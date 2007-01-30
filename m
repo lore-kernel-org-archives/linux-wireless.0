@@ -1,22 +1,18 @@
 Return-path: <wireless-bounces@tuxdriver.com>
-Received: from an-out-0708.google.com (an-out-0708.google.com [209.85.132.250])
-	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l0UN6vHM030560	for
- <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 18:07:23 -0500
-Received: by an-out-0708.google.com with SMTP id c38so14051ana	for
- <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 15:06:56 -0800 (PST)
-Date: Tue, 30 Jan 2007 17:36:21 -0500
+Received: from an-out-0708.google.com (an-out-0708.google.com [209.85.132.245])
+	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l0UMFIW6028896	for
+ <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 17:15:43 -0500
+Received: by an-out-0708.google.com with SMTP id c38so5020ana	for
+ <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 14:15:13 -0800 (PST)
+Date: Tue, 30 Jan 2007 17:15:12 -0500
 From: Jon Smirl <jonsmirl@gmail.com>
-Subject: Re: Getting dscape running
-In-reply-to: <1170195897.11455.6.camel@dv>
+Subject: Getting dscape running
 Sender: wireless-bounces@tuxdriver.com
-To: Pavel Roskin <proski@gnu.org>
-Cc: wireless@lists.tuxdriver.org
+To: wireless@lists.tuxdriver.org
 Errors-to: wireless-bounces@tuxdriver.com
-Message-id: <9e4733910701301436m2bdb903cpb2089a1c395b489c@mail.gmail.com>
+Message-id: <9e4733910701301415p2ce1042aqcd833c732bc761cb@mail.gmail.com>
 MIME-version: 1.0
 Content-type: text/plain; charset=us-ascii
-References: <9e4733910701301415p2ce1042aqcd833c732bc761cb@mail.gmail.com>
- <1170195897.11455.6.camel@dv>
 List-Post: <mailto:wireless@lists.tuxdriver.org>
 List-Subscribe: <http://lists.tuxdriver.org/mailman/listinfo/wireless>,
 	<mailto:wireless-request@lists.tuxdriver.org?subject=subscribe>
@@ -26,82 +22,50 @@ List-Archive: <http://lists.tuxdriver.org/pipermail/wireless>
 List-Help: <mailto:wireless-request@lists.tuxdriver.org?subject=help>
 List-Id: Linux wireless networking development <wireless.lists.tuxdriver.org>
 
-Here's the same rt2570 device using the ifconfig commands. I was
-trying to get NetworkManager running on it in case it was doing
-something that I wasn't doing manually. Some is not quite right with
-the WEP exchange.
+I'd like to get a basic connection working on my system so that I can
+check out the dscape stack and do some work on it. I am targeting an
+embedded system using USB dongles but right now I am working on my
+desktop. Hopefully this new list can provide the guidance that I need.
 
-jonsmirl@jonsmirl:/extra/wireless-dev/net/d80211$ iwconfig
-lo        no wireless extensions.
+I have NetworkManager from CVS and the current version of
+wpa_supplicant running. Hardware is a rt2570 dongle using the dscape
+stack. OS is Ubuntu.
 
-eth0      no wireless extensions.
+When I use NetworkManager to switch to the wireless device it fails.
+It says the access point is unencrypted when it is running actually
+WEP. The problem is probably caused by the NULL gobject reference.
+What's causing this?
 
-wmaster0  IEEE 802.11g  Frequency:2.412 GHz
-          RTS thr:off   Fragment thr=2346 B
+NetworkManager: <info>  Activation (wlan0) started...
+NetworkManager: <info>  Activation (wlan0) Stage 1 of 5 (Device
+Prepare) scheduled...
+NetworkManager: <info>  Activation (wlan0) Stage 1 of 5 (Device
+Prepare) started...
+NetworkManager: <info>  Activation (wlan0) Stage 2 of 5 (Device
+Configure) scheduled...
+NetworkManager: <info>  Activation (wlan0) Stage 1 of 5 (Device
+Prepare) complete.
+NetworkManager: <info>  Activation (wlan0) Stage 2 of 5 (Device
+Configure) starting...
+NetworkManager: <info>  Activation (wlan0/wireless): access point
+'Smirl' is unencrypted, no key needed.
 
-wlan0     IEEE 802.11g  ESSID:""
-          Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated
-          RTS thr:off   Fragment thr=2346 B
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+(NetworkManager:22478): GLib-GObject-WARNING **: invalid (NULL) pointer instance
 
-jonsmirl@jonsmirl:/extra/wireless-dev/net/d80211$ sudo iwconfig wlan0 channel 1
-jonsmirl@jonsmirl:/extra/wireless-dev/net/d80211$ sudo iwconfig wlan0
-key F491B8B905
-jonsmirl@jonsmirl:/extra/wireless-dev/net/d80211$ sudo iwconfig wlan0
-essid Smirl
-jonsmirl@jonsmirl:/extra/wireless-dev/net/d80211$ sudo iwconfig wlan0
-ap 00:11:95:18:15:31
-jonsmirl@jonsmirl:/extra/wireless-dev/net/d80211$ sudo dhclient wlan0
-Internet Systems Consortium DHCP Client V3.0.4
-Copyright 2004-2006 Internet Systems Consortium.
-All rights reserved.
-For info, please visit http://www.isc.org/sw/dhcp/
-
-wmaster0: unknown hardware address type 801
-wmaster0: unknown hardware address type 801
-Listening on LPF/wlan0/00:15:e9:2d:76:57
-Sending on   LPF/wlan0/00:15:e9:2d:76:57
-Sending on   Socket/fallback
-DHCPDISCOVER on wlan0 to 255.255.255.255 port 67 interval 8
-DHCPDISCOVER on wlan0 to 255.255.255.255 port 67 interval 14
-DHCPDISCOVER on wlan0 to 255.255.255.255 port 67 interval 19
-DHCPDISCOVER on wlan0 to 255.255.255.255 port 67 interval 20
-No DHCPOFFERS received.
-No working leases in persistent database - sleeping.
-jonsmirl@jonsmirl:/extra/wireless-dev/net/d80211$
-
-I'm unable to connect to it using WEP. The same device works on the Intel stack.
-
-wmaster0: TX to low-level driver (len=26) FC=0x00a0 DUR=0x013a
-A1=00:11:95:18:15:31 A2=00:15:e9:2d:76:57 A3=00:11:95:18:15:31
-wlan0: privacy configuration mismatch and mixed-cell disabled - disassociate
-wmaster0: TX to low-level driver (len=26) FC=0x00a0 DUR=0x013a
-A1=00:11:95:18:15:31 A2=00:15:e9:2d:76:57 A3=00:11:95:18:15:31
-wlan0: privacy configuration mismatch and mixed-cell disabled - disassociate
-wmaster0: TX to low-level driver (len=26) FC=0x00a0 DUR=0x013a
-A1=00:11:95:18:15:31 A2=00:15:e9:2d:76:57 A3=00:11:95:18:15:31
-wlan0: RX WEP frame with unknown keyidx 0 (A1=01:00:5e:00:00:38
-A2=00:11:95:18:15:31 A3=00:07:e9:55:4b:7e)
-wlan0: privacy configuration mismatch and mixed-cell disabled - disassociate
-wmaster0: TX to low-level driver (len=26) FC=0x00a0 DUR=0x013a
-A1=00:11:95:18:15:31 A2=00:15:e9:2d:76:57 A3=00:11:95:18:15:31
-wlan0: privacy configuration mismatch and mixed-cell disabled - disassociate
-wmaster0: TX to low-level driver (len=26) FC=0x00a0 DUR=0x013a
-A1=00:11:95:18:15:31 A2=00:15:e9:2d:76:57 A3=00:11:95:18:15:31
-wlan0: RX WEP frame with unknown keyidx 0 (A1=01:00:5e:00:00:38
-A2=00:11:95:18:15:31 A3=00:07:e9:55:4b:7e)
-wlan0: privacy configuration mismatch and mixed-cell disabled - disassociate
-wmaster0: TX to low-level driver (len=26) FC=0x00a0 DUR=0x013a
-A1=00:11:95:18:15:31 A2=00:15:e9:2d:76:57 A3=00:11:95:18:15:31
-wlan0: privacy configuration mismatch and mixed-cell disabled - disassociate
-wmaster0: TX to low-level driver (len=26) FC=0x00a0 DUR=0x013a
-A1=00:11:95:18:15:31 A2=00:15:e9:2d:76:57 A3=00:11:95:18:15:31
-jonsmirl@jonsmirl:/extra/wireless-dev/net/d80211$
-
-
-
+(NetworkManager:22478): GLib-GObject-CRITICAL **:
+g_signal_connect_data: assertion `G_TYPE_CHECK_INSTANCE (instance)'
+failed
+NetworkManager: nm_supplicant_interface_set_config: assertion `self !=
+NULL' failed
+NetworkManager: <WARN>  real_act_stage2_config(): Activation
+(wlan0/wireless): couldn't send wireless configuration to the
+supplicant.
+NetworkManager: <info>  Activation (wlan0) failure scheduled...
+NetworkManager: <info>  Activation (wlan0) Stage 2 of 5 (Device
+Configure) complete.
+NetworkManager: <info>  Activation (wlan0) failed for access point (Smirl)
+NetworkManager: <info>  Activation (wlan0) failed.
+NetworkManager: <info>  Deactivating device wlan0.
 
 -- 
 Jon Smirl
