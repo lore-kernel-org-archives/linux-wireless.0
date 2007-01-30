@@ -1,21 +1,21 @@
 Return-path: <wireless-bounces@tuxdriver.com>
-Received: from annwn14.rutgers.edu (smtp.rutgers.edu [128.6.72.243])
-	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l0V0HeIS032353	for
- <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 19:18:06 -0500
-Date: Tue, 30 Jan 2007 19:16:52 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: Re: Getting dscape running
-In-reply-to: <1170197696.11455.18.camel@dv>
+Received: from mail.qvalent.com (qvfw1.qvalent.com [202.7.65.65])
+	by ra.tuxdriver.com (8.13.7/8.13.7) with SMTP id l0UN2hfO030263	for
+ <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 18:03:09 -0500
+Date: Wed, 31 Jan 2007 10:01:41 +1100
+From: Mark Wallis <mwallis@serialmonkey.com>
+Subject: RE: Getting dscape running
+In-reply-to: <9e4733910701301441m5da25df8u3390ee9241eb4812@mail.gmail.com>
 Sender: wireless-bounces@tuxdriver.com
-To: Pavel Roskin <proski@gnu.org>
-Cc: wireless@lists.tuxdriver.org
+To: 'Jon Smirl' <jonsmirl@gmail.com>
+Cc: wireless@lists.tuxdriver.org, rt2400-devel@lists.sourceforge.net
 Errors-to: wireless-bounces@tuxdriver.com
-Message-id: <200701301916.58291.flamingice@sourmilk.net>
+Message-id: <03f001c744c2$9ac897d0$d059c770$@com>
 MIME-version: 1.0
-Content-type: multipart/mixed; boundary="===============1171907200=="
+Content-type: text/plain; charset=us-ascii
 References: <9e4733910701301415p2ce1042aqcd833c732bc761cb@mail.gmail.com>
- <9e4733910701301436m2bdb903cpb2089a1c395b489c@mail.gmail.com>
- <1170197696.11455.18.camel@dv>
+ <03c901c744bd$78281930$68784b90$@com>
+ <9e4733910701301441m5da25df8u3390ee9241eb4812@mail.gmail.com>
 List-Post: <mailto:wireless@lists.tuxdriver.org>
 List-Subscribe: <http://lists.tuxdriver.org/mailman/listinfo/wireless>,
 	<mailto:wireless-request@lists.tuxdriver.org?subject=subscribe>
@@ -25,46 +25,28 @@ List-Archive: <http://lists.tuxdriver.org/pipermail/wireless>
 List-Help: <mailto:wireless-request@lists.tuxdriver.org?subject=help>
 List-Id: Linux wireless networking development <wireless.lists.tuxdriver.org>
 
---===============1171907200==
-Content-Type: multipart/signed; boundary="nextPart1578235.Hhyii9Tds6";
-	protocol="application/pgp-signature"; micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+> check out my other post
 
---nextPart1578235.Hhyii9Tds6
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+It would be helpful if you could provide a debug trace as well.
 
-On Tuesday 30 January 2007 17:54, Pavel Roskin wrote:
-> Just in case, please make sure your .config enables CONFIG_CRYPTO_ECB
-> and CONFIG_CRYPTO_ARC4.
-d80211 selects ARC4. ECB is selected too if you have Linville's last update.
+> This is part of what makes working on wireless hard, the pieces are
+> scattered everywhere.
 
--Michael Wu
+Probably best to move this discussion to rt2400-devel and let us check
+if the problem still exists in our latest CVS. From there, if assoc
+is working fine you can bounce over to the NetworkManager list and go
+from there.
 
---nextPart1578235.Hhyii9Tds6
-Content-Type: application/pgp-signature
+Regards,
+Mark Wallis
+rt2x00 Project Admin
+mwallis@serialmonkey.com
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
 
-iD8DBQBFv9/6T3Oqt9AH4aERAszkAKDasU12KKlExk26kAbqYSAt/M/hngCffEa8
-FyQuGtTinWvlym6aPX9BNI4=
-=BGZj
------END PGP SIGNATURE-----
 
---nextPart1578235.Hhyii9Tds6--
 
---===============1171907200==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
 _______________________________________________
 wireless mailing list
 wireless@lists.tuxdriver.org
 http://lists.tuxdriver.org/mailman/listinfo/wireless
-
---===============1171907200==--
