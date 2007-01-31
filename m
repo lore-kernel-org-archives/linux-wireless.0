@@ -1,19 +1,20 @@
 Return-path: <wireless-bounces@tuxdriver.com>
-Received: from mail.qvalent.com (qvfw1.qvalent.com [202.7.65.65])
-	by ra.tuxdriver.com (8.13.7/8.13.7) with SMTP id l0UMPjoJ029224	for
- <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 17:26:11 -0500
-Date: Wed, 31 Jan 2007 09:24:55 +1100
-From: Mark Wallis <mwallis@serialmonkey.com>
-Subject: RE: Getting dscape running
-In-reply-to: <9e4733910701301415p2ce1042aqcd833c732bc761cb@mail.gmail.com>
+Received: from smtp156.iad.emailsrvr.com
+ (smtp156.iad.emailsrvr.com	[207.97.245.156])
+	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l0V0r1r9001401	for
+ <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 19:53:27 -0500
+Date: Tue, 30 Jan 2007 19:54:09 -0500
+From: Daniel Drake <dsd@gentoo.org>
+Subject: Re: SIOCGIWRANGE and dscape
+In-reply-to: <9e4733910701301636i18a21f31q421cc7d5c61f6c99@mail.gmail.com>
 Sender: wireless-bounces@tuxdriver.com
-To: 'Jon Smirl' <jonsmirl@gmail.com>
-Cc: wireless@lists.tuxdriver.org, rt2400-devel@lists.sourceforge.net
+To: Jon Smirl <jonsmirl@gmail.com>
+Cc: wireless@lists.tuxdriver.org
 Errors-to: wireless-bounces@tuxdriver.com
-Message-id: <03c901c744bd$78281930$68784b90$@com>
+Message-id: <45BFE8B1.2070104@gentoo.org>
 MIME-version: 1.0
 Content-type: text/plain; charset=us-ascii
-References: <9e4733910701301415p2ce1042aqcd833c732bc761cb@mail.gmail.com>
+References: <9e4733910701301636i18a21f31q421cc7d5c61f6c99@mail.gmail.com>
 List-Post: <mailto:wireless@lists.tuxdriver.org>
 List-Subscribe: <http://lists.tuxdriver.org/mailman/listinfo/wireless>,
 	<mailto:wireless-request@lists.tuxdriver.org?subject=subscribe>
@@ -23,30 +24,24 @@ List-Archive: <http://lists.tuxdriver.org/pipermail/wireless>
 List-Help: <mailto:wireless-request@lists.tuxdriver.org?subject=help>
 List-Id: Linux wireless networking development <wireless.lists.tuxdriver.org>
 
-Hi Jon,
+Jon Smirl wrote:
+> I can work on this, but how should it be done? There is no callout
+> from the stack to the drivers for this IOCTL. It also doesn't make
+> sense that each driver have the code to build the entire channel
+> lists. But you do need to know whether the driver is b/g or a/b/g. How
+> does the driver indicate which channel domain it is in, Japan/US/EU?
 
-> I have NetworkManager from CVS and the current version of
-> wpa_supplicant running. Hardware is a rt2570 dongle using the dscape
-> stack. OS is Ubuntu.
+This isn't a small project and is one of the remaining significant 
+things that some people would like to see before devicescape gets merged.
 
-Have you confirmed you are able to connect using iwconfig manually instead 
-of Network Manager ? Are you able to get associated ? 
+As you note, drivers do need to inform the stack of basic capabilities, 
+regulatory domain, supported reg domains, etc. And yes, channel 
+'databases' and frequency mappings should be stack level or higher.
 
-I assume you are using the rt2500usb.ko driver, but can you confirm 
-you are using a recent CVS tarball ?
+I don't think there is an answer to your questions at the moment - this 
+is stuff that needs both designing and implementing. Good luck :)
 
-
-Regards,
-Mark Wallis
-rt2x00 Project Admin
-mwallis@serialmonkey.com
-
-
-
-
-
-
-
+Daniel
 _______________________________________________
 wireless mailing list
 wireless@lists.tuxdriver.org
