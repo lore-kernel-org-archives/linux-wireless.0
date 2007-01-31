@@ -1,18 +1,21 @@
 Return-path: <wireless-bounces@tuxdriver.com>
-Received: from an-out-0708.google.com (an-out-0708.google.com [209.85.132.245])
-	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l0UMFIW6028896	for
- <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 17:15:43 -0500
-Received: by an-out-0708.google.com with SMTP id c38so5020ana	for
- <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 14:15:13 -0800 (PST)
-Date: Tue, 30 Jan 2007 17:15:12 -0500
-From: Jon Smirl <jonsmirl@gmail.com>
-Subject: Getting dscape running
+Received: from annwn14.rutgers.edu (smtp.rutgers.edu [128.6.72.243])
+	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l0V0HeIS032353	for
+ <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 19:18:06 -0500
+Date: Tue, 30 Jan 2007 19:16:52 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: Re: Getting dscape running
+In-reply-to: <1170197696.11455.18.camel@dv>
 Sender: wireless-bounces@tuxdriver.com
-To: wireless@lists.tuxdriver.org
+To: Pavel Roskin <proski@gnu.org>
+Cc: wireless@lists.tuxdriver.org
 Errors-to: wireless-bounces@tuxdriver.com
-Message-id: <9e4733910701301415p2ce1042aqcd833c732bc761cb@mail.gmail.com>
+Message-id: <200701301916.58291.flamingice@sourmilk.net>
 MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Content-type: multipart/mixed; boundary="===============1171907200=="
+References: <9e4733910701301415p2ce1042aqcd833c732bc761cb@mail.gmail.com>
+ <9e4733910701301436m2bdb903cpb2089a1c395b489c@mail.gmail.com>
+ <1170197696.11455.18.camel@dv>
 List-Post: <mailto:wireless@lists.tuxdriver.org>
 List-Subscribe: <http://lists.tuxdriver.org/mailman/listinfo/wireless>,
 	<mailto:wireless-request@lists.tuxdriver.org?subject=subscribe>
@@ -22,55 +25,46 @@ List-Archive: <http://lists.tuxdriver.org/pipermail/wireless>
 List-Help: <mailto:wireless-request@lists.tuxdriver.org?subject=help>
 List-Id: Linux wireless networking development <wireless.lists.tuxdriver.org>
 
-I'd like to get a basic connection working on my system so that I can
-check out the dscape stack and do some work on it. I am targeting an
-embedded system using USB dongles but right now I am working on my
-desktop. Hopefully this new list can provide the guidance that I need.
+--===============1171907200==
+Content-Type: multipart/signed; boundary="nextPart1578235.Hhyii9Tds6";
+	protocol="application/pgp-signature"; micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-I have NetworkManager from CVS and the current version of
-wpa_supplicant running. Hardware is a rt2570 dongle using the dscape
-stack. OS is Ubuntu.
+--nextPart1578235.Hhyii9Tds6
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-When I use NetworkManager to switch to the wireless device it fails.
-It says the access point is unencrypted when it is running actually
-WEP. The problem is probably caused by the NULL gobject reference.
-What's causing this?
+On Tuesday 30 January 2007 17:54, Pavel Roskin wrote:
+> Just in case, please make sure your .config enables CONFIG_CRYPTO_ECB
+> and CONFIG_CRYPTO_ARC4.
+d80211 selects ARC4. ECB is selected too if you have Linville's last update.
 
-NetworkManager: <info>  Activation (wlan0) started...
-NetworkManager: <info>  Activation (wlan0) Stage 1 of 5 (Device
-Prepare) scheduled...
-NetworkManager: <info>  Activation (wlan0) Stage 1 of 5 (Device
-Prepare) started...
-NetworkManager: <info>  Activation (wlan0) Stage 2 of 5 (Device
-Configure) scheduled...
-NetworkManager: <info>  Activation (wlan0) Stage 1 of 5 (Device
-Prepare) complete.
-NetworkManager: <info>  Activation (wlan0) Stage 2 of 5 (Device
-Configure) starting...
-NetworkManager: <info>  Activation (wlan0/wireless): access point
-'Smirl' is unencrypted, no key needed.
+-Michael Wu
 
-(NetworkManager:22478): GLib-GObject-WARNING **: invalid (NULL) pointer instance
+--nextPart1578235.Hhyii9Tds6
+Content-Type: application/pgp-signature
 
-(NetworkManager:22478): GLib-GObject-CRITICAL **:
-g_signal_connect_data: assertion `G_TYPE_CHECK_INSTANCE (instance)'
-failed
-NetworkManager: nm_supplicant_interface_set_config: assertion `self !=
-NULL' failed
-NetworkManager: <WARN>  real_act_stage2_config(): Activation
-(wlan0/wireless): couldn't send wireless configuration to the
-supplicant.
-NetworkManager: <info>  Activation (wlan0) failure scheduled...
-NetworkManager: <info>  Activation (wlan0) Stage 2 of 5 (Device
-Configure) complete.
-NetworkManager: <info>  Activation (wlan0) failed for access point (Smirl)
-NetworkManager: <info>  Activation (wlan0) failed.
-NetworkManager: <info>  Deactivating device wlan0.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
 
--- 
-Jon Smirl
-jonsmirl@gmail.com
+iD8DBQBFv9/6T3Oqt9AH4aERAszkAKDasU12KKlExk26kAbqYSAt/M/hngCffEa8
+FyQuGtTinWvlym6aPX9BNI4=
+=BGZj
+-----END PGP SIGNATURE-----
+
+--nextPart1578235.Hhyii9Tds6--
+
+--===============1171907200==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
 _______________________________________________
 wireless mailing list
 wireless@lists.tuxdriver.org
 http://lists.tuxdriver.org/mailman/listinfo/wireless
+
+--===============1171907200==--
