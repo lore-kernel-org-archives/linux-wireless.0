@@ -1,20 +1,17 @@
 Return-path: <wireless-bounces@tuxdriver.com>
-Received: from sipsolutions.net (Debian-exim@crystal.sipsolutions.net
-	[195.210.38.204])
-	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l0VKxJEt012136
-	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=NO)
-	for <wireless@lists.tuxdriver.org>; Wed, 31 Jan 2007 15:59:45 -0500
-Subject: Re: [RFC PATCH 2/3] wireless: move wext to net/wireless/
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christoph Hellwig <hch@infradead.org>
-In-Reply-To: <20070131144027.GA9579@infradead.org>
-References: <20070131013717.GA28076@tuxdriver.com>
-	<20070131013840.GB28076@tuxdriver.com>
-	<20070131013943.GC28076@tuxdriver.com>
-	<20070131144027.GA9579@infradead.org>
-Date: Wed, 31 Jan 2007 20:00:28 +0100
-Message-Id: <1170270028.2236.3.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from annwn14.rutgers.edu (smtp.rutgers.edu [128.6.72.243])
+	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l0V3MAUW004366
+	for <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 22:22:36 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: "Jon Smirl" <jonsmirl@gmail.com>
+Subject: Re: SIOCGIWRANGE and dscape
+Date: Tue, 30 Jan 2007 22:21:05 -0500
+References: <9e4733910701301636i18a21f31q421cc7d5c61f6c99@mail.gmail.com>
+	<20070131025234.GB7061@jm.kir.nu>
+	<9e4733910701301911p6c687565h65bce1aedf7e13a3@mail.gmail.com>
+In-Reply-To: <9e4733910701301911p6c687565h65bce1aedf7e13a3@mail.gmail.com>
+MIME-Version: 1.0
+Message-Id: <200701302221.17544.flamingice@sourmilk.net>
 Cc: wireless@lists.tuxdriver.org
 List-Id: Linux wireless networking development <wireless.lists.tuxdriver.org>
 List-Unsubscribe: <http://lists.tuxdriver.org/mailman/listinfo/wireless>,
@@ -24,49 +21,74 @@ List-Post: <mailto:wireless@lists.tuxdriver.org>
 List-Help: <mailto:wireless-request@lists.tuxdriver.org?subject=help>
 List-Subscribe: <http://lists.tuxdriver.org/mailman/listinfo/wireless>,
 	<mailto:wireless-request@lists.tuxdriver.org?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0112885471=="
+Content-Type: multipart/mixed; boundary="===============1552228038=="
 Sender: wireless-bounces@tuxdriver.com
 Errors-To: wireless-bounces@tuxdriver.com
 
+--===============1552228038==
+Content-Type: multipart/signed; boundary="nextPart6806833.HjrEdnNWPZ";
+	protocol="application/pgp-signature"; micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
---===============0112885471==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature";
-	boundary="=-DfXVNSL29HR9ao3DRoag"
-
-
---=-DfXVNSL29HR9ao3DRoag
-Content-Type: text/plain
+--nextPart6806833.HjrEdnNWPZ
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Wed, 2007-01-31 at 14:40 +0000, Christoph Hellwig wrote:
+On Tuesday 30 January 2007 22:11, you wrote:
+> On 1/30/07, Jouni Malinen <jkmaline@cc.hut.fi> wrote:
+> > On Tue, Jan 30, 2007 at 08:12:19PM -0500, Michael Wu wrote:
+> > > Fixing up giwrange is currently on my d80211 blockers todo list since
+> > > it is part of fixing wireless statistics reporting in d80211. Helper
+> > > functions for filling the channel lists is also somewhere on the todo
+> > > list, though it isn't on the blocker list. The driver currently has no
+> > > way to indicate what regulatory domain the hardware has stored in
+> > > eeprom, and d80211 just assumes FCC. (after all, d80211 isn't merge
+> > > ready yet ;) Yes, basic driver regulatory domain support is on my
+> > > blocker todo list.
+> >
+> > The simple workaround for client mode is indeed just assuming one
+> > regulatory domain, but the original design of the Devicescape stack was
+> > to use a user space component (hostapd in case of AP mode) to populate
+> > the allowed channel information based on what the low-level driver
+> > claims to support as far as channels are concerned and what is
+> > configured for regulatory domain (in hostapd configuration).
+>
+> It seems like regulatory domain for an AP has to be controlled from
+> user space. What about the simple case of someone with a US laptop
+> that flies to Japan and runs hostap. Getting the value from the eeprom
+> won't work in this case. If this is the case then the drivers just
+> need to report up every channel they can handle.
+>
+Yes, of course. I've read 802.11d. :) However, we need to simple regulatory=
+=20
+domain stuff on the driver side for feature parity with existing drivers. I=
+'m=20
+not actually trying to solve the problem for good, but to fix it enough to=
+=20
+merge. Reporting every channel is what is currently done (except for ipw394=
+5=20
+which restricts channels in firmware due to their regulatory concerns), and=
+ I=20
+think the userspace interface for setting valid channels is still there.
 
-> Is this the right name?  Shouldn't it be wext-ioctl.c given that
-> we'll hopefull soon grow a wext implementation with a proper method
-> table interface for drivers.
+=2DMichael Wu
 
-No, wext is dead, the replacement is a mix of cfg80211 and nl80211.
-Besides, wext isn't strictly ioctl-based, it does netlink too (but just
-puts the ioctl data into netlink messages and has the same braindamage.)
-
-johannes
-
---=-DfXVNSL29HR9ao3DRoag
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart6806833.HjrEdnNWPZ
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.2 (GNU/Linux)
 
-iD8DBQBFwOdM/ETPhpq3jKURAmQhAKCofz2fwYU59gvN90rpR27J0356WgCfVX1X
-pvBhKqR93UGpOT2bBHOcUEc=
-=17ke
+iD8DBQBFwAstT3Oqt9AH4aERAnxWAJ4pO9R6jaM/M+Uyt91hqr5pCQohqwCeMHtc
+qbDa4J+J65HM4q/jMEq44T8=
+=3LiB
 -----END PGP SIGNATURE-----
 
---=-DfXVNSL29HR9ao3DRoag--
+--nextPart6806833.HjrEdnNWPZ--
 
-
---===============0112885471==
+--===============1552228038==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -77,4 +99,4 @@ wireless mailing list
 wireless@lists.tuxdriver.org
 http://lists.tuxdriver.org/mailman/listinfo/wireless
 
---===============0112885471==--
+--===============1552228038==--
