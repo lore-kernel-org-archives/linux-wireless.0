@@ -1,17 +1,14 @@
 Return-path: <wireless-bounces@tuxdriver.com>
-Date: Wed, 31 Jan 2007 15:44:38 -0500
+Date: Wed, 31 Jan 2007 13:32:55 -0500
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Christoph Hellwig <hch@infradead.org>
+To: Jiri Benc <jbenc@suse.cz>
 Subject: Re: [RFC] cfg80211 merge
-Message-ID: <20070131204438.GB19669@tuxdriver.com>
+Message-ID: <20070131183255.GB8776@tuxdriver.com>
 References: <20070131013717.GA28076@tuxdriver.com>
 	<20070131024807.GA7061@jm.kir.nu>
 	<20070131182908.13bfc374@griffin.suse.cz>
-	<20070131183255.GB8776@tuxdriver.com>
-	<20070131202549.5ee47bd4@griffin.suse.cz>
-	<20070131200741.GA22448@infradead.org>
 Mime-Version: 1.0
-In-Reply-To: <20070131200741.GA22448@infradead.org>
+In-Reply-To: <20070131182908.13bfc374@griffin.suse.cz>
 Cc: wireless@lists.tuxdriver.org
 List-Id: Linux wireless networking development <wireless.lists.tuxdriver.org>
 List-Unsubscribe: <http://lists.tuxdriver.org/mailman/listinfo/wireless>,
@@ -25,28 +22,32 @@ Content-Type: text/plain; charset="us-ascii"
 Sender: wireless-bounces@tuxdriver.com
 Errors-To: wireless-bounces@tuxdriver.com
 
-On Wed, Jan 31, 2007 at 08:07:41PM +0000, Christoph Hellwig wrote:
-> On Wed, Jan 31, 2007 at 08:25:49PM +0100, Jiri Benc wrote:
-> > On Wed, 31 Jan 2007 13:32:55 -0500, John W. Linville wrote:
-> > > OK, where were you guys in London?  I don't recall any disagreement
-> > > there?
-> > 
-> > Hm, I remember we agreed that merging of d80211 and cfg80211/nl80211
-> > are two separate things. And a discussion about cfg80211/nl80211 not
-> > being quite ready yet (if I remember correctly, Jouni participated in
-> > that discussion). But well, it was just informal and maybe I missed
-> > something else.
+On Wed, Jan 31, 2007 at 06:29:08PM +0100, Jiri Benc wrote:
+> On Tue, 30 Jan 2007 18:48:07 -0800, Jouni Malinen wrote:
+> > I'm all for getting this into the mainline kernel as soon as possible,
+> > but I do not think that this should happen before there are user space
+> > programs that demonstrate that cfg80211 can be used without problems and
+> > that the kernel side implementation is complete enough to allow some
+> > meaningful operations to be completed with cfg80211 (likely with WEXT
+> > disabled, i.e., cfg80211 being feature complete for, say, WPA
+> > authentication).
 > 
-> Yes, cfg80211 should go in first so we can use it to avoid all the
-> boilerplate code in existing and new drivers.  Once we have netlink-capable
-> userspace nl80211 can be added ontop of that.  This also allows for
-> possibly needed adjustments of the nl interface when writing the
-> tools actually using it.
+> I fully agree with Jouni.
 
-Agreed.  I (and/or Johannes?) will rework the patches to remove the
-nl bits.
+OK, where were you guys in London?  I don't recall any disagreement
+there?
 
-Thanks,
+The WEXT compat code should be enough to drive the cfg80211 code.
+And we would mark it CONFIG_EXPERIMENTAL (which I left out of the
+patch) for now.  I suppose we could leave-out the nl80211 part to
+avoid userland lock-in for now?
+
+This also has the advantage of including the ieee80211_ptr in the
+net_device structure, hopefully easing the task of packaging the rest
+of the stack for external builds.
+
+I suppose we could wait for at least one driver to be cfg80211-capable.
+Would that satisfy everyone?
 
 John
 -- 
