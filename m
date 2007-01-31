@@ -1,17 +1,21 @@
 Return-path: <wireless-bounces@tuxdriver.com>
-Received: from mail.suse.cz (styx.suse.cz [82.119.242.94])
-	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l0VHbI3D004822
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <wireless@lists.tuxdriver.org>; Wed, 31 Jan 2007 12:37:44 -0500
-Date: Wed, 31 Jan 2007 18:37:13 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [RFC PATCH 1/3] cfg80211 and nl80211
-Message-ID: <20070131183713.10999c74@griffin.suse.cz>
-In-Reply-To: <200701302146.05289.flamingice@sourmilk.net>
-References: <20070131013717.GA28076@tuxdriver.com>
-	<20070131013840.GB28076@tuxdriver.com>
-	<200701302146.05289.flamingice@sourmilk.net>
+Received: from fencepost.gnu.org (fencepost.gnu.org [199.232.76.164])
+	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l0V3O0Fa004423
+	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=NO)
+	for <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 22:24:26 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>) id 1HC63p-0002Y3-8N
+	for wireless@lists.tuxdriver.org; Tue, 30 Jan 2007 22:23:01 -0500
+Subject: Re: SIOCGIWRANGE and dscape
+From: Pavel Roskin <proski@gnu.org>
+To: Jon Smirl <jonsmirl@gmail.com>
+In-Reply-To: <9e4733910701301911p6c687565h65bce1aedf7e13a3@mail.gmail.com>
+References: <9e4733910701301636i18a21f31q421cc7d5c61f6c99@mail.gmail.com>
+	<200701302012.23302.flamingice@sourmilk.net>
+	<20070131025234.GB7061@jm.kir.nu>
+	<9e4733910701301911p6c687565h65bce1aedf7e13a3@mail.gmail.com>
+Date: Tue, 30 Jan 2007 22:23:58 -0500
+Message-Id: <1170213838.11455.63.camel@dv>
 Mime-Version: 1.0
 Cc: wireless@lists.tuxdriver.org
 List-Id: Linux wireless networking development <wireless.lists.tuxdriver.org>
@@ -26,26 +30,26 @@ Content-Type: text/plain; charset="us-ascii"
 Sender: wireless-bounces@tuxdriver.com
 Errors-To: wireless-bounces@tuxdriver.com
 
-On Tue, 30 Jan 2007 21:46:01 -0500, Michael Wu wrote:
-> I think drivers that currently support frame injection do it by allowing TX on 
-> a monitor interface w/ AVS or radiotap header. I would rather have this than 
-> requiring the use of NL80211 to inject frames since userspace won't have to 
-> do as much to continue supporting frame injection. It also makes more sense 
-> to me. Status notification can be done by a 802.11 ACK frame. Radiotap might 
-> need to be extended to support toggling the ACK frame reporting for TX and 
-> whatever else userspace wants to set.
+On Tue, 2007-01-30 at 22:11 -0500, Jon Smirl wrote:
 
-Please, don't do that. You need to get a success/failure report from
-the driver/stack. Doing that by dumping fake frames through the network
-interfaces isn't something I could consider as a right behaviour. Also,
-you need to match the sent frame and the report from the driver. This
-gets really tricky when you use network interfaces.
+> Managed mode doesn't need to know the regulatory domain, right? It
+> picks it up from the AP.
 
- Jiri
+I'm afraid it does.  The station can initiate scan requests.  This
+should be done on authorized frequencies only.  Some countries disallow
+passive scanning outright, and that's something the card should know as
+well.  The power limits are also different.
+
+Still, I think we could have a minimal managed mode, in which the
+station doesn't transmit anything except when it detects an AP on that
+frequency, and even then, the station would follow the strictest txpower
+limitations.
 
 -- 
-Jiri Benc
-SUSE Labs
+Regards,
+Pavel Roskin
+
+
 _______________________________________________
 wireless mailing list
 wireless@lists.tuxdriver.org
