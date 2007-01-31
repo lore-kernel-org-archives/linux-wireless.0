@@ -1,15 +1,23 @@
 Return-path: <wireless-bounces@tuxdriver.com>
-Date: Wed, 31 Jan 2007 13:32:55 -0500
+Received: from ra.tuxdriver.com (ra.tuxdriver.com [127.0.0.1])
+	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l0V247fq002993
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 21:04:12 -0500
+Received: (from uucp@localhost)
+	by ra.tuxdriver.com (8.13.7/8.13.6/Submit) with UUCP id l0V1jOoe002605
+	for wireless@lists.tuxdriver.org; Tue, 30 Jan 2007 20:45:24 -0500
+Received: from linville-t43.mobile (linville-t43.mobile [127.0.0.1])
+	by linville-t43.mobile (8.13.8/8.13.8) with ESMTP id l0V1bHOb028238
+	for <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 20:37:17 -0500
+Received: (from linville@localhost)
+	by linville-t43.mobile (8.13.8/8.13.8/Submit) id l0V1bHjM028237
+	for wireless@lists.tuxdriver.org; Tue, 30 Jan 2007 20:37:17 -0500
+Date: Tue, 30 Jan 2007 20:37:17 -0500
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Jiri Benc <jbenc@suse.cz>
-Subject: Re: [RFC] cfg80211 merge
-Message-ID: <20070131183255.GB8776@tuxdriver.com>
-References: <20070131013717.GA28076@tuxdriver.com>
-	<20070131024807.GA7061@jm.kir.nu>
-	<20070131182908.13bfc374@griffin.suse.cz>
+To: wireless@lists.tuxdriver.org
+Subject: [RFC] cfg80211 merge
+Message-ID: <20070131013717.GA28076@tuxdriver.com>
 Mime-Version: 1.0
-In-Reply-To: <20070131182908.13bfc374@griffin.suse.cz>
-Cc: wireless@lists.tuxdriver.org
 List-Id: Linux wireless networking development <wireless.lists.tuxdriver.org>
 List-Unsubscribe: <http://lists.tuxdriver.org/mailman/listinfo/wireless>,
 	<mailto:wireless-request@lists.tuxdriver.org?subject=unsubscribe>
@@ -22,32 +30,19 @@ Content-Type: text/plain; charset="us-ascii"
 Sender: wireless-bounces@tuxdriver.com
 Errors-To: wireless-bounces@tuxdriver.com
 
-On Wed, Jan 31, 2007 at 06:29:08PM +0100, Jiri Benc wrote:
-> On Tue, 30 Jan 2007 18:48:07 -0800, Jouni Malinen wrote:
-> > I'm all for getting this into the mainline kernel as soon as possible,
-> > but I do not think that this should happen before there are user space
-> > programs that demonstrate that cfg80211 can be used without problems and
-> > that the kernel side implementation is complete enough to allow some
-> > meaningful operations to be completed with cfg80211 (likely with WEXT
-> > disabled, i.e., cfg80211 being feature complete for, say, WPA
-> > authentication).
-> 
-> I fully agree with Jouni.
+In London we agreed that it would be good to go ahead and merge
+cfg80211.  This provides some exposure to the API and eases some of
+the pain for driver maintainers (who won't have to follow wireless-dev
+to get it).
 
-OK, where were you guys in London?  I don't recall any disagreement
-there?
+I have refactored the cfg80211-related patches down to three patches.
+This eliminates some of the churn in the series from wireless-dev,
+and each patch leaves a buildable tree.
 
-The WEXT compat code should be enough to drive the cfg80211 code.
-And we would mark it CONFIG_EXPERIMENTAL (which I left out of the
-patch) for now.  I suppose we could leave-out the nl80211 part to
-avoid userland lock-in for now?
+Let me know if I've left anything out, screwed anything up, or if
+you no longer think a cfg80211 merge is appropriate at this time.
 
-This also has the advantage of including the ieee80211_ptr in the
-net_device structure, hopefully easing the task of packaging the rest
-of the stack for external builds.
-
-I suppose we could wait for at least one driver to be cfg80211-capable.
-Would that satisfy everyone?
+Thanks,
 
 John
 -- 
