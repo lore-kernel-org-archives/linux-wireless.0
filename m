@@ -1,26 +1,18 @@
 Return-path: <wireless-bounces@tuxdriver.com>
-Received: from fencepost.gnu.org (fencepost.gnu.org [199.232.76.164])
-	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l0UMtCGA029937
-	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=NO)
-	for <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 17:55:43 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
- id 1HC1rd-0007Xc-RL	for wireless@lists.tuxdriver.org; Tue,
- 30 Jan 2007 17:54:10 -0500
-Date: Tue, 30 Jan 2007 17:54:56 -0500
-From: Pavel Roskin <proski@gnu.org>
-Subject: Re: Getting dscape running
-In-reply-to: <9e4733910701301436m2bdb903cpb2089a1c395b489c@mail.gmail.com>
+Received: from annwn14.rutgers.edu (smtp.rutgers.edu [128.6.72.243])
+	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l0V1D4O8001807	for
+ <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 20:13:29 -0500
+Date: Tue, 30 Jan 2007 20:12:19 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: Re: SIOCGIWRANGE and dscape
+In-reply-to: <9e4733910701301636i18a21f31q421cc7d5c61f6c99@mail.gmail.com>
 Sender: wireless-bounces@tuxdriver.com
-To: Jon Smirl <jonsmirl@gmail.com>
-Cc: wireless@lists.tuxdriver.org
+To: wireless@lists.tuxdriver.org
 Errors-to: wireless-bounces@tuxdriver.com
-Message-id: <1170197696.11455.18.camel@dv>
+Message-id: <200701302012.23302.flamingice@sourmilk.net>
 MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-References: <9e4733910701301415p2ce1042aqcd833c732bc761cb@mail.gmail.com>
- <1170195897.11455.6.camel@dv>
- <9e4733910701301436m2bdb903cpb2089a1c395b489c@mail.gmail.com>
+Content-type: multipart/mixed; boundary="===============1334398120=="
+References: <9e4733910701301636i18a21f31q421cc7d5c61f6c99@mail.gmail.com>
 List-Post: <mailto:wireless@lists.tuxdriver.org>
 List-Subscribe: <http://lists.tuxdriver.org/mailman/listinfo/wireless>,
 	<mailto:wireless-request@lists.tuxdriver.org?subject=subscribe>
@@ -30,60 +22,75 @@ List-Archive: <http://lists.tuxdriver.org/pipermail/wireless>
 List-Help: <mailto:wireless-request@lists.tuxdriver.org?subject=help>
 List-Id: Linux wireless networking development <wireless.lists.tuxdriver.org>
 
-On Tue, 2007-01-30 at 17:36 -0500, Jon Smirl wrote:
-> Here's the same rt2570 device using the ifconfig commands. I was
-> trying to get NetworkManager running on it in case it was doing
-> something that I wasn't doing manually. Some is not quite right with
-> the WEP exchange.
-> 
-> jonsmirl@jonsmirl:/extra/wireless-dev/net/d80211$ iwconfig
-> lo        no wireless extensions.
-> 
-> eth0      no wireless extensions.
-> 
-> wmaster0  IEEE 802.11g  Frequency:2.412 GHz
->           RTS thr:off   Fragment thr=2346 B
-> 
-> wlan0     IEEE 802.11g  ESSID:""
->           Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated
->           RTS thr:off   Fragment thr=2346 B
->           Link Quality:0  Signal level:0  Noise level:0
->           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-> 
-> jonsmirl@jonsmirl:/extra/wireless-dev/net/d80211$ sudo iwconfig wlan0 channel 1
-> jonsmirl@jonsmirl:/extra/wireless-dev/net/d80211$ sudo iwconfig wlan0
-> key F491B8B905
-> jonsmirl@jonsmirl:/extra/wireless-dev/net/d80211$ sudo iwconfig wlan0
-> essid Smirl
-> jonsmirl@jonsmirl:/extra/wireless-dev/net/d80211$ sudo iwconfig wlan0
-> ap 00:11:95:18:15:31
+--===============1334398120==
+Content-Type: multipart/signed; boundary="nextPart1860735.jKj8MEjEr6";
+	protocol="application/pgp-signature"; micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-It would be interesting to look at the iwconfig output at this point.
-If "Link Quality" is still 0, there is no much use in running dhclient.
-Run iwconfig as root so you can verify that the WEP key is correct.
+--nextPart1860735.jKj8MEjEr6
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> I'm unable to connect to it using WEP. The same device works on the Intel stack.
+On Tuesday 30 January 2007 19:36, Jon Smirl wrote:
+> Looking in ieee80211_ioctl.c the implementation is in
+> ieee80211_ioctl_giwrange().
+>
+> I can work on this, but how should it be done? There is no callout
+> from the stack to the drivers for this IOCTL. It also doesn't make
+> sense that each driver have the code to build the entire channel
+> lists. But you do need to know whether the driver is b/g or a/b/g. How
+> does the driver indicate which channel domain it is in, Japan/US/EU?
+>
+=46ixing up giwrange is currently on my d80211 blockers todo list since it =
+is=20
+part of fixing wireless statistics reporting in d80211. Helper functions fo=
+r=20
+filling the channel lists is also somewhere on the todo list, though it isn=
+'t=20
+on the blocker list. The driver currently has no way to indicate what=20
+regulatory domain the hardware has stored in eeprom, and d80211 just assume=
+s=20
+=46CC. (after all, d80211 isn't merge ready yet ;) Yes, basic driver regula=
+tory=20
+domain support is on my blocker todo list.
 
-And how about connections without WEP?
+Listing rates and channels in giwrange should be easy - find the current mo=
+de,=20
+and iterate through the list of channels and rates in there. Ignore any=20
+channels which are not enabled. Count up all the enabled channels and stick=
+=20
+it in num_channels and num_frequency. I could probably just copy the code=20
+from the adm8211 (wireless-2.6 version) giwrange handler and modify it to=20
+traverse lists instead of arrays. Feel free to hack and submit a patch thou=
+gh=20
+=2D it's not like I don't have enough things on my todo list. :)
 
-> wmaster0: TX to low-level driver (len=26) FC=0x00a0 DUR=0x013a
-> A1=00:11:95:18:15:31 A2=00:15:e9:2d:76:57 A3=00:11:95:18:15:31
-> wlan0: privacy configuration mismatch and mixed-cell disabled - disassociate
+=2DMichael Wu
 
-My understanding of the code that prints the above is that either the AP
-doesn't support WEP or the client doesn't have WEP enabled.  That can
-include the case when some other encryption algorithm is active.
+--nextPart1860735.jKj8MEjEr6
+Content-Type: application/pgp-signature
 
-Just in case, please make sure your .config enables CONFIG_CRYPTO_ECB
-and CONFIG_CRYPTO_ARC4.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
 
--- 
-Regards,
-Pavel Roskin
+iD8DBQBFv+z3T3Oqt9AH4aERAkOcAJ4sr5gUotFBC2CZveC2NEdXHwg/xACg17P6
+dtdTS46y7+Uc8t7om098bsA=
+=RXD0
+-----END PGP SIGNATURE-----
 
+--nextPart1860735.jKj8MEjEr6--
+
+--===============1334398120==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 wireless mailing list
 wireless@lists.tuxdriver.org
 http://lists.tuxdriver.org/mailman/listinfo/wireless
+
+--===============1334398120==--
