@@ -1,21 +1,18 @@
 Return-path: <wireless-bounces@tuxdriver.com>
-Received: from mail.qvalent.com (qvfw1.qvalent.com [202.7.65.65])
-	by ra.tuxdriver.com (8.13.7/8.13.7) with SMTP id l0UN2hfO030263	for
- <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 18:03:09 -0500
-Date: Wed, 31 Jan 2007 10:01:41 +1100
-From: Mark Wallis <mwallis@serialmonkey.com>
-Subject: RE: Getting dscape running
-In-reply-to: <9e4733910701301441m5da25df8u3390ee9241eb4812@mail.gmail.com>
+Received: from an-out-0708.google.com (an-out-0708.google.com [209.85.132.245])
+	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l0V0aQHr000787	for
+ <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 19:36:52 -0500
+Received: by an-out-0708.google.com with SMTP id c38so27959ana	for
+ <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 16:36:22 -0800 (PST)
+Date: Tue, 30 Jan 2007 19:36:21 -0500
+From: Jon Smirl <jonsmirl@gmail.com>
+Subject: SIOCGIWRANGE and dscape
 Sender: wireless-bounces@tuxdriver.com
-To: 'Jon Smirl' <jonsmirl@gmail.com>
-Cc: wireless@lists.tuxdriver.org, rt2400-devel@lists.sourceforge.net
+To: wireless@lists.tuxdriver.org
 Errors-to: wireless-bounces@tuxdriver.com
-Message-id: <03f001c744c2$9ac897d0$d059c770$@com>
+Message-id: <9e4733910701301636i18a21f31q421cc7d5c61f6c99@mail.gmail.com>
 MIME-version: 1.0
 Content-type: text/plain; charset=us-ascii
-References: <9e4733910701301415p2ce1042aqcd833c732bc761cb@mail.gmail.com>
- <03c901c744bd$78281930$68784b90$@com>
- <9e4733910701301441m5da25df8u3390ee9241eb4812@mail.gmail.com>
 List-Post: <mailto:wireless@lists.tuxdriver.org>
 List-Subscribe: <http://lists.tuxdriver.org/mailman/listinfo/wireless>,
 	<mailto:wireless-request@lists.tuxdriver.org?subject=subscribe>
@@ -25,27 +22,27 @@ List-Archive: <http://lists.tuxdriver.org/pipermail/wireless>
 List-Help: <mailto:wireless-request@lists.tuxdriver.org?subject=help>
 List-Id: Linux wireless networking development <wireless.lists.tuxdriver.org>
 
-> check out my other post
+Now that my link is working, and since I don't know much about the
+dscape stack I'm looking for something simple to work on to get
+started. I noticed that SIOCGIWRANGE is not fully implemented.
 
-It would be helpful if you could provide a debug trace as well.
+jonsmirl@jonsmirl:/extra/wireless_tools.29$ sudo iwlist wlan0 channel
+wlan0     0 channels
+          Current Frequency:2.412 GHz
 
-> This is part of what makes working on wireless hard, the pieces are
-> scattered everywhere.
+jonsmirl@jonsmirl:/extra/wireless_tools.29$
 
-Probably best to move this discussion to rt2400-devel and let us check
-if the problem still exists in our latest CVS. From there, if assoc
-is working fine you can bounce over to the NetworkManager list and go
-from there.
+Looking in ieee80211_ioctl.c the implementation is in
+ieee80211_ioctl_giwrange().
 
-Regards,
-Mark Wallis
-rt2x00 Project Admin
-mwallis@serialmonkey.com
+I can work on this, but how should it be done? There is no callout
+from the stack to the drivers for this IOCTL. It also doesn't make
+sense that each driver have the code to build the entire channel
+lists. But you do need to know whether the driver is b/g or a/b/g. How
+does the driver indicate which channel domain it is in, Japan/US/EU?
 
-
-
-
-
+Jon Smirl
+jonsmirl@gmail.com
 _______________________________________________
 wireless mailing list
 wireless@lists.tuxdriver.org
