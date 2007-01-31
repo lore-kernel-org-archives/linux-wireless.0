@@ -1,23 +1,19 @@
 Return-path: <wireless-bounces@tuxdriver.com>
-Received: from ra.tuxdriver.com (ra.tuxdriver.com [127.0.0.1])
-	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l0V247fq002993
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 21:04:12 -0500
-Received: (from uucp@localhost)
-	by ra.tuxdriver.com (8.13.7/8.13.6/Submit) with UUCP id l0V1jOoe002605
-	for wireless@lists.tuxdriver.org; Tue, 30 Jan 2007 20:45:24 -0500
-Received: from linville-t43.mobile (linville-t43.mobile [127.0.0.1])
-	by linville-t43.mobile (8.13.8/8.13.8) with ESMTP id l0V1bHOb028238
-	for <wireless@lists.tuxdriver.org>; Tue, 30 Jan 2007 20:37:17 -0500
-Received: (from linville@localhost)
-	by linville-t43.mobile (8.13.8/8.13.8/Submit) id l0V1bHjM028237
-	for wireless@lists.tuxdriver.org; Tue, 30 Jan 2007 20:37:17 -0500
-Date: Tue, 30 Jan 2007 20:37:17 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
+Received: from vs166246.vserver.de
+	(static-ip-62-75-166-246.inaddr.intergenia.de [62.75.166.246])
+	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l0VKQaiB009124
+	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=NO)
+	for <wireless@lists.tuxdriver.org>; Wed, 31 Jan 2007 15:27:02 -0500
+From: Michael Buesch <mb@bu3sch.de>
 To: wireless@lists.tuxdriver.org
-Subject: [RFC] cfg80211 merge
-Message-ID: <20070131013717.GA28076@tuxdriver.com>
-Mime-Version: 1.0
+Subject: Re: [RFC PATCH 1/3] cfg80211 and nl80211
+Date: Wed, 31 Jan 2007 21:24:51 +0100
+References: <20070131013717.GA28076@tuxdriver.com>
+	<200701302146.05289.flamingice@sourmilk.net>
+	<20070131183713.10999c74@griffin.suse.cz>
+In-Reply-To: <20070131183713.10999c74@griffin.suse.cz>
+MIME-Version: 1.0
+Message-Id: <200701312124.52006.mb@bu3sch.de>
 List-Id: Linux wireless networking development <wireless.lists.tuxdriver.org>
 List-Unsubscribe: <http://lists.tuxdriver.org/mailman/listinfo/wireless>,
 	<mailto:wireless-request@lists.tuxdriver.org?subject=unsubscribe>
@@ -30,24 +26,28 @@ Content-Type: text/plain; charset="us-ascii"
 Sender: wireless-bounces@tuxdriver.com
 Errors-To: wireless-bounces@tuxdriver.com
 
-In London we agreed that it would be good to go ahead and merge
-cfg80211.  This provides some exposure to the API and eases some of
-the pain for driver maintainers (who won't have to follow wireless-dev
-to get it).
+On Wednesday 31 January 2007 18:37, Jiri Benc wrote:
+> On Tue, 30 Jan 2007 21:46:01 -0500, Michael Wu wrote:
+> > I think drivers that currently support frame injection do it by allowing TX on 
+> > a monitor interface w/ AVS or radiotap header. I would rather have this than 
+> > requiring the use of NL80211 to inject frames since userspace won't have to 
+> > do as much to continue supporting frame injection. It also makes more sense 
+> > to me. Status notification can be done by a 802.11 ACK frame. Radiotap might 
+> > need to be extended to support toggling the ACK frame reporting for TX and 
+> > whatever else userspace wants to set.
+> 
+> Please, don't do that. You need to get a success/failure report from
+> the driver/stack. Doing that by dumping fake frames through the network
+> interfaces isn't something I could consider as a right behaviour. Also,
+> you need to match the sent frame and the report from the driver. This
+> gets really tricky when you use network interfaces.
 
-I have refactored the cfg80211-related patches down to three patches.
-This eliminates some of the churn in the series from wireless-dev,
-and each patch leaves a buildable tree.
+TX control information also needs to be passed somehow.
+So you would require some TXcontrol header or something
+like that for the injected data. Not really scalable.
 
-Let me know if I've left anything out, screwed anything up, or if
-you no longer think a cfg80211 merge is appropriate at this time.
-
-Thanks,
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
 _______________________________________________
 wireless mailing list
 wireless@lists.tuxdriver.org
