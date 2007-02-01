@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34219 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933012AbXB0K5F (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:38932 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161157AbXBAEnL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Feb 2007 05:57:05 -0500
-Subject: Re: [PATCH] wireless: rename d80211 -> mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20070227032756.GA6569@tuxdriver.com>
-References: <20070227032756.GA6569@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sUoaeRw3mk0XysWJBgMP"
-Date: Tue, 27 Feb 2007 11:56:35 +0100
-Message-Id: <1172573795.3870.244.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 31 Jan 2007 23:43:11 -0500
+Message-ID: <45C16FDD.7040800@lwfinger.net>
+Date: Wed, 31 Jan 2007 22:43:09 -0600
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Stephen Hemminger <shemminger@osdl.org>
+CC: Jon Smirl <jonsmirl@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: Anyone have notes from Wireless Summit?
+References: <20070131.155116.62344146.davem@davemloft.net>	<45C13D41.7050901@lwfinger.net>	<9e4733910701311716o3d51bf25jbf8c65a72233e128@mail.gmail.com> <20070131202757.7dc1058c@oldman>
+In-Reply-To: <20070131202757.7dc1058c@oldman>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Stephen Hemminger wrote:
+> On Wed, 31 Jan 2007 20:16:52 -0500
+> "Jon Smirl" <jonsmirl@gmail.com> wrote:
+> 
+>> On 1/31/07, Larry Finger <larry.finger@lwfinger.net> wrote:
+>>> I've seen the program and the PDF's posted at
+>>> http://developer.osdl.org/dev/desktop_architects/index.php and I've seen some discussion about
+>>> what/was not agreed upon. Does anyone have any notes on the main and/or breakout sessions that could
+>>> be posted here, or in some other venue.
+> 
+> 
+> I put all the notes that were sent to me into:
+>   http://developer.osdl.org/dev/desktop_architects/index.php/Wireless_Summit_2
+> 
+> The PDF slides I uploaded and any notes I converted to Wiki pages
+> 
 
---=-sUoaeRw3mk0XysWJBgMP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks Stephen. BTW, is there a list of names to go with the photo? After communicating with all of
+you for a year, or so, I'd like to have faces to go with the names.
 
-On Mon, 2007-02-26 at 22:27 -0500, John W. Linville wrote:
-
-> I've changed all references in wireless-dev from d80211 to mac80211
-> and from D80211 to MAC80211,
-
-And I notice that by "all references", you really mean it:
-
--T:     git kernel.org:/pub/scm/linux/kernel/git/mwu/d80211-drivers.git
-+T:     git kernel.org:/pub/scm/linux/kernel/git/mwu/mac80211-drivers.git
-
-johannes
-
---=-sUoaeRw3mk0XysWJBgMP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF5A5j/ETPhpq3jKURAnkxAJ0UyGavGErC33RPj89/d9zac0j+xgCgreb2
-/mqrDvnoxkNIG2cwWnjOSrY=
-=x2oM
------END PGP SIGNATURE-----
-
---=-sUoaeRw3mk0XysWJBgMP--
+Larry
 
