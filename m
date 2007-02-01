@@ -1,50 +1,83 @@
-Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:47750
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932732AbXBTKFR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Feb 2007 05:05:17 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: Capture of unsuccessful ARP exchange
-Date: Tue, 20 Feb 2007 11:04:41 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Pavel Roskin <proski@gnu.org>, Jouni Malinen <j@w1.fi>,
-	linux-wireless@vger.kernel.org
-References: <1171935085.8133.42.camel@dv> <1171938483.10139.13.camel@dv> <1171959815.15489.75.camel@johannes.berg>
-In-Reply-To: <1171959815.15489.75.camel@johannes.berg>
+Return-path: <wireless-bounces@tuxdriver.com>
+Received: from sipsolutions.net (Debian-exim@crystal.sipsolutions.net
+	[195.210.38.204])
+	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l11DBgxG013321
+	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=NO)
+	for <wireless@lists.tuxdriver.org>; Thu, 1 Feb 2007 08:12:08 -0500
+Subject: Re: [RFC] cfg80211 merge
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+In-Reply-To: <1ba2fa240701311554i435d28b1x6822803326138cb5@mail.gmail.com>
+References: <20070131013717.GA28076@tuxdriver.com>
+	<20070131024807.GA7061@jm.kir.nu>
+	<20070131182908.13bfc374@griffin.suse.cz>
+	<20070131183255.GB8776@tuxdriver.com>
+	<20070131202549.5ee47bd4@griffin.suse.cz>
+	<20070131200741.GA22448@infradead.org>
+	<20070131204438.GB19669@tuxdriver.com>
+	<1170277561.2236.6.camel@johannes.berg>
+	<1ba2fa240701311554i435d28b1x6822803326138cb5@mail.gmail.com>
+Date: Thu, 01 Feb 2007 14:07:42 +0100
+Message-Id: <1170335262.17068.6.camel@johannes.berg>
+Mime-Version: 1.0
+Cc: wireless@lists.tuxdriver.org
+List-Id: Linux wireless networking development <wireless.lists.tuxdriver.org>
+List-Unsubscribe: <http://lists.tuxdriver.org/mailman/listinfo/wireless>,
+	<mailto:wireless-request@lists.tuxdriver.org?subject=unsubscribe>
+List-Archive: <http://lists.tuxdriver.org/pipermail/wireless>
+List-Post: <mailto:wireless@lists.tuxdriver.org>
+List-Help: <mailto:wireless-request@lists.tuxdriver.org?subject=help>
+List-Subscribe: <http://lists.tuxdriver.org/mailman/listinfo/wireless>,
+	<mailto:wireless-request@lists.tuxdriver.org?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============0223322688=="
+Sender: wireless-bounces@tuxdriver.com
+Errors-To: wireless-bounces@tuxdriver.com
+
+
+--===============0223322688==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature";
+	boundary="=-QAHOJhSa29TS8ET3plsT"
+
+
+--=-QAHOJhSa29TS8ET3plsT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, 2007-02-01 at 01:54 +0200, Tomas Winkler wrote:
+> As far as I tested cfg80211 compatibility mode is incomplete. You
+> cannot run hostapd over it
+> If I recall correctly PRISM2_IOCTL_PRISM2_PARAM and friends are not
+> passed to d80211=20
+
+It's a priv ioctl, it's not supposed to be passed on.
+
+johannes (who is getting positively pissed off about such requests)
+
+--=-QAHOJhSa29TS8ET3plsT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBFweYd/ETPhpq3jKURAk+KAJ4pjoecJwuRvRy8KXrmQOsSznQpXgCguq6t
+GfNncy3bQyiE5Pc494tbGRA=
+=QqwD
+-----END PGP SIGNATURE-----
+
+--=-QAHOJhSa29TS8ET3plsT--
+
+
+--===============0223322688==
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200702201104.42201.mb@bu3sch.de>
-Sender: linux-wireless-owner@vger.kernel.org
-List-ID: <linux-wireless.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-On Tuesday 20 February 2007 09:23, Johannes Berg wrote:
-> > When ping finally starts working, all the data is transmitted at 1Mbps.
-> > And the QoS field is still there , so it's not a problem by itself.
-> 
-> Didn't you say that you're using mb's tree? You have a 4311 IIRC so I
-> wouldn't be surprised if there are problems with receive sensitivity
-> that go away after, say, two minutes (recalibration interval).
+_______________________________________________
+wireless mailing list
+wireless@lists.tuxdriver.org
+http://lists.tuxdriver.org/mailman/listinfo/wireless
 
-My tree has serious transmission problems (TX and I think RX, too).
-I'd like to fix that as soon as possible, but I really can't find the
-damn bug. It's kind of: I verified the whole PHY code for sanity and
-correctness, but still don't see where it is.
-
-Maybe we can workaround that by driving the card at highest
-attenuation control values, always. But that would obviously break
-regulatory domain laws, so... .
-Let's try to find the bug. :)
-
-If someone wants to help searching, please do so. I'm kind of
-running out of ideas where to search.
-It's some issue with the idle-TSSI measurement in the PHY powercontrol
-init code. We almost always get a 0 value there, but we should
-get something around 50. That messes up attenuation control, later.
-Well, why do we get a 0 there? I have no idea. Must be a bug somewhere
-in the code that's run before the idle-TSSI is measured.
-
--- 
-Greetings Michael.
+--===============0223322688==--
