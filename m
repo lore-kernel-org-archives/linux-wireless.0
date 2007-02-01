@@ -1,39 +1,49 @@
-Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from queue03-winn.ispmail.ntl.com
- ([81.103.221.57]:19703 "EHLO	queue03-winn.ispmail.ntl.com"
- rhost-flags-OK-OK-OK-OK)	by vger.kernel.org with ESMTP id S1752603AbXBJBte
- (ORCPT	<rfc822;linux-wireless@vger.kernel.org>); Fri,
- 09 Feb 2007 20:49:34 -0500
-Date: Sat, 10 Feb 2007 01:27:18 +0000 (GMT)
-From: Daniel Drake <dsd@gentoo.org>
-Subject: [PATCH] zd1211rw: Readd zd_addr_t cast
-Sender: linux-wireless-owner@vger.kernel.org
-To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
- kune@deine-taler.de, rpjday@mindspring.com
-Message-id: <20070210012718.3B6E87B409F@zog.reactivated.net>
-List-ID: <linux-wireless.vger.kernel.org>
+Return-path: <wireless-bounces@tuxdriver.com>
+Received: from mail.suse.cz (styx.suse.cz [82.119.242.94])
+	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l11ECpcq014682
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <wireless@lists.tuxdriver.org>; Thu, 01 Feb 2007 09:13:17 -0500
+Date: Thu, 01 Feb 2007 15:12:48 +0100
+From: Jiri Benc <jbenc@suse.cz>
+Subject: Re: [RFC] cfg80211 merge
+In-reply-to: <1ba2fa240702010604o3cc827d6j1319579e15f28b48@mail.gmail.com>
+Sender: wireless-bounces@tuxdriver.com
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: wireless@lists.tuxdriver.org
+Errors-to: wireless-bounces@tuxdriver.com
+Message-id: <20070201151248.6048d41b@griffin.suse.cz>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+References: <20070131013717.GA28076@tuxdriver.com>
+ <20070131024807.GA7061@jm.kir.nu> <20070131182908.13bfc374@griffin.suse.cz>
+ <20070131183255.GB8776@tuxdriver.com>
+ <20070131202549.5ee47bd4@griffin.suse.cz>
+ <20070131200741.GA22448@infradead.org> <20070131204438.GB19669@tuxdriver.com>
+ <1170277561.2236.6.camel@johannes.berg>
+ <1ba2fa240701311554i435d28b1x6822803326138cb5@mail.gmail.com>
+ <1170335262.17068.6.camel@johannes.berg>
+ <1ba2fa240702010604o3cc827d6j1319579e15f28b48@mail.gmail.com>
+List-Post: <mailto:wireless@lists.tuxdriver.org>
+List-Subscribe: <http://lists.tuxdriver.org/mailman/listinfo/wireless>,
+	<mailto:wireless-request@lists.tuxdriver.org?subject=subscribe>
+List-Unsubscribe: <http://lists.tuxdriver.org/mailman/listinfo/wireless>,
+	<mailto:wireless-request@lists.tuxdriver.org?subject=unsubscribe>
+List-Archive: <http://lists.tuxdriver.org/pipermail/wireless>
+List-Help: <mailto:wireless-request@lists.tuxdriver.org?subject=help>
+List-Id: Linux wireless networking development <wireless.lists.tuxdriver.org>
 
-Robert P.J. Day's recent commit ("getting rid of all casts of k[cmz]alloc()
-calls") introduced a sparse warning for zd1211rw, related to our type-checking
-of addresses.
+On Thu, 1 Feb 2007 16:04:53 +0200, Tomas Winkler wrote:
+> Can you elaborate shortly.  I'm not from time 0 on this list.
+> Thanks.
 
-	zd_chip.c:116:15: warning: implicit cast to nocast type
+Use Google and list archives, that's why their exist.
 
-This patch readds the type cast, it is correct.
+ Jiri
 
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
-
-Index: linux/drivers/net/wireless/zd1211rw/zd_chip.c
-===================================================================
---- linux.orig/drivers/net/wireless/zd1211rw/zd_chip.c
-+++ linux/drivers/net/wireless/zd1211rw/zd_chip.c
-@@ -113,7 +113,7 @@ int zd_ioread32v_locked(struct zd_chip *
- 
- 	/* Allocate a single memory block for values and addresses. */
- 	count16 = 2*count;
--	a16 = kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
-+	a16 = (zd_addr_t *) kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
- 		                   GFP_NOFS);
- 	if (!a16) {
- 		dev_dbg_f(zd_chip_dev(chip),
+-- 
+Jiri Benc
+SUSE Labs
+_______________________________________________
+wireless mailing list
+wireless@lists.tuxdriver.org
+http://lists.tuxdriver.org/mailman/listinfo/wireless
