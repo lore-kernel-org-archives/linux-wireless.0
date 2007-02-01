@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44106 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932139AbXB1Liy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 06:38:54 -0500
-Subject: [PATCH] export device_rename
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Linux Kernel list <linux-kernel@vger.kernel.org>
-Cc: Greg KH <greg@kroah.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 28 Feb 2007 12:38:31 +0100
-Message-Id: <1172662711.3681.51.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2301 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161234AbXBABeX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Jan 2007 20:34:23 -0500
+Date: Wed, 31 Jan 2007 20:17:22 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: wireless@lists.tuxdriver.org, linux-wireless@vger.kernel.org
+Subject: wireless list moved to vger.kernel.org
+Message-ID: <20070201011721.GA25134@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In wireless we'd like to allow renaming of the phy devices we surface in
-sysfs. The base wireless code, however, can be built modular and thus we
-need device_rename exported.
+In response to some community requests, I have asked David
+Miller to create a list for us on vger.kernel.org.  David has
+obliged that request, so I have restricted new subscriptions to
+wireless@lists.tuxdriver.org and I am asking everyone to move wireless
+discussions to the new list.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+	linux-wireless@vger.kernel.org
 
----
-Is this acceptable? For testing reasons we want the cfg80211 code
-buildable as a module.
+Most of you should have been automatically subscribed to the new list.
+I think there are a handful of people who joined the tuxdriver list
+within the past 6 hours or so.	Those people may need to subscribe
+themselves to the vger list.
 
- drivers/base/core.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Sorry for the confusion.  FWIW, vger is probably a better home for
+our list anyway.
 
---- wireless-dev.orig/drivers/base/core.c	2007-02-28 12:35:37.123956566 +0100
-+++ wireless-dev/drivers/base/core.c	2007-02-28 12:35:51.763956566 +0100
-@@ -1029,7 +1029,7 @@ int device_rename(struct device *dev, ch
- 
- 	return error;
- }
--
-+EXPORT_SYMBOL_GPL(device_rename);
- 
- static int device_move_class_links(struct device *dev,
- 				   struct device *old_parent,
+Thanks,
 
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
