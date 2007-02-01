@@ -1,79 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:22507 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161212AbXBOUwZ (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49052 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422892AbXBANzI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Feb 2007 15:52:25 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH] d80211: Simplify channel & mode configuration
-Date: Thu, 15 Feb 2007 15:52:02 -0500
-Cc: linux-wireless@vger.kernel.org
-References: <200702092325.39994.flamingice@sourmilk.net> <200702092343.54479.flamingice@sourmilk.net> <20070215211528.623e1c14@griffin.suse.cz>
-In-Reply-To: <20070215211528.623e1c14@griffin.suse.cz>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart8746436.xBg7uj3rIC";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200702151552.02331.flamingice@sourmilk.net>
+	Thu, 1 Feb 2007 08:55:08 -0500
+Subject: [PATCH] maintainers: update all wireless entries
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain
+Date: Thu, 01 Feb 2007 14:45:18 +0100
+Message-Id: <1170337518.22420.1.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart8746436.xBg7uj3rIC
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+This patch updates the MAINTAINERS file putting the new list into place
+wherever appropriate. For some entries, I replaced netdev, for others I
+just added this one.
 
-On Thursday 15 February 2007 15:15, Jiri Benc wrote:
-> > +	local->hw.conf.channel =3D chan->chan;
-> > +	local->hw.conf.channel_val =3D chan->val;
-> > +	local->hw.conf.power_level =3D chan->power_level;
-> > +	local->hw.conf.freq =3D chan->freq;
-> > +	local->hw.conf.phymode =3D mode->mode;
-> > +	local->hw.conf.antenna_max =3D chan->antenna_max;
->
-> What about passing ieee80211_channel and ieee80211_hw_mode structures
-> instead of a ton of variables? (Just an idea, not a problem with the
-> patch.)
->
-I was thinking that too, but I was trying to avoid driver api changes. I mi=
-ght=20
-make a patch for it later if it still makes sense then.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-> > +	if (local->curr_rates !=3D mode->rates)
-> > +		rate_control_clear(local);
-> > +	local->curr_rates =3D mode->rates;
-> > +	local->num_curr_rates =3D mode->num_rates;
-> > +	ieee80211_prepare_rates(local);
->
-> This will trigger rate control reinitialization when scanning on abg
-> cards. It's needed but not obvious at first sight. Perhaps some comment
-> would be useful here? (Again, not a problem with the patch, just
-> something I realized looking at the patch and thinking why the hell do
-> we do the reinitialization here?)
->
-Yeah, this is why rate control never seems to work right on my system -=20
-NetworkManager keeps scanning and resetting the rate control. I'm not sure=
-=20
-exactly how to fix it, so I just left it..
+--- mb-wireless.orig/MAINTAINERS	2007-02-01 11:51:45.356144295 +0100
++++ mb-wireless/MAINTAINERS	2007-02-01 12:03:06.716144295 +0100
+@@ -242,7 +242,7 @@ S:	Maintained
+ ADM8211 WIRELESS DRIVER
+ P:	Michael Wu
+ M:	flamingice@sourmilk.net
+-L:	netdev@vger.kernel.org
++L:	linux-wireless@vger.kernel.org
+ W:	http://aluminum.sourmilk.net/adm8211/
+ T:	git kernel.org:/pub/scm/linux/kernel/git/mwu/d80211-drivers.git
+ S:	Maintained
+@@ -572,6 +572,7 @@ S:	Supported
+ ATMEL WIRELESS DRIVER
+ P:	Simon Kelley
+ M:	simon@thekelleys.org.uk
++L:	linux-wireless@vger.kernel.org
+ W:	http://www.thekelleys.org.uk/atmel
+ W:	http://atmelwlandriver.sourceforge.net/
+ S:	Maintained
+@@ -620,6 +621,7 @@ P:	Michael Buesch
+ M:	mb@bu3sch.de
+ P:	Stefano Brivio
+ M:	st3@riseup.net
++L:	linux-wireless@vger.kernel.org
+ W:	http://bcm43xx.berlios.de/
+ S:	Maintained
+ 
+@@ -628,6 +630,7 @@ P:	Larry Finger
+ M:	Larry.Finger@lwfinger.net
+ P:	Stefano Brivio
+ M:	st3@riseup.net
++L:	linux-wireless@vger.kernel.org
+ W:	http://bcm43xx.berlios.de/
+ S:	Maintained
+ 
+@@ -1456,6 +1459,7 @@ S:	Supported
+ HOST AP DRIVER
+ P:	Jouni Malinen
+ M:	jkmaline@cc.hut.fi
++L:	linux-wireless@vger.kernel.org
+ L:	hostap@shmoo.com
+ W:	http://hostap.epitest.fi/
+ S:	Maintained
+@@ -1750,6 +1754,7 @@ P:	Yi Zhu
+ M:	yi.zhu@intel.com
+ P:	James Ketrenos
+ M:	jketreno@linux.intel.com
++L:	linux-wireless@vger.kernel.org
+ L:	ipw2100-devel@lists.sourceforge.net
+ L:	http://lists.sourceforge.net/mailman/listinfo/ipw2100-devel
+ W:	http://ipw2100.sourceforge.net
+@@ -1760,6 +1765,7 @@ P:	Yi Zhu
+ M:	yi.zhu@intel.com
+ P:	James Ketrenos
+ M:	jketreno@linux.intel.com
++L:	linux-wireless@vger.kernel.org
+ L:	ipw2100-devel@lists.sourceforge.net
+ L:	http://lists.sourceforge.net/mailman/listinfo/ipw2100-devel
+ W:	http://ipw2200.sourceforge.net
+@@ -2325,7 +2331,7 @@ S:	Maintained
+ NETWORKING [WIRELESS]
+ P:	John W. Linville
+ M:	linville@tuxdriver.com
+-L:	netdev@vger.kernel.org
++L:	linux-wireless@vger.kernel.org
+ T:	git kernel.org:/pub/scm/linux/kernel/git/linville/wireless-2.6.git
+ S:	Maintained
+ 
+@@ -2454,6 +2460,7 @@ P:	Pavel Roskin
+ M:	proski@gnu.org
+ P:	David Gibson
+ M:	hermes@gibson.dropbear.id.au
++L:	linux-wireless@vger.kernel.org
+ L:	orinoco-users@lists.sourceforge.net
+ L:	orinoco-devel@lists.sourceforge.net
+ W:	http://www.nongnu.org/orinoco/
+@@ -2623,7 +2630,7 @@ S:	Supported
+ P54 WIRELESS DRIVER
+ P:	Michael Wu
+ M:	flamingice@sourmilk.net
+-L:	netdev@vger.kernel.org
++L:	linux-wireless@vger.kernel.org
+ L:	developers@islsm.org
+ W:	http://prism54.org
+ T:	git kernel.org:/pub/scm/linux/kernel/git/mwu/d80211-drivers.git
+@@ -2632,7 +2639,7 @@ S:	Maintained
+ PRISM54 WIRELESS DRIVER
+ P:	Prism54 Development Team
+ M:	prism54-private@prism54.org
+-L:	netdev@vger.kernel.org
++L:	linux-wireless@vger.kernel.org
+ W:	http://prism54.org
+ S:	Maintained
+ 
+@@ -2697,12 +2704,12 @@ S:	Maintained
+ RAYLINK/WEBGEAR 802.11 WIRELESS LAN DRIVER
+ P:	Corey Thomas
+ M:	corey@world.std.com
+-L:	linux-kernel@vger.kernel.org
++L:	linux-wireless@vger.kernel.org
+ S:	Maintained
+ 
+ Ralink rt2x00 WLAN driver
+ P:	rt2x00 project
+-M:	rt2400-devel@lists.sourceforge.net
++L:	linux-wireless@vger.kernel.org
+ L:	rt2400-devel@lists.sourceforge.net
+ W:	http://rt2x00.serialmonkey.com/
+ S:	Maintained
+@@ -2964,7 +2971,7 @@ M:	josejx@gentoo.org
+ P:	Daniel Drake
+ M:	dsd@gentoo.org
+ W:	http://softmac.sipsolutions.net/
+-L:	netdev@vger.kernel.org
++L:	linux-wireless@vger.kernel.org
+ S:	Maintained
+ 
+ SOFTWARE RAID (Multiple Disks) SUPPORT
+@@ -3641,6 +3648,7 @@ S:	Maintained
+ WAVELAN NETWORK DRIVER & WIRELESS EXTENSIONS
+ P:	Jean Tourrilhes
+ M:	jt@hpl.hp.com
++L:	linux-wireless@vger.kernel.org
+ W:	http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/
+ S:	Maintained
+ 
+@@ -3658,6 +3666,7 @@ S:	Maintained
+ WL3501 WIRELESS PCMCIA CARD DRIVER
+ P:	Arnaldo Carvalho de Melo
+ M:	acme@conectiva.com.br
++L:	linux-wireless@vger.kernel.org
+ W:	http://advogato.org/person/acme
+ S:	Maintained
+ 
+@@ -3720,6 +3729,7 @@ M:	dsd@gentoo.org
+ P:	Ulrich Kunitz
+ M:	kune@deine-taler.de
+ W:	http://zd1211.ath.cx/wiki/DriverRewrite
++L:	linux-wireless@vger.kernel.org
+ L:	zd1211-devs@lists.sourceforge.net (subscribers-only)
+ S:	Maintained
+ 
 
-=2DMichael Wu
 
---nextPart8746436.xBg7uj3rIC
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBF1MfyT3Oqt9AH4aERAuhcAKCyB6omR4zuwK9gmBEtfSoaRROhPACePoM9
-4BJQI0bpfs7ugoYhdLcXt9s=
-=efFc
------END PGP SIGNATURE-----
-
---nextPart8746436.xBg7uj3rIC--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
