@@ -1,96 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:12373 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1946403AbXBCIm3 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33163
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751784AbXBAPjd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Feb 2007 03:42:29 -0500
-Received: from localhost (localhost.rutgers.edu [127.0.0.1])
-	by annwn14.rutgers.edu (Postfix) with ESMTP id 17B756AD
-	for <linux-wireless@vger.kernel.org>; Sat,  3 Feb 2007 03:03:38 -0500 (EST)
-Received: from annwn14.rutgers.edu ([127.0.0.1])
-	by localhost (annwn14.rutgers.edu [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 05063-01 for <linux-wireless@vger.kernel.org>;
-	Sat, 3 Feb 2007 03:03:38 -0500 (EST)
-Received: from alpha.patmedia.net (host-24-225-148-91.patmedia.net [24.225.148.91])
-	by annwn14.rutgers.edu (Postfix) with ESMTP id E8B046A5
-	for <linux-wireless@vger.kernel.org>; Sat,  3 Feb 2007 03:03:37 -0500 (EST)
-From: Michael Wu <flamingice@sourmilk.net>
-To: linux-wireless@vger.kernel.org
-Subject: d80211-drivers pull request (week05)
+	Thu, 1 Feb 2007 10:39:33 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Fwd: Re: Anyone have notes from Wireless Summit?
+Date: Thu, 1 Feb 2007 16:37:56 +0100
+Cc: linux-wireless@vger.kernel.org, Jon Smirl <jonsmirl@gmail.com>,
+	Stephen Hemminger <shemminger@osdl.org>
 MIME-Version: 1.0
-Date: Sat, 3 Feb 2007 03:03:04 -0500
-Content-Type: multipart/signed;
-  boundary="nextPart11479563.eXKnVQLTJI";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200702030303.09034.flamingice@sourmilk.net>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200702011637.56951.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart11479563.eXKnVQLTJI
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+[Resend. Maybe it get's through the list now :)]
 
-[resend, forgot to CC linux-wireless]
+On Thursday 01 February 2007 05:43, Larry Finger wrote:
+> Stephen Hemminger wrote:
+> > On Wed, 31 Jan 2007 20:16:52 -0500
+> > "Jon Smirl" <jonsmirl@gmail.com> wrote:
+> > 
+> >> On 1/31/07, Larry Finger <larry.finger@lwfinger.net> wrote:
+> >>> I've seen the program and the PDF's posted at
+> >>> http://developer.osdl.org/dev/desktop_architects/index.php and I've seen some discussion about
+> >>> what/was not agreed upon. Does anyone have any notes on the main and/or breakout sessions that could
+> >>> be posted here, or in some other venue.
+> > 
+> > 
+> > I put all the notes that were sent to me into:
+> >   http://developer.osdl.org/dev/desktop_architects/index.php/Wireless_Summit_2
+> > 
+> > The PDF slides I uploaded and any notes I converted to Wiki pages
+> > 
+> 
+> Thanks Stephen. BTW, is there a list of names to go with the photo? After communicating with all of
+> you for a year, or so, I'd like to have faces to go with the names.
 
-Hi John,
+I can try to create a list. But I don't remember all the names.
+Please also apologize for any cruel typos :)
+I'll do from left to right.
 
-Please pull
-git://git.kernel.org/pub/scm/linux/kernel/git/mwu/d80211-drivers.git
-for these patches:
+1) Mohammed Abbas
+2) Don't remember, sorry.
+3) From Nokia. Don't remember your name, sorry. :)
+4) Jouni Malinen
+5) Don't remember the name, sorry.
+6) Jiri Benc
+7) Don't remember, sorry. But I remember your interresting talks about laws and stuff. ;)
+8) Don't remember, either :)
+9) Michael Buesch
+10) James Ketrenos
+11) Sebastian Gottschall
+12) Yi Zhu (I think. Not sure, sorry)
+13) not sure what his name was. Tomas Winkler?
+14) Daniel Drake
+15) Hm, dunno. Sorry.
+16) John Linville
+17) Johannes Berg
+18) Dan Williams
+19) Nick Kossifidis
+20) Mark Powell
+21) Luis Rodriguez
+22) Don't recognize him on the tiiiiiny photo.
+23) Michael Wu
+24) Stephen Hemminger
+25) Don't remember the name, too. Sorry.
 
-adm8211-week05 branch:
-Michael Wu (1):
-      adm8211: set MAC address properly
+Henry Ptasiniski from Broadcom doesn't seem to be on the
+picture. I think he left earlier.
 
-p54-week05 branch:
-Michael Wu (3):
-      p54: set MAC address properly
-      p54usb: silence warnings on BE
-      p54pci: make work for big endian
+Hope this helps. Someone else please fill in the missing ones. :)
 
-zd1211rw-week05 branch:
-Daniel Drake (3):
-      zd1211rw-d80211: Generic HMAC initialization
-      zd1211rw-d80211: Consistency for address space constants
-      zd1211rw-d80211: Remove addressing abstraction
+Here are some bigger pictures made by Luis
+http://mcgrof.com/albums/2007/01/osdl-01-20/
 
-Maxime Austruy (1):
-      zd1211rw-d80211: fix potential leak in usb_init
+That's Luis:
+http://mcgrof.com/albums/2007/01/osdl-01-20/load.php?image=dscf0085.jpg
 
-Michael Wu (1):
-      zd1211rw-d80211: Support for multicast addresses
+Left me, right Jiri:
+http://mcgrof.com/albums/2007/01/osdl-01-20/load.php?image=dscf0066.jpg
 
-Ulrich Kunitz (2):
-      zd1211rw-d80211: Fixed array size issue in reset_mode
-      zd1211rw-d80211: Reset device in the probe call
 
-Common to all branches:
-Michael Wu (1):
-      Remove unnecessary includes and SET_MODULE_OWNER
+So, now your picture... :D
 
-Patches ported from zd1211rw (softmac) now have the original author of the=
-=20
-patch set as the author in the commit when the "porting" was trivial.
-
-Thanks,
-=2DMichael Wu
-
---nextPart11479563.eXKnVQLTJI
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-
-iD8DBQBFxEG8T3Oqt9AH4aERAsM3AKDILmlU3Vnoxaan1MLo02ViD6AJQQCbB12B
-WAo+2OFjl+WHFmO3N8WYLEA=
-=zqMp
------END PGP SIGNATURE-----
-
---nextPart11479563.eXKnVQLTJI--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Greetings Michael.
