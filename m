@@ -1,54 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58736 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161273AbXBGMSp (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33173
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751823AbXBAPtk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Feb 2007 07:18:45 -0500
-Subject: Re: [PATCH] bcm43xx: Fix for oops on resume
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, netdev@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <45c8bd59.oamnvaNRMZvKoPBa%Larry.Finger@lwfinger.net>
-References: <45c8bd59.oamnvaNRMZvKoPBa%Larry.Finger@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nIAeVNKkW8S0delCnSTK"
-Date: Wed, 07 Feb 2007 13:15:49 +0100
-Message-Id: <1170850549.6798.22.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 1 Feb 2007 10:49:40 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: Anyone have notes from Wireless Summit?
+Date: Thu, 1 Feb 2007 16:19:13 +0100
+Cc: Stephen Hemminger <shemminger@osdl.org>,
+	Jon Smirl <jonsmirl@gmail.com>, linux-wireless@vger.kernel.org
+References: <20070131.155116.62344146.davem@davemloft.net> <20070131202757.7dc1058c@oldman> <45C16FDD.7040800@lwfinger.net>
+In-Reply-To: <45C16FDD.7040800@lwfinger.net>
+MIME-Version: 1.0
+Message-Id: <200702011619.13456.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 01 February 2007 05:43, Larry Finger wrote:
+> Stephen Hemminger wrote:
+> > On Wed, 31 Jan 2007 20:16:52 -0500
+> > "Jon Smirl" <jonsmirl@gmail.com> wrote:
+> > 
+> >> On 1/31/07, Larry Finger <larry.finger@lwfinger.net> wrote:
+> >>> I've seen the program and the PDF's posted at
+> >>> http://developer.osdl.org/dev/desktop_architects/index.php and I've seen some discussion about
+> >>> what/was not agreed upon. Does anyone have any notes on the main and/or breakout sessions that could
+> >>> be posted here, or in some other venue.
+> > 
+> > 
+> > I put all the notes that were sent to me into:
+> >   http://developer.osdl.org/dev/desktop_architects/index.php/Wireless_Summit_2
+> > 
+> > The PDF slides I uploaded and any notes I converted to Wiki pages
+> > 
+> 
+> Thanks Stephen. BTW, is there a list of names to go with the photo? After communicating with all of
+> you for a year, or so, I'd like to have faces to go with the names.
 
---=-nIAeVNKkW8S0delCnSTK
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I can try to create a list. But I don't remember all the names.
+Please also apologize for any cruel typos :)
+I'll do from left to right.
 
-On Tue, 2007-02-06 at 11:39 -0600, Larry Finger wrote:
-> There is a kernel oops on bcm43xx when resuming due to an overly tight ti=
-meout loop.
+1) Mohammed Abbas
+2) Don't remember, sorry.
+3) From Nokia. Don't remember your name, sorry. :)
+4) Jouni Malinen
+5) Don't remember the name, sorry.
+6) Jiri Benc
+7) Don't remember, sorry. But I remember your interresting talks about laws and stuff. ;)
+8) Don't remember, either :)
+9) Michael Buesch
+10) James Ketrenos
+11) Sebastian Gottschall
+12) Yi Zhu (I think. Not sure, sorry)
+13) not sure what his name was. Tomas Winkler?
+14) Daniel Drake
+15) Hm, dunno. Sorry.
+16) John Linville
+17) Johannes Berg
+18) Dan Williams
+19) Nick Kossifidis
+20) Mark Powell
+21) Luis Rodriguez
+22) Don't recognize him on the tiiiiiny photo.
+23) Michael Wu
+24) Stephen Hemminger
+25) Don't remember the name, too. Sorry.
 
-Come to think of it... Is there any chance of fixing the actual oops
-that happens in this case? I can imagine broken hardware or firmware
-that causes this as well and we don't really want to oops in that case
-either... That's why we have the timeout in the first place, to not hang
-there forever.
+Henry Ptasiniski from Broadcom doesn't seem to be on the
+picture. I think he left earlier.
 
-Nothing against this patch though.
+Hope this helps. Someone else please fill in the missing ones. :)
 
-johannes
+Here are some bigger pictures made by Luis
+http://mcgrof.com/albums/2007/01/osdl-01-20/
 
---=-nIAeVNKkW8S0delCnSTK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+That's Luis:
+http://mcgrof.com/albums/2007/01/osdl-01-20/load.php?image=dscf0085.jpg
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Left me, right Jiri:
+http://mcgrof.com/albums/2007/01/osdl-01-20/load.php?image=dscf0066.jpg
 
-iD8DBQBFycL1/ETPhpq3jKURAr3PAKC1GFxqEpU6pUw+vRwN5Cjnf1SIdwCfUu9L
-iPcN5QVP51rRYtc8YwE3A7Y=
-=cvY/
------END PGP SIGNATURE-----
 
---=-nIAeVNKkW8S0delCnSTK--
+So, now your picture... :D
 
+-- 
+Greetings Michael.
