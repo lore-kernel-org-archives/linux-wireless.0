@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.sea5.speakeasy.net ([69.17.117.4]:53094 "EHLO
-	mail2.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752520AbXBDTlK (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.244]:58148 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946137AbXBBVm6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Feb 2007 14:41:10 -0500
-Date: Sun, 4 Feb 2007 11:41:07 -0800
-From: Jouni Malinen <jkmaline@cc.hut.fi>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Jon Smirl <jonsmirl@gmail.com>, Pavel Roskin <proski@gnu.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: SoftMAC vs FullMAC
-Message-ID: <20070204194107.GE6632@jm.kir.nu>
-References: <9e4733910702040922n63736d27h7ab027dc90ae8989@mail.gmail.com> <20070204123048.4bhesocg4kosgscg@webmail.spamcop.net> <9e4733910702041031i5edd6dfeq7f8c5179fee5e00e@mail.gmail.com> <200702042007.29357.mb@bu3sch.de>
+	Fri, 2 Feb 2007 16:42:58 -0500
+Received: by an-out-0708.google.com with SMTP id b33so725302ana
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Feb 2007 13:42:58 -0800 (PST)
+Message-ID: <9e4733910702021342p67df7962yc88625e991efbf2b@mail.gmail.com>
+Date: Fri, 2 Feb 2007 16:42:57 -0500
+From: "Jon Smirl" <jonsmirl@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: d80211, redundant casts to iw_handler_def
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200702042007.29357.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 04, 2007 at 08:07:29PM +0100, Michael Buesch wrote:
+These two casts are redundant.
 
-> If creating and uploading the keys to the device is less work than
-> doing crypto in software, then it is clearly a win.
-
-Not necessarily..
-
-> And that _is_ the case for bcm43xx (at least. I don't know about other
-> devices' hwcrypto capabilities).
-> Doing less on the CPU and more in hw is always a win. I'm not sure
-> how you can say that you're not sure it is. ;)
-
-As an example, some of the earlier Prism2 designs supported WEP in
-hardware/firmware. Yes, it would free up some host CPU, but the maximum
-throughput dropped from ca. 6 Mbps to 4 Mbps (and much lower in some
-cases).. WEP is quite fast operation, so using the host CPU to double
-throughput sounds like a good trade in many cases.
+Signed-off-by: Jon Smirl <jonsmirl@gmail.com>
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+diff --git a/net/d80211/ieee80211.c b/net/d80211/ieee80211.c
+index 7353ed3..260ce9c 100644
+--- a/net/d80211/ieee80211.c
++++ b/net/d80211/ieee80211.c
+@@ -4313,8 +4313,7 @@ void ieee80211_if_setup(struct net_device *dev)
+ {
+ 	ether_setup(dev);
+ 	dev->hard_start_xmit = ieee80211_subif_start_xmit;
+-	dev->wireless_handlers =
+-		(struct iw_handler_def *) &ieee80211_iw_handler_def;
++	dev->wireless_handlers = &ieee80211_iw_handler_def;
+ 	dev->do_ioctl = ieee80211_ioctl;
+ 	dev->set_mac_address = ieee80211_set_mac_address;
+ 	dev->set_multicast_list = ieee80211_set_multicast_list;
+@@ -4472,8 +4471,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t
+priv_data_len,
+         sta_info_init(local);
+
+ 	mdev->hard_start_xmit = ieee80211_master_start_xmit;
+-	mdev->wireless_handlers =
+-		(struct iw_handler_def *) &ieee80211_iw_master_handler_def;
++	mdev->wireless_handlers = &ieee80211_iw_master_handler_def;
+         mdev->do_ioctl = ieee80211_ioctl;
+ 	mdev->change_mtu = ieee80211_change_mtu;
+         mdev->tx_timeout = ieee80211_tx_timeout;
