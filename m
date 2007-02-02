@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:58549
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965194AbXBTUCj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Feb 2007 15:02:39 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Fix max_rssi values signedness bug
-Date: Tue, 20 Feb 2007 21:02:14 +0100
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200702202102.14354.mb@bu3sch.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4547 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946098AbXBBVf7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Feb 2007 16:35:59 -0500
+Date: Fri, 2 Feb 2007 16:27:47 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: jeff@garzik.org
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Please pull "upstream-fixes" branch of wireless-2.6
+Message-ID: <20070202212747.GC9382@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-char is not signed on all architectures.
-This fixes a compiletime warning and bug on PPC.
+This is a fix for 2.6.20 (time permitting).
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+---
 
+The following changes since commit f56df2f4db6e4af87fb8e941cff69f4501a111df:
+  Linus Torvalds (1):
+        Linux 2.6.20-rc7
 
-Index: bu3sch-wireless-dev/drivers/net/wireless/d80211/rt2x00/rt2500pci.c
-===================================================================
---- bu3sch-wireless-dev.orig/drivers/net/wireless/d80211/rt2x00/rt2500pci.c	2007-02-20 20:35:17.000000000 +0100
-+++ bu3sch-wireless-dev/drivers/net/wireless/d80211/rt2x00/rt2500pci.c	2007-02-20 20:58:50.000000000 +0100
-@@ -2630,7 +2630,7 @@ static int rt2500pci_init_eeprom(struct 
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_CALIBRATE_OFFSET, &eeprom);
- 	rt2x00dev->hw->max_rssi =
- 		rt2x00_get_field16(eeprom, EEPROM_CALIBRATE_OFFSET_RSSI);
--	if (rt2x00dev->hw->max_rssi == 0x00 || rt2x00dev->hw->max_rssi == (char)0xff)
-+	if (rt2x00dev->hw->max_rssi == 0x00 || rt2x00dev->hw->max_rssi == (s8)0xff)
- 		rt2x00dev->hw->max_rssi = MAX_RX_SSI;
- 	rt2x00dev->hw->max_noise = -110;
+are found in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-fixes
+
+Maxime Austruy (1):
+      zd1211rw: fix potential leak in usb_init
+
+ drivers/net/wireless/zd1211rw/zd_usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+index 605e96e..2468ad6 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -1128,6 +1128,7 @@ static int __init usb_init(void)
  
-Index: bu3sch-wireless-dev/drivers/net/wireless/d80211/rt2x00/rt2500usb.c
-===================================================================
---- bu3sch-wireless-dev.orig/drivers/net/wireless/d80211/rt2x00/rt2500usb.c	2007-02-20 20:54:20.000000000 +0100
-+++ bu3sch-wireless-dev/drivers/net/wireless/d80211/rt2x00/rt2500usb.c	2007-02-20 20:59:23.000000000 +0100
-@@ -2474,7 +2474,7 @@ static int rt2500usb_init_eeprom(struct 
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_CALIBRATE_OFFSET, &eeprom);
- 	rt2x00dev->hw->max_rssi =
- 		rt2x00_get_field16(eeprom, EEPROM_CALIBRATE_OFFSET_RSSI);
--	if (rt2x00dev->hw->max_rssi == 0x00 || rt2x00dev->hw->max_rssi == (char)0xff)
-+	if (rt2x00dev->hw->max_rssi == 0x00 || rt2x00dev->hw->max_rssi == (s8)0xff)
- 		rt2x00dev->hw->max_rssi = MAX_RX_SSI;
- 	rt2x00dev->hw->max_noise = -110;
- 
-
+ 	r = usb_register(&driver);
+ 	if (r) {
++		destroy_workqueue(zd_workqueue);
+ 		printk(KERN_ERR "%s usb_register() failed. Error number %d\n",
+ 		       driver.name, r);
+ 		return r;
 -- 
-Greetings Michael.
+John W. Linville
+linville@tuxdriver.com
