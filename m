@@ -1,106 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:61934 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030311AbXBRFcD (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:47568
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750824AbXBCRdj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Feb 2007 00:32:03 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Jiri Benc <jbenc@suse.cz>
-Subject: [PATCH] d80211: Allow drivers to configure default regulatory domain
-Date: Sun, 18 Feb 2007 00:31:33 -0500
-Cc: linux-wireless@vger.kernel.org
+	Sat, 3 Feb 2007 12:33:39 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH RFC] d80211: Fix TKIP phase1 key mixing for hwcrypto
+Date: Sat, 3 Feb 2007 18:32:48 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart6777790.CFYePYjXNe";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200702180031.38710.flamingice@sourmilk.net>
+Message-Id: <200702031832.48505.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart6777790.CFYePYjXNe
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+This patch is not runtime tested, as I did not implement tkip
+support in bcm43xx, yet.
 
-d80211: Allow drivers to configure default regulatory domain
+--
 
-This patch allows drivers to configure the default set of channels if the
-device reports its default regulatory domain.
+This fixes TKIP phase1 key mixing for hwcrypto on BigEndian
+platforms.
+Casting an u8 array to u16* is wrong and will only work
+on le platforms.
+Make it explicit and expect an u8* parameter for
+ieee80211_tkip_gen_phase1key(). The function will take
+care to return an u8 array, instead of an u16 array, as
+that's what drivers assume.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-=2D--
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
- include/net/d80211.h   |    7 ++++++-
- net/d80211/ieee80211.c |    5 +++--
- 2 files changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/include/net/d80211.h b/include/net/d80211.h
-index 25a4dca..e0180ec 100644
-=2D-- a/include/net/d80211.h
-+++ b/include/net/d80211.h
-@@ -54,7 +54,9 @@
-  * freq, and val fields. Other fields will be filled in by 80211.o based on
-  * hostapd information and low-level driver does not need to use them. The
-  * limits for each channel will be provided in 'struct ieee80211_conf' when
-=2D * configuring the low-level driver with hw->config callback. */
-+ * configuring the low-level driver with hw->config callback. If a device =
-has
-+ * a default regulatory domain, IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED=
-=20
-can
-+ * be set to let the driver configure all fields. */
- struct ieee80211_channel {
- 	short chan; /* channel number (IEEE 802.11) */
- 	short freq; /* frequency in MHz */
-@@ -532,6 +534,9 @@ struct ieee80211_hw {
- 	/* Do TKIP phase1 and phase2 key mixing in stack and send the generated
- 	 * per-packet RC4 key with each TX frame when doing hwcrypto */
- #define IEEE80211_HW_TKIP_REQ_PHASE2_KEY (1<<14)
-+	/* Channels are already configured to the default regulatory domain
-+	 * specified in the device's EEPROM */
-+#define IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED (1<<15)
-=20
- 	u32 flags;			/* hardware flags defined above */
-=20
-diff --git a/net/d80211/ieee80211.c b/net/d80211/ieee80211.c
-index 0e5f23f..5af42aa 100644
-=2D-- a/net/d80211/ieee80211.c
-+++ b/net/d80211/ieee80211.c
-@@ -4652,6 +4652,9 @@ int ieee80211_register_hw(struct ieee802
- 	memcpy(local->mdev->dev_addr, local->hw.perm_addr, ETH_ALEN);
- 	SET_NETDEV_DEV(local->mdev, local->hw.dev);
-=20
-+	if (!(hw->flags & IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED))
-+		ieee80211_init_client(local->mdev);
+Index: bu3sch-wireless-dev/net/d80211/tkip.c
+===================================================================
+--- bu3sch-wireless-dev.orig/net/d80211/tkip.c	2007-01-11 19:09:43.000000000 +0100
++++ bu3sch-wireless-dev/net/d80211/tkip.c	2007-02-03 18:23:52.000000000 +0100
+@@ -192,10 +192,15 @@ u8 * ieee80211_tkip_add_iv(u8 *pos, stru
+ 
+ 
+ void ieee80211_tkip_gen_phase1key(struct ieee80211_key *key, u8 *ta,
+-				  u16 *phase1key)
++				  u8 *phase1key)
+ {
++	__le16 *k = (__le16 *)phase1key;
++	int i;
 +
- 	result =3D register_netdevice(local->mdev);
- 	if (result < 0) {
- 		rtnl_unlock();
-@@ -4746,8 +4749,6 @@ int ieee80211_register_hwmode(struct iee
- 		ieee80211_prepare_rates(local);
- 	}
-=20
-=2D	ieee80211_init_client(local->mdev);
-=2D
- 	return 0;
+ 	tkip_mixing_phase1(ta, &key->key[ALG_TKIP_TEMP_ENCR_KEY],
+-			   key->u.tkip.iv32, phase1key);
++			   key->u.tkip.iv32, (u16 *)k);
++	for (i = 0; i < 5; i++)
++		k[i] = cpu_to_le16(k[i]);
  }
- EXPORT_SYMBOL(ieee80211_register_hwmode);
+ 
+ void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
+Index: bu3sch-wireless-dev/net/d80211/tkip.h
+===================================================================
+--- bu3sch-wireless-dev.orig/net/d80211/tkip.h	2007-01-11 19:09:43.000000000 +0100
++++ bu3sch-wireless-dev/net/d80211/tkip.h	2007-02-03 18:19:18.000000000 +0100
+@@ -16,7 +16,7 @@
+ u8 * ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+ 			   u8 iv0, u8 iv1, u8 iv2);
+ void ieee80211_tkip_gen_phase1key(struct ieee80211_key *key, u8 *ta,
+-				  u16 *phase1key);
++				  u8 *phase1key);
+ void ieee80211_tkip_gen_rc4key(struct ieee80211_key *key, u8 *ta,
+ 			       u8 *rc4key);
+ void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
+Index: bu3sch-wireless-dev/net/d80211/wpa.c
+===================================================================
+--- bu3sch-wireless-dev.orig/net/d80211/wpa.c	2007-01-11 19:09:43.000000000 +0100
++++ bu3sch-wireless-dev/net/d80211/wpa.c	2007-02-03 18:18:50.000000000 +0100
+@@ -349,7 +349,7 @@ skip_iv_inc:
+ 			if (key->u.tkip.iv16 == 0 ||
+ 			    !key->u.tkip.tx_initialized) {
+ 				ieee80211_tkip_gen_phase1key(key, hdr->addr2,
+-					    (u16 *)tx->u.tx.control->tkip_key);
++					tx->u.tx.control->tkip_key);
+ 				key->u.tkip.tx_initialized = 1;
+ 				tx->u.tx.control->flags |=
+ 					    IEEE80211_TXCTL_TKIP_NEW_PHASE1_KEY;
 
---nextPart6777790.CFYePYjXNe
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBF1+S6T3Oqt9AH4aERAlOHAKCxKTptQxFPMQSOsZgSZctyEClalwCgvRBb
-X0Km41ICsSxfvmpGTAKUeao=
-=cjA5
------END PGP SIGNATURE-----
-
---nextPart6777790.CFYePYjXNe--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Greetings Michael.
