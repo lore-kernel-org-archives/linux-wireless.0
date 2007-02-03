@@ -1,64 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-36.dex002.intermedia.net ([64.78.21.121]:2195 "EHLO
-	dhost002-36.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751669AbXB0Qrg (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:36672 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750845AbXBCRiA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Feb 2007 11:47:36 -0500
-From: "Jouni Malinen" <jkm@devicescape.com>
-Date: Tue, 27 Feb 2007 08:47:27 -0800
-To: Andy Green <andy@warmcat.com>
+	Sat, 3 Feb 2007 12:38:00 -0500
+Subject: Re: [RFC] cfg80211 merge
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] Penumbra - Enabling unencrypted broadcasts alongside normal traffic
-Message-ID: <20070227164727.GA10048@devicescape.com>
-References: <45E41A9E.2020908@warmcat.com>
+In-Reply-To: <1ba2fa240702021018m2dda838dyb85e956e42694e72@mail.gmail.com>
+References: <20070131013717.GA28076@tuxdriver.com>
+	 <20070131183255.GB8776@tuxdriver.com>
+	 <20070131202549.5ee47bd4@griffin.suse.cz>
+	 <20070131200741.GA22448@infradead.org>
+	 <20070131204438.GB19669@tuxdriver.com>
+	 <1170277561.2236.6.camel@johannes.berg>
+	 <1ba2fa240701311554i435d28b1x6822803326138cb5@mail.gmail.com>
+	 <1170335262.17068.6.camel@johannes.berg>
+	 <1ba2fa240702010604o3cc827d6j1319579e15f28b48@mail.gmail.com>
+	 <1170339078.22420.3.camel@johannes.berg>
+	 <1ba2fa240702021018m2dda838dyb85e956e42694e72@mail.gmail.com>
+Content-Type: text/plain
+Date: Sat, 03 Feb 2007 18:37:09 +0100
+Message-Id: <1170524230.4629.13.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <45E41A9E.2020908@warmcat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 27, 2007 at 11:48:46AM +0000, Andy Green wrote:
+On Fri, 2007-02-02 at 20:18 +0200, Tomas Winkler wrote:
 
-> There is a start on a formal RFC for the broadcast transport protocol here:
-> 
-> http://penumbra.warmcat.com/penumbra-rfc-0.0.3.txt
+> I don't know who is missing something here, but what I'm saying that
+> (1) is not correct. priv ioctls don't work with compatibility  set
+> on. 
 
-Could you please extend the description of "Wireless Packet Format" to
-define all fields in the 802.11 header. I would especially be interested
-in seeing what is in the FromDS and ToDS fields of the frame control.
-I'm assuming this is using normal data frames, but that (type and
-subtype fields) should also be described clearly.
+Yup, looks like a bug. This should fix it.
 
->  - The wireless driver gets the packet for transmission, recognizes the 
-> Magic MAC, disables retries and sets the transmission rate (currently 
-> fixed 54Mbps, but this will change) and transmits the packet as a broadcast
+johannes
 
-So this frame is to be sent by the non-AP STAs directly as a broadcast
-frame, not through the AP which is the normal way of transmitting
-frames(?)
+--- wireless-dev.orig/net/wireless/wext-compat.c	2007-02-03 18:36:11.809570737 +0100
++++ wireless-dev/net/wireless/wext-compat.c	2007-02-03 18:36:35.589570737 +0100
+@@ -1395,7 +1395,7 @@ int cfg80211_wext_nl_get(struct net_devi
+ 					      &iw_handler_get_iwstats,
+ 					      p_buf, p_len);
+ 	if(request->cmd == SIOCGIWPRIV)
+-		return -EOPNOTSUPP;
++		return -ENOSYS;
+ 
+ 	/* Basic check */
+ 	if (!netif_device_present(dev))
+@@ -1618,7 +1618,7 @@ int cfg80211_wext_ioctl(struct ifreq *if
+ 						   &iw_handler_get_iwstats);
+ 
+ 		case SIOCGIWPRIV:
+-			return -EOPNOTSUPP;
++			return -ENOSYS;
+ 		default:
+ 			/* Basic check */
+ 			if (!netif_device_present(dev))
 
-> I hope there is some interest in this new capability for wireless 
-> devices in Linux.  To get any kind of widespread use, the capability 
-> needs to be already available in stock kernels and drivers so that the 
-> user only needs to open iptables and run a userspace daemon rather than 
-> patch his wireless drivers and stack.  So this is my reason for 
-> presenting this Request For Comments, to see if it can be considered.
 
-You would need to add "and configure the wlan driver/802.11 stack to
-enable this". I don't think this has to be disabled by default.
-
-Is this only for Linux at the moment or is someone looking at supporting
-this with other OSes?
-
->  - Hardware promisc is needed to catch the packets because they are not 
-> tagged as coming from the local AP.  All the devices I looked at can do 
-> hardware promisc separately from the logical promisc for Monitor mode. 
-> But perhaps this needs to be enabled and disabled in some modal way.
-
-This has to be disabled by default. There is a reason for such a
-filtering in wlan designs and just enabling promiscuous mode at 802.11
-level is going to considerable increase power needs for the device which
-is not acceptable for many low-power devices.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
