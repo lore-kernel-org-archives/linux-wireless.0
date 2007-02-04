@@ -1,61 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:42193 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751382AbXB0Rlv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Feb 2007 12:41:51 -0500
-Date: Tue, 27 Feb 2007 09:41:08 -0800
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	Pavel Roskin <proski@gnu.org>,
-	Alex Davis <alex14641@yahoo.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Patch to allow specification of interface name prefix
-Message-ID: <20070227094108.11f4844f@freekitty>
-In-Reply-To: <20070227111644.784600be@logostar.upir.cz>
-References: <510326.55988.qm@web50211.mail.yahoo.com>
-	<20070224233001.3ok4k0c00ksos4sw@webmail.spamcop.net>
-	<45E112F7.9090908@lwfinger.net>
-	<20070226150241.1b5b63b2@freekitty>
-	<20070227111644.784600be@logostar.upir.cz>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail7.sea5.speakeasy.net ([69.17.117.9]:42261 "EHLO
+	mail7.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752461AbXBDSOJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Feb 2007 13:14:09 -0500
+Date: Sun, 4 Feb 2007 10:07:24 -0800
+From: Jouni Malinen <jkmaline@cc.hut.fi>
+To: Jon Smirl <jonsmirl@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: SoftMAC vs FullMAC
+Message-ID: <20070204180724.GB6632@jm.kir.nu>
+References: <9e4733910702040922n63736d27h7ab027dc90ae8989@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9e4733910702040922n63736d27h7ab027dc90ae8989@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 27 Feb 2007 11:16:44 +0100
-Jiri Benc <jbenc@suse.cz> wrote:
+On Sun, Feb 04, 2007 at 12:22:15PM -0500, Jon Smirl wrote:
+> Has it been considered to simply treat all wireless hardware as
+> SoftMAC and to just ignore the FullMAC capabilities?
 
-> [removed bcm43xx-dev list]
-> 
-> On Mon, 26 Feb 2007 15:02:41 -0800, Stephen Hemminger wrote:
-> > This was hashed out on netdev 2+ years ago and decided that both ethernet
-> > and wireless devices should show up as 'eth%d'. For inclusion d80211 needs to conform
-> > to existing mainline kernel practice. If this means breaking the expectation of older
-> > out of tree wireless support (ie madwifi), sorry.
-> 
-> Decided? I remember just you and hch saying "all existing wireless drivers
-> do that, so everybody should". When pointing out that just two drivers do
-> that (I think ipw and prism) and everybody else use something different
-> (wlan%d most often) there was no reply. "ipw and one other driver do that
-> so everybody should" doesn't sound like a strong argument to me.
+There are number of FullMAC designs that do not allow management
+functionality to be moved to the host, so this consideration is not
+going to go very far unless one were to drop support for all the FullMAC
+designs that do not allow this..
 
-Don't put too much stock in what I said. Really don't care about such
-a trivial matter as naming.  Jeff and Christoph seem to care, I don't
+> Dscape looks to have already started down this path with
+> implementations for five vendors. Is the plan to do this for all
+> vendors, including Intel and Atheros?
 
-> Wireless devices need different handling (setting SSID, etc.) than Ethernet
-> ones. I think it's not so bad idea to show that difference by using a
-> different default name. Everybody else who is in some kind different from
-> Ethernet use different name than eth%d. I think we should conform to
-> existing mainline practice by using something different than eth%d too.
+Atheros (well, assuming you don't mean the USB design here) does not
+even use firmware, so it is not FullMAC card in any way.. There is
+already work on supporting Intel ipw3945 with d80211. Other Intel
+designs (ipw2100, ipw2200, ipw2915) are currently using more FullMAC
+type design, but that depends on the firmware implementation.. I don't
+know what the hardware would be capable of doing, but in theory, it
+might be possible (for the vendor) to produce a firmware version that
+could work soft MAC designs.
 
-As long as the tools work it shouldn't matter. There are some tools like
-irqbalance that seem to have in bred assumptions.
+> My specific need is that I am working on an embedded design that
+> really needs 802.11s, but 11s isn't available yet. I don't want to end
+> up locked into a hardware vendor's FullMAC implementation with much
+> more expensive hardware. Currently hardware can run 11s if there is a
+> host implementation in software.
 
-A bigger issue for me would be getting NAPI to work right for wireless.
-
-
+I hope you realize that 802.11s is in very early steps (the first draft
+failed to get the needed approval rate in IEEE 802.11 working group) and
+is subject to change.. Whether hardware can run 802.11s (the current
+draft or whatever may end up in the end) is quite open question from my
+view point.. 802.11 requires MAC changes and I'm sure there are hardware
+designs that do not work with the current 802.11s draft no matter what
+the host CPU is doing in the driver/802.11 stack.
 
 -- 
-Stephen Hemminger <shemminger@linux-foundation.org>
+Jouni Malinen                                            PGP id EFC895FA
