@@ -1,50 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:46369 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S2992985AbXBQRqb (ORCPT
+Received: from mail2.sea5.speakeasy.net ([69.17.117.4]:53094 "EHLO
+	mail2.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752520AbXBDTlK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Feb 2007 12:46:31 -0500
-Message-ID: <45D73F71.6050803@lwfinger.net>
-Date: Sat, 17 Feb 2007 11:46:25 -0600
-From: Larry Finger <larry.finger@lwfinger.net>
+	Sun, 4 Feb 2007 14:41:10 -0500
+Date: Sun, 4 Feb 2007 11:41:07 -0800
+From: Jouni Malinen <jkmaline@cc.hut.fi>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Jon Smirl <jonsmirl@gmail.com>, Pavel Roskin <proski@gnu.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: SoftMAC vs FullMAC
+Message-ID: <20070204194107.GE6632@jm.kir.nu>
+References: <9e4733910702040922n63736d27h7ab027dc90ae8989@mail.gmail.com> <20070204123048.4bhesocg4kosgscg@webmail.spamcop.net> <9e4733910702041031i5edd6dfeq7f8c5179fee5e00e@mail.gmail.com> <200702042007.29357.mb@bu3sch.de>
 MIME-Version: 1.0
-To: Stefano Brivio <stefano.brivio@polimi.it>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] bcm43xx: fix for 4309
-References: <20070217182444.5a7e3641@localhost>
-In-Reply-To: <20070217182444.5a7e3641@localhost>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200702042007.29357.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stefano Brivio wrote:
-> BCM4309 devices aren't working properly as A PHYs aren't supported yet, but
-> we probe 802.11a cores anyway. This fixes it, while still allowing for A PHY code
-> to be developed in the future.
-> 
-> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
-> ----
-> 
-> John,
-> 
-> This is actually a bugfix so I think it should make into 2.6.21. This makes
-> BCM4309 cards working.
-> 
+On Sun, Feb 04, 2007 at 08:07:29PM +0100, Michael Buesch wrote:
 
---- linux-2.6.20/drivers/net/wireless/bcm43xx/bcm43xx_main.c.orig	2007-02-17 18:05:21.872891550 +0100
-+++ linux-2.6.20/drivers/net/wireless/bcm43xx/bcm43xx_main.c	2007-02-17 18:14:59.620752491 +0100
-@@ -2741,8 +2741,9 @@
- 				 * dangling pins on the second core. Be careful
- 				 * and ignore these cores here.
- 				 */
--				if (bcm->pci_dev->device != 0x4324) {
--					dprintk(KERN_INFO PFX "Ignoring additional 802.11 core.\n");
-+				if (1 /*bcm->pci_dev->device != 0x4324*/ ) {
-+				/* TODO: A PHY */
-+					dprintk(KERN_INFO PFX "Ignoring additional 802.11a core.\n");
- 					continue;
- 				}
- 			}
-_______________________________________________
+> If creating and uploading the keys to the device is less work than
+> doing crypto in software, then it is clearly a win.
+
+Not necessarily..
+
+> And that _is_ the case for bcm43xx (at least. I don't know about other
+> devices' hwcrypto capabilities).
+> Doing less on the CPU and more in hw is always a win. I'm not sure
+> how you can say that you're not sure it is. ;)
+
+As an example, some of the earlier Prism2 designs supported WEP in
+hardware/firmware. Yes, it would free up some host CPU, but the maximum
+throughput dropped from ca. 6 Mbps to 4 Mbps (and much lower in some
+cases).. WEP is quite fast operation, so using the host CPU to double
+throughput sounds like a good trade in many cases.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
