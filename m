@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-68.dex002.intermedia.net ([64.78.20.34]:22077 "EHLO
-	DHOST002-68.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030582AbXBMA2x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Feb 2007 19:28:53 -0500
-From: "Jouni Malinen" <jkm@devicescape.com>
-Date: Mon, 12 Feb 2007 16:28:49 -0800
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>, Jiri Benc <jbenc@suse.cz>,
-	linux-wireless@vger.kernel.org
-Subject: Re: d80211: current TKIP hwcrypto implementation seems to be broken
-Message-ID: <20070213002849.GE16597@instant802.com>
-References: <200702041344.19117.mb@bu3sch.de> <200702130023.53271.mb@bu3sch.de> <1ba2fa240702121554v4e5b55b3t4582241f6347b355@mail.gmail.com> <200702130110.02658.mb@bu3sch.de> <1ba2fa240702121619x259f546dga2bebefbe24bf1d3@mail.gmail.com>
+Received: from styx.suse.cz ([82.119.242.94]:42776 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932930AbXBESQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Feb 2007 13:16:48 -0500
+Date: Mon, 5 Feb 2007 19:16:46 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC PATCH 1/3] cfg80211 and nl80211
+Message-ID: <20070205191646.54763005@griffin.suse.cz>
+In-Reply-To: <1170697795.3572.32.camel@johannes.berg>
+References: <20070131013717.GA28076@tuxdriver.com>
+	<200701302146.05289.flamingice@sourmilk.net>
+	<1170325092.2236.17.camel@johannes.berg>
+	<200702051245.35452.flamingice@sourmilk.net>
+	<1170697795.3572.32.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240702121619x259f546dga2bebefbe24bf1d3@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 13, 2007 at 02:19:15AM +0200, Tomas Winkler wrote:
+On Mon, 05 Feb 2007 18:49:55 +0100, Johannes Berg wrote:
+> > Let's make monitor interfaces 
+> > resemble monitoring ethernet a little more by reporting both RXed frames and 
+> > TXed frames. *BSD does this too and it makes running ethereal on monitor 
+> > interfaces much more useful. 
+> 
+> We do this right now afaik.
 
-> For past packets you've already computed it so why do  it again? So
-> you keep 2 phas1 keys one old and one current. When sequence numbers
-> advance sufficiently you discard the old one and compute the new one
-> in a spare time. Something like double buffer.
+AFAIK we report RXed frames only.
 
-Well, you can, but how likely is this case to really happen? If someone
-can show this happening frequently, I could consider adding support for
-it, but I see not much point in adding the extra complexity without a
-clear case where this would be of benefit. P1K is not really that slow
-after all and figuring out when the kernel code has "spare time" and all
-the extra handling of pre-calculation and storing the values is not
-really something I would like to add into d80211 unless this can really
-be shown to provide noticeable throughput improvement.
+> > TX frame reporting can be done simply in the 
+> > ieee80211_tx_status call, allowing the TX status to be reported on real 
+> > frames. 
+> 
+> I don't quite understand this comment. TX status reporting should go via
+> nl80211.
 
-> I didn't measured performance but I thought  it can be precomputed by
-> the supplicant rather then by kernel code.    I might be wrong.
+I think Michael meant that an elegant way for sending also TXed frames
+to monitor interfaces is to do that in ieee80211_tx_status. Makes sense
+to me.
 
-P1K is calculated by whoever is using the TKIP TK and in case of all the
-implementations that I'm aware of, this is not done in the supplicant.
-Sure, it could be done there, but I think the current design of doing
-all TKIP encryption/decryption (including phase 1 and 2 key derivation)
-in the kernel is better.
+ Jiri
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Jiri Benc
+SUSE Labs
