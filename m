@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:7956 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422678AbXBUQxN (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.240]:22268 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932983AbXBEO4F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Feb 2007 11:53:13 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so256840nfa
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Feb 2007 08:53:12 -0800 (PST)
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH 2/3] d80211: Split antenna selection into TX and RX antenna
-Date: Wed, 21 Feb 2007 17:52:34 +0100
-Cc: Jiri Benc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>,
+	Mon, 5 Feb 2007 09:56:05 -0500
+Received: by an-out-0708.google.com with SMTP id b33so1037352ana
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Feb 2007 06:56:05 -0800 (PST)
+Message-ID: <9e4733910702050656v5739c03ta3fa6563ed1236a8@mail.gmail.com>
+Date: Mon, 5 Feb 2007 09:56:04 -0500
+From: "Jon Smirl" <jonsmirl@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: SoftMAC vs FullMAC
+Cc: "Michael Buesch" <mb@bu3sch.de>, "Pavel Roskin" <proski@gnu.org>,
 	linux-wireless@vger.kernel.org
-References: <200702211702.47410.IvDoorn@gmail.com> <200702211744.24034.IvDoorn@gmail.com> <200702211751.27245.mb@bu3sch.de>
-In-Reply-To: <200702211751.27245.mb@bu3sch.de>
+In-Reply-To: <43e72e890702050028s33645f3exf8b1f97a783925e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702211752.34498.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <9e4733910702040922n63736d27h7ab027dc90ae8989@mail.gmail.com>
+	 <200702042007.29357.mb@bu3sch.de>
+	 <9e4733910702041144n277facd1g6af9c4659afc6d39@mail.gmail.com>
+	 <200702042111.17005.mb@bu3sch.de>
+	 <9e4733910702041246s750fc8ach73e29a8c17727145@mail.gmail.com>
+	 <43e72e890702050028s33645f3exf8b1f97a783925e@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > On further inspection not even that. :P
-> > The outcome of that switch is stored in the antenna variable, which is used with
-> > 
-> > 	bcm43xx_mgmtframe_txantenna(dev, antenna);
-> > 	bcm43xx_set_rx_antenna(dev, antenna);
-> > 
-> > So I guess that needs to be fixed to create a switch statement for
-> > the RX antenna and one for the TX antenna?
-> 
-> Ah, yeah. I didn't have the complete code for this in my head. :)
-> 
-> I'd rather like to have a helper function
-> int bcm43xx_antenna_from_ieee80211(u8 antenna)
-> which includes the switch statement and use it twice in the
-> config callback. Wanna do that?
+On 2/5/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> just because it makes our lives easier. MS may have done what they did
+> to help with their development efforts but it doesn't mean it was
+> necessarily good for technology. We want to work with vendors to
+> support their devices regardless of how stupid their design is --
+> ultimately our job is to support hardware for our users and not take
+> on political quests to dictate the path of technology.
 
-No problem, I will resend this patch with that helper function added.
+I wouldn't say MS did this for political reasons, I believe it was
+more for technical reasons based on the simple observation that the
+host CPU was 5-10 times the speed of the coprocessors. The dumb
+Ethernet card design was also lower cost which expanded the market.
+3COM actually came up with NDIS and then MS adopted it.
 
-Ivo
+For the 'smart' card vendors they then had to implement the stack all
+the way up to the NETBIOS layer without help from MS. They weren't
+shut out, but they got no support either. The burden of software
+implementation, plus the fact that the cards were 10x more expensive
+and slower, led to their ultimate failure.
+
+Looking back on this NDIS really helped the LAN industry by
+commoditizing the hardware. The market hugely expanded since the
+hardware was dirt cheap and very easy to use.
+
+-- 
+Jon Smirl
+jonsmirl@gmail.com
