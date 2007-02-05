@@ -1,98 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lugor.de ([212.112.242.222]:40203 "EHLO solar.vpn.lugor.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751256AbXBMKlg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Feb 2007 05:41:36 -0500
-From: "Hesse, Christian" <mail@earthworm.de>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
-Date: Tue, 13 Feb 2007 11:41:20 +0100
-Cc: James Ketrenos <jketreno@linux.intel.com>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-References: <45CCE3CA.4050904@linux.intel.com> <200702111417.38336.mail@earthworm.de> <1171349229.2326.91.camel@dv>
-In-Reply-To: <1171349229.2326.91.camel@dv>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55808
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932662AbXBEP2z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Feb 2007 10:28:55 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Jouni Malinen <jkmaline@cc.hut.fi>
+Subject: Re: [PATCH] d80211: Add API to generate RTS and CTS-to-self frames
+Date: Mon, 5 Feb 2007 16:28:46 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200702051412.50703.mb@bu3sch.de> <20070205145824.GA6637@jm.kir.nu>
+In-Reply-To: <20070205145824.GA6637@jm.kir.nu>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1727142.jQgLTeo4NX";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200702131141.25883.mail@earthworm.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702051628.46518.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1727142.jQgLTeo4NX
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Monday 05 February 2007 15:58, Jouni Malinen wrote:
+> > Index: bu3sch-wireless-dev/include/net/d80211.h
+> > ===================================================================
+> > --- bu3sch-wireless-dev.orig/include/net/d80211.h	2007-02-05 13:59:34.000000000 +0100
+> > +++ bu3sch-wireless-dev/include/net/d80211.h	2007-02-05 14:01:30.000000000 +0100
+> > @@ -194,7 +194,6 @@ struct ieee80211_tx_control {
+> >  #define IEEE80211_TXCTL_TKIP_NEW_PHASE1_KEY (1<<9)
+> >  	u32 flags;			       /* tx control flags defined
+> >  						* above */
+> > -	u16 rts_cts_duration;	/* duration field for RTS/CTS frame */
+> >  	u8 retry_limit;		/* 1 = only first attempt, 2 = one retry, .. */
+> >  	u8 power_level;		/* per-packet transmit power level, in dBm */
+> >  	u8 antenna_sel; 	/* 0 = default/diversity, 1 = Ant0, 2 = Ant1 */
+> 
+> NAK. Why are you removing this? It is needed for hardware that generates
+> RTS/CTS frames.
 
-On Tuesday 13 February 2007 07:47, Pavel Roskin wrote:
-> Hello!
->
-> On Sun, 2007-02-11 at 14:17 +0100, Hesse, Christian wrote:
-> > lsmod shows a use count of 4294967295 (2^32 - 1), no oopses or the like.
-> > This is reproducable all the time.
->
-> Although I cannot reproduce the problem (I'm on current wireless-dev),
-> here's my interpretation.
->
-> The iwlwifi driver includes both a driver and a rate control algorithm.
-> It passes THIS_MODULE (i.e. a handle to itself) to the generic rate
-> control code, which locks the caller i.e. iwlwifi.  Therefore, iwlwifi
-> has locked itself in memory.
->
-> To counteract that, the driver "puts" the module, i.e. decreases its use
-> count after the rate control is registered.  Conversely, the module
-> "gets" itself when the rate control is unregistered.
->
-> One thing that is clearly wrong is that try_module_get() comes after
-> ieee80211_rate_control_unregister(), not before.  This means that the
-> use count would go negative between those calls.  If the kernel starts
-> checking for this, the driver is in trouble.
->
-> Further, why do we need this self-locking/unlocking trick?  The driver
-> can just set priv->rate_control.module to NULL and prevent self-locking.
->
-> It would only make sense to put THIS_MODULE there is the rate control
-> were implemented as a separate module, which it probably a good idea in
-> the long term.
->
-> But a simple fix would be just to get rid of all references to
-> THIS_MODULE and let the kernel do the right thing.
->
-> Most likely, your kernel doesn't use the priv->rate_control.module field
-> to lock the module, so it would help in your case.
->
-> Please try this patch:
->
-> [ patch snipped ]
+As I said in response to Johannes' comment, if a driver needs just
+the duration, we should export the functions to calculate it
+and remove the calculation from the tx_control and the tx_control
+setup path.
 
-This patch solves the problem. The module's use count is zero and I can unl=
-oad=20
-and load the module.
-However I have processes in status D when restarting the device. Is it=20
-possible that some functions (i.e. escape_essid()) from old and new ieee802=
-11=20
-stack conflict? I will recompile my kernel without the old stack and see if=
-=20
-anything changes.
-=2D-=20
-Regards,
-Chris
+Currently there is no driver using it, so I simply removed it.
 
---nextPart1727142.jQgLTeo4NX
-Content-Type: application/pgp-signature
+BTW: Which cards need the duration, but not the whole frame?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQBF0ZXVlZfG2c8gdSURAl7OAKDQ62pkNZ2E/6cUuRAeLmCSHu9XIgCcDV6F
-nYZh84cnMTtkWtyQEpJ3YpM=
-=F0gE
------END PGP SIGNATURE-----
-
---nextPart1727142.jQgLTeo4NX--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Greetings Michael.
