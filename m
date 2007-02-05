@@ -1,83 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:14441 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751926AbXB1U6l (ORCPT
+Received: from dhost002-98.dex002.intermedia.net ([64.78.19.95]:14518 "EHLO
+	dhost002-99.dex002.intermedia.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S932675AbXBERBz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 15:58:41 -0500
-Received: from localhost (localhost.rutgers.edu [127.0.0.1])
-	by annwn13.rutgers.edu (Postfix) with ESMTP id 7801B32405D
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 15:58:40 -0500 (EST)
-Received: from annwn13.rutgers.edu ([127.0.0.1])
-	by localhost (annwn13.rutgers.edu [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 25664-08 for <linux-wireless@vger.kernel.org>;
-	Wed, 28 Feb 2007 15:58:40 -0500 (EST)
-Received: from [192.168.1.103] (resnet-172.23.52.117.resnet.rutgers.edu [172.23.52.117])
-	by annwn13.rutgers.edu (Postfix) with ESMTP id 61CEA32403F
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 15:58:40 -0500 (EST)
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 3/5] d80211: Set carrier status for STA interfaces
-Date: Wed, 28 Feb 2007 15:39:43 -0500
-To: linux-wireless@vger.kernel.org
-Message-Id: <20070228203943.11473.36193.stgit@magic.sourmilk.net>
-In-Reply-To: <20070228203943.11473.95222.stgit@magic.sourmilk.net>
-References: <20070228203943.11473.95222.stgit@magic.sourmilk.net>
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+	Mon, 5 Feb 2007 12:01:55 -0500
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Mon, 5 Feb 2007 08:47:38 -0800
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] d80211: Add API to generate RTS and CTS-to-self frames
+Message-ID: <20070205164738.GA31058@instant802.com>
+References: <200702051412.50703.mb@bu3sch.de> <20070205145824.GA6637@jm.kir.nu> <200702051628.46518.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200702051628.46518.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+On Mon, Feb 05, 2007 at 04:28:46PM +0100, Michael Buesch wrote:
 
-This makes STA interfaces set the carrier status based on the current
-association status.
+> As I said in response to Johannes' comment, if a driver needs just
+> the duration, we should export the functions to calculate it
+> and remove the calculation from the tx_control and the tx_control
+> setup path.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+In that case, I would like to see this change being included in the same
+patch/patchset.. Without this, I can only NAK this kind of change since
+it removes functionality needed for some designs and that is not
+something I would like to see happening with net/d80211 since the goal
+is to allow all reasonable hardware designs to work with it.
 
- net/mac80211/ieee80211.c     |    4 ++++
- net/mac80211/ieee80211_sta.c |    3 +++
- 2 files changed, 7 insertions(+), 0 deletions(-)
+> Currently there is no driver using it, so I simply removed it.
 
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 15344c7..a0879ba 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -2377,6 +2377,10 @@ static int ieee80211_open(struct net_dev
- 	else
- 		ieee80211_if_config(dev);
- 
-+	if (sdata->type == IEEE80211_IF_TYPE_STA &&
-+	    !local->user_space_mlme)
-+		netif_carrier_off(dev);
-+
- 	netif_start_queue(dev);
- 	return 0;
- }
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index a264008..9d08a37 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -375,11 +375,13 @@ static void ieee80211_set_associated(str
- 		sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 		if (sdata->type != IEEE80211_IF_TYPE_STA)
- 			return;
-+		netif_carrier_on(dev);
- 		ifsta->prev_bssid_set = 1;
- 		memcpy(ifsta->prev_bssid, sdata->u.sta.bssid, ETH_ALEN);
- 		memcpy(wrqu.ap_addr.sa_data, sdata->u.sta.bssid, ETH_ALEN);
- 		ieee80211_sta_send_associnfo(dev, ifsta);
- 	} else {
-+		netif_carrier_off(dev);
- 		memset(wrqu.ap_addr.sa_data, 0, ETH_ALEN);
- 	}
- 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
-@@ -2007,6 +2009,7 @@ static void ieee80211_sta_reset_auth(str
- 	       ifsta->auth_alg);
- 	ifsta->auth_transaction = -1;
- 	ifsta->associated = ifsta->auth_tries = ifsta->assoc_tries = 0;
-+	netif_carrier_off(dev);
- }
- 
- 
+There are, but maybe not in wireless-dev.git.
 
+> BTW: Which cards need the duration, but not the whole frame?
+
+Any card that supports different transmit rates for hw retries involving
+RTS/CTS/fragmentation (e.g., Atheros).
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
