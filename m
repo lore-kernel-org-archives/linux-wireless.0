@@ -1,99 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49417
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965945AbXBOPKV (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:24359 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932993AbXBET41 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Feb 2007 10:10:21 -0500
-From: Michael Buesch <mb@bu3sch.de>
+	Mon, 5 Feb 2007 14:56:27 -0500
+From: Michael Wu <flamingice@sourmilk.net>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 07/10] bcm43xx-d80211: update for wiphy api
-Date: Thu, 15 Feb 2007 16:09:58 +0100
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Jiri Benc <jbenc@suse.cz>
-References: <20070215144241.847938000@sipsolutions.net> <20070215144259.397393000@sipsolutions.net>
-In-Reply-To: <20070215144259.397393000@sipsolutions.net>
+Subject: Re: [RFC PATCH 1/3] cfg80211 and nl80211
+Date: Mon, 5 Feb 2007 14:55:55 -0500
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <20070131013717.GA28076@tuxdriver.com> <200702051423.13998.flamingice@sourmilk.net> <1170703485.3572.43.camel@johannes.berg>
+In-Reply-To: <1170703485.3572.43.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200702151609.58861.mb@bu3sch.de>
+Content-Type: multipart/signed;
+  boundary="nextPart2453089.ssXtxff1Uj";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200702051455.59331.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 15 February 2007 15:42, Johannes Berg wrote:
-> update bcm43xx-d80211.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+--nextPart2453089.ssXtxff1Uj
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-ACK for this.
+On Monday 05 February 2007 14:24, Johannes Berg wrote:
+> On Mon, 2007-02-05 at 14:23 -0500, Michael Wu wrote:
+> > Anyway, netlink does not seem appropriate for
+> > sending or receiving frames.
+>
+> Care to explain why you think so?
+>
+1. Userspace usually expects to send things on network interfaces. The kern=
+el=20
+usually receives frames from userspace on network interfaces. I don't see t=
+he=20
+point of making an exception for 802.11 frames. (or rather, the potential f=
+or=20
+simpler frame injection code is not enough to justify inventing a new=20
+interface for doing it)
+2. nl80211/cfg80211 is for configuring interfaces. Everything there is rela=
+ted=20
+to configuration of wireless interfaces except for the frame injection hook=
+=2E=20
+It doesn't look right.
 
-> ---
-> Really bcm43xx should be using the new wiphy debugfs stuff as well,
-> but I can't figure out what the hell it is doing when multiple
-> devices exist in a system. Thing is the new debugfs dir is only
+=2DMichael Wu
 
-What do you mean? It registers multiple ieee80211_hw, of course.
-Look at bcm43xx_wireless_init(), that's per-card (not per core).
+--nextPart2453089.ssXtxff1Uj
+Content-Type: application/pgp-signature
 
-> created for d80211 drivers when calling register_hw() and all items
-> must be gone from it when calling free_hw()...
-> 
-> ---
->  drivers/net/wireless/d80211/bcm43xx/bcm43xx_debugfs.c |    2 +-
->  drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c    |   15 ++++++---------
->  2 files changed, 7 insertions(+), 10 deletions(-)
-> 
-> --- wireless-dev.orig/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c	2007-02-15 13:50:28.967940064 +0100
-> +++ wireless-dev/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c	2007-02-15 14:01:33.486635438 +0100
-> @@ -3282,7 +3282,7 @@ static int bcm43xx_wireless_core_init(st
->  	ssb_bus_powerup(bus, 1); /* Enable dynamic PCTL */
->  	bcm43xx_macfilter_clear(dev, BCM43xx_MACFILTER_ASSOC);
->  	bcm43xx_macfilter_set(dev, BCM43xx_MACFILTER_SELF,
-> -			      (u8 *)(wl->hw->perm_addr));
-> +			      (u8 *)(wl->hw->wiphy->perm_addr));
->  	bcm43xx_security_init(dev);
->  	bcm43xx_measure_channel_change_time(dev);
->  
-> @@ -3743,14 +3743,11 @@ static int bcm43xx_wireless_init(struct 
->  		    IEEE80211_HW_WEP_INCLUDE_IV;
->  	hw->maxssi = BCM43xx_RX_MAX_SSI;
->  	hw->queues = 1;
-> -	hw->dev = &dev->dev;
-> -	if (is_valid_ether_addr(sprom->r1.et1mac)) {
-> -		memcpy(hw->perm_addr, sprom->r1.et1mac,
-> -		       ARRAY_SIZE(hw->perm_addr));
-> -	} else {
-> -		memcpy(hw->perm_addr, sprom->r1.il0mac,
-> -		       ARRAY_SIZE(hw->perm_addr));
-> -	}
-> +	SET_IEEE80211_DEV(hw, &dev->dev);
-> +	if (is_valid_ether_addr(sprom->r1.et1mac))
-> +		SET_IEEE80211_PERM_ADDR(hw, sprom->r1.et1mac);
-> +	else
-> +		SET_IEEE80211_PERM_ADDR(hw, sprom->r1.il0mac);
->  
->  	/* Get and initialize struct bcm43xx_wl */
->  	wl = hw_to_bcm43xx_wl(hw);
-> --- wireless-dev.orig/drivers/net/wireless/d80211/bcm43xx/bcm43xx_debugfs.c	2007-02-15 13:50:28.917940064 +0100
-> +++ wireless-dev/drivers/net/wireless/d80211/bcm43xx/bcm43xx_debugfs.c	2007-02-15 14:02:18.646635438 +0100
-> @@ -308,7 +308,7 @@ void bcm43xx_debugfs_add_device(struct b
->  
->  	dev->dfsentry = e;
->  
-> -	snprintf(devdir, sizeof(devdir), "wiphy%d", dev->wl->hw->index);
-> +	snprintf(devdir, sizeof(devdir), "%s", wiphy_name(dev->wl->hw->wiphy));
->  	e->subdir = debugfs_create_dir(devdir, fs.root);
->  	e->dentry_tsf = debugfs_create_file("tsf", 0666, e->subdir,
->  	                                    dev, &tsf_fops);
-> 
-> --
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
--- 
-Greetings Michael.
+iD8DBQBFx4vPT3Oqt9AH4aERAjcvAJ9S9C66Q+D/1E28sFy+fxYCK+zbSACgj+pm
+4THXhObZ/GXI32+p+3S07vM=
+=5oO2
+-----END PGP SIGNATURE-----
+
+--nextPart2453089.ssXtxff1Uj--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
