@@ -1,48 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54165 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946350AbXBQArm (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:40668 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932299AbXBESOt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Feb 2007 19:47:42 -0500
-Subject: [PATCH] fix cfg80211 modular compile w/o wext-compat
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: James Ketrenos <jketreno@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1171659366.3575.27.camel@johannes.berg>
-References: <1171659366.3575.27.camel@johannes.berg>
-Content-Type: text/plain
-Date: Sat, 17 Feb 2007 01:47:32 +0100
-Message-Id: <1171673252.31890.0.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 5 Feb 2007 13:14:49 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC PATCH 1/3] cfg80211 and nl80211
+Date: Mon, 5 Feb 2007 13:14:17 -0500
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <20070131013717.GA28076@tuxdriver.com> <200702051245.35452.flamingice@sourmilk.net> <1170697795.3572.32.camel@johannes.berg>
+In-Reply-To: <1170697795.3572.32.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart8740476.D0fSR1xI37";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200702051314.21627.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The static inlines that are supposed to be used w/o wext-compat to init
-wext-compat were done with the wrong #ifdef. This fixes it.
+--nextPart8740476.D0fSR1xI37
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+On Monday 05 February 2007 12:49, Johannes Berg wrote:
+> > Let's make monitor interfaces
+> > resemble monitoring ethernet a little more by reporting both RXed frames
+> > and TXed frames. *BSD does this too and it makes running ethereal on
+> > monitor interfaces much more useful.
+>
+> We do this right now afaik.
+>
+Where? I don't remember getting TX frames when running ethereal on a monito=
+r=20
+interface.
 
----
-or rather, this fixes it.
+> > TX frame reporting can be done simply in the
+> > ieee80211_tx_status call, allowing the TX status to be reported on real
+> > frames.
+>
+> I don't quite understand this comment. TX status reporting should go via
+> nl80211.
+>
+If we report TXed frames at the point when the driver calls=20
+ieee80211_tx_status, we know whether or not an ack was received. This=20
+information can be added to the TX frame that is reported to the monitor=20
+interface.
 
---- wireless-dev.orig/net/wireless/wext.h	2007-02-16 21:51:26.354695664 +0100
-+++ wireless-dev/net/wireless/wext.h	2007-02-17 01:46:34.514695664 +0100
-@@ -29,10 +29,14 @@ int wireless_process_ioctl(struct ifreq 
- int cfg80211_wext_ioctl(struct ifreq *ifr, unsigned int cmd);
- #ifdef CFG80211_MODULE
- int call_cfg80211_wext_ioctl(struct ifreq *ifr, unsigned int cmd);
-+#else
-+#define call_cfg80211_wext_ioctl cfg80211_wext_ioctl
-+#endif
-+
-+#if defined(CONFIG_CFG80211_WEXT_COMPAT) && defined(CFG80211_MODULE)
- int cfg80211_wext_init(void);
- void cfg80211_wext_exit(void);
- #else
--#define call_cfg80211_wext_ioctl cfg80211_wext_ioctl
- static inline int cfg80211_wext_init(void)
- {
- 	return 0;
+> > Doing this is actually somewhat orthogonal to packet injection via
+> > netlink or monitor interface, but if we are reporting TXed frames with a
+> > radiotap header, we might as well allow frame injection with a radiotap
+> > frame for consistency.
+>
+> Well, it hasn't got much merit because for anything useful you'll need
+> to get state information on nl80211.
+>
+I'm not sure what you mean. The program can get the configuration info it=20
+needs from nl80211/cfg80211/WE and send/inject frames through the monitor=20
+interface.
 
+=2DMichael Wu
 
+--nextPart8740476.D0fSR1xI37
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBFx3P9T3Oqt9AH4aERAvQDAKCLzFWeIx3D1eI0Wf2LvoMUzCktpQCgqcR2
+C5dzGkoMYVjZMLeE60DXX54=
+=4qJR
+-----END PGP SIGNATURE-----
+
+--nextPart8740476.D0fSR1xI37--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
