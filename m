@@ -1,125 +1,96 @@
-Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout01-winn.ispmail.ntl.com
- ([81.103.221.47]:30890 "EHLO	mtaout01-winn.ispmail.ntl.com"
- rhost-flags-OK-OK-OK-OK)	by vger.kernel.org with ESMTP id S1161037AbXBRBkk
- (ORCPT	<rfc822;linux-wireless@vger.kernel.org>); Sat,
- 17 Feb 2007 20:40:40 -0500
-Date: Sun, 18 Feb 2007 01:40:41 +0000 (GMT)
-From: Daniel Drake <dsd@gentoo.org>
-Subject: [PATCH] zd1211rw-d80211: Add ID for ZyXEL ZyAIR G-220 v2
-Sender: linux-wireless-owner@vger.kernel.org
-To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org, kune@deine-taler.de
-Message-id: <20070218014041.D25797B409F@zog.reactivated.net>
-List-ID: <linux-wireless.vger.kernel.org>
-
-Tested by Marijn Schouten
-zd1211b chip 0586:340f v4810 high 00-13-49 AL2230_RF pa0 g---
-FCC ID: I88G220V2
-
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
----
- drivers/net/wireless/d80211/zd1211rw/zd_usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/d80211/zd1211rw/zd_usb.c b/drivers/net/wireless/d80211/zd1211rw/zd_usb.c
-index 1e8a45e..aaa055d 100644
---- a/drivers/net/wireless/zd1211rw/drivers/net/wireless/d80211/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/drivers/net/wireless/d80211/zd1211rw/zd_usb.c
-@@ -60,6 +60,7 @@ static struct usb_device_id usb_ids[] = {
- 	{ USB_DEVICE(0x083a, 0x4505), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0471, 0x1236), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x13b1, 0x0024), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x0586, 0x340f), .driver_info = DEVICE_ZD1211B },
- 	/* "Driverless" devices that need ejecting */
- 	{ USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
- 	{}
--- 
-1.5.0
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
->From linux-wireless-owner@vger.kernel.org Sun Feb 18 06:13:42 2007
-Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pop.hut.fi [130.233.228.132]
-	by jm.kir.nu with POP3 (fetchmail-6.3.6)
-	for <jm@localhost> (single-drop); Sat, 17 Feb 2007 20:13:42 -0800 (PST)
-Received: from smtp02 (smtp02 [10.10.13.2])
- by mailstore2.hut-mail (iPlanet Messaging Server 5.2 HotFix 2.09 (built Nov 18
- 2005)) with ESMTP id <0JDN00D2U4ZFQM@mailstore2.hut-mail> for
- jkmaline@cc.hut.fi; Sun, 18 Feb 2007 06:11:39 +0200 (EET)
-Received: from smtp-3.hut.fi (smtp-3.hut.fi [130.233.228.93])
- by smtp02.hut-mail
- (iPlanet Messaging Server 5.2 HotFix 2.09 (built Nov 18 2005))
- with ESMTPS id <0JDN009SC4ZFKU@smtp02.hut-mail> for jkmaline@cc.hut.fi
- (ORCPT jkmaline@cc.hut.fi); Sun, 18 Feb 2007 06:11:39 +0200 (EET)
-Received: from localhost (katosiko.hut.fi [130.233.228.115])
-	by smtp-3.hut.fi (8.13.6/8.12.10) with ESMTP id l1I4BcSE017352	for
- <jkmaline@cc.hut.fi>; Sun, 18 Feb 2007 06:11:38 +0200
-Received: from smtp-3.hut.fi ([130.233.228.93])
- by localhost (katosiko.hut.fi [130.233.228.115]) (amavisd-new, port 10024)
- with LMTP id 21085-47 for <jkmaline@cc.hut.fi>; Sun,
- 18 Feb 2007 06:11:38 +0200 (EET)
-Received: from vger.kernel.org (vger.kernel.org [209.132.176.167])
-	by smtp-3.hut.fi (8.13.6/8.12.10) with ESMTP id l1I49eFn017253	for
- <jkmaline@cc.hut.fi>; Sun, 18 Feb 2007 06:09:41 +0200
-Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand	id
- S932240AbXBREJk (ORCPT <rfc822;jkmaline@cc.hut.fi>); Sat,
- 17 Feb 2007 23:09:40 -0500
-Received: (majordomo@vger.kernel.org) by vger.kernel.org id S932400AbXBREJk
-	(ORCPT <rfc822;linux-wireless-outgoing>); Sat, 17 Feb 2007 23:09:40 -0500
-Received: from smtp116.iad.emailsrvr.com
- ([207.97.245.116]:42995 "EHLO	smtp116.iad.emailsrvr.com"
- rhost-flags-OK-OK-OK-OK) by vger.kernel.org	with ESMTP id S932240AbXBREJj
- (ORCPT	<rfc822;linux-wireless@vger.kernel.org>); Sat,
- 17 Feb 2007 23:09:39 -0500
-Received: from [192.168.1.100]
- (c-24-34-179-5.hsd1.ma.comcast.net [24.34.179.5])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)	(Authenticated sender: ddrake@brontes3d.com)
-	by relay1.r1.iad.emailsrvr.com (SMTP Server) with ESMTP id 2D81E44C0C5; Sat,
- 17 Feb 2007 22:40:20 -0500 (EST)
-Date: Sat, 17 Feb 2007 22:41:13 -0500
-From: Daniel Drake <dsd@gentoo.org>
-Subject: Re: IPW2200 monitoring FW broken
-In-reply-to: <200702151840.16963.mb@bu3sch.de>
-Sender: linux-wireless-owner@vger.kernel.org
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org, James Ketrenos <jketreno@linux.intel.com>
-Message-id: <45D7CAD9.5030602@gentoo.org>
+Return-path: <wireless-bounces@tuxdriver.com>
+Received: from annwn13.rutgers.edu (smtp.rutgers.edu [128.6.72.243])
+	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l15HkMGf012426	for
+ <wireless@lists.tuxdriver.org>; Mon, 05 Feb 2007 12:46:47 -0500
+Date: Mon, 05 Feb 2007 12:45:30 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [RFC PATCH 1/3] cfg80211 and nl80211
+In-reply-to: <1170325092.2236.17.camel@johannes.berg>
+Sender: wireless-bounces@tuxdriver.com
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: wireless@lists.tuxdriver.org
+Errors-to: wireless-bounces@tuxdriver.com
+Message-id: <200702051245.35452.flamingice@sourmilk.net>
 MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-Content-transfer-encoding: 7bit
-Precedence: bulk
-User-Agent: Thunderbird 2.0b2 (X11/20070208)
-X-Greylist: delayed 1759 seconds by postgrey-1.27 at vger.kernel.org; Sat,
- 17 Feb 2007 23:09:39 EST
-X-Spam-Checker-Version: SpamAssassin 2.64 (2004-01-11) on katosiko.hut.fi
-X-TKK-Virus-Scanned: by amavisd-new-2.1.2-hutcc at katosiko.hut.fi
-References: <200702151840.16963.mb@bu3sch.de>
-X-Mailing-List: linux-wireless@vger.kernel.org
-Original-recipient: rfc822;jkmaline@cc.hut.fi
-Status: RO
-Content-Length: 840
-Lines: 22
+Content-type: multipart/mixed; boundary="===============0554357086=="
+References: <20070131013717.GA28076@tuxdriver.com>
+ <200701302146.05289.flamingice@sourmilk.net>
+ <1170325092.2236.17.camel@johannes.berg>
+List-Post: <mailto:wireless@lists.tuxdriver.org>
+List-Subscribe: <http://lists.tuxdriver.org/mailman/listinfo/wireless>,
+	<mailto:wireless-request@lists.tuxdriver.org?subject=subscribe>
+List-Unsubscribe: <http://lists.tuxdriver.org/mailman/listinfo/wireless>,
+	<mailto:wireless-request@lists.tuxdriver.org?subject=unsubscribe>
+List-Archive: <http://lists.tuxdriver.org/pipermail/wireless>
+List-Help: <mailto:wireless-request@lists.tuxdriver.org?subject=help>
+List-Id: Linux wireless networking development <wireless.lists.tuxdriver.org>
 
-Michael Buesch wrote:
-> Is IPW2200 monitoring FW still broken?
-> I miss huge amounts of packets when I try to monitor
-> some traffic.
+--===============0554357086==
+Content-Type: multipart/signed; boundary="nextPart4686705.a9Xxi1EMOT";
+	protocol="application/pgp-signature"; micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-I had the same problem with ipw2200 once. I lost the hardware before I 
-had a chance to dig into it, but then noticed ipw3945 on my laptop doing 
-the same thing.
+--nextPart4686705.a9Xxi1EMOT
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I've now narrowed it down a bit further: if i load ipw3945/ipw3945d and 
-associate to a network in managed mode before switching to monitor mode, 
-  then when monitoring I only see about 1/4 of all traffic.
+On Thursday 01 February 2007 05:18, Johannes Berg wrote:
+> I disagree. Generic netlink is trivially extensible while radiotap
+> isn't, and I really don't want a radiotap parser in the kernel.
+> Secondly, a lot of notification items will only be given via netlink
+> anyway, like failed decryption or whatever, and we don't want to keep
+> all this in fake management frames.
+>
+Okay then, let's not use fake frames then. Let's make monitor interfaces=20
+resemble monitoring ethernet a little more by reporting both RXed frames an=
+d=20
+TXed frames. *BSD does this too and it makes running ethereal on monitor=20
+interfaces much more useful. TX frame reporting can be done simply in the=20
+ieee80211_tx_status call, allowing the TX status to be reported on real=20
+frames.=20
 
-But, if I load the driver and go straight into monitor mode, things are 
-peachy. Maybe the same thing is happening for ipw2200?
+Doing this is actually somewhat orthogonal to packet injection via netlink =
+or=20
+monitor interface, but if we are reporting TXed frames with a radiotap=20
+header, we might as well allow frame injection with a radiotap frame for=20
+consistency. It seems far better than receiving frames on one interface and=
+=20
+then using netlink to TX on some wiphy. Not to mention that using a=20
+configuration interface to send data doesn't make much sense when there's a=
+=20
+perfectly fine network interface available. Radiotap parsing isn't much=20
+harder than EID parsing, allows current frame injection programs to continu=
+e=20
+working, and might even make it easier to run those programs on BSD too. (I=
+=20
+don't know what mechanism BSD uses for frame injection)
 
-Daniel
+=2DMichael Wu
 
+--nextPart4686705.a9Xxi1EMOT
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBFx20/T3Oqt9AH4aERAvFVAJwK7Xa6KQ/pbkxIj6VG/h8O54BjyACgmvrv
+gpTQj22tpW2iBhWmXAP70L0=
+=RGFA
+-----END PGP SIGNATURE-----
+
+--nextPart4686705.a9Xxi1EMOT--
+
+--===============0554357086==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+wireless mailing list
+wireless@lists.tuxdriver.org
+http://lists.tuxdriver.org/mailman/listinfo/wireless
+
+--===============0554357086==--
