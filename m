@@ -1,69 +1,289 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:37064 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932944AbXBLEaE (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59834
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932189AbXBEQ1o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Feb 2007 23:30:04 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: [PATCH] d80211: Fix wireless statistics reporting
-Date: Sun, 11 Feb 2007 23:29:15 -0500
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-References: <200702112209.46093.flamingice@sourmilk.net> <1171253350.27742.17.camel@dv>
-In-Reply-To: <1171253350.27742.17.camel@dv>
+	Mon, 5 Feb 2007 11:27:44 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH #2] d80211: Add API to generate RTS and CTS-to-self frames
+Date: Mon, 5 Feb 2007 17:26:09 +0100
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <jkmaline@cc.hut.fi>,
+	Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1489636.qNMvYl8yur";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200702112329.21901.flamingice@sourmilk.net>
+Message-Id: <200702051726.09556.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1489636.qNMvYl8yur
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+This adds API calls to generate RTS and CTS-to-self frames.
+To be called if the device firmware requires the host to
+generate RTS/CTS frames.
 
-On Sunday 11 February 2007 23:09, Pavel Roskin wrote:
-> > -	int signal;
-> > +	int signal; /* used as qual in statistics reporting */
->
-> I'm sorry but that the thing I have always hated about wireless
-> extensions.  Such tricks make the API context sensitive and loaded with
-> assumptions.
->
-Ok, but I was merely clarifying the current situation. That problem has alw=
-ays=20
-been there since the patch for statistics reporting went in.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-> I understand d80211 still has to interact with Wireless Extensions, but
-> let's not make things even worse.
-I'm making things better. Statistics reporting is pretty bad right now in=20
-d80211 with drivers reporting bogus values when they don't know, and=20
-statistics reporting of different d80211 drivers interacting with each othe=
-r=20
-when multiple devices are plugged in. This patch attempts to fix the worst=
-=20
-issues while attempting to avoid regressions. Feel free to follow up with=20
-another patch to make statistics reporting perfect.
+Index: bu3sch-wireless-dev/include/linux/ieee80211.h
+===================================================================
+--- bu3sch-wireless-dev.orig/include/linux/ieee80211.h	2007-02-05 17:21:09.000000000 +0100
++++ bu3sch-wireless-dev/include/linux/ieee80211.h	2007-02-05 17:21:13.000000000 +0100
+@@ -189,6 +189,21 @@ struct ieee80211_mgmt {
+ } __attribute__ ((packed));
+ 
+ 
++/* Control frames */
++struct ieee80211_rts {
++	__le16 frame_control;
++	__le16 duration;
++	__u8 ra[6];
++	__u8 ta[6];
++} __attribute__ ((packed));
++
++struct ieee80211_cts {
++	__le16 frame_control;
++	__le16 duration;
++	__u8 ra[6];
++} __attribute__ ((packed));
++
++
+ /* Authentication algorithms */
+ #define WLAN_AUTH_OPEN 0
+ #define WLAN_AUTH_SHARED_KEY 1
+Index: bu3sch-wireless-dev/include/net/d80211.h
+===================================================================
+--- bu3sch-wireless-dev.orig/include/net/d80211.h	2007-02-05 17:21:09.000000000 +0100
++++ bu3sch-wireless-dev/include/net/d80211.h	2007-02-05 17:21:13.000000000 +0100
+@@ -194,7 +194,6 @@ struct ieee80211_tx_control {
+ #define IEEE80211_TXCTL_TKIP_NEW_PHASE1_KEY (1<<9)
+ 	u32 flags;			       /* tx control flags defined
+ 						* above */
+-	u16 rts_cts_duration;	/* duration field for RTS/CTS frame */
+ 	u8 retry_limit;		/* 1 = only first attempt, 2 = one retry, .. */
+ 	u8 power_level;		/* per-packet transmit power level, in dBm */
+ 	u8 antenna_sel; 	/* 0 = default/diversity, 1 = Ant0, 2 = Ant1 */
+@@ -208,7 +207,8 @@ struct ieee80211_tx_control {
+ 	u8 sw_retry_attempt;	/* number of times hw has tried to
+ 				 * transmit frame (not incl. hw retries) */
+ 
+-	int rateidx; /* internal 80211.o rateidx */
++	int rateidx;		/* internal 80211.o rateidx */
++	int rts_rateidx;	/* internal 80211.o rateidx for RTS/CTS */
+ 	int alt_retry_rate; /* retry rate for the last retries, given as the
+ 			     * hw specific value for the rate (from
+ 			     * struct ieee80211_rate). To be used to limit
+@@ -829,6 +829,70 @@ struct sk_buff *ieee80211_beacon_get(str
+ 				     struct ieee80211_tx_control *control);
+ 
+ /**
++ * ieee80211_rts_get - RTS frame generation function
++ * @hw: pointer obtained from ieee80211_alloc_hw().
++ * @frame: pointer to the frame that is going to be protected by the RTS.
++ * @frame_len: the frame length (in octets).
++ * @frame_txctl: &struct ieee80211_tx_control of the frame.
++ * @rts: The buffer where to store the RTS frame.
++ *
++ * If the RTS frames are generated by the host system (i.e., not in
++ * hardware/firmware), the low-level driver uses this function to receive
++ * the next RTS frame from the 802.11 code. The low-level is responsible
++ * for calling this function before and RTS frame is needed.
++ */
++void ieee80211_rts_get(struct ieee80211_hw *hw,
++		       const void *frame, size_t frame_len,
++		       const struct ieee80211_tx_control *frame_txctl,
++		       struct ieee80211_rts *rts);
++
++/**
++ * ieee80211_rts_duration - Get the duration field for an RTS frame
++ * @hw: pointer obtained from ieee80211_alloc_hw().
++ * @frame_len: the length of the frame that is going to be protected by the RTS.
++ * @frame_txctl: &struct ieee80211_tx_control of the frame.
++ *
++ * If the RTS is generated in firmware, but the host system must provide
++ * the duration field, the low-level driver uses this function to receive
++ * the duration field value in little-endian byteorder.
++ */
++__le16 ieee80211_rts_duration(struct ieee80211_hw *hw,
++			      size_t frame_len,
++			      const struct ieee80211_tx_control *frame_txctl);
++
++/**
++ * ieee80211_ctstoself_get - CTS-to-self frame generation function
++ * @hw: pointer obtained from ieee80211_alloc_hw().
++ * @frame: pointer to the frame that is going to be protected by the CTS-to-self.
++ * @frame_len: the frame length (in octets).
++ * @frame_txctl: &struct ieee80211_tx_control of the frame.
++ * @cts: The buffer where to store the CTS-to-self frame.
++ *
++ * If the CTS-to-self frames are generated by the host system (i.e., not in
++ * hardware/firmware), the low-level driver uses this function to receive
++ * the next CTS-to-self frame from the 802.11 code. The low-level is responsible
++ * for calling this function before and CTS-to-self frame is needed.
++ */
++void ieee80211_ctstoself_get(struct ieee80211_hw *hw,
++			     const void *frame, size_t frame_len,
++			     const struct ieee80211_tx_control *frame_txctl,
++			     struct ieee80211_cts *cts);
++
++/**
++ * ieee80211_ctstoself_duration - Get the duration field for a CTS-to-self frame
++ * @hw: pointer obtained from ieee80211_alloc_hw().
++ * @frame_len: the length of the frame that is going to be protected by the CTS-to-self.
++ * @frame_txctl: &struct ieee80211_tx_control of the frame.
++ *
++ * If the CTS-to-self is generated in firmware, but the host system must provide
++ * the duration field, the low-level driver uses this function to receive
++ * the duration field value in little-endian byteorder.
++ */
++__le16 ieee80211_ctstoself_duration(struct ieee80211_hw *hw,
++				    size_t frame_len,
++				    const struct ieee80211_tx_control *frame_txctl);
++
++/**
+  * ieee80211_get_buffered_bc - accessing buffered broadcast and multicast frames
+  * @hw: pointer as obtained from ieee80211_alloc_hw().
+  * @if_id: interface ID from &struct ieee80211_if_init_conf.
+Index: bu3sch-wireless-dev/net/d80211/ieee80211.c
+===================================================================
+--- bu3sch-wireless-dev.orig/net/d80211/ieee80211.c	2007-02-05 17:21:09.000000000 +0100
++++ bu3sch-wireless-dev/net/d80211/ieee80211.c	2007-02-05 17:21:13.000000000 +0100
+@@ -802,7 +802,6 @@ ieee80211_tx_h_misc(struct ieee80211_txr
+ 	if ((control->flags & IEEE80211_TXCTL_USE_RTS_CTS) ||
+ 	    (control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT)) {
+ 		struct ieee80211_rate *rate;
+-		int erp = tx->u.tx.rate->flags & IEEE80211_RATE_ERP;
+ 
+ 		/* Do not use multiple retry rates when using RTS/CTS */
+ 		control->alt_retry_rate = -1;
+@@ -813,16 +812,8 @@ ieee80211_tx_h_misc(struct ieee80211_txr
+ 		       !(rate->flags & IEEE80211_RATE_BASIC))
+ 			rate--;
+ 
+-		if (control->flags & IEEE80211_TXCTL_USE_RTS_CTS)
+-			dur += ieee80211_frame_duration(tx->local, 10,
+-							rate->rate, erp,
+-							tx->local->
+-							short_preamble);
+-		dur += ieee80211_frame_duration(tx->local, tx->skb->len,
+-						tx->u.tx.rate->rate, erp,
+-						tx->u.tx.short_preamble);
+-		control->rts_cts_duration = dur;
+ 		control->rts_cts_rate = rate->val;
++		control->rts_rateidx = (int)(rate - tx->local->curr_rates);
+ 	}
+ 
+ 	if (tx->sta) {
+@@ -1781,7 +1772,6 @@ struct sk_buff * ieee80211_beacon_get(st
+ 		control->power_level = local->hw.conf.power_level;
+ 		control->flags |= IEEE80211_TXCTL_NO_ACK;
+ 		control->retry_limit = 1;
+-		control->rts_cts_duration = 0;
+ 		control->flags |= IEEE80211_TXCTL_CLEAR_DST_MASK;
+ 	}
+ 
+@@ -1790,6 +1780,91 @@ struct sk_buff * ieee80211_beacon_get(st
+ }
+ EXPORT_SYMBOL(ieee80211_beacon_get);
+ 
++__le16 ieee80211_rts_duration(struct ieee80211_hw *hw,
++			      size_t frame_len,
++			      const struct ieee80211_tx_control *frame_txctl)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct ieee80211_rate *rate;
++	int short_preamble = local->short_preamble;
++	int erp;
++	u16 dur;
++
++	rate = &(local->curr_rates[frame_txctl->rts_rateidx]);
++	erp = !!(rate->flags & IEEE80211_RATE_ERP);
++
++	/* CTS duration */
++	dur = ieee80211_frame_duration(local, 10, rate->rate,
++				       erp, short_preamble);
++	/* Data frame duration */
++	dur += ieee80211_frame_duration(local, frame_len, rate->rate,
++					erp, short_preamble);
++	/* ACK duration */
++	dur += ieee80211_frame_duration(local, 10, rate->rate,
++					erp, short_preamble);
++
++	return cpu_to_le16(dur);
++}
++EXPORT_SYMBOL(ieee80211_rts_duration);
++
++
++__le16 ieee80211_ctstoself_duration(struct ieee80211_hw *hw,
++				    size_t frame_len,
++				    const struct ieee80211_tx_control *frame_txctl)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct ieee80211_rate *rate;
++	int short_preamble = local->short_preamble;
++	int erp;
++	u16 dur;
++
++	rate = &(local->curr_rates[frame_txctl->rts_rateidx]);
++	erp = !!(rate->flags & IEEE80211_RATE_ERP);
++
++	/* Data frame duration */
++	dur = ieee80211_frame_duration(local, frame_len, rate->rate,
++				       erp, short_preamble);
++	if (!(frame_txctl->flags & IEEE80211_TXCTL_NO_ACK)) {
++		/* ACK duration */
++		dur += ieee80211_frame_duration(local, 10, rate->rate,
++						erp, short_preamble);
++	}
++
++	return cpu_to_le16(dur);
++}
++EXPORT_SYMBOL(ieee80211_ctstoself_duration);
++
++void ieee80211_rts_get(struct ieee80211_hw *hw,
++		       const void *frame, size_t frame_len,
++		       const struct ieee80211_tx_control *frame_txctl,
++		       struct ieee80211_rts *rts)
++{
++	const struct ieee80211_hdr *hdr = frame;
++	u16 fctl;
++
++	fctl = IEEE80211_FTYPE_CTL | IEEE80211_STYPE_RTS;
++	rts->frame_control = cpu_to_le16(fctl);
++	rts->duration = ieee80211_rts_duration(hw, frame_len, frame_txctl);
++	memcpy(rts->ra, hdr->addr1, sizeof(rts->ra));
++	memcpy(rts->ta, hdr->addr2, sizeof(rts->ta));
++}
++EXPORT_SYMBOL(ieee80211_rts_get);
++
++void ieee80211_ctstoself_get(struct ieee80211_hw *hw,
++			     const void *frame, size_t frame_len,
++			     const struct ieee80211_tx_control *frame_txctl,
++			     struct ieee80211_cts *cts)
++{
++	const struct ieee80211_hdr *hdr = frame;
++	u16 fctl;
++
++	fctl = IEEE80211_FTYPE_CTL | IEEE80211_STYPE_CTS;
++	cts->frame_control = cpu_to_le16(fctl);
++	cts->duration = ieee80211_ctstoself_duration(hw, frame_len, frame_txctl);
++	memcpy(cts->ra, hdr->addr1, sizeof(cts->ra));
++}
++EXPORT_SYMBOL(ieee80211_ctstoself_get);
++
+ struct sk_buff *
+ ieee80211_get_buffered_bc(struct ieee80211_hw *hw, int if_id,
+ 			  struct ieee80211_tx_control *control)
+Index: bu3sch-wireless-dev/net/d80211/ieee80211_sta.c
+===================================================================
+--- bu3sch-wireless-dev.orig/net/d80211/ieee80211_sta.c	2007-02-05 17:21:09.000000000 +0100
++++ bu3sch-wireless-dev/net/d80211/ieee80211_sta.c	2007-02-05 17:21:13.000000000 +0100
+@@ -2068,7 +2068,6 @@ static int ieee80211_sta_join_ibss(struc
+ 		control.power_level = local->hw.conf.power_level;
+ 		control.flags |= IEEE80211_TXCTL_NO_ACK;
+ 		control.retry_limit = 1;
+-		control.rts_cts_duration = 0;
+ 
+ 		ifsta->probe_resp = skb_copy(skb, GFP_ATOMIC);
+ 		if (ifsta->probe_resp) {
 
-=2DMichael Wu
-
---nextPart1489636.qNMvYl8yur
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBFz+0hT3Oqt9AH4aERAif4AJ93ghrCj63IB72CakiJOrVSfyrYVwCggNSJ
-cI+QgKO1iSrdjBvygFcCCAM=
-=lsOv
------END PGP SIGNATURE-----
-
---nextPart1489636.qNMvYl8yur--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Greetings Michael.
