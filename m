@@ -1,39 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44680 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030224AbXBTQ2z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Feb 2007 11:28:55 -0500
-Message-ID: <45DB21C3.4040800@garzik.org>
-Date: Tue, 20 Feb 2007 11:28:51 -0500
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'upstream' branch of wireless-2.6 (2007-02-14)
-References: <20070214212817.GB28318@tuxdriver.com> <45D7647B.8090704@garzik.org> <20070217233650.GA4310@tuxdriver.com>
-In-Reply-To: <20070217233650.GA4310@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37441 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933480AbXBEVlp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Feb 2007 16:41:45 -0500
+Subject: Re: d80211: current TKIP hwcrypto implementation seems to be broken
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+In-Reply-To: <20070205214333.4e77948e@griffin.suse.cz>
+References: <200702041344.19117.mb@bu3sch.de>
+	 <20070205214333.4e77948e@griffin.suse.cz>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+Ic6Knv6d2hrFPreDk+P"
+Date: Mon, 05 Feb 2007 22:38:16 +0100
+Message-Id: <1170711496.30959.3.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Sat, Feb 17, 2007 at 03:24:27PM -0500, Jeff Garzik wrote:
->> John W. Linville wrote:
->>> Some late-breaking small and/or important changes before the 2.6.21
->>> merge window closes...
-> 
->> ACK.  Tried to pull, but there were conflicts with netdev#upstream. 
->> Since there are dependencies in netdev#upstream, looks like you need to 
->> resend against that.
->  
-> Ah, yes...I cloned your 'upstream' branch, pulled from my
-> 'upstream' branch, resolved the conflicts, and committed on my new
-> 'upstream-jgarzik' branch.
-> 
-> Please pull from here:
-> 
-> 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-jgarzik
 
-pulled
+--=-+Ic6Knv6d2hrFPreDk+P
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, 2007-02-05 at 21:43 +0100, Jiri Benc wrote:
+
+> What if the key is changed by the user space? You won't know that and
+> won't call the library function then. I think it needs to be designed
+> in the opposite way - the stack will call a driver's callback.
+>=20
+> Or am I missing something?
+
+Wouldn't you have to reset the TSC to zero in that case?
+
+johannes
+
+--=-+Ic6Knv6d2hrFPreDk+P
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBFx6PI/ETPhpq3jKURAjkfAJ4tqM7Z9gnxPrEz+qRsHf0CeB9GDgCggrTQ
+xaKpInpSuWwIxohnVD6+PMk=
+=TJjX
+-----END PGP SIGNATURE-----
+
+--=-+Ic6Knv6d2hrFPreDk+P--
 
