@@ -1,36 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:37337 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750978AbXBKOra (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Feb 2007 09:47:30 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] bcm43xx: Fix loss of association after resume
-Date: Sun, 11 Feb 2007 15:45:02 +0100
-Cc: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	Larry Finger <larry.finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-References: <45cc9ebb.+9O/IXvs/C9RyFnk%Larry.Finger@lwfinger.net> <200702111514.04893.mb@bu3sch.de> <1171204910.5032.7.camel@johannes.berg>
-In-Reply-To: <1171204910.5032.7.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200702111545.04183.rjw@sisk.pl>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49751 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933489AbXBEVtP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Feb 2007 16:49:15 -0500
+Subject: Re: d80211: current TKIP hwcrypto implementation seems to be broken
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+In-Reply-To: <1170711496.30959.3.camel@johannes.berg>
+References: <200702041344.19117.mb@bu3sch.de>
+	 <20070205214333.4e77948e@griffin.suse.cz>
+	 <1170711496.30959.3.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-M2TW4Rebaul5S71TYPCl"
+Date: Mon, 05 Feb 2007 22:45:46 +0100
+Message-Id: <1170711946.30959.5.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, 11 February 2007 15:41, Johannes Berg wrote:
-> On Sun, 2007-02-11 at 15:14 +0100, Michael Buesch wrote:
-> 
-> > > bcm43xx: IRQ_READY timeout
-> > > bcm43xx: core_up for active 802.11 core failed (-19)
-> > 
-> > I never tried suspend to disk with the driver.
-> > Larry, an idea why the microcode doesn't respond?
-> 
-> Rafael, is bcm43xx built in or modular?
 
-Modular.  Otherwise I wouldn't have been able to reload it. :-)
+--=-M2TW4Rebaul5S71TYPCl
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Rafael
+On Mon, 2007-02-05 at 22:38 +0100, Johannes Berg wrote:
+> On Mon, 2007-02-05 at 21:43 +0100, Jiri Benc wrote:
+>=20
+> > What if the key is changed by the user space? You won't know that and
+> > won't call the library function then. I think it needs to be designed
+> > in the opposite way - the stack will call a driver's callback.
+> >=20
+> > Or am I missing something?
+>=20
+> Wouldn't you have to reset the TSC to zero in that case?
+
+Ah, but the driver will need to know for the RX path. Sorry about the
+confusion.
+
+johannes
+
+--=-M2TW4Rebaul5S71TYPCl
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBFx6WK/ETPhpq3jKURAsJ4AJ9G8UHkczs8rbipABZsqowAtnUGTwCfdOp9
+S70H28G2URHj5pyWY33uYnA=
+=uY8S
+-----END PGP SIGNATURE-----
+
+--=-M2TW4Rebaul5S71TYPCl--
+
