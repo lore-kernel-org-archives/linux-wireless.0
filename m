@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sirius.lasnet.de ([62.75.240.18]:44932 "EHLO sirius.lasnet.de"
+Received: from ogre.sisk.pl ([217.79.144.158]:45291 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752488AbXBIXKp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Feb 2007 18:10:45 -0500
-Date: Fri, 9 Feb 2007 23:37:01 +0100
-From: Stefan Schmidt <stefan@datenfreihafen.org>
-To: Neil Brown <neilb@suse.de>
-Cc: James Ketrenos <jketreno@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
-Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
-Message-ID: <20070209223701.GE9358@datenfreihafen.org>
-References: <45CCE3CA.4050904@linux.intel.com> <17868.62734.497825.667962@notabene.brown>
+	id S965542AbXBFW2E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Feb 2007 17:28:04 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: bcm43xx-dev@lists.berlios.de,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: RFT bcm43xx: Really _GOOD_ news
+Date: Tue, 6 Feb 2007 23:27:16 +0100
+Cc: Pavel Roskin <proski@gnu.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+References: <45C8E64B.1050605@lwfinger.net> <1170800330.2613.10.camel@dv>
+In-Reply-To: <1170800330.2613.10.camel@dv>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="h56sxpGKRmy85csR"
-In-Reply-To: <17868.62734.497825.667962@notabene.brown>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702062327.17401.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday, 6 February 2007 23:18, Pavel Roskin wrote:
+> On Tue, 2007-02-06 at 14:34 -0600, Larry Finger wrote:
+> > I have really _GOOD_ news!!!!! While reviewing the latest changes in the V4 specs, I found an
+> > interchange of the PHY version and PHY revision fields, relative to the current V3 specs. Of the
+> > three cards that I have, the 4306 had the same value for the PHY version and revision. In addition,
+> > it was the only card of the 3 thaw would work at 11Mbs. A light went on!
+> > 
+> > After installing the patch listed below, both my 4318 and my 4311 will now run at 11Mbs. From tests
+> > with iperf, I now get rates of 6.1 - 6.5 Mbs from all three.
+> 
+> I'm getting a sustained 1.7 megabytes per second over FTP with 4312
+> (PCIe card in Dell Latitude).  The connection to a 802.11g AP was
+> established instantaneously.
+> 
+> I have never had much success with the softmac driver at all.  Now it's
+> working better than the d80211 driver, with waits for minutes before it
+> starts talking to the same 802.11g AP.
+> 
+> I think it's a 2.6.20.1 material, considering its gain/changes ratio.
+> I'm actually going to compile this kernel without debug and keep it as a
+> "production" kernel.
+> 
+> Congratulations and many many thanks!
 
---h56sxpGKRmy85csR
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I can confirm the driver works great with the patch!
 
-Hello.
+Many thanks, Larry!
 
-On Sat, 2007-02-10 at 09:26, Neil Brown wrote:
-> On Friday February 9, jketreno@linux.intel.com wrote:
-> >=20
-> > Ok.  Now... any questions?
-> >=20
->=20
-> Yes.  Does this require a closed user-space helper like the other
-> 3945ABG driver, or is it completely open (maybe excepting firmware)?
-
-Quote from the mentioned website:
-
-"In addition to using the new d80211 subsystem, this project uses a
-new microcode image which removes the need for the user space
-regulatory daemon for this adapter"
-
-regards
-Stefan Schmidt
-
---h56sxpGKRmy85csR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-Comment: http://www.datenfreihafen.org/contact.html
-
-iD8DBQFFzPeNbNSsvd31FmURAgduAKCClVJBs+Qbr7cdDdCaWvogGXk9HQCfZCZ8
-0FALQ567+B0WT0r4GMPNxlU=
-=MeuP
------END PGP SIGNATURE-----
-
---h56sxpGKRmy85csR--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+Greetings,
+Rafael
