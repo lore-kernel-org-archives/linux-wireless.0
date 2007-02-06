@@ -1,64 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:19977 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932629AbXBSUsu (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:46028 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965575AbXBFW3R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 15:48:50 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH] d80211: Allow drivers to configure default regulatory domain
-Date: Mon, 19 Feb 2007 15:48:26 -0500
-Cc: linux-wireless@vger.kernel.org
-References: <200702180031.38710.flamingice@sourmilk.net> <20070219204938.29520759@griffin.suse.cz>
-In-Reply-To: <20070219204938.29520759@griffin.suse.cz>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1177660.SbyWoKT2F0";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200702191548.30357.flamingice@sourmilk.net>
+	Tue, 6 Feb 2007 17:29:17 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HEYnI-0004PV-1Y
+	for linux-wireless@vger.kernel.org; Tue, 06 Feb 2007 17:28:08 -0500
+Subject: Re: RFT bcm43xx: Really _GOOD_ news
+From: Pavel Roskin <proski@gnu.org>
+To: Gene Heskett <gene.heskett@verizon.net>
+Cc: bcm43xx-dev@lists.berlios.de,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <200702061637.31756.gene.heskett@verizon.net>
+References: <45C8E64B.1050605@lwfinger.net>
+	 <200702061637.31756.gene.heskett@verizon.net>
+Content-Type: text/plain
+Date: Tue, 06 Feb 2007 17:29:13 -0500
+Message-Id: <1170800953.2613.17.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1177660.SbyWoKT2F0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Tue, 2007-02-06 at 16:37 -0500, Gene Heskett wrote:
 
-On Monday 19 February 2007 14:49, Jiri Benc wrote:
-> How is a driver supposed to handle this? By walking through the channel
-> list and based on some value obtained from its EEPROM (or firmware or
-> whatever) set appropriate flags? That sounds like a need for duplicate
-> code in drivers. Shouldn't the stack accept a regdomain code (defined
-> as an enum of integers or so) instead?
->
-Region codes are not standardized though many devices these days tend towar=
-ds=20
-using atheros' codes. Of course, you can make a d80211 specific region code=
-=20
-enum and map hardware region codes to those region codes and this would wor=
-k=20
-well for most hardware out there.. except for ipw3945. So, this patch would=
-=20
-allow the ipw3945 to do its own funny thing while everyone else uses a=20
-library to setup the channels.
+> That's great Larry.  Now how long does it take to get this into a
+> distro's 
+> update kernel queue?  Or do I have to build a kernel for my lappy, 
+> currently on FC5?
 
-=2DMichael Wu
+Gene, I think it would be better for all of us if we don't bother Larry
+with such questions and let him discover the secrets of the 802.11g
+rates :)
 
---nextPart1177660.SbyWoKT2F0
-Content-Type: application/pgp-signature
+I think that patch has a good chance to get into Fedora 7 from the
+beginning.  We may see it in Fedora Core 6 if it goes to Linux 2.6.20
+and this patch goes to the 2.6.20.x branch before that.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+I think the best we can do now would be to test the driver and report
+the results.  This would speed up the process of getting the patch to
+the kernel.  Yes, that means recompiling the kernel.
 
-iD8DBQBF2g0eT3Oqt9AH4aERAsklAJwLi1+DxwB3BNMyxYyNV+tbvOPhJACgqlub
-fRqpMaca7nzPvD1eYu8s0Eo=
-=F56K
------END PGP SIGNATURE-----
+-- 
+Regards,
+Pavel Roskin
 
---nextPart1177660.SbyWoKT2F0--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
