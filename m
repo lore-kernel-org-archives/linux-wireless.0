@@ -1,69 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35624 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932596AbXBSTxH (ORCPT
+Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:59928 "EHLO
+	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965362AbXBFGRT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 14:53:07 -0500
-Subject: Re: [PATCH v2] d80211: Add software sequence support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070219204004.6730a17a@griffin.suse.cz>
-References: <200702141423.27823.IvDoorn@gmail.com>
-	 <20070216135827.7d262ae3@griffin.suse.cz>
-	 <1171660484.3575.34.camel@johannes.berg>
-	 <200702162307.16826.IvDoorn@gmail.com>
-	 <1171663926.3575.42.camel@johannes.berg>
-	 <20070219204004.6730a17a@griffin.suse.cz>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VU/xgg+h0WYpZvwfwXPQ"
-Date: Mon, 19 Feb 2007 20:52:50 +0100
-Message-Id: <1171914770.15489.5.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 6 Feb 2007 01:17:19 -0500
+Date: Tue, 06 Feb 2007 00:16:35 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>, netdev@vger.kernel.org,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] bcm43xx: Ignore ampdu status reports
+Message-ID: <45c81d43.P6v/adIydh88LL+j%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Michael Buesch <mb@bu3sch.de>
 
---=-VU/xgg+h0WYpZvwfwXPQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+iIf bcm43xx were to process an afterburner (ampdu) status response, Linux would oops. The
+ampdu and intermediate status bits are properly named.
 
-On Mon, 2007-02-19 at 20:40 +0100, Jiri Benc wrote:
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-> Per-MAC address counters would work but it's another overhead we need
-> to add (allocate a new reference-counted structure, put a pointer to it
-> into sdata, correctly deal with it when MAC address changes).
-
-Yup, I agree. Put it into drivers :P
-
-> I think we can live with the counter in sdata. It's not perfect but it
-> should work for all useful cases. The only situation where it won't
-> work I have been able to imagine is the case I described (STA and WDS
-> with the same address) and this particular setup is currently being
-> denied by d80211 (and it's not allowed by 802.11, btw).
->=20
-> If we consider this as a problem later, we can always change to per-MAC
-> address counters or something as it's completely internal to the stack
-> and no driver changes would be required.
-
-Ok. I'm fine with putting it into the stack. I'll take Michael by the
-word though that he'll do dynamically registered tx handlers later ;)
-
-johannes
-
---=-VU/xgg+h0WYpZvwfwXPQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF2gAS/ETPhpq3jKURAu60AJwPcElfA6BSlKkykTFdOBhv6goOOACfT231
-9V95k9nhz7JjxRv3QEWIypQ=
-=C/nu
------END PGP SIGNATURE-----
-
---=-VU/xgg+h0WYpZvwfwXPQ--
-
+Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
++++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+@@ -1453,12 +1453,10 @@ static void handle_irq_transmit_status(s
+ 
+ 		bcm43xx_debugfs_log_txstat(bcm, &stat);
+ 
+-		if (stat.flags & BCM43xx_TXSTAT_FLAG_IGNORE)
++		if (stat.flags & BCM43xx_TXSTAT_FLAG_AMPDU)
++			continue;
++		if (stat.flags & BCM43xx_TXSTAT_FLAG_INTER)
+ 			continue;
+-		if (!(stat.flags & BCM43xx_TXSTAT_FLAG_ACK)) {
+-			//TODO: packet was not acked (was lost)
+-		}
+-		//TODO: There are more (unknown) flags to test. see bcm43xx_main.h
+ 
+ 		if (bcm43xx_using_pio(bcm))
+ 			bcm43xx_pio_handle_xmitstatus(bcm, &stat);
+Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_xmit.h
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_xmit.h
++++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_xmit.h
+@@ -137,14 +137,8 @@ struct bcm43xx_xmitstatus {
+ 	u16 unknown; //FIXME
+ };
+ 
+-#define BCM43xx_TXSTAT_FLAG_ACK		0x01
+-//TODO #define BCM43xx_TXSTAT_FLAG_???	0x02
+-//TODO #define BCM43xx_TXSTAT_FLAG_???	0x04
+-//TODO #define BCM43xx_TXSTAT_FLAG_???	0x08
+-//TODO #define BCM43xx_TXSTAT_FLAG_???	0x10
+-#define BCM43xx_TXSTAT_FLAG_IGNORE	0x20
+-//TODO #define BCM43xx_TXSTAT_FLAG_???	0x40
+-//TODO #define BCM43xx_TXSTAT_FLAG_???	0x80
++#define BCM43xx_TXSTAT_FLAG_AMPDU	0x10
++#define BCM43xx_TXSTAT_FLAG_INTER	0x20
+ 
+ u8 bcm43xx_plcp_get_ratecode_cck(const u8 bitrate);
+ u8 bcm43xx_plcp_get_ratecode_ofdm(const u8 bitrate);
