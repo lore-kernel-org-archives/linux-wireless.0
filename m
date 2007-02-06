@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.224]:30606 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752490AbXBDSb2 (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:56433 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030181AbXBFWSz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Feb 2007 13:31:28 -0500
-Received: by wr-out-0506.google.com with SMTP id i22so1054213wra
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Feb 2007 10:31:27 -0800 (PST)
-Message-ID: <9e4733910702041031i5edd6dfeq7f8c5179fee5e00e@mail.gmail.com>
-Date: Sun, 4 Feb 2007 13:31:27 -0500
-From: "Jon Smirl" <jonsmirl@gmail.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: SoftMAC vs FullMAC
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20070204123048.4bhesocg4kosgscg@webmail.spamcop.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <9e4733910702040922n63736d27h7ab027dc90ae8989@mail.gmail.com>
-	 <20070204123048.4bhesocg4kosgscg@webmail.spamcop.net>
+	Tue, 6 Feb 2007 17:18:55 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HEYdF-0004Dh-8i
+	for linux-wireless@vger.kernel.org; Tue, 06 Feb 2007 17:17:45 -0500
+Subject: Re: RFT bcm43xx: Really _GOOD_ news
+From: Pavel Roskin <proski@gnu.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <45C8E64B.1050605@lwfinger.net>
+References: <45C8E64B.1050605@lwfinger.net>
+Content-Type: text/plain
+Date: Tue, 06 Feb 2007 17:18:50 -0500
+Message-Id: <1170800330.2613.10.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/4/07, Pavel Roskin <proski@gnu.org> wrote:
-> In fact, Atheros chips are not that intelligent to be treated as FullMAC, but
-> going to d80211 removes many chip specific features.
+On Tue, 2007-02-06 at 14:34 -0600, Larry Finger wrote:
+> I have really _GOOD_ news!!!!! While reviewing the latest changes in the V4 specs, I found an
+> interchange of the PHY version and PHY revision fields, relative to the current V3 specs. Of the
+> three cards that I have, the 4306 had the same value for the PHY version and revision. In addition,
+> it was the only card of the 3 thaw would work at 11Mbs. A light went on!
+> 
+> After installing the patch listed below, both my 4318 and my 4311 will now run at 11Mbs. From tests
+> with iperf, I now get rates of 6.1 - 6.5 Mbs from all three.
 
-What types of features are removed? For example Atheros turbo mode can
-be treated like another PHY layer implementation.
+I'm getting a sustained 1.7 megabytes per second over FTP with 4312
+(PCIe card in Dell Latitude).  The connection to a 802.11g AP was
+established instantaneously.
 
-If it is just off-loading the implementation of standard behavior then
-we may actually be better off ignoring this capability and
-implementing the standard behavior in the host.
+I have never had much success with the softmac driver at all.  Now it's
+working better than the d80211 driver, with waits for minutes before it
+starts talking to the same 802.11g AP.
 
-It's not even clear to me that doing encryption is a wireless
-co-processor is a win. It is almost certain that the host can perform
-the same algorithms many times faster that an embedded wireless
-processor.  Moving encryption onto the host reduces the latency of the
-connection.
+I think it's a 2.6.20.1 material, considering its gain/changes ratio.
+I'm actually going to compile this kernel without debug and keep it as a
+"production" kernel.
+
+Congratulations and many many thanks!
 
 -- 
-Jon Smirl
-jonsmirl@gmail.com
+Regards,
+Pavel Roskin
+
