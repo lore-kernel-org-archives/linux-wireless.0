@@ -1,71 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:57886 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1946163AbXBPUuR (ORCPT
+Received: from vms046pub.verizon.net ([206.46.252.46]:44559 "EHLO
+	vms046pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965677AbXBGID7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Feb 2007 15:50:17 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH 09/10] cfg80211: pending config
-Date: Fri, 16 Feb 2007 15:49:52 -0500
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Jiri Benc <jbenc@suse.cz>
-References: <20070215144241.847938000@sipsolutions.net> <20070215144300.419560000@sipsolutions.net> <1171653056.4153.38.camel@localhost.localdomain>
-In-Reply-To: <1171653056.4153.38.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart5075388.6eEOyqKOtR";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200702161549.52856.flamingice@sourmilk.net>
+	Wed, 7 Feb 2007 03:03:59 -0500
+Received: from coyote.coyote.den ([141.153.122.81])
+ by vms046.mailsrvcs.net (Sun Java System Messaging Server 6.2-6.01 (built Apr
+ 3 2006)) with ESMTPA id <0JD300EM52ELQFO5@vms046.mailsrvcs.net> for
+ linux-wireless@vger.kernel.org; Wed, 07 Feb 2007 02:03:58 -0600 (CST)
+Date: Wed, 07 Feb 2007 03:03:40 -0500
+From: Gene Heskett <gene.heskett@verizon.net>
+Subject: Re: RFT bcm43xx: Really _GOOD_ news
+In-reply-to: <45C95830.6040507@lwfinger.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Pavel Roskin <proski@gnu.org>, bcm43xx-dev@lists.berlios.de,
+	wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+Message-id: <200702070303.40968.gene.heskett@verizon.net>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+References: <45C8E64B.1050605@lwfinger.net>
+ <200702061848.00815.gene.heskett@verizon.net> <45C95830.6040507@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart5075388.6eEOyqKOtR
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-On Friday 16 February 2007 14:10, Dan Williams wrote:
-> > --- wireless-dev.orig/include/net/cfg80211.h	2007-02-15
-> > 13:23:41.967940064 +0100 +++
-> > wireless-dev/include/net/cfg80211.h	2007-02-15 13:23:43.707940064 +0100
-> > @@ -11,6 +11,8 @@
-> >   * Copyright 2006 Johannes Berg <johannes@sipsolutions.net>
-> >   */
-> >
-> > +#define SSID_MAX_LEN	32
-> > +
+On Tuesday 06 February 2007 23:40, Larry Finger wrote:
+>I was a bit too enthusiastic. The patch I sent earlier actually breaks
+> the 4318. It does make 4311 and 4312's work for the wrong reason. If
+> you have that card, you can use it in the meantime while we find out
+> just why it helps there.
 >
-> This has _got_ to be defined somewhere else in the stack?  Can we use
-> that define, or is it being moved to here?  Seems a shame to have it
-> more than one place.
+>Sorry for the false alarm, but we are making progress.
 >
-> On a side note, many many drivers need something like this, and many
-> many drivers redefine it internally.  Is there some header that all
-> drivers (even fullmac like airo, orinoco, atmel, and libertas) can get
-> this from?
->
-That's what include/linux/ieee80211.h is (or will be) for.
+>Larry
 
--Michael Wu
+And the 4318 is whats in my lappy.  What does it break?
 
---nextPart5075388.6eEOyqKOtR
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBF1hjwT3Oqt9AH4aERAhs7AJ44ApLoboNbbsijMzjbm7AwJ+dgdACeJ4+o
-QOM2WEK3qPsQoDA+HYIvr3k=
-=Tn4Z
------END PGP SIGNATURE-----
-
---nextPart5075388.6eEOyqKOtR--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Cheers, Gene
+"There are four boxes to be used in defense of liberty:
+ soap, ballot, jury, and ammo. Please use in that order."
+-Ed Howdershelt (Author)
+Yahoo.com and AOL/TW attorneys please note, additions to the above
+message by Gene Heskett are:
+Copyright 2007 by Maurice Eugene Heskett, all rights reserved.
