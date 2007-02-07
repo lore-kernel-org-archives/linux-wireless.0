@@ -1,55 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:46002 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946313AbXBPXyT convert rfc822-to-8bit (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:56517 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161305AbXBGNx3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Feb 2007 18:54:19 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HICsp-0004vT-T6
-	for linux-wireless@vger.kernel.org; Fri, 16 Feb 2007 18:52:55 -0500
-Received: from proski by gnu.org with local (Exim 4.66)
-	(envelope-from <proski@gnu.org>)
-	id 1HICu9-0007Rb-UJ
-	for linux-wireless@vger.kernel.org; Fri, 16 Feb 2007 18:54:17 -0500
-Subject: wireless-dev.git breaks wireless extensions
-From: Pavel Roskin <proski@gnu.org>
-To: linux-wireless <linux-wireless@vger.kernel.org>
+	Wed, 7 Feb 2007 08:53:29 -0500
+Message-ID: <45C9D9D6.2070700@lwfinger.net>
+Date: Wed, 07 Feb 2007 07:53:26 -0600
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: RFT: The real fix for BCM4311 and BCM4312
+References: <45C96B8A.8010000@lwfinger.net> <1170830071.11150.62.camel@dv> <200702071443.19676.rjw@sisk.pl>
+In-Reply-To: <200702071443.19676.rjw@sisk.pl>
 Content-Type: text/plain; charset=ISO-8859-1
-Date: Fri, 16 Feb 2007 18:54:17 -0500
-Message-Id: <1171670057.28539.5.camel@dv>
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+Rafael J. Wysocki wrote:
+> On Wednesday, 7 February 2007 07:34, Pavel Roskin wrote:
+>> On Wed, 2007-02-07 at 00:02 -0600, Larry Finger wrote:
+>>> The patch below will only affect cards with PHY revision 8, which I think are only BCM4311 and
+>>> BCM4312. At least those are the only ones in the database.
+>> BCM4312, old patch: 1.7M/s
+>> no patch: 26k/s
+>> no patch, rate 1: 100k/s
+>> new patch: 1.7M/s
+>> new patch, rate 1: 1.1M/s
+>> new patch, rate 2: 1.5M/s
+>> new patch, rate 5.5: 1.7M/s
+>> new patch, rate 18: 2.2M/s
+>> new patch, rate 36: 2.2M/s
+>>
+>> Yes, it looks like the new patch is as good as the previous one for my card.
+> 
+> The patch is apparently sufficient for me too.  Moreover, the D-Link APs that
+> were previously "invisible" are now listed by "iwlist ... scan" and I can
+> connect with them.  Thanks again!
 
-Today's wireless-dev.git breaks wireless extensions.  It forces
-CONFIG_CFG80211 to be enabled.  I reported that it breaks legacy driver=
-s
-back in December 2006.  It's still broken.  That's what I get for
-MadWifi:
+Great - a two-for-one! That must have been a signal strength issue.
 
-ath0      4=BF3=C0=D8=BD=BF  ESSID:"" [51]  Nickname:""
-          Channel:-0  Access Point: 9F:DD:13:94:33:C0   Bit Rate=3D-576=
-733 kb/s  =20
-          Tx-Power=3Doff   Sensitivity=3D-576733388 dBm =20
-          Retry:off   RTS thr:off   Fragment thr:off
-          Power Management:off
-          Link Quality=3D0/94  Signal level=3D-96 dBm  Noise level=3D-9=
-6 dBm
-          Rx invalid nwid:2088  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-I'll appreciate if things known be broken are not enabled by default,
-let alone unconditionally.
-
---=20
-Regards,
-Pavel Roskin
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Larry
