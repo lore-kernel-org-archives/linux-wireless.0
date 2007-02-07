@@ -1,56 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.237]:35008 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161079AbXBOTsY (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60563 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161313AbXBGN66 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Feb 2007 14:48:24 -0500
-Received: by wr-out-0506.google.com with SMTP id i21so783395wra
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Feb 2007 11:48:23 -0800 (PST)
-Message-ID: <43e72e890702151148t59552354h8c2ddaf06576b863@mail.gmail.com>
-Date: Thu, 15 Feb 2007 14:48:23 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: nl80211 userspace
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Nick Kossifidis" <mickflemm@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890702151146i7fb5915di4aa37f20e6cc3823@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-References: <1171479846.3709.3.camel@johannes.berg>
-	 <40f31dec0702150017x3ecfca57ucded8f1d88bbb121@mail.gmail.com>
-	 <20070215141944.GA3310@tuxdriver.com>
-	 <1171551930.5220.2.camel@johannes.berg>
-	 <43e72e890702151146i7fb5915di4aa37f20e6cc3823@mail.gmail.com>
+	Wed, 7 Feb 2007 08:58:58 -0500
+Subject: Re: [PATCH] bcm43xx: Fix for oops on resume
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>, netdev@vger.kernel.org,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+In-Reply-To: <45C9D930.5010307@lwfinger.net>
+References: <45c8bd59.oamnvaNRMZvKoPBa%Larry.Finger@lwfinger.net>
+	 <1170850549.6798.22.camel@johannes.berg>  <45C9D2E1.7040906@lwfinger.net>
+	 <1170855150.6798.38.camel@johannes.berg>  <45C9D930.5010307@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9jRpBJcTCvtAsdp1bUZa"
+Date: Wed, 07 Feb 2007 14:54:50 +0100
+Message-Id: <1170856490.6798.40.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/15/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On 2/15/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Thu, 2007-02-15 at 09:19 -0500, John W. Linville wrote:
-> >
-> > > P.S.  Michael is, of course, right that the tool for users probably
-> > > should not rely on python (or perl, et al).  FWIW, I got the
-> > > impression that Johannes's tool was meant to use in the short-run
-> > > for developers...?
-> >
-> > Yes. The advantage is that you don't even need to recompile it for new
-> > commands. And hey, maybe we can hack it up to generate the C code for
-> > the real tool :P
->
-> I think the tool we should rely on next should be based on
-> wpa_supplicant/wpa_cli codebase. wpa_supplicant already handles wext,
-> directly through ioclt(), but nevertheless it does call the right
-> ioctls. As such, it doesn't depend on iwlib so distributions who
-> decide to ditch iwconfig won't need a the old library and still get
-> backward compatibility . Extending it to support nl80211 would benefit
-> the wpa_supplicant codebase and we can take advantage and fork our own
-> new utility out of it. How about calling it "iw" as ifconfig's
-> replacement is called "ip" ?
 
-Oh and also -- what we can do for the userspace tool is rely on the
-old wext ioctls for each call until the respective nl80211 interface
-to cfg80211 is added. We can move forward replacing the ioctls as we
-go with each release of this new tool.
+--=-9jRpBJcTCvtAsdp1bUZa
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Wed, 2007-02-07 at 07:50 -0600, Larry Finger wrote:
+
+> Could you please apply this patch and tell me what gets printed after you=
+ resume, and whether you
+> did a suspend to RAM or disk?
+
+Not a bad idea. I can test suspend to ram as well as to disk, just got
+both working again.
+
+The kernel I'm running right now was built on my powermac so I can't do
+it right away (otherwise I could've just recompiled the bcm43xx module)
+but I'll do it later today or tomorrow.
+
+Usually, to get my connection back after a suspend, I just have to set
+the ssid again.
+
+johannes
+
+--=-9jRpBJcTCvtAsdp1bUZa
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBFydoq/ETPhpq3jKURAgBZAJ49QdaU3ysezdokLHtd7ZVAjQTVXQCggfRn
+0mv6T4AgFAjAqjVV5BkIC6o=
+=D62B
+-----END PGP SIGNATURE-----
+
+--=-9jRpBJcTCvtAsdp1bUZa--
+
