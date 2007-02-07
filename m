@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:57966 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751756AbXBMTQJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Feb 2007 14:16:09 -0500
-Subject: Re: [PATCH] prism54: correct assignment of DOT1XENABLE in WE-19   codepaths
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <1171393331.10344.106.camel@johannes.berg>
-References: <1171393222.5329.11.camel@localhost.localdomain>
-	 <1171393331.10344.106.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 13 Feb 2007 14:18:26 -0500
-Message-Id: <1171394306.5329.24.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from wr-out-0506.google.com ([64.233.184.224]:17962 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965239AbXBGCqE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Feb 2007 21:46:04 -0500
+Received: by wr-out-0506.google.com with SMTP id 68so92855wri
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Feb 2007 18:46:03 -0800 (PST)
+Message-ID: <9e4733910702061846y3117ff20g9bf234b25cb91116@mail.gmail.com>
+Date: Tue, 6 Feb 2007 21:46:03 -0500
+From: "Jon Smirl" <jonsmirl@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: IFF_BROADCAST and dscape
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-02-13 at 20:02 +0100, Johannes Berg wrote:
-> On Tue, 2007-02-13 at 14:00 -0500, Dan Williams wrote:
-> > Correct assignment of DOT1XENABLE in WE-19 codepaths.
-> > RX_UNENCRYPTED_EAPOL = 1 really means setting DOT1XENABLE _off_, and
-> > vice versa.  The original WE-19 patch erroneously reversed that.  This
-> > patch fixes association with unencrypted and WEP networks when using
-> > wpa_supplicant.
-> > 
-> > It also adds two missing break statements that, left out, could result
-> > in incorrect card configuration.
-> > 
-> > Please commit to both development and stable branches.
+Dscape doesn't appear to be setting IFF_BROADCAST. I have an existing
+app that is refusing to load since it wants that flag. Grepping the
+dscape source doesn't show IFF_BROADCAST.
 
-                                          ^^^^^
+zd1211 on Intel sets it:
+eth1      Link encap:Ethernet  HWaddr 00:02:72:53:E3:A6
+          UP BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:0 (0.0 b)  TX bytes:0 (0.0 b)
 
-Right; applicable to anything after _and_ including 2.6.19, which is
-when I think the WE-19 patch landed.
+rt2500usb on dscape doesn't
+wlan0     Link encap:Ethernet  HWaddr 00:15:E9:2D:76:57
+          UP RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0
+          RX bytes:0 (0.0 b)  TX bytes:0 (0.0 b)
 
-Dan
-
-> 
-> I guess it could also be applicable for stable?
-> 
-> johannes
-
+-- 
+Jon Smirl
+jonsmirl@gmail.com
