@@ -1,55 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:53390 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964939AbXBLQcW (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:43370 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161294AbXBGNXs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Feb 2007 11:32:22 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so638261uga
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Feb 2007 08:32:17 -0800 (PST)
-Message-ID: <45D0968F.8040103@gmail.com>
-Date: Mon, 12 Feb 2007 17:32:15 +0100
-From: dragoran <drago01@gmail.com>
+	Wed, 7 Feb 2007 08:23:48 -0500
+Message-ID: <45C9D2E1.7040906@lwfinger.net>
+Date: Wed, 07 Feb 2007 07:23:45 -0600
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-To: "Hesse, Christian" <mail@earthworm.de>
-CC: James Ketrenos <jketreno@linux.intel.com>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] [ANNOUNCE] d80211 based driver for Intel PRO/Wireless  3945ABG
-References: <45CCE3CA.4050904@linux.intel.com>	<200702101424.00156.mail@earthworm.de> <200702101525.56820.mail@earthworm.de>
-In-Reply-To: <200702101525.56820.mail@earthworm.de>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, netdev@vger.kernel.org,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] bcm43xx: Fix for oops on resume
+References: <45c8bd59.oamnvaNRMZvKoPBa%Larry.Finger@lwfinger.net> <1170850549.6798.22.camel@johannes.berg>
+In-Reply-To: <1170850549.6798.22.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hesse, Christian wrote:
-> On Saturday 10 February 2007 14:23, Hesse, Christian wrote:
->   
->> On Friday 09 February 2007 22:12, James Ketrenos wrote:
->>     
->>> We are pleased to announce the availability of a new driver for the
->>> Intel PRO/Wireless 3945ABG Network Connection adapter.
->>>       
->> Wow, great news on this rainy saturday! ;-)
->>
->> The driver works perfectly, I'm writing this mail via wireless link.
->> However there are two things to note:
->>
->> The driver generates two network devices. The second one is for promicious
->> mode? Is there any chance to disable the interface? ifrename renamed the
->> wrong one to wlan0 and I had to tell my system to use eth1 for the wireless
->> connection.
->>
->> Second problem is that I can't unload the module. I get the message "FATAL:
->> Module iwlwifi is in use." even if both interfaces are down.
->>     
->
-> Oh, I forgot one note: "make patch_kernel" is terribly broken. Any chance to 
-> get this fixed soon?
->   
->   
-confirmed on my box it resulted in deleting all kernel modules.
-(had to reinstall the kernel)
-(make modules in /lib/modules/`uname -r`/build after make patch_kernel)
-this was on fc6 x86_64
+Johannes Berg wrote:
+> On Tue, 2007-02-06 at 11:39 -0600, Larry Finger wrote:
+>> There is a kernel oops on bcm43xx when resuming due to an overly tight timeout loop.
+> 
+> Come to think of it... Is there any chance of fixing the actual oops
+> that happens in this case? I can imagine broken hardware or firmware
+> that causes this as well and we don't really want to oops in that case
+> either... That's why we have the timeout in the first place, to not hang
+> there forever.
+> 
+> Nothing against this patch though.
 
+As you suggested earlier, a slow clock setting in the bcm43xx device may be the cause of this
+difficulty. If my laptop would suspend/resume correctly, then I could test various fixes based on
+that hypothesis. Since it does not, I think the band-aid approach is warranted. A proper fix is
+still on my agenda; however, getting full data rates still has priority.
 
+Larry
