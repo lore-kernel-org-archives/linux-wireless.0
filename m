@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:31439 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932578AbXBSUkm (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:35069 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965544AbXBGGef (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 15:40:42 -0500
-Message-ID: <45DA0A7C.5010001@linux.intel.com>
-Date: Mon, 19 Feb 2007 12:37:16 -0800
-From: James Ketrenos <jketreno@linux.intel.com>
-MIME-Version: 1.0
-To: Jiri Benc <jbenc@suse.cz>
-CC: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] d80211: Allow drivers to configure default regulatory  domain
-References: <200702180031.38710.flamingice@sourmilk.net> <20070219204938.29520759@griffin.suse.cz>
-In-Reply-To: <20070219204938.29520759@griffin.suse.cz>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 7 Feb 2007 01:34:35 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HEgMv-00065l-0e
+	for linux-wireless@vger.kernel.org; Wed, 07 Feb 2007 01:33:25 -0500
+Subject: Re: RFT: The real fix for BCM4311 and BCM4312
+From: Pavel Roskin <proski@gnu.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <45C96B8A.8010000@lwfinger.net>
+References: <45C96B8A.8010000@lwfinger.net>
+Content-Type: text/plain
+Date: Wed, 07 Feb 2007 01:34:31 -0500
+Message-Id: <1170830071.11150.62.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Benc wrote:
-> On Sun, 18 Feb 2007 00:31:33 -0500, Michael Wu wrote:
->> This patch allows drivers to configure the default set of channels if the
->> device reports its default regulatory domain.
-> 
-> How is a driver supposed to handle this? By walking through the channel
-> list and based on some value obtained from its EEPROM (or firmware or
-> whatever) set appropriate flags? 
+On Wed, 2007-02-07 at 00:02 -0600, Larry Finger wrote:
+> The patch below will only affect cards with PHY revision 8, which I think are only BCM4311 and
+> BCM4312. At least those are the only ones in the database.
 
-Yes.
+BCM4312, old patch: 1.7M/s
+no patch: 26k/s
+no patch, rate 1: 100k/s
+new patch: 1.7M/s
+new patch, rate 1: 1.1M/s
+new patch, rate 2: 1.5M/s
+new patch, rate 5.5: 1.7M/s
+new patch, rate 18: 2.2M/s
+new patch, rate 36: 2.2M/s
 
-> That sounds like a need for duplicate code in drivers. 
+Yes, it looks like the new patch is as good as the previous one for my card.
 
-Unfortunately it is vendor and device specific.  I think we can 
-generalize things to provide helper functions and macros such that each 
-driver does it roughly the same way, but the stack itself can't do it.
+The rates are reported by wget, so they are not nearly precise, but the
+difference of 2 orders of magnitude just cannot be explained by anything
+other than the fix to the driver.
 
- > Shouldn't the stack accept a regdomain code (defined
-> as an enum of integers or so) instead?
+-- 
+Regards,
+Pavel Roskin
 
-The hardware needs to tell the stack all the channels it supports and 
-the restrictions on those channels.  The stack can then further restrict 
-the set of channels based on the user input to a "standard" set of 
-countries.
-
-"regdomains" are not static maps; they evolve over time as governments 
-change their regulations.  The channels and features supported by 
-hardware is static based on what the device was certified for.
-
-James
