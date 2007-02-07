@@ -1,69 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:25447 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932881AbXBLDOF (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52988 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161226AbXBGLrY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Feb 2007 22:14:05 -0500
-From: Michael Wu <flamingice@sourmilk.net>
+	Wed, 7 Feb 2007 06:47:24 -0500
+Subject: Re: d80211: Fix TKIP key type
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Michael Buesch <mb@bu3sch.de>
-Subject: [PATCH] bcm43xx-d80211: update to new statistics reporting API
-Date: Sun, 11 Feb 2007 22:13:29 -0500
-Cc: linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2664391.qfmHJqWRIa";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200702112213.29648.flamingice@sourmilk.net>
+Cc: Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200702061644.11150.mb@bu3sch.de>
+References: <200702031832.48505.mb@bu3sch.de>
+	 <20070205221957.3c9003b5@griffin.suse.cz>
+	 <200702061033.50134.flamingice@sourmilk.net>
+	 <200702061644.11150.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-L80WVWnskIoGEyk/wluk"
+Date: Wed, 07 Feb 2007 12:44:28 +0100
+Message-Id: <1170848668.6798.13.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2664391.qfmHJqWRIa
-Content-Type: text/plain;
-  charset="us-ascii"
+
+--=-L80WVWnskIoGEyk/wluk
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-bcm43xx-d80211: update to new statistics reporting API
+On Tue, 2007-02-06 at 16:44 +0100, Michael Buesch wrote:
 
-This patch updates bcm43xx-d80211 to the new statistics reporting API.
+> So I think we need a callback or something that sets the key in HW.
+> Maybe we can do that in the already existing set_key callback.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-=2D--
+Yes, your original patch with the library functions should be fine, if
+the driver needs it it can request it either in set_key or during tx (if
+the TSC cycled or whatever)
 
- drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+johannes
 
-diff --git a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c=20
-b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
-index 9f4d51d..054ea09 100644
-=2D-- a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
-+++ b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
-@@ -3560,7 +3560,9 @@ static int bcm43xx_wireless_init(struct
- 		    IEEE80211_HW_MONITOR_DURING_OPER |
- 		    IEEE80211_HW_DEVICE_HIDES_WEP |
- 		    IEEE80211_HW_WEP_INCLUDE_IV;
-=2D	hw->maxssi =3D BCM43xx_RX_MAX_SSI;
-+	hw->max_rssi =3D -110;
-+	hw->max_signal =3D BCM43xx_RX_MAX_SSI;
-+	hw->max_noise =3D -110;
- 	hw->queues =3D 1;
- 	hw->dev =3D &dev->dev;
- 	if (is_valid_ether_addr(sprom->r1.et1mac)) {
-
---nextPart2664391.qfmHJqWRIa
-Content-Type: application/pgp-signature
+--=-L80WVWnskIoGEyk/wluk
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBFz9tZT3Oqt9AH4aERAoE0AJ9R8tZsFsS3PfRbmF3YN1FQ+/bW5QCbBb7N
-mDQPLYRFJJ0N3AXNhoq7wcM=
-=leYK
+iD8DBQBFybuc/ETPhpq3jKURAnc9AKCJtJdo9SSnMWKW6AZZKedT5p3doQCfcD2z
+44nG2/kf4eFAESJTmCl0O8M=
+=E1f4
 -----END PGP SIGNATURE-----
 
---nextPart2664391.qfmHJqWRIa--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+--=-L80WVWnskIoGEyk/wluk--
+
