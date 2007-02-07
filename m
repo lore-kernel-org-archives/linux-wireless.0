@@ -1,55 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:47350 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751183AbXBZJ04 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:35260
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161329AbXBGOO4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Feb 2007 04:26:56 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so1688808nfa
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Feb 2007 01:26:55 -0800 (PST)
-Message-ID: <a32f33a40702260126p29915160n10b8790b19f405aa@mail.gmail.com>
-Date: Mon, 26 Feb 2007 10:26:55 +0100
-From: "Ivo Van Doorn" <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 3/3] d80211: Split antenna selection into TX and RX antenna
-Cc: "Jiri Benc" <jbenc@suse.cz>, "Michael Buesch" <mb@bu3sch.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070226011810.GC4936@tuxdriver.com>
+	Wed, 7 Feb 2007 09:14:56 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] bcm43xx: Fix incorrect definition of PHY revision
+Date: Wed, 7 Feb 2007 15:14:16 +0100
+Cc: John Linville <linville@tuxdriver.com>, netdev@vger.kernel.org,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <45c94821.qjljSnUzfws7mU7T%Larry.Finger@lwfinger.net>
+In-Reply-To: <45c94821.qjljSnUzfws7mU7T%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <200702211702.48001.IvDoorn@gmail.com>
-	 <20070223172815.359080e8@griffin.suse.cz>
-	 <200702231739.04950.IvDoorn@gmail.com>
-	 <20070226011810.GC4936@tuxdriver.com>
+Content-Type: text/plain; charset=US-ASCII
+Message-Id: <200702071514.17516.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wednesday 07 February 2007 04:31, Larry Finger wrote:
+> There is a typographical error in the spefications that interchange the PHY version
+> and revision. Fixing this error makes all BCM43xx varieties work at full CCCK rates.
+> 
+> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+> ---
+> 
+> John,
+> 
+> This patch should be put into wireless-2.6 and into 'upstream' as soon as possible.
+> I will be sending it to stable for inclusion in 2.6.20.1, and whatever other kernels
+> are still being maintained by -stable.
+> 
+> Larry
+> ---
+>  
+> Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+> ===================================================================
+> --- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+> +++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+> @@ -3704,9 +3704,9 @@ static int bcm43xx_read_phyinfo(struct b
+>  
+>  	value = bcm43xx_read16(bcm, BCM43xx_MMIO_PHY_VER);
+>  
+> -	phy_version = (value & 0xF000) >> 12;
+> +	phy_rev = (value & 0xF000) >> 12;
+>  	phy_type = (value & 0x0F00) >> 8;
+> -	phy_rev = (value & 0x000F);
+> +	phy_version = (value & 0x000F);
+>  
+>  	dprintk(KERN_INFO PFX "Detected PHY: Version: %x, Type %x, Revision %x\n",
+>  		phy_version, phy_type, phy_rev);
 
-> > Sorry about that, I had renamed rx_params to rx_status in my cvs tree and hadn't set that
-> > correctly to the git tree yet. I'll try to update rt2x00 inside wireless-dev as soon as possible,
-> > but in the mean time here is the correct patch.
->
-> Since you brought it up... :-)
->
-> It would be a big help if rt2x00 could keep upstream in-sync with your
-> current developments.  FWIW, I expect wireless-dev to get picked-up
-> in -mm soon, and Fedora has it in rawhide already.  So, it is in your
-> own best interest to make sure that we have the latest fixes here,
-> unless you want to support two different versions... :-)
 
-True true, I am terribly late with updating rt2x00 in the wireless-dev tree. :(
-I'll try to send several patches this week, I am not sure if that will be entire
-update because some changes are quite big.
-Although I should note that rt2x00 still isn't stable, rt61pci and rt73usb seem
-to be problematic in the sense that they still fail to associate or
-manage to associate
-only for a second before being disassociated again. The other drivers
-in rt2x00 also
-show various problematic behavior with suspend/resume, running
-ifconfig down followed
-by ifconfig up, monitor mode that isn't picking up everything,
-scanning that only picks
-up the strongest signals (Even APs that are a few meters away are
-sometimes not detected.) etc. etc.
+I don't think this is correct.
+>From which part of the specs did you get this?
+http://bcm-v4.sipsolutions.net/802.11/PHY is where the PHY_Version
+register is explained. "phy_version"=="AnalogType"
 
-Ivo
+Actually it is possible that phy_revision is mask 0xFF, but that's
+not too important at the moment, as we don't have revisions>0xF, yet.
+
+But besides that, it's interresting that this "fixes" things for you.
+
+Especially since wireless-2.6 has no support for hw-power-control, which
+is needed by cards 4318 and newer.
+
+-- 
+Greetings Michael.
