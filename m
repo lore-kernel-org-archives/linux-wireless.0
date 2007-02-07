@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:42776 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932930AbXBESQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Feb 2007 13:16:48 -0500
-Date: Mon, 5 Feb 2007 19:16:46 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC PATCH 1/3] cfg80211 and nl80211
-Message-ID: <20070205191646.54763005@griffin.suse.cz>
-In-Reply-To: <1170697795.3572.32.camel@johannes.berg>
-References: <20070131013717.GA28076@tuxdriver.com>
-	<200701302146.05289.flamingice@sourmilk.net>
-	<1170325092.2236.17.camel@johannes.berg>
-	<200702051245.35452.flamingice@sourmilk.net>
-	<1170697795.3572.32.camel@johannes.berg>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60570 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161316AbXBGN7I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Feb 2007 08:59:08 -0500
+Subject: Re: [PATCH] bcm43xx: Fix for oops on resume
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>, netdev@vger.kernel.org,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+In-Reply-To: <45C9D930.5010307@lwfinger.net>
+References: <45c8bd59.oamnvaNRMZvKoPBa%Larry.Finger@lwfinger.net>
+	 <1170850549.6798.22.camel@johannes.berg>  <45C9D2E1.7040906@lwfinger.net>
+	 <1170855150.6798.38.camel@johannes.berg>  <45C9D930.5010307@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-R/A4r1pYT2q7E3qWbCQS"
+Date: Wed, 07 Feb 2007 14:56:06 +0100
+Message-Id: <1170856566.6798.42.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 05 Feb 2007 18:49:55 +0100, Johannes Berg wrote:
-> > Let's make monitor interfaces 
-> > resemble monitoring ethernet a little more by reporting both RXed frames and 
-> > TXed frames. *BSD does this too and it makes running ethereal on monitor 
-> > interfaces much more useful. 
-> 
-> We do this right now afaik.
 
-AFAIK we report RXed frames only.
+--=-R/A4r1pYT2q7E3qWbCQS
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> > TX frame reporting can be done simply in the 
-> > ieee80211_tx_status call, allowing the TX status to be reported on real 
-> > frames. 
-> 
-> I don't quite understand this comment. TX status reporting should go via
-> nl80211.
+On Wed, 2007-02-07 at 07:50 -0600, Larry Finger wrote:
 
-I think Michael meant that an elegant way for sending also TXed frames
-to monitor interfaces is to do that in ieee80211_tx_status. Makes sense
-to me.
+> Could you please apply this patch and tell me what gets printed after you=
+ resume, and whether you
+> did a suspend to RAM or disk?
 
- Jiri
+Oh and if anyone else does this please also let us know what it prints
+on a regular freshly booted modprobe.
 
--- 
-Jiri Benc
-SUSE Labs
+johannes
+
+--=-R/A4r1pYT2q7E3qWbCQS
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBFydp2/ETPhpq3jKURAjG5AJ90t2l0mjc5nqn7ZQkgu5Q3P977JgCfYE2g
+dIri/oeJbkMw444+Vu1g4fg=
+=7abD
+-----END PGP SIGNATURE-----
+
+--=-R/A4r1pYT2q7E3qWbCQS--
+
