@@ -1,66 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:36960 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932805AbXBKM6h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Feb 2007 07:58:37 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52483 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161012AbXBGNfV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Feb 2007 08:35:21 -0500
+Subject: Re: [PATCH] bcm43xx: Fix for oops on resume
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH] bcm43xx: Fix loss of association after resume
-Date: Sun, 11 Feb 2007 13:56:11 +0100
-Cc: bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
-	wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-References: <45cc9ebb.+9O/IXvs/C9RyFnk%Larry.Finger@lwfinger.net> <200702101811.37355.rjw@sisk.pl> <45CE2C2F.8070502@lwfinger.net>
-In-Reply-To: <45CE2C2F.8070502@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702111356.12206.rjw@sisk.pl>
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, netdev@vger.kernel.org,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+In-Reply-To: <45C9D2E1.7040906@lwfinger.net>
+References: <45c8bd59.oamnvaNRMZvKoPBa%Larry.Finger@lwfinger.net>
+	 <1170850549.6798.22.camel@johannes.berg>  <45C9D2E1.7040906@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dW6QAIV0t5HDZ8bF3dEP"
+Date: Wed, 07 Feb 2007 14:32:30 +0100
+Message-Id: <1170855150.6798.38.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday, 10 February 2007 21:33, Larry Finger wrote:
-> Rafael,
-> 
-> Rafael J. Wysocki wrote:
-> > 
-> > I'm running with this patch applied right now, but the association is lost
-> > after the resume anyway.  I have to reload bcm43xx to make it associate with
-> > the AP again (no big deal).
-> 
-> 
-> Please send me the output of iwconfig and ifconfig after the resume, but before you reload bcm43xx.
 
-albercik:~ # iwconfig
-lo        no wireless extensions.
+--=-dW6QAIV0t5HDZ8bF3dEP
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-eth0      no wireless extensions.
+On Wed, 2007-02-07 at 07:23 -0600, Larry Finger wrote:
 
-eth1      IEEE 802.11b/g  ESSID:"DI524"  Nickname:"Broadcom 4311"
-          Mode:Managed  Frequency=2.484 GHz  Access Point: Invalid
-          Bit Rate=1 Mb/s   Tx-Power=18 dBm
-          RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Link Quality=0/100  Signal level=-256 dBm  Noise level=-256 dBm
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+> As you suggested earlier, a slow clock setting in the bcm43xx device may =
+be the cause of this
+> difficulty. If my laptop would suspend/resume correctly, then I could tes=
+t various fixes based on
+> that hypothesis.=20
 
-albercik:~ # ifconfig eth1
-eth1      Link encap:Ethernet  HWaddr 00:14:A5:BE:95:31
-          inet addr:192.168.100.101  Bcast:192.168.100.255  Mask:255.255.255.0
-          inet6 addr: fe80::214:a5ff:febe:9531/64 Scope:Link
-          UP BROADCAST MULTICAST  MTU:1500  Metric:1
-          RX packets:5137 errors:0 dropped:120 overruns:0 frame:0
-          TX packets:5703 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000
-          RX bytes:4569090 (4.3 Mb)  TX bytes:156826797 (149.5 Mb)
-          Interrupt:18
+Mine does suspend, but I don't see the problem...
 
-albercik:~ # ifconfig eth1 down
-albercik:~ # ifconfig eth1 up
-SIOCSIFFLAGS: No such device
+> Since it does not, I think the band-aid approach is warranted.=20
 
-Reloading the driver helps. ;-)
+Oh yes, I agree, having some hardware mess up will almost always crash
+the computer anyway.
 
-Greetings,
-Rafael
+> A proper fix is
+> still on my agenda; however, getting full data rates still has priority.
+
+Sure. Thanks for all you're doing :)
+
+johannes
+
+--=-dW6QAIV0t5HDZ8bF3dEP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBFydTu/ETPhpq3jKURAij5AJ926Vy+3KkRX+/OBFRO9cbSutuCFACfYiNq
+kazZr+6i5YprEP/M5Ane0c4=
+=uRTI
+-----END PGP SIGNATURE-----
+
+--=-dW6QAIV0t5HDZ8bF3dEP--
+
