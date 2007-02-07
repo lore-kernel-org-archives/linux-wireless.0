@@ -1,35 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:53206 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1422678AbXBUSB2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Feb 2007 13:01:28 -0500
-Date: Wed, 21 Feb 2007 19:01:23 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] d80211: Fix ieee80211_ptr check
-Message-ID: <20070221190123.66606886@griffin.suse.cz>
-In-Reply-To: <200702201813.58453.flamingice@sourmilk.net>
-References: <200702201813.58453.flamingice@sourmilk.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from nz-out-0506.google.com ([64.233.162.239]:10440 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161416AbXBGXs3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Feb 2007 18:48:29 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so324189nze
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Feb 2007 15:48:28 -0800 (PST)
+Message-ID: <43e72e890702071548l5c87a8ddkd92a46210bc96a12@mail.gmail.com>
+Date: Wed, 7 Feb 2007 18:48:28 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: reg-legal@lists.tuxdriver.org
+Subject: Please move to linux-wireless mailing list
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 20 Feb 2007 18:13:54 -0500, Michael Wu wrote:
-> dev->ieee80211_ptr can no longer be directly compared to check if a virtual
-> interface belongs to a master device.
+At the Wireless Summit II @ London in January 2007 we decided to
+create a new mailing list specifically for Linux wireless. We also
+decided we'd move discussions regarding regulatory talks over to that
+list. Please subscribe to the new Linux wireless mailing list for
+further regulatory talks. That list is open to the public.
 
-Hm, apparently the regexp I tried when resolving conflicts with John's
-tree wasn't good enough to catch this :-(
+echo subscribe linux-wireless | mail majordomo@vger.kernel.org
 
-Let's hope there are no more such things left.
+This list is now defunct and may be deleted at a future time.
 
-Thanks for finding this,
-
- Jiri
-
--- 
-Jiri Benc
-SUSE Labs
+  Luis
