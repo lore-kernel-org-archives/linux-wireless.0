@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:40198 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750708AbXBKP7V (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:53520 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161329AbXBGPmN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Feb 2007 10:59:21 -0500
-Message-ID: <45CF3D51.5050302@lwfinger.net>
-Date: Sun, 11 Feb 2007 09:59:13 -0600
+	Wed, 7 Feb 2007 10:42:13 -0500
+Message-ID: <45C9F352.3030706@lwfinger.net>
+Date: Wed, 07 Feb 2007 09:42:10 -0600
 From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>, bcm43xx-dev@lists.berlios.de,
+To: Daniel Gryniewicz <dang@fprintf.net>
+CC: Pavel Roskin <proski@gnu.org>,
 	wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH] bcm43xx: Fix loss of association after resume
-References: <45cc9ebb.+9O/IXvs/C9RyFnk%Larry.Finger@lwfinger.net> <200702111407.08099.mb@bu3sch.de> <200702111502.19545.rjw@sisk.pl> <200702111514.04893.mb@bu3sch.de>
-In-Reply-To: <200702111514.04893.mb@bu3sch.de>
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: RFT bcm43xx: Really _GOOD_ news
+References: <45C8E64B.1050605@lwfinger.net>	<200702061848.00815.gene.heskett@verizon.net>	<45C95830.6040507@lwfinger.net>	<200702070303.40968.gene.heskett@verizon.net>	<1170836250.11150.116.camel@dv> <1170861665.6964.4.camel@athena.fprintf.net>
+In-Reply-To: <1170861665.6964.4.camel@athena.fprintf.net>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Sunday 11 February 2007 15:02, Rafael J. Wysocki wrote:
->> PM: Removing info for No Bus:0000:30:00.0
->> bcm43xx: IRQ_READY timeout
->> bcm43xx: core_up for active 802.11 core failed (-19)
+Daniel Gryniewicz wrote:
+> On Wed, 2007-02-07 at 03:17 -0500, Pavel Roskin wrote:
+>> On Wed, 2007-02-07 at 03:03 -0500, Gene Heskett wrote:
+>>
+>>> And the 4318 is whats in my lappy.  What does it break?
+>> Oh, please, let's stop such questions.  Does it really matter what some
+>> knowingly wrong change does to particular hardware?  Just don't try the
+>> old patch.  Just forget that it existed.  It's not going to the kernel.
+>>
+>> Please try the new patch.  Ideally, measure speeds for various rates,
+>> because it's the speed that the patch is supposed to improve.
+>>
+>> If you have more questions of this kind, please make sure my personal
+>> e-mail is not in CC.
+>>esg 
 > 
-> I never tried suspend to disk with the driver.
+> Except that the new patch changes nothing for us poor 4318 users, so
+> what's the point of trying it?
+> 
+> That said, I'm running the broken patch right now, and my 4318 is
+> working better than ever before, so it changed *something* for my card.
 
-This implies that suspend to RAM works. Is that true?
-
-> Larry, an idea why the microcode doesn't respond?
-
-Is this code snippet supposed to keep the firmware loaded when the system is suspended?
-
-                bcm->firmware_norelease = 1;
-                bcm43xx_free_board(bcm);
-                bcm->firmware_norelease = 0;
-
-If so, that may be the problem. What would force it to be reloaded when resuming after a suspend to
-disk and subsequent power off? That would certainly explain why a reload is successful. Is there a
-volatile location that would safely indicate that the firmware is not good? Perhaps, we need to bite
-the bullet and reload the firmware after every resume. The patch below should do that.
-
-I am also working on a case where the user has troubles with a suspend to disk from Windows followed
-by a reboot to Linux, and warm reboots from Windows to Linux. In these cases, he gets a firmware
-file-format error; however, his firmware is fine from a cold boot.
+Intriguing.  Please send me the output of 'dmesg | grep bcm43xx'.  Thanks.
 
 Larry
-
-Index: linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-+++ linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-@@ -4296,6 +4297,7 @@ static int bcm43xx_resume(struct pci_dev
- 		printk(KERN_ERR PFX "Resume failed!\n");
- 		return err;
- 	}
-+	bcm43xx_request_firmware(bcm);
- 	netif_device_attach(net_dev);
-
- 	dprintk(KERN_INFO PFX "Device resumed.\n");
