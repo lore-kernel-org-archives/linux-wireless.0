@@ -1,63 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43609 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965604AbXBTAI4 (ORCPT
+Received: from nz-out-0506.google.com ([64.233.162.239]:59953 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423269AbXBHTlt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 19:08:56 -0500
-Subject: Re: Kernel bug in bcm43xx-d80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alex Davis <alex14641@yahoo.com>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <508755.46267.qm@web50206.mail.yahoo.com>
-References: <508755.46267.qm@web50206.mail.yahoo.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iFkOL9y/C7PG2Gj3866F"
-Date: Tue, 20 Feb 2007 01:08:44 +0100
-Message-Id: <1171930124.15489.68.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 8 Feb 2007 14:41:49 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so573240nze
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Feb 2007 11:41:49 -0800 (PST)
+Message-ID: <43e72e890702081141j168da47i421f4fe578a08735@mail.gmail.com>
+Date: Thu, 8 Feb 2007 14:41:48 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [RFC PATCH 3/3] cfg80211: add wext-compatible client
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Christoph Hellwig" <hch@infradead.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070208185050.GA6303@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+References: <20070131013717.GA28076@tuxdriver.com>
+	 <20070207004626.GA23096@tuxdriver.com>
+	 <20070207004747.GB23096@tuxdriver.com>
+	 <20070207004832.GC23096@tuxdriver.com>
+	 <20070207004929.GD23096@tuxdriver.com>
+	 <20070207075420.GB14703@infradead.org>
+	 <1170940386.4385.49.camel@johannes.berg>
+	 <43e72e890702081038k1d4f226eocf28c5faf6b79dc5@mail.gmail.com>
+	 <20070208185050.GA6303@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 2/8/07, John W. Linville <linville@tuxdriver.com> wrote:
+> On Thu, Feb 08, 2007 at 01:38:02PM -0500, Luis R. Rodriguez wrote:
+> > On 2/8/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > >On Wed, 2007-02-07 at 07:54 +0000, Christoph Hellwig wrote:
+> > >> Btw, if we submit cfg80211 for inclusion there should be at least one
+> > >patch
+> > >> in the series actually converts a driver to use it.  Both to make this
+> > >> code not dead and give people and example on how to use the cfg80211
+> > >> infrastructure.
+> > >
+> > >I guess I could make softmac use it.
+> >
+> > Another idea here is we can provide a configfs frontend to cfg80211
+> > therefore any device which implements cfg80211 will automagically have
+> > a userspace frontend (/configfs/wireless/foo) ready to test cfg80211.
+> > With this we wouldn't have to wait for the next userspace nl80211
+> > application to start testing cfg80211 directly (without wireless
+> > extensions compat). A configfs frontend can also allow more rapid
+> > development of userspace interfaces to configure wireless devices
+> > through cfg80211. Comments?
+>
+> Luis,
+>
+> You have mentioned this before, and FWIW I think it is a decent idea.
+> Let's see some code! :-)
 
---=-iFkOL9y/C7PG2Gj3866F
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I know, I know, talk is cheap, trust me, I abide by this motto every
+day. I actually wanted to just code this up and send this as part of
+my comment but do have other responsibilities I have to attend to
+first. I figured I'd throw it out though in case someone who does have
+time is willing to pick it up as I think it would be great for us.
 
-On Mon, 2007-02-19 at 15:48 -0800, Alex Davis wrote:
-> --- Pavel Roskin <proski@gnu.org> wrote:
->=20
-> > On Mon, 2007-02-19 at 13:48 -0800, Alex Davis wrote:
-> > > I go the following Oops with the latest wireless-dev git when startin=
-g wpa_supplicant:
-> >=20
-> > Wireless topics moved from this list to linux-wireless@vger.kernel.org.
-> > Broadcom drivers are discussed in bcm43xx-dev@lists.berlios.de.
-> > wireless-dev is horribly broken, and the fixes haven't been merged yet.
-> >=20
-> > The current Broadcom driver can be loaded from
-> > http://bu3sch.de/git/wireless-dev.git (please load it on top of
-> > wireless-dev.git to save bandwidth)
+> Still, I don't think it changes the issue that we need a driver (or
+> stack) plugged-in to the bottom end.  I have this on my personal list
+> of "soon TODO", although I haven't picked a driver yet.
+>
+> If anyone is working on a cfg80211 driver conversion, please speak-up
+> so we can avoid duplicating work.
 
-> What command do I use to load Mike's tree on top of wireless-dev?
-
-actually, get Jiri's
-(http://www.kernel.org/git/linux/kernel/git/jbenc/dscape.git), he's just
-committed the fixes.
-
-To merge it in, just git-pull it (and see the docs)
-
-johannes
-
---=-iFkOL9y/C7PG2Gj3866F
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF2jwM/ETPhpq3jKURAjHbAJ0TUYDYZP82rcyc569ecdLcNpNUqgCfbPgh
-13SzJDHWvarNYhY+VBhei2s=
-=QKlU
------END PGP SIGNATURE-----
-
---=-iFkOL9y/C7PG2Gj3866F--
-
+  Luis
