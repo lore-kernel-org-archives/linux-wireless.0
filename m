@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:62524 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422668AbXBUQpD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Feb 2007 11:45:03 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so254600nfa
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Feb 2007 08:45:01 -0800 (PST)
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH 2/3] d80211: Split antenna selection into TX and RX antenna
-Date: Wed, 21 Feb 2007 17:44:23 +0100
-Cc: Jiri Benc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>,
+Received: from ra.tuxdriver.com ([70.61.120.52]:2727 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1423250AbXBHTPU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Feb 2007 14:15:20 -0500
+Date: Thu, 8 Feb 2007 13:50:50 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Christoph Hellwig <hch@infradead.org>,
 	linux-wireless@vger.kernel.org
-References: <200702211702.47410.IvDoorn@gmail.com> <200702211737.33996.mb@bu3sch.de>
-In-Reply-To: <200702211737.33996.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702211744.24034.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [RFC PATCH 3/3] cfg80211: add wext-compatible client
+Message-ID: <20070208185050.GA6303@tuxdriver.com>
+References: <20070131013717.GA28076@tuxdriver.com> <20070207004626.GA23096@tuxdriver.com> <20070207004747.GB23096@tuxdriver.com> <20070207004832.GC23096@tuxdriver.com> <20070207004929.GD23096@tuxdriver.com> <20070207075420.GB14703@infradead.org> <1170940386.4385.49.camel@johannes.berg> <43e72e890702081038k1d4f226eocf28c5faf6b79dc5@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890702081038k1d4f226eocf28c5faf6b79dc5@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 21 February 2007 17:37, Michael Buesch wrote:
-> On Wednesday 21 February 2007 17:02, Ivo van Doorn wrote:
-> > Let broadcom use the antenna_tx field for hardware configuration.
-> > I did not check if the device is also capable of RX antenna selection,
-> > but current implementation only suggested support for the TX antenna.
-> > 
-> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> > 
-> > ---
-> > 
-> > diff --git a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
-> > index cdce227..580ea33 100644
-> > --- a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
-> > +++ b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
-> > @@ -2609,7 +2609,7 @@ static int bcm43xx_dev_config(struct ieee80211_hw *hw,
-> >  	int antenna = -1;
-> >  	int err = 0;
-> >  
-> > -	switch (conf->antenna_sel) {
-> > +	switch (conf->antenna_sel_tx) {
+On Thu, Feb 08, 2007 at 01:38:02PM -0500, Luis R. Rodriguez wrote:
+> On 2/8/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> >On Wed, 2007-02-07 at 07:54 +0000, Christoph Hellwig wrote:
+> >> Btw, if we submit cfg80211 for inclusion there should be at least one 
+> >patch
+> >> in the series actually converts a driver to use it.  Both to make this
+> >> code not dead and give people and example on how to use the cfg80211
+> >> infrastructure.
+> >
+> >I guess I could make softmac use it.
 > 
-> Nope, this is conf->antenna_sel_rx
-> ;)
+> Another idea here is we can provide a configfs frontend to cfg80211
+> therefore any device which implements cfg80211 will automagically have
+> a userspace frontend (/configfs/wireless/foo) ready to test cfg80211.
+> With this we wouldn't have to wait for the next userspace nl80211
+> application to start testing cfg80211 directly (without wireless
+> extensions compat). A configfs frontend can also allow more rapid
+> development of userspace interfaces to configure wireless devices
+> through cfg80211. Comments?
 
-On further inspection not even that. :P
-The outcome of that switch is stored in the antenna variable, which is used with
+Luis,
 
-	bcm43xx_mgmtframe_txantenna(dev, antenna);
-	bcm43xx_set_rx_antenna(dev, antenna);
+You have mentioned this before, and FWIW I think it is a decent idea.
+Let's see some code! :-)
 
-So I guess that needs to be fixed to create a switch statement for
-the RX antenna and one for the TX antenna?
+Still, I don't think it changes the issue that we need a driver (or
+stack) plugged-in to the bottom end.  I have this on my personal list
+of "soon TODO", although I haven't picked a driver yet.
 
-Ivo
+If anyone is working on a cfg80211 driver conversion, please speak-up
+so we can avoid duplicating work.
+
+Thanks,
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
