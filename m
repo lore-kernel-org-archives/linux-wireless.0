@@ -1,56 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:39257
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933274AbXB1Rgx (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:40320 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1423388AbXBHTCJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 12:36:53 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 8/28] rt2x00: optimize mac/bssid writing
-Date: Wed, 28 Feb 2007 18:36:07 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200702281507.11726.IvDoorn@gmail.com>
-In-Reply-To: <200702281507.11726.IvDoorn@gmail.com>
+	Thu, 8 Feb 2007 14:02:09 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: [PATCH] d80211: use default flags on virtual interfaces
+Date: Thu, 8 Feb 2007 14:01:35 -0500
+Cc: "Jon Smirl" <jonsmirl@gmail.com>, linux-wireless@vger.kernel.org
+References: <9e4733910702061846y3117ff20g9bf234b25cb91116@mail.gmail.com>
+In-Reply-To: <9e4733910702061846y3117ff20g9bf234b25cb91116@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702281836.07850.mb@bu3sch.de>
+Content-Type: multipart/signed;
+  boundary="nextPart2690725.YtdeWuIFtD";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200702081401.39530.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 28 February 2007 15:07, Ivo van Doorn wrote:
-> Handling the mac and bssid configuration can be done much easier
-> by writing the passed data directly into the register instead
-> of moving it to a local variable first.
-> 
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> 
-> ---
-> 
-> diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c b/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
-> index 27e151d..b6bf9f3 100644
-> --- a/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
-> +++ b/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
-> @@ -319,14 +319,11 @@ static inline void rt2400pci_close_debugfs(struct rt2x00_dev *rt2x00dev){}
->   */
->  static void rt2400pci_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
->  {
-> -	u32 reg[2] = { 0, 0 };
-> -
->  	/*
->  	 * The BSSID is passed to us as an array of bytes,
->  	 * that array is little endian, so no need for byte ordering.
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
->  	 */
-> -	memcpy(&reg, bssid, ETH_ALEN);
-> -	rt2x00_register_multiwrite(rt2x00dev, CSR5, &reg[0], sizeof(reg));
-> +	rt2x00_register_multiwrite(rt2x00dev, CSR5, (u32*)bssid, ETH_ALEN);
-                                                    ^^^^^^
+--nextPart2690725.YtdeWuIFtD
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-This doesn't break on BE machines?
+d80211: use default flags on virtual interfaces
 
-[Snipped the rest of the patch. Same comment applies there, too]
+There is no need to set dev->flags on virtual interfaces
+during registration.
 
--- 
-Greetings Michael.
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+=2D--
+
+ net/d80211/ieee80211_iface.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/net/d80211/ieee80211_iface.c b/net/d80211/ieee80211_iface.c
+index 3b2d259..342ad2a 100644
+=2D-- a/net/d80211/ieee80211_iface.c
++++ b/net/d80211/ieee80211_iface.c
+@@ -75,7 +75,6 @@ int ieee80211_if_add(struct net_device *
+ 	ndev->irq =3D dev->irq;
+ 	ndev->mem_start =3D dev->mem_start;
+ 	ndev->mem_end =3D dev->mem_end;
+=2D	ndev->flags =3D dev->flags & IFF_MULTICAST;
+ 	SET_NETDEV_DEV(ndev, local->hw.dev);
+=20
+ 	sdata =3D IEEE80211_DEV_TO_SUB_IF(ndev);
+
+--nextPart2690725.YtdeWuIFtD
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBFy3OTT3Oqt9AH4aERAm+oAJ9oXx4TGLGYfprNdMUTbGrSaFg+kwCgiV5Q
+OULKkqFG5rB7pVUdqDb4+OU=
+=kXpo
+-----END PGP SIGNATURE-----
+
+--nextPart2690725.YtdeWuIFtD--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
