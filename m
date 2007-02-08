@@ -1,58 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49686 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41606 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933373AbXBBMNL (ORCPT
+	with ESMTP id S1423006AbXBHNQL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Feb 2007 07:13:11 -0500
-Subject: p54 warnings
+	Thu, 8 Feb 2007 08:16:11 -0500
+Subject: Re: [RFC PATCH 1/3] wireless: add cfg80211
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xFRKjCELb/y9lh79qScW"
-Date: Thu, 01 Feb 2007 19:50:07 +0100
-Message-Id: <1170355807.22420.24.camel@johannes.berg>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070207073557.GA14703@infradead.org>
+References: <20070131013717.GA28076@tuxdriver.com>
+	 <20070207004626.GA23096@tuxdriver.com>
+	 <20070207004747.GB23096@tuxdriver.com>
+	 <20070207073557.GA14703@infradead.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5hJmvDu1H5atGTKGJIgf"
+Date: Thu, 08 Feb 2007 14:12:57 +0100
+Message-Id: <1170940377.4385.48.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-xFRKjCELb/y9lh79qScW
-Content-Type: text/plain; charset=UTF-8
+--=-5hJmvDu1H5atGTKGJIgf
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-When building p54 on BE platforms, you get a lot of warnings like this:
+> > +/*
+> > + * This is the new wireless configuration interface.
+>=20
+> I don't think new makes a lot of sense here, it's hopefully the
+> standad one soon.
 
-drivers/net/wireless/d80211/p54/prism54usb.c: In function =E2=80=98p54u_upl=
-oad_firmware_net2280=E2=80=99:
-drivers/net/wireless/d80211/p54/prism54usb.c:609: warning: initialization m=
-akes integer from pointer without a cast
-drivers/net/wireless/d80211/p54/prism54usb.c:609: warning: passing argument=
- 1 of =E2=80=98__fswab32=E2=80=99 makes integer from pointer without a cast
+Heh. I suppose it'll need a better description anyway.
 
-The cause is pretty obvious, in
+> > + *
+> > + * Copyright 2006 Johannes Berg <johannes@sipsolutions.net>
+> > + */
+> > +
+> > +#include "core.h"
+> > +#include <linux/if.h>
+> > +#include <linux/module.h>
+> > +#include <linux/err.h>
+> > +#include <net/genetlink.h>
+> > +#include <net/cfg80211.h>
+> > +#include <linux/mutex.h>
+> > +#include <linux/list.h>
+>=20
+> This include order seems odd.  We normally include local headers
+> last and net/ after linux/
 
-	P54U_WRITE(NET2280_DEV_U32, &devreg->int_enable, 0);
+Oh well. I often just stick in what I need in the order I needed it ;)
+I'll change it.
 
-you take a pointer and then pass it to cpu_to_le32(). IMHO that
-&devreg->int_enable should just be written out as P54U_DEV_BASE +
-INT_ENABLE or something.
+> > +MODULE_AUTHOR("Johannes Berg");
+> > +MODULE_LICENSE("GPL");
+>=20
+> Can you please add a MODULE_DESCRIPTION aswell?
 
-All the warnings come from something like &devreg->foo btw, and all seem
-to be in that function.
+Sure. Then again, didn't you just ask for "why can this be a module at
+all" too? :)
+
+> > +
+> > +/* RCU might be appropriate here since we usually
+> > + * only read the list, and that can happen quite
+> > + * often because we need to do it for each command */
+> > +LIST_HEAD(cfg80211_drv_list);
+> > +DEFINE_MUTEX(cfg80211_drv_mutex);
+>=20
+> Any reason these are non-static?  They aren't actually used outside
+> of this file, and in general having non-static lists isn't very nice,
+> we prefer having proper accessor functions.
+
+They'll be used in nl80211 which wasn't part of this patchset. Having
+accessor functions for lists is nice as long as it's add/remove, but I
+don't like having iterator functions with callbacks and all that much.
+And in fact, a list_for_each() is the only thing done with this list...
+I'd prefer keeping it this way.
+
+> > --- /dev/null
+> > +++ b/net/wireless/wext-compat.c
+> > @@ -0,0 +1,25 @@
+> > +/* NOT YET */
+> > +
+>=20
+> huh?  this file isn't added to the build process and only contains
+> a (non-standard formatted) comment.  No point in adding it in this
+> patch.
+
+Heh, yeah, it's replaced right away in the next one. I just had wanted
+to document the thoughts that went into that.
 
 johannes
 
---=-xFRKjCELb/y9lh79qScW
+--=-5hJmvDu1H5atGTKGJIgf
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBFwjZf/ETPhpq3jKURAqVmAJ9u2O9eTUTmhDcfp5XngSkVa6xKNgCffiAS
-k+UHvpi/CsIiIOwXW4+dISk=
-=38Z5
+iD8DBQBFyyHZ/ETPhpq3jKURAlyPAJ9rtnJci00UoJ8WX7qJOwsWNakLLQCfb6Fj
+R7nQQaT2hFdzsElSEeTaMRM=
+=1YF/
 -----END PGP SIGNATURE-----
 
---=-xFRKjCELb/y9lh79qScW--
+--=-5hJmvDu1H5atGTKGJIgf--
 
