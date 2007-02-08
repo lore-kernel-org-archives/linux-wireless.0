@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:51206 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751475AbXBNAmw (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:56734 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423297AbXBHTzc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Feb 2007 19:42:52 -0500
-Message-ID: <45D25AFC.2060508@lwfinger.net>
-Date: Tue, 13 Feb 2007 18:42:36 -0600
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: John Linville <linville@tuxdriver.com>,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] bcm43xx: Fix for 4311 and 02/07/07 specification changes
-References: <45d241c0.gWJcHxUYgWmBTwx8%Larry.Finger@lwfinger.net> <200702140002.05727.mb@bu3sch.de>
-In-Reply-To: <200702140002.05727.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 8 Feb 2007 14:55:32 -0500
+Date: Thu, 8 Feb 2007 19:55:26 +0000
+From: Christoph Hellwig <hch@infradead.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Christoph Hellwig <hch@infradead.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH 3/3] cfg80211: add wext-compatible client
+Message-ID: <20070208195526.GA5319@infradead.org>
+References: <20070131013717.GA28076@tuxdriver.com> <20070207004626.GA23096@tuxdriver.com> <20070207004747.GB23096@tuxdriver.com> <20070207004832.GC23096@tuxdriver.com> <20070207004929.GD23096@tuxdriver.com> <20070207075420.GB14703@infradead.org> <1170940386.4385.49.camel@johannes.berg> <43e72e890702081038k1d4f226eocf28c5faf6b79dc5@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890702081038k1d4f226eocf28c5faf6b79dc5@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Tuesday 13 February 2007 23:54, Larry Finger wrote:
->> The specifications for the bcm43xx driver have been modified. This patch
->> incorporates these changes in the code, which results in the BCM4311 and
->> BCM4312 working. The name of one of the PHY parameters, previously known
->> as "version", has been changed to "analog", short for  "analog core version" .
->>
->> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+On Thu, Feb 08, 2007 at 01:38:02PM -0500, Luis R. Rodriguez wrote:
+> >> in the series actually converts a driver to use it.  Both to make this
+> >> code not dead and give people and example on how to use the cfg80211
+> >> infrastructure.
+> >
+> >I guess I could make softmac use it.
 > 
->> @@ -750,7 +757,7 @@ static void bcm43xx_phy_initb5(struct bc
->>  	if (radio->version == 0x2050)
->>  		bcm43xx_phy_write(bcm, 0x0038, 0x0667);
->>  
->> -	if (phy->connected) {
->> +	if (phy->type == BCM43xx_PHYTYPE_G) {
-> 
-> I don't think this is correct.
-> I think (didn't verify) the specs talk about the "gmode" here.
-> I think you have been misleaded by that. The "gmode" bit is
-> the "connected" bit in the old softmac driver.
-> 
+> Another idea here is we can provide a configfs frontend to cfg80211
+> therefore any device which implements cfg80211 will automagically have
+> a userspace frontend (/configfs/wireless/foo) ready to test cfg80211.
 
-The specs definitely say "If this is a GPHY" is step 5 of http://bcm-specs.sipsolutions.net/B5PHY.
-
-Larry
+Huh?  We already have a wext fronted to nicely test cfg80211, what we
+need are backends.  In addition to that I think we should agree on
+one primary userspace configuration method for the future instead of
+adding lots of them just because it's so easy.  If the public opinion
+has changed 180 degrees and configs is preferred over nl80211 that's
+fine by me as long as the implementation is sane..
 
