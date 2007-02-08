@@ -1,47 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:46194 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752060AbXBWAMP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Feb 2007 19:12:15 -0500
-Received: from shell0.pdx.osdl.net (fw.osdl.org [65.172.181.6])
-	by smtp.osdl.org (8.12.8/8.12.8) with ESMTP id l1N0CDhB022697
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Feb 2007 16:12:14 -0800
-Received: from freekitty (unknown-230.office.pdx.osdl.net [10.8.0.230])
-	by shell0.pdx.osdl.net (8.13.1/8.11.6) with ESMTP id l1N0CDKA030536
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Feb 2007 16:12:13 -0800
-Date: Thu, 22 Feb 2007 16:11:02 -0800
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] bcm43xx: build failure
-Message-ID: <20070222161102.76a926e5@freekitty>
-In-Reply-To: <20070222161014.62d064a6@freekitty>
-References: <20070222161014.62d064a6@freekitty>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from smtp.rutgers.edu ([128.6.72.243]:51710 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1423292AbXBHTss (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Feb 2007 14:48:48 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: [PATCH] d80211: fix authentication issues
+Date: Thu, 8 Feb 2007 14:48:15 -0500
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart2847179.fGS6o7AlEG";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200702081448.19664.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Looks like the ssi field changed.
+--nextPart2847179.fGS6o7AlEG
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Signed-off-by: Stephen Hemminger <shemminger@linux-foundation.org>
----
- drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+d80211: fix authentication issues
 
-diff --git a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
-index cdce227..5c21b27 100644
---- a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
-+++ b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
-@@ -3681,7 +3681,7 @@ static int bcm43xx_wireless_init(struct 
- 		    IEEE80211_HW_MONITOR_DURING_OPER |
- 		    IEEE80211_HW_DEVICE_HIDES_WEP |
- 		    IEEE80211_HW_WEP_INCLUDE_IV;
--	hw->maxssi = BCM43xx_RX_MAX_SSI;
-+	hw->max_rssi = BCM43xx_RX_MAX_SSI;
- 	hw->queues = 1;
- 	hw->dev = &dev->dev;
- 	if (is_valid_ether_addr(sprom->r1.et1mac)) {
--- 
-1.4.1
+This patch prevents the MLME in d80211 from getting stuck when there is no
+reply to authentication frames. It also allows the bssid to be correctly
+set during IEEE80211_AUTHENTICATE.
 
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+=2D--
+
+ net/d80211/ieee80211_sta.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/net/d80211/ieee80211_sta.c b/net/d80211/ieee80211_sta.c
+index feba62b..64dbc79 100644
+=2D-- a/net/d80211/ieee80211_sta.c
++++ b/net/d80211/ieee80211_sta.c
+@@ -453,6 +453,7 @@ static void ieee80211_authenticate(struc
+ 		printk(KERN_DEBUG "%s: authentication with AP " MAC_FMT
+ 		       " timed out\n",
+ 		       dev->name, MAC_ARG(ifsta->bssid));
++		ifsta->state =3D IEEE80211_DISABLED;
+ 		return;
+ 	}
+=20
+@@ -668,6 +669,7 @@ static void ieee80211_associate(struct n
+ 		printk(KERN_DEBUG "%s: association with AP " MAC_FMT
+ 		       " timed out\n",
+ 		       dev->name, MAC_ARG(ifsta->bssid));
++		ifsta->state =3D IEEE80211_DISABLED;
+ 		return;
+ 	}
+=20
+@@ -677,6 +679,7 @@ static void ieee80211_associate(struct n
+ 	if (ieee80211_privacy_mismatch(dev, ifsta)) {
+ 		printk(KERN_DEBUG "%s: mismatch in privacy configuration and "
+ 		       "mixed-cell disabled - abort association\n", dev->name);
++		ifsta->state =3D IEEE80211_DISABLED;
+ 		return;
+ 	}
+=20
+@@ -2355,7 +2358,7 @@ int ieee80211_sta_set_bssid(struct net_d
+ 		ifsta->bssid_set =3D 0;
+ 	else
+ 		ifsta->bssid_set =3D 1;
+=2D	if (ifsta->ssid_set && ifsta->state !=3D IEEE80211_AUTHENTICATE)
++	if (ifsta->ssid_set)
+ 		ieee80211_sta_new_auth(dev, ifsta);
+=20
+ 	return 0;
+
+--nextPart2847179.fGS6o7AlEG
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBFy36DT3Oqt9AH4aERAhd3AKCd3Tlm/cUmrjmNfm7H3vDVoq2TBgCfTylE
+tl+tgcHWSCcjOhH68jWHzhA=
+=bb+9
+-----END PGP SIGNATURE-----
+
+--nextPart2847179.fGS6o7AlEG--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
