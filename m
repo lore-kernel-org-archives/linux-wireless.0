@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.229]:12169 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030511AbXBLXyG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Feb 2007 18:54:06 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so1793374nze
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Feb 2007 15:54:06 -0800 (PST)
-Message-ID: <1ba2fa240702121554v4e5b55b3t4582241f6347b355@mail.gmail.com>
-Date: Tue, 13 Feb 2007 01:54:05 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: d80211: current TKIP hwcrypto implementation seems to be broken
-Cc: "Jouni Malinen" <jkm@devicescape.com>, "Jiri Benc" <jbenc@suse.cz>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200702130023.53271.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <200702041344.19117.mb@bu3sch.de> <200702122239.31778.mb@bu3sch.de>
-	 <1ba2fa240702121515p7edd3682j87070b564cb08897@mail.gmail.com>
-	 <200702130023.53271.mb@bu3sch.de>
+Received: from styx.suse.cz ([82.119.242.94]:37321 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752388AbXBHSKs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Feb 2007 13:10:48 -0500
+Date: Thu, 8 Feb 2007 19:10:46 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: "John Linville" <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Michael Wu <flamingice@sourmilk.net>, netdev@vger.kernel.org,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/3] d80211: Add control structure for beacontemplates
+Message-ID: <20070208191046.457f17ed@griffin.suse.cz>
+In-Reply-To: <200702060046.45560.IvDoorn@gmail.com>
+References: <200702031725.19080.IvDoorn@gmail.com>
+	<20070205212802.36477fd4@griffin.suse.cz>
+	<200702060046.45560.IvDoorn@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/13/07, Michael Buesch <mb@bu3sch.de> wrote:
-> On Tuesday 13 February 2007 00:15, Tomas Winkler wrote:
-> > I fetching this from my "dusty" memory so I hope I'm right about it.
-> > TKIP phase1 one can be precomputed in advance. There's no runtime
->
-> Phase1 key changes on iv32 wrap.
+On Tue, 6 Feb 2007 00:46:45 +0100, Ivo van Doorn wrote:
+> --- dscape/net/d80211/ieee80211.c	2007-02-06 00:19:38.000000000 +0100
+> +++ dscape.control/net/d80211/ieee80211.c	2007-02-06 00:25:26.000000000 +0100
+> @@ -1857,7 +1857,8 @@ ieee80211_get_buffered_bc(struct ieee802
+>  EXPORT_SYMBOL(ieee80211_get_buffered_bc);
+>  
+>  static int __ieee80211_if_config(struct net_device *dev,
+> -				 struct sk_buff *beacon)
+> +				 struct sk_buff *beacon,
+> +				 struct ieee80211_tx_control *control)
+>  {
+>  	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+>  	struct ieee80211_local *local = dev->ieee80211_ptr;
+> @@ -1881,6 +1882,7 @@ static int __ieee80211_if_config(struct 
+>  		conf.generic_elem = sdata->u.ap.generic_elem;
+>  		conf.generic_elem_len = sdata->u.ap.generic_elem_len;
+>  		conf.beacon = beacon;
+> +		memcpy(&conf.beacon_control, control, sizeof(*control));
 
-That's correct, this depends on packet sequence counter,  but you can
-compute next TKIP phase1 even before iv32 wrap has occurred. You can
-compute 100 of them in advance.
+We can save this memcpy if ieee80211_if_conf.beacon_control is just a
+pointer.
 
-> > dependency after key exchange.
-> > Cached keys can be provided by supplicant. Usually u want to keep 2 or
-> > 3 cached TKIP phase1 for smooth decryption. As in QoS sequence
->
-> Hardware (bcm43xx at least) can only have one key at a time.
-> There's no point in caching, as phase1 key calculation is cheap
-> and can be done on-the-run. The expensive part it uploading it to HW.
+With the exception of this, the patch looks good now.
 
-True, but when there is a packet from past with tkip phase1 that
-doesn't match currently configured phase1 tkip you might be able to
-decrypt it, of course f hardware doesn't scramble it with wrong key.
+Thanks,
 
-> > counters are kept per AC, you might get into gentle state of receiving
-> > packets for the old key. If  you hold more then one  phase1 you might
-> > be able decrypt the packets that doesn't match current phase1 in
-> > software.
->
-> You can generate the new key then. There is no point in wasting memory
-> by precomputation of the keys.
+ Jiri
 
-These few bytes doesn't hurt you even if you're running on a cell phone.
-
-> --
-> Greetings Michael.
->
+-- 
+Jiri Benc
+SUSE Labs
