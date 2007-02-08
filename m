@@ -1,106 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:54736 "EHLO silver.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965128AbXBSWj2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 17:39:28 -0500
-From: Jiri Benc <jbenc@suse.cz>
-To: "John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20070219233919.221549000.midnight@suse.cz>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 11/12] d80211: more wiphy API fixes
-Message-Id: <20070219223957.3E845484B2@silver.suse.cz>
-Date: Mon, 19 Feb 2007 23:39:57 +0100 (CET)
+Received: from wx-out-0506.google.com ([66.249.82.230]:63191 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423483AbXBHV42 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Feb 2007 16:56:28 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so618121wxd
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Feb 2007 13:56:27 -0800 (PST)
+Message-ID: <43e72e890702081356wa0350een2617d067efe15325@mail.gmail.com>
+Date: Thu, 8 Feb 2007 16:56:26 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Christoph Hellwig" <hch@infradead.org>
+Subject: Re: [RFC PATCH 3/3] cfg80211: add wext-compatible client
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Michael Wu" <flamingice@sourmilk.net>
+In-Reply-To: <20070208195526.GA5319@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+References: <20070131013717.GA28076@tuxdriver.com>
+	 <20070207004626.GA23096@tuxdriver.com>
+	 <20070207004747.GB23096@tuxdriver.com>
+	 <20070207004832.GC23096@tuxdriver.com>
+	 <20070207004929.GD23096@tuxdriver.com>
+	 <20070207075420.GB14703@infradead.org>
+	 <1170940386.4385.49.camel@johannes.berg>
+	 <43e72e890702081038k1d4f226eocf28c5faf6b79dc5@mail.gmail.com>
+	 <20070208195526.GA5319@infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After resolving the conflict with John's tree, several things were still
-broken. This patch fixes that, together with fixing one related GCC warning.
+On 2/8/07, Christoph Hellwig <hch@infradead.org> wrote:
+> On Thu, Feb 08, 2007 at 01:38:02PM -0500, Luis R. Rodriguez wrote:
+> > >> in the series actually converts a driver to use it.  Both to make this
+> > >> code not dead and give people and example on how to use the cfg80211
+> > >> infrastructure.
+> > >
+> > >I guess I could make softmac use it.
+> >
+> > Another idea here is we can provide a configfs frontend to cfg80211
+> > therefore any device which implements cfg80211 will automagically have
+> > a userspace frontend (/configfs/wireless/foo) ready to test cfg80211.
+>
+> Huh?  We already have a wext fronted to nicely test cfg80211, what we
+> need are backends.
 
-Signed-off-by: Jiri Benc <jbenc@suse.cz>
+Yes, this is true.
 
----
+> In addition to that I think we should agree on
+> one primary userspace configuration method for the future instead of
+> adding lots of them just because it's so easy.
 
- net/d80211/ieee80211_cfg.c   |    2 +-
- net/d80211/ieee80211_ioctl.c |    6 +++---
- net/d80211/ieee80211_sta.c   |    6 +++---
- 3 files changed, 7 insertions(+), 7 deletions(-)
+Its not just that its provides a means to allow easy development of
+userspace applications, that's just the cherry on top of the cake. The
+real benefit of this is entirely architectural. Here are two examples:
 
-cec21de5adc61353fe43e6b931674a5f3f85206c
-diff --git a/net/d80211/ieee80211_cfg.c b/net/d80211/ieee80211_cfg.c
-index 82082ba..d6b2dff 100644
---- a/net/d80211/ieee80211_cfg.c
-+++ b/net/d80211/ieee80211_cfg.c
-@@ -15,7 +15,7 @@ static int ieee80211_list_interfaces(str
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct ieee80211_sub_if_data *subif;
--	int err;
-+	int err = 0;
- 
- 	spin_lock_bh(&local->sub_if_lock);
- 	list_for_each_entry(subif, &local->sub_if_list, list) {
-diff --git a/net/d80211/ieee80211_ioctl.c b/net/d80211/ieee80211_ioctl.c
-index c9b116e..3a62495 100644
---- a/net/d80211/ieee80211_ioctl.c
-+++ b/net/d80211/ieee80211_ioctl.c
-@@ -1578,7 +1578,7 @@ static int ieee80211_ioctl_giwrange(stru
- 				 struct iw_request_info *info,
- 				 struct iw_point *data, char *extra)
- {
--	struct ieee80211_local *local = dev->ieee80211_ptr;
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct iw_range *range = (struct iw_range *) extra;
- 
- 	data->length = sizeof(struct iw_range);
-@@ -1839,7 +1839,7 @@ static int ieee80211_ioctl_siwfreq(struc
- 				   struct iw_request_info *info,
- 				   struct iw_freq *freq, char *extra)
- {
--	struct ieee80211_local *local = dev->ieee80211_ptr;
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
- 	if (sdata->type == IEEE80211_IF_TYPE_STA)
-@@ -3055,7 +3055,7 @@ static int ieee80211_ioctl_siwauth(struc
- /* Get wireless statistics.  Called by /proc/net/wireless and by SIOCGIWSTATS */
- static struct iw_statistics *ieee80211_get_wireless_stats(struct net_device *dev)
- {
--	struct ieee80211_local *local = wdev_priv(net_dev->ieee80211_ptr);
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct iw_statistics *wstats = &local->wstats;
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct sta_info *sta = NULL;
-diff --git a/net/d80211/ieee80211_sta.c b/net/d80211/ieee80211_sta.c
-index 3d3d3f3..a6f461a 100644
---- a/net/d80211/ieee80211_sta.c
-+++ b/net/d80211/ieee80211_sta.c
-@@ -1903,7 +1903,7 @@ void ieee80211_sta_work(struct work_stru
- 	struct ieee80211_sub_if_data *sdata =
- 		container_of(work, struct ieee80211_sub_if_data, u.sta.work);
- 	struct net_device *dev = sdata->dev;
--	struct ieee80211_local *local = dev->ieee80211_ptr;
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_if_sta *ifsta;
- 	struct sk_buff *skb;
- 
-@@ -2051,7 +2051,7 @@ static int ieee80211_sta_match_ssid(stru
- static int ieee80211_sta_config_auth(struct net_device *dev,
- 				     struct ieee80211_if_sta *ifsta)
- {
--	struct ieee80211_local *local = dev->ieee80211_ptr;
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_sta_bss *bss, *selected = NULL;
- 	int top_rssi = 0, freq;
-@@ -2690,7 +2690,7 @@ int ieee80211_sta_req_scan(struct net_de
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
--	struct ieee80211_local *local = dev->ieee80211_ptr;
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 
- 	if (sdata->type != IEEE80211_IF_TYPE_STA)
- 		return ieee80211_sta_start_scan(dev, ssid, ssid_len);
--- 
-1.3.0
+a. Handling of private data
 
+That is non-standard data, ie that doesn't go in the cfg80211_config
+struct. Think of how iwpriv works and how nasty that was. Now granted
+cfg80211 would still need to have some infrastructure for handling of
+private data and nl80211 can be used as well but I find it would be
+more convenient to scrape the available private set/get information
+through a configfs tree on the device than have userspace applications
+use nl80211 all the time.
+
+b. Radiotap field selectivity
+
+Although we currently do not fully support radiotap and although
+radiotap currently  works by tacking on ALL the supported fields onto
+the beginning of the skb if we want to provide selectivity of fields I
+think configfs would provide an elegant way of dealing with this.
+Think of echo'ing 0 or 1 to some /config/wireless/foo/radiotap/bar.
+Alternative solutions to provide selectivity for radiotap can also be
+to provide different levels of verbosity for wanted data, which would
+make selectivity implementation much easier.
+
+> If the public opinion
+> has changed 180 degrees and configs is preferred over nl80211 that's
+> fine by me as long as the implementation is sane..
+
+I don't think the opinion has changed at all. I just think a configfs
+frontend would be good as well, specially for some cases as
+illustrated above.
+
+  Luis
