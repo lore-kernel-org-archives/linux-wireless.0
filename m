@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58995 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423429AbXBPJDv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Feb 2007 04:03:51 -0500
-Subject: Re: round_jiffies for schedule_delayed_work?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arjan van de Ven <arjan@linux.intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <45D4A37D.8000203@linux.intel.com>
-References: <1171489163.6093.30.camel@johannes.berg>
-	 <20070215150615.GB3310@tuxdriver.com>  <45D4A37D.8000203@linux.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dgDJG4BTwQufpH6hR+gp"
-Date: Fri, 16 Feb 2007 10:03:39 +0100
-Message-Id: <1171616619.5220.70.camel@johannes.berg>
+Received: from styx.suse.cz ([82.119.242.94]:37757 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752413AbXBHScn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Feb 2007 13:32:43 -0500
+Date: Thu, 8 Feb 2007 19:32:41 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: "John Linville" <linville@tuxdriver.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] d80211: respect extra_tx_headroom
+Message-ID: <20070208193241.3db028c9@griffin.suse.cz>
+In-Reply-To: <200702060047.13500.IvDoorn@gmail.com>
+References: <200702051632.24949.IvDoorn@gmail.com>
+	<20070205223724.51398750@griffin.suse.cz>
+	<200702060047.13500.IvDoorn@gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 6 Feb 2007 00:47:13 +0100, Ivo van Doorn wrote:
+> Not a problem, I'll try to remember it for future patches.
 
---=-dgDJG4BTwQufpH6hR+gp
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+And please add a colon after Signed-off-by next time :-)
 
-On Thu, 2007-02-15 at 19:16 +0100, Arjan van de Ven wrote:
+> Here is the updated patch.
 
-> there is round_jiffies_relative() you can use for this kind of purpose...=
-..
+Thanks, applied to my tree.
 
-I actually looked at the code for it but didn't make the connection.
-Sorry, I really should have. I'll see if I can do some patches.
+ Jiri
 
-johannes
-
---=-dgDJG4BTwQufpH6hR+gp
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF1XNr/ETPhpq3jKURAjLmAJwPYS5QxW1j/GVf+avIVyPIBpPNjgCginVo
-MrbVn/YCINgncW+4NSpf91I=
-=P/0T
------END PGP SIGNATURE-----
-
---=-dgDJG4BTwQufpH6hR+gp--
-
+-- 
+Jiri Benc
+SUSE Labs
