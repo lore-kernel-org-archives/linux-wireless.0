@@ -1,184 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:45968 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932435AbXB1VpH (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41607 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423000AbXBHNQL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 16:45:07 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: "Jouni Malinen" <jkm@devicescape.com>
-Subject: Re: [PATCH 5/5] d80211: switch STA interfaces to PS mode during scan
-Date: Wed, 28 Feb 2007 16:44:41 -0500
-Cc: linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
-References: <20070228203943.11473.95222.stgit@magic.sourmilk.net> <20070228210926.GM31074@devicescape.com> <200702281642.24404.flamingice@sourmilk.net>
-In-Reply-To: <200702281642.24404.flamingice@sourmilk.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart5171995.oVZeA9Q71D";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200702281644.42038.flamingice@sourmilk.net>
+	Thu, 8 Feb 2007 08:16:11 -0500
+Subject: Re: [RFC PATCH 3/3] cfg80211: add wext-compatible client
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070207075420.GB14703@infradead.org>
+References: <20070131013717.GA28076@tuxdriver.com>
+	 <20070207004626.GA23096@tuxdriver.com>
+	 <20070207004747.GB23096@tuxdriver.com>
+	 <20070207004832.GC23096@tuxdriver.com>
+	 <20070207004929.GD23096@tuxdriver.com>
+	 <20070207075420.GB14703@infradead.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4cQu2s596MHEmtBBfU/+"
+Date: Thu, 08 Feb 2007 14:13:06 +0100
+Message-Id: <1170940386.4385.49.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart5171995.oVZeA9Q71D
-Content-Type: text/plain;
-  charset="iso-8859-15"
+
+--=-4cQu2s596MHEmtBBfU/+
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Wednesday 28 February 2007 16:42, Michael Wu wrote:
-> This makes scans switch STA interfaces into PS mode so the AP queues fram=
-es
-> destined for us while we are scanning. This is achieved by sending a
-> nullfunc data frame with the PS mode bit set before scanning commences,
-> and a PS poll frame after scanning is completed.
->
-Er. I should update the description too..
+On Wed, 2007-02-07 at 07:54 +0000, Christoph Hellwig wrote:
 
-=2D-
+> Do we really have to add this directly to struct net_device and bloat it
+> for all users?  I'd put this behind  ieee80211_ptr instead unless there's
+> a good reason against that.
 
-d80211: switch STA interfaces to PS mode during scan
+Well, the reason currently is that cfg80211 treats ieee80211_ptr as an
+opaque cookie, it doesn't need to know what it points to.
 
-=46rom: Michael Wu <flamingice@sourmilk.net>
+Of course, I intend to change that too...
 
-This makes scans switch STA interfaces into PS mode so the AP queues frames
-destined for us while we are scanning. This is achieved by sending a
-nullfunc data frame with the PS mode bit set before scanning commences,
-and a nullfunc data frame without the PS mode bit set after scanning is
-completed.
+> > +config CFG80211_WEXTNL_COMPAT
+> > +	bool "cfg80211 WE-netlink compatibility"
+> > +	depends CFG80211 && CFG80211_WEXT_COMPAT
+> > +	---help---
+> > +	This option allows using devices whose drivers have been
+> > +	converted to use the new cfg80211 with wireless extensions
+> > +	over rtnetlink, providing WE-20 compatibility. Note that
+> > +	cfg80211's "native" interface is nl80211 using generic netlink.
+> > +	The wireless extensions are being deprecated and the netlink
+> > +	based API for WE was never configured by default, nor do any
+> > +	userspace tools use this feature.
+> > +
+> > +	This option exists only to make Jean happy. Say N.
+>=20
+> Should we really put this code in?  It seems like unessecary bloat to me.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-=2D--
+Yeah. Jean disappeared anyway, I'll kill it.
 
- include/linux/ieee80211.h    |    7 ++++++
- net/mac80211/ieee80211_sta.c |   51=20
-+++++++++++++++++++++++++++++++++++-------
- 2 files changed, 50 insertions(+), 8 deletions(-)
+> > @@ -2798,6 +2799,39 @@ int dev_ioctl(unsigned int cmd, void __user *arg=
+)
+> >  					ret =3D -EFAULT;
+> >  				return ret;
+> >  			}
+> > +#ifdef CONFIG_CFG80211_WEXT_COMPAT
+> > +			/* Take care of cfg80211 WE compatibility */
+> > +			if (cmd >=3D SIOCIWFIRST && cmd <=3D SIOCIWLAST) {
+> > +				/* If command is `set a parameter', or
+> > +				 * `get the encoding parameters', check if
+> > +				 * the user has the right to do it */
+> > +				if (IW_IS_SET(cmd) || cmd =3D=3D SIOCGIWENCODE
+> > +				    || cmd =3D=3D SIOCGIWENCODEEXT) {
+> > +					if (!capable(CAP_NET_ADMIN))
+> > +						return -EPERM;
+> > +				}
+> > +				dev_load(ifr.ifr_name);
+> > +				rtnl_lock();
+> > +				/* Follow me in net/wireless/wext-compat.c */
+> > +				ret =3D cfg80211_wext_ioctl(&ifr, cmd);
+> > +				rtnl_unlock();
+> > +				if (ret =3D=3D 0 && IW_IS_GET(cmd) &&
+> > +				    copy_to_user(arg, &ifr,
+> > +						 sizeof(struct ifreq)))
+> > +					ret =3D -EFAULT;
+> > +				/* haha, I cheat here by allowing a driver or
+> > +				 * stack to have both WE or CFG80211-WE for
+> > +				 * a little while during conversion... hope that
+> > +				 * ENOSYS is only used to indicate not implemented
+> > +				 *
+> > +				 * if wireless extensions are not configured
+> > +				 * then this is the last thing here so that
+> > +				 * if we fall through we return -EINVAL
+> > +				 */
+> > +				if (ret !=3D -ENOSYS)
+> > +					return ret;
+> > +			}
+>=20
+> Can we split this into a nice little helper function in wext-compat.c
+> or a dummy macro if it's not configured?
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 4379b1d..836bde2 100644
-=2D-- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -203,6 +203,13 @@ struct ieee80211_cts {
- 	__u8 ra[6];
- } __attribute__ ((packed));
-=20
-+struct ieee80211_ps_poll {
-+	__le16 frame_control;
-+	__le16 aid;
-+	__u8 bssid[6];
-+	__u8 ta[6];
-+} __attribute__ ((packed));
-+
-=20
- /* Authentication algorithms */
- #define WLAN_AUTH_OPEN 0
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 280b24f..747662d 100644
-=2D-- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -2523,6 +2523,37 @@ int ieee80211_sta_set_bssid(struct net_d
- }
-=20
-=20
-+static void ieee80211_send_nullfunc(struct ieee80211_local *local,
-+				    struct ieee80211_sub_if_data *sdata,
-+				    int powersave)
-+{
-+	struct sk_buff *skb;
-+	struct ieee80211_hdr *nullfunc;
-+	u16 fc;
-+
-+	skb =3D dev_alloc_skb(local->hw.extra_tx_headroom + 24);
-+	if (!skb) {
-+		printk(KERN_DEBUG "%s: failed to allocate buffer for nullfunc "
-+		       "frame\n", sdata->dev->name);
-+		return;
-+	}
-+	skb_reserve(skb, local->hw.extra_tx_headroom);
-+
-+	nullfunc =3D (struct ieee80211_hdr *) skb_put(skb, 24);
-+	memset(nullfunc, 0, 24);
-+	fc =3D IEEE80211_FTYPE_DATA | IEEE80211_STYPE_NULLFUNC |
-+	     IEEE80211_FCTL_TODS;
-+	if (powersave)
-+		fc |=3D IEEE80211_FCTL_PM;
-+	nullfunc->frame_control =3D cpu_to_le16(fc);
-+	memcpy(nullfunc->addr1, sdata->u.sta.bssid, ETH_ALEN);
-+	memcpy(nullfunc->addr2, sdata->dev->dev_addr, ETH_ALEN);
-+	memcpy(nullfunc->addr3, sdata->u.sta.bssid, ETH_ALEN);
-+
-+	ieee80211_sta_tx(sdata->dev, skb, 0);
-+}
-+
-+
- void ieee80211_scan_completed(struct ieee80211_hw *hw)
- {
- 	struct ieee80211_local *local =3D hw_to_local(hw);
-@@ -2544,10 +2575,12 @@ void ieee80211_scan_completed(struct iee
-=20
- 	spin_lock_bh(&local->sub_if_lock);
- 	list_for_each_entry(sdata, &local->sub_if_list, list) {
-=2D		netif_wake_queue(sdata->dev);
-=2D
-=2D		if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA)
-+		if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA) {
-+			if (sdata->u.sta.associated)
-+				ieee80211_send_nullfunc(local, sdata, 0);
- 			ieee80211_sta_timer((unsigned long)&sdata->u.sta);
-+		}
-+		netif_wake_queue(sdata->dev);
- 	}
- 	spin_unlock_bh(&local->sub_if_lock);
-=20
-@@ -2667,9 +2700,6 @@ static int ieee80211_sta_start_scan(stru
- 	  * ResultCode: SUCCESS, INVALID_PARAMETERS
- 	 */
-=20
-=2D	/* TODO: if assoc, move to power save mode for the duration of the
-=2D	 * scan */
-=2D
- 	if (local->sta_scanning) {
- 		if (local->scan_dev =3D=3D dev)
- 			return 0;
-@@ -2691,8 +2721,12 @@ static int ieee80211_sta_start_scan(stru
- 	local->sta_scanning =3D 1;
-=20
- 	spin_lock_bh(&local->sub_if_lock);
-=2D	list_for_each_entry(sdata, &local->sub_if_list, list)
-+	list_for_each_entry(sdata, &local->sub_if_list, list) {
- 		netif_stop_queue(sdata->dev);
-+		if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA &&
-+		    sdata->u.sta.associated)
-+			ieee80211_send_nullfunc(local, sdata, 1);
-+	}
- 	spin_unlock_bh(&local->sub_if_lock);
-=20
- 	if (ssid) {
-@@ -2706,7 +2740,8 @@ static int ieee80211_sta_start_scan(stru
- 					 list);
- 	local->scan_channel_idx =3D 0;
- 	local->scan_dev =3D dev;
-=2D	schedule_delayed_work(&local->scan_work, 0);
-+	/* TODO: start scan as soon as all nullfunc frames are ACKed */
-+	schedule_delayed_work(&local->scan_work, IEEE80211_CHANNEL_TIME);
-=20
- 	return 0;
- }
+I guess I can do that. Maybe I'll do the same with wext too.
 
---nextPart5171995.oVZeA9Q71D
-Content-Type: application/pgp-signature
+> > --- a/net/core/rtnetlink.c
+> > +++ b/net/core/rtnetlink.c
+> > @@ -56,6 +56,9 @@
+> >  #include <linux/wireless.h>
+> >  #include <net/iw_handler.h>
+> >  #endif	/* CONFIG_NET_WIRELESS_RTNETLINK */
+> > +#ifdef CONFIG_CFG80211_WEXTNL_COMPAT
+> > +#include <net/cfg80211.h>
+> > +#endif
+>=20
+> There's not point in including headers conditionally.
+
+It helps ccache when you change that header, but yeah, let's just
+include it.
+
+> This looks odd. Kbuild filters out duplicate objects, so something like
+> the snipplet below should work aswell:
+>=20
+> obj-$(CONFIG_WIRELESS_EXT)		+=3D wext-common.o wext-old.o
+> obj-$(CONFIG_CFG80211_WEXT_COMPAT)	+=3D wext-common.o wext-compat.o=09
+
+Hah, good point, I never even thought of something that would just
+duplicate it.
+
+> > +#ifdef CONFIG_CFG80211_WEXT_COMPAT
+> > +/* wext compatibility must be compiled in...
+> > + * this extern is in wext-compat.c */
+>=20
+> Is there really a point in making cfg80211 a loadable module?
+> This whle operation vector stuff looks like a lot of unnessecary
+> complexity to me.
+
+I think there is point in doing it as it allows us to replace it with an
+out-of-tree newer version for getting it into the hands of users who
+might not want to replace their whole kernel.
+
+> > new file mode 100644
+> > index 0000000..c1de1d7
+> > --- /dev/null
+> > +++ b/net/wireless/wext-common.c
+> > @@ -0,0 +1,610 @@
+> > +/* common wext support routines, proc interface and events */
+>=20
+> This is mostly Jean's old code, right?  Probably wants at least some
+> attribution.
+
+Yeah, good point, it's mostly code that moved from that file to here.
+
+> Btw, if we submit cfg80211 for inclusion there should be at least one pat=
+ch
+> in the series actually converts a driver to use it.  Both to make this
+> code not dead and give people and example on how to use the cfg80211
+> infrastructure.
+
+I guess I could make softmac use it.
+
+johannes
+
+--=-4cQu2s596MHEmtBBfU/+
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBF5ffKT3Oqt9AH4aERAlUTAJ0V0ySkkBLRUF1441N/chaaaOyfcwCfWvI4
-SfHmb2vAb4NgOBoKtbWa9wM=
-=FJj/
+iD8DBQBFyyHi/ETPhpq3jKURAq7JAJ9iGQtdpfN4esuYlvPkVQW+PsAmMQCgqs7q
+UwC6evotpZYb5X9okDLTQmI=
+=zrhX
 -----END PGP SIGNATURE-----
 
---nextPart5171995.oVZeA9Q71D--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+--=-4cQu2s596MHEmtBBfU/+--
+
