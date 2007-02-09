@@ -1,37 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-37.dex002.intermedia.net ([64.78.21.122]:31093 "EHLO
-	dhost002-37.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030560AbXBOUE5 (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:53253 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423345AbXBIWnr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Feb 2007 15:04:57 -0500
-From: "Jouni Malinen" <jkm@devicescape.com>
-Date: Thu, 15 Feb 2007 12:04:52 -0800
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Ivo van Doorn <ivdoorn@gmail.com>, Jiri Benc <jbenc@suse.cz>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] d80211: Add software sequence support
-Message-ID: <20070215200452.GE14247@instant802.com>
-References: <200702141423.27823.IvDoorn@gmail.com> <1171557724.5220.30.camel@johannes.berg> <200702151402.48150.flamingice@sourmilk.net> <200702151422.12195.flamingice@sourmilk.net>
+	Fri, 9 Feb 2007 17:43:47 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HFeRs-0000MZ-Vz
+	for linux-wireless@vger.kernel.org; Fri, 09 Feb 2007 17:42:33 -0500
+Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
+From: Pavel Roskin <proski@gnu.org>
+To: James Ketrenos <jketreno@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
+In-Reply-To: <45CCE3CA.4050904@linux.intel.com>
+References: <45CCE3CA.4050904@linux.intel.com>
+Content-Type: text/plain
+Date: Fri, 09 Feb 2007 17:43:41 -0500
+Message-Id: <1171061021.7039.7.camel@dv>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200702151422.12195.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 15, 2007 at 02:22:07PM -0500, Michael Wu wrote:
+Hello, James!
 
-> To be specific, I don't like the library approach when we can simply set a 
-> flag and let the stack handle it.
+On Fri, 2007-02-09 at 13:12 -0800, James Ketrenos wrote:
 
-In general, I would prefer not to use library approach for things like
-this sequence number support. In this case, there may not even be need
-for that flag if the operation itself is fast enough. In other words, I
-don't think it would cause problems for other drivers if the seq# were
-set regardless of whether it is neede or not. Just doing this without
-the flag may be the cleanest way and not likely to use much more CPU
-than verification of a flag before doing this..
+> You can find the new driver, and additional information about it, here:
+> 
+>    http://intellinuxwireless.org/iwlwifi.
+
+I cannot get it through git:
+
+$ git-clone http://intellinuxwireless.org/repos/iwlwifi.git
+Initialized empty Git repository in /home/proski/src/iwlwifi/.git/
+Cannot get remote repository information.
+Perhaps git-update-server-info needs to be run there?
+
+Perhaps git is right?  There is no info/refs there.
+
+> You can find that package at:
+> 
+>    http://intellinuxwireless.org/d80211
+
+I appreciate that you are doing this.  But it doesn't compile against
+kernels compiled outside the tree:
+
+grep: /lib/modules/2.6.20/build//include/linux/netdevice.h: No such file
+or directory
+
+Apparently it should be looking into /lib/modules/2.6.20/source as well.
+That was a problem with the official ipw3945 drivers as well.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Regards,
+Pavel Roskin
+
