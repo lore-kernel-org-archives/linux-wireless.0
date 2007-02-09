@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:65534 "EHLO
-	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965161AbXBGDcX (ORCPT
+Received: from rwcrmhc14.comcast.net ([216.148.227.154]:41847 "EHLO
+	rwcrmhc14.comcast.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992774AbXBITzc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Feb 2007 22:32:23 -0500
-Date: Tue, 06 Feb 2007 21:31:45 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>, netdev@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] bcm43xx: Fix incorrect definition of PHY revision
-Message-ID: <45c94821.qjljSnUzfws7mU7T%Larry.Finger@lwfinger.net>
+	Fri, 9 Feb 2007 14:55:32 -0500
+Message-ID: <45CCD1B1.80709@gentoo.org>
+Date: Fri, 09 Feb 2007 14:55:29 -0500
+From: Joseph Jezak <josejx@gentoo.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Michael Buesch <mb@bu3sch.de>
+CC: Bcm43xx-dev@lists.berlios.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
+References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net>	<45CCBB93.2040703@lwfinger.net> <45CCC5DF.8010001@gentoo.org> <200702092017.36950.mb@bu3sch.de>
+In-Reply-To: <200702092017.36950.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is a typographical error in the spefications that interchange the PHY version
-and revision. Fixing this error makes all BCM43xx varieties work at full CCCK rates.
+Michael Buesch wrote:
+> On Friday 09 February 2007 20:05, Joseph Jezak wrote:
+>>> I'll agree to that as long as there is a clear indication of any differences between V3 and V4 firmware.
+>> That's also part of the problem.  With the v4 driver, Broadcom 
+>> dropped support for a number of older BPHY devices (4301/4303 and 
+>> some 4306 revisions).  Do we still want to support those?  Should I 
+>> continue writing the specs for the uCode revision it's based on or 
+>> should I combine them?
+> 
+> If it's easily possible, please try to combine the old stuff
+> with the new v4 specs.
+> I think it's basically only dropped if() branches, right?
+> 
 
-Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
----
+Well, here's the problem.  There are a few places where a value is 
+changed (different value written to a register).  Does this mean 
+that the value is different due to the uCode changes (can't tell, no 
+documentation)?  Is it applicable to all revisions (can't tell, some 
+revisions are not supported in this version)?  If the revision 
+number range in a check changes is that because of a difference in 
+supported cards or a bug fix?
 
-John,
+So, it's not as simple as just dropped if() branches.  I can do my 
+best to combine them (I have done some of this already), but I can't 
+promise that it'll be accurate for all revisions or versions of the 
+chipset.
 
-This patch should be put into wireless-2.6 and into 'upstream' as soon as possible.
-I will be sending it to stable for inclusion in 2.6.20.1, and whatever other kernels
-are still being maintained by -stable.
-
-Larry
----
- 
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-@@ -3704,9 +3704,9 @@ static int bcm43xx_read_phyinfo(struct b
- 
- 	value = bcm43xx_read16(bcm, BCM43xx_MMIO_PHY_VER);
- 
--	phy_version = (value & 0xF000) >> 12;
-+	phy_rev = (value & 0xF000) >> 12;
- 	phy_type = (value & 0x0F00) >> 8;
--	phy_rev = (value & 0x000F);
-+	phy_version = (value & 0x000F);
- 
- 	dprintk(KERN_INFO PFX "Detected PHY: Version: %x, Type %x, Revision %x\n",
- 		phy_version, phy_type, phy_rev);
-
-===
-
+-Joe
