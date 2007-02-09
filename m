@@ -1,182 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:45880 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932432AbXB1Vmr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 16:42:47 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: "Jouni Malinen" <jkm@devicescape.com>
-Subject: Re: [PATCH 5/5] d80211: switch STA interfaces to PS mode during scan
-Date: Wed, 28 Feb 2007 16:42:20 -0500
-Cc: linux-wireless@vger.kernel.org
-References: <20070228203943.11473.95222.stgit@magic.sourmilk.net> <20070228203943.11473.88812.stgit@magic.sourmilk.net> <20070228210926.GM31074@devicescape.com>
-In-Reply-To: <20070228210926.GM31074@devicescape.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1870306.LCFWj25hOa";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200702281642.24404.flamingice@sourmilk.net>
+Received: from mx1.redhat.com ([66.187.233.31]:48795 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946415AbXBIMqr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Feb 2007 07:46:47 -0500
+Subject: Re: How to start with a Marvell driver (non-USB, non-OLPC)
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org, marvell8385-devel@linuxtogo.org,
+	frankh@marvell.com, rchokshi@marvell.com
+In-Reply-To: <200702090858.26294.hs4233@mail.mn-solutions.de>
+References: <200702090858.26294.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Fri, 09 Feb 2007 07:49:27 -0500
+Message-Id: <1171025367.2902.22.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1870306.LCFWj25hOa
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Fri, 2007-02-09 at 08:58 +0100, Holger Schurig wrote:
+> Hi all !
+> 
+> This mail is an attempt to get some feedback about the way we 
+> should go :-)   "We" are several people interested in 802.11bg 
+> cards in Compact-Flash format with an Marvell 8385 (AFAIK) chip. 
+> See the list of people at 
+> http://projects.linuxtogo.org/projects/marvell8385/   A driver 
+> for this cards would be quite nice for PDAs and other embedded 
+> Linux systems.
+> 
+> 
+> 
+> Two months ago I sent an e-mail to Marvell for support, or at 
+> least to put me in contact with the product manager. There was 
+> no response. Maybe they don't care for sales.
+> 
+> However, Marvell released a GPL driver for the OLPC project, 
+> which is now in Linux mainline. This driver is for a different 
 
-On Wednesday 28 February 2007 16:09, Jouni Malinen wrote:
-> Why bother with PS Poll in this case? Just send data::nullfunc with PS
-> Poll flag cleared. That will make the AP deliver all buffered frames (if
-> any).
-Didn't think of it. :)
+Actually, it's not in mainline.  It's still being reviewed and hasn't
+been merged.
 
-Here's a version that does that:
+> chip (8388 AFAIK), a different firmware (with Mesh capability) 
+> and a different host interface (USB). During the last month the 
+> libertas driver got rid of more and more code that applied to 
+> non-8388, non-USB, non-mesh-firmware versions of the Libertas 
 
-=2D-
+The only reason code was removed was because nobody was using it.  The
+people who review things (rightly) consider dead code a merge blocker.
+If you to keep stuff, please speak up.  It's not too late, please join
+the libertas-dev mailing list at infradead.org and say what you need.
+Patches are even better.
 
-d80211: switch STA interfaces to PS mode during scan
+> chip set family. Those cleanups made the in-kernel libertas 
+> driver more and more unusable for the cards that I have in mind. 
 
-=46rom: Michael Wu <flamingice@sourmilk.net>
+Again, the cleanups were because the code was unused.  Nobody said
+anything about that code being required, and it wasn't required for the
+card that the driver currently supports, and the kernel review people
+said to drop it.
 
-This makes scans switch STA interfaces into PS mode so the AP queues frames
-destined for us while we are scanning. This is achieved by sending a
-nullfunc data frame with the PS mode bit set before scanning commences,
-and a PS poll frame after scanning is completed.
+Kernel people also hate unnecessary hardware abstraction.  At the time
+the driver was reviewed, the only supported card type was USB because
+nobody stepped up and said they had other cards to support.  Therefore,
+pieces of the driver that abstracted the hardware bits got removed.  If
+you need to support CF type cards, we should add support for that
+hardware rather than making a new driver.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-=2D--
+> They did not only clean up, they also added their specific stuff 
+> for their mesh solution.
 
- include/linux/ieee80211.h    |    7 ++++++
- net/mac80211/ieee80211_sta.c |   51=20
-+++++++++++++++++++++++++++++++++++-------
- 2 files changed, 50 insertions(+), 8 deletions(-)
+If there's mesh-specific stuff that's _not_ bounded by checks for
+mesh-enabled firmware, then please point them out.  Those parts, if any,
+should be fixed.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 4379b1d..836bde2 100644
-=2D-- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -203,6 +203,13 @@ struct ieee80211_cts {
- 	__u8 ra[6];
- } __attribute__ ((packed));
-=20
-+struct ieee80211_ps_poll {
-+	__le16 frame_control;
-+	__le16 aid;
-+	__u8 bssid[6];
-+	__u8 ta[6];
-+} __attribute__ ((packed));
-+
-=20
- /* Authentication algorithms */
- #define WLAN_AUTH_OPEN 0
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 280b24f..747662d 100644
-=2D-- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -2523,6 +2523,37 @@ int ieee80211_sta_set_bssid(struct net_d
- }
-=20
-=20
-+static void ieee80211_send_nullfunc(struct ieee80211_local *local,
-+				    struct ieee80211_sub_if_data *sdata,
-+				    int powersave)
-+{
-+	struct sk_buff *skb;
-+	struct ieee80211_hdr *nullfunc;
-+	u16 fc;
-+
-+	skb =3D dev_alloc_skb(local->hw.extra_tx_headroom + 24);
-+	if (!skb) {
-+		printk(KERN_DEBUG "%s: failed to allocate buffer for nullfunc "
-+		       "frame\n", sdata->dev->name);
-+		return;
-+	}
-+	skb_reserve(skb, local->hw.extra_tx_headroom);
-+
-+	nullfunc =3D (struct ieee80211_hdr *) skb_put(skb, 24);
-+	memset(nullfunc, 0, 24);
-+	fc =3D IEEE80211_FTYPE_DATA | IEEE80211_STYPE_NULLFUNC |
-+	     IEEE80211_FCTL_TODS;
-+	if (powersave)
-+		fc |=3D IEEE80211_FCTL_PM;
-+	nullfunc->frame_control =3D cpu_to_le16(fc);
-+	memcpy(nullfunc->addr1, sdata->u.sta.bssid, ETH_ALEN);
-+	memcpy(nullfunc->addr2, sdata->dev->dev_addr, ETH_ALEN);
-+	memcpy(nullfunc->addr3, sdata->u.sta.bssid, ETH_ALEN);
-+
-+	ieee80211_sta_tx(sdata->dev, skb, 0);
-+}
-+
-+
- void ieee80211_scan_completed(struct ieee80211_hw *hw)
- {
- 	struct ieee80211_local *local =3D hw_to_local(hw);
-@@ -2544,10 +2575,12 @@ void ieee80211_scan_completed(struct iee
-=20
- 	spin_lock_bh(&local->sub_if_lock);
- 	list_for_each_entry(sdata, &local->sub_if_list, list) {
-=2D		netif_wake_queue(sdata->dev);
-=2D
-=2D		if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA)
-+		if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA) {
-+			if (sdata->u.sta.associated)
-+				ieee80211_send_nullfunc(local, sdata, 0);
- 			ieee80211_sta_timer((unsigned long)&sdata->u.sta);
-+		}
-+		netif_wake_queue(sdata->dev);
- 	}
- 	spin_unlock_bh(&local->sub_if_lock);
-=20
-@@ -2667,9 +2700,6 @@ static int ieee80211_sta_start_scan(stru
- 	  * ResultCode: SUCCESS, INVALID_PARAMETERS
- 	 */
-=20
-=2D	/* TODO: if assoc, move to power save mode for the duration of the
-=2D	 * scan */
-=2D
- 	if (local->sta_scanning) {
- 		if (local->scan_dev =3D=3D dev)
- 			return 0;
-@@ -2691,8 +2721,12 @@ static int ieee80211_sta_start_scan(stru
- 	local->sta_scanning =3D 1;
-=20
- 	spin_lock_bh(&local->sub_if_lock);
-=2D	list_for_each_entry(sdata, &local->sub_if_list, list)
-+	list_for_each_entry(sdata, &local->sub_if_list, list) {
- 		netif_stop_queue(sdata->dev);
-+		if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA &&
-+		    sdata->u.sta.associated)
-+			ieee80211_send_nullfunc(local, sdata, 1);
-+	}
- 	spin_unlock_bh(&local->sub_if_lock);
-=20
- 	if (ssid) {
-@@ -2706,7 +2740,8 @@ static int ieee80211_sta_start_scan(stru
- 					 list);
- 	local->scan_channel_idx =3D 0;
- 	local->scan_dev =3D dev;
-=2D	schedule_delayed_work(&local->scan_work, 0);
-+	/* TODO: start scan as soon as all nullfunc frames are ACKed */
-+	schedule_delayed_work(&local->scan_work, IEEE80211_CHANNEL_TIME);
-=20
- 	return 0;
- }
+> I think the biggest problem here is the firmware. The OLPC people 
+> have a special firmware for their USB dongle, which is not used 
+> in other chips, so a driver that has been heavily adapted to 
+> this firmware isn't easy to mangle to a different firmware.
 
---nextPart1870306.LCFWj25hOa
-Content-Type: application/pgp-signature
+No, it really hasn't.  The mesh-specific bits are a separate code path,
+and we routinely run non-mesh firmware using this driver.  If there are
+places that are missing run-time firmware version checks, then we need
+to fix those places.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+> So, what I (and several other people, see want to take the OLPC 
+> driver, get rid of the USB stuff, add in back stuff that is 
+> needed for CF-Card, add mangle and treat this until we get 
+> something that is working.
 
-iD8DBQBF5fdAT3Oqt9AH4aERAm+iAKCJ+PI1NTUbr64gWOKGa5yX5VO1WwCeOVPK
-XRrVYQ6C8KaERvjdhGdM8A8=
-=GoCz
------END PGP SIGNATURE-----
+You probably won't get that merged.  If the 8388 OLPC driver and the
+8385 CF driver share a lot of code, or if the chips are largely the same
+(they are) then there will rightfully be questions about why the same
+driver can't handle both chips.  And those questions are correct.
 
---nextPart1870306.LCFWj25hOa--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+Again, why don't we work together?  We are _not_ intentionally screwing
+over anybody else, and if there are pieces that you need, why don't we
+put those pieces back in?
+
+> Now, linux-2.6.20 still has Softmac. Some projects, like the 
+> bcm43xx, are very lively in the softwac area. d80211 is supposed 
+> to come into the kernel since months. I guess it's an endless 
+> task?  Will it ever arive?  What 80211 version should we use if 
+> our aim is inclusion in the stock kernel?  We don't plan, like 
+> so many other project, divide our working time into a year-long 
+> maintainance of two 80211 versions.
+
+The problem is that unless you've got a radically different firmware,
+you simply cannot use any of the existing 802.11 stacks.  The Marvell
+part, and the firmware, are inherently full-mac type devices and cannot
+be used with d80211 or ieee80211.
+
+The long and short of it is, please don't start a forked driver, because
+you may likely get denied a merge if the driver is too similar to an
+existing one.  Or both of us get denied merge and then we have to work
+together anyway.
+
+There's _no_ reason we shouldn't all work together.  If you have changes
+to the driver, please speak up and post them.  The original libertas
+hardware abstraction bits really sucked.  Rewriting them is probably a
+better use of your time than working on a forked driver.  If there are
+pieces of the libertas driver that are specific to the OLPC firmware, we
+need to protect those pieces with runtime checks.  We're happy to do
+that.  We've even got some 8388 USB dongles we can send you for testing.
+
+Dan
+
+
