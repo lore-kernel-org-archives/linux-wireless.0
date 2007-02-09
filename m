@@ -1,107 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59927
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:46558
 	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946123AbXBIFum (ORCPT
+	with ESMTP id S1946638AbXBIRLv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Feb 2007 00:50:42 -0500
+	Fri, 9 Feb 2007 12:11:51 -0500
 From: Michael Buesch <mb@bu3sch.de>
-To: Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [PATCH] d80211: remove hosttime from ieee80211_rx_status
-Date: Fri, 9 Feb 2007 06:50:11 +0100
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-References: <200702082359.47085.flamingice@sourmilk.net>
-In-Reply-To: <200702082359.47085.flamingice@sourmilk.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
+Date: Fri, 9 Feb 2007 18:11:40 +0100
+Cc: John Linville <linville@tuxdriver.com>, netdev@vger.kernel.org,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net>
+In-Reply-To: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200702090650.11910.mb@bu3sch.de>
+  charset="iso-8859-1"
+Message-Id: <200702091811.40683.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 09 February 2007 05:59, Michael Wu wrote:
-> d80211: remove hosttime from ieee80211_rx_status
+On Friday 09 February 2007 17:32, Larry Finger wrote:
+> The specifications for the bcm43xx driver have been modified. This patch
+> incorporates these changes in the code, which results in the BCM4311 and
+> BCM4312 working. The name of one of the PHY parameters, previously known
+> as "version", has been changed to "analog core version" .
 > 
-> Nobody fills hosttime in ieee80211_rx_status. Removing it allows
-> ieee80211_rx_status to fit in skb->cb.
-> 
-> Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
 > ---
 
-I'd like to see some kind of
-BUILD_BUG_ON(sizeof(struct ieee80211_rx_status) > sizeof(skb->cb));
-somewhere in the code to prevent unintentional future bugs.
+> @@ -729,19 +729,19 @@ static void bcm43xx_phy_initb5(struct bc
+>  	struct bcm43xx_phyinfo *phy = bcm43xx_current_phy(bcm);
+>  	struct bcm43xx_radioinfo *radio = bcm43xx_current_radio(bcm);
+>  	u16 offset;
+> +	u16 value;
+> +	u8 old_channel;
+>  
+> -	if (phy->version == 1 &&
+> -	    radio->version == 0x2050) {
 
->  include/net/d80211.h   |    1 -
->  net/d80211/ieee80211.c |   25 +++++--------------------
->  2 files changed, 5 insertions(+), 21 deletions(-)
-> 
-> diff --git a/include/net/d80211.h b/include/net/d80211.h
-> index 326def5..0b7b963 100644
-> --- a/include/net/d80211.h
-> +++ b/include/net/d80211.h
-> @@ -225,7 +225,6 @@ struct ieee80211_tx_control {
->   * (the subset supported by hardware) to the 802.11 code with each received
->   * frame. */
->  struct ieee80211_rx_status {
-> -        u64 hosttime;
->  	u64 mactime;
->          int freq; /* receive frequency in Mhz */
->          int channel;
-> diff --git a/net/d80211/ieee80211.c b/net/d80211/ieee80211.c
-> index bbcefa9..7a92bfe 100644
-> --- a/net/d80211/ieee80211.c
-> +++ b/net/d80211/ieee80211.c
-> @@ -2627,7 +2627,7 @@ ieee80211_fill_frame_info(struct ieee802
->                  struct timespec ts;
->  		struct ieee80211_rate *rate;
->  
-> -                jiffies_to_timespec(status->hosttime, &ts);
-> +		jiffies_to_timespec(jiffies, &ts);
->  		fi->hosttime = cpu_to_be64((u64) ts.tv_sec * 1000000 +
->  					   ts.tv_nsec / 1000);
->  		fi->mactime = cpu_to_be64(status->mactime);
-> @@ -4019,25 +4019,11 @@ static void ieee80211_stat_refresh(unsig
->  void ieee80211_rx_irqsafe(struct ieee80211_hw *hw, struct sk_buff *skb,
->  			  struct ieee80211_rx_status *status)
->  {
-> -	struct ieee80211_rx_status *saved;
->  	struct ieee80211_local *local = hw_to_local(hw);
->  
->  	skb->dev = local->mdev;
-> -	saved = kmalloc(sizeof(struct ieee80211_rx_status), GFP_ATOMIC);
-> -	if (unlikely(!saved)) {
-> -		if (net_ratelimit())
-> -			printk(KERN_WARNING "%s: Not enough memory, "
-> -			       "dropping packet", skb->dev->name);
-> -		/* should be dev_kfree_skb_irq, but due to this function being
-> -		 * named _irqsafe instead of just _irq we can't be sure that
-> -		 * people won't call it from non-irq contexts */
-> -		dev_kfree_skb_any(skb);
-> -		return;
+Why do you delete the check to radio version.
+It's still there in latest specs:
+http://bcm-v4.sipsolutions.net/802.11/PHY/Init/B5
+
+> +	if (phy->analog == 1)
+>  		bcm43xx_radio_write16(bcm, 0x007A,
+>  				      bcm43xx_radio_read16(bcm, 0x007A)
+>  				      | 0x0050);
 > -	}
-> -	memcpy(saved, status, sizeof(struct ieee80211_rx_status));
-> -	/* copy pointer to saved status into skb->cb for use by tasklet */
-> -	memcpy(skb->cb, &saved, sizeof(saved));
-> -
-> +	/* copy status into skb->cb for use by tasklet */
-> +	memcpy(skb->cb, status, sizeof(struct ieee80211_rx_status));
->  	skb->pkt_type = ieee80211_rx_msg;
->  	skb_queue_tail(&local->skb_queue, skb);
->  	tasklet_schedule(&local->tasklet);
-> @@ -4096,13 +4082,12 @@ static void ieee80211_tasklet_handler(un
->  	       (skb = skb_dequeue(&local->skb_queue_unreliable))) {
->                  switch (skb->pkt_type) {
->  		case ieee80211_rx_msg:
-> -			/* get pointer to saved status out of skb->cb */
-> -			memcpy(&rx_status, skb->cb, sizeof(rx_status));
-> +			/* status is in skb->cb */
-> +			rx_status = (struct ieee80211_rx_status *) skb->cb;
->  			/* Clear skb->type in order to not confuse kernel
->  			 * netstack. */
->  			skb->pkt_type = 0;
->  			__ieee80211_rx(local_to_hw(local), skb, rx_status);
-> -			kfree(rx_status);
->  			break;
->  		case ieee80211_tx_status_msg:
->  			/* get pointer to saved status out of skb->cb */
-> 
+>  	if ((bcm->board_vendor != PCI_VENDOR_ID_BROADCOM) &&
+>  	    (bcm->board_type != 0x0416)) {
+> +		value = 0x2120;
+>  		for (offset = 0x00A8 ; offset < 0x00C7; offset++) {
+> -			bcm43xx_phy_write(bcm, offset,
+> -					  (bcm43xx_phy_read(bcm, offset) + 0x2020)
+> -					  & 0x3F3F);
+> +			bcm43xx_phy_write(bcm, offset, value);
+> +			value += 0x0202;
+>  		}
+
+I don't see how this matches specs.
+
+>  	}
+>  	bcm43xx_phy_write(bcm, 0x0035,
+> @@ -776,7 +776,7 @@ static void bcm43xx_phy_initb5(struct bc
+>  				  bcm43xx_phy_read(bcm, BCM43xx_PHY_RADIO_BITFIELD) | (1 << 11));
+>  	}
+>  
+> -	if (phy->version == 1 && radio->version == 0x2050) {
+
+Dito.
+
+> +	if (phy->analog == 1) {
+>  		bcm43xx_phy_write(bcm, 0x0026, 0xCE00);
+>  		bcm43xx_phy_write(bcm, 0x0021, 0x3763);
+>  		bcm43xx_phy_write(bcm, 0x0022, 0x1BC3);
+> @@ -787,14 +787,15 @@ static void bcm43xx_phy_initb5(struct bc
+>  	bcm43xx_phy_write(bcm, 0x0030, 0x00C6);
+>  	bcm43xx_write16(bcm, 0x03EC, 0x3F22);
+>  
+> -	if (phy->version == 1 && radio->version == 0x2050)
+
+Dito.
+
+> +	if (phy->analog == 1)
+>  		bcm43xx_phy_write(bcm, 0x0020, 0x3E1C);
+>  	else
+>  		bcm43xx_phy_write(bcm, 0x0020, 0x301C);
+>  
+> -	if (phy->version == 0)
+> +	if (phy->analog == 0)
+>  		bcm43xx_write16(bcm, 0x03E4, 0x3000);
+>  
+> +	old_channel = radio->channel;
+>  	/* Force to channel 7, even if not supported. */
+>  	bcm43xx_radio_selectchannel(bcm, 7, 0);
+>  
+> @@ -816,11 +817,11 @@ static void bcm43xx_phy_initb5(struct bc
+>  
+>  	bcm43xx_radio_write16(bcm, 0x007A, bcm43xx_radio_read16(bcm, 0x007A) | 0x0007);
+>  
+> -	bcm43xx_radio_selectchannel(bcm, BCM43xx_RADIO_DEFAULT_CHANNEL_BG, 0);
+> +	bcm43xx_radio_selectchannel(bcm, old_channel, 0);
+>  
+>  	bcm43xx_phy_write(bcm, 0x0014, 0x0080);
+>  	bcm43xx_phy_write(bcm, 0x0032, 0x00CA);
+> -	bcm43xx_phy_write(bcm, 0x88A3, 0x002A);
+> +	bcm43xx_phy_write(bcm, 0x002A, 0x88A3);
+
+Well, this seems correct, but specs are still different. From where did you get this?
+
+
+Well, I don't review the rest until you say to which specs you did the changes. ;)
+
+-- 
+Greetings Michael.
