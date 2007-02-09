@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3859 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965424AbXBRAID (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Feb 2007 19:08:03 -0500
-Date: Sat, 17 Feb 2007 18:36:50 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'upstream' branch of wireless-2.6 (2007-02-14)
-Message-ID: <20070217233650.GA4310@tuxdriver.com>
-References: <20070214212817.GB28318@tuxdriver.com> <45D7647B.8090704@garzik.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <45D7647B.8090704@garzik.org>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:32936
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992772AbXBIT0r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Feb 2007 14:26:47 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Joseph Jezak <josejx@gentoo.org>
+Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
+Date: Fri, 9 Feb 2007 20:26:42 +0100
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de
+References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net> <200702091945.25187.mb@bu3sch.de> <45CCC8B5.3060108@gentoo.org>
+In-Reply-To: <45CCC8B5.3060108@gentoo.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702092026.43006.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 17, 2007 at 03:24:27PM -0500, Jeff Garzik wrote:
-> John W. Linville wrote:
-> >Some late-breaking small and/or important changes before the 2.6.21
-> >merge window closes...
+On Friday 09 February 2007 20:17, Joseph Jezak wrote:
+> > 
+> > The specs are unclear at this point:
+> > "Write the value to the offset"
+> > Offset in which register type?
+> 
+> PHY Register.  I've clarified it in the specs, I think this was said 
+> before, I made it worse when I cleaned it up.
+> 
+> >>  	// Initialization
+> >> -	if (phy->version == 0) {
+> >> +	if (phy->analog == 0) {
+> >>  		bcm43xx_write16(bcm, 0x03E6, 0x0122);
+> >>  	} else {
+> >> -		if (phy->version >= 2)
+> >> -			bcm43xx_write16(bcm, 0x03E6, 0x0040);
+> >> +		if (phy->analog >= 2)
+> >> +			bcm43xx_write16(bcm, 0x0003, (bcm43xx_read16(bcm, 0x0003)
+> >> +					& 0xFFBF) | 0x0040);
+> > 
+> > I think here is a specs bug.
+> 
+> This is correct.  Why do you think it's a specs bug?
 
-> ACK.  Tried to pull, but there were conflicts with netdev#upstream. 
-> Since there are dependencies in netdev#upstream, looks like you need to 
-> resend against that.
- 
-Ah, yes...I cloned your 'upstream' branch, pulled from my
-'upstream' branch, resolved the conflicts, and committed on my new
-'upstream-jgarzik' branch.
+Because
+a) The old one made more sense to me.
+b) Write MMIO register 0x3? I mean. What is that?
+   Could this be PHY or radio register 0x3?
 
-Please pull from here:
-
-	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-jgarzik
-
-Thanks!
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
