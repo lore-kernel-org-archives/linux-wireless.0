@@ -1,65 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:36834 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933153AbXB1RVl (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:39291
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992807AbXBIUau (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 12:21:41 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so618947nfa
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 09:21:38 -0800 (PST)
-Message-ID: <c4db5c50702280921i6f0689adm197b5fcb19f1852f@mail.gmail.com>
-Date: Wed, 28 Feb 2007 17:21:38 +0000
-From: "Robin Cornelius" <robin.cornelius@gmail.com>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Subject: Re: [PATCH 2/28] rt2x00: Add debugfs support
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200702281809.15486.IvDoorn@gmail.com>
+	Fri, 9 Feb 2007 15:30:50 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
+Date: Fri, 9 Feb 2007 21:30:38 +0100
+Cc: Joseph Jezak <josejx@gentoo.org>, netdev@vger.kernel.org,
+	Larry Finger <larry.finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net> <200702092017.36950.mb@bu3sch.de> <45CCD1B1.80709@gentoo.org>
+In-Reply-To: <45CCD1B1.80709@gentoo.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <200702281507.13953.IvDoorn@gmail.com>
-	 <200702281752.36875.IvDoorn@gmail.com>
-	 <1172681674.5015.43.camel@johannes.berg>
-	 <200702281809.15486.IvDoorn@gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702092130.38997.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/28/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> On Wednesday 28 February 2007 17:54, Johannes Berg wrote:
-> > On Wed, 2007-02-28 at 17:52 +0100, Ivo van Doorn wrote:
-> >
-> > > But there is some progress I believe, Robin seems to have managed to
-> > > compile cfg80211 now against a 2.6.20 kernel.
-> >
-> > Guys, why do we know nothing about this? Could you *please* come out of
-> > your hole?
->
-> Perhaps because Robin told it to me 5 minutes before I send that mail? ;)
-> He is still struggling a bit with the Makefile, but at least some progress has been made.
->
-> I have added Robin to the CC list, so he can explain the current status himself. :)
+On Friday 09 February 2007 20:55, Joseph Jezak wrote:
+> Michael Buesch wrote:
+> > On Friday 09 February 2007 20:05, Joseph Jezak wrote:
+> >>> I'll agree to that as long as there is a clear indication of any differences between V3 and V4 firmware.
+> >> That's also part of the problem.  With the v4 driver, Broadcom 
+> >> dropped support for a number of older BPHY devices (4301/4303 and 
+> >> some 4306 revisions).  Do we still want to support those?  Should I 
+> >> continue writing the specs for the uCode revision it's based on or 
+> >> should I combine them?
+> > 
+> > If it's easily possible, please try to combine the old stuff
+> > with the new v4 specs.
+> > I think it's basically only dropped if() branches, right?
+> > 
+> 
+> Well, here's the problem.  There are a few places where a value is 
+> changed (different value written to a register).  Does this mean 
+> that the value is different due to the uCode changes (can't tell, no 
+> documentation)?  Is it applicable to all revisions (can't tell, some 
+> revisions are not supported in this version)?  If the revision 
+> number range in a check changes is that because of a difference in 
+> supported cards or a bug fix?
+> 
+> So, it's not as simple as just dropped if() branches.  I can do my 
+> best to combine them (I have done some of this already), but I can't 
+> promise that it'll be accurate for all revisions or versions of the 
+> chipset.
 
-Hi guys,
-
-Ok status is as follows.
-
-d80211 and cfg80211 will compile against a 2.6.20 kernel (i believe
-2.6.18 or better will do).
-
-I have achieved this starting with the d80211 and cfg80211 code from
-wireless-dev.git, and applying some of the intel patches from the
-d80211 subsystem package and a couple of other pointer cast fixes. I
-have not made a patch set yet as I am still experimenting.
-
-The problem i am up against is now i must disable the existing
-wireless extensions in the kernel and this can only be done with a
-kernel rebuild. I have not tried this yet as I am not sure there is a
-lot of point continuing on this route as its not possible to
-completely out of kernel build the cfg80211 modules, which was the
-target for my experimentation.
-
-
+Ok, I see.
+How many of these old devices exist and who has access to them?
+If we want to combine stuff, we really must test it on these devices then.
 
 -- 
-Robin Cornelius
-http://www.byteme.org.uk
+Greetings Michael.
