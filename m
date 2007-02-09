@@ -1,147 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:45542 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932825AbXBTBb3 (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:32441 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752478AbXBIWfA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 20:31:29 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HJJpS-0000EE-9z
-	for linux-wireless@vger.kernel.org; Mon, 19 Feb 2007 20:30:02 -0500
-Subject: Capture of unsuccessful ARP exchange
-From: Pavel Roskin <proski@gnu.org>
-To: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Content-Type: multipart/mixed; boundary="=-E/+GOLyplOaiT7MFouY2"
-Date: Mon, 19 Feb 2007 20:31:25 -0500
-Message-Id: <1171935085.8133.42.camel@dv>
-Mime-Version: 1.0
+	Fri, 9 Feb 2007 17:35:00 -0500
+Message-ID: <45CCED20.90403@linux.intel.com>
+Date: Fri, 09 Feb 2007 13:52:32 -0800
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: Neil Brown <neilb@suse.de>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
+Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
+References: <45CCE3CA.4050904@linux.intel.com> <17868.62734.497825.667962@notabene.brown>
+In-Reply-To: <17868.62734.497825.667962@notabene.brown>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Neil Brown wrote:
+> On Friday February 9, jketreno@linux.intel.com wrote:
+>> Ok.  Now... any questions?
+> 
+> Yes.  Does this require a closed user-space helper like the other
+> 3945ABG driver, or is it completely open (maybe excepting firmware)?
 
---=-E/+GOLyplOaiT7MFouY2
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+The iwlwifi driver for the 3945 does not require the user space daemon, 
+but does require a new microcode image.
 
-Hello!
+Over the past year we were able to make the necessary changes to the 
+microcode used with the 3945 such that we were able to remove the 
+regulatory daemon.
 
-As I wrote before, bcm43xx_d80211 connects quickly to an 802.11g AP only
-if it doesn't support OFDM modes (bcm43xx_g_ratetable_size changed from
-12 to 4).  Actually, association is not a problem, but no data goes
-through for several minutes.
-
-I'm attaching a capture file of an unsuccessful APR exchange following
-the association.
-
-The AP is current MadWifi, MAC address 00:0F:B5:35:73:D8.  The STA is
-current bcm43xx_d80211 from mb branch, PCIe 4312, MAC address
-00:19:7D:21:7B:50.  The capture is done by another system running
-Wireshark 0.99.5 and current MadWifi in monitor mode.
-
-
-AP broadcasts a beacon announcing that it supports rates from 1 to
-54Mbps.  The flags indicate short preamble, spectrum management and
-short slot time.
-
-STA broadcasts an ARP request at 36Mbps.  QoS field requests normal ACK.
-
-STA receives ACK at 24Mbps.
-
-STA broadcasts another ARP request, this time at 1Mbps.  It's a non-QoS
-data frame.  However, the flags indicate that it's a frame from DS not
-to DS, unlike the previous ARP request that got that part correctly!
-
-AP rends APR reply at 5.5Mbps.  QoS field requests normal ACK, which
-never arrives.
-
-AP sends another such frame with retry bit set, followed by 6 more
-frames at 1Mbps.  QoS field requests normal ACK, which never arrives.
-
-STA broadcasts an ARP request at 36Mbps.  To-DS is set correctly.  Retry
-bit is set.  QoS field requests normal ACK.
-
-STA receives ACK at 24Mbps.
-
-STA broadcasts an ARP request at 24Mbps.  To-DS is set correctly.  Retry
-bit is set.  QoS field requests normal ACK.
-
-
-Following seems wrong to me:
-
-1) STA sends some packets with From-DS instead of To-DS.  I've seen more
-than one such packet, and they are always sent at 1Mbps.
-
-2) STA doesn't send ACK to frames specifically requesting it (if I
-understand the Wireshark interpretation correctly).
-
--- 
-Regards,
-Pavel Roskin
-
---=-E/+GOLyplOaiT7MFouY2
-Content-Disposition: attachment; filename=80211g-arp
-Content-Type: application/octet-stream; name=80211g-arp
-Content-Transfer-Encoding: base64
-
-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
-AAQAR8lIAEQAAgAAAAQAMWbrHEQAAwAAAAQACwAAAEQABAAAAAQAIAAAAAAAAAAAAAAAAAAAAEQA
-BgAAAAQAwP///0QABwAAAAQAoP///0QACAAAAAQASAAAAEQACQAAAAQAAAAAAEQACgAAAAQAQgAA
-AIgJLAAAD7U1c9gAGX0he1D////////gAgAAqqoDAAAACAYAAQgABgQAAQAZfSF7UAp1HVIAAAAA
-AAAKdR1HqzfaRaDoBwCaAAAAmgAAAEQAAACQAAAAYXRoMAAAAAAAAAAAAAAAAEQAAQAAAAQAR8lI
-AEQAAgAAAAQAWmbrHEQAAwAAAAQACwAAAEQABAAAAAQAOQAAAAAAAAAAAAAAAAAAAEQABgAAAAQA
-2f///0QABwAAAAQAoP///0QACAAAAAQAMAAAAEQACQAAAAQAAAAAAEQACgAAAAQADgAAANQAAAAA
-GX0he1CrN9pFthUIAM4AAADOAAAARAAAAJAAAABhdGgwAAAAAAAAAAAAAAAARAABAAAABABLyUgA
-RAACAAAABABtk+scRAADAAAABAALAAAARAAEAAAABAAgAAAAAAAAAAAAAAAAAAAARAAGAAAABADA
-////RAAHAAAABACg////RAAIAAAABAAwAAAARAAJAAAABAAAAAAARAAKAAAABABCAAAAiAksAAAP
-tTVz2AAZfSF7UP///////+ACAACqqgMAAAAIBgABCAAGBAABABl9IXtQCnUdUgAAAAAAAAp1HUc=
-
-
---=-E/+GOLyplOaiT7MFouY2--
-
+James
