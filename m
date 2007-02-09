@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:48053
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752505AbXBDTHm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Feb 2007 14:07:42 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Jon Smirl" <jonsmirl@gmail.com>
-Subject: Re: SoftMAC vs FullMAC
-Date: Sun, 4 Feb 2007 20:07:29 +0100
-Cc: "Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
-References: <9e4733910702040922n63736d27h7ab027dc90ae8989@mail.gmail.com> <20070204123048.4bhesocg4kosgscg@webmail.spamcop.net> <9e4733910702041031i5edd6dfeq7f8c5179fee5e00e@mail.gmail.com>
-In-Reply-To: <9e4733910702041031i5edd6dfeq7f8c5179fee5e00e@mail.gmail.com>
-MIME-Version: 1.0
-Message-Id: <200702042007.29357.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Received: from xenotime.net ([66.160.160.81]:38505 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S2992802AbXBIUZL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Feb 2007 15:25:11 -0500
+Received: from midway.site ([71.245.99.70]) by xenotime.net for <linux-wireless@vger.kernel.org>; Fri, 9 Feb 2007 12:25:01 -0800
+Date: Fri, 9 Feb 2007 12:21:46 -0800
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: New list for wireless dev discussions
+Message-Id: <20070209122146.083e9ad8.rdunlap@xenotime.net>
+In-Reply-To: <20070201190353.GE5408@tuxdriver.com>
+References: <20070130203944.GC6474@tuxdriver.com>
+	<20070201190353.GE5408@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 04 February 2007 19:31, Jon Smirl wrote:
-> On 2/4/07, Pavel Roskin <proski@gnu.org> wrote:
-> > In fact, Atheros chips are not that intelligent to be treated as FullMAC, but
-> > going to d80211 removes many chip specific features.
+On Thu, 1 Feb 2007 14:03:53 -0500 John W. Linville wrote:
+
+> On Tue, Jan 30, 2007 at 03:39:44PM -0500, John W. Linville wrote:
+> > At the wireless summit in London, we collectively decided to move
+> > day-to-day wireless development discussions to our own list.  I am
+> > hosting a list for this purpose:
+> > 
+> > 	http://lists.tuxdriver.org/mailman/listinfo/wireless
 > 
-> What types of features are removed? For example Atheros turbo mode can
-> be treated like another PHY layer implementation.
+> In response to some community requests, I have asked David
+> Miller to create a list for us on vger.kernel.org.  David has
+> obliged that request, so I have restricted new subscriptions to
+> wireless@lists.tuxdriver.org and I am asking everyone to move wireless
+> discussions to the new list.
 > 
-> If it is just off-loading the implementation of standard behavior then
-> we may actually be better off ignoring this capability and
-> implementing the standard behavior in the host.
-> 
-> It's not even clear to me that doing encryption is a wireless
-> co-processor is a win. It is almost certain that the host can perform
-> the same algorithms many times faster that an embedded wireless
-> processor.  Moving encryption onto the host reduces the latency of the
-> connection.
+> 	linux-wireless@vger.kernel.org
 
-If creating and uploading the keys to the device is less work than
-doing crypto in software, then it is clearly a win.
-And that _is_ the case for bcm43xx (at least. I don't know about other
-devices' hwcrypto capabilities).
-Doing less on the CPU and more in hw is always a win. I'm not sure
-how you can say that you're not sure it is. ;)
 
-Additionally, doing crypto in the RX path (tasklet context) is
-not really optimal, from a latency point of view.
+This is Good.  Now I'd like to request that linux-wireless people set
+an example by not posting duplicates to netdev@vger.kernel.org also.  :)
 
-But you can test it yourself. Enable/disable hwcrypto and watch how
-CPU load in "top" reacts.
 
-I did a quick test on my powerbook and software interrupt load
-decreases from about 30% to about 10% when switching from swcrypto
-to hwcrypto. I'd call that a significant win. And this 20% decrease
-is just the RX path. TX is done in process context (I think).
-
--- 
-Greetings Michael.
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
