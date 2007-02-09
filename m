@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-77.dex002.intermedia.net ([64.78.20.107]:40306 "EHLO
-	DHOST002-77.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933076AbXB1Q4X (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:48561
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946617AbXBIR37 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 11:56:23 -0500
-From: "Jouni Malinen" <jkm@devicescape.com>
-Date: Wed, 28 Feb 2007 08:55:51 -0800
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, Jiri Benc <jbenc@suse.cz>,
-	Stephen Hemminger <shemminger@linux-foundation.org>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	Pavel Roskin <proski@gnu.org>,
-	Alex Davis <alex14641@yahoo.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Patch to allow specification of interface name prefix
-Message-ID: <20070228165551.GC31074@devicescape.com>
-References: <510326.55988.qm@web50211.mail.yahoo.com> <20070224233001.3ok4k0c00ksos4sw@webmail.spamcop.net> <45E112F7.9090908@lwfinger.net> <20070226150241.1b5b63b2@freekitty> <20070227111644.784600be@logostar.upir.cz> <43e72e890702271055sc1525ecy54870626125a7fae@mail.gmail.com> <20070228012500.GB4072@tuxdriver.com> <20070228164437.GA31074@devicescape.com> <1172681452.5015.41.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1172681452.5015.41.camel@johannes.berg>
+	Fri, 9 Feb 2007 12:29:59 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Joseph Jezak <josejx@gentoo.org>
+Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
+Date: Fri, 9 Feb 2007 18:29:50 +0100
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de
+References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net> <200702091811.40683.mb@bu3sch.de> <45CCF432.2070002@gentoo.org>
+In-Reply-To: <45CCF432.2070002@gentoo.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702091829.51002.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 28, 2007 at 05:50:52PM +0100, Johannes Berg wrote:
-> On Wed, 2007-02-28 at 08:44 -0800, Jouni Malinen wrote:
-> > What's wrong with wlan#?
+On Friday 09 February 2007 23:22, Joseph Jezak wrote:
+> > Well, I don't review the rest until you say to which specs you did the changes. ;)
 > 
-> Some people are anal about changing user-visible properties when one
-> driver replaces another.
+> http://bcm-specs.sipsolutions.net/B5PHY
+> 
+> Larry was working from the old specs, so when I updated it, I only 
+> updated the old specs.  I'll fix the v4 specs soon.
 
-So? Some drivers in the current mainline kernel are using wlan#.
+Ah, ok. I think we should decide on which specs carry most recent information.
+I think v3 specs should be considered obsolete and new information/ fixes
+should go into v4. It is already too confusing where to find newest information
+to a certain thing.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Greetings Michael.
