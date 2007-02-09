@@ -1,97 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58153 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932241AbXBSNfT (ORCPT
+Received: from rwcrmhc13.comcast.net ([216.148.227.153]:47728 "EHLO
+	rwcrmhc13.comcast.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992795AbXBIT7F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 08:35:19 -0500
-Received: from [84.135.240.62] (helo=johannes.berg)
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.63)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1HJ8bz-0008Hp-NJ
-	for linux-wireless@vger.kernel.org; Mon, 19 Feb 2007 13:31:24 +0000
-Subject: FYI: current kernel-doc warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8DFNj0GubZa1FABb54BM"
-Date: Mon, 19 Feb 2007 14:35:11 +0100
-Message-Id: <1171892111.3471.12.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 9 Feb 2007 14:59:05 -0500
+Message-ID: <45CCD280.9070501@gentoo.org>
+Date: Fri, 09 Feb 2007 14:58:56 -0500
+From: Joseph Jezak <josejx@gentoo.org>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: Larry Finger <Larry.Finger@lwfinger.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
+References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net> <200702091945.25187.mb@bu3sch.de> <45CCC8B5.3060108@gentoo.org> <200702092026.43006.mb@bu3sch.de>
+In-Reply-To: <200702092026.43006.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>> This is correct.  Why do you think it's a specs bug?
+> 
+> Because
+> a) The old one made more sense to me.
+> b) Write MMIO register 0x3? I mean. What is that?
+>    Could this be PHY or radio register 0x3?
+> 
 
---=-8DFNj0GubZa1FABb54BM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Apologies.  You are correct that this should be PHY Register 0x3, 
+not MMIO offset 0x3.  I've corrected this in the specs.
 
-Just in case someone is idling and needs something to do, here's the
-current list of kernel-doc warnings in d80211.
-
-The list is also on
-http://linuxwireless.org/en/developers/d80211/kerneldoc/warnings which
-is updated daily from the current wireless-dev tree.
-
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'channel'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'freq'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'channel_val'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'phymode'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'regulatory_domain'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'beacon_int'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'flags'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'power_level'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'antenna_max'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'tx_power_reduction'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'antenna_sel'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'antenna_def'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'antenna_mode'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'radar_detect'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'spect_mgmt'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'quiet_duration'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'quiet_offset'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'quiet_period'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'radar_firpwr_threshold'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'radar_rssi_threshold'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'pulse_height_threshold'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'pulse_rssi_threshold'
-Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
-rameter 'pulse_inband_threshold'
-
-johannes
-
---=-8DFNj0GubZa1FABb54BM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF2aeP/ETPhpq3jKURAlSAAKChP5lEGE3oBLlBpBjgu+J6ogEeuwCfYN+e
-4gXLG1+PX5Qa5wJGyRwQvAE=
-=XbP+
------END PGP SIGNATURE-----
-
---=-8DFNj0GubZa1FABb54BM--
-
+-Joe
