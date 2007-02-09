@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:39426 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030692AbXBOTL2 (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:53289 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S2992837AbXBIVBD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Feb 2007 14:11:28 -0500
-Message-ID: <45D49BDA.30402@linux.intel.com>
-Date: Thu, 15 Feb 2007 09:43:54 -0800
-From: James Ketrenos <jketreno@linux.intel.com>
+	Fri, 9 Feb 2007 16:01:03 -0500
+Message-ID: <45CCE10A.3050109@lwfinger.net>
+Date: Fri, 09 Feb 2007 15:00:58 -0600
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: Re: IPW2200 monitoring FW broken
-References: <200702151840.16963.mb@bu3sch.de> <45D48BDE.4070708@linux.intel.com> <200702151910.59609.mb@bu3sch.de>
-In-Reply-To: <200702151910.59609.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Randy Dunlap <rdunlap@xenotime.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: New list for wireless dev discussions
+References: <20070130203944.GC6474@tuxdriver.com>	<20070201190353.GE5408@tuxdriver.com> <20070209122146.083e9ad8.rdunlap@xenotime.net>
+In-Reply-To: <20070209122146.083e9ad8.rdunlap@xenotime.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Thursday 15 February 2007 17:35, James Ketrenos wrote:
->> you can't update the packet capture  
->> window or you'll lose packets; but you should be able to get them all if 
->> you're doing a tethereal > somefile or if you turn off the update of the 
->> main window.
+Randy Dunlap wrote:
+> On Thu, 1 Feb 2007 14:03:53 -0500 John W. Linville wrote:
 > 
-> "update of the packet capture window". What's that?
-> I started a simple traffic monitoring in wireshark. Nothing fancy.
+>> On Tue, Jan 30, 2007 at 03:39:44PM -0500, John W. Linville wrote:
+>>> At the wireless summit in London, we collectively decided to move
+>>> day-to-day wireless development discussions to our own list.  I am
+>>> hosting a list for this purpose:
+>>>
+>>> 	http://lists.tuxdriver.org/mailman/listinfo/wireless
+>> In response to some community requests, I have asked David
+>> Miller to create a list for us on vger.kernel.org.  David has
+>> obliged that request, so I have restricted new subscriptions to
+>> wireless@lists.tuxdriver.org and I am asking everyone to move wireless
+>> discussions to the new list.
+>>
+>> 	linux-wireless@vger.kernel.org
+> 
+> 
+> This is Good.  Now I'd like to request that linux-wireless people set
+> an example by not posting duplicates to netdev@vger.kernel.org also.  :)
 
-In the 'Capture Options', the only option you can set is 'Hide capture 
-info dialog'.  If you turn on 'Update list of packets in real time' or 
-'Automatic scrolling in live capture', packets get dropped.  I don't 
-know if its a libpcap queue that fills up, if it starves the NIC, or 
-what--but having those turned on greatly reduces the # of packets you'll 
-capture.
+I was trying to decide if I should post a question if there had been enough time for people to
+switch. Now that the first complaint has been posted, I'm switched.
 
-James
+Larry
