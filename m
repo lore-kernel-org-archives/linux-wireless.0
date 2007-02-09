@@ -1,68 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:59928 "EHLO
-	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965362AbXBFGRT (ORCPT
+Received: from sccrmhc14.comcast.net ([63.240.77.84]:46541 "EHLO
+	sccrmhc14.comcast.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946642AbXBIR1r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Feb 2007 01:17:19 -0500
-Date: Tue, 06 Feb 2007 00:16:35 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>, netdev@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] bcm43xx: Ignore ampdu status reports
-Message-ID: <45c81d43.P6v/adIydh88LL+j%Larry.Finger@lwfinger.net>
+	Fri, 9 Feb 2007 12:27:47 -0500
+Message-ID: <45CCF432.2070002@gentoo.org>
+Date: Fri, 09 Feb 2007 17:22:42 -0500
+From: Joseph Jezak <josejx@gentoo.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Michael Buesch <mb@bu3sch.de>
+CC: Larry Finger <Larry.Finger@lwfinger.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
+References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net> <200702091811.40683.mb@bu3sch.de>
+In-Reply-To: <200702091811.40683.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Buesch <mb@bu3sch.de>
+> Well, I don't review the rest until you say to which specs you did the changes. ;)
 
-iIf bcm43xx were to process an afterburner (ampdu) status response, Linux would oops. The
-ampdu and intermediate status bits are properly named.
+http://bcm-specs.sipsolutions.net/B5PHY
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Larry was working from the old specs, so when I updated it, I only 
+updated the old specs.  I'll fix the v4 specs soon.
 
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-@@ -1453,12 +1453,10 @@ static void handle_irq_transmit_status(s
- 
- 		bcm43xx_debugfs_log_txstat(bcm, &stat);
- 
--		if (stat.flags & BCM43xx_TXSTAT_FLAG_IGNORE)
-+		if (stat.flags & BCM43xx_TXSTAT_FLAG_AMPDU)
-+			continue;
-+		if (stat.flags & BCM43xx_TXSTAT_FLAG_INTER)
- 			continue;
--		if (!(stat.flags & BCM43xx_TXSTAT_FLAG_ACK)) {
--			//TODO: packet was not acked (was lost)
--		}
--		//TODO: There are more (unknown) flags to test. see bcm43xx_main.h
- 
- 		if (bcm43xx_using_pio(bcm))
- 			bcm43xx_pio_handle_xmitstatus(bcm, &stat);
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_xmit.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_xmit.h
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_xmit.h
-@@ -137,14 +137,8 @@ struct bcm43xx_xmitstatus {
- 	u16 unknown; //FIXME
- };
- 
--#define BCM43xx_TXSTAT_FLAG_ACK		0x01
--//TODO #define BCM43xx_TXSTAT_FLAG_???	0x02
--//TODO #define BCM43xx_TXSTAT_FLAG_???	0x04
--//TODO #define BCM43xx_TXSTAT_FLAG_???	0x08
--//TODO #define BCM43xx_TXSTAT_FLAG_???	0x10
--#define BCM43xx_TXSTAT_FLAG_IGNORE	0x20
--//TODO #define BCM43xx_TXSTAT_FLAG_???	0x40
--//TODO #define BCM43xx_TXSTAT_FLAG_???	0x80
-+#define BCM43xx_TXSTAT_FLAG_AMPDU	0x10
-+#define BCM43xx_TXSTAT_FLAG_INTER	0x20
- 
- u8 bcm43xx_plcp_get_ratecode_cck(const u8 bitrate);
- u8 bcm43xx_plcp_get_ratecode_ofdm(const u8 bitrate);
+-Joe
+
+
