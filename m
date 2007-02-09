@@ -1,36 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailgate.cesmail.net ([216.154.195.36]:52426 "HELO
-	mailgate.cesmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752459AbXBDRha (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Feb 2007 12:37:30 -0500
-Message-ID: <20070204123048.4bhesocg4kosgscg@webmail.spamcop.net>
-Date: Sun,  4 Feb 2007 12:30:48 -0500
-From: Pavel Roskin <proski@gnu.org>
-To: Jon Smirl <jonsmirl@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: SoftMAC vs FullMAC
-References: <9e4733910702040922n63736d27h7ab027dc90ae8989@mail.gmail.com>
-In-Reply-To: <9e4733910702040922n63736d27h7ab027dc90ae8989@mail.gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:60329 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1423224AbXBIVMv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Feb 2007 16:12:51 -0500
+Message-ID: <45CCE3D1.3030303@garzik.org>
+Date: Fri, 09 Feb 2007 16:12:49 -0500
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Please pull "upstream" branch of wireless-2.6
+References: <20070202212747.GC9382@tuxdriver.com> <45C917EF.1060307@garzik.org> <20070207211117.GC6109@tuxdriver.com> <20070209201306.GA2580@tuxdriver.com>
+In-Reply-To: <20070209201306.GA2580@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Jon Smirl <jonsmirl@gmail.com>:
+John W. Linville wrote:
+> On Wed, Feb 07, 2007 at 04:11:17PM -0500, John W. Linville wrote:
+>> On Tue, Feb 06, 2007 at 07:06:07PM -0500, Jeff Garzik wrote:
+>>> Would you mind rebasing & resending, kind sir?
+>> By your command! :-)
+> 
+> And once more, now with feeling! :-)
+> 
+> ---
+> 
+> The following changes since commit 62d0cfcb27cf755cebdc93ca95dabc83608007cd:
+>   Linus Torvalds (1):
+>         Linux 2.6.20
+> 
+> are found in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream
+> 
+> Daniel Drake (1):
+>       zd1211rw: Remove noisy debug message
+> 
+> Larry Finger (5):
+>       bcm43xx: Fix problem with >1 GB RAM
+>       bcm43xx: Fix scaling error for 'iwlist rate' information
+>       bcm43xx: Fix scaling error for 'iwlist freq' information
+>       bcm43xx: Check error returns in initialization routines
+>       ieee80211: Fix sparse warning
+> 
+> Maxime Austruy (1):
+>       zd1211rw: fix potential leak in usb_init
+> 
+> Michael Buesch (1):
+>       bcm43xx: Enable fwpostfix in nondebug bcm43xx
+> 
+> Robert P. J. Day (2):
+>       Rename IPW2100 debugging macros to not look like config options.
+>       Replace incorrect macro name "WIRELESS_EXT" with "CONFIG_WIRELESS_EXT"
+> 
+> Ulrich Kunitz (3):
+>       zd1211rw: Reset device in the probe call
+>       zd1211rw: Fixed array size issue in reset_mode
+>       zd1211rw: Added error stats update
+> 
+>  drivers/net/wireless/bcm43xx/bcm43xx.h      |    1 +
+>  drivers/net/wireless/bcm43xx/bcm43xx_dma.c  |  171 +++++++++++++++++++--------
+>  drivers/net/wireless/bcm43xx/bcm43xx_main.c |   25 +++--
+>  drivers/net/wireless/bcm43xx/bcm43xx_wx.c   |   28 ++--
+>  drivers/net/wireless/ipw2100.c              |   16 ++--
+>  drivers/net/wireless/zd1211rw/zd_mac.c      |   44 ++++++--
+>  drivers/net/wireless/zd1211rw/zd_usb.c      |   12 ++
+>  net/core/net-sysfs.c                        |    4 +-
+>  net/ieee80211/ieee80211_tx.c                |    3 -
+>  9 files changed, 210 insertions(+), 94 deletions(-)
 
-> Has it been considered to simply treat all wireless hardware as
-> SoftMAC and to just ignore the FullMAC capabilities?
-[skip]
-> Dscape looks to have already started down this path with
-> implementations for five vendors. Is the plan to do this for all
-> vendors, including Intel and Atheros?
+pulled, thanks
 
-It is the plan for Atheros.  See Dadwifi.
 
-In fact, Atheros chips are not that intelligent to be treated as FullMAC, but
-going to d80211 removes many chip specific features.
-
---
-Regards,
-Pavel Roskin
