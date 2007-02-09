@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3470 "EHLO ra.tuxdriver.com"
+Received: from mx1.redhat.com ([66.187.233.31]:46982 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965632AbXBGBOI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Feb 2007 20:14:08 -0500
-Received: from ra.tuxdriver.com (ra.tuxdriver.com [127.0.0.1])
-	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l171DuDE003162
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Tue, 6 Feb 2007 20:14:02 -0500
-Received: (from uucp@localhost)
-	by ra.tuxdriver.com (8.13.7/8.13.6/Submit) with UUCP id l1719lUV003141
-	for linux-wireless@vger.kernel.org; Tue, 6 Feb 2007 20:09:47 -0500
-Received: from linville-t43.mobile (linville-t43.mobile [127.0.0.1])
-	by linville-t43.mobile (8.13.8/8.13.8) with ESMTP id l1718AkR023712
-	for <linux-wireless@vger.kernel.org>; Tue, 6 Feb 2007 20:08:10 -0500
-Received: (from linville@localhost)
-	by linville-t43.mobile (8.13.8/8.13.8/Submit) id l1718Aaw023711
-	for linux-wireless@vger.kernel.org; Tue, 6 Feb 2007 20:08:10 -0500
-Date: Tue, 6 Feb 2007 20:08:10 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: wireless-dev rebase (prep for -mm)
-Message-ID: <20070207010810.GE23096@tuxdriver.com>
+	id S1946023AbXBICHN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Feb 2007 21:07:13 -0500
+Subject: Re: [RFC PATCH 3/3] cfg80211: add wext-compatible client
+From: Dan Williams <dcbw@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070208195526.GA5319@infradead.org>
+References: <20070131013717.GA28076@tuxdriver.com>
+	 <20070207004626.GA23096@tuxdriver.com>
+	 <20070207004747.GB23096@tuxdriver.com>
+	 <20070207004832.GC23096@tuxdriver.com>
+	 <20070207004929.GD23096@tuxdriver.com>
+	 <20070207075420.GB14703@infradead.org>
+	 <1170940386.4385.49.camel@johannes.berg>
+	 <43e72e890702081038k1d4f226eocf28c5faf6b79dc5@mail.gmail.com>
+	 <20070208195526.GA5319@infradead.org>
+Content-Type: text/plain
+Date: Thu, 08 Feb 2007 21:09:20 -0500
+Message-Id: <1170986960.2873.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case anyone doesn't know, wireless-dev is here:
+On Thu, 2007-02-08 at 19:55 +0000, Christoph Hellwig wrote:
+> On Thu, Feb 08, 2007 at 01:38:02PM -0500, Luis R. Rodriguez wrote:
+> > >> in the series actually converts a driver to use it.  Both to make this
+> > >> code not dead and give people and example on how to use the cfg80211
+> > >> infrastructure.
+> > >
+> > >I guess I could make softmac use it.
+> > 
+> > Another idea here is we can provide a configfs frontend to cfg80211
+> > therefore any device which implements cfg80211 will automagically have
+> > a userspace frontend (/configfs/wireless/foo) ready to test cfg80211.
+> 
+> Huh?  We already have a wext fronted to nicely test cfg80211, what we
+> need are backends.  In addition to that I think we should agree on
+> one primary userspace configuration method for the future instead of
+> adding lots of them just because it's so easy.  If the public opinion
+> has changed 180 degrees and configs is preferred over nl80211 that's
+> fine by me as long as the implementation is sane..
 
-	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-dev.git
+I'd prefer to keep the netlink based API for use from userspace tools
+like NetworkManager and wpa_supplicant...  configfs is nice for scripts
+and screenscrapers but not really appropriate for desktop stuff.
 
-As I mentioned in London, I have kept this tree current w/ Linus by
-pulling from his branch into the master merge branch.  This has some
-advantages for my immediate downstream driver maintainers, but it
-has disadvantages.  In particular, it makes it difficult to extract
-a patch stream from wireless-dev that will directly apply on top of
-a current tree from Linus, et al.
+Dan
 
-I have taken some time and applied some git foo so that now I have a
-branch ("mm-master") that can yield such a patch stream.  This branch
-will be the base from which I will ask akpm to pull from -mm.
-It is rooted on top of the "cfg80211" branch, which contains the
-cfg80211 patches that I am grooming for an upstream merge in the
-immediate future.  For now, I will also continue to maintain the
-"master" branch as I have done previously.
 
-This message is intended to keep everyone who cares "in the loop".
-Feel free to voice any concerns/complaints/suggestions.
-
-Thanks,
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
