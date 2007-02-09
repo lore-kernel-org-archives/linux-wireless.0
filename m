@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.184]:31605 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750968AbXBRNRA (ORCPT
+Received: from rwcrmhc14.comcast.net ([216.148.227.154]:60275 "EHLO
+	rwcrmhc14.comcast.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992764AbXBITRM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Feb 2007 08:17:00 -0500
-Received: by mu-out-0910.google.com with SMTP id g7so198597muf
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Feb 2007 05:16:58 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] d80211: Fix skb panic during passive scan
-Date: Sun, 18 Feb 2007 14:16:24 +0100
-Cc: Jiri Benc <jbenc@suse.cz>, "John Linville" <linville@tuxdriver.com>
+	Fri, 9 Feb 2007 14:17:12 -0500
+Message-ID: <45CCC8B5.3060108@gentoo.org>
+Date: Fri, 09 Feb 2007 14:17:09 -0500
+From: Joseph Jezak <josejx@gentoo.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200702181416.24396.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+CC: Larry Finger <Larry.Finger@lwfinger.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
+References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net> <200702091945.25187.mb@bu3sch.de>
+In-Reply-To: <200702091945.25187.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only add the extra_tx_headroom to the len when allocating
-the sk_buff. This will prevent using an invalid length for skb_put
-which would cause a skb panic inside the driver.
+> 
+> The specs are unclear at this point:
+> "Write the value to the offset"
+> Offset in which register type?
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+PHY Register.  I've clarified it in the specs, I think this was said 
+before, I made it worse when I cleaned it up.
 
----
+>>  	// Initialization
+>> -	if (phy->version == 0) {
+>> +	if (phy->analog == 0) {
+>>  		bcm43xx_write16(bcm, 0x03E6, 0x0122);
+>>  	} else {
+>> -		if (phy->version >= 2)
+>> -			bcm43xx_write16(bcm, 0x03E6, 0x0040);
+>> +		if (phy->analog >= 2)
+>> +			bcm43xx_write16(bcm, 0x0003, (bcm43xx_read16(bcm, 0x0003)
+>> +					& 0xFFBF) | 0x0040);
+> 
+> I think here is a specs bug.
 
-diff --git a/net/d80211/ieee80211_scan.c b/net/d80211/ieee80211_scan.c
-index 263de0d..1d77155 100644
---- a/net/d80211/ieee80211_scan.c
-+++ b/net/d80211/ieee80211_scan.c
-@@ -280,7 +280,7 @@ void ieee80211_init_scan(struct ieee80211_local *local)
- {
- 	struct ieee80211_hdr hdr;
- 	u16 fc;
--	int len = 10 + local->hw.extra_tx_headroom;
-+	int len = 10;
- 	struct rate_control_extra extra;
- 
- 	/* Only initialize passive scanning if the hardware supports it */
-@@ -303,7 +303,8 @@ void ieee80211_init_scan(struct ieee80211_local *local)
- 
- 	/* Create a CTS from for broadcasting before
- 	 * the low level changes channels */
--	local->scan.skb = alloc_skb(len, GFP_KERNEL);
-+	local->scan.skb = alloc_skb(len + local->hw.extra_tx_headroom,
-+		GFP_KERNEL);
- 	if (!local->scan.skb) {
- 		printk(KERN_WARNING "%s: Failed to allocate CTS packet for "
- 		       "passive scan\n", local->mdev->name);
+This is correct.  Why do you think it's a specs bug?
+
+-Joe
