@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:45235
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:56663
 	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752707AbXBJGCh (ORCPT
+	with ESMTP id S1423182AbXBISsS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Feb 2007 01:02:37 -0500
+	Fri, 9 Feb 2007 13:48:18 -0500
 From: Michael Buesch <mb@bu3sch.de>
-To: Daniel Drake <dsd@gentoo.org>
-Subject: Re: [PATCH] zd1211rw: Readd zd_addr_t cast
-Date: Sat, 10 Feb 2007 07:02:14 +0100
-Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, kune@deine-taler.de,
-	rpjday@mindspring.com
-References: <20070210012718.3B6E87B409F@zog.reactivated.net>
-In-Reply-To: <20070210012718.3B6E87B409F@zog.reactivated.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
+Date: Fri, 9 Feb 2007 19:48:12 +0100
+Cc: Joseph Jezak <josejx@gentoo.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de
+References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net> <200702091829.51002.mb@bu3sch.de> <45CCBB93.2040703@lwfinger.net>
+In-Reply-To: <45CCBB93.2040703@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200702100702.15264.mb@bu3sch.de>
+  charset="iso-8859-1"
+Message-Id: <200702091948.13296.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 10 February 2007 02:27, Daniel Drake wrote:
-> Robert P.J. Day's recent commit ("getting rid of all casts of k[cmz]alloc()
-> calls") introduced a sparse warning for zd1211rw, related to our type-checking
-> of addresses.
+On Friday 09 February 2007 19:21, Larry Finger wrote:
+> Michael Buesch wrote:
+> > On Friday 09 February 2007 23:22, Joseph Jezak wrote:
+> >>> Well, I don't review the rest until you say to which specs you did the changes. ;)
+> >> http://bcm-specs.sipsolutions.net/B5PHY
+> >>
+> >> Larry was working from the old specs, so when I updated it, I only 
+> >> updated the old specs.  I'll fix the v4 specs soon.
+> > 
+> > Ah, ok. I think we should decide on which specs carry most recent information.
+> > I think v3 specs should be considered obsolete and new information/ fixes
+> > should go into v4. It is already too confusing where to find newest information
+> > to a certain thing.
+> > 
 > 
-> 	zd_chip.c:116:15: warning: implicit cast to nocast type
-> 
-> This patch readds the type cast, it is correct.
-> 
-> Signed-off-by: Daniel Drake <dsd@gentoo.org>
-> 
-> Index: linux/drivers/net/wireless/zd1211rw/zd_chip.c
-> ===================================================================
-> --- linux.orig/drivers/net/wireless/zd1211rw/zd_chip.c
-> +++ linux/drivers/net/wireless/zd1211rw/zd_chip.c
-> @@ -113,7 +113,7 @@ int zd_ioread32v_locked(struct zd_chip *
->  
->  	/* Allocate a single memory block for values and addresses. */
->  	count16 = 2*count;
-> -	a16 = kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
-> +	a16 = (zd_addr_t *) kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
->  		                   GFP_NOFS);
+> I'll agree to that as long as there is a clear indication of any differences between V3 and V4 firmware.
 
-Unrelated, but I am wondering since quite some time why you pass GFP_NOFS here.
-Any special reason? I think in general there is no good reason for code outside
-of the VFS to use this flag.
-IMHO you should pass either GFP_ATOMIC or GFP_KERNEL.
+Well, the difference between v3 and v4 is:
+* The SHM API.
+* v4 may include less BPHY stuff, as broadcom's v4 drivers don't include BHY anymore.
+
+So I'd say for everything bug BPHY the v4 specs should be considered latest.
+
+-- 
+Greetings Michael.
