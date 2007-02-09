@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37999 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965178AbXBTPvi (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:6598 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1946151AbXBIVzJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Feb 2007 10:51:38 -0500
-Subject: Re: Remove obsolete files
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200702201630.04040.mb@bu3sch.de>
-References: <200702201630.04040.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pYftHHmMxkYwgOSXimx7"
-Date: Tue, 20 Feb 2007 16:50:54 +0100
-Message-Id: <1171986654.15489.174.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 9 Feb 2007 16:55:09 -0500
+Message-ID: <45CCE3CA.4050904@linux.intel.com>
+Date: Fri, 09 Feb 2007 13:12:42 -0800
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
+Subject: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Please hold all questions until I am done with this email.  Thank you.
 
---=-pYftHHmMxkYwgOSXimx7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+We are pleased to announce the availability of a new driver for the 
+Intel PRO/Wireless 3945ABG Network Connection adapter.  This new driver 
+uses the new d80211 subsystem previously only available as part of the 
+wireless-dev tree.
 
-On Tue, 2007-02-20 at 16:30 +0100, Michael Buesch wrote:
+You can find the new driver, and additional information about it, here:
 
-> git rm drivers/net/wireless/README
-> git rm drivers/net/wireless/todo.txt
+   http://intellinuxwireless.org/iwlwifi.
 
-ACK.
+Within the new driver package are sources which we plan to submit for 
+kernel inclusion as well as scripts and patches which create a version 
+of the driver which can be loaded into kernels based on 2.6.18 and newer 
+(provided you have installed the d80211 subsystem as well)  The README 
+document can walk you through pretty quickly.
 
-johannes
+Since a lot of our users are not able to move to the latest versions of 
+the Linux kernel, we have put together a d80211 package allowing the 
+installation of the d80211 subsystem into an existing kernel image 
+without the need to migrate to wireless-dev, or upgrade to a newer 
+kernel at all (assuming you are using 2.6.18 or newer).
 
---=-pYftHHmMxkYwgOSXimx7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+You can find that package at:
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+   http://intellinuxwireless.org/d80211
 
-iD8DBQBF2xje/ETPhpq3jKURAtnuAJ4kX6t4G4RQbUW0RMWAbw1aHAPRZACgp2+Z
-Vsb3Z7njb+yR2qJcP+G4rIc=
-=z8Xz
------END PGP SIGNATURE-----
+Ok.  Now... any questions?
 
---=-pYftHHmMxkYwgOSXimx7--
-
+Thanks,
+James / Intel Corporation
