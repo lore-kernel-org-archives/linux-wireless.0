@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alnrmhc14.comcast.net ([206.18.177.54]:57306 "EHLO
-	alnrmhc14.comcast.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752619AbXBKC2o (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:36883 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752540AbXBIX2I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Feb 2007 21:28:44 -0500
-Message-ID: <45CE7BCA.6010107@gentoo.org>
-Date: Sat, 10 Feb 2007 21:13:30 -0500
-From: Joseph Jezak <josejx@gentoo.org>
+	Fri, 9 Feb 2007 18:28:08 -0500
+Message-ID: <45CCF982.6090207@linux.intel.com>
+Date: Fri, 09 Feb 2007 14:45:22 -0800
+From: James Ketrenos <jketreno@linux.intel.com>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Matthew Garrett <mjg59@srcf.ucam.org>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Bcm43xx-dev@lists.berlios.de,
-	Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
-References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net>	<45CCCAE1.9080901@lwfinger.net>	<20070209213239.GA11650@srcf.ucam.org> <200702100655.51495.mb@bu3sch.de>
-In-Reply-To: <200702100655.51495.mb@bu3sch.de>
+To: Pavel Roskin <proski@gnu.org>
+CC: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
+Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
+References: <45CCE3CA.4050904@linux.intel.com> <1171061021.7039.7.camel@dv>	 <45CCF318.2020503@linux.intel.com> <1171063040.7039.16.camel@dv>
+In-Reply-To: <1171063040.7039.16.camel@dv>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> It's likely that old cards still work with v4 firmware, but we don't know and
-> it has to be tested.
+Pavel Roskin wrote:
+> On Fri, 2007-02-09 at 14:18 -0800, James Ketrenos wrote:
+>>> grep: /lib/modules/2.6.20/build//include/linux/netdevice.h: No such file
+>>> or directory
+...
+>> I'll look into it.  Does it work if you explicitly set KSRC to point to 
+>> your kernel sources?
+>>
+>> $ make KSRC=/lib/modules/2.6.20/source
 > 
-> Care to do so?
+> That works.  At least it doesn't report errors.  But it doesn't create a
+> single object file.
 
-I'm fairly sure the reason for dropping the old cards is that the 
-on-board memory which holds the firmware isn't large enough to hold 
-the newer firmware.  I can't find my documentation for that at the 
-moment though.  Feel free to test and I'll confirm it later if I can 
-find the info.
+'make' builds a set of sources compatible with the running kernel (or 
+the one pointed to via KSRC=).
 
-I'd suspect it doesn't work though since they provided a different 
-firmware (ucode2) in the past.
+'make patch_kernel' will then install the sources into your kernel tree. 
+  You then build d80211 as part of your main kernel (either as a module 
+or static)  The changes 'patch_kernel' makes do not require a full 
+kernel rebuild (you can just build the 80211 modules).
 
--Joe
+We'll want to add the ability to build as out-of-tree .ko's (similar to 
+what iwlwifi does) but I wanted to get the project announced.
+
+> "build" is still hardcoded in iwlwifi's Makefile.  It's interesting that
+> D80211_INC is defined twice in Makefile.  That must be wrong.
+
+Now that you point it out, I hadn't tried using KSRC w/ the iwlwifi 
+build, just d80211.  I'll have to fix that :)
+
+Thanks,
+James
