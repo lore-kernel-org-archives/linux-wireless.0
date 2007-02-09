@@ -1,29 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:47310 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933152AbXBWQzn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Feb 2007 11:55:43 -0500
-Date: Fri, 23 Feb 2007 17:55:41 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Stephen Hemminger <shemminger@linux-foundation.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] d80211: optimise if_alloc() name creation.
-Message-ID: <20070223175541.72a806b8@griffin.suse.cz>
-In-Reply-To: <20070222223941.7f637c2c@localhost>
-References: <20070222223941.7f637c2c@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:44703
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992434AbXBIQx2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Feb 2007 11:53:28 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] bcm43xx: Fix loss of association after resume
+Date: Fri, 9 Feb 2007 17:53:12 +0100
+Cc: John Linville <linville@tuxdriver.com>, netdev@vger.kernel.org,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <45cc9ebb.+9O/IXvs/C9RyFnk%Larry.Finger@lwfinger.net>
+In-Reply-To: <45cc9ebb.+9O/IXvs/C9RyFnk%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702091753.12419.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 22 Feb 2007 22:39:41 -0800, Stephen Hemminger wrote:
-> The code to do guess and check for creating a sub-device name is unnecessary.
-> dev_alloc_name() is optimized to do this already.
+On Friday 09 February 2007 17:18, Larry Finger wrote:
+> After a suspend/resume cycle, bcm43xx-softmac has lost its association with
+> the AP and requires manual intervention. This situation is fixed by making
+> one of softmac's internal routines public and calling it.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Applied, thanks!
+Ack, this is good as workaround.
 
- Jiri
+> 
+> Index: linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+> +++ linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+> @@ -4278,6 +4278,7 @@ static int bcm43xx_resume(struct pci_dev
+>  {
+>  	struct net_device *net_dev = pci_get_drvdata(pdev);
+>  	struct bcm43xx_private *bcm = bcm43xx_priv(net_dev);
+> +	struct ieee80211softmac_device *mac = ieee80211_priv(net_dev);
+>  	int err = 0;
+>  
+>  	dprintk(KERN_INFO PFX "Resuming...\n");
+> @@ -4299,6 +4300,9 @@ static int bcm43xx_resume(struct pci_dev
+>  	}
+>  	netif_device_attach(net_dev);
+>  
+> +	if (mac->associnfo.associated)
+> +		ieee80211softmac_try_reassoc(mac);
+> +
+>  	dprintk(KERN_INFO PFX "Device resumed.\n");
+>  
+>  	return 0;
+> Index: linux-2.6/include/net/ieee80211softmac.h
+> ===================================================================
+> --- linux-2.6.orig/include/net/ieee80211softmac.h
+> +++ linux-2.6/include/net/ieee80211softmac.h
+> @@ -254,6 +254,7 @@ struct ieee80211softmac_device {
+>  };
+>  
+>  extern void ieee80211softmac_scan_finished(struct ieee80211softmac_device *sm);
+> +extern void ieee80211softmac_try_reassoc(struct ieee80211softmac_device *mac);
+>  
+>  static inline void * ieee80211softmac_priv(struct net_device *dev)
+>  {
+> Index: linux-2.6/net/ieee80211/softmac/ieee80211softmac_assoc.c
+> ===================================================================
+> --- linux-2.6.orig/net/ieee80211/softmac/ieee80211softmac_assoc.c
+> +++ linux-2.6/net/ieee80211/softmac/ieee80211softmac_assoc.c
+> @@ -441,6 +441,7 @@ ieee80211softmac_try_reassoc(struct ieee
+>  	schedule_delayed_work(&mac->associnfo.work, 0);
+>  	spin_unlock_irqrestore(&mac->lock, flags);
+>  }
+> +EXPORT_SYMBOL_GPL(ieee80211softmac_try_reassoc);
+>  
+>  int
+>  ieee80211softmac_handle_disassoc(struct net_device * dev,
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
 -- 
-Jiri Benc
-SUSE Labs
+Greetings Michael.
