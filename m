@@ -1,63 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52483 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161012AbXBGNfV (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:34786 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S2992771AbXBIT0c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Feb 2007 08:35:21 -0500
-Subject: Re: [PATCH] bcm43xx: Fix for oops on resume
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, netdev@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <45C9D2E1.7040906@lwfinger.net>
-References: <45c8bd59.oamnvaNRMZvKoPBa%Larry.Finger@lwfinger.net>
-	 <1170850549.6798.22.camel@johannes.berg>  <45C9D2E1.7040906@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dW6QAIV0t5HDZ8bF3dEP"
-Date: Wed, 07 Feb 2007 14:32:30 +0100
-Message-Id: <1170855150.6798.38.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 9 Feb 2007 14:26:32 -0500
+Message-ID: <45CCCAE1.9080901@lwfinger.net>
+Date: Fri, 09 Feb 2007 13:26:25 -0600
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Joseph Jezak <josejx@gentoo.org>
+CC: Michael Buesch <mb@bu3sch.de>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
+References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net> <200702091811.40683.mb@bu3sch.de> <45CCF432.2070002@gentoo.org> <200702091829.51002.mb@bu3sch.de> <45CCBB93.2040703@lwfinger.net> <45CCC5DF.8010001@gentoo.org>
+In-Reply-To: <45CCC5DF.8010001@gentoo.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Joe,
 
---=-dW6QAIV0t5HDZ8bF3dEP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Joseph Jezak wrote:
 
-On Wed, 2007-02-07 at 07:23 -0600, Larry Finger wrote:
+> That's also part of the problem.  With the v4 driver, Broadcom dropped
+> support for a number of older BPHY devices (4301/4303 and some 4306
+> revisions).  Do we still want to support those?  Should I continue
+> writing the specs for the uCode revision it's based on or should I
+> combine them?
 
-> As you suggested earlier, a slow clock setting in the bcm43xx device may =
-be the cause of this
-> difficulty. If my laptop would suspend/resume correctly, then I could tes=
-t various fixes based on
-> that hypothesis.=20
+As my 4306 is a rev 1 and is likely a version dropped in the V4 driver, I have a special interest in
+this question.
 
-Mine does suspend, but I don't see the problem...
+My plan is to continue to maintain bcm43xx-SoftMAC for at least the BPHY and 4306 revisions even
+after d80211 becomes the in-kernel driver. Of course, I hope that we will have found the killer bugs
+by that time, and that maintenance will only require following kernel API changes.
 
-> Since it does not, I think the band-aid approach is warranted.=20
+As the work will be yours, you should decide if you would rather maintain the V3 and V4 pages
+separately, or denote the special requirements of each firmware flavor in a combined set of pages.
 
-Oh yes, I agree, having some hardware mess up will almost always crash
-the computer anyway.
-
-> A proper fix is
-> still on my agenda; however, getting full data rates still has priority.
-
-Sure. Thanks for all you're doing :)
-
-johannes
-
---=-dW6QAIV0t5HDZ8bF3dEP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBFydTu/ETPhpq3jKURAij5AJ926Vy+3KkRX+/OBFRO9cbSutuCFACfYiNq
-kazZr+6i5YprEP/M5Ane0c4=
-=uRTI
------END PGP SIGNATURE-----
-
---=-dW6QAIV0t5HDZ8bF3dEP--
-
+Larry
