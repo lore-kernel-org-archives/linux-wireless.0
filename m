@@ -1,32 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33541
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932652AbXBSUyE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 15:54:04 -0500
-Received: from p85.212.15.41.tisdip.tiscali.de ([85.212.15.41] helo=[192.168.2.10])
-	by vs166246.vserver.de with esmtpa (Exim 4.50)
-	id 1HJFWS-00012Z-Ta
-	for linux-wireless@vger.kernel.org; Mon, 19 Feb 2007 21:54:09 +0100
-From: Michael Buesch <mb@bu3sch.de>
-To: linux-wireless@vger.kernel.org
-Subject: What about dadwifi and openhal?
-Date: Mon, 19 Feb 2007 21:53:19 +0100
+Received: from lugor.de ([212.112.242.222]:57227 "EHLO solar.vpn.lugor.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932300AbXBJOZ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Feb 2007 09:25:58 -0500
+From: "Hesse, Christian" <mail@earthworm.de>
+To: James Ketrenos <jketreno@linux.intel.com>
+Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
+Date: Sat, 10 Feb 2007 15:25:48 +0100
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
+References: <45CCE3CA.4050904@linux.intel.com> <200702101424.00156.mail@earthworm.de>
+In-Reply-To: <200702101424.00156.mail@earthworm.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200702192153.19458.mb@bu3sch.de>
+Content-Type: multipart/signed;
+  boundary="nextPart4019170.1c3ci8dBOU";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200702101525.56820.mail@earthworm.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There were biiig discussions about dadwifi and openhal
-a few weeks ago. About merging them and about inclusion
-in wireless-dev.
+--nextPart4019170.1c3ci8dBOU
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Is something actually happening?
-Is openhal being ported to dadwifi?
-Who is working on it?
-Can I help?
+On Saturday 10 February 2007 14:23, Hesse, Christian wrote:
+> On Friday 09 February 2007 22:12, James Ketrenos wrote:
+> > We are pleased to announce the availability of a new driver for the
+> > Intel PRO/Wireless 3945ABG Network Connection adapter.
+>
+> Wow, great news on this rainy saturday! ;-)
+>
+> The driver works perfectly, I'm writing this mail via wireless link.
+> However there are two things to note:
+>
+> The driver generates two network devices. The second one is for promicious
+> mode? Is there any chance to disable the interface? ifrename renamed the
+> wrong one to wlan0 and I had to tell my system to use eth1 for the wirele=
+ss
+> connection.
+>
+> Second problem is that I can't unload the module. I get the message "FATA=
+L:
+> Module iwlwifi is in use." even if both interfaces are down.
 
--- 
-Greetings Michael.
+Oh, I forgot one note: "make patch_kernel" is terribly broken. Any chance t=
+o=20
+get this fixed soon?
+=2D-=20
+Regards,
+Chris
+
+--nextPart4019170.1c3ci8dBOU
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBFzdX0lZfG2c8gdSURArNvAKDqpZwP8EkjphorY1tka+GEmFYKJQCgv8Bp
++nNB/GDp0HYCL9nwxjnxupk=
+=Gd7L
+-----END PGP SIGNATURE-----
+
+--nextPart4019170.1c3ci8dBOU--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
