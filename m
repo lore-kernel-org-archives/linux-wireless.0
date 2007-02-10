@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:48064 "EHLO amd.ucw.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1161078AbXBTXXf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Feb 2007 18:23:35 -0500
-Date: Mon, 19 Feb 2007 23:44:32 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: James Ketrenos <jketreno@linux.intel.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
-Message-ID: <20070219224432.GD21199@elf.ucw.cz>
-References: <45CCE3CA.4050904@linux.intel.com> <20070213181313.GA5350@ucw.cz> <45D254C6.7050401@linux.intel.com>
+Received: from mailgate.cesmail.net ([216.154.195.36]:35879 "HELO
+	mailgate.cesmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751644AbXBJRxw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Feb 2007 12:53:52 -0500
+Message-ID: <20070210125351.05uo0o0sgw0w0ckc@webmail.spamcop.net>
+Date: Sat, 10 Feb 2007 12:53:51 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Theodore Tso <tytso@mit.edu>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
+Subject: Re: [ipw3945-devel] [ANNOUNCE] d80211 based driver for Intel  PRO/Wireless 3945ABG
+References: <45CCE3CA.4050904@linux.intel.com>
+	<20070210162254.GC25607@thunk.org> <20070210163933.GA17140@tuxdriver.com>
+In-Reply-To: <20070210163933.GA17140@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <45D254C6.7050401@linux.intel.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Quoting "John W. Linville" <linville@tuxdriver.com>:
 
-> >>You can find the new driver, and additional information 
-> >>about it, here:
-> >>
-> >>  http://intellinuxwireless.org/iwlwifi.
-> >...
-> >>You can find that package at:
-> >>
-> >>  http://intellinuxwireless.org/d80211
-> >>
-> >>Ok.  Now... any questions?
-> >
-> >Yes... is there merged .git tree somewhere? I downloaded iwl git tree,
-> >but it did not contain d80211 stack. I'm now downloading wireless-dev
-> >git tree...
-> 
-> There isn't a singular merged iwlwifi + d80211 package tree outside of 
-> wireless-dev, and iwlwifi isn't there yet (I'm cleaning out some dead 
-> and duplicated code before we submit)
+> > Very cool!  Is it likely that d80211 and iwlwifi will be pushed into
+> > mainline in time for 2.6.21?
+>
+> Hmmm...I think we need to spend a cycle or so in -mm.  2.6.22 seems
+> more likely for mainline.
 
-Ok, I was looking for merged tree. JBenc told me it should be
-available "soon", so I guess I'll wait.
-								Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+I think we should take this as a goal.  Last time I checked, d80211 wasn't in
+-mm.  Perhaps it should go there.  And by the way, the latest changes from
+netdev->class_dev to netdev->dev break d80211.  Perhaps we should rebase
+wireless-dev immediately after 2.6.21-rc1, fix all compile issues and submit
+the patch to -mm.
+
+And iwlwifi is surprisingly good for a just announced driver.  It worked for me
+from the first attempt, and that's the first d80211 driver to do so.  In my
+opinion, it should go to wireless-dev as soon as possible so it can go to -mm
+toghether with other drivers.  A couple of wrinkles in the standalone build
+system are irrelevant to the kernel interation.
+
+--
+Regards,
+Pavel Roskin
