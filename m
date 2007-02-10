@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58834 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946164AbXBPU4M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Feb 2007 15:56:12 -0500
-Subject: [PATCH] fix cfg80211 modular compile w/o wext-compat
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: James Ketrenos <jketreno@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain
-Date: Fri, 16 Feb 2007 21:56:06 +0100
-Message-Id: <1171659366.3575.27.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from ogre.sisk.pl ([217.79.144.158]:33980 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751395AbXBJRN4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Feb 2007 12:13:56 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] bcm43xx: Fix loss of association after resume
+Date: Sat, 10 Feb 2007 18:11:36 +0100
+Cc: bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <45cc9ebb.+9O/IXvs/C9RyFnk%Larry.Finger@lwfinger.net> <200702091753.12419.mb@bu3sch.de>
+In-Reply-To: <200702091753.12419.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702101811.37355.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The static inlines that are supposed to be used w/o wext-compat to init
-wext-compat were done with the wrong #ifdef. This fixes it.
+On Friday, 9 February 2007 17:53, Michael Buesch wrote:
+> On Friday 09 February 2007 17:18, Larry Finger wrote:
+> > After a suspend/resume cycle, bcm43xx-softmac has lost its association with
+> > the AP and requires manual intervention. This situation is fixed by making
+> > one of softmac's internal routines public and calling it.
+> > 
+> > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> 
+> Ack, this is good as workaround.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+I'm running with this patch applied right now, but the association is lost
+after the resume anyway.  I have to reload bcm43xx to make it associate with
+the AP again (no big deal).
 
---- wireless-dev.orig/net/wireless/wext.h	2007-02-16 21:51:26.354695664 +0100
-+++ wireless-dev/net/wireless/wext.h	2007-02-16 21:55:32.794695664 +0100
-@@ -29,10 +29,14 @@ int wireless_process_ioctl(struct ifreq 
- int cfg80211_wext_ioctl(struct ifreq *ifr, unsigned int cmd);
- #ifdef CFG80211_MODULE
- int call_cfg80211_wext_ioctl(struct ifreq *ifr, unsigned int cmd);
-+#else
-+#define call_cfg80211_wext_ioctl cfg80211_wext_ioctl
-+#endif
-+
-+#ifdef CONFIG_CFG80211_WEXT_COMPAT
- int cfg80211_wext_init(void);
- void cfg80211_wext_exit(void);
- #else
--#define call_cfg80211_wext_ioctl cfg80211_wext_ioctl
- static inline int cfg80211_wext_init(void)
- {
- 	return 0;
+Greetings,
+Rafael
 
 
+-- 
+If you don't have the time to read,
+you don't have the time or the tools to write.
+		- Stephen King
