@@ -1,82 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58571 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751616AbXBVNgR (ORCPT
+Received: from alpha.logic.tuwien.ac.at ([128.130.175.20]:53375 "EHLO
+	alpha.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946820AbXBJBIi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Feb 2007 08:36:17 -0500
-Received: from [131.234.73.165] (helo=dhcp-73-165.uni-paderborn.de)
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.63)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1HKE3R-0001tr-BD
-	for linux-wireless@vger.kernel.org; Thu, 22 Feb 2007 13:32:13 +0000
-Subject: pynl80211 works
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cHZ40jmhCY1+rKY4YggA"
-Date: Thu, 22 Feb 2007 13:43:00 +0100
-Message-Id: <1172148180.5080.13.camel@johannes.berg>
+	Fri, 9 Feb 2007 20:08:38 -0500
+Date: Sat, 10 Feb 2007 01:46:20 +0100
+To: James Ketrenos <jketreno@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
+Subject: Re: [ipw3945-devel] [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
+Message-ID: <20070210004620.GA5959@gamma.logic.tuwien.ac.at>
+References: <45CCE3CA.4050904@linux.intel.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <45CCE3CA.4050904@linux.intel.com>
+From: Norbert Preining <preining@logic.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi all!
 
---=-cHZ40jmhCY1+rKY4YggA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Fre, 09 Feb 2007, James Ketrenos wrote:
+> We are pleased to announce the availability of a new driver for the=20
+> Intel PRO/Wireless 3945ABG Network Connection adapter.  This new driv=
+er=20
 
-you obviously need the nl80211 hookup patch and pynl80211 at after or at
-commit e99894da4ba56e0a493cc9e76d20bab8e3b0a96f but then watch:
+I am impressed: I had 2.6.20 running with ipw3945 + wpa_supplicant. I
+installed the d80211 system and the new driver, rebooted, and you won't
+believe it, I had network connection even with WEP encryption.
 
-# ip link
-[indizes 1, 2, 3, 6, 17 snipped]
+That was a big surprise for me that it worked out of the box without an=
+y
+magic.
 
-# ./wificonf.py add_virtual_interface 0 moni0 monitor
-Success
-
-# ip link
-[indizes 1, 2, 3, 6, 17 snipped]
-40: moni0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop
-    link/[802] 00:11:24:xx:xx:xx brd ff:ff:ff:ff:ff:ff
-
-# ./wificonf.py del_virtual_interface 0 moni0
-Success
-
-# ip link
-[indizes 1, 2, 3, 6, 17 snipped]
-
-# echo "Yes, it works! :D"
-Yes, it works! :D
+If you are interested in any dmesg/log output, please let me know.
 
 
-Oh and if you do get errors:
-$ ./wificonf.py add_virtual_interface 0 abc monitor
-Traceback (most recent call last):
-  File "./wificonf.py", line 210, in ?
-    exit(exec_cmd(items['CMD'][argv[1]], argv[2:]))
-  File "./wificonf.py", line 186, in exec_cmd
-    m =3D conn.recv()
-  File "/home/johannes/Projects/cfg80211/tool/netlink.py", line 145, in
-recv
-    raise OSError("Netlink error: %s (%d)"%(os.strerror(errno),errno))
-OSError: Netlink error: Operation not permitted (1)
+Ahhh ... one thing: The LED on my Acer Laptop (TM3012) does not show up=
+,
+maybe because I have CONFIG_D80211_LEDS off?
 
+Again, thanks a lot for the good work!
 
-Not the nicest error reporting but hey.
+Norbert
 
-johannes
-
---=-cHZ40jmhCY1+rKY4YggA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF3Y/U/ETPhpq3jKURAn99AJkB4DHIHrSHLFwu4X7h/3fW91gQMQCgmdvW
-Bv4U4xONdlmxG2ARpbNTVo8=
-=3uuk
------END PGP SIGNATURE-----
-
---=-cHZ40jmhCY1+rKY4YggA--
-
+-----------------------------------------------------------------------=
+--------
+Dr. Norbert Preining <preining@logic.at>                    Universit=E0=
+ di Siena
+Debian Developer <preining@debian.org>                         Debian T=
+eX Group
+gpg DSA: 0x09C5B094      fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 0=
+9C5 B094
+-----------------------------------------------------------------------=
+--------
+HARPENDEN (n.)
+The coda to a phone conversion, consisting of about eight exchanges,
+by which people try gracefully to get off the line.
+			--- Douglas Adams, The Meaning of Liff
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
