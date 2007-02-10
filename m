@@ -1,146 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:36580 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965134AbXBQMEb (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:47900 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751486AbXBJRzs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Feb 2007 07:04:31 -0500
-Subject: Re: even more breakage in wireless-dev.git
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Jiri Benc <jbenc@suse.cz>
-In-Reply-To: <1171707838.3487.11.camel@johannes.berg>
-References: <1171707838.3487.11.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-h+C3RppjpuFK4rYhXZXH"
-Date: Sat, 17 Feb 2007 13:03:41 +0100
-Message-Id: <1171713822.3655.3.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 10 Feb 2007 12:55:48 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: [PATCH] d80211: Make common function for frequency/channel selection
+Date: Sat, 10 Feb 2007 12:55:17 -0500
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart3653307.lR9xvcaeld";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200702101255.21479.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-h+C3RppjpuFK4rYhXZXH
-Content-Type: multipart/mixed; boundary="=-1L3kOYkWdIJWUz0OOPhz"
-
-
---=-1L3kOYkWdIJWUz0OOPhz
-Content-Type: text/plain
+--nextPart3653307.lR9xvcaeld
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Sat, 2007-02-17 at 11:23 +0100, Johannes Berg wrote:
-> Hah, I get to complain too.
+d80211: Make common function for frequency/channel selection
 
-and I also give some debugging info........
+This patch creates ieee80211_set_channel and moves the channel selection
+and setting code in ieee80211_ioctl_siwfreq to this function. This allows
+IBSS code in ieee80211_sta.c to set the channel without using the wireless
+extensions interface.
 
-> [  441.994183] bcm43xx_d80211: Radio turned off
-> [  442.310739] eth1: skb_queue not empty
-> [  442.313338] Unable to handle kernel paging request for data at address=
- 0x6b6b6b73
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+=2D--
 
-> [  442.315881] NIP [C0030ADC] tasklet_action+0x80/0xec
+ net/d80211/ieee80211_i.h     |    1 +
+ net/d80211/ieee80211_ioctl.c |   47 ++++++++++++++++++++++----------------=
+=2D---
+ net/d80211/ieee80211_sta.c   |   10 +--------
+ 3 files changed, 27 insertions(+), 31 deletions(-)
 
-ok so I was guessing that we free a used tasklet, and I'm right.
-Attached is a debug patch that gave me the following log instead of the
-oops:
+diff --git a/net/d80211/ieee80211_i.h b/net/d80211/ieee80211_i.h
+index 60d0a22..fa42fb5 100644
+=2D-- a/net/d80211/ieee80211_i.h
++++ b/net/d80211/ieee80211_i.h
+@@ -660,6 +660,7 @@ void ieee80211_stop_scan(struct ieee8021
+ int ieee80211_set_compression(struct ieee80211_local *local,
+ 			      struct net_device *dev, struct sta_info *sta);
+ int ieee80211_init_client(struct net_device *dev);
++int ieee80211_set_channel(struct ieee80211_local *local, int channel, int =
+freq);
+ /* ieee80211_sta.c */
+ void ieee80211_sta_timer(unsigned long data);
+ void ieee80211_sta_work(struct work_struct *work);
+diff --git a/net/d80211/ieee80211_ioctl.c b/net/d80211/ieee80211_ioctl.c
+index c7300cb..0a1a5eb 100644
+=2D-- a/net/d80211/ieee80211_ioctl.c
++++ b/net/d80211/ieee80211_ioctl.c
+@@ -1794,35 +1794,18 @@ static int ieee80211_ioctl_giwmode(struc
+ 	return 0;
+ }
+=20
+=2D
+=2Dint ieee80211_ioctl_siwfreq(struct net_device *dev,
+=2D			    struct iw_request_info *info,
+=2D			    struct iw_freq *freq, char *extra)
++int ieee80211_set_channel(struct ieee80211_local *local, int channel, int =
+freq)
+ {
+=2D	struct ieee80211_local *local =3D dev->ieee80211_ptr;
+ 	struct ieee80211_hw_mode *mode;
+=2D	int c, nfreq, set =3D 0;
+=2D
+=2D	/* freq->e =3D=3D 0: freq->m =3D channel; otherwise freq =3D m * 10^e */
+=2D	if (freq->e =3D=3D 0)
+=2D		nfreq =3D -1;
+=2D	else {
+=2D		int i, div =3D 1000000;
+=2D		for (i =3D 0; i < freq->e; i++)
+=2D			div /=3D 10;
+=2D		if (div > 0)
+=2D			nfreq =3D freq->m / div;
+=2D		else
+=2D			return -EINVAL;
+=2D	}
++	int c, set =3D 0;
+=20
+ 	list_for_each_entry(mode, &local->modes_list, list) {
++		if (!(local->enabled_modes & (1 << mode->mode)))
++			continue;
+ 		for (c =3D 0; c < mode->num_channels; c++) {
+ 			struct ieee80211_channel *chan =3D &mode->channels[c];
+ 			if (chan->flag & IEEE80211_CHAN_W_SCAN &&
+=2D			    ((freq->e =3D=3D 0 && chan->chan =3D=3D freq->m) ||
+=2D			     (freq->e > 0 && nfreq =3D=3D chan->freq)) &&
+=2D			    (local->enabled_modes & (1 << mode->mode))) {
++			    ((chan->chan =3D=3D channel) || (chan->freq =3D=3D freq))) {
+ 				/* Use next_mode as the mode preference to
+ 				 * resolve non-unique channel numbers. */
+ 				if (set && mode->mode !=3D local->next_mode)
+@@ -1845,6 +1828,26 @@ int ieee80211_ioctl_siwfreq(struct net_d
+ 	return -EINVAL;
+ }
+=20
++static int ieee80211_ioctl_siwfreq(struct net_device *dev,
++				   struct iw_request_info *info,
++				   struct iw_freq *freq, char *extra)
++{
++	struct ieee80211_local *local =3D dev->ieee80211_ptr;
++
++	/* freq->e =3D=3D 0: freq->m =3D channel; otherwise freq =3D m * 10^e */
++	if (freq->e =3D=3D 0)
++		return ieee80211_set_channel(local, freq->m, -1);
++	else {
++		int i, div =3D 1000000;
++		for (i =3D 0; i < freq->e; i++)
++			div /=3D 10;
++		if (div > 0)
++			return ieee80211_set_channel(local, -1, freq->m / div);
++		else
++			return -EINVAL;
++	}
++}
++
+=20
+ static int ieee80211_ioctl_giwfreq(struct net_device *dev,
+ 				   struct iw_request_info *info,
+diff --git a/net/d80211/ieee80211_sta.c b/net/d80211/ieee80211_sta.c
+index a883384..0b56135 100644
+=2D-- a/net/d80211/ieee80211_sta.c
++++ b/net/d80211/ieee80211_sta.c
+@@ -2004,16 +2004,11 @@ static void ieee80211_sta_new_auth(struc
+ }
+=20
+=20
+=2Dextern int ieee80211_ioctl_siwfreq(struct net_device *dev,
+=2D				   struct iw_request_info *info,
+=2D				   struct iw_freq *freq, char *extra);
+=2D
+ static int ieee80211_sta_join_ibss(struct net_device *dev,
+ 				   struct ieee80211_if_sta *ifsta,
+ 				   struct ieee80211_sta_bss *bss)
+ {
+ 	struct ieee80211_local *local =3D dev->ieee80211_ptr;
+=2D	struct iw_freq rq;
+ 	int res, rates, i, j;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
+@@ -2041,10 +2036,7 @@ static int ieee80211_sta_join_ibss(struc
+ 	sdata->drop_unencrypted =3D bss->capability &
+ 		WLAN_CAPABILITY_PRIVACY ? 1 : 0;
+=20
+=2D	memset(&rq, 0, sizeof(rq));
+=2D	rq.m =3D bss->freq * 100000;
+=2D	rq.e =3D 1;
+=2D	res =3D ieee80211_ioctl_siwfreq(dev, NULL, &rq, NULL);
++	res =3D ieee80211_set_channel(local, -1, bss->freq);
+=20
+ 	if (!(local->oper_channel->flag & IEEE80211_CHAN_W_IBSS)) {
+ 		printk(KERN_DEBUG "%s: IBSS not allowed on channel %d "
 
-[  281.135208] bcm43xx_d80211: Radio turned off
-[  281.371838] eth1: skb_queue not empty
-[  281.372089] attempt to free scheduled tasklet c0506188 in object c050600=
-0!
-[  281.372107] will leak memory instead!
-[  281.372122] Call Trace:
-[  281.372138] [E8FF9CD0] [C0009024] show_stack+0x3c/0x194 (unreliable)
-[  281.372199] [E8FF9D00] [C0030900] __tasklet_free_check+0x70/0x98
-[  281.372244] [E8FF9D20] [C007F670] kfree+0x78/0x120
-[  281.372288] [E8FF9D40] [F208A104] cfg80211_dev_free+0x24/0x38 [cfg80211]
-[  281.372358] [E8FF9D60] [F208A580] wiphy_class_dev_release+0x14/0x24 [cfg=
-80211]
-[  281.372406] [E8FF9D70] [C01D04D8] class_dev_release+0x74/0x9c
-[  281.372450] [E8FF9D90] [C016ED7C] kobject_cleanup+0x70/0xd4
-[  281.372490] [E8FF9DB0] [C016FD30] kref_put+0x54/0x6c
-[  281.372537] [E8FF9DC0] [C016ECFC] kobject_put+0x24/0x34
-[  281.372573] [E8FF9DD0] [C01CF5EC] class_device_put+0x1c/0x2c
-[  281.372613] [E8FF9DE0] [F208A0D0] wiphy_free+0x14/0x24 [cfg80211]
-[  281.372655] [E8FF9DF0] [F224AACC] ieee80211_free_hw+0x24/0x38 [80211]
-[  281.372744] [E8FF9E10] [F24836F8] bcm43xx_wireless_exit+0x24/0x38 [bcm43=
-xx_d80211]
-[  281.372813] [E8FF9E30] [F2081464] ssb_device_remove+0x34/0x54 [ssb]
-[  281.372863] [E8FF9E40] [C01CEA08] __device_release_driver+0x88/0xc0
-[  281.372910] [E8FF9E50] [C01CF180] driver_detach+0x110/0x140
-[  281.372949] [E8FF9E70] [C01CE49C] bus_remove_driver+0x8c/0xc8
-[  281.372987] [E8FF9E90] [C01CF208] driver_unregister+0x18/0x34
-[  281.373025] [E8FF9EB0] [F2081CBC] ssb_driver_unregister+0x14/0x24 [ssb]
-[  281.373078] [E8FF9EC0] [F249B7F4] bcm43xx_exit+0x18/0x35e4 [bcm43xx_d802=
-11]
-[  281.373126] [E8FF9ED0] [C004CC98] sys_delete_module+0x1ac/0x210
-[  281.373173] [E8FF9F40] [C0011380] ret_from_syscall+0x0/0x38
-[  281.373223] --- Exception: c01 at 0xff6ae18
-[  281.373253]     LR =3D 0x10001214
-
-As you can see (compile with debug info and get the struct sizes etc.),
-the tasklet in question must be=20
-
-	struct tasklet_struct tasklet;
-
-in struct ieee80211_local. Now to figure out why it is scheduled while
-we do ieee80211_free_hw, but I think that's good enough for me today.
-
-
-johannes
-
---=-1L3kOYkWdIJWUz0OOPhz
-Content-Disposition: attachment; filename=tasklet-free-debug.patch
-Content-Type: text/x-vhdl; name=tasklet-free-debug.patch; charset=utf-8
-Content-Transfer-Encoding: base64
-
-LS0tDQoga2VybmVsL3NvZnRpcnEuYyB8ICAgMjMgKysrKysrKysrKysrKysrKysrKysrKysNCiBt
-bS9zbGFiLmMgICAgICAgIHwgICAgNiArKysrKy0NCiAyIGZpbGVzIGNoYW5nZWQsIDI4IGluc2Vy
-dGlvbnMoKyksIDEgZGVsZXRpb24oLSkNCg0KLS0tIHdpcmVsZXNzLWRldi5vcmlnL2tlcm5lbC9z
-b2Z0aXJxLmMJMjAwNy0wMi0xNyAxMTozNTo1Mi4zODE3Nzc0MjEgKzAxMDANCisrKyB3aXJlbGVz
-cy1kZXYva2VybmVsL3NvZnRpcnEuYwkyMDA3LTAyLTE3IDExOjU5OjU0LjQzMTc3NzQyMSArMDEw
-MA0KQEAgLTM1Myw2ICszNTMsMjkgQEAgdm9pZCBmYXN0Y2FsbCBfX3Rhc2tsZXRfc2NoZWR1bGUo
-c3RydWN0IA0KIA0KIEVYUE9SVF9TWU1CT0woX190YXNrbGV0X3NjaGVkdWxlKTsNCiANCitpbnQg
-ZmFzdGNhbGwgX190YXNrbGV0X2ZyZWVfY2hlY2soY2hhciAqZnJvbSwgdW5zaWduZWQgbG9uZyBs
-ZW4pDQorew0KKwlzdHJ1Y3QgdGFza2xldF9zdHJ1Y3QgKnQ7DQorCXVuc2lnbmVkIGxvbmcgc3Rh
-cnQgPSAodW5zaWduZWQgbG9uZykgZnJvbTsNCisJaW50IHJldCA9IDA7DQorDQorCS8qIHJlYWxs
-eSBzaG91bGQgY2hlY2sgYWxsIENQVXMgYnV0IEkgb25seSBoYXZlIG9uZQ0KKwkgKiByaWdodCBu
-b3cgc28gSSdtIGZpbmUuIGhhaCEgKi8NCisJdCA9IF9fZ2V0X2NwdV92YXIodGFza2xldF92ZWMp
-Lmxpc3Q7DQorCXdoaWxlICh0KSB7DQorCQl1bnNpZ25lZCBsb25nIHR1bCA9ICh1bnNpZ25lZCBs
-b25nKXQ7DQorCQlpZiAodHVsID49IHN0YXJ0ICYmIHR1bCA8IChzdGFydCtsZW4pKSB7DQorCQkJ
-cHJpbnRrKEtFUk5fRVJSICJhdHRlbXB0IHRvIGZyZWUgc2NoZWR1bGVkIHRhc2tsZXQgJXAgaW4g
-b2JqZWN0ICVwIVxuIiwgdCwgZnJvbSk7DQorCQkJcHJpbnRrKEtFUk5fRVJSICJ3aWxsIGxlYWsg
-bWVtb3J5IGluc3RlYWQhXG4iKTsNCisJCQlkdW1wX3N0YWNrKCk7DQorCQkJcmV0ID0gLUVCVVNZ
-Ow0KKwkJfQ0KKwkJdCA9IHQtPm5leHQ7DQorCX0NCisNCisJcmV0dXJuIHJldDsNCit9DQorDQog
-dm9pZCBmYXN0Y2FsbCBfX3Rhc2tsZXRfaGlfc2NoZWR1bGUoc3RydWN0IHRhc2tsZXRfc3RydWN0
-ICp0KQ0KIHsNCiAJdW5zaWduZWQgbG9uZyBmbGFnczsNCi0tLSB3aXJlbGVzcy1kZXYub3JpZy9t
-bS9zbGFiLmMJMjAwNy0wMi0xNyAxMTozNjo1Ni4xODE3Nzc0MjEgKzAxMDANCisrKyB3aXJlbGVz
-cy1kZXYvbW0vc2xhYi5jCTIwMDctMDItMTcgMTE6NDU6MTcuMTYxNzc3NDIxICswMTAwDQpAQCAt
-Mzc0Nyw2ICszNzQ3LDkgQEAgRVhQT1JUX1NZTUJPTChrbWVtX2NhY2hlX2ZyZWUpOw0KICAqIERv
-bid0IGZyZWUgbWVtb3J5IG5vdCBvcmlnaW5hbGx5IGFsbG9jYXRlZCBieSBrbWFsbG9jKCkNCiAg
-KiBvciB5b3Ugd2lsbCBydW4gaW50byB0cm91YmxlLg0KICAqLw0KKw0KK2V4dGVybiBpbnQgZmFz
-dGNhbGwgX190YXNrbGV0X2ZyZWVfY2hlY2soY2hhciAqZnJvbSwgdW5zaWduZWQgbG9uZyBsZW5n
-dGgpOw0KKw0KIHZvaWQga2ZyZWUoY29uc3Qgdm9pZCAqb2JqcCkNCiB7DQogCXN0cnVjdCBrbWVt
-X2NhY2hlICpjOw0KQEAgLTM3NTgsNyArMzc2MSw4IEBAIHZvaWQga2ZyZWUoY29uc3Qgdm9pZCAq
-b2JqcCkNCiAJa2ZyZWVfZGVidWdjaGVjayhvYmpwKTsNCiAJYyA9IHZpcnRfdG9fY2FjaGUob2Jq
-cCk7DQogCWRlYnVnX2NoZWNrX25vX2xvY2tzX2ZyZWVkKG9ianAsIG9ial9zaXplKGMpKTsNCi0J
-X19jYWNoZV9mcmVlKGMsICh2b2lkICopb2JqcCk7DQorCWlmIChfX3Rhc2tsZXRfZnJlZV9jaGVj
-ayhvYmpwLCBvYmpfc2l6ZShjKSkgPT0gMCkNCisJCV9fY2FjaGVfZnJlZShjLCAodm9pZCAqKW9i
-anApOw0KIAlsb2NhbF9pcnFfcmVzdG9yZShmbGFncyk7DQogfQ0KIEVYUE9SVF9TWU1CT0woa2Zy
-ZWUpOw0K
-
-
---=-1L3kOYkWdIJWUz0OOPhz--
-
---=-h+C3RppjpuFK4rYhXZXH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart3653307.lR9xvcaeld
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBF1u8d/ETPhpq3jKURAnRUAKCqcOyCgmwSnmyQlZCOXNM6xU09qwCgqSiE
-WZsWZ6QYD+iIa3H8M4VoFFw=
-=6D34
+iD8DBQBFzgcJT3Oqt9AH4aERAg6bAJ9WLVaIKtw/gOkmHgbX1ZSGg+mE0wCgoLXA
+g2H3j0FoxRDmZ38xdfOx+Jw=
+=YbkL
 -----END PGP SIGNATURE-----
 
---=-h+C3RppjpuFK4rYhXZXH--
-
+--nextPart3653307.lR9xvcaeld--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
