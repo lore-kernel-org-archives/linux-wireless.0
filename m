@@ -1,74 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33006 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51716 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752088AbXBERx3 (ORCPT
+	with ESMTP id S932830AbXBKNYZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Feb 2007 12:53:29 -0500
-Subject: Re: [RFC PATCH 1/3] cfg80211 and nl80211
+	Sun, 11 Feb 2007 08:24:25 -0500
+Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200702051245.35452.flamingice@sourmilk.net>
-References: <20070131013717.GA28076@tuxdriver.com>
-	 <200701302146.05289.flamingice@sourmilk.net>
-	 <1170325092.2236.17.camel@johannes.berg>
-	 <200702051245.35452.flamingice@sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-A03yEjQN+YPU1yYzDUau"
-Date: Mon, 05 Feb 2007 18:49:55 +0100
-Message-Id: <1170697795.3572.32.camel@johannes.berg>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	Joseph Jezak <josejx@gentoo.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de
+In-Reply-To: <20070209213239.GA11650@srcf.ucam.org>
+References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net>
+	 <200702091811.40683.mb@bu3sch.de> <45CCF432.2070002@gentoo.org>
+	 <200702091829.51002.mb@bu3sch.de> <45CCBB93.2040703@lwfinger.net>
+	 <45CCC5DF.8010001@gentoo.org> <45CCCAE1.9080901@lwfinger.net>
+	 <20070209213239.GA11650@srcf.ucam.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HabjsH22xbiwaB15Uhea"
+Date: Sun, 11 Feb 2007 14:21:45 +0100
+Message-Id: <1171200105.5032.6.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-A03yEjQN+YPU1yYzDUau
+--=-HabjsH22xbiwaB15Uhea
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2007-02-05 at 12:45 -0500, Michael Wu wrote:
+On Fri, 2007-02-09 at 21:32 +0000, Matthew Garrett wrote:
+> On Fri, Feb 09, 2007 at 01:26:25PM -0600, Larry Finger wrote:
+>=20
+> > My plan is to continue to maintain bcm43xx-SoftMAC for at least the BPH=
+Y and 4306 revisions even
+> > after d80211 becomes the in-kernel driver. Of course, I hope that we wi=
+ll have found the killer bugs
+> > by that time, and that maintenance will only require following kernel A=
+PI changes.
+>=20
+> Just to make sure I'm understanding this correctly - does the v4=20
+> firmware drop compatibility for older cards, or is it just that Broadcom=20
+> dropped support in the driver at the same time as the firmware changed,=20
+> and the new firmware will still also drive the old cards?
 
-> Okay then, let's not use fake frames then.=20
-
-:)
-
-> Let's make monitor interfaces=20
-> resemble monitoring ethernet a little more by reporting both RXed frames =
-and=20
-> TXed frames. *BSD does this too and it makes running ethereal on monitor=20
-> interfaces much more useful.=20
-
-We do this right now afaik.
-
-> TX frame reporting can be done simply in the=20
-> ieee80211_tx_status call, allowing the TX status to be reported on real=20
-> frames.=20
-
-I don't quite understand this comment. TX status reporting should go via
-nl80211.
-
-> Doing this is actually somewhat orthogonal to packet injection via netlin=
-k or=20
-> monitor interface, but if we are reporting TXed frames with a radiotap=20
-> header, we might as well allow frame injection with a radiotap frame for=20
-> consistency.
-
-Well, it hasn't got much merit because for anything useful you'll need
-to get state information on nl80211.
+No, the older cards have a completely different MAC processor and
+Broadcom hasn't bothered to create v4 firmware for it since they dropped
+support for it along with creating new drivers (probably one decision
+influenced the other, creating a v2 firmware is likely more work than a
+v3+)
 
 johannes
 
---=-A03yEjQN+YPU1yYzDUau
+--=-HabjsH22xbiwaB15Uhea
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBFx25D/ETPhpq3jKURAnpkAJwKd9oD1vGg1TrA0NI+C8gK9IR8BACeIbwg
-od7BuU5xH1HcXZ1IL0iZaoM=
-=lgEP
+iD8DBQBFzxho/ETPhpq3jKURAmT8AJwLO+5yZpmzpOOKMPASRjn/zqWaRACeImnK
+CtK9IgSSd/ArTSLgFq4v/fM=
+=c6OX
 -----END PGP SIGNATURE-----
 
---=-A03yEjQN+YPU1yYzDUau--
+--=-HabjsH22xbiwaB15Uhea--
 
