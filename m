@@ -1,68 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55096 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965234AbXBTIXr (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:53133 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752484AbXBKAza (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Feb 2007 03:23:47 -0500
-Subject: Re: Capture of unsuccessful ARP exchange
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Jouni Malinen <j@w1.fi>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1171938483.10139.13.camel@dv>
-References: <1171935085.8133.42.camel@dv>  <20070220015851.GE5279@jm.kir.nu>
-	 <1171938483.10139.13.camel@dv>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iX0xcU1TNJt78vL2ywTv"
-Date: Tue, 20 Feb 2007 09:23:35 +0100
-Message-Id: <1171959815.15489.75.camel@johannes.berg>
+	Sat, 10 Feb 2007 19:55:30 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HG2yr-0008UG-QL
+	for linux-wireless@vger.kernel.org; Sat, 10 Feb 2007 19:54:13 -0500
+Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
+From: Pavel Roskin <proski@gnu.org>
+To: "Hesse, Christian" <mail@earthworm.de>
+Cc: James Ketrenos <jketreno@linux.intel.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <200702101424.00156.mail@earthworm.de>
+References: <45CCE3CA.4050904@linux.intel.com>
+	 <200702101424.00156.mail@earthworm.de>
+Content-Type: text/plain
+Date: Sat, 10 Feb 2007 19:55:23 -0500
+Message-Id: <1171155323.5573.7.camel@dv>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello!
 
---=-iX0xcU1TNJt78vL2ywTv
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+[I'm trimming the cc: a little bit]
 
-On Mon, 2007-02-19 at 21:28 -0500, Pavel Roskin wrote:
+On Sat, 2007-02-10 at 14:23 +0100, Hesse, Christian wrote:
+> On Friday 09 February 2007 22:12, James Ketrenos wrote:
+> > We are pleased to announce the availability of a new driver for the
+> > Intel PRO/Wireless 3945ABG Network Connection adapter.
+> 
+> Wow, great news on this rainy saturday! ;-)
+> 
+> The driver works perfectly, I'm writing this mail via wireless link. However 
+> there are two things to note:
+> 
+> The driver generates two network devices. The second one is for promicious 
+> mode? Is there any chance to disable the interface? ifrename renamed the 
+> wrong one to wlan0 and I had to tell my system to use eth1 for the wireless 
+> connection.
 
-> My first assumption was that the field QoS confuses it, but looking at
-> the code, it's more likely a low-level problem. =20
+I think one of the devices is wmaster0.  It's better that you just
+ignore it.  The effort is already underway to make that interface
+hidden.
 
-bcm43xx firmware can definitely handle QoS.
+In the meantime, you can use the "arp" condition in /etc/iftab.
+Ethernet is 1 (that includes the original wlan0), IEEE 802.11 is 801
+(that's the master devices and devices in monitor mode).  For example:
 
-> I'll try to see if the
-> frame is even seen by the driver.
+wifi* arp 801
+eth* arp 1
 
-I would expect you to find that it is not, but just run a monitor
-interface in addition.
+> Second problem is that I can't unload the module. I get the message "FATAL: 
+> Module iwlwifi is in use." even if both interfaces are down.
 
-> I agree.  The frames are either not received physically or thrown out.
-> Which makes me wonder why the association happens so quickly.  Perhaps
-> it's done at lower rates.
+I cannot reproduce this problem.  Please see the output of "lsmod" and
+the kernel log for possible oopses.
 
-Could you start capturing earlier to confirm this?
-
-> When ping finally starts working, all the data is transmitted at 1Mbps.
-> And the QoS field is still there , so it's not a problem by itself.
-
-Didn't you say that you're using mb's tree? You have a 4311 IIRC so I
-wouldn't be surprised if there are problems with receive sensitivity
-that go away after, say, two minutes (recalibration interval).
-
-johannes
-
---=-iX0xcU1TNJt78vL2ywTv
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF2rAH/ETPhpq3jKURArZ7AJ0emlpE7DwWyzJC5+fFrp++zmlDFQCfSDaw
-wjrDH0/Eo03JoRdWEucQimI=
-=huoe
------END PGP SIGNATURE-----
-
---=-iX0xcU1TNJt78vL2ywTv--
+-- 
+Regards,
+Pavel Roskin
 
