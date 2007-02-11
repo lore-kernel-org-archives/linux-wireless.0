@@ -1,42 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:41012 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965427AbXBLWUi (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:40198 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750708AbXBKP7V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Feb 2007 17:20:38 -0500
-Message-ID: <45D0E834.4050800@lwfinger.net>
-Date: Mon, 12 Feb 2007 16:20:36 -0600
+	Sun, 11 Feb 2007 10:59:21 -0500
+Message-ID: <45CF3D51.5050302@lwfinger.net>
+Date: Sun, 11 Feb 2007 09:59:13 -0600
 From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
+To: Michael Buesch <mb@bu3sch.de>
+CC: "Rafael J. Wysocki" <rjw@sisk.pl>, bcm43xx-dev@lists.berlios.de,
+	wireless <linux-wireless@vger.kernel.org>,
 	John Linville <linville@tuxdriver.com>
 Subject: Re: [PATCH] bcm43xx: Fix loss of association after resume
-References: <45cc9ebb.+9O/IXvs/C9RyFnk%Larry.Finger@lwfinger.net> <200702120150.59747.rjw@sisk.pl> <45CFC062.1050301@lwfinger.net> <200702122148.58101.rjw@sisk.pl>
-In-Reply-To: <200702122148.58101.rjw@sisk.pl>
+References: <45cc9ebb.+9O/IXvs/C9RyFnk%Larry.Finger@lwfinger.net> <200702111407.08099.mb@bu3sch.de> <200702111502.19545.rjw@sisk.pl> <200702111514.04893.mb@bu3sch.de>
+In-Reply-To: <200702111514.04893.mb@bu3sch.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafael J. Wysocki wrote:
-> On Monday, 12 February 2007 02:18, Larry Finger wrote:
->> Rafael J. Wysocki wrote:
->>> It doesn't help in my case.  The behavior is similar to that without the patch,
->>> but also with the patch it loses the association entirely.
->> Thanks for trying.
->>
->> Do you have this patch installed? If you do, please try increasing the 100 to 200.
+Michael Buesch wrote:
+> On Sunday 11 February 2007 15:02, Rafael J. Wysocki wrote:
+>> PM: Removing info for No Bus:0000:30:00.0
+>> bcm43xx: IRQ_READY timeout
+>> bcm43xx: core_up for active 802.11 core failed (-19)
 > 
-> Hm, but it wouldn't help to get the microcode to respond after the resume ...
+> I never tried suspend to disk with the driver.
 
-Yes it would. That count is how long the system waits for the firmware to respond.
+This implies that suspend to RAM works. Is that true?
 
-> I'm still thinking the problem is with the firmware.  Where exactly is it
-> stored?
+> Larry, an idea why the microcode doesn't respond?
 
-In the memory of the microprocessor on the card.
+Is this code snippet supposed to keep the firmware loaded when the system is suspended?
 
-Please do what I asked.
+                bcm->firmware_norelease = 1;
+                bcm43xx_free_board(bcm);
+                bcm->firmware_norelease = 0;
+
+If so, that may be the problem. What would force it to be reloaded when resuming after a suspend to
+disk and subsequent power off? That would certainly explain why a reload is successful. Is there a
+volatile location that would safely indicate that the firmware is not good? Perhaps, we need to bite
+the bullet and reload the firmware after every resume. The patch below should do that.
+
+I am also working on a case where the user has troubles with a suspend to disk from Windows followed
+by a reboot to Linux, and warm reboots from Windows to Linux. In these cases, he gets a firmware
+file-format error; however, his firmware is fine from a cold boot.
 
 Larry
+
+Index: linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
++++ linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+@@ -4296,6 +4297,7 @@ static int bcm43xx_resume(struct pci_dev
+ 		printk(KERN_ERR PFX "Resume failed!\n");
+ 		return err;
+ 	}
++	bcm43xx_request_firmware(bcm);
+ 	netif_device_attach(net_dev);
+
+ 	dprintk(KERN_INFO PFX "Device resumed.\n");
