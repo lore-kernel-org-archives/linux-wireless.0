@@ -1,55 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:36897 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933323AbXBXBk2 (ORCPT
+Received: from dhost002-97.dex002.intermedia.net ([64.78.19.89]:32558 "EHLO
+	DHOST002-97.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1030516AbXBLXxr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Feb 2007 20:40:28 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HKlsG-0005qY-KI
-	for linux-wireless@vger.kernel.org; Fri, 23 Feb 2007 20:38:56 -0500
-Received: from localhost ([127.0.0.1] helo=dv.roinet.com)
-	by gnu.org with esmtp (Exim 4.66)
-	(envelope-from <proski@gnu.org>)
-	id 1HKlti-0000qN-Q2
-	for linux-wireless@vger.kernel.org; Fri, 23 Feb 2007 20:40:26 -0500
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH] Suppress sparse message about keyidx - make it signed
-To: linux-wireless@vger.kernel.org
-Date: Fri, 23 Feb 2007 20:40:26 -0500
-Message-ID: <20070224014026.3230.70166.stgit@dv.roinet.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Mon, 12 Feb 2007 18:53:47 -0500
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Mon, 12 Feb 2007 15:53:41 -0800
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+Subject: Re: d80211: current TKIP hwcrypto implementation seems to be broken
+Message-ID: <20070212235341.GD16597@instant802.com>
+References: <200702041344.19117.mb@bu3sch.de> <20070212183020.GA16597@instant802.com> <200702122239.31778.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200702122239.31778.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sparse reports:
-error: dubious bitfield without explicit `signed' or `unsigned'
+On Mon, Feb 12, 2007 at 10:39:31PM +0100, Michael Buesch wrote:
 
-keyidx should be signed for consistency with definitions in d80211.h,
-and it doesn't need to be a bitfield - s8 would do the right thing. 
-Reorder the fields to keep the one-bit flags together.
+> What happens on RX when the iv32 wraps. Well, it simply won't decrypt
+> the frame. What we must do then is upload a new key as fast as possible.
+> The undecrypted frame can be either decrypted in SW (which I think d80211
+> can do. At least with minor additional changes), or we drop it.
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+That "iv32 wrap" should have been "iv32 changes" (phase1 key changes
+whenever iv16 changes, i.e., when iv32 is incremented by one). d80211
+does indeed support software decryption for this case, so it is fine to
+just pass the undecrypted frame up and marking it as such. This was
+needed for some of the TKIP cases with Atheros.
 
- net/d80211/ieee80211_key.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> I started to implement an API to calculate the phase1 key on demand.
+> It doesn't quite work, yet and I'm stuck in more important work
+> that should be done before the d80211 merge, so it will take some time
+> until I can continue debugging the stuff.
 
-diff --git a/net/d80211/ieee80211_key.h b/net/d80211/ieee80211_key.h
-index 5b5c564..2889b10 100644
---- a/net/d80211/ieee80211_key.h
-+++ b/net/d80211/ieee80211_key.h
-@@ -79,9 +79,9 @@ struct ieee80211_key {
- 	/* if the low level driver can provide hardware acceleration it should
- 	 * clear this flag */
- 	unsigned int force_sw_encrypt:1;
--	int keyidx:8; /* WEP key index */
- 	unsigned int default_tx_key:1; /* This key is the new default TX key
- 					* (used only for broadcast keys). */
-+	s8 keyidx; /* WEP key index */
- 
- 	u8 key[0];
- };
+OK.
 
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
