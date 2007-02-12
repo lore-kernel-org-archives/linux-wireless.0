@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:51433 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S2992992AbXBQRuL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Feb 2007 12:50:11 -0500
-Date: Sat, 17 Feb 2007 18:24:44 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: [PATCH] bcm43xx: fix for 4309
-Message-ID: <20070217182444.5a7e3641@localhost>
+Received: from dhost002-44.dex002.intermedia.net ([64.78.21.135]:23166 "EHLO
+	dhost002-44.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965288AbXBLSoj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Feb 2007 13:44:39 -0500
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Mon, 12 Feb 2007 10:30:20 -0800
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+Subject: Re: d80211: current TKIP hwcrypto implementation seems to be broken
+Message-ID: <20070212183020.GA16597@instant802.com>
+References: <200702041344.19117.mb@bu3sch.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200702041344.19117.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BCM4309 devices aren't working properly as A PHYs aren't supported yet, but
-we probe 802.11a cores anyway. This fixes it, while still allowing for A PHY code
-to be developed in the future.
+On Sun, Feb 04, 2007 at 01:44:18PM +0100, Michael Buesch wrote:
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
-----
+> We need the phase1 for bcm43xx. We need to upload it to
+> card memory and we need to pass it on every TX on the DMA.
 
-John,
+> So, currently we receive the phase1 key on the first
+> encrypted TX. That's too late, as we already receive encrypted
+> packets before that. bcm43xx needs the phase1 key (and the iv32)
+> on RX. It uses the one uploaded into the card memory. But it
+> is not uploaded, yet, as we did not TX any encrypted packet.
 
-This is actually a bugfix so I think it should make into 2.6.21. This makes
-BCM4309 cards working.
+How exactly is this supposed to work for RX? Phase1 needs to be
+calculated after 65536 frames (whenever iv32 changes), but the
+exact time for RX case is unclear due to possible loss of frames and
+retransmissions etc. Is bcm43xx just going drop couple of packets
+whenever the phase1 value is changed? Or is there some kind of
+mechanism for the hardware/firmware request a new phase1 value? Or is
+this supposed to be recovered from in software (which is something that
+d80211 is able to do if the radio driver notifies that the frame was not
+decrypted)?
 
 -- 
-Ciao
-Stefano
-
-----
-
---- linux-2.6.20/drivers/net/wireless/bcm43xx/bcm43xx_main.c.orig	2007-02-17 18:05:21.872891550 +0100
-+++ linux-2.6.20/drivers/net/wireless/bcm43xx/bcm43xx_main.c	2007-02-17 18:14:59.620752491 +0100
-@@ -2741,8 +2741,9 @@
- 				 * dangling pins on the second core. Be careful
- 				 * and ignore these cores here.
- 				 */
--				if (bcm->pci_dev->device != 0x4324) {
--					dprintk(KERN_INFO PFX "Ignoring additional 802.11 core.\n");
-+				if (1 /*bcm->pci_dev->device != 0x4324*/ ) {
-+				/* TODO: A PHY */
-+					dprintk(KERN_INFO PFX "Ignoring additional 802.11a core.\n");
- 					continue;
- 				}
- 			}
+Jouni Malinen                                            PGP id EFC895FA
