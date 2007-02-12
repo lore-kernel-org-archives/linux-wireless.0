@@ -1,70 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58862 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161300AbXBZWrP (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41722
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965424AbXBLVju (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Feb 2007 17:47:15 -0500
-Received: from [84.135.252.42] (helo=johannes.berg)
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.63)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1HLoYb-000250-Uy
-	for linux-wireless@vger.kernel.org; Mon, 26 Feb 2007 22:42:58 +0000
-Subject: [PATCH] net/wireless: fix sparse warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Mon, 26 Feb 2007 23:46:56 +0100
-Message-Id: <1172530016.3870.199.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 12 Feb 2007 16:39:50 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Jouni Malinen" <jkm@devicescape.com>
+Subject: Re: d80211: current TKIP hwcrypto implementation seems to be broken
+Date: Mon, 12 Feb 2007 22:39:31 +0100
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+References: <200702041344.19117.mb@bu3sch.de> <20070212183020.GA16597@instant802.com>
+In-Reply-To: <20070212183020.GA16597@instant802.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702122239.31778.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a few things sparse pointed out when I finally got it
-working.
+On Monday 12 February 2007 19:30, Jouni Malinen wrote:
+> On Sun, Feb 04, 2007 at 01:44:18PM +0100, Michael Buesch wrote:
+> 
+> > We need the phase1 for bcm43xx. We need to upload it to
+> > card memory and we need to pass it on every TX on the DMA.
+> 
+> > So, currently we receive the phase1 key on the first
+> > encrypted TX. That's too late, as we already receive encrypted
+> > packets before that. bcm43xx needs the phase1 key (and the iv32)
+> > on RX. It uses the one uploaded into the card memory. But it
+> > is not uploaded, yet, as we did not TX any encrypted packet.
+> 
+> How exactly is this supposed to work for RX?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+I misunderstood it, so my explaination was not 100% correct.
 
----
- net/wireless/sysfs.c       |    1 +
- net/wireless/wext-common.c |    8 ++++----
- 2 files changed, 5 insertions(+), 4 deletions(-)
+It works the following way: We need the phase1 for TX and for RX.
+The key for TX is passed along with the TX frame. We can take the
+key from the tx_control (I'd still like to get rid of the
+array in the tx_control, though. Working on it...)
+For RX we have the phase1 uploaded to some device memory.
 
---- wireless-dev.orig/net/wireless/sysfs.c	2007-02-26 23:42:38.124692803 +0100
-+++ wireless-dev/net/wireless/sysfs.c	2007-02-26 23:42:43.314692803 +0100
-@@ -13,6 +13,7 @@
- #include <linux/netdevice.h>
- #include <linux/nl80211.h>
- #include <net/cfg80211.h>
-+#include "sysfs.h"
- #include "core.h"
- 
- static inline struct cfg80211_registered_device *dev_to_rdev(
---- wireless-dev.orig/net/wireless/wext-common.c	2007-02-26 23:43:08.314692803 +0100
-+++ wireless-dev/net/wireless/wext-common.c	2007-02-26 23:44:55.654692803 +0100
-@@ -13,10 +13,11 @@
- #include <linux/module.h>
- #include <linux/wireless.h>
- #include <linux/types.h>
--#include <net/iw_handler.h>
- #include <linux/seq_file.h>
--#include <net/netlink.h>
- #include <linux/rtnetlink.h>
-+#include <net/iw_handler.h>
-+#include <net/netlink.h>
-+#include <net/wireless.h>
- #include "wext.h"
- 
- /* common data */
-@@ -301,8 +302,7 @@ const struct iw_ioctl_description standa
- 		.max_tokens	= sizeof(struct iw_pmkid_cand),
- 	},
- };
--unsigned standard_event_num = (sizeof(standard_event) /
--					sizeof(struct iw_ioctl_description));
-+static unsigned standard_event_num = ARRAY_SIZE(standard_event);
- 
- /* Size (in bytes) of various events */
- const int event_type_size[] = {
+What happens on RX when the iv32 wraps. Well, it simply won't decrypt
+the frame. What we must do then is upload a new key as fast as possible.
+The undecrypted frame can be either decrypted in SW (which I think d80211
+can do. At least with minor additional changes), or we drop it.
 
+I started to implement an API to calculate the phase1 key on demand.
+It doesn't quite work, yet and I'm stuck in more important work
+that should be done before the d80211 merge, so it will take some time
+until I can continue debugging the stuff.
 
+-- 
+Greetings Michael.
