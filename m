@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:32876 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750850AbXBPWHv (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:41012 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965427AbXBLWUi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Feb 2007 17:07:51 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so1667765nfa
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Feb 2007 14:07:50 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] d80211: Add software sequence support
-Date: Fri, 16 Feb 2007 23:07:16 +0100
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200702141423.27823.IvDoorn@gmail.com> <20070216135827.7d262ae3@griffin.suse.cz> <1171660484.3575.34.camel@johannes.berg>
-In-Reply-To: <1171660484.3575.34.camel@johannes.berg>
+	Mon, 12 Feb 2007 17:20:38 -0500
+Message-ID: <45D0E834.4050800@lwfinger.net>
+Date: Mon, 12 Feb 2007 16:20:36 -0600
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702162307.16826.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH] bcm43xx: Fix loss of association after resume
+References: <45cc9ebb.+9O/IXvs/C9RyFnk%Larry.Finger@lwfinger.net> <200702120150.59747.rjw@sisk.pl> <45CFC062.1050301@lwfinger.net> <200702122148.58101.rjw@sisk.pl>
+In-Reply-To: <200702122148.58101.rjw@sisk.pl>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 16 February 2007 22:14, Johannes Berg wrote:
-> On Fri, 2007-02-16 at 13:58 +0100, Jiri Benc wrote:
+Rafael J. Wysocki wrote:
+> On Monday, 12 February 2007 02:18, Larry Finger wrote:
+>> Rafael J. Wysocki wrote:
+>>> It doesn't help in my case.  The behavior is similar to that without the patch,
+>>> but also with the patch it loses the association entirely.
+>> Thanks for trying.
+>>
+>> Do you have this patch installed? If you do, please try increasing the 100 to 200.
 > 
-> > Both.
-> > 
-> > When you have a WDS link and some other wireless interface at the same
-> > time, their source addresses are (in most cases) the same. You want to
-> > have the sequence control counter shared by them. Actually, it will
-> > probably work most of time even when they have different counters. The
-> > situation where it won't work is if you have two virtual interfaces,
-> > one in STA and second in WDS mode, both connected to the same AP. I
-> > can't figure out how this particular setup could be useful but it's
-> > generally not disallowed.
-> > 
-> > Anyway, using different counter for a WDS interface probably violates
-> > 802.11 (although it's not much specific in this case). I believe it
-> > will work in most cases, though.
-> > 
-> > Any ideas how to solve that?
-> 
-> Make the counter per-mac address?
+> Hm, but it wouldn't help to get the microcode to respond after the resume ...
 
-Wouldn't that be the same as per-interface?
+Yes it would. That count is how long the system waits for the firmware to respond.
 
-Ivo
+> I'm still thinking the problem is with the firmware.  Where exactly is it
+> stored?
+
+In the memory of the microprocessor on the card.
+
+Please do what I asked.
+
+Larry
