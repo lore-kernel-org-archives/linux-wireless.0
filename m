@@ -1,83 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lugor.de ([212.112.242.222]:40123 "EHLO solar.vpn.lugor.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751304AbXBMMSl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Feb 2007 07:18:41 -0500
-From: "Hesse, Christian" <mail@earthworm.de>
-To: James Ketrenos <jketreno@linux.intel.com>
-Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
-Date: Tue, 13 Feb 2007 13:18:33 +0100
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
-References: <45CCE3CA.4050904@linux.intel.com> <200702101525.56820.mail@earthworm.de> <45D0B363.8070303@linux.intel.com>
-In-Reply-To: <45D0B363.8070303@linux.intel.com>
+Received: from smtp.rutgers.edu ([128.6.72.243]:25447 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932881AbXBLDOF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Feb 2007 22:14:05 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Michael Buesch <mb@bu3sch.de>
+Subject: [PATCH] bcm43xx-d80211: update to new statistics reporting API
+Date: Sun, 11 Feb 2007 22:13:29 -0500
+Cc: linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
 MIME-Version: 1.0
 Content-Type: multipart/signed;
-  boundary="nextPart1513687.nBdbPG6PMV";
+  boundary="nextPart2664391.qfmHJqWRIa";
   protocol="application/pgp-signature";
   micalg=pgp-sha1
-Message-Id: <200702131318.38027.mail@earthworm.de>
+Message-Id: <200702112213.29648.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1513687.nBdbPG6PMV
+--nextPart2664391.qfmHJqWRIa
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
 
-On Monday 12 February 2007 19:35, James Ketrenos wrote:
-> Hesse, Christian wrote:
-> > On Saturday 10 February 2007 14:23, Hesse, Christian wrote:
-> >> On Friday 09 February 2007 22:12, James Ketrenos wrote:
-> >>> We are pleased to announce the availability of a new driver for the
-> >>> Intel PRO/Wireless 3945ABG Network Connection adapter.
->
-> ...
->
-> > Oh, I forgot one note: "make patch_kernel" is terribly broken. Any chan=
-ce
-> > to get this fixed soon?
->
-> I've put up a new version of iwlwifi (0.0.6) with significant changes to
-> the patch_kernel scripts as well as including Pavel's patch to KSRC.
->
-> I performed some build testing with 2.6.18 and wireless-dev @ commit
-> f66e5aaa88c1c0a7ee6c6427d6535ed8afd35427 (Jan 8).
->
-> http://intellinuxwireless.org/?n=3Ddownloads
->
-> Let me know if it is still breaking.
+bcm43xx-d80211: update to new statistics reporting API
 
-Hmm, it compiled once, but after I removed the tree and used a clean one I =
-can=20
-not reproduce it:
+This patch updates bcm43xx-d80211 to the new statistics reporting API.
 
-LD      drivers/net/wireless/built-in.o
-ld: drivers/net/wireless/d80211/built-in.o: No such file: No such file or=20
-directory
-make[3]: *** [drivers/net/wireless/built-in.o] Error 1
-make[2]: *** [drivers/net/wireless] Error 2
-make[1]: *** [drivers/net] Error 2
-make: *** [drivers] Error 2
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+=2D--
 
-So it is still broken.
-=2D-=20
-Regards,
-Chris
+ drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
---nextPart1513687.nBdbPG6PMV
+diff --git a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c=20
+b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
+index 9f4d51d..054ea09 100644
+=2D-- a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
++++ b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
+@@ -3560,7 +3560,9 @@ static int bcm43xx_wireless_init(struct
+ 		    IEEE80211_HW_MONITOR_DURING_OPER |
+ 		    IEEE80211_HW_DEVICE_HIDES_WEP |
+ 		    IEEE80211_HW_WEP_INCLUDE_IV;
+=2D	hw->maxssi =3D BCM43xx_RX_MAX_SSI;
++	hw->max_rssi =3D -110;
++	hw->max_signal =3D BCM43xx_RX_MAX_SSI;
++	hw->max_noise =3D -110;
+ 	hw->queues =3D 1;
+ 	hw->dev =3D &dev->dev;
+ 	if (is_valid_ether_addr(sprom->r1.et1mac)) {
+
+--nextPart2664391.qfmHJqWRIa
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBF0aydlZfG2c8gdSURAkFAAJ9BGLgPA41ckZrsXTWDZHNo1LEnGgCgsFdA
-zve0xVxSF+0d8iyje4+ESO8=
-=3wBC
+iD8DBQBFz9tZT3Oqt9AH4aERAoE0AJ9R8tZsFsS3PfRbmF3YN1FQ+/bW5QCbBb7N
+mDQPLYRFJJ0N3AXNhoq7wcM=
+=leYK
 -----END PGP SIGNATURE-----
 
---nextPart1513687.nBdbPG6PMV--
+--nextPart2664391.qfmHJqWRIa--
 -: 
 To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 the body of a message to majordomo@vger.kernel.org: 
