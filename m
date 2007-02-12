@@ -1,91 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33173
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751823AbXBAPtk (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:50641 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932821AbXBLEkt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Feb 2007 10:49:40 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: Anyone have notes from Wireless Summit?
-Date: Thu, 1 Feb 2007 16:19:13 +0100
-Cc: Stephen Hemminger <shemminger@osdl.org>,
-	Jon Smirl <jonsmirl@gmail.com>, linux-wireless@vger.kernel.org
-References: <20070131.155116.62344146.davem@davemloft.net> <20070131202757.7dc1058c@oldman> <45C16FDD.7040800@lwfinger.net>
-In-Reply-To: <45C16FDD.7040800@lwfinger.net>
-MIME-Version: 1.0
-Message-Id: <200702011619.13456.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+	Sun, 11 Feb 2007 23:40:49 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HGSyS-00016j-9E
+	for linux-wireless@vger.kernel.org; Sun, 11 Feb 2007 23:39:32 -0500
+Subject: Re: [PATCH] d80211: Fix wireless statistics reporting
+From: Pavel Roskin <proski@gnu.org>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+In-Reply-To: <200702112329.21901.flamingice@sourmilk.net>
+References: <200702112209.46093.flamingice@sourmilk.net>
+	 <1171253350.27742.17.camel@dv> <200702112329.21901.flamingice@sourmilk.net>
+Content-Type: text/plain
+Date: Sun, 11 Feb 2007 23:40:46 -0500
+Message-Id: <1171255246.28458.22.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 01 February 2007 05:43, Larry Finger wrote:
-> Stephen Hemminger wrote:
-> > On Wed, 31 Jan 2007 20:16:52 -0500
-> > "Jon Smirl" <jonsmirl@gmail.com> wrote:
-> > 
-> >> On 1/31/07, Larry Finger <larry.finger@lwfinger.net> wrote:
-> >>> I've seen the program and the PDF's posted at
-> >>> http://developer.osdl.org/dev/desktop_architects/index.php and I've seen some discussion about
-> >>> what/was not agreed upon. Does anyone have any notes on the main and/or breakout sessions that could
-> >>> be posted here, or in some other venue.
-> > 
-> > 
-> > I put all the notes that were sent to me into:
-> >   http://developer.osdl.org/dev/desktop_architects/index.php/Wireless_Summit_2
-> > 
-> > The PDF slides I uploaded and any notes I converted to Wiki pages
-> > 
-> 
-> Thanks Stephen. BTW, is there a list of names to go with the photo? After communicating with all of
-> you for a year, or so, I'd like to have faces to go with the names.
+On Sun, 2007-02-11 at 23:29 -0500, Michael Wu wrote:
+> On Sunday 11 February 2007 23:09, Pavel Roskin wrote:
+> > > -	int signal;
+> > > +	int signal; /* used as qual in statistics reporting */
+> >
+> > I'm sorry but that the thing I have always hated about wireless
+> > extensions.  Such tricks make the API context sensitive and loaded with
+> > assumptions.
+> >
+> Ok, but I was merely clarifying the current situation. That problem has always 
+> been there since the patch for statistics reporting went in.
 
-I can try to create a list. But I don't remember all the names.
-Please also apologize for any cruel typos :)
-I'll do from left to right.
+Sorry, I should have made it clear that my post was more a reaction to
+the comments than to the actual code changes.
 
-1) Mohammed Abbas
-2) Don't remember, sorry.
-3) From Nokia. Don't remember your name, sorry. :)
-4) Jouni Malinen
-5) Don't remember the name, sorry.
-6) Jiri Benc
-7) Don't remember, sorry. But I remember your interresting talks about laws and stuff. ;)
-8) Don't remember, either :)
-9) Michael Buesch
-10) James Ketrenos
-11) Sebastian Gottschall
-12) Yi Zhu (I think. Not sure, sorry)
-13) not sure what his name was. Tomas Winkler?
-14) Daniel Drake
-15) Hm, dunno. Sorry.
-16) John Linville
-17) Johannes Berg
-18) Dan Williams
-19) Nick Kossifidis
-20) Mark Powell
-21) Luis Rodriguez
-22) Don't recognize him on the tiiiiiny photo.
-23) Michael Wu
-24) Stephen Hemminger
-25) Don't remember the name, too. Sorry.
+> > I understand d80211 still has to interact with Wireless Extensions, but
+> > let's not make things even worse.
+> I'm making things better. Statistics reporting is pretty bad right now in 
+> d80211 with drivers reporting bogus values when they don't know, and 
+> statistics reporting of different d80211 drivers interacting with each other 
+> when multiple devices are plugged in. This patch attempts to fix the worst 
+> issues while attempting to avoid regressions. Feel free to follow up with 
+> another patch to make statistics reporting perfect.
 
-Henry Ptasiniski from Broadcom doesn't seem to be on the
-picture. I think he left earlier.
-
-Hope this helps. Someone else please fill in the missing ones. :)
-
-Here are some bigger pictures made by Luis
-http://mcgrof.com/albums/2007/01/osdl-01-20/
-
-That's Luis:
-http://mcgrof.com/albums/2007/01/osdl-01-20/load.php?image=dscf0085.jpg
-
-Left me, right Jiri:
-http://mcgrof.com/albums/2007/01/osdl-01-20/load.php?image=dscf0066.jpg
-
-
-So, now your picture... :D
+This effort is very much appreciated.  I'll have a closer look if I see
+any issues after your patch is applied.
 
 -- 
-Greetings Michael.
+Regards,
+Pavel Roskin
+
