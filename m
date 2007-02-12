@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43738 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751548AbXBMSio (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:37064 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932944AbXBLEaE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Feb 2007 13:38:44 -0500
-Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: James Ketrenos <jketreno@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
-In-Reply-To: <20070213181313.GA5350@ucw.cz>
-References: <45CCE3CA.4050904@linux.intel.com>
-	 <20070213181313.GA5350@ucw.cz>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4eDDAlEObNoQHS1+pZk9"
-Date: Tue, 13 Feb 2007 19:36:11 +0100
-Message-Id: <1171391771.10344.93.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 11 Feb 2007 23:30:04 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: [PATCH] d80211: Fix wireless statistics reporting
+Date: Sun, 11 Feb 2007 23:29:15 -0500
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+References: <200702112209.46093.flamingice@sourmilk.net> <1171253350.27742.17.camel@dv>
+In-Reply-To: <1171253350.27742.17.camel@dv>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1489636.qNMvYl8yur";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200702112329.21901.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-4eDDAlEObNoQHS1+pZk9
-Content-Type: text/plain
+--nextPart1489636.qNMvYl8yur
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Tue, 2007-02-13 at 18:13 +0000, Pavel Machek wrote:
+On Sunday 11 February 2007 23:09, Pavel Roskin wrote:
+> > -	int signal;
+> > +	int signal; /* used as qual in statistics reporting */
+>
+> I'm sorry but that the thing I have always hated about wireless
+> extensions.  Such tricks make the API context sensitive and loaded with
+> assumptions.
+>
+Ok, but I was merely clarifying the current situation. That problem has alw=
+ays=20
+been there since the patch for statistics reporting went in.
 
-> Yes... is there merged .git tree somewhere? I downloaded iwl git tree,
-> but it did not contain d80211 stack. I'm now downloading wireless-dev
-> git tree...
+> I understand d80211 still has to interact with Wireless Extensions, but
+> let's not make things even worse.
+I'm making things better. Statistics reporting is pretty bad right now in=20
+d80211 with drivers reporting bogus values when they don't know, and=20
+statistics reporting of different d80211 drivers interacting with each othe=
+r=20
+when multiple devices are plugged in. This patch attempts to fix the worst=
+=20
+issues while attempting to avoid regressions. Feel free to follow up with=20
+another patch to make statistics reporting perfect.
 
-I would expect Intel to post patches some time soon to get into
-wireless-dev.
+=2DMichael Wu
 
-johannes
-
---=-4eDDAlEObNoQHS1+pZk9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart1489636.qNMvYl8yur
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBF0gUb/ETPhpq3jKURArxBAJsHws1jqvFVuWe3v2L1ffjoVLZh2ACfZXXf
-V4axbwrXq7ThBVYogk3rGXU=
-=gCW8
+iD8DBQBFz+0hT3Oqt9AH4aERAif4AJ93ghrCj63IB72CakiJOrVSfyrYVwCggNSJ
+cI+QgKO1iSrdjBvygFcCCAM=
+=lsOv
 -----END PGP SIGNATURE-----
 
---=-4eDDAlEObNoQHS1+pZk9--
-
+--nextPart1489636.qNMvYl8yur--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
