@@ -1,141 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37989 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964827AbXBLJdM (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:53390 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964939AbXBLQcW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Feb 2007 04:33:12 -0500
-Subject: Re: [PATCH 1/4] create cfg80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Broadcom Linux <bcm43xx-dev@berlios.de>
-In-Reply-To: <1171222767.3576.2.camel@johannes.berg>
-References: <20070209162711.375886000@sipsolutions.net>
-	 <20070209162826.930724000@sipsolutions.net>
-	 <1171222767.3576.2.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gwcLAd3ClQuBfw8mskjT"
-Date: Mon, 12 Feb 2007 09:12:08 +0100
-Message-Id: <1171267928.4881.9.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 12 Feb 2007 11:32:22 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so638261uga
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Feb 2007 08:32:17 -0800 (PST)
+Message-ID: <45D0968F.8040103@gmail.com>
+Date: Mon, 12 Feb 2007 17:32:15 +0100
+From: dragoran <drago01@gmail.com>
+MIME-Version: 1.0
+To: "Hesse, Christian" <mail@earthworm.de>
+CC: James Ketrenos <jketreno@linux.intel.com>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] [ANNOUNCE] d80211 based driver for Intel PRO/Wireless  3945ABG
+References: <45CCE3CA.4050904@linux.intel.com>	<200702101424.00156.mail@earthworm.de> <200702101525.56820.mail@earthworm.de>
+In-Reply-To: <200702101525.56820.mail@earthworm.de>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hesse, Christian wrote:
+> On Saturday 10 February 2007 14:23, Hesse, Christian wrote:
+>   
+>> On Friday 09 February 2007 22:12, James Ketrenos wrote:
+>>     
+>>> We are pleased to announce the availability of a new driver for the
+>>> Intel PRO/Wireless 3945ABG Network Connection adapter.
+>>>       
+>> Wow, great news on this rainy saturday! ;-)
+>>
+>> The driver works perfectly, I'm writing this mail via wireless link.
+>> However there are two things to note:
+>>
+>> The driver generates two network devices. The second one is for promicious
+>> mode? Is there any chance to disable the interface? ifrename renamed the
+>> wrong one to wlan0 and I had to tell my system to use eth1 for the wireless
+>> connection.
+>>
+>> Second problem is that I can't unload the module. I get the message "FATAL:
+>> Module iwlwifi is in use." even if both interfaces are down.
+>>     
+>
+> Oh, I forgot one note: "make patch_kernel" is terribly broken. Any chance to 
+> get this fixed soon?
+>   
+>   
+confirmed on my box it resulted in deleting all kernel modules.
+(had to reinstall the kernel)
+(make modules in /lib/modules/`uname -r`/build after make patch_kernel)
+this was on fc6 x86_64
 
---=-gwcLAd3ClQuBfw8mskjT
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Sun, 2007-02-11 at 20:39 +0100, Johannes Berg wrote:
-> On Fri, 2007-02-09 at 17:27 +0100, johannes@sipsolutions.net wrote:
-
-> [...]
-> needs to be changed. wiphy_free() should wait for
-> wiphy_class_dev_release (to make sure sysfs is gone) before freeing the
-> structure (if it has ever been added to sysfs).
-
-On second thought, no, that's perfectly correct. There's a slight bug
-however in the registration, it must not set wiphy_index when sysfs
-registration fails.
-
-The real bug I'm chasing (use-after-free leading to oops when rmmod'ing
-bcm43xx-d80211 while device is up) is in bcm43xx-d80211 and I found it
-too. Consider the following changes I made to debug:
-
-diff --git a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c b/drivers/n=
-et/wireless/d80211/bcm43xx/bcm43xx_main.c
-index 9f4d51d..5205859 100644
---- a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
-+++ b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
-@@ -1479,6 +1479,8 @@ static irqreturn_t bcm43xx_interrupt_handler(int irq,=
- void *dev_id)
- 	if (!dev)
- 		return IRQ_NONE;
-=20
-+	printk(KERN_INFO "bcm43xx_interrupt_handler\n");
-+
- 	spin_lock(&dev->wl->irq_lock);
-=20
- 	assert(bcm43xx_status(dev) =3D=3D BCM43xx_STAT_INITIALIZED);
-@@ -3453,7 +3455,8 @@ static void bcm43xx_one_core_detach(struct ssb_device=
- *dev)
- 	list_del(&wldev->list);
- 	wl->nr_devs--;
- 	ssb_set_drvdata(dev, NULL);
--	kfree(wldev);
-+	printk(KERN_INFO "kfree(wldev)\n");
-+//	kfree(wldev);
- }
-=20
- static int bcm43xx_one_core_attach(struct ssb_device *dev,
-@@ -3535,8 +3538,10 @@ static void bcm43xx_wireless_exit(struct ssb_device =
-*dev,
- {
- 	struct ieee80211_hw *hw =3D wl->hw;
-=20
-+	printk(KERN_INFO "bcm43xx_wireless_exit(): unregister_hw()\n");
- 	ieee80211_unregister_hw(hw);
- 	ssb_set_devtypedata(dev, NULL);
-+	printk(KERN_INFO "bcm43xx_wireless_exit(): free_hw()\n");
- 	ieee80211_free_hw(hw);
- }
-=20
-
-Now remember the oops I got which was a use-after-free in the interrupt han=
-dler.
-
-Now also consider this message log I got when inserting bcm43xx,
-scanning (I removed some interrupt messages), and then removing the
-module again:
-
-[ 1443.269289] wlan0: starting scan
-[ 1443.316409] bcm43xx_interrupt_handler
-...
-[ 1444.016378] bcm43xx_interrupt_handler
-[ 1444.053623] wlan0: scan completed
-[ 1445.317311] kfree(wldev)
-[ 1445.317931] bcm43xx_wireless_exit(): unregister_hw()
-[ 1445.385872] bcm43xx_d80211: Wireless interface stopped
-[ 1445.386554] bcm43xx_d80211: Removing Interface type 2
-[ 1445.387219] bcm43xx_d80211: DMA-32 0x0200 (RX) max used slots: 0/64
-[ 1445.389551] bcm43xx_d80211: DMA-32 0x02A0 (TX) max used slots: 0/128
-[ 1445.390609] bcm43xx_d80211: DMA-32 0x0280 (TX) max used slots: 0/128
-[ 1445.391678] bcm43xx_d80211: DMA-32 0x0260 (TX) max used slots: 0/128
-[ 1445.392756] bcm43xx_d80211: DMA-32 0x0240 (TX) max used slots: 0/128
-[ 1445.393821] bcm43xx_d80211: DMA-32 0x0220 (TX) max used slots: 2/128
-[ 1445.394869] bcm43xx_d80211: DMA-32 0x0200 (TX) max used slots: 0/128
-[ 1445.395924] bcm43xx_d80211: Radio turned off
-[ 1445.516479] bcm43xx_wireless_exit(): free_hw()
-[ 1445.517144] wiphy_free()
-[ 1445.518029] PM: Removing info for ssb:ssb04:04
-[ 1445.518164] PM: Removing info for ssb:ssb04:03
-[ 1445.518284] PM: Removing info for ssb:ssb04:02
-[ 1445.518405] PM: Removing info for ssb:ssb04:01
-[ 1445.518597] PM: Removing info for ssb:ssb04:00
-
-
-Now let's also take a look at the code that prints "Wireless interface
-stopped". That function is bcm43xx_wireless_core_stop(), which is passed
-a struct bcm43xx_wldev, precisely the one that two lines before was
-passed to that kfree()...
-
-So what happens is that sometimes a whole bunch of things in
-bcm43xx_wireless_core_stop will not work properly due to the
-use-after-free we have here. Unless you have slab debugging disabled
-(like me) where of course it fails every time...
-
-johannes
-
---=-gwcLAd3ClQuBfw8mskjT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD4DBQBF0CFY/ETPhpq3jKURApouAJdO/wSuXABqdNZm9d6FeYOzdgHhAJ45VQzA
-tzjzYSBT3bfq+ocy/qzODA==
-=Kk6O
------END PGP SIGNATURE-----
-
---=-gwcLAd3ClQuBfw8mskjT--
 
