@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:38505 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S2992802AbXBIUZL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Feb 2007 15:25:11 -0500
-Received: from midway.site ([71.245.99.70]) by xenotime.net for <linux-wireless@vger.kernel.org>; Fri, 9 Feb 2007 12:25:01 -0800
-Date: Fri, 9 Feb 2007 12:21:46 -0800
-From: Randy Dunlap <rdunlap@xenotime.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: New list for wireless dev discussions
-Message-Id: <20070209122146.083e9ad8.rdunlap@xenotime.net>
-In-Reply-To: <20070201190353.GE5408@tuxdriver.com>
-References: <20070130203944.GC6474@tuxdriver.com>
-	<20070201190353.GE5408@tuxdriver.com>
+Received: from mx1.redhat.com ([66.187.233.31]:54895 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751058AbXBMUeR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Feb 2007 15:34:17 -0500
+Subject: Re: [PATCH] prism54: correct assignment of DOT1XENABLE in WE-19   codepaths
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <1171394427.10344.112.camel@johannes.berg>
+References: <1171393222.5329.11.camel@localhost.localdomain>
+	 <1171393331.10344.106.camel@johannes.berg>
+	 <1171394306.5329.24.camel@localhost.localdomain>
+	 <1171394427.10344.112.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 13 Feb 2007 15:36:39 -0500
+Message-Id: <1171398999.5329.39.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 1 Feb 2007 14:03:53 -0500 John W. Linville wrote:
-
-> On Tue, Jan 30, 2007 at 03:39:44PM -0500, John W. Linville wrote:
-> > At the wireless summit in London, we collectively decided to move
-> > day-to-day wireless development discussions to our own list.  I am
-> > hosting a list for this purpose:
+On Tue, 2007-02-13 at 20:20 +0100, Johannes Berg wrote:
+> On Tue, 2007-02-13 at 14:18 -0500, Dan Williams wrote:
+> > On Tue, 2007-02-13 at 20:02 +0100, Johannes Berg wrote:
+> > > On Tue, 2007-02-13 at 14:00 -0500, Dan Williams wrote:
+> > > > Correct assignment of DOT1XENABLE in WE-19 codepaths.
+> > > > RX_UNENCRYPTED_EAPOL = 1 really means setting DOT1XENABLE _off_, and
+> > > > vice versa.  The original WE-19 patch erroneously reversed that.  This
+> > > > patch fixes association with unencrypted and WEP networks when using
+> > > > wpa_supplicant.
+> > > > 
+> > > > It also adds two missing break statements that, left out, could result
+> > > > in incorrect card configuration.
+> > > > 
+> > > > Please commit to both development and stable branches.
 > > 
-> > 	http://lists.tuxdriver.org/mailman/listinfo/wireless
+> >                                           ^^^^^
+> > 
+> > Right; applicable to anything after _and_ including 2.6.19, which is
+> > when I think the WE-19 patch landed.
 > 
-> In response to some community requests, I have asked David
-> Miller to create a list for us on vger.kernel.org.  David has
-> obliged that request, so I have restricted new subscriptions to
-> wireless@lists.tuxdriver.org and I am asking everyone to move wireless
-> discussions to the new list.
-> 
-> 	linux-wireless@vger.kernel.org
+> But I think John will take it to mean to apply it to wireless-dev and
+> wireless-2.6 so you should send it to stable@kernel.org
+
+Aha; ok.  Will do.
+
+Dan
 
 
-This is Good.  Now I'd like to request that linux-wireless people set
-an example by not posting duplicates to netdev@vger.kernel.org also.  :)
-
-
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
