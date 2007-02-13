@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:37215 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030381AbXBOSDd (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59853 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751546AbXBMSoO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Feb 2007 13:03:33 -0500
-Message-ID: <45D48BDE.4070708@linux.intel.com>
-Date: Thu, 15 Feb 2007 08:35:42 -0800
-From: James Ketrenos <jketreno@linux.intel.com>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: Re: IPW2200 monitoring FW broken
-References: <200702151840.16963.mb@bu3sch.de>
-In-Reply-To: <200702151840.16963.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 13 Feb 2007 13:44:14 -0500
+Subject: network manager vs. missing firmware
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Dan Williams <dcbw@redhat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gopN4OhA0JVME8vDfyUh"
+Date: Tue, 13 Feb 2007 19:41:46 +0100
+Message-Id: <1171392106.10344.100.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> Is IPW2200 monitoring FW still broken?
-> I miss huge amounts of packets when I try to monitor
-> some traffic.
-> 
-> I'm using current wireless-2.6 + v3.0 firmware.
-> 
-> Using two antennas.
-> 
 
-What type of frames?  Data or management & control?
+--=-gopN4OhA0JVME8vDfyUh
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-If you use wireshark to capture, you can't update the packet capture 
-window or you'll lose packets; but you should be able to get them all if 
-you're doing a tethereal > somefile or if you turn off the update of the 
-main window.
+Hi,
 
-I'm not sure if it can capture control frames or not.  I seem to recall 
-it getting some ACK frames but I don't think it was passing up all of 
-them, or if it ever passed up the CTS frames.  But you should be getting 
-the bulk of the data frames.
+Just remembered this issue from last year's summit and figured I'd bring
+it up again since we never made progress on it.
 
-Yi -- do you recall what the ipw2200 firmware would pass up?
+Is there any idea other than standardising on a new error code
+-ENOFIRMWARE that can be returned from device up or association or
+wherever makes sense for the driver. Or do we also mandate that it be
+returned on device up, and for example never on module load? I think
+it's mostly a question of documentation/driver acceptance policy/driver
+review as well as a question of whether we can get a new error code into
+the kernel or not.........
 
-James
+johannes
+
+--=-gopN4OhA0JVME8vDfyUh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF0gZq/ETPhpq3jKURAgyzAJ9cIoIc1r8KMs2/FIaF3QoKPmlAOwCgmBh/
+FeUcaTT3E5f90d8jr8jpC74=
+=4uTI
+-----END PGP SIGNATURE-----
+
+--=-gopN4OhA0JVME8vDfyUh--
+
