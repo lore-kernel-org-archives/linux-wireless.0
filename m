@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:59155 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750704AbXB0K2L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Feb 2007 05:28:11 -0500
-Date: Tue, 27 Feb 2007 11:28:08 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless: rename d80211 -> mac80211
-Message-ID: <20070227112808.2fc32c6a@logostar.upir.cz>
-In-Reply-To: <20070227032756.GA6569@tuxdriver.com>
-References: <20070227032756.GA6569@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33308
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751421AbXBMXCU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Feb 2007 18:02:20 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] bcm43xx: Fix for 4311 and 02/07/07 specification changes
+Date: Wed, 14 Feb 2007 00:02:05 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <45d241c0.gWJcHxUYgWmBTwx8%Larry.Finger@lwfinger.net>
+In-Reply-To: <45d241c0.gWJcHxUYgWmBTwx8%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702140002.05727.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 26 Feb 2007 22:27:57 -0500, John W. Linville wrote:
-> I apologize if this seems sudden, but I don't really think doing
-> it with a lot of warning would have been any better.  So, I made
-> the decision and did it.  Please don't complain unless it is just
-> unbearable for you. :-)
+On Tuesday 13 February 2007 23:54, Larry Finger wrote:
+> The specifications for the bcm43xx driver have been modified. This patch
+> incorporates these changes in the code, which results in the BCM4311 and
+> BCM4312 working. The name of one of the PHY parameters, previously known
+> as "version", has been changed to "analog", short for  "analog core version" .
+> 
+> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
 
-I think it's indeed a good time for such change now. Thanks for doing that!
+> @@ -750,7 +757,7 @@ static void bcm43xx_phy_initb5(struct bc
+>  	if (radio->version == 0x2050)
+>  		bcm43xx_phy_write(bcm, 0x0038, 0x0667);
+>  
+> -	if (phy->connected) {
+> +	if (phy->type == BCM43xx_PHYTYPE_G) {
 
-When we are at it, I think the module name should be 'mac80211.ko' and not
-'80211.ko'. This means renaming of mac80211.c (I suggest mac80211_proto.c or
-mac80211_main.c). Does it sounds reasonable? Should I make a patch?
-
-Thanks,
-
- Jiri
+I don't think this is correct.
+I think (didn't verify) the specs talk about the "gmode" here.
+I think you have been misleaded by that. The "gmode" bit is
+the "connected" bit in the old softmac driver.
 
 -- 
-Jiri Benc
-SUSE Labs
+Greetings Michael.
