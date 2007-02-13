@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2836 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161233AbXBUNvk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Feb 2007 08:51:40 -0500
-Date: Wed, 21 Feb 2007 08:32:03 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
+Received: from mga06.intel.com ([134.134.136.21]:5859 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932077AbXBNAAt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Feb 2007 19:00:49 -0500
+Message-ID: <45D24740.3070804@linux.intel.com>
+Date: Tue, 13 Feb 2007 15:18:24 -0800
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, jbenc@suse.cz
-Subject: Re: [RFC PATCH] d80211: fix build break from netdev class_device -> device changes
-Message-ID: <20070221133202.GB4978@tuxdriver.com>
-References: <20070221005811.GA3875@tuxdriver.com> <1172054717.3705.1.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1172054717.3705.1.camel@johannes.berg>
+CC: Pavel Machek <pavel@ucw.cz>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
+Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
+References: <45CCE3CA.4050904@linux.intel.com>	 <20070213181313.GA5350@ucw.cz> <1171391771.10344.93.camel@johannes.berg>
+In-Reply-To: <1171391771.10344.93.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 21, 2007 at 11:45:16AM +0100, Johannes Berg wrote:
-> On Tue, 2007-02-20 at 19:58 -0500, John W. Linville wrote:
-> > In preparation for 2.6.21-rc1, I pulled Linus' latest tree into a
-> > branch of wireless-dev.  I hit a build problem with the sysfs stuff,
-> > due to the recent changes from class_device -> device for net_device.
+Johannes Berg wrote:
+> On Tue, 2007-02-13 at 18:13 +0000, Pavel Machek wrote:
 > 
-> Hmm, need to look up the reason and see if wiphy stuff should follow.
-
-Exactly what I was thinking, and what made me question the patch's
-completeness...
- 
-> > Since I don't count sysfs as a strength, I thought it was worth
-> > posting this for some review before I actually pulled Linus' latest
-> > into wireless-dev and slapped this on top of it... :-)
-> > 
-> > Comments?
+>> Yes... is there merged .git tree somewhere? I downloaded iwl git tree,
+>> but it did not contain d80211 stack. I'm now downloading wireless-dev
+>> git tree...
 > 
-> Seems fine. Is to_net_dev() defined in netdevice.h now?
- 
-Ja.
+> I would expect Intel to post patches some time soon to get into
+> wireless-dev.
+> 
+> johannes
 
-> OTOH, we might want to take this opportunity and move it all to
-> debugfs ;)
+Some of the patches contained in the d80211-1.0.1 'pending/' directory 
+have already been submitted to netdev in the past.  The rest will be 
+submitted soon (I would have liked them to have been submitted a few 
+weeks back, but that slipped through my task list)
 
-Excellent suggestion.  But for now, I just want my tree to build and
-run... :-)
+The d80211 packages I've pushed to date haven't done a very good job of 
+accounting regarding the pending/ directory.  Those were the patches our 
+team here had been working with internally, and I wanted to get them out 
+to the users ASAP.  I'm working to get better descriptions added to the 
+headers of those patches, as well as adding a status line indicating 
+when the patches were submitted to the mailing lists for discussion.
 
-Thanks for the eyeballs!
+The goal is to only include patches in the d80211 tarballs which have 
+been submitted for eventual in-tree inclusion.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+James
