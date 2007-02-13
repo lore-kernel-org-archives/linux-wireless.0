@@ -1,290 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:48635 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932433AbXB1OHO (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:54035
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030516AbXBMAKO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 09:07:14 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so562562nfa
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 06:07:13 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 24/28] rt2x00: Spellcheck for some comments.
-Date: Wed, 28 Feb 2007 15:07:07 +0100
-Cc: linux-wireless@vger.kernel.org
+	Mon, 12 Feb 2007 19:10:14 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: d80211: current TKIP hwcrypto implementation seems to be broken
+Date: Tue, 13 Feb 2007 01:10:02 +0100
+Cc: "Jouni Malinen" <jkm@devicescape.com>, "Jiri Benc" <jbenc@suse.cz>,
+	linux-wireless@vger.kernel.org
+References: <200702041344.19117.mb@bu3sch.de> <200702130023.53271.mb@bu3sch.de> <1ba2fa240702121554v4e5b55b3t4582241f6347b355@mail.gmail.com>
+In-Reply-To: <1ba2fa240702121554v4e5b55b3t4582241f6347b355@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200702281507.07711.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="iso-8859-1"
+Message-Id: <200702130110.02658.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Spellcheck for some comments.
+On Tuesday 13 February 2007 00:54, Tomas Winkler wrote:
+> On 2/13/07, Michael Buesch <mb@bu3sch.de> wrote:
+> > On Tuesday 13 February 2007 00:15, Tomas Winkler wrote:
+> > > I fetching this from my "dusty" memory so I hope I'm right about it.
+> > > TKIP phase1 one can be precomputed in advance. There's no runtime
+> >
+> > Phase1 key changes on iv32 wrap.
+> 
+> That's correct, this depends on packet sequence counter,  but you can
+> compute next TKIP phase1 even before iv32 wrap has occurred. You can
+> compute 100 of them in advance.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Actually it should be "iv32 changes" instead of "iv32 wraps". Typo.
+But my point still remains. I see no point in precomputing it.
 
----
+> > > dependency after key exchange.
+> > > Cached keys can be provided by supplicant. Usually u want to keep 2 or
+> > > 3 cached TKIP phase1 for smooth decryption. As in QoS sequence
+> >
+> > Hardware (bcm43xx at least) can only have one key at a time.
+> > There's no point in caching, as phase1 key calculation is cheap
+> > and can be done on-the-run. The expensive part it uploading it to HW.
+> 
+> True, but when there is a packet from past with tkip phase1 that
+> doesn't match currently configured phase1 tkip you might be able to
+> decrypt it, of course f hardware doesn't scramble it with wrong key.
 
-diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c b/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
-index 5ad5d75..29a8203 100644
---- a/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
-@@ -114,7 +114,7 @@ static void rt2x00_bbp_write(const struct rt2x00_dev *rt2x00dev,
- 	u32 reg;
- 
- 	/*
--	 *  Wait untill the BBP becomes ready.
-+	 *  Wait until the BBP becomes ready.
- 	 */
- 	if (rt2x00_bbp_check(rt2x00dev) == 0xffff) {
- 		ERROR("BBPCSR register busy. Write failed.\n");
-@@ -139,7 +139,7 @@ static void rt2x00_bbp_read(const struct rt2x00_dev *rt2x00dev,
- 	u32 reg;
- 
- 	/*
--	 *  Wait untill the BBP becomes ready.
-+	 *  Wait until the BBP becomes ready.
- 	 */
- 	if (rt2x00_bbp_check(rt2x00dev) == 0xffff) {
- 		ERROR("BBPCSR register busy. Read failed.\n");
-@@ -157,7 +157,7 @@ static void rt2x00_bbp_read(const struct rt2x00_dev *rt2x00dev,
- 	rt2x00_register_write(rt2x00dev, BBPCSR, reg);
- 
- 	/*
--	 *  Wait untill the BBP becomes ready.
-+	 *  Wait until the BBP becomes ready.
- 	 */
- 	reg = rt2x00_bbp_check(rt2x00dev);
- 	if (reg == 0xffff)
-@@ -746,8 +746,8 @@ static int rt2400pci_set_state(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_register_write(rt2x00dev, PWRCSR1, reg);
- 
- 	/*
--	 * Device is not guarenteed to be in the requested state yet.
--	 * We must wait untill the register indicates that the
-+	 * Device is not guaranteed to be in the requested state yet.
-+	 * We must wait until the register indicates that the
- 	 * device has entered the correct state.
- 	 */
- 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
-diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2500pci.c b/drivers/net/wireless/mac80211/rt2x00/rt2500pci.c
-index 9763da5..e5d032c 100644
---- a/drivers/net/wireless/mac80211/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/mac80211/rt2x00/rt2500pci.c
-@@ -114,7 +114,7 @@ static void rt2x00_bbp_write(const struct rt2x00_dev *rt2x00dev,
- 	u32 reg;
- 
- 	/*
--	 *  Wait untill the BBP becomes ready.
-+	 *  Wait until the BBP becomes ready.
- 	 */
- 	if (rt2x00_bbp_check(rt2x00dev) == 0xffff) {
- 		ERROR("BBPCSR register busy. Write failed.\n");
-@@ -139,7 +139,7 @@ static void rt2x00_bbp_read(const struct rt2x00_dev *rt2x00dev,
- 	u32 reg;
- 
- 	/*
--	 *  Wait untill the BBP becomes ready.
-+	 *  Wait until the BBP becomes ready.
- 	 */
- 	if (rt2x00_bbp_check(rt2x00dev) == 0xffff) {
- 		ERROR("BBPCSR register busy. Read failed.\n");
-@@ -157,7 +157,7 @@ static void rt2x00_bbp_read(const struct rt2x00_dev *rt2x00dev,
- 	rt2x00_register_write(rt2x00dev, BBPCSR, reg);
- 
- 	/*
--	 *  Wait untill the BBP becomes ready.
-+	 *  Wait until the BBP becomes ready.
- 	 */
- 	reg = rt2x00_bbp_check(rt2x00dev);
- 	if (reg == 0xffff)
-@@ -720,7 +720,7 @@ static void rt2500pci_link_tuner(struct work_struct *work)
- 		return;
- 
- 	/*
--	 * Retreive link quality.
-+	 * Retrieve link quality.
- 	 */
- 	rssi = rt2x00_get_link_rssi(&rt2x00dev->link);
- 	if (!rssi)
-@@ -837,8 +837,8 @@ static int rt2500pci_set_state(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_register_write(rt2x00dev, PWRCSR1, reg);
- 
- 	/*
--	 * Device is not guarenteed to be in the requested state yet.
--	 * We must wait untill the register indicates that the
-+	 * Device is not guaranteed to be in the requested state yet.
-+	 * We must wait until the register indicates that the
- 	 * device has entered the correct state.
- 	 */
- 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
-diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c b/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c
-index bfad5a6..86846a1 100644
---- a/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c
-@@ -150,7 +150,7 @@ static void rt2x00_bbp_write(const struct rt2x00_dev *rt2x00dev,
- 	u16 reg;
- 
- 	/*
--	 *  Wait untill the BBP becomes ready.
-+	 *  Wait until the BBP becomes ready.
- 	 */
- 	if (rt2x00_bbp_check(rt2x00dev) == 0xffff) {
- 		ERROR("PHY_CSR8 register busy. Write failed.\n");
-@@ -174,7 +174,7 @@ static void rt2x00_bbp_read(const struct rt2x00_dev *rt2x00dev,
- 	u16 reg;
- 
- 	/*
--	 *  Wait untill the BBP becomes ready.
-+	 *  Wait until the BBP becomes ready.
- 	 */
- 	if (rt2x00_bbp_check(rt2x00dev) == 0xffff) {
- 		ERROR("PHY_CSR8 register busy. Read failed.\n");
-@@ -191,7 +191,7 @@ static void rt2x00_bbp_read(const struct rt2x00_dev *rt2x00dev,
- 	rt2x00_register_write(rt2x00dev, PHY_CSR7, reg);
- 
- 	/*
--	 *  Wait untill the BBP becomes ready.
-+	 *  Wait until the BBP becomes ready.
- 	 */
- 	if (rt2x00_bbp_check(rt2x00dev) == 0xffff) {
- 		ERROR("PHY_CSR8 register busy. Read failed.\n");
-@@ -740,7 +740,7 @@ static void rt2500usb_link_tuner(struct work_struct *work)
- 		return;
- 
- 	/*
--	 * Retreive link quality.
-+	 * Retrieve link quality.
- 	 */
- 	rssi = rt2x00_get_link_rssi(&rt2x00dev->link);
- 	if (!rssi)
-@@ -864,8 +864,8 @@ static int rt2500usb_set_state(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_register_write(rt2x00dev, MAC_CSR17, reg);
- 
- 	/*
--	 * Device is not guarenteed to be in the requested state yet.
--	 * We must wait untill the register indicates that the
-+	 * Device is not guaranteed to be in the requested state yet.
-+	 * We must wait until the register indicates that the
- 	 * device has entered the correct state.
- 	 */
- 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
-diff --git a/drivers/net/wireless/mac80211/rt2x00/rt61pci.c b/drivers/net/wireless/mac80211/rt2x00/rt61pci.c
-index ec149d1..f160e66 100644
---- a/drivers/net/wireless/mac80211/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/mac80211/rt2x00/rt61pci.c
-@@ -120,7 +120,7 @@ static void rt2x00_bbp_write(const struct rt2x00_dev *rt2x00dev,
- 	u32 reg;
- 
- 	/*
--	 *  Wait untill the BBP becomes ready.
-+	 *  Wait until the BBP becomes ready.
- 	 */
- 	if (rt2x00_bbp_check(rt2x00dev) == 0xffff) {
- 		ERROR("PHY_CSR3 register busy. Write failed.\n");
-@@ -145,7 +145,7 @@ static void rt2x00_bbp_read(const struct rt2x00_dev *rt2x00dev,
- 	u32 reg;
- 
- 	/*
--	 *  Wait untill the BBP becomes ready.
-+	 *  Wait until the BBP becomes ready.
- 	 */
- 	if (rt2x00_bbp_check(rt2x00dev) == 0xffff) {
- 		ERROR("PHY_CSR3 register busy. Read failed.\n");
-@@ -163,7 +163,7 @@ static void rt2x00_bbp_read(const struct rt2x00_dev *rt2x00dev,
- 	rt2x00_register_write(rt2x00dev, PHY_CSR3, reg);
- 
- 	/*
--	 *  Wait untill the BBP becomes ready.
-+	 *  Wait until the BBP becomes ready.
- 	 */
- 	reg = rt2x00_bbp_check(rt2x00dev);
- 	if (reg == 0xffff)
-@@ -948,7 +948,7 @@ static void rt61pci_link_tuner(struct work_struct *work)
- 	u8 low_bound;
- 
- 	/*
--	 * Retreive link quality.
-+	 * Retrieve link quality.
- 	 */
- 	rssi = rt2x00_get_link_rssi(&rt2x00dev->link);
- 	if (!rssi)
-@@ -960,7 +960,7 @@ static void rt61pci_link_tuner(struct work_struct *work)
- 	rt61pci_activity_led(rt2x00dev, rssi);
- 
- 	/*
--	 * Determine upper and lower limit for BBP17 register.
-+	 * Determine upper and lower limits for BBP17 register.
- 	 */
- 	if (rt2x00dev->rx_status.phymode == MODE_IEEE80211A) {
- 		up_bound = 0x48;
-@@ -1111,8 +1111,8 @@ static int rt61pci_set_state(struct rt2x00_dev *rt2x00dev,
- 	}
- 
- 	/*
--	 * Device is not guarenteed to be in the requested state yet.
--	 * We must wait untill the register indicates that the
-+	 * Device is not guaranteed to be in the requested state yet.
-+	 * We must wait until the register indicates that the
- 	 * device has entered the correct state.
- 	 */
- 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
-diff --git a/drivers/net/wireless/mac80211/rt2x00/rt73usb.c b/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
-index ffecc64..e75a478 100644
---- a/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
-@@ -152,7 +152,7 @@ static void rt2x00_bbp_write(const struct rt2x00_dev *rt2x00dev,
- 	u32 reg;
- 
- 	/*
--	 *  Wait untill the BBP becomes ready.
-+	 *  Wait until the BBP becomes ready.
- 	 */
- 	if (rt2x00_bbp_check(rt2x00dev) == 0xffff) {
- 		ERROR("PHY_CSR3 register busy. Write failed.\n");
-@@ -177,7 +177,7 @@ static void rt2x00_bbp_read(const struct rt2x00_dev *rt2x00dev,
- 	u32 reg;
- 
- 	/*
--	 *  Wait untill the BBP becomes ready.
-+	 *  Wait until the BBP becomes ready.
- 	 */
- 	if (rt2x00_bbp_check(rt2x00dev) == 0xffff) {
- 		ERROR("PHY_CSR3 register busy. Read failed.\n");
-@@ -195,7 +195,7 @@ static void rt2x00_bbp_read(const struct rt2x00_dev *rt2x00dev,
- 	rt2x00_register_write(rt2x00dev, PHY_CSR3, reg);
- 
- 	/*
--	 *  Wait untill the BBP becomes ready.
-+	 *  Wait until the BBP becomes ready.
- 	 */
- 	reg = rt2x00_bbp_check(rt2x00dev);
- 	if (reg == 0xffff)
-@@ -845,7 +845,7 @@ static void rt73usb_link_tuner(struct work_struct *work)
- 	u8 low_bound;
- 
- 	/*
--	 * Retreive link quality.
-+	 * Retrieve link quality.
- 	 */
- 	rssi = rt2x00_get_link_rssi(&rt2x00dev->link);
- 	if (!rssi)
-@@ -857,7 +857,7 @@ static void rt73usb_link_tuner(struct work_struct *work)
- 	rt73usb_activity_led(rt2x00dev, rssi);
- 
- 	/*
--	 * Determine upper and lower limit for BBP17 register.
-+	 * Determine upper and lower limits for BBP17 register.
- 	 */
- 	if (rt2x00dev->rx_status.phymode == MODE_IEEE80211A) {
- 		up_bound = 0x48;
-@@ -1018,8 +1018,8 @@ static int rt73usb_set_state(struct rt2x00_dev *rt2x00dev,
- 			0x00, USB_MODE_SLEEP, NULL, 0, REGISTER_TIMEOUT);
- 
- 	/*
--	 * Device is not guarenteed to be in the requested state yet.
--	 * We must wait untill the register indicates that the
-+	 * Device is not guaranteed to be in the requested state yet.
-+	 * We must wait until the register indicates that the
- 	 * device has entered the correct state.
- 	 */
- 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+HW doesn't scramble it. So when d80211 receives the packet it can
+_then_ generate the key. There's no point in precomputing it.
+
+> > > counters are kept per AC, you might get into gentle state of receiving
+> > > packets for the old key. If  you hold more then one  phase1 you might
+> > > be able decrypt the packets that doesn't match current phase1 in
+> > > software.
+> >
+> > You can generate the new key then. There is no point in wasting memory
+> > by precomputation of the keys.
+> 
+> These few bytes doesn't hurt you even if you're running on a cell phone.
+
+But they don't gain you anything too, IMO.
+So better not waste the memory and not have the extra complexity in code.
+
+-- 
+Greetings Michael.
