@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.244]:58148 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946137AbXBBVm6 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46748 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750766AbXBMQCu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Feb 2007 16:42:58 -0500
-Received: by an-out-0708.google.com with SMTP id b33so725302ana
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Feb 2007 13:42:58 -0800 (PST)
-Message-ID: <9e4733910702021342p67df7962yc88625e991efbf2b@mail.gmail.com>
-Date: Fri, 2 Feb 2007 16:42:57 -0500
-From: "Jon Smirl" <jonsmirl@gmail.com>
+	Tue, 13 Feb 2007 11:02:50 -0500
+Subject: Re: [PATCH 3/4] cfg80211: wext compat code
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Subject: d80211, redundant casts to iw_handler_def
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Cc: John Linville <linville@tuxdriver.com>
+In-Reply-To: <20070209162829.001594000@sipsolutions.net>
+References: <20070209162711.375886000@sipsolutions.net>
+	 <20070209162829.001594000@sipsolutions.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hfstCIMzv2PpcI6tajnh"
+Date: Tue, 13 Feb 2007 16:42:57 +0100
+Message-Id: <1171381377.10344.23.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These two casts are redundant.
 
-Signed-off-by: Jon Smirl <jonsmirl@gmail.com>
+--=-hfstCIMzv2PpcI6tajnh
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-diff --git a/net/d80211/ieee80211.c b/net/d80211/ieee80211.c
-index 7353ed3..260ce9c 100644
---- a/net/d80211/ieee80211.c
-+++ b/net/d80211/ieee80211.c
-@@ -4313,8 +4313,7 @@ void ieee80211_if_setup(struct net_device *dev)
- {
- 	ether_setup(dev);
- 	dev->hard_start_xmit = ieee80211_subif_start_xmit;
--	dev->wireless_handlers =
--		(struct iw_handler_def *) &ieee80211_iw_handler_def;
-+	dev->wireless_handlers = &ieee80211_iw_handler_def;
- 	dev->do_ioctl = ieee80211_ioctl;
- 	dev->set_mac_address = ieee80211_set_mac_address;
- 	dev->set_multicast_list = ieee80211_set_multicast_list;
-@@ -4472,8 +4471,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t
-priv_data_len,
-         sta_info_init(local);
+On Fri, 2007-02-09 at 17:27 +0100, johannes@sipsolutions.net wrote:
 
- 	mdev->hard_start_xmit = ieee80211_master_start_xmit;
--	mdev->wireless_handlers =
--		(struct iw_handler_def *) &ieee80211_iw_master_handler_def;
-+	mdev->wireless_handlers = &ieee80211_iw_master_handler_def;
-         mdev->do_ioctl = ieee80211_ioctl;
- 	mdev->change_mtu = ieee80211_change_mtu;
-         mdev->tx_timeout = ieee80211_tx_timeout;
+> +#ifdef CONFIG_CFG80211_WEXT_COMPAT
+> +	rtnl_lock();
+> +	ret =3D call_cfg80211_wext_ioctl(ifr, cmd);
+> +	rtnl_unlock();
+
+No need to take the rtnl here if we change the compat code slightly.
+
+> +static struct cfg80211_config *cfg80211_ensure_pending_cfg(
+> +	struct cfg80211_registered_driver *drv)
+> +{
+> +	struct cfg80211_config *cfg =3D drv->wext_pending_config;
+> +	if (!cfg)
+> +		cfg =3D kmalloc(sizeof(*cfg)+32, GFP_KERNEL);
+> +	if (cfg) {
+> +		cfg->ssid =3D (char*)cfg + sizeof(*cfg);
+> +		drv->wext_pending_config =3D cfg;
+
+This is a problem. It means that every driver can only have a single
+interface that is configurable via wext, or if you try multiple ones
+we'll run into a lot of trouble. The solution is to implement a list of
+pending configs that each have a netdev pointer in them. Bit icky.
+
+johannes
+
+--=-hfstCIMzv2PpcI6tajnh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF0dyB/ETPhpq3jKURAp/oAJ9ZAv9gL/aEyY1j7kxnTL6Ev5czfQCfYKiB
+wKt5lYJ257pnR1jcqp9aalo=
+=HjhS
+-----END PGP SIGNATURE-----
+
+--=-hfstCIMzv2PpcI6tajnh--
+
