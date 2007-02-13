@@ -1,43 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-67.dex002.intermedia.net ([64.78.20.25]:37146 "EHLO
-	DHOST002-67.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932374AbXB1TWH (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.177]:45818 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965447AbXBMBID (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 14:22:07 -0500
-From: "Jouni Malinen" <jkm@devicescape.com>
-Date: Wed, 28 Feb 2007 11:21:47 -0800
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, Jiri Benc <jbenc@suse.cz>,
-	Stephen Hemminger <shemminger@linux-foundation.org>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	Pavel Roskin <proski@gnu.org>,
-	Alex Davis <alex14641@yahoo.com>,
+	Mon, 12 Feb 2007 20:08:03 -0500
+Received: by py-out-1112.google.com with SMTP id a29so940235pyi
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Feb 2007 17:08:03 -0800 (PST)
+Message-ID: <1ba2fa240702121708k29634cf0r8d8ab8e02bca8dfc@mail.gmail.com>
+Date: Tue, 13 Feb 2007 03:08:03 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Jouni Malinen" <jkm@devicescape.com>
+Subject: Re: d80211: current TKIP hwcrypto implementation seems to be broken
+Cc: "Michael Buesch" <mb@bu3sch.de>, "Jiri Benc" <jbenc@suse.cz>,
 	linux-wireless@vger.kernel.org
-Subject: Re: Patch to allow specification of interface name prefix
-Message-ID: <20070228192147.GE31074@devicescape.com>
-References: <510326.55988.qm@web50211.mail.yahoo.com> <20070224233001.3ok4k0c00ksos4sw@webmail.spamcop.net> <45E112F7.9090908@lwfinger.net> <20070226150241.1b5b63b2@freekitty> <20070227111644.784600be@logostar.upir.cz> <43e72e890702271055sc1525ecy54870626125a7fae@mail.gmail.com> <20070228012500.GB4072@tuxdriver.com> <20070228164437.GA31074@devicescape.com> <20070228183535.GB5353@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070228183535.GB5353@tuxdriver.com>
+In-Reply-To: <20070213002849.GE16597@instant802.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <200702041344.19117.mb@bu3sch.de> <200702130023.53271.mb@bu3sch.de>
+	 <1ba2fa240702121554v4e5b55b3t4582241f6347b355@mail.gmail.com>
+	 <200702130110.02658.mb@bu3sch.de>
+	 <1ba2fa240702121619x259f546dga2bebefbe24bf1d3@mail.gmail.com>
+	 <20070213002849.GE16597@instant802.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 28, 2007 at 01:35:35PM -0500, John W. Linville wrote:
-> On Wed, Feb 28, 2007 at 08:44:37AM -0800, Jouni Malinen wrote:
-> > Why would we need to change anything now? What's wrong with wlan#?
-> 
-> See the earlier parts of the thread... :-)
+On 2/13/07, Jouni Malinen <jkm@devicescape.com> wrote:
+> On Tue, Feb 13, 2007 at 02:19:15AM +0200, Tomas Winkler wrote:
+>
+> > For past packets you've already computed it so why do  it again? So
+> > you keep 2 phas1 keys one old and one current. When sequence numbers
+> > advance sufficiently you discard the old one and compute the new one
+> > in a spare time. Something like double buffer.
+>
+> Well, you can, but how likely is this case to really happen? If someone
+> can show this happening frequently, I could consider adding support for
+> it, but I see not much point in adding the extra complexity without a
+> clear case where this would be of benefit. P1K is not really that slow
+> after all and figuring out when the kernel code has "spare time" and all
+> the extra handling of pre-calculation and storing the values is not
+> really something I would like to add into d80211 unless this can really
+> be shown to provide noticeable throughput improvement.
 
-I've seen a somewhat vague comment about some sort of decision on this
-front, but no one seems to be able to point to any level of details on
-what was agreed on and if yes, when and by whom. I have seen number of
-discussions on the topic of what the interfaces should be named, but
-none of those seem to be going anywhere and I have not seen any
-consensus on this topic. As such, the best thing to do seems to be not
-to do anything, i.e., not rename wlan# to anything else. If someone
-claims that d80211 is changing the existing behavior, I would just like
-to point out that wlan# is already used in the current mainline kernel
-and that argument does not sound reasonable.
+There are real cases when this happens. Try to two different AC for
+example  VoIP and have FTP in parallel.  Packets for low priority AC
+can be stalled encrypted and scheduled in a AP TX queue while high
+priority packets are already sent with the new key.
+Maybe the new key can be computed on demand but it's good thing to
+preserve the old key for while.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+
+>
+> > I didn't measured performance but I thought  it can be precomputed by
+> > the supplicant rather then by kernel code.    I might be wrong.
+>
+> P1K is calculated by whoever is using the TKIP TK and in case of all the
+> implementations that I'm aware of, this is not done in the supplicant.
+> Sure, it could be done there, but I think the current design of doing
+> all TKIP encryption/decryption (including phase 1 and 2 key derivation)
+> in the kernel is better.
+>
+You might be correct here.
+> --
+> Jouni Malinen                                            PGP id EFC895FA
+>
