@@ -1,41 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:7511 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751952AbXBVVtb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Feb 2007 16:49:31 -0500
-Message-ID: <45DE0F15.4000905@linux.intel.com>
-Date: Thu, 22 Feb 2007 13:45:57 -0800
-From: James Ketrenos <jketreno@linux.intel.com>
+Received: from lugor.de ([212.112.242.222]:40123 "EHLO solar.vpn.lugor.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751304AbXBMMSl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Feb 2007 07:18:41 -0500
+From: "Hesse, Christian" <mail@earthworm.de>
+To: James Ketrenos <jketreno@linux.intel.com>
+Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
+Date: Tue, 13 Feb 2007 13:18:33 +0100
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
+References: <45CCE3CA.4050904@linux.intel.com> <200702101525.56820.mail@earthworm.de> <45D0B363.8070303@linux.intel.com>
+In-Reply-To: <45D0B363.8070303@linux.intel.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: FYI - new d80211 subsystem package posted
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart1513687.nBdbPG6PMV";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200702131318.38027.mail@earthworm.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--nextPart1513687.nBdbPG6PMV
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I posted a new legacy kernel d80211 package based on wireless-dev commit 
-id 17e0264113fcf465d0712ce492c6a546d207d786.
+On Monday 12 February 2007 19:35, James Ketrenos wrote:
+> Hesse, Christian wrote:
+> > On Saturday 10 February 2007 14:23, Hesse, Christian wrote:
+> >> On Friday 09 February 2007 22:12, James Ketrenos wrote:
+> >>> We are pleased to announce the availability of a new driver for the
+> >>> Intel PRO/Wireless 3945ABG Network Connection adapter.
+>
+> ...
+>
+> > Oh, I forgot one note: "make patch_kernel" is terribly broken. Any chan=
+ce
+> > to get this fixed soon?
+>
+> I've put up a new version of iwlwifi (0.0.6) with significant changes to
+> the patch_kernel scripts as well as including Pavel's patch to KSRC.
+>
+> I performed some build testing with 2.6.18 and wireless-dev @ commit
+> f66e5aaa88c1c0a7ee6c6427d6535ed8afd35427 (Jan 8).
+>
+> http://intellinuxwireless.org/?n=3Ddownloads
+>
+> Let me know if it is still breaking.
 
-Per the versioning scheme being used where the first digit is 
-incremented with each re-base to wireless dev, this version is:
+Hmm, it compiled once, but after I removed the tree and used a clean one I =
+can=20
+not reproduce it:
 
-	d80211-2.0.1.tgz
+LD      drivers/net/wireless/built-in.o
+ld: drivers/net/wireless/d80211/built-in.o: No such file: No such file or=20
+directory
+make[3]: *** [drivers/net/wireless/built-in.o] Error 1
+make[2]: *** [drivers/net/wireless] Error 2
+make[1]: *** [drivers/net] Error 2
+make: *** [drivers] Error 2
 
-You can find it (if you want it, or want to direct users to it) at
+So it is still broken.
+=2D-=20
+Regards,
+Chris
 
-	http://intellinuxwireless.org/?p=d80211&n=downloads
+--nextPart1513687.nBdbPG6PMV
+Content-Type: application/pgp-signature
 
-There is little difference beyond compatibility patches for this version 
-vs. John's tree.  I pulled out the bulk of the patches we had in 
-pending/ as they don't currently apply to the rebase and I didn't want 
-to delay getting this out for users.  The only patch currently applied 
-is the one I emailed to the list a few hours ago making nl80211 optional 
-in the build.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
 
-Beyond doing some build testing, I haven't given much testing yet to 
-run-time.
+iD8DBQBF0aydlZfG2c8gdSURAkFAAJ9BGLgPA41ckZrsXTWDZHNo1LEnGgCgsFdA
+zve0xVxSF+0d8iyje4+ESO8=
+=3wBC
+-----END PGP SIGNATURE-----
 
-Thanks,
-James
+--nextPart1513687.nBdbPG6PMV--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
