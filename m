@@ -1,279 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59836
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932451AbXBEQ1o (ORCPT
+Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:44880 "EHLO
+	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751406AbXBMW5Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Feb 2007 11:27:44 -0500
-From: Michael Buesch <mb@bu3sch.de>
+	Tue, 13 Feb 2007 17:57:16 -0500
+Date: Tue, 13 Feb 2007 16:56:21 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH #2] rt2x00-d80211: Use d80211 API to generate RTS/CTS frames
-Date: Mon, 5 Feb 2007 17:25:40 +0100
-References: <200702051723.50008.mb@bu3sch.de>
-In-Reply-To: <200702051723.50008.mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org
+Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] bcm43xx: OFDM fix for rev 1 cards
+Message-ID: <45d24215.ArbNyvChpk0vYXTg%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702051725.40459.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the new d80211 API to generate RTS and CTS-to-self frames.
+Nearly all of the writes to the bcm43xx internal lookup tables (ilt)
+involve 16-bit quantities. Accordingly, the ilt_write routine was coded to
+pass a u16 value. For one early GPHY chip, 32-bit quantities are needed. For
+those writes, the value was clipped to 16 bits. This patch adds an ilt_write32
+routine that receives a 32-bit quantity and writes it to the appropriate
+locations.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+---
 
-Index: bu3sch-wireless-dev/drivers/net/wireless/d80211/rt2x00/rt2400pci.c
+
+Nearly all of the writes to the bcm43xx internal lookup tables (ilt)
+involve 16-bit quantities. Accordingly, the ilt_write routine was coded to
+pass a u16 value. For one early GPHY chip, 32-bit quantities are needed. For
+those writes, the value was clipped to 16 bits. This patch adds an ilt_write32
+routine that receives a 32-bit quantity and writes it to the appropriate
+locations.
+
+Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+---
+
+
+Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_ilt.c
 ===================================================================
---- bu3sch-wireless-dev.orig/drivers/net/wireless/d80211/rt2x00/rt2400pci.c	2007-02-05 17:21:09.000000000 +0100
-+++ bu3sch-wireless-dev/drivers/net/wireless/d80211/rt2x00/rt2400pci.c	2007-02-05 17:21:21.000000000 +0100
-@@ -1351,29 +1351,18 @@ static void rt2400pci_disable_radio(stru
- /*
-  * RTS frame creation.
-  */
--static struct sk_buff* rt2400pci_create_rts(struct rt2x00_dev *rt2x00dev,
--	struct ieee80211_hdr *hdr, unsigned short duration)
-+static struct sk_buff* rt2400pci_create_rts(struct ieee80211_hw *hw,
-+					    struct sk_buff *frag_skb,
-+					    struct ieee80211_tx_control *control)
- {
--	struct ieee80211_hdr *ieee80211hdr;
- 	struct sk_buff *skb;
--	u16 frame_control;
- 
--	skb = dev_alloc_skb(IEEE80211_HEADER);
-+	skb = dev_alloc_skb(sizeof(struct ieee80211_rts));
- 	if (!skb)
- 		return NULL;
--
--	/*
--	 * Copy the entire header over to RTS frame.
--	 */
--	memcpy(skb_put(skb, IEEE80211_HEADER), hdr, IEEE80211_HEADER);
--	ieee80211hdr = (struct ieee80211_hdr*)skb->data;
--
--	frame_control = IEEE80211_FTYPE_CTL | IEEE80211_STYPE_RTS;
--	ieee80211hdr->frame_control = cpu_to_le16(frame_control);
--
--	ieee80211hdr->duration_id = cpu_to_le16(duration);
--
--	ieee80211hdr->seq_ctrl = 0;
-+	skb_put(skb, sizeof(struct ieee80211_rts));
-+	ieee80211_rts_get(hw, frag_skb->data, frag_skb->len, control,
-+			  (struct ieee80211_rts *)(skb->data));
- 
- 	return skb;
+--- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_ilt.c
++++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_ilt.c
+@@ -325,6 +325,21 @@ void bcm43xx_ilt_write(struct bcm43xx_pr
+ 	}
  }
-@@ -1785,8 +1774,7 @@ static int rt2400pci_tx(struct ieee80211
- 	frame_control = le16_to_cpu(ieee80211hdr->frame_control);
- 	if ((control->flags & IEEE80211_TXCTL_USE_RTS_CTS) &&
- 	    !is_rts_frame(frame_control)) {
--		skb_rts = rt2400pci_create_rts(rt2x00dev,
--				ieee80211hdr, control->rts_cts_duration);
-+		skb_rts = rt2400pci_create_rts(hw, skb, control);
- 		if (!skb_rts) {
- 			WARNING("Failed to create RTS frame.\n");
- 			return NETDEV_TX_BUSY;
-Index: bu3sch-wireless-dev/drivers/net/wireless/d80211/rt2x00/rt2500pci.c
+ 
++void bcm43xx_ilt_write32(struct bcm43xx_private *bcm, u16 offset, u32 val)
++{
++	if (bcm43xx_current_phy(bcm)->type == BCM43xx_PHYTYPE_A) {
++		bcm43xx_phy_write(bcm, BCM43xx_PHY_ILT_A_CTRL, offset);
++		mmiowb();
++		bcm43xx_phy_write(bcm, BCM43xx_PHY_ILT_A_DATA2, (val & 0xFFFF0000) >> 16);
++		bcm43xx_phy_write(bcm, BCM43xx_PHY_ILT_A_DATA1, val & 0x0000FFFF);
++	} else {
++		bcm43xx_phy_write(bcm, BCM43xx_PHY_ILT_G_CTRL, offset);
++		mmiowb();
++		bcm43xx_phy_write(bcm, BCM43xx_PHY_ILT_G_DATA2, (val & 0xFFFF0000) >> 16);
++		bcm43xx_phy_write(bcm, BCM43xx_PHY_ILT_G_DATA1, val & 0x0000FFFF);
++	}
++}
++
+ u16 bcm43xx_ilt_read(struct bcm43xx_private *bcm, u16 offset)
+ {
+ 	if (bcm43xx_current_phy(bcm)->type == BCM43xx_PHYTYPE_A) {
+Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
 ===================================================================
---- bu3sch-wireless-dev.orig/drivers/net/wireless/d80211/rt2x00/rt2500pci.c	2007-02-05 17:21:09.000000000 +0100
-+++ bu3sch-wireless-dev/drivers/net/wireless/d80211/rt2x00/rt2500pci.c	2007-02-05 17:21:21.000000000 +0100
-@@ -1477,29 +1477,18 @@ static void rt2500pci_disable_radio(stru
- /*
-  * RTS frame creation.
-  */
--static struct sk_buff* rt2500pci_create_rts(struct rt2x00_dev *rt2x00dev,
--	struct ieee80211_hdr *hdr, unsigned short duration)
-+static struct sk_buff* rt2500pci_create_rts(struct ieee80211_hw *hw,
-+					    struct sk_buff *frag_skb,
-+					    struct ieee80211_tx_control *control)
- {
--	struct ieee80211_hdr *ieee80211hdr;
- 	struct sk_buff *skb;
--	u16 frame_control;
- 
--	skb = dev_alloc_skb(IEEE80211_HEADER);
-+	skb = dev_alloc_skb(sizeof(struct ieee80211_rts));
- 	if (!skb)
- 		return NULL;
--
--	/*
--	 * Copy the entire header over to RTS frame.
--	 */
--	memcpy(skb_put(skb, IEEE80211_HEADER), hdr, IEEE80211_HEADER);
--	ieee80211hdr = (struct ieee80211_hdr*)skb->data;
--
--	frame_control = IEEE80211_FTYPE_CTL | IEEE80211_STYPE_RTS;
--	ieee80211hdr->frame_control = cpu_to_le16(frame_control);
--
--	ieee80211hdr->duration_id = cpu_to_le16(duration);
--
--	ieee80211hdr->seq_ctrl = 0;
-+	skb_put(skb, sizeof(struct ieee80211_rts));
-+	ieee80211_rts_get(hw, frag_skb->data, frag_skb->len, control,
-+			  (struct ieee80211_rts *)(skb->data));
- 
- 	return skb;
- }
-@@ -1949,8 +1938,7 @@ static int rt2500pci_tx(struct ieee80211
- 	frame_control = le16_to_cpu(ieee80211hdr->frame_control);
- 	if ((control->flags & IEEE80211_TXCTL_USE_RTS_CTS) &&
- 	    !is_rts_frame(frame_control)) {
--		skb_rts = rt2500pci_create_rts(rt2x00dev,
--				ieee80211hdr, control->rts_cts_duration);
-+		skb_rts = rt2500pci_create_rts(hw, skb, control);
- 		if (!skb_rts) {
- 			WARNING("Failed to create RTS frame.\n");
- 			return NETDEV_TX_BUSY;
-Index: bu3sch-wireless-dev/drivers/net/wireless/d80211/rt2x00/rt2500usb.c
+--- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
++++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
+@@ -344,7 +344,7 @@ static void bcm43xx_phy_setupg(struct bc
+ 		for (i = 0; i < BCM43xx_ILT_NOISEG1_SIZE; i++)
+ 			bcm43xx_ilt_write(bcm, 0x1800 + i, bcm43xx_ilt_noiseg1[i]);
+ 		for (i = 0; i < BCM43xx_ILT_ROTOR_SIZE; i++)
+-			bcm43xx_ilt_write(bcm, 0x2000 + i, bcm43xx_ilt_rotor[i]);
++			bcm43xx_ilt_write32(bcm, 0x2000 + i, bcm43xx_ilt_rotor[i]);
+ 	} else {
+ 		/* nrssi values are signed 6-bit values. Not sure why we write 0x7654 here... */
+ 		bcm43xx_nrssi_hw_write(bcm, 0xBA98, (s16)0x7654);
+@@ -384,7 +384,7 @@ static void bcm43xx_phy_setupg(struct bc
+ 	
+ 	if (phy->rev == 1) {
+ 		for (i = 0; i < BCM43xx_ILT_RETARD_SIZE; i++)
+-			bcm43xx_ilt_write(bcm, 0x2400 + i, bcm43xx_ilt_retard[i]);
++			bcm43xx_ilt_write32(bcm, 0x2400 + i, bcm43xx_ilt_retard[i]);
+ 		for (i = 0; i < 4; i++) {
+ 			bcm43xx_ilt_write(bcm, 0x5404 + i, 0x0020);
+ 			bcm43xx_ilt_write(bcm, 0x5408 + i, 0x0020);
+@@ -507,10 +507,10 @@ static void bcm43xx_phy_setupa(struct bc
+ 		for (i = 0; i < BCM43xx_ILT_NOISEA2_SIZE; i++)
+ 			bcm43xx_ilt_write(bcm, 0x1800 + i, bcm43xx_ilt_noisea2[i]);
+ 		for (i = 0; i < BCM43xx_ILT_ROTOR_SIZE; i++)
+-			bcm43xx_ilt_write(bcm, 0x2000 + i, bcm43xx_ilt_rotor[i]);
++			bcm43xx_ilt_write32(bcm, 0x2000 + i, bcm43xx_ilt_rotor[i]);
+ 		bcm43xx_phy_init_noisescaletbl(bcm);
+ 		for (i = 0; i < BCM43xx_ILT_RETARD_SIZE; i++)
+-			bcm43xx_ilt_write(bcm, 0x2400 + i, bcm43xx_ilt_retard[i]);
++			bcm43xx_ilt_write32(bcm, 0x2400 + i, bcm43xx_ilt_retard[i]);
+ 		break;
+ 	case 3:
+ 		for (i = 0; i < 64; i++)
+Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_ilt.h
 ===================================================================
---- bu3sch-wireless-dev.orig/drivers/net/wireless/d80211/rt2x00/rt2500usb.c	2007-02-05 17:21:09.000000000 +0100
-+++ bu3sch-wireless-dev/drivers/net/wireless/d80211/rt2x00/rt2500usb.c	2007-02-05 17:21:21.000000000 +0100
-@@ -1442,29 +1442,18 @@ static void rt2500usb_disable_radio(stru
- /*
-  * RTS frame creation.
-  */
--static struct sk_buff* rt2500usb_create_rts(struct rt2x00_dev *rt2x00dev,
--	struct ieee80211_hdr *hdr, unsigned short duration)
-+static struct sk_buff* rt2500usb_create_rts(struct ieee80211_hw *hw,
-+					    struct sk_buff *frag_skb,
-+					    struct ieee80211_tx_control *control)
- {
--	struct ieee80211_hdr *ieee80211hdr;
- 	struct sk_buff *skb;
--	u16 frame_control;
+--- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_ilt.h
++++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_ilt.h
+@@ -27,6 +27,7 @@ extern const u16 bcm43xx_ilt_sigmasqr2[B
  
--	skb = dev_alloc_skb(IEEE80211_HEADER);
-+	skb = dev_alloc_skb(sizeof(struct ieee80211_rts));
- 	if (!skb)
- 		return NULL;
--
--	/*
--	 * Copy the entire header over to RTS frame.
--	 */
--	memcpy(skb_put(skb, IEEE80211_HEADER), hdr, IEEE80211_HEADER);
--	ieee80211hdr = (struct ieee80211_hdr*)skb->data;
--
--	frame_control = IEEE80211_FTYPE_CTL | IEEE80211_STYPE_RTS;
--	ieee80211hdr->frame_control = cpu_to_le16(frame_control);
--
--	ieee80211hdr->duration_id = cpu_to_le16(duration);
--
--	ieee80211hdr->seq_ctrl = 0;
-+	skb_put(skb, sizeof(struct ieee80211_rts));
-+	ieee80211_rts_get(hw, frag_skb->data, frag_skb->len, control,
-+			  (struct ieee80211_rts *)(skb->data));
  
- 	return skb;
- }
-@@ -1882,8 +1871,7 @@ static int rt2500usb_tx(struct ieee80211
- 	frame_control = le16_to_cpu(ieee80211hdr->frame_control);
- 	if ((control->flags & IEEE80211_TXCTL_USE_RTS_CTS) &&
- 	    !is_rts_frame(frame_control)) {
--		skb_rts = rt2500usb_create_rts(rt2x00dev,
--				ieee80211hdr, control->rts_cts_duration);
-+		skb_rts = rt2500usb_create_rts(hw, skb, control);
- 		if (!skb_rts) {
- 			WARNING("Failed to create RTS frame.\n");
- 			return NETDEV_TX_BUSY;
-Index: bu3sch-wireless-dev/drivers/net/wireless/d80211/rt2x00/rt61pci.c
-===================================================================
---- bu3sch-wireless-dev.orig/drivers/net/wireless/d80211/rt2x00/rt61pci.c	2007-02-05 17:21:09.000000000 +0100
-+++ bu3sch-wireless-dev/drivers/net/wireless/d80211/rt2x00/rt61pci.c	2007-02-05 17:21:21.000000000 +0100
-@@ -1925,29 +1925,18 @@ static void rt61pci_disable_radio(struct
- /*
-  * RTS frame creation.
-  */
--static struct sk_buff* rt61pci_create_rts(struct rt2x00_dev *rt2x00dev,
--	struct ieee80211_hdr *hdr, unsigned short duration)
-+static struct sk_buff* rt61pci_create_rts(struct ieee80211_hw *hw,
-+					  struct sk_buff *frag_skb,
-+					  struct ieee80211_tx_control *control)
- {
--	struct ieee80211_hdr *ieee80211hdr;
- 	struct sk_buff *skb;
--	u16 frame_control;
+ void bcm43xx_ilt_write(struct bcm43xx_private *bcm, u16 offset, u16 val);
++void bcm43xx_ilt_write32(struct bcm43xx_private *bcm, u16 offset, u32 val);
+ u16 bcm43xx_ilt_read(struct bcm43xx_private *bcm, u16 offset);
  
--	skb = dev_alloc_skb(IEEE80211_HEADER);
-+	skb = dev_alloc_skb(sizeof(struct ieee80211_rts));
- 	if (!skb)
- 		return NULL;
--
--	/*
--	 * Copy the entire header over to RTS frame.
--	 */
--	memcpy(skb_put(skb, IEEE80211_HEADER), hdr, IEEE80211_HEADER);
--	ieee80211hdr = (struct ieee80211_hdr*)skb->data;
--
--	frame_control = IEEE80211_FTYPE_CTL | IEEE80211_STYPE_RTS;
--	ieee80211hdr->frame_control = cpu_to_le16(frame_control);
--
--	ieee80211hdr->duration_id = cpu_to_le16(duration);
--
--	ieee80211hdr->seq_ctrl = 0;
-+	skb_put(skb, sizeof(struct ieee80211_rts));
-+	ieee80211_rts_get(hw, frag_skb->data, frag_skb->len, control,
-+			  (struct ieee80211_rts *)(skb->data));
- 
- 	return skb;
- }
-@@ -2445,8 +2434,7 @@ static int rt61pci_tx(struct ieee80211_h
- 	frame_control = le16_to_cpu(ieee80211hdr->frame_control);
- 	if ((control->flags & IEEE80211_TXCTL_USE_RTS_CTS) &&
- 	    !is_rts_frame(frame_control)) {
--		skb_rts = rt61pci_create_rts(rt2x00dev,
--				ieee80211hdr, control->rts_cts_duration);
-+		skb_rts = rt61pci_create_rts(hw, skb, control);
- 		if (!skb_rts) {
- 			WARNING("Failed to create RTS frame.\n");
- 			return NETDEV_TX_BUSY;
-Index: bu3sch-wireless-dev/drivers/net/wireless/d80211/rt2x00/rt73usb.c
-===================================================================
---- bu3sch-wireless-dev.orig/drivers/net/wireless/d80211/rt2x00/rt73usb.c	2007-02-05 17:21:09.000000000 +0100
-+++ bu3sch-wireless-dev/drivers/net/wireless/d80211/rt2x00/rt73usb.c	2007-02-05 17:21:21.000000000 +0100
-@@ -1704,29 +1704,18 @@ static void rt73usb_disable_radio(struct
- /*
-  * RTS frame creation.
-  */
--static struct sk_buff* rt73usb_create_rts(struct rt2x00_dev *rt2x00dev,
--	struct ieee80211_hdr *hdr, unsigned short duration)
-+static struct sk_buff* rt73usb_create_rts(struct ieee80211_hw *hw,
-+					  struct sk_buff *frag_skb,
-+					  struct ieee80211_tx_control *control)
- {
--	struct ieee80211_hdr *ieee80211hdr;
- 	struct sk_buff *skb;
--	u16 frame_control;
- 
--	skb = dev_alloc_skb(IEEE80211_HEADER);
-+	skb = dev_alloc_skb(sizeof(struct ieee80211_rts));
- 	if (!skb)
- 		return NULL;
--
--	/*
--	 * Copy the entire header over to RTS frame.
--	 */
--	memcpy(skb_put(skb, IEEE80211_HEADER), hdr, IEEE80211_HEADER);
--	ieee80211hdr = (struct ieee80211_hdr*)skb->data;
--
--	frame_control = IEEE80211_FTYPE_CTL | IEEE80211_STYPE_RTS;
--	ieee80211hdr->frame_control = cpu_to_le16(frame_control);
--
--	ieee80211hdr->duration_id = cpu_to_le16(duration);
--
--	ieee80211hdr->seq_ctrl = 0;
-+	skb_put(skb, sizeof(struct ieee80211_rts));
-+	ieee80211_rts_get(hw, frag_skb->data, frag_skb->len, control,
-+			  (struct ieee80211_rts *)(skb->data));
- 
- 	return skb;
- }
-@@ -2153,8 +2142,7 @@ static int rt73usb_tx(struct ieee80211_h
- 	frame_control = le16_to_cpu(ieee80211hdr->frame_control);
- 	if ((control->flags & IEEE80211_TXCTL_USE_RTS_CTS) &&
- 	    !is_rts_frame(frame_control)) {
--		skb_rts = rt73usb_create_rts(rt2x00dev,
--				ieee80211hdr, control->rts_cts_duration);
-+		skb_rts = rt73usb_create_rts(hw, skb, control);
- 		if (!skb_rts) {
- 			WARNING("Failed to create RTS frame.\n");
- 			return NETDEV_TX_BUSY;
+ #endif /* BCM43xx_ILT_H_ */
