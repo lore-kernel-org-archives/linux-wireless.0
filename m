@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nemesis.fprintf.net ([66.134.112.218]:3331 "EHLO
-	nemesis.fprintf.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030287AbXBGP1u (ORCPT
+Received: from dhost002-91.dex002.intermedia.net ([64.78.21.115]:33829 "EHLO
+	dhost002-91.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965458AbXBMBUp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Feb 2007 10:27:50 -0500
-Subject: Re: RFT bcm43xx: Really _GOOD_ news
-From: Daniel Gryniewicz <dang@fprintf.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Gene Heskett <gene.heskett@verizon.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de
-In-Reply-To: <1170836250.11150.116.camel@dv>
-References: <45C8E64B.1050605@lwfinger.net>
-	 <200702061848.00815.gene.heskett@verizon.net>
-	 <45C95830.6040507@lwfinger.net>
-	 <200702070303.40968.gene.heskett@verizon.net>
-	 <1170836250.11150.116.camel@dv>
-Content-Type: text/plain
-Date: Wed, 07 Feb 2007 10:21:05 -0500
-Message-Id: <1170861665.6964.4.camel@athena.fprintf.net>
+	Mon, 12 Feb 2007 20:20:45 -0500
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Mon, 12 Feb 2007 17:20:41 -0800
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>, Jiri Benc <jbenc@suse.cz>,
+	linux-wireless@vger.kernel.org
+Subject: Re: d80211: current TKIP hwcrypto implementation seems to be broken
+Message-ID: <20070213012041.GH16597@instant802.com>
+References: <200702041344.19117.mb@bu3sch.de> <200702130023.53271.mb@bu3sch.de> <1ba2fa240702121554v4e5b55b3t4582241f6347b355@mail.gmail.com> <200702130110.02658.mb@bu3sch.de> <1ba2fa240702121619x259f546dga2bebefbe24bf1d3@mail.gmail.com> <20070213002849.GE16597@instant802.com> <1ba2fa240702121708k29634cf0r8d8ab8e02bca8dfc@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240702121708k29634cf0r8d8ab8e02bca8dfc@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-02-07 at 03:17 -0500, Pavel Roskin wrote:
-> On Wed, 2007-02-07 at 03:03 -0500, Gene Heskett wrote:
-> 
-> > And the 4318 is whats in my lappy.  What does it break?
-> 
-> Oh, please, let's stop such questions.  Does it really matter what some
-> knowingly wrong change does to particular hardware?  Just don't try the
-> old patch.  Just forget that it existed.  It's not going to the kernel.
-> 
-> Please try the new patch.  Ideally, measure speeds for various rates,
-> because it's the speed that the patch is supposed to improve.
-> 
-> If you have more questions of this kind, please make sure my personal
-> e-mail is not in CC.
-> 
+On Tue, Feb 13, 2007 at 03:08:03AM +0200, Tomas Winkler wrote:
 
-Except that the new patch changes nothing for us poor 4318 users, so
-what's the point of trying it?
+> There are real cases when this happens. Try to two different AC for
+> example  VoIP and have FTP in parallel.  Packets for low priority AC
+> can be stalled encrypted and scheduled in a AP TX queue while high
+> priority packets are already sent with the new key.
+> Maybe the new key can be computed on demand but it's good thing to
+> preserve the old key for while.
 
-That said, I'm running the broken patch right now, and my 4318 is
-working better than ever before, so it changed *something* for my card.
+I don't know the particular hardware design well enough to comment on
+this, but d80211 software implementation keeps a separate RX P1K for
+each AC (actually, each TID). In other words, this kind of issue does
+not show up there. If the hardware implementation is limited to only one
+P1K for RX, there may be some benefit on storing old keys in some cases,
+but I'm not sure how that would work if the key has to be configured
+before the frame is actually received.
 
-Daniel
+In other words, in this case, the next frame after an FTP packet could
+well be from voice and not background and reconfiguring the old P1K
+value could have caused more latency on the higher priority frame at
+this point.. In other word, if there is only one RX P1K, the benefits
+for throughput may be requiring compromise on latency for higher
+priority traffic and that may or may not be acceptable.
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
