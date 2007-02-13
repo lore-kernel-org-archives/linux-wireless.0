@@ -1,600 +1,486 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:49045 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932444AbXB1OHS (ORCPT
+Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:34058 "EHLO
+	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751405AbXBMW4b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 09:07:18 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so562557nfa
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 06:07:17 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 18/28] rt2x00: Move firmware handling to rt2x00lib
-Date: Wed, 28 Feb 2007 15:07:09 +0100
-Cc: linux-wireless@vger.kernel.org
+	Tue, 13 Feb 2007 17:56:31 -0500
+Date: Tue, 13 Feb 2007 16:54:56 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] bcm43xx: Fix for 4311 and 02/07/07 specification changes
+Message-ID: <45d241c0.gWJcHxUYgWmBTwx8%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200702281507.10014.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move firmware handling to rt2x00lib, andmake sure that device
-initialization (debugfs etc) waits until the firmware is loaded.
+The specifications for the bcm43xx driver have been modified. This patch
+incorporates these changes in the code, which results in the BCM4311 and
+BCM4312 working. The name of one of the PHY parameters, previously known
+as "version", has been changed to "analog", short for  "analog core version" .
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-
+Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
 ---
 
-diff --git a/drivers/net/wireless/mac80211/rt2x00/rt61pci.c b/drivers/net/wireless/mac80211/rt2x00/rt61pci.c
-index 85e6377..dc63411 100644
---- a/drivers/net/wireless/mac80211/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/mac80211/rt2x00/rt61pci.c
-@@ -1187,158 +1187,6 @@ static int rt61pci_set_state(struct rt2x00_dev *rt2x00dev,
- /*
-  * Initialization functions.
-  */
--static int rt61pci_init_firmware_wait(struct rt2x00_dev *rt2x00dev)
--{
--	unsigned int i;
--
--	for (i = 0; i < 150; i++) {
--		if (GET_FLAG(rt2x00dev, FIRMWARE_FAILED))
--			return -EIO;
--		if (GET_FLAG(rt2x00dev, FIRMWARE_LOADED))
--			return 0;
--		msleep(20);
--	}
--
--	ERROR("Firmware loading timed out.\n");
--	return -EIO;
--}
--
--static void rt61pci_init_firmware_cont(const struct firmware *fw,
--	void *context)
--{
--	struct rt2x00_dev *rt2x00dev = context;
--	int i;
--	u32 reg;
--	u16 crc;
--
--	if (!fw || !fw->size || !fw->data) {
--		ERROR("Failed to load Firmware.\n");
--		goto exit;
--	}
--
--	/*
--	 * Wait for stable hardware.
--	 */
--	for (i = 0; i < 100; i++) {
--		rt2x00_register_read(rt2x00dev, MAC_CSR0, &reg);
--		if (reg)
--			break;
--		msleep(1);
--	}
--
--	if (!reg) {
--		ERROR("Unstable hardware.\n");
--		goto exit;
--	}
--
--	/*
--	 * Prepare MCU and mailbox for firmware loading.
--	 */
--	reg = 0;
--	rt2x00_set_field32(&reg, MCU_CNTL_CSR_RESET, 1);
--	rt2x00_register_write(rt2x00dev, MCU_CNTL_CSR, reg);
--	rt2x00_register_write(rt2x00dev, M2H_CMD_DONE_CSR, 0xffffffff);
--	rt2x00_register_write(rt2x00dev, H2M_MAILBOX_CSR, 0);
--	rt2x00_register_write(rt2x00dev, HOST_CMD_CSR, 0);
--
--	/*
--	 * Validate the firmware using 16 bit CRC.
--	 * The last 2 bytes of the firmware are the CRC
--	 * so substract those 2 bytes from the CRC checksum,
--	 * and set those 2 bytes to 0 when calculating CRC.
--	 */
--	reg = 0;
--	crc = crc_itu_t(0, fw->data, fw->size - 2);
--	crc = crc_itu_t(crc, (u8*)&reg, 2);
--
--	if (crc != (fw->data[fw->size - 2] << 8 | fw->data[fw->size - 1])) {
--		ERROR("Firmware CRC error.\n");
--		goto exit;
--	}
--
--	rt2x00_set_chip_fw(&rt2x00dev->chip,
--		fw->data[fw->size - 4], fw->data[fw->size - 3]);
--
--	/*
--	 * Write firmware to device.
--	 */
--	reg = 0;
--	rt2x00_set_field32(&reg, MCU_CNTL_CSR_RESET, 1);
--	rt2x00_set_field32(&reg, MCU_CNTL_CSR_SELECT_BANK, 1);
--	rt2x00_register_write(rt2x00dev, MCU_CNTL_CSR, reg);
--
--	rt2x00_register_multiwrite(
--		rt2x00dev, FIRMWARE_IMAGE_BASE, (u32*)fw->data, fw->size);
--
--	rt2x00_set_field32(&reg, MCU_CNTL_CSR_SELECT_BANK, 0);
--	rt2x00_register_write(rt2x00dev, MCU_CNTL_CSR, reg);
--
--	rt2x00_set_field32(&reg, MCU_CNTL_CSR_RESET, 0);
--	rt2x00_register_write(rt2x00dev, MCU_CNTL_CSR, reg);
--
--	for (i = 0; i < 100; i++) {
--		rt2x00_register_read(rt2x00dev, MCU_CNTL_CSR, &reg);
--		if (rt2x00_get_field32(reg, MCU_CNTL_CSR_READY))
--			break;
--		msleep(1);
--	}
--
--	if (i == 100) {
--		ERROR("MCU Control register not ready.\n");
--		goto exit;
--	}
--
--	/*
--	 * Reset MAC and BBP registers.
--	 */
--	reg = 0;
--	rt2x00_set_field32(&reg, MAC_CSR1_SOFT_RESET, 1);
--	rt2x00_set_field32(&reg, MAC_CSR1_BBP_RESET, 1);
--	rt2x00_register_write(rt2x00dev, MAC_CSR1, reg);
--
--	rt2x00_register_read(rt2x00dev, MAC_CSR1, &reg);
--	rt2x00_set_field32(&reg, MAC_CSR1_SOFT_RESET, 0);
--	rt2x00_set_field32(&reg, MAC_CSR1_BBP_RESET, 0);
--	rt2x00_register_write(rt2x00dev, MAC_CSR1, reg);
--
--	rt2x00_register_read(rt2x00dev, MAC_CSR1, &reg);
--	rt2x00_set_field32(&reg, MAC_CSR1_HOST_READY, 1);
--	rt2x00_register_write(rt2x00dev, MAC_CSR1, reg);
--
--	SET_FLAG(rt2x00dev, FIRMWARE_LOADED);
--
--	return;
--
--exit:
--	SET_FLAG(rt2x00dev, FIRMWARE_FAILED);
--}
--
--static int rt61pci_init_firmware(struct rt2x00_dev *rt2x00dev)
--{
--	unsigned int i;
--	static const struct {
--		char	*name;
--		u32	chip;
--	} firmware[] = {
--		{ "rt2561.bin",		RT2561 },
--		{ "rt2561s.bin",	RT2561s },
--		{ "rt2661.bin",		RT2661 },
--	};
--
--	/*
--	 * Read correct firmware from harddisk.
--	 */
--	for (i = 0; i < ARRAY_SIZE(firmware); i++) {
--		if (!rt2x00_rt(&rt2x00dev->chip, firmware[i].chip))
--			continue;
--		return request_firmware_nowait(THIS_MODULE, 1,
--			firmware[i].name, &rt2x00dev_pci(rt2x00dev)->dev,
--			rt2x00dev, rt61pci_init_firmware_cont);
--	}
--
--	return -EINVAL;
--}
--
- static int rt61pci_alloc_dma_ring(struct rt2x00_dev *rt2x00dev,
- 	enum ring_index ring_type, work_func_t handler,
- 	const u16 max_entries, const u16 data_size, const u16 desc_size)
-@@ -1793,7 +1641,7 @@ static int rt61pci_initialize(struct rt2x00_dev *rt2x00dev)
- 	 * We must wait on the firmware before
- 	 * we can safely continue.
- 	 */
--	if (rt61pci_init_firmware_wait(rt2x00dev))
-+	if (rt2x00lib_load_firmware_wait(rt2x00dev))
- 		return -ENODEV;
+John,
+
+I hope this fix makes it into 2.6.21. It is the main one that makes 4311 and
+4312 cards work.
+
+Larry
+---
+
+Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx.h
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx.h
++++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx.h
+@@ -333,7 +333,7 @@
+ #define BCM43xx_SBF_PS2			0x04000000
+ #define BCM43xx_SBF_NO_SSID_BCAST	0x08000000
+ #define BCM43xx_SBF_TIME_UPDATE		0x10000000
+-#define BCM43xx_SBF_80000000		0x80000000 /*FIXME: fix name*/
++#define BCM43xx_SBF_MODE_G		0x80000000
  
- 	/*
-@@ -3581,6 +3429,126 @@ static int rt61pci_init_hw(struct rt2x00_dev *rt2x00dev)
- 	return 0;
+ /* Microcode */
+ #define BCM43xx_UCODE_REVISION		0x0000
+@@ -540,7 +540,7 @@ struct bcm43xx_lopair {
+ 
+ struct bcm43xx_phyinfo {
+ 	/* Hardware Data */
+-	u8 version;
++	u8 analog;
+ 	u8 type;
+ 	u8 rev;
+ 	u16 antenna_diversity;
+Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
++++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
+@@ -205,8 +205,8 @@ static void bcm43xx_phy_init_pctl(struct
+ 	    (bcm->board_type == 0x0416))
+ 		return;
+ 
+-	bcm43xx_write16(bcm, 0x03E6, bcm43xx_read16(bcm, 0x03E6) & 0xFFDF);
+ 	bcm43xx_phy_write(bcm, 0x0028, 0x8018);
++	bcm43xx_write16(bcm, 0x03E6, bcm43xx_read16(bcm, 0x03E6) & 0xFFDF);
+ 
+ 	if (phy->type == BCM43xx_PHYTYPE_G) {
+ 		if (!phy->connected)
+@@ -317,6 +317,13 @@ static void bcm43xx_phy_agcsetup(struct 
+ 	bcm43xx_ilt_write(bcm, offset + 0x0801, 7);
+ 	bcm43xx_ilt_write(bcm, offset + 0x0802, 16);
+ 	bcm43xx_ilt_write(bcm, offset + 0x0803, 28);
++
++	if (phy->rev >= 6) {
++		bcm43xx_phy_write(bcm, 0x0426, (bcm43xx_phy_read(bcm, 0x0426)
++				  & 0xFFFC));
++		bcm43xx_phy_write(bcm, 0x0426, (bcm43xx_phy_read(bcm, 0x0426)
++				  & 0xEFFF));
++	}
  }
  
-+static void rt61pci_load_firmware(const struct firmware *fw, void *context)
-+{
-+	struct rt2x00_dev *rt2x00dev = context;
-+	int i;
-+	u32 reg;
-+	u16 crc;
-+
-+	if (!fw || !fw->size || !fw->data) {
-+		ERROR("Failed to load Firmware.\n");
-+		goto exit;
-+	}
-+
-+	/*
-+	 * Wait for stable hardware.
-+	 */
-+	for (i = 0; i < 100; i++) {
-+		rt2x00_register_read(rt2x00dev, MAC_CSR0, &reg);
-+		if (reg)
-+			break;
-+		msleep(1);
-+	}
-+
-+	if (!reg) {
-+		ERROR("Unstable hardware.\n");
-+		goto exit;
-+	}
-+
-+	/*
-+	 * Prepare MCU and mailbox for firmware loading.
-+	 */
-+	reg = 0;
-+	rt2x00_set_field32(&reg, MCU_CNTL_CSR_RESET, 1);
-+	rt2x00_register_write(rt2x00dev, MCU_CNTL_CSR, reg);
-+	rt2x00_register_write(rt2x00dev, M2H_CMD_DONE_CSR, 0xffffffff);
-+	rt2x00_register_write(rt2x00dev, H2M_MAILBOX_CSR, 0);
-+	rt2x00_register_write(rt2x00dev, HOST_CMD_CSR, 0);
-+
-+	/*
-+	 * Validate the firmware using 16 bit CRC.
-+	 * The last 2 bytes of the firmware are the CRC
-+	 * so substract those 2 bytes from the CRC checksum,
-+	 * and set those 2 bytes to 0 when calculating CRC.
-+	 */
-+	reg = 0;
-+	crc = crc_itu_t(0, fw->data, fw->size - 2);
-+	crc = crc_itu_t(crc, (u8*)&reg, 2);
-+
-+	if (crc != (fw->data[fw->size - 2] << 8 | fw->data[fw->size - 1])) {
-+		ERROR("Firmware CRC error.\n");
-+		goto exit;
-+	}
-+
-+	rt2x00_set_chip_fw(&rt2x00dev->chip,
-+		fw->data[fw->size - 4], fw->data[fw->size - 3]);
-+
-+	/*
-+	 * Write firmware to device.
-+	 */
-+	reg = 0;
-+	rt2x00_set_field32(&reg, MCU_CNTL_CSR_RESET, 1);
-+	rt2x00_set_field32(&reg, MCU_CNTL_CSR_SELECT_BANK, 1);
-+	rt2x00_register_write(rt2x00dev, MCU_CNTL_CSR, reg);
-+
-+	rt2x00_register_multiwrite(
-+		rt2x00dev, FIRMWARE_IMAGE_BASE, (u32*)fw->data, fw->size);
-+
-+	rt2x00_set_field32(&reg, MCU_CNTL_CSR_SELECT_BANK, 0);
-+	rt2x00_register_write(rt2x00dev, MCU_CNTL_CSR, reg);
-+
-+	rt2x00_set_field32(&reg, MCU_CNTL_CSR_RESET, 0);
-+	rt2x00_register_write(rt2x00dev, MCU_CNTL_CSR, reg);
-+
-+	for (i = 0; i < 100; i++) {
-+		rt2x00_register_read(rt2x00dev, MCU_CNTL_CSR, &reg);
-+		if (rt2x00_get_field32(reg, MCU_CNTL_CSR_READY))
-+			break;
-+		msleep(1);
-+	}
-+
-+	if (i == 100) {
-+		ERROR("MCU Control register not ready.\n");
-+		goto exit;
-+	}
-+
-+	/*
-+	 * Reset MAC and BBP registers.
-+	 */
-+	reg = 0;
-+	rt2x00_set_field32(&reg, MAC_CSR1_SOFT_RESET, 1);
-+	rt2x00_set_field32(&reg, MAC_CSR1_BBP_RESET, 1);
-+	rt2x00_register_write(rt2x00dev, MAC_CSR1, reg);
-+
-+	rt2x00_register_read(rt2x00dev, MAC_CSR1, &reg);
-+	rt2x00_set_field32(&reg, MAC_CSR1_SOFT_RESET, 0);
-+	rt2x00_set_field32(&reg, MAC_CSR1_BBP_RESET, 0);
-+	rt2x00_register_write(rt2x00dev, MAC_CSR1, reg);
-+
-+	rt2x00_register_read(rt2x00dev, MAC_CSR1, &reg);
-+	rt2x00_set_field32(&reg, MAC_CSR1_HOST_READY, 1);
-+	rt2x00_register_write(rt2x00dev, MAC_CSR1, reg);
-+
-+	SET_FLAG(rt2x00dev, FIRMWARE_LOADED);
-+
-+	/*
-+	 * Initialize the remaining bits of the device
-+	 * that had to wait until the firmware was loaded.
-+	 */
-+	if (rt61pci_init_hw(rt2x00dev)) {
-+		ERROR("Failed to initialize device.\n");
-+		return;
-+	}
-+
-+	rt61pci_open_debugfs(rt2x00dev);
-+
-+	return;
-+
-+exit:
-+	SET_FLAG(rt2x00dev, FIRMWARE_FAILED);
-+}
-+
- static void rt61pci_free_dev(struct rt2x00_dev *rt2x00dev)
- {
- 	/*
-@@ -3684,21 +3652,19 @@ static int rt61pci_alloc_dev(struct pci_dev *pci_dev,
- 	/*
- 	 * Initialize hardware.
- 	 */
--	if (rt61pci_init_eeprom(rt2x00dev) ||
--	    rt61pci_init_hw(rt2x00dev)) {
-+	if (rt61pci_init_eeprom(rt2x00dev)) {
- 		ERROR("Failed to initialize device.\n");
- 		goto exit;
+ static void bcm43xx_phy_setupg(struct bcm43xx_private *bcm)
+@@ -729,19 +736,19 @@ static void bcm43xx_phy_initb5(struct bc
+ 	struct bcm43xx_phyinfo *phy = bcm43xx_current_phy(bcm);
+ 	struct bcm43xx_radioinfo *radio = bcm43xx_current_radio(bcm);
+ 	u16 offset;
++	u16 value;
++	u8 old_channel;
+ 
+-	if (phy->version == 1 &&
+-	    radio->version == 0x2050) {
++	if (phy->analog == 1)
+ 		bcm43xx_radio_write16(bcm, 0x007A,
+ 				      bcm43xx_radio_read16(bcm, 0x007A)
+ 				      | 0x0050);
+-	}
+ 	if ((bcm->board_vendor != PCI_VENDOR_ID_BROADCOM) &&
+ 	    (bcm->board_type != 0x0416)) {
++		value = 0x2120;
+ 		for (offset = 0x00A8 ; offset < 0x00C7; offset++) {
+-			bcm43xx_phy_write(bcm, offset,
+-					  (bcm43xx_phy_read(bcm, offset) + 0x2020)
+-					  & 0x3F3F);
++			bcm43xx_phy_write(bcm, offset, value);
++			value += 0x0202;
+ 		}
+ 	}
+ 	bcm43xx_phy_write(bcm, 0x0035,
+@@ -750,7 +757,7 @@ static void bcm43xx_phy_initb5(struct bc
+ 	if (radio->version == 0x2050)
+ 		bcm43xx_phy_write(bcm, 0x0038, 0x0667);
+ 
+-	if (phy->connected) {
++	if (phy->type == BCM43xx_PHYTYPE_G) {
+ 		if (radio->version == 0x2050) {
+ 			bcm43xx_radio_write16(bcm, 0x007A,
+ 					      bcm43xx_radio_read16(bcm, 0x007A)
+@@ -776,7 +783,7 @@ static void bcm43xx_phy_initb5(struct bc
+ 				  bcm43xx_phy_read(bcm, BCM43xx_PHY_RADIO_BITFIELD) | (1 << 11));
  	}
  
--	if (rt61pci_init_firmware(rt2x00dev)) {
--		ERROR("Failed to load Firmware.\n");
--		goto exit;
--	}
--
- 	/*
--	 * Open the debugfs entry.
-+	 * Request firmware and wait with further
-+	 * initializing of the card until the firmware
-+	 * has been loaded.
- 	 */
--	rt61pci_open_debugfs(rt2x00dev);
-+	if (rt2x00lib_load_firmware(rt2x00dev, &rt2x00dev_pci(rt2x00dev)->dev,
-+		rt61pci_load_firmware))
-+		goto exit;
+-	if (phy->version == 1 && radio->version == 0x2050) {
++	if (phy->analog == 1) {
+ 		bcm43xx_phy_write(bcm, 0x0026, 0xCE00);
+ 		bcm43xx_phy_write(bcm, 0x0021, 0x3763);
+ 		bcm43xx_phy_write(bcm, 0x0022, 0x1BC3);
+@@ -787,14 +794,15 @@ static void bcm43xx_phy_initb5(struct bc
+ 	bcm43xx_phy_write(bcm, 0x0030, 0x00C6);
+ 	bcm43xx_write16(bcm, 0x03EC, 0x3F22);
  
- 	return 0;
+-	if (phy->version == 1 && radio->version == 0x2050)
++	if (phy->analog == 1)
+ 		bcm43xx_phy_write(bcm, 0x0020, 0x3E1C);
+ 	else
+ 		bcm43xx_phy_write(bcm, 0x0020, 0x301C);
  
-diff --git a/drivers/net/wireless/mac80211/rt2x00/rt73usb.c b/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
-index 467ab4c..a4aa876 100644
---- a/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
-@@ -1080,108 +1080,6 @@ static int rt73usb_set_state(struct rt2x00_dev *rt2x00dev,
- /*
-  * Initialization functions.
-  */
--static int rt73usb_init_firmware_wait(struct rt2x00_dev *rt2x00dev)
--{
--	unsigned int i;
--
--	for (i = 0; i < 150; i++) {
--		if (GET_FLAG(rt2x00dev, FIRMWARE_FAILED))
--			return -EIO;
--		if (GET_FLAG(rt2x00dev, FIRMWARE_LOADED))
--			return 0;
--		msleep(20);
--	}
--
--	ERROR("Firmware loading timed out.\n");
--	return -EIO;
--}
--
--static void rt73usb_init_firmware_cont(const struct firmware *fw,
--	void *context)
--{
--	struct rt2x00_dev *rt2x00dev = context;
--	unsigned int i;
--	int status;
--	u32 reg;
--	u16 crc;
--
--	if (!fw || !fw->size || !fw->data) {
--		ERROR("Failed to load Firmware.\n");
--		goto exit;
--	}
--
--	/*
--	 * Wait for stable hardware.
--	 */
--	for (i = 0; i < 100; i++) {
--		rt2x00_register_read(rt2x00dev, MAC_CSR0, &reg);
--		if (reg)
--			break;
--		msleep(1);
--	}
--
--	if (!reg) {
--		ERROR("Unstable hardware.\n");
--		goto exit;
--	}
--
--	/*
--	 * Validate the firmware using 16 bit CRC.
--	 * The last 2 bytes of the firmware are the CRC
--	 * so substract those 2 bytes from the CRC checksum,
--	 * and set those 2 bytes to 0 when calculating CRC.
--	 */
--	reg = 0;
--	crc = crc_itu_t(0, fw->data, fw->size - 2);
--	crc = crc_itu_t(crc, (u8*)&reg, 2);
--
--	if (crc != (fw->data[fw->size - 2] << 8 | fw->data[fw->size - 1])) {
--		ERROR("Firmware CRC error.\n");
--		goto exit;
--	}
--
--	rt2x00_set_chip_fw(&rt2x00dev->chip,
--		fw->data[fw->size - 4], fw->data[fw->size - 3]);
--
--	/*
--	 * Write firmware to device.
--	 */
--	for (i = 0; i < fw->size; i += sizeof(u32))
--		rt2x00_register_write(rt2x00dev, FIRMWARE_IMAGE_BASE + i,
--			*((u32*)(fw->data + i)));
--
--	/*
--	 * Send firmware request to device to load firmware,
--	 * we need to specify a long timeout time.
--	 */
--	status = rt2x00_vendor_request(rt2x00dev, USB_DEVICE_MODE,
--		USB_VENDOR_REQUEST_OUT, 0x00, USB_MODE_FIRMWARE,
--		NULL, 0, REGISTER_TIMEOUT_FIRMWARE);
--	if (status  < 0) {
--		ERROR("Failed to load Firmware error %d.\n", status);
--		goto exit;
--	}
--
--	rt73usb_disable_led(rt2x00dev);
--
--	SET_FLAG(rt2x00dev, FIRMWARE_LOADED);
--
--	return;
--
--exit:
--	SET_FLAG(rt2x00dev, FIRMWARE_FAILED);
--}
--
--static int rt73usb_init_firmware(struct rt2x00_dev *rt2x00dev)
--{
--	/*
--	 * Read correct firmware from harddisk.
--	 */
--	return request_firmware_nowait(THIS_MODULE, 1,
--		"rt73.bin", &rt2x00dev_usb(rt2x00dev)->dev, rt2x00dev,
--		rt73usb_init_firmware_cont);
--}
--
- static int rt73usb_alloc_dma_ring(struct rt2x00_dev *rt2x00dev,
- 	enum ring_index ring_type, const u16 max_entries,
- 	const u16 data_size, const u16 desc_size)
-@@ -1524,7 +1422,7 @@ static int rt73usb_initialize(struct rt2x00_dev *rt2x00dev)
- 	 * We must wait on the firmware before
- 	 * we can safely continue.
- 	 */
--	if (rt73usb_init_firmware_wait(rt2x00dev))
-+	if (rt2x00lib_load_firmware_wait(rt2x00dev))
- 		return -ENODEV;
+-	if (phy->version == 0)
++	if (phy->analog == 0)
+ 		bcm43xx_write16(bcm, 0x03E4, 0x3000);
  
- 	/*
-@@ -3239,6 +3137,93 @@ static int rt73usb_init_hw(struct rt2x00_dev *rt2x00dev)
- 	return 0;
++	old_channel = radio->channel;
+ 	/* Force to channel 7, even if not supported. */
+ 	bcm43xx_radio_selectchannel(bcm, 7, 0);
+ 
+@@ -816,11 +824,11 @@ static void bcm43xx_phy_initb5(struct bc
+ 
+ 	bcm43xx_radio_write16(bcm, 0x007A, bcm43xx_radio_read16(bcm, 0x007A) | 0x0007);
+ 
+-	bcm43xx_radio_selectchannel(bcm, BCM43xx_RADIO_DEFAULT_CHANNEL_BG, 0);
++	bcm43xx_radio_selectchannel(bcm, old_channel, 0);
+ 
+ 	bcm43xx_phy_write(bcm, 0x0014, 0x0080);
+ 	bcm43xx_phy_write(bcm, 0x0032, 0x00CA);
+-	bcm43xx_phy_write(bcm, 0x88A3, 0x002A);
++	bcm43xx_phy_write(bcm, 0x002A, 0x88A3);
+ 
+ 	bcm43xx_radio_set_txpower_bg(bcm, 0xFFFF, 0xFFFF, 0xFFFF);
+ 
+@@ -835,61 +843,24 @@ static void bcm43xx_phy_initb6(struct bc
+ 	struct bcm43xx_phyinfo *phy = bcm43xx_current_phy(bcm);
+ 	struct bcm43xx_radioinfo *radio = bcm43xx_current_radio(bcm);
+ 	u16 offset, val;
++	u8 old_channel;
+ 
+ 	bcm43xx_phy_write(bcm, 0x003E, 0x817A);
+ 	bcm43xx_radio_write16(bcm, 0x007A,
+ 	                      (bcm43xx_radio_read16(bcm, 0x007A) | 0x0058));
+-	if ((radio->manufact == 0x17F) &&
+-	    (radio->version == 0x2050) &&
+-	    (radio->revision == 3 ||
+-	     radio->revision == 4 ||
+-	     radio->revision == 5)) {
+-		bcm43xx_radio_write16(bcm, 0x0051, 0x001F);
+-		bcm43xx_radio_write16(bcm, 0x0052, 0x0040);
+-		bcm43xx_radio_write16(bcm, 0x0053, 0x005B);
+-		bcm43xx_radio_write16(bcm, 0x0054, 0x0098);
++	if (radio->revision == 4 ||
++	     radio->revision == 5) {
++		bcm43xx_radio_write16(bcm, 0x0051, 0x0037);
++		bcm43xx_radio_write16(bcm, 0x0052, 0x0070);
++		bcm43xx_radio_write16(bcm, 0x0053, 0x00B3);
++		bcm43xx_radio_write16(bcm, 0x0054, 0x009B);
+ 		bcm43xx_radio_write16(bcm, 0x005A, 0x0088);
+ 		bcm43xx_radio_write16(bcm, 0x005B, 0x0088);
+ 		bcm43xx_radio_write16(bcm, 0x005D, 0x0088);
+ 		bcm43xx_radio_write16(bcm, 0x005E, 0x0088);
+ 		bcm43xx_radio_write16(bcm, 0x007D, 0x0088);
+ 	}
+-	if ((radio->manufact == 0x17F) &&
+-	    (radio->version == 0x2050) &&
+-	    (radio->revision == 6)) {
+-		bcm43xx_radio_write16(bcm, 0x0051, 0x0000);
+-		bcm43xx_radio_write16(bcm, 0x0052, 0x0040);
+-		bcm43xx_radio_write16(bcm, 0x0053, 0x00B7);
+-		bcm43xx_radio_write16(bcm, 0x0054, 0x0098);
+-		bcm43xx_radio_write16(bcm, 0x005A, 0x0088);
+-		bcm43xx_radio_write16(bcm, 0x005B, 0x008B);
+-		bcm43xx_radio_write16(bcm, 0x005C, 0x00B5);
+-		bcm43xx_radio_write16(bcm, 0x005D, 0x0088);
+-		bcm43xx_radio_write16(bcm, 0x005E, 0x0088);
+-		bcm43xx_radio_write16(bcm, 0x007D, 0x0088);
+-		bcm43xx_radio_write16(bcm, 0x007C, 0x0001);
+-		bcm43xx_radio_write16(bcm, 0x007E, 0x0008);
+-	}
+-	if ((radio->manufact == 0x17F) &&
+-	    (radio->version == 0x2050) &&
+-	    (radio->revision == 7)) {
+-		bcm43xx_radio_write16(bcm, 0x0051, 0x0000);
+-		bcm43xx_radio_write16(bcm, 0x0052, 0x0040);
+-		bcm43xx_radio_write16(bcm, 0x0053, 0x00B7);
+-		bcm43xx_radio_write16(bcm, 0x0054, 0x0098);
+-		bcm43xx_radio_write16(bcm, 0x005A, 0x0088);
+-		bcm43xx_radio_write16(bcm, 0x005B, 0x00A8);
+-		bcm43xx_radio_write16(bcm, 0x005C, 0x0075);
+-		bcm43xx_radio_write16(bcm, 0x005D, 0x00F5);
+-		bcm43xx_radio_write16(bcm, 0x005E, 0x00B8);
+-		bcm43xx_radio_write16(bcm, 0x007D, 0x00E8);
+-		bcm43xx_radio_write16(bcm, 0x007C, 0x0001);
+-		bcm43xx_radio_write16(bcm, 0x007E, 0x0008);
+-		bcm43xx_radio_write16(bcm, 0x007B, 0x0000);
+-	}
+-	if ((radio->manufact == 0x17F) &&
+-	    (radio->version == 0x2050) &&
+-	    (radio->revision == 8)) {
++	if (radio->revision == 8) {
+ 		bcm43xx_radio_write16(bcm, 0x0051, 0x0000);
+ 		bcm43xx_radio_write16(bcm, 0x0052, 0x0040);
+ 		bcm43xx_radio_write16(bcm, 0x0053, 0x00B7);
+@@ -933,20 +904,26 @@ static void bcm43xx_phy_initb6(struct bc
+ 		                  bcm43xx_phy_read(bcm, 0x0802) | 0x0100);
+ 		bcm43xx_phy_write(bcm, 0x042B,
+ 		                  bcm43xx_phy_read(bcm, 0x042B) | 0x2000);
++		bcm43xx_phy_write(bcm, 0x5B, 0x0000);
++		bcm43xx_phy_write(bcm, 0x5C, 0x0000);
+ 	}
+ 
+-	/* Force to channel 7, even if not supported. */
+-	bcm43xx_radio_selectchannel(bcm, 7, 0);
++	old_channel = radio->channel;
++	if (old_channel >= 8)
++		bcm43xx_radio_selectchannel(bcm, 1, 0);
++	else
++		bcm43xx_radio_selectchannel(bcm, 13, 0);
+ 
+ 	bcm43xx_radio_write16(bcm, 0x0050, 0x0020);
+ 	bcm43xx_radio_write16(bcm, 0x0050, 0x0023);
+ 	udelay(40);
+-	bcm43xx_radio_write16(bcm, 0x007C, (bcm43xx_radio_read16(bcm, 0x007C) | 0x0002));
+-	bcm43xx_radio_write16(bcm, 0x0050, 0x0020);
+-	if (radio->manufact == 0x17F &&
+-	    radio->version == 0x2050 &&
+-	    radio->revision <= 2) {
++	if (radio->revision < 6 || radio-> revision == 8) {
++		bcm43xx_radio_write16(bcm, 0x007C, (bcm43xx_radio_read16(bcm, 0x007C)
++				      | 0x0002));
+ 		bcm43xx_radio_write16(bcm, 0x0050, 0x0020);
++	}
++	if (radio->revision <= 2) {
++		bcm43xx_radio_write16(bcm, 0x007C, 0x0020);
+ 		bcm43xx_radio_write16(bcm, 0x005A, 0x0070);
+ 		bcm43xx_radio_write16(bcm, 0x005B, 0x007B);
+ 		bcm43xx_radio_write16(bcm, 0x005C, 0x00B0);
+@@ -954,46 +931,41 @@ static void bcm43xx_phy_initb6(struct bc
+ 	bcm43xx_radio_write16(bcm, 0x007A,
+ 	                      (bcm43xx_radio_read16(bcm, 0x007A) & 0x00F8) | 0x0007);
+ 
+-	bcm43xx_radio_selectchannel(bcm, BCM43xx_RADIO_DEFAULT_CHANNEL_BG, 0);
++	bcm43xx_radio_selectchannel(bcm, old_channel, 0);
+ 
+ 	bcm43xx_phy_write(bcm, 0x0014, 0x0200);
+-	if (radio->version == 0x2050){
+-		if (radio->revision == 3 ||
+-		    radio->revision == 4 ||
+-		    radio->revision == 5)
+-			bcm43xx_phy_write(bcm, 0x002A, 0x8AC0);
+-		else
+-			bcm43xx_phy_write(bcm, 0x002A, 0x88C2);
+-	}
++	if (radio->revision >= 6)
++		bcm43xx_phy_write(bcm, 0x002A, 0x88C2);
++	else
++		bcm43xx_phy_write(bcm, 0x002A, 0x8AC0);
+ 	bcm43xx_phy_write(bcm, 0x0038, 0x0668);
+ 	bcm43xx_radio_set_txpower_bg(bcm, 0xFFFF, 0xFFFF, 0xFFFF);
+-	if (radio->version == 0x2050) {
+-		if (radio->revision == 3 ||
+-		    radio->revision == 4 ||
+-		    radio->revision == 5)
+-			bcm43xx_phy_write(bcm, 0x005D, bcm43xx_phy_read(bcm, 0x005D) | 0x0003);
+-		else if (radio->revision <= 2)
+-			bcm43xx_radio_write16(bcm, 0x005D, 0x000D);
+-	}
++	if (radio->revision <= 5)
++		bcm43xx_phy_write(bcm, 0x005D, bcm43xx_phy_read(bcm, 0x005D) | 0x0003);
++	if (radio->revision <= 2)
++		bcm43xx_radio_write16(bcm, 0x005D, 0x000D);
+ 	
+-	if (phy->rev == 4)
+-		bcm43xx_phy_write(bcm, 0x0002, (bcm43xx_phy_read(bcm, 0x0002) & 0xFFC0) | 0x0004);
+-	else
++	if (phy->analog == 4){
+ 		bcm43xx_write16(bcm, 0x03E4, 0x0009);
++		bcm43xx_phy_write(bcm, 0x61, bcm43xx_phy_read(bcm, 0x61) & 0xFFF);
++	} else {
++		bcm43xx_phy_write(bcm, 0x0002, (bcm43xx_phy_read(bcm, 0x0002) & 0xFFC0) | 0x0004);
++	}
++	if (phy->type == BCM43xx_PHYTYPE_G)
++		bcm43xx_write16(bcm, 0x03E6, 0x0);
+ 	if (phy->type == BCM43xx_PHYTYPE_B) {
+ 		bcm43xx_write16(bcm, 0x03E6, 0x8140);
+ 		bcm43xx_phy_write(bcm, 0x0016, 0x0410);
+ 		bcm43xx_phy_write(bcm, 0x0017, 0x0820);
+ 		bcm43xx_phy_write(bcm, 0x0062, 0x0007);
+ 		(void) bcm43xx_radio_calibrationvalue(bcm);
+-		bcm43xx_phy_lo_b_measure(bcm);
++		bcm43xx_phy_lo_g_measure(bcm);
+ 		if (bcm->sprom.boardflags & BCM43xx_BFL_RSSI) {
+ 			bcm43xx_calc_nrssi_slope(bcm);
+ 			bcm43xx_calc_nrssi_threshold(bcm);
+ 		}
+ 		bcm43xx_phy_init_pctl(bcm);
+-	} else
+-		bcm43xx_write16(bcm, 0x03E6, 0x0);
++	}
  }
  
-+static void rt73usb_load_firmware(const struct firmware *fw, void *context)
-+{
-+	struct rt2x00_dev *rt2x00dev = context;
-+	unsigned int i;
-+	int status;
-+	u32 reg;
-+	u16 crc;
-+
-+	if (!fw || !fw->size || !fw->data) {
-+		ERROR("Failed to load Firmware.\n");
-+		goto exit;
+ static void bcm43xx_calc_loopback_gain(struct bcm43xx_private *bcm)
+@@ -1063,7 +1035,7 @@ static void bcm43xx_calc_loopback_gain(s
+ 	bcm43xx_phy_write(bcm, 0x005A, 0x0780);
+ 	bcm43xx_phy_write(bcm, 0x0059, 0xC810);
+ 	bcm43xx_phy_write(bcm, 0x0058, 0x000D);
+-	if (phy->version == 0) {
++	if (phy->analog == 0) {
+ 		bcm43xx_phy_write(bcm, 0x0003, 0x0122);
+ 	} else {
+ 		bcm43xx_phy_write(bcm, 0x000A,
+@@ -1205,27 +1177,30 @@ static void bcm43xx_phy_initg(struct bcm
+ 	if (phy->rev >= 2) {
+ 		bcm43xx_phy_write(bcm, 0x0814, 0x0000);
+ 		bcm43xx_phy_write(bcm, 0x0815, 0x0000);
+-		if (phy->rev == 2)
+-			bcm43xx_phy_write(bcm, 0x0811, 0x0000);
+-		else if (phy->rev >= 3)
+-			bcm43xx_phy_write(bcm, 0x0811, 0x0400);
 +	}
-+
-+	/*
-+	 * Wait for stable hardware.
-+	 */
-+	for (i = 0; i < 100; i++) {
-+		rt2x00_register_read(rt2x00dev, MAC_CSR0, &reg);
-+		if (reg)
-+			break;
-+		msleep(1);
++	if (phy->rev == 2) {
++		bcm43xx_phy_write(bcm, 0x0811, 0x0000);
+ 		bcm43xx_phy_write(bcm, 0x0015, 0x00C0);
+-		if (phy->connected) {
+-			tmp = bcm43xx_phy_read(bcm, 0x0400) & 0xFF;
+-			if (tmp < 6) {
+-				bcm43xx_phy_write(bcm, 0x04C2, 0x1816);
+-				bcm43xx_phy_write(bcm, 0x04C3, 0x8006);
+-				if (tmp != 3) {
+-					bcm43xx_phy_write(bcm, 0x04CC,
+-							  (bcm43xx_phy_read(bcm, 0x04CC)
+-							   & 0x00FF) | 0x1F00);
+-				}
 +	}
-+
-+	if (!reg) {
-+		ERROR("Unstable hardware.\n");
-+		goto exit;
++	if (phy->rev >= 3) {
++		bcm43xx_phy_write(bcm, 0x0811, 0x0400);
++		bcm43xx_phy_write(bcm, 0x0015, 0x00C0);
 +	}
-+
-+	/*
-+	 * Validate the firmware using 16 bit CRC.
-+	 * The last 2 bytes of the firmware are the CRC
-+	 * so substract those 2 bytes from the CRC checksum,
-+	 * and set those 2 bytes to 0 when calculating CRC.
-+	 */
-+	reg = 0;
-+	crc = crc_itu_t(0, fw->data, fw->size - 2);
-+	crc = crc_itu_t(crc, (u8*)&reg, 2);
-+
-+	if (crc != (fw->data[fw->size - 2] << 8 | fw->data[fw->size - 1])) {
-+		ERROR("Firmware CRC error.\n");
-+		goto exit;
-+	}
-+
-+	rt2x00_set_chip_fw(&rt2x00dev->chip,
-+		fw->data[fw->size - 4], fw->data[fw->size - 3]);
-+
-+	/*
-+	 * Write firmware to device.
-+	 */
-+	for (i = 0; i < fw->size; i += sizeof(u32)) {
-+		reg = *((u32*)&fw->data[i]);
-+		rt2x00_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE + i,
-+			&reg, sizeof(u32));
-+	}
-+
-+	/*
-+	 * Send firmware request to device to load firmware,
-+	 * we need to specify a long timeout time.
-+	 */
-+	status = rt2x00_vendor_request(rt2x00dev, USB_DEVICE_MODE,
-+		USB_VENDOR_REQUEST_OUT, 0x00, USB_MODE_FIRMWARE,
-+		NULL, 0, REGISTER_TIMEOUT_FIRMWARE);
-+	if (status  < 0) {
-+		ERROR("Failed to write Firmware to device.\n");
-+		goto exit;
-+	}
-+
-+	SET_FLAG(rt2x00dev, FIRMWARE_LOADED);
-+
-+	/*
-+	 * Initialize the remaining bits of the device
-+	 * that had to wait until the firmware was loaded.
-+	 */
-+	if (rt73usb_init_hw(rt2x00dev)) {
-+		ERROR("Failed to initialize device.\n");
-+		return;
-+	}
-+
-+	rt73usb_disable_led(rt2x00dev);
-+	rt73usb_open_debugfs(rt2x00dev);
-+
-+	return;
-+
-+exit:
-+	SET_FLAG(rt2x00dev, FIRMWARE_FAILED);
-+}
-+
- static void rt73usb_free_dev(struct rt2x00_dev *rt2x00dev)
- {
- 	/*
-@@ -3323,21 +3308,19 @@ static int rt73usb_alloc_dev(struct usb_interface *usb_intf,
- 	/*
- 	 * Initialize hardware.
- 	 */
--	if (rt73usb_init_eeprom(rt2x00dev) ||
--	    rt73usb_init_hw(rt2x00dev)) {
-+	if (rt73usb_init_eeprom(rt2x00dev)) {
- 		ERROR("Failed to initialize device.\n");
- 		goto exit;
++	if (phy->connected) {
++		tmp = bcm43xx_phy_read(bcm, 0x0400) & 0xFF;
++		if (tmp < 6) {
++			bcm43xx_phy_write(bcm, 0x04C2, 0x1816);
++			bcm43xx_phy_write(bcm, 0x04C3, 0x8006);
++			if (tmp != 3) {
++				bcm43xx_phy_write(bcm, 0x04CC,
++						  (bcm43xx_phy_read(bcm, 0x04CC)
++						   & 0x00FF) | 0x1F00);
+ 			}
+ 		}
+ 	}
+ 	if (phy->rev < 3 && phy->connected)
+ 		bcm43xx_phy_write(bcm, 0x047E, 0x0078);
+-	if (phy->rev >= 6 && phy->rev <= 8) {
++	if (radio->revision == 8) {
+ 		bcm43xx_phy_write(bcm, 0x0801, bcm43xx_phy_read(bcm, 0x0801) | 0x0080);
+ 		bcm43xx_phy_write(bcm, 0x043E, bcm43xx_phy_read(bcm, 0x043E) | 0x0004);
+ 	}
+@@ -1638,14 +1613,14 @@ void bcm43xx_phy_set_baseband_attenuatio
+ 	struct bcm43xx_phyinfo *phy = bcm43xx_current_phy(bcm);
+ 	u16 value;
+ 
+-	if (phy->version == 0) {
++	if (phy->analog == 0) {
+ 		value = (bcm43xx_read16(bcm, 0x03E6) & 0xFFF0);
+ 		value |= (baseband_attenuation & 0x000F);
+ 		bcm43xx_write16(bcm, 0x03E6, value);
+ 		return;
  	}
  
--	if (rt73usb_init_firmware(rt2x00dev)) {
--		ERROR("Failed to load Firmware.\n");
--		goto exit;
--	}
--
- 	/*
--	 * Open the debugfs entry.
-+	 * Request firmware and wait with further
-+	 * initializing of the card until the firmware
-+	 * has been loaded.
- 	 */
--	rt73usb_open_debugfs(rt2x00dev);
-+	if (rt2x00lib_load_firmware(rt2x00dev, &rt2x00dev_usb(rt2x00dev)->dev,
-+		rt73usb_load_firmware))
-+		goto exit;
+-	if (phy->version > 1) {
++	if (phy->analog > 1) {
+ 		value = bcm43xx_phy_read(bcm, 0x0060) & ~0x003C;
+ 		value |= (baseband_attenuation << 2) & 0x003C;
+ 	} else {
+Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
++++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
+@@ -1393,11 +1393,12 @@ u16 bcm43xx_radio_init2050(struct bcm43x
+ 	backup[12] = bcm43xx_read16(bcm, BCM43xx_MMIO_CHANNEL_EXT);
  
- 	return 0;
+ 	// Initialization
+-	if (phy->version == 0) {
++	if (phy->analog == 0) {
+ 		bcm43xx_write16(bcm, 0x03E6, 0x0122);
+ 	} else {
+-		if (phy->version >= 2)
+-			bcm43xx_write16(bcm, 0x03E6, 0x0040);
++		if (phy->analog >= 2)
++			bcm43xx_phy_write(bcm, 0x0003, (bcm43xx_phy_read(bcm, 0x0003)
++					& 0xFFBF) | 0x0040);
+ 		bcm43xx_write16(bcm, BCM43xx_MMIO_CHANNEL_EXT,
+ 		                (bcm43xx_read16(bcm, BCM43xx_MMIO_CHANNEL_EXT) | 0x2000));
+ 	}
+@@ -1405,7 +1406,7 @@ u16 bcm43xx_radio_init2050(struct bcm43x
+ 	ret = bcm43xx_radio_calibrationvalue(bcm);
  
+ 	if (phy->type == BCM43xx_PHYTYPE_B)
+-		bcm43xx_radio_write16(bcm, 0x0078, 0x0003);
++		bcm43xx_radio_write16(bcm, 0x0078, 0x0026);
+ 
+ 	bcm43xx_phy_write(bcm, 0x0015, 0xBFAF);
+ 	bcm43xx_phy_write(bcm, 0x002B, 0x1403);
+@@ -1416,7 +1417,7 @@ u16 bcm43xx_radio_init2050(struct bcm43x
+ 	                      (bcm43xx_radio_read16(bcm, 0x0051) | 0x0004));
+ 	bcm43xx_radio_write16(bcm, 0x0052, 0x0000);
+ 	bcm43xx_radio_write16(bcm, 0x0043,
+-			      bcm43xx_radio_read16(bcm, 0x0043) | 0x0009);
++			      (bcm43xx_radio_read16(bcm, 0x0043) & 0xFFF0) | 0x0009);
+ 	bcm43xx_phy_write(bcm, 0x0058, 0x0000);
+ 
+ 	for (i = 0; i < 16; i++) {
+@@ -1488,7 +1489,7 @@ u16 bcm43xx_radio_init2050(struct bcm43x
+ 	bcm43xx_phy_write(bcm, 0x0059, backup[17]);
+ 	bcm43xx_phy_write(bcm, 0x0058, backup[18]);
+ 	bcm43xx_write16(bcm, 0x03E6, backup[11]);
+-	if (phy->version != 0)
++	if (phy->analog != 0)
+ 		bcm43xx_write16(bcm, BCM43xx_MMIO_CHANNEL_EXT, backup[12]);
+ 	bcm43xx_phy_write(bcm, 0x0035, backup[10]);
+ 	bcm43xx_radio_selectchannel(bcm, radio->channel, 1);
+Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
++++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+@@ -3692,7 +3692,7 @@ static int bcm43xx_read_phyinfo(struct b
+ {
+ 	struct bcm43xx_phyinfo *phy = bcm43xx_current_phy(bcm);
+ 	u16 value;
+-	u8 phy_version;
++	u8 phy_analog;
+ 	u8 phy_type;
+ 	u8 phy_rev;
+ 	int phy_rev_ok = 1;
+@@ -3700,12 +3700,12 @@ static int bcm43xx_read_phyinfo(struct b
+ 
+ 	value = bcm43xx_read16(bcm, BCM43xx_MMIO_PHY_VER);
+ 
+-	phy_version = (value & 0xF000) >> 12;
++	phy_analog = (value & 0xF000) >> 12;
+ 	phy_type = (value & 0x0F00) >> 8;
+ 	phy_rev = (value & 0x000F);
+ 
+-	dprintk(KERN_INFO PFX "Detected PHY: Version: %x, Type %x, Revision %x\n",
+-		phy_version, phy_type, phy_rev);
++	dprintk(KERN_INFO PFX "Detected PHY: Analog: %x, Type %x, Revision %x\n",
++		phy_analog, phy_type, phy_rev);
+ 
+ 	switch (phy_type) {
+ 	case BCM43xx_PHYTYPE_A:
+@@ -3748,7 +3748,7 @@ static int bcm43xx_read_phyinfo(struct b
+ 		       phy_rev);
+ 	}
+ 
+-	phy->version = phy_version;
++	phy->analog = phy_analog;
+ 	phy->type = phy_type;
+ 	phy->rev = phy_rev;
+ 	if ((phy_type == BCM43xx_PHYTYPE_B) || (phy_type == BCM43xx_PHYTYPE_G)) {
