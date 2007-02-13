@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:48128
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752527AbXBDUGP (ORCPT
+Received: from ns2.uludag.org.tr ([193.140.100.220]:52169 "EHLO uludag.org.tr"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750850AbXBMQ5B convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Feb 2007 15:06:15 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Jouni Malinen <jkmaline@cc.hut.fi>
-Subject: Re: SoftMAC vs FullMAC
-Date: Sun, 4 Feb 2007 21:05:57 +0100
-Cc: Jon Smirl <jonsmirl@gmail.com>, Pavel Roskin <proski@gnu.org>,
-	linux-wireless@vger.kernel.org
-References: <9e4733910702040922n63736d27h7ab027dc90ae8989@mail.gmail.com> <200702042007.29357.mb@bu3sch.de> <20070204194107.GE6632@jm.kir.nu>
-In-Reply-To: <20070204194107.GE6632@jm.kir.nu>
+	Tue, 13 Feb 2007 11:57:01 -0500
+From: Ismail =?iso-8859-1?q?D=F6nmez?= <ismail@pardus.org.tr>
+To: "Jeff Chua" <jeff.chua.linux@gmail.com>
+Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
+Date: Tue, 13 Feb 2007 18:57:01 +0200
+Cc: "James Ketrenos" <jketreno@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
+References: <45CCE3CA.4050904@linux.intel.com> <200702131558.48987.ismail@pardus.org.tr> <b6a2187b0702130710s217281c4k5ed227995c09c878@mail.gmail.com>
+In-Reply-To: <b6a2187b0702130710s217281c4k5ed227995c09c878@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702042105.57740.mb@bu3sch.de>
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200702131857.02369.ismail@pardus.org.tr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 04 February 2007 20:41, Jouni Malinen wrote:
-> On Sun, Feb 04, 2007 at 08:07:29PM +0100, Michael Buesch wrote:
-> 
-> > If creating and uploading the keys to the device is less work than
-> > doing crypto in software, then it is clearly a win.
-> 
-> Not necessarily..
-> 
-> > And that _is_ the case for bcm43xx (at least. I don't know about other
-> > devices' hwcrypto capabilities).
-> > Doing less on the CPU and more in hw is always a win. I'm not sure
-> > how you can say that you're not sure it is. ;)
-> 
-> As an example, some of the earlier Prism2 designs supported WEP in
-> hardware/firmware. Yes, it would free up some host CPU, but the maximum
-> throughput dropped from ca. 6 Mbps to 4 Mbps (and much lower in some
-> cases).. WEP is quite fast operation, so using the host CPU to double
-> throughput sounds like a good trade in many cases.
+On Tuesday 13 February 2007 17:10:24 Jeff Chua wrote:
+> On 2/13/07, Ismail D=F6nmez <ismail@pardus.org.tr> wrote:
+> > Tried this is on a patched 2.6.20 kernel with ipw3945 device and it
+> > always puts the card in 802.11a mode instead of 802.11bg mode.
+> >
+> > Ideas?
+>
+> Before running  "iwconfig wlan0 channel 8",  the card is set to
+> 802.11a mode. iwconfig shows rate at 54Mb/s. But after setting the
+> channel, it sets to 802.11b mode, and I can't find a way to change
+> from 11Mb/s to 54MB/s.
+>
+> "iwlist eth0 rate" only show up to 11Mb/s.
+>
+> So, my problem is the card is always in 802.11b mode.
 
-Yeah, ok. I was more thinking about sane hardware that's actually
-capable of doing hwcrypto. :)
-Sure, you're right. This prism2 card has to be treated as
-swcrypto device, as it's cleary not capable of handling the load.
+So I guess there is a common problem with a/bg modes?
 
--- 
-Greetings Michael.
+Regards,
+ismail
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
