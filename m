@@ -1,29 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:47056 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S964784AbXBEV5t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Feb 2007 16:57:49 -0500
-Date: Mon, 5 Feb 2007 22:57:47 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "John W.Linville" <linville@tuxdriver.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] d80211: Fix WMM ACI to UP mapping
-Message-ID: <20070205225747.0fa67c4b@griffin.suse.cz>
-In-Reply-To: <1170407754.6601.228.camel@debian.sh.intel.com>
-References: <1170407754.6601.228.camel@debian.sh.intel.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43738 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751548AbXBMSio (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Feb 2007 13:38:44 -0500
+Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: James Ketrenos <jketreno@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
+In-Reply-To: <20070213181313.GA5350@ucw.cz>
+References: <45CCE3CA.4050904@linux.intel.com>
+	 <20070213181313.GA5350@ucw.cz>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4eDDAlEObNoQHS1+pZk9"
+Date: Tue, 13 Feb 2007 19:36:11 +0100
+Message-Id: <1171391771.10344.93.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 02 Feb 2007 17:15:54 +0800, Zhu Yi wrote:
-> Fix WMM ACI to UP mapping according to IEEE 802.1d spec. Table 7-2.
 
-Applied to my tree, thanks!
+--=-4eDDAlEObNoQHS1+pZk9
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- Jiri
+On Tue, 2007-02-13 at 18:13 +0000, Pavel Machek wrote:
 
--- 
-Jiri Benc
-SUSE Labs
+> Yes... is there merged .git tree somewhere? I downloaded iwl git tree,
+> but it did not contain d80211 stack. I'm now downloading wireless-dev
+> git tree...
+
+I would expect Intel to post patches some time soon to get into
+wireless-dev.
+
+johannes
+
+--=-4eDDAlEObNoQHS1+pZk9
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF0gUb/ETPhpq3jKURArxBAJsHws1jqvFVuWe3v2L1ffjoVLZh2ACfZXXf
+V4axbwrXq7ThBVYogk3rGXU=
+=gCW8
+-----END PGP SIGNATURE-----
+
+--=-4eDDAlEObNoQHS1+pZk9--
+
