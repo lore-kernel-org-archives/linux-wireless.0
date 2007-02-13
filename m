@@ -1,60 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:26745 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751485AbXBNBSn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Feb 2007 20:18:43 -0500
-Message-ID: <45D25984.7080808@linux.intel.com>
-Date: Tue, 13 Feb 2007 16:36:20 -0800
-From: James Ketrenos <jketreno@linux.intel.com>
+Received: from lugor.de ([212.112.242.222]:40203 "EHLO solar.vpn.lugor.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751256AbXBMKlg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Feb 2007 05:41:36 -0500
+From: "Hesse, Christian" <mail@earthworm.de>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
+Date: Tue, 13 Feb 2007 11:41:20 +0100
+Cc: James Ketrenos <jketreno@linux.intel.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+References: <45CCE3CA.4050904@linux.intel.com> <200702111417.38336.mail@earthworm.de> <1171349229.2326.91.camel@dv>
+In-Reply-To: <1171349229.2326.91.camel@dv>
 MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: network manager vs. missing firmware
-References: <1171392106.10344.100.camel@johannes.berg> <1171394598.5329.31.camel@localhost.localdomain>
-In-Reply-To: <1171394598.5329.31.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart1727142.jQgLTeo4NX";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200702131141.25883.mail@earthworm.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
+--nextPart1727142.jQgLTeo4NX
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> The simpler, the better I think; but it's complicated.  A sample of
-> current drivers and when they call request_firmware() from a 2.6.19
-> kernel:
-> 
-> on dev->open: atmel, prism54, bcm43xx (softmac)
-> on dev->init: ipw2100, ipw2200
+On Tuesday 13 February 2007 07:47, Pavel Roskin wrote:
+> Hello!
+>
+> On Sun, 2007-02-11 at 14:17 +0100, Hesse, Christian wrote:
+> > lsmod shows a use count of 4294967295 (2^32 - 1), no oopses or the like.
+> > This is reproducable all the time.
+>
+> Although I cannot reproduce the problem (I'm on current wireless-dev),
+> here's my interpretation.
+>
+> The iwlwifi driver includes both a driver and a rate control algorithm.
+> It passes THIS_MODULE (i.e. a handle to itself) to the generic rate
+> control code, which locks the caller i.e. iwlwifi.  Therefore, iwlwifi
+> has locked itself in memory.
+>
+> To counteract that, the driver "puts" the module, i.e. decreases its use
+> count after the rate control is registered.  Conversely, the module
+> "gets" itself when the rate control is unregistered.
+>
+> One thing that is clearly wrong is that try_module_get() comes after
+> ieee80211_rate_control_unregister(), not before.  This means that the
+> use count would go negative between those calls.  If the kernel starts
+> checking for this, the driver is in trouble.
+>
+> Further, why do we need this self-locking/unlocking trick?  The driver
+> can just set priv->rate_control.module to NULL and prevent self-locking.
+>
+> It would only make sense to put THIS_MODULE there is the rate control
+> were implemented as a separate module, which it probably a good idea in
+> the long term.
+>
+> But a simple fix would be just to get rid of all references to
+> THIS_MODULE and let the kernel do the right thing.
+>
+> Most likely, your kernel doesn't use the priv->rate_control.module field
+> to lock the module, so it would help in your case.
+>
+> Please try this patch:
+>
+> [ patch snipped ]
 
-request_firmware is also used during mode changes (ie, BSS to IBSS to 
-MONITOR)
+This patch solves the problem. The module's use count is zero and I can unl=
+oad=20
+and load the module.
+However I have processes in status D when restarting the device. Is it=20
+possible that some functions (i.e. escape_essid()) from old and new ieee802=
+11=20
+stack conflict? I will recompile my kernel without the old stack and see if=
+=20
+anything changes.
+=2D-=20
+Regards,
+Chris
 
-Perhaps solving the larger problem of "the driver knows something is 
-horribly wrong, but has no way to tell the user" would be good. 
-Firmware not being there is bad.  There are also periodic failures or 
-usage conditions that keep things from working.  Right now we might have 
-failures due to:
+--nextPart1727142.jQgLTeo4NX
+Content-Type: application/pgp-signature
 
-	FIRMWARE missing
-	RF KILL active
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
 
-but maybe tomorrow we would have:
+iD8DBQBF0ZXVlZfG2c8gdSURAl7OAKDQ62pkNZ2E/6cUuRAeLmCSHu9XIgCcDV6F
+nYZh84cnMTtkWtyQEpJ3YpM=
+=F0gE
+-----END PGP SIGNATURE-----
 
-	Conflict with other active wifi device / coexistence
-
-or any number of solution specific error codes that the vendor / driver 
-writer would be able to articulate in a text string how to resolve.
-
-Perhaps a simple cfg80211 interface for querying the interface status 
-and and associated text string (if in an error condition).  Missing 
-firmware or RF kill could have standard numbers and the text string 
-could be standardized to return just the name of the firmware file expected.
-
-Even if it didn't get standardized across all devices, NM or other 
-utilities could provide a standard place for the user to look at the 
-error and then google on it.  Right now, things break and the user can't 
-figure out why without looking at the kernel log (which many users don't 
-even know exist).
-
-James
+--nextPart1727142.jQgLTeo4NX--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
