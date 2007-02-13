@@ -1,57 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:33006 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751662AbXBVPpg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Feb 2007 10:45:36 -0500
-Subject: Re: [git patches] net driver updates
-From: Dan Williams <dcbw@redhat.com>
-To: jeff@garzik.org
-Cc: Roger While <simrw@sim-basis.de>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070221132754.GA4978@tuxdriver.com>
-References: <6.1.1.1.2.20070221124144.04783fb8@192.168.6.12>
-	 <20070221132754.GA4978@tuxdriver.com>
-Content-Type: text/plain
-Date: Thu, 22 Feb 2007 10:48:30 -0500
-Message-Id: <1172159310.5114.2.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from nf-out-0910.google.com ([64.233.182.189]:10802 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751456AbXBMXg4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Feb 2007 18:36:56 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so480566nfa
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Feb 2007 15:36:54 -0800 (PST)
+Message-ID: <9b3e2dc20702131536q2f2a89aev8076bbd6e1ccdee9@mail.gmail.com>
+Date: Tue, 13 Feb 2007 18:36:54 -0500
+From: "Stephen Sinclair" <radarsat1@gmail.com>
+To: "Larry Finger" <larry.finger@lwfinger.net>
+Subject: Re: RFT: The real fix for BCM4311 and BCM4312
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	"Miles Lane" <miles.lane@gmail.com>, bcm43xx-dev@lists.berlios.de
+In-Reply-To: <45D2398D.7050104@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <45C96B8A.8010000@lwfinger.net> <1170830071.11150.62.camel@dv>
+	 <200702071443.19676.rjw@sisk.pl> <45C9D9D6.2070700@lwfinger.net>
+	 <a44ae5cd0702101530j38c983bfy9c1496fd50ca8b1c@mail.gmail.com>
+	 <45CE5812.3000306@lwfinger.net> <20070213211340.GG3572@tuxdriver.com>
+	 <45D2398D.7050104@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-02-21 at 08:27 -0500, John W. Linville wrote:
-> On Wed, Feb 21, 2007 at 12:46:46PM +0100, Roger While wrote:
-> > 
-> > >
-> > >Dan Williams (1):
-> > >      prism54: correct assignment of DOT1XENABLE in WE-19 codepaths
-> > 
-> > Where did this spring from ?
-> > I see no posting of this patch let alone
-> > an ACK.
-> > The patch is also doing rather more than the description -
-> > It is inserting extra breaks into a switch statement with
-> > no comment as to why.
-> 
-> Dan posted it to linux-wireless@vger.kernel.org on 13 Feb 2007.
-> The description in the body is quoted below:
+> I think most, if not all, the 4311 and 4312's are helped. I will be submitting a set of
+> patches this afternoon that help most cards.
 
-It was also posted to stable@kernel.org and accepted for 2.6.19 and
-2.6.20.
+I just wanted to express my thanks for all your work on this driver,
+and everyone else who's contributed to it.  Since this patch has fixed
+the speed issues, I haven't had to boot to Windows on my laptop in
+like a week.  I wonder if I ever will again.  It's the way it should
+be, and it's just fantastic.  Thank you!  If I could, I'd definitely
+buy you a beer.  ;-)
 
-Dan
 
-> 	Correct assignment of DOT1XENABLE in WE-19 codepaths.
-> 	RX_UNENCRYPTED_EAPOL = 1 really means setting DOT1XENABLE _off_, and
-> 	vice versa.  The original WE-19 patch erroneously reversed that.  This
-> 	patch fixes association with unencrypted and WEP networks when using
-> 	wpa_supplicant.
-> 	
-> 	It also adds two missing break statements that, left out, could result
-> 	in incorrect card configuration.
-> 	
-> 	Please commit to both development and stable branches.
-> 
-> Hth...
-> 
-> John
-
+Steve
