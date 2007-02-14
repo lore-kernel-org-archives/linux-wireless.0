@@ -1,34 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:60108 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752135AbXBJXlI (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:51206 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751475AbXBNAmw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Feb 2007 18:41:08 -0500
-Message-ID: <45CE5812.3000306@lwfinger.net>
-Date: Sat, 10 Feb 2007 17:41:06 -0600
+	Tue, 13 Feb 2007 19:42:52 -0500
+Message-ID: <45D25AFC.2060508@lwfinger.net>
+Date: Tue, 13 Feb 2007 18:42:36 -0600
 From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-To: Miles Lane <miles.lane@gmail.com>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: RFT: The real fix for BCM4311 and BCM4312
-References: <45C96B8A.8010000@lwfinger.net> <1170830071.11150.62.camel@dv>	 <200702071443.19676.rjw@sisk.pl> <45C9D9D6.2070700@lwfinger.net> <a44ae5cd0702101530j38c983bfy9c1496fd50ca8b1c@mail.gmail.com>
-In-Reply-To: <a44ae5cd0702101530j38c983bfy9c1496fd50ca8b1c@mail.gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+CC: John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] bcm43xx: Fix for 4311 and 02/07/07 specification changes
+References: <45d241c0.gWJcHxUYgWmBTwx8%Larry.Finger@lwfinger.net> <200702140002.05727.mb@bu3sch.de>
+In-Reply-To: <200702140002.05727.mb@bu3sch.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Miles Lane wrote:
-> I am testing this patch applied to the wireless-net git tree.
-> The card is a Linksys WPC54G.  The card is still getting very
-> weak signal strength and the connection seems unresponsive
-> most of the time.
+Michael Buesch wrote:
+> On Tuesday 13 February 2007 23:54, Larry Finger wrote:
+>> The specifications for the bcm43xx driver have been modified. This patch
+>> incorporates these changes in the code, which results in the BCM4311 and
+>> BCM4312 working. The name of one of the PHY parameters, previously known
+>> as "version", has been changed to "analog", short for  "analog core version" .
+>>
+>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+> 
+>> @@ -750,7 +757,7 @@ static void bcm43xx_phy_initb5(struct bc
+>>  	if (radio->version == 0x2050)
+>>  		bcm43xx_phy_write(bcm, 0x0038, 0x0667);
+>>  
+>> -	if (phy->connected) {
+>> +	if (phy->type == BCM43xx_PHYTYPE_G) {
+> 
+> I don't think this is correct.
+> I think (didn't verify) the specs talk about the "gmode" here.
+> I think you have been misleaded by that. The "gmode" bit is
+> the "connected" bit in the old softmac driver.
+> 
 
-As the subject says, the patch was for 4311 and 4312 cards. The 4318's are not yet fixed.
-
-As measured by my RF receiver, the amplitude of the 4318 is about -70 dBm, the 4311 is about -60 dBm
-and the 4306 is -50 dBm. All should have the -50 reading with my test setup.
-
-I'm working on the power routines and will let you know.
+The specs definitely say "If this is a GPHY" is step 5 of http://bcm-specs.sipsolutions.net/B5PHY.
 
 Larry
+
