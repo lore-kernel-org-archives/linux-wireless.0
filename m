@@ -1,64 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58567 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751619AbXBVNgM (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:26745 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751485AbXBNBSn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Feb 2007 08:36:12 -0500
-Subject: [PATCH] hook up nl80211 again
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 22 Feb 2007 13:36:17 +0100
-Message-Id: <1172147777.5080.5.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 13 Feb 2007 20:18:43 -0500
+Message-ID: <45D25984.7080808@linux.intel.com>
+Date: Tue, 13 Feb 2007 16:36:20 -0800
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: Dan Williams <dcbw@redhat.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: network manager vs. missing firmware
+References: <1171392106.10344.100.camel@johannes.berg> <1171394598.5329.31.camel@localhost.localdomain>
+In-Reply-To: <1171394598.5329.31.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Apparently when doing all the cfg80211 changes I accidentally removed
-the nl80211 registration. This patch adds it back.
+Dan Williams wrote:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> The simpler, the better I think; but it's complicated.  A sample of
+> current drivers and when they call request_firmware() from a 2.6.19
+> kernel:
+> 
+> on dev->open: atmel, prism54, bcm43xx (softmac)
+> on dev->init: ipw2100, ipw2200
 
----
- net/wireless/core.c |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+request_firmware is also used during mode changes (ie, BSS to IBSS to 
+MONITOR)
 
---- wireless-dev.orig/net/wireless/core.c	2007-02-22 12:10:05.824688035 +0100
-+++ wireless-dev/net/wireless/core.c	2007-02-22 12:11:52.384688035 +0100
-@@ -242,19 +242,23 @@ EXPORT_SYMBOL(wiphy_free);
- static int cfg80211_init(void)
- {
- 	int err = wiphy_sysfs_init();
--
- 	if (err)
- 		return err;
- 
- 	err = cfg80211_wext_init();
--
- 	if (err)
- 		goto out_exit_sysfs;
- 
-+	err = nl80211_init();
-+	if (err)
-+		goto out_nl80211;
-+
- 	ieee80211_debugfs_dir = debugfs_create_dir("ieee80211", NULL);
- 
- 	return 0;
- 
-+ out_nl80211:
-+	cfg80211_wext_exit();
-  out_exit_sysfs:
- 	wiphy_sysfs_exit();
- 
-@@ -265,6 +269,7 @@ module_init(cfg80211_init);
- static void cfg80211_exit(void)
- {
- 	debugfs_remove(ieee80211_debugfs_dir);
-+	nl80211_exit();
- 	cfg80211_wext_exit();
- 	wiphy_sysfs_exit();
- }
+Perhaps solving the larger problem of "the driver knows something is 
+horribly wrong, but has no way to tell the user" would be good. 
+Firmware not being there is bad.  There are also periodic failures or 
+usage conditions that keep things from working.  Right now we might have 
+failures due to:
 
+	FIRMWARE missing
+	RF KILL active
 
+but maybe tomorrow we would have:
+
+	Conflict with other active wifi device / coexistence
+
+or any number of solution specific error codes that the vendor / driver 
+writer would be able to articulate in a text string how to resolve.
+
+Perhaps a simple cfg80211 interface for querying the interface status 
+and and associated text string (if in an error condition).  Missing 
+firmware or RF kill could have standard numbers and the text string 
+could be standardized to return just the name of the firmware file expected.
+
+Even if it didn't get standardized across all devices, NM or other 
+utilities could provide a standard place for the user to look at the 
+error and then google on it.  Right now, things break and the user can't 
+figure out why without looking at the kernel log (which many users don't 
+even know exist).
+
+James
