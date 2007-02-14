@@ -1,31 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:34314 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933040AbXB0Mel (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Feb 2007 07:34:41 -0500
-Date: Tue, 27 Feb 2007 13:34:37 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] mac80211: fix more whitespace damage
-Message-ID: <20070227133437.497b9337@griffin.suse.cz>
-In-Reply-To: <1172574481.3870.248.camel@johannes.berg>
-References: <1172574481.3870.248.camel@johannes.berg>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43613 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965586AbXBOO7T (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Feb 2007 09:59:19 -0500
+Subject: round_jiffies for schedule_delayed_work?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arjan van de Ven <arjan@linux.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VYMxshuHgCtPR0v1Gzsh"
+Date: Wed, 14 Feb 2007 22:39:23 +0100
+Message-Id: <1171489163.6093.30.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 27 Feb 2007 12:08:01 +0100, Johannes Berg wrote:
-> This replaces all occurrences of 8 spaces with a tab. Without doubt
-> we'll find more problems, but this at least lets us edit the files
-> sanely again.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Acked-by: Jiri Benc <jbenc@suse.cz>
+--=-VYMxshuHgCtPR0v1Gzsh
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Jiri Benc
-SUSE Labs
+Hi,
+
+I was looking through recent commits in wireless-dev and found
+e226b8aa8921b6b75dcd0142a990b8c7bc1548fd which is correct, but I was
+wondering if it may be possible to do it more efficiently.
+
+We don't really need this code running every second after we init,
+having it run every second on average is good enough. I don't see any
+way to do this with the delayed work API though since
+schedule_delayed_work simply adds the timer at jiffies+delay.
+
+Should we be using a timer and round_jiffies() instead?
+
+johannes
+
+--=-VYMxshuHgCtPR0v1Gzsh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF04GL/ETPhpq3jKURAvz/AKCR213FgfngRgBiYJI1U1TTpMMFmQCgngQx
+SghI9a9h9n7BbamPbjk1C6c=
+=jCGJ
+-----END PGP SIGNATURE-----
+
+--=-VYMxshuHgCtPR0v1Gzsh--
+
