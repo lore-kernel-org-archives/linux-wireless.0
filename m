@@ -1,59 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:8519 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932269AbXB1Spd (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:58814 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932616AbXBNW23 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 13:45:33 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so641665nfa
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 10:45:32 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] rt2x00: split RT2X00 option
-Date: Wed, 28 Feb 2007 19:45:28 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200702281926.38820.IvDoorn@gmail.com> <1172687756.5015.65.camel@johannes.berg>
-In-Reply-To: <1172687756.5015.65.camel@johannes.berg>
+	Wed, 14 Feb 2007 17:28:29 -0500
+Message-ID: <45D38D06.40801@lwfinger.net>
+Date: Wed, 14 Feb 2007 16:28:22 -0600
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702281945.28426.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Joseph Jezak <josejx@gentoo.org>, Michael Buesch <mb@bu3sch.de>,
+	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
+References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net>	 <45CCBB93.2040703@lwfinger.net> <45CCC5DF.8010001@gentoo.org>	 <200702092017.36950.mb@bu3sch.de>  <45CCD1B1.80709@gentoo.org>	 <1171457525.11116.19.camel@johannes.berg>  <45D35F65.7060001@lwfinger.net> <1171481180.6093.11.camel@johannes.berg>
+In-Reply-To: <1171481180.6093.11.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 28 February 2007 19:35, Johannes Berg wrote:
-> On Wed, 2007-02-28 at 19:26 +0100, Ivo van Doorn wrote:
+Johannes Berg wrote:
+> On Wed, 2007-02-14 at 13:13 -0600, Larry Finger wrote:
 > 
-> > Make the debug(fs) config options depend on this new
-> > config option.
+>> I've got a pair of BCM4306 rev 2 cards. One of them is certainly available. Its LEDS don't work
+>> anymore, but the rest is functional.
 > 
-> I like that.
-
-:)
-
-> >  config RT2X00_DEBUGFS
-> >  	tristate "Ralink debugfs support"
-> > -	depends on RT2X00 && DEBUG_FS
-> > +	depends on RT2X00 && RT2X00_LIB && DEBUG_FS
-> >  	---help---
-> >  	Enable creation of debugfs files for the rt2x00 drivers.
-> >  	These debugfs files support both reading and writing of the
+> Oh good. Do they actually work right now?
 > 
-> If you think hard about it, this also solves the problem of having
-> drivers built-in when the debugfs module isn't. 
+> johannes
 
-Actually it doesn't fix that problem. :( It remains possible to
-compile all drivers into the kernel but keeping rt2x00debug.ko as
-module. But the solution really would be:
+With the patches I pulled yesterday, they work to 54Mbs. Performance is not as good as the 4311 or
+4318 cards, but usable.
 
-> But couldn't you just  
-> link the debugfs module into the lib module instead of making it an own
-> module? I don't see any point in having it separate since there will be
-> a dependency anyway.
+Larry
 
-My words exactly. ;)
-
-Merging those 2 modules has been placed on my todo list,
-I'll try to have this done as soon as possible.
-
-Ivo
