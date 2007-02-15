@@ -1,69 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40683 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965989AbXBOPTS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Feb 2007 10:19:18 -0500
-Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Joseph Jezak <josejx@gentoo.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Bcm43xx-dev@lists.berlios.de,
-	Larry Finger <larry.finger@lwfinger.net>
-In-Reply-To: <200702151613.20746.mb@bu3sch.de>
-References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net>
-	 <200702142240.01494.mb@bu3sch.de> <1171552024.5220.4.camel@johannes.berg>
-	 <200702151613.20746.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-14L1kdYiVQdEEXRiAArO"
-Date: Thu, 15 Feb 2007 16:19:13 +0100
-Message-Id: <1171552753.5220.10.camel@johannes.berg>
+Received: from styx.suse.cz ([82.119.242.94]:35749 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1161150AbXBOUPd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Feb 2007 15:15:33 -0500
+Date: Thu, 15 Feb 2007 21:15:28 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] d80211: Simplify channel & mode configuration
+Message-ID: <20070215211528.623e1c14@griffin.suse.cz>
+In-Reply-To: <200702092343.54479.flamingice@sourmilk.net>
+References: <200702092325.39994.flamingice@sourmilk.net>
+	<200702092343.54479.flamingice@sourmilk.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 9 Feb 2007 23:43:50 -0500, Michael Wu wrote:
+> --- a/net/d80211/ieee80211.c
+> +++ b/net/d80211/ieee80211.c
+> @@ -2005,8 +2005,24 @@ int ieee80211_if_config_beacon(struct ne
+>  int ieee80211_hw_config(struct ieee80211_local *local)
+>  {
+>  	struct ieee80211_hw_mode *mode;
+> +	struct ieee80211_channel *chan;
+>  	int ret = 0;
+>  
+> +	if (local->sta_scanning) {
+> +		chan = local->scan_channel;
+> +		mode = local->scan_hw_mode;
+> +	} else {
+> +		chan = local->oper_channel;
+> +		mode = local->oper_hw_mode;
+> +	}
+> +
+> +	local->hw.conf.channel = chan->chan;
+> +	local->hw.conf.channel_val = chan->val;
+> +	local->hw.conf.power_level = chan->power_level;
+> +	local->hw.conf.freq = chan->freq;
+> +	local->hw.conf.phymode = mode->mode;
+> +	local->hw.conf.antenna_max = chan->antenna_max;
 
---=-14L1kdYiVQdEEXRiAArO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+What about passing ieee80211_channel and ieee80211_hw_mode structures
+instead of a ton of variables? (Just an idea, not a problem with the
+patch.)
 
-On Thu, 2007-02-15 at 16:13 +0100, Michael Buesch wrote:
-> On Thursday 15 February 2007 16:07, Johannes Berg wrote:
-> > On Wed, 2007-02-14 at 22:40 +0100, Michael Buesch wrote:
-> > > On Wednesday 14 February 2007 14:18, Johannes Berg wrote:
-> > > > On Sat, 2007-02-10 at 06:55 +0100, Michael Buesch wrote:
-> > > >=20
-> > > > > It's likely that old cards still work with v4 firmware,
-> > > >=20
-> > > > No, it's absolutely impossible. Rev 2/4 cores have a totally differ=
-ent
-> > > > instruction set in the microcode.
-> > >=20
-> > > Ok, I was not talking about _that_ old cards. ;)
-> >=20
-> > Are there cards where they have new microcode instruction set but no v4
-> > firmware?
->=20
-> I don't know. I guessed so. Am I wrong? That would be good :)
+> +
+>  #ifdef CONFIG_D80211_VERBOSE_DEBUG
+>  	printk(KERN_DEBUG "HW CONFIG: channel=%d freq=%d "
+>  	       "phymode=%d\n", local->hw.conf.channel, local->hw.conf.freq,
+> @@ -2016,16 +2032,11 @@ int ieee80211_hw_config(struct ieee80211
+>  	if (local->ops->config)
+>  		ret = local->ops->config(local_to_hw(local), &local->hw.conf);
+>  
+> -	list_for_each_entry(mode, &local->modes_list, list) {
+> -		if (mode->mode == local->hw.conf.phymode) {
+> -			if (local->curr_rates != mode->rates)
+> -				rate_control_clear(local);
+> -			local->curr_rates = mode->rates;
+> -			local->num_curr_rates = mode->num_rates;
+> -			ieee80211_prepare_rates(local);
+> -			break;
+> -		}
+> -	}
+> +	if (local->curr_rates != mode->rates)
+> +		rate_control_clear(local);
+> +	local->curr_rates = mode->rates;
+> +	local->num_curr_rates = mode->num_rates;
+> +	ieee80211_prepare_rates(local);
 
-I wouldn't think so since we have rev5 v4 firmware and that should be
-the oldest post-rev4 right?
+This will trigger rate control reinitialization when scanning on abg
+cards. It's needed but not obvious at first sight. Perhaps some comment
+would be useful here? (Again, not a problem with the patch, just
+something I realized looking at the patch and thinking why the hell do
+we do the reinitialization here?)
 
-johannes
+> [...]
+> --- a/net/d80211/ieee80211_ioctl.c
+> +++ b/net/d80211/ieee80211_ioctl.c
+> @@ -1828,20 +1828,18 @@ int ieee80211_ioctl_siwfreq(struct net_d
+>  				if (set && mode->mode != local->next_mode)
+>  					continue;
+>  
+> -				local->hw.conf.channel = chan->chan;
+> -				local->hw.conf.channel_val = chan->val;
+> -                                local->hw.conf.power_level = chan->power_level;
+> -				local->hw.conf.freq = chan->freq;
+> -				local->hw.conf.phymode = mode->mode;
+> -                                local->hw.conf.antenna_max = chan->antenna_max;
+> +				local->oper_channel = chan;
+> +				local->oper_hw_mode = mode;
+>  				set++;
+>  			}
+>  		}
+>  	}
+>  
+>  	if (set) {
+> -		local->sta_scanning = 0; /* Abort possible scan */
+> -		return ieee80211_hw_config(local);
+> +		if (local->sta_scanning)
+> +			return 0;
 
---=-14L1kdYiVQdEEXRiAArO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+A comment mentioning that correct channel will be chosen automatically
+when the scan is finished would be useful, I think. No need to send a
+new patch, though :-)
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+> +		else
+> +			return ieee80211_hw_config(local);
 
-iD8DBQBF1Hnx/ETPhpq3jKURAvvKAJ9hu48KH5POIIsVoFR4EuoUBfdveQCeOK0C
-As9qoLd/K7zMznVksNA29A4=
-=gIWn
------END PGP SIGNATURE-----
 
---=-14L1kdYiVQdEEXRiAArO--
-
+-- 
+Jiri Benc
+SUSE Labs
