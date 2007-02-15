@@ -1,57 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:60550 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946363AbXBQBpq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Feb 2007 20:45:46 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HIEcg-0007Mw-H3
-	for linux-wireless@vger.kernel.org; Fri, 16 Feb 2007 20:44:22 -0500
-Subject: Re: wireless-dev.git breaks wireless extensions
-From: Pavel Roskin <proski@gnu.org>
-To: "John W. Linville" <linville@tuxdriver.com>
+Received: from styx.suse.cz ([82.119.242.94]:34724 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1030689AbXBOTLJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Feb 2007 14:11:09 -0500
+Date: Thu, 15 Feb 2007 20:11:07 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Michael Wu <flamingice@sourmilk.net>
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20070217010221.GA3405@tuxdriver.com>
-References: <1171670057.28539.5.camel@dv>
-	 <1171670990.3575.50.camel@johannes.berg> <1171673414.28874.4.camel@dv>
-	 <20070217010221.GA3405@tuxdriver.com>
-Content-Type: text/plain
-Date: Fri, 16 Feb 2007 20:45:40 -0500
-Message-Id: <1171676740.29232.4.camel@dv>
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] d80211: Add software sequence support
+Message-ID: <20070215201107.46e4344f@griffin.suse.cz>
+In-Reply-To: <200702151402.48150.flamingice@sourmilk.net>
+References: <200702141423.27823.IvDoorn@gmail.com>
+	<1171557724.5220.30.camel@johannes.berg>
+	<200702151402.48150.flamingice@sourmilk.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-02-16 at 20:02 -0500, John W. Linville wrote:
-> On Fri, Feb 16, 2007 at 07:50:14PM -0500, Pavel Roskin wrote:
-> 
-> > Even if I compile D80211 and CFG80211 as modules and load MadWifi, lsmod
-> > shows that cfg80211 is not loaded, but the iwconfig output is still
-> > wrong.  Some part of cfg80211 must be compiled into the kernel.
-> 
-> Sounds like the new version of cfg80211's wext compatibility hook
-> is broken...?
+On Thu, 15 Feb 2007 14:02:43 -0500, Michael Wu wrote:
+> If we're going to switch to a library approach, let's do it all at once. I 
+> don't want some features requiring flags to toggle and others requiring a 
+> function to call.
 
-I've applied two patches by Johannes "fix wext_ioctl() exit path" and
-"fix cfg80211 modular compile w/o wext-compat", and MadWifi is working
-fine now.
+Entirely library approach is not possible. So we're going to end up
+with mixed environment in any case.
 
-On the other hand, DadWifi won't compile:
-
-/home/proski/src/dadwifi/ath/if_ath_d80211.c: In function
-'ath_d80211_calc_bssid_mask':
-/home/proski/src/dadwifi/ath/if_ath_d80211.c:305: error: 'struct
-ieee80211_hw' has no member named 'perm_addr'
-
-The same problem exists with iwlwifi.  I'm away from my bcm43xx card at
-the moment.
-
-I'll post more if I find any problems with either upgrading the driver
-or wireless extensions for d80211 enabled drivers.
+ Jiri
 
 -- 
-Regards,
-Pavel Roskin
-
+Jiri Benc
+SUSE Labs
