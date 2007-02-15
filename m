@@ -1,51 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.nuim.ie ([149.157.1.19]:63833 "EHLO LARCH.MAY.IE"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752044AbXB0XcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Feb 2007 18:32:05 -0500
-Date: Tue, 27 Feb 2007 17:00:00 +0000
-From: Gavin McCullagh <gavin.mccullagh@nuim.ie>
-Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
-In-reply-to: <20070210125707.GA21803@srcf.ucam.org>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	Joseph Jezak <josejx@gentoo.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Bcm43xx-dev@lists.berlios.de
-Reply-to: Gavin McCullagh <gavin.mccullagh@nuim.ie>
-Message-id: <20070227170000.GZ12087@nuim.ie>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net>
- <45CCCAE1.9080901@lwfinger.net> <20070209213239.GA11650@srcf.ucam.org>
- <200702100655.51495.mb@bu3sch.de> <20070210125707.GA21803@srcf.ucam.org>
+Received: from py-out-1112.google.com ([64.233.166.179]:48757 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030216AbXBOQ6J (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Feb 2007 11:58:09 -0500
+Received: by py-out-1112.google.com with SMTP id a29so280757pyi
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Feb 2007 08:58:08 -0800 (PST)
+Message-ID: <1ba2fa240702150858g6598ab81p6b1fa5f904a94fad@mail.gmail.com>
+Date: Thu, 15 Feb 2007 18:58:08 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Jouni Malinen" <jkm@devicescape.com>
+Subject: Re: d80211: current TKIP hwcrypto implementation seems to be broken
+Cc: "Michael Buesch" <mb@bu3sch.de>, "Jiri Benc" <jbenc@suse.cz>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070213012041.GH16597@instant802.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <200702041344.19117.mb@bu3sch.de> <200702130023.53271.mb@bu3sch.de>
+	 <1ba2fa240702121554v4e5b55b3t4582241f6347b355@mail.gmail.com>
+	 <200702130110.02658.mb@bu3sch.de>
+	 <1ba2fa240702121619x259f546dga2bebefbe24bf1d3@mail.gmail.com>
+	 <20070213002849.GE16597@instant802.com>
+	 <1ba2fa240702121708k29634cf0r8d8ab8e02bca8dfc@mail.gmail.com>
+	 <20070213012041.GH16597@instant802.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 2/13/07, Jouni Malinen <jkm@devicescape.com> wrote:
+> On Tue, Feb 13, 2007 at 03:08:03AM +0200, Tomas Winkler wrote:
+>
+> > There are real cases when this happens. Try to two different AC for
+> > example  VoIP and have FTP in parallel.  Packets for low priority AC
+> > can be stalled encrypted and scheduled in a AP TX queue while high
+> > priority packets are already sent with the new key.
+> > Maybe the new key can be computed on demand but it's good thing to
+> > preserve the old key for while.
+>
+> I don't know the particular hardware design well enough to comment on
+> this, but d80211 software implementation keeps a separate RX P1K for
+> each AC (actually, each TID). In other words, this kind of issue does
+> not show up there. If the hardware implementation is limited to only one
+> P1K for RX, there may be some benefit on storing old keys in some cases,
+> but I'm not sure how that would work if the key has to be configured
+> before the frame is actually received.
 
-On Sat, 10 Feb 2007, Matthew Garrett wrote:
 
-> On Sat, Feb 10, 2007 at 06:55:50AM +0100, Michael Buesch wrote:
-> 
-> > It's likely that old cards still work with v4 firmware, but we don't know and
-> > it has to be tested.
-> > 
-> > Care to do so?
-> 
-> I'll check the revision of my 4306, but I think it's probably too new to 
-> be useful, unfortunately...
+Since TX  can use only on sequence counter regardless of AC also on
+receive side it's enough to use one phase1 key. To keep phase1 key for
+each AC is possible but it wast of memory. You need to keep just old
+key till all AC wraps.
 
-I have a fairly old 4306 at home which I was lent by my boss and I've been
-struggling to get it working for the past week or two.  What I find is that
-loads of firmwares which I try with bcm43xx-fwcutter complain about the
-firmware being old but then when I get a firmware which is not too old the
-device registers but doesn't seem to work -- iwlist can't see any access
-points and when I set the essid it doesn't associate with the AP.
+> In other words, in this case, the next frame after an FTP packet could
+> well be from voice and not background and reconfiguring the old P1K
+> value could have caused more latency on the higher priority frame at
+> this point.. In other word, if there is only one RX P1K, the benefits
+> for throughput may be requiring compromise on latency for higher
+> priority traffic and that may or may not be acceptable.
+>
 
-Can I be helpful as a tester?
+You decrypt with old phase1 only in software, usually it is only few
+packets (since TX counter is global). It will be a bug to configure HW
+with the old key.
 
-Gavin
-
+> Jouni Malinen                                            PGP id EFC895FA
+>
