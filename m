@@ -1,59 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:37652 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932078AbXB1SPq (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:39426 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1030692AbXBOTL2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 13:15:46 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so633763nfa
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 10:15:44 -0800 (PST)
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH 8/28] rt2x00: optimize mac/bssid writing
-Date: Wed, 28 Feb 2007 19:15:40 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200702281507.11726.IvDoorn@gmail.com> <200702281836.07850.mb@bu3sch.de>
-In-Reply-To: <200702281836.07850.mb@bu3sch.de>
+	Thu, 15 Feb 2007 14:11:28 -0500
+Message-ID: <45D49BDA.30402@linux.intel.com>
+Date: Thu, 15 Feb 2007 09:43:54 -0800
+From: James Ketrenos <jketreno@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702281915.40940.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+CC: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: Re: IPW2200 monitoring FW broken
+References: <200702151840.16963.mb@bu3sch.de> <45D48BDE.4070708@linux.intel.com> <200702151910.59609.mb@bu3sch.de>
+In-Reply-To: <200702151910.59609.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 28 February 2007 18:36, Michael Buesch wrote:
-> On Wednesday 28 February 2007 15:07, Ivo van Doorn wrote:
-> > Handling the mac and bssid configuration can be done much easier
-> > by writing the passed data directly into the register instead
-> > of moving it to a local variable first.
-> > 
-> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> > 
-> > ---
-> > 
-> > diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c b/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
-> > index 27e151d..b6bf9f3 100644
-> > --- a/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
-> > +++ b/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
-> > @@ -319,14 +319,11 @@ static inline void rt2400pci_close_debugfs(struct rt2x00_dev *rt2x00dev){}
-> >   */
-> >  static void rt2400pci_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
-> >  {
-> > -	u32 reg[2] = { 0, 0 };
-> > -
-> >  	/*
-> >  	 * The BSSID is passed to us as an array of bytes,
-> >  	 * that array is little endian, so no need for byte ordering.
->            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> >  	 */
-> > -	memcpy(&reg, bssid, ETH_ALEN);
-> > -	rt2x00_register_multiwrite(rt2x00dev, CSR5, &reg[0], sizeof(reg));
-> > +	rt2x00_register_multiwrite(rt2x00dev, CSR5, (u32*)bssid, ETH_ALEN);
->                                                     ^^^^^^
+Michael Buesch wrote:
+> On Thursday 15 February 2007 17:35, James Ketrenos wrote:
+>> you can't update the packet capture  
+>> window or you'll lose packets; but you should be able to get them all if 
+>> you're doing a tethereal > somefile or if you turn off the update of the 
+>> main window.
 > 
-> This doesn't break on BE machines?
+> "update of the packet capture window". What's that?
+> I started a simple traffic monitoring in wireshark. Nothing fancy.
 
-No, the multiwrite (just like multiread) does not perform byteordering,
-so the device will receive each byte in the correct order.
+In the 'Capture Options', the only option you can set is 'Hide capture 
+info dialog'.  If you turn on 'Update list of packets in real time' or 
+'Automatic scrolling in live capture', packets get dropped.  I don't 
+know if its a libpcap queue that fills up, if it starves the NIC, or 
+what--but having those turned on greatly reduces the # of packets you'll 
+capture.
 
-Ivo
+James
