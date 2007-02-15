@@ -1,76 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:42200 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752036AbXB0X0Z (ORCPT
+Received: from nz-out-0506.google.com ([64.233.162.234]:56037 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161503AbXBOWSF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Feb 2007 18:26:25 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Helge Deller <deller@gmx.de>
-Subject: Re: [PATCH] p54 various cleanups
-Date: Tue, 27 Feb 2007 18:26:03 -0500
-Cc: linux-wireless@vger.kernel.org
-References: <200702272219.58919.deller@gmx.de>
-In-Reply-To: <200702272219.58919.deller@gmx.de>
+	Thu, 15 Feb 2007 17:18:05 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so698919nze
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Feb 2007 14:18:05 -0800 (PST)
+Message-ID: <a32f33a40702151418q4314f64ewf8517838a7794e63@mail.gmail.com>
+Date: Thu, 15 Feb 2007 23:18:05 +0100
+From: "Ivo Van Doorn" <ivdoorn@gmail.com>
+To: "Jiri Benc" <jbenc@suse.cz>
+Subject: Re: [PATCH v2] d80211: Add software sequence support
+Cc: "Michael Wu" <flamingice@sourmilk.net>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070215215722.3db7f3ca@griffin.suse.cz>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart5560920.4FTdAhbx3Z";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200702271826.07149.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <200702141423.27823.IvDoorn@gmail.com>
+	 <200702151548.25041.flamingice@sourmilk.net>
+	 <20070215215722.3db7f3ca@griffin.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart5560920.4FTdAhbx3Z
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-
-On Tuesday 27 February 2007 16:19, Helge Deller wrote:
-> Patch below
-> - uses PCI_DEVICE macro
-> - adds a "const" to the p54_ops struct and
-> - replaces "__attribute__ ((packed))" by the generic "__packed" keyword.
+> > I am not so sure that storing this information in struct ieee80211_sta_bss
+> is
+> > correct. As far as I can tell, that is strictly for storing information
+> scan
+> > results and beacon information. Nothing outside of ieee80211_sta.c uses
+> it.
+> > struct sta_info or struct ieee80211_if_ap (sta interfaces have a pointer
+> to
+> > the struct ieee80211_if_ap on the master device) may be a better choice. I
+> > think struct sta_info is the right one though there is a problem - it
+> isn't
+> > allocated until a successful association.
 >
-> Signed-off-by: Helge Deller <deller@gmx.de>
->
-> PS: There are more possibilities to replace "__attribute__ ((packed))" by
-> the "__packed". Is this wished ? If yes, I can send additional patches for
-> the other subdirectories...
->
-If you don't mind, please split each cleanup into a separate patch and do a=
-ll=20
-d80211 drivers at the same time. adm8211 can also use the PCI_DEVICE cleanu=
-p,=20
-and adm8211, rt2x00, rtl8187, and zd1211rw can also switch to a const=20
-ieee80211_ops struct. I don't take patches for rt2x00 so you can either hav=
-e=20
-a patch with the adm8211/p54/zd1211rw ieee80211_ops cleanup and another wit=
-h =20
-the rt2x00 ieee80211_ops cleanup or you can make one big ieee80211_ops patc=
-h=20
-and let Linville apply that patch.
+> Thinking about it more, sdata should be the correct place. It's more
+> per-interface thing than per-BSS (although the difference is small in
+> this particular case).
 
-As for the __packed cleanup, I do not see any code in the kernel that uses=
-=20
-__packed, so I think it would be better if we dropped that for now.
+That would also optimize the sequence handler since the BSS
+does not have to be looked up anymore. I'll create the patch to do this asap.
 
-Thanks,
-=2DMichael Wu
-
---nextPart5560920.4FTdAhbx3Z
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBF5L4PT3Oqt9AH4aERAtosAKCl2hDCnZJVibW56VEWm/EDOVJgiwCeLCTc
-TDySjptNKoYeNzvgzkdHF84=
-=sokf
------END PGP SIGNATURE-----
-
---nextPart5560920.4FTdAhbx3Z--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+Ivo
