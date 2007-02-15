@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:51896 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750917AbXBWFpD (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:50078
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965951AbXBOPNk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Feb 2007 00:45:03 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HKTDO-0001qE-M3
-	for linux-wireless@vger.kernel.org; Fri, 23 Feb 2007 00:43:30 -0500
-Subject: Re: iwlwifi warnings
-From: Pavel Roskin <proski@gnu.org>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <20070221193836.GC3732@elf.ucw.cz>
-References: <45CCE3CA.4050904@linux.intel.com>
-	 <20070213181313.GA5350@ucw.cz> <45D254C6.7050401@linux.intel.com>
-	 <20070219224432.GD21199@elf.ucw.cz> <45DBE559.8080903@osdl.org>
-	 <20070221193836.GC3732@elf.ucw.cz>
-Content-Type: text/plain
-Date: Fri, 23 Feb 2007 00:44:58 -0500
-Message-Id: <1172209498.20817.54.camel@dv>
-Mime-Version: 1.0
+	Thu, 15 Feb 2007 10:13:40 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
+Date: Thu, 15 Feb 2007 16:13:20 +0100
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Joseph Jezak <josejx@gentoo.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de,
+	Larry Finger <larry.finger@lwfinger.net>
+References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net> <200702142240.01494.mb@bu3sch.de> <1171552024.5220.4.camel@johannes.berg>
+In-Reply-To: <1171552024.5220.4.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200702151613.20746.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-02-21 at 20:38 +0100, Pavel Machek wrote:
-> "Normal" installation procedure has too many steps in my eyes, and
-> combined git tree is not available, so I was waiting for merge at
-> least into -wirelessdev tree.
+On Thursday 15 February 2007 16:07, Johannes Berg wrote:
+> On Wed, 2007-02-14 at 22:40 +0100, Michael Buesch wrote:
+> > On Wednesday 14 February 2007 14:18, Johannes Berg wrote:
+> > > On Sat, 2007-02-10 at 06:55 +0100, Michael Buesch wrote:
+> > > 
+> > > > It's likely that old cards still work with v4 firmware,
+> > > 
+> > > No, it's absolutely impossible. Rev 2/4 cores have a totally different
+> > > instruction set in the microcode.
+> > 
+> > Ok, I was not talking about _that_ old cards. ;)
+> 
+> Are there cards where they have new microcode instruction set but no v4
+> firmware?
 
-"make patch_kernel" would patch the kernel from wireless-dev.git.  If
-the Linux source tree is not configured, just run "make distclean" after
-that (or apply my patch from the previous post in the ipw3945-devel
-list).
-
-You can use StGIT for convert the changes made by "make patch_kernel" to
-a local patch so that updating from the upstream git repository is still
-possible with "stg pull".
-
-No need to wait for anything.
+I don't know. I guessed so. Am I wrong? That would be good :)
 
 -- 
-Regards,
-Pavel Roskin
-
+Greetings Michael.
