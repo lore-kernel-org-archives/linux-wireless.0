@@ -1,31 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:54441
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030571AbXBMAPm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Feb 2007 19:15:42 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/4] create cfg80211
-Date: Tue, 13 Feb 2007 01:15:31 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Broadcom Linux <bcm43xx-dev@berlios.de>
-References: <20070209162711.375886000@sipsolutions.net> <1171222767.3576.2.camel@johannes.berg> <1171267928.4881.9.camel@johannes.berg>
-In-Reply-To: <1171267928.4881.9.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200702130115.32118.mb@bu3sch.de>
+Received: from styx.suse.cz ([82.119.242.94]:37036 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1161387AbXBOVa3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Feb 2007 16:30:29 -0500
+Date: Thu, 15 Feb 2007 22:30:28 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] d80211: Make common function for frequency/channel  selection
+Message-ID: <20070215223028.79a64b51@griffin.suse.cz>
+In-Reply-To: <200702101255.21479.flamingice@sourmilk.net>
+References: <200702101255.21479.flamingice@sourmilk.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 12 February 2007 09:12, Johannes Berg wrote:
-> The real bug I'm chasing (use-after-free leading to oops when rmmod'ing
-> bcm43xx-d80211 while device is up) is in bcm43xx-d80211 and I found it
-> too. Consider the following changes I made to debug:
+On Sat, 10 Feb 2007 12:55:17 -0500, Michael Wu wrote:
+> This patch creates ieee80211_set_channel and moves the channel selection
+> and setting code in ieee80211_ioctl_siwfreq to this function. This allows
+> IBSS code in ieee80211_sta.c to set the channel without using the wireless
+> extensions interface.
 
-Should be fixed in my tree now.
-Thanks for the good bugreport.
+Applied to my tree, thanks for the patch!
+
+ Jiri
 
 -- 
-Greetings Michael.
+Jiri Benc
+SUSE Labs
