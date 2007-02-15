@@ -1,58 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33393 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932506AbXBUKpd (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:47052
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030359AbXBORke (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Feb 2007 05:45:33 -0500
-Subject: Re: [RFC PATCH] d80211: fix build break from netdev class_device  -> device changes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, jbenc@suse.cz
-In-Reply-To: <20070221005811.GA3875@tuxdriver.com>
-References: <20070221005811.GA3875@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jYM1vcNQgP9XLFyXP8+3"
-Date: Wed, 21 Feb 2007 11:45:16 +0100
-Message-Id: <1172054717.3705.1.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 15 Feb 2007 12:40:34 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: linux-wireless@vger.kernel.org
+Subject: IPW2200 monitoring FW broken
+Date: Thu, 15 Feb 2007 18:40:16 +0100
+Cc: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+Message-Id: <200702151840.16963.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Is IPW2200 monitoring FW still broken?
+I miss huge amounts of packets when I try to monitor
+some traffic.
 
---=-jYM1vcNQgP9XLFyXP8+3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm using current wireless-2.6 + v3.0 firmware.
 
-On Tue, 2007-02-20 at 19:58 -0500, John W. Linville wrote:
-> In preparation for 2.6.21-rc1, I pulled Linus' latest tree into a
-> branch of wireless-dev.  I hit a build problem with the sysfs stuff,
-> due to the recent changes from class_device -> device for net_device.
+Using two antennas.
 
-Hmm, need to look up the reason and see if wiphy stuff should follow.
-
-> Since I don't count sysfs as a strength, I thought it was worth
-> posting this for some review before I actually pulled Linus' latest
-> into wireless-dev and slapped this on top of it... :-)
->=20
-> Comments?
-
-Seems fine. Is to_net_dev() defined in netdevice.h now?
-
-OTOH, we might want to take this opportunity and move it all to
-debugfs ;)
-
-johannes
-
---=-jYM1vcNQgP9XLFyXP8+3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF3CK8/ETPhpq3jKURAg78AJ9AX5vFJ9fFQWiP6DmqFLf4ds3vtgCggnlz
-dtyZEzxDNpqk9jyOlljxluE=
-=yrDn
------END PGP SIGNATURE-----
-
---=-jYM1vcNQgP9XLFyXP8+3--
-
+-- 
+Greetings Michael.
