@@ -1,57 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:40840 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1946208AbXBPShH (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49417
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965945AbXBOPKV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Feb 2007 13:37:07 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] d80211: Simplify channel & mode configuration
-Date: Fri, 16 Feb 2007 13:36:39 -0500
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-References: <200702092325.39994.flamingice@sourmilk.net> <200702151552.02331.flamingice@sourmilk.net> <1171645270.4153.2.camel@localhost.localdomain>
-In-Reply-To: <1171645270.4153.2.camel@localhost.localdomain>
+	Thu, 15 Feb 2007 10:10:21 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 07/10] bcm43xx-d80211: update for wiphy api
+Date: Thu, 15 Feb 2007 16:09:58 +0100
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Jiri Benc <jbenc@suse.cz>
+References: <20070215144241.847938000@sipsolutions.net> <20070215144259.397393000@sipsolutions.net>
+In-Reply-To: <20070215144259.397393000@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1309428.Z68NbPyCIB";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200702161336.44355.flamingice@sourmilk.net>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200702151609.58861.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1309428.Z68NbPyCIB
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Thursday 15 February 2007 15:42, Johannes Berg wrote:
+> update bcm43xx-d80211.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-On Friday 16 February 2007 12:01, Dan Williams wrote:
-> > Yeah, this is why rate control never seems to work right on my system -
-> > NetworkManager keeps scanning and resetting the rate control. I'm not
-> > sure exactly how to fix it, so I just left it..
->
-> Hmm; NM shouldn't be resetting the rate explicitly.  If the driver
-> resets the rate on a scan, isn't that a problem in the driver?
->
-The act of scanning causes the rate control to reset. It's a problem in=20
-d80211.
+ACK for this.
 
-=2DMichael Wu
+> ---
+> Really bcm43xx should be using the new wiphy debugfs stuff as well,
+> but I can't figure out what the hell it is doing when multiple
+> devices exist in a system. Thing is the new debugfs dir is only
 
---nextPart1309428.Z68NbPyCIB
-Content-Type: application/pgp-signature
+What do you mean? It registers multiple ieee80211_hw, of course.
+Look at bcm43xx_wireless_init(), that's per-card (not per core).
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+> created for d80211 drivers when calling register_hw() and all items
+> must be gone from it when calling free_hw()...
+> 
+> ---
+>  drivers/net/wireless/d80211/bcm43xx/bcm43xx_debugfs.c |    2 +-
+>  drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c    |   15 ++++++---------
+>  2 files changed, 7 insertions(+), 10 deletions(-)
+> 
+> --- wireless-dev.orig/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c	2007-02-15 13:50:28.967940064 +0100
+> +++ wireless-dev/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c	2007-02-15 14:01:33.486635438 +0100
+> @@ -3282,7 +3282,7 @@ static int bcm43xx_wireless_core_init(st
+>  	ssb_bus_powerup(bus, 1); /* Enable dynamic PCTL */
+>  	bcm43xx_macfilter_clear(dev, BCM43xx_MACFILTER_ASSOC);
+>  	bcm43xx_macfilter_set(dev, BCM43xx_MACFILTER_SELF,
+> -			      (u8 *)(wl->hw->perm_addr));
+> +			      (u8 *)(wl->hw->wiphy->perm_addr));
+>  	bcm43xx_security_init(dev);
+>  	bcm43xx_measure_channel_change_time(dev);
+>  
+> @@ -3743,14 +3743,11 @@ static int bcm43xx_wireless_init(struct 
+>  		    IEEE80211_HW_WEP_INCLUDE_IV;
+>  	hw->maxssi = BCM43xx_RX_MAX_SSI;
+>  	hw->queues = 1;
+> -	hw->dev = &dev->dev;
+> -	if (is_valid_ether_addr(sprom->r1.et1mac)) {
+> -		memcpy(hw->perm_addr, sprom->r1.et1mac,
+> -		       ARRAY_SIZE(hw->perm_addr));
+> -	} else {
+> -		memcpy(hw->perm_addr, sprom->r1.il0mac,
+> -		       ARRAY_SIZE(hw->perm_addr));
+> -	}
+> +	SET_IEEE80211_DEV(hw, &dev->dev);
+> +	if (is_valid_ether_addr(sprom->r1.et1mac))
+> +		SET_IEEE80211_PERM_ADDR(hw, sprom->r1.et1mac);
+> +	else
+> +		SET_IEEE80211_PERM_ADDR(hw, sprom->r1.il0mac);
+>  
+>  	/* Get and initialize struct bcm43xx_wl */
+>  	wl = hw_to_bcm43xx_wl(hw);
+> --- wireless-dev.orig/drivers/net/wireless/d80211/bcm43xx/bcm43xx_debugfs.c	2007-02-15 13:50:28.917940064 +0100
+> +++ wireless-dev/drivers/net/wireless/d80211/bcm43xx/bcm43xx_debugfs.c	2007-02-15 14:02:18.646635438 +0100
+> @@ -308,7 +308,7 @@ void bcm43xx_debugfs_add_device(struct b
+>  
+>  	dev->dfsentry = e;
+>  
+> -	snprintf(devdir, sizeof(devdir), "wiphy%d", dev->wl->hw->index);
+> +	snprintf(devdir, sizeof(devdir), "%s", wiphy_name(dev->wl->hw->wiphy));
+>  	e->subdir = debugfs_create_dir(devdir, fs.root);
+>  	e->dentry_tsf = debugfs_create_file("tsf", 0666, e->subdir,
+>  	                                    dev, &tsf_fops);
+> 
+> --
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-iD8DBQBF1fm8T3Oqt9AH4aERAiOQAJ0Y1Ek2rq6uw8p420B2+PSQvcNaJwCgoGd+
-dtwYSOYXysbqpYD87tQnrJQ=
-=yJEd
------END PGP SIGNATURE-----
-
---nextPart1309428.Z68NbPyCIB--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Greetings Michael.
