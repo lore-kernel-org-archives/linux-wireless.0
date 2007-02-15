@@ -1,41 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:53836
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030516AbXBMAGu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Feb 2007 19:06:50 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Jouni Malinen" <jkm@devicescape.com>
-Subject: Re: d80211: current TKIP hwcrypto implementation seems to be broken
-Date: Tue, 13 Feb 2007 01:06:37 +0100
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-References: <200702041344.19117.mb@bu3sch.de> <200702122239.31778.mb@bu3sch.de> <20070212235341.GD16597@instant802.com>
-In-Reply-To: <20070212235341.GD16597@instant802.com>
+Received: from ns.suse.de ([195.135.220.2]:47238 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161575AbXBOWmU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Feb 2007 17:42:20 -0500
+Date: Thu, 15 Feb 2007 14:40:57 -0800
+From: Greg KH <greg@kroah.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: renaming in debugfs?
+Message-ID: <20070215224057.GA20464@kroah.com>
+References: <1171540374.20204.2.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702130106.37999.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1171540374.20204.2.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 13 February 2007 00:53, Jouni Malinen wrote:
-> On Mon, Feb 12, 2007 at 10:39:31PM +0100, Michael Buesch wrote:
+On Thu, Feb 15, 2007 at 12:52:53PM +0100, Johannes Berg wrote:
+> For the wiphy stuff I wanted to provide a debugfs as well as a sysfs dir
+> for drivers (or the d80211 stack).
 > 
-> > What happens on RX when the iv32 wraps. Well, it simply won't decrypt
-> > the frame. What we must do then is upload a new key as fast as possible.
-> > The undecrypted frame can be either decrypted in SW (which I think d80211
-> > can do. At least with minor additional changes), or we drop it.
-> 
-> That "iv32 wrap" should have been "iv32 changes" (phase1 key changes
+> But then I decided that stable wiphy names will be a good thing instead
+> of just numbering them wiphy%d. Does anyone have any idea how to rename
+> directories in debugfs? I guess that for sysfs it'll just work if I
+> change the kobject name, but maybe that's wrong too?
 
-Yep, I'm sorry. It should be iv32, of course.
+No, use kobject_rename() if you want to rename a kobject in sysfs (or
+the real device_rename() call if you have a struct device).
 
-> whenever iv16 changes, i.e., when iv32 is incremented by one). d80211
-> does indeed support software decryption for this case, so it is fine to
-> just pass the undecrypted frame up and marking it as such. This was
-> needed for some of the TKIP cases with Atheros.
+For debugfs, there is no rename function yet, but it would be pretty
+trivial to add one if you wish.
 
-That's really cool.
+thanks,
 
--- 
-Greetings Michael.
+greg k-h
