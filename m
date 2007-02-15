@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:52763
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751624AbXBOP0w (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:38648 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161157AbXBOUVR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Feb 2007 10:26:52 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Linville, John" <linville@tuxdriver.com>
-Subject: Please pull from http://bu3sch.de/git/wireless-dev.git master
-Date: Thu, 15 Feb 2007 16:26:35 +0100
-Cc: linux-wireless@vger.kernel.org
+	Thu, 15 Feb 2007 15:21:17 -0500
+Message-ID: <45D4AC45.6050903@linux.intel.com>
+Date: Thu, 15 Feb 2007 10:53:57 -0800
+From: James Ketrenos <jketreno@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200702151626.35504.mb@bu3sch.de>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: yorkliu@sourceforge.net, Dan Williams <dcbw@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: network manager vs. missing firmware
+References: <1171392106.10344.100.camel@johannes.berg>	 <1171394598.5329.31.camel@localhost.localdomain>	 <45D25984.7080808@linux.intel.com> <43e72e890702131847q3306ef05s8ecb2c5f8d3b5676@mail.gmail.com>
+In-Reply-To: <43e72e890702131847q3306ef05s8ecb2c5f8d3b5676@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following changes since commit f962aa6758ad1b3df8315bb4d203947d3e638cf9:
-  Johannes Berg:
-        maintainers: update all wireless entries
+Luis R. Rodriguez wrote:
+> On 2/13/07, James Ketrenos <jketreno@linux.intel.com> wrote:
+>> Dan Williams wrote:
+>>
+>> > The simpler, the better I think; but it's complicated.  A sample of
+>> > current drivers and when they call request_firmware() from a 2.6.19
+>> > kernel:
+>> >
+>> > on dev->open: atmel, prism54, bcm43xx (softmac)
+>> > on dev->init: ipw2100, ipw2200
+>>
+>> request_firmware is also used during mode changes (ie, BSS to IBSS to
+>> MONITOR)
+> 
+> This is a bit off topic but if that's the case then we should also add
+> the check for Master mode and if so check to see if the AP firmware is
+> available and switch to on master mode. We'd then need to incorporate
+> the ap ipw2200 support on ipw2200
+> 
+> http://sourceforge.net/projects/ipw2200-ap
+> 
+> I wanted to try a patch to send along but I cannot find the relevent
+> code except the firmware there. Perhaps yorkliu can supply that
+> though.
 
-are found in the git repository at:
+Under the 'Download' link there is v0.3 available -- 
+http://sourceforge.net/project/showfiles.php?group_id=149502
 
-  http://bu3sch.de/git/wireless-dev.git
+I haven't tried it myself.  It hasn't been updated since Sept so 
+probably needs some kernel API cleanup.
 
-Michael Buesch:
-      bcm43xx-d80211: Fix rmmod crash. Call unregister_hw early.
-      bcm43xx-d80211: Do all init work in wireless_core_init().
-      ssb: Add API to properly handle bus powercontrol.
-      bcm43xx-d80211: Powerdown bus after attach step to save power.
-      bcm43xx-d80211: Implement card reset routine
-      bcm43xx-d80211: Fix stupid locking bug on error in chip_reset.
-      bcm43xx-d80211: Fix locking info text.
-      Merge branch 'master' of git://zeus2.kernel.org/.../linville/wireless-dev
-
- drivers/net/wireless/d80211/bcm43xx/bcm43xx.h      |   15 +-
- drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c |  146 +++++++++++++-------
- drivers/ssb/core.c                                 |   44 ++++++
- drivers/ssb/driver_chipcommon/chipcommon.c         |    1 
- include/linux/ssb/ssb.h                            |    5 +
- 5 files changed, 146 insertions(+), 65 deletions(-)
-
--- 
-Greetings Michael.
+James
