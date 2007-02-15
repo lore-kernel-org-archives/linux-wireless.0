@@ -1,63 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:33856 "EHLO
-	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751905AbXB0Vgp (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.230]:44788 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965133AbXBOIRw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Feb 2007 16:36:45 -0500
-Date: Tue, 27 Feb 2007 15:35:59 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] bcm43xx: Fix errors in specs to code translation in B6PHY init
-Message-ID: <45e4a43f.BEt7jx5dMLQiM3wz%Larry.Finger@lwfinger.net>
+	Thu, 15 Feb 2007 03:17:52 -0500
+Received: by wr-out-0506.google.com with SMTP id i31so595069wra
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Feb 2007 00:17:52 -0800 (PST)
+Message-ID: <40f31dec0702150017x3ecfca57ucded8f1d88bbb121@mail.gmail.com>
+Date: Thu, 15 Feb 2007 10:17:50 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: nl80211 userspace
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1171479846.3709.3.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+References: <1171479846.3709.3.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are three errors in the transcription of the latest revision to the
-B6PHY init specifications.
+I think it would be nice to have ifconfig for all interface
+configuration as they have done in openbsd, it's better to have one
+tool for all. What do you think ?
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+2007/2/14, Johannes Berg <johannes@sipsolutions.net>:
+> Hi,
+>
+> I've been playing a bit with parsing a modified nl80211 header file to
+> get a tool and
+>
+>  http://git.sipsolutions.net/pynl80211.git/
+>
+> is what I currently have. It doesn't
+> actually send netlink messages yet but that ought to be trivial to add,
+> I'm too lazy right now to look up all the exact binary stuff. Python
+> does have a "struct" module that can be used to pack things into binary
+> so it's really easy :)
+>
+> Anyway. The repository contains a modified nl80211.h and the tool relies on
+> a lot of things to be correct in it, see parse.py.
+>
+> Examples:
+> $ ./wificonf.py help configure
+> ./wificonf.py configure ifindex [ssid=...] [transmit_power=...] [frag_threshold=...] [channel=...] [rx_sensitivity=...]
+>         ifindex: interface name or index
+>         ssid: string (1-32 bytes)
+>         transmit_power: u32
+>         frag_threshold: u32
+>         channel: u32
+>         rx_sensitivity: u32
+> $ ./wificonf.py help set_roaming_control
+> ./wificonf.py set_roaming_control ifindex roaming_control
+>         ifindex: interface name or index
+>         roaming_control: kernel, userspace
+> $ ./wificonf.py configure eth1 ssid="my ssid" channel=7 frag_threshold=580
+> TODO: construct a netlink message with command number 9
+> and the following attributes
+>         1: 4
+>         18: 'my ssid'
+>         20: 580
+>         12: 7
+> $ ./wificonf.py set_fixed_bssid eth1 0:1:2:3:4:ff
+> TODO: construct a netlink message with command number 17
+> and the following attributes
+>         1: 4
+>         15: '\x00\x01\x02\x03\x04\xff'
+>
+> (ifindex is looked up via sysfs: /sys/class/net/<name>/ifindex)
+>
+> Obviously parsing the response netlink message is missing too :)
+>
+> Included also is a check shell script that will use wificonf's parser to
+> make sure the header file was parsed correctly wrt the numbers of the
+> constants (since I don't have a C parser built into it.)
+>
+> johannes
+>
+>
 
-John,
 
-This patch should be applied to wireless-2.6 and sent upstream to 2.6.21-rcX.
-
-Larry
-
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-@@ -859,6 +859,9 @@ static void bcm43xx_phy_initb6(struct bc
- 		bcm43xx_radio_write16(bcm, 0x005D, 0x0088);
- 		bcm43xx_radio_write16(bcm, 0x005E, 0x0088);
- 		bcm43xx_radio_write16(bcm, 0x007D, 0x0088);
-+		bcm43xx_write32(bcm, BCM43xx_MMIO_STATUS_BITFIELD,
-+				bcm43xx_read32(bcm, BCM43xx_MMIO_STATUS_BITFIELD)
-+				| 0x00000200);
- 	}
- 	if (radio->revision == 8) {
- 		bcm43xx_radio_write16(bcm, 0x0051, 0x0000);
-@@ -941,7 +944,8 @@ static void bcm43xx_phy_initb6(struct bc
- 	bcm43xx_phy_write(bcm, 0x0038, 0x0668);
- 	bcm43xx_radio_set_txpower_bg(bcm, 0xFFFF, 0xFFFF, 0xFFFF);
- 	if (radio->revision <= 5)
--		bcm43xx_phy_write(bcm, 0x005D, bcm43xx_phy_read(bcm, 0x005D) | 0x0003);
-+		bcm43xx_phy_write(bcm, 0x005D, (bcm43xx_phy_read(bcm, 0x005D)
-+			          & 0xFF80) | 0x0003);
- 	if (radio->revision <= 2)
- 		bcm43xx_radio_write16(bcm, 0x005D, 0x000D);
- 	
-@@ -958,7 +962,7 @@ static void bcm43xx_phy_initb6(struct bc
- 		bcm43xx_phy_write(bcm, 0x0016, 0x0410);
- 		bcm43xx_phy_write(bcm, 0x0017, 0x0820);
- 		bcm43xx_phy_write(bcm, 0x0062, 0x0007);
--		(void) bcm43xx_radio_calibrationvalue(bcm);
-+		bcm43xx_radio_init2050(bcm);
- 		bcm43xx_phy_lo_g_measure(bcm);
- 		if (bcm->sprom.boardflags & BCM43xx_BFL_RSSI) {
- 			bcm43xx_calc_nrssi_slope(bcm);
+-- 
+As you read this post global entropy rises. Have Fun ;-)
+Nick
