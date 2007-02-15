@@ -1,42 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:34641 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751841AbXBWVFM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Feb 2007 16:05:12 -0500
-Message-ID: <45DF5635.5080905@linux.intel.com>
-Date: Fri, 23 Feb 2007 13:01:41 -0800
-From: James Ketrenos <jketreno@linux.intel.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] d80211: create net/wireless/Kconfig and make nl80211  optional
-References: <45DF518B.5060809@linux.intel.com> <1172263955.3870.85.camel@johannes.berg>
-In-Reply-To: <1172263955.3870.85.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from styx.suse.cz ([82.119.242.94]:37009 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1161377AbXBOV3K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Feb 2007 16:29:10 -0500
+Date: Thu, 15 Feb 2007 22:29:09 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] d80211: Simplify channel & mode configuration
+Message-ID: <20070215222909.2b88dd56@griffin.suse.cz>
+In-Reply-To: <200702092343.54479.flamingice@sourmilk.net>
+References: <200702092325.39994.flamingice@sourmilk.net>
+	<200702092343.54479.flamingice@sourmilk.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Fri, 2007-02-23 at 12:41 -0800, James Ketrenos wrote:
->> Move the wireless Kconfig options into their own wireless/Kconfig and
->> add a CONFIG_CFG80211_NL80211 configuration option to allow nl80211
->> support to be optionally included (default =y)
-> 
-> I think this one is missing the changes in net/Kconfig.
-> 
-> And I should have looked closer before, sorry.
-> 
-> +config CFG80211
-> +        tristate "Improved wireless configuration API"
-> +        select WIRELESS_EXT
-> 
-> Why is that select WIRELESS_EXT? CFG80211 doesn't need that, d80211 does
-> and correctly selects it.
+On Fri, 9 Feb 2007 23:43:50 -0500, Michael Wu wrote:
+> This patch simplifies channel & mode setting while eliminating a race
+> between channel configuration and scanning. It also adds a call to
+> ieee80211_hw_config after ops->open.
 
-Confusion mostly...
+Applied to my tree, thanks for the patch!
 
-I've removed it.
+ Jiri
 
-James
+-- 
+Jiri Benc
+SUSE Labs
