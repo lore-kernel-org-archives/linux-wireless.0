@@ -1,38 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2048 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161357AbXBGPOO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Feb 2007 10:14:14 -0500
-Date: Wed, 7 Feb 2007 09:39:44 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: Re: [RFC v2] cfg80211 merge
-Message-ID: <20070207143944.GA6109@tuxdriver.com>
-References: <20070131013717.GA28076@tuxdriver.com> <20070207004626.GA23096@tuxdriver.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44075 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965961AbXBOPFf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Feb 2007 10:05:35 -0500
+Subject: Re: nl80211 userspace
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070215141944.GA3310@tuxdriver.com>
+References: <1171479846.3709.3.camel@johannes.berg>
+	 <40f31dec0702150017x3ecfca57ucded8f1d88bbb121@mail.gmail.com>
+	 <20070215141944.GA3310@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1BXg6PWNDmNXTjUZEyYf"
+Date: Thu, 15 Feb 2007 16:05:29 +0100
+Message-Id: <1171551930.5220.2.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070207004626.GA23096@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 06, 2007 at 07:46:26PM -0500, John W. Linville wrote:
-> In London we agreed that it would be good to go ahead and merge
-> cfg80211.  This provides some exposure to the API and eases some of
-> the pain for driver maintainers (who won't have to follow wireless-dev
-> to get it).  It also adds the ieee80211_ptr to the net_device struct.
-> 
-> I have refactored the cfg80211-related patches down to three patches.
-> This eliminates some of the churn in the series from wireless-dev,
-> and each patch leaves a buildable tree.  This version also removes
-> the nl80211 bits to a separate patch (available in wireless-dev on
-> the mm-master branch).
 
-Hmmm...looks like 2/3 got dropped, probably due to size.  FWIW, it
-is basically identical to the last round and is really just a rename
-of wireless.c to wext-old.c.
+--=-1BXg6PWNDmNXTjUZEyYf
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+On Thu, 2007-02-15 at 09:19 -0500, John W. Linville wrote:
+
+> P.S.  Michael is, of course, right that the tool for users probably
+> should not rely on python (or perl, et al).  FWIW, I got the
+> impression that Johannes's tool was meant to use in the short-run
+> for developers...?
+
+Yes. The advantage is that you don't even need to recompile it for new
+commands. And hey, maybe we can hack it up to generate the C code for
+the real tool :P
+
+johannes
+
+--=-1BXg6PWNDmNXTjUZEyYf
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF1Ha5/ETPhpq3jKURAvP9AJ9R+UmtVKKV4XuzKNG2YrHjX8/ffACfXCZi
+PmUuHUTlDVJ3lWRDw48SudM=
+=32GK
+-----END PGP SIGNATURE-----
+
+--=-1BXg6PWNDmNXTjUZEyYf--
+
