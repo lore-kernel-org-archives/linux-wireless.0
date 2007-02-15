@@ -1,178 +1,618 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:46206 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750810AbXB0MCG (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43641 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965602AbXBOO7u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Feb 2007 07:02:06 -0500
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id B597F8D124
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2007 12:48:47 +0100 (CET)
-Received: from flatcat.home.warmcat.com (flatcat [192.168.0.77])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id 83A00FAFC
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2007 11:49:43 +0000 (UTC)
-Received: from [127.0.0.1] (flatcat.home.warmcat.com [127.0.0.1])
-	by flatcat.home.warmcat.com (Postfix) with ESMTP id B3D801310212
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2007 11:48:46 +0000 (GMT)
-Message-ID: <45E41A9E.2020908@warmcat.com>
-Date: Tue, 27 Feb 2007 11:48:46 +0000
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
+	Thu, 15 Feb 2007 09:59:50 -0500
+Message-Id: <20070215144258.399503000@sipsolutions.net>
+References: <20070215144241.847938000@sipsolutions.net>
+Date: Thu, 15 Feb 2007 15:42:46 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Subject: [RFC] Penumbra - Enabling unencrypted broadcasts alongside normal  traffic
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>
+Subject: [PATCH 05/10] wext: clean up
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks -
+This cleans up wext.
 
-Introduction
-------------
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-I have been working on a GPL project called Penumbra
+---
+ net/wireless/wext-old.c |  302 ++----------------------------------------------
+ 1 file changed, 17 insertions(+), 285 deletions(-)
 
-http://penumbra.warmcat.com
+--- wireless-dev.orig/net/wireless/wext-old.c	2007-02-15 12:28:35.657940064 +0100
++++ wireless-dev/net/wireless/wext-old.c	2007-02-15 12:28:38.227940064 +0100
+@@ -7,79 +7,6 @@
+  * (As all part of the Linux kernel, this file is GPL)
+  */
+ 
+-/************************** DOCUMENTATION **************************/
+-/*
+- * API definition :
+- * --------------
+- * See <linux/wireless.h> for details of the APIs and the rest.
+- *
+- * History :
+- * -------
+- *
+- * v1 - 5.12.01 - Jean II
+- *	o Created this file.
+- *
+- * v2 - 13.12.01 - Jean II
+- *	o Move /proc/net/wireless stuff from net/core/dev.c to here
+- *	o Make Wireless Extension IOCTLs go through here
+- *	o Added iw_handler handling ;-)
+- *	o Added standard ioctl description
+- *	o Initial dumb commit strategy based on orinoco.c
+- *
+- * v3 - 19.12.01 - Jean II
+- *	o Make sure we don't go out of standard_ioctl[] in ioctl_standard_call
+- *	o Add event dispatcher function
+- *	o Add event description
+- *	o Propagate events as rtnetlink IFLA_WIRELESS option
+- *	o Generate event on selected SET requests
+- *
+- * v4 - 18.04.02 - Jean II
+- *	o Fix stupid off by one in iw_ioctl_description : IW_ESSID_MAX_SIZE + 1
+- *
+- * v5 - 21.06.02 - Jean II
+- *	o Add IW_PRIV_TYPE_ADDR in priv_type_size (+cleanup)
+- *	o Reshuffle IW_HEADER_TYPE_XXX to map IW_PRIV_TYPE_XXX changes
+- *	o Add IWEVCUSTOM for driver specific event/scanning token
+- *	o Turn on WE_STRICT_WRITE by default + kernel warning
+- *	o Fix WE_STRICT_WRITE in ioctl_export_private() (32 => iw_num)
+- *	o Fix off-by-one in test (extra_size <= IFNAMSIZ)
+- *
+- * v6 - 9.01.03 - Jean II
+- *	o Add common spy support : iw_handler_set_spy(), wireless_spy_update()
+- *	o Add enhanced spy support : iw_handler_set_thrspy() and event.
+- *	o Add WIRELESS_EXT version display in /proc/net/wireless
+- *
+- * v6 - 18.06.04 - Jean II
+- *	o Change get_spydata() method for added safety
+- *	o Remove spy #ifdef, they are always on -> cleaner code
+- *	o Allow any size GET request if user specifies length > max
+- *		and if request has IW_DESCR_FLAG_NOMAX flag or is SIOCGIWPRIV
+- *	o Start migrating get_wireless_stats to struct iw_handler_def
+- *	o Add wmb() in iw_handler_set_spy() for non-coherent archs/cpus
+- * Based on patch from Pavel Roskin <proski@gnu.org> :
+- *	o Fix kernel data leak to user space in private handler handling
+- *
+- * v7 - 18.3.05 - Jean II
+- *	o Remove (struct iw_point *)->pointer from events and streams
+- *	o Remove spy_offset from struct iw_handler_def
+- *	o Start deprecating dev->get_wireless_stats, output a warning
+- *	o If IW_QUAL_DBM is set, show dBm values in /proc/net/wireless
+- *	o Don't loose INVALID/DBM flags when clearing UPDATED flags (iwstats)
+- *
+- * v8 - 17.02.06 - Jean II
+- *	o RtNetlink requests support (SET/GET)
+- *
+- * v8b - 03.08.06 - Herbert Xu
+- *	o Fix Wireless Event locking issues.
+- *
+- * v9 - 14.3.06 - Jean II
+- *	o Change length in ESSID and NICK to strlen() instead of strlen()+1
+- *	o Make standard_ioctl_num and standard_event_num unsigned
+- *	o Remove (struct net_device *)->get_wireless_stats()
+- */
+-
+-/***************************** INCLUDES *****************************/
+-
+ #include <linux/module.h>
+ #include <linux/types.h>		/* off_t */
+ #include <linux/netdevice.h>		/* struct ifreq, dev_get_by_name() */
+@@ -97,19 +24,6 @@
+ 
+ #include "wext.h"
+ 
+-/**************************** CONSTANTS ****************************/
+-
+-/* Debugging stuff */
+-#undef WE_IOCTL_DEBUG		/* Debug IOCTL API */
+-#undef WE_RTNETLINK_DEBUG	/* Debug RtNetlink API */
+-#undef WE_EVENT_DEBUG		/* Debug Event dispatcher */
+-#undef WE_SPY_DEBUG		/* Debug enhanced spy support */
+-
+-/* Options */
+-//CONFIG_NET_WIRELESS_RTNETLINK	/* Wireless requests over RtNetlink */
+-#define WE_EVENT_RTNETLINK	/* Propagate events using RtNetlink */
+-#define WE_SET_EVENT		/* Generate an event on some set commands */
+-
+ /************************* GLOBAL VARIABLES *************************/
+ 
+ /* Size (in bytes) of the various private data types */
+@@ -312,12 +226,6 @@ static int ioctl_standard_call(struct ne
+ 		return -EOPNOTSUPP;
+ 	descr = &(wext_standard_ioctl[cmd - SIOCIWFIRST]);
+ 
+-#ifdef WE_IOCTL_DEBUG
+-	printk(KERN_DEBUG "%s (WE) : Found standard handler for 0x%04X\n",
+-	       ifr->ifr_name, cmd);
+-	printk(KERN_DEBUG "%s (WE) : Header type : %d, Token type : %d, size : %d, token : %d\n", dev->name, descr->header_type, descr->token_type, descr->token_size, descr->max_tokens);
+-#endif	/* WE_IOCTL_DEBUG */
+-
+ 	/* Prepare the call */
+ 	info.cmd = cmd;
+ 	info.flags = 0;
+@@ -328,12 +236,10 @@ static int ioctl_standard_call(struct ne
+ 		/* No extra arguments. Trivial to handle */
+ 		ret = handler(dev, &info, &(iwr->u), NULL);
+ 
+-#ifdef WE_SET_EVENT
+ 		/* Generate an event to notify listeners of the change */
+ 		if((descr->flags & IW_DESCR_FLAG_EVENT) &&
+ 		   ((ret == 0) || (ret == -EIWCOMMIT)))
+ 			wireless_send_event(dev, cmd, &(iwr->u), NULL);
+-#endif	/* WE_SET_EVENT */
+ 	} else {
+ 		char *	extra;
+ 		int	extra_size;
+@@ -408,11 +314,6 @@ static int ioctl_standard_call(struct ne
+ 			}
+ 		}
+ 
+-#ifdef WE_IOCTL_DEBUG
+-		printk(KERN_DEBUG "%s (WE) : Malloc %d bytes\n",
+-		       dev->name, extra_size);
+-#endif	/* WE_IOCTL_DEBUG */
+-
+ 		/* Create the kernel buffer */
+ 		/*    kzalloc ensures NULL-termination for essid_compat */
+ 		extra = kzalloc(extra_size, GFP_KERNEL);
+@@ -429,11 +330,6 @@ static int ioctl_standard_call(struct ne
+ 				kfree(extra);
+ 				return -EFAULT;
+ 			}
+-#ifdef WE_IOCTL_DEBUG
+-			printk(KERN_DEBUG "%s (WE) : Got %d bytes\n",
+-			       dev->name,
+-			       iwr->u.data.length * descr->token_size);
+-#endif	/* WE_IOCTL_DEBUG */
+ 		}
+ 
+ 		/* Call the handler */
+@@ -453,15 +349,9 @@ static int ioctl_standard_call(struct ne
+ 					   iwr->u.data.length *
+ 					   descr->token_size);
+ 			if (err)
+-				ret =  -EFAULT;				   
+-#ifdef WE_IOCTL_DEBUG
+-			printk(KERN_DEBUG "%s (WE) : Wrote %d bytes\n",
+-			       dev->name,
+-			       iwr->u.data.length * descr->token_size);
+-#endif	/* WE_IOCTL_DEBUG */
++				ret =  -EFAULT;
+ 		}
+ 
+-#ifdef WE_SET_EVENT
+ 		/* Generate an event to notify listeners of the change */
+ 		if((descr->flags & IW_DESCR_FLAG_EVENT) &&
+ 		   ((ret == 0) || (ret == -EIWCOMMIT))) {
+@@ -473,7 +363,6 @@ static int ioctl_standard_call(struct ne
+ 				wireless_send_event(dev, cmd, &(iwr->u),
+ 						    extra);
+ 		}
+-#endif	/* WE_SET_EVENT */
+ 
+ 		/* Cleanup - I told you it wasn't that long ;-) */
+ 		kfree(extra);
+@@ -523,16 +412,6 @@ static inline int ioctl_private_call(str
+ 			break;
+ 		}
+ 
+-#ifdef WE_IOCTL_DEBUG
+-	printk(KERN_DEBUG "%s (WE) : Found private handler for 0x%04X\n",
+-	       ifr->ifr_name, cmd);
+-	if(descr) {
+-		printk(KERN_DEBUG "%s (WE) : Name %s, set %X, get %X\n",
+-		       dev->name, descr->name,
+-		       descr->set_args, descr->get_args);
+-	}
+-#endif	/* WE_IOCTL_DEBUG */
+-
+ 	/* Compute the size of the set/get arguments */
+ 	if(descr != NULL) {
+ 		if(IW_IS_SET(cmd)) {
+@@ -589,11 +468,6 @@ static inline int ioctl_private_call(str
+ 				return -EFAULT;
+ 		}
+ 
+-#ifdef WE_IOCTL_DEBUG
+-		printk(KERN_DEBUG "%s (WE) : Malloc %d bytes\n",
+-		       dev->name, extra_size);
+-#endif	/* WE_IOCTL_DEBUG */
+-
+ 		/* Always allocate for max space. Easier, and won't last
+ 		 * long... */
+ 		extra = kmalloc(extra_size, GFP_KERNEL);
+@@ -609,10 +483,6 @@ static inline int ioctl_private_call(str
+ 				kfree(extra);
+ 				return -EFAULT;
+ 			}
+-#ifdef WE_IOCTL_DEBUG
+-			printk(KERN_DEBUG "%s (WE) : Got %d elem\n",
+-			       dev->name, iwr->u.data.length);
+-#endif	/* WE_IOCTL_DEBUG */
+ 		}
+ 
+ 		/* Call the handler */
+@@ -631,11 +501,7 @@ static inline int ioctl_private_call(str
+ 			err = copy_to_user(iwr->u.data.pointer, extra,
+ 					   extra_size);
+ 			if (err)
+-				ret =  -EFAULT;				   
+-#ifdef WE_IOCTL_DEBUG
+-			printk(KERN_DEBUG "%s (WE) : Wrote %d elem\n",
+-			       dev->name, iwr->u.data.length);
+-#endif	/* WE_IOCTL_DEBUG */
++				ret =  -EFAULT;
+ 		}
+ 
+ 		/* Cleanup - I told you it wasn't that long ;-) */
+@@ -671,8 +537,7 @@ int wireless_process_ioctl(struct ifreq 
+ 	/* A bunch of special cases, then the generic case...
+ 	 * Note that 'cmd' is already filtered in dev_ioctl() with
+ 	 * (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) */
+-	switch(cmd) 
+-	{
++	switch(cmd) {
+ 		case SIOCGIWSTATS:
+ 			/* Get Wireless Stats */
+ 			return ioctl_standard_call(dev,
+@@ -773,22 +638,10 @@ static int rtnetlink_standard_get(struct
+ 		return -EOPNOTSUPP;
+ 	descr = &(wext_standard_ioctl[cmd - SIOCIWFIRST]);
+ 
+-#ifdef WE_RTNETLINK_DEBUG
+-	printk(KERN_DEBUG "%s (WE.r) : Found standard handler for 0x%04X\n",
+-	       dev->name, cmd);
+-	printk(KERN_DEBUG "%s (WE.r) : Header type : %d, Token type : %d, size : %d, token : %d\n", dev->name, descr->header_type, descr->token_type, descr->token_size, descr->max_tokens);
+-#endif	/* WE_RTNETLINK_DEBUG */
+-
+ 	/* Check if wrqu is complete */
+ 	hdr_len = event_type_size[descr->header_type];
+-	if(request_len < hdr_len) {
+-#ifdef WE_RTNETLINK_DEBUG
+-		printk(KERN_DEBUG
+-		       "%s (WE.r) : Wireless request too short (%d)\n",
+-		       dev->name, request_len);
+-#endif	/* WE_RTNETLINK_DEBUG */
++	if(request_len < hdr_len)
+ 		return -EINVAL;
+-	}
+ 
+ 	/* Prepare the call */
+ 	info.cmd = cmd;
+@@ -832,10 +685,6 @@ static int rtnetlink_standard_get(struct
+ 			extra_size = (wrqu_point.data.length
+ 				      * descr->token_size);
+ 		buffer_size = extra_size + IW_EV_POINT_LEN + IW_EV_POINT_OFF;
+-#ifdef WE_RTNETLINK_DEBUG
+-		printk(KERN_DEBUG "%s (WE.r) : Malloc %d bytes (%d bytes)\n",
+-		       dev->name, extra_size, buffer_size);
+-#endif	/* WE_RTNETLINK_DEBUG */
+ 
+ 		/* Create the kernel buffer that we will return */
+ 		buffer = kmalloc(buffer_size, GFP_KERNEL);
+@@ -867,10 +716,6 @@ static int rtnetlink_standard_get(struct
+ 		 * dummy pointer. */
+ 		memcpy(buffer + IW_EV_POINT_OFF, request, IW_EV_LCP_LEN);
+ 
+-#ifdef WE_RTNETLINK_DEBUG
+-		printk(KERN_DEBUG "%s (WE.r) : Reply 0x%04X, hdr_len %d, tokens %d, extra_size %d, buffer_size %d\n", dev->name, cmd, hdr_len, wrqu->data.length, extra_size, buffer_size);
+-#endif	/* WE_RTNETLINK_DEBUG */
+-
+ 		/* Check if there is enough buffer up there */
+ 		if(wrqu_point.data.length < wrqu->data.length)
+ 			ret = -E2BIG;
+@@ -915,25 +760,13 @@ static inline int rtnetlink_standard_set
+ 		return -EOPNOTSUPP;
+ 	descr = &(wext_standard_ioctl[cmd - SIOCIWFIRST]);
+ 
+-#ifdef WE_RTNETLINK_DEBUG
+-	printk(KERN_DEBUG "%s (WE.r) : Found standard SET handler for 0x%04X\n",
+-	       dev->name, cmd);
+-	printk(KERN_DEBUG "%s (WE.r) : Header type : %d, Token type : %d, size : %d, token : %d\n", dev->name, descr->header_type, descr->token_type, descr->token_size, descr->max_tokens);
+-#endif	/* WE_RTNETLINK_DEBUG */
+-
+ 	/* Extract fixed header from request. This is properly aligned. */
+ 	wrqu = &request->u;
+ 
+ 	/* Check if wrqu is complete */
+ 	hdr_len = event_type_size[descr->header_type];
+-	if(request_len < hdr_len) {
+-#ifdef WE_RTNETLINK_DEBUG
+-		printk(KERN_DEBUG
+-		       "%s (WE.r) : Wireless request too short (%d)\n",
+-		       dev->name, request_len);
+-#endif	/* WE_RTNETLINK_DEBUG */
++	if(request_len < hdr_len)
+ 		return -EINVAL;
+-	}
+ 
+ 	/* Prepare the call */
+ 	info.cmd = cmd;
+@@ -964,18 +797,8 @@ static inline int rtnetlink_standard_set
+ 		extra_len = wrqu_point.data.length * descr->token_size;
+ 
+ 		/* Check if request is self consistent */
+-		if((request_len - hdr_len) < extra_len) {
+-#ifdef WE_RTNETLINK_DEBUG
+-			printk(KERN_DEBUG "%s (WE.r) : Wireless request data too short (%d)\n",
+-			       dev->name, extra_size);
+-#endif	/* WE_RTNETLINK_DEBUG */
++		if((request_len - hdr_len) < extra_len)
+ 			return -EINVAL;
+-		}
+-
+-#ifdef WE_RTNETLINK_DEBUG
+-		printk(KERN_DEBUG "%s (WE.r) : Malloc %d bytes\n",
+-		       dev->name, extra_size);
+-#endif	/* WE_RTNETLINK_DEBUG */
+ 
+ 		/* Always allocate for max space. Easier, and won't last
+ 		 * long... */
+@@ -991,7 +814,6 @@ static inline int rtnetlink_standard_set
+ 		ret = handler(dev, &info, &wrqu_point, extra);
+ 	}
+ 
+-#ifdef WE_SET_EVENT
+ 	/* Generate an event to notify listeners of the change */
+ 	if((descr->flags & IW_DESCR_FLAG_EVENT) &&
+ 	   ((ret == 0) || (ret == -EIWCOMMIT))) {
+@@ -1002,7 +824,6 @@ static inline int rtnetlink_standard_set
+ 		else
+ 			wireless_send_event(dev, cmd, wrqu, extra);
+ 	}
+-#endif	/* WE_SET_EVENT */
+ 
+ 	/* Cleanup - I told you it wasn't that long ;-) */
+ 	if(extra)
+@@ -1058,13 +879,6 @@ static inline int rtnetlink_private_get(
+ 	if(descr == NULL)
+ 		return -EOPNOTSUPP;
+ 
+-#ifdef WE_RTNETLINK_DEBUG
+-	printk(KERN_DEBUG "%s (WE.r) : Found private handler for 0x%04X\n",
+-	       dev->name, cmd);
+-	printk(KERN_DEBUG "%s (WE.r) : Name %s, set %X, get %X\n",
+-	       dev->name, descr->name, descr->set_args, descr->get_args);
+-#endif	/* WE_RTNETLINK_DEBUG */
+-
+ 	/* Compute the max size of the get arguments */
+ 	extra_size = get_priv_size(descr->get_args);
+ 
+@@ -1078,14 +892,8 @@ static inline int rtnetlink_private_get(
+ 	}
+ 
+ 	/* Check if wrqu is complete */
+-	if(request_len < hdr_len) {
+-#ifdef WE_RTNETLINK_DEBUG
+-		printk(KERN_DEBUG
+-		       "%s (WE.r) : Wireless request too short (%d)\n",
+-		       dev->name, request_len);
+-#endif	/* WE_RTNETLINK_DEBUG */
++	if(request_len < hdr_len)
+ 		return -EINVAL;
+-	}
+ 
+ 	/* Prepare the call */
+ 	info.cmd = cmd;
+@@ -1116,11 +924,6 @@ static inline int rtnetlink_private_get(
+ 		/* Buffer for full reply */
+ 		buffer_size = extra_size + IW_EV_POINT_LEN + IW_EV_POINT_OFF;
+ 
+-#ifdef WE_RTNETLINK_DEBUG
+-		printk(KERN_DEBUG "%s (WE.r) : Malloc %d bytes (%d bytes)\n",
+-		       dev->name, extra_size, buffer_size);
+-#endif	/* WE_RTNETLINK_DEBUG */
+-
+ 		/* Create the kernel buffer that we will return */
+ 		buffer = kmalloc(buffer_size, GFP_KERNEL);
+ 		if (buffer == NULL) {
+@@ -1152,10 +955,6 @@ static inline int rtnetlink_private_get(
+ 		/* Put the iwe header where it should, i.e. scrap the
+ 		 * dummy pointer. */
+ 		memcpy(buffer + IW_EV_POINT_OFF, request, IW_EV_LCP_LEN);
+-
+-#ifdef WE_RTNETLINK_DEBUG
+-		printk(KERN_DEBUG "%s (WE.r) : Reply 0x%04X, hdr_len %d, tokens %d, extra_size %d, buffer_size %d\n", dev->name, cmd, hdr_len, wrqu->data.length, extra_size, buffer_size);
+-#endif	/* WE_RTNETLINK_DEBUG */
+ 	}
+ 
+ 	/* Return the buffer to the caller */
+@@ -1213,13 +1012,6 @@ static inline int rtnetlink_private_set(
+ 	if(descr == NULL)
+ 		return -EOPNOTSUPP;
+ 
+-#ifdef WE_RTNETLINK_DEBUG
+-	printk(KERN_DEBUG "%s (WE.r) : Found private handler for 0x%04X\n",
+-	       ifr->ifr_name, cmd);
+-	printk(KERN_DEBUG "%s (WE.r) : Name %s, set %X, get %X\n",
+-	       dev->name, descr->name, descr->set_args, descr->get_args);
+-#endif	/* WE_RTNETLINK_DEBUG */
+-
+ 	/* Compute the size of the set arguments */
+ 	/* Check for sub-ioctl handler */
+ 	if(descr->name[0] == '\0')
+@@ -1242,14 +1034,8 @@ static inline int rtnetlink_private_set(
+ 	wrqu = &request->u;
+ 
+ 	/* Check if wrqu is complete */
+-	if(request_len < hdr_len) {
+-#ifdef WE_RTNETLINK_DEBUG
+-		printk(KERN_DEBUG
+-		       "%s (WE.r) : Wireless request too short (%d)\n",
+-		       dev->name, request_len);
+-#endif	/* WE_RTNETLINK_DEBUG */
++	if(request_len < hdr_len)
+ 		return -EINVAL;
+-	}
+ 
+ 	/* Prepare the call */
+ 	info.cmd = cmd;
+@@ -1277,18 +1063,8 @@ static inline int rtnetlink_private_set(
+ 		extra_len = adjust_priv_size(descr->set_args, &wrqu_point);
+ 
+ 		/* Check if request is self consistent */
+-		if((request_len - hdr_len) < extra_len) {
+-#ifdef WE_RTNETLINK_DEBUG
+-			printk(KERN_DEBUG "%s (WE.r) : Wireless request data too short (%d)\n",
+-			       dev->name, extra_size);
+-#endif	/* WE_RTNETLINK_DEBUG */
++		if((request_len - hdr_len) < extra_len)
+ 			return -EINVAL;
+-		}
+-
+-#ifdef WE_RTNETLINK_DEBUG
+-		printk(KERN_DEBUG "%s (WE.r) : Malloc %d bytes\n",
+-		       dev->name, extra_size);
+-#endif	/* WE_RTNETLINK_DEBUG */
+ 
+ 		/* Always allocate for max space. Easier, and won't last
+ 		 * long... */
+@@ -1329,18 +1105,12 @@ int wireless_rtnetlink_get(struct net_de
+ 	iw_handler		handler;
+ 
+ 	/* Check length */
+-	if(len < IW_EV_LCP_LEN) {
+-		printk(KERN_DEBUG "%s (WE.r) : RtNetlink request too short (%d)\n",
+-		       dev->name, len);
++	if(len < IW_EV_LCP_LEN)
+ 		return -EINVAL;
+-	}
+ 
+ 	/* ReCheck length (len may have padding) */
+-	if(request->len > len) {
+-		printk(KERN_DEBUG "%s (WE.r) : RtNetlink request len invalid (%d-%d)\n",
+-		       dev->name, request->len, len);
++	if(request->len > len)
+ 		return -EINVAL;
+-	}
+ 
+ 	/* Only accept GET requests in here */
+ 	if(!IW_IS_GET(request->cmd))
+@@ -1413,18 +1183,12 @@ int wireless_rtnetlink_set(struct net_de
+ 	iw_handler		handler;
+ 
+ 	/* Check length */
+-	if(len < IW_EV_LCP_LEN) {
+-		printk(KERN_DEBUG "%s (WE.r) : RtNetlink request too short (%d)\n",
+-		       dev->name, len);
++	if(len < IW_EV_LCP_LEN)
+ 		return -EINVAL;
+-	}
+ 
+ 	/* ReCheck length (len may have padding) */
+-	if(request->len > len) {
+-		printk(KERN_DEBUG "%s (WE.r) : RtNetlink request len invalid (%d-%d)\n",
+-		       dev->name, request->len, len);
++	if(request->len > len)
+ 		return -EINVAL;
+-	}
+ 
+ 	/* Only accept SET requests in here */
+ 	if(!IW_IS_SET(request->cmd))
+@@ -1520,19 +1284,6 @@ int iw_handler_set_spy(struct net_device
+ 		/* Reset stats */
+ 		memset(spydata->spy_stat, 0,
+ 		       sizeof(struct iw_quality) * IW_MAX_SPY);
+-
+-#ifdef WE_SPY_DEBUG
+-		printk(KERN_DEBUG "iw_handler_set_spy() :  wireless_data %p, spydata %p, num %d\n", dev->wireless_data, spydata, wrqu->data.length);
+-		for (i = 0; i < wrqu->data.length; i++)
+-			printk(KERN_DEBUG
+-			       "%02X:%02X:%02X:%02X:%02X:%02X \n",
+-			       spydata->spy_address[i][0],
+-			       spydata->spy_address[i][1],
+-			       spydata->spy_address[i][2],
+-			       spydata->spy_address[i][3],
+-			       spydata->spy_address[i][4],
+-			       spydata->spy_address[i][5]);
+-#endif	/* WE_SPY_DEBUG */
+ 	}
+ 
+ 	/* Make sure above is updated before re-enabling */
+@@ -1543,6 +1294,7 @@ int iw_handler_set_spy(struct net_device
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL(iw_handler_set_spy);
+ 
+ /*------------------------------------------------------------------*/
+ /*
+@@ -1578,6 +1330,7 @@ int iw_handler_get_spy(struct net_device
+ 		spydata->spy_stat[i].updated &= ~IW_QUAL_ALL_UPDATED;
+ 	return 0;
+ }
++EXPORT_SYMBOL(iw_handler_get_spy);
+ 
+ /*------------------------------------------------------------------*/
+ /*
+@@ -1602,12 +1355,9 @@ int iw_handler_set_thrspy(struct net_dev
+ 	/* Clear flag */
+ 	memset(spydata->spy_thr_under, '\0', sizeof(spydata->spy_thr_under));
+ 
+-#ifdef WE_SPY_DEBUG
+-	printk(KERN_DEBUG "iw_handler_set_thrspy() :  low %d ; high %d\n", spydata->spy_thr_low.level, spydata->spy_thr_high.level);
+-#endif	/* WE_SPY_DEBUG */
+-
+ 	return 0;
+ }
++EXPORT_SYMBOL(iw_handler_set_thrspy);
+ 
+ /*------------------------------------------------------------------*/
+ /*
+@@ -1631,6 +1381,7 @@ int iw_handler_get_thrspy(struct net_dev
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL(iw_handler_get_thrspy);
+ 
+ /*------------------------------------------------------------------*/
+ /*
+@@ -1656,16 +1407,6 @@ static void iw_send_thrspy_event(struct 
+ 	memcpy(&(threshold.low), &(spydata->spy_thr_low),
+ 	       2 * sizeof(struct iw_quality));
+ 
+-#ifdef WE_SPY_DEBUG
+-	printk(KERN_DEBUG "iw_send_thrspy_event() : address %02X:%02X:%02X:%02X:%02X:%02X, level %d, up = %d\n",
+-	       threshold.addr.sa_data[0],
+-	       threshold.addr.sa_data[1],
+-	       threshold.addr.sa_data[2],
+-	       threshold.addr.sa_data[3],
+-	       threshold.addr.sa_data[4],
+-	       threshold.addr.sa_data[5], threshold.qual.level);
+-#endif	/* WE_SPY_DEBUG */
+-
+ 	/* Send event to user space */
+ 	wireless_send_event(dev, SIOCGIWTHRSPY, &wrqu, (char *) &threshold);
+ }
+@@ -1689,10 +1430,6 @@ void wireless_spy_update(struct net_devi
+ 	if(!spydata)
+ 		return;
+ 
+-#ifdef WE_SPY_DEBUG
+-	printk(KERN_DEBUG "wireless_spy_update() :  wireless_data %p, spydata %p, address %02X:%02X:%02X:%02X:%02X:%02X\n", dev->wireless_data, spydata, address[0], address[1], address[2], address[3], address[4], address[5]);
+-#endif	/* WE_SPY_DEBUG */
+-
+ 	/* Update all records that match */
+ 	for(i = 0; i < spydata->spy_number; i++)
+ 		if(!compare_ether_addr(address, spydata->spy_address[i])) {
+@@ -1721,9 +1458,4 @@ void wireless_spy_update(struct net_devi
+ 		}
+ 	}
+ }
+-
+-EXPORT_SYMBOL(iw_handler_get_spy);
+-EXPORT_SYMBOL(iw_handler_get_thrspy);
+-EXPORT_SYMBOL(iw_handler_set_spy);
+-EXPORT_SYMBOL(iw_handler_set_thrspy);
+ EXPORT_SYMBOL(wireless_spy_update);
 
-The idea is simple, to allow unencrypted wireless broadcast packets to 
-be generated and received in userspace, while the normal traffic remains 
-privately encrypted as before.  This allows direct intercommunication 
-between boxes on differently protected private networks (on the same 
-channel) while not disturbing or reducing security of a normal encrypted 
-association.
+--
 
-Due to the broadcast nature of the protocol, there are no station 
-identities at all.  All broadcast packets use the same MAC and there is 
-no concept of addressability, at least not at the protocol level.  There 
-are no retries at the transport protocol level either since there may be 
-many listeners --  situations where there are multiple listeners in 
-range of the broadcasts are very well served.  Higher levels on protocol 
-can implement tunneling other protocols and retransmission requests, but 
-that is out of scope of what is needed in the 80211 stack.
-
-We have a userspace daemon that allows anonymous filesharing using the 
-protocol, but there are many other applications possible for machines to 
-be able to remain secure and private for normal traffic, yet be able to 
-also communicate locally unencrypted when they choose without going 
-through the Internet, an ISP or other paid -- and metered -- gateway.
-
-There is a start on a formal RFC for the broadcast transport protocol here:
-
-http://penumbra.warmcat.com/penumbra-rfc-0.0.3.txt
-
-
-Status
-------
-
-Currently I have this working for several wireless devices using the old 
-stack (IPW2200, IPW3945, and ZD1211RW -- BCM43XX is also done but does 
-not always receive for reasons I didn't discover), and I have it working 
-on the new stack for iwlwifi and RT73USB (RT2571 chipset) too now.  The 
-old stack drivers are patched without any changes to the old stack, but 
-for the new 80211 stack, the additional code is mostly tucked away in 
-the stack.  You can see examples of the patching required in both the 
-stack and the driver for the rt73usb case here:
-
-http://penumbra.warmcat.com/rt2x00-cvs-2007021403-penumbra-0.0.3.patch
-
-There is a related userspace daemon also available which communicates 
-via an embedded https server with the user and allows arbitrary files to 
-be shared around using the broadcast protocol.  The daemon bridges 
-traffic between multiple wireless devices on different channels seamlessly.
-
-All patches and the penumbrad daemon are available here:
-
-http://penumbra.warmcat.com/_twk/tiki-index.php?page=Downloads
-
-Performance at the moment for a iwlwifi <-> IPW2200 testcase is between 
-100KBytes/sec and 200KBytes/sec transfer, tested while downloading 
-simultaneously at 1MByte/sec using a WPA encrypted association to a 
-Belkin AP.  So any questions about whether it is possible, or can work 
-on a range of devices, or can operate simultaneously with WPA are 
-answered: it works great.
-
-
-Implementation
---------------
-
-The unencrypted broadcast packets are indicated by having a "Magic MAC" 
-address in their IEEE80211 Header Addr<n> fields.  The Magic MAC for 
-Penumbra is 13:22:33:44:55:66 (the IEEE had something to say about our 
-original choice of 11:22.. :-O ).
-
-Here is the path for a packet using the new stack patched to support the 
-protocol.
-
-  - Userspace transmits by creating a PF_PACKET / SOCK_RAW socket and 
-prepending an Ethernet header with the Magic MAC in it and send()ing it. 
-  Reed-Solomon coding is optionally used in userspace in case the 
-receiver allows to see damaged packets.
-
-  - The stack detects the magic MAC, and prepends a fixed IEEE80211 
-header to the skb, basically addr1-> FF:FF:FF:FF:FF:FF, addr2 and addr3 
--> 13:22:33:44:55:66 and encryption is turned off.
-
-  - The wireless driver gets the packet for transmission, recognizes the 
-Magic MAC, disables retries and sets the transmission rate (currently 
-fixed 54Mbps, but this will change) and transmits the packet as a broadcast
-
-For receive:
-
-  - The wireless device is set to hardware promiscuous
-
-  - When an incoming packet is seen with the magic MAC it has a fake 
-fixed Ethernet, IP and UDP header prepended to it.  IP and UDP checksums 
-are inserted so the packet is clean.  The packet always looks like it is 
-coming from UDP 0.0.0.0:61441 (port 0xF001) and is directed to 
-255.255.255.255:61442 (port 0xF002).  The packet is subject to iptables 
-rules as usual.
-
-  - Userspace listens on the right interface at UDP 61442 with a normal 
-socket and receives the packets as usual.
-
-There is some more detail and information here (it is about the old 
-stack implementation currently though)
-
-http://penumbra.warmcat.com/_twk/tiki-index.php?page=Implementation
-
-
-Issues
-------
-
-I hope there is some interest in this new capability for wireless 
-devices in Linux.  To get any kind of widespread use, the capability 
-needs to be already available in stock kernels and drivers so that the 
-user only needs to open iptables and run a userspace daemon rather than 
-patch his wireless drivers and stack.  So this is my reason for 
-presenting this Request For Comments, to see if it can be considered.
-
-Some of the issues that need working on/consensus if there is interest:
-
-  - Hardware promisc is needed to catch the packets because they are not 
-tagged as coming from the local AP.  All the devices I looked at can do 
-hardware promisc separately from the logical promisc for Monitor mode. 
-But perhaps this needs to be enabled and disabled in some modal way.
-
-  - The way the packets are captured does not integrate at the moment 
-with the rx handler list concept, because it needs access to args that 
-do not come to the "pre" rx handlers where it has to capture.  No doubt 
-there are multiple other implementation issues that can be hammered out 
-easily enough if there is interest.
-
-  - Right this second there are two patches, one for the iwlwifi case 
-and one for rt2x00, since they are using different versions of the new 
-80211 stack.
-
-  - The first byte of the payload is reserved for holding the desired TX 
-rate sent up from userspace, as well as indications about any ECC coding 
-that is present.  But today only a fixed 54Mbps packet rate is 
-implemented.  Despite all the stations are anonymous, the upper levels 
-of the protocol can guess the best rate to send a particular packet 
-depending on what has been going on, and so allow the system to work 
-over larger distances than 54Mbps only will allow.
-
-...  no doubt there will be more assuming there is any interest ;-)
-
-Thanks for reading this far and I hope it will be possible by adding 
-these relatively small changes to the stack to enable some cool 
-additional uses for existing wireless devices.
-
--Andy
