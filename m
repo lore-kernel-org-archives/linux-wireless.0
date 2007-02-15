@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:45621 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933447AbXBEUnf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Feb 2007 15:43:35 -0500
-Date: Mon, 5 Feb 2007 21:43:33 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: d80211: current TKIP hwcrypto implementation seems to be broken
-Message-ID: <20070205214333.4e77948e@griffin.suse.cz>
-In-Reply-To: <200702041344.19117.mb@bu3sch.de>
-References: <200702041344.19117.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:9965 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965322AbXBOIlG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Feb 2007 03:41:06 -0500
+Received: from lin01.mn-solutions.de (pD95F8F54.dip0.t-ipconnect.de [217.95.143.84])
+	by s131.mittwaldmedien.de (Postfix) with ESMTP id 499885E40B9
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Feb 2007 09:41:03 +0100 (CET)
+Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 1A4D51E002B
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Feb 2007 09:40:58 +0100 (CET)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: How to start with a Marvell driver (non-USB, non-OLPC)
+Date: Thu, 15 Feb 2007 09:40:49 +0100
+References: <200702090858.26294.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200702090858.26294.hs4233@mail.mn-solutions.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702150940.49306.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 4 Feb 2007 13:44:18 +0100, Michael Buesch wrote:
-> We need the phase1 for bcm43xx. We need to upload it to
-> card memory and we need to pass it on every TX on the DMA.
-> 
-> So, currently we receive the phase1 key on the first
-> encrypted TX. That's too late, as we already receive encrypted
-> packets before that. bcm43xx needs the phase1 key (and the iv32)
-> on RX. It uses the one uploaded into the card memory. But it
-> is not uploaded, yet, as we did not TX any encrypted packet.
-> 
-> I'd say the only solution to this is to implement the earlier
-> suggested way of having a library function call to generate
-> the keys. Of course, that needs some bookkeeping about the IVs
-> and stuff.
-> That library function would be called by bcm43xx before any
-> traffic to get an initial phase1 key (and iv32) uploaded.
+Okay, I got encouraging replies to my initial mail. Later I 
+produced some patches for discussion and posted them into 
+libertas-dev and marvell8385-devel@linuxtogo.org.
 
-What if the key is changed by the user space? You won't know that and
-won't call the library function then. I think it needs to be designed
-in the opposite way - the stack will call a driver's callback.
+But besides "please make a git repository" no one really cared 
+(about the patches --- there were other reactions). No patch has 
+been commented, ridiculed or applied.
 
-Or am I missing something?
 
- Jiri
+If someone is interested, the patches are at
+ 
+http://projects.linuxtogo.org/plugins/scmsvn/viewcvs.php/trunk/patches/?root=marvell8385
 
--- 
-Jiri Benc
-SUSE Labs
+
+
+I consider
+
+remove-unused-var.patch
+remove-boot-command-define.patch
+rename-functions.patch
+remove-libertas-sbi-get-priv.patch
+
+as applyable to libertas-2.6, the others are work-in-progress.
+
+
+I'm now in the process to create a git repository at 
+infradead.org, maybe this can help the process. However, I don't 
+have any idea what I can do if I pushed a changeset to infradead 
+and later learn that this is crap. Can I rebase the HEAD of a 
+remote git repository?
