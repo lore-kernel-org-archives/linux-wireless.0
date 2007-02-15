@@ -1,65 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alpha.logic.tuwien.ac.at ([128.130.175.20]:53375 "EHLO
-	alpha.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946820AbXBJBIi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Feb 2007 20:08:38 -0500
-Date: Sat, 10 Feb 2007 01:46:20 +0100
-To: James Ketrenos <jketreno@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
-Subject: Re: [ipw3945-devel] [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
-Message-ID: <20070210004620.GA5959@gamma.logic.tuwien.ac.at>
-References: <45CCE3CA.4050904@linux.intel.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3108 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965739AbXBOPis (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Feb 2007 10:38:48 -0500
+Date: Thu, 15 Feb 2007 10:06:15 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Arjan van de Ven <arjan@linux.intel.com>
+Subject: Re: round_jiffies for schedule_delayed_work?
+Message-ID: <20070215150615.GB3310@tuxdriver.com>
+References: <1171489163.6093.30.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <45CCE3CA.4050904@linux.intel.com>
-From: Norbert Preining <preining@logic.at>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1171489163.6093.30.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all!
+On Wed, Feb 14, 2007 at 10:39:23PM +0100, Johannes Berg wrote:
+> Hi,
+> 
+> I was looking through recent commits in wireless-dev and found
+> e226b8aa8921b6b75dcd0142a990b8c7bc1548fd which is correct, but I was
+> wondering if it may be possible to do it more efficiently.
+> 
+> We don't really need this code running every second after we init,
+> having it run every second on average is good enough. I don't see any
+> way to do this with the delayed work API though since
+> schedule_delayed_work simply adds the timer at jiffies+delay.
+> 
+> Should we be using a timer and round_jiffies() instead?
 
-On Fre, 09 Feb 2007, James Ketrenos wrote:
-> We are pleased to announce the availability of a new driver for the=20
-> Intel PRO/Wireless 3945ABG Network Connection adapter.  This new driv=
-er=20
+Using round_jiffies seems reasonable.  Perhaps the delayed work API
+can be extended to use it?
 
-I am impressed: I had 2.6.20 running with ipw3945 + wpa_supplicant. I
-installed the d80211 system and the new driver, rebooted, and you won't
-believe it, I had network connection even with WEP encryption.
-
-That was a big surprise for me that it worked out of the box without an=
-y
-magic.
-
-If you are interested in any dmesg/log output, please let me know.
-
-
-Ahhh ... one thing: The LED on my Acer Laptop (TM3012) does not show up=
-,
-maybe because I have CONFIG_D80211_LEDS off?
-
-Again, thanks a lot for the good work!
-
-Norbert
-
------------------------------------------------------------------------=
---------
-Dr. Norbert Preining <preining@logic.at>                    Universit=E0=
- di Siena
-Debian Developer <preining@debian.org>                         Debian T=
-eX Group
-gpg DSA: 0x09C5B094      fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 0=
-9C5 B094
------------------------------------------------------------------------=
---------
-HARPENDEN (n.)
-The coda to a phone conversion, consisting of about eight exchanges,
-by which people try gracefully to get off the line.
-			--- Douglas Adams, The Meaning of Liff
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
