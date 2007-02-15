@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:43675 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965676AbXBGIRe (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44131 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965972AbXBOPHO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Feb 2007 03:17:34 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HEhyZ-0000Sy-RF
-	for linux-wireless@vger.kernel.org; Wed, 07 Feb 2007 03:16:23 -0500
-Subject: Re: RFT bcm43xx: Really _GOOD_ news
-From: Pavel Roskin <proski@gnu.org>
-To: Gene Heskett <gene.heskett@verizon.net>
-Cc: bcm43xx-dev@lists.berlios.de,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200702070303.40968.gene.heskett@verizon.net>
-References: <45C8E64B.1050605@lwfinger.net>
-	 <200702061848.00815.gene.heskett@verizon.net>
-	 <45C95830.6040507@lwfinger.net>
-	 <200702070303.40968.gene.heskett@verizon.net>
-Content-Type: text/plain
-Date: Wed, 07 Feb 2007 03:17:30 -0500
-Message-Id: <1170836250.11150.116.camel@dv>
+	Thu, 15 Feb 2007 10:07:14 -0500
+Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Joseph Jezak <josejx@gentoo.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de,
+	Larry Finger <larry.finger@lwfinger.net>
+In-Reply-To: <200702142240.01494.mb@bu3sch.de>
+References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net>
+	 <200702100655.51495.mb@bu3sch.de> <1171459090.11116.22.camel@johannes.berg>
+	 <200702142240.01494.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-n4SadKywi06ow99jC/ry"
+Date: Thu, 15 Feb 2007 16:07:04 +0100
+Message-Id: <1171552024.5220.4.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-02-07 at 03:03 -0500, Gene Heskett wrote:
 
-> And the 4318 is whats in my lappy.  What does it break?
+--=-n4SadKywi06ow99jC/ry
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Oh, please, let's stop such questions.  Does it really matter what some
-knowingly wrong change does to particular hardware?  Just don't try the
-old patch.  Just forget that it existed.  It's not going to the kernel.
+On Wed, 2007-02-14 at 22:40 +0100, Michael Buesch wrote:
+> On Wednesday 14 February 2007 14:18, Johannes Berg wrote:
+> > On Sat, 2007-02-10 at 06:55 +0100, Michael Buesch wrote:
+> >=20
+> > > It's likely that old cards still work with v4 firmware,
+> >=20
+> > No, it's absolutely impossible. Rev 2/4 cores have a totally different
+> > instruction set in the microcode.
+>=20
+> Ok, I was not talking about _that_ old cards. ;)
 
-Please try the new patch.  Ideally, measure speeds for various rates,
-because it's the speed that the patch is supposed to improve.
+Are there cards where they have new microcode instruction set but no v4
+firmware?
 
-If you have more questions of this kind, please make sure my personal
-e-mail is not in CC.
+johannes
 
--- 
-Regards,
-Pavel Roskin
+--=-n4SadKywi06ow99jC/ry
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF1HcY/ETPhpq3jKURAltLAJ9pXbGsv9jjJUxZBadM4mH3GmIh0QCghEeg
+k7mggP2BMJ1QhArpNu/P4eE=
+=i0g8
+-----END PGP SIGNATURE-----
+
+--=-n4SadKywi06ow99jC/ry--
 
