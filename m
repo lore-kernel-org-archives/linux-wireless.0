@@ -1,50 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.230]:41595 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750723AbXBMPK1 convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43674 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965748AbXBOPAI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Feb 2007 10:10:27 -0500
-Received: by qb-out-0506.google.com with SMTP id z8so935189qbc
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Feb 2007 07:10:26 -0800 (PST)
-Message-ID: <b6a2187b0702130710s217281c4k5ed227995c09c878@mail.gmail.com>
-Date: Tue, 13 Feb 2007 23:10:24 +0800
-From: "Jeff Chua" <jeff.chua.linux@gmail.com>
-To: "=?ISO-8859-1?Q?Ismail_D=F6nmez?=" <ismail@pardus.org.tr>
-Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
-Cc: "James Ketrenos" <jketreno@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
-In-Reply-To: <200702131558.48987.ismail@pardus.org.tr>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-References: <45CCE3CA.4050904@linux.intel.com>
-	 <200702131558.48987.ismail@pardus.org.tr>
+	Thu, 15 Feb 2007 10:00:08 -0500
+Message-Id: <20070215144257.949316000@sipsolutions.net>
+References: <20070215144241.847938000@sipsolutions.net>
+Date: Thu, 15 Feb 2007 15:42:45 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>
+Subject: [PATCH 04/10] cfg/nl80211: make association explicit
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/13/07, Ismail D=F6nmez <ismail@pardus.org.tr> wrote:
+This patch makes association explicit.
 
-> Tried this is on a patched 2.6.20 kernel with ipw3945 device and it a=
-lways
-> puts the card in 802.11a mode instead of 802.11bg mode.
->
-> Ideas?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
+---
+ include/linux/nl80211.h |    3 +++
+ include/net/cfg80211.h  |    7 ++++++-
+ net/wireless/nl80211.c  |   10 ++++++++++
+ 3 files changed, 19 insertions(+), 1 deletion(-)
 
-Before running  "iwconfig wlan0 channel 8",  the card is set to
-802.11a mode. iwconfig shows rate at 54Mb/s. But after setting the
-channel, it sets to 802.11b mode, and I can't find a way to change
-from 11Mb/s to 54MB/s.
+--- wireless-dev.orig/include/net/cfg80211.h	2007-02-15 13:41:33.057940064 +0100
++++ wireless-dev/include/net/cfg80211.h	2007-02-15 13:48:54.087940064 +0100
+@@ -78,13 +78,17 @@ struct wiphy;
+  *
+  * @configure: configure the given interface as requested in the config struct.
+  *	       must not ignore any configuration item, if something is
+- *	       is requested that cannot be fulfilled return an error
++ *	       is requested that cannot be fulfilled return an error.
++ *             This call does not actually initiate any association or such.
+  *
+  * @get_config: fill the given config structure with the current configuration
+  *
+  * @get_config_valid: return a bitmask of CFG80211_CFG_VALID_* indicating
+  *		      which parameters can be set.
+  *
++ * @associate: associate with previously given settings (SSID, BSSID
++ *             if userspace roaming is enabled)
++ *
+  * @reassociate: reassociate with current settings (SSID, BSSID if
+  *		 userspace roaming is enabled)
+  *
+@@ -135,6 +139,7 @@ struct cfg80211_ops {
+ 				    struct net_device *dev);
+ 
+ 
++	int	(*associate)(struct wiphy *wiphy, struct net_device *dev);
+ 	int	(*reassociate)(struct wiphy *wiphy, struct net_device *dev);
+ 	int	(*disassociate)(struct wiphy *wiphy, struct net_device *dev);
+ 	int	(*deauth)(struct wiphy *wiphy, struct net_device *dev);
+--- wireless-dev.orig/include/linux/nl80211.h	2007-02-15 13:41:26.287940064 +0100
++++ wireless-dev/include/linux/nl80211.h	2007-02-15 13:48:53.357940064 +0100
+@@ -98,6 +98,9 @@ enum {
+ 	/* deauth from current AP */
+ 	NL80211_CMD_DEAUTH,
+ 
++	/* associate with current settings */
++	NL80211_CMD_ASSOCIATE,
++
+ 	/* re-associate with current settings
+ 	 * (SSID and BSSID if roaming control in userspace) */
+ 	NL80211_CMD_REASSOCIATE,
+--- wireless-dev.orig/net/wireless/nl80211.c	2007-02-15 13:41:33.067940064 +0100
++++ wireless-dev/net/wireless/nl80211.c	2007-02-15 13:49:48.257940064 +0100
+@@ -130,6 +130,7 @@ static int nl80211_get_cmdlist(struct sk
+ 	CHECK_CMD(del_virtual_intf, DEL_VIRTUAL_INTERFACE);
+ 	CHECK_CMD(configure, CONFIGURE);
+ 	CHECK_CMD(get_config, GET_CONFIG);
++	CHECK_CMD(associate, ASSOCIATE);
+ 	CHECK_CMD(reassociate, REASSOCIATE);
+ 	CHECK_CMD(disassociate, DISASSOCIATE);
+ 	CHECK_CMD(deauth, DEAUTH);
+@@ -699,6 +700,9 @@ static int nl80211_assoc_deauth(struct s
+ 		return err;
+ 
+ 	switch (info->genlhdr->cmd) {
++	case NL80211_CMD_ASSOCIATE:
++		act = drv->ops->associate;
++		break;
+ 	case NL80211_CMD_DISASSOCIATE:
+ 		act = drv->ops->disassociate;
+ 		break;
+@@ -964,6 +968,12 @@ static struct genl_ops nl80211_ops[] = {
+ 		/* can be retrieved by unprivileged users */
+ 	},
+ 	{
++		.cmd = NL80211_CMD_ASSOCIATE,
++		.doit = nl80211_assoc_deauth,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++	},
++	{
+ 		.cmd = NL80211_CMD_DISASSOCIATE,
+ 		.doit = nl80211_assoc_deauth,
+ 		.policy = nl80211_policy,
 
-"iwlist eth0 rate" only show up to 11Mb/s.
+--
 
-So, my problem is the card is always in 802.11b mode.
-
-Thanks,
-Jeff.
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
