@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-68.dex002.intermedia.net ([64.78.20.34]:7361 "EHLO
-	DHOST002-68.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933415AbXBET1P (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43615 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965606AbXBOO7U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Feb 2007 14:27:15 -0500
-From: "Jouni Malinen" <jkm@devicescape.com>
-Date: Mon, 5 Feb 2007 11:13:00 -0800
-To: Jiri Benc <jbenc@suse.cz>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC PATCH 1/3] cfg80211 and nl80211
-Message-ID: <20070205191300.GD31058@instant802.com>
-References: <1170699268.3572.39.camel@johannes.berg> <20070205192958.0fef1a88@griffin.suse.cz>
+	Thu, 15 Feb 2007 09:59:20 -0500
+Subject: renaming in debugfs?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Greg KH <greg@kroah.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-L1dLS/S3hOkRYQfXbBDp"
+Date: Thu, 15 Feb 2007 12:52:53 +0100
+Message-Id: <1171540374.20204.2.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070205192958.0fef1a88@griffin.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 05, 2007 at 07:29:58PM +0100, Jiri Benc wrote:
 
-> No. It's the other way around, when they're reported immediately, they
-> will be out of order. ieee80211_tx_status is called from the interrupt
-> handler as the result of the frame being actually sent. Before that, a
-> frame can sit for an arbitrary long time in the hw queue or not sent at
-> all. Reporting only frames confirmed by ieee80211_tx_status as
-> successfully sent at the time the function is called reflects better
-> what is on the air (it's still not perfect as things like
-> retransmissions are not caught).
+--=-L1dLS/S3hOkRYQfXbBDp
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-What is your definition for "successfully sent" in this context? I would
-probably also include frames that did not receive ACK, but did have some
-transmit tries. If there is place for reporting TX status (ack/no ack,
-number of retries) that could be added here. In addition, some hardware
-designs may also return the timestamp of the transmission in TX status,
-so that could also be added. This would actually make it possible to
-figure out the exact sequence of frames (in userspace app), if needed.
+For the wiphy stuff I wanted to provide a debugfs as well as a sysfs dir
+for drivers (or the d80211 stack).
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+But then I decided that stable wiphy names will be a good thing instead
+of just numbering them wiphy%d. Does anyone have any idea how to rename
+directories in debugfs? I guess that for sysfs it'll just work if I
+change the kobject name, but maybe that's wrong too?
+
+johannes
+
+--=-L1dLS/S3hOkRYQfXbBDp
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF1EmU/ETPhpq3jKURAjlCAKCRV3dfEUHeRIY2mPg9TUMQB3XgJACdE0q5
+z+dzrr7Qdt2yUI/ITjDiytg=
+=jDKJ
+-----END PGP SIGNATURE-----
+
+--=-L1dLS/S3hOkRYQfXbBDp--
+
