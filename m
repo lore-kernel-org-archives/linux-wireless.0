@@ -1,40 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:34345 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946477AbXBQIGR (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42591 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946091AbXBPVKK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Feb 2007 03:06:17 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HIKYv-0005Ff-0W
-	for linux-wireless@vger.kernel.org; Sat, 17 Feb 2007 03:04:53 -0500
-Subject: Re: More breakage in wireless-dev.git
-From: Pavel Roskin <proski@gnu.org>
-To: linux-wireless@vger.kernel.org
-Cc: Bcm43xx-dev@lists.berlios.de
-In-Reply-To: <1171690868.31103.17.camel@dv>
-References: <1171690868.31103.17.camel@dv>
+	Fri, 16 Feb 2007 16:10:10 -0500
+Subject: [PATCH/RFT] fix wiphy_create/wiphy_free sequence
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Sat, 17 Feb 2007 03:06:14 -0500
-Message-Id: <1171699574.32411.6.camel@dv>
+Date: Fri, 16 Feb 2007 22:09:59 +0100
+Message-Id: <1171660199.3575.32.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2007-02-17 at 00:41 -0500, Pavel Roskin wrote:
+Big bad oops when you did wiphy_create/wiphy_free without registering it
+inbetween. This should fix it.
 
-> There are more problems with today's wireless-dev.git even after I
-> applied the two Johannes' patches.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Fixed in "d80211: fix incorrect hw.priv setting in ieee80211_alloc_hw()"
-posted in linux-wireless.  In the meantime, just remove the second
-assignment for local->hw.priv in ieee80211_alloc_hw().
+---
+Please commit if it does fix the issue, I don't have the hw and don't
+feel like writing a dummy driver just to test this :)
 
-I'm still getting "bcm43xx_d80211: FOUND UNSUPPORTED PHY (Analog 4, Type
-0, Revision 7)" from bcm43xx_d80211 for a card that used to work.  That
-must be a separate problem.
+ net/wireless/core.c  |    6 ++++--
+ net/wireless/sysfs.c |   14 +-------------
+ net/wireless/sysfs.h |    3 +--
+ 3 files changed, 6 insertions(+), 17 deletions(-)
 
--- 
-Regards,
-Pavel Roskin
+--- wireless-dev.orig/net/wireless/core.c	2007-02-16 22:03:41.944695664 +0100
++++ wireless-dev/net/wireless/core.c	2007-02-16 22:07:00.154695664 +0100
+@@ -173,6 +173,8 @@ struct wiphy *wiphy_new(struct cfg80211_
+ 
+ 	mutex_init(&drv->mtx);
+ 
++	drv->wiphy.class_dev.class = &ieee80211_class;
++	drv->wiphy.class_dev.class_data = &drv->wiphy;
+ 	class_device_initialize(&drv->wiphy.class_dev);
+ 
+ 	return &drv->wiphy;
+@@ -187,7 +189,7 @@ int wiphy_register(struct wiphy *wiphy)
+ 	mutex_lock(&cfg80211_drv_mutex);
+ 
+ 
+-	res = wiphy_sysfs_add(&drv->wiphy);
++	res = class_device_add(&drv->wiphy.class_dev);
+ 	if (res)
+ 		goto out_unlock;
+ 
+@@ -217,7 +219,7 @@ void wiphy_unregister(struct wiphy *wiph
+ 	list_del(&drv->list);
+ 	mutex_unlock(&drv->mtx);
+ 
+-	wiphy_sysfs_del(wiphy);
++	class_device_del(&drv->wiphy.class_dev);
+ 	debugfs_remove(drv->wiphy.debugfsdir);
+ 
+ 	mutex_unlock(&cfg80211_drv_mutex);
+--- wireless-dev.orig/net/wireless/sysfs.c	2007-02-16 22:03:37.204695664 +0100
++++ wireless-dev/net/wireless/sysfs.c	2007-02-16 22:06:21.334695664 +0100
+@@ -52,7 +52,7 @@ static int wiphy_uevent(struct class_dev
+ 	return 0;
+ }
+ 
+-static struct class ieee80211_class = {
++struct class ieee80211_class = {
+ 	.name = "ieee80211",
+ 	.owner = THIS_MODULE,
+ 	.release = wiphy_class_dev_release,
+@@ -71,15 +71,3 @@ void wiphy_sysfs_exit(void)
+ {
+ 	class_unregister(&ieee80211_class);
+ }
+-
+-int wiphy_sysfs_add(struct wiphy *wiphy)
+-{
+-	wiphy->class_dev.class = &ieee80211_class;
+-	wiphy->class_dev.class_data = wiphy;
+-	return class_device_add(&wiphy->class_dev);
+-}
+-
+-void wiphy_sysfs_del(struct wiphy *wiphy)
+-{
+-	class_device_del(&wiphy->class_dev);
+-}
+--- wireless-dev.orig/net/wireless/sysfs.h	2007-02-16 22:04:53.794695664 +0100
++++ wireless-dev/net/wireless/sysfs.h	2007-02-16 22:05:09.534695664 +0100
+@@ -4,7 +4,6 @@
+ extern int wiphy_sysfs_init(void);
+ extern void wiphy_sysfs_exit(void);
+ 
+-extern int wiphy_sysfs_add(struct wiphy *wiphy);
+-extern void wiphy_sysfs_del(struct wiphy *wiphy);
++extern struct class ieee80211_class;
+ 
+ #endif /* __WIRELESS_SYSFS_H */
+
 
