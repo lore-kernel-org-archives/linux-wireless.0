@@ -1,91 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33163
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751784AbXBAPjd (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:30898 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422632AbXBPO34 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Feb 2007 10:39:33 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Fwd: Re: Anyone have notes from Wireless Summit?
-Date: Thu, 1 Feb 2007 16:37:56 +0100
-Cc: linux-wireless@vger.kernel.org, Jon Smirl <jonsmirl@gmail.com>,
-	Stephen Hemminger <shemminger@osdl.org>
+	Fri, 16 Feb 2007 09:29:56 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so1537572nfa
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Feb 2007 06:29:55 -0800 (PST)
+To: Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH v2] d80211: Add software sequence support
+Date: Fri, 16 Feb 2007 15:29:22 +0100
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200702141423.27823.IvDoorn@gmail.com> <200702161325.47396.IvDoorn@gmail.com> <20070216135827.7d262ae3@griffin.suse.cz>
+In-Reply-To: <20070216135827.7d262ae3@griffin.suse.cz>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
+Content-Type: text/plain;
   charset="iso-8859-1"
-Message-Id: <200702011637.56951.mb@bu3sch.de>
+Message-Id: <200702161529.22717.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[Resend. Maybe it get's through the list now :)]
-
-On Thursday 01 February 2007 05:43, Larry Finger wrote:
-> Stephen Hemminger wrote:
-> > On Wed, 31 Jan 2007 20:16:52 -0500
-> > "Jon Smirl" <jonsmirl@gmail.com> wrote:
+On Friday 16 February 2007 13:58, Jiri Benc wrote:
+> On Fri, 16 Feb 2007 13:25:47 +0100, Ivo van Doorn wrote:
+> > On Friday 16 February 2007 13:03, Jiri Benc wrote:
+> > > On Thu, 15 Feb 2007 21:57:22 +0100, Jiri Benc wrote:
+> > > > Thinking about it more, sdata should be the correct place. It's more
+> > > > per-interface thing than per-BSS (although the difference is small in
+> > > > this particular case).
+> > > 
+> > > ...and thinking about it even more, that won't work with WDS.
 > > 
-> >> On 1/31/07, Larry Finger <larry.finger@lwfinger.net> wrote:
-> >>> I've seen the program and the PDF's posted at
-> >>> http://developer.osdl.org/dev/desktop_architects/index.php and I've seen some discussion about
-> >>> what/was not agreed upon. Does anyone have any notes on the main and/or breakout sessions that could
-> >>> be posted here, or in some other venue.
-> > 
-> > 
-> > I put all the notes that were sent to me into:
-> >   http://developer.osdl.org/dev/desktop_architects/index.php/Wireless_Summit_2
-> > 
-> > The PDF slides I uploaded and any notes I converted to Wiki pages
-> > 
+> > You mean storing the sequence counter per-interface won't work,
+> > or per-bss?
 > 
-> Thanks Stephen. BTW, is there a list of names to go with the photo? After communicating with all of
-> you for a year, or so, I'd like to have faces to go with the names.
+> Both.
+> 
+> When you have a WDS link and some other wireless interface at the same
+> time, their source addresses are (in most cases) the same. You want to
+> have the sequence control counter shared by them. Actually, it will
+> probably work most of time even when they have different counters. The
+> situation where it won't work is if you have two virtual interfaces,
+> one in STA and second in WDS mode, both connected to the same AP. I
+> can't figure out how this particular setup could be useful but it's
+> generally not disallowed.
+> 
+> Anyway, using different counter for a WDS interface probably violates
+> 802.11 (although it's not much specific in this case). I believe it
+> will work in most cases, though.
+> 
+> Any ideas how to solve that?
 
-I can try to create a list. But I don't remember all the names.
-Please also apologize for any cruel typos :)
-I'll do from left to right.
+Are there more situations where it might be important to know
+if the WDS interface has to keep in mind that there is a virtual STA interface
+on the same network? Because it might be worthwhile to make a check for that
+in the creation of the WDS interface (and in the STA interface).
 
-1) Mohammed Abbas
-2) Don't remember, sorry.
-3) From Nokia. Don't remember your name, sorry. :)
-4) Jouni Malinen
-5) Don't remember the name, sorry.
-6) Jiri Benc
-7) Don't remember, sorry. But I remember your interresting talks about laws and stuff. ;)
-8) Don't remember, either :)
-9) Michael Buesch
-10) James Ketrenos
-11) Sebastian Gottschall
-12) Yi Zhu (I think. Not sure, sorry)
-13) not sure what his name was. Tomas Winkler?
-14) Daniel Drake
-15) Hm, dunno. Sorry.
-16) John Linville
-17) Johannes Berg
-18) Dan Williams
-19) Nick Kossifidis
-20) Mark Powell
-21) Luis Rodriguez
-22) Don't recognize him on the tiiiiiny photo.
-23) Michael Wu
-24) Stephen Hemminger
-25) Don't remember the name, too. Sorry.
-
-Henry Ptasiniski from Broadcom doesn't seem to be on the
-picture. I think he left earlier.
-
-Hope this helps. Someone else please fill in the missing ones. :)
-
-Here are some bigger pictures made by Luis
-http://mcgrof.com/albums/2007/01/osdl-01-20/
-
-That's Luis:
-http://mcgrof.com/albums/2007/01/osdl-01-20/load.php?image=dscf0085.jpg
-
-Left me, right Jiri:
-http://mcgrof.com/albums/2007/01/osdl-01-20/load.php?image=dscf0066.jpg
-
-
-So, now your picture... :D
-
--- 
-Greetings Michael.
+Ivo
