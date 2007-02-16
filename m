@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.234]:56037 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161503AbXBOWSF (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:32876 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750850AbXBPWHv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Feb 2007 17:18:05 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so698919nze
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Feb 2007 14:18:05 -0800 (PST)
-Message-ID: <a32f33a40702151418q4314f64ewf8517838a7794e63@mail.gmail.com>
-Date: Thu, 15 Feb 2007 23:18:05 +0100
-From: "Ivo Van Doorn" <ivdoorn@gmail.com>
-To: "Jiri Benc" <jbenc@suse.cz>
+	Fri, 16 Feb 2007 17:07:51 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so1667765nfa
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Feb 2007 14:07:50 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
 Subject: Re: [PATCH v2] d80211: Add software sequence support
-Cc: "Michael Wu" <flamingice@sourmilk.net>,
-	"John Linville" <linville@tuxdriver.com>,
+Date: Fri, 16 Feb 2007 23:07:16 +0100
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	John Linville <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <20070215215722.3db7f3ca@griffin.suse.cz>
+References: <200702141423.27823.IvDoorn@gmail.com> <20070216135827.7d262ae3@griffin.suse.cz> <1171660484.3575.34.camel@johannes.berg>
+In-Reply-To: <1171660484.3575.34.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <200702141423.27823.IvDoorn@gmail.com>
-	 <200702151548.25041.flamingice@sourmilk.net>
-	 <20070215215722.3db7f3ca@griffin.suse.cz>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702162307.16826.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > I am not so sure that storing this information in struct ieee80211_sta_bss
-> is
-> > correct. As far as I can tell, that is strictly for storing information
-> scan
-> > results and beacon information. Nothing outside of ieee80211_sta.c uses
-> it.
-> > struct sta_info or struct ieee80211_if_ap (sta interfaces have a pointer
-> to
-> > the struct ieee80211_if_ap on the master device) may be a better choice. I
-> > think struct sta_info is the right one though there is a problem - it
-> isn't
-> > allocated until a successful association.
->
-> Thinking about it more, sdata should be the correct place. It's more
-> per-interface thing than per-BSS (although the difference is small in
-> this particular case).
+On Friday 16 February 2007 22:14, Johannes Berg wrote:
+> On Fri, 2007-02-16 at 13:58 +0100, Jiri Benc wrote:
+> 
+> > Both.
+> > 
+> > When you have a WDS link and some other wireless interface at the same
+> > time, their source addresses are (in most cases) the same. You want to
+> > have the sequence control counter shared by them. Actually, it will
+> > probably work most of time even when they have different counters. The
+> > situation where it won't work is if you have two virtual interfaces,
+> > one in STA and second in WDS mode, both connected to the same AP. I
+> > can't figure out how this particular setup could be useful but it's
+> > generally not disallowed.
+> > 
+> > Anyway, using different counter for a WDS interface probably violates
+> > 802.11 (although it's not much specific in this case). I believe it
+> > will work in most cases, though.
+> > 
+> > Any ideas how to solve that?
+> 
+> Make the counter per-mac address?
 
-That would also optimize the sequence handler since the BSS
-does not have to be looked up anymore. I'll create the patch to do this asap.
+Wouldn't that be the same as per-interface?
 
 Ivo
