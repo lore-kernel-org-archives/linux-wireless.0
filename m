@@ -1,260 +1,473 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:48611 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932429AbXB1OHN (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:22967 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1946146AbXBPUre (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 09:07:13 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so562551nfa
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 06:07:12 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 26/28] rt2x00: Fix rt2500usb linktuning
-Date: Wed, 28 Feb 2007 15:07:06 +0100
+	Fri, 16 Feb 2007 15:47:34 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH] d80211: Support automatic channel/BSSID/SSID configuration
+Date: Fri, 16 Feb 2007 15:47:05 -0500
 Cc: linux-wireless@vger.kernel.org
+References: <200702110326.21623.flamingice@sourmilk.net> <20070216181555.71c440bd@griffin.suse.cz>
+In-Reply-To: <20070216181555.71c440bd@griffin.suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200702281507.06834.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart2734411.55sfuxiFV5";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200702161547.09806.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use EEPROM information to correctly work with the link tuning
-for rt2500usb. This improves link stability/quality.
+--nextPart2734411.55sfuxiFV5
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+On Friday 16 February 2007 12:15, Jiri Benc wrote:
+> On Sun, 11 Feb 2007 03:26:17 -0500, Michael Wu wrote:
+> > [...]
+> > --- a/net/d80211/ieee80211_ioctl.c
+> > +++ b/net/d80211/ieee80211_ioctl.c
+> > [...]
+> > @@ -1887,7 +1903,12 @@ static int ieee80211_ioctl_siwessid(stru
+> >  			sdata->u.sta.ssid_len =3D len;
+> >  			return 0;
+> >  		}
+> > -		return ieee80211_sta_set_ssid(dev, ssid, len);
+> > +		sdata->u.sta.auto_ssid_sel =3D !data->flags;
+>
+> Shouldn't be just some bit tested here?
+>
+iwconfig sets it to 1 when the essid is set and 0 when the user set it to a=
+ny.
 
----
+> > +		if (is_zero_ether_addr((u8 *) &ap_addr->sa_data)) {
+> > +			sdata->u.sta.auto_bssid_sel =3D 1;
+> > +			sdata->u.sta.auto_channel_sel =3D 1;
+> > +		} else if (is_broadcast_ether_addr((u8 *) &ap_addr->sa_data))
+> > +			sdata->u.sta.auto_bssid_sel =3D 1;
+> > +		else
+> > +			sdata->u.sta.auto_bssid_sel =3D 0;
+> > +		ret =3D ieee80211_sta_set_bssid(dev, (u8 *) &ap_addr->sa_data);
+>
+> u.sta.bssid_set is set in ieee80211_sta_set_bssid only and solely based
+> on sa_data address containing all zeros. Shouldn't it be set on
+> broadcast address too?
+>
+If you mean set to zero, yes, that would make more sense. Don't think it'll
+have any effect in practice though, but worth fixing anyway.
 
-diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c b/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c
-index 20e321e..32dcc06 100644
---- a/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c
-@@ -722,13 +722,18 @@ static void rt2500usb_config_mac_addr(struct rt2x00_dev *rt2x00dev, u8 *addr)
-  */
- static void rt2500usb_link_tuner(struct work_struct *work)
+> > +		if (ret)
+> > +			return ret;
+> > +		ieee80211_sta_req_auth(dev, &sdata->u.sta);
+> > +		return 0;
+> >  	} else if (sdata->type =3D=3D IEEE80211_IF_TYPE_WDS) {
+> >  		if (memcmp(sdata->u.wds.remote_addr, (u8 *) &ap_addr->sa_data,
+> >  			   ETH_ALEN) =3D=3D 0)
+> > diff --git a/net/d80211/ieee80211_sta.c b/net/d80211/ieee80211_sta.c
+> > index 0b56135..78d5cf5 100644
+> > --- a/net/d80211/ieee80211_sta.c
+> > +++ b/net/d80211/ieee80211_sta.c
+> > [...]
+> > @@ -1924,8 +1925,9 @@ void ieee80211_sta_work(struct work_stru
+> >  	}
+> >
+> >  	if (test_and_clear_bit(IEEE80211_STA_REQ_AUTH, &ifsta->request)) {
+> > -		ifsta->state =3D IEEE80211_AUTHENTICATE;
+> > -		ieee80211_sta_reset_auth(dev, ifsta);
+> > +		if (ieee80211_sta_config_auth(dev, ifsta))
+> > +			return;
+> > +		clear_bit(IEEE80211_STA_REQ_RUN, &ifsta->request);
+>
+> Shouldn't we return immediatelly or something when a scan was requested
+> by ieee80211_sta_config_auth?
+>
+We do. ieee80211_sta_config returns -1.
+
+> Seems like you forget to update top_rssi.
+>
+Yup, thanks.
+
+> if (selected)
+> 	atomic_inc(...);
+> spin_unlock(...);
+> if (selected) {
+> 	...
+>
+> I'd consider less error prone.
+>
+Sure, looks better to me too.
+
+=2D-
+
+d80211: Support automatic channel/BSSID/SSID configuration
+
+This patch implements auto channel/BSSID/SSID selection for backwards
+compatibility with anyone not using wpa_supplicant to associate.
+
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+=2D--
+
+ net/d80211/ieee80211_i.h     |    5 ++
+ net/d80211/ieee80211_iface.c |    2 +
+ net/d80211/ieee80211_ioctl.c |   47 +++++++++++++--
+ net/d80211/ieee80211_sta.c   |  128 ++++++++++++++++++++++++++++++++++++--=
+=2D---
+ 4 files changed, 156 insertions(+), 26 deletions(-)
+
+diff --git a/net/d80211/ieee80211_i.h b/net/d80211/ieee80211_i.h
+index fa42fb5..3c59a1f 100644
+=2D-- a/net/d80211/ieee80211_i.h
++++ b/net/d80211/ieee80211_i.h
+@@ -268,6 +268,9 @@ struct ieee80211_if_sta {
+ 	unsigned int create_ibss:1;
+ 	unsigned int mixed_cell:1;
+ 	unsigned int wmm_enabled:1;
++	unsigned int auto_ssid_sel:1;
++	unsigned int auto_bssid_sel:1;
++	unsigned int auto_channel_sel:1;
+ #define IEEE80211_STA_REQ_SCAN 0
+ #define IEEE80211_STA_REQ_AUTH 1
+ #define IEEE80211_STA_REQ_RUN  2
+@@ -671,6 +674,8 @@ int ieee80211_sta_set_ssid(struct net_de
+ int ieee80211_sta_get_ssid(struct net_device *dev, char *ssid, size_t *len=
+);
+ int ieee80211_sta_set_bssid(struct net_device *dev, u8 *bssid);
+ int ieee80211_sta_req_scan(struct net_device *dev, u8 *ssid, size_t ssid_l=
+en);
++void ieee80211_sta_req_auth(struct net_device *dev,
++			    struct ieee80211_if_sta *ifsta);
+ int ieee80211_sta_scan_results(struct net_device *dev, char *buf, size_t l=
+en);
+ void ieee80211_sta_rx_scan(struct net_device *dev, struct sk_buff *skb,
+ 			   struct ieee80211_rx_status *rx_status);
+diff --git a/net/d80211/ieee80211_iface.c b/net/d80211/ieee80211_iface.c
+index 939e289..ec9cdc2 100644
+=2D-- a/net/d80211/ieee80211_iface.c
++++ b/net/d80211/ieee80211_iface.c
+@@ -195,6 +195,8 @@ void ieee80211_if_set_type(struct net_de
+ 			IEEE80211_AUTH_ALG_SHARED_KEY;
+ 		ifsta->create_ibss =3D 1;
+ 		ifsta->wmm_enabled =3D 1;
++		ifsta->auto_channel_sel =3D 1;
++		ifsta->auto_bssid_sel =3D 1;
+=20
+ 		msdata =3D IEEE80211_DEV_TO_SUB_IF(sdata->local->mdev);
+ 		sdata->bss =3D &msdata->u.ap;
+diff --git a/net/d80211/ieee80211_ioctl.c b/net/d80211/ieee80211_ioctl.c
+index 0a1a5eb..fa85fb0 100644
+=2D-- a/net/d80211/ieee80211_ioctl.c
++++ b/net/d80211/ieee80211_ioctl.c
+@@ -1247,8 +1247,14 @@ static int ieee80211_set_gen_ie(struct n
+=20
+ 	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
+ 	if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA ||
+=2D	    sdata->type =3D=3D IEEE80211_IF_TYPE_IBSS)
+=2D		return ieee80211_sta_set_extra_ie(dev, ie, len);
++	    sdata->type =3D=3D IEEE80211_IF_TYPE_IBSS) {
++		int ret =3D ieee80211_sta_set_extra_ie(dev, ie, len);
++		if (ret)
++			return ret;
++		sdata->u.sta.auto_bssid_sel =3D 0;
++		ieee80211_sta_req_auth(dev, &sdata->u.sta);
++		return 0;
++	}
+=20
+ 	if (sdata->type =3D=3D IEEE80211_IF_TYPE_AP) {
+ 		kfree(sdata->u.ap.generic_elem);
+@@ -1833,11 +1839,20 @@ static int ieee80211_ioctl_siwfreq(struc
+ 				   struct iw_freq *freq, char *extra)
  {
--	struct link *link =
--		container_of(work, struct link, work.work);
- 	struct rt2x00_dev *rt2x00dev =
--		container_of(link, struct rt2x00_dev, link);
--	u16 reg;
-+		container_of(work, struct rt2x00_dev, link.work.work);
- 	u32 rssi;
--	u8 reg_r17;
-+	u16 cca_alarm;
-+	u16 bbp_thresh;
-+	u16 reg_r24;
-+	u16 reg_r25;
-+	u16 reg_r61;
-+	u16 reg_r17;
-+	u16 vgc_bound;
-+	u8 bbp_r17;
-+	u8 sens;
- 	u8 up_bound;
- 	u8 low_bound;
- 
-@@ -746,57 +751,67 @@ static void rt2500usb_link_tuner(struct work_struct *work)
- 	if (!rssi)
- 		goto exit;
- 
-+	rt2x00_eeprom_read(rt2x00dev, EEPROM_BBPTUNE, &bbp_thresh);
-+	bbp_thresh = eeprom_valid(bbp_thresh, 75, EEPROM_BBPTUNE_THRESHOLD);
+ 	struct ieee80211_local *local =3D dev->ieee80211_ptr;
++	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
 +
-+	rt2x00_eeprom_read(rt2x00dev, EEPROM_BBPTUNE_R24, &reg_r24);
-+	rt2x00_eeprom_read(rt2x00dev, EEPROM_BBPTUNE_R25, &reg_r25);
-+	rt2x00_eeprom_read(rt2x00dev, EEPROM_BBPTUNE_R61, &reg_r61);
-+
-+	if (rssi > bbp_thresh) {
-+		reg_r24 = eeprom_valid(reg_r24, 0x70, EEPROM_BBPTUNE_R24_HIGH);
-+		reg_r25 = eeprom_valid(reg_r25, 0x40, EEPROM_BBPTUNE_R25_HIGH);
-+		reg_r61 = eeprom_valid(reg_r61, 0x6d, EEPROM_BBPTUNE_R61_HIGH);
++	if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA)
++		sdata->u.sta.auto_channel_sel =3D 0;
+=20
+ 	/* freq->e =3D=3D 0: freq->m =3D channel; otherwise freq =3D m * 10^e */
+=2D	if (freq->e =3D=3D 0)
+=2D		return ieee80211_set_channel(local, freq->m, -1);
+=2D	else {
++	if (freq->e =3D=3D 0) {
++		if (freq->m < 0) {
++			if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA)
++				sdata->u.sta.auto_channel_sel =3D 1;
++			return 0;
++		} else
++			return ieee80211_set_channel(local, freq->m, -1);
 +	} else {
-+		reg_r24 = eeprom_valid(reg_r24, 0x80, EEPROM_BBPTUNE_R24_LOW);
-+		reg_r25 = eeprom_valid(reg_r25, 0x50, EEPROM_BBPTUNE_R25_LOW);
-+		reg_r61 = eeprom_valid(reg_r61, 0x60, EEPROM_BBPTUNE_R61_LOW);
+ 		int i, div =3D 1000000;
+ 		for (i =3D 0; i < freq->e; i++)
+ 			div /=3D 10;
+@@ -1880,6 +1895,7 @@ static int ieee80211_ioctl_siwessid(stru
+ 	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
+ 	if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA ||
+ 	    sdata->type =3D=3D IEEE80211_IF_TYPE_IBSS) {
++		int ret;
+ 		if (local->user_space_mlme) {
+ 			if (len > IEEE80211_MAX_SSID_LEN)
+ 				return -EINVAL;
+@@ -1887,7 +1903,12 @@ static int ieee80211_ioctl_siwessid(stru
+ 			sdata->u.sta.ssid_len =3D len;
+ 			return 0;
+ 		}
+=2D		return ieee80211_sta_set_ssid(dev, ssid, len);
++		sdata->u.sta.auto_ssid_sel =3D !data->flags;
++		ret =3D ieee80211_sta_set_ssid(dev, ssid, len);
++		if (ret)
++			return ret;
++		ieee80211_sta_req_auth(dev, &sdata->u.sta);
++		return 0;
+ 	}
+=20
+ 	if (sdata->type =3D=3D IEEE80211_IF_TYPE_AP) {
+@@ -1943,12 +1964,24 @@ static int ieee80211_ioctl_siwap(struct
+ 	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
+ 	if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA ||
+ 	    sdata->type =3D=3D IEEE80211_IF_TYPE_IBSS) {
++		int ret;
+ 		if (local->user_space_mlme) {
+ 			memcpy(sdata->u.sta.bssid, (u8 *) &ap_addr->sa_data,
+ 			       ETH_ALEN);
+ 			return 0;
+ 		}
+=2D		return ieee80211_sta_set_bssid(dev, (u8 *) &ap_addr->sa_data);
++		if (is_zero_ether_addr((u8 *) &ap_addr->sa_data)) {
++			sdata->u.sta.auto_bssid_sel =3D 1;
++			sdata->u.sta.auto_channel_sel =3D 1;
++		} else if (is_broadcast_ether_addr((u8 *) &ap_addr->sa_data))
++			sdata->u.sta.auto_bssid_sel =3D 1;
++		else
++			sdata->u.sta.auto_bssid_sel =3D 0;
++		ret =3D ieee80211_sta_set_bssid(dev, (u8 *) &ap_addr->sa_data);
++		if (ret)
++			return ret;
++		ieee80211_sta_req_auth(dev, &sdata->u.sta);
++		return 0;
+ 	} else if (sdata->type =3D=3D IEEE80211_IF_TYPE_WDS) {
+ 		if (memcmp(sdata->u.wds.remote_addr, (u8 *) &ap_addr->sa_data,
+ 			   ETH_ALEN) =3D=3D 0)
+diff --git a/net/d80211/ieee80211_sta.c b/net/d80211/ieee80211_sta.c
+index 0b56135..eabb0b7 100644
+=2D-- a/net/d80211/ieee80211_sta.c
++++ b/net/d80211/ieee80211_sta.c
+@@ -3,6 +3,7 @@
+  * Copyright 2003, Jouni Malinen <jkmaline@cc.hut.fi>
+  * Copyright 2004, Instant802 Networks, Inc.
+  * Copyright 2005, Devicescape Software, Inc.
++ * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -21,6 +22,7 @@
+ #include <linux/if_arp.h>
+ #include <linux/wireless.h>
+ #include <linux/random.h>
++#include <linux/etherdevice.h>
+ #include <net/iw_handler.h>
+ #include <asm/types.h>
+ #include <asm/delay.h>
+@@ -66,7 +68,7 @@ static int ieee80211_sta_find_ibss(struc
+ static int ieee80211_sta_wep_configured(struct net_device *dev);
+ static int ieee80211_sta_start_scan(struct net_device *dev,
+ 				    u8 *ssid, size_t ssid_len);
+=2Dstatic void ieee80211_sta_reset_auth(struct net_device *dev,
++static int ieee80211_sta_config_auth(struct net_device *dev,
+ 				     struct ieee80211_if_sta *ifsta);
+=20
+=20
+@@ -1924,8 +1926,9 @@ void ieee80211_sta_work(struct work_stru
+ 	}
+=20
+ 	if (test_and_clear_bit(IEEE80211_STA_REQ_AUTH, &ifsta->request)) {
+=2D		ifsta->state =3D IEEE80211_AUTHENTICATE;
+=2D		ieee80211_sta_reset_auth(dev, ifsta);
++		if (ieee80211_sta_config_auth(dev, ifsta))
++			return;
++		clear_bit(IEEE80211_STA_REQ_RUN, &ifsta->request);
+ 	} else if (!test_and_clear_bit(IEEE80211_STA_REQ_RUN, &ifsta->request))
+ 		return;
+=20
+@@ -1991,18 +1994,115 @@ static void ieee80211_sta_reset_auth(str
+ }
+=20
+=20
+=2Dstatic void ieee80211_sta_new_auth(struct net_device *dev,
+=2D				   struct ieee80211_if_sta *ifsta)
++void ieee80211_sta_req_auth(struct net_device *dev,
++			    struct ieee80211_if_sta *ifsta)
+ {
+ 	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
+=20
+ 	if (sdata->type !=3D IEEE80211_IF_TYPE_STA)
+ 		return;
+=20
+=2D	set_bit(IEEE80211_STA_REQ_AUTH, &ifsta->request);
+=2D	schedule_work(&ifsta->work);
++	if ((ifsta->bssid_set || ifsta->auto_bssid_sel) &&
++	    (ifsta->ssid_set || ifsta->auto_ssid_sel)) {
++		set_bit(IEEE80211_STA_REQ_AUTH, &ifsta->request);
++		schedule_work(&ifsta->work);
++	}
+ }
+=20
++static int ieee80211_sta_match_ssid(struct ieee80211_if_sta *ifsta,
++				    const char *ssid, int ssid_len)
++{
++	int tmp, hidden_ssid;
++
++	if (!memcmp(ifsta->ssid, ssid, ssid_len))
++		return 1;
++
++	if (ifsta->auto_bssid_sel)
++		return 0;
++
++	hidden_ssid =3D 1;
++	tmp =3D ssid_len;
++	while (tmp--) {
++		if (ssid[tmp] !=3D '\0') {
++			hidden_ssid =3D 0;
++			break;
++		}
 +	}
 +
-+	rt2x00_bbp_write(rt2x00dev, 24, reg_r24);
-+	rt2x00_bbp_write(rt2x00dev, 25, reg_r25);
-+	rt2x00_bbp_write(rt2x00dev, 61, reg_r61);
++	if (hidden_ssid && ifsta->ssid_len =3D=3D ssid_len)
++		return 1;
 +
-+	rt2x00_eeprom_read(rt2x00dev, EEPROM_BBPTUNE_VGC, &vgc_bound);
-+	vgc_bound = eeprom_valid(vgc_bound, 0x40, EEPROM_BBPTUNE_VGCUPPER);
++	if (ssid_len =3D=3D 1 && ssid[0] =3D=3D ' ')
++		return 1;
 +
- 	low_bound = 0x32;
- 	if (rssi >= 43)
--		up_bound = 0x40;
-+		up_bound = vgc_bound;
- 	else
--		up_bound = 0x40 - (43 - rssi);
-+		up_bound = vgc_bound - (43 - rssi);
- 	if (up_bound < low_bound)
- 		up_bound = low_bound;
- 
--	if (rssi > 75) {
--		rt2x00_bbp_write(rt2x00dev, 24, 0x70);
--		rt2x00_bbp_write(rt2x00dev, 25, 0x40);
--		rt2x00_bbp_write(rt2x00dev, 61, 0x6d);
--	} else {
--		rt2x00_bbp_write(rt2x00dev, 24, 0x80);
--		rt2x00_bbp_write(rt2x00dev, 25, 0x50);
--		rt2x00_bbp_write(rt2x00dev, 61, 0x60);
-+	rt2x00_bbp_read(rt2x00dev, 17, &bbp_r17);
-+	rt2x00_eeprom_read(rt2x00dev, EEPROM_BBPTUNE_R17, &reg_r17);
++	return 0;
++}
 +
-+	sens = bbp_r17;
++static int ieee80211_sta_config_auth(struct net_device *dev,
++				     struct ieee80211_if_sta *ifsta)
++{
++	struct ieee80211_local *local =3D dev->ieee80211_ptr;
++	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_sta_bss *bss, *selected =3D NULL;
++	int top_rssi =3D 0, freq;
 +
-+	if (rssi > 80)
-+		sens = 0x60;
-+	else if (rssi >= 62)
-+		sens = eeprom_valid(reg_r17, 0x48, EEPROM_BBPTUNE_R17_HIGH);
-+	else if (rssi >= 46)
-+		sens = eeprom_valid(reg_r17, 0x41, EEPROM_BBPTUNE_R17_LOW);
-+	else if (bbp_r17 > up_bound)
-+		sens = up_bound;
-+	else {
-+		rt2x00_register_read(rt2x00dev, STA_CSR3, &cca_alarm);
-+		if (cca_alarm > 512 && bbp_r17 < up_bound)
-+			sens = bbp_r17 + 1;
-+		else if (cca_alarm < 100 && bbp_r17 > low_bound)
-+			sens = bbp_r17 - 1;
++	if (!ifsta->auto_channel_sel && !ifsta->auto_bssid_sel &&
++	    !ifsta->auto_ssid_sel) {
++		ifsta->state =3D IEEE80211_AUTHENTICATE;
++		ieee80211_sta_reset_auth(dev, ifsta);
++		return 0;
++	}
++
++	spin_lock_bh(&local->sta_bss_lock);
++	freq =3D local->oper_channel->freq;
++	list_for_each_entry(bss, &local->sta_bss_list, list) {
++		if (!(bss->capability & WLAN_CAPABILITY_ESS))
++			continue;
++
++		if (!!(bss->capability & WLAN_CAPABILITY_PRIVACY) ^
++		    !!sdata->default_key)
++			continue;
++
++		if (!ifsta->auto_channel_sel && bss->freq !=3D freq)
++			continue;
++
++		if (!ifsta->auto_bssid_sel &&
++		    memcmp(bss->bssid, ifsta->bssid, ETH_ALEN))
++			continue;
++
++		if (!ifsta->auto_ssid_sel &&
++		    !ieee80211_sta_match_ssid(ifsta, bss->ssid, bss->ssid_len))
++			continue;
++
++		if (top_rssi < bss->rssi)
++			selected =3D bss;
++
++		top_rssi =3D bss->rssi;
++	}
++	if (selected)
++		atomic_inc(&selected->users);
++	spin_unlock_bh(&local->sta_bss_lock);
++
++	if (selected) {
++		ieee80211_set_channel(local, -1, selected->freq);
++		if (!ifsta->ssid_set)
++			ieee80211_sta_set_ssid(dev, selected->ssid,
++					       selected->ssid_len);
++		ieee80211_sta_set_bssid(dev, selected->bssid);
++		ieee80211_rx_bss_put(dev, selected);
++		ifsta->state =3D IEEE80211_AUTHENTICATE;
++		ieee80211_sta_reset_auth(dev, ifsta);
++		return 0;
++	} else {
++		if (ifsta->state !=3D IEEE80211_AUTHENTICATE) {
++			ieee80211_sta_start_scan(dev, NULL, 0);;
++			ifsta->state =3D IEEE80211_AUTHENTICATE;
++			set_bit(IEEE80211_STA_REQ_AUTH, &ifsta->request);
++		} else
++			ifsta->state =3D IEEE80211_DISABLED;
++	}
++	return -1;
++}
+=20
+ static int ieee80211_sta_join_ibss(struct net_device *dev,
+ 				   struct ieee80211_if_sta *ifsta,
+@@ -2353,16 +2453,12 @@ int ieee80211_sta_set_ssid(struct net_de
+ 	memset(ifsta->ssid + len, 0, IEEE80211_MAX_SSID_LEN - len);
+ 	ifsta->ssid_len =3D len;
+=20
+=2D	ifsta->ssid_set =3D 1;
++	ifsta->ssid_set =3D len ? 1 : 0;
+ 	if (sdata->type =3D=3D IEEE80211_IF_TYPE_IBSS && !ifsta->bssid_set) {
+ 		ifsta->ibss_join_req =3D jiffies;
+ 		ifsta->state =3D IEEE80211_IBSS_SEARCH;
+ 		return ieee80211_sta_find_ibss(dev, ifsta);
  	}
- 
--	rt2x00_bbp_read(rt2x00dev, 17, &reg_r17);
-+	rt2x00_bbp_write(rt2x00dev, 17, sens);
- 
--	if (rssi > 80) {
--		if (reg_r17 != 0x60)
--			rt2x00_bbp_write(rt2x00dev, 17, 0x60);
--		goto exit;
--	} else if (rssi >= 62) {
--		if (reg_r17 != 0x48)
--			rt2x00_bbp_write(rt2x00dev, 17, 0x48);
--		goto exit;
--	} else if (rssi >= 46) {
--		if (reg_r17 != 0x41)
--			rt2x00_bbp_write(rt2x00dev, 17, 0x41);
--		goto exit;
--	} else if (reg_r17 > up_bound) {
--		rt2x00_bbp_write(rt2x00dev, 17, up_bound);
--		goto exit;
--	}
--
--	rt2x00_register_read(rt2x00dev, STA_CSR3, &reg);
--
--	if (reg > 512 && reg_r17 < up_bound)
--		rt2x00_bbp_write(rt2x00dev, 17, ++reg_r17);
--	else if (reg < 100 && reg_r17 > low_bound)
--		rt2x00_bbp_write(rt2x00dev, 17, --reg_r17);
--
--exit:
- 	/*
- 	 * Update noise statistics.
- 	 */
--	if (reg_r17)
--		rt2x00_update_link_noise(&rt2x00dev->link, reg_r17);
-+	rt2x00_update_link_noise(&rt2x00dev->link, bbp_r17);
- 
-+exit:
- 	queue_delayed_work(rt2x00dev->workqueue, &rt2x00dev->link.work,
- 		LINK_TUNE_INTERVAL);
- }
-@@ -1160,6 +1175,22 @@ continue_csr_init:
- 	}
- 	DEBUG("...End initialization from EEPROM.\n");
- 
-+	rt2x00_eeprom_read(rt2x00dev, EEPROM_BBPTUNE_R24, &eeprom);
-+	value = eeprom_valid(eeprom, 0x80, EEPROM_BBPTUNE_R24_LOW);
-+	rt2x00_bbp_write(rt2x00dev, 24, value);
-+
-+	rt2x00_eeprom_read(rt2x00dev, EEPROM_BBPTUNE_R25, &eeprom);
-+	value = eeprom_valid(eeprom, 0x50, EEPROM_BBPTUNE_R25_LOW);
-+	rt2x00_bbp_write(rt2x00dev, 25, value);
-+
-+	rt2x00_eeprom_read(rt2x00dev, EEPROM_BBPTUNE_R61, &eeprom);
-+	value = eeprom_valid(eeprom, 0x60, EEPROM_BBPTUNE_R61_LOW);
-+	rt2x00_bbp_write(rt2x00dev, 61, value);
-+
-+	rt2x00_eeprom_read(rt2x00dev, EEPROM_BBPTUNE_VGC, &eeprom);
-+	value = eeprom_valid(eeprom, 0x40, EEPROM_BBPTUNE_VGCUPPER);
-+	rt2x00_bbp_write(rt2x00dev, 17, value);
-+
+=2D
+=2D	if (ifsta->bssid_set && ifsta->state !=3D IEEE80211_AUTHENTICATE)
+=2D		ieee80211_sta_new_auth(dev, ifsta);
+=2D
  	return 0;
  }
- 
-diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2500usb.h b/drivers/net/wireless/mac80211/rt2x00/rt2500usb.h
-index ffedfee..4cb05e5 100644
---- a/drivers/net/wireless/mac80211/rt2x00/rt2500usb.h
-+++ b/drivers/net/wireless/mac80211/rt2x00/rt2500usb.h
-@@ -561,6 +561,46 @@
- #define EEPROM_TXPOWER_2		FIELD16(0xff00)
- 
- /*
-+ * EEPROM Tuning threshold
-+ */
-+#define EEPROM_BBPTUNE			0x0030
-+#define EEPROM_BBPTUNE_THRESHOLD	FIELD16(0x00ff)
-+
-+/*
-+ * EEPROM BBP R24 Tuning.
-+ */
-+#define EEPROM_BBPTUNE_R24		0x0031
-+#define EEPROM_BBPTUNE_R24_LOW		FIELD16(0x00ff)
-+#define EEPROM_BBPTUNE_R24_HIGH		FIELD16(0xff00)
-+
-+/*
-+ * EEPROM BBP R25 Tuning.
-+ */
-+#define EEPROM_BBPTUNE_R25		0x0032
-+#define EEPROM_BBPTUNE_R25_LOW		FIELD16(0x00ff)
-+#define EEPROM_BBPTUNE_R25_HIGH		FIELD16(0xff00)
-+
-+/*
-+ * EEPROM BBP R24 Tuning.
-+ */
-+#define EEPROM_BBPTUNE_R61		0x0033
-+#define EEPROM_BBPTUNE_R61_LOW		FIELD16(0x00ff)
-+#define EEPROM_BBPTUNE_R61_HIGH		FIELD16(0xff00)
-+
-+/*
-+ * EEPROM BBP VGC Tuning.
-+ */
-+#define EEPROM_BBPTUNE_VGC		0x0034
-+#define EEPROM_BBPTUNE_VGCUPPER		FIELD16(0x00ff)
-+
-+/*
-+ * EEPROM BBP R17 Tuning.
-+ */
-+#define EEPROM_BBPTUNE_R17		0x0035
-+#define EEPROM_BBPTUNE_R17_LOW		FIELD16(0x00ff)
-+#define EEPROM_BBPTUNE_R17_HIGH		FIELD16(0xff00)
-+
-+/*
-  * RSSI <-> dBm offset calibration
-  */
- #define EEPROM_CALIBRATE_OFFSET		0x0036
-diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2x00.h b/drivers/net/wireless/mac80211/rt2x00/rt2x00.h
-index 0d47a41..bd15702 100644
---- a/drivers/net/wireless/mac80211/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/mac80211/rt2x00/rt2x00.h
-@@ -1220,4 +1220,20 @@ static inline u16 get_duration_res(const unsigned int size, const u8 rate)
- 	return ((size * 8 * 10) % rate);
+=20
+@@ -2396,13 +2492,10 @@ int ieee80211_sta_set_bssid(struct net_d
+ 		}
+ 	}
+=20
+=2D	if (memcmp(bssid, "\x00\x00\x00\x00\x00\x00", ETH_ALEN) =3D=3D 0)
++	if (!is_valid_ether_addr(bssid))
+ 		ifsta->bssid_set =3D 0;
+ 	else
+ 		ifsta->bssid_set =3D 1;
+=2D	if (ifsta->ssid_set)
+=2D		ieee80211_sta_new_auth(dev, ifsta);
+=2D
+ 	return 0;
  }
- 
-+/*
-+ * Helper define for accessing eeprom data that should be
-+ * validated before usage. When the eeprom is invalid the
-+ * default value will be returned.
-+ */
-+#define eeprom_valid(__word, __def, __val)				\
-+	({								\
-+		u16 __retval;						\
-+		if ((__word) == 0xffff || (__word) == 0x0000)		\
-+			__retval = (__def);				\
-+		else							\
-+			__retval = rt2x00_get_field16(			\
-+				(__word), (__val));			\
-+		__retval;						\
-+	})
-+
- #endif /* RT2X00_H */
+=20
+@@ -2812,9 +2905,6 @@ int ieee80211_sta_set_extra_ie(struct ne
+ 	}
+ 	memcpy(ifsta->extra_ie, ie, len);
+ 	ifsta->extra_ie_len =3D len;
+=2D	if (ifsta->bssid_set && ifsta->ssid_set &&
+=2D	    ifsta->state !=3D IEEE80211_AUTHENTICATE)
+=2D		ieee80211_sta_new_auth(dev, ifsta);
+ 	return 0;
+ }
+=20
+
+--nextPart2734411.55sfuxiFV5
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBF1hhNT3Oqt9AH4aERAr85AKDBb1ne2DSOV8v3qAtiNtoBC/UfeQCgzdWF
+EtJp+YAhl7A31T0eAbS0XKw=
+=C8jX
+-----END PGP SIGNATURE-----
+
+--nextPart2734411.55sfuxiFV5--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
