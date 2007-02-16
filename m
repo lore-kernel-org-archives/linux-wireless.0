@@ -1,53 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60879 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44209 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932480AbXBNT01 (ORCPT
+	with ESMTP id S1946123AbXBPUW0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Feb 2007 14:26:27 -0500
-Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
+	Fri, 16 Feb 2007 15:22:26 -0500
+Subject: Re: [PATCH 09/10] cfg80211: pending config
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: Joseph Jezak <josejx@gentoo.org>, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <45D35F65.7060001@lwfinger.net>
-References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net>
-	 <45CCBB93.2040703@lwfinger.net> <45CCC5DF.8010001@gentoo.org>
-	 <200702092017.36950.mb@bu3sch.de>  <45CCD1B1.80709@gentoo.org>
-	 <1171457525.11116.19.camel@johannes.berg>  <45D35F65.7060001@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-K6Wn4eUE6HqG78sLHFbp"
-Date: Wed, 14 Feb 2007 20:26:20 +0100
-Message-Id: <1171481180.6093.11.camel@johannes.berg>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Jiri Benc <jbenc@suse.cz>
+In-Reply-To: <1171653056.4153.38.camel@localhost.localdomain>
+References: <20070215144241.847938000@sipsolutions.net>
+	 <20070215144300.419560000@sipsolutions.net>
+	 <1171653056.4153.38.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QJXUfhFM5BvaQsxOkUf5"
+Date: Fri, 16 Feb 2007 21:22:24 +0100
+Message-Id: <1171657344.3575.13.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-K6Wn4eUE6HqG78sLHFbp
+--=-QJXUfhFM5BvaQsxOkUf5
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2007-02-14 at 13:13 -0600, Larry Finger wrote:
+On Fri, 2007-02-16 at 14:10 -0500, Dan Williams wrote:
 
-> I've got a pair of BCM4306 rev 2 cards. One of them is certainly availabl=
-e. Its LEDS don't work
-> anymore, but the rest is functional.
+> This has _got_ to be defined somewhere else in the stack?  Can we use
+> that define, or is it being moved to here?  Seems a shame to have it
+> more than one place.
 
-Oh good. Do they actually work right now?
+It probably is...
+
+> On a side note, many many drivers need something like this, and many
+> many drivers redefine it internally.  Is there some header that all
+> drivers (even fullmac like airo, orinoco, atmel, and libertas) can get
+> this from?
+
+Yeah, we should have some sort of stack/driver agnosting IEEE 802.11
+defines header w/o functions in it. Then I'd use that here too.
+
+
+> > - * NB3: It's really bad that we can't report an error from the timer-
+> > + * NB2: It's really bad that we can't report an error from the timer-
+> >   * based commit... Hopefully get_config_valid() can catch everything?
+>=20
+> Well, we'd have two choices; first, a netlink notification that the
+> config was unsuccessful, or second a WEXT SIOCSIWAP event of
+> 00:00:00:xxx for WE compat.  Why wouldn't one of those work?
+
+Yes, we can give a notification that it was unsuccessful. For wext, we
+don't actually need all this I think because we do it with commit
+anyway.
 
 johannes
 
---=-K6Wn4eUE6HqG78sLHFbp
+--=-QJXUfhFM5BvaQsxOkUf5
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBF02Jc/ETPhpq3jKURAligAJ44wfpHnI5qoeiAoDrzu/K7FvH1UQCeKHFV
-Odq2u+AAxLLGykRBBk0ss0c=
-=/Mnl
+iD8DBQBF1hKA/ETPhpq3jKURAmV5AJ4y8koaNy8hV0Kk+c8TRrf1le6VYwCeN0Li
++bUPqD3glhxqEUHJAUCYAm8=
+=bmUr
 -----END PGP SIGNATURE-----
 
---=-K6Wn4eUE6HqG78sLHFbp--
+--=-QJXUfhFM5BvaQsxOkUf5--
 
