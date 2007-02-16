@@ -1,103 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52516 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030622AbXB0M7Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Feb 2007 07:59:25 -0500
-Subject: Re: [RFC] Penumbra - Enabling unencrypted broadcasts alongside  normal  traffic
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <45E41A9E.2020908@warmcat.com>
-References: <45E41A9E.2020908@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yTQ8a0wFX9ivwm5G9h5r"
-Date: Tue, 27 Feb 2007 13:59:03 +0100
-Message-Id: <1172581143.3870.259.camel@johannes.berg>
+Received: from mx1.redhat.com ([66.187.233.31]:43221 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946229AbXBPTKO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Feb 2007 14:10:14 -0500
+Subject: Re: [PATCH 10/10] cfg/nl80211: remove legacy network id
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Jiri Benc <jbenc@suse.cz>
+In-Reply-To: <20070215144300.830181000@sipsolutions.net>
+References: <20070215144241.847938000@sipsolutions.net>
+	 <20070215144300.830181000@sipsolutions.net>
+Content-Type: text/plain
+Date: Fri, 16 Feb 2007 14:12:16 -0500
+Message-Id: <1171653136.4153.42.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2007-02-15 at 15:42 +0100, Johannes Berg wrote:
+> plain text document attachment (010-drop-nwid.patch)
+> This patch removes the legacy network ID.
 
---=-yTQ8a0wFX9ivwm5G9h5r
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Don't we still need the WEXT compat bits for nwid?  Or are we just axing
+it entirely?  What legacy drivers actually use this that are still in
+the kernel?
 
-Hi,
+Dan
 
-Just a few comments. I'll leave aside the issues with 802.11 here hoping
-you've thought about that. There are issues with admission control and
-similar things, for example.
-
-First, allow me to comment on some things from other sources:
-
-> The payload is protected using a 255:223 Reed-Solomon? Forward Error
-> Correction coding. This is capable to correct any 16 symbol errors
-> over each 223 bytes of payload. To maximize the benefit of this
-> protection, bulk data packets are limited to 213 bytes of actual
-> payload (and a 10-byte header), giving a 255 byte encoded packet
-> payload so each fragment fits inside a single error correction coding
-> cycle. The Reed-Solomon? coding also means there is no need for a
-> payload CRC.
-
-802.11 frames are always protected by a 32-bit CRC and will be discarded
-by hardware (in most cases) if that doesn't match. This is unnecessary
-overhead.
-
-> The unencrypted broadcast packets are indicated by having a "Magic MAC"=20
-> address in their IEEE80211 Header Addr<n> fields.  The Magic MAC for=20
-> Penumbra is 13:22:33:44:55:66 (the IEEE had something to say about our=20
-> original choice of 11:22.. :-O ).
-
-How about registering a OUI or getting someone to donate a MAC address
-instead of using a locally administered one?
-
->   - Userspace transmits by creating a PF_PACKET / SOCK_RAW socket and=20
-> prepending an Ethernet header with the Magic MAC in it and send()ing it.=20
-
-I don't see why you couldn't use the packet injection stuff we'll be
-needing anyway for userspace MLME.
-
->   - The wireless driver gets the packet for transmission, recognizes the=20
-> Magic MAC, disables retries and sets the transmission rate (currently=20
-> fixed 54Mbps, but this will change) and transmits the packet as a broadca=
-st
-
-You'd be able to control these parameters then.
-
->   - When an incoming packet is seen with the magic MAC it has a fake=20
-> fixed Ethernet, IP and UDP header prepended to it.  IP and UDP checksums=20
-> are inserted so the packet is clean.  The packet always looks like it is=20
-> coming from UDP 0.0.0.0:61441 (port 0xF001) and is directed to=20
-> 255.255.255.255:61442 (port 0xF002).  The packet is subject to iptables=20
-> rules as usual.
-
-Similarly, why not have userspace use a monitor interface directly?
-
-> To get any kind of widespread use, the capability=20
-> needs to be already available in stock kernels and drivers so that the=20
-> user only needs to open iptables and run a userspace daemon rather than=20
-> patch his wireless drivers and stack.
-
-I don't think that once we have packet injection in place for userspace
-MLME (well, we even have it now) you'll need to do any modifications at
-all. You'll just need to do more stuff in userspace. I also don't see
-why iptables should see these packets that are explicitly not IP. In
-fact, I think such packets should not be seen by the networking stack at
-all.
-
-johannes
-
---=-yTQ8a0wFX9ivwm5G9h5r
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF5CsX/ETPhpq3jKURAhqpAJ4qHjXKhM6pS31m/LBXW6fz0IK9PgCeKzhN
-dzN+nJlJlABPGh9iw4beaNs=
-=bUDz
------END PGP SIGNATURE-----
-
---=-yTQ8a0wFX9ivwm5G9h5r--
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> 
+> ---
+>  include/linux/nl80211.h |    4 ----
+>  include/net/cfg80211.h  |   10 ++++------
+>  net/wireless/nl80211.c  |   10 ----------
+>  3 files changed, 4 insertions(+), 20 deletions(-)
+> 
+> --- wireless-dev.orig/include/linux/nl80211.h	2007-02-15 12:28:37.497940064 +0100
+> +++ wireless-dev/include/linux/nl80211.h	2007-02-15 12:28:42.007940064 +0100
+> @@ -161,10 +161,6 @@ enum {
+>  	/* wiphy list */
+>  	NL80211_ATTR_WIPHY_LIST,
+>  
+> -	/* attributes used for configuration */
+> -	/* network ID (pre 802.11 HW) */
+> -	NL80211_ATTR_NETWORK_ID,
+> -
+>  	/* channel, 1-14 are B/G */
+>  	NL80211_ATTR_CHANNEL,
+>  
+> --- wireless-dev.orig/include/net/cfg80211.h	2007-02-15 12:28:41.297940064 +0100
+> +++ wireless-dev/include/net/cfg80211.h	2007-02-15 12:28:42.007940064 +0100
+> @@ -23,7 +23,6 @@ struct cfg80211_config {
+>  	s8 ssid_len;
+>  	u8 ssid[SSID_MAX_LEN];
+>  
+> -	u16 network_id;
+>  	s32 rx_sensitivity;
+>  	u32 transmit_power;
+>  	u32 fragmentation_threshold;
+> @@ -31,11 +30,10 @@ struct cfg80211_config {
+>  };
+>  
+>  #define CFG80211_CFG_VALID_SSID			(1<<0)
+> -#define CFG80211_CFG_VALID_NWID			(1<<1)
+> -#define CFG80211_CFG_VALID_RX_SENSITIVITY	(1<<2)
+> -#define CFG80211_CFG_VALID_TRANSMIT_POWER	(1<<3)
+> -#define CFG80211_CFG_VALID_FRAG_THRESHOLD	(1<<4)
+> -#define CFG80211_CFG_VALID_CHANNEL		(1<<5)
+> +#define CFG80211_CFG_VALID_RX_SENSITIVITY	(1<<1)
+> +#define CFG80211_CFG_VALID_TRANSMIT_POWER	(1<<2)
+> +#define CFG80211_CFG_VALID_FRAG_THRESHOLD	(1<<3)
+> +#define CFG80211_CFG_VALID_CHANNEL		(1<<4)
+>  
+>  struct scan_channel {
+>  	u32 channel;
+> --- wireless-dev.orig/net/wireless/nl80211.c	2007-02-15 12:28:41.307940064 +0100
+> +++ wireless-dev/net/wireless/nl80211.c	2007-02-15 12:28:42.007940064 +0100
+> @@ -75,7 +75,6 @@ static struct nla_policy nl80211_policy[
+>  				 .len = NL80211_MAX_FRAME_LEN },
+>  	[NL80211_ATTR_IFNAME] = { .type = NLA_NUL_STRING, .len = IFNAMSIZ-1 },
+>  	[NL80211_ATTR_IFTYPE] = { .type = NLA_U32 },
+> -	[NL80211_ATTR_NETWORK_ID] = { .type = NLA_U16 },
+>  	[NL80211_ATTR_CHANNEL] = { .type = NLA_U32 },
+>  	[NL80211_ATTR_RX_SENSITIVITY] = { .type = NLA_U32 },
+>  	[NL80211_ATTR_BSSID] = { .len = ETH_ALEN },
+> @@ -393,12 +392,6 @@ static int nl80211_configure(struct sk_b
+>  		memcpy(config.ssid, nla_data(attr), config.ssid_len);
+>  	}
+>  
+> -	attr = info->attrs[NL80211_ATTR_NETWORK_ID];
+> -	if (attr) {
+> -		config.valid |= CFG80211_CFG_VALID_NWID;
+> -		config.network_id = nla_get_u16(attr);
+> -	}
+> -
+>  	attr = info->attrs[NL80211_ATTR_RX_SENSITIVITY];
+>  	if (attr) {
+>  		config.valid |= CFG80211_CFG_VALID_RX_SENSITIVITY;
+> @@ -465,9 +458,6 @@ static int nl80211_get_config(struct sk_
+>  	if (config.ssid)
+>  		NLA_PUT_STRING(msg, NL80211_ATTR_SSID, config.ssid);
+>  
+> -	if (config.valid & CFG80211_CFG_VALID_NWID)
+> -		NLA_PUT_U16(msg, NL80211_ATTR_NETWORK_ID, config.network_id);
+> -
+>  	if (config.valid & CFG80211_CFG_VALID_RX_SENSITIVITY)
+>  		NLA_PUT_U32(msg, NL80211_ATTR_RX_SENSITIVITY, (u32)config.rx_sensitivity);
+>  
+> 
+> --
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
