@@ -1,31 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:23741 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932072AbXBNAF6 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51317 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966255AbXBPJ0j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Feb 2007 19:05:58 -0500
-Message-ID: <45D24873.10308@linux.intel.com>
-Date: Tue, 13 Feb 2007 15:23:31 -0800
-From: James Ketrenos <jketreno@linux.intel.com>
-MIME-Version: 1.0
-To: Norbert Preining <preining@logic.at>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
-Subject: Re: [ipw3945-devel] [ANNOUNCE] d80211 based driver for Intel PRO/Wireless  3945ABG
-References: <45CCE3CA.4050904@linux.intel.com> <20070210004620.GA5959@gamma.logic.tuwien.ac.at>
-In-Reply-To: <20070210004620.GA5959@gamma.logic.tuwien.ac.at>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+	Fri, 16 Feb 2007 04:26:39 -0500
+Subject: Re: IPW2200 monitoring FW broken
+From: Johannes Berg <johannes@sipsolutions.net>
+To: James Ketrenos <jketreno@linux.intel.com>
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	Zhu Yi <yi.zhu@intel.com>
+In-Reply-To: <45D48BDE.4070708@linux.intel.com>
+References: <200702151840.16963.mb@bu3sch.de>
+	 <45D48BDE.4070708@linux.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-B72WlqHbfg0czT62Unv1"
+Date: Fri, 16 Feb 2007 10:26:33 +0100
+Message-Id: <1171617993.5220.76.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Norbert Preining wrote:
-...
-> Ahhh ... one thing: The LED on my Acer Laptop (TM3012) does not show up,
-> maybe because I have CONFIG_D80211_LEDS off?
 
-The LED code in iwlwifi isn't hooked up to the D80211 LED code yet.  If 
-you'd file a bug at http://bughost.org regarding the LEDs being broken 
-(if you haven't already) I would appreciate it.
+--=-B72WlqHbfg0czT62Unv1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
-James
+On Thu, 2007-02-15 at 08:35 -0800, James Ketrenos wrote:
+
+> If you use wireshark to capture, you can't update the packet capture=20
+> window or you'll lose packets; but you should be able to get them all if=20
+> you're doing a tethereal > somefile or if you turn off the update of the=20
+> main window.
+
+I don't have that problem with bcm43xx at all, my machine can keep up
+quite easily.
+
+johannes
+
+--=-B72WlqHbfg0czT62Unv1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF1XjJ/ETPhpq3jKURAnLIAJ0UF1enOMdcc/L8voDsiy2t2GaDXwCghhxn
+jh0pMFs5AXQddxA65UK2ii0=
+=OeCx
+-----END PGP SIGNATURE-----
+
+--=-B72WlqHbfg0czT62Unv1--
+
