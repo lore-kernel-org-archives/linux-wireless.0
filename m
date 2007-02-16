@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail4.sea5.speakeasy.net ([69.17.117.6]:36540 "EHLO
-	mail4.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752499AbXBDSr0 (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:46002 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946313AbXBPXyT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Feb 2007 13:47:26 -0500
-Date: Sun, 4 Feb 2007 10:47:24 -0800
-From: Jouni Malinen <jkmaline@cc.hut.fi>
-To: Jon Smirl <jonsmirl@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: SoftMAC vs FullMAC
-Message-ID: <20070204184724.GD6632@jm.kir.nu>
-References: <9e4733910702040922n63736d27h7ab027dc90ae8989@mail.gmail.com> <20070204180724.GB6632@jm.kir.nu> <9e4733910702041024g2b1e51e0l89cbfb3f0d2e6f70@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9e4733910702041024g2b1e51e0l89cbfb3f0d2e6f70@mail.gmail.com>
+	Fri, 16 Feb 2007 18:54:19 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HICsp-0004vT-T6
+	for linux-wireless@vger.kernel.org; Fri, 16 Feb 2007 18:52:55 -0500
+Received: from proski by gnu.org with local (Exim 4.66)
+	(envelope-from <proski@gnu.org>)
+	id 1HICu9-0007Rb-UJ
+	for linux-wireless@vger.kernel.org; Fri, 16 Feb 2007 18:54:17 -0500
+Subject: wireless-dev.git breaks wireless extensions
+From: Pavel Roskin <proski@gnu.org>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Date: Fri, 16 Feb 2007 18:54:17 -0500
+Message-Id: <1171670057.28539.5.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 04, 2007 at 01:24:03PM -0500, Jon Smirl wrote:
+Hello!
 
-> What I've read is that there are no changes at the PHY layers for 11s.
-> If that is the case then any existing hardware should be able to run
-> 11s if the interface allows properly formatted packets to be
-> transmitted and received. Of course I don't know exactly what is in
-> the 11s draft since it is secret.
+Today's wireless-dev.git breaks wireless extensions.  It forces
+CONFIG_CFG80211 to be enabled.  I reported that it breaks legacy driver=
+s
+back in December 2006.  It's still broken.  That's what I get for
+MadWifi:
 
-Hardware may be able to take care of most needed functionality, but
-whether firmware is going to allow this is completely different
-question.. Amongst other things, IEEE 802.11s/D1.0 is adding new fields
-to the frame headers and that is likely to get into problems with number
-of firmware implementations.
+ath0      4=BF3=C0=D8=BD=BF  ESSID:"" [51]  Nickname:""
+          Channel:-0  Access Point: 9F:DD:13:94:33:C0   Bit Rate=3D-576=
+733 kb/s  =20
+          Tx-Power=3Doff   Sensitivity=3D-576733388 dBm =20
+          Retry:off   RTS thr:off   Fragment thr:off
+          Power Management:off
+          Link Quality=3D0/94  Signal level=3D-96 dBm  Noise level=3D-9=
+6 dBm
+          Rx invalid nwid:2088  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
 
-> A related issue is merging the Marvell support for the OLPC. Marvell
-> is doing a FullMAC 11s implementation which requires a coprocessor in
-> the wireless hardware. Merging a firmware 11s implementation before a
-> software 11s implementation exists will likely cause problems since
-> interfaces won't get designed correctly.
+I'll appreciate if things known be broken are not enabled by default,
+let alone unconditionally.
 
-I would not call that 11s. It may be a snapshot of a proposal for
-802.11s, but IEEE 802.11s is far from being complete, so better call
-this Marvell implementation something else.
+--=20
+Regards,
+Pavel Roskin
 
-> I'm concerned that's the vendor's goal is to require a new round of
-> hardware purchases to support 11s when it doesn't appear to be
-> necessary. OLPC needs the firmware implementation for power saving
-> reasons, not to implement the protocol.
-
-Vendors are usually more interested in selling new hardware than adding
-support for new functionality in old firmware (no money coming in)..
- 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
