@@ -1,52 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33153
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751734AbXBEQyQ (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52173 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946100AbXBPWMR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Feb 2007 11:54:16 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Jouni Malinen" <jkm@devicescape.com>
-Subject: Re: [PATCH] d80211: Add API to generate RTS and CTS-to-self frames
-Date: Mon, 5 Feb 2007 17:53:44 +0100
-Cc: John Linville <linville@tuxdriver.com>,
+	Fri, 16 Feb 2007 17:12:17 -0500
+Subject: Re: [PATCH v2] d80211: Add software sequence support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	John Linville <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-References: <200702051412.50703.mb@bu3sch.de> <200702051628.46518.mb@bu3sch.de> <20070205164738.GA31058@instant802.com>
-In-Reply-To: <20070205164738.GA31058@instant802.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702051753.45093.mb@bu3sch.de>
+In-Reply-To: <200702162307.16826.IvDoorn@gmail.com>
+References: <200702141423.27823.IvDoorn@gmail.com>
+	 <20070216135827.7d262ae3@griffin.suse.cz>
+	 <1171660484.3575.34.camel@johannes.berg>
+	 <200702162307.16826.IvDoorn@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GC+pk7KacA7yTW1UiqbZ"
+Date: Fri, 16 Feb 2007 23:12:06 +0100
+Message-Id: <1171663926.3575.42.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 05 February 2007 17:47, Jouni Malinen wrote:
-> On Mon, Feb 05, 2007 at 04:28:46PM +0100, Michael Buesch wrote:
-> 
-> > As I said in response to Johannes' comment, if a driver needs just
-> > the duration, we should export the functions to calculate it
-> > and remove the calculation from the tx_control and the tx_control
-> > setup path.
-> 
-> In that case, I would like to see this change being included in the same
-> patch/patchset.. Without this, I can only NAK this kind of change since
-> it removes functionality needed for some designs and that is not
-> something I would like to see happening with net/d80211 since the goal
-> is to allow all reasonable hardware designs to work with it.
 
-Ok, I already resent the patchset. ;)
+--=-GC+pk7KacA7yTW1UiqbZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> > Currently there is no driver using it, so I simply removed it.
-> 
-> There are, but maybe not in wireless-dev.git.
-> 
-> > BTW: Which cards need the duration, but not the whole frame?
-> 
-> Any card that supports different transmit rates for hw retries involving
-> RTS/CTS/fragmentation (e.g., Atheros).
+On Fri, 2007-02-16 at 23:07 +0100, Ivo van Doorn wrote:
+> On Friday 16 February 2007 22:14, Johannes Berg wrote:
+> > On Fri, 2007-02-16 at 13:58 +0100, Jiri Benc wrote:
+> >=20
+> > > Both.
+> > >=20
+> > > When you have a WDS link and some other wireless interface at the sam=
+e
+> > > time, their source addresses are (in most cases) the same. You want t=
+o
+> > > have the sequence control counter shared by them. Actually, it will
+> > > probably work most of time even when they have different counters. Th=
+e
+> > > situation where it won't work is if you have two virtual interfaces,
+> > > one in STA and second in WDS mode, both connected to the same AP. I
+> > > can't figure out how this particular setup could be useful but it's
+> > > generally not disallowed.
+> > >=20
+> > > Anyway, using different counter for a WDS interface probably violates
+> > > 802.11 (although it's not much specific in this case). I believe it
+> > > will work in most cases, though.
+> > >=20
+> > > Any ideas how to solve that?
+> >=20
+> > Make the counter per-mac address?
+>=20
+> Wouldn't that be the same as per-interface?
 
-Ok, nice.
-I just want to make sure that we don't have unused features (aka bloat)
-in the stack.
+Don't WDS interfaces have the same MAC as the corresponding AP
+interface?
 
--- 
-Greetings Michael.
+johannes
+
+--=-GC+pk7KacA7yTW1UiqbZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF1iw2/ETPhpq3jKURAsx7AJ94Q7dAvFIPyX9bWPaCkflDcMuwQwCeP71w
++tLjsFs+WwK2s5wa6SbhOxc=
+=H9m1
+-----END PGP SIGNATURE-----
+
+--=-GC+pk7KacA7yTW1UiqbZ--
+
