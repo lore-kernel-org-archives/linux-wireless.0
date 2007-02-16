@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39245 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58834 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751770AbXB0TPi (ORCPT
+	with ESMTP id S1946164AbXBPU4M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Feb 2007 14:15:38 -0500
-Subject: Re: Patch to allow specification of interface name prefix
+	Fri, 16 Feb 2007 15:56:12 -0500
+Subject: [PATCH] fix cfg80211 modular compile w/o wext-compat
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Ben Greear <greearb@candelatech.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1172602341.3291.8.camel@dv>
-References: <510326.55988.qm@web50211.mail.yahoo.com>
-	 <20070224233001.3ok4k0c00ksos4sw@webmail.spamcop.net>
-	 <45E112F7.9090908@lwfinger.net>	<20070226150241.1b5b63b2@freekitty>
-	 <20070227111644.784600be@logostar.upir.cz>
-	 <20070227094108.11f4844f@freekitty>  <45E4769E.2040102@candelatech.com>
-	 <1172602341.3291.8.camel@dv>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GZ8DuXEK5r86DnsdiPBZ"
-Date: Tue, 27 Feb 2007 20:15:08 +0100
-Message-Id: <1172603708.3870.265.camel@johannes.berg>
+To: linux-wireless@vger.kernel.org
+Cc: James Ketrenos <jketreno@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain
+Date: Fri, 16 Feb 2007 21:56:06 +0100
+Message-Id: <1171659366.3575.27.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The static inlines that are supposed to be used w/o wext-compat to init
+wext-compat were done with the wrong #ifdef. This fixes it.
 
---=-GZ8DuXEK5r86DnsdiPBZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-On Tue, 2007-02-27 at 13:52 -0500, Pavel Roskin wrote:
+--- wireless-dev.orig/net/wireless/wext.h	2007-02-16 21:51:26.354695664 +0100
++++ wireless-dev/net/wireless/wext.h	2007-02-16 21:55:32.794695664 +0100
+@@ -29,10 +29,14 @@ int wireless_process_ioctl(struct ifreq 
+ int cfg80211_wext_ioctl(struct ifreq *ifr, unsigned int cmd);
+ #ifdef CFG80211_MODULE
+ int call_cfg80211_wext_ioctl(struct ifreq *ifr, unsigned int cmd);
++#else
++#define call_cfg80211_wext_ioctl cfg80211_wext_ioctl
++#endif
++
++#ifdef CONFIG_CFG80211_WEXT_COMPAT
+ int cfg80211_wext_init(void);
+ void cfg80211_wext_exit(void);
+ #else
+-#define call_cfg80211_wext_ioctl cfg80211_wext_ioctl
+ static inline int cfg80211_wext_init(void)
+ {
+ 	return 0;
 
-> Shell scripts can do it using
-> "wireless" directory in sysfs:
-
-No, that's wrong. The 'wireless' directory there is bound to disappear
-since it's created by d80211. The sysfs interface is still subject to
-discussion.
-
-I think (but also subject to discussion) the way we'll want to do is
-take note of the 'wiphy' link. But to do that globally cfg80211 will
-need to be taught to create that link instead of mac80211 which requires
-knowledge about netdevs in cfg80211 and we still haven't quite figured
-that out.
-
-For legacy devices not using cfg80211, the only way will be to invoke
-legacy wext calls on them.
-
-johannes
-
---=-GZ8DuXEK5r86DnsdiPBZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF5IM8/ETPhpq3jKURAi6EAJ9LLf7d/E4BaHiVdLe3JnqWPKj+twCdENaN
-xIXeXiCdzPsF+cs15N+KIKw=
-=LRnG
------END PGP SIGNATURE-----
-
---=-GZ8DuXEK5r86DnsdiPBZ--
 
