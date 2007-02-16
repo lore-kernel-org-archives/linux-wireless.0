@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33308
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751421AbXBMXCU (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:20469 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932112AbXBPM0V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Feb 2007 18:02:20 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] bcm43xx: Fix for 4311 and 02/07/07 specification changes
-Date: Wed, 14 Feb 2007 00:02:05 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <45d241c0.gWJcHxUYgWmBTwx8%Larry.Finger@lwfinger.net>
-In-Reply-To: <45d241c0.gWJcHxUYgWmBTwx8%Larry.Finger@lwfinger.net>
+	Fri, 16 Feb 2007 07:26:21 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so1503129nfa
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Feb 2007 04:26:20 -0800 (PST)
+To: Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH v2] d80211: Add software sequence support
+Date: Fri, 16 Feb 2007 13:25:47 +0100
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200702141423.27823.IvDoorn@gmail.com> <20070215215722.3db7f3ca@griffin.suse.cz> <20070216130329.5f1dffee@griffin.suse.cz>
+In-Reply-To: <20070216130329.5f1dffee@griffin.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
-Message-Id: <200702140002.05727.mb@bu3sch.de>
+Message-Id: <200702161325.47396.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 13 February 2007 23:54, Larry Finger wrote:
-> The specifications for the bcm43xx driver have been modified. This patch
-> incorporates these changes in the code, which results in the BCM4311 and
-> BCM4312 working. The name of one of the PHY parameters, previously known
-> as "version", has been changed to "analog", short for  "analog core version" .
+On Friday 16 February 2007 13:03, Jiri Benc wrote:
+> On Thu, 15 Feb 2007 21:57:22 +0100, Jiri Benc wrote:
+> > Thinking about it more, sdata should be the correct place. It's more
+> > per-interface thing than per-BSS (although the difference is small in
+> > this particular case).
 > 
-> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+> ...and thinking about it even more, that won't work with WDS.
 
-> @@ -750,7 +757,7 @@ static void bcm43xx_phy_initb5(struct bc
->  	if (radio->version == 0x2050)
->  		bcm43xx_phy_write(bcm, 0x0038, 0x0667);
->  
-> -	if (phy->connected) {
-> +	if (phy->type == BCM43xx_PHYTYPE_G) {
+You mean storing the sequence counter per-interface won't work,
+or per-bss?
 
-I don't think this is correct.
-I think (didn't verify) the specs talk about the "gmode" here.
-I think you have been misleaded by that. The "gmode" bit is
-the "connected" bit in the old softmac driver.
-
--- 
-Greetings Michael.
+Ivo
