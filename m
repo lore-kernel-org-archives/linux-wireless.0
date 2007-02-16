@@ -1,52 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51317 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966255AbXBPJ0j (ORCPT
+Received: from dhost002-77.dex002.intermedia.net ([64.78.20.107]:56625 "EHLO
+	DHOST002-77.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932438AbXBPQFB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Feb 2007 04:26:39 -0500
-Subject: Re: IPW2200 monitoring FW broken
-From: Johannes Berg <johannes@sipsolutions.net>
-To: James Ketrenos <jketreno@linux.intel.com>
-Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <45D48BDE.4070708@linux.intel.com>
-References: <200702151840.16963.mb@bu3sch.de>
-	 <45D48BDE.4070708@linux.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-B72WlqHbfg0czT62Unv1"
-Date: Fri, 16 Feb 2007 10:26:33 +0100
-Message-Id: <1171617993.5220.76.camel@johannes.berg>
+	Fri, 16 Feb 2007 11:05:01 -0500
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Fri, 16 Feb 2007 08:04:56 -0800
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH] remove IEEE80211_HW_FRAGLIST flag
+Message-ID: <20070216160456.GA6173@instant802.com>
+References: <1171569181.5220.60.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1171569181.5220.60.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Feb 15, 2007 at 08:53:01PM +0100, Johannes Berg wrote:
+> This patch removes the IEEE80211_HW_FRAGLIST flag as it is neither used
+> nor makes sense (since we never submit fragmented frames to the master
+> device.)
 
---=-B72WlqHbfg0czT62Unv1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The reason for this flag was to reduce host CPU load for frame
+aggregation (merging multiple frames (skb's) into one frame. It was used
+to implement one part of Atheros Super A/G enhancements, but I don't see
+those proprietary changes being generic enough to be worth adding into
+net/d80211. However, IEEE 802.11n has similar features that may indeed
+benefit from this flag. As such, I would not remove it.
 
-On Thu, 2007-02-15 at 08:35 -0800, James Ketrenos wrote:
-
-> If you use wireshark to capture, you can't update the packet capture=20
-> window or you'll lose packets; but you should be able to get them all if=20
-> you're doing a tethereal > somefile or if you turn off the update of the=20
-> main window.
-
-I don't have that problem with bcm43xx at all, my machine can keep up
-quite easily.
-
-johannes
-
---=-B72WlqHbfg0czT62Unv1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF1XjJ/ETPhpq3jKURAnLIAJ0UF1enOMdcc/L8voDsiy2t2GaDXwCghhxn
-jh0pMFs5AXQddxA65UK2ii0=
-=OeCx
------END PGP SIGNATURE-----
-
---=-B72WlqHbfg0czT62Unv1--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
