@@ -1,71 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.239]:59953 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423269AbXBHTlt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Feb 2007 14:41:49 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so573240nze
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Feb 2007 11:41:49 -0800 (PST)
-Message-ID: <43e72e890702081141j168da47i421f4fe578a08735@mail.gmail.com>
-Date: Thu, 8 Feb 2007 14:41:48 -0500
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [RFC PATCH 3/3] cfg80211: add wext-compatible client
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Christoph Hellwig" <hch@infradead.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070208185050.GA6303@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-References: <20070131013717.GA28076@tuxdriver.com>
-	 <20070207004626.GA23096@tuxdriver.com>
-	 <20070207004747.GB23096@tuxdriver.com>
-	 <20070207004832.GC23096@tuxdriver.com>
-	 <20070207004929.GD23096@tuxdriver.com>
-	 <20070207075420.GB14703@infradead.org>
-	 <1170940386.4385.49.camel@johannes.berg>
-	 <43e72e890702081038k1d4f226eocf28c5faf6b79dc5@mail.gmail.com>
-	 <20070208185050.GA6303@tuxdriver.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4918 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946759AbXBQOiL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Feb 2007 09:38:11 -0500
+Date: Sat, 17 Feb 2007 09:14:48 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: wireless-dev.git breaks wireless extensions
+Message-ID: <20070217141448.GB4566@tuxdriver.com>
+References: <1171670057.28539.5.camel@dv> <1171670990.3575.50.camel@johannes.berg> <1171673414.28874.4.camel@dv> <20070217010221.GA3405@tuxdriver.com> <1171676740.29232.4.camel@dv>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1171676740.29232.4.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/8/07, John W. Linville <linville@tuxdriver.com> wrote:
-> On Thu, Feb 08, 2007 at 01:38:02PM -0500, Luis R. Rodriguez wrote:
-> > On 2/8/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > >On Wed, 2007-02-07 at 07:54 +0000, Christoph Hellwig wrote:
-> > >> Btw, if we submit cfg80211 for inclusion there should be at least one
-> > >patch
-> > >> in the series actually converts a driver to use it.  Both to make this
-> > >> code not dead and give people and example on how to use the cfg80211
-> > >> infrastructure.
-> > >
-> > >I guess I could make softmac use it.
-> >
-> > Another idea here is we can provide a configfs frontend to cfg80211
-> > therefore any device which implements cfg80211 will automagically have
-> > a userspace frontend (/configfs/wireless/foo) ready to test cfg80211.
-> > With this we wouldn't have to wait for the next userspace nl80211
-> > application to start testing cfg80211 directly (without wireless
-> > extensions compat). A configfs frontend can also allow more rapid
-> > development of userspace interfaces to configure wireless devices
-> > through cfg80211. Comments?
->
-> Luis,
->
-> You have mentioned this before, and FWIW I think it is a decent idea.
-> Let's see some code! :-)
+On Fri, Feb 16, 2007 at 08:45:40PM -0500, Pavel Roskin wrote:
+> On Fri, 2007-02-16 at 20:02 -0500, John W. Linville wrote:
 
-I know, I know, talk is cheap, trust me, I abide by this motto every
-day. I actually wanted to just code this up and send this as part of
-my comment but do have other responsibilities I have to attend to
-first. I figured I'd throw it out though in case someone who does have
-time is willing to pick it up as I think it would be great for us.
+> > Sounds like the new version of cfg80211's wext compatibility hook
+> > is broken...?
+> 
+> I've applied two patches by Johannes "fix wext_ioctl() exit path" and
+> "fix cfg80211 modular compile w/o wext-compat", and MadWifi is working
+> fine now.
+ 
+Soungs good...thanks for the report!
 
-> Still, I don't think it changes the issue that we need a driver (or
-> stack) plugged-in to the bottom end.  I have this on my personal list
-> of "soon TODO", although I haven't picked a driver yet.
->
-> If anyone is working on a cfg80211 driver conversion, please speak-up
-> so we can avoid duplicating work.
+> On the other hand, DadWifi won't compile:
+> 
+> /home/proski/src/dadwifi/ath/if_ath_d80211.c: In function
+> 'ath_d80211_calc_bssid_mask':
+> /home/proski/src/dadwifi/ath/if_ath_d80211.c:305: error: 'struct
+> ieee80211_hw' has no member named 'perm_addr'
+> 
+> The same problem exists with iwlwifi.  I'm away from my bcm43xx card at
+> the moment.
 
-  Luis
+Yep...this goes with the territory for out-of-kernel drivers.
+
+FWIW, the changes are straight-forward.  See the commits near the
+top of the tree for examples.
+
+> I'll post more if I find any problems with either upgrading the driver
+> or wireless extensions for d80211 enabled drivers.
+
+Thanks,
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
