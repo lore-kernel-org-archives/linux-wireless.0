@@ -1,62 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57382 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750916AbXB1Ptk (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55669
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946692AbXBQNCv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 10:49:40 -0500
-Subject: Re: [PATCH 14/28] rt2x00: Create rt2x00lib module
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200702281643.13490.IvDoorn@gmail.com>
-References: <200702281507.13004.IvDoorn@gmail.com>
-	 <200702281634.47330.IvDoorn@gmail.com>
-	 <1172677140.5015.22.camel@johannes.berg>
-	 <200702281643.13490.IvDoorn@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-36vJs1dGV48mEFFbfIsR"
-Date: Wed, 28 Feb 2007 16:49:14 +0100
-Message-Id: <1172677754.5015.24.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 17 Feb 2007 08:02:51 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: More breakage in wireless-dev.git
+Date: Sat, 17 Feb 2007 14:02:24 +0100
+Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+References: <1171690868.31103.17.camel@dv> <1171699574.32411.6.camel@dv>
+In-Reply-To: <1171699574.32411.6.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702171402.24593.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Saturday 17 February 2007 09:06, Pavel Roskin wrote:
+> I'm still getting "bcm43xx_d80211: FOUND UNSUPPORTED PHY (Analog 4, Type
+> 0, Revision 7)" from bcm43xx_d80211 for a card that used to work.  That
+> must be a separate problem.
 
---=-36vJs1dGV48mEFFbfIsR
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+More info about your device, please.
 
-On Wed, 2007-02-28 at 16:43 +0100, Ivo van Doorn wrote:
-
-> Nothing depended on RT2X00_LIB, I only had the drivers select RT2X00_LIB.
-> So something has changed or I am missing something. ;)
-
-No, I found what's up.
-
-You need to change it to
-
-config RT2X00_LIB
-        tristate
-        depends on RT2X00
-
-(note that it has no human-readable name)
-
-Btw. It appears that you can build debugfs support as a module while
-drivers are built in. Not good.
-
-johannes
-
---=-36vJs1dGV48mEFFbfIsR
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF5aR6/ETPhpq3jKURAhLWAJ9wmz39cwvcpOJd8YgRaRAVVyhMDgCeL6zJ
-icDleEzLPslk+UDMkl8EtRY=
-=+1sk
------END PGP SIGNATURE-----
-
---=-36vJs1dGV48mEFFbfIsR--
-
+-- 
+Greetings Michael.
