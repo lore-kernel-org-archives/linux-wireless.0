@@ -1,61 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from deine-taler.de ([217.160.107.63]:53308 "EHLO
-	p15091797.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751821AbXBJT4x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Feb 2007 14:56:53 -0500
-Date: Sat, 10 Feb 2007 20:56:52 +0100
-From: Ulrich Kunitz <kune@deine-taler.de>
-To: Joe Perches <joe@perches.com>
-Cc: Michael Buesch <mb@bu3sch.de>, Daniel Drake <dsd@gentoo.org>,
-	linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, rpjday@mindspring.com
-Subject: Re: [PATCH] zd1211rw: Readd zd_addr_t cast
-Message-ID: <20070210195652.GA16406@p15091797.pureserver.info>
-References: <20070210012718.3B6E87B409F@zog.reactivated.net> <200702100702.15264.mb@bu3sch.de> <1171133498.20342.59.camel@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1171133498.20342.59.camel@localhost>
+Received: from srv5.dvmed.net ([207.36.208.214]:47707 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751720AbXBQUYb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Feb 2007 15:24:31 -0500
+Message-ID: <45D7647B.8090704@garzik.org>
+Date: Sat, 17 Feb 2007 15:24:27 -0500
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'upstream' branch of wireless-2.6 (2007-02-14)
+References: <20070214212817.GB28318@tuxdriver.com>
+In-Reply-To: <20070214212817.GB28318@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07-02-10 10:51 Joe Perches wrote:
-
-> On Sat, 2007-02-10 at 07:02 +0100, Michael Buesch wrote:
-> > On Saturday 10 February 2007 02:27, Daniel Drake wrote:
-> > > Robert P.J. Day's recent commit ("getting rid of all casts of k[cmz]alloc()
-> > > calls") introduced a sparse warning for zd1211rw, related to our type-checking
-> > > of addresses.
-> > > > 	zd_chip.c:116:15: warning: implicit cast to nocast type
-> > > This patch readds the type cast, it is correct.
-> > > Signed-off-by: Daniel Drake <dsd@gentoo.org>
-> > > Index: linux/drivers/net/wireless/zd1211rw/zd_chip.c
-> > > ===================================================================
-> > > --- linux.orig/drivers/net/wireless/zd1211rw/zd_chip.c
-> > > +++ linux/drivers/net/wireless/zd1211rw/zd_chip.c
-> > > @@ -113,7 +113,7 @@ int zd_ioread32v_locked(struct zd_chip *
-> > >  
-> > >  	/* Allocate a single memory block for values and addresses. */
-> > >  	count16 = 2*count;
-> > > -	a16 = kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
-> > > +	a16 = (zd_addr_t *) kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
-> > >  		                   GFP_NOFS);
+John W. Linville wrote:
+> Some late-breaking small and/or important changes before the 2.6.21
+> merge window closes...
 > 
-> I think it better to remove this __nocast instead.
-> This is the only use of __nocast outside of kmem in the kernel tree.
+> ---
 > 
-> Why not just remove __nocast and use u16 instead of zd_addr_t?
+> The following changes since commit 46b8c85e1df091fe2d53ae7d02addb0dc58a9123:
+>   Larry Finger (1):
+>         ieee80211: Fix sparse warning
+> 
+> are found in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream
+> 
+> Ahmed S. Darwish (4):
+>       ipw2100: Use ARRAY_SIZE macro when appropriate
+>       misc-wireless: Use ARRAY_SIZE macro when appropriate
+>       hostap: Use ARRAY_SIZE macro when appropriate
+>       wavelan: Use ARRAY_SIZE macro when appropriate
+> 
+> Dan Williams (1):
+>       prism54: correct assignment of DOT1XENABLE in WE-19 codepaths
+> 
+> Daniel Drake (1):
+>       zd1211rw: Readd zd_addr_t cast
+> 
+> Ingo van Lil (1):
+>       wireless: fix IW_IS_{GET,SET} comment in wireless.h
+> 
+> Larry Finger (5):
+>       bcm43xx: Janitorial change - remove two unused variables
+>       bcm43xx: Fix for oops on resume
+>       bcm43xx: Fix for 4311 and 02/07/07 specification changes
+>       bcm43xx: OFDM fix for rev 1 cards
+>       ieee80211softmac: Fix setting of initial transmit rates
+> 
+> Michael Buesch (1):
+>       bcm43xx: Ignore ampdu status reports
 
-Using the __nocast type sparse catches errors, when address and
-value arguments are used in the wrong order for calls of the
-zd_ioread* and zd_iowrite* functions. I'm a lazy guy, I like tools
-do the hard work for me. 
+ACK.  Tried to pull, but there were conflicts with netdev#upstream. 
+Since there are dependencies in netdev#upstream, looks like you need to 
+resend against that.
 
-> If not the removal of the __nocast, would it be better to have a
-> void pointer there?
 
-I don't think that an explicit cast requires the introduction of a
-temporary variable.
-
--- 
-Uli Kunitz
