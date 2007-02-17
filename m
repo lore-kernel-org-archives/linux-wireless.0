@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.227]:29886 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752483AbXBDSYE (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:57682 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946340AbXBQAuQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Feb 2007 13:24:04 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so1405654nze
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Feb 2007 10:24:03 -0800 (PST)
-Message-ID: <9e4733910702041024g2b1e51e0l89cbfb3f0d2e6f70@mail.gmail.com>
-Date: Sun, 4 Feb 2007 13:24:03 -0500
-From: "Jon Smirl" <jonsmirl@gmail.com>
-To: "Jouni Malinen" <jkmaline@cc.hut.fi>
-Subject: Re: SoftMAC vs FullMAC
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20070204180724.GB6632@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <9e4733910702040922n63736d27h7ab027dc90ae8989@mail.gmail.com>
-	 <20070204180724.GB6632@jm.kir.nu>
+	Fri, 16 Feb 2007 19:50:16 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HIDkz-0005x3-5W
+	for linux-wireless@vger.kernel.org; Fri, 16 Feb 2007 19:48:53 -0500
+Subject: Re: wireless-dev.git breaks wireless extensions
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1171670990.3575.50.camel@johannes.berg>
+References: <1171670057.28539.5.camel@dv>
+	 <1171670990.3575.50.camel@johannes.berg>
+Content-Type: text/plain
+Date: Fri, 16 Feb 2007 19:50:14 -0500
+Message-Id: <1171673414.28874.4.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/4/07, Jouni Malinen <jkmaline@cc.hut.fi> wrote:
-> I hope you realize that 802.11s is in very early steps (the first draft
-> failed to get the needed approval rate in IEEE 802.11 working group) and
-> is subject to change.. Whether hardware can run 802.11s (the current
-> draft or whatever may end up in the end) is quite open question from my
-> view point.. 802.11 requires MAC changes and I'm sure there are hardware
-> designs that do not work with the current 802.11s draft no matter what
-> the host CPU is doing in the driver/802.11 stack.
+On Sat, 2007-02-17 at 01:09 +0100, Johannes Berg wrote:
+> On Fri, 2007-02-16 at 18:54 -0500, Pavel Roskin wrote:
+> > Hello!
+> > 
+> > Today's wireless-dev.git breaks wireless extensions.  It forces
+> > CONFIG_CFG80211 to be enabled.
+>                         ^^^^^^^ ??????
 
-What I've read is that there are no changes at the PHY layers for 11s.
-If that is the case then any existing hardware should be able to run
-11s if the interface allows properly formatted packets to be
-transmitted and received. Of course I don't know exactly what is in
-the 11s draft since it is secret.
+>From net/d80211/Kconfig:
 
-A related issue is merging the Marvell support for the OLPC. Marvell
-is doing a FullMAC 11s implementation which requires a coprocessor in
-the wireless hardware. Merging a firmware 11s implementation before a
-software 11s implementation exists will likely cause problems since
-interfaces won't get designed correctly.
+config D80211
+        tristate "Generic IEEE 802.11 Networking Stack (dscape)"
+        select CRYPTO
+        select CRYPTO_ECB
+        select CRYPTO_ARC4
+        select CRYPTO_AES
+        select CRC32
+        select WIRELESS_EXT
+        select CFG80211
 
-I'm concerned that's the vendor's goal is to require a new round of
-hardware purchases to support 11s when it doesn't appear to be
-necessary. OLPC needs the firmware implementation for power saving
-reasons, not to implement the protocol.
+It means if I want D80211, CFG80211 will be selected for me.  Last time
+I pulled the sources (a few days ago) I was able to disable CFG80211.
+
+Even if I compile D80211 and CFG80211 as modules and load MadWifi, lsmod
+shows that cfg80211 is not loaded, but the iwconfig output is still
+wrong.  Some part of cfg80211 must be compiled into the kernel.
 
 -- 
-Jon Smirl
-jonsmirl@gmail.com
+Regards,
+Pavel Roskin
+
