@@ -1,22 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.242]:28421 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933153AbXBWQzk (ORCPT
+Received: from mailgate.cesmail.net ([216.154.195.36]:51514 "HELO
+	mailgate.cesmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932754AbXBQS6I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Feb 2007 11:55:40 -0500
-Received: by an-out-0708.google.com with SMTP id b33so407367ana
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Feb 2007 08:55:40 -0800 (PST)
-Message-ID: <48f7fe350702230855n6b850331o110dff9bc9560b77@mail.gmail.com>
-Date: Fri, 23 Feb 2007 11:55:39 -0500
-From: "Ryan Hope" <rmh3093@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: d80211-2.0.1 build against 2.6.20-mm2
+	Sat, 17 Feb 2007 13:58:08 -0500
+Message-ID: <20070217135805.zfkg8kokc4s4owgg@webmail.spamcop.net>
+Date: Sat, 17 Feb 2007 13:58:05 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: More breakage in wireless-dev.git
+References: <1171690868.31103.17.camel@dv>
+	<200702171914.06802.mb@bu3sch.de>
+	<20070217132614.zfbt6sckkogosss8@webmail.spamcop.net>
+	<200702171930.10830.mb@bu3sch.de>
+In-Reply-To: <200702171930.10830.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The latest version of d80211 does not build against the latest
-mm-sources... Here is a patch to fix d80211 so that is DOES build
-against 2.6.20-mm2:
-http://www.rit.edu/~rmh3093/d80211-2.0.1-mm-fix.patch
+Quoting Michael Buesch <mb@bu3sch.de>:
+
+> Uh, why? I thought it is just an optimization and
+> git walks the tree, if the server info is not updated.
+>
+> But I ran it manually now.
+
+The driver is working now!
+
+As for git, I think all you need to make hooks/post-update executable, since it
+already has the right command in it.
+
+The problem is that git-fetch trusts refs/info instead of making individual
+requests to refs/branches/*.  Git needs to request refs/info anyway because it
+never relies on the ability to request and parse http directory listings.  And
+since refs/info already has the branch heads, why request more files?
+
+I know, this sounds weird.  It must be caused by the git developers' attitude
+towards http as a dumb protocol.
+
+--
+Regards,
+Pavel Roskin
