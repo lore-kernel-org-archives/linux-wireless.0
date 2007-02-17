@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:64125 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932272AbXBSOL7 (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:46369 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S2992985AbXBQRqb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 09:11:59 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so2432708nfa
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Feb 2007 06:11:58 -0800 (PST)
-Message-ID: <a32f33a40702190611k539b6974ka739fc31c8dab00e@mail.gmail.com>
-Date: Mon, 19 Feb 2007 15:11:57 +0100
-From: "Ivo Van Doorn" <ivdoorn@gmail.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: [PATCH] rt2x00: fix memory corruption caused by eeprom buffer overflow
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <1171893099.8550.23.camel@dv>
+	Sat, 17 Feb 2007 12:46:31 -0500
+Message-ID: <45D73F71.6050803@lwfinger.net>
+Date: Sat, 17 Feb 2007 11:46:25 -0600
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <20070219024654.3480.9392.stgit@dl.roinet.com>
-	 <a32f33a40702190307x2861b654s6233a6b9858e8233@mail.gmail.com>
-	 <1171893099.8550.23.camel@dv>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] bcm43xx: fix for 4309
+References: <20070217182444.5a7e3641@localhost>
+In-Reply-To: <20070217182444.5a7e3641@localhost>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Stefano Brivio wrote:
+> BCM4309 devices aren't working properly as A PHYs aren't supported yet, but
+> we probe 802.11a cores anyway. This fixes it, while still allowing for A PHY code
+> to be developed in the future.
+> 
+> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+> ----
+> 
+> John,
+> 
+> This is actually a bugfix so I think it should make into 2.6.21. This makes
+> BCM4309 cards working.
+> 
 
-> Shame on me.  I wrote a patch that worked on rt61, and then I discarded
-> it to make a "clean" fix for all drivers.
->
-> But anyway, I'm seeing now that CVS on sourceforge.net is not abandoned,
-> so I think the best approach would be to integrate it into the kernel.
-> It would be great if you remove dead code from CVS, all those
-> "experimental" branches that haven't been touched for months if not
-> years.  It was hard for me to find the actual sources.  I would have
-> spent last Sunday evening doing something more interesting than fixing
-> fixed bugs :)
-
-True true, everything useful is in the "source" module of the CVS tree.
-Along with the legacy drivers for each chipset.
-I thought the other older tree was already removed... :(
-
-> Finally, I'll appreciate if the driver is fixed to compile against
-> wireless-dev kernels.  You can take an approach similar to iwlwifi and
-> even rely on the same d80211 package.
-
-Well the d80211 stack inside rt2x00 is slightly modified to contain
-compatibility
-fixes for regular kernels. That way regular users can test rt2x00,
-which is extremely helpful.
-Other than that the stack also contains small patches that are in
-testing and I am sending
-to the wireless list when it is stable. At this moment I have for
-example the sequence
-counter patch that is currently under discussion on this list, as well
-as the currently
-antenna patch that will split antenna_sel into a RX and TX antenna selection.
-
-Ivo
+--- linux-2.6.20/drivers/net/wireless/bcm43xx/bcm43xx_main.c.orig	2007-02-17 18:05:21.872891550 +0100
++++ linux-2.6.20/drivers/net/wireless/bcm43xx/bcm43xx_main.c	2007-02-17 18:14:59.620752491 +0100
+@@ -2741,8 +2741,9 @@
+ 				 * dangling pins on the second core. Be careful
+ 				 * and ignore these cores here.
+ 				 */
+-				if (bcm->pci_dev->device != 0x4324) {
+-					dprintk(KERN_INFO PFX "Ignoring additional 802.11 core.\n");
++				if (1 /*bcm->pci_dev->device != 0x4324*/ ) {
++				/* TODO: A PHY */
++					dprintk(KERN_INFO PFX "Ignoring additional 802.11a core.\n");
+ 					continue;
+ 				}
+ 			}
+_______________________________________________
