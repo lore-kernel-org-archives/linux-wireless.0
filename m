@@ -1,35 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:33720 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932596AbXBSTtm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 14:49:42 -0500
-Date: Mon, 19 Feb 2007 20:49:38 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Michael Wu <flamingice@sourmilk.net>
+Received: from fencepost.gnu.org ([199.232.76.164]:34044 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752223AbXBRVys (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Feb 2007 16:54:48 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HItyE-0001tx-1R
+	for linux-wireless@vger.kernel.org; Sun, 18 Feb 2007 16:53:22 -0500
+Subject: Re: [PATCH] d80211: fix incorrect hw.priv setting in  ieee80211_alloc_hw()
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] d80211: Allow drivers to configure default regulatory  domain
-Message-ID: <20070219204938.29520759@griffin.suse.cz>
-In-Reply-To: <200702180031.38710.flamingice@sourmilk.net>
-References: <200702180031.38710.flamingice@sourmilk.net>
+In-Reply-To: <1171707397.3487.5.camel@johannes.berg>
+References: <20070217074208.348.69546.stgit@dv.roinet.com>
+	 <1171707397.3487.5.camel@johannes.berg>
+Content-Type: text/plain
+Date: Sun, 18 Feb 2007 16:54:45 -0500
+Message-Id: <1171835685.2201.4.camel@dv>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 18 Feb 2007 00:31:33 -0500, Michael Wu wrote:
-> This patch allows drivers to configure the default set of channels if the
-> device reports its default regulatory domain.
+On Sat, 2007-02-17 at 11:16 +0100, Johannes Berg wrote:
+> On Sat, 2007-02-17 at 02:42 -0500, Pavel Roskin wrote:
+> > hw.priv is set twice, and the second time it's set incorrectly to an
+> > area relative to the master device, which wasn't allocated for private
+> > data.
+> 
+> Yeah, this is obviously correct. Guess I was drinking when I did these
+> patches. I really wonder why I never saw any of your problems though, I
+> do have bcm43xx running here. Not that the driver actually does anything
+> for me, it always refuses to associate...
 
-How is a driver supposed to handle this? By walking through the channel
-list and based on some value obtained from its EEPROM (or firmware or
-whatever) set appropriate flags? That sounds like a need for duplicate
-code in drivers. Shouldn't the stack accept a regdomain code (defined
-as an enum of integers or so) instead?
+Oh, and by the way, wouldn't it be reasonable to have an inline function
+to calculate the pointer to the priv area instead of having an actual
+field for the pointer?
 
-Thanks,
-
- Jiri
+Also, it looks like we need a generic macro for aligning sizes.
 
 -- 
-Jiri Benc
-SUSE Labs
+Regards,
+Pavel Roskin
+
