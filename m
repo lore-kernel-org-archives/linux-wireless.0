@@ -1,64 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:3224 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933023AbXB1PM4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 10:12:56 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so581999nfa
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 07:12:55 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 14/28] rt2x00: Create rt2x00lib module
-Date: Wed, 28 Feb 2007 16:12:51 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200702281507.13004.IvDoorn@gmail.com> <1172674256.5015.15.camel@johannes.berg>
-In-Reply-To: <1172674256.5015.15.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702281612.51383.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mtaout01-winn.ispmail.ntl.com
+ ([81.103.221.47]:30890 "EHLO	mtaout01-winn.ispmail.ntl.com"
+ rhost-flags-OK-OK-OK-OK)	by vger.kernel.org with ESMTP id S1161037AbXBRBkk
+ (ORCPT	<rfc822;linux-wireless@vger.kernel.org>); Sat,
+ 17 Feb 2007 20:40:40 -0500
+Date: Sun, 18 Feb 2007 01:40:41 +0000 (GMT)
+From: Daniel Drake <dsd@gentoo.org>
+Subject: [PATCH] zd1211rw-d80211: Add ID for ZyXEL ZyAIR G-220 v2
 Sender: linux-wireless-owner@vger.kernel.org
+To: linville@tuxdriver.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org, kune@deine-taler.de
+Message-id: <20070218014041.D25797B409F@zog.reactivated.net>
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 28 February 2007 15:50, Johannes Berg wrote:
-> On Wed, 2007-02-28 at 15:07 +0100, Ivo van Doorn wrote:
-> 
-> >  config RT2X00
-> > -	bool "Ralink driver support"
-> > +	tristate "Ralink driver support"
-> >  	depends on NET_RADIO && MAC80211 && EXPERIMENTAL
-> >  	---help---
-> >  	This will enable the experimental support for the Ralink drivers,
-> > @@ -7,6 +7,10 @@ config RT2X00
-> >  
-> >  	These drivers will make use of the Devicescape ieee80211 stack.
-> >  
-> > +	This option will build the rt2x00 library which is required by
-> > +	each individual driver, when compiled as a module,
-> > +	this library will be called "rt2x00lib.ko".
-> 
-> I think I'd prefer having a new symbol CONFIG_RT2X00_LIB that is
-> selected by all sub-drivers that use it so that RT2X00 is a config-only
-> symbol.
+Tested by Marijn Schouten
+zd1211b chip 0586:340f v4810 high 00-13-49 AL2230_RF pa0 g---
+FCC ID: I88G220V2
 
-Is there any particular reason for RT2X00 to be a config only option?
-When RT2X00 is a config only option, it would still require RT2X00 to be a
-tristate option. Otherwise it is possible to build d80211 as module and
-rt2400pci compiled in. And I am not sure if that is a desired possibility,
-escpecially with the compilation errors that would produce.
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+---
+ drivers/net/wireless/d80211/zd1211rw/zd_usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-It would also mean that both RT2X00 and RT2X00_LIB are options the user
-can select (RT2X00_LIB  depending on Rt2X00 off course), I can't really see
-the point in that.
+diff --git a/drivers/net/wireless/d80211/zd1211rw/zd_usb.c b/drivers/net/wireless/d80211/zd1211rw/zd_usb.c
+index 1e8a45e..aaa055d 100644
+--- a/drivers/net/wireless/zd1211rw/drivers/net/wireless/d80211/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/drivers/net/wireless/d80211/zd1211rw/zd_usb.c
+@@ -60,6 +60,7 @@ static struct usb_device_id usb_ids[] = {
+ 	{ USB_DEVICE(0x083a, 0x4505), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x0471, 0x1236), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x13b1, 0x0024), .driver_info = DEVICE_ZD1211B },
++	{ USB_DEVICE(0x0586, 0x340f), .driver_info = DEVICE_ZD1211B },
+ 	/* "Driverless" devices that need ejecting */
+ 	{ USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
+ 	{}
+-- 
+1.5.0
 
-> Btw, you really need to use quilt or such, the Date: header line on
-> patch 8 is 6 seconds before patch 7 etc., they appear all out of order,
-> and having them as a reply to the 0/28 would be nice too.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>From linux-wireless-owner@vger.kernel.org Sun Feb 18 06:13:42 2007
+Return-path: <linux-wireless-owner@vger.kernel.org>
+Received: from pop.hut.fi [130.233.228.132]
+	by jm.kir.nu with POP3 (fetchmail-6.3.6)
+	for <jm@localhost> (single-drop); Sat, 17 Feb 2007 20:13:42 -0800 (PST)
+Received: from smtp02 (smtp02 [10.10.13.2])
+ by mailstore2.hut-mail (iPlanet Messaging Server 5.2 HotFix 2.09 (built Nov 18
+ 2005)) with ESMTP id <0JDN00D2U4ZFQM@mailstore2.hut-mail> for
+ jkmaline@cc.hut.fi; Sun, 18 Feb 2007 06:11:39 +0200 (EET)
+Received: from smtp-3.hut.fi (smtp-3.hut.fi [130.233.228.93])
+ by smtp02.hut-mail
+ (iPlanet Messaging Server 5.2 HotFix 2.09 (built Nov 18 2005))
+ with ESMTPS id <0JDN009SC4ZFKU@smtp02.hut-mail> for jkmaline@cc.hut.fi
+ (ORCPT jkmaline@cc.hut.fi); Sun, 18 Feb 2007 06:11:39 +0200 (EET)
+Received: from localhost (katosiko.hut.fi [130.233.228.115])
+	by smtp-3.hut.fi (8.13.6/8.12.10) with ESMTP id l1I4BcSE017352	for
+ <jkmaline@cc.hut.fi>; Sun, 18 Feb 2007 06:11:38 +0200
+Received: from smtp-3.hut.fi ([130.233.228.93])
+ by localhost (katosiko.hut.fi [130.233.228.115]) (amavisd-new, port 10024)
+ with LMTP id 21085-47 for <jkmaline@cc.hut.fi>; Sun,
+ 18 Feb 2007 06:11:38 +0200 (EET)
+Received: from vger.kernel.org (vger.kernel.org [209.132.176.167])
+	by smtp-3.hut.fi (8.13.6/8.12.10) with ESMTP id l1I49eFn017253	for
+ <jkmaline@cc.hut.fi>; Sun, 18 Feb 2007 06:09:41 +0200
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand	id
+ S932240AbXBREJk (ORCPT <rfc822;jkmaline@cc.hut.fi>); Sat,
+ 17 Feb 2007 23:09:40 -0500
+Received: (majordomo@vger.kernel.org) by vger.kernel.org id S932400AbXBREJk
+	(ORCPT <rfc822;linux-wireless-outgoing>); Sat, 17 Feb 2007 23:09:40 -0500
+Received: from smtp116.iad.emailsrvr.com
+ ([207.97.245.116]:42995 "EHLO	smtp116.iad.emailsrvr.com"
+ rhost-flags-OK-OK-OK-OK) by vger.kernel.org	with ESMTP id S932240AbXBREJj
+ (ORCPT	<rfc822;linux-wireless@vger.kernel.org>); Sat,
+ 17 Feb 2007 23:09:39 -0500
+Received: from [192.168.1.100]
+ (c-24-34-179-5.hsd1.ma.comcast.net [24.34.179.5])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)	(Authenticated sender: ddrake@brontes3d.com)
+	by relay1.r1.iad.emailsrvr.com (SMTP Server) with ESMTP id 2D81E44C0C5; Sat,
+ 17 Feb 2007 22:40:20 -0500 (EST)
+Date: Sat, 17 Feb 2007 22:41:13 -0500
+From: Daniel Drake <dsd@gentoo.org>
+Subject: Re: IPW2200 monitoring FW broken
+In-reply-to: <200702151840.16963.mb@bu3sch.de>
+Sender: linux-wireless-owner@vger.kernel.org
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org, James Ketrenos <jketreno@linux.intel.com>
+Message-id: <45D7CAD9.5030602@gentoo.org>
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
+Content-transfer-encoding: 7bit
+Precedence: bulk
+User-Agent: Thunderbird 2.0b2 (X11/20070208)
+X-Greylist: delayed 1759 seconds by postgrey-1.27 at vger.kernel.org; Sat,
+ 17 Feb 2007 23:09:39 EST
+X-Spam-Checker-Version: SpamAssassin 2.64 (2004-01-11) on katosiko.hut.fi
+X-TKK-Virus-Scanned: by amavisd-new-2.1.2-hutcc at katosiko.hut.fi
+References: <200702151840.16963.mb@bu3sch.de>
+X-Mailing-List: linux-wireless@vger.kernel.org
+Original-recipient: rfc822;jkmaline@cc.hut.fi
+Status: RO
+Content-Length: 840
+Lines: 22
 
-Yeah, I seem to have send the patch mails itself in the wrong order. :(
-So the number in the subject line is correct, just the order of sending
-was reversed.
-I'll try to do better next time. :)
+Michael Buesch wrote:
+> Is IPW2200 monitoring FW still broken?
+> I miss huge amounts of packets when I try to monitor
+> some traffic.
 
-Ivo
+I had the same problem with ipw2200 once. I lost the hardware before I 
+had a chance to dig into it, but then noticed ipw3945 on my laptop doing 
+the same thing.
+
+I've now narrowed it down a bit further: if i load ipw3945/ipw3945d and 
+associate to a network in managed mode before switching to monitor mode, 
+  then when monitoring I only see about 1/4 of all traffic.
+
+But, if I load the driver and go straight into monitor mode, things are 
+peachy. Maybe the same thing is happening for ipw2200?
+
+Daniel
+
