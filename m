@@ -1,48 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:43031 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933199AbXBESaB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Feb 2007 13:30:01 -0500
-Date: Mon, 5 Feb 2007 19:29:58 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC PATCH 1/3] cfg80211 and nl80211
-Message-ID: <20070205192958.0fef1a88@griffin.suse.cz>
-In-Reply-To: <1170699268.3572.39.camel@johannes.berg>
-References: <20070131013717.GA28076@tuxdriver.com>
-	<200702051245.35452.flamingice@sourmilk.net>
-	<1170697795.3572.32.camel@johannes.berg>
-	<200702051314.21627.flamingice@sourmilk.net>
-	<1170699268.3572.39.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from smtp.rutgers.edu ([128.6.72.243]:61934 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1030311AbXBRFcD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Feb 2007 00:32:03 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: [PATCH] d80211: Allow drivers to configure default regulatory domain
+Date: Sun, 18 Feb 2007 00:31:33 -0500
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart6777790.CFYePYjXNe";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200702180031.38710.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 05 Feb 2007 19:14:28 +0100, Johannes Berg wrote:
-> Oh but do we really want to report them that late? I wouldn't think so.
-> That would give us out-of-order issues wrt. the air...
+--nextPart6777790.CFYePYjXNe
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-No. It's the other way around, when they're reported immediately, they
-will be out of order. ieee80211_tx_status is called from the interrupt
-handler as the result of the frame being actually sent. Before that, a
-frame can sit for an arbitrary long time in the hw queue or not sent at
-all. Reporting only frames confirmed by ieee80211_tx_status as
-successfully sent at the time the function is called reflects better
-what is on the air (it's still not perfect as things like
-retransmissions are not caught).
+d80211: Allow drivers to configure default regulatory domain
 
-> Well, I guess I'm saying that wpa_supplicant shouldn't need the monitor
-> iface at all since it wants just management frames and we should give
-> those to it via netlink to avoid having to add more radiotap foo.
+This patch allows drivers to configure the default set of channels if the
+device reports its default regulatory domain.
 
-Agreed.
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+=2D--
 
- Jiri
+ include/net/d80211.h   |    7 ++++++-
+ net/d80211/ieee80211.c |    5 +++--
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
--- 
-Jiri Benc
-SUSE Labs
+diff --git a/include/net/d80211.h b/include/net/d80211.h
+index 25a4dca..e0180ec 100644
+=2D-- a/include/net/d80211.h
++++ b/include/net/d80211.h
+@@ -54,7 +54,9 @@
+  * freq, and val fields. Other fields will be filled in by 80211.o based on
+  * hostapd information and low-level driver does not need to use them. The
+  * limits for each channel will be provided in 'struct ieee80211_conf' when
+=2D * configuring the low-level driver with hw->config callback. */
++ * configuring the low-level driver with hw->config callback. If a device =
+has
++ * a default regulatory domain, IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED=
+=20
+can
++ * be set to let the driver configure all fields. */
+ struct ieee80211_channel {
+ 	short chan; /* channel number (IEEE 802.11) */
+ 	short freq; /* frequency in MHz */
+@@ -532,6 +534,9 @@ struct ieee80211_hw {
+ 	/* Do TKIP phase1 and phase2 key mixing in stack and send the generated
+ 	 * per-packet RC4 key with each TX frame when doing hwcrypto */
+ #define IEEE80211_HW_TKIP_REQ_PHASE2_KEY (1<<14)
++	/* Channels are already configured to the default regulatory domain
++	 * specified in the device's EEPROM */
++#define IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED (1<<15)
+=20
+ 	u32 flags;			/* hardware flags defined above */
+=20
+diff --git a/net/d80211/ieee80211.c b/net/d80211/ieee80211.c
+index 0e5f23f..5af42aa 100644
+=2D-- a/net/d80211/ieee80211.c
++++ b/net/d80211/ieee80211.c
+@@ -4652,6 +4652,9 @@ int ieee80211_register_hw(struct ieee802
+ 	memcpy(local->mdev->dev_addr, local->hw.perm_addr, ETH_ALEN);
+ 	SET_NETDEV_DEV(local->mdev, local->hw.dev);
+=20
++	if (!(hw->flags & IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED))
++		ieee80211_init_client(local->mdev);
++
+ 	result =3D register_netdevice(local->mdev);
+ 	if (result < 0) {
+ 		rtnl_unlock();
+@@ -4746,8 +4749,6 @@ int ieee80211_register_hwmode(struct iee
+ 		ieee80211_prepare_rates(local);
+ 	}
+=20
+=2D	ieee80211_init_client(local->mdev);
+=2D
+ 	return 0;
+ }
+ EXPORT_SYMBOL(ieee80211_register_hwmode);
+
+--nextPart6777790.CFYePYjXNe
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBF1+S6T3Oqt9AH4aERAlOHAKCxKTptQxFPMQSOsZgSZctyEClalwCgvRBb
+X0Km41ICsSxfvmpGTAKUeao=
+=cjA5
+-----END PGP SIGNATURE-----
+
+--nextPart6777790.CFYePYjXNe--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
