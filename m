@@ -1,599 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:13403 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965105AbXBWQjq (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60294 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932152AbXBSGda (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Feb 2007 11:39:46 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so906993nfa
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Feb 2007 08:39:45 -0800 (PST)
-To: Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH 3/3] d80211: Split antenna selection into TX and RX antenna
-Date: Fri, 23 Feb 2007 17:39:04 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-References: <200702211702.48001.IvDoorn@gmail.com> <20070223172815.359080e8@griffin.suse.cz>
-In-Reply-To: <20070223172815.359080e8@griffin.suse.cz>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702231739.04950.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Mon, 19 Feb 2007 01:33:30 -0500
+Subject: Re: [PATCH] d80211: fix incorrect hw.priv setting in  ieee80211_alloc_hw()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1171835685.2201.4.camel@dv>
+References: <20070217074208.348.69546.stgit@dv.roinet.com>
+	 <1171707397.3487.5.camel@johannes.berg>  <1171835685.2201.4.camel@dv>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wFRrtwZeoRfZXCKP7yO3"
+Date: Mon, 19 Feb 2007 07:33:19 +0100
+Message-Id: <1171866799.3471.1.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 23 February 2007 17:28, Jiri Benc wrote:
-> On Wed, 21 Feb 2007 17:02:47 +0100, Ivo van Doorn wrote:
-> > With the split antenna selection rt2x00 can now read the default
-> > value for both selections from the EEPROM and can now configure
-> > the card correctly based on the individual RX and TX antenna selections.
-> > 
-> > [...]
-> > @@ -468,7 +469,7 @@ static void rt2400pci_config_antenna(struct rt2x00_dev *rt2x00dev, int antenna)
-> >  	/*
-> >  	 * Only continue when there is something to be done.
-> >  	 */
-> > -	if (rt2x00dev->rx_params.antenna == antenna)
-> > +	if (rt2x00dev->rx_status.antenna == antenna_rx)
-> 
-> drivers/net/wireless/d80211/rt2x00/rt2400pci.c:472: error: 'struct rt2x00_dev' has no member named 'rx_status'
 
-Sorry about that, I had renamed rx_params to rx_status in my cvs tree and hadn't set that
-correctly to the git tree yet. I'll try to update rt2x00 inside wireless-dev as soon as possible,
-but in the mean time here is the correct patch.
+--=-wFRrtwZeoRfZXCKP7yO3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Ivo van Doorn<IvDoorn@gmail.com>
+On Sun, 2007-02-18 at 16:54 -0500, Pavel Roskin wrote:
+> On Sat, 2007-02-17 at 11:16 +0100, Johannes Berg wrote:
+> > On Sat, 2007-02-17 at 02:42 -0500, Pavel Roskin wrote:
+> > > hw.priv is set twice, and the second time it's set incorrectly to an
+> > > area relative to the master device, which wasn't allocated for privat=
+e
+> > > data.
+> >=20
+> > Yeah, this is obviously correct. Guess I was drinking when I did these
+> > patches. I really wonder why I never saw any of your problems though, I
+> > do have bcm43xx running here. Not that the driver actually does anythin=
+g
+> > for me, it always refuses to associate...
+>=20
+> Oh, and by the way, wouldn't it be reasonable to have an inline function
+> to calculate the pointer to the priv area instead of having an actual
+> field for the pointer?
 
----
+Yeah, I guess that isn't too hard to do. But if you think about what the
+current code will compile to that's also just an addition based on the
+struct size that is known at compile time.
 
-diff --git a/drivers/net/wireless/d80211/rt2x00/rt2400pci.c b/drivers/net/wireless/d80211/rt2x00/rt2400pci.c
-index 2e3a514..a64a5a9 100644
---- a/drivers/net/wireless/d80211/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/d80211/rt2x00/rt2400pci.c
-@@ -460,7 +460,8 @@ static void rt2400pci_config_txpower(struct rt2x00_dev *rt2x00dev, int txpower)
- 	rt2x00dev->tx_power = txpower;
- }
- 
--static void rt2400pci_config_antenna(struct rt2x00_dev *rt2x00dev, int antenna)
-+static void rt2400pci_config_antenna(struct rt2x00_dev *rt2x00dev,
-+	int antenna_tx, int antenna_rx)
- {
- 	u8 reg_rx;
- 	u8 reg_tx;
-@@ -468,7 +469,7 @@ static void rt2400pci_config_antenna(struct rt2x00_dev *rt2x00dev, int antenna)
- 	/*
- 	 * Only continue when there is something to be done.
- 	 */
--	if (rt2x00dev->rx_params.antenna == antenna)
-+	if (rt2x00dev->rx_params.antenna == antenna_rx)
- 		return;
- 
- 	rt2x00_bbp_read(rt2x00dev, 4, &reg_rx);
-@@ -481,25 +482,24 @@ static void rt2400pci_config_antenna(struct rt2x00_dev *rt2x00dev, int antenna)
- 	reg_tx &= ~0x03;
- 
- 	/*
--	 * Ralink devices have have antenna options for both TX as RX.
--	 * The ieee80211 stack currently only provide the user to set
--	 * 1 antenna, by default this is considered to be the TX antenna.
-+	 * Configure the TX antenna.
- 	 */
--	if (antenna == 0) {
--		/* Diversity. */
--		reg_rx |= 0x02;
-+	if (antenna_tx == 0)		/* Diversity. */
- 		reg_tx |= 0x01;
--	} else if (antenna == 1) {
--		/* RX: Antenna B */
--		reg_rx |= 0x04;
--		/* TX: Antenna A */
-+	else if (antenna_tx == 1)	/* TX: Antenna A */
- 		reg_tx |= 0x00;
--	} else if (antenna == 2) {
--		/* RX: Antenna A */
--		reg_rx |= 0x00;
--		/* TX: Antenna B */
-+	else if (antenna_tx == 2)	/* TX: Antenna B */
- 		reg_tx |= 0x02;
--	}
-+
-+	/*
-+	 * Configure the RX antenna.
-+	 */
-+	if (antenna_rx == 0)		/* Diversity. */
-+		reg_rx |= 0x02;
-+	else if (antenna_rx == 1)	/* RX: Antenna A */
-+		reg_rx |= 0x00;
-+	else if (antenna_rx == 2)	/* RX: Antenna B */
-+		reg_rx |= 0x04;
- 
- 	rt2x00_bbp_write(rt2x00dev, 4, reg_rx);
- 	rt2x00_bbp_write(rt2x00dev, 1, reg_tx);
-@@ -507,7 +507,7 @@ static void rt2400pci_config_antenna(struct rt2x00_dev *rt2x00dev, int antenna)
- 	/*
- 	 * Update active info for RX.
- 	 */
--	rt2x00dev->rx_params.antenna = antenna;
-+	rt2x00dev->rx_params.antenna = antenna_rx;
- }
- 
- static void rt2400pci_config_cw(struct rt2x00_dev *rt2x00dev,
-@@ -1972,7 +1972,8 @@ static int rt2400pci_config(struct ieee80211_hw *hw,
- 	rt2400pci_config_channel(rt2x00dev,
- 		conf->channel_val, conf->channel, conf->freq);
- 	rt2400pci_config_txpower(rt2x00dev, conf->power_level);
--	rt2400pci_config_antenna(rt2x00dev, conf->antenna_sel);
-+	rt2400pci_config_antenna(rt2x00dev,
-+		conf->antenna_sel_tx, conf->antenna_sel_rx);
- 	rt2400pci_config_duration(rt2x00dev,
- 		(conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME));
- 	rt2400pci_config_phymode(rt2x00dev, conf->phymode);
-@@ -2444,12 +2445,11 @@ static int rt2400pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 
- 	/*
- 	 * Identify default antenna configuration.
--	 * Ralink devices have have antenna options for both TX as RX.
--	 * The ieee80211 stack currently only provide the user to set
--	 * 1 antenna, by default this is considered to be the TX antenna.
- 	 */
--	rt2x00dev->hw->conf.antenna_sel = rt2x00_get_field16(eeprom,
-+	rt2x00dev->hw->conf.antenna_sel_tx = rt2x00_get_field16(eeprom,
- 		EEPROM_ANTENNA_TX_DEFAULT);
-+	rt2x00dev->hw->conf.antenna_sel_rx = rt2x00_get_field16(eeprom,
-+		EEPROM_ANTENNA_RX_DEFAULT);
- 
- 	/*
- 	 * Store led mode, for correct led behaviour.
-diff --git a/drivers/net/wireless/d80211/rt2x00/rt2500pci.c b/drivers/net/wireless/d80211/rt2x00/rt2500pci.c
-index 305cff6..aee6233 100644
---- a/drivers/net/wireless/d80211/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/d80211/rt2x00/rt2500pci.c
-@@ -509,7 +509,8 @@ static void rt2500pci_config_txpower(struct rt2x00_dev *rt2x00dev, int txpower)
- 	rt2x00dev->tx_power = txpower;
- }
- 
--static void rt2500pci_config_antenna(struct rt2x00_dev *rt2x00dev, int antenna)
-+static void rt2500pci_config_antenna(struct rt2x00_dev *rt2x00dev,
-+	int antenna_tx, int antenna_rx)
- {
- 	u32 reg;
- 	u8 reg_rx;
-@@ -518,7 +519,7 @@ static void rt2500pci_config_antenna(struct rt2x00_dev *rt2x00dev, int antenna)
- 	/*
- 	 * Only continue when there is something to be done.
- 	 */
--	if (rt2x00dev->rx_params.antenna == antenna)
-+	if (rt2x00dev->rx_params.antenna == antenna_rx)
- 		return;
- 
- 	rt2x00_register_read(rt2x00dev, BBPCSR1, &reg);
-@@ -532,33 +533,33 @@ static void rt2500pci_config_antenna(struct rt2x00_dev *rt2x00dev, int antenna)
- 	reg_tx &= ~0x03;
- 
- 	/*
--	 * Ralink devices have have antenna options for both TX as RX.
--	 * The ieee80211 stack currently only provide the user to set
--	 * 1 antenna, by default this is considered to be the TX antenna.
-+	 * Configure the TX antenna.
- 	 */
--	if (antenna == 0) {
--		/* Diversity. */
--		reg_rx |= 0x02;
-+	if (antenna_tx == 0) {		/* Diversity. */
- 		reg_tx |= 0x02;
- 		rt2x00_set_field32(&reg, BBPCSR1_CCK, 2);
- 		rt2x00_set_field32(&reg, BBPCSR1_OFDM, 2);
--	} else if (antenna == 1) {
--		/* RX: Antenna B */
--		reg_rx |= 0x02;
--		/* TX: Antenna A */
-+	} else if (antenna_tx == 1) {	/* TX: Antenna A */
- 		reg_tx |= 0x00;
- 		rt2x00_set_field32(&reg, BBPCSR1_CCK, 0);
- 		rt2x00_set_field32(&reg, BBPCSR1_OFDM, 0);
--	} else if (antenna == 2) {
--		/* RX: Antenna A */
--		reg_rx |= 0x00;
--		/* TX: Antenna B */
-+	} else if (antenna_tx == 2) {	/* TX: Antenna B */
- 		reg_tx |= 0x02;
- 		rt2x00_set_field32(&reg, BBPCSR1_CCK, 2);
- 		rt2x00_set_field32(&reg, BBPCSR1_OFDM, 2);
- 	}
- 
- 	/*
-+	 * Configure the RX antenna.
-+	 */
-+	if (antenna_rx == 0)		/* Diversity. */
-+		reg_rx |= 0x02;
-+	else if (antenna_rx == 1)	/* RX: Antenna A */
-+		reg_rx |= 0x00;
-+	else if (antenna_rx == 2)	/* RX: Antenna B */
-+		reg_rx |= 0x02;
-+
-+	/*
- 	 * RT2525E and RT5222 need to flip TX I/Q
- 	 */
- 	if (rt2x00_rf(&rt2x00dev->chip, RF2525E) ||
-@@ -584,7 +585,7 @@ static void rt2500pci_config_antenna(struct rt2x00_dev *rt2x00dev, int antenna)
- 	/*
- 	 * Update active info for RX.
- 	 */
--	rt2x00dev->rx_params.antenna = antenna;
-+	rt2x00dev->rx_params.antenna = antenna_rx;
- }
- 
- static void rt2500pci_config_duration(struct rt2x00_dev *rt2x00dev,
-@@ -2137,7 +2138,8 @@ static int rt2500pci_config(struct ieee80211_hw *hw,
- 		conf->channel_val, conf->channel, conf->freq,
- 		conf->power_level);
- 	rt2500pci_config_txpower(rt2x00dev, conf->power_level);
--	rt2500pci_config_antenna(rt2x00dev, conf->antenna_sel);
-+	rt2500pci_config_antenna(rt2x00dev,
-+		conf->antenna_sel_tx, conf->antenna_sel_rx);
- 	rt2500pci_config_duration(rt2x00dev,
- 		(conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME));
- 	rt2500pci_config_phymode(rt2x00dev, conf->phymode);
-@@ -2605,12 +2607,11 @@ static int rt2500pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 
- 	/*
- 	 * Identify default antenna configuration.
--	 * Ralink devices have have antenna options for both TX as RX.
--	 * The ieee80211 stack currently only provide the user to set
--	 * 1 antenna, by default this is considered to be the TX antenna.
- 	 */
--	rt2x00dev->hw->conf.antenna_sel = rt2x00_get_field16(eeprom,
-+	rt2x00dev->hw->conf.antenna_sel_tx = rt2x00_get_field16(eeprom,
- 		EEPROM_ANTENNA_TX_DEFAULT);
-+	rt2x00dev->hw->conf.antenna_sel_rx = rt2x00_get_field16(eeprom,
-+		EEPROM_ANTENNA_RX_DEFAULT);
- 
- 	/*
- 	 * Store led mode, for correct led behaviour.
-diff --git a/drivers/net/wireless/d80211/rt2x00/rt2500usb.c b/drivers/net/wireless/d80211/rt2x00/rt2500usb.c
-index 0976c98..8caaadd 100644
---- a/drivers/net/wireless/d80211/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/d80211/rt2x00/rt2500usb.c
-@@ -559,7 +559,8 @@ static void rt2500usb_config_txpower(struct rt2x00_dev *rt2x00dev, int txpower)
- 	rt2x00dev->tx_power = txpower;
- }
- 
--static void rt2500usb_config_antenna(struct rt2x00_dev *rt2x00dev, int antenna)
-+static void rt2500usb_config_antenna(struct rt2x00_dev *rt2x00dev,
-+	int antenna_tx, int antenna_rx)
- {
- 	u8 reg_rx;
- 	u8 reg_tx;
-@@ -569,7 +570,7 @@ static void rt2500usb_config_antenna(struct rt2x00_dev *rt2x00dev, int antenna)
- 	/*
- 	 * Only continue when there is something to be done.
- 	 */
--	if (rt2x00dev->rx_params.antenna == antenna)
-+	if (rt2x00dev->rx_params.antenna == antenna_rx)
- 		return;
- 
- 	rt2x00_bbp_read(rt2x00dev, 2, &reg_tx);
-@@ -584,33 +585,33 @@ static void rt2500usb_config_antenna(struct rt2x00_dev *rt2x00dev, int antenna)
- 	reg_rx &= ~0x03;
- 
- 	/*
--	 * Ralink devices have have antenna options for both TX as RX.
--	 * The ieee80211 stack currently only provide the user to set
--	 * 1 antenna, by default this is considered to be the TX antenna.
-+	 * Configure the TX antenna.
- 	 */
--	if (antenna == 0) {
--		/* Diversity. */
--		reg_rx |= 0x01;
-+	if (antenna_tx == 0) {		/* Diversity. */
- 		reg_tx |= 0x01;
- 		rt2x00_set_field16(&csr5_reg, PHY_CSR5_CCK, 1);
- 		rt2x00_set_field16(&csr6_reg, PHY_CSR6_OFDM, 1);
--	} else if (antenna == 1) {
--		/* RX: Antenna B */
--		reg_rx |= 0x02;
--		/* TX: Antenna A */
-+	} else if (antenna_tx == 1) {	/* TX: Antenna A */
- 		reg_tx |= 0x00;
- 		rt2x00_set_field16(&csr5_reg, PHY_CSR5_CCK, 0);
- 		rt2x00_set_field16(&csr6_reg, PHY_CSR6_OFDM, 0);
--	} else if (antenna == 2) {
--		/* RX: Antenna A */
--		reg_rx |= 0x00;
--		/* TX: Antenna B */
-+	} else if (antenna_tx == 2) {	/* TX: Antenna B */
- 		reg_tx |= 0x02;
- 		rt2x00_set_field16(&csr5_reg, PHY_CSR5_CCK, 2);
- 		rt2x00_set_field16(&csr6_reg, PHY_CSR6_OFDM, 2);
- 	}
- 
- 	/*
-+	 * Configure the RX antenna.
-+	 */
-+	if (antenna_rx == 0)		/* Diversity. */
-+		reg_rx |= 0x01;
-+	else if (antenna_rx == 1)	/* RX: Antenna A */
-+		reg_rx |= 0x00;
-+	else if (antenna_rx == 2)	/* RX: Antenna B */
-+		reg_rx |= 0x02;
-+
-+	/*
- 	 * RT2525E and RT5222 need to flip TX I/Q
- 	 */
- 	if (rt2x00_rf(&rt2x00dev->chip, RF2525E) ||
-@@ -637,7 +638,7 @@ static void rt2500usb_config_antenna(struct rt2x00_dev *rt2x00dev, int antenna)
- 	/*
- 	 * Update active info for RX.
- 	 */
--	rt2x00dev->rx_params.antenna = antenna;
-+	rt2x00dev->rx_params.antenna = antenna_rx;
- }
- 
- static void rt2500usb_config_duration(struct rt2x00_dev *rt2x00dev,
-@@ -2073,7 +2074,8 @@ static int rt2500usb_config(struct ieee80211_hw *hw,
- 		conf->channel_val, conf->channel, conf->freq,
- 		conf->power_level);
- 	rt2500usb_config_txpower(rt2x00dev, conf->power_level);
--	rt2500usb_config_antenna(rt2x00dev, conf->antenna_sel);
-+	rt2500usb_config_antenna(rt2x00dev,
-+		conf->antenna_sel_tx, conf->antenna_sel_rx);
- 	rt2500usb_config_duration(rt2x00dev,
- 		(conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME));
- 	rt2500usb_config_phymode(rt2x00dev, conf->phymode);
-@@ -2455,12 +2457,11 @@ static int rt2500usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 
- 	/*
- 	 * Identify default antenna configuration.
--	 * Ralink devices have have antenna options for both TX as RX.
--	 * The ieee80211 stack currently only provide the user to set
--	 * 1 antenna, by default this is considered to be the TX antenna.
- 	 */
--	rt2x00dev->hw->conf.antenna_sel = rt2x00_get_field16(eeprom,
-+	rt2x00dev->hw->conf.antenna_sel_tx = rt2x00_get_field16(eeprom,
- 		EEPROM_ANTENNA_TX_DEFAULT);
-+	rt2x00dev->hw->conf.antenna_sel_rx = rt2x00_get_field16(eeprom,
-+		EEPROM_ANTENNA_RX_DEFAULT);
- 
- 	/*
- 	 * Store led mode, for correct led behaviour.
-diff --git a/drivers/net/wireless/d80211/rt2x00/rt61pci.c b/drivers/net/wireless/d80211/rt2x00/rt61pci.c
-index 547c660..51ada44 100644
---- a/drivers/net/wireless/d80211/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/d80211/rt2x00/rt61pci.c
-@@ -677,7 +677,7 @@ static void rt61pci_config_txpower(struct rt2x00_dev *rt2x00dev, int txpower)
- }
- 
- static void rt61pci_config_antenna(struct rt2x00_dev *rt2x00dev,
--	int antenna, int phymode)
-+	int antenna_tx, int antenna_rx, int phymode)
- {
- 	u32 reg;
- 	u8 reg_r3;
-@@ -688,7 +688,7 @@ static void rt61pci_config_antenna(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Only continue when there is something to be done.
- 	 */
--	if (rt2x00dev->rx_params.antenna == antenna)
-+	if (rt2x00dev->rx_params.antenna == antenna_rx)
- 		return;
- 
- 	rt2x00_register_read(rt2x00dev, PHY_CSR0, &reg);
-@@ -753,50 +753,40 @@ static void rt61pci_config_antenna(struct rt2x00_dev *rt2x00dev,
- 
- 	if (rt2x00_rf(&rt2x00dev->chip, RF5225) ||
- 	    rt2x00_rf(&rt2x00dev->chip, RF5325)) {
--		if (antenna == 0) {
--			/* Diversity. */
-+		if (antenna_rx == 0) {		/* Diversity. */
- 			reg_r4 |= 0x02;
- 			if (phymode != MODE_IEEE80211A)
- 				reg_r4 |= 0x20;
--		} else if (antenna == 1) {
--			/* RX: Antenna B */
--			/* TX: Antenna A */
-+		} else if (antenna_rx == 1) {	/* RX: Antenna A */
- 			reg_r4 |= 0x01;
- 			if (phymode == MODE_IEEE80211A)
--				reg_r77 |= 0x03;
--			else
- 				reg_r77 &= ~0x03;
-+			else
-+				reg_r77 |= 0x03;
- 			rt2x00_bbp_write(rt2x00dev, 77, reg_r77);
--		} else if (antenna == 2) {
--			/* RX: Antenna A */
--			/* TX: Antenna B */
-+		} else if (antenna_rx == 2) {	/* RX: Antenna B */
- 			reg_r4 |= 0x01;
- 			if (phymode == MODE_IEEE80211A)
--				reg_r77 &= ~0x03;
--			else
- 				reg_r77 |= 0x03;
-+			else
-+				reg_r77 &= ~0x03;
- 			rt2x00_bbp_write(rt2x00dev, 77, reg_r77);
- 		}
- 	} else if (rt2x00_rf(&rt2x00dev->chip, RF2527) ||
- 		   (rt2x00_rf(&rt2x00dev->chip, RF2529) &&
- 		    GET_FLAG(rt2x00dev, CONFIG_DOUBLE_ANTENNA))) {
--		if (antenna == 0) {
--			/* Diversity. */
-+		if (antenna_rx == 0) {		/* Diversity. */
- 			reg_r4 |= 0x22;
- 			reg_r4 &= frame_type;
--		} else if (antenna == 1) {
--			/* RX: Antenna B */
--			/* TX: Antenna A */
-+		} else if (antenna_rx == 1) {	/* RX: Antenna A */
- 			reg_r4 |= 0x21;
- 			reg_r4 &= frame_type;
--			reg_r77 &= ~0x03;
-+			reg_r77 |= 0x03;
- 			rt2x00_bbp_write(rt2x00dev, 77, reg_r77);
--		} else if (antenna == 2) {
--			/* RX: Antenna A */
--			/* TX: Antenna B */
-+		} else if (antenna_rx == 2) {	/* RX: Antenna B */
- 			reg_r4 |= 0x21;
- 			reg_r4 &= frame_type;
--			reg_r77 |= 0x03;
-+			reg_r77 &= ~0x03;
- 			rt2x00_bbp_write(rt2x00dev, 77, reg_r77);
- 		}
- 	}
-@@ -813,7 +803,7 @@ static void rt61pci_config_antenna(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Update active info for RX.
- 	 */
--	rt2x00dev->rx_params.antenna = antenna;
-+	rt2x00dev->rx_params.antenna = antenna_rx;
- }
- 
- static void rt61pci_config_duration(struct rt2x00_dev *rt2x00dev,
-@@ -2632,7 +2622,8 @@ static int rt61pci_config(struct ieee80211_hw *hw,
- 		conf->channel_val, conf->channel, conf->freq,
- 		conf->power_level);
- 	rt61pci_config_txpower(rt2x00dev, conf->power_level);
--	rt61pci_config_antenna(rt2x00dev, conf->antenna_sel, conf->phymode);
-+	rt61pci_config_antenna(rt2x00dev,
-+		conf->antenna_sel_tx, conf->antenna_sel_rx, conf->phymode);
- 	rt61pci_config_duration(rt2x00dev,
- 		(conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME));
- 	rt61pci_config_phymode(rt2x00dev, conf->phymode);
-@@ -3095,12 +3086,11 @@ static int rt61pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 
- 	/*
- 	 * Identify default antenna configuration.
--	 * Ralink devices have have antenna options for both TX as RX.
--	 * The ieee80211 stack currently only provide the user to set
--	 * 1 antenna, by default this is considered to be the TX antenna.
- 	 */
--	rt2x00dev->hw->conf.antenna_sel = rt2x00_get_field16(eeprom,
-+	rt2x00dev->hw->conf.antenna_sel_tx = rt2x00_get_field16(eeprom,
- 		EEPROM_ANTENNA_TX_DEFAULT);
-+	rt2x00dev->hw->conf.antenna_sel_rx = rt2x00_get_field16(eeprom,
-+		EEPROM_ANTENNA_RX_DEFAULT);
- 
- 	/*
- 	 * Read the Frame type.
-diff --git a/drivers/net/wireless/d80211/rt2x00/rt73usb.c b/drivers/net/wireless/d80211/rt2x00/rt73usb.c
-index be66e2f..922b6f0 100644
---- a/drivers/net/wireless/d80211/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/d80211/rt2x00/rt73usb.c
-@@ -586,7 +586,7 @@ static void rt73usb_config_txpower(struct rt2x00_dev *rt2x00dev, int txpower)
- }
- 
- static void rt73usb_config_antenna(struct rt2x00_dev *rt2x00dev,
--	int antenna, int phymode)
-+	int antenna_tx, int antenna_rx, int phymode)
- {
- 	u32 reg;
- 	u8 reg_r3;
-@@ -597,7 +597,7 @@ static void rt73usb_config_antenna(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Only continue when there is something to be done.
- 	 */
--	if (rt2x00dev->rx_params.antenna == antenna)
-+	if (rt2x00dev->rx_params.antenna == antenna_rx)
- 		return;
- 
- 	rt2x00_register_read(rt2x00dev, PHY_CSR0, &reg);
-@@ -660,52 +660,42 @@ static void rt73usb_config_antenna(struct rt2x00_dev *rt2x00dev,
- 
- 	if (rt2x00_rf(&rt2x00dev->chip, RF5226) ||
- 	    rt2x00_rf(&rt2x00dev->chip, RF5225)) {
--		if (antenna == 0) {
--			/* Diversity. */
-+		if (antenna_rx == 0) {		/* Diversity. */
- 			reg_r4 |= 0x02;
- 			if (phymode != MODE_IEEE80211A)
- 				reg_r4 |= 0x20;
- 			reg_r4 &= frame_type;
--		} else if (antenna == 1) {
--			/* RX: Antenna B */
--			/* TX: Antenna A */
-+		} else if (antenna_rx == 1) {	/* RX: Antenna A */
- 			reg_r4 |= 0x01;
- 			reg_r4 &= frame_type;
- 			if (phymode == MODE_IEEE80211A)
--				reg_r77 |= 0x03;
--			else
- 				reg_r77 &= ~0x03;
-+			else
-+				reg_r77 |= 0x03;
- 			rt2x00_bbp_write(rt2x00dev, 77, reg_r77);
--		} else if (antenna == 2) {
--			/* RX: Antenna A */
--			/* TX: Antenna B */
-+		} else if (antenna_rx == 2) {	/* RX: Antenna B */
- 			reg_r4 |= 0x01;
- 			reg_r4 &= frame_type;
- 			if (phymode == MODE_IEEE80211A)
--				reg_r77 &= ~0x03;
--			else
- 				reg_r77 |= 0x03;
-+			else
-+				reg_r77 &= ~0x03;
- 			rt2x00_bbp_write(rt2x00dev, 77, reg_r77);
- 		}
- 	} else if (rt2x00_rf(&rt2x00dev->chip, RF2528) ||
- 		   rt2x00_rf(&rt2x00dev->chip, RF2527)) {
--		if (antenna == 0) {
--			/* Diversity. */
-+		if (antenna_rx == 0) {		/* Diversity. */
- 			reg_r4 |= 0x22;
- 			reg_r4 &= frame_type;
--		} else if (antenna == 1) {
--			/* RX: Antenna B */
--			/* TX: Antenna A */
-+		} else if (antenna_rx == 1) {	/* RX: Antenna A */
- 			reg_r4 |= 0x21;
- 			reg_r4 &= frame_type;
--			reg_r77 &= ~0x03;
-+			reg_r77 |= 0x03;
- 			rt2x00_bbp_write(rt2x00dev, 77, reg_r77);
--		} else if (antenna == 2) {
--			/* RX: Antenna A */
--			/* TX: Antenna B */
-+		} else if (antenna_rx == 2) {	/* RX: Antenna B */
- 			reg_r4 |= 0x21;
- 			reg_r4 &= frame_type;
--			reg_r77 |= 0x03;
-+			reg_r77 &= ~0x03;
- 			rt2x00_bbp_write(rt2x00dev, 77, reg_r77);
- 		}
- 	}
-@@ -716,7 +706,7 @@ static void rt73usb_config_antenna(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Update active info for RX.
- 	 */
--	rt2x00dev->rx_params.antenna = antenna;
-+	rt2x00dev->rx_params.antenna = antenna_rx;
- }
- 
- static void rt73usb_config_duration(struct rt2x00_dev *rt2x00dev,
-@@ -2344,7 +2334,8 @@ static int rt73usb_config(struct ieee80211_hw *hw,
- 		conf->channel_val, conf->channel, conf->freq,
- 		conf->power_level);
- 	rt73usb_config_txpower(rt2x00dev, conf->power_level);
--	rt73usb_config_antenna(rt2x00dev, conf->antenna_sel, conf->phymode);
-+	rt73usb_config_antenna(rt2x00dev,
-+		conf->antenna_sel_tx, conf->antenna_sel_rx, conf->phymode);
- 	rt73usb_config_duration(rt2x00dev,
- 		(conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME));
- 	rt73usb_config_phymode(rt2x00dev, conf->phymode);
-@@ -2770,12 +2761,11 @@ static int rt73usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 
- 	/*
- 	 * Identify default antenna configuration.
--	 * Ralink devices have have antenna options for both TX as RX.
--	 * The ieee80211 stack currently only provide the user to set
--	 * 1 antenna, by default this is considered to be the TX antenna.
- 	 */
--	rt2x00dev->hw->conf.antenna_sel = rt2x00_get_field16(eeprom,
-+	rt2x00dev->hw->conf.antenna_sel_tx = rt2x00_get_field16(eeprom,
- 		EEPROM_ANTENNA_TX_DEFAULT);
-+	rt2x00dev->hw->conf.antenna_sel_rx = rt2x00_get_field16(eeprom,
-+		EEPROM_ANTENNA_RX_DEFAULT);
- 
- 	/*
- 	 * Read the Frame type.
+> Also, it looks like we need a generic macro for aligning sizes.
+
+I hated wrapping my head around it so I just made the padding explicit
+in the struct ;)
+
+johannes
+
+--=-wFRrtwZeoRfZXCKP7yO3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF2USv/ETPhpq3jKURAvAJAJ0e2UGn3WTU4awold0zUEMmo0wRMACgliOQ
+Il6yNkp7PqFxz5Fu9iORi4g=
+=+y41
+-----END PGP SIGNATURE-----
+
+--=-wFRrtwZeoRfZXCKP7yO3--
+
