@@ -1,92 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:51710 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1423292AbXBHTss (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Feb 2007 14:48:48 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Jiri Benc <jbenc@suse.cz>
-Subject: [PATCH] d80211: fix authentication issues
-Date: Thu, 8 Feb 2007 14:48:15 -0500
+Received: from styx.suse.cz ([82.119.242.94]:54735 "EHLO silver.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S965119AbXBSWj0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Feb 2007 17:39:26 -0500
+From: Jiri Benc <jbenc@suse.cz>
+To: "John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20070219233919.221549000.midnight@suse.cz>
 Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2847179.fGS6o7AlEG";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200702081448.19664.flamingice@sourmilk.net>
+Subject: [PATCH 10/12] d80211: Fix skb panic during passive scan
+Message-Id: <20070219223956.30F10484B1@silver.suse.cz>
+Date: Mon, 19 Feb 2007 23:39:56 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2847179.fGS6o7AlEG
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+From: Ivo van Doorn <ivdoorn@gmail.com>
 
-d80211: fix authentication issues
+Only add the extra_tx_headroom to the len when allocating
+the sk_buff. This will prevent using an invalid length for skb_put
+which would cause a skb panic inside the driver.
 
-This patch prevents the MLME in d80211 from getting stuck when there is no
-reply to authentication frames. It also allows the bssid to be correctly
-set during IEEE80211_AUTHENTICATE.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-=2D--
+---
 
- net/d80211/ieee80211_sta.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ net/d80211/ieee80211_scan.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/net/d80211/ieee80211_sta.c b/net/d80211/ieee80211_sta.c
-index feba62b..64dbc79 100644
-=2D-- a/net/d80211/ieee80211_sta.c
-+++ b/net/d80211/ieee80211_sta.c
-@@ -453,6 +453,7 @@ static void ieee80211_authenticate(struc
- 		printk(KERN_DEBUG "%s: authentication with AP " MAC_FMT
- 		       " timed out\n",
- 		       dev->name, MAC_ARG(ifsta->bssid));
-+		ifsta->state =3D IEEE80211_DISABLED;
- 		return;
- 	}
-=20
-@@ -668,6 +669,7 @@ static void ieee80211_associate(struct n
- 		printk(KERN_DEBUG "%s: association with AP " MAC_FMT
- 		       " timed out\n",
- 		       dev->name, MAC_ARG(ifsta->bssid));
-+		ifsta->state =3D IEEE80211_DISABLED;
- 		return;
- 	}
-=20
-@@ -677,6 +679,7 @@ static void ieee80211_associate(struct n
- 	if (ieee80211_privacy_mismatch(dev, ifsta)) {
- 		printk(KERN_DEBUG "%s: mismatch in privacy configuration and "
- 		       "mixed-cell disabled - abort association\n", dev->name);
-+		ifsta->state =3D IEEE80211_DISABLED;
- 		return;
- 	}
-=20
-@@ -2355,7 +2358,7 @@ int ieee80211_sta_set_bssid(struct net_d
- 		ifsta->bssid_set =3D 0;
- 	else
- 		ifsta->bssid_set =3D 1;
-=2D	if (ifsta->ssid_set && ifsta->state !=3D IEEE80211_AUTHENTICATE)
-+	if (ifsta->ssid_set)
- 		ieee80211_sta_new_auth(dev, ifsta);
-=20
- 	return 0;
+27cfdcaec0ff523ce5a09915f76e36348753c9e2
+diff --git a/net/d80211/ieee80211_scan.c b/net/d80211/ieee80211_scan.c
+index 263de0d..1d77155 100644
+--- a/net/d80211/ieee80211_scan.c
++++ b/net/d80211/ieee80211_scan.c
+@@ -280,7 +280,7 @@ void ieee80211_init_scan(struct ieee8021
+ {
+ 	struct ieee80211_hdr hdr;
+ 	u16 fc;
+-	int len = 10 + local->hw.extra_tx_headroom;
++	int len = 10;
+ 	struct rate_control_extra extra;
+ 
+ 	/* Only initialize passive scanning if the hardware supports it */
+@@ -303,7 +303,8 @@ void ieee80211_init_scan(struct ieee8021
+ 
+ 	/* Create a CTS from for broadcasting before
+ 	 * the low level changes channels */
+-	local->scan.skb = alloc_skb(len, GFP_KERNEL);
++	local->scan.skb = alloc_skb(len + local->hw.extra_tx_headroom,
++		GFP_KERNEL);
+ 	if (!local->scan.skb) {
+ 		printk(KERN_WARNING "%s: Failed to allocate CTS packet for "
+ 		       "passive scan\n", local->mdev->name);
+-- 
+1.3.0
 
---nextPart2847179.fGS6o7AlEG
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBFy36DT3Oqt9AH4aERAhd3AKCd3Tlm/cUmrjmNfm7H3vDVoq2TBgCfTylE
-tl+tgcHWSCcjOhH68jWHzhA=
-=bb+9
------END PGP SIGNATURE-----
-
---nextPart2847179.fGS6o7AlEG--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
