@@ -1,75 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:60329 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423224AbXBIVMv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Feb 2007 16:12:51 -0500
-Message-ID: <45CCE3D1.3030303@garzik.org>
-Date: Fri, 09 Feb 2007 16:12:49 -0500
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Please pull "upstream" branch of wireless-2.6
-References: <20070202212747.GC9382@tuxdriver.com> <45C917EF.1060307@garzik.org> <20070207211117.GC6109@tuxdriver.com> <20070209201306.GA2580@tuxdriver.com>
-In-Reply-To: <20070209201306.GA2580@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46533 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932761AbXBSWgt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Feb 2007 17:36:49 -0500
+Subject: Re: Kernel bug in bcm43xx-d80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Alex Davis <alex14641@yahoo.com>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1171924247.2257.31.camel@dv>
+References: <358127.50930.qm@web50203.mail.yahoo.com>
+	 <1171923128.15489.35.camel@johannes.berg>  <1171924247.2257.31.camel@dv>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0YZSRJX46jYwjsc6Il3C"
+Date: Mon, 19 Feb 2007 23:36:38 +0100
+Message-Id: <1171924599.15489.41.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Wed, Feb 07, 2007 at 04:11:17PM -0500, John W. Linville wrote:
->> On Tue, Feb 06, 2007 at 07:06:07PM -0500, Jeff Garzik wrote:
->>> Would you mind rebasing & resending, kind sir?
->> By your command! :-)
-> 
-> And once more, now with feeling! :-)
-> 
-> ---
-> 
-> The following changes since commit 62d0cfcb27cf755cebdc93ca95dabc83608007cd:
->   Linus Torvalds (1):
->         Linux 2.6.20
-> 
-> are found in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream
-> 
-> Daniel Drake (1):
->       zd1211rw: Remove noisy debug message
-> 
-> Larry Finger (5):
->       bcm43xx: Fix problem with >1 GB RAM
->       bcm43xx: Fix scaling error for 'iwlist rate' information
->       bcm43xx: Fix scaling error for 'iwlist freq' information
->       bcm43xx: Check error returns in initialization routines
->       ieee80211: Fix sparse warning
-> 
-> Maxime Austruy (1):
->       zd1211rw: fix potential leak in usb_init
-> 
-> Michael Buesch (1):
->       bcm43xx: Enable fwpostfix in nondebug bcm43xx
-> 
-> Robert P. J. Day (2):
->       Rename IPW2100 debugging macros to not look like config options.
->       Replace incorrect macro name "WIRELESS_EXT" with "CONFIG_WIRELESS_EXT"
-> 
-> Ulrich Kunitz (3):
->       zd1211rw: Reset device in the probe call
->       zd1211rw: Fixed array size issue in reset_mode
->       zd1211rw: Added error stats update
-> 
->  drivers/net/wireless/bcm43xx/bcm43xx.h      |    1 +
->  drivers/net/wireless/bcm43xx/bcm43xx_dma.c  |  171 +++++++++++++++++++--------
->  drivers/net/wireless/bcm43xx/bcm43xx_main.c |   25 +++--
->  drivers/net/wireless/bcm43xx/bcm43xx_wx.c   |   28 ++--
->  drivers/net/wireless/ipw2100.c              |   16 ++--
->  drivers/net/wireless/zd1211rw/zd_mac.c      |   44 ++++++--
->  drivers/net/wireless/zd1211rw/zd_usb.c      |   12 ++
->  net/core/net-sysfs.c                        |    4 +-
->  net/ieee80211/ieee80211_tx.c                |    3 -
->  9 files changed, 210 insertions(+), 94 deletions(-)
 
-pulled, thanks
+--=-0YZSRJX46jYwjsc6Il3C
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, 2007-02-19 at 17:30 -0500, Pavel Roskin wrote:
+
+> Johannes, would it be possible to commit patches faster, please?  Now
+> that I told Michael about git-update-server-info, his changes are
+> downloadable as soon as he makes a commit.  wireless-dev.git, on the
+> other hand, is a mess and has been for some time (since Friday, I
+> believe).
+
+I don't commit to wireless-dev, John does. I'd love if the patches were
+in already ;) And I think he even said he had committed them but they
+didn't show up so something must have gone wrong (forgot to push out to
+kernel.org maybe)
+
+johannes
+
+--=-0YZSRJX46jYwjsc6Il3C
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF2iZ2/ETPhpq3jKURAr/mAJ4t/41WD2wCYyZ+DUeT5omoxPd1BwCgocPm
+t4HvCFkWP1sALsnVj49g7PU=
+=5ZdZ
+-----END PGP SIGNATURE-----
+
+--=-0YZSRJX46jYwjsc6Il3C--
 
