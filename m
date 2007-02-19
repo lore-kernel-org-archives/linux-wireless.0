@@ -1,48 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.uludag.org.tr ([193.140.100.220]:52169 "EHLO uludag.org.tr"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750850AbXBMQ5B convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58153 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932241AbXBSNfT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Feb 2007 11:57:01 -0500
-From: Ismail =?iso-8859-1?q?D=F6nmez?= <ismail@pardus.org.tr>
-To: "Jeff Chua" <jeff.chua.linux@gmail.com>
-Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
-Date: Tue, 13 Feb 2007 18:57:01 +0200
-Cc: "James Ketrenos" <jketreno@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
-References: <45CCE3CA.4050904@linux.intel.com> <200702131558.48987.ismail@pardus.org.tr> <b6a2187b0702130710s217281c4k5ed227995c09c878@mail.gmail.com>
-In-Reply-To: <b6a2187b0702130710s217281c4k5ed227995c09c878@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200702131857.02369.ismail@pardus.org.tr>
+	Mon, 19 Feb 2007 08:35:19 -0500
+Received: from [84.135.240.62] (helo=johannes.berg)
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.63)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1HJ8bz-0008Hp-NJ
+	for linux-wireless@vger.kernel.org; Mon, 19 Feb 2007 13:31:24 +0000
+Subject: FYI: current kernel-doc warnings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8DFNj0GubZa1FABb54BM"
+Date: Mon, 19 Feb 2007 14:35:11 +0100
+Message-Id: <1171892111.3471.12.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 13 February 2007 17:10:24 Jeff Chua wrote:
-> On 2/13/07, Ismail D=F6nmez <ismail@pardus.org.tr> wrote:
-> > Tried this is on a patched 2.6.20 kernel with ipw3945 device and it
-> > always puts the card in 802.11a mode instead of 802.11bg mode.
-> >
-> > Ideas?
->
-> Before running  "iwconfig wlan0 channel 8",  the card is set to
-> 802.11a mode. iwconfig shows rate at 54Mb/s. But after setting the
-> channel, it sets to 802.11b mode, and I can't find a way to change
-> from 11Mb/s to 54MB/s.
->
-> "iwlist eth0 rate" only show up to 11Mb/s.
->
-> So, my problem is the card is always in 802.11b mode.
 
-So I guess there is a common problem with a/bg modes?
+--=-8DFNj0GubZa1FABb54BM
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Regards,
-ismail
+Just in case someone is idling and needs something to do, here's the
+current list of kernel-doc warnings in d80211.
 
+The list is also on
+http://linuxwireless.org/en/developers/d80211/kerneldoc/warnings which
+is updated daily from the current wireless-dev tree.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'channel'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'freq'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'channel_val'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'phymode'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'regulatory_domain'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'beacon_int'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'flags'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'power_level'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'antenna_max'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'tx_power_reduction'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'antenna_sel'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'antenna_def'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'antenna_mode'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'radar_detect'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'spect_mgmt'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'quiet_duration'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'quiet_offset'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'quiet_period'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'radar_firpwr_threshold'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'radar_rssi_threshold'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'pulse_height_threshold'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'pulse_rssi_threshold'
+Warning(wireless-dev/include/net/d80211.h:311): No description found for pa=
+rameter 'pulse_inband_threshold'
+
+johannes
+
+--=-8DFNj0GubZa1FABb54BM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF2aeP/ETPhpq3jKURAlSAAKChP5lEGE3oBLlBpBjgu+J6ogEeuwCfYN+e
+4gXLG1+PX5Qa5wJGyRwQvAE=
+=XbP+
+-----END PGP SIGNATURE-----
+
+--=-8DFNj0GubZa1FABb54BM--
+
