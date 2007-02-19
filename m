@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:48611 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932414AbXB1OHL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 09:07:11 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so562551nfa
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 06:07:10 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 0/28] rt2x00:
-Date: Wed, 28 Feb 2007 15:07:04 +0100
+Received: from styx.suse.cz ([82.119.242.94]:32962 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932489AbXBSTIa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Feb 2007 14:08:30 -0500
+Date: Mon, 19 Feb 2007 20:08:27 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Michael Wu <flamingice@sourmilk.net>
 Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200702281507.04933.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH] d80211: Support automatic channel/BSSID/SSID  configuration
+Message-ID: <20070219200827.35172cbd@griffin.suse.cz>
+In-Reply-To: <200702161547.09806.flamingice@sourmilk.net>
+References: <200702110326.21623.flamingice@sourmilk.net>
+	<20070216181555.71c440bd@griffin.suse.cz>
+	<200702161547.09806.flamingice@sourmilk.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Fri, 16 Feb 2007 15:47:05 -0500, Michael Wu wrote:
+> --- a/net/d80211/ieee80211_sta.c
+> +++ b/net/d80211/ieee80211_sta.c
+> [...]
+> +static int ieee80211_sta_config_auth(struct net_device *dev,
+> +				     struct ieee80211_if_sta *ifsta)
+> +{
+> [...]
+> +
+> +		if (top_rssi < bss->rssi)
+> +			selected = bss;
+> +
+> +		top_rssi = bss->rssi;
 
-Here is the patch series to bring rt2x00 up to date.
-The main features this series presents are:
-	- debugfs support (reading/writing registers)
-	- rt2x00lib (Move generic code to a seperate module)
-	- sparse fixes
+if (top_rssi < bss->rssi) {
+	select = bss;
+	top_rssi = bss->rssi;
+}
+?
 
-This series also fixes countless of bugs, although several new
-ones have been introduced. All rt2x00 drivers should now
-be far better at supporting master mode. Alhtough rt73usb is
-no longer capable of receiving any data.
+Thanks,
 
-Sparse is not completely silent about rt2x00, except for the
-rt2x00debug module. sparse simply gives a warning about
-unnamed initializors in the file_operation structures and then
-simply crashes. I have been unable to see what the exact cause
-of the problem is.
+ Jiri
 
-For this patch series I have been experimenting with git/cogito a bit,
-so perhaps next patch series will be a git pull request instead of 30 mails. ;)
-
-Ivo
+-- 
+Jiri Benc
+SUSE Labs
