@@ -1,36 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:60569
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946134AbXBIF6O (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:48358 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752686AbXBSBoP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Feb 2007 00:58:14 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH #2] d80211: Add API to generate RTS and CTS-to-self frames
-Date: Fri, 9 Feb 2007 06:57:42 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <jkmaline@cc.hut.fi>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <200702051726.09556.mb@bu3sch.de> <20070208204447.74fbd37a@griffin.suse.cz>
-In-Reply-To: <20070208204447.74fbd37a@griffin.suse.cz>
+	Sun, 18 Feb 2007 20:44:15 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HIxYH-0006C6-S4
+	for linux-wireless@vger.kernel.org; Sun, 18 Feb 2007 20:42:49 -0500
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH] Use offsetof() instead of own equivalent
+To: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+Date: Sun, 18 Feb 2007 20:44:06 -0500
+Message-ID: <20070219014406.8677.62357.stgit@dl.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702090657.43682.mb@bu3sch.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 08 February 2007 20:44, Jiri Benc wrote:
-> On Mon, 5 Feb 2007 17:26:09 +0100, Michael Buesch wrote:
-> > This adds API calls to generate RTS and CTS-to-self frames.
-> > To be called if the device firmware requires the host to
-> > generate RTS/CTS frames.
-> 
-> Applied to my tree, thanks for the patch.
+The original macros result in gcc 4.2 warning about "cast from pointer
+to integer of different size" on 64-bit systems.
 
-Did you also apply rt2x00 and bcm43xx followup patches?
-Please note that rt2x00 is broken, if you apply this API change and leave the
-rt2x00 RTS fix out.
+Use of offsetof() on fields in substructures is widespread throughout
+the kernel code and should work whether offsetof() is defined using
+__compiler_offsetof() or a cast.
 
-You don't necessarily need to apply that bcm43xx RTS patch. I can do it, too.
-In fact, it needs another bugfix to not crash. :) I think I already sent that fix to John.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+
+ drivers/net/wireless/hostap/hostap_common.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/hostap/hostap_common.h b/drivers/net/wireless/hostap/hostap_common.h
+index 0162400..b31e6a0 100644
+--- a/drivers/net/wireless/hostap/hostap_common.h
++++ b/drivers/net/wireless/hostap/hostap_common.h
+@@ -368,9 +368,9 @@ enum {
+ 
+ #define PRISM2_HOSTAPD_MAX_BUF_SIZE 1024
+ #define PRISM2_HOSTAPD_RID_HDR_LEN \
+-((int) (&((struct prism2_hostapd_param *) 0)->u.rid.data))
++offsetof(struct prism2_hostapd_param, u.rid.data)
+ #define PRISM2_HOSTAPD_GENERIC_ELEMENT_HDR_LEN \
+-((int) (&((struct prism2_hostapd_param *) 0)->u.generic_elem.data))
++offsetof(struct prism2_hostapd_param, u.generic_elem.data)
+ 
+ /* Maximum length for algorithm names (-1 for nul termination) used in ioctl()
+  */
+
