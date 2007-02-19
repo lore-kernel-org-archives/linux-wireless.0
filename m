@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49717 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932629AbXBSUzd (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:35634 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932609AbXBSVJD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 15:55:33 -0500
-Subject: Re: [PATCH 03/10] introduce wiphy concept
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <20070219213716.183719c9@griffin.suse.cz>
-References: <20070215144241.847938000@sipsolutions.net>
-	 <20070215144257.530315000@sipsolutions.net>
-	 <20070219213716.183719c9@griffin.suse.cz>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-trdZTRgnpqs5ppv30nwX"
-Date: Mon, 19 Feb 2007 21:55:17 +0100
-Message-Id: <1171918517.15489.12.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 19 Feb 2007 16:09:03 -0500
+Message-ID: <45DA11DE.4050600@lwfinger.net>
+Date: Mon, 19 Feb 2007 15:08:46 -0600
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Gene Heskett <gene.heskett@verizon.net>
+CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: bcm43xx: Ad-Hoc (IBSS) works fine
+References: <200702191946.52440.mb@bu3sch.de> <200702191548.14982.gene.heskett@verizon.net>
+In-Reply-To: <200702191548.14982.gene.heskett@verizon.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Gene Heskett wrote:
+> On Monday 19 February 2007, Michael Buesch wrote:
+>> I just want to mention that Ad-Hoc works fine
+>> with the bcm43xx-d80211 driver in my tree.
+>> I didn't have to do any code changes, but simply try it once. ;)
+>>
+>> So, well. As the question has been asked several times
+>> if adhoc is supported, here is the answer: Yes it is.
+> 
+> Where might I find a decent, plain english, description of these 
+> various 'modes', Micheal?  I have relatively little experience in 802-11 
+> stuff and could use a tutorial explaining the lingo.
+> 
 
---=-trdZTRgnpqs5ppv30nwX
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+http://en.wikipedia.org/wiki/Wireless_ad-hoc_network
 
-On Mon, 2007-02-19 at 21:37 +0100, Jiri Benc wrote:
-
-> Currently, you need to distinguish whether some random net_device is
-> wireless device or not at some places. At least d80211 needs that (yes,
-> ifindex doesn't wrap often, so those are just safety checks, but - well
-> - I'd like to be safe).
->=20
-> How can this be effectively achieved if ieee80211_ptr is dropped?
-
-Not easily at all. Just thoughts anyway :)
-
-johannes
-
---=-trdZTRgnpqs5ppv30nwX
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF2g61/ETPhpq3jKURAmJRAJ4z3oTlpaGeXeniSc292HmIWEio0wCfdzfs
-z+H988nI0Twkl6BPk969I4Q=
-=MsT5
------END PGP SIGNATURE-----
-
---=-trdZTRgnpqs5ppv30nwX--
+Larry
 
