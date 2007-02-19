@@ -1,38 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33309
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422740AbXBAT6K (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:64125 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932272AbXBSOL7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Feb 2007 14:58:10 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: Anyone have notes from Wireless Summit?
-Date: Thu, 1 Feb 2007 20:56:34 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <20070131.155116.62344146.davem@davemloft.net> <200702012020.49394.mb@bu3sch.de> <45C243B1.1000009@lwfinger.net>
-In-Reply-To: <45C243B1.1000009@lwfinger.net>
+	Mon, 19 Feb 2007 09:11:59 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so2432708nfa
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Feb 2007 06:11:58 -0800 (PST)
+Message-ID: <a32f33a40702190611k539b6974ka739fc31c8dab00e@mail.gmail.com>
+Date: Mon, 19 Feb 2007 15:11:57 +0100
+From: "Ivo Van Doorn" <ivdoorn@gmail.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: [PATCH] rt2x00: fix memory corruption caused by eeprom buffer overflow
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+In-Reply-To: <1171893099.8550.23.camel@dv>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200702012056.34612.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <20070219024654.3480.9392.stgit@dl.roinet.com>
+	 <a32f33a40702190307x2861b654s6233a6b9858e8233@mail.gmail.com>
+	 <1171893099.8550.23.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 01 February 2007 20:46, Larry Finger wrote:
-> > But I wonder, why Denise is wearing a big jacket and you
-> > are standing in shorts and tshirt there?? That confuses me. :)
-> 
-> What can I say? I grew up in Minnesota and the cold winters of my childhood made me tough. ;) Of
-> course, Denise also lived in Minnesota, but I guess she's softer. That's good.
+Hi,
 
-:)
+> Shame on me.  I wrote a patch that worked on rt61, and then I discarded
+> it to make a "clean" fix for all drivers.
+>
+> But anyway, I'm seeing now that CVS on sourceforge.net is not abandoned,
+> so I think the best approach would be to integrate it into the kernel.
+> It would be great if you remove dead code from CVS, all those
+> "experimental" branches that haven't been touched for months if not
+> years.  It was hard for me to find the actual sources.  I would have
+> spent last Sunday evening doing something more interesting than fixing
+> fixed bugs :)
 
-> > But the mail did not go to the list. I think there is a 100k limit.
-> > If you want, I can upload it to my server to show it to the list members.
-> 
-> If you would, I would appreciate it.
+True true, everything useful is in the "source" module of the CVS tree.
+Along with the legacy drivers for each chipset.
+I thought the other older tree was already removed... :(
 
-http://bu3sch.de/misc/larry.jpg
+> Finally, I'll appreciate if the driver is fixed to compile against
+> wireless-dev kernels.  You can take an approach similar to iwlwifi and
+> even rely on the same d80211 package.
 
--- 
-Greetings Michael.
+Well the d80211 stack inside rt2x00 is slightly modified to contain
+compatibility
+fixes for regular kernels. That way regular users can test rt2x00,
+which is extremely helpful.
+Other than that the stack also contains small patches that are in
+testing and I am sending
+to the wireless list when it is stable. At this moment I have for
+example the sequence
+counter patch that is currently under discussion on this list, as well
+as the currently
+antenna patch that will split antenna_sel into a RX and TX antenna selection.
+
+Ivo
