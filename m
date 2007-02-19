@@ -1,68 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:24359 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932993AbXBET41 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33541
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932652AbXBSUyE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Feb 2007 14:56:27 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC PATCH 1/3] cfg80211 and nl80211
-Date: Mon, 5 Feb 2007 14:55:55 -0500
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <20070131013717.GA28076@tuxdriver.com> <200702051423.13998.flamingice@sourmilk.net> <1170703485.3572.43.camel@johannes.berg>
-In-Reply-To: <1170703485.3572.43.camel@johannes.berg>
+	Mon, 19 Feb 2007 15:54:04 -0500
+Received: from p85.212.15.41.tisdip.tiscali.de ([85.212.15.41] helo=[192.168.2.10])
+	by vs166246.vserver.de with esmtpa (Exim 4.50)
+	id 1HJFWS-00012Z-Ta
+	for linux-wireless@vger.kernel.org; Mon, 19 Feb 2007 21:54:09 +0100
+From: Michael Buesch <mb@bu3sch.de>
+To: linux-wireless@vger.kernel.org
+Subject: What about dadwifi and openhal?
+Date: Mon, 19 Feb 2007 21:53:19 +0100
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2453089.ssXtxff1Uj";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200702051455.59331.flamingice@sourmilk.net>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200702192153.19458.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2453089.ssXtxff1Uj
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+There were biiig discussions about dadwifi and openhal
+a few weeks ago. About merging them and about inclusion
+in wireless-dev.
 
-On Monday 05 February 2007 14:24, Johannes Berg wrote:
-> On Mon, 2007-02-05 at 14:23 -0500, Michael Wu wrote:
-> > Anyway, netlink does not seem appropriate for
-> > sending or receiving frames.
->
-> Care to explain why you think so?
->
-1. Userspace usually expects to send things on network interfaces. The kern=
-el=20
-usually receives frames from userspace on network interfaces. I don't see t=
-he=20
-point of making an exception for 802.11 frames. (or rather, the potential f=
-or=20
-simpler frame injection code is not enough to justify inventing a new=20
-interface for doing it)
-2. nl80211/cfg80211 is for configuring interfaces. Everything there is rela=
-ted=20
-to configuration of wireless interfaces except for the frame injection hook=
-=2E=20
-It doesn't look right.
+Is something actually happening?
+Is openhal being ported to dadwifi?
+Who is working on it?
+Can I help?
 
-=2DMichael Wu
-
---nextPart2453089.ssXtxff1Uj
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBFx4vPT3Oqt9AH4aERAjcvAJ9S9C66Q+D/1E28sFy+fxYCK+zbSACgj+pm
-4THXhObZ/GXI32+p+3S07vM=
-=5oO2
------END PGP SIGNATURE-----
-
---nextPart2453089.ssXtxff1Uj--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Greetings Michael.
