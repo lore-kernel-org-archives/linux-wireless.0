@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:46434 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965455AbXBMBJS (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49717 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932629AbXBSUzd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Feb 2007 20:09:18 -0500
-Received: by py-out-1112.google.com with SMTP id a29so940407pyi
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Feb 2007 17:09:17 -0800 (PST)
-Message-ID: <1ba2fa240702121709s3833aa9ajb50ed0b4fb5ce0c3@mail.gmail.com>
-Date: Tue, 13 Feb 2007 03:09:17 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: d80211: current TKIP hwcrypto implementation seems to be broken
-Cc: "Jouni Malinen" <jkm@devicescape.com>, "Jiri Benc" <jbenc@suse.cz>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200702130133.11690.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <200702041344.19117.mb@bu3sch.de> <200702130110.02658.mb@bu3sch.de>
-	 <1ba2fa240702121619x259f546dga2bebefbe24bf1d3@mail.gmail.com>
-	 <200702130133.11690.mb@bu3sch.de>
+	Mon, 19 Feb 2007 15:55:33 -0500
+Subject: Re: [PATCH 03/10] introduce wiphy concept
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <20070219213716.183719c9@griffin.suse.cz>
+References: <20070215144241.847938000@sipsolutions.net>
+	 <20070215144257.530315000@sipsolutions.net>
+	 <20070219213716.183719c9@griffin.suse.cz>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-trdZTRgnpqs5ppv30nwX"
+Date: Mon, 19 Feb 2007 21:55:17 +0100
+Message-Id: <1171918517.15489.12.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/13/07, Michael Buesch <mb@bu3sch.de> wrote:
-> On Tuesday 13 February 2007 01:19, Tomas Winkler wrote:
-> > > HW doesn't scramble it. So when d80211 receives the packet it can
-> > > _then_ generate the key. There's no point in precomputing it.
-> >
-> > For past packets you've already computed it so why do  it again? So
-> > you keep 2 phas1 keys one old and one current. When sequence numbers
-> > advance sufficiently you discard the old one and compute the new one
-> > in a spare time. Something like double buffer.
->
-> Ah, now I see. We are talking about two different things.
-> You are talking about the TX key and I am talking about
-> the RX key. We could probably cache the TX key to avoid the
-> key computation on every TX. That's right. But I don't even have
-> it working, yet, so optimization is not my worry, yet. :)
-> But yes, that could be an optimization to be done.
 
-No RX. phase1 is not computed on every packet, phase2 is but this is
-usually done be HW.
-> --
-> Greetings Michael.
->
+--=-trdZTRgnpqs5ppv30nwX
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2007-02-19 at 21:37 +0100, Jiri Benc wrote:
+
+> Currently, you need to distinguish whether some random net_device is
+> wireless device or not at some places. At least d80211 needs that (yes,
+> ifindex doesn't wrap often, so those are just safety checks, but - well
+> - I'd like to be safe).
+>=20
+> How can this be effectively achieved if ieee80211_ptr is dropped?
+
+Not easily at all. Just thoughts anyway :)
+
+johannes
+
+--=-trdZTRgnpqs5ppv30nwX
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF2g61/ETPhpq3jKURAmJRAJ4z3oTlpaGeXeniSc292HmIWEio0wCfdzfs
+z+H988nI0Twkl6BPk969I4Q=
+=MsT5
+-----END PGP SIGNATURE-----
+
+--=-trdZTRgnpqs5ppv30nwX--
+
