@@ -1,35 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:39233 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965696AbXBTAYA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 19:24:00 -0500
-Date: Tue, 20 Feb 2007 01:23:53 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Alex Davis <alex14641@yahoo.com>, Pavel Roskin <proski@gnu.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Kernel bug in bcm43xx-d80211
-Message-ID: <20070220012353.091f1fd8@logostar.upir.cz>
-In-Reply-To: <1171930456.15489.71.camel@johannes.berg>
-References: <508755.46267.qm@web50206.mail.yahoo.com>
-	<1171930124.15489.68.camel@johannes.berg>
-	<1171930456.15489.71.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:40132
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932487AbXBSSrf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Feb 2007 13:47:35 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: bcm43xx: Ad-Hoc (IBSS) works fine
+Date: Mon, 19 Feb 2007 19:46:52 +0100
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200702191946.52440.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 20 Feb 2007 01:14:16 +0100, Johannes Berg wrote:
-> > actually, get Jiri's
-> > (http://www.kernel.org/git/linux/kernel/git/jbenc/dscape.git), he's just
-> > committed the fixes.
-> 
-> Well I thought so, but apparently it isn't there yet...
+I just want to mention that Ad-Hoc works fine
+with the bcm43xx-d80211 driver in my tree.
+I didn't have to do any code changes, but simply try it once. ;)
 
-You need to pull the 'up' branch :-)
-
- Jiri
+So, well. As the question has been asked several times
+if adhoc is supported, here is the answer: Yes it is.
 
 -- 
-Jiri Benc
-SUSE Labs
+Greetings Michael.
