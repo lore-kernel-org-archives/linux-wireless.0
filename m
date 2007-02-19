@@ -1,238 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:40250 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751136AbXBUGXz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Feb 2007 01:23:55 -0500
-Message-ID: <45DBE559.8080903@osdl.org>
-Date: Tue, 20 Feb 2007 22:23:21 -0800
-From: Stephen Hemminger <shemminger@osdl.org>
+Received: from fencepost.gnu.org ([199.232.76.164]:44629 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752744AbXBSCq5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Feb 2007 21:46:57 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HIyWw-0007B3-PK
+	for linux-wireless@vger.kernel.org; Sun, 18 Feb 2007 21:45:30 -0500
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH] rt2x00: fix memory corruption caused by eeprom buffer overflow
+To: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+Date: Sun, 18 Feb 2007 21:46:54 -0500
+Message-ID: <20070219024654.3480.9392.stgit@dl.roinet.com>
 MIME-Version: 1.0
-To: Pavel Machek <pavel@ucw.cz>
-CC: James Ketrenos <jketreno@linux.intel.com>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: iwlwifi warnings
-References: <45CCE3CA.4050904@linux.intel.com> <20070213181313.GA5350@ucw.cz> <45D254C6.7050401@linux.intel.com> <20070219224432.GD21199@elf.ucw.cz>
-In-Reply-To: <20070219224432.GD21199@elf.ucw.cz>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BUilding with sparse shows lots of warnings.
+eeprom_93cx6_multiread() expects the last argument to be the buffer
+length in words, but kzalloc() expects the length in bytes.  This
+results in dangerous kernel memory corruption.
 
+Since there are already occurrences of "EEPROM_SIZE * sizeof(u16)" in
+the driver, I'm assuming that EEPROM_SIZE is in words, so the driver
+needs to allocate more memory.
 
-$ make C=3D1
-Checking kernel compatibility in:
-    /lib/modules/2.6.20.1/source
- * Kernel supports required features for 'tip' version.
-Building compatibility version in 'compatible/' directory:
-Copying compatible/ from origin/...done
-make -C /lib/modules/2.6.20.1/build M=3D/home/shemminger/src/iwlwifi-0.=
-0.8=20
-modules
-make[1]: Entering directory `/home/shemminger/kernel/linux-2.6.20.1'
-  CHECK   /home/shemminger/src/iwlwifi-0.0.8/compatible/base.c
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:11115:12: warning:=
-=20
-function 'ipw_rate_scale_clear_window' with external linkage has defini=
-tion
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:11352:12: warning:=
-=20
-function 'ipw_collect_tx_data' with external linkage has definition
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:11480:12: warning:=
-=20
-function 'ipw_convert_to_rate_index' with external linkage has definiti=
-on
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:11665:12: warning:=
-=20
-function 'ipw_convert_to_phy_index' with external linkage has definitio=
-n
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:11677:30: warning:=
-=20
-function 'ipw_get_lowest_rate' with external linkage has definition
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:11692:12: warning:=
-=20
-function 'ipw_get_adjacent_rate' with external linkage has definition
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:1522:11: warning:=20
-Using plain integer as NULL pointer
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:10004:16: warning:=
-=20
-Using plain integer as NULL pointer
-  CC [M]  /home/shemminger/src/iwlwifi-0.0.8/compatible/base.o
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c: In function=20
-=1B$-1=F2=F8ipw_rx_handle=F2=F9:
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:8175: warning:=20
-unused variable =1B$-1=F2=F8sleep=F2=F9
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:8195: warning:=20
-unused variable =1B$-1=F2=F8beacon=F2=F9
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:8227: warning:=20
-unused variable =1B$-1=F2=F8notif=F2=F9
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:8259: warning:=20
-unused variable =1B$-1=F2=F8notif=F2=F9
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c: At top level:
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:3889: warning:=20
-=1B$-1=F2=F8ipw_set_rxon_conf=F2=F9 defined but not used
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:2523: warning:=20
-=1B$-1=F2=F8ipw_rate_ieee2index=F2=F9 defined but not used
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:2577: warning:=20
-=1B$-1=F2=F8ipw_check_rx_config_cmd=F2=F9 defined but not used
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:3628: warning:=20
-=1B$-1=F2=F8ipw_setup_rxon_timing=F2=F9 defined but not used
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:6931: warning:=20
-=1B$-1=F2=F8ipw_send_qos_params_command=F2=F9 defined but not used
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:7964: warning:=20
-=1B$-1=F2=F8get_tx_fail_reason=F2=F9 defined but not used
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:8637: warning:=20
-=1B$-1=F2=F8ipw_get_rate_by_rssi=F2=F9 defined but not used
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:10371: warning:=20
-=1B$-1=F2=F8d_hw_scan=F2=F9 defined but not used
-  LD [M]  /home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.o
-  Building modules, stage 2.
-  MODPOST 1 modules
-WARNING: "ieee80211_rx_irqsafe"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_register_hwmode"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_unregister_hw"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_scan_completed"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_get_hdrlen"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_tx_status"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "sta_info_get"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_rate_control_register"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_netif_oper"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_tx_status_irqsafe"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_get_hdrlen_from_skb"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_rate_control_unregister"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_register_hw"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_alloc_hw"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_free_hw"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "sta_info_put"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-  CC      /home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.mod.o8$=
-=20
-make C=3D1
-Checking kernel compatibility in:
-    /lib/modules/2.6.20.1/source
- * Kernel supports required features for 'tip' version.
-Building compatibility version in 'compatible/' directory:
-Copying compatible/ from origin/...done
-make -C /lib/modules/2.6.20.1/build M=3D/home/shemminger/src/iwlwifi-0.=
-0.8=20
-modules
-make[1]: Entering directory `/home/shemminger/kernel/linux-2.6.20.1'
-  CHECK   /home/shemminger/src/iwlwifi-0.0.8/compatible/base.c
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:11115:12: warning:=
-=20
-function 'ipw_rate_scale_clear_window' with external linkage has defini=
-tion
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:11352:12: warning:=
-=20
-function 'ipw_collect_tx_data' with external linkage has definition
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:11480:12: warning:=
-=20
-function 'ipw_convert_to_rate_index' with external linkage has definiti=
-on
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:11665:12: warning:=
-=20
-function 'ipw_convert_to_phy_index' with external linkage has definitio=
-n
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:11677:30: warning:=
-=20
-function 'ipw_get_lowest_rate' with external linkage has definition
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:11692:12: warning:=
-=20
-function 'ipw_get_adjacent_rate' with external linkage has definition
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:1522:11: warning:=20
-Using plain integer as NULL pointer
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:10004:16: warning:=
-=20
-Using plain integer as NULL pointer
-  CC [M]  /home/shemminger/src/iwlwifi-0.0.8/compatible/base.o
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c: In function=20
-=1B$-1=F2=F8ipw_rx_handle=F2=F9:
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:8175: warning:=20
-unused variable =1B$-1=F2=F8sleep=F2=F9
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:8195: warning:=20
-unused variable =1B$-1=F2=F8beacon=F2=F9
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:8227: warning:=20
-unused variable =1B$-1=F2=F8notif=F2=F9
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:8259: warning:=20
-unused variable =1B$-1=F2=F8notif=F2=F9
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c: At top level:
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:3889: warning:=20
-=1B$-1=F2=F8ipw_set_rxon_conf=F2=F9 defined but not used
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:2523: warning:=20
-=1B$-1=F2=F8ipw_rate_ieee2index=F2=F9 defined but not used
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:2577: warning:=20
-=1B$-1=F2=F8ipw_check_rx_config_cmd=F2=F9 defined but not used
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:3628: warning:=20
-=1B$-1=F2=F8ipw_setup_rxon_timing=F2=F9 defined but not used
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:6931: warning:=20
-=1B$-1=F2=F8ipw_send_qos_params_command=F2=F9 defined but not used
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:7964: warning:=20
-=1B$-1=F2=F8get_tx_fail_reason=F2=F9 defined but not used
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:8637: warning:=20
-=1B$-1=F2=F8ipw_get_rate_by_rssi=F2=F9 defined but not used
-/home/shemminger/src/iwlwifi-0.0.8/compatible/base.c:10371: warning:=20
-=1B$-1=F2=F8d_hw_scan=F2=F9 defined but not used
-  LD [M]  /home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.o
-  Building modules, stage 2.
-  MODPOST 1 modules
-WARNING: "ieee80211_rx_irqsafe"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_register_hwmode"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_unregister_hw"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_scan_completed"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_get_hdrlen"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_tx_status"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "sta_info_get"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_rate_control_register"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_netif_oper"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_tx_status_irqsafe"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_get_hdrlen_from_skb"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_rate_control_unregister"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_register_hw"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_alloc_hw"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "ieee80211_free_hw"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-WARNING: "sta_info_put"=20
-[/home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko] undefined!
-  CC      /home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.mod.o
-  LD [M]  /home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko
-make[1]: Leaving directory `/home/shemminger/kernel/linux-2.6.20.1'
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-  LD [M]  /home/shemminger/src/iwlwifi-0.0.8/compatible/iwlwifi.ko
-make[1]: Leaving directory `/home/shemminger/kernel/linux-2.6.20.1'
+ drivers/net/wireless/d80211/rt2x00/rt2400pci.c |    2 +-
+ drivers/net/wireless/d80211/rt2x00/rt2500pci.c |    2 +-
+ drivers/net/wireless/d80211/rt2x00/rt2500usb.c |    2 +-
+ drivers/net/wireless/d80211/rt2x00/rt61pci.c   |    2 +-
+ drivers/net/wireless/d80211/rt2x00/rt73usb.c   |    2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/d80211/rt2x00/rt2400pci.c b/drivers/net/wireless/d80211/rt2x00/rt2400pci.c
+index 2e3a514..ef47554 100644
+--- a/drivers/net/wireless/d80211/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/d80211/rt2x00/rt2400pci.c
+@@ -2370,7 +2370,7 @@ static int rt2400pci_alloc_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	 * Allocate the eeprom memory, check the eeprom width
+ 	 * and copy the entire eeprom into this allocated memory.
+ 	 */
+-	rt2x00dev->eeprom = kzalloc(EEPROM_SIZE, GFP_KERNEL);
++	rt2x00dev->eeprom = kzalloc(EEPROM_SIZE * sizeof(u16), GFP_KERNEL);
+ 	if (!rt2x00dev->eeprom)
+ 		return -ENOMEM;
+ 
+diff --git a/drivers/net/wireless/d80211/rt2x00/rt2500pci.c b/drivers/net/wireless/d80211/rt2x00/rt2500pci.c
+index 305cff6..1085978 100644
+--- a/drivers/net/wireless/d80211/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/d80211/rt2x00/rt2500pci.c
+@@ -2526,7 +2526,7 @@ static int rt2500pci_alloc_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	 * Allocate the eeprom memory, check the eeprom width
+ 	 * and copy the entire eeprom into this allocated memory.
+ 	 */
+-	rt2x00dev->eeprom = kzalloc(EEPROM_SIZE, GFP_KERNEL);
++	rt2x00dev->eeprom = kzalloc(EEPROM_SIZE * sizeof(u16), GFP_KERNEL);
+ 	if (!rt2x00dev->eeprom)
+ 		return -ENOMEM;
+ 
+diff --git a/drivers/net/wireless/d80211/rt2x00/rt2500usb.c b/drivers/net/wireless/d80211/rt2x00/rt2500usb.c
+index 0976c98..0ace302 100644
+--- a/drivers/net/wireless/d80211/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/d80211/rt2x00/rt2500usb.c
+@@ -2386,7 +2386,7 @@ static int rt2500usb_alloc_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	 * Allocate the eeprom memory, check the eeprom width
+ 	 * and copy the entire eeprom into this allocated memory.
+ 	 */
+-	rt2x00dev->eeprom = kzalloc(EEPROM_SIZE, GFP_KERNEL);
++	rt2x00dev->eeprom = kzalloc(EEPROM_SIZE * sizeof(u16), GFP_KERNEL);
+ 	if (!rt2x00dev->eeprom)
+ 		return -ENOMEM;
+ 
+diff --git a/drivers/net/wireless/d80211/rt2x00/rt61pci.c b/drivers/net/wireless/d80211/rt2x00/rt61pci.c
+index 547c660..46c552f 100644
+--- a/drivers/net/wireless/d80211/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/d80211/rt2x00/rt61pci.c
+@@ -3015,7 +3015,7 @@ static int rt61pci_alloc_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	 * Allocate the eeprom memory, check the eeprom width
+ 	 * and copy the entire eeprom into this allocated memory.
+ 	 */
+-	rt2x00dev->eeprom = kzalloc(EEPROM_SIZE, GFP_KERNEL);
++	rt2x00dev->eeprom = kzalloc(EEPROM_SIZE * sizeof(u16), GFP_KERNEL);
+ 	if (!rt2x00dev->eeprom)
+ 		return -ENOMEM;
+ 
+diff --git a/drivers/net/wireless/d80211/rt2x00/rt73usb.c b/drivers/net/wireless/d80211/rt2x00/rt73usb.c
+index be66e2f..6fa5a7e 100644
+--- a/drivers/net/wireless/d80211/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/d80211/rt2x00/rt73usb.c
+@@ -2705,7 +2705,7 @@ static int rt73usb_alloc_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	 * Allocate the eeprom memory, check the eeprom width
+ 	 * and copy the entire eeprom into this allocated memory.
+ 	 */
+-	rt2x00dev->eeprom = kzalloc(EEPROM_SIZE, GFP_KERNEL);
++	rt2x00dev->eeprom = kzalloc(EEPROM_SIZE, GFP_KERNEL * sizeof(u16));
+ 	if (!rt2x00dev->eeprom)
+ 		return -ENOMEM;
+ 
+
