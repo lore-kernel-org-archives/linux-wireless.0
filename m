@@ -1,49 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4547 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946098AbXBBVf7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Feb 2007 16:35:59 -0500
-Date: Fri, 2 Feb 2007 16:27:47 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: jeff@garzik.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Please pull "upstream-fixes" branch of wireless-2.6
-Message-ID: <20070202212747.GC9382@tuxdriver.com>
+Received: from styx.suse.cz ([82.119.242.94]:34140 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932633AbXBSUYj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Feb 2007 15:24:39 -0500
+Date: Mon, 19 Feb 2007 21:24:38 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] d80211: Fix skb panic during passive scan
+Message-ID: <20070219212438.162383bb@griffin.suse.cz>
+In-Reply-To: <200702181416.24396.IvDoorn@gmail.com>
+References: <200702181416.24396.IvDoorn@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a fix for 2.6.20 (time permitting).
+On Sun, 18 Feb 2007 14:16:24 +0100, Ivo van Doorn wrote:
+> Only add the extra_tx_headroom to the len when allocating
+> the sk_buff. This will prevent using an invalid length for skb_put
+> which would cause a skb panic inside the driver.
 
----
+Applied, thanks for the patch!
 
-The following changes since commit f56df2f4db6e4af87fb8e941cff69f4501a111df:
-  Linus Torvalds (1):
-        Linux 2.6.20-rc7
+ Jiri
 
-are found in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-fixes
-
-Maxime Austruy (1):
-      zd1211rw: fix potential leak in usb_init
-
- drivers/net/wireless/zd1211rw/zd_usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index 605e96e..2468ad6 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -1128,6 +1128,7 @@ static int __init usb_init(void)
- 
- 	r = usb_register(&driver);
- 	if (r) {
-+		destroy_workqueue(zd_workqueue);
- 		printk(KERN_ERR "%s usb_register() failed. Error number %d\n",
- 		       driver.name, r);
- 		return r;
 -- 
-John W. Linville
-linville@tuxdriver.com
+Jiri Benc
+SUSE Labs
