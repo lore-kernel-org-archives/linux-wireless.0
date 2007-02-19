@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.uludag.org.tr ([193.140.100.220]:37529 "EHLO uludag.org.tr"
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:48064 "EHLO amd.ucw.cz"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750791AbXBMN6s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Feb 2007 08:58:48 -0500
-From: Ismail =?iso-8859-1?q?D=F6nmez?= <ismail@pardus.org.tr>
+	id S1161078AbXBTXXf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Feb 2007 18:23:35 -0500
+Date: Mon, 19 Feb 2007 23:44:32 +0100
+From: Pavel Machek <pavel@ucw.cz>
 To: James Ketrenos <jketreno@linux.intel.com>
-Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
-Date: Tue, 13 Feb 2007 15:58:47 +0200
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
-References: <45CCE3CA.4050904@linux.intel.com>
-In-Reply-To: <45CCE3CA.4050904@linux.intel.com>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
+Message-ID: <20070219224432.GD21199@elf.ucw.cz>
+References: <45CCE3CA.4050904@linux.intel.com> <20070213181313.GA5350@ucw.cz> <45D254C6.7050401@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702131558.48987.ismail@pardus.org.tr>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <45D254C6.7050401@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 09 February 2007 23:12:42 James Ketrenos wrote:
-> Please hold all questions until I am done with this email.  Thank you.
->
-> We are pleased to announce the availability of a new driver for the
-> Intel PRO/Wireless 3945ABG Network Connection adapter.  This new driver
-> uses the new d80211 subsystem previously only available as part of the
-> wireless-dev tree.
->
-> You can find the new driver, and additional information about it, here:
->
->    http://intellinuxwireless.org/iwlwifi.
+Hi!
 
-Tried this is on a patched 2.6.20 kernel with ipw3945 device and it always 
-puts the card in 802.11a mode instead of 802.11bg mode.
+> >>You can find the new driver, and additional information 
+> >>about it, here:
+> >>
+> >>  http://intellinuxwireless.org/iwlwifi.
+> >...
+> >>You can find that package at:
+> >>
+> >>  http://intellinuxwireless.org/d80211
+> >>
+> >>Ok.  Now... any questions?
+> >
+> >Yes... is there merged .git tree somewhere? I downloaded iwl git tree,
+> >but it did not contain d80211 stack. I'm now downloading wireless-dev
+> >git tree...
+> 
+> There isn't a singular merged iwlwifi + d80211 package tree outside of 
+> wireless-dev, and iwlwifi isn't there yet (I'm cleaning out some dead 
+> and duplicated code before we submit)
 
-Ideas?
-
-Regards,
-ismail
+Ok, I was looking for merged tree. JBenc told me it should be
+available "soon", so I guess I'll wait.
+								Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
