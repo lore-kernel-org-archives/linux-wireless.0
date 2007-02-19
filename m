@@ -1,78 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51443 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932664AbXBSVD0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 16:03:26 -0500
-Subject: Re: [PATCH 06/10] d80211: update for wiphy api
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <20070219214919.44838d97@griffin.suse.cz>
-References: <20070215144241.847938000@sipsolutions.net>
-	 <20070215144258.819563000@sipsolutions.net>
-	 <20070219214919.44838d97@griffin.suse.cz>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-16x0p/hv6P9Sn+neTiIg"
-Date: Mon, 19 Feb 2007 22:03:19 +0100
-Message-Id: <1171918999.15489.18.camel@johannes.berg>
+Received: from styx.suse.cz ([82.119.242.94]:33506 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932576AbXBSTkK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Feb 2007 14:40:10 -0500
+Date: Mon, 19 Feb 2007 20:40:04 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] d80211: Add software sequence support
+Message-ID: <20070219204004.6730a17a@griffin.suse.cz>
+In-Reply-To: <1171663926.3575.42.camel@johannes.berg>
+References: <200702141423.27823.IvDoorn@gmail.com>
+	<20070216135827.7d262ae3@griffin.suse.cz>
+	<1171660484.3575.34.camel@johannes.berg>
+	<200702162307.16826.IvDoorn@gmail.com>
+	<1171663926.3575.42.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 16 Feb 2007 23:12:06 +0100, Johannes Berg wrote:
+> On Fri, 2007-02-16 at 23:07 +0100, Ivo van Doorn wrote:
+> > On Friday 16 February 2007 22:14, Johannes Berg wrote:
+> > > Make the counter per-mac address?
+> > 
+> > Wouldn't that be the same as per-interface?
+> 
+> Don't WDS interfaces have the same MAC as the corresponding AP
+> interface?
 
---=-16x0p/hv6P9Sn+neTiIg
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+They do.
 
-On Mon, 2007-02-19 at 21:49 +0100, Jiri Benc wrote:
+Per-MAC address counters would work but it's another overhead we need
+to add (allocate a new reference-counted structure, put a pointer to it
+into sdata, correctly deal with it when MAC address changes).
 
-> Couldn't we just allow embedding of wiphy into a custom structure?
-> Something like:
->=20
-> struct ieee80211_hw {
-> 	struct wiphy wiphy;
-> 	...
-> }
->=20
-> This way the memory could become less fragmented and less pointer
-> dereferencing would be needed.
+I think we can live with the counter in sdata. It's not perfect but it
+should work for all useful cases. The only situation where it won't
+work I have been able to imagine is the case I described (STA and WDS
+with the same address) and this particular setup is currently being
+denied by d80211 (and it's not allowed by 802.11, btw).
 
-Actually, if you look at the memory layout in ieee80211.c, struct
-ieee80211_hw is part of the private area allocated along with the struct
-wiphy, so it really is:
+If we consider this as a problem later, we can always change to per-MAC
+address counters or something as it's completely internal to the stack
+and no driver changes would be required.
 
-[internal stuff]
-struct wiphy {
-...
-}
-struct ieee80211_hw {
-...
-}
+ Jiri
 
-What we could do is add
-
-static inline struct wiphy *priv_to_wiphy(void *priv)
-{
-	return container_of(priv, struct wiphy, priv);
-}
-
-to the net/wireless.h header. Then we could drop the wiphy field
-completely.
-
-johannes
-
---=-16x0p/hv6P9Sn+neTiIg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF2hCX/ETPhpq3jKURAqJMAJ9StYqmKcGcJTq7PwOkrPC5ZuNBMwCfYSY+
-gdUyq+rgDrOI3aHFUYod/gk=
-=wKQv
------END PGP SIGNATURE-----
-
---=-16x0p/hv6P9Sn+neTiIg--
-
+-- 
+Jiri Benc
+SUSE Labs
