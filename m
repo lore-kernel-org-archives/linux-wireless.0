@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:33980 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751395AbXBJRN4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Feb 2007 12:13:56 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] bcm43xx: Fix loss of association after resume
-Date: Sat, 10 Feb 2007 18:11:36 +0100
-Cc: bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-References: <45cc9ebb.+9O/IXvs/C9RyFnk%Larry.Finger@lwfinger.net> <200702091753.12419.mb@bu3sch.de>
-In-Reply-To: <200702091753.12419.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702101811.37355.rjw@sisk.pl>
+Received: from styx.suse.cz ([82.119.242.94]:54737 "EHLO silver.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S965130AbXBSWj3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Feb 2007 17:39:29 -0500
+From: Jiri Benc <jbenc@suse.cz>
+To: "John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20070219233919.221549000.midnight@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 12/12] d80211: fix incorrect hw.priv setting in ieee80211_alloc_hw()
+Message-Id: <20070219223958.4B41A484B3@silver.suse.cz>
+Date: Mon, 19 Feb 2007 23:39:58 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, 9 February 2007 17:53, Michael Buesch wrote:
-> On Friday 09 February 2007 17:18, Larry Finger wrote:
-> > After a suspend/resume cycle, bcm43xx-softmac has lost its association with
-> > the AP and requires manual intervention. This situation is fixed by making
-> > one of softmac's internal routines public and calling it.
-> > 
-> > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> 
-> Ack, this is good as workaround.
+From: Pavel Roskin <proski@gnu.org>
 
-I'm running with this patch applied right now, but the association is lost
-after the resume anyway.  I have to reload bcm43xx to make it associate with
-the AP again (no big deal).
+hw.priv is set twice, and the second time it's set incorrectly to an
+area relative to the master device, which wasn't allocated for private
+data.
 
-Greetings,
-Rafael
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
 
+---
 
+ net/d80211/ieee80211.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
+
+36d7bfa99c55b8b59fa49d5d6a030a470cecaaa0
+diff --git a/net/d80211/ieee80211.c b/net/d80211/ieee80211.c
+index a6afe89..93e8090 100644
+--- a/net/d80211/ieee80211.c
++++ b/net/d80211/ieee80211.c
+@@ -4556,9 +4556,6 @@ struct ieee80211_hw *ieee80211_alloc_hw(
+ 	mdev->ieee80211_ptr = &sdata->wdev;
+ 	sdata->wdev.wiphy = wiphy;
+ 
+-	local->hw.priv = (char *)mdev->priv +
+-			 ((sizeof(struct ieee80211_sub_if_data) +
+-			   NETDEV_ALIGN_CONST) & ~NETDEV_ALIGN_CONST);
+ 	local->hw.queues = 1; /* default */
+ 
+ 	local->mdev = mdev;
 -- 
-If you don't have the time to read,
-you don't have the time or the tools to write.
-		- Stephen King
+1.3.0
+
