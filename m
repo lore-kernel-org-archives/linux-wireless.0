@@ -1,72 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:32941 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751076AbXBMUzY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Feb 2007 15:55:24 -0500
-Subject: Re: network manager vs. missing firmware
-From: Dan Williams <dcbw@redhat.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35624 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932596AbXBSTxH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Feb 2007 14:53:07 -0500
+Subject: Re: [PATCH v2] d80211: Add software sequence support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	John Linville <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890702131213s715df387wa4bd4d1c66b4a664@mail.gmail.com>
-References: <1171392106.10344.100.camel@johannes.berg>
-	 <1171394598.5329.31.camel@localhost.localdomain>
-	 <1171395459.10344.123.camel@johannes.berg>
-	 <200702131443.16553.flamingice@sourmilk.net>
-	 <43e72e890702131213s715df387wa4bd4d1c66b4a664@mail.gmail.com>
-Content-Type: text/plain
-Date: Tue, 13 Feb 2007 15:58:09 -0500
-Message-Id: <1171400289.5329.51.camel@localhost.localdomain>
+In-Reply-To: <20070219204004.6730a17a@griffin.suse.cz>
+References: <200702141423.27823.IvDoorn@gmail.com>
+	 <20070216135827.7d262ae3@griffin.suse.cz>
+	 <1171660484.3575.34.camel@johannes.berg>
+	 <200702162307.16826.IvDoorn@gmail.com>
+	 <1171663926.3575.42.camel@johannes.berg>
+	 <20070219204004.6730a17a@griffin.suse.cz>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VU/xgg+h0WYpZvwfwXPQ"
+Date: Mon, 19 Feb 2007 20:52:50 +0100
+Message-Id: <1171914770.15489.5.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-02-13 at 15:13 -0500, Luis R. Rodriguez wrote:
-> On 2/13/07, Michael Wu <flamingice@sourmilk.net> wrote:
-> > On Tuesday 13 February 2007 14:37, Johannes Berg wrote:
-> > > > So this isn't really consistent.  I'm unclear as to why the ipw cards
-> > > > need it on init rather than on dev open, but hey, why make things
-> > > > easier?
-> > >
-> > > When is ->init() called anyway? Isn't it when you register the netdev so
-> > > it would be on probe?
-> > >
-> > Yes, ipw2200 does it on probe... but I know it can be pushed off to open. I've
-> > done it. However.. I think intersil cards really need firmware to read the
-> > eeprom.
-> 
-> This is correct
-> 
-> > prism54 currently sets a fake MAC address so they can push it off to
-> > open, but I think this is wrong.
-> 
-> This was suggested by Jean a long time ago after we asked for advice
-> on what to do since we couldn't read the MAC before loading the
-> firmware. Whatever we decide on we should standardize on it in case
-> other new cards end up with same issue. One option was to have the
-> probe() fail if no firmware was present but obviously this would force
-> you to reload the module/reboot if you then get the firmware. We
-> decided to leave the firmware upload on open() to overcome this but
-> the problem then was the lack of a MAC address.
-> 
-> Anyone know if wireless network devices the only ones requiring a
-> firmware? If not then we should think of slapping something onto
-> net_device. Otherwise we should distinguish the requirement on
-> cfg80211_config so userspace tools know WTF is going on and inform the
-> user appropriately.
 
-No; others include Apple iSight cameras (the built-in USB variants),
-bluetooth devices (usually USB too), Keyspan serial adapters (usually
-USB), a bunch of stuff in drivers/media/video/, some non-USB network
-adapters, and some adaptec and qlogic sci drivers.
+--=-VU/xgg+h0WYpZvwfwXPQ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-It seems that most USB devices require firmware no matter what type they
-are.  Beyond that:
+On Mon, 2007-02-19 at 20:40 +0100, Jiri Benc wrote:
 
-probe: scsi/qla2xxx, net/myri10ge, scsi/aic94xx, net/spidernet
-open: serial/icom
+> Per-MAC address counters would work but it's another overhead we need
+> to add (allocate a new reference-counted structure, put a pointer to it
+> into sdata, correctly deal with it when MAC address changes).
 
-Dan
+Yup, I agree. Put it into drivers :P
 
+> I think we can live with the counter in sdata. It's not perfect but it
+> should work for all useful cases. The only situation where it won't
+> work I have been able to imagine is the case I described (STA and WDS
+> with the same address) and this particular setup is currently being
+> denied by d80211 (and it's not allowed by 802.11, btw).
+>=20
+> If we consider this as a problem later, we can always change to per-MAC
+> address counters or something as it's completely internal to the stack
+> and no driver changes would be required.
+
+Ok. I'm fine with putting it into the stack. I'll take Michael by the
+word though that he'll do dynamically registered tx handlers later ;)
+
+johannes
+
+--=-VU/xgg+h0WYpZvwfwXPQ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF2gAS/ETPhpq3jKURAu60AJwPcElfA6BSlKkykTFdOBhv6goOOACfT231
+9V95k9nhz7JjxRv3QEWIypQ=
+=C/nu
+-----END PGP SIGNATURE-----
+
+--=-VU/xgg+h0WYpZvwfwXPQ--
 
