@@ -1,82 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53001 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751457AbXB0I2l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Feb 2007 03:28:41 -0500
-Subject: Re: [PATCH] d80211: fix sparse warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1172539109.5835.28.camel@dv>
-References: <1172530759.3870.205.camel@johannes.berg>
-	 <1172539109.5835.28.camel@dv>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tXfkSju1LBNhPKzQvUhY"
-Date: Tue, 27 Feb 2007 09:28:19 +0100
-Message-Id: <1172564899.3870.222.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from styx.suse.cz ([82.119.242.94]:54731 "EHLO silver.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932883AbXBSWjS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Feb 2007 17:39:18 -0500
+From: Jiri Benc <jbenc@suse.cz>
+To: "John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20070219233919.221549000.midnight@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/12] d80211: trivial cleanups in ieee80211_i.h
+Message-Id: <20070219223947.98494484A7@silver.suse.cz>
+Date: Mon, 19 Feb 2007 23:39:47 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Michael Wu <flamingice@sourmilk.net>
 
---=-tXfkSju1LBNhPKzQvUhY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This removes some unused things and fixes a typo.
 
-On Mon, 2007-02-26 at 20:18 -0500, Pavel Roskin wrote:
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
 
-> That's subtraction of pointers to types with sizes that are not power of
-> two.  This could lead to expensive division operations.  In may cases,
-> this warning indicates that using array indices instead of pointers
-> would be more effective (and probably safer).
+---
 
-Yeah, figured that out after I sent it but then went to bed instead. The
-fix in that case is pretty easy, just replace the looping through with
-an index-based loop and then you already have rateidx.
+ net/d80211/ieee80211.c   |    1 -
+ net/d80211/ieee80211_i.h |    5 +----
+ 2 files changed, 1 insertions(+), 5 deletions(-)
 
-> > net/d80211/ieee80211_ioctl.c:779:4: warning: incorrect type in argument=
- 6 (different signedness)
-> > net/d80211/ieee80211_ioctl.c:779:4:    expected int *err
-> > net/d80211/ieee80211_ioctl.c:779:4:    got unsigned int *<noident>
->=20
-> ieee80211_set_encryption() expects a pointer to (signed) integer, be the
-> code is giving it a pointer to u32.  Please decide what type "err"
-> should have, and change the function accordingly.
->=20
-> I think "u32" would be better, since it's a part of the hostapd
-> compatibility code and we don't want to touch the userspace now.  This
-> code is going to be obsoleted with the rest of hostapd interface.  For
-> now, it's better to do exactly what the userspace expects.
-
-I guess. The argument appears to also not be used in any case other than
-this one.
-
-> In case you are wondering, the test case is:
-
-Yeah, I thought it'd be due to the locked flag. But Linus is perfectly
-right, we should have a _locked version instead of using a flag.
-
-But on the topic of sparse/locks: Does anybody know how to make sparse
-recognise that I provide my own locking wrapper? If you check out
-bcm43xx-d80211, it'll complain about the phy lock function since it just
-locks, and then complain about phy unlock since it only unlocks. Would
-be nice if it could be told that these are opaque, correct, and lock a
-certain lock that it should check for in the callers.
-
-johannes
-
---=-tXfkSju1LBNhPKzQvUhY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF4+ui/ETPhpq3jKURAlCUAKCyhrhRnnvlAYmZX35o5LroHKVarACfRGOp
-t/O85DYuj4A4kitII/9r6G8=
-=SWas
------END PGP SIGNATURE-----
-
---=-tXfkSju1LBNhPKzQvUhY--
+35b4c9eca49e0464592bebdf36989d77f928ebc5
+diff --git a/net/d80211/ieee80211.c b/net/d80211/ieee80211.c
+index 82daeb8..bbcefa9 100644
+--- a/net/d80211/ieee80211.c
++++ b/net/d80211/ieee80211.c
+@@ -4559,7 +4559,6 @@ struct ieee80211_hw *ieee80211_alloc_hw(
+ 	spin_lock_init(&local->sub_if_lock);
+ 	INIT_LIST_HEAD(&local->sub_if_list);
+ 
+-        spin_lock_init(&local->generic_lock);
+ 	INIT_DELAYED_WORK(&local->scan_work, ieee80211_sta_scan_work);
+ 	init_timer(&local->stat_timer);
+ 	local->stat_timer.function = ieee80211_stat_refresh;
+diff --git a/net/d80211/ieee80211_i.h b/net/d80211/ieee80211_i.h
+index 5ab9eb5..bb8fc83 100644
+--- a/net/d80211/ieee80211_i.h
++++ b/net/d80211/ieee80211_i.h
+@@ -350,7 +350,7 @@ struct ieee80211_local {
+ 	struct class_device class_dev;
+ 
+ 	enum {
+-		IEEE80211_DEV_UNITIALIZED = 0,
++		IEEE80211_DEV_UNINITIALIZED = 0,
+ 		IEEE80211_DEV_REGISTERED,
+ 		IEEE80211_DEV_UNREGISTERED,
+ 	} reg_state;
+@@ -368,7 +368,6 @@ #define IEEE80211_IRQSAFE_QUEUE_LIMIT 12
+ 		ieee80211_tx_status_msg = 2
+ 	} ieee80211_msg_enum;
+ 
+-        spinlock_t generic_lock;
+ 	/* Station data structures */
+ 	struct kset sta_kset;
+ 	spinlock_t sta_lock; /* mutex for STA data structures */
+@@ -479,8 +478,6 @@ #endif
+         u32 stat_time;
+         struct timer_list stat_timer;
+ 
+-        struct proc_dir_entry *proc, *proc_sta, *proc_iface;
+-
+ 	struct work_struct sta_proc_add;
+ 
+ 	enum {
+-- 
+1.3.0
 
