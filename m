@@ -1,62 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:47918
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932417AbXBENba (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Feb 2007 08:31:30 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH] d80211: Add API to generate RTS and CTS-to-self frames
-Date: Mon, 5 Feb 2007 14:31:23 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200702051412.50703.mb@bu3sch.de>
-In-Reply-To: <200702051412.50703.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702051431.23796.mb@bu3sch.de>
+Received: from styx.suse.cz ([82.119.242.94]:34732 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932655AbXBSU76 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Feb 2007 15:59:58 -0500
+Date: Mon, 19 Feb 2007 21:59:56 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: James Ketrenos <jketreno@linux.intel.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] d80211: Allow drivers to configure default regulatory  domain
+Message-ID: <20070219215956.6c73b36f@griffin.suse.cz>
+In-Reply-To: <45DA0A7C.5010001@linux.intel.com>
+References: <200702180031.38710.flamingice@sourmilk.net>
+	<20070219204938.29520759@griffin.suse.cz>
+	<45DA0A7C.5010001@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 05 February 2007 14:12, Michael Buesch wrote:
-> +static u16 ieee80211_rts_duration(struct ieee80211_local *local,
-> +				  size_t frame_len, int rate,
-> +				  int erp, int short_preamble)
-> +{
-> +	u16 dur;
-> +
-> +	/* Data frame duration */
-> +	dur = ieee80211_frame_duration(local, frame_len, rate, erp, short_preamble);
-> +	/* ACK duration */
-> +	dur += ieee80211_frame_duration(local, 14, rate, erp, short_preamble);
-> +	/* CTS duration */
-> +	dur += ieee80211_frame_duration(local, 14, rate, erp, short_preamble);
+On Mon, 19 Feb 2007 12:37:16 -0800, James Ketrenos wrote:
+> Unfortunately it is vendor and device specific.  I think we can 
+> generalize things to provide helper functions and macros such that each 
+> driver does it roughly the same way, but the stack itself can't do it.
 
-Ok, I just figured out that this is wrong.
-It should be length 10, as the FCS length is added in ieee80211_frame_duration.
+If the stack really cannot do it, yes, such helpers make sense.
 
-> +	return dur;
-> +}
-> +
-> +static u16 ieee80211_ctstoself_duration(struct ieee80211_local *local,
-> +					size_t frame_len, int rate,
-> +					int erp, int short_preamble,
-> +					int data_requires_ack)
-> +{
-> +	u16 dur;
-> +
-> +	/* Data frame duration */
-> +	dur = ieee80211_frame_duration(local, frame_len, rate, erp, short_preamble);
-> +	if (data_requires_ack) {
-> +		/* ACK duration */
-> +		dur += ieee80211_frame_duration(local, 14, rate, erp, short_preamble);
-> +	}
+> The hardware needs to tell the stack all the channels it supports and 
+> the restrictions on those channels.  The stack can then further restrict 
+> the set of channels based on the user input to a "standard" set of 
+> countries.
 
-Same here.
+Yes.
 
+> "regdomains" are not static maps; they evolve over time as governments 
+> change their regulations.  The channels and features supported by 
+> hardware is static based on what the device was certified for.
 
-I will submit a corrected patch, soon.
-But please still review this one for other bugs.
+Ok.
+
+Thanks,
+
+ Jiri
 
 -- 
-Greetings Michael.
+Jiri Benc
+SUSE Labs
