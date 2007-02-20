@@ -1,67 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2272 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751359AbXB0Deu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Feb 2007 22:34:50 -0500
-Received: from ra.tuxdriver.com (ra.tuxdriver.com [127.0.0.1])
-	by ra.tuxdriver.com (8.13.7/8.13.7) with ESMTP id l1R3Yfc8015225
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Feb 2007 22:34:46 -0500
-Received: (from uucp@localhost)
-	by ra.tuxdriver.com (8.13.7/8.13.6/Submit) with UUCP id l1R3VTt4015202
-	for linux-wireless@vger.kernel.org; Mon, 26 Feb 2007 22:31:29 -0500
-Received: from linville-t43.mobile (linville-t43.mobile [127.0.0.1])
-	by linville-t43.mobile (8.13.8/8.13.8) with ESMTP id l1R3RxXc018729
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Feb 2007 22:28:00 -0500
-Received: (from linville@localhost)
-	by linville-t43.mobile (8.13.8/8.13.8/Submit) id l1R3RwMZ018723
-	for linux-wireless@vger.kernel.org; Mon, 26 Feb 2007 22:27:58 -0500
-Date: Mon, 26 Feb 2007 22:27:57 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] wireless: rename d80211 -> mac80211
-Message-ID: <20070227032756.GA6569@tuxdriver.com>
+Received: from fencepost.gnu.org ([199.232.76.164]:55179 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965677AbXBTAYG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Feb 2007 19:24:06 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HJImF-00076s-Fj
+	for linux-wireless@vger.kernel.org; Mon, 19 Feb 2007 19:22:39 -0500
+Subject: Re: Kernel bug in bcm43xx-d80211
+From: Pavel Roskin <proski@gnu.org>
+To: Alex Davis <alex14641@yahoo.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <508755.46267.qm@web50206.mail.yahoo.com>
+References: <508755.46267.qm@web50206.mail.yahoo.com>
+Content-Type: text/plain
+Date: Mon, 19 Feb 2007 19:24:03 -0500
+Message-Id: <1171931043.8133.4.camel@dv>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've been threatening to do this for a while.  Since I've recently
-pulled from everyone, the incoming patch rate is slow this week,
-and we are getting close to being in -mm, now seems as good a time
-as any to do it...
+On Mon, 2007-02-19 at 15:48 -0800, Alex Davis wrote:
+> --- Pavel Roskin <proski@gnu.org> wrote:
+> 
+> > On Mon, 2007-02-19 at 13:48 -0800, Alex Davis wrote:
+> > > I go the following Oops with the latest wireless-dev git when starting wpa_supplicant:
+> > 
+> > Wireless topics moved from this list to linux-wireless@vger.kernel.org.
+> > Broadcom drivers are discussed in bcm43xx-dev@lists.berlios.de.
+> > wireless-dev is horribly broken, and the fixes haven't been merged yet.
+> > 
+> > The current Broadcom driver can be loaded from
+> > http://bu3sch.de/git/wireless-dev.git (please load it on top of
+> > wireless-dev.git to save bandwidth)
+> What command do I use to load Mike's tree on top of wireless-dev?
 
-I've changed all references in wireless-dev from d80211 to mac80211
-and from D80211 to MAC80211, including renaming files and directories
-appropriately.  If you have outstanding patches, please account for
-this change.  Filtering them through sed should do the job nicely:
+This should do it for you:
 
-	cat old.patch | sed -e 's/d80211/mac80211/g' \
-		-e 's/D80211/MAC80211/g' > new.patch
+git-remote add bcm43xx http://bu3sch.de/git/wireless-dev.git
+git-branch bcm43xx
+git-config branch.bcm43xx.remote bcm43xx
+git-config branch.bcm43xx.merge refs/heads/master
+git-checkout bcm43xx
+git-pull
 
-I don't think it would have been appropriate to keep the old name,
-with its veiled reference to its origin but no real meaning to the
-uninitiated.  I think the mac80211 name is more indicative of the
-component's function, and it matches the naming motif we are using
-for cfg80211 and nl80211.
-
-I apologize if this seems sudden, but I don't really think doing
-it with a lot of warning would have been any better.  So, I made
-the decision and did it.  Please don't complain unless it is just
-unbearable for you. :-)
-
-The patch has been pushed to wireless-dev, and hopefully will be
-available by the time you read this.
-
-Thanks,
-
-John
-
-P.S.  The actual patch is too large to post here.  It is available
-on www.kernel.org:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-dev/master/0738-wireless-rename-d80211-mac80211.patch
+Sorry, I didn't expect it to be so hairy.  Perhaps it should be
+documented somewhere.
 
 -- 
-John W. Linville
-linville@tuxdriver.com
+Regards,
+Pavel Roskin
+
