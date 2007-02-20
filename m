@@ -1,28 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:47052
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030359AbXBORke (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Feb 2007 12:40:34 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: linux-wireless@vger.kernel.org
-Subject: IPW2200 monitoring FW broken
-Date: Thu, 15 Feb 2007 18:40:16 +0100
-Cc: James Ketrenos <jketreno@linux.intel.com>
+Received: from mx2.suse.de ([195.135.220.15]:36861 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030289AbXBTQzT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Feb 2007 11:55:19 -0500
+From: Andreas Schwab <schwab@suse.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: bcm43xx: Update Documentation/bcm43xx.txt
+References: <45db22c9.UMvRraqKhAGR5vmR%Larry.Finger@lwfinger.net>
+Date: Tue, 20 Feb 2007 17:55:03 +0100
+In-Reply-To: <45db22c9.UMvRraqKhAGR5vmR%Larry.Finger@lwfinger.net> (Larry
+	Finger's message of "Tue, 20 Feb 2007 10:33:13 -0600")
+Message-ID: <je3b50ixaw.fsf@sykes.suse.de>
 MIME-Version: 1.0
-Message-Id: <200702151840.16963.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is IPW2200 monitoring FW still broken?
-I miss huge amounts of packets when I try to monitor
-some traffic.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-I'm using current wireless-2.6 + v3.0 firmware.
+> The in-kernel documentation of the bcm43xx driver is out of date.
 
-Using two antennas.
+Please avoid lines longer than 80 columns.
 
--- 
-Greetings Michael.
+Andreas.
+
+--=20
+Andreas Schwab, SuSE Labs, schwab@suse.de
+SuSE Linux Products GmbH, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
+PGP key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4=
+ED5
+"And now for something completely different."
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
