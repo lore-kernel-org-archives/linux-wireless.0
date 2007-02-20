@@ -1,50 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rwcrmhc14.comcast.net ([216.148.227.154]:41847 "EHLO
-	rwcrmhc14.comcast.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992774AbXBITzc (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:30811 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161071AbXBTXOR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Feb 2007 14:55:32 -0500
-Message-ID: <45CCD1B1.80709@gentoo.org>
-Date: Fri, 09 Feb 2007 14:55:29 -0500
-From: Joseph Jezak <josejx@gentoo.org>
+	Tue, 20 Feb 2007 18:14:17 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] d80211: Fix ieee80211_ptr check
+Date: Tue, 20 Feb 2007 18:13:54 -0500
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Bcm43xx-dev@lists.berlios.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
-References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net>	<45CCBB93.2040703@lwfinger.net> <45CCC5DF.8010001@gentoo.org> <200702092017.36950.mb@bu3sch.de>
-In-Reply-To: <200702092017.36950.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart6663935.yXXaduvpZi";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200702201813.58453.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Friday 09 February 2007 20:05, Joseph Jezak wrote:
->>> I'll agree to that as long as there is a clear indication of any differences between V3 and V4 firmware.
->> That's also part of the problem.  With the v4 driver, Broadcom 
->> dropped support for a number of older BPHY devices (4301/4303 and 
->> some 4306 revisions).  Do we still want to support those?  Should I 
->> continue writing the specs for the uCode revision it's based on or 
->> should I combine them?
-> 
-> If it's easily possible, please try to combine the old stuff
-> with the new v4 specs.
-> I think it's basically only dropped if() branches, right?
-> 
+--nextPart6663935.yXXaduvpZi
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Well, here's the problem.  There are a few places where a value is 
-changed (different value written to a register).  Does this mean 
-that the value is different due to the uCode changes (can't tell, no 
-documentation)?  Is it applicable to all revisions (can't tell, some 
-revisions are not supported in this version)?  If the revision 
-number range in a check changes is that because of a difference in 
-supported cards or a bug fix?
+d80211: Fix ieee80211_ptr check
 
-So, it's not as simple as just dropped if() branches.  I can do my 
-best to combine them (I have done some of this already), but I can't 
-promise that it'll be accurate for all revisions or versions of the 
-chipset.
+dev->ieee80211_ptr can no longer be directly compared to check if a virtual
+interface belongs to a master device.
 
--Joe
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+=2D--
+
+ net/d80211/ieee80211.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/net/d80211/ieee80211.c b/net/d80211/ieee80211.c
+index adce657..70eb9be 100644
+=2D-- a/net/d80211/ieee80211.c
++++ b/net/d80211/ieee80211.c
+@@ -1093,7 +1093,8 @@ __ieee80211_tx_prepare(struct ieee80211_
+ static int inline is_ieee80211_device(struct net_device *dev,
+ 				      struct net_device *master)
+ {
+=2D	return (dev->ieee80211_ptr =3D=3D master->ieee80211_ptr);
++	return (wdev_priv(dev->ieee80211_ptr) =3D=3D
++		wdev_priv(master->ieee80211_ptr));
+ }
+=20
+ /* Device in tx->dev has a reference added; use dev_put(tx->dev) when
+
+--nextPart6663935.yXXaduvpZi
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBF24C2T3Oqt9AH4aERAoqWAJsGHqEhpnF11x2cL/IXvXMNojGm4gCgoPcQ
+9JHGaI8zCEdk/NAJ8XEkLIY=
+=glRQ
+-----END PGP SIGNATURE-----
+
+--nextPart6663935.yXXaduvpZi--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
