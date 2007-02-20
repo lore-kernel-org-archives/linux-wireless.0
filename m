@@ -1,71 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52987 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751856AbXBAQDQ (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:45542 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932825AbXBTBb3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Feb 2007 11:03:16 -0500
-Subject: Re: Anyone have notes from Wireless Summit?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	Stephen Hemminger <shemminger@osdl.org>,
-	Jon Smirl <jonsmirl@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <200702011619.13456.mb@bu3sch.de>
-References: <20070131.155116.62344146.davem@davemloft.net>
-	 <20070131202757.7dc1058c@oldman> <45C16FDD.7040800@lwfinger.net>
-	 <200702011619.13456.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GmujP/Yp8bUn8HznpkGw"
-Date: Thu, 01 Feb 2007 17:01:53 +0100
-Message-Id: <1170345713.22420.18.camel@johannes.berg>
+	Mon, 19 Feb 2007 20:31:29 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HJJpS-0000EE-9z
+	for linux-wireless@vger.kernel.org; Mon, 19 Feb 2007 20:30:02 -0500
+Subject: Capture of unsuccessful ARP exchange
+From: Pavel Roskin <proski@gnu.org>
+To: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Content-Type: multipart/mixed; boundary="=-E/+GOLyplOaiT7MFouY2"
+Date: Mon, 19 Feb 2007 20:31:25 -0500
+Message-Id: <1171935085.8133.42.camel@dv>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-GmujP/Yp8bUn8HznpkGw
+--=-E/+GOLyplOaiT7MFouY2
 Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 
-On Thu, 2007-02-01 at 16:19 +0100, Michael Buesch wrote:
+Hello!
 
-> 7) Don't remember, sorry. But I remember your interresting talks about la=
-ws and stuff. ;)
+As I wrote before, bcm43xx_d80211 connects quickly to an 802.11g AP only
+if it doesn't support OFDM modes (bcm43xx_g_ratetable_size changed from
+12 to 4).  Actually, association is not a problem, but no data goes
+through for several minutes.
 
-Matt Norwood
+I'm attaching a capture file of an unsuccessful APR exchange following
+the association.
 
-> 8) Don't remember, either :)
+The AP is current MadWifi, MAC address 00:0F:B5:35:73:D8.  The STA is
+current bcm43xx_d80211 from mb branch, PCIe 4312, MAC address
+00:19:7D:21:7B:50.  The capture is done by another system running
+Wireshark 0.99.5 and current MadWifi in monitor mode.
 
-from CSR, but I mess up who is who so I'll not even try.
 
-> 13) not sure what his name was. Tomas Winkler?
+AP broadcasts a beacon announcing that it supports rates from 1 to
+54Mbps.  The flags indicate short preamble, spectrum management and
+short slot time.
 
-Christian Scheele
+STA broadcasts an ARP request at 36Mbps.  QoS field requests normal ACK.
 
-> 22) Don't recognize him on the tiiiiiny photo.
+STA receives ACK at 24Mbps.
 
-Mark Shuttleworth
+STA broadcasts another ARP request, this time at 1Mbps.  It's a non-QoS
+data frame.  However, the flags indicate that it's a frame from DS not
+to DS, unlike the previous ARP request that got that part correctly!
 
-> Henry Ptasiniski from Broadcom doesn't seem to be on the
+AP rends APR reply at 5.5Mbps.  QoS field requests normal ACK, which
+never arrives.
 
-Ptasinski
+AP sends another such frame with retry bit set, followed by 6 more
+frames at 1Mbps.  QoS field requests normal ACK, which never arrives.
 
-> Hope this helps. Someone else please fill in the missing ones. :)
+STA broadcasts an ARP request at 36Mbps.  To-DS is set correctly.  Retry
+bit is set.  QoS field requests normal ACK.
 
-Does trying count?
+STA receives ACK at 24Mbps.
 
-johannes
+STA broadcasts an ARP request at 24Mbps.  To-DS is set correctly.  Retry
+bit is set.  QoS field requests normal ACK.
 
---=-GmujP/Yp8bUn8HznpkGw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Following seems wrong to me:
 
-iD8DBQBFwg7x/ETPhpq3jKURAj1gAJ0TGkpz1hJJZ0e/wDz35muq2yh82gCfQ8KJ
-fNuEkDEkvyCfZs5QNKx19G0=
-=FabL
------END PGP SIGNATURE-----
+1) STA sends some packets with From-DS instead of To-DS.  I've seen more
+than one such packet, and they are always sent at 1Mbps.
 
---=-GmujP/Yp8bUn8HznpkGw--
+2) STA doesn't send ACK to frames specifically requesting it (if I
+understand the Wireshark interpretation correctly).
+
+-- 
+Regards,
+Pavel Roskin
+
+--=-E/+GOLyplOaiT7MFouY2
+Content-Disposition: attachment; filename=80211g-arp
+Content-Type: application/octet-stream; name=80211g-arp
+Content-Transfer-Encoding: base64
+
+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
+AAQAR8lIAEQAAgAAAAQAMWbrHEQAAwAAAAQACwAAAEQABAAAAAQAIAAAAAAAAAAAAAAAAAAAAEQA
+BgAAAAQAwP///0QABwAAAAQAoP///0QACAAAAAQASAAAAEQACQAAAAQAAAAAAEQACgAAAAQAQgAA
+AIgJLAAAD7U1c9gAGX0he1D////////gAgAAqqoDAAAACAYAAQgABgQAAQAZfSF7UAp1HVIAAAAA
+AAAKdR1HqzfaRaDoBwCaAAAAmgAAAEQAAACQAAAAYXRoMAAAAAAAAAAAAAAAAEQAAQAAAAQAR8lI
+AEQAAgAAAAQAWmbrHEQAAwAAAAQACwAAAEQABAAAAAQAOQAAAAAAAAAAAAAAAAAAAEQABgAAAAQA
+2f///0QABwAAAAQAoP///0QACAAAAAQAMAAAAEQACQAAAAQAAAAAAEQACgAAAAQADgAAANQAAAAA
+GX0he1CrN9pFthUIAM4AAADOAAAARAAAAJAAAABhdGgwAAAAAAAAAAAAAAAARAABAAAABABLyUgA
+RAACAAAABABtk+scRAADAAAABAALAAAARAAEAAAABAAgAAAAAAAAAAAAAAAAAAAARAAGAAAABADA
+////RAAHAAAABACg////RAAIAAAABAAwAAAARAAJAAAABAAAAAAARAAKAAAABABCAAAAiAksAAAP
+tTVz2AAZfSF7UP///////+ACAACqqgMAAAAIBgABCAAGBAABABl9IXtQCnUdUgAAAAAAAAp1HUc=
+
+
+--=-E/+GOLyplOaiT7MFouY2--
 
