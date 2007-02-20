@@ -1,52 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2838 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161236AbXBUNvm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Feb 2007 08:51:42 -0500
-Date: Wed, 21 Feb 2007 08:27:54 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Roger While <simrw@sim-basis.de>
-Cc: netdev@vger.kernel.org, jeff@garzik.org, dcbw@redhat.com,
+Received: from styx.suse.cz ([82.119.242.94]:39233 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S965696AbXBTAYA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Feb 2007 19:24:00 -0500
+Date: Tue, 20 Feb 2007 01:23:53 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Alex Davis <alex14641@yahoo.com>, Pavel Roskin <proski@gnu.org>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [git patches] net driver updates
-Message-ID: <20070221132754.GA4978@tuxdriver.com>
-References: <6.1.1.1.2.20070221124144.04783fb8@192.168.6.12>
+Subject: Re: Kernel bug in bcm43xx-d80211
+Message-ID: <20070220012353.091f1fd8@logostar.upir.cz>
+In-Reply-To: <1171930456.15489.71.camel@johannes.berg>
+References: <508755.46267.qm@web50206.mail.yahoo.com>
+	<1171930124.15489.68.camel@johannes.berg>
+	<1171930456.15489.71.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6.1.1.1.2.20070221124144.04783fb8@192.168.6.12>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 21, 2007 at 12:46:46PM +0100, Roger While wrote:
+On Tue, 20 Feb 2007 01:14:16 +0100, Johannes Berg wrote:
+> > actually, get Jiri's
+> > (http://www.kernel.org/git/linux/kernel/git/jbenc/dscape.git), he's just
+> > committed the fixes.
 > 
-> >
-> >Dan Williams (1):
-> >      prism54: correct assignment of DOT1XENABLE in WE-19 codepaths
-> 
-> Where did this spring from ?
-> I see no posting of this patch let alone
-> an ACK.
-> The patch is also doing rather more than the description -
-> It is inserting extra breaks into a switch statement with
-> no comment as to why.
+> Well I thought so, but apparently it isn't there yet...
 
-Dan posted it to linux-wireless@vger.kernel.org on 13 Feb 2007.
-The description in the body is quoted below:
+You need to pull the 'up' branch :-)
 
-	Correct assignment of DOT1XENABLE in WE-19 codepaths.
-	RX_UNENCRYPTED_EAPOL = 1 really means setting DOT1XENABLE _off_, and
-	vice versa.  The original WE-19 patch erroneously reversed that.  This
-	patch fixes association with unencrypted and WEP networks when using
-	wpa_supplicant.
-	
-	It also adds two missing break statements that, left out, could result
-	in incorrect card configuration.
-	
-	Please commit to both development and stable branches.
+ Jiri
 
-Hth...
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Jiri Benc
+SUSE Labs
