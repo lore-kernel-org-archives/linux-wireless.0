@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45356 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932480AbXBENqb (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:41879 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965614AbXBTAQz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Feb 2007 08:46:31 -0500
-Subject: Re: [PATCH] d80211: Add API to generate RTS and CTS-to-self frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200702051412.50703.mb@bu3sch.de>
-References: <200702051412.50703.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oOOTnbZHUZxvGCRIRELJ"
-Date: Mon, 05 Feb 2007 14:43:00 +0100
-Message-Id: <1170682980.3572.16.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 19 Feb 2007 19:16:55 -0500
+Message-ID: <45DA3DEA.2040507@lwfinger.net>
+Date: Mon, 19 Feb 2007 18:16:42 -0600
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Alex Davis <alex14641@yahoo.com>
+CC: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+Subject: Re: Kernel bug in bcm43xx-d80211
+References: <508755.46267.qm@web50206.mail.yahoo.com>
+In-Reply-To: <508755.46267.qm@web50206.mail.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Alex Davis wrote:
+> --- Pavel Roskin <proski@gnu.org> wrote:
+> 
+>> On Mon, 2007-02-19 at 13:48 -0800, Alex Davis wrote:
+>>> I go the following Oops with the latest wireless-dev git when starting wpa_supplicant:
+>> Wireless topics moved from this list to linux-wireless@vger.kernel.org.
+>> Broadcom drivers are discussed in bcm43xx-dev@lists.berlios.de.
+>> wireless-dev is horribly broken, and the fixes haven't been merged yet.
+>>
+>> The current Broadcom driver can be loaded from
+>> http://bu3sch.de/git/wireless-dev.git (please load it on top of
+>> wireless-dev.git to save bandwidth)
+> What command do I use to load Mike's tree on top of wireless-dev?
 
---=-oOOTnbZHUZxvGCRIRELJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+While in the wireless-dev tree, issue the following:
 
-On Mon, 2007-02-05 at 14:12 +0100, Michael Buesch wrote:
+git branch michael
+git checkout michael
+git pull http://bu3sch.de/git/wireless-dev.git master
 
-> -	u16 rts_cts_duration;	/* duration field for RTS/CTS frame */
+To get back to the original wireless-dev tree, us a 'git checkout master' command.
 
-I'd think this was here for a purpose. Maybe some hardware generates the
-frame but not the duration field?
-
-Then again, if that's the case we can always export the functions to
-calculate it as library functions.
-
-Looks good.
-
-johannes
-
---=-oOOTnbZHUZxvGCRIRELJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBFxzRk/ETPhpq3jKURAsQnAJ4+1sr8kccuSSrusBK3jfj0GvjuKQCeOaeg
-MfMqRkOuTkP0fX/EwxdjeWI=
-=x0q7
------END PGP SIGNATURE-----
-
---=-oOOTnbZHUZxvGCRIRELJ--
-
+Larry
