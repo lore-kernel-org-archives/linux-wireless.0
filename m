@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41181 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750907AbXBKOoj (ORCPT
+Received: from mailgate.cesmail.net ([216.154.195.36]:52800 "HELO
+	mailgate.cesmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S965652AbXBTDys (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Feb 2007 09:44:39 -0500
-Subject: Re: [PATCH] bcm43xx: Fix loss of association after resume
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, bcm43xx-dev@lists.berlios.de,
-	Larry Finger <larry.finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <200702111514.04893.mb@bu3sch.de>
-References: <45cc9ebb.+9O/IXvs/C9RyFnk%Larry.Finger@lwfinger.net>
-	 <200702111407.08099.mb@bu3sch.de> <200702111502.19545.rjw@sisk.pl>
-	 <200702111514.04893.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BUhZq6jB5AQ52eKZQbZo"
-Date: Sun, 11 Feb 2007 15:41:50 +0100
-Message-Id: <1171204910.5032.7.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 19 Feb 2007 22:54:48 -0500
+Message-ID: <20070219225446.bgyosgww88c8wk80@webmail.spamcop.net>
+Date: Mon, 19 Feb 2007 22:54:46 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: Alex Davis <alex14641@yahoo.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: Kernel bug in bcm43xx-d80211
+References: <178298.69840.qm@web50208.mail.yahoo.com>
+In-Reply-To: <178298.69840.qm@web50208.mail.yahoo.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Quoting Alex Davis <alex14641@yahoo.com>:
 
---=-BUhZq6jB5AQ52eKZQbZo
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> I merged Michael's changes. It doesn't panic anymore, but I still can't
+> associate. Here's the
+> output from wpa_supplicant 0.4.9:
 
-On Sun, 2007-02-11 at 15:14 +0100, Michael Buesch wrote:
+I'm sorry!  I didn't realize git would be merging two branches.  I did try my
+commands, but I didn't notice the message about merging.
 
-> > bcm43xx: IRQ_READY timeout
-> > bcm43xx: core_up for active 802.11 core failed (-19)
->=20
-> I never tried suspend to disk with the driver.
-> Larry, an idea why the microcode doesn't respond?
+If you merge two branches, you are pulling the bugs from wireless.dev into the
+bcm43xx branch.
 
-Rafael, is bcm43xx built in or modular?
+You need to remove the merge by resetting the local branch to the remote branch.
+ Please use this command:
 
-johannes
+git-reset --hard remotes/bcm43xx/master
 
---=-BUhZq6jB5AQ52eKZQbZo
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+bcm43xx is the name you used in the git-remote command.  Perhaps we need some
+kind of git wrapper to deal with all that complexity of having multiple remotes
+in one repository.  I'll ask in the git list.  It doesn't look like an exotic
+case anymore.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Once you have reverted the branch, disable CONFIG_CFG80211 in .config - it's not
+ready yet.  This would fix the iwconfig output.
 
-iD8DBQBFzyst/ETPhpq3jKURAn3uAJ0dr76O0p5DKS+vcJsnInU9p+8E/ACffoPQ
-XDulZaA92w2H+zBsrcn+ae0=
-=+dau
------END PGP SIGNATURE-----
+As for association timeout, it's probably unrelated, bit it would be helpful if
+you recheck it on clean sources.  It's possible wpa_supplicant doesn't get the
+AP MAC address properly.
 
---=-BUhZq6jB5AQ52eKZQbZo--
-
+--
+Regards,
+Pavel Roskin
