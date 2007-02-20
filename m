@@ -1,69 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3894 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751664AbXBVSVb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Feb 2007 13:21:31 -0500
-Date: Thu, 22 Feb 2007 13:11:11 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "ivan.muccini@witech.it" <ivan.muccini@witech.it>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: 802.11s is possible
-Message-ID: <20070222181111.GE5631@tuxdriver.com>
-References: <45ddd0c2.b2.681a.1375331394@webmailh5.aruba.it>
+Received: from styx.suse.cz ([82.119.242.94]:39521 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S965823AbXBTAvP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Feb 2007 19:51:15 -0500
+Date: Tue, 20 Feb 2007 01:51:12 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Alex Davis <alex14641@yahoo.com>
+Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+Subject: Re: Kernel bug in bcm43xx-d80211
+Message-ID: <20070220015112.6b8e1658@logostar.upir.cz>
+In-Reply-To: <325621.23689.qm@web50209.mail.yahoo.com>
+References: <1171931043.8133.4.camel@dv>
+	<325621.23689.qm@web50209.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <45ddd0c2.b2.681a.1375331394@webmailh5.aruba.it>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 22, 2007 at 06:20:02PM +0100, ivan.muccini@witech.it wrote:
-> Hi, i'm italian student. I want experiment a channel
-> assignment algorithm in 802.11s mesh network. I think to use
-> madwifi driver for develop 802.11 feature, like new mesh
-> header in MAC header of Data frame, beacon, probe message
-> and association. Moreover I need to create new information
-> elemnt for HWMP routing protcol.
-> Becouse i am new in madwifi, i'm asking you if is possible
-> do this whit madwifi.
+On Mon, 19 Feb 2007 16:40:15 -0800 (PST), Alex Davis wrote:
+> I appreciate all the help, but now I'm confused. I got these instructions from Larry Finger:
+> git branch michael
+> git checkout michael
+> git pull http://bu3sch.de/git/wireless-dev.git master
 
-You'll have to look elsewhere for madwifi.  This list is for work
-destined for inclusion in the Linux kernel itself.  If you must use
-Atheros hardware, then please consider working in the ar5k-based
-dadwifi branch of the madwifi project.  That may have a future in
-the upstream kernel.
+This is easier for one-time pull.
 
-However, please consider using the Devicescape-originated stack which
-we here are working to have included in the upstream kernel "soon".  If you
-are familiar with git, you can get the sources from the tree here:
+> And these instructions from Pavel Roskin:
+> git-remote add bcm43xx http://bu3sch.de/git/wireless-dev.git
+> git-branch bcm43xx
+> git-config branch.bcm43xx.remote bcm43xx
+> git-config branch.bcm43xx.merge refs/heads/master
+> git-checkout bcm43xx
+> git-pull
 
-	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-dev.git
+This is useful if you want to pull regularly. But Larry's way can be used
+even in that case - I'm pulling regularly from wireless-dev and never used
+git-config :-)
 
-If you would prefer a stack of patches (over 700!) to apply on top
-of a current tree from Linus, you may want to look here:
+Also, Larry's advice about getting back to the original wireless-dev tree
+could be useful for you. It applies to both Larry's and Pavel's
+instructions.
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-dev/mm-master
+> Which set of instructions do I use? Are either of these still applicable, seeing as I was asked
+> to pull from Jiri Benc's tree?
 
-If that is unappealing but you are a Fedora user, you may want to
-look at my test kernels here:
+If you pull from my tree, you won't be able to compile any d80211 driver.
+The wireless statistics fixes need to be committed by John first.
 
-	http://people.redhat.com/linville/kernels/fc6/
+ Jiri
 
-Or my Fedora-netdev kernels available through yum by following the
-instructions here:
-
-	http://people.redhat.com/linville/kernels/fedora-netdev/
-
-And if none of those apply, you may wish to stick to Ralink rt2x00 or
-Intel ipw3945 hardware.  Each of those projects maintains a snapshot
-of the Devicescape-originated stack for use with their own drivers.
-
-As for help with understanding the stack code, Devicescape has some
-documentation available at their site.	And, of course, the code
-itself is the best reference.  :-)
-
-Hth!
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Jiri Benc
+SUSE Labs
