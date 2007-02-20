@@ -1,55 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:9965 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965322AbXBOIlG (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:56594 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932796AbXBTC2N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Feb 2007 03:41:06 -0500
-Received: from lin01.mn-solutions.de (pD95F8F54.dip0.t-ipconnect.de [217.95.143.84])
-	by s131.mittwaldmedien.de (Postfix) with ESMTP id 499885E40B9
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Feb 2007 09:41:03 +0100 (CET)
-Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id 1A4D51E002B
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Feb 2007 09:40:58 +0100 (CET)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: How to start with a Marvell driver (non-USB, non-OLPC)
-Date: Thu, 15 Feb 2007 09:40:49 +0100
-References: <200702090858.26294.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200702090858.26294.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702150940.49306.hs4233@mail.mn-solutions.de>
+	Mon, 19 Feb 2007 21:28:13 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HJKiL-0001Mu-Ny
+	for linux-wireless@vger.kernel.org; Mon, 19 Feb 2007 21:26:45 -0500
+Subject: Re: Capture of unsuccessful ARP exchange
+From: Pavel Roskin <proski@gnu.org>
+To: Jouni Malinen <j@w1.fi>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+In-Reply-To: <20070220015851.GE5279@jm.kir.nu>
+References: <1171935085.8133.42.camel@dv>  <20070220015851.GE5279@jm.kir.nu>
+Content-Type: text/plain
+Date: Mon, 19 Feb 2007 21:28:03 -0500
+Message-Id: <1171938483.10139.13.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Okay, I got encouraging replies to my initial mail. Later I 
-produced some patches for discussion and posted them into 
-libertas-dev and marvell8385-devel@linuxtogo.org.
+Hi, Jouni!
 
-But besides "please make a git repository" no one really cared 
-(about the patches --- there were other reactions). No patch has 
-been commented, ridiculed or applied.
+Thanks for quick and helpful reply!
 
+On Mon, 2007-02-19 at 17:58 -0800, Jouni Malinen wrote:
+> On Mon, Feb 19, 2007 at 08:31:25PM -0500, Pavel Roskin wrote:
 
-If someone is interested, the patches are at
- 
-http://projects.linuxtogo.org/plugins/scmsvn/viewcvs.php/trunk/patches/?root=marvell8385
+> > STA broadcasts another ARP request, this time at 1Mbps.  It's a non-QoS
+> > data frame.  However, the flags indicate that it's a frame from DS not
+> > to DS, unlike the previous ARP request that got that part correctly!
+> 
+> This is the same ARP packet being sent out by the AP and this time it is
+> actually transmitted to broadcast address (and no ACK, as expected).
 
+That's a relief.  I should pay more attention to the order of addresses,
+not just to the contents of the "source" column.
 
+> > AP rends APR reply at 5.5Mbps.  QoS field requests normal ACK, which
+> > never arrives.
+> > 
+> > AP sends another such frame with retry bit set, followed by 6 more
+> > frames at 1Mbps.  QoS field requests normal ACK, which never arrives.
+> 
+> It looks like the client has some problems receiving this frame or
+> ACKing it..
 
-I consider
+My first assumption was that the field QoS confuses it, but looking at
+the code, it's more likely a low-level problem.  I'll try to see if the
+frame is even seen by the driver.
 
-remove-unused-var.patch
-remove-boot-command-define.patch
-rename-functions.patch
-remove-libertas-sbi-get-priv.patch
+> > STA broadcasts an ARP request at 36Mbps.  To-DS is set correctly.  Retry
+> > bit is set.  QoS field requests normal ACK.
+> > 
+> > STA receives ACK at 24Mbps.
+> 
+> This is odd.. This frame is a retry of the first ARP request. In other
+> words, it looks like the non-AP STA did not receive the ACK from the AP.
+> What's even stranger is that it took so long to retry the frame that the
+> AP had enough time to actually send its reply multiple times.. It looks
+> like the non-AP STA is just not receiving any frames from the AP at this
+> point.
 
-as applyable to libertas-2.6, the others are work-in-progress.
+I agree.  The frames are either not received physically or thrown out.
+Which makes me wonder why the association happens so quickly.  Perhaps
+it's done at lower rates.
 
+When ping finally starts working, all the data is transmitted at 1Mbps.
+And the QoS field is still there , so it's not a problem by itself.
 
-I'm now in the process to create a git repository at 
-infradead.org, maybe this can help the process. However, I don't 
-have any idea what I can do if I pushed a changeset to infradead 
-and later learn that this is crap. Can I rebase the HEAD of a 
-remote git repository?
+> > 2) STA doesn't send ACK to frames specifically requesting it (if I
+> > understand the Wireshark interpretation correctly).
+> 
+> And continues retrying a packet ACK'ed by the AP. In other words, the
+> non-AP STA does not seem to be receiving anything here (either data or
+> ACK to stop retransmission of its own data frame). And this is not only
+> OFDM frames getting lost (all ACKs were using 24 Mbps), but also 1 and
+> 5.5 Mbps frames in the case of ARP response..
+
+That's the most interesting part, especially that ARP responses at 1Mbps
+are ignored.
+
+It looks like my doubts about the d80211 stack were wrong, and the
+solution is deeper in the driver, almost certainly on the receiving
+side.
+
+-- 
+Regards,
+Pavel Roskin
+
