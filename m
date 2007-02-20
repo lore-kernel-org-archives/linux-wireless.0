@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:34466 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932609AbXBSUh2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 15:37:28 -0500
-Date: Mon, 19 Feb 2007 21:37:16 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH 03/10] introduce wiphy concept
-Message-ID: <20070219213716.183719c9@griffin.suse.cz>
-In-Reply-To: <20070215144257.530315000@sipsolutions.net>
-References: <20070215144241.847938000@sipsolutions.net>
-	<20070215144257.530315000@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:47750
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932732AbXBTKFR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Feb 2007 05:05:17 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: Capture of unsuccessful ARP exchange
+Date: Tue, 20 Feb 2007 11:04:41 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>, Jouni Malinen <j@w1.fi>,
+	linux-wireless@vger.kernel.org
+References: <1171935085.8133.42.camel@dv> <1171938483.10139.13.camel@dv> <1171959815.15489.75.camel@johannes.berg>
+In-Reply-To: <1171959815.15489.75.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200702201104.42201.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 15 Feb 2007 15:42:44 +0100, Johannes Berg wrote:
-> For the future:
+On Tuesday 20 February 2007 09:23, Johannes Berg wrote:
+> > When ping finally starts working, all the data is transmitted at 1Mbps.
+> > And the QoS field is still there , so it's not a problem by itself.
 > 
-> Maybe instead of having ieee80211_ptr point to a struct wireless_dev
-> (which can be allocated along with the netdev) we should mandate that
-> each wireless netdev is allocated via a new function that puts the
-> wireless_dev struct as the first part of the private area of the netdev,
-> that way getting to it is just a simple addition instead of following
-> a pointer... and we can also drop ieee80211_ptr from struct net_device.
+> Didn't you say that you're using mb's tree? You have a 4311 IIRC so I
+> wouldn't be surprised if there are problems with receive sensitivity
+> that go away after, say, two minutes (recalibration interval).
 
-Currently, you need to distinguish whether some random net_device is
-wireless device or not at some places. At least d80211 needs that (yes,
-ifindex doesn't wrap often, so those are just safety checks, but - well
-- I'd like to be safe).
+My tree has serious transmission problems (TX and I think RX, too).
+I'd like to fix that as soon as possible, but I really can't find the
+damn bug. It's kind of: I verified the whole PHY code for sanity and
+correctness, but still don't see where it is.
 
-How can this be effectively achieved if ieee80211_ptr is dropped?
+Maybe we can workaround that by driving the card at highest
+attenuation control values, always. But that would obviously break
+regulatory domain laws, so... .
+Let's try to find the bug. :)
 
-Thanks,
-
- Jiri
+If someone wants to help searching, please do so. I'm kind of
+running out of ideas where to search.
+It's some issue with the idle-TSSI measurement in the PHY powercontrol
+init code. We almost always get a 0 value there, but we should
+get something around 50. That messes up attenuation control, later.
+Well, why do we get a 0 there? I have no idea. Must be a bug somewhere
+in the code that's run before the idle-TSSI is measured.
 
 -- 
-Jiri Benc
-SUSE Labs
+Greetings Michael.
