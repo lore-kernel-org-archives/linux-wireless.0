@@ -1,38 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:37530
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932655AbXBSVR2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 16:17:28 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Gene Heskett <gene.heskett@verizon.net>
-Subject: Re: bcm43xx: Ad-Hoc (IBSS) works fine
-Date: Mon, 19 Feb 2007 22:17:01 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <200702191946.52440.mb@bu3sch.de> <200702191548.14982.gene.heskett@verizon.net>
-In-Reply-To: <200702191548.14982.gene.heskett@verizon.net>
+Received: from srv5.dvmed.net ([207.36.208.214]:44680 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030224AbXBTQ2z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Feb 2007 11:28:55 -0500
+Message-ID: <45DB21C3.4040800@garzik.org>
+Date: Tue, 20 Feb 2007 11:28:51 -0500
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702192217.01975.mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'upstream' branch of wireless-2.6 (2007-02-14)
+References: <20070214212817.GB28318@tuxdriver.com> <45D7647B.8090704@garzik.org> <20070217233650.GA4310@tuxdriver.com>
+In-Reply-To: <20070217233650.GA4310@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 19 February 2007 21:48, Gene Heskett wrote:
-> On Monday 19 February 2007, Michael Buesch wrote:
-> >I just want to mention that Ad-Hoc works fine
-> >with the bcm43xx-d80211 driver in my tree.
-> >I didn't have to do any code changes, but simply try it once. ;)
-> >
-> >So, well. As the question has been asked several times
-> >if adhoc is supported, here is the answer: Yes it is.
+John W. Linville wrote:
+> On Sat, Feb 17, 2007 at 03:24:27PM -0500, Jeff Garzik wrote:
+>> John W. Linville wrote:
+>>> Some late-breaking small and/or important changes before the 2.6.21
+>>> merge window closes...
 > 
-> Where might I find a decent, plain english, description of these 
-> various 'modes', Micheal?  I have relatively little experience in 802-11 
-> stuff and could use a tutorial explaining the lingo.
+>> ACK.  Tried to pull, but there were conflicts with netdev#upstream. 
+>> Since there are dependencies in netdev#upstream, looks like you need to 
+>> resend against that.
+>  
+> Ah, yes...I cloned your 'upstream' branch, pulled from my
+> 'upstream' branch, resolved the conflicts, and committed on my new
+> 'upstream-jgarzik' branch.
+> 
+> Please pull from here:
+> 
+> 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-jgarzik
 
-Here you go:
-http://linuxwireless.org/en/users
+pulled
 
--- 
-Greetings Michael.
+
