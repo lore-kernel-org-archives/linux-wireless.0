@@ -1,32 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:43802 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423257AbXBHTRw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Feb 2007 14:17:52 -0500
-Date: Thu, 8 Feb 2007 19:17:21 +0000
-From: Christoph Hellwig <hch@infradead.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
+Received: from ra.tuxdriver.com ([70.61.120.52]:2838 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161236AbXBUNvm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Feb 2007 08:51:42 -0500
+Date: Wed, 21 Feb 2007 08:27:54 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Roger While <simrw@sim-basis.de>
+Cc: netdev@vger.kernel.org, jeff@garzik.org, dcbw@redhat.com,
 	linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH 1/3] wireless: add cfg80211
-Message-ID: <20070208191721.GA32732@infradead.org>
-References: <20070131013717.GA28076@tuxdriver.com> <20070207004626.GA23096@tuxdriver.com> <20070207004747.GB23096@tuxdriver.com> <20070207073557.GA14703@infradead.org> <1170940377.4385.48.camel@johannes.berg>
+Subject: Re: [git patches] net driver updates
+Message-ID: <20070221132754.GA4978@tuxdriver.com>
+References: <6.1.1.1.2.20070221124144.04783fb8@192.168.6.12>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1170940377.4385.48.camel@johannes.berg>
+In-Reply-To: <6.1.1.1.2.20070221124144.04783fb8@192.168.6.12>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 08, 2007 at 02:12:57PM +0100, Johannes Berg wrote:
-> > > +MODULE_AUTHOR("Johannes Berg");
-> > > +MODULE_LICENSE("GPL");
-> > 
-> > Can you please add a MODULE_DESCRIPTION aswell?
+On Wed, Feb 21, 2007 at 12:46:46PM +0100, Roger While wrote:
 > 
-> Sure. Then again, didn't you just ask for "why can this be a module at
-> all" too? :)
+> >
+> >Dan Williams (1):
+> >      prism54: correct assignment of DOT1XENABLE in WE-19 codepaths
+> 
+> Where did this spring from ?
+> I see no posting of this patch let alone
+> an ACK.
+> The patch is also doing rather more than the description -
+> It is inserting extra breaks into a switch statement with
+> no comment as to why.
 
-True.  Then again I try to stick MODULE_DESCRIPTIONS in wherever I can :)
+Dan posted it to linux-wireless@vger.kernel.org on 13 Feb 2007.
+The description in the body is quoted below:
 
+	Correct assignment of DOT1XENABLE in WE-19 codepaths.
+	RX_UNENCRYPTED_EAPOL = 1 really means setting DOT1XENABLE _off_, and
+	vice versa.  The original WE-19 patch erroneously reversed that.  This
+	patch fixes association with unencrypted and WEP networks when using
+	wpa_supplicant.
+	
+	It also adds two missing break statements that, left out, could result
+	in incorrect card configuration.
+	
+	Please commit to both development and stable branches.
+
+Hth...
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
