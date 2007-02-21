@@ -1,53 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33094 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932279AbXBSOTF (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:12669 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932974AbXBUBZv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 09:19:05 -0500
-Subject: Re: [PATCH] d80211: fix incorrect hw.priv setting in  ieee80211_alloc_hw()
-From: Johannes Berg <johannes@sipsolutions.net>
+	Tue, 20 Feb 2007 20:25:51 -0500
+From: Michael Wu <flamingice@sourmilk.net>
 To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1171892584.8550.13.camel@dv>
-References: <20070217074208.348.69546.stgit@dv.roinet.com>
-	 <1171707397.3487.5.camel@johannes.berg>  <1171835685.2201.4.camel@dv>
-	 <1171866799.3471.1.camel@johannes.berg>  <1171892584.8550.13.camel@dv>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OBL0cOp1m+QHMTOAOJVn"
-Date: Mon, 19 Feb 2007 15:18:56 +0100
-Message-Id: <1171894736.3471.23.camel@johannes.berg>
-Mime-Version: 1.0
+Subject: Re: [PATCH] rt2x00: Fix max_rssi values signedness bug
+Date: Tue, 20 Feb 2007 20:25:27 -0500
+Cc: Michael Buesch <mb@bu3sch.de>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200702202102.14354.mb@bu3sch.de> <1172020729.6042.2.camel@dv>
+In-Reply-To: <1172020729.6042.2.camel@dv>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1777872.oU9DeXhpcy";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200702202025.33485.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--nextPart1777872.oU9DeXhpcy
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
---=-OBL0cOp1m+QHMTOAOJVn
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Tuesday 20 February 2007 20:18, Pavel Roskin wrote:
+> > /* Maximum values for various statistics.
+> >  * Leave at 0 to indicate no support. Use negative numbers for dBm. */
+> > char max_rssi;
+> > char max_signal;
+> > char max_noise;
+>
+> So, there will be no dBm on PowerPC.  I think those fields should be
+> "signed char".
+Like in the patch Michael Buesch posted right before this one?
 
-On Mon, 2007-02-19 at 08:43 -0500, Pavel Roskin wrote:
+-Michael Wu
 
-> Perhaps you misunderstood my idea.  There is an field called priv in
-> struct ieee80211_hw.  That field will be written to, no matter how good
-> the compiler is at optimization.  And most drivers will access that
-> field by reading from memory.
-
-My mistake. I was thinking of struct wiphy.priv and not
-ieee80211_hw.priv.
-
-johannes
-
-
---=-OBL0cOp1m+QHMTOAOJVn
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart1777872.oU9DeXhpcy
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBF2bHQ/ETPhpq3jKURAthJAJwPYCl2fsSSJaGcorq1n0KIPjKcswCdFQhg
-XlRnKRmj/Tq7KwMLy1wplFg=
-=/9Se
+iD8DBQBF25+NT3Oqt9AH4aERAqBbAKDbuhtn25fSR3kXATu8qQYcXCrG6wCdErsM
+73bsAyAGu3CLuf3ZtM7vGF4=
+=/6Zo
 -----END PGP SIGNATURE-----
 
---=-OBL0cOp1m+QHMTOAOJVn--
-
+--nextPart1777872.oU9DeXhpcy--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
