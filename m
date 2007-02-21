@@ -1,69 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43666 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965739AbXBOPAA (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.187]:62524 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422668AbXBUQpD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Feb 2007 10:00:00 -0500
-Message-Id: <20070215144300.025457000@sipsolutions.net>
-References: <20070215144241.847938000@sipsolutions.net>
-Date: Thu, 15 Feb 2007 15:42:49 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>
-Subject: [PATCH 08/10] zd1211rw-d80211: update for wiphy api
-Mime-Version: 1.0
+	Wed, 21 Feb 2007 11:45:03 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so254600nfa
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Feb 2007 08:45:01 -0800 (PST)
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH 2/3] d80211: Split antenna selection into TX and RX antenna
+Date: Wed, 21 Feb 2007 17:44:23 +0100
+Cc: Jiri Benc <jbenc@suse.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200702211702.47410.IvDoorn@gmail.com> <200702211737.33996.mb@bu3sch.de>
+In-Reply-To: <200702211737.33996.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702211744.24034.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-update zd1211rw-d80211.
+On Wednesday 21 February 2007 17:37, Michael Buesch wrote:
+> On Wednesday 21 February 2007 17:02, Ivo van Doorn wrote:
+> > Let broadcom use the antenna_tx field for hardware configuration.
+> > I did not check if the device is also capable of RX antenna selection,
+> > but current implementation only suggested support for the TX antenna.
+> > 
+> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> > 
+> > ---
+> > 
+> > diff --git a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
+> > index cdce227..580ea33 100644
+> > --- a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
+> > +++ b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
+> > @@ -2609,7 +2609,7 @@ static int bcm43xx_dev_config(struct ieee80211_hw *hw,
+> >  	int antenna = -1;
+> >  	int err = 0;
+> >  
+> > -	switch (conf->antenna_sel) {
+> > +	switch (conf->antenna_sel_tx) {
+> 
+> Nope, this is conf->antenna_sel_rx
+> ;)
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+On further inspection not even that. :P
+The outcome of that switch is stored in the antenna variable, which is used with
 
----
- drivers/net/wireless/d80211/zd1211rw/zd_mac.c |    6 +++---
- drivers/net/wireless/d80211/zd1211rw/zd_usb.c |    2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+	bcm43xx_mgmtframe_txantenna(dev, antenna);
+	bcm43xx_set_rx_antenna(dev, antenna);
 
---- wireless-dev.orig/drivers/net/wireless/d80211/zd1211rw/zd_mac.c	2007-02-15 13:25:17.567940064 +0100
-+++ wireless-dev/drivers/net/wireless/d80211/zd1211rw/zd_mac.c	2007-02-15 13:25:36.357940064 +0100
-@@ -53,7 +53,7 @@ int zd_mac_init_hw(struct ieee80211_hw *
- 		goto disable_int;
- 	ZD_ASSERT(!irqs_disabled());
- 	spin_lock_irq(&mac->lock);
--	memcpy(dev->perm_addr, addr, ETH_ALEN);
-+	SET_IEEE80211_PERM_ADDR(dev, addr);
- 	spin_unlock_irq(&mac->lock);
- 
- 	r = zd_read_regdomain(chip, &default_regdomain);
-@@ -628,7 +628,7 @@ struct ieee80211_hw *zd_mac_alloc(struct
- 	mac->dev = dev;
- 
- 	mac->mode = IEEE80211_IF_TYPE_MGMT;
--	mac->hwaddr = dev->perm_addr;
-+	mac->hwaddr = dev->wiphy->perm_addr;
- 	mac->requested_channel = 1;
- 
- 	memcpy(mac->channels, zd_channels, sizeof(zd_channels));
-@@ -664,7 +664,7 @@ struct ieee80211_hw *zd_mac_alloc(struct
- 	housekeeping_init(mac);
- 	INIT_WORK(&mac->set_multicast_hash_work, set_multicast_hash_handler);
- 
--	dev->dev = &intf->dev;
-+	SET_IEEE80211_DEV(dev, &intf->dev);
- 	return dev;
- }
- 
---- wireless-dev.orig/drivers/net/wireless/d80211/zd1211rw/zd_usb.c	2007-02-15 13:25:17.657940064 +0100
-+++ wireless-dev/drivers/net/wireless/d80211/zd1211rw/zd_usb.c	2007-02-15 13:25:53.167940064 +0100
-@@ -955,7 +955,7 @@ static int probe(struct usb_interface *i
- 	}
- 
- 	dev_dbg_f(&intf->dev, "successful\n");
--	dev_info(&intf->dev,"wiphy%d\n", dev->index);
-+	dev_info(&intf->dev, "%s\n", wiphy_name(dev->wiphy));
- 	return 0;
- error:
- 	usb_reset_device(interface_to_usbdev(intf));
+So I guess that needs to be fixed to create a switch statement for
+the RX antenna and one for the TX antenna?
 
---
-
+Ivo
