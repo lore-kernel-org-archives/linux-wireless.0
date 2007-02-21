@@ -1,27 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtpipvs3.aruba.it ([62.149.128.188]:40557 "HELO smtp2.aruba.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751331AbXBVR1G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Feb 2007 12:27:06 -0500
-From: "ivan.muccini@witech.it" <ivan.muccini@witech.it>
-To: linux-wireless@vger.kernel.org
-Subject: 802.11s is possible
-Date: Thu, 22 Feb 2007 18:20:02 +0100
-Message-id: <45ddd0c2.b2.681a.1375331394@webmailh5.aruba.it>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:42830
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422665AbXBUQiH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Feb 2007 11:38:07 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 2/3] d80211: Split antenna selection into TX and RX antenna
+Date: Wed, 21 Feb 2007 17:37:33 +0100
+Cc: Jiri Benc <jbenc@suse.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200702211702.47410.IvDoorn@gmail.com>
+In-Reply-To: <200702211702.47410.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702211737.33996.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, i'm italian student. I want experiment a channel
-assignment algorithm in 802.11s mesh network. I think to use
-madwifi driver for develop 802.11 feature, like new mesh
-header in MAC header of Data frame, beacon, probe message
-and association. Moreover I need to create new information
-elemnt for HWMP routing protcol.
-Becouse i am new in madwifi, i'm asking you if is possible
-do this whit madwifi.
-Anybody can help me?
-thank
+On Wednesday 21 February 2007 17:02, Ivo van Doorn wrote:
+> Let broadcom use the antenna_tx field for hardware configuration.
+> I did not check if the device is also capable of RX antenna selection,
+> but current implementation only suggested support for the TX antenna.
+> 
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> 
+> ---
+> 
+> diff --git a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
+> index cdce227..580ea33 100644
+> --- a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
+> +++ b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
+> @@ -2609,7 +2609,7 @@ static int bcm43xx_dev_config(struct ieee80211_hw *hw,
+>  	int antenna = -1;
+>  	int err = 0;
+>  
+> -	switch (conf->antenna_sel) {
+> +	switch (conf->antenna_sel_tx) {
 
-Ivan
+Nope, this is conf->antenna_sel_rx
+;)
+
+-- 
+Greetings Michael.
