@@ -1,40 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2166 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965534AbXBOOi7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Feb 2007 09:38:59 -0500
-Date: Thu, 15 Feb 2007 09:19:44 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: nl80211 userspace
-Message-ID: <20070215141944.GA3310@tuxdriver.com>
-References: <1171479846.3709.3.camel@johannes.berg> <40f31dec0702150017x3ecfca57ucded8f1d88bbb121@mail.gmail.com>
-Mime-Version: 1.0
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:58685 "EHLO amd.ucw.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1422838AbXBUTiq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Feb 2007 14:38:46 -0500
+Date: Wed, 21 Feb 2007 20:38:36 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Stephen Hemminger <shemminger@osdl.org>
+Cc: James Ketrenos <jketreno@linux.intel.com>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: iwlwifi warnings
+Message-ID: <20070221193836.GC3732@elf.ucw.cz>
+References: <45CCE3CA.4050904@linux.intel.com> <20070213181313.GA5350@ucw.cz> <45D254C6.7050401@linux.intel.com> <20070219224432.GD21199@elf.ucw.cz> <45DBE559.8080903@osdl.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0702150017x3ecfca57ucded8f1d88bbb121@mail.gmail.com>
+In-Reply-To: <45DBE559.8080903@osdl.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 15, 2007 at 10:17:50AM +0200, Nick Kossifidis wrote:
-> I think it would be nice to have ifconfig for all interface
-> configuration as they have done in openbsd, it's better to have one
-> tool for all. What do you think ?
+Hi!
 
-I think I'd lean to a separate tool, analagous to ethtool.
+> BUilding with sparse shows lots of warnings.
 
-Anyway, the problem with using ifconfig is that it is generally
-considered to be deprecated in favor of 'ip' (i.e. the iproute2
-utility).  So increasing dependence on ifconfig would seem to be a
-bad idea.
+You seem to be the lucky one, able to actually compile the
+beast. Could you run diff against vanilla and post it somewhere?
 
-John
+"Normal" installation procedure has too many steps in my eyes, and
+combined git tree is not available, so I was waiting for merge at
+least into -wirelessdev tree.
+							Pavel
 
-P.S.  Michael is, of course, right that the tool for users probably
-should not rely on python (or perl, et al).  FWIW, I got the
-impression that Johannes's tool was meant to use in the short-run
-for developers...?
 -- 
-John W. Linville
-linville@tuxdriver.com
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
