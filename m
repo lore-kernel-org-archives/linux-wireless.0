@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:53520 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161329AbXBGPmN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Feb 2007 10:42:13 -0500
-Message-ID: <45C9F352.3030706@lwfinger.net>
-Date: Wed, 07 Feb 2007 09:42:10 -0600
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Daniel Gryniewicz <dang@fprintf.net>
-CC: Pavel Roskin <proski@gnu.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: RFT bcm43xx: Really _GOOD_ news
-References: <45C8E64B.1050605@lwfinger.net>	<200702061848.00815.gene.heskett@verizon.net>	<45C95830.6040507@lwfinger.net>	<200702070303.40968.gene.heskett@verizon.net>	<1170836250.11150.116.camel@dv> <1170861665.6964.4.camel@athena.fprintf.net>
-In-Reply-To: <1170861665.6964.4.camel@athena.fprintf.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from styx.suse.cz ([82.119.242.94]:52891 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1422725AbXBURp2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Feb 2007 12:45:28 -0500
+Date: Wed, 21 Feb 2007 18:45:25 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: [RFC PATCH] d80211: fix build break from netdev class_device ->  device changes
+Message-ID: <20070221184525.4a40779b@griffin.suse.cz>
+In-Reply-To: <20070221005811.GA3875@tuxdriver.com>
+References: <20070221005811.GA3875@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Gryniewicz wrote:
-> On Wed, 2007-02-07 at 03:17 -0500, Pavel Roskin wrote:
->> On Wed, 2007-02-07 at 03:03 -0500, Gene Heskett wrote:
->>
->>> And the 4318 is whats in my lappy.  What does it break?
->> Oh, please, let's stop such questions.  Does it really matter what some
->> knowingly wrong change does to particular hardware?  Just don't try the
->> old patch.  Just forget that it existed.  It's not going to the kernel.
->>
->> Please try the new patch.  Ideally, measure speeds for various rates,
->> because it's the speed that the patch is supposed to improve.
->>
->> If you have more questions of this kind, please make sure my personal
->> e-mail is not in CC.
->>esg 
+On Tue, 20 Feb 2007 19:58:11 -0500, John W. Linville wrote:
+> In preparation for 2.6.21-rc1, I pulled Linus' latest tree into a
+> branch of wireless-dev.  I hit a build problem with the sysfs stuff,
+> due to the recent changes from class_device -> device for net_device.
 > 
-> Except that the new patch changes nothing for us poor 4318 users, so
-> what's the point of trying it?
+> Since I don't count sysfs as a strength, I thought it was worth
+> posting this for some review before I actually pulled Linus' latest
+> into wireless-dev and slapped this on top of it... :-)
 > 
-> That said, I'm running the broken patch right now, and my 4318 is
-> working better than ever before, so it changed *something* for my card.
+> Comments?
 
-Intriguing.  Please send me the output of 'dmesg | grep bcm43xx'.  Thanks.
+Looks correct. Don't know if it's complete, though - I tried to pull
+from Linus but there are many conflicts caused by the ssb code, I'll
+leave them to you :-)
 
-Larry
+Acked-by: Jiri Benc <jbenc@suse.cz>
+
+I wonder if we can simplify it sometime in the future as we're getting
+device_attribute in the callbacks now... Probably not. And it's not
+worth the effort anyway.
+
+-- 
+Jiri Benc
+SUSE Labs
