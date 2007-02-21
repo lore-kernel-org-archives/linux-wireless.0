@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:43370 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161294AbXBGNXs (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:33689 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751121AbXBUBsD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Feb 2007 08:23:48 -0500
-Message-ID: <45C9D2E1.7040906@lwfinger.net>
-Date: Wed, 07 Feb 2007 07:23:45 -0600
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, netdev@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] bcm43xx: Fix for oops on resume
-References: <45c8bd59.oamnvaNRMZvKoPBa%Larry.Finger@lwfinger.net> <1170850549.6798.22.camel@johannes.berg>
-In-Reply-To: <1170850549.6798.22.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 20 Feb 2007 20:48:03 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HJgZ0-000191-6n
+	for linux-wireless@vger.kernel.org; Tue, 20 Feb 2007 20:46:34 -0500
+Subject: Re: [PATCH] rt2x00: Fix max_rssi values signedness bug
+From: Pavel Roskin <proski@gnu.org>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200702202025.33485.flamingice@sourmilk.net>
+References: <200702202102.14354.mb@bu3sch.de> <1172020729.6042.2.camel@dv>
+	 <200702202025.33485.flamingice@sourmilk.net>
+Content-Type: text/plain
+Date: Tue, 20 Feb 2007 20:47:57 -0500
+Message-Id: <1172022477.6042.4.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Tue, 2007-02-06 at 11:39 -0600, Larry Finger wrote:
->> There is a kernel oops on bcm43xx when resuming due to an overly tight timeout loop.
-> 
-> Come to think of it... Is there any chance of fixing the actual oops
-> that happens in this case? I can imagine broken hardware or firmware
-> that causes this as well and we don't really want to oops in that case
-> either... That's why we have the timeout in the first place, to not hang
-> there forever.
-> 
-> Nothing against this patch though.
+On Tue, 2007-02-20 at 20:25 -0500, Michael Wu wrote:
+> On Tuesday 20 February 2007 20:18, Pavel Roskin wrote:
+> > So, there will be no dBm on PowerPC.  I think those fields should be
+> > "signed char".
+> Like in the patch Michael Buesch posted right before this one?
 
-As you suggested earlier, a slow clock setting in the bcm43xx device may be the cause of this
-difficulty. If my laptop would suspend/resume correctly, then I could test various fixes based on
-that hypothesis. Since it does not, I think the band-aid approach is warranted. A proper fix is
-still on my agenda; however, getting full data rates still has priority.
+Yes.  Sorry for the noise.
 
-Larry
+-- 
+Regards,
+Pavel Roskin
+
