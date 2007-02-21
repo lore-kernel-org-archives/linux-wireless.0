@@ -1,56 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:33506 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932576AbXBSTkK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 14:40:10 -0500
-Date: Mon, 19 Feb 2007 20:40:04 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	John Linville <linville@tuxdriver.com>,
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:37819
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161315AbXBUQNX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Feb 2007 11:13:23 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 1/3] d80211: Split antenna selection into TX and RX antenna
+Date: Wed, 21 Feb 2007 17:12:53 +0100
+Cc: Jiri Benc <jbenc@suse.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] d80211: Add software sequence support
-Message-ID: <20070219204004.6730a17a@griffin.suse.cz>
-In-Reply-To: <1171663926.3575.42.camel@johannes.berg>
-References: <200702141423.27823.IvDoorn@gmail.com>
-	<20070216135827.7d262ae3@griffin.suse.cz>
-	<1171660484.3575.34.camel@johannes.berg>
-	<200702162307.16826.IvDoorn@gmail.com>
-	<1171663926.3575.42.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+References: <200702211702.46661.IvDoorn@gmail.com>
+In-Reply-To: <200702211702.46661.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702211712.54089.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 16 Feb 2007 23:12:06 +0100, Johannes Berg wrote:
-> On Fri, 2007-02-16 at 23:07 +0100, Ivo van Doorn wrote:
-> > On Friday 16 February 2007 22:14, Johannes Berg wrote:
-> > > Make the counter per-mac address?
-> > 
-> > Wouldn't that be the same as per-interface?
+On Wednesday 21 February 2007 17:02, Ivo van Doorn wrote:
+> Currently d80211 only uses a single variable for antenna selection,
+> some devices (rt2x00) can configure the TX and RX antenna
+> seperately from eachother.
+> Assuming that antenna_sel is only for tx, and rx is "the other antenna"
+> is flawed and does hinder possible switching of RX antenna based
+> on RSSI results. And configuring the wrong antenna also impacts
+> transfer rates and link quality.
 > 
-> Don't WDS interfaces have the same MAC as the corresponding AP
-> interface?
+> This patch will remove the usage of the IOCTL call:
+> PRISM2_PARAM_ANTENNA_SEL but will restore the usage of
+> (the already excisting) IOCTL calls PRISM2_PARAM_ANTSEL_TX and
+> PRISM2_PARAM_ANTSEL_RX.
+> 
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> 
+> ---
+> 
+> diff --git a/include/net/d80211.h b/include/net/d80211.h
+> index 551fe46..68c8c8a 100644
+> --- a/include/net/d80211.h
+> +++ b/include/net/d80211.h
+> @@ -196,7 +196,8 @@ struct ieee80211_tx_control {
+>  						* above */
+>  	u8 retry_limit;		/* 1 = only first attempt, 2 = one retry, .. */
+>  	u8 power_level;		/* per-packet transmit power level, in dBm */
+> -	u8 antenna_sel; 	/* 0 = default/diversity, 1 = Ant0, 2 = Ant1 */
+> +	u8 antenna_sel_tx; 	/* 0 = default/diversity, 1 = Ant0, 2 = Ant1 */
+> +	u8 antenna_sel_rx; 	/* 0 = default/diversity, 1 = Ant0, 2 = Ant1 */
 
-They do.
+This doesn't make sense to me.
+Why should we want to set the RX antenna on TXing a packet?
 
-Per-MAC address counters would work but it's another overhead we need
-to add (allocate a new reference-counted structure, put a pointer to it
-into sdata, correctly deal with it when MAC address changes).
+>  	s8 key_idx;		/* -1 = do not encrypt, >= 0 keyidx from
+>  				 * hw->set_key() */
+>  	u8 icv_len;		/* length of the ICV/MIC field in octets */
+> @@ -285,10 +286,9 @@ struct ieee80211_conf {
+>          u8 antenna_max;			/* maximum antenna gain */
+>  	short tx_power_reduction; /* in 0.1 dBm */
+>  
+> -	int antenna_sel;		/* default antenna conf:
+> -					 *	0 = default/diversity,
+> -			  		 *	1 = Ant0,
+> -					 *	2 = Ant1 */
+> +	/* 0 = default/diversity, 1 = Ant0, 2 = Ant1 */
+> +	u8 antenna_sel_tx;
+> +	u8 antenna_sel_rx;
 
-I think we can live with the counter in sdata. It's not perfect but it
-should work for all useful cases. The only situation where it won't
-work I have been able to imagine is the case I described (STA and WDS
-with the same address) and this particular setup is currently being
-denied by d80211 (and it's not allowed by 802.11, btw).
-
-If we consider this as a problem later, we can always change to per-MAC
-address counters or something as it's completely internal to the stack
-and no driver changes would be required.
-
- Jiri
+This makes sense, yes. I ack this.
 
 -- 
-Jiri Benc
-SUSE Labs
+Greetings Michael.
