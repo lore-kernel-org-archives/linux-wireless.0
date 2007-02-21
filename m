@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:6598 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1946151AbXBIVzJ (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:35977
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161322AbXBUQD5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Feb 2007 16:55:09 -0500
-Message-ID: <45CCE3CA.4050904@linux.intel.com>
-Date: Fri, 09 Feb 2007 13:12:42 -0800
-From: James Ketrenos <jketreno@linux.intel.com>
+	Wed, 21 Feb 2007 11:03:57 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: Please pull http://bu3sch.de/git/wireless-dev.git for-linville
+Date: Wed, 21 Feb 2007 17:00:36 +0100
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
-Subject: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200702211700.36555.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please hold all questions until I am done with this email.  Thank you.
+The following changes since commit 17e0264113fcf465d0712ce492c6a546d207d786:
+  Michael Wu:
+        d80211: Fix ieee80211_ptr check
 
-We are pleased to announce the availability of a new driver for the 
-Intel PRO/Wireless 3945ABG Network Connection adapter.  This new driver 
-uses the new d80211 subsystem previously only available as part of the 
-wireless-dev tree.
+are found in the git repository at:
 
-You can find the new driver, and additional information about it, here:
+  git pull http://bu3sch.de/git/wireless-dev.git for-linville
 
-   http://intellinuxwireless.org/iwlwifi.
+Michael Buesch:
+      ssb: Add sysfs file to read/write the SPROM on PCI devices.
+      ssb: Ignore additional 802.11 cores on devices with dangling pins on those cores.
+      bcm43xx-d80211: Ignore any A-PHY, as we don't support it, yet.
+      bcm43xx-d80211: Add "is-running" checks on core_stop and core_exit.
+      bcm43xx-d80211: Remove unneeded SHUTTINGDOWN and RESTARTING flags.
+      bcm43xx-d80211: Hold firmware in memory until we rmmod the module.
+      bcm43xx-d80211: Move firmware pointers to bcm43xx_wldev, where they belong.
+      ssb: Also check for PCI vendor ID, not just PCI device ID.
+      bcm43xx-d80211: Add modparam to keep bad frames in monitor mode.
+      ssb: Take care of changed REJECT bit in new backplane revisions.
+      bcm43xx-d80211: Turn the Radio and Analog off on core-exit and attach-finish.
+      bcm43xx-d80211: Set GMODE-MACCTL, if we are operating in GMODE.
+      bcm43xx-d80211: Fix register write for !GPHY.
+      Merge branch 'master' of git://zeus2.kernel.org/.../linville/wireless-dev
+      Merge branch 'master' of git://zeus2.kernel.org/.../linville/wireless-dev
 
-Within the new driver package are sources which we plan to submit for 
-kernel inclusion as well as scripts and patches which create a version 
-of the driver which can be loaded into kernels based on 2.6.18 and newer 
-(provided you have installed the d80211 subsystem as well)  The README 
-document can walk you through pretty quickly.
+ drivers/net/wireless/d80211/bcm43xx/bcm43xx.h      |   19 +-
+ drivers/net/wireless/d80211/bcm43xx/bcm43xx_lo.c   |    2 
+ drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c |  179 ++++++++++---------
+ drivers/ssb/core.c                                 |  118 +++++++++++-
+ drivers/ssb/pci.c                                  |  189 ++++++++++++++++++++
+ drivers/ssb/scan.c                                 |   38 ++++
+ drivers/ssb/ssb_private.h                          |    9 +
+ include/linux/ssb/ssb.h                            |    4 
+ include/linux/ssb/ssb_regs.h                       |    3 
+ 9 files changed, 449 insertions(+), 112 deletions(-)
 
-Since a lot of our users are not able to move to the latest versions of 
-the Linux kernel, we have put together a d80211 package allowing the 
-installation of the d80211 subsystem into an existing kernel image 
-without the need to migrate to wireless-dev, or upgrade to a newer 
-kernel at all (assuming you are using 2.6.18 or newer).
-
-You can find that package at:
-
-   http://intellinuxwireless.org/d80211
-
-Ok.  Now... any questions?
-
-Thanks,
-James / Intel Corporation
+-- 
+Greetings Michael.
