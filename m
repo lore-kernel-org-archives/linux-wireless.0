@@ -1,37 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:54507
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030572AbXBMARB (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.188]:12666 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161319AbXBUQD2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Feb 2007 19:17:01 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Jouni Malinen" <jkm@devicescape.com>
-Subject: Re: d80211: current TKIP hwcrypto implementation seems to be broken
-Date: Tue, 13 Feb 2007 01:16:50 +0100
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-References: <200702041344.19117.mb@bu3sch.de> <20070212235341.GD16597@instant802.com> <200702130106.37999.mb@bu3sch.de>
-In-Reply-To: <200702130106.37999.mb@bu3sch.de>
+	Wed, 21 Feb 2007 11:03:28 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so242963nfa
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Feb 2007 08:03:27 -0800 (PST)
+To: Jiri Benc <jbenc@suse.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: [PATCH 2/3] d80211: Split antenna selection into TX and RX antenna
+Date: Wed, 21 Feb 2007 17:02:47 +0100
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702130116.50406.mb@bu3sch.de>
+  charset="us-ascii"
+Message-Id: <200702211702.47410.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 13 February 2007 01:06, Michael Buesch wrote:
-> On Tuesday 13 February 2007 00:53, Jouni Malinen wrote:
-> > On Mon, Feb 12, 2007 at 10:39:31PM +0100, Michael Buesch wrote:
-> > 
-> > > What happens on RX when the iv32 wraps. Well, it simply won't decrypt
-> > > the frame. What we must do then is upload a new key as fast as possible.
-> > > The undecrypted frame can be either decrypted in SW (which I think d80211
-> > > can do. At least with minor additional changes), or we drop it.
-> > 
-> > That "iv32 wrap" should have been "iv32 changes" (phase1 key changes
-> 
-> Yep, I'm sorry. It should be iv32, of course.
+Let broadcom use the antenna_tx field for hardware configuration.
+I did not check if the device is also capable of RX antenna selection,
+but current implementation only suggested support for the TX antenna.
 
-Ah, crap. I should really go to bed. ;)
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
--- 
-Greetings Michael.
+---
+
+diff --git a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
+index cdce227..580ea33 100644
+--- a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
++++ b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
+@@ -2609,7 +2609,7 @@ static int bcm43xx_dev_config(struct ieee80211_hw *hw,
+ 	int antenna = -1;
+ 	int err = 0;
+ 
+-	switch (conf->antenna_sel) {
++	switch (conf->antenna_sel_tx) {
+ 	case 0: /* default/diversity */
+ 		antenna = BCM43xx_ANTENNA_DEFAULT;
+ 		break;
+diff --git a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_xmit.c b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_xmit.c
+index 71cba92..cfc84cd 100644
+--- a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_xmit.c
++++ b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_xmit.c
+@@ -281,7 +281,7 @@ static void generate_txhdr_fw4(struct bcm43xx_wldev *dev,
+ 		phy_ctl |= BCM43xx_TX4_PHY_OFDM;
+ 	if (dev->short_preamble)
+ 		phy_ctl |= BCM43xx_TX4_PHY_SHORTPRMBL;
+-	switch (txctl->antenna_sel) {
++	switch (txctl->antenna_sel_tx) {
+ 	case 0:
+ 		phy_ctl |= BCM43xx_TX4_PHY_ANTLAST;
+ 		break;
