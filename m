@@ -1,39 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:54455
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:52996
 	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992987AbXBQSO2 (ORCPT
+	with ESMTP id S1422724AbXBURcf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Feb 2007 13:14:28 -0500
+	Wed, 21 Feb 2007 12:32:35 -0500
 From: Michael Buesch <mb@bu3sch.de>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: More breakage in wireless-dev.git
-Date: Sat, 17 Feb 2007 19:14:06 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <1171690868.31103.17.camel@dv> <200702171856.08068.mb@bu3sch.de> <20070217131045.tsmois8g0og8okc4@webmail.spamcop.net>
-In-Reply-To: <20070217131045.tsmois8g0og8okc4@webmail.spamcop.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 2/3] d80211: Split antenna selection into TX and RX antenna
+Date: Wed, 21 Feb 2007 18:32:05 +0100
+Cc: Jiri Benc <jbenc@suse.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200702211702.47410.IvDoorn@gmail.com> <200702211819.52114.mb@bu3sch.de> <200702211824.45011.IvDoorn@gmail.com>
+In-Reply-To: <200702211824.45011.IvDoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
-Message-Id: <200702171914.06802.mb@bu3sch.de>
+Message-Id: <200702211832.05316.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 17 February 2007 19:10, Pavel Roskin wrote:
-> Quoting Michael Buesch <mb@bu3sch.de>:
-> 
-> > On Saturday 17 February 2007 18:51, Pavel Roskin wrote:
-> > > > The slab error on the end of your dmesg is interresting, though.
-> > >
-> > > I'll have a closer look.
+On Wednesday 21 February 2007 18:24, Ivo van Doorn wrote:
+> > No, there is no need to inline. Simple static in main.c above
+> > the config callback, please. :)
+> > And simply return BCM43xx_ANTENNA_DEFAULT for the default:
+> > case, so it doesn't break immediately, if someone decides
+> > to add something to d80211.
 > >
-> > I think that's fixed now, too.
+> > ...But we've almost got it :D
+> > After that you'll get my sign-off.
 > 
-> Awesome!  I'm waiting for your public repository to update so I can test your
-> fixes.
+> bcm43xx_antenna_from_ieee80211 is no longer inlined,
+> and it returns BCM43xx_ANTENNA_DEFAULT by default.
+> 
+> Hopefully I got it this time. :)
 
-I always update that when committing stuff, directly.
-So when you see mail from me "I committed foo", it means it's
-available in the public repository.
+Yeah, *clap clap clap* :D
+
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+> ---
+> 
+> diff --git a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
+> index cdce227..798427f 100644
+> --- a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
+> +++ b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
+> @@ -2598,6 +2598,20 @@ static int bcm43xx_switch_phymode(struct bcm43xx_wl *wl,
+>  	return 0;
+>  }
+>  
+> +static int bcm43xx_antenna_from_ieee80211(u8 antenna)
+> +{
+> +	switch (antenna) {
+> +	case 0: /* default/diversity */
+> +		return BCM43xx_ANTENNA_DEFAULT;
+> +	case 1: /* Antenna 0 */
+> +		return BCM43xx_ANTENNA0;
+> +	case 2: /* Antenna 1 */
+> +		return BCM43xx_ANTENNA1;
+> +	default:
+> +		return BCM43xx_ANTENNA_DEFAULT;
+> +	}
+> +}
+> +
+>  static int bcm43xx_dev_config(struct ieee80211_hw *hw,
+>  			      struct ieee80211_conf *conf)
+>  {
+> @@ -2606,22 +2620,12 @@ static int bcm43xx_dev_config(struct ieee80211_hw *hw,
+>  	struct bcm43xx_phy *phy;
+>  	unsigned long flags;
+>  	unsigned int new_phymode = 0xFFFF;
+> -	int antenna = -1;
+> +	int antenna_tx;
+> +	int antenna_rx;
+>  	int err = 0;
+>  
+> -	switch (conf->antenna_sel) {
+> -	case 0: /* default/diversity */
+> -		antenna = BCM43xx_ANTENNA_DEFAULT;
+> -		break;
+> -	case 1: /* Antenna 0 */
+> -		antenna = BCM43xx_ANTENNA0;
+> -		break;
+> -	case 2: /* Antenna 1 */
+> -		antenna = BCM43xx_ANTENNA1;
+> -		break;
+> -	default:
+> -		assert(0);
+> -	}
+> +	antenna_tx = bcm43xx_antenna_from_ieee80211(conf->antenna_sel_tx);
+> +	antenna_rx = bcm43xx_antenna_from_ieee80211(conf->antenna_sel_rx);
+>  
+>  	mutex_lock(&wl->mutex);
+>  
+> @@ -2682,8 +2686,8 @@ static int bcm43xx_dev_config(struct ieee80211_hw *hw,
+>  	}
+>  
+>  	/* Antennas for RX and management frame TX. */
+> -	bcm43xx_mgmtframe_txantenna(dev, antenna);
+> -	bcm43xx_set_rx_antenna(dev, antenna);
+> +	bcm43xx_mgmtframe_txantenna(dev, antenna_tx);
+> +	bcm43xx_set_rx_antenna(dev, antenna_rx);
+>  
+>  	/* Update templates for AP mode. */
+>  	if (bcm43xx_is_mode(wl, IEEE80211_IF_TYPE_AP))
+> diff --git a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_xmit.c b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_xmit.c
+> index 71cba92..cfc84cd 100644
+> --- a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_xmit.c
+> +++ b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_xmit.c
+> @@ -281,7 +281,7 @@ static void generate_txhdr_fw4(struct bcm43xx_wldev *dev,
+>  		phy_ctl |= BCM43xx_TX4_PHY_OFDM;
+>  	if (dev->short_preamble)
+>  		phy_ctl |= BCM43xx_TX4_PHY_SHORTPRMBL;
+> -	switch (txctl->antenna_sel) {
+> +	switch (txctl->antenna_sel_tx) {
+>  	case 0:
+>  		phy_ctl |= BCM43xx_TX4_PHY_ANTLAST;
+>  		break;
+> 
+> 
 
 -- 
 Greetings Michael.
