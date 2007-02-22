@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:38685 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030477AbXBLXSq (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:7511 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751952AbXBVVtb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Feb 2007 18:18:46 -0500
-Message-ID: <45D0F5D4.3070305@lwfinger.net>
-Date: Mon, 12 Feb 2007 17:18:44 -0600
-From: Larry Finger <larry.finger@lwfinger.net>
+	Thu, 22 Feb 2007 16:49:31 -0500
+Message-ID: <45DE0F15.4000905@linux.intel.com>
+Date: Thu, 22 Feb 2007 13:45:57 -0800
+From: James Ketrenos <jketreno@linux.intel.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH] bcm43xx: Fix loss of association after resume
-References: <45cc9ebb.+9O/IXvs/C9RyFnk%Larry.Finger@lwfinger.net>	<200702122148.58101.rjw@sisk.pl> <45D0E834.4050800@lwfinger.net> <200702130008.47684.rjw@sisk.pl>
-In-Reply-To: <200702130008.47684.rjw@sisk.pl>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Subject: FYI - new d80211 subsystem package posted
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafael J. Wysocki wrote:
-> On Monday, 12 February 2007 23:20, Larry Finger wrote:
->> Rafael J. Wysocki wrote:
->>> On Monday, 12 February 2007 02:18, Larry Finger wrote:
->>>> Rafael J. Wysocki wrote:
->>>>> It doesn't help in my case.  The behavior is similar to that without the patch,
->>>>> but also with the patch it loses the association entirely.
->>>> Thanks for trying.
->>>>
->>>> Do you have this patch installed? If you do, please try increasing the 100 to 200.
->>> Hm, but it wouldn't help to get the microcode to respond after the resume ...
->> Yes it would. That count is how long the system waits for the firmware to respond.
->>
->>> I'm still thinking the problem is with the firmware.  Where exactly is it
->>> stored?
->> In the memory of the microprocessor on the card.
->>
->> Please do what I asked.
-> 
-> With or without the previous patch?
 
-With the change to BCM43xx_IRQWAIT_MAX_RETRIES, but not the one that tries to reload the firmware.
+I posted a new legacy kernel d80211 package based on wireless-dev commit 
+id 17e0264113fcf465d0712ce492c6a546d207d786.
 
-Larry
+Per the versioning scheme being used where the first digit is 
+incremented with each re-base to wireless dev, this version is:
 
+	d80211-2.0.1.tgz
+
+You can find it (if you want it, or want to direct users to it) at
+
+	http://intellinuxwireless.org/?p=d80211&n=downloads
+
+There is little difference beyond compatibility patches for this version 
+vs. John's tree.  I pulled out the bulk of the patches we had in 
+pending/ as they don't currently apply to the rebase and I didn't want 
+to delay getting this out for users.  The only patch currently applied 
+is the one I emailed to the list a few hours ago making nl80211 optional 
+in the build.
+
+Beyond doing some build testing, I haven't given much testing yet to 
+run-time.
+
+Thanks,
+James
