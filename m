@@ -1,40 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33285
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422959AbXBATWZ (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58567 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751619AbXBVNgM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Feb 2007 14:22:25 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: Anyone have notes from Wireless Summit?
-Date: Thu, 1 Feb 2007 20:20:49 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <20070131.155116.62344146.davem@davemloft.net> <200702011619.13456.mb@bu3sch.de> <45C22A4C.5010105@lwfinger.net>
-In-Reply-To: <45C22A4C.5010105@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200702012020.49394.mb@bu3sch.de>
+	Thu, 22 Feb 2007 08:36:12 -0500
+Subject: [PATCH] hook up nl80211 again
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 22 Feb 2007 13:36:17 +0100
+Message-Id: <1172147777.5080.5.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 01 February 2007 18:58, Larry Finger wrote:
-> Michael Buesch wrote:
-> > 
-> > So, now your picture... :D
-> > 
-> Thanks for the names.
-> 
-> Getting a picture of me wasn't easy as I am usually on the other side of the lens. The attached
-> photo of Denise and me was taken about two years ago on the island of Kauai in Hawaii. As you can
-> see, I would have increased the average age of the participants by more than a year had I attended.
+Apparently when doing all the cfg80211 changes I accidentally removed
+the nl80211 registration. This patch adds it back.
 
-Nice picture. :) Also nice landscape there in Hawaii.
-But I wonder, why Denise is wearing a big jacket and you
-are standing in shorts and tshirt there?? That confuses me. :)
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-But the mail did not go to the list. I think there is a 100k limit.
-If you want, I can upload it to my server to show it to the list members.
+---
+ net/wireless/core.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
--- 
-Greetings Michael.
+--- wireless-dev.orig/net/wireless/core.c	2007-02-22 12:10:05.824688035 +0100
++++ wireless-dev/net/wireless/core.c	2007-02-22 12:11:52.384688035 +0100
+@@ -242,19 +242,23 @@ EXPORT_SYMBOL(wiphy_free);
+ static int cfg80211_init(void)
+ {
+ 	int err = wiphy_sysfs_init();
+-
+ 	if (err)
+ 		return err;
+ 
+ 	err = cfg80211_wext_init();
+-
+ 	if (err)
+ 		goto out_exit_sysfs;
+ 
++	err = nl80211_init();
++	if (err)
++		goto out_nl80211;
++
+ 	ieee80211_debugfs_dir = debugfs_create_dir("ieee80211", NULL);
+ 
+ 	return 0;
+ 
++ out_nl80211:
++	cfg80211_wext_exit();
+  out_exit_sysfs:
+ 	wiphy_sysfs_exit();
+ 
+@@ -265,6 +269,7 @@ module_init(cfg80211_init);
+ static void cfg80211_exit(void)
+ {
+ 	debugfs_remove(ieee80211_debugfs_dir);
++	nl80211_exit();
+ 	cfg80211_wext_exit();
+ 	wiphy_sysfs_exit();
+ }
+
+
