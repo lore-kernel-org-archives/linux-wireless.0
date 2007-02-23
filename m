@@ -1,39 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3574 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751083AbXBZDGA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Feb 2007 22:06:00 -0500
-Date: Sun, 25 Feb 2007 20:18:10 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/3] d80211: Split antenna selection into TX and RX antenna
-Message-ID: <20070226011810.GC4936@tuxdriver.com>
-References: <200702211702.48001.IvDoorn@gmail.com> <20070223172815.359080e8@griffin.suse.cz> <200702231739.04950.IvDoorn@gmail.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51605 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932615AbXBWLWm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Feb 2007 06:22:42 -0500
+Subject: Re: [PATCH] d80211: optimise if_alloc() name creation.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stephen Hemminger <shemminger@linux-foundation.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20070222223941.7f637c2c@localhost>
+References: <20070222223941.7f637c2c@localhost>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IAoMdObaisdcFkVTYgMT"
+Date: Fri, 23 Feb 2007 12:22:32 +0100
+Message-Id: <1172229752.3870.10.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200702231739.04950.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 23, 2007 at 05:39:04PM +0100, Ivo van Doorn wrote:
 
-> Sorry about that, I had renamed rx_params to rx_status in my cvs tree and hadn't set that
-> correctly to the git tree yet. I'll try to update rt2x00 inside wireless-dev as soon as possible,
-> but in the mean time here is the correct patch.
+--=-IAoMdObaisdcFkVTYgMT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Since you brought it up... :-)
+On Thu, 2007-02-22 at 22:39 -0800, Stephen Hemminger wrote:
+> The code to do guess and check for creating a sub-device name is unnecess=
+ary.
+> dev_alloc_name() is optimized to do this already.
 
-It would be a big help if rt2x00 could keep upstream in-sync with your
-current developments.  FWIW, I expect wireless-dev to get picked-up
-in -mm soon, and Fedora has it in rawhide already.  So, it is in your
-own best interest to make sure that we have the latest fixes here,
-unless you want to support two different versions... :-)
+Ack, I thought this might be the case some time ago but then forgot to
+investigate.
 
-Thanks!
+johannes
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+--=-IAoMdObaisdcFkVTYgMT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF3s54/ETPhpq3jKURAi9zAKCGoLjphIcXARjzHSjlhHSMbjc/1gCfVZzJ
+EaH420ZK/Fv+oPe+K1mbn5c=
+=tBR9
+-----END PGP SIGNATURE-----
+
+--=-IAoMdObaisdcFkVTYgMT--
+
