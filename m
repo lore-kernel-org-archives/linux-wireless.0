@@ -1,39 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4779 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750983AbXBJQov (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Feb 2007 11:44:51 -0500
-Date: Sat, 10 Feb 2007 11:39:34 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Theodore Tso <tytso@mit.edu>,
-	James Ketrenos <jketreno@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
-Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
-Message-ID: <20070210163933.GA17140@tuxdriver.com>
-References: <45CCE3CA.4050904@linux.intel.com> <20070210162254.GC25607@thunk.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070210162254.GC25607@thunk.org>
+Received: from mga06.intel.com ([134.134.136.21]:33117 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932625AbXBWTyy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Feb 2007 14:54:54 -0500
+Message-ID: <45DF45BC.8090102@linux.intel.com>
+Date: Fri, 23 Feb 2007 11:51:24 -0800
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Subject: d80211-3.0.2 available
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 10, 2007 at 11:22:54AM -0500, Theodore Tso wrote:
-> On Fri, Feb 09, 2007 at 01:12:42PM -0800, James Ketrenos wrote:
-> > Please hold all questions until I am done with this email.  Thank you.
-> > 
-> > We are pleased to announce the availability of a new driver for the 
-> > Intel PRO/Wireless 3945ABG Network Connection adapter.  This new driver 
-> > uses the new d80211 subsystem previously only available as part of the 
-> > wireless-dev tree.
-> 
-> Very cool!  Is it likely that d80211 and iwlwifi will be pushed into
-> mainline in time for 2.6.21?
+A new version of the d80211 package is available updated to the latest 
+wireless-dev tip commit id:
 
-Hmmm...I think we need to spend a cycle or so in -mm.  2.6.22 seems
-more likely for mainline.
+	db1eee24ed04ea33587f899b00dde9be8cd2e7e1
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+This version should now be installable over the latest Linus tree 
+2.6.21-rc1 tree back to 2.6.18.
+
+	http://intellinuxwireless.org/?p=d80211&n=downloads
+
+Thanks,
+James
