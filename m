@@ -1,126 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:52996
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422724AbXBURcf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Feb 2007 12:32:35 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 2/3] d80211: Split antenna selection into TX and RX antenna
-Date: Wed, 21 Feb 2007 18:32:05 +0100
-Cc: Jiri Benc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200702211702.47410.IvDoorn@gmail.com> <200702211819.52114.mb@bu3sch.de> <200702211824.45011.IvDoorn@gmail.com>
-In-Reply-To: <200702211824.45011.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702211832.05316.mb@bu3sch.de>
+Received: from smtp.osdl.org ([65.172.181.24]:46198 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752065AbXBWAMT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Feb 2007 19:12:19 -0500
+Received: from shell0.pdx.osdl.net (fw.osdl.org [65.172.181.6])
+	by smtp.osdl.org (8.12.8/8.12.8) with ESMTP id l1N0CEhB022699
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Feb 2007 16:12:14 -0800
+Received: from freekitty (unknown-230.office.pdx.osdl.net [10.8.0.230])
+	by shell0.pdx.osdl.net (8.13.1/8.11.6) with ESMTP id l1N0CDKB030536
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Feb 2007 16:12:14 -0800
+Date: Thu, 22 Feb 2007 16:12:10 -0800
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] d80211: convert to use compare_ether_addr
+Message-ID: <20070222161210.270f2905@freekitty>
+In-Reply-To: <20070222161014.62d064a6@freekitty>
+References: <20070222161014.62d064a6@freekitty>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 21 February 2007 18:24, Ivo van Doorn wrote:
-> > No, there is no need to inline. Simple static in main.c above
-> > the config callback, please. :)
-> > And simply return BCM43xx_ANTENNA_DEFAULT for the default:
-> > case, so it doesn't break immediately, if someone decides
-> > to add something to d80211.
-> >
-> > ...But we've almost got it :D
-> > After that you'll get my sign-off.
-> 
-> bcm43xx_antenna_from_ieee80211 is no longer inlined,
-> and it returns BCM43xx_ANTENNA_DEFAULT by default.
-> 
-> Hopefully I got it this time. :)
+compare_ether_addr is faster than memcmp()
 
-Yeah, *clap clap clap* :D
+Signed-off-by: Stephen Hemminger <shemminger@linux-foundation.org>
+---
+ net/d80211/ieee80211.c |   45 ++++++++++++++++++++++-----------------------
+ 1 files changed, 22 insertions(+), 23 deletions(-)
 
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
-> ---
-> 
-> diff --git a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
-> index cdce227..798427f 100644
-> --- a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
-> +++ b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_main.c
-> @@ -2598,6 +2598,20 @@ static int bcm43xx_switch_phymode(struct bcm43xx_wl *wl,
->  	return 0;
->  }
->  
-> +static int bcm43xx_antenna_from_ieee80211(u8 antenna)
-> +{
-> +	switch (antenna) {
-> +	case 0: /* default/diversity */
-> +		return BCM43xx_ANTENNA_DEFAULT;
-> +	case 1: /* Antenna 0 */
-> +		return BCM43xx_ANTENNA0;
-> +	case 2: /* Antenna 1 */
-> +		return BCM43xx_ANTENNA1;
-> +	default:
-> +		return BCM43xx_ANTENNA_DEFAULT;
-> +	}
-> +}
-> +
->  static int bcm43xx_dev_config(struct ieee80211_hw *hw,
->  			      struct ieee80211_conf *conf)
->  {
-> @@ -2606,22 +2620,12 @@ static int bcm43xx_dev_config(struct ieee80211_hw *hw,
->  	struct bcm43xx_phy *phy;
->  	unsigned long flags;
->  	unsigned int new_phymode = 0xFFFF;
-> -	int antenna = -1;
-> +	int antenna_tx;
-> +	int antenna_rx;
->  	int err = 0;
->  
-> -	switch (conf->antenna_sel) {
-> -	case 0: /* default/diversity */
-> -		antenna = BCM43xx_ANTENNA_DEFAULT;
-> -		break;
-> -	case 1: /* Antenna 0 */
-> -		antenna = BCM43xx_ANTENNA0;
-> -		break;
-> -	case 2: /* Antenna 1 */
-> -		antenna = BCM43xx_ANTENNA1;
-> -		break;
-> -	default:
-> -		assert(0);
-> -	}
-> +	antenna_tx = bcm43xx_antenna_from_ieee80211(conf->antenna_sel_tx);
-> +	antenna_rx = bcm43xx_antenna_from_ieee80211(conf->antenna_sel_rx);
->  
->  	mutex_lock(&wl->mutex);
->  
-> @@ -2682,8 +2686,8 @@ static int bcm43xx_dev_config(struct ieee80211_hw *hw,
->  	}
->  
->  	/* Antennas for RX and management frame TX. */
-> -	bcm43xx_mgmtframe_txantenna(dev, antenna);
-> -	bcm43xx_set_rx_antenna(dev, antenna);
-> +	bcm43xx_mgmtframe_txantenna(dev, antenna_tx);
-> +	bcm43xx_set_rx_antenna(dev, antenna_rx);
->  
->  	/* Update templates for AP mode. */
->  	if (bcm43xx_is_mode(wl, IEEE80211_IF_TYPE_AP))
-> diff --git a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_xmit.c b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_xmit.c
-> index 71cba92..cfc84cd 100644
-> --- a/drivers/net/wireless/d80211/bcm43xx/bcm43xx_xmit.c
-> +++ b/drivers/net/wireless/d80211/bcm43xx/bcm43xx_xmit.c
-> @@ -281,7 +281,7 @@ static void generate_txhdr_fw4(struct bcm43xx_wldev *dev,
->  		phy_ctl |= BCM43xx_TX4_PHY_OFDM;
->  	if (dev->short_preamble)
->  		phy_ctl |= BCM43xx_TX4_PHY_SHORTPRMBL;
-> -	switch (txctl->antenna_sel) {
-> +	switch (txctl->antenna_sel_tx) {
->  	case 0:
->  		phy_ctl |= BCM43xx_TX4_PHY_ANTLAST;
->  		break;
-> 
-> 
-
+diff --git a/net/d80211/ieee80211.c b/net/d80211/ieee80211.c
+index 73e34a0..6ffba74 100644
+--- a/net/d80211/ieee80211.c
++++ b/net/d80211/ieee80211.c
+@@ -2310,15 +2310,14 @@ static int ieee80211_open(struct net_dev
+ 	list_for_each_entry(nsdata, &local->sub_if_list, list) {
+ 		struct net_device *ndev = nsdata->dev;
+ 
+-		if (ndev != dev && ndev != local->mdev &&
+-		    netif_running(ndev) &&
+-		    memcmp(dev->dev_addr, ndev->dev_addr, ETH_ALEN) == 0 &&
+-		    !identical_mac_addr_allowed(sdata->type, nsdata->type)) {
++		if (ndev != dev && ndev != local->mdev && netif_running(ndev) &&
++		    compare_ether_addr(dev->dev_addr, ndev->dev_addr) == 0 &&
++		    !identical_mac_addr_allowed(sdata->type, nsdata->type))
+ 			return -ENOTUNIQ;
+-		}
+ 	}
+-	if (sdata->type == IEEE80211_IF_TYPE_WDS &&
+-	    memcmp(sdata->u.wds.remote_addr, "\0\0\0\0\0\0", ETH_ALEN) == 0)
++
++	if (sdata->type == IEEE80211_IF_TYPE_WDS && 
++	    is_zero_ether_addr(sdata->u.wds.remote_addr))
+ 		return -ENOLINK;
+ 
+ 	if (sdata->type == IEEE80211_IF_TYPE_MNTR && local->open_count &&
+@@ -2436,9 +2435,9 @@ static int header_parse_80211(struct sk_
+ 	return ETH_ALEN;
+ }
+ 
+-static inline int ieee80211_bssid_match(u8 *raddr, u8 *addr)
++static inline int ieee80211_bssid_match(const u8 *raddr, const u8 *addr)
+ {
+-	return memcmp(raddr, addr, ETH_ALEN) == 0 ||
++	return compare_ether_addr(raddr, addr) == 0 ||
+ 	       is_broadcast_ether_addr(raddr);
+ }
+ 
+@@ -2545,9 +2544,9 @@ ieee80211_rx_h_data(struct ieee80211_txr
+ 
+ 	ethertype = (payload[6] << 8) | payload[7];
+ 
+-	if (likely((memcmp(payload, rfc1042_header, 6) == 0 &&
++	if (likely((compare_ether_addr(payload, rfc1042_header) == 0 &&
+ 		    ethertype != ETH_P_AARP && ethertype != ETH_P_IPX) ||
+-		   memcmp(payload, bridge_tunnel_header, 6) == 0)) {
++		   compare_ether_addr(payload, bridge_tunnel_header) == 0)) {
+ 		/* remove RFC1042 or Bridge-Tunnel encapsulation and
+ 		 * replace EtherType */
+ 		skb_pull(skb, hdrlen + 6);
+@@ -3038,8 +3037,8 @@ ieee80211_reassemble_find(struct ieee802
+ 		f_fc = le16_to_cpu(f_hdr->frame_control);
+ 
+ 		if ((fc & IEEE80211_FCTL_FTYPE) != (f_fc & IEEE80211_FCTL_FTYPE) ||
+-		    memcmp(hdr->addr1, f_hdr->addr1, ETH_ALEN) != 0 ||
+-		    memcmp(hdr->addr2, f_hdr->addr2, ETH_ALEN) != 0)
++		    compare_ether_addr(hdr->addr1, f_hdr->addr1) != 0 ||
++		    compare_ether_addr(hdr->addr2, f_hdr->addr2) != 0)
+ 			continue;
+ 
+ 		if (entry->first_frag_time + 2 * HZ < jiffies) {
+@@ -3208,7 +3207,7 @@ ieee80211_rx_h_check(struct ieee80211_tx
+ 
+ 	if (!rx->u.rx.ra_match)
+ 		rx->skb->pkt_type = PACKET_OTHERHOST;
+-	else if (memcmp(rx->dev->dev_addr, hdr->addr1, ETH_ALEN) == 0)
++	else if (compare_ether_addr(rx->dev->dev_addr, hdr->addr1) == 0)
+ 		rx->skb->pkt_type = PACKET_HOST;
+ 	else if (is_multicast_ether_addr(hdr->addr1)) {
+ 		if (is_broadcast_ether_addr(hdr->addr1))
+@@ -3318,7 +3317,7 @@ ieee80211_rx_h_sta_process(struct ieee80
+ 	 * other STAs are using different BSSID. */
+ 	if (rx->sdata->type == IEEE80211_IF_TYPE_IBSS) {
+ 		u8 *bssid = ieee80211_get_bssid(hdr, rx->skb->len);
+-		if (memcmp(bssid, rx->sdata->u.sta.bssid, ETH_ALEN) == 0)
++		if (compare_ether_addr(bssid, rx->sdata->u.sta.bssid) == 0)
+ 			sta->last_rx = jiffies;
+ 	} else
+ 	if (!is_multicast_ether_addr(hdr->addr1) ||
+@@ -3797,8 +3796,8 @@ void __ieee80211_rx(struct ieee80211_hw 
+ 						continue;
+ 					rx.u.rx.ra_match = 0;
+ 				} else if (!multicast &&
+-					   memcmp(sdata->dev->dev_addr,
+-						  hdr->addr1, ETH_ALEN) != 0) {
++					   compare_ether_addr(sdata->dev->dev_addr,
++							      hdr->addr1) != 0) {
+ 					if (!sdata->promisc)
+ 						continue;
+ 					rx.u.rx.ra_match = 0;
+@@ -3813,8 +3812,8 @@ void __ieee80211_rx(struct ieee80211_hw 
+ 						continue;
+ 					rx.u.rx.ra_match = 0;
+ 				} else if (!multicast &&
+-					   memcmp(sdata->dev->dev_addr,
+-						  hdr->addr1, ETH_ALEN) != 0) {
++					   compare_ether_addr(sdata->dev->dev_addr,
++							      hdr->addr1) != 0) {
+ 					if (!sdata->promisc)
+ 						continue;
+ 					rx.u.rx.ra_match = 0;
+@@ -3827,8 +3826,8 @@ void __ieee80211_rx(struct ieee80211_hw 
+ 				break;
+ 			case IEEE80211_IF_TYPE_AP:
+ 				if (!bssid) {
+-					if (memcmp(sdata->dev->dev_addr,
+-						   hdr->addr1, ETH_ALEN) != 0)
++					if (compare_ether_addr(sdata->dev->dev_addr,
++							       hdr->addr1) != 0)
+ 						continue;
+ 				} else if (!ieee80211_bssid_match(bssid,
+ 							sdata->dev->dev_addr)) {
+@@ -3846,8 +3845,8 @@ void __ieee80211_rx(struct ieee80211_hw 
+ 				if (bssid ||
+ 				    (rx.fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
+ 					continue;
+-				if (memcmp(sdata->u.wds.remote_addr,
+-					   hdr->addr2, ETH_ALEN) != 0)
++				if (compare_ether_addr(sdata->u.wds.remote_addr,
++						       hdr->addr2) != 0)
+ 					continue;
+ 				break;
+ 			}
 -- 
-Greetings Michael.
+1.4.1
+
