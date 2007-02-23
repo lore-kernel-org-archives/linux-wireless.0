@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:53289 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S2992837AbXBIVBD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Feb 2007 16:01:03 -0500
-Message-ID: <45CCE10A.3050109@lwfinger.net>
-Date: Fri, 09 Feb 2007 15:00:58 -0600
-From: Larry Finger <larry.finger@lwfinger.net>
+Received: from ns.suse.de ([195.135.220.2]:45122 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932643AbXBWUVd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Feb 2007 15:21:33 -0500
+Date: Fri, 23 Feb 2007 12:19:54 -0800
+From: Greg KH <greg@kroah.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, jbenc@suse.cz
+Subject: Re: [RFC] convert wiphy to struct device
+Message-ID: <20070223201954.GA1609@kroah.com>
+References: <20070221005811.GA3875@tuxdriver.com> <1172054717.3705.1.camel@johannes.berg> <20070221133202.GB4978@tuxdriver.com> <1172242788.3870.46.camel@johannes.berg>
 MIME-Version: 1.0
-To: Randy Dunlap <rdunlap@xenotime.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: New list for wireless dev discussions
-References: <20070130203944.GC6474@tuxdriver.com>	<20070201190353.GE5408@tuxdriver.com> <20070209122146.083e9ad8.rdunlap@xenotime.net>
-In-Reply-To: <20070209122146.083e9ad8.rdunlap@xenotime.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1172242788.3870.46.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Randy Dunlap wrote:
-> On Thu, 1 Feb 2007 14:03:53 -0500 John W. Linville wrote:
+On Fri, Feb 23, 2007 at 03:59:48PM +0100, Johannes Berg wrote:
+> Ok so I did the wiphy stuff w/o knowing that class devs are apparently
+> deprecated. Below is a patch to convert it.
 > 
->> On Tue, Jan 30, 2007 at 03:39:44PM -0500, John W. Linville wrote:
->>> At the wireless summit in London, we collectively decided to move
->>> day-to-day wireless development discussions to our own list.  I am
->>> hosting a list for this purpose:
->>>
->>> 	http://lists.tuxdriver.org/mailman/listinfo/wireless
->> In response to some community requests, I have asked David
->> Miller to create a list for us on vger.kernel.org.  David has
->> obliged that request, so I have restricted new subscriptions to
->> wireless@lists.tuxdriver.org and I am asking everyone to move wireless
->> discussions to the new list.
->>
->> 	linux-wireless@vger.kernel.org
+> However, that patch has a problem. As discussed on netdev in the thread
+> "Converting network devices from class devices causes namespace
+> pollution" we'll have the same problem here, currently after the patch
+> this means that wiphys and netdevs will share the same namespace within
+> the device directory.
 > 
-> 
-> This is Good.  Now I'd like to request that linux-wireless people set
-> an example by not posting duplicates to netdev@vger.kernel.org also.  :)
+> I think the generic code Greg promised in that thread will fix it by
+> renaming the symlink to "ieee80211:wiphy0" instead of just "wiphy0" but
+> I'd like to have confirmation about that.
 
-I was trying to decide if I should post a question if there had been enough time for people to
-switch. Now that the first complaint has been posted, I'm switched.
+Yes it will, I'm working on that patch right now...
 
-Larry
+thanks,
+
+greg k-h
