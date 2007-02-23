@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60570 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37374 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161316AbXBGN7I (ORCPT
+	with ESMTP id S1750996AbXBWVDL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Feb 2007 08:59:08 -0500
-Subject: Re: [PATCH] bcm43xx: Fix for oops on resume
+	Fri, 23 Feb 2007 16:03:11 -0500
+Subject: Re: [PATCH] d80211: create net/wireless/Kconfig and make nl80211   optional
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>, netdev@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <45C9D930.5010307@lwfinger.net>
-References: <45c8bd59.oamnvaNRMZvKoPBa%Larry.Finger@lwfinger.net>
-	 <1170850549.6798.22.camel@johannes.berg>  <45C9D2E1.7040906@lwfinger.net>
-	 <1170855150.6798.38.camel@johannes.berg>  <45C9D930.5010307@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-R/A4r1pYT2q7E3qWbCQS"
-Date: Wed, 07 Feb 2007 14:56:06 +0100
-Message-Id: <1170856566.6798.42.camel@johannes.berg>
+To: James Ketrenos <jketreno@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <45DF5514.8000304@linux.intel.com>
+References: <45DF518B.5060809@linux.intel.com>
+	 <45DF5514.8000304@linux.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dw3c2CkwAXSSJppXa1dS"
+Date: Fri, 23 Feb 2007 22:02:58 +0100
+Message-Id: <1172264578.3870.89.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-R/A4r1pYT2q7E3qWbCQS
+--=-dw3c2CkwAXSSJppXa1dS
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2007-02-07 at 07:50 -0600, Larry Finger wrote:
+On Fri, 2007-02-23 at 12:56 -0800, James Ketrenos wrote:
+> Hold on applying.
+>=20
+> > +cfg80211-$(CONFIG_NL80211) +=3D nl80211.o
+>=20
+> Should have been
+>=20
+> cfg80211-$(CONFIG_CFG80211_NL80211) +=3D nl80211.o
 
-> Could you please apply this patch and tell me what gets printed after you=
- resume, and whether you
-> did a suspend to RAM or disk?
-
-Oh and if anyone else does this please also let us know what it prints
-on a regular freshly booted modprobe.
+Or maybe just rename it if it's already confusing you ;)
 
 johannes
 
---=-R/A4r1pYT2q7E3qWbCQS
+--=-dw3c2CkwAXSSJppXa1dS
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBFydp2/ETPhpq3jKURAjG5AJ90t2l0mjc5nqn7ZQkgu5Q3P977JgCfYE2g
-dIri/oeJbkMw444+Vu1g4fg=
-=7abD
+iD8DBQBF31aC/ETPhpq3jKURAl2fAKCiP7w7Qd2O2BKUzB3nNrfJHSPA4ACfTxyu
+6fdDZLOvCYCoI1cAX07iODw=
+=CETP
 -----END PGP SIGNATURE-----
 
---=-R/A4r1pYT2q7E3qWbCQS--
+--=-dw3c2CkwAXSSJppXa1dS--
 
