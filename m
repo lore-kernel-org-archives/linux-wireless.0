@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:41879 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965614AbXBTAQz (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:34641 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751841AbXBWVFM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 19:16:55 -0500
-Message-ID: <45DA3DEA.2040507@lwfinger.net>
-Date: Mon, 19 Feb 2007 18:16:42 -0600
-From: Larry Finger <larry.finger@lwfinger.net>
+	Fri, 23 Feb 2007 16:05:12 -0500
+Message-ID: <45DF5635.5080905@linux.intel.com>
+Date: Fri, 23 Feb 2007 13:01:41 -0800
+From: James Ketrenos <jketreno@linux.intel.com>
 MIME-Version: 1.0
-To: Alex Davis <alex14641@yahoo.com>
-CC: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-Subject: Re: Kernel bug in bcm43xx-d80211
-References: <508755.46267.qm@web50206.mail.yahoo.com>
-In-Reply-To: <508755.46267.qm@web50206.mail.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] d80211: create net/wireless/Kconfig and make nl80211  optional
+References: <45DF518B.5060809@linux.intel.com> <1172263955.3870.85.camel@johannes.berg>
+In-Reply-To: <1172263955.3870.85.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alex Davis wrote:
-> --- Pavel Roskin <proski@gnu.org> wrote:
+Johannes Berg wrote:
+> On Fri, 2007-02-23 at 12:41 -0800, James Ketrenos wrote:
+>> Move the wireless Kconfig options into their own wireless/Kconfig and
+>> add a CONFIG_CFG80211_NL80211 configuration option to allow nl80211
+>> support to be optionally included (default =y)
 > 
->> On Mon, 2007-02-19 at 13:48 -0800, Alex Davis wrote:
->>> I go the following Oops with the latest wireless-dev git when starting wpa_supplicant:
->> Wireless topics moved from this list to linux-wireless@vger.kernel.org.
->> Broadcom drivers are discussed in bcm43xx-dev@lists.berlios.de.
->> wireless-dev is horribly broken, and the fixes haven't been merged yet.
->>
->> The current Broadcom driver can be loaded from
->> http://bu3sch.de/git/wireless-dev.git (please load it on top of
->> wireless-dev.git to save bandwidth)
-> What command do I use to load Mike's tree on top of wireless-dev?
+> I think this one is missing the changes in net/Kconfig.
+> 
+> And I should have looked closer before, sorry.
+> 
+> +config CFG80211
+> +        tristate "Improved wireless configuration API"
+> +        select WIRELESS_EXT
+> 
+> Why is that select WIRELESS_EXT? CFG80211 doesn't need that, d80211 does
+> and correctly selects it.
 
-While in the wireless-dev tree, issue the following:
+Confusion mostly...
 
-git branch michael
-git checkout michael
-git pull http://bu3sch.de/git/wireless-dev.git master
+I've removed it.
 
-To get back to the original wireless-dev tree, us a 'git checkout master' command.
-
-Larry
+James
