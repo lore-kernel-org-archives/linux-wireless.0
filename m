@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:39291
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992807AbXBIUau (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50383 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933214AbXBWUwv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Feb 2007 15:30:50 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
-Date: Fri, 9 Feb 2007 21:30:38 +0100
-Cc: Joseph Jezak <josejx@gentoo.org>, netdev@vger.kernel.org,
-	Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net> <200702092017.36950.mb@bu3sch.de> <45CCD1B1.80709@gentoo.org>
-In-Reply-To: <45CCD1B1.80709@gentoo.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702092130.38997.mb@bu3sch.de>
+	Fri, 23 Feb 2007 15:52:51 -0500
+Subject: Re: [PATCH] d80211: create net/wireless/Kconfig and make nl80211  optional
+From: Johannes Berg <johannes@sipsolutions.net>
+To: James Ketrenos <jketreno@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <45DF518B.5060809@linux.intel.com>
+References: <45DF518B.5060809@linux.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gSGXGuWy7O8c5U3nq6kv"
+Date: Fri, 23 Feb 2007 21:52:35 +0100
+Message-Id: <1172263955.3870.85.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 09 February 2007 20:55, Joseph Jezak wrote:
-> Michael Buesch wrote:
-> > On Friday 09 February 2007 20:05, Joseph Jezak wrote:
-> >>> I'll agree to that as long as there is a clear indication of any differences between V3 and V4 firmware.
-> >> That's also part of the problem.  With the v4 driver, Broadcom 
-> >> dropped support for a number of older BPHY devices (4301/4303 and 
-> >> some 4306 revisions).  Do we still want to support those?  Should I 
-> >> continue writing the specs for the uCode revision it's based on or 
-> >> should I combine them?
-> > 
-> > If it's easily possible, please try to combine the old stuff
-> > with the new v4 specs.
-> > I think it's basically only dropped if() branches, right?
-> > 
-> 
-> Well, here's the problem.  There are a few places where a value is 
-> changed (different value written to a register).  Does this mean 
-> that the value is different due to the uCode changes (can't tell, no 
-> documentation)?  Is it applicable to all revisions (can't tell, some 
-> revisions are not supported in this version)?  If the revision 
-> number range in a check changes is that because of a difference in 
-> supported cards or a bug fix?
-> 
-> So, it's not as simple as just dropped if() branches.  I can do my 
-> best to combine them (I have done some of this already), but I can't 
-> promise that it'll be accurate for all revisions or versions of the 
-> chipset.
 
-Ok, I see.
-How many of these old devices exist and who has access to them?
-If we want to combine stuff, we really must test it on these devices then.
+--=-gSGXGuWy7O8c5U3nq6kv
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Greetings Michael.
+On Fri, 2007-02-23 at 12:41 -0800, James Ketrenos wrote:
+> Move the wireless Kconfig options into their own wireless/Kconfig and
+> add a CONFIG_CFG80211_NL80211 configuration option to allow nl80211
+> support to be optionally included (default =3Dy)
+
+I think this one is missing the changes in net/Kconfig.
+
+And I should have looked closer before, sorry.
+
++config CFG80211
++        tristate "Improved wireless configuration API"
++        select WIRELESS_EXT
+
+Why is that select WIRELESS_EXT? CFG80211 doesn't need that, d80211 does
+and correctly selects it.
+
+johannes
+
+--=-gSGXGuWy7O8c5U3nq6kv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF31QT/ETPhpq3jKURApXHAJ9B8BYv8ZmBFOk7xIUNrPCd3IKisQCfRkQi
+AMBEIZja4jqmSZrYrvxYaik=
+=y7eG
+-----END PGP SIGNATURE-----
+
+--=-gSGXGuWy7O8c5U3nq6kv--
+
