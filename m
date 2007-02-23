@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51605 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932615AbXBWLWm (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:51896 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750917AbXBWFpD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Feb 2007 06:22:42 -0500
-Subject: Re: [PATCH] d80211: optimise if_alloc() name creation.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stephen Hemminger <shemminger@linux-foundation.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20070222223941.7f637c2c@localhost>
-References: <20070222223941.7f637c2c@localhost>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IAoMdObaisdcFkVTYgMT"
-Date: Fri, 23 Feb 2007 12:22:32 +0100
-Message-Id: <1172229752.3870.10.camel@johannes.berg>
+	Fri, 23 Feb 2007 00:45:03 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HKTDO-0001qE-M3
+	for linux-wireless@vger.kernel.org; Fri, 23 Feb 2007 00:43:30 -0500
+Subject: Re: iwlwifi warnings
+From: Pavel Roskin <proski@gnu.org>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <20070221193836.GC3732@elf.ucw.cz>
+References: <45CCE3CA.4050904@linux.intel.com>
+	 <20070213181313.GA5350@ucw.cz> <45D254C6.7050401@linux.intel.com>
+	 <20070219224432.GD21199@elf.ucw.cz> <45DBE559.8080903@osdl.org>
+	 <20070221193836.GC3732@elf.ucw.cz>
+Content-Type: text/plain
+Date: Fri, 23 Feb 2007 00:44:58 -0500
+Message-Id: <1172209498.20817.54.camel@dv>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2007-02-21 at 20:38 +0100, Pavel Machek wrote:
+> "Normal" installation procedure has too many steps in my eyes, and
+> combined git tree is not available, so I was waiting for merge at
+> least into -wirelessdev tree.
 
---=-IAoMdObaisdcFkVTYgMT
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+"make patch_kernel" would patch the kernel from wireless-dev.git.  If
+the Linux source tree is not configured, just run "make distclean" after
+that (or apply my patch from the previous post in the ipw3945-devel
+list).
 
-On Thu, 2007-02-22 at 22:39 -0800, Stephen Hemminger wrote:
-> The code to do guess and check for creating a sub-device name is unnecess=
-ary.
-> dev_alloc_name() is optimized to do this already.
+You can use StGIT for convert the changes made by "make patch_kernel" to
+a local patch so that updating from the upstream git repository is still
+possible with "stg pull".
 
-Ack, I thought this might be the case some time ago but then forgot to
-investigate.
+No need to wait for anything.
 
-johannes
-
---=-IAoMdObaisdcFkVTYgMT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF3s54/ETPhpq3jKURAi9zAKCGoLjphIcXARjzHSjlhHSMbjc/1gCfVZzJ
-EaH420ZK/Fv+oPe+K1mbn5c=
-=tBR9
------END PGP SIGNATURE-----
-
---=-IAoMdObaisdcFkVTYgMT--
+-- 
+Regards,
+Pavel Roskin
 
