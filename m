@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:34137 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932629AbXBSUYJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 15:24:09 -0500
-Date: Mon, 19 Feb 2007 21:24:07 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <jkm@devicescape.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] remove IEEE80211_HW_FRAGLIST flag
-Message-ID: <20070219212407.58e8fb62@griffin.suse.cz>
-In-Reply-To: <1171642069.3575.4.camel@johannes.berg>
-References: <1171569181.5220.60.camel@johannes.berg>
-	<20070216160456.GA6173@instant802.com>
-	<1171642069.3575.4.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mailgate.cesmail.net ([216.154.195.36]:41209 "HELO
+	mailgate.cesmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752312AbXBYEaD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Feb 2007 23:30:03 -0500
+Message-ID: <20070224233001.3ok4k0c00ksos4sw@webmail.spamcop.net>
+Date: Sat, 24 Feb 2007 23:30:01 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: Alex Davis <alex14641@yahoo.com>
+Cc: larry.finger@lwfinger.net, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: Patch to allow specification of interface name prefix
+References: <510326.55988.qm@web50211.mail.yahoo.com>
+In-Reply-To: <510326.55988.qm@web50211.mail.yahoo.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 16 Feb 2007 17:07:49 +0100, Johannes Berg wrote:
-> On Fri, 2007-02-16 at 08:04 -0800, Jouni Malinen wrote:
-> 
-> > The reason for this flag was to reduce host CPU load for frame
-> > aggregation (merging multiple frames (skb's) into one frame. It was used
-> > to implement one part of Atheros Super A/G enhancements, but I don't see
-> > those proprietary changes being generic enough to be worth adding into
-> > net/d80211. However, IEEE 802.11n has similar features that may indeed
-> > benefit from this flag. As such, I would not remove it.
-> 
-> But we can never submit fragmented SKBs currently anyway, so whenever we
-> do any 802.11n changes that benefit from it we can add the flag back.
+Quoting Alex Davis <alex14641@yahoo.com>:
 
-I agree. Let's add the flag later when this is actually needed.
+> This patch will allow you to specify the interface name prefix of wireless
+> devices.
+>
+> On my machine, the wireless devices under the bcm43xx driver are named
+> 'ethx'; I
+> would really rather have them called 'wlanx', like bcm43xx-d80211 does.
 
-Applied, thanks for patch!
+You can use ifrename from wireless tools.  Use the option that checks the
+ethtool information.
 
- Jiri
+Jean has just released Wireless Tools 29-pre12, which can read symlinks in
+sysfs.  That would allow renaming d80211 based network devices by checking the
+"driver" symlinks in sysfs.  I asked Jean to do that with bcm43xx_d80211 in
+mind.
 
--- 
-Jiri Benc
-SUSE Labs
+It's not that I'm against your patch.  I'm rather ambivalent.  But I think using
+ifrename could reduce the need in kernel support for interface renaming.
+
+--
+Regards,
+Pavel Roskin
