@@ -1,57 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39709 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39928 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932634AbXBSUu5 (ORCPT
+	with ESMTP id S1161393AbXBZXMx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 15:50:57 -0500
-Subject: Re: bcm43xx: Ad-Hoc (IBSS) works fine
+	Mon, 26 Feb 2007 18:12:53 -0500
+Subject: [PATCH] bcm43xx-d80211: fix a sparse warning
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Gene Heskett <gene.heskett@verizon.net>
-Cc: bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200702191548.14982.gene.heskett@verizon.net>
-References: <200702191946.52440.mb@bu3sch.de>
-	 <200702191548.14982.gene.heskett@verizon.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-S2kYYk/X+Ko952To7Zep"
-Date: Mon, 19 Feb 2007 21:50:16 +0100
-Message-Id: <1171918216.15489.9.camel@johannes.berg>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Michael Buesch <mb@bu3sch.de>
+Content-Type: text/plain
+Date: Tue, 27 Feb 2007 00:12:34 +0100
+Message-Id: <1172531554.3870.208.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This fixes a missing prototype sparse complains about.
 
---=-S2kYYk/X+Ko952To7Zep
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-On Mon, 2007-02-19 at 15:48 -0500, Gene Heskett wrote:
-> On Monday 19 February 2007, Michael Buesch wrote:
-> >I just want to mention that Ad-Hoc works fine
-> >with the bcm43xx-d80211 driver in my tree.
-> >I didn't have to do any code changes, but simply try it once. ;)
-> >
-> >So, well. As the question has been asked several times
-> >if adhoc is supported, here is the answer: Yes it is.
->=20
-> Where might I find a decent, plain english, description of these=20
-> various 'modes', Micheal?  I have relatively little experience in 802-11=20
-> stuff and could use a tutorial explaining the lingo.
+---
+ drivers/net/wireless/d80211/bcm43xx/bcm43xx_pci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-If anyone writes something please add it to linuxwireless.org too :)
+--- wireless-dev.orig/drivers/net/wireless/d80211/bcm43xx/bcm43xx_pci.c	2007-02-27 00:10:30.974692803 +0100
++++ wireless-dev/drivers/net/wireless/d80211/bcm43xx/bcm43xx_pci.c	2007-02-27 00:10:56.574692803 +0100
+@@ -27,7 +27,7 @@
+ 
+ #include <linux/pci.h>
+ #include <linux/ssb/ssb.h>
+-
++#include "bcm43xx_pci.h"
+ 
+ static const struct pci_device_id bcm43xx_pci_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4301) },
 
-johannes
-
---=-S2kYYk/X+Ko952To7Zep
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF2g2I/ETPhpq3jKURApb/AKCwD9KHXSAPkxbs6PqAtnWqXLCuWgCfRN0+
-tPtjaCAGN9vGgM65zFvUgUE=
-=bEjp
------END PGP SIGNATURE-----
-
---=-S2kYYk/X+Ko952To7Zep--
 
