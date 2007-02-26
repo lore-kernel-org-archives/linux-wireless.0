@@ -1,44 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:47927
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752303AbXBDMog (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58862 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161300AbXBZWrP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Feb 2007 07:44:36 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Jiri Benc <jbenc@suse.cz>
-Subject: d80211: current TKIP hwcrypto implementation seems to be broken
-Date: Sun, 4 Feb 2007 13:44:18 +0100
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200702041344.19117.mb@bu3sch.de>
+	Mon, 26 Feb 2007 17:47:15 -0500
+Received: from [84.135.252.42] (helo=johannes.berg)
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.63)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1HLoYb-000250-Uy
+	for linux-wireless@vger.kernel.org; Mon, 26 Feb 2007 22:42:58 +0000
+Subject: [PATCH] net/wireless: fix sparse warnings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Mon, 26 Feb 2007 23:46:56 +0100
+Message-Id: <1172530016.3870.199.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Current TKIP hwcrypto phase1+2 key support in d80211
-seems to be broken. (At least for bcm43xx).
+This fixes a few things sparse pointed out when I finally got it
+working.
 
-Let me explain what happens:
-We need the phase1 for bcm43xx. We need to upload it to
-card memory and we need to pass it on every TX on the DMA.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-So, currently we receive the phase1 key on the first
-encrypted TX. That's too late, as we already receive encrypted
-packets before that. bcm43xx needs the phase1 key (and the iv32)
-on RX. It uses the one uploaded into the card memory. But it
-is not uploaded, yet, as we did not TX any encrypted packet.
+---
+ net/wireless/sysfs.c       |    1 +
+ net/wireless/wext-common.c |    8 ++++----
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-I'd say the only solution to this is to implement the earlier
-suggested way of having a library function call to generate
-the keys. Of course, that needs some bookkeeping about the IVs
-and stuff.
-That library function would be called by bcm43xx before any
-traffic to get an initial phase1 key (and iv32) uploaded.
+--- wireless-dev.orig/net/wireless/sysfs.c	2007-02-26 23:42:38.124692803 +0100
++++ wireless-dev/net/wireless/sysfs.c	2007-02-26 23:42:43.314692803 +0100
+@@ -13,6 +13,7 @@
+ #include <linux/netdevice.h>
+ #include <linux/nl80211.h>
+ #include <net/cfg80211.h>
++#include "sysfs.h"
+ #include "core.h"
+ 
+ static inline struct cfg80211_registered_device *dev_to_rdev(
+--- wireless-dev.orig/net/wireless/wext-common.c	2007-02-26 23:43:08.314692803 +0100
++++ wireless-dev/net/wireless/wext-common.c	2007-02-26 23:44:55.654692803 +0100
+@@ -13,10 +13,11 @@
+ #include <linux/module.h>
+ #include <linux/wireless.h>
+ #include <linux/types.h>
+-#include <net/iw_handler.h>
+ #include <linux/seq_file.h>
+-#include <net/netlink.h>
+ #include <linux/rtnetlink.h>
++#include <net/iw_handler.h>
++#include <net/netlink.h>
++#include <net/wireless.h>
+ #include "wext.h"
+ 
+ /* common data */
+@@ -301,8 +302,7 @@ const struct iw_ioctl_description standa
+ 		.max_tokens	= sizeof(struct iw_pmkid_cand),
+ 	},
+ };
+-unsigned standard_event_num = (sizeof(standard_event) /
+-					sizeof(struct iw_ioctl_description));
++static unsigned standard_event_num = ARRAY_SIZE(standard_event);
+ 
+ /* Size (in bytes) of various events */
+ const int event_type_size[] = {
 
-I currently don't really know how to implement this. Any suggestion?
 
-As a sideeffect, it would shrink the txcontrol by 16 bytes, again.
-
--- 
-Greetings Michael.
