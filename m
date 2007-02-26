@@ -1,39 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:20504 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933180AbXB1RJU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 12:09:20 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so615402nfa
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 09:09:18 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/28] rt2x00: Add debugfs support
-Date: Wed, 28 Feb 2007 18:09:15 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Robin Cornelius <robin.cornelius@gmail.com>
-References: <200702281507.13953.IvDoorn@gmail.com> <200702281752.36875.IvDoorn@gmail.com> <1172681674.5015.43.camel@johannes.berg>
-In-Reply-To: <1172681674.5015.43.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702281809.15486.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from smtp.osdl.org ([65.172.181.24]:37217 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161373AbXBZXDY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Feb 2007 18:03:24 -0500
+Date: Mon, 26 Feb 2007 15:02:41 -0800
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Pavel Roskin <proski@gnu.org>, Alex Davis <alex14641@yahoo.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: Patch to allow specification of interface name prefix
+Message-ID: <20070226150241.1b5b63b2@freekitty>
+In-Reply-To: <45E112F7.9090908@lwfinger.net>
+References: <510326.55988.qm@web50211.mail.yahoo.com>
+	<20070224233001.3ok4k0c00ksos4sw@webmail.spamcop.net>
+	<45E112F7.9090908@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 28 February 2007 17:54, Johannes Berg wrote:
-> On Wed, 2007-02-28 at 17:52 +0100, Ivo van Doorn wrote:
+On Sat, 24 Feb 2007 22:39:19 -0600
+Larry Finger <larry.finger@lwfinger.net> wrote:
+
+> Pavel Roskin wrote:
+> > Quoting Alex Davis <alex14641@yahoo.com>:
+> > 
+> >> This patch will allow you to specify the interface name prefix of wireless
+> >> devices.
+> >>
+> >> On my machine, the wireless devices under the bcm43xx driver are named
+> >> 'ethx'; I
+> >> would really rather have them called 'wlanx', like bcm43xx-d80211 does.
+> > 
+> > You can use ifrename from wireless tools.  Use the option that checks the
+> > ethtool information.
+> > 
+> > Jean has just released Wireless Tools 29-pre12, which can read symlinks in
+> > sysfs.  That would allow renaming d80211 based network devices by checking the
+> > "driver" symlinks in sysfs.  I asked Jean to do that with bcm43xx_d80211 in
+> > mind.
+> > 
+> > It's not that I'm against your patch.  I'm rather ambivalent.  But I think using
+> > ifrename could reduce the need in kernel support for interface renaming.
 > 
-> > But there is some progress I believe, Robin seems to have managed to
-> > compile cfg80211 now against a 2.6.20 kernel.
+> NACK.
 > 
-> Guys, why do we know nothing about this? Could you *please* come out of
-> your hole?
+> On my system (openSUSE 10.2), one sets the name in /etc/udev/rules.d/30-net_persistent_names.rule. I
+> feel that interface renaming is handled perfectly well in userland, and kernel support is not needed.
+> 
 
-Perhaps because Robin told it to me 5 minutes before I send that mail? ;)
-He is still struggling a bit with the Makefile, but at least some progress has been made.
+This was hashed out on netdev 2+ years ago and decided that both ethernet
+and wireless devices should show up as 'eth%d'. For inclusion d80211 needs to conform
+to existing mainline kernel practice. If this means breaking the expectation of older
+out of tree wireless support (ie madwifi), sorry.
 
-I have added Robin to the CC list, so he can explain the current status himself. :)
 
-Ivo
+-- 
+Stephen Hemminger <shemminger@linux-foundation.org>
