@@ -1,43 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:49638 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932315AbXBUBS4 (ORCPT
+Received: from dhost002-36.dex002.intermedia.net ([64.78.21.121]:2195 "EHLO
+	dhost002-36.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751669AbXB0Qrg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Feb 2007 20:18:56 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HJg6p-0000b6-9x
-	for linux-wireless@vger.kernel.org; Tue, 20 Feb 2007 20:17:27 -0500
-Subject: Re: [PATCH] rt2x00: Fix max_rssi values signedness bug
-From: Pavel Roskin <proski@gnu.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200702202102.14354.mb@bu3sch.de>
-References: <200702202102.14354.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Tue, 20 Feb 2007 20:18:49 -0500
-Message-Id: <1172020729.6042.2.camel@dv>
+	Tue, 27 Feb 2007 11:47:36 -0500
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Tue, 27 Feb 2007 08:47:27 -0800
+To: Andy Green <andy@warmcat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] Penumbra - Enabling unencrypted broadcasts alongside normal traffic
+Message-ID: <20070227164727.GA10048@devicescape.com>
+References: <45E41A9E.2020908@warmcat.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <45E41A9E.2020908@warmcat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-02-20 at 21:02 +0100, Michael Buesch wrote:
-> char is not signed on all architectures.
-> This fixes a compiletime warning and bug on PPC.
+On Tue, Feb 27, 2007 at 11:48:46AM +0000, Andy Green wrote:
 
-Then we have a bigger problem.  Please see include/net/d80211.h:
+> There is a start on a formal RFC for the broadcast transport protocol here:
+> 
+> http://penumbra.warmcat.com/penumbra-rfc-0.0.3.txt
 
-> /* Maximum values for various statistics.
->  * Leave at 0 to indicate no support. Use negative numbers for dBm. */
-> char max_rssi;
-> char max_signal;
-> char max_noise;
+Could you please extend the description of "Wireless Packet Format" to
+define all fields in the 802.11 header. I would especially be interested
+in seeing what is in the FromDS and ToDS fields of the frame control.
+I'm assuming this is using normal data frames, but that (type and
+subtype fields) should also be described clearly.
 
-So, there will be no dBm on PowerPC.  I think those fields should be
-"signed char".
+>  - The wireless driver gets the packet for transmission, recognizes the 
+> Magic MAC, disables retries and sets the transmission rate (currently 
+> fixed 54Mbps, but this will change) and transmits the packet as a broadcast
+
+So this frame is to be sent by the non-AP STAs directly as a broadcast
+frame, not through the AP which is the normal way of transmitting
+frames(?)
+
+> I hope there is some interest in this new capability for wireless 
+> devices in Linux.  To get any kind of widespread use, the capability 
+> needs to be already available in stock kernels and drivers so that the 
+> user only needs to open iptables and run a userspace daemon rather than 
+> patch his wireless drivers and stack.  So this is my reason for 
+> presenting this Request For Comments, to see if it can be considered.
+
+You would need to add "and configure the wlan driver/802.11 stack to
+enable this". I don't think this has to be disabled by default.
+
+Is this only for Linux at the moment or is someone looking at supporting
+this with other OSes?
+
+>  - Hardware promisc is needed to catch the packets because they are not 
+> tagged as coming from the local AP.  All the devices I looked at can do 
+> hardware promisc separately from the logical promisc for Monitor mode. 
+> But perhaps this needs to be enabled and disabled in some modal way.
+
+This has to be disabled by default. There is a reason for such a
+filtering in wlan designs and just enabling promiscuous mode at 802.11
+level is going to considerable increase power needs for the device which
+is not acceptable for many low-power devices.
 
 -- 
-Regards,
-Pavel Roskin
-
+Jouni Malinen                                            PGP id EFC895FA
