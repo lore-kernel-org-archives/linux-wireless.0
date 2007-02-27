@@ -1,50 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:48358 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752686AbXBSBoP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Feb 2007 20:44:15 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HIxYH-0006C6-S4
-	for linux-wireless@vger.kernel.org; Sun, 18 Feb 2007 20:42:49 -0500
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH] Use offsetof() instead of own equivalent
-To: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-Date: Sun, 18 Feb 2007 20:44:06 -0500
-Message-ID: <20070219014406.8677.62357.stgit@dl.roinet.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from styx.suse.cz ([82.119.242.94]:60167 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750791AbXB0LGA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Feb 2007 06:06:00 -0500
+Date: Tue, 27 Feb 2007 12:05:53 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless: rename d80211 -> mac80211
+Message-ID: <20070227120553.2eec27f9@logostar.upir.cz>
+In-Reply-To: <1172572747.3870.234.camel@johannes.berg>
+References: <20070227032756.GA6569@tuxdriver.com>
+	<20070227112808.2fc32c6a@logostar.upir.cz>
+	<1172572747.3870.234.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The original macros result in gcc 4.2 warning about "cast from pointer
-to integer of different size" on 64-bit systems.
+On Tue, 27 Feb 2007 11:39:06 +0100, Johannes Berg wrote:
+> This has bothered me for long. Can't we just call it main.c? I mean,
+> it's in mac80211/main.c so there's no chance of confusion... What's the
+> point in having mac80211/mac80211_something.c?
 
-Use of offsetof() on fields in substructures is widespread throughout
-the kernel code and should work whether offsetof() is defined using
-__compiler_offsetof() or a cast.
+Fine with me.
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+ Jiri
 
- drivers/net/wireless/hostap/hostap_common.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/hostap/hostap_common.h b/drivers/net/wireless/hostap/hostap_common.h
-index 0162400..b31e6a0 100644
---- a/drivers/net/wireless/hostap/hostap_common.h
-+++ b/drivers/net/wireless/hostap/hostap_common.h
-@@ -368,9 +368,9 @@ enum {
- 
- #define PRISM2_HOSTAPD_MAX_BUF_SIZE 1024
- #define PRISM2_HOSTAPD_RID_HDR_LEN \
--((int) (&((struct prism2_hostapd_param *) 0)->u.rid.data))
-+offsetof(struct prism2_hostapd_param, u.rid.data)
- #define PRISM2_HOSTAPD_GENERIC_ELEMENT_HDR_LEN \
--((int) (&((struct prism2_hostapd_param *) 0)->u.generic_elem.data))
-+offsetof(struct prism2_hostapd_param, u.generic_elem.data)
- 
- /* Maximum length for algorithm names (-1 for nul termination) used in ioctl()
-  */
-
+-- 
+Jiri Benc
+SUSE Labs
