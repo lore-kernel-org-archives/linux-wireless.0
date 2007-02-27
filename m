@@ -1,69 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:39715 "EHLO ogre.sisk.pl"
+Received: from ns2.lanforge.com ([66.165.47.211]:42285 "EHLO ns2.lanforge.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932941AbXBLAyA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Feb 2007 19:54:00 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH] bcm43xx: Fix loss of association after resume
-Date: Mon, 12 Feb 2007 01:50:58 +0100
-Cc: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-References: <45cc9ebb.+9O/IXvs/C9RyFnk%Larry.Finger@lwfinger.net> <200702111514.04893.mb@bu3sch.de> <45CF3D51.5050302@lwfinger.net>
-In-Reply-To: <45CF3D51.5050302@lwfinger.net>
+	id S1751976AbXB0Sks (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Feb 2007 13:40:48 -0500
+Message-ID: <45E4769E.2040102@candelatech.com>
+Date: Tue, 27 Feb 2007 10:21:18 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702120150.59747.rjw@sisk.pl>
+To: Stephen Hemminger <shemminger@linux-foundation.org>
+CC: Jiri Benc <jbenc@suse.cz>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>,
+	Alex Davis <alex14641@yahoo.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Patch to allow specification of interface name prefix
+References: <510326.55988.qm@web50211.mail.yahoo.com>	<20070224233001.3ok4k0c00ksos4sw@webmail.spamcop.net>	<45E112F7.9090908@lwfinger.net>	<20070226150241.1b5b63b2@freekitty>	<20070227111644.784600be@logostar.upir.cz> <20070227094108.11f4844f@freekitty>
+In-Reply-To: <20070227094108.11f4844f@freekitty>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, 11 February 2007 16:59, Larry Finger wrote:
-> Michael Buesch wrote:
-> > On Sunday 11 February 2007 15:02, Rafael J. Wysocki wrote:
-> >> PM: Removing info for No Bus:0000:30:00.0
-> >> bcm43xx: IRQ_READY timeout
-> >> bcm43xx: core_up for active 802.11 core failed (-19)
-> > 
-> > I never tried suspend to disk with the driver.
+Stephen Hemminger wrote:
+> On Tue, 27 Feb 2007 11:16:44 +0100
+> Jiri Benc <jbenc@suse.cz> wrote:
 > 
-> This implies that suspend to RAM works. Is that true?
+>> [removed bcm43xx-dev list]
+>>
+>> On Mon, 26 Feb 2007 15:02:41 -0800, Stephen Hemminger wrote:
+>>> This was hashed out on netdev 2+ years ago and decided that both ethernet
+>>> and wireless devices should show up as 'eth%d'. For inclusion d80211 needs to conform
+>>> to existing mainline kernel practice. If this means breaking the expectation of older
+>>> out of tree wireless support (ie madwifi), sorry.
+>> Decided? I remember just you and hch saying "all existing wireless drivers
+>> do that, so everybody should". When pointing out that just two drivers do
+>> that (I think ipw and prism) and everybody else use something different
+>> (wlan%d most often) there was no reply. "ipw and one other driver do that
+>> so everybody should" doesn't sound like a strong argument to me.
 > 
-> > Larry, an idea why the microcode doesn't respond?
-> 
-> Is this code snippet supposed to keep the firmware loaded when the system is suspended?
-> 
->                 bcm->firmware_norelease = 1;
->                 bcm43xx_free_board(bcm);
->                 bcm->firmware_norelease = 0;
-> 
-> If so, that may be the problem. What would force it to be reloaded when resuming after a suspend to
-> disk and subsequent power off? That would certainly explain why a reload is successful. Is there a
-> volatile location that would safely indicate that the firmware is not good? Perhaps, we need to bite
-> the bullet and reload the firmware after every resume. The patch below should do that.
-> 
-> I am also working on a case where the user has troubles with a suspend to disk from Windows followed
-> by a reboot to Linux, and warm reboots from Windows to Linux. In these cases, he gets a firmware
-> file-format error; however, his firmware is fine from a cold boot.
-> 
-> Larry
-> 
-> Index: linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-> +++ linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-> @@ -4296,6 +4297,7 @@ static int bcm43xx_resume(struct pci_dev
->  		printk(KERN_ERR PFX "Resume failed!\n");
->  		return err;
->  	}
-> +	bcm43xx_request_firmware(bcm);
->  	netif_device_attach(net_dev);
-> 
->  	dprintk(KERN_INFO PFX "Device resumed.\n");
+> Don't put too much stock in what I said. Really don't care about such
+> a trivial matter as naming.  Jeff and Christoph seem to care, I don't
 
-It doesn't help in my case.  The behavior is similar to that without the patch,
-but also with the patch it loses the association entirely.
+Regardless of the name, it would be nice to have some quick way to determine
+if a network device is wireless or not.  This could be an IOCTL, something
+in /proc/ or similar.  Even if you name them to be wlanX by default, folks
+can rename them, so applications that care about the type of the network
+device can't key off of names reliably...
 
-Greetings,
-Rafael
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
