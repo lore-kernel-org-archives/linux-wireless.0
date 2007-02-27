@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:29515 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751663AbXB0N6x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Feb 2007 08:58:53 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] wireless: rename d80211 -> mac80211
-Date: Tue, 27 Feb 2007 08:58:29 -0500
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <20070227032756.GA6569@tuxdriver.com> <1172573795.3870.244.camel@johannes.berg> <20070227131639.GA5826@tuxdriver.com>
-In-Reply-To: <20070227131639.GA5826@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1297820.0vnFrr7bXP";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200702270858.33742.flamingice@sourmilk.net>
+Received: from mail.nuim.ie ([149.157.1.19]:63833 "EHLO LARCH.MAY.IE"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752044AbXB0XcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Feb 2007 18:32:05 -0500
+Date: Tue, 27 Feb 2007 17:00:00 +0000
+From: Gavin McCullagh <gavin.mccullagh@nuim.ie>
+Subject: Re: [PATCH] bcm43xx: Fix code for spec changes of 2/7/2007
+In-reply-to: <20070210125707.GA21803@srcf.ucam.org>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Joseph Jezak <josejx@gentoo.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de
+Reply-to: Gavin McCullagh <gavin.mccullagh@nuim.ie>
+Message-id: <20070227170000.GZ12087@nuim.ie>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+References: <45cca236.+lL/rsW3DbM3elnk%Larry.Finger@lwfinger.net>
+ <45CCCAE1.9080901@lwfinger.net> <20070209213239.GA11650@srcf.ucam.org>
+ <200702100655.51495.mb@bu3sch.de> <20070210125707.GA21803@srcf.ucam.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1297820.0vnFrr7bXP
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Hi,
 
-On Tuesday 27 February 2007 08:16, John W. Linville wrote:
-> Michael, any chance you'd like to rename your tree so as to preserve
-> my infallibility? :-)
->
-Done.
+On Sat, 10 Feb 2007, Matthew Garrett wrote:
 
--Michael Wu
+> On Sat, Feb 10, 2007 at 06:55:50AM +0100, Michael Buesch wrote:
+> 
+> > It's likely that old cards still work with v4 firmware, but we don't know and
+> > it has to be tested.
+> > 
+> > Care to do so?
+> 
+> I'll check the revision of my 4306, but I think it's probably too new to 
+> be useful, unfortunately...
 
---nextPart1297820.0vnFrr7bXP
-Content-Type: application/pgp-signature
+I have a fairly old 4306 at home which I was lent by my boss and I've been
+struggling to get it working for the past week or two.  What I find is that
+loads of firmwares which I try with bcm43xx-fwcutter complain about the
+firmware being old but then when I get a firmware which is not too old the
+device registers but doesn't seem to work -- iwlist can't see any access
+points and when I set the essid it doesn't associate with the AP.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Can I be helpful as a tester?
 
-iD8DBQBF5DkJT3Oqt9AH4aERAqvhAJ9VTx1mMYOBuAZN1RMqXuZt6VLQ6wCgo7wT
-QOTAgbFoq5B9NuMALq2RbRE=
-=ODyp
------END PGP SIGNATURE-----
+Gavin
 
---nextPart1297820.0vnFrr7bXP--
