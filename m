@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms046pub.verizon.net ([206.46.252.46]:44559 "EHLO
-	vms046pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965677AbXBGID7 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:42149
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751641AbXB0PlG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Feb 2007 03:03:59 -0500
-Received: from coyote.coyote.den ([141.153.122.81])
- by vms046.mailsrvcs.net (Sun Java System Messaging Server 6.2-6.01 (built Apr
- 3 2006)) with ESMTPA id <0JD300EM52ELQFO5@vms046.mailsrvcs.net> for
- linux-wireless@vger.kernel.org; Wed, 07 Feb 2007 02:03:58 -0600 (CST)
-Date: Wed, 07 Feb 2007 03:03:40 -0500
-From: Gene Heskett <gene.heskett@verizon.net>
-Subject: Re: RFT bcm43xx: Really _GOOD_ news
-In-reply-to: <45C95830.6040507@lwfinger.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: Pavel Roskin <proski@gnu.org>, bcm43xx-dev@lists.berlios.de,
-	wireless <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>
-Message-id: <200702070303.40968.gene.heskett@verizon.net>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-References: <45C8E64B.1050605@lwfinger.net>
- <200702061848.00815.gene.heskett@verizon.net> <45C95830.6040507@lwfinger.net>
+	Tue, 27 Feb 2007 10:41:06 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: [PATCH] d80211: fix sparse warnings
+Date: Tue, 27 Feb 2007 16:40:21 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <1172530759.3870.205.camel@johannes.berg> <1172539109.5835.28.camel@dv>
+In-Reply-To: <1172539109.5835.28.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200702271640.21252.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 06 February 2007 23:40, Larry Finger wrote:
->I was a bit too enthusiastic. The patch I sent earlier actually breaks
-> the 4318. It does make 4311 and 4312's work for the wrong reason. If
-> you have that card, you can use it in the meantime while we find out
-> just why it helps there.
->
->Sorry for the false alarm, but we are making progress.
->
->Larry
+On Tuesday 27 February 2007 02:18, Pavel Roskin wrote:
+> On Mon, 2007-02-26 at 23:59 +0100, Johannes Berg wrote:
+> > This fixes some sparse warnings in d80211.
+> > 
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> > 
+> > ---
+> > A few warnings remain:
+> > 
+> > net/d80211/ieee80211.c:820:37: warning: potentially expensive pointer subtraction
+> 
+> That's subtraction of pointers to types with sizes that are not power of
+> two.  This could lead to expensive division operations.  In may cases,
+> this warning indicates that using array indices instead of pointers
+> would be more effective (and probably safer).
 
-And the 4318 is whats in my lappy.  What does it break?
+Uh, well.
+I think it's this line, no?
+
+	control->rts_rateidx = (int)(rate - tx->local->curr_rates);
+
+The problem there is, we have a pointer into an array and we
+need to get the index number into that array.
+Any better way to get an index by a pointer and a basepointer?
 
 -- 
-Cheers, Gene
-"There are four boxes to be used in defense of liberty:
- soap, ballot, jury, and ammo. Please use in that order."
--Ed Howdershelt (Author)
-Yahoo.com and AOL/TW attorneys please note, additions to the above
-message by Gene Heskett are:
-Copyright 2007 by Maurice Eugene Heskett, all rights reserved.
+Greetings Michael.
