@@ -1,48 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:4797 "EHLO spitz.ucw.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751494AbXBMS2Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Feb 2007 13:28:24 -0500
-Date: Tue, 13 Feb 2007 18:13:13 +0000
-From: Pavel Machek <pavel@ucw.cz>
-To: James Ketrenos <jketreno@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
-Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
-Message-ID: <20070213181313.GA5350@ucw.cz>
-References: <45CCE3CA.4050904@linux.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <45CCE3CA.4050904@linux.intel.com>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:42531
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751644AbXB0Pmo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Feb 2007 10:42:44 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] bcm43xx-d80211: fix a sparse warning
+Date: Tue, 27 Feb 2007 16:42:04 +0100
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <1172531554.3870.208.camel@johannes.berg>
+In-Reply-To: <1172531554.3870.208.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200702271642.04870.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+On Tuesday 27 February 2007 00:12, Johannes Berg wrote:
+> This fixes a missing prototype sparse complains about.
 
-> Please hold all questions until I am done with this 
-> email.  Thank you.
-> 
-> We are pleased to announce the availability of a new 
-> driver for the Intel PRO/Wireless 3945ABG Network 
-> Connection adapter.  This new driver uses the new d80211 
-> subsystem previously only available as part of the 
-> wireless-dev tree.
-> 
-> You can find the new driver, and additional information 
-> about it, here:
-> 
->   http://intellinuxwireless.org/iwlwifi.
-...
-> You can find that package at:
-> 
->   http://intellinuxwireless.org/d80211
-> 
-> Ok.  Now... any questions?
+Thanks, applied. 
 
-Yes... is there merged .git tree somewhere? I downloaded iwl git tree,
-but it did not contain d80211 stack. I'm now downloading wireless-dev
-git tree...
-							Pavel
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Greetings Michael.
