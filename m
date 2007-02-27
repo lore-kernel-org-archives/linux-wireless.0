@@ -1,137 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:38575 "EHLO
-	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030200AbXBTQec (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:46206 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750810AbXB0MCG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Feb 2007 11:34:32 -0500
-Date: Tue, 20 Feb 2007 10:33:13 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: bcm43xx: Update Documentation/bcm43xx.txt
-Message-ID: <45db22c9.UMvRraqKhAGR5vmR%Larry.Finger@lwfinger.net>
+	Tue, 27 Feb 2007 07:02:06 -0500
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id B597F8D124
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2007 12:48:47 +0100 (CET)
+Received: from flatcat.home.warmcat.com (flatcat [192.168.0.77])
+	by armbox7.home.warmcat.com (Postfix) with ESMTP id 83A00FAFC
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2007 11:49:43 +0000 (UTC)
+Received: from [127.0.0.1] (flatcat.home.warmcat.com [127.0.0.1])
+	by flatcat.home.warmcat.com (Postfix) with ESMTP id B3D801310212
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2007 11:48:46 +0000 (GMT)
+Message-ID: <45E41A9E.2020908@warmcat.com>
+Date: Tue, 27 Feb 2007 11:48:46 +0000
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: linux-wireless@vger.kernel.org
+Subject: [RFC] Penumbra - Enabling unencrypted broadcasts alongside normal  traffic
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The in-kernel documentation of the bcm43xx driver is out of date.
+Hi folks -
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Introduction
+------------
 
-Index: wireless-2.6/Documentation/networking/bcm43xx.txt
-===================================================================
---- wireless-2.6.orig/Documentation/networking/bcm43xx.txt
-+++ wireless-2.6/Documentation/networking/bcm43xx.txt
-@@ -2,35 +2,79 @@
- 			BCM43xx Linux Driver Project
- 			============================
- 
--About this software
---------------------
--
--The goal of this project is to develop a linux driver for Broadcom
--BCM43xx chips, based on the specification at 
--http://bcm-specs.sipsolutions.net/
--
--The project page is http://bcm43xx.berlios.de/
--
--
--Requirements
-+Introduction
- ------------
- 
--1)	Linux Kernel 2.6.16 or later
--	http://www.kernel.org/
--
--	You may want to configure your kernel with:
--
--	CONFIG_DEBUG_FS (optional):
--		-> Kernel hacking
--		  -> Debug Filesystem
--
--2)	SoftMAC IEEE 802.11 Networking Stack extension and patched ieee80211
--	modules:
--	http://softmac.sipsolutions.net/
--
--3)	Firmware Files
--
--	Please try fwcutter. Fwcutter can extract the firmware from various 
--	binary driver files. It supports driver files from Windows, MacOS and 
--	Linux. You can get fwcutter from http://bcm43xx.berlios.de/.
--	Also, fwcutter comes with a README file for further instructions.
-+Many of the wireless devices found in modern notebook computers are based
-+on the wireless chips produced by Broadcom. These devices have been a problem
-+for Linux users as there is no open-source driver available. In addition,
-+Broadcom has not released specifications for the device, and driver availability
-+has been limited to the binary-only form used in the GPL versions of AP
-+hardware such as the Linksys WRT54G, and the Windows and OS X drivers.
-+Before this project began, the only way to use these devices were to use the
-+Windows or OS X drivers with either the Linuxant or ndiswrapper modules. There
-+is a strong penalty if this method is used as loading the binary-only module
-+"taints" the kernel, and no kernel developer will help diagnose any kernel
-+problems.
-+
-+Development
-+-----------
-+
-+This driver has been developed using a clean-room technique that is described
-+at http://bcm-specs.sipsolutions.net/ReverseEngineeringProcess. For legal
-+reasons, none of the clean-room crew works on the on the Linux driver, and
-+none of the Linux developers sees anything but the specifications, which are
-+the ultimate product of the reverse-engineering group.
-+
-+Software
-+--------
-+
-+Since the release of the 2.6.17 kernel, the bcm43xx driver has been distributed
-+with the kernel source, and is prebuilt in most, if not all, distributions.
-+There is, however, additional software that is required. The firmware used by the
-+chip is the intellectual property of Broadcom and they have not given the bcm43xx
-+team redistribution rights to this firmware.  Since we cannot legally redistribute
-+the firwmare we cannot include it with the driver. Furthermore, it cannot be placed
-+in the downloadable archives of any distributing organization; therefore, the user is
-+responsible for obtaining the firmware and placing it in the appropriate location
-+so that the driver can find it when initializing.
-+
-+To help with this process, the bcm43xx developers provide a separate program
-+named bcm43xx-fwcutter to "cut" the firmware out of a Windows or OS X driver
-+and write the extracted files to the proper location. This program is usually
-+provided with the distribution; however, it may be downloaded from
-+
-+http://developer.berlios.de/project/showfiles.php?group_id=4547
-+
-+The firmware is available in two versions. V3 firmware is used with the in-kernel
-+bcm43xx driver that uses a software MAC layer called SoftMAC, and will have a
-+microcode revision of 0x127 or smaller. The V4 firmware is used by an out-of-kernel
-+driver employing a variation of the Devicescape MAC layer known as d80211. Once
-+bcm43xx-d80211 reaches a satisfactory level of development, it will replace
-+bcm43xx-softmac in the kernel as it is much more flexible and powerful.
-+
-+A source for the latest V3 firmware is
-+
-+http://downloads.openwrt.org/sources/wl_apsta-3.130.20.0.o
-+
-+Once this file is downloaded, the command 'bcm43xx-fwcutter -w <dir> <filename>'
-+will extract the microcode and write it to directory <dir>. The correct directory
-+will depend on your distribution; however, most use '/lib/firmware'. Once this
-+step is completed, the bcm3xx driver should load when the system is booted. To see
-+any messages relating to the driver, issue the command 'dmesg | grep bcm43xx' from
-+a terminal window. If there are any problems, please send that output to
-+Bcm43xx-dev@lists.berlios.de.
-+
-+Although the driver has been in-kernel since 2.6.17, the earliest version is quite
-+limited in its capability. Patches that include all features of later versions are
-+available for the stable kernel versions from 2.6.18. These will be needed if you
-+use a BCM4318, or a PCI Express version (BCM4311 and BCM4312). In addition, if you
-+have an early BCM4306 and more than 1 GB RAM, your kernel will need to be patched.
-+These patches, which are being updated regularly, are available at
-+ftp://lwfinger.dynalias.org/patches. Look for combined_2.6.YY.patch. Of course you
-+will need kernel source downloaded from kernel.org, or the source from your
-+distribution.
-+
-+If you build your own kernel, please enable CONFIG_BCM43XX_DEBUG and
-+CONFIG_IEEE80211_SOFTMAC_DEBUG. The log information provided is essential for solving
-+any problems.
+I have been working on a GPL project called Penumbra
+
+http://penumbra.warmcat.com
+
+The idea is simple, to allow unencrypted wireless broadcast packets to 
+be generated and received in userspace, while the normal traffic remains 
+privately encrypted as before.  This allows direct intercommunication 
+between boxes on differently protected private networks (on the same 
+channel) while not disturbing or reducing security of a normal encrypted 
+association.
+
+Due to the broadcast nature of the protocol, there are no station 
+identities at all.  All broadcast packets use the same MAC and there is 
+no concept of addressability, at least not at the protocol level.  There 
+are no retries at the transport protocol level either since there may be 
+many listeners --  situations where there are multiple listeners in 
+range of the broadcasts are very well served.  Higher levels on protocol 
+can implement tunneling other protocols and retransmission requests, but 
+that is out of scope of what is needed in the 80211 stack.
+
+We have a userspace daemon that allows anonymous filesharing using the 
+protocol, but there are many other applications possible for machines to 
+be able to remain secure and private for normal traffic, yet be able to 
+also communicate locally unencrypted when they choose without going 
+through the Internet, an ISP or other paid -- and metered -- gateway.
+
+There is a start on a formal RFC for the broadcast transport protocol here:
+
+http://penumbra.warmcat.com/penumbra-rfc-0.0.3.txt
+
+
+Status
+------
+
+Currently I have this working for several wireless devices using the old 
+stack (IPW2200, IPW3945, and ZD1211RW -- BCM43XX is also done but does 
+not always receive for reasons I didn't discover), and I have it working 
+on the new stack for iwlwifi and RT73USB (RT2571 chipset) too now.  The 
+old stack drivers are patched without any changes to the old stack, but 
+for the new 80211 stack, the additional code is mostly tucked away in 
+the stack.  You can see examples of the patching required in both the 
+stack and the driver for the rt73usb case here:
+
+http://penumbra.warmcat.com/rt2x00-cvs-2007021403-penumbra-0.0.3.patch
+
+There is a related userspace daemon also available which communicates 
+via an embedded https server with the user and allows arbitrary files to 
+be shared around using the broadcast protocol.  The daemon bridges 
+traffic between multiple wireless devices on different channels seamlessly.
+
+All patches and the penumbrad daemon are available here:
+
+http://penumbra.warmcat.com/_twk/tiki-index.php?page=Downloads
+
+Performance at the moment for a iwlwifi <-> IPW2200 testcase is between 
+100KBytes/sec and 200KBytes/sec transfer, tested while downloading 
+simultaneously at 1MByte/sec using a WPA encrypted association to a 
+Belkin AP.  So any questions about whether it is possible, or can work 
+on a range of devices, or can operate simultaneously with WPA are 
+answered: it works great.
+
+
+Implementation
+--------------
+
+The unencrypted broadcast packets are indicated by having a "Magic MAC" 
+address in their IEEE80211 Header Addr<n> fields.  The Magic MAC for 
+Penumbra is 13:22:33:44:55:66 (the IEEE had something to say about our 
+original choice of 11:22.. :-O ).
+
+Here is the path for a packet using the new stack patched to support the 
+protocol.
+
+  - Userspace transmits by creating a PF_PACKET / SOCK_RAW socket and 
+prepending an Ethernet header with the Magic MAC in it and send()ing it. 
+  Reed-Solomon coding is optionally used in userspace in case the 
+receiver allows to see damaged packets.
+
+  - The stack detects the magic MAC, and prepends a fixed IEEE80211 
+header to the skb, basically addr1-> FF:FF:FF:FF:FF:FF, addr2 and addr3 
+-> 13:22:33:44:55:66 and encryption is turned off.
+
+  - The wireless driver gets the packet for transmission, recognizes the 
+Magic MAC, disables retries and sets the transmission rate (currently 
+fixed 54Mbps, but this will change) and transmits the packet as a broadcast
+
+For receive:
+
+  - The wireless device is set to hardware promiscuous
+
+  - When an incoming packet is seen with the magic MAC it has a fake 
+fixed Ethernet, IP and UDP header prepended to it.  IP and UDP checksums 
+are inserted so the packet is clean.  The packet always looks like it is 
+coming from UDP 0.0.0.0:61441 (port 0xF001) and is directed to 
+255.255.255.255:61442 (port 0xF002).  The packet is subject to iptables 
+rules as usual.
+
+  - Userspace listens on the right interface at UDP 61442 with a normal 
+socket and receives the packets as usual.
+
+There is some more detail and information here (it is about the old 
+stack implementation currently though)
+
+http://penumbra.warmcat.com/_twk/tiki-index.php?page=Implementation
+
+
+Issues
+------
+
+I hope there is some interest in this new capability for wireless 
+devices in Linux.  To get any kind of widespread use, the capability 
+needs to be already available in stock kernels and drivers so that the 
+user only needs to open iptables and run a userspace daemon rather than 
+patch his wireless drivers and stack.  So this is my reason for 
+presenting this Request For Comments, to see if it can be considered.
+
+Some of the issues that need working on/consensus if there is interest:
+
+  - Hardware promisc is needed to catch the packets because they are not 
+tagged as coming from the local AP.  All the devices I looked at can do 
+hardware promisc separately from the logical promisc for Monitor mode. 
+But perhaps this needs to be enabled and disabled in some modal way.
+
+  - The way the packets are captured does not integrate at the moment 
+with the rx handler list concept, because it needs access to args that 
+do not come to the "pre" rx handlers where it has to capture.  No doubt 
+there are multiple other implementation issues that can be hammered out 
+easily enough if there is interest.
+
+  - Right this second there are two patches, one for the iwlwifi case 
+and one for rt2x00, since they are using different versions of the new 
+80211 stack.
+
+  - The first byte of the payload is reserved for holding the desired TX 
+rate sent up from userspace, as well as indications about any ECC coding 
+that is present.  But today only a fixed 54Mbps packet rate is 
+implemented.  Despite all the stations are anonymous, the upper levels 
+of the protocol can guess the best rate to send a particular packet 
+depending on what has been going on, and so allow the system to work 
+over larger distances than 54Mbps only will allow.
+
+...  no doubt there will be more assuming there is any interest ;-)
+
+Thanks for reading this far and I hope it will be possible by adding 
+these relatively small changes to the stack to enable some cool 
+additional uses for existing wireless devices.
+
+-Andy
