@@ -1,63 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:37744 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751459AbXBMXiK (ORCPT
+Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:33856 "EHLO
+	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751905AbXB0Vgp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Feb 2007 18:38:10 -0500
-Message-ID: <45D241F1.8040606@linux.intel.com>
-Date: Tue, 13 Feb 2007 14:55:45 -0800
-From: James Ketrenos <jketreno@linux.intel.com>
+	Tue, 27 Feb 2007 16:36:45 -0500
+Date: Tue, 27 Feb 2007 15:35:59 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] bcm43xx: Fix errors in specs to code translation in B6PHY init
+Message-ID: <45e4a43f.BEt7jx5dMLQiM3wz%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Ismail_D=F6nmez?= <ismail@pardus.org.tr>
-CC: Jeff Chua <jeff.chua.linux@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
-Subject: Re: [ANNOUNCE] d80211 based driver for Intel PRO/Wireless 3945ABG
-References: <45CCE3CA.4050904@linux.intel.com> <200702131558.48987.ismail@pardus.org.tr> <b6a2187b0702130710s217281c4k5ed227995c09c878@mail.gmail.com> <200702131857.02369.ismail@pardus.org.tr>
-In-Reply-To: <200702131857.02369.ismail@pardus.org.tr>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ismail D=F6nmez wrote:
-> On Tuesday 13 February 2007 17:10:24 Jeff Chua wrote:
->> On 2/13/07, Ismail D=F6nmez <ismail@pardus.org.tr> wrote:
->>> Tried this is on a patched 2.6.20 kernel with ipw3945 device and it
->>> always puts the card in 802.11a mode instead of 802.11bg mode.
->>>
->>> Ideas?
->> Before running  "iwconfig wlan0 channel 8",  the card is set to
->> 802.11a mode. iwconfig shows rate at 54Mb/s. But after setting the
->> channel, it sets to 802.11b mode, and I can't find a way to change
->> from 11Mb/s to 54MB/s.
->>
->> "iwlist eth0 rate" only show up to 11Mb/s.
->>
->> So, my problem is the card is always in 802.11b mode.
->=20
-> So I guess there is a common problem with a/bg modes?
+There are three errors in the transcription of the latest revision to the
+B6PHY init specifications.
 
-Regardless of what iwconfig reports as the mode or rate, you should be=20
-able to associate to an AP in either spectrum (2.4 or 5.2) using any=20
-valid rate.  Once configured and associated, iwconfig should provide=20
-more correct information.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-If association is failing, verify that 'iwlist scan' shows the AP and=20
-that you specify everything for the association, eg:
+John,
 
-    iwconfig wlan0 channel 8 essid MyAP ap 00:13:f0:0d:ca:fe
+This patch should be applied to wireless-2.6 and sent upstream to 2.6.21-rcX.
 
-d80211 will only attempt to associate once -- if it fails, then you nee=
-d=20
-to currently "de-configure" the device and reconfigure it back to what=20
-you want to associate to.  I do that here by chaging the AP BSSID to=20
-something else then changing it back.  If you use wpa_supplicant, it=20
-does the re-association attempts for you.
+Larry
 
-James
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
++++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
+@@ -859,6 +859,9 @@ static void bcm43xx_phy_initb6(struct bc
+ 		bcm43xx_radio_write16(bcm, 0x005D, 0x0088);
+ 		bcm43xx_radio_write16(bcm, 0x005E, 0x0088);
+ 		bcm43xx_radio_write16(bcm, 0x007D, 0x0088);
++		bcm43xx_write32(bcm, BCM43xx_MMIO_STATUS_BITFIELD,
++				bcm43xx_read32(bcm, BCM43xx_MMIO_STATUS_BITFIELD)
++				| 0x00000200);
+ 	}
+ 	if (radio->revision == 8) {
+ 		bcm43xx_radio_write16(bcm, 0x0051, 0x0000);
+@@ -941,7 +944,8 @@ static void bcm43xx_phy_initb6(struct bc
+ 	bcm43xx_phy_write(bcm, 0x0038, 0x0668);
+ 	bcm43xx_radio_set_txpower_bg(bcm, 0xFFFF, 0xFFFF, 0xFFFF);
+ 	if (radio->revision <= 5)
+-		bcm43xx_phy_write(bcm, 0x005D, bcm43xx_phy_read(bcm, 0x005D) | 0x0003);
++		bcm43xx_phy_write(bcm, 0x005D, (bcm43xx_phy_read(bcm, 0x005D)
++			          & 0xFF80) | 0x0003);
+ 	if (radio->revision <= 2)
+ 		bcm43xx_radio_write16(bcm, 0x005D, 0x000D);
+ 	
+@@ -958,7 +962,7 @@ static void bcm43xx_phy_initb6(struct bc
+ 		bcm43xx_phy_write(bcm, 0x0016, 0x0410);
+ 		bcm43xx_phy_write(bcm, 0x0017, 0x0820);
+ 		bcm43xx_phy_write(bcm, 0x0062, 0x0007);
+-		(void) bcm43xx_radio_calibrationvalue(bcm);
++		bcm43xx_radio_init2050(bcm);
+ 		bcm43xx_phy_lo_g_measure(bcm);
+ 		if (bcm->sprom.boardflags & BCM43xx_BFL_RSSI) {
+ 			bcm43xx_calc_nrssi_slope(bcm);
