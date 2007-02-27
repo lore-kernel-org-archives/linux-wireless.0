@@ -1,75 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42031 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752769AbXBKNP4 (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:29515 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751663AbXB0N6x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Feb 2007 08:15:56 -0500
-Received: from [84.135.252.56] (helo=johannes.berg)
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.63)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1HGEVF-0007lU-9R
-	for linux-wireless@vger.kernel.org; Sun, 11 Feb 2007 13:12:25 +0000
-Subject: Re: [PATCH 1/5] cfg80211: update to code submitted to mainline
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <20070209162526.489839000@sipsolutions.net>
-References: <20070209162414.043158000@sipsolutions.net>
-	 <20070209162526.489839000@sipsolutions.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RQe52Q3pitg1qMgJ8/5C"
-Date: Sun, 11 Feb 2007 14:13:29 +0100
-Message-Id: <1171199609.5032.0.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 27 Feb 2007 08:58:53 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] wireless: rename d80211 -> mac80211
+Date: Tue, 27 Feb 2007 08:58:29 -0500
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <20070227032756.GA6569@tuxdriver.com> <1172573795.3870.244.camel@johannes.berg> <20070227131639.GA5826@tuxdriver.com>
+In-Reply-To: <20070227131639.GA5826@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1297820.0vnFrr7bXP";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200702270858.33742.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--nextPart1297820.0vnFrr7bXP
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
---=-RQe52Q3pitg1qMgJ8/5C
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Tuesday 27 February 2007 08:16, John W. Linville wrote:
+> Michael, any chance you'd like to rename your tree so as to preserve
+> my infallibility? :-)
+>
+Done.
 
-On Fri, 2007-02-09 at 17:24 +0100, johannes@sipsolutions.net wrote:
+-Michael Wu
 
-
->=20
-> +int wext_ioctl(unsigned int cmd, struct ifreq *ifr, void __user *arg)
-> +{
-> +       int ret =3D -EINVAL;
-> +
-> +       /* If command is `set a parameter', or `get the encoding paramete=
-rs',
-> +        * check if the user is allowed to do it */
-> +       if (IW_IS_SET(cmd) || cmd =3D=3D SIOCGIWENCODE || cmd =3D=3D SIOC=
-GIWENCODEEXT)
-> +               if (!capable(CAP_NET_ADMIN))
-> +                       return -EPERM;
-> +
-> +       dev_load(ifr->ifr_name);
-> +
-> +#ifdef CONFIG_WIRELESS_EXT
-> +       rtnl_lock();
-> +       /* Follow me in wext-old.c */
-> +       ret =3D wireless_process_ioctl(ifr, cmd);
-> +       rtnl_unlock();
-> +
-> +       if (ret =3D=3D 0 && IW_IS_GET(cmd) &&
-              ^^^^^^^^^^^^
-
-That's the bug. That test must be removed.
-
-johannes
-
---=-RQe52Q3pitg1qMgJ8/5C
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart1297820.0vnFrr7bXP
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBFzxZ5/ETPhpq3jKURAlQxAJ9LhKPo/5errAOf1aLxAFf2FYBkngCcDe62
-KQjVzz1c7oxvcuhvDfXj2YY=
-=4Y4x
+iD8DBQBF5DkJT3Oqt9AH4aERAqvhAJ9VTx1mMYOBuAZN1RMqXuZt6VLQ6wCgo7wT
+QOTAgbFoq5B9NuMALq2RbRE=
+=ODyp
 -----END PGP SIGNATURE-----
 
---=-RQe52Q3pitg1qMgJ8/5C--
-
+--nextPart1297820.0vnFrr7bXP--
