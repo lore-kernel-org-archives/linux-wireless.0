@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:54726 "EHLO silver.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932575AbXBSWjQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 17:39:16 -0500
-From: Jiri Benc <jbenc@suse.cz>
-To: "John W. Linville" <linville@tuxdriver.com>
-Message-Id: <20070219233919.221549000.midnight@suse.cz>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2130 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751815AbXB0VE6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Feb 2007 16:04:58 -0500
+Date: Tue, 27 Feb 2007 15:50:45 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: jeff@garzik.org
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/12] d80211: pull request
-Date: Mon, 19 Feb 2007 23:39:45 +0100 (CET)
+Subject: Please pull 'upstream-fixes' branch of wireless-2.6
+Message-ID: <20070227205045.GF5826@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The following changes since commit c8f71b01a50597e298dc3214a2f2be7b8d31170c:
+  Linus Torvalds (1):
+        Linux 2.6.21-rc1
 
-I merged John's current wireless-dev (the master branch) into my tree,
-resolved conflicts, fixed resulting compilation breakage and applied Pavel's
-fix.
+are found in the git repository at:
 
-John, please pull from
-git://git.kernel.org/pub/scm/linux/kernel/git/jbenc/dscape.git up
-to obtain following patches:
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-fixes
 
-Ivo van Doorn:
-      d80211: Fix skb panic during passive scan
+Stefano Brivio (1):
+      bcm43xx: fix for 4309
 
-Jiri Benc:
-      Merge git://git.kernel.org/.../linville/wireless-dev into devel
-      d80211: more wiphy API fixes
+ drivers/net/wireless/bcm43xx/bcm43xx_main.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-Johannes Berg:
-      d80211: remove IEEE80211_HW_FRAGLIST flag
-
-Michael Wu:
-      d80211: fix authentication issues
-      d80211: trivial cleanups in ieee80211_i.h
-      d80211: remove hosttime from ieee80211_rx_status
-      d80211: Fix concurrency issues in ieee80211_sta.c
-      d80211: Simplify channel & mode configuration
-      d80211: Make common function for frequency/channel selection
-      d80211: Support automatic channel/BSSID/SSID configuration
-      d80211: Fix wireless statistics reporting
-
-Pavel Roskin:
-      d80211: fix incorrect hw.priv setting in ieee80211_alloc_hw()
-
- include/net/d80211.h         |   14 +
- net/d80211/ieee80211.c       |  102 +++++-----
- net/d80211/ieee80211_cfg.c   |    2 
- net/d80211/ieee80211_i.h     |   32 ++-
- net/d80211/ieee80211_iface.c |    7 +
- net/d80211/ieee80211_ioctl.c |  144 ++++++++------
- net/d80211/ieee80211_scan.c  |    5 
- net/d80211/ieee80211_sta.c   |  442 ++++++++++++++++++++++++++----------------
- 8 files changed, 452 insertions(+), 296 deletions(-)
-
-
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+index 73c831a..e594af4 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_main.c
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+@@ -2733,8 +2733,9 @@ static int bcm43xx_probe_cores(struct bcm43xx_private *bcm)
+ 				 * dangling pins on the second core. Be careful
+ 				 * and ignore these cores here.
+ 				 */
+-				if (bcm->pci_dev->device != 0x4324) {
+-					dprintk(KERN_INFO PFX "Ignoring additional 802.11 core.\n");
++				if (1 /*bcm->pci_dev->device != 0x4324*/ ) {
++				/* TODO: A PHY */
++					dprintk(KERN_INFO PFX "Ignoring additional 802.11a core.\n");
+ 					continue;
+ 				}
+ 			}
 -- 
-Jiri Benc
-SUSE Labs
+John W. Linville
+linville@tuxdriver.com
