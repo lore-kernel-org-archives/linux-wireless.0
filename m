@@ -1,53 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42477 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932127AbXBWLZY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Feb 2007 06:25:24 -0500
-Subject: Re: [PATCH] create net/wireless/Kconfig and make nl80211 optional
-From: Johannes Berg <johannes@sipsolutions.net>
-To: James Ketrenos <jketreno@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <45DDF22D.9000003@linux.intel.com>
-References: <45DDF22D.9000003@linux.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Q+8xmOlo5gzwDPwNWXGL"
-Date: Fri, 23 Feb 2007 12:25:14 +0100
-Message-Id: <1172229914.3870.13.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2937 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751455AbXB0CGC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Feb 2007 21:06:02 -0500
+Date: Mon, 26 Feb 2007 20:33:20 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stephen Hemminger <shemminger@linux-foundation.org>
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>,
+	Alex Davis <alex14641@yahoo.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: Patch to allow specification of interface name prefix
+Message-ID: <20070227013320.GA4476@tuxdriver.com>
+References: <510326.55988.qm@web50211.mail.yahoo.com> <20070224233001.3ok4k0c00ksos4sw@webmail.spamcop.net> <45E112F7.9090908@lwfinger.net> <20070226150241.1b5b63b2@freekitty>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070226150241.1b5b63b2@freekitty>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Feb 26, 2007 at 03:02:41PM -0800, Stephen Hemminger wrote:
 
---=-Q+8xmOlo5gzwDPwNWXGL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> This was hashed out on netdev 2+ years ago and decided that both ethernet
+> and wireless devices should show up as 'eth%d'. For inclusion d80211 needs to conform
+> to existing mainline kernel practice. If this means breaking the expectation of older
+> out of tree wireless support (ie madwifi), sorry.
 
-On Thu, 2007-02-22 at 11:42 -0800, James Ketrenos wrote:
-> Move the wireless Kconfig options into their own wireless/Kconfig and
-> add a CONFIG_NL80211 configuration option to allow nl80211 support to be
-> optionally included (default =3Dy)
+Any chance you could provide a pointer to that discussion in the archives?
 
-Ack, but we'll need to modify core.h to stub out nl80211_init() and
-nl80211_exit() in case nl80211 isn't compiled in. The reason this worked
-for you is that I forgot to hook up nl80211 completely ;)
-
-Do you want me to take care of that?`
-
-Thanks,
-johannes
-
-
---=-Q+8xmOlo5gzwDPwNWXGL
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF3s8a/ETPhpq3jKURAvzrAKCu+/G/FVLOYOFJGHn2iETRg5rQZACgkaea
-+fm0aBxLcKkF14hx/4QHikg=
-=gxqE
------END PGP SIGNATURE-----
-
---=-Q+8xmOlo5gzwDPwNWXGL--
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
