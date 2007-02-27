@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:54727 "EHLO silver.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932617AbXBSWjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 17:39:17 -0500
-From: Jiri Benc <jbenc@suse.cz>
-To: "John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20070219233919.221549000.midnight@suse.cz>
+Received: from fencepost.gnu.org ([199.232.76.164]:33467 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751692AbXB0SwY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Feb 2007 13:52:24 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HM7PT-0007UC-VW
+	for linux-wireless@vger.kernel.org; Tue, 27 Feb 2007 13:50:48 -0500
+Subject: Re: Patch to allow specification of interface name prefix
+From: Pavel Roskin <proski@gnu.org>
+To: Ben Greear <greearb@candelatech.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/12] d80211: fix authentication issues
-Message-Id: <20070219223946.760B2484A4@silver.suse.cz>
-Date: Mon, 19 Feb 2007 23:39:46 +0100 (CET)
+In-Reply-To: <45E4769E.2040102@candelatech.com>
+References: <510326.55988.qm@web50211.mail.yahoo.com>
+	 <20070224233001.3ok4k0c00ksos4sw@webmail.spamcop.net>
+	 <45E112F7.9090908@lwfinger.net>	<20070226150241.1b5b63b2@freekitty>
+	 <20070227111644.784600be@logostar.upir.cz>
+	 <20070227094108.11f4844f@freekitty>  <45E4769E.2040102@candelatech.com>
+Content-Type: text/plain
+Date: Tue, 27 Feb 2007 13:52:21 -0500
+Message-Id: <1172602341.3291.8.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+On Tue, 2007-02-27 at 10:21 -0800, Ben Greear wrote:
 
-This patch prevents the MLME in d80211 from getting stuck when there is no
-reply to authentication frames. It also allows the bssid to be correctly
-set during IEEE80211_AUTHENTICATE.
+> Regardless of the name, it would be nice to have some quick way to
+> determine
+> if a network device is wireless or not.  This could be an IOCTL, something
+> in /proc/ or similar.  Even if you name them to be wlanX by default, folks
+> can rename them, so applications that care about the type of the network
+> device can't key off of names reliably...
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-Signed-off-by: Jiri Benc <jbenc@suse.cz>
+iwconfig can do it using ioctl.  Shell scripts can do it using
+"wireless" directory in sysfs:
 
----
+for i in /sys/class/net/*; do
+  if test -d $i/wireless; then
+    echo `basename $i`
+  fi
+done
 
- net/d80211/ieee80211_sta.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
-
-d02de628f917dadffc36cbb04f25a9e0bd3cb070
-diff --git a/net/d80211/ieee80211_sta.c b/net/d80211/ieee80211_sta.c
-index 433a11b..0e45a65 100644
---- a/net/d80211/ieee80211_sta.c
-+++ b/net/d80211/ieee80211_sta.c
-@@ -456,6 +456,7 @@ static void ieee80211_authenticate(struc
- 		printk(KERN_DEBUG "%s: authentication with AP " MAC_FMT
- 		       " timed out\n",
- 		       dev->name, MAC_ARG(ifsta->bssid));
-+		ifsta->state = IEEE80211_DISABLED;
- 		return;
- 	}
- 
-@@ -677,6 +678,7 @@ static void ieee80211_associate(struct n
- 		printk(KERN_DEBUG "%s: association with AP " MAC_FMT
- 		       " timed out\n",
- 		       dev->name, MAC_ARG(ifsta->bssid));
-+		ifsta->state = IEEE80211_DISABLED;
- 		return;
- 	}
- 
-@@ -686,6 +688,7 @@ static void ieee80211_associate(struct n
- 	if (ieee80211_privacy_mismatch(dev, ifsta)) {
- 		printk(KERN_DEBUG "%s: mismatch in privacy configuration and "
- 		       "mixed-cell disabled - abort association\n", dev->name);
-+		ifsta->state = IEEE80211_DISABLED;
- 		return;
- 	}
- 
-@@ -2366,7 +2369,7 @@ int ieee80211_sta_set_bssid(struct net_d
- 		ifsta->bssid_set = 0;
- 	else
- 		ifsta->bssid_set = 1;
--	if (ifsta->ssid_set && ifsta->state != IEEE80211_AUTHENTICATE)
-+	if (ifsta->ssid_set)
- 		ieee80211_sta_new_auth(dev, ifsta);
- 
- 	return 0;
 -- 
-1.3.0
+Regards,
+Pavel Roskin
 
