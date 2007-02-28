@@ -1,47 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2350 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423154AbXBIAoa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Feb 2007 19:44:30 -0500
-Date: Thu, 8 Feb 2007 19:05:44 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Jory A. Pratt" <geekypenguin@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: RFT bcm43xx: Really _GOOD_ news
-Message-ID: <20070209000544.GC6303@tuxdriver.com>
-References: <45C8E64B.1050605@lwfinger.net> <45CB69EE.4000102@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <45CB69EE.4000102@gmail.com>
+Received: from nf-out-0910.google.com ([64.233.182.187]:8519 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932269AbXB1Spd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Feb 2007 13:45:33 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so641665nfa
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 10:45:32 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] rt2x00: split RT2X00 option
+Date: Wed, 28 Feb 2007 19:45:28 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200702281926.38820.IvDoorn@gmail.com> <1172687756.5015.65.camel@johannes.berg>
+In-Reply-To: <1172687756.5015.65.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702281945.28426.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 08, 2007 at 12:20:30PM -0600, Jory A. Pratt wrote:
-> Larry Finger wrote:
-> > I have really _GOOD_ news!!!!! While reviewing the latest changes in the V4 specs, I found an
-> > interchange of the PHY version and PHY revision fields, relative to the current V3 specs. Of the
-> > three cards that I have, the 4306 had the same value for the PHY version and revision. In addition,
-> > it was the only card of the 3 thaw would work at 11Mbs. A light went on!
-> >
-> > After installing the patch listed below, both my 4318 and my 4311 will now run at 11Mbs. From tests
-> > with iperf, I now get rates of 6.1 - 6.5 Mbs from all three.
+On Wednesday 28 February 2007 19:35, Johannes Berg wrote:
+> On Wed, 2007-02-28 at 19:26 +0100, Ivo van Doorn wrote:
+> 
+> > Make the debug(fs) config options depend on this new
+> > config option.
+> 
+> I like that.
 
-> I have tested this until I am blue in the face on a 4318. It killed me,
-> I was getting less then 200k/b a sec on a 5M pipe :(. I reverted the
-> patch and all is back to working even tho transfering files on the
-> internal network is still way out there.
+:)
 
-Jory,
+> >  config RT2X00_DEBUGFS
+> >  	tristate "Ralink debugfs support"
+> > -	depends on RT2X00 && DEBUG_FS
+> > +	depends on RT2X00 && RT2X00_LIB && DEBUG_FS
+> >  	---help---
+> >  	Enable creation of debugfs files for the rt2x00 drivers.
+> >  	These debugfs files support both reading and writing of the
+> 
+> If you think hard about it, this also solves the problem of having
+> drivers built-in when the debugfs module isn't. 
 
-Have you tried the patch Larry posted yesterday w/ subject "RFT:
-The real fix for BCM4311 and BCM4312"?
+Actually it doesn't fix that problem. :( It remains possible to
+compile all drivers into the kernel but keeping rt2x00debug.ko as
+module. But the solution really would be:
 
-Thanks,
+> But couldn't you just  
+> link the debugfs module into the lib module instead of making it an own
+> module? I don't see any point in having it separate since there will be
+> a dependency anyway.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+My words exactly. ;)
+
+Merging those 2 modules has been placed on my todo list,
+I'll try to have this done as soon as possible.
+
+Ivo
