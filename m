@@ -1,88 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:21482 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751415AbXBNIDo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Feb 2007 03:03:44 -0500
-Date: Wed, 14 Feb 2007 16:04:24 +0800
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] ipw2200: add channels sysfs entry
-Message-ID: <20070214080424.GA9797@mail.intel.com>
-Reply-To: yi.zhu@intel.com
+Received: from nf-out-0910.google.com ([64.233.182.187]:8341 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751030AbXB1QIM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Feb 2007 11:08:12 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so597740nfa
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 08:08:11 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 14/28] rt2x00: Create rt2x00lib module
+Date: Wed, 28 Feb 2007 17:08:07 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200702281507.13004.IvDoorn@gmail.com> <200702281657.50102.IvDoorn@gmail.com> <1172678429.5015.27.camel@johannes.berg>
+In-Reply-To: <1172678429.5015.27.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702281708.07905.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 28 February 2007 17:00, Johannes Berg wrote:
+> On Wed, 2007-02-28 at 16:57 +0100, Ivo van Doorn wrote:
+> 
+> > Thanks for the tip. I'll try to fix this.
+> > 
+> > Both things will end up in a new patch which I will send as soon as I have that
+> > debugfs config option fixed. :)
+> 
+> And another btw. How about using the wiphy debugfs node?
 
-Add 'channels' sysfs entry for ipw2200. The entry exports channels
-information for the user space.
+Good point, I had created debugfs before the entire wiphy integration into
+wireless-dev and hadn't noticed that entry yet. I'll fix that as soon as possible as well.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-
---
-diff -urp a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
---- a/drivers/net/wireless/ipw2200.c	2007-02-05 17:40:23.000000000 +0800
-+++ b/drivers/net/wireless/ipw2200.c	2007-02-14 15:44:56.000000000 +0800
-@@ -1847,6 +1847,52 @@ static ssize_t store_net_stats(struct de
- static DEVICE_ATTR(net_stats, S_IWUSR | S_IRUGO,
- 		   show_net_stats, store_net_stats);
- 
-+static ssize_t show_channels(struct device *d,
-+			     struct device_attribute *attr,
-+			     char *buf)
-+{
-+	struct ipw_priv *priv = dev_get_drvdata(d);
-+	const struct ieee80211_geo *geo = ipw_get_geo(priv->ieee);
-+	int len = 0, i;
-+
-+	len = sprintf(&buf[len],
-+		      "Displaying %d channels in 2.4Ghz band "
-+		      "(802.11bg):\n", geo->bg_channels);
-+
-+	for (i = 0; i < geo->bg_channels; i++) {
-+		len += sprintf(&buf[len], "%d: BSS%s%s, %s, Band %s.\n",
-+			       geo->bg[i].channel,
-+			       geo->bg[i].flags & IEEE80211_CH_RADAR_DETECT ?
-+			       " (radar spectrum)" : "",
-+			       ((geo->bg[i].flags & IEEE80211_CH_NO_IBSS) ||
-+				(geo->bg[i].flags & IEEE80211_CH_RADAR_DETECT))
-+			       ? "" : ", IBSS",
-+			       geo->bg[i].flags & IEEE80211_CH_PASSIVE_ONLY ?
-+			       "passive only" : "active/passive",
-+			       geo->bg[i].flags & IEEE80211_CH_B_ONLY ?
-+			       "B" : "B/G");
-+	}
-+
-+	len += sprintf(&buf[len],
-+		       "Displaying %d channels in 5.2Ghz band "
-+		       "(802.11a):\n", geo->a_channels);
-+	for (i = 0; i < geo->a_channels; i++) {
-+		len += sprintf(&buf[len], "%d: BSS%s%s, %s.\n",
-+			       geo->a[i].channel,
-+			       geo->a[i].flags & IEEE80211_CH_RADAR_DETECT ?
-+			       " (radar spectrum)" : "",
-+			       ((geo->a[i].flags & IEEE80211_CH_NO_IBSS) ||
-+				(geo->a[i].flags & IEEE80211_CH_RADAR_DETECT))
-+			       ? "" : ", IBSS",
-+			       geo->a[i].flags & IEEE80211_CH_PASSIVE_ONLY ?
-+			       "passive only" : "active/passive");
-+	}
-+
-+	return len;
-+}
-+
-+static DEVICE_ATTR(channels, S_IRUSR, show_channels, NULL);
-+
- static void notify_wx_assoc_event(struct ipw_priv *priv)
- {
- 	union iwreq_data wrqu;
-@@ -11383,6 +11383,7 @@ static struct attribute *ipw_sysfs_entri
- 	&dev_attr_led.attr,
- 	&dev_attr_speed_scan.attr,
- 	&dev_attr_net_stats.attr,
-+	&dev_attr_channels.attr,
- #ifdef CONFIG_IPW2200_PROMISCUOUS
- 	&dev_attr_rtap_iface.attr,
- 	&dev_attr_rtap_filter.attr,
+Ivo
