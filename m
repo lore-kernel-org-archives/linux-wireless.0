@@ -1,125 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60799 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751880AbXB1UCq (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:45968 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932435AbXB1VpH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 15:02:46 -0500
-Subject: Re: [PATCH 2/28] rt2x00: Add debugfs support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Robin Cornelius <robin.cornelius@gmail.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	James Ketrenos <jketreno@linux.intel.com>
-In-Reply-To: <c4db5c50702280921i6f0689adm197b5fcb19f1852f@mail.gmail.com>
-References: <200702281507.13953.IvDoorn@gmail.com>
-	 <200702281752.36875.IvDoorn@gmail.com>
-	 <1172681674.5015.43.camel@johannes.berg>
-	 <200702281809.15486.IvDoorn@gmail.com>
-	 <c4db5c50702280921i6f0689adm197b5fcb19f1852f@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IL2ERNwuHl9h/MA4dHZI"
-Date: Wed, 28 Feb 2007 21:02:20 +0100
-Message-Id: <1172692940.5015.85.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 28 Feb 2007 16:45:07 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: "Jouni Malinen" <jkm@devicescape.com>
+Subject: Re: [PATCH 5/5] d80211: switch STA interfaces to PS mode during scan
+Date: Wed, 28 Feb 2007 16:44:41 -0500
+Cc: linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
+References: <20070228203943.11473.95222.stgit@magic.sourmilk.net> <20070228210926.GM31074@devicescape.com> <200702281642.24404.flamingice@sourmilk.net>
+In-Reply-To: <200702281642.24404.flamingice@sourmilk.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart5171995.oVZeA9Q71D";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200702281644.42038.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-IL2ERNwuHl9h/MA4dHZI
-Content-Type: multipart/mixed; boundary="=-lgO2yBt9EMgzMucXagIj"
-
-
---=-lgO2yBt9EMgzMucXagIj
-Content-Type: text/plain
+--nextPart5171995.oVZeA9Q71D
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Wed, 2007-02-28 at 17:21 +0000, Robin Cornelius wrote:
+On Wednesday 28 February 2007 16:42, Michael Wu wrote:
+> This makes scans switch STA interfaces into PS mode so the AP queues fram=
+es
+> destined for us while we are scanning. This is achieved by sending a
+> nullfunc data frame with the PS mode bit set before scanning commences,
+> and a PS poll frame after scanning is completed.
+>
+Er. I should update the description too..
 
-> d80211 and cfg80211 will compile against a 2.6.20 kernel (i believe
-> 2.6.18 or better will do).
+=2D-
 
-I just got cfg80211 to compile against 2.6.19 on my brothers laptop.
-With James's changes to build mac80211 against older kernels, this
-should enable us to actually build the current code against older
-kernels.
+d80211: switch STA interfaces to PS mode during scan
 
-There will currently be two restrictions:
- * no nl80211
- * no wiphy renaming
+=46rom: Michael Wu <flamingice@sourmilk.net>
 
-The second isn't a problem at all, users just have a bit less
-convenience then. The first will become more and more of a problem as
-mac80211 will migrate towards cfg80211, but since it hasn't yet this
-will allow us some time.
+This makes scans switch STA interfaces into PS mode so the AP queues frames
+destined for us while we are scanning. This is achieved by sending a
+nullfunc data frame with the PS mode bit set before scanning commences,
+and a nullfunc data frame without the PS mode bit set after scanning is
+completed.
 
-To build, I used this sed script first:
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+=2D--
 
-sed 's/\([a-z0-9_]*\)->ieee80211_ptr/((struct wireless_dev*)(\1->ax25_ptr))=
-/' -i *.c
+ include/linux/ieee80211.h    |    7 ++++++
+ net/mac80211/ieee80211_sta.c |   51=20
++++++++++++++++++++++++++++++++++++-------
+ 2 files changed, 50 insertions(+), 8 deletions(-)
 
-to fix the ieee80211_ptr thing (using ax25_ptr as James did), and then
-applied the attached patch. Then I built the whole thing with the
-attached Makefile and loaded the module. I couldn't really test it since
-I don't have mac80211 building against that right now.
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 4379b1d..836bde2 100644
+=2D-- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -203,6 +203,13 @@ struct ieee80211_cts {
+ 	__u8 ra[6];
+ } __attribute__ ((packed));
+=20
++struct ieee80211_ps_poll {
++	__le16 frame_control;
++	__le16 aid;
++	__u8 bssid[6];
++	__u8 ta[6];
++} __attribute__ ((packed));
++
+=20
+ /* Authentication algorithms */
+ #define WLAN_AUTH_OPEN 0
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 280b24f..747662d 100644
+=2D-- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -2523,6 +2523,37 @@ int ieee80211_sta_set_bssid(struct net_d
+ }
+=20
+=20
++static void ieee80211_send_nullfunc(struct ieee80211_local *local,
++				    struct ieee80211_sub_if_data *sdata,
++				    int powersave)
++{
++	struct sk_buff *skb;
++	struct ieee80211_hdr *nullfunc;
++	u16 fc;
++
++	skb =3D dev_alloc_skb(local->hw.extra_tx_headroom + 24);
++	if (!skb) {
++		printk(KERN_DEBUG "%s: failed to allocate buffer for nullfunc "
++		       "frame\n", sdata->dev->name);
++		return;
++	}
++	skb_reserve(skb, local->hw.extra_tx_headroom);
++
++	nullfunc =3D (struct ieee80211_hdr *) skb_put(skb, 24);
++	memset(nullfunc, 0, 24);
++	fc =3D IEEE80211_FTYPE_DATA | IEEE80211_STYPE_NULLFUNC |
++	     IEEE80211_FCTL_TODS;
++	if (powersave)
++		fc |=3D IEEE80211_FCTL_PM;
++	nullfunc->frame_control =3D cpu_to_le16(fc);
++	memcpy(nullfunc->addr1, sdata->u.sta.bssid, ETH_ALEN);
++	memcpy(nullfunc->addr2, sdata->dev->dev_addr, ETH_ALEN);
++	memcpy(nullfunc->addr3, sdata->u.sta.bssid, ETH_ALEN);
++
++	ieee80211_sta_tx(sdata->dev, skb, 0);
++}
++
++
+ void ieee80211_scan_completed(struct ieee80211_hw *hw)
+ {
+ 	struct ieee80211_local *local =3D hw_to_local(hw);
+@@ -2544,10 +2575,12 @@ void ieee80211_scan_completed(struct iee
+=20
+ 	spin_lock_bh(&local->sub_if_lock);
+ 	list_for_each_entry(sdata, &local->sub_if_list, list) {
+=2D		netif_wake_queue(sdata->dev);
+=2D
+=2D		if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA)
++		if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA) {
++			if (sdata->u.sta.associated)
++				ieee80211_send_nullfunc(local, sdata, 0);
+ 			ieee80211_sta_timer((unsigned long)&sdata->u.sta);
++		}
++		netif_wake_queue(sdata->dev);
+ 	}
+ 	spin_unlock_bh(&local->sub_if_lock);
+=20
+@@ -2667,9 +2700,6 @@ static int ieee80211_sta_start_scan(stru
+ 	  * ResultCode: SUCCESS, INVALID_PARAMETERS
+ 	 */
+=20
+=2D	/* TODO: if assoc, move to power save mode for the duration of the
+=2D	 * scan */
+=2D
+ 	if (local->sta_scanning) {
+ 		if (local->scan_dev =3D=3D dev)
+ 			return 0;
+@@ -2691,8 +2721,12 @@ static int ieee80211_sta_start_scan(stru
+ 	local->sta_scanning =3D 1;
+=20
+ 	spin_lock_bh(&local->sub_if_lock);
+=2D	list_for_each_entry(sdata, &local->sub_if_list, list)
++	list_for_each_entry(sdata, &local->sub_if_list, list) {
+ 		netif_stop_queue(sdata->dev);
++		if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA &&
++		    sdata->u.sta.associated)
++			ieee80211_send_nullfunc(local, sdata, 1);
++	}
+ 	spin_unlock_bh(&local->sub_if_lock);
+=20
+ 	if (ssid) {
+@@ -2706,7 +2740,8 @@ static int ieee80211_sta_start_scan(stru
+ 					 list);
+ 	local->scan_channel_idx =3D 0;
+ 	local->scan_dev =3D dev;
+=2D	schedule_delayed_work(&local->scan_work, 0);
++	/* TODO: start scan as soon as all nullfunc frames are ACKed */
++	schedule_delayed_work(&local->scan_work, IEEE80211_CHANNEL_TIME);
+=20
+ 	return 0;
+ }
 
-johannes
-
---=-lgO2yBt9EMgzMucXagIj
-Content-Description: 
-Content-Disposition: attachment; filename=fixes.patch
-Content-Type: text/x-patch; charset=UTF-8
-Content-Transfer-Encoding: base64
-
-SW5kZXg6IGNmZzgwMjExL2NvcmUuYw0KPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQ0KLS0tIGNmZzgwMjExLm9yaWcvY29y
-ZS5jCTIwMDctMDItMjggMjA6NDA6NDAuNjk4OTA4NzkxICswMTAwDQorKysgY2ZnODAyMTEvY29y
-ZS5jCTIwMDctMDItMjggMjA6NDI6MDcuNjI0OTA4NzkxICswMTAwDQpAQCAtMTQ2LDYgKzE0Niw4
-IEBADQogew0KIAlpbnQgaWR4LCB0YWtlbiA9IC0xLCByZXN1bHQ7DQogDQorCXJldHVybiAtRU9Q
-Tk9UU1VQUDsNCisNCiAJLyogcHJvaGliaXQgY2FsbGluZyB0aGUgdGhpbmcgcGh5JWQgd2hlbiAl
-ZCBpcyBub3QgaXRzIG51bWJlciAqLw0KIAlzc2NhbmYobmV3bmFtZSwgUEhZX05BTUUgIiVuIiwg
-JmlkeCwgJnRha2VuKTsNCiAJaWYgKHRha2VuID09IHN0cmxlbihuZXduYW1lKSAmJiBpZHggIT0g
-cmRldi0+aWR4KQ0KQEAgLTI4MSw3ICsyODMsNyBAQA0KIAljYXNlIE5FVERFVl9SRUdJU1RFUjoN
-CiAJCW11dGV4X2xvY2soJnJkZXYtPmRldmxpc3RfbXR4KTsNCiAJCWxpc3RfYWRkKCYoKHN0cnVj
-dCB3aXJlbGVzc19kZXYqKShkZXYtPmF4MjVfcHRyKSktPmxpc3QsICZyZGV2LT5uZXRkZXZfbGlz
-dCk7DQotCQlpZiAoc3lzZnNfY3JlYXRlX2xpbmsoJmRldi0+ZGV2LmtvYmosICZyZGV2LT53aXBo
-eS5kZXYua29iaiwNCisJCWlmIChzeXNmc19jcmVhdGVfbGluaygmZGV2LT5jbGFzc19kZXYua29i
-aiwgJnJkZXYtPndpcGh5LmRldi5rb2JqLA0KIAkJCQkgICAgICAicGh5ODAyMTEiKSkgew0KIAkJ
-CXByaW50ayhLRVJOX0VSUiAid2lyZWxlc3M6IGZhaWxlZCB0byBhZGQgcGh5ODAyMTEgc3ltbGlu
-ayB0byBuZXRkZXYhXG4iKTsNCiAJCX0NCkBAIC0yOTAsNyArMjkyLDcgQEANCiAJCWJyZWFrOw0K
-IAljYXNlIE5FVERFVl9VTlJFR0lTVEVSOg0KIAkJbXV0ZXhfbG9jaygmcmRldi0+ZGV2bGlzdF9t
-dHgpOw0KLQkJc3lzZnNfcmVtb3ZlX2xpbmsoJmRldi0+ZGV2LmtvYmosICJwaHk4MDIxMSIpOw0K
-KwkJc3lzZnNfcmVtb3ZlX2xpbmsoJmRldi0+Y2xhc3NfZGV2LmtvYmosICJwaHk4MDIxMSIpOw0K
-IAkJbGlzdF9kZWwoJigoc3RydWN0IHdpcmVsZXNzX2RldiopKGRldi0+YXgyNV9wdHIpKS0+bGlz
-dCk7DQogCQltdXRleF91bmxvY2soJnJkZXYtPmRldmxpc3RfbXR4KTsNCiAJCWJyZWFrOw0K
-
-
---=-lgO2yBt9EMgzMucXagIj
-Content-Disposition: attachment; filename=Makefile
-Content-Transfer-Encoding: base64
-Content-Type: text/x-makefile; name=Makefile; charset=UTF-8
-
-S1ZFUgk6PSAkKHNoZWxsIHVuYW1lIC1yKQ0KS0RJUgk/PSAvbGliL21vZHVsZXMvJChLVkVSKS9i
-dWlsZA0KTU9EUEFUSAk6PSAkKERFU1RESVIpL2xpYi9tb2R1bGVzLyQoS1ZFUikva2VybmVsL25l
-dC93aXJlbGVzcy8NCg0KaWZuZXEgKCQoS0VSTkVMUkVMRUFTRSksKQ0KDQpDT05GSUdfQ0ZHODAy
-MTE9bQ0KQ0ZMQUdTKz0tSSAkKFBXRCkgJy1EaWVlZTgwMjExX3B0cj1heDI1X3B0cicNCg0Kb2Jq
-LSQoQ09ORklHX0NGRzgwMjExKSArPSBjZmc4MDIxMS5vDQpjZmc4MDIxMS15ICs9IGNvcmUubyBz
-eXNmcy5vDQoNCmVsc2UNClBXRAk6PSAkKHNoZWxsIHB3ZCkNCg0KbW9kdWxlOg0KCSQoTUFLRSkg
-LUMgJChLRElSKSBNPSQoUFdEKSBtb2R1bGVzDQplbmRpZg0K
-
-
---=-lgO2yBt9EMgzMucXagIj--
-
---=-IL2ERNwuHl9h/MA4dHZI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart5171995.oVZeA9Q71D
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBF5d/M/ETPhpq3jKURAu1iAJ4st4oAq09ZyX3yLtAH/KfBmca7rgCguIpY
-jRYm6JIsdC/b0VEYz/SMnsI=
-=wi+H
+iD8DBQBF5ffKT3Oqt9AH4aERAlUTAJ0V0ySkkBLRUF1441N/chaaaOyfcwCfWvI4
+SfHmb2vAb4NgOBoKtbWa9wM=
+=FJj/
 -----END PGP SIGNATURE-----
 
---=-IL2ERNwuHl9h/MA4dHZI--
-
+--nextPart5171995.oVZeA9Q71D--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
