@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:39521 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965823AbXBTAvP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 19:51:15 -0500
-Date: Tue, 20 Feb 2007 01:51:12 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Alex Davis <alex14641@yahoo.com>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-Subject: Re: Kernel bug in bcm43xx-d80211
-Message-ID: <20070220015112.6b8e1658@logostar.upir.cz>
-In-Reply-To: <325621.23689.qm@web50209.mail.yahoo.com>
-References: <1171931043.8133.4.camel@dv>
-	<325621.23689.qm@web50209.mail.yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from nf-out-0910.google.com ([64.233.182.188]:60163 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750839AbXB1P5z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Feb 2007 10:57:55 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so594731nfa
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 07:57:53 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 14/28] rt2x00: Create rt2x00lib module
+Date: Wed, 28 Feb 2007 16:57:49 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200702281507.13004.IvDoorn@gmail.com> <200702281643.13490.IvDoorn@gmail.com> <1172677754.5015.24.camel@johannes.berg>
+In-Reply-To: <1172677754.5015.24.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702281657.50102.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 19 Feb 2007 16:40:15 -0800 (PST), Alex Davis wrote:
-> I appreciate all the help, but now I'm confused. I got these instructions from Larry Finger:
-> git branch michael
-> git checkout michael
-> git pull http://bu3sch.de/git/wireless-dev.git master
+On Wednesday 28 February 2007 16:49, Johannes Berg wrote:
+> On Wed, 2007-02-28 at 16:43 +0100, Ivo van Doorn wrote:
+> 
+> > Nothing depended on RT2X00_LIB, I only had the drivers select RT2X00_LIB.
+> > So something has changed or I am missing something. ;)
+> 
+> No, I found what's up.
+> 
+> You need to change it to
+> 
+> config RT2X00_LIB
+>         tristate
+>         depends on RT2X00
+> 
+> (note that it has no human-readable name)
 
-This is easier for one-time pull.
+Ah ok. Thanks.
 
-> And these instructions from Pavel Roskin:
-> git-remote add bcm43xx http://bu3sch.de/git/wireless-dev.git
-> git-branch bcm43xx
-> git-config branch.bcm43xx.remote bcm43xx
-> git-config branch.bcm43xx.merge refs/heads/master
-> git-checkout bcm43xx
-> git-pull
+> Btw. It appears that you can build debugfs support as a module while
+> drivers are built in. Not good.
 
-This is useful if you want to pull regularly. But Larry's way can be used
-even in that case - I'm pulling regularly from wireless-dev and never used
-git-config :-)
+Thanks for the tip. I'll try to fix this.
 
-Also, Larry's advice about getting back to the original wireless-dev tree
-could be useful for you. It applies to both Larry's and Pavel's
-instructions.
+Both things will end up in a new patch which I will send as soon as I have that
+debugfs config option fixed. :)
 
-> Which set of instructions do I use? Are either of these still applicable, seeing as I was asked
-> to pull from Jiri Benc's tree?
-
-If you pull from my tree, you won't be able to compile any d80211 driver.
-The wireless statistics fixes need to be committed by John first.
-
- Jiri
-
--- 
-Jiri Benc
-SUSE Labs
+Ivo
