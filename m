@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:50276 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750843AbXBMTnr (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.190]:36834 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933153AbXB1RVl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Feb 2007 14:43:47 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: network manager vs. missing firmware
-Date: Tue, 13 Feb 2007 14:43:12 -0500
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-References: <1171392106.10344.100.camel@johannes.berg> <1171394598.5329.31.camel@localhost.localdomain> <1171395459.10344.123.camel@johannes.berg>
-In-Reply-To: <1171395459.10344.123.camel@johannes.berg>
+	Wed, 28 Feb 2007 12:21:41 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so618947nfa
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 09:21:38 -0800 (PST)
+Message-ID: <c4db5c50702280921i6f0689adm197b5fcb19f1852f@mail.gmail.com>
+Date: Wed, 28 Feb 2007 17:21:38 +0000
+From: "Robin Cornelius" <robin.cornelius@gmail.com>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Subject: Re: [PATCH 2/28] rt2x00: Add debugfs support
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200702281809.15486.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1621064.O5IAZpzz1u";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200702131443.16553.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <200702281507.13953.IvDoorn@gmail.com>
+	 <200702281752.36875.IvDoorn@gmail.com>
+	 <1172681674.5015.43.camel@johannes.berg>
+	 <200702281809.15486.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1621064.O5IAZpzz1u
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-
-On Tuesday 13 February 2007 14:37, Johannes Berg wrote:
-> > So this isn't really consistent.  I'm unclear as to why the ipw cards
-> > need it on init rather than on dev open, but hey, why make things
-> > easier?
+On 2/28/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> On Wednesday 28 February 2007 17:54, Johannes Berg wrote:
+> > On Wed, 2007-02-28 at 17:52 +0100, Ivo van Doorn wrote:
+> >
+> > > But there is some progress I believe, Robin seems to have managed to
+> > > compile cfg80211 now against a 2.6.20 kernel.
+> >
+> > Guys, why do we know nothing about this? Could you *please* come out of
+> > your hole?
 >
-> When is ->init() called anyway? Isn't it when you register the netdev so
-> it would be on probe?
+> Perhaps because Robin told it to me 5 minutes before I send that mail? ;)
+> He is still struggling a bit with the Makefile, but at least some progress has been made.
 >
-Yes, ipw2200 does it on probe... but I know it can be pushed off to open. I=
-'ve=20
-done it. However.. I think intersil cards really need firmware to read the=
-=20
-eeprom. prism54 currently sets a fake MAC address so they can push it off t=
-o=20
-open, but I think this is wrong.
+> I have added Robin to the CC list, so he can explain the current status himself. :)
 
-=2DMichael Wu
+Hi guys,
 
---nextPart1621064.O5IAZpzz1u
-Content-Type: application/pgp-signature
+Ok status is as follows.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+d80211 and cfg80211 will compile against a 2.6.20 kernel (i believe
+2.6.18 or better will do).
 
-iD8DBQBF0hTUT3Oqt9AH4aERAjKWAKC4ja0Pq5WZMAmn2yTiUcg3CqO3CQCeL3R0
-0g6LDD7BTMExL6uou3dckK0=
-=yw05
------END PGP SIGNATURE-----
+I have achieved this starting with the d80211 and cfg80211 code from
+wireless-dev.git, and applying some of the intel patches from the
+d80211 subsystem package and a couple of other pointer cast fixes. I
+have not made a patch set yet as I am still experimenting.
 
---nextPart1621064.O5IAZpzz1u--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+The problem i am up against is now i must disable the existing
+wireless extensions in the kernel and this can only be done with a
+kernel rebuild. I have not tried this yet as I am not sure there is a
+lot of point continuing on this route as its not possible to
+completely out of kernel build the cfg80211 modules, which was the
+target for my experimentation.
+
+
+
+-- 
+Robin Cornelius
+http://www.byteme.org.uk
