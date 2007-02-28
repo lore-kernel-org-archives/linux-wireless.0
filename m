@@ -1,37 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:32625 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752013AbXB1Q0s (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53310 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932231AbXB1SbF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 11:26:48 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so603061nfa
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 08:26:47 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/28] rt2x00: Add debugfs support
-Date: Wed, 28 Feb 2007 17:26:43 +0100
+	Wed, 28 Feb 2007 13:31:05 -0500
+Subject: Re: [PATCH 0/28] rt2x00:
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-References: <200702281507.13953.IvDoorn@gmail.com> <1172679380.5015.32.camel@johannes.berg>
-In-Reply-To: <1172679380.5015.32.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702281726.43619.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <200702281924.28452.IvDoorn@gmail.com>
+References: <200702281507.04933.IvDoorn@gmail.com>
+	 <200702281807.28551.IvDoorn@gmail.com>
+	 <1172682993.5015.52.camel@johannes.berg>
+	 <200702281924.28452.IvDoorn@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dy5kd7Log45jJ85gSipe"
+Date: Wed, 28 Feb 2007 19:30:05 +0100
+Message-Id: <1172687405.5015.60.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 28 February 2007 17:16, Johannes Berg wrote:
-> On Wed, 2007-02-28 at 15:07 +0100, Ivo van Doorn wrote:
-> 
-> > +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
-> > +	file->private_data = inode->i_private;
-> > +#else
-> > +	file->private_data = inode->u.generic_ip;
-> > +#endif
 
-Ouch.. :(
+--=-dy5kd7Log45jJ85gSipe
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I'll resend this patch without KERNEL_VERSION stuff in it.
+On Wed, 2007-02-28 at 19:24 +0100, Ivo van Doorn wrote:
 
-Ivo
+> So I think it is best
+> to reinvestigate merging rt2400pci and rt2500pci, when both modules are
+> working independently and hardware encryption work is being done. That wi=
+ll give
+> the best comparison material for making a better decision.=20
+
+Sounds good to me.
+
+johannes
+
+--=-dy5kd7Log45jJ85gSipe
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF5cot/ETPhpq3jKURAoPQAJ41fqUnGvFiDQ7msATjJ8jQfW737wCdFwOR
+8KTcpK2jvsnBIAtXM2DFZOs=
+=yku/
+-----END PGP SIGNATURE-----
+
+--=-dy5kd7Log45jJ85gSipe--
+
