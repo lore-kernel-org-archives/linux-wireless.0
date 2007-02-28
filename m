@@ -1,41 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3108 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965739AbXBOPis (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Feb 2007 10:38:48 -0500
-Date: Thu, 15 Feb 2007 10:06:15 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
+Received: from nf-out-0910.google.com ([64.233.182.191]:18277 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933174AbXB1RHd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Feb 2007 12:07:33 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so614912nfa
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 09:07:32 -0800 (PST)
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arjan van de Ven <arjan@linux.intel.com>
-Subject: Re: round_jiffies for schedule_delayed_work?
-Message-ID: <20070215150615.GB3310@tuxdriver.com>
-References: <1171489163.6093.30.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1171489163.6093.30.camel@johannes.berg>
+Subject: Re: [PATCH 0/28] rt2x00:
+Date: Wed, 28 Feb 2007 18:07:28 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200702281507.04933.IvDoorn@gmail.com> <1172681828.5015.47.camel@johannes.berg>
+In-Reply-To: <1172681828.5015.47.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702281807.28551.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 14, 2007 at 10:39:23PM +0100, Johannes Berg wrote:
-> Hi,
+On Wednesday 28 February 2007 17:57, Johannes Berg wrote:
+> On Wed, 2007-02-28 at 15:07 +0100, Ivo van Doorn wrote:
 > 
-> I was looking through recent commits in wireless-dev and found
-> e226b8aa8921b6b75dcd0142a990b8c7bc1548fd which is correct, but I was
-> wondering if it may be possible to do it more efficiently.
+> > Here is the patch series to bring rt2x00 up to date.
 > 
-> We don't really need this code running every second after we init,
-> having it run every second on average is good enough. I don't see any
-> way to do this with the delayed work API though since
-> schedule_delayed_work simply adds the timer at jiffies+delay.
+> Unrelated to this particular patchset, but we've long said how rt*
+> drivers are a source of huge amounts of duplicate code.
 > 
-> Should we be using a timer and round_jiffies() instead?
+> I just diffed rt2400pci and rt2500pci just for example and noticed that
+> the hardware is basically identical except for the added features. After
+> cutting out spurious changes the diff is about 150 lines so it should be
+> really simple to support the hw in one driver. It'd be great if you
+> could do this, the code duplication currently in there is pretty awkward
+> if we change anything externally and need to update 5 almost-identical
+> drivers.
 
-Using round_jiffies seems reasonable.  Perhaps the delayed work API
-can be extended to use it?
+That is where rt2x00lib is coming in. This is only a recent addition to rt2x00
+so not everything has moved in correctly. So you can expect more to be
+merged into rt2x00lib.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Merging rt2400pci and rt2500pci doesn't sound like a good idea to me,
+once rt2x00lib has been optimally used most duplicate code is out,
+and merging those 2 could make the implementation of hardware encryption
+for rt2500pci harder. rt2400pci is the only Ralink chip that is not capable of
+hardware encryption.
+
+In the early days of rt2x00 where work on rewriting the drivers has just begun,
+those 2 drivers were indeed merged but the checks for which chipset was
+currently used became more and more complex. The RF chipsets are
+not unique between RT chips, which made checking for which register
+should be set and with what value became larger and larger. In the end
+it appeared simpler to split the 2 apart. Especially when considering
+that more use should be made of the hardware encryption capabilities
+of rt2500.
+
+Ivo
