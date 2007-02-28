@@ -1,71 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40794 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932436AbXBESR7 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.173]:4714 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752401AbXB1Qyz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Feb 2007 13:17:59 -0500
-Subject: Re: [RFC PATCH 1/3] cfg80211 and nl80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200702051314.21627.flamingice@sourmilk.net>
-References: <20070131013717.GA28076@tuxdriver.com>
-	 <200702051245.35452.flamingice@sourmilk.net>
-	 <1170697795.3572.32.camel@johannes.berg>
-	 <200702051314.21627.flamingice@sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-T+XKW27dF41A0unOypvg"
-Date: Mon, 05 Feb 2007 19:14:28 +0100
-Message-Id: <1170699268.3572.39.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 28 Feb 2007 11:54:55 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so169608uga
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 08:54:54 -0800 (PST)
+Message-ID: <43e72e890702280854m763b401dmcb5e37599a42bb57@mail.gmail.com>
+Date: Wed, 28 Feb 2007 11:54:50 -0500
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Patch to allow specification of interface name prefix
+Cc: "Jouni Malinen" <jkm@devicescape.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Jiri Benc" <jbenc@suse.cz>,
+	"Stephen Hemminger" <shemminger@linux-foundation.org>,
+	"Larry Finger" <larry.finger@lwfinger.net>,
+	"Pavel Roskin" <proski@gnu.org>,
+	"Alex Davis" <alex14641@yahoo.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1172681452.5015.41.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+References: <510326.55988.qm@web50211.mail.yahoo.com>
+	 <20070224233001.3ok4k0c00ksos4sw@webmail.spamcop.net>
+	 <45E112F7.9090908@lwfinger.net> <20070226150241.1b5b63b2@freekitty>
+	 <20070227111644.784600be@logostar.upir.cz>
+	 <43e72e890702271055sc1525ecy54870626125a7fae@mail.gmail.com>
+	 <20070228012500.GB4072@tuxdriver.com>
+	 <20070228164437.GA31074@devicescape.com>
+	 <1172681452.5015.41.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 2/28/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2007-02-28 at 08:44 -0800, Jouni Malinen wrote:
+>
+> > What's wrong with wlan#?
+>
+> Some people are anal about changing user-visible properties when one
+> driver replaces another.
 
---=-T+XKW27dF41A0unOypvg
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Nothing is wrong with it, that's perfectly fine. This is just a matter
+of adopting a default convention for all wireless devices and sticking
+to it. Old drivers used eth%d as the drivers mangled ethernet frames
+and not wireless frames. With mac80211 wmaster handles wireless frames
+directly but wlan%d handles ethernet frames. If we care more about
+announcing a device is a wireless device is WLAN then lets go with
+wlan%d, if we care more about implying what type of frames are being
+passed to the device then eth%d seems more appropriate.
 
-On Mon, 2007-02-05 at 13:14 -0500, Michael Wu wrote:
-
-> Where? I don't remember getting TX frames when running ethereal on a moni=
-tor=20
-> interface.
-
-Ok, maybe it's missing. I think I saw them, but not sure. They do show
-up on wmaster ;)
-
-> If we report TXed frames at the point when the driver calls=20
-> ieee80211_tx_status, we know whether or not an ack was received. This=20
-> information can be added to the TX frame that is reported to the monitor=20
-> interface.
-
-Oh but do we really want to report them that late? I wouldn't think so.
-That would give us out-of-order issues wrt. the air...
-
-> I'm not sure what you mean. The program can get the configuration info it=
-=20
-> needs from nl80211/cfg80211/WE and send/inject frames through the monitor=
-=20
-> interface.
-
-Well, I guess I'm saying that wpa_supplicant shouldn't need the monitor
-iface at all since it wants just management frames and we should give
-those to it via netlink to avoid having to add more radiotap foo.
-
-johannes
-
---=-T+XKW27dF41A0unOypvg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBFx3QE/ETPhpq3jKURAr/yAJ4vHFtWb6GiZvQ64TG8dD++0Ok6owCfRjn8
-7/2xxFpUmPcKoyONnO9um0o=
-=7aBo
------END PGP SIGNATURE-----
-
---=-T+XKW27dF41A0unOypvg--
-
+  Luis
