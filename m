@@ -1,58 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2727 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423250AbXBHTPU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Feb 2007 14:15:20 -0500
-Date: Thu, 8 Feb 2007 13:50:50 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Christoph Hellwig <hch@infradead.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH 3/3] cfg80211: add wext-compatible client
-Message-ID: <20070208185050.GA6303@tuxdriver.com>
-References: <20070131013717.GA28076@tuxdriver.com> <20070207004626.GA23096@tuxdriver.com> <20070207004747.GB23096@tuxdriver.com> <20070207004832.GC23096@tuxdriver.com> <20070207004929.GD23096@tuxdriver.com> <20070207075420.GB14703@infradead.org> <1170940386.4385.49.camel@johannes.berg> <43e72e890702081038k1d4f226eocf28c5faf6b79dc5@mail.gmail.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38280 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752082AbXB1JQd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Feb 2007 04:16:33 -0500
+Subject: Re: [PATCH 2.6.20] kobject net ifindex + rename
+From: Johannes Berg <johannes@sipsolutions.net>
+To: jt@hpl.hp.com
+Cc: Greg Kroah-Hartman <gregkh@suse.de>,
+	"David S. Miller" <davem@davemloft.net>,
+	Linux kernel mailing list <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070228012741.GA3988@bougret.hpl.hp.com>
+References: <20070228012741.GA3988@bougret.hpl.hp.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fqSkluyBxkpWE3nHXRW0"
+Date: Wed, 28 Feb 2007 10:16:05 +0100
+Message-Id: <1172654165.3681.31.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890702081038k1d4f226eocf28c5faf6b79dc5@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 08, 2007 at 01:38:02PM -0500, Luis R. Rodriguez wrote:
-> On 2/8/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> >On Wed, 2007-02-07 at 07:54 +0000, Christoph Hellwig wrote:
-> >> Btw, if we submit cfg80211 for inclusion there should be at least one 
-> >patch
-> >> in the series actually converts a driver to use it.  Both to make this
-> >> code not dead and give people and example on how to use the cfg80211
-> >> infrastructure.
-> >
-> >I guess I could make softmac use it.
-> 
-> Another idea here is we can provide a configfs frontend to cfg80211
-> therefore any device which implements cfg80211 will automagically have
-> a userspace frontend (/configfs/wireless/foo) ready to test cfg80211.
-> With this we wouldn't have to wait for the next userspace nl80211
-> application to start testing cfg80211 directly (without wireless
-> extensions compat). A configfs frontend can also allow more rapid
-> development of userspace interfaces to configure wireless devices
-> through cfg80211. Comments?
 
-Luis,
+--=-fqSkluyBxkpWE3nHXRW0
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-You have mentioned this before, and FWIW I think it is a decent idea.
-Let's see some code! :-)
+Hi,
 
-Still, I don't think it changes the issue that we need a driver (or
-stack) plugged-in to the bottom end.  I have this on my personal list
-of "soon TODO", although I haven't picked a driver yet.
+> 	Patch for 2.6.20 is attached.
 
-If anyone is working on a cfg80211 driver conversion, please speak-up
-so we can avoid duplicating work.
+... and in the meantime netdevices aren't class_device any more :) IOW,
+your patch isn't going to work any more. Also, I think wireless could
+benefit from this as well.
 
-Thanks,
+>         The kobject framework is well designed, so adding these
+> features is trivial change and won't run the risk of breaking anything
+> (famous last words). Obviously, hotplug apps are free to ignore those
+> additional features.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Why not just add this to base kobject_rename instead? That way,
+userspace is notified for all renames in sysfs.
+The patch then collapses down to the change in net's sysfs code to add
+the ifindex to the environment, and another change in kobject to invoke
+a new event when a name changes and show the old name.
+
+johannes
+
+--=-fqSkluyBxkpWE3nHXRW0
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF5UhV/ETPhpq3jKURApykAJ9ZUXi6bJwmnMglXvkrs/woCNvi/ACfduQ/
+vK6NsgvxMQh5r4sZIJT1acU=
+=U4iY
+-----END PGP SIGNATURE-----
+
+--=-fqSkluyBxkpWE3nHXRW0--
+
