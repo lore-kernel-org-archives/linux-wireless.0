@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:37321 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752388AbXBHSKs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Feb 2007 13:10:48 -0500
-Date: Thu, 8 Feb 2007 19:10:46 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "John Linville" <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Michael Wu <flamingice@sourmilk.net>, netdev@vger.kernel.org,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/3] d80211: Add control structure for beacontemplates
-Message-ID: <20070208191046.457f17ed@griffin.suse.cz>
-In-Reply-To: <200702060046.45560.IvDoorn@gmail.com>
-References: <200702031725.19080.IvDoorn@gmail.com>
-	<20070205212802.36477fd4@griffin.suse.cz>
-	<200702060046.45560.IvDoorn@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from nf-out-0910.google.com ([64.233.182.187]:11413 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932274AbXB1SsG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Feb 2007 13:48:06 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so642303nfa
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 10:48:04 -0800 (PST)
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH 8/28] rt2x00: optimize mac/bssid writing
+Date: Wed, 28 Feb 2007 19:48:00 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200702281507.11726.IvDoorn@gmail.com> <200702281930.12972.IvDoorn@gmail.com> <200702281946.14128.mb@bu3sch.de>
+In-Reply-To: <200702281946.14128.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702281948.00464.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 6 Feb 2007 00:46:45 +0100, Ivo van Doorn wrote:
-> --- dscape/net/d80211/ieee80211.c	2007-02-06 00:19:38.000000000 +0100
-> +++ dscape.control/net/d80211/ieee80211.c	2007-02-06 00:25:26.000000000 +0100
-> @@ -1857,7 +1857,8 @@ ieee80211_get_buffered_bc(struct ieee802
->  EXPORT_SYMBOL(ieee80211_get_buffered_bc);
->  
->  static int __ieee80211_if_config(struct net_device *dev,
-> -				 struct sk_buff *beacon)
-> +				 struct sk_buff *beacon,
-> +				 struct ieee80211_tx_control *control)
->  {
->  	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->  	struct ieee80211_local *local = dev->ieee80211_ptr;
-> @@ -1881,6 +1882,7 @@ static int __ieee80211_if_config(struct 
->  		conf.generic_elem = sdata->u.ap.generic_elem;
->  		conf.generic_elem_len = sdata->u.ap.generic_elem_len;
->  		conf.beacon = beacon;
-> +		memcpy(&conf.beacon_control, control, sizeof(*control));
+> > > Do you writel this array in a loop inside of register_multiwrite?
+> > > If yes, it's broken. writel expects values in CPU endianess.
+> > > This array will always be little endian.
+> > 
+> > register_multiread uses memcpy_fromio(), and
+> > register_multiwrite uses memcpy_toio().
+> 
+> Ah, ok.
+> 
+> > So that should be safe to use right?
+> 
+> Yes.
+> 
+> > Otherwise would making register_multiwrite  accept a void* pointer be better?
+> 
+> Yeah it would. The argument type is wrong. If the function uses
+> memcpy_foo it expects an u8 array (or void array, whatever you prefer).
 
-We can save this memcpy if ieee80211_if_conf.beacon_control is just a
-pointer.
+Ok, thanks. I'll fix this as soon as possible.
 
-With the exception of this, the patch looks good now.
-
-Thanks,
-
- Jiri
-
--- 
-Jiri Benc
-SUSE Labs
+Ivo
