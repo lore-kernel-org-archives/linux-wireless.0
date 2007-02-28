@@ -1,57 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50383 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933214AbXBWUwv (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.186]:20504 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933180AbXB1RJU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Feb 2007 15:52:51 -0500
-Subject: Re: [PATCH] d80211: create net/wireless/Kconfig and make nl80211  optional
-From: Johannes Berg <johannes@sipsolutions.net>
-To: James Ketrenos <jketreno@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <45DF518B.5060809@linux.intel.com>
-References: <45DF518B.5060809@linux.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gSGXGuWy7O8c5U3nq6kv"
-Date: Fri, 23 Feb 2007 21:52:35 +0100
-Message-Id: <1172263955.3870.85.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 28 Feb 2007 12:09:20 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so615402nfa
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 09:09:18 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/28] rt2x00: Add debugfs support
+Date: Wed, 28 Feb 2007 18:09:15 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Robin Cornelius <robin.cornelius@gmail.com>
+References: <200702281507.13953.IvDoorn@gmail.com> <200702281752.36875.IvDoorn@gmail.com> <1172681674.5015.43.camel@johannes.berg>
+In-Reply-To: <1172681674.5015.43.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702281809.15486.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 28 February 2007 17:54, Johannes Berg wrote:
+> On Wed, 2007-02-28 at 17:52 +0100, Ivo van Doorn wrote:
+> 
+> > But there is some progress I believe, Robin seems to have managed to
+> > compile cfg80211 now against a 2.6.20 kernel.
+> 
+> Guys, why do we know nothing about this? Could you *please* come out of
+> your hole?
 
---=-gSGXGuWy7O8c5U3nq6kv
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Perhaps because Robin told it to me 5 minutes before I send that mail? ;)
+He is still struggling a bit with the Makefile, but at least some progress has been made.
 
-On Fri, 2007-02-23 at 12:41 -0800, James Ketrenos wrote:
-> Move the wireless Kconfig options into their own wireless/Kconfig and
-> add a CONFIG_CFG80211_NL80211 configuration option to allow nl80211
-> support to be optionally included (default =3Dy)
+I have added Robin to the CC list, so he can explain the current status himself. :)
 
-I think this one is missing the changes in net/Kconfig.
-
-And I should have looked closer before, sorry.
-
-+config CFG80211
-+        tristate "Improved wireless configuration API"
-+        select WIRELESS_EXT
-
-Why is that select WIRELESS_EXT? CFG80211 doesn't need that, d80211 does
-and correctly selects it.
-
-johannes
-
---=-gSGXGuWy7O8c5U3nq6kv
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF31QT/ETPhpq3jKURApXHAJ9B8BYv8ZmBFOk7xIUNrPCd3IKisQCfRkQi
-AMBEIZja4jqmSZrYrvxYaik=
-=y7eG
------END PGP SIGNATURE-----
-
---=-gSGXGuWy7O8c5U3nq6kv--
-
+Ivo
