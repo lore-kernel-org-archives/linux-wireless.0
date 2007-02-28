@@ -1,49 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55808
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932662AbXBEP2z (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40662 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751913AbXB1UJm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Feb 2007 10:28:55 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Jouni Malinen <jkmaline@cc.hut.fi>
-Subject: Re: [PATCH] d80211: Add API to generate RTS and CTS-to-self frames
-Date: Mon, 5 Feb 2007 16:28:46 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200702051412.50703.mb@bu3sch.de> <20070205145824.GA6637@jm.kir.nu>
-In-Reply-To: <20070205145824.GA6637@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702051628.46518.mb@bu3sch.de>
+	Wed, 28 Feb 2007 15:09:42 -0500
+Subject: Re: [PATCH 2/28] rt2x00: Add debugfs support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Robin Cornelius <robin.cornelius@gmail.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	James Ketrenos <jketreno@linux.intel.com>
+In-Reply-To: <1172692940.5015.85.camel@johannes.berg>
+References: <200702281507.13953.IvDoorn@gmail.com>
+	 <200702281752.36875.IvDoorn@gmail.com>
+	 <1172681674.5015.43.camel@johannes.berg>
+	 <200702281809.15486.IvDoorn@gmail.com>
+	 <c4db5c50702280921i6f0689adm197b5fcb19f1852f@mail.gmail.com>
+	 <1172692940.5015.85.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uwhWoUt6e9fOZuiukHSb"
+Date: Wed, 28 Feb 2007 21:09:16 +0100
+Message-Id: <1172693356.5015.91.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 05 February 2007 15:58, Jouni Malinen wrote:
-> > Index: bu3sch-wireless-dev/include/net/d80211.h
-> > ===================================================================
-> > --- bu3sch-wireless-dev.orig/include/net/d80211.h	2007-02-05 13:59:34.000000000 +0100
-> > +++ bu3sch-wireless-dev/include/net/d80211.h	2007-02-05 14:01:30.000000000 +0100
-> > @@ -194,7 +194,6 @@ struct ieee80211_tx_control {
-> >  #define IEEE80211_TXCTL_TKIP_NEW_PHASE1_KEY (1<<9)
-> >  	u32 flags;			       /* tx control flags defined
-> >  						* above */
-> > -	u16 rts_cts_duration;	/* duration field for RTS/CTS frame */
-> >  	u8 retry_limit;		/* 1 = only first attempt, 2 = one retry, .. */
-> >  	u8 power_level;		/* per-packet transmit power level, in dBm */
-> >  	u8 antenna_sel; 	/* 0 = default/diversity, 1 = Ant0, 2 = Ant1 */
-> 
-> NAK. Why are you removing this? It is needed for hardware that generates
-> RTS/CTS frames.
 
-As I said in response to Johannes' comment, if a driver needs just
-the duration, we should export the functions to calculate it
-and remove the calculation from the tx_control and the tx_control
-setup path.
+--=-uwhWoUt6e9fOZuiukHSb
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Currently there is no driver using it, so I simply removed it.
+On Wed, 2007-02-28 at 21:02 +0100, Johannes Berg wrote:
+>=20
+> CFLAGS+=3D-I $(PWD) '-Dieee80211_ptr=3Dax25_ptr'=20
 
-BTW: Which cards need the duration, but not the whole frame?
+The -D... part is of course bogus since I did the sed script. Tried this
+way first but that doesn't work since ieee80211_ptr isn't void* any more
+and we actually do -> on it.
 
--- 
-Greetings Michael.
+johannes
+
+--=-uwhWoUt6e9fOZuiukHSb
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF5eFr/ETPhpq3jKURAkfaAKC63QYrHBjyoFCc9JJESa5rq+hXiQCeLJUP
+2me9qP8G2zqssh/KMzvadFA=
+=YbMk
+-----END PGP SIGNATURE-----
+
+--=-uwhWoUt6e9fOZuiukHSb--
+
