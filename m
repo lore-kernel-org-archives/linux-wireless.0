@@ -1,53 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53961 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1945972AbXBPQHz (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.190]:49045 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932438AbXB1OHQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Feb 2007 11:07:55 -0500
-Subject: Re: [PATCH] remove IEEE80211_HW_FRAGLIST flag
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jkm@devicescape.com>
-Cc: linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
-In-Reply-To: <20070216160456.GA6173@instant802.com>
-References: <1171569181.5220.60.camel@johannes.berg>
-	 <20070216160456.GA6173@instant802.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SH16XWC9vbsSu8gpNWx4"
-Date: Fri, 16 Feb 2007 17:07:49 +0100
-Message-Id: <1171642069.3575.4.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 28 Feb 2007 09:07:16 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so562557nfa
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 06:07:15 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 22/28] rt2x00: Fix big endian problems for the pci drivers
+Date: Wed, 28 Feb 2007 15:07:08 +0100
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200702281507.08544.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Fix big endian problems for the pci drivers. Register access
+does not need to be byteordered.
 
---=-SH16XWC9vbsSu8gpNWx4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-On Fri, 2007-02-16 at 08:04 -0800, Jouni Malinen wrote:
+---
 
-> The reason for this flag was to reduce host CPU load for frame
-> aggregation (merging multiple frames (skb's) into one frame. It was used
-> to implement one part of Atheros Super A/G enhancements, but I don't see
-> those proprietary changes being generic enough to be worth adding into
-> net/d80211. However, IEEE 802.11n has similar features that may indeed
-> benefit from this flag. As such, I would not remove it.
-
-But we can never submit fragmented SKBs currently anyway, so whenever we
-do any 802.11n changes that benefit from it we can add the flag back.
-
-johannes
-
---=-SH16XWC9vbsSu8gpNWx4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF1dbV/ETPhpq3jKURAjMIAKCq2iz3VpzC63l0VstLIsuKcIXVygCbBkyt
-2JvMUWAQ854McCXHiG5nL9c=
-=QJ1p
------END PGP SIGNATURE-----
-
---=-SH16XWC9vbsSu8gpNWx4--
-
+diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c b/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
+index 3b6f503..3226d76 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
+@@ -69,8 +69,7 @@ static inline void rt2x00_register_read(
+ 	const struct rt2x00_dev *rt2x00dev,
+ 	const unsigned long offset, u32 *value)
+ {
+-	__le32 reg = (__force __le32)readl(rt2x00dev->csr_addr + offset);
+-	*value = le32_to_cpu(reg);
++	*value = readl(rt2x00dev->csr_addr + offset);
+ }
+ 
+ static inline void rt2x00_register_multiread(
+@@ -84,8 +83,7 @@ static inline void rt2x00_register_write(
+ 	const struct rt2x00_dev *rt2x00dev,
+ 	const unsigned long offset, u32 value)
+ {
+-	__le32 reg = cpu_to_le32(value);
+-	writel((__force u32)reg, rt2x00dev->csr_addr + offset);
++	writel(value, rt2x00dev->csr_addr + offset);
+ }
+ 
+ static inline void rt2x00_register_multiwrite(
+diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2500pci.c b/drivers/net/wireless/mac80211/rt2x00/rt2500pci.c
+index 59faa33..5554b3e 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/mac80211/rt2x00/rt2500pci.c
+@@ -69,8 +69,7 @@ static inline void rt2x00_register_read(
+ 	const struct rt2x00_dev *rt2x00dev,
+ 	const unsigned long offset, u32 *value)
+ {
+-	__le32 reg = (__force __le32)readl(rt2x00dev->csr_addr + offset);
+-	*value = le32_to_cpu(reg);
++	*value = readl(rt2x00dev->csr_addr + offset);
+ }
+ 
+ static inline void rt2x00_register_multiread(
+@@ -84,8 +83,7 @@ static inline void rt2x00_register_write(
+ 	const struct rt2x00_dev *rt2x00dev,
+ 	const unsigned long offset, u32 value)
+ {
+-	__le32 reg = cpu_to_le32(value);
+-	writel((__force u32)reg, rt2x00dev->csr_addr + offset);
++	writel(value, rt2x00dev->csr_addr + offset);
+ }
+ 
+ static inline void rt2x00_register_multiwrite(
+diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c b/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c
+index f451ae6..abbe032 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c
+@@ -105,7 +105,8 @@ static inline void rt2x00_register_multiread(
+ {
+ 	rt2x00_vendor_request(
+ 		rt2x00dev, USB_MULTI_READ, USB_VENDOR_REQUEST_IN,
+-		offset, 0x00, value, length, REGISTER_TIMEOUT);
++		offset, 0x00, value, length,
++		REGISTER_TIMEOUT * (length / sizeof(u16)));
+ }
+ 
+ static inline void rt2x00_register_write(
+@@ -124,7 +125,8 @@ static inline void rt2x00_register_multiwrite(
+ {
+ 	rt2x00_vendor_request(
+ 		rt2x00dev, USB_MULTI_WRITE, USB_VENDOR_REQUEST_OUT,
+-		offset, 0x00, value, length, REGISTER_TIMEOUT);
++		offset, 0x00, value, length,
++		REGISTER_TIMEOUT * (length / sizeof(u16)));
+ }
+ 
+ static u16 rt2x00_bbp_check(const struct rt2x00_dev *rt2x00dev)
+diff --git a/drivers/net/wireless/mac80211/rt2x00/rt61pci.c b/drivers/net/wireless/mac80211/rt2x00/rt61pci.c
+index 5718005..267f39e 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/mac80211/rt2x00/rt61pci.c
+@@ -71,10 +71,8 @@ static inline void rt2x00_register_read(
+ 	const struct rt2x00_dev *rt2x00dev,
+ 	const unsigned long offset, u32 *value)
+ {
+-	__le32 reg;
+ 	readl(rt2x00dev->csr_addr + MAC_CSR0);
+-	reg = (__force __le32)readl(rt2x00dev->csr_addr + offset);
+-	*value = le32_to_cpu(reg);
++	*value = readl(rt2x00dev->csr_addr + offset);
+ }
+ 
+ static inline void rt2x00_register_multiread(
+@@ -89,9 +87,8 @@ static inline void rt2x00_register_write(
+ 	const struct rt2x00_dev *rt2x00dev,
+ 	const unsigned long offset, u32 value)
+ {
+-	__le32 reg = cpu_to_le32(value);
+ 	readl(rt2x00dev->csr_addr + MAC_CSR0);
+-	writel((__force u32)reg, rt2x00dev->csr_addr + offset);
++	writel(value, rt2x00dev->csr_addr + offset);
+ }
+ 
+ static inline void rt2x00_register_multiwrite(
+diff --git a/drivers/net/wireless/mac80211/rt2x00/rt73usb.c b/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
+index a991be4..b24ecea 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
+@@ -107,7 +107,8 @@ static inline void rt2x00_register_multiread(
+ {
+ 	rt2x00_vendor_request(
+ 		rt2x00dev, USB_MULTI_READ, USB_VENDOR_REQUEST_IN,
+-		offset, 0x00, value, length, REGISTER_TIMEOUT);
++		offset, 0x00, value, length,
++		REGISTER_TIMEOUT * (length / sizeof(u32)));
+ }
+ 
+ static inline void rt2x00_register_write(
+@@ -126,7 +127,8 @@ static inline void rt2x00_register_multiwrite(
+ {
+ 	rt2x00_vendor_request(
+ 		rt2x00dev, USB_MULTI_WRITE, USB_VENDOR_REQUEST_OUT,
+-		offset, 0x00, value, length, REGISTER_TIMEOUT);
++		offset, 0x00, value, length,
++		REGISTER_TIMEOUT * (length / sizeof(u32)));
+ }
+ 
+ static u32 rt2x00_bbp_check(const struct rt2x00_dev *rt2x00dev)
