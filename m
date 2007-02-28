@@ -1,174 +1,288 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41607 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423000AbXBHNQL (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.190]:49045 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932432AbXB1OHN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Feb 2007 08:16:11 -0500
-Subject: Re: [RFC PATCH 3/3] cfg80211: add wext-compatible client
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070207075420.GB14703@infradead.org>
-References: <20070131013717.GA28076@tuxdriver.com>
-	 <20070207004626.GA23096@tuxdriver.com>
-	 <20070207004747.GB23096@tuxdriver.com>
-	 <20070207004832.GC23096@tuxdriver.com>
-	 <20070207004929.GD23096@tuxdriver.com>
-	 <20070207075420.GB14703@infradead.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4cQu2s596MHEmtBBfU/+"
-Date: Thu, 08 Feb 2007 14:13:06 +0100
-Message-Id: <1170940386.4385.49.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 28 Feb 2007 09:07:13 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so562557nfa
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 06:07:13 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 25/28] rt2x00: rt2x00.h cleanup
+Date: Wed, 28 Feb 2007 15:07:07 +0100
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200702281507.07287.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Cleanup some old code that was replaced by rt2x00lib, or isn't required
+anymore.
 
---=-4cQu2s596MHEmtBBfU/+
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-On Wed, 2007-02-07 at 07:54 +0000, Christoph Hellwig wrote:
+---
 
-> Do we really have to add this directly to struct net_device and bloat it
-> for all users?  I'd put this behind  ieee80211_ptr instead unless there's
-> a good reason against that.
-
-Well, the reason currently is that cfg80211 treats ieee80211_ptr as an
-opaque cookie, it doesn't need to know what it points to.
-
-Of course, I intend to change that too...
-
-> > +config CFG80211_WEXTNL_COMPAT
-> > +	bool "cfg80211 WE-netlink compatibility"
-> > +	depends CFG80211 && CFG80211_WEXT_COMPAT
-> > +	---help---
-> > +	This option allows using devices whose drivers have been
-> > +	converted to use the new cfg80211 with wireless extensions
-> > +	over rtnetlink, providing WE-20 compatibility. Note that
-> > +	cfg80211's "native" interface is nl80211 using generic netlink.
-> > +	The wireless extensions are being deprecated and the netlink
-> > +	based API for WE was never configured by default, nor do any
-> > +	userspace tools use this feature.
-> > +
-> > +	This option exists only to make Jean happy. Say N.
->=20
-> Should we really put this code in?  It seems like unessecary bloat to me.
-
-Yeah. Jean disappeared anyway, I'll kill it.
-
-> > @@ -2798,6 +2799,39 @@ int dev_ioctl(unsigned int cmd, void __user *arg=
-)
-> >  					ret =3D -EFAULT;
-> >  				return ret;
-> >  			}
-> > +#ifdef CONFIG_CFG80211_WEXT_COMPAT
-> > +			/* Take care of cfg80211 WE compatibility */
-> > +			if (cmd >=3D SIOCIWFIRST && cmd <=3D SIOCIWLAST) {
-> > +				/* If command is `set a parameter', or
-> > +				 * `get the encoding parameters', check if
-> > +				 * the user has the right to do it */
-> > +				if (IW_IS_SET(cmd) || cmd =3D=3D SIOCGIWENCODE
-> > +				    || cmd =3D=3D SIOCGIWENCODEEXT) {
-> > +					if (!capable(CAP_NET_ADMIN))
-> > +						return -EPERM;
-> > +				}
-> > +				dev_load(ifr.ifr_name);
-> > +				rtnl_lock();
-> > +				/* Follow me in net/wireless/wext-compat.c */
-> > +				ret =3D cfg80211_wext_ioctl(&ifr, cmd);
-> > +				rtnl_unlock();
-> > +				if (ret =3D=3D 0 && IW_IS_GET(cmd) &&
-> > +				    copy_to_user(arg, &ifr,
-> > +						 sizeof(struct ifreq)))
-> > +					ret =3D -EFAULT;
-> > +				/* haha, I cheat here by allowing a driver or
-> > +				 * stack to have both WE or CFG80211-WE for
-> > +				 * a little while during conversion... hope that
-> > +				 * ENOSYS is only used to indicate not implemented
-> > +				 *
-> > +				 * if wireless extensions are not configured
-> > +				 * then this is the last thing here so that
-> > +				 * if we fall through we return -EINVAL
-> > +				 */
-> > +				if (ret !=3D -ENOSYS)
-> > +					return ret;
-> > +			}
->=20
-> Can we split this into a nice little helper function in wext-compat.c
-> or a dummy macro if it's not configured?
-
-I guess I can do that. Maybe I'll do the same with wext too.
-
-> > --- a/net/core/rtnetlink.c
-> > +++ b/net/core/rtnetlink.c
-> > @@ -56,6 +56,9 @@
-> >  #include <linux/wireless.h>
-> >  #include <net/iw_handler.h>
-> >  #endif	/* CONFIG_NET_WIRELESS_RTNETLINK */
-> > +#ifdef CONFIG_CFG80211_WEXTNL_COMPAT
-> > +#include <net/cfg80211.h>
-> > +#endif
->=20
-> There's not point in including headers conditionally.
-
-It helps ccache when you change that header, but yeah, let's just
-include it.
-
-> This looks odd. Kbuild filters out duplicate objects, so something like
-> the snipplet below should work aswell:
->=20
-> obj-$(CONFIG_WIRELESS_EXT)		+=3D wext-common.o wext-old.o
-> obj-$(CONFIG_CFG80211_WEXT_COMPAT)	+=3D wext-common.o wext-compat.o=09
-
-Hah, good point, I never even thought of something that would just
-duplicate it.
-
-> > +#ifdef CONFIG_CFG80211_WEXT_COMPAT
-> > +/* wext compatibility must be compiled in...
-> > + * this extern is in wext-compat.c */
->=20
-> Is there really a point in making cfg80211 a loadable module?
-> This whle operation vector stuff looks like a lot of unnessecary
-> complexity to me.
-
-I think there is point in doing it as it allows us to replace it with an
-out-of-tree newer version for getting it into the hands of users who
-might not want to replace their whole kernel.
-
-> > new file mode 100644
-> > index 0000000..c1de1d7
-> > --- /dev/null
-> > +++ b/net/wireless/wext-common.c
-> > @@ -0,0 +1,610 @@
-> > +/* common wext support routines, proc interface and events */
->=20
-> This is mostly Jean's old code, right?  Probably wants at least some
-> attribution.
-
-Yeah, good point, it's mostly code that moved from that file to here.
-
-> Btw, if we submit cfg80211 for inclusion there should be at least one pat=
-ch
-> in the series actually converts a driver to use it.  Both to make this
-> code not dead and give people and example on how to use the cfg80211
-> infrastructure.
-
-I guess I could make softmac use it.
-
-johannes
-
---=-4cQu2s596MHEmtBBfU/+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBFyyHi/ETPhpq3jKURAq7JAJ9iGQtdpfN4esuYlvPkVQW+PsAmMQCgqs7q
-UwC6evotpZYb5X9okDLTQmI=
-=zrhX
------END PGP SIGNATURE-----
-
---=-4cQu2s596MHEmtBBfU/+--
-
+diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c b/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
+index 29a8203..f1e3624 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
+@@ -1817,11 +1817,6 @@ static int rt2400pci_beacon_update(struct ieee80211_hw *hw,
+ 	control->queue = IEEE80211_TX_QUEUE_BEACON;
+ 
+ 	/*
+-	 * Set the software sequence number.
+-	 */
+-	rt2x00_set_sequence(skb, &rt2x00dev->interface.sequence);
+-
+-	/*
+ 	 * Update the beacon entry.
+ 	 */
+ 	memcpy(entry->data_addr, skb->data, skb->len);
+diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2500pci.c b/drivers/net/wireless/mac80211/rt2x00/rt2500pci.c
+index e5d032c..06562e1 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/mac80211/rt2x00/rt2500pci.c
+@@ -1955,11 +1955,6 @@ static int rt2500pci_beacon_update(struct ieee80211_hw *hw,
+ 	control->queue = IEEE80211_TX_QUEUE_BEACON;
+ 
+ 	/*
+-	 * Set the software sequence number.
+-	 */
+-	rt2x00_set_sequence(skb, &rt2x00dev->interface.sequence);
+-
+-	/*
+ 	 * Update the beacon entry.
+ 	 */
+ 	memcpy(entry->data_addr, skb->data, skb->len);
+diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c b/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c
+index 86846a1..20e321e 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c
+@@ -2344,7 +2344,7 @@ static int rt2500usb_init_hw(struct rt2x00_dev *rt2x00dev)
+ 		IEEE80211_HW_MONITOR_DURING_OPER;
+ 	rt2x00dev->hw->extra_tx_headroom = TXD_DESC_SIZE;
+ 	rt2x00dev->hw->max_rssi = MAX_RX_SSI;
+-	rt2x00dev->hw->max_noise = -110;
++	rt2x00dev->hw->max_noise = MAX_RX_NOISE;
+ 	rt2x00dev->hw->queues = RING_NUM_TX;
+ 
+ 	if (ieee80211_register_hw(rt2x00dev->hw))
+diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2x00.h b/drivers/net/wireless/mac80211/rt2x00/rt2x00.h
+index 3bd8271..0d47a41 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/mac80211/rt2x00/rt2x00.h
+@@ -811,50 +811,8 @@ struct interface {
+ 	 * in monitor mode that that have been added.
+ 	 */
+ 	short monitor_count;
+-
+-	/*
+-	 * Sequence number for software controled sequence counters.
+-	 */
+-	u16 sequence;
+ };
+ 
+-static inline void rt2x00_add_interface(struct interface *intf,
+-	struct ieee80211_if_init_conf *conf)
+-{
+-	/*
+-	 * We support muliple monitor mode interfaces.
+-	 * All we need to do is increase the monitor_count.
+-	 */
+-	if (conf->type == IEEE80211_IF_TYPE_MNTR) {
+-		intf->monitor_count++;
+-	} else {
+-		intf->id = conf->if_id;
+-		intf->type = conf->type;
+-		if (conf->type == IEEE80211_IF_TYPE_AP)
+-			memcpy(&intf->bssid, conf->mac_addr, ETH_ALEN);
+-		intf->promisc = 0;
+-		intf->sequence = 0;
+-	}
+-}
+-
+-static inline void rt2x00_remove_interface(struct interface *intf,
+-	struct ieee80211_if_init_conf *conf)
+-{
+-	/*
+-	 * We support muliple monitor mode interfaces.
+-	 * All we need to do is decrease the monitor_count.
+-	 */
+-	if (conf->type == IEEE80211_IF_TYPE_MNTR) {
+-		intf->monitor_count--;
+-	} else if (intf->type == conf->type) {
+-		intf->id = 0;
+-		intf->type = -EINVAL;
+-		memset(&intf->bssid, 0x00, ETH_ALEN);
+-		intf->promisc = 0;
+-		intf->sequence = 0;
+-	}
+-}
+-
+ /*
+  * Scanning structure.
+  * Swithing channel during scanning will be put
+@@ -900,22 +858,6 @@ struct scanning {
+ 	struct work_struct work;
+ };
+ 
+-static inline void rt2x00_start_scan(struct scanning *scan,
+-	struct ieee80211_scan_conf *conf, int state)
+-{
+-	init_completion(&scan->completion);
+-
+-	memcpy(&scan->conf, conf, sizeof(*conf));
+-
+-	scan->state = state;
+-
+-	/*
+-	 * Set initial status to SCANNING_WAITING to prevent scanning
+-	 * to begin while there are still TX packets queued.
+-	 */
+-	scan->status = SCANNING_WAITING;
+-}
+-
+ static inline void rt2x00_signal_scan(struct scanning *scan, short status)
+ {
+ 	scan->status = status;
+@@ -923,25 +865,6 @@ static inline void rt2x00_signal_scan(struct scanning *scan, short status)
+ 	complete_all(&scan->completion);
+ }
+ 
+-static inline int rt2x00_wait_scan(struct scanning *scan)
+-{
+-	/*
+-	 * Only wait for completion when the status
+-	 * indicates we should. The SCANNING_READY
+-	 * and SCANNING_CANCELLED are both states
+-	 * which indicate complete_all has already
+-	 * been called.
+-	 */
+-	if (scan->status == SCANNING_WAITING)
+-		wait_for_completion(&scan->completion);
+-
+-	/*
+-	 * Status field will have been updated by the handler
+-	 * that has called complete_all() on our complete structure.
+-	 */
+-	return scan->status;
+-}
+-
+ /*
+  * rt2x00lib callback functions.
+  */
+@@ -1202,27 +1125,6 @@ static void rt2x00_eeprom_write(const struct rt2x00_dev *rt2x00dev,
+ 	rt2x00dev->eeprom[word] = cpu_to_le16(data);
+ }
+ 
+-static inline void rt2x00_update_tx_stats(struct rt2x00_dev *rt2x00dev,
+-	struct ieee80211_tx_status *tx_status, const int status,
+-	const int is_ack, const int is_rts)
+-{
+-	struct ieee80211_low_level_stats *stats = &rt2x00dev->low_level_stats;
+-
+-	if (is_ack)
+-		tx_status->flags |= IEEE80211_TX_STATUS_ACK;
+-	tx_status->excessive_retries = (status == TX_FAIL_RETRY);
+-
+-	if (!is_ack && status == TX_FAIL_RETRY)
+-		stats->dot11ACKFailureCount++;
+-
+-	if (is_rts) {
+-		if (status == TX_SUCCESS || status == TX_SUCCESS_RETRY)
+-			stats->dot11RTSSuccessCount++;
+-		else
+-			stats->dot11RTSFailureCount++;
+-	}
+-}
+-
+ /*
+  * Device specific rate value.
+  * We will have to create the device specific rate value
+@@ -1301,83 +1203,6 @@ static inline void device_rate_entry(struct ieee80211_rate *entry,
+ 	entry->min_rssi_ack_delta = 0;
+ }
+ 
+-static inline int device_signal_to_rate(struct ieee80211_hw_mode *mode,
+-	u8 signal, u8 ofdm)
+-{
+-	unsigned int i;
+-	u8 plcp;
+-	u8 rate;
+-
+-	for (i = 0; i < mode->num_rates; i++) {
+-		/*
+-		 * When frame was received with an OFDM bitrate,
+-		 * the signal is the PLCP value. If it was received with
+-		 * a CCK bitrate the signal is the rate in 0.5kbit/s.
+-		 */
+-		if (!ofdm) {
+-			rate = DEVICE_GET_RATE_FIELD(mode->rates[i].val, RATE);
+-			if (rate == signal)
+-				return mode->rates[i].val;
+-		} else {
+-			plcp = DEVICE_GET_RATE_FIELD(mode->rates[i].val, PLCP);
+-			if (plcp == signal) {
+-				/*
+-				 * Check for preamble bit.
+-				 */
+-				if (signal & 0x08)
+-					return mode->rates[i].val2;
+-				return mode->rates[i].val;
+-			}
+-		}
+-	}
+-
+-	return 0;
+-}
+-
+-/*
+- * Sequence number handlers.
+- */
+-static inline int rt2x00_require_sequence(struct ieee80211_hdr *ieee80211hdr)
+-{
+-	/*
+-	 * Check if the packet has a header
+-	 * that contains a seq_ctrl field.
+-	 */
+-	if (ieee80211_get_hdrlen(
+-		le16_to_cpu(ieee80211hdr->frame_control)) >= IEEE80211_HEADER)
+-		return 1;
+-	return 0;
+-}
+-
+-static inline void rt2x00_set_sequence(struct sk_buff *skb, u16 *seq)
+-{
+-	struct ieee80211_hdr *ieee80211hdr =
+-		(struct ieee80211_hdr*)skb->data;
+-
+-	/*
+-	 * Only attach the sequence number, when
+-	 * the buffer requires it.
+-	 */
+-	if (!rt2x00_require_sequence(ieee80211hdr))
+-		return;
+-
+-	/*
+-	 * Set the sequence number for this frame,
+-	 * but do not change the fragment number.
+-	 */
+-	ieee80211hdr->seq_ctrl |= cpu_to_le16(*seq & IEEE80211_SCTL_SEQ);
+-
+-	/*
+-	 * Since the dscape stack sends all packets and
+-	 * fragments individually, we need to check if there
+-	 * will be new fragments following.
+-	 * If this is the last or only fragment, the sequence
+-	 * counter should be increased.
+-	 */
+-	if (!ieee80211_get_morefrag(ieee80211hdr))
+-		*seq = (*seq + 0x10) & IEEE80211_SCTL_SEQ;
+-}
+-
+ /*
+  * Duration calculations
+  * The rate variable passed is: 100kbs.
