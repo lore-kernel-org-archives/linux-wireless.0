@@ -1,72 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:56021 "EHLO
-	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946606AbXBIQTH (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:42776 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751942AbXB1U6l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Feb 2007 11:19:07 -0500
-Date: Fri, 09 Feb 2007 10:18:03 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>, netdev@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] bcm43xx: Fix loss of association after resume
-Message-ID: <45cc9ebb.+9O/IXvs/C9RyFnk%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 28 Feb 2007 15:58:41 -0500
+Received: from localhost (localhost.rutgers.edu [127.0.0.1])
+	by annwn13.rutgers.edu (Postfix) with ESMTP id 523B5324074
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 15:58:40 -0500 (EST)
+Received: from annwn13.rutgers.edu ([127.0.0.1])
+	by localhost (annwn13.rutgers.edu [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 25695-08 for <linux-wireless@vger.kernel.org>;
+	Wed, 28 Feb 2007 15:58:40 -0500 (EST)
+Received: from [192.168.1.103] (resnet-172.23.52.117.resnet.rutgers.edu [172.23.52.117])
+	by annwn13.rutgers.edu (Postfix) with ESMTP id 3A69032405D
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 15:58:40 -0500 (EST)
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 2/5] d80211: Do not require drivers to implement reset callback
+Date: Wed, 28 Feb 2007 15:39:43 -0500
+To: linux-wireless@vger.kernel.org
+Message-Id: <20070228203943.11473.91707.stgit@magic.sourmilk.net>
+In-Reply-To: <20070228203943.11473.95222.stgit@magic.sourmilk.net>
+References: <20070228203943.11473.95222.stgit@magic.sourmilk.net>
+Content-Type: text/plain;
+  charset=utf-8;
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After a suspend/resume cycle, bcm43xx-softmac has lost its association with
-the AP and requires manual intervention. This situation is fixed by making
-one of softmac's internal routines public and calling it.
+From: Michael Wu <flamingice@sourmilk.net>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+This prevents drivers from crashing if there is a TX timeout and the reset
+callback isn't implemented.
+
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
 ---
 
+ net/mac80211/ieee80211.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Index: linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-+++ linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-@@ -4278,6 +4278,7 @@ static int bcm43xx_resume(struct pci_dev
- {
- 	struct net_device *net_dev = pci_get_drvdata(pdev);
- 	struct bcm43xx_private *bcm = bcm43xx_priv(net_dev);
-+	struct ieee80211softmac_device *mac = ieee80211_priv(net_dev);
- 	int err = 0;
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index bbdf928..15344c7 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -2084,7 +2084,7 @@ static void ieee80211_tx_timeout(struct
  
- 	dprintk(KERN_INFO PFX "Resuming...\n");
-@@ -4299,6 +4300,9 @@ static int bcm43xx_resume(struct pci_dev
- 	}
- 	netif_device_attach(net_dev);
+ 	printk(KERN_WARNING "%s: resetting interface.\n", dev->name);
  
-+	if (mac->associnfo.associated)
-+		ieee80211softmac_try_reassoc(mac);
-+
- 	dprintk(KERN_INFO PFX "Device resumed.\n");
- 
- 	return 0;
-Index: linux-2.6/include/net/ieee80211softmac.h
-===================================================================
---- linux-2.6.orig/include/net/ieee80211softmac.h
-+++ linux-2.6/include/net/ieee80211softmac.h
-@@ -254,6 +254,7 @@ struct ieee80211softmac_device {
- };
- 
- extern void ieee80211softmac_scan_finished(struct ieee80211softmac_device *sm);
-+extern void ieee80211softmac_try_reassoc(struct ieee80211softmac_device *mac);
- 
- static inline void * ieee80211softmac_priv(struct net_device *dev)
- {
-Index: linux-2.6/net/ieee80211/softmac/ieee80211softmac_assoc.c
-===================================================================
---- linux-2.6.orig/net/ieee80211/softmac/ieee80211softmac_assoc.c
-+++ linux-2.6/net/ieee80211/softmac/ieee80211softmac_assoc.c
-@@ -441,6 +441,7 @@ ieee80211softmac_try_reassoc(struct ieee
- 	schedule_delayed_work(&mac->associnfo.work, 0);
- 	spin_unlock_irqrestore(&mac->lock, flags);
- }
-+EXPORT_SYMBOL_GPL(ieee80211softmac_try_reassoc);
- 
- int
- ieee80211softmac_handle_disassoc(struct net_device * dev,
+-	if (local->ops->reset(local_to_hw(local)))
++	if (local->ops->reset && local->ops->reset(local_to_hw(local)))
+ 		printk(KERN_ERR "%s: failed to reset interface.\n", dev->name);
+ 	else
+ 		netif_wake_queue(dev);
+
