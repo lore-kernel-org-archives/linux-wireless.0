@@ -1,50 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:48260 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946436AbXBQHmQ (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.190]:51404 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932222AbXB1S0o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Feb 2007 02:42:16 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HIKBf-0004pr-57
-	for linux-wireless@vger.kernel.org; Sat, 17 Feb 2007 02:40:51 -0500
-Received: from localhost ([127.0.0.1] helo=dv.roinet.com)
-	by gnu.org with esmtp (Exim 4.66)
-	(envelope-from <proski@gnu.org>)
-	id 1HIKCv-00005s-3L
-	for linux-wireless@vger.kernel.org; Sat, 17 Feb 2007 02:42:09 -0500
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH] d80211: fix incorrect hw.priv setting in ieee80211_alloc_hw()
-To: linux-wireless@vger.kernel.org
-Date: Sat, 17 Feb 2007 02:42:08 -0500
-Message-ID: <20070217074208.348.69546.stgit@dv.roinet.com>
+	Wed, 28 Feb 2007 13:26:44 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so636708nfa
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 10:26:42 -0800 (PST)
+To: "John Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: split RT2X00 option
+Date: Wed, 28 Feb 2007 19:26:38 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200702281926.38820.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hw.priv is set twice, and the second time it's set incorrectly to an
-area relative to the master device, which wasn't allocated for private
-data.
+This patch will split the RT2X00 config option and adds the
+(for the user) invisible RT2X00_LIB config option that will be
+selected by the drivers.
+Make the debug(fs) config options depend on this new
+config option.
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+
 ---
 
- net/d80211/ieee80211.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
-
-diff --git a/net/d80211/ieee80211.c b/net/d80211/ieee80211.c
-index 456beb3..4f77e27 100644
---- a/net/d80211/ieee80211.c
-+++ b/net/d80211/ieee80211.c
-@@ -4550,9 +4550,6 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 	mdev->ieee80211_ptr = &sdata->wdev;
- 	sdata->wdev.wiphy = wiphy;
+diff --git a/drivers/net/wireless/mac80211/rt2x00/Kconfig b/drivers/net/wireless/mac80211/rt2x00/Kconfig
+index 1010a72..ec107e7 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/Kconfig
++++ b/drivers/net/wireless/mac80211/rt2x00/Kconfig
+@@ -7,13 +7,18 @@ config RT2X00
  
--	local->hw.priv = (char *)mdev->priv +
--			 ((sizeof(struct ieee80211_sub_if_data) +
--			   NETDEV_ALIGN_CONST) & ~NETDEV_ALIGN_CONST);
- 	local->hw.queues = 1; /* default */
+ 	These drivers will make use of the Devicescape ieee80211 stack.
  
- 	local->mdev = mdev;
-
+-	This option will build the rt2x00 library which is required by
+-	each individual driver, when compiled as a module,
+-	this library will be called "rt2x00lib.ko".
++	When building one of the individual drivers, the rt2x00 library
++	will also be created. That library (when the driver is built as
++	a module) will be called "rt2x00lib.ko".
++
++config RT2X00_LIB
++	tristate
++	depends on RT2X00
+ 
+ config RT2400PCI
+ 	tristate "Ralink rt2400 pci/pcmcia support"
+ 	depends on RT2X00 && PCI
++	select RT2X00_LIB
+ 	select EEPROM_93CX6
+ 	---help---
+ 	This is an experimental driver for the Ralink rt2400 wireless chip.
+@@ -23,6 +28,7 @@ config RT2400PCI
+ config RT2500PCI
+ 	tristate "Ralink rt2500 pci/pcmcia support"
+ 	depends on RT2X00 && PCI
++	select RT2X00_LIB
+ 	select EEPROM_93CX6
+ 	---help---
+ 	This is an experimental driver for the Ralink rt2500 wireless chip.
+@@ -32,6 +38,7 @@ config RT2500PCI
+ config RT61PCI
+ 	tristate "Ralink rt61 pci/pcmcia support"
+ 	depends on RT2X00 && FW_LOADER && PCI
++	select RT2X00_LIB
+ 	select CRC_ITU_T
+ 	select EEPROM_93CX6
+ 	---help---
+@@ -42,6 +49,7 @@ config RT61PCI
+ config RT2500USB
+ 	tristate "Ralink rt2500 usb support"
+ 	depends on RT2X00 && USB
++	select RT2X00_LIB
+ 	---help---
+ 	This is an experimental driver for the Ralink rt2500 wireless chip.
+ 
+@@ -50,6 +58,7 @@ config RT2500USB
+ config RT73USB
+ 	tristate "Ralink rt73 usb support"
+ 	depends on RT2X00 && FW_LOADER && USB
++	select RT2X00_LIB
+ 	select CRC_ITU_T
+ 	---help---
+ 	This is an experimental driver for the Ralink rt73 wireless chip.
+@@ -58,7 +67,7 @@ config RT73USB
+ 
+ config RT2X00_DEBUGFS
+ 	tristate "Ralink debugfs support"
+-	depends on RT2X00 && DEBUG_FS
++	depends on RT2X00 && RT2X00_LIB && DEBUG_FS
+ 	---help---
+ 	Enable creation of debugfs files for the rt2x00 drivers.
+ 	These debugfs files support both reading and writing of the
+@@ -66,6 +75,6 @@ config RT2X00_DEBUGFS
+ 
+ config RT2X00_DEBUG
+ 	bool "Ralink debug output"
+-	depends on RT2X00
++	depends on RT2X00 && RT2X00_LIB
+ 	---help---
+ 	Enable debugging output for all rt2x00 modules
+diff --git a/drivers/net/wireless/mac80211/rt2x00/Makefile b/drivers/net/wireless/mac80211/rt2x00/Makefile
+index 24837d5..10c7d9a 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/Makefile
++++ b/drivers/net/wireless/mac80211/rt2x00/Makefile
+@@ -1,4 +1,4 @@
+-obj-$(CONFIG_RT2X00)		+= rt2x00lib.o
++obj-$(CONFIG_RT2X00_LIB)	+= rt2x00lib.o
+ obj-$(CONFIG_RT2400PCI)		+= rt2400pci.o
+ obj-$(CONFIG_RT2500PCI)		+= rt2500pci.o
+ obj-$(CONFIG_RT61PCI)		+= rt61pci.o
