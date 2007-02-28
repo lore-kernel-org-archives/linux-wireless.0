@@ -1,76 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:60978 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751102AbXBZFXe (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:47470 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752334AbXB1Qvu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Feb 2007 00:23:34 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: John Linville <linville@tuxdriver.com>
-Subject: d80211-drivers pull request (week08)
-Date: Mon, 26 Feb 2007 00:22:54 -0500
-Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	Andrea Merello <andrea.merello@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2610272.elXoZgvkj7";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200702260022.59486.flamingice@sourmilk.net>
+	Wed, 28 Feb 2007 11:51:50 -0500
+Subject: Re: Patch to allow specification of interface name prefix
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jkm@devicescape.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, Jiri Benc <jbenc@suse.cz>,
+	Stephen Hemminger <shemminger@linux-foundation.org>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>,
+	Alex Davis <alex14641@yahoo.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070228164437.GA31074@devicescape.com>
+References: <510326.55988.qm@web50211.mail.yahoo.com>
+	 <20070224233001.3ok4k0c00ksos4sw@webmail.spamcop.net>
+	 <45E112F7.9090908@lwfinger.net> <20070226150241.1b5b63b2@freekitty>
+	 <20070227111644.784600be@logostar.upir.cz>
+	 <43e72e890702271055sc1525ecy54870626125a7fae@mail.gmail.com>
+	 <20070228012500.GB4072@tuxdriver.com>
+	 <20070228164437.GA31074@devicescape.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7ha38I8zkUSUyhvVDzGf"
+Date: Wed, 28 Feb 2007 17:50:52 +0100
+Message-Id: <1172681452.5015.41.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2610272.elXoZgvkj7
-Content-Type: text/plain;
-  charset="us-ascii"
+
+--=-7ha38I8zkUSUyhvVDzGf
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-Hi John,
+On Wed, 2007-02-28 at 08:44 -0800, Jouni Malinen wrote:
 
-Please pull
-git://git.kernel.org/pub/scm/linux/kernel/git/mwu/d80211-drivers.git
-for these patches:
+> What's wrong with wlan#?
 
-p54-week08 branch:
-Christian Lamparter (1):
-      p54: fix reloading issues with (mini-)pci adapters
+Some people are anal about changing user-visible properties when one
+driver replaces another.
 
-zd1211rw-week08 branch:
-Michael Wu (2):
-      zd1211rw-d80211: fix zd_mac_open error path
-      zd1211rw-d80211: remove requested_channel
+johannes
 
-rtl818x-week08 branch:
-Michael Wu (1):
-      rtl818x: Add RTL8187 driver
-
-Common to all branches:
-Michael Wu (1):
-      adm8211, p54, zd1211rw-d80211: remove skb_headroom check
-
-Yup, there's a new driver in there. It's for the Realtek 8187, found on=20
-Netgear WG111v2 and probably elsewhere too. It still needs work but it work=
-s=20
-well enough for more people to test now. Thanks to Andrea Merello for helpi=
-ng=20
-out with its development and thanks to Realtek for supporting Linux!
-
-=2DMichael Wu
-
---nextPart2610272.elXoZgvkj7
-Content-Type: application/pgp-signature
+--=-7ha38I8zkUSUyhvVDzGf
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBF4m6zT3Oqt9AH4aERAov7AJ4txuXz8Q5i327ktTk/dZagJRdbwQCfdaHZ
-MWbmlPgrbqq3XrwB1uvIZR8=
-=dM16
+iD8DBQBF5bLr/ETPhpq3jKURAvrMAJ9vczYpqTBy6FNh9MUMVBwIWa/5cACguZZl
+ibTwdSTdYah+GfOxvCI2Czg=
+=Ggjo
 -----END PGP SIGNATURE-----
 
---nextPart2610272.elXoZgvkj7--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+--=-7ha38I8zkUSUyhvVDzGf--
+
