@@ -1,67 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:45467 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932503AbXB1WIm (ORCPT
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:52542 "EHLO
+	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485AbXB1Uzj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 17:08:42 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so693944nfa
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 14:08:41 -0800 (PST)
-To: "John Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: fix NULL pointer exception
-Date: Wed, 28 Feb 2007 23:08:36 +0100
-Cc: linux-wireless@vger.kernel.org
+	Wed, 28 Feb 2007 15:55:39 -0500
+Date: Wed, 28 Feb 2007 14:54:39 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH V2] bcm43xx: Fix errors in specs to code translation in  B6PHY init
+Message-ID: <45e5ec0f.3gZBQ2k0CuR4JjTT%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200702282308.36935.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will fix a NULL pointer exception when working in master mode.
-When a master mode interface is added, the bssid is initialized,
-when config_interface() is called the bssid is invalid (only with master mode)
-so we cannot use that, instead the bssid inside the interface structure should
-be used.
+There are three errors in the transcription of the latest revision to the
+B6PHY init specifications.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
 
-diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2x00lib.c b/drivers/net/wireless/mac80211/rt2x00/rt2x00lib.c
-index e882182..8dacf00 100644
---- a/drivers/net/wireless/mac80211/rt2x00/rt2x00lib.c
-+++ b/drivers/net/wireless/mac80211/rt2x00/rt2x00lib.c
-@@ -480,6 +480,7 @@ int rt2x00lib_config_interface(struct ieee80211_hw *hw, int if_id,
- 	struct ieee80211_if_conf *conf)
- {
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
-+	struct interface *intf = &rt2x00dev->interface;
- 
- 	/*
- 	 * Monitor mode does not need configuring.
-@@ -488,7 +489,7 @@ int rt2x00lib_config_interface(struct ieee80211_hw *hw, int if_id,
- 	 */
- 	if (conf->type == IEEE80211_IF_TYPE_MNTR)
- 		return 0;
--	else if (conf->type != rt2x00dev->interface.type)
-+	else if (conf->type != intf->type)
- 		return -EINVAL;
- 
- 	/*
-@@ -497,13 +498,13 @@ int rt2x00lib_config_interface(struct ieee80211_hw *hw, int if_id,
- 	 * should now be set.
- 	 */
- 	if (conf->type != IEEE80211_IF_TYPE_AP)
--		memcpy(&rt2x00dev->interface.bssid, conf->bssid, ETH_ALEN);
-+		memcpy(&intf->bssid, conf->bssid, ETH_ALEN);
- 
- 	/*
- 	 * Enable configuration.
- 	 */
- 	rt2x00dev->lib_ops->config_type(rt2x00dev, conf->type);
--	rt2x00dev->lib_ops->config_bssid(rt2x00dev, conf->bssid);
-+	rt2x00dev->lib_ops->config_bssid(rt2x00dev, intf->bssid);
- 
- 	return 0;
- }
+John,
+
+This patch should be applied to wireless-2.6 and sent upstream to 2.6.21-rcX.
+
+Larry
+
+Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
++++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
+@@ -859,6 +859,11 @@ static void bcm43xx_phy_initb6(struct bc
+ 		bcm43xx_radio_write16(bcm, 0x005D, 0x0088);
+ 		bcm43xx_radio_write16(bcm, 0x005E, 0x0088);
+ 		bcm43xx_radio_write16(bcm, 0x007D, 0x0088);
++		bcm43xx_shm_write32(bcm, BCM43xx_SHM_SHARED,
++				    BCM43xx_UCODEFLAGS_OFFSET,
++				    (bcm43xx_shm_read32(bcm, BCM43xx_SHM_SHARED,
++				    BCM43xx_UCODEFLAGS_OFFSET)
++				    | 0x00000200));
+ 	}
+ 	if (radio->revision == 8) {
+ 		bcm43xx_radio_write16(bcm, 0x0051, 0x0000);
+@@ -941,7 +946,8 @@ static void bcm43xx_phy_initb6(struct bc
+ 	bcm43xx_phy_write(bcm, 0x0038, 0x0668);
+ 	bcm43xx_radio_set_txpower_bg(bcm, 0xFFFF, 0xFFFF, 0xFFFF);
+ 	if (radio->revision <= 5)
+-		bcm43xx_phy_write(bcm, 0x005D, bcm43xx_phy_read(bcm, 0x005D) | 0x0003);
++		bcm43xx_phy_write(bcm, 0x005D, (bcm43xx_phy_read(bcm, 0x005D)
++			          & 0xFF80) | 0x0003);
+ 	if (radio->revision <= 2)
+ 		bcm43xx_radio_write16(bcm, 0x005D, 0x000D);
+ 	
+@@ -958,7 +964,7 @@ static void bcm43xx_phy_initb6(struct bc
+ 		bcm43xx_phy_write(bcm, 0x0016, 0x0410);
+ 		bcm43xx_phy_write(bcm, 0x0017, 0x0820);
+ 		bcm43xx_phy_write(bcm, 0x0062, 0x0007);
+-		(void) bcm43xx_radio_calibrationvalue(bcm);
++		bcm43xx_radio_init2050(bcm);
+ 		bcm43xx_phy_lo_g_measure(bcm);
+ 		if (bcm->sprom.boardflags & BCM43xx_BFL_RSSI) {
+ 			bcm43xx_calc_nrssi_slope(bcm);
