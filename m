@@ -1,83 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:56834
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932265AbXB1Sq4 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55409 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933101AbXB1Q53 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Feb 2007 13:46:56 -0500
-From: Michael Buesch <mb@bu3sch.de>
+	Wed, 28 Feb 2007 11:57:29 -0500
+Subject: Re: [PATCH 0/28] rt2x00:
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 8/28] rt2x00: optimize mac/bssid writing
-Date: Wed, 28 Feb 2007 19:46:13 +0100
 Cc: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-References: <200702281507.11726.IvDoorn@gmail.com> <200702281924.59710.mb@bu3sch.de> <200702281930.12972.IvDoorn@gmail.com>
-In-Reply-To: <200702281930.12972.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200702281946.14128.mb@bu3sch.de>
+In-Reply-To: <200702281507.04933.IvDoorn@gmail.com>
+References: <200702281507.04933.IvDoorn@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IgLM0Z2LNJttT+t+qtlZ"
+Date: Wed, 28 Feb 2007 17:57:07 +0100
+Message-Id: <1172681828.5015.47.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 28 February 2007 19:30, Ivo van Doorn wrote:
-> On Wednesday 28 February 2007 19:24, Michael Buesch wrote:
-> > On Wednesday 28 February 2007 19:15, Ivo van Doorn wrote:
-> > > On Wednesday 28 February 2007 18:36, Michael Buesch wrote:
-> > > > On Wednesday 28 February 2007 15:07, Ivo van Doorn wrote:
-> > > > > Handling the mac and bssid configuration can be done much easier
-> > > > > by writing the passed data directly into the register instead
-> > > > > of moving it to a local variable first.
-> > > > > 
-> > > > > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> > > > > 
-> > > > > ---
-> > > > > 
-> > > > > diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c b/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
-> > > > > index 27e151d..b6bf9f3 100644
-> > > > > --- a/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
-> > > > > +++ b/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
-> > > > > @@ -319,14 +319,11 @@ static inline void rt2400pci_close_debugfs(struct rt2x00_dev *rt2x00dev){}
-> > > > >   */
-> > > > >  static void rt2400pci_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
-> > > > >  {
-> > > > > -	u32 reg[2] = { 0, 0 };
-> > > > > -
-> > > > >  	/*
-> > > > >  	 * The BSSID is passed to us as an array of bytes,
-> > > > >  	 * that array is little endian, so no need for byte ordering.
-> > > >            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> > > > >  	 */
-> > > > > -	memcpy(&reg, bssid, ETH_ALEN);
-> > > > > -	rt2x00_register_multiwrite(rt2x00dev, CSR5, &reg[0], sizeof(reg));
-> > > > > +	rt2x00_register_multiwrite(rt2x00dev, CSR5, (u32*)bssid, ETH_ALEN);
-> > > >                                                     ^^^^^^
-> > > > 
-> > > > This doesn't break on BE machines?
-> > > 
-> > > No, the multiwrite (just like multiread) does not perform byteordering,
-> > > so the device will receive each byte in the correct order.
-> > 
-> > No wait. It's not about performing byteordering somewhere.
-> > It's that casting a bytearray (which is little endian) into an
-> > u32 array (which is CPU endian) is almost always wrong.
-> > 
-> > Do you writel this array in a loop inside of register_multiwrite?
-> > If yes, it's broken. writel expects values in CPU endianess.
-> > This array will always be little endian.
-> 
-> register_multiread uses memcpy_fromio(), and
-> register_multiwrite uses memcpy_toio().
 
-Ah, ok.
+--=-IgLM0Z2LNJttT+t+qtlZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> So that should be safe to use right?
+On Wed, 2007-02-28 at 15:07 +0100, Ivo van Doorn wrote:
 
-Yes.
+> Here is the patch series to bring rt2x00 up to date.
 
-> Otherwise would making register_multiwrite  accept a void* pointer be better?
+Unrelated to this particular patchset, but we've long said how rt*
+drivers are a source of huge amounts of duplicate code.
 
-Yeah it would. The argument type is wrong. If the function uses
-memcpy_foo it expects an u8 array (or void array, whatever you prefer).
+I just diffed rt2400pci and rt2500pci just for example and noticed that
+the hardware is basically identical except for the added features. After
+cutting out spurious changes the diff is about 150 lines so it should be
+really simple to support the hw in one driver. It'd be great if you
+could do this, the code duplication currently in there is pretty awkward
+if we change anything externally and need to update 5 almost-identical
+drivers.
 
--- 
-Greetings Michael.
+johannes
+
+--=-IgLM0Z2LNJttT+t+qtlZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF5bRj/ETPhpq3jKURAnC8AKCtwgFIAQ1Va4z9pCCih4e/b0GGuwCgsaGG
+2EHRmhYgv8Ayn6WtxQF4bBo=
+=sBA9
+-----END PGP SIGNATURE-----
+
+--=-IgLM0Z2LNJttT+t+qtlZ--
+
