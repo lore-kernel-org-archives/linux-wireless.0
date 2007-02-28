@@ -1,61 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:32838 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932238AbXBSNwS (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.188]:48635 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932446AbXB1OHS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 08:52:18 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HJ8uq-0007V2-Ai
-	for linux-wireless@vger.kernel.org; Mon, 19 Feb 2007 08:50:52 -0500
-Subject: Re: [PATCH] rt2x00: fix memory corruption caused by eeprom buffer  overflow
-From: Pavel Roskin <proski@gnu.org>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <a32f33a40702190307x2861b654s6233a6b9858e8233@mail.gmail.com>
-References: <20070219024654.3480.9392.stgit@dl.roinet.com>
-	 <a32f33a40702190307x2861b654s6233a6b9858e8233@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 19 Feb 2007 08:51:39 -0500
-Message-Id: <1171893099.8550.23.camel@dv>
-Mime-Version: 1.0
+	Wed, 28 Feb 2007 09:07:18 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so562562nfa
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 06:07:17 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 19/28] rt2x00: Code cleanup after rt2x00lib
+Date: Wed, 28 Feb 2007 15:07:09 +0100
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200702281507.09669.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-02-19 at 12:07 +0100, Ivo Van Doorn wrote:
-> hi
-> 
-> > diff --git a/drivers/net/wireless/d80211/rt2x00/rt73usb.c b/drivers/net/wireless/d80211/rt2x00/rt73usb.c
-> > index be66e2f..6fa5a7e 100644
-> > --- a/drivers/net/wireless/d80211/rt2x00/rt73usb.c
-> > +++ b/drivers/net/wireless/d80211/rt2x00/rt73usb.c
-> > @@ -2705,7 +2705,7 @@ static int rt73usb_alloc_eeprom(struct rt2x00_dev *rt2x00dev)
-> >          * Allocate the eeprom memory, check the eeprom width
-> >          * and copy the entire eeprom into this allocated memory.
-> >          */
-> > -       rt2x00dev->eeprom = kzalloc(EEPROM_SIZE, GFP_KERNEL);
-> > +       rt2x00dev->eeprom = kzalloc(EEPROM_SIZE, GFP_KERNEL * sizeof(u16));
-> >         if (!rt2x00dev->eeprom)
-> >                 return -ENOMEM;
-> 
-> you might want to change this to EEPROM_SIZE * sizeof(u16). ;)
+Start using rt2x00lib, this removes quite a lot of code.
 
-Shame on me.  I wrote a patch that worked on rt61, and then I discarded
-it to make a "clean" fix for all drivers.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-But anyway, I'm seeing now that CVS on sourceforge.net is not abandoned,
-so I think the best approach would be to integrate it into the kernel.
-It would be great if you remove dead code from CVS, all those
-"experimental" branches that haven't been touched for months if not
-years.  It was hard for me to find the actual sources.  I would have
-spent last Sunday evening doing something more interesting than fixing
-fixed bugs :)
+---
 
-Finally, I'll appreciate if the driver is fixed to compile against
-wireless-dev kernels.  You can take an approach similar to iwlwifi and
-even rely on the same d80211 package.
-
--- 
-Regards,
-Pavel Roskin
-
+http://www.mendiosus.nl/rt2x00/19_rt2x00_cleanup.diff
