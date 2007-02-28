@@ -1,48 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52177 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966002AbXBOQDJ (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:41478 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751926AbXB1PnS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Feb 2007 11:03:09 -0500
-Subject: Re: [PATCH 00/10] cfg80211 updates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>
-In-Reply-To: <20070215144241.847938000@sipsolutions.net>
-References: <20070215144241.847938000@sipsolutions.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9jj3a8YzAsfY0Z6wgiiy"
-Date: Thu, 15 Feb 2007 17:02:58 +0100
-Message-Id: <1171555378.5220.17.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 28 Feb 2007 10:43:18 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so590803nfa
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 07:43:17 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 14/28] rt2x00: Create rt2x00lib module
+Date: Wed, 28 Feb 2007 16:43:13 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200702281507.13004.IvDoorn@gmail.com> <200702281634.47330.IvDoorn@gmail.com> <1172677140.5015.22.camel@johannes.berg>
+In-Reply-To: <1172677140.5015.22.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702281643.13490.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 28 February 2007 16:39, Johannes Berg wrote:
+> On Wed, 2007-02-28 at 16:34 +0100, Ivo van Doorn wrote:
+> 
+> > Nope, in my test it will show up in the menu. The help text has no influence.
+> > When the help text is not specified, selecting help on that entry will display
+> > "There is no help available for this kernel option." followed by the regular
+> > dependency information for that option.
+> 
+> I think that's only true if other things depend on it as opposed to
+> selecting it. I know that cfg80211 used to not show up in Kconfig (and
+> that was intentional)
 
---=-9jj3a8YzAsfY0Z6wgiiy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Nothing depended on RT2X00_LIB, I only had the drivers select RT2X00_LIB.
+So something has changed or I am missing something. ;)
 
-On Thu, 2007-02-15 at 15:42 +0100, Johannes Berg wrote:
-
-> it seems to for example that bcm43xx's debugfs
-> stuff doesn't work afterwards
-
-That's actually wrong, I had the note there and then found the
-problem...
-
-johannes
-
---=-9jj3a8YzAsfY0Z6wgiiy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF1IQy/ETPhpq3jKURApniAJ0ZNUkkaeDJoDDafqD4Hfe+BfsRLACglF8y
-seUvrckjkMvhFSQ+6N7nGSY=
-=C+ej
------END PGP SIGNATURE-----
-
---=-9jj3a8YzAsfY0Z6wgiiy--
-
+Ivo
