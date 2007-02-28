@@ -1,34 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:36064 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750911AbXBSKi2 (ORCPT
+Received: from mail8.sea5.speakeasy.net ([69.17.117.10]:33545 "EHLO
+	mail8.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751385AbXB1Dq7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Feb 2007 05:38:28 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so2385876nfa
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Feb 2007 02:38:27 -0800 (PST)
-Message-ID: <a32f33a40702190238w6c3527ccne5592b0aae1db17c@mail.gmail.com>
-Date: Mon, 19 Feb 2007 11:38:27 +0100
-From: "Ivo Van Doorn" <ivdoorn@gmail.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: [PATCH] rt2x00: fix memory corruption caused by eeprom buffer overflow
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <20070219024654.3480.9392.stgit@dl.roinet.com>
+	Tue, 27 Feb 2007 22:46:59 -0500
+Date: Tue, 27 Feb 2007 19:46:46 -0800
+From: Jouni Malinen <jkmaline@cc.hut.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] hostap: Add D-Link DWL-650 Rev. P1 product id
+Message-ID: <20070228034646.GA10278@jm.kir.nu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <20070219024654.3480.9392.stgit@dl.roinet.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> eeprom_93cx6_multiread() expects the last argument to be the buffer
-> length in words, but kzalloc() expects the length in bytes.  This
-> results in dangerous kernel memory corruption.
->
-> Since there are already occurrences of "EEPROM_SIZE * sizeof(u16)" in
-> the driver, I'm assuming that EEPROM_SIZE is in words, so the driver
-> needs to allocate more memory.
->
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
+It looks like some of the PC Card manfid/product strings were lost
+when Host AP driver was converted to use PCMCIA_DEVICE_* helpers. This
+patch adds back D-Link DWL-650 Rev. P1 using the same product ID
+string match as the pcmcia-cs/cardmgr configuration used before.
 
-ACK, this fix has been in CVS already, but I hadn't send the patch yet.
+Signed-off-by: Jouni Malinen <jkmaline@cc.hut.fi>
 
-Ivo
+
+Index: wireless-2.6/drivers/net/wireless/hostap/hostap_cs.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/hostap/hostap_cs.c
++++ wireless-2.6/drivers/net/wireless/hostap/hostap_cs.c
+@@ -848,6 +848,11 @@ static struct pcmcia_device_id hostap_cs
+ 		"Intersil", "PRISM 2_5 PCMCIA ADAPTER",	"ISL37300P",
+ 		"Eval-RevA",
+ 		0x4b801a17, 0x6345a0bf, 0xc9049a39, 0xc23adc0e),
++	/* D-Link DWL-650 Rev. P1; manfid 0x000b, 0x7110 */
++	PCMCIA_DEVICE_PROD_ID1234(
++		"D-Link", "DWL-650 Wireless PC Card RevP", "ISL37101P-10",
++		"A3",
++		0x1a424a1c, 0x6ea57632, 0xdd97a26b, 0x56b21f52),
+ 	PCMCIA_DEVICE_PROD_ID123(
+ 		"Addtron", "AWP-100 Wireless PCMCIA", "Version 01.02",
+ 		0xe6ec52ce, 0x08649af2, 0x4b74baa0),
+
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
