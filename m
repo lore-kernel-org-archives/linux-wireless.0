@@ -1,39 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:10802 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751456AbXBMXg4 (ORCPT
+Received: from dhost002-47.dex002.intermedia.net ([64.78.21.143]:47621 "EHLO
+	dhost002-47.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751963AbXB1VJa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Feb 2007 18:36:56 -0500
-Received: by nf-out-0910.google.com with SMTP id o25so480566nfa
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Feb 2007 15:36:54 -0800 (PST)
-Message-ID: <9b3e2dc20702131536q2f2a89aev8076bbd6e1ccdee9@mail.gmail.com>
-Date: Tue, 13 Feb 2007 18:36:54 -0500
-From: "Stephen Sinclair" <radarsat1@gmail.com>
-To: "Larry Finger" <larry.finger@lwfinger.net>
-Subject: Re: RFT: The real fix for BCM4311 and BCM4312
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	"Miles Lane" <miles.lane@gmail.com>, bcm43xx-dev@lists.berlios.de
-In-Reply-To: <45D2398D.7050104@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <45C96B8A.8010000@lwfinger.net> <1170830071.11150.62.camel@dv>
-	 <200702071443.19676.rjw@sisk.pl> <45C9D9D6.2070700@lwfinger.net>
-	 <a44ae5cd0702101530j38c983bfy9c1496fd50ca8b1c@mail.gmail.com>
-	 <45CE5812.3000306@lwfinger.net> <20070213211340.GG3572@tuxdriver.com>
-	 <45D2398D.7050104@lwfinger.net>
+	Wed, 28 Feb 2007 16:09:30 -0500
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Wed, 28 Feb 2007 13:09:26 -0800
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/5] d80211: switch STA interfaces to PS mode during scan
+Message-ID: <20070228210926.GM31074@devicescape.com>
+References: <20070228203943.11473.95222.stgit@magic.sourmilk.net> <20070228203943.11473.88812.stgit@magic.sourmilk.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070228203943.11473.88812.stgit@magic.sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I think most, if not all, the 4311 and 4312's are helped. I will be submitting a set of
-> patches this afternoon that help most cards.
+On Wed, Feb 28, 2007 at 03:39:43PM -0500, Michael Wu wrote:
+> This makes scans switch STA interfaces into PS mode so the AP queues frames
+> destined for us while we are scanning. This is achieved by sending a
+> nullfunc data frame with the PS mode bit set before scanning commences,
+> and a PS poll frame after scanning is completed.
 
-I just wanted to express my thanks for all your work on this driver,
-and everyone else who's contributed to it.  Since this patch has fixed
-the speed issues, I haven't had to boot to Windows on my laptop in
-like a week.  I wonder if I ever will again.  It's the way it should
-be, and it's just fantastic.  Thank you!  If I could, I'd definitely
-buy you a beer.  ;-)
+Why bother with PS Poll in this case? Just send data::nullfunc with PS
+Poll flag cleared. That will make the AP deliver all buffered frames (if
+any).
 
-
-Steve
+-- 
+Jouni Malinen                                            PGP id EFC895FA
