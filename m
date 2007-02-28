@@ -1,61 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51026 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751480AbXBMS6C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Feb 2007 13:58:02 -0500
-Subject: [PATCH] prism54: correct assignment of DOT1XENABLE in WE-19  codepaths
-From: Dan Williams <dcbw@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Content-Type: text/plain
-Date: Tue, 13 Feb 2007 14:00:22 -0500
-Message-Id: <1171393222.5329.11.camel@localhost.localdomain>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42336 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751546AbXB1PjX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Feb 2007 10:39:23 -0500
+Subject: Re: [PATCH 14/28] rt2x00: Create rt2x00lib module
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200702281634.47330.IvDoorn@gmail.com>
+References: <200702281507.13004.IvDoorn@gmail.com>
+	 <200702281612.51383.IvDoorn@gmail.com>
+	 <1172676338.5015.20.camel@johannes.berg>
+	 <200702281634.47330.IvDoorn@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aTraTIQt/PJYJxXHSxQ/"
+Date: Wed, 28 Feb 2007 16:39:00 +0100
+Message-Id: <1172677140.5015.22.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct assignment of DOT1XENABLE in WE-19 codepaths.
-RX_UNENCRYPTED_EAPOL = 1 really means setting DOT1XENABLE _off_, and
-vice versa.  The original WE-19 patch erroneously reversed that.  This
-patch fixes association with unencrypted and WEP networks when using
-wpa_supplicant.
 
-It also adds two missing break statements that, left out, could result
-in incorrect card configuration.
+--=-aTraTIQt/PJYJxXHSxQ/
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Please commit to both development and stable branches.
+On Wed, 2007-02-28 at 16:34 +0100, Ivo van Doorn wrote:
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+> Nope, in my test it will show up in the menu. The help text has no influe=
+nce.
+> When the help text is not specified, selecting help on that entry will di=
+splay
+> "There is no help available for this kernel option." followed by the regu=
+lar
+> dependency information for that option.
 
-diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-index 838d510..a5396c1 100644
---- a/drivers/net/wireless/prism54/isl_ioctl.c
-+++ b/drivers/net/wireless/prism54/isl_ioctl.c
-@@ -1395,11 +1395,16 @@ static int prism54_set_auth(struct net_device *ndev,
- 		break;
- 
- 	case IW_AUTH_RX_UNENCRYPTED_EAPOL:
--		dot1x = param->value ? 1 : 0;
-+		/* dot1x should be the opposite of RX_UNENCRYPTED_EAPOL;
-+		 * turn off dot1x when allowing receipt of unencrypted EAPOL
-+		 * frames, turn on dot1x when receipt should be disallowed
-+		 */
-+		dot1x = param->value ? 0 : 0x01;
- 		break;
- 
- 	case IW_AUTH_PRIVACY_INVOKED:
- 		privinvoked = param->value ? 1 : 0;
-+		break;
- 
- 	case IW_AUTH_DROP_UNENCRYPTED:
- 		exunencrypt = param->value ? 1 : 0;
-@@ -1589,6 +1594,7 @@ static int prism54_set_encodeext(struct net_device *ndev,
- 			}
- 			key.type = DOT11_PRIV_TKIP;
- 			key.length = KEY_SIZE_TKIP;
-+			break;
- 		default:
- 			return -EINVAL;
- 		}
+I think that's only true if other things depend on it as opposed to
+selecting it. I know that cfg80211 used to not show up in Kconfig (and
+that was intentional)
 
+Let me try this.
+
+johannes
+
+--=-aTraTIQt/PJYJxXHSxQ/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF5aIU/ETPhpq3jKURAknYAJ9KgrGQ08DdGS3dNqVGZE3e6EEu2QCfUR+7
+rZ3DGRCfV54ezxIxwuUKz84=
+=kqn8
+-----END PGP SIGNATURE-----
+
+--=-aTraTIQt/PJYJxXHSxQ/--
 
