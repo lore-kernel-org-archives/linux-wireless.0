@@ -1,53 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:38648 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161157AbXBOUVR (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:38416 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752027AbXB1QcN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Feb 2007 15:21:17 -0500
-Message-ID: <45D4AC45.6050903@linux.intel.com>
-Date: Thu, 15 Feb 2007 10:53:57 -0800
-From: James Ketrenos <jketreno@linux.intel.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: yorkliu@sourceforge.net, Dan Williams <dcbw@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
+	Wed, 28 Feb 2007 11:32:13 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so604551nfa
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 08:32:11 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/28] rt2x00: Add debugfs support
+Date: Wed, 28 Feb 2007 17:32:08 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: network manager vs. missing firmware
-References: <1171392106.10344.100.camel@johannes.berg>	 <1171394598.5329.31.camel@localhost.localdomain>	 <45D25984.7080808@linux.intel.com> <43e72e890702131847q3306ef05s8ecb2c5f8d3b5676@mail.gmail.com>
-In-Reply-To: <43e72e890702131847q3306ef05s8ecb2c5f8d3b5676@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+References: <200702281507.13953.IvDoorn@gmail.com> <1172679612.5015.35.camel@johannes.berg>
+In-Reply-To: <1172679612.5015.35.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702281732.08221.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On 2/13/07, James Ketrenos <jketreno@linux.intel.com> wrote:
->> Dan Williams wrote:
->>
->> > The simpler, the better I think; but it's complicated.  A sample of
->> > current drivers and when they call request_firmware() from a 2.6.19
->> > kernel:
->> >
->> > on dev->open: atmel, prism54, bcm43xx (softmac)
->> > on dev->init: ipw2100, ipw2200
->>
->> request_firmware is also used during mode changes (ie, BSS to IBSS to
->> MONITOR)
+On Wednesday 28 February 2007 17:20, Johannes Berg wrote:
+> On Wed, 2007-02-28 at 15:07 +0100, Ivo van Doorn wrote:
 > 
-> This is a bit off topic but if that's the case then we should also add
-> the check for Master mode and if so check to see if the AP firmware is
-> available and switch to on master mode. We'd then need to incorporate
-> the ap ipw2200 support on ipw2200
+> > +MODULE_VERSION("CVS");
 > 
-> http://sourceforge.net/projects/ipw2200-ap
-> 
-> I wanted to try a patch to send along but I cannot find the relevent
-> code except the firmware there. Perhaps yorkliu can supply that
-> though.
+> Umm, that's just wrong. And it would really help too if you worked the
+> other way around, work in wireless-dev (by submitting patches often) and
+> maintain old driver versions in CVS.
 
-Under the 'Download' link there is v0.3 available -- 
-http://sourceforge.net/project/showfiles.php?group_id=149502
+Well at the moment the cfg80211/nl80211 updates have had a great impact
+on our CVS tree. So it is starting to look like we are going to drop our CVS
+version if we don't find a backwards compatibility for vanilla kernels for it.
 
-I haven't tried it myself.  It hasn't been updated since Sept so 
-probably needs some kernel API cleanup.
+Working the other way around will have a negative (But as mentioned above
+a probably unescapable) side effect. 90% of our testers use the CVS against
+vanilla kernels, and I cannot see them swicthing to the wireless-dev tree.
+So I could switch (it is already under consideration) but it will cost us a lot
+of testers.. :(
 
-James
+Anyway, with the updated debugfs patch I'll have the versioning removed.
+
+Ivo
