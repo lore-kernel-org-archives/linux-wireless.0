@@ -1,39 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4433 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751579AbXB0NfW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Feb 2007 08:35:22 -0500
-Date: Tue, 27 Feb 2007 08:16:39 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless: rename d80211 -> mac80211
-Message-ID: <20070227131639.GA5826@tuxdriver.com>
-References: <20070227032756.GA6569@tuxdriver.com> <1172573795.3870.244.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1172573795.3870.244.camel@johannes.berg>
+Received: from nf-out-0910.google.com ([64.233.182.187]:37652 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932078AbXB1SPq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Feb 2007 13:15:46 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so633763nfa
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 10:15:44 -0800 (PST)
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH 8/28] rt2x00: optimize mac/bssid writing
+Date: Wed, 28 Feb 2007 19:15:40 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200702281507.11726.IvDoorn@gmail.com> <200702281836.07850.mb@bu3sch.de>
+In-Reply-To: <200702281836.07850.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702281915.40940.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 27, 2007 at 11:56:35AM +0100, Johannes Berg wrote:
-> On Mon, 2007-02-26 at 22:27 -0500, John W. Linville wrote:
+On Wednesday 28 February 2007 18:36, Michael Buesch wrote:
+> On Wednesday 28 February 2007 15:07, Ivo van Doorn wrote:
+> > Handling the mac and bssid configuration can be done much easier
+> > by writing the passed data directly into the register instead
+> > of moving it to a local variable first.
+> > 
+> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> > 
+> > ---
+> > 
+> > diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c b/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
+> > index 27e151d..b6bf9f3 100644
+> > --- a/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
+> > +++ b/drivers/net/wireless/mac80211/rt2x00/rt2400pci.c
+> > @@ -319,14 +319,11 @@ static inline void rt2400pci_close_debugfs(struct rt2x00_dev *rt2x00dev){}
+> >   */
+> >  static void rt2400pci_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
+> >  {
+> > -	u32 reg[2] = { 0, 0 };
+> > -
+> >  	/*
+> >  	 * The BSSID is passed to us as an array of bytes,
+> >  	 * that array is little endian, so no need for byte ordering.
+>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> >  	 */
+> > -	memcpy(&reg, bssid, ETH_ALEN);
+> > -	rt2x00_register_multiwrite(rt2x00dev, CSR5, &reg[0], sizeof(reg));
+> > +	rt2x00_register_multiwrite(rt2x00dev, CSR5, (u32*)bssid, ETH_ALEN);
+>                                                     ^^^^^^
 > 
-> > I've changed all references in wireless-dev from d80211 to mac80211
-> > and from D80211 to MAC80211,
-> 
-> And I notice that by "all references", you really mean it:
-> 
-> -T:     git kernel.org:/pub/scm/linux/kernel/git/mwu/d80211-drivers.git
-> +T:     git kernel.org:/pub/scm/linux/kernel/git/mwu/mac80211-drivers.git
+> This doesn't break on BE machines?
 
-Well, that may have been a bit unintentional.  Still, it might be
-appropriate...
+No, the multiwrite (just like multiread) does not perform byteordering,
+so the device will receive each byte in the correct order.
 
-Michael, any chance you'd like to rename your tree so as to preserve
-my infallibility? :-)
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Ivo
