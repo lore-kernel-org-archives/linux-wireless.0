@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:36393 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1161245AbXBOU5Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Feb 2007 15:57:25 -0500
-Date: Thu, 15 Feb 2007 21:57:22 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	"John Linville" <linville@tuxdriver.com>,
+Received: from nf-out-0910.google.com ([64.233.182.184]:32625 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752013AbXB1Q0s (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Feb 2007 11:26:48 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so603061nfa
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2007 08:26:47 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/28] rt2x00: Add debugfs support
+Date: Wed, 28 Feb 2007 17:26:43 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] d80211: Add software sequence support
-Message-ID: <20070215215722.3db7f3ca@griffin.suse.cz>
-In-Reply-To: <200702151548.25041.flamingice@sourmilk.net>
-References: <200702141423.27823.IvDoorn@gmail.com>
-	<200702151548.25041.flamingice@sourmilk.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+References: <200702281507.13953.IvDoorn@gmail.com> <1172679380.5015.32.camel@johannes.berg>
+In-Reply-To: <1172679380.5015.32.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200702281726.43619.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 15 Feb 2007 15:48:20 -0500, Michael Wu wrote:
-> I am not so sure that storing this information in struct ieee80211_sta_bss is 
-> correct. As far as I can tell, that is strictly for storing information scan 
-> results and beacon information. Nothing outside of ieee80211_sta.c uses it. 
-> struct sta_info or struct ieee80211_if_ap (sta interfaces have a pointer to 
-> the struct ieee80211_if_ap on the master device) may be a better choice. I 
-> think struct sta_info is the right one though there is a problem - it isn't 
-> allocated until a successful association.
+On Wednesday 28 February 2007 17:16, Johannes Berg wrote:
+> On Wed, 2007-02-28 at 15:07 +0100, Ivo van Doorn wrote:
+> 
+> > +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
+> > +	file->private_data = inode->i_private;
+> > +#else
+> > +	file->private_data = inode->u.generic_ip;
+> > +#endif
 
-Thinking about it more, sdata should be the correct place. It's more
-per-interface thing than per-BSS (although the difference is small in
-this particular case).
+Ouch.. :(
 
-Thanks,
+I'll resend this patch without KERNEL_VERSION stuff in it.
 
- Jiri
-
--- 
-Jiri Benc
-SUSE Labs
+Ivo
