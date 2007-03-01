@@ -1,91 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gundega.hpl.hp.com ([192.6.19.190]:59328 "EHLO
-	gundega.hpl.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161211AbXCGCDp (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:53147 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965192AbXCAPWX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2007 21:03:45 -0500
-Date: Tue, 6 Mar 2007 18:03:10 -0800
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Jouni Malinen <jkm@devicescape.com>
-Subject: Re: wireless extensions vs. 64-bit architectures
-Message-ID: <20070307020310.GA20466@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <1173144447.15891.93.camel@johannes.berg> <20070306171316.GA19669@bougret.hpl.hp.com> <200703061943.07350.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200703061943.07350.mb@bu3sch.de>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+	Thu, 1 Mar 2007 10:22:23 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so913495nfa
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2007 07:22:22 -0800 (PST)
+To: Andy Green <andy@warmcat.com>
+Subject: Re: Question about packet injection
+Date: Thu, 1 Mar 2007 16:22:17 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <45E41A9E.2020908@warmcat.com> <45E497A1.90400@warmcat.com> <45E6ED0B.20100@warmcat.com>
+In-Reply-To: <45E6ED0B.20100@warmcat.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200703011622.17602.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 06, 2007 at 07:43:06PM +0100, Michael Buesch wrote:
+On Thursday 01 March 2007 16:11, Andy Green wrote:
+> Hi folks -
 > 
-> Ok, it is wrapping the following ioctls:
+> As suggested here I migrated my daemon to using a per-physical device 
+> monitor mode interface it creates and destroys from usermode, together 
+> with libpcap for filtering and receiving broadcasts and that seems to be 
+> working okay.  So that is half the battle to get the broadcast system 
+> working with mac80211 out of the box without patches.
 > 
-> HANDLE_IOCTL(SIOCGIWRANGE, do_wireless_ioctl)
-> HANDLE_IOCTL(SIOCSIWSPY, do_wireless_ioctl)
-> HANDLE_IOCTL(SIOCGIWSPY, do_wireless_ioctl)
-> HANDLE_IOCTL(SIOCSIWTHRSPY, do_wireless_ioctl)
-> HANDLE_IOCTL(SIOCGIWTHRSPY, do_wireless_ioctl)
-> HANDLE_IOCTL(SIOCGIWAPLIST, do_wireless_ioctl)
-> HANDLE_IOCTL(SIOCGIWSCAN, do_wireless_ioctl)
-> HANDLE_IOCTL(SIOCSIWESSID, do_wireless_ioctl)
-> HANDLE_IOCTL(SIOCGIWESSID, do_wireless_ioctl)
-> HANDLE_IOCTL(SIOCSIWNICKN, do_wireless_ioctl)
-> HANDLE_IOCTL(SIOCGIWNICKN, do_wireless_ioctl)
-> HANDLE_IOCTL(SIOCSIWENCODE, do_wireless_ioctl)
-> HANDLE_IOCTL(SIOCGIWENCODE, do_wireless_ioctl)
+> However, if I inject a captured packet - with a PRISM header prepended - 
+> down the Monitor mode interface using pcap_inject(), I see it appear on 
+> the libpcap captured output okay, but it does not go out on the air AFAICT.
 > 
-> What about SIOCSIWSCAN, SIOCSIWENCODEEXT, SIOCGIWENCODEEXT
-> and some others that also use iw_point?
+> Is this in fact the correct way to try to inject a packet with fine 
+> control over its encryption and rate?  If so is it expected to currently 
+> work on iwlwifi 0.0.8 or rt2x00 (rt73usb) from CVS 2008-02-14?
 
-	Ok, please check the patch attached. I don't have a box to
-test that on, and on my 32 bit kernel it is not even compiled, but I
-believe I got everything all right.
-	Please push that to the usual channels...
+Note that rt73usb is currently broken, I know that RX isn't working
+because scanning fails. Chances are quite high that TX is failing too.
+I am still looking into that issue, but it might be the reason why
+packet injection is failing for you.
 
-> Greetings Michael.
-
-	Thanks again,
-
-	Jean
-
-Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
-
-------------------------------------------------------------------
-
-diff -u -p linux/fs/compat_ioctl.j1.c  linux/fs/compat_ioctl.c
---- linux/fs/compat_ioctl.j1.c	2007-03-06 17:49:33.000000000 -0800
-+++ linux/fs/compat_ioctl.c	2007-03-06 17:56:19.000000000 -0800
-@@ -2553,11 +2553,15 @@ HANDLE_IOCTL(I2C_RDWR, do_i2c_rdwr_ioctl
- HANDLE_IOCTL(I2C_SMBUS, do_i2c_smbus_ioctl)
- /* wireless */
- HANDLE_IOCTL(SIOCGIWRANGE, do_wireless_ioctl)
-+HANDLE_IOCTL(SIOCGIWPRIV, do_wireless_ioctl)
-+HANDLE_IOCTL(SIOCGIWSTATS, do_wireless_ioctl)
- HANDLE_IOCTL(SIOCSIWSPY, do_wireless_ioctl)
- HANDLE_IOCTL(SIOCGIWSPY, do_wireless_ioctl)
- HANDLE_IOCTL(SIOCSIWTHRSPY, do_wireless_ioctl)
- HANDLE_IOCTL(SIOCGIWTHRSPY, do_wireless_ioctl)
-+HANDLE_IOCTL(SIOCSIWMLME, do_wireless_ioctl)
- HANDLE_IOCTL(SIOCGIWAPLIST, do_wireless_ioctl)
-+HANDLE_IOCTL(SIOCSIWSCAN, do_wireless_ioctl)
- HANDLE_IOCTL(SIOCGIWSCAN, do_wireless_ioctl)
- HANDLE_IOCTL(SIOCSIWESSID, do_wireless_ioctl)
- HANDLE_IOCTL(SIOCGIWESSID, do_wireless_ioctl)
-@@ -2565,6 +2569,11 @@ HANDLE_IOCTL(SIOCSIWNICKN, do_wireless_i
- HANDLE_IOCTL(SIOCGIWNICKN, do_wireless_ioctl)
- HANDLE_IOCTL(SIOCSIWENCODE, do_wireless_ioctl)
- HANDLE_IOCTL(SIOCGIWENCODE, do_wireless_ioctl)
-+HANDLE_IOCTL(SIOCSIWGENIE, do_wireless_ioctl)
-+HANDLE_IOCTL(SIOCGIWGENIE, do_wireless_ioctl)
-+HANDLE_IOCTL(SIOCSIWENCODEEXT, do_wireless_ioctl)
-+HANDLE_IOCTL(SIOCGIWENCODEEXT, do_wireless_ioctl)
-+HANDLE_IOCTL(SIOCSIWPMKSA, do_wireless_ioctl)
- HANDLE_IOCTL(SIOCSIFBR, old_bridge_ioctl)
- HANDLE_IOCTL(SIOCGIFBR, old_bridge_ioctl)
- HANDLE_IOCTL(RTC_IRQP_READ32, rtc_ioctl)
+Ivo
