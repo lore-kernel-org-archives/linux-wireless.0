@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:56494 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933023AbXCKEkS (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:35146 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965425AbXCARO1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Mar 2007 23:40:18 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HQFpF-0002Ce-B8
-	for linux-wireless@vger.kernel.org; Sat, 10 Mar 2007 23:38:29 -0500
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH] zd1211rw: sparse-annotate radiotap header
-To: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>
-Date: Sat, 10 Mar 2007 23:40:16 -0500
-Message-ID: <20070311044016.1351.41028.stgit@dv.roinet.com>
+	Thu, 1 Mar 2007 12:14:27 -0500
+Message-ID: <45E709EF.6060200@warmcat.com>
+Date: Thu, 01 Mar 2007 17:14:23 +0000
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Question about packet injection
+References: <45E41A9E.2020908@warmcat.com> <45E497A1.90400@warmcat.com> <45E6ED0B.20100@warmcat.com> <200703011622.17602.IvDoorn@gmail.com>
+In-Reply-To: <200703011622.17602.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All fields in radiotap header must be little endian.  The driver does it
-correctly, but the structure definition must be annotated.
+Ivo van Doorn wrote:
+> On Thursday 01 March 2007 16:11, Andy Green wrote:
+>> Hi folks -
+>>
+>> As suggested here I migrated my daemon to using a per-physical device 
+>> monitor mode interface it creates and destroys from usermode, together 
+>> with libpcap for filtering and receiving broadcasts and that seems to be 
+>> working okay.  So that is half the battle to get the broadcast system 
+>> working with mac80211 out of the box without patches.
+>>
+>> However, if I inject a captured packet - with a PRISM header prepended - 
+>> down the Monitor mode interface using pcap_inject(), I see it appear on 
+>> the libpcap captured output okay, but it does not go out on the air AFAICT.
+>>
+>> Is this in fact the correct way to try to inject a packet with fine 
+>> control over its encryption and rate?  If so is it expected to currently 
+>> work on iwlwifi 0.0.8 or rt2x00 (rt73usb) from CVS 2008-02-14?
+> 
+> Note that rt73usb is currently broken, I know that RX isn't working
+> because scanning fails. Chances are quite high that TX is failing too.
+> I am still looking into that issue, but it might be the reason why
+> packet injection is failing for you.
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+The 2007-02-14 rt73usb CVS works okay for RX, it does iwlist wlan0 scans 
+alright here anyway with the AP shown.  I have had that version issuing 
+unencrypted broadcasts too by hacking the stack and the driver slightly. 
+  Maybe it was some Valentines Day magic :-)  But it doesn't associate 
+in a stable way with the AP using WPA on wpa_supplicant with the dscape 
+patch.
 
- drivers/net/wireless/mac80211/zd1211rw/zd_mac.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Anyway it seems the problem is one does not inject for TX on the Monitor 
+mode interface (/me goes away to grep and google what a Management mode 
+interface does, thanks Johannes)
 
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
-index 5b9e04a..231ec2d 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
-@@ -367,8 +367,8 @@ struct zd_rt_hdr {
- 	struct ieee80211_radiotap_header rt_hdr;
- 	u8  rt_flags;
- 	u8  rt_rate;
--	u16 rt_channel;
--	u16 rt_chbitmask;
-+	__le16 rt_channel;
-+	__le16 rt_chbitmask;
- } __attribute__((packed));
- 
- static void fill_rt_header(void *buffer, struct zd_mac *mac,
-
-
+-Andy
