@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57094 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58833 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752194AbXCHPdG (ORCPT
+	with ESMTP id S1161195AbXCAXlE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2007 10:33:06 -0500
-Subject: sparse using insane amounts of memory
+	Thu, 1 Mar 2007 18:41:04 -0500
+Subject: Re: [PATCH] mac80211: move PHY things to debugfs
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: linux-sparse@vger.kernel.org
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HHSjVGf5etuwmb4lfJNz"
-Date: Thu, 08 Mar 2007 03:02:36 +0100
-Message-Id: <1173319356.3546.54.camel@johannes.berg>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1172774065.3381.3.camel@johannes.berg>
+References: <1172774065.3381.3.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-d/VBG0nDw8Q50SUV+h+Z"
+Date: Fri, 02 Mar 2007 00:40:34 +0100
+Message-Id: <1172792434.5140.2.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-HHSjVGf5etuwmb4lfJNz
+--=-d/VBG0nDw8Q50SUV+h+Z
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Thu, 2007-03-01 at 19:34 +0100, Johannes Berg wrote:
+> This patch moves everything except the "sta" directory from the phy
+> sysfs to phy debugfs.
+>=20
 
-I was running make C=3D2 over the current wireless-dev tree (as of commit
-4533da881f2d8c3e0dbb5b3dbc7a919e12438a8a) and reached
-drivers/net/wireless/mac80211/rt2x00/rt2400pci.c when sparse started
-using more and more memory. It went up to about 1 GB. Now I don't know
-whether to blame sparse or if something's wrong with that file but it
-does seem to be a bit excessive... Similar with all the other driver
-files in that directory, yet I've not seen such a case before.
+ignore this one, it was buggy.
 
 johannes
 
---=-HHSjVGf5etuwmb4lfJNz
+--=-d/VBG0nDw8Q50SUV+h+Z
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBF7267/ETPhpq3jKURAvQpAJ4oBRF1odAQrZx7cQzHifDWHqZfxwCgo0/N
-c5i7hd0s5+/CaDTjrogefKE=
-=WFjz
+iD8DBQBF52Ry/ETPhpq3jKURAvFtAJwOz+hkvPSP5K9sPgx8sGgF4Grz9ACglTXc
+KeXmvzwfxYTHoTy3UAP5Oek=
+=a5Pd
 -----END PGP SIGNATURE-----
 
---=-HHSjVGf5etuwmb4lfJNz--
+--=-d/VBG0nDw8Q50SUV+h+Z--
 
