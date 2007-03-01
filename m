@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:55100 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753343AbXC2Ljk (ORCPT
+Received: from hoefnix.telenet-ops.be ([195.130.132.54]:33098 "EHLO
+	hoefnix.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932705AbXCALpF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2007 07:39:40 -0400
-Message-ID: <460BA3FE.3000700@warmcat.com>
-Date: Thu, 29 Mar 2007 12:33:18 +0100
-From: Andy Green <andy@warmcat.com>
+	Thu, 1 Mar 2007 06:45:05 -0500
+Message-ID: <45E6BCDF.7090602@yahoo.co.uk>
+Date: Thu, 01 Mar 2007 12:45:35 +0100
+From: Ivo Couckuyt <iv0co@yahoo.co.uk>
 MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/4] mac80211: Monitor mode radiotap-based packet injection
-References: <20070320103955.600509703@warmcat.com>	 <20070320104104.837354764@warmcat.com>	 <1174501733.3944.28.camel@johannes.berg>  <460B9F8C.3040701@warmcat.com> <1175167176.8807.53.camel@johannes.berg>
-In-Reply-To: <1175167176.8807.53.camel@johannes.berg>
+Cc: linux-wireless@vger.kernel.org, developers@islsm.org
+Subject: Re: Patch: prism54usb, new device
+References: <45E5A4C2.3090204@yahoo.co.uk> <1172748716.11911.34.camel@johannes.berg>
+In-Reply-To: <1172748716.11911.34.camel@johannes.berg>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+i got the info from here:
+http://bugs.gentoo.org/show_bug.cgi?id=142651
+comments 17-19
+19 suggested to sent it here
+
+don't know about the actually driver name, it's known to me as islsm
+which is not the same as the recently added p54? driver based on dscape 
+(from wireless-dev)
+
+regards,
+ilm
+
 Johannes Berg wrote:
-> On Thu, 2007-03-29 at 12:14 +0100, Andy Green wrote:
-> 
->>>> +	static const u8 radiotap_entry_sizes[] = {
->>>> +		8, /* IEEE80211_RADIOTAP_TSFT */
->>>> +		1, /* IEEE80211_RADIOTAP_FLAGS */
->>> [...]
->>>
->>> I'd prefer C99 style for this.
->> Shocked that stuff from as late as 1999 is allowed.  I normally use // 
->> myself, I was making a special effort.
-> 
-> Oh, dang, that was ambiguous. I was thinking
-> static const u8 radiotap_entry_sizes[] = {
-> 	[IEEE80211_RADIOTAP_TSFT] = 8,
-> 	...
-
-Ha, well I will fix that up then.  I couldn't really understand how the 
-coding style that insists to turn code into 80-col Bonsai Kittens can 
-also allow //.
-
->> The idea here is to synthesize an rx packet later after the tx has 
->> happened, reflecting the tx status back to userspace that way (if he 
->> elects to listen out for them)?
-> 
-> Yeah. Michael Wu says we don't need the magic cookie though.
-
-I missed this conversation evidently, didn't find it just now either. 
-In case the plan is to block the thread doing the injection until the 
-packet has gone out and is retired and can return an "acknowledged" 
-status direct to the send()er, throughput is an issue.
-
--Andy
+> I guess this should be on the radar of the prism54 people since it
+> applies against that driver and not p54?
+>
+> Please check the MAINTAINERS file (also on
+> http://linuxwireless.org/en/developers/maintainers) next time.
+>
+> On Wed, 2007-02-28 at 16:50 +0100, Ivo Couckuyt wrote:
+>   
+>> Using islsm/prism54usb  succesfully with the Philips CPWUA054 device for 
+>> a year now, made a little
+>> patch for prism54usb
+>> patched against
+>>
+>> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
+>>
+>>
+>> more info:
+>> http://www.p4c.philips.com/cgi-bin/dcbint/cpindex.pl?ctn=CPWUA054/00&scy=BE&slg=NL&grp=PC_PRODUCTS_GR_BE_CONSUMER&cat=PC_NETWORKING_CA_BE_CONSUMER&sct=WIRELESS_ADAPTERS_SU_BE_CONSUMER
+>>
+>> regards,
+>> ilm
+>>     
+>
+>   
