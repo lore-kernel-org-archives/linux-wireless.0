@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:42969 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753150AbXCVHjZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Mar 2007 03:39:25 -0400
-Date: Wed, 21 Mar 2007 23:39:17 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Matt Mackall <mpm@selenic.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Monakhov Dmitriy <dmonakhov@openvz.org>
-Subject: Re: 2.6.21-rc4-mm1
-Message-Id: <20070321233917.0393dfd1.akpm@linux-foundation.org>
-In-Reply-To: <20070321202225.GN10459@waste.org>
-References: <20070319205623.299d0378.akpm@linux-foundation.org>
-	<1174433034.62033.16.camel@localhost>
-	<20070320223643.d8cbc3f6.akpm@linux-foundation.org>
-	<4601761F.4000302@lwfinger.net>
-	<20070321185900.GC3801@tuxdriver.com>
-	<20070321202225.GN10459@waste.org>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52835 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965175AbXCAPVf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Mar 2007 10:21:35 -0500
+Subject: Re: Question about packet injection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andy Green <andy@warmcat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <45E6ED0B.20100@warmcat.com>
+References: <45E41A9E.2020908@warmcat.com>
+	 <20070227164727.GA10048@devicescape.com> <45E497A1.90400@warmcat.com>
+	 <45E6ED0B.20100@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rxklM7VP/IqYoWpa/LnZ"
+Date: Thu, 01 Mar 2007 16:21:12 +0100
+Message-Id: <1172762472.11911.65.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 21 Mar 2007 15:22:25 -0500 Matt Mackall <mpm@selenic.com> wrote:
 
-> With the latest -mm, I'm now getting this:
-> 
-> Mar 21 15:06:52 cinder kernel: ipw2200: Detected Intel PRO/Wireless
-> 2200BG Network Connection
-> Mar 21 15:06:52 cinder kernel: firmware_loading_store: unexpected
-> value (0)
-> Mar 21 15:06:52 cinder kernel: ipw2200: ipw2200-bss.fw
-> request_firmware failed:
-> Reason -2
-> Mar 21 15:06:52 cinder kernel: ipw2200: Unable to load firmware: -2
-> Mar 21 15:06:52 cinder kernel: ipw2200: failed to register network
-> device
+--=-rxklM7VP/IqYoWpa/LnZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The firmware loading bug is caused by
-driver-core-handles-kobject_uevent-failure-while-device_add.patch
+On Thu, 2007-03-01 at 15:11 +0000, Andy Green wrote:
 
-I've uploaded a revert patch to
-ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21-rc4/2.6.21-rc4-mm1/hot-fixes/
+> Is this in fact the correct way to try to inject a packet with fine=20
+> control over its encryption and rate?
+
+Right you need to create a management interface and dump it into there I
+think. Subject to change, still under discussion though.
+
+johannes
+
+--=-rxklM7VP/IqYoWpa/LnZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF5u9n/ETPhpq3jKURAiLTAJ4kFgTetPK/O5O3plQ0qAfTCWqHRgCcClye
+hN6wzRp/SDvc4/rVfHCHVOI=
+=FSTj
+-----END PGP SIGNATURE-----
+
+--=-rxklM7VP/IqYoWpa/LnZ--
 
