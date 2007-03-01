@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57060 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58537 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752072AbXCHPce (ORCPT
+	with ESMTP id S965504AbXCATEv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2007 10:32:34 -0500
-Subject: [PATCH] make netdev unregister notifier idempotent
+	Thu, 1 Mar 2007 14:04:51 -0500
+Subject: Re: [PATCH] mac80211: move PHY things to debugfs
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200703061907.19929.mb@bu3sch.de>
-References: <200703061907.19929.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Thu, 08 Mar 2007 02:19:02 +0100
-Message-Id: <1173316742.3546.39.camel@johannes.berg>
+To: Andy Green <andy@warmcat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <45E72174.9060104@warmcat.com>
+References: <1172774065.3381.3.camel@johannes.berg>
+	 <45E72174.9060104@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gF+USl22gK1SigLLF2nl"
+Date: Thu, 01 Mar 2007 20:04:26 +0100
+Message-Id: <1172775866.3381.7.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Due to the fact that other things may hold a netdev open and the kernel
-retries to call all notifiers again and again until the netdev's
-refcount reaches 0, the notifier must be idempotent. This patch achieves
-that by re-initialising the list and checking whether it is empty.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+--=-gF+USl22gK1SigLLF2nl
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
- net/wireless/core.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+On Thu, 2007-03-01 at 18:54 +0000, Andy Green wrote:
 
---- wireless-dev.orig/net/wireless/core.c	2007-03-08 02:07:12.703607522 +0100
-+++ wireless-dev/net/wireless/core.c	2007-03-08 02:08:59.503607522 +0100
-@@ -290,8 +290,10 @@ static int cfg80211_netdev_notifier_call
- 		break;
- 	case NETDEV_UNREGISTER:
- 		mutex_lock(&rdev->devlist_mtx);
--		sysfs_remove_link(&dev->dev.kobj, "phy80211");
--		list_del(&dev->ieee80211_ptr->list);
-+		if (!list_empty(&dev->ieee80211_ptr->list)) {
-+			sysfs_remove_link(&dev->dev.kobj, "phy80211");
-+			list_del_init(&dev->ieee80211_ptr->list);
-+		}
- 		mutex_unlock(&rdev->devlist_mtx);
- 		break;
- 	}
+> Gah I was using /sys/class/ieee80211/phy<n>/device/net:<ifname> to=20
+> discover which physical device owns which interfaces... if there isn't a=20
+> better/official way from userspace can this maybe stay in /sys?
 
+That's already gone anyway in recent kernels anyway and the net: stuff
+is broken currently.
+
+When Greg fixes sysfs, the real way would be to follow the symlink
+in /sys/class/net/ieee80211/ which links to (for
+example) /sys/devices/pci0001:10/0001:10:12.0/ssb06:01/phy6, then go
+back up one level and enumerate all net: objects in it.
+
+Or, if you start from a netdev, you can see the phy80211 symlink.
+
+johannes
+
+--=-gF+USl22gK1SigLLF2nl
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF5yO6/ETPhpq3jKURAn8UAKCvAFTRntvUevdHgdJucPOoQk6nRQCeOoU5
+T7oWBUToPrceUTxqk8D6JVc=
+=2NPU
+-----END PGP SIGNATURE-----
+
+--=-gF+USl22gK1SigLLF2nl--
 
