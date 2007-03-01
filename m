@@ -1,81 +1,751 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.227]:19155 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752636AbXCEEVs (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49829 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933286AbXCANIo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2007 23:21:48 -0500
-Received: by wr-out-0506.google.com with SMTP id 37so1226619wra
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Mar 2007 20:21:48 -0800 (PST)
-Message-ID: <a44ae5cd0703042021o434e42b1vea6fd90376824917@mail.gmail.com>
-Date: Sun, 4 Mar 2007 20:21:42 -0800
-From: "Miles Lane" <miles.lane@gmail.com>
-To: "Andrew Morton" <akpm@osdl.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	"Michael Buesch" <mbuesch@freenet.de>
-Subject: 2.6.21-rc2-mm1 -- WARNING: "pcmcia_access_configuration_register" [drivers/ssb/ssb.ko] undefined!
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 1 Mar 2007 08:08:44 -0500
+Received: from [84.135.246.90] (helo=johannes.berg)
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.63)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1HMkxF-0006ZY-Oe
+	for linux-wireless@vger.kernel.org; Thu, 01 Mar 2007 13:04:18 +0000
+Subject: [TRIAL BALLOON] remove rtnetlink wext
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 01 Mar 2007 14:08:18 +0100
+Message-Id: <1172754499.11911.42.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WARNING: "pcmcia_access_configuration_register" [drivers/ssb/ssb.ko] undefined!
-WARNING: "pccard_parse_tuple"
-[drivers/net/wireless/mac80211/bcm43xx/bcm43xx-mac80211.ko] undefined!
-WARNING: "pcmcia_register_driver"
-[drivers/net/wireless/mac80211/bcm43xx/bcm43xx-mac80211.ko] undefined!
-WARNING: "pccard_get_tuple_data"
-[drivers/net/wireless/mac80211/bcm43xx/bcm43xx-mac80211.ko] undefined!
-WARNING: "pcmcia_request_configuration"
-[drivers/net/wireless/mac80211/bcm43xx/bcm43xx-mac80211.ko] undefined!
-WARNING: "pcmcia_request_window"
-[drivers/net/wireless/mac80211/bcm43xx/bcm43xx-mac80211.ko] undefined!
-WARNING: "pccard_get_first_tuple"
-[drivers/net/wireless/mac80211/bcm43xx/bcm43xx-mac80211.ko] undefined!
-WARNING: "pcmcia_release_window"
-[drivers/net/wireless/mac80211/bcm43xx/bcm43xx-mac80211.ko] undefined!
-WARNING: "pcmcia_map_mem_page"
-[drivers/net/wireless/mac80211/bcm43xx/bcm43xx-mac80211.ko] undefined!
-WARNING: "pcmcia_unregister_driver"
-[drivers/net/wireless/mac80211/bcm43xx/bcm43xx-mac80211.ko] undefined!
-WARNING: "pcmcia_disable_device"
-[drivers/net/wireless/mac80211/bcm43xx/bcm43xx-mac80211.ko] undefined!
-make[1]: *** [__modpost] Error 1
+This patch removes rtnetlink wireless extensions. The rtnetlink
+transport for wireless extensions is
+ * a fairly large chunk of code
+ * not enabled on most kernels
+ * not required by any userspace tools
+ * only about a year old
+ * pointless
 
-#
-# PCCARD (PCMCIA/CardBus) support
-#
-# CONFIG_PCCARD is not set
+Thus, removing this code seems feasible.
 
-CONFIG_BCM43XX_MAC80211=m
-CONFIG_BCM43XX_MAC80211_PCI=y
-CONFIG_BCM43XX_MAC80211_PCMCIA=y
-CONFIG_BCM43XX_MAC80211_DEBUG=y
-CONFIG_BCM43XX_MAC80211_DMA=y
-CONFIG_BCM43XX_MAC80211_PIO=y
-CONFIG_BCM43XX_MAC80211_DMA_AND_PIO_MODE=y
-# CONFIG_BCM43XX_MAC80211_DMA_MODE is not set
-# CONFIG_BCM43XX_MAC80211_PIO_MODE is not set
-# CONFIG_RT2X00 is not set
-# CONFIG_ADM8211 is not set
-# CONFIG_P54_COMMON is not set
-# CONFIG_ZD1211RW_MAC80211 is not set
-# CONFIG_RTL818X is not set
-# CONFIG_RTL8187 is not set
-CONFIG_NET_WIRELESS=y
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-CONFIG_MAC80211=m
-CONFIG_MAC80211_LEDS=y
-CONFIG_MAC80211_DEBUG=y
-CONFIG_MAC80211_VERBOSE_DEBUG=y
-CONFIG_MAC80211_LOWTX_FRAME_DUMP=y
-CONFIG_TKIP_DEBUG=y
-CONFIG_MAC80211_DEBUG_COUNTERS=y
-CONFIG_HOSTAPD_WPA_TESTING=y
-CONFIG_MAC80211_IBSS_DEBUG=y
-CONFIG_MAC80211_VERBOSE_PS_DEBUG=y
-# CONFIG_IEEE80211 is not set
-CONFIG_WIRELESS_EXT=y
-CONFIG_CFG80211=y
-CONFIG_CFG80211_WEXT_COMPAT=y
-CONFIG_NL80211=y
+---
+ drivers/net/wireless/Kconfig |   10 
+ include/net/iw_handler.h     |   10 
+ net/core/rtnetlink.c         |   30 --
+ net/wireless/wext-old.c      |  608 -------------------------------------------
+ 4 files changed, 658 deletions(-)
+
+--- wireless-dev.orig/drivers/net/wireless/Kconfig	2007-03-01 13:20:00.164246483 +0100
++++ wireless-dev/drivers/net/wireless/Kconfig	2007-03-01 13:34:02.404246483 +0100
+@@ -25,16 +25,6 @@ config NET_RADIO
+ 	  the tools from
+ 	  <http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Tools.html>.
+ 
+-config NET_WIRELESS_RTNETLINK
+-	bool "Wireless Extension API over RtNetlink"
+-	depends on NET_RADIO
+-	---help---
+-	  Support the Wireless Extension API over the RtNetlink socket
+-	  in addition to the traditional ioctl interface (selected above).
+-
+-	  For now, few tools use this facility, but it might grow in the
+-	  future. The only downside is that it adds 4.5 kB to your kernel.
+-
+ # Note : the cards are obsolete (can't buy them anymore), but the drivers
+ # are not, as people are still using them...
+ comment "Obsolete Wireless cards support (pre-802.11)"
+--- wireless-dev.orig/net/core/rtnetlink.c	2007-03-01 13:19:40.274246483 +0100
++++ wireless-dev/net/core/rtnetlink.c	2007-03-01 13:20:05.144246483 +0100
+@@ -51,10 +51,6 @@
+ #include <net/pkt_sched.h>
+ #include <net/fib_rules.h>
+ #include <net/netlink.h>
+-#ifdef CONFIG_NET_WIRELESS_RTNETLINK
+-#include <linux/wireless.h>
+-#include <net/iw_handler.h>
+-#endif	/* CONFIG_NET_WIRELESS_RTNETLINK */
+ 
+ static DEFINE_MUTEX(rtnl_mutex);
+ static struct sock *rtnl;
+@@ -536,17 +532,6 @@ static int rtnl_setlink(struct sk_buff *
+ 		modified = 1;
+ 	}
+ 
+-#ifdef CONFIG_NET_WIRELESS_RTNETLINK
+-	if (tb[IFLA_WIRELESS]) {
+-		/* Call Wireless Extensions.
+-		 * Various stuff checked in there... */
+-		err = wireless_rtnetlink_set(dev, nla_data(tb[IFLA_WIRELESS]),
+-					     nla_len(tb[IFLA_WIRELESS]));
+-		if (err < 0)
+-			goto errout_dev;
+-	}
+-#endif	/* CONFIG_NET_WIRELESS_RTNETLINK */
+-
+ 	if (tb[IFLA_BROADCAST]) {
+ 		nla_memcpy(dev->broadcast, tb[IFLA_BROADCAST], dev->addr_len);
+ 		send_addr_notify = 1;
+@@ -610,21 +595,6 @@ static int rtnl_getlink(struct sk_buff *
+ 	} else
+ 		return -EINVAL;
+ 
+-
+-#ifdef CONFIG_NET_WIRELESS_RTNETLINK
+-	if (tb[IFLA_WIRELESS]) {
+-		/* Call Wireless Extensions. We need to know the size before
+-		 * we can alloc. Various stuff checked in there... */
+-		err = wireless_rtnetlink_get(dev, nla_data(tb[IFLA_WIRELESS]),
+-					     nla_len(tb[IFLA_WIRELESS]),
+-					     &iw_buf, &iw_buf_len);
+-		if (err < 0)
+-			goto errout;
+-
+-		iw += IW_EV_POINT_OFF;
+-	}
+-#endif	/* CONFIG_NET_WIRELESS_RTNETLINK */
+-
+ 	nskb = nlmsg_new(if_nlmsg_size(iw_buf_len), GFP_KERNEL);
+ 	if (nskb == NULL) {
+ 		err = -ENOBUFS;
+--- wireless-dev.orig/net/wireless/wext-old.c	2007-03-01 13:19:40.454246483 +0100
++++ wireless-dev/net/wireless/wext-old.c	2007-03-01 13:20:05.154246483 +0100
+@@ -610,614 +610,6 @@ int wireless_process_ioctl(struct ifreq 
+  * it calls here.
+  */
+ 
+-#ifdef CONFIG_NET_WIRELESS_RTNETLINK
+-/* ---------------------------------------------------------------- */
+-/*
+- * Wrapper to call a standard Wireless Extension GET handler.
+- * We do various checks and call the handler with the proper args.
+- */
+-static int rtnetlink_standard_get(struct net_device *	dev,
+-				  struct iw_event *	request,
+-				  int			request_len,
+-				  iw_handler		handler,
+-				  char **		p_buf,
+-				  int *			p_len)
+-{
+-	const struct iw_ioctl_description *	descr = NULL;
+-	unsigned int				cmd;
+-	union iwreq_data *			wrqu;
+-	int					hdr_len;
+-	struct iw_request_info			info;
+-	char *					buffer = NULL;
+-	int					buffer_size = 0;
+-	int					ret = -EINVAL;
+-
+-	/* Get the description of the Request */
+-	cmd = request->cmd;
+-	if((cmd - SIOCIWFIRST) >= wext_standard_ioctl_num)
+-		return -EOPNOTSUPP;
+-	descr = &(wext_standard_ioctl[cmd - SIOCIWFIRST]);
+-
+-	/* Check if wrqu is complete */
+-	hdr_len = event_type_size[descr->header_type];
+-	if(request_len < hdr_len)
+-		return -EINVAL;
+-
+-	/* Prepare the call */
+-	info.cmd = cmd;
+-	info.flags = 0;
+-
+-	/* Check if we have extra data in the reply or not */
+-	if(descr->header_type != IW_HEADER_TYPE_POINT) {
+-
+-		/* Create the kernel buffer that we will return.
+-		 * It's at an offset to match the TYPE_POINT case... */
+-		buffer_size = request_len + IW_EV_POINT_OFF;
+-		buffer = kmalloc(buffer_size, GFP_KERNEL);
+-		if (buffer == NULL) {
+-			return -ENOMEM;
+-		}
+-		/* Copy event data */
+-		memcpy(buffer + IW_EV_POINT_OFF, request, request_len);
+-		/* Use our own copy of wrqu */
+-		wrqu = (union iwreq_data *) (buffer + IW_EV_POINT_OFF
+-					     + IW_EV_LCP_LEN);
+-
+-		/* No extra arguments. Trivial to handle */
+-		ret = handler(dev, &info, wrqu, NULL);
+-
+-	} else {
+-		union iwreq_data	wrqu_point;
+-		char *			extra = NULL;
+-		int			extra_size = 0;
+-
+-		/* Get a temp copy of wrqu (skip pointer) */
+-		memcpy(((char *) &wrqu_point) + IW_EV_POINT_OFF,
+-		       ((char *) request) + IW_EV_LCP_LEN,
+-		       IW_EV_POINT_LEN - IW_EV_LCP_LEN);
+-
+-		/* Calculate space needed by arguments. Always allocate
+-		 * for max space. Easier, and won't last long... */
+-		extra_size = descr->max_tokens * descr->token_size;
+-		/* Support for very large requests */
+-		if((descr->flags & IW_DESCR_FLAG_NOMAX) &&
+-		   (wrqu_point.data.length > descr->max_tokens))
+-			extra_size = (wrqu_point.data.length
+-				      * descr->token_size);
+-		buffer_size = extra_size + IW_EV_POINT_LEN + IW_EV_POINT_OFF;
+-
+-		/* Create the kernel buffer that we will return */
+-		buffer = kmalloc(buffer_size, GFP_KERNEL);
+-		if (buffer == NULL) {
+-			return -ENOMEM;
+-		}
+-
+-		/* Put wrqu in the right place (just before extra).
+-		 * Leave space for IWE header and dummy pointer...
+-		 * Note that IW_EV_LCP_LEN==4 bytes, so it's still aligned...
+-		 */
+-		memcpy(buffer + IW_EV_LCP_LEN + IW_EV_POINT_OFF,
+-		       ((char *) &wrqu_point) + IW_EV_POINT_OFF,
+-		       IW_EV_POINT_LEN - IW_EV_LCP_LEN);
+-		wrqu = (union iwreq_data *) (buffer + IW_EV_LCP_LEN);
+-
+-		/* Extra comes logically after that. Offset +12 bytes. */
+-		extra = buffer + IW_EV_POINT_OFF + IW_EV_POINT_LEN;
+-
+-		/* Call the handler */
+-		ret = handler(dev, &info, wrqu, extra);
+-
+-		/* Calculate real returned length */
+-		extra_size = (wrqu->data.length * descr->token_size);
+-		/* Re-adjust reply size */
+-		request->len = extra_size + IW_EV_POINT_LEN;
+-
+-		/* Put the iwe header where it should, i.e. scrap the
+-		 * dummy pointer. */
+-		memcpy(buffer + IW_EV_POINT_OFF, request, IW_EV_LCP_LEN);
+-
+-		/* Check if there is enough buffer up there */
+-		if(wrqu_point.data.length < wrqu->data.length)
+-			ret = -E2BIG;
+-	}
+-
+-	/* Return the buffer to the caller */
+-	if (!ret) {
+-		*p_buf = buffer;
+-		*p_len = request->len;
+-	} else {
+-		/* Cleanup */
+-		if(buffer)
+-			kfree(buffer);
+-	}
+-
+-	return ret;
+-}
+-
+-/* ---------------------------------------------------------------- */
+-/*
+- * Wrapper to call a standard Wireless Extension SET handler.
+- * We do various checks and call the handler with the proper args.
+- */
+-static inline int rtnetlink_standard_set(struct net_device *	dev,
+-					 struct iw_event *	request,
+-					 int			request_len,
+-					 iw_handler		handler)
+-{
+-	const struct iw_ioctl_description *	descr = NULL;
+-	unsigned int				cmd;
+-	union iwreq_data *			wrqu;
+-	union iwreq_data			wrqu_point;
+-	int					hdr_len;
+-	char *					extra = NULL;
+-	int					extra_size = 0;
+-	struct iw_request_info			info;
+-	int					ret = -EINVAL;
+-
+-	/* Get the description of the Request */
+-	cmd = request->cmd;
+-	if((cmd - SIOCIWFIRST) >= wext_standard_ioctl_num)
+-		return -EOPNOTSUPP;
+-	descr = &(wext_standard_ioctl[cmd - SIOCIWFIRST]);
+-
+-	/* Extract fixed header from request. This is properly aligned. */
+-	wrqu = &request->u;
+-
+-	/* Check if wrqu is complete */
+-	hdr_len = event_type_size[descr->header_type];
+-	if(request_len < hdr_len)
+-		return -EINVAL;
+-
+-	/* Prepare the call */
+-	info.cmd = cmd;
+-	info.flags = 0;
+-
+-	/* Check if we have extra data in the request or not */
+-	if(descr->header_type != IW_HEADER_TYPE_POINT) {
+-
+-		/* No extra arguments. Trivial to handle */
+-		ret = handler(dev, &info, wrqu, NULL);
+-
+-	} else {
+-		int	extra_len;
+-
+-		/* Put wrqu in the right place (skip pointer) */
+-		memcpy(((char *) &wrqu_point) + IW_EV_POINT_OFF,
+-		       wrqu, IW_EV_POINT_LEN - IW_EV_LCP_LEN);
+-		/* Don't forget about the event code... */
+-		wrqu = &wrqu_point;
+-
+-		/* Check if number of token fits within bounds */
+-		if(wrqu_point.data.length > descr->max_tokens)
+-			return -E2BIG;
+-		if(wrqu_point.data.length < descr->min_tokens)
+-			return -EINVAL;
+-
+-		/* Real length of payload */
+-		extra_len = wrqu_point.data.length * descr->token_size;
+-
+-		/* Check if request is self consistent */
+-		if((request_len - hdr_len) < extra_len)
+-			return -EINVAL;
+-
+-		/* Always allocate for max space. Easier, and won't last
+-		 * long... */
+-		extra_size = descr->max_tokens * descr->token_size;
+-		extra = kmalloc(extra_size, GFP_KERNEL);
+-		if (extra == NULL)
+-			return -ENOMEM;
+-
+-		/* Copy extra in aligned buffer */
+-		memcpy(extra, ((char *) request) + hdr_len, extra_len);
+-
+-		/* Call the handler */
+-		ret = handler(dev, &info, &wrqu_point, extra);
+-	}
+-
+-	/* Generate an event to notify listeners of the change */
+-	if((descr->flags & IW_DESCR_FLAG_EVENT) &&
+-	   ((ret == 0) || (ret == -EIWCOMMIT))) {
+-		if(descr->flags & IW_DESCR_FLAG_RESTRICT)
+-			/* If the event is restricted, don't
+-			 * export the payload */
+-			wireless_send_event(dev, cmd, wrqu, NULL);
+-		else
+-			wireless_send_event(dev, cmd, wrqu, extra);
+-	}
+-
+-	/* Cleanup - I told you it wasn't that long ;-) */
+-	if(extra)
+-		kfree(extra);
+-
+-	/* Call commit handler if needed and defined */
+-	if(ret == -EIWCOMMIT)
+-		ret = call_commit_handler(dev);
+-
+-	return ret;
+-}
+-
+-/* ---------------------------------------------------------------- */
+-/*
+- * Wrapper to call a private Wireless Extension GET handler.
+- * Same as above...
+- * It's not as nice and slimline as the standard wrapper. The cause
+- * is struct iw_priv_args, which was not really designed for the
+- * job we are going here.
+- *
+- * IMPORTANT : This function prevent to set and get data on the same
+- * IOCTL and enforce the SET/GET convention. Not doing it would be
+- * far too hairy...
+- * If you need to set and get data at the same time, please don't use
+- * a iw_handler but process it in your ioctl handler (i.e. use the
+- * old driver API).
+- */
+-static inline int rtnetlink_private_get(struct net_device *	dev,
+-					struct iw_event *	request,
+-					int			request_len,
+-					iw_handler		handler,
+-					char **			p_buf,
+-					int *			p_len)
+-{
+-	const struct iw_priv_args *	descr = NULL;
+-	unsigned int			cmd;
+-	union iwreq_data *		wrqu;
+-	int				hdr_len;
+-	struct iw_request_info		info;
+-	int				extra_size = 0;
+-	int				i;
+-	char *				buffer = NULL;
+-	int				buffer_size = 0;
+-	int				ret = -EINVAL;
+-
+-	/* Get the description of the Request */
+-	cmd = request->cmd;
+-	for(i = 0; i < dev->wireless_handlers->num_private_args; i++)
+-		if(cmd == dev->wireless_handlers->private_args[i].cmd) {
+-			descr = &(dev->wireless_handlers->private_args[i]);
+-			break;
+-		}
+-	if(descr == NULL)
+-		return -EOPNOTSUPP;
+-
+-	/* Compute the max size of the get arguments */
+-	extra_size = get_priv_size(descr->get_args);
+-
+-	/* Does it fits in wrqu ? */
+-	if((descr->get_args & IW_PRIV_SIZE_FIXED) &&
+-	   (extra_size <= IFNAMSIZ)) {
+-		hdr_len = extra_size;
+-		extra_size = 0;
+-	} else {
+-		hdr_len = IW_EV_POINT_LEN;
+-	}
+-
+-	/* Check if wrqu is complete */
+-	if(request_len < hdr_len)
+-		return -EINVAL;
+-
+-	/* Prepare the call */
+-	info.cmd = cmd;
+-	info.flags = 0;
+-
+-	/* Check if we have a pointer to user space data or not. */
+-	if(extra_size == 0) {
+-
+-		/* Create the kernel buffer that we will return.
+-		 * It's at an offset to match the TYPE_POINT case... */
+-		buffer_size = request_len + IW_EV_POINT_OFF;
+-		buffer = kmalloc(buffer_size, GFP_KERNEL);
+-		if (buffer == NULL) {
+-			return -ENOMEM;
+-		}
+-		/* Copy event data */
+-		memcpy(buffer + IW_EV_POINT_OFF, request, request_len);
+-		/* Use our own copy of wrqu */
+-		wrqu = (union iwreq_data *) (buffer + IW_EV_POINT_OFF
+-					     + IW_EV_LCP_LEN);
+-
+-		/* No extra arguments. Trivial to handle */
+-		ret = handler(dev, &info, wrqu, (char *) wrqu);
+-
+-	} else {
+-		char *	extra;
+-
+-		/* Buffer for full reply */
+-		buffer_size = extra_size + IW_EV_POINT_LEN + IW_EV_POINT_OFF;
+-
+-		/* Create the kernel buffer that we will return */
+-		buffer = kmalloc(buffer_size, GFP_KERNEL);
+-		if (buffer == NULL) {
+-			return -ENOMEM;
+-		}
+-
+-		/* Put wrqu in the right place (just before extra).
+-		 * Leave space for IWE header and dummy pointer...
+-		 * Note that IW_EV_LCP_LEN==4 bytes, so it's still aligned...
+-		 */
+-		memcpy(buffer + IW_EV_LCP_LEN + IW_EV_POINT_OFF,
+-		       ((char *) request) + IW_EV_LCP_LEN,
+-		       IW_EV_POINT_LEN - IW_EV_LCP_LEN);
+-		wrqu = (union iwreq_data *) (buffer + IW_EV_LCP_LEN);
+-
+-		/* Extra comes logically after that. Offset +12 bytes. */
+-		extra = buffer + IW_EV_POINT_OFF + IW_EV_POINT_LEN;
+-
+-		/* Call the handler */
+-		ret = handler(dev, &info, wrqu, extra);
+-
+-		/* Adjust for the actual length if it's variable,
+-		 * avoid leaking kernel bits outside. */
+-		if (!(descr->get_args & IW_PRIV_SIZE_FIXED))
+-			extra_size = adjust_priv_size(descr->get_args, wrqu);
+-		/* Re-adjust reply size */
+-		request->len = extra_size + IW_EV_POINT_LEN;
+-
+-		/* Put the iwe header where it should, i.e. scrap the
+-		 * dummy pointer. */
+-		memcpy(buffer + IW_EV_POINT_OFF, request, IW_EV_LCP_LEN);
+-	}
+-
+-	/* Return the buffer to the caller */
+-	if (!ret) {
+-		*p_buf = buffer;
+-		*p_len = request->len;
+-	} else {
+-		/* Cleanup */
+-		if(buffer)
+-			kfree(buffer);
+-	}
+-
+-	return ret;
+-}
+-
+-/* ---------------------------------------------------------------- */
+-/*
+- * Wrapper to call a private Wireless Extension SET handler.
+- * Same as above...
+- * It's not as nice and slimline as the standard wrapper. The cause
+- * is struct iw_priv_args, which was not really designed for the
+- * job we are going here.
+- *
+- * IMPORTANT : This function prevent to set and get data on the same
+- * IOCTL and enforce the SET/GET convention. Not doing it would be
+- * far too hairy...
+- * If you need to set and get data at the same time, please don't use
+- * a iw_handler but process it in your ioctl handler (i.e. use the
+- * old driver API).
+- */
+-static inline int rtnetlink_private_set(struct net_device *	dev,
+-					struct iw_event *	request,
+-					int			request_len,
+-					iw_handler		handler)
+-{
+-	const struct iw_priv_args *	descr = NULL;
+-	unsigned int			cmd;
+-	union iwreq_data *		wrqu;
+-	union iwreq_data		wrqu_point;
+-	int				hdr_len;
+-	char *				extra = NULL;
+-	int				extra_size = 0;
+-	int				offset = 0;	/* For sub-ioctls */
+-	struct iw_request_info		info;
+-	int				i;
+-	int				ret = -EINVAL;
+-
+-	/* Get the description of the Request */
+-	cmd = request->cmd;
+-	for(i = 0; i < dev->wireless_handlers->num_private_args; i++)
+-		if(cmd == dev->wireless_handlers->private_args[i].cmd) {
+-			descr = &(dev->wireless_handlers->private_args[i]);
+-			break;
+-		}
+-	if(descr == NULL)
+-		return -EOPNOTSUPP;
+-
+-	/* Compute the size of the set arguments */
+-	/* Check for sub-ioctl handler */
+-	if(descr->name[0] == '\0')
+-		/* Reserve one int for sub-ioctl index */
+-		offset = sizeof(__u32);
+-
+-	/* Size of set arguments */
+-	extra_size = get_priv_size(descr->set_args);
+-
+-	/* Does it fits in wrqu ? */
+-	if((descr->set_args & IW_PRIV_SIZE_FIXED) &&
+-	   (extra_size <= IFNAMSIZ)) {
+-		hdr_len = IW_EV_LCP_LEN + extra_size;
+-		extra_size = 0;
+-	} else {
+-		hdr_len = IW_EV_POINT_LEN;
+-	}
+-
+-	/* Extract fixed header from request. This is properly aligned. */
+-	wrqu = &request->u;
+-
+-	/* Check if wrqu is complete */
+-	if(request_len < hdr_len)
+-		return -EINVAL;
+-
+-	/* Prepare the call */
+-	info.cmd = cmd;
+-	info.flags = 0;
+-
+-	/* Check if we have a pointer to user space data or not. */
+-	if(extra_size == 0) {
+-
+-		/* No extra arguments. Trivial to handle */
+-		ret = handler(dev, &info, wrqu, (char *) wrqu);
+-
+-	} else {
+-		int	extra_len;
+-
+-		/* Put wrqu in the right place (skip pointer) */
+-		memcpy(((char *) &wrqu_point) + IW_EV_POINT_OFF,
+-		       wrqu, IW_EV_POINT_LEN - IW_EV_LCP_LEN);
+-
+-		/* Does it fits within bounds ? */
+-		if(wrqu_point.data.length > (descr->set_args &
+-					     IW_PRIV_SIZE_MASK))
+-			return -E2BIG;
+-
+-		/* Real length of payload */
+-		extra_len = adjust_priv_size(descr->set_args, &wrqu_point);
+-
+-		/* Check if request is self consistent */
+-		if((request_len - hdr_len) < extra_len)
+-			return -EINVAL;
+-
+-		/* Always allocate for max space. Easier, and won't last
+-		 * long... */
+-		extra = kmalloc(extra_size, GFP_KERNEL);
+-		if (extra == NULL)
+-			return -ENOMEM;
+-
+-		/* Copy extra in aligned buffer */
+-		memcpy(extra, ((char *) request) + hdr_len, extra_len);
+-
+-		/* Call the handler */
+-		ret = handler(dev, &info, &wrqu_point, extra);
+-
+-		/* Cleanup - I told you it wasn't that long ;-) */
+-		kfree(extra);
+-	}
+-
+-	/* Call commit handler if needed and defined */
+-	if(ret == -EIWCOMMIT)
+-		ret = call_commit_handler(dev);
+-
+-	return ret;
+-}
+-
+-/* ---------------------------------------------------------------- */
+-/*
+- * Main RtNetlink dispatcher. Called from the main networking code
+- * (do_getlink() in net/core/rtnetlink.c).
+- * Check the type of Request and call the appropriate wrapper...
+- */
+-int wireless_rtnetlink_get(struct net_device *	dev,
+-			   char *		data,
+-			   int			len,
+-			   char **		p_buf,
+-			   int *		p_len)
+-{
+-	struct iw_event *	request = (struct iw_event *) data;
+-	iw_handler		handler;
+-
+-	/* Check length */
+-	if(len < IW_EV_LCP_LEN)
+-		return -EINVAL;
+-
+-	/* ReCheck length (len may have padding) */
+-	if(request->len > len)
+-		return -EINVAL;
+-
+-	/* Only accept GET requests in here */
+-	if(!IW_IS_GET(request->cmd))
+-		return -EOPNOTSUPP;
+-
+-	/* If command is `get the encoding parameters', check if
+-	 * the user has the right to do it */
+-	if (request->cmd == SIOCGIWENCODE ||
+-	    request->cmd == SIOCGIWENCODEEXT) {
+-		if (!capable(CAP_NET_ADMIN))
+-			return -EPERM;
+-	}
+-
+-	/* Special cases */
+-	if(request->cmd == SIOCGIWSTATS)
+-		/* Get Wireless Stats */
+-		return rtnetlink_standard_get(dev,
+-					      request,
+-					      request->len,
+-					      &iw_handler_get_iwstats,
+-					      p_buf, p_len);
+-	if(request->cmd == SIOCGIWPRIV) {
+-		/* Check if we have some wireless handlers defined */
+-		if(dev->wireless_handlers == NULL)
+-			return -EOPNOTSUPP;
+-		/* Get Wireless Stats */
+-		return rtnetlink_standard_get(dev,
+-					      request,
+-					      request->len,
+-					      &iw_handler_get_private,
+-					      p_buf, p_len);
+-	}
+-
+-	/* Basic check */
+-	if (!netif_device_present(dev))
+-		return -ENODEV;
+-
+-	/* Try to find the handler */
+-	handler = get_handler(dev, request->cmd);
+-	if(handler != NULL) {
+-		/* Standard and private are not the same */
+-		if(request->cmd < SIOCIWFIRSTPRIV)
+-			return rtnetlink_standard_get(dev,
+-						      request,
+-						      request->len,
+-						      handler,
+-						      p_buf, p_len);
+-		else
+-			return rtnetlink_private_get(dev,
+-						     request,
+-						     request->len,
+-						     handler,
+-						     p_buf, p_len);
+-	}
+-
+-	return -EOPNOTSUPP;
+-}
+-
+-/* ---------------------------------------------------------------- */
+-/*
+- * Main RtNetlink dispatcher. Called from the main networking code
+- * (do_setlink() in net/core/rtnetlink.c).
+- * Check the type of Request and call the appropriate wrapper...
+- */
+-int wireless_rtnetlink_set(struct net_device *	dev,
+-			   char *		data,
+-			   int			len)
+-{
+-	struct iw_event *	request = (struct iw_event *) data;
+-	iw_handler		handler;
+-
+-	/* Check length */
+-	if(len < IW_EV_LCP_LEN)
+-		return -EINVAL;
+-
+-	/* ReCheck length (len may have padding) */
+-	if(request->len > len)
+-		return -EINVAL;
+-
+-	/* Only accept SET requests in here */
+-	if(!IW_IS_SET(request->cmd))
+-		return -EOPNOTSUPP;
+-
+-	/* Basic check */
+-	if (!netif_device_present(dev))
+-		return -ENODEV;
+-
+-	/* New driver API : try to find the handler */
+-	handler = get_handler(dev, request->cmd);
+-	if(handler != NULL) {
+-		/* Standard and private are not the same */
+-		if(request->cmd < SIOCIWFIRSTPRIV)
+-			return rtnetlink_standard_set(dev,
+-						      request,
+-						      request->len,
+-						      handler);
+-		else
+-			return rtnetlink_private_set(dev,
+-						     request,
+-						     request->len,
+-						     handler);
+-	}
+-
+-	return -EOPNOTSUPP;
+-}
+-#endif	/* CONFIG_NET_WIRELESS_RTNETLINK */
+-
+ /********************** ENHANCED IWSPY SUPPORT **********************/
+ /*
+  * In the old days, the driver was handling spy support all by itself.
+--- wireless-dev.orig/include/net/iw_handler.h	2007-03-01 13:34:28.604246483 +0100
++++ wireless-dev/include/net/iw_handler.h	2007-03-01 13:34:38.444246483 +0100
+@@ -433,16 +433,6 @@ struct iw_public_data {
+ extern int dev_get_wireless_info(char * buffer, char **start, off_t offset,
+ 				 int length);
+ 
+-/* Handle RtNetlink requests, called in net/core/rtnetlink.c */
+-extern int wireless_rtnetlink_set(struct net_device *	dev,
+-				  char *		data,
+-				  int			len);
+-extern int wireless_rtnetlink_get(struct net_device *	dev,
+-				  char *		data,
+-				  int			len,
+-				  char **		p_buf,
+-				  int *			p_len);
+-
+ /* Second : functions that may be called by driver modules */
+ 
+ /* Send a single event to user space */
+
+
