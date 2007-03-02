@@ -1,36 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:37114 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S2992537AbXCWT01 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 15:26:27 -0400
-Date: Fri, 23 Mar 2007 20:21:39 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:33387 "EHLO
+	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992669AbXCBRhY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Mar 2007 12:37:24 -0500
+Date: Fri, 02 Mar 2007 11:36:29 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: [PATCH] bcm43xx: fix radio_set_tx_iq
-Message-ID: <20070323202139.7f37b32a@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] bcm43xx: Fix assertion failures in interrupt handler
+Message-ID: <45e8609d.Ypw71Z7iN5G3uSmi%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix a duplicated leftshift in bcm43xx_radio_set_tx_iq. data_high values are
-already leftshifted. Thanks to Michael Buesch for spotting this.
+From: Pavel Roskin <proski@gnu.org>
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+In the bcm43xx interrupt handler, sanity checks are wrongly done before the
+verification that the interrupt is for the bcm43xx.
+
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+ drivers/net/wireless/bcm43xx/bcm43xx_main.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+index 057541f..21d4ecd 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_main.c
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+@@ -1858,9 +1858,6 @@ static irqreturn_t bcm43xx_interrupt_handler(int irq, void *dev_id)
+ 
+ 	spin_lock(&bcm->irq_lock);
+ 
+-	assert(bcm43xx_status(bcm) == BCM43xx_STAT_INITIALIZED);
+-	assert(bcm->current_core->id == BCM43xx_COREID_80211);
+-
+ 	reason = bcm43xx_read32(bcm, BCM43xx_MMIO_GEN_IRQ_REASON);
+ 	if (reason == 0xffffffff) {
+ 		/* irq not for us (shared irq) */
+@@ -1871,6 +1868,9 @@ static irqreturn_t bcm43xx_interrupt_handler(int irq, void *dev_id)
+ 	if (!reason)
+ 		goto out;
+ 
++	assert(bcm43xx_status(bcm) == BCM43xx_STAT_INITIALIZED);
++	assert(bcm->current_core->id == BCM43xx_COREID_80211);
++
+ 	bcm->dma_reason[0] = bcm43xx_read32(bcm, BCM43xx_MMIO_DMA0_REASON)
+ 			     & 0x0001DC00;
+ 	bcm->dma_reason[1] = bcm43xx_read32(bcm, BCM43xx_MMIO_DMA1_REASON)
 
 ---
 
-diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_radio.c b/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
-index 32beb91..d153b58 100644
---- a/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
-+++ b/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
-@@ -1579,7 +1579,7 @@ void bcm43xx_radio_set_tx_iq(struct bcm4
- 	
- 	for (i = 0; i < 5; i++) {
- 		for (j = 0; j < 5; j++) {
--			if (tmp == (data_high[i] << 4 | data_low[j])) {
-+			if (tmp == (data_high[i] | data_low[j])) {
- 				bcm43xx_phy_write(bcm, 0x0069, (i - j) << 8 | 0x00C0);
- 				return;
- 			}
