@@ -1,100 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:41872 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751978AbXCaVCg (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:42935 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933322AbXCBKp7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Mar 2007 17:02:36 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: "dragoran dragoran" <drago01@gmail.com>
-Subject: Re: mac80211 does not support WPA when used with wext
-Date: Sat, 31 Mar 2007 17:00:47 -0400
-Cc: "Dan Williams" <dcbw@redhat.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"John Linville" <linville@redhat.com>, "Jiri Benc" <jbenc@suse.cz>
-References: <460E2B8C.4030002@gmail.com> <200703311503.53445.flamingice@sourmilk.net> <f6ca9fed0703311256m1b14ec35p836a62de532dd804@mail.gmail.com>
-In-Reply-To: <f6ca9fed0703311256m1b14ec35p836a62de532dd804@mail.gmail.com>
+	Fri, 2 Mar 2007 05:45:59 -0500
+Message-ID: <45E80064.6000200@warmcat.com>
+Date: Fri, 02 Mar 2007 10:45:56 +0000
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1873477.a29C2aeIqI";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200703311700.52792.flamingice@sourmilk.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: move PHY things to debugfs
+References: <1172774065.3381.3.camel@johannes.berg>	 <45E72174.9060104@warmcat.com>  <1172775866.3381.7.camel@johannes.berg>	 <1172776049.3381.10.camel@johannes.berg>  <45E7DF58.6080608@warmcat.com> <1172830582.3482.4.camel@johannes.berg>
+In-Reply-To: <1172830582.3482.4.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1873477.a29C2aeIqI
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Johannes Berg wrote:
 
-On Saturday 31 March 2007 15:56, dragoran dragoran wrote:
-> also networkmanager and hal think that the card only supports wep...
-> thx for the patch...
-> does it adress this issues?
-No, this has nothing to do with that. The following patch should address th=
-at=20
-issue, but my copy of networkmanager already does WPA fine so I can't say f=
-or=20
-sure whether it will help or not. A quick look through the networkmanager=20
-code seems to suggest this will work.
+Hi Johannes -
 
-=2D-
+>> I guess I'll stick with sysfs for now since the code is written already: 
+>> if I will find add_iface and so on down there then I guess it will all 
+>> work out with minor edits.
+> 
+> Just make sure you're running the very latest kernel with
+> CONFIG_SYSFS_DEPRECATED disabled (I think that's necessary, not entirely
+> sure). You'll notice when anything but the current CVS version of HAL no
+> longer displays network devices :/
 
-mac80211: set enc_capa
+I am currently using stock Fedora kernels, they have 
+CONFIG_SYSFS_DEPRECATED disabled already.  In current FC7 development 
+kernels they have mac80211 in there too now.  So I will mod this when it 
+breaks on the latest Fedora kernels.
 
-=46rom: Michael Wu <flamingice@sourmilk.net>
+>> Can I ask how stable this byzantine path I am currently following to get 
+>> a "Management interface" for tx injection is going to be?  Not even 
+>> standard wireless ioctl but Private IOCTL SIOCIWFIRSTPRIV+0 opens out 
+>> into a secret garden of "PRISM2" special features... is this already in 
+>> a little black refactoring book somewhere? 
+> 
+> Yup, it is. But there's still debate on whether it should be done
+> through netlink (nl80211) or some new special injection format for the
+> monitor interfaces like the management interface currently has.
+> 
+> [you can rip code from wpa_supplicant to inject frames]
 
-Update we_version_source and set enc_capa in iw_range.
+Yeah that is good advice, I will look to the wpa_supplicant code, 
+especially since my code doesn't work yet.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-=2D--
+> Btw, here's another argument against the monitor interfaces: having them
+> up takes the card out of powersave mode which they should only be while
+> not associated, even with a userspace MLME.
 
- net/mac80211/ieee80211_ioctl.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+It's better said "hardware promisc" than "Monitor Mode" if I understood 
+you.   The previous patches forced hardware promisc and then filtered 
+for the magic packets without using Monitor mode, but that has the same 
+power objection.
 
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-index b28e794..d139d97 100644
-=2D-- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -1583,7 +1583,7 @@ static int ieee80211_ioctl_giwrange(struct net_device=
-=20
-*dev,
- 	memset(range, 0, sizeof(struct iw_range));
-=20
- 	range->we_version_compiled =3D WIRELESS_EXT;
-=2D	range->we_version_source =3D 14;
-+	range->we_version_source =3D 21;
- 	range->retry_capa =3D IW_RETRY_LIMIT;
- 	range->retry_flags =3D IW_RETRY_LIMIT;
- 	range->min_retry =3D 0;
-@@ -1603,6 +1603,9 @@ static int ieee80211_ioctl_giwrange(struct net_device=
-=20
-*dev,
- 	range->avg_qual.noise =3D 0;
- 	range->avg_qual.updated =3D local->wstats_flags;
-=20
-+	range->enc_capa =3D IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
-+			  IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
-+
- 	return 0;
- }
-=20
+It's mitigated a bit by only bringing the monitor interface up 
+automatically when the daemon starts and down when it stops, but of 
+course normally the daemon runs all the time.  The daemon can even be 
+configured by the user to act differently if he wants if it sees he is 
+on battery.  Also mitigating it is that for the largest intended usage 
+case, people at home communicating with neighbours, the stations are 
+plugged in the wall.
 
---nextPart1873477.a29C2aeIqI
-Content-Type: application/pgp-signature
+But if there is a better way for the stack to get unencrypted broadcasts 
+(that is all I really want, addr1->FF:FF:FF:FF:FF:FF packets) through to 
+usermode, which you would think might not actually require hardware 
+promisc on the hardware, then I am quite motivated to work on that.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGDswET3Oqt9AH4aERAvmoAKCy+IutvFlpXWYMzVZtHSm4EeMoOACgtN8g
-PlB0DM0nxqrSfJlp2Z6l15Q=
-=P8ye
------END PGP SIGNATURE-----
-
---nextPart1873477.a29C2aeIqI--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-Andy
