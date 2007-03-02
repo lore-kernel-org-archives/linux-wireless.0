@@ -1,52 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58632 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965122AbXCAOgV (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:61610 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S2992645AbXCBRXq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2007 09:36:21 -0500
-Subject: [PATCH] schedule wext/rtnl for removal
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain
-Date: Thu, 01 Mar 2007 15:35:55 +0100
-Message-Id: <1172759755.11911.63.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 2 Mar 2007 12:23:46 -0500
+Message-ID: <45E85D9C.4090602@lwfinger.net>
+Date: Fri, 02 Mar 2007 11:23:40 -0600
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: Assertion failed in ieee80211softmac_wx_get_rate
+References: <1172816819.26330.12.camel@dv> <20070302135734.GB6676@tuxdriver.com>
+In-Reply-To: <20070302135734.GB6676@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since wext is being replaced as fast as we can (it'll probably stick
-around for legacy drivers though) and the wext/netlink stuff was never
-really used, this schedules it for removal.
+John W. Linville wrote:
+> 
+> It is in linux-2.6, wireless-2.6, and wireless-dev.  If you don't
+> want to use those trees, you should be able to apply the patch to
+> the tree you are using.
 
-The removal schedule is tight but there are no users of the code, the
-main user of the wext user interface are the wireless-tools, they only
-have an alpha version using the netlink interface and even that is
-incomplete.
+If you wish to run bcm43xx-softmac from either the mb (Michael Buesch) or the wireless-dev trees,
+you can get a patch to update them to the current state of my code at
+ftp://lwfinger.dynalias.org/patches/update_mb_0302.patch. This patch not only includes the things
+that are in the wireless-2.6 tree, but changes that are in progress.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+FYI, I have compile-, but not yet run-tested this tree with these changes.
 
----
- Documentation/feature-removal-schedule.txt |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
---- linux-2.6.orig/Documentation/feature-removal-schedule.txt	2007-03-01 15:25:31.714246483 +0100
-+++ linux-2.6/Documentation/feature-removal-schedule.txt	2007-03-01 15:32:23.904246483 +0100
-@@ -304,3 +304,15 @@ Why:	The code says it was obsolete when 
- Who:	Richard Purdie <rpurdie@rpsys.net>
- 
- ---------------------------
-+
-+What:	Wireless extensions over netlink (CONFIG_NET_WIRELESS_RTNETLINK)
-+When:	with the merge of wireless-dev, 2.6.22 or later
-+Why:	The option/code is
-+	 * not enabled on most kernels
-+	 * not required by any userspace tools (except an experimental one,
-+	   and even there only for some parts, others use ioctl)
-+	 * pointless since wext is no longer evolving and the ioctl
-+	   interface needs to be kept
-+Who:	Johannes Berg <johannes@sipsolutions.net>
-+
-+---------------------------
-
+Larry
 
