@@ -1,84 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:33400 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753208AbXCRJAZ (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.186]:3386 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992577AbXCBQV6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Mar 2007 05:00:25 -0400
-Message-ID: <45FCFFA5.5070801@warmcat.com>
-Date: Sun, 18 Mar 2007 09:00:21 +0000
-From: Andy Green <andy@warmcat.com>
+	Fri, 2 Mar 2007 11:21:58 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so1338978nfa
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2007 08:21:57 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: rt2x00 updated in wireless-dev
+Date: Fri, 2 Mar 2007 17:21:50 +0100
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <20070302153116.GC6676@tuxdriver.com>
+In-Reply-To: <20070302153116.GC6676@tuxdriver.com>
 MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH 2/2] mac80211: Monitor mode radiotap-based packet injection
-References: <20070317105800.659633351@warmcat.com> <200703171751.50898.flamingice@sourmilk.net> <45FC6727.3090008@warmcat.com> <200703171920.37469.flamingice@sourmilk.net> <45FC7924.8050501@warmcat.com>
-In-Reply-To: <45FC7924.8050501@warmcat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200703021721.50283.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andy Green wrote:
-> Michael Wu wrote:
->> On Saturday 17 March 2007 18:09, Andy Green wrote:
->>> Yeah naturally it was my first move to use what was there, but the
->>> result was a panic that went away when I moved the skb to belong to the
->>> "master" interface's index and separately persistently tagged the packet
->>> as being injected.
->>>
->> I don't see anything that would prevent this from working.. if you 
->> have a patch which does this and crashes, I'll take a look at it.
-> 
-> Okay I will try to regenerate this situation tomorrow afternoon, which 
-> will be my next chance.
+On Friday 02 March 2007 16:31, John W. Linville wrote:
+> I have applied the 30 or so patches Ivo sent to the linux-wireless
+> list a couple of days ago. 
 
-Well the panic did not return, I guess whatever I was doing that 
-provoked it I am not doing any more.  So I changed it back to the 
-sdata->dev->ifindex that the normal code path uses and confirmed that 
-continued to worked okay.
+Thanks!
 
-However when I went on to look at leveraging that to find out if the 
-originating interface was in Monitor mode, it seems that it might be a 
-little bit more expensive to do that -- and it would have to be done for 
-every tx packet in order to find out if it was injected.  By contrast 
-with the currently proposed staged system at each level the information 
-is always available without processing, and the overhead for the common 
-case where the packet was not injected is just testing if the if type 
-was monitor, and then later testing a bit in flags that are already 
-available.
+> Hopefully that brings the rt2x00 driver 
+> in wireless-dev almost up-to-date?
 
- From looking around the existing code, it seems something like this is 
-called for to use the ifindex instead:
+Well the only patches that are not in are:
+	- development stuff of today, which is still a bit buggy and not completed
+	- software sequence support for rt2400pci/rt2500pci,
+	  but that depends on the mac80211 patch that had been send earlier.
+	- rfkill support patch. The last RFC I had send
+	  out has not yet been replied, although Dmitry has send me a message
+          he has seen the mail and will reply as soon as he has time.
 
-__ieee80211_tx_prepare(...)
-{
-	struct ieee80211_tx_packet_data *pkt_data;
+> Via wireless-dev, the rt2x00 driver family is now in -mm and in
+> Fedora rawhide, possibly elsewhere.  I think it will be best for all
+> concerned to keep wireless-dev closely synchronized with rt2x00 fixes
+> and developments.  I hope you agree.
 
-	/* skb->cb is still valid by this time? */
+I absolutely agree, unfortunately lack of time on my side prevented me often
+to create those regular patches, although that is just a weak excuse since
+I had made enough patches into rt2x00. ;)
 
-	pkt_data = (struct ieee80211_tx_packet_data *)skb->cb;
+> Ivo seems to have (almost!) mastered the patch posting process for
+> upstream.  His last round of patches were easy to handle and merge.
+> They would have been merged faster, if there weren't so many of them
+> all at once.  A higher frequency of patches posted to linux-wireless
+> will continue to improve the merge delay upstream.
 
-	/* dev_get_by_index holds a read lock and iterates
-	 * a hlist, done for every tx packet */
+Well like I mentioned in the patch mail, I have experimented a bit with git
+this time. So hopefully there will be a git tree within a few weeks from where
+you can pull new updates. :)
 
-	originating_dev = dev_get_by_index(pkt_data->ifindex);
-	if(!originating_dev) goto skipped;
-	if (unlikely(!is_ieee80211_device(originating_dev, dev))) {
-		goto give_up_dev;
-	}
+> The rt2x00 project is important to the upstream community, and hence
+> to all the distros and their users.  I appreciate and applaud your
+> efforts in bringing the rt2x00 driver family this far.  I hope you
+> will now take the opportunity to more closely integrate your efforts
+> with those of the greater linux-wireless community.
 
-	originating__sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-	if(!originating__sdata) goto give_up_dev;
+I'll do my best. :)
 
-	if (unlikely(originating__sdata->type==IEEE80211_IF_TYPE_MNTR)){
-...
-	}
-	give_up_dev:
-	dev_put(originating_dev);
-	skipped:
-...
-}
-
-Given this, if it is actually the leanest implementation of using 
-ifindex, is it still preferred?
-
--Andy
+Ivo
