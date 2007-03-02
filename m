@@ -1,80 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:41700 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S2992431AbXCGSQk (ORCPT
+Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:33388 "EHLO
+	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932321AbXCBSdM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2007 13:16:40 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Helge Deller <deller@gmx.de>
-Subject: Re: [PATCH] p54 various cleanups
-Date: Wed, 7 Mar 2007 13:15:47 -0500
-Cc: linux-wireless@vger.kernel.org
-References: <200702272219.58919.deller@gmx.de> <200703040019.00159.flamingice@sourmilk.net> <200703051706.36500.deller@gmx.de>
-In-Reply-To: <200703051706.36500.deller@gmx.de>
+	Fri, 2 Mar 2007 13:33:12 -0500
+Date: Fri, 02 Mar 2007 12:32:06 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] bcm43xx: Fix bug in frequency to channel conversion
+Message-ID: <45e86da6.364P62Xmkc0zH2f9%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1490530.W6CXflnkzH";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200703071315.51957.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1490530.W6CXflnkzH
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+From: Joerg Sommer <joerg@alea.gnuu.de>
 
-On Monday 05 March 2007 11:06, Helge Deller wrote:
-> > > -static const char *rfs[] =3D {
-> > > +static const char * const rfs[] =3D {
-> >
-> > ?
->
-> That's correct.
-> 'rfs' is a pointer array to strings.
-> The first part ("const char")  tells the compiler to put the strings into
-> read-only memory. The second const after the * tells the compiler, that t=
-he
-> pointer array itself is read-only as well. This prevents e.g. this kind of
-> runtime modifications:  rfs[2] =3D "test"; Another example:
-> drivers/video/s3fb.c:static const char * const s3_names[] =3D {"S3 Unknow=
-n",
-> ... But if you don't like it, I'm fine wit dropping this part.
->
-Nah, it's fine. It looked like it was doing that but I've never seen any co=
-de=20
-that actually did that so I wasn't sure.
+The frequency to channel routine in bcm43xx requires that the frequency
+be in MHz, but that condition is not always met. This patch does the
+necessary conversion.
 
-> > BTW, you should have an updated summary for this patch.
->
-> This one -> ?
->
-> [PATCH] p54/rtl818x/zd1211rw  - various fixes
-> - use PCI_DEVICE macro
-> - add some const / __read_mostly annotations
-> - mark some arrays 'static'
->
-> Signed-off-by: Helge Deller <deller@gmx.de>
->
-Yup. Merged in my tree and pushing to wireless-dev. Thanks!
+Signed-off-by: Joerg Sommer <joerg@alea.gnuu.de>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-=2DMichael Wu
+Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_wx.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_wx.c
++++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_wx.c
+@@ -106,18 +106,24 @@ static int bcm43xx_wx_set_channelfreq(st
+ 	struct bcm43xx_private *bcm = bcm43xx_priv(net_dev);
+ 	unsigned long flags;
+ 	u8 channel;
++	s8 expon;
+ 	int freq;
+ 	int err = -EINVAL;
+ 
+ 	mutex_lock(&bcm->mutex);
+ 	spin_lock_irqsave(&bcm->irq_lock, flags);
+ 
+-	if ((data->freq.m >= 0) && (data->freq.m <= 1000)) {
++	if ((data->freq.e == 0) &&
++	    (data->freq.m >= 0) && (data->freq.m <= 1000)) {
+ 		channel = data->freq.m;
+ 		freq = bcm43xx_channel_to_freq(bcm, channel);
+ 	} else {
+-		channel = bcm43xx_freq_to_channel(bcm, data->freq.m);
+ 		freq = data->freq.m;
++		expon = 6 - data->freq.e;
++		while (--expon >= 0)    /* scale down the frequency to MHz */
++			freq /= 10;
++		assert(freq > 1000);
++		channel = bcm43xx_freq_to_channel(bcm, freq);
+ 	}
+ 	if (!ieee80211_is_valid_channel(bcm->ieee, channel))
+ 		goto out_unlock;
 
---nextPart1490530.W6CXflnkzH
-Content-Type: application/pgp-signature
+---
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBF7wFXT3Oqt9AH4aERAhVCAKC2hT3MhzON4e9B5j+NvLu9XMJ4tACfdEWR
-y5tYf6wVRxVnTlE8mSU+uws=
-=DVjQ
------END PGP SIGNATURE-----
-
---nextPart1490530.W6CXflnkzH--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
