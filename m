@@ -1,64 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38291 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964981AbXCFNVx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2007 08:21:53 -0500
-Subject: Re: [2.6.21 patch] unconditionally enable SYSFS_DEPRECATED
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Greg KH <greg@kroah.com>
-Cc: Matt Mackall <mpm@selenic.com>, Adrian Bunk <bunk@stusta.de>,
-	Theodore Tso <tytso@mit.edu>, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, yi.zhu@intel.com, jketreno@linux.intel.com,
-	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
-In-Reply-To: <20070306015638.GA23756@kroah.com>
-References: <20070304220857.GH23311@waste.org>
-	 <1173051564.6131.13.camel@johannes.berg> <20070305002550.GI23311@waste.org>
-	 <20070305011729.GB7681@kroah.com> <20070305125950.GC26781@thunk.org>
-	 <20070305185813.GA31465@kroah.com> <20070305234052.GR3441@stusta.de>
-	 <20070306000722.GA11436@kroah.com> <20070306013020.GN23311@waste.org>
-	 <20070306015638.GA23756@kroah.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-15IQDM44rstVXjWudRV8"
-Date: Tue, 06 Mar 2007 14:20:50 +0100
-Message-Id: <1173187250.3403.7.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from srv5.dvmed.net ([207.36.208.214]:55226 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S2992812AbXCCAmK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Mar 2007 19:42:10 -0500
+Message-ID: <45E8C460.3060400@garzik.org>
+Date: Fri, 02 Mar 2007 19:42:08 -0500
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'upstream' branch of wireless-2.6
+References: <20070227205045.GF5826@tuxdriver.com> <20070227205139.GG5826@tuxdriver.com>
+In-Reply-To: <20070227205139.GG5826@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+John W. Linville wrote:
+> The following changes since commit 357efd57f229716fd6a1494b970c5a66c0c465ef:
+>   Stefano Brivio (1):
+>         bcm43xx: fix for 4309
+> 
+> are found in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream
+> 
+> John W. Linville (1):
+>       wireless: remove obsolete text files
+> 
+> Larry Finger (1):
+>       bcm43xx: Update Documentation/bcm43xx.txt
+> 
+> Pavel Roskin (1):
+>       Use offsetof() instead of own equivalent
+> 
+> Ulrich Kunitz (1):
+>       zd1211rw: changed GFP_NOFS to GFP_KERNEL
+> 
+> Zhu Yi (1):
+>       ipw2200: add channels sysfs entry
+> 
+>  Documentation/networking/bcm43xx.txt        |   97 +++++++++++++++++++++------
+>  drivers/net/wireless/README                 |   25 -------
+>  drivers/net/wireless/hostap/hostap_common.h |    4 +-
+>  drivers/net/wireless/ipw2200.c              |   47 +++++++++++++
+>  drivers/net/wireless/todo.txt               |   15 ----
+>  drivers/net/wireless/zd1211rw/zd_chip.c     |    4 +-
+>  drivers/net/wireless/zd1211rw/zd_usb.c      |   20 +++---
+>  7 files changed, 136 insertions(+), 76 deletions(-)
+>  delete mode 100644 drivers/net/wireless/README
+>  delete mode 100644 drivers/net/wireless/todo.txt
 
---=-15IQDM44rstVXjWudRV8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+pulled
 
-On Mon, 2007-03-05 at 17:56 -0800, Greg KH wrote:
-
-> Theory F:  It broke because you are using NetworkManager for your
-> network devices and the patches that fix this have not made it into a
-> real release?
->=20
-> I'm just guessing, but does anyone who is having this problem, NOT using
-> NetworkManager?
->=20
-> I'm running an old version of HAL just fine, but I'm not using
-> NetworkManager here.
-
-Greg, HAL itself isn't the problem. The problem is that older versions
-of HAL ignore all network devices when this option is not set and thus
-network manager can't pick them up.
-
-johannes
-
---=-15IQDM44rstVXjWudRV8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF7Wqy/ETPhpq3jKURAmEZAKCE3mEn0TqexYxE2hmmdxG99XgqKwCgpetD
-p8rd51qaqJYQZRMK+qUJK60=
-=mau2
------END PGP SIGNATURE-----
-
---=-15IQDM44rstVXjWudRV8--
 
