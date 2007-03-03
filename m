@@ -1,168 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:51532
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932065AbXCJTds (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45860 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992787AbXCCAWH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Mar 2007 14:33:48 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH v3] d80211: Add software sequence support
-Date: Sat, 10 Mar 2007 20:32:36 +0100
-Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	Jouni Malinen <jkmaline@cc.hut.fi>
-References: <200702141423.27823.IvDoorn@gmail.com> <200703102001.41004.IvDoorn@gmail.com> <200703102021.40041.IvDoorn@gmail.com>
-In-Reply-To: <200703102021.40041.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Message-Id: <200703102032.36463.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+	Fri, 2 Mar 2007 19:22:07 -0500
+Subject: zd1211rw-mac80211 error codes and monitor mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Michael Wu <flamingice@sourmilk.net>, Daniel Drake <dsd@gentoo.org>
+Content-Type: text/plain
+Date: Sat, 03 Mar 2007 01:21:31 +0100
+Message-Id: <1172881291.8247.24.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 10 March 2007 20:21, Ivo van Doorn wrote:
-> Most hardware can keep track of sequence numbers themselves,
-> unfortunately *most* doesn't cover all devices. ;)
-> This patch will keep track of the (per-bss) sequence number
-> if the flag IEEE80211_HW_SOFTWARE_SEQUENCE has been set.
+I tried to figure out why I was getting this:
 
-The question has been asked (by Jouni), but I didn't see
-a good answer (maybe I missed it).
-Why is this a flag at all? The sequence counter is such a
-trivial thing that having an extra conditional is just _more_
-overhead. Why not simply calculate the seq all the time and
-let hardware override it, if it has the capability to do so?
-Calculation of the seq is cheap. No need to bloat code.
+# iwconfig wlan1 mode monitor
+# ip link set wlan1 up
+SIOCSIFFLAGS: Operation not permitted
 
-> This 3rd version of the patch has the sequence number stored
-> in the ieee80211_sub_if_data structure.
-> 
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> 
-> ---
-> 
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 82ea43f..e32e28a 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -515,6 +515,9 @@ struct ieee80211_hw {
->  	 * normal operation. */
->  #define IEEE80211_HW_MONITOR_DURING_OPER (1<<9)
->  
-> +	/* Does the HOST need to insert the frame sequence counter */
-> +#define IEEE80211_HW_SOFTWARE_SEQUENCE (1<<10)
-> +
->  	/* please fill this gap when adding new flags */
->  
->  	/* calculate Michael MIC for an MSDU when doing hwcrypto */
-> diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-> index 577dbe3..79c2a60 100644
-> --- a/net/mac80211/ieee80211.c
-> +++ b/net/mac80211/ieee80211.c
-> @@ -54,6 +54,20 @@ static u8 * ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len);
->  static int ieee80211_mgmt_start_xmit(struct sk_buff *skb,
->  				     struct net_device *dev);
->  
-> +static void ieee80211_include_sequence(struct ieee80211_sub_if_data *sdata,
-> +				       struct ieee80211_hdr *hdr)
-> +{
-> +	/*
-> +	 * Set the sequence number for this frame.
-> +	 */
-> +	hdr->seq_ctrl = cpu_to_le16(sdata->sequence & IEEE80211_SCTL_SEQ);
-> +
-> +	/*
-> +	 * Increase the sequence number.
-> +	 */
-> +	sdata->sequence = (sdata->sequence + 0x10) & IEEE80211_SCTL_SEQ;
-> +}
-> +
->  struct ieee80211_key_conf *
->  ieee80211_key_data2conf(struct ieee80211_local *local,
->  			const struct ieee80211_key *data)
-> @@ -445,6 +459,7 @@ ieee80211_tx_h_fragment(struct ieee80211_txrx_data *tx)
->  	size_t hdrlen, per_fragm, num_fragm, payload_len, left;
->  	struct sk_buff **frags, *first, *frag;
->  	int i;
-> +	u16 seq;
->  	u8 *pos;
->  	int frag_threshold = tx->local->fragmentation_threshold;
->  
-> @@ -463,6 +478,7 @@ ieee80211_tx_h_fragment(struct ieee80211_txrx_data *tx)
->  		goto fail;
->  
->  	hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_MOREFRAGS);
-> +	seq = le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ;
->  	pos = first->data + hdrlen + per_fragm;
->  	left = payload_len - per_fragm;
->  	for (i = 0; i < num_fragm - 1; i++) {
-> @@ -490,7 +506,7 @@ ieee80211_tx_h_fragment(struct ieee80211_txrx_data *tx)
->  		memcpy(fhdr, first->data, hdrlen);
->  		if (i == num_fragm - 2)
->  			fhdr->frame_control &= cpu_to_le16(~IEEE80211_FCTL_MOREFRAGS);
-> -		fhdr->seq_ctrl = cpu_to_le16(i + 1);
-> +		fhdr->seq_ctrl = cpu_to_le16(seq + ((i + 1) & IEEE80211_SCTL_FRAG));
->  		copylen = left > per_fragm ? per_fragm : left;
->  		memcpy(skb_put(frag, copylen), pos, copylen);
->  
-> @@ -900,6 +916,17 @@ ieee80211_tx_h_check_assoc(struct ieee80211_txrx_data *tx)
->  	return TXRX_CONTINUE;
->  }
->  
-> +static ieee80211_txrx_result
-> +ieee80211_tx_h_sequence(struct ieee80211_txrx_data *tx)
-> +{
-> +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
-> +
-> +	if ((tx->local->hw.flags & IEEE80211_HW_SOFTWARE_SEQUENCE) &&
-> +	    ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_control)) >= 24)
-> +		ieee80211_include_sequence(tx->sdata, hdr);
-> +
-> +	return TXRX_CONTINUE;
-> +}
->  
->  /* This function is called whenever the AP is about to exceed the maximum limit
->   * of buffered frames for power saving STAs. This situation should not really
-> @@ -1770,6 +1797,10 @@ struct sk_buff * ieee80211_beacon_get(struct ieee80211_hw *hw, int if_id,
->  	skb_reserve(skb, local->hw.extra_tx_headroom);
->  	memcpy(skb_put(skb, bh_len), b_head, bh_len);
->  
-> +	if (hw->flags & IEEE80211_HW_SOFTWARE_SEQUENCE)
-> +		ieee80211_include_sequence(sdata,
-> +			(struct ieee80211_hdr *)skb->data);
-> +
->  	ieee80211_beacon_add_tim(local, ap, skb);
->  
->  	if (b_tail) {
-> @@ -4381,6 +4412,7 @@ static ieee80211_rx_handler ieee80211_rx_handlers[] =
->  static ieee80211_tx_handler ieee80211_tx_handlers[] =
->  {
->  	ieee80211_tx_h_check_assoc,
-> +	ieee80211_tx_h_sequence,
->  	ieee80211_tx_h_ps_buf,
->  	ieee80211_tx_h_select_key,
->  	ieee80211_tx_h_michael_mic_add,
-> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-> index 9df8ef0..4b7c427 100644
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -317,6 +317,8 @@ struct ieee80211_sub_if_data {
->  	int ieee802_1x; /* IEEE 802.1X PAE - drop packet to/from unauthorized
->  			 * port */
->  
-> +	u16 sequence;
-> +
->  	/* Fragment table for host-based reassembly */
->  	struct ieee80211_fragment_entry	fragments[IEEE80211_FRAGMENT_MAX];
->  	unsigned int fragment_next;
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+Well, -EPERM == -1!
 
--- 
-Greetings Michael.
+Here's an example junk packet I captured:
+0000  80 21 10 01 00 00 00 40 00 00 00 00 00 00 00 00   .!.....@........
+0010  00 00 00 03 e1 ec bb 90 00 00 00 07 00 00 00 07   ................
+0020  00 00 00 00 00 00 00 00 ff ff ff ff 00 00 00 03   ................
+0030  00 00 00 18 00 00 00 00 00 00 00 00 00 00 00 00   ................
+0040  00 00 0e 00 0e 00 00 00 04 02 8a 09 a0 00 40 6c   ..............@l
+0050  00 00 ff ff 9f c9 ff ff 00 15 f2 3d af 91 30 0e   ...........=..0.
+0060  f2 3d 63 97 90 00 67 cb 1d fb e2 dc 00 66 67 00   .=c...g......fg.
+0070  11 cc 06 04 62 65 72 67 01 08 82 84 8b 96 24 30   ....berg......$0
+0080  78 77 03 01 01 05 84 f2 cd 6d 00 2a 01 04 b7 0c   xw.......m.*....
+0090  04 32 04 0c 12 18 60 dd 06 00 10 18 02 02 00 33   .2....`........3
+00a0  ae 4f 4b                                          .OK
+
+That's supposed to include a radiotap header etc. The same packet (well
+beacon from the same AP) captured with bcm43xx looks like this:
+
+0000  80 21 10 01 00 00 00 40 00 00 00 00 00 00 53 73   .!.....@......Ss
+0010  00 00 00 03 f8 7b 92 f0 00 00 00 07 00 00 00 03   .....{..........
+0020  00 00 00 0a 00 00 00 00 ff ff ff ff 00 00 00 03   ................
+0030  00 00 00 3b 00 00 00 00 00 00 00 00 00 00 00 00   ...;............
+0040  80 00 00 00 ff ff ff ff ff ff 00 15 f2 3d 63 97   .............=c.
+0050  00 15 f2 3d 63 97 20 56 f8 c1 ac 11 63 05 00 00   ...=c. V....c...
+0060  64 00 11 00 00 04 62 65 72 67 01 08 82 84 8b 96   d.....berg......
+0070  24 30 48 6c 03 01 01 05 04 00 01 00 00 2a 01 04   $0Hl.........*..
+0080  2f 01 04 32 04 0c 12 18 60 dd 06 00 10 18 02 02   /..2....`.......
+0090  00                                                .
+
+(the radiotap header goes up to 0x3f, packet starts at 0x40)
+
+--- wireless-dev.orig/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c	2007-03-03 01:05:05.840721703 +0100
++++ wireless-dev/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c	2007-03-03 01:09:50.930721703 +0100
+@@ -513,14 +513,17 @@ static int zd_mac_add_interface(struct i
+ 
+ 	/* NOTE: using IEEE80211_IF_TYPE_MGMT to indicate no mode selected */
+ 	if (mac->mode != IEEE80211_IF_TYPE_MGMT)
+-		return -1;
++		return -EOPNOTSUPP;
+ 
+ 	switch (conf->type) {
+ 	case IEEE80211_IF_TYPE_STA:
++	/* if I enable this captured packets are junk, needs work
++	case IEEE80211_IF_TYPE_MNTR:
++	*/
+ 		mac->mode = conf->type;
+ 		break;
+ 	default:
+-		return -1;
++		return -EOPNOTSUPP;
+ 	}
+ 
+ 	mac->hwaddr = conf->mac_addr;
+
+
