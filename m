@@ -1,85 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:35908 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933926AbXCWRwu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 13:52:50 -0400
-Date: Fri, 23 Mar 2007 18:52:46 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	Jouni Malinen <jkmaline@cc.hut.fi>
-Subject: Re: [PATCH v3] d80211: Add software sequence support
-Message-ID: <20070323185246.43d78753@griffin.suse.cz>
-In-Reply-To: <200703110025.30400.IvDoorn@gmail.com>
-References: <200702141423.27823.IvDoorn@gmail.com>
-	<200703102021.40041.IvDoorn@gmail.com>
-	<200703102032.36463.mb@bu3sch.de>
-	<200703110025.30400.IvDoorn@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:56868
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030679AbXCCQWv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Mar 2007 11:22:51 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] bcm43xx: Fix assertion failures in interrupt handler
+Date: Sat, 3 Mar 2007 17:21:42 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <45e8609d.Ypw71Z7iN5G3uSmi%Larry.Finger@lwfinger.net>
+In-Reply-To: <45e8609d.Ypw71Z7iN5G3uSmi%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200703031721.42811.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 11 Mar 2007 00:25:30 +0100, Ivo van Doorn wrote:
-> +static void ieee80211_include_sequence(struct ieee80211_sub_if_data *sdata,
-> +				       struct ieee80211_hdr *hdr)
+On Friday 02 March 2007 18:36, Larry Finger wrote:
+> From: Pavel Roskin <proski@gnu.org>
+> 
+> In the bcm43xx interrupt handler, sanity checks are wrongly done before the
+> verification that the interrupt is for the bcm43xx.
+> 
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-I'd prefer specifying this as inline function.
+ACK, I'm sorry for this really stupid bug. ;)
 
-> +{
-> +	/*
-> +	 * Set the sequence number for this frame.
-> +	 */
-> +	hdr->seq_ctrl = cpu_to_le16(sdata->sequence & IEEE80211_SCTL_SEQ);
-
-No need to do "& IEEE80211_SCTL_SEQ" here.
-
-> +
-> +	/*
-> +	 * Increase the sequence number.
-> +	 */
-
-Please reduce this and previous comment to one line each.
-
-> +	sdata->sequence = (sdata->sequence + 0x10) & IEEE80211_SCTL_SEQ;
-> +}
-> +
->  struct ieee80211_key_conf *
->  ieee80211_key_data2conf(struct ieee80211_local *local,
->  			const struct ieee80211_key *data)
-> @@ -445,6 +459,7 @@ ieee80211_tx_h_fragment(struct ieee80211_txrx_data *tx)
->  	size_t hdrlen, per_fragm, num_fragm, payload_len, left;
->  	struct sk_buff **frags, *first, *frag;
->  	int i;
-> +	u16 seq;
->  	u8 *pos;
->  	int frag_threshold = tx->local->fragmentation_threshold;
+> ---
+> 
+>  drivers/net/wireless/bcm43xx/bcm43xx_main.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+> index 057541f..21d4ecd 100644
+> --- a/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+> +++ b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+> @@ -1858,9 +1858,6 @@ static irqreturn_t bcm43xx_interrupt_handler(int irq, void *dev_id)
 >  
-> @@ -463,6 +478,7 @@ ieee80211_tx_h_fragment(struct ieee80211_txrx_data *tx)
->  		goto fail;
+>  	spin_lock(&bcm->irq_lock);
 >  
->  	hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_MOREFRAGS);
-> +	seq = le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ;
->  	pos = first->data + hdrlen + per_fragm;
->  	left = payload_len - per_fragm;
->  	for (i = 0; i < num_fragm - 1; i++) {
-> @@ -490,7 +506,7 @@ ieee80211_tx_h_fragment(struct ieee80211_txrx_data *tx)
->  		memcpy(fhdr, first->data, hdrlen);
->  		if (i == num_fragm - 2)
->  			fhdr->frame_control &= cpu_to_le16(~IEEE80211_FCTL_MOREFRAGS);
-> -		fhdr->seq_ctrl = cpu_to_le16(i + 1);
-> +		fhdr->seq_ctrl = cpu_to_le16(seq + ((i + 1) & IEEE80211_SCTL_FRAG));
-
-I'd prefer | instead of + here.
-
-Thanks,
-
- Jiri
+> -	assert(bcm43xx_status(bcm) == BCM43xx_STAT_INITIALIZED);
+> -	assert(bcm->current_core->id == BCM43xx_COREID_80211);
+> -
+>  	reason = bcm43xx_read32(bcm, BCM43xx_MMIO_GEN_IRQ_REASON);
+>  	if (reason == 0xffffffff) {
+>  		/* irq not for us (shared irq) */
+> @@ -1871,6 +1868,9 @@ static irqreturn_t bcm43xx_interrupt_handler(int irq, void *dev_id)
+>  	if (!reason)
+>  		goto out;
+>  
+> +	assert(bcm43xx_status(bcm) == BCM43xx_STAT_INITIALIZED);
+> +	assert(bcm->current_core->id == BCM43xx_COREID_80211);
+> +
+>  	bcm->dma_reason[0] = bcm43xx_read32(bcm, BCM43xx_MMIO_DMA0_REASON)
+>  			     & 0x0001DC00;
+>  	bcm->dma_reason[1] = bcm43xx_read32(bcm, BCM43xx_MMIO_DMA1_REASON)
+> 
+> ---
+> 
+> 
+> 
 
 -- 
-Jiri Benc
-SUSE Labs
+Greetings Michael.
