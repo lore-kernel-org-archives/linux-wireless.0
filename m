@@ -1,43 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:56084 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030532AbXCGWYj (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38063 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030683AbXCCQYU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2007 17:24:39 -0500
-Date: Wed, 7 Mar 2007 22:24:04 +0000
-From: Christoph Hellwig <hch@infradead.org>
-To: Marcelo Tosatti <marcelo@kvack.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Jeff Garzik <jeff@garzik.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'libertas' branch of wireless-2.6
-Message-ID: <20070307222404.GA23393@infradead.org>
-References: <20070227205649.GH5826@tuxdriver.com> <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org> <20070304153627.GA32380@dmt> <20070305140825.GA9982@infradead.org> <20070307181638.GA22305@dmt>
+	Sat, 3 Mar 2007 11:24:20 -0500
+Subject: Re: [patch] at76_usb wireless driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Guido Guenther <agx@sigxcpu.org>
+Cc: netdev@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1172934588.4966.46.camel@johannes.berg>
+References: <20070110145724.GA4171@bogon.ms20.nix>
+	 <20070223221230.GA9965@bogon.ms20.nix>
+	 <20070303150029.GA19940@bogon.ms20.nix>
+	 <1172934588.4966.46.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-h8P2bWm32yEpGQkx8npm"
+Date: Sat, 03 Mar 2007 17:23:57 +0100
+Message-Id: <1172939037.4966.97.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070307181638.GA22305@dmt>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 07, 2007 at 03:16:38PM -0300, Marcelo Tosatti wrote:
-> >  - please get rid of the ENTER/LEAVE macros
-> 
-> These are useful for debugging. We have removed most of the useless ones 
-> already.
 
-We've refused this on a lot of drivers.  If you really need this kind
-of debugging talk to acme to use a variant of ostra for this.
+--=-h8P2bWm32yEpGQkx8npm
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> >  - please get rid of all your private ioctls and iwpriv stuff
-> >    (should I add !!!! here)
-> 
-> Rationale being? There are a bunch of device private knobs, and iwpriv
-> is the interface for such configuration. (????)
+Looks pretty good, a few more comments.
 
-If you read netdev we're very very unhappy about device specific knobs,
-as they are really painful to support.  You should also look at the
-cfg80211 threads on why ioctls are really bad for moving to a knew
-non-wext, non-ioctl config mechanism.  And for why iwpriv is particularly
-bad look about the posts about the wext compat issues.
+KEVENT_* constants and functions are really really confusing when the
+"kevent" subsystem is being discussed on netdev all the time. They're
+also quite meaningless, please rename them to something like
+AT76_DEVEVENT_* or whatever. While at that, the kevent() function really
+could use splitting up into sub-functions, it's a pretty large mess.
+
+The same about constant names goes for PM_* constants since linux/pm.h
+defines a whole bunch of PM_* constants too (I initially thought you
+were using those and was really confused what the driver does!)
+
+Having a whole bunch of module parameters that only set initial settings
+for things you later configure with iwconfig seems pretty useless but if
+you really think that they're absolutely required I don't care too much.
+
+PRIV_IOCTL_SET_MONITOR_MODE is wrong as far as I can tell, there's
+"iwconfig ... mode monitor" which you should use instead. (Btw, why are
+the priv ioctls spaced so strangely??)
+
+There doesn't seem to be a need to include rtnetlink.h, what made you
+think you'd need rtnl_lock()?
+"putting this inside rtnl_lock() - rtnl_unlock() hangs modprobe" is
+pretty obvious -- register_netdev does rtnl_lock()! And don't use
+unregister_netdevice(), use unregister_netdev().
+
+Your init_new_device() function can return an error but those errors are
+not always checked, maybe a printk would be appropriate. Also,
+generally, subfunctions are allowed to return errors directly, i.e.
+instead of returning -1 return -ENODEV from there and just hand it up
+from the caller.
+
+at76c503_do_probe could use splitting into two functions, the two huge
+parts of the if, if only to unindent the whole code a bit and get it to
+adhere to 80 chars/line instead of 99.
+
+"Use our own dbg macro" but mabye use dev_dbg?
+Same for err() (which I didn't even know existed..) how about dev_err()?
+
+static u8 snapsig/rfc1042sig/bc_addr/off_addr/hw_rates/channel_frequency
+etc etc etc don't belong into a header file.
+
+
+
+Some other (mostly style) issues:
+ * kernel code prefers a space before the brace in
+   "struct at76c503_command{" et al.
+ * both your header and code files contain lots of trailing whitespace
+ * kernel code prefers no space between function names and the opening
+   parenthesis
+ * use compare_ether_addr() instead of memcmp (look for ETH_ALEN, lots
+   of places)
+ * all the PROC =3D=3D=3D=3D=3D stuff looks pretty strange to my eyes but h=
+ey
+   that's just me I guess :)
+ * why does at76c503_get_fw_info take such a huge number of parameters?
+   Couldn't you pass in a struct at76c503 * and have that filled?
+ * struct reg_domain should be tab-indented.
+ * don't use typedefs for structs
+ * attribute packed on members of a struct is pretty weird
+ * the various frame definitions like struct ieee802_11_beacon_data are
+   useless, the same stuff is in struct ieee80211_mgmt (at least on
+   wireless dev kernel, that might not be true on other kernels?)
+ * hex2str wants proper indentation
+ * get_hw_config has weird indentation
+ * wait_completion sounds far too generic (wait_for_completion in
+   completion.h!)
+
+
+
+Hey, I need to go but that probably gives you a lot to review...
+
+johannes
+
+--=-h8P2bWm32yEpGQkx8npm
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF6aEc/ETPhpq3jKURAgumAJ9tJXWNIqJJPsIVTicd5nbxD8M2CQCfW/Sy
+uX/o0j5eQziCrdB/EfY5VZc=
+=65sJ
+-----END PGP SIGNATURE-----
+
+--=-h8P2bWm32yEpGQkx8npm--
 
