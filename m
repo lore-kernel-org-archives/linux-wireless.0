@@ -1,117 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:19285 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965689AbXC1TLP (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43185 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751952AbXCCLSj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 15:11:15 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so307721uga
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Mar 2007 12:11:09 -0700 (PDT)
-Message-ID: <43e72e890703281211s6793af26pe14d9d9fdfa91095@mail.gmail.com>
-Date: Wed, 28 Mar 2007 15:11:08 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: mohamed <mabbas@linux.intel.com>
-Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery and association
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <1175148244.4237.4.camel@dell-4965.jf.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-References: <1174909105.1364.53.camel@dell-4965.jf.intel.com>
-	 <43e72e890703271005u6173567aq2c1c04635da3ce50@mail.gmail.com>
-	 <43e72e890703271011h47a6177dp32b7c2324ab51423@mail.gmail.com>
-	 <43e72e890703271029q169c3fdo6d410f272eaf791@mail.gmail.com>
-	 <1175148244.4237.4.camel@dell-4965.jf.intel.com>
+	Sat, 3 Mar 2007 06:18:39 -0500
+Received: from [84.135.251.95] (helo=[10.0.0.4])
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.63)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1HNSBj-0005cT-E8
+	for linux-wireless@vger.kernel.org; Sat, 03 Mar 2007 11:14:07 +0000
+Subject: question: /sys/class/net/*/wireless
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Xls4zepbtzkc11PGx/Tq"
+Date: Sat, 03 Mar 2007 12:18:11 +0100
+Message-Id: <1172920691.4966.6.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/29/07, mohamed <mabbas@linux.intel.com> wrote:
-> On Tue, 2007-03-27 at 13:29 -0400, Luis R. Rodriguez wrote:
-> > On 3/27/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > > On 3/27/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > > > On 3/26/07, mohamed <mabbas@linux.intel.com> wrote:
-> > > >
-> > > > > +/* Get 11n capabilties from low level driver */
-> > > > > +static void ieee80211_fill_ht_ie(struct net_device *dev,
-> > > > > +                                struct ieee80211_ht_capability *ht_capab)
-> > > > > +{
-> > > > > +       int rc;
-> > > > > +       struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-> > > > > +
-> > > > > +       if (!local->ops->get_ht_capab){
-> > > > > +               memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
-> > > > > +               return;
-> > > > > +       }
-> > > > > +
-> > > > > +       rc = local->ops->get_ht_capab(local_to_hw(local), ht_capab);
-> > > > > +       if (!rc) {
-> > > > > +               memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
-> > > > > +               return;
-> > > > > +       }
-> > > > >
-> > > > > +       ht_capab->capabilitiesInfo = (__le16) cpu_to_le16(
-> > > > > +                                       ht_capab->capabilitiesInfo);
-> > > > > +       ht_capab->extended_ht_capability_info = (__le16) cpu_to_le16(
-> > > > > +                                       ht_capab->extended_ht_capability_info);
-> > > > > +       ht_capab->tx_BF_capability_info = (__le32) cpu_to_le32(
-> > > > > +                                       ht_capab->tx_BF_capability_info);
-> > > > > +}
-> > > > > +
-> > > >
-> > > > We should memset to 0 the entire ht_capab to regardless as its coming
-> > > > from skb_put() otherwise we'll get random data there if we don't set
-> > > > it and we sure as hell don't want to just transmit that :)
-> I will memset to 0 before using the structure. I will change the patch
-> to reflect this.
 
-Thanks
+--=-Xls4zepbtzkc11PGx/Tq
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> > Also
-> > > > ieee80211_send_assoc() is already checking for
-> > > > local->ops->get_ht_capab so lets just do a BUG_ON here to capture
-> > > > cases where someone else didn't do the proper checking. So how about
-> > > > instead something like:
-> make sense.
+Hi,
 
-Thanks
+It just occurred to me that /sys/class/net/*/wireless/ completely
+depends on wireless extensions. Since we're attempting to kill wireless
+extensions and hopefully will succeed in doing that some time soon, it
+is possible that people will be running with mac80211 drivers w/o
+CONFIG_WIRELESS_EXT.
 
-> > > > /* Get 11n capabilties from low level driver */
-> > > > static void ieee80211_fill_ht_ie(struct net_device *dev,
-> > > >                                 struct ieee80211_ht_capability *ht_capab)
-> > > > {
-> > > >        struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-> > > >        BUG_ON(!local->ops->get_ht_capab);
-> > > >        memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
-> > > >        if (!local->ops->get_ht_capab(local_to_hw(local), ht_capab))
-> > > >                return;
-> > > >        ht_capab->capabilitiesInfo = (__le16) cpu_to_le16(
-> > > >                                        ht_capab->capabilitiesInfo);
-> > > >        ht_capab->extended_ht_capability_info = (__le16) cpu_to_le16(
-> > > >                                        ht_capab->extended_ht_capability_info);
-> > > >        ht_capab->tx_BF_capability_info = (__le32) cpu_to_le32(
-> > > >                                        ht_capab->tx_BF_capability_info);
-> > > > }
-> > > >
-> > >
-> > > On second thought just memset to 0 on ieee80211_send_assoc() right
-> > > after the skb_put and remove that from above.
-> > >
-> > >   Luis
-> > >
-> >
-> > Last few comments:
-> >
-> > I. In struct ieee80211_ops you added your hunk after the TSF comment,
-> > but before  u64 (*get_tsf)(struct ieee80211_hw *hw) was listed. Please
-> > move the hunk after get_tsf or before the comment.
-> >
-> > II. In ieee80211_fill_ht_ie() you do cpu_to_le* on the same fields.. I
-> > take it the driver's get_ht_capab() is supposed to fill these. Since
-> > you already defined them as little endian in the struct
-> > ieee80211_ht_capability, how about just leaving that up to the driver
-> > developer to make sure they do this? That's would be 6 lines less of
-> > code in ieee80211_fill_ht_ie().
+This leaves us in a sticky situation. People with CONFIG_WIRELESS_EXT
+will have /sys/class/net/*/wireless/ directories, but people without
+won't, and CONFIG_WIRELESS_EXT will not be necessary for a lot of
+people.
 
-And how about regarding the above comment (II)? We can just expect
-driver developers to follow proper endianness. That cleans that
-routine a bit more too.
+Thus, I think we'll need to offer a /sys/class/net/*/wireless/ directory
+for cfg80211-only systems as well, since that'd also be the only way to
+tell if a device is wireless from sysfs. However, I'd much rather have
+that dir called ieee80211 in accordance with what we're doing elsewhere.
+But pre-802.11 equipment also uses wireless ext. Hmm :)
 
-  Luis
+We could create ieee80211 and create a symlink to it.
+
+Another thing we could do is simply deprecate the wireless directory
+there, but then wireless-ext users wouldn't have a way to tell if a
+netdev is wireless from sysfs.... Kinda feels like a "caught between a
+rock and a hard place" type of situation to me right now but I'm sure
+someone can come up with something perfect :P
+
+johannes
+
+--=-Xls4zepbtzkc11PGx/Tq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF6Vlz/ETPhpq3jKURAljZAJwLF0OhSVH5rYrXM93XZsRx3I5uTQCffsHS
+cUOLx/uQDEZ2UhdOjB9DlkA=
+=A9wR
+-----END PGP SIGNATURE-----
+
+--=-Xls4zepbtzkc11PGx/Tq--
+
