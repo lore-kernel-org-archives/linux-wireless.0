@@ -1,101 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:47302 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753765AbXCaSJP (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53919 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030305AbXCCPKN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Mar 2007 14:09:15 -0400
-Message-ID: <460EA3C9.6020207@lwfinger.net>
-Date: Sat, 31 Mar 2007 13:09:13 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
-	John Linville <linville@redhat.com>
-Subject: Re: mac80211 does not support WPA when used with wext
-References: <460E2B8C.4030002@gmail.com>	 <1175335211.23438.45.camel@johannes.berg> <1175363333.9349.10.camel@localhost.localdomain>
-In-Reply-To: <1175363333.9349.10.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 3 Mar 2007 10:10:13 -0500
+Subject: Re: [patch] at76_usb wireless driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Guido Guenther <agx@sigxcpu.org>
+Cc: netdev@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070303150029.GA19940@bogon.ms20.nix>
+References: <20070110145724.GA4171@bogon.ms20.nix>
+	 <20070223221230.GA9965@bogon.ms20.nix>
+	 <20070303150029.GA19940@bogon.ms20.nix>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cm3GG6m5wEiypEDQK5dz"
+Date: Sat, 03 Mar 2007 16:09:48 +0100
+Message-Id: <1172934588.4966.46.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> On Sat, 2007-03-31 at 12:00 +0200, Johannes Berg wrote:
->> On Sat, 2007-03-31 at 11:36 +0200, dragoran wrote:
->>> Hello
->>> While testing the iwlwifi driver I noticed that the mac80211 does 
->>> provide a wext interface but does not support wpa with it.
->> You must have done something wrong, it works well.
-> 
-> Nope!  This time it's really mac80211 :)
-> 
-> Take a look at ieee80211_sta_scan_result() in mac80211/ieee80211_sta.c.
-> Note that it returns custom events for the WPA & RSN IEs.  That's just
-> wrong.  We should be using already-defined events.
-> 
-> [ Hopefully in cfg80211 we'll have a very easy way to extend the defined
-> tag-list for attributes returned from scan results.  If you look at what
-> various drivers have custom-defined for the CUSTOM tag, we weren't very
-> aggressive about standardizing custom tags into IWEV* events. ]
-> 
-> I'm not sure where the heck these bits of mac80211 came from; both
-> hostap and ieee80211 do it right (also airo, libertas, and prism54,
-> though I'm to blame for those).  Plus, it's a net loss of code to do it
-> with IWEVGENIE, and no additional kzalloc that can fail!  Bonus+2!
-> 
-> hostap:
-> -------------
-> 	if (bss && bss->wpa_ie_len > 0 && bss->wpa_ie_len <= MAX_WPA_IE_LEN) {
-> 		memset(&iwe, 0, sizeof(iwe));
-> 		iwe.cmd = IWEVGENIE;
-> 		iwe.u.data.length = bss->wpa_ie_len;
-> 		current_ev = iwe_stream_add_point(
-> 			current_ev, end_buf, &iwe, bss->wpa_ie);
-> 	}
-> 
-> 	if (bss && bss->rsn_ie_len > 0 && bss->rsn_ie_len <= MAX_WPA_IE_LEN) {
-> 		memset(&iwe, 0, sizeof(iwe));
-> 		iwe.cmd = IWEVGENIE;
-> 		iwe.u.data.length = bss->rsn_ie_len;
-> 		current_ev = iwe_stream_add_point(
-> 			current_ev, end_buf, &iwe, bss->rsn_ie);
-> 	}
-> 
-> ieee80211:
-> -------------
-> 
-> 	memset(&iwe, 0, sizeof(iwe));
-> 	if (network->wpa_ie_len) {
-> 		char buf[MAX_WPA_IE_LEN];
-> 		memcpy(buf, network->wpa_ie, network->wpa_ie_len);
-> 		iwe.cmd = IWEVGENIE;
-> 		iwe.u.data.length = network->wpa_ie_len;
-> 		start = iwe_stream_add_point(start, stop, &iwe, buf);
-> 	}
-> 
-> 	memset(&iwe, 0, sizeof(iwe));
-> 	if (network->rsn_ie_len) {
-> 		char buf[MAX_WPA_IE_LEN];
-> 		memcpy(buf, network->rsn_ie, network->rsn_ie_len);
-> 		iwe.cmd = IWEVGENIE;
-> 		iwe.u.data.length = network->rsn_ie_len;
-> 		start = iwe_stream_add_point(start, stop, &iwe, buf);
-> 	}
-> 
-> <rant>
-> 
-> I don't quite get why mac80211/d80211 was so behind in wireless
-> extensions support.  Didn't Jouni and Devicescape basically _write_
-> WE-18/19 WPA support?  Did d80211 just not get the love that
-> wpa_supplicant and the other drivers got when they were updated to WE-18
-> and later?
-> 
-> </rant>
-> 
-> I can whip something up that _looks_ right but hasn't been compile
-> tested if somebody else can test it.
-> 
 
-I can test it. ATM, I cannot get NM to connect, which prevents any testing of mac80211.
+--=-cm3GG6m5wEiypEDQK5dz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Larry
+Pavel should know better and have told you that wireless got it's own
+list ;)
+Quoting fully to make linux-wireless aware. I guess we'll want to take
+out netdev on replies to this.
+
+johannes
+
+On Sat, 2007-03-03 at 16:00 +0100, Guido Guenther wrote:
+> Hi,
+> I'd be glad if someone could review the at76_usb wireless driver, it
+> adds support for the at76c503, at76c505 and at76c505a wireless USB
+> adapters. Since it exceeds the lists size limit, please
+>     git-clone http://honk.sigxcpu.org/git/at76c503a.git/
+>=20
+> The projects homepage is:
+>     http://at76c503a.berlios.de/
+> The above git tree is functionally equivalent to the CVS version at
+> berlios but removes support for older kernels, older wireless
+> extensions, C99 style comments, commented out code and shifts things
+> around a little for better readability. This is only done to ease
+> reviewing - there are no functional changes over the CVS archive.
+>=20
+> The driver was tested (and is in pracitical use) on at least i386, amd64
+> and powerpc.
+>=20
+> Please note that I'm not the author of the driver, the driver itself
+> lists these copyright holders (but none of them showed up on the
+> mailing list during the last couple of months):
+>=20
+> Copyright (c) 2002 - 2003 Oliver Kurth
+> Copyright (c) 2004 Joerg Albert <joerg.albert@gmx.de>
+> Copyright (c) 2004 Nick Jones
+> Copyright (c) 2004 Balint Seeber <n0_5p4m_p13453@hotmail.com>
+>=20
+> Pavel Roskin, Maxim Grechkin and me were committing to CVS recently.
+> Cheers,
+>  -- Guido
+>=20
+> -
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+
+--=-cm3GG6m5wEiypEDQK5dz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF6Y+8/ETPhpq3jKURAicpAJkB5NTfipYJJcGOTkaj5uvYTThz5QCfd4wT
+WoILie/5wQ8RNV3v4bAQRos=
+=BQIh
+-----END PGP SIGNATURE-----
+
+--=-cm3GG6m5wEiypEDQK5dz--
+
