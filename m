@@ -1,66 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.233]:13711 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767823AbXCJFFJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Mar 2007 00:05:09 -0500
-Received: by wr-out-0506.google.com with SMTP id 70so1571001wra
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2007 21:05:08 -0800 (PST)
-Message-ID: <82faac5b0703092105x75149bcdx5813e18f96db8004@mail.gmail.com>
-Date: Sat, 10 Mar 2007 16:05:08 +1100
-From: "Darren Jenkins" <darrenrjenkins@gmail.com>
-To: "Linus Torvalds" <torvalds@linux-foundation.org>
-Subject: Re: sparse using insane amounts of memory
-Cc: "Ivo van Doorn" <ivdoorn@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org,
-	linux-sparse@vger.kernel.org
-In-Reply-To: <Pine.LNX.4.64.0703081104010.10832@woody.linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <1173319356.3546.54.camel@johannes.berg>
-	 <1173375270.15842.24.camel@dv>
-	 <1173375791.3248.37.camel@johannes.berg>
-	 <200703081908.40997.IvDoorn@gmail.com>
-	 <Pine.LNX.4.64.0703081023490.10832@woody.linux-foundation.org>
-	 <Pine.LNX.4.64.0703081104010.10832@woody.linux-foundation.org>
+Received: from xenotime.net ([66.160.160.81]:48829 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1030666AbXCCPxb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Mar 2007 10:53:31 -0500
+Received: from midway.site ([71.245.96.156]) by xenotime.net for <linux-wireless@vger.kernel.org>; Sat, 3 Mar 2007 07:53:27 -0800
+Date: Sat, 3 Mar 2007 07:51:19 -0800
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: straw poll: new Kconfig symbol for mac80211 debugfs?
+Message-Id: <20070303075119.6fe0ae1c.rdunlap@xenotime.net>
+In-Reply-To: <1172923924.4966.41.camel@johannes.berg>
+References: <1172923924.4966.41.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/9/07, Linus Torvalds <torvalds@linux-foundation.org> wrote:
->
->
-> On Thu, 8 Mar 2007, Linus Torvalds wrote:
-> >
-> > To check a value for being a nice range of consecutive bits, you can
-> > simply do:
-> >
-> >       #define is_power_of_two(x) (!((x) & ((x)-1)))
+On Sat, 03 Mar 2007 13:12:03 +0100 Johannes Berg wrote:
 
-There is already an inline for this in log2.h
+> After moving all the sysfs stuff to debugfs I notice that it is quite a
+> large amount of code. Does anybody think having a new Kconfig symbol for
+> that like this one
+> 
+> config MAC80211_DEBUGFS
+> 	bool "DebugFS support"
+> 	depends on MAC80211
+> 	---help---
+> 	  Select this to see extensive information about
+> 	  the internal state of mac80211 in debugfs.
+> 
+> 	  Say N unless you know you need this.
+> 
+> would make sense?
 
-/*
- *  Determine whether some value is a power of two, where zero is
- * *not* considered a power of two.
- */
+Yes.  But it should also depend on DEBUG_FS... (maybe it does
+that somewhere else?)
 
-static inline __attribute__((const))
-bool is_power_of_2(unsigned long n)
-{
-	return (n != 0 && ((n & (n - 1)) == 0));
-}
-
->  - 0 is special, and is generally considered to be a power of two (and
->    this is more fundamental than you'd think: it's not just fall-out from
->    the particular expression chosen, it is fundamentally *required* to
->    handle overflow, and you can think of 0 as 2**x, x > wordsize if that
->    makes you more comfortable with the notion that zero is a power-of-two
->    in any finite representation of 2's complement)
->
-> The "zero is special" thing means that if you don't want to accept zero as
-> a valid mask (it technically *is* a contiguous set of bits set - it's just
-> the empty set) you'd need to check for it specially.
-
-I guess the person who wrote it wasn't thinking discrete maths at the time.
-
-Darren J.
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
