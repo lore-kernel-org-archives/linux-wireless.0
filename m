@@ -1,58 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34383 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965254AbXCCMM0 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:42577
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751540AbXCCUWb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Mar 2007 07:12:26 -0500
-Received: from [84.135.251.95] (helo=[10.0.0.4])
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.63)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1HNT1n-0005p9-5z
-	for linux-wireless@vger.kernel.org; Sat, 03 Mar 2007 12:07:55 +0000
-Subject: straw poll: new Kconfig symbol for mac80211 debugfs?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FgelKFngyYwiawh9+idm"
-Date: Sat, 03 Mar 2007 13:12:03 +0100
-Message-Id: <1172923924.4966.41.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 3 Mar 2007 15:22:31 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Sam Ravnborg <sam@ravnborg.org>
+Subject: Re: [PATCH] bcm43xx: do not rebuild when kernel version changes
+Date: Sat, 3 Mar 2007 21:21:42 +0100
+Cc: linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@osdl.org>,
+	Larry Finger <larry.finger@lwfinger.net>
+References: <20070303190328.GA30463@uranus.ravnborg.org>
+In-Reply-To: <20070303190328.GA30463@uranus.ravnborg.org>
+MIME-Version: 1.0
+Message-Id: <200703032121.43136.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Saturday 03 March 2007 20:03, Sam Ravnborg wrote:
+> Replacing use of UTS_RELEASE with utsname()->release
+> avoids that this module is rebuild each
+> time the kernel version changes.
+> 
+> Compile tested only.
 
---=-FgelKFngyYwiawh9+idm
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I vote to get rid of the whole bcm43xx_ethtool.c file, as it's useless.
+It will vanish with the advent of d80211, anyway.
+Larry?
 
-After moving all the sysfs stuff to debugfs I notice that it is quite a
-large amount of code. Does anybody think having a new Kconfig symbol for
-that like this one
+> Signed-off-by: Sam Ravnborg <sam@ravnborg.org>
+> ---
+> diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c b/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
+> index c947025..d2df6a0 100644
+> --- a/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
+> +++ b/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
+> @@ -32,7 +32,7 @@
+>  #include <linux/netdevice.h>
+>  #include <linux/pci.h>
+>  #include <linux/string.h>
+> -#include <linux/utsrelease.h>
+> +#include <linux/utsname.h>
+>  
+>  
+>  static void bcm43xx_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info)
+> @@ -40,7 +40,7 @@ static void bcm43xx_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *
+>  	struct bcm43xx_private *bcm = bcm43xx_priv(dev);
+>  
+>  	strncpy(info->driver, KBUILD_MODNAME, sizeof(info->driver));
+> -	strncpy(info->version, UTS_RELEASE, sizeof(info->version));
+> +	strncpy(info->version, utsname()->release, sizeof(info->version));
+>  	strncpy(info->bus_info, pci_name(bcm->pci_dev), ETHTOOL_BUSINFO_LEN);
+>  }
+>  
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-config MAC80211_DEBUGFS
-	bool "DebugFS support"
-	depends on MAC80211
-	---help---
-	  Select this to see extensive information about
-	  the internal state of mac80211 in debugfs.
-
-	  Say N unless you know you need this.
-
-would make sense?
-
-johannes
-
---=-FgelKFngyYwiawh9+idm
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF6WYT/ETPhpq3jKURAjF9AJ9Eic35DUe37zEnQRl0+uahyYXlQACfeVs7
-fvleHc8YMk/VtCSYFBuIcMA=
-=/xls
------END PGP SIGNATURE-----
-
---=-FgelKFngyYwiawh9+idm--
-
+-- 
+Greetings Michael.
