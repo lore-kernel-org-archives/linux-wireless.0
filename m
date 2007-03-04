@@ -1,125 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:49480 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933287AbXCUSO6 (ORCPT
+Received: from mailgate.cesmail.net ([216.154.195.36]:43839 "HELO
+	mailgate.cesmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751455AbXCDHJV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2007 14:14:58 -0400
-Message-ID: <4601761F.4000302@lwfinger.net>
-Date: Wed, 21 Mar 2007 13:14:55 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Sun, 4 Mar 2007 02:09:21 -0500
+Message-ID: <20070304020920.b5lej3sw0oogwg4w@webmail.spamcop.net>
+Date: Sun,  4 Mar 2007 02:09:20 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Guido Guenther <agx@sigxcpu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [patch] at76_usb wireless driver
+References: <20070110145724.GA4171@bogon.ms20.nix>
+	<20070223221230.GA9965@bogon.ms20.nix>
+	<20070303150029.GA19940@bogon.ms20.nix>
+	<1172934588.4966.46.camel@johannes.berg>
+	<1172939037.4966.97.camel@johannes.berg>
+In-Reply-To: <1172939037.4966.97.camel@johannes.berg>
 MIME-Version: 1.0
-To: Andrew Morton <akpm@linux-foundation.org>
-CC: Zan Lynx <zlynx@acm.org>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
-	bcm43xx devel <Bcm43xx-dev@lists.berlios.de>
-Subject: Re: 2.6.21-rc4-mm1
-References: <20070319205623.299d0378.akpm@linux-foundation.org>	<1174433034.62033.16.camel@localhost> <20070320223643.d8cbc3f6.akpm@linux-foundation.org>
-In-Reply-To: <20070320223643.d8cbc3f6.akpm@linux-foundation.org>
-Content-Type: multipart/mixed;
- boundary="------------020006020605050908090003"
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------020006020605050908090003
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Quoting Johannes Berg <johannes@sipsolutions.net>:
 
-Andrew Morton wrote:
-> On Tue, 20 Mar 2007 17:23:54 -0600 Zan Lynx <zlynx@acm.org> wrote:
-> 
->> On Mon, 2007-03-19 at 20:56 -0800, Andrew Morton wrote:
->>> Temporarily at
->>>
->>>   http://userweb.kernel.org/~akpm/2.6.21-rc4-mm1/
->>>
->>> Will appear later at
->>>
->>>   ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21-rc4/2.6.21-rc4-mm1/
->> First impressions:
->> Several of the same bugs as rc3-mm*:
->>       * Freezes immediately if I touch the wlan0 device after loading
->>         the new Broadcom wireless driver.
+> Looks pretty good, a few more comments.
 
-The version of the ssb driver in 2.6.21-rc4-mm1 has a bug that causes a kernel oops if the bcm43xx
-chip contains a USB (dangling) core. This bug has been fixed in Michael Buesch's tree, but
-apparently not yet in Linville's wireless-dev tree. The patch is as follows:
+Thanks!
 
-commit 08531ff130bcc8181d9294a66e25010f48eefb97
-Author: Michael Buesch <mb@bu3sch.de>
-Date:   Wed Mar 7 23:01:08 2007 +0100
+> KEVENT_* constants and functions are really really confusing when the
+> "kevent" subsystem is being discussed on netdev all the time. They're
+> also quite meaningless, please rename them to something like
+> AT76_DEVEVENT_* or whatever. While at that, the kevent() function really
+> could use splitting up into sub-functions, it's a pretty large mess.
 
-    ssb: Don't freeze unregistered devices.
+I agree.  The purpose is likely to avoid scheduling too many different tasks,
+but I don't think it's worth the trouble.  In fact, it would be better if the
+driver had smaller tasks that would all compete with other scheduled tasks.  It
+would be fair to others.
 
-    Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> The same about constant names goes for PM_* constants since linux/pm.h
+> defines a whole bunch of PM_* constants too (I initially thought you
+> were using those and was really confused what the driver does!)
 
-diff --git a/drivers/ssb/core.c b/drivers/ssb/core.c
-index 2facada..c956edf 100644
---- a/drivers/ssb/core.c
-+++ b/drivers/ssb/core.c
-@@ -163,6 +163,8 @@ int ssb_devices_freeze(struct ssb_bus *bus)
- 		dev = &(bus->devices[i]);
- 		if (!dev->dev->driver)
- 			continue;
-+		if (!device_is_registered(dev->dev))
-+			continue;
- 		drv = drv_to_ssb_drv(dev->dev->driver);
- 		if (drv && drv->suspend) {
- 			err = drv->suspend(dev, state);
-@@ -185,6 +187,8 @@ int ssb_devices_thaw(struct ssb_bus *bus)
- 		dev = &(bus->devices[i]);
- 		if (!dev->dev->driver)
- 			continue;
-+		if (!device_is_registered(dev->dev))
-+			continue;
- 		drv = drv_to_ssb_drv(dev->dev->driver);
- 		if (drv && drv->resume) {
- 			err = drv->resume(dev);
+Good catch.
 
-Larry
+> Having a whole bunch of module parameters that only set initial settings
+> for things you later configure with iwconfig seems pretty useless but if
+> you really think that they're absolutely required I don't care too much.
 
+I agree, they are not needed.  It should be verified that all parameters can be
+set using iwconfig or iwpriv.  Maybe "debug" should stay.
 
---------------020006020605050908090003
-Content-Type: text/plain;
- name="usb_freeze"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="usb_freeze"
+> PRIV_IOCTL_SET_MONITOR_MODE is wrong as far as I can tell, there's
+> "iwconfig ... mode monitor" which you should use instead. (Btw, why are
+> the priv ioctls spaced so strangely??)
 
-commit 08531ff130bcc8181d9294a66e25010f48eefb97
-Author: Michael Buesch <mb@bu3sch.de>
-Date:   Wed Mar 7 23:01:08 2007 +0100
+The code is quite old and may predate monitor mode.  Reference to Kismet means
+that the driver was meant to emulate an old unofficial patch to orinoco driver.
 
-    ssb: Don't freeze unregistered devices.
-    
-    Signed-off-by: Michael Buesch <mb@bu3sch.de>
+On the other hand, the same setting selects whether to enable prism header, so
+that part should probably stay.
 
-diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-index 2facada..c956edf 100644
---- a/drivers/ssb/main.c
-+++ b/drivers/ssb/main.c
-@@ -163,6 +163,8 @@ int ssb_devices_freeze(struct ssb_bus *bus)
- 		dev = &(bus->devices[i]);
- 		if (!dev->dev->driver)
- 			continue;
-+		if (!device_is_registered(dev->dev))
-+			continue;
- 		drv = drv_to_ssb_drv(dev->dev->driver);
- 		if (drv && drv->suspend) {
- 			err = drv->suspend(dev, state);
-@@ -185,6 +187,8 @@ int ssb_devices_thaw(struct ssb_bus *bus)
- 		dev = &(bus->devices[i]);
- 		if (!dev->dev->driver)
- 			continue;
-+		if (!device_is_registered(dev->dev))
-+			continue;
- 		drv = drv_to_ssb_drv(dev->dev->driver);
- 		if (drv && drv->resume) {
- 			err = drv->resume(dev);
+> There doesn't seem to be a need to include rtnetlink.h, what made you
+> think you'd need rtnl_lock()?
+> "putting this inside rtnl_lock() - rtnl_unlock() hangs modprobe" is
+> pretty obvious -- register_netdev does rtnl_lock()! And don't use
+> unregister_netdevice(), use unregister_netdev().
 
+I see Guido has done it already.
 
---------------020006020605050908090003--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+> Your init_new_device() function can return an error but those errors are
+> not always checked, maybe a printk would be appropriate. Also,
+> generally, subfunctions are allowed to return errors directly, i.e.
+> instead of returning -1 return -ENODEV from there and just hand it up
+> from the caller.
+
+Agreed.
+
+> at76c503_do_probe could use splitting into two functions, the two huge
+> parts of the if, if only to unindent the whole code a bit and get it to
+> adhere to 80 chars/line instead of 99.
+
+Actually, there is some code duplication between the branches.  It would be
+great to avoid it first.  I also see that the code overuses debug printing.  I
+prefer to add it to fix a specific problem.  Keeping large portions of debug
+code just in case is probably not a good idea, since they reduce readability of
+the code.
+
+> "Use our own dbg macro" but mabye use dev_dbg?
+> Same for err() (which I didn't even know existed..) how about dev_err()?
+
+I think the driver uses USB functions here.  I think it's OK for a USB driver. 
+But the own dbg macro should probably be avoided.
+
+> static u8 snapsig/rfc1042sig/bc_addr/off_addr/hw_rates/channel_frequency
+> etc etc etc don't belong into a header file.
+
+Absolutely!  But since it's mixed with definitions, perhaps the whole code could
+be merged into at76_usb.c.  It's not like any other driver will ever include
+that header.  And adding 30k to 200k won't change much.
+
+> Some other (mostly style) issues:
+>  * kernel code prefers a space before the brace in
+>    "struct at76c503_command{" et al.
+>  * both your header and code files contain lots of trailing whitespace
+>  * kernel code prefers no space between function names and the opening
+>    parenthesis
+
+I think Lindent (from scripts directory in Linux sources) should be run on the
+driver.  Better yet, "Linudent --ignore-newlines).
+
+>  * use compare_ether_addr() instead of memcmp (look for ETH_ALEN, lots
+>    of places)
+
+OK
+
+>  * all the PROC ===== stuff looks pretty strange to my eyes but hey
+>    that's just me I guess :)
+
+That must be style from a language where functions are called procedures.  Sure,
+it must be removed.
+
+>  * why does at76c503_get_fw_info take such a huge number of parameters?
+>    Couldn't you pass in a struct at76c503 * and have that filled?
+
+Good idea.
+
+>  * struct reg_domain should be tab-indented.
+
+Lindent should take care of it.
+
+>  * don't use typedefs for structs
+
+All that code is prism header implementation from linux-wlan-ng, but I
+understand that it's a bad excuse.  Besides, one of the typedefs is not used.
+
+>  * attribute packed on members of a struct is pretty weird
+
+Another ugly legacy of linux-wlan-ng.
+
+>  * the various frame definitions like struct ieee802_11_beacon_data are
+>    useless, the same stuff is in struct ieee80211_mgmt (at least on
+>    wireless dev kernel, that might not be true on other kernels?)
+
+Yes, this needs to be done, but it requires some work.  The names are different.
+
+>  * hex2str wants proper indentation
+>  * get_hw_config has weird indentation
+
+Lindent will fix it.
+
+>  * wait_completion sounds far too generic (wait_for_completion in
+>    completion.h!)
+
+Yes, many function should be renamed.
+
+> Hey, I need to go but that probably gives you a lot to review...
+
+Thanks!
+
+I would also add:
+
+* useless macros (NUM_EP, EP)
+* macros for locking should be avoided
+* istate should be accessed using atomic_set/atomic_read; locking is overkill
+
+--
+Regards,
+Pavel Roskin
