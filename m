@@ -1,64 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48665 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753326AbXC2LHQ (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:60339
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751647AbXCDM63 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2007 07:07:16 -0400
-Subject: Re: [patch 4/5] IEEE 802.11n management action frame data   structures
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: mohamed <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-In-Reply-To: <20070326164503.f276cd71.randy.dunlap@oracle.com>
-References: <1174909342.1364.60.camel@dell-4965.jf.intel.com>
-	 <20070326164503.f276cd71.randy.dunlap@oracle.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7JweSLo5aQbRs0I5vVT8"
-Date: Wed, 28 Mar 2007 21:12:10 +0200
-Message-Id: <1175109131.5151.92.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 4 Mar 2007 07:58:29 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] bcm43xx: do not rebuild when kernel version changes
+Date: Sun, 4 Mar 2007 13:57:32 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <45ea5f3c.mlfmHoZ11OcoG/sT%Larry.Finger@lwfinger.net>
+In-Reply-To: <45ea5f3c.mlfmHoZ11OcoG/sT%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200703041357.33238.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday 04 March 2007 06:55, Larry Finger wrote:
+> From: Sam Ravnborg <sam@ravnborg.org>
+> 
+> In bcm43xx_ethtool, UTS_RELEASE is used. Replacing this with utsname()->release
+> avoids rebuilding this module each time the kernel version changes.
+> 
+> Signed-off-by: Sam Ravnborg <sam@ravnborg.org>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> 
+> John,
+> 
+> As the ethtool removal was NACKed by Jeff, we need to do this one.
 
---=-7JweSLo5aQbRs0I5vVT8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+What the fuck, why?
 
-On Mon, 2007-03-26 at 16:45 -0700, Randy Dunlap wrote:
+> Larry
+> 
+> ===
+> 
+> diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c b/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
+> index c947025..d2df6a0 100644
+> --- a/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
+> +++ b/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
+> @@ -32,7 +32,7 @@
+>  #include <linux/netdevice.h>
+>  #include <linux/pci.h>
+>  #include <linux/string.h>
+> -#include <linux/utsrelease.h>
+> +#include <linux/utsname.h>
+>  
+>  
+>  static void bcm43xx_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info)
+> @@ -40,7 +40,7 @@ static void bcm43xx_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *
+>  	struct bcm43xx_private *bcm = bcm43xx_priv(dev);
+>  
+>  	strncpy(info->driver, KBUILD_MODNAME, sizeof(info->driver));
+> -	strncpy(info->version, UTS_RELEASE, sizeof(info->version));
+> +	strncpy(info->version, utsname()->release, sizeof(info->version));
+>  	strncpy(info->bus_info, pci_name(bcm->pci_dev), ETHTOOL_BUSINFO_LEN);
+>  }
+>  
+> -
+> 
+> 
+> 
 
-> > +struct ieee802_11_addba_param {
-> > +	 __le16 reserved:1;
-> > +	 __le16 backPolicy:1;
-> > +	 __le16 tid:4;
-> > +	 __le16 bufSize:10;
-> > +} __attribute__ ((packed));
-> > +
-> > +struct ieee80211_delba_param {
-> > +	 __le16 reserved:11;
-> > +	 __le16 intiator:1;
-> > +	 __le16 tid:4;
-> > +}__attribute__ ((packed));
->=20
-> These bitfields are all local to one machine, not transported
-> across a network to systems where the bitfields may be represented
-> differently?
-
-You wish. No, these bitfields need to die, this is actually part of the
-"wire" format.
-
-johannes
-
---=-7JweSLo5aQbRs0I5vVT8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGCr4K/ETPhpq3jKURAmEfAJ9eew83sAjlnkC2TtzCFwefUVUH3QCgi4rK
-Fr0a03nsRHuIYKeJSC3s7ho=
-=+WLA
------END PGP SIGNATURE-----
-
---=-7JweSLo5aQbRs0I5vVT8--
-
+-- 
+Greetings Michael.
