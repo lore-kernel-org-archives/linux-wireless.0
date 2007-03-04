@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:28215 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932744AbXCKVl7 (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:47091 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750913AbXCDKX5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Mar 2007 17:41:59 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Daniel Drake <dsd@gentoo.org>
-Subject: Re: [PATCH RESEND] zd1211rw-mac80211: changed Kconfig
-Date: Sun, 11 Mar 2007 17:41:46 -0400
-Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, kune@deine-taler.de,
-	Michael Buesch <mb@bu3sch.de>
-References: <20070311191931.752B67B409F@zog.reactivated.net>
-In-Reply-To: <20070311191931.752B67B409F@zog.reactivated.net>
+	Sun, 4 Mar 2007 05:23:57 -0500
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 90E238CAD2
+	for <linux-wireless@vger.kernel.org>; Sun,  4 Mar 2007 11:23:55 +0100 (CET)
+Received: from flatcat.home.warmcat.com (flatcat [192.168.0.77])
+	by armbox7.home.warmcat.com (Postfix) with ESMTP id 18009F521
+	for <linux-wireless@vger.kernel.org>; Sun,  4 Mar 2007 10:25:00 +0000 (UTC)
+Received: from [127.0.0.1] (flatcat.home.warmcat.com [127.0.0.1])
+	by flatcat.home.warmcat.com (Postfix) with ESMTP id 5910CB2807A
+	for <linux-wireless@vger.kernel.org>; Sun,  4 Mar 2007 10:23:54 +0000 (GMT)
+Message-ID: <45EA9E39.6080706@warmcat.com>
+Date: Sun, 04 Mar 2007 10:23:53 +0000
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart24976746.hzOsMpKG4z";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200703111741.51440.flamingice@sourmilk.net>
+To: linux-wireless@vger.kernel.org
+Subject: Question about PRISM2 header rate field
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart24976746.hzOsMpKG4z
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Hi folks -
 
-On Sunday 11 March 2007 15:19, Daniel Drake wrote:
-> Changed the reference to Devicescape stack to mac80211.
->
-I referred to Devicescape originally because the only other driver that had=
-=20
-both softmac and devicescape versions was bcm43xx, so I copied "(DeviceScap=
-e=20
-stack)" in order to be consistent. I would prefer that there be one patch t=
-o=20
-replace both instances of "(DeviceScape stack)" with "(mac80211 stack)".
+I can decode captured Monitor Mode PRISM2 headers in a reasonable way, 
+except for the rate field.
 
-=2DMichael Wu
+On a capture of a broadcast which I believe was at 54Mbps, I see the 
+PRISM2 / ieee80211_frame_info field "datarate" is set to 0xf0, or 240 
+decimal.  I looked around at the various different ways of talking about 
+tx rate in the stack and drivers, but none that I found use 0xf0 for 
+54Mbps.  Is it 48Mbps in units of 200kHz?  Or 54Mbps in units of 225kHz 
+(!!)  Or...?
 
---nextPart24976746.hzOsMpKG4z
-Content-Type: application/pgp-signature
+I am trying to reissue this captured packet using the management 
+interface (which I can now conjure up) with a rate that I can control, 
+but I did not find any information on the coding for this field.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBF9HefT3Oqt9AH4aERAsjzAJ9AkCKeYMSAQSkiEMn4GeLJMc+UxgCdHQ2x
-N7/zsoiSJJLhctATMSRJ5G8=
-=PNgy
------END PGP SIGNATURE-----
-
---nextPart24976746.hzOsMpKG4z--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-Andy
