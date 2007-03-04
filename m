@@ -1,38 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:53218
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752914AbXCLUyh (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50544 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752545AbXCDXwu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2007 16:54:37 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [RFT] [PATCH] bcm43xx: ACI fixes
-Date: Mon, 12 Mar 2007 21:53:34 +0100
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <20070312010420.353a59c0@localhost> <20070312070558.07488359@localhost> <45F5B805.8040401@lwfinger.net>
-In-Reply-To: <45F5B805.8040401@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200703122153.34684.mb@bu3sch.de>
+	Sun, 4 Mar 2007 18:52:50 -0500
+Subject: Re: [patch] at76_usb wireless driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Guido Guenther <agx@sigxcpu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070304020920.b5lej3sw0oogwg4w@webmail.spamcop.net>
+References: <20070110145724.GA4171@bogon.ms20.nix>
+	 <20070223221230.GA9965@bogon.ms20.nix>
+	 <20070303150029.GA19940@bogon.ms20.nix>
+	 <1172934588.4966.46.camel@johannes.berg>
+	 <1172939037.4966.97.camel@johannes.berg>
+	 <20070304020920.b5lej3sw0oogwg4w@webmail.spamcop.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3CwCtEHlzazTaAqGsRyY"
+Date: Mon, 05 Mar 2007 00:52:23 +0100
+Message-Id: <1173052343.6131.24.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 12 March 2007 21:28, Larry Finger wrote:
-> Stefano Brivio wrote:
-> > On Mon, 12 Mar 2007 00:51:19 -0500
-> > 
-> > Well, wait. I'd want to see some performance improvements before the patch
-> > is applied. That's why I didn't send it to John and put RFT in the
-> > subject. Are there any?
-> 
-> No, I don't see any significant difference in RX or TX throughput with this patch. So far, I have
-> only tested on the 4311. Results for the 4306 and 4318 will come later.
 
-Not that interference mitigation can not improve the signal,
-if there is no interference disturbing it. ;) It _is_ already
-best possible signal, then.
+--=-3CwCtEHlzazTaAqGsRyY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Greetings Michael.
+On Sun, 2007-03-04 at 02:09 -0500, Pavel Roskin wrote:
+
+> > PRIV_IOCTL_SET_MONITOR_MODE is wrong as far as I can tell, there's
+> > "iwconfig ... mode monitor" which you should use instead. (Btw, why are
+> > the priv ioctls spaced so strangely??)
+>=20
+> The code is quite old and may predate monitor mode.  Reference to Kismet =
+means
+> that the driver was meant to emulate an old unofficial patch to orinoco d=
+river.
+>=20
+> On the other hand, the same setting selects whether to enable prism heade=
+r, so
+> that part should probably stay.
+
+Wouldn't you just always have prism headers in monitor mode? All cards I
+know do that iirc. Or well, radiotap seems to be the format of fashion
+these days. I don't particularly like either :)
+
+> > static u8 snapsig/rfc1042sig/bc_addr/off_addr/hw_rates/channel_frequenc=
+y
+> > etc etc etc don't belong into a header file.
+>=20
+> Absolutely!  But since it's mixed with definitions, perhaps the whole cod=
+e could
+> be merged into at76_usb.c.  It's not like any other driver will ever incl=
+ude
+> that header.  And adding 30k to 200k won't change much.
+
+Yeah, still, it's pretty weird to find that in a header file. It should
+be pretty easy to move it too ;)
+
+> > Some other (mostly style) issues:
+> >  * kernel code prefers a space before the brace in
+> >    "struct at76c503_command{" et al.
+> >  * both your header and code files contain lots of trailing whitespace
+> >  * kernel code prefers no space between function names and the opening
+> >    parenthesis
+>=20
+> I think Lindent (from scripts directory in Linux sources) should be run o=
+n the
+> driver.  Better yet, "Linudent --ignore-newlines).
+
+Not sure. I find that it messes up some things too. Maybe run Lindent,
+diff the original vs. the result and take the hunks you like.
+
+> >  * don't use typedefs for structs
+>=20
+> All that code is prism header implementation from linux-wlan-ng, but I
+> understand that it's a bad excuse.  Besides, one of the typedefs is not u=
+sed.
+
+Heh, I didn't really check if they were used.
+
+> >  * the various frame definitions like struct ieee802_11_beacon_data are
+> >    useless, the same stuff is in struct ieee80211_mgmt (at least on
+> >    wireless dev kernel, that might not be true on other kernels?)
+>=20
+> Yes, this needs to be done, but it requires some work.  The names are dif=
+ferent.
+
+Yeah, it shouldn't take long either, just remove the definitions that
+are there and fix the compile errors :P
+
+> * istate should be accessed using atomic_set/atomic_read; locking is over=
+kill
+
+atomic operations can be quite expensive too, but you probably know
+better if you need it or not.
+
+johannes
+
+--=-3CwCtEHlzazTaAqGsRyY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF61u2/ETPhpq3jKURAl/mAJ96M/qaA1mlXW5XIv15jZo3ynk+bACfSAS2
+sznCIPzqcY4zeLi22i/g1zg=
+=/5XT
+-----END PGP SIGNATURE-----
+
+--=-3CwCtEHlzazTaAqGsRyY--
+
