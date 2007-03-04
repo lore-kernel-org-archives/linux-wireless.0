@@ -1,55 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48629 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992432AbXCBN3g (ORCPT
+Received: from honk1.physik.uni-konstanz.de ([134.34.140.224]:55544 "EHLO
+	honk1.physik.uni-konstanz.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751809AbXCDQaI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2007 08:29:36 -0500
-Subject: [PATCH] add privid field to wiphy
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain
-Date: Fri, 02 Mar 2007 14:29:10 +0100
-Message-Id: <1172842150.3482.41.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 4 Mar 2007 11:30:08 -0500
+Date: Sun, 4 Mar 2007 16:57:11 +0100
+From: Guido Guenther <agx@sigxcpu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [patch] at76_usb wireless driver
+Message-ID: <20070304155711.GA11889@bogon.ms20.nix>
+References: <20070110145724.GA4171@bogon.ms20.nix> <20070223221230.GA9965@bogon.ms20.nix> <20070303150029.GA19940@bogon.ms20.nix> <1172934588.4966.46.camel@johannes.berg> <1172935117.4966.54.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1172935117.4966.54.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While working on more sysfs removal (moving all the per-netdev stuff as
-well) I noticed that we have no easy way to tell, given a netdev,
-whether it belongs to a wiphy mac80211 controls or maybe somebody else.
-
-This patch adds a void *privid field to the wiphy that you can assign to
-something global in the driver/stack module to find out whether the
-wiphy belongs to you or not when given a netdev with ieee80211_ptr, a
-wireless dev or a wiphy by some other code.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
----
-netdevs aren't notified themselves if the name changes but we can
-install a notifier chain handler for that, but then need to find out
-whether the netdev is ours or not :)
-
----
- include/net/wireless.h |    7 +++++++
- 1 file changed, 7 insertions(+)
-
---- wireless-dev.orig/include/net/wireless.h	2007-03-02 14:24:02.184333268 +0100
-+++ wireless-dev/include/net/wireless.h	2007-03-02 14:25:46.634333268 +0100
-@@ -23,6 +23,13 @@ struct wiphy {
- 	/* permanent MAC address */
- 	u8 perm_addr[ETH_ALEN];
- 
-+	/* If multiple wiphys are registered and you're handed e.g.
-+	 * a regular netdev with assigned ieee80211_ptr, you won't
-+	 * know whether it points to a wiphy your driver has registered
-+	 * or not. Assign this to something global to your driver to
-+	 * help determine whether you own this wiphy or not. */
-+	void *privid;
-+
- 	/* fields below are read-only, assigned by cfg80211 */
- 
- 	/* the item in /sys/class/ieee80211/ points to this,
-
-
+Hi Johannes,
+On Sat, Mar 03, 2007 at 04:18:36PM +0100, Johannes Berg wrote:
+> Quick comments on this driver.
+thanks a lot for reviewing the code! These issues (except for (4)) are
+already adressed in current git, Pavel fixed some more.
+Cheers,
+ -- Guido
