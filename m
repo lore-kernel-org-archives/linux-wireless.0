@@ -1,82 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2408 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933602AbXCUAoz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2007 20:44:55 -0400
-Date: Tue, 20 Mar 2007 20:22:22 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: EEPROM_93CX6 placement (was Re: 2.6.21-rc4-mm1)
-Message-ID: <20070321002222.GA4110@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from server8.tchmachines.com ([216.180.241.250]:56647 "EHLO
+	server8.tchmachines.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751212AbXCDFTF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2007 00:19:05 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Helge Deller <deller@gmx.de>
+Subject: Re: [PATCH] p54 various cleanups
+Date: Sun, 4 Mar 2007 00:18:55 -0500
+Cc: linux-wireless@vger.kernel.org
+References: <200702272219.58919.deller@gmx.de> <200702271826.07149.flamingice@sourmilk.net> <200703021945.20954.deller@gmx.de>
+In-Reply-To: <200703021945.20954.deller@gmx.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1563417.JtkKulCAIT";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703040019.00159.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Comments?  Patches?
+--nextPart1563417.JtkKulCAIT
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
------ Forwarded message from Randy Dunlap <randy.dunlap@oracle.com> -----
+On Friday 02 March 2007 13:45, Helge Deller wrote:
+> -static unsigned int tx_ring_size =3D 16;
+> -static unsigned int rx_ring_size =3D 16;
+> -static int debug =3D 1;
+> +static unsigned int tx_ring_size __read_mostly =3D 16;
+> +static unsigned int rx_ring_size __read_mostly =3D 16;
+> +static int debug __read_mostly =3D 1;
+>
+Hm, sure why not..
 
-> Date: 	Tue, 20 Mar 2007 16:49:23 -0700
-> From: Randy Dunlap <randy.dunlap@oracle.com>
-> To: Andrew Morton <akpm@linux-foundation.org>
-> Cc: linux-kernel@vger.kernel.org
-> Subject: Re: 2.6.21-rc4-mm1
-> In-Reply-To: <20070319205623.299d0378.akpm@linux-foundation.org>
-> Organization: Oracle Linux Eng.
-> X-Mailer: Sylpheed 2.3.1 (GTK+ 2.8.10; x86_64-unknown-linux-gnu)
-> X-Whitelist: TRUE
-> X-Whitelist: TRUE
-> X-Brightmail-Tracker: AAAAAQAAAAI=
-> Precedence: bulk
-> X-Mailing-List: 	linux-kernel@vger.kernel.org
-> X-Spam-Status: No, score=-2.6 required=3.0 tests=AWL,BAYES_00,SPF_HELO_PASS,
-> 	SPF_PASS,UNPARSEABLE_RELAY autolearn=ham version=3.1.3-gr0
-> X-Spam-Checker-Version: SpamAssassin 3.1.3-gr0 (2006-06-01) on 
-> 	ra.tuxdriver.com
-> 
-> On Mon, 19 Mar 2007 20:56:23 -0800 Andrew Morton wrote:
-> 
-> > 
-> > Temporarily at
-> > 
-> >   http://userweb.kernel.org/~akpm/2.6.21-rc4-mm1/
-> > 
-> > Will appear later at
-> > 
-> >   ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21-rc4/2.6.21-rc4-mm1/
-> 
-> 
-> I think that this:
-> 
-> config EEPROM_93CX6
-> 	tristate "EEPROM 93CX6 support"
-> 	---help---
-> 	This is a driver for the EEPROM chipsets 93c46 and 93c66.
-> 	The driver supports both read as well as write commands.
-> 
-> should not be in lib/Kconfig.  lib/ is not for drivers.
-> or (simpler) s/driver/library/
-> but I think I'd rather see it in drivers/misc/.
-> 
-> 
-> and the help text needs to be indented 2 more spaces...
-> 
-> ---
-> ~Randy
-> boilerplate:
-> *** Remember to use Documentation/SubmitChecklist when testing your code ***
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> -const u8 rtl8225_agc[] =3D {
+> +const const u8 rtl8225_agc[] =3D {
+What does const const do?
 
------ End forwarded message -----
+> -static const char *rfs[] =3D {
+> +static const char * const rfs[] =3D {
+?
 
--- 
-John W. Linville
-linville@tuxdriver.com
+BTW, you should have an updated summary for this patch.
+
+Rest of the patch looks okay to me.=20
+
+Thanks,
+=2DMichael Wu
+
+--nextPart1563417.JtkKulCAIT
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBF6lbET3Oqt9AH4aERAhvPAKC5sYKeUWE8paNFPEEzY1JJtfie/ACfcOnM
++lrebfbO+/v/8gfHybEoSMk=
+=mo+1
+-----END PGP SIGNATURE-----
+
+--nextPart1563417.JtkKulCAIT--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
