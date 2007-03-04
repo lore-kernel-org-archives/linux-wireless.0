@@ -1,41 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:8931 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934182AbXCVSYG (ORCPT
+Received: from server8.tchmachines.com ([216.180.241.250]:57204 "EHLO
+	server8.tchmachines.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751427AbXCDF2H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Mar 2007 14:24:06 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so779276uga
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Mar 2007 11:24:05 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: bug in rt2x00debug_deregister?
-Date: Thu, 22 Mar 2007 19:23:39 +0100
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <20070322174731.GG3860@tuxdriver.com>
-In-Reply-To: <20070322174731.GG3860@tuxdriver.com>
+	Sun, 4 Mar 2007 00:28:07 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] bcm43xx: remove ethtool
+Date: Sun, 4 Mar 2007 00:04:48 -0500
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+References: <45ea1a34.Lf4EKmMy+KAmSkH0%Larry.Finger@lwfinger.net> <45EA3D21.3080203@lwfinger.net> <45EA43EF.1080009@garzik.org>
+In-Reply-To: <45EA43EF.1080009@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200703221923.39680.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart3058243.NkWeZE2nZr";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703040004.57974.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+--nextPart3058243.NkWeZE2nZr
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-> http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=233345
-> http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=233434
-> 
-> Seeing some oopsen w/ the rt2x00 driver currently in Fedora rawhide.
-> That version does not have the most recent round of patches I merged
-> to wireless-dev a couple of days ago, FWIW.
+On Saturday 03 March 2007 22:58, Jeff Garzik wrote:
+> It's a highly standardized interface that provides information that's
+> either impossible or highly difficult to obtain elsewhere.
+>
+> If you are a userland process querying a network interface, that's the
+> only way to know which driver is attached, or the only way to build an
+> association between a PCI device and a network interface.
+>
+FWIW, on my system:
+/sys/class/net/eth1/device -> /sys/devices/pci0000:00/0000:00:10.4/usb1/1-7/1-7:1.0
+/sys/class/net/eth1/device/bus -> /sys/bus/usb
+/sys/class/net/eth1/device/driver -> /sys/bus/usb/drivers/zd1211rw_mac80211
 
-I need to doublecheck, but I believe the patch for those issues should
-be in the current wireless-dev tree.
+And the other way around:
+/sys/devices/pci0000:00/0000:00:10.4/usb1/1-7/1-7:1.0/net:eth1
+/sys/devices/pci0000:00/0000:00:10.4/usb1/1-7/1-7:1.0/net:wmaster0
 
-> I think it would be great if Ivo or some other rt2x00 developers
-> would register in Red Hat's bugzilla so that I can CC: them on bugs --
-> please let me know if anyone is amenable to that.
+Is this considered highly difficult or not standardized enough?
 
-I have just registered.
+-Michael Wu
 
-Ivo
+--nextPart3058243.NkWeZE2nZr
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBF6lN5T3Oqt9AH4aERAjO5AKDWGlxM2Bw36/Y0s84BODmUBU4spwCg0iwC
+PvK+BGxoQpKb8eNJEdShlFg=
+=RKnH
+-----END PGP SIGNATURE-----
+
+--nextPart3058243.NkWeZE2nZr--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
