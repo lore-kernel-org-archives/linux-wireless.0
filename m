@@ -1,34 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3031 "EHLO ra.tuxdriver.com"
+Received: from waste.org ([66.93.16.53]:35683 "EHLO waste.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965297AbXCFQf5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2007 11:35:57 -0500
-Date: Tue, 6 Mar 2007 11:11:43 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: bcm43xx-dev@berlios.de, wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Pull the patch sent under heading "[PATCH] bcm43xx: Fix typo in B5PHY init specifications"
-Message-ID: <20070306161143.GA553@tuxdriver.com>
-References: <45EBA6FB.4040602@lwfinger.net>
+	id S1751669AbXCEUIb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2007 15:08:31 -0500
+Date: Mon, 5 Mar 2007 13:55:30 -0600
+From: Matt Mackall <mpm@selenic.com>
+To: Greg KH <greg@kroah.com>
+Cc: Theodore Tso <tytso@mit.edu>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	yi.zhu@intel.com, jketreno@linux.intel.com,
+	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
+Subject: Re: Recent wireless breakage (ipw2200, iwconfig, NetworkManager)
+Message-ID: <20070305195530.GM23311@waste.org>
+References: <20070304220857.GH23311@waste.org> <1173051564.6131.13.camel@johannes.berg> <20070305002550.GI23311@waste.org> <20070305011729.GB7681@kroah.com> <20070305125950.GC26781@thunk.org> <20070305185813.GA31465@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <45EBA6FB.4040602@lwfinger.net>
+In-Reply-To: <20070305185813.GA31465@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 04, 2007 at 11:13:31PM -0600, Larry Finger wrote:
-
-> Please pull the patch referenced in the subject. It completely kills my BCM4306 with phy->revision == 1.
+On Mon, Mar 05, 2007 at 10:58:13AM -0800, Greg KH wrote:
+> Ok, how about the following patch.  Is it acceptable to everyone?
 > 
-> Joe Jezak and I will have to sort this one out.
+> -	  If you are using a distro that was released in 2006 or later,
+> -	  it should be safe to say N here.
+> +	  If you are using an OpenSuSE, Gentoo, Ubuntu, or Fedora
+> +	  release from 2007 or later, it should be safe to say N here.
+> +
+> +	  If you are using Debian or other distros that are slow to
+> +	  update HAL, please say Y here.
 
-Just to be clear, I interpret this to mean "do not apply that patch".
+What HAL version do you think Debian ought to have, pray tell? And
+what the hell version do those other distros have?
 
-"Pull" is often used to mean "take the patch and apply it" as in "git pull".
+The last HAL release was 0.5.8 on 11-Sep-2006. It showed up in
+Debian/unstable on 2-Oct. There have been six Debian bugfix releases,
+the most recent on 12-Feb.
 
-Let me know if I'm interpreting you incorrectly.
+http://people.freedesktop.org/~david/dist/
+http://packages.debian.org/changelogs/pool/main/h/hal/hal_0.5.8.1-6.1/changelog
 
-John
+The last NetworkManager is 0.6.4 released 13-Jul-2006. It showed up in
+Debian/unstable on 8-Aug. There have been five bugfix releases, the
+most recent on 30-Nov.
+
+http://ftp.gnome.org/pub/GNOME/sources/NetworkManager/0.6/
+http://packages.debian.org/changelogs/pool/main/n/network-manager/network-manager_0.6.4-6/changelog
+
+Debian is NOT the problem.
+
 -- 
-John W. Linville
-linville@tuxdriver.com
+Mathematics is the supreme nostalgia of our time.
