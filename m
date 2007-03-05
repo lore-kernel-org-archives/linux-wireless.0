@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:49002 "EHLO silver.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934317AbXCWUno (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 16:43:44 -0400
-From: Jiri Benc <jbenc@suse.cz>
-To: "John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20070323214400.642621638.midnight@suse.cz>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 17/19] mac80211: Properly kill tasklets before shutdown
-Message-Id: <20070323204500.356AC48590@silver.suse.cz>
-Date: Fri, 23 Mar 2007 21:45:00 +0100 (CET)
+Received: from fencepost.gnu.org ([199.232.76.164]:37178 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750876AbXCEDdj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2007 22:33:39 -0500
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HO3vY-0003la-NK
+	for linux-wireless@vger.kernel.org; Sun, 04 Mar 2007 22:31:56 -0500
+Subject: Re: [patch] at76_usb wireless driver
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Guido Guenther <agx@sigxcpu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1173052343.6131.24.camel@johannes.berg>
+References: <20070110145724.GA4171@bogon.ms20.nix>
+	 <20070223221230.GA9965@bogon.ms20.nix>
+	 <20070303150029.GA19940@bogon.ms20.nix>
+	 <1172934588.4966.46.camel@johannes.berg>
+	 <1172939037.4966.97.camel@johannes.berg>
+	 <20070304020920.b5lej3sw0oogwg4w@webmail.spamcop.net>
+	 <1173052343.6131.24.camel@johannes.berg>
+Content-Type: text/plain
+Date: Sun, 04 Mar 2007 22:33:34 -0500
+Message-Id: <1173065614.2670.20.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Buesch <mb@bu3sch.de>
+On Mon, 2007-03-05 at 00:52 +0100, Johannes Berg wrote:
+> Wouldn't you just always have prism headers in monitor mode? All cards I
+> know do that iirc. Or well, radiotap seems to be the format of fashion
+> these days. I don't particularly like either :)
 
-We need to do tasklet_kill() on any tasklet on unregister
-to make sure the tasklet is not running _and_ scheduled anymore.
-(tasklet_disable() only ensures it's not running anymore).
+Sounds good.  Radiotap is more flexible and better defined, but just
+leaving prism headers for now would be fine.
 
-This fixes the tasklet related crash that was reported some time ago.
+> Not sure. I find that it messes up some things too. Maybe run Lindent,
+> diff the original vs. the result and take the hunks you like.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: Jiri Benc <jbenc@suse.cz>
+Yes, something like that.
 
----
+> > * istate should be accessed using atomic_set/atomic_read; locking is overkill
+> 
+> atomic operations can be quite expensive too, but you probably know
+> better if you need it or not.
 
- net/mac80211/ieee80211.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Actually, it looks like we don't need them either.  Atomic operations
+are useful for counters or generally when data is read and written at
+once.  Simply reading and writing integers is atomic by design of any
+sane and supported CPU.
 
-baf56723a69d16311ad09db5ecee1f3e4c4d7ca1
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index fccb0fe..fb2ce3d 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -4728,8 +4728,8 @@ void ieee80211_unregister_hw(struct ieee
- 	struct ieee80211_sub_if_data *sdata, *tmp;
- 	int i;
- 
--	tasklet_disable(&local->tasklet);
--	/* TODO: skb_queue should be empty here, no need to do anything? */
-+	tasklet_kill(&local->tx_pending_tasklet);
-+	tasklet_kill(&local->tasklet);
- 
- 	rtnl_lock();
- 	local->reg_state = IEEE80211_DEV_UNREGISTERED;
+The istate locks were causing complains from the lock checkers, and my
+attempt to replace them with atomic operations silenced those
+complaints.  But It looks like we just need to drop those locks.  They
+were put there in a hurry without due checking, they don't address any
+problem, but they may create one.
+
 -- 
-1.3.0
+Regards,
+Pavel Roskin
 
