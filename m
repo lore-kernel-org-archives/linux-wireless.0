@@ -1,77 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38507 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933948AbXC0CSH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2007 22:18:07 -0400
-Subject: Re: [PATCH 2/5] mac80211: fix iwlist wlanX retry behavior
-From: Hong Liu <hong.liu@intel.com>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070323191145.2b4475d6@griffin.suse.cz>
-References: <1174015699.3408.43.camel@devlinux-hong>
-	 <20070323191145.2b4475d6@griffin.suse.cz>
-Content-Type: text/plain
-Date: Tue, 27 Mar 2007 10:07:20 +0800
-Message-Id: <1174961240.3664.18.camel@napa-sdv1>
-Mime-Version: 1.0
+Received: from wr-out-0506.google.com ([64.233.184.230]:15164 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751060AbXCEAqi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2007 19:46:38 -0500
+Received: by wr-out-0506.google.com with SMTP id 37so1174726wra
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Mar 2007 16:46:37 -0800 (PST)
+Message-ID: <5640c7e00703041646w32d7bc77s33d1fca4755a1b78@mail.gmail.com>
+Date: Mon, 5 Mar 2007 13:46:36 +1300
+From: "Ian McDonald" <ian.mcdonald@jandi.co.nz>
+To: "Matt Mackall" <mpm@selenic.com>
+Subject: Re: Recent wireless breakage (ipw2200, iwconfig, NetworkManager)
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Greg KH" <greg@kroah.com>, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, yi.zhu@intel.com, jketreno@linux.intel.com,
+	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
+In-Reply-To: <20070305002550.GI23311@waste.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <20070304220857.GH23311@waste.org>
+	 <1173051564.6131.13.camel@johannes.berg>
+	 <20070305002550.GI23311@waste.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwconfig relies on what mac80211 returned to display the retry info when
-it sets retry->flag = 0.
-So we can't just return -EINVAL when retry->flag == 0.
+On 3/5/07, Matt Mackall <mpm@selenic.com> wrote:
+> > This is due to the recent sysfs restructuring I think. IIRC the fix is
+> > to upgrade hal to a current git version.
+>
+> If that's the cause, the fix is to back out whatever was done to break
+> userspace. Breaking userspace is not ok. Upgrading from 2.6.x to
+> 2.6.x+1 should not entail replacing substantial parts of userspace,
+> especially with NOT-EVEN-FRAKKING-RELEASED-YET CODE.
+>
+> I will try a new HAL when it shows up in Debian/unstable and not a
+> moment sooner.
+>
+But you're running a kernel that's not in Debian/unstable so this
+seems a bit hypocritical.
 
+When you work with bleeding edge kernels you have to be prepared to
+work around things. Hell for ages git wasn't in Debian - unstable
+even, udev would break things etc.
 
-Signed-off-by: Hong Liu <hong.liu@intel.com>
-
----
-
- net/mac80211/ieee80211_ioctl.c |   16 +++++++++-------
- 1 files changed, 9 insertions(+), 7 deletions(-)
-
-bd08dec1012d17f66af6fd0170dce870cce34ab6
-diff --git a/net/mac80211/ieee80211_ioctl.c
-b/net/mac80211/ieee80211_ioctl.c
-index aa8b789..f57e48f 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -2176,16 +2176,18 @@ static int ieee80211_ioctl_giwretry(stru
-        struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-
-        retry->disabled = 0;
--       if ((retry->flags & IW_RETRY_TYPE) != IW_RETRY_LIMIT)
--               return -EINVAL;
--       if (retry->flags & IW_RETRY_MAX) {
--               retry->flags = IW_RETRY_LIMIT | IW_RETRY_MAX;
--               retry->value = local->long_retry_limit;
--       } else {
--               retry->flags = IW_RETRY_LIMIT;
-+       if (retry->flags == 0 || retry->flags & IW_RETRY_MIN) {
-+               /* first return min value, iwconfig will ask max value
-+                * later if needed */
-+               retry->flags |= IW_RETRY_LIMIT;
-                retry->value = local->short_retry_limit;
-                if (local->long_retry_limit != local->short_retry_limit)
-                        retry->flags |= IW_RETRY_MIN;
-+               return 0;
-+       }
-+       if (retry->flags & IW_RETRY_MAX) {
-+               retry->flags = IW_RETRY_LIMIT | IW_RETRY_MAX;
-+               retry->value = local->long_retry_limit;
-        }
-
-        return 0;
---
-1.3.3
-
-On Fri, 2007-03-23 at 19:11 +0100, Jiri Benc wrote:
-> On Fri, 16 Mar 2007 11:28:29 +0800, Hong Liu wrote:
-> > Signed-off-by: Hong Liu <hong.liu@intel.com>
-> 
-> Please add a description what the patch does.
-> 
-> Thanks,
-> 
->  Jiri
-> 
+Just my 2c worth.
+-- 
+Web: http://wand.net.nz/~iam4
+Blog: http://iansblog.jandi.co.nz
+WAND Network Research Group
