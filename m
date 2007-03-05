@@ -1,51 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtagate2.de.ibm.com ([195.212.29.151]:40138 "EHLO
-	mtagate2.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030461AbXCVLdN (ORCPT
+Received: from dhost002-80.dex002.intermedia.net ([64.78.20.165]:24380 "EHLO
+	DHOST002-80.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933580AbXCEQoa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Mar 2007 07:33:13 -0400
-Date: Thu, 22 Mar 2007 12:35:08 +0100
-From: Cornelia Huck <cornelia.huck@de.ibm.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Matt Mackall <mpm@selenic.com>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Monakhov Dmitriy <dmonakhov@openvz.org>
-Subject: Re: 2.6.21-rc4-mm1
-Message-ID: <20070322123508.3785fd30@gondolin.boeblingen.de.ibm.com>
-In-Reply-To: <20070321233917.0393dfd1.akpm@linux-foundation.org>
-References: <20070319205623.299d0378.akpm@linux-foundation.org>
-	<1174433034.62033.16.camel@localhost>
-	<20070320223643.d8cbc3f6.akpm@linux-foundation.org>
-	<4601761F.4000302@lwfinger.net>
-	<20070321185900.GC3801@tuxdriver.com>
-	<20070321202225.GN10459@waste.org>
-	<20070321233917.0393dfd1.akpm@linux-foundation.org>
+	Mon, 5 Mar 2007 11:44:30 -0500
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Mon, 5 Mar 2007 08:44:17 -0800
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [FYI] compiling hostapd against latest wireless-dev
+Message-ID: <20070305164417.GA10947@devicescape.com>
+References: <1173095902.6131.63.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1173095902.6131.63.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 21 Mar 2007 23:39:17 -0800,
-Andrew Morton <akpm@linux-foundation.org> wrote:
+On Mon, Mar 05, 2007 at 12:58:22PM +0100, Johannes Berg wrote:
+> ... isn't really possible at the moment. But you only need to change
+> some include paths (to be able to include the
+> net/mac80211/mac80211_common.h header!) and apply this change to be able
+> to include include/net/mac80211.h into the userspace code.
 
-> On Wed, 21 Mar 2007 15:22:25 -0500 Matt Mackall <mpm@selenic.com> wrote:
-> 
-> > With the latest -mm, I'm now getting this:
-> > 
-> > Mar 21 15:06:52 cinder kernel: ipw2200: Detected Intel PRO/Wireless
-> > 2200BG Network Connection
-> > Mar 21 15:06:52 cinder kernel: firmware_loading_store: unexpected
-> > value (0)
-> > Mar 21 15:06:52 cinder kernel: ipw2200: ipw2200-bss.fw
-> > request_firmware failed:
-> > Reason -2
-> > Mar 21 15:06:52 cinder kernel: ipw2200: Unable to load firmware: -2
-> > Mar 21 15:06:52 cinder kernel: ipw2200: failed to register network
-> > device
-> 
-> The firmware loading bug is caused by
-> driver-core-handles-kobject_uevent-failure-while-device_add.patch
+Which version of hostapd did you try to compile here? The current
+development branch does not include net/mac80211.h and the include path
+has also been changed from net/d80211 to net/mac80211 in example
+configuration.
 
-Hm, this patch looks sane. It might be a good idea to enable
-CONFIG_DEBUG_KOBJECT and find out why kobject_uevent() actually fails
-in this case...
+-- 
+Jouni Malinen                                            PGP id EFC895FA
