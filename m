@@ -1,62 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:38116 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932470AbXCVXTd (ORCPT
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:50989 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752235AbXCEXkv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Mar 2007 19:19:33 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 0/4] Try #5: Radiotap on Monitor Mode interfaces for rx and tx
-Date: Thu, 22 Mar 2007 19:10:30 -0400
-Cc: andy@warmcat.com, linux-wireless@vger.kernel.org
-References: <20070320103955.600509703@warmcat.com> <1174502809.3944.36.camel@johannes.berg>
-In-Reply-To: <1174502809.3944.36.camel@johannes.berg>
+	Mon, 5 Mar 2007 18:40:51 -0500
+Date: Tue, 6 Mar 2007 00:40:52 +0100
+From: Adrian Bunk <bunk@stusta.de>
+To: Greg KH <greg@kroah.com>
+Cc: Theodore Tso <tytso@mit.edu>, Matt Mackall <mpm@selenic.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	yi.zhu@intel.com, jketreno@linux.intel.com,
+	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
+Subject: [2.6.21 patch] unconditionally enable SYSFS_DEPRECATED
+Message-ID: <20070305234052.GR3441@stusta.de>
+References: <20070304220857.GH23311@waste.org> <1173051564.6131.13.camel@johannes.berg> <20070305002550.GI23311@waste.org> <20070305011729.GB7681@kroah.com> <20070305125950.GC26781@thunk.org> <20070305185813.GA31465@kroah.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3681876.jLAWxxaL6S";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200703221910.36705.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20070305185813.GA31465@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3681876.jLAWxxaL6S
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Mon, Mar 05, 2007 at 10:58:13AM -0800, Greg KH wrote:
+> 
+> Ok, how about the following patch.  Is it acceptable to everyone?
+> 
+> thanks,
+> 
+> greg k-h
+> 
+> ---
+>  init/Kconfig |   13 +++++++++++--
+>  1 file changed, 11 insertions(+), 2 deletions(-)
+> 
+> --- gregkh-2.6.orig/init/Kconfig
+> +++ gregkh-2.6/init/Kconfig
+> @@ -290,8 +290,17 @@ config SYSFS_DEPRECATED
+>  	  that belong to a class, back into the /sys/class heirachy, in
+>  	  order to support older versions of udev.
+>  
+> -	  If you are using a distro that was released in 2006 or later,
+> -	  it should be safe to say N here.
+> +	  If you are using an OpenSuSE, Gentoo, Ubuntu, or Fedora
+> +	  release from 2007 or later, it should be safe to say N here.
+> +
+> +	  If you are using Debian or other distros that are slow to
+> +	  update HAL, please say Y here.
+>...
 
-On Wednesday 21 March 2007 14:46, Johannes Berg wrote:
-> If the driver does not support radiotap, ieee80211_rx_monitor needs to
-> expand the head for each packet. Currently, this is also true, but since
-> currently no non-management frames are sent down the management
-> interface, this is not an issue. If each data packet needs to be first
-> reallocated though, it quickly becomes a problem for low-power embedded
-> access points running hostapd.
->
-That's why drivers should be modified to support radiotap.
+The sane solution seems to be to enable SYSFS_DEPRECATED unconditionally 
+for all users, and schedule it's removal for mid-2008 (or later).
 
-> Additionally, the overhead of tacking on radiotap headers to each
-> received frame is also rather high if you're only interested in
-> receiving the information for management frames.
->
-It's really not that much overhead.
+12 months after the first _release_ of a HAL that can live without seems 
+to be the first time when we can consider getting rid of it, since all 
+distributions with at least one release a year should ship it by then.
 
--Michael Wu
+Currently, SYSFS_DEPRECATED is only a trap for users.
 
---nextPart3681876.jLAWxxaL6S
-Content-Type: application/pgp-signature
+Suggested patch below.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+cu
+Adrian
 
-iD8DBQBGAwzsT3Oqt9AH4aERAs+cAKDDtlTknHbkwciWZMtG552pcoSsFwCdEtcu
-7W2kGiGTJ2oAUsR5FR/PNlc=
-=kIL3
------END PGP SIGNATURE-----
 
---nextPart3681876.jLAWxxaL6S--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+<--  snip  -->
+
+
+unconditionally enable SYSFS_DEPRECATED
+
+This patch unconditionally enables SYSFS_DEPRECATED and schedules it's
+removal for July 2008.
+
+Currently, SYSFS_DEPRECATED is only a trap for users accidentally
+disabling it.
+
+In July 2008, all distributions with at least one release a year should
+be able to run without SYSFS_DEPRECATED.
+
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
+index c3b1430..b0bce93 100644
+--- a/Documentation/feature-removal-schedule.txt
++++ b/Documentation/feature-removal-schedule.txt
+@@ -316,3 +316,13 @@ Why:	The option/code is
+ Who:	Johannes Berg <johannes@sipsolutions.net>
+ 
+ ---------------------------
++
++What:	deprecated sysfs files (CONFIG_SYSFS_DEPRECATED)
++When:	July 2008
++Why:	None of these features or values should be used any longer,
++	as they export driver core implementation details to userspace
++	or export properties which can't be kept stable across kernel
++	releases.
++Who:	Greg KH <greg@kroah.com>
++
++---------------------------
+diff --git a/init/Kconfig b/init/Kconfig
+index f977086..f652b6f 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -274,24 +274,9 @@ config CPUSETS
+ 	  Say N if unsure.
+ 
+ config SYSFS_DEPRECATED
+-	bool "Create deprecated sysfs files"
++	bool
+ 	default y
+ 	help
+-	  This option creates deprecated symlinks such as the
+-	  "device"-link, the <subsystem>:<name>-link, and the
+-	  "bus"-link. It may also add deprecated key in the
+-	  uevent environment.
+-	  None of these features or values should be used today, as
+-	  they export driver core implementation details to userspace
+-	  or export properties which can't be kept stable across kernel
+-	  releases.
+-
+-	  If enabled, this option will also move any device structures
+-	  that belong to a class, back into the /sys/class heirachy, in
+-	  order to support older versions of udev.
+-
+-	  If you are using a distro that was released in 2006 or later,
+-	  it should be safe to say N here.
+ 
+ config RELAY
+ 	bool "Kernel->user space relay support (formerly relayfs)"
