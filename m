@@ -1,68 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:39446 "EHLO
+Received: from mog.warmcat.com ([62.193.232.24]:43159 "EHLO
 	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S964960AbXCSVQd (ORCPT
+	by vger.kernel.org with ESMTP id S932231AbXCEIKw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2007 17:16:33 -0400
-Message-ID: <45FEFDAE.1000107@warmcat.com>
-Date: Mon, 19 Mar 2007 21:16:30 +0000
+	Mon, 5 Mar 2007 03:10:52 -0500
+Message-ID: <45EBD087.9020103@warmcat.com>
+Date: Mon, 05 Mar 2007 08:10:47 +0000
 From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
 To: Michael Wu <flamingice@sourmilk.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Faking powersave for fun and realtime channel muxing
-References: <45FEEB34.1000403@warmcat.com> <200703191638.48742.flamingice@sourmilk.net>
-In-Reply-To: <200703191638.48742.flamingice@sourmilk.net>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Question about PRISM2 header rate field
+References: <45EA9E39.6080706@warmcat.com> <1173053744.6131.40.camel@johannes.berg> <45EB6C3B.2060408@warmcat.com> <200703042210.52534.flamingice@sourmilk.net>
+In-Reply-To: <200703042210.52534.flamingice@sourmilk.net>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Michael Wu wrote:
-> On Monday 19 March 2007 15:57, Andy Green wrote:
->> Hi folks -
+
+Hi Michael -
+
+> On Sunday 04 March 2007 20:02, Andy Green wrote:
+>> How about for injection on the Management interface, it expects to find
+>> a PRISM2 header prepended to the ieee80211 one and the payload, in
+>> exactly the same format as is delivered by Monitor Mode?  The PRISM2
+>> capture header structure has a bunch of fields for things like rate and
+>> antenna selection already.  This has the satisfying aspect that you can
+>> literally replay the whole Monitor Mode packet capture down the
+>> Management Interface and get it to go out at the same rate.
 >>
->> If you could generate and manage powersave protocol frames to an AP from
->> the mac80211 stack, without actually putting the radio to sleep, you
->> could do some interesting things.
->>
-> Like in my scanning patch series?
-> 
-> http://news.gmane.org/find-root.php?group=gmane.linux.kernel.wireless.general&article=770
+> Isn't this what aircrack does? I think many other drivers that support frame 
+> injection do it in a similar way (TX AVS frame on monitor interface), and 
+> this is also the way I prefer the frame injection interface. It does have the 
+> nice property of being able to directly replay captured traffic as you 
+> mentioned. Just note that AVS/prism2 is planned to be removed in favor of 
+> radiotap which is more extensible. Radiotap should also work for frame 
+> injection, though it isn't as easy as using a fixed length header format.
 
-Yeah exactly like that, you're way ahead of me.  I will study these 
-tomorrow.  Thanks for the pointer and the boost with these patches.
+Radiotap is fine for me too.  PRISM2 has a 32-bit magic at the start, I 
+guess you can just check the first byte (Magic 0x1e for PRISM2, Version 
+0x00 for Radiotap) to find out what you have been given.  Just returning 
+  -ENOSUPP or something else unique for an unsupported header will allow 
+easy adaptation in userspace to what header system a given kernel will 
+support for tx.
 
-> This requires a bit of kernel side support to queue up frames on the client 
-> side to maintain the illusion that nothing happened. (except for a brief 
-> latency jump) However, it does seem to work for the wireless cards I've 
+Radiotap also has better documentation in the form of the old stack 
+header file at least.  It's clear there's more than enough capability 
+defined for my needs anyway, it will allow optional specification of 
+antenna and even tx power too.  It doesn't make any difference for me 
+that it is variable length.
 
-That's very encouraging!
+> Note that modifying the management interface to do this is possible, but it 
+> would break hostap (and probably wpa_supplicant w/ MLME). Doing packet 
+> injection on monitor interfaces instead is safer in that regard.
 
-> tested. Doing scanning like this in userspace will require some sort of 
-> interface to stop/restart the TX for the appropriate network interfaces, but 
-> will probably make your multichannel association idea possible.
-
-I didn't catch what you meant in the last bit, "some sort of interface 
-to stop/restart the TX"?  You mean for associated interfaces that are 
-currently "sleeping" they need to use the netdev-level interface start 
-and stop stuff?
-
-> As for how long the AP will hold your frames.. 802.11 defines a minimum time, 
-> but the maximum depends on the AP.
-
-I guess an important thing is that in the degenerate case where there is 
-only one logical interface up and associated, powersave mode doesn't get 
-used at all, it goes on like it does now.
-
-Then for associated interfaces when fake powersave mode is in use, it's 
-important that any queued packets at the AP are taken to keep the count 
-of packets held there low.  Packets queued in the driver for TX should 
-be dealt with to try to keep the count of packets queued there low too, 
-but it's less critical I guess.  So when associated interfaces are busy, 
-they hog all the time between them.
-
-Then last in the priority is Monitor interface time.  So when associated 
-interfaces are relatively idle, you can spend large blocks of time 
-monitoring on other channels.
+Basing it around Monitor Mode interfaces will suit all the potential 
+users I think, since they might already have one floating around, and 
+they are easier to spawn than Management anyway.
 
 -Andy
