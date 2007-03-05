@@ -1,73 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52163 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030744AbXCHWWI (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:47790 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933457AbXCENqo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2007 17:22:08 -0500
-Subject: Re: wireless extensions vs. 64-bit architectures
-From: Johannes Berg <johannes@sipsolutions.net>
-To: jt@hpl.hp.com
-Cc: Jouni Malinen <jkm@devicescape.com>, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>, Dan Williams <dcbw@redhat.com>
-In-Reply-To: <20070308221128.GA24884@bougret.hpl.hp.com>
-References: <1173144447.15891.93.camel@johannes.berg>
-	 <20070306171316.GA19669@bougret.hpl.hp.com>
-	 <200703061943.07350.mb@bu3sch.de>
-	 <20070307020310.GA20466@bougret.hpl.hp.com>
-	 <1173364747.14001.7.camel@johannes.berg>
-	 <20070308184954.GA24485@bougret.hpl.hp.com>
-	 <1173382042.3248.63.camel@johannes.berg>
-	 <20070308193412.GG23040@devicescape.com>
-	 <1173382802.3248.68.camel@johannes.berg>
-	 <20070308221128.GA24884@bougret.hpl.hp.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gRVbqpQMitVO9qXu6ELY"
-Date: Thu, 08 Mar 2007 23:22:06 +0100
-Message-Id: <1173392526.3831.12.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 5 Mar 2007 08:46:44 -0500
+Message-ID: <45EC1F41.9070406@warmcat.com>
+Date: Mon, 05 Mar 2007 13:46:41 +0000
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Filtering in Monitor Mode (was Question about PRISM2 header rate  field)
+References: <45EA9E39.6080706@warmcat.com>	 <1173053744.6131.40.camel@johannes.berg> <45EB6C3B.2060408@warmcat.com>	 <200703042210.52534.flamingice@sourmilk.net>	 <1173094447.6131.56.camel@johannes.berg>  <45EC1454.4080605@warmcat.com>	 <1173099910.6131.71.camel@johannes.berg>  <45EC18A9.50003@warmcat.com> <1173100957.6131.76.camel@johannes.berg>
+In-Reply-To: <1173100957.6131.76.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg wrote:
 
---=-gRVbqpQMitVO9qXu6ELY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> The power save mode argument still holds though, we might address that
+> with non-promisc monitor interfaces even though they do have a couple of
+> problems (you need to be associated on a different virtual netdev for it
+> to make sense...)
 
-On Thu, 2007-03-08 at 14:11 -0800, Jean Tourrilhes wrote:
+Hi Johannes -
 
-> 	This is exactly what I was pointing out earlier. Well,
-> actually, there may be ways of fixing it in the kernel, but that would
-> be real ugly, and I don't want to go there.
+Yes non-hardware promisc is an interesting combination for the userspace 
+MLME plan, since you have everything you need already without needing 
+hardware promisc.  I guess the best way is to define a new MODE_ enum 
+for MONITOR_LOCAL or something.
 
-Yeah, it would be extremely ugly and involve a lot of copying around
-when the app actually receives the data.
-
-> 	I've just released wireless_tools.29.pre15.tar.gz. This is
-> supposed to include a "band-aid" for that problem. To the best of my
-> knowledge, it should catch the problem and not introduce false
-> positive. I would be glad if you guys would have a quick look into it,
-> because obviously I can't test it.
-
-I looked at the diff between pre14 and pre15 but have to admit that I
-don't understand the code change. Unfortunately I can't test this until
-the 20th earliest so it'd be good if someone else could test this.
-
-Btw, could you look at the information leak patch I posted? We really
-need to get that fix (or another appropriate one) out asap.
-
-johannes
-
---=-gRVbqpQMitVO9qXu6ELY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF8IyO/ETPhpq3jKURAmY+AJ4kBibiCUqvIm+bStJ3epwJR/tX0ACgnO0Z
-TwFT8NV/WroevycvVw8dMOU=
-=Cr0E
------END PGP SIGNATURE-----
-
---=-gRVbqpQMitVO9qXu6ELY--
-
+-Andy
