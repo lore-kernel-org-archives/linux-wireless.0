@@ -1,56 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:45103 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752253AbXCSKzD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2007 06:55:03 -0400
-Message-ID: <45FE6C02.5050605@warmcat.com>
-Date: Mon, 19 Mar 2007 10:54:58 +0000
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211: Monitor mode radiotap-based packet injection
-References: <20070318101535.251183750@warmcat.com> <20070318101549.331461113@warmcat.com> <200703190156.07984.flamingice@sourmilk.net>
-In-Reply-To: <200703190156.07984.flamingice@sourmilk.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from waste.org ([66.93.16.53]:38070 "EHLO waste.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751003AbXCEArg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2007 19:47:36 -0500
+Date: Sun, 4 Mar 2007 18:25:50 -0600
+From: Matt Mackall <mpm@selenic.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, yi.zhu@intel.com, jketreno@linux.intel.com,
+	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
+Subject: Re: Recent wireless breakage (ipw2200, iwconfig, NetworkManager)
+Message-ID: <20070305002550.GI23311@waste.org>
+References: <20070304220857.GH23311@waste.org> <1173051564.6131.13.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1173051564.6131.13.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
+On Mon, Mar 05, 2007 at 12:39:24AM +0100, Johannes Berg wrote:
+> [adding linux-wireless to CC]
+> 
+> On Sun, 2007-03-04 at 16:08 -0600, Matt Mackall wrote:
+> > Recent kernels are having troubles with wireless for me. Two seemingly
+> > related problems:
+> 
+> I don't think they are related actually.
+> 
+> > a) NetworkManager seems oblivious to the existence of my IPW2200
+> 
+> This is due to the recent sysfs restructuring I think. IIRC the fix is
+> to upgrade hal to a current git version.
 
-> I've mostly made comments about style issues. There are only comments on the 
-> first instance of any style problem so please check the rest of the code for 
-> the same problems.
+If that's the cause, the fix is to back out whatever was done to break
+userspace. Breaking userspace is not ok. Upgrading from 2.6.x to
+2.6.x+1 should not entail replacing substantial parts of userspace,
+especially with NOT-EVEN-FRAKKING-RELEASED-YET CODE. 
 
-Thanks for this feedback Michael.  I have changed all the style problems 
-my eyes could see, assisted by visiting every = in the patch.
+I will try a new HAL when it shows up in Debian/unstable and not a
+moment sooner.
 
-> Hm, this could be integrated into the switch statement below, but it doesn't 
-> really matter much.
+> > b) Manual iwconfig waits for 60s and then reports:
+> 
+> That one's strange.
+> 
+> > A second attempt to enable WEP via iwconfig succeeds and network
+> > connectivity is normal. However, NetworkManager still ignores the
+> > device at this point.
+> 
+> I'd think it's a ipw bug but I have no idea if that was even touched
+> during this time.
+> 
+> > Bisect with Mercurial points to this patch:
+> > 
+> > $ hg bisect bad
+> > The first bad revision is:
+> > changeset:   46985:f701b96bb2f7
+> > user:        Greg Kroah-Hartman <gregkh@suse.de>
+> > date:        Wed Feb 07 10:37:11 2007 -0800
+> > summary:     Network: convert network devices to use struct device
+> > instead of class_device
+> > 
+> > which corresponds to 43cb76d91ee85f579a69d42bc8efc08bac560278 in git.
+> 
+> Yup, sysfs breakage/hal stuff. Can you try with a recent hal? And maybe
+> try to bisect the iwconfig stop thing if you've got enough time...
 
-It's also very handy for...
+Will double-check the iwconfig tests. It's been masked by
+NetworkManager for a while.
 
-> Have you looked into padding issues with radiotap headers? For example, if 
-> there is a 1 byte field which is then followed by a 4 byte field, there needs 
-> to be 3 bytes of padding after the first field, but if the field after were 2 
-> bytes long, the padding would only be 1 byte (according to my understanding 
-> of the radiotap specs).
-
-I googled for radiotap specs but I didn't find anything useful.  I added 
-some small code to enforce the alignment rules you mention above.
-
-I found there was no docs in ./Documentation about 80211, I added a 
-small explanation and examples about injection including this alignment 
-Gotcha so the knowledge isn't lost.
-
-> We could avoid this check altogether by spinning this code into a different 
-> function and setting the xmit handler appropriately depending on if we're 
-> initializing/switching to a monitor interface or not. Not entirely sure if 
-> it's worth it, but I thought I'd mention it.
-
-Yes, that method would be marginally better, but there is only a single 
-int getting tested in the main path and even that is marked up as 
-unlikely().  So I leave it as it is for now.
-
--Andy
+-- 
+Mathematics is the supreme nostalgia of our time.
