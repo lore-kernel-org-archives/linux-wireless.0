@@ -1,52 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53691 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54772 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1945905AbXCBMiW (ORCPT
+	with ESMTP id S933457AbXCENFo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2007 07:38:22 -0500
-Subject: Re: renaming in debugfs?
+	Mon, 5 Mar 2007 08:05:44 -0500
+Subject: Re: Filtering in Monitor Mode (was Question about PRISM2 header  rate  field)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Greg KH <greg@kroah.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20070215224057.GA20464@kroah.com>
-References: <1171540374.20204.2.camel@johannes.berg>
-	 <20070215224057.GA20464@kroah.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eyksJ1+WPmXEMqwdbgH+"
-Date: Fri, 02 Mar 2007 13:37:59 +0100
-Message-Id: <1172839079.3482.34.camel@johannes.berg>
+To: Andy Green <andy@warmcat.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <45EC1454.4080605@warmcat.com>
+References: <45EA9E39.6080706@warmcat.com>
+	 <1173053744.6131.40.camel@johannes.berg> <45EB6C3B.2060408@warmcat.com>
+	 <200703042210.52534.flamingice@sourmilk.net>
+	 <1173094447.6131.56.camel@johannes.berg>  <45EC1454.4080605@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BLx+0kelDvC8gWuHdkKY"
+Date: Mon, 05 Mar 2007 14:05:10 +0100
+Message-Id: <1173099910.6131.71.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-eyksJ1+WPmXEMqwdbgH+
+--=-BLx+0kelDvC8gWuHdkKY
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2007-02-15 at 14:40 -0800, Greg KH wrote:
+On Mon, 2007-03-05 at 13:00 +0000, Andy Green wrote:
 
-> For debugfs, there is no rename function yet, but it would be pretty
-> trivial to add one if you wish.
+> I used the libpcap filter stuff to limit what I saw to just the packets=20
+> of interest.  This is the filtering that tcpdump uses to do the=20
+> conditional filters like "port 22" or "host 192.168.0.1".  The filter=20
+> uses something called BPF (Berkeley Packet Filter) which is done=20
+> kernelside (at least libpcap is doing the filter install with ioctls in=20
+> pcap-bpf.c).  So the cost of drinking from a Monitor firehose is much=20
+> less than it sounds.
 
-I tried to, but failed.
-http://johannes.sipsolutions.net/patches/debugfs-rename.patch
-
-does absolutely nothing at all, not even return an error! What am I
-doing wrong? :)
+Actually, I think the cost can be significant, especially for embedded
+systems. You traverse into userspace for each packet at least once, and
+a management entity in userspace will not be concerned with data packets
+at all. Also, a monitor interface currently always disables power save
+mode for many drivers.
 
 johannes
 
---=-eyksJ1+WPmXEMqwdbgH+
+--=-BLx+0kelDvC8gWuHdkKY
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBF6Bqm/ETPhpq3jKURAjN8AKCGbIM2oI11tFEtbVLaISw1X8jzKQCfUIrK
-s1djbVQ3Z5/U4PW/b4KXHlU=
-=e4yY
+iD8DBQBF7BWG/ETPhpq3jKURAkyLAJ9eJTXX5bu1PW9fR+8w2jAfL11z6QCffclp
+7Lh5PpjijrgrS0sBUvGabU8=
+=mu9x
 -----END PGP SIGNATURE-----
 
---=-eyksJ1+WPmXEMqwdbgH+--
+--=-BLx+0kelDvC8gWuHdkKY--
 
