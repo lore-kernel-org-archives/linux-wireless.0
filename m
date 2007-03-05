@@ -1,39 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kanga.kvack.org ([66.96.29.28]:57701 "EHLO kanga.kvack.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965632AbXC1SFB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 14:05:01 -0400
-Date: Wed, 28 Mar 2007 15:04:13 -0300
-From: Marcelo Tosatti <marcelo@kvack.org>
-To: Pavel Roskin <proski@gnu.org>
-Cc: David Young <dyoung@pobox.com>, linux-wireless@vger.kernel.org,
-	Scott Raynel <scottraynel@gmail.com>, radiotap@mail.ojctech.com
-Subject: Re: [Radiotap] Re: RFC: radiotap discrepancy in Linux vs OpenBSD
-Message-ID: <20070328180413.GC17793@dmt>
-References: <20070325232416.64xwkc0kw04oosg0@webmail.spamcop.net> <20070326033729.GG31621@che.ojctech.com> <1174949149.28132.49.camel@dv>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1174949149.28132.49.camel@dv>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:39124
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933074AbXCEK6R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2007 05:58:17 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Adrian Bunk <bunk@stusta.de>
+Subject: Re: 2.6.21-rc2-mm1: drivers/usb/host/ohci-ssb.c doesn't compile
+Date: Mon, 5 Mar 2007 11:57:16 +0100
+Cc: Andrew Morton <akpm@linux-foundation.org>, linville@tuxdriver.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	dbrownell@users.sourceforge.net, greg@kroah.com,
+	linux-usb-devel@lists.sourceforge.net
+References: <20070302030026.5eef0c92.akpm@linux-foundation.org> <20070305014728.GN3441@stusta.de> <200703051149.05664.mb@bu3sch.de>
+In-Reply-To: <200703051149.05664.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200703051157.16822.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 26, 2007 at 06:45:49PM -0400, Pavel Roskin wrote:
-> On Sun, 2007-03-25 at 22:37 -0500, David Young wrote:
-> 
-> > > One is found in the current wireless-2.6.git:
-> > > 
-> > >         IEEE80211_RADIOTAP_RX_FLAGS = 14,
-> > >         IEEE80211_RADIOTAP_TX_FLAGS = 15,
-> > >         IEEE80211_RADIOTAP_RTS_RETRIES = 16,
-> > >         IEEE80211_RADIOTAP_DATA_RETRIES = 17,
+On Monday 05 March 2007 11:49, Michael Buesch wrote:
+> On Monday 05 March 2007 02:47, Adrian Bunk wrote:
+> > On Fri, Mar 02, 2007 at 03:00:26AM -0800, Andrew Morton wrote:
+> > >...
+> > > Changes since 2.6.20-mm2:
+> > >...
+> > >  git-wireless.patch
+> > >...
+> > >  git trees
+> > >...
 > > 
-> > These fields are slated to become part of the standard, I just haven't got
-> > around to updating the manual page, yet.  I have time to do that tonight.
+> > <--  snip  -->
+> > 
+> > ...
+> >   CC      drivers/usb/host/ohci-hcd.o
+> > In file included from 
+> > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-hcd.c:931:
+> > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:47: error: request for member 'hcd_priv_size' in something not a structure or union
 > 
-> OK.  I was wrong to assume that non-standard fields were introduced on
-> the Linux side.
+> Seems like there was a comma missing.
+> There also seems to be some Kconfig problem. will fix that.
+> 
+> > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:47: error: 'ssb_ohci_device' undeclared here (not in a function)
+> > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:52: error: 'ssb_ohci_reset' undeclared here (not in a function)
+> > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:53: error: 'ssb_ohci_start' undeclared here (not in a function)
+> > ...
+> > make[4]: *** [drivers/usb/host/ohci-hcd.o] Error 1
+> > 
+> > <--  snip  -->
 
-I mentioned those in the past to David Young, but I forgot to resend
-them to the radiotap list. 
+Actually, it seems like I will run into other kinds of nasty problems
+due to stupid design of the HCD code. The OHCI code #includes
+the various drivers, which have a module_init each. So if you
+compile PCI and SSB support, you have two module_init for one
+OHCI module. Not sure how to fix this. Any idea?
 
->From what I gather he's OK with them.
+-- 
+Greetings Michael.
