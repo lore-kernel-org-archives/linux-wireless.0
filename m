@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50671 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932309AbXCWUHW (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:33976 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933426AbXCENAJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 16:07:22 -0400
-Subject: Re: [stable] [PATCH] fix information leak in wireless extensions  on 64-bit platforms
-From: Johannes Berg <johannes@sipsolutions.net>
-To: jt@hpl.hp.com
-Cc: Chris Wright <chrisw@sous-sol.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
-In-Reply-To: <20070323200037.GA5165@bougret.hpl.hp.com>
-References: <1174640787.3588.65.camel@johannes.berg>
-	 <1174657362.3366.6.camel@johannes.berg>
-	 <20070323154828.GA4671@bougret.hpl.hp.com>
-	 <1174665384.4470.0.camel@johannes.berg>
-	 <20070323161339.GA4713@bougret.hpl.hp.com>
-	 <20070323193643.GY10574@sequoia.sous-sol.org>
-	 <20070323200037.GA5165@bougret.hpl.hp.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iW5MIcG7iWxZvQ9c5dML"
-Date: Fri, 23 Mar 2007 21:05:26 +0100
-Message-Id: <1174680326.4470.2.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 5 Mar 2007 08:00:09 -0500
+Message-ID: <45EC1454.4080605@warmcat.com>
+Date: Mon, 05 Mar 2007 13:00:04 +0000
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Filtering in Monitor Mode (was Question about PRISM2 header rate  field)
+References: <45EA9E39.6080706@warmcat.com>	 <1173053744.6131.40.camel@johannes.berg> <45EB6C3B.2060408@warmcat.com>	 <200703042210.52534.flamingice@sourmilk.net> <1173094447.6131.56.camel@johannes.berg>
+In-Reply-To: <1173094447.6131.56.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg wrote:
+> On Sun, 2007-03-04 at 22:10 -0500, Michael Wu wrote:
+>> Note that modifying the management interface to do this is possible, but it 
+>> would break hostap (and probably wpa_supplicant w/ MLME). Doing packet 
+>> injection on monitor interfaces instead is safer in that regard.
+> 
+> But if you want to do injection over monitor interfaces we'll need to
+> have the stupid mgmt interface hack around forever for the userspace
+> MLME so it can receive only management traffic (even the non-promisc
+> monitor iface we should have gets *far* too much traffic for a userspace
+> MLME)
 
---=-iW5MIcG7iWxZvQ9c5dML
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I used the libpcap filter stuff to limit what I saw to just the packets 
+of interest.  This is the filtering that tcpdump uses to do the 
+conditional filters like "port 22" or "host 192.168.0.1".  The filter 
+uses something called BPF (Berkeley Packet Filter) which is done 
+kernelside (at least libpcap is doing the filter install with ioctls in 
+pcap-bpf.c).  So the cost of drinking from a Monitor firehose is much 
+less than it sounds.
 
-On Fri, 2007-03-23 at 13:00 -0700, Jean Tourrilhes wrote:
+> Besides, to userspace, this is almost identical. In both cases it opens
+> a socket, binds to something (either raw socket bound to netdev or
+> netlink socket bound to nl80211) and then stuffs frames into that socket
+> with some fixed header format (for most apps anyway)
 
-> 	Let's be more clear. I tested properly on 32 bits. But, 32
-> bits is not where there is issue, this issue is specific to 64 bits. I
-> don't have a 64 bits platfor. It seems that few people doing wireless
-> have access to 64 bits platform (actually, it seems most of them don't
-> have access to SMP either), otherwise this would have been found many
-> years ago.
-> 	Johannes is one of the few having access to 64 bits stuff.
+I'm guessing the concern is to leave the crufty scary 
+not-very-well-known Management Interface monster asleep lest it wake up 
+while being edited and eat everyone :-)
 
-Few, heh. I'll give it a try next week. (actually, I don't have wireless
-on the 64-bit quad powermac but I can always plug in USB things)
-
-johannes
-
---=-iW5MIcG7iWxZvQ9c5dML
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGBDMG/ETPhpq3jKURAsDWAJ9x1TKrxs0xmn45OF7OFm8CiQ9Z0QCfZTVb
-AHSnDIo2OwdC89lkF20gLf4=
-=zj4T
------END PGP SIGNATURE-----
-
---=-iW5MIcG7iWxZvQ9c5dML--
-
+-Andy
