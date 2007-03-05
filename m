@@ -1,74 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:44178 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933740AbXCZWpz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2007 18:45:55 -0400
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HVxul-00005Q-K0
-	for linux-wireless@vger.kernel.org; Mon, 26 Mar 2007 18:43:47 -0400
-Subject: Re: RFC: radiotap discrepancy in Linux vs OpenBSD
-From: Pavel Roskin <proski@gnu.org>
-To: David Young <dyoung@pobox.com>
-Cc: linux-wireless@vger.kernel.org,
-	Scott Raynel <scottraynel@gmail.com>, radiotap@mail.ojctech.com
-In-Reply-To: <20070326033729.GG31621@che.ojctech.com>
-References: <20070325232416.64xwkc0kw04oosg0@webmail.spamcop.net>
-	 <20070326033729.GG31621@che.ojctech.com>
-Content-Type: text/plain
-Date: Mon, 26 Mar 2007 18:45:49 -0400
-Message-Id: <1174949149.28132.49.camel@dv>
-Mime-Version: 1.0
+Received: from ns.suse.de ([195.135.220.2]:44856 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752841AbXCES1B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2007 13:27:01 -0500
+Date: Mon, 5 Mar 2007 10:26:10 -0800
+From: Greg KH <greg@kroah.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Adrian Bunk <bunk@stusta.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, dbrownell@users.sourceforge.net,
+	linux-usb-devel@lists.sourceforge.net
+Subject: Re: 2.6.21-rc2-mm1: drivers/usb/host/ohci-ssb.c doesn't compile
+Message-ID: <20070305182610.GA14113@kroah.com>
+References: <20070302030026.5eef0c92.akpm@linux-foundation.org> <200703051149.05664.mb@bu3sch.de> <200703051157.16822.mb@bu3sch.de> <200703051226.46402.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200703051226.46402.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2007-03-25 at 22:37 -0500, David Young wrote:
-
-> > One is found in the current wireless-2.6.git:
+On Mon, Mar 05, 2007 at 12:26:45PM +0100, Michael Buesch wrote:
+> On Monday 05 March 2007 11:57, Michael Buesch wrote:
+> > > >   CC      drivers/usb/host/ohci-hcd.o
+> > > > In file included from 
+> > > > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-hcd.c:931:
+> > > > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:47: error: request for member 'hcd_priv_size' in something not a structure or union
+> > > 
+> > > Seems like there was a comma missing.
+> > > There also seems to be some Kconfig problem. will fix that.
+> > > 
+> > > > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:47: error: 'ssb_ohci_device' undeclared here (not in a function)
+> > > > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:52: error: 'ssb_ohci_reset' undeclared here (not in a function)
+> > > > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:53: error: 'ssb_ohci_start' undeclared here (not in a function)
+> > > > ...
+> > > > make[4]: *** [drivers/usb/host/ohci-hcd.o] Error 1
+> > > > 
+> > > > <--  snip  -->
 > > 
-> >         IEEE80211_RADIOTAP_RX_FLAGS = 14,
-> >         IEEE80211_RADIOTAP_TX_FLAGS = 15,
-> >         IEEE80211_RADIOTAP_RTS_RETRIES = 16,
-> >         IEEE80211_RADIOTAP_DATA_RETRIES = 17,
+> > Actually, it seems like I will run into other kinds of nasty problems
+> > due to stupid design of the HCD code. The OHCI code #includes
+> > the various drivers, which have a module_init each. So if you
+> > compile PCI and SSB support, you have two module_init for one
+> > OHCI module. Not sure how to fix this. Any idea?
 > 
-> These fields are slated to become part of the standard, I just haven't got
-> around to updating the manual page, yet.  I have time to do that tonight.
+> A real problem is that the HCD core seems to have the assumption
+> built-in that there can only be one OHCI driver per machine/arch.
+> That's not the case for SSB, where we can have both PCI and SSB
+> bus enabled, so both ohci drivers compiled.
+> Any idea? Greg perhaps?
 
-OK.  I was wrong to assume that non-standard fields were introduced on
-the Linux side.
+David has provided hints on how to do this in the past on the
+linux-usb-devel list if I remember correctly.
 
-> > Another set of the flags can be found in CVS OpenBSD:
-> > 
-> >         IEEE80211_RADIOTAP_FCS = 14,
-> >         IEEE80211_RADIOTAP_HWQUEUE = 15,
-> >         IEEE80211_RADIOTAP_RSSI = 16,
-> 
-> These fields are not part of the standard, and they will not become part
-> of the standard with these numbers.  This is the first time I have ever
-> heard of HWQUEUE and RSSI, actually.  What are they for?
+thanks,
 
-IEEE80211_RADIOTAP_HWQUEUE specifies the hardware queue.  This is used
-in the drivers for Atheros and Intel ipw3945 to report transmitted
-frames to the userspace.
-
-In case of Atheros, the value would always be 0, but the way it's
-written (HAL_TX_QUEUE_ID_DATA_MIN), I assume the value is supposed to be
-hardware specific rather than a number from the 802.11e standard.  Other
-values in the same enum are 6, 7, 8 and 9.
-
-In case of the ipw3945 driver, it's always 0, but it's used as an index
-in an array of size 4, so at least it a number from 0 to 3.
-
-The description in ieee80211_radiotap.h is: "A specific hardware queue
-(used by WME)" and it's one 8-bit integer.
-
-IEEE80211_RADIOTAP_HWQUEUE is described as "A relative Received Signal
-Strength Index" and it's two 8-bit integers, RSSI and max RSSI.  It's
-used by many drivers and includes uncalibrated signal data.  It looks
-like noise data is not included.
-
--- 
-Regards,
-Pavel Roskin
-
+greg k-h
