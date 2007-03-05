@@ -1,191 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:44150 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965525AbXCQLHy (ORCPT
+Received: from smtp112.sbc.mail.mud.yahoo.com ([68.142.198.211]:43223 "HELO
+	smtp112.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751316AbXCESst (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Mar 2007 07:07:54 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 238038CAD2
-	for <linux-wireless@vger.kernel.org>; Sat, 17 Mar 2007 12:07:52 +0100 (CET)
-Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id 8A2C8FBF5
-	for <linux-wireless@vger.kernel.org>; Sat, 17 Mar 2007 11:07:53 +0000 (UTC)
-Message-Id: <20070317110750.926633512@warmcat.com>
-References: <20070317105800.659633351@warmcat.com>
-Date: Sat, 17 Mar 2007 10:58:01 +0000
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] mac80211: Add radiotap support
+	Mon, 5 Mar 2007 13:48:49 -0500
+From: David Brownell <david-b@pacbell.net>
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: 2.6.21-rc2-mm1: drivers/usb/host/ohci-ssb.c doesn't compile
+Date: Mon, 5 Mar 2007 10:42:05 -0800
+Cc: greg@kroah.com, Adrian Bunk <bunk@stusta.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-usb-devel@lists.sourceforge.net
+References: <20070302030026.5eef0c92.akpm@linux-foundation.org> <200703051157.16822.mb@bu3sch.de> <200703051226.46402.mb@bu3sch.de>
+In-Reply-To: <200703051226.46402.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200703051042.06802.david-b@pacbell.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+On Monday 05 March 2007 3:26 am, Michael Buesch wrote:
+
+> > Actually, it seems like I will run into other kinds of nasty problems
+> > due to stupid design of the HCD code. The OHCI code #includes
+> > the various drivers, which have a module_init each. So if you
+> > compile PCI and SSB support, you have two module_init for one
+> > OHCI module. Not sure how to fix this. Any idea?
+> 
+> A real problem is that the HCD core seems to have the assumption
+> built-in that there can only be one OHCI driver per machine/arch.
+
+What ancient version of the driver are you referring to??
+
+CURRENT code has one module_init, and can hook up to several
+different kinds of bus glue.  There *is* only one OHCI driver.
+It can hook up through several different kinds of bus glue; a
+few platforms support more than one way to connect to various
+implementations of OHCI.
 
 
----
+> That's not the case for SSB, where we can have both PCI and SSB
+> bus enabled, so both ohci drivers compiled.
+> Any idea? Greg perhaps?
 
- include/net/mac80211.h         |    3 ++
- net/mac80211/ieee80211.c       |   69 +++++++++++++++++++++++++++++++++-------
- net/mac80211/ieee80211_iface.c |    2 +
- 3 files changed, 61 insertions(+), 13 deletions(-)
+This already works in the current code ...
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 916b21b..050f126 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -529,6 +529,9 @@ struct ieee80211_hw {
- 	 * per-packet RC4 key with each TX frame when doing hwcrypto */
- #define IEEE80211_HW_TKIP_REQ_PHASE2_KEY (1<<14)
- 
-+	/* Driver supports radiotap. Temporary until all drivers support it. */
-+#define IEEE80211_HW_RADIOTAP_SUPPORTED (1<<20)
-+
- 	u32 flags;			/* hardware flags defined above */
- 
- 	/* Set to the size of a needed device specific skb headroom for TX skbs. */
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 0b7cb35..c3a9f0e 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -8,6 +8,7 @@
-  */
- 
- #include <net/mac80211.h>
-+#include <net/ieee80211_radiotap.h>
- #include <linux/module.h>
- #include <linux/init.h>
- #include <linux/netdevice.h>
-@@ -286,6 +287,14 @@ int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
- }
- EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
- 
-+static int ieee80211_get_radiotap_len(struct sk_buff *skb)
-+{
-+	struct ieee80211_radiotap_header *hdr =
-+		(struct ieee80211_radiotap_header *) skb->data;
-+
-+	return le16_to_cpu(hdr->it_len);
-+}
-+
- #ifdef CONFIG_MAC80211_LOWTX_FRAME_DUMP
- static void ieee80211_dump_frame(const char *ifname, const char *title,
- 				 const struct sk_buff *skb)
-@@ -2741,26 +2750,50 @@ ieee80211_rx_monitor(struct net_device *dev, struct sk_buff *skb,
- 		     struct ieee80211_rx_status *status)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	struct ieee80211_frame_info *fi;
- 	struct ieee80211_sub_if_data *sdata;
--	const size_t hlen = sizeof(struct ieee80211_frame_info)
--				- sizeof(fi->msg_type);
-+	struct ieee80211_rtap_hdr {
-+		struct ieee80211_radiotap_header hdr;
-+		u8 flags;
-+		u8 pad0;
-+		u8 rate;
-+		u8 pad1;
-+		__le16 chan_freq;
-+		__le16 chan_flags;
-+		u8 antsignal;
-+	} __attribute__ ((packed)) *rthdr;
- 
- 	skb->dev = dev;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	if (skb_headroom(skb) < hlen) {
--		I802_DEBUG_INC(local->rx_expand_skb_head);
--		if (pskb_expand_head(skb, hlen, 0, GFP_ATOMIC)) {
--			dev_kfree_skb(skb);
--			return;
-+	if (!(local->hw.flags & IEEE80211_HW_RADIOTAP_SUPPORTED)) {
-+		if (skb_headroom(skb) < sizeof(*rthdr)) {
-+			I802_DEBUG_INC(local->rx_expand_skb_head);
-+			if (pskb_expand_head(skb, sizeof(*rthdr), 0, GFP_ATOMIC)) {
-+				dev_kfree_skb(skb);
-+				return;
-+			}
- 		}
--	}
- 
--	fi = (struct ieee80211_frame_info *) skb_push(skb, hlen);
-+		rthdr = (struct ieee80211_rtap_hdr *) skb_push(skb, sizeof(*rthdr));
-+		memset(rthdr, 0, sizeof(*rthdr));
-+		rthdr->hdr.it_len = cpu_to_le16(sizeof(*rthdr));
-+		rthdr->hdr.it_present =
-+			cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) ||
-+				    (1 << IEEE80211_RADIOTAP_RATE) ||
-+				    (1 << IEEE80211_RADIOTAP_CHANNEL) ||
-+				    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL));
-+		rthdr->flags = local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS ?
-+			       IEEE80211_RADIOTAP_F_FCS : 0;
-+		rthdr->rate = status->rate / 5;
-+		rthdr->chan_freq = cpu_to_le16(status->freq);
-+		rthdr->chan_flags =
-+			status->phymode == MODE_IEEE80211A ?
-+			cpu_to_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ) :
-+			cpu_to_le16(IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ);
-+		rthdr->antsignal = status->ssi;
-+	}
- 
--	ieee80211_fill_frame_info(local, fi, status);
- 	sdata->stats.rx_packets++;
- 	sdata->stats.rx_bytes += skb->len;
- 
-@@ -3164,6 +3197,10 @@ ieee80211_rx_h_monitor(struct ieee80211_txrx_data *rx)
- 		return TXRX_QUEUED;
- 	}
- 
-+	if (rx->local->monitors &&
-+	    rx->local->hw.flags & IEEE80211_HW_RADIOTAP_SUPPORTED)
-+		skb_pull(rx->skb, ieee80211_get_radiotap_len(rx->skb));
-+
- 	return TXRX_CONTINUE;
- }
- 
-@@ -3731,6 +3768,13 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct ieee80211_txrx_data rx;
- 	u16 type;
- 	int multicast;
-+	int radiotap_len = 0;
-+
-+	if (local->monitors &&
-+	    local->hw.flags & IEEE80211_HW_RADIOTAP_SUPPORTED) {
-+		radiotap_len = ieee80211_get_radiotap_len(skb);
-+		skb_pull(skb, radiotap_len);
-+	}
- 
- 	hdr = (struct ieee80211_hdr *) skb->data;
- 	memset(&rx, 0, sizeof(rx));
-@@ -3767,6 +3811,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		goto end;
- 	skb = rx.skb;
- 
-+	skb_push(skb, radiotap_len);
- 	if (sta && !sta->assoc_ap && !(sta->flags & WLAN_STA_WDS) &&
- 	    !local->iff_promiscs && !multicast) {
- 		rx.u.rx.ra_match = 1;
-@@ -3775,7 +3820,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	} else {
- 		struct ieee80211_sub_if_data *prev = NULL;
- 		struct sk_buff *skb_new;
--		u8 *bssid = ieee80211_get_bssid(hdr, skb->len);
-+		u8 *bssid = ieee80211_get_bssid(hdr, skb->len - radiotap_len);
- 
- 		list_for_each_entry(sdata, &local->sub_if_list, list) {
- 			rx.u.rx.ra_match = 1;
-diff --git a/net/mac80211/ieee80211_iface.c b/net/mac80211/ieee80211_iface.c
-index 3e0b4fa..51197b1 100644
---- a/net/mac80211/ieee80211_iface.c
-+++ b/net/mac80211/ieee80211_iface.c
-@@ -199,7 +199,7 @@ void ieee80211_if_set_type(struct net_device *dev, int type)
- 		break;
- 	}
- 	case IEEE80211_IF_TYPE_MNTR:
--		dev->type = ARPHRD_IEEE80211_PRISM;
-+		dev->type = ARPHRD_IEEE80211_RADIOTAP;
- 		break;
- 	default:
- 		printk(KERN_WARNING "%s: %s: Unknown interface type 0x%x",
-
--- 
+- Dave
