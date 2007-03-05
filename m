@@ -1,87 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:48991 "EHLO silver.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934088AbXCWUn2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 16:43:28 -0400
-From: Jiri Benc <jbenc@suse.cz>
-To: "John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20070323214400.642621638.midnight@suse.cz>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/19] mac80211: remove useless callbacks from wmaster
-Message-Id: <20070323204444.499A54849D@silver.suse.cz>
-Date: Fri, 23 Mar 2007 21:44:44 +0100 (CET)
+Received: from mog.warmcat.com ([62.193.232.24]:58669 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751126AbXCEBCy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2007 20:02:54 -0500
+Message-ID: <45EB6C3B.2060408@warmcat.com>
+Date: Mon, 05 Mar 2007 01:02:51 +0000
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Question about PRISM2 header rate field
+References: <45EA9E39.6080706@warmcat.com>  <45EAF559.5070701@warmcat.com> <1173053744.6131.40.camel@johannes.berg>
+In-Reply-To: <1173053744.6131.40.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wireless handlers (and other callbacks) on master interface only confuse
-users. Let's get rid of them.
+Johannes Berg wrote:
 
-Signed-off-by: Jiri Benc <jbenc@suse.cz>
+Hi Johannes -
 
----
+>> Well, I discover in fact you need to inject starting only from the 
+>> IEEE802.11 header... and indeed that does work if you do it on the 
+>> "Management Interface".  I found this from hostapd sources, since 
+>> wpa_supplicant doesn't seem to inject packets from userspace,
+> 
+> Never versions of wpa_supplicant should do this in the userspace MLME
+> part.
 
- net/mac80211/ieee80211.c       |    3 ---
- net/mac80211/ieee80211_i.h     |    1 -
- net/mac80211/ieee80211_ioctl.c |   22 ----------------------
- 3 files changed, 0 insertions(+), 26 deletions(-)
+I was looking at 0.5.7 but it can easily be I missed it.
 
-9e00ff1fabe362774319e9d24fe866a0140b0f34
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 3d4fabe..e7576c5 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -4597,9 +4597,6 @@ struct ieee80211_hw *ieee80211_alloc_hw(
- 	sta_info_init(local);
- 
- 	mdev->hard_start_xmit = ieee80211_master_start_xmit;
--	mdev->wireless_handlers = &ieee80211_iw_master_handler_def;
--	mdev->do_ioctl = ieee80211_ioctl;
--	mdev->change_mtu = ieee80211_change_mtu;
- 	mdev->tx_timeout = ieee80211_tx_timeout;
- 	mdev->get_stats = ieee80211_get_stats;
- 	mdev->open = ieee80211_master_open;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 9df8ef0..4398453 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -627,7 +627,6 @@ struct net_device_stats *ieee80211_dev_s
- /* ieee80211_ioctl.c */
- int ieee80211_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
- extern const struct iw_handler_def ieee80211_iw_handler_def;
--extern const struct iw_handler_def ieee80211_iw_master_handler_def;
- 
- /* Set hw encryption from ieee80211 */
- int ieee80211_set_hw_encryption(struct net_device *dev,
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-index ae224c6..93a204b 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -3280,25 +3280,3 @@ const struct iw_handler_def ieee80211_iw
- 	.private_args	= (struct iw_priv_args *) ieee80211_ioctl_priv,
- 	.get_wireless_stats = ieee80211_get_wireless_stats,
- };
--
--/* Wireless handlers for master interface */
--
--static const iw_handler ieee80211_master_handler[] =
--{
--	[SIOCGIWNAME  - SIOCIWFIRST] = (iw_handler) ieee80211_ioctl_giwname,
--	[SIOCSIWFREQ  - SIOCIWFIRST] = (iw_handler) ieee80211_ioctl_siwfreq,
--	[SIOCGIWFREQ  - SIOCIWFIRST] = (iw_handler) ieee80211_ioctl_giwfreq,
--	[SIOCGIWRANGE - SIOCIWFIRST] = (iw_handler) ieee80211_ioctl_giwrange,
--	[SIOCSIWRTS   - SIOCIWFIRST] = (iw_handler) ieee80211_ioctl_siwrts,
--	[SIOCGIWRTS   - SIOCIWFIRST] = (iw_handler) ieee80211_ioctl_giwrts,
--	[SIOCSIWFRAG  - SIOCIWFIRST] = (iw_handler) ieee80211_ioctl_siwfrag,
--	[SIOCGIWFRAG  - SIOCIWFIRST] = (iw_handler) ieee80211_ioctl_giwfrag,
--	[SIOCSIWRETRY - SIOCIWFIRST] = (iw_handler) ieee80211_ioctl_siwretry,
--	[SIOCGIWRETRY - SIOCIWFIRST] = (iw_handler) ieee80211_ioctl_giwretry,
--};
--
--const struct iw_handler_def ieee80211_iw_master_handler_def =
--{
--	.num_standard	= sizeof(ieee80211_master_handler) / sizeof(iw_handler),
--	.standard	= ieee80211_master_handler,
--};
--- 
-1.3.0
+> Looks like you're right, there doesn't seem to be a way. I always
+> thought this was possible.
+> 
+> I think you should raise this point on the mailing list again. I've
+> proposed doing this through nl80211 to allow extensibility of the meta
+> information (frame rate, ....) for an injected frame instead of
+> conjuring up yet another meta information framework that transports
+> frame across netdevs, but Michael strongly opposes the idea of
+> transporting frames via anything but a netdev.
+
+Hmm, right.
+
+> I could post some code for nl80211 inject that doesn't control any meta
+> information yet but at least has the capability of carrying it over to
+> the stack.
+
+These injected broadcasts will ultimately be used for bulk data 
+transfer: I have had 300kBytes/sec using the addressless file transfer 
+protocol on the patched wireless drivers.  In such a case, it is 
+critical that netdev-like stuff especially select() and tx blocking down 
+in usermode works properly: the progress of the usermode transmission 
+thread must be regulated only by the driver and stack managing the 
+descriptors and blocking when things are getting backed up.  If the 
+nl80211 injection "side channel" for sending packets doesn't inherit the 
+interface stop and start stuff in a clean way from whatever it calls 
+through to then it could get messy getting the netdev interfaces and the 
+side channel to block in sync I can imagine.
+
+Here are a couple of ideas to consider anyway.
+
+#1 The rate and so on metadata for the sending action has to belong 
+unambiguously with the payload, because multiple packet rates can be in 
+use at the same time as part of an anonymous selfconfiguring rate 
+optimization scheme, and so it would be no good selecting the injection 
+rate asynchronously on some ioctl or via another nl80211 api separate 
+from the payload.
+
+How about for injection on the Management interface, it expects to find 
+a PRISM2 header prepended to the ieee80211 one and the payload, in 
+exactly the same format as is delivered by Monitor Mode?  The PRISM2 
+capture header structure has a bunch of fields for things like rate and 
+antenna selection already.  This has the satisfying aspect that you can 
+literally replay the whole Monitor Mode packet capture down the 
+Management Interface and get it to go out at the same rate.
+
+#2 The whole management interface magic summoning hoodoo is a bit 
+strange compared to echo -n newinterfacename > 
+/sys/class/whatever/add_iface.  How about regularizing the situation by 
+allowing one or more normal mac80211 interfaces to be added and then set 
+like iwconfig wmgmt0 mode Management.  Perhaps it can then be possible 
+to associate the interface with a rate, like iwconfig wmgmt0 rate 54M or 
+iwconfig wmgmt1 rate 11M.  Depending on which one you send your packet 
+to, it goes out at the rate associated with the interface.  There can 
+still only be one real Management Interface per physical device if that 
+is important, the others are just thin wrappers over the single good one 
+to hold the rate (and antenna if possible) info.  In this way there are 
+no new magic headers needed, it is all done as a netdev and the 
+situation for Management Interface creation is normalized a bit.  The 
+drawback is that it is not quite as flexible as being able to specify 
+the rate and which antenna packet by packet.
+
+-Andy
 
