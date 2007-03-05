@@ -1,36 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alnrmhc15.comcast.net ([204.127.225.95]:65320 "EHLO
-	alnrmhc15.comcast.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965412AbXCLN2g (ORCPT
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:50712 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752800AbXCEShE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2007 09:28:36 -0400
-Message-ID: <45F55452.3000704@gentoo.org>
-Date: Mon, 12 Mar 2007 09:23:30 -0400
-From: Joseph Jezak <josejx@gentoo.org>
+	Mon, 5 Mar 2007 13:37:04 -0500
+Date: Mon, 5 Mar 2007 19:37:02 +0100
+From: Adrian Bunk <bunk@stusta.de>
+To: Greg KH <greg@kroah.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, dbrownell@users.sourceforge.net,
+	linux-usb-devel@lists.sourceforge.net
+Subject: Re: 2.6.21-rc2-mm1: drivers/usb/host/ohci-ssb.c doesn't compile
+Message-ID: <20070305183702.GN3441@stusta.de>
+References: <20070302030026.5eef0c92.akpm@linux-foundation.org> <200703051149.05664.mb@bu3sch.de> <200703051157.16822.mb@bu3sch.de> <200703051226.46402.mb@bu3sch.de> <20070305182610.GA14113@kroah.com>
 MIME-Version: 1.0
-To: David Woodhouse <dwmw2@infradead.org>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
-	Bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] bcm43xx: Fix typo in B5PHY init specifications
-References: <45e85f2b.Dp1dM05tvZFFROmc%Larry.Finger@lwfinger.net> <1173685989.3584.2.camel@shinybook.infradead.org>
-In-Reply-To: <1173685989.3584.2.camel@shinybook.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20070305182610.GA14113@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Woodhouse wrote:
-> On Fri, 2007-03-02 at 11:30 -0600, Larry Finger wrote:
->> There was an error in the B5PHY init specifications.
+On Mon, Mar 05, 2007 at 10:26:10AM -0800, Greg KH wrote:
+> On Mon, Mar 05, 2007 at 12:26:45PM +0100, Michael Buesch wrote:
+> > On Monday 05 March 2007 11:57, Michael Buesch wrote:
+> > > > >   CC      drivers/usb/host/ohci-hcd.o
+> > > > > In file included from 
+> > > > > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-hcd.c:931:
+> > > > > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:47: error: request for member 'hcd_priv_size' in something not a structure or union
+> > > > 
+> > > > Seems like there was a comma missing.
+> > > > There also seems to be some Kconfig problem. will fix that.
+> > > > 
+> > > > > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:47: error: 'ssb_ohci_device' undeclared here (not in a function)
+> > > > > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:52: error: 'ssb_ohci_reset' undeclared here (not in a function)
+> > > > > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:53: error: 'ssb_ohci_start' undeclared here (not in a function)
+> > > > > ...
+> > > > > make[4]: *** [drivers/usb/host/ohci-hcd.o] Error 1
+> > > > > 
+> > > > > <--  snip  -->
+> > > 
+> > > Actually, it seems like I will run into other kinds of nasty problems
+> > > due to stupid design of the HCD code. The OHCI code #includes
+> > > the various drivers, which have a module_init each. So if you
+> > > compile PCI and SSB support, you have two module_init for one
+> > > OHCI module. Not sure how to fix this. Any idea?
+> > 
+> > A real problem is that the HCD core seems to have the assumption
+> > built-in that there can only be one OHCI driver per machine/arch.
+> > That's not the case for SSB, where we can have both PCI and SSB
+> > bus enabled, so both ohci drivers compiled.
+> > Any idea? Greg perhaps?
 > 
-> This patch doesn't fix the machine check in bcm43xx_phy_initb5 which
-> Pavel Roskin and I reported a couple of weeks ago. To get rid of that
-> crash, I still have to revert an earlier 'spec update' patch
-> (740ac4fb08866d702be90f167665d03759bd27d0).
+> David has provided hints on how to do this in the past on the
+> linux-usb-devel list if I remember correctly.
+
+Is there any good reason why we can't split the OHCI drivers properly 
+into separate modules?
+
+> thanks,
 > 
+> greg k-h
 
-Yeah, the issue is that the Rev1 cards have to be init'd with g mode
-off.  I'm not sure anyone has picked up this fix yet. The relevant
-spec fix is here: http://bcm-v4.sipsolutions.net/802.11/PHY/calinit
+cu
+Adrian
 
--Joe
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
