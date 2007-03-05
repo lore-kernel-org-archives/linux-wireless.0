@@ -1,122 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:51111 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752992AbXCUVkR (ORCPT
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:49877 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751126AbXCEBFH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2007 17:40:17 -0400
-Date: Wed, 21 Mar 2007 14:39:31 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: Larry Finger <larry.finger@lwfinger.net>
+	Sun, 4 Mar 2007 20:05:07 -0500
+Date: Mon, 5 Mar 2007 02:05:08 +0100
+From: Adrian Bunk <bunk@stusta.de>
+To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Matt Mackall <mpm@selenic.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.21-rc4-mm1
-Message-Id: <20070321143931.c822e855.randy.dunlap@oracle.com>
-In-Reply-To: <46019D9C.4020909@lwfinger.net>
-References: <20070319205623.299d0378.akpm@linux-foundation.org>
-	<1174433034.62033.16.camel@localhost>
-	<20070320223643.d8cbc3f6.akpm@linux-foundation.org>
-	<4601761F.4000302@lwfinger.net>
-	<20070321185900.GC3801@tuxdriver.com>
-	<20070321202225.GN10459@waste.org>
-	<46019D9C.4020909@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Johannes Berg <johannes@sipsolutions.net>,
+	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, yi.zhu@intel.com, jketreno@linux.intel.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Recent wireless breakage (ipw2200, iwconfig, NetworkManager)
+Message-ID: <20070305010508.GK3441@stusta.de>
+References: <20070304220857.GH23311@waste.org> <1173051564.6131.13.camel@johannes.berg> <20070305002550.GI23311@waste.org> <20070304164525.349f9589.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20070304164525.349f9589.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 21 Mar 2007 16:03:24 -0500 Larry Finger wrote:
-
-> Matt Mackall wrote:
-> > With the latest -mm, I'm now getting this:
+On Sun, Mar 04, 2007 at 04:45:25PM -0800, Andrew Morton wrote:
+> On Sun, 4 Mar 2007 18:25:50 -0600 Matt Mackall <mpm@selenic.com> wrote:
+> 
+> > On Mon, Mar 05, 2007 at 12:39:24AM +0100, Johannes Berg wrote:
+> > > [adding linux-wireless to CC]
+> > > 
+> > > On Sun, 2007-03-04 at 16:08 -0600, Matt Mackall wrote:
+> > > > Recent kernels are having troubles with wireless for me. Two seemingly
+> > > > related problems:
+> > > 
+> > > I don't think they are related actually.
+> > > 
+> > > > a) NetworkManager seems oblivious to the existence of my IPW2200
+> > > 
+> > > This is due to the recent sysfs restructuring I think. IIRC the fix is
+> > > to upgrade hal to a current git version.
 > > 
-> > Mar 21 15:06:52 cinder kernel: ipw2200: Detected Intel PRO/Wireless
-> > 2200BG Network Connection
-> > Mar 21 15:06:52 cinder kernel: firmware_loading_store: unexpected
-> > value (0)
-> > Mar 21 15:06:52 cinder kernel: ipw2200: ipw2200-bss.fw
-> > request_firmware failed:
-> > Reason -2
-> > Mar 21 15:06:52 cinder kernel: ipw2200: Unable to load firmware: -2
-> > Mar 21 15:06:52 cinder kernel: ipw2200: failed to register network
-> > device
+> > If that's the cause, the fix is to back out whatever was done to break
+> > userspace. Breaking userspace is not ok. Upgrading from 2.6.x to
+> > 2.6.x+1 should not entail replacing substantial parts of userspace,
+> > especially with NOT-EVEN-FRAKKING-RELEASED-YET CODE. 
 > 
-> The problem for me is a general protection fault.
-> 
-> kernel: general protection fault: 0000 [1] SMP
-> kernel: last sysfs file: class/firmware/0000:01:00.0/loading
-> kernel: CPU 0
-> kernel: Modules linked in: af_packet snd_pcm_oss snd_mixer_oss snd_seq snd_seq_device
-> cpufreq_conservative cpufreq_ondemand cpufreq_userspace cpufreq_powersave powernow_k8 freq_table
-> button battery ac nls_utf8 ntfs loop nfsd exportfs nfs lockd nfs_acl sunrpc sr_mod usb_storage
-> libusual snd_hda_intel snd_hda_codec sdhci snd_pcm snd_timer ohci1394 mmc_core snd ieee1394
-> forcedeth soundcore snd_page_alloc ohci_hcd ide_cd ehci_hcd cdrom usbcore i2c_nforce2 bcm43xx
-> firmware_class ieee80211softmac ieee80211 ieee80211_crypt ext3 mbcache jbd sg edd fan sata_nv libata
-> amd74xx thermal processor sd_mod scsi_mod ide_disk ide_core
-> kernel: Pid: 4026, comm: cat Not tainted 2.6.21-rc4-mm1-mm1 #6
-> kernel: RIP: 0010:[<ffffffff80251f99>]  [<ffffffff80251f99>] module_put+0x1f/0x35
-> kernel: RSP: 0018:ffff810006f85ea8  EFLAGS: 00010256
-> kernel: RAX: 6b6b6b6b6b6b6dab RBX: ffff810005dbe1f0 RCX: ffffffff803f6160
-> kernel: RDX: 0000000000000001 RSI: ffffffff802ec3dc RDI: 6b6b6b6b6b6b6b6b
-> kernel: RBP: ffff810006f85ea8 R08: 0000000000000000 R09: ffff810005918888
-> kernel: R10: 0000000000000000 R11: ffffffff8811b020 R12: ffff81000850d000
-> kernel: R13: ffff810004ec25a8 R14: ffff810006f38c18 R15: ffff8100034017c0
-> kernel: FS:  00002b621c2f86f0(0000) GS:ffffffff8051e000(0000) knlGS:0000000000000000
-> kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> kernel: CR2: 00002b621c01d3c0 CR3: 0000000008154000 CR4: 00000000000006e0
-> kernel: Process cat (pid: 4026, threadinfo ffff810006f84000, task ffff810005dd3140)
-> kernel: Stack:  ffff810006f85ec8 ffffffff802cf4ba 0000000000000008 ffff810006f38c18
-> kernel:  ffff810006f85f08 ffffffff80290a44 ffff81000853bde0 ffff810004ec25a8
-> kernel:  ffff8100035d1cb0 0000000000000000 ffff810004ec25a8 00007fff8ed0f6d0
-> kernel: Call Trace:
-> kernel:  [<ffffffff802cf4ba>] release+0x3a/0x49
-> kernel:  [<ffffffff80290a44>] __fput+0xca/0x180
-> kernel:  [<ffffffff80290b0e>] fput+0x14/0x16
-> kernel:  [<ffffffff8028e1aa>] filp_close+0x66/0x71
-> kernel:  [<ffffffff8028f3c2>] sys_close+0x98/0xdd
-> kernel:  [<ffffffff80209f6e>] system_call+0x7e/0x83
-> kernel:
-> kernel:
-> kernel: Code: 48 ff 08 83 3f 02 75 0c 48 8b bf 50 22 00 00 e8 08 9d fd ff
-> kernel: RIP  [<ffffffff80251f99>] module_put+0x1f/0x35
-> kernel:  RSP <ffff810006f85ea8>
+> yep.  Adrian, I think we should track this as a blocking regression, at
+> least until we've fully understood the implications and had the usual
+> arguments.
 
-which is 'decq' instruction in the local_dec() below:
+I'm currently tracking it as one of the 31 2.6.21-rc regressions that 
+are not yet fixed in Linus' tree, and for me each of them is a blocker
+until proven otherwise.
 
-void module_put(struct module *module)
-{
-	if (module) {
-		unsigned int cpu = get_cpu();
-		local_dec(&module->ref[cpu].count);
-		/* Maybe they're waiting for us to drop reference? */
-		if (unlikely(!module_is_live(module)))
-			wake_up_process(module->waiter);
-		put_cpu();
-	}
-}
+Whether Linus releases 2.6.21 despite blocking regressions is a 
+different question...
 
-0000000000000f4e <module_put>:
-module_put():
-     f4e:	55                   	push   %rbp
-     f4f:	48 85 ff             	test   %rdi,%rdi
-     f52:	48 89 e5             	mov    %rsp,%rbp
-     f55:	74 2a                	je     f81 <module_put+0x33>
-     f57:	65 8b 04 25 24 00 00 	mov    %gs:0x24,%eax
-     f5e:	00 
-     f5f:	89 c0                	mov    %eax,%eax
-     f61:	48 c1 e0 07          	shl    $0x7,%rax
-     f65:	48 8d 84 38 00 02 00 	lea    0x200(%rax,%rdi,1),%rax
-     f6c:	00 
-*    f6d:	48 ff 08             	decq   (%rax)
-     f70:	83 3f 02             	cmpl   $0x2,(%rdi)
-     f73:	75 0c                	jne    f81 <module_put+0x33>
-     f75:	48 8b bf 10 06 00 00 	mov    0x610(%rdi),%rdi
-     f7c:	e8 00 00 00 00       	callq  f81 <module_put+0x33>
-			f7d: R_X86_64_PC32	wake_up_process+0xfffffffffffffffc
-     f81:	c9                   	leaveq 
-     f82:	c3                   	retq 
+cu
+Adrian
 
+-- 
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
