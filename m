@@ -1,35 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:47790 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933457AbXCENqo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 08:46:44 -0500
-Message-ID: <45EC1F41.9070406@warmcat.com>
-Date: Mon, 05 Mar 2007 13:46:41 +0000
-From: Andy Green <andy@warmcat.com>
+Received: from cantor2.suse.de ([195.135.220.15]:44346 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751947AbXCFEFi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2007 23:05:38 -0500
+Date: Mon, 5 Mar 2007 20:03:50 -0800
+From: Greg KH <greg@kroah.com>
+To: Matt Mackall <mpm@selenic.com>
+Cc: Adrian Bunk <bunk@stusta.de>, Theodore Tso <tytso@mit.edu>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	yi.zhu@intel.com, jketreno@linux.intel.com,
+	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
+Subject: Re: [2.6.21 patch] unconditionally enable SYSFS_DEPRECATED
+Message-ID: <20070306040350.GA25783@kroah.com>
+References: <1173051564.6131.13.camel@johannes.berg> <20070305002550.GI23311@waste.org> <20070305011729.GB7681@kroah.com> <20070305125950.GC26781@thunk.org> <20070305185813.GA31465@kroah.com> <20070305234052.GR3441@stusta.de> <20070306000722.GA11436@kroah.com> <20070306013020.GN23311@waste.org> <20070306024850.GA24477@kroah.com> <20070306033947.GQ23311@waste.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Filtering in Monitor Mode (was Question about PRISM2 header rate  field)
-References: <45EA9E39.6080706@warmcat.com>	 <1173053744.6131.40.camel@johannes.berg> <45EB6C3B.2060408@warmcat.com>	 <200703042210.52534.flamingice@sourmilk.net>	 <1173094447.6131.56.camel@johannes.berg>  <45EC1454.4080605@warmcat.com>	 <1173099910.6131.71.camel@johannes.berg>  <45EC18A9.50003@warmcat.com> <1173100957.6131.76.camel@johannes.berg>
-In-Reply-To: <1173100957.6131.76.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070306033947.GQ23311@waste.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
+On Mon, Mar 05, 2007 at 09:39:47PM -0600, Matt Mackall wrote:
+> On Mon, Mar 05, 2007 at 06:48:50PM -0800, Greg KH wrote:
+> > If so, can you disable the option and strace it to see what program is
+> > trying to access what?  That will put the
+> > HAL/NetworkManager/libsysfs/distro script finger pointing to rest pretty
+> > quickly :)
+> 
+> Ok, I've got straces of both good and bad (>5M each). Filtered out
+> random pointer values and the like, diffed, and filtered for /sys/,
+> and the result's still 1.5M. What should I be looking for?
 
-> The power save mode argument still holds though, we might address that
-> with non-promisc monitor interfaces even though they do have a couple of
-> problems (you need to be associated on a different virtual netdev for it
-> to make sense...)
+Failures when trying to read from /sys/class/net/
 
-Hi Johannes -
+Or opening the directory and iterating over the subdirs in there.  Or
+something like that.
 
-Yes non-hardware promisc is an interesting combination for the userspace 
-MLME plan, since you have everything you need already without needing 
-hardware promisc.  I guess the best way is to define a new MODE_ enum 
-for MONITOR_LOCAL or something.
+But the /sys/class/net/ stuff should hopefully help narrow it down.
 
--Andy
+thanks,
+
+greg k-h
