@@ -1,81 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59698 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752033AbXCDXj7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2007 18:39:59 -0500
-Subject: Re: Recent wireless breakage (ipw2200, iwconfig, NetworkManager)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Matt Mackall <mpm@selenic.com>
-Cc: Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, yi.zhu@intel.com, jketreno@linux.intel.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20070304220857.GH23311@waste.org>
-References: <20070304220857.GH23311@waste.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Bdf9yS6/Qs+ddGU6eaEw"
-Date: Mon, 05 Mar 2007 00:39:24 +0100
-Message-Id: <1173051564.6131.13.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from ns.suse.de ([195.135.220.2]:40922 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933575AbXCFAJE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2007 19:09:04 -0500
+Date: Mon, 5 Mar 2007 16:07:22 -0800
+From: Greg KH <greg@kroah.com>
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Theodore Tso <tytso@mit.edu>, Matt Mackall <mpm@selenic.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	yi.zhu@intel.com, jketreno@linux.intel.com,
+	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
+Subject: Re: [2.6.21 patch] unconditionally enable SYSFS_DEPRECATED
+Message-ID: <20070306000722.GA11436@kroah.com>
+References: <20070304220857.GH23311@waste.org> <1173051564.6131.13.camel@johannes.berg> <20070305002550.GI23311@waste.org> <20070305011729.GB7681@kroah.com> <20070305125950.GC26781@thunk.org> <20070305185813.GA31465@kroah.com> <20070305234052.GR3441@stusta.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070305234052.GR3441@stusta.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Mar 06, 2007 at 12:40:52AM +0100, Adrian Bunk wrote:
+> On Mon, Mar 05, 2007 at 10:58:13AM -0800, Greg KH wrote:
+> > 
+> > Ok, how about the following patch.  Is it acceptable to everyone?
+> > 
+> > thanks,
+> > 
+> > greg k-h
+> > 
+> > ---
+> >  init/Kconfig |   13 +++++++++++--
+> >  1 file changed, 11 insertions(+), 2 deletions(-)
+> > 
+> > --- gregkh-2.6.orig/init/Kconfig
+> > +++ gregkh-2.6/init/Kconfig
+> > @@ -290,8 +290,17 @@ config SYSFS_DEPRECATED
+> >  	  that belong to a class, back into the /sys/class heirachy, in
+> >  	  order to support older versions of udev.
+> >  
+> > -	  If you are using a distro that was released in 2006 or later,
+> > -	  it should be safe to say N here.
+> > +	  If you are using an OpenSuSE, Gentoo, Ubuntu, or Fedora
+> > +	  release from 2007 or later, it should be safe to say N here.
+> > +
+> > +	  If you are using Debian or other distros that are slow to
+> > +	  update HAL, please say Y here.
+> >...
+> 
+> The sane solution seems to be to enable SYSFS_DEPRECATED unconditionally 
+> for all users, and schedule it's removal for mid-2008 (or later).
+> 
+> 12 months after the first _release_ of a HAL that can live without seems 
+> to be the first time when we can consider getting rid of it, since all 
+> distributions with at least one release a year should ship it by then.
+> 
+> Currently, SYSFS_DEPRECATED is only a trap for users.
 
---=-Bdf9yS6/Qs+ddGU6eaEw
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Huh?
 
-[adding linux-wireless to CC]
+No, again, I've been using this just fine for about 6 months now.
 
-On Sun, 2007-03-04 at 16:08 -0600, Matt Mackall wrote:
-> Recent kernels are having troubles with wireless for me. Two seemingly
-> related problems:
+And what about all of the servers not using HAL/NetworkManager?
+And what about all of the embedded systems not using either?
 
-I don't think they are related actually.
+So to not allow this to be turned off by people who might want to (we
+want this for OpenSuSE 10.3, and Fedora 7 also will want this, as will
+other distros released this year), is pretty heavy-handed.
 
-> a) NetworkManager seems oblivious to the existence of my IPW2200
+It also will work in OpenSuSE 10.2 which is already released, and I
+think Fedora 6, but I've only limited experience with these.
 
-This is due to the recent sysfs restructuring I think. IIRC the fix is
-to upgrade hal to a current git version.
+Oh, and Gentoo works just fine, and has been for the past 6 months.
 
-> b) Manual iwconfig waits for 60s and then reports:
+I would just prefer to come up with an acceptable set of wording that
+will work to properly warn people.
 
-That one's strange.
+I proposed one such wording which some people took as a slam against
+Debian, which it really was not at all.
 
-> A second attempt to enable WEP via iwconfig succeeds and network
-> connectivity is normal. However, NetworkManager still ignores the
-> device at this point.
+Does someone else want to propose some other wording instead?
 
-I'd think it's a ipw bug but I have no idea if that was even touched
-during this time.
+thanks,
 
-> Bisect with Mercurial points to this patch:
->=20
-> $ hg bisect bad
-> The first bad revision is:
-> changeset:   46985:f701b96bb2f7
-> user:        Greg Kroah-Hartman <gregkh@suse.de>
-> date:        Wed Feb 07 10:37:11 2007 -0800
-> summary:     Network: convert network devices to use struct device
-> instead of class_device
->=20
-> which corresponds to 43cb76d91ee85f579a69d42bc8efc08bac560278 in git.
-
-Yup, sysfs breakage/hal stuff. Can you try with a recent hal? And maybe
-try to bisect the iwconfig stop thing if you've got enough time...
-
-johannes
-
---=-Bdf9yS6/Qs+ddGU6eaEw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF61is/ETPhpq3jKURAuvvAKC1g4NYvVxDXEyrhIwv4uXtMx4+dwCcD/90
-gjfwMbRL2vJ46swsF1N2/1E=
-=2Oqf
------END PGP SIGNATURE-----
-
---=-Bdf9yS6/Qs+ddGU6eaEw--
-
+greg k-h
