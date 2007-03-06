@@ -1,60 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54772 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933457AbXCENFo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 08:05:44 -0500
-Subject: Re: Filtering in Monitor Mode (was Question about PRISM2 header  rate  field)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <45EC1454.4080605@warmcat.com>
-References: <45EA9E39.6080706@warmcat.com>
-	 <1173053744.6131.40.camel@johannes.berg> <45EB6C3B.2060408@warmcat.com>
-	 <200703042210.52534.flamingice@sourmilk.net>
-	 <1173094447.6131.56.camel@johannes.berg>  <45EC1454.4080605@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BLx+0kelDvC8gWuHdkKY"
-Date: Mon, 05 Mar 2007 14:05:10 +0100
-Message-Id: <1173099910.6131.71.camel@johannes.berg>
+Received: from waste.org ([66.93.16.53]:39844 "EHLO waste.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933896AbXCFDR7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2007 22:17:59 -0500
+Date: Mon, 5 Mar 2007 21:04:52 -0600
+From: Matt Mackall <mpm@selenic.com>
+To: Greg KH <greg@kroah.com>
+Cc: Adrian Bunk <bunk@stusta.de>, Theodore Tso <tytso@mit.edu>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	yi.zhu@intel.com, jketreno@linux.intel.com,
+	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
+Subject: Re: [2.6.21 patch] unconditionally enable SYSFS_DEPRECATED
+Message-ID: <20070306030452.GO23311@waste.org>
+References: <20070304220857.GH23311@waste.org> <1173051564.6131.13.camel@johannes.berg> <20070305002550.GI23311@waste.org> <20070305011729.GB7681@kroah.com> <20070305125950.GC26781@thunk.org> <20070305185813.GA31465@kroah.com> <20070305234052.GR3441@stusta.de> <20070306000722.GA11436@kroah.com> <20070306013020.GN23311@waste.org> <20070306024850.GA24477@kroah.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070306024850.GA24477@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Mar 05, 2007 at 06:48:50PM -0800, Greg KH wrote:
+ 
+> Wait, have confirmed that if you enable this config option,
+> NetworkManager starts back up again and works properly?
 
---=-BLx+0kelDvC8gWuHdkKY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yep, probably should have mentioned that.
 
-On Mon, 2007-03-05 at 13:00 +0000, Andy Green wrote:
+> If so, can you disable the option and strace it to see what program is
+> trying to access what?  That will put the
+> HAL/NetworkManager/libsysfs/distro script finger pointing to rest pretty
+> quickly :)
 
-> I used the libpcap filter stuff to limit what I saw to just the packets=20
-> of interest.  This is the filtering that tcpdump uses to do the=20
-> conditional filters like "port 22" or "host 192.168.0.1".  The filter=20
-> uses something called BPF (Berkeley Packet Filter) which is done=20
-> kernelside (at least libpcap is doing the filter install with ioctls in=20
-> pcap-bpf.c).  So the cost of drinking from a Monitor firehose is much=20
-> less than it sounds.
+Did that a few hours ago, got a very large dump from both programs. No
+smoking guns to my eye, but I'll send you the logs later.
 
-Actually, I think the cost can be significant, especially for embedded
-systems. You traverse into userspace for each packet at least once, and
-a management entity in userspace will not be concerned with data packets
-at all. Also, a monitor interface currently always disables power save
-mode for many drivers.
-
-johannes
-
---=-BLx+0kelDvC8gWuHdkKY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF7BWG/ETPhpq3jKURAkyLAJ9eJTXX5bu1PW9fR+8w2jAfL11z6QCffclp
-7Lh5PpjijrgrS0sBUvGabU8=
-=mu9x
------END PGP SIGNATURE-----
-
---=-BLx+0kelDvC8gWuHdkKY--
-
+-- 
+Mathematics is the supreme nostalgia of our time.
