@@ -1,53 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:53322 "EHLO
-	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753893AbXCTUuw (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59772 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933914AbXCFNKe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2007 16:50:52 -0400
-Date: Tue, 20 Mar 2007 15:49:53 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] bcm43xx-mac80211: Change radio_init2050 to match specs
-Message-ID: <460048f1.Sz+VinhM/N8KG294%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 6 Mar 2007 08:10:34 -0500
+Subject: zd1211rw problems
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
+	Michael Wu <flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HIA6u0iGBuSKUBcpTnnc"
+Date: Tue, 06 Mar 2007 02:01:46 +0100
+Message-Id: <1173142906.15891.71.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The code in the mac80211 version of radio_init2050 differs from the specs
-in two places.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+--=-HIA6u0iGBuSKUBcpTnnc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Index: wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
-===================================================================
---- wireless-mb.orig/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
-+++ wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
-@@ -3444,9 +3444,9 @@ static u16 radio2050_rfover_val(struct b
- 			if (phy_register == BCM43xx_PHY_RFOVER) {
- 				return 0x9B3;
- 			} else if (phy_register == BCM43xx_PHY_RFOVERVAL) {
--				extlna |= (i << 8);
- 				if (extlna)
- 					extlna |= 0x8000;
-+				extlna |= (i << 8);
- 				switch (lpd) {
- 				case LPD(0, 1, 1):
- 					return 0x8F92;
-@@ -3724,9 +3724,10 @@ u16 bcm43xx_radio_init2050(struct bcm43x
- 		bcm43xx_phy_stackrestore(stack, BCM43xx_PHY_ANALOGOVERVAL);
- 		bcm43xx_phy_stackrestore(stack, BCM43xx_PHY_CRS0);
- 		bcm43xx_phy_stackrestore(stack, BCM43xx_PHY_CLASSCTL);
--		bcm43xx_write16(dev, BCM43xx_MMIO_PHY_RADIO,
--				bcm43xx_read16(dev, BCM43xx_MMIO_PHY_RADIO)
--				& 0x7FFF);
-+		if (has_loopback_gain(phy)) {
-+			bcm43xx_phy_stackrestore(stack, BCM43xx_PHY_LO_MASK);
-+			bcm43xx_phy_stackrestore(stack, BCM43xx_PHY_LO_CTL);
-+		}
- 	}
- 	if (i > 15)
- 		ret = radio78;
+Hi,
+
+I've been testing zd1211rw (not the mac80211 version) a bit on my
+powermac because I wanted to test AP mode for bcm43xx and use my zd1211
+device as a client... Thing is, I have a few problems with it already...
+
+For one, I get lots of warnings like this (when running in monitor mode)
+
+[ 3354.472204] drivers/net/wireless/zd1211rw/zd_chip.c:1467 ASSERT r >=3D 0=
+ VIOLATED!
+[ 3354.472212] Call Trace:
+[ 3354.472222] [C000000001BCF6D0] [C00000000000F330] .show_stack+0x68/0x1b0=
+ (unreliable)
+[ 3354.472247] [C000000001BCF770] [D000000000444F04] .zd_rx_qual_percent+0x=
+164/0x200 [zd1211rw]
+[ 3354.472281] [C000000001BCF7F0] [D0000000004470CC] .do_rx+0x198/0x5c0 [zd=
+1211rw]
+[ 3354.472307] [C000000001BCF8D0] [C000000000049978] .tasklet_action+0xd0/0=
+x188
+[ 3354.472323] [C000000001BCF970] [C0000000000495C4] .__do_softirq+0xa8/0x1=
+64
+
+Secondly, also in monitor mode, I see a huge number of invalid packets.
+I can't believe there's that much noise here, and even then I shouldn't
+be seeing these packets. And I mean a HUGE number, in just 10 seconds I
+captured around 3700 packets! I'm pretty sure that the CRC and/or PLCP
+check isn't enabled since I'm seeing things like
+
+Beacon frame,SN=3D2219,FN=3D0,BI=3D100, SSID: "p\025Echel"
+
+while the AP is actually named "puschel" (don't ask me, just someone in
+my vicinity). I hope it doesn't happen in a normal (managed) mode.
+
+johannes
+
+--=-HIA6u0iGBuSKUBcpTnnc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF7L16/ETPhpq3jKURArg7AJ9ogLlimHoRPsAhGSI4/VCz5Ur0oQCbBjgo
+XnyONrCQc4uQKzlZwMfit1g=
+=Dmhj
+-----END PGP SIGNATURE-----
+
+--=-HIA6u0iGBuSKUBcpTnnc--
+
