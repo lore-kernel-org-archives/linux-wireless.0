@@ -1,83 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41255 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933290AbXCFNQf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2007 08:16:35 -0500
-Subject: wireless extensions vs. 64-bit architectures
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: netdev <netdev@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>,
-	Jean Tourrilhes <jt@hpl.hp.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Jouni Malinen <jkm@devicescape.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-69EhBqzK3yp8CXMy0aPc"
-Date: Tue, 06 Mar 2007 02:27:26 +0100
-Message-Id: <1173144447.15891.93.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from mx1.suse.de ([195.135.220.2]:46659 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933846AbXCFB60 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2007 20:58:26 -0500
+Date: Mon, 5 Mar 2007 17:56:38 -0800
+From: Greg KH <greg@kroah.com>
+To: Matt Mackall <mpm@selenic.com>
+Cc: Adrian Bunk <bunk@stusta.de>, Theodore Tso <tytso@mit.edu>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	yi.zhu@intel.com, jketreno@linux.intel.com,
+	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
+Subject: Re: [2.6.21 patch] unconditionally enable SYSFS_DEPRECATED
+Message-ID: <20070306015638.GA23756@kroah.com>
+References: <20070304220857.GH23311@waste.org> <1173051564.6131.13.camel@johannes.berg> <20070305002550.GI23311@waste.org> <20070305011729.GB7681@kroah.com> <20070305125950.GC26781@thunk.org> <20070305185813.GA31465@kroah.com> <20070305234052.GR3441@stusta.de> <20070306000722.GA11436@kroah.com> <20070306013020.GN23311@waste.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070306013020.GN23311@waste.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Mar 05, 2007 at 07:30:21PM -0600, Matt Mackall wrote:
+> On Mon, Mar 05, 2007 at 04:07:22PM -0800, Greg KH wrote:
+> > On Tue, Mar 06, 2007 at 12:40:52AM +0100, Adrian Bunk wrote:
+> > > On Mon, Mar 05, 2007 at 10:58:13AM -0800, Greg KH wrote:
+> > > > 
+> > > > Ok, how about the following patch.  Is it acceptable to everyone?
+> > > > 
+> > > > thanks,
+> > > > 
+> > > > greg k-h
+> > > > 
+> > > > ---
+> > > >  init/Kconfig |   13 +++++++++++--
+> > > >  1 file changed, 11 insertions(+), 2 deletions(-)
+> > > > 
+> > > > --- gregkh-2.6.orig/init/Kconfig
+> > > > +++ gregkh-2.6/init/Kconfig
+> > > > @@ -290,8 +290,17 @@ config SYSFS_DEPRECATED
+> > > >  	  that belong to a class, back into the /sys/class heirachy, in
+> > > >  	  order to support older versions of udev.
+> > > >  
+> > > > -	  If you are using a distro that was released in 2006 or later,
+> > > > -	  it should be safe to say N here.
+> > > > +	  If you are using an OpenSuSE, Gentoo, Ubuntu, or Fedora
+> > > > +	  release from 2007 or later, it should be safe to say N here.
+> > > > +
+> > > > +	  If you are using Debian or other distros that are slow to
+> > > > +	  update HAL, please say Y here.
+> > > >...
+> > > 
+> > > The sane solution seems to be to enable SYSFS_DEPRECATED unconditionally 
+> > > for all users, and schedule it's removal for mid-2008 (or later).
+> > > 
+> > > 12 months after the first _release_ of a HAL that can live without seems 
+> > > to be the first time when we can consider getting rid of it, since all 
+> > > distributions with at least one release a year should ship it by then.
+> > > 
+> > > Currently, SYSFS_DEPRECATED is only a trap for users.
+> > 
+> > Huh?
+> > 
+> > No, again, I've been using this just fine for about 6 months now.
+> > 
+> > And what about all of the servers not using HAL/NetworkManager?
+> > And what about all of the embedded systems not using either?
+> > 
+> > So to not allow this to be turned off by people who might want to (we
+> > want this for OpenSuSE 10.3, and Fedora 7 also will want this, as will
+> > other distros released this year), is pretty heavy-handed.
+> > 
+> > It also will work in OpenSuSE 10.2 which is already released, and I
+> > think Fedora 6, but I've only limited experience with these.
+> > 
+> > Oh, and Gentoo works just fine, and has been for the past 6 months.
+> >
+> > I would just prefer to come up with an acceptable set of wording that
+> > will work to properly warn people.
+> > 
+> > I proposed one such wording which some people took as a slam against
+> > Debian, which it really was not at all.
+> > 
+> > Does someone else want to propose some other wording instead?
+> 
+> Back up a bit. Let's review:
+> 
+> Problem: NetworkManager stopped working with my ipw2200 on Debian/unstable
+> 
+> Theory A: It broke because I'm not running an as-yet-unreleased HAL.
+> 
+>  Then we should revert the patch pronto because it's an unqualified
+>  regression.
+> 
+> Theory B: It broke because I'm not running relatively recent HAL.
+> 
+>  By all accounts I'm running the latest and greatest HAL and Network
+>  Manager, more than recent enough to work.
+> 
+> Theory C: It broke because I've got some goofy config.
+> 
+>  My setup passes no arguments to either. The HAL config file is
+>  completely bare-bones and there's no sign of any configuration files
+>  for Network Manager.
+> 
+> Theory D: It broke for some nebulous Debian-related reason.
+> 
+>  That's a bunch of unhelpful crap.
+> 
 
---=-69EhBqzK3yp8CXMy0aPc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Can we come up with an actual theory for what's wrong with my setup, please?
+> Like, perhaps:
+> 
+> Theory E: There's some undiagnosed new breakage that this introduces
+> that no else hit until it went into mainline.
 
-Hi,
+Theory F:  It broke because you are using NetworkManager for your
+network devices and the patches that fix this have not made it into a
+real release?
 
-Wtf! After struggling with some strange problems with zd1211rw (see some
-other mail) I decided to think again about what could possibly cause all
-the other problems I'm having with it. The kernel seems fine, but iw*
-userspace continually segfaults! And it also seems to be not
-reproducible for most other people, I'd asked on IRC once a while.
+I'm just guessing, but does anyone who is having this problem, NOT using
+NetworkManager?
 
-Well. Some thinking and stracing and thinking later it occurred to me...
-Hell! wext is ioctls and includes this gem:
+I'm running an old version of HAL just fine, but I'm not using
+NetworkManager here.
 
-struct  iw_point
-{
-  void __user   *pointer;       /* Pointer to the data  (in user space) */
-  __u16         length;         /* number of fields or size in bytes */
-  __u16         flags;          /* Optional params */
-};
+I am using NetworkManager on a OpenSuSE 10.3 release, but suse's version
+of NetworkManager is well known to not be anywhere near what is released
+as a tarball :(
 
-Of course nobody ever tells you this, but it's used in a shitload of
-places.
+thanks,
 
-Btw, did I mention that I'm running a stock debian powerpc 32-bit
-userspace on my 64-bit machine. Oh and of course wext doesn't have any
-32-in-64 compat code.
-
-/me laughes manically about wext.
-
-And don't tell me the fix is to use the netlink interface to wext.
-Actually, I think it may have the same bug, it seems to be operating
-with iw_point (or at least its size) too but I can't really tell, the
-code's just too clear, I always just see right through it... Oh and I
-still insist on removing the whole pile of junk, netlink interface
-first.
-
-Isn't there any possibility that we can kill userspace interfaces that
-are terminally broken without keeping them for years to come?
-
-Sorry. This is just too frustrating.
-
-johannes
---=20
-Now playing: Nightwish (Century Child) - End Of All Hope
-
-
---=-69EhBqzK3yp8CXMy0aPc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF7MN+/ETPhpq3jKURAi4IAKCV0f12tSWsSweSwox/EOni7P5m9wCgrBXJ
-YBHJDtR9CHqrNbKTfEQP07Q=
-=TB7w
------END PGP SIGNATURE-----
-
---=-69EhBqzK3yp8CXMy0aPc--
-
+greg k-h
