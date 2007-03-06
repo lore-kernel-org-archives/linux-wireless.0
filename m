@@ -1,85 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53919 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50810 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030305AbXCCPKN (ORCPT
+	with ESMTP id S965082AbXCFOeo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Mar 2007 10:10:13 -0500
-Subject: Re: [patch] at76_usb wireless driver
+	Tue, 6 Mar 2007 09:34:44 -0500
+Subject: Re: wireless extensions vs. 64-bit architectures
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Guido Guenther <agx@sigxcpu.org>
-Cc: netdev@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20070303150029.GA19940@bogon.ms20.nix>
-References: <20070110145724.GA4171@bogon.ms20.nix>
-	 <20070223221230.GA9965@bogon.ms20.nix>
-	 <20070303150029.GA19940@bogon.ms20.nix>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cm3GG6m5wEiypEDQK5dz"
-Date: Sat, 03 Mar 2007 16:09:48 +0100
-Message-Id: <1172934588.4966.46.camel@johannes.berg>
+To: linux-wireless@vger.kernel.org
+Cc: netdev <netdev@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>,
+	Jean Tourrilhes <jt@hpl.hp.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Jouni Malinen <jkm@devicescape.com>
+In-Reply-To: <1173144447.15891.93.camel@johannes.berg>
+References: <1173144447.15891.93.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Z0M8FVW2QCgJi18CfauM"
+Date: Tue, 06 Mar 2007 15:31:20 +0100
+Message-Id: <1173191480.5415.2.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-cm3GG6m5wEiypEDQK5dz
+--=-Z0M8FVW2QCgJi18CfauM
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Pavel should know better and have told you that wireless got it's own
-list ;)
-Quoting fully to make linux-wireless aware. I guess we'll want to take
-out netdev on replies to this.
+On Tue, 2007-03-06 at 02:27 +0100, Johannes Berg wrote:
+> Actually, I think it may have the same bug, it seems to be operating
+> with iw_point (or at least its size) too
+
+I'm told that the code that uses it is only internal and the size isn't
+part of the userspace interface which makes this wrong. But we still
+have many programs relying on ioctls and none relying on the wext/nl
+interface so that isn't really a concern anyway.
 
 johannes
 
-On Sat, 2007-03-03 at 16:00 +0100, Guido Guenther wrote:
-> Hi,
-> I'd be glad if someone could review the at76_usb wireless driver, it
-> adds support for the at76c503, at76c505 and at76c505a wireless USB
-> adapters. Since it exceeds the lists size limit, please
->     git-clone http://honk.sigxcpu.org/git/at76c503a.git/
->=20
-> The projects homepage is:
->     http://at76c503a.berlios.de/
-> The above git tree is functionally equivalent to the CVS version at
-> berlios but removes support for older kernels, older wireless
-> extensions, C99 style comments, commented out code and shifts things
-> around a little for better readability. This is only done to ease
-> reviewing - there are no functional changes over the CVS archive.
->=20
-> The driver was tested (and is in pracitical use) on at least i386, amd64
-> and powerpc.
->=20
-> Please note that I'm not the author of the driver, the driver itself
-> lists these copyright holders (but none of them showed up on the
-> mailing list during the last couple of months):
->=20
-> Copyright (c) 2002 - 2003 Oliver Kurth
-> Copyright (c) 2004 Joerg Albert <joerg.albert@gmx.de>
-> Copyright (c) 2004 Nick Jones
-> Copyright (c) 2004 Balint Seeber <n0_5p4m_p13453@hotmail.com>
->=20
-> Pavel Roskin, Maxim Grechkin and me were committing to CVS recently.
-> Cheers,
->  -- Guido
->=20
-> -
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-
---=-cm3GG6m5wEiypEDQK5dz
+--=-Z0M8FVW2QCgJi18CfauM
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBF6Y+8/ETPhpq3jKURAicpAJkB5NTfipYJJcGOTkaj5uvYTThz5QCfd4wT
-WoILie/5wQ8RNV3v4bAQRos=
-=BQIh
+iD8DBQBF7Xs4/ETPhpq3jKURAqz4AJ0Y5WKHzeZiz4h+cNxAj24WCl4hKQCglXeW
+1RHWnx8ZFpPAYEyWKaHNQ0o=
+=hegF
 -----END PGP SIGNATURE-----
 
---=-cm3GG6m5wEiypEDQK5dz--
+--=-Z0M8FVW2QCgJi18CfauM--
 
