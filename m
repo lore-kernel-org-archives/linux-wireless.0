@@ -1,81 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:46111 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:36637 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752937AbXC1KUb (ORCPT
+	with ESMTP id S965522AbXCGQlf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 06:20:31 -0400
-Subject: PLCP header information (was: Re: [PATCH] zd1211rw-mac80211: Fix  for monitor mode bug)
+	Wed, 7 Mar 2007 11:41:35 -0500
+Subject: using keys service for wireless
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Andy Green <andy@warmcat.com>, Jiri Benc <jbenc@suse.cz>,
-	Daniel Drake <dsd@gentoo.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, kune@deine-taler.de,
-	radiotap@mail.ojctech.com
-In-Reply-To: <200703281155.52208.mb@bu3sch.de>
-References: <20070325231817.9C5887B409F@zog.reactivated.net>
-	 <200703262239.07013.mb@bu3sch.de> <1175073595.5151.28.camel@johannes.berg>
-	 <200703281155.52208.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oX1+TeLDf4ofHViDVkXa"
-Date: Wed, 28 Mar 2007 12:18:42 +0200
-Message-Id: <1175077122.5151.43.camel@johannes.berg>
+To: wireless <linux-wireless@vger.kernel.org>
+Cc: David Howells <dhowells@redhat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PF8uPtkn9E5DklTGfDjH"
+Date: Tue, 06 Mar 2007 19:58:12 +0100
+Message-Id: <1173207492.3503.13.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-oX1+TeLDf4ofHViDVkXa
+--=-PF8uPtkn9E5DklTGfDjH
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2007-03-28 at 11:55 +0200, Michael Buesch wrote:
+Hi all,
 
-> I think we need at least two "stages" for this config.
-> One that says: Get all packets with bad FCS
-> And one that says: Get all packets with bad FCS and everything else
-> that looks like a signal, which is probably your microwave oven, though.
+Months later... I finally thought about whether we should be using the
+key service (Documentation/keys.txt) for wireless. I think I've decided
+against that but want to present my thoughts here just in case someone
+jumps in to tell me where I'm wrong :)
 
-I agree.
+So let me start with an analysis of how we currently use keys. Normally,
+when we set up an encrypted wireless connection, we do two things at the
+same time: we tell the driver (or mac80211 stack) to use encryption and
+hand it a key. There are keys of various types based on which we decided
+what kind of encryption userspace is trying to set up.
 
-> So, when these packets are passed up the stack the PLCP is stripped.
-> I think we should make the stack aware of the PLCP (and add an RX flag
-> PLCP_available) so that it is able to check the PLCP checksum.
-> Otherwise the only way to detect your microwave oven from the packet
-> stream would be failed FCS. Which would also most likely failed then, but
-> I think it's probably useful for the user to see the PLCP, too, on
-> a mon interface.
->=20
-> So we need RX flags "PLCP_available" and "Not_checksummed".
+After the key has been set we encrypt all frames that go out with that
+key. Oh, there's an issue with group keys vs. pairwise keys which means
+that a single connection can have multiple keys and for outgoing packets
+we choose one of them to do the encryption with, same for incoming
+packets.
 
-Also "PLCP checksummed" or such. And we need to think about how we
-represent the PLCP in radiotap.
+For master mode (access point), we have a key per station and possibly
+some more keys, but the basic principle is the same: we hand the
+stack/driver a key and it uses it for en- and decryption.
 
-The PLCP header has different lengths depending on the type of PHY used,
-for Clause 17 (A) it is 40 bits, for the others (I think) it is 48 bits.
-For N I think the whole notion was changed a bit with the stuff being
-defined in terms of microseconds and not bits.
+There's basically no lifetime management going on, the key is usually
+valid until removed by userspace. In some cases there needs to be key
+renegotiation, but this is handled entirely in userspace anyway.
 
-It'd be useful to make this part of radiotap but it'd need a length byte
-too. I propose always padding it to a multiple of 8 bytes with a length
-byte as the first byte.
+Looking at this, I notice that if we wanted to use the key service we'd
+still have to tell the stack/driver about the encryption type [1] we
+want to use as well as when to start using it. Since we have no lifetime
+issues here, using the key service doesn't seem to really gain us
+anything and makes the userspace interface more complicated (the actual
+key data would be transported out of band while the command to use it
+still is in nl80211)
 
-For mac80211, we'd add a new item s16 plcp offset that tells us where in
-the radiotap header that the driver generated the plcp header can be
-found so that in the RX path we don't need to parse the radiotap header
-to find the PLCP if necessary.
+Does anybody have a differing opinion? If not, I'll add the required
+primitives to nl80211.
 
 johannes
 
---=-oX1+TeLDf4ofHViDVkXa
+[1] we could of course use many many key types or the key description
+for this
+
+--=-PF8uPtkn9E5DklTGfDjH
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGCkEC/ETPhpq3jKURArGoAKCnmjXZCvmgDh8Kqt1TCqSg3BFV+wCgtTl/
-+spbR8U09UWATK1VjxvWMRI=
-=Lh8g
+iD8DBQBF7bnE/ETPhpq3jKURAgeFAKC2Mck8fDvhDXsWItE0CA9e3DzrdwCeMiYA
+wSs376ZiGGgbT0hz28c1CEU=
+=ab5h
 -----END PGP SIGNATURE-----
 
---=-oX1+TeLDf4ofHViDVkXa--
+--=-PF8uPtkn9E5DklTGfDjH--
 
