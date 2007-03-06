@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:30076 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030334AbXCCRzP (ORCPT
+Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:62888 "EHLO
+	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932863AbXCFB36 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Mar 2007 12:55:15 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so960621uga
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Mar 2007 09:55:13 -0800 (PST)
-To: "John Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: rename rt2x00lib.c
-Date: Sat, 3 Mar 2007 18:55:06 +0100
-Cc: linux-wireless@vger.kernel.org
+	Mon, 5 Mar 2007 20:29:58 -0500
+Date: Mon, 05 Mar 2007 19:28:00 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: stable@kernel.org
+Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] bcm43xx: Fix assertion failures in interrupt handler
+Message-ID: <45ecc3a0.8we8IxI7lp6G5Y6l%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200703031855.06488.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is best to rename rt2x00lib.c now, because we want to
-link rt2x00debug.c and several other objects to it soon.
-Patches for creating those new objects, which will link to
-rt2x00lib as well will arrive soon.
+From: Pavel Roskin <proski@gnu.org>
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+In the bcm43xx interrupt handler, sanity checks are wrongly done before the
+verification that the interrupt is for the bcm43xx.
+
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+ drivers/net/wireless/bcm43xx/bcm43xx_main.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+index 057541f..21d4ecd 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_main.c
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+@@ -1858,9 +1858,6 @@ static irqreturn_t bcm43xx_interrupt_handler(int irq, void *dev_id)
+ 
+ 	spin_lock(&bcm->irq_lock);
+ 
+-	assert(bcm43xx_status(bcm) == BCM43xx_STAT_INITIALIZED);
+-	assert(bcm->current_core->id == BCM43xx_COREID_80211);
+-
+ 	reason = bcm43xx_read32(bcm, BCM43xx_MMIO_GEN_IRQ_REASON);
+ 	if (reason == 0xffffffff) {
+ 		/* irq not for us (shared irq) */
+@@ -1871,6 +1868,9 @@ static irqreturn_t bcm43xx_interrupt_handler(int irq, void *dev_id)
+ 	if (!reason)
+ 		goto out;
+ 
++	assert(bcm43xx_status(bcm) == BCM43xx_STAT_INITIALIZED);
++	assert(bcm->current_core->id == BCM43xx_COREID_80211);
++
+ 	bcm->dma_reason[0] = bcm43xx_read32(bcm, BCM43xx_MMIO_DMA0_REASON)
+ 			     & 0x0001DC00;
+ 	bcm->dma_reason[1] = bcm43xx_read32(bcm, BCM43xx_MMIO_DMA1_REASON)
 
 ---
 
-The rt2x00lib.c file has been renamed with the following command:
-cg-mv drivers/net/wireless/mac80211/rt2x00/rt2x00lib.c drivers/net/wireless/mac80211/rt2x00/rt2x00dev.c
-
-diff --git a/drivers/net/wireless/mac80211/rt2x00/Makefile b/drivers/net/wireless/mac80211/rt2x00/Makefile
-index 10c7d9a..f9f9810 100644
---- a/drivers/net/wireless/mac80211/rt2x00/Makefile
-+++ b/drivers/net/wireless/mac80211/rt2x00/Makefile
-@@ -1,3 +1,5 @@
-+rt2x00lib-objs := rt2x00dev.o
-+
- obj-$(CONFIG_RT2X00_LIB)	+= rt2x00lib.o
- obj-$(CONFIG_RT2400PCI)		+= rt2400pci.o
- obj-$(CONFIG_RT2500PCI)		+= rt2500pci.o
-diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2x00lib.c b/drivers/net/wireless/mac80211/rt2x00/rt2x00dev.c
-similarity index 100%
-rename from drivers/net/wireless/mac80211/rt2x00/rt2x00lib.c
-rename to drivers/net/wireless/mac80211/rt2x00/rt2x00dev.c
