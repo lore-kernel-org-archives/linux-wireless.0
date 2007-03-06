@@ -1,70 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47462 "EHLO mx1.redhat.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3031 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752269AbXC1Osm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 10:48:42 -0400
-Subject: Re: debugging network manager association failure?
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1175023571.5151.3.camel@johannes.berg>
-References: <1175023571.5151.3.camel@johannes.berg>
-Content-Type: text/plain
-Date: Wed, 28 Mar 2007 10:52:10 -0400
-Message-Id: <1175093530.6907.10.camel@localhost.localdomain>
+	id S965297AbXCFQf5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2007 11:35:57 -0500
+Date: Tue, 6 Mar 2007 11:11:43 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: bcm43xx-dev@berlios.de, wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Pull the patch sent under heading "[PATCH] bcm43xx: Fix typo in B5PHY init specifications"
+Message-ID: <20070306161143.GA553@tuxdriver.com>
+References: <45EBA6FB.4040602@lwfinger.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <45EBA6FB.4040602@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-03-27 at 21:26 +0200, Johannes Berg wrote:
-> Hi,
+On Sun, Mar 04, 2007 at 11:13:31PM -0600, Larry Finger wrote:
+
+> Please pull the patch referenced in the subject. It completely kills my BCM4306 with phy->revision == 1.
 > 
-> Usually I simply use wpa_supplicant itself when testing but for some
-> reason I decided to use nm today... and it failed.
-> 
-> My nm is 0.6.4 and wpa_supplicant 0.6.0. When I use wpa_supplicant with
-> a config file like this:
-> --- %< ---
-> ctrl_interface=/var/run/wpa_supplicant
-> eapol_version=1
-> ap_scan=1
-> fast_reauth=1
-> network={
->         ssid="berg"
->         priority=1
->         key_mgmt=WPA-PSK
->         psk="stuffhere"
->         pairwise=CCMP
->         group=CCMP TKIP
-> }
-> --- >% ---
-> 
-> it works perfectly. But with nm it doesn't do anything at all, stracing
-> it yields that it thinks it's getting authentication timeouts with
-> 00:...:00. Any idea what could be causing this? Is this a bug in
-> mac80211?
+> Joe Jezak and I will have to sort this one out.
 
-There's been weird errors with wpa_supplicant that I can't quite wrap my
-head around.  There are two cases:
+Just to be clear, I interpret this to mean "do not apply that patch".
 
-1) NM can't connect to wpa_supplicant's control socket sometimes; this
-is fixed by using the D-Bus interface
+"Pull" is often used to mean "take the patch and apply it" as in "git pull".
 
-2) The _same_ settings sent to wpa_supplicant via NM, and those same
-settings in the config file, produce different results.  I've compared
-the settings of quite a few cases of this and found no appreciable
-differences, but still NM fails to associate.  I was kind of hoping this
-would all go away with the switch to the D-Bus interface in 0.7, because
-the socket-based control interface has been so much of a hassle.  But it
-probably needs to be fixed for the 0.6.x branch.
+Let me know if I'm interpreting you incorrectly.
 
-Could you possibly get some driver traces of what happens in the driver
-for plain wpa_supplicant and then with NM+wpa_supplicant?  If the config
-that NM is sending to wpa_supplicant is the same, then the only thing I
-can think of is some randomly different driver state or interaction
-between the 3 unrelated to the specific config info that's causing
-associations to fail.
-
-Dan
-
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
