@@ -1,66 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:48198 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:52063 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933662AbXCZWh1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2007 18:37:27 -0400
-Subject: [patch 1/5] Add draft IEEE 802.11n data structures and constants
-From: mohamed <mabbas@linux.intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+	id S965291AbXCFQfY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2007 11:35:24 -0500
+Subject: Re: [FYI] compiling hostapd against latest wireless-dev
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1173095902.6131.63.camel@johannes.berg>
+References: <1173095902.6131.63.camel@johannes.berg>
 Content-Type: text/plain
-Date: Mon, 26 Mar 2007 04:36:39 -0700
-Message-Id: <1174908999.1364.50.camel@dell-4965.jf.intel.com>
+Date: Tue, 06 Mar 2007 10:40:38 -0500
+Message-Id: <1173195638.12545.3.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add draft IEEE 802.11n data structures and constants to ieee80211.h
+On Mon, 2007-03-05 at 12:58 +0100, Johannes Berg wrote:
+> ... isn't really possible at the moment. But you only need to change
+> some include paths (to be able to include the
+> net/mac80211/mac80211_common.h header!) and apply this change to be able
+> to include include/net/mac80211.h into the userspace code.
+> 
+> And no, this shouldn't be applied. Rather should the prism ioctl foo be
+> deleted.
 
-Several information element were added to support 80211n capabilities.
-This patch adds all data structures related to these information
-element. 
+Right; if there's something that the prism ioctls do that cfg80211
+doesn't, and that something is useful, then we probably need to extend
+cfg80211 to do that thing.  Then we rip out all the custom ioctl junk
+everywhere.
 
-Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
+Dan
 
-diff -Nupr wireless-dev/include/linux/ieee80211.h
-wireless-dev-new/include/linux/ieee80211.h
---- wireless-dev/include/linux/ieee80211.h	2007-03-23 13:07:38.000000000
--0700
-+++ wireless-dev-new/include/linux/ieee80211.h	2007-03-23
-12:35:07.000000000 -0700
-@@ -105,6 +105,23 @@ struct ieee80211_hdr {
- } __attribute__ ((packed));
- 
- 
-+struct ieee80211_ht_capability {
-+	__le16 capabilitiesInfo;
-+	u8 mac_ht_params_info;
-+	u8 supported_mcs_set[16];
-+	__le16 extended_ht_capability_info;
-+	__le32 tx_BF_capability_info;
-+	u8 antenna_selection_info;
-+}__attribute__ ((packed));
-+
-+struct ieee80211_ht_additional_info {
-+	u8 control_chan;
-+	u8 ht_param;
-+	__le16 operation_mode;
-+	__le16 stbc_param;
-+	u8 basic_set[16];
-+}__attribute__ ((packed));
-+
- struct ieee80211_mgmt {
- 	__le16 frame_control;
- 	__le16 duration;
-@@ -319,6 +336,9 @@ enum ieee80211_eid {
- 	/* 802.11g */
- 	WLAN_EID_ERP_INFO = 42,
- 	WLAN_EID_EXT_SUPP_RATES = 50,
-+	/* 802.11n */
-+        WLAN_EID_HT_CAPABILITY = 45,
-+        WLAN_EID_HT_EXTRA_INFO = 61,
- 	/* 802.11i */
- 	WLAN_EID_RSN = 48,
- 	WLAN_EID_WPA = 221,
- 
- 
+
+> johannes
+> 
+> --- wireless-dev.orig/include/net/mac80211.h	2007-03-04 01:53:43.719146462 +0100
+> +++ wireless-dev/include/net/mac80211.h	2007-03-04 01:55:13.489146462 +0100
+> @@ -10,6 +10,7 @@
+>  #ifndef MAC80211_H
+>  #define MAC80211_H
+>  
+> +#ifdef __KERNEL__
+>  #include <linux/kernel.h>
+>  #include <linux/if_ether.h>
+>  #include <linux/skbuff.h>
+> @@ -18,7 +19,7 @@
+>  #include <linux/ieee80211.h>
+>  #include <net/wireless.h>
+>  #include <net/cfg80211.h>
+> -
+> +#endif
+>  /* Note! Only ieee80211_tx_status_irqsafe() and ieee80211_rx_irqsafe() can be
+>   * called in hardware interrupt context. The low-level driver must not call any
+>   * other functions in hardware interrupt context. If there is a need for such
+> @@ -108,7 +109,7 @@ enum {
+>  	MODE_ATHEROS_TURBOG = 4 /* Atheros Turbo mode (2x.11g at 2.4 GHz) */,
+>  	NUM_IEEE80211_MODES = 5
+>  };
+> -
+> +#ifdef __KERNEL__
+>  struct ieee80211_hw_mode {
+>  	int mode; /* MODE_IEEE80211... */
+>  	int num_channels; /* Number of channels (below) */
+> @@ -118,7 +119,7 @@ struct ieee80211_hw_mode {
+>  
+>  	struct list_head list; /* Internal, don't touch */
+>  };
+> -
+> +#endif
+>  struct ieee80211_tx_queue_params {
+>  	int aifs; /* 0 .. 255; -1 = use default */
+>  	int cw_min; /* 2^n-1: 1, 3, 7, .. , 1023; 0 = use default */
+> @@ -552,7 +553,7 @@ struct ieee80211_hw {
+>  	 * WMM requires at least four queues. */
+>  	int queues;
+>  };
+> -
+> +#ifdef __KERNEL__
+>  static inline void SET_IEEE80211_DEV(struct ieee80211_hw *hw, struct device *dev)
+>  {
+>  	set_wiphy_dev(hw->wiphy, dev);
+> @@ -1079,4 +1080,6 @@ static inline int ieee80211_get_morefrag
+>  #define MAC_ARG(x) ((u8*)(x))[0], ((u8*)(x))[1], ((u8*)(x))[2], \
+>  		   ((u8*)(x))[3], ((u8*)(x))[4], ((u8*)(x))[5]
+>  
+> +#endif
+> +
+>  #endif /* MAC80211_H */
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
