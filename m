@@ -1,57 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60044 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933133AbXCHT1f (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:51622 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965511AbXCGOLH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2007 14:27:35 -0500
-Subject: Re: wireless extensions vs. 64-bit architectures
-From: Johannes Berg <johannes@sipsolutions.net>
-To: jt@hpl.hp.com
-Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Jouni Malinen <jkm@devicescape.com>
-In-Reply-To: <20070308184954.GA24485@bougret.hpl.hp.com>
-References: <1173144447.15891.93.camel@johannes.berg>
-	 <20070306171316.GA19669@bougret.hpl.hp.com>
-	 <200703061943.07350.mb@bu3sch.de>
-	 <20070307020310.GA20466@bougret.hpl.hp.com>
-	 <1173364747.14001.7.camel@johannes.berg>
-	 <20070308184954.GA24485@bougret.hpl.hp.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VjUWlSUMKghz3KaPjnFd"
-Date: Thu, 08 Mar 2007 20:27:22 +0100
-Message-Id: <1173382042.3248.63.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 7 Mar 2007 09:11:07 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Andy Green <andy@warmcat.com>
+Subject: Re: Packetspammer and iwlwifi fragility
+Date: Wed, 7 Mar 2007 09:10:15 -0500
+Cc: linux-wireless@vger.kernel.org
+References: <45EEB892.6040201@warmcat.com>
+In-Reply-To: <45EEB892.6040201@warmcat.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1304219.mXQjKltbL5";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703070910.20242.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-VjUWlSUMKghz3KaPjnFd
-Content-Type: text/plain
+--nextPart1304219.mXQjKltbL5
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Thu, 2007-03-08 at 10:49 -0800, Jean Tourrilhes wrote:
-> 	A proper fix would involve forcing the alignement in the
-> kernel. Unfortunately, that would break 64bit->64bit configs. I think
-> I can build a workaround for this in iwlib.
+On Wednesday 07 March 2007 08:05, Andy Green wrote:
+> Also notice that packets cannot be sent by packetspammer until the
+> interface is brought up, which I guess is reasonable enough, but also I
+> found not until the interface was associated with a WPA network, which
+> is a problem if the plan is to use the injection action to do the work
+> of association in userspace.
+>
+There is a hostap/prism2 sub-ioctl to enable userspace mlme mode, which sho=
+uld=20
+fix that issue. Look around in ieee80211_ioctl.c for=20
+PRISM2_IOCTL_PRISM2_PARAM, ieee80211_ioctl_prism2_param, and=20
+PRISM2_PARAM_USER_SPACE_MLME for hints. These sub-ioctls are, of course,=20
+quite evil and need to be replaced, but it's a little better than hacking=20
+mac80211 to start with user_space_mlme enabled by default.
 
-Actually, other tools like network manager, wpa supplicant and possibly
-more don't use iwlib afaik and are affected too, so the only real fix
-seems to be possible in the kernel.
+=2DMichael Wu
 
-johannes
-
---=-VjUWlSUMKghz3KaPjnFd
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart1304219.mXQjKltbL5
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBF8GOa/ETPhpq3jKURAufVAJ9rn5Xs0kODVf31jtCJAU0e6N0b4ACfYDpv
-ytNYd3/mBS0bVO61rLcZs4Y=
-=PAHo
+iD8DBQBF7sfMT3Oqt9AH4aERAmVsAJ0QvjCZAnJvpf4YcYvvasRtD/8imACgwgt3
+Gw/46k51ykYBRk8rX21nc7M=
+=awhu
 -----END PGP SIGNATURE-----
 
---=-VjUWlSUMKghz3KaPjnFd--
-
+--nextPart1304219.mXQjKltbL5--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
