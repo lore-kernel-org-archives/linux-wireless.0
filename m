@@ -1,162 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:37127 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753342AbXC2LO2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2007 07:14:28 -0400
-Message-ID: <460B9F8C.3040701@warmcat.com>
-Date: Thu, 29 Mar 2007 12:14:20 +0100
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/4] mac80211: Monitor mode radiotap-based packet injection
-References: <20070320103955.600509703@warmcat.com>	 <20070320104104.837354764@warmcat.com> <1174501733.3944.28.camel@johannes.berg>
-In-Reply-To: <1174501733.3944.28.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from kanga.kvack.org ([66.96.29.28]:60292 "EHLO kanga.kvack.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S2992437AbXCGSSD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2007 13:18:03 -0500
+Date: Wed, 7 Mar 2007 15:16:38 -0300
+From: Marcelo Tosatti <marcelo@kvack.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Marcelo Tosatti <marcelo@kvack.org>, Jeff Garzik <jeff@garzik.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'libertas' branch of wireless-2.6
+Message-ID: <20070307181638.GA22305@dmt>
+References: <20070227205649.GH5826@tuxdriver.com> <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org> <20070304153627.GA32380@dmt> <20070305140825.GA9982@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070305140825.GA9982@infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-
-Hi Johannes -
-
-I am going to issue a new patch set for the injection stuff shortly, so 
-I can reply to your comments with what has happened about them.
-
-> The actual parsing should live in cfg80211 (preferably in a new file) so
-> that others can use it. If it's a lot of code then add a new invisible
-> Kconfig symbol for it that drivers/stacks can select.
-
-I did this -- it's pretty small so I just added it to the Makefile.
-
->> +	 * There is also some pervacious arg padding, so that args
+On Mon, Mar 05, 2007 at 02:08:25PM +0000, Christoph Hellwig wrote:
+> On Sun, Mar 04, 2007 at 12:36:27PM -0300, Marcelo Tosatti wrote:
+> > Hi Christoph,
+> > 
+> > On Sat, Mar 03, 2007 at 05:21:40AM +0000, Christoph Hellwig wrote:
+> > > Umm, I can't remember the updated driver ever beeig posted for review.
+> > 
+> > http://lists.openwall.net/netdev/2007/02/10/25
+> > 
+> > > And to be honest I'd be surprised if it's in a good shape already.
+> > 
+> > Constructive comments are welcome... All comments made by Arnd (which
+> > were many!) have been addressed.
 > 
-> perwhat?
-
-http://www.urbandictionary.com/define.php?term=pervacious
-
-Rephrased to something less exciting.
-
->> +	static const u8 radiotap_entry_sizes[] = {
->> +		8, /* IEEE80211_RADIOTAP_TSFT */
->> +		1, /* IEEE80211_RADIOTAP_FLAGS */
-> [...]
+> Comments on that versions from a quick read over it:
 > 
-> I'd prefer C99 style for this.
+>  - the __le* annotation issue you mentioned in the mail is important.
+>    We definitvely don't want any new drivers without endianess annotations,
+>    because there are far too many endianess problems.  Even more so
+>    in a case of a driver like this one that's only tested on LE hardware
+>    and has LE device endianess.
+>  - things like 11d.[ch] don't have business of beeing in a driver,
+>    this should be somewhere in common code.
 
-Shocked that stuff from as late as 1999 is allowed.  I normally use // 
-myself, I was making a special effort.
+Most wireless drivers implement 11d internally. We certainly need to
+unify the management code, but thats not a merge blocker.
 
->> +		return TXRX_DROP; /* version byte as magic */
-> 
-> Bad idea. At least the comment. If you mean "drop the packet if it has a
-> radiotap version we don't parse" then say so.
+>  - there shouldn't be a LICENSE file in individual driver directories,
+>    especially if it's just plain old GPLv2.
+>  - please get rid of setting -DFOO flags in the Makefile, just use
+>    these directly as config symbols.
+>  - there shouldn't be a README file in the driver directory, this
+>    should be in Documentation/
+>  - please don't use wlan_* foo types.  a) this should be structs, not
+>    typedefs, and b) wlan is an utterly generic name for beeing inside
+>    a driver.  Then again most things using this should be inside
+>    generic code anyway.. (and yeah, all that is because the driver
+>    copied braindead linux-wlan-ng code that probably needs a major
+>    revision anyway)
+>  - there seems to be lots of tabs vs spaces messups
+>  - please get rid of the ENTER/LEAVE macros
 
-the PRISM format stuff that this replaces (on rx anyway) has an explicit 
-magic at the start.  Hence the thought to treat the version byte as a 
-"magic".  But changed.
+These are useful for debugging. We have removed most of the useless ones 
+already.
 
->> +	if (le32_to_cpu(rthdr->it_present) & 0x80000000) {
->> +		while (le32_to_cpu(*((u32 *)tap_arg)) & 0x80000000)
-> 
-> Use a constant for that, introduce one if necessary.
+>  - there's an awful lot of headers without clear divided responsibilities,
+>    there should be only a few ones left (internal interfaces and hw
+>    interface basically)
+>  - having lowercase names for lots of hw commands is a very bad idea
+>    for readability
+>  - please get rid of all your private ioctls and iwpriv stuff
+>    (should I add !!!! here)
 
-Done.
+Rationale being? There are a bunch of device private knobs, and iwpriv
+is the interface for such configuration. (????)
 
->> +	control->key_idx = -1; /* no encryption key */
-> 
-> Is there any way to indicate encryption? I think there might need to be
-> for 802.11w.
-> 
->> +	control->flags &= ~(IEEE80211_TXCTL_USE_RTS_CTS |
->> +		IEEE80211_TXCTL_USE_CTS_PROTECT);
-> 
-> These really should be selectable as well.
-> 
->> +	control->flags |= (IEEE80211_TXCTL_DO_NOT_ENCRYPT |
->> +		IEEE80211_TXCTL_NO_ACK);
-> 
-> And NO_ACK is a really really totally bad idea for a userspace MLME.
-> Needs to be selectable for sure.
+>  - scan.h has very strange almost docbook comments, please convert
+>    them to real docbook comments and actually run things through
+>    the tools to make sure it's right.
+>  - scan.h has vi indentation comment helpers that are contrary to
+>    linux coding style..
+>  - the thread.h abstractions are really useless, opencoding them
+>    would make the code a lot more readable.  And make people
+>    notice it's actually wrong:
+> 	o the return value from kthread_run needs to be checked
+> 	o wlan_deactivate_thread is not needed at all
+> 	o storing and checking the pid should go away
+> 	o there is no need for an additional waitqueue, you can
+> 	  just use wake_up_process for kernel threads.
+>  - most of types.h should not be there but you should be using
+>    the types from include/linux/*80211*
+>  - version.h shouldn't exist
+>  - the radiotap header changes should definitively not be in
+>    a "add a new driver" diff
 
-Yes to cover more usage cases setting more things is needed.  The game 
-seems to be to set the elements of the control struct from the radiotap 
-header.  For clear discussion here is the list of things that can be set 
-in control, first the ones we allow control of with this patch
+Other than this your comments are OK, will address them.
 
-	int tx_rate; /* Transmit rate, given as the hw specific value for the
-		      * rate (from struct ieee80211_rate) */
-	u8 power_level;		/* per-packet transmit power level, in dBm */
-	u8 antenna_sel_tx; 	/* 0 = default/diversity, 1 = Ant0, 2 = Ant1 */
-
-
-and the ones we might possibly want to fiddle with
-
-	int rts_cts_rate; /* Transmit rate for RTS/CTS frame, given as the hw
-			   * specific value for the rate (from
-			   * struct ieee80211_rate) */
-	u32 flags;			       /* tx control flags defined
-						* above */
-	u8 retry_limit;		/* 1 = only first attempt, 2 = one retry, .. */
-	s8 key_idx;		/* -1 = do not encrypt, >= 0 keyidx from
-				 * hw->set_key() */
-	u8 icv_len;		/* length of the ICV/MIC field in octets */
-	u8 iv_len;		/* length of the IV field in octets */
-	u8 tkip_key[16];	/* generated phase2/phase1 key for hw TKIP */
-	u8 queue;		/* hardware queue to use for this frame;
-				 * 0 = highest, hw->queues-1 = lowest */
-	u8 sw_retry_attempt;	/* number of times hw has tried to
-				 * transmit frame (not incl. hw retries) */
-	int alt_retry_rate; /* retry rate for the last retries, given as the
-			     * hw specific value for the rate (from
-			     * struct ieee80211_rate). To be used to limit
-			     * packet dropping when probing higher rates, if hw
-			     * supports multiple retry rates. -1 = not used */
-
-the flags are these
-
-#define IEEE80211_TXCTL_REQ_TX_STATUS	(1<<0)/* request TX status 
-callback for
-						* this frame */
-#define IEEE80211_TXCTL_DO_NOT_ENCRYPT	(1<<1) /* send this frame without
-						* encryption; e.g., for EAPOL
-						* frames */
-#define IEEE80211_TXCTL_USE_RTS_CTS	(1<<2) /* use RTS-CTS before sending
-						* frame */
-#define IEEE80211_TXCTL_USE_CTS_PROTECT	(1<<3) /* use CTS protection for the
-						* frame (e.g., for combined
-						* 802.11g / 802.11b networks) */
-#define IEEE80211_TXCTL_NO_ACK		(1<<4) /* tell the low level not to
-						* wait for an ack */
-#define IEEE80211_TXCTL_RATE_CTRL_PROBE	(1<<5)
-#define IEEE80211_TXCTL_CLEAR_DST_MASK	(1<<6)
-#define IEEE80211_TXCTL_REQUEUE		(1<<7)
-#define IEEE80211_TXCTL_FIRST_FRAGMENT	(1<<8) /* this is a first fragment of
-						* the frame */
-#define IEEE80211_TXCTL_TKIP_NEW_PHASE1_KEY (1<<9)
-
-I guess the method is to work out what is useful to control and to 
-define a minimal set of new radiotap arg indexes to cover them, and 
-propose it to the radiotap folks.
-
-> We also need to be able to assign some magic cookie to a packet that we
-> get back along with the packet so that we know when the injected packet
-> has been acked by the peer.
-
-The idea here is to synthesize an rx packet later after the tx has 
-happened, reflecting the tx status back to userspace that way (if he 
-elects to listen out for them)?
-
->> +	/* remove the radiotap header */
->> +	skb_pull(skb, le16_to_cpu(rthdr->it_len));
-> 
-> Shouldn't there be some sort of sanity check here so we don't pull too
-> much if userspace asks us to?
-
-The sanity check for length of the radiotap header vs length of the 
-packet is done right after the mag-^H^H^H version test.  It is moved 
-into the radiotap iteration init function in cfg80211 in the new patches.
-
--Andy
+Thanks!
 
