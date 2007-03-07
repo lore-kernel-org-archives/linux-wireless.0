@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:40985
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934015AbXC1Kwh (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:11481 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965574AbXCGRWH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 06:52:37 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: rx racing against removing interfaces?
-Date: Wed, 28 Mar 2007 12:52:23 +0200
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1174950322.25887.59.camel@johannes.berg>
-In-Reply-To: <1174950322.25887.59.camel@johannes.berg>
+	Wed, 7 Mar 2007 12:22:07 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] prism54usb: Fix hail of warnings on 64bit platforms
+Date: Wed, 7 Mar 2007 12:21:12 -0500
+Cc: akpm@osdl.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+References: <20070307164020.16944e32@lxorguk.ukuu.org.uk>
+In-Reply-To: <20070307164020.16944e32@lxorguk.ukuu.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200703281252.23834.mb@bu3sch.de>
+Content-Type: multipart/signed;
+  boundary="nextPart3115638.HeVOGtHyun";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703071221.19580.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 27 March 2007 01:05, Johannes Berg wrote:
-> Isn't there a race there when you remove interfaces and at the same time
-> __ieee80211_rx is running? I don't see anything that should stop that,
-> and if it happens we'll probably blow up pretty spectacularly with
-> accesses to a freed netdev, or even sending it frames...
+--nextPart3115638.HeVOGtHyun
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Well, IMHO __ieee80211_rx should be internal to mac80211 and not be exported.
-(Same goes for the IRQ-unsafe txstatus report). We can't (and we really don't
-want to) call synchronously into the stack from any driver. We want to
-defer the packet processing work to a tasklet. So we always want to
-call the _irqsafe functions. Why do we? Because of locking issues.
-1) There's no need to hold the lowlevel driver IRQ spinlock while
-processing the packet in the upper layers. We want to release it. Easiest
-and non-racy way to do this is to use the _irqsafe function and its tasklet.
-2) We want to prevent recursion back into the driver through a callback,
-which would result in lock recursion (we had these problems in softmac, as
-it is synchronous in most rx parts).
+On Wednesday 07 March 2007 11:40, Alan Cox wrote:
+> If you want to cast a pointer to a small value then start by turning it
+> into an unsigned long so the compiler knows what is going on.
+>
+I already have a fix for that - just haven't pushed it up to wireless-dev y=
+et.
 
-So why do I tell you this?
-I think there's no way we can call __ieee80211_rx after removing the
-interface, as the tasklet should be stopped first. But someone should
-verify if I'm right here.
-But anyway, the driver shouldn't be able to call __ieee80211_rx after the
-device is down, too, as the driver has to make sure IRQs are stopped
-when the device is brought down.
+> Personally I find the whole approach used by this driver for types of
+> registers (which are really USB register numbers) utterly perverse...
+>
+The same register offsets are used in the PCI driver since version 1 usb=20
+devices are really just the PCI device with a usb->pci bridge chip attached.
 
-So we have kind of implicit locking here, but I think it's ok.
+=2DMichael Wu
 
--- 
-Greetings Michael.
+--nextPart3115638.HeVOGtHyun
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBF7vSPT3Oqt9AH4aERAk/+AJ47KBW4bG3o0v6E2HsiFeZIL+el+ACgnL15
+Vqmt1hL7herq5ZcLS8Krg1Y=
+=hFX9
+-----END PGP SIGNATURE-----
+
+--nextPart3115638.HeVOGtHyun--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
