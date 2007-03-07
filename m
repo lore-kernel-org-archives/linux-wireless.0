@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47181 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933779AbXC1Js7 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55336
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992468AbXCGW3E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 05:48:59 -0400
-Subject: Re: WPA/RSN information in cfg80211?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mark Powell <Mark.Powell@csr.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <460A3665.5090906@csr.com>
-References: <1175034846.5151.20.camel@johannes.berg>
-	 <460A3665.5090906@csr.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ePqGCI/z8Fnuzel3P+op"
-Date: Wed, 28 Mar 2007 11:47:43 +0200
-Message-Id: <1175075263.5151.31.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 7 Mar 2007 17:29:04 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: Problem with USB1.1 Host cores with the mb tree for bcm43xx_mac80211
+Date: Wed, 7 Mar 2007 23:28:06 +0100
+Cc: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <45EF2015.8000802@lwfinger.net>
+In-Reply-To: <45EF2015.8000802@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200703072328.06195.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 07 March 2007 21:27, Larry Finger wrote:
+> If you have a BCM4311 and are seeing an oops that looks like this when loading bcm43xx_mac80211:
+> 
+> ssb: Switching to ChipCommon core, index 0
+> ssb: Switching to PCI-E core, index 3
+> ssb: Switching to USB 1.1 Host core, index 2
+> 
+> Unable to handle kernel NULL pointer dereference at 00000000000002d0 RIP:
+>  [<ffffffff8812fcfd>] :usbcore:usb_create_hcd+0x3b/0xe8
+> PGD 3e792067 PUD 3ed66067 PMD 0
+> Oops: 0002 [1] SMP
+> ...
+> 
+> there is a temporary, unofficial patch at
+> ftp://lwfinger.dynalias.org/patches/mac80211_usb_problem.patch. Although it works, it attacks the
+> symptom, not the cause, and will never be adopted into the code. Once a proper fix is applied, it
+> will no longer be needed.
 
---=-ePqGCI/z8Fnuzel3P+op
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+A patch to disable the USB core on non-embedded devices is in my tree now.
+The actual bug is still there, but nobody (except OpenWRT developers ;) )
+should be able to hit it anymore now. :)
 
-On Wed, 2007-03-28 at 10:33 +0100, Mark Powell wrote:
-
-> FWIW we currently use the value of IW_AUTH_WPA_VERSION to generate the
-> correct cipher suite selector when forming the set-key request for our
-> hard MAC device. We use other IW_AUTH settings too.
-
-Ok so that means we definitely need the individual settings. I thought
-so, but wanted to make sure.
-
-> We certainly need the individual settings. It is nice that
-> wpa_supplicant generates the IE - it saved me writing the code - but
-> that's just being lazy. We still have to modify the IE anyway to add WMM
-> stuff.
-
-Do I read that as "I don't care if we get the IE"?
-
-Putting the IE there has the advantage that you can easily play with new
-things for cards that use the IE by sticking a few more IEs into the
-attribute. But it has the disadvantage that cards behave differently if
-you give them contradictory settings. Maybe we need a way to ask a card
-which one it wants.
-
-johannes
-
---=-ePqGCI/z8Fnuzel3P+op
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGCjm//ETPhpq3jKURAuPEAJ41J62uHX1anGv13jmH9t2frqbISACeKPkz
-nFTtIh/fE8DXf2nAJUD0eRo=
-=AsoE
------END PGP SIGNATURE-----
-
---=-ePqGCI/z8Fnuzel3P+op--
-
+-- 
+Greetings Michael.
