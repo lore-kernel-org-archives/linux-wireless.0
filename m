@@ -1,61 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57299 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750957AbXCWUPo (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:55546 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S2992442AbXCGSWj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 16:15:44 -0400
-Subject: Re: [PATCH v2] mac80211: Prevent unregistering of unregistered hw
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Linville@poseidon.net,
-	John <linville@tuxdriver.com>, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200703232021.26462.IvDoorn@gmail.com>
-References: <200703232021.26462.IvDoorn@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oAau58vGRZwqioLw4YrF"
-Date: Fri, 23 Mar 2007 21:14:28 +0100
-Message-Id: <1174680868.4470.8.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 7 Mar 2007 13:22:39 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: John Linville <linville@tuxdriver.com>
+Subject: mac80211-drivers pull request (week10)
+Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	Ulrich Kunitz <kune@deine-taler.de>,
+	Andrea Merello <andrea.merello@gmail.com>
+MIME-Version: 1.0
+Date: Wed, 7 Mar 2007 13:21:50 -0500
+Content-Type: multipart/signed;
+  boundary="nextPart4831829.vGUzhaK8Q9";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703071321.51267.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-oAau58vGRZwqioLw4YrF
-Content-Type: text/plain
+--nextPart4831829.vGUzhaK8Q9
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Fri, 2007-03-23 at 20:21 +0100, Ivo van Doorn wrote:
+Hi John,
 
-> diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-> index 577dbe3..e7a613d 100644
-> --- a/net/mac80211/ieee80211.c
-> +++ b/net/mac80211/ieee80211.c
-> @@ -4765,6 +4765,9 @@ void ieee80211_unregister_hw(struct ieee80211_hw *h=
-w)
->  	/* TODO: skb_queue should be empty here, no need to do anything? */
-> =20
->  	rtnl_lock();
-> +
-> +	BUG_ON(local->reg_state !=3D IEEE80211_DEV_REGISTERED);
-> +
+Please pull
+git://git.kernel.org/pub/scm/linux/kernel/git/mwu/mac80211-drivers.git
+for these patches:
 
-Hm. Maybe that's better since then there's no race like in my patch. Use
-this one instead of mine please. But it does kill the system pretty
-badly if you BUG_ON with rtnl held :)
+p54-week10 branch:
+Michael Wu (2):
+      p54usb: fix warnings on 64bit arch
+      p54: Suppress warning in prism54common.c
 
-johannes
+rtl818x-week10 branch:
+Andrea Merello (2):
+      rtl8187: Minimize power consumption when down
+      rtl8187: check IEEE80211_CONF_SHORT_SLOT_TIME
 
---=-oAau58vGRZwqioLw4YrF
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Michael Wu (1):
+      rtl8187: Select EEPROM_93CX6
+
+Common to all branches:
+Helge Deller (1):
+      p54/rtl818x/zd1211rw - various fixes
+
+Michael Wu (1):
+      adm8211, p54: select CRC32
+
+Just some minor patches this time. There'll be more interesting things next=
+=20
+week..
+
+Thanks,
+=2DMichael Wu
+
+--nextPart4831829.vGUzhaK8Q9
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBGBDUk/ETPhpq3jKURAmfYAJ4wRDq1KKQFhDxj9mJcoPn4ALbTRQCdEim2
-wj6tBw1zPeExjgj8ok//mbo=
-=ihPH
+iD8DBQBF7wK/T3Oqt9AH4aERAiXHAJ9xL2dfF9cv7DA3ynUh9UWRIHmzdgCgo6LO
+uU4PSJiGWuwI9Bq6q9gFrSo=
+=Ojsz
 -----END PGP SIGNATURE-----
 
---=-oAau58vGRZwqioLw4YrF--
-
+--nextPart4831829.vGUzhaK8Q9--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
