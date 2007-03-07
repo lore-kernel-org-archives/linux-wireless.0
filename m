@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:45580 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752696AbXCaKLQ (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:56084 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030532AbXCGWYj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Mar 2007 06:11:16 -0400
-Received: by mu-out-0910.google.com with SMTP id g7so762875muf
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Mar 2007 03:11:14 -0700 (PDT)
-Message-ID: <460E33BF.2040508@gmail.com>
-Date: Sat, 31 Mar 2007 12:11:11 +0200
-From: dragoran <drago01@gmail.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: mac80211 does not support WPA when used with wext
-References: <460E2B8C.4030002@gmail.com> <1175335211.23438.45.camel@johannes.berg>
-In-Reply-To: <1175335211.23438.45.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+	Wed, 7 Mar 2007 17:24:39 -0500
+Date: Wed, 7 Mar 2007 22:24:04 +0000
+From: Christoph Hellwig <hch@infradead.org>
+To: Marcelo Tosatti <marcelo@kvack.org>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Jeff Garzik <jeff@garzik.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'libertas' branch of wireless-2.6
+Message-ID: <20070307222404.GA23393@infradead.org>
+References: <20070227205649.GH5826@tuxdriver.com> <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org> <20070304153627.GA32380@dmt> <20070305140825.GA9982@infradead.org> <20070307181638.GA22305@dmt>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070307181638.GA22305@dmt>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sat, 2007-03-31 at 11:36 +0200, dragoran wrote:
->   
->> Hello
->> While testing the iwlwifi driver I noticed that the mac80211 does 
->> provide a wext interface but does not support wpa with it.
->>     
->
-> You must have done something wrong, it works well.
->
->   
-ok simple test case for me:
-boot F7 livecd  on a laptop with a ipw3945 card.
-the iwlwifi driver got loaded....
-try to selected WPA from the nm menu ... wait there aren't any :( ...
-test with ipw3945 (ieee80211 based) wpa options are back ;)
-so can you please tell me which driver you used and how you verifed that 
-it works?
-> johannes
->   
+On Wed, Mar 07, 2007 at 03:16:38PM -0300, Marcelo Tosatti wrote:
+> >  - please get rid of the ENTER/LEAVE macros
+> 
+> These are useful for debugging. We have removed most of the useless ones 
+> already.
+
+We've refused this on a lot of drivers.  If you really need this kind
+of debugging talk to acme to use a variant of ostra for this.
+
+> >  - please get rid of all your private ioctls and iwpriv stuff
+> >    (should I add !!!! here)
+> 
+> Rationale being? There are a bunch of device private knobs, and iwpriv
+> is the interface for such configuration. (????)
+
+If you read netdev we're very very unhappy about device specific knobs,
+as they are really painful to support.  You should also look at the
+cfg80211 threads on why ioctls are really bad for moving to a knew
+non-wext, non-ioctl config mechanism.  And for why iwpriv is particularly
+bad look about the posts about the wext compat issues.
 
