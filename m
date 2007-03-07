@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail5.sea5.speakeasy.net ([69.17.117.7]:42192 "EHLO
-	mail5.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753811AbXCaR7u (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33902 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422948AbXCGRvj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Mar 2007 13:59:50 -0400
-Date: Sat, 31 Mar 2007 10:59:05 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
-	John Linville <linville@redhat.com>
-Subject: Re: mac80211 does not support WPA when used with wext
-Message-ID: <20070331175905.GK8435@jm.kir.nu>
-References: <460E2B8C.4030002@gmail.com> <1175335211.23438.45.camel@johannes.berg> <1175363333.9349.10.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1175363333.9349.10.camel@localhost.localdomain>
+	Wed, 7 Mar 2007 12:51:39 -0500
+Subject: Re: Crash in cfg80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200703061907.19929.mb@bu3sch.de>
+References: <200703061907.19929.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TElGauBwXfohUHQZStfl"
+Date: Wed, 07 Mar 2007 18:51:27 +0100
+Message-Id: <1173289887.9108.0.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 31, 2007 at 01:48:53PM -0400, Dan Williams wrote:
 
-> Take a look at ieee80211_sta_scan_result() in mac80211/ieee80211_sta.c.
-> Note that it returns custom events for the WPA & RSN IEs.  That's just
-> wrong.  We should be using already-defined events.
+--=-TElGauBwXfohUHQZStfl
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I don't think the "already-defined events" were defined when that code
-was written.. Sure, now it should be updated to use the WEXT-18 -based
-events.
+On Tue, 2007-03-06 at 19:07 +0100, Michael Buesch wrote:
+> BUG: unable to handle kernel paging request at virtual address
+> 00100104
 
-> I don't quite get why mac80211/d80211 was so behind in wireless
-> extensions support.  Didn't Jouni and Devicescape basically _write_
-> WE-18/19 WPA support?  Did d80211 just not get the love that
-> wpa_supplicant and the other drivers got when they were updated to WE-18
-> and later?
+Apparently the notifier was called twice and on the second time around
+the device had been removed from the list already (0x00100100 is
+LIST_POISON1.)
 
-Well, I may have added WPA support to WE-18, but only after having
-implemented support for WPA using custom events (the only real option
-available prior to WE-18). Devicescape code needed to work with number
-of Linux kernels that did not include WE-18, so it had to continue using
-those custom events. Looks like no one has had enough time or interest
-to update it to use the events defined in WE-18. wpa_supplicant supports
-both mechanisms for receiving the IEs.
+I'll look into it and post a patch later.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+johannes
+
+--=-TElGauBwXfohUHQZStfl
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF7vue/ETPhpq3jKURAoERAKCTtTCaEI78AnS6DXaoLATXx/NABACfYzJf
+S3+rddRGMG79k4kiFrFtxFY=
+=72NH
+-----END PGP SIGNATURE-----
+
+--=-TElGauBwXfohUHQZStfl--
+
