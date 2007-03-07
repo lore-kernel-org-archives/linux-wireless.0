@@ -1,60 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41790 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933213AbXCHTkO (ORCPT
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55581 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751967AbXCGPgE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2007 14:40:14 -0500
-Subject: Re: wireless extensions vs. 64-bit architectures
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jkm@devicescape.com>
-Cc: jt@hpl.hp.com, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>, Dan Williams <dcbw@redhat.com>
-In-Reply-To: <20070308193412.GG23040@devicescape.com>
-References: <1173144447.15891.93.camel@johannes.berg>
-	 <20070306171316.GA19669@bougret.hpl.hp.com>
-	 <200703061943.07350.mb@bu3sch.de>
-	 <20070307020310.GA20466@bougret.hpl.hp.com>
-	 <1173364747.14001.7.camel@johannes.berg>
-	 <20070308184954.GA24485@bougret.hpl.hp.com>
-	 <1173382042.3248.63.camel@johannes.berg>
-	 <20070308193412.GG23040@devicescape.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-AQ2J+NA0w52xtbr+ov3N"
-Date: Thu, 08 Mar 2007 20:40:01 +0100
-Message-Id: <1173382802.3248.68.camel@johannes.berg>
+	Wed, 7 Mar 2007 10:36:04 -0500
+Date: Wed, 7 Mar 2007 16:40:20 +0000
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: akpm@osdl.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] prism54usb: Fix hail of warnings on 64bit platforms
+Message-ID: <20070307164020.16944e32@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+If you want to cast a pointer to a small value then start by turning it
+into an unsigned long so the compiler knows what is going on.
 
---=-AQ2J+NA0w52xtbr+ov3N
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Personally I find the whole approach used by this driver for types of
+registers (which are really USB register numbers) utterly perverse...
 
-On Thu, 2007-03-08 at 11:34 -0800, Jouni Malinen wrote:
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-> Yes, workaround in just iwlib is not enough. If the only possible
-> solution is user space workaround, it better be documented (and
-> communicated to maintainers of user space apps) well so that
-> all user space programs not using iwlib can be modified, too.
-
-The more I think about it the worse it gets. Think about wireless events
-where both 32 and 64-bit userspace programs may be listening... That
-means we can't even fix it in the kernel without breaking something.
-
-johannes
-
---=-AQ2J+NA0w52xtbr+ov3N
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF8GaR/ETPhpq3jKURAkspAJ0eKz/C5kNMF2fmYcHhBdxs2S+yVwCggqKo
-a3rmXJie8QsxDNHH6YhGWMo=
-=Hxg6
------END PGP SIGNATURE-----
-
---=-AQ2J+NA0w52xtbr+ov3N--
-
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc2-mm2/drivers/net/wireless/mac80211/p54/prism54usb.c linux-2.6.21-rc2-mm2/drivers/net/wireless/mac80211/p54/prism54usb.c
+--- linux.vanilla-2.6.21-rc2-mm2/drivers/net/wireless/mac80211/p54/prism54usb.c	2007-03-06 23:09:47.000000000 +0000
++++ linux-2.6.21-rc2-mm2/drivers/net/wireless/mac80211/p54/prism54usb.c	2007-03-06 19:15:52.000000000 +0000
+@@ -533,7 +533,7 @@
+ #define P54U_WRITE(type, addr, data) \
+ 	do {\
+ 		err = p54u_write(priv, buf, type,\
+-				 cpu_to_le32((u32)addr), data);\
++				 cpu_to_le32((u32)(unsigned long)addr), data);\
+ 		if (err) \
+ 			goto fail;\
+ 	} while (0)
+@@ -541,7 +541,7 @@
+ #define P54U_READ(type, addr) \
+ 	do {\
+ 		err = p54u_read(priv, buf, type,\
+-				cpu_to_le32((u32)addr), &reg);\
++				cpu_to_le32((u32)(unsigned long)addr), &reg);\
+ 		if (err)\
+ 			goto fail;\
+ 	} while (0)
+@@ -648,16 +648,16 @@
+ 			   cpu_to_le32(0xc0000f00));
+ 
+ 		P54U_WRITE(NET2280_DEV_U32,
+-			   0x0020 | (u32)&devreg->direct_mem_win, 0);
++			   0x0020 | (unsigned long)&devreg->direct_mem_win, 0);
+ 		P54U_WRITE(NET2280_DEV_U32,
+-			   0x0020 | (u32)&devreg->direct_mem_win,
++			   0x0020 | (unsigned long)&devreg->direct_mem_win,
+ 			   cpu_to_le32(1));
+ 
+ 		P54U_WRITE(NET2280_DEV_U32,
+-			   0x0024 | (u32)&devreg->direct_mem_win,
++			   0x0024 | (unsigned long)&devreg->direct_mem_win,
+ 			   cpu_to_le32(block_len));
+ 		P54U_WRITE(NET2280_DEV_U32,
+-			   0x0028 | (u32)&devreg->direct_mem_win,
++			   0x0028 | (unsigned long)&devreg->direct_mem_win,
+ 			   cpu_to_le32(offset));
+ 
+ 		P54U_WRITE(NET2280_DEV_U32, &devreg->dma_addr,
+@@ -670,7 +670,7 @@
+ 		mdelay(10);
+ 
+ 		P54U_READ(NET2280_DEV_U32,
+-			  0x002C | (u32)&devreg->direct_mem_win);
++			  0x002C | (unsigned long)&devreg->direct_mem_win);
+ 		if (!(reg & cpu_to_le32(ISL38XX_DMA_STATUS_DONE)) ||
+ 		    !(reg & cpu_to_le32(ISL38XX_DMA_STATUS_READY))) {
+ 			printk(KERN_ERR "prism54usb: firmware DMA transfer "
