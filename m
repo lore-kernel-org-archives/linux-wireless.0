@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55842 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753418AbXCWUcb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 16:32:31 -0400
-Subject: Re: [stable] [PATCH] fix information leak in wireless extensions  on 64-bit platforms
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from madara.hpl.hp.com ([192.6.19.124]:57176 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161162AbXCGBn0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2007 20:43:26 -0500
+Date: Tue, 6 Mar 2007 17:42:48 -0800
 To: Michael Buesch <mb@bu3sch.de>
-Cc: jt@hpl.hp.com, Chris Wright <chrisw@sous-sol.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
-In-Reply-To: <200703232127.17790.mb@bu3sch.de>
-References: <1174640787.3588.65.camel@johannes.berg>
-	 <20070323193643.GY10574@sequoia.sous-sol.org>
-	 <20070323200037.GA5165@bougret.hpl.hp.com>
-	 <200703232127.17790.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xR64O3nrtg6uACMVN/Ev"
-Date: Fri, 23 Mar 2007 21:31:09 +0100
-Message-Id: <1174681869.7414.1.camel@johannes.berg>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Jouni Malinen <jkm@devicescape.com>
+Subject: Re: wireless extensions vs. 64-bit architectures
+Message-ID: <20070307014248.GA20360@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <1173144447.15891.93.camel@johannes.berg> <20070306171316.GA19669@bougret.hpl.hp.com> <200703061943.07350.mb@bu3sch.de>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200703061943.07350.mb@bu3sch.de>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Mar 06, 2007 at 07:43:06PM +0100, Michael Buesch wrote:
+> > 
+> > 	Yep, and it's even in fs/compat_ioctl.c. Hint, hint ;-)
+> 
+> Ok, it is wrapping the following ioctls:
+> 
+> HANDLE_IOCTL(SIOCGIWRANGE, do_wireless_ioctl)
+> HANDLE_IOCTL(SIOCSIWSPY, do_wireless_ioctl)
+> HANDLE_IOCTL(SIOCGIWSPY, do_wireless_ioctl)
+> HANDLE_IOCTL(SIOCSIWTHRSPY, do_wireless_ioctl)
+> HANDLE_IOCTL(SIOCGIWTHRSPY, do_wireless_ioctl)
+> HANDLE_IOCTL(SIOCGIWAPLIST, do_wireless_ioctl)
+> HANDLE_IOCTL(SIOCGIWSCAN, do_wireless_ioctl)
+> HANDLE_IOCTL(SIOCSIWESSID, do_wireless_ioctl)
+> HANDLE_IOCTL(SIOCGIWESSID, do_wireless_ioctl)
+> HANDLE_IOCTL(SIOCSIWNICKN, do_wireless_ioctl)
+> HANDLE_IOCTL(SIOCGIWNICKN, do_wireless_ioctl)
+> HANDLE_IOCTL(SIOCSIWENCODE, do_wireless_ioctl)
+> HANDLE_IOCTL(SIOCGIWENCODE, do_wireless_ioctl)
+> 
+> What about SIOCSIWSCAN, SIOCSIWENCODEEXT, SIOCGIWENCODEEXT
+> and some others that also use iw_point?
 
---=-xR64O3nrtg6uACMVN/Ev
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+	Yep, good point.
+	SIOCSIWSCAN is up there. I did not realise that all the WPA
+ioctls are missing. That's easy enough to fix, remember that you have
+the full description of the ioctls in wireless.c.
+	I'll try to do a patch if I find 5 min, but feel free to
+forward something to John L.
+	Thanks a lot !
 
-On Fri, 2007-03-23 at 21:27 +0100, Michael Buesch wrote:
+> Greetings Michael.
 
-> I finally have an USB ZD stick now, too. So I can test stuff, too.
-> Should I test this somehow?
-
-If you can, build libiw and wireless tools 32-bit programs and enable
-the debug dump of the actual message (see one of my original mails),
-then run them with scanning. You'll get a wrong message and some zeroes
-where in my example the padding was not zeroed.
-
-johannes
-
---=-xR64O3nrtg6uACMVN/Ev
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGBDkN/ETPhpq3jKURAgiCAKCViDjh4YFR//w0Op1L3IUyLUN1XQCaArz3
-zNs4yv6qYX0oDlkaOZ9STyc=
-=KkRm
------END PGP SIGNATURE-----
-
---=-xR64O3nrtg6uACMVN/Ev--
-
+	Jean
