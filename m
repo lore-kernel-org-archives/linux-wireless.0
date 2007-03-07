@@ -1,50 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:53248
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752159AbXCHPko (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:45367 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965719AbXCGW4R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2007 10:40:44 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: Properly kill tasklets before shutdown
-Date: Thu, 8 Mar 2007 16:39:40 +0100
-Cc: Jiri Benc <jbenc@suse.cz>, John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200703061902.00001.mb@bu3sch.de> <1173317164.3546.41.camel@johannes.berg>
-In-Reply-To: <1173317164.3546.41.camel@johannes.berg>
+	Wed, 7 Mar 2007 17:56:17 -0500
+Message-ID: <45EF4305.5060606@lwfinger.net>
+Date: Wed, 07 Mar 2007 16:56:05 -0600
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200703081639.40395.mb@bu3sch.de>
+To: Michael Buesch <mb@bu3sch.de>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
+Subject: Re: Problem with USB1.1 Host cores with the mb tree for bcm43xx_mac80211
+References: <45EF2015.8000802@lwfinger.net> <200703072328.06195.mb@bu3sch.de>
+In-Reply-To: <200703072328.06195.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 08 March 2007 02:26, Johannes Berg wrote:
-> On Tue, 2007-03-06 at 19:01 +0100, Michael Buesch wrote:
+Michael Buesch wrote:
+> On Wednesday 07 March 2007 21:27, Larry Finger wrote:
+>> If you have a BCM4311 and are seeing an oops that looks like this when loading bcm43xx_mac80211:
+>>
+>> ssb: Switching to ChipCommon core, index 0
+>> ssb: Switching to PCI-E core, index 3
+>> ssb: Switching to USB 1.1 Host core, index 2
+>>
+>> Unable to handle kernel NULL pointer dereference at 00000000000002d0 RIP:
+>>  [<ffffffff8812fcfd>] :usbcore:usb_create_hcd+0x3b/0xe8
+>> PGD 3e792067 PUD 3ed66067 PMD 0
+>> Oops: 0002 [1] SMP
+>> ...
+>>
+>> there is a temporary, unofficial patch at
+>> ftp://lwfinger.dynalias.org/patches/mac80211_usb_problem.patch. Although it works, it attacks the
+>> symptom, not the cause, and will never be adopted into the code. Once a proper fix is applied, it
+>> will no longer be needed.
 > 
-> > This fixes the tasklet related crash that was reported some time ago.
-> 
-> I agree with that :)
->  
-> > -	tasklet_disable(&local->tasklet);
-> > -	/* TODO: skb_queue should be empty here, no need to do anything? */
-> > +	tasklet_kill(&local->tx_pending_tasklet);
-> > +	tasklet_kill(&local->tasklet);
-> 
-> But I'm not sure this is sufficient. I think we can then leak pending
-> skbs.
+> A patch to disable the USB core on non-embedded devices is in my tree now.
+> The actual bug is still there, but nobody (except OpenWRT developers ;) )
+> should be able to hit it anymore now. :)
 
-I don't think so. tasklet_kill does actually waiting, not killing.
-It waits until the (maybe) scheduled tasklet did run and then waits
-for it to finish running.
-It doesn't rip off a scheduled tasklet without letting it run.
+Your patch works here. Thanks,
 
-> In my tests I've often gotten that warning message about the skb 
-> queue not being empty (right before the crash). Or is that handled
-> elsewhere now?
+Larry
 
-Uh, didn't get that. The assertion for this is in the same function
-some lines down.
-
--- 
-Greetings Michael.
