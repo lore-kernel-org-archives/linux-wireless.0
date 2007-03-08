@@ -1,73 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:58998 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965707AbXCPR3V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2007 13:29:21 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Hong Liu <hong.liu@intel.com>
-Subject: Re: [PATCH 3/5] mac80211: fix key restricted/open display
-Date: Fri, 16 Mar 2007 13:28:34 -0400
-Cc: Jiri Benc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <1174015698.3408.41.camel@devlinux-hong>
-In-Reply-To: <1174015698.3408.41.camel@devlinux-hong>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1964297.rPOTp2OQBs";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200703161328.41006.flamingice@sourmilk.net>
+Received: from madara.hpl.hp.com ([192.6.19.124]:59761 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933038AbXCHSvr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Mar 2007 13:51:47 -0500
+Date: Thu, 8 Mar 2007 10:49:54 -0800
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Jouni Malinen <jkm@devicescape.com>
+Subject: Re: wireless extensions vs. 64-bit architectures
+Message-ID: <20070308184954.GA24485@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <1173144447.15891.93.camel@johannes.berg> <20070306171316.GA19669@bougret.hpl.hp.com> <200703061943.07350.mb@bu3sch.de> <20070307020310.GA20466@bougret.hpl.hp.com> <1173364747.14001.7.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1173364747.14001.7.camel@johannes.berg>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1964297.rPOTp2OQBs
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Thu, Mar 08, 2007 at 03:39:07PM +0100, Johannes Berg wrote:
+> On Tue, 2007-03-06 at 18:03 -0800, Jean Tourrilhes wrote:
+> 
+> > 	Ok, please check the patch attached. I don't have a box to
+> > test that on, and on my 32 bit kernel it is not even compiled, but I
+> > believe I got everything all right.
+> 
+> Don't I wish it was that easy... Granted, that does seem to fix the
+> issue with iw_point but that's not the only thing that's broken. Here's
+> the next thing, I think this only happens after applying that patch,
+> without it probably just craps out earlier. Same thing happens with
+> iwevent (and maybe other things too.)
+> 
+> Enabling debugging in wireless tools yields (on my 64-bit kernel with
+> 32-bit userland):
+> # LD_LIBRARY_PATH=.  ./iwlist wlan0 scan
+> Scan result 4096
+> [00:18:8B:15:50:8A:35:E0:00:01:00:C0:02:E1:B8:0E:C0:00:00:00:50:8A:35:F0:00:19:8B:1B:50:8A:35:E0:00:09:00:01:50:8A:35:F0:47:6F:6C:6F:73:4E:65:74:7A:00:18:8B:01:50:8A:35:E0:49:45:45:45:20:38:30:32:2E:31:31:62:67:00:35:F0:00:0C:8B:07:50:8A:35:E0:00:00:00:03:00:10:8B:05:50:8A:35:E0:00:00:00:07:00:00:00:32:00:10:8B:2B:50:8A:35:E0:00:00:08:00:67:00:35:F0:00:70:8B:21:50:8A:35:E0:00:0F:42:40:00:00:00:32:00:1E:84:80:00:00:00:32:00:53:EC:60:00:00:00:32:00:5B:8D:80:00:00:00:32:00:89:54:40:00:00:00:32:00:A7:D8:C0:00:00:00:<lots more zeroes>
+> wlan0     Scan completed : 
+> DBG - stream->current = 0x10019008, stream->value = (nil), stream->end = 0x1001a008
+> DBG - iwe->cmd = 0x8B15, iwe->len = 24
+> 
+>                          ^^^^^^^^^^^^^ that's already bogus
 
-On Thursday 15 March 2007 23:28, Hong Liu wrote:
-> +	if (erq->flags & (IW_ENCODE_OPEN | IW_ENCODE_RESTRICTED))
-> +		if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA ||
-> +		    sdata->type =3D=3D IEEE80211_IF_TYPE_IBSS)
-> +			sdata->u.sta.auth_algs =3D
-> +				(erq->flags & IW_ENCODE_RESTRICTED) ?
-> +				IEEE80211_AUTH_ALG_SHARED_KEY :
-> +				IEEE80211_AUTH_ALG_OPEN;
-> +
-This is not right because encrypted access points often do not require shar=
-ed=20
-key authentication to associate. In fact, some cannot or refuse to use shar=
-ed=20
-key authentication and your patch prevents retrying with a different=20
-authentication algorithm.
+	Ok, now I get it. It's an alignement issue, the kernel align
+struct to 64 bit boundary, whereas the userspace expect it to 32 bit
+boundary. Pretty nasty.
+	A proper fix would involve forcing the alignement in the
+kernel. Unfortunately, that would break 64bit->64bit configs. I think
+I can build a workaround for this in iwlib.
 
-IW_ENCODE_RESTRICTED simply means that the interface should not make/accept=
-=20
-unencrypted connections. In client mode without wpa_supplicant, the AP=20
-selection code already refuses to select any APs without encryption enabled=
-=20
-if the default key is set. In adhoc mode, there's no such check, but I'm no=
-t=20
-sure how much it matters.
+	Thanks for the detailed bug report !
 
-=2DMichael Wu
-
---nextPart1964297.rPOTp2OQBs
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBF+tPIT3Oqt9AH4aERAg9yAJ4npFM6g1WqMqXD5L88F5w0FLf7pQCg03Cr
-Pj8df1DQa766jf9QFZkftUY=
-=GRK/
------END PGP SIGNATURE-----
-
---nextPart1964297.rPOTp2OQBs--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+	Jean
