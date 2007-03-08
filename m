@@ -1,88 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from betty.cbit.net.au ([202.55.154.10]:53453 "EHLO mail.cbit.net.au"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752194AbXCQHUk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Mar 2007 03:20:40 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mail.cbit.net.au (Postfix) with ESMTP id 15F0C1080AD
-	for <linux-wireless@vger.kernel.org>; Sat, 17 Mar 2007 18:20:38 +1100 (EST)
-Received: from mail.cbit.net.au ([127.0.0.1])
-	by localhost (betty [127.0.0.1]) (amavisd-new, port 10024) with LMTP
-	id 27417-02-13 for <linux-wireless@vger.kernel.org>;
-	Sat, 17 Mar 2007 18:20:37 +1100 (EST)
-Received: from keitarou.bubblesworth.net (unknown [202.55.155.91])
-	by mail.cbit.net.au (Postfix) with ESMTP id 66A46108077
-	for <linux-wireless@vger.kernel.org>; Sat, 17 Mar 2007 18:20:37 +1100 (EST)
-Date: Sat, 17 Mar 2007 18:20:32 +1100
-From: Paul TBBle Hampson <Paul.Hampson@Pobox.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: mac80211 and IPv6 Duplicate Address Detection (Was: prism54pci fails to read eeprom on PowerPC, then bugs in pci code)
-Message-ID: <20070317072032.GC5954@keitarou>
-References: <20070317034607.GA1522@keitarou> <200703170037.14875.flamingice@sourmilk.net> <1174107032.17023.14.camel@dv> <20070317065242.GB5954@keitarou>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="KN5l+BnMqAQyZLvT"
-In-Reply-To: <20070317065242.GB5954@keitarou>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:36432 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752555AbXCHQwL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Mar 2007 11:52:11 -0500
+Subject: Re: wireless extensions vs. 64-bit architectures
+From: Johannes Berg <johannes@sipsolutions.net>
+To: jt@hpl.hp.com
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Jouni Malinen <jkm@devicescape.com>
+In-Reply-To: <1173364747.14001.7.camel@johannes.berg>
+References: <1173144447.15891.93.camel@johannes.berg>
+	 <20070306171316.GA19669@bougret.hpl.hp.com>
+	 <200703061943.07350.mb@bu3sch.de>
+	 <20070307020310.GA20466@bougret.hpl.hp.com>
+	 <1173364747.14001.7.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-M+BU7xOXAoctaWZK8ZOO"
+Date: Thu, 08 Mar 2007 17:51:54 +0100
+Message-Id: <1173372714.3248.22.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---KN5l+BnMqAQyZLvT
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-M+BU7xOXAoctaWZK8ZOO
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, Mar 17, 2007 at 05:52:43PM +1100, Paul TBBle Hampson wrote:
-> Mar 17 17:47:00 su kernel: wlan1: duplicate address detected!
+On Thu, 2007-03-08 at 15:39 +0100, Johannes Berg wrote:
 
-OK, I've confirmed that I still get the above with both dadwifi and
-bcm43xx-mac80211
+> Now, I don't know what gcc for ia64 does and I don't have a cross
+> compiler to check, but on powerpc it does this.
 
-A tcpdump indicates that my laptop sees its own neighbour-announce come
-back, and assumes that's a different machine sending it, failing the
-duplicate address detection.
+As expected, the same happens on x86_64 (thanks to Michael Wu for the
+debug dump):
 
-A tcdump against the ethernet device (or bcm43xx from 2.6.20) does not
-see the neighbour-announce come back, and so passes the duplicate
-address detection, and gets an autoconfig IPv6 address.
+ <1><e13>: Abbrev Number: 17 (DW_TAG_structure_type)
+     DW_AT_sibling     : <e4c>
+     DW_AT_name        : (indirect string, offset: 0x33d): iw_event
+     DW_AT_byte_size   : 24
+     DW_AT_decl_file   : 100
+     DW_AT_decl_line   : 1049
+ <2><e20>: Abbrev Number: 18 (DW_TAG_member)
+     DW_AT_name        : len
+     DW_AT_decl_file   : 100
+     DW_AT_decl_line   : 1050
+     DW_AT_type        : <58b>
+     DW_AT_data_member_location: 2 byte block: 23 0     (DW_OP_plus_uconst:=
+ 0)
+ <2><e2f>: Abbrev Number: 18 (DW_TAG_member)
+     DW_AT_name        : cmd
+     DW_AT_decl_file   : 100
+     DW_AT_decl_line   : 1051
+     DW_AT_type        : <58b>
+     DW_AT_data_member_location: 2 byte block: 23 2     (DW_OP_plus_uconst:=
+ 2)
+ <2><e3e>: Abbrev Number: 18 (DW_TAG_member)
+     DW_AT_name        : u
+     DW_AT_decl_file   : 100
+     DW_AT_decl_line   : 1052
+     DW_AT_type        : <9bf>
+     DW_AT_data_member_location: 2 byte block: 23 8     (DW_OP_plus_uconst:=
+ 8)
 
-I thought it might be the lack of IFF_BROADCAST which was fixed a while
-ago, but it's still there.
+Hence, on those machines 32-bit userspace is also broken and we have the
+information leak too.
 
-kernel 2.6.20 from debian, patched with get_order() fix from 2.6.20.2
-modular mac80211 stack from intel's 4.0.4 tarball, patched into kernel
-bcm43xx-mac80211 from wireless-dev
-dadwifi from madwifi.org subversion repository
+johannes
 
---=20
------------------------------------------------------------
-Paul "TBBle" Hampson, B.Sc, LPI, MCSE
-On-hiatus Asian Studies student, ANU
-The Boss, Bubblesworth Pty Ltd (ABN: 51 095 284 361)
-Paul.Hampson@Pobox.Com
-
-Of course Pacman didn't influence us as kids. If it did,
-we'd be running around in darkened rooms, popping pills and
-listening to repetitive music.
- -- Kristian Wilson, Nintendo, Inc, 1989
-
-License: http://creativecommons.org/licenses/by/2.1/au/
------------------------------------------------------------
-
---KN5l+BnMqAQyZLvT
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+--=-M+BU7xOXAoctaWZK8ZOO
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQFF+5bAexDuohKLFuARAmxGAJ9rNObAgiR6GLsuwhJXxdYQrRFH2wCeIGs8
-RjnQ+OwbCjbPQjSlpTPOJ8E=
-=CEvl
+iD8DBQBF8D8q/ETPhpq3jKURAmrAAJ9GSY5F9y5u+OJS7gPnrli7ZQDPSwCePkA+
+LSHXACKZ+P1yHZw3+2wRV3A=
+=Tz0P
 -----END PGP SIGNATURE-----
 
---KN5l+BnMqAQyZLvT--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+--=-M+BU7xOXAoctaWZK8ZOO--
+
