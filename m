@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:21528 "EHLO
-	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753360AbXCYXSM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Mar 2007 19:18:12 -0400
-From: Daniel Drake <dsd@gentoo.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: kune@deine-taler.de
-Subject: [PATCH] zd1211rw-mac80211: Fix for monitor mode bug
-Message-Id: <20070325231817.9C5887B409F@zog.reactivated.net>
-Date: Mon, 26 Mar 2007 00:18:17 +0100 (BST)
+Received: from madara.hpl.hp.com ([192.6.19.124]:60372 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933083AbXCHTOY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Mar 2007 14:14:24 -0500
+Date: Thu, 8 Mar 2007 11:13:22 -0800
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Jouni Malinen <jkm@devicescape.com>
+Subject: Re: wireless extensions vs. 64-bit architectures
+Message-ID: <20070308191322.GA24598@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <1173144447.15891.93.camel@johannes.berg> <20070306171316.GA19669@bougret.hpl.hp.com> <200703061943.07350.mb@bu3sch.de> <20070307020310.GA20466@bougret.hpl.hp.com> <1173364747.14001.7.camel@johannes.berg> <20070308184954.GA24485@bougret.hpl.hp.com> <1173380909.3248.52.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1173380909.3248.52.camel@johannes.berg>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ulrich Kunitz <kune@deine-taler.de>
+On Thu, Mar 08, 2007 at 08:08:29PM +0100, Johannes Berg wrote:
+> On Thu, 2007-03-08 at 10:49 -0800, Jean Tourrilhes wrote:
+> 
+> > 	A proper fix would involve forcing the alignement in the
+> > kernel. Unfortunately, that would break 64bit->64bit configs. I think
+> > I can build a workaround for this in iwlib.
+> 
+> Not easily I think. You'd have to get something that has a well-defined
+> result and see whether padding is present or not. The MAC address might
+> be good enough (due to len being 24 instead of the expected 20) though.
+> Thing is that it's really hard to figure out (even at runtime) whether
+> the kernel and machine are 64 or 32-bits.
 
-The ZD1211 supports the delivery of packets with a wrong CRC value
-to the host. We switched that feature on in monitor mode, so that
-incomplete packets were delivered.
+	I'm looking into that. The good thing is that we have
+redundant information, so we can check that things don't match. It's a
+bit more complex because some of those take variable parameters.
 
-This problem has been reported to bugzilla.kernel.org as bug 8152.
-This patch fixes it for the mac80211 stack.
+> I'd think this is a kernel bug and 32-bit userspace should rightfully be
+> able to expect 32-bit aligned structs, no? Actually fixing it in the
+> kernel would not be trivial though.
 
-Signed-off-by: Ulrich Kunitz <kune@deine-taler.de>
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
----
- drivers/net/wireless/mac80211/zd1211rw/zd_mac.c |   12 ++----------
- 1 files changed, 2 insertions(+), 10 deletions(-)
+	What we could do is have every 64 bit kernel return things on
+a 32 bit boundary, irrespective of userspace used. That would break
+current 64 bit userspace.
 
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
-index 097f614..65eabfa 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
-@@ -91,17 +91,9 @@ void zd_mac_clear(struct zd_mac *mac)
- 
- static int reset_mode(struct zd_mac *mac)
- {
--	struct zd_ioreq32 ioreqs[] = {
--		{ CR_RX_FILTER, STA_RX_FILTER },
--		{ CR_SNIFFER_ON, 0U },
--	};
--
--	if (mac->mode == IEEE80211_IF_TYPE_MNTR) {
--		ioreqs[0].value = 0xffffffff;
--		ioreqs[1].value = 0x1;
--	}
-+	u32 filter = mac->mode == IEEE80211_IF_TYPE_MNTR ? ~0 : STA_RX_FILTER;
- 
--	return zd_iowrite32a(&mac->chip, ioreqs, ARRAY_SIZE(ioreqs));
-+	return zd_iowrite32(&mac->chip, CR_RX_FILTER, filter);
- }
- 
- static int zd_mac_open(struct ieee80211_hw *dev)
--- 
-1.5.0.5
+> johannes
+
+	Thanks !
+
+	Jean
 
