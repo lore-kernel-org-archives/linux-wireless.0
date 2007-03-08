@@ -1,73 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from waste.org ([66.93.16.53]:38070 "EHLO waste.org"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2118 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751003AbXCEArg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2007 19:47:36 -0500
-Date: Sun, 4 Mar 2007 18:25:50 -0600
-From: Matt Mackall <mpm@selenic.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, yi.zhu@intel.com, jketreno@linux.intel.com,
-	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
-Subject: Re: Recent wireless breakage (ipw2200, iwconfig, NetworkManager)
-Message-ID: <20070305002550.GI23311@waste.org>
-References: <20070304220857.GH23311@waste.org> <1173051564.6131.13.camel@johannes.berg>
+	id S1751574AbXCHEC0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2007 23:02:26 -0500
+Date: Wed, 7 Mar 2007 22:32:26 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: jeff@garzik.org
+Cc: linux-wireless@vger.kernel.org
+Subject: Please pull 'upstream' branch of wireless-2.6
+Message-ID: <20070308033226.GB19886@tuxdriver.com>
+References: <20070308033022.GA19886@tuxdriver.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1173051564.6131.13.camel@johannes.berg>
+In-Reply-To: <20070308033022.GA19886@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 05, 2007 at 12:39:24AM +0100, Johannes Berg wrote:
-> [adding linux-wireless to CC]
-> 
-> On Sun, 2007-03-04 at 16:08 -0600, Matt Mackall wrote:
-> > Recent kernels are having troubles with wireless for me. Two seemingly
-> > related problems:
-> 
-> I don't think they are related actually.
-> 
-> > a) NetworkManager seems oblivious to the existence of my IPW2200
-> 
-> This is due to the recent sysfs restructuring I think. IIRC the fix is
-> to upgrade hal to a current git version.
+The following changes since commit 9b73d945c4269f61d2ecf0555150b577a965bc99:
+  John W. Linville (1):
+        Merge branch 'upstream-fixes' into upstream
 
-If that's the cause, the fix is to back out whatever was done to break
-userspace. Breaking userspace is not ok. Upgrading from 2.6.x to
-2.6.x+1 should not entail replacing substantial parts of userspace,
-especially with NOT-EVEN-FRAKKING-RELEASED-YET CODE. 
+are found in the git repository at:
 
-I will try a new HAL when it shows up in Debian/unstable and not a
-moment sooner.
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream
 
-> > b) Manual iwconfig waits for 60s and then reports:
-> 
-> That one's strange.
-> 
-> > A second attempt to enable WEP via iwconfig succeeds and network
-> > connectivity is normal. However, NetworkManager still ignores the
-> > device at this point.
-> 
-> I'd think it's a ipw bug but I have no idea if that was even touched
-> during this time.
-> 
-> > Bisect with Mercurial points to this patch:
-> > 
-> > $ hg bisect bad
-> > The first bad revision is:
-> > changeset:   46985:f701b96bb2f7
-> > user:        Greg Kroah-Hartman <gregkh@suse.de>
-> > date:        Wed Feb 07 10:37:11 2007 -0800
-> > summary:     Network: convert network devices to use struct device
-> > instead of class_device
-> > 
-> > which corresponds to 43cb76d91ee85f579a69d42bc8efc08bac560278 in git.
-> 
-> Yup, sysfs breakage/hal stuff. Can you try with a recent hal? And maybe
-> try to bisect the iwconfig stop thing if you've got enough time...
+Andrew Morton (1):
+      ipw2200: fix ieee80211_get_geo typo
 
-Will double-check the iwconfig tests. It's been masked by
-NetworkManager for a while.
+Jouni Malinen (1):
+      hostap: Add D-Link DWL-650 Rev. P1 product id
 
+Sam Ravnborg (1):
+      bcm43xx: do not rebuild when kernel version changes
+
+ drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c |    4 ++--
+ drivers/net/wireless/hostap/hostap_cs.c        |    5 +++++
+ drivers/net/wireless/ipw2200.c                 |    2 +-
+ 3 files changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c b/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
+index c947025..d2df6a0 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
+@@ -32,7 +32,7 @@
+ #include <linux/netdevice.h>
+ #include <linux/pci.h>
+ #include <linux/string.h>
+-#include <linux/utsrelease.h>
++#include <linux/utsname.h>
+ 
+ 
+ static void bcm43xx_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info)
+@@ -40,7 +40,7 @@ static void bcm43xx_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *
+ 	struct bcm43xx_private *bcm = bcm43xx_priv(dev);
+ 
+ 	strncpy(info->driver, KBUILD_MODNAME, sizeof(info->driver));
+-	strncpy(info->version, UTS_RELEASE, sizeof(info->version));
++	strncpy(info->version, utsname()->release, sizeof(info->version));
+ 	strncpy(info->bus_info, pci_name(bcm->pci_dev), ETHTOOL_BUSINFO_LEN);
+ }
+ 
+diff --git a/drivers/net/wireless/hostap/hostap_cs.c b/drivers/net/wireless/hostap/hostap_cs.c
+index 8d8f4b9..534da85 100644
+--- a/drivers/net/wireless/hostap/hostap_cs.c
++++ b/drivers/net/wireless/hostap/hostap_cs.c
+@@ -848,6 +848,11 @@ static struct pcmcia_device_id hostap_cs_ids[] = {
+ 		"Intersil", "PRISM 2_5 PCMCIA ADAPTER",	"ISL37300P",
+ 		"Eval-RevA",
+ 		0x4b801a17, 0x6345a0bf, 0xc9049a39, 0xc23adc0e),
++	/* D-Link DWL-650 Rev. P1; manfid 0x000b, 0x7110 */
++	PCMCIA_DEVICE_PROD_ID1234(
++		"D-Link", "DWL-650 Wireless PC Card RevP", "ISL37101P-10",
++		"A3",
++		0x1a424a1c, 0x6ea57632, 0xdd97a26b, 0x56b21f52),
+ 	PCMCIA_DEVICE_PROD_ID123(
+ 		"Addtron", "AWP-100 Wireless PCMCIA", "Version 01.02",
+ 		0xe6ec52ce, 0x08649af2, 0x4b74baa0),
+diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+index 99c517a..4372438 100644
+--- a/drivers/net/wireless/ipw2200.c
++++ b/drivers/net/wireless/ipw2200.c
+@@ -1852,7 +1852,7 @@ static ssize_t show_channels(struct device *d,
+ 			     char *buf)
+ {
+ 	struct ipw_priv *priv = dev_get_drvdata(d);
+-	const struct ieee80211_geo *geo = ipw_get_geo(priv->ieee);
++	const struct ieee80211_geo *geo = ieee80211_get_geo(priv->ieee);
+ 	int len = 0, i;
+ 
+ 	len = sprintf(&buf[len],
 -- 
-Mathematics is the supreme nostalgia of our time.
+John W. Linville
+linville@tuxdriver.com
