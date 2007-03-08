@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:53635 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S964785AbXCZJyP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2007 05:54:15 -0400
-Date: Mon, 26 Mar 2007 11:54:12 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Daniel Drake <dsd@gentoo.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	kune@deine-taler.de, Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] zd1211rw-mac80211: Fix for monitor mode bug
-Message-ID: <20070326115412.2786c8f4@griffin.suse.cz>
-In-Reply-To: <20070325231817.9C5887B409F@zog.reactivated.net>
-References: <20070325231817.9C5887B409F@zog.reactivated.net>
+Received: from pentafluge.infradead.org ([213.146.154.40]:36108 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030268AbXCHIbq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Mar 2007 03:31:46 -0500
+Date: Thu, 8 Mar 2007 08:31:18 +0000
+From: Christoph Hellwig <hch@infradead.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Marcelo Tosatti <marcelo@kvack.org>,
+	Jeff Garzik <jeff@garzik.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'libertas' branch of wireless-2.6
+Message-ID: <20070308083118.GA3532@infradead.org>
+References: <20070227205649.GH5826@tuxdriver.com> <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org> <20070304153627.GA32380@dmt> <20070305140825.GA9982@infradead.org> <20070307181638.GA22305@dmt> <20070307222404.GA23393@infradead.org> <1173321651.12017.6.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1173321651.12017.6.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[removing netdev]
-
-On Mon, 26 Mar 2007 00:18:17 +0100 (BST), Daniel Drake wrote:
-> The ZD1211 supports the delivery of packets with a wrong CRC value
-> to the host. We switched that feature on in monitor mode, so that
-> incomplete packets were delivered.
+On Wed, Mar 07, 2007 at 09:40:51PM -0500, Dan Williams wrote:
+> That means, for example, the prism2 WPA ioctls, because WE-19 has
+> equivalent functionality.  Other examples include many of the madwifi
+> ioctls like auth_mode for which there are WEXT calls.  Others include
+> the ones for creating virtual STAs that are now subsumed by mac80211.
 > 
-> This problem has been reported to bugzilla.kernel.org as bug 8152.
-> This patch fixes it for the mac80211 stack.
+> For stuff that's seriously not common among drivers, there's nothing
+> else that drivers can do but provide private ioctls.
 
-ACK.
+No, we're more than unhappy with private knobs in general.  Each and
+every of them needs an good explanation on
 
-But this feature of zd1211 looks interesting. Johannes, shouldn't we
-add a parameter to cfg80211 allowing such packets to be received by
-monitor iterfaces?
+ a) why it's needed
+ b) why you can use an existing common interface
+ c) why it doesn't make sense to add a new common interface
 
-Daniel, does zd1211 send information about failed CRC check with the
-packet? Or do we need to recheck CRC in the stack if the feature
-mentioned above is implemented and there are both regular and monitor
-interface operating?
+see all the discussion on this on say netdev or linux-scsi.
 
-Thanks,
+Realize it, private interfaces are really bad, it means you need
+special userspace for a single driver, that's exactly the thing
+we try to avoid at all cost.
 
- Jiri
-
--- 
-Jiri Benc
-SUSE Labs
