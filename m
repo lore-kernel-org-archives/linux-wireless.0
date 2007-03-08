@@ -1,47 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:49003 "EHLO silver.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934316AbXCWUnp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 16:43:45 -0400
-From: Jiri Benc <jbenc@suse.cz>
-To: "John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20070323214400.642621638.midnight@suse.cz>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 18/19] mac80211: Prevent unregistering of unregistered hw
-Message-Id: <20070323204501.3C36148593@silver.suse.cz>
-Date: Fri, 23 Mar 2007 21:45:01 +0100 (CET)
+Received: from rgminet01.oracle.com ([148.87.113.118]:49080 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030771AbXCHW1b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Mar 2007 17:27:31 -0500
+Date: Thu, 8 Mar 2007 14:17:56 -0800
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: jt@hpl.hp.com
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Jouni Malinen <jkm@devicescape.com>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: wireless extensions vs. 64-bit architectures
+Message-Id: <20070308141756.efdfd6da.randy.dunlap@oracle.com>
+In-Reply-To: <20070308221128.GA24884@bougret.hpl.hp.com>
+References: <1173144447.15891.93.camel@johannes.berg>
+	<20070306171316.GA19669@bougret.hpl.hp.com>
+	<200703061943.07350.mb@bu3sch.de>
+	<20070307020310.GA20466@bougret.hpl.hp.com>
+	<1173364747.14001.7.camel@johannes.berg>
+	<20070308184954.GA24485@bougret.hpl.hp.com>
+	<1173382042.3248.63.camel@johannes.berg>
+	<20070308193412.GG23040@devicescape.com>
+	<1173382802.3248.68.camel@johannes.berg>
+	<20070308221128.GA24884@bougret.hpl.hp.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ivo van Doorn <ivdoorn@gmail.com>
+On Thu, 8 Mar 2007 14:11:28 -0800 Jean Tourrilhes wrote:
 
-At the moment it is possible to call ieee80211_unregister_hw()
-for an unregistered hw structure. This will cause a big panic.
-This patch will add a BUG_ON() line to warn about this situation.
+> On Thu, Mar 08, 2007 at 08:40:01PM +0100, Johannes Berg wrote:
+> > On Thu, 2007-03-08 at 11:34 -0800, Jouni Malinen wrote:
+> > 
+> > > Yes, workaround in just iwlib is not enough. If the only possible
+> > > solution is user space workaround, it better be documented (and
+> > > communicated to maintainers of user space apps) well so that
+> > > all user space programs not using iwlib can be modified, too.
+> > 
+> > The more I think about it the worse it gets. Think about wireless events
+> > where both 32 and 64-bit userspace programs may be listening... That
+> > means we can't even fix it in the kernel without breaking something.
+> > 
+> > johannes
+> 
+> 	This is exactly what I was pointing out earlier. Well,
+> actually, there may be ways of fixing it in the kernel, but that would
+> be real ugly, and I don't want to go there.
+> 
+> 	I've just released wireless_tools.29.pre15.tar.gz. This is
+> supposed to include a "band-aid" for that problem. To the best of my
+> knowledge, it should catch the problem and not introduce false
+> positive. I would be glad if you guys would have a quick look into it,
+> because obviously I can't test it.
+> 
+> 	Now, about the way forward...
+> 	First possiblity, we could stick with this band-aid
+> permanently.
+> 
+> 	Second possiblity : we do the right thing and plan a API
+> change to return struct always aligned on 32 bits. This way, when we
+> get 128 bit processor, we don't have to add another band aid ;-)
+> 	It would work like the ESSID changeover. We pick a WE version
+> changeover. We introduce userspace that can deal with before and
+> after. After 1 or 2 years, we flip the switch. After another 1 or 2
+> years, we get rid of backward compatibility.
+> 
+> 	Third possibility : we declare 32 bit userspace on 64 bit
+> kernel as not supported and advise users to get a 64 bit
+> userspace. The number of bug report on that issue would suggest that
+> very few users are in this case.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Signed-off-by: Jiri Benc <jbenc@suse.cz>
+I think that this is not actually an option since
+powerpc64 is all 32-bit userspace.
+Maybe some other arch-es are like this also (?).
+
+> 	I know the userspace guys will hate (1) and hate even more (2).
+> 
+> 	Regards,
+> 
+> 	Jean
+
+
 
 ---
-
- net/mac80211/ieee80211.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-a6d266e59dd7d2f2c4bc439d47f21cf92d6df949
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index fb2ce3d..39468b8 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -4732,6 +4732,9 @@ void ieee80211_unregister_hw(struct ieee
- 	tasklet_kill(&local->tasklet);
- 
- 	rtnl_lock();
-+
-+	BUG_ON(local->reg_state != IEEE80211_DEV_REGISTERED);
-+
- 	local->reg_state = IEEE80211_DEV_UNREGISTERED;
- 	if (local->apdev)
- 		ieee80211_if_del_mgmt(local);
--- 
-1.3.0
-
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
