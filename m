@@ -1,79 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48692 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753343AbXC2LHv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2007 07:07:51 -0400
-Subject: Re: [patch 5/5] IEEE 802.11n management action frame handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: mohamed <mabbas@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <1174909425.1364.63.camel@dell-4965.jf.intel.com>
-References: <1174909425.1364.63.camel@dell-4965.jf.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iLFD3p+OiwexCVijOkip"
-Date: Wed, 28 Mar 2007 22:15:01 +0200
-Message-Id: <1175112901.5151.141.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([66.187.233.31]:32962 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751661AbXCHMnM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Mar 2007 07:43:12 -0500
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <1173207492.3503.13.camel@johannes.berg> 
+References: <1173207492.3503.13.camel@johannes.berg> 
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: using keys service for wireless 
+Date: Thu, 08 Mar 2007 12:43:00 +0000
+Message-ID: <10771.1173357780@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
---=-iLFD3p+OiwexCVijOkip
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Oh, there's an issue with group keys vs. pairwise keys which means that a
+> single connection can have multiple keys and for outgoing packets we choose
+> one of them to do the encryption with, same for incoming packets.
 
-On Mon, 2007-03-26 at 04:43 -0700, mohamed wrote:
+Sounds messy:-)
 
-> +static void ieee80211_send_addba_resp(struct net_device *dev,
-> +				      struct ieee80211_mgmt *mgmt_src,
-> +				      size_t len,
-> +				      u16 status)
-> +{
-> +	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-> +        struct ieee80211_if_sta *ifsta =3D &sdata->u.sta;
-> +	struct sk_buff *skb;
-> +	struct ieee80211_mgmt *mgmt;
-> +
-> +	skb =3D dev_alloc_skb(sizeof(*mgmt) + 50 );
+> Looking at this, I notice that if we wanted to use the key service we'd
+> still have to tell the stack/driver about the encryption type [1] we
+> want to use as well as when to start using it.
 
-Why +50? And isn't sizeof(ieee80211_mgmt) a bit dangerous since that
-structure might increase in size?
+Surely you have to tell it that anyway at some level.  And can you not embed
+it in the key payload?
 
-> +static void ieee80211_rx_mgmt_action(struct net_device *dev,
-> +				     struct ieee80211_if_sta *ifsta,
-> +				     struct ieee80211_mgmt *mgmt,
-> +				     size_t len)
-> +{
-> +	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
-> +
-> +	if (len < 24 + 1) {
+As an example, I've just been reimplementing my in-kernel RxRPC (AFS) service
+to provide (a) a socket interface so userspace can use it, and (b) security.
+The way I do things is that userspace adds a key to its session keyring with a
+description of that name of the AFS cell (by calling the klog program).
 
-Why 25? Some #define maybe?
+The type of security required (kerberos4 is currently the only option) is
+embedded within the key.  When a userspace AFS client program wants to use a
+secured RxRPC socket, it nominates the name of the key it wants by a socket
+option:
 
-> +			printk(KERN_ERR "%s: recieved back unsupported \n",
-> +								dev->name);
+	char cell[] = "afs@CAMBRIDGE.REDHAT.COM";
+	ret = setsockopt(client, SOL_RXRPC, RXRPC_SECURITY_KEY,
+			 cell, strlen(cell));
+	OSERROR(ret, "key");
 
-"Received unsupported block-ack action"? And you need a ratelimit on
-that printk or somebody can flood you with kernel messages by sending
-tiny frames with invalid fields there. Possibly on other printks too.
+and the kernel then calls request_key() on that description to get the key,
+which it can then retain attached to the socket structure in the kernel.
 
-Oh and one more smallish thing: Can you post your patches 1-5/5 as
-replies to 0/5? Makes the whole thing more readable in most mail
-programs, and I think it also simplifies John's life when merging.
-=20
-johannes
+The server side of things I've done by giving the server AF_RXRPC socket a
+keyring with the server's secret list attached as keys:
 
---=-iLFD3p+OiwexCVijOkip
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+	keyring = add_key("keyring", "AFSkeys", NULL, 0,
+			  KEY_SPEC_PROCESS_KEYRING);
+	OSERROR(keyring, "add_key/ring");
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+	const char secret[8] = { 0xa7, 0x83, 0x8a, 0xcb, 0xc7, 0x83, 0xec,
+				 0x94 };
 
-iD8DBQBGCszF/ETPhpq3jKURAhOSAKCl39AHh6KPHM+g4bwGtfas/ZEZ4QCfUZqJ
-6Hfj+qOjMnNiET0/ieHIC2g=
-=Jfq8
------END PGP SIGNATURE-----
+	key = add_key("rxrpc_s", "52:2", secret, 8, keyring);
+	OSERROR(key, "add_key");
 
---=-iLFD3p+OiwexCVijOkip--
+	ret = setsockopt(server, SOL_RXRPC, RXRPC_SECURITY_KEYRING,
+			 "AFSkeys", 7);
+	OSERROR(ret, "set keyring");
 
+The keys in the keyring are named for the RxRPC service ID (52 - Volume
+Location Service) being provided and the security type (2 - kerberos).  This
+permits the server to add and remove keys without pestering the socket.
+
+Using the keytype's match() function, it would be possible to have a key
+named, say, "afs@cambridge.redhat.com:52:2" and match the bit I wanted
+depending on the pattern given to match().  For RxRPC, however, the keys are
+very different, so it doesn't actually make any sense to do that.
+
+
+Now this analogy may or may not help you.  I'll leave that up to you.
+
+David
