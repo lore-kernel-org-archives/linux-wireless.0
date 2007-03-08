@@ -1,42 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-40.dex002.intermedia.net ([64.78.21.127]:54325 "EHLO
-	dhost002-40.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030346AbXC2QKX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2007 12:10:23 -0400
-From: "Jouni Malinen" <jkm@devicescape.com>
-Date: Thu, 29 Mar 2007 08:44:31 -0700
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-Subject: Re: WPA/RSN information in cfg80211?
-Message-ID: <20070329154431.GA3906@devicescape.com>
-References: <1175034846.5151.20.camel@johannes.berg> <20070328190017.GI6036@devicescape.com> <1175166739.8807.46.camel@johannes.berg>
+Received: from mx1.redhat.com ([66.187.233.31]:51746 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750827AbXCHCib (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2007 21:38:31 -0500
+Subject: Re: Please pull 'libertas' branch of wireless-2.6
+From: Dan Williams <dcbw@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Marcelo Tosatti <marcelo@kvack.org>, Jeff Garzik <jeff@garzik.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070307222404.GA23393@infradead.org>
+References: <20070227205649.GH5826@tuxdriver.com>
+	 <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org>
+	 <20070304153627.GA32380@dmt> <20070305140825.GA9982@infradead.org>
+	 <20070307181638.GA22305@dmt>  <20070307222404.GA23393@infradead.org>
+Content-Type: text/plain
+Date: Wed, 07 Mar 2007 21:40:51 -0500
+Message-Id: <1173321651.12017.6.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1175166739.8807.46.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 29, 2007 at 01:12:19PM +0200, Johannes Berg wrote:
-> On Wed, 2007-03-28 at 12:00 -0700, Jouni Malinen wrote:
-> > As long as the information is available for the driver at the time of
-> > association request, it does not really matter how that information got
-> > there..
+On Wed, 2007-03-07 at 22:24 +0000, Christoph Hellwig wrote:
+> On Wed, Mar 07, 2007 at 03:16:38PM -0300, Marcelo Tosatti wrote:
+> > >  - please get rid of the ENTER/LEAVE macros
+> > 
+> > These are useful for debugging. We have removed most of the useless ones 
+> > already.
 > 
-> I'd have thought you would rather see the IE included to be able to
-> experiment with new things easier ;)
+> We've refused this on a lot of drivers.  If you really need this kind
+> of debugging talk to acme to use a variant of ostra for this.
+> 
+> > >  - please get rid of all your private ioctls and iwpriv stuff
+> > >    (should I add !!!! here)
+> > 
+> > Rationale being? There are a bunch of device private knobs, and iwpriv
+> > is the interface for such configuration. (????)
+> 
+> If you read netdev we're very very unhappy about device specific knobs,
+> as they are really painful to support.  You should also look at the
+> cfg80211 threads on why ioctls are really bad for moving to a knew
+> non-wext, non-ioctl config mechanism.  And for why iwpriv is particularly
+> bad look about the posts about the wext compat issues.
 
-Looks like there is some misunderstanding here.. What I meant with "the
-information" was both the IE and the individual parameters. I do indeed
-want to get both of these available to the drivers.
+We are unhappy with specific knobs _if_and_only_if_ they duplicate
+functionality that's currently available.
 
-> I really can't decide which way to use. Piecing together the IE in the
-> kernel and then just passing it doesn't seem like much overhead, but
-> doing it in userspace gives us more freedom for experiments...
+That means, for example, the prism2 WPA ioctls, because WE-19 has
+equivalent functionality.  Other examples include many of the madwifi
+ioctls like auth_mode for which there are WEXT calls.  Others include
+the ones for creating virtual STAs that are now subsumed by mac80211.
 
-I believe both should be provided from user space and kernel has option
-of using either one depending on needs.
+For stuff that's seriously not common among drivers, there's nothing
+else that drivers can do but provide private ioctls.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Dan
+
+
