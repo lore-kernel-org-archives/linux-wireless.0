@@ -1,62 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:33648 "EHLO mx1.redhat.com"
+Received: from smtp.osdl.org ([65.172.181.24]:58365 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752504AbXCQRUw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Mar 2007 13:20:52 -0400
-Subject: Re: [PATCH 3/5] mac80211: fix key restricted/open display
-From: Dan Williams <dcbw@redhat.com>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Hong Liu <hong.liu@intel.com>, Jiri Benc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200703170058.01020.flamingice@sourmilk.net>
-References: <1174015698.3408.41.camel@devlinux-hong>
-	 <200703162357.22669.flamingice@sourmilk.net>
-	 <1174106316.3026.19.camel@localhost.localdomain>
-	 <200703170058.01020.flamingice@sourmilk.net>
-Content-Type: text/plain
-Date: Sat, 17 Mar 2007 13:23:28 -0400
-Message-Id: <1174152208.7163.4.camel@localhost.localdomain>
-Mime-Version: 1.0
+	id S933064AbXCHTIn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Mar 2007 14:08:43 -0500
+Date: Thu, 8 Mar 2007 11:08:33 -0800 (PST)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+cc: Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	linux-sparse@vger.kernel.org
+Subject: Re: sparse using insane amounts of memory
+In-Reply-To: <Pine.LNX.4.64.0703081023490.10832@woody.linux-foundation.org>
+Message-ID: <Pine.LNX.4.64.0703081104010.10832@woody.linux-foundation.org>
+References: <1173319356.3546.54.camel@johannes.berg> <1173375270.15842.24.camel@dv>
+ <1173375791.3248.37.camel@johannes.berg> <200703081908.40997.IvDoorn@gmail.com>
+ <Pine.LNX.4.64.0703081023490.10832@woody.linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2007-03-17 at 00:57 -0400, Michael Wu wrote:
-> On Saturday 17 March 2007 00:38, Dan Williams wrote:
-> > On Fri, 2007-03-16 at 23:57 -0400, Michael Wu wrote:
-> > > On Friday 16 March 2007 23:46, Dan Williams wrote:
-> > > > I think you're misreading the patch?  It looks correct to me.  The
-> > > > second check for (erq->flags & IW_ENCODE_RESTRICTED) should ensure that
-> > > > Shared Key is only selected when the userspace program requested it.
-> > >
-> > > This breaks authentication algorithm fallback for sure.
-> >
-> > Well, then it's broken in most of the non mac80211 drivers then.
-> >
-> Why is that? The reason this breaks mac80211 is because auth_algs is a 
-> bitfield which indicates what authentication algorithms can be used. This 
-> patch makes it so that if a user chooses an authentication algorithm, that is 
-> the only one that will ever be used.
-
-Well, what I meant here was that older fullmac drivers don't do fallback
-and users must explicitly choose the auth method they required (which
-sucks).  Therefore, we've got to make sure that everything works as
-expected.  And I think you're right, mac80211 can just ignore requests
-to explicitly set the WEP auth alg.
-
-> > Well, if mac80211 can cycle (is this like airo's auto_wep?) then I guess
-> > we don't care about the auth mode.  As long as we don't break userspace
-> > programs that try to set the auth mode, I'm fine with that.
-> >
-> mac80211 should just ignore the bits. Airo's auto_wep appears to cycle through 
-> different encryption keys while mac80211 does not.
-
-Half-right.  auto_wep can be 0 -> 4.  0 is off, and 1 - 4 is the max
-index of WEP keys to try.  It cycles through _both_ the WEP keys and the
-auth modes trying each one out of the card isn't currently connected.
-Sort of crack to include the WEP keys too, but it appears to be the same
-thing.
-
-Dan
 
 
+On Thu, 8 Mar 2007, Linus Torvalds wrote:
+> 
+> To check a value for being a nice range of consecutive bits, you can 
+> simply do:
+> 
+> 	#define is_power_of_two(x) (!((x) & ((x)-1)))
+> 	#define low_bit_mask(x) (((x)-1) & ~(x))
+> 	#define is_contiguous_mask(x) is_power_of_two(1 + (x) + low_bit_mask(x))
+
+Side note: I didn't check this. So if you actually do this, please 
+double-check. The math should all be good, but there's a few caveats:
+
+ - I might have made a mistake
+
+ - 0 is special, and is generally considered to be a power of two (and 
+   this is more fundamental than you'd think: it's not just fall-out from 
+   the particular expression chosen, it is fundamentally *required* to 
+   handle overflow, and you can think of 0 as 2**x, x > wordsize if that 
+   makes you more comfortable with the notion that zero is a power-of-two 
+   in any finite representation of 2's complement)
+
+The "zero is special" thing means that if you don't want to accept zero as 
+a valid mask (it technically *is* a contiguous set of bits set - it's just 
+the empty set) you'd need to check for it specially.
+
+But the "I might have made a mistake" part is worth just remembering, and 
+just double-checking it all.
+
+		Linus
