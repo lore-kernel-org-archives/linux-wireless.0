@@ -1,89 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from che.ojctech.com ([64.198.255.2]:54701 "EHLO che.ojctech.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752974AbXCZQ7R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2007 12:59:17 -0400
-Date: Mon, 26 Mar 2007 11:59:08 -0500
-From: David Young <dyoung@pobox.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
-	Scott Raynel <scottraynel@gmail.com>, radiotap@mail.ojctech.com
-Subject: Re: RFC: radiotap discrepancy in Linux vs OpenBSD
-Message-ID: <20070326165908.GK31621@che.ojctech.com>
-References: <20070325232416.64xwkc0kw04oosg0@webmail.spamcop.net> <20070326033839.GA24097@che.ojctech.com> <43e72e890703260841v56047559y90b7c25c9c458564@mail.gmail.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51060 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752536AbXCHQpZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Mar 2007 11:45:25 -0500
+Subject: Re: sparse using insane amounts of memory
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org, linux-sparse@vger.kernel.org
+In-Reply-To: <1173371608.21465.12.camel@dv>
+References: <1173319356.3546.54.camel@johannes.berg>
+	 <1173371608.21465.12.camel@dv>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gy5OON78MuuNFRX/xO4L"
+Date: Thu, 08 Mar 2007 17:45:14 +0100
+Message-Id: <1173372315.3248.19.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890703260841v56047559y90b7c25c9c458564@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 26, 2007 at 11:41:38AM -0400, Luis R. Rodriguez wrote:
-> CC'ing radiotap list, this time with your comments inline.
-> 
-> On 3/25/07, David Young <dyoung@pobox.com> wrote:
-> >On Sun, Mar 25, 2007 at 11:24:16PM -0400, Pavel Roskin wrote:
-> >> Hello!
-> >
-> >(Oops, this time cc'd radiotap.)
-> >
-> >The place to discuss this is the mailing list
-> >radiotap@ojctech.com, which I have cc'd.  Subscribe at
-> ><http://mail.ojctech.com/mailman/listinfo/radiotap>.  Please feel free
-> >to circulate the URL.
-> >
-> >> I have noticed two different incompatible changes to enum
-> >> ieee80211_radiotap_type in ieee80211_radiotap.h.
-> >>
-> >> One is found in the current wireless-2.6.git:
-> >>
-> >>         IEEE80211_RADIOTAP_RX_FLAGS = 14,
-> >>         IEEE80211_RADIOTAP_TX_FLAGS = 15,
-> >>         IEEE80211_RADIOTAP_RTS_RETRIES = 16,
-> >>         IEEE80211_RADIOTAP_DATA_RETRIES = 17,
-> >
-> >These fields are slated to become part of the standard, I just haven't got
-> >around to updating the manual page, yet.  I have time to do that tonight.
-> >
-> >> It was added together with Marvell Libertas USB driver.
-> >
-> >> Another set of the flags can be found in CVS OpenBSD:
-> >>
-> >>         IEEE80211_RADIOTAP_FCS = 14,
-> >>         IEEE80211_RADIOTAP_HWQUEUE = 15,
-> >>         IEEE80211_RADIOTAP_RSSI = 16,
-> >
-> >These fields are not part of the standard, and they will not become part
-> >of the standard with these numbers.  This is the first time I have ever
-> >heard of HWQUEUE and RSSI, actually.  What are they for?
-> 
-> RSSI is Received Signal Strength Indication. Its a measurement of the
-> received radio signal strength. Unfortunately though RSSI units used
-> are arbitrary and the maximum value differs amongst chipsets. From
-> wikipedia:
-> 
-> --
-> RSSI measurements will vary from 0 to 255 depending on the vendor. It
-> consists of a one byte integer value. A value of 1 will indicate the
-> minimum signal strength detectable by the wireless card, while 0
-> indicates no signal. The value has a maximum of RSSI_Max. For example,
-> Cisco Systems cards will return a RSSI of 0 to 100. In this case, the
-> RSSI_Max is 100. The Cisco card can report 101 distinct power levels.
-> Another popular Wi-Fi chipset is made by Atheros. An Atheros based
-> card will return a RSSI value of 0 to 60.
-> --
-> 
-> As Samuel Barber had recommended before, we should probably instead
-> adopt RCPI. Quoting from his e-mail:
 
-RCPI sounds desirable.  Let us avoid labeling a field RCPI if it isn't.
-We may need both fields, RSSI (defined: uncalibrated, unsigned, unitless
-signal strength, greater numbers -> greater strength) and RCPI (defined
-per 802.11k draft 5.0).
+--=-gy5OON78MuuNFRX/xO4L
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Is 802.11k changing very rapidly, esp. the RCPI definition?
+On Thu, 2007-03-08 at 11:33 -0500, Pavel Roskin wrote:
 
-Dave
+> You forgot the version of sparse.
 
--- 
-David Young             OJC Technologies
-dyoung@ojctech.com      Urbana, IL * (217) 278-3933
+Good point. The commit is c4670dfcbe52b598e263c452762a66d22e636585.
+
+>   I cannot reproduce the problem with
+> the current sparse from git
+> (git://git.kernel.org/pub/scm/linux/kernel/git/josh/sparse.git)
+
+I just upgraded to 309f3805ddec9ab2f9c62da573586a7cf7c1f17a and still
+observe that it uses a lot of memory.
+
+> If you still have the problem, please remove rt2400pci.o and run:
+>=20
+> make CC=3D"gcc -save-temps -D__CHECKER__" KBUILD_NOCMDDEP=3D1
+>=20
+> rt2400pci.i will be found in the root of the build tree.  Please see if
+> you have a problem with it.  If you do, please put it online and post
+> the URL.
+
+I ran=20
+
+  make CC=3D"gcc -save-temps -D__CHECKER__" KBUILD_NOCMDDEP=3D1 M=3Ddrivers=
+/net/wireless/mac80211/rt2x00/
+
+and aborted when I got lots of errors, rt2400pci.i was created and has
+about 26k lines. Running sparse on it (sparse rt2400pci.i) takes a lot
+of memory too. I put the file up at
+http://johannes.sipsolutions.net/files/rt2400pci.i
+
+johannes
+
+--=-gy5OON78MuuNFRX/xO4L
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF8D2a/ETPhpq3jKURAn6GAJwPeORchTuh9CGHfRGKq7sNcMyztACfQvKQ
+yqjjKFBkh8Z7ZUNw9GmLSBo=
+=ZU1/
+-----END PGP SIGNATURE-----
+
+--=-gy5OON78MuuNFRX/xO4L--
+
