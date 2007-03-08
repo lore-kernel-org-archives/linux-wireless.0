@@ -1,74 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:48995 "EHLO silver.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934194AbXCWUnc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 16:43:32 -0400
-From: Jiri Benc <jbenc@suse.cz>
-To: "John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20070323214400.642621638.midnight@suse.cz>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 6/19] mac80211: Set carrier status for STA interfaces
-Message-Id: <20070323204448.7F593484C4@silver.suse.cz>
-Date: Fri, 23 Mar 2007 21:44:48 +0100 (CET)
+Received: from wx-out-0506.google.com ([66.249.82.225]:6079 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752404AbXCHSIz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Mar 2007 13:08:55 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so597912wxd
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2007 10:08:55 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: sparse using insane amounts of memory
+Date: Thu, 8 Mar 2007 19:08:40 +0100
+Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	linux-sparse@vger.kernel.org
+References: <1173319356.3546.54.camel@johannes.berg> <1173375270.15842.24.camel@dv> <1173375791.3248.37.camel@johannes.berg>
+In-Reply-To: <1173375791.3248.37.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200703081908.40997.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+On Thursday 08 March 2007 18:43, Johannes Berg wrote:
+> On Thu, 2007-03-08 at 12:34 -0500, Pavel Roskin wrote:
+> 
+> > FIELDS32 expands to some monstrosities.  Look for rt2x00_bbp_write in
+> > the dump.  Also behold the amount of parentheses in LOWEST_BIT32.
+> > That's almost certainly the culprit.
+> 
+> And I even had CONFIG_RT2X00_DEBUG enabled so it's worse that the
+> regular case.
 
-This makes STA interfaces set the carrier status based on the current
-association status.
+Those checks are intended to doublecheck the register FIELD{16,32}
+defines. Since all register definitions were rewritten from the legacy driver,
+(legacy driver used unions and structs for all registers) some of those
+defines weren't done correctly (A bitmask could for example be in binary 000110111
+which is very wrong).
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-Signed-off-by: Jiri Benc <jbenc@suse.cz>
+To check those the register checks were added to ensure the register defines
+were at least correct. I am however open to suggestions on how this should be improved
+and cleaned up, since it is not my favorite piece of code. ;)
 
----
-
- net/mac80211/ieee80211.c     |    4 ++++
- net/mac80211/ieee80211_sta.c |    3 +++
- 2 files changed, 7 insertions(+), 0 deletions(-)
-
-22abe7f30c0e34ac94eda86e6aad66f74e582317
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 18caa2b..30330b9 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -2368,6 +2368,10 @@ static int ieee80211_open(struct net_dev
- 	else
- 		ieee80211_if_config(dev);
- 
-+	if (sdata->type == IEEE80211_IF_TYPE_STA &&
-+	    !local->user_space_mlme)
-+		netif_carrier_off(dev);
-+
- 	netif_start_queue(dev);
- 	return 0;
- }
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index a264008..9d08a37 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -375,11 +375,13 @@ static void ieee80211_set_associated(str
- 		sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 		if (sdata->type != IEEE80211_IF_TYPE_STA)
- 			return;
-+		netif_carrier_on(dev);
- 		ifsta->prev_bssid_set = 1;
- 		memcpy(ifsta->prev_bssid, sdata->u.sta.bssid, ETH_ALEN);
- 		memcpy(wrqu.ap_addr.sa_data, sdata->u.sta.bssid, ETH_ALEN);
- 		ieee80211_sta_send_associnfo(dev, ifsta);
- 	} else {
-+		netif_carrier_off(dev);
- 		memset(wrqu.ap_addr.sa_data, 0, ETH_ALEN);
- 	}
- 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
-@@ -2007,6 +2009,7 @@ static void ieee80211_sta_reset_auth(str
- 	       ifsta->auth_alg);
- 	ifsta->auth_transaction = -1;
- 	ifsta->associated = ifsta->auth_tries = ifsta->assoc_tries = 0;
-+	netif_carrier_off(dev);
- }
- 
- 
--- 
-1.3.0
-
+Ivo
