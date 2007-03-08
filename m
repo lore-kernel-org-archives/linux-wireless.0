@@ -1,75 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33989 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57109 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752562AbXCEAQJ (ORCPT
+	with ESMTP id S1752202AbXCHPdY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2007 19:16:09 -0500
-Subject: Re: Question about PRISM2 header rate field
+	Thu, 8 Mar 2007 10:33:24 -0500
+Subject: Re: wireless extensions vs. 64-bit architectures
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <45EAF559.5070701@warmcat.com>
-References: <45EA9E39.6080706@warmcat.com>  <45EAF559.5070701@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5YKk6cEXK5Z9mtA19Hxe"
-Date: Mon, 05 Mar 2007 01:15:44 +0100
-Message-Id: <1173053744.6131.40.camel@johannes.berg>
+To: jt@hpl.hp.com
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Jouni Malinen <jkm@devicescape.com>
+In-Reply-To: <20070307020310.GA20466@bougret.hpl.hp.com>
+References: <1173144447.15891.93.camel@johannes.berg>
+	 <20070306171316.GA19669@bougret.hpl.hp.com>
+	 <200703061943.07350.mb@bu3sch.de>
+	 <20070307020310.GA20466@bougret.hpl.hp.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IXwO8PUpgVaVLp+Ovdez"
+Date: Thu, 08 Mar 2007 15:39:07 +0100
+Message-Id: <1173364747.14001.7.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-5YKk6cEXK5Z9mtA19Hxe
-Content-Type: text/plain
+--=-IXwO8PUpgVaVLp+Ovdez
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
+On Tue, 2007-03-06 at 18:03 -0800, Jean Tourrilhes wrote:
 
-> Well, I discover in fact you need to inject starting only from the=20
-> IEEE802.11 header... and indeed that does work if you do it on the=20
-> "Management Interface".  I found this from hostapd sources, since=20
-> wpa_supplicant doesn't seem to inject packets from userspace,
+> 	Ok, please check the patch attached. I don't have a box to
+> test that on, and on my 32 bit kernel it is not even compiled, but I
+> believe I got everything all right.
 
-Never versions of wpa_supplicant should do this in the userspace MLME
-part.
+Don't I wish it was that easy... Granted, that does seem to fix the
+issue with iw_point but that's not the only thing that's broken. Here's
+the next thing, I think this only happens after applying that patch,
+without it probably just craps out earlier. Same thing happens with
+iwevent (and maybe other things too.)
 
->  it seems=20
-> to trigger the stack to do canned packets by a huge range of IOCTLs.  So=20
-> I have unencrypted packets in both directions now without patching=20
-> anything on the kernel side :-D  But, there is a but...
+Enabling debugging in wireless tools yields (on my 64-bit kernel with
+32-bit userland):
+# LD_LIBRARY_PATH=3D.  ./iwlist wlan0 scan
+Scan result 4096
+[00:18:8B:15:50:8A:35:E0:00:01:00:C0:02:E1:B8:0E:C0:00:00:00:50:8A:35:F0:00=
+:19:8B:1B:50:8A:35:E0:00:09:00:01:50:8A:35:F0:47:6F:6C:6F:73:4E:65:74:7A:00=
+:18:8B:01:50:8A:35:E0:49:45:45:45:20:38:30:32:2E:31:31:62:67:00:35:F0:00:0C=
+:8B:07:50:8A:35:E0:00:00:00:03:00:10:8B:05:50:8A:35:E0:00:00:00:07:00:00:00=
+:32:00:10:8B:2B:50:8A:35:E0:00:00:08:00:67:00:35:F0:00:70:8B:21:50:8A:35:E0=
+:00:0F:42:40:00:00:00:32:00:1E:84:80:00:00:00:32:00:53:EC:60:00:00:00:32:00=
+:5B:8D:80:00:00:00:32:00:89:54:40:00:00:00:32:00:A7:D8:C0:00:00:00:<lots mo=
+re zeroes>
+wlan0     Scan completed :=20
+DBG - stream->current =3D 0x10019008, stream->value =3D (nil), stream->end =
+=3D 0x1001a008
+DBG - iwe->cmd =3D 0x8B15, iwe->len =3D 24
 
-:)
+                         ^^^^^^^^^^^^^ that's already bogus
 
-> The packet seems to go out at a default rate, in my case 1Mbps.  Is=20
-> there in fact a method for requesting the rate for injected packets, or=20
-> is there at the moment a simple equivalence that all broadcasts will go=20
-> out at 1Mbps?
 
-Looks like you're right, there doesn't seem to be a way. I always
-thought this was possible.
+DBG - event_type =3D 6, event_len =3D 16, pointer =3D 0x1001900c
+          Cell 01 - Address: 35:E0:00:01:00:C0=20
+DBG - stream->current =3D 0x10019020, stream->value =3D (nil), stream->end =
+=3D 0x1001a008
+DBG - iwe->cmd =3D 0x8B1B, iwe->len =3D 25
+DBG - event_type =3D 8, event_len =3D 4, pointer =3D 0x10019024=20
+DBG - extra_len =3D 17, token_len =3D 20618, token =3D 20618, max =3D 33, m=
+in =3D 0
+                    ESSID:"" [224]=20
+DBG - stream->current =3D 0x10019039, stream->value =3D (nil), stream->end =
+=3D 0x1001a008
+DBG - iwe->cmd =3D 0x8B01, iwe->len =3D 24
+DBG - event_type =3D 2, event_len =3D 16, pointer =3D 0x1001903d
+                    Protocol:P=EF=BF=BD5=EF=BF=BDIEEE 802.11b=20
+DBG - stream->current =3D 0x10019051, stream->value =3D (nil), stream->end =
+=3D 0x1001a008
+DBG - iwe->cmd =3D 0x8B07, iwe->len =3D 12=20
+DBG - event_type =3D 4, event_len =3D 4, pointer =3D 0x10019055
+Segmentation fault
 
-I think you should raise this point on the mailing list again. I've
-proposed doing this through nl80211 to allow extensibility of the meta
-information (frame rate, ....) for an injected frame instead of
-conjuring up yet another meta information framework that transports
-frame across netdevs, but Michael strongly opposes the idea of
-transporting frames via anything but a netdev.
+Ooops.
 
-I could post some code for nl80211 inject that doesn't control any meta
-information yet but at least has the capability of carrying it over to
-the stack.
+Whereas on a 32-bit machine in the same environment it is as it should
+be:
+
+Scan result 264
+[00:14:8B:15:00:01:00:C0:02:E1:B8:0E:C0:02:5A:F4:9F:CF:18:C0:00:11:8B:1B:00=
+:09:00:01:47:6F:6C:6F:73:4E:65:74:7A:00:14:8B:01:49:45:45:45:20:38:30:32:2E=
+:31:31:62:67:00:18:C0:00:08:8B:07:00:00:00:03:00:0C:8B:05:00:00:00:07:00:00=
+:00:32:00:08:8B:2B:00:00:08:00:00:6C:8B:21:00:0F:42:40:00:00:08:00:00:1E:84=
+:80:00:00:08:00:00:53:EC:60:00:00:08:00:00:5B:8D:80:00:00:08:00:00:89:54:40=
+:00:00:08:00:00:A7:D8:C0:00:00:08:00:00:B7:1B:00:00:00:08:00:01:12:A8:80:00=
+:00:08:00:01:4F:B1:80:00:00:08:00:01:6E:36:00:00:00:08:00:02:25:51:00:00:00=
+:08:00:02:DC:6C:00:00:00:08:00:03:37:F9:80:00:00:08:00:00:08:8C:01:64:00:00=
+:47:00:20:8C:05:00:18:00:00:DD:16:00:50:F2:01:01:00:00:50:F2:02:01:00:00:50=
+:F2:02:01:00:00:50:F2:02:00:1F:8C:02:00:17:00:00:20:4C:61:73:74:20:62:65:61=
+:63:6F:6E:3A:20:32:32:30:6D:73:20:61:67:6F]
+eth2      Scan completed :=20
+DBG - stream->current =3D 0x10019008, stream->value =3D (nil), stream->end =
+=3D 0x10019110
+DBG - iwe->cmd =3D 0x8B15, iwe->len =3D 20=20
+
+                         ^^^^^^^^^^^^^ look, 4 bytes less. I wonder why tha=
+t is!
+
+
+DBG - event_type =3D 6, event_len =3D 16, pointer =3D 0x1001900c
+          Cell 01 - Address: 00:C0:02:E1:B8:0E=20
+DBG - stream->current =3D 0x1001901c, stream->value =3D (nil), stream->end =
+=3D 0x10019110
+[and lots more skipped for clarity]
+
+
+So there. Do you want to know why too?
+
+Let's look at a debug info dump from my 64-bit kernel:
+
+ <1><96de>: Abbrev Number: 33 (DW_TAG_structure_type)
+  <96df>     DW_AT_sibling     : <9717>
+  <96e3>     DW_AT_name        : (indirect string, offset: 0x4278): iw_even=
+t
+  <96e7>     DW_AT_byte_size   : 24
+  <96e8>     DW_AT_decl_file   : 225
+  <96e9>     DW_AT_decl_line   : 1064
+ <2><96eb>: Abbrev Number: 23 (DW_TAG_member)
+  <96ec>     DW_AT_name        : len
+  <96f0>     DW_AT_decl_file   : 225
+  <96f1>     DW_AT_decl_line   : 1065
+  <96f3>     DW_AT_type        : <ed>
+  <96f7>     DW_AT_data_member_location: 2 byte block: 23 0     (DW_OP_plus=
+_uconst: 0)
+ <2><96fa>: Abbrev Number: 23 (DW_TAG_member)
+  <96fb>     DW_AT_name        : cmd
+  <96ff>     DW_AT_decl_file   : 225
+  <9700>     DW_AT_decl_line   : 1066
+  <9702>     DW_AT_type        : <ed>
+  <9706>     DW_AT_data_member_location: 2 byte block: 23 2     (DW_OP_plus=
+_uconst: 2)
+ <2><9709>: Abbrev Number: 23 (DW_TAG_member)
+  <970a>     DW_AT_name        : u
+  <970c>     DW_AT_decl_file   : 225
+  <970d>     DW_AT_decl_line   : 1067
+  <970f>     DW_AT_type        : <956e>
+  <9713>     DW_AT_data_member_location: 2 byte block: 23 8     (DW_OP_plus=
+_uconst: 8)
+
+
+The same structure from the 32-bit user space program (iwlist):
+
+ <1><c3a>: Abbrev Number: 15 (DW_TAG_structure_type)
+  <c3b>     DW_AT_sibling     : <c73>
+  <c3f>     DW_AT_name        : (indirect string, offset: 0x32b): iw_event
+  <c43>     DW_AT_byte_size   : 20
+  <c44>     DW_AT_decl_file   : 96
+  <c45>     DW_AT_decl_line   : 1095
+ <2><c47>: Abbrev Number: 16 (DW_TAG_member)
+  <c48>     DW_AT_name        : len
+  <c4c>     DW_AT_decl_file   : 96
+  <c4d>     DW_AT_decl_line   : 1096
+  <c4f>     DW_AT_type        : <550>
+  <c53>     DW_AT_data_member_location: 2 byte block: 23 0      (DW_OP_plus=
+_uconst: 0)
+ <2><c56>: Abbrev Number: 16 (DW_TAG_member)
+  <c57>     DW_AT_name        : cmd
+  <c5b>     DW_AT_decl_file   : 96
+  <c5c>     DW_AT_decl_line   : 1097
+  <c5e>     DW_AT_type        : <550>
+  <c62>     DW_AT_data_member_location: 2 byte block: 23 2      (DW_OP_plus=
+_uconst: 2)
+ <2><c65>: Abbrev Number: 16 (DW_TAG_member)
+  <c66>     DW_AT_name        : u
+  <c68>     DW_AT_decl_file   : 96
+  <c69>     DW_AT_decl_line   : 1098
+  <c6b>     DW_AT_type        : <7e0>
+  <c6f>     DW_AT_data_member_location: 2 byte block: 23 4      (DW_OP_plus=
+_uconst: 4)
+
+Compare the last lines of both (I'd have posted pahole output but the
+dwarf lib it uses doesn't parse 64-bit binaries correctly when it is
+compiled as a 32-bit binary.)=20
+
+Now look at the definition of IW_EV_LCP_LEN. Or wait, how about we look
+at the comment in front of it:
+
+  /* Size of the Event prefix (including padding and alignement junk) */
+
+
+Now, I don't know what gcc for ia64 does and I don't have a cross
+compiler to check, but on powerpc it does this. I think the reason for
+this here is iw_point again since it is part of the union iwreq_data
+which means that the whole union requires 8-byte alignment on 64-bit
+architectures where it's part of struct iw_event.
+
+The easiest "fix" would be to make the structure packed, but existing
+64-bit userspace expects the struct with padding while existing 32-bit
+userspace (which of course includes 32-bit userspace running on 64-bit
+machines) expects no padding... So that "fix" breaks all 64-bit
+userspace, great.
+
+Oh, btw, this also means that we have an information leak on 64-bit
+kernels. Those alignment bytes aren't ever cleared or anything, they
+come right from the stack since most users of this just use a struct
+iw_event on the stack which is then memcpy()ed right into the userspace
+buffer. For example those bytes 5 through 8 ("50:8A:35:E0") in the first
+buffer above. This is generally considered a security problem.
+
+Have fun...
 
 johannes
 
---=-5YKk6cEXK5Z9mtA19Hxe
+--=-IXwO8PUpgVaVLp+Ovdez
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBF62Ew/ETPhpq3jKURAnM+AKCq83umfX+qgCcFOE2AReHrSXKJ1QCfTGiO
-Fs8l2H+gmOgPcEmVKJVVii0=
-=US2d
+iD8DBQBF8CAK/ETPhpq3jKURArKKAKC6XXQ5B5OaKEFeKa7iR3o+Ze5fXQCeLqIV
+aCYqp4fPxzxP24ERdf1camQ=
+=KtKV
 -----END PGP SIGNATURE-----
 
---=-5YKk6cEXK5Z9mtA19Hxe--
+--=-IXwO8PUpgVaVLp+Ovdez--
 
