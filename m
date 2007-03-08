@@ -1,38 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:33651 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965812AbXCPSNh (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51977 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752599AbXCHRhh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2007 14:13:37 -0400
-Message-ID: <45FADE37.2080708@lwfinger.net>
-Date: Fri, 16 Mar 2007 13:13:11 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] bcm43xx: Add firmware version to ethtool output
-References: <45eb1612.l8xsd6TwZVsRseAH%Larry.Finger@lwfinger.net>	<200703042002.39581.mb@bu3sch.de> <20070316171427.GC3426@tuxdriver.com>
-In-Reply-To: <20070316171427.GC3426@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 8 Mar 2007 12:37:37 -0500
+Subject: Re: wireless extensions vs. 64-bit architectures
+From: Johannes Berg <johannes@sipsolutions.net>
+To: jt@hpl.hp.com
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Jouni Malinen <jkm@devicescape.com>
+In-Reply-To: <1173364747.14001.7.camel@johannes.berg>
+References: <1173144447.15891.93.camel@johannes.berg>
+	 <20070306171316.GA19669@bougret.hpl.hp.com>
+	 <200703061943.07350.mb@bu3sch.de>
+	 <20070307020310.GA20466@bougret.hpl.hp.com>
+	 <1173364747.14001.7.camel@johannes.berg>
+Content-Type: text/plain
+Date: Thu, 08 Mar 2007 18:37:07 +0100
+Message-Id: <1173375427.3248.33.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Sun, Mar 04, 2007 at 08:02:39PM +0100, Michael Buesch wrote:
->> On Sunday 04 March 2007 19:55, Larry Finger wrote:
-> 
->>> @@ -42,6 +43,8 @@ static void bcm43xx_get_drvinfo(struct n
->>>  	strncpy(info->driver, KBUILD_MODNAME, sizeof(info->driver));
->>>  	strncpy(info->version, utsname()->release, sizeof(info->version));
->>>  	strncpy(info->bus_info, pci_name(bcm->pci_dev), ETHTOOL_BUSINFO_LEN);
->>> +	snprintf(info->fw_version, sizeof(info->fw_version), "0x%x",
->>> +		 bcm43xx_shm_read16(bcm, BCM43xx_SHM_SHARED, BCM43xx_UCODE_REVISION));
->> This will crash when the device is not up.
-> 
-> Larry, will you be doing a new version of this patch that accounts
-> for this comment?
+On Thu, 2007-03-08 at 15:39 +0100, Johannes Berg wrote:
 
-No. Just drop that patch. It doesn't add enough functionality to bother with it.
+> Oh, btw, this also means that we have an information leak on 64-bit
+> kernels. Those alignment bytes aren't ever cleared or anything, they
+> come right from the stack since most users of this just use a struct
+> iw_event on the stack which is then memcpy()ed right into the userspace
+> buffer. For example those bytes 5 through 8 ("50:8A:35:E0") in the first
+> buffer above. This is generally considered a security problem.
 
-Larry
+Patch below might fix it. If it does, please send it on to Linus (or
+akpm), stable and whoever else might be interested in backporting it
+(distros? or do they cherrypick from stable?)
+
+I'm unable to test it as I'll be away from my only 64-bit machine for at
+least until the 19th or 20th.
+
+Yeah, I know sparse warns about this on 32-bit machines... But it seems
+useless to try to fix that warning.
+
+johannes
+
+From: Johannes Berg <johannes@sipsolutions.net>
+Subject: fix information leak in wireless extensions (on 64-bit architectures)
+
+On 64-bit architectures wireless extensions leak information from the
+kernel stack due to padding inside structs not being cleared before they
+are copied to userspace.
+
+This is available to unprivileged users since they can listen for
+wireless events and obtain scan results.
+
+This patch fixes it by explicitly clearing the padding.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+
+---
+ include/net/iw_handler.h |   20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+--- wireless-dev.orig/include/net/iw_handler.h	2007-03-08 18:17:43.384642258 +0100
++++ wireless-dev/include/net/iw_handler.h	2007-03-08 18:28:12.704642258 +0100
+@@ -484,6 +484,9 @@ iwe_stream_add_event(char *	stream,		/* 
+ 		     struct iw_event *iwe,	/* Payload */
+ 		     int	event_len)	/* Real size of payload */
+ {
++	/* clear padding */
++	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
++
+ 	/* Check if it's possible */
+ 	if(likely((stream + event_len) < ends)) {
+ 		iwe->len = event_len;
+@@ -505,6 +508,10 @@ iwe_stream_add_point(char *	stream,		/* 
+ 		     char *	extra)		/* More payload */
+ {
+ 	int	event_len = IW_EV_POINT_LEN + iwe->u.data.length;
++
++	/* clear padding */
++	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
++
+ 	/* Check if it's possible */
+ 	if(likely((stream + event_len) < ends)) {
+ 		iwe->len = event_len;
+@@ -531,6 +538,9 @@ iwe_stream_add_value(char *	event,		/* E
+ 		     struct iw_event *iwe,	/* Payload */
+ 		     int	event_len)	/* Real size of payload */
+ {
++	/* clear padding */
++	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
++
+ 	/* Don't duplicate LCP */
+ 	event_len -= IW_EV_LCP_LEN;
+ 
+@@ -558,6 +568,9 @@ iwe_stream_check_add_event(char *	stream
+ 			   int		event_len,	/* Size of payload */
+ 			   int *	perr)		/* Error report */
+ {
++	/* clear padding */
++	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
++
+ 	/* Check if it's possible, set error if not */
+ 	if(likely((stream + event_len) < ends)) {
+ 		iwe->len = event_len;
+@@ -582,6 +595,10 @@ iwe_stream_check_add_point(char *	stream
+ 			   int *	perr)		/* Error report */
+ {
+ 	int	event_len = IW_EV_POINT_LEN + iwe->u.data.length;
++
++	/* clear padding */
++	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
++
+ 	/* Check if it's possible */
+ 	if(likely((stream + event_len) < ends)) {
+ 		iwe->len = event_len;
+@@ -611,6 +628,9 @@ iwe_stream_check_add_value(char *	event,
+ 			   int		event_len,	/* Size of payload */
+ 			   int *	perr)		/* Error report */
+ {
++	/* clear padding */
++	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
++
+ 	/* Don't duplicate LCP */
+ 	event_len -= IW_EV_LCP_LEN;
+ 
+
+
