@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58633 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965511AbXCATHv (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:35735
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751861AbXCHOIK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2007 14:07:51 -0500
-Subject: Re: [PATCH] mac80211: move PHY things to debugfs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1172775866.3381.7.camel@johannes.berg>
-References: <1172774065.3381.3.camel@johannes.berg>
-	 <45E72174.9060104@warmcat.com>  <1172775866.3381.7.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DQQosq90CIXwBCNQnKwQ"
-Date: Thu, 01 Mar 2007 20:07:29 +0100
-Message-Id: <1172776049.3381.10.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 8 Mar 2007 09:08:10 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: Please pull 'libertas' branch of wireless-2.6
+Date: Thu, 8 Mar 2007 15:06:49 +0100
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Marcelo Tosatti <marcelo@kvack.org>,
+	Jeff Garzik <jeff@garzik.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <20070227205649.GH5826@tuxdriver.com> <20070307222404.GA23393@infradead.org> <1173321651.12017.6.camel@localhost.localdomain>
+In-Reply-To: <1173321651.12017.6.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200703081506.49750.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 08 March 2007 03:40, Dan Williams wrote:
+> We are unhappy with specific knobs _if_and_only_if_ they duplicate
+> functionality that's currently available.
+> 
+> That means, for example, the prism2 WPA ioctls, because WE-19 has
+> equivalent functionality.  Other examples include many of the madwifi
+> ioctls like auth_mode for which there are WEXT calls.  Others include
+> the ones for creating virtual STAs that are now subsumed by mac80211.
+> 
+> For stuff that's seriously not common among drivers, there's nothing
+> else that drivers can do but provide private ioctls.
 
---=-DQQosq90CIXwBCNQnKwQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Exactly.
+And, if you add some private tuning knob, you should think about,
+if it doesn't really belong to a common place like cfg80211, if other
+devices have similiar functionality.
 
-On Thu, 2007-03-01 at 20:04 +0100, Johannes Berg wrote:
+If it's really private to your device, doing some private tuning knob
+is perfectly fine. But maybe you should consider sysfs, configfs or something
+like that, because iwpriv is going to die with WEXT.
 
-> When Greg fixes sysfs, the real way would be to follow the symlink
-
-Oh and of course if you don't want to use sysfs then you can always use
-nl80211.
-
-johannes
-
---=-DQQosq90CIXwBCNQnKwQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF5yRw/ETPhpq3jKURAp+eAJ9Wd3Jj1s+HHg+KsOCHynAwyQh6CACfZ2kN
-+FSW41L4v5FxySiJg97TK/w=
-=VqLj
------END PGP SIGNATURE-----
-
---=-DQQosq90CIXwBCNQnKwQ--
-
+-- 
+Greetings Michael.
