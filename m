@@ -1,100 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.227]:24083 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934017AbXC0R3Q (ORCPT
+Received: from intermedia.net ([64.78.21.82]:39048 "EHLO
+	dhost002-16.dex002.intermedia.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752038AbXCHAtl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2007 13:29:16 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so2043641wra
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Mar 2007 10:29:15 -0700 (PDT)
-Message-ID: <43e72e890703271029q169c3fdo6d410f272eaf791@mail.gmail.com>
-Date: Tue, 27 Mar 2007 13:29:14 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: mohamed <mabbas@linux.intel.com>
-Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery and association
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <43e72e890703271011h47a6177dp32b7c2324ab51423@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-References: <1174909105.1364.53.camel@dell-4965.jf.intel.com>
-	 <43e72e890703271005u6173567aq2c1c04635da3ce50@mail.gmail.com>
-	 <43e72e890703271011h47a6177dp32b7c2324ab51423@mail.gmail.com>
+	Wed, 7 Mar 2007 19:49:41 -0500
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Wed, 7 Mar 2007 16:49:40 -0800
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: cfg/nl80211 primitives
+Message-ID: <20070308004940.GC31388@devicescape.com>
+References: <1173219649.3503.50.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1173219649.3503.50.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/27/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On 3/27/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > On 3/26/07, mohamed <mabbas@linux.intel.com> wrote:
-> >
-> > > +/* Get 11n capabilties from low level driver */
-> > > +static void ieee80211_fill_ht_ie(struct net_device *dev,
-> > > +                                struct ieee80211_ht_capability *ht_capab)
-> > > +{
-> > > +       int rc;
-> > > +       struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-> > > +
-> > > +       if (!local->ops->get_ht_capab){
-> > > +               memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
-> > > +               return;
-> > > +       }
-> > > +
-> > > +       rc = local->ops->get_ht_capab(local_to_hw(local), ht_capab);
-> > > +       if (!rc) {
-> > > +               memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
-> > > +               return;
-> > > +       }
-> > >
-> > > +       ht_capab->capabilitiesInfo = (__le16) cpu_to_le16(
-> > > +                                       ht_capab->capabilitiesInfo);
-> > > +       ht_capab->extended_ht_capability_info = (__le16) cpu_to_le16(
-> > > +                                       ht_capab->extended_ht_capability_info);
-> > > +       ht_capab->tx_BF_capability_info = (__le32) cpu_to_le32(
-> > > +                                       ht_capab->tx_BF_capability_info);
-> > > +}
-> > > +
-> >
-> > We should memset to 0 the entire ht_capab to regardless as its coming
-> > from skb_put() otherwise we'll get random data there if we don't set
-> > it and we sure as hell don't want to just transmit that :) Also
-> > ieee80211_send_assoc() is already checking for
-> > local->ops->get_ht_capab so lets just do a BUG_ON here to capture
-> > cases where someone else didn't do the proper checking. So how about
-> > instead something like:
-> >
-> > /* Get 11n capabilties from low level driver */
-> > static void ieee80211_fill_ht_ie(struct net_device *dev,
-> >                                 struct ieee80211_ht_capability *ht_capab)
-> > {
-> >        struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-> >        BUG_ON(!local->ops->get_ht_capab);
-> >        memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
-> >        if (!local->ops->get_ht_capab(local_to_hw(local), ht_capab))
-> >                return;
-> >        ht_capab->capabilitiesInfo = (__le16) cpu_to_le16(
-> >                                        ht_capab->capabilitiesInfo);
-> >        ht_capab->extended_ht_capability_info = (__le16) cpu_to_le16(
-> >                                        ht_capab->extended_ht_capability_info);
-> >        ht_capab->tx_BF_capability_info = (__le32) cpu_to_le32(
-> >                                        ht_capab->tx_BF_capability_info);
-> > }
-> >
->
-> On second thought just memset to 0 on ieee80211_send_assoc() right
-> after the skb_put and remove that from above.
->
->   Luis
->
+On Tue, Mar 06, 2007 at 11:20:49PM +0100, Johannes Berg wrote:
 
-Last few comments:
+> To me, separating actions from settings is basically this procedure:
+>  (1) give the kernel a bunch of parameters
+>  (2) give it some other parameter
+>  (3) change some parameters again
+>  (4) tell it to use the "current parameters" to do X
+> (where X may be "associate", "authenticate", ...)
 
-I. In struct ieee80211_ops you added your hunk after the TSF comment,
-but before  u64 (*get_tsf)(struct ieee80211_hw *hw) was listed. Please
-move the hunk after get_tsf or before the comment.
+And where would
+   (5) change some parameters within this association without triggering
+       new authentication/association
+fit in?
 
-II. In ieee80211_fill_ht_ie() you do cpu_to_le* on the same fields.. I
-take it the driver's get_ht_capab() is supposed to fill these. Since
-you already defined them as little endian in the struct
-ieee80211_ht_capability, how about just leaving that up to the driver
-developer to make sure they do this? That's would be 6 lines less of
-code in ieee80211_fill_ht_ie().
+> However, I don't see why we shouldn't go to a model where we give the
+> kernel all information it needs to do an operation when we want it to do
+> it, like the procedure
+>  (1) tell the kernel to do X
+>    - using parameter A=B
+>    - using parameter C=D
+>    - ...
+>  (2) tell the kernel to do Y
 
-  Luis
+Would this be all parameters as in _no_ other parameters could be set
+before or after the command? As an example, how would one set
+fragmentation threshold and then change that value after having
+associated?
+
+> This would also be a lot more in line with primitives outlined in the
+> IEEE 802.11 specification, like MLME-ASSOCIATE.request et al. In fact,
+> it seems that the interface could be modelled pretty much after the MLME
+> SAP interface outlined in clause 10.3.
+
+MLME SAP primitives may be okay for many cases, but we cannot limit
+ourselves to just the parameters defined there. Number of parameters do
+not go through MLME SAP interface and some of the options may require
+getting used to (e.g., power management options would use their own
+primitive, not MLME-ASSOCIATE, etc.).
+
+> Obviously, we wouldn't need to actually have all of them. For example,
+> MLME-START.request for BSSes wouldn't be implemented within mac80211 but
+> rather in hostapd. I don't know how ipw2200 master mode works though,
+> maybe we would in fact need to have the MLME-START.request in nl80211
+> for some devices. For a whole range of hardware MLME-JOIN also makes no
+> sense, but for bcm43xx for example it almost would [1].
+
+MLME SAP interface is between MLME and SME, but when we have some parts
+of MLME in user space and some in kernel, things can get bit confusing
+since the interface between MLME and SME is not the same as interface
+between kernel and user space.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
