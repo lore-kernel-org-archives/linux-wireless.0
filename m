@@ -1,38 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:35023 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753206AbXCRKMc (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40862 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752177AbXCHPnr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Mar 2007 06:12:32 -0400
-Message-ID: <45FD108C.10108@warmcat.com>
-Date: Sun, 18 Mar 2007 10:12:28 +0000
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH 2/2] mac80211: Monitor mode radiotap-based packet injection
-References: <20070317105800.659633351@warmcat.com> <200703171751.50898.flamingice@sourmilk.net> <45FC6727.3090008@warmcat.com> <200703171920.37469.flamingice@sourmilk.net> <45FC7924.8050501@warmcat.com> <45FCFFA5.5070801@warmcat.com>
-In-Reply-To: <45FCFFA5.5070801@warmcat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 8 Mar 2007 10:43:47 -0500
+Subject: Re: [PATCH] mac80211: Properly kill tasklets before shutdown
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Jiri Benc <jbenc@suse.cz>, John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200703081639.40395.mb@bu3sch.de>
+References: <200703061902.00001.mb@bu3sch.de>
+	 <1173317164.3546.41.camel@johannes.berg>  <200703081639.40395.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7mZzq/5fTOjQSF4UE10H"
+Date: Thu, 08 Mar 2007 16:43:35 +0100
+Message-Id: <1173368616.3248.5.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andy Green wrote:
 
-> However when I went on to look at leveraging that to find out if the 
-> originating interface was in Monitor mode, it seems that it might be a 
-> little bit more expensive to do that -- and it would have to be done for 
-> every tx packet in order to find out if it was injected.  By contrast 
-> with the currently proposed staged system at each level the information 
-> is always available without processing, and the overhead for the common 
-> case where the packet was not injected is just testing if the if type 
-> was monitor, and then later testing a bit in flags that are already 
-> available.
-> 
->  From looking around the existing code, it seems something like this is 
-> called for to use the ifindex instead:
+--=-7mZzq/5fTOjQSF4UE10H
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Ha, ignore this, Michael's method works just with what is to hand.  Try 
-#3 coming up.
+On Thu, 2007-03-08 at 16:39 +0100, Michael Buesch wrote:
 
--Andy
+> I don't think so. tasklet_kill does actually waiting, not killing.
+> It waits until the (maybe) scheduled tasklet did run and then waits
+> for it to finish running.
+> It doesn't rip off a scheduled tasklet without letting it run.
+
+Ah ok.
+
+> Uh, didn't get that. The assertion for this is in the same function
+> some lines down.
+
+I used to get that but probably using tasklet_kill for that tasklet
+fixes this then.
+
+johannes
+
+--=-7mZzq/5fTOjQSF4UE10H
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBF8C8n/ETPhpq3jKURAktEAJ9f8sBErqIN5chH06EmqBTCls0SuwCeOIv2
+MTvnYKlRPVYC3IcN0QrY/qI=
+=crd4
+-----END PGP SIGNATURE-----
+
+--=-7mZzq/5fTOjQSF4UE10H--
+
