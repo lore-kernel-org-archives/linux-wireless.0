@@ -1,49 +1,267 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from deine-taler.de ([217.160.107.63]:49398 "EHLO
-	p15091797.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750988AbXCKULu (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.170]:10104 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933351AbXCHVPJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Mar 2007 16:11:50 -0400
-Date: Sun, 11 Mar 2007 21:11:49 +0100
-From: Ulrich Kunitz <kune@deine-taler.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: jt@hpl.hp.com, Jouni Malinen <jkm@devicescape.com>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>,
-	Dan Williams <dcbw@redhat.com>
-Subject: Re: wireless extensions vs. 64-bit architectures
-Message-ID: <20070311201148.GA25938@p15091797.pureserver.info>
-References: <20070307020310.GA20466@bougret.hpl.hp.com> <1173364747.14001.7.camel@johannes.berg> <20070308184954.GA24485@bougret.hpl.hp.com> <1173382042.3248.63.camel@johannes.berg> <20070308193412.GG23040@devicescape.com> <1173382802.3248.68.camel@johannes.berg> <20070308221128.GA24884@bougret.hpl.hp.com> <1173393326.3831.21.camel@johannes.berg> <20070309213531.GA28070@bougret.hpl.hp.com> <1173634801.3382.8.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1173634801.3382.8.camel@johannes.berg>
+	Thu, 8 Mar 2007 16:15:09 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so1088740uga
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2007 13:15:06 -0800 (PST)
+To: "John Linville" <linville@tuxdriver.com>
+Subject: [PATCH 4/4] rt2x00: Fix power of 2 check
+Date: Thu, 8 Mar 2007 22:14:52 +0100
+Cc: wireless <linux-wireless@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200703082214.52864.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I'm still not convinced that papering over the problem in userspace is a
-> real solution.
-> 
-> johannes
+Cleanup code, make gcc happy, make sparse happy. What a happy patch ;)
+This cleans up the code used to check the validity of the register fields,
+this will also reduce the required memory usage while working with sparse.
+This patch was inspired on the codesuggestions from Linus.
 
-Just my 2 cents. I support this. What are the options? I see only
-two:
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-1. Use different magic numbers for 32 bit and 64 bit structures. A
-   flag is an alternative, but will be more difficult to debug.
-   Generation of the magic should be easy, use sizeof(unsigned
-   long) as test. User space has to care than for the rest.
+---
 
-2. Make the data representation identical in 32 bit and 64 bit.
-
-   This shouldn't be to difficult, if only u8, u16 and u32 types
-   are used. Pointers should be given as offsets. If necessary
-   align and/or packed attributes could be used.
-
-If the kernel interface can be changed, I vote for option 2,
-because user space has then to deal with a unique data layout.
-If the wext kernel interface cannot be changed to maintain
-backward compatibility, then I have to admit band-aids in user
-space are needed. However cfg80211 must not suffer from the same issues.
-
--- 
-Uli Kunitz
+diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2x00.h b/drivers/net/wireless/mac80211/rt2x00/rt2x00.h
+index b64d7ee..558d3ee 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/mac80211/rt2x00/rt2x00.h
+@@ -206,171 +206,10 @@ enum cipher {
+ };
+ 
+ /*
+- * Macros for determining which is the lowest or highest bit
+- * set in a 16 or 32 bit variable.
+- */
+-#define BIT_SET(__val, __bit)	(__val & (1 << __bit))
+-
+-#define BIT_OK(__val, __bit, __low, __high) \
+-	(__bit < __low ? 1 : \
+-	(__bit > __high ? 1 : \
+-	BIT_SET(__val, __bit) ? 1 : 0))
+-
+-#define LOWEST_BIT16(__val) \
+-	(BIT_SET(__val, 0) ? 0 : (BIT_SET(__val, 1) ? 1 : \
+-	(BIT_SET(__val, 2) ? 2 : (BIT_SET(__val, 3) ? 3 : \
+-	(BIT_SET(__val, 4) ? 4 : (BIT_SET(__val, 5) ? 5 : \
+-	(BIT_SET(__val, 6) ? 6 : (BIT_SET(__val, 7) ? 7 : \
+-	(BIT_SET(__val, 8) ? 8 : (BIT_SET(__val, 9) ? 9 : \
+-	(BIT_SET(__val, 10) ? 10 : (BIT_SET(__val, 11) ? 11 : \
+-	(BIT_SET(__val, 12) ? 12 : (BIT_SET(__val, 13) ? 13 : \
+-	(BIT_SET(__val, 14) ? 14 : (BIT_SET(__val, 15) ? 15 : \
+-	-EINVAL))))))))))))))))
+-
+-#define LOWEST_BIT32(__val) \
+-	(BIT_SET(__val, 0) ? 0 : (BIT_SET(__val, 1) ? 1 : \
+-	(BIT_SET(__val, 2) ? 2 : (BIT_SET(__val, 3) ? 3 : \
+-	(BIT_SET(__val, 4) ? 4 : (BIT_SET(__val, 5) ? 5 : \
+-	(BIT_SET(__val, 6) ? 6 : (BIT_SET(__val, 7) ? 7 : \
+-	(BIT_SET(__val, 8) ? 8 : (BIT_SET(__val, 9) ? 9 : \
+-	(BIT_SET(__val, 10) ? 10 : (BIT_SET(__val, 11) ? 11 : \
+-	(BIT_SET(__val, 12) ? 12 : (BIT_SET(__val, 13) ? 13 : \
+-	(BIT_SET(__val, 14) ? 14 : (BIT_SET(__val, 15) ? 15 : \
+-	(BIT_SET(__val, 16) ? 16 : (BIT_SET(__val, 17) ? 17 : \
+-	(BIT_SET(__val, 18) ? 18 : (BIT_SET(__val, 19) ? 19 : \
+-	(BIT_SET(__val, 20) ? 20 : (BIT_SET(__val, 21) ? 21 : \
+-	(BIT_SET(__val, 22) ? 22 : (BIT_SET(__val, 23) ? 23 : \
+-	(BIT_SET(__val, 24) ? 24 : (BIT_SET(__val, 25) ? 25 : \
+-	(BIT_SET(__val, 26) ? 27 : (BIT_SET(__val, 27) ? 27 : \
+-	(BIT_SET(__val, 28) ? 28 : (BIT_SET(__val, 29) ? 29 : \
+-	(BIT_SET(__val, 30) ? 30 : (BIT_SET(__val, 31) ? 31 : \
+-	-EINVAL))))))))))))))))))))))))))))))))
+-
+-#define HIGHEST_BIT16(__val) \
+-	(BIT_SET(__val, 15) ? 15 : (BIT_SET(__val, 14) ? 14 : \
+-	(BIT_SET(__val, 13) ? 13 : (BIT_SET(__val, 12) ? 12 : \
+-	(BIT_SET(__val, 11) ? 11 : (BIT_SET(__val, 10) ? 10 : \
+-	(BIT_SET(__val, 9) ? 9 : (BIT_SET(__val, 8) ? 8 : \
+-	(BIT_SET(__val, 7) ? 7 : (BIT_SET(__val, 6) ? 6 : \
+-	(BIT_SET(__val, 5) ? 5 : (BIT_SET(__val, 4) ? 4 : \
+-	(BIT_SET(__val, 3) ? 3 : (BIT_SET(__val, 2) ? 2 : \
+-	(BIT_SET(__val, 1) ? 1 : (BIT_SET(__val, 0) ? 0 : \
+-	-EINVAL))))))))))))))))
+-
+-#define HIGHEST_BIT32(__val) \
+-	(BIT_SET(__val, 31) ? 31 : (BIT_SET(__val, 30) ? 30 : \
+-	(BIT_SET(__val, 29) ? 29 : (BIT_SET(__val, 28) ? 28 : \
+-	(BIT_SET(__val, 27) ? 27 : (BIT_SET(__val, 26) ? 26 : \
+-	(BIT_SET(__val, 25) ? 25 : (BIT_SET(__val, 24) ? 24 : \
+-	(BIT_SET(__val, 23) ? 23 : (BIT_SET(__val, 22) ? 22 : \
+-	(BIT_SET(__val, 21) ? 21 : (BIT_SET(__val, 20) ? 20 : \
+-	(BIT_SET(__val, 19) ? 19 : (BIT_SET(__val, 18) ? 18 : \
+-	(BIT_SET(__val, 17) ? 17 : (BIT_SET(__val, 16) ? 16 : \
+-	(BIT_SET(__val, 15) ? 15 : (BIT_SET(__val, 14) ? 14 : \
+-	(BIT_SET(__val, 13) ? 13 : (BIT_SET(__val, 12) ? 12 : \
+-	(BIT_SET(__val, 11) ? 11 : (BIT_SET(__val, 10) ? 10 : \
+-	(BIT_SET(__val, 9) ? 9 : (BIT_SET(__val, 8) ? 8 : \
+-	(BIT_SET(__val, 7) ? 7 : (BIT_SET(__val, 6) ? 6 : \
+-	(BIT_SET(__val, 5) ? 5 : (BIT_SET(__val, 4) ? 4 : \
+-	(BIT_SET(__val, 3) ? 3 : (BIT_SET(__val, 2) ? 2 : \
+-	(BIT_SET(__val, 1) ? 1 : (BIT_SET(__val, 0) ? 0 : \
+-	-EINVAL))))))))))))))))))))))))))))))))
+-
+-#define BITRANGE_OK16(__val, __low, __high) \
+-	((BIT_OK(__val, 0, __low, __high) && \
+-	  BIT_OK(__val, 1, __low, __high) && \
+-	  BIT_OK(__val, 2, __low, __high) && \
+-	  BIT_OK(__val, 3, __low, __high) && \
+-	  BIT_OK(__val, 4, __low, __high) && \
+-	  BIT_OK(__val, 5, __low, __high) && \
+-	  BIT_OK(__val, 6, __low, __high) && \
+-	  BIT_OK(__val, 7, __low, __high) && \
+-	  BIT_OK(__val, 8, __low, __high) && \
+-	  BIT_OK(__val, 9, __low, __high) && \
+-	  BIT_OK(__val, 10, __low, __high) && \
+-	  BIT_OK(__val, 11, __low, __high) && \
+-	  BIT_OK(__val, 12, __low, __high) && \
+-	  BIT_OK(__val, 13, __low, __high) && \
+-	  BIT_OK(__val, 14, __low, __high) && \
+-	  BIT_OK(__val, 15, __low, __high)) ? \
+-	0 : -EINVAL)
+-
+-#define BITRANGE_OK32(__val, __low, __high) \
+-	((BIT_OK(__val, 0, __low, __high) && \
+-	  BIT_OK(__val, 1, __low, __high) && \
+-	  BIT_OK(__val, 2, __low, __high) && \
+-	  BIT_OK(__val, 3, __low, __high) && \
+-	  BIT_OK(__val, 4, __low, __high) && \
+-	  BIT_OK(__val, 5, __low, __high) && \
+-	  BIT_OK(__val, 6, __low, __high) && \
+-	  BIT_OK(__val, 7, __low, __high) && \
+-	  BIT_OK(__val, 8, __low, __high) && \
+-	  BIT_OK(__val, 9, __low, __high) && \
+-	  BIT_OK(__val, 10, __low, __high) && \
+-	  BIT_OK(__val, 11, __low, __high) && \
+-	  BIT_OK(__val, 12, __low, __high) && \
+-	  BIT_OK(__val, 13, __low, __high) && \
+-	  BIT_OK(__val, 14, __low, __high) && \
+-	  BIT_OK(__val, 15, __low, __high) && \
+-	  BIT_OK(__val, 16, __low, __high) && \
+-	  BIT_OK(__val, 17, __low, __high) && \
+-	  BIT_OK(__val, 18, __low, __high) && \
+-	  BIT_OK(__val, 19, __low, __high) && \
+-	  BIT_OK(__val, 20, __low, __high) && \
+-	  BIT_OK(__val, 21, __low, __high) && \
+-	  BIT_OK(__val, 22, __low, __high) && \
+-	  BIT_OK(__val, 23, __low, __high) && \
+-	  BIT_OK(__val, 24, __low, __high) && \
+-	  BIT_OK(__val, 25, __low, __high) && \
+-	  BIT_OK(__val, 26, __low, __high) && \
+-	  BIT_OK(__val, 27, __low, __high) && \
+-	  BIT_OK(__val, 28, __low, __high) && \
+-	  BIT_OK(__val, 29, __low, __high) && \
+-	  BIT_OK(__val, 30, __low, __high) && \
+-	  BIT_OK(__val, 31, __low, __high)) ? \
+-	0 : -EINVAL)
+-
+-extern int error_lowest_bit_not_constant;
+-extern int error_highest_bit_not_constant;
+-extern int error_bitrange_not_constant;
+-extern int error_bitrange_bad;
+-
+-#define BUILD_LOWEST_BIT16(__val) \
+-	(!__builtin_constant_p(__val) ? error_lowest_bit_not_constant : \
+-	LOWEST_BIT16(__val))
+-
+-#define BUILD_LOWEST_BIT32(__val) \
+-	(!__builtin_constant_p(__val) ? error_lowest_bit_not_constant : \
+-	LOWEST_BIT32(__val))
+-
+-#define BUILD_HIGHEST_BIT16(__val) \
+-	(!__builtin_constant_p(__val) ? error_highest_bit_not_constant : \
+-	HIGHEST_BIT16(__val))
+-
+-#define BUILD_HIGHEST_BIT32(__val) \
+-	(!__builtin_constant_p(__val) ? error_highest_bit_not_constant : \
+-	HIGHEST_BIT32(__val))
+-
+-#define BUILD_BITRANGE_OK16(__val, __low, __high) \
+-	((!__builtin_constant_p(__val) || !__builtin_constant_p(__low) || \
+-	  !__builtin_constant_p(__high)) ? error_bitrange_not_constant : \
+-	BITRANGE_OK16(__val, __low, __high))
+-
+-#define BUILD_BITRANGE_OK32(__val, __low, __high) \
+-	((!__builtin_constant_p(__val) || !__builtin_constant_p(__low) || \
+-	  !__builtin_constant_p(__high)) ? error_bitrange_not_constant : \
+-	BITRANGE_OK16(__val, __low, __high))
+-
+-/*
+  * Register handlers.
+  * We store the position of a register field inside a field structure,
+  * This will simplify the process of setting and reading a certain field
+  * inside the register while making sure the process remains byte order safe.
+- * Before setting the value into the structure we use macros to determine
+- * whether all bits in the field are contineous and valid.
+- * These additional checks will be optimized away at compile time,
+- * but do have a major impact on compile speed, therefor we only make this
+- * check when compiling with debug enabled.
+  */
+ struct rt2x00_field16 {
+ 	u16 bit_offset;
+@@ -383,39 +222,29 @@ struct rt2x00_field32 {
+ };
+ 
+ /*
+- * Before intitializing the rt2x00_field# structures,
+- * we will check if the bitmask is correct and does
+- * not contain any gaps.
+- * This check is only done in debug mode, since it severely
+- * impacts compilation speed.
++ * Power of two check from Linus Torvalds,
++ * this will check if the mask that has been
++ * given contains and contiguous set of bits.
+  */
+-#ifdef CONFIG_RT2X00_DEBUG
+-#define FIELD16(__mask) \
+-	( (struct rt2x00_field16) { \
+-		(BUILD_BITRANGE_OK16(__mask, BUILD_LOWEST_BIT16(__mask), \
+-			BUILD_HIGHEST_BIT16(__mask)) == 0) ? \
+-		BUILD_LOWEST_BIT16(__mask) : error_bitrange_bad, \
+-		(__mask) \
+-	} )
+-
+-#define FIELD32(__mask) \
+-	( (struct rt2x00_field32) { \
+-		(BUILD_BITRANGE_OK32(__mask, BUILD_LOWEST_BIT32(__mask), \
+-			BUILD_HIGHEST_BIT32(__mask)) == 0) ? \
+-		BUILD_LOWEST_BIT32(__mask) : error_bitrange_bad, \
+-		(__mask) \
+-	} )
+-#else /* CONFIG_RT2X00_DEBUG */
+-#define FIELD16(__mask) \
+-	( (struct rt2x00_field16) { \
+-		BUILD_LOWEST_BIT16(__mask), (__mask) \
+-	} )
+-
+-#define FIELD32(__mask) \
+-	( (struct rt2x00_field32) { \
+-		BUILD_LOWEST_BIT32(__mask), (__mask) \
+-	} )
+-#endif /* CONFIG_RT2X00_DEBUG */
++#define is_power_of_two(x)	( !((x) & ((x)-1)) )
++#define low_bit_mask(x)		( ((x)-1) & ~(x) )
++#define is_valid_mask(x)	is_power_of_two(1 + (x) + low_bit_mask(x))
++
++#define FIELD16(__mask)					\
++({							\
++	BUILD_BUG_ON(!__mask || !is_valid_mask(__mask));\
++	(struct rt2x00_field16) {			\
++		(__scanbit((__mask), 16) - 1), (__mask) \
++	};						\
++})
++
++#define FIELD32(__mask)					\
++({							\
++	BUILD_BUG_ON(!__mask || !is_valid_mask(__mask));\
++	(struct rt2x00_field32) {			\
++		(__scanbit((__mask), 32) - 1), (__mask) \
++	};						\
++})
+ 
+ static inline void rt2x00_set_field32(u32 *reg,
+ 	const struct rt2x00_field32 field, const u32 value)
