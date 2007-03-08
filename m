@@ -1,131 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50051 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753359AbXC2LUn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2007 07:20:43 -0400
-Subject: Re: [PATCH 4/4] mac80211: Monitor mode radiotap-based packet  injection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2121 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751589AbXCHECc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2007 23:02:32 -0500
+Date: Wed, 7 Mar 2007 22:30:22 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: jeff@garzik.org
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <460B9F8C.3040701@warmcat.com>
-References: <20070320103955.600509703@warmcat.com>
-	 <20070320104104.837354764@warmcat.com>
-	 <1174501733.3944.28.camel@johannes.berg>  <460B9F8C.3040701@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zF96zO+QyjnttjoeVzK+"
-Date: Thu, 29 Mar 2007 13:19:36 +0200
-Message-Id: <1175167176.8807.53.camel@johannes.berg>
+Subject: Please pull 'upstream-fixes' branch of wireless-2.6
+Message-ID: <20070308033022.GA19886@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The following changes since commit 08e15e81a40e3241ce93b4a43886f3abda184aa6:
+  Linus Torvalds (1):
+        Linux 2.6.21-rc3
 
---=-zF96zO+QyjnttjoeVzK+
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+are found in the git repository at:
 
-On Thu, 2007-03-29 at 12:14 +0100, Andy Green wrote:
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-fixes
 
-> >> +	static const u8 radiotap_entry_sizes[] =3D {
-> >> +		8, /* IEEE80211_RADIOTAP_TSFT */
-> >> +		1, /* IEEE80211_RADIOTAP_FLAGS */
-> > [...]
-> >=20
-> > I'd prefer C99 style for this.
->=20
-> Shocked that stuff from as late as 1999 is allowed.  I normally use //=20
-> myself, I was making a special effort.
+Joerg Sommer (1):
+      bcm43xx: Fix bug in frequency to channel conversion
 
-Oh, dang, that was ambiguous. I was thinking
-static const u8 radiotap_entry_sizes[] =3D {
-	[IEEE80211_RADIOTAP_TSFT] =3D 8,
-	...
+Larry Finger (1):
+      bcm43xx: Fix errors in specs to code translation in B6PHY init
 
-> Yes to cover more usage cases setting more things is needed.  The game=20
-> seems to be to set the elements of the control struct from the radiotap=20
-> header.  For clear discussion here is the list of things that can be set=20
-> in control, first the ones we allow control of with this patch
->=20
-> 	int tx_rate; /* Transmit rate, given as the hw specific value for the
-> 		      * rate (from struct ieee80211_rate) */
-> 	u8 power_level;		/* per-packet transmit power level, in dBm */
-> 	u8 antenna_sel_tx; 	/* 0 =3D default/diversity, 1 =3D Ant0, 2 =3D Ant1 *=
-/
->=20
->=20
-> and the ones we might possibly want to fiddle with
->=20
-> 	int rts_cts_rate; /* Transmit rate for RTS/CTS frame, given as the hw
-> 			   * specific value for the rate (from
-> 			   * struct ieee80211_rate) */
-> 	u32 flags;			       /* tx control flags defined
-> 						* above */
-> 	u8 retry_limit;		/* 1 =3D only first attempt, 2 =3D one retry, .. */
-> 	s8 key_idx;		/* -1 =3D do not encrypt, >=3D 0 keyidx from
-> 				 * hw->set_key() */
-> 	u8 icv_len;		/* length of the ICV/MIC field in octets */
-> 	u8 iv_len;		/* length of the IV field in octets */
-> 	u8 tkip_key[16];	/* generated phase2/phase1 key for hw TKIP */
-> 	u8 queue;		/* hardware queue to use for this frame;
-> 				 * 0 =3D highest, hw->queues-1 =3D lowest */
-> 	u8 sw_retry_attempt;	/* number of times hw has tried to
-> 				 * transmit frame (not incl. hw retries) */
-> 	int alt_retry_rate; /* retry rate for the last retries, given as the
-> 			     * hw specific value for the rate (from
-> 			     * struct ieee80211_rate). To be used to limit
-> 			     * packet dropping when probing higher rates, if hw
-> 			     * supports multiple retry rates. -1 =3D not used */
->=20
-> the flags are these
->=20
-> #define IEEE80211_TXCTL_REQ_TX_STATUS	(1<<0)/* request TX status=20
-> callback for
-> 						* this frame */
-> #define IEEE80211_TXCTL_DO_NOT_ENCRYPT	(1<<1) /* send this frame without
-> 						* encryption; e.g., for EAPOL
-> 						* frames */
-> #define IEEE80211_TXCTL_USE_RTS_CTS	(1<<2) /* use RTS-CTS before sending
-> 						* frame */
-> #define IEEE80211_TXCTL_USE_CTS_PROTECT	(1<<3) /* use CTS protection for =
-the
-> 						* frame (e.g., for combined
-> 						* 802.11g / 802.11b networks) */
-> #define IEEE80211_TXCTL_NO_ACK		(1<<4) /* tell the low level not to
-> 						* wait for an ack */
-> #define IEEE80211_TXCTL_RATE_CTRL_PROBE	(1<<5)
-> #define IEEE80211_TXCTL_CLEAR_DST_MASK	(1<<6)
-> #define IEEE80211_TXCTL_REQUEUE		(1<<7)
-> #define IEEE80211_TXCTL_FIRST_FRAGMENT	(1<<8) /* this is a first fragment=
- of
-> 						* the frame */
-> #define IEEE80211_TXCTL_TKIP_NEW_PHASE1_KEY (1<<9)
->=20
-> I guess the method is to work out what is useful to control and to=20
-> define a minimal set of new radiotap arg indexes to cover them, and=20
-> propose it to the radiotap folks.
+Pavel Roskin (1):
+      bcm43xx: Fix assertion failures in interrupt handler
 
-Yeah, not really necessary right from the start anyway. It's doable
-which is/was my biggest concern.
+ drivers/net/wireless/bcm43xx/bcm43xx_main.c |    6 +++---
+ drivers/net/wireless/bcm43xx/bcm43xx_phy.c  |   10 ++++++++--
+ drivers/net/wireless/bcm43xx/bcm43xx_wx.c   |   10 ++++++++--
+ 3 files changed, 19 insertions(+), 7 deletions(-)
 
-> The idea here is to synthesize an rx packet later after the tx has=20
-> happened, reflecting the tx status back to userspace that way (if he=20
-> elects to listen out for them)?
-
-Yeah. Michael Wu says we don't need the magic cookie though.
-
-johannes
-
---=-zF96zO+QyjnttjoeVzK+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGC6DI/ETPhpq3jKURArMEAKCN5hpi0hDvmgYAno0BUNBMS1chiQCaAsV3
-150Jeq4LMvC8DZjZNzsILy0=
-=8V7I
------END PGP SIGNATURE-----
-
---=-zF96zO+QyjnttjoeVzK+--
-
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+index e594af4..80cb88e 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_main.c
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+@@ -1858,9 +1858,6 @@ static irqreturn_t bcm43xx_interrupt_handler(int irq, void *dev_id)
+ 
+ 	spin_lock(&bcm->irq_lock);
+ 
+-	assert(bcm43xx_status(bcm) == BCM43xx_STAT_INITIALIZED);
+-	assert(bcm->current_core->id == BCM43xx_COREID_80211);
+-
+ 	reason = bcm43xx_read32(bcm, BCM43xx_MMIO_GEN_IRQ_REASON);
+ 	if (reason == 0xffffffff) {
+ 		/* irq not for us (shared irq) */
+@@ -1871,6 +1868,9 @@ static irqreturn_t bcm43xx_interrupt_handler(int irq, void *dev_id)
+ 	if (!reason)
+ 		goto out;
+ 
++	assert(bcm43xx_status(bcm) == BCM43xx_STAT_INITIALIZED);
++	assert(bcm->current_core->id == BCM43xx_COREID_80211);
++
+ 	bcm->dma_reason[0] = bcm43xx_read32(bcm, BCM43xx_MMIO_DMA0_REASON)
+ 			     & 0x0001DC00;
+ 	bcm->dma_reason[1] = bcm43xx_read32(bcm, BCM43xx_MMIO_DMA1_REASON)
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_phy.c b/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
+index 3a5c9c2..cae8925 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
+@@ -859,6 +859,11 @@ static void bcm43xx_phy_initb6(struct bcm43xx_private *bcm)
+ 		bcm43xx_radio_write16(bcm, 0x005D, 0x0088);
+ 		bcm43xx_radio_write16(bcm, 0x005E, 0x0088);
+ 		bcm43xx_radio_write16(bcm, 0x007D, 0x0088);
++		bcm43xx_shm_write32(bcm, BCM43xx_SHM_SHARED,
++				    BCM43xx_UCODEFLAGS_OFFSET,
++				    (bcm43xx_shm_read32(bcm, BCM43xx_SHM_SHARED,
++				    BCM43xx_UCODEFLAGS_OFFSET)
++				    | 0x00000200));
+ 	}
+ 	if (radio->revision == 8) {
+ 		bcm43xx_radio_write16(bcm, 0x0051, 0x0000);
+@@ -941,7 +946,8 @@ static void bcm43xx_phy_initb6(struct bcm43xx_private *bcm)
+ 	bcm43xx_phy_write(bcm, 0x0038, 0x0668);
+ 	bcm43xx_radio_set_txpower_bg(bcm, 0xFFFF, 0xFFFF, 0xFFFF);
+ 	if (radio->revision <= 5)
+-		bcm43xx_phy_write(bcm, 0x005D, bcm43xx_phy_read(bcm, 0x005D) | 0x0003);
++		bcm43xx_phy_write(bcm, 0x005D, (bcm43xx_phy_read(bcm, 0x005D)
++			          & 0xFF80) | 0x0003);
+ 	if (radio->revision <= 2)
+ 		bcm43xx_radio_write16(bcm, 0x005D, 0x000D);
+ 	
+@@ -958,7 +964,7 @@ static void bcm43xx_phy_initb6(struct bcm43xx_private *bcm)
+ 		bcm43xx_phy_write(bcm, 0x0016, 0x0410);
+ 		bcm43xx_phy_write(bcm, 0x0017, 0x0820);
+ 		bcm43xx_phy_write(bcm, 0x0062, 0x0007);
+-		(void) bcm43xx_radio_calibrationvalue(bcm);
++		bcm43xx_radio_init2050(bcm);
+ 		bcm43xx_phy_lo_g_measure(bcm);
+ 		if (bcm->sprom.boardflags & BCM43xx_BFL_RSSI) {
+ 			bcm43xx_calc_nrssi_slope(bcm);
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_wx.c b/drivers/net/wireless/bcm43xx/bcm43xx_wx.c
+index 7b665e2..d6d9413 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_wx.c
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_wx.c
+@@ -105,18 +105,24 @@ static int bcm43xx_wx_set_channelfreq(struct net_device *net_dev,
+ 	struct bcm43xx_private *bcm = bcm43xx_priv(net_dev);
+ 	unsigned long flags;
+ 	u8 channel;
++	s8 expon;
+ 	int freq;
+ 	int err = -EINVAL;
+ 
+ 	mutex_lock(&bcm->mutex);
+ 	spin_lock_irqsave(&bcm->irq_lock, flags);
+ 
+-	if ((data->freq.m >= 0) && (data->freq.m <= 1000)) {
++	if ((data->freq.e == 0) &&
++	    (data->freq.m >= 0) && (data->freq.m <= 1000)) {
+ 		channel = data->freq.m;
+ 		freq = bcm43xx_channel_to_freq(bcm, channel);
+ 	} else {
+-		channel = bcm43xx_freq_to_channel(bcm, data->freq.m);
+ 		freq = data->freq.m;
++		expon = 6 - data->freq.e;
++		while (--expon >= 0)    /* scale down the frequency to MHz */
++			freq /= 10;
++		assert(freq > 1000);
++		channel = bcm43xx_freq_to_channel(bcm, freq);
+ 	}
+ 	if (!ieee80211_is_valid_channel(bcm->ieee, channel))
+ 		goto out_unlock;
+-- 
+John W. Linville
+linville@tuxdriver.com
