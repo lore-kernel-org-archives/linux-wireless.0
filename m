@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40679 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57060 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422881AbXCWNot (ORCPT
+	with ESMTP id S1752072AbXCHPce (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 09:44:49 -0400
-Subject: Re: [PATCH] fix information leak in wireless extensions on 64-bit  platforms
+	Thu, 8 Mar 2007 10:32:34 -0500
+Subject: [PATCH] make netdev unregister notifier idempotent
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: stable@kernel.org, linux-wireless <linux-wireless@vger.kernel.org>,
-	Jean Tourrilhes <jt@hpl.hp.com>
-In-Reply-To: <1174640787.3588.65.camel@johannes.berg>
-References: <1174640787.3588.65.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mH8m0eX8qc1SOy5ymS+y"
-Date: Fri, 23 Mar 2007 14:42:42 +0100
-Message-Id: <1174657362.3366.6.camel@johannes.berg>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200703061907.19929.mb@bu3sch.de>
+References: <200703061907.19929.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Thu, 08 Mar 2007 02:19:02 +0100
+Message-Id: <1173316742.3546.39.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Due to the fact that other things may hold a netdev open and the kernel
+retries to call all notifiers again and again until the netdev's
+refcount reaches 0, the notifier must be idempotent. This patch achieves
+that by re-initialising the list and checking whether it is empty.
 
---=-mH8m0eX8qc1SOy5ymS+y
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-On Fri, 2007-03-23 at 14:40 +0100, Johannes Berg wrote:
-> Wireless extensions on 64-bit platforms leak information from the kernel
-> stack due to padding in structs that is copied. This affects any
-> wireless event stream including scan results and so hence is available
-> to unprivileged users.
+---
+ net/wireless/core.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Ignore this patch, I see Jean just posted one as well :)
+--- wireless-dev.orig/net/wireless/core.c	2007-03-08 02:07:12.703607522 +0100
++++ wireless-dev/net/wireless/core.c	2007-03-08 02:08:59.503607522 +0100
+@@ -290,8 +290,10 @@ static int cfg80211_netdev_notifier_call
+ 		break;
+ 	case NETDEV_UNREGISTER:
+ 		mutex_lock(&rdev->devlist_mtx);
+-		sysfs_remove_link(&dev->dev.kobj, "phy80211");
+-		list_del(&dev->ieee80211_ptr->list);
++		if (!list_empty(&dev->ieee80211_ptr->list)) {
++			sysfs_remove_link(&dev->dev.kobj, "phy80211");
++			list_del_init(&dev->ieee80211_ptr->list);
++		}
+ 		mutex_unlock(&rdev->devlist_mtx);
+ 		break;
+ 	}
 
-johannes
-
---=-mH8m0eX8qc1SOy5ymS+y
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGA9lS/ETPhpq3jKURAjs1AJ9BT4+AR3kbLMovz825P7asZq1YSgCfdgrG
-N9SunpmGnhFhwtLeDLAGdGk=
-=7S6v
------END PGP SIGNATURE-----
-
---=-mH8m0eX8qc1SOy5ymS+y--
 
