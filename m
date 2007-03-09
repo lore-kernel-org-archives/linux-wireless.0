@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:10501 "EHLO
-	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753182AbXCYXRt (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.188]:3193 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992839AbXCIPOT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Mar 2007 19:17:49 -0400
-From: Daniel Drake <dsd@gentoo.org>
-To: linville@tuxdriver.com
+	Fri, 9 Mar 2007 10:14:19 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so1104331nfa
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2007 07:14:18 -0800 (PST)
+To: "John Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: Prevent unregistering of unregistered hw
+Date: Fri, 9 Mar 2007 16:14:04 +0100
 Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: kune@deine-taler.de
-Subject: [PATCH] zd1211rw-mac80211: tweak reset-on-probe behaviour
-Message-Id: <20070325231754.5E2267B409F@zog.reactivated.net>
-Date: Mon, 26 Mar 2007 00:17:54 +0100 (BST)
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200703091614.04526.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ulrich Kunitz <kune@deine-taler.de>
+At the moment it is possible to call ieee80211_unregister_hw()
+for an unregistered hw structure. This will cause a big panic.
+This patch will add a check to check if IEEE80211_DEV_REGISTERED
+has been set before attempting to unregister hw.
 
-This is an update to the earlier commit 8b4ebaabf12. The argument
-is directly used and an error condition will be handled.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Here are some sentences about the reason for this commit. There
-have been a larger number of reports of problems after rebooting
-the machine. According to reports the resetting of the stick
-during probe makes this problem disappear. Notify that it doesn't
-help while reloading the module.
-
-Signed-off-by: Ulrich Kunitz <kune@deine-taler.de>
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
 ---
- drivers/net/wireless/mac80211/zd1211rw/zd_usb.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c b/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
-index 418a8ad..8867110 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
-@@ -917,7 +917,12 @@ static int probe(struct usb_interface *intf, const struct usb_device_id *id)
- 		goto error;
- 	}
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 577dbe3..7494280 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -4765,6 +4765,12 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ 	/* TODO: skb_queue should be empty here, no need to do anything? */
  
--	usb_reset_device(interface_to_usbdev(intf));
-+	r = usb_reset_device(udev);
-+	if (r) {
-+		dev_err(&intf->dev,
-+			"couldn't reset usb device. Error number %d\n", r);
-+		goto error;
+ 	rtnl_lock();
++
++	if (local->reg_state != IEEE80211_DEV_REGISTERED) {
++		rtnl_unlock();
++		return;
 +	}
- 
- 	dev = zd_mac_alloc(intf);
- 	if (dev == NULL) {
--- 
-1.5.0.5
-
++
+ 	local->reg_state = IEEE80211_DEV_UNREGISTERED;
+ 	if (local->apdev)
+ 		ieee80211_if_del_mgmt(local);
