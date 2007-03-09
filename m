@@ -1,34 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:54411 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030658AbXCNUEa (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58222
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S2992885AbXCICPi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Mar 2007 16:04:30 -0400
-Message-ID: <45F85546.1010902@lwfinger.net>
-Date: Wed, 14 Mar 2007 15:04:22 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] Eliminate some 'G Mode Enable' magic numbers
-References: <45f82054.fJi116VPchav9Mns%Larry.Finger@lwfinger.net> <20070314194950.GG3372@tuxdriver.com>
-In-Reply-To: <20070314194950.GG3372@tuxdriver.com>
-Content-Type: text/plain; charset=us-ascii
+	Thu, 8 Mar 2007 21:15:38 -0500
+Date: Thu, 08 Mar 2007 18:15:38 -0800 (PST)
+Message-Id: <20070308.181538.51844021.davem@davemloft.net>
+To: tommy@numba-tu.com
+Cc: torvalds@linux-foundation.org, ivdoorn@gmail.com,
+	johannes@sipsolutions.net, proski@gnu.org,
+	linux-wireless@vger.kernel.org, linux-sparse@vger.kernel.org
+Subject: Re: OT
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <44121.209.213.198.25.1173402764.squirrel@numba-tu.com>
+References: <200703081908.40997.IvDoorn@gmail.com>
+	<Pine.LNX.4.64.0703081023490.10832@woody.linux-foundation.org>
+	<44121.209.213.198.25.1173402764.squirrel@numba-tu.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Wed, Mar 14, 2007 at 11:18:28AM -0500, Larry Finger wrote:
->> In code manipulating the TM State Low register of 802.11 cores, two
->> different magic numbers are used to reference the 'G Mode Enable' bit.
->> One of these, 0x20000000, is clear, but the other, (0x800 << 18), is not.
->> This patch replaces both types with a defined constant. In addition, two
->> bits in the TM State High registers are given definitions to help in
->> following the code.
+From: "Tommy Thorn" <tommy@numba-tu.com>
+Date: Thu, 8 Mar 2007 17:12:44 -0800 (PST)
+
+> Linus Torvalds said:
+> ....
+> > Thus endeth Linus' "games with bits" lecture. It was probably more than you
+> > really wanted to know. There's a ton of games you can play with simple "x-1"
+> and
+> > bitmasking ops like this).
 > 
-> Looks reasonable to me -- not sure why this is an RFC?  Does anyone
-> object?
+> For anyone who enjoy this stuff (don't we all?), I heartily recommend Knuth's
+> recent "Bitwise Tricks and Techniques" Pre-Fascicle:
+> http://www-cs-faculty.stanford.edu/~knuth/news.html
 
-Not so far. I'll make it a proper patch.
-
-Larry
+Or "Hacker's Delight" which comes up from time to time on these
+lists as well.
