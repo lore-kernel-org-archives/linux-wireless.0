@@ -1,42 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:43839 "EHLO
-	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992664AbXCBRbO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2007 12:31:14 -0500
-Date: Fri, 02 Mar 2007 11:30:19 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] bcm43xx: Fix typo in B5PHY init specifications
-Message-ID: <45e85f2b.Dp1dM05tvZFFROmc%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4030 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752157AbXCIPFc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Mar 2007 10:05:32 -0500
+Date: Fri, 9 Mar 2007 09:19:07 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Andrew Morton <akpm@linux-foundation.org>,
+	Adrian Bunk <bunk@stusta.de>, jgarzik@pobox.com,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: 2.6.21-rc2-mm2: drivers/net/wireless/libertas/debugfs.c addr bogosity
+Message-ID: <20070309141906.GA3296@tuxdriver.com>
+References: <20070306004408.d3f6434d.akpm@linux-foundation.org> <20070307224116.GE3441@stusta.de> <20070307150057.4e6342dc.akpm@linux-foundation.org> <20070309021146.GL4575@bakeyournoodle.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070309021146.GL4575@bakeyournoodle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There was an error in the B5PHY init specifications.
+Probably should copy me and linux-wireless@vger.kernel.org.  Other than
+that, this looks fine to me.  I'll queue it up shortly.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+John
 
-John,
+On Fri, Mar 09, 2007 at 01:11:46PM +1100, Tony Breeds wrote:
+> On Wed, Mar 07, 2007 at 03:00:57PM -0800, Andrew Morton wrote:
+> > On Wed, 7 Mar 2007 23:41:16 +0100
+> > Adrian Bunk <bunk@stusta.de> wrote:
+> > 
+> > > On Tue, Mar 06, 2007 at 12:44:08AM -0800, Andrew Morton wrote:
+> > > >...
+> > > > Changes since 2.6.20-rc2-mm1:
+> > > >...
+> > > >  git-netdev-all.patch
+> > > >...
+> > > >  git trees
+> > > >...
+> > > 
+> > > drivers/net/wireless/libertas/debugfs.c contains:
+> > >   #define item_addr(n) ((u32) &((wlan_adapter *)0)->n)
+> > > 
+> > > This is wrong on 64bit architectures.
+> > 
+> > Is OK - it is simply yet another reimplementation of offsetof().  Hint.
+> 
+> Perhaps something like?
+> 
+> Against 2.6.21-rc3-mm2
+> 
+> From: Tony Breeds <tony@bakeyournoodle.com>
+> 
+> Cleanup drivers/net/wireless/libertas/debugfs.c to use standard kernel macros and functions.
+> 
+> Signed-off-by: Tony Breeds <tony@bakeyournoodle.com>
+> 
+> ---
+> only compile tested on x86
+> 
+>  debugfs.c |   41 ++++-------------------------------------
+>  1 file changed, 4 insertions(+), 37 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
+> index 3ad1e03..51dfd20 100644
+> --- a/drivers/net/wireless/libertas/debugfs.c
+> +++ b/drivers/net/wireless/libertas/debugfs.c
+> @@ -1772,8 +1772,8 @@ void libertas_debugfs_remove_one(wlan_private *priv)
+>  
+>  /* debug entry */
+>  
+> -#define item_size(n) (sizeof ((wlan_adapter *)0)->n)
+> -#define item_addr(n) ((u32) &((wlan_adapter *)0)->n)
+> +#define item_size(n)	(FIELD_SIZEOF(wlan_adapter, n))
+> +#define item_addr(n)	(offsetof(wlan_adapter, n))
+>  
+>  struct debug_data {
+>  	char name[32];
+> @@ -1789,40 +1789,7 @@ static struct debug_data items[] = {
+>  	{"psstate", item_size(psstate), item_addr(psstate)},
+>  };
+>  
+> -static int num_of_items = sizeof(items) / sizeof(items[0]);
+> -
+> -/**
+> - *  @brief convert string to number
+> - *
+> - *  @param s   	   pointer to numbered string
+> - *  @return 	   converted number from string s
+> - */
+> -static int string_to_number(char *s)
+> -{
+> -	int r = 0;
+> -	int base = 0;
+> -
+> -	if ((strncmp(s, "0x", 2) == 0) || (strncmp(s, "0X", 2) == 0))
+> -		base = 16;
+> -	else
+> -		base = 10;
+> -
+> -	if (base == 16)
+> -		s += 2;
+> -
+> -	for (s = s; *s != 0; s++) {
+> -		if ((*s >= 48) && (*s <= 57))
+> -			r = (r * base) + (*s - 48);
+> -		else if ((*s >= 65) && (*s <= 70))
+> -			r = (r * base) + (*s - 55);
+> -		else if ((*s >= 97) && (*s <= 102))
+> -			r = (r * base) + (*s - 87);
+> -		else
+> -			break;
+> -	}
+> -
+> -	return r;
+> -}
+> +static int num_of_items = ARRAY_SIZE(items);
+>  
+>  /**
+>   *  @brief proc read function
+> @@ -1912,7 +1879,7 @@ static int wlan_debugfs_write(struct file *f, const char __user *buf,
+>  			if (!p2)
+>  				break;
+>  			p2++;
+> -			r = string_to_number(p2);
+> +			r = simple_strtoul(p2, NULL, 0);
+>  			if (d[i].size == 1)
+>  				*((u8 *) d[i].addr) = (u8) r;
+>  			else if (d[i].size == 2)
+> Yours Tony
+> 
+>   linux.conf.au        http://linux.conf.au/ || http://lca2008.linux.org.au/
+>   Jan 28 - Feb 02 2008 The Australian Linux Technical Conference!
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
-This patch is meant for wireless-2.6, 'upstream', and 'upstream-fixes'.
-
-Larry
-
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-@@ -806,7 +806,7 @@ static void bcm43xx_phy_initb5(struct bc
- 	/* Force to channel 7, even if not supported. */
- 	bcm43xx_radio_selectchannel(bcm, 7, 0);
- 
--	if (radio->version != 0x2050) {
-+	if (radio->version == 0x2050) {
- 		bcm43xx_radio_write16(bcm, 0x0075, 0x0080);
- 		bcm43xx_radio_write16(bcm, 0x0079, 0x0081);
- 	}
+-- 
+John W. Linville
+linville@tuxdriver.com
