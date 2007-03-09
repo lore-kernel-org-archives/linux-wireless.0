@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtagate8.de.ibm.com ([195.212.29.157]:41340 "EHLO
-	mtagate8.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933908AbXC0RP7 (ORCPT
+Received: from dhost002-53.dex002.intermedia.net ([64.78.21.155]:42913 "EHLO
+	dhost002-53.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1767634AbXCIXT0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2007 13:15:59 -0400
-Date: Tue, 27 Mar 2007 19:17:49 +0200
-From: Cornelia Huck <cornelia.huck@de.ibm.com>
-To: "Kay Sievers" <kay.sievers@vrfy.org>
-Cc: "Eric Rannaud" <eric.rannaud@gmail.com>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	"Larry Finger" <larry.finger@lwfinger.net>,
-	"Matt Mackall" <mpm@selenic.com>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	"Monakhov Dmitriy" <dmonakhov@openvz.org>
-Subject: Re: 2.6.21-rc4-mm1
-Message-ID: <20070327191749.28298069@gondolin.boeblingen.de.ibm.com>
-In-Reply-To: <3ae72650703270225k1db9c4a8w6e31b95e007336d7@mail.gmail.com>
-References: <20070321202225.GN10459@waste.org>
-	<20070322123508.3785fd30@gondolin.boeblingen.de.ibm.com>
-	<4602752A.5050109@lwfinger.net>
-	<20070322181019.62fe78ed@gondolin.boeblingen.de.ibm.com>
-	<4602D137.4060402@lwfinger.net>
-	<20070323111029.4089ccfb@gondolin.boeblingen.de.ibm.com>
-	<20070323210618.6a41f5da.akpm@linux-foundation.org>
-	<20070326110949.5301a571@gondolin.boeblingen.de.ibm.com>
-	<20070326012232.0f0b9e09.akpm@linux-foundation.org>
-	<20070326103432.GB18799@zenigma>
-	<3ae72650703270225k1db9c4a8w6e31b95e007336d7@mail.gmail.com>
+	Fri, 9 Mar 2007 18:19:26 -0500
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Fri, 9 Mar 2007 15:19:22 -0800
+To: Jean Tourrilhes <jt@hpl.hp.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: wireless extensions vs. 64-bit architectures
+Message-ID: <20070309231922.GF24143@devicescape.com>
+References: <200703061943.07350.mb@bu3sch.de> <20070307020310.GA20466@bougret.hpl.hp.com> <1173364747.14001.7.camel@johannes.berg> <20070308184954.GA24485@bougret.hpl.hp.com> <1173382042.3248.63.camel@johannes.berg> <20070308193412.GG23040@devicescape.com> <1173382802.3248.68.camel@johannes.berg> <20070308221128.GA24884@bougret.hpl.hp.com> <1173393326.3831.21.camel@johannes.berg> <20070309213531.GA28070@bougret.hpl.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070309213531.GA28070@bougret.hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 27 Mar 2007 11:25:57 +0200,
-"Kay Sievers" <kay.sievers@vrfy.org> wrote:
+On Fri, Mar 09, 2007 at 01:35:31PM -0800, Jean Tourrilhes wrote:
 
-> I don't see any point in deregistering a kernel device, if the event
-> to userspace goes wrong, or a subsytem returns a non-zero value in the
-> filter.
+> 	It's not as bad as it look like. All userspace programs
+> nowadays use either the iwlib or wpa_supplicant. For example,
+> NetworkManager gets its stuff through wpa_supplicant, and kdenetwork
+> uses iwlib. So, in essence, there is only two places to fix.
+> 	Which is why I would like to hear from Jouni.
 
-But if we filter the event, we just return 0?
- 
-> Checking the uevent return value, will not prevent any malfunction,
-> usually this kind of "error handling" just prevents bringing up a
-> whole subsystem, or booting-up a box, because the needed device does
-> not exist at all.
+How confident are you of this being the full set? I did not use iwlib
+for two reasons: its license and it not being available (at least at
+that point in time) by default in many Linux distros. I would expect
+someone else having the same reasons, but I have to admit that I have
+not looked into this at all, so this is only a guess.
 
-OK, if we consider uevents to be non-vital to a functioning device.
+> 	By the way, I've just released version 29.pre16 which has a
+> better band aid. It fixes bugs of the previous version and is more
+> forward compatible (i.e. it's compatible with option 2).
 
-OTOH, I think using something like uevent_suppress (maybe via
-dev_uevent_filter?) is a saner way to suppress a uevent than to return
-an error code in the uevent function.
+Hmm.. What should I look as the description of the latest proposed
+workaround? I was kind of hoping to see a nice description of the
+problem and proposed change in couple of paragraphs of text.. ;-)
+Anyway, I can see two changes when I diff wireless tools 29.pre14 and
+pre15 that are clearly related to this. Diff of pre14 vs. pre16 or pre15
+vs. pre16 includes more changes and some of them do not seem to be
+related to issue.
+
+Unfortunately I do not have access to any system to test this
+workaround, so I cannot easily test this myself.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
