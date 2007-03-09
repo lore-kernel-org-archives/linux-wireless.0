@@ -1,70 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-2.dex002.intermedia.net ([64.78.21.14]:48466 "EHLO
-	dhost002-2.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965696AbXC1TLT (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:35386
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2993126AbXCIPrG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 15:11:19 -0400
-From: "Jouni Malinen" <jkm@devicescape.com>
-Date: Wed, 28 Mar 2007 12:11:16 -0700
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: optimise ieee80211_get_hdrlen
-Message-ID: <20070328191116.GJ6036@devicescape.com>
-References: <1175011305.9282.10.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1175011305.9282.10.camel@johannes.berg>
+	Fri, 9 Mar 2007 10:47:06 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH] mac80211: Prevent unregistering of unregistered hw
+Date: Fri, 9 Mar 2007 16:46:05 +0100
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200703091614.04526.IvDoorn@gmail.com>
+In-Reply-To: <200703091614.04526.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200703091646.05292.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 27, 2007 at 06:01:45PM +0200, Johannes Berg wrote:
+On Friday 09 March 2007 16:14, Ivo van Doorn wrote:
+> At the moment it is possible to call ieee80211_unregister_hw()
+> for an unregistered hw structure. This will cause a big panic.
+> This patch will add a check to check if IEEE80211_DEV_REGISTERED
+> has been set before attempting to unregister hw.
 
-> This patch optimises the ieee80211_get_hdrlen function by exploiting the
-> bit masks directly.
+For which reason would a driver call unregister, but not register before?
+I smell design problems in the driver ;)
 
-> --- wireless-dev.orig/net/mac80211/ieee80211.c	2007-03-27 16:33:47.163155480 +0200
-> +++ wireless-dev/net/mac80211/ieee80211.c	2007-03-27 16:33:48.473155480 +0200
-> @@ -258,19 +258,24 @@ int ieee80211_get_hdrlen(u16 fc)
->  	case IEEE80211_FTYPE_DATA:
->  		if ((fc & IEEE80211_FCTL_FROMDS) && (fc & IEEE80211_FCTL_TODS))
->  			hdrlen = 30; /* Addr4 */
-> -		if (fc & IEEE80211_STYPE_QOS_DATA)
-> -			hdrlen += 2; /* QoS Control Field */
-> +		/* QoS Control Field */
-> +		hdrlen += (fc & IEEE80211_STYPE_QOS_DATA)
-> +				>> (ilog2(IEEE80211_STYPE_QOS_DATA)-1);
->  		break;
-
-Could you please add a comment explaining what exactly happens here and
-more importantly, include an easy way of understanding that this adds 2
-bytes.
-
->  	case IEEE80211_FTYPE_CTL:
-> -		switch (fc & IEEE80211_FCTL_STYPE) {
-> -		case IEEE80211_STYPE_CTS:
-> -		case IEEE80211_STYPE_ACK:
-> +		/*
-> +		 * ACK and CTS are 10 bytes, all others 16. To see how
-> +		 * to get this condition consider
-> +		 *   subtype mask:   0b0000000011110000 (0x00F0)
-> +		 *   ACK subtype:    0b0000000011010000 (0x00D0)
-> +		 *   CTS subtype:    0b0000000011000000 (0x00C0)
-> +		 *   bits that matter:         ^^^      (0x00E0)
-> +		 *   value of those: 0b0000000011000000 (0x00C0)
-> +		 */
-> +		if ((fc & 0xE0) == 0xC0)
->  			hdrlen = 10;
-> -			break;
-> -		default:
-> +		else
->  			hdrlen = 16;
-> -			break;
-> -		}
-
-Is this case even used anywhere? Looks like unnecessary optimization at
-the cost of making the source code more difficult to understand and
-modify.
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> 
+> ---
+> 
+> diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+> index 577dbe3..7494280 100644
+> --- a/net/mac80211/ieee80211.c
+> +++ b/net/mac80211/ieee80211.c
+> @@ -4765,6 +4765,12 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+>  	/* TODO: skb_queue should be empty here, no need to do anything? */
+>  
+>  	rtnl_lock();
+> +
+> +	if (local->reg_state != IEEE80211_DEV_REGISTERED) {
+> +		rtnl_unlock();
+> +		return;
+> +	}
+> +
+>  	local->reg_state = IEEE80211_DEV_UNREGISTERED;
+>  	if (local->apdev)
+>  		ieee80211_if_del_mgmt(local);
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Greetings Michael.
