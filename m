@@ -1,51 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:33320 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752949AbXCSLC5 (ORCPT
+Received: from h223.17.255.206.cable.lngv.cablelynx.com ([206.255.17.223]:35220
+	"EHLO dulcinea.shadowen.org" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1767525AbXCIT4t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2007 07:02:57 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 78C808CAD2
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2007 12:02:56 +0100 (CET)
-Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id 43D5EFF2B
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2007 11:02:57 +0000 (UTC)
-Message-Id: <20070319110124.819185242@warmcat.com>
-Date: Mon, 19 Mar 2007 11:01:24 +0000
-From: andy@warmcat.com
+	Fri, 9 Mar 2007 14:56:49 -0500
+Received: from localhost (unknown [127.0.0.1])
+	by dulcinea.shadowen.org (Postfix) with ESMTP id A3A403865BF0
+	for <linux-wireless@vger.kernel.org>; Fri,  9 Mar 2007 19:52:58 +0000 (UTC)
+Received: from dulcinea.shadowen.org ([127.0.0.1])
+ by localhost (dulcinea [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+ id 25774-18 for <linux-wireless@vger.kernel.org>;
+ Fri,  9 Mar 2007 13:52:52 -0600 (CST)
+Received: from localhost (unknown [127.0.0.1])
+	by dulcinea.shadowen.org (Postfix) with ESMTP id DE8BC3865BCD
+	for <linux-wireless@vger.kernel.org>; Fri,  9 Mar 2007 13:52:51 -0600 (CST)
+Date: Fri, 9 Mar 2007 13:52:48 -0600 (CST)
+From: Jeff Williams <angelbane@ou.edu>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/3] Try #4: Radiotap on Monitor Mode interfaces for rx and tx
+Subject: Airgo Networks Wireless Card Linux support
+Message-ID: <Pine.LNX.4.64.0703091340080.380@dulcinea>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks -
+Hello all,
 
-Patches #1 and #2 change the Monitor Mode wireless interfaces to use radiotap
-both for monitoring and for packet injection.  The monitoring side is done by a patch
-from Michael Wu.  Tcpdump knows how to handle the result.
+As the airgo networks wireless cards are not currently supported, in Linux 
+and I can find no projects with that aim, I am looking for someone, or a 
+group, to help rememdy that. I have already begun reverse engineering 
+from some of the available drivers in the hopes of developing a 
+specification similar in scope to the bcm-specs project. Is there anyone 
+out there at all interested in pursuing this with me?
 
-For injecting packets, the you issue a packet using libpcap or a SOCK_PACKET
-socket down an interface to the wireless device that is in Monitor Mode.  The packet
-has a normal radiotap header prepended to the IEEE80211 header.  The radiotap header
-is variable length depending on what the user wants to specify, currently the
-transmit rate, power and antenna can be specified using normal radiotap semantics.
-Any other entries are skipped.
+I'm not sure that this is the correct venue for this question, if not 
+perhaps someone here can point me in the correct direction.
 
-A usermode app packetspammer is available from here
-
-http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
-
-which allows easy injection of these packets from the commandline.  At the moment it
-loops issuing packets at a variety of rates which can be seen from another
-machine's monitor mode interface on the same channel.  There are instructions for
-build and using it on the page above.
-
-Currently it has been tested for both rx and tx using zd1211rw-mac80211 and works
-except for the rx radiotap rate is not shown in tcpdump.
-
-The patches should be based against wireless-dev.
-
-I also added a documentation file patch which explains how to use the injection
-functionality.
--- 
-
+Thank you,
+Jeff
