@@ -1,97 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:47946 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1422727AbXCWI5f (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:16503 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965257AbXCICYN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 04:57:35 -0400
-Message-ID: <46039679.6080401@warmcat.com>
-Date: Fri, 23 Mar 2007 08:57:29 +0000
-From: Andy Green <andy@warmcat.com>
+	Thu, 8 Mar 2007 21:24:13 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so881828nfa
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2007 18:24:12 -0800 (PST)
+Message-ID: <1197ff4c0703081824p6ebf504fs6587b024fbd3733d@mail.gmail.com>
+Date: Fri, 9 Mar 2007 10:24:10 +0800
+From: "Yanbo Li" <dreamfly281@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: Problem with USB1.1 Host cores with the mb tree for bcm43xx_mac80211
+Cc: "Larry Finger" <larry.finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	"Broadcom Linux" <bcm43xx-dev@lists.berlios.de>
+In-Reply-To: <200703081418.40809.mb@bu3sch.de>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH 0/4] Try #5: Radiotap on Monitor Mode interfaces for rx  and tx
-References: <20070320103955.600509703@warmcat.com> <1174500637.3944.9.camel@johannes.berg>
-In-Reply-To: <1174500637.3944.9.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
+References: <45EF2015.8000802@lwfinger.net> <45EF4305.5060606@lwfinger.net>
+	 <1197ff4c0703072356s575058e3h50c6104ec7609ff4@mail.gmail.com>
+	 <200703081418.40809.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Tue, 2007-03-20 at 10:39 +0000, andy@warmcat.com wrote:
-> 
->> For injecting packets, the you issue a packet using libpcap or a SOCK_PACKET
->> socket down an interface to the wireless device that is in Monitor Mode.
-> 
-> Ok so people don't want to have this in cfg80211, all the better for me
-> since it's less work.
+On 3/8/07, Michael Buesch <mb@bu3sch.de> wrote:
+> On Thursday 08 March 2007 08:56, Yanbo Li wrote:
+> > It seemed my 4311 works without key
+> > authrized.
+>
+> Eh, what?
+>
+> --
+> Greetings Michael.
+>
+Sorry for my poor english, I mean the card work with "iwconfig eth1
+key off".(eth1 is
+the wireless card) This is my card info:
 
-$ cd wireless-dev
-$ grep cfg80211 Documentation/* -R
+0c:00.0 0280: 14e4:4311 (rev 01)
+        Subsystem: 1028:0007
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+ParErr- Stepping- SERR+ FastB2B-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 11
+        Region 0: Memory at dfdfc000 (32-bit, non-prefetchable) [size=16K]
+        Capabilities: [40] Power Management version 2
+                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=375mA
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=2 PME-
+        Capabilities: [58] Message Signalled Interrupts: 64bit-
+Queue=0/0 Enable-
+                Address: 00000000  Data: 0000
+        Capabilities: [d0] Express Legacy Endpoint IRQ 0
+                Device: Supported: MaxPayload 128 bytes, PhantFunc 0, ExtTag+
+                Device: Latency L0s <4us, L1 unlimited
+                Device: AtnBtn- AtnInd- PwrInd-
+                Device: Errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                Device: RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                Device: MaxPayload 128 bytes, MaxReadReq 128 bytes
+                Link: Supported Speed 2.5Gb/s, Width x1, ASPM L0s, Port 0
+                Link: Latency L0s <4us, L1 <64us
+                Link: ASPM L0s Enabled RCB 64 bytes CommClk+ ExtSynch-
+                Link: Speed 2.5Gb/s, Width x1
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [13c] Virtual Channel
 
-As a Johnny-come-lately noob, how should I find out that cfg80211 either 
-exists or how it works?  Far from some kind of turf war initiating 
-gauntlet throwing, I was unaware cfg80211 was an option.
-
-My interest is being able to inject broadcast packets from userspace 
-with fine control over how it goes out.  I have now tried several ways 
-to get that to happen with varying success, patching drivers in the old 
-stack (worked but impractical for wide uptake), using the management 
-interface in the new stack (works but it is heading towards deprecation 
-and did not allow rate control) and finally the Monitor mode injection 
-(works perfectly but requires to convince you guys to include it).
-
-send()ing packets back up a Monitor Mode interface with the same 
-radiotap semantics as the came out of it with is the most natural and 
-portable (libpcap pcap_inject() just works with it on the same network 
-interface as it can capture on) way to do injection from a usermode and 
-architectural standpoint.
-
-I wouldn't say it is the "best" way to push the weirdo wext/prism Ioctls 
-out of the stack, I don't know enough about the details of it, but I 
-don't think this and the cfg80211 methods need to be in conflict.  In a 
-real sense you can look at this patchset as intending to max out the 
-promise of libpcap to usermode.  Sine they then have enough tools, if 
-someone wants to implement a userspace MLME or other unthinkable hacks 
-in userspace their way is open without any more kernelside cooperation 
-needed.
-
-> I urge you to solve the issues with this injection interface, we've
-> established that you can use packet filters to grab only management
-> frames but monitor interfaces definitely still interact very badly with
-> power management, and when the hardware has a BSS filter then this will
-> also be disabled with a monitor interface (if monitor during operation
-> is supported) which again puts more load on the host.
-
-Those aren't issues with "this injection interface" but in optimizing 
-the receive action for the existing Monitor mode.
-
-> I have previously suggested to use the IFF_PROMISC bit for this, but
-> this will also need good driver/stack API since currently drivers that
-> support monitor during operation will just turn off BSS filters and such
-> when a monitor interface is added. That will have to be changed in
-> drivers as well.
-
-Sure.  Monitor mode can deliver sensible default results with 
-IFF_PROMISC off: it will just show traffic that was flying about inside 
-the associated connection with the client anyway.  Just making the only 
-way to enable hardware promisc being via IFF_PROMISC ioctl handler will 
-allow control over whether you want to see everything with the power hit 
-(the power hit doesn't matter for a box wired to the mains) or you just 
-want to see things aimed at you.  So it sounds like a good enhancement 
-exploiting an existing traditional attribute whatever way you look at it.
-
-> Also, and I'm going to reply to your patches as well, this is not
-> something that should be restricted to mac80211 since cfg80211
-> generically supports virtual interfaces and anybody could in theory use
-> a userspace MLME even with a full-mac card given a special no-management
-> firmware mode. Hence, this should be documented for cfg80211 users.
-
-I don't understand why Monitor Mode injection needs to fly under the 
-cfg80211 flag.  It seems to belong to mac80211 code and would continue 
-to work if cfg80211 was disabled.  Can you explain a bit more why it 
-logically belongs in that category?
-
--Andy
+BR
+lyb
