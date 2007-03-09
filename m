@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40862 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752177AbXCHPnr (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:42008 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2993103AbXCIKSx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2007 10:43:47 -0500
-Subject: Re: [PATCH] mac80211: Properly kill tasklets before shutdown
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Jiri Benc <jbenc@suse.cz>, John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200703081639.40395.mb@bu3sch.de>
-References: <200703061902.00001.mb@bu3sch.de>
-	 <1173317164.3546.41.camel@johannes.berg>  <200703081639.40395.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7mZzq/5fTOjQSF4UE10H"
-Date: Thu, 08 Mar 2007 16:43:35 +0100
-Message-Id: <1173368616.3248.5.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 9 Mar 2007 05:18:53 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so1266906uga
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2007 02:18:52 -0800 (PST)
+To: "John Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 4/4] rt2x00: Fix power of 2 check
+Date: Fri, 9 Mar 2007 11:18:39 +0100
+Cc: wireless <linux-wireless@vger.kernel.org>
+References: <200703082214.52864.IvDoorn@gmail.com>
+In-Reply-To: <200703082214.52864.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200703091118.39371.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 08 March 2007 22:14, Ivo van Doorn wrote:
+> Cleanup code, make gcc happy, make sparse happy. What a happy patch ;)
+> This cleans up the code used to check the validity of the register fields,
+> this will also reduce the required memory usage while working with sparse.
+> This patch was inspired on the codesuggestions from Linus.
 
---=-7mZzq/5fTOjQSF4UE10H
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Please cancel this 4th patch, the previous 3 were correct but this one is terribly wrong.
 
-On Thu, 2007-03-08 at 16:39 +0100, Michael Buesch wrote:
+> +#define is_power_of_two(x)	( !((x) & ((x)-1)) )
+> +#define low_bit_mask(x)		( ((x)-1) & ~(x) )
+> +#define is_valid_mask(x)	is_power_of_two(1 + (x) + low_bit_mask(x))
+> +
+> +#define FIELD16(__mask)					\
+> +({							\
+> +	BUILD_BUG_ON(!__mask || !is_valid_mask(__mask));\
+> +	(struct rt2x00_field16) {			\
+> +		(__scanbit((__mask), 16) - 1), (__mask) \
+> +	};						\
+> +})
+> +
+> +#define FIELD32(__mask)					\
+> +({							\
+> +	BUILD_BUG_ON(!__mask || !is_valid_mask(__mask));\
+> +	(struct rt2x00_field32) {			\
+> +		(__scanbit((__mask), 32) - 1), (__mask) \
+> +	};						\
+> +})
 
-> I don't think so. tasklet_kill does actually waiting, not killing.
-> It waits until the (maybe) scheduled tasklet did run and then waits
-> for it to finish running.
-> It doesn't rip off a scheduled tasklet without letting it run.
+The problem is here, I have used __scanbit to determine the first bit
+that is set. __scanbit was used since this doesn't require a pointer to the value
+while the other functions do require the pointer (and the macro receives the direct
+value hence the reason for the __scanbit choice).
+Unfortunately I did not check if __scanbit was available on all arches, and this one
+seems to only excist for x86_64.. :S
+I'll try to fix this asap and come with a new patch.
 
-Ah ok.
-
-> Uh, didn't get that. The assertion for this is in the same function
-> some lines down.
-
-I used to get that but probably using tasklet_kill for that tasklet
-fixes this then.
-
-johannes
-
---=-7mZzq/5fTOjQSF4UE10H
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF8C8n/ETPhpq3jKURAktEAJ9f8sBErqIN5chH06EmqBTCls0SuwCeOIv2
-MTvnYKlRPVYC3IcN0QrY/qI=
-=crd4
------END PGP SIGNATURE-----
-
---=-7mZzq/5fTOjQSF4UE10H--
-
+Ivo
