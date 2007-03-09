@@ -1,88 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:48280 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751149AbXCQVbX (ORCPT
+Received: from gundega.hpl.hp.com ([192.6.19.190]:59169 "EHLO
+	gundega.hpl.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767547AbXCIVhJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Mar 2007 17:31:23 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: andy@warmcat.com
-Subject: Re: [PATCH 2/2] mac80211: Monitor mode radiotap-based packet injection
-Date: Sat, 17 Mar 2007 17:30:28 -0400
-Cc: linux-wireless@vger.kernel.org
-References: <20070317105800.659633351@warmcat.com> <20070317110751.352850972@warmcat.com>
-In-Reply-To: <20070317110751.352850972@warmcat.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1564202.JS19W853hE";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200703171730.33349.flamingice@sourmilk.net>
+	Fri, 9 Mar 2007 16:37:09 -0500
+Date: Fri, 9 Mar 2007 13:35:31 -0800
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <jkm@devicescape.com>, Michael Buesch <mb@bu3sch.de>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>, Dan Williams <dcbw@redhat.com>
+Subject: Re: wireless extensions vs. 64-bit architectures
+Message-ID: <20070309213531.GA28070@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <20070306171316.GA19669@bougret.hpl.hp.com> <200703061943.07350.mb@bu3sch.de> <20070307020310.GA20466@bougret.hpl.hp.com> <1173364747.14001.7.camel@johannes.berg> <20070308184954.GA24485@bougret.hpl.hp.com> <1173382042.3248.63.camel@johannes.berg> <20070308193412.GG23040@devicescape.com> <1173382802.3248.68.camel@johannes.berg> <20070308221128.GA24884@bougret.hpl.hp.com> <1173393326.3831.21.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1173393326.3831.21.camel@johannes.berg>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1564202.JS19W853hE
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Thu, Mar 08, 2007 at 11:35:26PM +0100, Johannes Berg wrote:
+> On Thu, 2007-03-08 at 14:11 -0800, Jean Tourrilhes wrote:
+> 
+> > 	First possiblity, we could stick with this band-aid
+> > permanently.
+> 
+> It sucks for various reasons, one for example being that I don't even
+> understand your recognition code but all userspace programs that use
+> wext will have to include such code!
 
-On Saturday 17 March 2007 06:58, andy@warmcat.com wrote:
-> diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-> index fb33b90..3873262 100644
-> --- a/net/mac80211/ieee80211.c
-> +++ b/net/mac80211/ieee80211.c
-> @@ -35,6 +35,7 @@
->  #include "ieee80211_led.h"
->  #include "ieee80211_cfg.h"
->  #include "ieee80211_sysfs.h"
-> +#include <net/ieee80211_radiotap.h>
->
-Already included by my patch.
+	It's not as bad as it look like. All userspace programs
+nowadays use either the iwlib or wpa_supplicant. For example,
+NetworkManager gets its stuff through wpa_supplicant, and kdenetwork
+uses iwlib. So, in essence, there is only two places to fix.
+	Which is why I would like to hear from Jouni.
 
-> +	int tap_index =3D 0;
-> +	u8 *tap_arg =3D skb->data + sizeof(struct ieee80211_radiotap_header);
-> +	u32 *curr_arg_bitmap =3D &rthdr->it_present;
-> +	u32 arg_bitmap=3Dle32_to_cpu(*curr_arg_bitmap);
-Space before and after the =3D.=20
+	By the way, I've just released version 29.pre16 which has a
+better band aid. It fixes bugs of the previous version and is more
+forward compatible (i.e. it's compatible with option 2).
 
-> +
-> +	if(rthdr->it_version) return TXRX_DROP; /* version byte used as magic */
-Space after the if.
+	Have fun...
 
-> +
-> +		/* sanity check for skb length and radiotap length field */
-Keep comments indented the same as everything else.
-
-> +	if (skb->len < (le16_to_cpu(rthdr->it_len) +
-> +		sizeof(struct ieee80211_hdr)))
-Using some spaces to align the start of the second line with the parenthesi=
-s=20
-often looks better.
-
-> +		/* process and remove the injection radiotap header */
-> +
-> +	if(control->flags & IEEE80211_TXCTL_INJECTED_PACKET) {
-dev points to the virtual interface that the frame originally came in on. Y=
-ou=20
-can get sdata from that and figure out if the interface was a monitor=20
-interface.
-
-Thanks,
-=2DMichael Wu
-
---nextPart1564202.JS19W853hE
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBF/F35T3Oqt9AH4aERAhsdAJ90tyV7BAO5qWZc+LpvyTdSZlggLQCgma9p
-A4dqUT8yzJ4nSby/m1nFtrQ=
-=TxDj
------END PGP SIGNATURE-----
-
---nextPart1564202.JS19W853hE--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+	Jean
