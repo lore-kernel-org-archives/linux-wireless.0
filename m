@@ -1,67 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:42577
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751540AbXCCUWb (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:11965 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752848AbXCJRvR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Mar 2007 15:22:31 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: [PATCH] bcm43xx: do not rebuild when kernel version changes
-Date: Sat, 3 Mar 2007 21:21:42 +0100
-Cc: linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@osdl.org>,
-	Larry Finger <larry.finger@lwfinger.net>
-References: <20070303190328.GA30463@uranus.ravnborg.org>
-In-Reply-To: <20070303190328.GA30463@uranus.ravnborg.org>
+	Sat, 10 Mar 2007 12:51:17 -0500
+From: Michael Wu <flamingice@sourmilk.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH v2] d80211: Add software sequence support
+Date: Sat, 10 Mar 2007 12:51:02 -0500
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Benc <jbenc@suse.cz>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200702141423.27823.IvDoorn@gmail.com> <1171914770.15489.5.camel@johannes.berg> <200703101538.55267.IvDoorn@gmail.com>
+In-Reply-To: <200703101538.55267.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Message-Id: <200703032121.43136.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: multipart/signed;
+  boundary="nextPart3661060.3cSgG0DYFQ";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703101251.07345.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 03 March 2007 20:03, Sam Ravnborg wrote:
-> Replacing use of UTS_RELEASE with utsname()->release
-> avoids that this module is rebuild each
-> time the kernel version changes.
-> 
-> Compile tested only.
+--nextPart3661060.3cSgG0DYFQ
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I vote to get rid of the whole bcm43xx_ethtool.c file, as it's useless.
-It will vanish with the advent of d80211, anyway.
-Larry?
+On Saturday 10 March 2007 09:38, Ivo van Doorn wrote:
+> So just to be clear, this patch does not need any tweaking anymore right?
+Just stick the counter in sdata if you haven't done so already. Should be f=
+ine=20
+once that's done.
 
-> Signed-off-by: Sam Ravnborg <sam@ravnborg.org>
-> ---
-> diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c b/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
-> index c947025..d2df6a0 100644
-> --- a/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
-> +++ b/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
-> @@ -32,7 +32,7 @@
->  #include <linux/netdevice.h>
->  #include <linux/pci.h>
->  #include <linux/string.h>
-> -#include <linux/utsrelease.h>
-> +#include <linux/utsname.h>
->  
->  
->  static void bcm43xx_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info)
-> @@ -40,7 +40,7 @@ static void bcm43xx_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *
->  	struct bcm43xx_private *bcm = bcm43xx_priv(dev);
->  
->  	strncpy(info->driver, KBUILD_MODNAME, sizeof(info->driver));
-> -	strncpy(info->version, UTS_RELEASE, sizeof(info->version));
-> +	strncpy(info->version, utsname()->release, sizeof(info->version));
->  	strncpy(info->bus_info, pci_name(bcm->pci_dev), ETHTOOL_BUSINFO_LEN);
->  }
->  
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+Thanks,
+=2DMichael Wu
 
--- 
-Greetings Michael.
+--nextPart3661060.3cSgG0DYFQ
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBF8vALT3Oqt9AH4aERAu8QAJ9RnajuvRt9i8BEMvxEzNAEGD6vOgCgreFl
+hq87NrEg60SsnKJZZIwSJXc=
+=H3XD
+-----END PGP SIGNATURE-----
+
+--nextPart3661060.3cSgG0DYFQ--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
