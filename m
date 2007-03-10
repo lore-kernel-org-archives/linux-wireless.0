@@ -1,61 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51402.mail.re2.yahoo.com ([206.190.38.181]:47209 "HELO
-	web51402.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1945950AbXC3Ioc convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Mar 2007 04:44:32 -0400
-Date: Fri, 30 Mar 2007 01:37:51 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: mac80211 vs. hostapd
-To: linux-wireless@vger.kernel.org
+Received: from wr-out-0506.google.com ([64.233.184.233]:13711 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767823AbXCJFFJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Mar 2007 00:05:09 -0500
+Received: by wr-out-0506.google.com with SMTP id 70so1571001wra
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2007 21:05:08 -0800 (PST)
+Message-ID: <82faac5b0703092105x75149bcdx5813e18f96db8004@mail.gmail.com>
+Date: Sat, 10 Mar 2007 16:05:08 +1100
+From: "Darren Jenkins" <darrenrjenkins@gmail.com>
+To: "Linus Torvalds" <torvalds@linux-foundation.org>
+Subject: Re: sparse using insane amounts of memory
+Cc: "Ivo van Doorn" <ivdoorn@gmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	linux-sparse@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.64.0703081104010.10832@woody.linux-foundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-ID: <347198.46462.qm@web51402.mail.re2.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <1173319356.3546.54.camel@johannes.berg>
+	 <1173375270.15842.24.camel@dv>
+	 <1173375791.3248.37.camel@johannes.berg>
+	 <200703081908.40997.IvDoorn@gmail.com>
+	 <Pine.LNX.4.64.0703081023490.10832@woody.linux-foundation.org>
+	 <Pine.LNX.4.64.0703081104010.10832@woody.linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
-can somebody explain the relationship between hostapd and mac80211? To =
-be more specific:
+On 3/9/07, Linus Torvalds <torvalds@linux-foundation.org> wrote:
+>
+>
+> On Thu, 8 Mar 2007, Linus Torvalds wrote:
+> >
+> > To check a value for being a nice range of consecutive bits, you can
+> > simply do:
+> >
+> >       #define is_power_of_two(x) (!((x) & ((x)-1)))
 
-I'm used to the Madwifi driver where one could create a virtual interfa=
-ce in AP mode and the net80211
-stack included in Madwifi would then provide the AP functionality.
-I understand that things are differently with mac80211 based drivers. T=
-he kernel part of the stack does
-not include the AP functionality at all. Handling of associated station=
-s is done by hostapd. Is this
-correct so far? Does "iwconfig wlan0 mode master" have any meaning? How=
- does one create multiple
-virtual interfaces (the equivalent of Madwifis wlanconfig command)?
+There is already an inline for this in log2.h
 
-If so, I could not find a sample configuration for hostapd that provide=
-s a simple, unsecured AP.
-I suspect that this is because traditionally hostapd has only been used=
- to provide a WPA secured AP.
+/*
+ *  Determine whether some value is a power of two, where zero is
+ * *not* considered a power of two.
+ */
 
-Is this the right list to ask for such a sample configuration?
-=20
---=20
+static inline __attribute__((const))
+bool is_power_of_2(unsigned long n)
+{
+	return (n != 0 && ((n & (n - 1)) == 0));
+}
 
-Thanks in advance and kind regards
+>  - 0 is special, and is generally considered to be a power of two (and
+>    this is more fundamental than you'd think: it's not just fall-out from
+>    the particular expression chosen, it is fundamentally *required* to
+>    handle overflow, and you can think of 0 as 2**x, x > wordsize if that
+>    makes you more comfortable with the notion that zero is a power-of-two
+>    in any finite representation of 2's complement)
+>
+> The "zero is special" thing means that if you don't want to accept zero as
+> a valid mask (it technically *is* a contiguous set of bits set - it's just
+> the empty set) you'd need to check for it specially.
 
-       Joerg
+I guess the person who wrote it wasn't thinking discrete maths at the time.
 
-
-
-
-
-
-
-
-=09
-	=09
-___________________________________________________________=20
-Der fr=FChe Vogel f=E4ngt den Wurm. Hier gelangen Sie zum neuen Yahoo! =
-Mail: http://mail.yahoo.de
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Darren J.
