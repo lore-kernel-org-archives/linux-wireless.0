@@ -1,93 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:58402 "EHLO
-	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932411AbXCNQSs (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.189]:2430 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933632AbXCKOGF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Mar 2007 12:18:48 -0400
-Date: Wed, 14 Mar 2007 11:18:28 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [RFC] Eliminate some 'G Mode Enable' magic numbers
-Message-ID: <45f82054.fJi116VPchav9Mns%Larry.Finger@lwfinger.net>
+	Sun, 11 Mar 2007 10:06:05 -0400
+Received: by mu-out-0910.google.com with SMTP id g7so1687602muf
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Mar 2007 07:06:04 -0700 (PDT)
+To: "John Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2] rt2x00: fix firmware dependency
+Date: Sun, 11 Mar 2007 15:05:48 +0100
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200703111505.48510.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In code manipulating the TM State Low register of 802.11 cores, two
-different magic numbers are used to reference the 'G Mode Enable' bit.
-One of these, 0x20000000, is clear, but the other, (0x800 << 18), is not.
-This patch replaces both types with a defined constant. In addition, two
-bits in the TM State High registers are given definitions to help in
-following the code.
+There is no need to always build rt2x00lib.ko including the firmware handlers,
+only rt61pci and rt73usb will require the firmware handling. So lets add a new
+invisible config option selected by rt61pci and rt73usb to enable the firmware
+handling inside rt2x00lib.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+
 ---
 
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx.h
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx.h
-@@ -277,11 +277,14 @@
- #define BCM43xx_SBTMSTATELOW_REJECT		0x02
- #define BCM43xx_SBTMSTATELOW_CLOCK		0x10000
- #define BCM43xx_SBTMSTATELOW_FORCE_GATE_CLOCK	0x20000
-+#define BCM43xx_SBTMSTATELOW_G_MODE_ENABLE	0x20000000
+Patch send again because of mail client problem
+
+diff --git a/drivers/net/wireless/mac80211/rt2x00/Kconfig b/drivers/net/wireless/mac80211/rt2x00/Kconfig
+index 6242f15..0528431 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/Kconfig
++++ b/drivers/net/wireless/mac80211/rt2x00/Kconfig
+@@ -15,6 +15,10 @@ config RT2X00_LIB
+ 	tristate
+ 	depends on RT2X00
  
- /* sbtmstatehigh state flags */
- #define BCM43xx_SBTMSTATEHIGH_SERROR		0x00000001
- #define BCM43xx_SBTMSTATEHIGH_BUSY		0x00000004
- #define BCM43xx_SBTMSTATEHIGH_TIMEOUT		0x00000020
-+#define BCM43xx_SBTMSTATEHIGH_G_PHY_AVAIL	0x00010000
-+#define BCM43xx_SBTMSTATEHIGH_A_PHY_AVAIL	0x00020000
- #define BCM43xx_SBTMSTATEHIGH_COREFLAGS		0x1FFF0000
- #define BCM43xx_SBTMSTATEHIGH_DMA64BIT		0x10000000
- #define BCM43xx_SBTMSTATEHIGH_GATEDCLK		0x20000000
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-@@ -168,16 +168,16 @@ int bcm43xx_phy_connect(struct bcm43xx_p
++config RT2X00_LIB_FIRMWARE
++	boolean
++	depends on RT2X00
++
+ config RT2400PCI
+ 	tristate "Ralink rt2400 pci/pcmcia support"
+ 	depends on RT2X00 && PCI
+@@ -39,6 +43,7 @@ config RT61PCI
+ 	tristate "Ralink rt61 pci/pcmcia support"
+ 	depends on RT2X00 && FW_LOADER && PCI
+ 	select RT2X00_LIB
++	select RT2X00_LIB_FIRMWARE
+ 	select CRC_ITU_T
+ 	select EEPROM_93CX6
+ 	---help---
+@@ -59,6 +64,7 @@ config RT73USB
+ 	tristate "Ralink rt73 usb support"
+ 	depends on RT2X00 && FW_LOADER && USB
+ 	select RT2X00_LIB
++	select RT2X00_LIB_FIRMWARE
+ 	select CRC_ITU_T
+ 	---help---
+ 	This is an experimental driver for the Ralink rt73 wireless chip.
+diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2x00dev.c b/drivers/net/wireless/mac80211/rt2x00/rt2x00dev.c
+index 8dacf00..ba27a3e 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/mac80211/rt2x00/rt2x00dev.c
+@@ -40,6 +40,7 @@
+ #include "rt2x00.h"
+ #include "rt2x00lib.h"
  
- 	flags = bcm43xx_read32(bcm, BCM43xx_CIR_SBTMSTATEHIGH);
- 	if (connect) {
--		if (!(flags & 0x00010000))
-+		if (!(flags & BCM43xx_SBTMSTATEHIGH_G_PHY_AVAIL))
- 			return -ENODEV;
- 		flags = bcm43xx_read32(bcm, BCM43xx_CIR_SBTMSTATELOW);
--		flags |= (0x800 << 18);
-+		flags |= BCM43xx_SBTMSTATELOW_G_MODE_ENABLE;
- 		bcm43xx_write32(bcm, BCM43xx_CIR_SBTMSTATELOW, flags);
- 	} else {
--		if (!(flags & 0x00020000))
-+		if (!(flags & BCM43xx_SBTMSTATEHIGH_A_PHY_AVAIL))
- 			return -ENODEV;
- 		flags = bcm43xx_read32(bcm, BCM43xx_CIR_SBTMSTATELOW);
--		flags &= ~(0x800 << 18);
-+		flags &= ~BCM43xx_SBTMSTATELOW_G_MODE_ENABLE;
- 		bcm43xx_write32(bcm, BCM43xx_CIR_SBTMSTATELOW, flags);
- 	}
- out:
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-@@ -1389,7 +1389,7 @@ void bcm43xx_wireless_core_reset(struct 
- 				& ~(BCM43xx_SBF_MAC_ENABLED | 0x00000002));
- 	} else {
- 		if (connect_phy)
--			flags |= 0x20000000;
-+			flags |= BCM43xx_SBTMSTATELOW_G_MODE_ENABLE;
- 		bcm43xx_phy_connect(bcm, connect_phy);
- 		bcm43xx_core_enable(bcm, flags);
- 		bcm43xx_write16(bcm, 0x03E6, 0x0000);
-@@ -3662,7 +3662,7 @@ int bcm43xx_select_wireless_core(struct 
- 		u32 sbtmstatelow;
++#ifdef CONFIG_RT2X00_LIB_FIRMWARE
+ struct fw_entry {
+ 	u32	chip;
+ 	char	*name;
+@@ -92,6 +93,7 @@ int rt2x00lib_load_firmware_wait(struct rt2x00_dev *rt2x00dev)
+ 	return -ETIMEDOUT;
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_load_firmware_wait);
++#endif /* CONFIG_RT2X00_LIB_FIRMWARE */
  
- 		sbtmstatelow = bcm43xx_read32(bcm, BCM43xx_CIR_SBTMSTATELOW);
--		sbtmstatelow |= 0x20000000;
-+		sbtmstatelow |= BCM43xx_SBTMSTATELOW_G_MODE_ENABLE;
- 		bcm43xx_write32(bcm, BCM43xx_CIR_SBTMSTATELOW, sbtmstatelow);
- 	}
- 	err = wireless_core_up(bcm, 1);
+ void rt2x00lib_update_tx_stats(struct data_entry *entry,
+ 	const int status, const int is_ack, const int retry)
+diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2x00lib.h b/drivers/net/wireless/mac80211/rt2x00/rt2x00lib.h
+index 5ec88a6..9728d5b 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/rt2x00lib.h
++++ b/drivers/net/wireless/mac80211/rt2x00/rt2x00lib.h
+@@ -30,9 +30,11 @@
+ 
+ #include <linux/firmware.h>
+ 
++#ifdef CONFIG_RT2X00_LIB_FIRMWARE
+ int rt2x00lib_load_firmware(struct rt2x00_dev *rt2x00dev, struct device *dev,
+ 	void (*cont)(const struct firmware *fw, void *context));
+ int rt2x00lib_load_firmware_wait(struct rt2x00_dev *rt2x00dev);
++#endif /* CONFIG_RT2X00_LIB_FIRMWARE */
+ 
+ void rt2x00lib_update_tx_stats(struct data_entry *entry,
+ 	const int status, const int is_ack, const int retry);
