@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:52596 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934302AbXCWUDc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 16:03:32 -0400
-Date: Fri, 23 Mar 2007 13:00:37 -0700
-To: Chris Wright <chrisw@sous-sol.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
-Subject: Re: [stable] [PATCH] fix information leak in wireless extensions on 64-bit platforms
-Message-ID: <20070323200037.GA5165@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <1174640787.3588.65.camel@johannes.berg> <1174657362.3366.6.camel@johannes.berg> <20070323154828.GA4671@bougret.hpl.hp.com> <1174665384.4470.0.camel@johannes.berg> <20070323161339.GA4713@bougret.hpl.hp.com> <20070323193643.GY10574@sequoia.sous-sol.org>
+Received: from deine-taler.de ([217.160.107.63]:49398 "EHLO
+	p15091797.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750988AbXCKULu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Mar 2007 16:11:50 -0400
+Date: Sun, 11 Mar 2007 21:11:49 +0100
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: jt@hpl.hp.com, Jouni Malinen <jkm@devicescape.com>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: wireless extensions vs. 64-bit architectures
+Message-ID: <20070311201148.GA25938@p15091797.pureserver.info>
+References: <20070307020310.GA20466@bougret.hpl.hp.com> <1173364747.14001.7.camel@johannes.berg> <20070308184954.GA24485@bougret.hpl.hp.com> <1173382042.3248.63.camel@johannes.berg> <20070308193412.GG23040@devicescape.com> <1173382802.3248.68.camel@johannes.berg> <20070308221128.GA24884@bougret.hpl.hp.com> <1173393326.3831.21.camel@johannes.berg> <20070309213531.GA28070@bougret.hpl.hp.com> <1173634801.3382.8.camel@johannes.berg>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070323193643.GY10574@sequoia.sous-sol.org>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+In-Reply-To: <1173634801.3382.8.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 23, 2007 at 12:36:43PM -0700, Chris Wright wrote:
-> * Jean Tourrilhes (jt@hpl.hp.com) wrote:
+> I'm still not convinced that papering over the problem in userspace is a
+> real solution.
 > 
-> > 	The last thing is that I could not test those stuff myself,
-> > and the testing done for me was limited. I would be more confident if
-> > you were to give it a good beating before we push that into stable,
-> > because you know what to test.
-> 
-> That's useful info.  Have you had any luck (it looks pretty straight
-> forward)?
+> johannes
 
-	Let's be more clear. I tested properly on 32 bits. But, 32
-bits is not where there is issue, this issue is specific to 64 bits. I
-don't have a 64 bits platfor. It seems that few people doing wireless
-have access to 64 bits platform (actually, it seems most of them don't
-have access to SMP either), otherwise this would have been found many
-years ago.
-	Johannes is one of the few having access to 64 bits stuff.
+Just my 2 cents. I support this. What are the options? I see only
+two:
 
-> thanks,
-> -chris
+1. Use different magic numbers for 32 bit and 64 bit structures. A
+   flag is an alternative, but will be more difficult to debug.
+   Generation of the magic should be easy, use sizeof(unsigned
+   long) as test. User space has to care than for the rest.
 
-	Have fun...
+2. Make the data representation identical in 32 bit and 64 bit.
 
-	Jean
+   This shouldn't be to difficult, if only u8, u16 and u32 types
+   are used. Pointers should be given as offsets. If necessary
+   align and/or packed attributes could be used.
+
+If the kernel interface can be changed, I vote for option 2,
+because user space has then to deal with a unique data layout.
+If the wext kernel interface cannot be changed to maintain
+backward compatibility, then I have to admit band-aids in user
+space are needed. However cfg80211 must not suffer from the same issues.
+
+-- 
+Uli Kunitz
