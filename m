@@ -1,91 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:60857 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751289AbXCUKMb (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:28215 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932744AbXCKVl7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2007 06:12:31 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so243228uga
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Mar 2007 03:12:30 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: EEPROM_93CX6 placement (was Re: 2.6.21-rc4-mm1)
-Date: Wed, 21 Mar 2007 11:12:05 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>
-References: <20070321002222.GA4110@tuxdriver.com>
-In-Reply-To: <20070321002222.GA4110@tuxdriver.com>
+	Sun, 11 Mar 2007 17:41:59 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Daniel Drake <dsd@gentoo.org>
+Subject: Re: [PATCH RESEND] zd1211rw-mac80211: changed Kconfig
+Date: Sun, 11 Mar 2007 17:41:46 -0400
+Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, kune@deine-taler.de,
+	Michael Buesch <mb@bu3sch.de>
+References: <20070311191931.752B67B409F@zog.reactivated.net>
+In-Reply-To: <20070311191931.752B67B409F@zog.reactivated.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200703211112.05402.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart24976746.hzOsMpKG4z";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703111741.51440.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 21 March 2007 01:22, John W. Linville wrote:
-> Comments?  Patches?
+--nextPart24976746.hzOsMpKG4z
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I'll try to come up with a patch later today to move the eeprom_93cx6 module
-to the correct location (drivers/misc) and fix the help text in KConfig.
+On Sunday 11 March 2007 15:19, Daniel Drake wrote:
+> Changed the reference to Devicescape stack to mac80211.
+>
+I referred to Devicescape originally because the only other driver that had=
+=20
+both softmac and devicescape versions was bcm43xx, so I copied "(DeviceScap=
+e=20
+stack)" in order to be consistent. I would prefer that there be one patch t=
+o=20
+replace both instances of "(DeviceScape stack)" with "(mac80211 stack)".
 
-Ivo
+=2DMichael Wu
 
-> ----- Forwarded message from Randy Dunlap <randy.dunlap@oracle.com> -----
-> 
-> > Date: 	Tue, 20 Mar 2007 16:49:23 -0700
-> > From: Randy Dunlap <randy.dunlap@oracle.com>
-> > To: Andrew Morton <akpm@linux-foundation.org>
-> > Cc: linux-kernel@vger.kernel.org
-> > Subject: Re: 2.6.21-rc4-mm1
-> > In-Reply-To: <20070319205623.299d0378.akpm@linux-foundation.org>
-> > Organization: Oracle Linux Eng.
-> > X-Mailer: Sylpheed 2.3.1 (GTK+ 2.8.10; x86_64-unknown-linux-gnu)
-> > X-Whitelist: TRUE
-> > X-Whitelist: TRUE
-> > X-Brightmail-Tracker: AAAAAQAAAAI=
-> > Precedence: bulk
-> > X-Mailing-List: 	linux-kernel@vger.kernel.org
-> > X-Spam-Status: No, score=-2.6 required=3.0 tests=AWL,BAYES_00,SPF_HELO_PASS,
-> > 	SPF_PASS,UNPARSEABLE_RELAY autolearn=ham version=3.1.3-gr0
-> > X-Spam-Checker-Version: SpamAssassin 3.1.3-gr0 (2006-06-01) on 
-> > 	ra.tuxdriver.com
-> > 
-> > On Mon, 19 Mar 2007 20:56:23 -0800 Andrew Morton wrote:
-> > 
-> > > 
-> > > Temporarily at
-> > > 
-> > >   http://userweb.kernel.org/~akpm/2.6.21-rc4-mm1/
-> > > 
-> > > Will appear later at
-> > > 
-> > >   ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21-rc4/2.6.21-rc4-mm1/
-> > 
-> > 
-> > I think that this:
-> > 
-> > config EEPROM_93CX6
-> > 	tristate "EEPROM 93CX6 support"
-> > 	---help---
-> > 	This is a driver for the EEPROM chipsets 93c46 and 93c66.
-> > 	The driver supports both read as well as write commands.
-> > 
-> > should not be in lib/Kconfig.  lib/ is not for drivers.
-> > or (simpler) s/driver/library/
-> > but I think I'd rather see it in drivers/misc/.
-> > 
-> > 
-> > and the help text needs to be indented 2 more spaces...
-> > 
-> > ---
-> > ~Randy
-> > boilerplate:
-> > *** Remember to use Documentation/SubmitChecklist when testing your code ***
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> 
-> ----- End forwarded message -----
-> 
+--nextPart24976746.hzOsMpKG4z
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBF9HefT3Oqt9AH4aERAsjzAJ9AkCKeYMSAQSkiEMn4GeLJMc+UxgCdHQ2x
+N7/zsoiSJJLhctATMSRJ5G8=
+=PNgy
+-----END PGP SIGNATURE-----
+
+--nextPart24976746.hzOsMpKG4z--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
