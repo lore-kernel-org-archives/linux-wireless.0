@@ -1,60 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50480 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933168AbXCELeg (ORCPT
+Received: from smtp136.iad.emailsrvr.com ([207.97.245.136]:35355 "EHLO
+	smtp136.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933931AbXCKSND (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 06:34:36 -0500
-Subject: Re: Question about PRISM2 header rate field
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Andy Green <andy@warmcat.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <200703042210.52534.flamingice@sourmilk.net>
-References: <45EA9E39.6080706@warmcat.com>
-	 <1173053744.6131.40.camel@johannes.berg> <45EB6C3B.2060408@warmcat.com>
-	 <200703042210.52534.flamingice@sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DM41aR0AFnjhLOIU0htx"
-Date: Mon, 05 Mar 2007 12:34:07 +0100
-Message-Id: <1173094447.6131.56.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 11 Mar 2007 14:13:03 -0400
+Message-ID: <45F446C6.8020808@gentoo.org>
+Date: Sun, 11 Mar 2007 14:13:26 -0400
+From: Daniel Drake <dsd@gentoo.org>
+MIME-Version: 1.0
+To: linville@tuxdriver.com
+CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	kune@deine-taler.de, maxime@tralhalla.org
+Subject: Re: [PATCH] zd1211rw-mac80211: Use compare_ether_addr()
+References: <20070311175041.B53557B409F@zog.reactivated.net>
+In-Reply-To: <20070311175041.B53557B409F@zog.reactivated.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Daniel Drake wrote:
+> Suggested by Maxime Austruy, based on mac80211 changes from Stephen
+> Hemminger
 
---=-DM41aR0AFnjhLOIU0htx
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Sorry, paths were broken on these patches. Resends coming a little later.
 
-On Sun, 2007-03-04 at 22:10 -0500, Michael Wu wrote:
->=20
-> Note that modifying the management interface to do this is possible, but =
-it=20
-> would break hostap (and probably wpa_supplicant w/ MLME). Doing packet=20
-> injection on monitor interfaces instead is safer in that regard.
-
-But if you want to do injection over monitor interfaces we'll need to
-have the stupid mgmt interface hack around forever for the userspace
-MLME so it can receive only management traffic (even the non-promisc
-monitor iface we should have gets *far* too much traffic for a userspace
-MLME)
-
-Besides, to userspace, this is almost identical. In both cases it opens
-a socket, binds to something (either raw socket bound to netdev or
-netlink socket bound to nl80211) and then stuffs frames into that socket
-with some fixed header format (for most apps anyway)
-
-johannes
-
---=-DM41aR0AFnjhLOIU0htx
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF7AAv/ETPhpq3jKURAvW9AKCQFkMJMwBee+RUijdMU2EBQ+QP5ACfVB25
-SUT3ZcLjxxwVgSqn7JZ8zyI=
-=hz2I
------END PGP SIGNATURE-----
-
---=-DM41aR0AFnjhLOIU0htx--
+Daniel
 
