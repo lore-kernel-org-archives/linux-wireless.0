@@ -1,32 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canuck.infradead.org ([209.217.80.40]:46623 "EHLO
-	canuck.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030584AbXC2R7k (ORCPT
+Received: from deine-taler.de ([217.160.107.63]:63653 "EHLO
+	p15091797.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933535AbXCKMu6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2007 13:59:40 -0400
-Subject: Re: [PATCH] bcm43xx: Change initialization for 2050 radios
-From: David Woodhouse <dwmw2@infradead.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
-	Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <460a92d5.+NfCgWddLCeb9ty2%Larry.Finger@lwfinger.net>
-References: <460a92d5.+NfCgWddLCeb9ty2%Larry.Finger@lwfinger.net>
-Content-Type: text/plain
-Date: Thu, 29 Mar 2007 18:22:35 +0100
-Message-Id: <1175188955.3122.42.camel@pmac.infradead.org>
+	Sun, 11 Mar 2007 08:50:58 -0400
+Date: Sun, 11 Mar 2007 13:50:56 +0100
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>
+Subject: Re: [PATCH] zd1211rw: sparse-annotate radiotap header
+Message-ID: <20070311125056.GA14635@p15091797.pureserver.info>
+References: <20070311044016.1351.41028.stgit@dv.roinet.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070311044016.1351.41028.stgit@dv.roinet.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-03-28 at 11:07 -0500, Larry Finger wrote:
-> This patch implements the changes in the specifications for
-> 2050radio_init that were recently posted.
+On 07-03-10 23:40 Pavel Roskin wrote:
 
-That seems to help performance quite a lot -- although 'rate 11M' still
-runs a _lot_ faster than the 24M which the driver seems to settle at by
-default, when it's sitting 1m from the AP.
+> All fields in radiotap header must be little endian.  The driver does it
+> correctly, but the structure definition must be annotated.
+> 
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
+Acked-by: Ulrich Kunitz <kune@deine-taler.de>
+
+I have put the patch in the zd1211rw branch of my wireless-dev
+git tree, which can be found under
+
+http://www.deine-taler.de/zd1211/wireless-dev.git/
+
+Cheers,
+
+Uli
 
 -- 
-dwmw2
-
+Uli Kunitz
