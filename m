@@ -1,40 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-44.dex002.intermedia.net ([64.78.21.135]:49600 "EHLO
-	dhost002-44.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751003AbXCLSWD (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:56352
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751749AbXCKUbV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2007 14:22:03 -0400
-From: "Jouni Malinen" <jkm@devicescape.com>
-Date: Mon, 12 Mar 2007 10:21:49 -0800
-To: Jean Tourrilhes <jt@hpl.hp.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>,
-	Dan Williams <dcbw@redhat.com>
+	Sun, 11 Mar 2007 16:31:21 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Ulrich Kunitz <kune@deine-taler.de>
 Subject: Re: wireless extensions vs. 64-bit architectures
-Message-ID: <20070312182149.GA1785@devicescape.com>
-References: <1173364747.14001.7.camel@johannes.berg> <20070308184954.GA24485@bougret.hpl.hp.com> <1173382042.3248.63.camel@johannes.berg> <20070308193412.GG23040@devicescape.com> <1173382802.3248.68.camel@johannes.berg> <20070308221128.GA24884@bougret.hpl.hp.com> <1173393326.3831.21.camel@johannes.berg> <20070309213531.GA28070@bougret.hpl.hp.com> <1173634801.3382.8.camel@johannes.berg> <20070312175639.GA4048@bougret.hpl.hp.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070312175639.GA4048@bougret.hpl.hp.com>
+Date: Sun, 11 Mar 2007 21:30:05 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>, jt@hpl.hp.com,
+	Jouni Malinen <jkm@devicescape.com>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>, Dan Williams <dcbw@redhat.com>
+References: <20070307020310.GA20466@bougret.hpl.hp.com> <1173634801.3382.8.camel@johannes.berg> <20070311201148.GA25938@p15091797.pureserver.info>
+In-Reply-To: <20070311201148.GA25938@p15091797.pureserver.info>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200703112130.05717.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 12, 2007 at 10:56:39AM -0700, Jean Tourrilhes wrote:
-
-> > I would guess that others "use" iwlib like that too.
+On Sunday 11 March 2007 21:11, Ulrich Kunitz wrote:
+> > I'm still not convinced that papering over the problem in userspace is a
+> > real solution.
+> > 
+> > johannes
 > 
-> 	Which others ? The applications that process scan results can
-> be counted on your fingers. And if you count the one actively
-> developped, you can use one hand.
+> Just my 2 cents. I support this. What are the options? I see only
+> two:
+> 
+> 1. Use different magic numbers for 32 bit and 64 bit structures. A
+>    flag is an alternative, but will be more difficult to debug.
+>    Generation of the magic should be easy, use sizeof(unsigned
+>    long) as test. User space has to care than for the rest.
+> 
+> 2. Make the data representation identical in 32 bit and 64 bit.
+> 
+>    This shouldn't be to difficult, if only u8, u16 and u32 types
+>    are used.
 
-Quick search of SIOCGIWSCAN with Google Code Search
-(http://www.google.com/codesearch) shows quite large set of uses. Most
-of them are from various drivers, but at least some (e.g., Xsupplicant,
-waproamd) are from user space applications. I did not actually verify
-whether any of these would be affected by the 64/32-bit issue, but I
-would assume some of the apps are indeed parsing the scan results with
-internal implementation.
+>    Pointers should be given as offsets.
+
+Offsets to what?
+
+>    If necessary  
+>    align and/or packed attributes could be used.
+> 
+> If the kernel interface can be changed, I vote for option 2,
+> because user space has then to deal with a unique data layout.
+> If the wext kernel interface cannot be changed to maintain
+> backward compatibility, then I have to admit band-aids in user
+> space are needed. However cfg80211 must not suffer from the same issues.
+
+All your suggestions break the userspace ABI on all machines,
+which is a thing we _really_ want to avoid.
+
+The right fix is to have a compatibility wrapper in the kernel,
+but it turns out to be hard to implement. I don't think we want
+to change the structures layout and break ABI.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Greetings Michael.
