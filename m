@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54205 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55574 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934083AbXCVKEw (ORCPT
+	with ESMTP id S933857AbXCKRdu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Mar 2007 06:04:52 -0400
-Subject: Re: [PATCH 0/4] Try #5: Radiotap on Monitor Mode interfaces for rx  and tx
+	Sun, 11 Mar 2007 13:33:50 -0400
+Subject: Re: [PATCH] remove dead header junk
 From: Johannes Berg <johannes@sipsolutions.net>
-To: andy@warmcat.com
+To: Michael Wu <flamingice@sourmilk.net>
 Cc: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <20070320103955.600509703@warmcat.com>
-References: <20070320103955.600509703@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-akv+yztskle1Cn4XZ2zU"
-Date: Wed, 21 Mar 2007 19:46:49 +0100
-Message-Id: <1174502809.3944.36.camel@johannes.berg>
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jkm@devicescape.com>
+In-Reply-To: <200703110151.43475.flamingice@sourmilk.net>
+References: <1173112674.6131.93.camel@johannes.berg>
+	 <200703110151.43475.flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-c1AOnRdmKzh9X7oM/V2q"
+Date: Sun, 11 Mar 2007 18:33:56 +0100
+Message-Id: <1173634436.3382.6.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-akv+yztskle1Cn4XZ2zU
+--=-c1AOnRdmKzh9X7oM/V2q
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Sun, 2007-03-11 at 01:51 -0500, Michael Wu wrote:
+> On Monday 05 March 2007 11:37, Johannes Berg wrote:
+> > -	PRISM2_HOSTAPD_SET_ASSOC_AP_ADDR =3D 11,
+> FYI, this breaks the compile of the devicescape driver for hostap.
 
-Here are some more issues using monitor interfaces for management that
-will need to be addressed before I'm convinced that doing injection on
-monitor interfaces is viable.
-
-If the driver does not support radiotap, ieee80211_rx_monitor needs to
-expand the head for each packet. Currently, this is also true, but since
-currently no non-management frames are sent down the management
-interface, this is not an issue. If each data packet needs to be first
-reallocated though, it quickly becomes a problem for low-power embedded
-access points running hostapd.
-
-Additionally, the overhead of tacking on radiotap headers to each
-received frame is also rather high if you're only interested in
-receiving the information for management frames.
+Ugh, why's that? That call isn't implemented so this breakage is
+probably a good thing ;)
 
 johannes
 
---=-akv+yztskle1Cn4XZ2zU
+--=-c1AOnRdmKzh9X7oM/V2q
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGAX2Z/ETPhpq3jKURAjplAJoD6r6ht0o7AsRggFLnOSQ68g2JKQCeKrKg
-U+AiwFHvX6Ri142PMIawhuM=
-=ZCH2
+iD8DBQBF9D2E/ETPhpq3jKURAuYAAKCKl8Q6vSqCKPyLubMB0DRx0fhLpgCfVyXl
+llBlrtIBumG78dlq4MUnPBI=
+=Qosl
 -----END PGP SIGNATURE-----
 
---=-akv+yztskle1Cn4XZ2zU--
+--=-c1AOnRdmKzh9X7oM/V2q--
 
