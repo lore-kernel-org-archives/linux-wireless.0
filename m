@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:35146 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965425AbXCARO1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2007 12:14:27 -0500
-Message-ID: <45E709EF.6060200@warmcat.com>
-Date: Thu, 01 Mar 2007 17:14:23 +0000
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Ivo van Doorn <ivdoorn@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Question about packet injection
-References: <45E41A9E.2020908@warmcat.com> <45E497A1.90400@warmcat.com> <45E6ED0B.20100@warmcat.com> <200703011622.17602.IvDoorn@gmail.com>
-In-Reply-To: <200703011622.17602.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from ra.tuxdriver.com ([70.61.120.52]:2831 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030326AbXCLPCp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Mar 2007 11:02:45 -0400
+Date: Mon, 12 Mar 2007 10:37:47 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Jeff Williams <angelbane@ou.edu>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Airgo Networks Wireless Card Linux support
+Message-ID: <20070312143747.GA8878@tuxdriver.com>
+References: <Pine.LNX.4.64.0703091340080.380@dulcinea> <200703120038.59689.flamingice@sourmilk.net> <1173676135.30756.27.camel@dv>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1173676135.30756.27.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ivo van Doorn wrote:
-> On Thursday 01 March 2007 16:11, Andy Green wrote:
->> Hi folks -
->>
->> As suggested here I migrated my daemon to using a per-physical device 
->> monitor mode interface it creates and destroys from usermode, together 
->> with libpcap for filtering and receiving broadcasts and that seems to be 
->> working okay.  So that is half the battle to get the broadcast system 
->> working with mac80211 out of the box without patches.
->>
->> However, if I inject a captured packet - with a PRISM header prepended - 
->> down the Monitor mode interface using pcap_inject(), I see it appear on 
->> the libpcap captured output okay, but it does not go out on the air AFAICT.
->>
->> Is this in fact the correct way to try to inject a packet with fine 
->> control over its encryption and rate?  If so is it expected to currently 
->> work on iwlwifi 0.0.8 or rt2x00 (rt73usb) from CVS 2008-02-14?
+On Mon, Mar 12, 2007 at 01:08:55AM -0400, Pavel Roskin wrote:
+> On Mon, 2007-03-12 at 00:38 -0400, Michael Wu wrote:
 > 
-> Note that rt73usb is currently broken, I know that RX isn't working
-> because scanning fails. Chances are quite high that TX is failing too.
-> I am still looking into that issue, but it might be the reason why
-> packet injection is failing for you.
+> > Well, if you're willing to write specs, I'll help write the driver. Silly 
+> > question first however - have you asked Airgo Networks if they are willing to 
+> > help with a Linux driver?
+> 
+> From
+> http://searchopensource.techtarget.com/originalContent/0,289142,sid39_gci1134910,00.html
+> 
+> "Joe felt that Airgo Networks should be commended for its honorable
+> handling of OSS, but he still had no luck there. When he called the
+> company, he found out that no Linux drivers will be available for the
+> Airgo chip set until late 2005 or early 2006."
+> 
+> Oh well.  At least they are not against the idea of Linux drivers.
 
-The 2007-02-14 rt73usb CVS works okay for RX, it does iwlist wlan0 scans 
-alright here anyway with the AP shown.  I have had that version issuing 
-unencrypted broadcasts too by hacking the stack and the driver slightly. 
-  Maybe it was some Valentines Day magic :-)  But it doesn't associate 
-in a stable way with the AP using WPA on wpa_supplicant with the dscape 
-patch.
+A reply from 13 February 2007 to a query a made a day or two before that:
 
-Anyway it seems the problem is one does not inject for TX on the Monitor 
-mode interface (/me goes away to grep and google what a Management mode 
-interface does, thanks Johannes)
+	"Thank you for your inquiry. At this time we do not have Linux drivers
+	for Airgo products. Please check back on our web for new products and
+	updates. With focus on delivering our next generation of solutions, we
+	are not able to support outside development efforts." [1]
 
--Andy
+At this point I have to recommend that all Linux users avoid Airgo
+hardware unless/until either Airgo decides to support its hardware or
+someone is successful with a reverse engineering effort.  I expect
+that there will be other .11n hardware supported on Linux in the
+near future.
+
+Regarding reverse engineering, please do follow the example set by the
+bcm43xx team.  We don't need any more drivers of questionable origin.
+
+Thanks,
+
+John
+
+[1] To which I replied "If you don't have time to support me, how will
+you ever have time to write your own driver?"  Of course, I have had
+no response to that one.
+-- 
+John W. Linville
+linville@tuxdriver.com
