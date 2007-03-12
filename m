@@ -1,68 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.226]:1841 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751752AbXCSELU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2007 00:11:20 -0400
-Received: by wr-out-0506.google.com with SMTP id 41so1270362wry
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Mar 2007 21:11:20 -0700 (PDT)
-Message-ID: <43e72e890703182111lc2fa029u9180806554ce3bcc@mail.gmail.com>
-Date: Mon, 19 Mar 2007 00:11:20 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: prism54pci fails to read eeprom on PowerPC, then bugs in pci code
-In-Reply-To: <20070317061502.GA5954@keitarou>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-References: <20070317034607.GA1522@keitarou>
-	 <200703170037.14875.flamingice@sourmilk.net>
-	 <20070317061502.GA5954@keitarou>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2834 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030325AbXCLPDI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Mar 2007 11:03:08 -0400
+Date: Mon, 12 Mar 2007 10:53:09 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Joseph Jezak <josejx@gentoo.org>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] bcm43xx: Fix typo in B5PHY init specifications
+Message-ID: <20070312145309.GB8878@tuxdriver.com>
+References: <45e85f2b.Dp1dM05tvZFFROmc%Larry.Finger@lwfinger.net> <1173685989.3584.2.camel@shinybook.infradead.org> <45F55452.3000704@gentoo.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <45F55452.3000704@gentoo.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/17/07, Paul TBBle Hampson <Paul.Hampson@pobox.com> wrote:
-> On Sat, Mar 17, 2007 at 12:37:10AM -0400, Michael Wu wrote:
-> > On Friday 16 March 2007 23:46, Paul TBBle Hampson wrote:
-> >> The (built-in) bcm43xx-mac80211 driver works, but when I try to load a
-> >> CardBus Atheros card I've got lying around with dadwifi-openhal, it
-> >> fails with some sort of hardware error.  (ie. it _might_ be a dodgey
-> >> Cardbus port, although both cardbus cards used to work in this machine,
-> >> using prism54 hardmac and the dadwifi with atheros hal driver
-> >> respectively)
->
-> > Can you rule out the port first? Load the fullmac driver first, bring it up &
-> > down, unload it, and then try p54.
->
-> OK, with the current prism54 as it appears in wireless-dev:
-> Mar 17 16:32:41 su kernel: pccard: CardBus card inserted into slot 0
->  ] modprobe prism54
-> Mar 17 16:33:04 su kernel: Loaded prism54 driver, version 1.2
-> Mar 17 16:33:04 su kernel: PCI: Enabling device 0001:11:00.0 (0000 -> 0002)
-> Mar 17 16:33:04 su kernel: prism54: pci_set_mwi(pdev) succeeded
->  ] ifup prism54-0 (fires up wpa_supplicant and tries to associate to local WPA AP)
-> Mar 17 16:33:54 su kernel: prism54-0: resetting device...
-> Mar 17 16:33:54 su kernel: prism54-0: uploading firmware...
-> Mar 17 16:33:54 su kernel: prism54-0: firmware version: 1.0.4.3
-> Mar 17 16:33:54 su kernel: prism54-0: firmware upload complete
-> Mar 17 16:33:54 su kernel: prism54-0: interface reset complete
-> Mar 17 16:33:55 su kernel: prism54-0: WPA IE Attachment was set
-> Mar 17 16:34:05 su kernel: prism54-0: no IPv6 routers present
-> Mar 17 16:34:08 su kernel: prism54-0: WPA IE Attachment was set
-> Mar 17 16:34:21 su kernel: prism54-0: WPA IE Attachment was set
-> Mar 17 16:34:34 su kernel: prism54-0: timeout waiting for mgmt response 300, triggering device
-> <repeat last two lies x 3>
-> Mar 17 16:35:14 su kernel: prism54-0: mgt_commit_list: failure. oid=19000004 err=1
-> Mar 17 16:35:14 su kernel: prism54-0: mgt_commit: failure
-> Mar 17 16:35:14 su kernel: prism54-0: WPA IE Attachment was set
-> <repeat last three lines>
-> Mar 17 16:35:30 su kernel: prism54-0: timeout waiting for mgmt response 300, triggering device
-> Mar 17 16:35:30 su kernel: prism54-0: mgt_commit_list: failure. oid=19000004 err=1
-> Mar 17 16:35:30 su kernel: prism54-0: mgt_commit: failure
-> Mar 17 16:35:30 su kernel: prism54-0: WPA IE Attachment was set
-> <repeat these four lines a lot>
-> Mar 17 16:37:40 su kernel: prism54-0: timeout waiting for mgmt response 300, triggering device
+On Mon, Mar 12, 2007 at 09:23:30AM -0400, Joseph Jezak wrote:
+> David Woodhouse wrote:
+> > On Fri, 2007-03-02 at 11:30 -0600, Larry Finger wrote:
+> >> There was an error in the B5PHY init specifications.
+> > 
+> > This patch doesn't fix the machine check in bcm43xx_phy_initb5 which
+> > Pavel Roskin and I reported a couple of weeks ago. To get rid of that
+> > crash, I still have to revert an earlier 'spec update' patch
+> > (740ac4fb08866d702be90f167665d03759bd27d0).
+> > 
+> 
+> Yeah, the issue is that the Rev1 cards have to be init'd with g mode
+> off.  I'm not sure anyone has picked up this fix yet. The relevant
+> spec fix is here: http://bcm-v4.sipsolutions.net/802.11/PHY/calinit
 
-FYI prism54 doesn't yet support WPA. There was a patch lying around
-but I just have not had enough time to dedicate its integration.
+FWIW, by inspection it looks like the mac80211-based driver is
+(trying?) to implement this change.
 
-  Luis
+David, have you tried the mac80211 version?  Does it still have the
+same crash?
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
