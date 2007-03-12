@@ -1,56 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42540 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030305AbXCCPTA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Mar 2007 10:19:00 -0500
-Subject: Re: [patch] at76_usb wireless driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Guido Guenther <agx@sigxcpu.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1172934588.4966.46.camel@johannes.berg>
-References: <20070110145724.GA4171@bogon.ms20.nix>
-	 <20070223221230.GA9965@bogon.ms20.nix>
-	 <20070303150029.GA19940@bogon.ms20.nix>
-	 <1172934588.4966.46.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RCZwXwnnhjpP5AwKBcGb"
-Date: Sat, 03 Mar 2007 16:18:36 +0100
-Message-Id: <1172935117.4966.54.camel@johannes.berg>
+Received: from madara.hpl.hp.com ([192.6.19.124]:52359 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751880AbXCLR6d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Mar 2007 13:58:33 -0400
+Date: Mon, 12 Mar 2007 10:56:39 -0700
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <jkm@devicescape.com>, Michael Buesch <mb@bu3sch.de>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>, Dan Williams <dcbw@redhat.com>
+Subject: Re: wireless extensions vs. 64-bit architectures
+Message-ID: <20070312175639.GA4048@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <20070307020310.GA20466@bougret.hpl.hp.com> <1173364747.14001.7.camel@johannes.berg> <20070308184954.GA24485@bougret.hpl.hp.com> <1173382042.3248.63.camel@johannes.berg> <20070308193412.GG23040@devicescape.com> <1173382802.3248.68.camel@johannes.berg> <20070308221128.GA24884@bougret.hpl.hp.com> <1173393326.3831.21.camel@johannes.berg> <20070309213531.GA28070@bougret.hpl.hp.com> <1173634801.3382.8.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1173634801.3382.8.camel@johannes.berg>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Mar 11, 2007 at 06:40:01PM +0100, Johannes Berg wrote:
+> On Fri, 2007-03-09 at 13:35 -0800, Jean Tourrilhes wrote:
+> 
+> > 	It's not as bad as it look like. All userspace programs
+> > nowadays use either the iwlib or wpa_supplicant. For example,
+> > NetworkManager gets its stuff through wpa_supplicant, and kdenetwork
+> > uses iwlib. So, in essence, there is only two places to fix.
+> 
+> That's definitely not true, the latest network manager I have sources to
+> on my laptop right now (0.6.4) uses iwlib but only iw_get_ext and no
+> parsing functions.
 
---=-RCZwXwnnhjpP5AwKBcGb
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+	You are right. I did assume that if it was using iwlib, it
+would use the scan helpers. As I said, I did my audit for the ESSID
+stuff and did not refresh for the scan stuff.
 
-Quick comments on this driver.
+> I would guess that others "use" iwlib like that too.
 
- (1) I'd prefer if the huge list of USB IDs was in a header file that is
-     included, quick cut'n'paste job :)
- (2) remove the LED stuff for ipaq, that belongs into an LED trigger and
-     ipaq can define an LED driver for the LED so you can hook it up,
-     also makes it generic so other people can use the LED trigger
-     functionality
- (3) don't initialise static variables to 0
- (4) reorder code so less function prototypes are required
+	Which others ? The applications that process scan results can
+be counted on your fingers. And if you count the one actively
+developped, you can use one hand.
 
-more to follow after tea.
+> Can you please also *document* the bandaid and actually *describe* it in
+> *words* instead of dense code without comments?
 
-johannes
+	I did that in the e-mail to Jouni. The problem is that most
+people are unfamiliar with decoding iwevents, so can't grasp the
+explanation.
+	Basically, for iwpoint, we have an outer lenght and an inner
+length. If they don't match, we have an alignement issue and just need
+to pick the payload 8 bytes after the expected location.
+	For other events, they have a well known size. If the outer
+lenght is not the expected size, but is expected+4, you just pick the
+payload 4 bytes after the expected location.
 
---=-RCZwXwnnhjpP5AwKBcGb
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+> I'm still not convinced that papering over the problem in userspace is a
+> real solution.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+	The final overall solution may be a mix of individual
+solutions. This is definitely part of it. We don't know yet what are
+the other part of this overall solution.
+	This brings a solution to people using current and old
+kernel. For example, I would expect to be much easier to convince
+distro to update older/stable versions with a new wtool than with a
+new kernel. The fix I did is trivial to backport to WT-28 or WT-27
+(which I plan to do once it's confirmed it works).
 
-iD8DBQBF6ZHM/ETPhpq3jKURAkAWAKC13a4YPnd2rs3GXTzQsbEkLWH7EQCdFlwU
-+Vw5Myqfnor/Zbp8cLDvRLo=
-=NiLg
------END PGP SIGNATURE-----
+>  johannes
 
---=-RCZwXwnnhjpP5AwKBcGb--
+	Have fun...
+
+	Jean
 
