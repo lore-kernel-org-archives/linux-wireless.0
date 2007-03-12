@@ -1,63 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2831 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030326AbXCLPCp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2007 11:02:45 -0400
-Date: Mon, 12 Mar 2007 10:37:47 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	Jeff Williams <angelbane@ou.edu>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Airgo Networks Wireless Card Linux support
-Message-ID: <20070312143747.GA8878@tuxdriver.com>
-References: <Pine.LNX.4.64.0703091340080.380@dulcinea> <200703120038.59689.flamingice@sourmilk.net> <1173676135.30756.27.camel@dv>
+Received: from mfe1.polimi.it ([131.175.12.23]:37754 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S965143AbXCLGJ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Mar 2007 02:09:58 -0400
+Date: Mon, 12 Mar 2007 07:05:58 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: [RFT] [PATCH] bcm43xx: ACI fixes
+Message-ID: <20070312070558.07488359@localhost>
+In-Reply-To: <45F4EA57.5010405@lwfinger.net>
+References: <20070312010420.353a59c0@localhost>
+	<45F4C902.9050405@lwfinger.net>
+	<45F4EA57.5010405@lwfinger.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1173676135.30756.27.camel@dv>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 12, 2007 at 01:08:55AM -0400, Pavel Roskin wrote:
-> On Mon, 2007-03-12 at 00:38 -0400, Michael Wu wrote:
+On Mon, 12 Mar 2007 00:51:19 -0500
+Larry Finger <larry.finger@lwfinger.net> wrote:
+
+> Larry Finger wrote:
+> > Stefano Brivio wrote:
+> >> Please test the following patch. It syncs ACI (Adjacent Channels
+> >> Interference) code to specs. I can't test it right now. Will port to
+> >> mac80211 branch ASAP.
+> >>
+> >>
+> >> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+> >> ----
+> > 
+> > NACK - this patch really kills performance on my 4311. I'll see if I
+> > can find the problem.
 > 
-> > Well, if you're willing to write specs, I'll help write the driver. Silly 
-> > question first however - have you asked Airgo Networks if they are willing to 
-> > help with a Linux driver?
-> 
-> From
-> http://searchopensource.techtarget.com/originalContent/0,289142,sid39_gci1134910,00.html
-> 
-> "Joe felt that Airgo Networks should be commended for its honorable
-> handling of OSS, but he still had no luck there. When he called the
-> company, he found out that no Linux drivers will be available for the
-> Airgo chip set until late 2005 or early 2006."
-> 
-> Oh well.  At least they are not against the idea of Linux drivers.
+> Forget the above. The performance was killed by my AP, which needed to be
+> rebooted. I will send this patch on to John.
 
-A reply from 13 February 2007 to a query a made a day or two before that:
+Well, wait. I'd want to see some performance improvements before the patch
+is applied. That's why I didn't send it to John and put RFT in the
+subject. Are there any?
 
-	"Thank you for your inquiry. At this time we do not have Linux drivers
-	for Airgo products. Please check back on our web for new products and
-	updates. With focus on delivering our next generation of solutions, we
-	are not able to support outside development efforts." [1]
 
-At this point I have to recommend that all Linux users avoid Airgo
-hardware unless/until either Airgo decides to support its hardware or
-someone is successful with a reverse engineering effort.  I expect
-that there will be other .11n hardware supported on Linux in the
-near future.
-
-Regarding reverse engineering, please do follow the example set by the
-bcm43xx team.  We don't need any more drivers of questionable origin.
-
-Thanks,
-
-John
-
-[1] To which I replied "If you don't have time to support me, how will
-you ever have time to write your own driver?"  Of course, I have had
-no response to that one.
--- 
-John W. Linville
-linville@tuxdriver.com
+--
+Ciao
+Stefano
