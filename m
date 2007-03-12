@@ -1,118 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37937 "EHLO mga09.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3176 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751884AbXC1TUw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 15:20:52 -0400
-Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery and  association
-From: mohamed <mabbas@linux.intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <43e72e890703281211s6793af26pe14d9d9fdfa91095@mail.gmail.com>
-References: <1174909105.1364.53.camel@dell-4965.jf.intel.com>
-	 <43e72e890703271005u6173567aq2c1c04635da3ce50@mail.gmail.com>
-	 <43e72e890703271011h47a6177dp32b7c2324ab51423@mail.gmail.com>
-	 <43e72e890703271029q169c3fdo6d410f272eaf791@mail.gmail.com>
-	 <1175148244.4237.4.camel@dell-4965.jf.intel.com>
-	 <43e72e890703281211s6793af26pe14d9d9fdfa91095@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 29 Mar 2007 00:21:39 -0700
-Message-Id: <1175152899.4237.13.camel@dell-4965.jf.intel.com>
+	id S1750755AbXCLSC0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Mar 2007 14:02:26 -0400
+Date: Mon, 12 Mar 2007 13:48:25 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	Joseph Jezak <josejx@gentoo.org>,
+	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH] bcm43xx: Fix typo in B5PHY init specifications
+Message-ID: <20070312174825.GD8878@tuxdriver.com>
+References: <45e85f2b.Dp1dM05tvZFFROmc%Larry.Finger@lwfinger.net> <1173685989.3584.2.camel@shinybook.infradead.org> <45F55452.3000704@gentoo.org> <20070312145309.GB8878@tuxdriver.com> <1173712594.3584.6.camel@shinybook.infradead.org> <45F590FA.4020409@lwfinger.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <45F590FA.4020409@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-03-28 at 15:11 -0400, Luis R. Rodriguez wrote:
-> On 3/29/07, mohamed <mabbas@linux.intel.com> wrote:
-> > On Tue, 2007-03-27 at 13:29 -0400, Luis R. Rodriguez wrote:
-> > > On 3/27/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > > > On 3/27/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > > > > On 3/26/07, mohamed <mabbas@linux.intel.com> wrote:
-> > > > >
-> > > > > > +/* Get 11n capabilties from low level driver */
-> > > > > > +static void ieee80211_fill_ht_ie(struct net_device *dev,
-> > > > > > +                                struct ieee80211_ht_capability *ht_capab)
-> > > > > > +{
-> > > > > > +       int rc;
-> > > > > > +       struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-> > > > > > +
-> > > > > > +       if (!local->ops->get_ht_capab){
-> > > > > > +               memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
-> > > > > > +               return;
-> > > > > > +       }
-> > > > > > +
-> > > > > > +       rc = local->ops->get_ht_capab(local_to_hw(local), ht_capab);
-> > > > > > +       if (!rc) {
-> > > > > > +               memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
-> > > > > > +               return;
-> > > > > > +       }
-> > > > > >
-> > > > > > +       ht_capab->capabilitiesInfo = (__le16) cpu_to_le16(
-> > > > > > +                                       ht_capab->capabilitiesInfo);
-> > > > > > +       ht_capab->extended_ht_capability_info = (__le16) cpu_to_le16(
-> > > > > > +                                       ht_capab->extended_ht_capability_info);
-> > > > > > +       ht_capab->tx_BF_capability_info = (__le32) cpu_to_le32(
-> > > > > > +                                       ht_capab->tx_BF_capability_info);
-> > > > > > +}
-> > > > > > +
-> > > > >
-> > > > > We should memset to 0 the entire ht_capab to regardless as its coming
-> > > > > from skb_put() otherwise we'll get random data there if we don't set
-> > > > > it and we sure as hell don't want to just transmit that :)
-> > I will memset to 0 before using the structure. I will change the patch
-> > to reflect this.
+On Mon, Mar 12, 2007 at 12:42:18PM -0500, Larry Finger wrote:
+> David Woodhouse wrote:
+> > On Mon, 2007-03-12 at 10:53 -0400, John W. Linville wrote:
+> >> FWIW, by inspection it looks like the mac80211-based driver is
+> >> (trying?) to implement this change.
+> >>
+> >> David, have you tried the mac80211 version?  Does it still have the
+> >> same crash?
+> > 
+> > Should the one in 2.6.20-1.2982.fc7 be OK? I can try that relatively
+> > easily; anything else might need to wait till I get home.
+> > 
 > 
-> Thanks
-> 
-> > > Also
-> > > > > ieee80211_send_assoc() is already checking for
-> > > > > local->ops->get_ht_capab so lets just do a BUG_ON here to capture
-> > > > > cases where someone else didn't do the proper checking. So how about
-> > > > > instead something like:
-> > make sense.
-> 
-> Thanks
-> 
-> > > > > /* Get 11n capabilties from low level driver */
-> > > > > static void ieee80211_fill_ht_ie(struct net_device *dev,
-> > > > >                                 struct ieee80211_ht_capability *ht_capab)
-> > > > > {
-> > > > >        struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-> > > > >        BUG_ON(!local->ops->get_ht_capab);
-> > > > >        memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
-> > > > >        if (!local->ops->get_ht_capab(local_to_hw(local), ht_capab))
-> > > > >                return;
-> > > > >        ht_capab->capabilitiesInfo = (__le16) cpu_to_le16(
-> > > > >                                        ht_capab->capabilitiesInfo);
-> > > > >        ht_capab->extended_ht_capability_info = (__le16) cpu_to_le16(
-> > > > >                                        ht_capab->extended_ht_capability_info);
-> > > > >        ht_capab->tx_BF_capability_info = (__le32) cpu_to_le32(
-> > > > >                                        ht_capab->tx_BF_capability_info);
-> > > > > }
-> > > > >
-> > > >
-> > > > On second thought just memset to 0 on ieee80211_send_assoc() right
-> > > > after the skb_put and remove that from above.
-> > > >
-> > > >   Luis
-> > > >
-> > >
-> > > Last few comments:
-> > >
-> > > I. In struct ieee80211_ops you added your hunk after the TSF comment,
-> > > but before  u64 (*get_tsf)(struct ieee80211_hw *hw) was listed. Please
-> > > move the hunk after get_tsf or before the comment.
-> > >
-> > > II. In ieee80211_fill_ht_ie() you do cpu_to_le* on the same fields.. I
-> > > take it the driver's get_ht_capab() is supposed to fill these. Since
-> > > you already defined them as little endian in the struct
-> > > ieee80211_ht_capability, how about just leaving that up to the driver
-> > > developer to make sure they do this? That's would be 6 lines less of
-> > > code in ieee80211_fill_ht_ie().
-> 
-> And how about regarding the above comment (II)? We can just expect
-> driver developers to follow proper endianness. That cleans that
-> routine a bit more too.
-> 
-Yes I will do this as well
-Mohamed
->   Luis
+> I don't think it will improve anything. I don't currently have a copy of wireless-dev, but the code
+> in the mb tree is identical with that of wireless-2.6. I'm currently trying to figure out the spec
+> at http://bcm-v4.sipsolutions.net/802.11/PHY/calinit and what we need to change.
+
+Huh?  Are you looking in drivers/net/wireless/mac80211/bcm43xx?
+It certainly seems to differ quite a bit from what is in
+drivers/net/wireless/bcm43xx (i.e. no the softmac-based version).
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
