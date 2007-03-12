@@ -1,36 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canuck.infradead.org ([209.217.80.40]:45317 "EHLO
-	canuck.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030622AbXC2SNh (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:55697 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965111AbXCLFI7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2007 14:13:37 -0400
-Subject: Re: [PATCH] bcm43xx: Change initialization for 2050 radios
-From: David Woodhouse <dwmw2@infradead.org>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
-	Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <460C0157.5030404@lwfinger.net>
-References: <460a92d5.+NfCgWddLCeb9ty2%Larry.Finger@lwfinger.net>
-	 <1175188955.3122.42.camel@pmac.infradead.org>
-	 <460BFDF0.9010401@lwfinger.net>
-	 <1175191382.3122.44.camel@pmac.infradead.org>
-	 <460C0157.5030404@lwfinger.net>
+	Mon, 12 Mar 2007 01:08:59 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HQckW-0002pb-TQ
+	for linux-wireless@vger.kernel.org; Mon, 12 Mar 2007 01:07:08 -0400
+Subject: Re: Airgo Networks Wireless Card Linux support
+From: Pavel Roskin <proski@gnu.org>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Jeff Williams <angelbane@ou.edu>, linux-wireless@vger.kernel.org
+In-Reply-To: <200703120038.59689.flamingice@sourmilk.net>
+References: <Pine.LNX.4.64.0703091340080.380@dulcinea>
+	 <200703120038.59689.flamingice@sourmilk.net>
 Content-Type: text/plain
-Date: Thu, 29 Mar 2007 19:13:33 +0100
-Message-Id: <1175192013.3122.47.camel@pmac.infradead.org>
+Date: Mon, 12 Mar 2007 01:08:55 -0400
+Message-Id: <1173676135.30756.27.camel@dv>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-03-29 at 13:11 -0500, Larry Finger wrote:
-> OK, you are measuring receive speed, which is nearly independent of
-> Bit Rate. Do you have access to any other host on your LAN that could
-> be an Iperf server, or that is an NFS server? 
+On Mon, 2007-03-12 at 00:38 -0400, Michael Wu wrote:
 
-That can be done. Need to get Fedora PS3 kernel working properly first
-though...
+> Well, if you're willing to write specs, I'll help write the driver. Silly 
+> question first however - have you asked Airgo Networks if they are willing to 
+> help with a Linux driver?
+
+From
+http://searchopensource.techtarget.com/originalContent/0,289142,sid39_gci1134910,00.html
+
+"Joe felt that Airgo Networks should be commended for its honorable
+handling of OSS, but he still had no luck there. When he called the
+company, he found out that no Linux drivers will be available for the
+Airgo chip set until late 2005 or early 2006."
+
+Oh well.  At least they are not against the idea of Linux drivers.
 
 -- 
-dwmw2
+Regards,
+Pavel Roskin
 
