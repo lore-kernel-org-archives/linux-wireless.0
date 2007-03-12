@@ -1,32 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:54769 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965283AbXCLHyX (ORCPT
+Received: from gundega.hpl.hp.com ([192.6.19.190]:55058 "EHLO
+	gundega.hpl.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752886AbXCLUfV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2007 03:54:23 -0400
-Subject: Re: [PATCH] bcm43xx: Fix typo in B5PHY init specifications
-From: David Woodhouse <dwmw2@infradead.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
-	Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <45e85f2b.Dp1dM05tvZFFROmc%Larry.Finger@lwfinger.net>
-References: <45e85f2b.Dp1dM05tvZFFROmc%Larry.Finger@lwfinger.net>
-Content-Type: text/plain
-Date: Mon, 12 Mar 2007 08:53:09 +0100
-Message-Id: <1173685989.3584.2.camel@shinybook.infradead.org>
+	Mon, 12 Mar 2007 16:35:21 -0400
+Date: Mon, 12 Mar 2007 13:34:53 -0700
+To: Jouni Malinen <jkm@devicescape.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: wireless extensions vs. 64-bit architectures
+Message-ID: <20070312203453.GA4230@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <20070308184954.GA24485@bougret.hpl.hp.com> <1173382042.3248.63.camel@johannes.berg> <20070308193412.GG23040@devicescape.com> <1173382802.3248.68.camel@johannes.berg> <20070308221128.GA24884@bougret.hpl.hp.com> <1173393326.3831.21.camel@johannes.berg> <20070309213531.GA28070@bougret.hpl.hp.com> <1173634801.3382.8.camel@johannes.berg> <20070312175639.GA4048@bougret.hpl.hp.com> <20070312182149.GA1785@devicescape.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070312182149.GA1785@devicescape.com>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-03-02 at 11:30 -0600, Larry Finger wrote:
-> There was an error in the B5PHY init specifications.
+On Mon, Mar 12, 2007 at 10:21:49AM -0800, Jouni Malinen wrote:
+> On Mon, Mar 12, 2007 at 10:56:39AM -0700, Jean Tourrilhes wrote:
+> 
+> > > I would guess that others "use" iwlib like that too.
+> > 
+> > 	Which others ? The applications that process scan results can
+> > be counted on your fingers. And if you count the one actively
+> > developped, you can use one hand.
+> 
+> Quick search of SIOCGIWSCAN with Google Code Search
+> (http://www.google.com/codesearch) shows quite large set of uses. Most
+> of them are from various drivers, but at least some (e.g., Xsupplicant,
+> waproamd) are from user space applications. I did not actually verify
+> whether any of these would be affected by the 64/32-bit issue, but I
+> would assume some of the apps are indeed parsing the scan results with
+> internal implementation.
 
-This patch doesn't fix the machine check in bcm43xx_phy_initb5 which
-Pavel Roskin and I reported a couple of weeks ago. To get rid of that
-crash, I still have to revert an earlier 'spec update' patch
-(740ac4fb08866d702be90f167665d03759bd27d0).
+	Note that you will get such a list on my web page, and if you
+find something not on the list, please send it to me.
+	XSupplicant uses iwlib for scanning.
+	waproamd has not been actively developped for the last 3 years.
+	kdenetwork/KWiFiManager uses iwlib for scanning.
+	Kifi uses iwlib and has not been actively developped for the
+last 2 years.
+	ApRadar has not been actively developped for the last 3 years.
+	SuSE netapplet is no longer on the net. wifi-radar parse the
+output of iwlist.
+	Mandrake net_applet, from what I can gather, use wpa_supplicant.
 
--- 
-dwmw2
+	Ok, we are left with :
+	wpa_supplicant use its own code.
+	NetworkManager : partially use iwlib, use own code for scanning.
+
+> Jouni Malinen
+
+	Jean
 
