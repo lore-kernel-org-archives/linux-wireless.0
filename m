@@ -1,64 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:43595 "EHLO mx1.redhat.com"
+Received: from madara.hpl.hp.com ([192.6.19.124]:63034 "EHLO madara.hpl.hp.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933045AbXCQEf5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Mar 2007 00:35:57 -0400
-Subject: Re: [PATCH 3/5] mac80211: fix key restricted/open display
-From: Dan Williams <dcbw@redhat.com>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Hong Liu <hong.liu@intel.com>, Jiri Benc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200703162357.22669.flamingice@sourmilk.net>
-References: <1174015698.3408.41.camel@devlinux-hong>
-	 <200703161328.41006.flamingice@sourmilk.net>
-	 <1174103177.3026.8.camel@localhost.localdomain>
-	 <200703162357.22669.flamingice@sourmilk.net>
-Content-Type: text/plain
-Date: Sat, 17 Mar 2007 00:38:36 -0400
-Message-Id: <1174106316.3026.19.camel@localhost.localdomain>
+	id S933651AbXCMVcd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Mar 2007 17:32:33 -0400
+Date: Tue, 13 Mar 2007 14:30:50 -0700
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <jkm@devicescape.com>, Michael Buesch <mb@bu3sch.de>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>, Dan Williams <dcbw@redhat.com>
+Subject: Re: wireless extensions vs. 64-bit architectures
+Message-ID: <20070313213050.GB6272@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <20070308184954.GA24485@bougret.hpl.hp.com> <1173382042.3248.63.camel@johannes.berg> <20070308193412.GG23040@devicescape.com> <1173382802.3248.68.camel@johannes.berg> <20070308221128.GA24884@bougret.hpl.hp.com> <1173393326.3831.21.camel@johannes.berg> <20070309213531.GA28070@bougret.hpl.hp.com> <1173634801.3382.8.camel@johannes.berg> <20070312175639.GA4048@bougret.hpl.hp.com> <1173814925.12717.6.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1173814925.12717.6.camel@johannes.berg>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-03-16 at 23:57 -0400, Michael Wu wrote:
-> On Friday 16 March 2007 23:46, Dan Williams wrote:
-> > I think you're misreading the patch?  It looks correct to me.  The
-> > second check for (erq->flags & IW_ENCODE_RESTRICTED) should ensure that
-> > Shared Key is only selected when the userspace program requested it.
-> >
-> This breaks authentication algorithm fallback for sure.
+On Tue, Mar 13, 2007 at 08:42:05PM +0100, Johannes Berg wrote:
+> On Mon, 2007-03-12 at 10:56 -0700, Jean Tourrilhes wrote:
+> 
+> > 	I did that in the e-mail to Jouni. The problem is that most
+> > people are unfamiliar with decoding iwevents, so can't grasp the
+> > explanation.
+> > 	Basically, for iwpoint, we have an outer lenght and an inner
+> > length. If they don't match, we have an alignement issue and just need
+> > to pick the payload 8 bytes after the expected location.
+> > 	For other events, they have a well known size. If the outer
+> > lenght is not the expected size, but is expected+4, you just pick the
+> > payload 4 bytes after the expected location.
+> 
+> Ok.
+> 
+> So the plan now is to put this document up somewhere maybe with some
+> graphics or whatever, and then send this to distros so they know what
+> happens when people hit this bug.
+> 
+> Does your new version work without padding even on 64-bit arches? Then
+> in a few years we can actually remove the padding completely in the
+> kernel, right?
 
-Well, then it's broken in most of the non mac80211 drivers then.
+	You are too smart ;-) Yes, the second version in pre16 does
+exactly that. That's why I had to change the constants.
 
-> > Not quite.  Somewhere along the line WEXT turned ENCODE_RESTRICTED into
-> > the selector for Shared Key, while ENCODE_OPEN is Open System.  Arguably
-> > there's a larger need to specifying auth mode than rejecting unencrypted
-> > associations.  Most drivers do it this way, with the exception of
-> > madwifi because they like to be irritatingly different.  Nobody ever
-> > really used the 'don't accept unencrypted' thing anyway in the old days,
-> > plus ENCODEEXT has a separate flag for this.
-> >
-> Even if it got redefined along the way, mac80211 has no need for that 
-> particular definition since it can automatically cycle between authentication 
-> algorithms. Besides, "its meaning depends on the card used" according to the 
-> iwconfig man page.
+> johannes
 
-Well, if mac80211 can cycle (is this like airo's auto_wep?) then I guess
-we don't care about the auth mode.  As long as we don't break userspace
-programs that try to set the auth mode, I'm fine with that.
-
-> > So I think the patch is correct.  Ideally all this gets fixed and all
-> > the overloaded meanings go away with cfg80211 :)
-> >
-> > Acked-by: Dan Williams <dcbw@redhat.com>
-> >
-> NACK. It is not useful and if implemented, gives the user an unnecessary 
-> choice that can only cause more problems.
-
-As long as existing stuff isn't broken, and as long as mac80211 silently
-ignores it, and as long as the auth cycle stuff works, then fine.
-
-Dan
-
+	Jean
 
