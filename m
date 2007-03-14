@@ -1,74 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:52359 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751880AbXCLR6d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2007 13:58:33 -0400
-Date: Mon, 12 Mar 2007 10:56:39 -0700
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <jkm@devicescape.com>, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>, Dan Williams <dcbw@redhat.com>
-Subject: Re: wireless extensions vs. 64-bit architectures
-Message-ID: <20070312175639.GA4048@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <20070307020310.GA20466@bougret.hpl.hp.com> <1173364747.14001.7.camel@johannes.berg> <20070308184954.GA24485@bougret.hpl.hp.com> <1173382042.3248.63.camel@johannes.berg> <20070308193412.GG23040@devicescape.com> <1173382802.3248.68.camel@johannes.berg> <20070308221128.GA24884@bougret.hpl.hp.com> <1173393326.3831.21.camel@johannes.berg> <20070309213531.GA28070@bougret.hpl.hp.com> <1173634801.3382.8.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from stout.engsoc.carleton.ca ([134.117.69.22]:60753 "EHLO
+	stout.engsoc.carleton.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932117AbXCNQFT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Mar 2007 12:05:19 -0400
+Date: Wed, 14 Mar 2007 12:03:56 -0400
+From: Kyle McMartin <kyle@canonical.com>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, hostap@shmoo.com, j@w1.fi
+Subject: [HOSTAP] Make debug a run-time option
+Message-ID: <20070314160356.GA16337@athena.road.mcmartin.ca>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1173634801.3382.8.camel@johannes.berg>
-From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 11, 2007 at 06:40:01PM +0100, Johannes Berg wrote:
-> On Fri, 2007-03-09 at 13:35 -0800, Jean Tourrilhes wrote:
-> 
-> > 	It's not as bad as it look like. All userspace programs
-> > nowadays use either the iwlib or wpa_supplicant. For example,
-> > NetworkManager gets its stuff through wpa_supplicant, and kdenetwork
-> > uses iwlib. So, in essence, there is only two places to fix.
-> 
-> That's definitely not true, the latest network manager I have sources to
-> on my laptop right now (0.6.4) uses iwlib but only iw_get_ext and no
-> parsing functions.
+Build-time debugging isn't overly useful for distro kernel folks, nor is
+enabling huge amounts of debug spew by default. Provide the option of
+enabling debugging with module parameters.
 
-	You are right. I did assume that if it was using iwlib, it
-would use the scan helpers. As I said, I did my audit for the ESSID
-stuff and did not refresh for the scan stuff.
-
-> I would guess that others "use" iwlib like that too.
-
-	Which others ? The applications that process scan results can
-be counted on your fingers. And if you count the one actively
-developped, you can use one hand.
-
-> Can you please also *document* the bandaid and actually *describe* it in
-> *words* instead of dense code without comments?
-
-	I did that in the e-mail to Jouni. The problem is that most
-people are unfamiliar with decoding iwevents, so can't grasp the
-explanation.
-	Basically, for iwpoint, we have an outer lenght and an inner
-length. If they don't match, we have an alignement issue and just need
-to pick the payload 8 bytes after the expected location.
-	For other events, they have a well known size. If the outer
-lenght is not the expected size, but is expected+4, you just pick the
-payload 4 bytes after the expected location.
-
-> I'm still not convinced that papering over the problem in userspace is a
-> real solution.
-
-	The final overall solution may be a mix of individual
-solutions. This is definitely part of it. We don't know yet what are
-the other part of this overall solution.
-	This brings a solution to people using current and old
-kernel. For example, I would expect to be much easier to convince
-distro to update older/stable versions with a new wtool than with a
-new kernel. The fix I did is trivial to backport to WT-28 or WT-27
-(which I plan to do once it's confirmed it works).
-
->  johannes
-
-	Have fun...
-
-	Jean
-
+Signed-off-by: Kyle McMartin <kyle@canonical.com>
+---
+diff --git a/drivers/net/wireless/hostap/hostap_info.c b/drivers/net/wireless/hostap/hostap_info.c
+index b6a02a0..6eb8d88 100644
+--- a/drivers/net/wireless/hostap/hostap_info.c
++++ b/drivers/net/wireless/hostap/hostap_info.c
+@@ -96,7 +96,6 @@ static void prism2_info_commtallies(local_info_t *local, unsigned char *buf,
+ 
+ 
+ #ifndef PRISM2_NO_STATION_MODES
+-#ifndef PRISM2_NO_DEBUG
+ static const char* hfa384x_linkstatus_str(u16 linkstatus)
+ {
+ 	switch (linkstatus) {
+@@ -116,7 +115,6 @@ static const char* hfa384x_linkstatus_str(u16 linkstatus)
+ 		return "Unknown";
+ 	}
+ }
+-#endif /* PRISM2_NO_DEBUG */
+ 
+ 
+ /* Called only as a tasklet (software IRQ) */
+@@ -362,9 +360,7 @@ void hostap_info_process(local_info_t *local, struct sk_buff *skb)
+ 	struct hfa384x_info_frame *info;
+ 	unsigned char *buf;
+ 	int left;
+-#ifndef PRISM2_NO_DEBUG
+ 	int i;
+-#endif /* PRISM2_NO_DEBUG */
+ 
+ 	info = (struct hfa384x_info_frame *) skb->data;
+ 	buf = skb->data + sizeof(*info);
+@@ -389,16 +385,16 @@ void hostap_info_process(local_info_t *local, struct sk_buff *skb)
+ 		break;
+ #endif /* PRISM2_NO_STATION_MODES */
+ 
+-#ifndef PRISM2_NO_DEBUG
+ 	default:
+-		PDEBUG(DEBUG_EXTRA, "%s: INFO - len=%d type=0x%04x\n",
+-		       local->dev->name, info->len, info->type);
+-		PDEBUG(DEBUG_EXTRA, "Unknown info frame:");
+-		for (i = 0; i < (left < 100 ? left : 100); i++)
+-			PDEBUG2(DEBUG_EXTRA, " %02x", buf[i]);
+-		PDEBUG2(DEBUG_EXTRA, "\n");
++		if (hostap_debug) {
++			PDEBUG(DEBUG_EXTRA, "%s: INFO - len=%d type=0x%04x\n",
++			       local->dev->name, info->len, info->type);
++			PDEBUG(DEBUG_EXTRA, "Unknown info frame:");
++			for (i = 0; i < (left < 100 ? left : 100); i++)
++				PDEBUG2(DEBUG_EXTRA, " %02x", buf[i]);
++			PDEBUG2(DEBUG_EXTRA, "\n");
++		}
+ 		break;
+-#endif /* PRISM2_NO_DEBUG */
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/hostap/hostap_main.c b/drivers/net/wireless/hostap/hostap_main.c
+index 9077e6e..2015ab3 100644
+--- a/drivers/net/wireless/hostap/hostap_main.c
++++ b/drivers/net/wireless/hostap/hostap_main.c
+@@ -46,6 +46,14 @@ MODULE_VERSION(PRISM2_VERSION);
+ /* FIX: */
+ #define PRISM2_MAX_MTU (PRISM2_MAX_FRAME_SIZE - (6 /* LLC */ + 8 /* WEP */))
+ 
++unsigned int hostap_debug = 0;
++module_param(hostap_debug, uint, 0644);
++MODULE_PARM_DESC(hostap_debug, "Enable verbose debugging output");
++EXPORT_SYMBOL(hostap_debug);
++
++unsigned int hostap_debug_mask = DEBUG_MASK;
++module_param(hostap_debug_mask, uint, 0644);
++EXPORT_SYMBOL(hostap_debug_mask);
+ 
+ struct net_device * hostap_add_interface(struct local_info *local,
+ 					 int type, int rtnl_locked,
+diff --git a/drivers/net/wireless/hostap/hostap_wlan.h b/drivers/net/wireless/hostap/hostap_wlan.h
+index 87a54aa..e318f26 100644
+--- a/drivers/net/wireless/hostap/hostap_wlan.h
++++ b/drivers/net/wireless/hostap/hostap_wlan.h
+@@ -923,8 +923,6 @@ struct hostap_skb_tx_data {
+ };
+ 
+ 
+-#ifndef PRISM2_NO_DEBUG
+-
+ #define DEBUG_FID BIT(0)
+ #define DEBUG_PS BIT(1)
+ #define DEBUG_FLOW BIT(2)
+@@ -935,16 +933,12 @@ struct hostap_skb_tx_data {
+ #define DEBUG_PS2 BIT(7)
+ #define DEBUG_MASK (DEBUG_PS | DEBUG_AP | DEBUG_HW | DEBUG_EXTRA)
+ #define PDEBUG(n, args...) \
+-do { if ((n) & DEBUG_MASK) printk(KERN_DEBUG args); } while (0)
++do { if (hostap_debug && ((n) & hostap_debug_mask)) printk(KERN_DEBUG args); } while (0)
+ #define PDEBUG2(n, args...) \
+-do { if ((n) & DEBUG_MASK) printk(args); } while (0)
+-
+-#else /* PRISM2_NO_DEBUG */
+-
+-#define PDEBUG(n, args...)
+-#define PDEBUG2(n, args...)
++do { if (hostap_debug && ((n) & hostap_debug_mask)) printk(args); } while (0)
+ 
+-#endif /* PRISM2_NO_DEBUG */
++extern unsigned int hostap_debug;
++extern unsigned int hostap_debug_mask;
+ 
+ enum { BAP0 = 0, BAP1 = 1 };
+ 
