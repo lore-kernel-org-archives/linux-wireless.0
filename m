@@ -1,25 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ccerelbas02.cce.hp.com ([161.114.21.105]:42593 "EHLO
-	ccerelbas02.cce.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965513AbXCLKxm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2007 06:53:42 -0400
-From: "Doragh, Phil" <Phil.Doragh@hp.com>
-To: Pavel Roskin <proski@gnu.org>, Michael Wu <flamingice@sourmilk.net>
-Cc: Jeff Williams <angelbane@ou.edu>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 12 Mar 2007 10:26:49 +0000
-Subject: RE: Airgo Networks Wireless Card Linux support
-Message-ID: <6036B9B114DF464D98B405FDE9ECFAF45692C2B7@G3W0076.americas.hpqcorp.net>
-References: <Pine.LNX.4.64.0703091340080.380@dulcinea>
-	 <200703120038.59689.flamingice@sourmilk.net>,<1173676135.30756.27.camel@dv>
-In-Reply-To: <1173676135.30756.27.camel@dv>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from hostap.isc.org ([204.152.186.63]:60836 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752637AbXCNRoO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Mar 2007 13:44:14 -0400
+Date: Wed, 14 Mar 2007 17:17:42 +0000
+From: Jouni Malinen <j@w1.fi>
+To: Kyle McMartin <kyle@canonical.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	hostap@shmoo.com, j@w1.fi
+Subject: Re: [HOSTAP] Make debug a run-time option
+Message-ID: <20070314171742.GA20779@hostap.isc.org>
+References: <20070314160356.GA16337@athena.road.mcmartin.ca>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070314160356.GA16337@athena.road.mcmartin.ca>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Mar 14, 2007 at 12:03:56PM -0400, Kyle McMartin wrote:
+> Build-time debugging isn't overly useful for distro kernel folks, nor is
+> enabling huge amounts of debug spew by default. Provide the option of
+> enabling debugging with module parameters.
 
-Airgo no longer an independent company, it was purchased by Qualcomm last year, you would need to contact Qualcomm now to obtain OSS support.
+While I understand that it would be difficult to change the debug level
+options with binary distributions, I'm not sure whether I would like to
+see these changes going in. PRISM2_NO_DEBUG was added to make it
+possible to reduce the driver size considerably. In addition, the change
+to the default debug categories (i.e., disable all) may make it more
+difficult to understand reported issues. I would be more open to
+disabling debug messages one-by-one if there is something specific that
+can be agreed to cause more harm than benefit with extra output.
 
-Phil Doragh
+-- 
+Jouni Malinen                                            PGP id EFC895FA
