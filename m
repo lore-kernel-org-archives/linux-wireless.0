@@ -1,78 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51713 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965573AbXC1SYQ (ORCPT
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:58402 "EHLO
+	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932411AbXCNQSs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 14:24:16 -0400
-Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: mohamed <mabbas@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <1174909200.1364.56.camel@dell-4965.jf.intel.com>
-References: <1174909200.1364.56.camel@dell-4965.jf.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JEyGv9mdABH+HqPQvXwL"
-Date: Wed, 28 Mar 2007 20:23:00 +0200
-Message-Id: <1175106180.5151.76.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 14 Mar 2007 12:18:48 -0400
+Date: Wed, 14 Mar 2007 11:18:28 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [RFC] Eliminate some 'G Mode Enable' magic numbers
+Message-ID: <45f82054.fJi116VPchav9Mns%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In code manipulating the TM State Low register of 802.11 cores, two
+different magic numbers are used to reference the 'G Mode Enable' bit.
+One of these, 0x20000000, is clear, but the other, (0x800 << 18), is not.
+This patch replaces both types with a defined constant. In addition, two
+bits in the TM State High registers are given definitions to help in
+following the code.
 
---=-JEyGv9mdABH+HqPQvXwL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-On Mon, 2007-03-26 at 04:40 -0700, mohamed wrote:
-
-> +	ethertype =3D (payload[6] << 8) | payload[7];
-> +
-> +	if (likely((memcmp(payload, rfc1042_header, 6) =3D=3D 0 &&
-> +		ethertype !=3D ETH_P_AARP && ethertype !=3D ETH_P_IPX) ||
-> +		memcmp(payload, bridge_tunnel_header, 6) =3D=3D 0)) {
-> +		/* remove RFC1042 or Bridge-Tunnel encapsulation and
-> +		* replace EtherType */=09
-> +		skb_pull(skb, hdrlen + 6);
-> +	} else {
-> +		skb_pull(skb, hdrlen);
-> +	}
-> +
-> +	eth =3D (struct ethhdr*)skb->data;
-
-If you put the eth =3D stuff before ethertype =3D you can make this code
-something like ethertype =3D be16_to_cpu(eth->h_proto) instead of the
-hardcoded endianness conversion. And the memcmp() could be
-compare_ether_addr(eth->h_dest, rfc1042_header) instead.
-
-> +	while ((u8*)eth < skb->data + skb->len) {
-
-I don't understand this cast of eth to u8*. That seems wrong given that
-there's an ethhdr there where the first byte isn't a length byte.
-
-> +        	unsigned int eth_len =3D sizeof(struct ethhdr) +=20
-> +						ntohs(eth->h_proto);
-> +       =20
-> +		frame =3D dev_alloc_skb(3000);
-
-Maybe there's a way to get an skb that actually points into the payload?
-Not sure that is desirable though we really should optimise the receive
-path.. it does far too many copies already.
-
-
-I'll look some things later again, have to go now.
-
-johannes
-
---=-JEyGv9mdABH+HqPQvXwL
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGCrKE/ETPhpq3jKURApqoAJ94daebkoXR96E5kikTi2lVxVA2rwCbBmk4
-wO5FgyehD0W8VhR54W9YhmM=
-=wSey
------END PGP SIGNATURE-----
-
---=-JEyGv9mdABH+HqPQvXwL--
-
+Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx.h
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx.h
++++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx.h
+@@ -277,11 +277,14 @@
+ #define BCM43xx_SBTMSTATELOW_REJECT		0x02
+ #define BCM43xx_SBTMSTATELOW_CLOCK		0x10000
+ #define BCM43xx_SBTMSTATELOW_FORCE_GATE_CLOCK	0x20000
++#define BCM43xx_SBTMSTATELOW_G_MODE_ENABLE	0x20000000
+ 
+ /* sbtmstatehigh state flags */
+ #define BCM43xx_SBTMSTATEHIGH_SERROR		0x00000001
+ #define BCM43xx_SBTMSTATEHIGH_BUSY		0x00000004
+ #define BCM43xx_SBTMSTATEHIGH_TIMEOUT		0x00000020
++#define BCM43xx_SBTMSTATEHIGH_G_PHY_AVAIL	0x00010000
++#define BCM43xx_SBTMSTATEHIGH_A_PHY_AVAIL	0x00020000
+ #define BCM43xx_SBTMSTATEHIGH_COREFLAGS		0x1FFF0000
+ #define BCM43xx_SBTMSTATEHIGH_DMA64BIT		0x10000000
+ #define BCM43xx_SBTMSTATEHIGH_GATEDCLK		0x20000000
+Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
++++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
+@@ -168,16 +168,16 @@ int bcm43xx_phy_connect(struct bcm43xx_p
+ 
+ 	flags = bcm43xx_read32(bcm, BCM43xx_CIR_SBTMSTATEHIGH);
+ 	if (connect) {
+-		if (!(flags & 0x00010000))
++		if (!(flags & BCM43xx_SBTMSTATEHIGH_G_PHY_AVAIL))
+ 			return -ENODEV;
+ 		flags = bcm43xx_read32(bcm, BCM43xx_CIR_SBTMSTATELOW);
+-		flags |= (0x800 << 18);
++		flags |= BCM43xx_SBTMSTATELOW_G_MODE_ENABLE;
+ 		bcm43xx_write32(bcm, BCM43xx_CIR_SBTMSTATELOW, flags);
+ 	} else {
+-		if (!(flags & 0x00020000))
++		if (!(flags & BCM43xx_SBTMSTATEHIGH_A_PHY_AVAIL))
+ 			return -ENODEV;
+ 		flags = bcm43xx_read32(bcm, BCM43xx_CIR_SBTMSTATELOW);
+-		flags &= ~(0x800 << 18);
++		flags &= ~BCM43xx_SBTMSTATELOW_G_MODE_ENABLE;
+ 		bcm43xx_write32(bcm, BCM43xx_CIR_SBTMSTATELOW, flags);
+ 	}
+ out:
+Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
++++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+@@ -1389,7 +1389,7 @@ void bcm43xx_wireless_core_reset(struct 
+ 				& ~(BCM43xx_SBF_MAC_ENABLED | 0x00000002));
+ 	} else {
+ 		if (connect_phy)
+-			flags |= 0x20000000;
++			flags |= BCM43xx_SBTMSTATELOW_G_MODE_ENABLE;
+ 		bcm43xx_phy_connect(bcm, connect_phy);
+ 		bcm43xx_core_enable(bcm, flags);
+ 		bcm43xx_write16(bcm, 0x03E6, 0x0000);
+@@ -3662,7 +3662,7 @@ int bcm43xx_select_wireless_core(struct 
+ 		u32 sbtmstatelow;
+ 
+ 		sbtmstatelow = bcm43xx_read32(bcm, BCM43xx_CIR_SBTMSTATELOW);
+-		sbtmstatelow |= 0x20000000;
++		sbtmstatelow |= BCM43xx_SBTMSTATELOW_G_MODE_ENABLE;
+ 		bcm43xx_write32(bcm, BCM43xx_CIR_SBTMSTATELOW, sbtmstatelow);
+ 	}
+ 	err = wireless_core_up(bcm, 1);
