@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:62046 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934339AbXCXBl5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 21:41:57 -0400
-Message-ID: <460481D8.5010905@lwfinger.net>
-Date: Fri, 23 Mar 2007 20:41:44 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Stefano Brivio <stefano.brivio@polimi.it>
-CC: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx devel <Bcm43xx-dev@lists.berlios.de>
-Subject: Re: RFC: Future plans for bcm43xx-softmac
-References: <4604106F.7080003@lwfinger.net> <20070323204627.183d2c21@localhost>
-In-Reply-To: <20070323204627.183d2c21@localhost>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from ra.tuxdriver.com ([70.61.120.52]:4599 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030871AbXCNUCZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Mar 2007 16:02:25 -0400
+Date: Wed, 14 Mar 2007 15:48:00 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kyle McMartin <kyle@canonical.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, hostap@shmoo.com, j@w1.fi
+Subject: Re: [HOSTAP] Make debug a run-time option
+Message-ID: <20070314194800.GF3372@tuxdriver.com>
+References: <20070314160356.GA16337@athena.road.mcmartin.ca> <20070314171742.GA20779@hostap.isc.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070314171742.GA20779@hostap.isc.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stefano Brivio wrote:
-> On Fri, 23 Mar 2007 12:37:51 -0500
-> Larry Finger <Larry.Finger@lwfinger.net> wrote:
+On Wed, Mar 14, 2007 at 05:17:42PM +0000, Jouni Malinen wrote:
+> On Wed, Mar 14, 2007 at 12:03:56PM -0400, Kyle McMartin wrote:
+> > Build-time debugging isn't overly useful for distro kernel folks, nor is
+> > enabling huge amounts of debug spew by default. Provide the option of
+> > enabling debugging with module parameters.
 > 
->> I think we have a plan for the future of bcm43xx-softmac once the
->> bcm43xx-mac80211 version goes into mainline. Unfortunately it cannot just
->> be abandoned as there will be no support for 802.11b-only devices in
->> bcm43xx-mac80211.
->>
->> The steps to be done are as follows:
->>
->> 1. Change the namespace from bcm43xx to bcm4301. This will both reflect
->> the purpose of the changed driver as well as prevent namespace collisions
->> with the bcm43xx-mac80211 version in case both are built into the kernel.
-> 
-> I'm quite sure you know, bcm4301 isn't the only 802.11b-only device.
-> There's bcm4303 too. Anyway, naming the driver bcm4301 sounds reasonable to
-> me.
+> While I understand that it would be difficult to change the debug level
+> options with binary distributions, I'm not sure whether I would like to
+> see these changes going in. PRISM2_NO_DEBUG was added to make it
+> possible to reduce the driver size considerably. In addition, the change
 
-Yes, but bcm430x would have been more confusing as the 4306 and 4309 are covered by V4 firmware.
-Other choices such as bcm43xx-old, etc. seemed a little clumsy.
+What about a combined approach?  The existing compile-time option
+could remain while runtime restrictions could be added for when the
+debug stuff is compiled into the driver?
 
-Larry
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
