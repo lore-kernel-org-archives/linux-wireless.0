@@ -1,37 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:45163 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030351AbXCLPSB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2007 11:18:01 -0400
-Subject: Re: [PATCH] bcm43xx: Fix typo in B5PHY init specifications
-From: David Woodhouse <dwmw2@infradead.org>
+Received: from hostap.isc.org ([204.152.186.63]:32965 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751749AbXCNWHj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Mar 2007 18:07:39 -0400
+Date: Wed, 14 Mar 2007 22:05:38 +0000
+From: Jouni Malinen <j@w1.fi>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Joseph Jezak <josejx@gentoo.org>, linux-wireless@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <20070312145309.GB8878@tuxdriver.com>
-References: <45e85f2b.Dp1dM05tvZFFROmc%Larry.Finger@lwfinger.net>
-	 <1173685989.3584.2.camel@shinybook.infradead.org>
-	 <45F55452.3000704@gentoo.org>  <20070312145309.GB8878@tuxdriver.com>
-Content-Type: text/plain
-Date: Mon, 12 Mar 2007 16:16:34 +0100
-Message-Id: <1173712594.3584.6.camel@shinybook.infradead.org>
+Cc: Kyle McMartin <kyle@canonical.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, hostap@shmoo.com, j@w1.fi
+Subject: Re: [HOSTAP] Make debug a run-time option
+Message-ID: <20070314220538.GA23642@hostap.isc.org>
+References: <20070314160356.GA16337@athena.road.mcmartin.ca> <20070314171742.GA20779@hostap.isc.org> <20070314194800.GF3372@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070314194800.GF3372@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-03-12 at 10:53 -0400, John W. Linville wrote:
-> 
-> FWIW, by inspection it looks like the mac80211-based driver is
-> (trying?) to implement this change.
-> 
-> David, have you tried the mac80211 version?  Does it still have the
-> same crash?
+On Wed, Mar 14, 2007 at 03:48:00PM -0400, John W. Linville wrote:
 
-Should the one in 2.6.20-1.2982.fc7 be OK? I can try that relatively
-easily; anything else might need to wait till I get home.
+> What about a combined approach?  The existing compile-time option
+> could remain while runtime restrictions could be added for when the
+> debug stuff is compiled into the driver?
+
+I would be perfectly fine with doing that assuming the default behavior
+is not changed with this patch (i.e., debugging would be enabled by
+default). I would consider changing the default setting a separate issue
+and for that, it might be more worthwhile approach to identify the debug
+messages that are undesired by default than to disable everything.
 
 -- 
-dwmw2
-
+Jouni Malinen                                            PGP id EFC895FA
