@@ -1,33 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:61359 "EHLO
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:39936 "EHLO
 	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934350AbXC2Vqv (ORCPT
+	by vger.kernel.org with ESMTP id S933885AbXCNFOC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2007 17:46:51 -0400
-Message-ID: <460C33CA.3050509@lwfinger.net>
-Date: Thu, 29 Mar 2007 16:46:50 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 14 Mar 2007 01:14:02 -0400
+Message-ID: <45F78498.8080608@lwfinger.net>
+Date: Wed, 14 Mar 2007 00:14:00 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx devel <Bcm43xx-dev@lists.berlios.de>
-Subject: Patches for bcm43xx-softmac
-Content-Type: text/plain; charset=ISO-8859-1
+To: Stefano Brivio <stefano.brivio@polimi.it>
+CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [RFT] [PATCH] bcm43xx: ACI fixes
+References: <20070312010420.353a59c0@localhost>
+In-Reply-To: <20070312010420.353a59c0@localhost>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A recent change to the specs for the initialization of 2.4 GHz radios has resulted in increased
-transfer speeds for the bcm43xx-softmac driver. Thanks to Joe Jezak for all his work.
+Stefano,
 
-My measurements are for transfers speeds between my laptop and an FTP server connected to my router
-by a 100 Mbs wired connection. Using the new patches, I get receive speeds up to 2 MB/s and transmit
-speeds of up to 0.7 MB/s for the BCM4311 and the BCM4318. Speeds for the BCM4306 are slower (0.7
-MB/s for receive and 0.6 MB/s for transmit).
+As noted earlier on the list, I have started testing this patch. In setting the various interference
+modes, I have found some bugs in other places that were not previously tested. Thanks for this
+contribution.
 
-The files needed to patch the various 2.6.20.y and 2.6.21-rc5 kernels are at
-ftp://lwfinger.dynalias.org/patches. I have abandoned support for 2.6.18 and 2.6.19 kernels. The
-patch for 2.6.21-rc5 can be applied to either Linus's or Linville's wireless-2.6 git tree.
+I have some comments below.
 
-Also on the FTP site are two Perl scripts for testing. One of them (perf_test.pl) uses an Iperf
-server somewhere on your LAN. The other (file_test.pl) works with an NFS server on your LAN to
-measure transfer rates.
+Stefano Brivio wrote:
+> Please test the following patch. It syncs ACI (Adjacent Channels
+> Interference) code to specs. I can't test it right now. Will port to
+> mac80211 branch ASAP.
+> 
+> 
+> Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+> ----
+> 
+> diff --git a/drivers/net/wireless/bcm43xx/bcm43xx.h b/drivers/net/wireless/bcm43xx/bcm43xx.h
+> index 95ff175..7023327 100644
+> --- a/drivers/net/wireless/bcm43xx/bcm43xx.h
+> +++ b/drivers/net/wireless/bcm43xx/bcm43xx.h
+> @@ -398,6 +398,9 @@
+>  #define BCM43xx_DEFAULT_SHORT_RETRY_LIMIT	7
+>  #define BCM43xx_DEFAULT_LONG_RETRY_LIMIT	4
+>  
+> +/* Statscounter offsets. */
+> +#define BCM43xx_SC_ACI		0x2E
+> +
+>  /* FIXME: the next line is a guess as to what the maximum RSSI value might be */
+>  #define RX_RSSI_MAX				60
+>  
+> @@ -550,7 +553,11 @@ struct bcm43xx_phyinfo {
+>  	u8 connected:1,
+>  	   calibrated:1,
+>  	   is_locked:1, /* used in bcm43xx_phy_{un}lock() */
+> -	   dyn_tssi_tbl:1; /* used in bcm43xx_phy_init_tssi2dbm_table() */
+> +	   dyn_tssi_tbl:1, /* used in bcm43xx_phy_init_tssi2dbm_table() */
+> +	   g_interfmode:1; /* bit 4000 in PHY_G_CRS, used in periodic tasks */
+> +	u8 g_interfmode_timer; /* how much time ago g_interfmode was unset */
+> +	u16 g_sc_saved; /* used in periodic tasks for ACI */
+> +
+>  	/* LO Measurement Data.
+>  	 * Use bcm43xx_get_lopair() to get a value.
+>  	 */
+> @@ -629,7 +636,9 @@ struct bcm43xx_radioinfo {
+>  	/* ACI (adjacent channel interference) flags. */
+>  	u8 aci_enable:1,
+>  	   aci_wlan_automatic:1,
+> -	   aci_hw_rssi:1;
+> +	   aci_hw_rssi:1,
+> +	   aci_delay:5;
+Should this be a bit field? Why not just make it a u8?
+> +	u8 aci_start;
+>  };
+>  
+>  /* Data structures for DMA transmission, per 80211 core. */
+> @@ -699,6 +708,18 @@ struct bcm43xx_noise_calculation {
+>  	s8 samples[8][4];
+>  };
+>  
+> +/* Statscounter data (currently ACI only). */
+> +struct bcm43xx_statscounter_saved {
+> +	u16 aci;
+> +};
+> +
+> +/* Values for ACI moving average calculation. */
+> +struct bcm43xx_aci_saved {
+> +	u16 value[8];
+> +	u8 next:3,
+> +	   set:3;
+As I will explain later, I don't think 'set' is needed. I also recommend having 'next' be a plain u8.
+> +};
+> +
+>  struct bcm43xx_stats {
+>  	u8 noise;
+>  	struct iw_statistics wstats;
+> @@ -812,6 +833,10 @@ struct bcm43xx_private {
+>  	u32 irq_savedstate;
+>  	/* Link Quality calculation context. */
+>  	struct bcm43xx_noise_calculation noisecalc;
+> +	/* Statscounter tracking. */
+> +	struct bcm43xx_statscounter_saved sc;
+> +	/* ACI tracking. */
+> +	struct bcm43xx_aci_saved aci;
+>  	/* if > 0 MAC is suspended. if == 0 MAC is enabled. */
+>  	int mac_suspended;
+>  
+> diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+> index e594af4..27ec519 100644
+> --- a/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+> +++ b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+> @@ -3059,6 +3059,44 @@ static void bcm43xx_pcie_mdio_write(stru
+>  	bcm43xx_write32(bcm, BCM43xx_PCIECORE_MDIO_CTL, 0);
+>  }
+>  
+> +/* We don't use any statscounter other than ACI for now */
+> +static u16 bcm43xx_sc_read(struct bcm43xx_private *bcm)
+> +{
+> +	struct bcm43xx_statscounter_saved *sc = &bcm->sc;
+> +	u16 tmp;
+> +
+> +	tmp = bcm43xx_shm_read16(bcm, BCM43xx_SHM_SHARED, 0x80 + BCM43xx_SC_ACI)
+> +		- sc->aci;
+> +	if (tmp)
+> +		sc->aci += tmp;
+> +
+> +	return tmp;
+> +}
+> +
+> +static u16 bcm43xx_aci_moving_average(struct bcm43xx_private *bcm)
+> +{
+> +	struct bcm43xx_aci_saved *aci = &bcm->aci;
+> +
+> +	u8 i;
+> +	u16 avg;
+> +	u32 sum = 0;
+> +
+> +	aci->value[aci->next] = bcm43xx_sc_read(bcm);
+> +	if (unlikely(aci->set < 7))
+> +		aci->set++;
+I don't think the variable aci->set is needed as the divisor is alway 8 in the calculation of the
+average below. Any error in the average shouldn't be important as it will occur only in the first
+cycle through the value buffer. The for loop below should end at i < 8. There will be extra
+calculations only during the first buffer cycle.
+> +	for (i = 0; i < aci->set; i++)
+> +		sum += aci->value[i];
+> +	avg = sum / (u16)8;
+Why the cast here? I didn't get any gcc warnings without it. I expect this ends up as a shift right
+anyway.
+> +	if ((sum % 8) > 3)
+> +		avg++;
+> +	if (aci->next < 7)
+> +		aci->next++;
+> +	else
+> +		aci->next = 0;
+Why not auto-increment aci->next in the line where bcm43xx_sc_read is called. Then you only need to
+test for next > 7 and reset it to zero then.
+> +
+> +	return avg;
+> +}
+
+Larry
 
