@@ -1,52 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:49149 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752837AbXCST5o (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41357
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422861AbXCOPLE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2007 15:57:44 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 5041D8CAD2
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2007 20:57:42 +0100 (CET)
-Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id F1E10FFBE
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2007 19:57:42 +0000 (UTC)
-Received: from [127.0.0.1] (meerkat.home.warmcat.com [127.0.0.1])
-	by meerkat.home.warmcat.com (Postfix) with ESMTP id 147CE18D1D67
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2007 19:57:41 +0000 (GMT)
-Message-ID: <45FEEB34.1000403@warmcat.com>
-Date: Mon, 19 Mar 2007 19:57:40 +0000
-From: Andy Green <andy@warmcat.com>
+	Thu, 15 Mar 2007 11:11:04 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: Please pull http://bu3sch.de/git/wireless-dev.git for-linville
+Date: Thu, 15 Mar 2007 16:08:18 +0100
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Faking powersave for fun and realtime channel muxing
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200703151608.19112.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks -
+The following changes since commit 4533da881f2d8c3e0dbb5b3dbc7a919e12438a8a:
+  Andrew Morton:
+        b44 warning fixes
 
-If you could generate and manage powersave protocol frames to an AP from 
-the mac80211 stack, without actually putting the radio to sleep, you 
-could do some interesting things.
+are found in the git repository at:
 
-For example you could allow any logical network interface to have a 
-different channel.  In this case, during the time that the channel you 
-are associated on has been told you have gone into powersave mode, you 
-can actually spend time on that other channel, before switching the 
-channel back to check in with the AP.  So you could for example run 
-monitor mode on channel 11 while being associated on channel 2, given 
-the limitation that sometimes you aren't listening because you are 
-taking care of business on channel 2.  This can surely lead to ripping 
-out all the "scanning" stuff and ioctl(s) from kernel mode and doing it 
-from a regular interface using the existing Monitor semantics.
+  http://bu3sch.de/git/wireless-dev.git for-linville
 
-Depending on the limitations of the time you can arrange to "sleep" with 
-the AP, using this technique you could even associate multiple logical 
-interfaces to APs on different channels despite they are sharing one 
-physical radio.  That could be cool for dealing with realtime selection 
-of the best channel/AP when the guy is mobile, for example.
+Michael Buesch:
+      ssb-ohci: Completely disable the driver on non-embedded systems
+      ssb: Move and rename some files.
+      ssb: Don't freeze unregistered devices.
+      bcm43xx-mac80211: Rewrite of the LO feedthrough measuring statemachine.
+      bcm43xx-mac80211: More LO fixes.
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-dev
+      bcm43xx-mac80211: Select SSB_DEBUG if bcm43xx debugging is enabled.
 
-Is there something like firmware constraints or the detail of the 
-powersaving protocol that kill this dead or is it possible to consider?
+ drivers/net/wireless/mac80211/bcm43xx/Kconfig      |    1 
+ drivers/net/wireless/mac80211/bcm43xx/bcm43xx.h    |    5 
+ drivers/net/wireless/mac80211/bcm43xx/bcm43xx_lo.c |  702 +++++++------
+ drivers/net/wireless/mac80211/bcm43xx/bcm43xx_lo.h |   29 -
+ .../net/wireless/mac80211/bcm43xx/bcm43xx_main.c   |    9 
+ .../net/wireless/mac80211/bcm43xx/bcm43xx_phy.c    |  107 +-
+ .../net/wireless/mac80211/bcm43xx/bcm43xx_phy.h    |    6 
+ drivers/ssb/Makefile                               |   17 
+ drivers/ssb/core.c                                 | 1038 --------------------
+ drivers/ssb/driver_chipcommon.c                    |  402 ++++++++
+ drivers/ssb/driver_chipcommon/chipcommon.c         |  402 --------
+ drivers/ssb/driver_mips/mips.c                     |  258 -----
+ drivers/ssb/driver_mipscore.c                      |  258 +++++
+ drivers/ssb/driver_pci/pcicore.c                   |  556 -----------
+ drivers/ssb/driver_pcicore.c                       |  556 +++++++++++
+ drivers/ssb/main.c                                 | 1042 ++++++++++++++++++++
+ drivers/usb/host/Kconfig                           |   11 
+ drivers/usb/host/ohci-ssb.c                        |    9 
+ 18 files changed, 2731 insertions(+), 2677 deletions(-)
+ delete mode 100644 drivers/ssb/core.c
+ create mode 100644 drivers/ssb/driver_chipcommon.c
+ delete mode 100644 drivers/ssb/driver_chipcommon/chipcommon.c
+ delete mode 100644 drivers/ssb/driver_mips/mips.c
+ create mode 100644 drivers/ssb/driver_mipscore.c
+ delete mode 100644 drivers/ssb/driver_pci/pcicore.c
+ create mode 100644 drivers/ssb/driver_pcicore.c
+ create mode 100644 drivers/ssb/main.c
 
--Andy
+-- 
+Greetings Michael.
