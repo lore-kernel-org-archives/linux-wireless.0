@@ -1,52 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:43423 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752985AbXC1VIw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 17:08:52 -0400
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HWfLv-0007Il-8A
-	for linux-wireless@vger.kernel.org; Wed, 28 Mar 2007 17:06:43 -0400
-Received: from localhost ([127.0.0.1] helo=dv.roinet.com)
-	by gnu.org with esmtp (Exim 4.66)
-	(envelope-from <proski@gnu.org>)
-	id 1HWfNz-0007RP-Gv
-	for linux-wireless@vger.kernel.org; Wed, 28 Mar 2007 17:08:51 -0400
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH] Remove comment about IEEE80211_RADIOTAP_FCS
-To: linux-wireless@vger.kernel.org
-Date: Wed, 28 Mar 2007 17:08:51 -0400
-Message-ID: <20070328210851.28590.49264.stgit@dv.roinet.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga02.intel.com ([134.134.136.20]:41194 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750894AbXCPDk4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2007 23:40:56 -0400
+Subject: [PATCH 1/5] mac80211: fix wrong keyidx will change default key
+From: Hong Liu <hong.liu@intel.com>
+To: Jiri Benc <jbenc@suse.cz>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Message-Id: <1174015695.3408.35.camel@devlinux-hong>
+Mime-Version: 1.0
+Date: Fri, 16 Mar 2007 11:28:15 +0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IEEE80211_RADIOTAP_FCS is obsolete and should not be used.  It's no
-longer defined.  Remove it from the comment too.
+Signed-off-by: Hong Liu <hong.liu@intel.com>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
-That's for wireless-2.6
 ---
 
- include/net/ieee80211_radiotap.h |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+ net/mac80211/ieee80211_ioctl.c |   22 ++++++++++------------
+ 1 files changed, 10 insertions(+), 12 deletions(-)
 
-diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
-index f3bc00e..a0c2b41 100644
---- a/include/net/ieee80211_radiotap.h
-+++ b/include/net/ieee80211_radiotap.h
-@@ -186,9 +186,6 @@ struct ieee80211_radiotap_header {
-  *
-  *     Number of unicast retries a transmitted frame used.
-  *
-- * IEEE80211_RADIOTAP_FCS           	__le32       data
-- *
-- *	FCS from frame in network byte order.
-  */
- enum ieee80211_radiotap_type {
- 	IEEE80211_RADIOTAP_TSFT = 0,
-
+e0f38f2908fb5f32bdf4eb1dc197c81fae61fbe1
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index ae224c6..aa8b789 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -2919,19 +2919,17 @@ static int ieee80211_ioctl_siwencode(str
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	idx = erq->flags & IW_ENCODE_INDEX;
+-	if (idx < 1 || idx > 4) {
+-		idx = -1;
+-		if (!sdata->default_key)
+-			idx = 0;
+-		else for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
+-			if (sdata->default_key == sdata->keys[i]) {
+-				idx = i;
+-				break;
++	if (idx == 0) {
++		if (sdata->default_key)
++			for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
++				if (sdata->default_key == sdata->keys[i]) {
++					idx = i;
++					break;
++				}
+ 			}
+-		}
+-		if (idx < 0)
+-			return -EINVAL;
+-	} else
++	} else if (idx < 1 || idx > 4)
++		return -EINVAL;
++	else
+ 		idx--;
+ 
+ 	if (erq->flags & IW_ENCODE_DISABLED)
+-- 
+1.3.3
 
