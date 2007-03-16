@@ -1,60 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43587 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933471AbXCENXH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 08:23:07 -0500
-Subject: Re: Filtering in Monitor Mode (was Question about PRISM2  header rate field)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <45EC18A9.50003@warmcat.com>
-References: <45EA9E39.6080706@warmcat.com>
-	 <1173053744.6131.40.camel@johannes.berg> <45EB6C3B.2060408@warmcat.com>
-	 <200703042210.52534.flamingice@sourmilk.net>
-	 <1173094447.6131.56.camel@johannes.berg>  <45EC1454.4080605@warmcat.com>
-	 <1173099910.6131.71.camel@johannes.berg>  <45EC18A9.50003@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-biacEMYky5rABGds64f/"
-Date: Mon, 05 Mar 2007 14:22:37 +0100
-Message-Id: <1173100957.6131.76.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([66.187.233.31]:35473 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933594AbXCPLkk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2007 07:40:40 -0400
+Message-ID: <45FA8210.7080709@redhat.com>
+Date: Fri, 16 Mar 2007 12:40:00 +0100
+From: Michal Schmidt <mschmidt@redhat.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: breed@users.sourceforge.net, dcbw@redhat.com,
+	netdev@vger.kernel.org
+Subject: [PATCH 1/3] airo: Don't check for NULL before kfree()
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+It's unnecessary to check for NULL before calling kfree().
 
---=-biacEMYky5rABGds64f/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Michal Schmidt <mschmidt@redhat.com>
 
-On Mon, 2007-03-05 at 13:18 +0000, Andy Green wrote:
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index a8c2bfe..71ac1f1 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -2740,8 +2740,6 @@ static int airo_networks_allocate(struct airo_info *ai)
+ 
+ static void airo_networks_free(struct airo_info *ai)
+ {
+-	if (!ai->networks)
+-		return;
+ 	kfree(ai->networks);
+ 	ai->networks = NULL;
+ }
 
-> Not sure I explained well enough: looking at libpcap sources, it=20
-> compiles the filter you request into a bytecode and then gives it to the=20
-> kernelside using an ioctl.  When you recv() or select() on the monitor=20
-> interface after that, you block until something matching your filter=20
-> definition turns up.  Userspace doesn't hear about the rest of it.
 
-Uh eh right, I'm confused :)
-
-The power save mode argument still holds though, we might address that
-with non-promisc monitor interfaces even though they do have a couple of
-problems (you need to be associated on a different virtual netdev for it
-to make sense...)
-
-johannes
-
---=-biacEMYky5rABGds64f/
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF7Bmd/ETPhpq3jKURAs6IAJ9EsJIgokTFkHz5VEUIssS7q4woPACgkcJq
-sxBQ8/v0hyHovODTIu8gVJ4=
-=UvaG
------END PGP SIGNATURE-----
-
---=-biacEMYky5rABGds64f/--
 
