@@ -1,60 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48707 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753342AbXC2LIL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2007 07:08:11 -0400
-Subject: [PATCH] remove another wext/netlink comment
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 29 Mar 2007 00:10:39 +0200
-Message-Id: <1175119840.8807.0.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2811 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965780AbXCPRn7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2007 13:43:59 -0400
+Date: Fri, 16 Mar 2007 13:14:27 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] bcm43xx: Add firmware version to ethtool output
+Message-ID: <20070316171427.GC3426@tuxdriver.com>
+References: <45eb1612.l8xsd6TwZVsRseAH%Larry.Finger@lwfinger.net> <200703042002.39581.mb@bu3sch.de>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200703042002.39581.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Looks like I missed this when removing wext/nl.
+On Sun, Mar 04, 2007 at 08:02:39PM +0100, Michael Buesch wrote:
+> On Sunday 04 March 2007 19:55, Larry Finger wrote:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> > @@ -42,6 +43,8 @@ static void bcm43xx_get_drvinfo(struct n
+> >  	strncpy(info->driver, KBUILD_MODNAME, sizeof(info->driver));
+> >  	strncpy(info->version, utsname()->release, sizeof(info->version));
+> >  	strncpy(info->bus_info, pci_name(bcm->pci_dev), ETHTOOL_BUSINFO_LEN);
+> > +	snprintf(info->fw_version, sizeof(info->fw_version), "0x%x",
+> > +		 bcm43xx_shm_read16(bcm, BCM43xx_SHM_SHARED, BCM43xx_UCODE_REVISION));
+> 
+> This will crash when the device is not up.
 
----
- net/wireless/wext-old.c |   24 ------------------------
- 1 file changed, 24 deletions(-)
+Larry, will you be doing a new version of this patch that accounts
+for this comment?
 
---- wireless-dev.orig/net/wireless/wext-old.c	2007-03-29 00:01:28.645833397 +0200
-+++ wireless-dev/net/wireless/wext-old.c	2007-03-29 00:01:43.785833397 +0200
-@@ -586,30 +586,6 @@ int wireless_process_ioctl(struct ifreq 
- 	return -EINVAL;
- }
- 
--/********************** RTNETLINK REQUEST API **********************/
--/*
-- * The alternate user space API to configure all those Wireless Extensions
-- * is through RtNetlink.
-- * This API support only the new driver API (iw_handler).
-- *
-- * This RtNetlink API use the same query/reply model as the ioctl API.
-- * Maximum effort has been done to fit in the RtNetlink model, and
-- * we support both RtNetlink Set and RtNelink Get operations.
-- * On the other hand, we don't offer Dump operations because of the
-- * following reasons :
-- *	o Large number of parameters, most optional
-- *	o Large size of some parameters (> 100 bytes)
-- *	o Each parameters need to be extracted from hardware
-- *	o Scan requests can take seconds and disable network activity.
-- * Because of this high cost/overhead, we want to return only the
-- * parameters the user application is really interested in.
-- * We could offer partial Dump using the IW_DESCR_FLAG_DUMP flag.
-- *
-- * The API uses the standard RtNetlink socket. When the RtNetlink code
-- * find a IFLA_WIRELESS field in a RtNetlink SET_LINK request,
-- * it calls here.
-- */
--
- /********************** ENHANCED IWSPY SUPPORT **********************/
- /*
-  * In the old days, the driver was handling spy support all by itself.
-
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
