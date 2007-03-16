@@ -1,61 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:51622 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965511AbXCGOLH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2007 09:11:07 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Andy Green <andy@warmcat.com>
-Subject: Re: Packetspammer and iwlwifi fragility
-Date: Wed, 7 Mar 2007 09:10:15 -0500
+Received: from mga02.intel.com ([134.134.136.20]:41194 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751889AbXCPDlH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2007 23:41:07 -0400
+Subject: [PATCH 3/5] mac80211: fix key restricted/open display
+From: Hong Liu <hong.liu@intel.com>
+To: Jiri Benc <jbenc@suse.cz>,
+	"John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-References: <45EEB892.6040201@warmcat.com>
-In-Reply-To: <45EEB892.6040201@warmcat.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1304219.mXQjKltbL5";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200703070910.20242.flamingice@sourmilk.net>
+Content-Type: text/plain
+Message-Id: <1174015698.3408.41.camel@devlinux-hong>
+Mime-Version: 1.0
+Date: Fri, 16 Mar 2007 11:28:24 +0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1304219.mXQjKltbL5
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Wednesday 07 March 2007 08:05, Andy Green wrote:
-> Also notice that packets cannot be sent by packetspammer until the
-> interface is brought up, which I guess is reasonable enough, but also I
-> found not until the interface was associated with a WPA network, which
-> is a problem if the plan is to use the injection action to do the work
-> of association in userspace.
->
-There is a hostap/prism2 sub-ioctl to enable userspace mlme mode, which sho=
-uld=20
-fix that issue. Look around in ieee80211_ioctl.c for=20
-PRISM2_IOCTL_PRISM2_PARAM, ieee80211_ioctl_prism2_param, and=20
-PRISM2_PARAM_USER_SPACE_MLME for hints. These sub-ioctls are, of course,=20
-quite evil and need to be replaced, but it's a little better than hacking=20
-mac80211 to start with user_space_mlme enabled by default.
+Signed-off-by: Hong Liu <hong.liu@intel.com>
 
-=2DMichael Wu
+---
 
---nextPart1304219.mXQjKltbL5
-Content-Type: application/pgp-signature
+ net/mac80211/ieee80211_ioctl.c |   16 ++++++++++++++++
+ 1 files changed, 16 insertions(+), 0 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+26742fdf9c5835a0abcb75a364840beee08953f8
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index f57e48f..46fd125 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -2934,6 +2934,14 @@ static int ieee80211_ioctl_siwencode(str
+ 	else
+ 		idx--;
+ 
++	if (erq->flags & (IW_ENCODE_OPEN | IW_ENCODE_RESTRICTED))
++		if (sdata->type == IEEE80211_IF_TYPE_STA ||
++		    sdata->type == IEEE80211_IF_TYPE_IBSS)
++			sdata->u.sta.auth_algs =
++				(erq->flags & IW_ENCODE_RESTRICTED) ?
++				IEEE80211_AUTH_ALG_SHARED_KEY :
++				IEEE80211_AUTH_ALG_OPEN;
++
+ 	if (erq->flags & IW_ENCODE_DISABLED)
+ 		alg = ALG_NONE;
+ 	else if (erq->length == 0) {
+@@ -2993,6 +3001,14 @@ static int ieee80211_ioctl_giwencode(str
+ 	erq->length = sdata->keys[idx]->keylen;
+ 	erq->flags |= IW_ENCODE_ENABLED;
+ 
++	if (sdata->type == IEEE80211_IF_TYPE_STA ||
++	    sdata->type == IEEE80211_IF_TYPE_IBSS) {
++		if (sdata->u.sta.auth_algs & IEEE80211_AUTH_ALG_OPEN)
++			erq->flags |= IW_ENCODE_OPEN;
++		else if (sdata->u.sta.auth_algs & IEEE80211_AUTH_ALG_SHARED_KEY)
++			erq->flags |= IW_ENCODE_RESTRICTED;
++	}
++
+ 	return 0;
+ }
+ 
+-- 
+1.3.3
 
-iD8DBQBF7sfMT3Oqt9AH4aERAmVsAJ0QvjCZAnJvpf4YcYvvasRtD/8imACgwgt3
-Gw/46k51ykYBRk8rX21nc7M=
-=awhu
------END PGP SIGNATURE-----
-
---nextPart1304219.mXQjKltbL5--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
