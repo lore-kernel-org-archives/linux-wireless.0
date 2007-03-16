@@ -1,65 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:47151 "EHLO
-	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751205AbXCNPcR (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:43190
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965819AbXCPSWT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Mar 2007 11:32:17 -0400
-Date: Wed, 14 Mar 2007 10:32:07 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linux-wireless@vger.kernel.org
-Cc: Bcm43xx-dev@lists.berlios.de
-Message-ID: <45f81577.+/XXKWDXwOzyP+DA%Larry.Finger@lwfinger.net>
+	Fri, 16 Mar 2007 14:22:19 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH] mac80211: Properly kill tasklets before shutdown
+Date: Fri, 16 Mar 2007 19:22:07 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <200703061902.00001.mb@bu3sch.de>
+In-Reply-To: <200703061902.00001.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200703161922.07545.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During testing of bcm43xx interference mitigation, two problems were
-discovered:
+Just want to make sure this crash fix patch is not lost,
+as I didn't see it showing up in some git tree, yet.
 
-(1) When the MANUALWLAN mode was set, routines _stack_save and _stack_restore
-    generated assertions that were traced to saving ILT registers with addresses
-    > 0xFFF. This problem was fixed by adding one bit to the field used for
-    the offset, and subtracting one bit from the space used for the id.
-(2) In MANUALWLAN mode, the IRQ XMIT errors are generated. The cause of these
-    errors has not yet been located. Any suggestions on debugging this problem
-    would be greatly appreciated.
+On Tuesday 06 March 2007 19:01, Michael Buesch wrote:
+> We need to do tasklet_kill() on any tasklet on unregister
+> to make sure the tasklet is not running _and_ scheduled anymore.
+> (tasklet_disable() only ensures it's not running anymore).
+> 
+> This fixes the tasklet related crash that was reported some time ago.
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> 
+> Index: bu3sch-wireless-dev/net/mac80211/ieee80211.c
+> ===================================================================
+> --- bu3sch-wireless-dev.orig/net/mac80211/ieee80211.c	2007-03-06 15:55:53.000000000 +0100
+> +++ bu3sch-wireless-dev/net/mac80211/ieee80211.c	2007-03-06 15:58:10.000000000 +0100
+> @@ -4761,8 +4761,8 @@
+>  	struct ieee80211_sub_if_data *sdata, *tmp;
+>  	int i;
+>  
+> -	tasklet_disable(&local->tasklet);
+> -	/* TODO: skb_queue should be empty here, no need to do anything? */
+> +	tasklet_kill(&local->tx_pending_tasklet);
+> +	tasklet_kill(&local->tasklet);
+>  
+>  	rtnl_lock();
+>  	local->reg_state = IEEE80211_DEV_UNREGISTERED;
+> 
 
-Larry
-
-
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
-@@ -882,10 +882,10 @@ static void _stack_save(u32 *_stackptr, 
- {
- 	u32 *stackptr = &(_stackptr[*stackidx]);
- 
--	assert((offset & 0xF000) == 0x0000);
--	assert((id & 0xF0) == 0x00);
-+	assert((offset & 0xE000) == 0x0000);
-+	assert((id & 0xF8) == 0x00);
- 	*stackptr = offset;
--	*stackptr |= ((u32)id) << 12;
-+	*stackptr |= ((u32)id) << 13;
- 	*stackptr |= ((u32)value) << 16;
- 	(*stackidx)++;
- 	assert(*stackidx < BCM43xx_INTERFSTACK_SIZE);
-@@ -896,12 +896,12 @@ static u16 _stack_restore(u32 *stackptr,
- {
- 	size_t i;
- 
--	assert((offset & 0xF000) == 0x0000);
--	assert((id & 0xF0) == 0x00);
-+	assert((offset & 0xE000) == 0x0000);
-+	assert((id & 0xF8) == 0x00);
- 	for (i = 0; i < BCM43xx_INTERFSTACK_SIZE; i++, stackptr++) {
--		if ((*stackptr & 0x00000FFF) != offset)
-+		if ((*stackptr & 0x00001FFF) != offset)
- 			continue;
--		if (((*stackptr & 0x0000F000) >> 12) != id)
-+		if (((*stackptr & 0x00007000) >> 13) != id)
- 			continue;
- 		return ((*stackptr & 0xFFFF0000) >> 16);
- 	}
+-- 
+Greetings Michael.
