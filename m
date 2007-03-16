@@ -1,23 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:43899 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751074AbXCCFWT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Mar 2007 00:22:19 -0500
-Date: Sat, 3 Mar 2007 05:21:40 +0000
-From: Christoph Hellwig <hch@infradead.org>
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, marcelo@kvack.org
-Subject: Re: Please pull 'libertas' branch of wireless-2.6
-Message-ID: <20070303052140.GA31075@infradead.org>
-References: <20070227205649.GH5826@tuxdriver.com> <45E8CF5E.5090305@garzik.org>
+Received: from mga02.intel.com ([134.134.136.20]:41194 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751988AbXCPDlK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2007 23:41:10 -0400
+Subject: [PATCH 2/5] mac80211: fix iwlist wlanX retry behavior
+From: Hong Liu <hong.liu@intel.com>
+To: Jiri Benc <jbenc@suse.cz>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Message-Id: <1174015699.3408.43.camel@devlinux-hong>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <45E8CF5E.5090305@garzik.org>
+Date: Fri, 16 Mar 2007 11:28:29 +0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Umm, I can't remember the updated driver ever beeig posted for review.
-And to be honest I'd be surprised if it's in a good shape already.
+Signed-off-by: Hong Liu <hong.liu@intel.com>
+
+---
+
+ net/mac80211/ieee80211_ioctl.c |   16 +++++++++-------
+ 1 files changed, 9 insertions(+), 7 deletions(-)
+
+bd08dec1012d17f66af6fd0170dce870cce34ab6
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index aa8b789..f57e48f 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -2176,16 +2176,18 @@ static int ieee80211_ioctl_giwretry(stru
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 
+ 	retry->disabled = 0;
+-	if ((retry->flags & IW_RETRY_TYPE) != IW_RETRY_LIMIT)
+-		return -EINVAL;
+-	if (retry->flags & IW_RETRY_MAX) {
+-		retry->flags = IW_RETRY_LIMIT | IW_RETRY_MAX;
+-		retry->value = local->long_retry_limit;
+-	} else {
+-		retry->flags = IW_RETRY_LIMIT;
++	if (retry->flags == 0 || retry->flags & IW_RETRY_MIN) {
++		/* first return min value, iwconfig will ask max value
++		 * later if needed */
++		retry->flags |= IW_RETRY_LIMIT;
+ 		retry->value = local->short_retry_limit;
+ 		if (local->long_retry_limit != local->short_retry_limit)
+ 			retry->flags |= IW_RETRY_MIN;
++		return 0;
++	}
++	if (retry->flags & IW_RETRY_MAX) {
++		retry->flags = IW_RETRY_LIMIT | IW_RETRY_MAX;
++		retry->value = local->long_retry_limit;
+ 	}
+ 
+ 	return 0;
+-- 
+1.3.3
 
