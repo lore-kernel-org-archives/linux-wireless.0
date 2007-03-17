@@ -1,49 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3356 "EHLO ra.tuxdriver.com"
+Received: from mx1.redhat.com ([66.187.233.31]:43595 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933770AbXCUTOW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2007 15:14:22 -0400
-Date: Wed, 21 Mar 2007 14:59:00 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Zan Lynx <zlynx@acm.org>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
-	bcm43xx devel <Bcm43xx-dev@lists.berlios.de>
-Subject: Re: 2.6.21-rc4-mm1
-Message-ID: <20070321185900.GC3801@tuxdriver.com>
-References: <20070319205623.299d0378.akpm@linux-foundation.org> <1174433034.62033.16.camel@localhost> <20070320223643.d8cbc3f6.akpm@linux-foundation.org> <4601761F.4000302@lwfinger.net>
+	id S933045AbXCQEf5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Mar 2007 00:35:57 -0400
+Subject: Re: [PATCH 3/5] mac80211: fix key restricted/open display
+From: Dan Williams <dcbw@redhat.com>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Hong Liu <hong.liu@intel.com>, Jiri Benc <jbenc@suse.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200703162357.22669.flamingice@sourmilk.net>
+References: <1174015698.3408.41.camel@devlinux-hong>
+	 <200703161328.41006.flamingice@sourmilk.net>
+	 <1174103177.3026.8.camel@localhost.localdomain>
+	 <200703162357.22669.flamingice@sourmilk.net>
+Content-Type: text/plain
+Date: Sat, 17 Mar 2007 00:38:36 -0400
+Message-Id: <1174106316.3026.19.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4601761F.4000302@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 21, 2007 at 01:14:55PM -0500, Larry Finger wrote:
-> Andrew Morton wrote:
-> > On Tue, 20 Mar 2007 17:23:54 -0600 Zan Lynx <zlynx@acm.org> wrote:
-> > 
-> >> On Mon, 2007-03-19 at 20:56 -0800, Andrew Morton wrote:
-> >>> Temporarily at
-> >>>
-> >>>   http://userweb.kernel.org/~akpm/2.6.21-rc4-mm1/
-> >>>
-> >>> Will appear later at
-> >>>
-> >>>   ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21-rc4/2.6.21-rc4-mm1/
-> >> First impressions:
-> >> Several of the same bugs as rc3-mm*:
-> >>       * Freezes immediately if I touch the wlan0 device after loading
-> >>         the new Broadcom wireless driver.
-> 
-> The version of the ssb driver in 2.6.21-rc4-mm1 has a bug that causes a kernel oops if the bcm43xx
-> chip contains a USB (dangling) core. This bug has been fixed in Michael Buesch's tree, but
-> apparently not yet in Linville's wireless-dev tree. The patch is as follows:
+On Fri, 2007-03-16 at 23:57 -0400, Michael Wu wrote:
+> On Friday 16 March 2007 23:46, Dan Williams wrote:
+> > I think you're misreading the patch?  It looks correct to me.  The
+> > second check for (erq->flags & IW_ENCODE_RESTRICTED) should ensure that
+> > Shared Key is only selected when the userspace program requested it.
+> >
+> This breaks authentication algorithm fallback for sure.
 
-FWIW, that patch is in my tree as of yesterday.  Presumably it should
-be in the next -mm.
+Well, then it's broken in most of the non mac80211 drivers then.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+> > Not quite.  Somewhere along the line WEXT turned ENCODE_RESTRICTED into
+> > the selector for Shared Key, while ENCODE_OPEN is Open System.  Arguably
+> > there's a larger need to specifying auth mode than rejecting unencrypted
+> > associations.  Most drivers do it this way, with the exception of
+> > madwifi because they like to be irritatingly different.  Nobody ever
+> > really used the 'don't accept unencrypted' thing anyway in the old days,
+> > plus ENCODEEXT has a separate flag for this.
+> >
+> Even if it got redefined along the way, mac80211 has no need for that 
+> particular definition since it can automatically cycle between authentication 
+> algorithms. Besides, "its meaning depends on the card used" according to the 
+> iwconfig man page.
+
+Well, if mac80211 can cycle (is this like airo's auto_wep?) then I guess
+we don't care about the auth mode.  As long as we don't break userspace
+programs that try to set the auth mode, I'm fine with that.
+
+> > So I think the patch is correct.  Ideally all this gets fixed and all
+> > the overloaded meanings go away with cfg80211 :)
+> >
+> > Acked-by: Dan Williams <dcbw@redhat.com>
+> >
+> NACK. It is not useful and if implemented, gives the user an unnecessary 
+> choice that can only cause more problems.
+
+As long as existing stuff isn't broken, and as long as mac80211 silently
+ignores it, and as long as the auth cycle stuff works, then fine.
+
+Dan
+
+
