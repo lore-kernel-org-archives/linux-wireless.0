@@ -1,94 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:44705 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016AbXCUKiS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2007 06:38:18 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so252246uga
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Mar 2007 03:38:16 -0700 (PDT)
-To: "John Linville" <linville@tuxdriver.com>
-Subject: [PATCH] Move eeprom_93cx6 from lib/ to drivers/misc/
-Date: Wed, 21 Mar 2007 11:37:50 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>
+Received: from betty.cbit.net.au ([202.55.154.10]:53453 "EHLO mail.cbit.net.au"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752194AbXCQHUk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Mar 2007 03:20:40 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.cbit.net.au (Postfix) with ESMTP id 15F0C1080AD
+	for <linux-wireless@vger.kernel.org>; Sat, 17 Mar 2007 18:20:38 +1100 (EST)
+Received: from mail.cbit.net.au ([127.0.0.1])
+	by localhost (betty [127.0.0.1]) (amavisd-new, port 10024) with LMTP
+	id 27417-02-13 for <linux-wireless@vger.kernel.org>;
+	Sat, 17 Mar 2007 18:20:37 +1100 (EST)
+Received: from keitarou.bubblesworth.net (unknown [202.55.155.91])
+	by mail.cbit.net.au (Postfix) with ESMTP id 66A46108077
+	for <linux-wireless@vger.kernel.org>; Sat, 17 Mar 2007 18:20:37 +1100 (EST)
+Date: Sat, 17 Mar 2007 18:20:32 +1100
+From: Paul TBBle Hampson <Paul.Hampson@Pobox.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: mac80211 and IPv6 Duplicate Address Detection (Was: prism54pci fails to read eeprom on PowerPC, then bugs in pci code)
+Message-ID: <20070317072032.GC5954@keitarou>
+References: <20070317034607.GA1522@keitarou> <200703170037.14875.flamingice@sourmilk.net> <1174107032.17023.14.camel@dv> <20070317065242.GB5954@keitarou>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200703211137.51012.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="KN5l+BnMqAQyZLvT"
+In-Reply-To: <20070317065242.GB5954@keitarou>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As requested, this will move the eeprom_93cx6 from its location in
-lib/ to drivers/misc/
 
-Signed-off-by Ivo van Doorn <IvDoorn@gmail.com>
+--KN5l+BnMqAQyZLvT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
----
+On Sat, Mar 17, 2007 at 05:52:43PM +1100, Paul TBBle Hampson wrote:
+> Mar 17 17:47:00 su kernel: wlan1: duplicate address detected!
 
-eeprom_93cx6.c was moved with:
-cg-mv lib/eeprom_93cx6.c drivers/misc/eeprom_93cx6.c
+OK, I've confirmed that I still get the above with both dadwifi and
+bcm43xx-mac80211
 
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index 80b199f..1af3e76 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -122,4 +122,12 @@ config SONY_LAPTOP
- 
- 	  Read <file:Documentation/sony-laptop.txt> for more information.
- 
-+config EEPROM_93CX6
-+	tristate "EEPROM 93CX6 support"
-+	  ---help---
-+	  This is a driver for the EEPROM chipsets 93c46 and 93c66.
-+	  The driver supports both read as well as write commands.
-+
-+	  When compiled as a module, this driver will be called "eeprom_93c6.ko".
-+
- endmenu
-diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-index 7793ccd..f65b835 100644
---- a/drivers/misc/Makefile
-+++ b/drivers/misc/Makefile
-@@ -12,3 +12,4 @@ obj-$(CONFIG_TIFM_CORE)       	+= tifm_core.o
- obj-$(CONFIG_TIFM_7XX1)       	+= tifm_7xx1.o
- obj-$(CONFIG_SGI_IOC4)		+= ioc4.o
- obj-$(CONFIG_SONY_LAPTOP)	+= sony-laptop.o
-+obj-$(CONFIG_EEPROM_93CX6)	+= eeprom_93cx6.o
-diff --git a/lib/eeprom_93cx6.c b/drivers/misc/eeprom_93cx6.c
-similarity index 100%
-rename from lib/eeprom_93cx6.c
-rename to drivers/misc/eeprom_93cx6.c
-diff --git a/lib/Kconfig b/lib/Kconfig
-index 0b275b7..8e91748 100644
---- a/lib/Kconfig
-+++ b/lib/Kconfig
-@@ -50,14 +50,6 @@ config LIBCRC32C
- 	  require M here.  See Castagnoli93.
- 	  Module will be libcrc32c.
- 
--config EEPROM_93CX6
--	tristate "EEPROM 93CX6 support"
--	---help---
--	This is a driver for the EEPROM chipsets 93c46 and 93c66.
--	The driver supports both read as well as write commands.
--
--	When compiled as a module, this driver will be called "eeprom_93c6.ko".
--
- config AUDIT_GENERIC
- 	bool
- 	depends on AUDIT && !AUDIT_ARCH
-diff --git a/lib/Makefile b/lib/Makefile
-index 71ae5be..d7edaf3 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -56,8 +56,6 @@ obj-$(CONFIG_TEXTSEARCH_FSM) += ts_fsm.o
- obj-$(CONFIG_SMP) += percpu_counter.o
- obj-$(CONFIG_AUDIT_GENERIC) += audit.o
- 
--obj-$(CONFIG_EEPROM_93CX6) += eeprom_93cx6.o
--
- obj-$(CONFIG_SWIOTLB) += swiotlb.o
- obj-$(CONFIG_FAULT_INJECTION) += fault-inject.o
- 
+A tcpdump indicates that my laptop sees its own neighbour-announce come
+back, and assumes that's a different machine sending it, failing the
+duplicate address detection.
+
+A tcdump against the ethernet device (or bcm43xx from 2.6.20) does not
+see the neighbour-announce come back, and so passes the duplicate
+address detection, and gets an autoconfig IPv6 address.
+
+I thought it might be the lack of IFF_BROADCAST which was fixed a while
+ago, but it's still there.
+
+kernel 2.6.20 from debian, patched with get_order() fix from 2.6.20.2
+modular mac80211 stack from intel's 4.0.4 tarball, patched into kernel
+bcm43xx-mac80211 from wireless-dev
+dadwifi from madwifi.org subversion repository
+
+--=20
+-----------------------------------------------------------
+Paul "TBBle" Hampson, B.Sc, LPI, MCSE
+On-hiatus Asian Studies student, ANU
+The Boss, Bubblesworth Pty Ltd (ABN: 51 095 284 361)
+Paul.Hampson@Pobox.Com
+
+Of course Pacman didn't influence us as kids. If it did,
+we'd be running around in darkened rooms, popping pills and
+listening to repetitive music.
+ -- Kristian Wilson, Nintendo, Inc, 1989
+
+License: http://creativecommons.org/licenses/by/2.1/au/
+-----------------------------------------------------------
+
+--KN5l+BnMqAQyZLvT
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFF+5bAexDuohKLFuARAmxGAJ9rNObAgiR6GLsuwhJXxdYQrRFH2wCeIGs8
+RjnQ+OwbCjbPQjSlpTPOJ8E=
+=CEvl
+-----END PGP SIGNATURE-----
+
+--KN5l+BnMqAQyZLvT--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
