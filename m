@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3355 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933766AbXCUTOS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2007 15:14:18 -0400
-Date: Wed, 21 Mar 2007 15:00:03 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+Received: from mog.warmcat.com ([62.193.232.24]:48480 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750741AbXCQPfh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Mar 2007 11:35:37 -0400
+Message-ID: <45FC0AC7.4030504@warmcat.com>
+Date: Sat, 17 Mar 2007 15:35:35 +0000
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
 To: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Zan Lynx <zlynx@acm.org>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	bcm43xx devel <Bcm43xx-dev@lists.berlios.de>
-Subject: Re: 2.6.21-rc4-mm1
-Message-ID: <20070321190003.GD3801@tuxdriver.com>
-References: <20070319205623.299d0378.akpm@linux-foundation.org> <20070320223643.d8cbc3f6.akpm@linux-foundation.org> <4601761F.4000302@lwfinger.net> <200703211934.28465.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200703211934.28465.mb@bu3sch.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] mac80211: Monitor mode radiotap-based packet injection
+References: <20070317105800.659633351@warmcat.com> <200703171459.23246.mb@bu3sch.de> <45FC0205.2020409@warmcat.com> <200703171606.58803.mb@bu3sch.de>
+In-Reply-To: <200703171606.58803.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 21, 2007 at 07:34:28PM +0100, Michael Buesch wrote:
-> On Wednesday 21 March 2007 19:14, Larry Finger wrote:
-> > Andrew Morton wrote:
-> > > On Tue, 20 Mar 2007 17:23:54 -0600 Zan Lynx <zlynx@acm.org> wrote:
-> > > 
-> > >> On Mon, 2007-03-19 at 20:56 -0800, Andrew Morton wrote:
-> > >>> Temporarily at
-> > >>>
-> > >>>   http://userweb.kernel.org/~akpm/2.6.21-rc4-mm1/
-> > >>>
-> > >>> Will appear later at
-> > >>>
-> > >>>   ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21-rc4/2.6.21-rc4-mm1/
-> > >> First impressions:
-> > >> Several of the same bugs as rc3-mm*:
-> > >>       * Freezes immediately if I touch the wlan0 device after loading
-> > >>         the new Broadcom wireless driver.
-> > 
-> > The version of the ssb driver in 2.6.21-rc4-mm1 has a bug that causes a kernel oops if the bcm43xx
-> > chip contains a USB (dangling) core. This bug has been fixed in Michael Buesch's tree, but
-> > apparently not yet in Linville's wireless-dev tree. The patch is as follows:
-> > 
-> > commit 08531ff130bcc8181d9294a66e25010f48eefb97
-> > Author: Michael Buesch <mb@bu3sch.de>
-> > Date:   Wed Mar 7 23:01:08 2007 +0100
-> > 
-> >     ssb: Don't freeze unregistered devices.
+Michael Buesch wrote:
+> On Saturday 17 March 2007 15:58, Andy Green wrote:
+>> Michael Buesch wrote:
+>>
+>>>> +#define IEEE80211_TXCTL_INJECTED_PACKET (1<<10) /* tx into monitor IF */
+>>> What is a driver supposed to do on this flag? More documentation, please.
+>> Hi Michael -
+>>
+>> The driver doesn't have to do anything with that flag... it's a private 
+>> mac80211-internal flag to get the attribute that the packet was injected 
 > 
-> No, that's a different fix for suspend.
+>> If there's a simpler way I'm happy to use it.
 > 
-> This is the fix:
-> http://bu3sch.de/gitweb?p=wireless-dev.git;a=commitdiff;h=b87f743f3643ea162892dce0bbc91e6f026a49bf
-> 
-> Pull request was sent to John.
+> Ok, no. I'm fine with this. But please mark it as mac80211-internal
+> flag, so driver authors don't waste time on thinking about wtf this is. ;)
+> Either by documenting it in a comment or by doing a special define
+> (two underscores or something). Or both.
 
-That's "ssb-ohci: Completely disable the driver on non-embedded
-systems", also in wireless-dev as of yesterday.
+Both sounds like a good idea, thanks: I will wait a bit for any more 
+comments and then add this to a try #3.  I noticed Michael Wu set his 
+flag to 1<<20 and I guess he had this in mind, so I will change mine to 
+1<<21 to further distance it from the other flags in bits and in meaning.
 
-Thanks,
+-Andy
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+
+
