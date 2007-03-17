@@ -1,59 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:58952
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752937AbXC1J4X (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:48412 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751845AbXCQVwh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 05:56:23 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] zd1211rw-mac80211: Fix for monitor mode bug
-Date: Wed, 28 Mar 2007 11:55:51 +0200
-Cc: Andy Green <andy@warmcat.com>, Jiri Benc <jbenc@suse.cz>,
-	Daniel Drake <dsd@gentoo.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, kune@deine-taler.de
-References: <20070325231817.9C5887B409F@zog.reactivated.net> <200703262239.07013.mb@bu3sch.de> <1175073595.5151.28.camel@johannes.berg>
-In-Reply-To: <1175073595.5151.28.camel@johannes.berg>
+	Sat, 17 Mar 2007 17:52:37 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: andy@warmcat.com
+Subject: Re: [PATCH 2/2] mac80211: Monitor mode radiotap-based packet injection
+Date: Sat, 17 Mar 2007 17:51:46 -0400
+Cc: linux-wireless@vger.kernel.org
+References: <20070317105800.659633351@warmcat.com> <20070317110751.352850972@warmcat.com> <200703171730.33349.flamingice@sourmilk.net>
+In-Reply-To: <200703171730.33349.flamingice@sourmilk.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200703281155.52208.mb@bu3sch.de>
+Content-Type: multipart/signed;
+  boundary="nextPart1348326.Pt6YK3Eef3";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703171751.50898.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 28 March 2007 11:19, Johannes Berg wrote:
-> On Mon, 2007-03-26 at 22:39 +0200, Michael Buesch wrote:
-> 
-> > Well, yeah. It does of course. If you have a STA and a MON interface,
-> > the STA also receives the packs with bad CRCs. But that's how
-> > mac80211 designed the virt-interface stuff.
-> > Same goes for promisc. If you have a STA and a MON you can't have
-> > the STA in non-promisc mode, so you also receive promisc packets on
-> > the STA. That's how it's supposed to be. (I think mac80211 filters
-> > them in the STA code somewhere).
-> 
-> Yeah, it filters those later by BSSID, that's intended, but it wasn't
-> ever programmed to check the CRC. We'll need to introduce a new rx
-> status flag "was crc checked".
-> 
-> > The modparams actually are just a temporary hack and were never meant
-> > to stay there. I wanted to have the knob in cfg80211, sooner or later.
-> > So when the knob is there, mac80211 should take care that the STA
-> > doesn't receive the bad packets.
+--nextPart1348326.Pt6YK3Eef3
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I think we need at least two "stages" for this config.
-One that says: Get all packets with bad FCS
-And one that says: Get all packets with bad FCS and everything else
-that looks like a signal, which is probably your microwave oven, though.
+On Saturday 17 March 2007 17:30, Michael Wu wrote:
+> > +		/* process and remove the injection radiotap header */
+> > +
+> > +	if(control->flags & IEEE80211_TXCTL_INJECTED_PACKET) {
+>
+> dev points to the virtual interface that the frame originally came in on.
+> You can get sdata from that and figure out if the interface was a monitor
+> interface.
+>
+Of course, this depends on ifindex being set properly.
 
-So, when these packets are passed up the stack the PLCP is stripped.
-I think we should make the stack aware of the PLCP (and add an RX flag
-PLCP_available) so that it is able to check the PLCP checksum.
-Otherwise the only way to detect your microwave oven from the packet
-stream would be failed FCS. Which would also most likely failed then, but
-I think it's probably useful for the user to see the PLCP, too, on
-a mon interface.
+You added:
+	pkt_data->ifindex =3D  local->mdev->ifindex;
 
-So we need RX flags "PLCP_available" and "Not_checksummed".
+but in that same function, this is used instead:
+	pkt_data->ifindex =3D sdata->dev->ifindex;
 
--- 
-Greetings Michael.
+Which allows the master device to figure out which virtual interface the sk=
+b=20
+came from.
+
+=2DMichael Wu
+
+--nextPart1348326.Pt6YK3Eef3
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBF/GL2T3Oqt9AH4aERAk7vAKDMUzvFRSAQSbYfxFHjQY3VewmP6wCeIdv1
+QXx6LQfwumGdBFSzNJ4NeZ4=
+=Z8o4
+-----END PGP SIGNATURE-----
+
+--nextPart1348326.Pt6YK3Eef3--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
