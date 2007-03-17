@@ -1,74 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:63498 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932975AbXCVXTd (ORCPT
+Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:54642 "EHLO
+	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751458AbXCQQ3Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Mar 2007 19:19:33 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/4] mac80211: Add radiotap support for Monitor mode RX
-Date: Thu, 22 Mar 2007 19:18:21 -0400
-Cc: andy@warmcat.com, linux-wireless@vger.kernel.org
-References: <20070320103955.600509703@warmcat.com> <20070320104104.318699229@warmcat.com> <1174503091.3944.42.camel@johannes.berg>
-In-Reply-To: <1174503091.3944.42.camel@johannes.berg>
+	Sat, 17 Mar 2007 12:29:16 -0400
+Date: Sat, 17 Mar 2007 11:28:21 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] bcm43xx: Fix code for confusion between PHY revision and  PHY version
+Message-ID: <45fc1725.yUj4D2LtC57tEQYF%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart5685658.RJviMaEanf";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200703221918.22256.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart5685658.RJviMaEanf
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+There are several places where the PHY version and revision were interchanged.
+These are changed in the specifications on 2/13/07 and now use "analog" instead
+instead of "version" to help reduce confusion.
 
-On Wednesday 21 March 2007 14:51, Johannes Berg wrote:
-> > +	/* Driver supports radiotap. */
-> > +#define IEEE80211_HW_RADIOTAP_SUPPORTED (1<<10)
-> >
-> > +	if (local->monitors &&
-> > +	    local->hw.flags & IEEE80211_HW_RADIOTAP_SUPPORTED) {
-> > +		radiotap_len =3D ieee80211_get_radiotap_len(skb);
-> > +		skb_pull(skb, radiotap_len);
-> > +	}
->
-> I don't think that can work.
->
->  1) it needs a lot more documentation on what a driver needs to do for
->     this (for example that it should only add radiotap headers if a
->     monitor interface was added)
->
-Lack of documentation makes code not work?
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
->  2) afaik local->monitors is increased even for soft monitor interfaces,
->     thus this will really fall on its nose when the driver supports
->     radiotap but not monitor during operation.
->
-Yes. I noted that in December when the patch was first posted. This will be=
-=20
-fixed when I post a radiotap RX patch that's actually signed off. No sign o=
-ff=20
-from me means it's not done and probably not tested enough if at all.
+John,
 
-=2DMichael Wu
+I had thought this patch was submitted earlier, but apparently I failed
+to send it. This material is needed for wireless-2.6, "upstream"
+and "upstream-fixes".
 
---nextPart5685658.RJviMaEanf
-Content-Type: application/pgp-signature
+Thanks,
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Larry
 
-iD8DBQBGAw6+T3Oqt9AH4aERAsQoAKCKqxjgk8zXiM7JBmdjslMEs1/ejQCfdIAV
-mvFCRO1uLYbXutRQU7PW9UY=
-=UEWQ
------END PGP SIGNATURE-----
 
---nextPart5685658.RJviMaEanf--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
+===================================================================
+--- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
++++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
+@@ -458,7 +458,7 @@ static void bcm43xx_calc_nrssi_offset(st
+ 		bcm43xx_phy_write(bcm, 0x005A, 0x0480);
+ 		bcm43xx_phy_write(bcm, 0x0059, 0x0810);
+ 		bcm43xx_phy_write(bcm, 0x0058, 0x000D);
+-		if (phy->rev == 0) {
++		if (phy->analog == 0) {
+ 			bcm43xx_phy_write(bcm, 0x0003, 0x0122);
+ 		} else {
+ 			bcm43xx_phy_write(bcm, 0x000A,
+@@ -570,9 +570,9 @@ void bcm43xx_calc_nrssi_slope(struct bcm
+ 		nrssi0 = (s16)bcm43xx_phy_read(bcm, 0x0027);
+ 		bcm43xx_radio_write16(bcm, 0x007A,
+ 				      bcm43xx_radio_read16(bcm, 0x007A) & 0x007F);
+-		if (phy->rev >= 2) {
++		if (phy->analog >= 2) {
+ 			bcm43xx_write16(bcm, 0x03E6, 0x0040);
+-		} else if (phy->rev == 0) {
++		} else if (phy->analog == 0) {
+ 			bcm43xx_write16(bcm, 0x03E6, 0x0122);
+ 		} else {
+ 			bcm43xx_write16(bcm, BCM43xx_MMIO_CHANNEL_EXT,
+@@ -596,7 +596,7 @@ void bcm43xx_calc_nrssi_slope(struct bcm
+ 		bcm43xx_phy_write(bcm, 0x0015, backup[5]);
+ 		bcm43xx_phy_write(bcm, 0x002A, backup[6]);
+ 		bcm43xx_synth_pu_workaround(bcm, radio->channel);
+-		if (phy->rev != 0)
++		if (phy->analog != 0)
+ 			bcm43xx_write16(bcm, 0x03F4, backup[13]);
+ 
+ 		bcm43xx_phy_write(bcm, 0x0020, backup[7]);
+@@ -692,7 +692,7 @@ void bcm43xx_calc_nrssi_slope(struct bcm
+ 
+ 		bcm43xx_radio_write16(bcm, 0x007A,
+ 				      bcm43xx_radio_read16(bcm, 0x007A) & 0x007F);
+-		if (phy->rev >= 2) {
++		if (phy->analog >= 2) {
+ 			bcm43xx_phy_write(bcm, 0x0003,
+ 					  (bcm43xx_phy_read(bcm, 0x0003)
+ 					   & 0xFF9F) | 0x0040);
+
+---
+
