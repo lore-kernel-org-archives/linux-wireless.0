@@ -1,68 +1,372 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail7.sea5.speakeasy.net ([69.17.117.9]:60303 "EHLO
-	mail7.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753245AbXCRQpK (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:44151 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965521AbXCQLHy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Mar 2007 12:45:10 -0400
-Date: Sun, 18 Mar 2007 09:45:07 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	Hong Liu <hong.liu@intel.com>, Jiri Benc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/5] mac80211: fix key restricted/open display
-Message-ID: <20070318164506.GB5358@jm.kir.nu>
-References: <1174015698.3408.41.camel@devlinux-hong> <200703161328.41006.flamingice@sourmilk.net> <1174103177.3026.8.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1174103177.3026.8.camel@localhost.localdomain>
+	Sat, 17 Mar 2007 07:07:54 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 2B0A48CAD8
+	for <linux-wireless@vger.kernel.org>; Sat, 17 Mar 2007 12:07:52 +0100 (CET)
+Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
+	by armbox7.home.warmcat.com (Postfix) with ESMTP id D4527FBF9
+	for <linux-wireless@vger.kernel.org>; Sat, 17 Mar 2007 11:07:53 +0000 (UTC)
+Message-Id: <20070317110751.352850972@warmcat.com>
+References: <20070317105800.659633351@warmcat.com>
+Date: Sat, 17 Mar 2007 10:58:02 +0000
+From: andy@warmcat.com
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] mac80211: Monitor mode radiotap-based packet injection
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 16, 2007 at 11:46:17PM -0400, Dan Williams wrote:
-> On Fri, 2007-03-16 at 13:28 -0400, Michael Wu wrote:
-> > On Thursday 15 March 2007 23:28, Hong Liu wrote:
-> > > +	if (erq->flags & (IW_ENCODE_OPEN | IW_ENCODE_RESTRICTED))
-> > > +		if (sdata->type == IEEE80211_IF_TYPE_STA ||
-> > > +		    sdata->type == IEEE80211_IF_TYPE_IBSS)
-> > > +			sdata->u.sta.auth_algs =
-> > > +				(erq->flags & IW_ENCODE_RESTRICTED) ?
-> > > +				IEEE80211_AUTH_ALG_SHARED_KEY :
-> > > +				IEEE80211_AUTH_ALG_OPEN;
+From: Andy Green <andy@warmcat.com>
 
-NAK.
+Try #2
+ - took Michael Wu's advice about better tools and basing on wireless-dev
+ - took Luis Rodriguez's advice about coding style makeover
+ - took Pavel Roskin's advice about little-endian radiotap
 
-> I think you're misreading the patch?  It looks correct to me.  The
-> second check for (erq->flags & IW_ENCODE_RESTRICTED) should ensure that
-> Shared Key is only selected when the userspace program requested it.
+Index: linux-2.6.20.i386/include/net/mac80211.h
+===================================================
 
-IW_ENCODE_RESTRICTED and Shared Key are different things (IMHO).
-
-> > IW_ENCODE_RESTRICTED simply means that the interface should not make/accept 
-> > unencrypted connections.
-
-Agreed.
-
-> Not quite.  Somewhere along the line WEXT turned ENCODE_RESTRICTED into
-> the selector for Shared Key, while ENCODE_OPEN is Open System.  Arguably
-> there's a larger need to specifying auth mode than rejecting unencrypted
-> associations.  Most drivers do it this way, with the exception of
-> madwifi because they like to be irritatingly different.  Nobody ever
-> really used the 'don't accept unencrypted' thing anyway in the old days,
-> plus ENCODEEXT has a separate flag for this.
-
-Take a look at Host AP driver.. It has always mapped HFA384x WEPFLAGS
-excludeunencrypted to IW_ENCODE_RESTRICTED..
-
-The IW_ENCODE_OPEN/RESTRICTED is quite unfortunate part of WEXT and
-since it has been used for two completely different things, it should
-not really be used. I would hope that this change is not introduced into
-mac80211.
-
-WE-18 introduced IW_AUTH_80211_AUTH_ALG and that should be used if user
-space wants to explicitly select which 802.11 authentication algorithm
-is to be used. Please let the IW_ENCODE_OPEN/RESTRICTED misuse die.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 4fc8edc..bb5777e 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -189,6 +189,7 @@ struct ieee80211_tx_control {
+ #define IEEE80211_TXCTL_FIRST_FRAGMENT	(1<<8) /* this is a first fragment of
+ 						* the frame */
+ #define IEEE80211_TXCTL_TKIP_NEW_PHASE1_KEY (1<<9)
++#define IEEE80211_TXCTL_INJECTED_PACKET (1<<10) /* tx into monitor IF */
+ 	u32 flags;			       /* tx control flags defined
+ 						* above */
+ 	u8 retry_limit;		/* 1 = only first attempt, 2 = one retry, .. */
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index fb33b90..3873262 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -35,6 +35,7 @@
+ #include "ieee80211_led.h"
+ #include "ieee80211_cfg.h"
+ #include "ieee80211_sysfs.h"
++#include <net/ieee80211_radiotap.h>
+ 
+ /* See IEEE 802.1H for LLC/SNAP encapsulation/decapsulation */
+ /* Ethernet-II snap header (RFC1042 for most EtherTypes) */
+@@ -1054,7 +1055,163 @@ ieee80211_tx_h_ps_buf(struct ieee80211_txrx_data *tx)
+ }
+ 
+ 
+-static void inline
++/* deal with packet injection down monitor interface
++ * with Radiotap Header -- only called for monitor mode interface
++ */
++
++static ieee80211_txrx_result
++__ieee80211_convert_radiotap_to_control_and_remove(
++	struct ieee80211_txrx_data *tx,
++	struct sk_buff *skb, struct ieee80211_tx_control *control)
++{
++	/* this is the moment to interpret the radiotap header that
++	 * must be at the start of the packet injected in Monitor
++	 * mode into control and then discard the radiotap header
++	 *
++	 * Need to take some care with endian-ness since radiotap
++	 * is apparently a little-endian struct, including the args
++	*/
++
++	struct ieee80211_radiotap_header *rthdr =
++		(struct ieee80211_radiotap_header *) skb->data;
++
++	/* small length lookup table for all radiotap types we heard of
++	 * starting from b0 in the bitmap, so we can walk the payload
++	 * area of the radiotap header
++	 */
++
++	static const u8 radiotap_entry_sizes[] = {
++		8, /* IEEE80211_RADIOTAP_TSFT */
++		1, /* IEEE80211_RADIOTAP_FLAGS */
++		1, /* IEEE80211_RADIOTAP_RATE */
++		4, /* IEEE80211_RADIOTAP_CHANNEL */
++		2, /* IEEE80211_RADIOTAP_FHSS */
++		1, /* IEEE80211_RADIOTAP_DBM_ANTSIGNAL */
++		1, /* IEEE80211_RADIOTAP_DBM_ANTNOISE */
++		2, /* IEEE80211_RADIOTAP_LOCK_QUALITY */
++		2, /* IEEE80211_RADIOTAP_TX_ATTENUATION */
++		2, /* IEEE80211_RADIOTAP_DB_TX_ATTENUATION */
++		1, /* IEEE80211_RADIOTAP_DBM_TX_POWER */
++		1, /* IEEE80211_RADIOTAP_ANTENNA */
++		1, /* IEEE80211_RADIOTAP_DB_ANTSIGNAL */
++		1  /* IEEE80211_RADIOTAP_DB_ANTNOISE */
++			/* add more here as they are defined */
++	};
++	int tap_index = 0;
++	u8 *tap_arg = skb->data + sizeof(struct ieee80211_radiotap_header);
++	u32 *curr_arg_bitmap = &rthdr->it_present;
++	u32 arg_bitmap=le32_to_cpu(*curr_arg_bitmap);
++
++	if(rthdr->it_version) return TXRX_DROP; /* version byte used as magic */
++
++		/* sanity check for skb length and radiotap length field */
++	if (skb->len < (le16_to_cpu(rthdr->it_len) +
++		sizeof(struct ieee80211_hdr)))
++		return TXRX_DROP;
++
++		/* find payload start allowing for extended bitmap(s) */
++
++	if(le32_to_cpu(rthdr->it_present) & 0x80000000) {
++		while( le32_to_cpu(*((u32 *)tap_arg)) & 0x80000000)
++			tap_arg += sizeof(u32);
++		tap_arg += sizeof(u32);
++	}
++
++		/* default control situation for all injected packets */
++
++	control->retry_limit = 1; /* no retry */
++	control->key_idx = -1; /* no encryption key */
++	control->flags &= ~(IEEE80211_TXCTL_USE_RTS_CTS |
++		IEEE80211_TXCTL_USE_CTS_PROTECT);
++	control->flags |= (IEEE80211_TXCTL_DO_NOT_ENCRYPT |
++		IEEE80211_TXCTL_NO_ACK);
++	control->antenna_sel_tx = 0; /* default to default/diversity */
++
++		/* for every radiotap entry we can at
++		 * least skip (by knowing the length)...
++		 */
++
++	while(tap_index < sizeof(radiotap_entry_sizes)) {
++		int i, target_rate;
++
++		if(!(arg_bitmap & 1)) goto next_entry;
++
++			/* arg is present */
++
++		switch(tap_index) { /* deal with if interested */
++
++		case IEEE80211_RADIOTAP_RATE:
++			/* radiotap "rate" u8 is in
++			 * 500kbps units, eg, 0x02=1Mbps
++			 * ieee80211 "rate" int is
++			 * in 100kbps units, eg, 0x0a=1Mbps
++			 */
++			target_rate = (*tap_arg) * 5;
++			for (i = 0; i < tx->local->num_curr_rates; i++){
++				struct ieee80211_rate *r =
++					&tx->local->curr_rates[i];
++
++				if(r->rate <= target_rate) {
++					if(r->flags &
++						IEEE80211_RATE_PREAMBLE2) {
++						control->tx_rate = r->val2;
++					} else {
++						control->tx_rate = r->val;
++					}
++				
++
++						/* end on exact match */
++					if(r->rate == target_rate)
++						i = tx->local->num_curr_rates;
++				}
++			}
++			break;
++
++		case IEEE80211_RADIOTAP_ANTENNA:
++			/* radiotap uses 0 for 1st ant,
++			 * mac80211 is 1 for 1st ant
++			 * absence of IEEE80211_RADIOTAP_ANTENNA
++			 * gives default/diversity
++			*/
++			control->antenna_sel_tx = (*tap_arg) + 1;
++			break;
++
++		case IEEE80211_RADIOTAP_DBM_TX_POWER:
++			control->power_level = *tap_arg;
++			break;
++
++		default:
++			break;
++		}
++
++		tap_arg += radiotap_entry_sizes[tap_index];
++
++		next_entry:
++
++		tap_index++;
++		if(unlikely((tap_index & 31) == 0)) {
++				/* completed current u32 bitmap */
++			if(arg_bitmap & 1) { /* b31 was set, there is another */
++				/* move to next u32 bitmap */
++				curr_arg_bitmap++;
++				arg_bitmap = le32_to_cpu(*curr_arg_bitmap);
++			} else {
++				/* he didn't give us any more bitmaps: end */
++				tap_index = sizeof(radiotap_entry_sizes);
++			}
++		} else { /* just try the next bit */
++			arg_bitmap >>= 1;
++		}
++	}
++
++		/* remove the radiotap header */
++	skb_pull(skb, le16_to_cpu(rthdr->it_len));
++
++	return TXRX_CONTINUE;
++}
++
++
++static ieee80211_txrx_result inline
+ __ieee80211_tx_prepare(struct ieee80211_txrx_data *tx,
+ 		       struct sk_buff *skb,
+ 		       struct net_device *dev,
+@@ -1071,7 +1228,30 @@ __ieee80211_tx_prepare(struct ieee80211_txrx_data *tx,
+ 	tx->sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	tx->sta = sta_info_get(local, hdr->addr1);
+ 	tx->fc = le16_to_cpu(hdr->frame_control);
++
++		/* set defaults for things that can be set by
++		 * injected radiotap headers
++		 */
++
+ 	control->power_level = local->hw.conf.power_level;
++	control->antenna_sel_tx = local->hw.conf.antenna_sel_tx;
++	if (local->sta_antenna_sel != STA_ANTENNA_SEL_AUTO && tx->sta )
++		control->antenna_sel_tx = tx->sta->antenna_sel_tx;
++
++		/* process and remove the injection radiotap header */
++
++	if(control->flags & IEEE80211_TXCTL_INJECTED_PACKET) {
++		if(__ieee80211_convert_radiotap_to_control_and_remove(
++			tx, skb, control) == TXRX_DROP) {
++			return TXRX_DROP;
++		}
++		/* we removed the radiotap header after this point,
++		 * we filled control with what we could use
++		 * set to the actual ieee header now
++		 */
++		hdr = (struct ieee80211_hdr *) skb->data;
++	}
++
+ 	tx->u.tx.control = control;
+ 	tx->u.tx.unicast = !is_multicast_ether_addr(hdr->addr1);
+ 	if (is_multicast_ether_addr(hdr->addr1))
+@@ -1088,9 +1268,6 @@ __ieee80211_tx_prepare(struct ieee80211_txrx_data *tx,
+ 		control->flags |= IEEE80211_TXCTL_CLEAR_DST_MASK;
+ 		tx->sta->clear_dst_mask = 0;
+ 	}
+-	control->antenna_sel_tx = local->hw.conf.antenna_sel_tx;
+-	if (local->sta_antenna_sel != STA_ANTENNA_SEL_AUTO && tx->sta)
+-		control->antenna_sel_tx = tx->sta->antenna_sel_tx;
+ 	hdrlen = ieee80211_get_hdrlen(tx->fc);
+ 	if (skb->len > hdrlen + sizeof(rfc1042_header) + 2) {
+ 		u8 *pos = &skb->data[hdrlen + sizeof(rfc1042_header)];
+@@ -1098,6 +1275,7 @@ __ieee80211_tx_prepare(struct ieee80211_txrx_data *tx,
+ 	}
+ 	control->flags |= IEEE80211_TXCTL_FIRST_FRAGMENT;
+ 
++	return TXRX_CONTINUE;
+ }
+ 
+ static int inline is_ieee80211_device(struct net_device *dev,
+@@ -1215,14 +1393,22 @@ static int ieee80211_tx(struct net_device *dev, struct sk_buff *skb,
+ 		return 0;
+ 	}
+ 
+-	__ieee80211_tx_prepare(&tx, skb, dev, control);
++	if(__ieee80211_tx_prepare(&tx, skb, dev, control)==TXRX_DROP) {
++		dev_kfree_skb(skb);
++		return 0;
++	}
++
+ 	sta = tx.sta;
+ 	tx.u.tx.mgmt_interface = mgmt;
+ 
+-	for (handler = local->tx_handlers; *handler != NULL; handler++) {
+-		res = (*handler)(&tx);
+-		if (res != TXRX_CONTINUE)
+-			break;
++	if(unlikely((control->flags & IEEE80211_TXCTL_INJECTED_PACKET))) {
++		res=TXRX_CONTINUE;
++	} else {
++		for (handler = local->tx_handlers; *handler != NULL; handler++) {
++			res = (*handler)(&tx);
++			if (res != TXRX_CONTINUE)
++				break;
++		}
+ 	}
+ 
+ 	skb = tx.skb; /* handlers are allowed to change skb */
+@@ -1410,6 +1596,8 @@ static int ieee80211_master_start_xmit(struct sk_buff *skb,
+ 	if (pkt_data->requeue)
+ 		control.flags |= IEEE80211_TXCTL_REQUEUE;
+ 	control.queue = pkt_data->queue;
++	if(pkt_data->is_injected_into_monitor)
++		control.flags |= IEEE80211_TXCTL_INJECTED_PACKET;
+ 
+ 	ret = ieee80211_tx(odev, skb, &control,
+ 			   control.type == IEEE80211_IF_TYPE_MGMT);
+@@ -1456,6 +1644,51 @@ static int ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		goto fail;
+ 	}
+ 
++	if(unlikely(sdata->type==IEEE80211_IF_TYPE_MNTR)) {
++		struct ieee80211_radiotap_header * prthdr=
++			(struct ieee80211_radiotap_header *)skb->data;
++
++			/* there must be a radiotap header at the
++			 * start in this case
++			 */
++
++		if(unlikely(prthdr->it_version)) {
++			/* radiotap version used as magic */
++			ret=0;
++			goto fail;
++		}
++
++		skb->dev = local->mdev;
++
++		pkt_data = (struct ieee80211_tx_packet_data *)skb->cb;
++		memset(pkt_data, 0, sizeof(struct ieee80211_tx_packet_data));
++		pkt_data->ifindex =  local->mdev->ifindex;
++		pkt_data->mgmt_iface = 0;
++		pkt_data->do_not_encrypt = 1;
++		pkt_data->is_injected_into_monitor = 1;
++			/* above needed because we set skb device to master */
++
++			/* fix up the pointers accounting for the radiotap
++			 * header still being in there.  We are being given
++			 * a precooked IEEE80211 header so no need for
++			 * normal processing
++			 */
++
++		skb->mac.raw = skb->data+prthdr->it_len;
++		skb->nh.raw = skb->data+prthdr->it_len+
++			sizeof(struct ieee80211_hdr);
++		skb->h.raw = skb->data+prthdr->it_len+
++			sizeof(struct ieee80211_hdr);
++
++			/* pass the radiotap header up to
++			 * the next stage intact
++			 */
++
++		dev_queue_xmit(skb);
++
++		return 0;
++	}
++
+ 	nh_pos = skb->nh.raw - skb->data;
+ 	h_pos = skb->h.raw - skb->data;
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 9df8ef0..617d297 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -162,6 +162,7 @@ struct ieee80211_tx_packet_data {
+ 	unsigned int requeue:1;
+ 	unsigned int mgmt_iface:1;
+ 	unsigned int queue:4;
++	unsigned int is_injected_into_monitor:1;
+ };
+ 
+ struct ieee80211_tx_stored_packet {
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
