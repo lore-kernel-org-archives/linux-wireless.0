@@ -1,73 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3189 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2992454AbXCBOFe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2007 09:05:34 -0500
-Date: Fri, 2 Mar 2007 08:57:34 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: Re: Assertion failed in ieee80211softmac_wx_get_rate
-Message-ID: <20070302135734.GB6676@tuxdriver.com>
-References: <1172816819.26330.12.camel@dv>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1172816819.26330.12.camel@dv>
+Received: from smtp.rutgers.edu ([128.6.72.243]:61802 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751698AbXCQXVZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Mar 2007 19:21:25 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Andy Green <andy@warmcat.com>
+Subject: Re: [PATCH 2/2] mac80211: Monitor mode radiotap-based packet injection
+Date: Sat, 17 Mar 2007 19:20:31 -0400
+Cc: linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
+References: <20070317105800.659633351@warmcat.com> <200703171751.50898.flamingice@sourmilk.net> <45FC6727.3090008@warmcat.com>
+In-Reply-To: <45FC6727.3090008@warmcat.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1948880.Vx30VJKnQn";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703171920.37469.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 02, 2007 at 01:26:59AM -0500, Pavel Roskin wrote:
-> Hello!
-> 
-> If I load bcm43xx and run iwconfig without bringing the interface up,
-> I'm getting this in the kernel log:
-> 
-> SoftMAC: ASSERTION FAILED (0)
-> at: /home/proski/src/linux-2.6/net/ieee80211/softmac/ieee80211softmac_wx.c:306:ieee80211softmac_wx_get_rate()
-> 
-> It's an x86 system with the 2.6.20 kernel (actually, it's the master
-> branch from the mb repository, which is wireless-dev before the 2.6.21
-> switchover plus broadcom fixes).
-> 
-> The assert assures that the interface has a valid tx rate.  But since
-> the interface has never been up, the rate has not been assigned.
-> 
-> Either softmac should tolerate rate 0, at least when the interface is
-> down, or it should initialize the rate much earlier, perhaps in
-> alloc_ieee80211softmac().
-> 
-> I can test another tree, e.g. wireless-2.6, if there are chances that
-> the problem has been fixed.
+--nextPart1948880.Vx30VJKnQn
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Does the tree you are using have this commit?
+On Saturday 17 March 2007 18:09, Andy Green wrote:
+> Yeah naturally it was my first move to use what was there, but the
+> result was a panic that went away when I moved the skb to belong to the
+> "master" interface's index and separately persistently tagged the packet
+> as being injected.
+>
+I don't see anything that would prevent this from working.. if you have a=20
+patch which does this and crashes, I'll take a look at it.
 
-commit 6bbdce5ac755e3b3cdcf9bb9fdbcc2af78ad34d0
-Author: John W. Linville <linville@tuxdriver.com>
-Date:   Tue Jan 2 21:22:05 2007 -0500
+> Is it safe against race problems on interface removal to consider to
+> look up against the interface index at actual send time?
+>
+Yes. dev_get_by_index in ieee80211_master_start_xmit calls dev_hold. When i=
+t=20
+is done, dev_put is called. The headroom reservation code looks suspicious=
+=20
+though.. it doesn't call dev_put if it fails. Fortunately, this is unlikely=
+=20
+to happen.
 
-    [PATCH] softmac: avoid assert in ieee80211softmac_wx_get_rate
+Thanks,
+=2DMichael Wu
 
-    Unconfigured bcm43xx device can hit an assert() during wx_get_rate
-    queries.  This is because bcm43xx calls ieee80211softmac_start late
-    (i.e. during open instead of probe).
+--nextPart1948880.Vx30VJKnQn
+Content-Type: application/pgp-signature
 
-       bcm43xx_net_open ->
-          bcm43xx_init_board ->
-             bcm43xx_select_wireless_core ->
-                ieee80211softmac_start
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-    Fix is to check that device is running before completing
-    ieee80211softmac_wx_get_rate.
+iD8DBQBF/HfFT3Oqt9AH4aERAkWYAJ9u6YMVkJIX5JlEC4SAbtVEtdq5AwCeN0sP
+zqGn+seC7O9B7lB3QmrRc+U=
+=FACM
+-----END PGP SIGNATURE-----
 
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-It is in linux-2.6, wireless-2.6, and wireless-dev.  If you don't
-want to use those trees, you should be able to apply the patch to
-the tree you are using.
-
-Hth!
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+--nextPart1948880.Vx30VJKnQn--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
