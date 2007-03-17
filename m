@@ -1,94 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:61840 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965337AbXCFR3u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2007 12:29:50 -0500
-Date: Tue, 6 Mar 2007 09:13:16 -0800
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Jean Tourrilhes <jt@hpl.hp.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Jouni Malinen <jkm@devicescape.com>
-Subject: Re: wireless extensions vs. 64-bit architectures
-Message-ID: <20070306171316.GA19669@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <1173144447.15891.93.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1173144447.15891.93.camel@johannes.berg>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Received: from betty.cbit.net.au ([202.55.154.10]:53946 "EHLO mail.cbit.net.au"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752649AbXCQHfK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Mar 2007 03:35:10 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.cbit.net.au (Postfix) with ESMTP id E42261081AC
+	for <linux-wireless@vger.kernel.org>; Sat, 17 Mar 2007 18:35:07 +1100 (EST)
+Received: from mail.cbit.net.au ([127.0.0.1])
+	by localhost (betty [127.0.0.1]) (amavisd-new, port 10024) with LMTP
+	id 27417-02-59 for <linux-wireless@vger.kernel.org>;
+	Sat, 17 Mar 2007 18:35:05 +1100 (EST)
+Received: from keitarou.bubblesworth.net (unknown [202.55.155.91])
+	by mail.cbit.net.au (Postfix) with ESMTP id 651A11081B6
+	for <linux-wireless@vger.kernel.org>; Sat, 17 Mar 2007 18:34:58 +1100 (EST)
+Date: Sat, 17 Mar 2007 18:34:53 +1100
+From: Paul TBBle Hampson <Paul.Hampson@Pobox.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: prism54pci fails to read eeprom on PowerPC, then bugs in pci code
+Message-ID: <20070317073453.GD5954@keitarou>
+References: <20070317034607.GA1522@keitarou> <200703170037.14875.flamingice@sourmilk.net> <20070317061502.GA5954@keitarou> <200703170244.54114.flamingice@sourmilk.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="JwB53PgKC5A7+0Ej"
+In-Reply-To: <200703170244.54114.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 06, 2007 at 02:27:26AM +0100, Johannes Berg wrote:
-> Hi,
-> 
-> Wtf! After struggling with some strange problems with zd1211rw (see some
-> other mail) I decided to think again about what could possibly cause all
-> the other problems I'm having with it. The kernel seems fine, but iw*
-> userspace continually segfaults! And it also seems to be not
-> reproducible for most other people, I'd asked on IRC once a while.
-> 
-> Well. Some thinking and stracing and thinking later it occurred to me...
-> Hell! wext is ioctls and includes this gem:
-> 
-> struct  iw_point
-> {
->   void __user   *pointer;       /* Pointer to the data  (in user space) */
->   __u16         length;         /* number of fields or size in bytes */
->   __u16         flags;          /* Optional params */
-> };
-> 
-> Of course nobody ever tells you this, but it's used in a shitload of
-> places.
 
-	Yep, and it's even in fs/compat_ioctl.c. Hint, hint ;-)
+--JwB53PgKC5A7+0Ej
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Btw, did I mention that I'm running a stock debian powerpc 32-bit
-> userspace on my 64-bit machine. Oh and of course wext doesn't have any
-> 32-in-64 compat code.
+On Sat, Mar 17, 2007 at 02:44:49AM -0400, Michael Wu wrote:
+> On Saturday 17 March 2007 02:15, Paul TBBle Hampson wrote:
+>> Is it worth dumping the purported eeprom to see if it's actually a valid
+>> eeprom in a format unexpected by the code? (The card is very old now...)
 
-	Please check again, it does.
+> Actually, the code doesn't check (but it does report) if parsing fails so=
+ a=20
+> corrupted eeprom can't be the reason for probe failure. I'll get that fix=
+ed=20
+> next week..
 
-> /me laughes manically about wext.
-> 
-> And don't tell me the fix is to use the netlink interface to wext.
-> Actually, I think it may have the same bug, it seems to be operating
-> with iw_point (or at least its size) too but I can't really tell, the
-> code's just too clear, I always just see right through it... Oh and I
-> still insist on removing the whole pile of junk, netlink interface
-> first.
+> So anyway, your card isn't even returning the eeprom data. Only thing I c=
+an=20
+> think of is fiddling with the mdelay in that (p54p_read_eeprom) function=
+=20
+> (there's only one). Try making it bigger. That mdelay solved problems wit=
+h=20
+> eeprom reading on module reload but it's very close to the minimum delay=
+=20
+> needed there.
 
-	Well, why don't you go and check it. For example, check
-where IW_EV_POINT_OFF is used.
+mdelay of 500 and 5000 didn't seem to help.
 
-> Isn't there any possibility that we can kill userspace interfaces that
-> are terminally broken without keeping them for years to come?
+Would the result of any of the P54P_READs help? Or do they not produce
+anything useful at this stage?
 
-	Well, is there a possibility that people check the facts
-before making bold assumptions ?
+--=20
+-----------------------------------------------------------
+Paul "TBBle" Hampson, B.Sc, LPI, MCSE
+On-hiatus Asian Studies student, ANU
+The Boss, Bubblesworth Pty Ltd (ABN: 51 095 284 361)
+Paul.Hampson@Pobox.Com
 
-> Sorry. This is just too frustrating.
+Of course Pacman didn't influence us as kids. If it did,
+we'd be running around in darkened rooms, popping pills and
+listening to repetitive music.
+ -- Kristian Wilson, Nintendo, Inc, 1989
 
-	Yes, you are perfectly right. This continuous bashing of wext
-for no good reason is too frustrating.
+License: http://creativecommons.org/licenses/by/2.1/au/
+-----------------------------------------------------------
 
-> johannes
+--JwB53PgKC5A7+0Ej
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-	Now, back to the problem. You seem to have an intermitent
-crash. If the stuff above was broken, it would systematically crash,
-because it would always get stuff at an offset.
-	The fact that the crash is not systematic leads me to believe
-that something else is at play, such as a compiler optimisation gone
-bad, some memory condition, or a driver returning corrupted data to
-wext and iwconfig not checking bad data properly.
-	If you were to give me a proper bug report, there is a chance
-that we might make progress.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
 
-	Have fun...
+iD8DBQFF+5odexDuohKLFuARAobiAJ0YzBmBpASppHCVmqWCisjaTJ2FLwCfa5EK
+QMQBd+D7eGU6nnuOXF+Hk1Q=
+=2joK
+-----END PGP SIGNATURE-----
 
-	Jean
-
-
-
+--JwB53PgKC5A7+0Ej--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
