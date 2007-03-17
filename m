@@ -1,67 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33114
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933622AbXCEVeW (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:25251 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753716AbXCQD6G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 16:34:22 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Linville, John" <linville@tuxdriver.com>
-Subject: Please pull http://bu3sch.de/git/wireless-dev.git for-linville
-Date: Mon, 5 Mar 2007 22:33:29 +0100
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+	Fri, 16 Mar 2007 23:58:06 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH 3/5] mac80211: fix key restricted/open display
+Date: Fri, 16 Mar 2007 23:57:18 -0400
+Cc: Hong Liu <hong.liu@intel.com>, Jiri Benc <jbenc@suse.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <1174015698.3408.41.camel@devlinux-hong> <200703161328.41006.flamingice@sourmilk.net> <1174103177.3026.8.camel@localhost.localdomain>
+In-Reply-To: <1174103177.3026.8.camel@localhost.localdomain>
 MIME-Version: 1.0
-Message-Id: <200703052233.30189.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: multipart/signed;
+  boundary="nextPart2047727.n9sggcVzvy";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703162357.22669.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This batch of patches includes a few critical bugfixes
-and bugfixes for issues just reported in the -mm kernel.
+--nextPart2047727.n9sggcVzvy
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
+On Friday 16 March 2007 23:46, Dan Williams wrote:
+> I think you're misreading the patch?  It looks correct to me.  The
+> second check for (erq->flags & IW_ENCODE_RESTRICTED) should ensure that
+> Shared Key is only selected when the userspace program requested it.
+>
+This breaks authentication algorithm fallback for sure.
 
+> Not quite.  Somewhere along the line WEXT turned ENCODE_RESTRICTED into
+> the selector for Shared Key, while ENCODE_OPEN is Open System.  Arguably
+> there's a larger need to specifying auth mode than rejecting unencrypted
+> associations.  Most drivers do it this way, with the exception of
+> madwifi because they like to be irritatingly different.  Nobody ever
+> really used the 'don't accept unencrypted' thing anyway in the old days,
+> plus ENCODEEXT has a separate flag for this.
+>
+Even if it got redefined along the way, mac80211 has no need for that=20
+particular definition since it can automatically cycle between authenticati=
+on=20
+algorithms. Besides, "its meaning depends on the card used" according to th=
+e=20
+iwconfig man page.
 
+> So I think the patch is correct.  Ideally all this gets fixed and all
+> the overloaded meanings go away with cfg80211 :)
+>
+> Acked-by: Dan Williams <dcbw@redhat.com>
+>
+NACK. It is not useful and if implemented, gives the user an unnecessary=20
+choice that can only cause more problems.
 
-The following changes since commit 96f93b6fbd8b2cd454ede3a9b75bbd98415164d8:
-  Ivo van Doorn:
-        rt2x00: fix NULL pointer exception
+=2DMichael Wu
 
-are found in the git repository at:
+--nextPart2047727.n9sggcVzvy
+Content-Type: application/pgp-signature
 
-  http://bu3sch.de/git/wireless-dev.git for-linville
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-Michael Buesch:
-      bcm43xx-mac80211: fix a sparse warning
-      ssb: Save lots of memory by shrinking struct ssb_device.
-      bcm43xx-mac80211: Ignore any IRQ that's not for us.
-      bcm43xx-mac80211: Flip radio_ver conditional in b5 init.
-      bcm43xx-mac80211: Don't free beacon_control, as it's not allocated dynamically.
-      bcm43xx-mac80211: bcm43xx-pcmcia must depend on PCMCIA
-      Subject: bcm43xx-mac80211: Put the PCI stub into main.c
-      ssb: Fix compile of OHCI core driver.
-      ssb: Don't poke with dev->drvdata in SSB to avoid a conflict with USB OHCI.
-      ssb-ohci: Proper start/reset and suspend/resume routines.
+iD8DBQBF+2ciT3Oqt9AH4aERAmjOAKCZGJxvmvzsf8dEFxI5ClnHmjH1CACgi0Tj
+x7aKM5sPtcQ1u+D8Heri/Wc=
+=/6cZ
+-----END PGP SIGNATURE-----
 
- drivers/net/b44.c                                  |   50 ++++---
- drivers/net/wireless/mac80211/bcm43xx/Kconfig      |    2 
- drivers/net/wireless/mac80211/bcm43xx/Makefile     |    1 
- drivers/net/wireless/mac80211/bcm43xx/bcm43xx.h    |    3 
- .../net/wireless/mac80211/bcm43xx/bcm43xx_dma.c    |   16 +--
- .../net/wireless/mac80211/bcm43xx/bcm43xx_main.c   |   56 +++++++--
- .../net/wireless/mac80211/bcm43xx/bcm43xx_pci.c    |   61 ----------
- .../net/wireless/mac80211/bcm43xx/bcm43xx_pci.h    |   22 ----
- .../net/wireless/mac80211/bcm43xx/bcm43xx_phy.c    |    2 
- .../net/wireless/mac80211/bcm43xx/bcm43xx_sysfs.c  |    4 -
- drivers/ssb/core.c                                 |  136 ++++++++++++++++----
- drivers/ssb/scan.c                                 |   20 ---
- drivers/ssb/ssb_private.h                          |    1 
- drivers/usb/host/Kconfig                           |   20 +--
- drivers/usb/host/ohci-hcd.c                        |   19 +++
- drivers/usb/host/ohci-ssb.c                        |  100 +++++++++++----
- include/linux/ssb/ssb.h                            |   25 +++-
- 17 files changed, 311 insertions(+), 227 deletions(-)
- delete mode 100644 drivers/net/wireless/mac80211/bcm43xx/bcm43xx_pci.c
- delete mode 100644 drivers/net/wireless/mac80211/bcm43xx/bcm43xx_pci.h
-
--- 
-Greetings Michael.
+--nextPart2047727.n9sggcVzvy--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
