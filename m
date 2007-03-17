@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:47715
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965524AbXC1LdN (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:43541 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751783AbXCQWJp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 07:33:13 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: rx racing against removing interfaces?
-Date: Wed, 28 Mar 2007 13:32:40 +0200
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1174950322.25887.59.camel@johannes.berg> <200703281259.55764.mb@bu3sch.de> <1175080054.5151.50.camel@johannes.berg>
-In-Reply-To: <1175080054.5151.50.camel@johannes.berg>
+	Sat, 17 Mar 2007 18:09:45 -0400
+Message-ID: <45FC6727.3090008@warmcat.com>
+Date: Sat, 17 Mar 2007 22:09:43 +0000
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200703281332.40879.mb@bu3sch.de>
+To: Michael Wu <flamingice@sourmilk.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] mac80211: Monitor mode radiotap-based packet injection
+References: <20070317105800.659633351@warmcat.com> <20070317110751.352850972@warmcat.com> <200703171730.33349.flamingice@sourmilk.net> <200703171751.50898.flamingice@sourmilk.net>
+In-Reply-To: <200703171751.50898.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 28 March 2007 13:07, Johannes Berg wrote:
-> On Wed, 2007-03-28 at 12:59 +0200, Michael Buesch wrote:
+Michael Wu wrote:
+> On Saturday 17 March 2007 17:30, Michael Wu wrote:
+>>> +		/* process and remove the injection radiotap header */
+>>> +
+>>> +	if(control->flags & IEEE80211_TXCTL_INJECTED_PACKET) {
+>> dev points to the virtual interface that the frame originally came in on.
+>> You can get sdata from that and figure out if the interface was a monitor
+>> interface.
+>>
+> Of course, this depends on ifindex being set properly.
 > 
-> > Oh, you mean virtual interfaces.. yeah, there's probably a race. I don't
-> > know the locking there.
+> You added:
+> 	pkt_data->ifindex =  local->mdev->ifindex;
 > 
-> Yes, I mean virtual interfaces, when the thing is in progress while we
-> iterate through.
+> but in that same function, this is used instead:
+> 	pkt_data->ifindex = sdata->dev->ifindex;
 > 
-> > But my comment about the non-irqsafe-variants-should-be-hidden still applies :)
-> 
-> I'll reread it ;)
-> 
-> But I'm not sure I fully agree. If the driver calls __ieee80211_rx in
-> softirq context that should be good without requiring to reschedule in
-> mac80211.
+> Which allows the master device to figure out which virtual interface the skb 
+> came from.
 
-I'm not sure there is an easy and non-racy way to drop the driver IRQ lock
-while calling __ieee80211_rx synchronously.
+Yeah naturally it was my first move to use what was there, but the 
+result was a panic that went away when I moved the skb to belong to the 
+"master" interface's index and separately persistently tagged the packet 
+as being injected.
 
--- 
-Greetings Michael.
+Is it safe against race problems on interface removal to consider to 
+look up against the interface index at actual send time?
+
+-Andy
+
