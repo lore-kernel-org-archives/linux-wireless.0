@@ -1,58 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:56294 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933045AbXCQFGT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Mar 2007 01:06:19 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: prism54pci fails to read eeprom on PowerPC, then bugs in pci code
-Date: Sat, 17 Mar 2007 01:05:18 -0400
-Cc: Paul TBBle Hampson <Paul.Hampson@pobox.com>,
+Received: from mx1.redhat.com ([66.187.233.31]:60831 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933426AbXCRXdL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Mar 2007 19:33:11 -0400
+Subject: Re: [PATCH 3/5] mac80211: fix key restricted/open display
+From: Dan Williams <dcbw@redhat.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Hong Liu <hong.liu@intel.com>, Jiri Benc <jbenc@suse.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-References: <20070317034607.GA1522@keitarou> <200703170037.14875.flamingice@sourmilk.net> <1174107032.17023.14.camel@dv>
-In-Reply-To: <1174107032.17023.14.camel@dv>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart6549716.gGmfMxjQhk";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200703170105.19348.flamingice@sourmilk.net>
+In-Reply-To: <20070318164506.GB5358@jm.kir.nu>
+References: <1174015698.3408.41.camel@devlinux-hong>
+	 <200703161328.41006.flamingice@sourmilk.net>
+	 <1174103177.3026.8.camel@localhost.localdomain>
+	 <20070318164506.GB5358@jm.kir.nu>
+Content-Type: text/plain
+Date: Sun, 18 Mar 2007 19:35:46 -0400
+Message-Id: <1174260946.8053.20.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart6549716.gGmfMxjQhk
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Sun, 2007-03-18 at 09:45 -0700, Jouni Malinen wrote:
+> On Fri, Mar 16, 2007 at 11:46:17PM -0400, Dan Williams wrote:
+> > On Fri, 2007-03-16 at 13:28 -0400, Michael Wu wrote:
+> > > On Thursday 15 March 2007 23:28, Hong Liu wrote:
+> > > > +	if (erq->flags & (IW_ENCODE_OPEN | IW_ENCODE_RESTRICTED))
+> > > > +		if (sdata->type == IEEE80211_IF_TYPE_STA ||
+> > > > +		    sdata->type == IEEE80211_IF_TYPE_IBSS)
+> > > > +			sdata->u.sta.auth_algs =
+> > > > +				(erq->flags & IW_ENCODE_RESTRICTED) ?
+> > > > +				IEEE80211_AUTH_ALG_SHARED_KEY :
+> > > > +				IEEE80211_AUTH_ALG_OPEN;
+> 
+> NAK.
+> 
+> > I think you're misreading the patch?  It looks correct to me.  The
+> > second check for (erq->flags & IW_ENCODE_RESTRICTED) should ensure that
+> > Shared Key is only selected when the userspace program requested it.
+> 
+> IW_ENCODE_RESTRICTED and Shared Key are different things (IMHO).
 
-On Saturday 17 March 2007 00:50, Pavel Roskin wrote:
-> Oh, and I'm amazed that somebody is using dadwifi-openhal verify the
-> hardware!  It's in a pretty poor shape right now.  It prints some
-> warnings because it starts with channel 0.  The interface can be brought
-> up if you set a valid channel, and I think it might scan.
->
-Really? mac80211 should set the channel immediately after bringing the=20
-interface. If no channel is configured, it defaults to the first channel in=
-=20
-the first mode that is registered.
+Yes, I _know_ that.  I thought that was apparent in my message.  But
+WEXT has commingled them to some degree.  Otherwise, there's no way at
+all to select between Open System or Shared Key when associating.
 
-=2DMichael Wu
+I would also argue that there is more of a use for selecting between SK
+and OS auth than using RESTRICTED for it's real meaning anyway.
 
---nextPart6549716.gGmfMxjQhk
-Content-Type: application/pgp-signature
+> > > IW_ENCODE_RESTRICTED simply means that the interface should not make/accept 
+> > > unencrypted connections.
+> 
+> Agreed.
+> 
+> > Not quite.  Somewhere along the line WEXT turned ENCODE_RESTRICTED into
+> > the selector for Shared Key, while ENCODE_OPEN is Open System.  Arguably
+> > there's a larger need to specifying auth mode than rejecting unencrypted
+> > associations.  Most drivers do it this way, with the exception of
+> > madwifi because they like to be irritatingly different.  Nobody ever
+> > really used the 'don't accept unencrypted' thing anyway in the old days,
+> > plus ENCODEEXT has a separate flag for this.
+> 
+> Take a look at Host AP driver.. It has always mapped HFA384x WEPFLAGS
+> excludeunencrypted to IW_ENCODE_RESTRICTED..
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Which is somewhat unfortunate.  How does the HostAP driver select for OS
+or SK when userspace programs don't know about WE-18 and therefore don't
+use AUTH_ALG?
 
-iD8DBQBF+3cPT3Oqt9AH4aERAiMVAKCmR5hCBc3IBRYQJKfeK8boc8dhJACeODwP
-pRBAc/TSwyR9isSHQep6hOY=
-=1trD
------END PGP SIGNATURE-----
+This is the same problem I submitted that "auth alg fallback" patch to
+wpa_supplicant for last year.  Older drivers like orinoco or atmel just
+don't have ENCODEEXT (I added it to prism54 and airo), and instead use
+RESTRICTED.
 
---nextPart6549716.gGmfMxjQhk--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+There is no good way for a userspace program to set SK/OS except try
+ENCODEEXT and fall back to ENCODE.  Which is, um, suboptimal.
+
+> The IW_ENCODE_OPEN/RESTRICTED is quite unfortunate part of WEXT and
+> since it has been used for two completely different things, it should
+> not really be used. I would hope that this change is not introduced into
+> mac80211.
+
+Definitely.
+
+> WE-18 introduced IW_AUTH_80211_AUTH_ALG and that should be used if user
+> space wants to explicitly select which 802.11 authentication algorithm
+> is to be used. Please let the IW_ENCODE_OPEN/RESTRICTED misuse die.
+
+Obviously we want it to die.  But the better solution is to make apps
+that care about "exclude unencrypted", which there are few, use
+ENCODEEXT and keep OPEN/RESTRICTED be what most of the old drivers
+expect it to be; the selector for OS/SK.  Then clean up all the double
+meanings with cfg80211 and call it day.
+
+Dan
+
+
