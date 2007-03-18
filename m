@@ -1,94 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:50180 "EHLO
-	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030880AbXCNUHM (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:35025 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753203AbXCRKPv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Mar 2007 16:07:12 -0400
-Date: Wed, 14 Mar 2007 15:06:22 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] bcm43xx:Eliminate some 'G Mode Enable' magic numbers
-Message-ID: <45f855be.d6q3Pv+rtlMA4ojm%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 18 Mar 2007 06:15:51 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id AD18A8D0F4
+	for <linux-wireless@vger.kernel.org>; Sun, 18 Mar 2007 11:15:49 +0100 (CET)
+Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
+	by armbox7.home.warmcat.com (Postfix) with ESMTP id 8751BFED5
+	for <linux-wireless@vger.kernel.org>; Sun, 18 Mar 2007 10:15:53 +0000 (UTC)
+Message-Id: <20070318101549.070185687@warmcat.com>
+References: <20070318101535.251183750@warmcat.com>
+Date: Sun, 18 Mar 2007 10:15:36 +0000
+From: andy@warmcat.com
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] mac80211: Add radiotap support
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In code manipulating the TM State Low register of 802.11 cores, two
-different magic numbers are used to reference the 'G Mode Enable' bit.
-One of these, 0x20000000, is clear, but the other, (0x800 << 18), is not.
-This patch replaces both types with a defined constant. In addition, two
-bits in the TM State High registers are given definitions to help in
-following the code.
+From: Michael Wu <flamingice@sourmilk.net>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+
 ---
 
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx.h
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx.h
-@@ -277,11 +277,14 @@
- #define BCM43xx_SBTMSTATELOW_REJECT		0x02
- #define BCM43xx_SBTMSTATELOW_CLOCK		0x10000
- #define BCM43xx_SBTMSTATELOW_FORCE_GATE_CLOCK	0x20000
-+#define BCM43xx_SBTMSTATELOW_G_MODE_ENABLE	0x20000000
+ include/net/mac80211.h         |    3 ++
+ net/mac80211/ieee80211.c       |   69 +++++++++++++++++++++++++++++++++-------
+ net/mac80211/ieee80211_iface.c |    2 +
+ 3 files changed, 61 insertions(+), 13 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 916b21b..050f126 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -529,6 +529,9 @@ struct ieee80211_hw {
+ 	 * per-packet RC4 key with each TX frame when doing hwcrypto */
+ #define IEEE80211_HW_TKIP_REQ_PHASE2_KEY (1<<14)
  
- /* sbtmstatehigh state flags */
- #define BCM43xx_SBTMSTATEHIGH_SERROR		0x00000001
- #define BCM43xx_SBTMSTATEHIGH_BUSY		0x00000004
- #define BCM43xx_SBTMSTATEHIGH_TIMEOUT		0x00000020
-+#define BCM43xx_SBTMSTATEHIGH_G_PHY_AVAIL	0x00010000
-+#define BCM43xx_SBTMSTATEHIGH_A_PHY_AVAIL	0x00020000
- #define BCM43xx_SBTMSTATEHIGH_COREFLAGS		0x1FFF0000
- #define BCM43xx_SBTMSTATEHIGH_DMA64BIT		0x10000000
- #define BCM43xx_SBTMSTATEHIGH_GATEDCLK		0x20000000
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-@@ -168,16 +168,16 @@ int bcm43xx_phy_connect(struct bcm43xx_p
++	/* Driver supports radiotap. Temporary until all drivers support it. */
++#define IEEE80211_HW_RADIOTAP_SUPPORTED (1<<20)
++
+ 	u32 flags;			/* hardware flags defined above */
  
- 	flags = bcm43xx_read32(bcm, BCM43xx_CIR_SBTMSTATEHIGH);
- 	if (connect) {
--		if (!(flags & 0x00010000))
-+		if (!(flags & BCM43xx_SBTMSTATEHIGH_G_PHY_AVAIL))
- 			return -ENODEV;
- 		flags = bcm43xx_read32(bcm, BCM43xx_CIR_SBTMSTATELOW);
--		flags |= (0x800 << 18);
-+		flags |= BCM43xx_SBTMSTATELOW_G_MODE_ENABLE;
- 		bcm43xx_write32(bcm, BCM43xx_CIR_SBTMSTATELOW, flags);
- 	} else {
--		if (!(flags & 0x00020000))
-+		if (!(flags & BCM43xx_SBTMSTATEHIGH_A_PHY_AVAIL))
- 			return -ENODEV;
- 		flags = bcm43xx_read32(bcm, BCM43xx_CIR_SBTMSTATELOW);
--		flags &= ~(0x800 << 18);
-+		flags &= ~BCM43xx_SBTMSTATELOW_G_MODE_ENABLE;
- 		bcm43xx_write32(bcm, BCM43xx_CIR_SBTMSTATELOW, flags);
+ 	/* Set to the size of a needed device specific skb headroom for TX skbs. */
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 0b7cb35..c3a9f0e 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -8,6 +8,7 @@
+  */
+ 
+ #include <net/mac80211.h>
++#include <net/ieee80211_radiotap.h>
+ #include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/netdevice.h>
+@@ -286,6 +287,14 @@ int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
+ }
+ EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
+ 
++static int ieee80211_get_radiotap_len(struct sk_buff *skb)
++{
++	struct ieee80211_radiotap_header *hdr =
++		(struct ieee80211_radiotap_header *) skb->data;
++
++	return le16_to_cpu(hdr->it_len);
++}
++
+ #ifdef CONFIG_MAC80211_LOWTX_FRAME_DUMP
+ static void ieee80211_dump_frame(const char *ifname, const char *title,
+ 				 const struct sk_buff *skb)
+@@ -2741,26 +2750,50 @@ ieee80211_rx_monitor(struct net_device *dev, struct sk_buff *skb,
+ 		     struct ieee80211_rx_status *status)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	struct ieee80211_frame_info *fi;
+ 	struct ieee80211_sub_if_data *sdata;
+-	const size_t hlen = sizeof(struct ieee80211_frame_info)
+-				- sizeof(fi->msg_type);
++	struct ieee80211_rtap_hdr {
++		struct ieee80211_radiotap_header hdr;
++		u8 flags;
++		u8 pad0;
++		u8 rate;
++		u8 pad1;
++		__le16 chan_freq;
++		__le16 chan_flags;
++		u8 antsignal;
++	} __attribute__ ((packed)) *rthdr;
+ 
+ 	skb->dev = dev;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+-	if (skb_headroom(skb) < hlen) {
+-		I802_DEBUG_INC(local->rx_expand_skb_head);
+-		if (pskb_expand_head(skb, hlen, 0, GFP_ATOMIC)) {
+-			dev_kfree_skb(skb);
+-			return;
++	if (!(local->hw.flags & IEEE80211_HW_RADIOTAP_SUPPORTED)) {
++		if (skb_headroom(skb) < sizeof(*rthdr)) {
++			I802_DEBUG_INC(local->rx_expand_skb_head);
++			if (pskb_expand_head(skb, sizeof(*rthdr), 0, GFP_ATOMIC)) {
++				dev_kfree_skb(skb);
++				return;
++			}
+ 		}
+-	}
+ 
+-	fi = (struct ieee80211_frame_info *) skb_push(skb, hlen);
++		rthdr = (struct ieee80211_rtap_hdr *) skb_push(skb, sizeof(*rthdr));
++		memset(rthdr, 0, sizeof(*rthdr));
++		rthdr->hdr.it_len = cpu_to_le16(sizeof(*rthdr));
++		rthdr->hdr.it_present =
++			cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) ||
++				    (1 << IEEE80211_RADIOTAP_RATE) ||
++				    (1 << IEEE80211_RADIOTAP_CHANNEL) ||
++				    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL));
++		rthdr->flags = local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS ?
++			       IEEE80211_RADIOTAP_F_FCS : 0;
++		rthdr->rate = status->rate / 5;
++		rthdr->chan_freq = cpu_to_le16(status->freq);
++		rthdr->chan_flags =
++			status->phymode == MODE_IEEE80211A ?
++			cpu_to_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ) :
++			cpu_to_le16(IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ);
++		rthdr->antsignal = status->ssi;
++	}
+ 
+-	ieee80211_fill_frame_info(local, fi, status);
+ 	sdata->stats.rx_packets++;
+ 	sdata->stats.rx_bytes += skb->len;
+ 
+@@ -3164,6 +3197,10 @@ ieee80211_rx_h_monitor(struct ieee80211_txrx_data *rx)
+ 		return TXRX_QUEUED;
  	}
- out:
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-@@ -1389,7 +1389,7 @@ void bcm43xx_wireless_core_reset(struct 
- 				& ~(BCM43xx_SBF_MAC_ENABLED | 0x00000002));
- 	} else {
- 		if (connect_phy)
--			flags |= 0x20000000;
-+			flags |= BCM43xx_SBTMSTATELOW_G_MODE_ENABLE;
- 		bcm43xx_phy_connect(bcm, connect_phy);
- 		bcm43xx_core_enable(bcm, flags);
- 		bcm43xx_write16(bcm, 0x03E6, 0x0000);
-@@ -3662,7 +3662,7 @@ int bcm43xx_select_wireless_core(struct 
- 		u32 sbtmstatelow;
  
- 		sbtmstatelow = bcm43xx_read32(bcm, BCM43xx_CIR_SBTMSTATELOW);
--		sbtmstatelow |= 0x20000000;
-+		sbtmstatelow |= BCM43xx_SBTMSTATELOW_G_MODE_ENABLE;
- 		bcm43xx_write32(bcm, BCM43xx_CIR_SBTMSTATELOW, sbtmstatelow);
++	if (rx->local->monitors &&
++	    rx->local->hw.flags & IEEE80211_HW_RADIOTAP_SUPPORTED)
++		skb_pull(rx->skb, ieee80211_get_radiotap_len(rx->skb));
++
+ 	return TXRX_CONTINUE;
+ }
+ 
+@@ -3731,6 +3768,13 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	struct ieee80211_txrx_data rx;
+ 	u16 type;
+ 	int multicast;
++	int radiotap_len = 0;
++
++	if (local->monitors &&
++	    local->hw.flags & IEEE80211_HW_RADIOTAP_SUPPORTED) {
++		radiotap_len = ieee80211_get_radiotap_len(skb);
++		skb_pull(skb, radiotap_len);
++	}
+ 
+ 	hdr = (struct ieee80211_hdr *) skb->data;
+ 	memset(&rx, 0, sizeof(rx));
+@@ -3767,6 +3811,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		goto end;
+ 	skb = rx.skb;
+ 
++	skb_push(skb, radiotap_len);
+ 	if (sta && !sta->assoc_ap && !(sta->flags & WLAN_STA_WDS) &&
+ 	    !local->iff_promiscs && !multicast) {
+ 		rx.u.rx.ra_match = 1;
+@@ -3775,7 +3820,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	} else {
+ 		struct ieee80211_sub_if_data *prev = NULL;
+ 		struct sk_buff *skb_new;
+-		u8 *bssid = ieee80211_get_bssid(hdr, skb->len);
++		u8 *bssid = ieee80211_get_bssid(hdr, skb->len - radiotap_len);
+ 
+ 		list_for_each_entry(sdata, &local->sub_if_list, list) {
+ 			rx.u.rx.ra_match = 1;
+diff --git a/net/mac80211/ieee80211_iface.c b/net/mac80211/ieee80211_iface.c
+index 3e0b4fa..51197b1 100644
+--- a/net/mac80211/ieee80211_iface.c
++++ b/net/mac80211/ieee80211_iface.c
+@@ -199,7 +199,7 @@ void ieee80211_if_set_type(struct net_device *dev, int type)
+ 		break;
  	}
- 	err = wireless_core_up(bcm, 1);
+ 	case IEEE80211_IF_TYPE_MNTR:
+-		dev->type = ARPHRD_IEEE80211_PRISM;
++		dev->type = ARPHRD_IEEE80211_RADIOTAP;
+ 		break;
+ 	default:
+ 		printk(KERN_WARNING "%s: %s: Unknown interface type 0x%x",
+
+-- 
