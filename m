@@ -1,191 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:35025 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753203AbXCRKPv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Mar 2007 06:15:51 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id AD18A8D0F4
-	for <linux-wireless@vger.kernel.org>; Sun, 18 Mar 2007 11:15:49 +0100 (CET)
-Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id 8751BFED5
-	for <linux-wireless@vger.kernel.org>; Sun, 18 Mar 2007 10:15:53 +0000 (UTC)
-Message-Id: <20070318101549.070185687@warmcat.com>
-References: <20070318101535.251183750@warmcat.com>
-Date: Sun, 18 Mar 2007 10:15:36 +0000
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] mac80211: Add radiotap support
+Received: from mx2.redhat.com ([66.187.237.31]:49577 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750759AbXCSOYt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2007 10:24:49 -0400
+Subject: Re: wireless chipsets not supported by current wireless tree
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: Randy Dunlap <rdunlap@xenotime.net>,
+	Stephen Hemminger <shemminger@linux-foundation.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200703190847.31321.hs4233@mail.mn-solutions.de>
+References: <20070316224417.792d77d6@oldman>
+	 <20070316225727.d3327d7a.rdunlap@xenotime.net>
+	 <200703190847.31321.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Mon, 19 Mar 2007 10:27:01 -0400
+Message-Id: <1174314421.10751.8.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+On Mon, 2007-03-19 at 08:47 +0100, Holger Schurig wrote:
+> > Is there a chance of or anyone already working on Marvell
+> > (non-OLPC) support, e.g., for one of these?
+> >
+> > 00:09.0 Ethernet controller: Marvell Technology Group Ltd.
+> > 88w8335 [Libertas] 802.11b/g Wireless (rev 03)
+
+That chip has some significant differences to the 838x line that the
+OLPC and others are using.  I'm not sure we can support that chipset in
+the same driver, unless its firmware interface is quite similar.
+
+> Yes, there is someone working there. A bunch of my patches to 
+> shape the OLPC driver in a way libertas_lib.ko, libertas_usb.ko, 
+
+small note: I'd rather have the bus-independent part be called
+"libertas.ko" rather than _lib.
+
+> libertas_cs.ko got already applied. I made some experiments with 
+> firmware download, David Anders wrote a fwcutter and so on.
+> 
+> I once created a project 
+> http://projects.linuxtogo.org/projects/marvell8385/, but most of 
+> the discussion happend now in the OLPC Marvell mailing list. 
+> From time to time we're also on #libertas on *.freenode.net.
+
+The list and channel aren't supposed to be OLPC specific, really, hence
+the generic "libertas-dev" name and such.  Since you're around, it's no
+longer only OLPC people happening to work on the driver, and that's the
+way it should be.
+
+> Nothing works yet, and I got (and will get) distracted because my 
+> company switched to SAP Business One and I'm mostly busy 
+> extracting data out of our old system and putting that into 
+> SAPB1 :-(  Maybe I have again time this week.
+
+Great.  Let's make the driver Not Suck :)
+
+Dan
 
 
----
-
- include/net/mac80211.h         |    3 ++
- net/mac80211/ieee80211.c       |   69 +++++++++++++++++++++++++++++++++-------
- net/mac80211/ieee80211_iface.c |    2 +
- 3 files changed, 61 insertions(+), 13 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 916b21b..050f126 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -529,6 +529,9 @@ struct ieee80211_hw {
- 	 * per-packet RC4 key with each TX frame when doing hwcrypto */
- #define IEEE80211_HW_TKIP_REQ_PHASE2_KEY (1<<14)
- 
-+	/* Driver supports radiotap. Temporary until all drivers support it. */
-+#define IEEE80211_HW_RADIOTAP_SUPPORTED (1<<20)
-+
- 	u32 flags;			/* hardware flags defined above */
- 
- 	/* Set to the size of a needed device specific skb headroom for TX skbs. */
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 0b7cb35..c3a9f0e 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -8,6 +8,7 @@
-  */
- 
- #include <net/mac80211.h>
-+#include <net/ieee80211_radiotap.h>
- #include <linux/module.h>
- #include <linux/init.h>
- #include <linux/netdevice.h>
-@@ -286,6 +287,14 @@ int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
- }
- EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
- 
-+static int ieee80211_get_radiotap_len(struct sk_buff *skb)
-+{
-+	struct ieee80211_radiotap_header *hdr =
-+		(struct ieee80211_radiotap_header *) skb->data;
-+
-+	return le16_to_cpu(hdr->it_len);
-+}
-+
- #ifdef CONFIG_MAC80211_LOWTX_FRAME_DUMP
- static void ieee80211_dump_frame(const char *ifname, const char *title,
- 				 const struct sk_buff *skb)
-@@ -2741,26 +2750,50 @@ ieee80211_rx_monitor(struct net_device *dev, struct sk_buff *skb,
- 		     struct ieee80211_rx_status *status)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	struct ieee80211_frame_info *fi;
- 	struct ieee80211_sub_if_data *sdata;
--	const size_t hlen = sizeof(struct ieee80211_frame_info)
--				- sizeof(fi->msg_type);
-+	struct ieee80211_rtap_hdr {
-+		struct ieee80211_radiotap_header hdr;
-+		u8 flags;
-+		u8 pad0;
-+		u8 rate;
-+		u8 pad1;
-+		__le16 chan_freq;
-+		__le16 chan_flags;
-+		u8 antsignal;
-+	} __attribute__ ((packed)) *rthdr;
- 
- 	skb->dev = dev;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	if (skb_headroom(skb) < hlen) {
--		I802_DEBUG_INC(local->rx_expand_skb_head);
--		if (pskb_expand_head(skb, hlen, 0, GFP_ATOMIC)) {
--			dev_kfree_skb(skb);
--			return;
-+	if (!(local->hw.flags & IEEE80211_HW_RADIOTAP_SUPPORTED)) {
-+		if (skb_headroom(skb) < sizeof(*rthdr)) {
-+			I802_DEBUG_INC(local->rx_expand_skb_head);
-+			if (pskb_expand_head(skb, sizeof(*rthdr), 0, GFP_ATOMIC)) {
-+				dev_kfree_skb(skb);
-+				return;
-+			}
- 		}
--	}
- 
--	fi = (struct ieee80211_frame_info *) skb_push(skb, hlen);
-+		rthdr = (struct ieee80211_rtap_hdr *) skb_push(skb, sizeof(*rthdr));
-+		memset(rthdr, 0, sizeof(*rthdr));
-+		rthdr->hdr.it_len = cpu_to_le16(sizeof(*rthdr));
-+		rthdr->hdr.it_present =
-+			cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) ||
-+				    (1 << IEEE80211_RADIOTAP_RATE) ||
-+				    (1 << IEEE80211_RADIOTAP_CHANNEL) ||
-+				    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL));
-+		rthdr->flags = local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS ?
-+			       IEEE80211_RADIOTAP_F_FCS : 0;
-+		rthdr->rate = status->rate / 5;
-+		rthdr->chan_freq = cpu_to_le16(status->freq);
-+		rthdr->chan_flags =
-+			status->phymode == MODE_IEEE80211A ?
-+			cpu_to_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ) :
-+			cpu_to_le16(IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ);
-+		rthdr->antsignal = status->ssi;
-+	}
- 
--	ieee80211_fill_frame_info(local, fi, status);
- 	sdata->stats.rx_packets++;
- 	sdata->stats.rx_bytes += skb->len;
- 
-@@ -3164,6 +3197,10 @@ ieee80211_rx_h_monitor(struct ieee80211_txrx_data *rx)
- 		return TXRX_QUEUED;
- 	}
- 
-+	if (rx->local->monitors &&
-+	    rx->local->hw.flags & IEEE80211_HW_RADIOTAP_SUPPORTED)
-+		skb_pull(rx->skb, ieee80211_get_radiotap_len(rx->skb));
-+
- 	return TXRX_CONTINUE;
- }
- 
-@@ -3731,6 +3768,13 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct ieee80211_txrx_data rx;
- 	u16 type;
- 	int multicast;
-+	int radiotap_len = 0;
-+
-+	if (local->monitors &&
-+	    local->hw.flags & IEEE80211_HW_RADIOTAP_SUPPORTED) {
-+		radiotap_len = ieee80211_get_radiotap_len(skb);
-+		skb_pull(skb, radiotap_len);
-+	}
- 
- 	hdr = (struct ieee80211_hdr *) skb->data;
- 	memset(&rx, 0, sizeof(rx));
-@@ -3767,6 +3811,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		goto end;
- 	skb = rx.skb;
- 
-+	skb_push(skb, radiotap_len);
- 	if (sta && !sta->assoc_ap && !(sta->flags & WLAN_STA_WDS) &&
- 	    !local->iff_promiscs && !multicast) {
- 		rx.u.rx.ra_match = 1;
-@@ -3775,7 +3820,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	} else {
- 		struct ieee80211_sub_if_data *prev = NULL;
- 		struct sk_buff *skb_new;
--		u8 *bssid = ieee80211_get_bssid(hdr, skb->len);
-+		u8 *bssid = ieee80211_get_bssid(hdr, skb->len - radiotap_len);
- 
- 		list_for_each_entry(sdata, &local->sub_if_list, list) {
- 			rx.u.rx.ra_match = 1;
-diff --git a/net/mac80211/ieee80211_iface.c b/net/mac80211/ieee80211_iface.c
-index 3e0b4fa..51197b1 100644
---- a/net/mac80211/ieee80211_iface.c
-+++ b/net/mac80211/ieee80211_iface.c
-@@ -199,7 +199,7 @@ void ieee80211_if_set_type(struct net_device *dev, int type)
- 		break;
- 	}
- 	case IEEE80211_IF_TYPE_MNTR:
--		dev->type = ARPHRD_IEEE80211_PRISM;
-+		dev->type = ARPHRD_IEEE80211_RADIOTAP;
- 		break;
- 	default:
- 		printk(KERN_WARNING "%s: %s: Unknown interface type 0x%x",
-
--- 
