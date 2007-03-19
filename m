@@ -1,47 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pasmtpa.tele.dk ([80.160.77.114]:38402 "EHLO pasmtpA.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030400AbXCCThg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Mar 2007 14:37:36 -0500
-Date: Sat, 3 Mar 2007 20:03:28 +0100
-From: Sam Ravnborg <sam@ravnborg.org>
-To: linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@osdl.org>
-Subject: [PATCH] bcm43xx: do not rebuild when kernel version changes
-Message-ID: <20070303190328.GA30463@uranus.ravnborg.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mog.warmcat.com ([62.193.232.24]:39446 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964960AbXCSVQd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2007 17:16:33 -0400
+Message-ID: <45FEFDAE.1000107@warmcat.com>
+Date: Mon, 19 Mar 2007 21:16:30 +0000
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Michael Wu <flamingice@sourmilk.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Faking powersave for fun and realtime channel muxing
+References: <45FEEB34.1000403@warmcat.com> <200703191638.48742.flamingice@sourmilk.net>
+In-Reply-To: <200703191638.48742.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replacing use of UTS_RELEASE with utsname()->release
-avoids that this module is rebuild each
-time the kernel version changes.
+Michael Wu wrote:
+> On Monday 19 March 2007 15:57, Andy Green wrote:
+>> Hi folks -
+>>
+>> If you could generate and manage powersave protocol frames to an AP from
+>> the mac80211 stack, without actually putting the radio to sleep, you
+>> could do some interesting things.
+>>
+> Like in my scanning patch series?
+> 
+> http://news.gmane.org/find-root.php?group=gmane.linux.kernel.wireless.general&article=770
 
-Compile tested only.
+Yeah exactly like that, you're way ahead of me.  I will study these 
+tomorrow.  Thanks for the pointer and the boost with these patches.
 
-Signed-off-by: Sam Ravnborg <sam@ravnborg.org>
----
-diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c b/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
-index c947025..d2df6a0 100644
---- a/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
-+++ b/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
-@@ -32,7 +32,7 @@
- #include <linux/netdevice.h>
- #include <linux/pci.h>
- #include <linux/string.h>
--#include <linux/utsrelease.h>
-+#include <linux/utsname.h>
- 
- 
- static void bcm43xx_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info)
-@@ -40,7 +40,7 @@ static void bcm43xx_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *
- 	struct bcm43xx_private *bcm = bcm43xx_priv(dev);
- 
- 	strncpy(info->driver, KBUILD_MODNAME, sizeof(info->driver));
--	strncpy(info->version, UTS_RELEASE, sizeof(info->version));
-+	strncpy(info->version, utsname()->release, sizeof(info->version));
- 	strncpy(info->bus_info, pci_name(bcm->pci_dev), ETHTOOL_BUSINFO_LEN);
- }
- 
+> This requires a bit of kernel side support to queue up frames on the client 
+> side to maintain the illusion that nothing happened. (except for a brief 
+> latency jump) However, it does seem to work for the wireless cards I've 
+
+That's very encouraging!
+
+> tested. Doing scanning like this in userspace will require some sort of 
+> interface to stop/restart the TX for the appropriate network interfaces, but 
+> will probably make your multichannel association idea possible.
+
+I didn't catch what you meant in the last bit, "some sort of interface 
+to stop/restart the TX"?  You mean for associated interfaces that are 
+currently "sleeping" they need to use the netdev-level interface start 
+and stop stuff?
+
+> As for how long the AP will hold your frames.. 802.11 defines a minimum time, 
+> but the maximum depends on the AP.
+
+I guess an important thing is that in the degenerate case where there is 
+only one logical interface up and associated, powersave mode doesn't get 
+used at all, it goes on like it does now.
+
+Then for associated interfaces when fake powersave mode is in use, it's 
+important that any queued packets at the AP are taken to keep the count 
+of packets held there low.  Packets queued in the driver for TX should 
+be dealt with to try to keep the count of packets queued there low too, 
+but it's less critical I guess.  So when associated interfaces are busy, 
+they hog all the time between them.
+
+Then last in the priority is Monitor interface time.  So when associated 
+interfaces are relatively idle, you can spend large blocks of time 
+monitoring on other channels.
+
+-Andy
