@@ -1,88 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41497 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422916AbXCWN6g (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:33320 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752949AbXCSLC5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 09:58:36 -0400
-Subject: Re: [PATCH 0/4] Try #5: Radiotap on Monitor Mode interfaces for rx  and tx
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <46039679.6080401@warmcat.com>
-References: <20070320103955.600509703@warmcat.com>
-	 <1174500637.3944.9.camel@johannes.berg>  <46039679.6080401@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RAFa5/XeNE8pg6Q3bCJm"
-Date: Fri, 23 Mar 2007 14:57:15 +0100
-Message-Id: <1174658235.3366.19.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 19 Mar 2007 07:02:57 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 78C808CAD2
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2007 12:02:56 +0100 (CET)
+Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
+	by armbox7.home.warmcat.com (Postfix) with ESMTP id 43D5EFF2B
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2007 11:02:57 +0000 (UTC)
+Message-Id: <20070319110124.819185242@warmcat.com>
+Date: Mon, 19 Mar 2007 11:01:24 +0000
+From: andy@warmcat.com
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/3] Try #4: Radiotap on Monitor Mode interfaces for rx and tx
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi folks -
 
---=-RAFa5/XeNE8pg6Q3bCJm
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Patches #1 and #2 change the Monitor Mode wireless interfaces to use radiotap
+both for monitoring and for packet injection.  The monitoring side is done by a patch
+from Michael Wu.  Tcpdump knows how to handle the result.
 
-On Fri, 2007-03-23 at 08:57 +0000, Andy Green wrote:
+For injecting packets, the you issue a packet using libpcap or a SOCK_PACKET
+socket down an interface to the wireless device that is in Monitor Mode.  The packet
+has a normal radiotap header prepended to the IEEE80211 header.  The radiotap header
+is variable length depending on what the user wants to specify, currently the
+transmit rate, power and antenna can be specified using normal radiotap semantics.
+Any other entries are skipped.
 
-> $ cd wireless-dev
-> $ grep cfg80211 Documentation/* -R
->=20
-> As a Johnny-come-lately noob, how should I find out that cfg80211 either=20
-> exists or how it works?  Far from some kind of turf war initiating=20
-> gauntlet throwing, I was unaware cfg80211 was an option.
+A usermode app packetspammer is available from here
 
-Yep, my mistake. I blame lack of time and cooperation, nobody but me
-seems to be actually interested in working on cfg80211.
+http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
 
-> My interest is being able to inject broadcast packets from userspace=20
-> with fine control over how it goes out.  I have now tried several ways=20
-> to get that to happen with varying success, patching drivers in the old=20
-> stack (worked but impractical for wide uptake), using the management=20
-> interface in the new stack (works but it is heading towards deprecation=20
-> and did not allow rate control) and finally the Monitor mode injection=20
-> (works perfectly but requires to convince you guys to include it).
+which allows easy injection of these packets from the commandline.  At the moment it
+loops issuing packets at a variety of rates which can be seen from another
+machine's monitor mode interface on the same channel.  There are instructions for
+build and using it on the page above.
 
-Yep, I know.
+Currently it has been tested for both rx and tx using zd1211rw-mac80211 and works
+except for the rx radiotap rate is not shown in tcpdump.
 
-> send()ing packets back up a Monitor Mode interface with the same=20
-> radiotap semantics as the came out of it with is the most natural and=20
-> portable (libpcap pcap_inject() just works with it on the same network=20
-> interface as it can capture on) way to do injection from a usermode and=20
-> architectural standpoint.
+The patches should be based against wireless-dev.
 
-Right, and I'm not saying it doesn't make sense. I'm just trying to say
-that before we add this interface we really need to figure out whether
-it's feasible that this interface replaces all the wext/prism ioctl foo.
-
-> I don't understand why Monitor Mode injection needs to fly under the=20
-> cfg80211 flag.  It seems to belong to mac80211 code and would continue=20
-> to work if cfg80211 was disabled.  Can you explain a bit more why it=20
-> logically belongs in that category?
-
-Because of the userspace MLME that cfg80211 needs to support. At the
-second wireless summit in London we have decided that the userspace MLME
-should be transparent to users in that they still simply use nl80211 and
-the kernel forwards the requests to the userspace MLME and also forwards
-the responses. Therefore, most of the userspace MLME handling needs to
-live in cfg80211, which makes cfg80211 also the logical point to define
-injection at since the userspace MLME requires it.
-
-johannes
-
---=-RAFa5/XeNE8pg6Q3bCJm
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGA9y7/ETPhpq3jKURAjaxAKCSoMax6rMwcMjA2Bxf+KnYIkjbMACgm6f9
-cnF1Ui5qDVTjD71N3Po6zdc=
-=1bQl
------END PGP SIGNATURE-----
-
---=-RAFa5/XeNE8pg6Q3bCJm--
+I also added a documentation file patch which explains how to use the injection
+functionality.
+-- 
 
