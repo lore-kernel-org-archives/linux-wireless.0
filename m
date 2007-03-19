@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:39124
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933074AbXCEK6R (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:57062 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S964808AbXCSUkJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 05:58:17 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Adrian Bunk <bunk@stusta.de>
-Subject: Re: 2.6.21-rc2-mm1: drivers/usb/host/ohci-ssb.c doesn't compile
-Date: Mon, 5 Mar 2007 11:57:16 +0100
-Cc: Andrew Morton <akpm@linux-foundation.org>, linville@tuxdriver.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	dbrownell@users.sourceforge.net, greg@kroah.com,
-	linux-usb-devel@lists.sourceforge.net
-References: <20070302030026.5eef0c92.akpm@linux-foundation.org> <20070305014728.GN3441@stusta.de> <200703051149.05664.mb@bu3sch.de>
-In-Reply-To: <200703051149.05664.mb@bu3sch.de>
+	Mon, 19 Mar 2007 16:40:09 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Andy Green <andy@warmcat.com>
+Subject: Re: Faking powersave for fun and realtime channel muxing
+Date: Mon, 19 Mar 2007 16:38:43 -0400
+Cc: linux-wireless@vger.kernel.org
+References: <45FEEB34.1000403@warmcat.com>
+In-Reply-To: <45FEEB34.1000403@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200703051157.16822.mb@bu3sch.de>
+Content-Type: multipart/signed;
+  boundary="nextPart32623997.PdHQqjVhnN";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703191638.48742.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 05 March 2007 11:49, Michael Buesch wrote:
-> On Monday 05 March 2007 02:47, Adrian Bunk wrote:
-> > On Fri, Mar 02, 2007 at 03:00:26AM -0800, Andrew Morton wrote:
-> > >...
-> > > Changes since 2.6.20-mm2:
-> > >...
-> > >  git-wireless.patch
-> > >...
-> > >  git trees
-> > >...
-> > 
-> > <--  snip  -->
-> > 
-> > ...
-> >   CC      drivers/usb/host/ohci-hcd.o
-> > In file included from 
-> > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-hcd.c:931:
-> > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:47: error: request for member 'hcd_priv_size' in something not a structure or union
-> 
-> Seems like there was a comma missing.
-> There also seems to be some Kconfig problem. will fix that.
-> 
-> > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:47: error: 'ssb_ohci_device' undeclared here (not in a function)
-> > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:52: error: 'ssb_ohci_reset' undeclared here (not in a function)
-> > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:53: error: 'ssb_ohci_start' undeclared here (not in a function)
-> > ...
-> > make[4]: *** [drivers/usb/host/ohci-hcd.o] Error 1
-> > 
-> > <--  snip  -->
+--nextPart32623997.PdHQqjVhnN
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Actually, it seems like I will run into other kinds of nasty problems
-due to stupid design of the HCD code. The OHCI code #includes
-the various drivers, which have a module_init each. So if you
-compile PCI and SSB support, you have two module_init for one
-OHCI module. Not sure how to fix this. Any idea?
+On Monday 19 March 2007 15:57, Andy Green wrote:
+> Hi folks -
+>
+> If you could generate and manage powersave protocol frames to an AP from
+> the mac80211 stack, without actually putting the radio to sleep, you
+> could do some interesting things.
+>
+Like in my scanning patch series?
 
--- 
-Greetings Michael.
+http://news.gmane.org/find-root.php?group=3Dgmane.linux.kernel.wireless.gen=
+eral&article=3D770
+
+This requires a bit of kernel side support to queue up frames on the client=
+=20
+side to maintain the illusion that nothing happened. (except for a brief=20
+latency jump) However, it does seem to work for the wireless cards I've=20
+tested. Doing scanning like this in userspace will require some sort of=20
+interface to stop/restart the TX for the appropriate network interfaces, bu=
+t=20
+will probably make your multichannel association idea possible.
+
+As for how long the AP will hold your frames.. 802.11 defines a minimum tim=
+e,=20
+but the maximum depends on the AP.
+
+=2DMichael Wu
+
+--nextPart32623997.PdHQqjVhnN
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBF/vTYT3Oqt9AH4aERAn9eAKC432oUP9HBKkhnCTRUUdLL56F8cwCfQzOK
+xb6hgcrBCBxJ9mxZWD7Gg0A=
+=oVJJ
+-----END PGP SIGNATURE-----
+
+--nextPart32623997.PdHQqjVhnN--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
