@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:38347
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932098AbXCUPdo (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:14696 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965758AbXCSHrj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2007 11:33:44 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH] bcm43xx-mac80211: Change radio_init2050 to match specs
-Date: Wed, 21 Mar 2007 16:33:27 +0100
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <460048f1.Sz+VinhM/N8KG294%Larry.Finger@lwfinger.net> <200703211501.48178.mb@bu3sch.de> <46014F75.7080609@lwfinger.net>
-In-Reply-To: <46014F75.7080609@lwfinger.net>
+	Mon, 19 Mar 2007 03:47:39 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: wireless chipsets not supported by current wireless tree
+Date: Mon, 19 Mar 2007 08:47:30 +0100
+Cc: Stephen Hemminger <shemminger@linux-foundation.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <20070316224417.792d77d6@oldman> <20070316225727.d3327d7a.rdunlap@xenotime.net>
+In-Reply-To: <20070316225727.d3327d7a.rdunlap@xenotime.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200703211633.27901.mb@bu3sch.de>
+Content-Type: text/plain; charset=US-ASCII
+Message-Id: <200703190847.31321.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 21 March 2007 16:29, Larry Finger wrote:
-> Michael Buesch wrote:
-> > On Tuesday 20 March 2007 21:49, Larry Finger wrote:
-> >> The code in the mac80211 version of radio_init2050 differs from the specs
-> >> in two places.
-> >>
-> >> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> >> ---
-> >>
-> >> Index: wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
-> >> ===================================================================
-> >> --- wireless-mb.orig/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
-> >> +++ wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
-> >> @@ -3444,9 +3444,9 @@ static u16 radio2050_rfover_val(struct b
-> >>  			if (phy_register == BCM43xx_PHY_RFOVER) {
-> >>  				return 0x9B3;
-> >>  			} else if (phy_register == BCM43xx_PHY_RFOVERVAL) {
-> >> -				extlna |= (i << 8);
-> >>  				if (extlna)
-> >>  					extlna |= 0x8000;
-> >> +				extlna |= (i << 8);
-> > 
-> > What's the difference?
-> 
-> The nonzero test for extlna should be made on the table value, not the table value or'd with i << 8.
+> Is there a chance of or anyone already working on Marvell
+> (non-OLPC) support, e.g., for one of these?
+>
+> 00:09.0 Ethernet controller: Marvell Technology Group Ltd.
+> 88w8335 [Libertas] 802.11b/g Wireless (rev 03)
 
-Oh, I see. Some brain screwage on my side :)
+Yes, there is someone working there. A bunch of my patches to 
+shape the OLPC driver in a way libertas_lib.ko, libertas_usb.ko, 
+libertas_cs.ko got already applied. I made some experiments with 
+firmware download, David Anders wrote a fwcutter and so on.
 
--- 
-Greetings Michael.
+I once created a project 
+http://projects.linuxtogo.org/projects/marvell8385/, but most of 
+the discussion happend now in the OLPC Marvell mailing list. 
+>From time to time we're also on #libertas on *.freenode.net.
+
+
+Nothing works yet, and I got (and will get) distracted because my 
+company switched to SAP Business One and I'm mostly busy 
+extracting data out of our old system and putting that into 
+SAPB1 :-(  Maybe I have again time this week.
+
