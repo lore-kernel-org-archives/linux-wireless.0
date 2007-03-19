@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41516
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753413AbXCWU2O (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:59473 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752307AbXCSUwa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 16:28:14 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: jt@hpl.hp.com
-Subject: Re: [stable] [PATCH] fix information leak in wireless extensions on 64-bit platforms
-Date: Fri, 23 Mar 2007 21:27:17 +0100
-Cc: Chris Wright <chrisw@sous-sol.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
-References: <1174640787.3588.65.camel@johannes.berg> <20070323193643.GY10574@sequoia.sous-sol.org> <20070323200037.GA5165@bougret.hpl.hp.com>
-In-Reply-To: <20070323200037.GA5165@bougret.hpl.hp.com>
+	Mon, 19 Mar 2007 16:52:30 -0400
+Message-ID: <45FEF80B.9020107@warmcat.com>
+Date: Mon, 19 Mar 2007 20:52:27 +0000
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200703232127.17790.mb@bu3sch.de>
+To: Michael Buesch <mb@bu3sch.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Faking powersave for fun and realtime channel muxing
+References: <45FEEB34.1000403@warmcat.com> <200703192108.43892.mb@bu3sch.de>
+In-Reply-To: <200703192108.43892.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 23 March 2007 21:00, Jean Tourrilhes wrote:
-> On Fri, Mar 23, 2007 at 12:36:43PM -0700, Chris Wright wrote:
-> > * Jean Tourrilhes (jt@hpl.hp.com) wrote:
-> > 
-> > > 	The last thing is that I could not test those stuff myself,
-> > > and the testing done for me was limited. I would be more confident if
-> > > you were to give it a good beating before we push that into stable,
-> > > because you know what to test.
-> > 
-> > That's useful info.  Have you had any luck (it looks pretty straight
-> > forward)?
+Michael Buesch wrote:
+
+>> For example you could allow any logical network interface to have a 
+>> different channel.  In this case, during the time that the channel you 
+>> are associated on has been told you have gone into powersave mode, you 
+>> can actually spend time on that other channel, before switching the 
+>> channel back to check in with the AP.  So you could for example run 
+>> monitor mode on channel 11 while being associated on channel 2, given 
+>> the limitation that sometimes you aren't listening because you are 
 > 
-> 	Let's be more clear. I tested properly on 32 bits. But, 32
-> bits is not where there is issue, this issue is specific to 64 bits. I
-> don't have a 64 bits platfor. It seems that few people doing wireless
-> have access to 64 bits platform (actually, it seems most of them don't
-> have access to SMP either), otherwise this would have been found many
-> years ago.
-> 	Johannes is one of the few having access to 64 bits stuff.
+> And what's it good for to have a monitor device that randomly misses
+> half of the packets? I mean... rather useless, no?
 
-I finally have an USB ZD stick now, too. So I can test stuff, too.
-Should I test this somehow?
+Well it would hopefully be much less than half the time you are away. 
+If nothing much is going on in the associated channel, which a lot of 
+the time is true, then you would be spending most of the time monitoring 
+on the other channel.  Depending on the reason though even a 10% capture 
+of another channel that you can currently see 0% of could be great... 
+and it would be happening using a standard Monitor interface.
 
--- 
-Greetings Michael.
+The immediate use for it is a continuous awareness of the kind of stuff 
+going on around you on other channels, as I mentioned it could replace 
+the current beacon "scan" concept with more of an eye of Sauron operated 
+using the existing Monitor semantics.
+
+But I can also use it for the penumbra broadcast stuff.  If it enables 
+autodetection of other channels with the traffic on and automatic usage 
+of those channels without really affecting the association to the user's 
+AP on another channel, that is a very cool feature.
+
+>> Is there something like firmware constraints or the detail of the 
+>> powersaving protocol that kill this dead or is it possible to consider?
+> 
+> For software MAC devices this might work. But I think performance would suck.
+> But it sounds like it's worth an experiment. So if you want to.. :)
+
+Well, about general performance, it can modulate the amount of 
+powersaving time it is willing to use according to the amount of packets 
+coming to and going from the associated interface.
+
+-Andy
