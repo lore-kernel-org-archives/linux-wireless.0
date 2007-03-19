@@ -1,90 +1,254 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from waste.org ([66.93.16.53]:45950 "EHLO waste.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933962AbXCFGXK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2007 01:23:10 -0500
-Date: Tue, 6 Mar 2007 00:10:09 -0600
-From: Matt Mackall <mpm@selenic.com>
-To: Greg KH <greg@kroah.com>
-Cc: Adrian Bunk <bunk@stusta.de>, Theodore Tso <tytso@mit.edu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	yi.zhu@intel.com, jketreno@linux.intel.com,
-	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
-Subject: Re: [2.6.21 patch] unconditionally enable SYSFS_DEPRECATED
-Message-ID: <20070306061009.GR23311@waste.org>
-References: <20070305002550.GI23311@waste.org> <20070305011729.GB7681@kroah.com> <20070305125950.GC26781@thunk.org> <20070305185813.GA31465@kroah.com> <20070305234052.GR3441@stusta.de> <20070306000722.GA11436@kroah.com> <20070306013020.GN23311@waste.org> <20070306024850.GA24477@kroah.com> <20070306033947.GQ23311@waste.org> <20070306040350.GA25783@kroah.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070306040350.GA25783@kroah.com>
+Received: from smtp.rutgers.edu ([128.6.72.243]:42100 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S966034AbXCSRQ3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2007 13:16:29 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: andy@warmcat.com
+Subject: Re: [PATCH 1/3] mac80211: Add radiotap support
+Date: Mon, 19 Mar 2007 13:15:26 -0400
+Cc: linux-wireless@vger.kernel.org
+References: <20070319110124.819185242@warmcat.com> <20070319110256.288303943@warmcat.com>
+In-Reply-To: <20070319110256.288303943@warmcat.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart2946526.4qkEjm3QeM";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703191315.33695.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 05, 2007 at 08:03:50PM -0800, Greg KH wrote:
-> On Mon, Mar 05, 2007 at 09:39:47PM -0600, Matt Mackall wrote:
-> > On Mon, Mar 05, 2007 at 06:48:50PM -0800, Greg KH wrote:
-> > > If so, can you disable the option and strace it to see what program is
-> > > trying to access what?  That will put the
-> > > HAL/NetworkManager/libsysfs/distro script finger pointing to rest pretty
-> > > quickly :)
-> > 
-> > Ok, I've got straces of both good and bad (>5M each). Filtered out
-> > random pointer values and the like, diffed, and filtered for /sys/,
-> > and the result's still 1.5M. What should I be looking for?
-> 
-> Failures when trying to read from /sys/class/net/
-> 
-> Or opening the directory and iterating over the subdirs in there.  Or
-> something like that.
-> 
-> But the /sys/class/net/ stuff should hopefully help narrow it down.
+--nextPart2946526.4qkEjm3QeM
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_uUs/FzUqWXddRPs"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Works:
+--Boundary-01=_uUs/FzUqWXddRPs
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-6857  open("/sys/class/net",
-O_RDONLY|O_NONBLOCK|O_LARGEFILE|O_DIRECTORY) = 13
-6857  fstat64(13, {st_mode=S_IFDIR|0755, st_size=0, ...}) = 0
-6857  fcntl64(13, F_SETFD, FD_CLOEXEC)  = 0
-6857  getdents64(13, /* 5 entries */, 4096) = 120
-6857  readlink("/sys/class/net/eth1", 0x80a2450, 256) = -1 EINVAL
-(Invalid argument)
-6857  readlink("/sys/class/net/eth1/device",
-"../../../devices/pci0000:00/0000:00:1e.0/0000:02:02.0", 256) = 53
-6857  readlink("/sys/class/net/lo", 0x80a2450, 256) = -1 EINVAL
-(Invalid argument)
-6857  readlink("/sys/class/net/lo/device", 0x80a2450, 256) = -1 ENOENT
-(No such
-file or directory)
-6857  readlink("/sys/class/net/eth0", 0x80a2450, 256) = -1 EINVAL
-(Invalid argument)
-6857  readlink("/sys/class/net/eth0/device",
-"../../../devices/pci0000:00/0000:00:1e.0/0000:02:01.0", 256) = 53
-6857  getdents64(13, /* 0 entries */, 4096) = 0
-6857  close(13)                         = 0
+On Monday 19 March 2007 07:01, andy@warmcat.com wrote:
+> +	struct ieee80211_rtap_hdr {
+> +		struct ieee80211_radiotap_header hdr;
+> +		u8 flags;
+> +		u8 pad0;
+> +		u8 rate;
+> +		u8 pad1;
+> +		__le16 chan_freq;
+> +		__le16 chan_flags;
+> +		u8 antsignal;
+> +	} __attribute__ ((packed)) *rthdr;
+>
+Looks like I screwed up the padding there. New patch without the padding=20
+attached. Probably explains why rate isn't being reported correctly..
 
-Breaks:
+=2DMichael Wu
 
-3620  open("/sys/class/net",
-O_RDONLY|O_NONBLOCK|O_LARGEFILE|O_DIRECTORY) = 13
-3620  fstat64(13, {st_mode=S_IFDIR|0755, st_size=0, ...}) = 0
-3620  fcntl64(13, F_SETFD, FD_CLOEXEC)  = 0
-3620  getdents64(13, /* 5 entries */, 4096) = 120
-3620  readlink("/sys/class/net/eth1",
-"../../devices/pci0000:00/0000:00:1e.0/00\00:02:02.0/eth1", 256) = 55
-3620
-readlink("/sys/devices/pci0000:00/0000:00:1e.0/0000:02:02.0/eth1/device",
-0x809e910, 256) = -1 ENOENT (No such file or directory)
-3620  readlink("/sys/class/net/lo", "../../devices/virtual/net/lo",
-256) = 28
-3620  readlink("/sys/devices/virtual/net/lo/device", 0x809e960, 256) =
--1 ENOEN\T (No such file or directory)
-3620  readlink("/sys/class/net/eth0",
-"../../devices/pci0000:00/0000:00:1e.0/00\00:02:01.0/eth0", 256) = 55
-3620
-readlink("/sys/devices/pci0000:00/0000:00:1e.0/0000:02:01.0/eth0/device",
-0x809e960, 256) = -1 ENOENT (No such file or directory)
-3620  getdents64(13, /* 0 entries */, 4096) = 0
-3620  close(13)                         = 0
+--Boundary-01=_uUs/FzUqWXddRPs
+Content-Type: text/x-diff;
+  charset="iso-8859-15";
+  name="radio.diff"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="radio.diff"
 
--- 
-Mathematics is the supreme nostalgia of our time.
+mac80211: Add radiotap support
+
+=46rom: Michael Wu <flamingice@sourmilk.net>
+
+
+=2D--
+
+ include/net/mac80211.h         |    3 ++
+ net/mac80211/ieee80211.c       |   67 +++++++++++++++++++++++++++++++++---=
+=2D---
+ net/mac80211/ieee80211_iface.c |    2 +
+ 3 files changed, 59 insertions(+), 13 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 916b21b..27cffdc 100644
+=2D-- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -518,6 +518,9 @@ struct ieee80211_hw {
+ 	 * normal operation. */
+ #define IEEE80211_HW_MONITOR_DURING_OPER (1<<9)
+=20
++	/* Driver supports radiotap. */
++#define IEEE80211_HW_RADIOTAP_SUPPORTED (1<<10)
++
+ 	/* please fill this gap when adding new flags */
+=20
+ 	/* calculate Michael MIC for an MSDU when doing hwcrypto */
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 0b7cb35..6bffc29 100644
+=2D-- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -8,6 +8,7 @@
+  */
+=20
+ #include <net/mac80211.h>
++#include <net/ieee80211_radiotap.h>
+ #include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/netdevice.h>
+@@ -286,6 +287,14 @@ int ieee80211_get_hdrlen_from_skb(const struct sk_buff=
+ *skb)
+ }
+ EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
+=20
++static int ieee80211_get_radiotap_len(struct sk_buff *skb)
++{
++	struct ieee80211_radiotap_header *hdr =3D
++		(struct ieee80211_radiotap_header *) skb->data;
++
++	return le16_to_cpu(hdr->it_len);
++}
++
+ #ifdef CONFIG_MAC80211_LOWTX_FRAME_DUMP
+ static void ieee80211_dump_frame(const char *ifname, const char *title,
+ 				 const struct sk_buff *skb)
+@@ -2741,26 +2750,48 @@ ieee80211_rx_monitor(struct net_device *dev, struct=
+ sk_buff *skb,
+ 		     struct ieee80211_rx_status *status)
+ {
+ 	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
+=2D	struct ieee80211_frame_info *fi;
+ 	struct ieee80211_sub_if_data *sdata;
+=2D	const size_t hlen =3D sizeof(struct ieee80211_frame_info)
+=2D				- sizeof(fi->msg_type);
++	struct ieee80211_rtap_hdr {
++		struct ieee80211_radiotap_header hdr;
++		u8 flags;
++		u8 rate;
++		__le16 chan_freq;
++		__le16 chan_flags;
++		u8 antsignal;
++	} __attribute__ ((packed)) *rthdr;
+=20
+ 	skb->dev =3D dev;
+=20
+ 	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
+=20
+=2D	if (skb_headroom(skb) < hlen) {
+=2D		I802_DEBUG_INC(local->rx_expand_skb_head);
+=2D		if (pskb_expand_head(skb, hlen, 0, GFP_ATOMIC)) {
+=2D			dev_kfree_skb(skb);
+=2D			return;
++	if (!(local->hw.flags & IEEE80211_HW_RADIOTAP_SUPPORTED)) {
++		if (skb_headroom(skb) < sizeof(*rthdr)) {
++			I802_DEBUG_INC(local->rx_expand_skb_head);
++			if (pskb_expand_head(skb, sizeof(*rthdr), 0, GFP_ATOMIC)) {
++				dev_kfree_skb(skb);
++				return;
++			}
+ 		}
+=2D	}
+=20
+=2D	fi =3D (struct ieee80211_frame_info *) skb_push(skb, hlen);
++		rthdr =3D (struct ieee80211_rtap_hdr *) skb_push(skb, sizeof(*rthdr));
++		memset(rthdr, 0, sizeof(*rthdr));
++		rthdr->hdr.it_len =3D cpu_to_le16(sizeof(*rthdr));
++		rthdr->hdr.it_present =3D
++			cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) ||
++				    (1 << IEEE80211_RADIOTAP_RATE) ||
++				    (1 << IEEE80211_RADIOTAP_CHANNEL) ||
++				    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL));
++		rthdr->flags =3D local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS ?
++			       IEEE80211_RADIOTAP_F_FCS : 0;
++		rthdr->rate =3D status->rate / 5;
++		rthdr->chan_freq =3D cpu_to_le16(status->freq);
++		rthdr->chan_flags =3D
++			status->phymode =3D=3D MODE_IEEE80211A ?
++			cpu_to_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ) :
++			cpu_to_le16(IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ);
++		rthdr->antsignal =3D status->ssi;
++	}
+=20
+=2D	ieee80211_fill_frame_info(local, fi, status);
+ 	sdata->stats.rx_packets++;
+ 	sdata->stats.rx_bytes +=3D skb->len;
+=20
+@@ -3164,6 +3195,10 @@ ieee80211_rx_h_monitor(struct ieee80211_txrx_data *r=
+x)
+ 		return TXRX_QUEUED;
+ 	}
+=20
++	if (rx->local->monitors &&
++	    rx->local->hw.flags & IEEE80211_HW_RADIOTAP_SUPPORTED)
++		skb_pull(rx->skb, ieee80211_get_radiotap_len(rx->skb));
++
+ 	return TXRX_CONTINUE;
+ }
+=20
+@@ -3731,6 +3766,13 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct =
+sk_buff *skb,
+ 	struct ieee80211_txrx_data rx;
+ 	u16 type;
+ 	int multicast;
++	int radiotap_len =3D 0;
++
++	if (local->monitors &&
++	    local->hw.flags & IEEE80211_HW_RADIOTAP_SUPPORTED) {
++		radiotap_len =3D ieee80211_get_radiotap_len(skb);
++		skb_pull(skb, radiotap_len);
++	}
+=20
+ 	hdr =3D (struct ieee80211_hdr *) skb->data;
+ 	memset(&rx, 0, sizeof(rx));
+@@ -3767,6 +3809,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct s=
+k_buff *skb,
+ 		goto end;
+ 	skb =3D rx.skb;
+=20
++	skb_push(skb, radiotap_len);
+ 	if (sta && !sta->assoc_ap && !(sta->flags & WLAN_STA_WDS) &&
+ 	    !local->iff_promiscs && !multicast) {
+ 		rx.u.rx.ra_match =3D 1;
+@@ -3775,7 +3818,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct s=
+k_buff *skb,
+ 	} else {
+ 		struct ieee80211_sub_if_data *prev =3D NULL;
+ 		struct sk_buff *skb_new;
+=2D		u8 *bssid =3D ieee80211_get_bssid(hdr, skb->len);
++		u8 *bssid =3D ieee80211_get_bssid(hdr, skb->len - radiotap_len);
+=20
+ 		list_for_each_entry(sdata, &local->sub_if_list, list) {
+ 			rx.u.rx.ra_match =3D 1;
+diff --git a/net/mac80211/ieee80211_iface.c b/net/mac80211/ieee80211_iface.c
+index 3e0b4fa..51197b1 100644
+=2D-- a/net/mac80211/ieee80211_iface.c
++++ b/net/mac80211/ieee80211_iface.c
+@@ -199,7 +199,7 @@ void ieee80211_if_set_type(struct net_device *dev, int =
+type)
+ 		break;
+ 	}
+ 	case IEEE80211_IF_TYPE_MNTR:
+=2D		dev->type =3D ARPHRD_IEEE80211_PRISM;
++		dev->type =3D ARPHRD_IEEE80211_RADIOTAP;
+ 		break;
+ 	default:
+ 		printk(KERN_WARNING "%s: %s: Unknown interface type 0x%x",
+
+--Boundary-01=_uUs/FzUqWXddRPs--
+
+--nextPart2946526.4qkEjm3QeM
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBF/sU1T3Oqt9AH4aERAvEKAKC7K/DuU79lfV7NmYUYIHft/mZzbQCfUggg
+jeAkF2QvbFzE2/P8FsJc+Ww=
+=R99k
+-----END PGP SIGNATURE-----
+
+--nextPart2946526.4qkEjm3QeM--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
