@@ -1,44 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:58297 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422832AbXCOGmB (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:35175 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965259AbXCTKQe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2007 02:42:01 -0400
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HRjd5-0004Xa-PP
-	for linux-wireless@vger.kernel.org; Thu, 15 Mar 2007 02:40:04 -0400
-Subject: Re: [RFC][PATCH] Add radiotap-based packet injection capability to  monitor mode
-From: Pavel Roskin <proski@gnu.org>
-To: Andy Green <andy@warmcat.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <45F8E873.4050705@warmcat.com>
-References: <45F89DA5.8000206@warmcat.com>
-	 <200703150157.02876.flamingice@sourmilk.net> <45F8E873.4050705@warmcat.com>
-Content-Type: text/plain
-Date: Thu, 15 Mar 2007 02:41:41 -0400
-Message-Id: <1173940901.24577.6.camel@dv>
-Mime-Version: 1.0
+	Tue, 20 Mar 2007 06:16:34 -0400
+Message-ID: <45FFB47F.2060807@warmcat.com>
+Date: Tue, 20 Mar 2007 10:16:31 +0000
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Michael Wu <flamingice@sourmilk.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/3] mac80211: Add radiotap support
+References: <20070319110124.819185242@warmcat.com> <20070319110256.288303943@warmcat.com> <200703191315.33695.flamingice@sourmilk.net>
+In-Reply-To: <200703191315.33695.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-03-15 at 06:32 +0000, Andy Green wrote:
->   It seemed from the struct ieee80211_radiotap_header header version in 
-> Linville's latest FC7 #4 RPM anyway that they were native endian, ie, 
-> using u16 in there.  I took from that the args were likewise u16, which 
-> was possible since the radiotap part doesn't normally leave the machine. 
->   But having fixed endianness makes more sense.
+Michael Wu wrote:
 
-I posted a patch that annotates radiotap as little-endian, but I haven't
-seen any reaction so far.
+Hi Michael -
 
-I'm not aware of any driver that implements radiotap as native endian
-(at least intentionally).  All implementation I know are little endian,
-even if it means sparse warnings (that's how I became aware of the
-problem with the non-annotated include file for radiotap).
+> +		rthdr->hdr.it_present =
+> +			cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) ||
+> +				    (1 << IEEE80211_RADIOTAP_RATE) ||
+> +				    (1 << IEEE80211_RADIOTAP_CHANNEL) ||
+> +				    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL));
 
--- 
-Regards,
-Pavel Roskin
+These were the wrong kind of OR operator as well.
 
+test.c:
+#include <stdio.h>
+int main() { printf("%d %d\n", 1 || 2, 1 | 2); return 0; }
+
+$ gcc test.c
+$ ./a.out
+1 3
+
+After fixing that it now works with tcpdump!
+
+# tcpdump -i mon0 -s0 -X ether host 13:22:33:44:55:66
+
+09:54:58.579725 1.0 Mb/s 2417 MHz (0x0480) 100dB signal 
+13:22:33:44:55:66 (oui Unknown) Unknown SSAP 0x60 > 13:22:33:44:55:66 
+(oui Unknown) Unknown DSAP 0x50 Unnumbered, ua, Flags [Command], length 38
+         0x0000:  5061 636b 6574 7370 616d 6d65 7220 6272  Packetspammer.br
+         0x0010:  6f61 6463 6173 7420 7061 636b 6574 2031  oadcast.packet.1
+         0x0020:  3639 72b1 0066                           69r..f
+09:54:58.679197 54.0 Mb/s 2417 MHz (0x0480) 100dB signal 
+13:22:33:44:55:66 (oui Unknown) Unknown SSAP 0x60 > 13:22:33:44:55:66 
+(oui Unknown) Unknown DSAP 0x50 Unnumbered, ua, Flags [Command], length 38
+         0x0000:  5061 636b 6574 7370 616d 6d65 7220 6272  Packetspammer.br
+         0x0010:  6f61 6463 6173 7420 7061 636b 6574 2031  oadcast.packet.1
+         0x0020:  3730 c01d 92cd                           70....
+
+Note the CRC appears, I guess it's okay.  With zd1211rw-mac80211 as it 
+is, rx strength always appears as 100dB: it comes from 
+ieee80211_rx_status.ssi.  1Mbps injection is working as well since a 
+couple of tries ago on my patch.
+
+-Andy
