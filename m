@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44416 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965632AbXCBVLW (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:49702 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753564AbXCTKlG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2007 16:11:22 -0500
-Subject: Re: [PATCH] move per-netdev and key stuff to debugfs
-From: Johannes Berg <johannes@sipsolutions.net>
+	Tue, 20 Mar 2007 06:41:06 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 1065F8CAD2
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2007 11:41:05 +0100 (CET)
+Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
+	by armbox7.home.warmcat.com (Postfix) with ESMTP id 591FF10090
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2007 10:41:07 +0000 (UTC)
+Message-Id: <20070320103955.600509703@warmcat.com>
+Date: Tue, 20 Mar 2007 10:39:55 +0000
+From: andy@warmcat.com
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1172852882.8247.2.camel@johannes.berg>
-References: <1172852882.8247.2.camel@johannes.berg>
-Date: Fri, 02 Mar 2007 22:10:53 +0100
-Message-Id: <1172869853.8247.12.camel@johannes.berg>
-Mime-Version: 1.0
+Subject: [PATCH 0/4] Try #5: Radiotap on Monitor Mode interfaces for rx and tx
 Sender: linux-wireless-owner@vger.kernel.org
-Content-Type: multipart/mixed; boundary=DSPAM_MULTIPART_EX-2279
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi folks -
 
---DSPAM_MULTIPART_EX-2279
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SCRs8tBeHe1Cz3Bugpzw"
+This set of patches change the Monitor Mode wireless interfaces to use radiotap
+both for monitoring and for packet injection.  The monitoring side is done by a patch
+from Michael Wu.  Tcpdump knows how to handle the result.
 
---=-SCRs8tBeHe1Cz3Bugpzw
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+For injecting packets, the you issue a packet using libpcap or a SOCK_PACKET
+socket down an interface to the wireless device that is in Monitor Mode.  The packet
+has a normal radiotap header prepended to the IEEE80211 header.  The radiotap header
+is variable length depending on what the user wants to specify, currently the
+transmit rate, power and antenna can be specified using normal radiotap semantics.
+Any other entries are skipped.
 
-Found a small bug and did some cleanups, I'll post a link to the series
-to not spam you with these huge patches again.
+A usermode app packetspammer is available from here
 
-johannes
+http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
 
---=-SCRs8tBeHe1Cz3Bugpzw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+which allows easy injection of these packets from the commandline.  At the moment it
+loops issuing packets at a variety of rates which can be seen from another
+machine's monitor mode interface on the same channel.  There are instructions for
+build and using it on the page above.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Currently it has been tested for both rx and tx using zd1211rw-mac80211.
 
-iD8DBQBF6JLc/ETPhpq3jKURAqzbAKCzuR2vTmEjhg+wjb9xulG2dlvlDgCeJ84T
-nD57GP7/qccRjyV1LdnDHUA=
-=Nwhe
------END PGP SIGNATURE-----
+The patches should be based against wireless-dev.
 
---=-SCRs8tBeHe1Cz3Bugpzw--
-
---DSPAM_MULTIPART_EX-2279
-Content-Type: text/plain
-X-DSPAM-Signature: 45e891fa22798165083049
-
-!DSPAM:45e891fa22798165083049!
---DSPAM_MULTIPART_EX-2279--
+I also added a documentation file patch which explains how to use the injection
+functionality.
+-- 
