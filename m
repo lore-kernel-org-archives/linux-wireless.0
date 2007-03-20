@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58537 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965504AbXCATEv (ORCPT
+Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:53322 "EHLO
+	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753893AbXCTUuw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2007 14:04:51 -0500
-Subject: Re: [PATCH] mac80211: move PHY things to debugfs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <45E72174.9060104@warmcat.com>
-References: <1172774065.3381.3.camel@johannes.berg>
-	 <45E72174.9060104@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gF+USl22gK1SigLLF2nl"
-Date: Thu, 01 Mar 2007 20:04:26 +0100
-Message-Id: <1172775866.3381.7.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 20 Mar 2007 16:50:52 -0400
+Date: Tue, 20 Mar 2007 15:49:53 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] bcm43xx-mac80211: Change radio_init2050 to match specs
+Message-ID: <460048f1.Sz+VinhM/N8KG294%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The code in the mac80211 version of radio_init2050 differs from the specs
+in two places.
 
---=-gF+USl22gK1SigLLF2nl
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-On Thu, 2007-03-01 at 18:54 +0000, Andy Green wrote:
-
-> Gah I was using /sys/class/ieee80211/phy<n>/device/net:<ifname> to=20
-> discover which physical device owns which interfaces... if there isn't a=20
-> better/official way from userspace can this maybe stay in /sys?
-
-That's already gone anyway in recent kernels anyway and the net: stuff
-is broken currently.
-
-When Greg fixes sysfs, the real way would be to follow the symlink
-in /sys/class/net/ieee80211/ which links to (for
-example) /sys/devices/pci0001:10/0001:10:12.0/ssb06:01/phy6, then go
-back up one level and enumerate all net: objects in it.
-
-Or, if you start from a netdev, you can see the phy80211 symlink.
-
-johannes
-
---=-gF+USl22gK1SigLLF2nl
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF5yO6/ETPhpq3jKURAn8UAKCvAFTRntvUevdHgdJucPOoQk6nRQCeOoU5
-T7oWBUToPrceUTxqk8D6JVc=
-=2NPU
------END PGP SIGNATURE-----
-
---=-gF+USl22gK1SigLLF2nl--
-
+Index: wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
+===================================================================
+--- wireless-mb.orig/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
++++ wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
+@@ -3444,9 +3444,9 @@ static u16 radio2050_rfover_val(struct b
+ 			if (phy_register == BCM43xx_PHY_RFOVER) {
+ 				return 0x9B3;
+ 			} else if (phy_register == BCM43xx_PHY_RFOVERVAL) {
+-				extlna |= (i << 8);
+ 				if (extlna)
+ 					extlna |= 0x8000;
++				extlna |= (i << 8);
+ 				switch (lpd) {
+ 				case LPD(0, 1, 1):
+ 					return 0x8F92;
+@@ -3724,9 +3724,10 @@ u16 bcm43xx_radio_init2050(struct bcm43x
+ 		bcm43xx_phy_stackrestore(stack, BCM43xx_PHY_ANALOGOVERVAL);
+ 		bcm43xx_phy_stackrestore(stack, BCM43xx_PHY_CRS0);
+ 		bcm43xx_phy_stackrestore(stack, BCM43xx_PHY_CLASSCTL);
+-		bcm43xx_write16(dev, BCM43xx_MMIO_PHY_RADIO,
+-				bcm43xx_read16(dev, BCM43xx_MMIO_PHY_RADIO)
+-				& 0x7FFF);
++		if (has_loopback_gain(phy)) {
++			bcm43xx_phy_stackrestore(stack, BCM43xx_PHY_LO_MASK);
++			bcm43xx_phy_stackrestore(stack, BCM43xx_PHY_LO_CTL);
++		}
+ 	}
+ 	if (i > 15)
+ 		ret = radio78;
