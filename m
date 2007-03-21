@@ -1,57 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:38615 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932569AbXC1Udg (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:45567
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932840AbXCUQSE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 16:33:36 -0400
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HWenn-0005bI-4J
-	for linux-wireless@vger.kernel.org; Wed, 28 Mar 2007 16:31:27 -0400
-Subject: Re: [Radiotap] Re: RFC: radiotap discrepancy in Linux vs OpenBSD
-From: Pavel Roskin <proski@gnu.org>
-To: Marcelo Tosatti <marcelo@kvack.org>
-Cc: David Young <dyoung@pobox.com>, linux-wireless@vger.kernel.org,
-	Scott Raynel <scottraynel@gmail.com>, radiotap@mail.ojctech.com
-In-Reply-To: <20070328180413.GC17793@dmt>
-References: <20070325232416.64xwkc0kw04oosg0@webmail.spamcop.net>
-	 <20070326033729.GG31621@che.ojctech.com> <1174949149.28132.49.camel@dv>
-	 <20070328180413.GC17793@dmt>
-Content-Type: text/plain
-Date: Wed, 28 Mar 2007 16:33:32 -0400
-Message-Id: <1175114012.9299.4.camel@dv>
-Mime-Version: 1.0
+	Wed, 21 Mar 2007 12:18:04 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH] bcm43xx-mac80211: Change radio_init2050 to match specs
+Date: Wed, 21 Mar 2007 17:17:52 +0100
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Joseph Jezak <josejx@gentoo.org>
+References: <460048f1.Sz+VinhM/N8KG294%Larry.Finger@lwfinger.net> <200703211501.48178.mb@bu3sch.de> <46014F75.7080609@lwfinger.net>
+In-Reply-To: <46014F75.7080609@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Message-Id: <200703211717.53055.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-03-28 at 15:04 -0300, Marcelo Tosatti wrote:
-> On Mon, Mar 26, 2007 at 06:45:49PM -0400, Pavel Roskin wrote:
-> > On Sun, 2007-03-25 at 22:37 -0500, David Young wrote:
+On Wednesday 21 March 2007 16:29, Larry Finger wrote:
+> Michael Buesch wrote:
+> > On Tuesday 20 March 2007 21:49, Larry Finger wrote:
+> >> The code in the mac80211 version of radio_init2050 differs from the specs
+> >> in two places.
+> >>
+> >> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> >> ---
+> >>
+> >> Index: wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
+> >> ===================================================================
+> >> --- wireless-mb.orig/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
+> >> +++ wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
+> >> @@ -3444,9 +3444,9 @@ static u16 radio2050_rfover_val(struct b
+> >>  			if (phy_register == BCM43xx_PHY_RFOVER) {
+> >>  				return 0x9B3;
+> >>  			} else if (phy_register == BCM43xx_PHY_RFOVERVAL) {
+> >> -				extlna |= (i << 8);
+> >>  				if (extlna)
+> >>  					extlna |= 0x8000;
+> >> +				extlna |= (i << 8);
 > > 
-> > > > One is found in the current wireless-2.6.git:
-> > > > 
-> > > >         IEEE80211_RADIOTAP_RX_FLAGS = 14,
-> > > >         IEEE80211_RADIOTAP_TX_FLAGS = 15,
-> > > >         IEEE80211_RADIOTAP_RTS_RETRIES = 16,
-> > > >         IEEE80211_RADIOTAP_DATA_RETRIES = 17,
-> > > 
-> > > These fields are slated to become part of the standard, I just haven't got
-> > > around to updating the manual page, yet.  I have time to do that tonight.
-> > 
-> > OK.  I was wrong to assume that non-standard fields were introduced on
-> > the Linux side.
+> > What's the difference?
 > 
-> I mentioned those in the past to David Young, but I forgot to resend
-> them to the radiotap list. 
+> The nonzero test for extlna should be made on the table value, not the table value or'd with i << 8.
 
-Then we need to remove IEEE80211_RADIOTAP_FCS from Linux
-ieee80211_radiotap.h.  It's only present in a comment, but it's a
-comment that can be harmful.  I could submit a patch, but it would
-conflict with a patch that does sparse annotation.
+Eh, wait.
+The spec is not clear (at least to me) on this point:
 
-OK, I'll submit both.
+# OR the loop position value left shifted by 8 with the External LNA Control Value
+# If the External LNA Value isn't 0
+   1. OR the value with 0x8000 
+# OR this value with the table values below which are marked with Yes
+
+>From my understanding current code is correct.
+But I see that one could interpret the spec in your way as well.
+Joseph?
 
 -- 
-Regards,
-Pavel Roskin
-
+Greetings Michael.
