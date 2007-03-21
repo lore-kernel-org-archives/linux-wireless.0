@@ -1,75 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59839 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934112AbXCFNMG (ORCPT
+Received: from mailgw1.uni-kl.de ([131.246.120.220]:50408 "EHLO
+	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750865AbXCUEdr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2007 08:12:06 -0500
-Subject: bcm43xx master mode works for me
-From: Johannes Berg <johannes@sipsolutions.net>
-To: bcm43xx-dev@berlios.de
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xK6eIEZaJurr/mE7FvOD"
-Date: Tue, 06 Mar 2007 02:08:12 +0100
-Message-Id: <1173143292.15891.79.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 21 Mar 2007 00:33:47 -0400
+Received: from thot.informatik.uni-kl.de (thot.informatik.uni-kl.de [131.246.166.35])
+	by mailgw1.uni-kl.de (8.13.4/8.13.4/Debian-3sarge3) with ESMTP id l2L4CqNI018015
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Mar 2007 05:12:52 +0100
+Date: Wed, 21 Mar 2007 05:12:52 +0100
+From: Joerg Mayer <jmayer@loplof.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] mac80211: Monitor mode radiotap-based packet injection
+Message-ID: <20070321041252.GB10005@thot.informatik.uni-kl.de>
+References: <20070318101535.251183750@warmcat.com> <200703190156.07984.flamingice@sourmilk.net> <45FE6C02.5050605@warmcat.com> <200703191250.47929.flamingice@sourmilk.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200703191250.47929.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Mar 19, 2007 at 12:50:42PM -0400, Michael Wu wrote:
+> > I googled for radiotap specs but I didn't find anything useful.  I added
+> > some small code to enforce the alignment rules you mention above.
+> >
+> I got the information on padding from:
+> http://madwifi.org/wiki/DevDocs/RadiotapHeader
+>
+> I don't remember how I managed to find that, but there it is.
 
---=-xK6eIEZaJurr/mE7FvOD
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The packet-radiotap.c in Wireshark has the following comments:
 
-I just gave this another try, after porting the fix for the
-beacon_control kfree bug which I'd found and debugged with Michael on
-IRC earlier (changeset 8ce88367b520c0fb303832026d5604a414e1259c in his
-tree) to the latest wireless-dev [1] and making hostapd compile, I have
-master mode working with bcm43xx.
+/* Written with info from:
+ *
+ * http://madwifi.org/wiki/DevDocs/RadiotapHeader
+ * NetBSD's ieee80211_radiotap.h file
+ */
 
-That means I can now start working on creating a driver_nl82011.c for
-hostapd and killing off the prism2 ioctls one by one :) Help is always
-welcome though.
+/*
+ * The NetBSD ieee80211_radiotap man page
+ * (http://netbsd.gw.com/cgi-bin/man-cgi?ieee80211_radiotap+9+NetBSD-current)
+ * says:
+ *
+ *    Radiotap capture fields must be naturally aligned.  That is, 16-, 32-,
+ *    and 64-bit fields must begin on 16-, 32-, and 64-bit boundaries, respec-
+ *    tively.  In this way, drivers can avoid unaligned accesses to radiotap
+ *    capture fields.  radiotap-compliant drivers must insert padding before a
+ *    capture field to ensure its natural alignment.  radiotap-compliant packet
+ *    dissectors, such as tcpdump(8), expect the padding.
+ */
 
-johannes
-
-[1]
-actually, that's not strictly true. my tree also contains these patches:
-
-fix-mac80211-Kconfig [was sent to akpm for the s390 problems]
-tasklet-free-debug.patch [kills scheduled tasklets in memory that is being =
-freed]
-fix-scanf.patch [fixes scanf, unfortunately nobody replied to that...]
-export-device-rename.patch [gregkh has that]
-wiphy-rename.patch [posted earlier]
-delete-netlink-wext.patch [posted earlier]
-rework-kconfig [posted earlier]
-bluetape1.patch
-bluetape2.patch
-bluetape3.patch
-bluetape4.patch
-bluetape5.patch [Michael Wu's patch series]
-sysfs-to-debugfs.patch [debugfs #1]
-more-sysfs-to-debugfs.patch [debugfs #2]
-wiphy-private-id.patch [posted earlier]
-mac80211-netdev-stuff-to-debugfs.patch [debugfs #3]
-fix-header-bogosities.patch [posted recently]
-nl80211-new-commands.patch [work in progress]
-wpa.h.patch [posted recently]
-bcm43xx-fix.patch [the ported fix]
-hostapd-compile.patch [posted FYI]
-
-
---=-xK6eIEZaJurr/mE7FvOD
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF7L77/ETPhpq3jKURAt1sAJ4zBpeO53xVJh2ZkqlpeKdKyaYrMgCgsZRh
-cJZKkZMQHfCaLF7o7TuwQpI=
-=LS5F
------END PGP SIGNATURE-----
-
---=-xK6eIEZaJurr/mE7FvOD--
+Ciao
+     Joerg
+--
+Joerg Mayer                                           <jmayer@loplof.de>
+We are stuck with technology when what we really want is just stuff that
+works. Some say that should read Microsoft instead of technology.
 
