@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50448 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752851AbXC1JL2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 05:11:28 -0400
-Subject: dev_mc_discard: multicast leakage
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fzr+BvgVCXXkVggrMFDW"
-Date: Tue, 27 Mar 2007 02:07:28 +0200
-Message-Id: <1174954048.25887.77.camel@johannes.berg>
+Received: from styx.suse.cz ([82.119.242.94]:55407 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932223AbXCUPYV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Mar 2007 11:24:21 -0400
+Date: Wed, 21 Mar 2007 16:24:19 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Andy Green <andy@warmcat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Faking powersave for fun and realtime channel muxing
+Message-ID: <20070321162419.09b45703@griffin.suse.cz>
+In-Reply-To: <45FEEB34.1000403@warmcat.com>
+References: <45FEEB34.1000403@warmcat.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 19 Mar 2007 19:57:40 +0000, Andy Green wrote:
+> Depending on the limitations of the time you can arrange to "sleep" with 
+> the AP, using this technique you could even associate multiple logical 
+> interfaces to APs on different channels despite they are sharing one 
+> physical radio.  That could be cool for dealing with realtime selection 
+> of the best channel/AP when the guy is mobile, for example.
 
---=-fzr+BvgVCXXkVggrMFDW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Nice idea, but it won't work. You are completely dependent on AP's
+timing and if the beacon interval and DTIM period is the same at both
+APs (that's quite likely) and DTIMs are sent at more or less the same
+time (that could happen), bad luck. How would you explain to users that
+it won't work in some random cases?
 
-Hi,
+Using the time between two DTIMs to tune to other channels for other
+purposes (like _active_ scanning - note that passive scanning won't
+work) or getting rough idea of channels usage could work. But as was
+already noted, it requires tx traffic to be buffered, thus degrading
+performance. You need to balance these two things pretty well - not an
+easy job, I would say.
 
-I just got the message:
+Also, consider that an amount of time required to tune to another
+channel is not zero.
 
-[119933.809902] dev_mc_discard: multicast leakage! dmi_users=3D1
+Thanks,
 
-when I had created two monitor interfaces and deleted one of them.
-Anybody have any idea what could cause this?
+ Jiri
 
-johannes
-
---=-fzr+BvgVCXXkVggrMFDW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGCGBA/ETPhpq3jKURArFaAJ4gcQ/XUh5h4i9kqS58xPlmHS4g8ACfW1vk
-YBOXfOsCnX4XFJF4eA6E5/U=
-=5rDA
------END PGP SIGNATURE-----
-
---=-fzr+BvgVCXXkVggrMFDW--
-
+-- 
+Jiri Benc
+SUSE Labs
