@@ -1,62 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35615 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964976AbXCALcS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2007 06:32:18 -0500
-Subject: Re: Patch: prism54usb, new device
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo Couckuyt <iv0co@yahoo.co.uk>
-Cc: linux-wireless@vger.kernel.org, developers@islsm.org
-In-Reply-To: <45E5A4C2.3090204@yahoo.co.uk>
-References: <45E5A4C2.3090204@yahoo.co.uk>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-a/NZAoKt4iY8xfyY3NEt"
-Date: Thu, 01 Mar 2007 12:31:56 +0100
-Message-Id: <1172748716.11911.34.camel@johannes.berg>
+Received: from styx.suse.cz ([82.119.242.94]:52478 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752887AbXCUOMe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Mar 2007 10:12:34 -0400
+Date: Wed, 21 Mar 2007 15:12:31 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: question: /sys/class/net/*/wireless
+Message-ID: <20070321151231.0a912abf@griffin.suse.cz>
+In-Reply-To: <1174064833.3355.7.camel@johannes.berg>
+References: <1172920691.4966.6.camel@johannes.berg>
+	<1172921257.4966.12.camel@johannes.berg>
+	<1172967669.3402.0.camel@johannes.berg>
+	<20070316150352.5290eea7@griffin.suse.cz>
+	<1174064833.3355.7.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 16 Mar 2007 18:07:12 +0100, Johannes Berg wrote:
+> On Fri, 2007-03-16 at 15:03 +0100, Jiri Benc wrote:
+> > Then we can have /sys/class/net/*/ieee80211 for cfg80211-based
+> > interfaces.
+> 
+> And /wireless just present for wext? That won't work out properly, but
+> I'm sure once I actually look at the code I can think of something.
 
---=-a/NZAoKt4iY8xfyY3NEt
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Why it won't work? If you have wext-compat configured, you have the
+'wireless' directory (and 'ieee80211' as well). If you don't have
+wext-compat, you don't have the 'wireless' directory. But tools which
+depend on wext won't work then anyway, so no difference here.
 
-I guess this should be on the radar of the prism54 people since it
-applies against that driver and not p54?
+Or am I missing some special cases?
 
-Please check the MAINTAINERS file (also on
-http://linuxwireless.org/en/developers/maintainers) next time.
+Thanks,
 
-On Wed, 2007-02-28 at 16:50 +0100, Ivo Couckuyt wrote:
-> Using islsm/prism54usb  succesfully with the Philips CPWUA054 device for=20
-> a year now, made a little
-> patch for prism54usb
-> patched against
->=20
-> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
->=20
->=20
-> more info:
-> http://www.p4c.philips.com/cgi-bin/dcbint/cpindex.pl?ctn=3DCPWUA054/00&sc=
-y=3DBE&slg=3DNL&grp=3DPC_PRODUCTS_GR_BE_CONSUMER&cat=3DPC_NETWORKING_CA_BE_=
-CONSUMER&sct=3DWIRELESS_ADAPTERS_SU_BE_CONSUMER
->=20
-> regards,
-> ilm
+ Jiri
 
-
---=-a/NZAoKt4iY8xfyY3NEt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF5rms/ETPhpq3jKURAgB0AKCEd/M7IB/abqOOw+e3nKhbUPqnowCcC/T4
-icAaQSsxIvC5NkC+MfyOyF4=
-=Ebhe
------END PGP SIGNATURE-----
-
---=-a/NZAoKt4iY8xfyY3NEt--
-
+-- 
+Jiri Benc
+SUSE Labs
