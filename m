@@ -1,54 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58029 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1945972AbXC3KiY (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:59424 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932286AbXCUEHd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Mar 2007 06:38:24 -0400
-Subject: Re: cfg80211 wext compat w/o wext code changes, rtnl locking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	James Ketrenos <jketreno@linux.intel.com>
-In-Reply-To: <200703301211.05261.mb@bu3sch.de>
-References: <1175122815.8807.21.camel@johannes.berg>
-	 <200703301211.05261.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-b/gPFxq4OCwGfyPamR2a"
-Date: Fri, 30 Mar 2007 12:37:31 +0200
-Message-Id: <1175251051.19085.2.camel@johannes.berg>
+	Wed, 21 Mar 2007 00:07:33 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HTs4q-0001qg-WB
+	for linux-wireless@vger.kernel.org; Wed, 21 Mar 2007 00:05:33 -0400
+Subject: Re: wireless chipsets not supported by current wireless tree
+From: Pavel Roskin <proski@gnu.org>
+To: Stephen Hemminger <shemminger@linux-foundation.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070316224417.792d77d6@oldman>
+References: <20070316224417.792d77d6@oldman>
+Content-Type: text/plain
+Date: Wed, 21 Mar 2007 00:07:27 -0400
+Message-Id: <1174450047.9513.36.camel@dv>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2007-03-16 at 22:44 -0700, Stephen Hemminger wrote:
+> Anyone keep a list of the important chips not supported by the current
+> wireless tree? I know about Atheros, and the upcoming Marvell stuff but
+> what about the others.
 
---=-b/gPFxq4OCwGfyPamR2a
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm not aware of such list.  I think it could be placed on
+http://linuxwireless.org/
 
-On Fri, 2007-03-30 at 12:11 +0200, Michael Buesch wrote:
-> On Thursday 29 March 2007 01:00, Johannes Berg wrote:
-> > -			if(handler !=3D NULL) {
-> > +			if (handler) {
-> > +				if (!dev->wireless_handlers->no_locking)
-> > +					rtnl_lock();
->=20
-> Is sparse OK with this conditional locking?
+Just off the top of my head:
 
-I also thought it wasn't but it didn't complain. The only reason why I
-didn't just duplicate the code was the deep indentation here...
+No known drivers:
 
-johannes
+Airgo
+Atheros draft-802.11n PCI
+Atheros USB
 
---=-b/gPFxq4OCwGfyPamR2a
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Vendor drivers in unusable condition (importance is arguable):
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Hermes 2/2.5
+Am1771
 
-iD8DBQBGDOhr/ETPhpq3jKURAgoAAJ9Yn2wIWyMZXiCHKHCeR5b3bd8WdwCePF0s
-zH5194wlkuy9Lb2fRWMNWSA=
-=pwQt
------END PGP SIGNATURE-----
+Drivers outside the tree:
 
---=-b/gPFxq4OCwGfyPamR2a--
+Intel ipw3945
+rtl818x PCI
+Atmel USB
+
+Drivers in the tree but currently unusable:
+
+rt61
+
+This list may be helpful, but most chipsets listed there are obsolete:
+http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Linux.Wireless.drivers.html
+
+-- 
+Regards,
+Pavel Roskin
 
