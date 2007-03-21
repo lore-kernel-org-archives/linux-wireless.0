@@ -1,66 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60524 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752432AbXCAOQ0 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:39013
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933351AbXCUSfG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2007 09:16:26 -0500
-Subject: Re: [TRIAL BALLOON] rework wireless Kconfig
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890703010611o33b2a5b3kc43cadd2a11a5287@mail.gmail.com>
-References: <1172755537.11911.50.camel@johannes.berg>
-	 <43e72e890703010611o33b2a5b3kc43cadd2a11a5287@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EXwEQQXgL56vRy501+2W"
-Date: Thu, 01 Mar 2007 15:16:02 +0100
-Message-Id: <1172758562.11911.55.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 21 Mar 2007 14:35:06 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: 2.6.21-rc4-mm1
+Date: Wed, 21 Mar 2007 19:34:28 +0100
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Zan Lynx <zlynx@acm.org>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	bcm43xx devel <Bcm43xx-dev@lists.berlios.de>,
+	John Linville <linville@tuxdriver.com>
+References: <20070319205623.299d0378.akpm@linux-foundation.org> <20070320223643.d8cbc3f6.akpm@linux-foundation.org> <4601761F.4000302@lwfinger.net>
+In-Reply-To: <4601761F.4000302@lwfinger.net>
+MIME-Version: 1.0
+Message-Id: <200703211934.28465.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 21 March 2007 19:14, Larry Finger wrote:
+> Andrew Morton wrote:
+> > On Tue, 20 Mar 2007 17:23:54 -0600 Zan Lynx <zlynx@acm.org> wrote:
+> > 
+> >> On Mon, 2007-03-19 at 20:56 -0800, Andrew Morton wrote:
+> >>> Temporarily at
+> >>>
+> >>>   http://userweb.kernel.org/~akpm/2.6.21-rc4-mm1/
+> >>>
+> >>> Will appear later at
+> >>>
+> >>>   ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21-rc4/2.6.21-rc4-mm1/
+> >> First impressions:
+> >> Several of the same bugs as rc3-mm*:
+> >>       * Freezes immediately if I touch the wlan0 device after loading
+> >>         the new Broadcom wireless driver.
+> 
+> The version of the ssb driver in 2.6.21-rc4-mm1 has a bug that causes a kernel oops if the bcm43xx
+> chip contains a USB (dangling) core. This bug has been fixed in Michael Buesch's tree, but
+> apparently not yet in Linville's wireless-dev tree. The patch is as follows:
+> 
+> commit 08531ff130bcc8181d9294a66e25010f48eefb97
+> Author: Michael Buesch <mb@bu3sch.de>
+> Date:   Wed Mar 7 23:01:08 2007 +0100
+> 
+>     ssb: Don't freeze unregistered devices.
 
---=-EXwEQQXgL56vRy501+2W
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+No, that's a different fix for suspend.
 
-On Thu, 2007-03-01 at 09:11 -0500, Luis R. Rodriguez wrote:
+This is the fix:
+http://bu3sch.de/gitweb?p=wireless-dev.git;a=commitdiff;h=b87f743f3643ea162892dce0bbc91e6f026a49bf
 
-> > --- wireless-dev.orig/net/wireless/Kconfig      2007-03-01 14:18:51.854=
-246483 +0100
-> > +++ wireless-dev/net/wireless/Kconfig   2007-03-01 14:19:19.614246483 +=
-0100
-> > @@ -29,3 +29,11 @@ config NL80211
-> >
-> >           If unsure, say Y.
-> >
-> > +config WIRELESS_EXT
-> > +       bool "Wireless extensions"
-> > +       default n
-> > +       ---help---
-> > +         This compiles code for the wireless extensions.
-> > +
-> > +         Say N if you can unless you have external modules
-> > +         that rely on it.
->=20
-> I'd say we put more descriptive text here and explain a little of how
-> cfg80211 is supposed to replace it with nl80211.
+Pull request was sent to John.
 
-Noted. I'll need to respin the patches anyway and just wanted some early
-feedback.
-
-johannes
-
---=-EXwEQQXgL56vRy501+2W
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF5uAi/ETPhpq3jKURAlnnAJ9KE6g1bEhhw3VEFeIjNgafklQ+agCfYLso
-wVw+Oy8xsmV1WAITC4hTNBs=
-=bAMI
------END PGP SIGNATURE-----
-
---=-EXwEQQXgL56vRy501+2W--
-
+-- 
+Greetings Michael.
