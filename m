@@ -1,39 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:32865
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933812AbXC1KKX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 06:10:23 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: found: PHY transmission errors in bcm43xx-mac80211 master mode
-Date: Wed, 28 Mar 2007 12:10:13 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jiri Benc <jbenc@suse.cz>
-References: <1174988381.5710.7.camel@johannes.berg>
-In-Reply-To: <1174988381.5710.7.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200703281210.13707.mb@bu3sch.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2408 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933602AbXCUAoz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Mar 2007 20:44:55 -0400
+Date: Tue, 20 Mar 2007 20:22:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: EEPROM_93CX6 placement (was Re: 2.6.21-rc4-mm1)
+Message-ID: <20070321002222.GA4110@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 27 March 2007 11:39, Johannes Berg wrote:
-> Hi,
-> 
-> So I figured out where the PHY transmission errors come from. That's
-> when the firmware tries to respond to a probe request, apparently the
-> driver/mac80211/hostapd don't handle probe response offloading and thus
-> the whole settings for probe responses are invalid, leading to phy
-> transmission errors. mac80211 or hostapd actually respond to the probe
-> responses then but it'd be nice if we could actually use the
-> offloading :)
+Comments?  Patches?
 
-We do upload a probe response template. But I think that there is a
-bug in that code, too.
-A TX error sounds like a bad PLCP or something. Maybe wrong packet size
-given to the ucode. Did the SHM offset with the size actually change?
+----- Forwarded message from Randy Dunlap <randy.dunlap@oracle.com> -----
+
+> Date: 	Tue, 20 Mar 2007 16:49:23 -0700
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+> To: Andrew Morton <akpm@linux-foundation.org>
+> Cc: linux-kernel@vger.kernel.org
+> Subject: Re: 2.6.21-rc4-mm1
+> In-Reply-To: <20070319205623.299d0378.akpm@linux-foundation.org>
+> Organization: Oracle Linux Eng.
+> X-Mailer: Sylpheed 2.3.1 (GTK+ 2.8.10; x86_64-unknown-linux-gnu)
+> X-Whitelist: TRUE
+> X-Whitelist: TRUE
+> X-Brightmail-Tracker: AAAAAQAAAAI=
+> Precedence: bulk
+> X-Mailing-List: 	linux-kernel@vger.kernel.org
+> X-Spam-Status: No, score=-2.6 required=3.0 tests=AWL,BAYES_00,SPF_HELO_PASS,
+> 	SPF_PASS,UNPARSEABLE_RELAY autolearn=ham version=3.1.3-gr0
+> X-Spam-Checker-Version: SpamAssassin 3.1.3-gr0 (2006-06-01) on 
+> 	ra.tuxdriver.com
+> 
+> On Mon, 19 Mar 2007 20:56:23 -0800 Andrew Morton wrote:
+> 
+> > 
+> > Temporarily at
+> > 
+> >   http://userweb.kernel.org/~akpm/2.6.21-rc4-mm1/
+> > 
+> > Will appear later at
+> > 
+> >   ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21-rc4/2.6.21-rc4-mm1/
+> 
+> 
+> I think that this:
+> 
+> config EEPROM_93CX6
+> 	tristate "EEPROM 93CX6 support"
+> 	---help---
+> 	This is a driver for the EEPROM chipsets 93c46 and 93c66.
+> 	The driver supports both read as well as write commands.
+> 
+> should not be in lib/Kconfig.  lib/ is not for drivers.
+> or (simpler) s/driver/library/
+> but I think I'd rather see it in drivers/misc/.
+> 
+> 
+> and the help text needs to be indented 2 more spaces...
+> 
+> ---
+> ~Randy
+> boilerplate:
+> *** Remember to use Documentation/SubmitChecklist when testing your code ***
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+
+----- End forwarded message -----
 
 -- 
-Greetings Michael.
+John W. Linville
+linville@tuxdriver.com
