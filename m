@@ -1,171 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailgate.cesmail.net ([216.154.195.36]:43839 "HELO
-	mailgate.cesmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751455AbXCDHJV (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54230 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030342AbXCVKFF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2007 02:09:21 -0500
-Message-ID: <20070304020920.b5lej3sw0oogwg4w@webmail.spamcop.net>
-Date: Sun,  4 Mar 2007 02:09:20 -0500
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Guido Guenther <agx@sigxcpu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [patch] at76_usb wireless driver
-References: <20070110145724.GA4171@bogon.ms20.nix>
-	<20070223221230.GA9965@bogon.ms20.nix>
-	<20070303150029.GA19940@bogon.ms20.nix>
-	<1172934588.4966.46.camel@johannes.berg>
-	<1172939037.4966.97.camel@johannes.berg>
-In-Reply-To: <1172939037.4966.97.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+	Thu, 22 Mar 2007 06:05:05 -0400
+Subject: Re: [PATCH 1/4] mac80211: Coding style cleanups
+From: Johannes Berg <johannes@sipsolutions.net>
+To: andy@warmcat.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20070320104104.112865979@warmcat.com>
+References: <20070320103955.600509703@warmcat.com>
+	 <20070320104104.112865979@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NUhPxIb5q+tWW2XfJ0P9"
+Date: Wed, 21 Mar 2007 19:58:23 +0100
+Message-Id: <1174503503.3944.50.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Johannes Berg <johannes@sipsolutions.net>:
 
-> Looks pretty good, a few more comments.
+--=-NUhPxIb5q+tWW2XfJ0P9
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks!
+On Tue, 2007-03-20 at 10:39 +0000, andy@warmcat.com wrote:
 
-> KEVENT_* constants and functions are really really confusing when the
-> "kevent" subsystem is being discussed on netdev all the time. They're
-> also quite meaningless, please rename them to something like
-> AT76_DEVEVENT_* or whatever. While at that, the kevent() function really
-> could use splitting up into sub-functions, it's a pretty large mess.
+I don't really see why this is necessary at all, but anyway.
 
-I agree.  The purpose is likely to avoid scheduling too many different tasks,
-but I don't think it's worth the trouble.  In fact, it would be better if the
-driver had smaller tasks that would all compete with other scheduled tasks.  It
-would be fair to others.
+> -			     (tx->fc & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_DATA)) {
+> +			     (tx->fc & IEEE80211_FCTL_FTYPE)
+> +=3D=3D			      IEEE80211_FTYPE_DATA)) {
 
-> The same about constant names goes for PM_* constants since linux/pm.h
-> defines a whole bunch of PM_* constants too (I initially thought you
-> were using those and was really confused what the driver does!)
+That's totally borked.
 
-Good catch.
+> -		if (unlikely((tx->fc & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_DA=
+TA &&
+> +		if (unlikely((tx->fc & IEEE80211_FCTL_FTYPE) =3D=3D
+> +		             IEEE80211_FTYPE_DATA &&
 
-> Having a whole bunch of module parameters that only set initial settings
-> for things you later configure with iwconfig seems pretty useless but if
-> you really think that they're absolutely required I don't care too much.
+Indent that a bit more so it's clear it belongs to the line above and
+isn't a condition itself.
+=20
+>  	if (unlikely(!sta ||
+>  		     ((tx->fc & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_MGMT &&
+> -		      (tx->fc & IEEE80211_FCTL_STYPE) =3D=3D IEEE80211_STYPE_PROBE_RES=
+P)))
+> +		      (tx->fc & IEEE80211_FCTL_STYPE) =3D=3D
+> +		       IEEE80211_STYPE_PROBE_RESP)))
 
-I agree, they are not needed.  It should be verified that all parameters can be
-set using iwconfig or iwpriv.  Maybe "debug" should stay.
+ditto.
 
-> PRIV_IOCTL_SET_MONITOR_MODE is wrong as far as I can tell, there's
-> "iwconfig ... mode monitor" which you should use instead. (Btw, why are
-> the priv ioctls spaced so strangely??)
+> @@ -1170,7 +1178,8 @@ static int __ieee80211_tx(struct ieee80211_local *l=
+ocal, struct sk_buff *skb,
+>  						IEEE80211_TXCTL_RATE_CTRL_PROBE;
+>  				else
+>  					control->flags &=3D
+> -						~IEEE80211_TXCTL_RATE_CTRL_PROBE;
+> +						~IEEE80211_TXCTL_RATE_CTRL_PROBE
+> +					;
 
-The code is quite old and may predate monitor mode.  Reference to Kismet means
-that the driver was meant to emulate an old unofficial patch to orinoco driver.
+ahem.
 
-On the other hand, the same setting selects whether to enable prism header, so
-that part should probably stay.
+> -				printk(KERN_DEBUG "%s: ieee80211_beacon_get: no rate "
+> +				printk(KERN_DEBUG
+> +				       "%s: ieee80211_beacon_get: no rate "
+>  				       "found\n", local->mdev->name);
 
-> There doesn't seem to be a need to include rtnetlink.h, what made you
-> think you'd need rtnl_lock()?
-> "putting this inside rtnl_lock() - rtnl_unlock() hangs modprobe" is
-> pretty obvious -- register_netdev does rtnl_lock()! And don't use
-> unregister_netdevice(), use unregister_netdev().
+Please change that to
+	... no "
+	"rate found\n", ...
 
-I see Guido has done it already.
+instead.
+=20
+>  __le16 ieee80211_ctstoself_duration(struct ieee80211_hw *hw,
+>  				    size_t frame_len,
+> -				    const struct ieee80211_tx_control *frame_txctl)
+> +				    const struct ieee80211_tx_control
+> +					*frame_txctl)
 
-> Your init_new_device() function can return an error but those errors are
-> not always checked, maybe a printk would be appropriate. Also,
-> generally, subfunctions are allowed to return errors directly, i.e.
-> instead of returning -1 return -ENODEV from there and just hand it up
-> from the caller.
+That's not how the kernel looks like in that case. I'd prefer this as
 
-Agreed.
+__le16 ieee80211_ctstoself_duration(
+	struct ieee80211_hw *hw,
+	size_t frame_len,
+	const struct ieee80211_tx_control *frame_txctl)
 
-> at76c503_do_probe could use splitting into two functions, the two huge
-> parts of the if, if only to unindent the whole code a bit and get it to
-> adhere to 80 chars/line instead of 99.
 
-Actually, there is some code duplication between the branches.  It would be
-great to avoid it first.  I also see that the code overuses debug printing.  I
-prefer to add it to fix a specific problem.  Keeping large portions of debug
-code just in case is probably not a good idea, since they reduce readability of
-the code.
+>  			if (rx->sdata->bss)
+> -				bss_tim_clear(rx->local, rx->sdata->bss, rx->sta->aid);
+> +				bss_tim_clear(rx->local, rx->sdata->bss,
+> +					rx->sta->aid);
 
-> "Use our own dbg macro" but mabye use dev_dbg?
-> Same for err() (which I didn't even know existed..) how about dev_err()?
+You have lots of space to indent it to the parenthesis.
+=20
+> -		if ((fc & IEEE80211_FCTL_FTYPE) !=3D (f_fc & IEEE80211_FCTL_FTYPE) ||
+> +		if ((fc & IEEE80211_FCTL_FTYPE) !=3D
+> +		    (f_fc & IEEE80211_FCTL_FTYPE) ||
 
-I think the driver uses USB functions here.  I think it's OK for a USB driver. 
-But the own dbg macro should probably be avoided.
+same as above.
 
-> static u8 snapsig/rfc1042sig/bc_addr/off_addr/hw_rates/channel_frequency
-> etc etc etc don't belong into a header file.
+> -		       (rx->fc & IEEE80211_FCTL_STYPE) =3D=3D IEEE80211_STYPE_PSPOLL))=
+ &&
+> +		       (rx->fc & IEEE80211_FCTL_STYPE) =3D=3D
+> +		        IEEE80211_STYPE_PSPOLL)) &&
 
-Absolutely!  But since it's mixed with definitions, perhaps the whole code could
-be merged into at76_usb.c.  It's not like any other driver will ever include
-that header.  And adding 30k to 200k won't change much.
+ditto.
 
-> Some other (mostly style) issues:
->  * kernel code prefers a space before the brace in
->    "struct at76c503_command{" et al.
->  * both your header and code files contain lots of trailing whitespace
->  * kernel code prefers no space between function names and the opening
->    parenthesis
+>  		     (rx->fc & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_DATA &&
+> -		     (rx->fc & IEEE80211_FCTL_STYPE) !=3D IEEE80211_STYPE_NULLFUNC &&
+> +		     (rx->fc & IEEE80211_FCTL_STYPE) !=3D
+> +		      IEEE80211_STYPE_NULLFUNC &&
 
-I think Lindent (from scripts directory in Linux sources) should be run on the
-driver.  Better yet, "Linudent --ignore-newlines).
+ditto.
 
->  * use compare_ether_addr() instead of memcmp (look for ETH_ALEN, lots
->    of places)
+> -		     (rx->fc & IEEE80211_FCTL_STYPE) !=3D IEEE80211_STYPE_NULLFUNC &&
+> +		     (rx->fc & IEEE80211_FCTL_STYPE) !=3D
+> +		      IEEE80211_STYPE_NULLFUNC &&
 
-OK
+ditto.
+=20
+> @@ -3800,8 +3820,9 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct=
+ sk_buff *skb,
+>  						continue;
+>  					rx.u.rx.ra_match =3D 0;
+>  				} else if (!multicast &&
+> -					   compare_ether_addr(sdata->dev->dev_addr,
+> -							      hdr->addr1) !=3D 0) {
+> +					   compare_ether_addr(
+> +						sdata->dev->dev_addr,
+> +						hdr->addr1) !=3D 0) {
+>  					if (!sdata->promisc)
+>  						continue;
 
->  * all the PROC ===== stuff looks pretty strange to my eyes but hey
->    that's just me I guess :)
 
-That must be style from a language where functions are called procedures.  Sure,
-it must be removed.
+Ugh. Somebody really needs to take this code and delete some indent by
+moving stuff into new functions.
 
->  * why does at76c503_get_fw_info take such a huge number of parameters?
->    Couldn't you pass in a struct at76c503 * and have that filled?
+>  					if (net_ratelimit())
+> -						printk(KERN_DEBUG "%s: failed to copy "
+> +						printk(KERN_DEBUG
+> +						       "%s: failed to copy "
+>  						       "multicast frame for %s",
+> -						       local->mdev->name, prev->dev->name);
+> +						       local->mdev->name,
+> +						       prev->dev->name);
 
-Good idea.
+Same as I said for that other message.
 
->  * struct reg_domain should be tab-indented.
+johannes
 
-Lindent should take care of it.
+--=-NUhPxIb5q+tWW2XfJ0P9
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
->  * don't use typedefs for structs
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-All that code is prism header implementation from linux-wlan-ng, but I
-understand that it's a bad excuse.  Besides, one of the typedefs is not used.
+iD8DBQBGAYBP/ETPhpq3jKURAvMJAJ9NW2YoaOBvK8qK0jxKB9z2YZQxIACgmnxP
+8x1rAX1QfsYrz3vQOgWH5EU=
+=/Sb2
+-----END PGP SIGNATURE-----
 
->  * attribute packed on members of a struct is pretty weird
+--=-NUhPxIb5q+tWW2XfJ0P9--
 
-Another ugly legacy of linux-wlan-ng.
-
->  * the various frame definitions like struct ieee802_11_beacon_data are
->    useless, the same stuff is in struct ieee80211_mgmt (at least on
->    wireless dev kernel, that might not be true on other kernels?)
-
-Yes, this needs to be done, but it requires some work.  The names are different.
-
->  * hex2str wants proper indentation
->  * get_hw_config has weird indentation
-
-Lindent will fix it.
-
->  * wait_completion sounds far too generic (wait_for_completion in
->    completion.h!)
-
-Yes, many function should be renamed.
-
-> Hey, I need to go but that probably gives you a lot to review...
-
-Thanks!
-
-I would also add:
-
-* useless macros (NUM_EP, EP)
-* macros for locking should be avoided
-* istate should be accessed using atomic_set/atomic_read; locking is overkill
-
---
-Regards,
-Pavel Roskin
