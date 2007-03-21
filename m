@@ -1,61 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:58539 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932473AbXCEWku (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 17:40:50 -0500
-Date: Mon, 5 Mar 2007 14:39:00 -0800
-From: Greg KH <greg@kroah.com>
-To: Matt Mackall <mpm@selenic.com>
-Cc: Theodore Tso <tytso@mit.edu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	yi.zhu@intel.com, jketreno@linux.intel.com,
-	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
-Subject: Re: Recent wireless breakage (ipw2200, iwconfig, NetworkManager)
-Message-ID: <20070305223900.GA7676@kroah.com>
-References: <20070304220857.GH23311@waste.org> <1173051564.6131.13.camel@johannes.berg> <20070305002550.GI23311@waste.org> <20070305011729.GB7681@kroah.com> <20070305125950.GC26781@thunk.org> <20070305185813.GA31465@kroah.com> <20070305195530.GM23311@waste.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070305195530.GM23311@waste.org>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54224 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934083AbXCVKE6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Mar 2007 06:04:58 -0400
+Subject: Re: [PATCH 2/4] mac80211: Add radiotap support for Monitor mode RX
+From: Johannes Berg <johannes@sipsolutions.net>
+To: andy@warmcat.com
+Cc: linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>
+In-Reply-To: <20070320104104.318699229@warmcat.com>
+References: <20070320103955.600509703@warmcat.com>
+	 <20070320104104.318699229@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-InCrHSJarn2Y74P+KDCm"
+Date: Wed, 21 Mar 2007 19:51:31 +0100
+Message-Id: <1174503091.3944.42.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 05, 2007 at 01:55:30PM -0600, Matt Mackall wrote:
-> On Mon, Mar 05, 2007 at 10:58:13AM -0800, Greg KH wrote:
-> > Ok, how about the following patch.  Is it acceptable to everyone?
-> > 
-> > -	  If you are using a distro that was released in 2006 or later,
-> > -	  it should be safe to say N here.
-> > +	  If you are using an OpenSuSE, Gentoo, Ubuntu, or Fedora
-> > +	  release from 2007 or later, it should be safe to say N here.
-> > +
-> > +	  If you are using Debian or other distros that are slow to
-> > +	  update HAL, please say Y here.
-> 
-> What HAL version do you think Debian ought to have, pray tell? And
-> what the hell version do those other distros have?
-> 
-> The last HAL release was 0.5.8 on 11-Sep-2006. It showed up in
-> Debian/unstable on 2-Oct. There have been six Debian bugfix releases,
-> the most recent on 12-Feb.
-> 
-> http://people.freedesktop.org/~david/dist/
-> http://packages.debian.org/changelogs/pool/main/h/hal/hal_0.5.8.1-6.1/changelog
 
-Ok, I only named HAL as that is what people have told me the problem is.
-I have been running this change on my boxs, without
-CONFIG_SYSFS_DEPRECATED since last July or so.
+--=-InCrHSJarn2Y74P+KDCm
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-But I don't use NetworkManager here for the most part, but I have tried
-this in the OpenSuse10.3 alpha releases and it seems to work just fine
-with whatever version of NetworkManager it uses.
 
-So perhaps it's some wrapper scripts somewhere?  I think SuSE had some
-odd things hard coded somewhere that prevented 10.1 from working
-properly with this change.
+> +	/* Driver supports radiotap. */
+> +#define IEEE80211_HW_RADIOTAP_SUPPORTED (1<<10)
 
-Ok, so I'll drop the HAL wording above, what should I say instead?
+> +	if (local->monitors &&
+> +	    local->hw.flags & IEEE80211_HW_RADIOTAP_SUPPORTED) {
+> +		radiotap_len =3D ieee80211_get_radiotap_len(skb);
+> +		skb_pull(skb, radiotap_len);
+> +	}
 
-thanks,
+I don't think that can work.=20
 
-greg k-h
+ 1) it needs a lot more documentation on what a driver needs to do for
+    this (for example that it should only add radiotap headers if a
+    monitor interface was added)
+
+ 2) afaik local->monitors is increased even for soft monitor interfaces,
+    thus this will really fall on its nose when the driver supports
+    radiotap but not monitor during operation.
+
+johannes
+
+--=-InCrHSJarn2Y74P+KDCm
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGAX6z/ETPhpq3jKURAgg4AJwJXi5N1bM3W/dNVmKydEeSD7KfZgCfcGCJ
+ccIW2/SiLfpzv6ukVHhDVvU=
+=069G
+-----END PGP SIGNATURE-----
+
+--=-InCrHSJarn2Y74P+KDCm--
+
