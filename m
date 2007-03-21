@@ -1,91 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:43568 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752149AbXCQGpj (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:49480 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933287AbXCUSO6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Mar 2007 02:45:39 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Paul TBBle Hampson <Paul.Hampson@pobox.com>
-Subject: Re: prism54pci fails to read eeprom on PowerPC, then bugs in pci code
-Date: Sat, 17 Mar 2007 02:44:49 -0400
-Cc: linux-wireless@vger.kernel.org
-References: <20070317034607.GA1522@keitarou> <200703170037.14875.flamingice@sourmilk.net> <20070317061502.GA5954@keitarou>
-In-Reply-To: <20070317061502.GA5954@keitarou>
+	Wed, 21 Mar 2007 14:14:58 -0400
+Message-ID: <4601761F.4000302@lwfinger.net>
+Date: Wed, 21 Mar 2007 13:14:55 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2842515.S2j9ovjxeo";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200703170244.54114.flamingice@sourmilk.net>
+To: Andrew Morton <akpm@linux-foundation.org>
+CC: Zan Lynx <zlynx@acm.org>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	bcm43xx devel <Bcm43xx-dev@lists.berlios.de>
+Subject: Re: 2.6.21-rc4-mm1
+References: <20070319205623.299d0378.akpm@linux-foundation.org>	<1174433034.62033.16.camel@localhost> <20070320223643.d8cbc3f6.akpm@linux-foundation.org>
+In-Reply-To: <20070320223643.d8cbc3f6.akpm@linux-foundation.org>
+Content-Type: multipart/mixed;
+ boundary="------------020006020605050908090003"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2842515.S2j9ovjxeo
+This is a multi-part message in MIME format.
+--------------020006020605050908090003
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+Andrew Morton wrote:
+> On Tue, 20 Mar 2007 17:23:54 -0600 Zan Lynx <zlynx@acm.org> wrote:
+> 
+>> On Mon, 2007-03-19 at 20:56 -0800, Andrew Morton wrote:
+>>> Temporarily at
+>>>
+>>>   http://userweb.kernel.org/~akpm/2.6.21-rc4-mm1/
+>>>
+>>> Will appear later at
+>>>
+>>>   ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21-rc4/2.6.21-rc4-mm1/
+>> First impressions:
+>> Several of the same bugs as rc3-mm*:
+>>       * Freezes immediately if I touch the wlan0 device after loading
+>>         the new Broadcom wireless driver.
+
+The version of the ssb driver in 2.6.21-rc4-mm1 has a bug that causes a kernel oops if the bcm43xx
+chip contains a USB (dangling) core. This bug has been fixed in Michael Buesch's tree, but
+apparently not yet in Linville's wireless-dev tree. The patch is as follows:
+
+commit 08531ff130bcc8181d9294a66e25010f48eefb97
+Author: Michael Buesch <mb@bu3sch.de>
+Date:   Wed Mar 7 23:01:08 2007 +0100
+
+    ssb: Don't freeze unregistered devices.
+
+    Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+diff --git a/drivers/ssb/core.c b/drivers/ssb/core.c
+index 2facada..c956edf 100644
+--- a/drivers/ssb/core.c
++++ b/drivers/ssb/core.c
+@@ -163,6 +163,8 @@ int ssb_devices_freeze(struct ssb_bus *bus)
+ 		dev = &(bus->devices[i]);
+ 		if (!dev->dev->driver)
+ 			continue;
++		if (!device_is_registered(dev->dev))
++			continue;
+ 		drv = drv_to_ssb_drv(dev->dev->driver);
+ 		if (drv && drv->suspend) {
+ 			err = drv->suspend(dev, state);
+@@ -185,6 +187,8 @@ int ssb_devices_thaw(struct ssb_bus *bus)
+ 		dev = &(bus->devices[i]);
+ 		if (!dev->dev->driver)
+ 			continue;
++		if (!device_is_registered(dev->dev))
++			continue;
+ 		drv = drv_to_ssb_drv(dev->dev->driver);
+ 		if (drv && drv->resume) {
+ 			err = drv->resume(dev);
+
+Larry
+
+
+--------------020006020605050908090003
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+ name="usb_freeze"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="usb_freeze"
 
-On Saturday 17 March 2007 02:15, Paul TBBle Hampson wrote:
->  ] rmmod prism54
-> Mar 17 16:43:26 su kernel: prism54-0: removing device
-> Mar 17 16:43:26 su kernel: Unloaded prism54 driver
->
-> Then, with the p54 code, patched with the patch you attached.
->
->  ] modprobe prism54pci
-> Mar 17 16:48:56 su kernel: p54: LM86 firmware
-> Mar 17 16:48:58 su kernel: 0001:11:00.0 (prism54pci): Cannot read eeprom!
-> Mar 17 16:48:58 su kernel: prism54pci: probe of 0001:11:00.0 failed with
-> error -22
->
-> Hmm, I guess the patch fixed the BUG_ON. ^_^
->
-Ok good, thanks for testing!
+commit 08531ff130bcc8181d9294a66e25010f48eefb97
+Author: Michael Buesch <mb@bu3sch.de>
+Date:   Wed Mar 7 23:01:08 2007 +0100
 
-> Still fails to read an eeprom from my card though. I'm wondering if the
-> crapspew from the prism54 driver implies card or socket badness?
->
-These devices do go bad, so a broken card isn't out of the question. Howeve=
-r..
+    ssb: Don't freeze unregistered devices.
+    
+    Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-> However, the hardmac driver is able to get a MAC address (with an OID
-> query, according to the code) and the MAC address is correct:
-> 00:60:64:03:41:81
->
-My broken card never got that far.=20
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index 2facada..c956edf 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -163,6 +163,8 @@ int ssb_devices_freeze(struct ssb_bus *bus)
+ 		dev = &(bus->devices[i]);
+ 		if (!dev->dev->driver)
+ 			continue;
++		if (!device_is_registered(dev->dev))
++			continue;
+ 		drv = drv_to_ssb_drv(dev->dev->driver);
+ 		if (drv && drv->suspend) {
+ 			err = drv->suspend(dev, state);
+@@ -185,6 +187,8 @@ int ssb_devices_thaw(struct ssb_bus *bus)
+ 		dev = &(bus->devices[i]);
+ 		if (!dev->dev->driver)
+ 			continue;
++		if (!device_is_registered(dev->dev))
++			continue;
+ 		drv = drv_to_ssb_drv(dev->dev->driver);
+ 		if (drv && drv->resume) {
+ 			err = drv->resume(dev);
 
-> Is it worth dumping the purported eeprom to see if it's actually a valid
-> eeprom in a format unexpected by the code? (The card is very old now...)
->
-Actually, the code doesn't check (but it does report) if parsing fails so a=
-=20
-corrupted eeprom can't be the reason for probe failure. I'll get that fixed=
-=20
-next week..
 
-So anyway, your card isn't even returning the eeprom data. Only thing I can=
-=20
-think of is fiddling with the mdelay in that (p54p_read_eeprom) function=20
-(there's only one). Try making it bigger. That mdelay solved problems with=
-=20
-eeprom reading on module reload but it's very close to the minimum delay=20
-needed there.
-
-=2DMichael Wu
-
---nextPart2842515.S2j9ovjxeo
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBF+45mT3Oqt9AH4aERAmasAKDQeDbnUTrKYPrPSDWgX55eIKtX/gCePX0N
-cFVzhbduZ7L1tYKP1fMmS+Q=
-=SFIp
------END PGP SIGNATURE-----
-
---nextPart2842515.S2j9ovjxeo--
+--------------020006020605050908090003--
 -: 
 To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 the body of a message to majordomo@vger.kernel.org: 
