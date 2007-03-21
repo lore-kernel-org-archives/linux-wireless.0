@@ -1,50 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:61157 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750714AbXCLSat (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54200 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933913AbXCVKEp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2007 14:30:49 -0400
-Message-ID: <45F59C53.4090500@lwfinger.net>
-Date: Mon, 12 Mar 2007 13:30:43 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: David Woodhouse <dwmw2@infradead.org>,
-	Joseph Jezak <josejx@gentoo.org>,
-	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] bcm43xx: Fix typo in B5PHY init specifications
-References: <45e85f2b.Dp1dM05tvZFFROmc%Larry.Finger@lwfinger.net> <1173685989.3584.2.camel@shinybook.infradead.org> <45F55452.3000704@gentoo.org> <20070312145309.GB8878@tuxdriver.com> <1173712594.3584.6.camel@shinybook.infradead.org> <45F590FA.4020409@lwfinger.net> <20070312174825.GD8878@tuxdriver.com>
-In-Reply-To: <20070312174825.GD8878@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 22 Mar 2007 06:04:45 -0400
+Subject: Re: [PATCH 4/4] mac80211: Monitor mode radiotap-based packet  injection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: andy@warmcat.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20070320104104.837354764@warmcat.com>
+References: <20070320103955.600509703@warmcat.com>
+	 <20070320104104.837354764@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-smhD+13qTe/hKKM4MNst"
+Date: Wed, 21 Mar 2007 19:28:53 +0100
+Message-Id: <1174501733.3944.28.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Mon, Mar 12, 2007 at 12:42:18PM -0500, Larry Finger wrote:
->> David Woodhouse wrote:
->>> On Mon, 2007-03-12 at 10:53 -0400, John W. Linville wrote:
->>>> FWIW, by inspection it looks like the mac80211-based driver is
->>>> (trying?) to implement this change.
->>>>
->>>> David, have you tried the mac80211 version?  Does it still have the
->>>> same crash?
->>> Should the one in 2.6.20-1.2982.fc7 be OK? I can try that relatively
->>> easily; anything else might need to wait till I get home.
->>>
->> I don't think it will improve anything. I don't currently have a copy of wireless-dev, but the code
->> in the mb tree is identical with that of wireless-2.6. I'm currently trying to figure out the spec
->> at http://bcm-v4.sipsolutions.net/802.11/PHY/calinit and what we need to change.
-> 
-> Huh?  Are you looking in drivers/net/wireless/mac80211/bcm43xx?
-> It certainly seems to differ quite a bit from what is in
-> drivers/net/wireless/bcm43xx (i.e. no the softmac-based version).
 
-I was, but the conclusion is the same. The generate_xxatt_list is not relevant and only the last if
-clause is important. The second argument to the second call to wireless_core_reset is just a
-different way to say "non-zero".
+--=-smhD+13qTe/hKKM4MNst
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I've been looking at the code for a while now, and I still don't see where the code doesn't match
-the spec. Either it is a subtle point, or I'm not even close to sharp today.
+On Tue, 2007-03-20 at 10:39 +0000, andy@warmcat.com wrote:
 
-Larry
+> --- a/net/mac80211/ieee80211.c
+> +++ b/net/mac80211/ieee80211.c
+> @@ -1054,7 +1054,180 @@ ieee80211_tx_h_ps_buf(struct ieee80211_txrx_data =
+*tx)
+>  }
+> =20
+>=20
+> -static void inline
+> +/* deal with packet injection down monitor interface
+> + * with Radiotap Header -- only called for monitor mode interface
+> + */
+> +
+> +static ieee80211_txrx_result
+> +__ieee80211_convert_radiotap_to_control_and_remove(
+> +	struct ieee80211_txrx_data *tx,
+> +	struct sk_buff *skb, struct ieee80211_tx_control *control)
+> +{
+
+The actual parsing should live in cfg80211 (preferably in a new file) so
+that others can use it. If it's a lot of code then add a new invisible
+Kconfig symbol for it that drivers/stacks can select.
+
+> +	 * There is also some pervacious arg padding, so that args
+
+perwhat?
+
+> +	static const u8 radiotap_entry_sizes[] =3D {
+> +		8, /* IEEE80211_RADIOTAP_TSFT */
+> +		1, /* IEEE80211_RADIOTAP_FLAGS */
+[...]
+
+I'd prefer C99 style for this.
+
+> +		return TXRX_DROP; /* version byte as magic */
+
+Bad idea. At least the comment. If you mean "drop the packet if it has a
+radiotap version we don't parse" then say so.
+
+> +	if (le32_to_cpu(rthdr->it_present) & 0x80000000) {
+> +		while (le32_to_cpu(*((u32 *)tap_arg)) & 0x80000000)
+
+Use a constant for that, introduce one if necessary.
+
+> +	control->key_idx =3D -1; /* no encryption key */
+
+Is there any way to indicate encryption? I think there might need to be
+for 802.11w.
+
+> +	control->flags &=3D ~(IEEE80211_TXCTL_USE_RTS_CTS |
+> +		IEEE80211_TXCTL_USE_CTS_PROTECT);
+
+These really should be selectable as well.
+
+> +	control->flags |=3D (IEEE80211_TXCTL_DO_NOT_ENCRYPT |
+> +		IEEE80211_TXCTL_NO_ACK);
+
+And NO_ACK is a really really totally bad idea for a userspace MLME.
+Needs to be selectable for sure.
+
+We also need to be able to assign some magic cookie to a packet that we
+get back along with the packet so that we know when the injected packet
+has been acked by the peer.
+
+> +	/* remove the radiotap header */
+> +	skb_pull(skb, le16_to_cpu(rthdr->it_len));
+
+Shouldn't there be some sort of sanity check here so we don't pull too
+much if userspace asks us to?
+
+> +			/* radiotap version used as magic */
+
+Same comment as above, there's nothing magic about the radiotap version.
+
+johannes
+
+--=-smhD+13qTe/hKKM4MNst
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGAXll/ETPhpq3jKURAsKUAJwOH+oVqLmo99/M3RLcIqy89vjT9gCguAVj
+Rfv6QNZ4Zp4u3GWc8uT4tjQ=
+=fpMs
+-----END PGP SIGNATURE-----
+
+--=-smhD+13qTe/hKKM4MNst--
+
