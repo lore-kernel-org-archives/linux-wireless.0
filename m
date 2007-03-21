@@ -1,33 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sccrmhc15.comcast.net ([63.240.77.85]:60698 "EHLO
-	sccrmhc15.comcast.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932469AbXCVAoT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2007 20:44:19 -0400
-Message-ID: <4601D14B.5090001@gentoo.org>
-Date: Wed, 21 Mar 2007 20:43:55 -0400
-From: Joseph Jezak <josejx@gentoo.org>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Larry Finger <larry.finger@lwfinger.net>,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] bcm43xx-mac80211: Change radio_init2050 to match specs
-References: <460048f1.Sz+VinhM/N8KG294%Larry.Finger@lwfinger.net> <200703211501.48178.mb@bu3sch.de> <46014F75.7080609@lwfinger.net> <200703211717.53055.mb@bu3sch.de>
-In-Reply-To: <200703211717.53055.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp.osdl.org ([65.172.181.24]:54842 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753011AbXCUVpL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Mar 2007 17:45:11 -0400
+Date: Wed, 21 Mar 2007 14:45:03 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Matt Mackall <mpm@selenic.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: 2.6.21-rc4-mm1
+Message-Id: <20070321144503.1b1e16ca.akpm@linux-foundation.org>
+In-Reply-To: <20070321202225.GN10459@waste.org>
+References: <20070319205623.299d0378.akpm@linux-foundation.org>
+	<1174433034.62033.16.camel@localhost>
+	<20070320223643.d8cbc3f6.akpm@linux-foundation.org>
+	<4601761F.4000302@lwfinger.net>
+	<20070321185900.GC3801@tuxdriver.com>
+	<20070321202225.GN10459@waste.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- >>From my understanding current code is correct.
-> But I see that one could interpret the spec in your way as well.
-> Joseph?
+On Wed, 21 Mar 2007 15:22:25 -0500
+Matt Mackall <mpm@selenic.com> wrote:
 
-If the External LNA value, as read from the table, is non-zero, OR
-that value with 0x8000 (which I think is the "enable the External
-LNA flag).
+> With the latest -mm, I'm now getting this:
+> 
+> Mar 21 15:06:52 cinder kernel: ipw2200: Detected Intel PRO/Wireless
+> 2200BG Network Connection
+> Mar 21 15:06:52 cinder kernel: firmware_loading_store: unexpected
+> value (0)
+> Mar 21 15:06:52 cinder kernel: ipw2200: ipw2200-bss.fw
+> request_firmware failed:
+> Reason -2
+> Mar 21 15:06:52 cinder kernel: ipw2200: Unable to load firmware: -2
+> Mar 21 15:06:52 cinder kernel: ipw2200: failed to register network
+> device
+> 
 
-I've updated the specs to reflect this.
+Yes, someone seems to have thoroughly bollixed firmware loading.  I was
+able to make it pretend to work for my ipw2200, but that obviously wasn't
+sufficient.
 
--Joe
-
-
+I plan to do a bisection this evening, find the dud patch.
