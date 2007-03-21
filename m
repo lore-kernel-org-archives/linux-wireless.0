@@ -1,68 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server8.tchmachines.com ([216.180.241.250]:57204 "EHLO
-	server8.tchmachines.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751427AbXCDF2H (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:44705 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751016AbXCUKiS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2007 00:28:07 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] bcm43xx: remove ethtool
-Date: Sun, 4 Mar 2007 00:04:48 -0500
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-References: <45ea1a34.Lf4EKmMy+KAmSkH0%Larry.Finger@lwfinger.net> <45EA3D21.3080203@lwfinger.net> <45EA43EF.1080009@garzik.org>
-In-Reply-To: <45EA43EF.1080009@garzik.org>
+	Wed, 21 Mar 2007 06:38:18 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so252246uga
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Mar 2007 03:38:16 -0700 (PDT)
+To: "John Linville" <linville@tuxdriver.com>
+Subject: [PATCH] Move eeprom_93cx6 from lib/ to drivers/misc/
+Date: Wed, 21 Mar 2007 11:37:50 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3058243.NkWeZE2nZr";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200703040004.57974.flamingice@sourmilk.net>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200703211137.51012.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3058243.NkWeZE2nZr
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+As requested, this will move the eeprom_93cx6 from its location in
+lib/ to drivers/misc/
 
-On Saturday 03 March 2007 22:58, Jeff Garzik wrote:
-> It's a highly standardized interface that provides information that's
-> either impossible or highly difficult to obtain elsewhere.
->
-> If you are a userland process querying a network interface, that's the
-> only way to know which driver is attached, or the only way to build an
-> association between a PCI device and a network interface.
->
-FWIW, on my system:
-/sys/class/net/eth1/device -> /sys/devices/pci0000:00/0000:00:10.4/usb1/1-7/1-7:1.0
-/sys/class/net/eth1/device/bus -> /sys/bus/usb
-/sys/class/net/eth1/device/driver -> /sys/bus/usb/drivers/zd1211rw_mac80211
+Signed-off-by Ivo van Doorn <IvDoorn@gmail.com>
 
-And the other way around:
-/sys/devices/pci0000:00/0000:00:10.4/usb1/1-7/1-7:1.0/net:eth1
-/sys/devices/pci0000:00/0000:00:10.4/usb1/1-7/1-7:1.0/net:wmaster0
+---
 
-Is this considered highly difficult or not standardized enough?
+eeprom_93cx6.c was moved with:
+cg-mv lib/eeprom_93cx6.c drivers/misc/eeprom_93cx6.c
 
--Michael Wu
-
---nextPart3058243.NkWeZE2nZr
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBF6lN5T3Oqt9AH4aERAjO5AKDWGlxM2Bw36/Y0s84BODmUBU4spwCg0iwC
-PvK+BGxoQpKb8eNJEdShlFg=
-=RKnH
------END PGP SIGNATURE-----
-
---nextPart3058243.NkWeZE2nZr--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+index 80b199f..1af3e76 100644
+--- a/drivers/misc/Kconfig
++++ b/drivers/misc/Kconfig
+@@ -122,4 +122,12 @@ config SONY_LAPTOP
+ 
+ 	  Read <file:Documentation/sony-laptop.txt> for more information.
+ 
++config EEPROM_93CX6
++	tristate "EEPROM 93CX6 support"
++	  ---help---
++	  This is a driver for the EEPROM chipsets 93c46 and 93c66.
++	  The driver supports both read as well as write commands.
++
++	  When compiled as a module, this driver will be called "eeprom_93c6.ko".
++
+ endmenu
+diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
+index 7793ccd..f65b835 100644
+--- a/drivers/misc/Makefile
++++ b/drivers/misc/Makefile
+@@ -12,3 +12,4 @@ obj-$(CONFIG_TIFM_CORE)       	+= tifm_core.o
+ obj-$(CONFIG_TIFM_7XX1)       	+= tifm_7xx1.o
+ obj-$(CONFIG_SGI_IOC4)		+= ioc4.o
+ obj-$(CONFIG_SONY_LAPTOP)	+= sony-laptop.o
++obj-$(CONFIG_EEPROM_93CX6)	+= eeprom_93cx6.o
+diff --git a/lib/eeprom_93cx6.c b/drivers/misc/eeprom_93cx6.c
+similarity index 100%
+rename from lib/eeprom_93cx6.c
+rename to drivers/misc/eeprom_93cx6.c
+diff --git a/lib/Kconfig b/lib/Kconfig
+index 0b275b7..8e91748 100644
+--- a/lib/Kconfig
++++ b/lib/Kconfig
+@@ -50,14 +50,6 @@ config LIBCRC32C
+ 	  require M here.  See Castagnoli93.
+ 	  Module will be libcrc32c.
+ 
+-config EEPROM_93CX6
+-	tristate "EEPROM 93CX6 support"
+-	---help---
+-	This is a driver for the EEPROM chipsets 93c46 and 93c66.
+-	The driver supports both read as well as write commands.
+-
+-	When compiled as a module, this driver will be called "eeprom_93c6.ko".
+-
+ config AUDIT_GENERIC
+ 	bool
+ 	depends on AUDIT && !AUDIT_ARCH
+diff --git a/lib/Makefile b/lib/Makefile
+index 71ae5be..d7edaf3 100644
+--- a/lib/Makefile
++++ b/lib/Makefile
+@@ -56,8 +56,6 @@ obj-$(CONFIG_TEXTSEARCH_FSM) += ts_fsm.o
+ obj-$(CONFIG_SMP) += percpu_counter.o
+ obj-$(CONFIG_AUDIT_GENERIC) += audit.o
+ 
+-obj-$(CONFIG_EEPROM_93CX6) += eeprom_93cx6.o
+-
+ obj-$(CONFIG_SWIOTLB) += swiotlb.o
+ obj-$(CONFIG_FAULT_INJECTION) += fault-inject.o
+ 
