@@ -1,136 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:40608 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753186AbXCaTFo (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43953 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752880AbXCUOSK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Mar 2007 15:05:44 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: mac80211 does not support WPA when used with wext
-Date: Sat, 31 Mar 2007 15:03:45 -0400
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
-	John Linville <linville@redhat.com>, Jiri Benc <jbenc@suse.cz>
-References: <460E2B8C.4030002@gmail.com> <1175335211.23438.45.camel@johannes.berg> <1175363333.9349.10.camel@localhost.localdomain>
-In-Reply-To: <1175363333.9349.10.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2453519.gNGMR0HAli";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200703311503.53445.flamingice@sourmilk.net>
+	Wed, 21 Mar 2007 10:18:10 -0400
+Subject: Re: question: /sys/class/net/*/wireless
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20070321151231.0a912abf@griffin.suse.cz>
+References: <1172920691.4966.6.camel@johannes.berg>
+	 <1172921257.4966.12.camel@johannes.berg>
+	 <1172967669.3402.0.camel@johannes.berg>
+	 <20070316150352.5290eea7@griffin.suse.cz>
+	 <1174064833.3355.7.camel@johannes.berg>
+	 <20070321151231.0a912abf@griffin.suse.cz>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sU5f3ebQ0bOVO2TTEQbY"
+Date: Wed, 21 Mar 2007 15:16:44 +0100
+Message-Id: <1174486604.4230.41.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2453519.gNGMR0HAli
-Content-Type: text/plain;
-  charset="iso-8859-15"
+
+--=-sU5f3ebQ0bOVO2TTEQbY
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Saturday 31 March 2007 13:48, Dan Williams wrote:
-> On Sat, 2007-03-31 at 12:00 +0200, Johannes Berg wrote:
-> > On Sat, 2007-03-31 at 11:36 +0200, dragoran wrote:
-> > > Hello
-> > > While testing the iwlwifi driver I noticed that the mac80211 does
-> > > provide a wext interface but does not support wpa with it.
-> >
-> > You must have done something wrong, it works well.
->
-> Nope!  This time it's really mac80211 :)
->
-> Take a look at ieee80211_sta_scan_result() in mac80211/ieee80211_sta.c.
-> Note that it returns custom events for the WPA & RSN IEs.  That's just
-> wrong.  We should be using already-defined events.
->
-What does that have to do with WPA not working? wpa_supplicant works fine w=
-ith=20
-the custom events on my system. Also works fine with the standard events=20
-which the following patch makes mac80211 use.
+On Wed, 2007-03-21 at 15:12 +0100, Jiri Benc wrote:
 
-=2D-
+> Why it won't work? If you have wext-compat configured, you have the
+> 'wireless' directory (and 'ieee80211' as well). If you don't have
+> wext-compat, you don't have the 'wireless' directory. But tools which
+> depend on wext won't work then anyway, so no difference here.
+>=20
+> Or am I missing some special cases?
 
-mac80211: use IWEVGENIE
+No, that's all ok, but I don't think people (will) realise that wext has
+influence into sysfs. Actually, it isn't created by wext-common but
+net/core/net-sysfs.c so we'll have to actually make that create all the
+stuff with wext-compat too. Which again sucks but may work out
+differently after all if James makes wext-compat use wext.
 
-=46rom: Michael Wu <flamingice@sourmilk.net>
+johannes
 
-Use IWEVGENIE which was defined in WE-18.
-
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-=2D--
-
- net/mac80211/ieee80211_sta.c |   40 ++++++++++----------------------------=
-=2D-
- 1 files changed, 10 insertions(+), 30 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 087f176..a227c38 100644
-=2D-- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -2839,39 +2839,19 @@ ieee80211_sta_scan_result(struct net_device *dev,
- 	current_ev =3D iwe_stream_add_point(current_ev, end_buf, &iwe, "");
-=20
- 	if (bss && bss->wpa_ie) {
-=2D		char *buf, *p;
-=2D		int i;
-=2D		buf =3D kmalloc(30 + bss->wpa_ie_len * 2, GFP_ATOMIC);
-=2D		if (buf) {
-=2D			p =3D buf;
-=2D			p +=3D sprintf(p, "wpa_ie=3D");
-=2D			for (i =3D 0; i < bss->wpa_ie_len; i++)
-=2D				p+=3D sprintf(p, "%02x", bss->wpa_ie[i]);
-=2D			memset(&iwe, 0, sizeof(iwe));
-=2D			iwe.cmd =3D IWEVCUSTOM;
-=2D			iwe.u.data.length =3D strlen(buf);
-=2D			current_ev =3D iwe_stream_add_point(current_ev, end_buf,
-=2D							  &iwe, buf);
-=2D			kfree(buf);
-=2D		}
-+		memset(&iwe, 0, sizeof(iwe));
-+		iwe.cmd =3D IWEVGENIE;
-+		iwe.u.data.length =3D bss->wpa_ie_len;
-+		current_ev =3D iwe_stream_add_point(current_ev, end_buf, &iwe,
-+						  bss->wpa_ie);
- 	}
-=20
- 	if (bss && bss->rsn_ie) {
-=2D		char *buf, *p;
-=2D		int i;
-=2D		buf =3D kmalloc(30 + bss->rsn_ie_len * 2, GFP_ATOMIC);
-=2D		if (buf) {
-=2D			p =3D buf;
-=2D			p +=3D sprintf(p, "rsn_ie=3D");
-=2D			for (i =3D 0; i < bss->rsn_ie_len; i++)
-=2D				p+=3D sprintf(p, "%02x", bss->rsn_ie[i]);
-=2D			memset(&iwe, 0, sizeof(iwe));
-=2D			iwe.cmd =3D IWEVCUSTOM;
-=2D			iwe.u.data.length =3D strlen(buf);
-=2D			current_ev =3D iwe_stream_add_point(current_ev, end_buf,
-=2D							  &iwe, buf);
-=2D			kfree(buf);
-=2D		}
-+		memset(&iwe, 0, sizeof(iwe));
-+		iwe.cmd =3D IWEVGENIE;
-+		iwe.u.data.length =3D bss->rsn_ie_len;
-+		current_ev =3D iwe_stream_add_point(current_ev, end_buf, &iwe,
-+						  bss->rsn_ie);
- 	}
-=20
- 	if (bss) {
-
---nextPart2453519.gNGMR0HAli
-Content-Type: application/pgp-signature
+--=-sU5f3ebQ0bOVO2TTEQbY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBGDrCZT3Oqt9AH4aERAgWlAJ40YsNh6yZw5rB2DsYzxcIKCKjJ/wCfVBJp
-UwWs4BIDHkcxjeboexUxdGw=
-=YEQA
+iD8DBQBGAT5M/ETPhpq3jKURApCrAKCyqtEdsvyVQxiQDTpq1N3FaP8J6wCgnB3y
+Pv0CrnHvtU+pMMhtH3Q8wB4=
+=egZh
 -----END PGP SIGNATURE-----
 
---nextPart2453519.gNGMR0HAli--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+--=-sU5f3ebQ0bOVO2TTEQbY--
+
