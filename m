@@ -1,31 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:36248 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751999AbXCWSE3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 14:04:29 -0400
-Date: Fri, 23 Mar 2007 19:04:27 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH] mac80211: Fix pkt_type annotations
-Message-ID: <20070323190427.1a9f7781@griffin.suse.cz>
-In-Reply-To: <200703061743.41510.mb@bu3sch.de>
-References: <200703061743.41510.mb@bu3sch.de>
+Received: from mtagate2.de.ibm.com ([195.212.29.151]:40138 "EHLO
+	mtagate2.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030461AbXCVLdN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Mar 2007 07:33:13 -0400
+Date: Thu, 22 Mar 2007 12:35:08 +0100
+From: Cornelia Huck <cornelia.huck@de.ibm.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Matt Mackall <mpm@selenic.com>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Monakhov Dmitriy <dmonakhov@openvz.org>
+Subject: Re: 2.6.21-rc4-mm1
+Message-ID: <20070322123508.3785fd30@gondolin.boeblingen.de.ibm.com>
+In-Reply-To: <20070321233917.0393dfd1.akpm@linux-foundation.org>
+References: <20070319205623.299d0378.akpm@linux-foundation.org>
+	<1174433034.62033.16.camel@localhost>
+	<20070320223643.d8cbc3f6.akpm@linux-foundation.org>
+	<4601761F.4000302@lwfinger.net>
+	<20070321185900.GC3801@tuxdriver.com>
+	<20070321202225.GN10459@waste.org>
+	<20070321233917.0393dfd1.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 6 Mar 2007 17:43:41 +0100, Michael Buesch wrote:
-> There is no need for an instance of the enum in ieee80211_local.
-> Remove it. Also make the constants uppercase to respect
-> kernel coding style.
+On Wed, 21 Mar 2007 23:39:17 -0800,
+Andrew Morton <akpm@linux-foundation.org> wrote:
 
-Applied to my tree, thanks!
+> On Wed, 21 Mar 2007 15:22:25 -0500 Matt Mackall <mpm@selenic.com> wrote:
+> 
+> > With the latest -mm, I'm now getting this:
+> > 
+> > Mar 21 15:06:52 cinder kernel: ipw2200: Detected Intel PRO/Wireless
+> > 2200BG Network Connection
+> > Mar 21 15:06:52 cinder kernel: firmware_loading_store: unexpected
+> > value (0)
+> > Mar 21 15:06:52 cinder kernel: ipw2200: ipw2200-bss.fw
+> > request_firmware failed:
+> > Reason -2
+> > Mar 21 15:06:52 cinder kernel: ipw2200: Unable to load firmware: -2
+> > Mar 21 15:06:52 cinder kernel: ipw2200: failed to register network
+> > device
+> 
+> The firmware loading bug is caused by
+> driver-core-handles-kobject_uevent-failure-while-device_add.patch
 
- Jiri
-
--- 
-Jiri Benc
-SUSE Labs
+Hm, this patch looks sane. It might be a good idea to enable
+CONFIG_DEBUG_KOBJECT and find out why kobject_uevent() actually fails
+in this case...
