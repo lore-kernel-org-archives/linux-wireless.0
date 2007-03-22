@@ -1,68 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gundega.hpl.hp.com ([192.6.19.190]:58117 "EHLO
-	gundega.hpl.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030771AbXCHWL6 (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:63498 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932975AbXCVXTd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2007 17:11:58 -0500
-Date: Thu, 8 Mar 2007 14:11:28 -0800
+	Thu, 22 Mar 2007 19:19:33 -0400
+From: Michael Wu <flamingice@sourmilk.net>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <jkm@devicescape.com>, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>, Dan Williams <dcbw@redhat.com>
-Subject: Re: wireless extensions vs. 64-bit architectures
-Message-ID: <20070308221128.GA24884@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <1173144447.15891.93.camel@johannes.berg> <20070306171316.GA19669@bougret.hpl.hp.com> <200703061943.07350.mb@bu3sch.de> <20070307020310.GA20466@bougret.hpl.hp.com> <1173364747.14001.7.camel@johannes.berg> <20070308184954.GA24485@bougret.hpl.hp.com> <1173382042.3248.63.camel@johannes.berg> <20070308193412.GG23040@devicescape.com> <1173382802.3248.68.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1173382802.3248.68.camel@johannes.berg>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Subject: Re: [PATCH 2/4] mac80211: Add radiotap support for Monitor mode RX
+Date: Thu, 22 Mar 2007 19:18:21 -0400
+Cc: andy@warmcat.com, linux-wireless@vger.kernel.org
+References: <20070320103955.600509703@warmcat.com> <20070320104104.318699229@warmcat.com> <1174503091.3944.42.camel@johannes.berg>
+In-Reply-To: <1174503091.3944.42.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart5685658.RJviMaEanf";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703221918.22256.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 08, 2007 at 08:40:01PM +0100, Johannes Berg wrote:
-> On Thu, 2007-03-08 at 11:34 -0800, Jouni Malinen wrote:
-> 
-> > Yes, workaround in just iwlib is not enough. If the only possible
-> > solution is user space workaround, it better be documented (and
-> > communicated to maintainers of user space apps) well so that
-> > all user space programs not using iwlib can be modified, too.
-> 
-> The more I think about it the worse it gets. Think about wireless events
-> where both 32 and 64-bit userspace programs may be listening... That
-> means we can't even fix it in the kernel without breaking something.
-> 
-> johannes
+--nextPart5685658.RJviMaEanf
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-	This is exactly what I was pointing out earlier. Well,
-actually, there may be ways of fixing it in the kernel, but that would
-be real ugly, and I don't want to go there.
+On Wednesday 21 March 2007 14:51, Johannes Berg wrote:
+> > +	/* Driver supports radiotap. */
+> > +#define IEEE80211_HW_RADIOTAP_SUPPORTED (1<<10)
+> >
+> > +	if (local->monitors &&
+> > +	    local->hw.flags & IEEE80211_HW_RADIOTAP_SUPPORTED) {
+> > +		radiotap_len =3D ieee80211_get_radiotap_len(skb);
+> > +		skb_pull(skb, radiotap_len);
+> > +	}
+>
+> I don't think that can work.
+>
+>  1) it needs a lot more documentation on what a driver needs to do for
+>     this (for example that it should only add radiotap headers if a
+>     monitor interface was added)
+>
+Lack of documentation makes code not work?
 
-	I've just released wireless_tools.29.pre15.tar.gz. This is
-supposed to include a "band-aid" for that problem. To the best of my
-knowledge, it should catch the problem and not introduce false
-positive. I would be glad if you guys would have a quick look into it,
-because obviously I can't test it.
+>  2) afaik local->monitors is increased even for soft monitor interfaces,
+>     thus this will really fall on its nose when the driver supports
+>     radiotap but not monitor during operation.
+>
+Yes. I noted that in December when the patch was first posted. This will be=
+=20
+fixed when I post a radiotap RX patch that's actually signed off. No sign o=
+ff=20
+from me means it's not done and probably not tested enough if at all.
 
-	Now, about the way forward...
-	First possiblity, we could stick with this band-aid
-permanently.
+=2DMichael Wu
 
-	Second possiblity : we do the right thing and plan a API
-change to return struct always aligned on 32 bits. This way, when we
-get 128 bit processor, we don't have to add another band aid ;-)
-	It would work like the ESSID changeover. We pick a WE version
-changeover. We introduce userspace that can deal with before and
-after. After 1 or 2 years, we flip the switch. After another 1 or 2
-years, we get rid of backward compatibility.
+--nextPart5685658.RJviMaEanf
+Content-Type: application/pgp-signature
 
-	Third possibility : we declare 32 bit userspace on 64 bit
-kernel as not supported and advise users to get a 64 bit
-userspace. The number of bug report on that issue would suggest that
-very few users are in this case.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-	I know the userspace guys will hate (1) and hate even more (2).
+iD8DBQBGAw6+T3Oqt9AH4aERAsQoAKCKqxjgk8zXiM7JBmdjslMEs1/ejQCfdIAV
+mvFCRO1uLYbXutRQU7PW9UY=
+=UEWQ
+-----END PGP SIGNATURE-----
 
-	Regards,
-
-	Jean
+--nextPart5685658.RJviMaEanf--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
