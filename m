@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49804 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934252AbXC1LML (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.170]:13038 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934004AbXCVQYl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 07:12:11 -0400
-Subject: Re: rx racing against removing interfaces?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200703281259.55764.mb@bu3sch.de>
-References: <1174950322.25887.59.camel@johannes.berg>
-	 <200703281252.23834.mb@bu3sch.de>  <200703281259.55764.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZkTnLS+WzetCk0LS2tp0"
-Date: Wed, 28 Mar 2007 13:07:34 +0200
-Message-Id: <1175080054.5151.50.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 22 Mar 2007 12:24:41 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so744661uga
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Mar 2007 09:24:39 -0700 (PDT)
+Message-ID: <a44ae5cd0703220924h20f6cd1bsc4d7b354b61859d4@mail.gmail.com>
+Date: Thu, 22 Mar 2007 09:24:38 -0700
+From: "Miles Lane" <miles.lane@gmail.com>
+To: "Andrew Morton" <akpm@linux-foundation.org>
+Subject: Re: 2.6.21-rc4-mm1 + 4 hotfixes -- BUG: unable to handle kernel paging request at virtual address 6b6b6ceb -- EIP is at module_put+0x7/0x1f
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <20070322012836.8e1a0d10.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <a44ae5cd0703220029lb4df507ne21da177f7c05008@mail.gmail.com>
+	 <20070321234456.946d1742.akpm@linux-foundation.org>
+	 <a44ae5cd0703220114r42dd1954t3a4e1357d5ff71d6@mail.gmail.com>
+	 <20070322012836.8e1a0d10.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I cannot reproduce the BUG with your ml.bz2 patch applied.
+I am seeing this with both 2.6.21-rc4-mm1 + hotfixes, and with
+2.6.21-rc4 + ml.bz2:
 
---=-ZkTnLS+WzetCk0LS2tp0
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Mar 22 09:10:35 FractalPath kernel: ACPI: CPU0 (power states: C1[C1]
+C2[C2] C3[C3])
+Mar 22 09:10:35 FractalPath kernel: The kobject at, or inside
+per_cpu__cpuidle_devices+0x40/0x558 is not dynamically allocated.
+Mar 22 09:10:35 FractalPath kernel: The kobject at, or inside
+per_cpu__cpuidle_devices+0xd4/0x558 is not dynamically allocated.
+Mar 22 09:10:35 FractalPath kernel: The kobject at, or inside
+per_cpu__cpuidle_devices+0x168/0x558 is not dynamically allocated.
+Mar 22 09:10:35 FractalPath kernel: cpuidle: using driver acpi_idle
 
-On Wed, 2007-03-28 at 12:59 +0200, Michael Buesch wrote:
+Not sure if this is a problem.  Also, the first time I booted the ml.bz2
+build, it hung.  I don't have netconsole or a serial debugging system
+set up, so I have no idea what the problem was.  The second boot,
+ipw2200 loaded with no errors, but NetworkManager wouldn't
+connect until I removed and reinserted the module.
 
-> Oh, you mean virtual interfaces.. yeah, there's probably a race. I don't
-> know the locking there.
-
-Yes, I mean virtual interfaces, when the thing is in progress while we
-iterate through.
-
-> But my comment about the non-irqsafe-variants-should-be-hidden still appl=
-ies :)
-
-I'll reread it ;)
-
-But I'm not sure I fully agree. If the driver calls __ieee80211_rx in
-softirq context that should be good without requiring to reschedule in
-mac80211.
-
-johannes
-
---=-ZkTnLS+WzetCk0LS2tp0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGCkx2/ETPhpq3jKURAnDGAKCMOFzsNtnt8dl8Z9bqta2kI46HNgCgpaOl
-uOtDmPZcrlHFd+UKyhbw6jQ=
-=VHao
------END PGP SIGNATURE-----
-
---=-ZkTnLS+WzetCk0LS2tp0--
-
+All the best,
+           Miles
