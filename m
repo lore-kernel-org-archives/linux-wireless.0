@@ -1,70 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:57062 "EHLO
+Received: from smtp.rutgers.edu ([128.6.72.243]:63494 "EHLO
 	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S964808AbXCSUkJ (ORCPT
+	with ESMTP id S932564AbXCVXTe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2007 16:40:09 -0400
+	Thu, 22 Mar 2007 19:19:34 -0400
 From: Michael Wu <flamingice@sourmilk.net>
-To: Andy Green <andy@warmcat.com>
-Subject: Re: Faking powersave for fun and realtime channel muxing
-Date: Mon, 19 Mar 2007 16:38:43 -0400
-Cc: linux-wireless@vger.kernel.org
-References: <45FEEB34.1000403@warmcat.com>
-In-Reply-To: <45FEEB34.1000403@warmcat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 0/4] Try #5: Radiotap on Monitor Mode interfaces for rx and tx
+Date: Thu, 22 Mar 2007 18:58:04 -0400
+Cc: andy@warmcat.com, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <20070320103955.600509703@warmcat.com> <1174500637.3944.9.camel@johannes.berg>
+In-Reply-To: <1174500637.3944.9.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: multipart/signed;
-  boundary="nextPart32623997.PdHQqjVhnN";
+  boundary="nextPart2139142.E3EkotEnRf";
   protocol="application/pgp-signature";
   micalg=pgp-sha1
-Message-Id: <200703191638.48742.flamingice@sourmilk.net>
+Message-Id: <200703221858.09200.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart32623997.PdHQqjVhnN
+--nextPart2139142.E3EkotEnRf
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="iso-8859-15"
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
 
-On Monday 19 March 2007 15:57, Andy Green wrote:
-> Hi folks -
+On Wednesday 21 March 2007 14:10, Johannes Berg wrote:
+> Ok so people don't want to have this in cfg80211, all the better for me
+> since it's less work.
 >
-> If you could generate and manage powersave protocol frames to an AP from
-> the mac80211 stack, without actually putting the radio to sleep, you
-> could do some interesting things.
+> I urge you to solve the issues with this injection interface, we've
+> established that you can use packet filters to grab only management
+> frames but monitor interfaces definitely still interact very badly with
+> power management, and when the hardware has a BSS filter then this will
+> also be disabled with a monitor interface (if monitor during operation
+> is supported) which again puts more load on the host.
 >
-Like in my scanning patch series?
+> I have previously suggested to use the IFF_PROMISC bit for this, but
+> this will also need good driver/stack API since currently drivers that
+> support monitor during operation will just turn off BSS filters and such
+> when a monitor interface is added. That will have to be changed in
+> drivers as well.
+>
+Note that my patch predates the suggestion that IFF_PROMISC be used to turn=
+ on=20
+monitor mode on the hardware. (2006-12-18) I merely updated it so that=20
+monitor interfaces output radiotap whether or not the driver supports.
 
-http://news.gmane.org/find-root.php?group=3Dgmane.linux.kernel.wireless.gen=
-eral&article=3D770
-
-This requires a bit of kernel side support to queue up frames on the client=
+This patch series is not meant to replace the management interface. I just=
 =20
-side to maintain the illusion that nothing happened. (except for a brief=20
-latency jump) However, it does seem to work for the wireless cards I've=20
-tested. Doing scanning like this in userspace will require some sort of=20
-interface to stop/restart the TX for the appropriate network interfaces, bu=
-t=20
-will probably make your multichannel association idea possible.
+gave Andy Green the radiotap RX patch so he could do some work in the right=
+=20
+direction, but that patch isn't complete by itself. (That's why I didn't si=
+gn=20
+off on it) In particular, patches doing these things in addition to what th=
+is=20
+current patch series does will be needed to finally remove the management=20
+interface:
 
-As for how long the AP will hold your frames.. 802.11 defines a minimum tim=
-e,=20
-but the maximum depends on the AP.
+1. Make it easy to flip monitor mode on and off in drivers and support your=
+=20
+IFF_PROMISC suggestion.
+2. Make the use of radiotap by drivers configurable independently of monito=
+r=20
+mode.
+3. Report the result of a TX through monitor interfaces after=20
+ieee80211_tx_status is called. This requires new radiotap definitions.
+4. Move things like radar detection and the rest of ieee80211_msg_* to=20
+cfg/nl80211 if they are necessary.
+5. Port hostap and wpa_supplicant to the new interface. Will require some f=
+un=20
+with packet filtering..
+6. Kill the mgmt interface once and for all.
+
+We don't need to replace the mgmt interface at once however. Addressing the=
+=20
+first two issues should be sufficient to merge the radiotap RX/TX patches.=
+=20
+After that, 3-6 can be done one by one.
 
 =2DMichael Wu
 
---nextPart32623997.PdHQqjVhnN
+--nextPart2139142.E3EkotEnRf
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBF/vTYT3Oqt9AH4aERAn9eAKC432oUP9HBKkhnCTRUUdLL56F8cwCfQzOK
-xb6hgcrBCBxJ9mxZWD7Gg0A=
-=oVJJ
+iD8DBQBGAwoBT3Oqt9AH4aERAumNAJ0WlBqNFKm3aD3P6oB8YcCpuG/P/wCfT+GT
+v1tKv8PwbztWVw4X87eQ4pQ=
+=yMLU
 -----END PGP SIGNATURE-----
 
---nextPart32623997.PdHQqjVhnN--
+--nextPart2139142.E3EkotEnRf--
 -: 
 To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 the body of a message to majordomo@vger.kernel.org: 
