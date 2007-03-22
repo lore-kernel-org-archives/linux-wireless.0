@@ -1,45 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50463 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933638AbXC1JLo (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:38116 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932470AbXCVXTd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 05:11:44 -0400
-Subject: [PATCH] mac80211: use ARRAY_SIZE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 27 Mar 2007 17:59:26 +0200
-Message-Id: <1175011166.9282.0.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 22 Mar 2007 19:19:33 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 0/4] Try #5: Radiotap on Monitor Mode interfaces for rx and tx
+Date: Thu, 22 Mar 2007 19:10:30 -0400
+Cc: andy@warmcat.com, linux-wireless@vger.kernel.org
+References: <20070320103955.600509703@warmcat.com> <1174502809.3944.36.camel@johannes.berg>
+In-Reply-To: <1174502809.3944.36.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart3681876.jLAWxxaL6S";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703221910.36705.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch converts all applicable instances of
-sizeof(array)/sizeof(member) that I found to ARRAY_SIZE.
+--nextPart3681876.jLAWxxaL6S
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+On Wednesday 21 March 2007 14:46, Johannes Berg wrote:
+> If the driver does not support radiotap, ieee80211_rx_monitor needs to
+> expand the head for each packet. Currently, this is also true, but since
+> currently no non-management frames are sent down the management
+> interface, this is not an issue. If each data packet needs to be first
+> reallocated though, it quickly becomes a problem for low-power embedded
+> access points running hostapd.
+>
+That's why drivers should be modified to support radiotap.
 
----
- net/mac80211/ieee80211_ioctl.c |    8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+> Additionally, the overhead of tacking on radiotap headers to each
+> received frame is also rather high if you're only interested in
+> receiving the information for management frames.
+>
+It's really not that much overhead.
 
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-03-27 16:33:30.893155480 +0200
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-03-27 16:33:44.363155480 +0200
-@@ -3273,11 +3273,9 @@ static const iw_handler ieee80211_privat
- 
- const struct iw_handler_def ieee80211_iw_handler_def =
- {
--	.num_standard	= sizeof(ieee80211_handler) / sizeof(iw_handler),
--	.num_private	= sizeof(ieee80211_private_handler) /
--			  sizeof(iw_handler),
--	.num_private_args = sizeof(ieee80211_ioctl_priv) /
--			    sizeof(struct iw_priv_args),
-+	.num_standard	= ARRAY_SIZE(ieee80211_handler),
-+	.num_private	= ARRAY_SIZE(ieee80211_private_handler),
-+	.num_private_args = ARRAY_SIZE(ieee80211_ioctl_priv),
- 	.standard	= (iw_handler *) ieee80211_handler,
- 	.private	= (iw_handler *) ieee80211_private_handler,
- 	.private_args	= (struct iw_priv_args *) ieee80211_ioctl_priv,
+-Michael Wu
 
+--nextPart3681876.jLAWxxaL6S
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGAwzsT3Oqt9AH4aERAs+cAKDDtlTknHbkwciWZMtG552pcoSsFwCdEtcu
+7W2kGiGTJ2oAUsR5FR/PNlc=
+=kIL3
+-----END PGP SIGNATURE-----
+
+--nextPart3681876.jLAWxxaL6S--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
