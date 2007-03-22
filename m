@@ -1,156 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:43484 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753458AbXC2Nko (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2007 09:40:44 -0400
-Message-Id: <20070329134040.432588393@warmcat.com>
-References: <20070329133814.841581235@warmcat.com>
-Date: Thu, 29 Mar 2007 14:38:15 +0100
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Cc: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 1/5] mac80211:Change Radiotap to little-endian (Pavel Roskin)
+Received: from ra.tuxdriver.com ([70.61.120.52]:3261 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934177AbXCVSOb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Mar 2007 14:14:31 -0400
+Date: Thu, 22 Mar 2007 13:47:31 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: rt2400-devel@lists.sourceforge.net
+Cc: linux-wireless@vger.kernel.org
+Subject: bug in rt2x00debug_deregister?
+Message-ID: <20070322174731.GG3860@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Meddled with by Andy Green since signed-off: made it apply to current
-wireless-dev, took out comments for radiotap types not in current wireless-dev
+http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=233345
+http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=233434
 
-Document that all fields must be little endian.  Use annotated types
-even in the comments.  Consistently use shorter type names (u8, s8). 
-Realign the comments.
+Seeing some oopsen w/ the rt2x00 driver currently in Fedora rawhide.
+That version does not have the most recent round of patches I merged
+to wireless-dev a couple of days ago, FWIW.
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
-diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
-index 429b738..7dbf9fb 100644
---- a/include/net/ieee80211_radiotap.h
-+++ b/include/net/ieee80211_radiotap.h
-@@ -66,7 +66,9 @@
-  */
- #define IEEE80211_RADIOTAP_HDRLEN	64
- 
--/* The radio capture header precedes the 802.11 header. */
-+/* The radio capture header precedes the 802.11 header.
-+ * All data in the header is little endian on all platforms.
-+ */
- struct ieee80211_radiotap_header {
- 	u8 it_version;		/* Version 0. Only increases
- 				 * for drastic changes,
-@@ -74,12 +76,12 @@ struct ieee80211_radiotap_header {
- 				 * new fields does not count.
- 				 */
- 	u8 it_pad;
--	u16 it_len;		/* length of the whole
-+	__le16 it_len;		/* length of the whole
- 				 * header in bytes, including
- 				 * it_version, it_pad,
- 				 * it_len, and data fields.
- 				 */
--	u32 it_present;		/* A bitmap telling which
-+	__le32 it_present;	/* A bitmap telling which
- 				 * fields are present. Set bit 31
- 				 * (0x80000000) to extend the
- 				 * bitmap by another 32 bits.
-@@ -91,84 +93,84 @@ struct ieee80211_radiotap_header {
- /* Name                                 Data type       Units
-  * ----                                 ---------       -----
-  *
-- * IEEE80211_RADIOTAP_TSFT              u64       microseconds
-+ * IEEE80211_RADIOTAP_TSFT              __le64          microseconds
-  *
-  *      Value in microseconds of the MAC's 64-bit 802.11 Time
-  *      Synchronization Function timer when the first bit of the
-  *      MPDU arrived at the MAC. For received frames, only.
-  *
-- * IEEE80211_RADIOTAP_CHANNEL           2 x u16   MHz, bitmap
-+ * IEEE80211_RADIOTAP_CHANNEL           2 x __le16      MHz, bitmap
-  *
-  *      Tx/Rx frequency in MHz, followed by flags (see below).
-  *
-- * IEEE80211_RADIOTAP_FHSS              u16       see below
-+ * IEEE80211_RADIOTAP_FHSS              __le16          see below
-  *
-  *      For frequency-hopping radios, the hop set (first byte)
-  *      and pattern (second byte).
-  *
-- * IEEE80211_RADIOTAP_RATE              u8        500kb/s
-+ * IEEE80211_RADIOTAP_RATE              u8              500kb/s
-  *
-  *      Tx/Rx data rate
-  *
-- * IEEE80211_RADIOTAP_DBM_ANTSIGNAL     int8_t          decibels from
-+ * IEEE80211_RADIOTAP_DBM_ANTSIGNAL     s8              decibels from
-  *                                                      one milliwatt (dBm)
-  *
-  *      RF signal power at the antenna, decibel difference from
-  *      one milliwatt.
-  *
-- * IEEE80211_RADIOTAP_DBM_ANTNOISE      int8_t          decibels from
-+ * IEEE80211_RADIOTAP_DBM_ANTNOISE      s8              decibels from
-  *                                                      one milliwatt (dBm)
-  *
-  *      RF noise power at the antenna, decibel difference from one
-  *      milliwatt.
-  *
-- * IEEE80211_RADIOTAP_DB_ANTSIGNAL      u8        decibel (dB)
-+ * IEEE80211_RADIOTAP_DB_ANTSIGNAL      u8              decibel (dB)
-  *
-  *      RF signal power at the antenna, decibel difference from an
-  *      arbitrary, fixed reference.
-  *
-- * IEEE80211_RADIOTAP_DB_ANTNOISE       u8        decibel (dB)
-+ * IEEE80211_RADIOTAP_DB_ANTNOISE       u8              decibel (dB)
-  *
-  *      RF noise power at the antenna, decibel difference from an
-  *      arbitrary, fixed reference point.
-  *
-- * IEEE80211_RADIOTAP_LOCK_QUALITY      u16       unitless
-+ * IEEE80211_RADIOTAP_LOCK_QUALITY      __le16          unitless
-  *
-  *      Quality of Barker code lock. Unitless. Monotonically
-  *      nondecreasing with "better" lock strength. Called "Signal
-  *      Quality" in datasheets.  (Is there a standard way to measure
-  *      this?)
-  *
-- * IEEE80211_RADIOTAP_TX_ATTENUATION    u16       unitless
-+ * IEEE80211_RADIOTAP_TX_ATTENUATION    __le16          unitless
-  *
-  *      Transmit power expressed as unitless distance from max
-  *      power set at factory calibration.  0 is max power.
-  *      Monotonically nondecreasing with lower power levels.
-  *
-- * IEEE80211_RADIOTAP_DB_TX_ATTENUATION u16       decibels (dB)
-+ * IEEE80211_RADIOTAP_DB_TX_ATTENUATION __le16          decibels (dB)
-  *
-  *      Transmit power expressed as decibel distance from max power
-  *      set at factory calibration.  0 is max power.  Monotonically
-  *      nondecreasing with lower power levels.
-  *
-- * IEEE80211_RADIOTAP_DBM_TX_POWER      int8_t          decibels from
-+ * IEEE80211_RADIOTAP_DBM_TX_POWER      s8              decibels from
-  *                                                      one milliwatt (dBm)
-  *
-  *      Transmit power expressed as dBm (decibels from a 1 milliwatt
-  *      reference). This is the absolute power level measured at
-  *      the antenna port.
-  *
-- * IEEE80211_RADIOTAP_FLAGS             u8        bitmap
-+ * IEEE80211_RADIOTAP_FLAGS             u8              bitmap
-  *
-  *      Properties of transmitted and received frames. See flags
-  *      defined below.
-  *
-- * IEEE80211_RADIOTAP_ANTENNA           u8        antenna index
-+ * IEEE80211_RADIOTAP_ANTENNA           u8              antenna index
-  *
-  *      Unitless indication of the Rx/Tx antenna for this packet.
-  *      The first antenna is antenna 0.
-  *
-- * IEEE80211_RADIOTAP_FCS           	u32       data
-+ * IEEE80211_RADIOTAP_FCS           	__le32          data
-  *
-  *	FCS from frame in network byte order.
-  */
+I think it would be great if Ivo or some other rt2x00 developers
+would register in Red Hat's bugzilla so that I can CC: them on bugs --
+please let me know if anyone is amenable to that.
 
+Thanks,
+
+John
 -- 
+John W. Linville
+linville@tuxdriver.com
