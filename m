@@ -1,57 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48873 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932325AbXCHRmh (ORCPT
+Received: from sccrmhc15.comcast.net ([63.240.77.85]:60698 "EHLO
+	sccrmhc15.comcast.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932469AbXCVAoT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2007 12:42:37 -0500
-Subject: Re: sparse using insane amounts of memory
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org, linux-sparse@vger.kernel.org
-In-Reply-To: <1173375270.15842.24.camel@dv>
-References: <1173319356.3546.54.camel@johannes.berg>
-	 <1173371608.21465.12.camel@dv>  <1173372315.3248.19.camel@johannes.berg>
-	 <1173375270.15842.24.camel@dv>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WRUTWb1nn6F/YbqVTt9K"
-Date: Thu, 08 Mar 2007 18:42:29 +0100
-Message-Id: <1173375749.3248.35.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 21 Mar 2007 20:44:19 -0400
+Message-ID: <4601D14B.5090001@gentoo.org>
+Date: Wed, 21 Mar 2007 20:43:55 -0400
+From: Joseph Jezak <josejx@gentoo.org>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: Larry Finger <larry.finger@lwfinger.net>,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] bcm43xx-mac80211: Change radio_init2050 to match specs
+References: <460048f1.Sz+VinhM/N8KG294%Larry.Finger@lwfinger.net> <200703211501.48178.mb@bu3sch.de> <46014F75.7080609@lwfinger.net> <200703211717.53055.mb@bu3sch.de>
+In-Reply-To: <200703211717.53055.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+ >>From my understanding current code is correct.
+> But I see that one could interpret the spec in your way as well.
+> Joseph?
 
---=-WRUTWb1nn6F/YbqVTt9K
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+If the External LNA value, as read from the table, is non-zero, OR
+that value with 0x8000 (which I think is the "enable the External
+LNA flag).
 
-On Thu, 2007-03-08 at 12:34 -0500, Pavel Roskin wrote:
+I've updated the specs to reflect this.
 
-> FIELDS32 expands to some monstrosities.  Look for rt2x00_bbp_write in
-> the dump.  Also behold the amount of parentheses in LOWEST_BIT32.
-> That's almost certainly the culprit.
+-Joe
 
-Ouch, yeah, looks pretty bad.
-
-> I understand the idea is to make gcc calculate integer logarithms at the
-> compile time.  That's nice, but sparse has to do the same, and it's
-> probably not optimized for such misuse.
-
-The whole logic there is beyond me without giving it some serious look
-so I'll trust you on that :)
-
-johannes
-
---=-WRUTWb1nn6F/YbqVTt9K
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF8EsF/ETPhpq3jKURAhz2AKCX9l7I/5phmUiSoGStbJVz0kpPqQCglO7d
-GYk9Cgq7ZSOv0B7+4JJBP3U=
-=MM0e
------END PGP SIGNATURE-----
-
---=-WRUTWb1nn6F/YbqVTt9K--
 
