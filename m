@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:49367 "EHLO
-	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752411AbXCDSzu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2007 13:55:50 -0500
-Date: Sun, 04 Mar 2007 12:55:14 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] bcm43xx: Add firmware version to ethtool output
-Message-ID: <45eb1612.l8xsd6TwZVsRseAH%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from smtp.osdl.org ([65.172.181.24]:42969 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753150AbXCVHjZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Mar 2007 03:39:25 -0400
+Date: Wed, 21 Mar 2007 23:39:17 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Matt Mackall <mpm@selenic.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Monakhov Dmitriy <dmonakhov@openvz.org>
+Subject: Re: 2.6.21-rc4-mm1
+Message-Id: <20070321233917.0393dfd1.akpm@linux-foundation.org>
+In-Reply-To: <20070321202225.GN10459@waste.org>
+References: <20070319205623.299d0378.akpm@linux-foundation.org>
+	<1174433034.62033.16.camel@localhost>
+	<20070320223643.d8cbc3f6.akpm@linux-foundation.org>
+	<4601761F.4000302@lwfinger.net>
+	<20070321185900.GC3801@tuxdriver.com>
+	<20070321202225.GN10459@waste.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As the removal of ethtool capability from bcm43xx has been NACKed,
-some useful functionality should be added. This patch changes it
-so that the firmware version is output.
+On Wed, 21 Mar 2007 15:22:25 -0500 Matt Mackall <mpm@selenic.com> wrote:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+> With the latest -mm, I'm now getting this:
+> 
+> Mar 21 15:06:52 cinder kernel: ipw2200: Detected Intel PRO/Wireless
+> 2200BG Network Connection
+> Mar 21 15:06:52 cinder kernel: firmware_loading_store: unexpected
+> value (0)
+> Mar 21 15:06:52 cinder kernel: ipw2200: ipw2200-bss.fw
+> request_firmware failed:
+> Reason -2
+> Mar 21 15:06:52 cinder kernel: ipw2200: Unable to load firmware: -2
+> Mar 21 15:06:52 cinder kernel: ipw2200: failed to register network
+> device
 
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c
-@@ -27,6 +27,7 @@
- */
- 
- #include "bcm43xx.h"
-+#include "bcm43xx_main.h"
- #include "bcm43xx_ethtool.h"
- 
- #include <linux/netdevice.h>
-@@ -42,6 +43,8 @@ static void bcm43xx_get_drvinfo(struct n
- 	strncpy(info->driver, KBUILD_MODNAME, sizeof(info->driver));
- 	strncpy(info->version, utsname()->release, sizeof(info->version));
- 	strncpy(info->bus_info, pci_name(bcm->pci_dev), ETHTOOL_BUSINFO_LEN);
-+	snprintf(info->fw_version, sizeof(info->fw_version), "0x%x",
-+		 bcm43xx_shm_read16(bcm, BCM43xx_SHM_SHARED, BCM43xx_UCODE_REVISION));
- }
- 
- const struct ethtool_ops bcm43xx_ethtool_ops = {
+The firmware loading bug is caused by
+driver-core-handles-kobject_uevent-failure-while-device_add.patch
+
+I've uploaded a revert patch to
+ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21-rc4/2.6.21-rc4-mm1/hot-fixes/
+
