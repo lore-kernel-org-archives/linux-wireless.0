@@ -1,197 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:27371 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752245AbXCAFnf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2007 00:43:35 -0500
-From: Michael Wu <flamingice@sourmilk.net>
-To: Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH 4/5] d80211: Stop virtual interfaces during scan
-Date: Thu, 1 Mar 2007 00:40:09 -0500
-Cc: linux-wireless@vger.kernel.org
-References: <20070228203943.11473.95222.stgit@magic.sourmilk.net> <20070228203943.11473.81749.stgit@magic.sourmilk.net>
-In-Reply-To: <20070228203943.11473.81749.stgit@magic.sourmilk.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3002782.u2AsKEci4Z";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200703010040.14598.flamingice@sourmilk.net>
+Received: from smtp.osdl.org ([65.172.181.24]:46312 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932473AbXCVJ2s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Mar 2007 05:28:48 -0400
+Date: Thu, 22 Mar 2007 01:28:36 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: "Miles Lane" <miles.lane@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+Subject: Re: 2.6.21-rc4-mm1 + 4 hotfixes -- BUG: unable to handle kernel  paging request at virtual address 6b6b6ceb -- EIP is at module_put+0x7/0x1f
+Message-Id: <20070322012836.8e1a0d10.akpm@linux-foundation.org>
+In-Reply-To: <a44ae5cd0703220114r42dd1954t3a4e1357d5ff71d6@mail.gmail.com>
+References: <a44ae5cd0703220029lb4df507ne21da177f7c05008@mail.gmail.com>
+	<20070321234456.946d1742.akpm@linux-foundation.org>
+	<a44ae5cd0703220114r42dd1954t3a4e1357d5ff71d6@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3002782.u2AsKEci4Z
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Thu, 22 Mar 2007 01:14:41 -0700 "Miles Lane" <miles.lane@gmail.com> wrote:
 
-On Wednesday 28 February 2007 15:39, Michael Wu wrote:
-> From: Michael Wu <flamingice@sourmilk.net>
->
-> This prevents data frames from being queued on the master device if it is
-> in the midst of a scan. It also makes both master and virtual interfaces
-> properly set trans_start when frames are sent so the network watchdog does
-> not try to reset the interfaces. tx_queue_len is left as the default on
-> virtual interfaces to allow frames to be queued while the device is
-> scanning.
->
-And now that all STA interfaces are woken up after a scan, we also can remo=
-ve=20
-the scan_dev check.
+> I still encounter the BUG with the reverted patch.  In these two
+> builds hitting the BUG, more stuff is built as a module, so perhaps
+> that is why I am triggering this.  I am appending my .config file.
+> 
+> I hope this helps,
+>           Miles
+> 
+> kobject drivers: registering. parent: ipw2200, set: <NULL>
+> kobject_uevent_env
+> kobject filter function caused the event to drop!
+> kobject 0000:01:06.0: cleaning up
+> kobject firmware: cleaning up
+> BUG: unable to handle kernel paging request at virtual address 6b6b6ceb
+>  printing eip:
+> c0137c22
+> *pde = 00000000
+> Oops: 0002 [#1]
+> last sysfs file:
+> devices/pci0000:00/0000:00:1e.0/0000:01:06.0/firmware/0000:01:06.0/loading
+> Modules linked in: snd_pcm snd_seq_dummy sdhci snd_seq_oss rng_core
+> ipw2200 snd_seq_midi_event snd_seq snd_timer snd_s
+> eq_device mmc_core tifm_7xx1 tifm_core fw_ohci fw_core ieee80211
+> ieee80211_crypt yenta_socket rsrc_nonstatic pcmcia_co
+> re snd soundcore shpchp iTCO_wdt snd_page_alloc pci_hotplug psmouse
+> rtc iTCO_vendor_support intel_agp agpgart evdev ex
+> t3 jbd mbcache sg sr_mod cdrom sd_mod pata_acpi ata_piix ohci1394
+> ieee1394 8139too mii libata scsi_mod ehci_hcd uhci_h
+> cd usbcore thermal processor fan
+> CPU:    0
+> EIP:    0060:[<c0137c22>]    Not tainted VLI
+> EFLAGS: 00010202   (2.6.21-rc4-mm1 #5)
+> EIP is at module_put+0x7/0x1f
+> eax: 6b6b6b6b   ebx: c354d628   ecx: c01618d2   edx: 00000001
+> esi: c39f5000   edi: c1e47d4c   ebp: c1fa3f38   esp: c1fa3f38
+> ds: 007b   es: 007b   fs: 00d8  gs: 0033  ss: 0068
+> Process firmware_helper (pid: 1888, ti=c1fa2000 task=c1cab570 task.ti=c1fa2000)
+> Stack: c1fa3f48 c019db66 00000008 c3548038 c1fa3f70 c0165eee 00000000 00000000
+>        c39aea18 c1c12118 c3548038 c1e47d4c c1e13b14 00000000 c1fa3f80 c0166036
+>        c1e47d4c c1e47d4c c1fa3f98 c0163ac6 c1e13b38 00000003 c1e13b14 c1e13b38
+> Call Trace:
+>  [<c0104c22>] show_trace_log_lvl+0x1a/0x2f
+>  [<c0104cd2>] show_stack_log_lvl+0x9b/0xaa
+>  [<c0104e97>] show_registers+0x1b6/0x288
+>  [<c010505d>] die+0xf4/0x209
+>  [<c0114b20>] do_page_fault+0x45d/0x529
+>  [<c028a0fc>] error_code+0x74/0x7c
+>  [<c019db66>] release+0x2a/0x37
+>  [<c0165eee>] __fput+0xbe/0x168
+>  [<c0166036>] fput+0x31/0x35
+>  [<c0163ac6>] filp_close+0x54/0x5c
+>  [<c0164a97>] sys_close+0x6f/0xa7
+>  [<c0103c94>] sysenter_past_esp+0x5d/0x99
+>  =======================
+> Code: fe ff 8b 86 c4 00 00 00 e8 42 e4 08 00 89 f8 e8 22 e4 08 00 89
+> f8 e8 d4 e2 08 00 59 89 d8 5b 5b 5e 5f 5d c3 55 8
+> 5 c0 89 e5 74 16 <ff> 88 80 01 00 00 83 38 02 75 0b 8b 80 08 02 00 00
+> e8 9c ee fd
+> EIP: [<c0137c22>] module_put+0x7/0x1f SS:ESP 0068:c1fa3f38
+> kobject pcmcia: registering. parent: <NULL>, set: module
+> kobject holders: registering. parent: pcmcia, set: <NULL>
+> kobject_uevent_env
+> 
 
-=2D-
+Marvellous.
 
-d80211: Stop virtual interfaces during scan
+I cannot reproduce it with my current lineup.  Maybe someone fixed it in
+one of the subsystem trees.
 
-=46rom: Michael Wu <flamingice@sourmilk.net>
+If you have time, could you please test
+http://userweb.kernel.org/~akpm/ml.bz2 (against 2.6.21-rc4).
 
-This prevents data frames from being queued on the master device if it is
-in the midst of a scan. It also makes both master and virtual interfaces
-properly set trans_start when frames are sent. tx_queue_len is left as the=
-=20
-default on virtual interfaces to allow frames to be queued while the device=
-=20
-is scanning.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-=2D--
 
- net/mac80211/ieee80211.c     |    5 +++--
- net/mac80211/ieee80211_sta.c |   28 +++++++++++++++++++---------
- 2 files changed, 22 insertions(+), 11 deletions(-)
+It surprises me that ipw2200 does this:
 
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 4d08266..52d0e1e 100644
-=2D-- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -1148,6 +1148,7 @@ static int __ieee80211_tx(struct ieee802
- 		ret =3D local->ops->tx(local_to_hw(local), skb, control);
- 		if (ret)
- 			return IEEE80211_TX_AGAIN;
-+		local->mdev->trans_start =3D jiffies;
- 		ieee80211_led_tx(local, 1);
- 	}
- 	if (tx->u.tx.extra_frag) {
-@@ -1178,6 +1179,7 @@ static int __ieee80211_tx(struct ieee802
- 					    control);
- 			if (ret)
- 				return IEEE80211_TX_FRAG_AGAIN;
-+			local->mdev->trans_start =3D jiffies;
- 			ieee80211_led_tx(local, 1);
- 			tx->u.tx.extra_frag[i] =3D NULL;
- 		}
-@@ -1588,6 +1590,7 @@ static int ieee80211_subif_start_xmit(st
- 	skb->nh.raw =3D skb->data + nh_pos;
- 	skb->h.raw =3D skb->data + h_pos;
-=20
-+	dev->trans_start =3D jiffies;
- 	dev_queue_xmit(skb);
-=20
- 	return 0;
-@@ -4419,7 +4422,6 @@ void ieee80211_if_setup(struct net_devic
- 	dev->get_stats =3D ieee80211_get_stats;
- 	dev->open =3D ieee80211_open;
- 	dev->stop =3D ieee80211_stop;
-=2D	dev->tx_queue_len =3D 0;
- 	dev->uninit =3D ieee80211_if_reinit;
- 	dev->destructor =3D ieee80211_if_free;
- }
-@@ -4434,7 +4436,6 @@ void ieee80211_if_mgmt_setup(struct net_
- 	dev->stop =3D ieee80211_mgmt_stop;
- 	dev->type =3D ARPHRD_IEEE80211_PRISM;
- 	dev->hard_header_parse =3D header_parse_80211;
-=2D	dev->tx_queue_len =3D 0;
- 	dev->uninit =3D ieee80211_if_reinit;
- 	dev->destructor =3D ieee80211_if_free;
- }
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 9d08a37..ce7dc28 100644
-=2D-- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -1918,10 +1918,7 @@ void ieee80211_sta_work(struct work_stru
- 	if (!netif_running(dev))
- 		return;
-=20
-=2D	/* TODO: scan_dev check should be removed once scan_completed wakes
-=2D	 * every STA interface */
-=2D	if (local->sta_scanning &&
-=2D	    local->scan_dev =3D=3D dev)
-+	if (local->sta_scanning)
- 		return;
-=20
- 	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-@@ -2527,7 +2524,7 @@ void ieee80211_scan_completed(struct iee
- {
- 	struct ieee80211_local *local =3D hw_to_local(hw);
- 	struct net_device *dev =3D local->scan_dev;
-=2D	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_sub_if_data *sdata;
- 	union iwreq_data wrqu;
-=20
- 	printk(KERN_DEBUG "%s: scan completed\n", dev->name);
-@@ -2542,15 +2539,23 @@ void ieee80211_scan_completed(struct iee
- 	memset(&wrqu, 0, sizeof(wrqu));
- 	wireless_send_event(dev, SIOCGIWSCAN, &wrqu, NULL);
-=20
-+	spin_lock_bh(&local->sub_if_lock);
-+	list_for_each_entry(sdata, &local->sub_if_list, list) {
-+		netif_wake_queue(sdata->dev);
-+
-+		if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA)
-+			ieee80211_sta_timer((unsigned long)&sdata->u.sta);
-+	}
-+	spin_unlock_bh(&local->sub_if_lock);
-+
-+	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
- 	if (sdata->type =3D=3D IEEE80211_IF_TYPE_IBSS) {
- 		struct ieee80211_if_sta *ifsta =3D &sdata->u.sta;
- 		if (!ifsta->bssid_set ||
- 		    (!ifsta->state =3D=3D IEEE80211_IBSS_JOINED &&
- 		    !ieee80211_sta_active_ibss(dev)))
- 			ieee80211_sta_find_ibss(dev, ifsta);
-=2D	/* TODO: need to wake every sta interface */
-=2D	} else if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA)
-=2D		ieee80211_sta_timer((unsigned long)&sdata->u.sta);
-+	}
- }
- EXPORT_SYMBOL(ieee80211_scan_completed);
-=20
-@@ -2637,6 +2642,7 @@ static int ieee80211_sta_start_scan(stru
- 				    u8 *ssid, size_t ssid_len)
- {
- 	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_sub_if_data *sdata;
-=20
- 	if (ssid_len > IEEE80211_MAX_SSID_LEN)
- 		return -EINVAL;
-@@ -2680,7 +2686,11 @@ static int ieee80211_sta_start_scan(stru
- 	}
-=20
- 	local->sta_scanning =3D 1;
-=2D	/* TODO: stop TX queue? */
-+
-+	spin_lock_bh(&local->sub_if_lock);
-+	list_for_each_entry(sdata, &local->sub_if_list, list)
-+		netif_stop_queue(sdata->dev);
-+	spin_unlock_bh(&local->sub_if_lock);
-=20
- 	if (ssid) {
- 		local->scan_ssid_len =3D ssid_len;
+[  104.284000] kobject 'ipw2200' does not have a release() function, if this is not a directory kobject, it is broken and must be fixed.
 
---nextPart3002782.u2AsKEci4Z
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBF5mc+T3Oqt9AH4aERAnBcAJ4sG5VZGczmI9nCZmoCHW/TJpntFgCfWahG
-T5f0VWp9HacgZI7v3xfWve8=
-=BXvF
------END PGP SIGNATURE-----
-
---nextPart3002782.u2AsKEci4Z--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
