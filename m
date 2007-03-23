@@ -1,99 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kanga.kvack.org ([66.96.29.28]:60292 "EHLO kanga.kvack.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2992437AbXCGSSD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2007 13:18:03 -0500
-Date: Wed, 7 Mar 2007 15:16:38 -0300
-From: Marcelo Tosatti <marcelo@kvack.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Marcelo Tosatti <marcelo@kvack.org>, Jeff Garzik <jeff@garzik.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'libertas' branch of wireless-2.6
-Message-ID: <20070307181638.GA22305@dmt>
-References: <20070227205649.GH5826@tuxdriver.com> <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org> <20070304153627.GA32380@dmt> <20070305140825.GA9982@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070305140825.GA9982@infradead.org>
+Received: from styx.suse.cz ([82.119.242.94]:48987 "EHLO silver.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933403AbXCWUn0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 16:43:26 -0400
+From: Jiri Benc <jbenc@suse.cz>
+To: "John W. Linville" <linville@tuxdriver.com>
+Message-Id: <20070323214400.642621638.midnight@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/19] d80211: pull request
+Date: Fri, 23 Mar 2007 21:44:42 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 05, 2007 at 02:08:25PM +0000, Christoph Hellwig wrote:
-> On Sun, Mar 04, 2007 at 12:36:27PM -0300, Marcelo Tosatti wrote:
-> > Hi Christoph,
-> > 
-> > On Sat, Mar 03, 2007 at 05:21:40AM +0000, Christoph Hellwig wrote:
-> > > Umm, I can't remember the updated driver ever beeig posted for review.
-> > 
-> > http://lists.openwall.net/netdev/2007/02/10/25
-> > 
-> > > And to be honest I'd be surprised if it's in a good shape already.
-> > 
-> > Constructive comments are welcome... All comments made by Arnd (which
-> > were many!) have been addressed.
-> 
-> Comments on that versions from a quick read over it:
-> 
->  - the __le* annotation issue you mentioned in the mail is important.
->    We definitvely don't want any new drivers without endianess annotations,
->    because there are far too many endianess problems.  Even more so
->    in a case of a driver like this one that's only tested on LE hardware
->    and has LE device endianess.
->  - things like 11d.[ch] don't have business of beeing in a driver,
->    this should be somewhere in common code.
+Sorry again for the long delay. I reviewed most of patches sent in last
+three weeks, with one big exception of radiotap support (that's my task for
+the next week :-)).
 
-Most wireless drivers implement 11d internally. We certainly need to
-unify the management code, but thats not a merge blocker.
+Please note that I renamed my tree to mac80211.git.
 
->  - there shouldn't be a LICENSE file in individual driver directories,
->    especially if it's just plain old GPLv2.
->  - please get rid of setting -DFOO flags in the Makefile, just use
->    these directly as config symbols.
->  - there shouldn't be a README file in the driver directory, this
->    should be in Documentation/
->  - please don't use wlan_* foo types.  a) this should be structs, not
->    typedefs, and b) wlan is an utterly generic name for beeing inside
->    a driver.  Then again most things using this should be inside
->    generic code anyway.. (and yeah, all that is because the driver
->    copied braindead linux-wlan-ng code that probably needs a major
->    revision anyway)
->  - there seems to be lots of tabs vs spaces messups
->  - please get rid of the ENTER/LEAVE macros
+John, please pull from
+git://git.kernel.org/pub/scm/linux/kernel/git/jbenc/mac80211.git master
+to obtain following patches:
 
-These are useful for debugging. We have removed most of the useless ones 
-already.
+Hong Liu:
+      mac80211: fix wrong keyidx will change default key
+      mac80211: fix passing wrong pointer to ieee80211_dump_frame
 
->  - there's an awful lot of headers without clear divided responsibilities,
->    there should be only a few ones left (internal interfaces and hw
->    interface basically)
->  - having lowercase names for lots of hw commands is a very bad idea
->    for readability
->  - please get rid of all your private ioctls and iwpriv stuff
->    (should I add !!!! here)
+Ivo van Doorn:
+      mac80211: Prevent unregistering of unregistered hw
+      mac80211: Add software sequence support
 
-Rationale being? There are a bunch of device private knobs, and iwpriv
-is the interface for such configuration. (????)
+Jiri Benc:
+      mac80211: drop packets from nonexisting interfaces in PS mode
+      mac80211: remove useless callbacks from wmaster
+      mac80211: fix rtnl locking in ieee80211_register_hw
 
->  - scan.h has very strange almost docbook comments, please convert
->    them to real docbook comments and actually run things through
->    the tools to make sure it's right.
->  - scan.h has vi indentation comment helpers that are contrary to
->    linux coding style..
->  - the thread.h abstractions are really useless, opencoding them
->    would make the code a lot more readable.  And make people
->    notice it's actually wrong:
-> 	o the return value from kthread_run needs to be checked
-> 	o wlan_deactivate_thread is not needed at all
-> 	o storing and checking the pid should go away
-> 	o there is no need for an additional waitqueue, you can
-> 	  just use wake_up_process for kernel threads.
->  - most of types.h should not be there but you should be using
->    the types from include/linux/*80211*
->  - version.h shouldn't exist
->  - the radiotap header changes should definitively not be in
->    a "add a new driver" diff
+Johannes Berg:
+      mac80211: fix remaining sparse warnings
 
-Other than this your comments are OK, will address them.
+johannes@sipsolutions.net:
+      mac80211: move PHY things to debugfs
+      mac80211: move sta dir to debugfs
+      mac80211: move per-netdev and key stuff to debugfs
+      mac80211 debugfs Kconfig
 
-Thanks!
+Michael Buesch:
+      mac80211: Fix pkt_type annotations
+      mac80211: Properly kill tasklets before shutdown
 
+Michael Wu:
+      mac80211: Remove curr_rates and fix related concurrency issues
+      mac80211: Remove tx_timeout callback
+      mac80211: Set carrier status for STA interfaces
+      mac80211: Stop virtual interfaces during scan
+      mac80211: switch STA interfaces to PS mode during scan
+
+ include/net/mac80211.h             |    7 
+ net/mac80211/Kconfig               |    9 
+ net/mac80211/Makefile              |    3 
+ net/mac80211/debugfs.c             |  436 ++++++++++++++++++++++
+ net/mac80211/debugfs.h             |   16 +
+ net/mac80211/debugfs_key.c         |  253 +++++++++++++
+ net/mac80211/debugfs_key.h         |   34 ++
+ net/mac80211/debugfs_netdev.c      |  440 ++++++++++++++++++++++
+ net/mac80211/debugfs_netdev.h      |   30 ++
+ net/mac80211/debugfs_sta.c         |  242 ++++++++++++
+ net/mac80211/debugfs_sta.h         |   12 +
+ net/mac80211/ieee80211.c           |  298 +++++++--------
+ net/mac80211/ieee80211_i.h         |  162 +++++++-
+ net/mac80211/ieee80211_iface.c     |   25 -
+ net/mac80211/ieee80211_ioctl.c     |  129 +++---
+ net/mac80211/ieee80211_key.h       |   21 +
+ net/mac80211/ieee80211_rate.h      |   47 +-
+ net/mac80211/ieee80211_scan.c      |    2 
+ net/mac80211/ieee80211_sta.c       |  138 +++++--
+ net/mac80211/ieee80211_sysfs.c     |  718 ------------------------------------
+ net/mac80211/ieee80211_sysfs.h     |   12 -
+ net/mac80211/ieee80211_sysfs_sta.c |  438 ----------------------
+ net/mac80211/rc80211_simple.c      |  139 ++++---
+ net/mac80211/sta_info.c            |   82 ++--
+ net/mac80211/sta_info.h            |   18 +
+ 25 files changed, 2102 insertions(+), 1609 deletions(-)
+
+-- 
+Jiri Benc
+SUSE Labs
