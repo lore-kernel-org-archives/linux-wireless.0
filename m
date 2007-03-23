@@ -1,35 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:61610 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S2992645AbXCBRXq (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:46936 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1422859AbXCWMyJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2007 12:23:46 -0500
-Message-ID: <45E85D9C.4090602@lwfinger.net>
-Date: Fri, 02 Mar 2007 11:23:40 -0600
-From: Larry Finger <larry.finger@lwfinger.net>
+	Fri, 23 Mar 2007 08:54:09 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: John Linville <linville@tuxdriver.com>
+Subject: mac80211-drivers pull request (week12)
+Cc: linux-wireless@vger.kernel.org,
+	Andrea Merello <andrea.merello@gmail.com>,
+	Chr <chunkeey@web.de>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: Assertion failed in ieee80211softmac_wx_get_rate
-References: <1172816819.26330.12.camel@dv> <20070302135734.GB6676@tuxdriver.com>
-In-Reply-To: <20070302135734.GB6676@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Fri, 23 Mar 2007 08:52:54 -0400
+Content-Type: multipart/signed;
+  boundary="nextPart1956126.FCsk95MfAM";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703230852.55259.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> 
-> It is in linux-2.6, wireless-2.6, and wireless-dev.  If you don't
-> want to use those trees, you should be able to apply the patch to
-> the tree you are using.
+--nextPart1956126.FCsk95MfAM
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-If you wish to run bcm43xx-softmac from either the mb (Michael Buesch) or the wireless-dev trees,
-you can get a patch to update them to the current state of my code at
-ftp://lwfinger.dynalias.org/patches/update_mb_0302.patch. This patch not only includes the things
-that are in the wireless-2.6 tree, but changes that are in progress.
+Hi John,
 
-FYI, I have compile-, but not yet run-tested this tree with these changes.
+Please pull
+git://git.kernel.org/pub/scm/linux/kernel/git/mwu/mac80211-drivers.git
+for these patches:
 
-Larry
+p54-week10 branch:
+Christian Lamparter (1):
+      p54: fix rates and add short preambles support for cck
 
+Michael Wu (3):
+      p54usb: Move USB ID entry to v2 section
+      p54pci: Fix error path when eeprom read fails
+      p54: Add RTS/CTS support
+
+rtl818x-week10 branch:
+Michael Wu (2):
+      rtl8187: Enable contention window
+      rtl8187: Set MSR
+
+Thanks,
+-Michael Wu
+
+--nextPart1956126.FCsk95MfAM
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGA82nT3Oqt9AH4aERAk79AJ9h8q+56r34AN2SNPIHLX4BbZWNggCfVP74
+vSFNUcD0EJYan1Hrcsz02Pg=
+=mlXs
+-----END PGP SIGNATURE-----
+
+--nextPart1956126.FCsk95MfAM--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
