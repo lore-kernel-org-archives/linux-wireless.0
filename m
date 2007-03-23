@@ -1,54 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:46418 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751809AbXCDQfl (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:35999 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751766AbXCWSGf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2007 11:35:41 -0500
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id CF21B8CAD2
-	for <linux-wireless@vger.kernel.org>; Sun,  4 Mar 2007 17:35:39 +0100 (CET)
-Received: from flatcat.home.warmcat.com (flatcat [192.168.0.77])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id 4EC2BFABF
-	for <linux-wireless@vger.kernel.org>; Sun,  4 Mar 2007 16:36:45 +0000 (UTC)
-Received: from [127.0.0.1] (flatcat.home.warmcat.com [127.0.0.1])
-	by flatcat.home.warmcat.com (Postfix) with ESMTP id 58C16B2807A
-	for <linux-wireless@vger.kernel.org>; Sun,  4 Mar 2007 16:35:38 +0000 (GMT)
-Message-ID: <45EAF559.5070701@warmcat.com>
-Date: Sun, 04 Mar 2007 16:35:37 +0000
-From: Andy Green <andy@warmcat.com>
+	Fri, 23 Mar 2007 14:06:35 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH 5/5] d80211: switch STA interfaces to PS mode during scan
+Date: Fri, 23 Mar 2007 14:05:15 -0400
+Cc: linux-wireless@vger.kernel.org
+References: <20070228203943.11473.95222.stgit@magic.sourmilk.net> <200703010043.10565.flamingice@sourmilk.net> <20070323170136.5f6205db@griffin.suse.cz>
+In-Reply-To: <20070323170136.5f6205db@griffin.suse.cz>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: Question about PRISM2 header rate field
-References: <45EA9E39.6080706@warmcat.com>
-In-Reply-To: <45EA9E39.6080706@warmcat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart1225946.eiIYDyUnVV";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703231405.20085.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andy Green wrote:
+--nextPart1225946.eiIYDyUnVV
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> On a capture of a broadcast which I believe was at 54Mbps, I see the 
-> PRISM2 / ieee80211_frame_info field "datarate" is set to 0xf0, or 240 
-> decimal.  I looked around at the various different ways of talking about 
-> tx rate in the stack and drivers, but none that I found use 0xf0 for 
-> 54Mbps.  Is it 48Mbps in units of 200kHz?  Or 54Mbps in units of 225kHz 
-> (!!)  Or...?
-> 
-> I am trying to reissue this captured packet using the management 
-> interface (which I can now conjure up) with a rate that I can control, 
-> but I did not find any information on the coding for this field.
+On Friday 23 March 2007 12:01, Jiri Benc wrote:
+> > @@ -2541,10 +2572,12 @@ void ieee80211_scan_completed(struct iee
+> >
+> >  	spin_lock_bh(&local->sub_if_lock);
+> >  	list_for_each_entry(sdata, &local->sub_if_list, list) {
+> > -		netif_wake_queue(sdata->dev);
+> > -
+> > -		if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA)
+> > +		if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA) {
+> > +			if (sdata->u.sta.associated)
+> > +				ieee80211_send_nullfunc(local, sdata, 0);
+> >  			ieee80211_sta_timer((unsigned long)&sdata->u.sta);
+> > +		}
+> > +		netif_wake_queue(sdata->dev);
+>
+> Shouldn't the queue be woken before calling ieee80211_sta_timer?
+>
+ieee80211_sta_timer just schedules the workqueue to run. I'm not sure if th=
+e=20
+workqueue can run immediately after that, but even if it did, the sta code=
+=20
+doesn't depend on the queue of a virtual interface so these lines don't nee=
+d=20
+to run in any particular order.
 
-Well, I discover in fact you need to inject starting only from the 
-IEEE802.11 header... and indeed that does work if you do it on the 
-"Management Interface".  I found this from hostapd sources, since 
-wpa_supplicant doesn't seem to inject packets from userspace, it seems 
-to trigger the stack to do canned packets by a huge range of IOCTLs.  So 
-I have unencrypted packets in both directions now without patching 
-anything on the kernel side :-D  But, there is a but...
+=2DMichael Wu
 
-The packet seems to go out at a default rate, in my case 1Mbps.  Is 
-there in fact a method for requesting the rate for injected packets, or 
-is there at the moment a simple equivalence that all broadcasts will go 
-out at 1Mbps?
+--nextPart1225946.eiIYDyUnVV
+Content-Type: application/pgp-signature
 
--Andy
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGBBbgT3Oqt9AH4aERAiLrAJ9GCbo6NFw9hQWxR+G1RhXHgHiQ7ACfe5Jy
+iibIeHtLtuJJMz/bBj90MLk=
+=Vr+P
+-----END PGP SIGNATURE-----
+
+--nextPart1225946.eiIYDyUnVV--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
