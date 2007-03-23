@@ -1,66 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:49877 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751126AbXCEBFH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2007 20:05:07 -0500
-Date: Mon, 5 Mar 2007 02:05:08 +0100
-From: Adrian Bunk <bunk@stusta.de>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Matt Mackall <mpm@selenic.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, yi.zhu@intel.com, jketreno@linux.intel.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Recent wireless breakage (ipw2200, iwconfig, NetworkManager)
-Message-ID: <20070305010508.GK3441@stusta.de>
-References: <20070304220857.GH23311@waste.org> <1173051564.6131.13.camel@johannes.berg> <20070305002550.GI23311@waste.org> <20070304164525.349f9589.akpm@linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20070304164525.349f9589.akpm@linux-foundation.org>
+Received: from styx.suse.cz ([82.119.242.94]:36691 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753292AbXCWS2Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 14:28:16 -0400
+Date: Fri, 23 Mar 2007 19:28:15 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Hong Liu <hong.liu@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/5] mac80211: fix iwlist wlanX key behavior
+Message-ID: <20070323192815.6082e716@griffin.suse.cz>
+In-Reply-To: <1174015697.3408.39.camel@devlinux-hong>
+References: <1174015697.3408.39.camel@devlinux-hong>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 04, 2007 at 04:45:25PM -0800, Andrew Morton wrote:
-> On Sun, 4 Mar 2007 18:25:50 -0600 Matt Mackall <mpm@selenic.com> wrote:
-> 
-> > On Mon, Mar 05, 2007 at 12:39:24AM +0100, Johannes Berg wrote:
-> > > [adding linux-wireless to CC]
-> > > 
-> > > On Sun, 2007-03-04 at 16:08 -0600, Matt Mackall wrote:
-> > > > Recent kernels are having troubles with wireless for me. Two seemingly
-> > > > related problems:
-> > > 
-> > > I don't think they are related actually.
-> > > 
-> > > > a) NetworkManager seems oblivious to the existence of my IPW2200
-> > > 
-> > > This is due to the recent sysfs restructuring I think. IIRC the fix is
-> > > to upgrade hal to a current git version.
-> > 
-> > If that's the cause, the fix is to back out whatever was done to break
-> > userspace. Breaking userspace is not ok. Upgrading from 2.6.x to
-> > 2.6.x+1 should not entail replacing substantial parts of userspace,
-> > especially with NOT-EVEN-FRAKKING-RELEASED-YET CODE. 
-> 
-> yep.  Adrian, I think we should track this as a blocking regression, at
-> least until we've fully understood the implications and had the usual
-> arguments.
+On Fri, 16 Mar 2007 11:28:21 +0800, Hong Liu wrote:
+> Signed-off-by: Hong Liu <hong.liu@intel.com>
 
-I'm currently tracking it as one of the 31 2.6.21-rc regressions that 
-are not yet fixed in Linus' tree, and for me each of them is a blocker
-until proven otherwise.
+Please add a description.
 
-Whether Linus releases 2.6.21 despite blocking regressions is a 
-different question...
+Thanks,
 
-cu
-Adrian
+ Jiri
 
 -- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+Jiri Benc
+SUSE Labs
