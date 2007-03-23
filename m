@@ -1,62 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50810 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932167AbXCELVs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 06:21:48 -0500
-Subject: Re: Recent wireless breakage (ipw2200, iwconfig, NetworkManager)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Greg KH <greg@kroah.com>
-Cc: Matt Mackall <mpm@selenic.com>, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, yi.zhu@intel.com, jketreno@linux.intel.com,
-	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
-In-Reply-To: <20070305011729.GB7681@kroah.com>
-References: <20070304220857.GH23311@waste.org>
-	 <1173051564.6131.13.camel@johannes.berg> <20070305002550.GI23311@waste.org>
-	 <20070305011729.GB7681@kroah.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WaY/ydGDzBbpcLWjiA3+"
-Date: Mon, 05 Mar 2007 12:20:51 +0100
-Message-Id: <1173093651.6131.47.camel@johannes.berg>
+Received: from styx.suse.cz ([82.119.242.94]:37098 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753386AbXCWTBc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 15:01:32 -0400
+Date: Fri, 23 Mar 2007 20:01:30 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/5] d80211: switch STA interfaces to PS mode during  scan
+Message-ID: <20070323200130.3f8d36ac@griffin.suse.cz>
+In-Reply-To: <200703231405.20085.flamingice@sourmilk.net>
+References: <20070228203943.11473.95222.stgit@magic.sourmilk.net>
+	<200703010043.10565.flamingice@sourmilk.net>
+	<20070323170136.5f6205db@griffin.suse.cz>
+	<200703231405.20085.flamingice@sourmilk.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 23 Mar 2007 14:05:15 -0400, Michael Wu wrote:
+> ieee80211_sta_timer just schedules the workqueue to run. I'm not sure if the 
+> workqueue can run immediately after that, but even if it did, the sta code 
+> doesn't depend on the queue of a virtual interface so these lines don't need 
+> to run in any particular order.
 
---=-WaY/ydGDzBbpcLWjiA3+
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Okay, you're right. Applied, thanks!
 
-On Sun, 2007-03-04 at 17:17 -0800, Greg KH wrote:
+ Jiri
 
-> > > This is due to the recent sysfs restructuring I think. IIRC the fix i=
-s
-> > > to upgrade hal to a current git version.
-> >=20
-> > If that's the cause, the fix is to back out whatever was done to break
-> > userspace. Breaking userspace is not ok. Upgrading from 2.6.x to
-> > 2.6.x+1 should not entail replacing substantial parts of userspace,
-> > especially with NOT-EVEN-FRAKKING-RELEASED-YET CODE.=20
->=20
-> I should not have broken any userspace if CONFIG_SYSFS_DEPRECATED is
-> enabled with that patch.  If that is enabled, and that patch still
-> causes problems, please let me know.
-
-Yeah, sorry for not mentioning that in my original email and the
-discussion it stirred.
-
-johannes
-
---=-WaY/ydGDzBbpcLWjiA3+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF6/0T/ETPhpq3jKURAiozAJsGdNBKnO4F5KILsz5xkFeI1guIhQCgu4Ab
-ZLbtATQiHXpB5fnsD/JwaV8=
-=93wK
------END PGP SIGNATURE-----
-
---=-WaY/ydGDzBbpcLWjiA3+--
-
+-- 
+Jiri Benc
+SUSE Labs
