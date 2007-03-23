@@ -1,56 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:49900 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751692AbXCEBr1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2007 20:47:27 -0500
-Date: Mon, 5 Mar 2007 02:47:28 +0100
-From: Adrian Bunk <bunk@stusta.de>
-To: Andrew Morton <akpm@linux-foundation.org>, linville@tuxdriver.com
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	dbrownell@users.sourceforge.net, greg@kroah.com,
-	linux-usb-devel@lists.sourceforge.net
-Subject: 2.6.21-rc2-mm1: drivers/usb/host/ohci-ssb.c doesn't compile
-Message-ID: <20070305014728.GN3441@stusta.de>
-References: <20070302030026.5eef0c92.akpm@linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20070302030026.5eef0c92.akpm@linux-foundation.org>
+Received: from styx.suse.cz ([82.119.242.94]:49001 "EHLO silver.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S2992555AbXCWUnm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 16:43:42 -0400
+From: Jiri Benc <jbenc@suse.cz>
+To: "John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20070323214400.642621638.midnight@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 15/19] mac80211: fix wrong keyidx will change default key
+Message-Id: <20070323204458.25F2548589@silver.suse.cz>
+Date: Fri, 23 Mar 2007 21:44:58 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 02, 2007 at 03:00:26AM -0800, Andrew Morton wrote:
->...
-> Changes since 2.6.20-mm2:
->...
->  git-wireless.patch
->...
->  git trees
->...
+From: Hong Liu <hong.liu@intel.com>
 
-<--  snip  -->
+Signed-off-by: Hong Liu <hong.liu@intel.com>
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
 
-...
-  CC      drivers/usb/host/ohci-hcd.o
-In file included from 
-/home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-hcd.c:931:
-/home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:47: error: request for member 'hcd_priv_size' in something not a structure or union
-/home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:47: error: 'ssb_ohci_device' undeclared here (not in a function)
-/home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:52: error: 'ssb_ohci_reset' undeclared here (not in a function)
-/home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:53: error: 'ssb_ohci_start' undeclared here (not in a function)
-...
-make[4]: *** [drivers/usb/host/ohci-hcd.o] Error 1
+---
 
-<--  snip  -->
+ net/mac80211/ieee80211_ioctl.c |   22 ++++++++++------------
+ 1 files changed, 10 insertions(+), 12 deletions(-)
 
-
-cu
-Adrian
-
+1485998df4d688be3e0907423a774dadbf90a631
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index 21a17eb..b28e794 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -2924,19 +2924,17 @@ static int ieee80211_ioctl_siwencode(str
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	idx = erq->flags & IW_ENCODE_INDEX;
+-	if (idx < 1 || idx > 4) {
+-		idx = -1;
+-		if (!sdata->default_key)
+-			idx = 0;
+-		else for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
+-			if (sdata->default_key == sdata->keys[i]) {
+-				idx = i;
+-				break;
++	if (idx == 0) {
++		if (sdata->default_key)
++			for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
++				if (sdata->default_key == sdata->keys[i]) {
++					idx = i;
++					break;
++				}
+ 			}
+-		}
+-		if (idx < 0)
+-			return -EINVAL;
+-	} else
++	} else if (idx < 1 || idx > 4)
++		return -EINVAL;
++	else
+ 		idx--;
+ 
+ 	if (erq->flags & IW_ENCODE_DISABLED)
 -- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+1.3.0
 
