@@ -1,141 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:56158 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933339AbXCQEh6 (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:56706 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932274AbXCWRh4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Mar 2007 00:37:58 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Paul TBBle Hampson <Paul.Hampson@pobox.com>
-Subject: Re: prism54pci fails to read eeprom on PowerPC, then bugs in pci code
-Date: Sat, 17 Mar 2007 00:37:10 -0400
-Cc: linux-wireless@vger.kernel.org
-References: <20070317034607.GA1522@keitarou>
-In-Reply-To: <20070317034607.GA1522@keitarou>
+	Fri, 23 Mar 2007 13:37:56 -0400
+Message-ID: <4604106F.7080003@lwfinger.net>
+Date: Fri, 23 Mar 2007 12:37:51 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart45184827.H491RMaYht";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200703170037.14875.flamingice@sourmilk.net>
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx devel <Bcm43xx-dev@lists.berlios.de>
+Subject: RFC: Future plans for bcm43xx-softmac
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart45184827.H491RMaYht
-Content-Type: multipart/mixed;
-  boundary="Boundary-01=_2B3+FE5FYkPjahc"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+I think we have a plan for the future of bcm43xx-softmac once the bcm43xx-mac80211 version goes into
+mainline. Unfortunately it cannot just be abandoned as there will be no support for 802.11b-only
+devices in bcm43xx-mac80211.
 
---Boundary-01=_2B3+FE5FYkPjahc
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+The steps to be done are as follows:
 
-On Friday 16 March 2007 23:46, Paul TBBle Hampson wrote:
-> The (built-in) bcm43xx-mac80211 driver works, but when I try to load a
-> CardBus Atheros card I've got lying around with dadwifi-openhal, it
-> fails with some sort of hardware error.  (ie. it _might_ be a dodgey
-> Cardbus port, although both cardbus cards used to work in this machine,
-> using prism54 hardmac and the dadwifi with atheros hal driver
-> respectively)
->
-Can you rule out the port first? Load the fullmac driver first, bring it up=
- &=20
-down, unload it, and then try p54.
+1. Change the namespace from bcm43xx to bcm4301. This will both reflect the purpose of the changed
+driver as well as prevent namespace collisions with the bcm43xx-mac80211 version in case both are
+built into the kernel.
 
-> (Albeit the hardmach driver never managed to WPA, and as of 2.6.20 still
-> doesn't, haven't tried the version in wireless-dev yet)
->
-Hardmac version in wireless-dev is the same thing. wireless-dev is just for=
-=20
-mac80211 and cfg80211 code.
+2. Modify bcm4301 to use mac80211 rather than softmac. Although this process has the potential for
+introducing bugs into what is currently the stable version, it does allow the abandonment of softmac
+with its deficiencies, many of which are essentially uncorrectable.
 
-> So maybe the BUG isn't a problem with the p54 driver, but I'd appreciate
-> help with making it find the eeprom so it doesn't happen...
-I just found a leak in a probe error path. It might somehow cause the probl=
-em=20
-in the pci code. I've attached a patch to fix it.
+3. The PCI-ids recognized by bcm4301-mac80211 will be restricted to the 802.11b-only devices and the
+configuration information will be modified.
+
+Step 1 will be completed very soon and the appropriate patches will be submitted to Linville's
+wireless-dev tree.
+
+I will be working on step 2 in the coming months and will submit those patches to the list for
+comments and testing. When ready, they too will be submitted to Linville. Once bcm43xx-mac80211 goes
+into mainline, the step 3 patches will be submitted.
+
+Please comment on this plan.
 
 Thanks,
-=2DMichael Wu
 
---Boundary-01=_2B3+FE5FYkPjahc
-Content-Type: text/x-diff;
-  charset="iso-8859-15";
-  name="fix-p54-error-leak.diff"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="fix-p54-error-leak.diff"
-
-p54pci: Fix error path when eeprom read fails
-
-=46rom: Michael Wu <flamingice@sourmilk.net>
-
-The p54 PCI driver leaks memory when eeprom read fails. This fixes it.
-
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-=2D--
-
- drivers/net/wireless/mac80211/p54/prism54pci.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211/p54/prism54pci.c b/drivers/net/w=
-ireless/mac80211/p54/prism54pci.c
-index 578ec39..798a5ee 100644
-=2D-- a/drivers/net/wireless/mac80211/p54/prism54pci.c
-+++ b/drivers/net/wireless/mac80211/p54/prism54pci.c
-@@ -567,11 +567,11 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
-=20
- 	err =3D p54p_upload_firmware(dev);
- 	if (err)
-=2D		goto err_iounmap;
-+		goto err_free_desc;
-=20
- 	err =3D p54p_read_eeprom(dev);
- 	if (err)
-=2D		goto err_iounmap;
-+		goto err_free_desc;
-=20
- 	priv->common.open =3D p54p_open;
- 	priv->common.stop =3D p54p_stop;
-@@ -583,7 +583,7 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
- 	if (err) {
- 		printk(KERN_ERR "%s (prism54pci): Cannot register netdevice\n",
- 		       pci_name(pdev));
-=2D		goto err_free_desc;
-+		goto err_free_common;
- 	}
-=20
- 	printk(KERN_INFO "%s: hwaddr " MAC_FMT ", isl38%02x\n",
-@@ -592,8 +592,10 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
-=20
- 	return 0;
-=20
-=2D err_free_desc:
-+ err_free_common:
- 	p54_free_common(dev);
-+
-+ err_free_desc:
- 	pci_free_consistent(pdev, sizeof(*priv->ring_control),
- 			    priv->ring_control, priv->ring_control_dma);
-=20
-
---Boundary-01=_2B3+FE5FYkPjahc--
-
---nextPart45184827.H491RMaYht
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBF+3B6T3Oqt9AH4aERAlVKAJ4vCxCDFnRS8OCmpGa9mBBHqAilzACgjx/p
-+A5HKZEIS2800MyyzWJcNB0=
-=9Bby
------END PGP SIGNATURE-----
-
---nextPart45184827.H491RMaYht--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+Larry
