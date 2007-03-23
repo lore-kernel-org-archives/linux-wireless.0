@@ -1,45 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:54842 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753011AbXCUVpL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2007 17:45:11 -0400
-Date: Wed, 21 Mar 2007 14:45:03 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Matt Mackall <mpm@selenic.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.21-rc4-mm1
-Message-Id: <20070321144503.1b1e16ca.akpm@linux-foundation.org>
-In-Reply-To: <20070321202225.GN10459@waste.org>
-References: <20070319205623.299d0378.akpm@linux-foundation.org>
-	<1174433034.62033.16.camel@localhost>
-	<20070320223643.d8cbc3f6.akpm@linux-foundation.org>
-	<4601761F.4000302@lwfinger.net>
-	<20070321185900.GC3801@tuxdriver.com>
-	<20070321202225.GN10459@waste.org>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49780 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422888AbXCWNpw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 09:45:52 -0400
+Subject: Re: [PATCH 2/4] mac80211: Add radiotap support for Monitor mode RX
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: andy@warmcat.com, linux-wireless@vger.kernel.org
+In-Reply-To: <200703221918.22256.flamingice@sourmilk.net>
+References: <20070320103955.600509703@warmcat.com>
+	 <20070320104104.318699229@warmcat.com>
+	 <1174503091.3944.42.camel@johannes.berg>
+	 <200703221918.22256.flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oXbKqqoN/V4cm8XCCSRU"
+Date: Fri, 23 Mar 2007 14:44:24 +0100
+Message-Id: <1174657464.3366.8.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 21 Mar 2007 15:22:25 -0500
-Matt Mackall <mpm@selenic.com> wrote:
 
-> With the latest -mm, I'm now getting this:
-> 
-> Mar 21 15:06:52 cinder kernel: ipw2200: Detected Intel PRO/Wireless
-> 2200BG Network Connection
-> Mar 21 15:06:52 cinder kernel: firmware_loading_store: unexpected
-> value (0)
-> Mar 21 15:06:52 cinder kernel: ipw2200: ipw2200-bss.fw
-> request_firmware failed:
-> Reason -2
-> Mar 21 15:06:52 cinder kernel: ipw2200: Unable to load firmware: -2
-> Mar 21 15:06:52 cinder kernel: ipw2200: failed to register network
-> device
-> 
+--=-oXbKqqoN/V4cm8XCCSRU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Yes, someone seems to have thoroughly bollixed firmware loading.  I was
-able to make it pretend to work for my ipw2200, but that obviously wasn't
-sufficient.
+On Thu, 2007-03-22 at 19:18 -0400, Michael Wu wrote:
 
-I plan to do a bisection this evening, find the dud patch.
+> >  1) it needs a lot more documentation on what a driver needs to do for
+> >     this (for example that it should only add radiotap headers if a
+> >     monitor interface was added)
+> >
+> Lack of documentation makes code not work?
+
+Heh, no, but it adds new driver API.
+
+> >  2) afaik local->monitors is increased even for soft monitor interfaces=
+,
+> >     thus this will really fall on its nose when the driver supports
+> >     radiotap but not monitor during operation.
+> >
+> Yes. I noted that in December when the patch was first posted. This will =
+be=20
+> fixed when I post a radiotap RX patch that's actually signed off. No sign=
+ off=20
+> from me means it's not done and probably not tested enough if at all.
+
+Ok, good.
+
+johannes
+
+--=-oXbKqqoN/V4cm8XCCSRU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGA9m3/ETPhpq3jKURAhzkAJ9zWxfV+z88hh778/0at+wVxBXFpQCffHgj
+il/fdJwHL+wFNCefJPLfIv0=
+=xv1j
+-----END PGP SIGNATURE-----
+
+--=-oXbKqqoN/V4cm8XCCSRU--
+
