@@ -1,94 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:46894 "EHLO
-	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932189AbXCLVt4 (ORCPT
+Received: from mtagate1.de.ibm.com ([195.212.29.150]:6145 "EHLO
+	mtagate1.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422773AbXCWKId (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2007 17:49:56 -0400
-Date: Mon, 12 Mar 2007 16:49:38 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: [RFC] bcm43xx: Replace some magic numbers
-Message-ID: <45f5caf2.B7juO0pz9ZlapMwv%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 23 Mar 2007 06:08:33 -0400
+Date: Fri, 23 Mar 2007 11:10:29 +0100
+From: Cornelia Huck <cornelia.huck@de.ibm.com>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Matt Mackall <mpm@selenic.com>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Monakhov Dmitriy <dmonakhov@openvz.org>
+Subject: Re: 2.6.21-rc4-mm1
+Message-ID: <20070323111029.4089ccfb@gondolin.boeblingen.de.ibm.com>
+In-Reply-To: <4602D137.4060402@lwfinger.net>
+References: <20070319205623.299d0378.akpm@linux-foundation.org>
+	<1174433034.62033.16.camel@localhost>
+	<20070320223643.d8cbc3f6.akpm@linux-foundation.org>
+	<4601761F.4000302@lwfinger.net>
+	<20070321185900.GC3801@tuxdriver.com>
+	<20070321202225.GN10459@waste.org>
+	<20070321233917.0393dfd1.akpm@linux-foundation.org>
+	<20070322123508.3785fd30@gondolin.boeblingen.de.ibm.com>
+	<4602752A.5050109@lwfinger.net>
+	<20070322181019.62fe78ed@gondolin.boeblingen.de.ibm.com>
+	<4602D137.4060402@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In code manipulating the TM State Low register of 802.11 cores, two
-different magic numbers are used to reference the 'G Mode Enable' bit.
-One of these, 0x20000000, is clear, but the other, (0x800 << 18), is not.
-This patch replaces both types with a defined constant. In addition, two
-bits in the TM State High registers are given definitions to help in the
-reading of the code.
+On Thu, 22 Mar 2007 13:55:51 -0500,
+Larry Finger <larry.finger@lwfinger.net> wrote:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cornelia Huck wrote:
+> > On Thu, 22 Mar 2007 07:23:06 -0500,
+> > 
+> > This would indicate that dev_uevent had been called. But how could
+> > kobject_uevent then return an error without moaning about an uevent()
+> > error code? Maybe the following debug patch could shed some light on
+> > this (all moaning is prefixed with kobject_uevent_env, so it should be
+> > easy to spot)...
+> 
+> I applied the debug patch, but I don't see any error codes being returned. This time I also got the
+> General Protection Faults. An excerpt of the log is attached.
+
+Hm, I think I have an idea about what happened.
+
+The firmware class tried to suppress the first KOBJ_ADD uevent by
+returning -ENODEV in firmware_uevent if FW_STATUS_READY was not set.
+This only worked as long as the return code of kobject_uevent was not
+checked in device_add. hack-to-make-wireless-work.patch made that first
+uevent return successfully, but this possible triggered some udev rule
+too early, leading to firmware load failures.
+
+The following (completely untested) patch uses uevent_suppress to stop
+the uevent from being generated during device_add. Does this work for
+you?
+
 ---
+ drivers/base/firmware_class.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx.h
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx.h
-@@ -277,11 +277,14 @@
- #define BCM43xx_SBTMSTATELOW_REJECT		0x02
- #define BCM43xx_SBTMSTATELOW_CLOCK		0x10000
- #define BCM43xx_SBTMSTATELOW_FORCE_GATE_CLOCK	0x20000
-+#define BCM43xx_SBTMSTATELOW_G_MODE_ENABLE	0x20000000
+--- linux-2.6.orig/drivers/base/firmware_class.c
++++ linux-2.6/drivers/base/firmware_class.c
+@@ -333,6 +333,7 @@ static int fw_register_device(struct dev
+ 	f_dev->parent = device;
+ 	f_dev->class = &firmware_class;
+ 	dev_set_drvdata(f_dev, fw_priv);
++	f_dev->uevent_suppress = 1;
+ 	retval = device_register(f_dev);
+ 	if (retval) {
+ 		printk(KERN_ERR "%s: device_register failed\n",
+@@ -385,6 +386,7 @@ static int fw_setup_device(struct firmwa
+                 set_bit(FW_STATUS_READY, &fw_priv->status);
+         else
+                 set_bit(FW_STATUS_READY_NOHOTPLUG, &fw_priv->status);
++	f_dev->uevent_suppress = 0;
+ 	*dev_p = f_dev;
+ 	goto out;
  
- /* sbtmstatehigh state flags */
- #define BCM43xx_SBTMSTATEHIGH_SERROR		0x00000001
- #define BCM43xx_SBTMSTATEHIGH_BUSY		0x00000004
- #define BCM43xx_SBTMSTATEHIGH_TIMEOUT		0x00000020
-+#define BCM43xx_SBTMSTATEHIGH_G_PHY_AVAIL	0x00010000
-+#define BCM43xx_SBTMSTATEHIGH_A_PHY_AVAIL	0x00020000
- #define BCM43xx_SBTMSTATEHIGH_COREFLAGS		0x1FFF0000
- #define BCM43xx_SBTMSTATEHIGH_DMA64BIT		0x10000000
- #define BCM43xx_SBTMSTATEHIGH_GATEDCLK		0x20000000
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
-@@ -168,16 +168,16 @@ int bcm43xx_phy_connect(struct bcm43xx_p
- 
- 	flags = bcm43xx_read32(bcm, BCM43xx_CIR_SBTMSTATEHIGH);
- 	if (connect) {
--		if (!(flags & 0x00010000))
-+		if (!(flags & BCM43xx_SBTMSTATEHIGH_G_PHY_AVAIL))
- 			return -ENODEV;
- 		flags = bcm43xx_read32(bcm, BCM43xx_CIR_SBTMSTATELOW);
--		flags |= (0x800 << 18);
-+		flags |= BCM43xx_SBTMSTATELOW_G_MODE_ENABLE;
- 		bcm43xx_write32(bcm, BCM43xx_CIR_SBTMSTATELOW, flags);
- 	} else {
--		if (!(flags & 0x00020000))
-+		if (!(flags & BCM43xx_SBTMSTATEHIGH_A_PHY_AVAIL))
- 			return -ENODEV;
- 		flags = bcm43xx_read32(bcm, BCM43xx_CIR_SBTMSTATELOW);
--		flags &= ~(0x800 << 18);
-+		flags &= ~BCM43xx_SBTMSTATELOW_G_MODE_ENABLE;
- 		bcm43xx_write32(bcm, BCM43xx_CIR_SBTMSTATELOW, flags);
- 	}
- out:
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-@@ -1389,7 +1389,7 @@ void bcm43xx_wireless_core_reset(struct 
- 				& ~(BCM43xx_SBF_MAC_ENABLED | 0x00000002));
- 	} else {
- 		if (connect_phy)
--			flags |= 0x20000000;
-+			flags |= BCM43xx_SBTMSTATELOW_G_MODE_ENABLE;
- 		bcm43xx_phy_connect(bcm, connect_phy);
- 		bcm43xx_core_enable(bcm, flags);
- 		bcm43xx_write16(bcm, 0x03E6, 0x0000);
-@@ -3662,7 +3662,7 @@ int bcm43xx_select_wireless_core(struct 
- 		u32 sbtmstatelow;
- 
- 		sbtmstatelow = bcm43xx_read32(bcm, BCM43xx_CIR_SBTMSTATELOW);
--		sbtmstatelow |= 0x20000000;
-+		sbtmstatelow |= BCM43xx_SBTMSTATELOW_G_MODE_ENABLE;
- 		bcm43xx_write32(bcm, BCM43xx_CIR_SBTMSTATELOW, sbtmstatelow);
- 	}
- 	err = wireless_core_up(bcm, 1);
