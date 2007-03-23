@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54605 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965404AbXC1JVQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 05:21:16 -0400
-Subject: Re: [PATCH] zd1211rw-mac80211: Fix for monitor mode bug
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Andy Green <andy@warmcat.com>, Jiri Benc <jbenc@suse.cz>,
-	Daniel Drake <dsd@gentoo.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, kune@deine-taler.de
-In-Reply-To: <200703262239.07013.mb@bu3sch.de>
-References: <20070325231817.9C5887B409F@zog.reactivated.net>
-	 <200703261328.28156.mb@bu3sch.de> <1174908666.1536.15.camel@johannes.berg>
-	 <200703262239.07013.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4tGPrlnbbkIj5pqXEtlW"
-Date: Wed, 28 Mar 2007 11:19:55 +0200
-Message-Id: <1175073595.5151.28.camel@johannes.berg>
+Received: from madara.hpl.hp.com ([192.6.19.124]:62085 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750853AbXCWQQA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 12:16:00 -0400
+Date: Fri, 23 Mar 2007 09:13:39 -0700
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>, stable@kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] fix information leak in wireless extensions on 64-bit platforms
+Message-ID: <20070323161339.GA4713@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <1174640787.3588.65.camel@johannes.berg> <1174657362.3366.6.camel@johannes.berg> <20070323154828.GA4671@bougret.hpl.hp.com> <1174665384.4470.0.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1174665384.4470.0.camel@johannes.berg>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Mar 23, 2007 at 04:56:24PM +0100, Johannes Berg wrote:
+> On Fri, 2007-03-23 at 08:48 -0700, Jean Tourrilhes wrote:
+> 
+> > 	Yes, sorry for the delay, I wanted to make sure I had all the
+> > parts fully fleshed out.
+> 
+> :)
+> 
+> Could you maybe send yours to stable too? Both of them I guess. Or do
+> you want us (John I guess) to do that?
+> 
+> johannes
 
---=-4tGPrlnbbkIj5pqXEtlW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+	It seems that the lifetime of each stable branch is measured
+in weeks (apart from 2.6.16), and being an old timer, gaining a few
+weeks does not seem to me to be worth the trouble. It's not like the
+bug is entirely new.
+	I'm personally more concerned about distro. If getting it into
+stable would make it go into a distro release, then I would see more
+value. It seems that it's too late for the next release of Debian or
+Fedora, and I don't know if any distro is going to be based on this
+stable branch.
+	The last thing is that I could not test those stuff myself,
+and the testing done for me was limited. I would be more confident if
+you were to give it a good beating before we push that into stable,
+because you know what to test.
+	Those are only my opinions. John is the man, so I let him
+decide. John, if you feel like pushing it, please do it.
 
-On Mon, 2007-03-26 at 22:39 +0200, Michael Buesch wrote:
+	Have fun...
 
-> Well, yeah. It does of course. If you have a STA and a MON interface,
-> the STA also receives the packs with bad CRCs. But that's how
-> mac80211 designed the virt-interface stuff.
-> Same goes for promisc. If you have a STA and a MON you can't have
-> the STA in non-promisc mode, so you also receive promisc packets on
-> the STA. That's how it's supposed to be. (I think mac80211 filters
-> them in the STA code somewhere).
-
-Yeah, it filters those later by BSSID, that's intended, but it wasn't
-ever programmed to check the CRC. We'll need to introduce a new rx
-status flag "was crc checked".
-
-> The modparams actually are just a temporary hack and were never meant
-> to stay there. I wanted to have the knob in cfg80211, sooner or later.
-> So when the knob is there, mac80211 should take care that the STA
-> doesn't receive the bad packets.
-
-Right.
-
-johannes
-
---=-4tGPrlnbbkIj5pqXEtlW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGCjM7/ETPhpq3jKURAsWyAKC5VMKc2uKSNsVAIY/yDxuLRYJUIwCfV+xu
-j14kFvQr5aSAx+HsbW3BFgo=
-=aZrK
------END PGP SIGNATURE-----
-
---=-4tGPrlnbbkIj5pqXEtlW--
-
+	Jean
