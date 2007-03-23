@@ -1,176 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:43486 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753499AbXC2Nko (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2007 09:40:44 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 693DF8D0F0
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2007 15:40:39 +0200 (CEST)
-Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id BF100100CC
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2007 13:41:02 +0000 (UTC)
-Message-Id: <20070329134040.986905763@warmcat.com>
-References: <20070329133814.841581235@warmcat.com>
-Date: Thu, 29 Mar 2007 14:38:17 +0100
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/5] mac80211: Monitor mode radiotap injection docs
+Received: from styx.suse.cz ([82.119.242.94]:48995 "EHLO silver.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S934194AbXCWUnc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 16:43:32 -0400
+From: Jiri Benc <jbenc@suse.cz>
+To: "John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20070323214400.642621638.midnight@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 6/19] mac80211: Set carrier status for STA interfaces
+Message-Id: <20070323204448.7F593484C4@silver.suse.cz>
+Date: Fri, 23 Mar 2007 21:44:48 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andy Green <andy@warmcat.com>
+From: Michael Wu <flamingice@sourmilk.net>
 
+This makes STA interfaces set the carrier status based on the current
+association status.
 
-diff --git a/Documentation/networking/mac80211-injection.txt b/Documentation/networking/mac80211-injection.txt
-new file mode 100644
-index 0000000..53ef7a0
---- /dev/null
-+++ b/Documentation/networking/mac80211-injection.txt
-@@ -0,0 +1,59 @@
-+How to use packet injection with mac80211
-+=========================================
-+
-+mac80211 now allows arbitrary packets to be injected down any Monitor Mode
-+interface from userland.  The packet you inject needs to be composed in the
-+following format:
-+
-+ [ radiotap header  ]
-+ [ ieee80211 header ]
-+ [ payload ]
-+
-+The radiotap format is discussed in
-+./Documentation/networking/radiotap-headers.txt.
-+
-+Despite 13 radiotap argument types are currently defined, most only make sense
-+to appear on received packets.  Currently three kinds of argument are used by
-+the injection code, although it knows to skip any other arguments that are
-+present (facilitating replay of captured radiotap headers directly):
-+
-+ - IEEE80211_RADIOTAP_RATE - u8 arg in 500kbps units (0x02 --> 1Mbps)
-+
-+ - IEEE80211_RADIOTAP_ANTENNA - u8 arg, 0x00 = ant1, 0x01 = ant2
-+
-+ - IEEE80211_RADIOTAP_DBM_TX_POWER - u8 arg, dBm
-+
-+Here is an example valid radiotap header defining these three parameters
-+
-+	0x00, 0x00, // <-- radiotap version
-+	0x0b, 0x00, // <- radiotap header length
-+	0x04, 0x0c, 0x00, 0x00, // <-- bitmap
-+	0x6c, // <-- rate
-+	0x0c, //<-- tx power
-+	0x01 //<-- antenna
-+
-+The ieee80211 header follows immediately afterwards, looking for example like
-+this:
-+
-+	0x08, 0x01, 0x00, 0x00,
-+	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-+	0x13, 0x22, 0x33, 0x44, 0x55, 0x66,
-+	0x13, 0x22, 0x33, 0x44, 0x55, 0x66,
-+	0x10, 0x86
-+
-+Then lastly there is the payload.
-+
-+After composing the packet contents, it is sent by send()-ing it to a logical
-+mac80211 interface that is in Monitor mode.  Libpcap can also be used,
-+(which is easier than doing the work to bind the socket to the right
-+interface), along the following lines:
-+
-+	ppcap = pcap_open_live(szInterfaceName, 800, 1, 20, szErrbuf);
-+...
-+	r = pcap_inject(ppcap, u8aSendBuffer, nLength);
-+
-+You can also find sources for a complete inject test applet here:
-+
-+http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
-+
-+Andy Green <andy@warmcat.com>
-diff --git a/Documentation/networking/radiotap-headers.txt b/Documentation/networking/radiotap-headers.txt
-new file mode 100644
-index 0000000..0d2207a
---- /dev/null
-+++ b/Documentation/networking/radiotap-headers.txt
-@@ -0,0 +1,79 @@
-+How to use radiotap headers
-+===========================
-+
-+Pointer to the radiotap include file
-+------------------------------------
-+
-+Radiotap headers are variable-length and extensible, you can get most of the
-+information you need to know on them from:
-+
-+./include/net/ieee80211_radiotap.h
-+
-+This document gives an overview and warns on some corner cases.
-+
-+
-+Structure of the header
-+-----------------------
-+
-+There is a fixed portion at the start which contains a u32 bitmap that defines
-+if the possible argument associated with that bit is present or not.  So if b0
-+of the it_present member of ieee80211_radiotap_header is set, it means that
-+the header for argument index 0 (IEEE80211_RADIOTAP_TSFT) is present in the
-+argument area.
-+
-+   < 8-byte ieee80211_radiotap_header >
-+   [ <possible argument bitmap extensions ... > ]
-+   [ <argument> ... ]
-+
-+At the moment there are only 13 possible argument indexes defined, but in case
-+we run out of space in the u32 it_present member, it is defined that b31 set
-+indicates that there is another u32 bitmap following (shown as "possible
-+argument bitmap extensions..." above), and the start of the arguments is moved
-+forward 4 bytes each time.
-+
-+Note also that the it_len member __le16 is set to the total number of bytes
-+covered by the ieee80211_radiotap_header and any arguments following.
-+
-+
-+Requirements for arguments
-+--------------------------
-+
-+After the fixed part of the header, the arguments follow for each argument
-+index whose matching bit is set in the it_present member of
-+ieee80211_radiotap_header.
-+
-+ - the arguments are all stored little-endian!
-+
-+ - the argument payload for a given argument index has a fixed size.  So
-+   IEEE80211_RADIOTAP_TSFT being present always indicates an 8-byte argument is
-+   present.  See the comments in ./include/net/ieee80211_radiotap.h for a nice
-+   breakdown of all the argument sizes
-+
-+ - the arguments must be aligned to a boundary of the argument size using
-+   padding.  So a u16 argument must start on the next u16 boundary if it isn't
-+   already on one, a u32 must start on the next u32 boundary and so on.
-+
-+ - "alignment" is relative to the start of the ieee80211_radiotap_header, ie,
-+   the first byte of the radiotap header.  The absolute alignment of that first
-+   byte isn't defined.  So even if the whole radiotap header is starting at, eg,
-+   address 0x00000003, still the first byte of the radiotap header is treated as
-+   0 for alignment purposes.
-+
-+ - The arguments for a given argument index can be a compound of multiple types
-+   together.  For example IEEE80211_RADIOTAP_CHANNEL has an argument payload
-+   consisting of two u16s of total length 4.  When this happens, the padding
-+   rule is applied dealing with a u16, NOT dealing with a 4-byte single entity.
-+
-+
-+Example valid radiotap header
-+-----------------------------
-+
-+	0x00, 0x00, // <-- radiotap version + pad byte
-+	0x0b, 0x00, // <- radiotap header length
-+	0x04, 0x0c, 0x00, 0x00, // <-- bitmap
-+	0x6c, // <-- rate (in 500kHz units)
-+	0x0c, //<-- tx power
-+	0x01 //<-- antenna
-+
-+
-+Andy Green <andy@warmcat.com>
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
 
+---
+
+ net/mac80211/ieee80211.c     |    4 ++++
+ net/mac80211/ieee80211_sta.c |    3 +++
+ 2 files changed, 7 insertions(+), 0 deletions(-)
+
+22abe7f30c0e34ac94eda86e6aad66f74e582317
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 18caa2b..30330b9 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -2368,6 +2368,10 @@ static int ieee80211_open(struct net_dev
+ 	else
+ 		ieee80211_if_config(dev);
+ 
++	if (sdata->type == IEEE80211_IF_TYPE_STA &&
++	    !local->user_space_mlme)
++		netif_carrier_off(dev);
++
+ 	netif_start_queue(dev);
+ 	return 0;
+ }
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index a264008..9d08a37 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -375,11 +375,13 @@ static void ieee80211_set_associated(str
+ 		sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 		if (sdata->type != IEEE80211_IF_TYPE_STA)
+ 			return;
++		netif_carrier_on(dev);
+ 		ifsta->prev_bssid_set = 1;
+ 		memcpy(ifsta->prev_bssid, sdata->u.sta.bssid, ETH_ALEN);
+ 		memcpy(wrqu.ap_addr.sa_data, sdata->u.sta.bssid, ETH_ALEN);
+ 		ieee80211_sta_send_associnfo(dev, ifsta);
+ 	} else {
++		netif_carrier_off(dev);
+ 		memset(wrqu.ap_addr.sa_data, 0, ETH_ALEN);
+ 	}
+ 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+@@ -2007,6 +2009,7 @@ static void ieee80211_sta_reset_auth(str
+ 	       ifsta->auth_alg);
+ 	ifsta->auth_transaction = -1;
+ 	ifsta->associated = ifsta->auth_tries = ifsta->assoc_tries = 0;
++	netif_carrier_off(dev);
+ }
+ 
+ 
 -- 
+1.3.0
+
