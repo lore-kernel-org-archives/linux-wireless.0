@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34105 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750857AbXCDD6o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Mar 2007 22:58:44 -0500
-Message-ID: <45EA43EF.1080009@garzik.org>
-Date: Sat, 03 Mar 2007 22:58:39 -0500
-From: Jeff Garzik <jeff@garzik.org>
+Received: from nf-out-0910.google.com ([64.233.182.191]:16584 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933592AbXCWTWD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 15:22:03 -0400
+Received: by nf-out-0910.google.com with SMTP id o25so2156552nfa
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Mar 2007 12:22:01 -0700 (PDT)
+To: Jiri Benc <jbenc@suse.cz>, "Linville"@poseidon.kernel.org,
+	"John" <linville@tuxdriver.com>
+Subject: [PATCH v2] mac80211: Prevent unregistering of unregistered hw
+Date: Fri, 23 Mar 2007 20:21:25 +0100
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-To: Larry Finger <larry.finger@lwfinger.net>
-CC: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] bcm43xx: remove ethtool
-References: <45ea1a34.Lf4EKmMy+KAmSkH0%Larry.Finger@lwfinger.net> <45EA3272.7090101@garzik.org> <45EA3D21.3080203@lwfinger.net>
-In-Reply-To: <45EA3D21.3080203@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200703232021.26462.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> Jeff Garzik wrote:
->> Larry Finger wrote:
->>> Ethtool is useless for bcm43xx - remove it.
->>>
->>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> How is GDRVINFO useless?  Where does mac80211 provide equivalent
->> information?
-> 
-> I cannot speak for mac80211, but the current implementation for SoftMAC only implements the GDRVINFO
-> call. From it, you get that the driver is bcm43xx (big surprise), the kernel version (easier gotten
-> by a uname -r), and the bus info. None of the operational parameters can be changed or interrogated.
-> 
-> Is this enough to keep the ethtool interface? Because of the EOL for SoftMAC, this code will never
-> be enhanced or extended. Does some userland code need this info?
+At the moment it is possible to call ieee80211_unregister_hw()
+for an unregistered hw structure. This will cause a big panic.
+This patch will add a BUG_ON() line to warn about this situation.
 
-It's a highly standardized interface that provides information that's 
-either impossible or highly difficult to obtain elsewhere.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-If you are a userland process querying a network interface, that's the 
-only way to know which driver is attached, or the only way to build an 
-association between a PCI device and a network interface.
+---
 
-So NAK this change.  All network drivers should implement GDRVINFO, even 
-if they are not strictly ethernet drivers.
-
-	Jeff
-
-
-
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 577dbe3..e7a613d 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -4765,6 +4765,9 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ 	/* TODO: skb_queue should be empty here, no need to do anything? */
+ 
+ 	rtnl_lock();
++
++	BUG_ON(local->reg_state != IEEE80211_DEV_REGISTERED);
++
+ 	local->reg_state = IEEE80211_DEV_UNREGISTERED;
+ 	if (local->apdev)
+ 		ieee80211_if_del_mgmt(local);
