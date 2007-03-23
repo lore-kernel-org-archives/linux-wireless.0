@@ -1,86 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:40922 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933575AbXCFAJE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 19:09:04 -0500
-Date: Mon, 5 Mar 2007 16:07:22 -0800
-From: Greg KH <greg@kroah.com>
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Theodore Tso <tytso@mit.edu>, Matt Mackall <mpm@selenic.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	yi.zhu@intel.com, jketreno@linux.intel.com,
-	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
-Subject: Re: [2.6.21 patch] unconditionally enable SYSFS_DEPRECATED
-Message-ID: <20070306000722.GA11436@kroah.com>
-References: <20070304220857.GH23311@waste.org> <1173051564.6131.13.camel@johannes.berg> <20070305002550.GI23311@waste.org> <20070305011729.GB7681@kroah.com> <20070305125950.GC26781@thunk.org> <20070305185813.GA31465@kroah.com> <20070305234052.GR3441@stusta.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070305234052.GR3441@stusta.de>
+Received: from styx.suse.cz ([82.119.242.94]:48988 "EHLO silver.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933277AbXCWUn1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 16:43:27 -0400
+From: Jiri Benc <jbenc@suse.cz>
+To: "John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20070323214400.642621638.midnight@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/19] mac80211: drop packets from nonexisting interfaces in PS mode
+Message-Id: <20070323204443.409B24849A@silver.suse.cz>
+Date: Fri, 23 Mar 2007 21:44:43 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 06, 2007 at 12:40:52AM +0100, Adrian Bunk wrote:
-> On Mon, Mar 05, 2007 at 10:58:13AM -0800, Greg KH wrote:
-> > 
-> > Ok, how about the following patch.  Is it acceptable to everyone?
-> > 
-> > thanks,
-> > 
-> > greg k-h
-> > 
-> > ---
-> >  init/Kconfig |   13 +++++++++++--
-> >  1 file changed, 11 insertions(+), 2 deletions(-)
-> > 
-> > --- gregkh-2.6.orig/init/Kconfig
-> > +++ gregkh-2.6/init/Kconfig
-> > @@ -290,8 +290,17 @@ config SYSFS_DEPRECATED
-> >  	  that belong to a class, back into the /sys/class heirachy, in
-> >  	  order to support older versions of udev.
-> >  
-> > -	  If you are using a distro that was released in 2006 or later,
-> > -	  it should be safe to say N here.
-> > +	  If you are using an OpenSuSE, Gentoo, Ubuntu, or Fedora
-> > +	  release from 2007 or later, it should be safe to say N here.
-> > +
-> > +	  If you are using Debian or other distros that are slow to
-> > +	  update HAL, please say Y here.
-> >...
-> 
-> The sane solution seems to be to enable SYSFS_DEPRECATED unconditionally 
-> for all users, and schedule it's removal for mid-2008 (or later).
-> 
-> 12 months after the first _release_ of a HAL that can live without seems 
-> to be the first time when we can consider getting rid of it, since all 
-> distributions with at least one release a year should ship it by then.
-> 
-> Currently, SYSFS_DEPRECATED is only a trap for users.
+In a power saving mode, packets queued by devices that meanwhile disappeared
+has to be discarded.
 
-Huh?
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
 
-No, again, I've been using this just fine for about 6 months now.
+---
 
-And what about all of the servers not using HAL/NetworkManager?
-And what about all of the embedded systems not using either?
+ net/mac80211/ieee80211.c |   46 +++++++++++++++++++++++++---------------------
+ 1 files changed, 25 insertions(+), 21 deletions(-)
 
-So to not allow this to be turned off by people who might want to (we
-want this for OpenSuSE 10.3, and Fedora 7 also will want this, as will
-other distros released this year), is pretty heavy-handed.
+c5ba64d9fc39c42ebc1ed38993dd6d3281708b8a
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 577dbe3..3d4fabe 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -1100,10 +1100,10 @@ static int inline is_ieee80211_device(st
+ 
+ /* Device in tx->dev has a reference added; use dev_put(tx->dev) when
+  * finished with it. */
+-static void inline ieee80211_tx_prepare(struct ieee80211_txrx_data *tx,
+-					struct sk_buff *skb,
+-					struct net_device *mdev,
+-					struct ieee80211_tx_control *control)
++static int inline ieee80211_tx_prepare(struct ieee80211_txrx_data *tx,
++				       struct sk_buff *skb,
++				       struct net_device *mdev,
++				       struct ieee80211_tx_control *control)
+ {
+ 	struct ieee80211_tx_packet_data *pkt_data;
+ 	struct net_device *dev;
+@@ -1114,13 +1114,10 @@ static void inline ieee80211_tx_prepare(
+ 		dev_put(dev);
+ 		dev = NULL;
+ 	}
+-	if (unlikely(!dev)) {
+-		printk(KERN_WARNING "%s: NULL ifindex in pkt_data\n",
+-		       mdev->name);
+-		dev = mdev;
+-		dev_hold(dev);
+-	}
++	if (unlikely(!dev))
++		return -ENODEV;
+ 	__ieee80211_tx_prepare(tx, skb, dev, control);
++	return 0;
+ }
+ 
+ static inline int __ieee80211_queue_stopped(const struct ieee80211_local *local,
+@@ -1915,20 +1912,27 @@ ieee80211_get_buffered_bc(struct ieee802
+ 
+ 	if (bss->dtim_count != 0)
+ 		return NULL; /* send buffered bc/mc only after DTIM beacon */
+-	skb = skb_dequeue(&bss->ps_bc_buf);
+ 	memset(control, 0, sizeof(*control));
+-	if (!skb)
+-		return NULL;
+-	local->total_ps_buffered--;
++	while (1) {
++		skb = skb_dequeue(&bss->ps_bc_buf);
++		if (!skb)
++			return NULL;
++		local->total_ps_buffered--;
+ 
+-	if (!skb_queue_empty(&bss->ps_bc_buf) && skb->len >= 2) {
+-		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-		/* more buffered multicast/broadcast frames ==> set MoreData
+-		 * flag in IEEE 802.11 header to inform PS STAs */
+-		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_MOREDATA);
+-	}
++		if (!skb_queue_empty(&bss->ps_bc_buf) && skb->len >= 2) {
++			struct ieee80211_hdr *hdr =
++				(struct ieee80211_hdr *) skb->data;
++			/* more buffered multicast/broadcast frames ==> set
++			 * MoreData flag in IEEE 802.11 header to inform PS
++			 * STAs */
++			hdr->frame_control |=
++				cpu_to_le16(IEEE80211_FCTL_MOREDATA);
++		}
+ 
+-	ieee80211_tx_prepare(&tx, skb, local->mdev, control);
++		if (ieee80211_tx_prepare(&tx, skb, local->mdev, control) == 0)
++			break;
++		dev_kfree_skb_any(skb);
++	}
+ 	sta = tx.sta;
+ 	tx.u.tx.ps_buffered = 1;
+ 
+-- 
+1.3.0
 
-It also will work in OpenSuSE 10.2 which is already released, and I
-think Fedora 6, but I've only limited experience with these.
-
-Oh, and Gentoo works just fine, and has been for the past 6 months.
-
-I would just prefer to come up with an acceptable set of wording that
-will work to properly warn people.
-
-I proposed one such wording which some people took as a slam against
-Debian, which it really was not at all.
-
-Does someone else want to propose some other wording instead?
-
-thanks,
-
-greg k-h
