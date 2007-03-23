@@ -1,55 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53077 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753354AbXC2LJF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2007 07:09:05 -0400
-Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: mohamed <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-In-Reply-To: <200703282308.43274.mb@bu3sch.de>
-References: <1174909200.1364.56.camel@dell-4965.jf.intel.com>
-	 <1175106180.5151.76.camel@johannes.berg>  <200703282308.43274.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FstNg6qq/0Pqw0mL26SW"
-Date: Thu, 29 Mar 2007 13:06:22 +0200
-Message-Id: <1175166382.8807.35.camel@johannes.berg>
+Received: from threatwall.zlynx.org ([199.45.143.218]:41936 "EHLO zlynx.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S934300AbXCWUC3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 16:02:29 -0400
+Subject: Re: 2.6.21-rc4-mm1
+From: Zan Lynx <zlynx@acm.org>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	bluez-devel@lists.sourceforge.net, reiserfs-dev@namesys.com
+In-Reply-To: <46015990.0@lwfinger.net>
+References: <20070319205623.299d0378.akpm@linux-foundation.org>
+	 <1174433034.62033.16.camel@localhost>
+	 <20070320223643.d8cbc3f6.akpm@linux-foundation.org>
+	 <46015990.0@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-T9xAHRaGXU5aa4okKXwV"
+Date: Fri, 23 Mar 2007 13:40:32 -0600
+Message-Id: <1174678832.289400.16.camel@localhost>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-FstNg6qq/0Pqw0mL26SW
+--=-T9xAHRaGXU5aa4okKXwV
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2007-03-28 at 23:08 +0200, Michael Buesch wrote:
-> On Wednesday 28 March 2007 20:23, Johannes Berg wrote:
-> > > +	while ((u8*)eth < skb->data + skb->len) {
-> >=20
-> > I don't understand this cast of eth to u8*. That seems wrong given that
-> > there's an ethhdr there where the first byte isn't a length byte.
+On Wed, 2007-03-21 at 11:13 -0500, Larry Finger wrote:
+> Andrew Morton wrote:
+> > On Tue, 20 Mar 2007 17:23:54 -0600 Zan Lynx <zlynx@acm.org> wrote:
+> >> First impressions:
+> >> Several of the same bugs as rc3-mm*:
+> >>       * Freezes immediately if I touch the wlan0 device after loading
+> >>         the new Broadcom wireless driver.
 >=20
-> We're not comparing the data eth points to here, but the eth pointer
-> itself. It's pretty weird code. Maybe this can be solved in a
-> more clear way. But it might be correct as-is.
+> --snip--
+>=20
+> >> 02:02.0 Network controller: Broadcom Corporation BCM4303 802.11b Wirel=
+ess LAN Controller (rev 02)
+>=20
+> I'm a little confused. The bcm43xx-mac80211 driver does not handle 802.11=
+b devices, and the
+> bcm43xx-softmac driver should not freeze. Which one was configured here?
 
-Yeah, I read it wrong. It's fine, see my new mail.
+It may have partly been a problem of having half of softmac and half
+devicescape.  I'm not entirely sure what udev did.
 
-johannes
+I tried a patch for the Sonic Silicon that was posted and I turned off
+all the configuration for the softmac driver.
 
---=-FstNg6qq/0Pqw0mL26SW
+It isn't crashing right now but 802.11 isn't working either.  I may get
+a chance this weekend to try some things with it, and some different
+firmware sets.
+
+If the new bcm43xx drivers do not support 802.11b at all and never will,
+I missed the documentation.  Someone should add that to Kconfig.
+--=20
+Zan Lynx <zlynx@acm.org>
+
+--=-T9xAHRaGXU5aa4okKXwV
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v2.0.3 (GNU/Linux)
 
-iD8DBQBGC52u/ETPhpq3jKURAs6UAJ9wY0Q+E1mCWNzB3iTYVvrts03fAQCgs11i
-Q8QS4YSzVipVi6E2+/D+Vmg=
-=zCjN
+iD8DBQBGBC0wG8fHaOLTWwgRAjx2AKCV/CK0iBVpck/IjTXzpqEuxdykUwCeNS6N
+r3/AJOR7cLYuU2WHk6F+ZSU=
+=dMzn
 -----END PGP SIGNATURE-----
 
---=-FstNg6qq/0Pqw0mL26SW--
+--=-T9xAHRaGXU5aa4okKXwV--
 
