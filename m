@@ -1,32 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-80.dex002.intermedia.net ([64.78.20.165]:24380 "EHLO
-	DHOST002-80.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933580AbXCEQoa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 11:44:30 -0500
-From: "Jouni Malinen" <jkm@devicescape.com>
-Date: Mon, 5 Mar 2007 08:44:17 -0800
-To: Johannes Berg <johannes@sipsolutions.net>
+Received: from styx.suse.cz ([82.119.242.94]:33448 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S2992478AbXCWPyF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 11:54:05 -0400
+Date: Fri, 23 Mar 2007 16:54:00 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Michael Wu <flamingice@sourmilk.net>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [FYI] compiling hostapd against latest wireless-dev
-Message-ID: <20070305164417.GA10947@devicescape.com>
-References: <1173095902.6131.63.camel@johannes.berg>
+Subject: Re: [PATCH 4/5] d80211: Stop virtual interfaces during scan
+Message-ID: <20070323165400.353e713f@griffin.suse.cz>
+In-Reply-To: <200703010040.14598.flamingice@sourmilk.net>
+References: <20070228203943.11473.95222.stgit@magic.sourmilk.net>
+	<20070228203943.11473.81749.stgit@magic.sourmilk.net>
+	<200703010040.14598.flamingice@sourmilk.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1173095902.6131.63.camel@johannes.berg>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 05, 2007 at 12:58:22PM +0100, Johannes Berg wrote:
-> ... isn't really possible at the moment. But you only need to change
-> some include paths (to be able to include the
-> net/mac80211/mac80211_common.h header!) and apply this change to be able
-> to include include/net/mac80211.h into the userspace code.
+On Thu, 1 Mar 2007 00:40:09 -0500, Michael Wu wrote:
+> On Wednesday 28 February 2007 15:39, Michael Wu wrote:
+> > From: Michael Wu <flamingice@sourmilk.net>
+> >
+> > This prevents data frames from being queued on the master device if it is
+> > in the midst of a scan. It also makes both master and virtual interfaces
+> > properly set trans_start when frames are sent so the network watchdog does
+> > not try to reset the interfaces. tx_queue_len is left as the default on
+> > virtual interfaces to allow frames to be queued while the device is
+> > scanning.
+> >
+> And now that all STA interfaces are woken up after a scan, we also can remove 
+> the scan_dev check.
 
-Which version of hostapd did you try to compile here? The current
-development branch does not include net/mac80211.h and the include path
-has also been changed from net/d80211 to net/mac80211 in example
-configuration.
+Looks good, thanks!
+
+ Jiri
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Jiri Benc
+SUSE Labs
