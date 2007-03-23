@@ -1,219 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:43866 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752366AbXC1SPl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 14:15:41 -0400
-Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
-From: mohamed <mabbas@linux.intel.com>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20070326163609.d9169d7b.randy.dunlap@oracle.com>
-References: <1174909200.1364.56.camel@dell-4965.jf.intel.com>
-	 <20070326163609.d9169d7b.randy.dunlap@oracle.com>
-Content-Type: text/plain
-Date: Wed, 28 Mar 2007 23:16:18 -0700
-Message-Id: <1175148978.4237.11.camel@dell-4965.jf.intel.com>
-Mime-Version: 1.0
+Received: from styx.suse.cz ([82.119.242.94]:49004 "EHLO silver.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S934318AbXCWUnq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 16:43:46 -0400
+From: Jiri Benc <jbenc@suse.cz>
+To: "John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20070323214400.642621638.midnight@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 19/19] mac80211: Add software sequence support
+Message-Id: <20070323204502.446944859D@silver.suse.cz>
+Date: Fri, 23 Mar 2007 21:45:02 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-03-26 at 16:36 -0700, Randy Dunlap wrote:
-> On Mon, 26 Mar 2007 04:40:00 -0700 mohamed wrote:
-> 
-> > Add A-MSDU Rx aggregation support.
-> > 
-> > To support IEEE 802.11n, we need to be able to process A-MSDU frames. 
-> > The present of the HT control field indicates it is A-MSDU frame. 
-> > This patch adds support to discover and process A-MSDU frames.
-> > 
-> > Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
-> > 
-> > diff -Nupr wireless-dev/net/mac80211/ieee80211.c
-> > wireless-dev-new/net/mac80211/ieee80211.c
-> > --- wireless-dev/net/mac80211/ieee80211.c	2007-03-27 00:36:24.000000000
-> > -0700
-> > +++ wireless-dev-new/net/mac80211/ieee80211.c	2007-03-27
-> > 01:54:48.000000000 -0700
-> > @@ -2446,6 +2446,143 @@ static inline int ieee80211_bssid_match(
-> >  }
-> >  
-> >  
-> > +inline static unsigned int calc_pad_len(unsigned int len) 
-> > +{ 
-> > +	return (4 - len % 4) % 4; 
-> 
-> Oops, line ends with a space.  Please, no lines that end with
-> space or tab.
-I will clean all style issues. 
-> 
-> Is gcc doing shifts for these % operations?  Hope so.
-> 
-> > +}
-> > +
-> > +inline static int is_agg_frame(struct sk_buff *skb, u16 fc)
-> > +{
-> > +	u8 *p = skb->data + ieee80211_get_hdrlen(fc) - 2;
-> > +
-> > +	if (!(fc & IEEE80211_STYPE_QOS_DATA));
-> 
-> line ends with ';' ???
-> 
-> > +		return 0;
-> > +
-> > +	if (*p & QOS_CONTROL_A_MSDU_PRESENT)
-> > +		return 1;
-> > +	else
-> 
-> 'else' not needed (just a style thing)
-> 
-> > +		return 0;
-> > +}
-> > +
-> > +static ieee80211_txrx_result
-> > +ieee80211_rx_h_data_agg(struct ieee80211_txrx_data *rx)
-> > +{
-> > +	struct net_device *dev = rx->dev;
-> > +	struct ieee80211_local *local = rx->local;
-> > +	u16 fc, hdrlen, ethertype;
-> > +	u8 *payload;
-> > +	struct sk_buff *skb = rx->skb, *skb2, *frame;
-> > +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> > +	const struct ethhdr* eth;
-> > +
-> > +	fc = rx->fc;
-> > +	if (unlikely((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA))
-> > +		return TXRX_CONTINUE;
-> > +
-> > +	if (unlikely(!WLAN_FC_DATA_PRESENT(fc)))
-> > +		return TXRX_DROP;
-> > +
-> > +	if (!is_agg_frame(skb, fc))
-> > +		return TXRX_CONTINUE;
-> > +
-> > +	hdrlen = ieee80211_get_hdrlen(fc);
-> > +
-> > +	payload = skb->data + hdrlen;
-> > +
-> > +	if (unlikely(skb->len - hdrlen < 8)) {
-> > +		if (net_ratelimit()) {
-> > +			printk(KERN_DEBUG "%s: RX too short data frame "
-> > +				"payload\n", dev->name);
-> > +		}
-> > +		return TXRX_DROP;
-> > +	}
-> > +
-> > +	ethertype = (payload[6] << 8) | payload[7];
-> > +
-> > +	if (likely((memcmp(payload, rfc1042_header, 6) == 0 &&
-> > +		ethertype != ETH_P_AARP && ethertype != ETH_P_IPX) ||
-> > +		memcmp(payload, bridge_tunnel_header, 6) == 0)) {
-> > +		/* remove RFC1042 or Bridge-Tunnel encapsulation and
-> > +		* replace EtherType */	
-> > +		skb_pull(skb, hdrlen + 6);
-> > +	} else {
-> > +		skb_pull(skb, hdrlen);
-> > +	}
-> 
-> No braces on single-statement "blocks".  (happens elsewhere also)
-> 
-> > +
-> > +	eth = (struct ethhdr*)skb->data;
-> > +
-> > +	while ((u8*)eth < skb->data + skb->len) {
-> > +        	unsigned int eth_len = sizeof(struct ethhdr) + 
-> > +						ntohs(eth->h_proto);
-> > +        
-> > +		frame = dev_alloc_skb(3000);
-> 
-> Why 3000?  can it be a well-defined #define??
-3000 just a safe number I picked up. I will change to 
-dev_alloc_skb(local->hw.extra_tx_headroom + eth_len);
-Are any more space needed?
+From: Ivo van Doorn <ivdoorn@gmail.com>
 
-> 
-> > +
-> > +		if (frame == NULL) 
-> > +			return TXRX_DROP;
-> > +
-> > +		frame->mac.raw = frame->data;
-> > +		memcpy(skb_put(frame, eth_len), (u8*)eth, eth_len);
-> > +
-> > +		frame->dev = dev;
-> > +
-> > +		skb2 = NULL;
-> > +
-> > +		sdata->stats.rx_packets++;
-> > +		sdata->stats.rx_bytes += frame->len;
-> > +
-> > +		if (local->bridge_packets && 
-> > +		    (sdata->type == IEEE80211_IF_TYPE_AP ||
-> > +		     sdata->type == IEEE80211_IF_TYPE_VLAN) && 
-> > +                    rx->u.rx.ra_match) {
-> > +			if (is_multicast_ether_addr(frame->data)) {
-> > +				/* send multicast frames both to higher layers
-> > +				* in local net stack and back to the wireless 
-> > +				* media */
-> > +				skb2 = skb_copy(frame, GFP_ATOMIC);
-> > +				if (!skb2)
-> > +					printk(KERN_DEBUG "%s: failed to clone "
-> > +					"multicast frame\n", dev->name);
-> 
-> more indentation on last part.
-> 
-> > +			} else {
-> > +				struct sta_info *dsta;
-> > +				dsta = sta_info_get(local, frame->data);
-> > +				if (dsta && !dsta->dev) {
-> > +					printk(KERN_DEBUG "Station with null "
-> > +					"dev structure!\n");
-> 
-> Indentation.  no braces.
-> 
-> > +                        	} else if (dsta && dsta->dev == dev) {
-> > +                                	/* Destination station is associated 
-> > +					* to this AP, so send the frame
-> > +					* directly to it and do not pass 
-> > +					* the frame to local net stack.
-> > +					*/
-> > +					skb2 = skb;
-> > +					skb = NULL;
-> > +				}
-> > +				if (dsta)
-> > +					sta_info_put(dsta);
-> > +			}
-> > +		}
-> > +		if (frame) {
-> > +			/* deliver to local stack */
-> > +			frame->protocol = eth_type_trans(frame, dev);
-> > +			memset(frame->cb, 0, sizeof(frame->cb));
-> > +			netif_rx(frame);
-> > +		}
-> > +
-> > +		if (skb2) {
-> > +			/* send to wireless media */
-> > +			skb2->protocol = __constant_htons(ETH_P_802_3);
-> > +			skb2->mac.raw = skb2->nh.raw = skb2->data;
-> > +			dev_queue_xmit(skb2);
-> > +		}
-> > +
-> > +		eth = (struct ethhdr*)((u8*)eth + eth_len 
-> > +					+ calc_pad_len(eth_len));
-> > +	}
-> > +
-> > +	dev_kfree_skb(skb);
-> > +        return TXRX_QUEUED;
-> 
-> Inconsisten indentation above.  'return' line is using spaces
-> instead of a tab.
-> 
-> > +}
-> > +
-> >  static ieee80211_txrx_result
-> >  ieee80211_rx_h_data(struct ieee80211_txrx_data *rx)
-> >  {
-> 
-> 
-> ---
-> ~Randy
-> *** Remember to use Documentation/SubmitChecklist when testing your code ***
+Most hardware can keep track of sequence numbers themselves,
+unfortunately *most* doesn't cover all devices. ;)
+This patch will keep track of the (per-bss) sequence number.
+
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
+
+---
+
+ net/mac80211/ieee80211.c   |   27 ++++++++++++++++++++++++++-
+ net/mac80211/ieee80211_i.h |    2 ++
+ 2 files changed, 28 insertions(+), 1 deletions(-)
+
+35262af661f8561e197b093581889e85ef6f5d74
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 39468b8..3bf0be4 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -59,6 +59,16 @@ static u8 * ieee80211_get_bssid(struct i
+ static int ieee80211_mgmt_start_xmit(struct sk_buff *skb,
+ 				     struct net_device *dev);
+ 
++static inline void ieee80211_include_sequence(struct ieee80211_sub_if_data *sdata,
++					      struct ieee80211_hdr *hdr)
++{
++	/* Set the sequence number for this frame. */
++	hdr->seq_ctrl = cpu_to_le16(sdata->sequence);
++
++	/* Increase the sequence number. */
++	sdata->sequence = (sdata->sequence + 0x10) & IEEE80211_SCTL_SEQ;
++}
++
+ struct ieee80211_key_conf *
+ ieee80211_key_data2conf(struct ieee80211_local *local,
+ 			const struct ieee80211_key *data)
+@@ -437,6 +447,7 @@ ieee80211_tx_h_fragment(struct ieee80211
+ 	size_t hdrlen, per_fragm, num_fragm, payload_len, left;
+ 	struct sk_buff **frags, *first, *frag;
+ 	int i;
++	u16 seq;
+ 	u8 *pos;
+ 	int frag_threshold = tx->local->fragmentation_threshold;
+ 
+@@ -455,6 +466,7 @@ ieee80211_tx_h_fragment(struct ieee80211
+ 		goto fail;
+ 
+ 	hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_MOREFRAGS);
++	seq = le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ;
+ 	pos = first->data + hdrlen + per_fragm;
+ 	left = payload_len - per_fragm;
+ 	for (i = 0; i < num_fragm - 1; i++) {
+@@ -482,7 +494,7 @@ ieee80211_tx_h_fragment(struct ieee80211
+ 		memcpy(fhdr, first->data, hdrlen);
+ 		if (i == num_fragm - 2)
+ 			fhdr->frame_control &= cpu_to_le16(~IEEE80211_FCTL_MOREFRAGS);
+-		fhdr->seq_ctrl = cpu_to_le16(i + 1);
++		fhdr->seq_ctrl = cpu_to_le16(seq | ((i + 1) & IEEE80211_SCTL_FRAG));
+ 		copylen = left > per_fragm ? per_fragm : left;
+ 		memcpy(skb_put(frag, copylen), pos, copylen);
+ 
+@@ -894,6 +906,16 @@ #endif
+ 	return TXRX_CONTINUE;
+ }
+ 
++static ieee80211_txrx_result
++ieee80211_tx_h_sequence(struct ieee80211_txrx_data *tx)
++{
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
++
++	if (ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_control)) >= 24)
++		ieee80211_include_sequence(tx->sdata, hdr);
++
++	return TXRX_CONTINUE;
++}
+ 
+ /* This function is called whenever the AP is about to exceed the maximum limit
+  * of buffered frames for power saving STAs. This situation should not really
+@@ -1766,6 +1788,8 @@ #endif /* CONFIG_MAC80211_VERBOSE_DEBUG 
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+ 	memcpy(skb_put(skb, bh_len), b_head, bh_len);
+ 
++	ieee80211_include_sequence(sdata, (struct ieee80211_hdr *)skb->data);
++
+ 	ieee80211_beacon_add_tim(local, ap, skb);
+ 
+ 	if (b_tail) {
+@@ -4373,6 +4397,7 @@ static ieee80211_rx_handler ieee80211_rx
+ static ieee80211_tx_handler ieee80211_tx_handlers[] =
+ {
+ 	ieee80211_tx_h_check_assoc,
++	ieee80211_tx_h_sequence,
+ 	ieee80211_tx_h_ps_buf,
+ 	ieee80211_tx_h_select_key,
+ 	ieee80211_tx_h_michael_mic_add,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 3c10152..561c976 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -318,6 +318,8 @@ struct ieee80211_sub_if_data {
+ 	int ieee802_1x; /* IEEE 802.1X PAE - drop packet to/from unauthorized
+ 			 * port */
+ 
++	u16 sequence;
++
+ 	/* Fragment table for host-based reassembly */
+ 	struct ieee80211_fragment_entry	fragments[IEEE80211_FRAGMENT_MAX];
+ 	unsigned int fragment_next;
+-- 
+1.3.0
+
