@@ -1,47 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:38480 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422959AbXCBG1B (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2007 01:27:01 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HN1Ck-0002wR-A0
-	for linux-wireless@vger.kernel.org; Fri, 02 Mar 2007 01:25:22 -0500
-Subject: Assertion failed in ieee80211softmac_wx_get_rate
-From: Pavel Roskin <proski@gnu.org>
-To: linux-wireless@vger.kernel.org
-Cc: bcm43xx-dev@lists.berlios.de
-Content-Type: text/plain
-Date: Fri, 02 Mar 2007 01:26:59 -0500
-Message-Id: <1172816819.26330.12.camel@dv>
+Received: from mfe1.polimi.it ([131.175.12.23]:40614 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933541AbXCWT2W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 15:28:22 -0400
+Date: Fri, 23 Mar 2007 20:23:43 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: [PATCH] bcm43xx-mac80211: fix radio_set_tx_iq
+Message-ID: <20070323202343.0e7ea0e7@localhost>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+Fix a duplicated leftshift in bcm43xx_radio_set_tx_iq. data_high values are
+already leftshifted. Thanks to Michael Buesch for spotting this.
 
-If I load bcm43xx and run iwconfig without bringing the interface up,
-I'm getting this in the kernel log:
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 
-SoftMAC: ASSERTION FAILED (0)
-at: /home/proski/src/linux-2.6/net/ieee80211/softmac/ieee80211softmac_wx.c:306:ieee80211softmac_wx_get_rate()
+---
 
-It's an x86 system with the 2.6.20 kernel (actually, it's the master
-branch from the mb repository, which is wireless-dev before the 2.6.21
-switchover plus broadcom fixes).
-
-The assert assures that the interface has a valid tx rate.  But since
-the interface has never been up, the rate has not been assigned.
-
-Either softmac should tolerate rate 0, at least when the interface is
-down, or it should initialize the rate much earlier, perhaps in
-alloc_ieee80211softmac().
-
-I can test another tree, e.g. wireless-2.6, if there are chances that
-the problem has been fixed.
-
--- 
-Regards,
-Pavel Roskin
-
+diff --git a/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c b/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
+index 10a82b1..a2c52f6 100644
+--- a/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
++++ b/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
+@@ -3802,7 +3802,7 @@ void bcm43xx_radio_set_tx_iq(struct bcm4
+ 
+ 	for (i = 0; i < 5; i++) {
+ 		for (j = 0; j < 5; j++) {
+-			if (tmp == (data_high[i] << 4 | data_low[j])) {
++			if (tmp == (data_high[i] | data_low[j])) {
+ 				bcm43xx_phy_write(dev, 0x0069, (i - j) << 8 | 0x00C0);
+ 				return;
+ 			}
