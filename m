@@ -1,38 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canuck.infradead.org ([209.217.80.40]:46640 "EHLO
-	canuck.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030339AbXC2SDL (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40437 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934045AbXCWNmg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2007 14:03:11 -0400
-Subject: Re: [PATCH] bcm43xx: Change initialization for 2050 radios
-From: David Woodhouse <dwmw2@infradead.org>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
-	Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <460BFDF0.9010401@lwfinger.net>
-References: <460a92d5.+NfCgWddLCeb9ty2%Larry.Finger@lwfinger.net>
-	 <1175188955.3122.42.camel@pmac.infradead.org>
-	 <460BFDF0.9010401@lwfinger.net>
+	Fri, 23 Mar 2007 09:42:36 -0400
+Subject: [PATCH] fix information leak in wireless extensions on 64-bit  platforms
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jean Tourrilhes <jt@hpl.hp.com>
 Content-Type: text/plain
-Date: Thu, 29 Mar 2007 19:03:02 +0100
-Message-Id: <1175191382.3122.44.camel@pmac.infradead.org>
+Date: Fri, 23 Mar 2007 10:06:27 +0100
+Message-Id: <1174640787.3588.65.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-03-29 at 12:57 -0500, Larry Finger wrote:
-> Is the better performance for 11M in transmitting or receiving? How is
-> it measured? My 4306's, which should be the same as yours, do better
-> at 24M than at 11M. 
+Wireless extensions on 64-bit platforms leak information from the kernel
+stack due to padding in structs that is copied. This affects any
+wireless event stream including scan results and so hence is available
+to unprivileged users.
 
-It's for 'scp <somekernelrpm> shinybook:' -- it's not a particularly
-good test.
+This patch is a quick fix for this that simply zeroes out the padding in
+the structs before copying them until Jean comes up with the promised
+better fix, at which time he can revert this one along with his new
+patch.
 
-And in fact the 'normal' module seems to be performing quite well today
-too. I think the real performance problem comes when there are dropped
-packets.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: stable@kernel.org
+Cc: linux-wireless@vger.kernel.org
+Cc: Jean Tourrilhes <jt@hpl.hp.com>
 
--- 
-dwmw2
+---
+ include/net/iw_handler.h |   20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+--- wireless-dev.orig/include/net/iw_handler.h	2007-03-17 20:19:45.369309540 +0100
++++ wireless-dev/include/net/iw_handler.h	2007-03-17 20:19:59.429309540 +0100
+@@ -484,6 +484,9 @@ iwe_stream_add_event(char *	stream,		/* 
+ 		     struct iw_event *iwe,	/* Payload */
+ 		     int	event_len)	/* Real size of payload */
+ {
++	/* clear padding */
++	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
++
+ 	/* Check if it's possible */
+ 	if(likely((stream + event_len) < ends)) {
+ 		iwe->len = event_len;
+@@ -505,6 +508,10 @@ iwe_stream_add_point(char *	stream,		/* 
+ 		     char *	extra)		/* More payload */
+ {
+ 	int	event_len = IW_EV_POINT_LEN + iwe->u.data.length;
++
++	/* clear padding */
++	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
++
+ 	/* Check if it's possible */
+ 	if(likely((stream + event_len) < ends)) {
+ 		iwe->len = event_len;
+@@ -531,6 +538,9 @@ iwe_stream_add_value(char *	event,		/* E
+ 		     struct iw_event *iwe,	/* Payload */
+ 		     int	event_len)	/* Real size of payload */
+ {
++	/* clear padding */
++	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
++
+ 	/* Don't duplicate LCP */
+ 	event_len -= IW_EV_LCP_LEN;
+ 
+@@ -558,6 +568,9 @@ iwe_stream_check_add_event(char *	stream
+ 			   int		event_len,	/* Size of payload */
+ 			   int *	perr)		/* Error report */
+ {
++	/* clear padding */
++	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
++
+ 	/* Check if it's possible, set error if not */
+ 	if(likely((stream + event_len) < ends)) {
+ 		iwe->len = event_len;
+@@ -582,6 +595,10 @@ iwe_stream_check_add_point(char *	stream
+ 			   int *	perr)		/* Error report */
+ {
+ 	int	event_len = IW_EV_POINT_LEN + iwe->u.data.length;
++
++	/* clear padding */
++	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
++
+ 	/* Check if it's possible */
+ 	if(likely((stream + event_len) < ends)) {
+ 		iwe->len = event_len;
+@@ -611,6 +628,9 @@ iwe_stream_check_add_value(char *	event,
+ 			   int		event_len,	/* Size of payload */
+ 			   int *	perr)		/* Error report */
+ {
++	/* clear padding */
++	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
++
+ 	/* Don't duplicate LCP */
+ 	event_len -= IW_EV_LCP_LEN;
+ 
+
 
