@@ -1,57 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:60629 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752460AbXCHQdc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2007 11:33:32 -0500
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HPLWs-00043v-16
-	for linux-wireless@vger.kernel.org; Thu, 08 Mar 2007 11:31:46 -0500
-Subject: Re: sparse using insane amounts of memory
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-sparse@vger.kernel.org
-In-Reply-To: <1173319356.3546.54.camel@johannes.berg>
-References: <1173319356.3546.54.camel@johannes.berg>
-Content-Type: text/plain
-Date: Thu, 08 Mar 2007 11:33:28 -0500
-Message-Id: <1173371608.21465.12.camel@dv>
+Received: from styx.suse.cz ([82.119.242.94]:36678 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753291AbXCWS10 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 14:27:26 -0400
+Date: Fri, 23 Mar 2007 19:27:24 +0100
+From: Jiri Benc <jbenc@suse.cz>
+To: Hong Liu <hong.liu@intel.com>
+Cc: Dan Williams <dcbw@redhat.com>, Jouni Malinen <j@w1.fi>,
+	Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/5] mac80211: fix key restricted/open display
+Message-ID: <20070323192724.39334c96@griffin.suse.cz>
+In-Reply-To: <1174535025.9000.25.camel@devlinux-hong>
+References: <1174015698.3408.41.camel@devlinux-hong>
+	<200703161328.41006.flamingice@sourmilk.net>
+	<1174103177.3026.8.camel@localhost.localdomain>
+	<20070318164506.GB5358@jm.kir.nu>
+	<1174260946.8053.20.camel@localhost.localdomain>
+	<1174535025.9000.25.camel@devlinux-hong>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-03-08 at 03:02 +0100, Johannes Berg wrote:
-> Hi,
-> 
-> I was running make C=2 over the current wireless-dev tree (as of commit
-> 4533da881f2d8c3e0dbb5b3dbc7a919e12438a8a) and reached
-> drivers/net/wireless/mac80211/rt2x00/rt2400pci.c when sparse started
-> using more and more memory. It went up to about 1 GB. Now I don't know
-> whether to blame sparse or if something's wrong with that file but it
-> does seem to be a bit excessive... Similar with all the other driver
-> files in that directory, yet I've not seen such a case before.
+On Thu, 22 Mar 2007 11:43:45 +0800, Hong Liu wrote:
+> As far as mac80211 is concerned, I think the patch is not needed.
+> mac80211 has done what it needed to do through the SIOC{S/G}IWAUTH
+> interface.
 
-You forgot the version of sparse.  I cannot reproduce the problem with
-the current sparse from git
-(git://git.kernel.org/pub/scm/linux/kernel/git/josh/sparse.git)
+Ok. Let's drop this patch.
 
-There were some bad bugs fixed recently.  If you are using the snapshot,
-please download the latest snapshot now, as they were out-of-date until
-very recently.
+Thanks,
 
-If you still have the problem, please remove rt2400pci.o and run:
-
-make CC="gcc -save-temps -D__CHECKER__" KBUILD_NOCMDDEP=1
-
-rt2400pci.i will be found in the root of the build tree.  Please see if
-you have a problem with it.  If you do, please put it online and post
-the URL.
-
-If git sparse resolves the problem, I urge sparse developers to make
-another release soon.
+ Jiri
 
 -- 
-Regards,
-Pavel Roskin
-
+Jiri Benc
+SUSE Labs
