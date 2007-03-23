@@ -1,43 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:14696 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965758AbXCSHrj convert rfc822-to-8bit (ORCPT
+Received: from gundega.hpl.hp.com ([192.6.19.190]:58610 "EHLO
+	gundega.hpl.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992466AbXCWPu2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2007 03:47:39 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: wireless chipsets not supported by current wireless tree
-Date: Mon, 19 Mar 2007 08:47:30 +0100
-Cc: Stephen Hemminger <shemminger@linux-foundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <20070316224417.792d77d6@oldman> <20070316225727.d3327d7a.rdunlap@xenotime.net>
-In-Reply-To: <20070316225727.d3327d7a.rdunlap@xenotime.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Message-Id: <200703190847.31321.hs4233@mail.mn-solutions.de>
+	Fri, 23 Mar 2007 11:50:28 -0400
+Date: Fri, 23 Mar 2007 08:48:28 -0700
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>, stable@kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] fix information leak in wireless extensions on 64-bit platforms
+Message-ID: <20070323154828.GA4671@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <1174640787.3588.65.camel@johannes.berg> <1174657362.3366.6.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1174657362.3366.6.camel@johannes.berg>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Is there a chance of or anyone already working on Marvell
-> (non-OLPC) support, e.g., for one of these?
->
-> 00:09.0 Ethernet controller: Marvell Technology Group Ltd.
-> 88w8335 [Libertas] 802.11b/g Wireless (rev 03)
+On Fri, Mar 23, 2007 at 02:42:42PM +0100, Johannes Berg wrote:
+> On Fri, 2007-03-23 at 14:40 +0100, Johannes Berg wrote:
+> > Wireless extensions on 64-bit platforms leak information from the kernel
+> > stack due to padding in structs that is copied. This affects any
+> > wireless event stream including scan results and so hence is available
+> > to unprivileged users.
+> 
+> Ignore this patch, I see Jean just posted one as well :)
+> 
+> johannes
 
-Yes, there is someone working there. A bunch of my patches to 
-shape the OLPC driver in a way libertas_lib.ko, libertas_usb.ko, 
-libertas_cs.ko got already applied. I made some experiments with 
-firmware download, David Anders wrote a fwcutter and so on.
+	Yes, sorry for the delay, I wanted to make sure I had all the
+parts fully fleshed out.
+	Thanks !
 
-I once created a project 
-http://projects.linuxtogo.org/projects/marvell8385/, but most of 
-the discussion happend now in the OLPC Marvell mailing list. 
->From time to time we're also on #libertas on *.freenode.net.
-
-
-Nothing works yet, and I got (and will get) distracted because my 
-company switched to SAP Business One and I'm mostly busy 
-extracting data out of our old system and putting that into 
-SAPB1 :-(  Maybe I have again time this week.
+	Jean
 
