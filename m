@@ -1,97 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:52063 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965291AbXCFQfY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2007 11:35:24 -0500
-Subject: Re: [FYI] compiling hostapd against latest wireless-dev
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+Received: from styx.suse.cz ([82.119.242.94]:49000 "EHLO silver.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S934310AbXCWUnk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 16:43:40 -0400
+From: Jiri Benc <jbenc@suse.cz>
+To: "John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20070323214400.642621638.midnight@suse.cz>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1173095902.6131.63.camel@johannes.berg>
-References: <1173095902.6131.63.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 06 Mar 2007 10:40:38 -0500
-Message-Id: <1173195638.12545.3.camel@localhost.localdomain>
-Mime-Version: 1.0
+Subject: [PATCH 13/19] mac80211: fix remaining sparse warnings
+Message-Id: <20070323204456.154BC48584@silver.suse.cz>
+Date: Fri, 23 Mar 2007 21:44:56 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-03-05 at 12:58 +0100, Johannes Berg wrote:
-> ... isn't really possible at the moment. But you only need to change
-> some include paths (to be able to include the
-> net/mac80211/mac80211_common.h header!) and apply this change to be able
-> to include include/net/mac80211.h into the userspace code.
-> 
-> And no, this shouldn't be applied. Rather should the prism ioctl foo be
-> deleted.
+From: Johannes Berg <johannes@sipsolutions.net>
 
-Right; if there's something that the prism ioctls do that cfg80211
-doesn't, and that something is useful, then we probably need to extend
-cfg80211 to do that thing.  Then we rip out all the custom ioctl junk
-everywhere.
+This patch fixes the sparse warnings that remain after Michael Wu's
+patches as well as those I might have introduced myself during the
+debugfs restructuring...
 
-Dan
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
 
+---
 
-> johannes
-> 
-> --- wireless-dev.orig/include/net/mac80211.h	2007-03-04 01:53:43.719146462 +0100
-> +++ wireless-dev/include/net/mac80211.h	2007-03-04 01:55:13.489146462 +0100
-> @@ -10,6 +10,7 @@
->  #ifndef MAC80211_H
->  #define MAC80211_H
->  
-> +#ifdef __KERNEL__
->  #include <linux/kernel.h>
->  #include <linux/if_ether.h>
->  #include <linux/skbuff.h>
-> @@ -18,7 +19,7 @@
->  #include <linux/ieee80211.h>
->  #include <net/wireless.h>
->  #include <net/cfg80211.h>
-> -
-> +#endif
->  /* Note! Only ieee80211_tx_status_irqsafe() and ieee80211_rx_irqsafe() can be
->   * called in hardware interrupt context. The low-level driver must not call any
->   * other functions in hardware interrupt context. If there is a need for such
-> @@ -108,7 +109,7 @@ enum {
->  	MODE_ATHEROS_TURBOG = 4 /* Atheros Turbo mode (2x.11g at 2.4 GHz) */,
->  	NUM_IEEE80211_MODES = 5
->  };
-> -
-> +#ifdef __KERNEL__
->  struct ieee80211_hw_mode {
->  	int mode; /* MODE_IEEE80211... */
->  	int num_channels; /* Number of channels (below) */
-> @@ -118,7 +119,7 @@ struct ieee80211_hw_mode {
->  
->  	struct list_head list; /* Internal, don't touch */
->  };
-> -
-> +#endif
->  struct ieee80211_tx_queue_params {
->  	int aifs; /* 0 .. 255; -1 = use default */
->  	int cw_min; /* 2^n-1: 1, 3, 7, .. , 1023; 0 = use default */
-> @@ -552,7 +553,7 @@ struct ieee80211_hw {
->  	 * WMM requires at least four queues. */
->  	int queues;
->  };
-> -
-> +#ifdef __KERNEL__
->  static inline void SET_IEEE80211_DEV(struct ieee80211_hw *hw, struct device *dev)
->  {
->  	set_wiphy_dev(hw->wiphy, dev);
-> @@ -1079,4 +1080,6 @@ static inline int ieee80211_get_morefrag
->  #define MAC_ARG(x) ((u8*)(x))[0], ((u8*)(x))[1], ((u8*)(x))[2], \
->  		   ((u8*)(x))[3], ((u8*)(x))[4], ((u8*)(x))[5]
->  
-> +#endif
-> +
->  #endif /* MAC80211_H */
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ net/mac80211/debugfs_netdev.c  |    4 ++--
+ net/mac80211/ieee80211.c       |    2 +-
+ net/mac80211/ieee80211_ioctl.c |    2 +-
+ net/mac80211/sta_info.c        |   21 +++++++++++++++------
+ 4 files changed, 19 insertions(+), 10 deletions(-)
+
+a290e1fe4bd5779b96e07cc9deff9c75b7887a54
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 7b713fb..9e39646 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -244,7 +244,7 @@ static void add_monitor_files(struct iee
+ 	DEBUGFS_ADD(mode, monitor);
+ }
+ 
+-void add_files(struct ieee80211_sub_if_data *sdata)
++static void add_files(struct ieee80211_sub_if_data *sdata)
+ {
+ 	if (!sdata->debugfsdir)
+ 		return;
+@@ -337,7 +337,7 @@ static void del_monitor_files(struct iee
+ 	DEBUGFS_DEL(mode, monitor);
+ }
+ 
+-void del_files(struct ieee80211_sub_if_data *sdata, int type)
++static void del_files(struct ieee80211_sub_if_data *sdata, int type)
+ {
+ 	if (!sdata->debugfsdir)
+ 		return;
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index db04fd8..24cc3a0 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -97,7 +97,7 @@ struct ieee80211_key *ieee80211_key_allo
+ 	return key;
+ }
+ 
+-void ieee80211_key_release(struct kref *kref)
++static void ieee80211_key_release(struct kref *kref)
+ {
+ 	struct ieee80211_key *key;
+ 
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index cb75015..21a17eb 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -518,7 +518,7 @@ int ieee80211_set_hw_encryption(struct n
+ 
+ 
+ static int ieee80211_set_encryption(struct net_device *dev, u8 *sta_addr,
+-				    int idx, int alg, int set_tx_key, int *err,
++				    int idx, int alg, int set_tx_key, u32 *err,
+ 				    const u8 *_key, size_t key_len)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index dfbd369..4e341f6 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -102,7 +102,7 @@ int sta_info_min_txrate_get(struct ieee8
+ }
+ 
+ 
+-void sta_info_release(struct kref *kref)
++static void sta_info_release(struct kref *kref)
+ {
+ 	struct sta_info *sta = container_of(kref, struct sta_info, kref);
+ 	struct ieee80211_local *local = sta->local;
+@@ -210,14 +210,11 @@ #endif /* CONFIG_MAC80211_VERBOSE_DEBUG 
+ 	sta_info_put(sta);
+ }
+ 
+-void sta_info_free(struct sta_info *sta, int locked)
++static void sta_info_remove(struct sta_info *sta)
+ {
+-	struct sk_buff *skb;
+ 	struct ieee80211_local *local = sta->local;
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+-	if (!locked)
+-		spin_lock_bh(&local->sta_lock);
+ 	sta_info_hash_del(local, sta);
+ 	list_del(&sta->list);
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
+@@ -228,8 +225,20 @@ void sta_info_free(struct sta_info *sta,
+ 	}
+ 	local->num_sta--;
+ 	sta_info_remove_aid_ptr(sta);
+-	if (!locked)
++}
++
++void sta_info_free(struct sta_info *sta, int locked)
++{
++	struct sk_buff *skb;
++	struct ieee80211_local *local = sta->local;
++
++	if (!locked) {
++		spin_lock_bh(&local->sta_lock);
++		sta_info_remove(sta);
+ 		spin_unlock_bh(&local->sta_lock);
++	} else {
++		sta_info_remove(sta);
++	}
+ 	if (local->ops->sta_table_notification)
+ 		local->ops->sta_table_notification(local_to_hw(local),
+ 						  local->num_sta);
+-- 
+1.3.0
 
