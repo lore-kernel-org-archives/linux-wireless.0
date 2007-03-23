@@ -1,51 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:37046
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:52261
 	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933068AbXCEKoZ (ORCPT
+	with ESMTP id S1753302AbXCWSah (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 05:44:25 -0500
+	Fri, 23 Mar 2007 14:30:37 -0400
 From: Michael Buesch <mb@bu3sch.de>
-To: Adrian Bunk <bunk@stusta.de>
-Subject: Re: 2.6.21-rc2-mm1: drivers/net/wireless/ compile error
-Date: Mon, 5 Mar 2007 11:41:36 +0100
-Cc: Andrew Morton <akpm@linux-foundation.org>, linville@tuxdriver.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-References: <20070302030026.5eef0c92.akpm@linux-foundation.org> <20070305014724.GM3441@stusta.de>
-In-Reply-To: <20070305014724.GM3441@stusta.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: RFC: Future plans for bcm43xx-softmac
+Date: Fri, 23 Mar 2007 19:30:19 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx devel <Bcm43xx-dev@lists.berlios.de>
+References: <4604106F.7080003@lwfinger.net>
+In-Reply-To: <4604106F.7080003@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200703051141.37180.mb@bu3sch.de>
+  charset="iso-8859-1"
+Message-Id: <200703231930.19312.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 05 March 2007 02:47, Adrian Bunk wrote:
-> On Fri, Mar 02, 2007 at 03:00:26AM -0800, Andrew Morton wrote:
-> >...
-> > Changes since 2.6.20-mm2:
-> >...
-> >  git-wireless.patch
-> >...
-> >  git trees
-> >...
+On Friday 23 March 2007 18:37, Larry Finger wrote:
+> I think we have a plan for the future of bcm43xx-softmac once the bcm43xx-mac80211 version goes into
+> mainline. Unfortunately it cannot just be abandoned as there will be no support for 802.11b-only
+> devices in bcm43xx-mac80211.
 > 
-> Multiple copies of the same drivers are a problem:
+> The steps to be done are as follows:
 > 
-> <--  snip  -->
+> 1. Change the namespace from bcm43xx to bcm4301. This will both reflect the purpose of the changed
+> driver as well as prevent namespace collisions with the bcm43xx-mac80211 version in case both are
+> built into the kernel.
 > 
-> ...
->   LD      drivers/net/wireless/built-in.o
-> drivers/net/wireless/mac80211/built-in.o: In function `zd_chip_switch_radio_on':
-> (.text+0x303b8): multiple definition of `zd_chip_switch_radio_on'
-> drivers/net/wireless/zd1211rw/built-in.o:(.text+0x1fc): first defined here
-> drivers/net/wireless/mac80211/built-in.o: In function `bcm43xx_dma_tx_suspend':
-> (.text+0x128b6): multiple definition of `bcm43xx_dma_tx_suspend'
-> drivers/net/wireless/bcm43xx/built-in.o:(.text+0x17d94): first defined here
-> ...
-> make[4]: *** [drivers/net/wireless/built-in.o] Error 1
+> 2. Modify bcm4301 to use mac80211 rather than softmac. Although this process has the potential for
+> introducing bugs into what is currently the stable version, it does allow the abandonment of softmac
+> with its deficiencies, many of which are essentially uncorrectable.
+> 
+> 3. The PCI-ids recognized by bcm4301-mac80211 will be restricted to the 802.11b-only devices and the
+> configuration information will be modified.
+> 
+> Step 1 will be completed very soon and the appropriate patches will be submitted to Linville's
+> wireless-dev tree.
+> 
+> I will be working on step 2 in the coming months and will submit those patches to the list for
+> comments and testing. When ready, they too will be submitted to Linville. Once bcm43xx-mac80211 goes
+> into mainline, the step 3 patches will be submitted.
+> 
+> Please comment on this plan.
 
-Sure. You can't compile bcm43xx and bcm43xx-d80211 into the kernel.
-This is going to be fixed by ripping out bcm43xx when bcm43xx-d80211 is merged.
+I ACK this as-is.
 
 -- 
 Greetings Michael.
