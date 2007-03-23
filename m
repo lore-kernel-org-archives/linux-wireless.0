@@ -1,39 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:44197 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422651AbXC2WAD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2007 18:00:03 -0400
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HX2cy-0006bM-Ib
-	for linux-wireless@vger.kernel.org; Thu, 29 Mar 2007 17:57:52 -0400
-Subject: Re: [PATCH 1/5] Meddled with by Andy Green since signed-off: made  it apply to current wireless-dev, took out comments for radiotap types not  in current wireless-dev
-From: Pavel Roskin <proski@gnu.org>
-To: Andy Green <andy@warmcat.com>
+Received: from styx.suse.cz ([82.119.242.94]:48993 "EHLO silver.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933934AbXCWUn3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 16:43:29 -0400
+From: Jiri Benc <jbenc@suse.cz>
+To: "John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20070323214400.642621638.midnight@suse.cz>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <460C1340.7040700@warmcat.com>
-References: <20070329133114.569947199@warmcat.com>
-	 <20070329133123.323900095@warmcat.com> <1175195559.12052.14.camel@dv>
-	 <460C1340.7040700@warmcat.com>
-Content-Type: text/plain
-Date: Thu, 29 Mar 2007 18:00:01 -0400
-Message-Id: <1175205601.24718.11.camel@dv>
-Mime-Version: 1.0
+Subject: [PATCH 3/19] mac80211: fix rtnl locking in ieee80211_register_hw
+Message-Id: <20070323204445.517D6484A1@silver.suse.cz>
+Date: Fri, 23 Mar 2007 21:44:45 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-03-29 at 20:28 +0100, Andy Green wrote:
+rtnl locking in ieee80211_register_hw was racy. This patch fixes that.
 
-> The file in wireless-2.6 does not seem to have the __le stuff in it?
-> Am 
-> I looking in the right place at 
-> http://ftp.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git?
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
 
-It should be there:
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-2.6.git;a=commit;h=99f89e33e15d47322a89fac02f2e4d5f4dcee91d
+---
 
+ net/mac80211/ieee80211.c |   13 ++++---------
+ 1 files changed, 4 insertions(+), 9 deletions(-)
+
+9d0a7f4ed6daf144111954e2ecd70df78e7449d9
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index e7576c5..9d95250 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -4666,18 +4666,13 @@ int ieee80211_register_hw(struct ieee802
+ 	SET_NETDEV_DEV(local->mdev, wiphy_dev(local->hw.wiphy));
+ 
+ 	result = register_netdevice(local->mdev);
+-	if (result < 0) {
+-		rtnl_unlock();
++	if (result < 0)
+ 		goto fail_dev;
+-	}
+ 	result = ieee80211_sysfs_add_netdevice(local->mdev);
+-	if (result < 0) {
+-		rtnl_unlock();
++	if (result < 0)
+ 		goto fail_if_sysfs;
+-	}
+ 
+ 	result = ieee80211_init_rate_ctrl_alg(local, NULL);
+-	rtnl_unlock();
+ 	if (result < 0) {
+ 		printk(KERN_DEBUG "%s: Failed to initialize rate control "
+ 		       "algorithm\n", local->mdev->name);
+@@ -4696,7 +4691,6 @@ int ieee80211_register_hw(struct ieee802
+ 	ieee80211_install_qdisc(local->mdev);
+ 
+ 	/* add one default STA interface */
+-	rtnl_lock();
+ 	result = ieee80211_if_add(local->mdev, "wlan%d", 1, &sta_dev);
+ 	if (result == 0)
+ 		ieee80211_if_set_type(sta_dev, IEEE80211_IF_TYPE_STA);
+@@ -4713,8 +4707,9 @@ fail_wep:
+ fail_rate:
+ 	ieee80211_sysfs_remove_netdevice(local->mdev);
+ fail_if_sysfs:
+-	unregister_netdev(local->mdev);
++	unregister_netdevice(local->mdev);
+ fail_dev:
++	rtnl_unlock();
+ 	sta_info_stop(local);
+ fail_sta_info:
+ 	ieee80211_dev_sysfs_del(local);
 -- 
-Regards,
-Pavel Roskin
+1.3.0
 
