@@ -1,34 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:37098 "EHLO mail.suse.cz"
+Received: from styx.suse.cz ([82.119.242.94]:49000 "EHLO silver.suse.cz"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753386AbXCWTBc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 15:01:32 -0400
-Date: Fri, 23 Mar 2007 20:01:30 +0100
+	id S934313AbXCWUnm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 16:43:42 -0400
 From: Jiri Benc <jbenc@suse.cz>
-To: Michael Wu <flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20070323214400.642621638.midnight@suse.cz>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 5/5] d80211: switch STA interfaces to PS mode during  scan
-Message-ID: <20070323200130.3f8d36ac@griffin.suse.cz>
-In-Reply-To: <200703231405.20085.flamingice@sourmilk.net>
-References: <20070228203943.11473.95222.stgit@magic.sourmilk.net>
-	<200703010043.10565.flamingice@sourmilk.net>
-	<20070323170136.5f6205db@griffin.suse.cz>
-	<200703231405.20085.flamingice@sourmilk.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: [PATCH 16/19] mac80211: fix passing wrong pointer to ieee80211_dump_frame
+Message-Id: <20070323204459.2DBDB4858F@silver.suse.cz>
+Date: Fri, 23 Mar 2007 21:44:59 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 23 Mar 2007 14:05:15 -0400, Michael Wu wrote:
-> ieee80211_sta_timer just schedules the workqueue to run. I'm not sure if the 
-> workqueue can run immediately after that, but even if it did, the sta code 
-> doesn't depend on the queue of a virtual interface so these lines don't need 
-> to run in any particular order.
+From: Hong Liu <hong.liu@intel.com>
 
-Okay, you're right. Applied, thanks!
+Signed-off-by: Hong Liu <hong.liu@intel.com>
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
 
- Jiri
+---
 
+ net/mac80211/ieee80211.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+0ddfc778426ba75c2ad71d23e9e2e48121264c70
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 24cc3a0..fccb0fe 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -1166,7 +1166,8 @@ static int __ieee80211_tx(struct ieee802
+ 			}
+ 
+ 			ieee80211_dump_frame(local->mdev->name,
+-					     "TX to low-level driver", skb);
++					     "TX to low-level driver",
++					     tx->u.tx.extra_frag[i]);
+ 			ret = local->ops->tx(local_to_hw(local),
+ 					    tx->u.tx.extra_frag[i],
+ 					    control);
 -- 
-Jiri Benc
-SUSE Labs
+1.3.0
+
