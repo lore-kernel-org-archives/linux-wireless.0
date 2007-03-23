@@ -1,47 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58833 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161195AbXCAXlE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2007 18:41:04 -0500
-Subject: Re: [PATCH] mac80211: move PHY things to debugfs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1172774065.3381.3.camel@johannes.berg>
-References: <1172774065.3381.3.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-d/VBG0nDw8Q50SUV+h+Z"
-Date: Fri, 02 Mar 2007 00:40:34 +0100
-Message-Id: <1172792434.5140.2.camel@johannes.berg>
+Received: from mfe1.polimi.it ([131.175.12.23]:37114 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S2992537AbXCWT01 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 15:26:27 -0400
+Date: Fri, 23 Mar 2007 20:21:39 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: [PATCH] bcm43xx: fix radio_set_tx_iq
+Message-ID: <20070323202139.7f37b32a@localhost>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Fix a duplicated leftshift in bcm43xx_radio_set_tx_iq. data_high values are
+already leftshifted. Thanks to Michael Buesch for spotting this.
 
---=-d/VBG0nDw8Q50SUV+h+Z
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
 
-On Thu, 2007-03-01 at 19:34 +0100, Johannes Berg wrote:
-> This patch moves everything except the "sta" directory from the phy
-> sysfs to phy debugfs.
->=20
+---
 
-ignore this one, it was buggy.
-
-johannes
-
---=-d/VBG0nDw8Q50SUV+h+Z
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF52Ry/ETPhpq3jKURAvFtAJwOz+hkvPSP5K9sPgx8sGgF4Grz9ACglTXc
-KeXmvzwfxYTHoTy3UAP5Oek=
-=a5Pd
------END PGP SIGNATURE-----
-
---=-d/VBG0nDw8Q50SUV+h+Z--
-
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_radio.c b/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
+index 32beb91..d153b58 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_radio.c
+@@ -1579,7 +1579,7 @@ void bcm43xx_radio_set_tx_iq(struct bcm4
+ 	
+ 	for (i = 0; i < 5; i++) {
+ 		for (j = 0; j < 5; j++) {
+-			if (tmp == (data_high[i] << 4 | data_low[j])) {
++			if (tmp == (data_high[i] | data_low[j])) {
+ 				bcm43xx_phy_write(bcm, 0x0069, (i - j) << 8 | 0x00C0);
+ 				return;
+ 			}
