@@ -1,50 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:37757
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932255AbXCETLN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 14:11:13 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: David Brownell <david-b@pacbell.net>
-Subject: Re: 2.6.21-rc2-mm1: drivers/usb/host/ohci-ssb.c doesn't compile
-Date: Mon, 5 Mar 2007 20:09:25 +0100
-Cc: greg@kroah.com, Adrian Bunk <bunk@stusta.de>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	linux-usb-devel@lists.sourceforge.net
-References: <20070302030026.5eef0c92.akpm@linux-foundation.org> <200703051226.46402.mb@bu3sch.de> <200703051042.06802.david-b@pacbell.net>
-In-Reply-To: <200703051042.06802.david-b@pacbell.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200703052009.26136.mb@bu3sch.de>
+Received: from 216-99-217-87.dsl.aracnet.com ([216.99.217.87]:46331 "EHLO
+	sous-sol.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S2992544AbXCWToI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 15:44:08 -0400
+Date: Fri, 23 Mar 2007 12:36:43 -0700
+From: Chris Wright <chrisw@sous-sol.org>
+To: Jean Tourrilhes <jt@hpl.hp.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
+Subject: Re: [stable] [PATCH] fix information leak in wireless extensions on 64-bit platforms
+Message-ID: <20070323193643.GY10574@sequoia.sous-sol.org>
+References: <1174640787.3588.65.camel@johannes.berg> <1174657362.3366.6.camel@johannes.berg> <20070323154828.GA4671@bougret.hpl.hp.com> <1174665384.4470.0.camel@johannes.berg> <20070323161339.GA4713@bougret.hpl.hp.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070323161339.GA4713@bougret.hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 05 March 2007 19:42, David Brownell wrote:
-> On Monday 05 March 2007 3:26 am, Michael Buesch wrote:
-> 
-> > > Actually, it seems like I will run into other kinds of nasty problems
-> > > due to stupid design of the HCD code. The OHCI code #includes
-> > > the various drivers, which have a module_init each. So if you
-> > > compile PCI and SSB support, you have two module_init for one
-> > > OHCI module. Not sure how to fix this. Any idea?
-> > 
-> > A real problem is that the HCD core seems to have the assumption
-> > built-in that there can only be one OHCI driver per machine/arch.
-> 
-> What ancient version of the driver are you referring to??
+* Jean Tourrilhes (jt@hpl.hp.com) wrote:
+> 	It seems that the lifetime of each stable branch is measured
+> in weeks (apart from 2.6.16),
 
-Uh, can't be _that_ ancient, as I wrote this stuff only a few weeks ago. :)
+That's not accurate (apart from the fact that months are made of weeks ;-)
 
-> CURRENT code has one module_init, and can hook up to several
-> different kinds of bus glue.  There *is* only one OHCI driver.
-> It can hook up through several different kinds of bus glue; a
-> few platforms support more than one way to connect to various
-> implementations of OHCI.
+~2.5 months
+2.6.15.1  Jan 15  2006
+2.6.15.7  Mar 28  2006
 
-Yeah, good to see that this changed. I'll fixup the stuff. Thanks.
+[skipping 2.6.16 since it's still going]
 
--- 
-Greetings Michael.
+~2 months
+2.6.17.1  Aug 22  2006
+2.6.17.14 Oct 13  2006
+
+~3 months
+2.6.18.1  Oct 14 2006
+2.6.18.8  Feb 23 2007
+
+~3 months
+2.6.19.1  Dec 11 2006
+2.6.19.7  Mar  3 2007
+
+And to reiterate the sentiments of others.  Security relevant bugs are
+always of interest to the stable team as well as distros.
+
+> 	The last thing is that I could not test those stuff myself,
+> and the testing done for me was limited. I would be more confident if
+> you were to give it a good beating before we push that into stable,
+> because you know what to test.
+
+That's useful info.  Have you had any luck (it looks pretty straight
+forward)?
+
+thanks,
+-chris
