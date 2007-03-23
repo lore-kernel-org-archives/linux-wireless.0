@@ -1,33 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from waste.org ([66.93.16.53]:59482 "EHLO waste.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932334AbXCUUfA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2007 16:35:00 -0400
-Date: Wed, 21 Mar 2007 15:22:25 -0500
-From: Matt Mackall <mpm@selenic.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.21-rc4-mm1
-Message-ID: <20070321202225.GN10459@waste.org>
-References: <20070319205623.299d0378.akpm@linux-foundation.org> <1174433034.62033.16.camel@localhost> <20070320223643.d8cbc3f6.akpm@linux-foundation.org> <4601761F.4000302@lwfinger.net> <20070321185900.GC3801@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070321185900.GC3801@tuxdriver.com>
+Received: from styx.suse.cz ([82.119.242.94]:49002 "EHLO silver.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S934317AbXCWUno (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 16:43:44 -0400
+From: Jiri Benc <jbenc@suse.cz>
+To: "John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20070323214400.642621638.midnight@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 17/19] mac80211: Properly kill tasklets before shutdown
+Message-Id: <20070323204500.356AC48590@silver.suse.cz>
+Date: Fri, 23 Mar 2007 21:45:00 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the latest -mm, I'm now getting this:
+From: Michael Buesch <mb@bu3sch.de>
 
-Mar 21 15:06:52 cinder kernel: ipw2200: Detected Intel PRO/Wireless
-2200BG Network Connection
-Mar 21 15:06:52 cinder kernel: firmware_loading_store: unexpected
-value (0)
-Mar 21 15:06:52 cinder kernel: ipw2200: ipw2200-bss.fw
-request_firmware failed:
-Reason -2
-Mar 21 15:06:52 cinder kernel: ipw2200: Unable to load firmware: -2
-Mar 21 15:06:52 cinder kernel: ipw2200: failed to register network
-device
+We need to do tasklet_kill() on any tasklet on unregister
+to make sure the tasklet is not running _and_ scheduled anymore.
+(tasklet_disable() only ensures it's not running anymore).
 
+This fixes the tasklet related crash that was reported some time ago.
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
+
+---
+
+ net/mac80211/ieee80211.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+baf56723a69d16311ad09db5ecee1f3e4c4d7ca1
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index fccb0fe..fb2ce3d 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -4728,8 +4728,8 @@ void ieee80211_unregister_hw(struct ieee
+ 	struct ieee80211_sub_if_data *sdata, *tmp;
+ 	int i;
+ 
+-	tasklet_disable(&local->tasklet);
+-	/* TODO: skb_queue should be empty here, no need to do anything? */
++	tasklet_kill(&local->tx_pending_tasklet);
++	tasklet_kill(&local->tasklet);
+ 
+ 	rtnl_lock();
+ 	local->reg_state = IEEE80211_DEV_UNREGISTERED;
 -- 
-Mathematics is the supreme nostalgia of our time.
+1.3.0
+
