@@ -1,55 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtagate5.de.ibm.com ([195.212.29.154]:61106 "EHLO
-	mtagate5.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753540AbXCZJIA (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50671 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932309AbXCWUHW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2007 05:08:00 -0400
-Date: Mon, 26 Mar 2007 11:09:49 +0200
-From: Cornelia Huck <cornelia.huck@de.ibm.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	Matt Mackall <mpm@selenic.com>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Monakhov Dmitriy <dmonakhov@openvz.org>,
-	Eric Rannaud <eric.rannaud@gmail.com>
-Subject: Re: 2.6.21-rc4-mm1
-Message-ID: <20070326110949.5301a571@gondolin.boeblingen.de.ibm.com>
-In-Reply-To: <20070323210618.6a41f5da.akpm@linux-foundation.org>
-References: <20070319205623.299d0378.akpm@linux-foundation.org>
-	<1174433034.62033.16.camel@localhost>
-	<20070320223643.d8cbc3f6.akpm@linux-foundation.org>
-	<4601761F.4000302@lwfinger.net>
-	<20070321185900.GC3801@tuxdriver.com>
-	<20070321202225.GN10459@waste.org>
-	<20070321233917.0393dfd1.akpm@linux-foundation.org>
-	<20070322123508.3785fd30@gondolin.boeblingen.de.ibm.com>
-	<4602752A.5050109@lwfinger.net>
-	<20070322181019.62fe78ed@gondolin.boeblingen.de.ibm.com>
-	<4602D137.4060402@lwfinger.net>
-	<20070323111029.4089ccfb@gondolin.boeblingen.de.ibm.com>
-	<20070323210618.6a41f5da.akpm@linux-foundation.org>
+	Fri, 23 Mar 2007 16:07:22 -0400
+Subject: Re: [stable] [PATCH] fix information leak in wireless extensions  on 64-bit platforms
+From: Johannes Berg <johannes@sipsolutions.net>
+To: jt@hpl.hp.com
+Cc: Chris Wright <chrisw@sous-sol.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
+In-Reply-To: <20070323200037.GA5165@bougret.hpl.hp.com>
+References: <1174640787.3588.65.camel@johannes.berg>
+	 <1174657362.3366.6.camel@johannes.berg>
+	 <20070323154828.GA4671@bougret.hpl.hp.com>
+	 <1174665384.4470.0.camel@johannes.berg>
+	 <20070323161339.GA4713@bougret.hpl.hp.com>
+	 <20070323193643.GY10574@sequoia.sous-sol.org>
+	 <20070323200037.GA5165@bougret.hpl.hp.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iW5MIcG7iWxZvQ9c5dML"
+Date: Fri, 23 Mar 2007 21:05:26 +0100
+Message-Id: <1174680326.4470.2.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 23 Mar 2007 21:06:18 -0800,
-Andrew Morton <akpm@linux-foundation.org> wrote:
 
-> Would I be right in guessing that this was all triggered by
-> uevent-improve-error-checking-and-handling.patch?
+--=-iW5MIcG7iWxZvQ9c5dML
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Looks like it, since it passed the uevent failures to the upper layer.
+On Fri, 2007-03-23 at 13:00 -0700, Jean Tourrilhes wrote:
 
-> If so, do you think I should labour on with
-> uevent-improve-error-checking-and-handling.patch plus your fix, or should I
-> drop the lot?  (I'm inclined toward the latter, but I'm still not
-> sure which patch(es) need to be dropped).
+> 	Let's be more clear. I tested properly on 32 bits. But, 32
+> bits is not where there is issue, this issue is specific to 64 bits. I
+> don't have a 64 bits platfor. It seems that few people doing wireless
+> have access to 64 bits platform (actually, it seems most of them don't
+> have access to SMP either), otherwise this would have been found many
+> years ago.
+> 	Johannes is one of the few having access to 64 bits stuff.
 
-This depends on what semantics uevent returning an error code should
-have. The firmware code was using it to suppress uevents, but
-uevent_suppress is a better idea now. So if we want uevent returning !=
-0 to imply "something really bad happened", all uevent functions have
-to be audited and those that work like firmware_uevent have to be
-converted to uevent_suppress. This would be cleaner, but I'm not sure
-it's worth the work.
+Few, heh. I'll give it a try next week. (actually, I don't have wireless
+on the 64-bit quad powermac but I can always plug in USB things)
+
+johannes
+
+--=-iW5MIcG7iWxZvQ9c5dML
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGBDMG/ETPhpq3jKURAsDWAJ9x1TKrxs0xmn45OF7OFm8CiQ9Z0QCfZTVb
+AHSnDIo2OwdC89lkF20gLf4=
+=zj4T
+-----END PGP SIGNATURE-----
+
+--=-iW5MIcG7iWxZvQ9c5dML--
+
