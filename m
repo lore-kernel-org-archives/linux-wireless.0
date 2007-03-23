@@ -1,69 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59181 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423003AbXCBKQt (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:36381 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S2992435AbXCWPAc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2007 05:16:49 -0500
-Subject: Re: [PATCH] mac80211: move PHY things to debugfs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <45E7DF58.6080608@warmcat.com>
-References: <1172774065.3381.3.camel@johannes.berg>
-	 <45E72174.9060104@warmcat.com>  <1172775866.3381.7.camel@johannes.berg>
-	 <1172776049.3381.10.camel@johannes.berg>  <45E7DF58.6080608@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-X+6nC/yfSdqk9UW5tVF9"
-Date: Fri, 02 Mar 2007 11:16:22 +0100
-Message-Id: <1172830582.3482.4.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 23 Mar 2007 11:00:32 -0400
+Message-ID: <4603EB81.4050308@lwfinger.net>
+Date: Fri, 23 Mar 2007 10:00:17 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Cornelia Huck <cornelia.huck@de.ibm.com>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	Matt Mackall <mpm@selenic.com>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Monakhov Dmitriy <dmonakhov@openvz.org>
+Subject: Re: 2.6.21-rc4-mm1
+References: <20070319205623.299d0378.akpm@linux-foundation.org>	<1174433034.62033.16.camel@localhost>	<20070320223643.d8cbc3f6.akpm@linux-foundation.org>	<4601761F.4000302@lwfinger.net>	<20070321185900.GC3801@tuxdriver.com>	<20070321202225.GN10459@waste.org>	<20070321233917.0393dfd1.akpm@linux-foundation.org>	<20070322123508.3785fd30@gondolin.boeblingen.de.ibm.com>	<4602752A.5050109@lwfinger.net>	<20070322181019.62fe78ed@gondolin.boeblingen.de.ibm.com>	<4602D137.4060402@lwfinger.net> <20070323111029.4089ccfb@gondolin.boeblingen.de.ibm.com>
+In-Reply-To: <20070323111029.4089ccfb@gondolin.boeblingen.de.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Cornelia Huck wrote:
+> On Thu, 22 Mar 2007 13:55:51 -0500,
+> Larry Finger <larry.finger@lwfinger.net> wrote:
+>> I applied the debug patch, but I don't see any error codes being returned. This time I also got the
+>> General Protection Faults. An excerpt of the log is attached.
+> 
+> Hm, I think I have an idea about what happened.
+> 
+> The firmware class tried to suppress the first KOBJ_ADD uevent by
+> returning -ENODEV in firmware_uevent if FW_STATUS_READY was not set.
+> This only worked as long as the return code of kobject_uevent was not
+> checked in device_add. hack-to-make-wireless-work.patch made that first
+> uevent return successfully, but this possible triggered some udev rule
+> too early, leading to firmware load failures.
+> 
+> The following (completely untested) patch uses uevent_suppress to stop
+> the uevent from being generated during device_add. Does this work for
+> you?
 
---=-X+6nC/yfSdqk9UW5tVF9
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yes it does. Good job. On my first reboot with the new code, the startup of X hung with the black
+screen and the big X cursor, but that seems to have been a single occurrence. With the patch, the
+bcm43xx firmware is loaded and the device is working.
 
-On Fri, 2007-03-02 at 08:24 +0000, Andy Green wrote:
+Thanks,
 
-> I guess I'll stick with sysfs for now since the code is written already:=20
-> if I will find add_iface and so on down there then I guess it will all=20
-> work out with minor edits.
-
-Just make sure you're running the very latest kernel with
-CONFIG_SYSFS_DEPRECATED disabled (I think that's necessary, not entirely
-sure). You'll notice when anything but the current CVS version of HAL no
-longer displays network devices :/
-
-> Can I ask how stable this byzantine path I am currently following to get=20
-> a "Management interface" for tx injection is going to be?  Not even=20
-> standard wireless ioctl but Private IOCTL SIOCIWFIRSTPRIV+0 opens out=20
-> into a secret garden of "PRISM2" special features... is this already in=20
-> a little black refactoring book somewhere?=20
-
-Yup, it is. But there's still debate on whether it should be done
-through netlink (nl80211) or some new special injection format for the
-monitor interfaces like the management interface currently has.
-
-[you can rip code from wpa_supplicant to inject frames]
-
-Btw, here's another argument against the monitor interfaces: having them
-up takes the card out of powersave mode which they should only be while
-not associated, even with a userspace MLME.
-
-johannes
-
---=-X+6nC/yfSdqk9UW5tVF9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF5/l2/ETPhpq3jKURAkFwAKCXgBlwioMajx8Q04abiKnjd1Z4WACfXNLV
-LCuETdkKJl7jgLpuaTorPCk=
-=56ip
------END PGP SIGNATURE-----
-
---=-X+6nC/yfSdqk9UW5tVF9--
-
+Larry
