@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gundega.hpl.hp.com ([192.6.19.190]:59169 "EHLO
-	gundega.hpl.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767547AbXCIVhJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Mar 2007 16:37:09 -0500
-Date: Fri, 9 Mar 2007 13:35:31 -0800
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <jkm@devicescape.com>, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>, Dan Williams <dcbw@redhat.com>
-Subject: Re: wireless extensions vs. 64-bit architectures
-Message-ID: <20070309213531.GA28070@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <20070306171316.GA19669@bougret.hpl.hp.com> <200703061943.07350.mb@bu3sch.de> <20070307020310.GA20466@bougret.hpl.hp.com> <1173364747.14001.7.camel@johannes.berg> <20070308184954.GA24485@bougret.hpl.hp.com> <1173382042.3248.63.camel@johannes.berg> <20070308193412.GG23040@devicescape.com> <1173382802.3248.68.camel@johannes.berg> <20070308221128.GA24884@bougret.hpl.hp.com> <1173393326.3831.21.camel@johannes.berg>
+Received: from mfe1.polimi.it ([131.175.12.23]:45840 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S934089AbXCWTvp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 15:51:45 -0400
+Date: Fri, 23 Mar 2007 20:46:27 +0100
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx devel <Bcm43xx-dev@lists.berlios.de>
+Subject: Re: RFC: Future plans for bcm43xx-softmac
+Message-ID: <20070323204627.183d2c21@localhost>
+In-Reply-To: <4604106F.7080003@lwfinger.net>
+References: <4604106F.7080003@lwfinger.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1173393326.3831.21.camel@johannes.berg>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 08, 2007 at 11:35:26PM +0100, Johannes Berg wrote:
-> On Thu, 2007-03-08 at 14:11 -0800, Jean Tourrilhes wrote:
+On Fri, 23 Mar 2007 12:37:51 -0500
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+
+> I think we have a plan for the future of bcm43xx-softmac once the
+> bcm43xx-mac80211 version goes into mainline. Unfortunately it cannot just
+> be abandoned as there will be no support for 802.11b-only devices in
+> bcm43xx-mac80211.
 > 
-> > 	First possiblity, we could stick with this band-aid
-> > permanently.
+> The steps to be done are as follows:
 > 
-> It sucks for various reasons, one for example being that I don't even
-> understand your recognition code but all userspace programs that use
-> wext will have to include such code!
+> 1. Change the namespace from bcm43xx to bcm4301. This will both reflect
+> the purpose of the changed driver as well as prevent namespace collisions
+> with the bcm43xx-mac80211 version in case both are built into the kernel.
 
-	It's not as bad as it look like. All userspace programs
-nowadays use either the iwlib or wpa_supplicant. For example,
-NetworkManager gets its stuff through wpa_supplicant, and kdenetwork
-uses iwlib. So, in essence, there is only two places to fix.
-	Which is why I would like to hear from Jouni.
+I'm quite sure you know, bcm4301 isn't the only 802.11b-only device.
+There's bcm4303 too. Anyway, naming the driver bcm4301 sounds reasonable to
+me.
 
-	By the way, I've just released version 29.pre16 which has a
-better band aid. It fixes bugs of the previous version and is more
-forward compatible (i.e. it's compatible with option 2).
+> Please comment on this plan.
 
-	Have fun...
+ACK.
 
-	Jean
+
+--
+Ciao
+Stefano
