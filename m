@@ -1,37 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:35473 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933594AbXCPLkk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2007 07:40:40 -0400
-Message-ID: <45FA8210.7080709@redhat.com>
-Date: Fri, 16 Mar 2007 12:40:00 +0100
-From: Michal Schmidt <mschmidt@redhat.com>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:42292
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752191AbXCWRXF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2007 13:23:05 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH] mac80211: Properly kill tasklets before shutdown
+Date: Fri, 23 Mar 2007 18:22:50 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <200703061902.00001.mb@bu3sch.de> <20070323181746.7a8f4b56@griffin.suse.cz>
+In-Reply-To: <20070323181746.7a8f4b56@griffin.suse.cz>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: breed@users.sourceforge.net, dcbw@redhat.com,
-	netdev@vger.kernel.org
-Subject: [PATCH 1/3] airo: Don't check for NULL before kfree()
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200703231822.50522.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's unnecessary to check for NULL before calling kfree().
+On Friday 23 March 2007 18:17, Jiri Benc wrote:
+> On Tue, 6 Mar 2007 19:01:59 +0100, Michael Buesch wrote:
+> > We need to do tasklet_kill() on any tasklet on unregister
+> > to make sure the tasklet is not running _and_ scheduled anymore.
+> > (tasklet_disable() only ensures it's not running anymore).
+> > 
+> > This fixes the tasklet related crash that was reported some time ago.
+> > 
+> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> > 
+> > Index: bu3sch-wireless-dev/net/mac80211/ieee80211.c
+> > ===================================================================
+> > --- bu3sch-wireless-dev.orig/net/mac80211/ieee80211.c	2007-03-06 15:55:53.000000000 +0100
+> > +++ bu3sch-wireless-dev/net/mac80211/ieee80211.c	2007-03-06 15:58:10.000000000 +0100
+> > @@ -4761,8 +4761,8 @@
+> >  	struct ieee80211_sub_if_data *sdata, *tmp;
+> >  	int i;
+> >  
+> > -	tasklet_disable(&local->tasklet);
+> 
+> I think this tasklet_disable should not be removed.
 
-Signed-off-by: Michal Schmidt <mschmidt@redhat.com>
+Why?...
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index a8c2bfe..71ac1f1 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -2740,8 +2740,6 @@ static int airo_networks_allocate(struct airo_info *ai)
- 
- static void airo_networks_free(struct airo_info *ai)
- {
--	if (!ai->networks)
--		return;
- 	kfree(ai->networks);
- 	ai->networks = NULL;
- }
+> > -	/* TODO: skb_queue should be empty here, no need to do anything? */
+> > +	tasklet_kill(&local->tx_pending_tasklet);
+> > +	tasklet_kill(&local->tasklet);
 
+...We kill it here.
 
+kill == (make sure it's not scheduled anymore) && disable
 
+-- 
+Greetings Michael.
