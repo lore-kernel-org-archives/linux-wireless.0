@@ -1,82 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:44176 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933816AbXC0RLq (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41516
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753413AbXCWU2O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2007 13:11:46 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so1953478uga
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Mar 2007 10:11:41 -0700 (PDT)
-Message-ID: <43e72e890703271011h47a6177dp32b7c2324ab51423@mail.gmail.com>
-Date: Tue, 27 Mar 2007 13:11:39 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: mohamed <mabbas@linux.intel.com>
-Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery and association
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <43e72e890703271005u6173567aq2c1c04635da3ce50@mail.gmail.com>
+	Fri, 23 Mar 2007 16:28:14 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: jt@hpl.hp.com
+Subject: Re: [stable] [PATCH] fix information leak in wireless extensions on 64-bit platforms
+Date: Fri, 23 Mar 2007 21:27:17 +0100
+Cc: Chris Wright <chrisw@sous-sol.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
+References: <1174640787.3588.65.camel@johannes.berg> <20070323193643.GY10574@sequoia.sous-sol.org> <20070323200037.GA5165@bougret.hpl.hp.com>
+In-Reply-To: <20070323200037.GA5165@bougret.hpl.hp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-References: <1174909105.1364.53.camel@dell-4965.jf.intel.com>
-	 <43e72e890703271005u6173567aq2c1c04635da3ce50@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200703232127.17790.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/27/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On 3/26/07, mohamed <mabbas@linux.intel.com> wrote:
->
-> > +/* Get 11n capabilties from low level driver */
-> > +static void ieee80211_fill_ht_ie(struct net_device *dev,
-> > +                                struct ieee80211_ht_capability *ht_capab)
-> > +{
-> > +       int rc;
-> > +       struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-> > +
-> > +       if (!local->ops->get_ht_capab){
-> > +               memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
-> > +               return;
-> > +       }
-> > +
-> > +       rc = local->ops->get_ht_capab(local_to_hw(local), ht_capab);
-> > +       if (!rc) {
-> > +               memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
-> > +               return;
-> > +       }
-> >
-> > +       ht_capab->capabilitiesInfo = (__le16) cpu_to_le16(
-> > +                                       ht_capab->capabilitiesInfo);
-> > +       ht_capab->extended_ht_capability_info = (__le16) cpu_to_le16(
-> > +                                       ht_capab->extended_ht_capability_info);
-> > +       ht_capab->tx_BF_capability_info = (__le32) cpu_to_le32(
-> > +                                       ht_capab->tx_BF_capability_info);
-> > +}
-> > +
->
-> We should memset to 0 the entire ht_capab to regardless as its coming
-> from skb_put() otherwise we'll get random data there if we don't set
-> it and we sure as hell don't want to just transmit that :) Also
-> ieee80211_send_assoc() is already checking for
-> local->ops->get_ht_capab so lets just do a BUG_ON here to capture
-> cases where someone else didn't do the proper checking. So how about
-> instead something like:
->
-> /* Get 11n capabilties from low level driver */
-> static void ieee80211_fill_ht_ie(struct net_device *dev,
->                                 struct ieee80211_ht_capability *ht_capab)
-> {
->        struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
->        BUG_ON(!local->ops->get_ht_capab);
->        memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
->        if (!local->ops->get_ht_capab(local_to_hw(local), ht_capab))
->                return;
->        ht_capab->capabilitiesInfo = (__le16) cpu_to_le16(
->                                        ht_capab->capabilitiesInfo);
->        ht_capab->extended_ht_capability_info = (__le16) cpu_to_le16(
->                                        ht_capab->extended_ht_capability_info);
->        ht_capab->tx_BF_capability_info = (__le32) cpu_to_le32(
->                                        ht_capab->tx_BF_capability_info);
-> }
->
+On Friday 23 March 2007 21:00, Jean Tourrilhes wrote:
+> On Fri, Mar 23, 2007 at 12:36:43PM -0700, Chris Wright wrote:
+> > * Jean Tourrilhes (jt@hpl.hp.com) wrote:
+> > 
+> > > 	The last thing is that I could not test those stuff myself,
+> > > and the testing done for me was limited. I would be more confident if
+> > > you were to give it a good beating before we push that into stable,
+> > > because you know what to test.
+> > 
+> > That's useful info.  Have you had any luck (it looks pretty straight
+> > forward)?
+> 
+> 	Let's be more clear. I tested properly on 32 bits. But, 32
+> bits is not where there is issue, this issue is specific to 64 bits. I
+> don't have a 64 bits platfor. It seems that few people doing wireless
+> have access to 64 bits platform (actually, it seems most of them don't
+> have access to SMP either), otherwise this would have been found many
+> years ago.
+> 	Johannes is one of the few having access to 64 bits stuff.
 
-On second thought just memset to 0 on ieee80211_send_assoc() right
-after the skb_put and remove that from above.
+I finally have an USB ZD stick now, too. So I can test stuff, too.
+Should I test this somehow?
 
-  Luis
+-- 
+Greetings Michael.
