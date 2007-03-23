@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:60477
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753296AbXCQPHF (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39700 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992481AbXCWP7o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Mar 2007 11:07:05 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Andy Green <andy@warmcat.com>
-Subject: Re: [PATCH 2/2] mac80211: Monitor mode radiotap-based packet injection
-Date: Sat, 17 Mar 2007 16:06:58 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <20070317105800.659633351@warmcat.com> <200703171459.23246.mb@bu3sch.de> <45FC0205.2020409@warmcat.com>
-In-Reply-To: <45FC0205.2020409@warmcat.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200703171606.58803.mb@bu3sch.de>
+	Fri, 23 Mar 2007 11:59:44 -0400
+Subject: Re: [PATCH] fix information leak in wireless extensions on 64-bit  platforms
+From: Johannes Berg <johannes@sipsolutions.net>
+To: jt@hpl.hp.com
+Cc: "John W. Linville" <linville@tuxdriver.com>, stable@kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070323154828.GA4671@bougret.hpl.hp.com>
+References: <1174640787.3588.65.camel@johannes.berg>
+	 <1174657362.3366.6.camel@johannes.berg>
+	 <20070323154828.GA4671@bougret.hpl.hp.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nfpOsTXhL0C5wyO0r51G"
+Date: Fri, 23 Mar 2007 16:56:24 +0100
+Message-Id: <1174665384.4470.0.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 17 March 2007 15:58, Andy Green wrote:
-> Michael Buesch wrote:
-> 
-> >> +#define IEEE80211_TXCTL_INJECTED_PACKET (1<<10) /* tx into monitor IF */
-> > 
-> > What is a driver supposed to do on this flag? More documentation, please.
-> 
-> Hi Michael -
-> 
-> The driver doesn't have to do anything with that flag... it's a private 
-> mac80211-internal flag to get the attribute that the packet was injected 
 
-> If there's a simpler way I'm happy to use it.
+--=-nfpOsTXhL0C5wyO0r51G
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Ok, no. I'm fine with this. But please mark it as mac80211-internal
-flag, so driver authors don't waste time on thinking about wtf this is. ;)
-Either by documenting it in a comment or by doing a special define
-(two underscores or something). Or both.
+On Fri, 2007-03-23 at 08:48 -0700, Jean Tourrilhes wrote:
 
--- 
-Greetings Michael.
+> 	Yes, sorry for the delay, I wanted to make sure I had all the
+> parts fully fleshed out.
+
+:)
+
+Could you maybe send yours to stable too? Both of them I guess. Or do
+you want us (John I guess) to do that?
+
+johannes
+
+--=-nfpOsTXhL0C5wyO0r51G
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGA/in/ETPhpq3jKURAtQEAJ43Rjku+PxaejuQ0/Je+3cfUeFwLwCgsXku
+8kBAD0U/bGJiqdbt1a2Knz8=
+=3Doa
+-----END PGP SIGNATURE-----
+
+--=-nfpOsTXhL0C5wyO0r51G--
+
