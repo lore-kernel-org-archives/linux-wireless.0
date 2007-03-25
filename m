@@ -1,155 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:52391 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965416AbXCFRzM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2007 12:55:12 -0500
-Subject: Re: [2.6.21 patch] unconditionally enable SYSFS_DEPRECATED
-From: Dan Williams <dcbw@redhat.com>
-To: Greg KH <greg@kroah.com>
-Cc: Matt Mackall <mpm@selenic.com>, Adrian Bunk <bunk@stusta.de>,
-	Theodore Tso <tytso@mit.edu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	yi.zhu@intel.com, jketreno@linux.intel.com,
-	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
-In-Reply-To: <20070306015638.GA23756@kroah.com>
-References: <20070304220857.GH23311@waste.org>
-	 <1173051564.6131.13.camel@johannes.berg> <20070305002550.GI23311@waste.org>
-	 <20070305011729.GB7681@kroah.com> <20070305125950.GC26781@thunk.org>
-	 <20070305185813.GA31465@kroah.com> <20070305234052.GR3441@stusta.de>
-	 <20070306000722.GA11436@kroah.com> <20070306013020.GN23311@waste.org>
-	 <20070306015638.GA23756@kroah.com>
-Content-Type: text/plain
-Date: Tue, 06 Mar 2007 10:55:34 -0500
-Message-Id: <1173196534.12545.12.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:9887 "EHLO
+	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753367AbXCYXSo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Mar 2007 19:18:44 -0400
+From: Daniel Drake <dsd@gentoo.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: kune@deine-taler.de
+Subject: [PATCH] zd1211rw-mac80211: Fix NULL dereference on installer exit path
+Message-Id: <20070325231839.AB6BA7B409F@zog.reactivated.net>
+Date: Mon, 26 Mar 2007 00:18:39 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-03-05 at 17:56 -0800, Greg KH wrote:
-> On Mon, Mar 05, 2007 at 07:30:21PM -0600, Matt Mackall wrote:
-> > On Mon, Mar 05, 2007 at 04:07:22PM -0800, Greg KH wrote:
-> > > On Tue, Mar 06, 2007 at 12:40:52AM +0100, Adrian Bunk wrote:
-> > > > On Mon, Mar 05, 2007 at 10:58:13AM -0800, Greg KH wrote:
-> > > > > 
-> > > > > Ok, how about the following patch.  Is it acceptable to everyone?
-> > > > > 
-> > > > > thanks,
-> > > > > 
-> > > > > greg k-h
-> > > > > 
-> > > > > ---
-> > > > >  init/Kconfig |   13 +++++++++++--
-> > > > >  1 file changed, 11 insertions(+), 2 deletions(-)
-> > > > > 
-> > > > > --- gregkh-2.6.orig/init/Kconfig
-> > > > > +++ gregkh-2.6/init/Kconfig
-> > > > > @@ -290,8 +290,17 @@ config SYSFS_DEPRECATED
-> > > > >  	  that belong to a class, back into the /sys/class heirachy, in
-> > > > >  	  order to support older versions of udev.
-> > > > >  
-> > > > > -	  If you are using a distro that was released in 2006 or later,
-> > > > > -	  it should be safe to say N here.
-> > > > > +	  If you are using an OpenSuSE, Gentoo, Ubuntu, or Fedora
-> > > > > +	  release from 2007 or later, it should be safe to say N here.
-> > > > > +
-> > > > > +	  If you are using Debian or other distros that are slow to
-> > > > > +	  update HAL, please say Y here.
-> > > > >...
-> > > > 
-> > > > The sane solution seems to be to enable SYSFS_DEPRECATED unconditionally 
-> > > > for all users, and schedule it's removal for mid-2008 (or later).
-> > > > 
-> > > > 12 months after the first _release_ of a HAL that can live without seems 
-> > > > to be the first time when we can consider getting rid of it, since all 
-> > > > distributions with at least one release a year should ship it by then.
-> > > > 
-> > > > Currently, SYSFS_DEPRECATED is only a trap for users.
-> > > 
-> > > Huh?
-> > > 
-> > > No, again, I've been using this just fine for about 6 months now.
-> > > 
-> > > And what about all of the servers not using HAL/NetworkManager?
-> > > And what about all of the embedded systems not using either?
-> > > 
-> > > So to not allow this to be turned off by people who might want to (we
-> > > want this for OpenSuSE 10.3, and Fedora 7 also will want this, as will
-> > > other distros released this year), is pretty heavy-handed.
-> > > 
-> > > It also will work in OpenSuSE 10.2 which is already released, and I
-> > > think Fedora 6, but I've only limited experience with these.
-> > > 
-> > > Oh, and Gentoo works just fine, and has been for the past 6 months.
-> > >
-> > > I would just prefer to come up with an acceptable set of wording that
-> > > will work to properly warn people.
-> > > 
-> > > I proposed one such wording which some people took as a slam against
-> > > Debian, which it really was not at all.
-> > > 
-> > > Does someone else want to propose some other wording instead?
-> > 
-> > Back up a bit. Let's review:
-> > 
-> > Problem: NetworkManager stopped working with my ipw2200 on Debian/unstable
-> > 
-> > Theory A: It broke because I'm not running an as-yet-unreleased HAL.
-> > 
-> >  Then we should revert the patch pronto because it's an unqualified
-> >  regression.
-> > 
-> > Theory B: It broke because I'm not running relatively recent HAL.
-> > 
-> >  By all accounts I'm running the latest and greatest HAL and Network
-> >  Manager, more than recent enough to work.
-> > 
-> > Theory C: It broke because I've got some goofy config.
-> > 
-> >  My setup passes no arguments to either. The HAL config file is
-> >  completely bare-bones and there's no sign of any configuration files
-> >  for Network Manager.
-> > 
-> > Theory D: It broke for some nebulous Debian-related reason.
-> > 
-> >  That's a bunch of unhelpful crap.
-> > 
-> 
-> > Can we come up with an actual theory for what's wrong with my setup, please?
-> > Like, perhaps:
-> > 
-> > Theory E: There's some undiagnosed new breakage that this introduces
-> > that no else hit until it went into mainline.
-> 
-> Theory F:  It broke because you are using NetworkManager for your
-> network devices and the patches that fix this have not made it into a
-> real release?
+When dealing with a DEVICE_INSTALLER, dev will be NULL when disconnect()
+is called. This fixes a NULL dereference oops with such devices.
 
-The problem is _NOT_ NetworkManager.  NM just asks HAL for network
-devices, NM does not muck with /sys at all.  If HAL can't see it,
-NetworkManager can't see it, because NM uses HAL.
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+---
+ drivers/net/wireless/mac80211/zd1211rw/zd_usb.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-The problem is that sysfs is fundamentally a kernel API.  Whenever it
-changes, HAL must change or HAL will break.  Same story with anything
-that ever reads from sysfs.
-
-Dan
-
-> I'm just guessing, but does anyone who is having this problem, NOT using
-> NetworkManager?
-> 
-> I'm running an old version of HAL just fine, but I'm not using
-> NetworkManager here.
-> 
-> I am using NetworkManager on a OpenSuSE 10.3 release, but suse's version
-> of NetworkManager is well known to not be anywhere near what is released
-> as a tarball :(
-> 
-> thanks,
-> 
-> greg k-h
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c b/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
+index 8867110..24d22dc 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
+@@ -978,14 +978,17 @@ error:
+ static void disconnect(struct usb_interface *intf)
+ {
+ 	struct ieee80211_hw *dev = zd_intf_to_dev(intf);
+-	struct zd_mac *mac = zd_dev_mac(dev);
+-	struct zd_usb *usb = &mac->chip.usb;
++	struct zd_mac *mac;
++	struct zd_usb *usb;
+ 
+ 	/* Either something really bad happened, or we're just dealing with
+ 	 * a DEVICE_INSTALLER. */
+ 	if (dev == NULL)
+ 		return;
+ 
++	mac = zd_dev_mac(dev);
++	usb = &mac->chip.usb;
++
+ 	dev_dbg_f(zd_usb_dev(usb), "\n");
+ 
+ 	ieee80211_unregister_hw(dev);
+-- 
+1.5.0.5
 
