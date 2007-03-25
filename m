@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50487 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933791AbXC1JMP (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:45343 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932437AbXCYSXz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2007 05:12:15 -0400
-Subject: [PATCH] mac80211: add sta item when changing WDS address
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 27 Mar 2007 18:01:17 +0200
-Message-Id: <1175011277.9282.8.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 25 Mar 2007 14:23:55 -0400
+Message-ID: <4606BE34.7000705@lwfinger.net>
+Date: Sun, 25 Mar 2007 13:23:48 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: David Woodhouse <dwmw2@infradead.org>
+CC: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	Bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] bcm43xx: Fix machine check on PPC for version 1 PHY
+References: <46067d12.1uF8l72xIYAG6Vyb%Larry.Finger@lwfinger.net>	 <200703251613.23880.mb@bu3sch.de> <1174841628.20505.244.camel@pmac.infradead.org>
+In-Reply-To: <1174841628.20505.244.camel@pmac.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds a sta item for the new address when you change a WDS
-link's address. If the sta item cannot be created return an error.
+David Woodhouse wrote:
+> On Sun, 2007-03-25 at 16:13 +0200, Michael Buesch wrote:
+>> I'm not sure this patch is complete.
+>> Joseph made changes to the specs that should fix the issue completely.
+>> I didn't look at the changes, yet. 
+> 
+> I don't see relevant changes in the v3 specs. I was working empirically,
+> reverting parts of the large patch which broke it.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+There aren't any. Joseph is making the changes to the V4 specs, most of which are valid for V3 as
+well. If I have any questions, I ask him privately.
 
----
- net/mac80211/ieee80211.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
-
---- wireless-dev.orig/net/mac80211/ieee80211.c	2007-03-27 16:33:29.523155480 +0200
-+++ wireless-dev/net/mac80211/ieee80211.c	2007-03-27 16:33:47.163155480 +0200
-@@ -4418,6 +4418,15 @@ int ieee80211_if_update_wds(struct net_d
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct sta_info *sta;
- 
-+	if (compare_ether_addr(remote_addr, sdata->u.wds.remote_addr) == 0)
-+		return 0;
-+
-+	/* Create STA entry for the new peer */
-+	sta = sta_info_add(local, dev, remote_addr, GFP_KERNEL);
-+	if (!sta)
-+		return -ENOMEM;
-+	sta_info_put(sta);
-+
- 	/* Remove STA entry for the old peer */
- 	sta = sta_info_get(local, sdata->u.wds.remote_addr);
- 	if (sta) {
-
+Larry
 
