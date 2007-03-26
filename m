@@ -1,60 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40091 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965747AbXCPRHW (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:39965
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751072AbXCZUjy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2007 13:07:22 -0400
-Subject: Re: question: /sys/class/net/*/wireless
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20070316150352.5290eea7@griffin.suse.cz>
-References: <1172920691.4966.6.camel@johannes.berg>
-	 <1172921257.4966.12.camel@johannes.berg>
-	 <1172967669.3402.0.camel@johannes.berg>
-	 <20070316150352.5290eea7@griffin.suse.cz>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8n+sDKBIczHijLm4cKSL"
-Date: Fri, 16 Mar 2007 18:07:12 +0100
-Message-Id: <1174064833.3355.7.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 26 Mar 2007 16:39:54 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH] bcm43xx: Fix machine check on PPC for version 1 PHY
+Date: Mon, 26 Mar 2007 22:39:31 +0200
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de
+References: <46067d12.1uF8l72xIYAG6Vyb%Larry.Finger@lwfinger.net> <460730FF.1050603@lwfinger.net> <1174911202.3238.15.camel@pmac.infradead.org>
+In-Reply-To: <1174911202.3238.15.camel@pmac.infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200703262239.31415.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 26 March 2007 14:13, David Woodhouse wrote:
+> On Sun, 2007-03-25 at 21:33 -0500, Larry Finger wrote:
+> > Joseph has fixed the problem in initb5 (the first hunk), but the second hunk is still not in the new
+> > specs. It was in the previous version in a slightly different form, but was found largely by trial
+> > and error.
+> > 
+> > I would prefer that this patch go forward as is so that we don't end up with this bug in the
+> > released version of 21.6.21. I am in the process of making the initg code match the current specs,
+> > but that will certainly require more testing than I think we have time to complete before 2.6.21 is
+> > released. 
+> 
+> FWIW I tried the mac80211 version (with v4 firmware) and saw very
+> similar machine checks, even after trying to apply the same 'fixes'.
 
---=-8n+sDKBIczHijLm4cKSL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+logs...
 
-On Fri, 2007-03-16 at 15:03 +0100, Jiri Benc wrote:
-
-> > Actually, that was pointless. I should have checked before, but forgot
-> > to, /proc/net/wireless lives in wext-common.c now which is compiled
-> > whenever you have cfg80211/wext-compat and/or wext configured.
->=20
-> Couldn't /sys/class/net/*/wireless be created by wext-common.c as well?
-> (Didn't check, maybe it's not doable.)
-
-Yeah, currently it just lives in some other place, but it could.
-
-> Then we can have /sys/class/net/*/ieee80211 for cfg80211-based
-> interfaces.
-
-And /wireless just present for wext? That won't work out properly, but
-I'm sure once I actually look at the code I can think of something.
-
-johannes
-
---=-8n+sDKBIczHijLm4cKSL
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF+s7A/ETPhpq3jKURAgd5AJ9oYxRhPn6uP0vqvHhyZ60ewVYMwgCfdmrQ
-4NBf19xKXxcoc5ofbAJWYt8=
-=Jtoz
------END PGP SIGNATURE-----
-
---=-8n+sDKBIczHijLm4cKSL--
-
+-- 
+Greetings Michael.
