@@ -1,68 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38984 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030744AbXCHWgO (ORCPT
+Received: from mtagate5.de.ibm.com ([195.212.29.154]:61106 "EHLO
+	mtagate5.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753540AbXCZJIA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2007 17:36:14 -0500
-Subject: Re: wireless extensions vs. 64-bit architectures
-From: Johannes Berg <johannes@sipsolutions.net>
-To: jt@hpl.hp.com
-Cc: Randy Dunlap <randy.dunlap@oracle.com>,
-	Jouni Malinen <jkm@devicescape.com>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>,
-	Dan Williams <dcbw@redhat.com>
-In-Reply-To: <20070308223058.GA24960@bougret.hpl.hp.com>
-References: <20070306171316.GA19669@bougret.hpl.hp.com>
-	 <200703061943.07350.mb@bu3sch.de>
-	 <20070307020310.GA20466@bougret.hpl.hp.com>
-	 <1173364747.14001.7.camel@johannes.berg>
-	 <20070308184954.GA24485@bougret.hpl.hp.com>
-	 <1173382042.3248.63.camel@johannes.berg>
-	 <20070308193412.GG23040@devicescape.com>
-	 <1173382802.3248.68.camel@johannes.berg>
-	 <20070308221128.GA24884@bougret.hpl.hp.com>
-	 <20070308141756.efdfd6da.randy.dunlap@oracle.com>
-	 <20070308223058.GA24960@bougret.hpl.hp.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-A0ugIXUNFx7kSjNbWe1s"
-Date: Thu, 08 Mar 2007 23:36:12 +0100
-Message-Id: <1173393373.3831.23.camel@johannes.berg>
+	Mon, 26 Mar 2007 05:08:00 -0400
+Date: Mon, 26 Mar 2007 11:09:49 +0200
+From: Cornelia Huck <cornelia.huck@de.ibm.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	Matt Mackall <mpm@selenic.com>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Monakhov Dmitriy <dmonakhov@openvz.org>,
+	Eric Rannaud <eric.rannaud@gmail.com>
+Subject: Re: 2.6.21-rc4-mm1
+Message-ID: <20070326110949.5301a571@gondolin.boeblingen.de.ibm.com>
+In-Reply-To: <20070323210618.6a41f5da.akpm@linux-foundation.org>
+References: <20070319205623.299d0378.akpm@linux-foundation.org>
+	<1174433034.62033.16.camel@localhost>
+	<20070320223643.d8cbc3f6.akpm@linux-foundation.org>
+	<4601761F.4000302@lwfinger.net>
+	<20070321185900.GC3801@tuxdriver.com>
+	<20070321202225.GN10459@waste.org>
+	<20070321233917.0393dfd1.akpm@linux-foundation.org>
+	<20070322123508.3785fd30@gondolin.boeblingen.de.ibm.com>
+	<4602752A.5050109@lwfinger.net>
+	<20070322181019.62fe78ed@gondolin.boeblingen.de.ibm.com>
+	<4602D137.4060402@lwfinger.net>
+	<20070323111029.4089ccfb@gondolin.boeblingen.de.ibm.com>
+	<20070323210618.6a41f5da.akpm@linux-foundation.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 23 Mar 2007 21:06:18 -0800,
+Andrew Morton <akpm@linux-foundation.org> wrote:
 
---=-A0ugIXUNFx7kSjNbWe1s
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Would I be right in guessing that this was all triggered by
+> uevent-improve-error-checking-and-handling.patch?
 
-On Thu, 2007-03-08 at 14:30 -0800, Jean Tourrilhes wrote:
+Looks like it, since it passed the uevent failures to the upper layer.
 
-> 	Then, I assume that the powerpc64 must be using a magic
-> version of iwconfig to configure wireless interfaces, because I only
-> ever got one other bug report on the issue. They should have sent the
-> patch to Johannes, because now I know about their unauthorised version
-> of iwconfig.
+> If so, do you think I should labour on with
+> uevent-improve-error-checking-and-handling.patch plus your fix, or should I
+> drop the lot?  (I'm inclined toward the latter, but I'm still not
+> sure which patch(es) need to be dropped).
 
-There probably aren't many powerpc64 users that actually use wireless on
-it since, well, most such machines are pretty stationary and
-well-equipped with gigabit ethernet :)
-
-May I ask who this was though? Some distro?
-
-johannes
-
---=-A0ugIXUNFx7kSjNbWe1s
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF8I/c/ETPhpq3jKURAhHRAJ9Ye0K+KXMJmOEr685gXO6gIP892wCeMbrk
-9SIHHbbFdMPTffn+6q6Cs5A=
-=cd6K
------END PGP SIGNATURE-----
-
---=-A0ugIXUNFx7kSjNbWe1s--
-
+This depends on what semantics uevent returning an error code should
+have. The firmware code was using it to suppress uevents, but
+uevent_suppress is a better idea now. So if we want uevent returning !=
+0 to imply "something really bad happened", all uevent functions have
+to be audited and those that work like firmware_uevent have to be
+converted to uevent_suppress. This would be cleaner, but I'm not sure
+it's worth the work.
