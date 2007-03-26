@@ -1,76 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55581 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751967AbXCGPgE (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49045 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752669AbXC1JGM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2007 10:36:04 -0500
-Date: Wed, 7 Mar 2007 16:40:20 +0000
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: akpm@osdl.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] prism54usb: Fix hail of warnings on 64bit platforms
-Message-ID: <20070307164020.16944e32@lxorguk.ukuu.org.uk>
+	Wed, 28 Mar 2007 05:06:12 -0400
+Received: from [131.234.78.148]
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.66)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1HWU6b-00047C-Rh
+	for linux-wireless@vger.kernel.org; Wed, 28 Mar 2007 10:06:11 +0100
+Subject: mac80211 qdisc bugs [Fwd: Re: [patch] d80211: use pfifo_qdisc_ops  rather than d80211-specific qdisc]
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xGWS/qRRW8vFeE/xxwb4"
+Date: Mon, 26 Mar 2007 19:55:33 +0200
+Message-Id: <1174931733.25887.34.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If you want to cast a pointer to a small value then start by turning it
-into an unsigned long so the compiler knows what is going on.
 
-Personally I find the whole approach used by this driver for types of
-registers (which are really USB register numbers) utterly perverse...
+--=-xGWS/qRRW8vFeE/xxwb4
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+Has anybody addressed these points yet? I don't understand much about
+qdiscs myself... Add to todo list?
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc2-mm2/drivers/net/wireless/mac80211/p54/prism54usb.c linux-2.6.21-rc2-mm2/drivers/net/wireless/mac80211/p54/prism54usb.c
---- linux.vanilla-2.6.21-rc2-mm2/drivers/net/wireless/mac80211/p54/prism54usb.c	2007-03-06 23:09:47.000000000 +0000
-+++ linux-2.6.21-rc2-mm2/drivers/net/wireless/mac80211/p54/prism54usb.c	2007-03-06 19:15:52.000000000 +0000
-@@ -533,7 +533,7 @@
- #define P54U_WRITE(type, addr, data) \
- 	do {\
- 		err = p54u_write(priv, buf, type,\
--				 cpu_to_le32((u32)addr), data);\
-+				 cpu_to_le32((u32)(unsigned long)addr), data);\
- 		if (err) \
- 			goto fail;\
- 	} while (0)
-@@ -541,7 +541,7 @@
- #define P54U_READ(type, addr) \
- 	do {\
- 		err = p54u_read(priv, buf, type,\
--				cpu_to_le32((u32)addr), &reg);\
-+				cpu_to_le32((u32)(unsigned long)addr), &reg);\
- 		if (err)\
- 			goto fail;\
- 	} while (0)
-@@ -648,16 +648,16 @@
- 			   cpu_to_le32(0xc0000f00));
- 
- 		P54U_WRITE(NET2280_DEV_U32,
--			   0x0020 | (u32)&devreg->direct_mem_win, 0);
-+			   0x0020 | (unsigned long)&devreg->direct_mem_win, 0);
- 		P54U_WRITE(NET2280_DEV_U32,
--			   0x0020 | (u32)&devreg->direct_mem_win,
-+			   0x0020 | (unsigned long)&devreg->direct_mem_win,
- 			   cpu_to_le32(1));
- 
- 		P54U_WRITE(NET2280_DEV_U32,
--			   0x0024 | (u32)&devreg->direct_mem_win,
-+			   0x0024 | (unsigned long)&devreg->direct_mem_win,
- 			   cpu_to_le32(block_len));
- 		P54U_WRITE(NET2280_DEV_U32,
--			   0x0028 | (u32)&devreg->direct_mem_win,
-+			   0x0028 | (unsigned long)&devreg->direct_mem_win,
- 			   cpu_to_le32(offset));
- 
- 		P54U_WRITE(NET2280_DEV_U32, &devreg->dma_addr,
-@@ -670,7 +670,7 @@
- 		mdelay(10);
- 
- 		P54U_READ(NET2280_DEV_U32,
--			  0x002C | (u32)&devreg->direct_mem_win);
-+			  0x002C | (unsigned long)&devreg->direct_mem_win);
- 		if (!(reg & cpu_to_le32(ISL38XX_DMA_STATUS_DONE)) ||
- 		    !(reg & cpu_to_le32(ISL38XX_DMA_STATUS_READY))) {
- 			printk(KERN_ERR "prism54usb: firmware DMA transfer "
+johannes
+
+-------- Forwarded Message --------
+> From: Patrick McHardy <kaber@trash.net>
+> To: David Kimdon <david.kimdon@devicescape.com>
+> Cc: netdev@vger.kernel.org, John W. Linville <linville@tuxdriver.com>,
+> Jiri Benc <jbenc@suse.cz>
+> Subject: Re: [patch] d80211: use pfifo_qdisc_ops rather than
+> d80211-specific qdisc
+> Date: Thu, 26 Oct 2006 03:21:10 +0200
+
+[...]
+
+> BTW, I noticed a few bugs while looking at the qdisc handling in
+> wireless-dev:
+>=20
+> - wme_qdiscop_enqueue doesn't increment q.qlen for packets queued
+>   to q->requeued[], which might cause upper layer code to stop
+>   dequeueing if q.qlen reaches zero.
+>=20
+> - classify_1d doesn't care about tc_classify return values.
+>   tc_classify may decide to steal packets, drop them, etc. In case
+>   of stolen packets this causes use-after-free, otherwise just
+>   malfunctions.
+>=20
+> - classify_1d returns res.class if it is !=3D -1, which can never happen
+>   (except with an empty classifier list because of the explicit
+>   initialization, but you should check the return code) since ->get()
+>   and ->bind_tcf() both return 0 for invalid classes and the classid
+>   otherwise. There's also an off-by-one, classids start at one, so it
+>   should return res.class - 1 (or better res.classid - 1, which is
+>   meant to be a numerical identifier).
+>=20
+> - wme_discop_destroy leaks classifier module references and memory
+>   when destroying classifiers, it should use tcf_destroy()
+>=20
+> Considering that it is possibly and may be desirable to attach a
+> different qdisc than the built-in multiband qdisc, it might also
+> make sense to split the 80211 specific classification in a seperate
+> classifier module to allow simple classification of management traffic
+> with other qdiscs.
+
+
+--=-xGWS/qRRW8vFeE/xxwb4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGCAkV/ETPhpq3jKURAkUgAJ4mLufK35VYbu50Q6ISmq4CyPybcACgsIN6
+IuVUVkt+vcZ3KxL6PKxCSL8=
+=/UqC
+-----END PGP SIGNATURE-----
+
+--=-xGWS/qRRW8vFeE/xxwb4--
+
