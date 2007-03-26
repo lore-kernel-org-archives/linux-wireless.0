@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:44482 "EHLO pasmtpB.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933059AbXCHTCc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2007 14:02:32 -0500
-Date: Thu, 8 Mar 2007 20:02:41 +0100
-From: Sam Ravnborg <sam@ravnborg.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
-	linux-sparse@vger.kernel.org
-Subject: Re: sparse using insane amounts of memory
-Message-ID: <20070308190241.GA9792@uranus.ravnborg.org>
-References: <1173319356.3546.54.camel@johannes.berg> <1173375270.15842.24.camel@dv> <1173375791.3248.37.camel@johannes.berg> <200703081908.40997.IvDoorn@gmail.com> <Pine.LNX.4.64.0703081023490.10832@woody.linux-foundation.org>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50436 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752824AbXC1JLN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Mar 2007 05:11:13 -0400
+Subject: rx racing against removing interfaces?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FE2vOw9bps3QglgYNyG5"
+Date: Tue, 27 Mar 2007 01:05:22 +0200
+Message-Id: <1174950322.25887.59.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <Pine.LNX.4.64.0703081023490.10832@woody.linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> You can then make it a compile-time failure with something like
-> 
-> 	extern unsigned int this_doesnt_exist_and_wont_link;
-> 
-> 	is_contiguous_mask(x) ? (x) : this_doesnt_exist_and_wont_link;
-> 
-> which returns "x" if it's ok, and an unlinkable expression if it isn't.
 
-Or you can use the already defined macros in kernel.h for this:
+--=-FE2vOw9bps3QglgYNyG5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-/* Force a compilation error if condition is true */
-#define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
+Isn't there a race there when you remove interfaces and at the same time
+__ieee80211_rx is running? I don't see anything that should stop that,
+and if it happens we'll probably blow up pretty spectacularly with
+accesses to a freed netdev, or even sending it frames...
 
-/* Force a compilation error if condition is true, but also produce a
-   result (of value 0 and type size_t), so the expression can be used
-   e.g. in a structure initializer (or where-ever else comma expressions
-   aren't permitted). */
-#define BUILD_BUG_ON_ZERO(e) (sizeof(char[1 - 2 * !!(e)]) - 1)
+johannes
 
-	Sam
+--=-FE2vOw9bps3QglgYNyG5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGCFGy/ETPhpq3jKURAnlbAJ9j0lMQ6MP84tXaukQL8+RJgqxHbACfTnRJ
+aKIV9HsRVYWZYCELIM3H5DI=
+=MPdl
+-----END PGP SIGNATURE-----
+
+--=-FE2vOw9bps3QglgYNyG5--
+
