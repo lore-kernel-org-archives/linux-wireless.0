@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp126.iad.emailsrvr.com ([207.97.245.126]:49734 "EHLO
-	smtp126.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752244AbXCHP6P (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.189]:55968 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751010AbXCZKej (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2007 10:58:15 -0500
-Message-ID: <45F032B3.70506@gentoo.org>
-Date: Thu, 08 Mar 2007 10:58:43 -0500
-From: Daniel Drake <dsd@gentoo.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Maxime Austruy <maxime@tralhalla.org>,
+	Mon, 26 Mar 2007 06:34:39 -0400
+Received: by mu-out-0910.google.com with SMTP id g7so2703784muf
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2007 03:34:38 -0700 (PDT)
+Date: Mon, 26 Mar 2007 12:34:33 +0200
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Cornelia Huck <cornelia.huck@de.ibm.com>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Matt Mackall <mpm@selenic.com>, linux-kernel@vger.kernel.org,
 	linux-wireless@vger.kernel.org,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: zd1211rw problems
-References: <1173142906.15891.71.camel@johannes.berg>	 <20070306171541.GA18622@tralhalla.org> <1173317249.3546.43.camel@johannes.berg>
-In-Reply-To: <1173317249.3546.43.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Monakhov Dmitriy <dmonakhov@openvz.org>
+Subject: Re: 2.6.21-rc4-mm1
+Message-ID: <20070326103432.GB18799@zenigma>
+References: <20070321202225.GN10459@waste.org> <20070321233917.0393dfd1.akpm@linux-foundation.org> <20070322123508.3785fd30@gondolin.boeblingen.de.ibm.com> <4602752A.5050109@lwfinger.net> <20070322181019.62fe78ed@gondolin.boeblingen.de.ibm.com> <4602D137.4060402@lwfinger.net> <20070323111029.4089ccfb@gondolin.boeblingen.de.ibm.com> <20070323210618.6a41f5da.akpm@linux-foundation.org> <20070326110949.5301a571@gondolin.boeblingen.de.ibm.com> <20070326012232.0f0b9e09.akpm@linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070326012232.0f0b9e09.akpm@linux-foundation.org>
+From: Eric Rannaud <eric.rannaud@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Tue, 2007-03-06 at 09:15 -0800, Maxime Austruy wrote:
+On Mon, Mar 26, 2007 at 01:22:32AM -0800, Andrew Morton wrote:
+> On Mon, 26 Mar 2007 11:09:49 +0200 Cornelia Huck <cornelia.huck@de.ibm.com> wrote:
+> > > If so, do you think I should labour on with
+> > > uevent-improve-error-checking-and-handling.patch plus your fix, or should I
+> > > drop the lot?  (I'm inclined toward the latter, but I'm still not
+> > > sure which patch(es) need to be dropped).
+> > 
+> > This depends on what semantics uevent returning an error code should
+> > have. The firmware code was using it to suppress uevents, but
+> > uevent_suppress is a better idea now. So if we want uevent returning !=
+> > 0 to imply "something really bad happened", all uevent functions have
+> > to be audited and those that work like firmware_uevent have to be
+> > converted to uevent_suppress. This would be cleaner, but I'm not sure
+> > it's worth the work.
 > 
->> fyi, this looks like: 
->>    http://bugzilla.kernel.org/show_bug.cgi?id=7752
+> We're generally struggling to stay alive amongst all the bugs at present -
+> I'll drop all those patches.
 
-It would be useful if someone could post results from the patch there. I 
-do not see the issue on any of my devices.
+My mistake, I wrote the guilty patch
+uevent-improve-error-checking-and-handling.patch assuming it was safe to
+treat the return value as an error code, since several uevent functions
+returns things like -ENOMEM.
 
-> Yeah, looks like. Do you want me to open another bug report for the
-> filter-not -working issue?
+Should I rework the patch as Cornelia suggests and resubmit later, when
+things have settled down a little?
 
-Yes please.
-
-Daniel
+Thanks.
