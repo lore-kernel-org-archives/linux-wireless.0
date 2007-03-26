@@ -1,69 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35549 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964964AbXCALaR (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:40054
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752904AbXCZUkO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2007 06:30:17 -0500
-Subject: Re: [PATCH] allow wiphy renaming
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Greg KH <greg@kroah.com>
-In-Reply-To: <1172672119.5015.11.camel@johannes.berg>
-References: <1172672119.5015.11.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pfF90A2VyDsO7NRn1AJ0"
-Date: Thu, 01 Mar 2007 12:29:52 +0100
-Message-Id: <1172748592.11911.32.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 26 Mar 2007 16:40:14 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] zd1211rw-mac80211: Fix for monitor mode bug
+Date: Mon, 26 Mar 2007 22:39:06 +0200
+Cc: Andy Green <andy@warmcat.com>, Jiri Benc <jbenc@suse.cz>,
+	Daniel Drake <dsd@gentoo.org>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, kune@deine-taler.de
+References: <20070325231817.9C5887B409F@zog.reactivated.net> <200703261328.28156.mb@bu3sch.de> <1174908666.1536.15.camel@johannes.berg>
+In-Reply-To: <1174908666.1536.15.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200703262239.07013.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 26 March 2007 13:31, Johannes Berg wrote:
+> On Mon, 2007-03-26 at 13:28 +0200, Michael Buesch wrote:
+> 
+> > We currently have two module parameters in bcm43xx-mac80211 for this:
+> > 
+> > static int modparam_mon_keep_bad;
+> > module_param_named(mon_keep_bad, modparam_mon_keep_bad, int, 0444);
+> > MODULE_PARM_DESC(mon_keep_bad, "Keep bad frames in monitor mode");
+> > 
+> > static int modparam_mon_keep_badplcp;
+> > module_param_named(mon_keep_badplcp, modparam_mon_keep_bad, int, 0444);
+> > MODULE_PARM_DESC(mon_keep_badplcp, "Keep frames with bad PLCP in monitor mode");
+> 
+> Out of curiosity, doesn't that break things when you have both a monitor
+> and a non-monitor interface [1]? Or do you just disable it then?
+> 
+> johannes
+> 
+> [1] I think that mac80211 assumes CRC checks have passed, no?
 
---=-pfF90A2VyDsO7NRn1AJ0
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Well, yeah. It does of course. If you have a STA and a MON interface,
+the STA also receives the packs with bad CRCs. But that's how
+mac80211 designed the virt-interface stuff.
+Same goes for promisc. If you have a STA and a MON you can't have
+the STA in non-promisc mode, so you also receive promisc packets on
+the STA. That's how it's supposed to be. (I think mac80211 filters
+them in the STA code somewhere).
 
-On Wed, 2007-02-28 at 15:15 +0100, Johannes Berg wrote:
-> This patch enables userspace to rename 802.11 PHYs via nl80211. It adds
-> the first multicast group and notifies it of these renames as well.
+The modparams actually are just a temporary hack and were never meant
+to stay there. I wanted to have the knob in cfg80211, sooner or later.
+So when the knob is there, mac80211 should take care that the STA
+doesn't receive the bad packets.
 
-> Tested and works :)
-
-Well, I forgot to test the corner cases. The patch is somewhat broken.
-
-> +	/* prohibit calling the thing phy%d when %d is not its number */
-> +	sscanf(newname, PHY_NAME "%n", &idx, &taken);
-> +	if (taken =3D=3D strlen(newname) && idx !=3D rdev->idx)
-> +		return -EINVAL;
-
-sscanf has a bug that makes this use case not work. If it worked
-correctly, this would also disallow things like 'phy007' when the index
-is not 7.
-
-The whole point in disallowing something other than the own number was
-to simplify code in other places so I don't have to check for used
-numbers when assigning new ones. Any comments on the whole thing? I
-kinda fear that if I go through with this someone will show up who
-really desperately needs to call something phy7 when it has index 22 and
-I will be held responsible ;)
-
-OTOH, this may be an incentive to not use phy* for stable names to begin
-with, avoiding the problem we see with netdevs and people continually
-complaining about unstable names...
-
-johannes
-
---=-pfF90A2VyDsO7NRn1AJ0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF5rkw/ETPhpq3jKURAtHaAJ9Sse4mgPgE2l6T4cQzSThrX5gAKwCfVofg
-4um3AEDmlsWTc0gTuJbppz8=
-=jjxo
------END PGP SIGNATURE-----
-
---=-pfF90A2VyDsO7NRn1AJ0--
-
+-- 
+Greetings Michael.
