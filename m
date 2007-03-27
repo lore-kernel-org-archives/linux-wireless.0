@@ -1,63 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:41194 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751889AbXCPDlH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2007 23:41:07 -0400
-Subject: [PATCH 3/5] mac80211: fix key restricted/open display
-From: Hong Liu <hong.liu@intel.com>
-To: Jiri Benc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Message-Id: <1174015698.3408.41.camel@devlinux-hong>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50495 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934015AbXC1JMW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Mar 2007 05:12:22 -0400
+Subject: debugging network manager association failure?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BqBzMUIWnoBS5g3J/pzj"
+Date: Tue, 27 Mar 2007 21:26:11 +0200
+Message-Id: <1175023571.5151.3.camel@johannes.berg>
 Mime-Version: 1.0
-Date: Fri, 16 Mar 2007 11:28:24 +0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Signed-off-by: Hong Liu <hong.liu@intel.com>
+--=-BqBzMUIWnoBS5g3J/pzj
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
+Hi,
 
- net/mac80211/ieee80211_ioctl.c |   16 ++++++++++++++++
- 1 files changed, 16 insertions(+), 0 deletions(-)
+Usually I simply use wpa_supplicant itself when testing but for some
+reason I decided to use nm today... and it failed.
 
-26742fdf9c5835a0abcb75a364840beee08953f8
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-index f57e48f..46fd125 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -2934,6 +2934,14 @@ static int ieee80211_ioctl_siwencode(str
- 	else
- 		idx--;
- 
-+	if (erq->flags & (IW_ENCODE_OPEN | IW_ENCODE_RESTRICTED))
-+		if (sdata->type == IEEE80211_IF_TYPE_STA ||
-+		    sdata->type == IEEE80211_IF_TYPE_IBSS)
-+			sdata->u.sta.auth_algs =
-+				(erq->flags & IW_ENCODE_RESTRICTED) ?
-+				IEEE80211_AUTH_ALG_SHARED_KEY :
-+				IEEE80211_AUTH_ALG_OPEN;
-+
- 	if (erq->flags & IW_ENCODE_DISABLED)
- 		alg = ALG_NONE;
- 	else if (erq->length == 0) {
-@@ -2993,6 +3001,14 @@ static int ieee80211_ioctl_giwencode(str
- 	erq->length = sdata->keys[idx]->keylen;
- 	erq->flags |= IW_ENCODE_ENABLED;
- 
-+	if (sdata->type == IEEE80211_IF_TYPE_STA ||
-+	    sdata->type == IEEE80211_IF_TYPE_IBSS) {
-+		if (sdata->u.sta.auth_algs & IEEE80211_AUTH_ALG_OPEN)
-+			erq->flags |= IW_ENCODE_OPEN;
-+		else if (sdata->u.sta.auth_algs & IEEE80211_AUTH_ALG_SHARED_KEY)
-+			erq->flags |= IW_ENCODE_RESTRICTED;
-+	}
-+
- 	return 0;
- }
- 
--- 
-1.3.3
+My nm is 0.6.4 and wpa_supplicant 0.6.0. When I use wpa_supplicant with
+a config file like this:
+--- %< ---
+ctrl_interface=3D/var/run/wpa_supplicant
+eapol_version=3D1
+ap_scan=3D1
+fast_reauth=3D1
+network=3D{
+        ssid=3D"berg"
+        priority=3D1
+        key_mgmt=3DWPA-PSK
+        psk=3D"stuffhere"
+        pairwise=3DCCMP
+        group=3DCCMP TKIP
+}
+--- >% ---
+
+it works perfectly. But with nm it doesn't do anything at all, stracing
+it yields that it thinks it's getting authentication timeouts with
+00:...:00. Any idea what could be causing this? Is this a bug in
+mac80211?
+
+johannes
+
+--=-BqBzMUIWnoBS5g3J/pzj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGCW/S/ETPhpq3jKURAvYJAKCT3Aj0y6NGOzb5yiApzxIi759oagCbBePG
+Pivuhe/dwOguUqJiVjrsLUo=
+=NlB+
+-----END PGP SIGNATURE-----
+
+--=-BqBzMUIWnoBS5g3J/pzj--
 
