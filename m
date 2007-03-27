@@ -1,95 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33704
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965939AbXCFQpW (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50459 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753635AbXC1JLj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2007 11:45:22 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Jiri Benc <jbenc@suse.cz>
-Subject: [PATCH] mac80211: Fix pkt_type annotations
-Date: Tue, 6 Mar 2007 17:43:41 +0100
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200703061743.41510.mb@bu3sch.de>
+	Wed, 28 Mar 2007 05:11:39 -0400
+Subject: BUG in bcm43xx/mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Benc <jbenc@suse.cz>, Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tP86D55+gETIMsHKn2fq"
+Date: Tue, 27 Mar 2007 17:33:38 +0200
+Message-Id: <1175009618.5710.10.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no need for an instance of the enum in ieee80211_local.
-Remove it. Also make the constants uppercase to respect
-kernel coding style.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+--=-tP86D55+gETIMsHKn2fq
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Index: wireless-dev/net/mac80211/ieee80211.c
-===================================================================
---- wireless-dev.orig/net/mac80211/ieee80211.c	2007-03-05 13:36:16.000000000 +0100
-+++ wireless-dev/net/mac80211/ieee80211.c	2007-03-06 17:41:19.000000000 +0100
-@@ -4051,7 +4051,7 @@ void ieee80211_rx_irqsafe(struct ieee802
- 	skb->dev = local->mdev;
- 	/* copy status into skb->cb for use by tasklet */
- 	memcpy(skb->cb, status, sizeof(*status));
--	skb->pkt_type = ieee80211_rx_msg;
-+	skb->pkt_type = IEEE80211_RX_MSG;
- 	skb_queue_tail(&local->skb_queue, skb);
- 	tasklet_schedule(&local->tasklet);
- }
-@@ -4081,7 +4081,7 @@ void ieee80211_tx_status_irqsafe(struct 
- 	/* copy pointer to saved status into skb->cb for use by tasklet */
- 	memcpy(skb->cb, &saved, sizeof(saved));
- 
--	skb->pkt_type = ieee80211_tx_status_msg;
-+	skb->pkt_type = IEEE80211_TX_STATUS_MSG;
- 	skb_queue_tail(status->control.flags & IEEE80211_TXCTL_REQ_TX_STATUS ?
- 		       &local->skb_queue : &local->skb_queue_unreliable, skb);
- 	tmp = skb_queue_len(&local->skb_queue) +
-@@ -4108,7 +4108,7 @@ static void ieee80211_tasklet_handler(un
- 	while ((skb = skb_dequeue(&local->skb_queue)) ||
- 	       (skb = skb_dequeue(&local->skb_queue_unreliable))) {
- 		switch (skb->pkt_type) {
--		case ieee80211_rx_msg:
-+		case IEEE80211_RX_MSG:
- 			/* status is in skb->cb */
- 			memcpy(&rx_status, skb->cb, sizeof(rx_status));
- 			/* Clear skb->type in order to not confuse kernel
-@@ -4116,7 +4116,7 @@ static void ieee80211_tasklet_handler(un
- 			skb->pkt_type = 0;
- 			__ieee80211_rx(local_to_hw(local), skb, &rx_status);
- 			break;
--		case ieee80211_tx_status_msg:
-+		case IEEE80211_TX_STATUS_MSG:
- 			/* get pointer to saved status out of skb->cb */
- 			memcpy(&tx_status, skb->cb, sizeof(tx_status));
- 			skb->pkt_type = 0;
-Index: wireless-dev/net/mac80211/ieee80211_i.h
-===================================================================
---- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-03-05 13:36:16.000000000 +0100
-+++ wireless-dev/net/mac80211/ieee80211_i.h	2007-03-06 17:40:15.000000000 +0100
-@@ -342,6 +342,11 @@ struct ieee80211_sub_if_data {
- 
- #define IEEE80211_DEV_TO_SUB_IF(dev) netdev_priv(dev)
- 
-+enum {
-+	IEEE80211_RX_MSG	= 1,
-+	IEEE80211_TX_STATUS_MSG	= 2,
-+};
-+
- struct ieee80211_local {
- 	/* embed the driver visible part.
- 	 * don't cast (use the static inlines below), but we keep
-@@ -374,10 +379,6 @@ struct ieee80211_local {
- 	struct tasklet_struct tasklet;
- 	struct sk_buff_head skb_queue;
- 	struct sk_buff_head skb_queue_unreliable;
--	enum {
--		ieee80211_rx_msg = 1,
--		ieee80211_tx_status_msg = 2
--	} ieee80211_msg_enum;
- 
- 	/* Station data structures */
- 	struct kset sta_kset;
+I just rmmod'ed bcm43xx-mac80211, rc80211_simple and mac80211 all at
+once while wpa supplicant was running...
 
--- 
-Greetings Michael.
+[17285.438218] BUG: sleeping function called from invalid context at kernel=
+/mutex.c:86
+[17285.438226] in_atomic():1, irqs_disabled():0
+[17285.438231] Call Trace:
+[17285.438236] [EF7DDC70] [C0008D6C] show_stack+0x3c/0x194 (unreliable)
+[17285.438256] [EF7DDCA0] [C0025C00] __might_sleep+0xd4/0xe8
+[17285.438273] [EF7DDCB0] [C02CF1C8] mutex_lock+0x24/0x3c
+[17285.438289] [EF7DDCD0] [F2750960] bcm43xx_dev_set_key+0xe8/0x3e8 [bcm43x=
+x_mac80211]
+[17285.438331] [EF7DDD10] [F2722004] sta_info_free+0xe4/0x1a4 [mac80211]
+[17285.438385] [EF7DDD50] [F2722140] sta_info_flush+0x7c/0xb4 [mac80211]
+[17285.438407] [EF7DDD70] [F272B538] ieee80211_if_reinit+0x130/0x2dc [mac80=
+211]
+[17285.438432] [EF7DDDA0] [C02366E0] unregister_netdevice+0x120/0x268
+[17285.438446] [EF7DDDC0] [F272AE2C] __ieee80211_if_del+0x30/0x44 [mac80211=
+]
+[17285.438469] [EF7DDDE0] [F2719F1C] ieee80211_unregister_hw+0x78/0x264 [ma=
+c80211]
+[17285.438491] [EF7DDE10] [F274FF44] bcm43xx_remove+0xa4/0xb0 [bcm43xx_mac8=
+0211]
+[17285.438510] [EF7DDE30] [F222B6A4] ssb_device_remove+0x38/0x58 [ssb]
+[17285.438548] [EF7DDE40] [C01D53A8] __device_release_driver+0x88/0xc8
+[17285.438561] [EF7DDE50] [C01D5B68] driver_detach+0x110/0x140
+[17285.438570] [EF7DDE70] [C01D4E3C] bus_remove_driver+0x8c/0xc8
+[17285.438580] [EF7DDE90] [C01D5BF0] driver_unregister+0x18/0x34
+[17285.438589] [EF7DDEB0] [F222B0F8] ssb_driver_unregister+0x14/0x24 [ssb]
+[17285.438604] [EF7DDEC0] [F2766530] bcm43xx_exit+0x18/0x3678 [bcm43xx_mac8=
+0211]
+[17285.438623] [EF7DDED0] [C004CAC0] sys_delete_module+0x1ac/0x210
+[17285.438633] [EF7DDF40] [C0010BD8] ret_from_syscall+0x0/0x38
+[17285.438646] --- Exception: c01 at 0xff6afd8
+[17285.438661]     LR =3D 0x10001214
+
+
+--=-tP86D55+gETIMsHKn2fq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGCTlR/ETPhpq3jKURAom2AKCgiWNnt2cnmPESjHpG0uqtccyeZACfZOPY
+9Ln+75mWthIKOaRqsQ6xIEQ=
+=t0/z
+-----END PGP SIGNATURE-----
+
+--=-tP86D55+gETIMsHKn2fq--
+
