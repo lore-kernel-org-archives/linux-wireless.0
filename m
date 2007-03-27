@@ -1,48 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:55407 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932223AbXCUPYV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2007 11:24:21 -0400
-Date: Wed, 21 Mar 2007 16:24:19 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Andy Green <andy@warmcat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Faking powersave for fun and realtime channel muxing
-Message-ID: <20070321162419.09b45703@griffin.suse.cz>
-In-Reply-To: <45FEEB34.1000403@warmcat.com>
-References: <45FEEB34.1000403@warmcat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from wr-out-0506.google.com ([64.233.184.227]:24083 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934017AbXC0R3Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Mar 2007 13:29:16 -0400
+Received: by wr-out-0506.google.com with SMTP id 76so2043641wra
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Mar 2007 10:29:15 -0700 (PDT)
+Message-ID: <43e72e890703271029q169c3fdo6d410f272eaf791@mail.gmail.com>
+Date: Tue, 27 Mar 2007 13:29:14 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: mohamed <mabbas@linux.intel.com>
+Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery and association
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <43e72e890703271011h47a6177dp32b7c2324ab51423@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+References: <1174909105.1364.53.camel@dell-4965.jf.intel.com>
+	 <43e72e890703271005u6173567aq2c1c04635da3ce50@mail.gmail.com>
+	 <43e72e890703271011h47a6177dp32b7c2324ab51423@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 19 Mar 2007 19:57:40 +0000, Andy Green wrote:
-> Depending on the limitations of the time you can arrange to "sleep" with 
-> the AP, using this technique you could even associate multiple logical 
-> interfaces to APs on different channels despite they are sharing one 
-> physical radio.  That could be cool for dealing with realtime selection 
-> of the best channel/AP when the guy is mobile, for example.
+On 3/27/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On 3/27/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > On 3/26/07, mohamed <mabbas@linux.intel.com> wrote:
+> >
+> > > +/* Get 11n capabilties from low level driver */
+> > > +static void ieee80211_fill_ht_ie(struct net_device *dev,
+> > > +                                struct ieee80211_ht_capability *ht_capab)
+> > > +{
+> > > +       int rc;
+> > > +       struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+> > > +
+> > > +       if (!local->ops->get_ht_capab){
+> > > +               memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
+> > > +               return;
+> > > +       }
+> > > +
+> > > +       rc = local->ops->get_ht_capab(local_to_hw(local), ht_capab);
+> > > +       if (!rc) {
+> > > +               memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
+> > > +               return;
+> > > +       }
+> > >
+> > > +       ht_capab->capabilitiesInfo = (__le16) cpu_to_le16(
+> > > +                                       ht_capab->capabilitiesInfo);
+> > > +       ht_capab->extended_ht_capability_info = (__le16) cpu_to_le16(
+> > > +                                       ht_capab->extended_ht_capability_info);
+> > > +       ht_capab->tx_BF_capability_info = (__le32) cpu_to_le32(
+> > > +                                       ht_capab->tx_BF_capability_info);
+> > > +}
+> > > +
+> >
+> > We should memset to 0 the entire ht_capab to regardless as its coming
+> > from skb_put() otherwise we'll get random data there if we don't set
+> > it and we sure as hell don't want to just transmit that :) Also
+> > ieee80211_send_assoc() is already checking for
+> > local->ops->get_ht_capab so lets just do a BUG_ON here to capture
+> > cases where someone else didn't do the proper checking. So how about
+> > instead something like:
+> >
+> > /* Get 11n capabilties from low level driver */
+> > static void ieee80211_fill_ht_ie(struct net_device *dev,
+> >                                 struct ieee80211_ht_capability *ht_capab)
+> > {
+> >        struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+> >        BUG_ON(!local->ops->get_ht_capab);
+> >        memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
+> >        if (!local->ops->get_ht_capab(local_to_hw(local), ht_capab))
+> >                return;
+> >        ht_capab->capabilitiesInfo = (__le16) cpu_to_le16(
+> >                                        ht_capab->capabilitiesInfo);
+> >        ht_capab->extended_ht_capability_info = (__le16) cpu_to_le16(
+> >                                        ht_capab->extended_ht_capability_info);
+> >        ht_capab->tx_BF_capability_info = (__le32) cpu_to_le32(
+> >                                        ht_capab->tx_BF_capability_info);
+> > }
+> >
+>
+> On second thought just memset to 0 on ieee80211_send_assoc() right
+> after the skb_put and remove that from above.
+>
+>   Luis
+>
 
-Nice idea, but it won't work. You are completely dependent on AP's
-timing and if the beacon interval and DTIM period is the same at both
-APs (that's quite likely) and DTIMs are sent at more or less the same
-time (that could happen), bad luck. How would you explain to users that
-it won't work in some random cases?
+Last few comments:
 
-Using the time between two DTIMs to tune to other channels for other
-purposes (like _active_ scanning - note that passive scanning won't
-work) or getting rough idea of channels usage could work. But as was
-already noted, it requires tx traffic to be buffered, thus degrading
-performance. You need to balance these two things pretty well - not an
-easy job, I would say.
+I. In struct ieee80211_ops you added your hunk after the TSF comment,
+but before  u64 (*get_tsf)(struct ieee80211_hw *hw) was listed. Please
+move the hunk after get_tsf or before the comment.
 
-Also, consider that an amount of time required to tune to another
-channel is not zero.
+II. In ieee80211_fill_ht_ie() you do cpu_to_le* on the same fields.. I
+take it the driver's get_ht_capab() is supposed to fill these. Since
+you already defined them as little endian in the struct
+ieee80211_ht_capability, how about just leaving that up to the driver
+developer to make sure they do this? That's would be 6 lines less of
+code in ieee80211_fill_ht_ie().
 
-Thanks,
-
- Jiri
-
--- 
-Jiri Benc
-SUSE Labs
+  Luis
