@@ -1,61 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:35911 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933780AbXCZXpq (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50505 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933771AbXC1JMg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2007 19:45:46 -0400
-Date: Mon, 26 Mar 2007 16:45:03 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: mohamed <mabbas@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [patch 4/5] IEEE 802.11n management action frame data  structures
-Message-Id: <20070326164503.f276cd71.randy.dunlap@oracle.com>
-In-Reply-To: <1174909342.1364.60.camel@dell-4965.jf.intel.com>
-References: <1174909342.1364.60.camel@dell-4965.jf.intel.com>
+	Wed, 28 Mar 2007 05:12:36 -0400
+Subject: Re: d80211: How does TX flow control work?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jan Kiszka <jan.kiszka@web.de>
+Cc: Jiri Benc <jbenc@suse.cz>, Ivo Van Doorn <ivdoorn@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <45A2A728.1070404@web.de>
+References: <459A5945.80909@web.de>
+	 <20070103185203.2754e059@griffin.suse.cz>	<459BF179.6000906@web.de>
+	 <20070103191853.4f440b8b@griffin.suse.cz> <459BFB05.9040608@web.de>
+	 <45A03825.9080807@web.de>  <45A2A728.1070404@web.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QoR66N9xK0NewvgLHwK3"
+Date: Tue, 27 Mar 2007 22:58:50 +0200
+Message-Id: <1175029130.5151.6.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 26 Mar 2007 04:42:22 -0700 mohamed wrote:
 
-> Add draft IEEE 802.11n management action frame data structures and
-> constants
-> 
-> Several Action frame format are defined to support IEEE 802.11n
-> features. 
-> This patch add the data structure for Block Ack management action frame.
-> 
-> Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
-> 
-> diff -Nupr wireless-dev/include/linux/ieee80211.h
-> wireless-dev-new/include/linux/ieee80211.h
-> --- wireless-dev/include/linux/ieee80211.h	2007-03-23 13:25:24.000000000
-> -0700
-> +++ wireless-dev-new/include/linux/ieee80211.h	2007-03-23
-> 13:43:21.000000000 -0700
-> @@ -105,6 +105,19 @@ struct ieee80211_hdr {
->  } __attribute__ ((packed));
->  
->  
-> +struct ieee802_11_addba_param {
-> +	 __le16 reserved:1;
-> +	 __le16 backPolicy:1;
-> +	 __le16 tid:4;
-> +	 __le16 bufSize:10;
-> +} __attribute__ ((packed));
-> +
-> +struct ieee80211_delba_param {
-> +	 __le16 reserved:11;
-> +	 __le16 intiator:1;
-> +	 __le16 tid:4;
-> +}__attribute__ ((packed));
-
-These bitfields are all local to one machine, not transported
-across a network to systems where the bitfields may be represented
-differently?
+--=-QoR66N9xK0NewvgLHwK3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+> The actual problem was meanwhile identified: shorewall happened to
+> overwrite the queueing discipline of wmaster0 with pfifo_fast. I found
+> the magic knob to tell shorewall to no longer do this (at least until I
+> want to manage traffic control that way...), but I still wonder if it is
+> an acceptable situation. Currently, the user can intentionally or
+> accidentally screw up the stack this way.
+
+I don't seem to be able to do that:
+
+# tc qdisc change dev wmaster0 pfifo
+RTNETLINK answers: Invalid argument
+
+# tc qdisc replace dev wmaster0 pfifo
+RTNETLINK answers: Invalid argument
+
+what exactly does shorewall do?
+
+johannes
+
+--=-QoR66N9xK0NewvgLHwK3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGCYWK/ETPhpq3jKURAjrKAJ4/e3T4bHJwmKCfsZ9kxq6z5OvydACfYAH5
+s8ETGrMdJRWYLJfNOFHC29s=
+=J/q1
+-----END PGP SIGNATURE-----
+
+--=-QoR66N9xK0NewvgLHwK3--
+
