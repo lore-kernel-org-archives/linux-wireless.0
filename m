@@ -1,38 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gundega.hpl.hp.com ([192.6.19.190]:58610 "EHLO
-	gundega.hpl.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992466AbXCWPu2 (ORCPT
+Received: from nz-out-0506.google.com ([64.233.162.229]:31076 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933761AbXC0RFm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 11:50:28 -0400
-Date: Fri, 23 Mar 2007 08:48:28 -0700
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>, stable@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] fix information leak in wireless extensions on 64-bit platforms
-Message-ID: <20070323154828.GA4671@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <1174640787.3588.65.camel@johannes.berg> <1174657362.3366.6.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1174657362.3366.6.camel@johannes.berg>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+	Tue, 27 Mar 2007 13:05:42 -0400
+Received: by nz-out-0506.google.com with SMTP id s1so2478522nze
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Mar 2007 10:05:41 -0700 (PDT)
+Message-ID: <43e72e890703271005u6173567aq2c1c04635da3ce50@mail.gmail.com>
+Date: Tue, 27 Mar 2007 13:05:40 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: mohamed <mabbas@linux.intel.com>
+Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery and association
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <1174909105.1364.53.camel@dell-4965.jf.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+References: <1174909105.1364.53.camel@dell-4965.jf.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 23, 2007 at 02:42:42PM +0100, Johannes Berg wrote:
-> On Fri, 2007-03-23 at 14:40 +0100, Johannes Berg wrote:
-> > Wireless extensions on 64-bit platforms leak information from the kernel
-> > stack due to padding in structs that is copied. This affects any
-> > wireless event stream including scan results and so hence is available
-> > to unprivileged users.
-> 
-> Ignore this patch, I see Jean just posted one as well :)
-> 
-> johannes
+On 3/26/07, mohamed <mabbas@linux.intel.com> wrote:
 
-	Yes, sorry for the delay, I wanted to make sure I had all the
-parts fully fleshed out.
-	Thanks !
+> +/* Get 11n capabilties from low level driver */
+> +static void ieee80211_fill_ht_ie(struct net_device *dev,
+> +                                struct ieee80211_ht_capability *ht_capab)
+> +{
+> +       int rc;
+> +       struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+> +
+> +       if (!local->ops->get_ht_capab){
+> +               memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
+> +               return;
+> +       }
+> +
+> +       rc = local->ops->get_ht_capab(local_to_hw(local), ht_capab);
+> +       if (!rc) {
+> +               memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
+> +               return;
+> +       }
+>
+> +       ht_capab->capabilitiesInfo = (__le16) cpu_to_le16(
+> +                                       ht_capab->capabilitiesInfo);
+> +       ht_capab->extended_ht_capability_info = (__le16) cpu_to_le16(
+> +                                       ht_capab->extended_ht_capability_info);
+> +       ht_capab->tx_BF_capability_info = (__le32) cpu_to_le32(
+> +                                       ht_capab->tx_BF_capability_info);
+> +}
+> +
 
-	Jean
+We should memset to 0 the entire ht_capab to regardless as its coming
+from skb_put() otherwise we'll get random data there if we don't set
+it and we sure as hell don't want to just transmit that :) Also
+ieee80211_send_assoc() is already checking for
+local->ops->get_ht_capab so lets just do a BUG_ON here to capture
+cases where someone else didn't do the proper checking. So how about
+instead something like:
 
+/* Get 11n capabilties from low level driver */
+static void ieee80211_fill_ht_ie(struct net_device *dev,
+                                struct ieee80211_ht_capability *ht_capab)
+{
+       struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+       BUG_ON(!local->ops->get_ht_capab);
+       memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
+       if (!local->ops->get_ht_capab(local_to_hw(local), ht_capab))
+               return;
+       ht_capab->capabilitiesInfo = (__le16) cpu_to_le16(
+                                       ht_capab->capabilitiesInfo);
+       ht_capab->extended_ht_capability_info = (__le16) cpu_to_le16(
+                                       ht_capab->extended_ht_capability_info);
+       ht_capab->tx_BF_capability_info = (__le32) cpu_to_le32(
+                                       ht_capab->tx_BF_capability_info);
+}
