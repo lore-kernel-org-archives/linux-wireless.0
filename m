@@ -1,131 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51977 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50491 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752599AbXCHRhh (ORCPT
+	with ESMTP id S933812AbXC1JMT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2007 12:37:37 -0500
-Subject: Re: wireless extensions vs. 64-bit architectures
+	Wed, 28 Mar 2007 05:12:19 -0400
+Subject: [PATCH] mac80211: optimise ieee80211_get_hdrlen
 From: Johannes Berg <johannes@sipsolutions.net>
-To: jt@hpl.hp.com
-Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Jouni Malinen <jkm@devicescape.com>
-In-Reply-To: <1173364747.14001.7.camel@johannes.berg>
-References: <1173144447.15891.93.camel@johannes.berg>
-	 <20070306171316.GA19669@bougret.hpl.hp.com>
-	 <200703061943.07350.mb@bu3sch.de>
-	 <20070307020310.GA20466@bougret.hpl.hp.com>
-	 <1173364747.14001.7.camel@johannes.berg>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Thu, 08 Mar 2007 18:37:07 +0100
-Message-Id: <1173375427.3248.33.camel@johannes.berg>
+Date: Tue, 27 Mar 2007 18:01:45 +0200
+Message-Id: <1175011305.9282.10.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-03-08 at 15:39 +0100, Johannes Berg wrote:
+This patch optimises the ieee80211_get_hdrlen function by exploiting the
+bit masks directly.
 
-> Oh, btw, this also means that we have an information leak on 64-bit
-> kernels. Those alignment bytes aren't ever cleared or anything, they
-> come right from the stack since most users of this just use a struct
-> iw_event on the stack which is then memcpy()ed right into the userspace
-> buffer. For example those bytes 5 through 8 ("50:8A:35:E0") in the first
-> buffer above. This is generally considered a security problem.
-
-Patch below might fix it. If it does, please send it on to Linus (or
-akpm), stable and whoever else might be interested in backporting it
-(distros? or do they cherrypick from stable?)
-
-I'm unable to test it as I'll be away from my only 64-bit machine for at
-least until the 19th or 20th.
-
-Yeah, I know sparse warns about this on 32-bit machines... But it seems
-useless to try to fix that warning.
-
-johannes
-
-From: Johannes Berg <johannes@sipsolutions.net>
-Subject: fix information leak in wireless extensions (on 64-bit architectures)
-
-On 64-bit architectures wireless extensions leak information from the
-kernel stack due to padding inside structs not being cleared before they
-are copied to userspace.
-
-This is available to unprivileged users since they can listen for
-wireless events and obtain scan results.
-
-This patch fixes it by explicitly clearing the padding.
+On powerpc, this decreases the function by 4 instructions, but more
+importantly it kills 4 of the 5 branches it contained.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
 ---
- include/net/iw_handler.h |   20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+And don't ask me how the compiler actually gets by with a single branch
+now!
 
---- wireless-dev.orig/include/net/iw_handler.h	2007-03-08 18:17:43.384642258 +0100
-+++ wireless-dev/include/net/iw_handler.h	2007-03-08 18:28:12.704642258 +0100
-@@ -484,6 +484,9 @@ iwe_stream_add_event(char *	stream,		/* 
- 		     struct iw_event *iwe,	/* Payload */
- 		     int	event_len)	/* Real size of payload */
- {
-+	/* clear padding */
-+	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
-+
- 	/* Check if it's possible */
- 	if(likely((stream + event_len) < ends)) {
- 		iwe->len = event_len;
-@@ -505,6 +508,10 @@ iwe_stream_add_point(char *	stream,		/* 
- 		     char *	extra)		/* More payload */
- {
- 	int	event_len = IW_EV_POINT_LEN + iwe->u.data.length;
-+
-+	/* clear padding */
-+	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
-+
- 	/* Check if it's possible */
- 	if(likely((stream + event_len) < ends)) {
- 		iwe->len = event_len;
-@@ -531,6 +538,9 @@ iwe_stream_add_value(char *	event,		/* E
- 		     struct iw_event *iwe,	/* Payload */
- 		     int	event_len)	/* Real size of payload */
- {
-+	/* clear padding */
-+	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
-+
- 	/* Don't duplicate LCP */
- 	event_len -= IW_EV_LCP_LEN;
- 
-@@ -558,6 +568,9 @@ iwe_stream_check_add_event(char *	stream
- 			   int		event_len,	/* Size of payload */
- 			   int *	perr)		/* Error report */
- {
-+	/* clear padding */
-+	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
-+
- 	/* Check if it's possible, set error if not */
- 	if(likely((stream + event_len) < ends)) {
- 		iwe->len = event_len;
-@@ -582,6 +595,10 @@ iwe_stream_check_add_point(char *	stream
- 			   int *	perr)		/* Error report */
- {
- 	int	event_len = IW_EV_POINT_LEN + iwe->u.data.length;
-+
-+	/* clear padding */
-+	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
-+
- 	/* Check if it's possible */
- 	if(likely((stream + event_len) < ends)) {
- 		iwe->len = event_len;
-@@ -611,6 +628,9 @@ iwe_stream_check_add_value(char *	event,
- 			   int		event_len,	/* Size of payload */
- 			   int *	perr)		/* Error report */
- {
-+	/* clear padding */
-+	memset((char*)iwe + 4, 0, IW_EV_LCP_LEN - 4);
-+
- 	/* Don't duplicate LCP */
- 	event_len -= IW_EV_LCP_LEN;
+It was fun to do but in my userspace test program on powerpc doesn't
+seem to change much, CPU time goes down by like 2%...
+
+ net/mac80211/ieee80211.c |   23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
+
+--- wireless-dev.orig/net/mac80211/ieee80211.c	2007-03-27 16:33:47.163155480 +0200
++++ wireless-dev/net/mac80211/ieee80211.c	2007-03-27 16:33:48.473155480 +0200
+@@ -258,19 +258,24 @@ int ieee80211_get_hdrlen(u16 fc)
+ 	case IEEE80211_FTYPE_DATA:
+ 		if ((fc & IEEE80211_FCTL_FROMDS) && (fc & IEEE80211_FCTL_TODS))
+ 			hdrlen = 30; /* Addr4 */
+-		if (fc & IEEE80211_STYPE_QOS_DATA)
+-			hdrlen += 2; /* QoS Control Field */
++		/* QoS Control Field */
++		hdrlen += (fc & IEEE80211_STYPE_QOS_DATA)
++				>> (ilog2(IEEE80211_STYPE_QOS_DATA)-1);
+ 		break;
+ 	case IEEE80211_FTYPE_CTL:
+-		switch (fc & IEEE80211_FCTL_STYPE) {
+-		case IEEE80211_STYPE_CTS:
+-		case IEEE80211_STYPE_ACK:
++		/*
++		 * ACK and CTS are 10 bytes, all others 16. To see how
++		 * to get this condition consider
++		 *   subtype mask:   0b0000000011110000 (0x00F0)
++		 *   ACK subtype:    0b0000000011010000 (0x00D0)
++		 *   CTS subtype:    0b0000000011000000 (0x00C0)
++		 *   bits that matter:         ^^^      (0x00E0)
++		 *   value of those: 0b0000000011000000 (0x00C0)
++		 */
++		if ((fc & 0xE0) == 0xC0)
+ 			hdrlen = 10;
+-			break;
+-		default:
++		else
+ 			hdrlen = 16;
+-			break;
+-		}
+ 		break;
+ 	}
  
 
 
