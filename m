@@ -1,72 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54177 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50517 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934013AbXCVKEj (ORCPT
+	with ESMTP id S933935AbXC1JMt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Mar 2007 06:04:39 -0400
-Subject: Re: [PATCH 0/4] Try #5: Radiotap on Monitor Mode interfaces for rx  and tx
+	Wed, 28 Mar 2007 05:12:49 -0400
+Subject: WPA/RSN information in cfg80211?
 From: Johannes Berg <johannes@sipsolutions.net>
-To: andy@warmcat.com
-Cc: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <20070320103955.600509703@warmcat.com>
-References: <20070320103955.600509703@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jfgMJmcyyTaUmyonbLH/"
-Date: Wed, 21 Mar 2007 19:10:37 +0100
-Message-Id: <1174500637.3944.9.camel@johannes.berg>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Jouni Malinen <j@w1.fi>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Y9hWdoda2W2jPJPR2ltP"
+Date: Wed, 28 Mar 2007 00:34:06 +0200
+Message-Id: <1175034846.5151.20.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-jfgMJmcyyTaUmyonbLH/
+--=-Y9hWdoda2W2jPJPR2ltP
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2007-03-20 at 10:39 +0000, andy@warmcat.com wrote:
+Looking through wpa_supplicant and then through the kernel I notice that
+we currently in the kernel special-case some things in SIOCSIWAUTH, for
+example IW_AUTH_WPA_VERSION is ignored since we rely on the IE that wpa
+supplicant gave us.
 
-> For injecting packets, the you issue a packet using libpcap or a SOCK_PAC=
-KET
-> socket down an interface to the wireless device that is in Monitor Mode.
+Apart from how wrong I think this is (we shouldn't be allowing a setting
+we can't do, we need to return some error code and wpa_supplicant should
+sort it out) I also found only one occurrence in prism54 where the
+parameters are actually not ignored. Is that driver fully replaced by
+p54?
 
-Ok so people don't want to have this in cfg80211, all the better for me
-since it's less work.
+Is there any point in supporting these at all? Does the Libertas 8388
+requires the settings as well instead of just the IE to include?
 
-I urge you to solve the issues with this injection interface, we've
-established that you can use packet filters to grab only management
-frames but monitor interfaces definitely still interact very badly with
-power management, and when the hardware has a BSS filter then this will
-also be disabled with a monitor interface (if monitor during operation
-is supported) which again puts more load on the host.
-
-I have previously suggested to use the IFF_PROMISC bit for this, but
-this will also need good driver/stack API since currently drivers that
-support monitor during operation will just turn off BSS filters and such
-when a monitor interface is added. That will have to be changed in
-drivers as well.
-
-Also, and I'm going to reply to your patches as well, this is not
-something that should be restricted to mac80211 since cfg80211
-generically supports virtual interfaces and anybody could in theory use
-a userspace MLME even with a full-mac card given a special no-management
-firmware mode. Hence, this should be documented for cfg80211 users.
-
-Please work out these issues before adding this interface to the kernel.
+I'm inclined to just require userspace to put both the IE and the
+individual settings into the relevant nl80211 messages, but then we
+might just as well piece the IE together from those settings, no?
 
 johannes
 
---=-jfgMJmcyyTaUmyonbLH/
+--=-Y9hWdoda2W2jPJPR2ltP
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGAXUd/ETPhpq3jKURAmLKAKCNQ9KWBUllg6NR7lL65GWTSF4nCgCfUHPl
-+pgfWzBLiw/qci2euqIpuBI=
-=N1nA
+iD8DBQBGCZvd/ETPhpq3jKURAkGIAJ9GEWJUwO8IHSpGa45JZNhAnj4hLQCeJsks
+kD+JPfs1Rxq7YVV5afG1dag=
+=tPrv
 -----END PGP SIGNATURE-----
 
---=-jfgMJmcyyTaUmyonbLH/--
+--=-Y9hWdoda2W2jPJPR2ltP--
 
