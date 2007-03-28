@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:43595
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932398AbXCEL1r (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49804 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934252AbXC1LML (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 06:27:47 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: greg@kroah.com
-Subject: Re: 2.6.21-rc2-mm1: drivers/usb/host/ohci-ssb.c doesn't compile
-Date: Mon, 5 Mar 2007 12:26:45 +0100
-Cc: Adrian Bunk <bunk@stusta.de>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, dbrownell@users.sourceforge.net,
-	linux-usb-devel@lists.sourceforge.net
-References: <20070302030026.5eef0c92.akpm@linux-foundation.org> <200703051149.05664.mb@bu3sch.de> <200703051157.16822.mb@bu3sch.de>
-In-Reply-To: <200703051157.16822.mb@bu3sch.de>
-MIME-Version: 1.0
-Message-Id: <200703051226.46402.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="utf-8"
+	Wed, 28 Mar 2007 07:12:11 -0400
+Subject: Re: rx racing against removing interfaces?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200703281259.55764.mb@bu3sch.de>
+References: <1174950322.25887.59.camel@johannes.berg>
+	 <200703281252.23834.mb@bu3sch.de>  <200703281259.55764.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZkTnLS+WzetCk0LS2tp0"
+Date: Wed, 28 Mar 2007 13:07:34 +0200
+Message-Id: <1175080054.5151.50.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 05 March 2007 11:57, Michael Buesch wrote:
-> > >   CC      drivers/usb/host/ohci-hcd.o
-> > > In file included from 
-> > > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-hcd.c:931:
-> > > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:47: error: request for member 'hcd_priv_size' in something not a structure or union
-> > 
-> > Seems like there was a comma missing.
-> > There also seems to be some Kconfig problem. will fix that.
-> > 
-> > > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:47: error: 'ssb_ohci_device' undeclared here (not in a function)
-> > > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:52: error: 'ssb_ohci_reset' undeclared here (not in a function)
-> > > /home/bunk/linux/kernel-2.6/linux-2.6.21-rc2-mm1/drivers/usb/host/ohci-ssb.c:53: error: 'ssb_ohci_start' undeclared here (not in a function)
-> > > ...
-> > > make[4]: *** [drivers/usb/host/ohci-hcd.o] Error 1
-> > > 
-> > > <--  snip  -->
-> 
-> Actually, it seems like I will run into other kinds of nasty problems
-> due to stupid design of the HCD code. The OHCI code #includes
-> the various drivers, which have a module_init each. So if you
-> compile PCI and SSB support, you have two module_init for one
-> OHCI module. Not sure how to fix this. Any idea?
 
-A real problem is that the HCD core seems to have the assumption
-built-in that there can only be one OHCI driver per machine/arch.
-That's not the case for SSB, where we can have both PCI and SSB
-bus enabled, so both ohci drivers compiled.
-Any idea? Greg perhaps?
+--=-ZkTnLS+WzetCk0LS2tp0
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Refactoring the code that OHCI drivers register to the HCD core
-instead of hard-linking it in would fix the issue. But that's pretty
-intrusive to do.
+On Wed, 2007-03-28 at 12:59 +0200, Michael Buesch wrote:
 
--- 
-Greetings Michael.
+> Oh, you mean virtual interfaces.. yeah, there's probably a race. I don't
+> know the locking there.
+
+Yes, I mean virtual interfaces, when the thing is in progress while we
+iterate through.
+
+> But my comment about the non-irqsafe-variants-should-be-hidden still appl=
+ies :)
+
+I'll reread it ;)
+
+But I'm not sure I fully agree. If the driver calls __ieee80211_rx in
+softirq context that should be good without requiring to reschedule in
+mac80211.
+
+johannes
+
+--=-ZkTnLS+WzetCk0LS2tp0
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGCkx2/ETPhpq3jKURAnDGAKCMOFzsNtnt8dl8Z9bqta2kI46HNgCgpaOl
+uOtDmPZcrlHFd+UKyhbw6jQ=
+=VHao
+-----END PGP SIGNATURE-----
+
+--=-ZkTnLS+WzetCk0LS2tp0--
+
