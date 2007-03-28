@@ -1,71 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:35999 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751766AbXCWSGf (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:47181 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933779AbXC1Js7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 14:06:35 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH 5/5] d80211: switch STA interfaces to PS mode during scan
-Date: Fri, 23 Mar 2007 14:05:15 -0400
-Cc: linux-wireless@vger.kernel.org
-References: <20070228203943.11473.95222.stgit@magic.sourmilk.net> <200703010043.10565.flamingice@sourmilk.net> <20070323170136.5f6205db@griffin.suse.cz>
-In-Reply-To: <20070323170136.5f6205db@griffin.suse.cz>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1225946.eiIYDyUnVV";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200703231405.20085.flamingice@sourmilk.net>
+	Wed, 28 Mar 2007 05:48:59 -0400
+Subject: Re: WPA/RSN information in cfg80211?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mark Powell <Mark.Powell@csr.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <460A3665.5090906@csr.com>
+References: <1175034846.5151.20.camel@johannes.berg>
+	 <460A3665.5090906@csr.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ePqGCI/z8Fnuzel3P+op"
+Date: Wed, 28 Mar 2007 11:47:43 +0200
+Message-Id: <1175075263.5151.31.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1225946.eiIYDyUnVV
-Content-Type: text/plain;
-  charset="iso-8859-1"
+
+--=-ePqGCI/z8Fnuzel3P+op
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Friday 23 March 2007 12:01, Jiri Benc wrote:
-> > @@ -2541,10 +2572,12 @@ void ieee80211_scan_completed(struct iee
-> >
-> >  	spin_lock_bh(&local->sub_if_lock);
-> >  	list_for_each_entry(sdata, &local->sub_if_list, list) {
-> > -		netif_wake_queue(sdata->dev);
-> > -
-> > -		if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA)
-> > +		if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA) {
-> > +			if (sdata->u.sta.associated)
-> > +				ieee80211_send_nullfunc(local, sdata, 0);
-> >  			ieee80211_sta_timer((unsigned long)&sdata->u.sta);
-> > +		}
-> > +		netif_wake_queue(sdata->dev);
->
-> Shouldn't the queue be woken before calling ieee80211_sta_timer?
->
-ieee80211_sta_timer just schedules the workqueue to run. I'm not sure if th=
-e=20
-workqueue can run immediately after that, but even if it did, the sta code=
-=20
-doesn't depend on the queue of a virtual interface so these lines don't nee=
-d=20
-to run in any particular order.
+On Wed, 2007-03-28 at 10:33 +0100, Mark Powell wrote:
 
-=2DMichael Wu
+> FWIW we currently use the value of IW_AUTH_WPA_VERSION to generate the
+> correct cipher suite selector when forming the set-key request for our
+> hard MAC device. We use other IW_AUTH settings too.
 
---nextPart1225946.eiIYDyUnVV
-Content-Type: application/pgp-signature
+Ok so that means we definitely need the individual settings. I thought
+so, but wanted to make sure.
+
+> We certainly need the individual settings. It is nice that
+> wpa_supplicant generates the IE - it saved me writing the code - but
+> that's just being lazy. We still have to modify the IE anyway to add WMM
+> stuff.
+
+Do I read that as "I don't care if we get the IE"?
+
+Putting the IE there has the advantage that you can easily play with new
+things for cards that use the IE by sticking a few more IEs into the
+attribute. But it has the disadvantage that cards behave differently if
+you give them contradictory settings. Maybe we need a way to ask a card
+which one it wants.
+
+johannes
+
+--=-ePqGCI/z8Fnuzel3P+op
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBGBBbgT3Oqt9AH4aERAiLrAJ9GCbo6NFw9hQWxR+G1RhXHgHiQ7ACfe5Jy
-iibIeHtLtuJJMz/bBj90MLk=
-=Vr+P
+iD8DBQBGCjm//ETPhpq3jKURAuPEAJ41J62uHX1anGv13jmH9t2frqbISACeKPkz
+nFTtIh/fE8DXf2nAJUD0eRo=
+=AsoE
 -----END PGP SIGNATURE-----
 
---nextPart1225946.eiIYDyUnVV--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+--=-ePqGCI/z8Fnuzel3P+op--
+
