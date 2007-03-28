@@ -1,43 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:44346 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751947AbXCFEFi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 23:05:38 -0500
-Date: Mon, 5 Mar 2007 20:03:50 -0800
-From: Greg KH <greg@kroah.com>
-To: Matt Mackall <mpm@selenic.com>
-Cc: Adrian Bunk <bunk@stusta.de>, Theodore Tso <tytso@mit.edu>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	yi.zhu@intel.com, jketreno@linux.intel.com,
-	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
-Subject: Re: [2.6.21 patch] unconditionally enable SYSFS_DEPRECATED
-Message-ID: <20070306040350.GA25783@kroah.com>
-References: <1173051564.6131.13.camel@johannes.berg> <20070305002550.GI23311@waste.org> <20070305011729.GB7681@kroah.com> <20070305125950.GC26781@thunk.org> <20070305185813.GA31465@kroah.com> <20070305234052.GR3441@stusta.de> <20070306000722.GA11436@kroah.com> <20070306013020.GN23311@waste.org> <20070306024850.GA24477@kroah.com> <20070306033947.GQ23311@waste.org>
+Received: from cluster-c.mailcontrol.com ([168.143.177.190]:46782 "EHLO
+	cluster-c.mailcontrol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752937AbXC1K1n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Mar 2007 06:27:43 -0400
+Received: from rly21c.srv.mailcontrol.com (localhost.localdomain [127.0.0.1])
+	by rly21c.srv.mailcontrol.com (MailControl) with ESMTP id l2S9hVs6002600
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Mar 2007 10:43:31 +0100
+Received: from submission.mailcontrol.com (submission.mailcontrol.com [86.111.216.190])
+	by rly21c.srv.mailcontrol.com (MailControl) id l2S9geiN000791
+	for linux-wireless@vger.kernel.org; Wed, 28 Mar 2007 10:42:40 +0100
+Message-ID: <460A3665.5090906@csr.com>
+Date: Wed, 28 Mar 2007 10:33:25 +0100
+From: Mark Powell <Mark.Powell@csr.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070306033947.GQ23311@waste.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Subject: Re: WPA/RSN information in cfg80211?
+References: <1175034846.5151.20.camel@johannes.berg>
+In-Reply-To: <1175034846.5151.20.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 05, 2007 at 09:39:47PM -0600, Matt Mackall wrote:
-> On Mon, Mar 05, 2007 at 06:48:50PM -0800, Greg KH wrote:
-> > If so, can you disable the option and strace it to see what program is
-> > trying to access what?  That will put the
-> > HAL/NetworkManager/libsysfs/distro script finger pointing to rest pretty
-> > quickly :)
-> 
-> Ok, I've got straces of both good and bad (>5M each). Filtered out
-> random pointer values and the like, diffed, and filtered for /sys/,
-> and the result's still 1.5M. What should I be looking for?
+Johannes Berg wrote:
+> Looking through wpa_supplicant and then through the kernel I notice that
+> we currently in the kernel special-case some things in SIOCSIWAUTH, for
+> example IW_AUTH_WPA_VERSION is ignored since we rely on the IE that wpa
+> supplicant gave us.
+>   
+FWIW we currently use the value of IW_AUTH_WPA_VERSION to generate the
+correct cipher suite selector when forming the set-key request for our
+hard MAC device. We use other IW_AUTH settings too.
+> ...
+>
+> I'm inclined to just require userspace to put both the IE and the
+> individual settings into the relevant nl80211 messages, but then we
+> might just as well piece the IE together from those settings, no?
+>   
+We certainly need the individual settings. It is nice that
+wpa_supplicant generates the IE - it saved me writing the code - but
+that's just being lazy. We still have to modify the IE anyway to add WMM
+stuff.
 
-Failures when trying to read from /sys/class/net/
+Mark
 
-Or opening the directory and iterating over the subdirs in there.  Or
-something like that.
+-- 
+Mark Powell                              mailto:Mark.Powell@csr.com
+Group Leader, Host Drivers               Tel: +44 (0)1223 692000
+CSR, Business Park, Cowley Road, Cambridge, CB24 0WZ, UK
 
-But the /sys/class/net/ stuff should hopefully help narrow it down.
 
-thanks,
 
-greg k-h
+To access the latest news from CSR copy this link into a web browser:  http://www.csr.com/email_sig.php
+
+To get further information regarding CSR, please visit our Investor Relations page at http://ir.csr.com/csr/about/overview
