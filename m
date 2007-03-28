@@ -1,92 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:39389 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933648AbXCUS6H (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46111 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752937AbXC1KUb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2007 14:58:07 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so435317uga
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Mar 2007 11:58:05 -0700 (PDT)
-To: "John Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2] Move eeprom_93cx6 from lib/ to drivers/misc/
-Date: Wed, 21 Mar 2007 19:57:39 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Randy Dunlap <randy.dunlap@oracle.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200703211957.39999.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Wed, 28 Mar 2007 06:20:31 -0400
+Subject: PLCP header information (was: Re: [PATCH] zd1211rw-mac80211: Fix  for monitor mode bug)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Andy Green <andy@warmcat.com>, Jiri Benc <jbenc@suse.cz>,
+	Daniel Drake <dsd@gentoo.org>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, kune@deine-taler.de,
+	radiotap@mail.ojctech.com
+In-Reply-To: <200703281155.52208.mb@bu3sch.de>
+References: <20070325231817.9C5887B409F@zog.reactivated.net>
+	 <200703262239.07013.mb@bu3sch.de> <1175073595.5151.28.camel@johannes.berg>
+	 <200703281155.52208.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oX1+TeLDf4ofHViDVkXa"
+Date: Wed, 28 Mar 2007 12:18:42 +0200
+Message-Id: <1175077122.5151.43.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As requested, this will move the eeprom_93cx6 from its location in
-lib/ to drivers/misc/
-This second version uses correct identation for the --help-- line.
 
-Signed-off-by Ivo van Doorn <IvDoorn@gmail.com>
+--=-oX1+TeLDf4ofHViDVkXa
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
+On Wed, 2007-03-28 at 11:55 +0200, Michael Buesch wrote:
 
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index 80b199f..4069fe1 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -122,4 +122,12 @@ config SONY_LAPTOP
- 
- 	  Read <file:Documentation/sony-laptop.txt> for more information.
- 
-+config EEPROM_93CX6
-+	tristate "EEPROM 93CX6 support"
-+	---help---
-+	  This is a driver for the EEPROM chipsets 93c46 and 93c66.
-+	  The driver supports both read as well as write commands.
-+
-+	  When compiled as a module, this driver will be called "eeprom_93c6.ko".
-+
- endmenu
-diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-index 7793ccd..f65b835 100644
---- a/drivers/misc/Makefile
-+++ b/drivers/misc/Makefile
-@@ -12,3 +12,4 @@ obj-$(CONFIG_TIFM_CORE)       	+= tifm_core.o
- obj-$(CONFIG_TIFM_7XX1)       	+= tifm_7xx1.o
- obj-$(CONFIG_SGI_IOC4)		+= ioc4.o
- obj-$(CONFIG_SONY_LAPTOP)	+= sony-laptop.o
-+obj-$(CONFIG_EEPROM_93CX6)	+= eeprom_93cx6.o
-diff --git a/lib/eeprom_93cx6.c b/drivers/misc/eeprom_93cx6.c
-similarity index 100%
-rename from lib/eeprom_93cx6.c
-rename to drivers/misc/eeprom_93cx6.c
-diff --git a/lib/Kconfig b/lib/Kconfig
-index 0b275b7..8e91748 100644
---- a/lib/Kconfig
-+++ b/lib/Kconfig
-@@ -50,14 +50,6 @@ config LIBCRC32C
- 	  require M here.  See Castagnoli93.
- 	  Module will be libcrc32c.
- 
--config EEPROM_93CX6
--	tristate "EEPROM 93CX6 support"
--	---help---
--	This is a driver for the EEPROM chipsets 93c46 and 93c66.
--	The driver supports both read as well as write commands.
--
--	When compiled as a module, this driver will be called "eeprom_93c6.ko".
--
- config AUDIT_GENERIC
- 	bool
- 	depends on AUDIT && !AUDIT_ARCH
-diff --git a/lib/Makefile b/lib/Makefile
-index 71ae5be..d7edaf3 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -56,8 +56,6 @@ obj-$(CONFIG_TEXTSEARCH_FSM) += ts_fsm.o
- obj-$(CONFIG_SMP) += percpu_counter.o
- obj-$(CONFIG_AUDIT_GENERIC) += audit.o
- 
--obj-$(CONFIG_EEPROM_93CX6) += eeprom_93cx6.o
--
- obj-$(CONFIG_SWIOTLB) += swiotlb.o
- obj-$(CONFIG_FAULT_INJECTION) += fault-inject.o
- 
+> I think we need at least two "stages" for this config.
+> One that says: Get all packets with bad FCS
+> And one that says: Get all packets with bad FCS and everything else
+> that looks like a signal, which is probably your microwave oven, though.
+
+I agree.
+
+> So, when these packets are passed up the stack the PLCP is stripped.
+> I think we should make the stack aware of the PLCP (and add an RX flag
+> PLCP_available) so that it is able to check the PLCP checksum.
+> Otherwise the only way to detect your microwave oven from the packet
+> stream would be failed FCS. Which would also most likely failed then, but
+> I think it's probably useful for the user to see the PLCP, too, on
+> a mon interface.
+>=20
+> So we need RX flags "PLCP_available" and "Not_checksummed".
+
+Also "PLCP checksummed" or such. And we need to think about how we
+represent the PLCP in radiotap.
+
+The PLCP header has different lengths depending on the type of PHY used,
+for Clause 17 (A) it is 40 bits, for the others (I think) it is 48 bits.
+For N I think the whole notion was changed a bit with the stuff being
+defined in terms of microseconds and not bits.
+
+It'd be useful to make this part of radiotap but it'd need a length byte
+too. I propose always padding it to a multiple of 8 bytes with a length
+byte as the first byte.
+
+For mac80211, we'd add a new item s16 plcp offset that tells us where in
+the radiotap header that the driver generated the plcp header can be
+found so that in the RX path we don't need to parse the radiotap header
+to find the PLCP if necessary.
+
+johannes
+
+--=-oX1+TeLDf4ofHViDVkXa
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGCkEC/ETPhpq3jKURArGoAKCnmjXZCvmgDh8Kqt1TCqSg3BFV+wCgtTl/
++spbR8U09UWATK1VjxvWMRI=
+=Lh8g
+-----END PGP SIGNATURE-----
+
+--=-oX1+TeLDf4ofHViDVkXa--
+
