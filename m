@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:35024 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753757AbXCRKPu (ORCPT
+Received: from cluster-c.mailcontrol.com ([168.143.177.190]:36244 "EHLO
+	cluster-c.mailcontrol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753621AbXC1KJL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Mar 2007 06:15:50 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 8610B8CAD2
-	for <linux-wireless@vger.kernel.org>; Sun, 18 Mar 2007 11:15:49 +0100 (CET)
-Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id 3AEF9FECD
-	for <linux-wireless@vger.kernel.org>; Sun, 18 Mar 2007 10:15:53 +0000 (UTC)
-Message-Id: <20070318101535.251183750@warmcat.com>
-Date: Sun, 18 Mar 2007 10:15:35 +0000
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/2] Try #3 Radiotap on Monitor Mode interfaces for rx and tx
+	Wed, 28 Mar 2007 06:09:11 -0400
+Received: from rly06c.srv.mailcontrol.com (localhost.localdomain [127.0.0.1])
+	by rly06c.srv.mailcontrol.com (MailControl) with ESMTP id l2SA8w0j015627
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Mar 2007 11:09:06 +0100
+Received: from submission.mailcontrol.com (submission.mailcontrol.com [86.111.216.190])
+	by rly06c.srv.mailcontrol.com (MailControl) id l2SA80u7013700
+	for linux-wireless@vger.kernel.org; Wed, 28 Mar 2007 11:08:00 +0100
+Message-ID: <460A3DC6.8030604@csr.com>
+Date: Wed, 28 Mar 2007 11:04:54 +0100
+From: Mark Powell <Mark.Powell@csr.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Subject: Re: WPA/RSN information in cfg80211?
+References: <1175034846.5151.20.camel@johannes.berg>	 <460A3665.5090906@csr.com> <1175075263.5151.31.camel@johannes.berg>
+In-Reply-To: <1175075263.5151.31.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks -
+Johannes Berg wrote:
+> On Wed, 2007-03-28 at 10:33 +0100, Mark Powell wrote:
+>   
+>> We certainly need the individual settings. It is nice that
+>> wpa_supplicant generates the IE - it saved me writing the code - but
+>> that's just being lazy. We still have to modify the IE anyway to add WMM
+>> stuff.
+>>     
+> Do I read that as "I don't care if we get the IE"?
+>   
+We can build it into the driver if we have to :)
+> Putting the IE there has the advantage that you can easily play with new
+> things for cards that use the IE by sticking a few more IEs into the
+> attribute. 
+I agree. Forming the MLME requests, including the IE, is really the role
+of the userland app (the SME in IEEE802.11 speak).
+> But it has the disadvantage that cards behave differently if
+> you give them contradictory settings. Maybe we need a way to ask a card
+> which one it wants.
+>   
+Is that just a case of garbage-in-garbage-out?
 
-This pair of patches change the Monitor Mode wireless interfaces to use radiotap
-both for monitoring and for packet injection.  The monitoring side is done by a patch
-from Michael Wu.  Tcpdump knows how to handle the result.
+Mark
 
-For injecting packets, the you issue a packet using libpcap or a SOCK_PACKET
-socket down an interface to the wireless device that is in Monitor Mode.  The packet
-has a normal radiotap header prepended to the IEEE80211 header.  The radiotap header
-is variable length depending on what the user wants to specify, currently the
-transmit rate, power and antenna can be specified using normal radiotap semantics.
-Any other entries are skipped.
 
-A usermode app packetspammer is available from here
 
-http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
+To access the latest news from CSR copy this link into a web browser:  http://www.csr.com/email_sig.php
 
-which allows easy injection of these packets from the commandline.  At the moment it
-loops issuing packets at a variety of rates which can be seen from another
-machine's monitor mode interface on the same channel.  There are instructions for
-build and using it on the page above.
-
-Currently it has been tested for both rx and tx using zd1211rw-mac80211 and works
-except for 1Mbps TX (54Mbps - 2Mbps works) and the rx radiotap rate is not shown in
-tcpdump.
-
-The patches should be based against wireless-dev.
--- 
+To get further information regarding CSR, please visit our Investor Relations page at http://ir.csr.com/csr/about/overview
