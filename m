@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39822 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751958AbXCCL2p (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:38615 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932569AbXC1Udg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Mar 2007 06:28:45 -0500
-Received: from [84.135.251.95] (helo=[10.0.0.4])
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.63)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1HNSKm-0005em-Pc
-	for linux-wireless@vger.kernel.org; Sat, 03 Mar 2007 11:23:29 +0000
-Subject: Re: question: /sys/class/net/*/wireless
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <1172920691.4966.6.camel@johannes.berg>
-References: <1172920691.4966.6.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2tdnMOYuoh3CgNuEfRQ9"
-Date: Sat, 03 Mar 2007 12:27:37 +0100
-Message-Id: <1172921257.4966.12.camel@johannes.berg>
+	Wed, 28 Mar 2007 16:33:36 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HWenn-0005bI-4J
+	for linux-wireless@vger.kernel.org; Wed, 28 Mar 2007 16:31:27 -0400
+Subject: Re: [Radiotap] Re: RFC: radiotap discrepancy in Linux vs OpenBSD
+From: Pavel Roskin <proski@gnu.org>
+To: Marcelo Tosatti <marcelo@kvack.org>
+Cc: David Young <dyoung@pobox.com>, linux-wireless@vger.kernel.org,
+	Scott Raynel <scottraynel@gmail.com>, radiotap@mail.ojctech.com
+In-Reply-To: <20070328180413.GC17793@dmt>
+References: <20070325232416.64xwkc0kw04oosg0@webmail.spamcop.net>
+	 <20070326033729.GG31621@che.ojctech.com> <1174949149.28132.49.camel@dv>
+	 <20070328180413.GC17793@dmt>
+Content-Type: text/plain
+Date: Wed, 28 Mar 2007 16:33:32 -0400
+Message-Id: <1175114012.9299.4.camel@dv>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2007-03-28 at 15:04 -0300, Marcelo Tosatti wrote:
+> On Mon, Mar 26, 2007 at 06:45:49PM -0400, Pavel Roskin wrote:
+> > On Sun, 2007-03-25 at 22:37 -0500, David Young wrote:
+> > 
+> > > > One is found in the current wireless-2.6.git:
+> > > > 
+> > > >         IEEE80211_RADIOTAP_RX_FLAGS = 14,
+> > > >         IEEE80211_RADIOTAP_TX_FLAGS = 15,
+> > > >         IEEE80211_RADIOTAP_RTS_RETRIES = 16,
+> > > >         IEEE80211_RADIOTAP_DATA_RETRIES = 17,
+> > > 
+> > > These fields are slated to become part of the standard, I just haven't got
+> > > around to updating the manual page, yet.  I have time to do that tonight.
+> > 
+> > OK.  I was wrong to assume that non-standard fields were introduced on
+> > the Linux side.
+> 
+> I mentioned those in the past to David Young, but I forgot to resend
+> them to the radiotap list. 
 
---=-2tdnMOYuoh3CgNuEfRQ9
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Then we need to remove IEEE80211_RADIOTAP_FCS from Linux
+ieee80211_radiotap.h.  It's only present in a comment, but it's a
+comment that can be harmful.  I could submit a patch, but it would
+conflict with a patch that does sparse annotation.
 
-And related to that issue, /proc/net/wireless.
+OK, I'll submit both.
 
-Seeing that /sys/class/net/*/wireless has been around forever and offers
-the same information (actually, /proc/net/wireless tries to post-process
-quality values?? we can do that in sysfs too) I opt for killing it to
-minimize support requirements for cfg80211.
-
-Unless somebody objects I intend to send a feature removal schedule
-patch soon.
-
-johannes
-
---=-2tdnMOYuoh3CgNuEfRQ9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBF6Vup/ETPhpq3jKURAgYHAJ93BBzP50hYM2KgU+9Gfa/95fiGewCfa7TS
-OgokVJfD0mr55tSW2RDPvjw=
-=0G+p
------END PGP SIGNATURE-----
-
---=-2tdnMOYuoh3CgNuEfRQ9--
+-- 
+Regards,
+Pavel Roskin
 
