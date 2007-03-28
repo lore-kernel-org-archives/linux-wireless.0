@@ -1,64 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49566 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51897 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753563AbXCZKAc (ORCPT
+	with ESMTP id S1753637AbXC1K0J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2007 06:00:32 -0400
-Subject: Re: [PATCH] zd1211rw-mac80211: Fix for monitor mode bug
+	Wed, 28 Mar 2007 06:26:09 -0400
+Subject: Re: WPA/RSN information in cfg80211?
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: Daniel Drake <dsd@gentoo.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, kune@deine-taler.de
-In-Reply-To: <20070326115412.2786c8f4@griffin.suse.cz>
-References: <20070325231817.9C5887B409F@zog.reactivated.net>
-	 <20070326115412.2786c8f4@griffin.suse.cz>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9ZD0NYPTl8VGfJ2zwAnE"
-Date: Mon, 26 Mar 2007 11:59:58 +0200
-Message-Id: <1174903199.1536.4.camel@johannes.berg>
+To: Mark Powell <Mark.Powell@csr.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <460A3DC6.8030604@csr.com>
+References: <1175034846.5151.20.camel@johannes.berg>
+	 <460A3665.5090906@csr.com> <1175075263.5151.31.camel@johannes.berg>
+	 <460A3DC6.8030604@csr.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XdJhJ7410Q/1Rc9CmCoD"
+Date: Wed, 28 Mar 2007 12:24:52 +0200
+Message-Id: <1175077492.5151.46.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-9ZD0NYPTl8VGfJ2zwAnE
+--=-XdJhJ7410Q/1Rc9CmCoD
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2007-03-26 at 11:54 +0200, Jiri Benc wrote:
+On Wed, 2007-03-28 at 11:04 +0100, Mark Powell wrote:
 
-> But this feature of zd1211 looks interesting. Johannes, shouldn't we
-> add a parameter to cfg80211 allowing such packets to be received by
-> monitor iterfaces?
+> > Putting the IE there has the advantage that you can easily play with ne=
+w
+> > things for cards that use the IE by sticking a few more IEs into the
+> > attribute.=20
 
-Dunno. bcm43xx has this feature too, it even allows you to bypass the
-second CRC check in the PLCP header. Picks up your microwave with
-that ;)
+> I agree. Forming the MLME requests, including the IE, is really the role
+> of the userland app (the SME in IEEE802.11 speak).
 
-Maybe take this into account for the driver API when implementing
-IFF_PROMISC as we talked about?
+Right.
 
-> Daniel, does zd1211 send information about failed CRC check with the
-> packet? Or do we need to recheck CRC in the stack if the feature
-> mentioned above is implemented and there are both regular and monitor
-> interface operating?
+> > But it has the disadvantage that cards behave differently if
+> > you give them contradictory settings. Maybe we need a way to ask a card
+> > which one it wants.
 
-bcm43xx doesn't tell you when the CRC failed, nor does it tell you when
-the PLCP CRC failed (if you want to see those frames). Hence, we'd have
-to recheck the CRC(s).
+> Is that just a case of garbage-in-garbage-out?
+
+Yes, but I can just see it coming that the developer has a fullmac card
+that accepts having no IE and then some users with a halfmac card that
+needs the IE present is going to crap out. It'd be nice if we could
+avoid that, but I think we probably can't without much overhead that we
+don't want.
 
 johannes
 
---=-9ZD0NYPTl8VGfJ2zwAnE
+--=-XdJhJ7410Q/1Rc9CmCoD
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGB5me/ETPhpq3jKURAro8AJ0d8UWJ4l+XL4pN+S/3f0YbTWY0ZgCeL6TA
-BVY3RlYAzfH5al1SyHYMd1M=
-=Ce/I
+iD8DBQBGCkJ0/ETPhpq3jKURAuJJAJ4s8Ot7X/i0Ak1ErDLj9GtwBDAUdACbBbaw
+mNOAmV6sr0KV8pgBxTztRW8=
+=vzQd
 -----END PGP SIGNATURE-----
 
---=-9ZD0NYPTl8VGfJ2zwAnE--
+--=-XdJhJ7410Q/1Rc9CmCoD--
 
