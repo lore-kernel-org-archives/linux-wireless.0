@@ -1,36 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55218 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2992809AbXCCAmB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2007 19:42:01 -0500
-Message-ID: <45E8C456.8070307@garzik.org>
-Date: Fri, 02 Mar 2007 19:41:58 -0500
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'upstream-fixes' branch of wireless-2.6
-References: <20070227205045.GF5826@tuxdriver.com>
-In-Reply-To: <20070227205045.GF5826@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41279 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934062AbXC1JP3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Mar 2007 05:15:29 -0400
+Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery and
+	association
+From: Johannes Berg <johannes@sipsolutions.net>
+To: mohamed <mabbas@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <1174909105.1364.53.camel@dell-4965.jf.intel.com>
+References: <1174909105.1364.53.camel@dell-4965.jf.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wIMfIyG3etHfb6PJeo6P"
+Date: Wed, 28 Mar 2007 11:14:17 +0200
+Message-Id: <1175073257.5151.27.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> The following changes since commit c8f71b01a50597e298dc3214a2f2be7b8d31170c:
->   Linus Torvalds (1):
->         Linux 2.6.21-rc1
-> 
-> are found in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-fixes
-> 
-> Stefano Brivio (1):
->       bcm43xx: fix for 4309
-> 
->  drivers/net/wireless/bcm43xx/bcm43xx_main.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
 
-pulled
+--=-wIMfIyG3etHfb6PJeo6P
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, 2007-03-26 at 04:38 -0700, mohamed wrote:
+
+> +	/* Get ht capabilities from the device */
+> +	int (*get_ht_capab)(struct ieee80211_hw *hw,
+> +			    struct ieee80211_ht_capability *ht_cap_param);
+> +
+
+Does this really need to return an error? And if so, what happens? You
+currently send a blank HT capabilities IE but I think in that case it
+should be left out completely. But I don't think it will ever return an
+error, it doesn't even need to allocate memory. Just change this to
+void?
+
+johannes
+
+--=-wIMfIyG3etHfb6PJeo6P
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGCjHp/ETPhpq3jKURAl8/AJwNKip6SCGze3HnwjOlxkSb6dA4fgCfTRQt
+PMaCE9MPp3vj2hx1bvjSNts=
+=ssDs
+-----END PGP SIGNATURE-----
+
+--=-wIMfIyG3etHfb6PJeo6P--
 
