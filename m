@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns1.suse.de ([195.135.220.2]:47485 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932213AbXCES7D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 13:59:03 -0500
-Date: Mon, 5 Mar 2007 10:58:13 -0800
-From: Greg KH <greg@kroah.com>
-To: Theodore Tso <tytso@mit.edu>, Matt Mackall <mpm@selenic.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	yi.zhu@intel.com, jketreno@linux.intel.com,
-	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
-Subject: Re: Recent wireless breakage (ipw2200, iwconfig, NetworkManager)
-Message-ID: <20070305185813.GA31465@kroah.com>
-References: <20070304220857.GH23311@waste.org> <1173051564.6131.13.camel@johannes.berg> <20070305002550.GI23311@waste.org> <20070305011729.GB7681@kroah.com> <20070305125950.GC26781@thunk.org>
+Received: from rgminet01.oracle.com ([148.87.113.118]:11600 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965624AbXC1STL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Mar 2007 14:19:11 -0400
+Message-ID: <460AB1A7.5090708@oracle.com>
+Date: Wed, 28 Mar 2007 11:19:19 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070305125950.GC26781@thunk.org>
+To: mohamed <mabbas@linux.intel.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
+References: <1174909200.1364.56.camel@dell-4965.jf.intel.com>	 <20070326163609.d9169d7b.randy.dunlap@oracle.com> <1175148978.4237.11.camel@dell-4965.jf.intel.com>
+In-Reply-To: <1175148978.4237.11.camel@dell-4965.jf.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 05, 2007 at 07:59:50AM -0500, Theodore Tso wrote:
-> On Sun, Mar 04, 2007 at 05:17:29PM -0800, Greg KH wrote:
-> > I should not have broken any userspace if CONFIG_SYSFS_DEPRECATED is
-> > enabled with that patch.  If that is enabled, and that patch still
-> > causes problems, please let me know.
-> 
-> But we still need to update the help text for CONFIG_SYS_DEPRECATED to
-> make it clear that its deprecation schedule still needs to be 2009 to
-> 2011 (depending on whether we want to accomodate Debian's glacial
-> release schedule).  Certainly the 2006 date which is currently there
-> simply isn't accurate.
+mohamed wrote:
+> On Mon, 2007-03-26 at 16:36 -0700, Randy Dunlap wrote:
+>> On Mon, 26 Mar 2007 04:40:00 -0700 mohamed wrote:
+>>
+>>> Add A-MSDU Rx aggregation support.
+>>>
+>>> To support IEEE 802.11n, we need to be able to process A-MSDU frames. 
+>>> The present of the HT control field indicates it is A-MSDU frame. 
+>>> This patch adds support to discover and process A-MSDU frames.
+>>>
+>>> Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
 
-Ok, how about the following patch.  Is it acceptable to everyone?
+>>> +	while ((u8*)eth < skb->data + skb->len) {
+>>> +        	unsigned int eth_len = sizeof(struct ethhdr) + 
+>>> +						ntohs(eth->h_proto);
+>>> +        
+>>> +		frame = dev_alloc_skb(3000);
+>> Why 3000?  can it be a well-defined #define??
+> 3000 just a safe number I picked up. I will change to 
+> dev_alloc_skb(local->hw.extra_tx_headroom + eth_len);
+> Are any more space needed?
 
-thanks,
+Nope, that looks fine.  Thanks.
 
-greg k-h
-
----
- init/Kconfig |   13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
-
---- gregkh-2.6.orig/init/Kconfig
-+++ gregkh-2.6/init/Kconfig
-@@ -290,8 +290,17 @@ config SYSFS_DEPRECATED
- 	  that belong to a class, back into the /sys/class heirachy, in
- 	  order to support older versions of udev.
- 
--	  If you are using a distro that was released in 2006 or later,
--	  it should be safe to say N here.
-+	  If you are using an OpenSuSE, Gentoo, Ubuntu, or Fedora
-+	  release from 2007 or later, it should be safe to say N here.
-+
-+	  If you are using Debian or other distros that are slow to
-+	  update HAL, please say Y here.
-+
-+	  If you have any problems with devices not being found properly
-+	  from userspace programs, and this option is disabled, say Y
-+	  here.
-+
-+	  If you are unsure about this at all, say Y.
- 
- config RELAY
- 	bool "Kernel->user space relay support (formerly relayfs)"
+-- 
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
