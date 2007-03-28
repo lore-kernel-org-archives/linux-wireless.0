@@ -1,41 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:57889 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161325AbXCBIZC (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:51005
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752989AbXC1VJA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2007 03:25:02 -0500
-Message-ID: <45E7DF58.6080608@warmcat.com>
-Date: Fri, 02 Mar 2007 08:24:56 +0000
-From: Andy Green <andy@warmcat.com>
+	Wed, 28 Mar 2007 17:09:00 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
+Date: Wed, 28 Mar 2007 23:08:43 +0200
+Cc: mohamed <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+References: <1174909200.1364.56.camel@dell-4965.jf.intel.com> <1175106180.5151.76.camel@johannes.berg>
+In-Reply-To: <1175106180.5151.76.camel@johannes.berg>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: move PHY things to debugfs
-References: <1172774065.3381.3.camel@johannes.berg>	 <45E72174.9060104@warmcat.com>  <1172775866.3381.7.camel@johannes.berg> <1172776049.3381.10.camel@johannes.berg>
-In-Reply-To: <1172776049.3381.10.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200703282308.43274.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Thu, 2007-03-01 at 20:04 +0100, Johannes Berg wrote:
+On Wednesday 28 March 2007 20:23, Johannes Berg wrote:
+> > +	while ((u8*)eth < skb->data + skb->len) {
 > 
->> When Greg fixes sysfs, the real way would be to follow the symlink
-> 
-> Oh and of course if you don't want to use sysfs then you can always use
-> nl80211.
+> I don't understand this cast of eth to u8*. That seems wrong given that
+> there's an ethhdr there where the first byte isn't a length byte.
 
-Hi Johannes -
+We're not comparing the data eth points to here, but the eth pointer
+itself. It's pretty weird code. Maybe this can be solved in a
+more clear way. But it might be correct as-is.
 
-I guess I'll stick with sysfs for now since the code is written already: 
-if I will find add_iface and so on down there then I guess it will all 
-work out with minor edits.
-
-Can I ask how stable this byzantine path I am currently following to get 
-a "Management interface" for tx injection is going to be?  Not even 
-standard wireless ioctl but Private IOCTL SIOCIWFIRSTPRIV+0 opens out 
-into a secret garden of "PRISM2" special features... is this already in 
-a little black refactoring book somewhere?   Just glumly curious what 
-the lifetime of any usermode code based around any of this stuff is...
-
--Andy
+-- 
+Greetings Michael.
