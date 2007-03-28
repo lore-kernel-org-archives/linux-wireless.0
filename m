@@ -1,31 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49452 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750773AbXCCTxi (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:47715
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965524AbXC1LdN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Mar 2007 14:53:38 -0500
-Subject: Re: question: /sys/class/net/*/wireless
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jkmaline@cc.hut.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20070303174008.GA5081@jm.kir.nu>
-References: <1172920691.4966.6.camel@johannes.berg>
-	 <1172921257.4966.12.camel@johannes.berg>  <20070303174008.GA5081@jm.kir.nu>
-Content-Type: text/plain
-Date: Sat, 03 Mar 2007 20:53:33 +0100
-Message-Id: <1172951614.4277.2.camel@localhost>
-Mime-Version: 1.0
+	Wed, 28 Mar 2007 07:33:13 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: rx racing against removing interfaces?
+Date: Wed, 28 Mar 2007 13:32:40 +0200
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1174950322.25887.59.camel@johannes.berg> <200703281259.55764.mb@bu3sch.de> <1175080054.5151.50.camel@johannes.berg>
+In-Reply-To: <1175080054.5151.50.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200703281332.40879.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sa, 2007-03-03 at 09:40 -0800, Jouni Malinen wrote:
+On Wednesday 28 March 2007 13:07, Johannes Berg wrote:
+> On Wed, 2007-03-28 at 12:59 +0200, Michael Buesch wrote:
+> 
+> > Oh, you mean virtual interfaces.. yeah, there's probably a race. I don't
+> > know the locking there.
+> 
+> Yes, I mean virtual interfaces, when the thing is in progress while we
+> iterate through.
+> 
+> > But my comment about the non-irqsafe-variants-should-be-hidden still applies :)
+> 
+> I'll reread it ;)
+> 
+> But I'm not sure I fully agree. If the driver calls __ieee80211_rx in
+> softirq context that should be good without requiring to reschedule in
+> mac80211.
 
-> Well, it could be added to the schedule, but taken into account how
-> widely used /proc/net/wireless and wireless extensions are in user space
-> programs, I don't think this should be removed anytime soon, if ever. I
-> would object removal for at least the next five years..
+I'm not sure there is an easy and non-racy way to drop the driver IRQ lock
+while calling __ieee80211_rx synchronously.
 
-Will you write the compat code for cfg80211 for it? :P
-
-johannes
-
+-- 
+Greetings Michael.
