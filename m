@@ -1,62 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:35175 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965259AbXCTKQe (ORCPT
+Received: from dhost002-40.dex002.intermedia.net ([64.78.21.127]:54325 "EHLO
+	dhost002-40.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1030346AbXC2QKX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2007 06:16:34 -0400
-Message-ID: <45FFB47F.2060807@warmcat.com>
-Date: Tue, 20 Mar 2007 10:16:31 +0000
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/3] mac80211: Add radiotap support
-References: <20070319110124.819185242@warmcat.com> <20070319110256.288303943@warmcat.com> <200703191315.33695.flamingice@sourmilk.net>
-In-Reply-To: <200703191315.33695.flamingice@sourmilk.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 29 Mar 2007 12:10:23 -0400
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Thu, 29 Mar 2007 08:44:31 -0700
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Subject: Re: WPA/RSN information in cfg80211?
+Message-ID: <20070329154431.GA3906@devicescape.com>
+References: <1175034846.5151.20.camel@johannes.berg> <20070328190017.GI6036@devicescape.com> <1175166739.8807.46.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1175166739.8807.46.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
+On Thu, Mar 29, 2007 at 01:12:19PM +0200, Johannes Berg wrote:
+> On Wed, 2007-03-28 at 12:00 -0700, Jouni Malinen wrote:
+> > As long as the information is available for the driver at the time of
+> > association request, it does not really matter how that information got
+> > there..
+> 
+> I'd have thought you would rather see the IE included to be able to
+> experiment with new things easier ;)
 
-Hi Michael -
+Looks like there is some misunderstanding here.. What I meant with "the
+information" was both the IE and the individual parameters. I do indeed
+want to get both of these available to the drivers.
 
-> +		rthdr->hdr.it_present =
-> +			cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) ||
-> +				    (1 << IEEE80211_RADIOTAP_RATE) ||
-> +				    (1 << IEEE80211_RADIOTAP_CHANNEL) ||
-> +				    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL));
+> I really can't decide which way to use. Piecing together the IE in the
+> kernel and then just passing it doesn't seem like much overhead, but
+> doing it in userspace gives us more freedom for experiments...
 
-These were the wrong kind of OR operator as well.
+I believe both should be provided from user space and kernel has option
+of using either one depending on needs.
 
-test.c:
-#include <stdio.h>
-int main() { printf("%d %d\n", 1 || 2, 1 | 2); return 0; }
-
-$ gcc test.c
-$ ./a.out
-1 3
-
-After fixing that it now works with tcpdump!
-
-# tcpdump -i mon0 -s0 -X ether host 13:22:33:44:55:66
-
-09:54:58.579725 1.0 Mb/s 2417 MHz (0x0480) 100dB signal 
-13:22:33:44:55:66 (oui Unknown) Unknown SSAP 0x60 > 13:22:33:44:55:66 
-(oui Unknown) Unknown DSAP 0x50 Unnumbered, ua, Flags [Command], length 38
-         0x0000:  5061 636b 6574 7370 616d 6d65 7220 6272  Packetspammer.br
-         0x0010:  6f61 6463 6173 7420 7061 636b 6574 2031  oadcast.packet.1
-         0x0020:  3639 72b1 0066                           69r..f
-09:54:58.679197 54.0 Mb/s 2417 MHz (0x0480) 100dB signal 
-13:22:33:44:55:66 (oui Unknown) Unknown SSAP 0x60 > 13:22:33:44:55:66 
-(oui Unknown) Unknown DSAP 0x50 Unnumbered, ua, Flags [Command], length 38
-         0x0000:  5061 636b 6574 7370 616d 6d65 7220 6272  Packetspammer.br
-         0x0010:  6f61 6463 6173 7420 7061 636b 6574 2031  oadcast.packet.1
-         0x0020:  3730 c01d 92cd                           70....
-
-Note the CRC appears, I guess it's okay.  With zd1211rw-mac80211 as it 
-is, rx strength always appears as 100dB: it comes from 
-ieee80211_rx_status.ssi.  1Mbps injection is working as well since a 
-couple of tries ago on my patch.
-
--Andy
+-- 
+Jouni Malinen                                            PGP id EFC895FA
