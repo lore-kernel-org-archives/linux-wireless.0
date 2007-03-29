@@ -1,58 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailgw1.uni-kl.de ([131.246.120.220]:50408 "EHLO
-	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865AbXCUEdr (ORCPT
+Received: from dhost002-97.dex002.intermedia.net ([64.78.19.89]:29971 "EHLO
+	DHOST002-97.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932536AbXC2QZw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2007 00:33:47 -0400
-Received: from thot.informatik.uni-kl.de (thot.informatik.uni-kl.de [131.246.166.35])
-	by mailgw1.uni-kl.de (8.13.4/8.13.4/Debian-3sarge3) with ESMTP id l2L4CqNI018015
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Mar 2007 05:12:52 +0100
-Date: Wed, 21 Mar 2007 05:12:52 +0100
-From: Joerg Mayer <jmayer@loplof.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211: Monitor mode radiotap-based packet injection
-Message-ID: <20070321041252.GB10005@thot.informatik.uni-kl.de>
-References: <20070318101535.251183750@warmcat.com> <200703190156.07984.flamingice@sourmilk.net> <45FE6C02.5050605@warmcat.com> <200703191250.47929.flamingice@sourmilk.net>
-MIME-Version: 1.0
+	Thu, 29 Mar 2007 12:25:52 -0400
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Thu, 29 Mar 2007 08:48:48 -0700
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: optimise ieee80211_get_hdrlen
+Message-ID: <20070329154848.GB3906@devicescape.com>
+References: <1175011305.9282.10.camel@johannes.berg> <20070328191116.GJ6036@devicescape.com> <1175166447.8807.38.camel@johannes.berg>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200703191250.47929.flamingice@sourmilk.net>
+In-Reply-To: <1175166447.8807.38.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 19, 2007 at 12:50:42PM -0400, Michael Wu wrote:
-> > I googled for radiotap specs but I didn't find anything useful.  I added
-> > some small code to enforce the alignment rules you mention above.
-> >
-> I got the information on padding from:
-> http://madwifi.org/wiki/DevDocs/RadiotapHeader
->
-> I don't remember how I managed to find that, but there it is.
+On Thu, Mar 29, 2007 at 01:07:27PM +0200, Johannes Berg wrote:
+> On Wed, 2007-03-28 at 12:11 -0700, Jouni Malinen wrote:
 
-The packet-radiotap.c in Wireshark has the following comments:
+> > Is this case even used anywhere? Looks like unnecessary optimization at
+> > the cost of making the source code more difficult to understand and
+> > modify.
+> 
+> Not sure. I tested in userspace with a program that simply tried all
+> possible values.
 
-/* Written with info from:
- *
- * http://madwifi.org/wiki/DevDocs/RadiotapHeader
- * NetBSD's ieee80211_radiotap.h file
- */
+At least originally, there were no need for processing any control
+frames which is why asked this.. I haven't looked whether any of the new
+hardware drivers have needs for processing them.
 
-/*
- * The NetBSD ieee80211_radiotap man page
- * (http://netbsd.gw.com/cgi-bin/man-cgi?ieee80211_radiotap+9+NetBSD-current)
- * says:
- *
- *    Radiotap capture fields must be naturally aligned.  That is, 16-, 32-,
- *    and 64-bit fields must begin on 16-, 32-, and 64-bit boundaries, respec-
- *    tively.  In this way, drivers can avoid unaligned accesses to radiotap
- *    capture fields.  radiotap-compliant drivers must insert padding before a
- *    capture field to ensure its natural alignment.  radiotap-compliant packet
- *    dissectors, such as tcpdump(8), expect the padding.
- */
-
-Ciao
-     Joerg
---
-Joerg Mayer                                           <jmayer@loplof.de>
-We are stuck with technology when what we really want is just stuff that
-works. Some say that should read Microsoft instead of technology.
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
