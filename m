@@ -1,57 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:62888 "EHLO
-	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932863AbXCFB36 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53101 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753347AbXC2LJn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 20:29:58 -0500
-Date: Mon, 05 Mar 2007 19:28:00 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: stable@kernel.org
-Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] bcm43xx: Fix assertion failures in interrupt handler
-Message-ID: <45ecc3a0.8we8IxI7lp6G5Y6l%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 29 Mar 2007 07:09:43 -0400
+Subject: Re: [PATCH] mac80211: optimise ieee80211_get_hdrlen
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jkm@devicescape.com>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070328191116.GJ6036@devicescape.com>
+References: <1175011305.9282.10.camel@johannes.berg>
+	 <20070328191116.GJ6036@devicescape.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9+P/Cmk9hM73Tf8TSQ4L"
+Date: Thu, 29 Mar 2007 13:07:27 +0200
+Message-Id: <1175166447.8807.38.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pavel Roskin <proski@gnu.org>
 
-In the bcm43xx interrupt handler, sanity checks are wrongly done before the
-verification that the interrupt is for the bcm43xx.
+--=-9+P/Cmk9hM73Tf8TSQ4L
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+On Wed, 2007-03-28 at 12:11 -0700, Jouni Malinen wrote:
 
- drivers/net/wireless/bcm43xx/bcm43xx_main.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+> > +		/* QoS Control Field */
+> > +		hdrlen +=3D (fc & IEEE80211_STYPE_QOS_DATA)
+> > +				>> (ilog2(IEEE80211_STYPE_QOS_DATA)-1);
+> >  		break;
+>=20
+> Could you please add a comment explaining what exactly happens here and
+> more importantly, include an easy way of understanding that this adds 2
+> bytes.
 
-diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-index 057541f..21d4ecd 100644
---- a/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-+++ b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-@@ -1858,9 +1858,6 @@ static irqreturn_t bcm43xx_interrupt_handler(int irq, void *dev_id)
- 
- 	spin_lock(&bcm->irq_lock);
- 
--	assert(bcm43xx_status(bcm) == BCM43xx_STAT_INITIALIZED);
--	assert(bcm->current_core->id == BCM43xx_COREID_80211);
--
- 	reason = bcm43xx_read32(bcm, BCM43xx_MMIO_GEN_IRQ_REASON);
- 	if (reason == 0xffffffff) {
- 		/* irq not for us (shared irq) */
-@@ -1871,6 +1868,9 @@ static irqreturn_t bcm43xx_interrupt_handler(int irq, void *dev_id)
- 	if (!reason)
- 		goto out;
- 
-+	assert(bcm43xx_status(bcm) == BCM43xx_STAT_INITIALIZED);
-+	assert(bcm->current_core->id == BCM43xx_COREID_80211);
-+
- 	bcm->dma_reason[0] = bcm43xx_read32(bcm, BCM43xx_MMIO_DMA0_REASON)
- 			     & 0x0001DC00;
- 	bcm->dma_reason[1] = bcm43xx_read32(bcm, BCM43xx_MMIO_DMA1_REASON)
+Yeah, I should do that.
 
----
+> Is this case even used anywhere? Looks like unnecessary optimization at
+> the cost of making the source code more difficult to understand and
+> modify.
+
+Not sure. I tested in userspace with a program that simply tried all
+possible values.
+
+johannes
+
+--=-9+P/Cmk9hM73Tf8TSQ4L
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGC53v/ETPhpq3jKURAks7AKCrnJeY5Be/gqrR4oQ+eMCKHhExFgCfcHgm
+NHeeoZzxYrNu2Y54Lg52Jpc=
+=3aCL
+-----END PGP SIGNATURE-----
+
+--=-9+P/Cmk9hM73Tf8TSQ4L--
 
