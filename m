@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from waste.org ([66.93.16.53]:45061 "EHLO waste.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932869AbXCXWpI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Mar 2007 18:45:08 -0400
-Date: Sat, 24 Mar 2007 17:32:28 -0500
-From: Matt Mackall <mpm@selenic.com>
-To: Andrew Morton <akpm@linux-foundation.org>,
-	Cornelia Huck <cornelia.huck@de.ibm.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Monakhov Dmitriy <dmonakhov@openvz.org>
-Subject: Re: 2.6.21-rc4-mm1
-Message-ID: <20070324223228.GP10459@waste.org>
-References: <20070319205623.299d0378.akpm@linux-foundation.org> <1174433034.62033.16.camel@localhost> <20070320223643.d8cbc3f6.akpm@linux-foundation.org> <4601761F.4000302@lwfinger.net> <20070321185900.GC3801@tuxdriver.com> <20070321202225.GN10459@waste.org> <20070321233917.0393dfd1.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070321233917.0393dfd1.akpm@linux-foundation.org>
+Received: from mog.warmcat.com ([62.193.232.24]:55100 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753343AbXC2Ljk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Mar 2007 07:39:40 -0400
+Message-ID: <460BA3FE.3000700@warmcat.com>
+Date: Thu, 29 Mar 2007 12:33:18 +0100
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/4] mac80211: Monitor mode radiotap-based packet injection
+References: <20070320103955.600509703@warmcat.com>	 <20070320104104.837354764@warmcat.com>	 <1174501733.3944.28.camel@johannes.berg>  <460B9F8C.3040701@warmcat.com> <1175167176.8807.53.camel@johannes.berg>
+In-Reply-To: <1175167176.8807.53.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 21, 2007 at 11:39:17PM -0800, Andrew Morton wrote:
-> On Wed, 21 Mar 2007 15:22:25 -0500 Matt Mackall <mpm@selenic.com> wrote:
+Johannes Berg wrote:
+> On Thu, 2007-03-29 at 12:14 +0100, Andy Green wrote:
 > 
-> > With the latest -mm, I'm now getting this:
-> > 
-> > Mar 21 15:06:52 cinder kernel: ipw2200: Detected Intel PRO/Wireless
-> > 2200BG Network Connection
-> > Mar 21 15:06:52 cinder kernel: firmware_loading_store: unexpected
-> > value (0)
-> > Mar 21 15:06:52 cinder kernel: ipw2200: ipw2200-bss.fw
-> > request_firmware failed:
-> > Reason -2
-> > Mar 21 15:06:52 cinder kernel: ipw2200: Unable to load firmware: -2
-> > Mar 21 15:06:52 cinder kernel: ipw2200: failed to register network
-> > device
+>>>> +	static const u8 radiotap_entry_sizes[] = {
+>>>> +		8, /* IEEE80211_RADIOTAP_TSFT */
+>>>> +		1, /* IEEE80211_RADIOTAP_FLAGS */
+>>> [...]
+>>>
+>>> I'd prefer C99 style for this.
+>> Shocked that stuff from as late as 1999 is allowed.  I normally use // 
+>> myself, I was making a special effort.
 > 
-> The firmware loading bug is caused by
-> driver-core-handles-kobject_uevent-failure-while-device_add.patch
+> Oh, dang, that was ambiguous. I was thinking
+> static const u8 radiotap_entry_sizes[] = {
+> 	[IEEE80211_RADIOTAP_TSFT] = 8,
+> 	...
+
+Ha, well I will fix that up then.  I couldn't really understand how the 
+coding style that insists to turn code into 80-col Bonsai Kittens can 
+also allow //.
+
+>> The idea here is to synthesize an rx packet later after the tx has 
+>> happened, reflecting the tx status back to userspace that way (if he 
+>> elects to listen out for them)?
 > 
-> I've uploaded a revert patch to
-> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21-rc4/2.6.21-rc4-mm1/hot-fixes/
+> Yeah. Michael Wu says we don't need the magic cookie though.
 
-For the record, with the following patches:
+I missed this conversation evidently, didn't find it just now either. 
+In case the plan is to block the thread doing the injection until the 
+packet has gone out and is retired and can return an "acknowledged" 
+status direct to the send()er, throughput is an issue.
 
-# hotfixes
-mm-debug-check-for-the-fault-vs-invalidate-race.patch
-mm-fix-fault-vs-invalidate-race-for-linear-mappings-fix-2.patch
-mm-fix-fault-vs-invalidate-race-for-linear-mappings-fix.patch
-revert-driver-core-handles-kobject_uevent-failure-while-device_add.patch
-tty-in-tiocsctty-when-we-steal-a-tty-hang-it-up-fix.patch
-
-...I just had a boot where firmware loading failed again. rmmod+insmod
-fixed it.
-
--- 
-Mathematics is the supreme nostalgia of our time.
+-Andy
