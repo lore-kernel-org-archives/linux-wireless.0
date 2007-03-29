@@ -1,60 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gundega.hpl.hp.com ([192.6.19.190]:55058 "EHLO
-	gundega.hpl.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752886AbXCLUfV (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57183 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753326AbXC2L1b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2007 16:35:21 -0400
-Date: Mon, 12 Mar 2007 13:34:53 -0700
-To: Jouni Malinen <jkm@devicescape.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>,
-	Dan Williams <dcbw@redhat.com>
-Subject: Re: wireless extensions vs. 64-bit architectures
-Message-ID: <20070312203453.GA4230@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <20070308184954.GA24485@bougret.hpl.hp.com> <1173382042.3248.63.camel@johannes.berg> <20070308193412.GG23040@devicescape.com> <1173382802.3248.68.camel@johannes.berg> <20070308221128.GA24884@bougret.hpl.hp.com> <1173393326.3831.21.camel@johannes.berg> <20070309213531.GA28070@bougret.hpl.hp.com> <1173634801.3382.8.camel@johannes.berg> <20070312175639.GA4048@bougret.hpl.hp.com> <20070312182149.GA1785@devicescape.com>
+	Thu, 29 Mar 2007 07:27:31 -0400
+Subject: Re: [PATCH 3/4] mac80211: Monitor mode radiotap injection docs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andy Green <andy@warmcat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <460BA0A1.7080106@warmcat.com>
+References: <20070320103955.600509703@warmcat.com>
+	 <20070320104104.575903961@warmcat.com>
+	 <1174500950.3944.15.camel@johannes.berg>  <460BA0A1.7080106@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Fk0K38LYhpXjvyO16CDJ"
+Date: Thu, 29 Mar 2007 13:26:14 +0200
+Message-Id: <1175167574.8807.58.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070312182149.GA1785@devicescape.com>
-From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 12, 2007 at 10:21:49AM -0800, Jouni Malinen wrote:
-> On Mon, Mar 12, 2007 at 10:56:39AM -0700, Jean Tourrilhes wrote:
-> 
-> > > I would guess that others "use" iwlib like that too.
-> > 
-> > 	Which others ? The applications that process scan results can
-> > be counted on your fingers. And if you count the one actively
-> > developped, you can use one hand.
-> 
-> Quick search of SIOCGIWSCAN with Google Code Search
-> (http://www.google.com/codesearch) shows quite large set of uses. Most
-> of them are from various drivers, but at least some (e.g., Xsupplicant,
-> waproamd) are from user space applications. I did not actually verify
-> whether any of these would be affected by the 64/32-bit issue, but I
-> would assume some of the apps are indeed parsing the scan results with
-> internal implementation.
 
-	Note that you will get such a list on my web page, and if you
-find something not on the list, please send it to me.
-	XSupplicant uses iwlib for scanning.
-	waproamd has not been actively developped for the last 3 years.
-	kdenetwork/KWiFiManager uses iwlib for scanning.
-	Kifi uses iwlib and has not been actively developped for the
-last 2 years.
-	ApRadar has not been actively developped for the last 3 years.
-	SuSE netapplet is no longer on the net. wifi-radar parse the
-output of iwlist.
-	Mandrake net_applet, from what I can gather, use wpa_supplicant.
+--=-Fk0K38LYhpXjvyO16CDJ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-	Ok, we are left with :
-	wpa_supplicant use its own code.
-	NetworkManager : partially use iwlib, use own code for scanning.
+On Thu, 2007-03-29 at 12:18 +0100, Andy Green wrote:
 
-> Jouni Malinen
+> Well, the actual injection action is happening in mac80211.  I think=20
+> you're looking at it as a cfg80211 wext-replacing type thing and I am=20
+> looking at it as completely generic mac80211 packet injection from=20
+> userspace.
 
-	Jean
+Yeah. Don't worry about it. We can move it later and define it for
+cfg80211 when we introduce the userspace mlme stuff.
+
+> > Drop all that, it's generic radiotap description. Put it into another
+> > file if you want.
+>=20
+> This kind of description makes documentation useful to the reader, who=20
+> may never have heard of radiotap (it is not very visible in Google right=20
+> now in a useful way).
+
+Maybe just stick it into a radiotap file and refer to that? I'm just a
+bit worried that it'll get outdated because somebody looking for
+radiotap stuff won't find it here when updating. Not sure it can even
+get outdated though.
+
+> It's ~380 lines.  It also knows how to conjure up management interfaces.=20
+>   I can chop it down and put it in here if you feel it is important.
+
+It's probably easy enough to write from the docs so probably not really
+necessary. I think when I wrote this I was offline so couldn't actually
+check out the demo program ;)
+
+> I appreciate the comments, but I am 100% sure that some correct=20
+> documentation that may be over-chatty is better than no documentation at=20
+> all.  After hesitating and starting to change it I left it as it is, if=20
+> you still feel these things are important comment in that direction=20
+> again on the new patch and I will grit my teeth and change it.
+
+No, don't take me too seriously. I appreciate documentation I may not
+agree with in all points much more than the lack thereof :)
+
+johannes
+
+--=-Fk0K38LYhpXjvyO16CDJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGC6JW/ETPhpq3jKURAuQoAJ9jzRDESbdu73X3ehJfXm5XPTzk1ACfRb4A
+l0ykh7Vs0whEpnTNW2h5hkA=
+=agcv
+-----END PGP SIGNATURE-----
+
+--=-Fk0K38LYhpXjvyO16CDJ--
 
