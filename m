@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:52261
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753302AbXCWSah (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:43482 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753496AbXC2Nko (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2007 14:30:37 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: RFC: Future plans for bcm43xx-softmac
-Date: Fri, 23 Mar 2007 19:30:19 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx devel <Bcm43xx-dev@lists.berlios.de>
-References: <4604106F.7080003@lwfinger.net>
-In-Reply-To: <4604106F.7080003@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200703231930.19312.mb@bu3sch.de>
+	Thu, 29 Mar 2007 09:40:44 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id C3CCF8CB14
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2007 15:40:38 +0200 (CEST)
+Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
+	by armbox7.home.warmcat.com (Postfix) with ESMTP id 02A32100CC
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2007 13:41:01 +0000 (UTC)
+Message-Id: <20070329133814.841581235@warmcat.com>
+Date: Thu, 29 Mar 2007 14:38:14 +0100
+From: andy@warmcat.com
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/5] Try #6: Radiotap on Monitor Mode interfaces for rx and tx
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 23 March 2007 18:37, Larry Finger wrote:
-> I think we have a plan for the future of bcm43xx-softmac once the bcm43xx-mac80211 version goes into
-> mainline. Unfortunately it cannot just be abandoned as there will be no support for 802.11b-only
-> devices in bcm43xx-mac80211.
-> 
-> The steps to be done are as follows:
-> 
-> 1. Change the namespace from bcm43xx to bcm4301. This will both reflect the purpose of the changed
-> driver as well as prevent namespace collisions with the bcm43xx-mac80211 version in case both are
-> built into the kernel.
-> 
-> 2. Modify bcm4301 to use mac80211 rather than softmac. Although this process has the potential for
-> introducing bugs into what is currently the stable version, it does allow the abandonment of softmac
-> with its deficiencies, many of which are essentially uncorrectable.
-> 
-> 3. The PCI-ids recognized by bcm4301-mac80211 will be restricted to the 802.11b-only devices and the
-> configuration information will be modified.
-> 
-> Step 1 will be completed very soon and the appropriate patches will be submitted to Linville's
-> wireless-dev tree.
-> 
-> I will be working on step 2 in the coming months and will submit those patches to the list for
-> comments and testing. When ready, they too will be submitted to Linville. Once bcm43xx-mac80211 goes
-> into mainline, the step 3 patches will be submitted.
-> 
-> Please comment on this plan.
+Hi folks -
 
-I ACK this as-is.
+This set of patches change the Monitor Mode wireless interfaces to use radiotap
+both for monitoring and for packet injection.  The monitoring side is done by a patch
+from Michael Wu.  Tcpdump knows how to handle the result.
 
+For injecting packets, the you issue a packet using libpcap or a SOCK_PACKET
+socket down an interface to the wireless device that is in Monitor Mode.  The packet
+has a normal radiotap header prepended to the IEEE80211 header.  The radiotap header
+is variable length depending on what the user wants to specify, currently the
+transmit rate, power and antenna can be specified using normal radiotap semantics.
+Any other entries are skipped.
+
+The radiotap parser is broken out into its own file under cfg80211.
+
+A usermode app packetspammer is available from here
+
+http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
+
+which allows easy injection of these packets from the commandline.  At the moment it
+loops issuing packets at a variety of rates which can be seen from another
+machine's monitor mode interface on the same channel.  There are instructions for
+build and using it on the page above.
+
+Currently it has been tested for both rx and tx using zd1211rw-mac80211.
+
+The patches should be based against yesterday's wireless-dev.
+
+I also added some documentation files which explains how to use the injection
+functionality and radiotap header notes.
 -- 
-Greetings Michael.
