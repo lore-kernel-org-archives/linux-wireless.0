@@ -1,208 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47561 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965565AbXCGQvs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2007 11:51:48 -0500
-Message-Id: <20070307164647.839947000@sipsolutions.net>
-References: <20070307164531.910923000@sipsolutions.net>
-Date: Wed, 07 Mar 2007 17:45:35 +0100
-From: johannes@sipsolutions.net
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH (v3) 4/4] mac80211 debugfs Kconfig
+Received: from mga09.intel.com ([134.134.136.24]:37937 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751884AbXC1TUw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Mar 2007 15:20:52 -0400
+Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery and  association
+From: mohamed <mabbas@linux.intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <43e72e890703281211s6793af26pe14d9d9fdfa91095@mail.gmail.com>
+References: <1174909105.1364.53.camel@dell-4965.jf.intel.com>
+	 <43e72e890703271005u6173567aq2c1c04635da3ce50@mail.gmail.com>
+	 <43e72e890703271011h47a6177dp32b7c2324ab51423@mail.gmail.com>
+	 <43e72e890703271029q169c3fdo6d410f272eaf791@mail.gmail.com>
+	 <1175148244.4237.4.camel@dell-4965.jf.intel.com>
+	 <43e72e890703281211s6793af26pe14d9d9fdfa91095@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 29 Mar 2007 00:21:39 -0700
+Message-Id: <1175152899.4237.13.camel@dell-4965.jf.intel.com>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds a configuration option to mac80211 that lets you
-enable or disable the debugfs internal state export.
-
-I intentionally made this option not depend on MAC80211_DEBUG
-because that option always generates debug messages in the kernel
-log; this way you can see the internal state without seeing any
-debugging message.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
----
- net/mac80211/Kconfig          |    9 +++++++++
- net/mac80211/Makefile         |    2 +-
- net/mac80211/debugfs.h        |    2 +-
- net/mac80211/debugfs_key.h    |    2 +-
- net/mac80211/debugfs_netdev.h |    2 +-
- net/mac80211/debugfs_sta.h    |    2 +-
- net/mac80211/ieee80211_i.h    |    4 ++--
- net/mac80211/ieee80211_key.h  |    2 +-
- net/mac80211/ieee80211_rate.h |    4 ++--
- net/mac80211/rc80211_simple.c |    6 +++---
- net/mac80211/sta_info.h       |    2 +-
- 11 files changed, 23 insertions(+), 14 deletions(-)
-
---- wireless-dev.orig/net/mac80211/Kconfig	2007-03-07 13:03:43.954710923 +0100
-+++ wireless-dev/net/mac80211/Kconfig	2007-03-07 13:04:00.514710923 +0100
-@@ -18,6 +18,15 @@ config MAC80211_LEDS
- 	This option enables a few LED triggers for different
- 	packet receive/transmit events.
- 
-+config MAC80211_DEBUGFS
-+	bool "Export mac80211 internals in DebugFS"
-+	depends on MAC80211 && DEBUG_FS
-+	---help---
-+	  Select this to see extensive information about
-+	  the internal state of mac80211 in debugfs.
-+
-+	  Say N unless you know you need this.
-+
- config MAC80211_DEBUG
- 	bool "Enable debugging output"
- 	depends on MAC80211
---- wireless-dev.orig/net/mac80211/Makefile	2007-03-07 13:03:58.974710923 +0100
-+++ wireless-dev/net/mac80211/Makefile	2007-03-07 13:04:00.514710923 +0100
-@@ -1,7 +1,7 @@
- obj-$(CONFIG_MAC80211) += mac80211.o rc80211_simple.o
- 
- mac80211-objs-$(CONFIG_MAC80211_LEDS) += ieee80211_led.o
--mac80211-objs-$(CONFIG_DEBUG_FS) += debugfs.o debugfs_sta.o debugfs_netdev.o debugfs_key.o
-+mac80211-objs-$(CONFIG_MAC80211_DEBUGFS) += debugfs.o debugfs_sta.o debugfs_netdev.o debugfs_key.o
- 
- mac80211-objs := \
- 	ieee80211.o \
---- wireless-dev.orig/net/mac80211/debugfs.h	2007-03-07 13:03:56.054710923 +0100
-+++ wireless-dev/net/mac80211/debugfs.h	2007-03-07 13:04:00.514710923 +0100
-@@ -1,7 +1,7 @@
- #ifndef __MAC80211_DEBUGFS_H
- #define __MAC80211_DEBUGFS_H
- 
--#ifdef CONFIG_DEBUG_FS
-+#ifdef CONFIG_MAC80211_DEBUGFS
- extern void debugfs_hw_add(struct ieee80211_local *local);
- extern void debugfs_hw_del(struct ieee80211_local *local);
- extern int mac80211_open_file_generic(struct inode *inode, struct file *file);
---- wireless-dev.orig/net/mac80211/debugfs_key.h	2007-03-07 13:03:58.994710923 +0100
-+++ wireless-dev/net/mac80211/debugfs_key.h	2007-03-07 13:04:00.514710923 +0100
-@@ -1,7 +1,7 @@
- #ifndef __MAC80211_DEBUGFS_KEY_H
- #define __MAC80211_DEBUGFS_KEY_H
- 
--#ifdef CONFIG_DEBUG_FS
-+#ifdef CONFIG_MAC80211_DEBUGFS
- void ieee80211_debugfs_key_add(struct ieee80211_local *local,
- 			       struct ieee80211_key *key);
- void ieee80211_debugfs_key_remove(struct ieee80211_key *key);
---- wireless-dev.orig/net/mac80211/debugfs_netdev.h	2007-03-07 13:03:58.974710923 +0100
-+++ wireless-dev/net/mac80211/debugfs_netdev.h	2007-03-07 13:04:00.514710923 +0100
-@@ -3,7 +3,7 @@
- #ifndef __IEEE80211_SYSFS_H
- #define __IEEE80211_SYSFS_H
- 
--#ifdef CONFIG_DEBUG_FS
-+#ifdef CONFIG_MAC80211_DEBUGFS
- void ieee80211_debugfs_add_netdev(struct ieee80211_sub_if_data *sdata);
- void ieee80211_debugfs_remove_netdev(struct ieee80211_sub_if_data *sdata);
- void ieee80211_debugfs_change_if_type(struct ieee80211_sub_if_data *sdata,
---- wireless-dev.orig/net/mac80211/debugfs_sta.h	2007-03-07 13:03:56.074710923 +0100
-+++ wireless-dev/net/mac80211/debugfs_sta.h	2007-03-07 13:04:00.514710923 +0100
-@@ -1,7 +1,7 @@
- #ifndef __MAC80211_DEBUGFS_STA_H
- #define __MAC80211_DEBUGFS_STA_H
- 
--#ifdef CONFIG_DEBUG_FS
-+#ifdef CONFIG_MAC80211_DEBUGFS
- void ieee80211_sta_debugfs_add(struct sta_info *sta);
- void ieee80211_sta_debugfs_remove(struct sta_info *sta);
- #else
---- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-03-07 13:03:58.984710923 +0100
-+++ wireless-dev/net/mac80211/ieee80211_i.h	2007-03-07 13:04:00.514710923 +0100
-@@ -337,7 +337,7 @@ struct ieee80211_sub_if_data {
- 	int channel_use;
- 	int channel_use_raw;
- 
--#ifdef CONFIG_DEBUG_FS
-+#ifdef CONFIG_MAC80211_DEBUGFS
- 	struct dentry *debugfsdir;
- 	union {
- 		struct {
-@@ -595,7 +595,7 @@ struct ieee80211_local {
- 
- 	int user_space_mlme;
- 
--#ifdef CONFIG_DEBUG_FS
-+#ifdef CONFIG_MAC80211_DEBUGFS
- 	struct local_debugfsdentries {
- 		struct dentry *channel;
- 		struct dentry *frequency;
---- wireless-dev.orig/net/mac80211/ieee80211_key.h	2007-03-07 13:03:58.984710923 +0100
-+++ wireless-dev/net/mac80211/ieee80211_key.h	2007-03-07 13:04:00.514710923 +0100
-@@ -83,7 +83,7 @@ struct ieee80211_key {
- 					* (used only for broadcast keys). */
- 	s8 keyidx; /* WEP key index */
- 
--#ifdef CONFIG_DEBUG_FS
-+#ifdef CONFIG_MAC80211_DEBUGFS
- 	struct {
- 		struct dentry *stalink;
- 		struct dentry *dir;
---- wireless-dev.orig/net/mac80211/rc80211_simple.c	2007-03-07 13:03:56.084710923 +0100
-+++ wireless-dev/net/mac80211/rc80211_simple.c	2007-03-07 13:04:00.514710923 +0100
-@@ -123,7 +123,7 @@ struct sta_rate_control {
- 	u32 tx_avg_rate_sum;
- 	u32 tx_avg_rate_num;
- 
--#ifdef CONFIG_DEBUG_FS
-+#ifdef CONFIG_MAC80211_DEBUGFS
- 	struct dentry *tx_avg_rate_sum_dentry;
- 	struct dentry *tx_avg_rate_num_dentry;
- #endif
-@@ -333,7 +333,7 @@ static void rate_control_simple_free_sta
- 	kfree(rctrl);
- }
- 
--#ifdef CONFIG_DEBUG_FS
-+#ifdef CONFIG_MAC80211_DEBUGFS
- 
- static int open_file_generic(struct inode *inode, struct file *file)
- {
-@@ -406,7 +406,7 @@ static struct rate_control_ops rate_cont
- 	.free = rate_control_simple_free,
- 	.alloc_sta = rate_control_simple_alloc_sta,
- 	.free_sta = rate_control_simple_free_sta,
--#ifdef CONFIG_DEBUG_FS
-+#ifdef CONFIG_MAC80211_DEBUGFS
- 	.add_sta_debugfs = rate_control_simple_add_sta_debugfs,
- 	.remove_sta_debugfs = rate_control_simple_remove_sta_debugfs,
- #endif
---- wireless-dev.orig/net/mac80211/sta_info.h	2007-03-07 13:03:56.074710923 +0100
-+++ wireless-dev/net/mac80211/sta_info.h	2007-03-07 13:04:00.524710923 +0100
-@@ -115,7 +115,7 @@ struct sta_info {
- 
- 	u16 listen_interval;
- 
--#ifdef CONFIG_DEBUG_FS
-+#ifdef CONFIG_MAC80211_DEBUGFS
- 	struct sta_info_debugfsdentries {
- 		struct dentry *dir;
- 		struct dentry *flags;
---- wireless-dev.orig/net/mac80211/ieee80211_rate.h	2007-03-07 13:03:56.084710923 +0100
-+++ wireless-dev/net/mac80211/ieee80211_rate.h	2007-03-07 13:04:00.524710923 +0100
-@@ -124,7 +124,7 @@ static inline void rate_control_free_sta
- 
- static inline void rate_control_add_sta_debugfs(struct sta_info *sta)
- {
--#ifdef CONFIG_DEBUG_FS
-+#ifdef CONFIG_MAC80211_DEBUGFS
- 	struct rate_control_ref *ref = sta->rate_ctrl;
- 	if (sta->debugfs.dir && ref->ops->add_sta_debugfs)
- 		ref->ops->add_sta_debugfs(ref->priv, sta->rate_ctrl_priv,
-@@ -134,7 +134,7 @@ static inline void rate_control_add_sta_
- 
- static inline void rate_control_remove_sta_debugfs(struct sta_info *sta)
- {
--#ifdef CONFIG_DEBUG_FS
-+#ifdef CONFIG_MAC80211_DEBUGFS
- 	struct rate_control_ref *ref = sta->rate_ctrl;
- 	if (ref->ops->remove_sta_debugfs)
- 		ref->ops->remove_sta_debugfs(ref->priv, sta->rate_ctrl_priv);
-
---
-
+On Wed, 2007-03-28 at 15:11 -0400, Luis R. Rodriguez wrote:
+> On 3/29/07, mohamed <mabbas@linux.intel.com> wrote:
+> > On Tue, 2007-03-27 at 13:29 -0400, Luis R. Rodriguez wrote:
+> > > On 3/27/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > > > On 3/27/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > > > > On 3/26/07, mohamed <mabbas@linux.intel.com> wrote:
+> > > > >
+> > > > > > +/* Get 11n capabilties from low level driver */
+> > > > > > +static void ieee80211_fill_ht_ie(struct net_device *dev,
+> > > > > > +                                struct ieee80211_ht_capability *ht_capab)
+> > > > > > +{
+> > > > > > +       int rc;
+> > > > > > +       struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+> > > > > > +
+> > > > > > +       if (!local->ops->get_ht_capab){
+> > > > > > +               memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
+> > > > > > +               return;
+> > > > > > +       }
+> > > > > > +
+> > > > > > +       rc = local->ops->get_ht_capab(local_to_hw(local), ht_capab);
+> > > > > > +       if (!rc) {
+> > > > > > +               memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
+> > > > > > +               return;
+> > > > > > +       }
+> > > > > >
+> > > > > > +       ht_capab->capabilitiesInfo = (__le16) cpu_to_le16(
+> > > > > > +                                       ht_capab->capabilitiesInfo);
+> > > > > > +       ht_capab->extended_ht_capability_info = (__le16) cpu_to_le16(
+> > > > > > +                                       ht_capab->extended_ht_capability_info);
+> > > > > > +       ht_capab->tx_BF_capability_info = (__le32) cpu_to_le32(
+> > > > > > +                                       ht_capab->tx_BF_capability_info);
+> > > > > > +}
+> > > > > > +
+> > > > >
+> > > > > We should memset to 0 the entire ht_capab to regardless as its coming
+> > > > > from skb_put() otherwise we'll get random data there if we don't set
+> > > > > it and we sure as hell don't want to just transmit that :)
+> > I will memset to 0 before using the structure. I will change the patch
+> > to reflect this.
+> 
+> Thanks
+> 
+> > > Also
+> > > > > ieee80211_send_assoc() is already checking for
+> > > > > local->ops->get_ht_capab so lets just do a BUG_ON here to capture
+> > > > > cases where someone else didn't do the proper checking. So how about
+> > > > > instead something like:
+> > make sense.
+> 
+> Thanks
+> 
+> > > > > /* Get 11n capabilties from low level driver */
+> > > > > static void ieee80211_fill_ht_ie(struct net_device *dev,
+> > > > >                                 struct ieee80211_ht_capability *ht_capab)
+> > > > > {
+> > > > >        struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+> > > > >        BUG_ON(!local->ops->get_ht_capab);
+> > > > >        memset(ht_capab, 0, sizeof(struct ieee80211_ht_capability));
+> > > > >        if (!local->ops->get_ht_capab(local_to_hw(local), ht_capab))
+> > > > >                return;
+> > > > >        ht_capab->capabilitiesInfo = (__le16) cpu_to_le16(
+> > > > >                                        ht_capab->capabilitiesInfo);
+> > > > >        ht_capab->extended_ht_capability_info = (__le16) cpu_to_le16(
+> > > > >                                        ht_capab->extended_ht_capability_info);
+> > > > >        ht_capab->tx_BF_capability_info = (__le32) cpu_to_le32(
+> > > > >                                        ht_capab->tx_BF_capability_info);
+> > > > > }
+> > > > >
+> > > >
+> > > > On second thought just memset to 0 on ieee80211_send_assoc() right
+> > > > after the skb_put and remove that from above.
+> > > >
+> > > >   Luis
+> > > >
+> > >
+> > > Last few comments:
+> > >
+> > > I. In struct ieee80211_ops you added your hunk after the TSF comment,
+> > > but before  u64 (*get_tsf)(struct ieee80211_hw *hw) was listed. Please
+> > > move the hunk after get_tsf or before the comment.
+> > >
+> > > II. In ieee80211_fill_ht_ie() you do cpu_to_le* on the same fields.. I
+> > > take it the driver's get_ht_capab() is supposed to fill these. Since
+> > > you already defined them as little endian in the struct
+> > > ieee80211_ht_capability, how about just leaving that up to the driver
+> > > developer to make sure they do this? That's would be 6 lines less of
+> > > code in ieee80211_fill_ht_ie().
+> 
+> And how about regarding the above comment (II)? We can just expect
+> driver developers to follow proper endianness. That cleans that
+> routine a bit more too.
+> 
+Yes I will do this as well
+Mohamed
+>   Luis
