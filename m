@@ -1,106 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36528 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933683AbXCFAmx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 19:42:53 -0500
-Date: Mon, 5 Mar 2007 16:41:17 -0800
-From: Greg KH <greg@kroah.com>
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Theodore Tso <tytso@mit.edu>, Matt Mackall <mpm@selenic.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	yi.zhu@intel.com, jketreno@linux.intel.com,
-	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
-Subject: Re: [2.6.21 patch] unconditionally enable SYSFS_DEPRECATED
-Message-ID: <20070306004117.GB12566@kroah.com>
-References: <20070304220857.GH23311@waste.org> <1173051564.6131.13.camel@johannes.berg> <20070305002550.GI23311@waste.org> <20070305011729.GB7681@kroah.com> <20070305125950.GC26781@thunk.org> <20070305185813.GA31465@kroah.com> <20070305234052.GR3441@stusta.de> <20070306000722.GA11436@kroah.com> <20070306003541.GT3441@stusta.de>
+Received: from mog.warmcat.com ([62.193.232.24]:52319 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934329AbXC2T2H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Mar 2007 15:28:07 -0400
+Message-ID: <460C1340.7040700@warmcat.com>
+Date: Thu, 29 Mar 2007 20:28:00 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070306003541.GT3441@stusta.de>
+To: Pavel Roskin <proski@gnu.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/5] Meddled with by Andy Green since signed-off: made  it apply to current wireless-dev, took out comments for radiotap types not  in current wireless-dev
+References: <20070329133114.569947199@warmcat.com>	 <20070329133123.323900095@warmcat.com> <1175195559.12052.14.camel@dv>
+In-Reply-To: <1175195559.12052.14.camel@dv>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 06, 2007 at 01:35:41AM +0100, Adrian Bunk wrote:
-> On Mon, Mar 05, 2007 at 04:07:22PM -0800, Greg KH wrote:
-> > On Tue, Mar 06, 2007 at 12:40:52AM +0100, Adrian Bunk wrote:
-> > > On Mon, Mar 05, 2007 at 10:58:13AM -0800, Greg KH wrote:
-> > > > 
-> > > > Ok, how about the following patch.  Is it acceptable to everyone?
-> > > > 
-> > > > thanks,
-> > > > 
-> > > > greg k-h
-> > > > 
-> > > > ---
-> > > >  init/Kconfig |   13 +++++++++++--
-> > > >  1 file changed, 11 insertions(+), 2 deletions(-)
-> > > > 
-> > > > --- gregkh-2.6.orig/init/Kconfig
-> > > > +++ gregkh-2.6/init/Kconfig
-> > > > @@ -290,8 +290,17 @@ config SYSFS_DEPRECATED
-> > > >  	  that belong to a class, back into the /sys/class heirachy, in
-> > > >  	  order to support older versions of udev.
-> > > >  
-> > > > -	  If you are using a distro that was released in 2006 or later,
-> > > > -	  it should be safe to say N here.
-> > > > +	  If you are using an OpenSuSE, Gentoo, Ubuntu, or Fedora
-> > > > +	  release from 2007 or later, it should be safe to say N here.
-> > > > +
-> > > > +	  If you are using Debian or other distros that are slow to
-> > > > +	  update HAL, please say Y here.
-> > > >...
-> > > 
-> > > The sane solution seems to be to enable SYSFS_DEPRECATED unconditionally 
-> > > for all users, and schedule it's removal for mid-2008 (or later).
-> > > 
-> > > 12 months after the first _release_ of a HAL that can live without seems 
-> > > to be the first time when we can consider getting rid of it, since all 
-> > > distributions with at least one release a year should ship it by then.
-> > > 
-> > > Currently, SYSFS_DEPRECATED is only a trap for users.
-> > 
-> > Huh?
-> > 
-> > No, again, I've been using this just fine for about 6 months now.
-> > 
-> > And what about all of the servers not using HAL/NetworkManager?
+Pavel Roskin wrote:
+> On Thu, 2007-03-29 at 14:31 +0100, andy@warmcat.com wrote:
+>> plain text document attachment
+>> (mac80211-sparse-annotate-radiotap-header-pavel-roskin.diff)
+>> Document that all fields must be little endian.  Use annotated types
+>> even in the comments.  Consistently use shorter type names (u8, s8). 
+>> Realign the comments.
 > 
-> On a server, it shouldn't harm.
+> I don't know what it means, but I think wireless-dev should just copy
+> include/net/ieee80211_radiotap.h from wireless-2.6.  The later has more
+> fields, and it turns out they are approved by David Young, the radiotap
+> maintainer.
 
-But if they wanted that option enabled?
+Just to clear up some confusion about the title, I sent myself the 
+patchset first to make sure it would go out okay, and it surpised me by 
+sending Pavel a copy because his email is in the patch.  The title is 
+what I wrote in the first line of the patch comment at that time.
 
-> > And what about all of the embedded systems not using either?
+> There is no reason mac80211 would need to change that file.
+
+I included it because I wanted the __le stuff your patch added to the 
+ieee80211_radiotap_header definition and the documentation that the args 
+are __le* as well.
+
+The file in wireless-2.6 does not seem to have the __le stuff in it?  Am 
+I looking in the right place at 
+http://ftp.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git?
+
+>>   *
+>> - * IEEE80211_RADIOTAP_FCS           	u32       data
+>> + * IEEE80211_RADIOTAP_FCS           	__le32          data
+>>   *
+>>   *	FCS from frame in network byte order.
 > 
-> If it was much code, I would have sent a patch that allowed disabling it 
-> if EMBEDDED=y.
+> I sent a patch yesterday that removes this part altogether.
 
-It's not a code size issue.  In fact, if the option is enabled, like you
-have done, it builds more code into the kernel than before.
+Okay well I will remove it here from my patch too in case it goes on.
 
-> > So to not allow this to be turned off by people who might want to (we
-> > want this for OpenSuSE 10.3, and Fedora 7 also will want this, as will
-> > other distros released this year), is pretty heavy-handed.
-> > 
-> > It also will work in OpenSuSE 10.2 which is already released, and I
-> > think Fedora 6, but I've only limited experience with these.
-> > 
-> > Oh, and Gentoo works just fine, and has been for the past 6 months.
-> 
-> For most people, it simply doesn't matter whether SYSFS_DEPRECATED is 
-> on or off.
+> I'm fine with this patch, I'm just saying that adjusting the patch is
+> more work than copying the file.
 
-Exactly.
+I don't mind using another version that has later fields instead, but I 
+think your idea to put the right types in and document it needs keeping 
+one way or another.  It's pretty unusual that the struct and args are 
+little-endian and it is big clue when you see the types talked about 
+with __le.
 
-> But accidentally disabling SYSFS_DEPRECATED has proven to be a trap 
-> people sometimes fall into - and tracking them down to 
-> SYSFS_DEPRECATED=n sometimes takes some time.
-
-So how do I put up the warning flag any larger than I have?
-
-I do not want this always enabled, that option is not acceptable to me,
-or to the zillions of people who are running a distro that this option
-works just fine on (see above list...)
-
-thanks,
-
-greg k-h
+-Andy
