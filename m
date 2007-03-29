@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59846 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53077 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030503AbXCFNMN (ORCPT
+	with ESMTP id S1753354AbXC2LJF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2007 08:12:13 -0500
-Subject: Re: [FYI] compiling hostapd against latest wireless-dev
+	Thu, 29 Mar 2007 07:09:05 -0400
+Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jkm@devicescape.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20070305164417.GA10947@devicescape.com>
-References: <1173095902.6131.63.camel@johannes.berg>
-	 <20070305164417.GA10947@devicescape.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HeQxV0wuVEUYuFeprDNj"
-Date: Tue, 06 Mar 2007 14:08:29 +0100
-Message-Id: <1173186509.3403.0.camel@johannes.berg>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: mohamed <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+In-Reply-To: <200703282308.43274.mb@bu3sch.de>
+References: <1174909200.1364.56.camel@dell-4965.jf.intel.com>
+	 <1175106180.5151.76.camel@johannes.berg>  <200703282308.43274.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FstNg6qq/0Pqw0mL26SW"
+Date: Thu, 29 Mar 2007 13:06:22 +0200
+Message-Id: <1175166382.8807.35.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-HeQxV0wuVEUYuFeprDNj
+--=-FstNg6qq/0Pqw0mL26SW
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2007-03-05 at 08:44 -0800, Jouni Malinen wrote:
+On Wed, 2007-03-28 at 23:08 +0200, Michael Buesch wrote:
+> On Wednesday 28 March 2007 20:23, Johannes Berg wrote:
+> > > +	while ((u8*)eth < skb->data + skb->len) {
+> >=20
+> > I don't understand this cast of eth to u8*. That seems wrong given that
+> > there's an ethhdr there where the first byte isn't a length byte.
+>=20
+> We're not comparing the data eth points to here, but the eth pointer
+> itself. It's pretty weird code. Maybe this can be solved in a
+> more clear way. But it might be correct as-is.
 
-> Which version of hostapd did you try to compile here? The current
-> development branch does not include net/mac80211.h and the include path
-> has also been changed from net/d80211 to net/mac80211 in example
-> configuration.
-
-I was a bit in a hurry and just downloaded the latest release. Thanks
-for the heads up, I'll give the dev version a try.
+Yeah, I read it wrong. It's fine, see my new mail.
 
 johannes
 
---=-HeQxV0wuVEUYuFeprDNj
+--=-FstNg6qq/0Pqw0mL26SW
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBF7WfN/ETPhpq3jKURAqSNAKCZgiVUVIfVJr018Ixca1ztx/LNbQCfSmVp
-OfHSaeYphR47CyeILsiUP7o=
-=5n/z
+iD8DBQBGC52u/ETPhpq3jKURAs6UAJ9wY0Q+E1mCWNzB3iTYVvrts03fAQCgs11i
+Q8QS4YSzVipVi6E2+/D+Vmg=
+=zCjN
 -----END PGP SIGNATURE-----
 
---=-HeQxV0wuVEUYuFeprDNj--
+--=-FstNg6qq/0Pqw0mL26SW--
 
