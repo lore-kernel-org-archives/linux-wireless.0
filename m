@@ -1,50 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.230]:15164 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751060AbXCEAqi (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53238 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753340AbXC2LN0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2007 19:46:38 -0500
-Received: by wr-out-0506.google.com with SMTP id 37so1174726wra
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Mar 2007 16:46:37 -0800 (PST)
-Message-ID: <5640c7e00703041646w32d7bc77s33d1fca4755a1b78@mail.gmail.com>
-Date: Mon, 5 Mar 2007 13:46:36 +1300
-From: "Ian McDonald" <ian.mcdonald@jandi.co.nz>
-To: "Matt Mackall" <mpm@selenic.com>
-Subject: Re: Recent wireless breakage (ipw2200, iwconfig, NetworkManager)
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Greg KH" <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, yi.zhu@intel.com, jketreno@linux.intel.com,
-	linux-wireless <linux-wireless@vger.kernel.org>, akpm@osdl.org
-In-Reply-To: <20070305002550.GI23311@waste.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <20070304220857.GH23311@waste.org>
-	 <1173051564.6131.13.camel@johannes.berg>
-	 <20070305002550.GI23311@waste.org>
+	Thu, 29 Mar 2007 07:13:26 -0400
+Subject: Re: WPA/RSN information in cfg80211?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jkm@devicescape.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <20070328190017.GI6036@devicescape.com>
+References: <1175034846.5151.20.camel@johannes.berg>
+	 <20070328190017.GI6036@devicescape.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LQXB6uDZuDU5PB0Q0j5g"
+Date: Thu, 29 Mar 2007 13:12:19 +0200
+Message-Id: <1175166739.8807.46.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/5/07, Matt Mackall <mpm@selenic.com> wrote:
-> > This is due to the recent sysfs restructuring I think. IIRC the fix is
-> > to upgrade hal to a current git version.
->
-> If that's the cause, the fix is to back out whatever was done to break
-> userspace. Breaking userspace is not ok. Upgrading from 2.6.x to
-> 2.6.x+1 should not entail replacing substantial parts of userspace,
-> especially with NOT-EVEN-FRAKKING-RELEASED-YET CODE.
->
-> I will try a new HAL when it shows up in Debian/unstable and not a
-> moment sooner.
->
-But you're running a kernel that's not in Debian/unstable so this
-seems a bit hypocritical.
 
-When you work with bleeding edge kernels you have to be prepared to
-work around things. Hell for ages git wasn't in Debian - unstable
-even, udev would break things etc.
+--=-LQXB6uDZuDU5PB0Q0j5g
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Just my 2c worth.
--- 
-Web: http://wand.net.nz/~iam4
-Blog: http://iansblog.jandi.co.nz
-WAND Network Research Group
+On Wed, 2007-03-28 at 12:00 -0700, Jouni Malinen wrote:
+
+> Use of WPA/RSN IE vs. individual parameters depends on the driver. For
+> example, NDIS drivers generate the IEs internally and need to be
+> configured with the key management (WPA-PSK, WPA-Enterprise, WPA2-PSK,
+> WPA2-Enterprise, ..) and cipher suites separately. They would not use
+> WPA/RSN IE at all. Some drivers use the IE so that kernel code does not
+> need to have all the code for generating it. They may (or may not,
+> depending on needs) ignore the individual values.
+
+Yes, I know that much.
+
+> > I'm inclined to just require userspace to put both the IE and the
+> > individual settings into the relevant nl80211 messages, but then we
+> > might just as well piece the IE together from those settings, no?
+>=20
+> As long as the information is available for the driver at the time of
+> association request, it does not really matter how that information got
+> there..
+
+I'd have thought you would rather see the IE included to be able to
+experiment with new things easier ;)
+
+I really can't decide which way to use. Piecing together the IE in the
+kernel and then just passing it doesn't seem like much overhead, but
+doing it in userspace gives us more freedom for experiments...
+
+johannes
+
+--=-LQXB6uDZuDU5PB0Q0j5g
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGC58T/ETPhpq3jKURAhxrAJ0cveux5pWhNdZ72GqfXybo+Gc8uwCfaSUI
+3Scb63pwT1SYJ5M5X9+WgXs=
+=apQL
+-----END PGP SIGNATURE-----
+
+--=-LQXB6uDZuDU5PB0Q0j5g--
+
