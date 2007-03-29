@@ -1,95 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:54846 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752757AbXCXFHD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Mar 2007 01:07:03 -0400
-Date: Fri, 23 Mar 2007 21:06:18 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Cornelia Huck <cornelia.huck@de.ibm.com>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	Matt Mackall <mpm@selenic.com>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Monakhov Dmitriy <dmonakhov@openvz.org>
-Subject: Re: 2.6.21-rc4-mm1
-Message-Id: <20070323210618.6a41f5da.akpm@linux-foundation.org>
-In-Reply-To: <20070323111029.4089ccfb@gondolin.boeblingen.de.ibm.com>
-References: <20070319205623.299d0378.akpm@linux-foundation.org>
-	<1174433034.62033.16.camel@localhost>
-	<20070320223643.d8cbc3f6.akpm@linux-foundation.org>
-	<4601761F.4000302@lwfinger.net>
-	<20070321185900.GC3801@tuxdriver.com>
-	<20070321202225.GN10459@waste.org>
-	<20070321233917.0393dfd1.akpm@linux-foundation.org>
-	<20070322123508.3785fd30@gondolin.boeblingen.de.ibm.com>
-	<4602752A.5050109@lwfinger.net>
-	<20070322181019.62fe78ed@gondolin.boeblingen.de.ibm.com>
-	<4602D137.4060402@lwfinger.net>
-	<20070323111029.4089ccfb@gondolin.boeblingen.de.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from fmmailgate03.web.de ([217.72.192.234]:48616 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751487AbXC2Ipd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Mar 2007 04:45:33 -0400
+Message-ID: <460B7CAA.4020604@web.de>
+Date: Thu, 29 Mar 2007 10:45:30 +0200
+From: Jan Kiszka <jan.kiszka@web.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Jiri Benc <jbenc@suse.cz>, Ivo Van Doorn <ivdoorn@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: d80211: How does TX flow control work?
+References: <459A5945.80909@web.de>	 <20070103185203.2754e059@griffin.suse.cz>	<459BF179.6000906@web.de>	 <20070103191853.4f440b8b@griffin.suse.cz> <459BFB05.9040608@web.de>	 <45A03825.9080807@web.de>  <45A2A728.1070404@web.de> <1175029130.5151.6.camel@johannes.berg>
+In-Reply-To: <1175029130.5151.6.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig48D0320CABB87E558548BC1B"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 23 Mar 2007 11:10:29 +0100 Cornelia Huck <cornelia.huck@de.ibm.com> wrote:
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig48D0320CABB87E558548BC1B
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: quoted-printable
 
-> On Thu, 22 Mar 2007 13:55:51 -0500,
-> Larry Finger <larry.finger@lwfinger.net> wrote:
-> 
-> > Cornelia Huck wrote:
-> > > On Thu, 22 Mar 2007 07:23:06 -0500,
-> > > 
-> > > This would indicate that dev_uevent had been called. But how could
-> > > kobject_uevent then return an error without moaning about an uevent()
-> > > error code? Maybe the following debug patch could shed some light on
-> > > this (all moaning is prefixed with kobject_uevent_env, so it should be
-> > > easy to spot)...
-> > 
-> > I applied the debug patch, but I don't see any error codes being returned. This time I also got the
-> > General Protection Faults. An excerpt of the log is attached.
-> 
-> Hm, I think I have an idea about what happened.
-> 
-> The firmware class tried to suppress the first KOBJ_ADD uevent by
-> returning -ENODEV in firmware_uevent if FW_STATUS_READY was not set.
-> This only worked as long as the return code of kobject_uevent was not
-> checked in device_add. hack-to-make-wireless-work.patch made that first
-> uevent return successfully, but this possible triggered some udev rule
-> too early, leading to firmware load failures.
-> 
-> The following (completely untested) patch uses uevent_suppress to stop
-> the uevent from being generated during device_add. Does this work for
-> you?
-> 
-> ---
->  drivers/base/firmware_class.c |    2 ++
->  1 file changed, 2 insertions(+)
-> 
-> --- linux-2.6.orig/drivers/base/firmware_class.c
-> +++ linux-2.6/drivers/base/firmware_class.c
-> @@ -333,6 +333,7 @@ static int fw_register_device(struct dev
->  	f_dev->parent = device;
->  	f_dev->class = &firmware_class;
->  	dev_set_drvdata(f_dev, fw_priv);
-> +	f_dev->uevent_suppress = 1;
->  	retval = device_register(f_dev);
->  	if (retval) {
->  		printk(KERN_ERR "%s: device_register failed\n",
-> @@ -385,6 +386,7 @@ static int fw_setup_device(struct firmwa
->                  set_bit(FW_STATUS_READY, &fw_priv->status);
->          else
->                  set_bit(FW_STATUS_READY_NOHOTPLUG, &fw_priv->status);
-> +	f_dev->uevent_suppress = 0;
->  	*dev_p = f_dev;
->  	goto out;
+Johannes Berg wrote:
+>> The actual problem was meanwhile identified: shorewall happened to
+>> overwrite the queueing discipline of wmaster0 with pfifo_fast. I found=
 
-hm.
+>> the magic knob to tell shorewall to no longer do this (at least until =
+I
+>> want to manage traffic control that way...), but I still wonder if it =
+is
+>> an acceptable situation. Currently, the user can intentionally or
+>> accidentally screw up the stack this way.
+>=20
+> I don't seem to be able to do that:
+>=20
+> # tc qdisc change dev wmaster0 pfifo
+> RTNETLINK answers: Invalid argument
+>=20
+> # tc qdisc replace dev wmaster0 pfifo
+> RTNETLINK answers: Invalid argument
+>=20
+> what exactly does shorewall do?
+>=20
 
-Would I be right in guessing that this was all triggered by
-uevent-improve-error-checking-and-handling.patch?
+Don't recall... need to re-test... lacking time. :(
 
-If so, do you think I should labour on with
-uevent-improve-error-checking-and-handling.patch plus your fix, or should I
-drop the lot?  (I'm inclined toward the latter, but I'm still not
-sure which patch(es) need to be dropped).
+Just one note: I observed this on a 2.6.19 kernel - in case there is a
+difference to the latest.
 
-Thanks.
+Jan
+
+
+
+--------------enig48D0320CABB87E558548BC1B
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFGC3yqniDOoMHTA+kRAqesAJ9MaVvYAEXdO1QDkG5/30mbO8HRkQCfWLE9
+b85HqNF2vVutucymxafU1zQ=
+=YgrF
+-----END PGP SIGNATURE-----
+
+--------------enig48D0320CABB87E558548BC1B--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
