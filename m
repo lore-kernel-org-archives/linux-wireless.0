@@ -1,63 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:43159 "EHLO
+Received: from mog.warmcat.com ([62.193.232.24]:58468 "EHLO
 	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932231AbXCEIKw (ORCPT
+	by vger.kernel.org with ESMTP id S1753363AbXC2LTB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2007 03:10:52 -0500
-Message-ID: <45EBD087.9020103@warmcat.com>
-Date: Mon, 05 Mar 2007 08:10:47 +0000
+	Thu, 29 Mar 2007 07:19:01 -0400
+Message-ID: <460BA0A1.7080106@warmcat.com>
+Date: Thu, 29 Mar 2007 12:18:57 +0100
 From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Question about PRISM2 header rate field
-References: <45EA9E39.6080706@warmcat.com> <1173053744.6131.40.camel@johannes.berg> <45EB6C3B.2060408@warmcat.com> <200703042210.52534.flamingice@sourmilk.net>
-In-Reply-To: <200703042210.52534.flamingice@sourmilk.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/4] mac80211: Monitor mode radiotap injection docs
+References: <20070320103955.600509703@warmcat.com>	 <20070320104104.575903961@warmcat.com> <1174500950.3944.15.camel@johannes.berg>
+In-Reply-To: <1174500950.3944.15.camel@johannes.berg>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
+Johannes Berg wrote:
+> On Tue, 2007-03-20 at 10:39 +0000, andy@warmcat.com wrote:
+> 
+>> +++ b/Documentation/networking/mac80211-injection.txt
+> 
+> This needs to be for cfg80211.
 
-Hi Michael -
+Well, the actual injection action is happening in mac80211.  I think 
+you're looking at it as a cfg80211 wext-replacing type thing and I am 
+looking at it as completely generic mac80211 packet injection from 
+userspace.
 
-> On Sunday 04 March 2007 20:02, Andy Green wrote:
->> How about for injection on the Management interface, it expects to find
->> a PRISM2 header prepended to the ieee80211 one and the payload, in
->> exactly the same format as is delivered by Monitor Mode?  The PRISM2
->> capture header structure has a bunch of fields for things like rate and
->> antenna selection already.  This has the satisfying aspect that you can
->> literally replay the whole Monitor Mode packet capture down the
->> Management Interface and get it to go out at the same rate.
->>
-> Isn't this what aircrack does? I think many other drivers that support frame 
-> injection do it in a similar way (TX AVS frame on monitor interface), and 
-> this is also the way I prefer the frame injection interface. It does have the 
-> nice property of being able to directly replay captured traffic as you 
-> mentioned. Just note that AVS/prism2 is planned to be removed in favor of 
-> radiotap which is more extensible. Radiotap should also work for frame 
-> injection, though it isn't as easy as using a fixed length header format.
+>> +Radiotap headers are variable-length and extensible, you can get most of the
+>> +information you need to know on them from:
+>> +
+>> +./include/net/ieee80211_radiotap.h
+>> +
+>> +But note: all fields in the radiotap header are *little endian*.
+>> +
+>> +There is a fixed portion at the start which contains a u32 bitmap that defines
+>> +if the possible argument is present or not.  At the moment there are only 13
+>> +possible arguments defined, but in case we run out of space in the u32 it is
+>> +defined that b31 set indicates that there is another u32 bitmap following, and
+>> +the start of the arguments is moved forward 4 bytes each time.
+> 
+> Drop all that, it's generic radiotap description. Put it into another
+> file if you want.
 
-Radiotap is fine for me too.  PRISM2 has a 32-bit magic at the start, I 
-guess you can just check the first byte (Magic 0x1e for PRISM2, Version 
-0x00 for Radiotap) to find out what you have been given.  Just returning 
-  -ENOSUPP or something else unique for an unsupported header will allow 
-easy adaptation in userspace to what header system a given kernel will 
-support for tx.
+This kind of description makes documentation useful to the reader, who 
+may never have heard of radiotap (it is not very visible in Google right 
+now in a useful way).
 
-Radiotap also has better documentation in the form of the old stack 
-header file at least.  It's clear there's more than enough capability 
-defined for my needs anyway, it will allow optional specification of 
-antenna and even tx power too.  It doesn't make any difference for me 
-that it is variable length.
+>> +After the fixed part of the header, the arguments follow.
+>> +
+>> + - the arguments are all little-endian!
+> 
+> duplicated information.
 
-> Note that modifying the management interface to do this is possible, but it 
-> would break hostap (and probably wpa_supplicant w/ MLME). Doing packet 
-> injection on monitor interfaces instead is safer in that regard.
+Yes when documenting something, you duplicate critical information, it 
+is not an error but a static Forward Error Correction technology for 
+lossy readers.
 
-Basing it around Monitor Mode interfaces will suit all the potential 
-users I think, since they might already have one floating around, and 
-they are easier to spawn than Management anyway.
+>> +The ieee80211 header follows immediately afterwards, looking for example like
+>> +this:
+>> +
+>> +	0x08, 0x01, 0x00, 0x00,
+>> +	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+>> +	0x13, 0x22, 0x33, 0x44, 0x55, 0x66,
+>> +	0x13, 0x22, 0x33, 0x44, 0x55, 0x66,
+>> +	0x10, 0x86
+>> +
+>> +Then lastly there is the payload.
+> 
+> Scratch that, somebody who doesn't know how a IEEE 802.11 header looks
+> like has no business reading that file anyway ;)
+
+Everybody has to learn from nothing!
+
+>> Libpcap can also be used,
+>> +(which is easier than doing the work to bind the socket to the right
+>> +interface), along the following lines:
+>> +
+>> +	ppcap = pcap_open_live(szInterfaceName, 800, 1, 20, szErrbuf);
+>> +...
+>> +	r = pcap_inject(ppcap, u8aSendBuffer, nLength);
+>> +
+>> +You can also find sources for a complete inject test applet here:
+>> +
+>> +http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
+> 
+> Is it big enough to warrant being elsewhere? I don't see how an example
+> program can be more than a few lines of code and then it could be
+> included here as a C file.
+
+It's ~380 lines.  It also knows how to conjure up management interfaces. 
+  I can chop it down and put it in here if you feel it is important.
+
+I appreciate the comments, but I am 100% sure that some correct 
+documentation that may be over-chatty is better than no documentation at 
+all.  After hesitating and starting to change it I left it as it is, if 
+you still feel these things are important comment in that direction 
+again on the new patch and I will grit my teeth and change it.
 
 -Andy
