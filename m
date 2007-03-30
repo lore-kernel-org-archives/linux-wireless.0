@@ -1,76 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:23911 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030387AbXCSQvm (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49419 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964844AbXC3Kj2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2007 12:51:42 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Andy Green <andy@warmcat.com>
-Subject: Re: [PATCH 2/2] mac80211: Monitor mode radiotap-based packet injection
-Date: Mon, 19 Mar 2007 12:50:42 -0400
-Cc: linux-wireless@vger.kernel.org
-References: <20070318101535.251183750@warmcat.com> <200703190156.07984.flamingice@sourmilk.net> <45FE6C02.5050605@warmcat.com>
-In-Reply-To: <45FE6C02.5050605@warmcat.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1227885.z6XHLNEoeD";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200703191250.47929.flamingice@sourmilk.net>
+	Fri, 30 Mar 2007 06:39:28 -0400
+Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery and  association
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	mohamed <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+In-Reply-To: <1ba2fa240703291648h6b0d10bdje2ea54f3c1754f5b@mail.gmail.com>
+References: <1174909105.1364.53.camel@dell-4965.jf.intel.com>
+	 <1175112213.5151.133.camel@johannes.berg>
+	 <43e72e890703291246p1010770es9d8a81979d03fa72@mail.gmail.com>
+	 <1ba2fa240703291648h6b0d10bdje2ea54f3c1754f5b@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/7DzieAnHOiFO0ONTQ0A"
+Date: Fri, 30 Mar 2007 12:38:32 +0200
+Message-Id: <1175251112.19085.4.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1227885.z6XHLNEoeD
-Content-Type: text/plain;
-  charset="iso-8859-1"
+
+--=-/7DzieAnHOiFO0ONTQ0A
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Monday 19 March 2007 06:54, Andy Green wrote:
-> Michael Wu wrote:
-> > I've mostly made comments about style issues. There are only comments on
-> > the first instance of any style problem so please check the rest of the
-> > code for the same problems.
->
-> Thanks for this feedback Michael.  I have changed all the style problems
-> my eyes could see, assisted by visiting every =3D in the patch.
->
-Just one last thing.. a bunch of the comments in the last chunk of the patc=
-h=20
-are still indented too much. Otherwise, the 4th version of the patch looks=
-=20
-good as far as style goes.
+On Fri, 2007-03-30 at 01:48 +0200, Tomas Winkler wrote:
 
-> > Have you looked into padding issues with radiotap headers? For example,
-> > if there is a 1 byte field which is then followed by a 4 byte field,
-> > there needs to be 3 bytes of padding after the first field, but if the
-> > field after were 2 bytes long, the padding would only be 1 byte
-> > (according to my understanding of the radiotap specs).
->
-> I googled for radiotap specs but I didn't find anything useful.  I added
-> some small code to enforce the alignment rules you mention above.
->
-I got the information on padding from:
-http://madwifi.org/wiki/DevDocs/RadiotapHeader
+> Can someone  explain to me what is rational to choose between  making
+> information element (IE) a struct  or 'rolling it into the code' . I'm
+> finding it much more readable to use struct and when it  changes for
+> example because 11n draft changes. And the change is reflected in
+> compilation time.=20
 
-I don't remember how I managed to find that, but there it is.
+I wasn't talking about making it a struct or not, I was merely saying
+that there isn't much point in a three-line function that does
+essentially nothing related to the actual task.
 
-Thanks,
-=2DMichael Wu
+johannes
 
---nextPart1227885.z6XHLNEoeD
-Content-Type: application/pgp-signature
+
+--=-/7DzieAnHOiFO0ONTQ0A
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBF/r9nT3Oqt9AH4aERAuXEAJ91yboUQASN4Ho6ApHuIT9TF3Ed9gCgyavz
-FlXoNYR4obmi8XFcMEGNbz4=
-=mg96
+iD8DBQBGDOio/ETPhpq3jKURAsYQAJ9MGUOnEfiEbehGPTEU/V+03cTYoQCeJ2D6
+h/RrkQvuTo7Fy1Ge2GL+510=
+=6FNh
 -----END PGP SIGNATURE-----
 
---nextPart1227885.z6XHLNEoeD--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+--=-/7DzieAnHOiFO0ONTQ0A--
+
