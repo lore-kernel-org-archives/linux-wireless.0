@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:52478 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752887AbXCUOMe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2007 10:12:34 -0400
-Date: Wed, 21 Mar 2007 15:12:31 +0100
-From: Jiri Benc <jbenc@suse.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: question: /sys/class/net/*/wireless
-Message-ID: <20070321151231.0a912abf@griffin.suse.cz>
-In-Reply-To: <1174064833.3355.7.camel@johannes.berg>
-References: <1172920691.4966.6.camel@johannes.berg>
-	<1172921257.4966.12.camel@johannes.berg>
-	<1172967669.3402.0.camel@johannes.berg>
-	<20070316150352.5290eea7@griffin.suse.cz>
-	<1174064833.3355.7.camel@johannes.berg>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58029 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1945972AbXC3KiY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Mar 2007 06:38:24 -0400
+Subject: Re: cfg80211 wext compat w/o wext code changes, rtnl locking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	James Ketrenos <jketreno@linux.intel.com>
+In-Reply-To: <200703301211.05261.mb@bu3sch.de>
+References: <1175122815.8807.21.camel@johannes.berg>
+	 <200703301211.05261.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-b/gPFxq4OCwGfyPamR2a"
+Date: Fri, 30 Mar 2007 12:37:31 +0200
+Message-Id: <1175251051.19085.2.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 16 Mar 2007 18:07:12 +0100, Johannes Berg wrote:
-> On Fri, 2007-03-16 at 15:03 +0100, Jiri Benc wrote:
-> > Then we can have /sys/class/net/*/ieee80211 for cfg80211-based
-> > interfaces.
-> 
-> And /wireless just present for wext? That won't work out properly, but
-> I'm sure once I actually look at the code I can think of something.
 
-Why it won't work? If you have wext-compat configured, you have the
-'wireless' directory (and 'ieee80211' as well). If you don't have
-wext-compat, you don't have the 'wireless' directory. But tools which
-depend on wext won't work then anyway, so no difference here.
+--=-b/gPFxq4OCwGfyPamR2a
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Or am I missing some special cases?
+On Fri, 2007-03-30 at 12:11 +0200, Michael Buesch wrote:
+> On Thursday 29 March 2007 01:00, Johannes Berg wrote:
+> > -			if(handler !=3D NULL) {
+> > +			if (handler) {
+> > +				if (!dev->wireless_handlers->no_locking)
+> > +					rtnl_lock();
+>=20
+> Is sparse OK with this conditional locking?
 
-Thanks,
+I also thought it wasn't but it didn't complain. The only reason why I
+didn't just duplicate the code was the deep indentation here...
 
- Jiri
+johannes
 
--- 
-Jiri Benc
-SUSE Labs
+--=-b/gPFxq4OCwGfyPamR2a
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGDOhr/ETPhpq3jKURAgoAAJ9Yn2wIWyMZXiCHKHCeR5b3bd8WdwCePF0s
+zH5194wlkuy9Lb2fRWMNWSA=
+=pwQt
+-----END PGP SIGNATURE-----
+
+--=-b/gPFxq4OCwGfyPamR2a--
+
