@@ -1,36 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:47850 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030580AbXC2R5N (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:29165 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752617AbXCaJgQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2007 13:57:13 -0400
-Message-ID: <460BFDF0.9010401@lwfinger.net>
-Date: Thu, 29 Mar 2007 12:57:04 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Sat, 31 Mar 2007 05:36:16 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so1044719uga
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Mar 2007 02:36:15 -0700 (PDT)
+Message-ID: <460E2B8C.4030002@gmail.com>
+Date: Sat, 31 Mar 2007 11:36:12 +0200
+From: dragoran <drago01@gmail.com>
 MIME-Version: 1.0
-To: David Woodhouse <dwmw2@infradead.org>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] bcm43xx: Change initialization for 2050 radios
-References: <460a92d5.+NfCgWddLCeb9ty2%Larry.Finger@lwfinger.net> <1175188955.3122.42.camel@pmac.infradead.org>
-In-Reply-To: <1175188955.3122.42.camel@pmac.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Subject: mac80211 does not support WPA when used with wext
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Woodhouse wrote:
-> On Wed, 2007-03-28 at 11:07 -0500, Larry Finger wrote:
->> This patch implements the changes in the specifications for
->> 2050radio_init that were recently posted.
-> 
-> That seems to help performance quite a lot -- although 'rate 11M' still
-> runs a _lot_ faster than the 24M which the driver seems to settle at by
-> default, when it's sitting 1m from the AP.
-> 
+Hello
+While testing the iwlwifi driver I noticed that the mac80211 does 
+provide a wext interface but does not support wpa with it.
+Why? Is this a known bug/limitation.
+And if yes any plans to fix it? Fedora 7 uses mac80211 by default which 
+results into networkmanager and (unpatched)wpa_supplicant is useless for 
+people who use WPA/WPA2.
 
-Is the better performance for 11M in transmitting or receiving? How is it measured? My 4306's, which
-should be the same as yours, do better at 24M than at 11M.
-
-Larry
-
+P.S: please CC me
