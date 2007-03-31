@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:50545 "EHLO smtp.osdl.org"
+Received: from mx1.redhat.com ([66.187.233.31]:56956 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933771AbXCZJWw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2007 05:22:52 -0400
-Date: Mon, 26 Mar 2007 01:22:32 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Cornelia Huck <cornelia.huck@de.ibm.com>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	Matt Mackall <mpm@selenic.com>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Monakhov Dmitriy <dmonakhov@openvz.org>,
-	Eric Rannaud <eric.rannaud@gmail.com>
-Subject: Re: 2.6.21-rc4-mm1
-Message-Id: <20070326012232.0f0b9e09.akpm@linux-foundation.org>
-In-Reply-To: <20070326110949.5301a571@gondolin.boeblingen.de.ibm.com>
-References: <20070319205623.299d0378.akpm@linux-foundation.org>
-	<1174433034.62033.16.camel@localhost>
-	<20070320223643.d8cbc3f6.akpm@linux-foundation.org>
-	<4601761F.4000302@lwfinger.net>
-	<20070321185900.GC3801@tuxdriver.com>
-	<20070321202225.GN10459@waste.org>
-	<20070321233917.0393dfd1.akpm@linux-foundation.org>
-	<20070322123508.3785fd30@gondolin.boeblingen.de.ibm.com>
-	<4602752A.5050109@lwfinger.net>
-	<20070322181019.62fe78ed@gondolin.boeblingen.de.ibm.com>
-	<4602D137.4060402@lwfinger.net>
-	<20070323111029.4089ccfb@gondolin.boeblingen.de.ibm.com>
-	<20070323210618.6a41f5da.akpm@linux-foundation.org>
-	<20070326110949.5301a571@gondolin.boeblingen.de.ibm.com>
+	id S1753722AbXCaRyZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Mar 2007 13:54:25 -0400
+Subject: Re: mac80211 does not support WPA when used with wext
+From: Dan Williams <dcbw@redhat.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: dragoran <drago01@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200703311837.27990.mb@bu3sch.de>
+References: <460E2B8C.4030002@gmail.com>
+	 <1175335211.23438.45.camel@johannes.berg> <460E43D6.1060501@gmail.com>
+	 <200703311837.27990.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Sat, 31 Mar 2007 13:57:55 -0400
+Message-Id: <1175363875.9349.11.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 26 Mar 2007 11:09:49 +0200 Cornelia Huck <cornelia.huck@de.ibm.com> wrote:
-
-> On Fri, 23 Mar 2007 21:06:18 -0800,
-> Andrew Morton <akpm@linux-foundation.org> wrote:
+On Sat, 2007-03-31 at 18:37 +0200, Michael Buesch wrote:
+> On Saturday 31 March 2007 13:19, dragoran wrote:
+> > Johannes Berg wrote:
+> > > On Sat, 2007-03-31 at 11:36 +0200, dragoran wrote:
+> > >   
+> > >> Hello
+> > >> While testing the iwlwifi driver I noticed that the mac80211 does 
+> > >> provide a wext interface but does not support wpa with it.
+> > >>     
+> > >
+> > > You must have done something wrong, it works well.
+> > >
+> > >   
+> > same also happens with the rt2x00 drivers....
+> > it seems that I am not doing something wrong but that you are using a 
+> > ieee80211 based driver....
 > 
-> > Would I be right in guessing that this was all triggered by
-> > uevent-improve-error-checking-and-handling.patch?
-> 
-> Looks like it, since it passed the uevent failures to the upper layer.
+> I think you can trust Johannes, the author of the mac80211 configuratrion
+> interface, in this matter. ;)
+> mac80211 _does_ work with WPA. For sure. 100%.
+> You are doing something wrong.
 
-OK, thanks.
+No, he's not, see my previous post.  mac80211 doesn't use the right
+WE-18 and later IWEVGENIE event to report IEs in scan results.  Like
+every other in-kernel driver/stack out there besides mac80211.
 
-> > If so, do you think I should labour on with
-> > uevent-improve-error-checking-and-handling.patch plus your fix, or should I
-> > drop the lot?  (I'm inclined toward the latter, but I'm still not
-> > sure which patch(es) need to be dropped).
-> 
-> This depends on what semantics uevent returning an error code should
-> have. The firmware code was using it to suppress uevents, but
-> uevent_suppress is a better idea now. So if we want uevent returning !=
-> 0 to imply "something really bad happened", all uevent functions have
-> to be audited and those that work like firmware_uevent have to be
-> converted to uevent_suppress. This would be cleaner, but I'm not sure
-> it's worth the work.
+Dan
 
-We're generally struggling to stay alive amongst all the bugs at present -
-I'll drop all those patches.
 
