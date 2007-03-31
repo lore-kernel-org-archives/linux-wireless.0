@@ -1,37 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:27352 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750962AbXCJTB5 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:57762
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753377AbXCaQhs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Mar 2007 14:01:57 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so1725787uga
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Mar 2007 11:01:55 -0800 (PST)
-To: Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [PATCH v2] d80211: Add software sequence support
-Date: Sat, 10 Mar 2007 20:01:40 +0100
+	Sat, 31 Mar 2007 12:37:48 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: dragoran <drago01@gmail.com>
+Subject: Re: mac80211 does not support WPA when used with wext
+Date: Sat, 31 Mar 2007 18:37:27 +0200
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Jiri Benc <jbenc@suse.cz>,
-	John Linville <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-References: <200702141423.27823.IvDoorn@gmail.com> <200703101538.55267.IvDoorn@gmail.com> <200703101251.07345.flamingice@sourmilk.net>
-In-Reply-To: <200703101251.07345.flamingice@sourmilk.net>
+References: <460E2B8C.4030002@gmail.com> <1175335211.23438.45.camel@johannes.berg> <460E43D6.1060501@gmail.com>
+In-Reply-To: <460E43D6.1060501@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200703102001.41004.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="iso-8859-15"
+Message-Id: <200703311837.27990.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 10 March 2007 18:51, Michael Wu wrote:
-> On Saturday 10 March 2007 09:38, Ivo van Doorn wrote:
-> > So just to be clear, this patch does not need any tweaking anymore right?
-> Just stick the counter in sdata if you haven't done so already. Should be fine 
-> once that's done.
+On Saturday 31 March 2007 13:19, dragoran wrote:
+> Johannes Berg wrote:
+> > On Sat, 2007-03-31 at 11:36 +0200, dragoran wrote:
+> >   
+> >> Hello
+> >> While testing the iwlwifi driver I noticed that the mac80211 does 
+> >> provide a wext interface but does not support wpa with it.
+> >>     
+> >
+> > You must have done something wrong, it works well.
+> >
+> >   
+> same also happens with the rt2x00 drivers....
+> it seems that I am not doing something wrong but that you are using a 
+> ieee80211 based driver....
 
-Ah ok. I had it in ieee80211_sta_bss.
-I'll create a new patch with the sequence number in the right location.
+I think you can trust Johannes, the author of the mac80211 configuratrion
+interface, in this matter. ;)
+mac80211 _does_ work with WPA. For sure. 100%.
+You are doing something wrong.
 
-Thanks.
-
-Ivo
+-- 
+Greetings Michael.
