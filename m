@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:49702 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753564AbXCTKlG (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:11257 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753170AbXCaPjd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2007 06:41:06 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 1065F8CAD2
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2007 11:41:05 +0100 (CET)
-Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id 591FF10090
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2007 10:41:07 +0000 (UTC)
-Message-Id: <20070320103955.600509703@warmcat.com>
-Date: Tue, 20 Mar 2007 10:39:55 +0000
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/4] Try #5: Radiotap on Monitor Mode interfaces for rx and tx
+	Sat, 31 Mar 2007 11:39:33 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: mohamed <mabbas@linux.intel.com>
+Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery and association
+Date: Sat, 31 Mar 2007 11:37:19 -0400
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Jouni Malinen <jkm@devicescape.com>
+References: <1174909105.1364.53.camel@dell-4965.jf.intel.com>
+In-Reply-To: <1174909105.1364.53.camel@dell-4965.jf.intel.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart8280531.ca2BLHECuS";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703311137.24379.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks -
+--nextPart8280531.ca2BLHECuS
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-This set of patches change the Monitor Mode wireless interfaces to use radiotap
-both for monitoring and for packet injection.  The monitoring side is done by a patch
-from Michael Wu.  Tcpdump knows how to handle the result.
+On Monday 26 March 2007 07:38, mohamed wrote:
+> Add basic support for IEEE 802.11n discovery and association.
+>
+> This patch adds support to discover IEEE 802.11n AP and enable
+> association to 802.11n Network. It parses beacon to discover 802.11n
+> IE and include HT capability information element in Association Request
+> Frame.
+> It also call low level driver with the HT capability available during
+> association.
+>
+So.. what happens when the user is using a userspace mlme?
 
-For injecting packets, the you issue a packet using libpcap or a SOCK_PACKET
-socket down an interface to the wireless device that is in Monitor Mode.  The packet
-has a normal radiotap header prepended to the IEEE80211 header.  The radiotap header
-is variable length depending on what the user wants to specify, currently the
-transmit rate, power and antenna can be specified using normal radiotap semantics.
-Any other entries are skipped.
+-Michael Wu
 
-A usermode app packetspammer is available from here
+--nextPart8280531.ca2BLHECuS
+Content-Type: application/pgp-signature
 
-http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-which allows easy injection of these packets from the commandline.  At the moment it
-loops issuing packets at a variety of rates which can be seen from another
-machine's monitor mode interface on the same channel.  There are instructions for
-build and using it on the page above.
+iD8DBQBGDoA0T3Oqt9AH4aERAj8AAJ9d3Kk0nXK8dDHPsPfl8dMFztRQ6wCgrGlW
+7Ce8mEXdlC5Fo9iHFLGIy8U=
+=tdrZ
+-----END PGP SIGNATURE-----
 
-Currently it has been tested for both rx and tx using zd1211rw-mac80211.
-
-The patches should be based against wireless-dev.
-
-I also added a documentation file patch which explains how to use the injection
-functionality.
--- 
+--nextPart8280531.ca2BLHECuS--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
