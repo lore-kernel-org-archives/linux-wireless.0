@@ -1,59 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51746 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750827AbXCHCib (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2007 21:38:31 -0500
-Subject: Re: Please pull 'libertas' branch of wireless-2.6
-From: Dan Williams <dcbw@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Marcelo Tosatti <marcelo@kvack.org>, Jeff Garzik <jeff@garzik.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070307222404.GA23393@infradead.org>
-References: <20070227205649.GH5826@tuxdriver.com>
-	 <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org>
-	 <20070304153627.GA32380@dmt> <20070305140825.GA9982@infradead.org>
-	 <20070307181638.GA22305@dmt>  <20070307222404.GA23393@infradead.org>
-Content-Type: text/plain
-Date: Wed, 07 Mar 2007 21:40:51 -0500
-Message-Id: <1173321651.12017.6.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from smtp.rutgers.edu ([128.6.72.243]:40608 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753186AbXCaTFo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Mar 2007 15:05:44 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: mac80211 does not support WPA when used with wext
+Date: Sat, 31 Mar 2007 15:03:45 -0400
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
+	John Linville <linville@redhat.com>, Jiri Benc <jbenc@suse.cz>
+References: <460E2B8C.4030002@gmail.com> <1175335211.23438.45.camel@johannes.berg> <1175363333.9349.10.camel@localhost.localdomain>
+In-Reply-To: <1175363333.9349.10.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart2453519.gNGMR0HAli";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200703311503.53445.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-03-07 at 22:24 +0000, Christoph Hellwig wrote:
-> On Wed, Mar 07, 2007 at 03:16:38PM -0300, Marcelo Tosatti wrote:
-> > >  - please get rid of the ENTER/LEAVE macros
-> > 
-> > These are useful for debugging. We have removed most of the useless ones 
-> > already.
-> 
-> We've refused this on a lot of drivers.  If you really need this kind
-> of debugging talk to acme to use a variant of ostra for this.
-> 
-> > >  - please get rid of all your private ioctls and iwpriv stuff
-> > >    (should I add !!!! here)
-> > 
-> > Rationale being? There are a bunch of device private knobs, and iwpriv
-> > is the interface for such configuration. (????)
-> 
-> If you read netdev we're very very unhappy about device specific knobs,
-> as they are really painful to support.  You should also look at the
-> cfg80211 threads on why ioctls are really bad for moving to a knew
-> non-wext, non-ioctl config mechanism.  And for why iwpriv is particularly
-> bad look about the posts about the wext compat issues.
+--nextPart2453519.gNGMR0HAli
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-We are unhappy with specific knobs _if_and_only_if_ they duplicate
-functionality that's currently available.
+On Saturday 31 March 2007 13:48, Dan Williams wrote:
+> On Sat, 2007-03-31 at 12:00 +0200, Johannes Berg wrote:
+> > On Sat, 2007-03-31 at 11:36 +0200, dragoran wrote:
+> > > Hello
+> > > While testing the iwlwifi driver I noticed that the mac80211 does
+> > > provide a wext interface but does not support wpa with it.
+> >
+> > You must have done something wrong, it works well.
+>
+> Nope!  This time it's really mac80211 :)
+>
+> Take a look at ieee80211_sta_scan_result() in mac80211/ieee80211_sta.c.
+> Note that it returns custom events for the WPA & RSN IEs.  That's just
+> wrong.  We should be using already-defined events.
+>
+What does that have to do with WPA not working? wpa_supplicant works fine w=
+ith=20
+the custom events on my system. Also works fine with the standard events=20
+which the following patch makes mac80211 use.
 
-That means, for example, the prism2 WPA ioctls, because WE-19 has
-equivalent functionality.  Other examples include many of the madwifi
-ioctls like auth_mode for which there are WEXT calls.  Others include
-the ones for creating virtual STAs that are now subsumed by mac80211.
+=2D-
 
-For stuff that's seriously not common among drivers, there's nothing
-else that drivers can do but provide private ioctls.
+mac80211: use IWEVGENIE
 
-Dan
+=46rom: Michael Wu <flamingice@sourmilk.net>
 
+Use IWEVGENIE which was defined in WE-18.
 
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+=2D--
+
+ net/mac80211/ieee80211_sta.c |   40 ++++++++++----------------------------=
+=2D-
+ 1 files changed, 10 insertions(+), 30 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 087f176..a227c38 100644
+=2D-- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -2839,39 +2839,19 @@ ieee80211_sta_scan_result(struct net_device *dev,
+ 	current_ev =3D iwe_stream_add_point(current_ev, end_buf, &iwe, "");
+=20
+ 	if (bss && bss->wpa_ie) {
+=2D		char *buf, *p;
+=2D		int i;
+=2D		buf =3D kmalloc(30 + bss->wpa_ie_len * 2, GFP_ATOMIC);
+=2D		if (buf) {
+=2D			p =3D buf;
+=2D			p +=3D sprintf(p, "wpa_ie=3D");
+=2D			for (i =3D 0; i < bss->wpa_ie_len; i++)
+=2D				p+=3D sprintf(p, "%02x", bss->wpa_ie[i]);
+=2D			memset(&iwe, 0, sizeof(iwe));
+=2D			iwe.cmd =3D IWEVCUSTOM;
+=2D			iwe.u.data.length =3D strlen(buf);
+=2D			current_ev =3D iwe_stream_add_point(current_ev, end_buf,
+=2D							  &iwe, buf);
+=2D			kfree(buf);
+=2D		}
++		memset(&iwe, 0, sizeof(iwe));
++		iwe.cmd =3D IWEVGENIE;
++		iwe.u.data.length =3D bss->wpa_ie_len;
++		current_ev =3D iwe_stream_add_point(current_ev, end_buf, &iwe,
++						  bss->wpa_ie);
+ 	}
+=20
+ 	if (bss && bss->rsn_ie) {
+=2D		char *buf, *p;
+=2D		int i;
+=2D		buf =3D kmalloc(30 + bss->rsn_ie_len * 2, GFP_ATOMIC);
+=2D		if (buf) {
+=2D			p =3D buf;
+=2D			p +=3D sprintf(p, "rsn_ie=3D");
+=2D			for (i =3D 0; i < bss->rsn_ie_len; i++)
+=2D				p+=3D sprintf(p, "%02x", bss->rsn_ie[i]);
+=2D			memset(&iwe, 0, sizeof(iwe));
+=2D			iwe.cmd =3D IWEVCUSTOM;
+=2D			iwe.u.data.length =3D strlen(buf);
+=2D			current_ev =3D iwe_stream_add_point(current_ev, end_buf,
+=2D							  &iwe, buf);
+=2D			kfree(buf);
+=2D		}
++		memset(&iwe, 0, sizeof(iwe));
++		iwe.cmd =3D IWEVGENIE;
++		iwe.u.data.length =3D bss->rsn_ie_len;
++		current_ev =3D iwe_stream_add_point(current_ev, end_buf, &iwe,
++						  bss->rsn_ie);
+ 	}
+=20
+ 	if (bss) {
+
+--nextPart2453519.gNGMR0HAli
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGDrCZT3Oqt9AH4aERAgWlAJ40YsNh6yZw5rB2DsYzxcIKCKjJ/wCfVBJp
+UwWs4BIDHkcxjeboexUxdGw=
+=YEQA
+-----END PGP SIGNATURE-----
+
+--nextPart2453519.gNGMR0HAli--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
