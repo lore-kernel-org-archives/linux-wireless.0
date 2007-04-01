@@ -1,113 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33727 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423077AbXDZJk1 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.169]:56722 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933068AbXDAOCg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2007 05:40:27 -0400
-Message-Id: <20070424180849.651555000@sipsolutions.net>
-References: <20070424180732.371620000@sipsolutions.net>
-Date: Tue, 24 Apr 2007 20:07:39 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	jt@hpl.hp.com
-Subject: [PATCH 7/9] wext: reduce inline abuse
-Mime-Version: 1.0
+	Sun, 1 Apr 2007 10:02:36 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so1294449uga
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Apr 2007 07:02:33 -0700 (PDT)
+To: "John Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: Use correct length in descriptor
+Date: Sun, 1 Apr 2007 16:01:52 +0200
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200704011601.53481.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes a bunch of inline abuse from wext. Most functions
-that were marked inline are only used once so the compiler will inline
-them anyway, others are used multiple times but there's no requirement
-for them to be inline since they aren't in any fast paths.
+This fixes an important issue where the incorrect length is being
+passed to the descriptor initializor. This incorrect initialization will
+cause frames to be send out incorrectly.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
 ---
- net/wireless/wext.c |   29 ++++++++++-------------------
- 1 file changed, 10 insertions(+), 19 deletions(-)
 
---- net-2.6.22.orig/net/wireless/wext.c	2007-04-24 19:13:50.288804911 +0200
-+++ net-2.6.22/net/wireless/wext.c	2007-04-24 19:18:49.198804911 +0200
-@@ -440,10 +440,8 @@ static const int event_type_pk_size[] = 
- /* ---------------------------------------------------------------- */
- /*
-  * Return the driver handler associated with a specific Wireless Extension.
-- * Called from various place, so make sure it remains efficient.
-  */
--static inline iw_handler get_handler(struct net_device *dev,
--				     unsigned int cmd)
-+static iw_handler get_handler(struct net_device *dev, unsigned int cmd)
- {
- 	/* Don't "optimise" the following variable, it will crash */
- 	unsigned int	index;		/* *MUST* be unsigned */
-@@ -470,7 +468,7 @@ static inline iw_handler get_handler(str
- /*
-  * Get statistics out of the driver
-  */
--static inline struct iw_statistics *get_wireless_stats(struct net_device *dev)
-+static struct iw_statistics *get_wireless_stats(struct net_device *dev)
- {
- 	/* New location */
- 	if ((dev->wireless_handlers != NULL) &&
-@@ -500,7 +498,7 @@ static inline struct iw_statistics *get_
-  * netif_running(dev) test. I'm open on that one...
-  * Hopefully, the driver will remember to do a commit in "open()" ;-)
-  */
--static inline int call_commit_handler(struct net_device *	dev)
-+static int call_commit_handler(struct net_device *dev)
- {
- 	if ((netif_running(dev)) &&
- 	   (dev->wireless_handlers->standard[0] != NULL)) {
-@@ -622,8 +620,8 @@ static int iw_handler_get_private(struct
- /*
-  * Print one entry (line) of /proc/net/wireless
-  */
--static __inline__ void wireless_seq_printf_stats(struct seq_file *seq,
--						 struct net_device *dev)
-+static void wireless_seq_printf_stats(struct seq_file *seq,
-+				      struct net_device *dev)
- {
- 	/* Get stats from the driver */
- 	struct iw_statistics *stats = get_wireless_stats(dev);
-@@ -892,10 +890,8 @@ static int ioctl_standard_call(struct ne
-  * a iw_handler but process it in your ioctl handler (i.e. use the
-  * old driver API).
-  */
--static inline int ioctl_private_call(struct net_device *	dev,
--				     struct ifreq *		ifr,
--				     unsigned int		cmd,
--				     iw_handler		handler)
-+static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
-+			      unsigned int cmd, iw_handler handler)
- {
- 	struct iwreq *			iwr = (struct iwreq *) ifr;
- 	const struct iw_priv_args *	descr = NULL;
-@@ -1134,11 +1130,8 @@ static DECLARE_TASKLET(wireless_nlevent_
-  * current wireless config. Dumping the wireless config is far too
-  * expensive (for each parameter, the driver need to query the hardware).
-  */
--static inline int rtnetlink_fill_iwinfo(struct sk_buff *	skb,
--					struct net_device *	dev,
--					int			type,
--					char *			event,
--					int			event_len)
-+static int rtnetlink_fill_iwinfo(struct sk_buff *skb, struct net_device *dev,
-+				 int type, char *event, int event_len)
- {
- 	struct ifinfomsg *r;
- 	struct nlmsghdr  *nlh;
-@@ -1172,9 +1165,7 @@ rtattr_failure:
-  * Andrzej Krzysztofowicz mandated that I used a IFLA_XXX field
-  * within a RTM_NEWLINK event.
-  */
--static inline void rtmsg_iwinfo(struct net_device *	dev,
--				char *			event,
--				int			event_len)
-+static void rtmsg_iwinfo(struct net_device *dev, char *event, int event_len)
- {
- 	struct sk_buff *skb;
- 	int size = NLMSG_GOODSIZE;
-
---
-
+diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c b/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c
+index 187076d..537d0c5 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/mac80211/rt2x00/rt2500usb.c
+@@ -1555,8 +1555,7 @@ static int rt2500usb_write_tx_data(struct rt2x00_dev *rt2x00dev,
+ 
+ 	skb_push(skb, rt2x00dev->hw->extra_tx_headroom);
+ 	txd = (struct data_desc*)skb->data;
+-	rt2500usb_write_tx_desc(rt2x00dev, txd, ieee80211hdr,
+-		skb->len, control);
++	rt2500usb_write_tx_desc(rt2x00dev, txd, ieee80211hdr, length, control);
+ 	memcpy(&entry->tx_status.control, control, sizeof(*control));
+ 	entry->skb = skb;
+ 
+diff --git a/drivers/net/wireless/mac80211/rt2x00/rt73usb.c b/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
+index 9c9fbce..7b3b878 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
+@@ -1714,7 +1714,7 @@ static int rt73usb_write_tx_data(struct rt2x00_dev *rt2x00dev,
+ 
+ 	skb_push(skb, rt2x00dev->hw->extra_tx_headroom);
+ 	txd = (struct data_desc*)skb->data;
+-	rt73usb_write_tx_desc(rt2x00dev, txd, ieee80211hdr, skb->len, control);
++	rt73usb_write_tx_desc(rt2x00dev, txd, ieee80211hdr, length, control);
+ 	memcpy(&entry->tx_status.control, control, sizeof(*control));
+ 	entry->skb = skb;
+ 
