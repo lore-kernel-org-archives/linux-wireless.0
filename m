@@ -1,22 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:49407 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767255AbXDETmQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 15:42:16 -0400
-Received: from localhost (fw.osdl.org [65.172.181.6])
-	(authenticated bits=0)
-	by smtp.osdl.org (8.12.8/8.12.8) with ESMTP id l35JgEPD006471
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Thu, 5 Apr 2007 12:42:14 -0700
-Date: Thu, 5 Apr 2007 12:42:17 -0700
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: linux-wireless@vger.kernel.org
-Subject: PCMCIA 802.11n support
-Message-ID: <20070405124217.42cf81ff@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from ug-out-1314.google.com ([66.249.92.171]:56012 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933069AbXDAOCh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Apr 2007 10:02:37 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so1294455uga
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Apr 2007 07:02:36 -0700 (PDT)
+To: "John Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: new USB ID for rt73usb
+Date: Sun, 1 Apr 2007 16:01:55 +0200
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200704011601.56030.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do you know of any PCMCIA cards with 802.11n that are supported
-by the current wireless-dev tree?
+This will add a new USB ID for the rt73usb driver
+
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+
+---
+
+diff --git a/drivers/net/wireless/mac80211/rt2x00/rt73usb.c b/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
+index 7b3b878..21bb298 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
+@@ -2938,6 +2938,7 @@ static struct usb_device_id rt73usb_device_table[] = {
+ 	{ USB_DEVICE(0x1690, 0x0722) },
+ 	/* ASUS */
+ 	{ USB_DEVICE(0x0b05, 0x1723) },
++	{ USB_DEVICE(0x0b05, 0x1724) },
+ 	/* Belkin */
+ 	{ USB_DEVICE(0x050d, 0x7050) },
+ 	{ USB_DEVICE(0x050d, 0x705a) },
