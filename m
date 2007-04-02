@@ -1,215 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:23275 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161483AbXDWS6S (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:54584 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965606AbXDBSBF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2007 14:58:18 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 02/13] sync with radiotap header in wireless-2.6
-Date: Mon, 23 Apr 2007 14:48:12 -0400
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Message-Id: <20070423184812.7029.94861.stgit@magic.sourmilk.net>
-In-Reply-To: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+	Mon, 2 Apr 2007 14:01:05 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HYQnq-0001Vz-BC
+	for linux-wireless@vger.kernel.org; Mon, 02 Apr 2007 13:58:50 -0400
+Subject: Re: cfg80211 wext compat w/o wext code changes, rtnl locking
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	James Ketrenos <jketreno@linux.intel.com>
+In-Reply-To: <1175251051.19085.2.camel@johannes.berg>
+References: <1175122815.8807.21.camel@johannes.berg>
+	 <200703301211.05261.mb@bu3sch.de>  <1175251051.19085.2.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 02 Apr 2007 14:00:59 -0400
+Message-Id: <1175536859.25048.6.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+On Fri, 2007-03-30 at 12:37 +0200, Johannes Berg wrote:
+> On Fri, 2007-03-30 at 12:11 +0200, Michael Buesch wrote:
+> > On Thursday 29 March 2007 01:00, Johannes Berg wrote:
+> > > -			if(handler != NULL) {
+> > > +			if (handler) {
+> > > +				if (!dev->wireless_handlers->no_locking)
+> > > +					rtnl_lock();
+> > 
+> > Is sparse OK with this conditional locking?
+> 
+> I also thought it wasn't but it didn't complain. The only reason why I
+> didn't just duplicate the code was the deep indentation here...
 
-Update the radiotap header with what's in wireless-2.6. Also remove the
-comment about IEEE80211_RADIOTAP_FCS.
+Just for your information, rtnl_lock() is actually a mutex.  Neither
+rtnl_lock() nor any mutex operation are annotated to give sparse any
+idea of what they are doing.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+If sparse learns about mutexes, expect it to give a warning.  Please
+consider if the code between rtnl_lock() and rtnl_unlock() could be
+moved to a separate function so that locking and unlocking would happen
+in the same basic block.
 
- include/net/ieee80211_radiotap.h |   77 ++++++++++++++++++++++++++------------
- 1 files changed, 52 insertions(+), 25 deletions(-)
-
-diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
-index 429b738..a0c2b41 100644
---- a/include/net/ieee80211_radiotap.h
-+++ b/include/net/ieee80211_radiotap.h
-@@ -66,7 +66,9 @@
-  */
- #define IEEE80211_RADIOTAP_HDRLEN	64
- 
--/* The radio capture header precedes the 802.11 header. */
-+/* The radio capture header precedes the 802.11 header.
-+ * All data in the header is little endian on all platforms.
-+ */
- struct ieee80211_radiotap_header {
- 	u8 it_version;		/* Version 0. Only increases
- 				 * for drastic changes,
-@@ -74,12 +76,12 @@ struct ieee80211_radiotap_header {
- 				 * new fields does not count.
- 				 */
- 	u8 it_pad;
--	u16 it_len;		/* length of the whole
-+	__le16 it_len;		/* length of the whole
- 				 * header in bytes, including
- 				 * it_version, it_pad,
- 				 * it_len, and data fields.
- 				 */
--	u32 it_present;		/* A bitmap telling which
-+	__le32 it_present;	/* A bitmap telling which
- 				 * fields are present. Set bit 31
- 				 * (0x80000000) to extend the
- 				 * bitmap by another 32 bits.
-@@ -88,89 +90,102 @@ struct ieee80211_radiotap_header {
- 				 */
- };
- 
--/* Name                                 Data type       Units
-- * ----                                 ---------       -----
-+/* Name                                 Data type    Units
-+ * ----                                 ---------    -----
-  *
-- * IEEE80211_RADIOTAP_TSFT              u64       microseconds
-+ * IEEE80211_RADIOTAP_TSFT              __le64       microseconds
-  *
-  *      Value in microseconds of the MAC's 64-bit 802.11 Time
-  *      Synchronization Function timer when the first bit of the
-  *      MPDU arrived at the MAC. For received frames, only.
-  *
-- * IEEE80211_RADIOTAP_CHANNEL           2 x u16   MHz, bitmap
-+ * IEEE80211_RADIOTAP_CHANNEL           2 x __le16   MHz, bitmap
-  *
-  *      Tx/Rx frequency in MHz, followed by flags (see below).
-  *
-- * IEEE80211_RADIOTAP_FHSS              u16       see below
-+ * IEEE80211_RADIOTAP_FHSS              __le16       see below
-  *
-  *      For frequency-hopping radios, the hop set (first byte)
-  *      and pattern (second byte).
-  *
-- * IEEE80211_RADIOTAP_RATE              u8        500kb/s
-+ * IEEE80211_RADIOTAP_RATE              u8           500kb/s
-  *
-  *      Tx/Rx data rate
-  *
-- * IEEE80211_RADIOTAP_DBM_ANTSIGNAL     int8_t          decibels from
-- *                                                      one milliwatt (dBm)
-+ * IEEE80211_RADIOTAP_DBM_ANTSIGNAL     s8           decibels from
-+ *                                                   one milliwatt (dBm)
-  *
-  *      RF signal power at the antenna, decibel difference from
-  *      one milliwatt.
-  *
-- * IEEE80211_RADIOTAP_DBM_ANTNOISE      int8_t          decibels from
-- *                                                      one milliwatt (dBm)
-+ * IEEE80211_RADIOTAP_DBM_ANTNOISE      s8           decibels from
-+ *                                                   one milliwatt (dBm)
-  *
-  *      RF noise power at the antenna, decibel difference from one
-  *      milliwatt.
-  *
-- * IEEE80211_RADIOTAP_DB_ANTSIGNAL      u8        decibel (dB)
-+ * IEEE80211_RADIOTAP_DB_ANTSIGNAL      u8           decibel (dB)
-  *
-  *      RF signal power at the antenna, decibel difference from an
-  *      arbitrary, fixed reference.
-  *
-- * IEEE80211_RADIOTAP_DB_ANTNOISE       u8        decibel (dB)
-+ * IEEE80211_RADIOTAP_DB_ANTNOISE       u8           decibel (dB)
-  *
-  *      RF noise power at the antenna, decibel difference from an
-  *      arbitrary, fixed reference point.
-  *
-- * IEEE80211_RADIOTAP_LOCK_QUALITY      u16       unitless
-+ * IEEE80211_RADIOTAP_LOCK_QUALITY      __le16       unitless
-  *
-  *      Quality of Barker code lock. Unitless. Monotonically
-  *      nondecreasing with "better" lock strength. Called "Signal
-  *      Quality" in datasheets.  (Is there a standard way to measure
-  *      this?)
-  *
-- * IEEE80211_RADIOTAP_TX_ATTENUATION    u16       unitless
-+ * IEEE80211_RADIOTAP_TX_ATTENUATION    __le16       unitless
-  *
-  *      Transmit power expressed as unitless distance from max
-  *      power set at factory calibration.  0 is max power.
-  *      Monotonically nondecreasing with lower power levels.
-  *
-- * IEEE80211_RADIOTAP_DB_TX_ATTENUATION u16       decibels (dB)
-+ * IEEE80211_RADIOTAP_DB_TX_ATTENUATION __le16       decibels (dB)
-  *
-  *      Transmit power expressed as decibel distance from max power
-  *      set at factory calibration.  0 is max power.  Monotonically
-  *      nondecreasing with lower power levels.
-  *
-- * IEEE80211_RADIOTAP_DBM_TX_POWER      int8_t          decibels from
-- *                                                      one milliwatt (dBm)
-+ * IEEE80211_RADIOTAP_DBM_TX_POWER      s8           decibels from
-+ *                                                   one milliwatt (dBm)
-  *
-  *      Transmit power expressed as dBm (decibels from a 1 milliwatt
-  *      reference). This is the absolute power level measured at
-  *      the antenna port.
-  *
-- * IEEE80211_RADIOTAP_FLAGS             u8        bitmap
-+ * IEEE80211_RADIOTAP_FLAGS             u8           bitmap
-  *
-  *      Properties of transmitted and received frames. See flags
-  *      defined below.
-  *
-- * IEEE80211_RADIOTAP_ANTENNA           u8        antenna index
-+ * IEEE80211_RADIOTAP_ANTENNA           u8           antenna index
-  *
-  *      Unitless indication of the Rx/Tx antenna for this packet.
-  *      The first antenna is antenna 0.
-  *
-- * IEEE80211_RADIOTAP_FCS           	u32       data
-+ * IEEE80211_RADIOTAP_RX_FLAGS          __le16       bitmap
-+ *
-+ *     Properties of received frames. See flags defined below.
-+ *
-+ * IEEE80211_RADIOTAP_TX_FLAGS          __le16       bitmap
-+ *
-+ *     Properties of transmitted frames. See flags defined below.
-+ *
-+ * IEEE80211_RADIOTAP_RTS_RETRIES       u8           data
-+ *
-+ *     Number of rts retries a transmitted frame used.
-+ *
-+ * IEEE80211_RADIOTAP_DATA_RETRIES      u8           data
-+ *
-+ *     Number of unicast retries a transmitted frame used.
-  *
-- *	FCS from frame in network byte order.
-  */
- enum ieee80211_radiotap_type {
- 	IEEE80211_RADIOTAP_TSFT = 0,
-@@ -187,7 +202,11 @@ enum ieee80211_radiotap_type {
- 	IEEE80211_RADIOTAP_ANTENNA = 11,
- 	IEEE80211_RADIOTAP_DB_ANTSIGNAL = 12,
- 	IEEE80211_RADIOTAP_DB_ANTNOISE = 13,
--	IEEE80211_RADIOTAP_EXT = 31,
-+	IEEE80211_RADIOTAP_RX_FLAGS = 14,
-+	IEEE80211_RADIOTAP_TX_FLAGS = 15,
-+	IEEE80211_RADIOTAP_RTS_RETRIES = 16,
-+	IEEE80211_RADIOTAP_DATA_RETRIES = 17,
-+	IEEE80211_RADIOTAP_EXT = 31
- };
- 
- /* Channel flags. */
-@@ -219,6 +238,14 @@ enum ieee80211_radiotap_type {
- 						 * 802.11 header and payload
- 						 * (to 32-bit boundary)
- 						 */
-+/* For IEEE80211_RADIOTAP_RX_FLAGS */
-+#define IEEE80211_RADIOTAP_F_RX_BADFCS	0x0001	/* frame failed crc check */
-+
-+/* For IEEE80211_RADIOTAP_TX_FLAGS */
-+#define IEEE80211_RADIOTAP_F_TX_FAIL	0x0001	/* failed due to excessive
-+						 * retries */
-+#define IEEE80211_RADIOTAP_F_TX_CTS	0x0002	/* used cts 'protection' */
-+#define IEEE80211_RADIOTAP_F_TX_RTS	0x0004	/* used rts/cts handshake */
- 
- /* Ugly macro to convert literal channel numbers into their mhz equivalents
-  * There are certianly some conditions that will break this (like feeding it '30')
+-- 
+Regards,
+Pavel Roskin
 
