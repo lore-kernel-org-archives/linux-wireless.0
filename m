@@ -1,78 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:8777 "EHLO annwn14.rutgers.edu"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752997AbXDKSmz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2007 14:42:55 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: John Linville <linville@tuxdriver.com>
-Subject: mac80211-drivers pull request (week15)
-Cc: linux-wireless@vger.kernel.org,
-	Andrea Merello <andrea.merello@gmail.com>,
-	Chr <chunkeey@web.de>, Daniel Drake <dsd@gentoo.org>,
-	kune@deine-taler.de
-MIME-Version: 1.0
-Date: Wed, 11 Apr 2007 14:40:04 -0400
-Content-Type: multipart/signed;
-  boundary="nextPart5828059.tnBymJYrRX";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200704111440.09728.flamingice@sourmilk.net>
+Received: from mx1.redhat.com ([66.187.233.31]:59004 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965710AbXDBTP4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Apr 2007 15:15:56 -0400
+Subject: Re: SIOCSIWAP behavior question
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+In-Reply-To: <1175533095.23438.79.camel@johannes.berg>
+References: <1175521655.9859.15.camel@localhost.localdomain>
+	 <1175533095.23438.79.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 02 Apr 2007 15:19:20 -0400
+Message-Id: <1175541560.11325.17.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart5828059.tnBymJYrRX
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Mon, 2007-04-02 at 18:58 +0200, Johannes Berg wrote:
+> On Mon, 2007-04-02 at 09:47 -0400, Dan Williams wrote:
+> > Should setting a BSSID trigger a disconnection event from the driver?
+> > Obviously a disconnect event shouldn't be triggered if the BSSID being
+> > set is the same BSSID the card is already associated with.  Or does that
+> > mean "reassociate unconditionally" ?
+> 
+> IMHO (answering your rephrased question with "always") it should unless
+> the BSSIDs are really identical. After all, one disassociates from one
+> BSS before associating to the other.
 
-Hi John,
+So it appears that you and Jouni have opposite views here?  I think a
+pure & consistent approach would issue disconnect every time the driver
+disassociated.  But I'm not sure that would actually work in practice
+for all cases.  But I don't have a good idea of all the specifics or
+implications.
 
-Please pull
-git://git.kernel.org/pub/scm/linux/kernel/git/mwu/mac80211-drivers.git
-for these patches:
+I tend to think thought that Jouni's right and that within the same ESS
+we shouldn't send disconnect events if you're just changing BSSID.
 
-Common to all branches:
-Michael Wu (1):
-      adm8211, p54, zd1211rw-mac80211, rtl8187: return -EOPNOTSUPP in=20
-add_interface
+Dan
 
-adm8211-week15 branch:
-Christian Lamparter (1):
-      adm8211 remove some unnecessary IEEE80211_RATE_PREAMBLE2.
+> > The libertas driver currently does this; it sometimes confuses
+> > wpa_supplicant and is arguably wrong behavior because drivers don't
+> > issue disconnection events when auto-roaming from BSSID to BSSID in the
+> > same ESS.
+> 
+> Is there a way to trigger such events when auto-roaming? :)
+> 
+> > Thoughts?  I guess I vote for not sending disconnect events if that
+> > BSSID has the same capabilities and the same SSID as the current
+> > association BSS.
+> 
+> I think that just makes things unnecessarily complex -- we'd have to try
+> to see if two things are really the same ESS in the driver/stack/...
+> 
+> johannes
 
-Michael Wu (1):
-      adm8211: remove passive scan handler
-
-p54-week15 branch:
-Christian Lamparter (1):
-      p54: more on retry count, rates and outputpower.
-
-rtl818x-week15 branch:
-Michael Wu (1):
-      rtl8187: fix rtl818x_ioread* return types
-
-zd1211rw-week15 branch:
-Michael Wu (2):
-      zd1211rw-mac80211: Enable monitor mode
-      zd1211rw: Hide if zd1211rw-mac80211 is builtin
-
-Thanks,
-=2DMichael Wu
-
---nextPart5828059.tnBymJYrRX
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGHSuJT3Oqt9AH4aERAlp5AKC/yu8VQsDJHHvv2P44XpJlZ7nclQCgjGSN
-8dN2m3aQB8oeFqvu9voQFkI=
-=FyPt
------END PGP SIGNATURE-----
-
---nextPart5828059.tnBymJYrRX--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
