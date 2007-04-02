@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cvs.openbsd.org ([199.185.137.3]:35856 "EHLO cvs.openbsd.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767273AbXDEXZG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 19:25:06 -0400
-Message-Id: <200704052321.l35NLkBL001761@cvs.openbsd.org>
-To: David Miller <davem@davemloft.net>
-cc: jeff@garzik.org, mb@bu3sch.de, mglocker@openbsd.org,
-	jsimola@gmail.com, deraadt@theos.com, stefano.brivio@polimi.it,
-	martin-langer@gmx.de, kugelfang@gentoo.org,
-	andreas.jaggi@waterwave.ch, larry.finger@lwfinger.net,
-	Quaker.Fang@sun.com, johannes@sipsolutions.net, josejx@gentoo.org,
-	linville@tuxdriver.com, greg@kroah.com,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
-In-reply-to: Your message of "Thu, 05 Apr 2007 14:21:57 PDT."
-             <20070405.142157.74750261.davem@davemloft.net>
-Date: Thu, 05 Apr 2007 17:21:46 -0600
-From: Theo de Raadt <deraadt@cvs.openbsd.org>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44100 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965672AbXDBSjE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Apr 2007 14:39:04 -0400
+Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: mabbas <mabbas@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <4611F47F.2060809@linux.intel.com>
+References: <1174909200.1364.56.camel@dell-4965.jf.intel.com>
+	 <1175111599.5151.123.camel@johannes.berg>
+	 <4611F47F.2060809@linux.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2igsy9B9zjXRqf99E574"
+Date: Mon, 02 Apr 2007 20:38:23 +0200
+Message-Id: <1175539103.16379.3.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> The main aim right now for you is to deflect as much attention as
-> possible away from the fact that someone was caught red handed putting
-> GPL'd code into a BSD driver.
 
-No, my goal is to make sure that one community can't gang up on one
-person in a public blame fest, and totally ruin that future value that
-person might put into the community.
+--=-2igsy9B9zjXRqf99E574
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The driver is gone.  Since it is gone, there is no more infringement.
+On Mon, 2007-04-02 at 23:30 -0700, mabbas wrote:
 
-What there is though, is a lot of resentment.
+> I am calling ieee80211_rx_h_data_agg after ieee80211_rx_h_remove_qos_cont=
+rol which
+> clears all QoS data which include QOS_CONTROL_A_MSDU_PRESENT bit. We can =
+solve this by
+> adding new field is_frame_agg to ieee80211_txrx_data.u.rx.is_frame_agg wh=
+ich will be set in
+> ieee80211_rx_h_parse_qos or we can add new function to ieee80211_rx_pre_h=
+andlers just to do that. the other=20
+> option is to shuffle calling sequence here if that possible to call ieee8=
+0211_rx_h_data_agg
+> before ieee80211_rx_h_remove_qos_control. any opinion?
 
-And the Linux community should think very carefully about where that
-resentment is coming from.
+Since it's part of the QoS stuff that .11n adds I think we should stick
+it into the qos parser.
 
-This was handled very poorly.
+johannes
 
-David, if you found a piece of your code in some other tree, under a
-different license, would your first point of engatement be a public or
-private mail?
+--=-2igsy9B9zjXRqf99E574
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Please, tell us.
+iD8DBQBGEU2f/ETPhpq3jKURAi0nAKClMHIdZP2ViDHY9W2YzULUZjNEggCgiYPT
+AeElc5DXULHRCSWG4IQSlLc=
+=vGhZ
+-----END PGP SIGNATURE-----
+
+--=-2igsy9B9zjXRqf99E574--
+
