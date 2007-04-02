@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:45153 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965757AbXDGKvl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Apr 2007 06:51:41 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 440508CAE9
-	for <linux-wireless@vger.kernel.org>; Sat,  7 Apr 2007 12:51:36 +0200 (CEST)
-Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id C865EFC00
-	for <linux-wireless@vger.kernel.org>; Sat,  7 Apr 2007 10:51:43 +0000 (UTC)
-Message-Id: <20070407105058.762762192@warmcat.com>
-Date: Sat, 07 Apr 2007 11:50:58 +0100
-From: andy@warmcat.com
+Received: from mx1.redhat.com ([66.187.233.31]:42099 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965441AbXDBNn7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Apr 2007 09:43:59 -0400
+Subject: SIOCSIWAP behavior question
+From: Dan Williams <dcbw@redhat.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/7] Try #7: Radiotap on Monitor Mode interfaces for rx and tx
+Cc: Jouni Malinen <j@w1.fi>
+Content-Type: text/plain
+Date: Mon, 02 Apr 2007 09:47:35 -0400
+Message-Id: <1175521655.9859.15.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks -
+Should setting a BSSID trigger a disconnection event from the driver?
+Obviously a disconnect event shouldn't be triggered if the BSSID being
+set is the same BSSID the card is already associated with.  Or does that
+mean "reassociate unconditionally" ?
 
-This set of patches change the Monitor Mode wireless interfaces to use radiotap
-both for monitoring and for packet injection.  The monitoring side is done by a patch
-from Michael Wu.  Tcpdump knows how to handle the result.
+But suppose we have two APs in the same ESS with obviously different
+BSSIDs.  The card automatically associates with one BSSID, but
+wpa_supplicant decides it likes the other BSSID and calls SIOCSIWAP to
+lock to that one during the association process.  Should the driver
+issue an IWAP event of 00:00:00:00:00:00 before attempting
+re-association with the BSSID that wpa_supplicant wants?
 
-For injecting packets, the you issue a packet using libpcap or a SOCK_PACKET
-socket down an interface to the wireless device that is in Monitor Mode.  The packet
-has a normal radiotap header prepended to the IEEE80211 header.  The radiotap header
-is variable length depending on what the user wants to specify, currently the
-transmit rate, power and antenna can be specified using normal radiotap semantics.
-Any other entries are skipped.
+The libertas driver currently does this; it sometimes confuses
+wpa_supplicant and is arguably wrong behavior because drivers don't
+issue disconnection events when auto-roaming from BSSID to BSSID in the
+same ESS.
 
-The radiotap parser is broken out into its own file under cfg80211.
+Conversely, if you have two access points 'linksys' with different
+BSSIDs that really _are_ two different ESSs, this would screw up
+userspace tools if a disconnect _wasn't_ sent.  But in this case
+automatic tools have more problems than driver events.
 
-A usermode app packetspammer is available from here
+Thoughts?  I guess I vote for not sending disconnect events if that
+BSSID has the same capabilities and the same SSID as the current
+association BSS.
 
-http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
+Dan
 
-which allows easy injection of these packets from the commandline.  At the moment it
-loops issuing packets at a variety of rates which can be seen from another
-machine's monitor mode interface on the same channel.  There are instructions for
-build and using it on the page above.
 
-Currently it has been tested for both rx and tx using zd1211rw-mac80211.
-
-The patches are based against this morning's wireless-dev.
-
-I also added some documentation files which explains how to use the injection
-functionality and radiotap header notes.
-
-I have used the radiotap include patch from Michael Wu which basically syncs 
-wireless-dev with the one in wireless-2.6, and his latest radiotap rx patch.  I
-added a tiny patch on top of his rx patch with an explanation.
-
--- 
