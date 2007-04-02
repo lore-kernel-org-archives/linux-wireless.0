@@ -1,40 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:61984 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753689AbXDUWzf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2007 18:55:35 -0400
-Message-ID: <462A965D.9000708@lwfinger.net>
-Date: Sat, 21 Apr 2007 17:55:25 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Pavel Roskin <proski@gnu.org>,
-	John Linville <linville@tuxdriver.com>,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ieee80211: Output frequency rather than channel in scan  results
-References: <46298e00.m7oDqYNvDCFdCSj1%Larry.Finger@lwfinger.net>	 <20070421001253.q449myskosg0sg8k@webmail.spamcop.net> <1177193997.19554.1.camel@localhost.localdomain>
-In-Reply-To: <1177193997.19554.1.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([66.187.233.31]:44742 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965425AbXDBNvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Apr 2007 09:51:51 -0400
+Subject: Re: SIOCSIWAP behavior question
+From: Dan Williams <dcbw@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Jouni Malinen <j@w1.fi>
+In-Reply-To: <1175521655.9859.15.camel@localhost.localdomain>
+References: <1175521655.9859.15.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Mon, 02 Apr 2007 09:55:28 -0400
+Message-Id: <1175522128.9859.17.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> On Sat, 2007-04-21 at 00:12 -0400, Pavel Roskin wrote:
->> Quoting Larry Finger <Larry.Finger@lwfinger.net>:
->>
->>> In ieee80211, the output of scan results lists channels rather than
->>> frequencies; however, NetworkManager needs frequency. This patch
->>> changes the output from channel to frequency.
->> The driver can report both, and I think it should.  This would make the iwlist
->> output a bit longer, but kernel drivers shouldn't be written to make userspace
->> program generate pretty output.
+On Mon, 2007-04-02 at 09:47 -0400, Dan Williams wrote:
+> Should setting a BSSID trigger a disconnection event from the driver?
+
+Hmm; badly phrased question.  I really meant:
+
+Should setting a BSSID _always_ trigger a disconnection event from the
+driver?
+
+> Obviously a disconnect event shouldn't be triggered if the BSSID being
+> set is the same BSSID the card is already associated with.  Or does that
+> mean "reassociate unconditionally" ?
 > 
-> I'm trying to remember why NM cares about frequency, and I think it's
-> for ad-hoc mode; but wpa_supplicant didn't historically support a
-> "channel" configuration parameter and so you can't create adhoc networks
-> with NM right now anyway...  What's the failure mode?
+> But suppose we have two APs in the same ESS with obviously different
+> BSSIDs.  The card automatically associates with one BSSID, but
+> wpa_supplicant decides it likes the other BSSID and calls SIOCSIWAP to
+> lock to that one during the association process.  Should the driver
+> issue an IWAP event of 00:00:00:00:00:00 before attempting
+> re-association with the BSSID that wpa_supplicant wants?
+> 
+> The libertas driver currently does this; it sometimes confuses
+> wpa_supplicant and is arguably wrong behavior because drivers don't
+> issue disconnection events when auto-roaming from BSSID to BSSID in the
+> same ESS.
+> 
+> Conversely, if you have two access points 'linksys' with different
+> BSSIDs that really _are_ two different ESSs, this would screw up
+> userspace tools if a disconnect _wasn't_ sent.  But in this case
+> automatic tools have more problems than driver events.
+> 
+> Thoughts?  I guess I vote for not sending disconnect events if that
+> BSSID has the same capabilities and the same SSID as the current
+> association BSS.
+> 
+> Dan
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-In the KDE NM applet, the frequency is listed as 0.
-
-Larry
