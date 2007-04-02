@@ -1,89 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail4.sea5.speakeasy.net ([69.17.117.6]:48546 "EHLO
-	mail4.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964883AbXDGBjm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2007 21:39:42 -0400
-Date: Fri, 6 Apr 2007 18:38:48 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RFC: ieee80211: Spamming of log resulting from packets with ExtIV not set
-Message-ID: <20070407013848.GG16197@jm.kir.nu>
-References: <4616DD7E.6010606@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4616DD7E.6010606@lwfinger.net>
+Received: from mx1.redhat.com ([66.187.233.31]:34963 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753073AbXDBEIb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Apr 2007 00:08:31 -0400
+Subject: Re: WPA does not connect to bcm43xx-mac80211 when using  NetworkManager
+From: Dan Williams <dcbw@redhat.com>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <46107D79.3060706@lwfinger.net>
+References: <460E2B8C.4030002@gmail.com>
+	 <200703311503.53445.flamingice@sourmilk.net>
+	 <f6ca9fed0703311256m1b14ec35p836a62de532dd804@mail.gmail.com>
+	 <200703311700.52792.flamingice@sourmilk.net>
+	 <1175388624.10282.0.camel@localhost.localdomain>
+	 <46107D79.3060706@lwfinger.net>
+Content-Type: text/plain
+Date: Mon, 02 Apr 2007 00:12:04 -0400
+Message-Id: <1175487124.30381.16.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 06, 2007 at 06:53:34PM -0500, Larry Finger wrote:
-> Using bcm43xx-softmac, my log gets full of messages that look like:
+On Sun, 2007-04-01 at 22:50 -0500, Larry Finger wrote:
+> Dan,
 > 
-> Apr  6 18:06:55 larrylap kernel: TKIP: ICV error detected: 
-> STA=00:14:bf:85:49:fa
+> My bcm43xx-mac80211 system generates the following log entries when trying to connect using WPA-PSK
+> TKIP controlled by NetworkManager. The same configuration works with bcm43xx-softmac.
 
-Does the driver properly filter out FCS errors? If not, the proper fix
-is to fix the driver to do that. If yes, I'm quite surprised that you
-see these messages so frequently.
+So what you're saying here is that NM works with softmac, but doesn't
+work with mac80211?
 
-> Are there any objections to the following patch to eliminate these messages 
-> from TKIP and CCMP?
+> eth1: Initial auth_alg=0
+> eth1: authenticate with AP 00:14:bf:85:49:fa
+> eth1: RX authentication from 00:14:bf:85:49:fa (alg=0 transaction=2 status=0)
+> eth1: authenticated
+> eth1: associate with AP 00:14:bf:85:49:fa
+> eth1: RX AssocResp from 00:14:bf:85:49:fa (capab=0x31 status=0 aid=2)
+> eth1: associated
+> wmaster0: Added STA 00:14:bf:85:49:fa
+> eth1: RX deauthentication from 00:14:bf:85:49:fa (reason=15)
+> eth1: deauthenticated
+> eth1: set_encrypt - unknown addr 00:00:00:00:00:00
+> eth1: authenticate with AP 00:14:bf:85:49:fa
+> eth1: RX authentication from 00:14:bf:85:49:fa (alg=0 transaction=2 status=0)
+> eth1: authenticated
+> eth1: associate with AP 00:14:bf:85:49:fa
+> eth1: RX ReassocResp from 00:14:bf:85:49:fa (capab=0x31 status=0 aid=2)
+> eth1: associated
+> eth1: starting scan
+> 
+> It does the original open authentication and associates, but the final WPA authentication times out.
 
-Your patch is not changing this particular error that you showed.. Was
-that on purpose? I would be okay with removing the ICV error message
-since it has a separate counter, _assuming_ this can be shown to not be
-caused by a driver that does not filter out FCS errors.
+Hmm; any idea why that happens?  Can we figure out more about the
+association process inside the driver?  If it works with wpa_supplicant,
+can you increase the debugging output of wpa_supplicant in the NM
+sources in nm-device-802-11-wireless.c in supplicant_exec() by adding
+another argument to argv with the value '-ddd'?
 
-> Index: wireless-2.6/net/ieee80211/ieee80211_crypt_tkip.c
-> ===================================================================
-> --- wireless-2.6.orig/net/ieee80211/ieee80211_crypt_tkip.c
-> +++ wireless-2.6/net/ieee80211/ieee80211_crypt_tkip.c
-> @@ -439,11 +439,7 @@ static int ieee80211_tkip_decrypt(struct
->  	pos = skb->data + hdr_len;
->  	keyidx = pos[3];
->  	if (!(keyidx & (1 << 5))) {
-> -		if (net_ratelimit()) {
-> -			printk(KERN_DEBUG "TKIP: received packet without 
-> ExtIV"
-> -			       " flag from " MAC_FMT "\n", 
-> MAC_ARG(hdr->addr2));
-> -		}
-> -		return -2;
-> +		return -2; /* received packet without ExtIV */
->  	}
+Thanks!
+Dan
 
-Have you ever seen this message? I would be against this change unless
-an error counter is added here. I do not remember anyone having
-complained about this particular message, so I would just leave this
-as-is.
+> I'm using Michael Buesch's "mb" tree with the "mac80211: use IWEVGENIE" and "mac80211: set enc_capa"
+> patches by Michael Wu. My distro is openSUSE 10.2 on an x86_64 system.
+> 
+> Please advise on any further information I should provide.
+> 
+> Thanks,
+> 
+> Larry
 
-> Index: wireless-2.6/net/ieee80211/ieee80211_crypt_ccmp.c
-> @@ -306,11 +306,7 @@ static int ieee80211_ccmp_decrypt(struct
->  	pos = skb->data + hdr_len;
->  	keyidx = pos[3];
->  	if (!(keyidx & (1 << 5))) {
-> -		if (net_ratelimit()) {
-> -			printk(KERN_DEBUG "CCMP: received packet without 
-> ExtIV"
-> -			       " flag from " MAC_FMT "\n", 
-> MAC_ARG(hdr->addr2));
-> -		}
-> -		return -2;
-> +		return -2; /* received packet without ExtIV */
-
-Hmm.. This does not apply to the version I have (which actually has
-dot11RSNAStatsCCMPFormatErrors counter here).. Without the counter, I
-would be against removing this and even with the counter, I would not
-remove this unless someone has actually reported this particular message
-showing up in logs frequently.
-
-
-So far, these messages in TKIP/CCMP have found number of issues in
-various implementation doing things incorrectly and as such, I would not
-recommend removing them unless they can clearly be showed to be causing
-problems which cannot be fixed by doing a proper fix (e.g., FCS
-validation, duplicate filtering, etc. at the driver level).
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
