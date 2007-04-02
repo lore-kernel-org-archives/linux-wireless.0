@@ -1,38 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:51098 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751224AbXDHOIS (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54271 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933674AbXDBQ6y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Apr 2007 10:08:18 -0400
-Message-ID: <4618F787.9080903@lwfinger.net>
-Date: Sun, 08 Apr 2007 09:09:11 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RFC: ieee80211: Spamming of log resulting from packets with ExtIV  not set
-References: <4616DD7E.6010606@lwfinger.net> <20070407013848.GG16197@jm.kir.nu>
-In-Reply-To: <20070407013848.GG16197@jm.kir.nu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 2 Apr 2007 12:58:54 -0400
+Subject: Re: SIOCSIWAP behavior question
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+In-Reply-To: <1175521655.9859.15.camel@localhost.localdomain>
+References: <1175521655.9859.15.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0dQqWT6nIJ592SQPmgsp"
+Date: Mon, 02 Apr 2007 18:58:14 +0200
+Message-Id: <1175533095.23438.79.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni Malinen wrote:
-> On Fri, Apr 06, 2007 at 06:53:34PM -0500, Larry Finger wrote:
->> Using bcm43xx-softmac, my log gets full of messages that look like:
->>
->> Apr  6 18:06:55 larrylap kernel: TKIP: ICV error detected: 
->> STA=00:14:bf:85:49:fa
-> 
-> Does the driver properly filter out FCS errors? If not, the proper fix
-> is to fix the driver to do that. If yes, I'm quite surprised that you
-> see these messages so frequently.
 
-According to Johannes Berg and Michael Buesch, the bcm43xx firmware filters the frames with FCS 
-errors before they even get to the driver. I'm still looking to see if I can find a way to filter 
-the offending packets further to keep them from getting to ieee80211.
+--=-0dQqWT6nIJ592SQPmgsp
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
+On Mon, 2007-04-02 at 09:47 -0400, Dan Williams wrote:
+> Should setting a BSSID trigger a disconnection event from the driver?
+> Obviously a disconnect event shouldn't be triggered if the BSSID being
+> set is the same BSSID the card is already associated with.  Or does that
+> mean "reassociate unconditionally" ?
 
-Larry
+IMHO (answering your rephrased question with "always") it should unless
+the BSSIDs are really identical. After all, one disassociates from one
+BSS before associating to the other.
+
+> The libertas driver currently does this; it sometimes confuses
+> wpa_supplicant and is arguably wrong behavior because drivers don't
+> issue disconnection events when auto-roaming from BSSID to BSSID in the
+> same ESS.
+
+Is there a way to trigger such events when auto-roaming? :)
+
+> Thoughts?  I guess I vote for not sending disconnect events if that
+> BSSID has the same capabilities and the same SSID as the current
+> association BSS.
+
+I think that just makes things unnecessarily complex -- we'd have to try
+to see if two things are really the same ESS in the driver/stack/...
+
+johannes
+
+--=-0dQqWT6nIJ592SQPmgsp
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGETYm/ETPhpq3jKURAgO+AJ9lnbIaOd7BSivU1f8UltUaQB/F6gCdEkrB
+NjGjoy6L1YeJ8MwtBIJI4o4=
+=Jw6R
+-----END PGP SIGNATURE-----
+
+--=-0dQqWT6nIJ592SQPmgsp--
 
