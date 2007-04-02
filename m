@@ -1,67 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33746 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42934 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422808AbXDRKPy (ORCPT
+	with ESMTP id S965624AbXDBSQZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2007 06:15:54 -0400
-Subject: Re: [PATCH 2.6] WE-22 : prevent information leak on 64 bit
+	Mon, 2 Apr 2007 14:16:25 -0400
+Subject: Re: cfg80211 wext compat w/o wext code changes, rtnl locking
 From: Johannes Berg <johannes@sipsolutions.net>
-To: jt@hpl.hp.com
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+To: Pavel Roskin <proski@gnu.org>
+Cc: Michael Buesch <mb@bu3sch.de>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org
-In-Reply-To: <20070417170820.GB22372@bougret.hpl.hp.com>
-References: <20070323003116.GC2712@bougret.hpl.hp.com>
-	 <1175508410.23438.75.camel@johannes.berg>
-	 <20070417170820.GB22372@bougret.hpl.hp.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CrSHNBiciv6FsUBsIlJ3"
-Date: Wed, 18 Apr 2007 12:18:11 +0200
-Message-Id: <1176891491.6141.63.camel@johannes.berg>
+	James Ketrenos <jketreno@linux.intel.com>
+In-Reply-To: <1175536859.25048.6.camel@dv>
+References: <1175122815.8807.21.camel@johannes.berg>
+	 <200703301211.05261.mb@bu3sch.de>  <1175251051.19085.2.camel@johannes.berg>
+	 <1175536859.25048.6.camel@dv>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-u3E/pCkdl5wIape0UZK7"
+Date: Mon, 02 Apr 2007 20:15:41 +0200
+Message-Id: <1175537741.16379.1.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-CrSHNBiciv6FsUBsIlJ3
+--=-u3E/pCkdl5wIape0UZK7
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Jean,
+On Mon, 2007-04-02 at 14:00 -0400, Pavel Roskin wrote:
 
-> 	First, I'm the current active maintainer of the
-> wext-over-netlink interface, and nobody bothered to even 'inform' me
-> about its removal, let alone consult with me.
+> Just for your information, rtnl_lock() is actually a mutex. Neither
+> rtnl_lock() nor any mutex operation are annotated to give sparse any
+> idea of what they are doing.
 
-I definitely should have copied you on the feature-removal schedule
-patch for wext-over-netlink and then the actual removal in wireless-dev;
-please accept my apologies for not doing that, it was not done in bad
-faith. It was never my intention to demote you to a "second class
-citizen", I'm sorry you feel that way.
+Oh. And I guess rtnl_lock/unlock would need to be annotated and not just
+the mutex operations (or are they inlines? I forgot)
 
-I have previously (and multiple times) given technical justification for
-removing this code (even recorded in the kernel changelog now) and I
-contend your allegation that it is a political issue. Others in this
-thread have pointed out the technical issues with wext and wext/nl so I
-will not repeat them.
+> If sparse learns about mutexes, expect it to give a warning.  Please
+> consider if the code between rtnl_lock() and rtnl_unlock() could be
+> moved to a separate function so that locking and unlocking would happen
+> in the same basic block.
 
-I hope that despite my mistakes in handling the wext/nl removal we will
-be able to work together in the future to have wext fully supported with
-clear semantics for backwards compatibility while the kernel internally
-migrates towards cfg80211.
+Yeah. The patch is probably not complete anyway. I just floated it to
+get some comments...
 
 johannes
 
---=-CrSHNBiciv6FsUBsIlJ3
+--=-u3E/pCkdl5wIape0UZK7
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGJfBi/ETPhpq3jKURAmQwAKCnkstoiNfYGyE6NocnCIISsRHiIACfTPzm
-Vx24BYZqnoPVGRm8qiu3Hek=
-=DqGm
+iD8DBQBGEUhN/ETPhpq3jKURAqIvAKCgbcZEUxItTjqnCadmsiG5fiYulwCgj5PM
+ydVBHz0bcfkiQm0iNpVleMc=
+=XFYb
 -----END PGP SIGNATURE-----
 
---=-CrSHNBiciv6FsUBsIlJ3--
+--=-u3E/pCkdl5wIape0UZK7--
 
