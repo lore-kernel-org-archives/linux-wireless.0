@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44849 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54243 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031178AbXDZLCI (ORCPT
+	with ESMTP id S965375AbXDCLsY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2007 07:02:08 -0400
-Subject: Re: [PATCH 0/9] various wext cleanups
+	Tue, 3 Apr 2007 07:48:24 -0400
+Subject: Re: SIOCSIWAP behavior question
 From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	jt@hpl.hp.com
-In-Reply-To: <20070426.031842.17863787.davem@davemloft.net>
-References: <20070424180732.371620000@sipsolutions.net>
-	 <1177582513.6814.27.camel@johannes.berg>
-	 <20070426.031842.17863787.davem@davemloft.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LtyBngnaJw5KO0HuMcCR"
-Date: Thu, 26 Apr 2007 13:05:21 +0200
-Message-Id: <1177585521.6814.47.camel@johannes.berg>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+In-Reply-To: <1175541560.11325.17.camel@localhost.localdomain>
+References: <1175521655.9859.15.camel@localhost.localdomain>
+	 <1175533095.23438.79.camel@johannes.berg>
+	 <1175541560.11325.17.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JQzhgqzwcqr/5arDhvDW"
+Date: Tue, 03 Apr 2007 13:47:46 +0200
+Message-Id: <1175600866.16379.40.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-LtyBngnaJw5KO0HuMcCR
+--=-JQzhgqzwcqr/5arDhvDW
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2007-04-26 at 03:18 -0700, David Miller wrote:
+On Mon, 2007-04-02 at 15:19 -0400, Dan Williams wrote:
 
-> I got the bounce so I have the changelog too :-)
+> So it appears that you and Jouni have opposite views here?
 
-Sorry. I should've known and just posted git instructions. You should
-have gotten a copy directly to your inbox too.
+Looks like :)
+
+> I think a
+> pure & consistent approach would issue disconnect every time the driver
+> disassociated.  But I'm not sure that would actually work in practice
+> for all cases.  But I don't have a good idea of all the specifics or
+> implications.
+>=20
+> I tend to think thought that Jouni's right and that within the same ESS
+> we shouldn't send disconnect events if you're just changing BSSID.
+
+I guess that if you just send a new BSSID without sending a 00::00
+inbetween the disconnect must have been there and is sort of implied.
+I'm fine with either way, and I'd like the outcome of this discussion
+specified somewhere on the cfg80211 page on linuxwireless.org so we can
+do it that way there too and I don't forget ;)
 
 johannes
 
---=-LtyBngnaJw5KO0HuMcCR
+--=-JQzhgqzwcqr/5arDhvDW
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGMIdw/ETPhpq3jKURAsrfAJ0YFQUJElDFUXsBzmUk8NbDMEALKgCfSOHC
-7n07w70QN78mCmtJ58plSrk=
-=enTb
+iD8DBQBGEj7i/ETPhpq3jKURAsQcAKC6LdMKMJFwf0401TOOu/KoEZnxAgCfV726
+sveGdSwdRu3Vrtd6W69gFbQ=
+=baLS
 -----END PGP SIGNATURE-----
 
---=-LtyBngnaJw5KO0HuMcCR--
+--=-JQzhgqzwcqr/5arDhvDW--
 
