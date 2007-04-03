@@ -1,72 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-46.dex002.intermedia.net ([64.78.21.140]:35561 "EHLO
-	dhost002-46.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161365AbXDKXDf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2007 19:03:35 -0400
+Received: from ug-out-1314.google.com ([66.249.92.169]:50028 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966082AbXDCAHG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Apr 2007 20:07:06 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so109704uga
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2007 17:07:01 -0700 (PDT)
+Message-ID: <1ba2fa240704021707l1964a2cav579a4665bf48fbc6@mail.gmail.com>
+Date: Tue, 3 Apr 2007 03:07:00 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
+Cc: mabbas <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+In-Reply-To: <1175539103.16379.3.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [patch 2/5] Add basic support for IEEE 802.11n discovery and association
-Date: Wed, 11 Apr 2007 15:50:47 -0700
-Message-ID: <C86180A8C204554D8A3323D8F6B0A29F01DEB33D@dhost002-46.dex002.intermedia.net>
-In-Reply-To: <1ba2fa240704111503l6dcef504na73c997ae75ebccd@mail.gmail.com>
-References: <1174909105.1364.53.camel@dell-4965.jf.intel.com> <20070411194059.GA2436@tuxdriver.com> <461D3F48.70004@linux.intel.com> <200704111630.06160.flamingice@sourmilk.net> <1ba2fa240704111503l6dcef504na73c997ae75ebccd@mail.gmail.com>
-From: "Simon Barber" <simon@devicescape.com>
-To: "Tomas Winkler" <tomasw@gmail.com>,
-	"Michael Wu" <flamingice@sourmilk.net>
-Cc: "mabbas" <mabbas@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Jouni Malinen" <jkm@devicescape.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <1174909200.1364.56.camel@dell-4965.jf.intel.com>
+	 <1175111599.5151.123.camel@johannes.berg>
+	 <4611F47F.2060809@linux.intel.com>
+	 <1175539103.16379.3.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setup and tear down of BA should be done by userspace - actual
-processing of the BA frames themselves should be done in mac80211. This
-allows maximum flexibility from userspace to control the policy of when
-to setup and teardown BA streams.
+11n is QoS derived but it's not WME.
+I think we should extract qos control filed and ht control fields from
+header in pre-handlers
+one of them is qos parser,  just it needs to save the qos fields on
+the txrx data
+This will be needed in both rx and tx path. With 11n there are few
+other points in the code  that these fields need to be accessed.
+You can query fc  whether this fields are set.
 
-Simon
+ieee80211_txrx_data
+      u16 fc, ethertype;
++    u16 qos_ctrl; /* cpu  order */
++    u16 ht_ctrl;
 
------Original Message-----
-From: Tomas Winkler [mailto:tomasw@gmail.com] 
-Sent: Wednesday, April 11, 2007 3:04 PM
-To: Michael Wu
-Cc: mabbas; John W. Linville; linux-wireless@vger.kernel.org; Jouni
-Malinen; Simon Barber
-Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery
-and association
+The other option is to introduce again all the types of headers
+24,26...32.  I don' t know real reason why they are not present in
+mac80211 but it looks intentional.
 
-On 4/11/07, Michael Wu <flamingice@sourmilk.net> wrote:
-> On Wednesday 11 April 2007 16:04, mabbas wrote:
-> > I am not familiar with userspace mlme what needed to be done?
-> mac80211 has a userspace mlme mode which defers all things dealing 
-> with management frames to userspace (wpa_supplicant). It basically 
-> disables all the code in ieee80211_sta.c and routes management frames 
-> to a special interface where wpa_supplicant (or hostap) handles 
-> things. This is preferred and the ieee80211_sta.c code is there for
-backwards compatibility.
+Next option to avoid the blow up of header types we can use offset functions
+int ieee80211_get_qosctl_offset(u16 fc)
+int ieee80211_get_htctl_offset(u16 fc)
+This will give consistent offset of these control fields but it still
+won't work when you use this remove qos field handler.
+
+Other thing is to change ieee80211_get_hdrlen function as the header
+is longer now by other 2 octets (ht control field)
+
+On 4/2/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2007-04-02 at 23:30 -0700, mabbas wrote:
 >
-> No major features should be added to the in-kernel MLME 
-> (ieee80211_sta.c) but even more importantly, your patch series does 
-> not provide the appropriate hooks for a userspace MLME to support a
-driver using this 802.11n API.
+> > I am calling ieee80211_rx_h_data_agg after ieee80211_rx_h_remove_qos_control which
+> > clears all QoS data which include QOS_CONTROL_A_MSDU_PRESENT bit. We can solve this by
+> > adding new field is_frame_agg to ieee80211_txrx_data.u.rx.is_frame_agg which will be set in
+> > ieee80211_rx_h_parse_qos or we can add new function to ieee80211_rx_pre_handlers just to do that. the other
+> > option is to shuffle calling sequence here if that possible to call ieee80211_rx_h_data_agg
+> > before ieee80211_rx_h_remove_qos_control. any opinion?
 >
-> -Michael Wu
+> Since it's part of the QoS stuff that .11n adds I think we should stick
+> it into the qos parser.
+>
+> johannes
 >
 >
-Meanwhile I don't see feasible user space implementation for this as
-data packet classification is done in kernel. BACK streams are
-dynamically  opened and teared down per TID according current traffic
-shape.
-This is new feature and the user space handling is not well understand
-yet. I suggest that we proceed with patches and let the evolution making
-its steps.
-
-If someone has concrete suggestion on implementing it as user space MLME
-I will be glad to hear.
-Thanks
-
-
-Tomas
