@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:62154 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754260AbXDWVZ7 (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:44594 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753573AbXDDQZp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2007 17:25:59 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Andy Green <andy@warmcat.com>
-Subject: Re: [PATCH 03/13] mac80211: fix virtual interface related locking
-Date: Mon, 23 Apr 2007 17:21:56 -0400
-Cc: linux-wireless@vger.kernel.org
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <20070423184812.7029.7682.stgit@magic.sourmilk.net> <462D1DD8.8060507@warmcat.com>
-In-Reply-To: <462D1DD8.8060507@warmcat.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1378668.mUeepNRrtt";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200704231722.07280.flamingice@sourmilk.net>
+	Wed, 4 Apr 2007 12:25:45 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HZ8Gd-0006wn-HH
+	for linux-wireless@vger.kernel.org; Wed, 04 Apr 2007 12:23:27 -0400
+Subject: Re: Orinoco, mac80211 and wpa2
+From: Pavel Roskin <proski@gnu.org>
+To: Jouni Malinen <jkm@devicescape.com>
+Cc: Dan Williams <dcbw@redhat.com>, Jan Dittmer <jdi@l4x.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070404153814.GC8229@devicescape.com>
+References: <4613A4A9.1060902@l4x.org>
+	 <1175697737.2656.3.camel@localhost.localdomain>
+	 <1175700158.5322.9.camel@dv>  <20070404153814.GC8229@devicescape.com>
+Content-Type: text/plain
+Date: Wed, 04 Apr 2007 12:25:38 -0400
+Message-Id: <1175703938.5322.21.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1378668.mUeepNRrtt
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Wed, 2007-04-04 at 08:38 -0700, Jouni Malinen wrote:
 
-On Monday 23 April 2007 16:58, Andy Green wrote:
-> Couldn't get this to apply on current wireless-dev, and there is a
-> trailing whitespace.  Maybe it's a problem with a script I concocted to
-> extract the patch from saved Thunderbird 2.0 mails... ?  Is it just that
-> wireless-dev changed inbetweentimes?
->
-This patch series depends on the recent cfg80211/mac80211 rtnl locking=20
-patches.
+> If Orinoco cards added WPA support in the same (or similar) way as
+> Intersil Prism2/2.5/3, firmware support is certainly needed. In case of
+> Intersil, it was needed for adding WPA/RSN IE into (Re)AssocReq and to
+> receive Beacon/ProbeResp frames (to get WPA/RSN IE from AP). 
 
-=2DMichael Wu
+Since Orinoco 9.xx firmware has explicit support for WPA (at least for
+TKIP), I guess it could be used for that with or without mac80211.
 
---nextPart1378668.mUeepNRrtt
-Content-Type: application/pgp-signature
+Another approach would be to send beacons and other management frames
+from the host software, but I'm afraid the firmware would get in the way
+somewhere.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+> In addition, the firmware must allow host-based encryption/decryption to be
+> enabled.
 
-iD8DBQBGLSN/T3Oqt9AH4aERAsU+AJ9fXcW66kvNVBK8+I19VOPUxY3X0ACgsok6
-WtC8yzbAP7262F3X2L4LpM0=
-=T1Qg
------END PGP SIGNATURE-----
+That's not a problem.
 
---nextPart1378668.mUeepNRrtt--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Regards,
+Pavel Roskin
+
