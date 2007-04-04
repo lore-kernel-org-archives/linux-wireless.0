@@ -1,85 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:53997
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767132AbXDERb6 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.175]:27436 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992748AbXDDIqs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 13:31:58 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Marcus Glocker <marcus@nazgul.ch>
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues
-Date: Thu, 5 Apr 2007 19:31:10 +0200
-Cc: Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Joseph Jezak <josejx@gentoo.org>,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-References: <200704041945.21447.mb@bu3sch.de> <20070405054107.GB7660@gollum.nazgul.ch> <20070405163434.GA18477@gollum.nazgul.ch>
-In-Reply-To: <20070405163434.GA18477@gollum.nazgul.ch>
+	Wed, 4 Apr 2007 04:46:48 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so583933uga
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Apr 2007 01:46:46 -0700 (PDT)
+Message-ID: <1ba2fa240704040145l2aa8eb35hd2ef77b5475a03a3@mail.gmail.com>
+Date: Wed, 4 Apr 2007 11:45:53 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: debugfs.c and DEBUG COUNTERS
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200704051931.11044.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 05 April 2007 18:34, Marcus Glocker wrote:
-> OK, I decided to go for option 3:
-> 
-> ***
-> 
-> From: Marcus Glocker <mglocker@cvs.openbsd.org>                                 
-> To: source-changes@cvs.openbsd.org                                              
-> Date: Thu, 5 Apr 2007 10:25:25 -0600 (MDT)                                      
-> Subject: CVS: cvs.openbsd.org: src                                              
->   
-> CVSROOT:        /cvs
-> Module name:    src
-> Changes by:     mglocker@cvs.openbsd.org        2007/04/05 10:25:25
->   
-> Modified files:
->         sys/conf       : files
->         sys/dev/pci    : files.pci
->         sys/dev/cardbus: files.cardbus
-> Removed files:
->         share/man/man4 : bcw.4
->         sys/dev/ic     : bcw.c bcwreg.h bcwvar.h
->         sys/dev/pci    : if_bcw_pci.c
->         sys/dev/cardbus: if_bcw_cardbus.c
->   
-> Log message:
-> After been attacked by Michael Buesch <mb@bu3sch.de> because we initially
-> were using some of their routines in the bcw driver, I decided to stop
-> working on it.  To avoid any further license chit chat I plain drop the
-> driver.
-> 
-> ***
-> 
-> Happy now?
-> 
-> It's a pleasure to see how the OpenSource community stands together,
-> and starting public wars instead of talking directly to the people
-> involved.
+debugfs.c fails comillation if CONFIG_MAC80211_DEBUG_COUNTERS is not defined
+Here is a quick patch. Not sure it's correct but now it compiles.
 
-I don't understand your reaction, really.
-If you were really interrested in doing a Broadcom wireless driver for
-openbsd, you would have chosen the option to relicense some code (and
-therefore drop only that code which I refuse to relicense), which I gave
-you.
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 419da6a..75043dd 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -253,6 +253,8 @@ DEBUGFS_DEVSTATS_FILE(dot11RTSFailureCount);
+ DEBUGFS_DEVSTATS_FILE(dot11FCSErrorCount);
+ DEBUGFS_DEVSTATS_FILE(dot11RTSSuccessCount);
 
-It's a pity. I'd like you to sleep a night over this and rethink
-your decision tomorrow.
-Feel free to contact us to get code relicensed _before_ you re-add
-it to the repository. This will make you and us happy and I'm sure
-you'll have a working driver soon.
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
++
+ static ssize_t stats_wme_rx_queue_read(struct file *file,
+                                       char __user *userbuf,
+                                       size_t count, loff_t *ppos)
+@@ -293,6 +295,7 @@ static const struct file_operations
+stats_wme_tx_queue_ops = {
+        .open = mac80211_open_file_generic,
+ };
 
--- 
-Greetings Michael.
++#endif
+
+ void debugfs_hw_add(struct ieee80211_local *local)
+ {
+@@ -360,13 +363,13 @@ void debugfs_hw_add(struct ieee80211_local *local)
+        DEBUGFS_STATS_ADD(rx_expand_skb_head2);
+        DEBUGFS_STATS_ADD(rx_handlers_fragments);
+        DEBUGFS_STATS_ADD(tx_status_drop);
++       DEBUGFS_STATS_ADD(wme_tx_queue);
++       DEBUGFS_STATS_ADD(wme_rx_queue);
+ #endif
+        DEBUGFS_STATS_ADD(dot11ACKFailureCount);
+        DEBUGFS_STATS_ADD(dot11RTSFailureCount);
+        DEBUGFS_STATS_ADD(dot11FCSErrorCount);
+        DEBUGFS_STATS_ADD(dot11RTSSuccessCount);
+-       DEBUGFS_STATS_ADD(wme_tx_queue);
+-       DEBUGFS_STATS_ADD(wme_rx_queue);
+ }
+
+ void debugfs_hw_del(struct ieee80211_local *local)
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index aa3035b..1790902 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -223,8 +223,10 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+        DEBUGFS_ADD(last_ack_ms);
+        DEBUGFS_ADD(inactive_ms);
+        DEBUGFS_ADD(last_seq_ctrl);
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
+        DEBUGFS_ADD(wme_rx_queue);
+        DEBUGFS_ADD(wme_tx_queue);
++#endif
+ }
+
+ void ieee80211_sta_debugfs_remove(struct sta_info *sta)
+@@ -235,9 +237,10 @@ void ieee80211_sta_debugfs_remove(struct sta_info *sta)
+        DEBUGFS_DEL(last_ack_ms);
+        DEBUGFS_DEL(inactive_ms);
+        DEBUGFS_DEL(last_seq_ctrl);
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
+        DEBUGFS_DEL(wme_rx_queue);
+        DEBUGFS_DEL(wme_tx_queue);
+-
++#endif
+        debugfs_remove(sta->debugfs.dir);
+        sta->debugfs.dir = NULL;
+ }
