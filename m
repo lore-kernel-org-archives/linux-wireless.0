@@ -1,236 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33749 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2993151AbXDZJky (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:60715
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1766922AbXDDULt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2007 05:40:54 -0400
-Message-Id: <20070424180847.982382000@sipsolutions.net>
-References: <20070424180732.371620000@sipsolutions.net>
-Date: Tue, 24 Apr 2007 20:07:35 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	jt@hpl.hp.com
-Subject: [PATCH 3/9] wext: remove dead debug code
-Mime-Version: 1.0
+	Wed, 4 Apr 2007 16:11:49 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com
+Subject: OpenBSD bcw: Possible GPL license violation issues
+Date: Wed, 4 Apr 2007 22:08:13 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Joseph Jezak <josejx@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+MIME-Version: 1.0
+Message-Id: <200704041945.21447.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch kills a whole bunch of code that can only ever be used by
-defining some things in wext.c. Also, the things that are printed are
-mostly useless since the API is fairly well-tested.
+I, Michael Buesch, am one of the maintainers of the GPL'd Linux
+wireless LAN driver for the Broadcom chip (bcm43xx).
+The Copyright holders of bcm43xx (which includes me) want to talk
+to you, OpenBSD bcw developers, about possible GPL license and therefore
+Copyright violations in your bcw driver.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+We believe that you might have directly copied code
+out of bcm43xx (licensed under GPL v2), without our explicit permission,
+into bcw (licensed under BSD license).
+There are implementation details in bcm43xx that appear exactly
+the same in bcw. These implementation details clearly don't come
+from the open specifications at bcm-specs.sipsolutions.net
+or bcm-v4.sipsolutions.net.
 
----
- net/wireless/wext.c |   92 ----------------------------------------------------
- 1 file changed, 92 deletions(-)
+We have always made and still make a great effort to keep our code clean
+of any Copyright issues (cleanroom design). Please make sure you also do.
 
---- net-2.6.22.orig/net/wireless/wext.c	2007-04-24 18:58:07.738804911 +0200
-+++ net-2.6.22/net/wireless/wext.c	2007-04-24 18:59:00.998804911 +0200
-@@ -103,11 +103,6 @@
- 
- /**************************** CONSTANTS ****************************/
- 
--/* Debugging stuff */
--#undef WE_IOCTL_DEBUG		/* Debug IOCTL API */
--#undef WE_EVENT_DEBUG		/* Debug Event dispatcher */
--#undef WE_SPY_DEBUG		/* Debug enhanced spy support */
--
- /* Options */
- #define WE_EVENT_RTNETLINK	/* Propagate events using RtNetlink */
- #define WE_SET_EVENT		/* Generate an event on some set commands */
-@@ -736,12 +731,6 @@ static int ioctl_standard_call(struct ne
- 		return -EOPNOTSUPP;
- 	descr = &(standard_ioctl[cmd - SIOCIWFIRST]);
- 
--#ifdef WE_IOCTL_DEBUG
--	printk(KERN_DEBUG "%s (WE) : Found standard handler for 0x%04X\n",
--	       ifr->ifr_name, cmd);
--	printk(KERN_DEBUG "%s (WE) : Header type : %d, Token type : %d, size : %d, token : %d\n", dev->name, descr->header_type, descr->token_type, descr->token_size, descr->max_tokens);
--#endif	/* WE_IOCTL_DEBUG */
--
- 	/* Prepare the call */
- 	info.cmd = cmd;
- 	info.flags = 0;
-@@ -832,11 +821,6 @@ static int ioctl_standard_call(struct ne
- 			}
- 		}
- 
--#ifdef WE_IOCTL_DEBUG
--		printk(KERN_DEBUG "%s (WE) : Malloc %d bytes\n",
--		       dev->name, extra_size);
--#endif	/* WE_IOCTL_DEBUG */
--
- 		/* Create the kernel buffer */
- 		/*    kzalloc ensures NULL-termination for essid_compat */
- 		extra = kzalloc(extra_size, GFP_KERNEL);
-@@ -853,11 +837,6 @@ static int ioctl_standard_call(struct ne
- 				kfree(extra);
- 				return -EFAULT;
- 			}
--#ifdef WE_IOCTL_DEBUG
--			printk(KERN_DEBUG "%s (WE) : Got %d bytes\n",
--			       dev->name,
--			       iwr->u.data.length * descr->token_size);
--#endif	/* WE_IOCTL_DEBUG */
- 		}
- 
- 		/* Call the handler */
-@@ -878,11 +857,6 @@ static int ioctl_standard_call(struct ne
- 					   descr->token_size);
- 			if (err)
- 				ret =  -EFAULT;
--#ifdef WE_IOCTL_DEBUG
--			printk(KERN_DEBUG "%s (WE) : Wrote %d bytes\n",
--			       dev->name,
--			       iwr->u.data.length * descr->token_size);
--#endif	/* WE_IOCTL_DEBUG */
- 		}
- 
- #ifdef WE_SET_EVENT
-@@ -947,16 +921,6 @@ static inline int ioctl_private_call(str
- 			break;
- 		}
- 
--#ifdef WE_IOCTL_DEBUG
--	printk(KERN_DEBUG "%s (WE) : Found private handler for 0x%04X\n",
--	       ifr->ifr_name, cmd);
--	if (descr) {
--		printk(KERN_DEBUG "%s (WE) : Name %s, set %X, get %X\n",
--		       dev->name, descr->name,
--		       descr->set_args, descr->get_args);
--	}
--#endif	/* WE_IOCTL_DEBUG */
--
- 	/* Compute the size of the set/get arguments */
- 	if (descr != NULL) {
- 		if (IW_IS_SET(cmd)) {
-@@ -1013,11 +977,6 @@ static inline int ioctl_private_call(str
- 				return -EFAULT;
- 		}
- 
--#ifdef WE_IOCTL_DEBUG
--		printk(KERN_DEBUG "%s (WE) : Malloc %d bytes\n",
--		       dev->name, extra_size);
--#endif	/* WE_IOCTL_DEBUG */
--
- 		/* Always allocate for max space. Easier, and won't last
- 		 * long... */
- 		extra = kmalloc(extra_size, GFP_KERNEL);
-@@ -1033,10 +992,6 @@ static inline int ioctl_private_call(str
- 				kfree(extra);
- 				return -EFAULT;
- 			}
--#ifdef WE_IOCTL_DEBUG
--			printk(KERN_DEBUG "%s (WE) : Got %d elem\n",
--			       dev->name, iwr->u.data.length);
--#endif	/* WE_IOCTL_DEBUG */
- 		}
- 
- 		/* Call the handler */
-@@ -1056,10 +1011,6 @@ static inline int ioctl_private_call(str
- 					   extra_size);
- 			if (err)
- 				ret =  -EFAULT;
--#ifdef WE_IOCTL_DEBUG
--			printk(KERN_DEBUG "%s (WE) : Wrote %d elem\n",
--			       dev->name, iwr->u.data.length);
--#endif	/* WE_IOCTL_DEBUG */
- 		}
- 
- 		/* Cleanup - I told you it wasn't that long ;-) */
-@@ -1319,11 +1270,6 @@ void wireless_send_event(struct net_devi
- 		       dev->name, cmd);
- 		return;
- 	}
--#ifdef WE_EVENT_DEBUG
--	printk(KERN_DEBUG "%s (WE) : Got event 0x%04X\n",
--	       dev->name, cmd);
--	printk(KERN_DEBUG "%s (WE) : Header type : %d, Token type : %d, size : %d, token : %d\n", dev->name, descr->header_type, descr->token_type, descr->token_size, descr->max_tokens);
--#endif	/* WE_EVENT_DEBUG */
- 
- 	/* Check extra parameters and set extra_len */
- 	if (descr->header_type == IW_HEADER_TYPE_POINT) {
-@@ -1341,19 +1287,12 @@ void wireless_send_event(struct net_devi
- 			extra_len = wrqu->data.length * descr->token_size;
- 		/* Always at an offset in wrqu */
- 		wrqu_off = IW_EV_POINT_OFF;
--#ifdef WE_EVENT_DEBUG
--		printk(KERN_DEBUG "%s (WE) : Event 0x%04X, tokens %d, extra_len %d\n", dev->name, cmd, wrqu->data.length, extra_len);
--#endif	/* WE_EVENT_DEBUG */
- 	}
- 
- 	/* Total length of the event */
- 	hdr_len = event_type_size[descr->header_type];
- 	event_len = hdr_len + extra_len;
- 
--#ifdef WE_EVENT_DEBUG
--	printk(KERN_DEBUG "%s (WE) : Event 0x%04X, hdr_len %d, wrqu_off %d, event_len %d\n", dev->name, cmd, hdr_len, wrqu_off, event_len);
--#endif	/* WE_EVENT_DEBUG */
--
- 	/* Create temporary buffer to hold the event */
- 	event = kmalloc(event_len, GFP_ATOMIC);
- 	if (event == NULL)
-@@ -1443,19 +1382,6 @@ int iw_handler_set_spy(struct net_device
- 		/* Reset stats */
- 		memset(spydata->spy_stat, 0,
- 		       sizeof(struct iw_quality) * IW_MAX_SPY);
--
--#ifdef WE_SPY_DEBUG
--		printk(KERN_DEBUG "iw_handler_set_spy() :  wireless_data %p, spydata %p, num %d\n", dev->wireless_data, spydata, wrqu->data.length);
--		for (i = 0; i < wrqu->data.length; i++)
--			printk(KERN_DEBUG
--			       "%02X:%02X:%02X:%02X:%02X:%02X \n",
--			       spydata->spy_address[i][0],
--			       spydata->spy_address[i][1],
--			       spydata->spy_address[i][2],
--			       spydata->spy_address[i][3],
--			       spydata->spy_address[i][4],
--			       spydata->spy_address[i][5]);
--#endif	/* WE_SPY_DEBUG */
- 	}
- 
- 	/* Make sure above is updated before re-enabling */
-@@ -1525,10 +1451,6 @@ int iw_handler_set_thrspy(struct net_dev
- 	/* Clear flag */
- 	memset(spydata->spy_thr_under, '\0', sizeof(spydata->spy_thr_under));
- 
--#ifdef WE_SPY_DEBUG
--	printk(KERN_DEBUG "iw_handler_set_thrspy() :  low %d ; high %d\n", spydata->spy_thr_low.level, spydata->spy_thr_high.level);
--#endif	/* WE_SPY_DEBUG */
--
- 	return 0;
- }
- 
-@@ -1579,16 +1501,6 @@ static void iw_send_thrspy_event(struct 
- 	memcpy(&(threshold.low), &(spydata->spy_thr_low),
- 	       2 * sizeof(struct iw_quality));
- 
--#ifdef WE_SPY_DEBUG
--	printk(KERN_DEBUG "iw_send_thrspy_event() : address %02X:%02X:%02X:%02X:%02X:%02X, level %d, up = %d\n",
--	       threshold.addr.sa_data[0],
--	       threshold.addr.sa_data[1],
--	       threshold.addr.sa_data[2],
--	       threshold.addr.sa_data[3],
--	       threshold.addr.sa_data[4],
--	       threshold.addr.sa_data[5], threshold.qual.level);
--#endif	/* WE_SPY_DEBUG */
--
- 	/* Send event to user space */
- 	wireless_send_event(dev, SIOCGIWTHRSPY, &wrqu, (char *) &threshold);
- }
-@@ -1612,10 +1524,6 @@ void wireless_spy_update(struct net_devi
- 	if (!spydata)
- 		return;
- 
--#ifdef WE_SPY_DEBUG
--	printk(KERN_DEBUG "wireless_spy_update() :  wireless_data %p, spydata %p, address %02X:%02X:%02X:%02X:%02X:%02X\n", dev->wireless_data, spydata, address[0], address[1], address[2], address[3], address[4], address[5]);
--#endif	/* WE_SPY_DEBUG */
--
- 	/* Update all records that match */
- 	for (i = 0; i < spydata->spy_number; i++)
- 		if (!compare_ether_addr(address, spydata->spy_address[i])) {
+A few examples follow of what we think might be GPL violations.
+This list is far from being complete.
 
---
+BCW_PHY_STACKSAVE()
+BCW_ILT_STACKSAVE()
+bcw_stack_save()
+bcw_stack_restore()
+These functions are a possible implementation of the specs when
+they say "backup/restore a value".
+Yet, it looks like you had exactly the same idea implementing this
+generic description that I had.
 
+bcw_set_opmode()
+This function does not appear in the specifications.
+I think Jiri Benc wrote it initially (and gave it its name) and
+I extended it.
+
+bcw_leds_switch_all()
+is not in the specs, but a pure implementation detail of bcm43xx.
+
+bcw_sprom_read()
+This is obviously copied. Even the error message string is similiar.
+
+bcw_phy_calc_loopback_gain()
+I think it's no coincidence that you also decided to name the backup
+variables like
+	uint16_t backup_phy[15];
+	uint16_t backup_radio[3];
+	uint16_t backup_bband;
+
+bcw_phy_init_pctl()
+	uint16_t saved_batt = 0, saved_ratt = 0, saved_txctl1 = 0;
+	int must_reset_txpower = 0;
+
+bcw_phy_xmitpower()
+Attenuation adjustment algorithms (while loops).
+
+bcw_phy_lo_g_state()
+This exactly matches bcm43xx, although the specs only have an abstract
+description and diagram of the state machine.
+
+bcw_phy_lo_g_deviation_subval()
+/* XXX bcm43xx_voluntary_preempt() ? */
+Nice comment there.
+You might want to grep bcw for the string "bcm43xx"
+and you will find more of them.
+
+
+... and all the rest.
+
+
+We'd like to have this issue resolved.
+In general we are not against having a free (and BSD licensed) driver
+in the BSD operating system. But you _have_ to cooperate with us if you'd
+like to take our code and relicense it under BSD license. We intentionally
+put the code under GPL license. We did _not_ do this, because "everybody
+does this". We did this, among other reasons, because we
+[citing Michael, Mon, 26 Dec 2005 13:03:44 +0100]
+"don't think we should allow proprietary vendors to take our code
+and close it again."
+
+[citing Michael, Date unknown]
+"What if Broadcom decides to take our LO measure state machine and
+put it into the original driver? (The Rev Engineers told me they have
+a very different weird solution for this in their code).
+I really don't want to see this happen."
+
+We'd like to offer you to start cooperating with us.
+We respect you and your Copyright. You should also do so on our work.
+
+We would not be opposed to relicensing parts of our code under the BSD
+license on an explicit case-by-case base.
+So if you ask "May I use this and that function" and if I own the
+Copyright on that particular function, I will approve or deny your request.
+Other Copyright holders of the bcm43xx code might act the same way.
+
+We're not out for blood, just for a fair resolution.
+We'd like you to start contacting us to resolve the issue now.
+
+Have a nice day.
+
+-- 
+Greetings Michael.
