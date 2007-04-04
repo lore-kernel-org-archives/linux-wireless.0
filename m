@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:53718 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1767240AbXDETSA (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:56000 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992923AbXDDPWr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 15:18:00 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Hauke Mehrtens <linux-wireless@hauke-m.de>
-Subject: Re: no reassociateing with rtl8187 driver
-Date: Thu, 5 Apr 2007 15:15:44 -0400
-Cc: linux-wireless@vger.kernel.org
-References: <46140CD0.3010205@hauke-m.de>
-In-Reply-To: <46140CD0.3010205@hauke-m.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1304159.yykWSaVPxV";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200704051515.49161.flamingice@sourmilk.net>
+	Wed, 4 Apr 2007 11:22:47 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HZ7Hh-0005KF-OV
+	for linux-wireless@vger.kernel.org; Wed, 04 Apr 2007 11:20:29 -0400
+Subject: Re: Orinoco, mac80211 and wpa2
+From: Pavel Roskin <proski@gnu.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Jan Dittmer <jdi@l4x.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <1175697737.2656.3.camel@localhost.localdomain>
+References: <4613A4A9.1060902@l4x.org>
+	 <1175697737.2656.3.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Wed, 04 Apr 2007 11:22:38 -0400
+Message-Id: <1175700158.5322.9.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1304159.yykWSaVPxV
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Wed, 2007-04-04 at 10:42 -0400, Dan Williams wrote:
 
-On Wednesday 04 April 2007 16:38, Hauke Mehrtens wrote:
-> I am using the rtl8187 driver based on the mac80211 stack and it is
-> working pretty well except it can't reassociate to the access point with
-> WEP encryption enabled (I haven't tested without) of which he lost the
-> connection.
->
-mac80211 doesn't handle reassociation when a connection is lost. It is=20
-recommended to configure mac80211 with either wpa_supplicant or=20
-NetworkManager (which in turn uses wpa_supplicant). However, since we're=20
-trying to have a reasonable level of compatibility with userspace that use=
-=20
-wireless tools directly to connect, some reassociation is probably=20
-appropriate to implement.
+> In your case, some cards supported by the orinoco drivers _do_ have WPA
+> capability with a firmware upgrade and by using the 'hostap' drivers.
+> I'd try blacklisting the orinoco and see if the 'hostap' driver supports
+> your card.
 
-=2DMichael Wu
+I think that Sony laptops have real Lucent Orinoco card, e.g.:
+https://launchpad.net/ubuntu/+source/linux-source-2.6.20/+bug/66696/comments/11
 
---nextPart1304159.yykWSaVPxV
-Content-Type: application/pgp-signature
+Porting Orinoco driver to mac80211 would be a fun project, and I don't
+think it's impossible.  It should be possible to dumb down the card,
+turn off scanning and authentication and send raw packets.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+I'm not sure if the firmware support would be needed, but Lucent 9.xx
+firmware has WPA support.  Since it's RAM loadable, the firmware loading
+will need to be added.  Fortunately, the implementation already exists
+in the now defunct HermesAP project.
 
-iD8DBQBGFUrlT3Oqt9AH4aERAutZAKDNzan7TBDaaHscNCHp+z/y84KqhwCeNaUC
-civ/y1wEXgo6Y1kNPowOYow=
-=PmXh
------END PGP SIGNATURE-----
+I have way too much stuff on my plate to even attempt it myself, but I
+would not discourage others.
 
---nextPart1304159.yykWSaVPxV--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Regards,
+Pavel Roskin
+
