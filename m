@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:63142 "EHLO
-	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754126AbXDUEIK (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46169 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992760AbXDDItU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2007 00:08:10 -0400
-Date: Fri, 20 Apr 2007 23:07:28 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] ieee80211: Output frequency rather than channel in scan  results
-Message-ID: <46298e00.m7oDqYNvDCFdCSj1%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 4 Apr 2007 04:49:20 -0400
+Subject: Re: debugfs.c and DEBUG COUNTERS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240704040145l2aa8eb35hd2ef77b5475a03a3@mail.gmail.com>
+References: <1ba2fa240704040145l2aa8eb35hd2ef77b5475a03a3@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+mVTfzJCdrsTwpv1dQfA"
+Date: Wed, 04 Apr 2007 10:48:47 +0200
+Message-Id: <1175676527.3556.6.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In ieee80211, the output of scan results lists channels rather than
-frequencies; however, NetworkManager needs frequency. This patch
-changes the output from channel to frequency.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+--=-+mVTfzJCdrsTwpv1dQfA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Index: wireless-2.6/net/ieee80211/ieee80211_wx.c
-===================================================================
---- wireless-2.6.orig/net/ieee80211/ieee80211_wx.c
-+++ wireless-2.6/net/ieee80211/ieee80211_wx.c
-@@ -89,12 +89,15 @@ static char *ieee80211_translate_scan(st
- 		start = iwe_stream_add_event(start, stop, &iwe, IW_EV_UINT_LEN);
- 	}
- 
--	/* Add frequency/channel */
-+	/* Add frequency */
- 	iwe.cmd = SIOCGIWFREQ;
--/*	iwe.u.freq.m = ieee80211_frequency(network->channel, network->mode);
--	iwe.u.freq.e = 3; */
--	iwe.u.freq.m = network->channel;
--	iwe.u.freq.e = 0;
-+	if (network->channel < 15)
-+		iwe.u.freq.m = 2407 + 5 * network->channel;
-+	else
-+		iwe.u.freq.m = 5000 + 5 * network->channel;
-+	if (network->channel == 14)
-+		iwe.u.freq.m = 2484;    /* special case for Japan */
-+	iwe.u.freq.e = 6;
- 	iwe.u.freq.i = 0;
- 	start = iwe_stream_add_event(start, stop, &iwe, IW_EV_FREQ_LEN);
- 
+Hint: read the mailing list you keep posting to.
+
+johannes
+
+--=-+mVTfzJCdrsTwpv1dQfA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGE2Zu/ETPhpq3jKURAq/oAJkB7rLLLqKj5iPYuv93OWfrCbNHaACgnbzJ
+U4RJ3crR9gYWNoSnBIO+UU4=
+=aPOZ
+-----END PGP SIGNATURE-----
+
+--=-+mVTfzJCdrsTwpv1dQfA--
+
