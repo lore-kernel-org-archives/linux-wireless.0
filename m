@@ -1,77 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:43441
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031297AbXDQXgU (ORCPT
+Received: from mga07.intel.com ([143.182.124.22]:3854 "EHLO
+	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S2992450AbXDCWgj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2007 19:36:20 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: jt@hpl.hp.com
-Subject: Re: [PATCH 2.6] WE-22 : prevent information leak on 64 bit
-Date: Wed, 18 Apr 2007 01:34:50 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org
-References: <20070323003116.GC2712@bougret.hpl.hp.com> <1175508410.23438.75.camel@johannes.berg> <20070417170820.GB22372@bougret.hpl.hp.com>
-In-Reply-To: <20070417170820.GB22372@bougret.hpl.hp.com>
+	Tue, 3 Apr 2007 18:36:39 -0400
+Message-ID: <46138001.70301@linux.intel.com>
+Date: Wed, 04 Apr 2007 03:37:53 -0700
+From: mabbas <mabbas@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200704180134.50571.mb@bu3sch.de>
+To: linux-wireless@vger.kernel.org
+CC: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
+	mabbas@linux.intel.com
+Subject: Re: [patch 5/5] IEEE 802.11n management action frame handling
+References: <1174909425.1364.63.camel@dell-4965.jf.intel.com> <1175112901.5151.141.camel@johannes.berg>
+In-Reply-To: <1175112901.5151.141.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 17 April 2007 19:08, Jean Tourrilhes wrote:
-> 	I'm sorry to have to write this e-mail. But this incident is
-> completely opposed to the ideal of FreeSoftware/OpenSource and
-> demonstrate some of the bad politics happening in Linux.
-> 
-> 	First, I'm the current active maintainer of the
-> wext-over-netlink interface, and nobody bothered to even 'inform' me
-> about its removal, let alone consult with me.
-> 	This shows a complete lack of courtesy and a total disrespect
-> to the concept of maintainer, basically some people are just second
-> class citizens.
-> 
-> 	Second, there is no technical justification to such decision,
-> it's just plain politics. I would agree that for the vast majority of
-> people, this API was useless, as any work in progress. But, it is
-> maintained (by me), it is not causing any technical issue, for those
-> people it's not compiled in (i.e. no bloat), it is not causing bugs
-> and not preventing other code to be merged in the kernel.
-> 	Therefore a purely politic decision.
+modified patch at the end
+Johannes Berg wrote:
+> On Mon, 2007-03-26 at 04:43 -0700, mohamed wrote:
+>
+>   
+>> +static void ieee80211_send_addba_resp(struct net_device *dev,
+>> +				      struct ieee80211_mgmt *mgmt_src,
+>> +				      size_t len,
+>> +				      u16 status)
+>> +{
+>> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+>> +        struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+>> +	struct sk_buff *skb;
+>> +	struct ieee80211_mgmt *mgmt;
+>> +
+>> +	skb = dev_alloc_skb(sizeof(*mgmt) + 50 );
+>>     
+>
+> Why +50? And isn't sizeof(ieee80211_mgmt) a bit dangerous since that
+> structure might increase in size?
+>
+>   
+>> +static void ieee80211_rx_mgmt_action(struct net_device *dev,
+>> +				     struct ieee80211_if_sta *ifsta,
+>> +				     struct ieee80211_mgmt *mgmt,
+>> +				     size_t len)
+>> +{
+>> +	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+>> +
+>> +	if (len < 24 + 1) {
+>>     
+>
+> Why 25? Some #define maybe?
+>
+>   
+>> +			printk(KERN_ERR "%s: recieved back unsupported \n",
+>> +								dev->name);
+>>     
+>
+> "Received unsupported block-ack action"? And you need a ratelimit on
+> that printk or somebody can flood you with kernel messages by sending
+> tiny frames with invalid fields there. Possibly on other printks too.
+>
+> Oh and one more smallish thing: Can you post your patches 1-5/5 as
+> replies to 0/5? Makes the whole thing more readable in most mail
+> programs, and I think it also simplifies John's life when merging.
+>  
+> johannes
+>   
+add draft IEEE 802.11n management action frame handling
 
-It is _only_ about replacing obsolete code by code that obsoleted it.
-That happens all the time. Look at the process scheduler and compare
-it to 2.4, for example.
+Several Action frame format are defined to support IEEE 802.11n features.
+This patch adds support to parse Block Ack action frame, then call
+low level driver with the frame's body.
 
-We want to reduce the maintainance burden. Nothing more.
-If we remove unused code (which WEXT-NL is), then we don't have to
-write compatibility code to support it in future.
-Why wait with removal until we can't anymore (when people use it)?
+Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
 
-> 	Now, I've got a problem with your attitude in this matter,
-> Johannes. It's now the second time you remove features from code I
-> maintain by pure fiat, and you have engaged in a long running FUD
-> campain about my code. This is totally disgraceful of a Linux
-> maintainer, and you should know it.
-> 	If the only way you have to promote your code is by actively
-> destroying my code, then you have a real issue. Your code should stand
-> on its own merit, without the need of attacking other people's work
-> and playing political tricks.
-> 	I hope you will note that I never disparaged your code, I
-> never prevented its inclusion in Linux and I never attempted to
-> control the Linux Wireless space and left plenty of space for new
-> developpers.
-> 
-> 	You still have a lot to learn, like all of us. You still don't
-> understand Wireless Extensions (as your FUD shows) and why it's still
-> so popular despite all its warts. You don't get the value of not
-> burning bridges with other developpers and professional conduct.
-
-I'd say nobody but you does fully understand WEXT. Somebody might
-call that either a design issue, or a documentation issue.
-I personally make both issues responsible for this.
-
--- 
-Greetings Michael.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b1bbc3d..34e67a7 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -728,6 +728,10 @@ struct ieee80211_ops {
+ 	 * required function. */
+ 	u64 (*get_tsf)(struct ieee80211_hw *hw);
+ 
++	/* Call low level driver with 11n Block Ack action */
++	int (*handle_ba_action)(struct ieee80211_hw *hw,
++				struct ieee80211_mgmt *mgmt);
++
+ 	/* Reset the TSF timer and allow firmware/hardware to synchronize with
+ 	 * other STAs in the IBSS. This is only used in IBSS mode. This
+ 	 * function is optional if the firmware/hardware takes full care of
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 2ae0a56..7bba219 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -57,6 +57,9 @@ #define IEEE80211_FC(type, stype) cpu_to
+ 
+ #define ERP_INFO_USE_PROTECTION BIT(1)
+ 
++/* mgmt header + 1 byte action code */
++#define IEEE80211_MIN_ACTION_SIZE (24 + 1)
++
+ static void ieee80211_send_probe_req(struct net_device *dev, u8 *dst,
+ 				     u8 *ssid, size_t ssid_len);
+ static struct ieee80211_sta_bss *
+@@ -1782,6 +1785,102 @@ #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+ 	ieee80211_sta_tx(dev, skb, 0);
+ }
+ 
++static void ieee80211_send_addba_resp(struct net_device *dev,
++				      struct ieee80211_mgmt *mgmt_src,
++				      size_t len,
++				      u16 status)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct sk_buff *skb;
++	struct ieee80211_mgmt *mgmt;
++
++	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom);
++	if (!skb) {
++		printk(KERN_DEBUG "%s: failed to allocate buffer "
++		       "for addts frame\n", dev->name);
++		return;
++	}
++
++	skb_reserve(skb, local->hw.extra_tx_headroom);
++	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
++	memset(mgmt, 0, 24);
++	memcpy(mgmt->da, ifsta->bssid, ETH_ALEN);
++	memcpy(mgmt->sa, dev->dev_addr, ETH_ALEN);
++	memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
++	mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
++					   IEEE80211_STYPE_ACTION);
++
++	skb_put(skb, 1 + sizeof(mgmt->u.action.u.addba_resp));
++	mgmt->u.action.category = WLAN_CATEGORY_BACK;
++	mgmt->u.action.u.addba_resp.action_code = WLAN_ACTION_ADDBA_RESP;
++	mgmt->u.action.u.addba_resp.dialog_token =
++		mgmt_src->u.action.u.addba_req.dialog_token;
++	mgmt->u.action.u.addba_resp.capab =
++		mgmt_src->u.action.u.addba_req.capab;
++	mgmt->u.action.u.addba_resp.timeout =
++		mgmt_src->u.action.u.addba_req.timeout;
++	mgmt->u.action.u.addba_resp.status = cpu_to_le16(status);
++
++	ieee80211_sta_tx(dev, skb, 0);
++	
++	return;
++}
++
++static void ieee80211_rx_mgmt_action(struct net_device *dev,
++				     struct ieee80211_if_sta *ifsta,
++				     struct ieee80211_mgmt *mgmt,
++				     size_t len)
++{
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++
++	if (len < IEEE80211_MIN_ACTION_SIZE) 
++		return;
++
++	switch (mgmt->u.action.category) {
++	case WLAN_CATEGORY_BACK:
++		switch (mgmt->u.action.u.addba_req.action_code) {
++		case WLAN_ACTION_ADDBA_REQ:
++			if (len < (IEEE80211_MIN_ACTION_SIZE + 
++				   sizeof(mgmt->u.action.u.addba_req)))
++				break;	
++			if (!local->ops->handle_ba_action || 
++			    (local->ops->handle_ba_action(local_to_hw(local),
++						      mgmt)))
++				ieee80211_send_addba_resp(dev, mgmt, len,
++						WLAN_STATUS_REQUEST_DECLINED);
++			else
++				ieee80211_send_addba_resp(dev, mgmt, len,
++							WLAN_STATUS_SUCCESS);
++			break;
++		case WLAN_ACTION_ADDBA_RESP:
++			if (len < (IEEE80211_MIN_ACTION_SIZE +
++				   sizeof(mgmt->u.action.u.addba_resp)))
++				break;
++			if (!local->ops->handle_ba_action)
++				break;
++			local->ops->handle_ba_action(local_to_hw(local), mgmt);
++			break;
++		case WLAN_ACTION_DELBA:
++			if (len < (IEEE80211_MIN_ACTION_SIZE +
++				   sizeof(mgmt->u.action.u.delba)))
++				break;
++
++			 if (!local->ops->handle_ba_action)
++				break;
++
++			local->ops->handle_ba_action(local_to_hw(local), mgmt);
++			break;
++		default:
++			break;
++		}
++		break;
++
++	default:
++		break;
++	}
++}
+ 
+ void ieee80211_sta_rx_mgmt(struct net_device *dev, struct sk_buff *skb,
+ 			   struct ieee80211_rx_status *rx_status)
+@@ -1810,6 +1909,7 @@ void ieee80211_sta_rx_mgmt(struct net_de
+ 	case IEEE80211_STYPE_REASSOC_RESP:
+ 	case IEEE80211_STYPE_DEAUTH:
+ 	case IEEE80211_STYPE_DISASSOC:
++	case IEEE80211_STYPE_ACTION:
+ 		skb_queue_tail(&ifsta->skb_queue, skb);
+ 		schedule_work(&ifsta->work);
+ 		return;
+@@ -1867,6 +1967,9 @@ static void ieee80211_sta_rx_queued_mgmt
+ 	case IEEE80211_STYPE_DISASSOC:
+ 		ieee80211_rx_mgmt_disassoc(dev, ifsta, mgmt, skb->len);
+ 		break;
++	case IEEE80211_STYPE_ACTION:
++		ieee80211_rx_mgmt_action(dev, ifsta, mgmt, skb->len);
++		break;
+ 	}
+ 
+ 	kfree_skb(skb);
