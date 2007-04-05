@@ -1,32 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:52521 "EHLO madara.hpl.hp.com"
+Received: from cvs.openbsd.org ([199.185.137.3]:19635 "EHLO cvs.openbsd.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754831AbXDZQxH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2007 12:53:07 -0400
-Date: Thu, 26 Apr 2007 09:53:04 -0700
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 9/9] net_device: dont include wext bits if not required
-Message-ID: <20070426165304.GC22576@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <20070424180732.371620000@sipsolutions.net> <20070424180850.595757000@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070424180850.595757000@sipsolutions.net>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+	id S1767273AbXDEX0N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2007 19:26:13 -0400
+Message-Id: <200704052323.l35NN8Mk029461@cvs.openbsd.org>
+To: David Miller <davem@davemloft.net>
+cc: jeff@garzik.org, mb@bu3sch.de, mglocker@openbsd.org,
+	jsimola@gmail.com, deraadt@theos.com, stefano.brivio@polimi.it,
+	martin-langer@gmx.de, kugelfang@gentoo.org,
+	andreas.jaggi@waterwave.ch, larry.finger@lwfinger.net,
+	Quaker.Fang@sun.com, johannes@sipsolutions.net, josejx@gentoo.org,
+	linville@tuxdriver.com, greg@kroah.com,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
+In-reply-to: Your message of "Thu, 05 Apr 2007 14:21:57 PDT."
+             <20070405.142157.74750261.davem@davemloft.net>
+Date: Thu, 05 Apr 2007 17:23:08 -0600
+From: Theo de Raadt <deraadt@cvs.openbsd.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 24, 2007 at 08:07:41PM +0200, Johannes Berg wrote:
-> This patch makes the wext bits in struct net_device depend on
-> CONFIG_WIRELESS_EXT.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> I understand why you might want to do damage control like this.
 
-	I personally would not do that. Having conditional fields in
-"struct net_device" is very bad, it's a sure way to crash on modules
-in some cases. If I remember well, Jeff Garzik has been fighting those
-over the years.
+The driver is deleted.
 
-	Jean
+What damage specifically would I be trying to control?
+
+I'll tell you -- I would be trying to control the damage of a
+community of public hotheads ripping one person to shreds.
+
+The process was unacceptable.
