@@ -1,72 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([198.107.51.143]:3132 "EHLO mail.tpi.com"
+Received: from cvs.openbsd.org ([199.185.137.3]:36932 "EHLO cvs.openbsd.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753549AbXDRRHQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2007 13:07:16 -0400
-Message-ID: <462649E3.4000208@canonical.com>
-Date: Wed, 18 Apr 2007 10:40:03 -0600
-From: Tim Gardner <tim.gardner@canonical.com>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: kernel-team@lists.ubuntu.com, Ben Collins <ben.collins@ubuntu.com>,
-	mjg59@cavan.codon.org.uk
-Subject: [PATCH] Fix NetworkManager/wpa_supplicant race condition
-Content-Type: multipart/mixed;
- boundary="------------020403000603050301020700"
+	id S1767223AbXDETQ4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2007 15:16:56 -0400
+Message-Id: <200704051913.l35JDww5000087@cvs.openbsd.org>
+To: Michael Buesch <mb@bu3sch.de>
+cc: Joseph Jezak <josejx@gentoo.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
+In-reply-to: Your message of "Thu, 05 Apr 2007 21:09:00 +0200."
+             <200704052109.00797.mb@bu3sch.de>
+Date: Thu, 05 Apr 2007 13:13:58 -0600
+From: Theo de Raadt <deraadt@cvs.openbsd.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------020403000603050301020700
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+I am not the only one with the belief that your process sucked.
+And neither is the person below.  Many people see it that way.
 
-This patch fixes an assumption made by wpa_supplicant. Any time
-wpa_supplicant requests to set an ESSID (e.g., associate), it expects an
-event notifying that association has completed. If the Networkmanager
-has already setup an association, such as for an open auth AP, then the
-request to associate by wpa_supplicant will be ignored.
 
-If Networkmanager is requested to restart the connection, such as by
-clicking on the SSID, then wpa_supplicant is allowed to build the
-association from scratch, which always works.
+---
+From: Jason Dixon <jason@dixongroup.net>
+Subject: Re: CVS: cvs.openbsd.org: src 
+Date: Thu, 5 Apr 2007 14:56:37 -0400
+To: source-changes@cvs.openbsd.org
+X-Mailer: Apple Mail (2.752.3)
+X-Virus-Scanned: by amavisd-new using ClamAV at dixongroup.net
+X-Loop: source-changes@openbsd.org
+Precedence: list
+Sender: owner-source-changes@openbsd.org
 
-https://bugs.launchpad.net/ubuntu/+source/linux-source-2.6.20/+bug/103768
+On Apr 5, 2007, at 2:37 PM, Theo de Raadt wrote:
 
-By always emitting this event, am I causing any unintended side effects?
+> Marcus was not really given much choice.  Well, he was given some
+> other choices, but they are rather ridiculous.  He was accused, and
+> quite frankly attacked, and Marcus has made his choice as to how to
+> react.
+>
+> I will stand by him to make his own choice as he sees fit.
+>
+> This whole thing is not purely about the GPL license, but about the
+> informing/enforcement approach taken by the Linux Broadcom people
+> towards handling this issue.  Their approach is inhuman and
+> unacceptable.
+>
+> There are various lists on the net where more can be found out about
+> this, and if people want to go find out more they should go search a
+> bit.
 
-rtg
--- 
-Tim Gardner tim.gardner@ubuntu.com
+The way they chose to "notify" Marcus shows a complete lack of  
+respect for Marcus.  As Theo expressed in the thread, there is NO  
+DOUBT that they would have notified a corporation privately.  Why  
+would you treat an individual, working on the code out of their own  
+desire, with less respect?
 
---------------020403000603050301020700
-Content-Type: text/plain;
- name="bug_103768"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="bug_103768"
+--
+Jason Dixon
+DixonGroup Consulting
+http://www.dixongroup.net
 
-diff --git a/net/ieee80211/softmac/ieee80211softmac_wx.c b/net/ieee80211/softmac/ieee80211softmac_wx.c
-index fa2f7da..cc2e8ba 100644
---- a/net/ieee80211/softmac/ieee80211softmac_wx.c
-+++ b/net/ieee80211/softmac/ieee80211softmac_wx.c
-@@ -88,6 +88,13 @@ ieee80211softmac_wx_set_essid(struct net_device *net_dev,
- 		   !memcmp(n->essid.data, extra, n->essid.len)) {
- 			dprintk(KERN_INFO PFX "Already associating or associated to "MAC_FMT"\n",
- 				MAC_ARG(sm->associnfo.bssid));
-+			/* wpa_supplicant expects an association event, regardless of prior
-+			 * association state. If associating, then the associnfo.work task
-+			 * will send the appropriate event.
-+			 */
-+			if (sm->associnfo.associated)
-+				ieee80211softmac_call_events_locked(sm,
-+					IEEE80211SOFTMAC_EVENT_ASSOCIATED, n);
- 			goto out;
- 		} else {
- 			dprintk(KERN_INFO PFX "Canceling existing associate request!\n");
-
---------------020403000603050301020700--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
