@@ -1,80 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:61507 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753047AbXDIVvF (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:46466
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753205AbXDEQrz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2007 17:51:05 -0400
-Message-ID: <461AB589.20405@lwfinger.net>
-Date: Mon, 09 Apr 2007 16:52:09 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 5 Apr 2007 12:47:55 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Marcus Glocker <marcus@nazgul.ch>
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues
+Date: Thu, 5 Apr 2007 18:47:05 +0200
+Cc: Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joseph Jezak <josejx@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+References: <200704041945.21447.mb@bu3sch.de> <20070405054107.GB7660@gollum.nazgul.ch>
+In-Reply-To: <20070405054107.GB7660@gollum.nazgul.ch>
 MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Problem with wpa_supplicant on bcm43xx-mac80211
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200704051847.05778.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni,
+On Thursday 05 April 2007 07:41, Marcus Glocker wrote:
+> I wanted to make some quick progress (maybe too quick), and rewrite
+> the functions in question after seeing some first success, e.g.
+> receivment of first frames, which isn't the case right now.  But
+> still, the specs for some functions are so strict, writing tons
+> of registers in a strict order, some parts will still look similar.
 
-I'm having a problem authenticating with my AP using WPA-PSK TKIP and the bcm43xx-mac80211 driver. 
-The system works fine with bcm43xx-softmac - thus I know my wpa_supplicant.conf file is OK.
+To make it clear. We are not issueing any copyright claims on
+these magic register sequences.
+This is only about algorithms and so on. I mentioned the LO state
+machine, for example.
 
-I have turned on full (-ddd) debugging of wpa_supplicant. In my log, I see the following sequence of 
-outputs for both the good and the bad examples:
+> The last thing I want is to start a license war with you guys,
+> and also I don't want to harm OpenBSD further with this issue.
+> And of course we want to solve that license issue ASAP.
+> 
+> So, I am suggestion three options:
+> 
+> 	1. You give me some time and I try to rewrite the code
+> 	   in question.  We keep in touch, and maybe we can split
+> 	   up both parties in freedom afterwards.
+> 
+> 	2. Same as option one, but if my time resources keep
+> 	   shrinking like they do right now, spending weekends
+> 	   in the office and I can't fix up the driver soon,
+> 	   I'll drop the driver.
+> 
+> 	3. We don't come to a point and I'll plain drop the driver
+> 	   directly, very soon.
 
-logger: State: ASSOCIATED -> 4WAY_HANDSHAKE
-logger: WPA: RX message 1 of 4-Way Handshake from 00:14:bf:85:49:fa (ver=1)
-logger: WPA: Renewed SNonce - hexdump(len=32): 5e ca e4 8d 31 e3 05 5b e4 1f b0 80 56 94 14 fa 51 23 
-81 d6 2d a5 5f 68 3c 02 fe ef 04 56 3e 6e
-logger: WPA: PMK - hexdump(len=32): [REMOVED]
-logger: WPA: PTK - hexdump(len=64): [REMOVED]
-logger: WPA: WPA IE for msg 2/4 - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 02 01 00 00 50 
-f2 02 01 0000 50 f2 02
-logger: WPA: Sending EAPOL-Key 2/4
+	4. bcm43xx people review the driver and think about relicensing
+	   (parts of) bcw, so you don't have to rewrite it.
+	   We don't want to distrurb bcw development, but we don't like
+	   the harsh way of taking code without permission and asking
+	   for permission afterwards.
+	   If you want to have more code relicensed, please ask on a
+	   case-by-case base _before_ importing it into bcw.
 
-At this point, the two cases diverge. The bad example has a 4 second delay, then I get the following:
-
-kernel: eth1: RX deauthentication from 00:14:bf:85:49:fa (reason=15)
-kernel: eth1: deauthenticated
-logger: WPA: TX EAPOL-Key - hexdump(len=123): 01 03 00 77 fe 01 09 00 20 00 00 00 00 00 00 00 16 5e 
-ca e4 8d 31 e3 05 5b e4 1f b0 80 56 94 14 fa 51 23 81 d6 2d a5 5f 68 3c 02 fe ef 04 56 3e 6e 00 00 
-00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-00 00 00 00 00 00 00 00 00 00 00 00 00 00 09 9d 33 23 c2 dc 6b ca 26 19 5f d9 a4 1b 85 11 00 18 dd 
-16 00 50 f2 01 01 00 00 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02
-logger: EAPOL: startWhen --> 0
-logger: EAPOL: SUPP_PAE entering state CONNECTING
-logger: EAPOL: txStart
-logger: WPA: drop TX EAPOL in non-IEEE 802.1X mode (type=1 len=0)
-logger: RTM_NEWLINK: operstate=0 ifi_flags=0x1023 ([UP])
-logger: Wireless event: cmd=0x8b15 len=24
-logger: Wireless event: new AP: 00:00:00:00:00:00
-
- From here, the process repeats over and over without success.
-
-With the driver that works, the output continues with:
-
-logger: WPA: TX EAPOL-Key - hexdump(len=123): 01 03 00 77 fe 01 09 00 20 00 00 00 00 00 00 00 0e fd 
-80 70 69 ec e0 6d 0d 4b ec 66 c3 0d 8a 46 82 11 6e a8 e8 97 be 20 5a 19 4f a3 99 c5 4e 39 e4 00 00 
-00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-00 00 00 00 00 00 00 00 00 00 00 00 00 00 fe 58 da 6c 96 95 93 66 96 d5 46 a3 e0 18 32 bd 00 18 dd 
-16 00 50 f2 01 01 00 00 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02
-logger: RX EAPOL from 00:14:bf:85:49:fa
-logger: RX EAPOL - hexdump(len=125): 01 03 00 79 fe 01 c9 00 20 00 00 00 00 00 00 00 0f 57 6f 04 92 
-27 6b 80 c0 19 de 3c 7f e8 22 2b e0 ce 47 09 1e 68 fc bf 4a 1e 3d ca 4d d3 21 b3 dd 00 00 00 00 00 
-00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-00 00 00 00 00 00 00 00 00 00 00 33 bb 6b 6a 3d 36 6a 41 32 ab d0 7a 51 a1 b5 cf 00 1a dd 18 00 50 
-f2 01 01 00 00 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02 00 00
-logger: IEEE 802.1X RX: version=1 type=3 length=121
-
- From here if finishes the authentication and communication is established.
-
-Do you know why the supplicant waits the 4 seconds between the "sending key 2/4" message and the 
-actual transmission of it? Do you think that is important, or is it a false lead? I would appreciate 
-any debugging leads you might offer.
-
-I'm using wpa_supplicant 0.5.7 and running 2.6.21-rc5 on an openSUSE 10.2 distribution.
-
-Thanks,
-
-Larry
+-- 
+Greetings Michael.
