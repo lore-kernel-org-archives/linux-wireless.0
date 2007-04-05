@@ -1,78 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:48701 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1422984AbXDXSJ2 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44810 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767256AbXDETvV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2007 14:09:28 -0400
-Message-ID: <462E47D0.8030800@warmcat.com>
-Date: Tue, 24 Apr 2007 19:09:20 +0100
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 03/13] mac80211: fix virtual interface related locking
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <20070423184812.7029.7682.stgit@magic.sourmilk.net> <462D1DD8.8060507@warmcat.com> <200704231722.07280.flamingice@sourmilk.net>
-In-Reply-To: <200704231722.07280.flamingice@sourmilk.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 5 Apr 2007 15:51:21 -0400
+Subject: Re: PCMCIA 802.11n support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stephen Hemminger <shemminger@linux-foundation.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20070405124217.42cf81ff@localhost>
+References: <20070405124217.42cf81ff@localhost>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zJsDBVqzkjTkDXfz1aZs"
+Date: Thu, 05 Apr 2007 21:51:06 +0200
+Message-Id: <1175802666.3489.0.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
 
-> On Monday 23 April 2007 16:58, Andy Green wrote:
->> Couldn't get this to apply on current wireless-dev, and there is a
->> trailing whitespace.  Maybe it's a problem with a script I concocted to
->> extract the patch from saved Thunderbird 2.0 mails... ?  Is it just that
->> wireless-dev changed inbetweentimes?
->>
-> This patch series depends on the recent cfg80211/mac80211 rtnl locking 
-> patches.
+--=-zJsDBVqzkjTkDXfz1aZs
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for that.  I added
+On Thu, 2007-04-05 at 12:42 -0700, Stephen Hemminger wrote:
+> Do you know of any PCMCIA cards with 802.11n that are supported
+> by the current wireless-dev tree?
 
-cfg80211_nl80211-use-rtnl.patch
-mac80211-update-for-cfg80211-rtnl-locking.patch
+I don't think there are any. We're trying to look at the Broadcom .11n
+stuff but it'll take quite some time, and the only thing that is even
+partially supported now is iwlwifi which I don't think exists in cardbus
+form factor. But even then it's probably not fully supported yet.
 
-(these names are made from the originally posted subject line) before 
-your series and they went in fine.  And the injection patches went in 
-fine on top of that, and continue to work.
+johannes
 
-However I saw this on reinsertion of zd1211rw-mac80211 module:
+--=-zJsDBVqzkjTkDXfz1aZs
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-=============================================
-[ INFO: possible recursive locking detected ]
-2.6.21-rc7 #11
----------------------------------------------
-ip/2600 is trying to acquire lock:
-  (&dev->_xmit_lock){-+..}, at: [<e09199c5>] 
-ieee80211_set_multicast_list+0x46/0x167 [mac80211]
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-but task is already holding lock:
-  (&dev->_xmit_lock){-+..}, at: [<c05abc05>] dev_mc_upload+0x14/0x3c
+iD8DBQBGFVMq/ETPhpq3jKURAmrwAJ0QX2yNe9Y6hi7ZSiVORmD70bHlWQCdFcWK
+wjl7GBv/0HQVsgOX+OWM66E=
+=tBuF
+-----END PGP SIGNATURE-----
 
-other info that might help us debug this:
-2 locks held by ip/2600:
-  #0:  (rtnl_mutex){--..}, at: [<c0609593>] mutex_lock+0x21/0x24
-  #1:  (&dev->_xmit_lock){-+..}, at: [<c05abc05>] dev_mc_upload+0x14/0x3c
+--=-zJsDBVqzkjTkDXfz1aZs--
 
-stack backtrace:
-  [<c0405ea6>] show_trace_log_lvl+0x1a/0x2f
-  [<c0406456>] show_trace+0x12/0x14
-  [<c04064da>] dump_stack+0x16/0x18
-  [<c04428c7>] __lock_acquire+0x116/0xb46
-  [<c04436b8>] lock_acquire+0x56/0x6f
-  [<c060a7d1>] _spin_lock+0x2b/0x38
-  [<e09199c5>] ieee80211_set_multicast_list+0x46/0x167 [mac80211]
-  [<c05abad8>] __dev_mc_upload+0x20/0x22
-  [<c05abc18>] dev_mc_upload+0x27/0x3c
-  [<c05a9e79>] dev_open+0x47/0x66
-  [<c05a87b9>] dev_change_flags+0x51/0xf1
-  [<c05e60c4>] devinet_ioctl+0x235/0x53b
-  [<c05e6684>] inet_ioctl+0x73/0x91
-  [<c059f531>] sock_ioctl+0x1ac/0x1c9
-  [<c048464a>] do_ioctl+0x22/0x67
-  [<c04848e1>] vfs_ioctl+0x252/0x265
-  [<c048493d>] sys_ioctl+0x49/0x64
-  [<c0404eec>] syscall_call+0x7/0xb
-
--Andy
