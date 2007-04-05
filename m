@@ -1,34 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:43179 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030501AbXDKXZI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2007 19:25:08 -0400
-Message-ID: <461D6E4F.6060401@warmcat.com>
-Date: Thu, 12 Apr 2007 00:25:03 +0100
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Tomas Winkler <tomasw@gmail.com>
-CC: Simon Barber <simon@devicescape.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	mabbas <mabbas@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <jkm@devicescape.com>
-Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery and  association
-References: <1174909105.1364.53.camel@dell-4965.jf.intel.com>	 <20070411194059.GA2436@tuxdriver.com> <461D3F48.70004@linux.intel.com>	 <200704111630.06160.flamingice@sourmilk.net>	 <1ba2fa240704111503l6dcef504na73c997ae75ebccd@mail.gmail.com>	 <C86180A8C204554D8A3323D8F6B0A29F01DEB33D@dhost002-46.dex002.intermedia.net> <1ba2fa240704111605l305230d3vf09c085473364eb3@mail.gmail.com>
-In-Reply-To: <1ba2fa240704111605l305230d3vf09c085473364eb3@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from cvs.openbsd.org ([199.185.137.3]:11988 "EHLO cvs.openbsd.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1767348AbXDEVm2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2007 17:42:28 -0400
+Message-Id: <200704052139.l35LdHhb006295@cvs.openbsd.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Pavel Roskin <proski@gnu.org>, Michael Buesch <mb@bu3sch.de>,
+	Joseph Jezak <josejx@gentoo.org>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
+In-reply-to: Your message of "Thu, 05 Apr 2007 23:36:27 +0200."
+             <1175808987.3489.18.camel@johannes.berg>
+Date: Thu, 05 Apr 2007 15:39:17 -0600
+From: Theo de Raadt <deraadt@cvs.openbsd.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler wrote:
+> > Cooperation is not built on that.  Maybe you specifically don't care
+> > about cooperation, but I am sure there are others who do.  So perhaps
+> > watch your words.
+> 
+> How you can *possibly* expect cooperation from a group of people who
+>  * just discovered that somebody has taken large parts of their code
 
-> So you monitor your traffic load in driver, then notify user space
-> application which opens or tears down for you the BA stream?
-> What would be the notification mechanism ?
+Well, you start to expect that mistakes happen, and you privately contact
+them.
 
-Since hopefully the concept will involve a kernelside-filtered 
-monitoring action via libpcap, the stack could for example inject a 
-periodic stats summary packet down the monitor interface back to userspace.
+>  * removed their attribution
 
--Andy
+The attribution was never to be added, because a couple of functions
+were copied in temporarily to help development of other functions, and
+then they were accidentally commited.
+
+This was a mistake, but no private mail about it happened. 
+
+>  * relicensed them under a much more permissive license
+
+They were accidentally copied, and then a public mail was made to a bunch
+of large mailing lists.
+
+>  * /then/ claims that it was "an honest mistake"
+
+If the claims aren't believed, then you are right there can be no
+cooperation, can there.  But someone has to believe claims.   If I
+don't believe your claims that you aren't a rabbit, it doesn't make
+you a rabbit.  Someone has to try to accept claims of fair development.
+
+If you don't believe us, how about this claim:  OpenSSH on Linux has
+no major holes.  Go ahead, keep using it.  The fact is, you have to
+accept that some claims are done on fair grounds.  If you don't, then
+no, you are right -- no cooperation is possible.
+
+>  * also claims that the license (GPL in this case) isn't relevant
+>    because the code doesn't "run" (hint: GPL covers redistribution too,
+>    no matter if the code runs or not)
+
+Accidents were made.  But you don't believe that.  How does cooperation
+start?
+
+> is totally beyond me.
+> 
+> Yet Michael offered it.
+
+He offered something after slagging someone to bits.  That's not a real
+offer.
+
+
+How does cooperation start, if the first statements are about theft
+and lies?
+
+It doesn't.  And you prefer it that way?
