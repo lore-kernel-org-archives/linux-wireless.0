@@ -1,66 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:9493 "EHLO annwn14.rutgers.edu"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1161542AbXDWS6T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2007 14:58:19 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 07/13] mac80211: fix configuration concurrency issues in ieee80211_sta.c
-Date: Mon, 23 Apr 2007 14:48:13 -0400
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Message-Id: <20070423184813.7029.81396.stgit@magic.sourmilk.net>
-In-Reply-To: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+Received: from cvs.openbsd.org ([199.185.137.3]:12951 "EHLO cvs.openbsd.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1766816AbXDEXhV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2007 19:37:21 -0400
+Message-Id: <200704052334.l35NY7Vh006993@cvs.openbsd.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Pavel Roskin <proski@gnu.org>, Michael Buesch <mb@bu3sch.de>,
+	Joseph Jezak <josejx@gentoo.org>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
+In-reply-to: Your message of "Fri, 06 Apr 2007 01:34:08 +0200."
+             <1175816048.3489.40.camel@johannes.berg>
+Date: Thu, 05 Apr 2007 17:34:07 -0600
+From: Theo de Raadt <deraadt@cvs.openbsd.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+> > Cooperation is based on mutual trust.
+> >=20
+> > We don't trust Linux people anymore.
+> 
+> I find this comment amusing. Do you expect us to trust you after
+> discovering such blatant license violations?
 
-This prevents userspace and the in-kernel MLME from configuring
-channel/BSSID/SSID at the same time when the in-kernel MLME is in the midst
-of automatic AP selection. This is done by holding the RTNL lock.
+You're right -- perhaps you should not trust us.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+By the way, we are the people who write OpenSSH.  Perhaps you should
+not trust it, either.
 
- net/mac80211/ieee80211_sta.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 0e9e4f9..04a63a7 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -2068,9 +2068,12 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
- 	struct ieee80211_sta_bss *bss, *selected = NULL;
- 	int top_rssi = 0, freq;
- 
-+	rtnl_lock();
-+
- 	if (!ifsta->auto_channel_sel && !ifsta->auto_bssid_sel &&
- 	    !ifsta->auto_ssid_sel) {
- 		ifsta->state = IEEE80211_AUTHENTICATE;
-+		rtnl_unlock();
- 		ieee80211_sta_reset_auth(dev, ifsta);
- 		return 0;
- 	}
-@@ -2113,6 +2116,7 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
- 		ieee80211_sta_set_bssid(dev, selected->bssid);
- 		ieee80211_rx_bss_put(dev, selected);
- 		ifsta->state = IEEE80211_AUTHENTICATE;
-+		rtnl_unlock();
- 		ieee80211_sta_reset_auth(dev, ifsta);
- 		return 0;
- 	} else {
-@@ -2123,6 +2127,7 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
- 		} else
- 			ifsta->state = IEEE80211_DISABLED;
- 	}
-+	rtnl_unlock();
- 	return -1;
- }
- 
-
+Will you guys defend Micheal's the point where we public mail to
+absolutely any point at all, just because we are not GPL people?
