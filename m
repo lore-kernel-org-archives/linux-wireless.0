@@ -1,73 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:40591
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:37265
 	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751890AbXDGPVs (ORCPT
+	with ESMTP id S1767202AbXDESlV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Apr 2007 11:21:48 -0400
+	Thu, 5 Apr 2007 14:41:21 -0400
 From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: Please pull from http://bu3sch.de/git/wireless-dev.git/ for-linville
-Date: Sat, 7 Apr 2007 17:20:39 +0200
+To: Theo de Raadt <deraadt@cvs.openbsd.org>
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues
+Date: Thu, 5 Apr 2007 20:40:35 +0200
+Cc: Marcus Glocker <marcus@nazgul.ch>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joseph Jezak <josejx@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+References: <200704051828.l35ISZHQ030939@cvs.openbsd.org>
+In-Reply-To: <200704051828.l35ISZHQ030939@cvs.openbsd.org>
 MIME-Version: 1.0
-Message-Id: <200704071720.39487.mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="iso-8859-15"
+Message-Id: <200704052040.36016.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following changes since commit 32bfb29ad13f7451c3a09f092430b30133fc6739:
-  Johannes Berg:
-        fix debugfs compile w/o debug counters
+On Thursday 05 April 2007 20:28, Theo de Raadt wrote:
+> > > But when dealing with a parallel open source effort, you went right to
+> > > the jugular.  I bet you deal nicer with companies.
+> > 
+> > There was no deal with you!
+> 
+> I don't understand this sentence of yours.
 
-are found in the git repository at:
+There was no agreement with you to use my code.
 
-  http://bu3sch.de/git/wireless-dev.git/ for-linville
+> Do you make deals with companies?
 
-Mostly bugfixes.
+Not yet. Maybe in future. Who knows...
 
-Michael Buesch:
-      bcm43xx-mac80211: Fix 2050 radio init value restore for lb gain devices.
-      bcm43xx-mac80211: vstack: Fix slight bug and add debugging
-      bcm43xx-mac80211: Add more VStack debugging.
-      bcm43xx-mac80211: Remove old unsupported devs from the PCI list.
-      bcm43xx-mac80211: Update my email address.
-      bcm43xx-mac80211: LO setup: Registers are ORed, not overwritten.
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-dev
-      bcm43xx-mac80211: Fix extlna flag for 2050 init
-      ssb: Do pci core init on attach stage.
-      ssb: use container_of for the dev-wrapper.
-      ssb: kfree devwrap (not dev) in dev register error path.
-      bcm43xx-mac80211: Fix hwencryption breakage for latest firmware.
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-dev
-      bcm43xx-mac80211: Replace vstack in LO setup by a data structure.
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-dev
-      bcm43xx-mac80211: Remove the "vstack" and its remaining uses.
+> Do you do those deals publically?
 
- drivers/net/wireless/mac80211/bcm43xx/Makefile     |   16 +-
- drivers/net/wireless/mac80211/bcm43xx/bcm43xx.h    |   33 ++-
- .../wireless/mac80211/bcm43xx/bcm43xx_debugfs.c    |    2 
- .../net/wireless/mac80211/bcm43xx/bcm43xx_dma.c    |    2 
- .../net/wireless/mac80211/bcm43xx/bcm43xx_leds.c   |    2 
- drivers/net/wireless/mac80211/bcm43xx/bcm43xx_lo.c |  177 ++++++++++--------
- .../net/wireless/mac80211/bcm43xx/bcm43xx_main.c   |   86 +++++-----
- .../net/wireless/mac80211/bcm43xx/bcm43xx_main.h   |    2 
- .../net/wireless/mac80211/bcm43xx/bcm43xx_pcmcia.c |    2 
- .../net/wireless/mac80211/bcm43xx/bcm43xx_phy.c    |  119 ++++++++------
- .../net/wireless/mac80211/bcm43xx/bcm43xx_pio.c    |    2 
- .../net/wireless/mac80211/bcm43xx/bcm43xx_power.c  |    2 
- .../net/wireless/mac80211/bcm43xx/bcm43xx_power.h  |    2 
- .../net/wireless/mac80211/bcm43xx/bcm43xx_sysfs.c  |    2 
- .../net/wireless/mac80211/bcm43xx/bcm43xx_tables.c |    2 
- .../net/wireless/mac80211/bcm43xx/bcm43xx_vstack.c |  202 -----------------------
- .../net/wireless/mac80211/bcm43xx/bcm43xx_vstack.h |   83 ---------
- .../net/wireless/mac80211/bcm43xx/bcm43xx_xmit.c   |   12 -
- .../net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h   |   35 ++++
- drivers/ssb/main.c                                 |   14 +
- include/linux/ssb/ssb.h                            |    4 
- 21 files changed, 307 insertions(+), 494 deletions(-)
- delete mode 100644 drivers/net/wireless/mac80211/bcm43xx/bcm43xx_vstack.c
- delete mode 100644 drivers/net/wireless/mac80211/bcm43xx/bcm43xx_vstack.h
+That depends on what the company does.
+If the company illegally distributes my code to the public,
+I _will_ contact them in public as well.
+
+If they contact me in private _before_ distributing the code,
+I will respond in private.
+
+The exact same thing would have been true for you.
+But you did _not_ do any effort to contact me before distributing
+my code.
+
+> What are you saying?
+> 
+> Was Marcus suppose do to have some sort of deal with you?
+
+The deal was: He asks for relicensing-permission on
+a particular faction of my code and I ACK or deny it.
+
+I explained the exact deal more than once.
 
 -- 
 Greetings Michael.
