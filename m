@@ -1,87 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:27436 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992748AbXDDIqs (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:48708
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752156AbXDERAv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Apr 2007 04:46:48 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so583933uga
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Apr 2007 01:46:46 -0700 (PDT)
-Message-ID: <1ba2fa240704040145l2aa8eb35hd2ef77b5475a03a3@mail.gmail.com>
-Date: Wed, 4 Apr 2007 11:45:53 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: debugfs.c and DEBUG COUNTERS
-Cc: linux-wireless@vger.kernel.org
+	Thu, 5 Apr 2007 13:00:51 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Theo de Raadt <deraadt@cvs.openbsd.org>
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues
+Date: Thu, 5 Apr 2007 18:59:46 +0200
+Cc: Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joseph Jezak <josejx@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+References: <200704042222.l34MMYCr009965@cvs.openbsd.org>
+In-Reply-To: <200704042222.l34MMYCr009965@cvs.openbsd.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200704051859.47207.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-debugfs.c fails comillation if CONFIG_MAC80211_DEBUG_COUNTERS is not defined
-Here is a quick patch. Not sure it's correct but now it compiles.
+On Thursday 05 April 2007 00:22, Theo de Raadt wrote:
+> >  [citing Michael, Date unknown]
+> > "What if Broadcom decides to take our LO measure state machine and
+> > put it into the original driver? (The Rev Engineers told me they have
+> > a very different weird solution for this in their code).
+> > I really don't want to see this happen."
+> 
+> For the record, I want to warn you that you CANNOT COPYRIGHT
+> A STATE MACHINE, which is what the above sentence implies.
 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 419da6a..75043dd 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -253,6 +253,8 @@ DEBUGFS_DEVSTATS_FILE(dot11RTSFailureCount);
- DEBUGFS_DEVSTATS_FILE(dot11FCSErrorCount);
- DEBUGFS_DEVSTATS_FILE(dot11RTSSuccessCount);
+> You can copyright the actual way it is written ('expression'), but you
 
-+#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
-+
- static ssize_t stats_wme_rx_queue_read(struct file *file,
-                                       char __user *userbuf,
-                                       size_t count, loff_t *ppos)
-@@ -293,6 +295,7 @@ static const struct file_operations
-stats_wme_tx_queue_ops = {
-        .open = mac80211_open_file_generic,
- };
+We explicitely takled about the IMPLEMENTATION. An Implementation _is_
+"the way it is written". Fullstop.
 
-+#endif
+> Whoever Michael is, that comment above about using the GPL as a patent
+> like tool is crazy.  And if you think that the GPL has any binding
+> against Broadcom copying the idea of your state machine, you are
+> quite deluded.
 
- void debugfs_hw_add(struct ieee80211_local *local)
- {
-@@ -360,13 +363,13 @@ void debugfs_hw_add(struct ieee80211_local *local)
-        DEBUGFS_STATS_ADD(rx_expand_skb_head2);
-        DEBUGFS_STATS_ADD(rx_handlers_fragments);
-        DEBUGFS_STATS_ADD(tx_status_drop);
-+       DEBUGFS_STATS_ADD(wme_tx_queue);
-+       DEBUGFS_STATS_ADD(wme_rx_queue);
- #endif
-        DEBUGFS_STATS_ADD(dot11ACKFailureCount);
-        DEBUGFS_STATS_ADD(dot11RTSFailureCount);
-        DEBUGFS_STATS_ADD(dot11FCSErrorCount);
-        DEBUGFS_STATS_ADD(dot11RTSSuccessCount);
--       DEBUGFS_STATS_ADD(wme_tx_queue);
--       DEBUGFS_STATS_ADD(wme_rx_queue);
- }
+Please read my mail more carefully in the first place, please.
 
- void debugfs_hw_del(struct ieee80211_local *local)
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index aa3035b..1790902 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -223,8 +223,10 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
-        DEBUGFS_ADD(last_ack_ms);
-        DEBUGFS_ADD(inactive_ms);
-        DEBUGFS_ADD(last_seq_ctrl);
-+#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
-        DEBUGFS_ADD(wme_rx_queue);
-        DEBUGFS_ADD(wme_tx_queue);
-+#endif
- }
-
- void ieee80211_sta_debugfs_remove(struct sta_info *sta)
-@@ -235,9 +237,10 @@ void ieee80211_sta_debugfs_remove(struct sta_info *sta)
-        DEBUGFS_DEL(last_ack_ms);
-        DEBUGFS_DEL(inactive_ms);
-        DEBUGFS_DEL(last_seq_ctrl);
-+#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
-        DEBUGFS_DEL(wme_rx_queue);
-        DEBUGFS_DEL(wme_tx_queue);
--
-+#endif
-        debugfs_remove(sta->debugfs.dir);
-        sta->debugfs.dir = NULL;
- }
+-- 
+Greetings Michael.
