@@ -1,40 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59818
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755143AbXDZVgy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2007 17:36:54 -0400
-Date: Thu, 26 Apr 2007 14:37:01 -0700 (PDT)
-Message-Id: <20070426.143701.131919386.davem@davemloft.net>
-To: jt@hpl.hp.com
-Cc: mb@bu3sch.de, johannes@sipsolutions.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 7/9] wext: reduce inline abuse
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20070426171517.GA22667@bougret.hpl.hp.com>
-References: <20070426165032.GB22576@bougret.hpl.hp.com>
-	<200704261903.27932.mb@bu3sch.de>
-	<20070426171517.GA22667@bougret.hpl.hp.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from cvs.openbsd.org ([199.185.137.3]:15877 "EHLO cvs.openbsd.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1767196AbXDESf6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2007 14:35:58 -0400
+Message-Id: <200704051832.l35IWcXk001005@cvs.openbsd.org>
+To: Michael Buesch <mb@bu3sch.de>
+cc: Joseph Jezak <josejx@gentoo.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
+In-reply-to: Your message of "Thu, 05 Apr 2007 20:30:03 +0200."
+             <200704052030.03939.mb@bu3sch.de>
+Date: Thu, 05 Apr 2007 12:32:38 -0600
+From: Theo de Raadt <deraadt@cvs.openbsd.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jean Tourrilhes <jt@hpl.hp.com>
-Date: Thu, 26 Apr 2007 10:15:17 -0700
-
-> On Thu, Apr 26, 2007 at 07:03:27PM +0200, Michael Buesch wrote:
-> > 
-> > Sure, other people have different opinions on that, but I think
-> > with my approach we get smallest code with good speed.
+> On Thursday 05 April 2007 20:00, Theo de Raadt wrote:
+> > The most striking thing about this is that I am sure you guys are
+> > treating Marcus worse than you would treat a company using your code
+> > against license.  You would privately mail a company, I am sure of it.
 > 
-> 	Try with gcc-3.3 if you don't trust me. Your patch will
-> produce bigger and slower code. Thanks.
+> This is the proof that you read mails in the way you want
+> them to be. You should indead read my mail and _not_ interpret
+> your personal foobar into my words.
 
-A broken compiler is not an argument for keeping all of these
-bogus inlines around.
+On the contrary, I am reading the mails in the way that Marcus Glocker
+read it, before he deleted the driver, because I have at least some
+fucking empathy in my soul.
 
-It is the compilers job to optimize things correctly, and current
-gcc's do.
+> We do not treat Marcus bad in any way.
 
-We've always had this approach to dealing with compiler "issues".
+That is a complete lie.  You called him a thief, and PRESUMED that he
+did it on purpose.  In later mails privately to me you said that you
+did not call him a thief of even imply it (I quote, "the word thief
+was not even in my mind when I wrote it"), but then in your next
+public mail you directly contradicted that again by saying you are
+completely convinced he did it on purpose.  You cannot have it both
+ways; there is only one interpretation, that being that you are
+accusing him of theft, just in other words.
+
+> The opposite is true. We offered the explicit opportunity to
+> get (some of the) code relicensed, if he starts to work together
+> with us.
+
+You have no understanding of how human beings work.  You maligned someone
+by saying he did it intentionally, therefore your explicit opportunities
+are bullshit.  Or are you now going to say that all the functions he
+is using are OK to use?
+
+No, you wanted him to come begging, after you called him a thief.  You
+obviously have no understanding of how human beings operate.
+
+> > Your postings have been simply inhuman.
+> > 
+> > And I will go out of my way to ensure that anyone in the future
+> > understands that is our viewpoint on this.
+> 
+> fine.
+
