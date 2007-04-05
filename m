@@ -1,40 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:44085 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754178AbXDRSbv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2007 14:31:51 -0400
-Date: Wed, 18 Apr 2007 20:31:51 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rx racing against removing interfaces?
-Message-ID: <20070418203151.30f32933@griffin.suse.cz>
-In-Reply-To: <1174950322.25887.59.camel@johannes.berg>
-References: <1174950322.25887.59.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from cvs.openbsd.org ([199.185.137.3]:18950 "EHLO cvs.openbsd.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932330AbXDEAce (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Apr 2007 20:32:34 -0400
+Message-Id: <200704050029.l350TiP6025711@cvs.openbsd.org>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+cc: Michael Buesch <mb@bu3sch.de>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joseph Jezak <josejx@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
+In-reply-to: Your message of "Thu, 05 Apr 2007 02:18:05 +0200."
+             <20070405021805.5da85e5e@localhost>
+Date: Wed, 04 Apr 2007 18:29:44 -0600
+From: Theo de Raadt <deraadt@cvs.openbsd.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 27 Mar 2007 01:05:22 +0200, Johannes Berg wrote:
-> Isn't there a race there when you remove interfaces and at the same time
-> __ieee80211_rx is running? I don't see anything that should stop that,
-> and if it happens we'll probably blow up pretty spectacularly with
-> accesses to a freed netdev, or even sending it frames...
+> Who is mean here? Again, we aren't out for blood. I don't care for who is
+> mean here. But if you do, you should be a bit more careful before insulting
+> people.
 
-Yes, there is a race.
+OH i get it.  I'm insulting you, but you guys are not mean by taking it
+widely public.  No private mail received anyone.
 
-- sta_info should be holding a reference to a net_device in its dev
-  field (sta_info_add).
-- walking through the local->sub_if_list in __ieee80211_rx should
-  happen under a lock
-- while invoking rx handlers in the list_for_each_entry loop (they
-  shouldn't be called under the lock above - hm, another thing that
-  makes locking in mac80211 hard) we should hold a reference to the
-  appropriate net_device
+> Plus, I think the mail was sent to the specific people for this
+> issue. Would you please tell me who is not "specific" here?
 
- Jiri
+How about we start with the following people, who do not seem like the
+specific people to mail.
 
--- 
-Jiri Benc
-SUSE Labs
+Martin Langer <martin-langer@gmx.de>
+Danny van Dyk <kugelfang@gentoo.org>
+Andreas Jaggi <andreas.jaggi@waterwave.ch>
+Larry Finger <larry.finger@lwfinger.net>
+Quaker.Fang@sun.com
+Johannes Berg <johannes@sipsolutions.net>
+Joseph Jezak <josejx@gentoo.org>
+John Linville <linville@tuxdriver.com>
+Greg kh <greg@kroah.com>
+bcm43xx-dev@lists.berlios.de
+linux-wireless@vger.kernel.org
+license-violation@gpl-violations.org
+
+If Marcus Glocker just gives up now, and aborts his efforts, I would
+not be surprised.  I'd be a bit dissapointed but then it is just the
+increasingly rare Broadcom chipset.
+
+If he quit, I would understand his position completely, based on the
+first contact with him about this issue BEING A PUBLIC DRAG THROUGH
+THE MUD BY YOU GUYS.
+
+This infighting between two teams trying to support the same chipset
+is a complete mockery of the publicness of the original reverse
+engineering effort.  My guess is that Michael is thinking very
+carefully about whether starting the discussion in public was the
+right thing to do, but I am very sure that Stefano jumping in to lob a
+second volley of mud helps noone's cause, especially Michael's cause.
+Stefano, if you want this resolved nicely, I suggest you think before
+you send more mail.
+
+> Maintaining whitespace and variable names. 
+
+Copyrighted whitespaces and variable names, you mean, right?
+
