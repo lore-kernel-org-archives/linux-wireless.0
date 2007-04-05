@@ -1,59 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44100 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44964 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965672AbXDBSjE (ORCPT
+	with ESMTP id S1767338AbXDEVhx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2007 14:39:04 -0400
-Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
+	Thu, 5 Apr 2007 17:37:53 -0400
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues
 From: Johannes Berg <johannes@sipsolutions.net>
-To: mabbas <mabbas@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <4611F47F.2060809@linux.intel.com>
-References: <1174909200.1364.56.camel@dell-4965.jf.intel.com>
-	 <1175111599.5151.123.camel@johannes.berg>
-	 <4611F47F.2060809@linux.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2igsy9B9zjXRqf99E574"
-Date: Mon, 02 Apr 2007 20:38:23 +0200
-Message-Id: <1175539103.16379.3.camel@johannes.berg>
+To: Theo de Raadt <deraadt@cvs.openbsd.org>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Pavel Roskin <proski@gnu.org>, Michael Buesch <mb@bu3sch.de>,
+	Joseph Jezak <josejx@gentoo.org>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+In-Reply-To: <200704052125.l35LPuXB019703@cvs.openbsd.org>
+References: <200704052125.l35LPuXB019703@cvs.openbsd.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-b58FUQUYslrXPA/Kdj1e"
+Date: Thu, 05 Apr 2007 23:36:27 +0200
+Message-Id: <1175808987.3489.18.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-2igsy9B9zjXRqf99E574
+--=-b58FUQUYslrXPA/Kdj1e
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2007-04-02 at 23:30 -0700, mabbas wrote:
+On Thu, 2007-04-05 at 15:25 -0600, Theo de Raadt wrote:
 
-> I am calling ieee80211_rx_h_data_agg after ieee80211_rx_h_remove_qos_cont=
-rol which
-> clears all QoS data which include QOS_CONTROL_A_MSDU_PRESENT bit. We can =
-solve this by
-> adding new field is_frame_agg to ieee80211_txrx_data.u.rx.is_frame_agg wh=
-ich will be set in
-> ieee80211_rx_h_parse_qos or we can add new function to ieee80211_rx_pre_h=
-andlers just to do that. the other=20
-> option is to shuffle calling sequence here if that possible to call ieee8=
-0211_rx_h_data_agg
-> before ieee80211_rx_h_remove_qos_control. any opinion?
+> Cooperation is not built on that.  Maybe you specifically don't care
+> about cooperation, but I am sure there are others who do.  So perhaps
+> watch your words.
 
-Since it's part of the QoS stuff that .11n adds I think we should stick
-it into the qos parser.
+How you can *possibly* expect cooperation from a group of people who
+ * just discovered that somebody has taken large parts of their code
+ * removed their attribution
+ * relicensed them under a much more permissive license
+ * /then/ claims that it was "an honest mistake"
+ * also claims that the license (GPL in this case) isn't relevant
+   because the code doesn't "run" (hint: GPL covers redistribution too,
+   no matter if the code runs or not)
+
+is totally beyond me.
+
+Yet Michael offered it.
 
 johannes
 
---=-2igsy9B9zjXRqf99E574
+--=-b58FUQUYslrXPA/Kdj1e
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGEU2f/ETPhpq3jKURAi0nAKClMHIdZP2ViDHY9W2YzULUZjNEggCgiYPT
-AeElc5DXULHRCSWG4IQSlLc=
-=vGhZ
+iD8DBQBGFWvb/ETPhpq3jKURAvNsAKCCDQW8SyFOGCMlINLInmb/6RbsRQCglBOl
+Cmat9FG8VdxqQgdnhyY/93w=
+=QDCO
 -----END PGP SIGNATURE-----
 
---=-2igsy9B9zjXRqf99E574--
+--=-b58FUQUYslrXPA/Kdj1e--
 
