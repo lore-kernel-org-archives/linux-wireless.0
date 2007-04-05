@@ -1,82 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47475 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767246AbXDTUvP (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:38203 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767230AbXDETbs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Apr 2007 16:51:15 -0400
-Subject: Re: [PATCH] wext: allow wext users without rtnl
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: shemminger@linux-foundation.org, linville@tuxdriver.com,
-	flamingice@sourmilk.net, linux-wireless@vger.kernel.org
-In-Reply-To: <20070420.133257.32722308.davem@davemloft.net>
-References: <1176825010.3902.28.camel@johannes.berg>
-	 <20070418140451.075370fc@freekitty>
-	 <1177098521.5902.20.camel@johannes.berg>
-	 <20070420.133257.32722308.davem@davemloft.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6EchTCA8ofjZxyVd3tV4"
-Date: Fri, 20 Apr 2007 22:53:42 +0200
-Message-Id: <1177102423.5902.38.camel@johannes.berg>
+	Thu, 5 Apr 2007 15:31:48 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HZXeC-0005YL-Ee
+	for linux-wireless@vger.kernel.org; Thu, 05 Apr 2007 15:29:28 -0400
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues
+From: Pavel Roskin <proski@gnu.org>
+To: Theo de Raadt <deraadt@cvs.openbsd.org>
+Cc: Michael Buesch <mb@bu3sch.de>, Joseph Jezak <josejx@gentoo.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+In-Reply-To: <200704051848.l35ImrcP028396@cvs.openbsd.org>
+References: <200704051848.l35ImrcP028396@cvs.openbsd.org>
+Content-Type: text/plain
+Date: Thu, 05 Apr 2007 15:31:27 -0400
+Message-Id: <1175801487.19303.52.camel@dv>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2007-04-05 at 12:48 -0600, Theo de Raadt wrote:
 
---=-6EchTCA8ofjZxyVd3tV4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> No, your message offered that he can come begging, because that is the
+> best that thieves may do.
+> 
+> Come little dog, come beg for forgiveness.
+> 
+> You are a very poor example of humankind.
 
-On Fri, 2007-04-20 at 13:32 -0700, David Miller wrote:
+Theo,
 
-> > Then again, holding rtnl in cfg80211 would simplify some things because
-> > we could pass in a netdev pointer instead of the ifindex for example.
-> >=20
-> > If you think I can justify holding rtnl in cfg80211 I'm certainly
-> > willing to change that. Global locks are just too suspicious to me ;)
->=20
-> It is true that things like IPSEC configuration via xfrm_user.c
-> uses it's own mutex, so there is precedence for splitting up
-> the locking where things are truly seperate.
+I'm a member of linux-wireless list, an occasional contributor to
+bcm43xx and a MadWifi developer.
 
-:)
+It has been a few months ago that I was feeling bad for another OpenBSD
+driver developer.  The MadWifi team asked him to relicense parts of the
+driver (so called openhal) under GPL so that if would be easier for us
+to erase the boundary between the HAL and the rest of MadWifi and
+eventually integrate it into the Linux kernel.
 
-> But changing things like MAC addresse changes, which you mention, do
-> fall into the existing scope of the RTNL semaphore.
+We got a message from you, which was rather abusive, and it just made
+impossible for that OpenBSD developer to do anything but to deny our
+request.  I was feeling bad for him, because it was his code.  I would
+not want to be in a similar situation.
 
-Actually, just thought about mac address change again, it is only
-permitted when devices are down anyway and at that point nothing can
-race since wireless devices that are down just store configuration for
-when they're up (or ignore it)
+Now you are asking us to be sensitive towards somebody who just took the
+code under GPL and put it under BSD license without asking any
+questions, nicely or otherwise.
 
-> If it simplifies things, all the reason more to use it for cfg80211.
+I'm sorry, but your Harlequin show is woefully unconvincing and
+out-of-date.  Knowing something about you, I think a "sensitive OpenBSD
+developer" is an oxymoron.
 
-A few places could use a netdev pointer instead of ifindex but I don't
-feel it's much of a simplification for callees. This is only an issue
-for two or three calls that cannot hold a netdev reference because the
-device will be removed by the driver/stack.
+I don't want to fan the flames anymore, so it's probably my one and only
+posting regarding this topic, unless you give me a good reason to reply.
+But please don't try.
 
-Since the discussion came up due to dropping the rtnl from wext I think
-that it may be beneficial if we added rtnl locking to cfg80211 now to
-simplify migration away from wext which holds rtnl and then revisit the
-locking when we can drop wext completely from the mac80211 code. That
-would allow us to revisit rtnl locking for wext when we have completely
-migrated to cfg80211 and wext is only handled through cfg80211.
-
-Does that sound like an acceptable way forward?
-
-johannes
-
---=-6EchTCA8ofjZxyVd3tV4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGKShW/ETPhpq3jKURAnUSAJ4sQ2cnXKrQmnMYiM4DjQERaQgnuACfcvn8
-fX8uPN8INcZzZsOaxKRAj3A=
-=zHhL
------END PGP SIGNATURE-----
-
---=-6EchTCA8ofjZxyVd3tV4--
+-- 
+Regards,
+Pavel Roskin
 
