@@ -1,72 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3959 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030684AbXDQPpn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2007 11:45:43 -0400
-Date: Tue, 17 Apr 2007 11:21:03 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>, Andreas Schwab <schwab@suse.de>,
-	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] ieee80211-crypt: Make some TKIP and CCMP error logging conditional on IEEE80211_DEBUG_DROP
-Message-ID: <20070417152103.GC8633@tuxdriver.com>
-References: <461a68c9.Nx0/XQSxDR1PJhM4%Larry.Finger@lwfinger.net> <jeirbwfb55.fsf@sykes.suse.de> <4623C561.4030201@lwfinger.net> <200704162237.01280.mb@bu3sch.de> <462413AE.9020200@lwfinger.net> <20070417131222.GA8633@tuxdriver.com> <1176819909.26202.33.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1176819909.26202.33.camel@localhost.localdomain>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:54733
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767147AbXDERgZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2007 13:36:25 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Theo de Raadt <deraadt@cvs.openbsd.org>
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues
+Date: Thu, 5 Apr 2007 19:35:35 +0200
+Cc: Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joseph Jezak <josejx@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+References: <200704051700.l35H0Cc7027001@cvs.openbsd.org>
+In-Reply-To: <200704051700.l35H0Cc7027001@cvs.openbsd.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200704051935.36264.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 17, 2007 at 10:25:08AM -0400, Dan Williams wrote:
-> On Tue, 2007-04-17 at 09:12 -0400, John W. Linville wrote:
-> > On Mon, Apr 16, 2007 at 07:24:14PM -0500, Larry Finger wrote:
-> > > Michael Buesch wrote:
-> > > > On Monday 16 April 2007 20:50, Larry Finger wrote:
-> > 
-> > > >> @@ -229,6 +229,7 @@ void free_ieee80211(struct net_device *d
-> > > >>
-> > > >>   static int debug = 0;
-> > > >>   u32 ieee80211_debug_level = 0;
-> > > >> +EXPORT_SYMBOL_GPL(ieee80211_debug_level);
-> > > > 
-> > > > We don't use the _GPL suffix in mac80211.
-> > > 
-> > > Upon inspection, neither does most of ieee80211. It is now changed.
-> > 
-> > You are strongly encouraged to use the _GPL version for new symbol
-> > exports, especially those which are fundamentally internal to
-> > in-kernel subsystems and/or have no reasonable usage by drivers.
-> > FWIW, this symbol would seem to fulfill both of those criteria.
-> > 
-> > If you do not object, I would prefer the _GPL version of the patch.
+On Thursday 05 April 2007 19:00, Theo de Raadt wrote:
+> > No. I'd like _you_ to make "your" developers aware of the issue
+> > that you'd like to have the openbsd tree clean, in the first place.
 > 
-> What's the rationale for mac80211 _not_ using _GPL exports? I thought
-> most new exports were pretty much required to be _GPL (otherwise
-> somebody would NAK it) unless it was really, really necessary that they
-> weren't.
+> I make developers aware.  Marcus was aware.  He made a few mistakes.
+> You don't believe him.
+> 
+> That's fine.  We don't believe your public flogging was the kind and
+> right way to approach this whole problem.
+> 
+> But the issue is over.  The code has been entirely deleted.
+> 
+> I hope you are happy.  I am sure Marcus is not happy, because he's
+> thrown away about 800 hours of hobby work.  But it is easier for him
+> to just abandon this, based on the strength of your initial mail.
 
-An argument against _GPL exports for mac80211 might be leaving the
-exports alone as a token of gratitude or respect towards Devicescape
-for having seeded the development of mac80211 with a big chunk of code.
-While I do thank Devicescape for their support, I'm not sure that
-this argument would be truly compelling.
+I'm sorry if the mail sounded too strong. This was not intentional.
+But I think I made a great effort to make this clear, though.
+I am not out for blood.
 
-A more presuasive argument in favor of this pragmatism is that
-it would be counter-productive to discourage driver availability.
-At this point regulatory issues are still enough of a spectre that
-some vendors will want the option of offering non-GPL drivers.
-Such drivers would clearly not be redistributable, but there are
-arguments that allow for such drivers (i.e. "the user installed
-the driver -- not us", etc like Nvidia video drivers).  Of course,
-no one likes enabling this kind of "bad behaviour".
+> I mean, if I were him, why would I bother going on,
 
-Probably the best reason in favor of leaving them as-is is that they
-were written that way by their original author(s).
+To get your broadcom cards working on bsd??
+Really, there's no single other reason to write a driver.
 
-Should I ask for opinionated discussion on the matter? :-)
+> when there are 
+> accusations about copyright being based on white space, variable
+> names which are the same, or simple "save the registers" algorithms
+> which you feel are too similar.
 
-John
+I did _never_ base by arguments on these things. I explicitely
+marked these things in the mail as being EXAMPLES for the most
+obvious 1:1 copying going on.
+
+> I'd say he did the right thing to give up.
+
+Only if you don't need a Broadcom wireless driver.
+
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
