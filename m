@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:47164 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755959AbXD0Trd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2007 15:47:33 -0400
-Date: Fri, 27 Apr 2007 21:47:54 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Dan Williams <dcbw@redhat.com>
-Cc: James Ketrenos <jketreno@linux.intel.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
-Message-ID: <20070427214754.532ccfda@griffin.suse.cz>
-In-Reply-To: <1177702975.4438.0.camel@localhost.localdomain>
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-	<200704251634.16604.flamingice@sourmilk.net>
-	<46312067.9090005@linux.intel.com>
-	<200704262023.52833.flamingice@sourmilk.net>
-	<1177684132.21025.36.camel@localhost.localdomain>
-	<20070427164208.25434f11@griffin.suse.cz>
-	<1177685793.21025.52.camel@localhost.localdomain>
-	<20070427172004.32b7bf4a@griffin.suse.cz>
-	<46322CA9.7090606@linux.intel.com>
-	<20070427201054.61b9bc4c@griffin.suse.cz>
-	<1177702975.4438.0.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from sccrmhc14.comcast.net ([63.240.77.84]:34948 "EHLO
+	sccrmhc14.comcast.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752960AbXDEA6G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Apr 2007 20:58:06 -0400
+Message-ID: <46144855.9020503@gentoo.org>
+Date: Wed, 04 Apr 2007 20:52:37 -0400
+From: Joseph Jezak <josejx@gentoo.org>
+MIME-Version: 1.0
+To: Theo de Raadt <deraadt@cvs.openbsd.org>
+CC: Stefano Brivio <stefano.brivio@polimi.it>,
+	Michael Buesch <mb@bu3sch.de>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues
+References: <200704050029.l350TiP6025711@cvs.openbsd.org>
+In-Reply-To: <200704050029.l350TiP6025711@cvs.openbsd.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 27 Apr 2007 15:42:55 -0400, Dan Williams wrote:
-> I don't see how they could possibly conflict methodically.  They are two
-> paths to the same result.  Or do you mean currently conflict technically
-> in the code?
+> Johannes Berg <johannes@sipsolutions.net>
+> Joseph Jezak <josejx@gentoo.org>
 
-The latter.
+We are two members of the reverse engineering team as can be
+verified by looking at the specification.
 
- Jiri
+> This infighting between two teams trying to support the same chipset
+> is a complete mockery of the publicness of the original reverse
+> engineering effort. 
 
--- 
-Jiri Benc
-SUSE Labs
+As one of the reverse engineers, the reason for the openness of
+writing the specification was to ensure that the Chinese Wall method
+was maintained.
+
+To date, I have not been contacted by any of the bcw programmers
+regarding clarification of the specification, but I would welcome
+any questions they might have.
+
+-Joe
