@@ -1,47 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:35638
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S2992707AbXDRVJ4 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.169]:53604 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767404AbXDEXAL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2007 17:09:56 -0400
-Date: Wed, 18 Apr 2007 14:09:56 -0700 (PDT)
-Message-Id: <20070418.140956.116355415.davem@davemloft.net>
-To: shemminger@linux-foundation.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	flamingice@sourmilk.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wext: allow wext users without rtnl
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20070418140451.075370fc@freekitty>
-References: <1176825010.3902.28.camel@johannes.berg>
-	<20070418140451.075370fc@freekitty>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 5 Apr 2007 19:00:11 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so1093450uga
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Apr 2007 16:00:10 -0700 (PDT)
+To: Theo de Raadt <deraadt@cvs.openbsd.org>
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues
+Date: Fri, 6 Apr 2007 00:59:24 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Pavel Roskin <proski@gnu.org>, Michael Buesch <mb@bu3sch.de>,
+	Joseph Jezak <josejx@gentoo.org>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+References: <200704052139.l35LdHhb006295@cvs.openbsd.org>
+In-Reply-To: <200704052139.l35LdHhb006295@cvs.openbsd.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
+Message-Id: <200704060059.24876.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-Date: Wed, 18 Apr 2007 14:04:51 -0700
+> >  * removed their attribution
+>=20
+> The attribution was never to be added, because a couple of functions
+> were copied in temporarily to help development of other functions, an=
+d
+> then they were accidentally commited.
 
-> On Tue, 17 Apr 2007 17:50:10 +0200
-> Johannes Berg <johannes@sipsolutions.net> wrote:
-> 
-> > This patch modifies wext adding a flag that allows drivers to specify that
-> > they do not wish their wext calls made under rtnl. The default is to still
-> > acquire the rtnl.
-> > 
-> > Warning: a device reference is held for the new no_locking API,
-> > therefore it is not safe to call unregister_netdev on the passed device!
-> > 
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > 
-> >
-> 
-> NACK Conditional locking is bad design.
-> Either lock or not, make up your mind and fix the devices.
+To be honest it is completely beyond me how somebody manages
+to read code, considers it usefull (and thus has read the code in such =
+a way
+that he was searching for something usefull), copy'n'paste the code and=
+ commits
+the code to cvs. And at the end of the day claims that it is an acciden=
+t.
 
-It is also wrong because all entities in the kernel assume
-that network configuration changes all occur under the RTNL
-therefore it must be held consistently everywhere.
+> It was an accident for him to commit it. =A0But it was no accident yo=
+u
+> decided to make a public fuss about it. =A0Now you have your public
+> fuss.
 
-I don't know what kind of deadlock or other issues are being
-worked around here, but you'll have to find another way.
+Everybody can make his own choice on the manner in which the violation =
+is being
+reported. Yes, Michael could have send a private mail, but he could als=
+o have made
+the violation even more public by adding some mail address that would h=
+ave started
+an even bigger flamewar.
+But note that 75% of the people following this thread would not have ta=
+ken too much
+interest into this violation when you did not jump into the trenches an=
+d starting to insult
+people in order to make a big fuzz about it
+
+You have your reasons for wanting a discussion about the GPL violation =
+private, Michael
+had his reasons for making more people aware of the situation. Just bec=
+ause somebody
+does not share the same opinion as you don't make him "inhumane", "harm=
+ing cooperation
+between open source projects". Neither is it true that somebody is
+"Not being supportive to the open source community" when he cannot fulf=
+ill your request/demand.
+
+I wonder what upsets you most, the fact that openBSD is not perfect in =
+terms of that the code
+contains a GPL violation or that you were forced into a public debate a=
+bout this while you prefer
+to flame and insult people privately.
+
+Ivo
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
