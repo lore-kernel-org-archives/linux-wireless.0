@@ -1,81 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:33516 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754171AbXDPSsH (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:53718 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1767240AbXDETSA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2007 14:48:07 -0400
-Message-ID: <4623C561.4030201@lwfinger.net>
-Date: Mon, 16 Apr 2007 13:50:09 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Thu, 5 Apr 2007 15:18:00 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Hauke Mehrtens <linux-wireless@hauke-m.de>
+Subject: Re: no reassociateing with rtl8187 driver
+Date: Thu, 5 Apr 2007 15:15:44 -0400
+Cc: linux-wireless@vger.kernel.org
+References: <46140CD0.3010205@hauke-m.de>
+In-Reply-To: <46140CD0.3010205@hauke-m.de>
 MIME-Version: 1.0
-To: Andreas Schwab <schwab@suse.de>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] ieee80211-crypt: Make some TKIP and CCMP error logging  conditional on IEEE80211_DEBUG_DROP
-References: <461a68c9.Nx0/XQSxDR1PJhM4%Larry.Finger@lwfinger.net> <jeirbwfb55.fsf@sykes.suse.de>
-In-Reply-To: <jeirbwfb55.fsf@sykes.suse.de>
-Content-Type: multipart/mixed;
- boundary="------------060403030808010702070102"
+Content-Type: multipart/signed;
+  boundary="nextPart1304159.yykWSaVPxV";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704051515.49161.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------060403030808010702070102
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Andreas Schwab wrote:
-> 
-> This is causing an undefined refrence to ieee80211_debug_level with
-> CONFIG_IEEE80211_DEBUG=y and CONFIG_IEEE80211_CRYPT_CCMP=m and/or
-> CONFIG_IEEE80211_CRYPT_TKIP=m.
-> 
-> WARNING: "ieee80211_debug_level" [net/ieee80211/ieee80211_crypt_tkip.ko] undefined!
-> WARNING: "ieee80211_debug_level" [net/ieee80211/ieee80211_crypt_ccmp.ko] undefined!
-> 
-> Andreas.
-
-The missing symbol was not exported by ieee80211_module.c. Sorry for not testing enough. The fix is 
-as follows:
-
-Index: wireless-2.6/net/ieee80211/ieee80211_module.c
-===================================================================
---- wireless-2.6.orig/net/ieee80211/ieee80211_module.c
-+++ wireless-2.6/net/ieee80211/ieee80211_module.c
-@@ -229,6 +229,7 @@ void free_ieee80211(struct net_device *d
-
-  static int debug = 0;
-  u32 ieee80211_debug_level = 0;
-+EXPORT_SYMBOL_GPL(ieee80211_debug_level);
-  static struct proc_dir_entry *ieee80211_proc = NULL;
-
-  static int show_debug_level(char *page, char **start, off_t offset,
-
-
-
---------------060403030808010702070102
+--nextPart1304159.yykWSaVPxV
 Content-Type: text/plain;
- name="missing_debug"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="missing_debug"
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Index: wireless-2.6/net/ieee80211/ieee80211_module.c
-===================================================================
---- wireless-2.6.orig/net/ieee80211/ieee80211_module.c
-+++ wireless-2.6/net/ieee80211/ieee80211_module.c
-@@ -229,6 +229,7 @@ void free_ieee80211(struct net_device *d
- 
- static int debug = 0;
- u32 ieee80211_debug_level = 0;
-+EXPORT_SYMBOL_GPL(ieee80211_debug_level);
- static struct proc_dir_entry *ieee80211_proc = NULL;
- 
- static int show_debug_level(char *page, char **start, off_t offset,
+On Wednesday 04 April 2007 16:38, Hauke Mehrtens wrote:
+> I am using the rtl8187 driver based on the mac80211 stack and it is
+> working pretty well except it can't reassociate to the access point with
+> WEP encryption enabled (I haven't tested without) of which he lost the
+> connection.
+>
+mac80211 doesn't handle reassociation when a connection is lost. It is=20
+recommended to configure mac80211 with either wpa_supplicant or=20
+NetworkManager (which in turn uses wpa_supplicant). However, since we're=20
+trying to have a reasonable level of compatibility with userspace that use=
+=20
+wireless tools directly to connect, some reassociation is probably=20
+appropriate to implement.
 
+=2DMichael Wu
 
---------------060403030808010702070102--
+--nextPart1304159.yykWSaVPxV
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGFUrlT3Oqt9AH4aERAutZAKDNzan7TBDaaHscNCHp+z/y84KqhwCeNaUC
+civ/y1wEXgo6Y1kNPowOYow=
+=PmXh
+-----END PGP SIGNATURE-----
+
+--nextPart1304159.yykWSaVPxV--
 -: 
 To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 the body of a message to majordomo@vger.kernel.org: 
