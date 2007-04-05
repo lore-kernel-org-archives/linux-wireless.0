@@ -1,75 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:34248 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1031334AbXD2UBO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Apr 2007 16:01:14 -0400
-Date: Sun, 29 Apr 2007 22:01:12 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: mac80211: pull request
-Message-ID: <20070429220112.5703e15c@logostar.upir.cz>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:57729
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767171AbXDERyZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2007 13:54:25 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Theo de Raadt <deraadt@cvs.openbsd.org>
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues
+Date: Thu, 5 Apr 2007 19:53:32 +0200
+Cc: Marcus Glocker <marcus@nazgul.ch>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joseph Jezak <josejx@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+References: <200704051725.l35HPJXt014600@cvs.openbsd.org>
+In-Reply-To: <200704051725.l35HPJXt014600@cvs.openbsd.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200704051953.33685.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please pull from
-git://git.kernel.org/pub/scm/linux/kernel/git/jbenc/mac80211.git up
-to obtain following patches:
+On Thursday 05 April 2007 19:25, Theo de Raadt wrote:
+> But when dealing with a parallel open source effort, you went right to
+> the jugular.  I bet you deal nicer with companies.
 
-James Ketrenos (1):
-      mac80211: Fix ieee80211_sta_config_auth to select networks if rssi < 0
+There was no deal with you!
+You simply took the code.
 
-Jiri Benc (5):
-      mac80211: remove unused code
-      mac80211: remove test_mode
-      mac80211: document requirement for atomicity of callbacks
-      mac80211: add copyrights
-      mac80211: remove hostapd scanning
+> But you, sir, are not in the group of people who try to nicely get
+> problems results.  You publically kick people who make mistakes.
 
-Johannes Berg (1):
-      mac80211: optimise ieee80211_get_hdrlen
-
-Larry Finger (1):
-      mac80211: Add channel to scan results
-
-Michael Wu (18):
-      mac80211: Add radiotap support
-      mac80211: fix virtual interface related locking
-      mac80211: disable tasklets on close
-      mac80211: remove statistics callback for master device
-      mac80211: avoid flush_scheduled_work
-      mac80211: fix configuration concurrency issues in ieee80211_sta.c
-      mac80211: misc cleanups in ieee80211_sta.c
-      mac80211: set bssid to broadcast before scan
-      mac80211: fix issues in ieee80211 qdisc
-      mac80211: prevent master device from going up without ieee80211 qdisc
-      mac80211: stop all virtual interfaces when master device goes down
-      mac80211: kill ieee80211_set_mac_address
-      mac80211: kill ceiling_div
-      mac80211: eliminate forward declarations in ieee80211.c
-      mac80211: set event_capa in iw_range
-      mac80211: suppress warnings
-      mac80211: Allow drivers to configure default regulatory domain
-      mac80211: remove ieee80211_netif_oper
-
- include/net/mac80211.h         |  111 ++++--------
- net/mac80211/Makefile          |    1 -
- net/mac80211/debugfs.c         |    3 -
- net/mac80211/hostapd_ioctl.h   |    3 -
- net/mac80211/ieee80211.c       |  403 ++++++++++++++++++++--------------------
- net/mac80211/ieee80211_cfg.c   |   15 +-
- net/mac80211/ieee80211_i.h     |   50 +-----
- net/mac80211/ieee80211_iface.c |   79 ++++-----
- net/mac80211/ieee80211_ioctl.c |  178 ++++--------------
- net/mac80211/ieee80211_scan.c  |  344 ----------------------------------
- net/mac80211/ieee80211_sta.c   |   75 +++++---
- net/mac80211/sta_info.c        |    5 +-
- net/mac80211/wme.c             |   24 ++--
- net/mac80211/wme.h             |    1 +
- 14 files changed, 370 insertions(+), 922 deletions(-)
+I do not believe this can be called a mistake. It was intentional.
+You cannot copy code by mistake.
 
 -- 
-Jiri Benc
-SUSE Labs
+Greetings Michael.
