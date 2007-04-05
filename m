@@ -1,38 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4750 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751821AbXDUTPd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2007 15:15:33 -0400
-Date: Sat, 21 Apr 2007 14:56:22 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dick <dm@chello.nl>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: mac80211-7.0.4 ieee80211_ptr trouble
-Message-ID: <20070421185622.GA7019@tuxdriver.com>
-References: <1177144052.9892.8.camel@localhost>
+Received: from mfe1.polimi.it ([131.175.12.23]:58823 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1767321AbXDEVXm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2007 17:23:42 -0400
+Date: Thu, 5 Apr 2007 23:19:10 +0200
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Theo de Raadt <deraadt@cvs.openbsd.org>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Pavel Roskin" <proski@gnu.org>, "Michael Buesch" <mb@bu3sch.de>,
+	"Joseph Jezak" <josejx@gentoo.org>,
+	"Marcus Glocker" <mglocker@openbsd.org>,
+	"Jon Simola" <jsimola@gmail.com>,
+	"Theo de Raadt" <deraadt@theos.com>,
+	"Martin Langer" <martin-langer@gmx.de>,
+	"Danny van Dyk" <kugelfang@gentoo.org>,
+	"Andreas Jaggi" <andreas.jaggi@waterwave.ch>,
+	"Larry Finger" <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John Linville" <linville@tuxdriver.com>,
+	"Greg kh" <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues
+Message-ID: <20070405231910.6969b7ac@localhost>
+In-Reply-To: <200704052010.l35KA9S6024250@cvs.openbsd.org>
+References: <43e72e890704051257n1ae26c64k3e05614bea843729@mail.gmail.com>
+	<200704052010.l35KA9S6024250@cvs.openbsd.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1177144052.9892.8.camel@localhost>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 21, 2007 at 10:27:32AM +0200, Dick wrote:
-> Hi all,
-> 
-> I'm trying to compile compatible mac80211 modules with
-> linux-2.6.20-gentoo-r6 but I'm missing the ieee80211_ptr in struct
-> net_device.
-> 
-> /var/tmp/portage/net-wireless/mac80211-7.0.4/work/mac80211-7.0.4/compatible/net/mac80211/ieee80211_ioctl.c: In functie 'ieee80211_ioctl_get_hw_features':
-> /var/tmp/portage/net-wireless/mac80211-7.0.4/work/mac80211-7.0.4/compatible/net/mac80211/ieee80211_ioctl.c:119: fout: 'struct net_device' has no member named 'ieee80211_ptr'
-> /var/tmp/portage/net-wireless/mac80211-7.0.4/work/mac80211-7.0.4/compatible/net/mac80211/ieee80211_ioctl.c: In functie 'ieee80211_ioctl_scan':
-> /var/tmp/portage/net-wireless/mac80211-7.0.4/work/mac80211-7.0.4/compatible/net/mac80211/ieee80211_ioctl.c:172: fout: 'struct net_device' has no member named 'ieee80211_ptr'
-> 
-> What am I doing wrong, what happened to ieee80211_ptr?
+On Thu, 05 Apr 2007 14:10:09 -0600
+Theo de Raadt <deraadt@cvs.openbsd.org> wrote:
 
-You'll have to ask the gentoo guys...
+> No, Marcus Glocker decided this entirely on his own accord.  I gave
+> him specific instructions to decide as he sees fit.  I told him I did
+> not want to influence him.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Oh, and sure you didn't, with your personal flamewar!
+
+You made a drama out of a simple issue. We have been so stupid to follow
+you.
+
+So, what's driving you crazy right now, sorted by relevance:
+1) we went public;
+2) we don't believe that Marcus copied code by mistake;
+3) we are inhuman and we lack empathy.
+
+About the third one, we can't do anything. Coding bcm43xx made us inhuman.
+Plus, we are engineers or even worse species. We even use GPL. Really sorry
+about that.
+
+Now, about the first and second ones. Would telling you you are right help
+you to stop whining and let people focus on the real issue? In case, I
+would promptly tell you that you are right and we are wrong.
+
+
+--
+Ciao
+Stefano
