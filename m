@@ -1,11 +1,14 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cvs.openbsd.org ([199.185.137.3]:40793 "EHLO cvs.openbsd.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767178AbXDESD6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 14:03:58 -0400
-Message-Id: <200704051800.l35I0reU004087@cvs.openbsd.org>
-To: Michael Buesch <mb@bu3sch.de>
-cc: Joseph Jezak <josejx@gentoo.org>,
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41297
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767229AbXDETJv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2007 15:09:51 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Theo de Raadt <deraadt@cvs.openbsd.org>
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues
+Date: Thu, 5 Apr 2007 21:09:00 +0200
+Cc: Joseph Jezak <josejx@gentoo.org>,
 	Stefano Brivio <stefano.brivio@polimi.it>,
 	Marcus Glocker <mglocker@openbsd.org>,
 	Jon Simola <jsimola@gmail.com>,
@@ -19,19 +22,32 @@ cc: Joseph Jezak <josejx@gentoo.org>,
 	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
 	linux-wireless@vger.kernel.org,
 	license-violation@gpl-violations.org
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
-In-reply-to: Your message of "Thu, 05 Apr 2007 19:40:03 +0200."
-             <200704051940.04407.mb@bu3sch.de>
-Date: Thu, 05 Apr 2007 12:00:53 -0600
-From: Theo de Raadt <deraadt@cvs.openbsd.org>
+References: <200704051848.l35ImrcP028396@cvs.openbsd.org>
+In-Reply-To: <200704051848.l35ImrcP028396@cvs.openbsd.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200704052109.00797.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The most striking thing about this is that I am sure you guys are
-treating Marcus worse than you would treat a company using your code
-against license.  You would privately mail a company, I am sure of it.
+I won't reply to your mail anymore, as you are not interrested
+in a real solution to this. Instead you write things like that:
 
-Your postings have been simply inhuman.
+On Thursday 05 April 2007 20:48, Theo de Raadt wrote:
+> You are a very poor example of humankind.
 
-And I will go out of my way to ensure that anyone in the future
-understands that is our viewpoint on this.
+Which has absolutely nothing to do with the issue of
+copyright and GPL violation.
+
+I could say similiar things to you, but I don't.
+I wrote the initial mail to get the issue resolved, but
+not insult you.
+
+Yet, you think it's my turn to be "human" and so on.
+But why did _you_ not be human and asked before using
+our stuff? Ah, I know, it was a mistake...
+At least in your opinion.
+
+-- 
+Greetings Michael.
