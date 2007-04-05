@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49021
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753411AbXDKRXY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2007 13:23:24 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] bcm43xx-mac80211: Fix machine checks on PPC with rev 1 PHYs
-Date: Wed, 11 Apr 2007 19:22:26 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <461d0815.ip3FDr8RDQXyCT4U%Larry.Finger@lwfinger.net>
-In-Reply-To: <461d0815.ip3FDr8RDQXyCT4U%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Message-Id: <200704111922.27087.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Received: from cvs.openbsd.org ([199.185.137.3]:40793 "EHLO cvs.openbsd.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1767178AbXDESD6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2007 14:03:58 -0400
+Message-Id: <200704051800.l35I0reU004087@cvs.openbsd.org>
+To: Michael Buesch <mb@bu3sch.de>
+cc: Joseph Jezak <josejx@gentoo.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
+In-reply-to: Your message of "Thu, 05 Apr 2007 19:40:03 +0200."
+             <200704051940.04407.mb@bu3sch.de>
+Date: Thu, 05 Apr 2007 12:00:53 -0600
+From: Theo de Raadt <deraadt@cvs.openbsd.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 11 April 2007 18:08, Larry Finger wrote:
-> On PPC architecture with phy->rev == 1, machine checks occur during
-> initialization of the "Extended G PHY registers". This problem was
-> also seen on bcm43xx-softmac, and was fixed by conditionally skipping
-> over certain reads/writes of these registers.  The same solution has been
-> applied here with testing by David Woodhouse.  Note: These modifications
-> are not found in the specifications, but are needed for PPC.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> John and Michael,
-> 
-> This patch will apply to both the wireless-dev and the mb trees.
+The most striking thing about this is that I am sure you guys are
+treating Marcus worse than you would treat a company using your code
+against license.  You would privately mail a company, I am sure of it.
 
-Applied to my tree, thanks.
-http://bu3sch.de/gitweb?p=wireless-dev.git;a=commitdiff;h=e25588a08a1b7e0d500c30dd0ccee76d318fe72d
+Your postings have been simply inhuman.
 
--- 
-Greetings Michael.
+And I will go out of my way to ensure that anyone in the future
+understands that is our viewpoint on this.
