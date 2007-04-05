@@ -1,61 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:50191 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161483AbXDLCXu (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50237
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1767314AbXDEVV4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2007 22:23:50 -0400
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1Hbow7-0001bt-Dc
-	for linux-wireless@vger.kernel.org; Wed, 11 Apr 2007 22:21:23 -0400
-Subject: Re: [PATCH] bcm43xx: Hide if bcm43xx-mac80211 is builtin
-From: Pavel Roskin <proski@gnu.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-In-Reply-To: <20070412012051.GC3473@tuxdriver.com>
-References: <200704111901.06403.flamingice@sourmilk.net>
-	 <20070412012051.GC3473@tuxdriver.com>
-Content-Type: text/plain
-Date: Wed, 11 Apr 2007 22:23:43 -0400
-Message-Id: <1176344623.21564.46.camel@dv>
+	Thu, 5 Apr 2007 17:21:56 -0400
+Date: Thu, 05 Apr 2007 14:21:57 -0700 (PDT)
+Message-Id: <20070405.142157.74750261.davem@davemloft.net>
+To: deraadt@cvs.openbsd.org
+Cc: jeff@garzik.org, mb@bu3sch.de, mglocker@openbsd.org,
+	jsimola@gmail.com, deraadt@theos.com, stefano.brivio@polimi.it,
+	martin-langer@gmx.de, kugelfang@gentoo.org,
+	andreas.jaggi@waterwave.ch, larry.finger@lwfinger.net,
+	Quaker.Fang@sun.com, johannes@sipsolutions.net, josejx@gentoo.org,
+	linville@tuxdriver.com, greg@kroah.com,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <200704052056.l35KuTIr025210@cvs.openbsd.org>
+References: <46155E82.2040808@garzik.org>
+	<200704052056.l35KuTIr025210@cvs.openbsd.org>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-04-11 at 21:20 -0400, John W. Linville wrote:
-> On Wed, Apr 11, 2007 at 07:01:06PM -0400, Michael Wu wrote:
-> > bcm43xx: Hide if bcm43xx-mac80211 is builtin
-> > 
-> > From: Michael Wu <flamingice@sourmilk.net>
-> > 
-> > This prevents users from compiling bcm43xx (softmac) and bcm43xx-mac80211
-> > into the kernel at the same time. In the case that it is attempted, make
-> > bcm43xx (softmac) not build.
+From: Theo de Raadt <deraadt@cvs.openbsd.org>
+Date: Thu, 05 Apr 2007 14:56:29 -0600
+
+> > Snipped?  I presume, then, you admit you are misrepresenting others' 
+> > opinions in this thread.
 > 
-> Since the two drivers use different firmware and the (currently)
-> softmac-based driver will evolve into bcm4301 with support for older
-> hardware, I'd prefer to leave this one out.
+> No, there was a side discussion about whitespace and variable naming,
+> and even algorithms covered by the GPL.  Gimme a break.  These were
+> essentially claimed by some of the examples shown by Michael.  Go look
+> carefully.
 
-It's possible to bind and unbind drivers, so having two drivers for the
-same hardware is not a problem per se.
+The main aim right now for you is to deflect as much attention as
+possible away from the fact that someone was caught red handed putting
+GPL'd code into a BSD driver.
 
-The problem is that such configuration won't compile as it stands now.
-It can be fixed by massive renaming of the symbols in one of the
-drivers, but I'm not sure we settled on a specific name.  I suggested
-bcm4301, which was well received, but it sound like it won't happen
-until bcm43xx_mac80211 matures.
+That is why you keep harping back to the issue about Michael's
+approach to dealing with this.
 
-If "bcm4301" prefix is too confusing or "humiliating" for the
-softmac-based driver, we could consider something more acceptable in the
-short term, like bcm4k, broadcom, bcom, brcm (Broadcom's stock ticker),
-bcm43sm (after softmac), bcmwifi, bcmw, bcw (just to amuse Theo) and so
-on.
+I understand why you might want to do damage control like this.
 
-If the symbols are not renamed, we need some protection in Kconfig, or
-we'll fail "make allyesconfig".
+There is also no way one can directly copy GPL'd code into a BSD
+driver, check it into a CVS tree, and have no idea what in the world
+one is doing.  I don't believe that argument for one second.
 
--- 
-Regards,
-Pavel Roskin
+A developer working on a BSD driver for 6 months is oblivious to the
+fact that copying in some GPL'd code might not be a good idea?  Give
+me a break.
 
+There have been some very clever methods employed here in this thread
+to control the path of a conversation.  For example, you knew that if
+you gave the full URL for the Empathy article at Wikipedia, nobody
+would click on it and read it.  Yet you used a tinyurl, and this had
+the psychological effect of making nearly everyone reading curious
+what the tinyurl pointed to, and they clicked it.  You even got me
+with that one.
