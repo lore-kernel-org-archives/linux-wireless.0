@@ -1,52 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:63188 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754030AbXDMPEf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2007 11:04:35 -0400
-Message-ID: <461F9C58.6050106@lwfinger.net>
-Date: Fri, 13 Apr 2007 10:06:00 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Stefano Brivio <stefano.brivio@polimi.it>
-CC: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] bcm43xx-mac80211: Fix machine checks on PPC with rev  1 PHYs
-References: <461d0815.ip3FDr8RDQXyCT4U%Larry.Finger@lwfinger.net> <20070413113638.10db9767@localhost>
-In-Reply-To: <20070413113638.10db9767@localhost>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from cvs.openbsd.org ([199.185.137.3]:13659 "EHLO cvs.openbsd.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1767282AbXDEU7n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2007 16:59:43 -0400
+Message-Id: <200704052056.l35KuTIr025210@cvs.openbsd.org>
+To: Jeff Garzik <jeff@garzik.org>
+cc: Michael Buesch <mb@bu3sch.de>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joseph Jezak <josejx@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
+In-reply-to: Your message of "Thu, 05 Apr 2007 16:39:30 EDT."
+             <46155E82.2040808@garzik.org>
+Date: Thu, 05 Apr 2007 14:56:29 -0600
+From: Theo de Raadt <deraadt@cvs.openbsd.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stefano Brivio wrote:
-> On Wed, 11 Apr 2007 11:08:53 -0500
-> Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> 
->> On PPC architecture with phy->rev == 1, machine checks occur during
->> initialization of the "Extended G PHY registers". This problem was
->> also seen on bcm43xx-softmac, and was fixed by conditionally skipping
->> over certain reads/writes of these registers.  The same solution has been
->> applied here with testing by David Woodhouse.  Note: These modifications
->> are not found in the specifications, but are needed for PPC.
-> 
-> I don't think this patch has to be reverted, but I still think that it's
-> better to notice the reverse engineers team about failing operations
-> and understand the real problem rather than hiding it. Which works in some
-> cases, but sometimes just hide other bugs.
-> 
-> I'm almost done with rewriting the whole A/G/N setup and init routines,
-> following the new v4 specs. This issue could even be related.
+> <shrug>  Probably because of the confrontation tone of the entire 
+> thread.  Everybody's on the offensive, and not willing to admit mistakes.
 
-I agree that it would be better if we could follow the specs and not have the machine check problem. 
-My impression is that early versions of the bcm43xx driver did not have this difficulty, but that it 
-appeared after a relatively recent change in the G init specs. BTW, these were the changes that 
-greatly improved performance, particularly on the phy->rev = 8 devices. Perhaps the Broadcom 
-software abandoned/ignored the phy->rev = 1 units running on PPC hardware, which seems to be the 
-only combination that shows the problem. I don't know about MIPS hardware, but the problem is not 
-seen on x86 architecture.
+Oh, for sure I know that is what is going on.  Only one person has
+admitted a mistake thus far, and it was Marcus Glocker, in his first
+post to the thread.  After that, Michael got to the point of saying
+that he does not believe that Marcus made a mistake.  Therefore
+Michael has further entrenched his position.
 
-I look forward to your rewrite of the setup and init routines. Perhaps they will even let my 4311 
-work with mac80211, but I will be very surprised if the PPC machine check problem goes away.
+> A private email SHOULD be the first approach for a copyright issue like 
+> this, regardless of whether its a private person or a corp.
+> 
+> 
+> > Shall I keep replying until everyone gets it?
+> 
+> Whatever makes you happy :)
 
-Larry
+It makes me happy to show that I have empathy for a situation where
+someone who puts hundreds of hours of work in as a hobby, and to
+defend that person.  It makes me extremely unhappy that I have to do
+so, and that some other people think this is a non-event.
+
+> > <rest deleted, because the above line is so important>
+> 
+> Snipped?  I presume, then, you admit you are misrepresenting others' 
+> opinions in this thread.
+
+No, there was a side discussion about whitespace and variable naming,
+and even algorithms covered by the GPL.  Gimme a break.  These were
+essentially claimed by some of the examples shown by Michael.  Go look
+carefully.
+
+That said, there were more real issues, and those have been dealt with
+in a reply from Marcus, plus the driver now being deleted.
+
+The Italian dude in particular was complaining bitterly in private
+mail about the whitespace similarities... good grief, not whitespace
+similarities.  How SCO of him.
