@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:42099 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965441AbXDBNn7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2007 09:43:59 -0400
-Subject: SIOCSIWAP behavior question
-From: Dan Williams <dcbw@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Jouni Malinen <j@w1.fi>
-Content-Type: text/plain
-Date: Mon, 02 Apr 2007 09:47:35 -0400
-Message-Id: <1175521655.9859.15.camel@localhost.localdomain>
+Received: from mfe1.polimi.it ([131.175.12.23]:50375 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1766634AbXDEWHu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2007 18:07:50 -0400
+Date: Fri, 6 Apr 2007 00:03:33 +0200
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Theo de Raadt <deraadt@cvs.openbsd.org>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Pavel Roskin" <proski@gnu.org>, "Michael Buesch" <mb@bu3sch.de>,
+	"Joseph Jezak" <josejx@gentoo.org>,
+	"Marcus Glocker" <mglocker@openbsd.org>,
+	"Jon Simola" <jsimola@gmail.com>,
+	"Theo de Raadt" <deraadt@theos.com>,
+	"Martin Langer" <martin-langer@gmx.de>,
+	"Danny van Dyk" <kugelfang@gentoo.org>,
+	"Andreas Jaggi" <andreas.jaggi@waterwave.ch>,
+	"Larry Finger" <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John Linville" <linville@tuxdriver.com>,
+	"Greg kh" <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues
+Message-ID: <20070406000333.20621012@localhost>
+In-Reply-To: <200704052125.l35LPuXB019703@cvs.openbsd.org>
+References: <20070405231910.6969b7ac@localhost>
+	<200704052125.l35LPuXB019703@cvs.openbsd.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Should setting a BSSID trigger a disconnection event from the driver?
-Obviously a disconnect event shouldn't be triggered if the BSSID being
-set is the same BSSID the card is already associated with.  Or does that
-mean "reassociate unconditionally" ?
+On Thu, 05 Apr 2007 15:25:56 -0600
+Theo de Raadt <deraadt@cvs.openbsd.org> wrote:
 
-But suppose we have two APs in the same ESS with obviously different
-BSSIDs.  The card automatically associates with one BSSID, but
-wpa_supplicant decides it likes the other BSSID and calls SIOCSIWAP to
-lock to that one during the association process.  Should the driver
-issue an IWAP event of 00:00:00:00:00:00 before attempting
-re-association with the BSSID that wpa_supplicant wants?
+> > You made a drama out of a simple issue.
+> 
+> Actually Michael and his friends made a drama out of a simple issue;
+> so simple that it would have been dealt with in private within days.
+> And everyone would have looked good about it, and felt great about it.
+> 
+> Stefano, I am not inflaming.  I am rightly justified in complaining
+> that someone has been treated very badly, for no good reason.
+> 
+> Cooperation is not built on that.  Maybe you specifically don't care
+> about cooperation, but I am sure there are others who do.  So perhaps
+> watch your words.
 
-The libertas driver currently does this; it sometimes confuses
-wpa_supplicant and is arguably wrong behavior because drivers don't
-issue disconnection events when auto-roaming from BSSID to BSSID in the
-same ESS.
-
-Conversely, if you have two access points 'linksys' with different
-BSSIDs that really _are_ two different ESSs, this would screw up
-userspace tools if a disconnect _wasn't_ sent.  But in this case
-automatic tools have more problems than driver events.
-
-Thoughts?  I guess I vote for not sending disconnect events if that
-BSSID has the same capabilities and the same SSID as the current
-association BSS.
-
-Dan
+Got it. Your MUA has a bug that doesn't let you read more than the first
+line of an email. Now you will wonder... "first what"?
 
 
+-- 
+Ciao
+Stefano
