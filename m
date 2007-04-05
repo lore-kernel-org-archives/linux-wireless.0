@@ -1,137 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:58379 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755489AbXD0Iy0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2007 04:54:26 -0400
-Message-ID: <4631BA3E.3090805@warmcat.com>
-Date: Fri, 27 Apr 2007 09:54:22 +0100
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: James Ketrenos <jketreno@linux.intel.com>
-CC: Michael Wu <flamingice@sourmilk.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <200704251634.16604.flamingice@sourmilk.net> <46312067.9090005@linux.intel.com> <200704262023.52833.flamingice@sourmilk.net> <46317888.9040909@linux.intel.com> <4631A9C8.5040003@warmcat.com> <4631AEEF.2030306@linux.intel.com>
-In-Reply-To: <4631AEEF.2030306@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from cvs.openbsd.org ([199.185.137.3]:29836 "EHLO cvs.openbsd.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1767134AbXDER3j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2007 13:29:39 -0400
+Message-Id: <200704051725.l35HPJXt014600@cvs.openbsd.org>
+To: Michael Buesch <mb@bu3sch.de>
+cc: Marcus Glocker <marcus@nazgul.ch>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joseph Jezak <josejx@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
+In-reply-to: Your message of "Thu, 05 Apr 2007 19:14:10 +0200."
+             <200704051914.10999.mb@bu3sch.de>
+Date: Thu, 05 Apr 2007 11:25:19 -0600
+From: Theo de Raadt <deraadt@cvs.openbsd.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-James Ketrenos wrote:
-> Andy Green wrote:
->> James Ketrenos wrote:
->>> The more passive channels you add (most of 802.11a) the slower the
->>> scanning gets.
->>
->> Well just a datapoint on that (zd1211rw, presumably mac80211 scanned)
->>
->> $ time iwlist mon0 scan
-> ...
->> real    0m0.857s
->> user    0m0.001s
->> sys     0m0.004s
+> On Thursday 05 April 2007 18:48, Theo de Raadt wrote:
+> > I personally believe that you made a very poor choice by publically
+> > attacking a developer who did not even have working code yet.  You chose
 > 
-> How many channels are being scanned, and how many of those channels are
-> passive only?  And can you clarify on 'presumably'?
+> The GPL is not about "working code", it's about distribution.
+> And you did distribute our code under the BSD license, which is
+> a GPL violation.
 
-It's a BG stick, so 13.  'presumably' means I grepped the
-zd1211rw-mac80211 dir looking for scan and didn't find anything, so I
-"presume" the scan action is driven by mac80211.
+Marcus made a mistake, and instead of privately mailing him you told a
+bunch of mailing lists.  Your mails make it clear that you don't
+believe his process was in good faith.  Fine -- then we cannot believe
+that your very public posting was in good faith, either.
 
->>>> Eliminating the hw_scan callback reduces driver complexity. 
->>> If done right, the stack would set up the list of channels to scan,
->>> whether to scan the channel active or passive, and the template for the
->>> probe request to use. 
->>
->> I think one can reasonably say that's a lot of stuff to support what is
->> a vendor-specific feature that only optimizes what can already be done.
-> 
-> I think I would say that's a lot of stuff to make software scanning try
-> and work as well as hardware scanning does now.  hw_scan() is there now,
-> it works, and its twice as fast as software scanning.  The work should
-> be to make software scanning better for hardware that can't do hardware
-> scan, not to remove the ability for hardware scanning.
-> 
-> ...
->> Maybe a simpler, more granular way to come at that is in the firmware to
->> allow selection of "beacon only" filtering, or maybe a count of valid
->> CRC packets that got filtered so you can assess if you should look
->> closer at that channel.
-> 
-> Or maybe just let the firmware do the scan?  :)
+> I think this is dangerous, because the code is tainted and it
+> may even taint other codebases. For example if someone working
+> for opensolaris choses to import bcw into solaris, as he's rightfully
+> got the opinion that bcw is BSD licensed.
 
-Well, let me put it this way... hiding the scan sequencing action even
-in the stack seems like a bad thing to me, so hiding it further back
-into a modal device-specific firmware action seems really wrong to me.
-If scan is moved completely out of kernel mode, and instead the existing
-primitive actions (change channel, set monitor mode, use libpcap BPF
-filtering) enhanced and exploited to deliver better functionality (see
-the latency subject below), the result is leaner kernel code, simpler
-and all-in-one-place usermode code AND the architecture of empowering
-the simpler already-exposed primitives allow re-use to do things that
-aren't thought of yet.
+Yes, dangerous mistakes happen all the time.  But we live in a world
+of source code, where mistakes can be undone.
 
-Let's not forget that the bulk of the time this firmware assisted scan
-action is doing nothing but letting the radio dwell on the frequency it
-selected, for tens of ms.  I'm not sure why including mac80211 in the
-loop should make a tremendous difference.
+Now that mistake is undone.  In the way you wanted; was there every any
+doubt in ANYONE'S MIND that Marcus would approach this any other way?
 
-> ...
->> For result latency, at the moment the monolithic scan is atomic, you sit
->> there with nothing and get your results all at once.  With a usermode
->> driven scan, you will get results as you scan a channel, improving the
->> perception of latency.
-> 
-> The action for finding your particular AP will always be atomic.  If the
-> AP you want is on a passive channel and you happen to miss the beacon in
-> one pass, now the 4.7s "find the AP and associate via software" sequence
-> is 9.4s... or 13.
-> There is no 'perception of latency' when it comes to the question of
-> "How long after I click the button to turn on wireless do I have to wait
-> before I can hit refresh on my browser?"
+Or are you completely and totally deluded, and beyond that --
+completely unaware of how human beings react?
 
-I was talking about iwlist scan or populating a list of channels in a
-GUI, but let me point out that in the case of the usermode
-wpa_supplicant hunting an AP, if it is in control of the scan behaviour
-because it drives the whole process from usermode as I propose it should
-eventually, it becomes quite easy to prioritize the channel hunt order
-on probability of where it has been seen before, and to modulate the
-dwell time on particular channels as well, all of that done in usermode
-according to wpa_supplicant's needs.  Delivering much better performance
- in the typical case.  For all mac80211 drivers at once.
+> I offered several ways to solve the issue that would help bcw development
+> (offering to relicense my code).
 
->> It seems it won't make your life that much harder
-> 
-> Actually it will because we'll end up having to have our users use the
-> external mac80211 subsystem for as long as hardware scanning is not
-> supported by the kernel.  Accelerated scanning is something end users
-> like.  I'm not going to give that up.
+Isn't that a bit like offering a kibble to a cat after you've kicked it?
 
-Well I don't have any right to tell you to give up on anything, but as
-someone whose whole project is completely stalled by his code not
-getting into mac80211, I can confidently assert you need to bring
-mac80211 along with you in that case.
+> If Marcus gave up that's a pity. But that's his choice. I respect that,
+> although I hoped to get a better solution.
 
->> mac80211-based scanning appears to work for you already
-> 
-> mac80211-based scanning worked as a stop gap.  It is definitely not
-> suitable as a final solution.
+KICK KICK KICK KICK.  I wish the cat still wants to come over and purr
+near me.
 
-Hum well, it works, it's not that unsuitable.  It's slower.  It's still
-suitable.
+There's thousands of people who write code, and try to be nice to the
+people who write that code.  When license problems happen, they try to
+nicely get problems resolved privately first.  If problems cannot be
+nicely resolved, then they do them in a more public fashion.
 
->> and we talk about 2 seconds instead of 1 for results now and again.
-> 
-> It isn't 2s vs 1s -- we're talking 5s vs. 2s... and that's if it finds
-> the AP on the first scan, which it doesn't always do.  "now and again"
-> is a lot more common than you'd like and when you're using a laptop and
-> changing environments, roaming, AP hopping, etc.
+There is a large culture of GPL proponents who privately deal with
+companies to get things resolved, and then privately use legal force,
+and then maybe, in the end, use public force.
 
-Fine: we talk about 5s vs 2s "now and again" and when roaming and AP
-hopping.  And there is at least a competing concept to enhance mac80211
-to reduce that down below 2s for many typical cases without special
-vendor-specific tweaks so that all drivers would benefit.
+But when dealing with a parallel open source effort, you went right to
+the jugular.  I bet you deal nicer with companies.  What is the matter
+with you?  Are you not human?
 
--Andy
+But you, sir, are not in the group of people who try to nicely get
+problems results.  You publically kick people who make mistakes.
+
+Maybe you don't feel guilty about what has happened here, but you no
+longer have my respect.  You don't understand how a human being might
+react to being kicked in public, when a small private word might have
+been better.
+
