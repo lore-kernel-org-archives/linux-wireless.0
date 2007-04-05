@@ -1,70 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:51321 "EHLO
-	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751209AbXDOEVn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Apr 2007 00:21:43 -0400
-Date: Sat, 14 Apr 2007 23:22:46 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] bcm43xx-mac80211: Make wireless statistics yield  reasonable values
-Message-ID: <4621a896.akSEX43I3VgRXr70%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from cvs.openbsd.org ([199.185.137.3]:44592 "EHLO cvs.openbsd.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1767207AbXDESp0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2007 14:45:26 -0400
+Message-Id: <200704051842.l35IgYRu017570@cvs.openbsd.org>
+To: Michael Buesch <mb@bu3sch.de>
+cc: Marcus Glocker <marcus@nazgul.ch>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joseph Jezak <josejx@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
+In-reply-to: Your message of "Thu, 05 Apr 2007 20:40:35 +0200."
+             <200704052040.36016.mb@bu3sch.de>
+Date: Thu, 05 Apr 2007 12:42:34 -0600
+From: Theo de Raadt <deraadt@cvs.openbsd.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The variables in mac80211 are confusing and should be renamed; however, that may take
-some time to reach a consensus. In the meantime, these changes are needed to get
-reasonable numbers from bcm43xx-mac80211.
+Again, your assumption is that he did it on purpose, and thus, you
+are calling him a thief.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
 
-John,
 
-This is wireless-dev material. The extensive renaming patches
-that were submitted on 4/14 should be discarded.
 
-Larry
+> On Thursday 05 April 2007 20:28, Theo de Raadt wrote:
+> > > > But when dealing with a parallel open source effort, you went right to
+> > > > the jugular.  I bet you deal nicer with companies.
+> > > 
+> > > There was no deal with you!
+> > 
+> > I don't understand this sentence of yours.
+> 
+> There was no agreement with you to use my code.
+> 
+> > Do you make deals with companies?
+> 
+> Not yet. Maybe in future. Who knows...
+> 
+> > Do you do those deals publically?
+> 
+> That depends on what the company does.
+> If the company illegally distributes my code to the public,
+> I _will_ contact them in public as well.
+> 
+> If they contact me in private _before_ distributing the code,
+> I will respond in private.
+> 
+> The exact same thing would have been true for you.
+> But you did _not_ do any effort to contact me before distributing
+> my code.
+> 
+> > What are you saying?
+> > 
+> > Was Marcus suppose do to have some sort of deal with you?
+> 
+> The deal was: He asks for relicensing-permission on
+> a particular faction of my code and I ACK or deny it.
+> 
+> I explained the exact deal more than once.
+> 
+> -- 
+> Greetings Michael.
 
- bcm43xx_main.c |    4 ++--
- bcm43xx_xmit.c |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-Index: wireless-dev/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.c
-+++ wireless-dev/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.c
-@@ -525,12 +525,12 @@ void bcm43xx_rx(struct bcm43xx_wldev *de
- 		}
- 	}
- 
--	status.signal = bcm43xx_rssi_postprocess(dev, jssi,
-+	status.ssi = bcm43xx_rssi_postprocess(dev, jssi,
- 					      (phystat0 & BCM43xx_RX_PHYST0_OFDM),
- 					      (phystat0 & BCM43xx_RX_PHYST0_GAINCTL),
- 					      (phystat3 & BCM43xx_RX_PHYST3_TRSTATE));
- 	status.noise = dev->stats.link_noise;
--	status.ssi = jssi;
-+	status.signal = jssi; /* this looks wrong, but is what mac80211 wants */
- 	if (phystat0 & BCM43xx_RX_PHYST0_OFDM)
- 		status.rate = bcm43xx_plcp_get_bitrate_ofdm(plcp);
- 	else
-Index: wireless-dev/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
-+++ wireless-dev/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
-@@ -3757,8 +3757,8 @@ static int bcm43xx_wireless_init(struct 
- 		    IEEE80211_HW_MONITOR_DURING_OPER |
- 		    IEEE80211_HW_DEVICE_HIDES_WEP |
- 		    IEEE80211_HW_WEP_INCLUDE_IV;
--	hw->max_rssi = -110;
--	hw->max_signal = BCM43xx_RX_MAX_SSI;
-+	hw->max_signal = 100; /* This looks wrong, but is what mac80211 wants */
-+	hw->max_rssi = BCM43xx_RX_MAX_SSI;
- 	hw->max_noise = -110;
- 	hw->queues = 1;
- 	SET_IEEE80211_DEV(hw, dev->dev);
