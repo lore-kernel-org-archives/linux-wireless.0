@@ -1,204 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33720 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423042AbXDZJkV (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:60460
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767328AbXDEV1R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2007 05:40:21 -0400
-Message-Id: <20070424180847.533947000@sipsolutions.net>
-References: <20070424180732.371620000@sipsolutions.net>
-Date: Tue, 24 Apr 2007 20:07:34 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	jt@hpl.hp.com
-Subject: [PATCH 2/9] wext: clean up how wext is called
-Mime-Version: 1.0
+	Thu, 5 Apr 2007 17:27:17 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Theo de Raadt <deraadt@cvs.openbsd.org>
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues
+Date: Thu, 5 Apr 2007 23:26:22 +0200
+Cc: Jeff Garzik <jeff@garzik.org>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joseph Jezak <josejx@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+References: <200704052056.l35KuTIr025210@cvs.openbsd.org>
+In-Reply-To: <200704052056.l35KuTIr025210@cvs.openbsd.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200704052326.23288.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch cleans up the call paths from the core code into wext.
+On Thursday 05 April 2007 22:56, Theo de Raadt wrote:
+> It makes me happy to show that I have empathy for a situation where
+> someone who puts hundreds of hours of work in as a hobby, and to
+> defend that person.  It makes me extremely unhappy that I have to do
+> so, and that some other people think this is a non-event.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+We put THOUSANDS of hours of work into bcm43xx and you
+simply relicense it without permission. Your point being?
 
----
- include/net/iw_handler.h |   11 +----------
- include/net/wext.h       |   24 ++++++++++++++++++++++++
- net/core/dev.c           |   34 ++++------------------------------
- net/wireless/wext.c      |   28 ++++++++++++++++++++++++----
- 4 files changed, 53 insertions(+), 44 deletions(-)
+> > > <rest deleted, because the above line is so important>
+> > 
+> > Snipped?  I presume, then, you admit you are misrepresenting others' 
+> > opinions in this thread.
+> 
+> No, there was a side discussion about whitespace and variable naming,
+> and even algorithms covered by the GPL.  Gimme a break.  These were
+> essentially claimed by some of the examples shown by Michael.  Go look
+> carefully.
 
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ net-2.6.22/include/net/wext.h	2007-04-24 18:51:23.568804911 +0200
-@@ -0,0 +1,24 @@
-+#ifndef __NET_WEXT_H
-+#define __NET_WEXT_H
-+
-+/*
-+ * wireless extensions interface to the core code
-+ */
-+
-+#ifdef CONFIG_WIRELESS_EXT
-+extern int wext_proc_init(void);
-+extern int wext_handle_ioctl(struct ifreq *ifr, unsigned int cmd,
-+			     void __user *arg);
-+#else
-+static inline int wext_proc_init()
-+{
-+	return 0;
-+}
-+static inline int wext_handle_ioctl(struct ifreq *ifr, unsigned int cmd,
-+				    void __user *arg)
-+{
-+	return -EINVAL;
-+}
-+#endif
-+
-+#endif /* __NET_WEXT_H */
---- net-2.6.22.orig/net/core/dev.c	2007-04-24 18:50:45.888804911 +0200
-+++ net-2.6.22/net/core/dev.c	2007-04-24 18:51:23.568804911 +0200
-@@ -109,7 +109,7 @@
- #include <linux/netpoll.h>
- #include <linux/rcupdate.h>
- #include <linux/delay.h>
--#include <linux/wireless.h>
-+#include <net/wext.h>
- #include <net/iw_handler.h>
- #include <asm/current.h>
- #include <linux/audit.h>
-@@ -2348,12 +2348,6 @@ static const struct file_operations ptyp
- };
- 
- 
--#ifdef CONFIG_WIRELESS_EXT
--extern int wireless_proc_init(void);
--#else
--#define wireless_proc_init() 0
--#endif
--
- static int __init dev_proc_init(void)
- {
- 	int rc = -ENOMEM;
-@@ -2365,7 +2359,7 @@ static int __init dev_proc_init(void)
- 	if (!proc_net_fops_create("ptype", S_IRUGO, &ptype_seq_fops))
- 		goto out_dev2;
- 
--	if (wireless_proc_init())
-+	if (wext_proc_init())
- 		goto out_softnet;
- 	rc = 0;
- out:
-@@ -2923,29 +2917,9 @@ int dev_ioctl(unsigned int cmd, void __u
- 					ret = -EFAULT;
- 				return ret;
- 			}
--#ifdef CONFIG_WIRELESS_EXT
- 			/* Take care of Wireless Extensions */
--			if (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) {
--				/* If command is `set a parameter', or
--				 * `get the encoding parameters', check if
--				 * the user has the right to do it */
--				if (IW_IS_SET(cmd) || cmd == SIOCGIWENCODE
--				    || cmd == SIOCGIWENCODEEXT) {
--					if (!capable(CAP_NET_ADMIN))
--						return -EPERM;
--				}
--				dev_load(ifr.ifr_name);
--				rtnl_lock();
--				/* Follow me in net/wireless/wext.c */
--				ret = wireless_process_ioctl(&ifr, cmd);
--				rtnl_unlock();
--				if (IW_IS_GET(cmd) &&
--				    copy_to_user(arg, &ifr,
--						 sizeof(struct ifreq)))
--					ret = -EFAULT;
--				return ret;
--			}
--#endif	/* CONFIG_WIRELESS_EXT */
-+			if (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST)
-+				return wext_handle_ioctl(&ifr, cmd, arg);
- 			return -EINVAL;
- 	}
- }
---- net-2.6.22.orig/include/net/iw_handler.h	2007-04-24 18:54:01.678804911 +0200
-+++ net-2.6.22/include/net/iw_handler.h	2007-04-24 18:56:27.328804911 +0200
-@@ -431,16 +431,7 @@ struct iw_public_data {
-  * Those may be called only within the kernel.
-  */
- 
--/* First : function strictly used inside the kernel */
--
--/* Handle /proc/net/wireless, called in net/code/dev.c */
--extern int dev_get_wireless_info(char * buffer, char **start, off_t offset,
--				 int length);
--
--/* Handle IOCTLs, called in net/core/dev.c */
--extern int wireless_process_ioctl(struct ifreq *ifr, unsigned int cmd);
--
--/* Second : functions that may be called by driver modules */
-+/* functions that may be called by driver modules */
- 
- /* Send a single event to user space */
- extern void wireless_send_event(struct net_device *	dev,
---- net-2.6.22.orig/net/wireless/wext.c	2007-04-24 18:51:31.288804911 +0200
-+++ net-2.6.22/net/wireless/wext.c	2007-04-24 19:04:20.818804911 +0200
-@@ -97,6 +97,7 @@
- #include <linux/wireless.h>		/* Pretty obvious */
- #include <net/iw_handler.h>		/* New driver API */
- #include <net/netlink.h>
-+#include <net/wext.h>
- 
- #include <asm/uaccess.h>		/* copy_to_user() */
- 
-@@ -696,7 +697,7 @@ static const struct file_operations wire
- 	.release = seq_release,
- };
- 
--int __init wireless_proc_init(void)
-+int __init wext_proc_init(void)
- {
- 	/* Create /proc/net/wireless entry */
- 	if (!proc_net_fops_create("wireless", S_IRUGO, &wireless_seq_fops))
-@@ -1075,11 +1076,10 @@ static inline int ioctl_private_call(str
- 
- /* ---------------------------------------------------------------- */
- /*
-- * Main IOCTl dispatcher. Called from the main networking code
-- * (dev_ioctl() in net/core/dev.c).
-+ * Main IOCTl dispatcher.
-  * Check the type of IOCTL and call the appropriate wrapper...
-  */
--int wireless_process_ioctl(struct ifreq *ifr, unsigned int cmd)
-+static int wireless_process_ioctl(struct ifreq *ifr, unsigned int cmd)
- {
- 	struct net_device *dev;
- 	iw_handler	handler;
-@@ -1143,6 +1143,26 @@ int wireless_process_ioctl(struct ifreq 
- 	return -EINVAL;
- }
- 
-+/* entry point from dev ioctl */
-+int wext_handle_ioctl(struct ifreq *ifr, unsigned int cmd,
-+		      void __user *arg)
-+{
-+	int ret;
-+
-+	/* If command is `set a parameter', or
-+	 * `get the encoding parameters', check if
-+	 * the user has the right to do it */
-+	if (IW_IS_SET(cmd) || cmd == SIOCGIWENCODE || cmd == SIOCGIWENCODEEXT)
-+		if (!capable(CAP_NET_ADMIN))
-+			return -EPERM;
-+	dev_load(ifr->ifr_name);
-+	rtnl_lock();
-+	ret = wireless_process_ioctl(ifr, cmd);
-+	rtnl_unlock();
-+	if (IW_IS_GET(cmd) && copy_to_user(arg, ifr, sizeof(struct ifreq)))
-+		return -EFAULT;
-+	return ret;
-+}
- 
- /************************* EVENT PROCESSING *************************/
- /*
+You simply don't get it. These were EXAMPLES of why we think the
+code was copied 1:1. This has NOTHING to do with copyright law
+at this point. It simply shows: "Oh look, you named that variable
+or that function exactly like I did, although the specs did not
+suggest naming. Unlikely to be so by coincidence."
 
---
+> That said, there were more real issues, and those have been dealt with
+> in a reply from Marcus, plus the driver now being deleted.
 
+I want to point out again that I _never_ made it a requirement
+to delete the driver. I offered ways to handle it by going through
+the code and judging on a case-by-case base of what can stay and
+what has to be rewritten by you.
+
+> The Italian dude in particular was complaining bitterly in private
+> mail about the whitespace similarities... good grief, not whitespace
+> similarities.  How SCO of him.
+
+Yeah. Must be coincidence that you typed whitespace exactly like
+we did. I'm sure this didn't come from copying, but from coincidence.
+
+[Irony may be found in the mail above]
+
+-- 
+Greetings Michael.
