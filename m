@@ -1,61 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:49371 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933045AbXDFWy0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2007 18:54:26 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so1241117uga
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2007 15:54:25 -0700 (PDT)
-Message-ID: <1ba2fa240704061554t489c5efahb60472c9385a324c@mail.gmail.com>
-Date: Sat, 7 Apr 2007 01:54:24 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John Linville" <linville@tuxdriver.com>
-Subject: Re: mac80211 debugfs compile failure
-Cc: "Michael Buesch" <mb@bu3sch.de>, "Jiri Benc" <jbenc@suse.cz>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, "Daniel Drake" <dsd@gentoo.org>
-In-Reply-To: <4616CD15.80405@gentoo.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=WINDOWS-1252;
-	format=flowed
-References: <200704070028.02143.mb@bu3sch.de> <4616CD15.80405@gentoo.org>
+Received: from cvs.openbsd.org ([199.185.137.3]:9448 "EHLO cvs.openbsd.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1767258AbXDETlC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2007 15:41:02 -0400
+Message-Id: <200704051937.l35JbSQh011320@cvs.openbsd.org>
+To: Pavel Roskin <proski@gnu.org>
+cc: Michael Buesch <mb@bu3sch.de>, Joseph Jezak <josejx@gentoo.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
+In-reply-to: Your message of "Thu, 05 Apr 2007 15:31:27 EDT."
+             <1175801487.19303.52.camel@dv>
+Date: Thu, 05 Apr 2007 13:37:28 -0600
+From: Theo de Raadt <deraadt@cvs.openbsd.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John
-Can you give this patch some higher priority. It's not nice to have a
-compilation breakage for so long time in the 'main' branch.
-Thanks
-Tomas
+> On Thu, 2007-04-05 at 12:48 -0600, Theo de Raadt wrote:
+> 
+> > No, your message offered that he can come begging, because that is the
+> > best that thieves may do.
+> > 
+> > Come little dog, come beg for forgiveness.
+> > 
+> > You are a very poor example of humankind.
+> 
+> Theo,
+> 
+> I'm a member of linux-wireless list, an occasional contributor to
+> bcm43xx and a MadWifi developer.
+> 
+> It has been a few months ago that I was feeling bad for another OpenBSD
+> driver developer.  The MadWifi team asked him to relicense parts of the
+> driver (so called openhal) under GPL so that if would be easier for us
+> to erase the boundary between the HAL and the rest of MadWifi and
+> eventually integrate it into the Linux kernel.
 
-On 4/7/07, Daniel Drake <dsd@gentoo.org> wrote:
-> Michael Buesch wrote:
-> > net/mac80211/debugfs.c: In function =E2=80=98stats_wme_rx_queue_rea=
-d=E2=80=99:
-> > net/mac80211/debugfs.c:266: error: =E2=80=98struct ieee80211_local=E2=
-=80=99 has no member named =E2=80=98wme_rx_queue=E2=80=99
-> > net/mac80211/debugfs.c: In function =E2=80=98stats_wme_tx_queue_rea=
-d=E2=80=99:
-> > net/mac80211/debugfs.c:286: error: =E2=80=98struct ieee80211_local=E2=
-=80=99 has no member named =E2=80=98wme_tx_queue=E2=80=99
-> > make[2]: *** [net/mac80211/debugfs.o] Error 1
-> > make[1]: *** [net/mac80211] Error 2
-> > make: *** [net] Error 2
-> >
-> > Seems like some ifdefs missing or something. Does a patch exist?
-> >
->
->  From Johannes:
-> [PATCH] fix debugfs compile w/o debug counters
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
-ess" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Which OpenBSD devleoper did you feel bad for?  Reyk?  Reyk was going
+to relicence it? HAHAHA.  Man have you ever got it wrong.  Reyk
+totally gets to decide that, since he wrote it -- and he said NO you
+repeatedly.
+
+In the end, he asked ME to stop you guys from mailing him.
+
+How do you think you can rewrite history when the person who has sole
+license (Reyk) will say your history is totally false?
+
+Reyk was THRILLED that I finally told you guys to get lost
+
+> We got a message from you, which was rather abusive, and it just made
+> impossible for that OpenBSD developer to do anything but to deny our
+> request.  I was feeling bad for him, because it was his code.  I would
+> not want to be in a similar situation.
+
+The Linux people who wanted our atheros dirver got a numerous NICE
+reply messages from me Reyk and me saying NO, THE DRIVER WILL NOT BE
+RELICENCED.
+
+It got to the point where we were receiving one message requesting it
+every few days, and then you guys even sicked Lessig on us, to have
+him request the same.  Why did we have to relicence it?  Oh my -- we
+were told that "No, Linus will not let a BSD driver into the Linux
+tree".  As if we care for that problem.
+
+It was exceedingly rude how we received the same requests, over and
+over and over, week after week after week.
+
+Eventually, yes, we were rude and very strong: OVER OUR DEAD BODIES
+THE ATHEROS DRIVER WILL NOT BE RE-LICENSED TO BE GPL OR DUAL.  PERIOD.
+
+You guys had a choice to listen the first few times.  You were assholes
+to request it week after week after week.
+
+Don't go rewriting history.  There was never any point in time when
+it was going to be relicenced, and if you want to be sorry for what
+happene with Reyk, you can go and apologize to him for perstering
+him so long.
+
+> Now you are asking us to be sensitive towards somebody who just took the
+> code under GPL and put it under BSD license without asking any
+> questions, nicely or otherwise.
+
+What Marcus did was an accident.  You REFUSE to believe it was an
+accident.  The driver has now been deleted.  Do you feel better?
+
+> I'm sorry, but your Harlequin show is woefully unconvincing and
+> out-of-date.  Knowing something about you, I think a "sensitive OpenBSD
+> developer" is an oxymoron.
+> 
+> I don't want to fan the flames anymore, so it's probably my one and only
+> posting regarding this topic, unless you give me a good reason to reply.
+> But please don't try.
+> 
+> -- 
+> Regards,
+> Pavel Roskin
+> 
+
