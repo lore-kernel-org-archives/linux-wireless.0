@@ -1,68 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:61712 "EHLO
-	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1946003AbXDCWIU (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:45659
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753195AbXDEQnd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Apr 2007 18:08:20 -0400
-Received: from aamtaout03-winn.ispmail.ntl.com ([81.103.221.35])
-          by mtaout01-winn.ispmail.ntl.com with ESMTP
-          id <20070403220818.LCJL2951.mtaout01-winn.ispmail.ntl.com@aamtaout03-winn.ispmail.ntl.com>
-          for <linux-wireless@vger.kernel.org>;
-          Tue, 3 Apr 2007 23:08:18 +0100
-Received: from zog.reactivated.net ([86.14.211.88])
-          by aamtaout03-winn.ispmail.ntl.com with ESMTP
-          id <20070403220818.FTRG26699.aamtaout03-winn.ispmail.ntl.com@zog.reactivated.net>
-          for <linux-wireless@vger.kernel.org>;
-          Tue, 3 Apr 2007 23:08:18 +0100
-From: Daniel Drake <dsd@gentoo.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] zd1211rw-mac80211: Remove invalid CR write during ZD1211 phy reset
-Message-Id: <20070403220824.CC12B7B409F@zog.reactivated.net>
-Date: Tue,  3 Apr 2007 23:08:24 +0100 (BST)
+	Thu, 5 Apr 2007 12:43:33 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Theo de Raadt <deraadt@cvs.openbsd.org>
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues
+Date: Thu, 5 Apr 2007 18:41:56 +0200
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joseph Jezak <josejx@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+References: <200704050029.l350TiP6025711@cvs.openbsd.org>
+In-Reply-To: <200704050029.l350TiP6025711@cvs.openbsd.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200704051841.58475.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The vendor driver only does the CR123 write for non-USB devices (which
-don't exist on the consumer market)
+On Thursday 05 April 2007 02:29, Theo de Raadt wrote:
+> > Who is mean here? Again, we aren't out for blood. I don't care for who is
+> > mean here. But if you do, you should be a bit more careful before insulting
+> > people.
+> 
+> OH i get it.  I'm insulting you, but you guys are not mean by taking it
+> widely public.  No private mail received anyone.
 
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
----
- drivers/net/wireless/mac80211/zd1211rw/zd_chip.c |   22 +++++++++++-----------
- 1 files changed, 11 insertions(+), 11 deletions(-)
+I'm sorry. This GPL violation is too obvious.
+Compare the code. Many functions are 1:1 copied. The author of
+bcw can't tell me that he did not intentionally violate the GPL
+and our copyright.
 
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
-index 05624b3..53bbd34 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
-@@ -684,17 +684,17 @@ static int zd1211_hw_reset_phy(struct zd_chip *chip)
- 		{ CR111, 0x27 }, { CR112, 0x27 }, { CR113, 0x27 },
- 		{ CR114, 0x27 }, { CR115, 0x26 }, { CR116, 0x24 },
- 		{ CR117, 0xfc }, { CR118, 0xfa }, { CR120, 0x4f },
--		{ CR123, 0x27 }, { CR125, 0xaa }, { CR127, 0x03 },
--		{ CR128, 0x14 }, { CR129, 0x12 }, { CR130, 0x10 },
--		{ CR131, 0x0C }, { CR136, 0xdf }, { CR137, 0x40 },
--		{ CR138, 0xa0 }, { CR139, 0xb0 }, { CR140, 0x99 },
--		{ CR141, 0x82 }, { CR142, 0x54 }, { CR143, 0x1c },
--		{ CR144, 0x6c }, { CR147, 0x07 }, { CR148, 0x4c },
--		{ CR149, 0x50 }, { CR150, 0x0e }, { CR151, 0x18 },
--		{ CR160, 0xfe }, { CR161, 0xee }, { CR162, 0xaa },
--		{ CR163, 0xfa }, { CR164, 0xfa }, { CR165, 0xea },
--		{ CR166, 0xbe }, { CR167, 0xbe }, { CR168, 0x6a },
--		{ CR169, 0xba }, { CR170, 0xba }, { CR171, 0xba },
-+		{ CR125, 0xaa }, { CR127, 0x03 }, { CR128, 0x14 },
-+		{ CR129, 0x12 }, { CR130, 0x10 }, { CR131, 0x0C },
-+		{ CR136, 0xdf }, { CR137, 0x40 }, { CR138, 0xa0 },
-+		{ CR139, 0xb0 }, { CR140, 0x99 }, { CR141, 0x82 },
-+		{ CR142, 0x54 }, { CR143, 0x1c }, { CR144, 0x6c },
-+		{ CR147, 0x07 }, { CR148, 0x4c }, { CR149, 0x50 },
-+		{ CR150, 0x0e }, { CR151, 0x18 }, { CR160, 0xfe },
-+		{ CR161, 0xee }, { CR162, 0xaa }, { CR163, 0xfa },
-+		{ CR164, 0xfa }, { CR165, 0xea }, { CR166, 0xbe },
-+		{ CR167, 0xbe }, { CR168, 0x6a }, { CR169, 0xba },
-+		{ CR170, 0xba }, { CR171, 0xba },
- 		/* Note: CR204 must lead the CR203 */
- 		{ CR204, 0x7d },
- 		{ },
+> If Marcus Glocker just gives up now, and aborts his efforts, I would
+> not be surprised.  I'd be a bit dissapointed but then it is just the
+> increasingly rare Broadcom chipset.
+
+Marcus Glocker is free to contact us to get a clean relicensing
+agreement on the code. I wrote that in the first mail.
+
+> If he quit, I would understand his position completely, based on the
+> first contact with him about this issue BEING A PUBLIC DRAG THROUGH
+> THE MUD BY YOU GUYS.
+
+Your code is public. We respond in your public GPL violation in
+a public mail.
+
+> This infighting between two teams trying to support the same chipset
+> is a complete mockery of the publicness of the original reverse
+> engineering effort.  My guess is that Michael is thinking very
+> carefully about whether starting the discussion in public was the
+> right thing to do, but I am very sure that Stefano jumping in to lob a
+> second volley of mud helps noone's cause, especially Michael's cause.
+> Stefano, if you want this resolved nicely, I suggest you think before
+> you send more mail.
+
+Please don't attack Stefano. This leads to nothing.
+He is also a copyright holder of large amounts of bcm43xx code.
+
+> > Maintaining whitespace and variable names. 
+> 
+> Copyrighted whitespaces and variable names, you mean, right?
+
+We are not talking about variable names of whitespaces.
+We are talking about copied code and algorithms.
+The examples I brought were just examples.
+
 -- 
-1.5.0.6
-
+Greetings Michael.
