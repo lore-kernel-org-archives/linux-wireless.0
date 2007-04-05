@@ -1,37 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4973 "EHLO ra.tuxdriver.com"
+Received: from cvs.openbsd.org ([199.185.137.3]:3279 "EHLO cvs.openbsd.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755362AbXD0Bd2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2007 21:33:28 -0400
-Date: Thu, 26 Apr 2007 21:12:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: johannes@sipsolutions.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, jt@hpl.hp.com
-Subject: Re: [PATCH 0/9] various wext cleanups
-Message-ID: <20070427011251.GC25332@tuxdriver.com>
-References: <20070424180732.371620000@sipsolutions.net> <20070426.031921.133286083.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070426.031921.133286083.davem@davemloft.net>
+	id S1753310AbXDEREM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2007 13:04:12 -0400
+Message-Id: <200704051700.l35H0Cc7027001@cvs.openbsd.org>
+To: Michael Buesch <mb@bu3sch.de>
+cc: Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joseph Jezak <josejx@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
+In-reply-to: Your message of "Thu, 05 Apr 2007 18:57:26 +0200."
+             <200704051857.27471.mb@bu3sch.de>
+Date: Thu, 05 Apr 2007 11:00:12 -0600
+From: Theo de Raadt <deraadt@cvs.openbsd.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 26, 2007 at 03:19:21AM -0700, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Tue, 24 Apr 2007 20:07:32 +0200
-> 
-> > This patch series contains various cleanups to the wireless extensions code.
-> 
-> I'll wait for Linville to ACK this stuff, then I'll apply it.
+> No. I'd like _you_ to make "your" developers aware of the issue
+> that you'd like to have the openbsd tree clean, in the first place.
 
-I'm OK with the whole series.
+I make developers aware.  Marcus was aware.  He made a few mistakes.
+You don't believe him.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+That's fine.  We don't believe your public flogging was the kind and
+right way to approach this whole problem.
 
-Good enough?  Or would you prefer a git pull request?
+But the issue is over.  The code has been entirely deleted.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+I hope you are happy.  I am sure Marcus is not happy, because he's
+thrown away about 800 hours of hobby work.  But it is easier for him
+to just abandon this, based on the strength of your initial mail.
+
+I mean, if I were him, why would I bother going on, when there are
+accusations about copyright being based on white space, variable
+names which are the same, or simple "save the registers" algorithms
+which you feel are too similar.
+
+I'd say he did the right thing to give up.
