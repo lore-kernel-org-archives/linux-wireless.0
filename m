@@ -1,34 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:59394 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1766750AbXDSPDX (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:51722
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753225AbXDFACo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2007 11:03:23 -0400
-Message-ID: <4627854B.7000300@lwfinger.net>
-Date: Thu, 19 Apr 2007 10:05:47 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Thu, 5 Apr 2007 20:02:44 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Theo de Raadt <deraadt@cvs.openbsd.org>
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues
+Date: Fri, 6 Apr 2007 02:02:00 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Pavel Roskin <proski@gnu.org>,
+	Joseph Jezak <josejx@gentoo.org>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+References: <200704052351.l35Np3NM024755@cvs.openbsd.org>
+In-Reply-To: <200704052351.l35Np3NM024755@cvs.openbsd.org>
 MIME-Version: 1.0
-To: Jiri Benc <jbenc@suse.cz>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>, bcm43xx-dev@berlios.de,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH 0/4] mac80211 and drivers: Improve wireless statistics
-References: <46211955.4080006@lwfinger.net> <20070419163453.5d792085@griffin.suse.cz>
-In-Reply-To: <20070419163453.5d792085@griffin.suse.cz>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200704060202.01547.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Benc wrote:
+On Friday 06 April 2007 01:51, Theo de Raadt wrote:
+> Please get your developers off our mailing list, attacking our users
+> with one liners.  Or should I perhaps just add a cc to misc in future
+> mails?
 > 
-> The whole signal reporting in WE looks like a mess to me. It seems that
-> no renaming could help here, I'm afraid - the names you consider better
-> others consider worse.
-> 
-> Let's leave it as is, and return to it when converting mac80211 to use
-> cfg80211. With a bit of luck it would be no issue then :-)
+> ---
+> Date: Thu, 5 Apr 2007 20:14:59 -0300
+> From: "=?ISO-8859-1?Q?Andr=E9s_Delfino?=" <adelfino@gmail.com>
 
-I have already decided to leave the whole mess alone. I will patch bcm43xx-mac80211 to conform to 
-what is currently in mac80211 so that reasonable values are seen by the users.
+I don't know who adelfino@gmail.com is.
 
-Larry
+-- 
+Greetings Michael.
