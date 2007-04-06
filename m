@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:65416 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965826AbXDIVLR (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:52121 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751943AbXDFTbi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2007 17:11:17 -0400
-Message-ID: <461AAC33.4030409@lwfinger.net>
-Date: Mon, 09 Apr 2007 16:12:19 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: Dan Williams <dcbw@redhat.com>,
-	John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH] mac80211: Report correct wireless statistics
-References: <461877ea.cyxM3SSnr6WhYkjX%Larry.Finger@lwfinger.net> <1176120428.2693.12.camel@localhost.localdomain> <461A6092.20701@lwfinger.net> <200704091316.23661.flamingice@sourmilk.net>
-In-Reply-To: <200704091316.23661.flamingice@sourmilk.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 6 Apr 2007 15:31:38 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1HZu7Z-0002UN-VJ
+	for linux-wireless@vger.kernel.org; Fri, 06 Apr 2007 15:29:18 -0400
+Subject: Re: Orinoco, mac80211 and wpa2
+From: Pavel Roskin <proski@gnu.org>
+To: Erik Mouw <mouw@nl.linux.org>
+Cc: Jouni Malinen <jkm@devicescape.com>,
+	Dan Williams <dcbw@redhat.com>, Jan Dittmer <jdi@l4x.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070406100328.GA3126@gateway.home>
+References: <4613A4A9.1060902@l4x.org>
+	 <1175697737.2656.3.camel@localhost.localdomain>
+	 <1175700158.5322.9.camel@dv> <20070404153814.GC8229@devicescape.com>
+	 <1175703938.5322.21.camel@dv>  <20070406100328.GA3126@gateway.home>
+Content-Type: text/plain
+Date: Fri, 06 Apr 2007 15:31:26 -0400
+Message-Id: <1175887886.28918.16.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
-> rt2x00 does not use qual. All other drivers in tree that use qual 
-> (zd1211rw-mac80211, rtl8187) use the current convention.
+On Fri, 2007-04-06 at 12:03 +0200, Erik Mouw wrote:
+> > Since Orinoco 9.xx firmware has explicit support for WPA (at least for
+> > TKIP), I guess it could be used for that with or without mac80211.
 > 
-> I don't see anything in those 4 points that would argue against the current 
-> conventions in mac80211. In fact, it sounds like you are arguing for it since 
-> jssi, which you said is linear, goes to qual (after my patch is applied) 
-> which wants a linear number.
+> Do you have any idea where I can find 9.xx firmware? The latest
+> firmware I can find for Orinoco PCMCIA Silver/Gold is 8.72.
 
-The code is internally consistent. Now it is only the usage of the (r)ssi name to describe the 
-logarithmic numbers that is confusing. Would you entertain a patch that changed (r)ssi to level in 
-the structs and drivers to reduce the confusion? I have such a patch that works with 
-bcm43xx-mac80211. In addition, all other drivers compile.
+It's in wl_lkm_718_abg.tar.gz, which was sadly taken offline by Agere.
 
-Larry
+I could find a copy here:
+http://www.elcard.fi/Driver/wl_lkm_718_release.tar.gz.tar
+
+The file is misnamed, it should be renamed to wl_lkm_718_abg.tar.gz
+
+The firmware for Orinoco cards is in "firmware" directory.  It's version
+9.48.  I believe it's RAM loadable and cannot be flashed permanently.
+
+-- 
+Regards,
+Pavel Roskin
+
