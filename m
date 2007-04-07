@@ -1,35 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:58648 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933318AbXD2P6m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Apr 2007 11:58:42 -0400
-Date: Sun, 29 Apr 2007 17:58:39 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: remove hostapd scanning
-Message-ID: <20070429175839.46b61840@logostar.upir.cz>
-In-Reply-To: <200704291127.00777.flamingice@sourmilk.net>
-References: <20070429155623.3a7f1a67@logostar.upir.cz>
-	<200704291127.00777.flamingice@sourmilk.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mailgw1.uni-kl.de ([131.246.120.220]:41225 "EHLO
+	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965494AbXDGIQk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Apr 2007 04:16:40 -0400
+Date: Sat, 7 Apr 2007 10:12:13 +0200
+From: Joerg Mayer <jmayer@loplof.de>
+To: Marcus Glocker <marcus@nazgul.ch>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Marcus Glocker <mglocker@openbsd.org>,
+	Jon Simola <jsimola@gmail.com>,
+	Theo de Raadt <deraadt@theos.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Martin Langer <martin-langer@gmx.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joseph Jezak <josejx@gentoo.org>,
+	John Linville <linville@tuxdriver.com>,
+	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	license-violation@gpl-violations.org
+Subject: Re: OpenBSD bcw: Possible GPL license violation issues
+Message-ID: <20070407081213.GG22666@thot.informatik.uni-kl.de>
+References: <200704041945.21447.mb@bu3sch.de> <20070405054107.GB7660@gollum.nazgul.ch>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070405054107.GB7660@gollum.nazgul.ch>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 29 Apr 2007 11:27:00 -0400, Michael Wu wrote:
-> On Sunday 29 April 2007 09:56, Jiri Benc wrote:
-> > This removes passive_scan callback with associated code. The whole thing is
-> > not a job for a driver and can be done in a much cleaner way using user
-> > space MLME. Besides, nobody (not even hostapd) uses that call.
-> >
-> Well, if we're gonna get rid of this, we can kill ieee80211_netif_oper for 
-> good since ieee80211_scan.c was the last user.
+Looking at Marcus initial reply, <speculate> when he had not read all
+the harsh words that followed the initial mail </speculate>, it seems to
+me to be the most open and constructive mail in the whole thread and
+what is missing in my inbox is a direct reply to that mail until he
+himself replied that he had decided to give up on the project.
 
-Good catch. Thanks.
+While I find it sad that he chose that solution I would have felt rather
+disheartened by the discussion that happend in the meantime too.
 
- Jiri
-
+ ciao
+      Joerg
 -- 
-Jiri Benc
-SUSE Labs
+Joerg Mayer                                           <jmayer@loplof.de>
+We are stuck with technology when what we really want is just stuff that
+works. Some say that should read Microsoft instead of technology.
