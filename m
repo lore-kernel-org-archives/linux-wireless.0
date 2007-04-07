@@ -1,54 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cvs.openbsd.org ([199.185.137.3]:3304 "EHLO cvs.openbsd.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767206AbXDESwG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 14:52:06 -0400
-Message-Id: <200704051848.l35ImrcP028396@cvs.openbsd.org>
-To: Michael Buesch <mb@bu3sch.de>
-cc: Joseph Jezak <josejx@gentoo.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
-In-reply-to: Your message of "Thu, 05 Apr 2007 20:47:10 +0200."
-             <200704052047.11737.mb@bu3sch.de>
-Date: Thu, 05 Apr 2007 12:48:53 -0600
-From: Theo de Raadt <deraadt@cvs.openbsd.org>
+Received: from deine-taler.de ([217.160.107.63]:58556 "EHLO
+	p15091797.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965480AbXDGH4G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Apr 2007 03:56:06 -0400
+Date: Sat, 7 Apr 2007 09:56:03 +0200
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: Jouni Malinen <j@w1.fi>
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RFC: ieee80211: Spamming of log resulting from packets with ExtIV not set
+Message-ID: <20070407075603.GA1724@p15091797.pureserver.info>
+References: <4616DD7E.6010606@lwfinger.net> <20070407013848.GG16197@jm.kir.nu> <46171B36.6090108@lwfinger.net> <20070407043310.GH16197@jm.kir.nu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070407043310.GH16197@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Thursday 05 April 2007 20:32, Theo de Raadt wrote:
-> > Or are you now going to say that all the functions he
-> > is using are OK to use?
-> 
-> No!
-> I decide this on a case-by-case base as you OpenBSD guys contact
-> me and ask "Is it OK to you to use this particular fraction of code...".
-> I wrote that in the very first mail.
+On 07-04-06 21:33 Jouni Malinen wrote:
 
-He did NOT mail you, because he did not know he had made a mistake.
+> I would expect most wlan designs to do FCS error filtering in hardware,
+> so this could be just lack of configuring something differently or
+> dropping frames based on one of the RX flags. If the exact mechanism for
+> this is not known, I would recommend validating FCS in software prior to
+> processing the its contents (or trying to decrypt it for that matter).
 
-Again, you are assuming he did not make a mistake, and you are thus
-calling him a thief.
+Just for clarification: ZD1211 does the FCS check in hardware, but
+reports the packet to the host with an error bit set, so the
+driver needs to filter the packet out.
 
-> > No, you wanted him to come begging,
-> 
-> I want you to respect my copyright. Fullstop.
-
-No, your message offered that he can come begging, because that is the
-best that thieves may do.
-
-Come little dog, come beg for forgiveness.
-
-You are a very poor example of humankind.
-
+-- 
+Uli Kunitz
