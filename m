@@ -1,31 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:31301 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992784AbXDDJ1J (ORCPT
+Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:46243 "EHLO
+	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966217AbXDGSC2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Apr 2007 05:27:09 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so594555uga
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Apr 2007 02:27:08 -0700 (PDT)
-Message-ID: <1ba2fa240704040227q6746bd2ek905ee602b5cbe56@mail.gmail.com>
-Date: Wed, 4 Apr 2007 12:27:07 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: debugfs.c and DEBUG COUNTERS
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1175676527.3556.6.camel@johannes.berg>
+	Sat, 7 Apr 2007 14:02:28 -0400
+Date: Sat, 07 Apr 2007 13:00:05 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] bcm43xx-mac80211: Fix error in initiallizing max RSSI and max signal
+Message-ID: <4617dc25.vXqEEvwca/gaq2Cw%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <1ba2fa240704040145l2aa8eb35hd2ef77b5475a03a3@mail.gmail.com>
-	 <1175676527.3556.6.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oh my. Missed that one.
-Anyway twice is better then none :)
+In bcm43xx-mac80211, the max_rssi and max_signal values sent to mac80211 are reversed.
 
-On 4/4/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Hint: read the mailing list you keep posting to.
->
-> johannes
->
->
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+John,
+
+This is wireless-dev material.
+
+Michael,
+
+It can also be applied to the mb tree.
+
+Larry
+
+ bcm43xx_main.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Index: wireless-dev/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
++++ wireless-dev/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
+@@ -3760,8 +3760,8 @@ static int bcm43xx_wireless_init(struct 
+ 		    IEEE80211_HW_MONITOR_DURING_OPER |
+ 		    IEEE80211_HW_DEVICE_HIDES_WEP |
+ 		    IEEE80211_HW_WEP_INCLUDE_IV;
+-	hw->max_rssi = -110;
+-	hw->max_signal = BCM43xx_RX_MAX_SSI;
++	hw->max_signal = -110;
++	hw->max_rssi = BCM43xx_RX_MAX_SSI;
+ 	hw->max_noise = -110;
+ 	hw->queues = 1;
+ 	SET_IEEE80211_DEV(hw, dev->dev);
