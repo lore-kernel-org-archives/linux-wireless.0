@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59370
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933185AbXD2MyE (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:42798 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965280AbXDGEQO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Apr 2007 08:54:04 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH 3/4] mac80211: document requirement for atomicity of callbacks
-Date: Sun, 29 Apr 2007 14:53:47 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <20070429023215.40c2aea7@logostar.upir.cz> <200704291115.43657.mb@bu3sch.de> <20070429124929.417ef7da@logostar.upir.cz>
-In-Reply-To: <20070429124929.417ef7da@logostar.upir.cz>
+	Sat, 7 Apr 2007 00:16:14 -0400
+Message-ID: <46171B36.6090108@lwfinger.net>
+Date: Fri, 06 Apr 2007 23:16:54 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200704291453.47601.mb@bu3sch.de>
+To: Jouni Malinen <j@w1.fi>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RFC: ieee80211: Spamming of log resulting from packets with ExtIV  not set
+References: <4616DD7E.6010606@lwfinger.net> <20070407013848.GG16197@jm.kir.nu>
+In-Reply-To: <20070407013848.GG16197@jm.kir.nu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 29 April 2007 12:49:29 Jiri Benc wrote:
-> On Sun, 29 Apr 2007 11:15:43 +0200, Michael Buesch wrote:
-> > On Sunday 29 April 2007 02:33:45 Jiri Benc wrote:
-> > > +	 * Must be atomic. */
-> > >  	int (*set_key)(struct ieee80211_hw *hw, set_key_cmd cmd,
-> > >  		       u8 *addr, struct ieee80211_key_conf *key, int aid);
-> > 
-> > I think USB drivers and bcm43xx violate that. We can't easily workaround it
-> > without doing the operation async.
+Jouni Malinen wrote:
+> On Fri, Apr 06, 2007 at 06:53:34PM -0500, Larry Finger wrote:
+>> Using bcm43xx-softmac, my log gets full of messages that look like:
+>>
+>> Apr  6 18:06:55 larrylap kernel: TKIP: ICV error detected: 
+>> STA=00:14:bf:85:49:fa
 > 
-> I know. Unfortunately, it's not easy to fix that in mac80211. I really want
-> this call not to be atomic and will try to change it later, but it's not a
-> priority now.
-> 
-> For now, just always return success and complain to dmesg if something goes
-> wrong during setting of the key in a workqueue.
+> Does the driver properly filter out FCS errors? If not, the proper fix
+> is to fix the driver to do that. If yes, I'm quite surprised that you
+> see these messages so frequently.
 
-Ok, I see. But I want to note that this might be more problematic
-then just a lost error code. It might race.
-For example it might race with the EAPOL KEY authentication stuff.
-So I think we must also workaround that by disabling TX queues
-until the key configuration request has actually happened
-on the device.
+As far as I can tell, FCS errors are not filtered. I looked at other wireless drivers, and I can see 
+where zd1211rw filters them, but I have not yet figured out what routine sets the error bits. Once I 
+have that and filter them, I'll see if the log messages stop.
 
--- 
-Greetings Michael.
+Thanks for the advice,
+
+Larry
+
