@@ -1,89 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40524 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767352AbXDEVur (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:45157 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965760AbXDGKvl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 17:50:47 -0400
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Theo de Raadt <deraadt@cvs.openbsd.org>
-Cc: Michael Buesch <mb@bu3sch.de>, Jeff Garzik <jeff@garzik.org>,
-	Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	Joseph Jezak <josejx@gentoo.org>,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-In-Reply-To: <200704052133.l35LXmZA032186@cvs.openbsd.org>
-References: <200704052133.l35LXmZA032186@cvs.openbsd.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MAwf0tFQxcc66dnMG1dZ"
-Date: Thu, 05 Apr 2007 23:49:59 +0200
-Message-Id: <1175809799.3489.31.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 7 Apr 2007 06:51:41 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id CCBB98CBE1
+	for <linux-wireless@vger.kernel.org>; Sat,  7 Apr 2007 12:51:36 +0200 (CEST)
+Message-Id: <20070407105138.941578062@warmcat.com>
+References: <20070407105058.762762192@warmcat.com>
+Date: Sat, 07 Apr 2007 11:51:02 +0100
+From: andy@warmcat.com
+To: linux-wireless@vger.kernel.org
+Cc: Andy Green <andy@warmcat.com>
+Subject: [PATCH 4/7] mac80211: Monitor mode radiotap injection docs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Andy Green <andy@warmcat.com>
+Signed-off-by: Andy Green <andy@warmcat.com>
 
---=-MAwf0tFQxcc66dnMG1dZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2007-04-05 at 15:33 -0600, Theo de Raadt wrote:
+diff --git a/Documentation/networking/mac80211-injection.txt b/Documentation/networking/mac80211-injection.txt
+new file mode 100644
+index 0000000..53ef7a0
+--- /dev/null
++++ b/Documentation/networking/mac80211-injection.txt
+@@ -0,0 +1,59 @@
++How to use packet injection with mac80211
++=========================================
++
++mac80211 now allows arbitrary packets to be injected down any Monitor Mode
++interface from userland.  The packet you inject needs to be composed in the
++following format:
++
++ [ radiotap header  ]
++ [ ieee80211 header ]
++ [ payload ]
++
++The radiotap format is discussed in
++./Documentation/networking/radiotap-headers.txt.
++
++Despite 13 radiotap argument types are currently defined, most only make sense
++to appear on received packets.  Currently three kinds of argument are used by
++the injection code, although it knows to skip any other arguments that are
++present (facilitating replay of captured radiotap headers directly):
++
++ - IEEE80211_RADIOTAP_RATE - u8 arg in 500kbps units (0x02 --> 1Mbps)
++
++ - IEEE80211_RADIOTAP_ANTENNA - u8 arg, 0x00 = ant1, 0x01 = ant2
++
++ - IEEE80211_RADIOTAP_DBM_TX_POWER - u8 arg, dBm
++
++Here is an example valid radiotap header defining these three parameters
++
++	0x00, 0x00, // <-- radiotap version
++	0x0b, 0x00, // <- radiotap header length
++	0x04, 0x0c, 0x00, 0x00, // <-- bitmap
++	0x6c, // <-- rate
++	0x0c, //<-- tx power
++	0x01 //<-- antenna
++
++The ieee80211 header follows immediately afterwards, looking for example like
++this:
++
++	0x08, 0x01, 0x00, 0x00,
++	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
++	0x13, 0x22, 0x33, 0x44, 0x55, 0x66,
++	0x13, 0x22, 0x33, 0x44, 0x55, 0x66,
++	0x10, 0x86
++
++Then lastly there is the payload.
++
++After composing the packet contents, it is sent by send()-ing it to a logical
++mac80211 interface that is in Monitor mode.  Libpcap can also be used,
++(which is easier than doing the work to bind the socket to the right
++interface), along the following lines:
++
++	ppcap = pcap_open_live(szInterfaceName, 800, 1, 20, szErrbuf);
++...
++	r = pcap_inject(ppcap, u8aSendBuffer, nLength);
++
++You can also find sources for a complete inject test applet here:
++
++http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
++
++Andy Green <andy@warmcat.com>
+diff --git a/Documentation/networking/radiotap-headers.txt b/Documentation/networking/radiotap-headers.txt
+new file mode 100644
+index 0000000..0d2207a
+--- /dev/null
++++ b/Documentation/networking/radiotap-headers.txt
+@@ -0,0 +1,79 @@
++How to use radiotap headers
++===========================
++
++Pointer to the radiotap include file
++------------------------------------
++
++Radiotap headers are variable-length and extensible, you can get most of the
++information you need to know on them from:
++
++./include/net/ieee80211_radiotap.h
++
++This document gives an overview and warns on some corner cases.
++
++
++Structure of the header
++-----------------------
++
++There is a fixed portion at the start which contains a u32 bitmap that defines
++if the possible argument associated with that bit is present or not.  So if b0
++of the it_present member of ieee80211_radiotap_header is set, it means that
++the header for argument index 0 (IEEE80211_RADIOTAP_TSFT) is present in the
++argument area.
++
++   < 8-byte ieee80211_radiotap_header >
++   [ <possible argument bitmap extensions ... > ]
++   [ <argument> ... ]
++
++At the moment there are only 13 possible argument indexes defined, but in case
++we run out of space in the u32 it_present member, it is defined that b31 set
++indicates that there is another u32 bitmap following (shown as "possible
++argument bitmap extensions..." above), and the start of the arguments is moved
++forward 4 bytes each time.
++
++Note also that the it_len member __le16 is set to the total number of bytes
++covered by the ieee80211_radiotap_header and any arguments following.
++
++
++Requirements for arguments
++--------------------------
++
++After the fixed part of the header, the arguments follow for each argument
++index whose matching bit is set in the it_present member of
++ieee80211_radiotap_header.
++
++ - the arguments are all stored little-endian!
++
++ - the argument payload for a given argument index has a fixed size.  So
++   IEEE80211_RADIOTAP_TSFT being present always indicates an 8-byte argument is
++   present.  See the comments in ./include/net/ieee80211_radiotap.h for a nice
++   breakdown of all the argument sizes
++
++ - the arguments must be aligned to a boundary of the argument size using
++   padding.  So a u16 argument must start on the next u16 boundary if it isn't
++   already on one, a u32 must start on the next u32 boundary and so on.
++
++ - "alignment" is relative to the start of the ieee80211_radiotap_header, ie,
++   the first byte of the radiotap header.  The absolute alignment of that first
++   byte isn't defined.  So even if the whole radiotap header is starting at, eg,
++   address 0x00000003, still the first byte of the radiotap header is treated as
++   0 for alignment purposes.
++
++ - The arguments for a given argument index can be a compound of multiple types
++   together.  For example IEEE80211_RADIOTAP_CHANNEL has an argument payload
++   consisting of two u16s of total length 4.  When this happens, the padding
++   rule is applied dealing with a u16, NOT dealing with a 4-byte single entity.
++
++
++Example valid radiotap header
++-----------------------------
++
++	0x00, 0x00, // <-- radiotap version + pad byte
++	0x0b, 0x00, // <- radiotap header length
++	0x04, 0x0c, 0x00, 0x00, // <-- bitmap
++	0x6c, // <-- rate (in 500kHz units)
++	0x0c, //<-- tx power
++	0x01 //<-- antenna
++
++
++Andy Green <andy@warmcat.com>
 
-> Those were just 'EXAMPLES'?  So you had no evidence?  Why would you
-> show examples of white space and variable naming when you had real
-> evidence?  Or did you think that the examples would be evidence?
-
-Of course you're putting things out of context and order again, which
-we've all seen enough in this thread; but let me set this straight:
-
-When we discovered that the driver looked similar, we first looked for
-instances of code that were apparently copied (as Marcus claims "a lot
-of lines in bcw are written in a way with a too close eye to your
-code.") At that point we still assumed they actually were just rewritten
-versions of the same functions.
-
-However, discovering, for example, an implementation (!) of an abstract
-state machine (yes, don't explain to me again how you cannot copyright a
-state machine) that is exactly identical to the implementation in
-bcm43xx when the description in the specs basically looks like an
-octagon, we decided to look further, and discovered things like:
-
-http://www.openbsd.org/cgi-bin/cvsweb/src/sys/dev/ic/Attic/bcw.c.diff?r1=3D=
-1.77&r2=3D1.78
-
-where original code that Jon Simola wrote from the specs (!) is ripped
-out and replaced by something that comes straight from bcm43xx.
-
-And at that point, still wondering if it was just written similarly,
-Stefano started comparing it on a much lower level and discovered that
-there's just no way that the seemingly similar code could have been
-rewritten and not copied since that would imply that there's at least
-some difference except for a quick s/bcm43xx/bcw/g and re-editing of
-some strings.
-
-So that's how we got to whitespace. For the record.
-
-johannes
-
---=-MAwf0tFQxcc66dnMG1dZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGFW8H/ETPhpq3jKURAs5iAKC0t2ZwCcU84HuRi6RFreoCTfIliQCdG908
-U+ib1VMtjjutsWMcvxcSz7c=
-=Iiem
------END PGP SIGNATURE-----
-
---=-MAwf0tFQxcc66dnMG1dZ--
-
+-- 
