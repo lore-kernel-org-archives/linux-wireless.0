@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:48116 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754078AbXDQAWL (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:43316 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965712AbXDGT1u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2007 20:22:11 -0400
-Message-ID: <462413AE.9020200@lwfinger.net>
-Date: Mon, 16 Apr 2007 19:24:14 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Sat, 7 Apr 2007 15:27:50 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: andy@warmcat.com
+Subject: Re: [PATCH 3/7] mac80211: Radiotap rx to use fallback rate calc if ieee80211_get_rate fails
+Date: Sat, 7 Apr 2007 15:25:26 -0400
+Cc: linux-wireless@vger.kernel.org
+References: <20070407105058.762762192@warmcat.com> <20070407105138.693035816@warmcat.com>
+In-Reply-To: <20070407105138.693035816@warmcat.com>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Andreas Schwab <schwab@suse.de>, linux-wireless@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] ieee80211-crypt: Make some TKIP and CCMP error logging  conditional on IEEE80211_DEBUG_DROP
-References: <461a68c9.Nx0/XQSxDR1PJhM4%Larry.Finger@lwfinger.net>	<jeirbwfb55.fsf@sykes.suse.de> <4623C561.4030201@lwfinger.net> <200704162237.01280.mb@bu3sch.de>
-In-Reply-To: <200704162237.01280.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart2393539.kL2IsuGOYP";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704071525.30640.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Monday 16 April 2007 20:50, Larry Finger wrote:
->> Andreas Schwab wrote:
->>> This is causing an undefined refrence to ieee80211_debug_level with
->>> CONFIG_IEEE80211_DEBUG=y and CONFIG_IEEE80211_CRYPT_CCMP=m and/or
->>> CONFIG_IEEE80211_CRYPT_TKIP=m.
->>>
->>> WARNING: "ieee80211_debug_level" [net/ieee80211/ieee80211_crypt_tkip.ko] undefined!
->>> WARNING: "ieee80211_debug_level" [net/ieee80211/ieee80211_crypt_ccmp.ko] undefined!
->>>
->>> Andreas.
->> The missing symbol was not exported by ieee80211_module.c. Sorry for not testing enough. The fix is 
->> as follows:
->>
->> Index: wireless-2.6/net/ieee80211/ieee80211_module.c
->> ===================================================================
->> --- wireless-2.6.orig/net/ieee80211/ieee80211_module.c
->> +++ wireless-2.6/net/ieee80211/ieee80211_module.c
->> @@ -229,6 +229,7 @@ void free_ieee80211(struct net_device *d
->>
->>   static int debug = 0;
->>   u32 ieee80211_debug_level = 0;
->> +EXPORT_SYMBOL_GPL(ieee80211_debug_level);
-> 
-> We don't use the _GPL suffix in mac80211.
-> 
+--nextPart2393539.kL2IsuGOYP
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Upon inspection, neither does most of ieee80211. It is now changed.
+On Saturday 07 April 2007 06:51, andy@warmcat.com wrote:
+> Michael Wu's radiotap rx code gave me a rate of 0 on zd1211rw-mac80211,
+> perhaps because no interface to the physical device was associated.  Added
+> some fallback code so that if the rate could not be computed by
+> ieee80211_get_rate it uses Michael's original method (which always worked
+> for me).
+I know about this problem. The rate reporting in zd1211rw-mac80211 was alwa=
+ys=20
+wrong and needs to be fixed there, or the mac80211 interface should modifie=
+d=20
+to remove the assumption that TX hw rate =3D=3D RX hw rate. In either case,=
+ this=20
+is the wrong way to fix this issue.
 
-Larry
+=2DMichael Wu
+
+--nextPart2393539.kL2IsuGOYP
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGF/AqT3Oqt9AH4aERAvBXAKCG0hZyeqpwdUqVs0IGZ3yjO0TuZACeLmEd
+k8tbXaNsZu8WiR8rCoEZ2kI=
+=u69M
+-----END PGP SIGNATURE-----
+
+--nextPart2393539.kL2IsuGOYP--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
