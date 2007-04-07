@@ -1,63 +1,251 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47078 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767424AbXDEXen (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:45155 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965764AbXDGKvl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 19:34:43 -0400
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Theo de Raadt <deraadt@cvs.openbsd.org>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Pavel Roskin <proski@gnu.org>, Michael Buesch <mb@bu3sch.de>,
-	Joseph Jezak <josejx@gentoo.org>,
-	Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-In-Reply-To: <200704052323.l35NNgvS026227@cvs.openbsd.org>
-References: <200704052323.l35NNgvS026227@cvs.openbsd.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mL1Dvvvi52klGxa5siPH"
-Date: Fri, 06 Apr 2007 01:34:08 +0200
-Message-Id: <1175816048.3489.40.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 7 Apr 2007 06:51:41 -0400
+Message-Id: <20070407105138.465992816@warmcat.com>
+References: <20070407105058.762762192@warmcat.com>
+Date: Sat, 07 Apr 2007 11:51:00 +0100
+From: andy@warmcat.com
+To: linux-wireless@vger.kernel.org
+Cc: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 2/7] mac80211: Add radiotap support
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Michael Wu <flamingice@sourmilk.net>
 
---=-mL1Dvvvi52klGxa5siPH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch makes mac80211 monitor interfaces use radiotap headers. It also
+provides a flag to let a driver specify a frame has a radiotap header and
+another flag to let the driver know if adding a radiotap header would be
+helpful.
 
-On Thu, 2007-04-05 at 17:23 -0600, Theo de Raadt wrote:
+Thanks to Andy Green <andy@warmcat.com> for testing earlier versions of
+this patch.
 
-> Cooperation is based on mutual trust.
->=20
-> We don't trust Linux people anymore.
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
-I find this comment amusing. Do you expect us to trust you after
-discovering such blatant license violations?
+ include/net/mac80211.h         |    8 +++-
+ net/mac80211/ieee80211.c       |   75 ++++++++++++++++++++++++++++++++++------
+ net/mac80211/ieee80211_iface.c |    2 +
+ 3 files changed, 70 insertions(+), 15 deletions(-)
 
-johannes
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 916b21b..3b22369 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -216,9 +216,6 @@ struct ieee80211_tx_control {
+ 	int ifindex;	/* internal */
+ };
+ 
+-#define RX_FLAG_MMIC_ERROR       0x1
+-#define RX_FLAG_DECRYPTED	0x2
+-
+ /* Receive status. The low-level driver should provide this information
+  * (the subset supported by hardware) to the 802.11 code with each received
+  * frame. */
+@@ -232,6 +229,9 @@ struct ieee80211_rx_status {
+ 	int noise;
+ 	int antenna;
+ 	int rate;
++#define RX_FLAG_MMIC_ERROR	(1<<0)
++#define RX_FLAG_DECRYPTED	(1<<1)
++#define RX_FLAG_RADIOTAP	(1<<2)
+ 	int flag;
+ };
+ 
+@@ -278,6 +278,8 @@ struct ieee80211_conf {
+ #define IEEE80211_CONF_SHORT_SLOT_TIME	(1<<0) /* use IEEE 802.11g Short Slot
+ 						* Time */
+ #define IEEE80211_CONF_SSID_HIDDEN	(1<<1) /* do not broadcast the ssid */
++#define IEEE80211_CONF_RADIOTAP		(1<<2) /* use radiotap if supported
++						  check this bit at RX time */
+ 	u32 flags;			/* configuration flags defined above */
+ 
+ 	u8 power_level;			/* transmit power limit for current
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index c390c85..bbf58a3 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -8,6 +8,7 @@
+  */
+ 
+ #include <net/mac80211.h>
++#include <net/ieee80211_radiotap.h>
+ #include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/netdevice.h>
+@@ -292,6 +293,14 @@ int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
+ }
+ EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
+ 
++static int ieee80211_get_radiotap_len(struct sk_buff *skb)
++{
++	struct ieee80211_radiotap_header *hdr =
++		(struct ieee80211_radiotap_header *) skb->data;
++
++	return le16_to_cpu(hdr->it_len);
++}
++
+ #ifdef CONFIG_MAC80211_LOWTX_FRAME_DUMP
+ static void ieee80211_dump_frame(const char *ifname, const char *title,
+ 				 const struct sk_buff *skb)
+@@ -2339,6 +2348,7 @@ static int ieee80211_open(struct net_device *dev)
+ 		/* run the interface in a "soft monitor" mode */
+ 		local->monitors++;
+ 		local->open_count++;
++		local->hw.conf.flags |= IEEE80211_CONF_RADIOTAP;
+ 		return 0;
+ 	}
+ 	ieee80211_start_soft_monitor(local);
+@@ -2387,9 +2397,10 @@ static int ieee80211_open(struct net_device *dev)
+ 	}
+ 	local->open_count++;
+ 
+-	if (sdata->type == IEEE80211_IF_TYPE_MNTR)
++	if (sdata->type == IEEE80211_IF_TYPE_MNTR) {
+ 		local->monitors++;
+-	else
++		local->hw.conf.flags |= IEEE80211_CONF_RADIOTAP;
++	} else
+ 		ieee80211_if_config(dev);
+ 
+ 	if (sdata->type == IEEE80211_IF_TYPE_STA &&
+@@ -2414,13 +2425,18 @@ static int ieee80211_stop(struct net_device *dev)
+ 		/* remove "soft monitor" interface */
+ 		local->open_count--;
+ 		local->monitors--;
++		if (!local->monitors)
++			local->hw.conf.flags &= ~IEEE80211_CONF_RADIOTAP;
+ 		return 0;
+ 	}
+ 
+ 	netif_stop_queue(dev);
+ 
+-	if (sdata->type == IEEE80211_IF_TYPE_MNTR)
++	if (sdata->type == IEEE80211_IF_TYPE_MNTR) {
+ 		local->monitors--;
++		if (!local->monitors)
++			local->hw.conf.flags &= ~IEEE80211_CONF_RADIOTAP;
++	}
+ 
+ 	local->open_count--;
+ 	if (local->open_count == 0) {
+@@ -2766,26 +2782,53 @@ ieee80211_rx_monitor(struct net_device *dev, struct sk_buff *skb,
+ 		     struct ieee80211_rx_status *status)
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	struct ieee80211_frame_info *fi;
+ 	struct ieee80211_sub_if_data *sdata;
+-	const size_t hlen = sizeof(struct ieee80211_frame_info)
+-				- sizeof(fi->msg_type);
++	struct ieee80211_rate *rate;
++	struct ieee80211_rtap_hdr {
++		struct ieee80211_radiotap_header hdr;
++		u8 flags;
++		u8 rate;
++		__le16 chan_freq;
++		__le16 chan_flags;
++		u8 antsignal;
++	} __attribute__ ((packed)) *rthdr;
+ 
+ 	skb->dev = dev;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+-	if (skb_headroom(skb) < hlen) {
++	if (status->flag & RX_FLAG_RADIOTAP)
++		goto out;
++
++	if (skb_headroom(skb) < sizeof(*rthdr)) {
+ 		I802_DEBUG_INC(local->rx_expand_skb_head);
+-		if (pskb_expand_head(skb, hlen, 0, GFP_ATOMIC)) {
++		if (pskb_expand_head(skb, sizeof(*rthdr), 0, GFP_ATOMIC)) {
+ 			dev_kfree_skb(skb);
+ 			return;
+ 		}
+ 	}
+ 
+-	fi = (struct ieee80211_frame_info *) skb_push(skb, hlen);
++	rthdr = (struct ieee80211_rtap_hdr *) skb_push(skb, sizeof(*rthdr));
++	memset(rthdr, 0, sizeof(*rthdr));
++	rthdr->hdr.it_len = cpu_to_le16(sizeof(*rthdr));
++	rthdr->hdr.it_present =
++		cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
++			    (1 << IEEE80211_RADIOTAP_RATE) |
++			    (1 << IEEE80211_RADIOTAP_CHANNEL) |
++			    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL));
++	rthdr->flags = local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS ?
++		       IEEE80211_RADIOTAP_F_FCS : 0;
++	rate = ieee80211_get_rate(local, status->phymode, status->rate);
++	if (rate)
++		rthdr->rate = rate->rate / 5;
++	rthdr->chan_freq = cpu_to_le16(status->freq);
++	rthdr->chan_flags =
++		status->phymode == MODE_IEEE80211A ?
++		cpu_to_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ) :
++		cpu_to_le16(IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ);
++	rthdr->antsignal = status->ssi;
+ 
+-	ieee80211_fill_frame_info(local, fi, status);
++ out:
+ 	sdata->stats.rx_packets++;
+ 	sdata->stats.rx_bytes += skb->len;
+ 
+@@ -3189,6 +3232,9 @@ ieee80211_rx_h_monitor(struct ieee80211_txrx_data *rx)
+ 		return TXRX_QUEUED;
+ 	}
+ 
++	if (rx->u.rx.status->flag & RX_FLAG_RADIOTAP)
++		skb_pull(rx->skb, ieee80211_get_radiotap_len(rx->skb));
++
+ 	return TXRX_CONTINUE;
+ }
+ 
+@@ -3756,6 +3802,12 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	struct ieee80211_txrx_data rx;
+ 	u16 type;
+ 	int multicast;
++	int radiotap_len = 0;
++
++	if (status->flag & RX_FLAG_RADIOTAP) {
++		radiotap_len = ieee80211_get_radiotap_len(skb);
++		skb_pull(skb, radiotap_len);
++	}
+ 
+ 	hdr = (struct ieee80211_hdr *) skb->data;
+ 	memset(&rx, 0, sizeof(rx));
+@@ -3792,6 +3844,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		goto end;
+ 	skb = rx.skb;
+ 
++	skb_push(skb, radiotap_len);
+ 	if (sta && !sta->assoc_ap && !(sta->flags & WLAN_STA_WDS) &&
+ 	    !local->iff_promiscs && !multicast) {
+ 		rx.u.rx.ra_match = 1;
+@@ -3800,7 +3853,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	} else {
+ 		struct ieee80211_sub_if_data *prev = NULL;
+ 		struct sk_buff *skb_new;
+-		u8 *bssid = ieee80211_get_bssid(hdr, skb->len);
++		u8 *bssid = ieee80211_get_bssid(hdr, skb->len - radiotap_len);
+ 
+ 		list_for_each_entry(sdata, &local->sub_if_list, list) {
+ 			rx.u.rx.ra_match = 1;
+diff --git a/net/mac80211/ieee80211_iface.c b/net/mac80211/ieee80211_iface.c
+index b1b20ba..495177b 100644
+--- a/net/mac80211/ieee80211_iface.c
++++ b/net/mac80211/ieee80211_iface.c
+@@ -192,7 +192,7 @@ void ieee80211_if_set_type(struct net_device *dev, int type)
+ 		break;
+ 	}
+ 	case IEEE80211_IF_TYPE_MNTR:
+-		dev->type = ARPHRD_IEEE80211_PRISM;
++		dev->type = ARPHRD_IEEE80211_RADIOTAP;
+ 		break;
+ 	default:
+ 		printk(KERN_WARNING "%s: %s: Unknown interface type 0x%x",
 
---=-mL1Dvvvi52klGxa5siPH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGFYdv/ETPhpq3jKURAv0zAJ9heod19iZRCJcndpK+qoKNso2kYwCguYIv
-QgH7kp4pMuC5ThEqmS0fFL8=
-=v/uY
------END PGP SIGNATURE-----
-
---=-mL1Dvvvi52klGxa5siPH--
-
+-- 
