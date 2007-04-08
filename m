@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:54584 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965606AbXDBSBF (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49833 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752759AbXDHIKR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2007 14:01:05 -0400
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HYQnq-0001Vz-BC
-	for linux-wireless@vger.kernel.org; Mon, 02 Apr 2007 13:58:50 -0400
-Subject: Re: cfg80211 wext compat w/o wext code changes, rtnl locking
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	James Ketrenos <jketreno@linux.intel.com>
-In-Reply-To: <1175251051.19085.2.camel@johannes.berg>
-References: <1175122815.8807.21.camel@johannes.berg>
-	 <200703301211.05261.mb@bu3sch.de>  <1175251051.19085.2.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 02 Apr 2007 14:00:59 -0400
-Message-Id: <1175536859.25048.6.camel@dv>
+	Sun, 8 Apr 2007 04:10:17 -0400
+Subject: Re: RFC: ieee80211: Spamming of log resulting from packets with  ExtIV  not set
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Jouni Malinen <j@w1.fi>, wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <46171B36.6090108@lwfinger.net>
+References: <4616DD7E.6010606@lwfinger.net>
+	 <20070407013848.GG16197@jm.kir.nu>  <46171B36.6090108@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/PYltyxa1r6FDnjbGNfL"
+Date: Sun, 08 Apr 2007 10:10:13 +0200
+Message-Id: <1176019813.8459.15.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-03-30 at 12:37 +0200, Johannes Berg wrote:
-> On Fri, 2007-03-30 at 12:11 +0200, Michael Buesch wrote:
-> > On Thursday 29 March 2007 01:00, Johannes Berg wrote:
-> > > -			if(handler != NULL) {
-> > > +			if (handler) {
-> > > +				if (!dev->wireless_handlers->no_locking)
-> > > +					rtnl_lock();
-> > 
-> > Is sparse OK with this conditional locking?
-> 
-> I also thought it wasn't but it didn't complain. The only reason why I
-> didn't just duplicate the code was the deep indentation here...
 
-Just for your information, rtnl_lock() is actually a mutex.  Neither
-rtnl_lock() nor any mutex operation are annotated to give sparse any
-idea of what they are doing.
+--=-/PYltyxa1r6FDnjbGNfL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-If sparse learns about mutexes, expect it to give a warning.  Please
-consider if the code between rtnl_lock() and rtnl_unlock() could be
-moved to a separate function so that locking and unlocking would happen
-in the same basic block.
+On Fri, 2007-04-06 at 23:16 -0500, Larry Finger wrote:
 
--- 
-Regards,
-Pavel Roskin
+> As far as I can tell, FCS errors are not filtered.
+
+Actually, they are filtered by the firmware and never passed up to the
+driver unless you set the "rx invalid frames" bit in the mac control
+field. Since the driver never sets that except with some of the module
+parameters (or is that modparm bcm43xx-mac80211 only?) the FCS on all
+frames passed up should be fine.
+
+johannes
+
+--=-/PYltyxa1r6FDnjbGNfL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGGKNk/ETPhpq3jKURAjHtAKCez9VgWMXVcOfi1dCLzIyDsqcYqgCfYi0i
+J3K1OxK/JaP05Q9tAF2VAF4=
+=K4eg
+-----END PGP SIGNATURE-----
+
+--=-/PYltyxa1r6FDnjbGNfL--
 
