@@ -1,63 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49090 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752040AbXDUTvb (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:49668 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751404AbXDHPiB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2007 15:51:31 -0400
-Subject: Re: mac80211-7.0.4 ieee80211_ptr trouble
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Dick <dm@chello.nl>, linux-wireless@vger.kernel.org
-In-Reply-To: <20070421185622.GA7019@tuxdriver.com>
-References: <1177144052.9892.8.camel@localhost>
-	 <20070421185622.GA7019@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fLnN5VvVDmh1Bs/gVLJ8"
-Date: Sat, 21 Apr 2007 21:54:14 +0200
-Message-Id: <1177185254.5941.30.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 8 Apr 2007 11:38:01 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] mac80211: Report correct wireless statistics
+Date: Sun, 8 Apr 2007 11:35:28 -0400
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
+References: <461877ea.cyxM3SSnr6WhYkjX%Larry.Finger@lwfinger.net>
+In-Reply-To: <461877ea.cyxM3SSnr6WhYkjX%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1430589.kfyelUZkIR";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704081135.33106.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-fLnN5VvVDmh1Bs/gVLJ8
-Content-Type: text/plain
+--nextPart1430589.kfyelUZkIR
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Sat, 2007-04-21 at 14:56 -0400, John W. Linville wrote:
+On Sunday 08 April 2007 01:04, Larry Finger wrote:
+> In mac80211 the 'qual' and 'level' values are interchanged. The patch also
+> places the 'qual' value on a 0 - 100 scale and calculated using the formu=
+la
+> contained in iwlib.
+>
+NACK. Qual (arbitrary signal quality) and level (RSSI) values are correct a=
+nd=20
+userspace is responsible for scaling any statistics values.
 
-> > /var/tmp/portage/net-wireless/mac80211-7.0.4/work/mac80211-7.0.4/compat=
-ible/net/mac80211/ieee80211_ioctl.c: In functie 'ieee80211_ioctl_get_hw_fea=
-tures':
-> > /var/tmp/portage/net-wireless/mac80211-7.0.4/work/mac80211-7.0.4/compat=
-ible/net/mac80211/ieee80211_ioctl.c:119: fout: 'struct net_device' has no m=
-ember named 'ieee80211_ptr'
-> > /var/tmp/portage/net-wireless/mac80211-7.0.4/work/mac80211-7.0.4/compat=
-ible/net/mac80211/ieee80211_ioctl.c: In functie 'ieee80211_ioctl_scan':
-> > /var/tmp/portage/net-wireless/mac80211-7.0.4/work/mac80211-7.0.4/compat=
-ible/net/mac80211/ieee80211_ioctl.c:172: fout: 'struct net_device' has no m=
-ember named 'ieee80211_ptr'
-> >=20
-> > What am I doing wrong, what happened to ieee80211_ptr?
->=20
-> You'll have to ask the gentoo guys...
+=2DMichael Wu
 
-Nah, he's compiling James's stuff against a kernel that doesn't have
-ieee80211_ptr, afaik James used ax25_ptr for this or something... Looks
-like you forgot some header file.
-
-johannes
-
---=-fLnN5VvVDmh1Bs/gVLJ8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart1430589.kfyelUZkIR
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBGKmvm/ETPhpq3jKURAlC1AKCnMa7rbhQGtMjDTzt1hoUbM07WEQCfWd4v
-z8R6OrKwFI7T5wIkVJFLYS4=
-=7fTB
+iD8DBQBGGQvFT3Oqt9AH4aERAl+3AJ9bPoKLVK7wrwLJK/k3FSEqqLio2ACeNSCu
+zKXQkE3l4lwRusu3pvGWOVw=
+=lbnK
 -----END PGP SIGNATURE-----
 
---=-fLnN5VvVDmh1Bs/gVLJ8--
-
+--nextPart1430589.kfyelUZkIR--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
