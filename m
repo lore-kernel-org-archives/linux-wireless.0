@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:39588 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752044AbXDHXEv (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:41516 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752031AbXDHWZ3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Apr 2007 19:04:51 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH] mac80211: Report correct wireless statistics
-Date: Sun, 8 Apr 2007 19:02:18 -0400
-Cc: John Linville <linville@tuxdriver.com>,
+	Sun, 8 Apr 2007 18:25:29 -0400
+Message-ID: <46196C03.4070003@lwfinger.net>
+Date: Sun, 08 Apr 2007 17:26:11 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Wu <flamingice@sourmilk.net>
+CC: John Linville <linville@tuxdriver.com>,
 	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
 	linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
-References: <461877ea.cyxM3SSnr6WhYkjX%Larry.Finger@lwfinger.net> <200704081135.33106.flamingice@sourmilk.net> <46196C03.4070003@lwfinger.net>
-In-Reply-To: <46196C03.4070003@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart37941198.yn8CclvMiS";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200704081902.23238.flamingice@sourmilk.net>
+Subject: Re: [PATCH] mac80211: Report correct wireless statistics
+References: <461877ea.cyxM3SSnr6WhYkjX%Larry.Finger@lwfinger.net> <200704081135.33106.flamingice@sourmilk.net>
+In-Reply-To: <200704081135.33106.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart37941198.yn8CclvMiS
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Michael Wu wrote:
+> On Sunday 08 April 2007 01:04, Larry Finger wrote:
+>> In mac80211 the 'qual' and 'level' values are interchanged. The patch also
+>> places the 'qual' value on a 0 - 100 scale and calculated using the formula
+>> contained in iwlib.
+>>
+> NACK. Qual (arbitrary signal quality) and level (RSSI) values are correct and 
+> userspace is responsible for scaling any statistics values.
 
-On Sunday 08 April 2007 18:26, Larry Finger wrote:
-> Link Quality=3D216/146  Signal level=3D-197 dBm  Noise level=3D-63 dBm
->
-Is this before or after your "bcm43xx-mac80211: Fix error in initiallizing =
-max=20
-RSSI and max signal" patch?
+I disagree. For the wireless extensions output, the maximum values are set implicitly in the
+iw_range struct. In addition, the level is always in dBm (a negative number), whereas the RSSI is an
+arbitrary positive number. Because the maximum value is driver dependent, it must be specified when
+the driver initializes the MAC layer.
 
-=2DMichael Wu
+In any case, the current code is broken. Without my patch, an iwconfig command with bcm43xx-mac80211
+produces the line:
 
---nextPart37941198.yn8CclvMiS
-Content-Type: application/pgp-signature
+Link Quality=216/146  Signal level=-197 dBm  Noise level=-63 dBm
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+We could argue about the Link Quality, although the x/146 looks pretty strange. The Signal level of
+-197 dBm is impossible. With my patch, the same version of bcm43xx gets the line
 
-iD8DBQBGGXR/T3Oqt9AH4aERAlVzAKDVewnwkNKF1Sh8S5IBvYPZ0TtdIACguK2a
-jLdZ7ZwrincUe1TIIfP09iQ=
-=8pJR
------END PGP SIGNATURE-----
+Link Quality=90/100  Signal level=-36 dBm  Noise level=-69 dBm
 
---nextPart37941198.yn8CclvMiS--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+That Signal level matches what comes from both bcm43xx-softmac and the Windows driver running under
+ndiswrapper.
+
+Larry
+
+
