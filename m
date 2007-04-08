@@ -1,335 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:45159 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965786AbXDGKvn (ORCPT
+Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:38497 "EHLO
+	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751861AbXDHGH0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Apr 2007 06:51:43 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 5DD778D74F
-	for <linux-wireless@vger.kernel.org>; Sat,  7 Apr 2007 12:51:37 +0200 (CEST)
-Message-Id: <20070407105139.538660638@warmcat.com>
-References: <20070407105058.762762192@warmcat.com>
-Date: Sat, 07 Apr 2007 11:51:04 +0100
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Cc: Andy Green <andy@warmcat.com>
-Subject: [PATCH 6/7] cfg80211: Radiotap parser
+	Sun, 8 Apr 2007 02:07:26 -0400
+Date: Sun, 08 Apr 2007 00:04:42 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Report correct wireless statistics
+Message-ID: <461877ea.cyxM3SSnr6WhYkjX%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andy Green <andy@warmcat.com>
+In mac80211 the 'qual' and 'level' values are interchanged. The patch also
+places the 'qual' value on a 0 - 100 scale and calculated using the formula
+contained in iwlib.
 
-Try #2
- - added sanity check to extended present bitmap u32 walking code - disallow
-   possibility to walk past the end of the radiotap header length
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Try #1
- - Based on Johannes Berg's comments, broke out the radiotap parsing into
-   its own file as part of cfg80211
- - From same comments, added mask constant for b31 of arg presence bitfield
-   to ieee80211_radiotap.h
- - Fixed subtle but nasty bug with alignment: args in the radiotap area are
-   aligned *relative to the start of the header* now.  The header is not
-   guaranteed to align to anything (it is randomly in an skb data area).
+John and Michael,
 
-Signed-off-by: Andy Green <andy@warmcat.com>
+This fix is meant for the wireless-dev and mb git trees.
 
-===================================================
+Larry
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 47e4544..098d4b6 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -74,6 +74,41 @@ struct key_params {
- 	u32 cipher;
- };
+ ieee80211_ioctl.c |   16 +++++++++++-----
+ ieee80211_sta.c   |    9 +++++++--
+ 2 files changed, 18 insertions(+), 7 deletions(-)
+
+Index: wireless-mb/net/mac80211/ieee80211_sta.c
+===================================================================
+--- wireless-mb.orig/net/mac80211/ieee80211_sta.c
++++ wireless-mb/net/mac80211/ieee80211_sta.c
+@@ -2822,8 +2822,10 @@ ieee80211_sta_scan_result(struct net_dev
  
-+
-+/* Radiotap header iteration
-+ *   implemented in net/wireless/radiotap.c
-+ *
-+ * call __ieee80211_radiotap_iterator_init() to init the opaque iterator
-+ * (no need to init anything in there beforehand)
-+ * then loop calling __ieee80211_radiotap_iterator_next()... it returns -1
-+ * if there are no more args in the header, or the next argument type index
-+ * that is present.  The iterator's this_arg member points to the start of the
-+ * argument associated with the current argument type that is present,
-+ * which can be found in the iterator's this_arg_index member.
-+ */
-+
-+struct ieee80211_radiotap_iterator {
-+	struct ieee80211_radiotap_header *rtheader;
-+	int max_length; /* copy of max length we can scan over */
-+	int this_arg_index; /* IEEE80211_RADIOTAP_* index for caller */
-+	u8 * this_arg; /* current arg start position, caller can change */
-+
-+	int arg_index; /* internal: arg index b0 of bitmap_shifter represents */
-+	u8 * arg; /* internal: points to the next arg start position */
-+	__le32 *next_bitmap; /* internal */
-+	u32 bitmap_shifter; /* internal */
-+};
-+
-+extern int ieee80211_radiotap_iterator_init(
-+   struct ieee80211_radiotap_iterator * iterator,
-+   struct ieee80211_radiotap_header * radiotap_header,
-+   int max_length
-+);
-+
-+extern int ieee80211_radiotap_iterator_next(
-+   struct ieee80211_radiotap_iterator * iterator);
-+
-+
- /* from net/wireless.h */
- struct wiphy;
+ 	memset(&iwe, 0, sizeof(iwe));
+ 	iwe.cmd = IWEVQUAL;
+-	iwe.u.qual.qual = bss->signal;
+-	iwe.u.qual.level = bss->rssi;
++	iwe.u.qual.level = bss->signal;
++	if (unlikely(local->hw.max_rssi == 0))
++		local->hw.max_rssi = 100;
++	iwe.u.qual.qual = (100 * bss->rssi) / local->hw.max_rssi;
+ 	iwe.u.qual.noise = bss->noise;
+ 	iwe.u.qual.updated = local->wstats_flags;
+ 	current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
+Index: wireless-mb/net/mac80211/ieee80211_ioctl.c
+===================================================================
+--- wireless-mb.orig/net/mac80211/ieee80211_ioctl.c
++++ wireless-mb/net/mac80211/ieee80211_ioctl.c
+@@ -1593,12 +1593,12 @@ static int ieee80211_ioctl_giwrange(stru
+ 	range->min_frag = 256;
+ 	range->max_frag = 2346;
  
-diff --git a/net/wireless/Makefile b/net/wireless/Makefile
-index 507a028..26f815a 100644
---- a/net/wireless/Makefile
-+++ b/net/wireless/Makefile
-@@ -1,6 +1,6 @@
- obj-$(CONFIG_CFG80211) += cfg80211.o
+-	range->max_qual.qual = local->hw.max_signal;
+-	range->max_qual.level = local->hw.max_rssi;
++	range->max_qual.qual = 100;
++	range->max_qual.level = local->hw.max_signal;
+ 	range->max_qual.noise = local->hw.max_noise;
+ 	range->max_qual.updated = local->wstats_flags;
  
--cfg80211-y += core.o sysfs.o
-+cfg80211-y += core.o sysfs.o radiotap.o
- cfg80211-$(CONFIG_NL80211) += nl80211.o
- cfg80211-$(CONFIG_CFG80211_WEXT_COMPAT) += wext-compat.o
- 
-diff --git a/net/wireless/radiotap.c b/net/wireless/radiotap.c
-new file mode 100644
-index 0000000..a50a8e7
---- /dev/null
-+++ b/net/wireless/radiotap.c
-@@ -0,0 +1,231 @@
-+/*
-+ * Radiotap parser
-+ *
-+ * Copyright 2007		Andy Green <andy@warmcat.com>
-+ */
-+
-+#include <linux/if.h>
-+#include <linux/err.h>
-+#include <linux/mutex.h>
-+#include <linux/device.h>
-+#include <net/genetlink.h>
-+#include <net/cfg80211.h>
-+#include <net/wireless.h>
-+#include "nl80211.h"
-+#include "core.h"
-+#include <net/ieee80211_radiotap.h>
-+
-+
-+/**
-+ * ieee80211_radiotap_iterator_init - radiotap parser iterator initialization
-+ * @iterator: radiotap_iterator to initialize
-+ * @radiotap_header: radiotap header to parse
-+ * @max_length: total length we can parse into (eg, whole packet length)
-+ *
-+ * Returns: 0 on success or negative if sanity check fails
-+ *
-+ * This function initializes an opaque iterator struct which can then
-+ * be passed to ieee80211_radiotap_iterator_next() to visit every radiotap
-+ * argument which is present in the header.  It knows about extended
-+ * present headers and handles them.
-+ */
-+
-+int ieee80211_radiotap_iterator_init(
-+   struct ieee80211_radiotap_iterator * iterator,
-+   struct ieee80211_radiotap_header * radiotap_header,
-+   int max_length)
-+{
-+
-+	/* Linux only supports version 0 radiotap format */
-+
-+	if (radiotap_header->it_version)
-+		return -EINVAL;
-+
-+	/* sanity check for allowed length and radiotap length field */
-+
-+	if (max_length < (le16_to_cpu(radiotap_header->it_len)))
-+		return -EINVAL;
-+
-+	iterator->rtheader = radiotap_header;
-+	iterator->max_length = le16_to_cpu(radiotap_header->it_len);
-+	iterator->arg_index = 0;
-+	iterator->bitmap_shifter = le32_to_cpu(radiotap_header->it_present);
-+	iterator->arg = ((u8 *)radiotap_header) +
-+			sizeof(struct ieee80211_radiotap_header);
-+	iterator->this_arg = 0;
-+
-+	/* find payload start allowing for extended bitmap(s) */
-+
-+	if (unlikely(iterator->bitmap_shifter &
-+	    IEEE80211_RADIOTAP_PRESENT_EXTEND_MASK)) {
-+		while (le32_to_cpu(*((u32 *)iterator->arg)) &
-+		    IEEE80211_RADIOTAP_PRESENT_EXTEND_MASK) {
-+			iterator->arg += sizeof(u32);
-+
-+			/* check for insanity where the present bitmaps
-+			 * keep claiming to extend up to or even beyond the
-+			 * stated radiotap header length
-+			 */
-+
-+			if ((((int)iterator->arg) - ((int)iterator->rtheader)) >
-+			    iterator->max_length)
-+				return -EINVAL;
-+			
-+		}
-+
-+		iterator->arg += sizeof(u32);
-+
-+		/* no need to check again for blowing past stated radiotap
-+		 * header length, becuase ieee80211_radiotap_iterator_next
-+		 * checks it before it is dereferenced */
-+
-+	}
-+
-+	/* we are all initialized happily */
-+
-+	return 0;
-+}
-+
-+EXPORT_SYMBOL(ieee80211_radiotap_iterator_init);
-+
-+
-+/**
-+ * ieee80211_radiotap_iterator_next - return next radiotap parser iterator arg
-+ * @iterator: radiotap_iterator to move to next arg (if any)
-+ *
-+ * Returns: next present arg index on success or negative if no more or error
-+ *
-+ * This function returns the next radiotap arg index (IEEE80211_RADIOTAP_*)
-+ * and sets iterator->this_arg to point to the payload for the arg.  It takes
-+ * care of alignment handling and extended present fields.  interator->this_arg
-+ * can be changed by the caller.  The args pointed to are in little-endian
-+ * format.
-+ */
-+
-+int ieee80211_radiotap_iterator_next(
-+   struct ieee80211_radiotap_iterator * iterator)
-+{
-+
-+	/* small length lookup table for all radiotap types we heard of
-+	 * starting from b0 in the bitmap, so we can walk the payload
-+	 * area of the radiotap header
-+	 *
-+	 * There is a requirement to pad args, so that args
-+	 * of a given length must begin at a boundary of that length
-+	 * -- but note that compound args are allowed (eg, 2 x u16
-+	 * for IEEE80211_RADIOTAP_CHANNEL) so total arg length is not
-+	 * a reliable indicator of alignment requirement.
-+	 *
-+	 * upper nybble: content alignment for arg
-+	 * lower nybble: content length for arg
-+	 */
-+
-+	static const u8 rt_sizes[] = {
-+		[IEEE80211_RADIOTAP_TSFT] = 0x88,
-+		[IEEE80211_RADIOTAP_FLAGS] = 0x11,
-+		[IEEE80211_RADIOTAP_RATE] = 0x11,
-+		[IEEE80211_RADIOTAP_CHANNEL] = 0x24,
-+		[IEEE80211_RADIOTAP_FHSS] = 0x22,
-+		[IEEE80211_RADIOTAP_DBM_ANTSIGNAL] = 0x11,
-+		[IEEE80211_RADIOTAP_DBM_ANTNOISE] = 0x11,
-+		[IEEE80211_RADIOTAP_LOCK_QUALITY] = 0x22,
-+		[IEEE80211_RADIOTAP_TX_ATTENUATION] = 0x22,
-+		[IEEE80211_RADIOTAP_DB_TX_ATTENUATION] = 0x22,
-+		[IEEE80211_RADIOTAP_DBM_TX_POWER] = 0x11,
-+		[IEEE80211_RADIOTAP_ANTENNA] = 0x11,
-+		[IEEE80211_RADIOTAP_DB_ANTSIGNAL] = 0x11,
-+		[IEEE80211_RADIOTAP_DB_ANTNOISE] = 0x11
-+		/* add more here as they are defined in
-+		 * include/net/ieee80211_radiotap.h
-+		 */
-+	};
-+
-+	/* for every radiotap entry we can at
-+	 * least skip (by knowing the length)...
-+	 */
-+
-+	while (iterator->arg_index < sizeof(rt_sizes)) {
-+		int hit=0;
-+
-+		if (!(iterator->bitmap_shifter & 1))
-+			goto next_entry; /* arg not present */
-+
-+		/* arg is present, account for alignment padding
-+		 *  8-bit args can be at any alignment
-+		 * 16-bit args must start on 16-bit boundary
-+		 * 32-bit args must start on 32-bit boundary
-+		 * 64-bit args must start on 64-bit boundary
-+		 *
-+		 * note that total arg size can differ from alignment of
-+		 * elements inside arg, so we use upper nybble of length
-+		 * table to base alignment on
-+		 *
-+		 * also note: these alignments are ** relative to the
-+		 * start of the radiotap header **.  There is no guarantee
-+		 * that the radiotap header itself is aligned on any
-+		 * kind of boundary.
-+		 */
-+
-+		if ((((int)iterator->arg)-((int)iterator->rtheader)) &
-+		    ((rt_sizes[iterator->arg_index] >> 4) - 1))
-+			iterator->arg_index +=
-+				(rt_sizes[iterator->arg_index] >> 4) -
-+				((((int)iterator->arg) -
-+				 ((int)iterator->rtheader)) &
-+				 ((rt_sizes[iterator->arg_index] >> 4) - 1));
-+
-+		/* this is what we will return to user, but we need to
-+		 * move on first so next call has something fresh to test
-+		 */
-+
-+		iterator->this_arg_index = iterator->arg_index;
-+		iterator->this_arg = iterator->arg;
-+		hit = 1;
-+
-+		/* internally move on the size of this arg */
-+
-+		iterator->arg += rt_sizes[iterator->arg_index] & 0x0f;
-+
-+		/* check for insanity where we are given a bitmap that
-+		 * claims to have more arg content than the length of the
-+		 * radiotap section.  We will normally end up equalling this
-+		 * max_length on the last arg, never exceeding it.
-+		 */
-+
-+		if ((((int)iterator->arg) - ((int)iterator->rtheader)) >
-+		    iterator->max_length)
-+			return -EINVAL;
-+
-+	next_entry:
-+
-+		iterator->arg_index++;
-+		if (unlikely((iterator->arg_index & 31) == 0)) {
-+			/* completed current u32 bitmap */
-+			if (iterator->bitmap_shifter & 1) {
-+				/* b31 was set, there is more */
-+				/* move to next u32 bitmap */
-+				iterator->bitmap_shifter = le32_to_cpu(
-+					*iterator->next_bitmap);
-+				iterator->next_bitmap++;
-+			} else {
-+				/* no more bitmaps: end */
-+				iterator->arg_index = sizeof(rt_sizes);
-+			}
-+		} else { /* just try the next bit */
-+			iterator->bitmap_shifter >>= 1;
-+		}
-+
-+		/* if we found a valid arg earlier, return it now */
-+
-+		if (hit)
-+			return iterator->this_arg_index;
-+
-+	}
-+
-+	/* we don't know how to handle any more args, we're done */
-+
-+	return -1;
-+}
-+
-+EXPORT_SYMBOL(ieee80211_radiotap_iterator_next);
-+
-
--- 
+-	range->avg_qual.qual = local->hw.max_signal/2;
++	range->avg_qual.qual = 50;
+ 	range->avg_qual.level = 0;
+ 	range->avg_qual.noise = 0;
+ 	range->avg_qual.updated = local->wstats_flags;
+@@ -3087,8 +3087,10 @@ static struct iw_statistics *ieee80211_g
+ 		wstats->qual.noise = 0;
+ 		wstats->qual.updated = IW_QUAL_ALL_INVALID;
+ 	} else {
+-		wstats->qual.level = sta->last_rssi;
+-		wstats->qual.qual = sta->last_signal;
++		if (unlikely(local->hw.max_rssi == 0))
++			local->hw.max_rssi = 100;
++		wstats->qual.qual = (100 * sta->last_rssi) / local->hw.max_rssi;
++		wstats->qual.level = sta->last_signal;
+ 		wstats->qual.noise = sta->last_noise;
+ 		wstats->qual.updated = local->wstats_flags;
+ 		sta_info_put(sta);
