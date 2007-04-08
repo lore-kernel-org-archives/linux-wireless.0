@@ -1,27 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:45620 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752443AbXDUUbg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2007 16:31:36 -0400
-Message-ID: <462A74A3.3060807@lwfinger.net>
-Date: Sat, 21 Apr 2007 15:31:31 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/2 V3] ieee80211: Output frequency and channel in scan results
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from main.gmane.org ([80.91.229.2]:38551 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752418AbXDHDAK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Apr 2007 23:00:10 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1HaNdK-0007sK-9C
+	for linux-wireless@vger.kernel.org; Sun, 08 Apr 2007 05:00:03 +0200
+Received: from pool-71-110-62-245.lsanca.dsl-w.verizon.net ([71.110.62.245])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Apr 2007 05:00:02 +0200
+Received: from macorgan by pool-71-110-62-245.lsanca.dsl-w.verizon.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Apr 2007 05:00:02 +0200
+To: linux-wireless@vger.kernel.org
+From: mike <macorgan@hotmail.com>
+Subject: GLP code in BSD tree
+Date: Sun, 8 Apr 2007 02:47:33 +0000 (UTC)
+Message-ID: <loom.20070408T044232-54@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Following reviewers suggestions, this patch has been reworked to output both channel and frequency 
-in the scan results. This is accomplished in two steps:
+How in the hell can you possibly call direct cut-and-paste a mistake? Grow up,
+and admit the theft ("mistaken misuse") of the code in question! If it was my
+code, I doubt I would ask privately and politely how it was cut and pasted into
+the BSD source tree. 
 
-(1) A new routine, ieee80211_channel_to_freq, is added to ieee80211. This routine does no 
-calculations of frequency, but gets the value stored in the ieee80211_geo struct.
-
-(2) Modify ieee80211_wx to use the new routine.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
