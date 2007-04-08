@@ -1,98 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-46.dex002.intermedia.net ([64.78.21.140]:42088 "EHLO
-	dhost002-46.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965320AbXDLAS5 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2007 20:18:57 -0400
+Received: from ug-out-1314.google.com ([66.249.92.174]:33646 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752678AbXDHHsR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Apr 2007 03:48:17 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so1378301uga
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Apr 2007 00:48:16 -0700 (PDT)
+Message-ID: <1ba2fa240704080048o326da895o4fa97e0f1cc0dc30@mail.gmail.com>
+Date: Sun, 8 Apr 2007 10:48:16 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] mac80211: Report correct wireless statistics
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"Michael Buesch" <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <461877ea.cyxM3SSnr6WhYkjX%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [patch 2/5] Add basic support for IEEE 802.11n discovery and association
-Date: Wed, 11 Apr 2007 17:20:11 -0700
-Message-ID: <C86180A8C204554D8A3323D8F6B0A29F01DEB358@dhost002-46.dex002.intermedia.net>
-In-Reply-To: <1ba2fa240704111605l305230d3vf09c085473364eb3@mail.gmail.com>
-References: <1174909105.1364.53.camel@dell-4965.jf.intel.com> <20070411194059.GA2436@tuxdriver.com> <461D3F48.70004@linux.intel.com> <200704111630.06160.flamingice@sourmilk.net> <1ba2fa240704111503l6dcef504na73c997ae75ebccd@mail.gmail.com> <C86180A8C204554D8A3323D8F6B0A29F01DEB33D@dhost002-46.dex002.intermedia.net> <1ba2fa240704111605l305230d3vf09c085473364eb3@mail.gmail.com>
-From: "Simon Barber" <simon@devicescape.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Cc: "Michael Wu" <flamingice@sourmilk.net>,
-	"mabbas" <mabbas@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Jouni Malinen" <jkm@devicescape.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <461877ea.cyxM3SSnr6WhYkjX%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are several possible notification mechanisms - according to the
-application's needs. It could be part of tc - using a qdisc, or libpcap,
-or something hardwired into mac80211 or something else. Someone might
-want this controlled by a userspace application (e.g. video streaming).
-Someone else might want an automatic algorithm.
+What if rssi is in DBM i.e. negative number.
 
-Simon 
+According definition it should be positive but then there is that code
+in ieee80211.c
 
------Original Message-----
-From: Tomas Winkler [mailto:tomasw@gmail.com] 
-Sent: Wednesday, April 11, 2007 4:05 PM
-To: Simon Barber
-Cc: Michael Wu; mabbas; John W. Linville;
-linux-wireless@vger.kernel.org; Jouni Malinen
-Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery
-and association
+int ieee80211_register_hw(struct ieee80211_hw *hw).
+...
+if (local->hw.max_rssi < 0 || local->hw.max_noise < 0)
 
-So you monitor your traffic load in driver, then notify user space
-application which opens or tears down for you the BA stream?
-What would be the notification mechanism ?
+                local->wstats_flags |= IW_QUAL_DBM;
 
 
-On 4/12/07, Simon Barber <simon@devicescape.com> wrote:
-> Setup and tear down of BA should be done by userspace - actual 
-> processing of the BA frames themselves should be done in mac80211. 
-> This allows maximum flexibility from userspace to control the policy 
-> of when to setup and teardown BA streams.
->
-> Simon
->
-> -----Original Message-----
-> From: Tomas Winkler [mailto:tomasw@gmail.com]
-> Sent: Wednesday, April 11, 2007 3:04 PM
-> To: Michael Wu
-> Cc: mabbas; John W. Linville; linux-wireless@vger.kernel.org; Jouni 
-> Malinen; Simon Barber
-> Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery 
-> and association
->
-> On 4/11/07, Michael Wu <flamingice@sourmilk.net> wrote:
-> > On Wednesday 11 April 2007 16:04, mabbas wrote:
-> > > I am not familiar with userspace mlme what needed to be done?
-> > mac80211 has a userspace mlme mode which defers all things dealing 
-> > with management frames to userspace (wpa_supplicant). It basically 
-> > disables all the code in ieee80211_sta.c and routes management 
-> > frames to a special interface where wpa_supplicant (or hostap) 
-> > handles things. This is preferred and the ieee80211_sta.c code is 
-> > there for
-> backwards compatibility.
-> >
-> > No major features should be added to the in-kernel MLME
-> > (ieee80211_sta.c) but even more importantly, your patch series does 
-> > not provide the appropriate hooks for a userspace MLME to support a
-> driver using this 802.11n API.
-> >
-> > -Michael Wu
-> >
-> >
-> Meanwhile I don't see feasible user space implementation for this as 
-> data packet classification is done in kernel. BACK streams are 
-> dynamically  opened and teared down per TID according current traffic 
-> shape.
-> This is new feature and the user space handling is not well understand
 
-> yet. I suggest that we proceed with patches and let the evolution 
-> making its steps.
+On 4/8/07, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> In mac80211 the 'qual' and 'level' values are interchanged. The patch also
+> places the 'qual' value on a 0 - 100 scale and calculated using the formula
+> contained in iwlib.
 >
-> If someone has concrete suggestion on implementing it as user space 
-> MLME I will be glad to hear.
-> Thanks
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
 >
+> John and Michael,
 >
-> Tomas
+> This fix is meant for the wireless-dev and mb git trees.
+>
+> Larry
+>
+>  ieee80211_ioctl.c |   16 +++++++++++-----
+>  ieee80211_sta.c   |    9 +++++++--
+>  2 files changed, 18 insertions(+), 7 deletions(-)
+>
+> Index: wireless-mb/net/mac80211/ieee80211_sta.c
+> ===================================================================
+> --- wireless-mb.orig/net/mac80211/ieee80211_sta.c
+> +++ wireless-mb/net/mac80211/ieee80211_sta.c
+> @@ -2822,8 +2822,10 @@ ieee80211_sta_scan_result(struct net_dev
+>
+>         memset(&iwe, 0, sizeof(iwe));
+>         iwe.cmd = IWEVQUAL;
+> -       iwe.u.qual.qual = bss->signal;
+> -       iwe.u.qual.level = bss->rssi;
+> +       iwe.u.qual.level = bss->signal;
+> +       if (unlikely(local->hw.max_rssi == 0))
+> +               local->hw.max_rssi = 100;
+> +       iwe.u.qual.qual = (100 * bss->rssi) / local->hw.max_rssi;
+>         iwe.u.qual.noise = bss->noise;
+>         iwe.u.qual.updated = local->wstats_flags;
+>         current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
+> Index: wireless-mb/net/mac80211/ieee80211_ioctl.c
+> ===================================================================
+> --- wireless-mb.orig/net/mac80211/ieee80211_ioctl.c
+> +++ wireless-mb/net/mac80211/ieee80211_ioctl.c
+> @@ -1593,12 +1593,12 @@ static int ieee80211_ioctl_giwrange(stru
+>         range->min_frag = 256;
+>         range->max_frag = 2346;
+>
+> -       range->max_qual.qual = local->hw.max_signal;
+> -       range->max_qual.level = local->hw.max_rssi;
+> +       range->max_qual.qual = 100;
+> +       range->max_qual.level = local->hw.max_signal;
+>         range->max_qual.noise = local->hw.max_noise;
+>         range->max_qual.updated = local->wstats_flags;
+>
+> -       range->avg_qual.qual = local->hw.max_signal/2;
+> +       range->avg_qual.qual = 50;
+>         range->avg_qual.level = 0;
+>         range->avg_qual.noise = 0;
+>         range->avg_qual.updated = local->wstats_flags;
+> @@ -3087,8 +3087,10 @@ static struct iw_statistics *ieee80211_g
+>                 wstats->qual.noise = 0;
+>                 wstats->qual.updated = IW_QUAL_ALL_INVALID;
+>         } else {
+> -               wstats->qual.level = sta->last_rssi;
+> -               wstats->qual.qual = sta->last_signal;
+> +               if (unlikely(local->hw.max_rssi == 0))
+> +                       local->hw.max_rssi = 100;
+> +               wstats->qual.qual = (100 * sta->last_rssi) / local->hw.max_rssi;
+> +               wstats->qual.level = sta->last_signal;
+>                 wstats->qual.noise = sta->last_noise;
+>                 wstats->qual.updated = local->wstats_flags;
+>                 sta_info_put(sta);
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
