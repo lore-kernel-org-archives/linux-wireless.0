@@ -1,85 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:38497 "EHLO
-	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751861AbXDHGH0 (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:12197 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752017AbXDHV4y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Apr 2007 02:07:26 -0400
-Date: Sun, 08 Apr 2007 00:04:42 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Report correct wireless statistics
-Message-ID: <461877ea.cyxM3SSnr6WhYkjX%Larry.Finger@lwfinger.net>
+	Sun, 8 Apr 2007 17:56:54 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "dragoran dragoran" <drago01@gmail.com>
+Subject: Re: mac80211 does not support WPA when used with wext
+Date: Sun, 8 Apr 2007 17:54:17 -0400
+Cc: "Dan Williams" <dcbw@redhat.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John Linville" <linville@redhat.com>, "Jiri Benc" <jbenc@suse.cz>
+References: <460E2B8C.4030002@gmail.com> <200703311700.52792.flamingice@sourmilk.net> <f6ca9fed0704081445u5536e596m4ca4caeb44f7f87@mail.gmail.com>
+In-Reply-To: <f6ca9fed0704081445u5536e596m4ca4caeb44f7f87@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed;
+  boundary="nextPart3936691.axGtOIUNTS";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704081754.24937.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In mac80211 the 'qual' and 'level' values are interchanged. The patch also
-places the 'qual' value on a 0 - 100 scale and calculated using the formula
-contained in iwlib.
+--nextPart3936691.axGtOIUNTS
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+On Sunday 08 April 2007 17:45, dragoran dragoran wrote:
+> are you planning to submit this patches to wireless-dev ? so that distros
+> (ex: fedora 7) can pick  it up?
+By CCing Jiri and Linville, I already did. Did this patch work for you?
 
-John and Michael,
+-Michael Wu
 
-This fix is meant for the wireless-dev and mb git trees.
+--nextPart3936691.axGtOIUNTS
+Content-Type: application/pgp-signature
 
-Larry
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
- ieee80211_ioctl.c |   16 +++++++++++-----
- ieee80211_sta.c   |    9 +++++++--
- 2 files changed, 18 insertions(+), 7 deletions(-)
+iD8DBQBGGWSQT3Oqt9AH4aERAsn/AJ499nLK5I+b7cz+bB7uSUYiR8h5dwCgqCQj
+MsfvwE9FomBHpqDHv4sQ9Lg=
+=4Mhy
+-----END PGP SIGNATURE-----
 
-Index: wireless-mb/net/mac80211/ieee80211_sta.c
-===================================================================
---- wireless-mb.orig/net/mac80211/ieee80211_sta.c
-+++ wireless-mb/net/mac80211/ieee80211_sta.c
-@@ -2822,8 +2822,10 @@ ieee80211_sta_scan_result(struct net_dev
- 
- 	memset(&iwe, 0, sizeof(iwe));
- 	iwe.cmd = IWEVQUAL;
--	iwe.u.qual.qual = bss->signal;
--	iwe.u.qual.level = bss->rssi;
-+	iwe.u.qual.level = bss->signal;
-+	if (unlikely(local->hw.max_rssi == 0))
-+		local->hw.max_rssi = 100;
-+	iwe.u.qual.qual = (100 * bss->rssi) / local->hw.max_rssi;
- 	iwe.u.qual.noise = bss->noise;
- 	iwe.u.qual.updated = local->wstats_flags;
- 	current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
-Index: wireless-mb/net/mac80211/ieee80211_ioctl.c
-===================================================================
---- wireless-mb.orig/net/mac80211/ieee80211_ioctl.c
-+++ wireless-mb/net/mac80211/ieee80211_ioctl.c
-@@ -1593,12 +1593,12 @@ static int ieee80211_ioctl_giwrange(stru
- 	range->min_frag = 256;
- 	range->max_frag = 2346;
- 
--	range->max_qual.qual = local->hw.max_signal;
--	range->max_qual.level = local->hw.max_rssi;
-+	range->max_qual.qual = 100;
-+	range->max_qual.level = local->hw.max_signal;
- 	range->max_qual.noise = local->hw.max_noise;
- 	range->max_qual.updated = local->wstats_flags;
- 
--	range->avg_qual.qual = local->hw.max_signal/2;
-+	range->avg_qual.qual = 50;
- 	range->avg_qual.level = 0;
- 	range->avg_qual.noise = 0;
- 	range->avg_qual.updated = local->wstats_flags;
-@@ -3087,8 +3087,10 @@ static struct iw_statistics *ieee80211_g
- 		wstats->qual.noise = 0;
- 		wstats->qual.updated = IW_QUAL_ALL_INVALID;
- 	} else {
--		wstats->qual.level = sta->last_rssi;
--		wstats->qual.qual = sta->last_signal;
-+		if (unlikely(local->hw.max_rssi == 0))
-+			local->hw.max_rssi = 100;
-+		wstats->qual.qual = (100 * sta->last_rssi) / local->hw.max_rssi;
-+		wstats->qual.level = sta->last_signal;
- 		wstats->qual.noise = sta->last_noise;
- 		wstats->qual.updated = local->wstats_flags;
- 		sta_info_put(sta);
+--nextPart3936691.axGtOIUNTS--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
