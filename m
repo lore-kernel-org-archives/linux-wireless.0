@@ -1,52 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49596
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932386AbXDQUmL (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:45540 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965920AbXDIPxh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2007 16:42:11 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Jouni Malinen" <jkm@devicescape.com>
-Subject: Re: [PATCH] ieee80211-crypt: Make some TKIP and CCMP error loggingconditional on IEEE80211_DEBUG_DROP
-Date: Tue, 17 Apr 2007 22:40:43 +0200
-Cc: Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	Andreas Schwab <schwab@suse.de>,
-	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de
-References: <461a68c9.Nx0/XQSxDR1PJhM4%Larry.Finger@lwfinger.net> <1176819909.26202.33.camel@localhost.localdomain> <20070417154146.GA22909@devicescape.com>
-In-Reply-To: <20070417154146.GA22909@devicescape.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200704172240.43792.mb@bu3sch.de>
+	Mon, 9 Apr 2007 11:53:37 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 681F68D130
+	for <linux-wireless@vger.kernel.org>; Mon,  9 Apr 2007 17:53:31 +0200 (CEST)
+Message-Id: <20070409155335.095429959@warmcat.com>
+References: <20070409154802.470925215@warmcat.com>
+Date: Mon, 09 Apr 2007 16:48:05 +0100
+From: andy@warmcat.com
+To: linux-wireless@vger.kernel.org
+Cc: Andy Green <andy@warmcat.com>
+Subject: [PATCH 3/7] mac80211: Monitor mode radiotap injection docs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 17 April 2007 17:41, Jouni Malinen wrote:
-> My personal view on this _GPL in exports is that it is just unnecessary
-> extra complexity in the implementation and there should not be any place
-> for license enforcement in the kernel implementation; this is better
-> left for the license text and things completely outside the source code.
-> As such, I have a preference of not seeing _GPL added to code that is
-> derived from anything I've written.
+From: Andy Green <andy@warmcat.com>
+Signed-off-by: Andy Green <andy@warmcat.com>
 
-I clearly second that opinion and I thought we (the main people working
-on wireless) had decided to _not_ use GPL syms in mac80211 (was d80211).
-In my opinion license policy should not be represented in sourcecode.
-Source is source, license is license. That are two absolutely seperate
-things to me. For example, if I want to relicense some code (as
-a copyright holder), I clearly don't want to change sourcecode for this.
-In fact, I think the GPL suffix is pretty much useless, legal wise.
-And everybody knows that the kernel is GPLed. So _every_ single symbol
-is actually a _GPL() symbol. the _GPL() annotation is just redundant
-and bloats code.
 
-Using kernel syms from a non-GPL compatible module is always walking
-a borderline. Be it for _GPL() or normal syms; Exactly the same issue
-for both.
-
-All IMO, of course. I'm perfectly aware of different people having
-different opinions on this. ;)
+diff --git a/Documentation/networking/mac80211-injection.txt b/Documentation/networking/mac80211-injection.txt
+new file mode 100644
+index 0000000..53ef7a0
+--- /dev/null
++++ b/Documentation/networking/mac80211-injection.txt
+@@ -0,0 +1,59 @@
++How to use packet injection with mac80211
++=========================================
++
++mac80211 now allows arbitrary packets to be injected down any Monitor Mode
++interface from userland.  The packet you inject needs to be composed in the
++following format:
++
++ [ radiotap header  ]
++ [ ieee80211 header ]
++ [ payload ]
++
++The radiotap format is discussed in
++./Documentation/networking/radiotap-headers.txt.
++
++Despite 13 radiotap argument types are currently defined, most only make sense
++to appear on received packets.  Currently three kinds of argument are used by
++the injection code, although it knows to skip any other arguments that are
++present (facilitating replay of captured radiotap headers directly):
++
++ - IEEE80211_RADIOTAP_RATE - u8 arg in 500kbps units (0x02 --> 1Mbps)
++
++ - IEEE80211_RADIOTAP_ANTENNA - u8 arg, 0x00 = ant1, 0x01 = ant2
++
++ - IEEE80211_RADIOTAP_DBM_TX_POWER - u8 arg, dBm
++
++Here is an example valid radiotap header defining these three parameters
++
++	0x00, 0x00, // <-- radiotap version
++	0x0b, 0x00, // <- radiotap header length
++	0x04, 0x0c, 0x00, 0x00, // <-- bitmap
++	0x6c, // <-- rate
++	0x0c, //<-- tx power
++	0x01 //<-- antenna
++
++The ieee80211 header follows immediately afterwards, looking for example like
++this:
++
++	0x08, 0x01, 0x00, 0x00,
++	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
++	0x13, 0x22, 0x33, 0x44, 0x55, 0x66,
++	0x13, 0x22, 0x33, 0x44, 0x55, 0x66,
++	0x10, 0x86
++
++Then lastly there is the payload.
++
++After composing the packet contents, it is sent by send()-ing it to a logical
++mac80211 interface that is in Monitor mode.  Libpcap can also be used,
++(which is easier than doing the work to bind the socket to the right
++interface), along the following lines:
++
++	ppcap = pcap_open_live(szInterfaceName, 800, 1, 20, szErrbuf);
++...
++	r = pcap_inject(ppcap, u8aSendBuffer, nLength);
++
++You can also find sources for a complete inject test applet here:
++
++http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
++
++Andy Green <andy@warmcat.com>
+diff --git a/Documentation/networking/radiotap-headers.txt b/Documentation/networking/radiotap-headers.txt
+new file mode 100644
+index 0000000..0d2207a
+--- /dev/null
++++ b/Documentation/networking/radiotap-headers.txt
+@@ -0,0 +1,79 @@
++How to use radiotap headers
++===========================
++
++Pointer to the radiotap include file
++------------------------------------
++
++Radiotap headers are variable-length and extensible, you can get most of the
++information you need to know on them from:
++
++./include/net/ieee80211_radiotap.h
++
++This document gives an overview and warns on some corner cases.
++
++
++Structure of the header
++-----------------------
++
++There is a fixed portion at the start which contains a u32 bitmap that defines
++if the possible argument associated with that bit is present or not.  So if b0
++of the it_present member of ieee80211_radiotap_header is set, it means that
++the header for argument index 0 (IEEE80211_RADIOTAP_TSFT) is present in the
++argument area.
++
++   < 8-byte ieee80211_radiotap_header >
++   [ <possible argument bitmap extensions ... > ]
++   [ <argument> ... ]
++
++At the moment there are only 13 possible argument indexes defined, but in case
++we run out of space in the u32 it_present member, it is defined that b31 set
++indicates that there is another u32 bitmap following (shown as "possible
++argument bitmap extensions..." above), and the start of the arguments is moved
++forward 4 bytes each time.
++
++Note also that the it_len member __le16 is set to the total number of bytes
++covered by the ieee80211_radiotap_header and any arguments following.
++
++
++Requirements for arguments
++--------------------------
++
++After the fixed part of the header, the arguments follow for each argument
++index whose matching bit is set in the it_present member of
++ieee80211_radiotap_header.
++
++ - the arguments are all stored little-endian!
++
++ - the argument payload for a given argument index has a fixed size.  So
++   IEEE80211_RADIOTAP_TSFT being present always indicates an 8-byte argument is
++   present.  See the comments in ./include/net/ieee80211_radiotap.h for a nice
++   breakdown of all the argument sizes
++
++ - the arguments must be aligned to a boundary of the argument size using
++   padding.  So a u16 argument must start on the next u16 boundary if it isn't
++   already on one, a u32 must start on the next u32 boundary and so on.
++
++ - "alignment" is relative to the start of the ieee80211_radiotap_header, ie,
++   the first byte of the radiotap header.  The absolute alignment of that first
++   byte isn't defined.  So even if the whole radiotap header is starting at, eg,
++   address 0x00000003, still the first byte of the radiotap header is treated as
++   0 for alignment purposes.
++
++ - The arguments for a given argument index can be a compound of multiple types
++   together.  For example IEEE80211_RADIOTAP_CHANNEL has an argument payload
++   consisting of two u16s of total length 4.  When this happens, the padding
++   rule is applied dealing with a u16, NOT dealing with a 4-byte single entity.
++
++
++Example valid radiotap header
++-----------------------------
++
++	0x00, 0x00, // <-- radiotap version + pad byte
++	0x0b, 0x00, // <- radiotap header length
++	0x04, 0x0c, 0x00, 0x00, // <-- bitmap
++	0x6c, // <-- rate (in 500kHz units)
++	0x0c, //<-- tx power
++	0x01 //<-- antenna
++
++
++Andy Green <andy@warmcat.com>
 
 -- 
-Greetings Michael.
