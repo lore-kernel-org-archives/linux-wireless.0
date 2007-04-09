@@ -1,195 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:44839 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754489AbXD2AdF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2007 20:33:05 -0400
-Received: from logostar.upir.cz (r2u241.net.upc.cz [62.245.84.241])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.suse.cz (SUSE LINUX ESMTP Mailer) with ESMTP id 67C09628062
-	for <linux-wireless@vger.kernel.org>; Sun, 29 Apr 2007 02:33:04 +0200 (CEST)
-Date: Sun, 29 Apr 2007 02:33:03 +0200
-From: Jiri Benc <jbenc@suse.cz>
+Received: from mog.warmcat.com ([62.193.232.24]:45545 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965934AbXDIPxj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Apr 2007 11:53:39 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 4E43A8D151
+	for <linux-wireless@vger.kernel.org>; Mon,  9 Apr 2007 17:53:32 +0200 (CEST)
+Message-Id: <20070409155336.002012553@warmcat.com>
+References: <20070409154802.470925215@warmcat.com>
+Date: Mon, 09 Apr 2007 16:48:09 +0100
+From: andy@warmcat.com
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/4] mac80211: remove test_mode
-Message-ID: <20070429023303.6106567b@logostar.upir.cz>
-In-Reply-To: <20070429023215.40c2aea7@logostar.upir.cz>
-References: <20070429023215.40c2aea7@logostar.upir.cz>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Cc: Andy Green <andy@warmcat.com>
+Subject: [PATCH 7/7] zd1211rw-mac80211: return hardware specific tx rate code for rx status
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Testing of a radio is a driver-specific debug feature and doesn't belong to
-the stack. Drivers should implement it using debugfs.
+zd1211rw-mac80211 uses different hardware-specific codings to talk about
+rates when doing transmit and receive.  Because mac80211 looks up the rx
+rate against the rates table used for selecting hardware-specific coding for
+tx, the rate returned in the rx_status struct needs to be adjusted to use the
+coding used to hardware-specific tx rates.  This patch performs this adjustment.
 
-Signed-off-by: Jiri Benc <jbenc@suse.cz>
+From: Andy Green <andy@warmcat.com>
+Signed-off-by: Andy Green <andy@warmcat.com>
 
----
- include/net/mac80211.h         |   28 ------------------
- net/mac80211/hostapd_ioctl.h   |    2 -
- net/mac80211/ieee80211_ioctl.c |   63 -----------------------------------------
- 3 files changed, 93 deletions(-)
-
---- dscape.orig/include/net/mac80211.h
-+++ dscape/include/net/mac80211.h
-@@ -687,12 +687,6 @@ struct ieee80211_ops {
- 	int (*get_stats)(struct ieee80211_hw *hw,
- 			 struct ieee80211_low_level_stats *stats);
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
+index 4d226dc..30684e3 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
+@@ -1563,6 +1563,28 @@ u16 zd_rx_rate(const void *rx_frame, const struct rx_status *status)
+ 	return rate;
+ }
  
--	/* Enable/disable test modes; mode = IEEE80211_TEST_* */
--	int (*test_mode)(struct ieee80211_hw *hw, int mode);
--
--	/* Configuration of test parameters */
--	int (*test_param)(struct ieee80211_hw *hw, int param, int value);
--
- 	/* For devices that generate their own beacons and probe response
- 	 * or association responses this updates the state of privacy_invoked
- 	 * returns 0 for success or an error number */
-@@ -1056,28 +1050,6 @@ void ieee80211_scan_completed(struct iee
- int  ieee80211_radar_status(struct ieee80211_hw *hw, int channel,
- 			    int radar, int radar_type);
- 
--/* Test modes */
--enum {
--	IEEE80211_TEST_DISABLE = 0 /* terminate testing */,
--	IEEE80211_TEST_UNMASK_CHANNELS = 1 /* allow all channels to be used */,
--	IEEE80211_TEST_CONTINUOUS_TX = 2,
--};
--
--/* Test parameters */
--enum {
--	/* TX power in hardware specific raw value */
--	IEEE80211_TEST_PARAM_TX_POWER_RAW = 0,
--	/* TX rate in hardware specific raw value */
--	IEEE80211_TEST_PARAM_TX_RATE_RAW = 1,
--	/* Continuous TX pattern (32-bit) */
--	IEEE80211_TEST_PARAM_TX_PATTERN = 2,
--	/* TX power in 0.1 dBm, 100 = 10 dBm */
--	IEEE80211_TEST_PARAM_TX_POWER = 3,
--	/* TX rate in 100 kbps, 540 = 54 Mbps */
--	IEEE80211_TEST_PARAM_TX_RATE = 4,
--	IEEE80211_TEST_PARAM_TX_ANT_SEL_RAW = 5,
--};
--
- /* return a pointer to the source address (SA) */
- static inline u8 *ieee80211_get_SA(struct ieee80211_hdr *hdr)
++int zd_rx_rate_using_tx_format(const void *rx_frame,
++   const struct rx_status *status)
++{
++	if (status->frame_status & ZD_RX_OFDM) {
++		return ZD_CS_OFDM | (zd_ofdm_plcp_header_rate(rx_frame) & 0xf);
++	}
++
++	switch (zd_cck_plcp_header_rate(rx_frame)) {
++	case ZD_CCK_SIGNAL_1M:
++		return ZD_CS_CCK_RATE_1M;
++	case ZD_CCK_SIGNAL_2M:
++		return ZD_CS_CCK_RATE_2M;
++	case ZD_CCK_SIGNAL_5M5:
++		return ZD_CS_CCK_RATE_5_5M;
++	case ZD_CCK_SIGNAL_11M:
++		return ZD_CS_CCK_RATE_11M;
++	default:
++		return 0;
++	}
++
++}
++
+ int zd_chip_switch_radio_on(struct zd_chip *chip)
  {
---- dscape.orig/net/mac80211/hostapd_ioctl.h
-+++ dscape/net/mac80211/hostapd_ioctl.h
-@@ -20,7 +20,6 @@
- #define PRISM2_IOCTL_PRISM2_PARAM (SIOCIWFIRSTPRIV + 0)
- #define PRISM2_IOCTL_GET_PRISM2_PARAM (SIOCIWFIRSTPRIV + 1)
- #define PRISM2_IOCTL_HOSTAPD (SIOCIWFIRSTPRIV + 3)
--#define PRISM2_IOCTL_TEST_PARAM (SIOCIWFIRSTPRIV + 4)
+ 	int r;
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.h b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.h
+index a4dc06c..4f4fe8c 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.h
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.h
+@@ -873,6 +873,8 @@ u8 zd_rx_qual_percent(const void *rx_frame, unsigned int size,
+ u8 zd_rx_strength_percent(u8 rssi);
  
- /* PRISM2_IOCTL_PRISM2_PARAM ioctl() subtypes:
-  * This table is no longer added to, the whole sub-ioctl
-@@ -41,7 +40,6 @@ enum {
- 	PRISM2_PARAM_DROP_UNENCRYPTED = 1002,
- 	PRISM2_PARAM_PREAMBLE = 1003,
- 	PRISM2_PARAM_SHORT_SLOT_TIME = 1006,
--	PRISM2_PARAM_TEST_MODE = 1007,
- 	PRISM2_PARAM_NEXT_MODE = 1008,
- 	PRISM2_PARAM_CLEAR_KEYS = 1009,
- 	PRISM2_PARAM_RADIO_ENABLED = 1010,
---- dscape.orig/net/mac80211/ieee80211_ioctl.c
-+++ dscape/net/mac80211/ieee80211_ioctl.c
-@@ -2189,38 +2189,6 @@ static int ieee80211_ioctl_giwretry(stru
+ u16 zd_rx_rate(const void *rx_frame, const struct rx_status *status);
++int zd_rx_rate_using_tx_format(const void *rx_frame,
++   const struct rx_status *status);
+ 
+ struct zd_mc_hash {
+ 	u32 low;
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
+index 65eabfa..bfaa923 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
+@@ -411,7 +411,7 @@ static int fill_rx_stats(struct ieee80211_rx_status *stats,
+ 	stats->signal = zd_rx_qual_percent(buffer,
+ 		                          length - sizeof(struct rx_status),
+ 		                          status);
+-	stats->rate = zd_rx_rate(buffer, status);
++	stats->rate = zd_rx_rate_using_tx_format(buffer, status);
+ 
  	return 0;
  }
- 
--
--static void ieee80211_ioctl_unmask_channels(struct ieee80211_local *local)
--{
--	struct ieee80211_hw_mode *mode;
--	int c;
--
--	list_for_each_entry(mode, &local->modes_list, list) {
--		for (c = 0; c < mode->num_channels; c++) {
--			struct ieee80211_channel *chan = &mode->channels[c];
--			chan->flag |= IEEE80211_CHAN_W_SCAN;
--		}
--	}
--}
--
--
--static int ieee80211_ioctl_test_mode(struct net_device *dev, int mode)
--{
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	int ret = -EOPNOTSUPP;
--
--	if (mode == IEEE80211_TEST_UNMASK_CHANNELS) {
--		ieee80211_ioctl_unmask_channels(local);
--		ret = 0;
--	}
--
--	if (local->ops->test_mode)
--		ret = local->ops->test_mode(local_to_hw(local), mode);
--
--	return ret;
--}
--
--
- static int ieee80211_ioctl_clear_keys(struct net_device *dev)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-@@ -2537,10 +2505,6 @@ static int ieee80211_ioctl_prism2_param(
- 					local_to_hw(local), value);
- 		break;
- 
--	case PRISM2_PARAM_TEST_MODE:
--		ret = ieee80211_ioctl_test_mode(dev, value);
--		break;
--
- 	case PRISM2_PARAM_NEXT_MODE:
- 		local->next_mode = value;
- 		break;
-@@ -2871,27 +2835,6 @@ static int ieee80211_ioctl_get_prism2_pa
- 	return ret;
- }
- 
--
--static int ieee80211_ioctl_test_param(struct net_device *dev,
--				      struct iw_request_info *info,
--				      void *wrqu, char *extra)
--{
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	int *i = (int *) extra;
--	int param = *i;
--	int value = *(i + 1);
--
--	if (!capable(CAP_NET_ADMIN))
--		return -EPERM;
--
--	if (local->ops->test_param)
--		return local->ops->test_param(local_to_hw(local),
--					     param, value);
--
--	return -EOPNOTSUPP;
--}
--
--
- static int ieee80211_ioctl_siwmlme(struct net_device *dev,
- 				   struct iw_request_info *info,
- 				   struct iw_point *data, char *extra)
-@@ -3177,8 +3120,6 @@ static const struct iw_priv_args ieee802
- 	{ PRISM2_IOCTL_GET_PRISM2_PARAM,
- 	  IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
- 	  IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1, "get_param" },
--	{ PRISM2_IOCTL_TEST_PARAM,
--	  IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 2, 0, "test_param" },
- };
- 
- 
-@@ -3190,10 +3131,6 @@ int ieee80211_ioctl(struct net_device *d
- 	switch (cmd) {
- 		/* Private ioctls (iwpriv) that have not yet been converted
- 		 * into new wireless extensions API */
--	case PRISM2_IOCTL_TEST_PARAM:
--		ret = ieee80211_ioctl_test_param(dev, NULL, &wrq->u,
--						 (char *) &wrq->u);
--		break;
- 	case PRISM2_IOCTL_HOSTAPD:
- 		if (!capable(CAP_NET_ADMIN)) ret = -EPERM;
- 		else ret = ieee80211_ioctl_priv_hostapd(dev, &wrq->u.data);
+
+-- 
