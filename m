@@ -1,56 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:58551 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932247AbXDKX5b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2007 19:57:31 -0400
-Subject: Re: [PATCH] bcm43xx: Hide if bcm43xx-mac80211 is builtin
-From: Dan Williams <dcbw@redhat.com>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-In-Reply-To: <200704111901.06403.flamingice@sourmilk.net>
-References: <200704111901.06403.flamingice@sourmilk.net>
-Content-Type: text/plain
-Date: Wed, 11 Apr 2007 20:01:10 -0400
-Message-Id: <1176336070.1298.17.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:57333 "EHLO
+	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966141AbXDIQZR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Apr 2007 12:25:17 -0400
+Date: Mon, 09 Apr 2007 11:24:41 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] ieee80211-crypt: Make some TKIP and CCMP error logging  conditional on IEEE80211_DEBUG_DROP
+Message-ID: <461a68c9.Nx0/XQSxDR1PJhM4%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-04-11 at 19:01 -0400, Michael Wu wrote:
-> bcm43xx: Hide if bcm43xx-mac80211 is builtin
-> 
-> From: Michael Wu <flamingice@sourmilk.net>
-> 
-> This prevents users from compiling bcm43xx (softmac) and bcm43xx-mac80211
-> into the kernel at the same time. In the case that it is attempted, make
-> bcm43xx (softmac) not build.
+There are messages arising from ieee80211_crypt that spam the logs of
+casual users. These are changed to be logged only if the user specifically
+requests the IEEE80211_DEBUG_DROP messages. In either case, the error/drop count
+is incremented.
 
-What kernel version is this targetted at?  Have the mac80211 bits
-reached feature parity with the softmac bits?  I'm still hearing quite a
-few reports of mac80211 being flaky WRT WEXT implementation and
-compatibility.  I don't necessarily object, I just want to make sure
-that when this patch hits released kernels, that the mac80211 port is in
-the same or better shape than the softmac one.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Dan
-
-
-> Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-> ---
-> 
->  drivers/net/wireless/bcm43xx/Kconfig |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/bcm43xx/Kconfig b/drivers/net/wireless/bcm43xx/Kconfig
-> index ce397e4..f69510d 100644
-> --- a/drivers/net/wireless/bcm43xx/Kconfig
-> +++ b/drivers/net/wireless/bcm43xx/Kconfig
-> @@ -1,6 +1,7 @@
->  config BCM43XX
->  	tristate "Broadcom BCM43xx wireless support"
->  	depends on PCI && IEEE80211 && IEEE80211_SOFTMAC && WLAN_80211 && EXPERIMENTAL
-> +	depends on BCM43XX_MAC80211 != 'y'
->  	select WIRELESS_EXT
->  	select FW_LOADER
->  	select HW_RANDOM
-
+Index: wireless-2.6/net/ieee80211/ieee80211_crypt_tkip.c
+===================================================================
+--- wireless-2.6.orig/net/ieee80211/ieee80211_crypt_tkip.c
++++ wireless-2.6/net/ieee80211/ieee80211_crypt_tkip.c
+@@ -465,7 +465,7 @@ static int ieee80211_tkip_decrypt(struct
+ 
+ 	if (tkip_replay_check(iv32, iv16, tkey->rx_iv32, tkey->rx_iv16)) {
+ 		if (net_ratelimit()) {
+-			printk(KERN_DEBUG "TKIP: replay detected: STA=" MAC_FMT
++			IEEE80211_DEBUG_DROP("TKIP: replay detected: STA=" MAC_FMT
+ 			       " previous TSC %08x%04x received TSC "
+ 			       "%08x%04x\n", MAC_ARG(hdr->addr2),
+ 			       tkey->rx_iv32, tkey->rx_iv16, iv32, iv16);
+@@ -507,7 +507,7 @@ static int ieee80211_tkip_decrypt(struct
+ 			tkey->rx_phase1_done = 0;
+ 		}
+ 		if (net_ratelimit()) {
+-			printk(KERN_DEBUG "TKIP: ICV error detected: STA="
++			IEEE80211_DEBUG_DROP("TKIP: ICV error detected: STA="
+ 			       MAC_FMT "\n", MAC_ARG(hdr->addr2));
+ 		}
+ 		tkey->dot11RSNAStatsTKIPICVErrors++;
+Index: wireless-2.6/net/ieee80211/ieee80211_crypt_ccmp.c
+===================================================================
+--- wireless-2.6.orig/net/ieee80211/ieee80211_crypt_ccmp.c
++++ wireless-2.6/net/ieee80211/ieee80211_crypt_ccmp.c
+@@ -338,7 +338,7 @@ static int ieee80211_ccmp_decrypt(struct
+ 
+ 	if (ccmp_replay_check(pn, key->rx_pn)) {
+ 		if (net_ratelimit()) {
+-			printk(KERN_DEBUG "CCMP: replay detected: STA=" MAC_FMT
++			IEEE80211_DEBUG_DROP("CCMP: replay detected: STA=" MAC_FMT
+ 			       " previous PN %02x%02x%02x%02x%02x%02x "
+ 			       "received PN %02x%02x%02x%02x%02x%02x\n",
+ 			       MAC_ARG(hdr->addr2), MAC_ARG(key->rx_pn),
