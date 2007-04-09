@@ -1,63 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54243 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965375AbXDCLsY (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:45537 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965915AbXDIPxh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Apr 2007 07:48:24 -0400
-Subject: Re: SIOCSIWAP behavior question
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-In-Reply-To: <1175541560.11325.17.camel@localhost.localdomain>
-References: <1175521655.9859.15.camel@localhost.localdomain>
-	 <1175533095.23438.79.camel@johannes.berg>
-	 <1175541560.11325.17.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JQzhgqzwcqr/5arDhvDW"
-Date: Tue, 03 Apr 2007 13:47:46 +0200
-Message-Id: <1175600866.16379.40.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 9 Apr 2007 11:53:37 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id CA5A78CAE9
+	for <linux-wireless@vger.kernel.org>; Mon,  9 Apr 2007 17:53:30 +0200 (CEST)
+Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
+	by armbox7.home.warmcat.com (Postfix) with ESMTP id 74133FCDA
+	for <linux-wireless@vger.kernel.org>; Mon,  9 Apr 2007 15:53:44 +0000 (UTC)
+Message-Id: <20070409154802.470925215@warmcat.com>
+Date: Mon, 09 Apr 2007 16:48:02 +0100
+From: andy@warmcat.com
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/7] Try #8: Radiotap on Monitor Mode interfaces for rx and tx
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi folks -
 
---=-JQzhgqzwcqr/5arDhvDW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This set of patches change the Monitor Mode wireless interfaces to use radiotap
+both for monitoring and for packet injection.  The monitoring side is done by a patch
+from Michael Wu.  For example, tcpdump can handle the resulting radiotap packets.
 
-On Mon, 2007-04-02 at 15:19 -0400, Dan Williams wrote:
+For injecting packets, you issue a packet using libpcap or a SOCK_PACKET
+socket down an interface to the wireless device that is in Monitor Mode.  
+The packet has a normal radiotap header prepended to the IEEE80211 header.
+The radiotap header is variable length depending on what the user wants to 
+specify: currently the transmit rate, power and antenna are interpreted,
+and any other entries are skipped.
 
-> So it appears that you and Jouni have opposite views here?
+The radiotap parser is broken out into its own file under cfg80211.
 
-Looks like :)
+A usermode app packetspammer is available from here
 
-> I think a
-> pure & consistent approach would issue disconnect every time the driver
-> disassociated.  But I'm not sure that would actually work in practice
-> for all cases.  But I don't have a good idea of all the specifics or
-> implications.
->=20
-> I tend to think thought that Jouni's right and that within the same ESS
-> we shouldn't send disconnect events if you're just changing BSSID.
+http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
 
-I guess that if you just send a new BSSID without sending a 00::00
-inbetween the disconnect must have been there and is sort of implied.
-I'm fine with either way, and I'd like the outcome of this discussion
-specified somewhere on the cfg80211 page on linuxwireless.org so we can
-do it that way there too and I don't forget ;)
+which allows easy injection of these packets from the commandline.  At the moment it
+loops issuing packets at a variety of rates which can be seen from another
+machine's monitor mode interface on the same channel.  There are instructions for
+build and using it on the page above.
 
-johannes
+Currently it has been tested for both rx and tx using zd1211rw-mac80211.
 
---=-JQzhgqzwcqr/5arDhvDW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+The patches are based against this morning's wireless-dev.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+I also added some documentation files which explains how to use the injection
+functionality and radiotap header notes.
 
-iD8DBQBGEj7i/ETPhpq3jKURAsQcAKC6LdMKMJFwf0401TOOu/KoEZnxAgCfV726
-sveGdSwdRu3Vrtd6W69gFbQ=
-=baLS
------END PGP SIGNATURE-----
+I have used the radiotap include patch from Michael Wu which basically syncs 
+wireless-dev with the one in wireless-2.6, and his latest radiotap rx patch.
 
---=-JQzhgqzwcqr/5arDhvDW--
+Michael Wu's rx patch exposed an issue with zd1211rw-mac80211 using its
+hardware-dependent rx rate coding which differs from the coding used to
+specify tx rates.  I therefore added a small broken-out patch in this set
+which converts the reported rx rate from zd1211rw-mac80211 to use the
+corresponding tx rate coding, so mac80211 can use the reported rate with
+its rate tables (which use the hardware-specific tx rate coding) to find
+the absolute bitrate and report that via radiotap.
 
+-- 
