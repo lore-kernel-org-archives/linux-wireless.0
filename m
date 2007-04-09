@@ -1,108 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:62141 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754723AbXD1UrI (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:59182 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752169AbXDIAe2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2007 16:47:08 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so1031330uga
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Apr 2007 13:47:06 -0700 (PDT)
-To: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Please pull 'upstream' branch of rt2x00
-Date: Sat, 28 Apr 2007 22:45:54 +0200
+	Sun, 8 Apr 2007 20:34:28 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH] mac80211: Report correct wireless statistics
+Date: Sun, 8 Apr 2007 20:31:52 -0400
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
+References: <461877ea.cyxM3SSnr6WhYkjX%Larry.Finger@lwfinger.net> <200704081941.18921.flamingice@sourmilk.net> <461982A7.30901@lwfinger.net>
+In-Reply-To: <461982A7.30901@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200704282245.54394.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart16337775.sWFHrRrAgs";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704082031.59934.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+--nextPart16337775.sWFHrRrAgs
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_4lYGGc7wIQcHrkL"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-A new update of rt2x00 is ready. :)
+--Boundary-01=_4lYGGc7wIQcHrkL
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Perhaps the most interesting thing would be the removal
-of passive scan support, because it was a purely software based
-solution that (if really required) could best be resolved in mac80211
-rather then the driver for devices that don't support such a thing in the
-hardware.
-The rest is just code being moved around, (more specifically code being moved
-from the drivers toward rt2x00lib/pci/usb. There aren't any specific bugfixes made.
+On Sunday 08 April 2007 20:02, Larry Finger wrote:
+> Link Quality=3D219/60  Signal level=3D-200 dBm  Noise level=3D-69 dBm
+>
+Try the attached patch without your "bcm43xx-mac80211: Fix error in=20
+initiallizing max RSSI and max signal" patch.
 
-Ivo
+=2DMichael Wu
 
----
+--Boundary-01=_4lYGGc7wIQcHrkL
+Content-Type: text/x-diff;
+  charset="iso-8859-1";
+  name="fix-bcm43xx-statistics.diff"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline;
+	filename="fix-bcm43xx-statistics.diff"
 
-The following changes since commit 9e4fd17309d0acddd1748c76f6bd35a0c85446b6:
-  Johannes Berg (1):
-        clarify locking comment in cfg80211
+bcm43xx-mac80211: Swap ssi and signal reporting
 
-are found in the git repository at:
+=46rom: Michael Wu <flamingice@sourmilk.net>
 
-  http://git.serialmonkey.com/rt2x00.git/ upstream
+The ssi and signal reporting in bcm43xx-mac80211 should be swapped.
 
-Ivo van Doorn (38):
-      rt2x00: Move beaconhandling into rt2x00{usb,pci} modules
-      rt2x00: Fix rt2x00pci, rt2x00usb, rt2x00mac module/debug enviroment
-      rt2x00: Move common rxdone and txdone code into rt2x00lib
-      rt2x00: Set rf_base during channel configuration
-      rt2x00: Move initialize() and uninitialize() into rt2x00pci/rt2x00usb
-      rt2x00: Fix spellin error
-      rt2x00: Move ieee80211_hw init & registration into rt2x00lib
-      rt2x00: Fix hardware mode registration order
-      rt2x00: Add struct debugsfs pointer to rt2x00dev
-      rt2x00: Fix debugfs related compile problem
-      rt2x00: Explicit return type for rt2x00debug_register
-      rt2x00: Fix sparse errors
-      rt2x00: Move alloc_rings into rt2x00lib
-      rt2x00: Move device allocation into rt2x00lib
-      rt2x00: Make rt2x00debug const
-      rt2x00: Minor fixes (comment & headers)
-      rt2x00: Create rt2x00_ops structure
-      rt2x00: rt2x00pci shouldn't use DRV_NAME for irq registration
-      rt2x00: Rename rt(25)73 identifications
-      rt2x00: Move PCI/USB handlers into rt2x00pci/usb modules
-      rt2x00: Fix hw mode registration
-      rt2x00: Fix NULL pointer exeption during init_hw
-      rt2x00: Fix sparse warnings
-      rt2x00: Fix ERROR strings
-      rt2x00: Move rf values outside functions
-      rt2x00: Allocate enough rings
-      rt2x00: Move write_tx_data functions into rt2x00pci/usb
-      rt2x00: Fix compilation error when not selecting rt61pci and rt73usb
-      rt2x00: Add return statement to rt2x00lib_alloc_dev
-      rt2x00: Create dummy rt2x00lib_firmware_load_wait()
-      rt2x00: Move write_tx_desc initialization into rt2x00lib
-      rt2x00: Remove ENTRY_RTS_CTS_FRAME flag
-      rt2x00: Fix check for Acked frames
-      Merge branch 'wireless-dev'
-      rt2x00: Remove passive scanning support
-      rt2x00: Set channel_change_time to 0
-      rt2x00: Move USB txdone handler into rt2x00usb
-      rt2x00: rt61 should call ieee80211_wake_queue only for correct queues
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+=2D--
 
- drivers/net/wireless/mac80211/rt2x00/Makefile      |    2 +
- drivers/net/wireless/mac80211/rt2x00/rt2400pci.c   | 1303 +++------------
- drivers/net/wireless/mac80211/rt2x00/rt2400pci.h   |    9 +-
- drivers/net/wireless/mac80211/rt2x00/rt2500pci.c   | 1496 ++++--------------
- drivers/net/wireless/mac80211/rt2x00/rt2500pci.h   |    7 -
- drivers/net/wireless/mac80211/rt2x00/rt2500usb.c   | 1448 +++--------------
- drivers/net/wireless/mac80211/rt2x00/rt2500usb.h   |    2 -
- drivers/net/wireless/mac80211/rt2x00/rt2x00.h      |  165 +-
- drivers/net/wireless/mac80211/rt2x00/rt2x00debug.c |   27 +-
- drivers/net/wireless/mac80211/rt2x00/rt2x00debug.h |    7 +-
- drivers/net/wireless/mac80211/rt2x00/rt2x00dev.c   |  689 +++++++-
- drivers/net/wireless/mac80211/rt2x00/rt2x00lib.h   |   70 +-
- drivers/net/wireless/mac80211/rt2x00/rt2x00mac.c   |  166 +--
- drivers/net/wireless/mac80211/rt2x00/rt2x00pci.c   |  587 +++++++
- drivers/net/wireless/mac80211/rt2x00/rt2x00pci.h   |   50 +-
- drivers/net/wireless/mac80211/rt2x00/rt2x00usb.c   |  637 +++++++
- drivers/net/wireless/mac80211/rt2x00/rt2x00usb.h   |   44 +-
- drivers/net/wireless/mac80211/rt2x00/rt61pci.c     | 1731 ++++---------------
- drivers/net/wireless/mac80211/rt2x00/rt61pci.h     |    7 -
- drivers/net/wireless/mac80211/rt2x00/rt73usb.c     | 1597 ++++---------------
- drivers/net/wireless/mac80211/rt2x00/rt73usb.h     |    4 +-
- 21 files changed, 3553 insertions(+), 6495 deletions(-)
- create mode 100644 drivers/net/wireless/mac80211/rt2x00/rt2x00pci.c
- create mode 100644 drivers/net/wireless/mac80211/rt2x00/rt2x00usb.c
+ .../net/wireless/mac80211/bcm43xx/bcm43xx_xmit.c   |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.c b/drivers=
+/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.c
+index cfc84cd..4f163a5 100644
+=2D-- a/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.c
++++ b/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.c
+@@ -529,12 +529,12 @@ void bcm43xx_rx(struct bcm43xx_wldev *dev,
+ 		}
+ 	}
+=20
+=2D	status.signal =3D bcm43xx_rssi_postprocess(dev, jssi,
++	status.ssi =3D bcm43xx_rssi_postprocess(dev, jssi,
+ 					      (phystat0 & BCM43xx_RX_PHYST0_OFDM),
+ 					      (phystat0 & BCM43xx_RX_PHYST0_GAINCTL),
+ 					      (phystat3 & BCM43xx_RX_PHYST3_TRSTATE));
+ 	status.noise =3D dev->stats.link_noise;
+=2D	status.ssi =3D jssi;
++	status.signal =3D jssi;
+ 	if (phystat0 & BCM43xx_RX_PHYST0_OFDM)
+ 		status.rate =3D bcm43xx_plcp_get_bitrate_ofdm(plcp);
+ 	else
+
+--Boundary-01=_4lYGGc7wIQcHrkL--
+
+--nextPart16337775.sWFHrRrAgs
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGGYl/T3Oqt9AH4aERAkZGAKDCisDay3L17xAg6IwU2HOPnRpqfQCguhkw
+gvfxXlgVV6IUgewVeBtaick=
+=KYgT
+-----END PGP SIGNATURE-----
+
+--nextPart16337775.sWFHrRrAgs--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
