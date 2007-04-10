@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4974 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755364AbXD0Bd2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2007 21:33:28 -0400
-Date: Thu, 26 Apr 2007 20:55:49 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jean Tourrilhes <jt@hpl.hp.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/9] wext: remove dead debug code
-Message-ID: <20070427005549.GB25332@tuxdriver.com>
-References: <20070424180732.371620000@sipsolutions.net> <20070424180847.982382000@sipsolutions.net> <20070426164632.GA22576@bougret.hpl.hp.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070426164632.GA22576@bougret.hpl.hp.com>
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:48171 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1030682AbXDJOhv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Apr 2007 10:37:51 -0400
+Message-ID: <461BA189.9030903@lwfinger.net>
+Date: Tue, 10 Apr 2007 09:39:05 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: dragoran <drago01@gmail.com>
+CC: Michael Wu <flamingice@sourmilk.net>,
+	Dan Williams <dcbw@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@redhat.com>, Jiri Benc <jbenc@suse.cz>,
+	ipw3945-devel@lists.sourceforge.net, jketreno@linux.intel.com
+Subject: Re: mac80211 does not support WPA when used with wext
+References: <460E2B8C.4030002@gmail.com>	 <200703311700.52792.flamingice@sourmilk.net>	 <f6ca9fed0704081445u5536e596m4ca4caeb44f7f87@mail.gmail.com>	 <200704081754.24937.flamingice@sourmilk.net> <f6ca9fed0704081527j641a4ecat44151e107cab7342@mail.gmail.com> <461B3930.6040203@gmail.com>
+In-Reply-To: <461B3930.6040203@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 26, 2007 at 09:46:32AM -0700, Jean Tourrilhes wrote:
+dragoran wrote:
+> ioctl[SIOCSIWAUTH]: Operation not supported
+> WEXT auth param 4 value 0x0 - wpa_driver_wext_set_drop_unencrypted
+> ioctl[SIOCSIWAUTH]: Operation not supported
+> ----
+> notice the *ioctl[SIOCSIWAUTH]: Operation not supported* what is 
+> SIOCSIWAUTH and how does it not being supproted affect wpa/wext support?
 
-> 	Overall ok with the patches. Comments on a few of them...
-> 	I personally would not remove this DEBUG code, because it
-> decreases the overall maitainability of the code.
-> 	First, it does not only help to debug the API, but it can be
-> used to debug userspace and drivers in some extreme cases.
-> 	Second, this debugging act as documentation. He points out
-> which are the important variables and how they are used at critical
-> points of the code.
-> 	As this debug is localised, and compiled out, it does not
-> bother anybody and should stay.
+I agree with Dan Williams that this message is not critical. Michael Buesch uses WPA with mac80211, 
+and his version doesn't support SIOCSIWAUTH either.
 
-Jean,
+I'm beginning to think that there is a problem with certain AP's. What is the make and model of 
+yours? What firmware version is it using? I cannot connect to my Linksys WRT54G V5 with or without 
+WPA enabled. I'm running v1.02.00 of the firmware (the latest).
 
-I think the code looks cleaner with the patch applied.  If the
-debugging is valuable to you, I recommend that you save this patch
-and reverse apply it before future work.
-
-Thanks,
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Larry
