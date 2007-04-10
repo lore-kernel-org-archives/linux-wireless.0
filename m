@@ -1,469 +1,308 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:39812 "EHLO havoc.gtf.org"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4382 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756164AbXD1QNx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2007 12:13:53 -0400
-Date: Sat, 28 Apr 2007 11:49:02 -0400
-From: Jeff Garzik <jeff@garzik.org>
-To: netdev@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: What's in netdev-2.6.git? (and, netdev rebased)
-Message-ID: <20070428154902.GA12530@havoc.gtf.org>
+	id S1750979AbXDJUcU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Apr 2007 16:32:20 -0400
+Date: Tue, 10 Apr 2007 16:23:37 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: jeff@garzik.org
+Cc: linux-wireless@vger.kernel.org
+Subject: Please pull 'upstream-fixes' branch of wireless-2.6
+Message-ID: <20070410202337.GC14123@tuxdriver.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is what is queued for Linus, for sending upstream tomorrow
-(most likely).
+The following changes since commit a21bd69e1509b43823c317c3bf3f7ffa99884356:
+  Linus Torvalds (1):
+        Linux 2.6.21-rc6
 
-Wireless guys, in particular, I would appreciate a quick verify and
-retest, to make sure a rebase merge went correctly.
+are found in the git repository at:
 
-As of this moment, I just rebased netdev (something I try to
-do infrequently).  There are now only three branches of note at
-netdev-2.6.git, and only one content branch:
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-fixes
 
-	upstream	Queued for 2.6.22 upstream
+Daniel Drake (2):
+      zd1211rw: Reject AL2230S devices
+      zd1211rw: Fix E2P_PHY_REG patching
 
-	master		Vanilla upstream
-	ALL		Queued for public testing (-mm uses this)
+Larry Finger (2):
+      bcm43xx: Fix 802.11b/g scan limits to match regulatory reqs
+      bcm43xx: Fix PPC machine checks and match loopback gain specs
 
-Branch 'ALL' is currently equivalent to 'upstream'.
+ drivers/net/wireless/bcm43xx/bcm43xx_main.c  |   20 +++++++++-
+ drivers/net/wireless/bcm43xx/bcm43xx_phy.c   |   57 ++++++++++++++-----------
+ drivers/net/wireless/zd1211rw/zd_chip.c      |   12 ++----
+ drivers/net/wireless/zd1211rw/zd_chip.h      |    4 +-
+ drivers/net/wireless/zd1211rw/zd_rf_al2230.c |    6 +++
+ 5 files changed, 63 insertions(+), 36 deletions(-)
 
-
-(shortlog follows diffstat)
-
- Documentation/DocBook/kernel-api.tmpl          |    6 +
- Documentation/networking/bcm43xx.txt           |   97 +-
- MAINTAINERS                                    |   20 +-
- arch/mips/mips-boards/sim/Makefile             |    3 +-
- arch/mips/mips-boards/sim/sim_platform.c       |   35 +
- arch/powerpc/sysdev/qe_lib/ucc_fast.c          |    3 +
- crypto/michael_mic.c                           |    4 +-
- drivers/net/3c509.c                            |    1 -
- drivers/net/Kconfig                            |   15 +-
- drivers/net/Makefile                           |    2 +-
- drivers/net/chelsio/Makefile                   |    4 +-
- drivers/net/chelsio/common.h                   |    6 +-
- drivers/net/chelsio/cphy.h                     |   16 +-
- drivers/net/chelsio/gmac.h                     |   10 +-
- drivers/net/chelsio/ixf1010.c                  |  505 -----
- drivers/net/chelsio/mac.c                      |    2 +-
- drivers/net/chelsio/mv88e1xxx.c                |    8 +-
- drivers/net/chelsio/mv88x201x.c                |    8 +-
- drivers/net/chelsio/my3126.c                   |    8 +-
- drivers/net/chelsio/pm3393.c                   |    8 +-
- drivers/net/chelsio/subr.c                     |  199 ++-
- drivers/net/chelsio/vsc7326.c                  |    2 +-
- drivers/net/chelsio/vsc8244.c                  |  367 ----
- drivers/net/chelsio/vsc8244_reg.h              |  172 --
- drivers/net/e100.c                             |  159 +-
- drivers/net/e1000/e1000.h                      |    3 -
- drivers/net/e1000/e1000_ethtool.c              |   34 +-
- drivers/net/e1000/e1000_main.c                 |   45 +-
- drivers/net/e1000/e1000_param.c                |    4 +-
- drivers/net/eexpress.c                         |    9 +-
- drivers/net/ehea/ehea.h                        |   42 +-
- drivers/net/ehea/ehea_ethtool.c                |  115 +-
- drivers/net/ehea/ehea_main.c                   |  940 +++++---
- drivers/net/ehea/ehea_phyp.c                   |    6 +-
- drivers/net/ehea/ehea_phyp.h                   |    6 +-
- drivers/net/ehea/ehea_qmr.c                    |  184 ++-
- drivers/net/ehea/ehea_qmr.h                    |   16 +-
- drivers/net/hamradio/baycom_ser_fdx.c          |   13 +-
- drivers/net/ibmveth.c                          |   10 +-
- drivers/net/ixgb/ixgb.h                        |    3 -
- drivers/net/ixgb/ixgb_ethtool.c                |    4 +-
- drivers/net/ixgb/ixgb_main.c                   |    4 +-
- drivers/net/ixgb/ixgb_param.c                  |    8 +-
- drivers/net/mii.c                              |   57 +
- drivers/net/mipsnet.c                          |   53 +-
- drivers/net/mv643xx_eth.c                      |   59 +-
- drivers/net/mv643xx_eth.h                      |    4 -
- drivers/net/netxen/netxen_nic.h                |  189 +-
- drivers/net/netxen/netxen_nic_ethtool.c        |  212 ++-
- drivers/net/netxen/netxen_nic_hdr.h            |   12 +
- drivers/net/netxen/netxen_nic_hw.c             |  401 +++-
- drivers/net/netxen/netxen_nic_hw.h             |   85 +-
- drivers/net/netxen/netxen_nic_init.c           |  130 +-
- drivers/net/netxen/netxen_nic_isr.c            |  101 +-
- drivers/net/netxen/netxen_nic_main.c           |  769 ++++---
- drivers/net/netxen/netxen_nic_niu.c            |  168 +-
- drivers/net/netxen/netxen_nic_phan_reg.h       |  134 +-
- drivers/net/pcnet32.c                          |  159 +-
- drivers/net/phy/mdio_bus.c                     |   19 +-
- drivers/net/phy/phy.c                          |  194 ++-
- drivers/net/phy/phy_device.c                   |  114 +-
- drivers/net/qla3xxx.c                          |  371 +++-
- drivers/net/qla3xxx.h                          |   33 +-
- drivers/net/s2io-regs.h                        |    2 +-
- drivers/net/s2io.c                             |   78 +-
- drivers/net/s2io.h                             |    8 +-
- drivers/net/sb1250-mac.c                       |  294 ++-
- drivers/net/sgiseeq.c                          |   28 +-
- drivers/net/sk98lin/skge.c                     |   20 +-
- drivers/net/skfp/h/lnkstat.h                   |   84 -
- drivers/net/skge.c                             |   30 +-
- drivers/net/skge.h                             |   10 +-
- drivers/net/smc911x.c                          |    2 +-
- drivers/net/tc35815.c                          | 2554 ++++++++++++++++------
- drivers/net/tulip/dmfe.c                       |  118 +-
- drivers/net/tulip/interrupt.c                  |    4 +-
- drivers/net/tulip/media.c                      |   40 +-
- drivers/net/tulip/tulip.h                      |    9 +-
- drivers/net/tulip/tulip_core.c                 |    6 +-
- drivers/net/tulip/winbond-840.c                |    2 +-
- drivers/net/ucc_geth.c                         |  946 +++-----
- drivers/net/ucc_geth.h                         |  114 +-
- drivers/net/ucc_geth_mii.c                     |  279 +++
- drivers/net/ucc_geth_mii.h                     |  100 +
- drivers/net/ucc_geth_phy.c                     |  785 -------
- drivers/net/ucc_geth_phy.h                     |  217 --
- drivers/net/wan/hdlc_cisco.c                   |   29 +-
- drivers/net/wan/hdlc_fr.c                      |   18 +-
- drivers/net/wireless/Kconfig                   |   13 +
- drivers/net/wireless/Makefile                  |    1 +
- drivers/net/wireless/README                    |   25 -
- drivers/net/wireless/airo.c                    |   70 +-
- drivers/net/wireless/bcm43xx/bcm43xx.h         |    3 +
- drivers/net/wireless/bcm43xx/bcm43xx_ethtool.c |    4 +-
- drivers/net/wireless/bcm43xx/bcm43xx_main.c    |    4 +-
- drivers/net/wireless/bcm43xx/bcm43xx_phy.c     |   23 +-
- drivers/net/wireless/bcm43xx/bcm43xx_phy.h     |    4 +
- drivers/net/wireless/bcm43xx/bcm43xx_radio.c   |  196 ++-
- drivers/net/wireless/hostap/hostap_ap.c        |    4 +-
- drivers/net/wireless/hostap/hostap_common.h    |    4 +-
- drivers/net/wireless/hostap/hostap_cs.c        |    9 +-
- drivers/net/wireless/hostap/hostap_hw.c        |    4 +-
- drivers/net/wireless/hostap/hostap_main.c      |    4 +-
- drivers/net/wireless/hostap/hostap_pci.c       |    2 +-
- drivers/net/wireless/hostap/hostap_plx.c       |    2 +-
- drivers/net/wireless/ipw2100.c                 |    4 +-
- drivers/net/wireless/ipw2200.c                 |   47 +
- drivers/net/wireless/libertas/11d.c            |  754 +++++++
- drivers/net/wireless/libertas/11d.h            |  105 +
- drivers/net/wireless/libertas/LICENSE          |   16 +
- drivers/net/wireless/libertas/Makefile         |   21 +
- drivers/net/wireless/libertas/README           | 1044 +++++++++
- drivers/net/wireless/libertas/assoc.c          |  588 +++++
- drivers/net/wireless/libertas/assoc.h          |   30 +
- drivers/net/wireless/libertas/cmd.c            | 1958 +++++++++++++++++
- drivers/net/wireless/libertas/cmdresp.c        | 1031 +++++++++
- drivers/net/wireless/libertas/debugfs.c        | 1935 +++++++++++++++++
- drivers/net/wireless/libertas/debugfs.h        |    6 +
- drivers/net/wireless/libertas/decl.h           |   83 +
- drivers/net/wireless/libertas/defs.h           |  369 ++++
- drivers/net/wireless/libertas/dev.h            |  403 ++++
- drivers/net/wireless/libertas/ethtool.c        |  184 ++
- drivers/net/wireless/libertas/fw.c             |  361 +++
- drivers/net/wireless/libertas/fw.h             |   13 +
- drivers/net/wireless/libertas/host.h           |  338 +++
- drivers/net/wireless/libertas/hostcmd.h        |  693 ++++++
- drivers/net/wireless/libertas/if_bootcmd.c     |   38 +
- drivers/net/wireless/libertas/if_usb.c         |  952 ++++++++
- drivers/net/wireless/libertas/if_usb.h         |  109 +
- drivers/net/wireless/libertas/ioctl.c          | 2500 +++++++++++++++++++++
- drivers/net/wireless/libertas/join.c           | 1055 +++++++++
- drivers/net/wireless/libertas/join.h           |   64 +
- drivers/net/wireless/libertas/main.c           | 1258 +++++++++++
- drivers/net/wireless/libertas/radiotap.h       |   57 +
- drivers/net/wireless/libertas/rx.c             |  459 ++++
- drivers/net/wireless/libertas/sbi.h            |   40 +
- drivers/net/wireless/libertas/scan.c           | 2044 +++++++++++++++++
- drivers/net/wireless/libertas/scan.h           |  216 ++
- drivers/net/wireless/libertas/thread.h         |   52 +
- drivers/net/wireless/libertas/tx.c             |  285 +++
- drivers/net/wireless/libertas/types.h          |  289 +++
- drivers/net/wireless/libertas/version.h        |    8 +
- drivers/net/wireless/libertas/wext.c           | 2769 ++++++++++++++++++++++++
- drivers/net/wireless/libertas/wext.h           |  147 ++
- drivers/net/wireless/todo.txt                  |   15 -
- drivers/net/wireless/zd1211rw/zd_chip.c        |   47 +-
- drivers/net/wireless/zd1211rw/zd_chip.h        |    1 +
- drivers/net/wireless/zd1211rw/zd_mac.c         |   23 +-
- drivers/net/wireless/zd1211rw/zd_rf.c          |   18 +-
- drivers/net/wireless/zd1211rw/zd_rf.h          |   11 +-
- drivers/net/wireless/zd1211rw/zd_rf_al2230.c   |   91 +-
- drivers/net/wireless/zd1211rw/zd_rf_al7230b.c  |  317 +++-
- drivers/net/wireless/zd1211rw/zd_rf_rf2959.c   |    4 +-
- drivers/net/wireless/zd1211rw/zd_usb.c         |   24 +-
- include/asm-powerpc/ucc_fast.h                 |    3 +
- include/linux/fsl_devices.h                    |   39 -
- include/linux/hdlc.h                           |    3 +-
- include/linux/pci_ids.h                        |    2 +
- include/linux/phy.h                            |    1 +
- include/linux/wireless.h                       |    2 +-
- include/net/ieee80211.h                        |    4 +-
- include/net/ieee80211_crypt.h                  |    4 +-
- include/net/ieee80211_radiotap.h               |   77 +-
- net/ieee80211/ieee80211_crypt.c                |    2 +-
- net/ieee80211/ieee80211_crypt_ccmp.c           |    4 +-
- net/ieee80211/ieee80211_crypt_tkip.c           |    6 +-
- net/ieee80211/ieee80211_crypt_wep.c            |    2 +-
- net/ieee80211/ieee80211_module.c               |    5 +-
- net/ieee80211/ieee80211_rx.c                   |    4 +-
- net/ieee80211/ieee80211_wx.c                   |    4 +-
- 170 files changed, 29413 insertions(+), 6144 deletions(-)
- create mode 100644 arch/mips/mips-boards/sim/sim_platform.c
- delete mode 100644 drivers/net/chelsio/ixf1010.c
- delete mode 100644 drivers/net/chelsio/vsc8244.c
- delete mode 100644 drivers/net/chelsio/vsc8244_reg.h
- delete mode 100644 drivers/net/skfp/h/lnkstat.h
- create mode 100644 drivers/net/ucc_geth_mii.c
- create mode 100644 drivers/net/ucc_geth_mii.h
- delete mode 100644 drivers/net/ucc_geth_phy.c
- delete mode 100644 drivers/net/ucc_geth_phy.h
- delete mode 100644 drivers/net/wireless/README
- create mode 100644 drivers/net/wireless/libertas/11d.c
- create mode 100644 drivers/net/wireless/libertas/11d.h
- create mode 100644 drivers/net/wireless/libertas/LICENSE
- create mode 100644 drivers/net/wireless/libertas/Makefile
- create mode 100644 drivers/net/wireless/libertas/README
- create mode 100644 drivers/net/wireless/libertas/assoc.c
- create mode 100644 drivers/net/wireless/libertas/assoc.h
- create mode 100644 drivers/net/wireless/libertas/cmd.c
- create mode 100644 drivers/net/wireless/libertas/cmdresp.c
- create mode 100644 drivers/net/wireless/libertas/debugfs.c
- create mode 100644 drivers/net/wireless/libertas/debugfs.h
- create mode 100644 drivers/net/wireless/libertas/decl.h
- create mode 100644 drivers/net/wireless/libertas/defs.h
- create mode 100644 drivers/net/wireless/libertas/dev.h
- create mode 100644 drivers/net/wireless/libertas/ethtool.c
- create mode 100644 drivers/net/wireless/libertas/fw.c
- create mode 100644 drivers/net/wireless/libertas/fw.h
- create mode 100644 drivers/net/wireless/libertas/host.h
- create mode 100644 drivers/net/wireless/libertas/hostcmd.h
- create mode 100644 drivers/net/wireless/libertas/if_bootcmd.c
- create mode 100644 drivers/net/wireless/libertas/if_usb.c
- create mode 100644 drivers/net/wireless/libertas/if_usb.h
- create mode 100644 drivers/net/wireless/libertas/ioctl.c
- create mode 100644 drivers/net/wireless/libertas/join.c
- create mode 100644 drivers/net/wireless/libertas/join.h
- create mode 100644 drivers/net/wireless/libertas/main.c
- create mode 100644 drivers/net/wireless/libertas/radiotap.h
- create mode 100644 drivers/net/wireless/libertas/rx.c
- create mode 100644 drivers/net/wireless/libertas/sbi.h
- create mode 100644 drivers/net/wireless/libertas/scan.c
- create mode 100644 drivers/net/wireless/libertas/scan.h
- create mode 100644 drivers/net/wireless/libertas/thread.h
- create mode 100644 drivers/net/wireless/libertas/tx.c
- create mode 100644 drivers/net/wireless/libertas/types.h
- create mode 100644 drivers/net/wireless/libertas/version.h
- create mode 100644 drivers/net/wireless/libertas/wext.c
- create mode 100644 drivers/net/wireless/libertas/wext.h
- delete mode 100644 drivers/net/wireless/todo.txt
-
-Adrian Bunk (3):
-      make drivers/net/s2io.c:vlan_strip_flag static
-      drivers/net/qla3xxx.c: make 2 functions static
-      make drivers/net/qla3xxx.c:PHY_DEVICES[] static
-
-Ahmed S. Darwish (2):
-      e1000: Use ARRAY_SIZE macro when appropriate
-      ixgb: Use ARRAY_SIZE macro when appropriate.
-
-Andrew Morton (1):
-      ipw2200: fix ieee80211_get_geo typo
-
-Arjan van de Ven (1):
-      user of the jiffies rounding code: e1000
-
-Atsushi Nemoto (3):
-      tc35815 driver update (take 2)
-      tc35815: Fix an usage of streaming DMA API.
-      tc35815: Zap changelog from source code
-
-Auke Kok (1):
-      e1000: list e1000-devel mailing list in MAINTAINERS
-
-Daniel Drake (10):
-      zd1211rw: Use compare_ether_addr()
-      zd1211rw: Add AL2230S RF support
-      zd1211rw: More device IDs
-      zd1211rw: Mark some data const
-      zd1211rw: Don't handle broken frames in monitor mode
-      zd1211rw: Add another ID for Linksys WUSBF54G
-      zd1211rw: Remove invalid CR write during ZD1211 phy reset
-      zd1211rw: rework band edge patching
-      zd1211rw: Add AL7230B RF support for ZD1211B
-      zd1211rw: Add ID for ZyXEL AG-220
-
-Deepak Saxena (1):
-      Netpoll support for Sibyte MAC
-
-Dmitriy Monakhov (1):
-      sk98lin: handle pci_enable_device() return value in skge_resume()
-
-Don Fry (2):
-      pcnet32: only allocate init_block dma consistent
-      pcnet32: change to use netdev_priv
-
-Folkert van Heusden (1):
-      baycom_ser_fdx: also allow i/o ports >= 0x1000 and enhanced failure logging
-
-Gabriel Paubert (1):
-      mv643xx_eth: make eth_port_uc_addr_{get,set}() calls symmetric
-
-Jan-Bernd Themann (5):
-      ehea: dynamic add / remove port
-      ehea: NAPI multi queue TX/RX path for SMP
-      ehea: fix for dynamic lpar support
-      ehea: code cleanup
-      ehea: removing unused functionality
-
-Jean Delvare (1):
-      strlcpy is smart enough
-
-Jesse Brandeburg (2):
-      e100: allow bad MAC address when running with invalid eeprom csum
-      e100: Optionally use I/O mode only to access register space
-
-John W. Linville (2):
-      wireless: remove obsolete text files
-      libertas: fix build breakage from netdev class_device -> device
-
-Jouni Malinen (2):
-      hostap: Add D-Link DWL-650 Rev. P1 product id
-      Update my email address from jkmaline@cc.hut.fi to j@w1.fi
-
-Kim Phillips (3):
-      phylib: add RGMII-ID interface mode definition
-      ucc_geth: migrate ucc_geth to phylib
-      ucc_geth: version 1.1
-
-Krzysztof Halasa (1):
-      Generic HDLC sparse annotations
-
-Ladislav Michl (1):
-      Add support for Seeq 8003 on Challenge S Mezz board.
-
-Larry Finger (5):
-      bcm43xx: Update Documentation/bcm43xx.txt
-      bcm43xx:Eliminate some 'G Mode Enable' magic numbers
-      bcm43xx: Change initialization for 2050 radios
-      ieee80211-crypt: Make some TKIP and CCMP error logging conditional
-      ieee80211: add missing global needed by IEEE80211_DEBUG_XXXX
-
-Marcelo Tosatti (1):
-      Marvell Libertas 8388 802.11b/g USB driver
-
-Marcin Juszkiewicz (1):
-      hostap_cs: support ADLINK 345 CF
-
-Mark Mason (1):
-      add NAPI support to sb1250-mac.c
-
-Maxim Levitsky (2):
-      dmfe: add support for suspend/resume
-      dmfe: add support for Wake on lan
-
-Michael Barkowski (1):
-      ucc_geth: Fix interrupt coalescing size and alignment
-
-Michael Ellerman (1):
-      Fix sparse errors in drivers/net/ibmveth.c
-
-Michael Reiss (2):
-      ucc_geth: NAPI-related bug fixes
-      ucc_geth: Implement Transmit on Demand support
-
-Michal Schmidt (2):
-      airo: Don't check for NULL before kfree()
-      airo: Make /sys/bus/pci/drivers/airo/{,un}bind work
-
-Milind Arun Choudhary (2):
-      e1000: ROUND_UP macro cleanup in drivers/net/e1000
-      ixgb: ROUND_UP macro cleanup in drivers/net/ixgb
-
-Mithlesh Thukral (7):
-      NetXen: Use multiple PCI functions
-      NetXen: Removal of redundant argument passing
-      NetXen: Multi PCI support for Quad cards
-      NetXen: Removal of redundant macros
-      NetXen: Port swap feature for multi port cards
-      NetXen: Fixes for Power PC architecture
-      NetXen: Fix for vmalloc issues
-
-Nicu Ioan Petru (1):
-      ucc_geth: fixes for ucc_geth_memclean
-
-Pavel Roskin (3):
-      hostap: use offsetof() instead of own equivalent
-      sparse-annotate radiotap header
-      Remove comment about IEEE80211_RADIOTAP_FCS
-
-Ralf Baechle (1):
-      MIPSnet: Modernize use platform_device API.
-
-Ramkrishna Vepa (3):
-      S2IO: Save/Restore unused buffer mappings in 2/3 buffer mode
-      S2io: Remove unused variables
-      S2io: Change of driver maintainers
-
-Randy Dunlap (2):
-      phy layer: add kernel-doc + DocBook
-      mii: add kernel-doc notation
-
-Robert P. J. Day (2):
-      remove unused header file: drivers/net/skfp/h/lnkstat.h
-      3C509: Remove unnecessary include of <linux/pm_legacy.h>
-
-Ron Mercer (3):
-      qla3xxx: Add ethtool get_pauseparam for improved bonding support.
-      qla3xxx: Adding support for the Agere PHY (ET1011C)
-      qla3xxx: Bumping driver version number to v2.03.00-k4
-
-Sam Ravnborg (1):
-      bcm43xx: do not rebuild when kernel version changes
-
-Scott Feldman (1):
-      [netdrvr e100] experiment with doing RX in a similar manner to eepro100
-
-Shan Lu (1):
-      network: add the missing phy_device speed information to phy_mii_ioctl
-
-Shani (1):
-      Patch:replace with time_after in drivers/net/eexpress.c
-
-Shani Moideen (1):
-      [netdrvr] eexpress: minor corrections
-
-Stephen Hemminger (7):
-      chelsio: remove unused code for 1G boards
-      chelsio: use C99 style initialization
-      chelsio: use const for virtual functions
-      skge: ignore unused error interrupts
-      skge: transmit locking improvements
-      skge: rearrange fields
-      skge: version 1.11
-
-Thibaut VARENE (1):
-      TULIP: Natsemi dp83840a PHY fix
-
-Thomas Klein (2):
-      ehea: fix for sysfs entries
-      ehea: fix for dlpar support
-
-Tony Breeds (1):
-      libertas: use standard kernel macros
-
-Ulrich Kunitz (1):
-      zd1211rw: changed GFP_NOFS to GFP_KERNEL
-
-Valerie Henson (3):
-      TULIP: Fix for 64-bit MIPS
-      Fix tulip SytemError typo
-      Rev tulip version
-
-Vitaly Wool (1):
-      smc911x: fix compilation breakage wjen debug is on
-
-Yan Burman (1):
-      e1000: Use kcalloc()
-
-Zhu Yi (1):
-      ipw2200: add channels sysfs entry
-
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+index 80cb88e..a38e7ee 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_main.c
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+@@ -946,6 +946,7 @@ static int bcm43xx_geo_init(struct bcm43xx_private *bcm)
+ 	u8 channel;
+ 	struct bcm43xx_phyinfo *phy;
+ 	const char *iso_country;
++	u8 max_bg_channel;
+ 
+ 	geo = kzalloc(sizeof(*geo), GFP_KERNEL);
+ 	if (!geo)
+@@ -967,6 +968,23 @@ static int bcm43xx_geo_init(struct bcm43xx_private *bcm)
+ 	}
+ 	iso_country = bcm43xx_locale_iso(bcm->sprom.locale);
+ 
++/* set the maximum channel based on locale set in sprom or witle locale option */
++	switch (bcm->sprom.locale) {
++	case BCM43xx_LOCALE_THAILAND:
++	case BCM43xx_LOCALE_ISRAEL:
++	case BCM43xx_LOCALE_JORDAN:
++	case BCM43xx_LOCALE_USA_CANADA_ANZ:
++	case BCM43xx_LOCALE_USA_LOW:
++		max_bg_channel = 11;
++		break;
++	case BCM43xx_LOCALE_JAPAN:
++	case BCM43xx_LOCALE_JAPAN_HIGH:
++		max_bg_channel = 14;
++		break;
++	default:
++		max_bg_channel = 13;
++	}
++
+  	if (have_a) {
+ 		for (i = 0, channel = IEEE80211_52GHZ_MIN_CHANNEL;
+ 		      channel <= IEEE80211_52GHZ_MAX_CHANNEL; channel++) {
+@@ -978,7 +996,7 @@ static int bcm43xx_geo_init(struct bcm43xx_private *bcm)
+ 	}
+ 	if (have_bg) {
+ 		for (i = 0, channel = IEEE80211_24GHZ_MIN_CHANNEL;
+-		      channel <= IEEE80211_24GHZ_MAX_CHANNEL; channel++) {
++		      channel <= max_bg_channel; channel++) {
+ 			chan = &geo->bg[i++];
+ 			chan->freq = bcm43xx_channel_to_freq_bg(channel);
+ 			chan->channel = channel;
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_phy.c b/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
+index d1e89be..72529a4 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_phy.c
+@@ -978,7 +978,7 @@ static void bcm43xx_calc_loopback_gain(struct bcm43xx_private *bcm)
+ {
+ 	struct bcm43xx_phyinfo *phy = bcm43xx_current_phy(bcm);
+ 	struct bcm43xx_radioinfo *radio = bcm43xx_current_radio(bcm);
+-	u16 backup_phy[15];
++	u16 backup_phy[15] = {0};
+ 	u16 backup_radio[3];
+ 	u16 backup_bband;
+ 	u16 i;
+@@ -989,8 +989,10 @@ static void bcm43xx_calc_loopback_gain(struct bcm43xx_private *bcm)
+ 	backup_phy[1] = bcm43xx_phy_read(bcm, 0x0001);
+ 	backup_phy[2] = bcm43xx_phy_read(bcm, 0x0811);
+ 	backup_phy[3] = bcm43xx_phy_read(bcm, 0x0812);
+-	backup_phy[4] = bcm43xx_phy_read(bcm, 0x0814);
+-	backup_phy[5] = bcm43xx_phy_read(bcm, 0x0815);
++	if (phy->rev != 1) {
++		backup_phy[4] = bcm43xx_phy_read(bcm, 0x0814);
++		backup_phy[5] = bcm43xx_phy_read(bcm, 0x0815);
++	}
+ 	backup_phy[6] = bcm43xx_phy_read(bcm, 0x005A);
+ 	backup_phy[7] = bcm43xx_phy_read(bcm, 0x0059);
+ 	backup_phy[8] = bcm43xx_phy_read(bcm, 0x0058);
+@@ -1018,14 +1020,16 @@ static void bcm43xx_calc_loopback_gain(struct bcm43xx_private *bcm)
+ 			  bcm43xx_phy_read(bcm, 0x0811) | 0x0001);
+ 	bcm43xx_phy_write(bcm, 0x0812,
+ 			  bcm43xx_phy_read(bcm, 0x0812) & 0xFFFE);
+-	bcm43xx_phy_write(bcm, 0x0814,
+-			  bcm43xx_phy_read(bcm, 0x0814) | 0x0001);
+-	bcm43xx_phy_write(bcm, 0x0815,
+-			  bcm43xx_phy_read(bcm, 0x0815) & 0xFFFE);
+-	bcm43xx_phy_write(bcm, 0x0814,
+-			  bcm43xx_phy_read(bcm, 0x0814) | 0x0002);
+-	bcm43xx_phy_write(bcm, 0x0815,
+-			  bcm43xx_phy_read(bcm, 0x0815) & 0xFFFD);
++	if (phy->rev != 1) {
++		bcm43xx_phy_write(bcm, 0x0814,
++				  bcm43xx_phy_read(bcm, 0x0814) | 0x0001);
++		bcm43xx_phy_write(bcm, 0x0815,
++				  bcm43xx_phy_read(bcm, 0x0815) & 0xFFFE);
++		bcm43xx_phy_write(bcm, 0x0814,
++				  bcm43xx_phy_read(bcm, 0x0814) | 0x0002);
++		bcm43xx_phy_write(bcm, 0x0815,
++				  bcm43xx_phy_read(bcm, 0x0815) & 0xFFFD);
++	}
+ 	bcm43xx_phy_write(bcm, 0x0811,
+ 			  bcm43xx_phy_read(bcm, 0x0811) | 0x000C);
+ 	bcm43xx_phy_write(bcm, 0x0812,
+@@ -1048,10 +1052,12 @@ static void bcm43xx_calc_loopback_gain(struct bcm43xx_private *bcm)
+ 				  bcm43xx_phy_read(bcm, 0x000A)
+ 				  | 0x2000);
+ 	}
+-	bcm43xx_phy_write(bcm, 0x0814,
+-			  bcm43xx_phy_read(bcm, 0x0814) | 0x0004);
+-	bcm43xx_phy_write(bcm, 0x0815,
+-			  bcm43xx_phy_read(bcm, 0x0815) & 0xFFFB);
++	if (phy->rev != 1) {
++		bcm43xx_phy_write(bcm, 0x0814,
++				  bcm43xx_phy_read(bcm, 0x0814) | 0x0004);
++		bcm43xx_phy_write(bcm, 0x0815,
++				  bcm43xx_phy_read(bcm, 0x0815) & 0xFFFB);
++	}
+ 	bcm43xx_phy_write(bcm, 0x0003,
+ 			  (bcm43xx_phy_read(bcm, 0x0003)
+ 			   & 0xFF9F) | 0x0040);
+@@ -1138,8 +1144,10 @@ static void bcm43xx_calc_loopback_gain(struct bcm43xx_private *bcm)
+ 		}
+ 	}
+ 
+-	bcm43xx_phy_write(bcm, 0x0814, backup_phy[4]);
+-	bcm43xx_phy_write(bcm, 0x0815, backup_phy[5]);
++	if (phy->rev != 1) {
++		bcm43xx_phy_write(bcm, 0x0814, backup_phy[4]);
++		bcm43xx_phy_write(bcm, 0x0815, backup_phy[5]);
++	}
+ 	bcm43xx_phy_write(bcm, 0x005A, backup_phy[6]);
+ 	bcm43xx_phy_write(bcm, 0x0059, backup_phy[7]);
+ 	bcm43xx_phy_write(bcm, 0x0058, backup_phy[8]);
+@@ -1188,24 +1196,23 @@ static void bcm43xx_phy_initg(struct bcm43xx_private *bcm)
+ 		bcm43xx_phy_write(bcm, 0x0811, 0x0000);
+ 		bcm43xx_phy_write(bcm, 0x0015, 0x00C0);
+ 	}
+-	if (phy->rev >= 3) {
++	if (phy->rev > 5) {
+ 		bcm43xx_phy_write(bcm, 0x0811, 0x0400);
+ 		bcm43xx_phy_write(bcm, 0x0015, 0x00C0);
+ 	}
+ 	if (phy->rev >= 2 && phy->connected) {
+ 		tmp = bcm43xx_phy_read(bcm, 0x0400) & 0xFF;
+-		if (tmp < 6) {
++		if (tmp ==3 || tmp == 5) {
+ 			bcm43xx_phy_write(bcm, 0x04C2, 0x1816);
+ 			bcm43xx_phy_write(bcm, 0x04C3, 0x8006);
+-			if (tmp != 3) {
++			if (tmp == 5) {
+ 				bcm43xx_phy_write(bcm, 0x04CC,
+ 						  (bcm43xx_phy_read(bcm, 0x04CC)
+ 						   & 0x00FF) | 0x1F00);
+ 			}
+ 		}
+-	}
+-	if (phy->rev < 3 && phy->connected)
+ 		bcm43xx_phy_write(bcm, 0x047E, 0x0078);
++	}
+ 	if (radio->revision == 8) {
+ 		bcm43xx_phy_write(bcm, 0x0801, bcm43xx_phy_read(bcm, 0x0801) | 0x0080);
+ 		bcm43xx_phy_write(bcm, 0x043E, bcm43xx_phy_read(bcm, 0x043E) | 0x0004);
+@@ -1232,7 +1239,7 @@ static void bcm43xx_phy_initg(struct bcm43xx_private *bcm)
+ 		if (phy->rev >= 6) {
+ 			bcm43xx_phy_write(bcm, 0x0036,
+ 					  (bcm43xx_phy_read(bcm, 0x0036)
+-					   & 0xF000) | (radio->txctl2 << 12));
++					   & 0x0FFF) | (radio->txctl2 << 12));
+ 		}
+ 		if (bcm->sprom.boardflags & BCM43xx_BFL_PACTRL)
+ 			bcm43xx_phy_write(bcm, 0x002E, 0x8075);
+@@ -1243,7 +1250,7 @@ static void bcm43xx_phy_initg(struct bcm43xx_private *bcm)
+ 		else
+ 			bcm43xx_phy_write(bcm, 0x002F, 0x0202);
+ 	}
+-	if (phy->connected) {
++	if (phy->connected || phy->rev >= 2) {
+ 		bcm43xx_phy_lo_adjust(bcm, 0);
+ 		bcm43xx_phy_write(bcm, 0x080F, 0x8078);
+ 	}
+@@ -1257,7 +1264,7 @@ static void bcm43xx_phy_initg(struct bcm43xx_private *bcm)
+ 		 */
+ 		bcm43xx_nrssi_hw_update(bcm, 0xFFFF);
+ 		bcm43xx_calc_nrssi_threshold(bcm);
+-	} else if (phy->connected) {
++	} else if (phy->connected || phy->rev >= 2) {
+ 		if (radio->nrssi[0] == -1000) {
+ 			assert(radio->nrssi[1] == -1000);
+ 			bcm43xx_calc_nrssi_slope(bcm);
+diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
+index 9c64f89..87ee3ee 100644
+--- a/drivers/net/wireless/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/zd1211rw/zd_chip.c
+@@ -337,6 +337,7 @@ static int read_pod(struct zd_chip *chip, u8 *rf_type)
+ 	chip->patch_cr157 = (value >> 13) & 0x1;
+ 	chip->patch_6m_band_edge = (value >> 21) & 0x1;
+ 	chip->new_phy_layout = (value >> 31) & 0x1;
++	chip->al2230s_bit = (value >> 7) & 0x1;
+ 	chip->link_led = ((value >> 4) & 1) ? LED1 : LED2;
+ 	chip->supports_tx_led = 1;
+ 	if (value & (1 << 24)) { /* LED scenario */
+@@ -591,16 +592,16 @@ int zd_chip_unlock_phy_regs(struct zd_chip *chip)
+ 	return r;
+ }
+ 
+-/* CR157 can be optionally patched by the EEPROM */
++/* CR157 can be optionally patched by the EEPROM for original ZD1211 */
+ static int patch_cr157(struct zd_chip *chip)
+ {
+ 	int r;
+-	u32 value;
++	u16 value;
+ 
+ 	if (!chip->patch_cr157)
+ 		return 0;
+ 
+-	r = zd_ioread32_locked(chip, &value, E2P_PHY_REG);
++	r = zd_ioread16_locked(chip, &value, E2P_PHY_REG);
+ 	if (r)
+ 		return r;
+ 
+@@ -790,11 +791,6 @@ static int zd1211b_hw_reset_phy(struct zd_chip *chip)
+ 		goto out;
+ 
+ 	r = zd_iowrite16a_locked(chip, ioreqs, ARRAY_SIZE(ioreqs));
+-	if (r)
+-		goto unlock;
+-
+-	r = patch_cr157(chip);
+-unlock:
+ 	t = zd_chip_unlock_phy_regs(chip);
+ 	if (t && !r)
+ 		r = t;
+diff --git a/drivers/net/wireless/zd1211rw/zd_chip.h b/drivers/net/wireless/zd1211rw/zd_chip.h
+index b07569e..e57ed75 100644
+--- a/drivers/net/wireless/zd1211rw/zd_chip.h
++++ b/drivers/net/wireless/zd1211rw/zd_chip.h
+@@ -641,8 +641,8 @@ enum {
+  * also only 11 channels. */
+ #define E2P_ALLOWED_CHANNEL	E2P_DATA(0x18)
+ 
+-#define E2P_PHY_REG		E2P_DATA(0x1a)
+ #define E2P_DEVICE_VER		E2P_DATA(0x20)
++#define E2P_PHY_REG		E2P_DATA(0x25)
+ #define E2P_36M_CAL_VALUE1	E2P_DATA(0x28)
+ #define E2P_36M_CAL_VALUE2      E2P_DATA(0x2a)
+ #define E2P_36M_CAL_VALUE3      E2P_DATA(0x2c)
+@@ -711,7 +711,7 @@ struct zd_chip {
+ 	u16 link_led;
+ 	unsigned int pa_type:4,
+ 		patch_cck_gain:1, patch_cr157:1, patch_6m_band_edge:1,
+-		new_phy_layout:1,
++		new_phy_layout:1, al2230s_bit:1,
+ 		is_zd1211b:1, supports_tx_led:1;
+ };
+ 
+diff --git a/drivers/net/wireless/zd1211rw/zd_rf_al2230.c b/drivers/net/wireless/zd1211rw/zd_rf_al2230.c
+index 25323a1..5235a78 100644
+--- a/drivers/net/wireless/zd1211rw/zd_rf_al2230.c
++++ b/drivers/net/wireless/zd1211rw/zd_rf_al2230.c
+@@ -358,6 +358,12 @@ int zd_rf_init_al2230(struct zd_rf *rf)
+ {
+ 	struct zd_chip *chip = zd_rf_to_chip(rf);
+ 
++	if (chip->al2230s_bit) {
++		dev_err(zd_chip_dev(chip), "AL2230S devices are not yet "
++			"supported by this driver.\n");
++		return -ENODEV;
++	}
++
+ 	rf->switch_radio_off = al2230_switch_radio_off;
+ 	if (chip->is_zd1211b) {
+ 		rf->init_hw = zd1211b_al2230_init_hw;
+-- 
+John W. Linville
+linville@tuxdriver.com
