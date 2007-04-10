@@ -1,58 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:47887 "EHLO
-	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1946012AbXDCWRG (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:56206 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030346AbXDJFfe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Apr 2007 18:17:06 -0400
-From: Daniel Drake <dsd@gentoo.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: kune@deine-taler.de
-Subject: [PATCH] zd1211rw: Remove invalid CR write during ZD1211 phy reset
-Message-Id: <20070403221710.89FD07B409F@zog.reactivated.net>
-Date: Tue,  3 Apr 2007 23:17:10 +0100 (BST)
+	Tue, 10 Apr 2007 01:35:34 -0400
+Subject: Re: [PATCH] mac80211: make mode change to same mode always  successful
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <200704092245.49798.flamingice@sourmilk.net>
+References: <200704092245.49798.flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Jp3eecn8Ms3N4iNbTRnj"
+Date: Tue, 10 Apr 2007 07:35:49 +0200
+Message-Id: <1176183349.8459.55.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The vendor driver only does the CR123 write for non-USB devices (which
-don't exist on the consumer market)
 
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
----
- zd_chip.c |   22 +++++++++++-----------
- 1 files changed, 11 insertions(+), 11 deletions(-)
+--=-Jp3eecn8Ms3N4iNbTRnj
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Index: linux/drivers/net/wireless/zd1211rw/zd_chip.c
-===================================================================
---- linux.orig/drivers/net/wireless/zd1211rw/zd_chip.c
-+++ linux/drivers/net/wireless/zd1211rw/zd_chip.c
-@@ -684,17 +684,17 @@ static int zd1211_hw_reset_phy(struct zd
- 		{ CR111, 0x27 }, { CR112, 0x27 }, { CR113, 0x27 },
- 		{ CR114, 0x27 }, { CR115, 0x26 }, { CR116, 0x24 },
- 		{ CR117, 0xfc }, { CR118, 0xfa }, { CR120, 0x4f },
--		{ CR123, 0x27 }, { CR125, 0xaa }, { CR127, 0x03 },
--		{ CR128, 0x14 }, { CR129, 0x12 }, { CR130, 0x10 },
--		{ CR131, 0x0C }, { CR136, 0xdf }, { CR137, 0x40 },
--		{ CR138, 0xa0 }, { CR139, 0xb0 }, { CR140, 0x99 },
--		{ CR141, 0x82 }, { CR142, 0x54 }, { CR143, 0x1c },
--		{ CR144, 0x6c }, { CR147, 0x07 }, { CR148, 0x4c },
--		{ CR149, 0x50 }, { CR150, 0x0e }, { CR151, 0x18 },
--		{ CR160, 0xfe }, { CR161, 0xee }, { CR162, 0xaa },
--		{ CR163, 0xfa }, { CR164, 0xfa }, { CR165, 0xea },
--		{ CR166, 0xbe }, { CR167, 0xbe }, { CR168, 0x6a },
--		{ CR169, 0xba }, { CR170, 0xba }, { CR171, 0xba },
-+		{ CR125, 0xaa }, { CR127, 0x03 }, { CR128, 0x14 },
-+		{ CR129, 0x12 }, { CR130, 0x10 }, { CR131, 0x0C },
-+		{ CR136, 0xdf }, { CR137, 0x40 }, { CR138, 0xa0 },
-+		{ CR139, 0xb0 }, { CR140, 0x99 }, { CR141, 0x82 },
-+		{ CR142, 0x54 }, { CR143, 0x1c }, { CR144, 0x6c },
-+		{ CR147, 0x07 }, { CR148, 0x4c }, { CR149, 0x50 },
-+		{ CR150, 0x0e }, { CR151, 0x18 }, { CR160, 0xfe },
-+		{ CR161, 0xee }, { CR162, 0xaa }, { CR163, 0xfa },
-+		{ CR164, 0xfa }, { CR165, 0xea }, { CR166, 0xbe },
-+		{ CR167, 0xbe }, { CR168, 0x6a }, { CR169, 0xba },
-+		{ CR170, 0xba }, { CR171, 0xba },
- 		/* Note: CR204 must lead the CR203 */
- 		{ CR204, 0x7d },
- 		{ },
+On Mon, 2007-04-09 at 22:45 -0400, Michael Wu wrote:
+> I suspect wireless mode change failure is the cause of many wpa_supplican=
+t and=20
+> NM problems. Anyone who is having issues with wpa_supplicant and/or NM -=20
+> please try this patch.
+
+Haven't tried it yet, but it looks good to me. Not much point in denying
+a change to a mode that we currently have. I don't really have issues
+with wpa_supplicant though, it does print a lot of mode change failures
+but never seems to care.
+
+johannes
+
+--=-Jp3eecn8Ms3N4iNbTRnj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGGyI1/ETPhpq3jKURAuU0AJ9qXKQwFwwBTNxey27zo6yk7qiI/QCeK9Ic
+PP+3IqsgCIc1TBausDmjppw=
+=WR+4
+-----END PGP SIGNATURE-----
+
+--=-Jp3eecn8Ms3N4iNbTRnj--
+
