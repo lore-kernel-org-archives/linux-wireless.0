@@ -1,80 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:49793 "EHLO
-	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966281AbXDGS5J (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:22165 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1030319AbXDJCs2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Apr 2007 14:57:09 -0400
-Date: Sat, 07 Apr 2007 13:54:35 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] bcm43xx: Fix 802.11b/g scan limits to match regulatory  requirements
-Message-ID: <4617e8eb.8Y1vYMQ0EdBtHlLP%Larry.Finger@lwfinger.net>
+	Mon, 9 Apr 2007 22:48:28 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: [PATCH] mac80211: make mode change to same mode always successful
+Date: Mon, 9 Apr 2007 22:45:45 -0400
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed;
+  boundary="nextPart4689356.uBjqX5YZTE";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704092245.49798.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In 802.11b/g mode, bcm43xx actively scans channels 1-14 no matter what locale has been set,
-either in the sprom or by the locale option. This behaviorviolates regulatory rules
-everywhere in the world except Japan. This patch changes the default range to the correct
-value if the locale has been set, and to channels 1-13 if no locale has been set.
+--nextPart4689356.uBjqX5YZTE
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_ZpvGGOmWnUs+fA6"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+--Boundary-01=_ZpvGGOmWnUs+fA6
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-John,
+I suspect wireless mode change failure is the cause of many wpa_supplicant =
+and=20
+NM problems. Anyone who is having issues with wpa_supplicant and/or NM -=20
+please try this patch.
 
-This should be applied to wireless-2.6.
+Thanks,
+=2DMichael Wu
 
-Larry
+--Boundary-01=_ZpvGGOmWnUs+fA6
+Content-Type: text/x-diff;
+  charset="us-ascii";
+  name="friendly-siwmode.diff"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline;
+	filename="friendly-siwmode.diff"
 
- bcm43xx_main.c |   20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+mac80211: make mode change to same mode always successful
 
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-@@ -946,6 +946,7 @@ static int bcm43xx_geo_init(struct bcm43
- 	u8 channel;
- 	struct bcm43xx_phyinfo *phy;
- 	const char *iso_country;
-+	u8 max_bg_channel;
- 
- 	geo = kzalloc(sizeof(*geo), GFP_KERNEL);
- 	if (!geo)
-@@ -967,6 +968,23 @@ static int bcm43xx_geo_init(struct bcm43
+=46rom: Michael Wu <flamingice@sourmilk.net>
+
+This patch makes ieee80211_ioctl_siwmode always return success if the new
+mode is the same as the current mode.
+
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+=2D--
+
+ net/mac80211/ieee80211_ioctl.c |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index d139d97..bb3852c 100644
+=2D-- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -1738,8 +1738,6 @@ static int ieee80211_ioctl_siwmode(struct net_device =
+*dev,
+=20
+ 	if (sdata->type =3D=3D IEEE80211_IF_TYPE_VLAN)
+ 		return -EOPNOTSUPP;
+=2D	if (netif_running(dev))
+=2D		return -EBUSY;
+=20
+ 	switch (*mode) {
+ 	case IW_MODE_MASTER:
+@@ -1761,10 +1759,14 @@ static int ieee80211_ioctl_siwmode(struct net_devic=
+e *dev,
+ 		return -EINVAL;
  	}
- 	iso_country = bcm43xx_locale_iso(bcm->sprom.locale);
- 
-+/* set the maximum channel based on locale set in sprom or witle locale option */
-+	switch (bcm->sprom.locale) {
-+	case BCM43xx_LOCALE_THAILAND:
-+	case BCM43xx_LOCALE_ISRAEL:
-+	case BCM43xx_LOCALE_JORDAN:
-+	case BCM43xx_LOCALE_USA_CANADA_ANZ:
-+	case BCM43xx_LOCALE_USA_LOW:
-+		max_bg_channel = 11;
-+		break;
-+	case BCM43xx_LOCALE_JAPAN:
-+	case BCM43xx_LOCALE_JAPAN_HIGH:
-+		max_bg_channel = 14;
-+		break;
-+	default:
-+		max_bg_channel = 13;
-+	}
+=20
+=2D	if (type !=3D sdata->type) {
+=2D		ieee80211_if_reinit(dev);
+=2D		ieee80211_if_set_type(dev, type);
+=2D	}
++	if (type =3D=3D sdata->type)
++		return 0;
++	if (netif_running(dev))
++		return -EBUSY;
 +
-  	if (have_a) {
- 		for (i = 0, channel = IEEE80211_52GHZ_MIN_CHANNEL;
- 		      channel <= IEEE80211_52GHZ_MAX_CHANNEL; channel++) {
-@@ -978,7 +996,7 @@ static int bcm43xx_geo_init(struct bcm43
- 	}
- 	if (have_bg) {
- 		for (i = 0, channel = IEEE80211_24GHZ_MIN_CHANNEL;
--		      channel <= IEEE80211_24GHZ_MAX_CHANNEL; channel++) {
-+		      channel <= max_bg_channel; channel++) {
- 			chan = &geo->bg[i++];
- 			chan->freq = bcm43xx_channel_to_freq_bg(channel);
- 			chan->channel = channel;
++	ieee80211_if_reinit(dev);
++	ieee80211_if_set_type(dev, type);
++
+ 	return 0;
+ }
+=20
+
+--Boundary-01=_ZpvGGOmWnUs+fA6--
+
+--nextPart4689356.uBjqX5YZTE
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGGvpdT3Oqt9AH4aERArtIAJ9aCyk4X5544q8r/jxaUc9oNClhdgCfTCks
+K2JquW8gsqDhRiSNu73p0uM=
+=l0pS
+-----END PGP SIGNATURE-----
+
+--nextPart4689356.uBjqX5YZTE--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
