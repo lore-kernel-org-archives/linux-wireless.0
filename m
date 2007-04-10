@@ -1,121 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:51878 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161552AbXDWS6U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2007 14:58:20 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 11/13] mac80211: fix issues in ieee80211 qdisc
-Date: Mon, 23 Apr 2007 14:48:14 -0400
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Message-Id: <20070423184814.7029.35933.stgit@magic.sourmilk.net>
-In-Reply-To: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+Received: from ra.tuxdriver.com ([70.61.120.52]:3153 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753781AbXDJOBd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Apr 2007 10:01:33 -0400
+Date: Tue, 10 Apr 2007 09:39:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gallo Renato <renatogallo@katamail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: intel 3945 testing the drivers on slack
+Message-ID: <20070410133953.GA14123@tuxdriver.com>
+References: <1176187118.2201.8.camel@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1176187118.2201.8.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+On Tue, Apr 10, 2007 at 08:38:38AM +0200, Gallo Renato wrote:
 
-This patch fixes two issues found by Patrick McHardy:
+> on the dmesg and disconnects losing the wireless extentions I decided to
+> try the new kernel 2.6.20.6 with the drivers
+> iwlwifi-0.0.11/  iwlwifi-0.0.11.tgz  iwlwifi-ucode-2.14.1/
+> iwlwifi-ucode-2.14.1.tgz  mac80211-6.0.0/  mac80211-6.0.0.tgz
+> 
+> 
+> but got troubles compiling since after the patching phase it gives me 
+> 
+> CC      drivers/net/wireless/mac80211/iwlwifi/base.o
+> drivers/net/wireless/mac80211/iwlwifi/base.c: In function
+> `ipw_rate_scale_rate_init':
+> drivers/net/wireless/mac80211/iwlwifi/base.c:11695: error: structure has
+> no member named `num_curr_rates'
+> drivers/net/wireless/mac80211/iwlwifi/base.c:11697: error: structure has
+> no member named `curr_rates'
 
-1. wme_qdiscop_enqueue doesn't increment q.qlen for packets queued to
-q->requeued[], which might cause upper layer code to stop dequeueing if
-q.qlen reaches zero.
-2. wme_discop_destroy leaks classifier module references and memory when
-destroying classifiers, it should use tcf_destroy()
+It sounds like there is a mismatch between the iwlwifi version and
+mac80211 version you are using?  Dunno.
 
-It also removes some dead code.
+I'll leave it to the iwlwifi guys to answer more...
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
-
- net/mac80211/wme.c |   13 +++++--------
- 1 files changed, 5 insertions(+), 8 deletions(-)
-
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 243da1f..79b4305 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -220,6 +220,7 @@ static int wme_qdiscop_enqueue(struct sk_buff *skb, struct Qdisc* qd)
- 
- 	if (pkt_data->requeue) {
- 		skb_queue_tail(&q->requeued[pkt_data->queue], skb);
-+		qd->q.qlen++;
- 		return 0;
- 	}
- 
-@@ -313,8 +314,10 @@ static struct sk_buff *wme_qdiscop_dequeue(struct Qdisc* qd)
- 
- 		/* there is space - try and get a frame */
- 		skb = skb_dequeue(&q->requeued[queue]);
--		if (skb)
-+		if (skb) {
-+			qd->q.qlen--;
- 			return skb;
-+		}
- 
- 		qdisc = q->queues[queue];
- 		skb = qdisc->dequeue(qdisc);
-@@ -356,7 +359,7 @@ static void wme_qdiscop_destroy(struct Qdisc* qd)
- 
- 	while ((tp = q->filter_list) != NULL) {
- 		q->filter_list = tp->next;
--		tp->ops->destroy(tp);
-+		tcf_destroy(tp);
- 	}
- 
- 	for (queue=0; queue < hw->queues; queue++) {
-@@ -503,7 +506,6 @@ static unsigned long wme_classop_bind(struct Qdisc *qd, unsigned long parent,
- 
- static void wme_classop_put(struct Qdisc *q, unsigned long cl)
- {
--	/* printk(KERN_DEBUG "entering %s\n", __func__); */
- }
- 
- 
-@@ -513,7 +515,6 @@ static int wme_classop_change(struct Qdisc *qd, u32 handle, u32 parent,
- 	unsigned long cl = *arg;
- 	struct ieee80211_local *local = wdev_priv(qd->dev->ieee80211_ptr);
- 	struct ieee80211_hw *hw = &local->hw;
--	/* printk(KERN_DEBUG "entering %s\n", __func__); */
- 
- 	if (cl - 1 > hw->queues)
- 		return -ENOENT;
-@@ -531,7 +532,6 @@ static int wme_classop_delete(struct Qdisc *qd, unsigned long cl)
- {
- 	struct ieee80211_local *local = wdev_priv(qd->dev->ieee80211_ptr);
- 	struct ieee80211_hw *hw = &local->hw;
--	/* printk(KERN_DEBUG "entering %s\n", __func__); */
- 
- 	if (cl - 1 > hw->queues)
- 		return -ENOENT;
-@@ -545,7 +545,6 @@ static int wme_classop_dump_class(struct Qdisc *qd, unsigned long cl,
- 	struct ieee80211_sched_data *q = qdisc_priv(qd);
- 	struct ieee80211_local *local = wdev_priv(qd->dev->ieee80211_ptr);
- 	struct ieee80211_hw *hw = &local->hw;
--	/* printk(KERN_DEBUG "entering %s\n", __func__); */
- 
- 	if (cl - 1 > hw->queues)
- 		return -ENOENT;
-@@ -561,7 +560,6 @@ static void wme_classop_walk(struct Qdisc *qd, struct qdisc_walker *arg)
- 	struct ieee80211_local *local = wdev_priv(qd->dev->ieee80211_ptr);
- 	struct ieee80211_hw *hw = &local->hw;
- 	int queue;
--	/* printk(KERN_DEBUG "entering %s\n", __func__); */
- 
- 	if (arg->stop)
- 		return;
-@@ -586,7 +584,6 @@ static struct tcf_proto ** wme_classop_find_tcf(struct Qdisc *qd,
- 						unsigned long cl)
- {
- 	struct ieee80211_sched_data *q = qdisc_priv(qd);
--	/* printk("entering %s\n", __func__); */
- 
- 	if (cl)
- 		return NULL;
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
