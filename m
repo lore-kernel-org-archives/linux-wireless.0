@@ -1,479 +1,401 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:33781 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754272AbXDSWoL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2007 18:44:11 -0400
-Date: Fri, 20 Apr 2007 00:42:58 +0200
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andreamrl@tiscali.it>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtl818x-mac80211: fix coding style
-Message-ID: <20070420004258.23848470@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from py-out-1112.google.com ([64.233.166.176]:34031 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030680AbXDJOet (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Apr 2007 10:34:49 -0400
+Received: by py-out-1112.google.com with SMTP id a29so1372992pyi
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Apr 2007 07:34:49 -0700 (PDT)
+Message-ID: <f6ca9fed0704100734o111ce262xff3b1d8f1d84f2c9@mail.gmail.com>
+Date: Tue, 10 Apr 2007 16:34:48 +0200
+From: "dragoran dragoran" <drago01@gmail.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: mac80211 does not support WPA when used with wext
+Cc: "Michael Wu" <flamingice@sourmilk.net>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John Linville" <linville@redhat.com>, "Jiri Benc" <jbenc@suse.cz>,
+	ipw3945-devel@lists.sourceforge.net, jketreno@linux.intel.com
+In-Reply-To: <1176207933.15572.11.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_Part_24710_26166473.1176215688162"
+References: <460E2B8C.4030002@gmail.com>
+	 <200703311700.52792.flamingice@sourmilk.net>
+	 <f6ca9fed0704081445u5536e596m4ca4caeb44f7f87@mail.gmail.com>
+	 <200704081754.24937.flamingice@sourmilk.net>
+	 <f6ca9fed0704081527j641a4ecat44151e107cab7342@mail.gmail.com>
+	 <461B3930.6040203@gmail.com>
+	 <1176207933.15572.11.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix coding style.
+------=_Part_24710_26166473.1176215688162
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
----
-Index: wireless-dev/drivers/net/wireless/mac80211/rtl818x/rtl8187.h
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/mac80211/rtl818x/rtl8187.h
-+++ wireless-dev/drivers/net/wireless/mac80211/rtl818x/rtl8187.h
-@@ -68,7 +68,7 @@ static inline u8 rtl818x_ioread8(struct 
- 
- 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
- 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
--			(unsigned long)addr, 0, &val, sizeof(val), HZ/2);
-+			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
- 
- 	return val;
- }
-@@ -79,7 +79,7 @@ static inline u8 rtl818x_ioread16(struct
- 
- 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
- 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
--			(unsigned long)addr, 0, &val, sizeof(val), HZ/2);
-+			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
- 
- 	return le16_to_cpu(val);
- }
-@@ -90,7 +90,7 @@ static inline u8 rtl818x_ioread32(struct
- 
- 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
- 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
--			(unsigned long)addr, 0, &val, sizeof(val), HZ/2);
-+			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
- 
- 	return le32_to_cpu(val);
- }
-@@ -100,7 +100,7 @@ static inline void rtl818x_iowrite8(stru
- {
- 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
- 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
--			(unsigned long)addr, 0, &val, sizeof(val), HZ/2);
-+			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
- }
- 
- static inline void rtl818x_iowrite16(struct rtl8187_priv *priv,
-@@ -110,7 +110,7 @@ static inline void rtl818x_iowrite16(str
- 
- 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
- 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
--			(unsigned long)addr, 0, &buf, sizeof(buf), HZ/2);
-+			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
- }
- 
- static inline void rtl818x_iowrite32(struct rtl8187_priv *priv,
-@@ -120,7 +120,7 @@ static inline void rtl818x_iowrite32(str
- 
- 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
- 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
--			(unsigned long)addr, 0, &buf, sizeof(buf), HZ/2);
-+			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
- }
- 
- #endif /* RTL8187_H */
-Index: wireless-dev/drivers/net/wireless/mac80211/rtl818x/rtl8187_dev.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/mac80211/rtl818x/rtl8187_dev.c
-+++ wireless-dev/drivers/net/wireless/mac80211/rtl818x/rtl8187_dev.c
-@@ -58,9 +58,9 @@ void rtl8187_write_phy(struct ieee80211_
- 
- static void rtl8187_tx_cb(struct urb *urb)
- {
--	struct ieee80211_tx_status status = {{0}};
-+	struct ieee80211_tx_status status = { {0} };
- 	struct sk_buff *skb = (struct sk_buff *)urb->context;
--	struct rtl8187_tx_info *info = (struct rtl8187_tx_info *) skb->cb;
-+	struct rtl8187_tx_info *info = (struct rtl8187_tx_info *)skb->cb;
- 
- 	usb_free_urb(info->urb);
- 	if (info->control)
-@@ -88,30 +88,30 @@ static int rtl8187_tx(struct ieee80211_h
- 	}
- 
- 	if (ieee80211_get_hdrlen_from_skb(skb) >= 24) {
--		ieeehdr = (struct ieee80211_hdr *) skb->data;
-+		ieeehdr = (struct ieee80211_hdr *)skb->data;
- 		ieeehdr->seq_ctrl = cpu_to_le16(priv->seq_counter);
- 		priv->seq_counter += 0x10;
- 		priv->seq_counter &= IEEE80211_SCTL_SEQ;
- 	}
- 
--	hdr = (struct rtl8187_tx_hdr *) skb_push(skb, sizeof(*hdr));
-+	hdr = (struct rtl8187_tx_hdr *)skb_push(skb, sizeof(*hdr));
- 	tmp = skb->len - sizeof(*hdr);
- 	tmp |= RTL8187_TX_FLAG_NO_ENCRYPT;
- 	tmp |= control->rts_cts_rate << 19;
- 	tmp |= control->tx_rate << 24;
--	if(ieee80211_get_morefrag((struct ieee80211_hdr  *)skb))
-+	if (ieee80211_get_morefrag((struct ieee80211_hdr *)skb))
- 		tmp |= RTL8187_TX_FLAG_MORE_FRAG;
--	if(control->flags & IEEE80211_TXCTL_USE_RTS_CTS)
-+	if (control->flags & IEEE80211_TXCTL_USE_RTS_CTS)
- 		tmp |= RTL8187_TX_FLAG_RTS;
--	if(control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT)
-+	if (control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT)
- 		tmp |= RTL8187_TX_FLAG_CTS;
- 	hdr->flags = cpu_to_le32(tmp);
--	hdr->rts_duration = 0;	/* TODO : follow RTL sample */
-+	hdr->rts_duration = 0;	/* TODO: follow RTL sample */
- 	hdr->len = 0;
- 	tmp = control->retry_limit << 8;
- 	hdr->retry = cpu_to_le32(tmp);
- 
--	info = (struct rtl8187_tx_info *) skb->cb;
-+	info = (struct rtl8187_tx_info *)skb->cb;
- 	info->control = kmemdup(control, sizeof(*control), GFP_ATOMIC);
- 	info->urb = urb;
- 	info->dev = dev;
-@@ -122,15 +122,14 @@ static int rtl8187_tx(struct ieee80211_h
- 	return 0;
- }
- 
--
- static void rtl8187_rx_cb(struct urb *urb)
- {
--	struct sk_buff *skb = (struct sk_buff *) urb->context;
-+	struct sk_buff *skb = (struct sk_buff *)urb->context;
- 	struct rtl8187_rx_info *info = (struct rtl8187_rx_info *)skb->cb;
- 	struct ieee80211_hw *dev = info->dev;
- 	struct rtl8187_priv *priv = dev->priv;
- 	struct rtl8187_rx_hdr *hdr;
--	struct ieee80211_rx_status rx_status = {0};
-+	struct ieee80211_rx_status rx_status = { 0 };
- 	int rate, signal;
- 
- 	if (unlikely(urb->status)) {
-@@ -141,18 +140,18 @@ static void rtl8187_rx_cb(struct urb *ur
- 
- 	skb_unlink(skb, &priv->rx_queue);
- 	skb_put(skb, urb->actual_length);
--	hdr = (struct rtl8187_rx_hdr *) (skb->tail - sizeof(*hdr));
-+	hdr = (struct rtl8187_rx_hdr *)(skb->tail - sizeof(*hdr));
- 	skb_trim(skb, le16_to_cpu(hdr->len) & 0x0FFF);
- 
- 	signal = hdr->agc >> 1;
- 	rate = (le16_to_cpu(hdr->rate) >> 4) & 0xF;
--	if (rate > 3) {	// OFDM rate.
-+	if (rate > 3) {	/* OFDM rate */
- 		if (signal > 90)
- 			signal = 90;
- 		else if (signal < 25)
- 			signal = 25;
- 		signal = 90 - signal;
--	} else {	// CCK rate.
-+	} else {	/* CCK rate */
- 		if (signal > 95)
- 			signal = 95;
- 		else if (signal < 30)
-@@ -177,7 +176,7 @@ static void rtl8187_rx_cb(struct urb *ur
- 		return;
- 	}
- 
--	info = (struct rtl8187_rx_info *) skb->cb;
-+	info = (struct rtl8187_rx_info *)skb->cb;
- 	info->urb = urb;
- 	info->dev = dev;
- 	urb->transfer_buffer = skb->tail;
-@@ -206,7 +205,7 @@ static int rtl8187_init_urbs(struct ieee
- 		usb_fill_bulk_urb(entry, priv->udev,
- 				  usb_rcvbulkpipe(priv->udev, 1), skb->tail,
- 				  RTL8187_MAX_RX, rtl8187_rx_cb, skb);
--		info = (struct rtl8187_rx_info *) skb->cb;
-+		info = (struct rtl8187_rx_info *)skb->cb;
- 		info->urb = entry;
- 		info->dev = dev;
- 		skb_queue_tail(&priv->rx_queue, skb);
-@@ -246,9 +245,9 @@ static int rtl8187_init_hw(struct ieee80
- 
- 	mdelay(200);
- 
--	// check success of reset
-+	/* check success of reset */
- 	if (rtl818x_ioread8(priv, &priv->map->CMD) & RTL818X_CMD_RESET) {
--		printk(KERN_ERR "rtl8187: reset timeout!\n");
-+		printk(KERN_ERR "rtl8187: Reset timeout!\n");
- 		return -ETIMEDOUT;
- 	}
- 
-@@ -291,7 +290,7 @@ static int rtl8187_init_hw(struct ieee80
- 	rtl818x_iowrite8(priv, &priv->map->RESP_RATE, (8 << 4) | 0);
- 	rtl818x_iowrite16(priv, &priv->map->BRSR, 0x01F3);
- 
--	// ehh?
-+	// XXX: ehh?
- 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
- 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
- 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
-@@ -300,7 +299,7 @@ static int rtl8187_init_hw(struct ieee80
- 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
- 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
- 
--	// host_usb_init
-+	/* host_usb_init */
- 	rtl818x_iowrite8(priv, (u8 *)0xFF85, 0);
- 	rtl818x_iowrite8(priv, &priv->map->GPIO, 0);
- 	reg = rtl818x_ioread8(priv, (u8 *)0xFE53);
-@@ -367,18 +366,18 @@ static int rtl8187_open(struct ieee80211
- 
- 	rtl8187_init_urbs(dev);
- 
--	reg  = RTL818X_RX_CONF_ONLYERLPKT |
--	       RTL818X_RX_CONF_RX_AUTORESETPHY |
--	       RTL818X_RX_CONF_BSSID |
--	       RTL818X_RX_CONF_MGMT |
--	       RTL818X_RX_CONF_CTRL |
--	       RTL818X_RX_CONF_DATA |
--	       (7 << 13 /* RX FIFO threshold NONE */) |
--	       (7 << 10 /* MAX RX DMA */) |
--	       RTL818X_RX_CONF_BROADCAST |
--	       RTL818X_RX_CONF_MULTICAST |
--	       RTL818X_RX_CONF_NICMAC;
--	if(priv->mode == IEEE80211_IF_TYPE_MNTR)
-+	reg = RTL818X_RX_CONF_ONLYERLPKT |
-+	      RTL818X_RX_CONF_RX_AUTORESETPHY |
-+	      RTL818X_RX_CONF_BSSID |
-+	      RTL818X_RX_CONF_MGMT |
-+	      RTL818X_RX_CONF_CTRL |
-+	      RTL818X_RX_CONF_DATA |
-+	      (7 << 13 /* RX FIFO threshold NONE */) |
-+	      (7 << 10 /* MAX RX DMA */) |
-+	      RTL818X_RX_CONF_BROADCAST |
-+	      RTL818X_RX_CONF_MULTICAST |
-+	      RTL818X_RX_CONF_NICMAC;
-+	if (priv->mode == IEEE80211_IF_TYPE_MNTR)
- 		reg |= RTL818X_RX_CONF_MONITOR;
- 
- 	rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
-@@ -429,7 +428,7 @@ static int rtl8187_stop(struct ieee80211
- 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
- 
- 	while ((skb = skb_dequeue(&priv->rx_queue))) {
--		info = (struct rtl8187_rx_info *) skb->cb;
-+		info = (struct rtl8187_rx_info *)skb->cb;
- 		if (!info->urb)
- 			continue;
- 
-@@ -590,7 +589,7 @@ static int __devinit rtl8187_probe(struc
- 	skb_queue_head_init(&priv->rx_queue);
- 	memcpy(priv->channels, rtl818x_channels, sizeof(rtl818x_channels));
- 	memcpy(priv->rates, rtl818x_rates, sizeof(rtl818x_rates));
--	priv->map = (struct rtl818x_csr __iomem *) 0xFF00;
-+	priv->map = (struct rtl818x_csr __iomem *)0xFF00;
- 	priv->modes[0].mode = MODE_IEEE80211G;
- 	priv->modes[0].num_rates = ARRAY_SIZE(rtl818x_rates);
- 	priv->modes[0].rates = priv->rates;
-@@ -628,7 +627,7 @@ static int __devinit rtl8187_probe(struc
- 
- 	eeprom_93cx6_multiread(&eeprom, 0x7, dev->wiphy->perm_addr, 3);
- 	if (!is_valid_ether_addr(dev->wiphy->perm_addr)) {
--		printk(KERN_WARNING "rtl8187: Invalid hwaddr! Using randomly generated MAC addr\n");
-+		printk(KERN_WARNING "rtl8187: Invalid hwaddr! Using randomly generated MAC address\n");
- 		random_ether_addr(dev->wiphy->perm_addr);
- 	}
- 
-@@ -662,8 +661,7 @@ static int __devinit rtl8187_probe(struc
- 
- 	rtl8225_write(dev, 0, 0x1B7);
- 
--	if (rtl8225_read(dev, 8) != 0x588 ||
--	    rtl8225_read(dev, 9) != 0x700)
-+	if (rtl8225_read(dev, 8) != 0x588 || rtl8225_read(dev, 9) != 0x700)
- 		priv->rf_init = rtl8225_rf_init;
- 	else
- 		priv->rf_init = rtl8225z2_rf_init;
-Index: wireless-dev/drivers/net/wireless/mac80211/rtl818x/rtl8187_rtl8225.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/mac80211/rtl818x/rtl8187_rtl8225.c
-+++ wireless-dev/drivers/net/wireless/mac80211/rtl818x/rtl8187_rtl8225.c
-@@ -45,7 +45,7 @@ void rtl8225_write_bitbang(struct ieee80
- 	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80);
- 	udelay(10);
- 
--	for(i = 15; i >= 0; i--){
-+	for (i = 15; i >= 0; i--) {
- 		u16 reg = reg80 | (bangdata & (1 << i)) >> i;
- 
- 		if (i & 1)
-@@ -104,7 +104,7 @@ void rtl8225_write(struct ieee80211_hw *
- {
- 	struct rtl8187_priv *priv = dev->priv;
- 
--	if(priv->asic_rev)
-+	if (priv->asic_rev)
- 		rtl8225_write_8051(dev, addr, data);
- 	else
- 		rtl8225_write_bitbang(dev, addr, data);
-@@ -230,13 +230,13 @@ static const u8 rtl8225_agc[] = {
- };
- 
- static const u8 rtl8225_gain[] = {
--	0x23, 0x88, 0x7c, 0xa5,// -82dbm
--	0x23, 0x88, 0x7c, 0xb5,// -82dbm
--	0x23, 0x88, 0x7c, 0xc5,// -82dbm
--	0x33, 0x80, 0x79, 0xc5,// -78dbm
--	0x43, 0x78, 0x76, 0xc5,// -74dbm
--	0x53, 0x60, 0x73, 0xc5,// -70dbm
--	0x63, 0x58, 0x70, 0xc5,// -66dbm
-+	0x23, 0x88, 0x7c, 0xa5,	/* -82dBm */
-+	0x23, 0x88, 0x7c, 0xb5,	/* -82dBm */
-+	0x23, 0x88, 0x7c, 0xc5,	/* -82dBm */
-+	0x33, 0x80, 0x79, 0xc5,	/* -78dBm */
-+	0x43, 0x78, 0x76, 0xc5,	/* -74dBm */
-+	0x53, 0x60, 0x73, 0xc5,	/* -70dBm */
-+	0x63, 0x58, 0x70, 0xc5,	/* -66dBm */
- };
- 
- static const u8 rtl8225_threshold[] = {
-@@ -301,7 +301,7 @@ static void rtl8225_rf_set_tx_power(stru
- 
- 	mdelay(1); // FIXME: optional?
- 
--	// anaparam2 on
-+	/* anaparam2 on */
- 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
- 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
- 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
-@@ -314,7 +314,7 @@ static void rtl8225_rf_set_tx_power(stru
- 	rtl8225_write_phy_ofdm(dev, 8, 0x00);
- 
- 	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_OFDM,
--			 rtl8225_tx_gain_cck_ofdm[ofdm_power/6] >> 1);
-+			 rtl8225_tx_gain_cck_ofdm[ofdm_power / 6] >> 1);
- 
- 	tmp = &rtl8225_tx_power_ofdm[ofdm_power % 6];
- 
-@@ -349,14 +349,14 @@ void rtl8225_rf_init(struct ieee80211_hw
- 	rtl8225_write(dev, 0x2, 0xC4D); mdelay(200);
- 	rtl8225_write(dev, 0x2, 0x44D); mdelay(200);
- 
--	if (!(rtl8225_read(dev, 6) & (1 << 7))){
-+	if (!(rtl8225_read(dev, 6) & (1 << 7))) {
- 		rtl8225_write(dev, 0x02, 0x0c4d);
- 		mdelay(200);
- 		rtl8225_write(dev, 0x02, 0x044d);
- 		mdelay(100);
- 		if (!(rtl8225_read(dev, 6) & (1 << 7)))
--			printk("RF Calibration Failed!!!! %x\n",
--				rtl8225_read(dev, 6));
-+			printk("rtl8187: RF Calibration Failed! %x\n",
-+			       rtl8225_read(dev, 6));
- 	}
- 
- 	rtl8225_write(dev, 0x0, 0x127);
-@@ -453,15 +453,15 @@ void rtl8225_rf_init(struct ieee80211_hw
- 
- 	rtl8225_rf_set_tx_power(dev, 1);
- 
--	// RX antenna default to A
--	rtl8225_write_phy_cck(dev, 0x10, 0x9b); mdelay(1);	// B: 0xDB
--	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); mdelay(1);	// B: 0x10
-+	/* RX antenna default to A */
-+	rtl8225_write_phy_cck(dev, 0x10, 0x9b); mdelay(1);	/* B: 0xDB */
-+	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); mdelay(1);	/* B: 0x10 */
- 
--	rtl818x_iowrite8(priv, &priv->map->TX_ANTENNA, 0x03);	// B: 0x00
-+	rtl818x_iowrite8(priv, &priv->map->TX_ANTENNA, 0x03);	/* B: 0x00 */
- 	mdelay(1);
- 	rtl818x_iowrite32(priv, (__le32 *)0xFF94, 0x3dc00002);
- 
--	// set sensitivity
-+	/* set sensitivity */
- 	rtl8225_write(dev, 0x0c, 0x50);
- 	rtl8225_write_phy_ofdm(dev, 0x0d, rtl8225_gain[2 * 4]);
- 	rtl8225_write_phy_ofdm(dev, 0x1b, rtl8225_gain[2 * 4 + 2]);
-@@ -470,7 +470,6 @@ void rtl8225_rf_init(struct ieee80211_hw
- 	rtl8225_write_phy_cck(dev, 0x41, rtl8225_threshold[2]);
- }
- 
--
- static const u8 rtl8225z2_tx_power_cck_ch14[] = {
- 	0x36, 0x35, 0x2e, 0x1b, 0x00, 0x00, 0x00, 0x00
- };
-@@ -523,7 +522,7 @@ static void rtl8225z2_rf_set_tx_power(st
- 			 rtl8225z2_tx_gain_cck_ofdm[cck_power]);
- 	mdelay(1);
- 
--	// anaparam2 on
-+	/* anaparam2 on */
- 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
- 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
- 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
-@@ -558,13 +557,13 @@ static const u16 rtl8225z2_rxgain[] = {
- };
- 
- static const u8 rtl8225z2_gain_bg[] = {
--	0x23, 0x15, 0xa5, // -82-1dBm
--	0x23, 0x15, 0xb5, // -82-2dBm
--	0x23, 0x15, 0xc5, // -82-3dBm
--	0x33, 0x15, 0xc5, // -78dBm
--	0x43, 0x15, 0xc5, // -74dBm
--	0x53, 0x15, 0xc5, // -70dBm
--	0x63, 0x15, 0xc5  // -66dBm
-+	0x23, 0x15, 0xa5, /* -82-1dBm */
-+	0x23, 0x15, 0xb5, /* -82-2dBm */
-+	0x23, 0x15, 0xc5, /* -82-3dBm */
-+	0x33, 0x15, 0xc5, /* -78dBm */
-+	0x43, 0x15, 0xc5, /* -74dBm */
-+	0x53, 0x15, 0xc5, /* -70dBm */
-+	0x63, 0x15, 0xc5  /* -66dBm */
- };
- 
- void rtl8225z2_rf_init(struct ieee80211_hw *dev)
-@@ -611,8 +610,8 @@ void rtl8225z2_rf_init(struct ieee80211_
- 		rtl8225_write(dev, 0x02, 0x044D);
- 		mdelay(100);
- 		if (!(rtl8225_read(dev, 6) & (1 << 7)))
--			printk("RF Calibration Failed!!!! %x\n",
--				rtl8225_read(dev, 6));
-+			printk("rtl8187: RF Calibration Failed! %x\n",
-+			       rtl8225_read(dev, 6));
- 	}
- 
- 	mdelay(200);
-@@ -706,11 +705,11 @@ void rtl8225z2_rf_init(struct ieee80211_
- 
- 	rtl8225z2_rf_set_tx_power(dev, 1);
- 
--	// RX antenna default to A
--	rtl8225_write_phy_cck(dev, 0x10, 0x9b); mdelay(1);	// B: 0xDB
--	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); mdelay(1);	// B: 0x10
-+	/* RX antenna default to A */
-+	rtl8225_write_phy_cck(dev, 0x10, 0x9b); mdelay(1);	/* B: 0xDB */
-+	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); mdelay(1);	/* B: 0x10 */
- 
--	rtl818x_iowrite8(priv, &priv->map->TX_ANTENNA, 0x03);	// B: 0x00
-+	rtl818x_iowrite8(priv, &priv->map->TX_ANTENNA, 0x03);	/* B: 0x00 */
- 	mdelay(1);
- 	rtl818x_iowrite32(priv, (__le32 *)0xFF94, 0x3dc00002);
- }
-@@ -743,5 +742,3 @@ void rtl8225_rf_set_channel(struct ieee8
- 	rtl8225_write(dev, 0x7, rtl8225_chan[channel - 1]);
- 	mdelay(10);
- }
--
--
-Index: wireless-dev/drivers/net/wireless/mac80211/rtl818x/rtl818x.h
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/mac80211/rtl818x/rtl818x.h
-+++ wireless-dev/drivers/net/wireless/mac80211/rtl818x/rtl818x.h
-@@ -105,7 +105,7 @@ struct rtl818x_csr {
- 	u8	reserved_17[32];
- 	u16	TALLY_CNT;
- 	u8	TALLY_SEL;
--} __attribute__ ((packed));
-+} __attribute__((packed));
- 
- static const struct ieee80211_rate rtl818x_rates[] = {
- 	{ .rate = 10,
+On 4/10/07, Dan Williams <dcbw@redhat.com> wrote:
+> On Tue, 2007-04-10 at 09:13 +0200, dragoran wrote:
+> > ok I tested it again with linvilles f7 test kernel (wireless-git + your
+> > patches + iwlwifi).
+> > again nm detect the card as wpa and it finds the wpa enabled network.
+> > But it fails to connect (does not even ask for a key). So I tryed to use
+> > wpa_supplicant by hand ( with a config that works fine with ipw3945 ;
+> > ieee80211) . Its seems not to be related to iwlwifi but to a ioctl that
+> > mac80211 does not support (when used with wext).
+> > ----
+> > Own MAC address: 00:18:de:05:f7:9e
+> > wpa_driver_wext_set_wpa
+> > wpa_driver_wext_set_key: alg=0 key_idx=0 set_tx=0 seq_len=0 key_len=0
+> > wpa_driver_wext_set_key: alg=0 key_idx=1 set_tx=0 seq_len=0 key_len=0
+> > wpa_driver_wext_set_key: alg=0 key_idx=2 set_tx=0 seq_len=0 key_len=0
+> > wpa_driver_wext_set_key: alg=0 key_idx=3 set_tx=0 seq_len=0 key_len=0
+> > wpa_driver_wext_set_countermeasures
+> > ioctl[SIOCSIWAUTH]: Operation not supported
+> > WEXT auth param 4 value 0x0 - wpa_driver_wext_set_drop_unencrypted
+> > ioctl[SIOCSIWAUTH]: Operation not supported
+> > ----
+> > notice the *ioctl[SIOCSIWAUTH]: Operation not supported* what is
+> > SIOCSIWAUTH and how does it not being supproted affect wpa/wext support?
+>
+> I'm not actually sure these are too much of a problem; some drivers
+> don't support all options and wpa_supplicant should be able to continue
+> without it.  Is there any log out put _after_ the pieces you show?
+>
 
+yes see the attached file (same config works fine with ipw3945) sorry
+for the resend but stupid gmail sends html mail wgich the list does
+not accept
 
--- 
-Ciao
-Stefano
+> Dan
+>
+>
+>
+
+------=_Part_24710_26166473.1176215688162
+Content-Type: text/x-log; name="wpa_mac80211.log"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="wpa_mac80211.log"
+X-Attachment-Id: file0
+
+IHdwYV9zdXBwbGljYW50IC1kZCAtYyAvZXRjL3dwYV9zdXBwbGljYW50L3dwYV9zdXBwbGljYW50
+LmNvbmYgLWkgZXRoMSAtRCB3ZXh0CkluaXRpYWxpemluZyBpbnRlcmZhY2UgJ2V0aDEnIGNvbmYg
+Jy9ldGMvd3BhX3N1cHBsaWNhbnQvd3BhX3N1cHBsaWNhbnQuY29uZicgZHJpdmVyICd3ZXh0JyBj
+dHJsX2ludGVyZmFjZSAnTi9BJwpDb25maWd1cmF0aW9uIGZpbGUgJy9ldGMvd3BhX3N1cHBsaWNh
+bnQvd3BhX3N1cHBsaWNhbnQuY29uZicgLT4gJy9ldGMvd3BhX3N1cHBsaWNhbnQvd3BhX3N1cHBs
+aWNhbnQuY29uZicKUmVhZGluZyBjb25maWd1cmF0aW9uIGZpbGUgJy9ldGMvd3BhX3N1cHBsaWNh
+bnQvd3BhX3N1cHBsaWNhbnQuY29uZicKY3RybF9pbnRlcmZhY2U9Jy92YXIvcnVuL3dwYV9zdXBw
+bGljYW50JwpjdHJsX2ludGVyZmFjZV9ncm91cD0xMCAoZnJvbSBncm91cCBuYW1lICd3aGVlbCcp
+CkxpbmU6IDQgLSBzdGFydCBvZiBhIG5ldyBuZXR3b3JrIGJsb2NrCnNzaWQgLSBoZXhkdW1wX2Fz
+Y2lpKGxlbj0zKToKICAgICA2MSA2ZSA3OSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIGFueSAgICAgICAgICAgICAKa2V5X21nbXQ6IDB4NApMaW5lOiA5IC0gc3RhcnQg
+b2YgYSBuZXcgbmV0d29yayBibG9jawpzc2lkIC0gaGV4ZHVtcF9hc2NpaShsZW49NSk6CiAgICAg
+NmQgNzkgNmUgNjUgNzQgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBteW5ldCAg
+ICAgICAgICAgCnByb3RvOiAweDEKa2V5X21nbXQ6IDB4MgpzY2FuX3NzaWQ9MSAoMHgxKQpwYWly
+d2lzZTogMHg4Cmdyb3VwOiAweDgKUFNLIChBU0NJSSBwYXNzcGhyYXNlKSAtIGhleGR1bXBfYXNj
+aWkobGVuPTkpOiBbUkVNT1ZFRF0KUFNLIChmcm9tIHBhc3NwaHJhc2UpIC0gaGV4ZHVtcChsZW49
+MzIpOiBbUkVNT1ZFRF0KUHJpb3JpdHkgZ3JvdXAgMAogICBpZD0wIHNzaWQ9J2FueScKICAgaWQ9
+MSBzc2lkPSdteW5ldCcKSW5pdGlhbGl6aW5nIGludGVyZmFjZSAoMikgJ2V0aDEnCkVBUE9MOiBT
+VVBQX1BBRSBlbnRlcmluZyBzdGF0ZSBESVNDT05ORUNURUQKRUFQT0w6IEtFWV9SWCBlbnRlcmlu
+ZyBzdGF0ZSBOT19LRVlfUkVDRUlWRQpFQVBPTDogU1VQUF9CRSBlbnRlcmluZyBzdGF0ZSBJTklU
+SUFMSVpFCkVBUDogRUFQIGVudGVyaW5nIHN0YXRlIERJU0FCTEVECkVBUE9MOiBFeHRlcm5hbCBu
+b3RpZmljYXRpb24gLSBwb3J0RW5hYmxlZD0wCkVBUE9MOiBFeHRlcm5hbCBub3RpZmljYXRpb24g
+LSBwb3J0VmFsaWQ9MApTSU9DR0lXUkFOR0U6IFdFKGNvbXBpbGVkKT0yMiBXRShzb3VyY2UpPTIx
+IGVuY19jYXBhPTB4ZgogIGNhcGFiaWxpdGllczoga2V5X21nbXQgMHhmIGVuYyAweGYKT3duIE1B
+QyBhZGRyZXNzOiAwMDoxODpkZTowNTpmNzo5ZQp3cGFfZHJpdmVyX3dleHRfc2V0X3dwYQp3cGFf
+ZHJpdmVyX3dleHRfc2V0X2tleTogYWxnPTAga2V5X2lkeD0wIHNldF90eD0wIHNlcV9sZW49MCBr
+ZXlfbGVuPTAKd3BhX2RyaXZlcl93ZXh0X3NldF9rZXk6IGFsZz0wIGtleV9pZHg9MSBzZXRfdHg9
+MCBzZXFfbGVuPTAga2V5X2xlbj0wCndwYV9kcml2ZXJfd2V4dF9zZXRfa2V5OiBhbGc9MCBrZXlf
+aWR4PTIgc2V0X3R4PTAgc2VxX2xlbj0wIGtleV9sZW49MAp3cGFfZHJpdmVyX3dleHRfc2V0X2tl
+eTogYWxnPTAga2V5X2lkeD0zIHNldF90eD0wIHNlcV9sZW49MCBrZXlfbGVuPTAKd3BhX2RyaXZl
+cl93ZXh0X3NldF9jb3VudGVybWVhc3VyZXMKaW9jdGxbU0lPQ1NJV0FVVEhdOiBPcGVyYXRpb24g
+bm90IHN1cHBvcnRlZApXRVhUIGF1dGggcGFyYW0gNCB2YWx1ZSAweDAgLSB3cGFfZHJpdmVyX3dl
+eHRfc2V0X2Ryb3BfdW5lbmNyeXB0ZWQKaW9jdGxbU0lPQ1NJV0FVVEhdOiBPcGVyYXRpb24gbm90
+IHN1cHBvcnRlZApXRVhUIGF1dGggcGFyYW0gNSB2YWx1ZSAweDEgLSBTZXR0aW5nIHNjYW4gcmVx
+dWVzdDogMCBzZWMgMTAwMDAwIHVzZWMKQWRkZWQgaW50ZXJmYWNlIGV0aDEKV2lyZWxlc3MgZXZl
+bnQ6IGNtZD0weDhiMDYgbGVuPTEyCklnbm9yZSBldmVudCBmb3IgZm9yZWlnbiBpZmluZGV4IDMK
+UlRNX05FV0xJTkssIElGTEFfSUZOQU1FOiBJbnRlcmZhY2UgJ2V0aDEnIGFkZGVkClJUTV9ORVdM
+SU5LLCBJRkxBX0lGTkFNRTogSW50ZXJmYWNlICdldGgxJyBhZGRlZApTdGF0ZTogRElTQ09OTkVD
+VEVEIC0+IFNDQU5OSU5HClN0YXJ0aW5nIEFQIHNjYW4gKHNwZWNpZmljIFNTSUQpClNjYW4gU1NJ
+RCAtIGhleGR1bXBfYXNjaWkobGVuPTUpOgogICAgIDZkIDc5IDZlIDY1IDc0ICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgbXluZXQgICAgICAgICAgIApTY2FuIHRpbWVvdXQgLSB0
+cnkgdG8gZ2V0IHJlc3VsdHMKaW9jdGxbU0lPQ0dJV1NDQU5dOiBSZXNvdXJjZSB0ZW1wb3Jhcmls
+eSB1bmF2YWlsYWJsZQpTY2FuIHJlc3VsdHM6IC0xCkZhaWxlZCB0byBnZXQgc2NhbiByZXN1bHRz
+CkZhaWxlZCB0byBnZXQgc2NhbiByZXN1bHRzIC0gdHJ5IHNjYW5uaW5nIGFnYWluClNldHRpbmcg
+c2NhbiByZXF1ZXN0OiAxIHNlYyAwIHVzZWMKU3RhcnRpbmcgQVAgc2NhbiAoYnJvYWRjYXN0IFNT
+SUQpCldpcmVsZXNzIGV2ZW50OiBjbWQ9MHg4YjE5IGxlbj0xNgppb2N0bFtTSU9DR0lXU0NBTl06
+IFJlc291cmNlIHRlbXBvcmFyaWx5IHVuYXZhaWxhYmxlClNjYW4gcmVzdWx0czogLTEKRmFpbGVk
+IHRvIGdldCBzY2FuIHJlc3VsdHMKRmFpbGVkIHRvIGdldCBzY2FuIHJlc3VsdHMgLSB0cnkgc2Nh
+bm5pbmcgYWdhaW4KU2V0dGluZyBzY2FuIHJlcXVlc3Q6IDEgc2VjIDAgdXNlYwpTdGFydGluZyBB
+UCBzY2FuIChzcGVjaWZpYyBTU0lEKQpTY2FuIFNTSUQgLSBoZXhkdW1wX2FzY2lpKGxlbj01KToK
+ICAgICA2ZCA3OSA2ZSA2NSA3NCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIG15
+bmV0ICAgICAgICAgICAKU2NhbiB0aW1lb3V0IC0gdHJ5IHRvIGdldCByZXN1bHRzCmlvY3RsW1NJ
+T0NHSVdTQ0FOXTogUmVzb3VyY2UgdGVtcG9yYXJpbHkgdW5hdmFpbGFibGUKU2NhbiByZXN1bHRz
+OiAtMQpGYWlsZWQgdG8gZ2V0IHNjYW4gcmVzdWx0cwpGYWlsZWQgdG8gZ2V0IHNjYW4gcmVzdWx0
+cyAtIHRyeSBzY2FubmluZyBhZ2FpbgpTZXR0aW5nIHNjYW4gcmVxdWVzdDogMSBzZWMgMCB1c2Vj
+ClN0YXJ0aW5nIEFQIHNjYW4gKGJyb2FkY2FzdCBTU0lEKQpXaXJlbGVzcyBldmVudDogY21kPTB4
+OGIxOSBsZW49MTYKUmVjZWl2ZWQgMzk4IGJ5dGVzIG9mIHNjYW4gcmVzdWx0cyAoMSBCU1NlcykK
+U2NhbiByZXN1bHRzOiAxClNlbGVjdGluZyBCU1MgZnJvbSBwcmlvcml0eSBncm91cCAwCjA6IDAw
+OjBkOjBiOmMzOmJkOmM5IHNzaWQ9J215bmV0JyB3cGFfaWVfbGVuPTI0IHJzbl9pZV9sZW49MjIg
+Y2Fwcz0weDExCiAgIHNraXAgLSBTU0lEIG1pc21hdGNoCiAgIHNlbGVjdGVkIGJhc2VkIG9uIFdQ
+QSBJRQpUcnlpbmcgdG8gYXNzb2NpYXRlIHdpdGggMDA6MGQ6MGI6YzM6YmQ6YzkgKFNTSUQ9J215
+bmV0JyBmcmVxPTI0MTIgTUh6KQpDYW5jZWxsaW5nIHNjYW4gcmVxdWVzdApXUEE6IGNsZWFyaW5n
+IG93biBXUEEvUlNOIElFCkF1dG9tYXRpYyBhdXRoX2FsZyBzZWxlY3Rpb246IDB4MQpXUEE6IHVz
+aW5nIElFRUUgODAyLjExaS9EMy4wCldQQTogU2VsZWN0ZWQgY2lwaGVyIHN1aXRlczogZ3JvdXAg
+OCBwYWlyd2lzZSA4IGtleV9tZ210IDIKV1BBOiBzZXQgQVAgV1BBIElFIC0gaGV4ZHVtcChsZW49
+MjQpOiBkZCAxNiAwMCA1MCBmMiAwMSAwMSAwMCAwMCA1MCBmMiAwMiAwMSAwMCAwMCA1MCBmMiAw
+MiAwMSAwMCAwMCA1MCBmMiAwMgpXUEE6IHNldCBBUCBSU04gSUUgLSBoZXhkdW1wKGxlbj0yMik6
+IDMwIDE0IDAxIDAwIDAwIDBmIGFjIDAyIDAxIDAwIDAwIDBmIGFjIDAyIDAxIDAwIDAwIDBmIGFj
+IDAyIDBjIDAwCldQQTogdXNpbmcgR1RLIFRLSVAKV1BBOiB1c2luZyBQVEsgVEtJUApXUEE6IHVz
+aW5nIEtFWV9NR01UIFdQQS1QU0sKV1BBOiBTZXQgb3duIFdQQSBJRSBkZWZhdWx0IC0gaGV4ZHVt
+cChsZW49MjQpOiBkZCAxNiAwMCA1MCBmMiAwMSAwMSAwMCAwMCA1MCBmMiAwMiAwMSAwMCAwMCA1
+MCBmMiAwMiAwMSAwMCAwMCA1MCBmMiAwMgpObyBrZXlzIGhhdmUgYmVlbiBjb25maWd1cmVkIC0g
+c2tpcCBrZXkgY2xlYXJpbmcKd3BhX2RyaXZlcl93ZXh0X3NldF9kcm9wX3VuZW5jcnlwdGVkCmlv
+Y3RsW1NJT0NTSVdBVVRIXTogT3BlcmF0aW9uIG5vdCBzdXBwb3J0ZWQKV0VYVCBhdXRoIHBhcmFt
+IDUgdmFsdWUgMHgxIC0gU3RhdGU6IFNDQU5OSU5HIC0+IEFTU09DSUFUSU5HCndwYV9kcml2ZXJf
+d2V4dF9hc3NvY2lhdGUKaW9jdGxbU0lPQ1NJV01PREVdOiBEZXZpY2Ugb3IgcmVzb3VyY2UgYnVz
+eQp3cGFfZHJpdmVyX3dleHRfYXNzb2NpYXRlOiBhc3NvYyBmYWlsZWQgYmVjYXVzZSBzZXRfbW9k
+ZSBmYWlsZWQKQXNzb2NpYXRpb24gcmVxdWVzdCB0byB0aGUgZHJpdmVyIGZhaWxlZApTZXR0aW5n
+IGF1dGhlbnRpY2F0aW9uIHRpbWVvdXQ6IDE1IHNlYyAwIHVzZWMKRUFQT0w6IEV4dGVybmFsIG5v
+dGlmaWNhdGlvbiAtIEVBUCBzdWNjZXNzPTAKRUFQT0w6IEV4dGVybmFsIG5vdGlmaWNhdGlvbiAt
+IEVBUCBmYWlsPTAKRUFQT0w6IEV4dGVybmFsIG5vdGlmaWNhdGlvbiAtIHBvcnRDb250cm9sPUF1
+dG8KUlNOOiBJZ25vcmVkIFBNS0lEIGNhbmRpZGF0ZSB3aXRob3V0IHByZWF1dGggZmxhZwpXaXJl
+bGVzcyBldmVudDogY21kPTB4OGIwNCBsZW49MTYKV2lyZWxlc3MgZXZlbnQ6IGNtZD0weDhiMWEg
+bGVuPTIxCldpcmVsZXNzIGV2ZW50OiBjbWQ9MHg4YzAyIGxlbj0yMTkKQ3VzdG9tIHdpcmVsZXNz
+IGV2ZW50OiAnQVNTT0NJTkZPKFJlcUlFcz0wMDA1NmQ3OTZlNjU3NDAxMDQwMjA0MGIxNmRkMTYw
+MDUwZjIwMTAxMDAwMDUwZjIwMjAxMDAwMDUwZjIwMjAxMDAwMDUwZjIwMmRkMDcwMDUwZjIwMjAw
+MDEwMCBSZXNwSUVzPTAxMDg4Mjg0OGI5NjBjMTIxODI0MzIwNDMwNDg2MDZjZGQxODAwNTBmMjAy
+MDEwMTAwMDAwM2E0MDAwMDI3YTQwMDAwNDI0MzVlMDA2MjMyMmYwMCknCkFzc29jaWF0aW9uIGlu
+Zm8gZXZlbnQKcmVxX2llcyAtIGhleGR1bXAobGVuPTQ2KTogMDAgMDUgNmQgNzkgNmUgNjUgNzQg
+MDEgMDQgMDIgMDQgMGIgMTYgZGQgMTYgMDAgNTAgZjIgMDEgMDEgMDAgMDAgNTAgZjIgMDIgMDEg
+MDAgMDAgNTAgZjIgMDIgMDEgMDAgMDAgNTAgZjIgMDIgZGQgMDcgMDAgNTAgZjIgMDIgMDAgMDEg
+MDAKcmVzcF9pZXMgLSBoZXhkdW1wKGxlbj00Mik6IDAxIDA4IDgyIDg0IDhiIDk2IDBjIDEyIDE4
+IDI0IDMyIDA0IDMwIDQ4IDYwIDZjIGRkIDE4IDAwIDUwIGYyIDAyIDAxIDAxIDAwIDAwIDAzIGE0
+IDAwIDAwIDI3IGE0IDAwIDAwIDQyIDQzIDVlIDAwIDYyIDMyIDJmIDAwCldQQTogc2V0IG93biBX
+UEEvUlNOIElFIC0gaGV4ZHVtcChsZW49MjQpOiBkZCAxNiAwMCA1MCBmMiAwMSAwMSAwMCAwMCA1
+MCBmMiAwMiAwMSAwMCAwMCA1MCBmMiAwMiAwMSAwMCAwMCA1MCBmMiAwMgpXaXJlbGVzcyBldmVu
+dDogY21kPTB4OGIxNSBsZW49MjQKV2lyZWxlc3MgZXZlbnQ6IG5ldyBBUDogMDA6MGQ6MGI6YzM6
+YmQ6YzkKU3RhdGU6IEFTU09DSUFUSU5HIC0+IEFTU09DSUFURUQKQXNzb2NpYXRlZCB0byBhIG5l
+dyBCU1M6IEJTU0lEPTAwOjBkOjBiOmMzOmJkOmM5Ck5vIGtleXMgaGF2ZSBiZWVuIGNvbmZpZ3Vy
+ZWQgLSBza2lwIGtleSBjbGVhcmluZwpBc3NvY2lhdGVkIHdpdGggMDA6MGQ6MGI6YzM6YmQ6YzkK
+V1BBOiBBc3NvY2lhdGlvbiBldmVudCAtIGNsZWFyIHJlcGxheSBjb3VudGVyCkVBUE9MOiBFeHRl
+cm5hbCBub3RpZmljYXRpb24gLSBwb3J0RW5hYmxlZD0wCkVBUE9MOiBFeHRlcm5hbCBub3RpZmlj
+YXRpb24gLSBwb3J0VmFsaWQ9MApFQVBPTDogRXh0ZXJuYWwgbm90aWZpY2F0aW9uIC0gRUFQIHN1
+Y2Nlc3M9MApFQVBPTDogRXh0ZXJuYWwgbm90aWZpY2F0aW9uIC0gcG9ydEVuYWJsZWQ9MQpFQVBP
+TDogU1VQUF9QQUUgZW50ZXJpbmcgc3RhdGUgQ09OTkVDVElORwpFQVBPTDogU1VQUF9CRSBlbnRl
+cmluZyBzdGF0ZSBJRExFClNldHRpbmcgYXV0aGVudGljYXRpb24gdGltZW91dDogMTAgc2VjIDAg
+dXNlYwpFQVBPTDogc3RhcnRXaGVuIC0tPiAwCkVBUE9MOiBTVVBQX1BBRSBlbnRlcmluZyBzdGF0
+ZSBDT05ORUNUSU5HCkVBUE9MOiB0eFN0YXJ0CldQQTogZHJvcCBUWCBFQVBPTCBpbiBub24tSUVF
+RSA4MDIuMVggbW9kZSAodHlwZT0xIGxlbj0wKQpXaXJlbGVzcyBldmVudDogY21kPTB4OGIxNSBs
+ZW49MjQKV2lyZWxlc3MgZXZlbnQ6IG5ldyBBUDogMDA6MDA6MDA6MDA6MDA6MDAKU2V0dGluZyBz
+Y2FuIHJlcXVlc3Q6IDAgc2VjIDEwMDAwMCB1c2VjCkFkZGVkIEJTU0lEIDAwOjBkOjBiOmMzOmJk
+OmM5IGludG8gYmxhY2tsaXN0ClN0YXRlOiBBU1NPQ0lBVEVEIC0+IERJU0NPTk5FQ1RFRApFQVBP
+TDogRXh0ZXJuYWwgbm90aWZpY2F0aW9uIC0gcG9ydEVuYWJsZWQ9MApFQVBPTDogU1VQUF9QQUUg
+ZW50ZXJpbmcgc3RhdGUgRElTQ09OTkVDVEVECkVBUE9MOiBTVVBQX0JFIGVudGVyaW5nIHN0YXRl
+IElOSVRJQUxJWkUKRUFQT0w6IEV4dGVybmFsIG5vdGlmaWNhdGlvbiAtIHBvcnRWYWxpZD0wCkVB
+UE9MOiBFeHRlcm5hbCBub3RpZmljYXRpb24gLSBFQVAgc3VjY2Vzcz0wCkNUUkwtRVZFTlQtRElT
+Q09OTkVDVEVEIC0gRGlzY29ubmVjdCBldmVudCAtIHJlbW92ZSBrZXlzCndwYV9kcml2ZXJfd2V4
+dF9zZXRfa2V5OiBhbGc9MCBrZXlfaWR4PTAgc2V0X3R4PTAgc2VxX2xlbj0wIGtleV9sZW49MAp3
+cGFfZHJpdmVyX3dleHRfc2V0X2tleTogYWxnPTAga2V5X2lkeD0xIHNldF90eD0wIHNlcV9sZW49
+MCBrZXlfbGVuPTAKd3BhX2RyaXZlcl93ZXh0X3NldF9rZXk6IGFsZz0wIGtleV9pZHg9MiBzZXRf
+dHg9MCBzZXFfbGVuPTAga2V5X2xlbj0wCndwYV9kcml2ZXJfd2V4dF9zZXRfa2V5OiBhbGc9MCBr
+ZXlfaWR4PTMgc2V0X3R4PTAgc2VxX2xlbj0wIGtleV9sZW49MAp3cGFfZHJpdmVyX3dleHRfc2V0
+X2tleTogYWxnPTAga2V5X2lkeD0wIHNldF90eD0wIHNlcV9sZW49MCBrZXlfbGVuPTAKaW9jdGxb
+U0lPQ1NJV0VOQ09ERUVYVF06IE5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnkKRHJpdmVyIGRpZCBu
+b3Qgc3VwcG9ydCBTSU9DU0lXRU5DT0RFRVhUClN0YXRlOiBESVNDT05ORUNURUQgLT4gU0NBTk5J
+TkcKU3RhcnRpbmcgQVAgc2NhbiAoc3BlY2lmaWMgU1NJRCkKU2NhbiBTU0lEIC0gaGV4ZHVtcF9h
+c2NpaShsZW49NSk6CiAgICAgNmQgNzkgNmUgNjUgNzQgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICBteW5ldCAgICAgICAgICAgCldpcmVsZXNzIGV2ZW50OiBjbWQ9MHg4YzAyIGxl
+bj0yMTkKQ3VzdG9tIHdpcmVsZXNzIGV2ZW50OiAnQVNTT0NJTkZPKFJlcUlFcz0wMDA1NmQ3OTZl
+NjU3NDAxMDQwMjA0MGIxNmRkMTYwMDUwZjIwMTAxMDAwMDUwZjIwMjAxMDAwMDUwZjIwMjAxMDAw
+MDUwZjIwMmRkMDcwMDUwZjIwMjAwMDEwMCBSZXNwSUVzPTAxMDg4Mjg0OGI5NjBjMTIxODI0MzIw
+NDMwNDg2MDZjZGQxODAwNTBmMjAyMDEwMTAwMDAwM2E0MDAwMDI3YTQwMDAwNDI0MzVlMDA2MjMy
+MmYwMCknCkFzc29jaWF0aW9uIGluZm8gZXZlbnQKcmVxX2llcyAtIGhleGR1bXAobGVuPTQ2KTog
+MDAgMDUgNmQgNzkgNmUgNjUgNzQgMDEgMDQgMDIgMDQgMGIgMTYgZGQgMTYgMDAgNTAgZjIgMDEg
+MDEgMDAgMDAgNTAgZjIgMDIgMDEgMDAgMDAgNTAgZjIgMDIgMDEgMDAgMDAgNTAgZjIgMDIgZGQg
+MDcgMDAgNTAgZjIgMDIgMDAgMDEgMDAKcmVzcF9pZXMgLSBoZXhkdW1wKGxlbj00Mik6IDAxIDA4
+IDgyIDg0IDhiIDk2IDBjIDEyIDE4IDI0IDMyIDA0IDMwIDQ4IDYwIDZjIGRkIDE4IDAwIDUwIGYy
+IDAyIDAxIDAxIDAwIDAwIDAzIGE0IDAwIDAwIDI3IGE0IDAwIDAwIDQyIDQzIDVlIDAwIDYyIDMy
+IDJmIDAwCldQQTogc2V0IG93biBXUEEvUlNOIElFIC0gaGV4ZHVtcChsZW49MjQpOiBkZCAxNiAw
+MCA1MCBmMiAwMSAwMSAwMCAwMCA1MCBmMiAwMiAwMSAwMCAwMCA1MCBmMiAwMiAwMSAwMCAwMCA1
+MCBmMiAwMgpXaXJlbGVzcyBldmVudDogY21kPTB4OGIxNSBsZW49MjQKV2lyZWxlc3MgZXZlbnQ6
+IG5ldyBBUDogMDA6MGQ6MGI6YzM6YmQ6YzkKU3RhdGU6IFNDQU5OSU5HIC0+IEFTU09DSUFURUQK
+QXNzb2NpYXRlZCB0byBhIG5ldyBCU1M6IEJTU0lEPTAwOjBkOjBiOmMzOmJkOmM5Ck5vIGtleXMg
+aGF2ZSBiZWVuIGNvbmZpZ3VyZWQgLSBza2lwIGtleSBjbGVhcmluZwpBc3NvY2lhdGVkIHdpdGgg
+MDA6MGQ6MGI6YzM6YmQ6YzkKV1BBOiBBc3NvY2lhdGlvbiBldmVudCAtIGNsZWFyIHJlcGxheSBj
+b3VudGVyCkVBUE9MOiBFeHRlcm5hbCBub3RpZmljYXRpb24gLSBwb3J0RW5hYmxlZD0wCkVBUE9M
+OiBFeHRlcm5hbCBub3RpZmljYXRpb24gLSBwb3J0VmFsaWQ9MApFQVBPTDogRXh0ZXJuYWwgbm90
+aWZpY2F0aW9uIC0gRUFQIHN1Y2Nlc3M9MApFQVBPTDogRXh0ZXJuYWwgbm90aWZpY2F0aW9uIC0g
+cG9ydEVuYWJsZWQ9MQpFQVBPTDogU1VQUF9QQUUgZW50ZXJpbmcgc3RhdGUgQ09OTkVDVElORwpF
+QVBPTDogU1VQUF9CRSBlbnRlcmluZyBzdGF0ZSBJRExFClNldHRpbmcgYXV0aGVudGljYXRpb24g
+dGltZW91dDogMTAgc2VjIDAgdXNlYwpTY2FuIHRpbWVvdXQgLSB0cnkgdG8gZ2V0IHJlc3VsdHMK
+aW9jdGxbU0lPQ0dJV1NDQU5dOiBSZXNvdXJjZSB0ZW1wb3JhcmlseSB1bmF2YWlsYWJsZQpTY2Fu
+IHJlc3VsdHM6IC0xCkZhaWxlZCB0byBnZXQgc2NhbiByZXN1bHRzCkZhaWxlZCB0byBnZXQgc2Nh
+biByZXN1bHRzIC0gdHJ5IHNjYW5uaW5nIGFnYWluClNldHRpbmcgc2NhbiByZXF1ZXN0OiAxIHNl
+YyAwIHVzZWMKRUFQT0w6IHN0YXJ0V2hlbiAtLT4gMApFQVBPTDogU1VQUF9QQUUgZW50ZXJpbmcg
+c3RhdGUgQ09OTkVDVElORwpFQVBPTDogdHhTdGFydApXUEE6IGRyb3AgVFggRUFQT0wgaW4gbm9u
+LUlFRUUgODAyLjFYIG1vZGUgKHR5cGU9MSBsZW49MCkKU3RhcnRpbmcgQVAgc2NhbiAoYnJvYWRj
+YXN0IFNTSUQpCldpcmVsZXNzIGV2ZW50OiBjbWQ9MHg4YjE5IGxlbj0xNgpSZWNlaXZlZCAzOTgg
+Ynl0ZXMgb2Ygc2NhbiByZXN1bHRzICgxIEJTU2VzKQpTY2FuIHJlc3VsdHM6IDEKU2VsZWN0aW5n
+IEJTUyBmcm9tIHByaW9yaXR5IGdyb3VwIDAKMDogMDA6MGQ6MGI6YzM6YmQ6Yzkgc3NpZD0nbXlu
+ZXQnIHdwYV9pZV9sZW49MjQgcnNuX2llX2xlbj0yMiBjYXBzPTB4MTEKICAgc2tpcCAtIFNTSUQg
+bWlzbWF0Y2gKICAgc2VsZWN0ZWQgYmFzZWQgb24gV1BBIElFCkFscmVhZHkgYXNzb2NpYXRlZCB3
+aXRoIHRoZSBzZWxlY3RlZCBBUC4KQXV0aGVudGljYXRpb24gd2l0aCAwMDowZDowYjpjMzpiZDpj
+OSB0aW1lZCBvdXQuCkJTU0lEIDAwOjBkOjBiOmMzOmJkOmM5IGJsYWNrbGlzdCBjb3VudCBpbmNy
+ZW1lbnRlZCB0byAyClN0YXRlOiBBU1NPQ0lBVEVEIC0+IERJU0NPTk5FQ1RFRAp3cGFfZHJpdmVy
+X3dleHRfZGlzYXNzb2NpYXRlCk5vIGtleXMgaGF2ZSBiZWVuIGNvbmZpZ3VyZWQgLSBza2lwIGtl
+eSBjbGVhcmluZwpFQVBPTDogRXh0ZXJuYWwgbm90aWZpY2F0aW9uIC0gcG9ydEVuYWJsZWQ9MApF
+QVBPTDogU1VQUF9QQUUgZW50ZXJpbmcgc3RhdGUgRElTQ09OTkVDVEVECkVBUE9MOiBTVVBQX0JF
+IGVudGVyaW5nIHN0YXRlIElOSVRJQUxJWkUKRUFQT0w6IEV4dGVybmFsIG5vdGlmaWNhdGlvbiAt
+IHBvcnRWYWxpZD0wClNldHRpbmcgc2NhbiByZXF1ZXN0OiAwIHNlYyAwIHVzZWMKU3RhdGU6IERJ
+U0NPTk5FQ1RFRCAtPiBTQ0FOTklORwpTdGFydGluZyBBUCBzY2FuIChzcGVjaWZpYyBTU0lEKQpT
+Y2FuIFNTSUQgLSBoZXhkdW1wX2FzY2lpKGxlbj01KToKICAgICA2ZCA3OSA2ZSA2NSA3NCAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIG15bmV0ICAgICAgICAgICAKV2lyZWxlc3Mg
+ZXZlbnQ6IGNtZD0weDhiMTUgbGVuPTI0CldpcmVsZXNzIGV2ZW50OiBuZXcgQVA6IDAwOjAwOjAw
+OjAwOjAwOjAwCkJTU0lEIDAwOjBkOjBiOmMzOmJkOmM5IGJsYWNrbGlzdCBjb3VudCBpbmNyZW1l
+bnRlZCB0byAzClN0YXRlOiBTQ0FOTklORyAtPiBESVNDT05ORUNURUQKRUFQT0w6IEV4dGVybmFs
+IG5vdGlmaWNhdGlvbiAtIHBvcnRFbmFibGVkPTAKRUFQT0w6IEV4dGVybmFsIG5vdGlmaWNhdGlv
+biAtIHBvcnRWYWxpZD0wCkVBUE9MOiBFeHRlcm5hbCBub3RpZmljYXRpb24gLSBFQVAgc3VjY2Vz
+cz0wCkNUUkwtRVZFTlQtRElTQ09OTkVDVEVEIC0gRGlzY29ubmVjdCBldmVudCAtIHJlbW92ZSBr
+ZXlzCndwYV9kcml2ZXJfd2V4dF9zZXRfa2V5OiBhbGc9MCBrZXlfaWR4PTAgc2V0X3R4PTAgc2Vx
+X2xlbj0wIGtleV9sZW49MAp3cGFfZHJpdmVyX3dleHRfc2V0X2tleTogYWxnPTAga2V5X2lkeD0x
+IHNldF90eD0wIHNlcV9sZW49MCBrZXlfbGVuPTAKd3BhX2RyaXZlcl93ZXh0X3NldF9rZXk6IGFs
+Zz0wIGtleV9pZHg9MiBzZXRfdHg9MCBzZXFfbGVuPTAga2V5X2xlbj0wCndwYV9kcml2ZXJfd2V4
+dF9zZXRfa2V5OiBhbGc9MCBrZXlfaWR4PTMgc2V0X3R4PTAgc2VxX2xlbj0wIGtleV9sZW49MAp3
+cGFfZHJpdmVyX3dleHRfc2V0X2tleTogYWxnPTAga2V5X2lkeD0wIHNldF90eD0wIHNlcV9sZW49
+MCBrZXlfbGVuPTAKaW9jdGxbU0lPQ1NJV0VOQ09ERUVYVF06IE5vIHN1Y2ggZmlsZSBvciBkaXJl
+Y3RvcnkKRHJpdmVyIGRpZCBub3Qgc3VwcG9ydCBTSU9DU0lXRU5DT0RFRVhUClNjYW4gdGltZW91
+dCAtIHRyeSB0byBnZXQgcmVzdWx0cwppb2N0bFtTSU9DR0lXU0NBTl06IFJlc291cmNlIHRlbXBv
+cmFyaWx5IHVuYXZhaWxhYmxlClNjYW4gcmVzdWx0czogLTEKRmFpbGVkIHRvIGdldCBzY2FuIHJl
+c3VsdHMKRmFpbGVkIHRvIGdldCBzY2FuIHJlc3VsdHMgLSB0cnkgc2Nhbm5pbmcgYWdhaW4KU2V0
+dGluZyBzY2FuIHJlcXVlc3Q6IDEgc2VjIDAgdXNlYwpTdGF0ZTogRElTQ09OTkVDVEVEIC0+IFND
+QU5OSU5HClN0YXJ0aW5nIEFQIHNjYW4gKGJyb2FkY2FzdCBTU0lEKQpXaXJlbGVzcyBldmVudDog
+Y21kPTB4OGIxOSBsZW49MTYKUmVjZWl2ZWQgMzk4IGJ5dGVzIG9mIHNjYW4gcmVzdWx0cyAoMSBC
+U1NlcykKU2NhbiByZXN1bHRzOiAxClNlbGVjdGluZyBCU1MgZnJvbSBwcmlvcml0eSBncm91cCAw
+CjA6IDAwOjBkOjBiOmMzOmJkOmM5IHNzaWQ9J215bmV0JyB3cGFfaWVfbGVuPTI0IHJzbl9pZV9s
+ZW49MjIgY2Fwcz0weDExCiAgIHNraXAgLSBibGFja2xpc3RlZApObyBBUHMgZm91bmQgLSBjbGVh
+ciBibGFja2xpc3QgYW5kIHRyeSBhZ2FpbgpSZW1vdmVkIEJTU0lEIDAwOjBkOjBiOmMzOmJkOmM5
+IGZyb20gYmxhY2tsaXN0IChjbGVhcikKU2VsZWN0aW5nIEJTUyBmcm9tIHByaW9yaXR5IGdyb3Vw
+IDAKMDogMDA6MGQ6MGI6YzM6YmQ6Yzkgc3NpZD0nbXluZXQnIHdwYV9pZV9sZW49MjQgcnNuX2ll
+X2xlbj0yMiBjYXBzPTB4MTEKICAgc2tpcCAtIFNTSUQgbWlzbWF0Y2gKICAgc2VsZWN0ZWQgYmFz
+ZWQgb24gV1BBIElFClRyeWluZyB0byBhc3NvY2lhdGUgd2l0aCAwMDowZDowYjpjMzpiZDpjOSAo
+U1NJRD0nbXluZXQnIGZyZXE9MjQxMiBNSHopCkNhbmNlbGxpbmcgc2NhbiByZXF1ZXN0CldQQTog
+Y2xlYXJpbmcgb3duIFdQQS9SU04gSUUKQXV0b21hdGljIGF1dGhfYWxnIHNlbGVjdGlvbjogMHgx
+CldQQTogdXNpbmcgSUVFRSA4MDIuMTFpL0QzLjAKV1BBOiBTZWxlY3RlZCBjaXBoZXIgc3VpdGVz
+OiBncm91cCA4IHBhaXJ3aXNlIDgga2V5X21nbXQgMgpXUEE6IHNldCBBUCBXUEEgSUUgLSBoZXhk
+dW1wKGxlbj0yNCk6IGRkIDE2IDAwIDUwIGYyIDAxIDAxIDAwIDAwIDUwIGYyIDAyIDAxIDAwIDAw
+IDUwIGYyIDAyIDAxIDAwIDAwIDUwIGYyIDAyCldQQTogc2V0IEFQIFJTTiBJRSAtIGhleGR1bXAo
+bGVuPTIyKTogMzAgMTQgMDEgMDAgMDAgMGYgYWMgMDIgMDEgMDAgMDAgMGYgYWMgMDIgMDEgMDAg
+MDAgMGYgYWMgMDIgMGMgMDAKV1BBOiB1c2luZyBHVEsgVEtJUApXUEE6IHVzaW5nIFBUSyBUS0lQ
+CldQQTogdXNpbmcgS0VZX01HTVQgV1BBLVBTSwpXUEE6IFNldCBvd24gV1BBIElFIGRlZmF1bHQg
+LSBoZXhkdW1wKGxlbj0yNCk6IGRkIDE2IDAwIDUwIGYyIDAxIDAxIDAwIDAwIDUwIGYyIDAyIDAx
+IDAwIDAwIDUwIGYyIDAyIDAxIDAwIDAwIDUwIGYyIDAyCk5vIGtleXMgaGF2ZSBiZWVuIGNvbmZp
+Z3VyZWQgLSBza2lwIGtleSBjbGVhcmluZwp3cGFfZHJpdmVyX3dleHRfc2V0X2Ryb3BfdW5lbmNy
+eXB0ZWQKaW9jdGxbU0lPQ1NJV0FVVEhdOiBPcGVyYXRpb24gbm90IHN1cHBvcnRlZApXRVhUIGF1
+dGggcGFyYW0gNSB2YWx1ZSAweDEgLSBTdGF0ZTogU0NBTk5JTkcgLT4gQVNTT0NJQVRJTkcKd3Bh
+X2RyaXZlcl93ZXh0X2Fzc29jaWF0ZQppb2N0bFtTSU9DU0lXTU9ERV06IERldmljZSBvciByZXNv
+dXJjZSBidXN5CndwYV9kcml2ZXJfd2V4dF9hc3NvY2lhdGU6IGFzc29jIGZhaWxlZCBiZWNhdXNl
+IHNldF9tb2RlIGZhaWxlZApBc3NvY2lhdGlvbiByZXF1ZXN0IHRvIHRoZSBkcml2ZXIgZmFpbGVk
+ClNldHRpbmcgYXV0aGVudGljYXRpb24gdGltZW91dDogMTUgc2VjIDAgdXNlYwpFQVBPTDogRXh0
+ZXJuYWwgbm90aWZpY2F0aW9uIC0gRUFQIHN1Y2Nlc3M9MApFQVBPTDogRXh0ZXJuYWwgbm90aWZp
+Y2F0aW9uIC0gRUFQIGZhaWw9MApFQVBPTDogRXh0ZXJuYWwgbm90aWZpY2F0aW9uIC0gcG9ydENv
+bnRyb2w9QXV0bwpXaXJlbGVzcyBldmVudDogY21kPTB4OGIwNCBsZW49MTYKV2lyZWxlc3MgZXZl
+bnQ6IGNtZD0weDhiMWEgbGVuPTIxCldpcmVsZXNzIGV2ZW50OiBjbWQ9MHg4YzAyIGxlbj0yMTkK
+Q3VzdG9tIHdpcmVsZXNzIGV2ZW50OiAnQVNTT0NJTkZPKFJlcUlFcz0wMDA1NmQ3OTZlNjU3NDAx
+MDQwMjA0MGIxNmRkMTYwMDUwZjIwMTAxMDAwMDUwZjIwMjAxMDAwMDUwZjIwMjAxMDAwMDUwZjIw
+MmRkMDcwMDUwZjIwMjAwMDEwMCBSZXNwSUVzPTAxMDg4Mjg0OGI5NjBjMTIxODI0MzIwNDMwNDg2
+MDZjZGQxODAwNTBmMjAyMDEwMTAwMDAwM2E0MDAwMDI3YTQwMDAwNDI0MzVlMDA2MjMyMmYwMCkn
+CkFzc29jaWF0aW9uIGluZm8gZXZlbnQKcmVxX2llcyAtIGhleGR1bXAobGVuPTQ2KTogMDAgMDUg
+NmQgNzkgNmUgNjUgNzQgMDEgMDQgMDIgMDQgMGIgMTYgZGQgMTYgMDAgNTAgZjIgMDEgMDEgMDAg
+MDAgNTAgZjIgMDIgMDEgMDAgMDAgNTAgZjIgMDIgMDEgMDAgMDAgNTAgZjIgMDIgZGQgMDcgMDAg
+NTAgZjIgMDIgMDAgMDEgMDAKcmVzcF9pZXMgLSBoZXhkdW1wKGxlbj00Mik6IDAxIDA4IDgyIDg0
+IDhiIDk2IDBjIDEyIDE4IDI0IDMyIDA0IDMwIDQ4IDYwIDZjIGRkIDE4IDAwIDUwIGYyIDAyIDAx
+IDAxIDAwIDAwIDAzIGE0IDAwIDAwIDI3IGE0IDAwIDAwIDQyIDQzIDVlIDAwIDYyIDMyIDJmIDAw
+CldQQTogc2V0IG93biBXUEEvUlNOIElFIC0gaGV4ZHVtcChsZW49MjQpOiBkZCAxNiAwMCA1MCBm
+MiAwMSAwMSAwMCAwMCA1MCBmMiAwMiAwMSAwMCAwMCA1MCBmMiAwMiAwMSAwMCAwMCA1MCBmMiAw
+MgpXaXJlbGVzcyBldmVudDogY21kPTB4OGIxNSBsZW49MjQKV2lyZWxlc3MgZXZlbnQ6IG5ldyBB
+UDogMDA6MGQ6MGI6YzM6YmQ6YzkKU3RhdGU6IEFTU09DSUFUSU5HIC0+IEFTU09DSUFURUQKQXNz
+b2NpYXRlZCB0byBhIG5ldyBCU1M6IEJTU0lEPTAwOjBkOjBiOmMzOmJkOmM5Ck5vIGtleXMgaGF2
+ZSBiZWVuIGNvbmZpZ3VyZWQgLSBza2lwIGtleSBjbGVhcmluZwpBc3NvY2lhdGVkIHdpdGggMDA6
+MGQ6MGI6YzM6YmQ6YzkKV1BBOiBBc3NvY2lhdGlvbiBldmVudCAtIGNsZWFyIHJlcGxheSBjb3Vu
+dGVyCkVBUE9MOiBFeHRlcm5hbCBub3RpZmljYXRpb24gLSBwb3J0RW5hYmxlZD0wCkVBUE9MOiBF
+eHRlcm5hbCBub3RpZmljYXRpb24gLSBwb3J0VmFsaWQ9MApFQVBPTDogRXh0ZXJuYWwgbm90aWZp
+Y2F0aW9uIC0gRUFQIHN1Y2Nlc3M9MApFQVBPTDogRXh0ZXJuYWwgbm90aWZpY2F0aW9uIC0gcG9y
+dEVuYWJsZWQ9MQpFQVBPTDogU1VQUF9QQUUgZW50ZXJpbmcgc3RhdGUgQ09OTkVDVElORwpFQVBP
+TDogU1VQUF9CRSBlbnRlcmluZyBzdGF0ZSBJRExFClNldHRpbmcgYXV0aGVudGljYXRpb24gdGlt
+ZW91dDogMTAgc2VjIDAgdXNlYwpFQVBPTDogc3RhcnRXaGVuIC0tPiAwCkVBUE9MOiBTVVBQX1BB
+RSBlbnRlcmluZyBzdGF0ZSBDT05ORUNUSU5HCkVBUE9MOiB0eFN0YXJ0CldQQTogZHJvcCBUWCBF
+QVBPTCBpbiBub24tSUVFRSA4MDIuMVggbW9kZSAodHlwZT0xIGxlbj0wKQpXaXJlbGVzcyBldmVu
+dDogY21kPTB4OGIxNSBsZW49MjQKV2lyZWxlc3MgZXZlbnQ6IG5ldyBBUDogMDA6MDA6MDA6MDA6
+MDA6MDAKU2V0dGluZyBzY2FuIHJlcXVlc3Q6IDAgc2VjIDEwMDAwMCB1c2VjCkFkZGVkIEJTU0lE
+IDAwOjBkOjBiOmMzOmJkOmM5IGludG8gYmxhY2tsaXN0ClN0YXRlOiBBU1NPQ0lBVEVEIC0+IERJ
+U0NPTk5FQ1RFRApFQVBPTDogRXh0ZXJuYWwgbm90aWZpY2F0aW9uIC0gcG9ydEVuYWJsZWQ9MApF
+QVBPTDogU1VQUF9QQUUgZW50ZXJpbmcgc3RhdGUgRElTQ09OTkVDVEVECkVBUE9MOiBTVVBQX0JF
+IGVudGVyaW5nIHN0YXRlIElOSVRJQUxJWkUKRUFQT0w6IEV4dGVybmFsIG5vdGlmaWNhdGlvbiAt
+IHBvcnRWYWxpZD0wCkVBUE9MOiBFeHRlcm5hbCBub3RpZmljYXRpb24gLSBFQVAgc3VjY2Vzcz0w
+CkNUUkwtRVZFTlQtRElTQ09OTkVDVEVEIC0gRGlzY29ubmVjdCBldmVudCAtIHJlbW92ZSBrZXlz
+CndwYV9kcml2ZXJfd2V4dF9zZXRfa2V5OiBhbGc9MCBrZXlfaWR4PTAgc2V0X3R4PTAgc2VxX2xl
+bj0wIGtleV9sZW49MAp3cGFfZHJpdmVyX3dleHRfc2V0X2tleTogYWxnPTAga2V5X2lkeD0xIHNl
+dF90eD0wIHNlcV9sZW49MCBrZXlfbGVuPTAKd3BhX2RyaXZlcl93ZXh0X3NldF9rZXk6IGFsZz0w
+IGtleV9pZHg9MiBzZXRfdHg9MCBzZXFfbGVuPTAga2V5X2xlbj0wCndwYV9kcml2ZXJfd2V4dF9z
+ZXRfa2V5OiBhbGc9MCBrZXlfaWR4PTMgc2V0X3R4PTAgc2VxX2xlbj0wIGtleV9sZW49MAp3cGFf
+ZHJpdmVyX3dleHRfc2V0X2tleTogYWxnPTAga2V5X2lkeD0wIHNldF90eD0wIHNlcV9sZW49MCBr
+ZXlfbGVuPTAKaW9jdGxbU0lPQ1NJV0VOQ09ERUVYVF06IE5vIHN1Y2ggZmlsZSBvciBkaXJlY3Rv
+cnkKRHJpdmVyIGRpZCBub3Qgc3VwcG9ydCBTSU9DU0lXRU5DT0RFRVhUClN0YXRlOiBESVNDT05O
+RUNURUQgLT4gU0NBTk5JTkcKU3RhcnRpbmcgQVAgc2NhbiAoc3BlY2lmaWMgU1NJRCkKU2NhbiBT
+U0lEIC0gaGV4ZHVtcF9hc2NpaShsZW49NSk6CiAgICAgNmQgNzkgNmUgNjUgNzQgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICBteW5ldCAgICAgICAgICAgCldpcmVsZXNzIGV2ZW50
+OiBjbWQ9MHg4YzAyIGxlbj0yMTkKQ3VzdG9tIHdpcmVsZXNzIGV2ZW50OiAnQVNTT0NJTkZPKFJl
+cUlFcz0wMDA1NmQ3OTZlNjU3NDAxMDQwMjA0MGIxNmRkMTYwMDUwZjIwMTAxMDAwMDUwZjIwMjAx
+MDAwMDUwZjIwMjAxMDAwMDUwZjIwMmRkMDcwMDUwZjIwMjAwMDEwMCBSZXNwSUVzPTAxMDg4Mjg0
+OGI5NjBjMTIxODI0MzIwNDMwNDg2MDZjZGQxODAwNTBmMjAyMDEwMTAwMDAwM2E0MDAwMDI3YTQw
+MDAwNDI0MzVlMDA2MjMyMmYwMCknCkFzc29jaWF0aW9uIGluZm8gZXZlbnQKcmVxX2llcyAtIGhl
+eGR1bXAobGVuPTQ2KTogMDAgMDUgNmQgNzkgNmUgNjUgNzQgMDEgMDQgMDIgMDQgMGIgMTYgZGQg
+MTYgMDAgNTAgZjIgMDEgMDEgMDAgMDAgNTAgZjIgMDIgMDEgMDAgMDAgNTAgZjIgMDIgMDEgMDAg
+MDAgNTAgZjIgMDIgZGQgMDcgMDAgNTAgZjIgMDIgMDAgMDEgMDAKcmVzcF9pZXMgLSBoZXhkdW1w
+KGxlbj00Mik6IDAxIDA4IDgyIDg0IDhiIDk2IDBjIDEyIDE4IDI0IDMyIDA0IDMwIDQ4IDYwIDZj
+IGRkIDE4IDAwIDUwIGYyIDAyIDAxIDAxIDAwIDAwIDAzIGE0IDAwIDAwIDI3IGE0IDAwIDAwIDQy
+IDQzIDVlIDAwIDYyIDMyIDJmIDAwCldQQTogc2V0IG93biBXUEEvUlNOIElFIC0gaGV4ZHVtcChs
+ZW49MjQpOiBkZCAxNiAwMCA1MCBmMiAwMSAwMSAwMCAwMCA1MCBmMiAwMiAwMSAwMCAwMCA1MCBm
+MiAwMiAwMSAwMCAwMCA1MCBmMiAwMgpXaXJlbGVzcyBldmVudDogY21kPTB4OGIxNSBsZW49MjQK
+V2lyZWxlc3MgZXZlbnQ6IG5ldyBBUDogMDA6MGQ6MGI6YzM6YmQ6YzkKU3RhdGU6IFNDQU5OSU5H
+IC0+IEFTU09DSUFURUQKQXNzb2NpYXRlZCB0byBhIG5ldyBCU1M6IEJTU0lEPTAwOjBkOjBiOmMz
+OmJkOmM5Ck5vIGtleXMgaGF2ZSBiZWVuIGNvbmZpZ3VyZWQgLSBza2lwIGtleSBjbGVhcmluZwpB
+c3NvY2lhdGVkIHdpdGggMDA6MGQ6MGI6YzM6YmQ6YzkKV1BBOiBBc3NvY2lhdGlvbiBldmVudCAt
+IGNsZWFyIHJlcGxheSBjb3VudGVyCkVBUE9MOiBFeHRlcm5hbCBub3RpZmljYXRpb24gLSBwb3J0
+RW5hYmxlZD0wCkVBUE9MOiBFeHRlcm5hbCBub3RpZmljYXRpb24gLSBwb3J0VmFsaWQ9MApFQVBP
+TDogRXh0ZXJuYWwgbm90aWZpY2F0aW9uIC0gRUFQIHN1Y2Nlc3M9MApFQVBPTDogRXh0ZXJuYWwg
+bm90aWZpY2F0aW9uIC0gcG9ydEVuYWJsZWQ9MQpFQVBPTDogU1VQUF9QQUUgZW50ZXJpbmcgc3Rh
+dGUgQ09OTkVDVElORwpFQVBPTDogU1VQUF9CRSBlbnRlcmluZyBzdGF0ZSBJRExFClNldHRpbmcg
+YXV0aGVudGljYXRpb24gdGltZW91dDogMTAgc2VjIDAgdXNlYwpTY2FuIHRpbWVvdXQgLSB0cnkg
+dG8gZ2V0IHJlc3VsdHMKaW9jdGxbU0lPQ0dJV1NDQU5dOiBSZXNvdXJjZSB0ZW1wb3JhcmlseSB1
+bmF2YWlsYWJsZQpTY2FuIHJlc3VsdHM6IC0xCkZhaWxlZCB0byBnZXQgc2NhbiByZXN1bHRzCkZh
+aWxlZCB0byBnZXQgc2NhbiByZXN1bHRzIC0gdHJ5IHNjYW5uaW5nIGFnYWluClNldHRpbmcgc2Nh
+biByZXF1ZXN0OiAxIHNlYyAwIHVzZWMKRUFQT0w6IHN0YXJ0V2hlbiAtLT4gMApFQVBPTDogU1VQ
+UF9QQUUgZW50ZXJpbmcgc3RhdGUgQ09OTkVDVElORwpFQVBPTDogdHhTdGFydApXUEE6IGRyb3Ag
+VFggRUFQT0wgaW4gbm9uLUlFRUUgODAyLjFYIG1vZGUgKHR5cGU9MSBsZW49MCkKU3RhcnRpbmcg
+QVAgc2NhbiAoYnJvYWRjYXN0IFNTSUQpCldpcmVsZXNzIGV2ZW50OiBjbWQ9MHg4YjE5IGxlbj0x
+NgpSZWNlaXZlZCAzOTggYnl0ZXMgb2Ygc2NhbiByZXN1bHRzICgxIEJTU2VzKQpTY2FuIHJlc3Vs
+dHM6IDEKU2VsZWN0aW5nIEJTUyBmcm9tIHByaW9yaXR5IGdyb3VwIDAKMDogMDA6MGQ6MGI6YzM6
+YmQ6Yzkgc3NpZD0nbXluZXQnIHdwYV9pZV9sZW49MjQgcnNuX2llX2xlbj0yMiBjYXBzPTB4MTEK
+ICAgc2tpcCAtIFNTSUQgbWlzbWF0Y2gKICAgc2VsZWN0ZWQgYmFzZWQgb24gV1BBIElFCkFscmVh
+ZHkgYXNzb2NpYXRlZCB3aXRoIHRoZSBzZWxlY3RlZCBBUC4KQ1RSTC1FVkVOVC1URVJNSU5BVElO
+RyAtIHNpZ25hbCAyIHJlY2VpdmVkClJlbW92aW5nIGludGVyZmFjZSBldGgxClN0YXRlOiBBU1NP
+Q0lBVEVEIC0+IERJU0NPTk5FQ1RFRAp3cGFfZHJpdmVyX3dleHRfZGVhdXRoZW50aWNhdGUKTm8g
+a2V5cyBoYXZlIGJlZW4gY29uZmlndXJlZCAtIHNraXAga2V5IGNsZWFyaW5nCkVBUE9MOiBFeHRl
+cm5hbCBub3RpZmljYXRpb24gLSBwb3J0RW5hYmxlZD0wCkVBUE9MOiBTVVBQX1BBRSBlbnRlcmlu
+ZyBzdGF0ZSBESVNDT05ORUNURUQKRUFQT0w6IFNVUFBfQkUgZW50ZXJpbmcgc3RhdGUgSU5JVElB
+TElaRQpFQVBPTDogRXh0ZXJuYWwgbm90aWZpY2F0aW9uIC0gcG9ydFZhbGlkPTAKd3BhX2RyaXZl
+cl93ZXh0X3NldF93cGEKd3BhX2RyaXZlcl93ZXh0X3NldF9kcm9wX3VuZW5jcnlwdGVkCmlvY3Rs
+W1NJT0NTSVdBVVRIXTogT3BlcmF0aW9uIG5vdCBzdXBwb3J0ZWQKV0VYVCBhdXRoIHBhcmFtIDUg
+dmFsdWUgMHgwIC0gd3BhX2RyaXZlcl93ZXh0X3NldF9jb3VudGVybWVhc3VyZXMKaW9jdGxbU0lP
+Q1NJV0FVVEhdOiBPcGVyYXRpb24gbm90IHN1cHBvcnRlZApXRVhUIGF1dGggcGFyYW0gNCB2YWx1
+ZSAweDAgLSBObyBrZXlzIGhhdmUgYmVlbiBjb25maWd1cmVkIC0gc2tpcCBrZXkgY2xlYXJpbmcK
+UmVtb3ZlZCBCU1NJRCAwMDowZDowYjpjMzpiZDpjOSBmcm9tIGJsYWNrbGlzdCAoY2xlYXIpCkNh
+bmNlbGxpbmcgc2NhbiByZXF1ZXN0Cg==
+------=_Part_24710_26166473.1176215688162--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
