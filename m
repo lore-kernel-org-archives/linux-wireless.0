@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37835 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767648AbXDFNw1 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.169]:2657 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030457AbXDJHNf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2007 09:52:27 -0400
-Subject: Re: [PATCH] mac80211: Add radiotap support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
-	Andy Green <andy@warmcat.com>
-In-Reply-To: <200704060926.21863.flamingice@sourmilk.net>
-References: <200704060048.51524.flamingice@sourmilk.net>
-	 <1175847074.3489.56.camel@johannes.berg>
-	 <200704060926.21863.flamingice@sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-91f31UO/anzxWs8Rl936"
-Date: Fri, 06 Apr 2007 15:52:16 +0200
-Message-Id: <1175867536.8459.3.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 10 Apr 2007 03:13:35 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so20809uga
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Apr 2007 00:13:34 -0700 (PDT)
+Message-ID: <461B3930.6040203@gmail.com>
+Date: Tue, 10 Apr 2007 09:13:52 +0200
+From: dragoran <drago01@gmail.com>
+MIME-Version: 1.0
+To: dragoran dragoran <drago01@gmail.com>
+CC: Michael Wu <flamingice@sourmilk.net>,
+	Dan Williams <dcbw@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@redhat.com>, Jiri Benc <jbenc@suse.cz>,
+	ipw3945-devel@lists.sourceforge.net, jketreno@linux.intel.com
+Subject: Re: mac80211 does not support WPA when used with wext
+References: <460E2B8C.4030002@gmail.com>	 <200703311700.52792.flamingice@sourmilk.net>	 <f6ca9fed0704081445u5536e596m4ca4caeb44f7f87@mail.gmail.com>	 <200704081754.24937.flamingice@sourmilk.net> <f6ca9fed0704081527j641a4ecat44151e107cab7342@mail.gmail.com>
+In-Reply-To: <f6ca9fed0704081527j641a4ecat44151e107cab7342@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-91f31UO/anzxWs8Rl936
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 2007-04-06 at 09:26 -0400, Michael Wu wrote:
-
-> > I don't like this trick. It's so non-obvious. And inbetween, the only
-> > thing we ever use is skb->data (once, to get hdr assigned) and skb->len
-> > (which we could also load into a local variable.
-> >
-> This is actually being done to avoid modifying rx_pre_handlers.
-
-Ah, I missed that they were called inbetween.
-
-johannes
-
---=-91f31UO/anzxWs8Rl936
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGFlCP/ETPhpq3jKURAjAyAKC4dFJ5g5YwxEbCYANkAJ7Xl0kYcwCfWAqZ
-4W0DvrD9fAkQwYG3Rv097Kc=
-=1qzc
------END PGP SIGNATURE-----
-
---=-91f31UO/anzxWs8Rl936--
+ok I tested it again with linvilles f7 test kernel (wireless-git + your 
+patches + iwlwifi).
+again nm detect the card as wpa and it finds the wpa enabled network. 
+But it fails to connect (does not even ask for a key). So I tryed to use 
+wpa_supplicant by hand ( with a config that works fine with ipw3945 ; 
+ieee80211) . Its seems not to be related to iwlwifi but to a ioctl that 
+mac80211 does not support (when used with wext).
+----
+Own MAC address: 00:18:de:05:f7:9e
+wpa_driver_wext_set_wpa
+wpa_driver_wext_set_key: alg=0 key_idx=0 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=1 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=2 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=3 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_countermeasures
+ioctl[SIOCSIWAUTH]: Operation not supported
+WEXT auth param 4 value 0x0 - wpa_driver_wext_set_drop_unencrypted
+ioctl[SIOCSIWAUTH]: Operation not supported
+----
+notice the *ioctl[SIOCSIWAUTH]: Operation not supported* what is 
+SIOCSIWAUTH and how does it not being supproted affect wpa/wext support?
 
