@@ -1,64 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:44539 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933471AbXDFXwy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2007 19:52:54 -0400
-Message-ID: <4616DD7E.6010606@lwfinger.net>
-Date: Fri, 06 Apr 2007 18:53:34 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from smtp.rutgers.edu ([128.6.72.243]:9349 "EHLO annwn13.rutgers.edu"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1161344AbXDKXEB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Apr 2007 19:04:01 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Michael Buesch <mb@bu3sch.de>
+Subject: [PATCH] bcm43xx: Hide if bcm43xx-mac80211 is builtin
+Date: Wed, 11 Apr 2007 19:01:06 -0400
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: RFC: ieee80211: Spamming of log resulting from packets with ExtIV  not set
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart1328119.EjFDdGe3nu";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704111901.06403.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using bcm43xx-softmac, my log gets full of messages that look like:
+--nextPart1328119.EjFDdGe3nu
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Apr  6 18:06:55 larrylap kernel: TKIP: ICV error detected: STA=00:14:bf:85:49:fa
-Apr  6 18:06:55 larrylap kernel: TKIP: ICV error detected: STA=00:14:bf:85:49:fa
-Apr  6 18:06:55 larrylap kernel: TKIP: ICV error detected: STA=00:14:bf:85:49:fa
-Apr  6 18:06:55 larrylap kernel: TKIP: ICV error detected: STA=00:14:bf:85:49:fa
-Apr  6 18:06:55 larrylap kernel: TKIP: ICV error detected: STA=00:14:bf:85:49:fa
-Apr  6 18:06:55 larrylap kernel: TKIP: ICV error detected: STA=00:14:bf:85:49:fa
-Apr  6 18:06:55 larrylap kernel: TKIP: ICV error detected: STA=00:14:bf:85:49:fa
+bcm43xx: Hide if bcm43xx-mac80211 is builtin
 
-Are there any objections to the following patch to eliminate these messages from TKIP and CCMP?
+From: Michael Wu <flamingice@sourmilk.net>
 
-Index: wireless-2.6/net/ieee80211/ieee80211_crypt_tkip.c
-===================================================================
---- wireless-2.6.orig/net/ieee80211/ieee80211_crypt_tkip.c
-+++ wireless-2.6/net/ieee80211/ieee80211_crypt_tkip.c
-@@ -439,11 +439,7 @@ static int ieee80211_tkip_decrypt(struct
-  	pos = skb->data + hdr_len;
-  	keyidx = pos[3];
-  	if (!(keyidx & (1 << 5))) {
--		if (net_ratelimit()) {
--			printk(KERN_DEBUG "TKIP: received packet without ExtIV"
--			       " flag from " MAC_FMT "\n", MAC_ARG(hdr->addr2));
--		}
--		return -2;
-+		return -2; /* received packet without ExtIV */
-  	}
-  	keyidx >>= 6;
-  	if (tkey->key_idx != keyidx) {
-Index: wireless-2.6/net/ieee80211/ieee80211_crypt_ccmp.c
-===================================================================
---- wireless-2.6.orig/net/ieee80211/ieee80211_crypt_ccmp.c
-+++ wireless-2.6/net/ieee80211/ieee80211_crypt_ccmp.c
-@@ -306,11 +306,7 @@ static int ieee80211_ccmp_decrypt(struct
-  	pos = skb->data + hdr_len;
-  	keyidx = pos[3];
-  	if (!(keyidx & (1 << 5))) {
--		if (net_ratelimit()) {
--			printk(KERN_DEBUG "CCMP: received packet without ExtIV"
--			       " flag from " MAC_FMT "\n", MAC_ARG(hdr->addr2));
--		}
--		return -2;
-+		return -2; /* received packet without ExtIV */
-  	}
-  	keyidx >>= 6;
+This prevents users from compiling bcm43xx (softmac) and bcm43xx-mac80211
+into the kernel at the same time. In the case that it is attempted, make
+bcm43xx (softmac) not build.
 
-Larry
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
+ drivers/net/wireless/bcm43xx/Kconfig |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/bcm43xx/Kconfig b/drivers/net/wireless/bcm43xx/Kconfig
+index ce397e4..f69510d 100644
+--- a/drivers/net/wireless/bcm43xx/Kconfig
++++ b/drivers/net/wireless/bcm43xx/Kconfig
+@@ -1,6 +1,7 @@
+ config BCM43XX
+ 	tristate "Broadcom BCM43xx wireless support"
+ 	depends on PCI && IEEE80211 && IEEE80211_SOFTMAC && WLAN_80211 && EXPERIMENTAL
++	depends on BCM43XX_MAC80211 != 'y'
+ 	select WIRELESS_EXT
+ 	select FW_LOADER
+ 	select HW_RANDOM
+
+--nextPart1328119.EjFDdGe3nu
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGHWiyT3Oqt9AH4aERAnyoAKCiXATfxWEs4LYhG7VzxU/xJ6Cd5gCgxMtT
+9MhOwDFmkn6ReUgaUwQpX6I=
+=vuf9
+-----END PGP SIGNATURE-----
+
+--nextPart1328119.EjFDdGe3nu--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
