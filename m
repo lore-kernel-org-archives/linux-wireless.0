@@ -1,79 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:61934 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752393AbXD0Ob6 (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.232]:23035 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161358AbXDKXFE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2007 10:31:58 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: James Ketrenos <jketreno@linux.intel.com>
-Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
-Date: Fri, 27 Apr 2007 10:27:40 -0400
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <200704262023.52833.flamingice@sourmilk.net> <46319E31.4090101@linux.intel.com>
-In-Reply-To: <46319E31.4090101@linux.intel.com>
+	Wed, 11 Apr 2007 19:05:04 -0400
+Received: by wr-out-0506.google.com with SMTP id 71so283179wri
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2007 16:05:03 -0700 (PDT)
+Message-ID: <1ba2fa240704111605l305230d3vf09c085473364eb3@mail.gmail.com>
+Date: Thu, 12 Apr 2007 02:05:02 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Simon Barber" <simon@devicescape.com>
+Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery and association
+Cc: "Michael Wu" <flamingice@sourmilk.net>,
+	mabbas <mabbas@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Jouni Malinen" <jkm@devicescape.com>
+In-Reply-To: <C86180A8C204554D8A3323D8F6B0A29F01DEB33D@dhost002-46.dex002.intermedia.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1681113.Z7GisItH0B";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200704271027.44363.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <1174909105.1364.53.camel@dell-4965.jf.intel.com>
+	 <20070411194059.GA2436@tuxdriver.com> <461D3F48.70004@linux.intel.com>
+	 <200704111630.06160.flamingice@sourmilk.net>
+	 <1ba2fa240704111503l6dcef504na73c997ae75ebccd@mail.gmail.com>
+	 <C86180A8C204554D8A3323D8F6B0A29F01DEB33D@dhost002-46.dex002.intermedia.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1681113.Z7GisItH0B
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+So you monitor your traffic load in driver, then notify user space
+application which opens or tears down for you the BA stream?
+What would be the notification mechanism ?
 
-On Friday 27 April 2007 02:54, James Ketrenos wrote:
-> Anyway, I ran a quick test of using hw_scan enabled and disabled on a
-> system with 15 active and 17 passive channels.
+
+On 4/12/07, Simon Barber <simon@devicescape.com> wrote:
+> Setup and tear down of BA should be done by userspace - actual
+> processing of the BA frames themselves should be done in mac80211. This
+> allows maximum flexibility from userspace to control the policy of when
+> to setup and teardown BA streams.
 >
-> 	hw scan: 2.2s
-> 	sw scan: 4.7s
+> Simon
 >
-> So the SW scan wasn't the 10s that I stated before (although it sure felt
-> like 10s before I ran it with 'time')  But anyway... the hw scan is
-> currently beating out sw scanning by ~54%, at least here.
+> -----Original Message-----
+> From: Tomas Winkler [mailto:tomasw@gmail.com]
+> Sent: Wednesday, April 11, 2007 3:04 PM
+> To: Michael Wu
+> Cc: mabbas; John W. Linville; linux-wireless@vger.kernel.org; Jouni
+> Malinen; Simon Barber
+> Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery
+> and association
 >
-Ok. Let's try interpreting these numbers.
-
-The current settings in mac80211 give each active scan channel 1/33rd of a=
-=20
-second to send a probe request and another 1/33rd of a second to listen for=
-=20
-any replies. That means, at the very minimum, an active scan will take a bi=
-t=20
-over 60 ms to complete per channel. For passive scans, each channel gets=20
-1/5th of a second, so that's 200 ms right there. With all this, we get:
-
-=2E06 (s/channel) * 15 channels + .2 (s/channel) * 17 channels =3D 4.3 s
-
-So, 91% of the time that software scan takes is just.. waiting. HW scan=20
-simply "wins" by default because it doesn't wait as long. These numbers say=
-=20
-nothing about the actual overhead of using SW vs. HW scanning. Can you=20
-provide more details on the delays that iwlwifi uses so we can do a proper=
-=20
-comparison?
-
-=2DMichael Wu
-
---nextPart1681113.Z7GisItH0B
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGMghgT3Oqt9AH4aERAsTFAKDViKL3bsP/rK28ja/6sMOkzdFU8gCggpk/
-93FL/1VpDe+to2plyHtQYuw=
-=T1np
------END PGP SIGNATURE-----
-
---nextPart1681113.Z7GisItH0B--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+> On 4/11/07, Michael Wu <flamingice@sourmilk.net> wrote:
+> > On Wednesday 11 April 2007 16:04, mabbas wrote:
+> > > I am not familiar with userspace mlme what needed to be done?
+> > mac80211 has a userspace mlme mode which defers all things dealing
+> > with management frames to userspace (wpa_supplicant). It basically
+> > disables all the code in ieee80211_sta.c and routes management frames
+> > to a special interface where wpa_supplicant (or hostap) handles
+> > things. This is preferred and the ieee80211_sta.c code is there for
+> backwards compatibility.
+> >
+> > No major features should be added to the in-kernel MLME
+> > (ieee80211_sta.c) but even more importantly, your patch series does
+> > not provide the appropriate hooks for a userspace MLME to support a
+> driver using this 802.11n API.
+> >
+> > -Michael Wu
+> >
+> >
+> Meanwhile I don't see feasible user space implementation for this as
+> data packet classification is done in kernel. BACK streams are
+> dynamically  opened and teared down per TID according current traffic
+> shape.
+> This is new feature and the user space handling is not well understand
+> yet. I suggest that we proceed with patches and let the evolution making
+> its steps.
+>
+> If someone has concrete suggestion on implementing it as user space MLME
+> I will be glad to hear.
+> Thanks
+>
+>
+> Tomas
+>
