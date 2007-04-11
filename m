@@ -1,175 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:45540 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965920AbXDIPxh (ORCPT
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:39350 "EHLO
+	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753251AbXDKQIn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2007 11:53:37 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 681F68D130
-	for <linux-wireless@vger.kernel.org>; Mon,  9 Apr 2007 17:53:31 +0200 (CEST)
-Message-Id: <20070409155335.095429959@warmcat.com>
-References: <20070409154802.470925215@warmcat.com>
-Date: Mon, 09 Apr 2007 16:48:05 +0100
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Cc: Andy Green <andy@warmcat.com>
-Subject: [PATCH 3/7] mac80211: Monitor mode radiotap injection docs
+	Wed, 11 Apr 2007 12:08:43 -0400
+Date: Wed, 11 Apr 2007 11:08:53 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] bcm43xx-mac80211: Fix machine checks on PPC with rev 1  PHYs
+Message-ID: <461d0815.ip3FDr8RDQXyCT4U%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andy Green <andy@warmcat.com>
-Signed-off-by: Andy Green <andy@warmcat.com>
+On PPC architecture with phy->rev == 1, machine checks occur during
+initialization of the "Extended G PHY registers". This problem was
+also seen on bcm43xx-softmac, and was fixed by conditionally skipping
+over certain reads/writes of these registers.  The same solution has been
+applied here with testing by David Woodhouse.  Note: These modifications
+are not found in the specifications, but are needed for PPC.
 
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-diff --git a/Documentation/networking/mac80211-injection.txt b/Documentation/networking/mac80211-injection.txt
-new file mode 100644
-index 0000000..53ef7a0
---- /dev/null
-+++ b/Documentation/networking/mac80211-injection.txt
-@@ -0,0 +1,59 @@
-+How to use packet injection with mac80211
-+=========================================
-+
-+mac80211 now allows arbitrary packets to be injected down any Monitor Mode
-+interface from userland.  The packet you inject needs to be composed in the
-+following format:
-+
-+ [ radiotap header  ]
-+ [ ieee80211 header ]
-+ [ payload ]
-+
-+The radiotap format is discussed in
-+./Documentation/networking/radiotap-headers.txt.
-+
-+Despite 13 radiotap argument types are currently defined, most only make sense
-+to appear on received packets.  Currently three kinds of argument are used by
-+the injection code, although it knows to skip any other arguments that are
-+present (facilitating replay of captured radiotap headers directly):
-+
-+ - IEEE80211_RADIOTAP_RATE - u8 arg in 500kbps units (0x02 --> 1Mbps)
-+
-+ - IEEE80211_RADIOTAP_ANTENNA - u8 arg, 0x00 = ant1, 0x01 = ant2
-+
-+ - IEEE80211_RADIOTAP_DBM_TX_POWER - u8 arg, dBm
-+
-+Here is an example valid radiotap header defining these three parameters
-+
-+	0x00, 0x00, // <-- radiotap version
-+	0x0b, 0x00, // <- radiotap header length
-+	0x04, 0x0c, 0x00, 0x00, // <-- bitmap
-+	0x6c, // <-- rate
-+	0x0c, //<-- tx power
-+	0x01 //<-- antenna
-+
-+The ieee80211 header follows immediately afterwards, looking for example like
-+this:
-+
-+	0x08, 0x01, 0x00, 0x00,
-+	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-+	0x13, 0x22, 0x33, 0x44, 0x55, 0x66,
-+	0x13, 0x22, 0x33, 0x44, 0x55, 0x66,
-+	0x10, 0x86
-+
-+Then lastly there is the payload.
-+
-+After composing the packet contents, it is sent by send()-ing it to a logical
-+mac80211 interface that is in Monitor mode.  Libpcap can also be used,
-+(which is easier than doing the work to bind the socket to the right
-+interface), along the following lines:
-+
-+	ppcap = pcap_open_live(szInterfaceName, 800, 1, 20, szErrbuf);
-+...
-+	r = pcap_inject(ppcap, u8aSendBuffer, nLength);
-+
-+You can also find sources for a complete inject test applet here:
-+
-+http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
-+
-+Andy Green <andy@warmcat.com>
-diff --git a/Documentation/networking/radiotap-headers.txt b/Documentation/networking/radiotap-headers.txt
-new file mode 100644
-index 0000000..0d2207a
---- /dev/null
-+++ b/Documentation/networking/radiotap-headers.txt
-@@ -0,0 +1,79 @@
-+How to use radiotap headers
-+===========================
-+
-+Pointer to the radiotap include file
-+------------------------------------
-+
-+Radiotap headers are variable-length and extensible, you can get most of the
-+information you need to know on them from:
-+
-+./include/net/ieee80211_radiotap.h
-+
-+This document gives an overview and warns on some corner cases.
-+
-+
-+Structure of the header
-+-----------------------
-+
-+There is a fixed portion at the start which contains a u32 bitmap that defines
-+if the possible argument associated with that bit is present or not.  So if b0
-+of the it_present member of ieee80211_radiotap_header is set, it means that
-+the header for argument index 0 (IEEE80211_RADIOTAP_TSFT) is present in the
-+argument area.
-+
-+   < 8-byte ieee80211_radiotap_header >
-+   [ <possible argument bitmap extensions ... > ]
-+   [ <argument> ... ]
-+
-+At the moment there are only 13 possible argument indexes defined, but in case
-+we run out of space in the u32 it_present member, it is defined that b31 set
-+indicates that there is another u32 bitmap following (shown as "possible
-+argument bitmap extensions..." above), and the start of the arguments is moved
-+forward 4 bytes each time.
-+
-+Note also that the it_len member __le16 is set to the total number of bytes
-+covered by the ieee80211_radiotap_header and any arguments following.
-+
-+
-+Requirements for arguments
-+--------------------------
-+
-+After the fixed part of the header, the arguments follow for each argument
-+index whose matching bit is set in the it_present member of
-+ieee80211_radiotap_header.
-+
-+ - the arguments are all stored little-endian!
-+
-+ - the argument payload for a given argument index has a fixed size.  So
-+   IEEE80211_RADIOTAP_TSFT being present always indicates an 8-byte argument is
-+   present.  See the comments in ./include/net/ieee80211_radiotap.h for a nice
-+   breakdown of all the argument sizes
-+
-+ - the arguments must be aligned to a boundary of the argument size using
-+   padding.  So a u16 argument must start on the next u16 boundary if it isn't
-+   already on one, a u32 must start on the next u32 boundary and so on.
-+
-+ - "alignment" is relative to the start of the ieee80211_radiotap_header, ie,
-+   the first byte of the radiotap header.  The absolute alignment of that first
-+   byte isn't defined.  So even if the whole radiotap header is starting at, eg,
-+   address 0x00000003, still the first byte of the radiotap header is treated as
-+   0 for alignment purposes.
-+
-+ - The arguments for a given argument index can be a compound of multiple types
-+   together.  For example IEEE80211_RADIOTAP_CHANNEL has an argument payload
-+   consisting of two u16s of total length 4.  When this happens, the padding
-+   rule is applied dealing with a u16, NOT dealing with a 4-byte single entity.
-+
-+
-+Example valid radiotap header
-+-----------------------------
-+
-+	0x00, 0x00, // <-- radiotap version + pad byte
-+	0x0b, 0x00, // <- radiotap header length
-+	0x04, 0x0c, 0x00, 0x00, // <-- bitmap
-+	0x6c, // <-- rate (in 500kHz units)
-+	0x0c, //<-- tx power
-+	0x01 //<-- antenna
-+
-+
-+Andy Green <andy@warmcat.com>
+John and Michael,
 
--- 
+This patch will apply to both the wireless-dev and the mb trees.
+
+Larry
+
+ bcm43xx_phy.c |   50 +++++++++++++++++++++++++++++---------------------
+ 1 file changed, 29 insertions(+), 21 deletions(-)
+
+Index: wireless-dev/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
++++ wireless-dev/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
+@@ -1362,7 +1362,7 @@ static void bcm43xx_phy_initb6(struct bc
+ static void bcm43xx_calc_loopback_gain(struct bcm43xx_wldev *dev)
+ {
+ 	struct bcm43xx_phy *phy = &dev->phy;
+-	u16 backup_phy[16];
++	u16 backup_phy[16] = {0};
+ 	u16 backup_radio[3];
+ 	u16 backup_bband;
+ 	u16 i, j, loop_i_max;
+@@ -1373,8 +1373,10 @@ static void bcm43xx_calc_loopback_gain(s
+ 	backup_phy[1] = bcm43xx_phy_read(dev, BCM43xx_PHY_CCKBBANDCFG);
+ 	backup_phy[2] = bcm43xx_phy_read(dev, BCM43xx_PHY_RFOVER);
+ 	backup_phy[3] = bcm43xx_phy_read(dev, BCM43xx_PHY_RFOVERVAL);
+-	backup_phy[4] = bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVER);
+-	backup_phy[5] = bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVERVAL);
++	if (phy->rev != 1) {
++		backup_phy[4] = bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVER);
++		backup_phy[5] = bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVERVAL);
++	}
+ 	backup_phy[6] = bcm43xx_phy_read(dev, BCM43xx_PHY_BASE(0x5A));
+ 	backup_phy[7] = bcm43xx_phy_read(dev, BCM43xx_PHY_BASE(0x59));
+ 	backup_phy[8] = bcm43xx_phy_read(dev, BCM43xx_PHY_BASE(0x58));
+@@ -1402,14 +1404,16 @@ static void bcm43xx_calc_loopback_gain(s
+ 			  bcm43xx_phy_read(dev, BCM43xx_PHY_RFOVER) | 0x0001);
+ 	bcm43xx_phy_write(dev, BCM43xx_PHY_RFOVERVAL,
+ 			  bcm43xx_phy_read(dev, BCM43xx_PHY_RFOVERVAL) & 0xFFFE);
+-	bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVER,
+-			  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVER) | 0x0001);
+-	bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVERVAL,
+-			  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVERVAL) & 0xFFFE);
+-	bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVER,
+-			  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVER) | 0x0002);
+-	bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVERVAL,
+-			  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVERVAL) & 0xFFFD);
++	if (phy->rev != 1) {
++		bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVER,
++				  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVER) | 0x0001);
++		bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVERVAL,
++				  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVERVAL) & 0xFFFE);
++		bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVER,
++				  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVER) | 0x0002);
++		bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVERVAL,
++				  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVERVAL) & 0xFFFD);
++	}
+ 	bcm43xx_phy_write(dev, BCM43xx_PHY_RFOVER,
+ 			  bcm43xx_phy_read(dev, BCM43xx_PHY_RFOVER) | 0x000C);
+ 	bcm43xx_phy_write(dev, BCM43xx_PHY_RFOVER,
+@@ -1426,10 +1430,12 @@ static void bcm43xx_calc_loopback_gain(s
+ 
+ 	bcm43xx_phy_write(dev, BCM43xx_PHY_BASE(0x0A),
+ 			  bcm43xx_phy_read(dev, BCM43xx_PHY_BASE(0x0A)) | 0x2000);
+-	bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVER,
+-			  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVER) | 0x0004);
+-	bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVERVAL,
+-			  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVERVAL) & 0xFFFB);
++	if (phy->rev != 1) {
++		bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVER,
++				  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVER) | 0x0004);
++		bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVERVAL,
++				  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVERVAL) & 0xFFFB);
++	}
+ 	bcm43xx_phy_write(dev, BCM43xx_PHY_BASE(0x03),
+ 			  (bcm43xx_phy_read(dev, BCM43xx_PHY_BASE(0x03))
+ 			   & 0xFF9F) | 0x40);
+@@ -1522,8 +1528,10 @@ exit_loop1:
+ 		trsw_rx = 0x18;
+ exit_loop2:
+ 
+-	bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVER, backup_phy[4]);
+-	bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVERVAL, backup_phy[5]);
++	if (phy->rev != 1) {
++		bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVER, backup_phy[4]);
++		bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVERVAL, backup_phy[5]);
++	}
+ 	bcm43xx_phy_write(dev, BCM43xx_PHY_BASE(0x5A), backup_phy[6]);
+ 	bcm43xx_phy_write(dev, BCM43xx_PHY_BASE(0x59), backup_phy[7]);
+ 	bcm43xx_phy_write(dev, BCM43xx_PHY_BASE(0x58), backup_phy[8]);
+@@ -1576,7 +1584,7 @@ static void bcm43xx_phy_initg(struct bcm
+ 		bcm43xx_phy_write(dev, BCM43xx_PHY_RFOVER, 0x400);
+ 		bcm43xx_phy_write(dev, BCM43xx_PHY_PGACTL, 0xC0);
+ 	}
+-	if (phy->gmode) {
++	if (phy->gmode && phy->rev >= 2) {
+ 		tmp = bcm43xx_phy_read(dev, BCM43xx_PHY_VERSION_OFDM);
+ 		tmp &= BCM43xx_PHYVER_VERSION;
+ 		if (tmp == 3 || tmp == 5) {
+@@ -1635,7 +1643,7 @@ static void bcm43xx_phy_initg(struct bcm
+ 		else
+ 			bcm43xx_phy_write(dev, BCM43xx_PHY_BASE(0x2F), 0x202);
+ 	}
+-	if (phy->gmode) {
++	if (phy->gmode && phy->rev != 1) {
+ 		bcm43xx_lo_adjust(dev);
+ 		bcm43xx_phy_write(dev, BCM43xx_PHY_LO_MASK, 0x8078);
+ 	}
+@@ -1649,8 +1657,8 @@ static void bcm43xx_phy_initg(struct bcm
+ 		 */
+ 		bcm43xx_nrssi_hw_update(dev, 0xFFFF);//FIXME?
+ 		bcm43xx_calc_nrssi_threshold(dev);
+-	} else {
+-		if (phy->gmode && phy->nrssi[0] == -1000) {
++	} else if (phy->gmode && phy->rev != 1) {
++		if (phy->nrssi[0] == -1000) {
+ 			assert(phy->nrssi[1] == -1000);
+ 			bcm43xx_calc_nrssi_slope(dev);
+ 		} else
