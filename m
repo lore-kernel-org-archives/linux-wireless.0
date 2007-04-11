@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52437 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932189AbXDAITf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Apr 2007 04:19:35 -0400
-Subject: Re: mac80211 does not support WPA when used with wext
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3661 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030259AbXDKTr6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Apr 2007 15:47:58 -0400
+Date: Wed, 11 Apr 2007 15:40:59 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: Michael Wu <flamingice@sourmilk.net>
-Cc: dragoran dragoran <drago01@gmail.com>,
-	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	John Linville <linville@redhat.com>, Jiri Benc <jbenc@suse.cz>
-In-Reply-To: <200703311700.52792.flamingice@sourmilk.net>
-References: <460E2B8C.4030002@gmail.com>
-	 <200703311503.53445.flamingice@sourmilk.net>
-	 <f6ca9fed0703311256m1b14ec35p836a62de532dd804@mail.gmail.com>
-	 <200703311700.52792.flamingice@sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZSdmfCy1cTl26TGV3eEC"
-Date: Sun, 01 Apr 2007 10:18:43 +0200
-Message-Id: <1175415523.23438.55.camel@johannes.berg>
+Cc: mohamed <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org,
+	Jouni Malinen <jkm@devicescape.com>
+Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery and association
+Message-ID: <20070411194059.GA2436@tuxdriver.com>
+References: <1174909105.1364.53.camel@dell-4965.jf.intel.com> <200703311137.24379.flamingice@sourmilk.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200703311137.24379.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Mar 31, 2007 at 11:37:19AM -0400, Michael Wu wrote:
+> On Monday 26 March 2007 07:38, mohamed wrote:
+> > Add basic support for IEEE 802.11n discovery and association.
+> >
+> > This patch adds support to discover IEEE 802.11n AP and enable
+> > association to 802.11n Network. It parses beacon to discover 802.11n
+> > IE and include HT capability information element in Association Request
+> > Frame.
+> > It also call low level driver with the HT capability available during
+> > association.
+> >
+> So.. what happens when the user is using a userspace mlme?
 
---=-ZSdmfCy1cTl26TGV3eEC
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+So...Michael is unhappy that I merged this one (and maybe unhappy
+about the whole series).
 
-On Sat, 2007-03-31 at 17:00 -0400, Michael Wu wrote:
+Mohamed, could you address his concern that your patch preclude
+userland MLME functionality?  Let's make sure we aren't closing-off
+that capability.
 
-> No, this has nothing to do with that. The following patch should address =
-that=20
-> issue, but my copy of networkmanager already does WPA fine so I can't say=
- for=20
-> sure whether it will help or not. A quick look through the networkmanager=
-=20
-> code seems to suggest this will work.
+Thanks,
 
-My NM also does WPA but fails (see previous thread), haven't gotten
-around to debugging it yet. But it definitely tries WPA. Then, however,
-when I decline to give it a key because I want to use wpa_supplicant
-manually, it tells me that my card can't do WPA (encryption not
-supported or something)...
-
-johannes
-
---=-ZSdmfCy1cTl26TGV3eEC
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGD2rj/ETPhpq3jKURAtN8AKCNvPFcY5VT9sS4eNpFNH3a2YoD6wCghdIw
-uppPnOWA7+7DPD4vsL+Zes0=
-=pfNQ
------END PGP SIGNATURE-----
-
---=-ZSdmfCy1cTl26TGV3eEC--
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
