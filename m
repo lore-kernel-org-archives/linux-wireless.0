@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41767 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754039AbXDMPQL (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:50191 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161483AbXDLCXu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2007 11:16:11 -0400
-Subject: Re: [PATCH] bcm43xx-mac80211: Fix machine checks on PPC with rev   1 PHYs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
-	Bcm43xx-dev@lists.berlios.de
-In-Reply-To: <461F9C58.6050106@lwfinger.net>
-References: <461d0815.ip3FDr8RDQXyCT4U%Larry.Finger@lwfinger.net>
-	 <20070413113638.10db9767@localhost>  <461F9C58.6050106@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sfGeU8T6PvRdYz2ma0VA"
-Date: Fri, 13 Apr 2007 17:17:46 +0200
-Message-Id: <1176477466.7052.114.camel@johannes.berg>
+	Wed, 11 Apr 2007 22:23:50 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1Hbow7-0001bt-Dc
+	for linux-wireless@vger.kernel.org; Wed, 11 Apr 2007 22:21:23 -0400
+Subject: Re: [PATCH] bcm43xx: Hide if bcm43xx-mac80211 is builtin
+From: Pavel Roskin <proski@gnu.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+In-Reply-To: <20070412012051.GC3473@tuxdriver.com>
+References: <200704111901.06403.flamingice@sourmilk.net>
+	 <20070412012051.GC3473@tuxdriver.com>
+Content-Type: text/plain
+Date: Wed, 11 Apr 2007 22:23:43 -0400
+Message-Id: <1176344623.21564.46.camel@dv>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2007-04-11 at 21:20 -0400, John W. Linville wrote:
+> On Wed, Apr 11, 2007 at 07:01:06PM -0400, Michael Wu wrote:
+> > bcm43xx: Hide if bcm43xx-mac80211 is builtin
+> > 
+> > From: Michael Wu <flamingice@sourmilk.net>
+> > 
+> > This prevents users from compiling bcm43xx (softmac) and bcm43xx-mac80211
+> > into the kernel at the same time. In the case that it is attempted, make
+> > bcm43xx (softmac) not build.
+> 
+> Since the two drivers use different firmware and the (currently)
+> softmac-based driver will evolve into bcm4301 with support for older
+> hardware, I'd prefer to leave this one out.
 
---=-sfGeU8T6PvRdYz2ma0VA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+It's possible to bind and unbind drivers, so having two drivers for the
+same hardware is not a problem per se.
 
-On Fri, 2007-04-13 at 10:06 -0500, Larry Finger wrote:
+The problem is that such configuration won't compile as it stands now.
+It can be fixed by massive renaming of the symbols in one of the
+drivers, but I'm not sure we settled on a specific name.  I suggested
+bcm4301, which was well received, but it sound like it won't happen
+until bcm43xx_mac80211 matures.
 
-> I look forward to your rewrite of the setup and init routines. Perhaps th=
-ey will even let my 4311=20
-> work with mac80211, but I will be very surprised if the PPC machine check=
- problem goes away.
+If "bcm4301" prefix is too confusing or "humiliating" for the
+softmac-based driver, we could consider something more acceptable in the
+short term, like bcm4k, broadcom, bcom, brcm (Broadcom's stock ticker),
+bcm43sm (after softmac), bcmwifi, bcmw, bcw (just to amuse Theo) and so
+on.
 
-With phy rev =3D=3D 1, the gmode bit is assumed unset when initialising a G
-PHY. Maybe that is the crucial difference. David will send me some
-backtraces of this problem, once he does I'll look at it again.
+If the symbols are not renamed, we need some protection in Kconfig, or
+we'll fail "make allyesconfig".
 
-johannes
-
---=-sfGeU8T6PvRdYz2ma0VA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGH58a/ETPhpq3jKURAk9fAKCi5+Xj0OKyXgcJxYgW7Kxtz5WQOwCfX5D7
-dbkH+WkgtA8BMQHznFcasmk=
-=CEd9
------END PGP SIGNATURE-----
-
---=-sfGeU8T6PvRdYz2ma0VA--
+-- 
+Regards,
+Pavel Roskin
 
