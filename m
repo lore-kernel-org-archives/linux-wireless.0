@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:60274 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031037AbXDQAta (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2007 20:49:30 -0400
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HdbqU-0006ya-9W
-	for linux-wireless@vger.kernel.org; Mon, 16 Apr 2007 20:46:58 -0400
-Subject: Re: [at76_usb] kernel panic in update_wstats()
-From: Pavel Roskin <proski@gnu.org>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Guido Guenther <agx@sigxcpu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	at76c503a-develop@lists.berlios.de
-In-Reply-To: <20070417005827.6f74945a@localhost>
-References: <20070415205619.6747d9ed@localhost>
-	 <20070416082912.GA19004@bogon.ms20.nix> <20070417005827.6f74945a@localhost>
-Content-Type: text/plain
-Date: Mon, 16 Apr 2007 20:49:26 -0400
-Message-Id: <1176770966.9269.16.camel@dv>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3376 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753920AbXDMAP3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2007 20:15:29 -0400
+Date: Thu, 12 Apr 2007 19:56:21 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] bcm43xx: Hide if bcm43xx-mac80211 is builtin
+Message-ID: <20070412235621.GB3470@tuxdriver.com>
+References: <200704111901.06403.flamingice@sourmilk.net> <20070412012051.GC3473@tuxdriver.com> <200704112155.14204.flamingice@sourmilk.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200704112155.14204.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-04-17 at 00:58 +0200, Stefano Brivio wrote:
+On Wed, Apr 11, 2007 at 09:55:08PM -0400, Michael Wu wrote:
+> On Wednesday 11 April 2007 21:20, John W. Linville wrote:
+> > Since the two drivers use different firmware and the (currently)
+> > softmac-based driver will evolve into bcm4301 with support for older
+> > hardware, I'd prefer to leave this one out.
+> >
+> This is just to make allyesconfig work. (wasn't Andrew Morton telling you to 
+> do this?) Both drivers can still be compiled as modules.
 
-> I missed it, it works now. Thanks Pavel and sorry for the noise. BTW,
-> stats are still bogus (link, signal, noise level == 0). But I don't think
-> it makes sense to debug this now, as you will probably have to deal with
-> mac80211 soon.
+OK, I see that now.  FWIW, the namespace changes of the old bcm43xx
+driver to bcm4301 would fulfill the same goal.  But I suppose this
+patch is fine for the time being.
 
-If you mean Ad-Hoc, I agree.  Quality of an Ad-Hoc connection is not
-well defined.  It's better implemented across the board than for every
-driver.
-
-Indeed, the driver is quite "soft", and could be a good candidate for
-mac80211 conversion.  Although it wasn't a requirement for submission.
-
-> I had to make a little patch in order to build the driver on a kernel
-> version < 2.6.20. I don't think you want to merge this, as you are
-> working
-> for inclusion into mainline, but in case, here it is:
-
-Correct, it's not what we want at this point, but thanks anyway.
-
+John
 -- 
-Regards,
-Pavel Roskin
-
+John W. Linville
+linville@tuxdriver.com
