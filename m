@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:45156 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965739AbXDGKvl (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54796 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965480AbXDLI32 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Apr 2007 06:51:41 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id C03118CBD7
-	for <linux-wireless@vger.kernel.org>; Sat,  7 Apr 2007 12:51:36 +0200 (CEST)
-Message-Id: <20070407105138.693035816@warmcat.com>
-References: <20070407105058.762762192@warmcat.com>
-Date: Sat, 07 Apr 2007 11:51:01 +0100
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Cc: Andy Green <andy@warmcat.com>
-Subject: [PATCH 3/7] mac80211: Radiotap rx to use fallback rate calc if ieee80211_get_rate fails
+	Thu, 12 Apr 2007 04:29:28 -0400
+Subject: [PATCH] mac80211: kill useless scan printks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jiri Benc <jbenc@suse.cz>
+Content-Type: text/plain
+Date: Thu, 12 Apr 2007 02:56:39 +0200
+Message-Id: <1176339399.3579.8.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andy Green <andy@warmcat.com>
+This patch removes the "starting scan" and "scan completed"
+messages that mac80211 prints all the time.
 
-Michael Wu's radiotap rx code gave me a rate of 0 on zd1211rw-mac80211, perhaps
-because no interface to the physical device was associated.  Added some fallback
-code so that if the rate could not be computed by ieee80211_get_rate it uses
-Michael's original method (which always worked for me).
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Signed-off-by: Andy Green <andy@warmcat.com>
+---
+We should probably remove more but I find these most annoying. You ought
+to know when you start a scan, and you get an iwevent when it
+finishes...
+
+ net/mac80211/ieee80211_sta.c |    3 ---
+ 1 file changed, 3 deletions(-)
+
+--- wireless-dev.orig/net/mac80211/ieee80211_sta.c	2007-04-11 18:00:23.469481358 +0200
++++ wireless-dev/net/mac80211/ieee80211_sta.c	2007-04-11 18:02:02.829481358 +0200
+@@ -2558,7 +2558,6 @@ void ieee80211_scan_completed(struct iee
+ 	struct ieee80211_sub_if_data *sdata;
+ 	union iwreq_data wrqu;
+ 
+-	printk(KERN_DEBUG "%s: scan completed\n", dev->name);
+ 	local->last_scan_completed = jiffies;
+ 	wmb();
+ 	local->sta_scanning = 0;
+@@ -2703,8 +2702,6 @@ static int ieee80211_sta_start_scan(stru
+ 		return -EBUSY;
+ 	}
+ 
+-	printk(KERN_DEBUG "%s: starting scan\n", dev->name);
+-
+ 	if (local->ops->hw_scan) {
+ 		int rc = local->ops->hw_scan(local_to_hw(local),
+ 					    ssid, ssid_len);
 
 
-
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index e8c5f8d..211886c 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -2821,6 +2821,8 @@ ieee80211_rx_monitor(struct net_device *dev, struct sk_buff *skb,
- 	rate = ieee80211_get_rate(local, status->phymode, status->rate);
- 	if (rate)
- 		rthdr->rate = rate->rate / 5;
-+	else
-+		rthdr->rate = status->rate / 5;
- 	rthdr->chan_freq = cpu_to_le16(status->freq);
- 	rthdr->chan_flags =
- 		status->phymode == MODE_IEEE80211A ?
-
--- 
