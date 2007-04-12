@@ -1,50 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([199.232.76.164]:56000 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992923AbXDDPWr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Apr 2007 11:22:47 -0400
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1HZ7Hh-0005KF-OV
-	for linux-wireless@vger.kernel.org; Wed, 04 Apr 2007 11:20:29 -0400
-Subject: Re: Orinoco, mac80211 and wpa2
-From: Pavel Roskin <proski@gnu.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Jan Dittmer <jdi@l4x.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <1175697737.2656.3.camel@localhost.localdomain>
-References: <4613A4A9.1060902@l4x.org>
-	 <1175697737.2656.3.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Wed, 04 Apr 2007 11:22:38 -0400
-Message-Id: <1175700158.5322.9.camel@dv>
+Received: from main.gmane.org ([80.91.229.2]:47000 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1945956AbXDLJkO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2007 05:40:14 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1Hbvmc-0004ZD-J0
+	for linux-wireless@vger.kernel.org; Thu, 12 Apr 2007 11:40:02 +0200
+Received: from 176.Red-83-55-60.dynamicIP.rima-tde.net ([83.55.60.176])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2007 11:40:02 +0200
+Received: from nonihil by 176.Red-83-55-60.dynamicIP.rima-tde.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2007 11:40:02 +0200
+To: linux-wireless@vger.kernel.org
+From: nihil <nonihil@gmail.com>
+Subject: OpenBSD bcw: Possible GPL license violation issues
+Date: Thu, 12 Apr 2007 09:28:13 +0000 (UTC)
+Message-ID: <loom.20070412T112535-688@post.gmane.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-04-04 at 10:42 -0400, Dan Williams wrote:
+I suggest a whole new license:
 
-> In your case, some cards supported by the orinoco drivers _do_ have WPA
-> capability with a firmware upgrade and by using the 'hostap' drivers.
-> I'd try blacklisting the orinoco and see if the 'hostap' driver supports
-> your card.
+"NPL (Nihil Public License):
 
-I think that Sony laptops have real Lucent Orinoco card, e.g.:
-https://launchpad.net/ubuntu/+source/linux-source-2.6.20/+bug/66696/comments/11
+ex nihilo nihil fit."
 
-Porting Orinoco driver to mac80211 would be a fun project, and I don't
-think it's impossible.  It should be possible to dumb down the card,
-turn off scanning and authentication and send raw packets.
+Meaning: If you take the effort to write/copy/publish/whatever code, you might
+aswell use it and give others the possibility to do so.
 
-I'm not sure if the firmware support would be needed, but Lucent 9.xx
-firmware has WPA support.  Since it's RAM loadable, the firmware loading
-will need to be added.  Fortunately, the implementation already exists
-in the now defunct HermesAP project.
-
-I have way too much stuff on my plate to even attempt it myself, but I
-would not discourage others.
-
--- 
 Regards,
-Pavel Roskin
+
+Figura Priuationis
 
