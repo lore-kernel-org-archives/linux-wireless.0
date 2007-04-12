@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:34377 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753930AbXD1Ofa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2007 10:35:30 -0400
-Date: Sat, 28 Apr 2007 16:35:27 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jkm@devicescape.com>
-Subject: Re: [PATCH] mac80211: optimise ieee80211_get_hdrlen
-Message-ID: <20070428163527.30375d03@logostar.upir.cz>
-In-Reply-To: <1177768717.5102.11.camel@johannes.berg>
-References: <1175011305.9282.10.camel@johannes.berg>
-	<20070328191116.GJ6036@devicescape.com>
-	<1177686617.3565.27.camel@johannes.berg>
-	<20070428154049.313d5491@logostar.upir.cz>
-	<1177768717.5102.11.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2116 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161456AbXDLBph (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Apr 2007 21:45:37 -0400
+Date: Wed, 11 Apr 2007 21:20:51 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] bcm43xx: Hide if bcm43xx-mac80211 is builtin
+Message-ID: <20070412012051.GC3473@tuxdriver.com>
+References: <200704111901.06403.flamingice@sourmilk.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200704111901.06403.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 28 Apr 2007 15:58:37 +0200, Johannes Berg wrote:
-> On Sat, 2007-04-28 at 15:40 +0200, Jiri Benc wrote:
-> > This is not unlikely if you have a WDS link set up. I wouldn't change the
-> > condition.
+On Wed, Apr 11, 2007 at 07:01:06PM -0400, Michael Wu wrote:
+> bcm43xx: Hide if bcm43xx-mac80211 is builtin
 > 
-> Good point. Want me to resend of do you want to just remove the
-> unlikely?
+> From: Michael Wu <flamingice@sourmilk.net>
+> 
+> This prevents users from compiling bcm43xx (softmac) and bcm43xx-mac80211
+> into the kernel at the same time. In the case that it is attempted, make
+> bcm43xx (softmac) not build.
 
-Applied without the unlikely part.
+Since the two drivers use different firmware and the (currently)
+softmac-based driver will evolve into bcm4301 with support for older
+hardware, I'd prefer to leave this one out.
 
 Thanks,
 
- Jiri
-
+John
 -- 
-Jiri Benc
-SUSE Labs
+John W. Linville
+linville@tuxdriver.com
