@@ -1,37 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.190]:7372 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754046AbXDMPZF (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:32803 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161464AbXDLB6H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2007 11:25:05 -0400
-Received: by mu-out-0910.google.com with SMTP id g7so961732muf
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Apr 2007 08:25:04 -0700 (PDT)
-To: Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [PATCH] eeprom_93cx6: do not assume zeroed buffer
-Date: Fri, 13 Apr 2007 17:24:01 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Andrea Merello <andreamrl@tiscali.it>,
-	linux-wireless@vger.kernel.org
-References: <200704131017.22525.flamingice@sourmilk.net>
-In-Reply-To: <200704131017.22525.flamingice@sourmilk.net>
+	Wed, 11 Apr 2007 21:58:07 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] bcm43xx: Hide if bcm43xx-mac80211 is builtin
+Date: Wed, 11 Apr 2007 21:55:08 -0400
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+References: <200704111901.06403.flamingice@sourmilk.net> <20070412012051.GC3473@tuxdriver.com>
+In-Reply-To: <20070412012051.GC3473@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200704131724.02089.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart1804864.VYcjIeV0bE";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704112155.14204.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 13 April 2007 16:17, Michael Wu wrote:
-> eeprom_93cx6: do not assume zeroed buffer
-> 
-> From: Michael Wu <flamingice@sourmilk.net>
-> 
-> eeprom_93cx6_read_bits assumes u16 *data is already zeroed. This removes
-> that assumption.
+--nextPart1804864.VYcjIeV0bE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-ACK. :)
-This was indeed an issue where I was doubting if the driver should make sure the data
-was set to zero or that the calling driver should be responsible.
+On Wednesday 11 April 2007 21:20, John W. Linville wrote:
+> Since the two drivers use different firmware and the (currently)
+> softmac-based driver will evolve into bcm4301 with support for older
+> hardware, I'd prefer to leave this one out.
+>
+This is just to make allyesconfig work. (wasn't Andrew Morton telling you t=
+o=20
+do this?) Both drivers can still be compiled as modules.
 
-Ivo
+=2DMichael Wu
+
+--nextPart1804864.VYcjIeV0bE
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGHZGCT3Oqt9AH4aERAmxfAKCUxFB7PVuWRaN2FM8jPGi8eGgi8ACfYh1X
+K5Fx0RE8ChZdyintwdsLAGk=
+=6oU2
+-----END PGP SIGNATURE-----
+
+--nextPart1804864.VYcjIeV0bE--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
