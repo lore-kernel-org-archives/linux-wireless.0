@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:51722
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753225AbXDFACo (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41767 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754039AbXDMPQL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 20:02:44 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Theo de Raadt <deraadt@cvs.openbsd.org>
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues
-Date: Fri, 6 Apr 2007 02:02:00 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Pavel Roskin <proski@gnu.org>,
-	Joseph Jezak <josejx@gentoo.org>,
-	Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-References: <200704052351.l35Np3NM024755@cvs.openbsd.org>
-In-Reply-To: <200704052351.l35Np3NM024755@cvs.openbsd.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200704060202.01547.mb@bu3sch.de>
+	Fri, 13 Apr 2007 11:16:11 -0400
+Subject: Re: [PATCH] bcm43xx-mac80211: Fix machine checks on PPC with rev   1 PHYs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	Bcm43xx-dev@lists.berlios.de
+In-Reply-To: <461F9C58.6050106@lwfinger.net>
+References: <461d0815.ip3FDr8RDQXyCT4U%Larry.Finger@lwfinger.net>
+	 <20070413113638.10db9767@localhost>  <461F9C58.6050106@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sfGeU8T6PvRdYz2ma0VA"
+Date: Fri, 13 Apr 2007 17:17:46 +0200
+Message-Id: <1176477466.7052.114.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 06 April 2007 01:51, Theo de Raadt wrote:
-> Please get your developers off our mailing list, attacking our users
-> with one liners.  Or should I perhaps just add a cc to misc in future
-> mails?
-> 
-> ---
-> Date: Thu, 5 Apr 2007 20:14:59 -0300
-> From: "=?ISO-8859-1?Q?Andr=E9s_Delfino?=" <adelfino@gmail.com>
 
-I don't know who adelfino@gmail.com is.
+--=-sfGeU8T6PvRdYz2ma0VA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Greetings Michael.
+On Fri, 2007-04-13 at 10:06 -0500, Larry Finger wrote:
+
+> I look forward to your rewrite of the setup and init routines. Perhaps th=
+ey will even let my 4311=20
+> work with mac80211, but I will be very surprised if the PPC machine check=
+ problem goes away.
+
+With phy rev =3D=3D 1, the gmode bit is assumed unset when initialising a G
+PHY. Maybe that is the crucial difference. David will send me some
+backtraces of this problem, once he does I'll look at it again.
+
+johannes
+
+--=-sfGeU8T6PvRdYz2ma0VA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGH58a/ETPhpq3jKURAk9fAKCi5+Xj0OKyXgcJxYgW7Kxtz5WQOwCfX5D7
+dbkH+WkgtA8BMQHznFcasmk=
+=CEd9
+-----END PGP SIGNATURE-----
+
+--=-sfGeU8T6PvRdYz2ma0VA--
+
