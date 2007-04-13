@@ -1,59 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cvs.openbsd.org ([199.185.137.3]:31239 "EHLO cvs.openbsd.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767176AbXDESOW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 14:14:22 -0400
-Message-Id: <200704051810.l35IAe8R011453@cvs.openbsd.org>
-To: Michael Buesch <mb@bu3sch.de>
-cc: Marcus Glocker <marcus@nazgul.ch>,
-	Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Joseph Jezak <josejx@gentoo.org>,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
-In-reply-to: Your message of "Thu, 05 Apr 2007 19:14:10 +0200."
-             <200704051914.10999.mb@bu3sch.de>
-Date: Thu, 05 Apr 2007 12:10:40 -0600
-From: Theo de Raadt <deraadt@cvs.openbsd.org>
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:49472 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752770AbXDMBUv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2007 21:20:51 -0400
+Message-ID: <461EDB39.6080806@lwfinger.net>
+Date: Thu, 12 Apr 2007 20:22:01 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] bcm43xx-mac80211: Fix machine checks on PPC with rev  1 PHYs
+References: <461d0815.ip3FDr8RDQXyCT4U%Larry.Finger@lwfinger.net> <20070413000950.GC3470@tuxdriver.com>
+In-Reply-To: <20070413000950.GC3470@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I think this is dangerous, because the code is tainted and it
-> may even taint other codebases. For example if someone working
-> for opensolaris choses to import bcw into solaris, as he's rightfully
-> got the opinion that bcw is BSD licensed.
+John W. Linville wrote:
+> On Wed, Apr 11, 2007 at 11:08:53AM -0500, Larry Finger wrote:
+>> On PPC architecture with phy->rev == 1, machine checks occur during
+>> initialization of the "Extended G PHY registers". This problem was
+>> also seen on bcm43xx-softmac, and was fixed by conditionally skipping
+>> over certain reads/writes of these registers.  The same solution has been
+>> applied here with testing by David Woodhouse.  Note: These modifications
+>> are not found in the specifications, but are needed for PPC.
+> 
+> I added this patch to the Fedora rawhide kernels, but our Fedora QA
+> lead reports that he still has this crash:
+> 
+> 	http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=233011
+> 
+> I had diagnosed this to be the same crash as this patch was supposed
+> to address.  Was I in error?
+> 
+> He also reports that the problem still occurs on my FC7 test kernels,
+> which are very close to the current rawhide kernels but with the most
+> recent round of wireless-dev updates added.
 
-It's unbelievable how you show so much caring so much for these other
-corporate code bases, but you are inhuman towards a person.
+I suspect the machine check is from the same kind of problem; however, the soft lockup is different. 
+It is always possible that it changes the behavior. There is also the different program flow in 
+mac80211. I just put in the ones that failed in softmac.
 
-You included Quaker.Fang@sun.com to let him know of this problem,
-that's very nice of you.
+Your tester needs to get a copy of David's hack that prints out the address of the offending 
+register. That is the only way to tell what is happening. Once we know the address, then it will be 
+a matter of getting printk's into the code to tell which one is failing.
 
-But you did so in a mail where you ACCUSED Marcus of being a
-thief.
-
-That's very pro-Corporate, and very anti-Human.
-
-You just have zero empathy.  When you don't have any understanding at
-the emotional level of how other people will react, you just aren't
-being a complete human.  You can't be that harsh towards people and
-then give them choices, and expect to get well reasoned results.
-
-I suggest you look at
-
-	http://tinyurl.com/jqh2p
-
-And I am stunned that so many of you who are cc'd don't say anything
-about this.  Is it OK for open source developers to accuse each other
-publically like this, and not try private discussions first?
- 
+Larry
