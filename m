@@ -1,43 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:53112 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753309AbXD2Ktf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Apr 2007 06:49:35 -0400
-Date: Sun, 29 Apr 2007 12:49:29 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/4] mac80211: document requirement for atomicity of  callbacks
-Message-ID: <20070429124929.417ef7da@logostar.upir.cz>
-In-Reply-To: <200704291115.43657.mb@bu3sch.de>
-References: <20070429023215.40c2aea7@logostar.upir.cz>
-	<20070429023345.43e09faf@logostar.upir.cz>
-	<200704291115.43657.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from smtp.rutgers.edu ([128.6.72.243]:25567 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1030886AbXDMXVS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Apr 2007 19:21:18 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH] mac80211: Report correct wireless statistics
+Date: Fri, 13 Apr 2007 19:18:20 -0400
+Cc: Dan Williams <dcbw@redhat.com>,
+	John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
+References: <461877ea.cyxM3SSnr6WhYkjX%Larry.Finger@lwfinger.net> <200704091902.14301.flamingice@sourmilk.net> <461AE160.6060404@lwfinger.net>
+In-Reply-To: <461AE160.6060404@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart9807661.MWb1Iz70VB";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704131918.24758.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 29 Apr 2007 11:15:43 +0200, Michael Buesch wrote:
-> On Sunday 29 April 2007 02:33:45 Jiri Benc wrote:
-> > +	 * Must be atomic. */
-> >  	int (*set_key)(struct ieee80211_hw *hw, set_key_cmd cmd,
-> >  		       u8 *addr, struct ieee80211_key_conf *key, int aid);
-> 
-> I think USB drivers and bcm43xx violate that. We can't easily workaround it
-> without doing the operation async.
+--nextPart9807661.MWb1Iz70VB
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I know. Unfortunately, it's not easy to fix that in mac80211. I really want
-this call not to be atomic and will try to change it later, but it's not a
-priority now.
+On Monday 09 April 2007 20:59, Larry Finger wrote:
+> I changed signal to qual and (r)ssi to level. Once these changes were mad=
+e,
+> iwconfig gives me the following:
+>
+> Link Quality=3D57/100  Signal level=3D-37 dBm  Noise level=3D-70 dBm
+>
+> The patch is pretty large and touches a lot of files, but if one is to be
+> able to bisect around it, it has to be a single commit. As the patch
+> entitled "[PATCH] bcm43xx-mac80211: Fix error in initiallizing max RSSI a=
+nd
+> max signal" has been accepted into Michael Buesch's tree, I have assumed
+> that it is already included.
+>
+I would prefer having the bcm43xx-mac80211 fix and the renaming separated i=
+nto=20
+two patches.
 
-For now, just always return success and complain to dmesg if something goes
-wrong during setting of the key in a workqueue.
+Also, why wasn't max_rssi changed to max_level? I'm not so sure about doing=
+=20
+s/rssi/level/, however. s/rssi/signal/ sounds better to me. (which makes it=
+=20
+sound similar to your other patch, except rssi is eliminated because one=20
+variable needs to do RSSI/dBm and the other needs to be more general than=20
+just another RSSI statistic)
+
+The change from "rssi=3D%d" to "level=3D%d" looks wrong to me. If any users=
+pace=20
+app is parsing that info, that breaks it. Then again, that information is=20
+actually redundant since we report IWEVQUAL earlier so it should just be=20
+removed. I'll post a patch.
 
 Thanks,
+=2DMichael Wu
 
- Jiri
+--nextPart9807661.MWb1Iz70VB
+Content-Type: application/pgp-signature
 
--- 
-Jiri Benc
-SUSE Labs
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGIA/AT3Oqt9AH4aERAtCGAJ9kYhp7mdu115NOPeg3Dqjlz7b4WwCeMiOt
+CZvTFGXKENHdqcETXdFBjck=
+=xKtN
+-----END PGP SIGNATURE-----
+
+--nextPart9807661.MWb1Iz70VB--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
