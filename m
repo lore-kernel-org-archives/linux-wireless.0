@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34476 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757232AbXD0UvH (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:63188 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754030AbXDMPEf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2007 16:51:07 -0400
-Subject: Re: Wireless rates with mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <46325F58.5070808@lwfinger.net>
-References: <462F9617.8010207@lwfinger.net>
-	 <20070427221153.7ecc04de@griffin.suse.cz>	<46325B51.7090506@lwfinger.net>
-	 <20070427222932.548519eb@griffin.suse.cz>  <46325F58.5070808@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9hpItHD/ZjD/ez06bvnr"
-Date: Fri, 27 Apr 2007 22:51:08 +0200
-Message-Id: <1177707068.3565.61.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 13 Apr 2007 11:04:35 -0400
+Message-ID: <461F9C58.6050106@lwfinger.net>
+Date: Fri, 13 Apr 2007 10:06:00 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Stefano Brivio <stefano.brivio@polimi.it>
+CC: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] bcm43xx-mac80211: Fix machine checks on PPC with rev  1 PHYs
+References: <461d0815.ip3FDr8RDQXyCT4U%Larry.Finger@lwfinger.net> <20070413113638.10db9767@localhost>
+In-Reply-To: <20070413113638.10db9767@localhost>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Stefano Brivio wrote:
+> On Wed, 11 Apr 2007 11:08:53 -0500
+> Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> 
+>> On PPC architecture with phy->rev == 1, machine checks occur during
+>> initialization of the "Extended G PHY registers". This problem was
+>> also seen on bcm43xx-softmac, and was fixed by conditionally skipping
+>> over certain reads/writes of these registers.  The same solution has been
+>> applied here with testing by David Woodhouse.  Note: These modifications
+>> are not found in the specifications, but are needed for PPC.
+> 
+> I don't think this patch has to be reverted, but I still think that it's
+> better to notice the reverse engineers team about failing operations
+> and understand the real problem rather than hiding it. Which works in some
+> cases, but sometimes just hide other bugs.
+> 
+> I'm almost done with rewriting the whole A/G/N setup and init routines,
+> following the new v4 specs. This issue could even be related.
 
---=-9hpItHD/ZjD/ez06bvnr
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I agree that it would be better if we could follow the specs and not have the machine check problem. 
+My impression is that early versions of the bcm43xx driver did not have this difficulty, but that it 
+appeared after a relatively recent change in the G init specs. BTW, these were the changes that 
+greatly improved performance, particularly on the phy->rev = 8 devices. Perhaps the Broadcom 
+software abandoned/ignored the phy->rev = 1 units running on PPC hardware, which seems to be the 
+only combination that shows the problem. I don't know about MIPS hardware, but the problem is not 
+seen on x86 architecture.
 
-On Fri, 2007-04-27 at 15:38 -0500, Larry Finger wrote:
+I look forward to your rewrite of the setup and init routines. Perhaps they will even let my 4311 
+work with mac80211, but I will be very surprised if the PPC machine check problem goes away.
 
-> No, the simple rate algorithm is fine. Once I make the connection, it is =
-changing the rates up and=20
-> down as I would have expected. The main problem was that I never got on, =
-and without communication=20
-> there was no basis on which to adjust the rate.
-
-Hah, I had the same problem and always thought the dhcp server was
-somehow a bit buggy because re-doing dhcp fixed it (it sends a bunch of
-packets and then the rate gets adjusted down). Of course, I don't have
-any problems to associate since my university still runs 40-bit WEP.
-
-johannes
-
---=-9hpItHD/ZjD/ez06bvnr
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGMmI8/ETPhpq3jKURAjA+AJ9qGVGF50qQtGfZT3aq3wlR6MKyHACgiju9
-wd6tcAvg/dHfDipDN92IEtE=
-=YgpK
------END PGP SIGNATURE-----
-
---=-9hpItHD/ZjD/ez06bvnr--
-
+Larry
