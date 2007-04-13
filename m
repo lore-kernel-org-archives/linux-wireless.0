@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4270 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752225AbXDMApZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2007 20:45:25 -0400
-Date: Thu, 12 Apr 2007 20:09:50 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+Received: from mu-out-0910.google.com ([209.85.134.190]:7372 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754046AbXDMPZF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Apr 2007 11:25:05 -0400
+Received: by mu-out-0910.google.com with SMTP id g7so961732muf
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Apr 2007 08:25:04 -0700 (PDT)
+To: Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [PATCH] eeprom_93cx6: do not assume zeroed buffer
+Date: Fri, 13 Apr 2007 17:24:01 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Andrea Merello <andreamrl@tiscali.it>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] bcm43xx-mac80211: Fix machine checks on PPC with rev 1 PHYs
-Message-ID: <20070413000950.GC3470@tuxdriver.com>
-References: <461d0815.ip3FDr8RDQXyCT4U%Larry.Finger@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <461d0815.ip3FDr8RDQXyCT4U%Larry.Finger@lwfinger.net>
+References: <200704131017.22525.flamingice@sourmilk.net>
+In-Reply-To: <200704131017.22525.flamingice@sourmilk.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200704131724.02089.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 11, 2007 at 11:08:53AM -0500, Larry Finger wrote:
-> On PPC architecture with phy->rev == 1, machine checks occur during
-> initialization of the "Extended G PHY registers". This problem was
-> also seen on bcm43xx-softmac, and was fixed by conditionally skipping
-> over certain reads/writes of these registers.  The same solution has been
-> applied here with testing by David Woodhouse.  Note: These modifications
-> are not found in the specifications, but are needed for PPC.
+On Friday 13 April 2007 16:17, Michael Wu wrote:
+> eeprom_93cx6: do not assume zeroed buffer
+> 
+> From: Michael Wu <flamingice@sourmilk.net>
+> 
+> eeprom_93cx6_read_bits assumes u16 *data is already zeroed. This removes
+> that assumption.
 
-I added this patch to the Fedora rawhide kernels, but our Fedora QA
-lead reports that he still has this crash:
+ACK. :)
+This was indeed an issue where I was doubting if the driver should make sure the data
+was set to zero or that the calling driver should be responsible.
 
-	http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=233011
-
-I had diagnosed this to be the same crash as this patch was supposed
-to address.  Was I in error?
-
-He also reports that the problem still occurs on my FC7 test kernels,
-which are very close to the current rawhide kernels but with the most
-recent round of wireless-dev updates added.
-
-	http://people.redhat.com/linville/kernels/fc7/
-
-Any thoughts?
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Ivo
