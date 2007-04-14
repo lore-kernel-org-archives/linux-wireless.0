@@ -1,55 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55345 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031355AbXDZROM (ORCPT
+Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:44204 "EHLO
+	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753624AbXDNSOC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2007 13:14:12 -0400
-Subject: Re: [PATCH 7/9] wext: reduce inline abuse
-From: Johannes Berg <johannes@sipsolutions.net>
-To: jt@hpl.hp.com
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	Sat, 14 Apr 2007 14:14:02 -0400
+Date: Sat, 14 Apr 2007 13:15:15 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <20070426165032.GB22576@bougret.hpl.hp.com>
-References: <20070424180732.371620000@sipsolutions.net>
-	 <20070424180849.651555000@sipsolutions.net>
-	 <20070426165032.GB22576@bougret.hpl.hp.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-y3qfPucXZSNHhXurlwUE"
-Date: Thu, 26 Apr 2007 19:14:05 +0200
-Message-Id: <1177607646.6814.106.camel@johannes.berg>
-Mime-Version: 1.0
+Subject: [PATCH 4/4] mac80211: Remove old names for statistics variables
+Message-ID: <46211a33.JlaK27J9HyTa6JIz%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Patch 4/4: Remove old stats variables from mac80211 structs.
 
---=-y3qfPucXZSNHhXurlwUE
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-On Thu, 2007-04-26 at 09:50 -0700, Jean Tourrilhes wrote:
-
-> 	That's clearly not true of all compilers. All gcc versions
-> before 4.0 need serious help to inline functions used only once. Our
-> current minimal requirement for the kernel is gcc 3.2, therefore this
-> code is still useful.
-> 	Note that this is a legitimate use of inline (tell the
-> compiler to inline the function), not an abuse.
-
-No, the abuse is using inline in the first place because it doesn't
-matter, none of this has an actual reason to be inlined.
-
-johannes
-
---=-y3qfPucXZSNHhXurlwUE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGMN3d/ETPhpq3jKURAlFeAJ0d3nWHI8bXfWWdOFVAii+GAz5dtwCgtj3t
-F2zsmBU7+QilMa474j3nijA=
-=T5HB
------END PGP SIGNATURE-----
-
---=-y3qfPucXZSNHhXurlwUE--
-
+Index: wireless-dev/include/net/mac80211.h
+===================================================================
+--- wireless-dev.orig/include/net/mac80211.h
++++ wireless-dev/include/net/mac80211.h
+@@ -227,8 +227,6 @@ struct ieee80211_rx_status {
+ 	int freq; /* receive frequency in Mhz */
+ 	int channel;
+ 	int phymode;
+-	int ssi;
+-	int signal; /* used as qual in statistics reporting */
+ 	int level;  /* used in statistics reporting */
+ 	int qual; /* used in statistics reporting */
+ 	int noise;
+@@ -544,9 +542,7 @@ struct ieee80211_hw {
+ 	int channel_change_time;
+ 	/* Maximum values for various statistics.
+ 	 * Leave at 0 to indicate no support. Use negative numbers for dBm. */
+-	s8 max_rssi;
+ 	s8 max_level;
+-	s8 max_signal;
+ 	s8 max_qual;
+ 	s8 max_noise;
+ 
+Index: wireless-dev/net/mac80211/ieee80211.c
+===================================================================
+--- wireless-dev.orig/net/mac80211/ieee80211.c
++++ wireless-dev/net/mac80211/ieee80211.c
+@@ -4211,7 +4211,7 @@ void ieee80211_rx_irqsafe(struct ieee802
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 
+-//	BUILD_BUG_ON(sizeof(struct ieee80211_rx_status) > sizeof(skb->cb));
++	BUILD_BUG_ON(sizeof(struct ieee80211_rx_status) > sizeof(skb->cb));
+ 
+ 	skb->dev = local->mdev;
+ 	/* copy status into skb->cb for use by tasklet */
+Index: wireless-dev/net/mac80211/ieee80211_i.h
+===================================================================
+--- wireless-dev.orig/net/mac80211/ieee80211_i.h
++++ wireless-dev/net/mac80211/ieee80211_i.h
+@@ -82,7 +82,6 @@ struct ieee80211_sta_bss {
+ 	int hw_mode;
+ 	int channel;
+ 	int freq;
+-	int rssi, signal;
+ 	int level, qual, noise;
+ 	u8 *wpa_ie;
+ 	size_t wpa_ie_len;
+Index: wireless-dev/net/mac80211/sta_info.h
+===================================================================
+--- wireless-dev.orig/net/mac80211/sta_info.h
++++ wireless-dev/net/mac80211/sta_info.h
+@@ -83,10 +83,8 @@ struct sta_info {
+ 	unsigned long rx_fragments; /* number of received MPDUs */
+ 	unsigned long rx_dropped; /* number of dropped MPDUs from this STA */
+ 
+-	int last_rssi; /* RSSI of last received frame from this STA */
+-	int last_signal; /* signal of last received frame from this STA */
+ 	int last_level; /* level of last received frame from this STA */
+-	int last_qual; /* qual of last received frame from this STA */
++	int last_qual; /* quality value of last received frame from this STA */
+ 	int last_noise; /* noise of last received frame from this STA */
+ 	int last_ack_rssi[3]; /* RSSI of last received ACKs from this STA */
+ 	unsigned long last_ack;
