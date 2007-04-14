@@ -1,37 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:49088 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753515AbXDOTpU (ORCPT
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:39867 "EHLO
+	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753398AbXDNSMM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Apr 2007 15:45:20 -0400
-Message-ID: <46228134.2020300@lwfinger.net>
-Date: Sun, 15 Apr 2007 14:47:00 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: John Linville <linville@tuxdriver.com>,
+	Sat, 14 Apr 2007 14:12:12 -0400
+Date: Sat, 14 Apr 2007 13:13:10 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
 	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] bcm43xx-mac80211: Make wireless statistics yield reasonable  values
-References: <4621a896.akSEX43I3VgRXr70%Larry.Finger@lwfinger.net> <200704150050.48891.flamingice@sourmilk.net>
-In-Reply-To: <200704150050.48891.flamingice@sourmilk.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: [PATCH 1/4] Mac80211: Add new names for statistics variables
+Message-ID: <462119b6.sR44k/X6U4ToSXkJ%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
-> On Sunday 15 April 2007 00:22, Larry Finger wrote:
->> -	hw->max_rssi = -110;
->> -	hw->max_signal = BCM43xx_RX_MAX_SSI;
->> +	hw->max_signal = 100; /* This looks wrong, but is what mac80211 wants */
->> +	hw->max_rssi = BCM43xx_RX_MAX_SSI;
-> The number being passed into ssi is dBm, so why is the max being set to 60? It 
-> should be set to the minimum dBm that the device can report, like -110 as it 
-> was set before. Since SSI is actually being passed into signal, MAX_SSI 
-> should go to max_signal.
+Patch 1/4: Add new names for stats variables to the various structs in mac80211.
 
-You are correct that -110 would be better than -196, which is what 60 translates to given the s8 
-arithmetic. Due to the internal workings of mac80211, the quantity in max_signal ends up as the 
-denominator in the qual report of x/y. I would sooner give the users a percentage that parts per 60.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Larry
+Index: wireless-dev/include/net/mac80211.h
+===================================================================
+--- wireless-dev.orig/include/net/mac80211.h
++++ wireless-dev/include/net/mac80211.h
+@@ -229,6 +229,8 @@ struct ieee80211_rx_status {
+ 	int phymode;
+ 	int ssi;
+ 	int signal; /* used as qual in statistics reporting */
++	int level;  /* used in statistics reporting */
++	int qual; /* used in statistics reporting */
+ 	int noise;
+ 	int antenna;
+ 	int rate;
+@@ -543,7 +545,9 @@ struct ieee80211_hw {
+ 	/* Maximum values for various statistics.
+ 	 * Leave at 0 to indicate no support. Use negative numbers for dBm. */
+ 	s8 max_rssi;
++	s8 max_level;
+ 	s8 max_signal;
++	s8 max_qual;
+ 	s8 max_noise;
+ 
+ 	/* Number of available hardware TX queues for data packets.
+Index: wireless-dev/net/mac80211/sta_info.h
+===================================================================
+--- wireless-dev.orig/net/mac80211/sta_info.h
++++ wireless-dev/net/mac80211/sta_info.h
+@@ -85,6 +85,8 @@ struct sta_info {
+ 
+ 	int last_rssi; /* RSSI of last received frame from this STA */
+ 	int last_signal; /* signal of last received frame from this STA */
++	int last_level; /* level of last received frame from this STA */
++	int last_qual; /* qual of last received frame from this STA */
+ 	int last_noise; /* noise of last received frame from this STA */
+ 	int last_ack_rssi[3]; /* RSSI of last received ACKs from this STA */
+ 	unsigned long last_ack;
+Index: wireless-dev/net/mac80211/ieee80211.c
+===================================================================
+--- wireless-dev.orig/net/mac80211/ieee80211.c
++++ wireless-dev/net/mac80211/ieee80211.c
+@@ -4211,7 +4211,7 @@ void ieee80211_rx_irqsafe(struct ieee802
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 
+-	BUILD_BUG_ON(sizeof(struct ieee80211_rx_status) > sizeof(skb->cb));
++//	BUILD_BUG_ON(sizeof(struct ieee80211_rx_status) > sizeof(skb->cb));
+ 
+ 	skb->dev = local->mdev;
+ 	/* copy status into skb->cb for use by tasklet */
+Index: wireless-dev/net/mac80211/ieee80211_i.h
+===================================================================
+--- wireless-dev.orig/net/mac80211/ieee80211_i.h
++++ wireless-dev/net/mac80211/ieee80211_i.h
+@@ -82,7 +82,8 @@ struct ieee80211_sta_bss {
+ 	int hw_mode;
+ 	int channel;
+ 	int freq;
+-	int rssi, signal, noise;
++	int rssi, signal;
++	int level, qual, noise;
+ 	u8 *wpa_ie;
+ 	size_t wpa_ie_len;
+ 	u8 *rsn_ie;
