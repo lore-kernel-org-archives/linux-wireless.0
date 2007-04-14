@@ -1,65 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:35911 "EHLO
+Received: from smtp.rutgers.edu ([128.6.72.243]:26307 "EHLO
 	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1422995AbXDXS26 (ORCPT
+	with ESMTP id S1752105AbXDNATv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2007 14:28:58 -0400
+	Fri, 13 Apr 2007 20:19:51 -0400
 From: Michael Wu <flamingice@sourmilk.net>
-To: Andy Green <andy@warmcat.com>
-Subject: Re: [PATCH 03/13] mac80211: fix virtual interface related locking
-Date: Tue, 24 Apr 2007 14:24:56 -0400
-Cc: linux-wireless@vger.kernel.org
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <200704231722.07280.flamingice@sourmilk.net> <462E47D0.8030800@warmcat.com>
-In-Reply-To: <462E47D0.8030800@warmcat.com>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: [PATCH] mac80211: remove redundant rssi information in scan results
+Date: Fri, 13 Apr 2007 20:16:54 -0400
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: multipart/signed;
-  boundary="nextPart16586894.RspPzIOW70";
+  boundary="nextPart1997526.Q5WLYMUuz1";
   protocol="application/pgp-signature";
   micalg=pgp-sha1
-Message-Id: <200704241425.01152.flamingice@sourmilk.net>
+Message-Id: <200704132016.59165.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart16586894.RspPzIOW70
+--nextPart1997526.Q5WLYMUuz1
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
 
-On Tuesday 24 April 2007 14:09, Andy Green wrote:
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> [ INFO: possible recursive locking detected ]
-> 2.6.21-rc7 #11
-> ---------------------------------------------
-> ip/2600 is trying to acquire lock:
->   (&dev->_xmit_lock){-+..}, at: [<e09199c5>]
-> ieee80211_set_multicast_list+0x46/0x167 [mac80211]
->
-> but task is already holding lock:
->   (&dev->_xmit_lock){-+..}, at: [<c05abc05>] dev_mc_upload+0x14/0x3c
->
-This is fine, though it would be nice if we can shut the warning off. Virtu=
-al=20
-interfaces can try to take the xmit lock of the master device, but the mast=
-er=20
-device will never try to take the xmit lock of the virtual interfaces and=20
-especially not while holding its own xmit lock.
+mac80211: remove redundant rssi information in scan results
 
-=2DMichael Wu
+=46rom: Michael Wu <flamingice@sourmilk.net>
 
---nextPart16586894.RspPzIOW70
+rssi is already reported in IWEVQUAL. Remove the custom event that also
+reported rssi.
+
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+=2D--
+
+ net/mac80211/ieee80211_sta.c |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 2678b95..1648c76 100644
+=2D-- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -3047,13 +3047,6 @@ ieee80211_sta_scan_result(struct net_device *dev,
+=20
+ 		memset(&iwe, 0, sizeof(iwe));
+ 		iwe.cmd =3D IWEVCUSTOM;
+=2D		sprintf(buf, "rssi=3D%d", bss->rssi);
+=2D		iwe.u.data.length =3D strlen(buf);
+=2D		current_ev =3D iwe_stream_add_point(current_ev, end_buf, &iwe,
+=2D						  buf);
+=2D
+=2D		memset(&iwe, 0, sizeof(iwe));
+=2D		iwe.cmd =3D IWEVCUSTOM;
+ 		sprintf(buf, "capab=3D0x%04x", bss->capability);
+ 		iwe.u.data.length =3D strlen(buf);
+ 		current_ev =3D iwe_stream_add_point(current_ev, end_buf, &iwe,
+
+--nextPart1997526.Q5WLYMUuz1
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBGLkt9T3Oqt9AH4aERAsjVAJwOi2PMD5DYdTrbXasjyCPvvSit5QCgx4/d
-iJc6TOkMLiNKykyqDDRtNiE=
-=2A/y
+iD8DBQBGIB17T3Oqt9AH4aERAi2NAJsHYImRSbzDQpHy3bKzQMvI0gGySwCdFl4h
+UIKkQOew4mhij6zkxP0XvbI=
+=bwlV
 -----END PGP SIGNATURE-----
 
---nextPart16586894.RspPzIOW70--
+--nextPart1997526.Q5WLYMUuz1--
 -: 
 To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 the body of a message to majordomo@vger.kernel.org: 
