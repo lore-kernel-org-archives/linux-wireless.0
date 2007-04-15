@@ -1,85 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cvs.openbsd.org ([199.185.137.3]:36506 "EHLO cvs.openbsd.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751566AbXDDVwc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Apr 2007 17:52:32 -0400
-Message-Id: <200704042139.l34LdX54017048@cvs.openbsd.org>
-To: Michael Buesch <mb@bu3sch.de>
-cc: Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Joseph Jezak <josejx@gentoo.org>,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
-In-reply-to: Your message of "Wed, 04 Apr 2007 22:08:13 +0200."
-             <200704041945.21447.mb@bu3sch.de>
-Date: Wed, 04 Apr 2007 15:39:33 -0600
-From: Theo de Raadt <deraadt@cvs.openbsd.org>
+Received: from deine-taler.de ([217.160.107.63]:56261 "EHLO
+	p15091797.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752808AbXDOJZ3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Apr 2007 05:25:29 -0400
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ulrich Kunitz <kune@deine-taler.de>
+Subject: [PATCH] mac80211: add ieee80211_wake_queues()
+Date: Sun, 15 Apr 2007 11:25:28 +0200
+Message-Id: <11766291282625-git-send-email-kune@deine-taler.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> We're not out for blood, just for a fair resolution.
-> We'd like you to start contacting us to resolve the issue now.
-> 
-> Have a nice day.
+For zd1211rw I need the possibility to wake the tx queues in the
+mac80211 stack. Though the mac80211 stack provides the function
+ieee80211_stop_queues() there is no function
+ieee80211_wake_queues(). This patch adds ieee80211_wake_queues().
 
-Wow, that's a hell of a long cc list for a request for a fair
-resolution.  the last 3 lines are mellow, but the body before that was
-not very nice.
+The patch includes also a tiny simplification of
+ieee80211_stop_queues().
 
-> We have always made and still make a great effort to keep our code clean
-> of any Copyright issues (cleanroom design). Please make sure you also do.
+Signed-off-by: Ulrich Kunitz <kune@deine-taler.de>
+---
+ include/net/mac80211.h   |    8 ++++++++
+ net/mac80211/ieee80211.c |   12 ++++++++++--
+ 2 files changed, 18 insertions(+), 2 deletions(-)
 
-We always try to make our stuff as clean as possible too.  In fact, I
-think no other code base out there is as clear of violations as ours.
-This is a major problem in our code base.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index eb785c9..a0ac4a8 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1019,6 +1019,14 @@ void ieee80211_start_queues(struct ieee80211_hw *hw);
+ void ieee80211_stop_queues(struct ieee80211_hw *hw);
+ 
+ /**
++ * ieee80211_wake_queues - wake all queues
++ * @hw: pointer as obtained from ieee80211_alloc_hw().
++ *
++ * Drivers should use this function instead of netif_wake_queue.
++ */
++void ieee80211_wake_queues(struct ieee80211_hw *hw);
++
++/**
+  * ieee80211_get_mc_list_item - iteration over items in multicast list
+  * @hw: pointer as obtained from ieee80211_alloc_hw().
+  * @prev: value returned by previous call to ieee80211_get_mc_list_item() or
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index b5a62b7..34b7837 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -5048,14 +5048,22 @@ EXPORT_SYMBOL(ieee80211_start_queues);
+ 
+ void ieee80211_stop_queues(struct ieee80211_hw *hw)
+ {
+-	struct ieee80211_local *local = hw_to_local(hw);
+ 	int i;
+ 
+-	for (i = 0; i < local->hw.queues; i++)
++	for (i = 0; i < hw->queues; i++)
+ 		ieee80211_stop_queue(hw, i);
+ }
+ EXPORT_SYMBOL(ieee80211_stop_queues);
+ 
++void ieee80211_wake_queues(struct ieee80211_hw *hw)
++{
++	int i;
++
++	for (i = 0; i < hw->queues; i++)
++		ieee80211_wake_queue(hw, i);
++}
++EXPORT_SYMBOL(ieee80211_wake_queues);
++
+ struct net_device_stats *ieee80211_dev_stats(struct net_device *dev)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+-- 
+1.5.1.1
 
-Yes, this driver has other problems though.  To begin with, it does
-not even run yet, in any sense.  Since it is not actual using code,
-there will be those who argue that the full impact of the GPL does not
-come to bear yet -- noone is "using" the code yet.  But beyond that,
-these types of problem should not exist in our tree.  It will be
-resolved.
-
-But I don't know which way Marcus will do that.  Maybe he'll just
-delete the driver and quit even trying, because you chose to cc so
-many people, and malign him.  Maybe he'll simply replace every single
-line that looks similar, and then he could rightly not even mention
-any of the efforts of people like you.  Or he'll could be nicer.
-Maybe he will take your rather strong worded mail to a couple hundred
-people in a cool way.  I don't know.  It will be choices he has to
-make.
-
-It will be resolved in our tree, but it is up to him which way he does
-it.  But when you approach issues like this with comments like "We'd
-like you to start contacting us to resolve the issue now" and your
-first mail is cc'd to a couple hundred people.... in the future,
-please think more carefully, ok?
-
-Because right now, in that mail, you've pretty much done Broadcom's
-job for them.  You've told the entire BSD community who may want to
-use a driver for this chip later, that because of a few GPL issues you
-are willing to use very strong words -- published very widely -- to
-disrupt the efforts of one guy who is trying to do things for them.
-And, you are going to do this using the GPL, even.  You did not
-privately mail that developer.  No, you basically went public with it.
-
-That is how about half the user and developer community will see it.
-They will see your widely posted mail as an overly strong position.
-
-And you have probably royally pissed of a developer working in
-parallel in the same problem space as youself.  Would you be happy to
-receive a mail like you just sent?  No, you would be really disturbed,
-to your soul.
-
-So next time, talk to the specific people, so you don't come off
-as being mean, ok?
