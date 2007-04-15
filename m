@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54796 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965480AbXDLI32 (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:18713 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750833AbXDOEx6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2007 04:29:28 -0400
-Subject: [PATCH] mac80211: kill useless scan printks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jiri Benc <jbenc@suse.cz>
-Content-Type: text/plain
-Date: Thu, 12 Apr 2007 02:56:39 +0200
-Message-Id: <1176339399.3579.8.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 15 Apr 2007 00:53:58 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] bcm43xx-mac80211: Make wireless statistics yield reasonable values
+Date: Sun, 15 Apr 2007 00:50:43 -0400
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+References: <4621a896.akSEX43I3VgRXr70%Larry.Finger@lwfinger.net>
+In-Reply-To: <4621a896.akSEX43I3VgRXr70%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1206522.aBPQvGtOq6";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704150050.48891.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the "starting scan" and "scan completed"
-messages that mac80211 prints all the time.
+--nextPart1206522.aBPQvGtOq6
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+On Sunday 15 April 2007 00:22, Larry Finger wrote:
+> -	hw->max_rssi =3D -110;
+> -	hw->max_signal =3D BCM43xx_RX_MAX_SSI;
+> +	hw->max_signal =3D 100; /* This looks wrong, but is what mac80211 wants=
+ */
+> +	hw->max_rssi =3D BCM43xx_RX_MAX_SSI;
+The number being passed into ssi is dBm, so why is the max being set to 60?=
+ It=20
+should be set to the minimum dBm that the device can report, like -110 as i=
+t=20
+was set before. Since SSI is actually being passed into signal, MAX_SSI=20
+should go to max_signal.
 
----
-We should probably remove more but I find these most annoying. You ought
-to know when you start a scan, and you get an iwevent when it
-finishes...
+=2DMichael Wu
 
- net/mac80211/ieee80211_sta.c |    3 ---
- 1 file changed, 3 deletions(-)
+--nextPart1206522.aBPQvGtOq6
+Content-Type: application/pgp-signature
 
---- wireless-dev.orig/net/mac80211/ieee80211_sta.c	2007-04-11 18:00:23.469481358 +0200
-+++ wireless-dev/net/mac80211/ieee80211_sta.c	2007-04-11 18:02:02.829481358 +0200
-@@ -2558,7 +2558,6 @@ void ieee80211_scan_completed(struct iee
- 	struct ieee80211_sub_if_data *sdata;
- 	union iwreq_data wrqu;
- 
--	printk(KERN_DEBUG "%s: scan completed\n", dev->name);
- 	local->last_scan_completed = jiffies;
- 	wmb();
- 	local->sta_scanning = 0;
-@@ -2703,8 +2702,6 @@ static int ieee80211_sta_start_scan(stru
- 		return -EBUSY;
- 	}
- 
--	printk(KERN_DEBUG "%s: starting scan\n", dev->name);
--
- 	if (local->ops->hw_scan) {
- 		int rc = local->ops->hw_scan(local_to_hw(local),
- 					    ssid, ssid_len);
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
+iD8DBQBGIa8oT3Oqt9AH4aERAg8UAKC/JKKruQZ5W5t3fccvVfP/zqDszQCgr2vS
+S9+YSCy01tnV2GotgaSBbsw=
+=Qqj3
+-----END PGP SIGNATURE-----
 
+--nextPart1206522.aBPQvGtOq6--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
