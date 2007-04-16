@@ -1,56 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48390 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752573AbXDUUVI (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:38904 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754112AbXDPARf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2007 16:21:08 -0400
-Subject: Re: mac80211-7.0.4 ieee80211_ptr trouble
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dick <dm@chello.nl>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1177186573.13434.5.camel@localhost>
-References: <1177144052.9892.8.camel@localhost>
-	 <20070421185622.GA7019@tuxdriver.com>
-	 <1177185254.5941.30.camel@johannes.berg>
-	 <1177186573.13434.5.camel@localhost>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wnyU94dSee6aCQiJ5lw8"
-Date: Sat, 21 Apr 2007 22:23:51 +0200
-Message-Id: <1177187031.5941.34.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 15 Apr 2007 20:17:35 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: [PATCH] mac80211: remove ieee80211_netif_oper from mac80211.h
+Date: Sun, 15 Apr 2007 20:14:24 -0400
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1286675.NvqlDIlJQ0";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704152014.29691.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-wnyU94dSee6aCQiJ5lw8
-Content-Type: text/plain
+--nextPart1286675.NvqlDIlJQ0
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Never ever remove a mailing list from the CC unless you have good
-reasons to and or the stuff you're discussing is actually private.
+mac80211: remove ieee80211_netif_oper from mac80211.h
 
+=46rom: Michael Wu <flamingice@sourmilk.net>
 
-> Thank you for your reactions, I can't find a header file where
-> ieee80211_ptr is defined. So I figured it might be renamed or removed by
-> Gentoo or linux-2.6.20.
-> Either way this should be fixed in the compat version. I hope someone
-> can point me in the right direction ;)
+rt2x00 was the last user of ieee80211_netif_oper outside of mac80211.
+ieee80211_netif_oper can now be removed from mac80211.h
 
-No, you misunderstood me. The compat package includes a header file that
-does these defines, but apparently you're missing it.
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+=2D--
 
-johannes
+ include/net/mac80211.h     |   11 -----------
+ net/mac80211/ieee80211.c   |    1 -
+ net/mac80211/ieee80211_i.h |    6 ++++++
+ 3 files changed, 6 insertions(+), 12 deletions(-)
 
---=-wnyU94dSee6aCQiJ5lw8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2ec1d04..0c7e088 100644
+=2D-- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -975,17 +975,6 @@ int ieee80211_get_hdrlen_from_skb(const struct sk_buff=
+ *skb);
+ /* Like ieee80211_get_hdrlen_from_skb() but takes a FC in CPU order. */
+ int ieee80211_get_hdrlen(u16 fc);
+=20
+=2D/* Function for net interface operation. IEEE 802.11 may use multiple ke=
+rnel
+=2D * netdevices for each hardware device. The low-level driver does not "s=
+ee"
+=2D * these interfaces, so it should use this function to perform netif
+=2D * operations on all interface. */
+=2D/* This function is deprecated. */
+=2Dtypedef enum {
+=2D	NETIF_ATTACH, NETIF_DETACH, NETIF_START, NETIF_STOP, NETIF_WAKE,
+=2D	NETIF_IS_STOPPED, NETIF_UPDATE_TX_START
+=2D} Netif_Oper;
+=2Dint ieee80211_netif_oper(struct ieee80211_hw *hw, Netif_Oper op);
+=2D
+ /**
+  * ieee80211_wake_queue - wake specific queue
+  * @hw: pointer as obtained from ieee80211_alloc_hw().
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 439246a..fae3666 100644
+=2D-- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -5069,7 +5069,6 @@ int ieee80211_netif_oper(struct ieee80211_hw *hw, Net=
+if_Oper op)
+=20
+ 	return 0;
+ }
+=2DEXPORT_SYMBOL(ieee80211_netif_oper);
+=20
+ void ieee80211_wake_queue(struct ieee80211_hw *hw, int queue)
+ {
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 3205bfe..2bf26cf 100644
+=2D-- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -761,6 +761,12 @@ void ieee80211_if_mgmt_setup(struct net_device *dev);
+ int ieee80211_init_rate_ctrl_alg(struct ieee80211_local *local,
+ 				 const char *name);
+ struct net_device_stats *ieee80211_dev_stats(struct net_device *dev);
++/* This function is deprecated. */
++typedef enum {
++	NETIF_ATTACH, NETIF_DETACH, NETIF_START, NETIF_STOP, NETIF_WAKE,
++	NETIF_IS_STOPPED, NETIF_UPDATE_TX_START
++} Netif_Oper;
++int ieee80211_netif_oper(struct ieee80211_hw *hw, Netif_Oper op);
+=20
+ /* ieee80211_ioctl.c */
+ int ieee80211_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
+
+--nextPart1286675.NvqlDIlJQ0
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBGKnLX/ETPhpq3jKURAtT4AJ46uaqIg+UfC2zCMv/FCAhTNYlKbwCgi74u
-lIJzIefv+kw1ywjDGTC+cLw=
-=NJHN
+iD8DBQBGIr/lT3Oqt9AH4aERAvl2AJ0a+klgvDUzEJbVBveirDHPdOSVFgCfSUZR
+vXrq3/wC3js5lkqFS0PUixI=
+=cME4
 -----END PGP SIGNATURE-----
 
---=-wnyU94dSee6aCQiJ5lw8--
-
+--nextPart1286675.NvqlDIlJQ0--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
