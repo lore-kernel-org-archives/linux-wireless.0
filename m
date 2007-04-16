@@ -1,141 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:45286 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:45136 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755913AbXD0OZo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2007 10:25:44 -0400
-Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
-From: Dan Williams <dcbw@redhat.com>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: James Ketrenos <jketreno@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-In-Reply-To: <200704262023.52833.flamingice@sourmilk.net>
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-	 <200704251634.16604.flamingice@sourmilk.net>
-	 <46312067.9090005@linux.intel.com>
-	 <200704262023.52833.flamingice@sourmilk.net>
-Content-Type: text/plain
-Date: Fri, 27 Apr 2007 10:28:52 -0400
-Message-Id: <1177684132.21025.36.camel@localhost.localdomain>
-Mime-Version: 1.0
+	id S1753209AbXDPSF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2007 14:05:26 -0400
+From: Andreas Schwab <schwab@suse.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH] ieee80211-crypt: Make some TKIP and CCMP error logging conditional on IEEE80211_DEBUG_DROP
+References: <461a68c9.Nx0/XQSxDR1PJhM4%Larry.Finger@lwfinger.net>
+Date: Mon, 16 Apr 2007 20:05:10 +0200
+In-Reply-To: <461a68c9.Nx0/XQSxDR1PJhM4%Larry.Finger@lwfinger.net> (Larry
+	Finger's message of "Mon, 09 Apr 2007 11:24:41 -0500")
+Message-ID: <jeirbwfb55.fsf@sykes.suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-04-26 at 20:23 -0400, Michael Wu wrote: 
-> On Thursday 26 April 2007 17:57, James Ketrenos wrote:
-> > With a penalty to battery life and an increase in the amount of time a scan
-> > takes.  There are improvements that can be made to make the software
-> > scanning faster, but at a penalty of added complexity on both the driver
-> > and the stack side -- for no *real* gain for users that have cards that can
-> > offload the scan.
-> >
-> Sure there is. Smaller firmware means firmware that's less likely to 
-> malfunction, which seems to be an issue. I don't see what you're saying about 
-> added complexity on the driver side. Eliminating the hw_scan callback reduces 
-> driver complexity. The increase in complexity on the stack side is offset by 
-> the fact that no driver/firmware/hardware needs to implement their own clever 
-> scanning algorithm.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-If it's done right, it doesn't increase stack/driver complexity at all.
-Obviously not everything can/should be done in software on the host CPU.
-We all disliked Intel's binary regulatory daemon, and now that it's back
-in firmware we're all happy.  That's reality.
+> There are messages arising from ieee80211_crypt that spam the logs of
+> casual users. These are changed to be logged only if the user specifi=
+cally
+> requests the IEEE80211_DEBUG_DROP messages. In either case, the error=
+/drop count
+> is incremented.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>
+> Index: wireless-2.6/net/ieee80211/ieee80211_crypt_tkip.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- wireless-2.6.orig/net/ieee80211/ieee80211_crypt_tkip.c
+> +++ wireless-2.6/net/ieee80211/ieee80211_crypt_tkip.c
+> @@ -465,7 +465,7 @@ static int ieee80211_tkip_decrypt(struct
+> =20
+>  	if (tkip_replay_check(iv32, iv16, tkey->rx_iv32, tkey->rx_iv16)) {
+>  		if (net_ratelimit()) {
+> -			printk(KERN_DEBUG "TKIP: replay detected: STA=3D" MAC_FMT
+> +			IEEE80211_DEBUG_DROP("TKIP: replay detected: STA=3D" MAC_FMT
+>  			       " previous TSC %08x%04x received TSC "
+>  			       "%08x%04x\n", MAC_ARG(hdr->addr2),
+>  			       tkey->rx_iv32, tkey->rx_iv16, iv32, iv16);
+> @@ -507,7 +507,7 @@ static int ieee80211_tkip_decrypt(struct
+>  			tkey->rx_phase1_done =3D 0;
+>  		}
+>  		if (net_ratelimit()) {
+> -			printk(KERN_DEBUG "TKIP: ICV error detected: STA=3D"
+> +			IEEE80211_DEBUG_DROP("TKIP: ICV error detected: STA=3D"
+>  			       MAC_FMT "\n", MAC_ARG(hdr->addr2));
+>  		}
+>  		tkey->dot11RSNAStatsTKIPICVErrors++;
+> Index: wireless-2.6/net/ieee80211/ieee80211_crypt_ccmp.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- wireless-2.6.orig/net/ieee80211/ieee80211_crypt_ccmp.c
+> +++ wireless-2.6/net/ieee80211/ieee80211_crypt_ccmp.c
+> @@ -338,7 +338,7 @@ static int ieee80211_ccmp_decrypt(struct
+> =20
+>  	if (ccmp_replay_check(pn, key->rx_pn)) {
+>  		if (net_ratelimit()) {
+> -			printk(KERN_DEBUG "CCMP: replay detected: STA=3D" MAC_FMT
+> +			IEEE80211_DEBUG_DROP("CCMP: replay detected: STA=3D" MAC_FMT
+>  			       " previous PN %02x%02x%02x%02x%02x%02x "
+>  			       "received PN %02x%02x%02x%02x%02x%02x\n",
+>  			       MAC_ARG(hdr->addr2), MAC_ARG(key->rx_pn),
+>
+>
 
-We shouldn't be ignoring discrete hardware functionality just because
-it's in the firmware and also may be in the stack.  Hardware crypto like
-somebody mentioned.  TCP offload.  etc.  Not allowing a driver writer to
-take advantage of hardware functionality is quite short-sighted.  Having
-a pure host-CPU software stack is not utopia; it's entirely unrealistic
-for a variety of reasons, some of which are below [1].
+This is causing an undefined refrence to ieee80211_debug_level with
+CONFIG_IEEE80211_DEBUG=3Dy and CONFIG_IEEE80211_CRYPT_CCMP=3Dm and/or
+CONFIG_IEEE80211_CRYPT_TKIP=3Dm.
 
-Obviously somebody needs to figure out why software scan is so slow.
-Scan time matters; it should be as fast as possible without sacrificing
-correctness or regulatory safety.  But that doesn't mean dismissing
-hardware scan just because it can also be done in the stack.
+WARNING: "ieee80211_debug_level" [net/ieee80211/ieee80211_crypt_tkip.ko=
+] undefined!
+WARNING: "ieee80211_debug_level" [net/ieee80211/ieee80211_crypt_ccmp.ko=
+] undefined!
 
-Let's be clear.  Is mac80211 (a) _the_ Linux wireless stack that
-non-fullmac vendors should target so Linux has a consistent wireless
-story?  Or is it (b) a pure software stack for only thin parts like
-Atheros and everyone who doesn't have hardware exactly like Atheros can
-just go away and play somewhere else?  If it's (a), then we shouldn't be
-saying no to James.  If it's (b), then why aren't we doing (a) instead?
+Andreas.
 
-Dan
-
-1) power-critical situations like embedded devices where some pieces
-must be offloaded to the wireless part
-
-2) lower-speed devices that may not have cycles to burn on functions
-that the hardware can also do, even if most of the stack is software
-
-3) timing critical functions
-
-4) hybrid parts that are mostly softmac (ipw2100, ipw2200)
-
-5) we don't make hardware
-
-> > > the use of the hw_scan callback breaks the AP autoconfiguration code
-> > > in ieee80211_sta.c due to its inadequate design.
-> >
-> > Is it breaking it just due to the auto-configuration code not knowing when
-> > to configure things?
-> >
-> Yes, because ..
-> 
-> > > Calling hw_scan starts a
-> > > hardware scan, but there is no way to know when the scan is completed.
-> >
-> > That needs to be improved.
-> >
-> This is exactly the issue.
-> 
-> > > Even if that problem were addressed, I still wouldn't like it as the
-> > > design of the hw_scan callback is deficient in a number of other ways and
-> > > is completely inapplicable to all other hardware/firmware softmac designs
-> > > that I know.
-> >
-> > Given that there are things we can do as a result of the hw_scan that we
-> > can't do on the host without imposing greater system load and slower scan
-> > results, I really don't want to lose the ability to support hardware
-> > offloading of scanning.
-> >
-> How fast is hardware scanning? What part of software scanning is slowing 
-> things down? What's the big bottleneck that justifies moving this to 
-> hardware? Are you sure it cannot be eliminated? Why haven't any other vendors 
-> chosen to offload scanning like this?
-> 
-> > Could you voice some of the "other ways" the current hw_scan callback is
-> > deficient?
-> >
-> Sure. In addition to not being able to find out when the scan is completed..
-> 
-> - There is no way to specify what channels to scan.
-> - There is no way to specify a passive scan.
-> - The probe frame that is used is fixed with the exception of the SSID.
-> - There is no corresponding interface for the userspace MLME.
-> 
-> This isn't very important, however. I am more interested in what problems in 
-> software scanning need to be solved by moving to hardware scanning.
-> 
-> > I'm fine with us overhauling how hw_scan works and integrates with the
-> > stack, but an all out ban on hardware scan offload just doesn't make sense.
-> >  The host can do all RC4 and AES encrypt/decrypt too but certainly we would
-> > prefer the hardware to do that for us, right?
-> >
-> The host can do TCP/IP too but certainly we would prefer the hardware to do 
-> that for us, right?
-> 
-> Well, referring to TOE is unfair, but it makes the point that only some things 
-> make sense in hardware. Softmac is the result of removing the things that 
-> don't.
-> 
-> > In the short term, I would rather we leave hw_scan in the code and have the
-> > users that currently rely on hw_scan just have to manually configure the AP
-> > selection until such time as the in-kernel-AP-selection-policy code works
-> > with hw offloaded scan.
-> >
-> What incentive does that give to fix the code? Leaving broken things in for 
-> the sake of out-of-tree drivers does not appeal to me.
-> 
-> -Michael Wu
-
+--=20
+Andreas Schwab, SuSE Labs, schwab@suse.de
+SuSE Linux Products GmbH, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
+PGP key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4=
+ED5
+"And now for something completely different."
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
