@@ -1,36 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:44461 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755995AbXD0PaH (ORCPT
+Received: from honk1.physik.uni-konstanz.de ([134.34.140.224]:50077 "EHLO
+	honk1.physik.uni-konstanz.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751131AbXDPJB6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2007 11:30:07 -0400
-Message-ID: <463216FA.6000206@warmcat.com>
-Date: Fri, 27 Apr 2007 16:30:02 +0100
-From: Andy Green <andy@warmcat.com>
+	Mon, 16 Apr 2007 05:01:58 -0400
+Date: Mon, 16 Apr 2007 10:29:12 +0200
+From: Guido Guenther <agx@sigxcpu.org>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [at76_usb] kernel panic in update_wstats()
+Message-ID: <20070416082912.GA19004@bogon.ms20.nix>
+References: <20070415205619.6747d9ed@localhost>
 MIME-Version: 1.0
-To: Jiri Benc <jbenc@suse.cz>
-CC: Dan Williams <dcbw@redhat.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	James Ketrenos <jketreno@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>	<200704251634.16604.flamingice@sourmilk.net>	<46312067.9090005@linux.intel.com>	<200704262023.52833.flamingice@sourmilk.net>	<1177684132.21025.36.camel@localhost.localdomain>	<20070427164208.25434f11@griffin.suse.cz>	<1177685793.21025.52.camel@localhost.localdomain> <20070427172004.32b7bf4a@griffin.suse.cz>
-In-Reply-To: <20070427172004.32b7bf4a@griffin.suse.cz>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070415205619.6747d9ed@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Benc wrote:
+On Sun, Apr 15, 2007 at 08:56:19PM +0200, Stefano Brivio wrote:
+> I'm using the at76c503a driver (0.14beta1, but it looks almost identical
+> to a76c503a git) on Linux 2.6.18.
+Are you sure you're running a version that has this fix from git:
+4b50804c047272075f07edb5b62d857e3200d6a0
 
-> fixes the problem. Now, let's find something that fixes the problem as
-> well but doesn't remove the functionality. James already proposed a
-> solution that could work if a support for user space MLME is added. Do
-> you have an idea how to add it?
+If you already have this fix, please try to comment out the different
+at76_calc_* functions to see which one causes the problem.
+Cheers,
+ -- Guido
 
-Jiri, what functionality?  The ability to change frequency periodically?
-  Isn't that something mac80211 can do already?
-
-What is the special sauce that just HAS to be in vendor firmware here?
-
--Andy
