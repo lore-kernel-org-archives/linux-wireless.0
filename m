@@ -1,73 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44964 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767338AbXDEVhx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 17:37:53 -0400
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Theo de Raadt <deraadt@cvs.openbsd.org>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Pavel Roskin <proski@gnu.org>, Michael Buesch <mb@bu3sch.de>,
-	Joseph Jezak <josejx@gentoo.org>,
-	Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-In-Reply-To: <200704052125.l35LPuXB019703@cvs.openbsd.org>
-References: <200704052125.l35LPuXB019703@cvs.openbsd.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-b58FUQUYslrXPA/Kdj1e"
-Date: Thu, 05 Apr 2007 23:36:27 +0200
-Message-Id: <1175808987.3489.18.camel@johannes.berg>
+Received: from mfe1.polimi.it ([131.175.12.23]:42026 "EHLO polimi.it"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753994AbXDPW7E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2007 18:59:04 -0400
+Date: Tue, 17 Apr 2007 00:58:27 +0200
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Guido Guenther <agx@sigxcpu.org>
+Cc: Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	at76c503a-develop@lists.berlios.de
+Subject: Re: [at76_usb] kernel panic in update_wstats()
+Message-ID: <20070417005827.6f74945a@localhost>
+In-Reply-To: <20070416082912.GA19004@bogon.ms20.nix>
+References: <20070415205619.6747d9ed@localhost>
+	<20070416082912.GA19004@bogon.ms20.nix>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 16 Apr 2007 10:29:12 +0200
+Guido Guenther <agx@sigxcpu.org> wrote:
 
---=-b58FUQUYslrXPA/Kdj1e
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Sun, Apr 15, 2007 at 08:56:19PM +0200, Stefano Brivio wrote:
+> > I'm using the at76c503a driver (0.14beta1, but it looks almost identical
+> > to a76c503a git) on Linux 2.6.18.
+> Are you sure you're running a version that has this fix from git:
+> 4b50804c047272075f07edb5b62d857e3200d6a0
 
-On Thu, 2007-04-05 at 15:25 -0600, Theo de Raadt wrote:
+I missed it, it works now. Thanks Pavel and sorry for the noise. BTW,
+stats are still bogus (link, signal, noise level == 0). But I don't think
+it makes sense to debug this now, as you will probably have to deal with
+mac80211 soon.
 
-> Cooperation is not built on that.  Maybe you specifically don't care
-> about cooperation, but I am sure there are others who do.  So perhaps
-> watch your words.
+I had to make a little patch in order to build the driver on a kernel
+version < 2.6.20. I don't think you want to merge this, as you are working
+for inclusion into mainline, but in case, here it is:
 
-How you can *possibly* expect cooperation from a group of people who
- * just discovered that somebody has taken large parts of their code
- * removed their attribution
- * relicensed them under a much more permissive license
- * /then/ claims that it was "an honest mistake"
- * also claims that the license (GPL in this case) isn't relevant
-   because the code doesn't "run" (hint: GPL covers redistribution too,
-   no matter if the code runs or not)
+Signed-off-by: Stefano Brivio <stefano.brivio@polimi.it>
+---
+diff --git a/at76_usb.c b/at76_usb.c
+index e39e31e..159901b 100644
+--- a/at76_usb.c
++++ b/at76_usb.c
+@@ -35,6 +35,7 @@
+ #include <net/iw_handler.h>
+ #include <linux/firmware.h>
+ #include <linux/leds.h>
++#include <linux/version.h>
+ 
+ #include "at76_usb.h"
+ #include "at76_usb_ids.h"
+@@ -5961,7 +5962,12 @@ static struct at76_priv *alloc_new_device(struct usb_device *udev,
+ 	dev->netdev = netdev;
+ 
+ 	init_MUTEX(&dev->sem);
++
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20)
++	INIT_WORK(&dev->devent_queue, at76_devent, (void *)&dev->devent_queue);
++#else
+ 	INIT_WORK(&dev->devent_queue, at76_devent);
++#endif
+ 
+ 	dev->open_count = 0;
+ 
 
-is totally beyond me.
 
-Yet Michael offered it.
-
-johannes
-
---=-b58FUQUYslrXPA/Kdj1e
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGFWvb/ETPhpq3jKURAvNsAKCCDQW8SyFOGCMlINLInmb/6RbsRQCglBOl
-Cmat9FG8VdxqQgdnhyY/93w=
-=QDCO
------END PGP SIGNATURE-----
-
---=-b58FUQUYslrXPA/Kdj1e--
-
+--
+Ciao
+Stefano
