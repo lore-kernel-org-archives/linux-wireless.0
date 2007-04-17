@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41297
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767229AbXDETJv (ORCPT
+Received: from dhost002-89.dex002.intermedia.net ([64.78.20.227]:5945 "EHLO
+	dhost002-89.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1031099AbXDQPzu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 15:09:51 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Theo de Raadt <deraadt@cvs.openbsd.org>
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues
-Date: Thu, 5 Apr 2007 21:09:00 +0200
-Cc: Joseph Jezak <josejx@gentoo.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-References: <200704051848.l35ImrcP028396@cvs.openbsd.org>
-In-Reply-To: <200704051848.l35ImrcP028396@cvs.openbsd.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200704052109.00797.mb@bu3sch.de>
+	Tue, 17 Apr 2007 11:55:50 -0400
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Tue, 17 Apr 2007 08:41:46 -0700
+To: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Michael Buesch <mb@bu3sch.de>, Andreas Schwab <schwab@suse.de>,
+	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] ieee80211-crypt: Make some TKIP and CCMP error loggingconditional on IEEE80211_DEBUG_DROP
+Message-ID: <20070417154146.GA22909@devicescape.com>
+References: <461a68c9.Nx0/XQSxDR1PJhM4%Larry.Finger@lwfinger.net> <jeirbwfb55.fsf@sykes.suse.de> <4623C561.4030201@lwfinger.net> <200704162237.01280.mb@bu3sch.de> <462413AE.9020200@lwfinger.net> <20070417131222.GA8633@tuxdriver.com> <1176819909.26202.33.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1176819909.26202.33.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I won't reply to your mail anymore, as you are not interrested
-in a real solution to this. Instead you write things like that:
+On Tue, Apr 17, 2007 at 10:25:08AM -0400, Dan Williams wrote:
 
-On Thursday 05 April 2007 20:48, Theo de Raadt wrote:
-> You are a very poor example of humankind.
+> What's the rationale for mac80211 _not_ using _GPL exports? I thought
+> most new exports were pretty much required to be _GPL (otherwise
+> somebody would NAK it) unless it was really, really necessary that they
+> weren't.
 
-Which has absolutely nothing to do with the issue of
-copyright and GPL violation.
+Where is this kind of "requirement" documented? I was under the
+impression that in general, the authors could decide how the symbols
+gets exported as far as using _GPL or not is concerned.
 
-I could say similiar things to you, but I don't.
-I wrote the initial mail to get the issue resolved, but
-not insult you.
-
-Yet, you think it's my turn to be "human" and so on.
-But why did _you_ not be human and asked before using
-our stuff? Ah, I know, it was a mistake...
-At least in your opinion.
+My personal view on this _GPL in exports is that it is just unnecessary
+extra complexity in the implementation and there should not be any place
+for license enforcement in the kernel implementation; this is better
+left for the license text and things completely outside the source code.
+As such, I have a preference of not seeing _GPL added to code that is
+derived from anything I've written.
 
 -- 
-Greetings Michael.
+Jouni Malinen                                            PGP id EFC895FA
