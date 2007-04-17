@@ -1,102 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33736 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423042AbXDZJkj (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49596
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932386AbXDQUmL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2007 05:40:39 -0400
-Message-Id: <20070424180848.394200000@sipsolutions.net>
-References: <20070424180732.371620000@sipsolutions.net>
-Date: Tue, 24 Apr 2007 20:07:36 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	jt@hpl.hp.com
-Subject: [PATCH 4/9] wext: remove options
-Mime-Version: 1.0
+	Tue, 17 Apr 2007 16:42:11 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "Jouni Malinen" <jkm@devicescape.com>
+Subject: Re: [PATCH] ieee80211-crypt: Make some TKIP and CCMP error loggingconditional on IEEE80211_DEBUG_DROP
+Date: Tue, 17 Apr 2007 22:40:43 +0200
+Cc: Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Andreas Schwab <schwab@suse.de>,
+	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de
+References: <461a68c9.Nx0/XQSxDR1PJhM4%Larry.Finger@lwfinger.net> <1176819909.26202.33.camel@localhost.localdomain> <20070417154146.GA22909@devicescape.com>
+In-Reply-To: <20070417154146.GA22909@devicescape.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200704172240.43792.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch kills the two options in wext that are required to be enabled
-anyway because they influence the userspace API.
+On Tuesday 17 April 2007 17:41, Jouni Malinen wrote:
+> My personal view on this _GPL in exports is that it is just unnecessary
+> extra complexity in the implementation and there should not be any place
+> for license enforcement in the kernel implementation; this is better
+> left for the license text and things completely outside the source code.
+> As such, I have a preference of not seeing _GPL added to code that is
+> derived from anything I've written.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+I clearly second that opinion and I thought we (the main people working
+on wireless) had decided to _not_ use GPL syms in mac80211 (was d80211).
+In my opinion license policy should not be represented in sourcecode.
+Source is source, license is license. That are two absolutely seperate
+things to me. For example, if I want to relicense some code (as
+a copyright holder), I clearly don't want to change sourcecode for this.
+In fact, I think the GPL suffix is pretty much useless, legal wise.
+And everybody knows that the kernel is GPLed. So _every_ single symbol
+is actually a _GPL() symbol. the _GPL() annotation is just redundant
+and bloats code.
 
----
- net/wireless/wext.c |   15 ---------------
- 1 file changed, 15 deletions(-)
+Using kernel syms from a non-GPL compatible module is always walking
+a borderline. Be it for _GPL() or normal syms; Exactly the same issue
+for both.
 
---- net-2.6.22.orig/net/wireless/wext.c	2007-04-24 18:59:13.258804911 +0200
-+++ net-2.6.22/net/wireless/wext.c	2007-04-24 18:59:34.138804911 +0200
-@@ -101,12 +101,6 @@
- 
- #include <asm/uaccess.h>		/* copy_to_user() */
- 
--/**************************** CONSTANTS ****************************/
--
--/* Options */
--#define WE_EVENT_RTNETLINK	/* Propagate events using RtNetlink */
--#define WE_SET_EVENT		/* Generate an event on some set commands */
--
- /************************* GLOBAL VARIABLES *************************/
- /*
-  * You should not use global variables, because of re-entrancy.
-@@ -741,12 +735,10 @@ static int ioctl_standard_call(struct ne
- 		/* No extra arguments. Trivial to handle */
- 		ret = handler(dev, &info, &(iwr->u), NULL);
- 
--#ifdef WE_SET_EVENT
- 		/* Generate an event to notify listeners of the change */
- 		if ((descr->flags & IW_DESCR_FLAG_EVENT) &&
- 		   ((ret == 0) || (ret == -EIWCOMMIT)))
- 			wireless_send_event(dev, cmd, &(iwr->u), NULL);
--#endif	/* WE_SET_EVENT */
- 	} else {
- 		char *	extra;
- 		int	extra_size;
-@@ -859,7 +851,6 @@ static int ioctl_standard_call(struct ne
- 				ret =  -EFAULT;
- 		}
- 
--#ifdef WE_SET_EVENT
- 		/* Generate an event to notify listeners of the change */
- 		if ((descr->flags & IW_DESCR_FLAG_EVENT) &&
- 		   ((ret == 0) || (ret == -EIWCOMMIT))) {
-@@ -871,7 +862,6 @@ static int ioctl_standard_call(struct ne
- 				wireless_send_event(dev, cmd, &(iwr->u),
- 						    extra);
- 		}
--#endif	/* WE_SET_EVENT */
- 
- 		/* Cleanup - I told you it wasn't that long ;-) */
- 		kfree(extra);
-@@ -1121,7 +1111,6 @@ int wext_handle_ioctl(struct ifreq *ifr,
-  * Most often, the event will be propagated through rtnetlink
-  */
- 
--#ifdef WE_EVENT_RTNETLINK
- /* ---------------------------------------------------------------- */
- /*
-  * Locking...
-@@ -1225,8 +1214,6 @@ static inline void rtmsg_iwinfo(struct n
- 	tasklet_schedule(&wireless_nlevent_tasklet);
- }
- 
--#endif	/* WE_EVENT_RTNETLINK */
--
- /* ---------------------------------------------------------------- */
- /*
-  * Main event dispatcher. Called from other parts and drivers.
-@@ -1305,10 +1292,8 @@ void wireless_send_event(struct net_devi
- 	if (extra != NULL)
- 		memcpy(((char *) event) + hdr_len, extra, extra_len);
- 
--#ifdef WE_EVENT_RTNETLINK
- 	/* Send via the RtNetlink event channel */
- 	rtmsg_iwinfo(dev, (char *) event, event_len);
--#endif	/* WE_EVENT_RTNETLINK */
- 
- 	/* Cleanup */
- 	kfree(event);
+All IMO, of course. I'm perfectly aware of different people having
+different opinions on this. ;)
 
---
-
+-- 
+Greetings Michael.
