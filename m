@@ -1,59 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:44742 "EHLO mx1.redhat.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4804 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965425AbXDBNvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2007 09:51:51 -0400
-Subject: Re: SIOCSIWAP behavior question
-From: Dan Williams <dcbw@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Jouni Malinen <j@w1.fi>
-In-Reply-To: <1175521655.9859.15.camel@localhost.localdomain>
-References: <1175521655.9859.15.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Mon, 02 Apr 2007 09:55:28 -0400
-Message-Id: <1175522128.9859.17.camel@localhost.localdomain>
+	id S1030872AbXDQTWv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Apr 2007 15:22:51 -0400
+Date: Tue, 17 Apr 2007 14:34:42 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jean Tourrilhes <jt@hpl.hp.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 2.6] WE-22 : prevent information leak on 64 bit
+Message-ID: <20070417183442.GE8633@tuxdriver.com>
+References: <20070323003116.GC2712@bougret.hpl.hp.com> <1175508410.23438.75.camel@johannes.berg> <20070417170820.GB22372@bougret.hpl.hp.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070417170820.GB22372@bougret.hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-04-02 at 09:47 -0400, Dan Williams wrote:
-> Should setting a BSSID trigger a disconnection event from the driver?
+On Tue, Apr 17, 2007 at 10:08:20AM -0700, Jean Tourrilhes wrote:
+> On Mon, Apr 02, 2007 at 12:06:50PM +0200, Johannes Berg wrote:
+> > 
+> > Jean Tourrilhes wrote :
+> > > 	Johannes Berg discovered that kernel space was leaking to
+> > > userspace on 64 bit platform. He made a first patch to fix that. This
+> > > is an improved version of his patch.
+> > > 	This was tested on 2.6.21-rc4. Would you mind pushing that
+> > > upstream ?
+> > 
+> > Just FYI. This patch applies with rejects in net/core/rtnetlink.c and
+> > net/core/wireless.c to wireless-dev. The changes in those two files can
+> > be ignored completely since they affect only the removed
+> > wext-over-netlink interface.
+> > 
+> > johannes
+> 
+> 	I'm sorry to have to write this e-mail. But this incident is
+> completely opposed to the ideal of FreeSoftware/OpenSource and
+> demonstrate some of the bad politics happening in Linux.
+> 
+> 	First, I'm the current active maintainer of the
+> wext-over-netlink interface, and nobody bothered to even 'inform' me
+> about its removal, let alone consult with me.
 
-Hmm; badly phrased question.  I really meant:
+Honestly, most of us thought you weren't interested.
 
-Should setting a BSSID _always_ trigger a disconnection event from the
-driver?
+> 	This shows a complete lack of courtesy and a total disrespect
+> to the concept of maintainer, basically some people are just second
+> class citizens.
 
-> Obviously a disconnect event shouldn't be triggered if the BSSID being
-> set is the same BSSID the card is already associated with.  Or does that
-> mean "reassociate unconditionally" ?
-> 
-> But suppose we have two APs in the same ESS with obviously different
-> BSSIDs.  The card automatically associates with one BSSID, but
-> wpa_supplicant decides it likes the other BSSID and calls SIOCSIWAP to
-> lock to that one during the association process.  Should the driver
-> issue an IWAP event of 00:00:00:00:00:00 before attempting
-> re-association with the BSSID that wpa_supplicant wants?
-> 
-> The libertas driver currently does this; it sometimes confuses
-> wpa_supplicant and is arguably wrong behavior because drivers don't
-> issue disconnection events when auto-roaming from BSSID to BSSID in the
-> same ESS.
-> 
-> Conversely, if you have two access points 'linksys' with different
-> BSSIDs that really _are_ two different ESSs, this would screw up
-> userspace tools if a disconnect _wasn't_ sent.  But in this case
-> automatic tools have more problems than driver events.
-> 
-> Thoughts?  I guess I vote for not sending disconnect events if that
-> BSSID has the same capabilities and the same SSID as the current
-> association BSS.
-> 
-> Dan
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm sorry that you are upset.  I do not believe any disrespect was
+intended.
 
+> 	Second, there is no technical justification to such decision,
+> it's just plain politics. I would agree that for the vast majority of
+> people, this API was useless, as any work in progress. But, it is
+> maintained (by me), it is not causing any technical issue, for those
+> people it's not compiled in (i.e. no bloat), it is not causing bugs
+> and not preventing other code to be merged in the kernel.
+> 	Therefore a purely politic decision.
+
+I would not call it politics, but I do not want to split hairs.
+
+This API was controversial and mostly unwelcome from the start.
+It was ridiculed as "ioctls over netlink" at the last kernel summit.
+It is widely regarded as less of a solution and more of an extension
+to a problem.
+
+One of the objections to having merged the API was that _if_ it were
+to gain users then we would have to carry that maintenance burden
+ad infinitum.  This fear was already beginning to be confirmed by the
+efforts at maintaining WE compatibility in cfg80211.  Since there were
+(thankfully) still no users and only compatibility headaches from
+maintaining it, Johannes wanted to remove the code, and I consented
+to his request.
+
+I wish you would not view this as a personal issue.  Your contributions
+are certainly welcome in general.  We just don't see any benefit from
+keeping this code around as we move forward.
+
+Again, I am terribly sorry that this was a surprise to you.  I will be
+sure to communicate with you directly should another such issue arise.
+
+> 	By the way : don't bother replying to this e-mail, nothing
+> good will come of it.
+
+Hopefully that isn't totally true...
+
+Regards,
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
