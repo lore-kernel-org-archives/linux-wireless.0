@@ -1,32 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3594 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031109AbXDYSwK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Apr 2007 14:52:10 -0400
-Date: Wed, 25 Apr 2007 14:16:56 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: James Ketrenos <jketreno@linux.intel.com>
-Cc: Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
-Message-ID: <20070425181656.GD5875@tuxdriver.com>
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <20070423184814.7029.8413.stgit@magic.sourmilk.net> <462EE107.8040005@linux.intel.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33746 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422808AbXDRKPy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Apr 2007 06:15:54 -0400
+Subject: Re: [PATCH 2.6] WE-22 : prevent information leak on 64 bit
+From: Johannes Berg <johannes@sipsolutions.net>
+To: jt@hpl.hp.com
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org
+In-Reply-To: <20070417170820.GB22372@bougret.hpl.hp.com>
+References: <20070323003116.GC2712@bougret.hpl.hp.com>
+	 <1175508410.23438.75.camel@johannes.berg>
+	 <20070417170820.GB22372@bougret.hpl.hp.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CrSHNBiciv6FsUBsIlJ3"
+Date: Wed, 18 Apr 2007 12:18:11 +0200
+Message-Id: <1176891491.6141.63.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <462EE107.8040005@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 24, 2007 at 10:03:03PM -0700, James Ketrenos wrote:
 
-> (I would like to see hw_scan remain since iwlwifi uses it -- which we hope 
-> to submit as soon as the code restructuring is complete)
+--=-CrSHNBiciv6FsUBsIlJ3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I was going to mention this in response to Michael's patch, but then
-I checked your current iwlwifi git tree.  There your hw_scan routine
-is commented-out, so I figured you didn't want/need it anymore...?
+Jean,
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+> 	First, I'm the current active maintainer of the
+> wext-over-netlink interface, and nobody bothered to even 'inform' me
+> about its removal, let alone consult with me.
+
+I definitely should have copied you on the feature-removal schedule
+patch for wext-over-netlink and then the actual removal in wireless-dev;
+please accept my apologies for not doing that, it was not done in bad
+faith. It was never my intention to demote you to a "second class
+citizen", I'm sorry you feel that way.
+
+I have previously (and multiple times) given technical justification for
+removing this code (even recorded in the kernel changelog now) and I
+contend your allegation that it is a political issue. Others in this
+thread have pointed out the technical issues with wext and wext/nl so I
+will not repeat them.
+
+I hope that despite my mistakes in handling the wext/nl removal we will
+be able to work together in the future to have wext fully supported with
+clear semantics for backwards compatibility while the kernel internally
+migrates towards cfg80211.
+
+johannes
+
+--=-CrSHNBiciv6FsUBsIlJ3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGJfBi/ETPhpq3jKURAmQwAKCnkstoiNfYGyE6NocnCIISsRHiIACfTPzm
+Vx24BYZqnoPVGRm8qiu3Hek=
+=DqGm
+-----END PGP SIGNATURE-----
+
+--=-CrSHNBiciv6FsUBsIlJ3--
+
