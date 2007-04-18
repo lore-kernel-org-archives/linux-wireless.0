@@ -1,115 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:58738 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932178AbXDIMSa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2007 08:18:30 -0400
-Subject: Re: [PATCH] mac80211: Report correct wireless statistics
-From: Dan Williams <dcbw@redhat.com>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
-In-Reply-To: <1176120428.2693.12.camel@localhost.localdomain>
-References: <461877ea.cyxM3SSnr6WhYkjX%Larry.Finger@lwfinger.net>
-	 <200704082031.59934.flamingice@sourmilk.net>
-	 <4619B90E.1030403@lwfinger.net>
-	 <200704090043.34436.flamingice@sourmilk.net>
-	 <1176120428.2693.12.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Mon, 09 Apr 2007 08:21:11 -0400
-Message-Id: <1176121271.2693.23.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from fmmailgate03.web.de ([217.72.192.234]:49963 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422749AbXDRJtJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Apr 2007 05:49:09 -0400
+From: Chr <chunkeey@web.de>
+To: Stefan Puch <stefan.puch@mail.uni-oldenburg.de>
+Subject: Re: prism54: WPA/RSN support for fullmac cards
+Date: Wed, 18 Apr 2007 11:49:06 +0200
+References: <462336B1.4090006@mail.uni-oldenburg.de> <200704172123.30956.chunkeey@web.de> <4625DE1E.1040302@mail.uni-oldenburg.de>
+In-Reply-To: <4625DE1E.1040302@mail.uni-oldenburg.de>
+Cc: linux-net@vger.kernel.org, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200704181149.06856.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-04-09 at 08:07 -0400, Dan Williams wrote:
-> On Mon, 2007-04-09 at 00:43 -0400, Michael Wu wrote:
-> > On Sunday 08 April 2007 23:54, Larry Finger wrote:
-> > > Why would I want to do this?
-> > Did it fix the output?
-> > 
-> > > If the community agrees on anything, it is 
-> > > that the signal is given in dBm (i.e. a negative number) and that the rssi
-> > > is a positive number.
-> > Nope. dBm doesn't have to be negative, though it often is since most wireless 
-> > hardware isn't that powerful. RSSI is simply a number that's bigger for 
-> > stronger signals. It could be dBm, but it doesn't have to be. If you want a 
-> > stronger definition of RSSI, look at RCPI.
-> > 
-> > > The firmware in the bcm43xx chips return a quantity 
-> > > that looks like an rssi with a received packet, and
-> > > bcm43xx_rssi_postprocess turns that into a quantity that looks like dBm.
-> > > Your patch reverses those designations and mixes up the two quantities.
-> > > Again I ask "Why"?
-> > >
-> > Because of the naming/use of the statistics in mac80211 and WE. Signal ends up 
-> > getting assigned to (struct iw_quality).qual, which is actually just an 
-> > arbitrary link quality indicator, not dBm. Anything you care about can be put 
-> > there. (r)ssi gets assigned to (struct iw_quality).level, which is RSSI. WE 
-> > allows that and noise to be specified in either arbitrary units or dBm or 
-> > RCPI.
-> > 
-> > Yes, I did reverse your conventions, but it makes more sense this way. (R)SSI 
-> > is always valid to assign to (struct iw_quality).level and signal ((struct 
-> > iw_quality).qual) is quite arbitrary and cannot be specified in specific 
-> > units.
-> > 
-> > Signal should be probably be renamed to qual to make it more clear that it is 
-> > arbitrary.
-> 
-> In WE, qual is arbitrary within a few limits:
-> 
-> a) qual _must_ change on a linear scale
-> b) a valid max_qual.qual must be set
-> c) qual must fall within the bounds of [0, max_qual.qual] inclusive
+On Wednesday, 18. April 2007 11:00, you wrote:
 
-d) max_qual.qual must be greater than 0
-
-> If you report 'level' in dBm, you must set the IW_QUAL_DBM flag.
-> Otherwise, 'level' _may_ be assumed to be RSSI.  If 'level' is dBm,
-> max_qual.level must be 0.  If 'level' is RSSI, max_qual.level must be
-> greater than 0, and level must fall within the bounds of [0,
-> max_qual.level] inclusive.  Replace 'level' with 'noise' here for the
-> rules for noise.
 > 
-> I don't particularly care if level/noise is RSSI _as long as_ you give
-> the max RSSI for your part.  Different radio parts have different max
-> RSSI values, and if you're writing a driver you sure better know them or
-> figure some reasonable ones out by experimentation.  RSSI is entirely
-> vendor defined and does _not_ conform to any rules.  Therefore we need
-> the max RSSI to get usable signal strength reports from your part.
-
-RSSI doesn't conform to any rules _except_ that has a lower bound of 0
-and an upper bound of the max for your part.  WE happens to provide only
-a u8 for the value, so if your vendor defines RSSI as > 255 you must
-somehow stuff RSSI into a u8.
-
-14.2.3.2 RXVECTOR RSSI
-    The receive signal strength indicator (RSSI) is an optional
-parameter that has a value of 0 through RSSI Max.
-
-Every vendor has a different max; Symbol's max is (at least used to be)
-31.  Cisco aironet's max is 100.  Atheros' max appears to be 60.
-Therefore, you must specify your max RSSI level in max_qual.level if you
-use RSSI so that userspace tools can actually use your RSSI to produce
-meaningful numbers.
-
-Dan
-
-> I know that 0 dBm isn't actually the upper bound, but in practice most
-> people aren't going to get parts that go above that.  0 dBm should be
-> considered a _limitation_ of WEXT that we obviously fix with
-> cfg80211/nl80211 when we bring some sanity to signal strength reporting.
+> Conclusion:
+> It seems that Softmac firmware version greater than 2.13.x.x have WPA2 + AES
+> Support, perhaps this helps for further development or reverse engineering of
+> the firmware.
+> (I could although provide debug traces from wpa_supplicant when using WPA2 + AES
+> with ndiswrapper if that helps)
 > 
-> Again, if you report level in RSSI, you must provide the max RSSI for
-> your part in max_qual.level.
-> 
-> Dan
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+No, that's why they are called "Softmac" FW. Now the whole encryption 
+(WEP/WPA/RSN with RC4, TKIP and CCMP) is done in software by your 
+host CPU and not by the card... 
+
+But please stick with the 2.7.0.0 FW, the all drivers are written for/from ;) it.
+
+Oh, and if you're interested in the FW, you should take a look @ the freemac project. 
+AFAIK, it doesn't work yet, but it contains some "helpful" hints about these devices.
 
