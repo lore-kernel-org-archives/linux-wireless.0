@@ -1,166 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:17581 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753009AbXD0VWu (ORCPT
+Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:44404 "EHLO
+	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161505AbXDSNq0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2007 17:22:50 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH 10/13] mac80211: set bssid to broadcast before scan
-Date: Fri, 27 Apr 2007 17:18:25 -0400
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <20070427194015.602759a1@griffin.suse.cz> <200704271550.01153.flamingice@sourmilk.net>
-In-Reply-To: <200704271550.01153.flamingice@sourmilk.net>
+	Thu, 19 Apr 2007 09:46:26 -0400
+Date: Thu, 19 Apr 2007 08:47:09 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH 2/3] bcm43xx-mac80211: Fix machine check on PPC for  phy->rev == 1
+Message-ID: <462772dd.XXaOmceDEQQJ3+9R%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart12667035.yxHF6DXHFo";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200704271718.29137.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart12667035.yxHF6DXHFo
-Content-Type: multipart/mixed;
-  boundary="Boundary-01=_himMG9MZmgimgWw"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Patch 3/3: References to the Analog Override and Analog Override Value
+Registers in the Extended G PHY Registers cause a machine check on
+PPC architecture and a phy->rev == 1 chip. These patches skip over the
+troublesome accesses. These changes do not conform with the specs,
+but were found necessary for bcm43xx-softmac as well.
 
---Boundary-01=_himMG9MZmgimgWw
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-On Friday 27 April 2007 15:49, Michael Wu wrote:
-> On Friday 27 April 2007 13:40, Jiri Benc wrote:
-> > I agree.
-> >
-> > And I'd like to see some way to disable this feature for sane cards.
->
-> Here you go.
->
-> Thanks,
-> -Michael Wu
-And here's one that *really* works.
+John,
 
-Thanks,
--Michael Wu
+This patch is for the wireless-dev tree. A separate one will be prepared
+for the mb tree.
 
---Boundary-01=_himMG9MZmgimgWw
-Content-Type: text/x-diff;
-  charset="iso-8859-15";
-  name="11-reset-bssid-before-scan.diff"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline;
-	filename="11-reset-bssid-before-scan.diff"
+Larry
 
-mac80211: set bssid to broadcast before scan
-
-=46rom: Michael Wu <flamingice@sourmilk.net>
-
-This patch sets the BSSID to broadcast before scanning to ensure that the
-hardware filter does not filter probe responses.
-
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-=2D--
-
- include/net/mac80211.h       |    4 ++++
- net/mac80211/ieee80211.c     |    7 ++++++-
- net/mac80211/ieee80211_sta.c |   11 +++++++++++
- 3 files changed, 21 insertions(+), 1 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index cade956..2da0d31 100644
-=2D-- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -524,6 +524,10 @@ struct ieee80211_hw {
- 	 * normal operation. */
- #define IEEE80211_HW_MONITOR_DURING_OPER (1<<9)
-=20
-+	/* Device does not need BSSID filter set to broadcast in order to
-+	 * receive all probe responses while scanning */
-+#define IEEE80211_HW_NO_PROBE_FILTERING (1<<10)
-+
- 	/* please fill this gap when adding new flags */
-=20
- 	/* calculate Michael MIC for an MSDU when doing hwcrypto */
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index f6a71ce..4976493 100644
-=2D-- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -2015,6 +2015,7 @@ static int __ieee80211_if_config(struct net_device *d=
-ev,
- 	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_if_conf conf;
-+	static const u8 scan_bssid[] =3D { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
-=20
- 	if (!local->ops->config_interface || !netif_running(dev))
- 		return 0;
-@@ -2023,7 +2024,11 @@ static int __ieee80211_if_config(struct net_device *=
-dev,
- 	conf.type =3D sdata->type;
- 	if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA ||
- 	    sdata->type =3D=3D IEEE80211_IF_TYPE_IBSS) {
-=2D		conf.bssid =3D sdata->u.sta.bssid;
-+		if (local->sta_scanning &&
-+		    local->scan_dev =3D=3D dev)
-+			conf.bssid =3D scan_bssid;
-+		else
-+			conf.bssid =3D sdata->u.sta.bssid;
- 		conf.ssid =3D sdata->u.sta.ssid;
- 		conf.ssid_len =3D sdata->u.sta.ssid_len;
- 		conf.generic_elem =3D sdata->u.sta.extra_ie;
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 7cb2dd3..7b12d7d 100644
-=2D-- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -2577,6 +2577,11 @@ void ieee80211_scan_completed(struct ieee80211_hw *h=
-w)
- 		printk(KERN_DEBUG "%s: failed to restore operational"
- 		       "channel after scan\n", dev->name);
-=20
-+	if (!(local->hw.flags & IEEE80211_HW_NO_PROBE_FILTERING))
-+		if (ieee80211_if_config(dev))
-+			printk(KERN_DEBUG "%s: failed to restore operational"
-+			       "BSSID after scan\n", dev->name);
-+
- 	memset(&wrqu, 0, sizeof(wrqu));
- 	wireless_send_event(dev, SIOCGIWSCAN, &wrqu, NULL);
-=20
-@@ -2736,6 +2741,12 @@ static int ieee80211_sta_start_scan(struct net_devic=
-e *dev,
- 					 list);
- 	local->scan_channel_idx =3D 0;
- 	local->scan_dev =3D dev;
-+
-+	if (!(local->hw.flags & IEEE80211_HW_NO_PROBE_FILTERING))
-+		if (ieee80211_if_config(dev))
-+			printk(KERN_DEBUG "%s: failed to set BSSID for scan\n",
-+			       dev->name);
-+
- 	/* TODO: start scan as soon as all nullfunc frames are ACKed */
- 	queue_delayed_work(local->hw.workqueue, &local->scan_work,
- 			   IEEE80211_CHANNEL_TIME);
-
---Boundary-01=_himMG9MZmgimgWw--
-
---nextPart12667035.yxHF6DXHFo
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGMmilT3Oqt9AH4aERAoVqAKDXrzoN0HBT4GIxdYjmh3pX2g4HNACgm4zS
-nIwiccRnQHvAPTAbH66SVik=
-=gQLz
------END PGP SIGNATURE-----
-
---nextPart12667035.yxHF6DXHFo--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+Index: wireless-dev/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
++++ wireless-dev/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
+@@ -1361,7 +1361,7 @@ static void bcm43xx_phy_initb6(struct bc
+ static void bcm43xx_calc_loopback_gain(struct bcm43xx_wldev *dev)
+ {
+ 	struct bcm43xx_phy *phy = &dev->phy;
+-	u16 backup_phy[16];
++	u16 backup_phy[16] = {0};
+ 	u16 backup_radio[3];
+ 	u16 backup_bband;
+ 	u16 i, j, loop_i_max;
+@@ -1372,8 +1372,10 @@ static void bcm43xx_calc_loopback_gain(s
+ 	backup_phy[1] = bcm43xx_phy_read(dev, BCM43xx_PHY_CCKBBANDCFG);
+ 	backup_phy[2] = bcm43xx_phy_read(dev, BCM43xx_PHY_RFOVER);
+ 	backup_phy[3] = bcm43xx_phy_read(dev, BCM43xx_PHY_RFOVERVAL);
+-	backup_phy[4] = bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVER);
+-	backup_phy[5] = bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVERVAL);
++	if (phy->rev != 1) { /* Not in specs, but needed to prevent PPC machine check */
++		backup_phy[4] = bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVER);
++		backup_phy[5] = bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVERVAL);
++	}
+ 	backup_phy[6] = bcm43xx_phy_read(dev, BCM43xx_PHY_BASE(0x5A));
+ 	backup_phy[7] = bcm43xx_phy_read(dev, BCM43xx_PHY_BASE(0x59));
+ 	backup_phy[8] = bcm43xx_phy_read(dev, BCM43xx_PHY_BASE(0x58));
+@@ -1401,14 +1403,16 @@ static void bcm43xx_calc_loopback_gain(s
+ 			  bcm43xx_phy_read(dev, BCM43xx_PHY_RFOVER) | 0x0001);
+ 	bcm43xx_phy_write(dev, BCM43xx_PHY_RFOVERVAL,
+ 			  bcm43xx_phy_read(dev, BCM43xx_PHY_RFOVERVAL) & 0xFFFE);
+-	bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVER,
+-			  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVER) | 0x0001);
+-	bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVERVAL,
+-			  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVERVAL) & 0xFFFE);
+-	bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVER,
+-			  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVER) | 0x0002);
+-	bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVERVAL,
+-			  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVERVAL) & 0xFFFD);
++	if (phy->rev != 1) { /* Not in specs, but needed to prevent PPC machine check */
++		bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVER,
++				  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVER) | 0x0001);
++		bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVERVAL,
++				  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVERVAL) & 0xFFFE);
++		bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVER,
++				  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVER) | 0x0002);
++		bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVERVAL,
++				  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVERVAL) & 0xFFFD);
++	}
+ 	bcm43xx_phy_write(dev, BCM43xx_PHY_RFOVER,
+ 			  bcm43xx_phy_read(dev, BCM43xx_PHY_RFOVER) | 0x000C);
+ 	bcm43xx_phy_write(dev, BCM43xx_PHY_RFOVER,
+@@ -1425,10 +1429,12 @@ static void bcm43xx_calc_loopback_gain(s
+ 
+ 	bcm43xx_phy_write(dev, BCM43xx_PHY_BASE(0x0A),
+ 			  bcm43xx_phy_read(dev, BCM43xx_PHY_BASE(0x0A)) | 0x2000);
+-	bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVER,
+-			  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVER) | 0x0004);
+-	bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVERVAL,
+-			  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVERVAL) & 0xFFFB);
++	if (phy->rev != 1) { /* Not in specs, but needed to prevent PPC machine check */
++		bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVER,
++				  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVER) | 0x0004);
++		bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVERVAL,
++				  bcm43xx_phy_read(dev, BCM43xx_PHY_ANALOGOVERVAL) & 0xFFFB);
++	}
+ 	bcm43xx_phy_write(dev, BCM43xx_PHY_BASE(0x03),
+ 			  (bcm43xx_phy_read(dev, BCM43xx_PHY_BASE(0x03))
+ 			   & 0xFF9F) | 0x40);
+@@ -1521,8 +1527,10 @@ exit_loop1:
+ 		trsw_rx = 0x18;
+ exit_loop2:
+ 
+-	bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVER, backup_phy[4]);
+-	bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVERVAL, backup_phy[5]);
++	if (phy->rev != 1) { /* Not in specs, but needed to prevent PPC machine check */
++		bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVER, backup_phy[4]);
++		bcm43xx_phy_write(dev, BCM43xx_PHY_ANALOGOVERVAL, backup_phy[5]);
++	}
+ 	bcm43xx_phy_write(dev, BCM43xx_PHY_BASE(0x5A), backup_phy[6]);
+ 	bcm43xx_phy_write(dev, BCM43xx_PHY_BASE(0x59), backup_phy[7]);
+ 	bcm43xx_phy_write(dev, BCM43xx_PHY_BASE(0x58), backup_phy[8]);
+@@ -2431,8 +2439,10 @@ static void bcm43xx_calc_nrssi_offset(st
+ 	backup[0] = bcm43xx_phy_read(dev, 0x0001);
+ 	backup[1] = bcm43xx_phy_read(dev, 0x0811);
+ 	backup[2] = bcm43xx_phy_read(dev, 0x0812);
+-	backup[3] = bcm43xx_phy_read(dev, 0x0814);
+-	backup[4] = bcm43xx_phy_read(dev, 0x0815);
++	if (phy->rev != 1) { /* Not in specs, but needed to prevent PPC machine check */
++		backup[3] = bcm43xx_phy_read(dev, 0x0814);
++		backup[4] = bcm43xx_phy_read(dev, 0x0815);
++	}
+ 	backup[5] = bcm43xx_phy_read(dev, 0x005A);
+ 	backup[6] = bcm43xx_phy_read(dev, 0x0059);
+ 	backup[7] = bcm43xx_phy_read(dev, 0x0058);
+@@ -2498,10 +2508,12 @@ static void bcm43xx_calc_nrssi_offset(st
+ 	} else {
+ 		bcm43xx_radio_write16(dev, 0x007A,
+ 				      bcm43xx_radio_read16(dev, 0x007A) & 0x007F);
+-		bcm43xx_phy_write(dev, 0x0814,
+-				  bcm43xx_phy_read(dev, 0x0814) | 0x0001);
+-		bcm43xx_phy_write(dev, 0x0815,
+-				  bcm43xx_phy_read(dev, 0x0815) & 0xFFFE);
++		if (phy->rev != 1) { /* Not in specs, but needed to prevent PPC machine check */
++			bcm43xx_phy_write(dev, 0x0814,
++					  bcm43xx_phy_read(dev, 0x0814) | 0x0001);
++			bcm43xx_phy_write(dev, 0x0815,
++					  bcm43xx_phy_read(dev, 0x0815) & 0xFFFE);
++		}
+ 		bcm43xx_phy_write(dev, 0x0811,
+ 				  bcm43xx_phy_read(dev, 0x0811) | 0x000C);
+ 		bcm43xx_phy_write(dev, 0x0812,
+@@ -2520,10 +2532,12 @@ static void bcm43xx_calc_nrssi_offset(st
+ 					  bcm43xx_phy_read(dev, 0x000A)
+ 					  | 0x2000);
+ 		}
+-		bcm43xx_phy_write(dev, 0x0814,
+-				  bcm43xx_phy_read(dev, 0x0814) | 0x0004);
+-		bcm43xx_phy_write(dev, 0x0815,
+-				  bcm43xx_phy_read(dev, 0x0815) & 0xFFFB);
++		if (phy->rev != 1) { /* Not in specs, but needed to prevent PPC machine check */
++			bcm43xx_phy_write(dev, 0x0814,
++					  bcm43xx_phy_read(dev, 0x0814) | 0x0004);
++			bcm43xx_phy_write(dev, 0x0815,
++					  bcm43xx_phy_read(dev, 0x0815) & 0xFFFB);
++		}
+ 		bcm43xx_phy_write(dev, 0x0003,
+ 				  (bcm43xx_phy_read(dev, 0x0003) & 0xFF9F)
+ 				  | 0x0040);
+@@ -2560,8 +2574,10 @@ static void bcm43xx_calc_nrssi_offset(st
+ 		bcm43xx_phy_write(dev, 0x080F, backup[14]);
+ 		bcm43xx_phy_write(dev, 0x0810, backup[15]);
+ 	}
+-	bcm43xx_phy_write(dev, 0x0814, backup[3]);
+-	bcm43xx_phy_write(dev, 0x0815, backup[4]);
++	if (phy->rev != 1) { /* Not in specs, but needed to prevent PPC machine check */
++		bcm43xx_phy_write(dev, 0x0814, backup[3]);
++		bcm43xx_phy_write(dev, 0x0815, backup[4]);
++	}
+ 	bcm43xx_phy_write(dev, 0x005A, backup[5]);
+ 	bcm43xx_phy_write(dev, 0x0059, backup[6]);
+ 	bcm43xx_phy_write(dev, 0x0058, backup[7]);
