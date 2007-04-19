@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:42798 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965280AbXDGEQO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Apr 2007 00:16:14 -0400
-Message-ID: <46171B36.6090108@lwfinger.net>
-Date: Fri, 06 Apr 2007 23:16:54 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RFC: ieee80211: Spamming of log resulting from packets with ExtIV  not set
-References: <4616DD7E.6010606@lwfinger.net> <20070407013848.GG16197@jm.kir.nu>
-In-Reply-To: <20070407013848.GG16197@jm.kir.nu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from styx.suse.cz ([82.119.242.94]:58390 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1766722AbXDSOet (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Apr 2007 10:34:49 -0400
+Date: Thu, 19 Apr 2007 16:34:53 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@berlios.de,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/4] mac80211 and drivers: Improve wireless statistics
+Message-ID: <20070419163453.5d792085@griffin.suse.cz>
+In-Reply-To: <46211955.4080006@lwfinger.net>
+References: <46211955.4080006@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni Malinen wrote:
-> On Fri, Apr 06, 2007 at 06:53:34PM -0500, Larry Finger wrote:
->> Using bcm43xx-softmac, my log gets full of messages that look like:
->>
->> Apr  6 18:06:55 larrylap kernel: TKIP: ICV error detected: 
->> STA=00:14:bf:85:49:fa
-> 
-> Does the driver properly filter out FCS errors? If not, the proper fix
-> is to fix the driver to do that. If yes, I'm quite surprised that you
-> see these messages so frequently.
+On Sat, 14 Apr 2007 13:11:33 -0500, Larry Finger wrote:
+> In wireless statistics reporting, three quantities related to the
+> signal are reported: "qual" (linear with the signal),
+> "level" (logarithmic), and "noise". In mac80211 and the drivers that
+> use it, the first two have a mixture of internal names for those
+> quantities.
 
-As far as I can tell, FCS errors are not filtered. I looked at other wireless drivers, and I can see 
-where zd1211rw filters them, but I have not yet figured out what routine sets the error bits. Once I 
-have that and filter them, I'll see if the log messages stop.
+The whole signal reporting in WE looks like a mess to me. It seems that
+no renaming could help here, I'm afraid - the names you consider better
+others consider worse.
 
-Thanks for the advice,
+Let's leave it as is, and return to it when converting mac80211 to use
+cfg80211. With a bit of luck it would be no issue then :-)
 
-Larry
+Thanks,
 
+ Jiri
+
+-- 
+Jiri Benc
+SUSE Labs
