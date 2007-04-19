@@ -1,37 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:47705 "EHLO mail.suse.cz"
+Received: from mfe1.polimi.it ([131.175.12.23]:55503 "EHLO polimi.it"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757203AbXD0U3K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2007 16:29:10 -0400
-Date: Fri, 27 Apr 2007 22:29:32 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Wireless rates with mac80211
-Message-ID: <20070427222932.548519eb@griffin.suse.cz>
-In-Reply-To: <46325B51.7090506@lwfinger.net>
-References: <462F9617.8010207@lwfinger.net>
-	<20070427221153.7ecc04de@griffin.suse.cz>
-	<46325B51.7090506@lwfinger.net>
+	id S637774AbXDSN7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Apr 2007 09:59:09 -0400
+Date: Thu, 19 Apr 2007 15:58:05 +0200
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/3] bcm43xx-mac80211: Fix machine check on PPC for  phy->rev == 1
+Message-ID: <20070419155805.611244ec@localhost>
+In-Reply-To: <462772da.WTFJ4M8EynD9kYbu%Larry.Finger@lwfinger.net>
+References: <462772da.WTFJ4M8EynD9kYbu%Larry.Finger@lwfinger.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 27 Apr 2007 15:21:37 -0500, Larry Finger wrote:
-> Thanks for the info. I'm using txrate in the sta_info struct, which is an index into the rates 
-> array. That turned out to be very useful as I discovered that rc80211_simple was setting the initial 
-> rate to 54 Mbs. I have some doubt if that rate is best under any circumstance, but it certainly is 
-> not for bcm43xx as the current issues with TX power do not allow transmission at that rate. By 
-> setting the initial rate to 1 Mbs, I was able to connect for the first time with my BCM4311.
+On Thu, 19 Apr 2007 08:47:06 -0500
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-Rate control modules can be switched on-the-fly with mac80211. You can
-write your own rc module that uses 1 mbps all times :-) Actually, I
-wrote that module but haven't kept it up to date so it doesn't even
-compile now...
+> @@ -599,16 +599,16 @@ static void bcm43xx_phy_agcsetup(struct 
 
- Jiri
+Just FYI, I'm going to whack this whole function soon, when the R.E. team
+is done with A PHY LO specifications and I release the patchset I previously
+talked about. In the meanwhile, if this really fixes machine checks, I ACK
+this.
 
--- 
-Jiri Benc
-SUSE Labs
+
+--
+Ciao
+Stefano
