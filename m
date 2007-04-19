@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37499 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754168AbXD0KP5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2007 06:15:57 -0400
-Subject: [PATCH] cfg80211: fix rtnl warning in sysfs.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 27 Apr 2007 12:16:04 +0200
-Message-Id: <1177668964.7828.48.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from mail.tpi.com ([198.107.51.143]:1506 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1766831AbXDSPv1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Apr 2007 11:51:27 -0400
+Message-ID: <46278FEB.50203@canonical.com>
+Date: Thu, 19 Apr 2007 09:51:07 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
+MIME-Version: 1.0
+To: Dan Williams <dcbw@redhat.com>
+CC: Tim Gardner <tim.gardner@canonical.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] Fix NetworkManager/wpa_supplicant race condition
+References: <462649E3.4000208@canonical.com>	 <1176916954.20244.14.camel@localhost.localdomain>	 <46266EF9.3050001@canonical.com> <1176951852.3207.1.camel@localhost.localdomain>
+In-Reply-To: <1176951852.3207.1.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes an oversight from my rtnl patch for cfg80211.
+Dan Williams wrote:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+snip, snip
 
----
-In the patch for net-2.6 I didn't make this mistake so it's wireless-dev
-only.
+> 
+> When I say "reassociate", I mean a new association cycle to the _same_
+> BSSID/SSID using the settings that are current at that point in time.  I
+> guess I should have made that clear.
+> 
+> Dan
+> 
+>> A quick look at ieee80211_ioctl_siwessid() shows that it always forces
+>> an authentication cycle.
+>>
+>> I'll experiment a little to see how the Softmac can be driven through an
+>> authentication/association cycle on calls to SIOCSIWESSID or SIOCSIWAP.
+>>
+>> rtg
 
- net/wireless/sysfs.c |    1 +
- 1 file changed, 1 insertion(+)
+Dan,
 
---- wireless-dev.orig/net/wireless/sysfs.c	2007-04-27 12:11:14.684987898 +0200
-+++ wireless-dev/net/wireless/sysfs.c	2007-04-27 12:11:23.544987898 +0200
-@@ -12,6 +12,7 @@
- #include <linux/module.h>
- #include <linux/netdevice.h>
- #include <linux/nl80211.h>
-+#include <linux/rtnetlink.h>
- #include <net/cfg80211.h>
- #include "sysfs.h"
- #include "core.h"
+I agree that driving the SoftMAC protocol through an auth/assoc cycle
+when changing ESSID or BSSID is architecturally the right thing to do.
+However, the required changes are a bit too extensive for me to add to a
+recently released kernel (Feisty).  I'll have to get back to this when I
+have more freedom to whack and slash.
 
+In the meantime, I still think emitting an ASSOC event is a good interim
+fix. I'll be testing it over the next few days within the Ubuntu community.
 
+rtg
+-- 
+Tim Gardner tim.gardner@ubuntu.com
