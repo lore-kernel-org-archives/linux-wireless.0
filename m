@@ -1,61 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cvs.openbsd.org ([199.185.137.3]:44356 "EHLO cvs.openbsd.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767270AbXDETuH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 15:50:07 -0400
-Message-Id: <200704051946.l35Jkn0a013925@cvs.openbsd.org>
-To: Michael Buesch <mb@bu3sch.de>
-cc: Joseph Jezak <josejx@gentoo.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
-In-reply-to: Your message of "Thu, 05 Apr 2007 21:45:31 +0200."
-             <200704052145.32619.mb@bu3sch.de>
-Date: Thu, 05 Apr 2007 13:46:49 -0600
-From: Theo de Raadt <deraadt@cvs.openbsd.org>
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:59394 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1766750AbXDSPDX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Apr 2007 11:03:23 -0400
+Message-ID: <4627854B.7000300@lwfinger.net>
+Date: Thu, 19 Apr 2007 10:05:47 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Jiri Benc <jbenc@suse.cz>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>, bcm43xx-dev@berlios.de,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH 0/4] mac80211 and drivers: Improve wireless statistics
+References: <46211955.4080006@lwfinger.net> <20070419163453.5d792085@griffin.suse.cz>
+In-Reply-To: <20070419163453.5d792085@griffin.suse.cz>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > You refuse to accept it was an accident.  Therefore we refuse to
-> > accept that your public posting was an accident.
+Jiri Benc wrote:
 > 
-> Both exactly right.
-
-You purposely set out to humiliate him.
-
-> I never said I wanted the driver to be deleted. Re-read the whole
-> thread please. But switch your "turn the meaning of sentences over" device
-> off first, please.
-
-Your fancy words left him no choice.
-
-> > Jason Dixon is a liar because he doubts something?  How can he be a
+> The whole signal reporting in WE looks like a mess to me. It seems that
+> no renaming could help here, I'm afraid - the names you consider better
+> others consider worse.
 > 
-> This sentence is the prove that you don't read mails exactly before
-> replying. Jason did not "doubt something". He wrote [citing]:
-> "there is NO DOUBT that they would have notified a corporation privately"
-> 
-> Note the capitalized words.
-> 
-> This is a plain lie. There is no special exception from me to companies.
-> I already said that in another mail.
+> Let's leave it as is, and return to it when converting mac80211 to use
+> cfg80211. With a bit of luck it would be no issue then :-)
 
-There is no doubt in my mind either that you would treat a company
-better than you treated Marcus.
+I have already decided to leave the whole mess alone. I will patch bcm43xx-mac80211 to conform to 
+what is currently in mac80211 so that reasonable values are seen by the users.
 
-Especially after you just saw what happened when you treat someone
-like this.
-
-My guess is you learned an important lesson, but just don't have
-the balls to admit it.
+Larry
