@@ -1,35 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:41132 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755938AbXD0PXL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2007 11:23:11 -0400
-Date: Fri, 27 Apr 2007 17:23:32 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: add sta item when changing WDS address
-Message-ID: <20070427172332.0d69f013@griffin.suse.cz>
-In-Reply-To: <1177686772.3565.32.camel@johannes.berg>
-References: <1175011277.9282.8.camel@johannes.berg>
-	<1177686772.3565.32.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.tpi.com ([198.107.51.143]:3020 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754315AbXDTC3y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Apr 2007 22:29:54 -0400
+Message-ID: <4628259E.7060105@canonical.com>
+Date: Thu, 19 Apr 2007 20:29:50 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
+MIME-Version: 1.0
+To: linville@tuxdriver.com
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: PATCH [001/001] - Remove duplicate rtnl_unlock()
+Content-Type: multipart/mixed;
+ boundary="------------080607000204020607040402"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 27 Apr 2007 17:12:52 +0200, Johannes Berg wrote:
-> On Tue, 2007-03-27 at 18:01 +0200, Johannes Berg wrote:
-> > This patch adds a sta item for the new address when you change a WDS
-> > link's address. If the sta item cannot be created return an error.
-> 
-> Anything wrong with this patch? :)
+This is a multi-part message in MIME format.
+--------------080607000204020607040402
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-It's in wireless-dev for quite some time (commit
-d80bb18ca3444520b465f3006bbb78837a5e28d9). Did I miss some problem when
-I was looking at the patch?
 
- Jiri
+Remove a duplicate rtnl_unlock().
+
+Signed-off-by: tim.gardner@ubuntu.com
+
+---
+
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index b5a62b7..cf3d020 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -4816,7 +4816,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	rtnl_lock();
+ 	result = dev_alloc_name(local->mdev, local->mdev->name);
+ 	if (result < 0) {
+-		rtnl_unlock();
+ 		goto fail_dev;
+ 	}
 
 -- 
-Jiri Benc
-SUSE Labs
+Tim Gardner tim.gardner@ubuntu.com
+
+--------------080607000204020607040402
+Content-Type: text/plain;
+ name="duplicate_unlock.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="duplicate_unlock.txt"
+
+
+Remove a duplicate rtnl_unlock().
+
+Signed-off-by: tim.gardner@ubuntu.com
+
+---
+
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index b5a62b7..cf3d020 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -4816,7 +4816,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	rtnl_lock();
+ 	result = dev_alloc_name(local->mdev, local->mdev->name);
+ 	if (result < 0) {
+-		rtnl_unlock();
+ 		goto fail_dev;
+ 	}
+ 
+
+--------------080607000204020607040402--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
