@@ -1,93 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:51874 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161546AbXDWS6U (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:47475 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767246AbXDTUvP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2007 14:58:20 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 09/13] mac80211: remove hw_scan callback
-Date: Mon, 23 Apr 2007 14:48:14 -0400
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Message-Id: <20070423184814.7029.8413.stgit@magic.sourmilk.net>
-In-Reply-To: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+	Fri, 20 Apr 2007 16:51:15 -0400
+Subject: Re: [PATCH] wext: allow wext users without rtnl
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: shemminger@linux-foundation.org, linville@tuxdriver.com,
+	flamingice@sourmilk.net, linux-wireless@vger.kernel.org
+In-Reply-To: <20070420.133257.32722308.davem@davemloft.net>
+References: <1176825010.3902.28.camel@johannes.berg>
+	 <20070418140451.075370fc@freekitty>
+	 <1177098521.5902.20.camel@johannes.berg>
+	 <20070420.133257.32722308.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6EchTCA8ofjZxyVd3tV4"
+Date: Fri, 20 Apr 2007 22:53:42 +0200
+Message-Id: <1177102423.5902.38.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
 
-The hw_scan callback breaks the auto AP selection code in ieee80211_sta.c.
-No in-tree drivers use it either. This patch removes it.
+--=-6EchTCA8ofjZxyVd3tV4
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+On Fri, 2007-04-20 at 13:32 -0700, David Miller wrote:
 
- include/net/mac80211.h       |    4 ----
- net/mac80211/ieee80211.c     |    3 +--
- net/mac80211/ieee80211_sta.c |   11 +----------
- 3 files changed, 2 insertions(+), 16 deletions(-)
+> > Then again, holding rtnl in cfg80211 would simplify some things because
+> > we could pass in a netdev pointer instead of the ifindex for example.
+> >=20
+> > If you think I can justify holding rtnl in cfg80211 I'm certainly
+> > willing to change that. Global locks are just too suspicious to me ;)
+>=20
+> It is true that things like IPSEC configuration via xfrm_user.c
+> uses it's own mutex, so there is precedence for splitting up
+> the locking where things are truly seperate.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index b4b6619..cade956 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -668,10 +668,6 @@ struct ieee80211_ops {
- 	int (*passive_scan)(struct ieee80211_hw *hw, int state,
- 			    struct ieee80211_scan_conf *conf);
- 
--	/* Ask the hardware to service the scan request, no need to start
--	 * the scan state machine in stack. */
--	int (*hw_scan)(struct ieee80211_hw *hw, u8 *ssid, size_t len);
--
- 	/* return low-level statistics */
- 	int (*get_stats)(struct ieee80211_hw *hw,
- 			 struct ieee80211_low_level_stats *stats);
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 25ea011..ddb8153 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -2235,8 +2235,7 @@ static void ieee80211_if_shutdown(struct net_device *dev)
- 		sdata->u.sta.state = IEEE80211_DISABLED;
- 		del_timer_sync(&sdata->u.sta.timer);
- 		skb_queue_purge(&sdata->u.sta.skb_queue);
--		if (!local->ops->hw_scan &&
--		    local->scan_dev == sdata->dev) {
-+		if (local->scan_dev == sdata->dev) {
- 			local->sta_scanning = 0;
- 			cancel_delayed_work(&local->scan_work);
- 		}
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index fe5c762..7cb2dd3 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -23,6 +23,7 @@
- #include <linux/wireless.h>
- #include <linux/random.h>
- #include <linux/etherdevice.h>
-+#include <linux/rtnetlink.h>
- #include <net/iw_handler.h>
- #include <asm/types.h>
- #include <asm/delay.h>
-@@ -2713,16 +2714,6 @@ static int ieee80211_sta_start_scan(struct net_device *dev,
- 		return -EBUSY;
- 	}
- 
--	if (local->ops->hw_scan) {
--		int rc = local->ops->hw_scan(local_to_hw(local),
--					    ssid, ssid_len);
--		if (!rc) {
--			local->sta_scanning = 1;
--			local->scan_dev = dev;
--		}
--		return rc;
--	}
--
- 	local->sta_scanning = 1;
- 
- 	read_lock(&local->sub_if_lock);
+:)
+
+> But changing things like MAC addresse changes, which you mention, do
+> fall into the existing scope of the RTNL semaphore.
+
+Actually, just thought about mac address change again, it is only
+permitted when devices are down anyway and at that point nothing can
+race since wireless devices that are down just store configuration for
+when they're up (or ignore it)
+
+> If it simplifies things, all the reason more to use it for cfg80211.
+
+A few places could use a netdev pointer instead of ifindex but I don't
+feel it's much of a simplification for callees. This is only an issue
+for two or three calls that cannot hold a netdev reference because the
+device will be removed by the driver/stack.
+
+Since the discussion came up due to dropping the rtnl from wext I think
+that it may be beneficial if we added rtnl locking to cfg80211 now to
+simplify migration away from wext which holds rtnl and then revisit the
+locking when we can drop wext completely from the mac80211 code. That
+would allow us to revisit rtnl locking for wext when we have completely
+migrated to cfg80211 and wext is only handled through cfg80211.
+
+Does that sound like an acceptable way forward?
+
+johannes
+
+--=-6EchTCA8ofjZxyVd3tV4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGKShW/ETPhpq3jKURAnUSAJ4sQ2cnXKrQmnMYiM4DjQERaQgnuACfcvn8
+fX8uPN8INcZzZsOaxKRAj3A=
+=zHhL
+-----END PGP SIGNATURE-----
+
+--=-6EchTCA8ofjZxyVd3tV4--
 
