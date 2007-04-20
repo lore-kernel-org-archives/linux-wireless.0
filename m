@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33691 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161806AbXDZJjm (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46438
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1767225AbXDTUcy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2007 05:39:42 -0400
-Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <20070423184814.7029.8413.stgit@magic.sourmilk.net>
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-	 <20070423184814.7029.8413.stgit@magic.sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cAn67agjbY2qAn6UqoE8"
-Date: Tue, 24 Apr 2007 18:20:55 +0200
-Message-Id: <1177431656.3528.33.camel@johannes.berg>
+	Fri, 20 Apr 2007 16:32:54 -0400
+Date: Fri, 20 Apr 2007 13:32:57 -0700 (PDT)
+Message-Id: <20070420.133257.32722308.davem@davemloft.net>
+To: johannes@sipsolutions.net
+Cc: shemminger@linux-foundation.org, linville@tuxdriver.com,
+	flamingice@sourmilk.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wext: allow wext users without rtnl
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1177098521.5902.20.camel@johannes.berg>
+References: <1176825010.3902.28.camel@johannes.berg>
+	<20070418140451.075370fc@freekitty>
+	<1177098521.5902.20.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 20 Apr 2007 21:48:41 +0200
 
---=-cAn67agjbY2qAn6UqoE8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> I'm not entirely opposed to making cfg80211 hold rtnl for configuration,
+> it just seems pointless to block configuration of different devices
+> against each other when even a for a single item it shouldn't matter.
+> Then again, holding rtnl in cfg80211 would simplify some things because
+> we could pass in a netdev pointer instead of the ifindex for example.
+> 
+> If you think I can justify holding rtnl in cfg80211 I'm certainly
+> willing to change that. Global locks are just too suspicious to me ;)
 
-On Mon, 2007-04-23 at 14:48 -0400, Michael Wu wrote:
+It is true that things like IPSEC configuration via xfrm_user.c
+uses it's own mutex, so there is precedence for splitting up
+the locking where things are truly seperate.
 
-> --- a/net/mac80211/ieee80211_sta.c
-> +++ b/net/mac80211/ieee80211_sta.c
-> @@ -23,6 +23,7 @@
->  #include <linux/wireless.h>
->  #include <linux/random.h>
->  #include <linux/etherdevice.h>
-> +#include <linux/rtnetlink.h>
->  #include <net/iw_handler.h>
->  #include <asm/types.h>
->  #include <asm/delay.h>
+But changing things like MAC addresse changes, which you mention, do
+fall into the existing scope of the RTNL semaphore.
 
-Nah. Is that missing from some previous patch?
-
-johannes
-
---=-cAn67agjbY2qAn6UqoE8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGLi5n/ETPhpq3jKURAmjOAKCIGVCPNO8IC9HDT8DutZNdhQ6oTwCff2oD
-5Ipr8fuuu4W0g6Gq7uJ817U=
-=H8Az
------END PGP SIGNATURE-----
-
---=-cAn67agjbY2qAn6UqoE8--
-
+If it simplifies things, all the reason more to use it for cfg80211.
