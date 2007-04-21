@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:34174 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1031341AbXD2Tzd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Apr 2007 15:55:33 -0400
-Date: Sun, 29 Apr 2007 21:55:28 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: "Stable" branch of mac80211
-Message-ID: <20070429215528.02c51cf9@logostar.upir.cz>
-In-Reply-To: <200704291414.19963.flamingice@sourmilk.net>
-References: <20070429194855.451b9e7c@logostar.upir.cz>
-	<200704291414.19963.flamingice@sourmilk.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:52771 "EHLO
+	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752702AbXDUUcC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Apr 2007 16:32:02 -0400
+Date: Sat, 21 Apr 2007 15:31:59 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linux-wireless@vger.kernel.org
+Message-ID: <462a74bf.q78F6+5laAQtwRWs%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 29 Apr 2007 14:14:14 -0400, Michael Wu wrote:
-> wireless-dev has been updated recently. One of the conflicts can be resolved 
-> easily. There's also an API change which conflicts with the qdisc fixes 
-> because tcf_destroy is no longer exported. A patch for that is attached.
+In ieee80211, the output of scan results lists channels, but not
+frequencies, which are needed by NetworkManager. This patch uses
+the new ieee80211_channel_to_freq routine to add the frequency to the output.
 
-I folded the patch into the qdisc fix patch and rebased my tree (all
-branches).
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-I also ensured the previously misapplied radiotap patch is now applied
-correctly and dropped the "move radiotap removal code to right function"
-patch.
-
-Thanks,
-
- Jiri
-
--- 
-Jiri Benc
-SUSE Labs
+Index: wireless-2.6/net/ieee80211/ieee80211_wx.c
+===================================================================
+--- wireless-2.6.orig/net/ieee80211/ieee80211_wx.c
++++ wireless-2.6/net/ieee80211/ieee80211_wx.c
+@@ -89,15 +89,17 @@ static char *ieee80211_translate_scan(st
+ 		start = iwe_stream_add_event(start, stop, &iwe, IW_EV_UINT_LEN);
+ 	}
+ 
+-	/* Add frequency/channel */
++	/* Add channel and frequency */
+ 	iwe.cmd = SIOCGIWFREQ;
+-/*	iwe.u.freq.m = ieee80211_frequency(network->channel, network->mode);
+-	iwe.u.freq.e = 3; */
+ 	iwe.u.freq.m = network->channel;
+ 	iwe.u.freq.e = 0;
+ 	iwe.u.freq.i = 0;
+ 	start = iwe_stream_add_event(start, stop, &iwe, IW_EV_FREQ_LEN);
+ 
++	iwe.u.freq.m = ieee80211_channel_to_freq(ieee, network->channel);
++	iwe.u.freq.e = 6;
++	start = iwe_stream_add_event(start, stop, &iwe, IW_EV_FREQ_LEN);
++
+ 	/* Add encryption capability */
+ 	iwe.cmd = SIOCGIWENCODE;
+ 	if (network->capability & WLAN_CAPABILITY_PRIVACY)
