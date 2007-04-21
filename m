@@ -1,74 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:41816 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965972AbXD1QmJ (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49090 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752040AbXDUTvb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2007 12:42:09 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 7/7] mac80211: Allow drivers to configure default regulatory domain
-Date: Sat, 28 Apr 2007 12:36:02 -0400
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Message-Id: <20070428163602.27203.93106.stgit@magic.sourmilk.net>
-In-Reply-To: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
-References: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+	Sat, 21 Apr 2007 15:51:31 -0400
+Subject: Re: mac80211-7.0.4 ieee80211_ptr trouble
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Dick <dm@chello.nl>, linux-wireless@vger.kernel.org
+In-Reply-To: <20070421185622.GA7019@tuxdriver.com>
+References: <1177144052.9892.8.camel@localhost>
+	 <20070421185622.GA7019@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fLnN5VvVDmh1Bs/gVLJ8"
+Date: Sat, 21 Apr 2007 21:54:14 +0200
+Message-Id: <1177185254.5941.30.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
 
-This patch allows drivers to configure the default set of channels if the
-device reports its default regulatory domain.
+--=-fLnN5VvVDmh1Bs/gVLJ8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+On Sat, 2007-04-21 at 14:56 -0400, John W. Linville wrote:
 
- include/net/mac80211.h   |    8 ++++++--
- net/mac80211/ieee80211.c |    3 ++-
- 2 files changed, 8 insertions(+), 3 deletions(-)
+> > /var/tmp/portage/net-wireless/mac80211-7.0.4/work/mac80211-7.0.4/compat=
+ible/net/mac80211/ieee80211_ioctl.c: In functie 'ieee80211_ioctl_get_hw_fea=
+tures':
+> > /var/tmp/portage/net-wireless/mac80211-7.0.4/work/mac80211-7.0.4/compat=
+ible/net/mac80211/ieee80211_ioctl.c:119: fout: 'struct net_device' has no m=
+ember named 'ieee80211_ptr'
+> > /var/tmp/portage/net-wireless/mac80211-7.0.4/work/mac80211-7.0.4/compat=
+ible/net/mac80211/ieee80211_ioctl.c: In functie 'ieee80211_ioctl_scan':
+> > /var/tmp/portage/net-wireless/mac80211-7.0.4/work/mac80211-7.0.4/compat=
+ible/net/mac80211/ieee80211_ioctl.c:172: fout: 'struct net_device' has no m=
+ember named 'ieee80211_ptr'
+> >=20
+> > What am I doing wrong, what happened to ieee80211_ptr?
+>=20
+> You'll have to ask the gentoo guys...
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index f0cfe88..96321be 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -52,7 +52,9 @@
-  * freq, and val fields. Other fields will be filled in by 80211.o based on
-  * hostapd information and low-level driver does not need to use them. The
-  * limits for each channel will be provided in 'struct ieee80211_conf' when
-- * configuring the low-level driver with hw->config callback. */
-+ * configuring the low-level driver with hw->config callback. If a device has
-+ * a default regulatory domain, IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED
-+ * can be set to let the driver configure all fields */
- struct ieee80211_channel {
- 	short chan; /* channel number (IEEE 802.11) */
- 	short freq; /* frequency in MHz */
-@@ -528,7 +530,9 @@ struct ieee80211_hw {
- 	 * receive all probe responses while scanning */
- #define IEEE80211_HW_NO_PROBE_FILTERING (1<<10)
- 
--	/* please fill this gap when adding new flags */
-+	/* Channels are already configured to the default regulatory domain
-+	 * specified in the device's EEPROM */
-+#define IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED (1<<11)
- 
- 	/* calculate Michael MIC for an MSDU when doing hwcrypto */
- #define IEEE80211_HW_TKIP_INCLUDE_MMIC (1<<12)
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 2b6cb06..f609e6c 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -4837,7 +4837,8 @@ int ieee80211_register_hwmode(struct ieee80211_hw *hw,
- 		local->hw.conf.chan = local->oper_channel;
- 	}
- 
--	ieee80211_init_client(local->mdev);
-+	if (!(hw->flags & IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED))
-+		ieee80211_init_client(local->mdev);
- 
- 	return 0;
- }
+Nah, he's compiling James's stuff against a kernel that doesn't have
+ieee80211_ptr, afaik James used ax25_ptr for this or something... Looks
+like you forgot some header file.
+
+johannes
+
+--=-fLnN5VvVDmh1Bs/gVLJ8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGKmvm/ETPhpq3jKURAlC1AKCnMa7rbhQGtMjDTzt1hoUbM07WEQCfWd4v
+z8R6OrKwFI7T5wIkVJFLYS4=
+=7fTB
+-----END PGP SIGNATURE-----
+
+--=-fLnN5VvVDmh1Bs/gVLJ8--
 
