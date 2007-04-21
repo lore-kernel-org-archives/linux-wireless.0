@@ -1,34 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:45335 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755431AbXD0HOS (ORCPT
+Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:50587 "EHLO
+	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754270AbXDUE0S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2007 03:14:18 -0400
-Message-ID: <46319E31.4090101@linux.intel.com>
-Date: Thu, 26 Apr 2007 23:54:41 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
+	Sat, 21 Apr 2007 00:26:18 -0400
+Date: Fri, 20 Apr 2007 23:25:40 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH V2] ieee80211: Output frequency rather than channel in  scan results
+Message-ID: <46299244.Q+HmhPpbYVGidoy1%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <200704251634.16604.flamingice@sourmilk.net> <46312067.9090005@linux.intel.com> <200704262023.52833.flamingice@sourmilk.net>
-In-Reply-To: <200704262023.52833.flamingice@sourmilk.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
+In ieee80211, the output of scan results lists channels rather than
+frequencies; however, NetworkManager needs frequency. This patch
+adds the frequency to the output.
 
-> How fast is hardware scanning? 
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-I just hooked the hw scanning back up in iwlwifi (as of iwlwifi-0.0.14)  The driver wasn't calling ieee80211_scan_complete() before to tell the stack the scan was done, so no results were being passing up.
-
-Anyway, I ran a quick test of using hw_scan enabled and disabled on a system with 15 active and 17 passive channels.
-
-	hw scan: 2.2s
-	sw scan: 4.7s
-
-So the SW scan wasn't the 10s that I stated before (although it sure felt like 10s before I ran it with 'time')  But anyway... the hw scan is currently beating out sw scanning by ~54%, at least here.
-
-James
+Index: wireless-2.6/net/ieee80211/ieee80211_wx.c
+===================================================================
+--- wireless-2.6.orig/net/ieee80211/ieee80211_wx.c
++++ wireless-2.6/net/ieee80211/ieee80211_wx.c
+@@ -89,15 +89,22 @@ static char *ieee80211_translate_scan(st
+ 		start = iwe_stream_add_event(start, stop, &iwe, IW_EV_UINT_LEN);
+ 	}
+ 
+-	/* Add frequency/channel */
++	/* Add channel and frequency */
+ 	iwe.cmd = SIOCGIWFREQ;
+-/*	iwe.u.freq.m = ieee80211_frequency(network->channel, network->mode);
+-	iwe.u.freq.e = 3; */
+ 	iwe.u.freq.m = network->channel;
+ 	iwe.u.freq.e = 0;
+ 	iwe.u.freq.i = 0;
+ 	start = iwe_stream_add_event(start, stop, &iwe, IW_EV_FREQ_LEN);
+ 
++	if (network->channel < 15)
++		iwe.u.freq.m = 2407 + 5 * network->channel;
++	else
++		iwe.u.freq.m = 5000 + 5 * network->channel;
++	if (network->channel == 14)
++		iwe.u.freq.m = 2484;    /* special case for Japan */
++	iwe.u.freq.e = 6;
++	start = iwe_stream_add_event(start, stop, &iwe, IW_EV_FREQ_LEN);
++
+ 	/* Add encryption capability */
+ 	iwe.cmd = SIOCGIWENCODE;
+ 	if (network->capability & WLAN_CAPABILITY_PRIVACY)
