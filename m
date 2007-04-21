@@ -1,60 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55306 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965496AbXDLIza (ORCPT
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:64922 "EHLO
+	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752702AbXDUUbq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2007 04:55:30 -0400
-Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery and   association
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	Simon Barber <simon@devicescape.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	mabbas <mabbas@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <jkm@devicescape.com>
-In-Reply-To: <461D6E4F.6060401@warmcat.com>
-References: <1174909105.1364.53.camel@dell-4965.jf.intel.com>
-	 <20070411194059.GA2436@tuxdriver.com> <461D3F48.70004@linux.intel.com>
-	 <200704111630.06160.flamingice@sourmilk.net>
-	 <1ba2fa240704111503l6dcef504na73c997ae75ebccd@mail.gmail.com>
-	 <C86180A8C204554D8A3323D8F6B0A29F01DEB33D@dhost002-46.dex002.intermedia.net>
-	 <1ba2fa240704111605l305230d3vf09c085473364eb3@mail.gmail.com>
-	 <461D6E4F.6060401@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8VJC3x16hiFZyOenWyLc"
-Date: Thu, 12 Apr 2007 10:56:49 +0200
-Message-Id: <1176368209.7052.10.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 21 Apr 2007 16:31:46 -0400
+Date: Sat, 21 Apr 2007 15:31:43 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linux-wireless@vger.kernel.org
+Message-ID: <462a74af.G6W/yBS27WPF7eds%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The routines that interrogate the ieee80211_geo struct are missing a
+channel to frequency entry. This patch adds it.
 
---=-8VJC3x16hiFZyOenWyLc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-On Thu, 2007-04-12 at 00:25 +0100, Andy Green wrote:
-
-> Since hopefully the concept will involve a kernelside-filtered=20
-> monitoring action via libpcap, the stack could for example inject a=20
-> periodic stats summary packet down the monitor interface back to userspac=
-e.
-
-Eek. No *new* fake packets any more please.
-
-johannes
-
---=-8VJC3x16hiFZyOenWyLc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGHfRR/ETPhpq3jKURAjksAJ45WzyXT3mW+TPiYwq/22OPyVFgtgCfTjzE
-h/QayjF2rdSBOB0CGRgGQJ0=
-=pa3w
------END PGP SIGNATURE-----
-
---=-8VJC3x16hiFZyOenWyLc--
-
+Index: wireless-2.6/net/ieee80211/ieee80211_geo.c
+===================================================================
+--- wireless-2.6.orig/net/ieee80211/ieee80211_geo.c
++++ wireless-2.6/net/ieee80211/ieee80211_geo.c
+@@ -94,6 +94,21 @@ int ieee80211_channel_to_index(struct ie
+ 	return -1;
+ }
+ 
++u32 ieee80211_channel_to_freq(struct ieee80211_device * ieee, u8 channel)
++{
++	const struct ieee80211_channel * ch;
++
++	/* Driver needs to initialize the geography map before using
++	 * these helper functions */
++	if (ieee->geo.bg_channels == 0 && ieee->geo.a_channels == 0)
++		return 0;
++
++	ch = ieee80211_get_channel(ieee, channel);
++	if (!ch->channel)
++		return 0;
++	return ch->freq;
++}
++
+ u8 ieee80211_freq_to_channel(struct ieee80211_device * ieee, u32 freq)
+ {
+ 	int i;
+@@ -174,6 +189,7 @@ EXPORT_SYMBOL(ieee80211_get_channel);
+ EXPORT_SYMBOL(ieee80211_get_channel_flags);
+ EXPORT_SYMBOL(ieee80211_is_valid_channel);
+ EXPORT_SYMBOL(ieee80211_freq_to_channel);
++EXPORT_SYMBOL(ieee80211_channel_to_freq);
+ EXPORT_SYMBOL(ieee80211_channel_to_index);
+ EXPORT_SYMBOL(ieee80211_set_geo);
+ EXPORT_SYMBOL(ieee80211_get_geo);
+Index: wireless-2.6/include/net/ieee80211.h
+===================================================================
+--- wireless-2.6.orig/include/net/ieee80211.h
++++ wireless-2.6/include/net/ieee80211.h
+@@ -1291,6 +1291,8 @@ extern u8 ieee80211_get_channel_flags(st
+ extern const struct ieee80211_channel *ieee80211_get_channel(struct
+ 							     ieee80211_device
+ 							     *ieee, u8 channel);
++extern u32 ieee80211_channel_to_freq(struct ieee80211_device * ieee,
++				      u8 channel);
+ 
+ /* ieee80211_wx.c */
+ extern int ieee80211_wx_get_scan(struct ieee80211_device *ieee,
