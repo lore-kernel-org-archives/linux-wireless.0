@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtpsrv03.uni-oldenburg.de ([134.106.87.11]:43951 "EHLO
-	smtpsrv03.uni-oldenburg.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1423029AbXDXTJb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2007 15:09:31 -0400
-Message-ID: <462E55EA.4030900@mail.uni-oldenburg.de>
-Date: Tue, 24 Apr 2007 21:09:30 +0200
-From: Stefan Puch <stefan.puch@mail.uni-oldenburg.de>
-MIME-Version: 1.0
-To: linux-net@vger.kernel.org
-CC: linux-wireless@vger.kernel.org
-Subject: Re: prism54: WPA/RSN support for fullmac cards
-References: <462336B1.4090006@mail.uni-oldenburg.de> <1176732546.27418.9.camel@localhost.localdomain> <4625130F.4090104@mail.uni-oldenburg.de> <200704172123.30956.chunkeey@web.de>
-In-Reply-To: <200704172123.30956.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-15
+Received: from mx1.redhat.com ([66.187.233.31]:40204 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753301AbXDUWQv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Apr 2007 18:16:51 -0400
+Subject: Re: [PATCH] ieee80211: Output frequency rather than channel in  scan results
+From: Dan Williams <dcbw@redhat.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+In-Reply-To: <20070421001253.q449myskosg0sg8k@webmail.spamcop.net>
+References: <46298e00.m7oDqYNvDCFdCSj1%Larry.Finger@lwfinger.net>
+	 <20070421001253.q449myskosg0sg8k@webmail.spamcop.net>
+Content-Type: text/plain
+Date: Sat, 21 Apr 2007 18:19:57 -0400
+Message-Id: <1177193997.19554.1.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chr wrote:
->> I thought that at least chunkeey got a working connection.... obviously not.
->>
-> Of course it works! But not with every AP... only with "hostapd".
-> (I don't have anything else to try).
-
-Perhaps we can do a meeting after your ABI and do some tests with another AP?
-
-
-> But please, before you waste your time with _some_ fullmac anomalies,
+On Sat, 2007-04-21 at 00:12 -0400, Pavel Roskin wrote:
+> Quoting Larry Finger <Larry.Finger@lwfinger.net>:
 > 
-> get the last wireless-dev.git tree. 
-> There is a SOFTMAC driver for all prism54 chips now! 
+> > In ieee80211, the output of scan results lists channels rather than
+> > frequencies; however, NetworkManager needs frequency. This patch
+> > changes the output from channel to frequency.
 > 
-> You only need a firmware: 
-> http://daemonizer.de/prism54/prism54-fw/fw-softmac/lmac_2.7.0.0.arm
-> (rename it to "isl3886" and put it in the right place).
+> The driver can report both, and I think it should.  This would make the iwlist
+> output a bit longer, but kernel drivers shouldn't be written to make userspace
+> program generate pretty output.
 
-- I got the wireless-dev.git tree version g5363171f.
-- I could successfully use the SOFTMAC driver with my Netgear WG511 and the
-  Fritz!Box Fon WLAN 7170
-- WPA and WPA2 encryption worked fine (very good work Thanks!)
-- only the "Act" (yellow) LED on the WLAN-Adapter was flashing very very fast
-  the whole time, I hope it doesn't give up to fast (perhaps someone could set
-  the rate a little bit down?)
+I'm trying to remember why NM cares about frequency, and I think it's
+for ad-hoc mode; but wpa_supplicant didn't historically support a
+"channel" configuration parameter and so you can't create adhoc networks
+with NM right now anyway...  What's the failure mode?
 
-- if I can do some further testings that may help you let me know
+Dan
 
-Regards Stefan
+> --
+> Regards,
+> Pavel Roskin
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
