@@ -1,32 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:5167 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752262AbXDIBL2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Apr 2007 21:11:28 -0400
-Subject: Re: Is it possible to test ipw2200 / mac80211 in 2.6.21-rc6-mm1?
-From: Zhu Yi <yi.zhu@intel.com>
-To: Miles Lane <miles.lane@gmail.com>
-Cc: wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <a44ae5cd0704081723q5b66baa8u23d2dda6d7ac0c91@mail.gmail.com>
-References: <a44ae5cd0704081723q5b66baa8u23d2dda6d7ac0c91@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 09 Apr 2007 09:09:44 +0800
-Message-Id: <1176080985.16123.158.camel@debian.sh.intel.com>
-Mime-Version: 1.0
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:44439 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752969AbXDVWYL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Apr 2007 18:24:11 -0400
+Message-ID: <462BE085.1050906@lwfinger.net>
+Date: Sun, 22 Apr 2007 17:24:05 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Dan Williams <dcbw@redhat.com>
+CC: Pavel Roskin <proski@gnu.org>,
+	John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ieee80211: Output frequency rather than channel in scan  results
+References: <46298e00.m7oDqYNvDCFdCSj1%Larry.Finger@lwfinger.net>	 <20070421001253.q449myskosg0sg8k@webmail.spamcop.net>	 <1177193997.19554.1.camel@localhost.localdomain>	 <462A965D.9000708@lwfinger.net> <1177279412.21205.23.camel@localhost.localdomain>
+In-Reply-To: <1177279412.21205.23.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2007-04-08 at 20:23 -0400, Miles Lane wrote:
-> Hello,
+Dan Williams wrote:
 > 
-> I notice that mac80211 is in Andrew's tree, but I don't seem to be
-> able to build ipw2200 without including the current softmac stuff.
-> I'd like to test the mac80211 code.  Is there a way to do this for
-> ipw2200 currently?  Do I have to use one of the development git trees?
+> Haha.  Ok.  NM should be smarter about this and convert channels
+> returned by the driver into frequencies.  In the end, I prefer
+> frequencies where at all possible, because channel numbers are _not_
+> unique (unless you use the the tuple of [standard, band, channel] where
+> standard is something like "802.11" or "802.16", band is "a" or "bg").
 
-No. ipw2100/2200 currently only work with ieee80211. iwlwifi drivers for
-ipw3945/4965 cards work with mac80211.
-http://intellinuxwireless.org/
+My current (but not yet accepted) patch for ieee80211 outputs both channel and frequency as does the 
+"soon to be submitted" one for mac80211. I agree that frequency is unique; however, I find it easier 
+to think in terms of channels. In addition, I only use the bg band and have no confusion. If both 
+are listed, everyone should be happy.
 
-Thanks,
--yi
+Larry
