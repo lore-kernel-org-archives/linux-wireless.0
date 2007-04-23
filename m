@@ -1,51 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:23419 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1423018AbXDXSwS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2007 14:52:18 -0400
+Received: from smtp.rutgers.edu ([128.6.72.243]:9493 "EHLO annwn14.rutgers.edu"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1161542AbXDWS6T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2007 14:58:19 -0400
 From: Michael Wu <flamingice@sourmilk.net>
-To: Stefan Puch <stefan.puch@mail.uni-oldenburg.de>
-Subject: Re: prism54: WPA/RSN support for fullmac cards
-Date: Tue, 24 Apr 2007 14:48:17 -0400
-Cc: linux-wireless@vger.kernel.org, linux-net@vger.kernel.org
-References: <462336B1.4090006@mail.uni-oldenburg.de> <43e72e890704171324l12ebf189m5837aae95b7143d1@mail.gmail.com> <462E513A.5000003@mail.uni-oldenburg.de>
-In-Reply-To: <462E513A.5000003@mail.uni-oldenburg.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart5190207.n9tXSRDnWK";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200704241448.22557.flamingice@sourmilk.net>
+Subject: [PATCH 07/13] mac80211: fix configuration concurrency issues in ieee80211_sta.c
+Date: Mon, 23 Apr 2007 14:48:13 -0400
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Message-Id: <20070423184813.7029.81396.stgit@magic.sourmilk.net>
+In-Reply-To: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+Content-Type: text/plain;
+  charset=utf-8;
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart5190207.n9tXSRDnWK
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+From: Michael Wu <flamingice@sourmilk.net>
 
-On Tuesday 24 April 2007 14:49, Stefan Puch wrote:
-> You can also use the FullMAC design to do some wlan sniffing/hacking
-> because it supports packet injection in Monitor mode!
-.. and so does p54, with the appropriate patches by Andy Green.
+This prevents userspace and the in-kernel MLME from configuring
+channel/BSSID/SSID at the same time when the in-kernel MLME is in the midst
+of automatic AP selection. This is done by holding the RTNL lock.
 
--Michael Wu
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
---nextPart5190207.n9tXSRDnWK
-Content-Type: application/pgp-signature
+ net/mac80211/ieee80211_sta.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 0e9e4f9..04a63a7 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -2068,9 +2068,12 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
+ 	struct ieee80211_sta_bss *bss, *selected = NULL;
+ 	int top_rssi = 0, freq;
+ 
++	rtnl_lock();
++
+ 	if (!ifsta->auto_channel_sel && !ifsta->auto_bssid_sel &&
+ 	    !ifsta->auto_ssid_sel) {
+ 		ifsta->state = IEEE80211_AUTHENTICATE;
++		rtnl_unlock();
+ 		ieee80211_sta_reset_auth(dev, ifsta);
+ 		return 0;
+ 	}
+@@ -2113,6 +2116,7 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
+ 		ieee80211_sta_set_bssid(dev, selected->bssid);
+ 		ieee80211_rx_bss_put(dev, selected);
+ 		ifsta->state = IEEE80211_AUTHENTICATE;
++		rtnl_unlock();
+ 		ieee80211_sta_reset_auth(dev, ifsta);
+ 		return 0;
+ 	} else {
+@@ -2123,6 +2127,7 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
+ 		} else
+ 			ifsta->state = IEEE80211_DISABLED;
+ 	}
++	rtnl_unlock();
+ 	return -1;
+ }
+ 
 
-iD8DBQBGLlD2T3Oqt9AH4aERAkYeAKC4UPGXDeOSgQDsfT4hrPWaQWb6jwCgqHq5
-KkLtFRn9OPFq/k06i+kHlLo=
-=yWIO
------END PGP SIGNATURE-----
-
---nextPart5190207.n9tXSRDnWK--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
