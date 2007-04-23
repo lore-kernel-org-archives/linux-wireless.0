@@ -1,286 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:48612 "EHLO
+Received: from smtp.rutgers.edu ([128.6.72.243]:23275 "EHLO
 	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750987AbXDFEvG (ORCPT
+	with ESMTP id S1161483AbXDWS6S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2007 00:51:06 -0400
+	Mon, 23 Apr 2007 14:58:18 -0400
 From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 02/13] sync with radiotap header in wireless-2.6
+Date: Mon, 23 Apr 2007 14:48:12 -0400
 To: Jiri Benc <jbenc@suse.cz>
-Subject: [PATCH] mac80211: Add radiotap support
-Date: Fri, 6 Apr 2007 00:48:46 -0400
-Cc: linux-wireless@vger.kernel.org, Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart4863762.bpiB9SVFXm";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200704060048.51524.flamingice@sourmilk.net>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Message-Id: <20070423184812.7029.94861.stgit@magic.sourmilk.net>
+In-Reply-To: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+Content-Type: text/plain;
+  charset=utf-8;
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart4863762.bpiB9SVFXm
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+From: Michael Wu <flamingice@sourmilk.net>
 
-mac80211: Add radiotap support
-
-=46rom: Michael Wu <flamingice@sourmilk.net>
-
-This patch makes mac80211 monitor interfaces use radiotap headers. It also
-provides a flag to let a driver specify a frame has a radiotap header and
-another flag to let the driver know if adding a radiotap header would be
-helpful.
-
-Thanks to Andy Green <andy@warmcat.com> for testing earlier versions of
-this patch.
+Update the radiotap header with what's in wireless-2.6. Also remove the
+comment about IEEE80211_RADIOTAP_FCS.
 
 Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-=2D--
+---
 
- include/net/mac80211.h         |    8 +++-
- net/mac80211/ieee80211.c       |   75 ++++++++++++++++++++++++++++++++++--=
-=2D---
- net/mac80211/ieee80211_iface.c |    2 +
- 3 files changed, 70 insertions(+), 15 deletions(-)
+ include/net/ieee80211_radiotap.h |   77 ++++++++++++++++++++++++++------------
+ 1 files changed, 52 insertions(+), 25 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 916b21b..3b22369 100644
-=2D-- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -216,9 +216,6 @@ struct ieee80211_tx_control {
- 	int ifindex;	/* internal */
- };
-=20
-=2D#define RX_FLAG_MMIC_ERROR       0x1
-=2D#define RX_FLAG_DECRYPTED	0x2
-=2D
- /* Receive status. The low-level driver should provide this information
-  * (the subset supported by hardware) to the 802.11 code with each received
-  * frame. */
-@@ -232,6 +229,9 @@ struct ieee80211_rx_status {
- 	int noise;
- 	int antenna;
- 	int rate;
-+#define RX_FLAG_MMIC_ERROR	(1<<0)
-+#define RX_FLAG_DECRYPTED	(1<<1)
-+#define RX_FLAG_RADIOTAP	(1<<2)
- 	int flag;
- };
-=20
-@@ -278,6 +278,8 @@ struct ieee80211_conf {
- #define IEEE80211_CONF_SHORT_SLOT_TIME	(1<<0) /* use IEEE 802.11g Short Sl=
-ot
- 						* Time */
- #define IEEE80211_CONF_SSID_HIDDEN	(1<<1) /* do not broadcast the ssid */
-+#define IEEE80211_CONF_RADIOTAP		(1<<2) /* use radiotap if supported
-+						  check this bit at RX time */
- 	u32 flags;			/* configuration flags defined above */
-=20
- 	u8 power_level;			/* transmit power limit for current
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index c390c85..bbf58a3 100644
-=2D-- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -8,6 +8,7 @@
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index 429b738..a0c2b41 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -66,7 +66,9 @@
   */
-=20
- #include <net/mac80211.h>
-+#include <net/ieee80211_radiotap.h>
- #include <linux/module.h>
- #include <linux/init.h>
- #include <linux/netdevice.h>
-@@ -292,6 +293,14 @@ int ieee80211_get_hdrlen_from_skb(const struct sk_buff=
- *skb)
- }
- EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
-=20
-+static int ieee80211_get_radiotap_len(struct sk_buff *skb)
-+{
-+	struct ieee80211_radiotap_header *hdr =3D
-+		(struct ieee80211_radiotap_header *) skb->data;
+ #define IEEE80211_RADIOTAP_HDRLEN	64
+ 
+-/* The radio capture header precedes the 802.11 header. */
++/* The radio capture header precedes the 802.11 header.
++ * All data in the header is little endian on all platforms.
++ */
+ struct ieee80211_radiotap_header {
+ 	u8 it_version;		/* Version 0. Only increases
+ 				 * for drastic changes,
+@@ -74,12 +76,12 @@ struct ieee80211_radiotap_header {
+ 				 * new fields does not count.
+ 				 */
+ 	u8 it_pad;
+-	u16 it_len;		/* length of the whole
++	__le16 it_len;		/* length of the whole
+ 				 * header in bytes, including
+ 				 * it_version, it_pad,
+ 				 * it_len, and data fields.
+ 				 */
+-	u32 it_present;		/* A bitmap telling which
++	__le32 it_present;	/* A bitmap telling which
+ 				 * fields are present. Set bit 31
+ 				 * (0x80000000) to extend the
+ 				 * bitmap by another 32 bits.
+@@ -88,89 +90,102 @@ struct ieee80211_radiotap_header {
+ 				 */
+ };
+ 
+-/* Name                                 Data type       Units
+- * ----                                 ---------       -----
++/* Name                                 Data type    Units
++ * ----                                 ---------    -----
+  *
+- * IEEE80211_RADIOTAP_TSFT              u64       microseconds
++ * IEEE80211_RADIOTAP_TSFT              __le64       microseconds
+  *
+  *      Value in microseconds of the MAC's 64-bit 802.11 Time
+  *      Synchronization Function timer when the first bit of the
+  *      MPDU arrived at the MAC. For received frames, only.
+  *
+- * IEEE80211_RADIOTAP_CHANNEL           2 x u16   MHz, bitmap
++ * IEEE80211_RADIOTAP_CHANNEL           2 x __le16   MHz, bitmap
+  *
+  *      Tx/Rx frequency in MHz, followed by flags (see below).
+  *
+- * IEEE80211_RADIOTAP_FHSS              u16       see below
++ * IEEE80211_RADIOTAP_FHSS              __le16       see below
+  *
+  *      For frequency-hopping radios, the hop set (first byte)
+  *      and pattern (second byte).
+  *
+- * IEEE80211_RADIOTAP_RATE              u8        500kb/s
++ * IEEE80211_RADIOTAP_RATE              u8           500kb/s
+  *
+  *      Tx/Rx data rate
+  *
+- * IEEE80211_RADIOTAP_DBM_ANTSIGNAL     int8_t          decibels from
+- *                                                      one milliwatt (dBm)
++ * IEEE80211_RADIOTAP_DBM_ANTSIGNAL     s8           decibels from
++ *                                                   one milliwatt (dBm)
+  *
+  *      RF signal power at the antenna, decibel difference from
+  *      one milliwatt.
+  *
+- * IEEE80211_RADIOTAP_DBM_ANTNOISE      int8_t          decibels from
+- *                                                      one milliwatt (dBm)
++ * IEEE80211_RADIOTAP_DBM_ANTNOISE      s8           decibels from
++ *                                                   one milliwatt (dBm)
+  *
+  *      RF noise power at the antenna, decibel difference from one
+  *      milliwatt.
+  *
+- * IEEE80211_RADIOTAP_DB_ANTSIGNAL      u8        decibel (dB)
++ * IEEE80211_RADIOTAP_DB_ANTSIGNAL      u8           decibel (dB)
+  *
+  *      RF signal power at the antenna, decibel difference from an
+  *      arbitrary, fixed reference.
+  *
+- * IEEE80211_RADIOTAP_DB_ANTNOISE       u8        decibel (dB)
++ * IEEE80211_RADIOTAP_DB_ANTNOISE       u8           decibel (dB)
+  *
+  *      RF noise power at the antenna, decibel difference from an
+  *      arbitrary, fixed reference point.
+  *
+- * IEEE80211_RADIOTAP_LOCK_QUALITY      u16       unitless
++ * IEEE80211_RADIOTAP_LOCK_QUALITY      __le16       unitless
+  *
+  *      Quality of Barker code lock. Unitless. Monotonically
+  *      nondecreasing with "better" lock strength. Called "Signal
+  *      Quality" in datasheets.  (Is there a standard way to measure
+  *      this?)
+  *
+- * IEEE80211_RADIOTAP_TX_ATTENUATION    u16       unitless
++ * IEEE80211_RADIOTAP_TX_ATTENUATION    __le16       unitless
+  *
+  *      Transmit power expressed as unitless distance from max
+  *      power set at factory calibration.  0 is max power.
+  *      Monotonically nondecreasing with lower power levels.
+  *
+- * IEEE80211_RADIOTAP_DB_TX_ATTENUATION u16       decibels (dB)
++ * IEEE80211_RADIOTAP_DB_TX_ATTENUATION __le16       decibels (dB)
+  *
+  *      Transmit power expressed as decibel distance from max power
+  *      set at factory calibration.  0 is max power.  Monotonically
+  *      nondecreasing with lower power levels.
+  *
+- * IEEE80211_RADIOTAP_DBM_TX_POWER      int8_t          decibels from
+- *                                                      one milliwatt (dBm)
++ * IEEE80211_RADIOTAP_DBM_TX_POWER      s8           decibels from
++ *                                                   one milliwatt (dBm)
+  *
+  *      Transmit power expressed as dBm (decibels from a 1 milliwatt
+  *      reference). This is the absolute power level measured at
+  *      the antenna port.
+  *
+- * IEEE80211_RADIOTAP_FLAGS             u8        bitmap
++ * IEEE80211_RADIOTAP_FLAGS             u8           bitmap
+  *
+  *      Properties of transmitted and received frames. See flags
+  *      defined below.
+  *
+- * IEEE80211_RADIOTAP_ANTENNA           u8        antenna index
++ * IEEE80211_RADIOTAP_ANTENNA           u8           antenna index
+  *
+  *      Unitless indication of the Rx/Tx antenna for this packet.
+  *      The first antenna is antenna 0.
+  *
+- * IEEE80211_RADIOTAP_FCS           	u32       data
++ * IEEE80211_RADIOTAP_RX_FLAGS          __le16       bitmap
++ *
++ *     Properties of received frames. See flags defined below.
++ *
++ * IEEE80211_RADIOTAP_TX_FLAGS          __le16       bitmap
++ *
++ *     Properties of transmitted frames. See flags defined below.
++ *
++ * IEEE80211_RADIOTAP_RTS_RETRIES       u8           data
++ *
++ *     Number of rts retries a transmitted frame used.
++ *
++ * IEEE80211_RADIOTAP_DATA_RETRIES      u8           data
++ *
++ *     Number of unicast retries a transmitted frame used.
+  *
+- *	FCS from frame in network byte order.
+  */
+ enum ieee80211_radiotap_type {
+ 	IEEE80211_RADIOTAP_TSFT = 0,
+@@ -187,7 +202,11 @@ enum ieee80211_radiotap_type {
+ 	IEEE80211_RADIOTAP_ANTENNA = 11,
+ 	IEEE80211_RADIOTAP_DB_ANTSIGNAL = 12,
+ 	IEEE80211_RADIOTAP_DB_ANTNOISE = 13,
+-	IEEE80211_RADIOTAP_EXT = 31,
++	IEEE80211_RADIOTAP_RX_FLAGS = 14,
++	IEEE80211_RADIOTAP_TX_FLAGS = 15,
++	IEEE80211_RADIOTAP_RTS_RETRIES = 16,
++	IEEE80211_RADIOTAP_DATA_RETRIES = 17,
++	IEEE80211_RADIOTAP_EXT = 31
+ };
+ 
+ /* Channel flags. */
+@@ -219,6 +238,14 @@ enum ieee80211_radiotap_type {
+ 						 * 802.11 header and payload
+ 						 * (to 32-bit boundary)
+ 						 */
++/* For IEEE80211_RADIOTAP_RX_FLAGS */
++#define IEEE80211_RADIOTAP_F_RX_BADFCS	0x0001	/* frame failed crc check */
 +
-+	return le16_to_cpu(hdr->it_len);
-+}
-+
- #ifdef CONFIG_MAC80211_LOWTX_FRAME_DUMP
- static void ieee80211_dump_frame(const char *ifname, const char *title,
- 				 const struct sk_buff *skb)
-@@ -2339,6 +2348,7 @@ static int ieee80211_open(struct net_device *dev)
- 		/* run the interface in a "soft monitor" mode */
- 		local->monitors++;
- 		local->open_count++;
-+		local->hw.conf.flags |=3D IEEE80211_CONF_RADIOTAP;
- 		return 0;
- 	}
- 	ieee80211_start_soft_monitor(local);
-@@ -2387,9 +2397,10 @@ static int ieee80211_open(struct net_device *dev)
- 	}
- 	local->open_count++;
-=20
-=2D	if (sdata->type =3D=3D IEEE80211_IF_TYPE_MNTR)
-+	if (sdata->type =3D=3D IEEE80211_IF_TYPE_MNTR) {
- 		local->monitors++;
-=2D	else
-+		local->hw.conf.flags |=3D IEEE80211_CONF_RADIOTAP;
-+	} else
- 		ieee80211_if_config(dev);
-=20
- 	if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA &&
-@@ -2414,13 +2425,18 @@ static int ieee80211_stop(struct net_device *dev)
- 		/* remove "soft monitor" interface */
- 		local->open_count--;
- 		local->monitors--;
-+		if (!local->monitors)
-+			local->hw.conf.flags &=3D ~IEEE80211_CONF_RADIOTAP;
- 		return 0;
- 	}
-=20
- 	netif_stop_queue(dev);
-=20
-=2D	if (sdata->type =3D=3D IEEE80211_IF_TYPE_MNTR)
-+	if (sdata->type =3D=3D IEEE80211_IF_TYPE_MNTR) {
- 		local->monitors--;
-+		if (!local->monitors)
-+			local->hw.conf.flags &=3D ~IEEE80211_CONF_RADIOTAP;
-+	}
-=20
- 	local->open_count--;
- 	if (local->open_count =3D=3D 0) {
-@@ -2766,26 +2782,53 @@ ieee80211_rx_monitor(struct net_device *dev, struct=
- sk_buff *skb,
- 		     struct ieee80211_rx_status *status)
- {
- 	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
-=2D	struct ieee80211_frame_info *fi;
- 	struct ieee80211_sub_if_data *sdata;
-=2D	const size_t hlen =3D sizeof(struct ieee80211_frame_info)
-=2D				- sizeof(fi->msg_type);
-+	struct ieee80211_rate *rate;
-+	struct ieee80211_rtap_hdr {
-+		struct ieee80211_radiotap_header hdr;
-+		u8 flags;
-+		u8 rate;
-+		__le16 chan_freq;
-+		__le16 chan_flags;
-+		u8 antsignal;
-+	} __attribute__ ((packed)) *rthdr;
-=20
- 	skb->dev =3D dev;
-=20
- 	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-=20
-=2D	if (skb_headroom(skb) < hlen) {
-+	if (status->flag & RX_FLAG_RADIOTAP)
-+		goto out;
-+
-+	if (skb_headroom(skb) < sizeof(*rthdr)) {
- 		I802_DEBUG_INC(local->rx_expand_skb_head);
-=2D		if (pskb_expand_head(skb, hlen, 0, GFP_ATOMIC)) {
-+		if (pskb_expand_head(skb, sizeof(*rthdr), 0, GFP_ATOMIC)) {
- 			dev_kfree_skb(skb);
- 			return;
- 		}
- 	}
-=20
-=2D	fi =3D (struct ieee80211_frame_info *) skb_push(skb, hlen);
-+	rthdr =3D (struct ieee80211_rtap_hdr *) skb_push(skb, sizeof(*rthdr));
-+	memset(rthdr, 0, sizeof(*rthdr));
-+	rthdr->hdr.it_len =3D cpu_to_le16(sizeof(*rthdr));
-+	rthdr->hdr.it_present =3D
-+		cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
-+			    (1 << IEEE80211_RADIOTAP_RATE) |
-+			    (1 << IEEE80211_RADIOTAP_CHANNEL) |
-+			    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL));
-+	rthdr->flags =3D local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS ?
-+		       IEEE80211_RADIOTAP_F_FCS : 0;
-+	rate =3D ieee80211_get_rate(local, status->phymode, status->rate);
-+	if (rate)
-+		rthdr->rate =3D rate->rate / 5;
-+	rthdr->chan_freq =3D cpu_to_le16(status->freq);
-+	rthdr->chan_flags =3D
-+		status->phymode =3D=3D MODE_IEEE80211A ?
-+		cpu_to_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ) :
-+		cpu_to_le16(IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ);
-+	rthdr->antsignal =3D status->ssi;
-=20
-=2D	ieee80211_fill_frame_info(local, fi, status);
-+ out:
- 	sdata->stats.rx_packets++;
- 	sdata->stats.rx_bytes +=3D skb->len;
-=20
-@@ -3189,6 +3232,9 @@ ieee80211_rx_h_monitor(struct ieee80211_txrx_data *rx)
- 		return TXRX_QUEUED;
- 	}
-=20
-+	if (rx->u.rx.status->flag & RX_FLAG_RADIOTAP)
-+		skb_pull(rx->skb, ieee80211_get_radiotap_len(rx->skb));
-+
- 	return TXRX_CONTINUE;
- }
-=20
-@@ -3756,6 +3802,12 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct =
-sk_buff *skb,
- 	struct ieee80211_txrx_data rx;
- 	u16 type;
- 	int multicast;
-+	int radiotap_len =3D 0;
-+
-+	if (status->flag & RX_FLAG_RADIOTAP) {
-+		radiotap_len =3D ieee80211_get_radiotap_len(skb);
-+		skb_pull(skb, radiotap_len);
-+	}
-=20
- 	hdr =3D (struct ieee80211_hdr *) skb->data;
- 	memset(&rx, 0, sizeof(rx));
-@@ -3792,6 +3844,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct s=
-k_buff *skb,
- 		goto end;
- 	skb =3D rx.skb;
-=20
-+	skb_push(skb, radiotap_len);
- 	if (sta && !sta->assoc_ap && !(sta->flags & WLAN_STA_WDS) &&
- 	    !local->iff_promiscs && !multicast) {
- 		rx.u.rx.ra_match =3D 1;
-@@ -3800,7 +3853,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct s=
-k_buff *skb,
- 	} else {
- 		struct ieee80211_sub_if_data *prev =3D NULL;
- 		struct sk_buff *skb_new;
-=2D		u8 *bssid =3D ieee80211_get_bssid(hdr, skb->len);
-+		u8 *bssid =3D ieee80211_get_bssid(hdr, skb->len - radiotap_len);
-=20
- 		list_for_each_entry(sdata, &local->sub_if_list, list) {
- 			rx.u.rx.ra_match =3D 1;
-diff --git a/net/mac80211/ieee80211_iface.c b/net/mac80211/ieee80211_iface.c
-index b1b20ba..495177b 100644
-=2D-- a/net/mac80211/ieee80211_iface.c
-+++ b/net/mac80211/ieee80211_iface.c
-@@ -192,7 +192,7 @@ void ieee80211_if_set_type(struct net_device *dev, int =
-type)
- 		break;
- 	}
- 	case IEEE80211_IF_TYPE_MNTR:
-=2D		dev->type =3D ARPHRD_IEEE80211_PRISM;
-+		dev->type =3D ARPHRD_IEEE80211_RADIOTAP;
- 		break;
- 	default:
- 		printk(KERN_WARNING "%s: %s: Unknown interface type 0x%x",
++/* For IEEE80211_RADIOTAP_TX_FLAGS */
++#define IEEE80211_RADIOTAP_F_TX_FAIL	0x0001	/* failed due to excessive
++						 * retries */
++#define IEEE80211_RADIOTAP_F_TX_CTS	0x0002	/* used cts 'protection' */
++#define IEEE80211_RADIOTAP_F_TX_RTS	0x0004	/* used rts/cts handshake */
+ 
+ /* Ugly macro to convert literal channel numbers into their mhz equivalents
+  * There are certianly some conditions that will break this (like feeding it '30')
 
---nextPart4863762.bpiB9SVFXm
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGFdEzT3Oqt9AH4aERAn0FAJ9jRrotYO1NchPr4/nzI4gQ3Fx07ACfatG8
-rDmu2AjbESemdYPXrBi2h9A=
-=HyLA
------END PGP SIGNATURE-----
-
---nextPart4863762.bpiB9SVFXm--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
