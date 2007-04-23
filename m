@@ -1,55 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:62511 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753015AbXDBDuT (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:23303 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161548AbXDWS6U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Apr 2007 23:50:19 -0400
-Message-ID: <46107D79.3060706@lwfinger.net>
-Date: Sun, 01 Apr 2007 22:50:17 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: WPA does not connect to bcm43xx-mac80211 when using NetworkManager
-References: <460E2B8C.4030002@gmail.com>	 <200703311503.53445.flamingice@sourmilk.net>	 <f6ca9fed0703311256m1b14ec35p836a62de532dd804@mail.gmail.com>	 <200703311700.52792.flamingice@sourmilk.net> <1175388624.10282.0.camel@localhost.localdomain>
-In-Reply-To: <1175388624.10282.0.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 23 Apr 2007 14:58:20 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 10/13] mac80211: set bssid to broadcast before scan
+Date: Mon, 23 Apr 2007 14:48:14 -0400
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Message-Id: <20070423184814.7029.99423.stgit@magic.sourmilk.net>
+In-Reply-To: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+Content-Type: text/plain;
+  charset=utf-8;
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Michael Wu <flamingice@sourmilk.net>
 
-Dan,
+This patch sets the BSSID to broadcast before scanning to ensure that the
+hardware filter does not filter probe responses.
 
-My bcm43xx-mac80211 system generates the following log entries when trying to connect using WPA-PSK
-TKIP controlled by NetworkManager. The same configuration works with bcm43xx-softmac.
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
-eth1: Initial auth_alg=0
-eth1: authenticate with AP 00:14:bf:85:49:fa
-eth1: RX authentication from 00:14:bf:85:49:fa (alg=0 transaction=2 status=0)
-eth1: authenticated
-eth1: associate with AP 00:14:bf:85:49:fa
-eth1: RX AssocResp from 00:14:bf:85:49:fa (capab=0x31 status=0 aid=2)
-eth1: associated
-wmaster0: Added STA 00:14:bf:85:49:fa
-eth1: RX deauthentication from 00:14:bf:85:49:fa (reason=15)
-eth1: deauthenticated
-eth1: set_encrypt - unknown addr 00:00:00:00:00:00
-eth1: authenticate with AP 00:14:bf:85:49:fa
-eth1: RX authentication from 00:14:bf:85:49:fa (alg=0 transaction=2 status=0)
-eth1: authenticated
-eth1: associate with AP 00:14:bf:85:49:fa
-eth1: RX ReassocResp from 00:14:bf:85:49:fa (capab=0x31 status=0 aid=2)
-eth1: associated
-eth1: starting scan
+ net/mac80211/ieee80211.c     |    6 +++++-
+ net/mac80211/ieee80211_i.h   |    1 +
+ net/mac80211/ieee80211_sta.c |   10 ++++++++++
+ 3 files changed, 16 insertions(+), 1 deletions(-)
 
-It does the original open authentication and associates, but the final WPA authentication times out.
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index ddb8153..17c6fde 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -2023,7 +2023,11 @@ static int __ieee80211_if_config(struct net_device *dev,
+ 	conf.type = sdata->type;
+ 	if (sdata->type == IEEE80211_IF_TYPE_STA ||
+ 	    sdata->type == IEEE80211_IF_TYPE_IBSS) {
+-		conf.bssid = sdata->u.sta.bssid;
++		if (local->sta_scanning &&
++		    local->scan_dev == dev)
++			conf.bssid = local->scan_bssid;
++		else
++			conf.bssid = sdata->u.sta.bssid;
+ 		conf.ssid = sdata->u.sta.ssid;
+ 		conf.ssid_len = sdata->u.sta.ssid_len;
+ 		conf.generic_elem = sdata->u.sta.extra_ie;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 6b3e1c5..fe638a9 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -502,6 +502,7 @@ struct ieee80211_local {
+ 	struct ieee80211_hw_mode *oper_hw_mode, *scan_hw_mode;
+ 	u8 scan_ssid[IEEE80211_MAX_SSID_LEN];
+ 	size_t scan_ssid_len;
++	u8 scan_bssid[ETH_ALEN];
+ 	struct list_head sta_bss_list;
+ 	struct ieee80211_sta_bss *sta_bss_hash[STA_HASH_SIZE];
+ 	spinlock_t sta_bss_lock;
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 7cb2dd3..20bd77b 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -2577,6 +2577,10 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
+ 		printk(KERN_DEBUG "%s: failed to restore operational"
+ 		       "channel after scan\n", dev->name);
+ 
++	if (ieee80211_if_config(dev))
++		printk(KERN_DEBUG "%s: failed to restore operational"
++		       "BSSID after scan\n", dev->name);
++
+ 	memset(&wrqu, 0, sizeof(wrqu));
+ 	wireless_send_event(dev, SIOCGIWSCAN, &wrqu, NULL);
+ 
+@@ -2730,12 +2734,18 @@ static int ieee80211_sta_start_scan(struct net_device *dev,
+ 		memcpy(local->scan_ssid, ssid, ssid_len);
+ 	} else
+ 		local->scan_ssid_len = 0;
++	memset(local->scan_bssid, ~0, ETH_ALEN);
+ 	local->scan_state = SCAN_SET_CHANNEL;
+ 	local->scan_hw_mode = list_entry(local->modes_list.next,
+ 					 struct ieee80211_hw_mode,
+ 					 list);
+ 	local->scan_channel_idx = 0;
+ 	local->scan_dev = dev;
++
++	if (ieee80211_if_config(dev))
++		printk(KERN_DEBUG "%s: failed to set BSSID for scan\n",
++		       dev->name);
++
+ 	/* TODO: start scan as soon as all nullfunc frames are ACKed */
+ 	queue_delayed_work(local->hw.workqueue, &local->scan_work,
+ 			   IEEE80211_CHANNEL_TIME);
 
-I'm using Michael Buesch's "mb" tree with the "mac80211: use IWEVGENIE" and "mac80211: set enc_capa"
-patches by Michael Wu. My distro is openSUSE 10.2 on an x86_64 system.
-
-Please advise on any further information I should provide.
-
-Thanks,
-
-Larry
