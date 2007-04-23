@@ -1,33 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4001 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946705AbXD3TWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Apr 2007 15:22:13 -0400
-Date: Mon, 30 Apr 2007 14:45:58 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: James Ketrenos <jketreno@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: "Stable" branch of mac80211
-Message-ID: <20070430184558.GD5994@tuxdriver.com>
-References: <20070429194855.451b9e7c@logostar.upir.cz> <46361EE3.6060107@linux.intel.com> <20070430192951.26bdf1df@griffin.suse.cz>
+Received: from amsfep17-int.chello.nl ([213.46.243.15]:7827 "EHLO
+	amsfep14-int.chello.nl" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1161483AbXDWTdR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2007 15:33:17 -0400
+Received: from [192.168.4.2] (really [62.163.57.155])
+          by amsfep14-int.chello.nl
+          (InterMail vM.6.01.04.04 201-2131-118-104-20050224) with ESMTP
+          id <20070423193314.ZNMB5341.amsfep14-int.chello.nl@[192.168.4.2]>
+          for <linux-wireless@vger.kernel.org>;
+          Mon, 23 Apr 2007 21:33:14 +0200
+Subject: Re: mac80211-7.0.4 ieee80211_ptr trouble
+From: Dick <dm@chello.nl>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <462CEDD4.9040804@linux.intel.com>
+References: <1177275065.9812.9.camel@localhost>
+	 <462CEDD4.9040804@linux.intel.com>
+Content-Type: text/plain
+Date: Mon, 23 Apr 2007 21:33:14 +0200
+Message-Id: <1177356794.7744.6.camel@dick.marinus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070430192951.26bdf1df@griffin.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 30, 2007 at 07:29:51PM +0200, Jiri Benc wrote:
-> On Mon, 30 Apr 2007 09:52:51 -0700, James Ketrenos wrote:
+Op maandag 23-04-2007 om 10:33 uur [tijdzone -0700], schreef James
+Ketrenos:
+> You can find it as mac80211-7.0.5.tgz at
+> http://intellinuxwireless.org/?p=mac80211&n=downloads 
 
-> > I assume the entire new tree will be marked as 'experimental', so what
-> > is the advantage gained by pulling this code out now?
-> 
-> Once the code is in vanilla, user space interfaces are set in stone.
-> Regarding .11n, untested and unreviewed patches shouldn't go to vanilla.
+Thanks a lot, it now compiles fine again!
 
-ACK
--- 
-John W. Linville
-linville@tuxdriver.com
+greetings,
+Dick
+
