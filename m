@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4831 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423049AbXDXTWE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2007 15:22:04 -0400
-Date: Tue, 24 Apr 2007 14:59:57 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Andy Green <andy@warmcat.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 03/13] mac80211: fix virtual interface related locking
-Message-ID: <20070424185957.GD22681@tuxdriver.com>
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <200704231722.07280.flamingice@sourmilk.net> <462E47D0.8030800@warmcat.com> <200704241425.01152.flamingice@sourmilk.net>
+Received: from styx.suse.cz ([82.119.242.94]:50156 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1161260AbXDWS31 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2007 14:29:27 -0400
+Date: Mon, 23 Apr 2007 20:29:30 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [PATCH] mac80211: update for cfg80211 rtnl locking
+Message-ID: <20070423202930.27749d11@griffin.suse.cz>
+In-Reply-To: <1177147293.5941.2.camel@johannes.berg>
+References: <1177147293.5941.2.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200704241425.01152.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 24, 2007 at 02:24:56PM -0400, Michael Wu wrote:
-> On Tuesday 24 April 2007 14:09, Andy Green wrote:
-> > =============================================
-> > [ INFO: possible recursive locking detected ]
-> > 2.6.21-rc7 #11
-> > ---------------------------------------------
-> > ip/2600 is trying to acquire lock:
-> >   (&dev->_xmit_lock){-+..}, at: [<e09199c5>]
-> > ieee80211_set_multicast_list+0x46/0x167 [mac80211]
-> >
-> > but task is already holding lock:
-> >   (&dev->_xmit_lock){-+..}, at: [<c05abc05>] dev_mc_upload+0x14/0x3c
-> >
-> This is fine, though it would be nice if we can shut the warning off. Virtual 
-> interfaces can try to take the xmit lock of the master device, but the master 
-> device will never try to take the xmit lock of the virtual interfaces and 
-> especially not while holding its own xmit lock.
+On Sat, 21 Apr 2007 11:21:32 +0200, Johannes Berg wrote:
+> cfg80211 was changed to hold the rtnl lock over calls to stack
+> specific operations. This patch changes mac80211 to account for that.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Hmmm...there is probably some lockdep annotation foo to take care of
-this, but I don't know it.
+Acked-by: Jiri Benc <jbenc@suse.cz>
 
-Anyone?
+John, please apply with the cfg80211 rtnl patch.
 
-John
+Thanks,
+
+ Jiri
+
 -- 
-John W. Linville
-linville@tuxdriver.com
+Jiri Benc
+SUSE Labs
