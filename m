@@ -1,120 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33754 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2993153AbXDZJk6 (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:23287 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161505AbXDWS6S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2007 05:40:58 -0400
-Message-Id: <20070424180850.362164000@sipsolutions.net>
-References: <20070424180732.371620000@sipsolutions.net>
-Date: Tue, 24 Apr 2007 20:07:40 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	jt@hpl.hp.com
-Subject: [PATCH 8/9] wext: misc code cleanups
-Mime-Version: 1.0
+	Mon, 23 Apr 2007 14:58:18 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 05/13] mac80211: remove statistics callback for master device
+Date: Mon, 23 Apr 2007 14:48:13 -0400
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Message-Id: <20070423184813.7029.95204.stgit@magic.sourmilk.net>
+In-Reply-To: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+Content-Type: text/plain;
+  charset=utf-8;
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just a few things that didn't fit in with the other patches.
+From: Michael Wu <flamingice@sourmilk.net>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Statistics were never updated properly for the master device, so don't
+bother reporting them.
 
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
 ---
- net/wireless/wext.c |   28 +++++++++++-----------------
- 1 file changed, 11 insertions(+), 17 deletions(-)
 
---- net-2.6.22.orig/net/wireless/wext.c	2007-04-24 19:18:49.198804911 +0200
-+++ net-2.6.22/net/wireless/wext.c	2007-04-24 19:25:46.768804911 +0200
-@@ -476,7 +476,7 @@ static struct iw_statistics *get_wireles
- 		return dev->wireless_handlers->get_wireless_stats(dev);
- 
- 	/* Not found */
--	return (struct iw_statistics *) NULL;
-+	return NULL;
- }
- 
- /* ---------------------------------------------------------------- */
-@@ -501,11 +501,11 @@ static struct iw_statistics *get_wireles
- static int call_commit_handler(struct net_device *dev)
- {
- 	if ((netif_running(dev)) &&
--	   (dev->wireless_handlers->standard[0] != NULL)) {
-+	   (dev->wireless_handlers->standard[0] != NULL))
- 		/* Call the commit handler on the driver */
- 		return dev->wireless_handlers->standard[0](dev, NULL,
- 							   NULL, NULL);
--	} else
-+	else
- 		return 0;		/* Command completed successfully */
- }
- 
-@@ -554,8 +554,7 @@ static int iw_handler_get_iwstats(struct
- 	struct iw_statistics *stats;
- 
- 	stats = get_wireless_stats(dev);
--	if (stats != (struct iw_statistics *) NULL) {
--
-+	if (stats) {
- 		/* Copy statistics to extra */
- 		memcpy(extra, stats, sizeof(struct iw_statistics));
- 		wrqu->data.length = sizeof(struct iw_statistics);
-@@ -814,9 +813,8 @@ static int ioctl_standard_call(struct ne
- 		/* Create the kernel buffer */
- 		/*    kzalloc ensures NULL-termination for essid_compat */
- 		extra = kzalloc(extra_size, GFP_KERNEL);
--		if (extra == NULL) {
-+		if (extra == NULL)
- 			return -ENOMEM;
--		}
- 
- 		/* If it is a SET, get all the extra data in here */
- 		if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
-@@ -957,18 +955,14 @@ static int ioctl_private_call(struct net
- 			if (iwr->u.data.length > (descr->set_args &
- 						 IW_PRIV_SIZE_MASK))
- 				return -E2BIG;
--		} else {
--			/* Check NULL pointer */
--			if (iwr->u.data.pointer == NULL)
--				return -EFAULT;
--		}
-+		} else if (iwr->u.data.pointer == NULL)
-+			return -EFAULT;
- 
- 		/* Always allocate for max space. Easier, and won't last
- 		 * long... */
- 		extra = kmalloc(extra_size, GFP_KERNEL);
--		if (extra == NULL) {
-+		if (extra == NULL)
- 			return -ENOMEM;
--		}
- 
- 		/* If it is a SET, get all the extra data in here */
- 		if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
-@@ -1259,7 +1253,7 @@ void wireless_send_event(struct net_devi
- 	event->len = event_len;
- 	event->cmd = cmd;
- 	memcpy(&event->u, ((char *) wrqu) + wrqu_off, hdr_len - IW_EV_LCP_LEN);
--	if (extra != NULL)
-+	if (extra)
- 		memcpy(((char *) event) + hdr_len, extra, extra_len);
- 
- 	/* Send via the RtNetlink event channel */
-@@ -1290,11 +1284,11 @@ EXPORT_SYMBOL(wireless_send_event);
-  * Because this is called on the Rx path via wireless_spy_update(),
-  * we want it to be efficient...
-  */
--static inline struct iw_spy_data * get_spydata(struct net_device *dev)
-+static inline struct iw_spy_data *get_spydata(struct net_device *dev)
- {
- 	/* This is the new way */
- 	if (dev->wireless_data)
--		return(dev->wireless_data->spy_data);
-+		return dev->wireless_data->spy_data;
- 	return NULL;
- }
- 
+ net/mac80211/ieee80211.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
---
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 7743ca0..8a3c749 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -4694,7 +4694,6 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	sta_info_init(local);
+ 
+ 	mdev->hard_start_xmit = ieee80211_master_start_xmit;
+-	mdev->get_stats = ieee80211_get_stats;
+ 	mdev->open = ieee80211_master_open;
+ 	mdev->stop = ieee80211_master_stop;
+ 	mdev->type = ARPHRD_IEEE80211;
 
