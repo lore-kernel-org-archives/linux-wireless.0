@@ -1,64 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-17.dex002.intermedia.net ([64.78.21.83]:22558 "EHLO
-	dhost002-17.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932887AbXDBPyM (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:51874 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161546AbXDWS6U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2007 11:54:12 -0400
-From: "Jouni Malinen" <jkm@devicescape.com>
-Date: Mon, 2 Apr 2007 08:54:05 -0700
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Subject: Re: SIOCSIWAP behavior question
-Message-ID: <20070402155405.GA2706@devicescape.com>
-References: <1175521655.9859.15.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1175521655.9859.15.camel@localhost.localdomain>
+	Mon, 23 Apr 2007 14:58:20 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 09/13] mac80211: remove hw_scan callback
+Date: Mon, 23 Apr 2007 14:48:14 -0400
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Message-Id: <20070423184814.7029.8413.stgit@magic.sourmilk.net>
+In-Reply-To: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+Content-Type: text/plain;
+  charset=utf-8;
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 02, 2007 at 09:47:35AM -0400, Dan Williams wrote:
-> Should setting a BSSID trigger a disconnection event from the driver?
+From: Michael Wu <flamingice@sourmilk.net>
 
-Just the act of setting BSSID? No.
+The hw_scan callback breaks the auto AP selection code in ieee80211_sta.c.
+No in-tree drivers use it either. This patch removes it.
 
-> Obviously a disconnect event shouldn't be triggered if the BSSID being
-> set is the same BSSID the card is already associated with.  Or does that
-> mean "reassociate unconditionally" ?
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
-I would ike to see disconnect event only if the driver/stack notices
-that it cannot complete association and based on this, believes its
-association to the ESS is lost.
+ include/net/mac80211.h       |    4 ----
+ net/mac80211/ieee80211.c     |    3 +--
+ net/mac80211/ieee80211_sta.c |   11 +----------
+ 3 files changed, 2 insertions(+), 16 deletions(-)
 
-> But suppose we have two APs in the same ESS with obviously different
-> BSSIDs.  The card automatically associates with one BSSID, but
-> wpa_supplicant decides it likes the other BSSID and calls SIOCSIWAP to
-> lock to that one during the association process.  Should the driver
-> issue an IWAP event of 00:00:00:00:00:00 before attempting
-> re-association with the BSSID that wpa_supplicant wants?
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b4b6619..cade956 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -668,10 +668,6 @@ struct ieee80211_ops {
+ 	int (*passive_scan)(struct ieee80211_hw *hw, int state,
+ 			    struct ieee80211_scan_conf *conf);
+ 
+-	/* Ask the hardware to service the scan request, no need to start
+-	 * the scan state machine in stack. */
+-	int (*hw_scan)(struct ieee80211_hw *hw, u8 *ssid, size_t len);
+-
+ 	/* return low-level statistics */
+ 	int (*get_stats)(struct ieee80211_hw *hw,
+ 			 struct ieee80211_low_level_stats *stats);
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 25ea011..ddb8153 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -2235,8 +2235,7 @@ static void ieee80211_if_shutdown(struct net_device *dev)
+ 		sdata->u.sta.state = IEEE80211_DISABLED;
+ 		del_timer_sync(&sdata->u.sta.timer);
+ 		skb_queue_purge(&sdata->u.sta.skb_queue);
+-		if (!local->ops->hw_scan &&
+-		    local->scan_dev == sdata->dev) {
++		if (local->scan_dev == sdata->dev) {
+ 			local->sta_scanning = 0;
+ 			cancel_delayed_work(&local->scan_work);
+ 		}
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index fe5c762..7cb2dd3 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -23,6 +23,7 @@
+ #include <linux/wireless.h>
+ #include <linux/random.h>
+ #include <linux/etherdevice.h>
++#include <linux/rtnetlink.h>
+ #include <net/iw_handler.h>
+ #include <asm/types.h>
+ #include <asm/delay.h>
+@@ -2713,16 +2714,6 @@ static int ieee80211_sta_start_scan(struct net_device *dev,
+ 		return -EBUSY;
+ 	}
+ 
+-	if (local->ops->hw_scan) {
+-		int rc = local->ops->hw_scan(local_to_hw(local),
+-					    ssid, ssid_len);
+-		if (!rc) {
+-			local->sta_scanning = 1;
+-			local->scan_dev = dev;
+-		}
+-		return rc;
+-	}
+-
+ 	local->sta_scanning = 1;
+ 
+ 	read_lock(&local->sub_if_lock);
 
-I would not like to see this. I see this as re-association within the
-same ESS and the driver/stack should just report the new BSSID after
-successful re-association. The exact same behavior should apply here
-regardless of whether BSSID was set (sort of forced re-association) or
-not (driver/stack re-associating, e.g., due to signal strength
-difference).
-
-> The libertas driver currently does this; it sometimes confuses
-> wpa_supplicant and is arguably wrong behavior because drivers don't
-> issue disconnection events when auto-roaming from BSSID to BSSID in the
-> same ESS.
-> 
-> Conversely, if you have two access points 'linksys' with different
-> BSSIDs that really _are_ two different ESSs, this would screw up
-> userspace tools if a disconnect _wasn't_ sent.  But in this case
-> automatic tools have more problems than driver events.
-
-I would rather not see disconnect event in either case. User space tools
-should react to BSSID change event by determining whether the old
-network configuration is still valid. This could be done, e.g., by
-pinging the default gateway (IP and/or MAC layer) and re-running DHCP if
-needed.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
