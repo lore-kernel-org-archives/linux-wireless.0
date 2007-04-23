@@ -1,72 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:37265
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767202AbXDESlV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 14:41:21 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Theo de Raadt <deraadt@cvs.openbsd.org>
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues
-Date: Thu, 5 Apr 2007 20:40:35 +0200
-Cc: Marcus Glocker <marcus@nazgul.ch>,
-	Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Joseph Jezak <josejx@gentoo.org>,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-References: <200704051828.l35ISZHQ030939@cvs.openbsd.org>
-In-Reply-To: <200704051828.l35ISZHQ030939@cvs.openbsd.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200704052040.36016.mb@bu3sch.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4549 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161404AbXDWSw0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2007 14:52:26 -0400
+Date: Mon, 23 Apr 2007 14:33:34 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	johannes@sipsolutions.net
+Subject: [PATCH] update MAINTAINERS for wireless mailing list
+Message-ID: <20070423183334.GC5883@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 05 April 2007 20:28, Theo de Raadt wrote:
-> > > But when dealing with a parallel open source effort, you went right to
-> > > the jugular.  I bet you deal nicer with companies.
-> > 
-> > There was no deal with you!
-> 
-> I don't understand this sentence of yours.
+From: Johannes Berg <johannes@sipsolutions.net>
 
-There was no agreement with you to use my code.
+This patch adds the linux-wireless mailing list to all appropriate
+entries in the MAINTAINERS file.
 
-> Do you make deals with companies?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ MAINTAINERS |   15 ++++++++++++---
+ 1 files changed, 12 insertions(+), 3 deletions(-)
 
-Not yet. Maybe in future. Who knows...
-
-> Do you do those deals publically?
-
-That depends on what the company does.
-If the company illegally distributes my code to the public,
-I _will_ contact them in public as well.
-
-If they contact me in private _before_ distributing the code,
-I will respond in private.
-
-The exact same thing would have been true for you.
-But you did _not_ do any effort to contact me before distributing
-my code.
-
-> What are you saying?
-> 
-> Was Marcus suppose do to have some sort of deal with you?
-
-The deal was: He asks for relicensing-permission on
-a particular faction of my code and I ACK or deny it.
-
-I explained the exact deal more than once.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 6876c8b..a15ec1a 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -656,6 +656,7 @@ S:	Supported
+ ATMEL WIRELESS DRIVER
+ P:	Simon Kelley
+ M:	simon@thekelleys.org.uk
++L:	linux-wireless@vger.kernel.org
+ W:	http://www.thekelleys.org.uk/atmel
+ W:	http://atmelwlandriver.sourceforge.net/
+ S:	Maintained
+@@ -711,6 +712,7 @@ P:	Larry Finger
+ M:	Larry.Finger@lwfinger.net
+ P:	Stefano Brivio
+ M:	st3@riseup.net
++L:	linux-wireless@vger.kernel.org
+ W:	http://bcm43xx.berlios.de/
+ S:	Maintained
+ 
+@@ -1552,6 +1554,7 @@ S:	Supported
+ HOST AP DRIVER
+ P:	Jouni Malinen
+ M:	jkmaline@cc.hut.fi
++L:	linux-wireless@vger.kernel.org
+ L:	hostap@shmoo.com
+ W:	http://hostap.epitest.fi/
+ S:	Maintained
+@@ -1838,6 +1841,7 @@ P:	Yi Zhu
+ M:	yi.zhu@intel.com
+ P:	James Ketrenos
+ M:	jketreno@linux.intel.com
++L:	linux-wireless@vger.kernel.org
+ L:	ipw2100-devel@lists.sourceforge.net
+ L:	http://lists.sourceforge.net/mailman/listinfo/ipw2100-devel
+ W:	http://ipw2100.sourceforge.net
+@@ -1848,6 +1852,7 @@ P:	Yi Zhu
+ M:	yi.zhu@intel.com
+ P:	James Ketrenos
+ M:	jketreno@linux.intel.com
++L:	linux-wireless@vger.kernel.org
+ L:	ipw2100-devel@lists.sourceforge.net
+ L:	http://lists.sourceforge.net/mailman/listinfo/ipw2100-devel
+ W:	http://ipw2200.sourceforge.net
+@@ -2540,6 +2545,7 @@ P:	Pavel Roskin
+ M:	proski@gnu.org
+ P:	David Gibson
+ M:	hermes@gibson.dropbear.id.au
++L:	linux-wireless@vger.kernel.org
+ L:	orinoco-users@lists.sourceforge.net
+ L:	orinoco-devel@lists.sourceforge.net
+ W:	http://www.nongnu.org/orinoco/
+@@ -2719,7 +2725,7 @@ S:	Supported
+ PRISM54 WIRELESS DRIVER
+ P:	Prism54 Development Team
+ M:	developers@islsm.org
+-L:	netdev@vger.kernel.org
++L:	linux-wireless@vger.kernel.org
+ W:	http://prism54.org
+ S:	Maintained
+ 
+@@ -2790,7 +2796,7 @@ S:	Maintained
+ RAYLINK/WEBGEAR 802.11 WIRELESS LAN DRIVER
+ P:	Corey Thomas
+ M:	corey@world.std.com
+-L:	linux-kernel@vger.kernel.org
++L:	linux-wireless@vger.kernel.org
+ S:	Maintained
+ 
+ RANDOM NUMBER DRIVER
+@@ -3053,7 +3059,7 @@ M:	josejx@gentoo.org
+ P:	Daniel Drake
+ M:	dsd@gentoo.org
+ W:	http://softmac.sipsolutions.net/
+-L:	netdev@vger.kernel.org
++L:	linux-wireless@vger.kernel.org
+ S:	Maintained
+ 
+ SOFTWARE RAID (Multiple Disks) SUPPORT
+@@ -3758,6 +3764,7 @@ S:	Maintained
+ WAVELAN NETWORK DRIVER & WIRELESS EXTENSIONS
+ P:	Jean Tourrilhes
+ M:	jt@hpl.hp.com
++L:	linux-wireless@vger.kernel.org
+ W:	http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/
+ S:	Maintained
+ 
+@@ -3775,6 +3782,7 @@ S:	Maintained
+ WL3501 WIRELESS PCMCIA CARD DRIVER
+ P:	Arnaldo Carvalho de Melo
+ M:	acme@ghostprotocols.net
++L:	linux-wireless@vger.kernel.org
+ W:	http://oops.ghostprotocols.net:81/blog
+ S:	Maintained
+ 
+@@ -3838,6 +3846,7 @@ M:	dsd@gentoo.org
+ P:	Ulrich Kunitz
+ M:	kune@deine-taler.de
+ W:	http://zd1211.ath.cx/wiki/DriverRewrite
++L:	linux-wireless@vger.kernel.org
+ L:	zd1211-devs@lists.sourceforge.net (subscribers-only)
+ S:	Maintained
+ 
+-- 
+1.5.0.6
 
 -- 
-Greetings Michael.
+John W. Linville
+linville@tuxdriver.com
