@@ -1,84 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:54684 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932098AbXDAEsf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Apr 2007 00:48:35 -0400
-Subject: Re: mac80211 does not support WPA when used with wext
-From: Dan Williams <dcbw@redhat.com>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
-	John Linville <linville@redhat.com>, Jiri Benc <jbenc@suse.cz>
-In-Reply-To: <200703312121.26758.flamingice@sourmilk.net>
-References: <460E2B8C.4030002@gmail.com>
-	 <200703311503.53445.flamingice@sourmilk.net>
-	 <1175388940.10282.7.camel@localhost.localdomain>
-	 <200703312121.26758.flamingice@sourmilk.net>
-Content-Type: text/plain
-Date: Sun, 01 Apr 2007 00:51:57 -0400
-Message-Id: <1175403117.10282.24.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from smtp.rutgers.edu ([128.6.72.243]:9509 "EHLO annwn14.rutgers.edu"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1161558AbXDWS6U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2007 14:58:20 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 13/13] mac80211: stop all virtual interfaces when master device goes down
+Date: Mon, 23 Apr 2007 14:48:15 -0400
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Message-Id: <20070423184814.7029.35852.stgit@magic.sourmilk.net>
+In-Reply-To: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+Content-Type: text/plain;
+  charset=utf-8;
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2007-03-31 at 21:21 -0400, Michael Wu wrote:
-> On Saturday 31 March 2007 20:55, Dan Williams wrote:
-> > wpa_supplicant works fine with it because it parses the custom events.
-> >
-> > NetworkManager will not parse custom events by design, in the same way
-> > that it will not allow WPA to be used on a card unless the driver
-> > explicitly advertises WPA support, and requires the use of the
-> > wpa_supplicant WEXT driver.  I'm not going to spend my time implementing
-> > stuff 3 different ways; we need to standardize this stuff and stick with
-> > it.
-> >
-> > Draw a line in the sand and all that.  Sure, it's made some people's
-> > lives harder, but NetworkManager was the reason madwifi added WE-19
-> > support, for example.
-> >
-> NetworkManager doesn't parse custom events? I'm pretty sure WPA/WPA2 was 
-> reported correctly in the scan results before.. maybe because of this little 
-> bit of code?
-> 
-> NetworkManager-0.6.4/src/nm-device-802-11-wireless.c:
-> case IWEVCUSTOM:
->     clen = iwe->u.data.length;
->     if (custom + clen > end)
->         break;
->     if (clen > 7 && ((strncmp (custom, "wpa_ie=", 7) == 0) || (strncmp 
-> (custom, "rsn_ie=", 7) == 0)))
-> ...
-> 
-> But that's besides the point. It is true that proper events should be used, 
-> but that issue has nothing to do with why WPA isn't working with 
-> NetworkManager. That was my point.
+From: Michael Wu <flamingice@sourmilk.net>
 
-Huh; right.  My bad :)  What's probably going on here then is that since
-the driver wasn't reporting WPA capability via enc_capa, the applet
-wont' show WPA as an option, and NM won't allow you to connect to
-WPA-enabled access points.
+The master device cannot actually veto taking a device down. This patch
+makes all virtual devices go down if the master device goes down.
 
-In any case, with 0.7 all the scanning code is ripped out in favor of
-using the D-Bus interface to wpa_supplicant, so this goes away and its
-wpa_supplicant's problem and not mine.
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
-Dan
+ net/mac80211/ieee80211.c |   13 ++++++-------
+ 1 files changed, 6 insertions(+), 7 deletions(-)
 
-> > Patch looks good though; thanks!  One thing I just thought of, which no
-> > drivers probably do.  Should mac80211 check that there's enough space
-> > left in the WE stream to actually add the IE?  There are usually checks
-> > to ensure that there's enough space to add the next whole BSS, but I
-> > don't know if we do checks to during the addition of each BSS.  Maybe
-> > I'm wrong and this isn't an issue.
-> >
-> iwe_stream_add_point(char *     stream,         /* Stream of events */
->                      char *     ends,           /* End of stream */
->                      struct iw_event *iwe,      /* Payload length + flags */
->                      char *     extra)          /* More payload */
-> {
->         int     event_len = IW_EV_POINT_LEN + iwe->u.data.length;
->         /* Check if it's possible */
->         if(likely((stream + event_len) < ends)) {
-> 
-> -Michael Wu
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index e876e04..6002f2d 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -2293,13 +2293,11 @@ static int ieee80211_master_stop(struct net_device *dev)
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+ 	read_lock(&local->sub_if_lock);
+-	list_for_each_entry(sdata, &local->sub_if_list, list) {
+-		if (sdata->dev != dev && netif_running(sdata->dev)) {
+-			read_unlock(&local->sub_if_lock);
+-			return -EOPNOTSUPP;
+-		}
+-	}
++	list_for_each_entry(sdata, &local->sub_if_list, list)
++		if (sdata->dev != dev && netif_running(sdata->dev))
++			dev_close(sdata->dev);
+ 	read_unlock(&local->sub_if_lock);
++
+ 	return 0;
+ }
+ 
+@@ -2475,7 +2473,8 @@ static int ieee80211_stop(struct net_device *dev)
+ 	local->open_count--;
+ 	if (local->open_count == 0) {
+ 		ieee80211_stop_scan(local);
+-		dev_close(local->mdev);
++		if (netif_running(local->mdev))
++			dev_close(local->mdev);
+ 		if (local->apdev)
+ 			dev_close(local->apdev);
+ 		if (local->ops->stop)
 
