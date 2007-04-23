@@ -1,76 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:47552 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S2993013AbXDTNKr (ORCPT
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:44487 "EHLO
+	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161105AbXDWEzd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Apr 2007 09:10:47 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Subject: Re: [PATCH] rtl818x-mac80211: fix coding style
-Date: Fri, 20 Apr 2007 09:07:08 -0400
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Andrea Merello <andreamrl@tiscali.it>,
-	linux-wireless@vger.kernel.org
-References: <20070420004258.23848470@localhost> <200704191923.31674.flamingice@sourmilk.net> <20070420090218.5a51d363@localhost>
-In-Reply-To: <20070420090218.5a51d363@localhost>
+	Mon, 23 Apr 2007 00:55:33 -0400
+Date: Sun, 22 Apr 2007 23:54:55 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Add channel to scan results
+Message-ID: <462c3c1f.8rt9VKvruWRkx5ts%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1487771.4G4lCE1XyX";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200704200907.13916.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1487771.4G4lCE1XyX
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+The scan results from mac80211 list only the frequency for any access
+point found. This patch adds the channel to the output as well.
 
-On Friday 20 April 2007 03:02, Stefano Brivio wrote:
-> On Thu, 19 Apr 2007 19:23:26 -0400
->
-> Michael Wu <flamingice@sourmilk.net> wrote:
-> > On Thursday 19 April 2007 18:42, Stefano Brivio wrote:
-> > > Fix coding style.
-> >
-> > Looks mostly good except for..
-> >
-> > > -	// ehh?
-> > > +	// XXX: ehh?
-> >
-> > Use FIXME if you want to put in a prefix.
->
-> "XXX:" means we don't know if it's a FIXME, a TODO or just correct code.
-> It's quite used. Unless this is a clear FIXME, I'd keep it.
->
-Sure. But I don't use it in my drivers. Take it out if you don't like FIXME.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-> > > -} __attribute__ ((packed));
-> > > +} __attribute__((packed));
-> >
-> > I prefer the space here.
->
-> Please see CodingStyle.
-Fair enough.
 
-Thanks,
--Michael Wu
+Index: wireless-dev/net/mac80211/ieee80211_sta.c
+===================================================================
+--- wireless-dev.orig/net/mac80211/ieee80211_sta.c
++++ wireless-dev/net/mac80211/ieee80211_sta.c
+@@ -2971,6 +2971,10 @@ ieee80211_sta_scan_result(struct net_dev
+ 
+ 	memset(&iwe, 0, sizeof(iwe));
+ 	iwe.cmd = SIOCGIWFREQ;
++	iwe.u.freq.m = bss->channel;
++	iwe.u.freq.e = 0;
++	current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
++					  IW_EV_FREQ_LEN);
+ 	iwe.u.freq.m = bss->freq * 100000;
+ 	iwe.u.freq.e = 1;
+ 	current_ev = iwe_stream_add_event(current_ev, end_buf, &iwe,
 
---nextPart1487771.4G4lCE1XyX
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGKLsBT3Oqt9AH4aERAvsmAJ4tj8Jh5zafiIrDGHNfZptzGBX96wCfRByD
-D5nrDfvNHzD4b/9Y/vNjmMQ=
-=YzDH
------END PGP SIGNATURE-----
-
---nextPart1487771.4G4lCE1XyX--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
