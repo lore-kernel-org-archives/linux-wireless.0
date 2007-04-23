@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:26019 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965971AbXD1QmI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2007 12:42:08 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 5/7] mac80211: set event_capa in iw_range
-Date: Sat, 28 Apr 2007 12:36:02 -0400
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Message-Id: <20070428163602.27203.37008.stgit@magic.sourmilk.net>
-In-Reply-To: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
-References: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+Received: from ra.tuxdriver.com ([70.61.120.52]:2884 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752311AbXDWUXW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2007 16:23:22 -0400
+Date: Mon, 23 Apr 2007 15:53:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	johannes@sipsolutions.net,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Subject: [PATCH] drivers/net/wireless/Kconfig: correct minor typo
+Message-ID: <20070423195313.GG5883@tuxdriver.com>
+References: <20070423183334.GC5883@tuxdriver.com> <20070423183443.GD5883@tuxdriver.com> <20070423213519.2692d0fd@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070423213519.2692d0fd@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+Correct minor typo in drivers/net/wireless/Kconfig identified by
+Stefano Brivio <stefano.brivio@polimi.it>.
 
-This fills in the event capability bitfield in struct iw_range.
-
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
-
- net/mac80211/ieee80211_ioctl.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-index 91bc633..9f4bde6 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -1599,6 +1599,11 @@ static int ieee80211_ioctl_giwrange(struct net_device *dev,
- 	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
- 			  IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 880c628..4426841 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -11,7 +11,7 @@ config WLAN_PRE80211
+ 	  Say Y if you have any pre-802.11 wireless LAN hardware.
  
-+	IW_EVENT_CAPA_SET_KERNEL(range->event_capa);
-+	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWTHRSPY);
-+	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWAP);
-+	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWSCAN);
-+
- 	return 0;
- }
+ 	  This option does not affect the kernel build, it only
+-	  let's you choose drivers.
++	  lets you choose drivers.
  
+ config STRIP
+ 	tristate "STRIP (Metricom starmode radio IP)"
+@@ -112,7 +112,7 @@ config WLAN_80211
+ 	  Say Y if you have any 802.11 wireless LAN hardware.
+ 
+ 	  This option does not affect the kernel build, it only
+-	  let's you choose drivers.
++	  lets you choose drivers.
+ 
+ config PCMCIA_RAYCS
+ 	tristate "Aviator/Raytheon 2.4MHz wireless support"
 
+-- 
+John W. Linville
+linville@tuxdriver.com
