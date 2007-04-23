@@ -1,32 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:55454 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752228AbXDIBKH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Apr 2007 21:10:07 -0400
-Subject: Re: Is it possible to test ipw2200 / mac80211 in 2.6.21-rc6-mm1?
-From: Dan Williams <dcbw@redhat.com>
-To: Miles Lane <miles.lane@gmail.com>
-Cc: wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <a44ae5cd0704081723q5b66baa8u23d2dda6d7ac0c91@mail.gmail.com>
-References: <a44ae5cd0704081723q5b66baa8u23d2dda6d7ac0c91@mail.gmail.com>
-Content-Type: text/plain
-Date: Sun, 08 Apr 2007 21:13:47 -0400
-Message-Id: <1176081227.4025.3.camel@localhost.localdomain>
+Received: from styx.suse.cz ([82.119.242.94]:53810 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753570AbXDWU6R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2007 16:58:17 -0400
+Date: Mon, 23 Apr 2007 22:58:21 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH 13/13] mac80211: stop all virtual interfaces when master  device goes down
+Message-ID: <20070423225821.783ffdc2@griffin.suse.cz>
+In-Reply-To: <20070423184814.7029.35852.stgit@magic.sourmilk.net>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+	<20070423184814.7029.35852.stgit@magic.sourmilk.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2007-04-08 at 20:23 -0400, Miles Lane wrote:
-> Hello,
-> 
-> I notice that mac80211 is in Andrew's tree, but I don't seem to be
-> able to build ipw2200 without including the current softmac stuff.
-> I'd like to test the mac80211 code.  Is there a way to do this for
-> ipw2200 currently?  Do I have to use one of the development git trees?
+On Mon, 23 Apr 2007 14:48:15 -0400, Michael Wu wrote:
+> The master device cannot actually veto taking a device down. This patch
+> makes all virtual devices go down if the master device goes down.
 
-I don't believe that ipw2200 is a mac80211-based driver.  Unless the
-Intel guys rewrote it to be based on mac80211, which would be awesome.
+That fixes my objections for patch #4 :-)
 
-Dan
+ Jiri
 
-
+-- 
+Jiri Benc
+SUSE Labs
