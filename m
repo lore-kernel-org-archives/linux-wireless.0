@@ -1,72 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:26023 "EHLO
+Received: from smtp.rutgers.edu ([128.6.72.243]:62154 "EHLO
 	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965975AbXD1QmJ (ORCPT
+	with ESMTP id S1754260AbXDWVZ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2007 12:42:09 -0400
+	Mon, 23 Apr 2007 17:25:59 -0400
 From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 6/7] mac80211: suppress warnings
-Date: Sat, 28 Apr 2007 12:36:02 -0400
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Message-Id: <20070428163602.27203.25629.stgit@magic.sourmilk.net>
-In-Reply-To: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
-References: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+To: Andy Green <andy@warmcat.com>
+Subject: Re: [PATCH 03/13] mac80211: fix virtual interface related locking
+Date: Mon, 23 Apr 2007 17:21:56 -0400
+Cc: linux-wireless@vger.kernel.org
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <20070423184812.7029.7682.stgit@magic.sourmilk.net> <462D1DD8.8060507@warmcat.com>
+In-Reply-To: <462D1DD8.8060507@warmcat.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1378668.mUeepNRrtt";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704231722.07280.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+--nextPart1378668.mUeepNRrtt
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-This eliminates warnings from gcc and sparse.
+On Monday 23 April 2007 16:58, Andy Green wrote:
+> Couldn't get this to apply on current wireless-dev, and there is a
+> trailing whitespace.  Maybe it's a problem with a script I concocted to
+> extract the patch from saved Thunderbird 2.0 mails... ?  Is it just that
+> wireless-dev changed inbetweentimes?
+>
+This patch series depends on the recent cfg80211/mac80211 rtnl locking=20
+patches.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+=2DMichael Wu
 
- net/mac80211/ieee80211.c |    8 +++-----
- 1 files changed, 3 insertions(+), 5 deletions(-)
+--nextPart1378668.mUeepNRrtt
+Content-Type: application/pgp-signature
 
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 4fd2300..2b6cb06 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -952,8 +952,6 @@ ieee80211_tx_h_check_assoc(struct ieee80211_txrx_data *tx)
- 	if (unlikely(!tx->u.tx.mgmt_interface && tx->sdata->ieee802_1x &&
- 		     !(sta_flags & WLAN_STA_AUTHORIZED))) {
- #ifdef CONFIG_MAC80211_DEBUG
--		struct ieee80211_hdr *hdr =
--			(struct ieee80211_hdr *) tx->skb->data;
- 		printk(KERN_DEBUG "%s: dropped frame to " MAC_FMT
- 		       " (unauthorized port)\n", tx->dev->name,
- 		       MAC_ARG(hdr->addr1));
-@@ -2049,7 +2047,7 @@ static int __ieee80211_if_config(struct net_device *dev,
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_if_conf conf;
--	static const u8 scan_bssid[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
-+	static u8 scan_bssid[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
- 
- 	if (!local->ops->config_interface || !netif_running(dev))
- 		return 0;
-@@ -2758,7 +2756,7 @@ ieee80211_fill_frame_info(struct ieee80211_local *local,
- 				htonl(ieee80211_phytype_dsss_dot11_turbo);
- 			break;
- 		default:
--			fi->phytype = 0xAAAAAAAA;
-+			fi->phytype = htonl(0xAAAAAAAA);
- 			break;
- 		}
- 		fi->channel = htonl(status->channel);
-@@ -2779,7 +2777,7 @@ ieee80211_fill_frame_info(struct ieee80211_local *local,
- 		}
- 
- 		fi->antenna = htonl(status->antenna);
--		fi->priority = 0xffffffff; /* no clue */
-+		fi->priority = htonl(0xffffffff); /* no clue */
- 		fi->ssi_type = htonl(ieee80211_ssi_raw);
- 		fi->ssi_signal = htonl(status->ssi);
- 		fi->ssi_noise = 0x00000000;
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
+iD8DBQBGLSN/T3Oqt9AH4aERAsU+AJ9fXcW66kvNVBK8+I19VOPUxY3X0ACgsok6
+WtC8yzbAP7262F3X2L4LpM0=
+=T1Qg
+-----END PGP SIGNATURE-----
+
+--nextPart1378668.mUeepNRrtt--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
