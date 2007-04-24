@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:44408
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754898AbXDZRDu (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:36641 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754612AbXDXJTk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2007 13:03:50 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: jt@hpl.hp.com
-Subject: Re: [PATCH 7/9] wext: reduce inline abuse
-Date: Thu, 26 Apr 2007 19:03:27 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-References: <20070424180732.371620000@sipsolutions.net> <20070424180849.651555000@sipsolutions.net> <20070426165032.GB22576@bougret.hpl.hp.com>
-In-Reply-To: <20070426165032.GB22576@bougret.hpl.hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200704261903.27932.mb@bu3sch.de>
+	Tue, 24 Apr 2007 05:19:40 -0400
+Subject: [PATCH] cfg80211: update comment for locking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <20070423183634.GE5883@tuxdriver.com>
+References: <20070423183334.GC5883@tuxdriver.com>
+	 <20070423183443.GD5883@tuxdriver.com> <20070423183634.GE5883@tuxdriver.com>
+Content-Type: text/plain
+Date: Tue, 24 Apr 2007 11:22:36 +0200
+Message-Id: <1177406557.3528.19.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 26 April 2007 18:50:32 Jean Tourrilhes wrote:
-> On Tue, Apr 24, 2007 at 08:07:39PM +0200, Johannes Berg wrote:
-> > This patch removes a bunch of inline abuse from wext. Most functions
-> > that were marked inline are only used once so the compiler will inline
-> > them anyway, others are used multiple times but there's no requirement
-> > for them to be inline since they aren't in any fast paths.
-> > 
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> 
-> 	That's clearly not true of all compilers. All gcc versions
-> before 4.0 need serious help to inline functions used only once. Our
-> current minimal requirement for the kernel is gcc 3.2, therefore this
-> code is still useful.
-> 	Note that this is a legitimate use of inline (tell the
-> compiler to inline the function), not an abuse.
+This patch adds a comment that was part of my rtnl locking patch for
+cfg80211 but which I forgot for the merge.
 
-By my personal definition _every_ use of inline is abuse, if it's not
-in an absolute fastpath and applied to a really tiny function.
-Sure, other people have different opinions on that, but I think
-with my approach we get smallest code with good speed.
-In general I try to avoid inline whereever possible.
-I think this patch is OK and should go in.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Often it's even desired to have out of line functions in fastpaths.
-See spinlocks.
+---
+ include/net/cfg80211.h |    4 ++++
+ 1 file changed, 4 insertions(+)
 
--- 
-Greetings Michael.
+--- net-2.6.22.orig/include/net/cfg80211.h	2007-04-24 11:20:47.538813880 +0200
++++ net-2.6.22/include/net/cfg80211.h	2007-04-24 11:21:26.388813880 +0200
+@@ -23,6 +23,10 @@ struct wiphy;
+  * All callbacks except where otherwise noted should return 0
+  * on success or a negative error code.
+  *
++ * All operations are currently invoked under rtnl for consistency with the
++ * wireless extensions but this is subject to reevaluation as soon as this
++ * code is used more widely and we have a first user without wext.
++ *
+  * @add_virtual_intf: create a new virtual interface with the given name
+  *
+  * @del_virtual_intf: remove the virtual interface determined by ifindex.
+
+
