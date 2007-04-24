@@ -1,89 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:53844 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753127AbXDIMEK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2007 08:04:10 -0400
-Subject: Re: [PATCH] mac80211: Report correct wireless statistics
-From: Dan Williams <dcbw@redhat.com>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
-In-Reply-To: <200704090043.34436.flamingice@sourmilk.net>
-References: <461877ea.cyxM3SSnr6WhYkjX%Larry.Finger@lwfinger.net>
-	 <200704082031.59934.flamingice@sourmilk.net>
-	 <4619B90E.1030403@lwfinger.net>
-	 <200704090043.34436.flamingice@sourmilk.net>
-Content-Type: text/plain
-Date: Mon, 09 Apr 2007 08:07:08 -0400
-Message-Id: <1176120428.2693.12.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mog.warmcat.com ([62.193.232.24]:44071 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1423090AbXDXUve (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Apr 2007 16:51:34 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 157488CAC9
+	for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2007 22:51:26 +0200 (CEST)
+Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
+	by armbox7.home.warmcat.com (Postfix) with ESMTP id BE7B2131BD
+	for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2007 20:52:04 +0000 (UTC)
+Received: from meerkat.home.warmcat.com (meerkat.home.warmcat.com [127.0.0.1])
+	by meerkat.home.warmcat.com (Postfix) with ESMTP id 9ABED18D1D69
+	for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2007 21:51:30 +0100 (BST)
+Message-ID: <462E6DD1.4050108@warmcat.com>
+Date: Tue, 24 Apr 2007 21:51:29 +0100
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] bcm43xx-mac80211: fix rx status reported frequency
+Content-Type: multipart/mixed;
+ boundary="------------000200050806080503020602"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-04-09 at 00:43 -0400, Michael Wu wrote:
-> On Sunday 08 April 2007 23:54, Larry Finger wrote:
-> > Why would I want to do this?
-> Did it fix the output?
-> 
-> > If the community agrees on anything, it is 
-> > that the signal is given in dBm (i.e. a negative number) and that the rssi
-> > is a positive number.
-> Nope. dBm doesn't have to be negative, though it often is since most wireless 
-> hardware isn't that powerful. RSSI is simply a number that's bigger for 
-> stronger signals. It could be dBm, but it doesn't have to be. If you want a 
-> stronger definition of RSSI, look at RCPI.
-> 
-> > The firmware in the bcm43xx chips return a quantity 
-> > that looks like an rssi with a received packet, and
-> > bcm43xx_rssi_postprocess turns that into a quantity that looks like dBm.
-> > Your patch reverses those designations and mixes up the two quantities.
-> > Again I ask "Why"?
-> >
-> Because of the naming/use of the statistics in mac80211 and WE. Signal ends up 
-> getting assigned to (struct iw_quality).qual, which is actually just an 
-> arbitrary link quality indicator, not dBm. Anything you care about can be put 
-> there. (r)ssi gets assigned to (struct iw_quality).level, which is RSSI. WE 
-> allows that and noise to be specified in either arbitrary units or dBm or 
-> RCPI.
-> 
-> Yes, I did reverse your conventions, but it makes more sense this way. (R)SSI 
-> is always valid to assign to (struct iw_quality).level and signal ((struct 
-> iw_quality).qual) is quite arbitrary and cannot be specified in specific 
-> units.
-> 
-> Signal should be probably be renamed to qual to make it more clear that it is 
-> arbitrary.
-
-In WE, qual is arbitrary within a few limits:
-
-a) qual _must_ change on a linear scale
-b) a valid max_qual.qual must be set
-c) qual must fall within the bounds of [0, max_qual.qual] inclusive
-
-If you report 'level' in dBm, you must set the IW_QUAL_DBM flag.
-Otherwise, 'level' _may_ be assumed to be RSSI.  If 'level' is dBm,
-max_qual.level must be 0.  If 'level' is RSSI, max_qual.level must be
-greater than 0, and level must fall within the bounds of [0,
-max_qual.level] inclusive.  Replace 'level' with 'noise' here for the
-rules for noise.
-
-I don't particularly care if level/noise is RSSI _as long as_ you give
-the max RSSI for your part.  Different radio parts have different max
-RSSI values, and if you're writing a driver you sure better know them or
-figure some reasonable ones out by experimentation.  RSSI is entirely
-vendor defined and does _not_ conform to any rules.  Therefore we need
-the max RSSI to get usable signal strength reports from your part.
-
-I know that 0 dBm isn't actually the upper bound, but in practice most
-people aren't going to get parts that go above that.  0 dBm should be
-considered a _limitation_ of WEXT that we obviously fix with
-cfg80211/nl80211 when we bring some sanity to signal strength reporting.
-
-Again, if you report level in RSSI, you must provide the max RSSI for
-your part in max_qual.level.
-
-Dan
+This is a multi-part message in MIME format.
+--------------000200050806080503020602
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
 
+--------------000200050806080503020602
+Content-Type: text/x-patch;
+ name="bcm43xx-mac80211-fix-rx-status-reported-frequency.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename*0="bcm43xx-mac80211-fix-rx-status-reported-frequency.patch"
+
+bcm43xx-mac80211: Fix reported rx frequency and channel
+
+bcm43xx-mac80211 is reporting bogus frequencies and channels back to
+mac80211 at the moment (eg, actual ch1 (2412MHz) reported as 2424MHz).
+
+Prior to this patch, the hardware rx channel value is reported as
+starting at 0x18 and rising by 0x10 per channel.  Code in bcm43xx_xmit.c
+tries to take this value and add 2400 to it to get the rx frequency.
+It seems the intention is that the hardware reports the (rx freq - 2400),
+so we want the value starting at 0x0c and rising by 0x05 per channel.
+
+If the value read is shifted one more bit to the right, it will
+succeed in doing this.  Therefore this patch increases the shifting constant
+by one and reduces the mask by one lsb.
+
+The rx frequency reported in the radiotap rx and then, eg, tcpdump,
+is then correct.  I didn't test ch 14 but I guess the hardware is
+consistent about it.
+
+Signed-off-by: Andy Green <andy@warmcat.com>
+
+diff --git a/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h b/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h
+index 44fa515..0372064 100644
+--- a/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h
++++ b/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h
+@@ -190,8 +190,8 @@ struct bcm43xx_rxhdr_fw4 {
+ /* RX channel */
+ #define BCM43xx_RX_CHAN_GAIN		0xFC00 /* Gain */
+ #define BCM43xx_RX_CHAN_GAIN_SHIFT	10
+-#define BCM43xx_RX_CHAN_ID		0x03FC /* Channel ID */
+-#define BCM43xx_RX_CHAN_ID_SHIFT	2
++#define BCM43xx_RX_CHAN_ID		0x03F8 /* Channel ID */
++#define BCM43xx_RX_CHAN_ID_SHIFT	3
+ #define BCM43xx_RX_CHAN_PHYTYPE		0x0003 /* PHY type */
+ 
+ 
+
+--------------000200050806080503020602--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
