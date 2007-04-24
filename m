@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cvs.openbsd.org ([199.185.137.3]:46453 "EHLO cvs.openbsd.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767162AbXDERoW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 13:44:22 -0400
-Message-Id: <200704051740.l35HeNtx029008@cvs.openbsd.org>
-To: Michael Buesch <mb@bu3sch.de>
-cc: Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Joseph Jezak <josejx@gentoo.org>,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
-In-reply-to: Your message of "Thu, 05 Apr 2007 19:35:35 +0200."
-             <200704051935.36264.mb@bu3sch.de>
-Date: Thu, 05 Apr 2007 11:40:23 -0600
-From: Theo de Raadt <deraadt@cvs.openbsd.org>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33652 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2993142AbXDZJik (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2007 05:38:40 -0400
+Subject: Re: [PATCH 01/13] mac80211: Add radiotap support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-f5+iqN9gNnFIyiSfsSgp"
+Date: Tue, 24 Apr 2007 18:16:04 +0200
+Message-Id: <1177431364.3528.29.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I'm sorry if the mail sounded too strong. This was not intentional.
 
-It sure as hell was intentional; the minute you assumed it was not an
-ACCIDENT, and you decided to go public, it became 100% intentional.
-You even gave him choices, and having brought it public, you were
-telling him to make that choice publically.
+--=-f5+iqN9gNnFIyiSfsSgp
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Well, he has made the expected choice.  A choice almost every person
-on this planet would make.
 
-> But I think I made a great effort to make this clear, though.
-> I am not out for blood.
+> -#define RX_FLAG_MMIC_ERROR       0x1
+> -#define RX_FLAG_DECRYPTED	0x2
+> -
+>  /* Receive status. The low-level driver should provide this information
+>   * (the subset supported by hardware) to the 802.11 code with each recei=
+ved
+>   * frame. */
+> @@ -232,6 +229,9 @@ struct ieee80211_rx_status {
+>  	int noise;
+>  	int antenna;
+>  	int rate;
+> +#define RX_FLAG_MMIC_ERROR	(1<<0)
+> +#define RX_FLAG_DECRYPTED	(1<<1)
+> +#define RX_FLAG_RADIOTAP	(1<<2)
+>  	int flag;
+>  };
 
-And I guess that makes it ok.
+Doesn't matter right now, but for the future: kernel-doc hates having
+constants inlined into a struct like that.
+=20
+johannes
+
+--=-f5+iqN9gNnFIyiSfsSgp
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGLi1D/ETPhpq3jKURAv+AAJ9lFba+nfc+yaN/lUd0CnS1BAZU6QCfRx0g
+F+1cBJBUDygIjiR4griEjKc=
+=R+QP
+-----END PGP SIGNATURE-----
+
+--=-f5+iqN9gNnFIyiSfsSgp--
+
