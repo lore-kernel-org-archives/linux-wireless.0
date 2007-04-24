@@ -1,39 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:14480 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754076AbXDWRd3 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33759 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2993162AbXDZJlC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2007 13:33:29 -0400
-Message-ID: <462CEDD4.9040804@linux.intel.com>
-Date: Mon, 23 Apr 2007 10:33:08 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
-MIME-Version: 1.0
-To: Dick Marinus <dick.marinus@chello.nl>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211-7.0.4 ieee80211_ptr trouble
-References: <1177275065.9812.9.camel@localhost>
-In-Reply-To: <1177275065.9812.9.camel@localhost>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 26 Apr 2007 05:41:02 -0400
+Message-Id: <20070424180849.235352000@sipsolutions.net>
+References: <20070424180732.371620000@sipsolutions.net>
+Date: Tue, 24 Apr 2007 20:07:38 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	jt@hpl.hp.com
+Subject: [PATCH 6/9] wext: move EXPORT_SYMBOL statements where they belong
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dick Marinus wrote:
+EXPORT_SYMBOL statements are supposed to go together with the symbol
+they're exporting. This patch moves them accordingly.
 
-> Ah, it seems ieee80211_ptr doesn't cause the problem, make unmodified
-> failed:
-...
-> |--- pre/net/mac80211/ieee80211_sysfs.c 2007-04-17 15:54:31.000000000
-...
-> ieee80211_sysfs doesn't seem to exist in {pre,post}/net/mac80211/
-> neither in /usr/src/linux.
-> 
-> should it have been in the mac80211-7.0.4 tarball?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-I see the problem now :)
+---
+ net/wireless/wext.c |   11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-ieee80211_sysfs.c is provided as part of Yi's pending/ patch to adding the sysfs attributes for QoS, and the add_net_dev patch is built against that code.  I've checked in a new version of the mac80211 subsystem's build scripts that corrects for this behavior.  I've build tested on 2.6.20-gentoo-r6 w/ both 'make patch_kernel' and 'make patch_kernel_unmodified' (which uses the unmodified (no 'pending' sources)
+--- net-2.6.22.orig/net/wireless/wext.c	2007-04-24 19:11:11.888804911 +0200
++++ net-2.6.22/net/wireless/wext.c	2007-04-24 19:12:44.288804911 +0200
+@@ -1279,6 +1279,7 @@ void wireless_send_event(struct net_devi
+ 
+ 	return;		/* Always success, I guess ;-) */
+ }
++EXPORT_SYMBOL(wireless_send_event);
+ 
+ /********************** ENHANCED IWSPY SUPPORT **********************/
+ /*
+@@ -1356,6 +1357,7 @@ int iw_handler_set_spy(struct net_device
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL(iw_handler_set_spy);
+ 
+ /*------------------------------------------------------------------*/
+ /*
+@@ -1391,6 +1393,7 @@ int iw_handler_get_spy(struct net_device
+ 		spydata->spy_stat[i].updated &= ~IW_QUAL_ALL_UPDATED;
+ 	return 0;
+ }
++EXPORT_SYMBOL(iw_handler_get_spy);
+ 
+ /*------------------------------------------------------------------*/
+ /*
+@@ -1417,6 +1420,7 @@ int iw_handler_set_thrspy(struct net_dev
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL(iw_handler_set_thrspy);
+ 
+ /*------------------------------------------------------------------*/
+ /*
+@@ -1440,6 +1444,7 @@ int iw_handler_get_thrspy(struct net_dev
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL(iw_handler_get_thrspy);
+ 
+ /*------------------------------------------------------------------*/
+ /*
+@@ -1516,10 +1521,4 @@ void wireless_spy_update(struct net_devi
+ 		}
+ 	}
+ }
+-
+-EXPORT_SYMBOL(iw_handler_get_spy);
+-EXPORT_SYMBOL(iw_handler_get_thrspy);
+-EXPORT_SYMBOL(iw_handler_set_spy);
+-EXPORT_SYMBOL(iw_handler_set_thrspy);
+-EXPORT_SYMBOL(wireless_send_event);
+ EXPORT_SYMBOL(wireless_spy_update);
 
-You can find it as mac80211-7.0.5.tgz at http://intellinuxwireless.org/?p=mac80211&n=downloads
+--
 
-Thanks,
-James
