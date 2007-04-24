@@ -1,252 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:9477 "EHLO annwn14.rutgers.edu"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1161377AbXDWS6S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2007 14:58:18 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 01/13] mac80211: Add radiotap support
-Date: Mon, 23 Apr 2007 14:48:12 -0400
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Message-Id: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33749 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2993151AbXDZJky (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2007 05:40:54 -0400
+Message-Id: <20070424180847.982382000@sipsolutions.net>
+References: <20070424180732.371620000@sipsolutions.net>
+Date: Tue, 24 Apr 2007 20:07:35 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	jt@hpl.hp.com
+Subject: [PATCH 3/9] wext: remove dead debug code
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+This patch kills a whole bunch of code that can only ever be used by
+defining some things in wext.c. Also, the things that are printed are
+mostly useless since the API is fairly well-tested.
 
-This patch makes mac80211 monitor interfaces use radiotap headers. It also
-provides a bit to let a driver specify a frame has a radiotap header and
-another bit to let the driver know if adding a radiotap header would be
-helpful.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Thanks to Andy Green <andy@warmcat.com> for testing earlier versions of
-this patch.
-
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
 ---
+ net/wireless/wext.c |   92 ----------------------------------------------------
+ 1 file changed, 92 deletions(-)
 
- include/net/mac80211.h         |    8 +++-
- net/mac80211/ieee80211.c       |   75 ++++++++++++++++++++++++++++++++++------
- net/mac80211/ieee80211_iface.c |    2 +
- 3 files changed, 70 insertions(+), 15 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 1fb4bd9..6392c44 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -216,9 +216,6 @@ struct ieee80211_tx_control {
- 	int ifindex;	/* internal */
- };
+--- net-2.6.22.orig/net/wireless/wext.c	2007-04-24 18:58:07.738804911 +0200
++++ net-2.6.22/net/wireless/wext.c	2007-04-24 18:59:00.998804911 +0200
+@@ -103,11 +103,6 @@
  
--#define RX_FLAG_MMIC_ERROR       0x1
--#define RX_FLAG_DECRYPTED	0x2
+ /**************************** CONSTANTS ****************************/
+ 
+-/* Debugging stuff */
+-#undef WE_IOCTL_DEBUG		/* Debug IOCTL API */
+-#undef WE_EVENT_DEBUG		/* Debug Event dispatcher */
+-#undef WE_SPY_DEBUG		/* Debug enhanced spy support */
 -
- /* Receive status. The low-level driver should provide this information
-  * (the subset supported by hardware) to the 802.11 code with each received
-  * frame. */
-@@ -232,6 +229,9 @@ struct ieee80211_rx_status {
- 	int noise;
- 	int antenna;
- 	int rate;
-+#define RX_FLAG_MMIC_ERROR	(1<<0)
-+#define RX_FLAG_DECRYPTED	(1<<1)
-+#define RX_FLAG_RADIOTAP	(1<<2)
- 	int flag;
- };
+ /* Options */
+ #define WE_EVENT_RTNETLINK	/* Propagate events using RtNetlink */
+ #define WE_SET_EVENT		/* Generate an event on some set commands */
+@@ -736,12 +731,6 @@ static int ioctl_standard_call(struct ne
+ 		return -EOPNOTSUPP;
+ 	descr = &(standard_ioctl[cmd - SIOCIWFIRST]);
  
-@@ -278,6 +278,8 @@ struct ieee80211_conf {
- #define IEEE80211_CONF_SHORT_SLOT_TIME	(1<<0) /* use IEEE 802.11g Short Slot
- 						* Time */
- #define IEEE80211_CONF_SSID_HIDDEN	(1<<1) /* do not broadcast the ssid */
-+#define IEEE80211_CONF_RADIOTAP		(1<<2) /* use radiotap if supported
-+						  check this bit at RX time */
- 	u32 flags;			/* configuration flags defined above */
- 
- 	u8 power_level;			/* transmit power limit for current
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index ab51a74..51ad624 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -8,6 +8,7 @@
-  */
- 
- #include <net/mac80211.h>
-+#include <net/ieee80211_radiotap.h>
- #include <linux/module.h>
- #include <linux/init.h>
- #include <linux/netdevice.h>
-@@ -291,6 +292,14 @@ int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
- }
- EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
- 
-+static int ieee80211_get_radiotap_len(struct sk_buff *skb)
-+{
-+	struct ieee80211_radiotap_header *hdr =
-+		(struct ieee80211_radiotap_header *) skb->data;
-+
-+	return le16_to_cpu(hdr->it_len);
-+}
-+
- #ifdef CONFIG_MAC80211_LOWTX_FRAME_DUMP
- static void ieee80211_dump_frame(const char *ifname, const char *title,
- 				 const struct sk_buff *skb)
-@@ -2355,6 +2364,7 @@ static int ieee80211_open(struct net_device *dev)
- 		/* run the interface in a "soft monitor" mode */
- 		local->monitors++;
- 		local->open_count++;
-+		local->hw.conf.flags |= IEEE80211_CONF_RADIOTAP;
- 		return 0;
- 	}
- 	ieee80211_start_soft_monitor(local);
-@@ -2403,9 +2413,10 @@ static int ieee80211_open(struct net_device *dev)
- 	}
- 	local->open_count++;
- 
--	if (sdata->type == IEEE80211_IF_TYPE_MNTR)
-+	if (sdata->type == IEEE80211_IF_TYPE_MNTR) {
- 		local->monitors++;
--	else
-+		local->hw.conf.flags |= IEEE80211_CONF_RADIOTAP;
-+	} else
- 		ieee80211_if_config(dev);
- 
- 	if (sdata->type == IEEE80211_IF_TYPE_STA &&
-@@ -2430,13 +2441,18 @@ static int ieee80211_stop(struct net_device *dev)
- 		/* remove "soft monitor" interface */
- 		local->open_count--;
- 		local->monitors--;
-+		if (!local->monitors)
-+			local->hw.conf.flags &= ~IEEE80211_CONF_RADIOTAP;
- 		return 0;
- 	}
- 
- 	netif_stop_queue(dev);
- 
--	if (sdata->type == IEEE80211_IF_TYPE_MNTR)
-+	if (sdata->type == IEEE80211_IF_TYPE_MNTR) {
- 		local->monitors--;
-+		if (!local->monitors)
-+			local->hw.conf.flags &= ~IEEE80211_CONF_RADIOTAP;
-+	}
- 
- 	local->open_count--;
- 	if (local->open_count == 0) {
-@@ -2782,26 +2798,53 @@ ieee80211_rx_monitor(struct net_device *dev, struct sk_buff *skb,
- 		     struct ieee80211_rx_status *status)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	struct ieee80211_frame_info *fi;
- 	struct ieee80211_sub_if_data *sdata;
--	const size_t hlen = sizeof(struct ieee80211_frame_info)
--				- sizeof(fi->msg_type);
-+	struct ieee80211_rate *rate;
-+	struct ieee80211_rtap_hdr {
-+		struct ieee80211_radiotap_header hdr;
-+		u8 flags;
-+		u8 rate;
-+		__le16 chan_freq;
-+		__le16 chan_flags;
-+		u8 antsignal;
-+	} __attribute__ ((packed)) *rthdr;
- 
- 	skb->dev = dev;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	if (skb_headroom(skb) < hlen) {
-+	if (status->flag & RX_FLAG_RADIOTAP)
-+		goto out;
-+
-+	if (skb_headroom(skb) < sizeof(*rthdr)) {
- 		I802_DEBUG_INC(local->rx_expand_skb_head);
--		if (pskb_expand_head(skb, hlen, 0, GFP_ATOMIC)) {
-+		if (pskb_expand_head(skb, sizeof(*rthdr), 0, GFP_ATOMIC)) {
- 			dev_kfree_skb(skb);
- 			return;
+-#ifdef WE_IOCTL_DEBUG
+-	printk(KERN_DEBUG "%s (WE) : Found standard handler for 0x%04X\n",
+-	       ifr->ifr_name, cmd);
+-	printk(KERN_DEBUG "%s (WE) : Header type : %d, Token type : %d, size : %d, token : %d\n", dev->name, descr->header_type, descr->token_type, descr->token_size, descr->max_tokens);
+-#endif	/* WE_IOCTL_DEBUG */
+-
+ 	/* Prepare the call */
+ 	info.cmd = cmd;
+ 	info.flags = 0;
+@@ -832,11 +821,6 @@ static int ioctl_standard_call(struct ne
+ 			}
  		}
+ 
+-#ifdef WE_IOCTL_DEBUG
+-		printk(KERN_DEBUG "%s (WE) : Malloc %d bytes\n",
+-		       dev->name, extra_size);
+-#endif	/* WE_IOCTL_DEBUG */
+-
+ 		/* Create the kernel buffer */
+ 		/*    kzalloc ensures NULL-termination for essid_compat */
+ 		extra = kzalloc(extra_size, GFP_KERNEL);
+@@ -853,11 +837,6 @@ static int ioctl_standard_call(struct ne
+ 				kfree(extra);
+ 				return -EFAULT;
+ 			}
+-#ifdef WE_IOCTL_DEBUG
+-			printk(KERN_DEBUG "%s (WE) : Got %d bytes\n",
+-			       dev->name,
+-			       iwr->u.data.length * descr->token_size);
+-#endif	/* WE_IOCTL_DEBUG */
+ 		}
+ 
+ 		/* Call the handler */
+@@ -878,11 +857,6 @@ static int ioctl_standard_call(struct ne
+ 					   descr->token_size);
+ 			if (err)
+ 				ret =  -EFAULT;
+-#ifdef WE_IOCTL_DEBUG
+-			printk(KERN_DEBUG "%s (WE) : Wrote %d bytes\n",
+-			       dev->name,
+-			       iwr->u.data.length * descr->token_size);
+-#endif	/* WE_IOCTL_DEBUG */
+ 		}
+ 
+ #ifdef WE_SET_EVENT
+@@ -947,16 +921,6 @@ static inline int ioctl_private_call(str
+ 			break;
+ 		}
+ 
+-#ifdef WE_IOCTL_DEBUG
+-	printk(KERN_DEBUG "%s (WE) : Found private handler for 0x%04X\n",
+-	       ifr->ifr_name, cmd);
+-	if (descr) {
+-		printk(KERN_DEBUG "%s (WE) : Name %s, set %X, get %X\n",
+-		       dev->name, descr->name,
+-		       descr->set_args, descr->get_args);
+-	}
+-#endif	/* WE_IOCTL_DEBUG */
+-
+ 	/* Compute the size of the set/get arguments */
+ 	if (descr != NULL) {
+ 		if (IW_IS_SET(cmd)) {
+@@ -1013,11 +977,6 @@ static inline int ioctl_private_call(str
+ 				return -EFAULT;
+ 		}
+ 
+-#ifdef WE_IOCTL_DEBUG
+-		printk(KERN_DEBUG "%s (WE) : Malloc %d bytes\n",
+-		       dev->name, extra_size);
+-#endif	/* WE_IOCTL_DEBUG */
+-
+ 		/* Always allocate for max space. Easier, and won't last
+ 		 * long... */
+ 		extra = kmalloc(extra_size, GFP_KERNEL);
+@@ -1033,10 +992,6 @@ static inline int ioctl_private_call(str
+ 				kfree(extra);
+ 				return -EFAULT;
+ 			}
+-#ifdef WE_IOCTL_DEBUG
+-			printk(KERN_DEBUG "%s (WE) : Got %d elem\n",
+-			       dev->name, iwr->u.data.length);
+-#endif	/* WE_IOCTL_DEBUG */
+ 		}
+ 
+ 		/* Call the handler */
+@@ -1056,10 +1011,6 @@ static inline int ioctl_private_call(str
+ 					   extra_size);
+ 			if (err)
+ 				ret =  -EFAULT;
+-#ifdef WE_IOCTL_DEBUG
+-			printk(KERN_DEBUG "%s (WE) : Wrote %d elem\n",
+-			       dev->name, iwr->u.data.length);
+-#endif	/* WE_IOCTL_DEBUG */
+ 		}
+ 
+ 		/* Cleanup - I told you it wasn't that long ;-) */
+@@ -1319,11 +1270,6 @@ void wireless_send_event(struct net_devi
+ 		       dev->name, cmd);
+ 		return;
+ 	}
+-#ifdef WE_EVENT_DEBUG
+-	printk(KERN_DEBUG "%s (WE) : Got event 0x%04X\n",
+-	       dev->name, cmd);
+-	printk(KERN_DEBUG "%s (WE) : Header type : %d, Token type : %d, size : %d, token : %d\n", dev->name, descr->header_type, descr->token_type, descr->token_size, descr->max_tokens);
+-#endif	/* WE_EVENT_DEBUG */
+ 
+ 	/* Check extra parameters and set extra_len */
+ 	if (descr->header_type == IW_HEADER_TYPE_POINT) {
+@@ -1341,19 +1287,12 @@ void wireless_send_event(struct net_devi
+ 			extra_len = wrqu->data.length * descr->token_size;
+ 		/* Always at an offset in wrqu */
+ 		wrqu_off = IW_EV_POINT_OFF;
+-#ifdef WE_EVENT_DEBUG
+-		printk(KERN_DEBUG "%s (WE) : Event 0x%04X, tokens %d, extra_len %d\n", dev->name, cmd, wrqu->data.length, extra_len);
+-#endif	/* WE_EVENT_DEBUG */
  	}
  
--	fi = (struct ieee80211_frame_info *) skb_push(skb, hlen);
-+	rthdr = (struct ieee80211_rtap_hdr *) skb_push(skb, sizeof(*rthdr));
-+	memset(rthdr, 0, sizeof(*rthdr));
-+	rthdr->hdr.it_len = cpu_to_le16(sizeof(*rthdr));
-+	rthdr->hdr.it_present =
-+		cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
-+			    (1 << IEEE80211_RADIOTAP_RATE) |
-+			    (1 << IEEE80211_RADIOTAP_CHANNEL) |
-+			    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL));
-+	rthdr->flags = local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS ?
-+		       IEEE80211_RADIOTAP_F_FCS : 0;
-+	rate = ieee80211_get_rate(local, status->phymode, status->rate);
-+	if (rate)
-+		rthdr->rate = rate->rate / 5;
-+	rthdr->chan_freq = cpu_to_le16(status->freq);
-+	rthdr->chan_flags =
-+		status->phymode == MODE_IEEE80211A ?
-+		cpu_to_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ) :
-+		cpu_to_le16(IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ);
-+	rthdr->antsignal = status->ssi;
+ 	/* Total length of the event */
+ 	hdr_len = event_type_size[descr->header_type];
+ 	event_len = hdr_len + extra_len;
  
--	ieee80211_fill_frame_info(local, fi, status);
-+ out:
- 	sdata->stats.rx_packets++;
- 	sdata->stats.rx_bytes += skb->len;
- 
-@@ -3397,6 +3440,9 @@ ieee80211_rx_h_sta_process(struct ieee80211_txrx_data *rx)
- 		return TXRX_QUEUED;
+-#ifdef WE_EVENT_DEBUG
+-	printk(KERN_DEBUG "%s (WE) : Event 0x%04X, hdr_len %d, wrqu_off %d, event_len %d\n", dev->name, cmd, hdr_len, wrqu_off, event_len);
+-#endif	/* WE_EVENT_DEBUG */
+-
+ 	/* Create temporary buffer to hold the event */
+ 	event = kmalloc(event_len, GFP_ATOMIC);
+ 	if (event == NULL)
+@@ -1443,19 +1382,6 @@ int iw_handler_set_spy(struct net_device
+ 		/* Reset stats */
+ 		memset(spydata->spy_stat, 0,
+ 		       sizeof(struct iw_quality) * IW_MAX_SPY);
+-
+-#ifdef WE_SPY_DEBUG
+-		printk(KERN_DEBUG "iw_handler_set_spy() :  wireless_data %p, spydata %p, num %d\n", dev->wireless_data, spydata, wrqu->data.length);
+-		for (i = 0; i < wrqu->data.length; i++)
+-			printk(KERN_DEBUG
+-			       "%02X:%02X:%02X:%02X:%02X:%02X \n",
+-			       spydata->spy_address[i][0],
+-			       spydata->spy_address[i][1],
+-			       spydata->spy_address[i][2],
+-			       spydata->spy_address[i][3],
+-			       spydata->spy_address[i][4],
+-			       spydata->spy_address[i][5]);
+-#endif	/* WE_SPY_DEBUG */
  	}
  
-+	if (rx->u.rx.status->flag & RX_FLAG_RADIOTAP)
-+		skb_pull(rx->skb, ieee80211_get_radiotap_len(rx->skb));
-+
- 	return TXRX_CONTINUE;
+ 	/* Make sure above is updated before re-enabling */
+@@ -1525,10 +1451,6 @@ int iw_handler_set_thrspy(struct net_dev
+ 	/* Clear flag */
+ 	memset(spydata->spy_thr_under, '\0', sizeof(spydata->spy_thr_under));
+ 
+-#ifdef WE_SPY_DEBUG
+-	printk(KERN_DEBUG "iw_handler_set_thrspy() :  low %d ; high %d\n", spydata->spy_thr_low.level, spydata->spy_thr_high.level);
+-#endif	/* WE_SPY_DEBUG */
+-
+ 	return 0;
  }
  
-@@ -3772,6 +3818,12 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct ieee80211_txrx_data rx;
- 	u16 type;
- 	int multicast;
-+	int radiotap_len = 0;
-+
-+	if (status->flag & RX_FLAG_RADIOTAP) {
-+		radiotap_len = ieee80211_get_radiotap_len(skb);
-+		skb_pull(skb, radiotap_len);
-+	}
+@@ -1579,16 +1501,6 @@ static void iw_send_thrspy_event(struct 
+ 	memcpy(&(threshold.low), &(spydata->spy_thr_low),
+ 	       2 * sizeof(struct iw_quality));
  
- 	hdr = (struct ieee80211_hdr *) skb->data;
- 	memset(&rx, 0, sizeof(rx));
-@@ -3808,6 +3860,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		goto end;
- 	skb = rx.skb;
+-#ifdef WE_SPY_DEBUG
+-	printk(KERN_DEBUG "iw_send_thrspy_event() : address %02X:%02X:%02X:%02X:%02X:%02X, level %d, up = %d\n",
+-	       threshold.addr.sa_data[0],
+-	       threshold.addr.sa_data[1],
+-	       threshold.addr.sa_data[2],
+-	       threshold.addr.sa_data[3],
+-	       threshold.addr.sa_data[4],
+-	       threshold.addr.sa_data[5], threshold.qual.level);
+-#endif	/* WE_SPY_DEBUG */
+-
+ 	/* Send event to user space */
+ 	wireless_send_event(dev, SIOCGIWTHRSPY, &wrqu, (char *) &threshold);
+ }
+@@ -1612,10 +1524,6 @@ void wireless_spy_update(struct net_devi
+ 	if (!spydata)
+ 		return;
  
-+	skb_push(skb, radiotap_len);
- 	if (sta && !sta->assoc_ap && !(sta->flags & WLAN_STA_WDS) &&
- 	    !local->iff_promiscs && !multicast) {
- 		rx.u.rx.ra_match = 1;
-@@ -3816,7 +3869,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	} else {
- 		struct ieee80211_sub_if_data *prev = NULL;
- 		struct sk_buff *skb_new;
--		u8 *bssid = ieee80211_get_bssid(hdr, skb->len);
-+		u8 *bssid = ieee80211_get_bssid(hdr, skb->len - radiotap_len);
- 
- 		list_for_each_entry(sdata, &local->sub_if_list, list) {
- 			rx.u.rx.ra_match = 1;
-diff --git a/net/mac80211/ieee80211_iface.c b/net/mac80211/ieee80211_iface.c
-index b1b20ba..495177b 100644
---- a/net/mac80211/ieee80211_iface.c
-+++ b/net/mac80211/ieee80211_iface.c
-@@ -192,7 +192,7 @@ void ieee80211_if_set_type(struct net_device *dev, int type)
- 		break;
- 	}
- 	case IEEE80211_IF_TYPE_MNTR:
--		dev->type = ARPHRD_IEEE80211_PRISM;
-+		dev->type = ARPHRD_IEEE80211_RADIOTAP;
- 		break;
- 	default:
- 		printk(KERN_WARNING "%s: %s: Unknown interface type 0x%x",
+-#ifdef WE_SPY_DEBUG
+-	printk(KERN_DEBUG "wireless_spy_update() :  wireless_data %p, spydata %p, address %02X:%02X:%02X:%02X:%02X:%02X\n", dev->wireless_data, spydata, address[0], address[1], address[2], address[3], address[4], address[5]);
+-#endif	/* WE_SPY_DEBUG */
+-
+ 	/* Update all records that match */
+ 	for (i = 0; i < spydata->spy_number; i++)
+ 		if (!compare_ether_addr(address, spydata->spy_address[i])) {
+
+--
 
