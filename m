@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2116 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161456AbXDLBph (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2007 21:45:37 -0400
-Date: Wed, 11 Apr 2007 21:20:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] bcm43xx: Hide if bcm43xx-mac80211 is builtin
-Message-ID: <20070412012051.GC3473@tuxdriver.com>
-References: <200704111901.06403.flamingice@sourmilk.net>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33762 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2993163AbXDZJlE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2007 05:41:04 -0400
+Message-Id: <20070424180850.595757000@sipsolutions.net>
+References: <20070424180732.371620000@sipsolutions.net>
+Date: Tue, 24 Apr 2007 20:07:41 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	jt@hpl.hp.com
+Subject: [PATCH 9/9] net_device: dont include wext bits if not required
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200704111901.06403.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 11, 2007 at 07:01:06PM -0400, Michael Wu wrote:
-> bcm43xx: Hide if bcm43xx-mac80211 is builtin
-> 
-> From: Michael Wu <flamingice@sourmilk.net>
-> 
-> This prevents users from compiling bcm43xx (softmac) and bcm43xx-mac80211
-> into the kernel at the same time. In the case that it is attempted, make
-> bcm43xx (softmac) not build.
+This patch makes the wext bits in struct net_device depend on
+CONFIG_WIRELESS_EXT.
 
-Since the two drivers use different firmware and the (currently)
-softmac-based driver will evolve into bcm4301 with support for older
-hardware, I'd prefer to leave this one out.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Thanks,
+---
+ include/linux/netdevice.h |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+--- net-2.6.22.orig/include/linux/netdevice.h	2007-04-24 19:36:59.248804911 +0200
++++ net-2.6.22/include/linux/netdevice.h	2007-04-24 19:37:31.608804911 +0200
+@@ -352,12 +352,13 @@ struct net_device
+ 	struct net_device_stats* (*get_stats)(struct net_device *dev);
+ 	struct net_device_stats	stats;
+ 
++#ifdef CONFIG_WIRELESS_EXT
+ 	/* List of functions to handle Wireless Extensions (instead of ioctl).
+ 	 * See <net/iw_handler.h> for details. Jean II */
+ 	const struct iw_handler_def *	wireless_handlers;
+ 	/* Instance data managed by the core of Wireless Extensions. */
+ 	struct iw_public_data *	wireless_data;
+-
++#endif
+ 	const struct ethtool_ops *ethtool_ops;
+ 
+ 	/*
+
+--
+
