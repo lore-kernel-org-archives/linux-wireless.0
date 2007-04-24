@@ -1,42 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:38136 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754100AbXDZEQg (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33720 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423042AbXDZJkV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2007 00:16:36 -0400
-Message-ID: <463027A3.9040201@lwfinger.net>
-Date: Wed, 25 Apr 2007 23:16:35 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Wireless rates with mac80211
-References: <462F9617.8010207@lwfinger.net> <200704251637.53683.flamingice@sourmilk.net>
-In-Reply-To: <200704251637.53683.flamingice@sourmilk.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 26 Apr 2007 05:40:21 -0400
+Message-Id: <20070424180847.533947000@sipsolutions.net>
+References: <20070424180732.371620000@sipsolutions.net>
+Date: Tue, 24 Apr 2007 20:07:34 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	jt@hpl.hp.com
+Subject: [PATCH 2/9] wext: clean up how wext is called
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
-> On Wednesday 25 April 2007 13:55, Larry Finger wrote:
->> In mac80211, the SIOC{S,G}IWRATE commands are not implemented. Is there
->> another way to find out what transmission rate is being used?
->>
-> If mac80211 is configured to be verbose enough, it will periodically print the 
-> average rate used since the last time the message was printed out.
-> 
-> #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
->                         printk(KERN_DEBUG "%s: STA " MAC_FMT " Average rate: "
->                                "%d (%d/%d)\n",
->                                dev->name, MAC_ARG(sta->addr),
->                                srctrl->tx_avg_rate_sum /
->                                srctrl->tx_avg_rate_num,
->                                srctrl->tx_avg_rate_sum,
->                                srctrl->tx_avg_rate_num);
-> #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
+This patch cleans up the call paths from the core code into wext.
 
-The problem with that level of debug, the logs are flooded with many lines each scan cycle, which 
-happens every 1 minute with NetworkManager. In addidtion, I was hoping for something I could look at 
-without having to peruse my way through the complete log.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Larry
+---
+ include/net/iw_handler.h |   11 +----------
+ include/net/wext.h       |   24 ++++++++++++++++++++++++
+ net/core/dev.c           |   34 ++++------------------------------
+ net/wireless/wext.c      |   28 ++++++++++++++++++++++++----
+ 4 files changed, 53 insertions(+), 44 deletions(-)
+
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ net-2.6.22/include/net/wext.h	2007-04-24 18:51:23.568804911 +0200
+@@ -0,0 +1,24 @@
++#ifndef __NET_WEXT_H
++#define __NET_WEXT_H
++
++/*
++ * wireless extensions interface to the core code
++ */
++
++#ifdef CONFIG_WIRELESS_EXT
++extern int wext_proc_init(void);
++extern int wext_handle_ioctl(struct ifreq *ifr, unsigned int cmd,
++			     void __user *arg);
++#else
++static inline int wext_proc_init()
++{
++	return 0;
++}
++static inline int wext_handle_ioctl(struct ifreq *ifr, unsigned int cmd,
++				    void __user *arg)
++{
++	return -EINVAL;
++}
++#endif
++
++#endif /* __NET_WEXT_H */
+--- net-2.6.22.orig/net/core/dev.c	2007-04-24 18:50:45.888804911 +0200
++++ net-2.6.22/net/core/dev.c	2007-04-24 18:51:23.568804911 +0200
+@@ -109,7 +109,7 @@
+ #include <linux/netpoll.h>
+ #include <linux/rcupdate.h>
+ #include <linux/delay.h>
+-#include <linux/wireless.h>
++#include <net/wext.h>
+ #include <net/iw_handler.h>
+ #include <asm/current.h>
+ #include <linux/audit.h>
+@@ -2348,12 +2348,6 @@ static const struct file_operations ptyp
+ };
+ 
+ 
+-#ifdef CONFIG_WIRELESS_EXT
+-extern int wireless_proc_init(void);
+-#else
+-#define wireless_proc_init() 0
+-#endif
+-
+ static int __init dev_proc_init(void)
+ {
+ 	int rc = -ENOMEM;
+@@ -2365,7 +2359,7 @@ static int __init dev_proc_init(void)
+ 	if (!proc_net_fops_create("ptype", S_IRUGO, &ptype_seq_fops))
+ 		goto out_dev2;
+ 
+-	if (wireless_proc_init())
++	if (wext_proc_init())
+ 		goto out_softnet;
+ 	rc = 0;
+ out:
+@@ -2923,29 +2917,9 @@ int dev_ioctl(unsigned int cmd, void __u
+ 					ret = -EFAULT;
+ 				return ret;
+ 			}
+-#ifdef CONFIG_WIRELESS_EXT
+ 			/* Take care of Wireless Extensions */
+-			if (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) {
+-				/* If command is `set a parameter', or
+-				 * `get the encoding parameters', check if
+-				 * the user has the right to do it */
+-				if (IW_IS_SET(cmd) || cmd == SIOCGIWENCODE
+-				    || cmd == SIOCGIWENCODEEXT) {
+-					if (!capable(CAP_NET_ADMIN))
+-						return -EPERM;
+-				}
+-				dev_load(ifr.ifr_name);
+-				rtnl_lock();
+-				/* Follow me in net/wireless/wext.c */
+-				ret = wireless_process_ioctl(&ifr, cmd);
+-				rtnl_unlock();
+-				if (IW_IS_GET(cmd) &&
+-				    copy_to_user(arg, &ifr,
+-						 sizeof(struct ifreq)))
+-					ret = -EFAULT;
+-				return ret;
+-			}
+-#endif	/* CONFIG_WIRELESS_EXT */
++			if (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST)
++				return wext_handle_ioctl(&ifr, cmd, arg);
+ 			return -EINVAL;
+ 	}
+ }
+--- net-2.6.22.orig/include/net/iw_handler.h	2007-04-24 18:54:01.678804911 +0200
++++ net-2.6.22/include/net/iw_handler.h	2007-04-24 18:56:27.328804911 +0200
+@@ -431,16 +431,7 @@ struct iw_public_data {
+  * Those may be called only within the kernel.
+  */
+ 
+-/* First : function strictly used inside the kernel */
+-
+-/* Handle /proc/net/wireless, called in net/code/dev.c */
+-extern int dev_get_wireless_info(char * buffer, char **start, off_t offset,
+-				 int length);
+-
+-/* Handle IOCTLs, called in net/core/dev.c */
+-extern int wireless_process_ioctl(struct ifreq *ifr, unsigned int cmd);
+-
+-/* Second : functions that may be called by driver modules */
++/* functions that may be called by driver modules */
+ 
+ /* Send a single event to user space */
+ extern void wireless_send_event(struct net_device *	dev,
+--- net-2.6.22.orig/net/wireless/wext.c	2007-04-24 18:51:31.288804911 +0200
++++ net-2.6.22/net/wireless/wext.c	2007-04-24 19:04:20.818804911 +0200
+@@ -97,6 +97,7 @@
+ #include <linux/wireless.h>		/* Pretty obvious */
+ #include <net/iw_handler.h>		/* New driver API */
+ #include <net/netlink.h>
++#include <net/wext.h>
+ 
+ #include <asm/uaccess.h>		/* copy_to_user() */
+ 
+@@ -696,7 +697,7 @@ static const struct file_operations wire
+ 	.release = seq_release,
+ };
+ 
+-int __init wireless_proc_init(void)
++int __init wext_proc_init(void)
+ {
+ 	/* Create /proc/net/wireless entry */
+ 	if (!proc_net_fops_create("wireless", S_IRUGO, &wireless_seq_fops))
+@@ -1075,11 +1076,10 @@ static inline int ioctl_private_call(str
+ 
+ /* ---------------------------------------------------------------- */
+ /*
+- * Main IOCTl dispatcher. Called from the main networking code
+- * (dev_ioctl() in net/core/dev.c).
++ * Main IOCTl dispatcher.
+  * Check the type of IOCTL and call the appropriate wrapper...
+  */
+-int wireless_process_ioctl(struct ifreq *ifr, unsigned int cmd)
++static int wireless_process_ioctl(struct ifreq *ifr, unsigned int cmd)
+ {
+ 	struct net_device *dev;
+ 	iw_handler	handler;
+@@ -1143,6 +1143,26 @@ int wireless_process_ioctl(struct ifreq 
+ 	return -EINVAL;
+ }
+ 
++/* entry point from dev ioctl */
++int wext_handle_ioctl(struct ifreq *ifr, unsigned int cmd,
++		      void __user *arg)
++{
++	int ret;
++
++	/* If command is `set a parameter', or
++	 * `get the encoding parameters', check if
++	 * the user has the right to do it */
++	if (IW_IS_SET(cmd) || cmd == SIOCGIWENCODE || cmd == SIOCGIWENCODEEXT)
++		if (!capable(CAP_NET_ADMIN))
++			return -EPERM;
++	dev_load(ifr->ifr_name);
++	rtnl_lock();
++	ret = wireless_process_ioctl(ifr, cmd);
++	rtnl_unlock();
++	if (IW_IS_GET(cmd) && copy_to_user(arg, ifr, sizeof(struct ifreq)))
++		return -EFAULT;
++	return ret;
++}
+ 
+ /************************* EVENT PROCESSING *************************/
+ /*
+
+--
+
