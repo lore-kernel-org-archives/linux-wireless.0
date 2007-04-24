@@ -1,72 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:65358 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1766729AbXDFKyI (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33727 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423077AbXDZJk1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2007 06:54:08 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so1159809uga
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2007 03:54:06 -0700 (PDT)
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues
-Date: Fri, 6 Apr 2007 12:53:20 +0200
-Cc: Theo de Raadt <deraadt@cvs.openbsd.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Pavel Roskin <proski@gnu.org>,
-	Joseph Jezak <josejx@gentoo.org>,
-	Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-References: <200704052328.l35NSg8F020269@cvs.openbsd.org> <200704061104.50009.IvDoorn@gmail.com> <200704061114.02480.mb@bu3sch.de>
-In-Reply-To: <200704061114.02480.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200704061253.21137.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 26 Apr 2007 05:40:27 -0400
+Message-Id: <20070424180849.651555000@sipsolutions.net>
+References: <20070424180732.371620000@sipsolutions.net>
+Date: Tue, 24 Apr 2007 20:07:39 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	jt@hpl.hp.com
+Subject: [PATCH 7/9] wext: reduce inline abuse
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 06 April 2007 11:14, Michael Buesch wrote:
-> On Friday 06 April 2007 11:04, Ivo van Doorn wrote:
-> > > I don't think he intentionally did it.
-> > 
-> > Ok, so it was only the commit that was perhaps accidental, it does mean
-> > that he should be more carefull about what he is exactly committing.
-> 
-> We should not confuse that it was not "the commit", but the code has
-> been committed in several commits. (I didn't count them)
-> A mistake several times in a row? Isn't that unlikely to be a mistake them?
+This patch removes a bunch of inline abuse from wext. Most functions
+that were marked inline are only used once so the compiler will inline
+them anyway, others are used multiple times but there's no requirement
+for them to be inline since they aren't in any fast paths.
 
-Hehe, well there are 2 scenarios for this:
-1) The commits were all done without thinking about what was being committed,
-    the code was not reviewed, and apparently the committed had no idea what
-    the license of his own code and of the code he copied from meant.
-2) The commits were done on purpose, making the commits a direct and severe
-    GPL-violation.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-If it was scenario 1, then I suggest Theo should be more strict towards his developers
-and be more clear on what can and cannot be committed. Also I would recommend
-that within his team the commits are better monitored to prevent these "mistakes"
-in the future.
+---
+ net/wireless/wext.c |   29 ++++++++++-------------------
+ 1 file changed, 10 insertions(+), 19 deletions(-)
 
-If it was scenario 2, then I suggest Theo will follow the same suggestions as I described
-for scenario 1, but in addition should have some harsh talk towards his developers
-regarding licenses, and he shouldn't start hide behind a discussion that is more about
-whethere to have a "public" or "private" email regarding these issues.
+--- net-2.6.22.orig/net/wireless/wext.c	2007-04-24 19:13:50.288804911 +0200
++++ net-2.6.22/net/wireless/wext.c	2007-04-24 19:18:49.198804911 +0200
+@@ -440,10 +440,8 @@ static const int event_type_pk_size[] = 
+ /* ---------------------------------------------------------------- */
+ /*
+  * Return the driver handler associated with a specific Wireless Extension.
+- * Called from various place, so make sure it remains efficient.
+  */
+-static inline iw_handler get_handler(struct net_device *dev,
+-				     unsigned int cmd)
++static iw_handler get_handler(struct net_device *dev, unsigned int cmd)
+ {
+ 	/* Don't "optimise" the following variable, it will crash */
+ 	unsigned int	index;		/* *MUST* be unsigned */
+@@ -470,7 +468,7 @@ static inline iw_handler get_handler(str
+ /*
+  * Get statistics out of the driver
+  */
+-static inline struct iw_statistics *get_wireless_stats(struct net_device *dev)
++static struct iw_statistics *get_wireless_stats(struct net_device *dev)
+ {
+ 	/* New location */
+ 	if ((dev->wireless_handlers != NULL) &&
+@@ -500,7 +498,7 @@ static inline struct iw_statistics *get_
+  * netif_running(dev) test. I'm open on that one...
+  * Hopefully, the driver will remember to do a commit in "open()" ;-)
+  */
+-static inline int call_commit_handler(struct net_device *	dev)
++static int call_commit_handler(struct net_device *dev)
+ {
+ 	if ((netif_running(dev)) &&
+ 	   (dev->wireless_handlers->standard[0] != NULL)) {
+@@ -622,8 +620,8 @@ static int iw_handler_get_private(struct
+ /*
+  * Print one entry (line) of /proc/net/wireless
+  */
+-static __inline__ void wireless_seq_printf_stats(struct seq_file *seq,
+-						 struct net_device *dev)
++static void wireless_seq_printf_stats(struct seq_file *seq,
++				      struct net_device *dev)
+ {
+ 	/* Get stats from the driver */
+ 	struct iw_statistics *stats = get_wireless_stats(dev);
+@@ -892,10 +890,8 @@ static int ioctl_standard_call(struct ne
+  * a iw_handler but process it in your ioctl handler (i.e. use the
+  * old driver API).
+  */
+-static inline int ioctl_private_call(struct net_device *	dev,
+-				     struct ifreq *		ifr,
+-				     unsigned int		cmd,
+-				     iw_handler		handler)
++static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
++			      unsigned int cmd, iw_handler handler)
+ {
+ 	struct iwreq *			iwr = (struct iwreq *) ifr;
+ 	const struct iw_priv_args *	descr = NULL;
+@@ -1134,11 +1130,8 @@ static DECLARE_TASKLET(wireless_nlevent_
+  * current wireless config. Dumping the wireless config is far too
+  * expensive (for each parameter, the driver need to query the hardware).
+  */
+-static inline int rtnetlink_fill_iwinfo(struct sk_buff *	skb,
+-					struct net_device *	dev,
+-					int			type,
+-					char *			event,
+-					int			event_len)
++static int rtnetlink_fill_iwinfo(struct sk_buff *skb, struct net_device *dev,
++				 int type, char *event, int event_len)
+ {
+ 	struct ifinfomsg *r;
+ 	struct nlmsghdr  *nlh;
+@@ -1172,9 +1165,7 @@ rtattr_failure:
+  * Andrzej Krzysztofowicz mandated that I used a IFLA_XXX field
+  * within a RTM_NEWLINK event.
+  */
+-static inline void rtmsg_iwinfo(struct net_device *	dev,
+-				char *			event,
+-				int			event_len)
++static void rtmsg_iwinfo(struct net_device *dev, char *event, int event_len)
+ {
+ 	struct sk_buff *skb;
+ 	int size = NLMSG_GOODSIZE;
 
-Note that with both scenarios I have described it is clear that a big mistake was made
-on the side of the BSD team, and it is that which should be addressed and not the
-question if a public or private mail should be send to first start a discussion about the
-violation.
+--
 
-Ivo
