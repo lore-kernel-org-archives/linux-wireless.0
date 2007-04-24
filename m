@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:40092 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752100AbXDHXnq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Apr 2007 19:43:46 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH] mac80211: Report correct wireless statistics
-Date: Sun, 8 Apr 2007 19:41:13 -0400
-Cc: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
-References: <461877ea.cyxM3SSnr6WhYkjX%Larry.Finger@lwfinger.net> <200704081902.23238.flamingice@sourmilk.net> <46197B90.8050408@lwfinger.net>
-In-Reply-To: <46197B90.8050408@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart17298579.SqCXdPtynt";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200704081941.18921.flamingice@sourmilk.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4831 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1423049AbXDXTWE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Apr 2007 15:22:04 -0400
+Date: Tue, 24 Apr 2007 14:59:57 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Andy Green <andy@warmcat.com>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 03/13] mac80211: fix virtual interface related locking
+Message-ID: <20070424185957.GD22681@tuxdriver.com>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <200704231722.07280.flamingice@sourmilk.net> <462E47D0.8030800@warmcat.com> <200704241425.01152.flamingice@sourmilk.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200704241425.01152.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart17298579.SqCXdPtynt
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-On Sunday 08 April 2007 19:32, Larry Finger wrote:
-> Michael Wu wrote:
-> > Is this before or after your "bcm43xx-mac80211: Fix error in
-> > initiallizing max RSSI and max signal" patch?
+On Tue, Apr 24, 2007 at 02:24:56PM -0400, Michael Wu wrote:
+> On Tuesday 24 April 2007 14:09, Andy Green wrote:
+> > =============================================
+> > [ INFO: possible recursive locking detected ]
+> > 2.6.21-rc7 #11
+> > ---------------------------------------------
+> > ip/2600 is trying to acquire lock:
+> >   (&dev->_xmit_lock){-+..}, at: [<e09199c5>]
+> > ieee80211_set_multicast_list+0x46/0x167 [mac80211]
 > >
-> This is after that patch.
->
-So what do the statistics look like without that patch?
+> > but task is already holding lock:
+> >   (&dev->_xmit_lock){-+..}, at: [<c05abc05>] dev_mc_upload+0x14/0x3c
+> >
+> This is fine, though it would be nice if we can shut the warning off. Virtual 
+> interfaces can try to take the xmit lock of the master device, but the master 
+> device will never try to take the xmit lock of the virtual interfaces and 
+> especially not while holding its own xmit lock.
 
--Michael Wu
+Hmmm...there is probably some lockdep annotation foo to take care of
+this, but I don't know it.
 
---nextPart17298579.SqCXdPtynt
-Content-Type: application/pgp-signature
+Anyone?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGGX2eT3Oqt9AH4aERApapAJ9PcfhJrtWmcFoMKikdkapJoFkoRwCfUw9K
-b0Flutwb00O9CtBa92ymEjk=
-=KiEN
------END PGP SIGNATURE-----
-
---nextPart17298579.SqCXdPtynt--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
