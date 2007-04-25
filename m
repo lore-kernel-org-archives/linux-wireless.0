@@ -1,46 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:59813 "EHLO mx1.redhat.com"
+Received: from mail.axxeo.de ([82.100.226.146]:33764 "EHLO mail.axxeo.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753899AbXDDOiu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Apr 2007 10:38:50 -0400
-Subject: Re: Orinoco, mac80211 and wpa2
-From: Dan Williams <dcbw@redhat.com>
-To: Jan Dittmer <jdi@l4x.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4613A4A9.1060902@l4x.org>
-References: <4613A4A9.1060902@l4x.org>
-Content-Type: text/plain
-Date: Wed, 04 Apr 2007 10:42:17 -0400
-Message-Id: <1175697737.2656.3.camel@localhost.localdomain>
-Mime-Version: 1.0
+	id S2992815AbXDYQT1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Apr 2007 12:19:27 -0400
+From: Ingo Oeser <netdev@axxeo.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] cfg80211: new wireless config infrastructure
+Date: Wed, 25 Apr 2007 18:06:45 +0200
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, johannes@sipsolutions.net
+References: <20070423183334.GC5883@tuxdriver.com> <20070423183443.GD5883@tuxdriver.com> <20070423183634.GE5883@tuxdriver.com>
+In-Reply-To: <20070423183634.GE5883@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200704251806.46270.netdev@axxeo.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-04-04 at 15:14 +0200, Jan Dittmer wrote:
-> Hello,
-> 
-> I've a 802.11b Orinoco based integrated WLAN card in my
-> Sony Laptop (SRX51P). I'm using it with the in kernel 'orinoco-cs'
-> driver. The driver does not support connecting to wpa2
-> enabled networks. If I understand it correctly, the mac80211
-> can emulate wpa2 in software? Would porting the orinoco
-> driver to the new framework make it to possible to use wpa2
-> with it? Or is wpa2 hardware dependent?
+Hi there,
 
-WPA requires a combination of updated firmware and hardware support.  If
-you card doesn't have the right hardware (though most are likely capable
-of WPA-TKIP at least), it won't be able to do WPA.  If you do not have
-firmware that is capable of WPA, you will not be able to do WPA.
+John W. Linville schrieb:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> --- /dev/null
+> +++ b/net/wireless/core.c
+> @@ -0,0 +1,209 @@
+> +/*
+> + * This is the linux wireless configuration interface.
+> + *
+> + * Copyright 2006, 2007		Johannes Berg <johannes@sipsolutions.net>
+> + */
+> +
+> +#include <linux/if.h>
+> +#include <linux/module.h>
+> +#include <linux/err.h>
+> +#include <linux/mutex.h>
+> +#include <linux/list.h>
+> +#include <linux/nl80211.h>
+> +#include <linux/debugfs.h>
+> +#include <linux/notifier.h>
+> +#include <linux/device.h>
+> +#include <net/genetlink.h>
+> +#include <net/cfg80211.h>
+> +#include <net/wireless.h>
+> +#include "core.h"
+> +#include "sysfs.h"
+> +
+> +/* name for sysfs, %d is appended */
+> +#define PHY_NAME "phy"
+> +
+> +MODULE_AUTHOR("Johannes Berg");
+> +MODULE_LICENSE("GPL");
+> +MODULE_DESCRIPTION("wireless configuration support");
+> +
+> +/* RCU might be appropriate here since we usually
+> + * only read the list, and that can happen quite
+> + * often because we need to do it for each command */
+> +LIST_HEAD(cfg80211_drv_list);
+> +DEFINE_MUTEX(cfg80211_drv_mutex);
+> +static int wiphy_counter;
+> +
+> +/* for debugfs */
+> +static struct dentry *ieee80211_debugfs_dir;
+> +
+> +/* exported functions */
+> +
+> +struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
+> +{
+> +	struct cfg80211_registered_device *drv;
+> +	int alloc_size;
+> +
+> +	alloc_size = sizeof(*drv) + sizeof_priv;
+> +
+> +	drv = kzalloc(alloc_size, GFP_KERNEL);
+> +	if (!drv)
+> +		return NULL;
+> +
+> +	drv->ops = ops;
+> +
+> +	mutex_lock(&cfg80211_drv_mutex);
+> +
+> +	if (unlikely(wiphy_counter<0)) {
 
-Only a few manufacturers released updated firmware to support WPA-TKIP
-and even fewer to support WPA-CCMP on cards that did not originally
-support it.
+		mutex_unlock(&cfg80211_drv_mutex);
 
-In your case, some cards supported by the orinoco drivers _do_ have WPA
-capability with a firmware upgrade and by using the 'hostap' drivers.
-I'd try blacklisting the orinoco and see if the 'hostap' driver supports
-your card.
+> +		/* ugh, wrapped! */
+> +		kfree(drv);
+> +		return NULL;
+> +	}
+> +	drv->idx = wiphy_counter;
+> +
+> +	/* give it a proper name */
+> +	snprintf(drv->wiphy.dev.bus_id, BUS_ID_SIZE,
+> +		 PHY_NAME "%d", drv->idx);
+> +
+> +	/* now increase counter for the next time */
+> +	wiphy_counter++;
+> +	mutex_unlock(&cfg80211_drv_mutex);
 
-Dan
+Since drv and its contents are not visible to anyone yet, 
+I suggest the following code flow for that:
+
+mutex_lock(&cfg80211_drv_mutex);
+
+drv->idx = wiphy_counter;
+
+/* increase counter for the next time, if id didn't wrap */
+if (drv->idx >= 0)
+	wiphy_counter++;
+
+mutex_unlock(&cfg80211_drv_mutex);
+
+if (drv->idx < 0) {
+	kfree(drv);
+	return NULL;
+}
+
+/* give it a proper name */
+snprintf(drv->wiphy.dev.bus_id, BUS_ID_SIZE,
+	 PHY_NAME "%d", drv->idx);
+
+[enqueue to all lists here]
 
 
+Rest looks good so far.
+
+Regards
+
+Ingo Oeser
