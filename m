@@ -1,80 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:9501 "EHLO annwn14.rutgers.edu"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1161556AbXDWS6U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2007 14:58:20 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 12/13] mac80211: prevent master device from going up without ieee80211 qdisc
-Date: Mon, 23 Apr 2007 14:48:14 -0400
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Message-Id: <20070423184814.7029.82059.stgit@magic.sourmilk.net>
-In-Reply-To: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:51403
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992717AbXDYM51 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Apr 2007 08:57:27 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Andy Green <andy@warmcat.com>
+Subject: Re: [PATCH] bcm43xx-mac80211: fix rx status reported frequency
+Date: Wed, 25 Apr 2007 14:55:47 +0200
+Cc: linux-wireless@vger.kernel.org, Joseph Jezak <josejx@gentoo.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <462E6DD1.4050108@warmcat.com>
+In-Reply-To: <462E6DD1.4050108@warmcat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
+Message-Id: <200704251455.48012.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+Always inline patches, please.
 
-This patch ensures that the master device cannot be opened without the
-ieee80211 qdisc installed.
+On Tuesday 24 April 2007 22:51, Andy Green wrote:
+> diff --git a/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h
+> b/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h index
+> 44fa515..0372064 100644
+> --- a/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h
+> +++ b/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h
+> @@ -190,8 +190,8 @@ struct bcm43xx_rxhdr_fw4 {
+> =A0/* RX channel */
+> =A0#define BCM43xx_RX_CHAN_GAIN=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A00xFC0=
+0 /* Gain */
+> =A0#define BCM43xx_RX_CHAN_GAIN_SHIFT=A0=A0=A0=A0=A010
+> -#define BCM43xx_RX_CHAN_ID=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A00x0=
+3FC /* Channel ID */
+> -#define BCM43xx_RX_CHAN_ID_SHIFT=A0=A0=A0=A0=A0=A0=A02
+> +#define BCM43xx_RX_CHAN_ID=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A00x0=
+3F8 /* Channel ID */
+> +#define BCM43xx_RX_CHAN_ID_SHIFT=A0=A0=A0=A0=A0=A0=A03
+> =A0#define BCM43xx_RX_CHAN_PHYTYPE=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A00x0003 /* PHY type */
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+according to the specs the value 0x3FC is right.
+Johannes, Joe?
 
- net/mac80211/ieee80211.c |    6 ++++++
- net/mac80211/wme.c       |    6 ++++++
- net/mac80211/wme.h       |    1 +
- 3 files changed, 13 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 17c6fde..e876e04 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -2270,6 +2270,12 @@ static int ieee80211_master_open(struct net_device *dev)
- 	struct ieee80211_sub_if_data *sdata;
- 	int res = -EOPNOTSUPP;
- 
-+	if (!ieee80211_qdisc_installed(dev)) {
-+		printk(KERN_ERR "%s: ieee80211 qdisc not installed\n",
-+		       dev->name);
-+		return res;
-+	}
-+
- 	read_lock(&local->sub_if_lock);
- 	list_for_each_entry(sdata, &local->sub_if_list, list) {
- 		if (sdata->dev != dev && netif_running(sdata->dev)) {
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 79b4305..1cb6358 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -655,6 +655,12 @@ void ieee80211_install_qdisc(struct net_device *dev)
- }
- 
- 
-+int ieee80211_qdisc_installed(struct net_device *dev)
-+{
-+	return dev->qdisc_sleeping->ops == &wme_qdisc_ops;
-+}
-+
-+
- int ieee80211_wme_register(void)
- {
- 	int err = 0;
-diff --git a/net/mac80211/wme.h b/net/mac80211/wme.h
-index 90add6e..2a79262 100644
---- a/net/mac80211/wme.h
-+++ b/net/mac80211/wme.h
-@@ -31,6 +31,7 @@ ieee80211_txrx_result
- ieee80211_rx_h_remove_qos_control(struct ieee80211_txrx_data *rx);
- 
- void ieee80211_install_qdisc(struct net_device *dev);
-+int ieee80211_qdisc_installed(struct net_device *dev);
- 
- int ieee80211_wme_register(void);
- void ieee80211_wme_unregister(void);
-
+--=20
+Greetings Michael.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
