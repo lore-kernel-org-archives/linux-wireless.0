@@ -1,85 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:53762 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751762AbXDWUxd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2007 16:53:33 -0400
-Date: Mon, 23 Apr 2007 22:53:37 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH 04/13] mac80211: disable tasklets on close
-Message-ID: <20070423225337.34c5133d@griffin.suse.cz>
-In-Reply-To: <20070423184813.7029.71821.stgit@magic.sourmilk.net>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38950 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965211AbXDYMJy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Apr 2007 08:09:54 -0400
+Message-ID: <20227.131.234.232.81.1177502988.squirrel@secure.sipsolutions.net>
+In-Reply-To: <200704241425.01152.flamingice@sourmilk.net>
 References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-	<20070423184813.7029.71821.stgit@magic.sourmilk.net>
-Mime-Version: 1.0
+    <200704231722.07280.flamingice@sourmilk.net>
+    <462E47D0.8030800@warmcat.com>
+    <200704241425.01152.flamingice@sourmilk.net>
+Date: Wed, 25 Apr 2007 14:09:48 +0200 (CEST)
+Subject: Re: [PATCH 03/13] mac80211: fix virtual interface related locking
+From: "Johannes Berg" <johannes@sipsolutions.net>
+To: "Michael Wu" <flamingice@sourmilk.net>
+Cc: "Andy Green" <andy@warmcat.com>, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 23 Apr 2007 14:48:13 -0400, Michael Wu wrote:
-> This prevents all tasklets from running when the device is down.
-> 
-> [...]
-> --- a/net/mac80211/ieee80211.c
-> +++ b/net/mac80211/ieee80211.c
-> @@ -2276,7 +2276,6 @@ static int ieee80211_master_open(struct net_device *dev)
->  	list_for_each_entry(sdata, &local->sub_if_list, list) {
->  		if (sdata->dev != dev && netif_running(sdata->dev)) {
->  			res = 0;
-> -			tasklet_enable(&local->tx_pending_tasklet);
->  			break;
->  		}
->  	}
-> @@ -2289,7 +2288,6 @@ static int ieee80211_master_stop(struct net_device *dev)
->  	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
->  	struct ieee80211_sub_if_data *sdata;
->  
-> -	tasklet_disable(&local->tx_pending_tasklet);
->  	read_lock(&local->sub_if_lock);
->  	list_for_each_entry(sdata, &local->sub_if_list, list) {
->  		if (sdata->dev != dev && netif_running(sdata->dev)) {
-> @@ -2401,6 +2399,8 @@ static int ieee80211_open(struct net_device *dev)
->  
->  	if (local->open_count == 0) {
->  		res = 0;
-> +		tasklet_enable(&local->tx_pending_tasklet);
-> +		tasklet_enable(&local->tasklet);
->  		if (local->ops->open)
->  			res = local->ops->open(local_to_hw(local));
->  		if (res == 0) {
-> @@ -2475,6 +2475,8 @@ static int ieee80211_stop(struct net_device *dev)
->  			dev_close(local->apdev);
->  		if (local->ops->stop)
->  			local->ops->stop(local_to_hw(local));
-> +		tasklet_disable(&local->tx_pending_tasklet);
-> +		tasklet_disable(&local->tasklet);
+Michael Wu wrote:
+> This is fine, though it would be nice if we can shut the warning off.
+> Virtual
+> interfaces can try to take the xmit lock of the master device, but the
+> master
+> device will never try to take the xmit lock of the virtual interfaces and
+> especially not while holding its own xmit lock.
 
+You can shut the warning off by explicitly labeling the master lock as
+belonging to a different class or something. Bridging code has similar
+things IIRC, maybe check there.
 
-This seems suspicious to me. Will it really work when somebody take the
-master interface down by hand while some other interface is still
-active?
-
-Thanks,
-
- Jiri
-
->  	}
->  	if (local->ops->remove_interface) {
->  		struct ieee80211_if_init_conf conf;
-> @@ -4713,6 +4715,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
->  	tasklet_init(&local->tasklet,
->  		     ieee80211_tasklet_handler,
->  		     (unsigned long) local);
-> +	tasklet_disable(&local->tasklet);
-> +
->  	skb_queue_head_init(&local->skb_queue);
->  	skb_queue_head_init(&local->skb_queue_unreliable);
->  
-> 
-
-
--- 
-Jiri Benc
-SUSE Labs
+johannes
