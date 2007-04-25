@@ -1,32 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gundega.hpl.hp.com ([192.6.19.190]:52461 "EHLO
-	gundega.hpl.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754137AbXDRQbX (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:30695 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S2993106AbXDYUlz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2007 12:31:23 -0400
-Date: Wed, 18 Apr 2007 09:30:34 -0700
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 2.6] WE-22 : prevent information leak on 64 bit
-Message-ID: <20070418163034.GA24878@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <20070323003116.GC2712@bougret.hpl.hp.com> <1175508410.23438.75.camel@johannes.berg> <20070417170820.GB22372@bougret.hpl.hp.com> <200704180134.50571.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200704180134.50571.mb@bu3sch.de>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+	Wed, 25 Apr 2007 16:41:55 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: Wireless rates with mac80211
+Date: Wed, 25 Apr 2007 16:37:53 -0400
+Cc: wireless <linux-wireless@vger.kernel.org>
+References: <462F9617.8010207@lwfinger.net>
+In-Reply-To: <462F9617.8010207@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1303206.gIBcvSJB4z";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704251637.53683.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 18, 2007 at 01:34:50AM +0200, Michael Buesch wrote:
-> 
-> I'd say nobody but you does fully understand WEXT.
+--nextPart1303206.gIBcvSJB4z
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-	Not true. If tommorow I was run over by an ICE, you could ask
-Jouni, Dan or Pavel to take over.
-	Have fun...
+On Wednesday 25 April 2007 13:55, Larry Finger wrote:
+> In mac80211, the SIOC{S,G}IWRATE commands are not implemented. Is there
+> another way to find out what transmission rate is being used?
+>
+If mac80211 is configured to be verbose enough, it will periodically print =
+the=20
+average rate used since the last time the message was printed out.
 
-	Jean
+#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+                        printk(KERN_DEBUG "%s: STA " MAC_FMT " Average rate=
+: "
+                               "%d (%d/%d)\n",
+                               dev->name, MAC_ARG(sta->addr),
+                               srctrl->tx_avg_rate_sum /
+                               srctrl->tx_avg_rate_num,
+                               srctrl->tx_avg_rate_sum,
+                               srctrl->tx_avg_rate_num);
+#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
+
+=2DMichael Wu
+
+--nextPart1303206.gIBcvSJB4z
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGL7whT3Oqt9AH4aERAl8JAJsFaG2QyQH9VsCpVt4Lsw5ke3MZUQCgi4Gm
+yW+n0k8TQ/No8V9w3kTsCvE=
+=uRuD
+-----END PGP SIGNATURE-----
+
+--nextPart1303206.gIBcvSJB4z--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
