@@ -1,34 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:63644 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752103AbXDIABy (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:50850 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030877AbXDYNrW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Apr 2007 20:01:54 -0400
-Message-ID: <461982A7.30901@lwfinger.net>
-Date: Sun, 08 Apr 2007 19:02:47 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Wed, 25 Apr 2007 09:47:22 -0400
+From: Chr <chunkeey@web.de>
+To: Stefan Puch <stefan.puch@mail.uni-oldenburg.de>
+Subject: Re: prism54: WPA/RSN support for fullmac cards
+Date: Wed, 25 Apr 2007 15:47:20 +0200
+Cc: linux-net@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <462336B1.4090006@mail.uni-oldenburg.de> <200704172123.30956.chunkeey@web.de> <462E55EA.4030900@mail.uni-oldenburg.de>
+In-Reply-To: <462E55EA.4030900@mail.uni-oldenburg.de>
 MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH] mac80211: Report correct wireless statistics
-References: <461877ea.cyxM3SSnr6WhYkjX%Larry.Finger@lwfinger.net> <200704081902.23238.flamingice@sourmilk.net> <46197B90.8050408@lwfinger.net> <200704081941.18921.flamingice@sourmilk.net>
-In-Reply-To: <200704081941.18921.flamingice@sourmilk.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200704251547.20248.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
-> On Sunday 08 April 2007 19:32, Larry Finger wrote:
->> Michael Wu wrote:
->>> Is this before or after your "bcm43xx-mac80211: Fix error in
->>> initiallizing max RSSI and max signal" patch?
->>>
->> This is after that patch.
->>
-> So what do the statistics look like without that patch?
+On Tuesday, 24. April 2007, Stefan Puch wrote:
+> Chr wrote:
+> >> I thought that at least chunkeey got a working connection.... obviously not.
+> >>
+> > Of course it works! But not with every AP... only with "hostapd".
+> > (I don't have anything else to try).
+> 
+> Perhaps we can do a meeting after your ABI and do some tests with another AP?
+Now, I'm "finish" with the "practical" part... ;-).
+But, I won't be here the next few weeks, (field excursion, another field excursion 
+and did I mention lots of field excursion?) . 
 
-Link Quality=219/60  Signal level=-200 dBm  Noise level=-69 dBm
+> 
+> > But please, before you waste your time with _some_ fullmac anomalies,
+> > 
+> > get the last wireless-dev.git tree. 
+> > There is a SOFTMAC driver for all prism54 chips now! 
+> > 
+> > You only need a firmware: 
+> > http://daemonizer.de/prism54/prism54-fw/fw-softmac/lmac_2.7.0.0.arm
+> > (rename it to "isl3886" and put it in the right place).
+> 
+> - I got the wireless-dev.git tree version g5363171f.
+> - I could successfully use the SOFTMAC driver with my Netgear WG511 and the
+>   Fritz!Box Fon WLAN 7170
+> - WPA and WPA2 encryption worked fine (very good work Thanks!)
+> - only the "Act" (yellow) LED on the WLAN-Adapter was flashing very very fast
+>   the whole time, I hope it doesn't give up to fast (perhaps someone could set
+>   the rate a little bit down?)
+> 
 
-Larry
+Na, don't worry, I've copied more than 4 GB over the WIFI link, it should be stable.
+But, I know that some cheap APs may have "stability" problems, I ditched my old 
+Netgear WG624 for that reason. 
+
+> - if I can do some further testings that may help you let me know
+> 
+
+(Do you know why your AP rejects the FULLMAC driver?
+If you have another card you can "monitor" for "deauth" or
+"disassoc" mlmes, they include a "reason" code)
+
+Thanks,
+	Chr.
+
