@@ -1,34 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-38.dex002.intermedia.net ([64.78.21.123]:44846 "EHLO
-	dhost002-38.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933686AbXDBRBb (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41151
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1031146AbXDZKSg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2007 13:01:31 -0400
-From: "Jouni Malinen" <jkm@devicescape.com>
-Date: Mon, 2 Apr 2007 10:01:30 -0700
-To: Joerg Mayer <jmayer@loplof.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: SIOCSIWAP behavior question
-Message-ID: <20070402170130.GC2706@devicescape.com>
-References: <1175521655.9859.15.camel@localhost.localdomain> <20070402155405.GA2706@devicescape.com> <20070402165643.GH10005@thot.informatik.uni-kl.de>
+	Thu, 26 Apr 2007 06:18:36 -0400
+Date: Thu, 26 Apr 2007 03:18:42 -0700 (PDT)
+Message-Id: <20070426.031842.17863787.davem@davemloft.net>
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	jt@hpl.hp.com
+Subject: Re: [PATCH 0/9] various wext cleanups
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1177582513.6814.27.camel@johannes.berg>
+References: <20070424180732.371620000@sipsolutions.net>
+	<1177582513.6814.27.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070402165643.GH10005@thot.informatik.uni-kl.de>
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 02, 2007 at 06:56:43PM +0200, Joerg Mayer wrote:
-> On Mon, Apr 02, 2007 at 08:54:05AM -0700, Jouni Malinen wrote:
-> > I would ike to see disconnect event only if the driver/stack notices
-> > that it cannot complete association and based on this, believes its
-> > association to the ESS is lost.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Thu, 26 Apr 2007 12:15:13 +0200
+
+> On Tue, 2007-04-24 at 20:07 +0200, Johannes Berg wrote:
+> > This patch series contains various cleanups to the wireless extensions code.
 > 
-> What is the recommended way to cause a disconnect / reconnect?
+> Patch 1/9 got lost because it's too large, but it's only moving
+> net/core/wireless.c to net/wireless/wext.c and doing some tiny Makefile
+> updates.
 
-I don't know whether there is such a thing, but I normally use
-SIOCSIWESSID with a different SSID (e.g., a random string) to force
-disconnection and with the same SSID to force re-association to the same
-ESS.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+I got the bounce so I have the changelog too :-)
