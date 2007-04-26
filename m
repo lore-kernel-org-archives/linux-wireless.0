@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from schokokeks.org ([87.106.4.7]:39419 "EHLO keks.schokokeks.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2993020AbXDRX7G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2007 19:59:06 -0400
-From: "Hanno =?utf-8?q?B=C3=B6ck?=" <ml@hboeck.de>
-To: linux-wireless@vger.kernel.org
-Subject: Meaning of two trees wireless-dev and wireless-2.6
-Date: Thu, 19 Apr 2007 01:53:39 +0200
+Received: from smtp.rutgers.edu ([128.6.72.243]:13893 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754702AbXDZE0z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2007 00:26:55 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: Wireless rates with mac80211
+Date: Thu, 26 Apr 2007 00:22:44 -0400
+Cc: wireless <linux-wireless@vger.kernel.org>
+References: <462F9617.8010207@lwfinger.net> <200704251637.53683.flamingice@sourmilk.net> <463027A3.9040201@lwfinger.net>
+In-Reply-To: <463027A3.9040201@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: multipart/signed;
-  boundary="nextPart4188400.Fis6XuobSg";
+  boundary="nextPart14909341.lh2mCGQxbF";
   protocol="application/pgp-signature";
   micalg=pgp-sha1
-Message-Id: <200704190153.39400.ml@hboeck.de>
+Message-Id: <200704260022.48747.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart4188400.Fis6XuobSg
+--nextPart14909341.lh2mCGQxbF
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
 
-Hi,
+On Thursday 26 April 2007 00:16, Larry Finger wrote:
+> The problem with that level of debug, the logs are flooded with many lines
+> each scan cycle, which happens every 1 minute with NetworkManager. In
+> addidtion, I was hoping for something I could look at without having to
+> peruse my way through the complete log.
+>
+Patches welcome. The rate control API currently has no easy way to obtain t=
+he=20
+current rate which is part of why SIOCGIWRATE hasn't been implemented yet.
 
-On git.kernel.org, there seem to be two active main wireless-trees:=20
-wireless-dev and wireless-2.6.
+=2DMichael Wu
 
-Can anyone explain me the meaning of both trees? Is it planned to merge the=
-=20
-work?
-
-=2D-=20
-Hanno B=C3=B6ck		Blog:   http://www.hboeck.de/
-GPG: 3DBD3B20		Jabber: jabber@hboeck.de
-
---nextPart4188400.Fis6XuobSg
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+--nextPart14909341.lh2mCGQxbF
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.3 (GNU/Linux)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBGJq+Dr2QksT29OyARAq/VAJ9qQKlgNUVIwQCCI9MMGbjCHXFUtQCgpBCW
-J0Ba+UevMQ38ey/N9HN//PY=
-=F/7I
+iD8DBQBGMCkYT3Oqt9AH4aERAs75AJ0QX4/nLTD7ajetj6/6Wls9xnwbuACbBQ7F
+SR6oxPGteDqWye7Za7Sj8UQ=
+=xj/x
 -----END PGP SIGNATURE-----
 
---nextPart4188400.Fis6XuobSg--
+--nextPart14909341.lh2mCGQxbF--
 -: 
 To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 the body of a message to majordomo@vger.kernel.org: 
