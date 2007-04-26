@@ -1,37 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canuck.infradead.org ([209.217.80.40]:48526 "EHLO
-	canuck.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753688AbXDPAG4 (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:30016 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754071AbXDZDWs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Apr 2007 20:06:56 -0400
-Subject: Re: [PATCH] bcm43xx-mac80211: Fix machine checks on PPC with rev   1 PHYs
-From: David Woodhouse <dwmw2@infradead.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Bcm43xx-dev@lists.berlios.de
-In-Reply-To: <1176477466.7052.114.camel@johannes.berg>
-References: <461d0815.ip3FDr8RDQXyCT4U%Larry.Finger@lwfinger.net>
-	 <20070413113638.10db9767@localhost>  <461F9C58.6050106@lwfinger.net>
-	 <1176477466.7052.114.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 16 Apr 2007 01:06:38 +0100
-Message-Id: <1176681998.7929.81.camel@pmac.infradead.org>
-Mime-Version: 1.0
+	Wed, 25 Apr 2007 23:22:48 -0400
+Message-ID: <4630166E.6060000@linux.intel.com>
+Date: Wed, 25 Apr 2007 20:03:10 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <20070423184814.7029.8413.stgit@magic.sourmilk.net> <462EE107.8040005@linux.intel.com> <20070425181656.GD5875@tuxdriver.com>
+In-Reply-To: <20070425181656.GD5875@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-04-13 at 17:17 +0200, Johannes Berg wrote:
-> With phy rev == 1, the gmode bit is assumed unset when initialising a
-> G PHY. Maybe that is the crucial difference. David will send me some
-> backtraces of this problem, once he does I'll look at it again.
+John W. Linville wrote:
+> On Tue, Apr 24, 2007 at 10:03:03PM -0700, James Ketrenos wrote:
+> 
+>> (I would like to see hw_scan remain since iwlwifi uses it -- which we hope 
+>> to submit as soon as the code restructuring is complete)
+> 
+> I was going to mention this in response to Michael's patch, but then
+> I checked your current iwlwifi git tree.  There your hw_scan routine
+> is commented-out, so I figured you didn't want/need it anymore...?
 
-http://david.woodhou.se/bcm43xx-mac80211.dmesg-3.txt 
+One of the changes in iwlwifi caused the hwscan to start locking the system and at the time it was easier to comment it out and focus on other issues (rate scaling was broken as well)  
 
-The module itself is at http://david.woodhou.se/bcm43xx-mac80211.ko so
-you can find line numbers where they're not immediately obvious.
+When the hw scanning does work, its returns scan results a lot faster to the user without as much processing overhead, so we'll definitely want to switch back to using the hwscan for iwlwifi.
 
--- 
-dwmw2
-
+James
