@@ -1,50 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:56109
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042AbXD2JP6 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35109 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031355AbXDZRJE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Apr 2007 05:15:58 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH 3/4] mac80211: document requirement for atomicity of callbacks
-Date: Sun, 29 Apr 2007 11:15:43 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <20070429023215.40c2aea7@logostar.upir.cz> <20070429023345.43e09faf@logostar.upir.cz>
-In-Reply-To: <20070429023345.43e09faf@logostar.upir.cz>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200704291115.43657.mb@bu3sch.de>
+	Thu, 26 Apr 2007 13:09:04 -0400
+Subject: [PATCH wireless-dev, net-2.6.22] cfg80211: fix locking in wiphy_new
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ingo Oeser <netdev@axxeo.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <200704251806.46270.netdev@axxeo.de>
+References: <20070423183334.GC5883@tuxdriver.com>
+	 <20070423183443.GD5883@tuxdriver.com> <20070423183634.GE5883@tuxdriver.com>
+	 <200704251806.46270.netdev@axxeo.de>
+Content-Type: text/plain
+Date: Thu, 26 Apr 2007 15:14:22 +0200
+Message-Id: <1177593262.6814.75.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 29 April 2007 02:33:45 Jiri Benc wrote:
-> @@ -631,7 +632,8 @@ struct ieee80211_ops {
->  	 * we need to combine the multicast lists and flags for multiple
->  	 * virtual interfaces), they cannot assign set_multicast_list.
->  	 * The parameters here replace dev->flags and dev->mc_count,
-> -	 * dev->mc_list is replaced by calling ieee80211_get_mc_list_item. */
-> +	 * dev->mc_list is replaced by calling ieee80211_get_mc_list_item.
-> +	 * Must be atomic. */
->  	void (*set_multicast_list)(struct ieee80211_hw *hw,
->  				   unsigned short flags, int mc_count);
+This patch fixes the locking in wiphy new. Ingo Oeser <netdev@axxeo.de>
+noticed that locking in the error case was wrong and also suggested this
+fix.
 
-Why is that required to be atomic, actually?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
->  	/* Set encryption key. IEEE 802.11 module calls this function to set
-> @@ -647,7 +650,8 @@ struct ieee80211_ops {
->  	 * station hwaddr for individual keys. aid of the station is given
->  	 * to help low-level driver in selecting which key->hw_key_idx to use
->  	 * for this key. TX control data will use the hw_key_idx selected by
-> -	 * the low-level driver. */
-> +	 * the low-level driver.
-> +	 * Must be atomic. */
->  	int (*set_key)(struct ieee80211_hw *hw, set_key_cmd cmd,
->  		       u8 *addr, struct ieee80211_key_conf *key, int aid);
+---
+As with other patches, this is diffed against wireless-dev but applies
+against net-2.6.22 (or is that net-2.6 now?) with some offset (but no
+fuzz.)
 
-I think USB drivers and bcm43xx violate that. We can't easily workaround it
-without doing the operation async.
+---
+ net/wireless/core.c |   16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
+
+--- wireless-dev.orig/net/wireless/core.c	2007-04-26 15:01:15.623251869 +0200
++++ wireless-dev/net/wireless/core.c	2007-04-26 15:07:27.933251869 +0200
+@@ -189,21 +189,25 @@ struct wiphy *wiphy_new(struct cfg80211_
+ 
+ 	mutex_lock(&cfg80211_drv_mutex);
+ 
+-	if (unlikely(wiphy_counter<0)) {
++	drv->idx = wiphy_counter;
++
++	/* now increase counter for the next device unless
++	 * it has wrapped previously */
++	if (wiphy_counter >= 0)
++		wiphy_counter++;
++
++	mutex_unlock(&cfg80211_drv_mutex);
++
++	if (unlikely(drv->idx < 0)) {
+ 		/* ugh, wrapped! */
+ 		kfree(drv);
+ 		return NULL;
+ 	}
+-	drv->idx = wiphy_counter;
+ 
+ 	/* give it a proper name */
+ 	snprintf(drv->wiphy.dev.bus_id, BUS_ID_SIZE,
+ 		 PHY_NAME "%d", drv->idx);
+ 
+-	/* now increase counter for the next time */
+-	wiphy_counter++;
+-	mutex_unlock(&cfg80211_drv_mutex);
+-
+ 	mutex_init(&drv->mtx);
+ 	mutex_init(&drv->devlist_mtx);
+ 	INIT_LIST_HEAD(&drv->netdev_list);
 
 
--- 
-Greetings Michael.
