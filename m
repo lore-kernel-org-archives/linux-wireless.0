@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailgw1.uni-kl.de ([131.246.120.220]:60851 "EHLO
-	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030866AbXDUNm4 (ORCPT
+Received: from gundega.hpl.hp.com ([192.6.19.190]:54194 "EHLO
+	gundega.hpl.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754845AbXDZQui (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2007 09:42:56 -0400
-Date: Sat, 21 Apr 2007 15:42:10 +0200
-From: Joerg Mayer <jmayer@loplof.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2] ieee80211: Output frequency rather than channel in scan results
-Message-ID: <20070421134210.GA15350@thot.informatik.uni-kl.de>
-References: <46299244.Q+HmhPpbYVGidoy1%Larry.Finger@lwfinger.net>
+	Thu, 26 Apr 2007 12:50:38 -0400
+Date: Thu, 26 Apr 2007 09:50:32 -0700
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 7/9] wext: reduce inline abuse
+Message-ID: <20070426165032.GB22576@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <20070424180732.371620000@sipsolutions.net> <20070424180849.651555000@sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <46299244.Q+HmhPpbYVGidoy1%Larry.Finger@lwfinger.net>
+In-Reply-To: <20070424180849.651555000@sipsolutions.net>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 20, 2007 at 11:25:40PM -0500, Larry Finger wrote:
-> +	if (network->channel < 15)
-> +		iwe.u.freq.m = 2407 + 5 * network->channel;
-> +	else
-> +		iwe.u.freq.m = 5000 + 5 * network->channel;
-> +	if (network->channel == 14)
-> +		iwe.u.freq.m = 2484;    /* special case for Japan */
+On Tue, Apr 24, 2007 at 08:07:39PM +0200, Johannes Berg wrote:
+> This patch removes a bunch of inline abuse from wext. Most functions
+> that were marked inline are only used once so the compiler will inline
+> them anyway, others are used multiple times but there's no requirement
+> for them to be inline since they aren't in any fast paths.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-As you are taking japanese channels into account: How about handling the
- >= 4.9 GHz case for Japan as well?
-See 802.11j-2004.pdf 17.3.8.3.2, 17.3.8.3.3 and table J.3 for details.
+	That's clearly not true of all compilers. All gcc versions
+before 4.0 need serious help to inline functions used only once. Our
+current minimal requirement for the kernel is gcc 3.2, therefore this
+code is still useful.
+	Note that this is a legitimate use of inline (tell the
+compiler to inline the function), not an abuse.
 
- ciao
-    Joerg
--- 
-Joerg Mayer                                           <jmayer@loplof.de>
-We are stuck with technology when what we really want is just stuff that
-works. Some say that should read Microsoft instead of technology.
+	Jean
