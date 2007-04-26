@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:40204 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753301AbXDUWQv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2007 18:16:51 -0400
-Subject: Re: [PATCH] ieee80211: Output frequency rather than channel in  scan results
-From: Dan Williams <dcbw@redhat.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <20070421001253.q449myskosg0sg8k@webmail.spamcop.net>
-References: <46298e00.m7oDqYNvDCFdCSj1%Larry.Finger@lwfinger.net>
-	 <20070421001253.q449myskosg0sg8k@webmail.spamcop.net>
-Content-Type: text/plain
-Date: Sat, 21 Apr 2007 18:19:57 -0400
-Message-Id: <1177193997.19554.1.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from gundega.hpl.hp.com ([192.6.19.190]:54107 "EHLO
+	gundega.hpl.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754838AbXDZQrn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2007 12:47:43 -0400
+Date: Thu, 26 Apr 2007 09:46:32 -0700
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/9] wext: remove dead debug code
+Message-ID: <20070426164632.GA22576@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <20070424180732.371620000@sipsolutions.net> <20070424180847.982382000@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070424180847.982382000@sipsolutions.net>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2007-04-21 at 00:12 -0400, Pavel Roskin wrote:
-> Quoting Larry Finger <Larry.Finger@lwfinger.net>:
+On Tue, Apr 24, 2007 at 08:07:35PM +0200, Johannes Berg wrote:
+> This patch kills a whole bunch of code that can only ever be used by
+> defining some things in wext.c. Also, the things that are printed are
+> mostly useless since the API is fairly well-tested.
 > 
-> > In ieee80211, the output of scan results lists channels rather than
-> > frequencies; however, NetworkManager needs frequency. This patch
-> > changes the output from channel to frequency.
-> 
-> The driver can report both, and I think it should.  This would make the iwlist
-> output a bit longer, but kernel drivers shouldn't be written to make userspace
-> program generate pretty output.
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-I'm trying to remember why NM cares about frequency, and I think it's
-for ad-hoc mode; but wpa_supplicant didn't historically support a
-"channel" configuration parameter and so you can't create adhoc networks
-with NM right now anyway...  What's the failure mode?
+	Hi,
 
-Dan
+	Overall ok with the patches. Comments on a few of them...
+	I personally would not remove this DEBUG code, because it
+decreases the overall maitainability of the code.
+	First, it does not only help to debug the API, but it can be
+used to debug userspace and drivers in some extreme cases.
+	Second, this debugging act as documentation. He points out
+which are the important variables and how they are used at critical
+points of the code.
+	As this debug is localised, and compiled out, it does not
+bother anybody and should stay.
 
-> --
-> Regards,
-> Pavel Roskin
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	Regards,
 
+	Jean
