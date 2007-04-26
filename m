@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:33645 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756279AbXD1Nkw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2007 09:40:52 -0400
-Date: Sat, 28 Apr 2007 15:40:49 +0200
-From: Jiri Benc <jbenc@suse.cz>
+Received: from smtp.rutgers.edu ([128.6.72.243]:18981 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754662AbXDZMw5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2007 08:52:57 -0400
+From: Michael Wu <flamingice@sourmilk.net>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jkm@devicescape.com>
-Subject: Re: [PATCH] mac80211: optimise ieee80211_get_hdrlen
-Message-ID: <20070428154049.313d5491@logostar.upir.cz>
-In-Reply-To: <1177686617.3565.27.camel@johannes.berg>
-References: <1175011305.9282.10.camel@johannes.berg>
-	<20070328191116.GJ6036@devicescape.com>
-	<1177686617.3565.27.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
+Date: Thu, 26 Apr 2007 08:48:40 -0400
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <20070423184814.7029.8413.stgit@magic.sourmilk.net> <1177431656.3528.33.camel@johannes.berg>
+In-Reply-To: <1177431656.3528.33.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1878647.thMpRUOj1n";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704260848.45404.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 27 Apr 2007 17:10:17 +0200, Johannes Berg wrote:
-> --- wireless-dev.orig/net/mac80211/ieee80211.c	2007-04-27 12:03:38.334987898 +0200
-> +++ wireless-dev/net/mac80211/ieee80211.c	2007-04-27 12:03:43.034987898 +0200
-> @@ -255,21 +255,32 @@ int ieee80211_get_hdrlen(u16 fc)
->  
->  	switch (fc & IEEE80211_FCTL_FTYPE) {
->  	case IEEE80211_FTYPE_DATA:
-> -		if ((fc & IEEE80211_FCTL_FROMDS) && (fc & IEEE80211_FCTL_TODS))
-> +		if (unlikely((fc & IEEE80211_FCTL_FROMDS) && (fc & IEEE80211_FCTL_TODS)))
+--nextPart1878647.thMpRUOj1n
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-This is not unlikely if you have a WDS link set up. I wouldn't change the
-condition.
+On Tuesday 24 April 2007 12:20, Johannes Berg wrote:
+> Nah. Is that missing from some previous patch?
+>
+Opps. Yeah, that was suppose to be part of patch 7.
 
- Jiri
+-Michael Wu
 
--- 
-Jiri Benc
-SUSE Labs
+--nextPart1878647.thMpRUOj1n
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGMJ+tT3Oqt9AH4aERAn/lAJ4iTE8c2Btr1Gm6EV5WBRL/a+R45QCeNou8
+dG5msFRqw29BA5qp5hlxAjM=
+=0FlV
+-----END PGP SIGNATURE-----
+
+--nextPart1878647.thMpRUOj1n--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
