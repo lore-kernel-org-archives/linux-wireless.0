@@ -1,61 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42934 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965624AbXDBSQZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2007 14:16:25 -0400
-Subject: Re: cfg80211 wext compat w/o wext code changes, rtnl locking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	James Ketrenos <jketreno@linux.intel.com>
-In-Reply-To: <1175536859.25048.6.camel@dv>
-References: <1175122815.8807.21.camel@johannes.berg>
-	 <200703301211.05261.mb@bu3sch.de>  <1175251051.19085.2.camel@johannes.berg>
-	 <1175536859.25048.6.camel@dv>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-u3E/pCkdl5wIape0UZK7"
-Date: Mon, 02 Apr 2007 20:15:41 +0200
-Message-Id: <1175537741.16379.1.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4975 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755365AbXD0Bd2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2007 21:33:28 -0400
+Date: Thu, 26 Apr 2007 20:50:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jean Tourrilhes <jt@hpl.hp.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 9/9] net_device: dont include wext bits if not required
+Message-ID: <20070427005013.GA25332@tuxdriver.com>
+References: <20070424180732.371620000@sipsolutions.net> <20070424180850.595757000@sipsolutions.net> <20070426165304.GC22576@bougret.hpl.hp.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070426165304.GC22576@bougret.hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Apr 26, 2007 at 09:53:04AM -0700, Jean Tourrilhes wrote:
+> On Tue, Apr 24, 2007 at 08:07:41PM +0200, Johannes Berg wrote:
+> > This patch makes the wext bits in struct net_device depend on
+> > CONFIG_WIRELESS_EXT.
+> > 
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> 
+> 	I personally would not do that. Having conditional fields in
+> "struct net_device" is very bad, it's a sure way to crash on modules
+> in some cases. If I remember well, Jeff Garzik has been fighting those
+> over the years.
 
---=-u3E/pCkdl5wIape0UZK7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm not sure I understand the reasoning here.  Without a doubt kernel
+modules need to be built against the same configuration as the kernels
+that are loading them.  So, conditional component of net_device should
+not cause crashes.
 
-On Mon, 2007-04-02 at 14:00 -0400, Pavel Roskin wrote:
+FWIW, there are other conditionally compiled portions of net_device
+(NETPOLL, NET_POLL_CONTROLLER).  I don't see the harm here.
 
-> Just for your information, rtnl_lock() is actually a mutex. Neither
-> rtnl_lock() nor any mutex operation are annotated to give sparse any
-> idea of what they are doing.
-
-Oh. And I guess rtnl_lock/unlock would need to be annotated and not just
-the mutex operations (or are they inlines? I forgot)
-
-> If sparse learns about mutexes, expect it to give a warning.  Please
-> consider if the code between rtnl_lock() and rtnl_unlock() could be
-> moved to a separate function so that locking and unlocking would happen
-> in the same basic block.
-
-Yeah. The patch is probably not complete anyway. I just floated it to
-get some comments...
-
-johannes
-
---=-u3E/pCkdl5wIape0UZK7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGEUhN/ETPhpq3jKURAqIvAKCgbcZEUxItTjqnCadmsiG5fiYulwCgj5PM
-ydVBHz0bcfkiQm0iNpVleMc=
-=XFYb
------END PGP SIGNATURE-----
-
---=-u3E/pCkdl5wIape0UZK7--
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
