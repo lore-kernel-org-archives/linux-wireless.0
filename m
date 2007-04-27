@@ -1,132 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:52990 "EHLO
+Received: from smtp.rutgers.edu ([128.6.72.243]:61934 "EHLO
 	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965967AbXD1QmJ (ORCPT
+	with ESMTP id S1752393AbXD0Ob6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2007 12:42:09 -0400
+	Fri, 27 Apr 2007 10:31:58 -0400
 From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 4/7] mac80211: eliminate forward declarations in ieee80211.c
-Date: Sat, 28 Apr 2007 12:36:02 -0400
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Message-Id: <20070428163601.27203.53866.stgit@magic.sourmilk.net>
-In-Reply-To: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
-References: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+To: James Ketrenos <jketreno@linux.intel.com>
+Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
+Date: Fri, 27 Apr 2007 10:27:40 -0400
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <200704262023.52833.flamingice@sourmilk.net> <46319E31.4090101@linux.intel.com>
+In-Reply-To: <46319E31.4090101@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1681113.Z7GisItH0B";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704271027.44363.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+--nextPart1681113.Z7GisItH0B
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-ieee80211_get_bssid can be moved up in ieee80211 to avoid declaring it at
-the top of the file. ieee80211_mgmt_start_xmit is used after it's defined
-so it doesn't need to be declared at the top.
+On Friday 27 April 2007 02:54, James Ketrenos wrote:
+> Anyway, I ran a quick test of using hw_scan enabled and disabled on a
+> system with 15 active and 17 passive channels.
+>
+> 	hw scan: 2.2s
+> 	sw scan: 4.7s
+>
+> So the SW scan wasn't the 10s that I stated before (although it sure felt
+> like 10s before I ran it with 'time')  But anyway... the hw scan is
+> currently beating out sw scanning by ~54%, at least here.
+>
+Ok. Let's try interpreting these numbers.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+The current settings in mac80211 give each active scan channel 1/33rd of a=
+=20
+second to send a probe request and another 1/33rd of a second to listen for=
+=20
+any replies. That means, at the very minimum, an active scan will take a bi=
+t=20
+over 60 ms to complete per channel. For passive scans, each channel gets=20
+1/5th of a second, so that's 200 ms right there. With all this, we get:
 
- net/mac80211/ieee80211.c |   73 +++++++++++++++++++++-------------------------
- 1 files changed, 34 insertions(+), 39 deletions(-)
+=2E06 (s/channel) * 15 channels + .2 (s/channel) * 17 channels =3D 4.3 s
 
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 66fb4db..4fd2300 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -55,11 +55,6 @@ static const unsigned char eapol_header[] =
- 	{ 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e };
- 
- 
--static u8 * ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len);
--
--static int ieee80211_mgmt_start_xmit(struct sk_buff *skb,
--				     struct net_device *dev);
--
- static inline void ieee80211_include_sequence(struct ieee80211_sub_if_data *sdata,
- 					      struct ieee80211_hdr *hdr)
- {
-@@ -250,6 +245,40 @@ static void ieee80211_key_threshold_notify(struct net_device *dev,
- }
- 
- 
-+static u8 * ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len)
-+{
-+	u16 fc;
-+
-+	if (len < 24)
-+		return NULL;
-+
-+	fc = le16_to_cpu(hdr->frame_control);
-+
-+	switch (fc & IEEE80211_FCTL_FTYPE) {
-+	case IEEE80211_FTYPE_DATA:
-+		switch (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
-+		case IEEE80211_FCTL_TODS:
-+			return hdr->addr1;
-+		case (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS):
-+			return NULL;
-+		case IEEE80211_FCTL_FROMDS:
-+			return hdr->addr2;
-+		case 0:
-+			return hdr->addr3;
-+		}
-+		break;
-+	case IEEE80211_FTYPE_MGMT:
-+		return hdr->addr3;
-+	case IEEE80211_FTYPE_CTL:
-+		if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PSPOLL)
-+			return hdr->addr1;
-+		else
-+			return NULL;
-+	}
-+
-+	return NULL;
-+}
-+
- int ieee80211_get_hdrlen(u16 fc)
- {
- 	int hdrlen = 24;
-@@ -3654,40 +3683,6 @@ ieee80211_rx_h_passive_scan(struct ieee80211_txrx_data *rx)
- }
- 
- 
--static u8 * ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len)
--{
--	u16 fc;
--
--	if (len < 24)
--		return NULL;
--
--	fc = le16_to_cpu(hdr->frame_control);
--
--	switch (fc & IEEE80211_FCTL_FTYPE) {
--	case IEEE80211_FTYPE_DATA:
--		switch (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
--		case IEEE80211_FCTL_TODS:
--			return hdr->addr1;
--		case (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS):
--			return NULL;
--		case IEEE80211_FCTL_FROMDS:
--			return hdr->addr2;
--		case 0:
--			return hdr->addr3;
--		}
--		break;
--	case IEEE80211_FTYPE_MGMT:
--		return hdr->addr3;
--	case IEEE80211_FTYPE_CTL:
--		if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PSPOLL)
--			return hdr->addr1;
--		else
--			return NULL;
--	}
--
--	return NULL;
--}
--
- static void ieee80211_rx_michael_mic_report(struct net_device *dev,
- 					    struct ieee80211_hdr *hdr,
- 					    struct sta_info *sta,
+So, 91% of the time that software scan takes is just.. waiting. HW scan=20
+simply "wins" by default because it doesn't wait as long. These numbers say=
+=20
+nothing about the actual overhead of using SW vs. HW scanning. Can you=20
+provide more details on the delays that iwlwifi uses so we can do a proper=
+=20
+comparison?
 
+=2DMichael Wu
+
+--nextPart1681113.Z7GisItH0B
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGMghgT3Oqt9AH4aERAsTFAKDViKL3bsP/rK28ja/6sMOkzdFU8gCggpk/
+93FL/1VpDe+to2plyHtQYuw=
+=T1np
+-----END PGP SIGNATURE-----
+
+--nextPart1681113.Z7GisItH0B--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
