@@ -1,32 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4634 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756033AbXD0Pwd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2007 11:52:33 -0400
-Date: Fri, 27 Apr 2007 11:21:15 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: add sta item when changing WDS address
-Message-ID: <20070427152115.GA6431@tuxdriver.com>
-References: <1175011277.9282.8.camel@johannes.berg> <1177686772.3565.32.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1177686772.3565.32.camel@johannes.berg>
+Received: from mga06.intel.com ([134.134.136.21]:5580 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756933AbXD0RWN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2007 13:22:13 -0400
+Message-ID: <46322CA9.7090606@linux.intel.com>
+Date: Fri, 27 Apr 2007 10:02:33 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: Jiri Benc <jbenc@suse.cz>
+CC: Dan Williams <dcbw@redhat.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>	<200704251634.16604.flamingice@sourmilk.net>	<46312067.9090005@linux.intel.com>	<200704262023.52833.flamingice@sourmilk.net>	<1177684132.21025.36.camel@localhost.localdomain>	<20070427164208.25434f11@griffin.suse.cz>	<1177685793.21025.52.camel@localhost.localdomain> <20070427172004.32b7bf4a@griffin.suse.cz>
+In-Reply-To: <20070427172004.32b7bf4a@griffin.suse.cz>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 27, 2007 at 05:12:52PM +0200, Johannes Berg wrote:
-> On Tue, 2007-03-27 at 18:01 +0200, Johannes Berg wrote:
-> > This patch adds a sta item for the new address when you change a WDS
-> > link's address. If the sta item cannot be created return an error.
-> 
-> Anything wrong with this patch? :)
+Jiri Benc wrote:
+> The problem is that Michael during fixing of the stack for mainline
+> inclusion encountered a problem with the current implementation of the
+> hw scanning. We need to fix that problem.
 
-Hopefully nothing...I merged it as commit d80bb18ca3444520b465f3006bbb78837a5e28d9.
+All his patch does is delete the hw_scan callback.  It doesn't *fix* anything.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+> The proposed solution (removing of the hw_scan callback) obviously
+> fixes the problem. 
+
+No, it doesn't fix the problem--it removes the functionality.  Deleting automatic AP selection "fixes the problem" too.
+
+> Now, let's find something that fixes the problem as
+> well but doesn't remove the functionality. James already proposed a
+> solution that could work if a support for user space MLME is added. Do
+> you have an idea how to add it?
+
+userspace MLME needs to have a scan command if you really want to have efficient scanning controlled by userspace.  Tuning, waiting, tuning, waiting, tx, listening, tuning, ... introduces a *lot* of userspace/kernel/hardware bouncing.
+
+The userspace MLME can evolve over time.  
+
+User space can try and do sw scanning even if the hw_scan callback is setup.  Nothing about adding hw_scan prevents userspace from thrashing between the kernel, the drivers, and the host to chew up extra CPU cycles.
+
+James
