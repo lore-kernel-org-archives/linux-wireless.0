@@ -1,59 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54896 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030866AbXDUNvX (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:20127 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756089AbXD0Rgm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2007 09:51:23 -0400
-Subject: Re: [PATCH V2] ieee80211: Output frequency rather than channel in  scan results
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joerg Mayer <jmayer@loplof.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <20070421134210.GA15350@thot.informatik.uni-kl.de>
-References: <46299244.Q+HmhPpbYVGidoy1%Larry.Finger@lwfinger.net>
-	 <20070421134210.GA15350@thot.informatik.uni-kl.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6uMCpfaWQXZA0I+21MPy"
-Date: Sat, 21 Apr 2007 15:54:00 +0200
-Message-Id: <1177163640.5941.17.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 27 Apr 2007 13:36:42 -0400
+Message-ID: <4632300E.8090507@linux.intel.com>
+Date: Fri, 27 Apr 2007 10:17:02 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Andy Green <andy@warmcat.com>, Dan Williams <dcbw@redhat.com>,
+	Jiri Benc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>	 <200704251634.16604.flamingice@sourmilk.net>	 <46312067.9090005@linux.intel.com>	 <200704262023.52833.flamingice@sourmilk.net>	 <1177684132.21025.36.camel@localhost.localdomain>	 <20070427164208.25434f11@griffin.suse.cz>	 <1177685793.21025.52.camel@localhost.localdomain>	 <463213D7.9070604@warmcat.com> <1177687364.3565.36.camel@johannes.berg>
+In-Reply-To: <1177687364.3565.36.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg wrote:
+> The diff to rip out the hw_scan callback is tiny, and since it'd need to
+> be worked on anyway to add notification when scanning is done,
+> IMHO it is little more work to remove the scan now and add it back in one patch
+> including the notification. 
 
---=-6uMCpfaWQXZA0I+21MPy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The driver calls ieee80211_scan_completed(), which is in stack and works so let's not rip out hw_scan.
 
-On Sat, 2007-04-21 at 15:42 +0200, Joerg Mayer wrote:
-> On Fri, Apr 20, 2007 at 11:25:40PM -0500, Larry Finger wrote:
-> > +	if (network->channel < 15)
-> > +		iwe.u.freq.m =3D 2407 + 5 * network->channel;
-> > +	else
-> > +		iwe.u.freq.m =3D 5000 + 5 * network->channel;
-> > +	if (network->channel =3D=3D 14)
-> > +		iwe.u.freq.m =3D 2484;    /* special case for Japan */
->=20
-> As you are taking japanese channels into account: How about handling the
->  >=3D 4.9 GHz case for Japan as well?
-> See 802.11j-2004.pdf 17.3.8.3.2, 17.3.8.3.3 and table J.3 for details.
+To be fair, I still don't know what was being fixed by taking hw_scan out... auto-AP selection has never worked here whether I use hw_scan or mac80211's sw scan; I have to configure everything from userspace including channel, essid, channel, and bssid (essid might be optional; I haven't tried not including it)
 
-How about just adding some sort of table in other common code and using
-that. Then you can submit a patch for that table :P
-
-johannes
-
---=-6uMCpfaWQXZA0I+21MPy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGKhd4/ETPhpq3jKURAvgbAJ9xV//sqkRxenBAXWpEPFTdfD0YdQCfbuyX
-jdxUnIZ7w9DGxXF8IfbQ4XE=
-=3GU/
------END PGP SIGNATURE-----
-
---=-6uMCpfaWQXZA0I+21MPy--
-
+James
