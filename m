@@ -1,51 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2884 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752311AbXDWUXW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2007 16:23:22 -0400
-Date: Mon, 23 Apr 2007 15:53:13 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	johannes@sipsolutions.net,
-	Stefano Brivio <stefano.brivio@polimi.it>
-Subject: [PATCH] drivers/net/wireless/Kconfig: correct minor typo
-Message-ID: <20070423195313.GG5883@tuxdriver.com>
-References: <20070423183334.GC5883@tuxdriver.com> <20070423183443.GD5883@tuxdriver.com> <20070423213519.2692d0fd@localhost>
+Received: from styx.suse.cz ([82.119.242.94]:38424 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755881AbXD0Olr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2007 10:41:47 -0400
+Date: Fri, 27 Apr 2007 16:42:08 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
+Message-ID: <20070427164208.25434f11@griffin.suse.cz>
+In-Reply-To: <1177684132.21025.36.camel@localhost.localdomain>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+	<200704251634.16604.flamingice@sourmilk.net>
+	<46312067.9090005@linux.intel.com>
+	<200704262023.52833.flamingice@sourmilk.net>
+	<1177684132.21025.36.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070423213519.2692d0fd@localhost>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct minor typo in drivers/net/wireless/Kconfig identified by
-Stefano Brivio <stefano.brivio@polimi.it>.
+On Fri, 27 Apr 2007 10:28:52 -0400, Dan Williams wrote:
+> We shouldn't be ignoring discrete hardware functionality just because
+> it's in the firmware and also may be in the stack.  Hardware crypto like
+> somebody mentioned.  TCP offload.  etc.  Not allowing a driver writer to
+> take advantage of hardware functionality is quite short-sighted.  Having
+> a pure host-CPU software stack is not utopia; it's entirely unrealistic
+> for a variety of reasons, some of which are below [1].
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 880c628..4426841 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -11,7 +11,7 @@ config WLAN_PRE80211
- 	  Say Y if you have any pre-802.11 wireless LAN hardware.
- 
- 	  This option does not affect the kernel build, it only
--	  let's you choose drivers.
-+	  lets you choose drivers.
- 
- config STRIP
- 	tristate "STRIP (Metricom starmode radio IP)"
-@@ -112,7 +112,7 @@ config WLAN_80211
- 	  Say Y if you have any 802.11 wireless LAN hardware.
- 
- 	  This option does not affect the kernel build, it only
--	  let's you choose drivers.
-+	  lets you choose drivers.
- 
- config PCMCIA_RAYCS
- 	tristate "Aviator/Raytheon 2.4MHz wireless support"
+I'm not saying no (see my other mail in this thread), I see some
+reasons myself, but I don't think your reasons are valid.
+
+> 1) power-critical situations like embedded devices where some pieces
+> must be offloaded to the wireless part
+
+Such solutions will use fullmac. See e.g. OLPC.
+
+> 2) lower-speed devices that may not have cycles to burn on functions
+> that the hardware can also do, even if most of the stack is software
+
+Such solutions have no other way than using fullmac.
+
+> 3) timing critical functions
+
+Such as? Scanning? That's not timing critical at all. Or something
+other?
+
+> 4) hybrid parts that are mostly softmac (ipw2100, ipw2200)
+
+Supporting of halfmacs in a softmac stack is hardly possible. You can
+write something like a "halfsoftmac" but you need to do that for each
+such chipset again. Because (by definition) every halfmac chipset needs
+a different set of functionality from the stack.
+
+> 5) we don't make hardware
+
+But we are also not required to support every obscure feature of the
+hardware.
+
+Thanks,
+
+ Jiri
 
 -- 
-John W. Linville
-linville@tuxdriver.com
+Jiri Benc
+SUSE Labs
