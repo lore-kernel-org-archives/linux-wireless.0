@@ -1,30 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:38551 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752418AbXDHDAK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Apr 2007 23:00:10 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1HaNdK-0007sK-9C
-	for linux-wireless@vger.kernel.org; Sun, 08 Apr 2007 05:00:03 +0200
-Received: from pool-71-110-62-245.lsanca.dsl-w.verizon.net ([71.110.62.245])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Apr 2007 05:00:02 +0200
-Received: from macorgan by pool-71-110-62-245.lsanca.dsl-w.verizon.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Apr 2007 05:00:02 +0200
-To: linux-wireless@vger.kernel.org
-From: mike <macorgan@hotmail.com>
-Subject: GLP code in BSD tree
-Date: Sun, 8 Apr 2007 02:47:33 +0000 (UTC)
-Message-ID: <loom.20070408T044232-54@post.gmane.org>
+Received: from styx.suse.cz ([82.119.242.94]:47445 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757180AbXD0ULb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2007 16:11:31 -0400
+Date: Fri, 27 Apr 2007 22:11:53 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Wireless rates with mac80211
+Message-ID: <20070427221153.7ecc04de@griffin.suse.cz>
+In-Reply-To: <462F9617.8010207@lwfinger.net>
+References: <462F9617.8010207@lwfinger.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-How in the hell can you possibly call direct cut-and-paste a mistake? Grow up,
-and admit the theft ("mistaken misuse") of the code in question! If it was my
-code, I doubt I would ask privately and politely how it was cut and pasted into
-the BSD source tree. 
+On Wed, 25 Apr 2007 12:55:35 -0500, Larry Finger wrote:
+> In mac80211, the SIOC{S,G}IWRATE commands are not implemented. Is there another way to find out what 
+> transmission rate is being used?
 
+If you have debugfs compiled in, you can look into
+<debugfs_mount_point>/ieee80211/phy0/stations/*/rc_simple_tx_avg_rate_[ns]um.
+But that's just average.
+
+ Jiri
+
+-- 
+Jiri Benc
+SUSE Labs
