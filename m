@@ -1,137 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4549 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161404AbXDWSw0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2007 14:52:26 -0400
-Date: Mon, 23 Apr 2007 14:33:34 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	johannes@sipsolutions.net
-Subject: [PATCH] update MAINTAINERS for wireless mailing list
-Message-ID: <20070423183334.GC5883@tuxdriver.com>
+Received: from styx.suse.cz ([82.119.242.94]:54864 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755507AbXD0I7v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2007 04:59:51 -0400
+Date: Fri, 27 Apr 2007 11:00:11 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: James Ketrenos <jketreno@linux.intel.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
+Message-ID: <20070427110011.5dbf8f13@griffin.suse.cz>
+In-Reply-To: <46317888.9040909@linux.intel.com>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+	<200704251634.16604.flamingice@sourmilk.net>
+	<46312067.9090005@linux.intel.com>
+	<200704262023.52833.flamingice@sourmilk.net>
+	<46317888.9040909@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+On Thu, 26 Apr 2007 21:14:00 -0700, James Ketrenos wrote:
+> Right now the scanning in mac80211 is slow.  I haven't really dug
+> into it to see if it will transition from passive to active if it
+> detects RF activity on an otherwise passive channel, etc. but I have
+> seen that if we turn on hw scanning we can get results back in a few
+> seconds vs. 10 or more.  
 
-This patch adds the linux-wireless mailing list to all appropriate
-entries in the MAINTAINERS file.
+The scanning in mac80211 needs to be improved. I'd consider this as a
+job for user space MLME, though.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- MAINTAINERS |   15 ++++++++++++---
- 1 files changed, 12 insertions(+), 3 deletions(-)
+> The more passive channels you add (most of 802.11a) the slower the
+> scanning gets.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 6876c8b..a15ec1a 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -656,6 +656,7 @@ S:	Supported
- ATMEL WIRELESS DRIVER
- P:	Simon Kelley
- M:	simon@thekelleys.org.uk
-+L:	linux-wireless@vger.kernel.org
- W:	http://www.thekelleys.org.uk/atmel
- W:	http://atmelwlandriver.sourceforge.net/
- S:	Maintained
-@@ -711,6 +712,7 @@ P:	Larry Finger
- M:	Larry.Finger@lwfinger.net
- P:	Stefano Brivio
- M:	st3@riseup.net
-+L:	linux-wireless@vger.kernel.org
- W:	http://bcm43xx.berlios.de/
- S:	Maintained
- 
-@@ -1552,6 +1554,7 @@ S:	Supported
- HOST AP DRIVER
- P:	Jouni Malinen
- M:	jkmaline@cc.hut.fi
-+L:	linux-wireless@vger.kernel.org
- L:	hostap@shmoo.com
- W:	http://hostap.epitest.fi/
- S:	Maintained
-@@ -1838,6 +1841,7 @@ P:	Yi Zhu
- M:	yi.zhu@intel.com
- P:	James Ketrenos
- M:	jketreno@linux.intel.com
-+L:	linux-wireless@vger.kernel.org
- L:	ipw2100-devel@lists.sourceforge.net
- L:	http://lists.sourceforge.net/mailman/listinfo/ipw2100-devel
- W:	http://ipw2100.sourceforge.net
-@@ -1848,6 +1852,7 @@ P:	Yi Zhu
- M:	yi.zhu@intel.com
- P:	James Ketrenos
- M:	jketreno@linux.intel.com
-+L:	linux-wireless@vger.kernel.org
- L:	ipw2100-devel@lists.sourceforge.net
- L:	http://lists.sourceforge.net/mailman/listinfo/ipw2100-devel
- W:	http://ipw2200.sourceforge.net
-@@ -2540,6 +2545,7 @@ P:	Pavel Roskin
- M:	proski@gnu.org
- P:	David Gibson
- M:	hermes@gibson.dropbear.id.au
-+L:	linux-wireless@vger.kernel.org
- L:	orinoco-users@lists.sourceforge.net
- L:	orinoco-devel@lists.sourceforge.net
- W:	http://www.nongnu.org/orinoco/
-@@ -2719,7 +2725,7 @@ S:	Supported
- PRISM54 WIRELESS DRIVER
- P:	Prism54 Development Team
- M:	developers@islsm.org
--L:	netdev@vger.kernel.org
-+L:	linux-wireless@vger.kernel.org
- W:	http://prism54.org
- S:	Maintained
- 
-@@ -2790,7 +2796,7 @@ S:	Maintained
- RAYLINK/WEBGEAR 802.11 WIRELESS LAN DRIVER
- P:	Corey Thomas
- M:	corey@world.std.com
--L:	linux-kernel@vger.kernel.org
-+L:	linux-wireless@vger.kernel.org
- S:	Maintained
- 
- RANDOM NUMBER DRIVER
-@@ -3053,7 +3059,7 @@ M:	josejx@gentoo.org
- P:	Daniel Drake
- M:	dsd@gentoo.org
- W:	http://softmac.sipsolutions.net/
--L:	netdev@vger.kernel.org
-+L:	linux-wireless@vger.kernel.org
- S:	Maintained
- 
- SOFTWARE RAID (Multiple Disks) SUPPORT
-@@ -3758,6 +3764,7 @@ S:	Maintained
- WAVELAN NETWORK DRIVER & WIRELESS EXTENSIONS
- P:	Jean Tourrilhes
- M:	jt@hpl.hp.com
-+L:	linux-wireless@vger.kernel.org
- W:	http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/
- S:	Maintained
- 
-@@ -3775,6 +3782,7 @@ S:	Maintained
- WL3501 WIRELESS PCMCIA CARD DRIVER
- P:	Arnaldo Carvalho de Melo
- M:	acme@ghostprotocols.net
-+L:	linux-wireless@vger.kernel.org
- W:	http://oops.ghostprotocols.net:81/blog
- S:	Maintained
- 
-@@ -3838,6 +3846,7 @@ M:	dsd@gentoo.org
- P:	Ulrich Kunitz
- M:	kune@deine-taler.de
- W:	http://zd1211.ath.cx/wiki/DriverRewrite
-+L:	linux-wireless@vger.kernel.org
- L:	zd1211-devs@lists.sourceforge.net (subscribers-only)
- S:	Maintained
- 
--- 
-1.5.0.6
+This seems to be a common, not a softmac specific problem. At least, if
+done properly, I don't see how there could be a difference in softmac
+vs. firmware scanning wrt. time.
+
+> If done right, the stack would set up the list of channels to scan,
+> whether to scan the channel active or passive, and the template for
+> the probe request to use.  
+> 
+> For sw based scans, the stack would then have a mechanism for
+> executing that scan through a series of tunes, transmits, etc.  For
+> hw scans, it would pass that structure to the driver which would
+> package it for the hardware and pass it down.
+> 
+> Upon completion of the scan (sw or hw) the notification would come
+> back to the stack to let it know scanning is complete.  
+> 
+> The sw scan engine would be tied into the rest of the transmit
+> infrastructure to manage off channel time, etc. (which you don't have
+> to do with hw scanning since the hardware/uCode does it all for you)
+
+This sounds reasonable and I think it addresses most of Michael's
+objections.
+
+Unfortunately, I don't see how user space MLME fits into this. Any idea
+how to solve this remaining issue? (But no ugly hacks, please.)
+
+> Unless there is a mechanism to quickly and easily toggle between
+> filter and don't  filter, you'll end up turning off hw/uCode
+> filtering of packets all the time.  
+
+I'm not sure I understand. What prevents you from turning off the
+filtering just during the scanning?
+
+> Which means the hardware would be set to full promiscuous mode and
+> every packet Rx'd would get tossed to the host to then either process
+> or discard--which keeps the host CPU awake (which isn't good on
+> laptops or anywhere else folks care about power consumption)  And
+> scanning is one of those things that happens more frequently when you
+> are not plugged in and are moving around the home, school, office,
+> etc.
+
+Yes, power consumption is a good argument. However, how much time you
+spend in scanning (compared to the total time you use your wifi card)?
+It would be helpful to see some numbers.
+
+> > What's the big bottleneck that justifies moving this to 
+> > hardware? 
+> 
+> With the 3945 its mainly power consumption.
+
+Do you have some numbers? Personally, I have no idea how much power you
+can save by offloading the scan. It could be interesting.
+
+Thanks,
+
+ Jiri
 
 -- 
-John W. Linville
-linville@tuxdriver.com
+Jiri Benc
+SUSE Labs
