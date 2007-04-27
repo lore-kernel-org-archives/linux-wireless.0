@@ -1,71 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4697 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755425AbXD0C1P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2007 22:27:15 -0400
-Date: Thu, 26 Apr 2007 21:47:44 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: Johannes Berg <johannes@sipsolutions.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] cfg80211: fix locking in wiphy_new
-Message-ID: <20070427014744.GE25332@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga06.intel.com ([134.134.136.21]:27870 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757294AbXD0VGp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2007 17:06:45 -0400
+Message-ID: <4632614B.8060102@linux.intel.com>
+Date: Fri, 27 Apr 2007 13:47:07 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: Michael Wu <flamingice@sourmilk.net>
+CC: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <20070423184814.7029.8413.stgit@magic.sourmilk.net>
+In-Reply-To: <20070423184814.7029.8413.stgit@magic.sourmilk.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+Michael Wu wrote:
+> From: Michael Wu <flamingice@sourmilk.net>
+> 
+> The hw_scan callback breaks the auto AP selection code in ieee80211_sta.c.
+> No in-tree drivers use it either. This patch removes it.
 
-This patch fixes the locking in wiphy new. Ingo Oeser <netdev@axxeo.de>
-noticed that locking in the error case was wrong and also suggested this
-fix.
+The auto AP selection code is broken because ieee80211_sta_config_auth wasn't selecting a network if the RSSI was negative.)
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Thanks,
+James
+
+----
+
+[PATCH] Fix ieee80211_sta_config_auth to select networks if rssi < 0
+
+The rssi check was against the top_rssi being less than the network
+rssi.  However, 0 is higher than all negative rssi, so if an adapter
+returned negative rssi values, auto AP selection would never work.
+
+This patch changes behavior such if no network is currently selected it
+ignores the rssi comparison and picks the network that matches all other criteria.
+
+Signed-off-by: James Ketrenos <jketreno@linux.intel.com>
 ---
- net/wireless/core.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
+ net/mac80211/ieee80211_sta.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 532e1e0..24a21ad 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -53,21 +53,25 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 92e575a..6889e79 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -2249,7 +2249,7 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
+ 		    !ieee80211_sta_match_ssid(ifsta, bss->ssid, bss->ssid_len))
+ 			continue;
  
- 	mutex_lock(&cfg80211_drv_mutex);
- 
--	if (unlikely(wiphy_counter<0)) {
-+	drv->idx = wiphy_counter;
-+
-+	/* now increase counter for the next device unless
-+	 * it has wrapped previously */
-+	if (wiphy_counter >= 0)
-+		wiphy_counter++;
-+
-+	mutex_unlock(&cfg80211_drv_mutex);
-+
-+	if (unlikely(drv->idx < 0)) {
- 		/* ugh, wrapped! */
- 		kfree(drv);
- 		return NULL;
- 	}
--	drv->idx = wiphy_counter;
- 
- 	/* give it a proper name */
- 	snprintf(drv->wiphy.dev.bus_id, BUS_ID_SIZE,
- 		 PHY_NAME "%d", drv->idx);
- 
--	/* now increase counter for the next time */
--	wiphy_counter++;
--	mutex_unlock(&cfg80211_drv_mutex);
--
- 	mutex_init(&drv->mtx);
- 	mutex_init(&drv->devlist_mtx);
- 	INIT_LIST_HEAD(&drv->netdev_list);
+-		if (top_rssi < bss->rssi) {
++		if (!selected || top_rssi < bss->rssi) {
+ 			selected = bss;
+ 			top_rssi = bss->rssi;
+ 		}
 -- 
 1.5.0.6
-
--- 
-John W. Linville
-linville@tuxdriver.com
