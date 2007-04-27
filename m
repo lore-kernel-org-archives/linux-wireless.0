@@ -1,63 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:45537 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965915AbXDIPxh (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:32895 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751060AbXD0Vdx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2007 11:53:37 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id CA5A78CAE9
-	for <linux-wireless@vger.kernel.org>; Mon,  9 Apr 2007 17:53:30 +0200 (CEST)
-Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id 74133FCDA
-	for <linux-wireless@vger.kernel.org>; Mon,  9 Apr 2007 15:53:44 +0000 (UTC)
-Message-Id: <20070409154802.470925215@warmcat.com>
-Date: Mon, 09 Apr 2007 16:48:02 +0100
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/7] Try #8: Radiotap on Monitor Mode interfaces for rx and tx
+	Fri, 27 Apr 2007 17:33:53 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH 10/13] mac80211: set bssid to broadcast before scan
+Date: Fri, 27 Apr 2007 17:29:30 -0400
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <200704271550.01153.flamingice@sourmilk.net> <200704271718.29137.flamingice@sourmilk.net>
+In-Reply-To: <200704271718.29137.flamingice@sourmilk.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart4121365.iLg8sBSmNQ";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704271729.37341.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks -
+--nextPart4121365.iLg8sBSmNQ
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_7smMG+H8ChZerKi"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-This set of patches change the Monitor Mode wireless interfaces to use radiotap
-both for monitoring and for packet injection.  The monitoring side is done by a patch
-from Michael Wu.  For example, tcpdump can handle the resulting radiotap packets.
+--Boundary-01=_7smMG+H8ChZerKi
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-For injecting packets, you issue a packet using libpcap or a SOCK_PACKET
-socket down an interface to the wireless device that is in Monitor Mode.  
-The packet has a normal radiotap header prepended to the IEEE80211 header.
-The radiotap header is variable length depending on what the user wants to 
-specify: currently the transmit rate, power and antenna are interpreted,
-and any other entries are skipped.
+On Friday 27 April 2007 17:18, Michael Wu wrote:
+> On Friday 27 April 2007 15:49, Michael Wu wrote:
+> > On Friday 27 April 2007 13:40, Jiri Benc wrote:
+> > > I agree.
+> > >
+> > > And I'd like to see some way to disable this feature for sane cards.
+> >
+> > Here you go.
+> >
+> > Thanks,
+> > -Michael Wu
+>
+> And here's one that *really* works.
+>
+> Thanks,
+> -Michael Wu
+And this is the one that even looks good.
 
-The radiotap parser is broken out into its own file under cfg80211.
+Thanks,
+-Michael Wu
 
-A usermode app packetspammer is available from here
+--Boundary-01=_7smMG+H8ChZerKi
+Content-Type: text/x-diff;
+  charset="iso-8859-15";
+  name="11-reset-bssid-before-scan.diff"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline;
+	filename="11-reset-bssid-before-scan.diff"
 
-http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
+mac80211: set bssid to broadcast before scan
 
-which allows easy injection of these packets from the commandline.  At the moment it
-loops issuing packets at a variety of rates which can be seen from another
-machine's monitor mode interface on the same channel.  There are instructions for
-build and using it on the page above.
+=46rom: Michael Wu <flamingice@sourmilk.net>
 
-Currently it has been tested for both rx and tx using zd1211rw-mac80211.
+This patch sets the BSSID to broadcast before scanning to ensure that the
+hardware filter does not filter probe responses.
 
-The patches are based against this morning's wireless-dev.
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+=2D--
 
-I also added some documentation files which explains how to use the injection
-functionality and radiotap header notes.
+ include/net/mac80211.h       |    4 ++++
+ net/mac80211/ieee80211.c     |    7 ++++++-
+ net/mac80211/ieee80211_sta.c |   11 +++++++++++
+ 3 files changed, 21 insertions(+), 1 deletions(-)
 
-I have used the radiotap include patch from Michael Wu which basically syncs 
-wireless-dev with the one in wireless-2.6, and his latest radiotap rx patch.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index cade956..2da0d31 100644
+=2D-- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -524,6 +524,10 @@ struct ieee80211_hw {
+ 	 * normal operation. */
+ #define IEEE80211_HW_MONITOR_DURING_OPER (1<<9)
+=20
++	/* Device does not need BSSID filter set to broadcast in order to
++	 * receive all probe responses while scanning */
++#define IEEE80211_HW_NO_PROBE_FILTERING (1<<10)
++
+ 	/* please fill this gap when adding new flags */
+=20
+ 	/* calculate Michael MIC for an MSDU when doing hwcrypto */
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index f6a71ce..4976493 100644
+=2D-- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -2015,6 +2015,7 @@ static int __ieee80211_if_config(struct net_device *d=
+ev,
+ 	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_if_conf conf;
++	static const u8 scan_bssid[] =3D { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+=20
+ 	if (!local->ops->config_interface || !netif_running(dev))
+ 		return 0;
+@@ -2023,7 +2024,11 @@ static int __ieee80211_if_config(struct net_device *=
+dev,
+ 	conf.type =3D sdata->type;
+ 	if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA ||
+ 	    sdata->type =3D=3D IEEE80211_IF_TYPE_IBSS) {
+=2D		conf.bssid =3D sdata->u.sta.bssid;
++		if (local->sta_scanning &&
++		    local->scan_dev =3D=3D dev)
++			conf.bssid =3D scan_bssid;
++		else
++			conf.bssid =3D sdata->u.sta.bssid;
+ 		conf.ssid =3D sdata->u.sta.ssid;
+ 		conf.ssid_len =3D sdata->u.sta.ssid_len;
+ 		conf.generic_elem =3D sdata->u.sta.extra_ie;
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 7cb2dd3..d1376f1 100644
+=2D-- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -2577,6 +2577,11 @@ void ieee80211_scan_completed(struct ieee80211_hw *h=
+w)
+ 		printk(KERN_DEBUG "%s: failed to restore operational"
+ 		       "channel after scan\n", dev->name);
+=20
++	if (!(local->hw.flags & IEEE80211_HW_NO_PROBE_FILTERING) &&
++	    ieee80211_if_config(dev))
++		printk(KERN_DEBUG "%s: failed to restore operational"
++		       "BSSID after scan\n", dev->name);
++
+ 	memset(&wrqu, 0, sizeof(wrqu));
+ 	wireless_send_event(dev, SIOCGIWSCAN, &wrqu, NULL);
+=20
+@@ -2736,6 +2741,12 @@ static int ieee80211_sta_start_scan(struct net_devic=
+e *dev,
+ 					 list);
+ 	local->scan_channel_idx =3D 0;
+ 	local->scan_dev =3D dev;
++
++	if (!(local->hw.flags & IEEE80211_HW_NO_PROBE_FILTERING) &&
++	    ieee80211_if_config(dev))
++		printk(KERN_DEBUG "%s: failed to set BSSID for scan\n",
++		       dev->name);
++
+ 	/* TODO: start scan as soon as all nullfunc frames are ACKed */
+ 	queue_delayed_work(local->hw.workqueue, &local->scan_work,
+ 			   IEEE80211_CHANNEL_TIME);
 
-Michael Wu's rx patch exposed an issue with zd1211rw-mac80211 using its
-hardware-dependent rx rate coding which differs from the coding used to
-specify tx rates.  I therefore added a small broken-out patch in this set
-which converts the reported rx rate from zd1211rw-mac80211 to use the
-corresponding tx rate coding, so mac80211 can use the reported rate with
-its rate tables (which use the hardware-specific tx rate coding) to find
-the absolute bitrate and report that via radiotap.
+--Boundary-01=_7smMG+H8ChZerKi--
 
--- 
+--nextPart4121365.iLg8sBSmNQ
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGMmtBT3Oqt9AH4aERAuk6AJ9SV3sGdqP9F9Nzc53wPxuT8Kw8/ACeKkpu
+QVxVKXirCaxELSifuKRpgM4=
+=zK0G
+-----END PGP SIGNATURE-----
+
+--nextPart4121365.iLg8sBSmNQ--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
