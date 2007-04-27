@@ -1,58 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:59875 "EHLO mail.suse.cz"
+Received: from styx.suse.cz ([82.119.242.94]:40895 "EHLO mail.suse.cz"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1031037AbXD3R3Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Apr 2007 13:29:16 -0400
-Date: Mon, 30 Apr 2007 19:29:51 +0200
+	id S1755966AbXD0PTn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2007 11:19:43 -0400
+Date: Fri, 27 Apr 2007 17:20:04 +0200
 From: Jiri Benc <jbenc@suse.cz>
-To: James Ketrenos <jketreno@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: "Stable" branch of mac80211
-Message-ID: <20070430192951.26bdf1df@griffin.suse.cz>
-In-Reply-To: <46361EE3.6060107@linux.intel.com>
-References: <20070429194855.451b9e7c@logostar.upir.cz>
-	<46361EE3.6060107@linux.intel.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
+Message-ID: <20070427172004.32b7bf4a@griffin.suse.cz>
+In-Reply-To: <1177685793.21025.52.camel@localhost.localdomain>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+	<200704251634.16604.flamingice@sourmilk.net>
+	<46312067.9090005@linux.intel.com>
+	<200704262023.52833.flamingice@sourmilk.net>
+	<1177684132.21025.36.camel@localhost.localdomain>
+	<20070427164208.25434f11@griffin.suse.cz>
+	<1177685793.21025.52.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 30 Apr 2007 09:52:51 -0700, James Ketrenos wrote:
-> I'm curious what the criteria was for removing code from 'stable'  
-> 
-> Are there known bugs/oops?  Is it known to be broken, or ?  
-> 
-> For code we know we ultimately want to be redone, removed, or whatever,
-> I can understand not wanting to merge the code.
+On Fri, 27 Apr 2007 10:56:33 -0400, Dan Williams wrote:
+> My point is that things are not black and white.  It's not fullmac vs.
+> softmac, there's a spectrum of parts in between.  I'm not advocating
+> making mac80211 work with every part under the sun, but it seems that
+> we're not being open enough to functionality that might be in hardware.
+> Holding a 100% software line with mac80211 is just IMHO wrong and
+> short-sighted.  The stack needs to be flexible WRT to the hardware
+> capabilities of the parts that we expect to use it.  Saying no to
+> hardware scanning just because it can also be done in software too is
+> wrong.
 
-AP and user space MLME mode don't have clarified user space interface.
-We don't want to support the current mess (mgmt interface) forever. WDS
-is tightly linked with AP.
+Agreed.
 
-802.11n code is not deeply reviewed by anyone and thus it's unclear
-whether it will need to be changed (I already heard some objections) or
-not.
+> We're not trying to limit the capabilities of hardware artificially, but
+> at the same time we're not going to allow crackpot hardware stuff to
+> clutter up the stack.  Hardware scan is far from crackpot hardware
+> stuff; it's a simple, discrete function that shouldn't be hard work
+> with.  It's already in, right?  Ripping it out for a 100% software
+> agenda is wrong.  Let's take out crypto offload then too if we're going
+> to take a consistently 100% software line.  Again, it's not either
+> software or hardware; it's a spectrum of capabilities and we shouldn't
+> be making the stack _less_ flexible.
 
-> However we ultimately want AP, WDS, and 802.11n.
+The problem is that Michael during fixing of the stack for mainline
+inclusion encountered a problem with the current implementation of the
+hw scanning. We need to fix that problem.
 
-We ultimately want STA mode and - maybe - IBSS. Other things are just
-nice to have. They will still stay in wireless-dev, of course.
-
-> At least with 802.11n, I haven't seen anything indicating the code
-> needs to be done any differently than it is currently being done.  
-
-Nobody uses it. I don't see a reason why it needs to go in now. I
-really want those patches to be reviewed by someone before considering
-them "stable". It can be me, but I need some time to study .11n draft,
-or someone else experienced with different hw designs.
-
-> I assume the entire new tree will be marked as 'experimental', so what
-> is the advantage gained by pulling this code out now?
-
-Once the code is in vanilla, user space interfaces are set in stone.
-Regarding .11n, untested and unreviewed patches shouldn't go to vanilla.
+The proposed solution (removing of the hw_scan callback) obviously
+fixes the problem. Now, let's find something that fixes the problem as
+well but doesn't remove the functionality. James already proposed a
+solution that could work if a support for user space MLME is added. Do
+you have an idea how to add it?
 
 Thanks,
 
