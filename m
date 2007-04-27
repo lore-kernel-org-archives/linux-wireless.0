@@ -1,68 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:64922 "EHLO
-	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752702AbXDUUbq (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44315 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755972AbXD0PKU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2007 16:31:46 -0400
-Date: Sat, 21 Apr 2007 15:31:43 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linux-wireless@vger.kernel.org
-Message-ID: <462a74af.G6W/yBS27WPF7eds%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 27 Apr 2007 11:10:20 -0400
+Subject: [PATCH] mac80211: optimise ieee80211_get_hdrlen
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jkm@devicescape.com>
+In-Reply-To: <20070328191116.GJ6036@devicescape.com>
+References: <1175011305.9282.10.camel@johannes.berg>
+	 <20070328191116.GJ6036@devicescape.com>
+Content-Type: text/plain
+Date: Fri, 27 Apr 2007 17:10:17 +0200
+Message-Id: <1177686617.3565.27.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The routines that interrogate the ieee80211_geo struct are missing a
-channel to frequency entry. This patch adds it.
+This patch optimises the ieee80211_get_hdrlen function by exploiting the
+bit masks directly.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+On powerpc, this decreases the function by 4 instructions, but more
+importantly it kills 3 of the 5 branches it contained.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+
 ---
+Looks like I forgot to resend this with the new comment. I think
+optimising the control frames too is fine even if we don't use them,
+it's not /that/ hard to understand.
 
-Index: wireless-2.6/net/ieee80211/ieee80211_geo.c
-===================================================================
---- wireless-2.6.orig/net/ieee80211/ieee80211_geo.c
-+++ wireless-2.6/net/ieee80211/ieee80211_geo.c
-@@ -94,6 +94,21 @@ int ieee80211_channel_to_index(struct ie
- 	return -1;
- }
+ net/mac80211/ieee80211.c |   31 +++++++++++++++++++++----------
+ 1 file changed, 21 insertions(+), 10 deletions(-)
+
+--- wireless-dev.orig/net/mac80211/ieee80211.c	2007-04-27 12:03:38.334987898 +0200
++++ wireless-dev/net/mac80211/ieee80211.c	2007-04-27 12:03:43.034987898 +0200
+@@ -255,21 +255,32 @@ int ieee80211_get_hdrlen(u16 fc)
  
-+u32 ieee80211_channel_to_freq(struct ieee80211_device * ieee, u8 channel)
-+{
-+	const struct ieee80211_channel * ch;
-+
-+	/* Driver needs to initialize the geography map before using
-+	 * these helper functions */
-+	if (ieee->geo.bg_channels == 0 && ieee->geo.a_channels == 0)
-+		return 0;
-+
-+	ch = ieee80211_get_channel(ieee, channel);
-+	if (!ch->channel)
-+		return 0;
-+	return ch->freq;
-+}
-+
- u8 ieee80211_freq_to_channel(struct ieee80211_device * ieee, u32 freq)
- {
- 	int i;
-@@ -174,6 +189,7 @@ EXPORT_SYMBOL(ieee80211_get_channel);
- EXPORT_SYMBOL(ieee80211_get_channel_flags);
- EXPORT_SYMBOL(ieee80211_is_valid_channel);
- EXPORT_SYMBOL(ieee80211_freq_to_channel);
-+EXPORT_SYMBOL(ieee80211_channel_to_freq);
- EXPORT_SYMBOL(ieee80211_channel_to_index);
- EXPORT_SYMBOL(ieee80211_set_geo);
- EXPORT_SYMBOL(ieee80211_get_geo);
-Index: wireless-2.6/include/net/ieee80211.h
-===================================================================
---- wireless-2.6.orig/include/net/ieee80211.h
-+++ wireless-2.6/include/net/ieee80211.h
-@@ -1291,6 +1291,8 @@ extern u8 ieee80211_get_channel_flags(st
- extern const struct ieee80211_channel *ieee80211_get_channel(struct
- 							     ieee80211_device
- 							     *ieee, u8 channel);
-+extern u32 ieee80211_channel_to_freq(struct ieee80211_device * ieee,
-+				      u8 channel);
+ 	switch (fc & IEEE80211_FCTL_FTYPE) {
+ 	case IEEE80211_FTYPE_DATA:
+-		if ((fc & IEEE80211_FCTL_FROMDS) && (fc & IEEE80211_FCTL_TODS))
++		if (unlikely((fc & IEEE80211_FCTL_FROMDS) && (fc & IEEE80211_FCTL_TODS)))
+ 			hdrlen = 30; /* Addr4 */
+-		if (fc & IEEE80211_STYPE_QOS_DATA)
+-			hdrlen += 2; /* QoS Control Field */
++		/*
++		 * The QoS Control field is two bytes and its presence is
++		 * indicated by the IEEE80211_STYPE_QOS_DATA bit. Add 2 to
++		 * hdrlen if that bit is set.
++		 * This works by masking out the bit and shifting it to
++		 * bit position 1 so the result has the value 0 or 2.
++		 */
++		hdrlen += (fc & IEEE80211_STYPE_QOS_DATA)
++				>> (ilog2(IEEE80211_STYPE_QOS_DATA)-1);
+ 		break;
+ 	case IEEE80211_FTYPE_CTL:
+-		switch (fc & IEEE80211_FCTL_STYPE) {
+-		case IEEE80211_STYPE_CTS:
+-		case IEEE80211_STYPE_ACK:
++		/*
++		 * ACK and CTS are 10 bytes, all others 16. To see how
++		 * to get this condition consider
++		 *   subtype mask:   0b0000000011110000 (0x00F0)
++		 *   ACK subtype:    0b0000000011010000 (0x00D0)
++		 *   CTS subtype:    0b0000000011000000 (0x00C0)
++		 *   bits that matter:         ^^^      (0x00E0)
++		 *   value of those: 0b0000000011000000 (0x00C0)
++		 */
++		if ((fc & 0xE0) == 0xC0)
+ 			hdrlen = 10;
+-			break;
+-		default:
++		else
+ 			hdrlen = 16;
+-			break;
+-		}
+ 		break;
+ 	}
  
- /* ieee80211_wx.c */
- extern int ieee80211_wx_get_scan(struct ieee80211_device *ieee,
+
+
