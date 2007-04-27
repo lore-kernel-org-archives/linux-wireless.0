@@ -1,258 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:53512 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754215AbXDWUlO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2007 16:41:14 -0400
-Date: Mon, 23 Apr 2007 22:41:16 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: linux-wireless@vger.kernel.org,
+Received: from smtp.rutgers.edu ([128.6.72.243]:55162 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757174AbXD0TyQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2007 15:54:16 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH 10/13] mac80211: set bssid to broadcast before scan
+Date: Fri, 27 Apr 2007 15:49:57 -0400
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
 	John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH 03/13] mac80211: fix virtual interface related locking
-Message-ID: <20070423224116.03d99954@griffin.suse.cz>
-In-Reply-To: <20070423184812.7029.7682.stgit@magic.sourmilk.net>
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-	<20070423184812.7029.7682.stgit@magic.sourmilk.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <1177431851.3528.36.camel@johannes.berg> <20070427194015.602759a1@griffin.suse.cz>
+In-Reply-To: <20070427194015.602759a1@griffin.suse.cz>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart2148680.KI2KMkRjyB";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704271550.01153.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 23 Apr 2007 14:48:13 -0400, Michael Wu wrote:
-> This converts sub_if_lock to a rw lock and makes all code touching
-> sub_if_list use it, grabs mdev's tx lock in set_multicast_list to
-> synchronize multicast configuration, and simplifies some related code.
-> 
-> [...]
-> --- a/net/mac80211/ieee80211.c
-> +++ b/net/mac80211/ieee80211.c
-> [...]
-> @@ -2148,6 +2148,7 @@ static void ieee80211_set_multicast_list(struct net_device *dev)
->  	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->  	unsigned short flags;
->  
-> +	netif_tx_lock(local->mdev);
+--nextPart2148680.KI2KMkRjyB
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_lPlMG8mkSAHQmT8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Shouldn't it be netif_tx_lock_bh?
+--Boundary-01=_lPlMG8mkSAHQmT8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
->  	if (((dev->flags & IFF_ALLMULTI) != 0) ^ (sdata->allmulti != 0)) {
->  		if (sdata->allmulti) {
->  			sdata->allmulti = 0;
-> @@ -2177,9 +2178,12 @@ static void ieee80211_set_multicast_list(struct net_device *dev)
->  			flags |= IFF_ALLMULTI;
->  		if (local->iff_promiscs)
->  			flags |= IFF_PROMISC;
-> +		read_lock(&local->sub_if_lock);
->  		local->ops->set_multicast_list(local_to_hw(local), flags,
->  					      local->mc_count);
-
-Would be nice to have documented that set_multicast_list is called in
-atomic context.
-
-> +		read_unlock(&local->sub_if_lock);
->  	}
-> +	netif_tx_unlock(local->mdev);
->  }
->  
->  struct dev_mc_list *ieee80211_get_mc_list_item(struct ieee80211_hw *hw,
-> @@ -2220,12 +2224,11 @@ static struct net_device_stats *ieee80211_get_stats(struct net_device *dev)
->  	return &(sdata->stats);
->  }
->  
-> -void ieee80211_if_shutdown(struct net_device *dev)
-> +static void ieee80211_if_shutdown(struct net_device *dev)
->  {
->  	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
->  	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->  
-> -	ASSERT_RTNL();
-
-As you already said, this is not necessary.
-
-> [...]
-> @@ -3871,6 +3884,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
->  		struct sk_buff *skb_new;
->  		u8 *bssid = ieee80211_get_bssid(hdr, skb->len - radiotap_len);
->  
-> +		read_lock(&local->sub_if_lock);
->  		list_for_each_entry(sdata, &local->sub_if_list, list) {
->  			rx.u.rx.ra_match = 1;
->  			switch (sdata->type) {
-> @@ -3906,10 +3920,9 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
->  					rx.u.rx.ra_match = 0;
->  				} else if (!sta)
->  					sta = rx.sta =
-> -						ieee80211_ibss_add_sta(local->mdev,
-> +						ieee80211_ibss_add_sta(sdata->dev,
->  								       skb, bssid,
->  								       hdr->addr2);
-> -						/* FIXME: call with sdata->dev */
->  				break;
->  			case IEEE80211_IF_TYPE_AP:
->  				if (!bssid) {
-> @@ -3964,6 +3977,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
->  						     &rx, sta);
->  		} else
->  			dev_kfree_skb(skb);
-> +		read_unlock(&local->sub_if_lock);
-
-Documenting that sub_if_lock cannot be taken under sta_bss_lock nor
-under sta_lock would be nice.
-
-local->ops->conf_tx and ->set_time are called under spinlock, are we ok with that?
-
-> [...]
-> --- a/net/mac80211/ieee80211_ioctl.c
-> +++ b/net/mac80211/ieee80211_ioctl.c
-> @@ -1003,23 +1003,30 @@ static int ieee80211_ioctl_add_if(struct net_device *dev,
->  		if (left < sizeof(struct hostapd_if_wds))
->  			return -EPROTO;
->  
-> -		res = ieee80211_if_add(dev, param->u.if_info.name, 0, &new_dev);
-> +		res = ieee80211_if_add(dev, param->u.if_info.name, &new_dev,
-> +				       IEEE80211_IF_TYPE_WDS);
->  		if (res)
->  			return res;
-> -		ieee80211_if_set_type(new_dev, IEEE80211_IF_TYPE_WDS);
->  		res = ieee80211_if_update_wds(new_dev, wds->remote_addr);
-> -		if (res)
-> -			__ieee80211_if_del(wdev_priv(dev->ieee80211_ptr),
-> -					   IEEE80211_DEV_TO_SUB_IF(new_dev));
-> +		if (unlikely(res)) {
-> +			struct ieee80211_local *local =
-> +				wdev_priv(dev->ieee80211_ptr);
-> +			struct ieee80211_sub_if_data *sdata = 
-> +				IEEE80211_DEV_TO_SUB_IF(new_dev);
-> +			write_lock_bh(&local->sub_if_lock);
-> +			list_del(&sdata->list);
-> +			write_unlock_bh(&local->sub_if_lock);
-> +			__ieee80211_if_del(local, sdata);
-> +		}
-
-A good candidate for a separate function :-) But it can be done later
-when this is needed at some other place.
-
->  		return res;
->  	case HOSTAP_IF_VLAN:
->  		if (left < sizeof(struct hostapd_if_vlan))
->  			return -EPROTO;
->  
-> -		res = ieee80211_if_add(dev, param->u.if_info.name, 0, &new_dev);
-> +		res = ieee80211_if_add(dev, param->u.if_info.name, NULL,
-> +				       IEEE80211_IF_TYPE_VLAN);
->  		if (res)
->  			return res;
-> -		ieee80211_if_set_type(new_dev, IEEE80211_IF_TYPE_VLAN);
->  #if 0
->  		res = ieee80211_if_update_vlan(new_dev, vlan->id);
->  		if (res)
-
-I know that the next few lines are commented out but please fix them as
-well or remove the #ifed out code completely, otherwise we may be in
-trouble later.
-
-> [...]
-> @@ -1093,36 +1098,34 @@ static int ieee80211_ioctl_update_if(struct net_device *dev,
->  		struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
->  		struct net_device *wds_dev = NULL;
->  		struct ieee80211_sub_if_data *sdata;
-> +		int ret;
->  
->  		if (left < sizeof(struct ieee80211_if_wds))
->  			return -EPROTO;
->  
-> +		read_lock(&local->sub_if_lock);
->  		list_for_each_entry(sdata, &local->sub_if_list, list) {
->  			if (strcmp(param->u.if_info.name,
->  				   sdata->dev->name) == 0) {
->  				wds_dev = sdata->dev;
-> +				dev_hold(wds_dev);
->  				break;
->  			}
->  		}
-> +		read_unlock(&local->sub_if_lock);
->  
->  		if (!wds_dev || sdata->type != IEEE80211_IF_TYPE_WDS)
->  			return -ENODEV;
->  
-> -		return ieee80211_if_update_wds(wds_dev, wds->remote_addr);
-> +		ret = ieee80211_if_update_wds(wds_dev, wds->remote_addr);
-> +		dev_put(wds_dev);
-
-This was the place with unnecessary dev_hold/dev_put you talked about,
-right? Just wanted to show I'm paying attention :-)
-
-> [...]
-> @@ -2239,6 +2239,7 @@ static int ieee80211_ioctl_clear_keys(struct net_device *dev)
->  	struct sta_info *sta;
->  
->  	memset(addr, 0xff, ETH_ALEN);
-> +	read_lock(&local->sub_if_lock);
->  	list_for_each_entry(sdata, &local->sub_if_list, list) {
->  		for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
->  			keyconf = NULL;
-> @@ -2256,6 +2257,7 @@ static int ieee80211_ioctl_clear_keys(struct net_device *dev)
->  		}
->  		sdata->default_key = NULL;
->  	}
-> +	read_unlock(&local->sub_if_lock);
-
-Again, local->ops->set_key called under spinlock.
-
->  
->  	spin_lock_bh(&local->sta_lock);
->  	list_for_each_entry(sta, &local->sta_list, list) {
-> @@ -2388,6 +2390,7 @@ static int ieee80211_ioctl_default_wep_only(struct ieee80211_local *local,
->  	struct ieee80211_sub_if_data *sdata;
->  
->  	local->default_wep_only = value;
-> +	read_lock(&local->sub_if_lock);
->  	list_for_each_entry(sdata, &local->sub_if_list, list)
->  		for (i = 0; i < NUM_DEFAULT_KEYS; i++)
->  			if (value)
-> @@ -2396,6 +2399,7 @@ static int ieee80211_ioctl_default_wep_only(struct ieee80211_local *local,
->  			else
->  				ieee80211_key_disable_hwaccel(local,
->  							      sdata->keys[i]);
-> +	read_unlock(&local->sub_if_lock);
->  
->  	return 0;
->  }
-> @@ -2406,7 +2410,7 @@ void ieee80211_update_default_wep_only(struct ieee80211_local *local)
->  	int i = 0;
->  	struct ieee80211_sub_if_data *sdata;
->  
-> -	spin_lock_bh(&local->sub_if_lock);
-> +	read_lock(&local->sub_if_lock);
->  	list_for_each_entry(sdata, &local->sub_if_list, list) {
->  
->  		if (sdata->dev == local->mdev)
-> @@ -2415,7 +2419,7 @@ void ieee80211_update_default_wep_only(struct ieee80211_local *local)
->  		/* If there is an AP interface then depend on userspace to
->  		   set default_wep_only correctly. */
->  		if (sdata->type == IEEE80211_IF_TYPE_AP) {
-> -			spin_unlock_bh(&local->sub_if_lock);
-> +			read_unlock(&local->sub_if_lock);
->  			return;
->  		}
->  
-> @@ -2427,7 +2431,7 @@ void ieee80211_update_default_wep_only(struct ieee80211_local *local)
->  	else
->  		ieee80211_ioctl_default_wep_only(local, 0);
-
-Recursively taken lock. Ok, it's rwlock locked for reading, but I'd
-still prefer not doing that.
-
->  
-> -	spin_unlock_bh(&local->sub_if_lock);
-> +	read_unlock(&local->sub_if_lock);
->  }
-> [...]
+On Friday 27 April 2007 13:40, Jiri Benc wrote:
+> I agree.
+>
+> And I'd like to see some way to disable this feature for sane cards.
+>
+Here you go.
 
 Thanks,
+-Michael Wu
 
- Jiri
+--Boundary-01=_lPlMG8mkSAHQmT8
+Content-Type: text/x-diff;
+  charset="iso-8859-1";
+  name="11-reset-bssid-before-scan.diff"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline;
+	filename="11-reset-bssid-before-scan.diff"
 
--- 
-Jiri Benc
-SUSE Labs
+mac80211: set bssid to broadcast before scan
+
+=46rom: Michael Wu <flamingice@sourmilk.net>
+
+This patch sets the BSSID to broadcast before scanning to ensure that the
+hardware filter does not filter probe responses.
+
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+=2D--
+
+ include/net/mac80211.h       |    4 ++++
+ net/mac80211/ieee80211.c     |    7 ++++++-
+ net/mac80211/ieee80211_sta.c |   11 +++++++++++
+ 3 files changed, 21 insertions(+), 1 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index cade956..2da0d31 100644
+=2D-- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -524,6 +524,10 @@ struct ieee80211_hw {
+ 	 * normal operation. */
+ #define IEEE80211_HW_MONITOR_DURING_OPER (1<<9)
+=20
++	/* Device does not need BSSID filter set to broadcast in order to
++	 * receive all probe responses while scanning */
++#define IEEE80211_HW_NO_PROBE_FILTERING (1<<10)
++
+ 	/* please fill this gap when adding new flags */
+=20
+ 	/* calculate Michael MIC for an MSDU when doing hwcrypto */
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index f6a71ce..4976493 100644
+=2D-- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -2015,6 +2015,7 @@ static int __ieee80211_if_config(struct net_device *d=
+ev,
+ 	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_if_conf conf;
++	static const u8 scan_bssid[] =3D { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+=20
+ 	if (!local->ops->config_interface || !netif_running(dev))
+ 		return 0;
+@@ -2023,7 +2024,11 @@ static int __ieee80211_if_config(struct net_device *=
+dev,
+ 	conf.type =3D sdata->type;
+ 	if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA ||
+ 	    sdata->type =3D=3D IEEE80211_IF_TYPE_IBSS) {
+=2D		conf.bssid =3D sdata->u.sta.bssid;
++		if (local->sta_scanning &&
++		    local->scan_dev =3D=3D dev)
++			conf.bssid =3D scan_bssid;
++		else
++			conf.bssid =3D sdata->u.sta.bssid;
+ 		conf.ssid =3D sdata->u.sta.ssid;
+ 		conf.ssid_len =3D sdata->u.sta.ssid_len;
+ 		conf.generic_elem =3D sdata->u.sta.extra_ie;
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 7cb2dd3..d996412 100644
+=2D-- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -2577,6 +2577,11 @@ void ieee80211_scan_completed(struct ieee80211_hw *h=
+w)
+ 		printk(KERN_DEBUG "%s: failed to restore operational"
+ 		       "channel after scan\n", dev->name);
+=20
++	if (local->hw.flags & IEEE80211_HW_NO_PROBE_FILTERING ||
++	    ieee80211_if_config(dev))
++		printk(KERN_DEBUG "%s: failed to restore operational"
++		       "BSSID after scan\n", dev->name);
++
+ 	memset(&wrqu, 0, sizeof(wrqu));
+ 	wireless_send_event(dev, SIOCGIWSCAN, &wrqu, NULL);
+=20
+@@ -2736,6 +2741,12 @@ static int ieee80211_sta_start_scan(struct net_devic=
+e *dev,
+ 					 list);
+ 	local->scan_channel_idx =3D 0;
+ 	local->scan_dev =3D dev;
++
++	if (local->hw.flags & IEEE80211_HW_NO_PROBE_FILTERING ||
++	    ieee80211_if_config(dev))
++		printk(KERN_DEBUG "%s: failed to set BSSID for scan\n",
++		       dev->name);
++
+ 	/* TODO: start scan as soon as all nullfunc frames are ACKed */
+ 	queue_delayed_work(local->hw.workqueue, &local->scan_work,
+ 			   IEEE80211_CHANNEL_TIME);
+
+--Boundary-01=_lPlMG8mkSAHQmT8--
+
+--nextPart2148680.KI2KMkRjyB
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGMlPpT3Oqt9AH4aERAoA8AJ0f9Rc1kssbmVXl9UEho9mQC/r4ngCeJ/N8
+waG0qIygYdTwjgs01DT/dE8=
+=WLQB
+-----END PGP SIGNATURE-----
+
+--nextPart2148680.KI2KMkRjyB--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
