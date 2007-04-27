@@ -1,118 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.229]:1982 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161431AbXDLBNN (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:44052 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757170AbXD0T7N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2007 21:13:13 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so310879wra
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2007 18:13:12 -0700 (PDT)
-Message-ID: <1ba2fa240704111813p556f7e16u1dbf14d1d20f5781@mail.gmail.com>
-Date: Thu, 12 Apr 2007 04:13:08 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Simon Barber" <simon@devicescape.com>
-Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery and association
-Cc: "Michael Wu" <flamingice@sourmilk.net>,
-	mabbas <mabbas@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Jouni Malinen" <jkm@devicescape.com>
-In-Reply-To: <C86180A8C204554D8A3323D8F6B0A29F01DEB358@dhost002-46.dex002.intermedia.net>
+	Fri, 27 Apr 2007 15:59:13 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: [PATCH] mac80211: don't export linux/ieee80211.h
+Date: Fri, 27 Apr 2007 15:54:55 -0400
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <1174909105.1364.53.camel@dell-4965.jf.intel.com>
-	 <20070411194059.GA2436@tuxdriver.com> <461D3F48.70004@linux.intel.com>
-	 <200704111630.06160.flamingice@sourmilk.net>
-	 <1ba2fa240704111503l6dcef504na73c997ae75ebccd@mail.gmail.com>
-	 <C86180A8C204554D8A3323D8F6B0A29F01DEB33D@dhost002-46.dex002.intermedia.net>
-	 <1ba2fa240704111605l305230d3vf09c085473364eb3@mail.gmail.com>
-	 <C86180A8C204554D8A3323D8F6B0A29F01DEB358@dhost002-46.dex002.intermedia.net>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200704271554.55770.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Actually the recipient part I can see be implemented in the  user
-space MLME. The initiator  part requires request from  kernel to user
-space to start the BA negotiation.
-Still there is some amount  internal state information that need to be
-passed back and forth that make user space MLME to be a long shot, bat
-eventually we get there.
-Dynamic algorithm look like best option to me as keeping underutilized
-stream only hurts the performance. User application may tune
-thresholds and timeouts and of course must tag the traffic.
+From: Michael Wu <flamingice@sourmilk.net>
 
+The definitions in linux/ieee80211.h don't need to be exported.
 
-On 4/12/07, Simon Barber <simon@devicescape.com> wrote:
-> There are several possible notification mechanisms - according to the
-> application's needs. It could be part of tc - using a qdisc, or libpcap,
-> or something hardwired into mac80211 or something else. Someone might
-> want this controlled by a userspace application (e.g. video streaming).
-> Someone else might want an automatic algorithm.
->
-> Simon
->
-> -----Original Message-----
-> From: Tomas Winkler [mailto:tomasw@gmail.com]
-> Sent: Wednesday, April 11, 2007 4:05 PM
-> To: Simon Barber
-> Cc: Michael Wu; mabbas; John W. Linville;
-> linux-wireless@vger.kernel.org; Jouni Malinen
-> Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery
-> and association
->
-> So you monitor your traffic load in driver, then notify user space
-> application which opens or tears down for you the BA stream?
-> What would be the notification mechanism ?
->
->
-> On 4/12/07, Simon Barber <simon@devicescape.com> wrote:
-> > Setup and tear down of BA should be done by userspace - actual
-> > processing of the BA frames themselves should be done in mac80211.
-> > This allows maximum flexibility from userspace to control the policy
-> > of when to setup and teardown BA streams.
-> >
-> > Simon
-> >
-> > -----Original Message-----
-> > From: Tomas Winkler [mailto:tomasw@gmail.com]
-> > Sent: Wednesday, April 11, 2007 3:04 PM
-> > To: Michael Wu
-> > Cc: mabbas; John W. Linville; linux-wireless@vger.kernel.org; Jouni
-> > Malinen; Simon Barber
-> > Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery
-> > and association
-> >
-> > On 4/11/07, Michael Wu <flamingice@sourmilk.net> wrote:
-> > > On Wednesday 11 April 2007 16:04, mabbas wrote:
-> > > > I am not familiar with userspace mlme what needed to be done?
-> > > mac80211 has a userspace mlme mode which defers all things dealing
-> > > with management frames to userspace (wpa_supplicant). It basically
-> > > disables all the code in ieee80211_sta.c and routes management
-> > > frames to a special interface where wpa_supplicant (or hostap)
-> > > handles things. This is preferred and the ieee80211_sta.c code is
-> > > there for
-> > backwards compatibility.
-> > >
-> > > No major features should be added to the in-kernel MLME
-> > > (ieee80211_sta.c) but even more importantly, your patch series does
-> > > not provide the appropriate hooks for a userspace MLME to support a
-> > driver using this 802.11n API.
-> > >
-> > > -Michael Wu
-> > >
-> > >
-> > Meanwhile I don't see feasible user space implementation for this as
-> > data packet classification is done in kernel. BACK streams are
-> > dynamically  opened and teared down per TID according current traffic
-> > shape.
-> > This is new feature and the user space handling is not well understand
->
-> > yet. I suggest that we proceed with patches and let the evolution
-> > making its steps.
-> >
-> > If someone has concrete suggestion on implementing it as user space
-> > MLME I will be glad to hear.
-> > Thanks
-> >
-> >
-> > Tomas
-> >
->
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
+
+ include/linux/Kbuild      |    1 -
+ include/linux/ieee80211.h |   56 +++++++++++++++++++++++----------------------
+ 2 files changed, 28 insertions(+), 29 deletions(-)
+
+diff --git a/include/linux/Kbuild b/include/linux/Kbuild
+index 2781d33..7a1bb18 100644
+--- a/include/linux/Kbuild
++++ b/include/linux/Kbuild
+@@ -70,7 +70,6 @@ header-y += hysdn_if.h
+ header-y += i2c-dev.h
+ header-y += i8k.h
+ header-y += icmp.h
+-header-y += ieee80211.h
+ header-y += if_arcnet.h
+ header-y += if_arp.h
+ header-y += if_bonding.h
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index ae19306..ecd61e8 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -98,20 +98,20 @@
+ struct ieee80211_hdr {
+ 	__le16 frame_control;
+ 	__le16 duration_id;
+-	__u8 addr1[6];
+-	__u8 addr2[6];
+-	__u8 addr3[6];
++	u8 addr1[6];
++	u8 addr2[6];
++	u8 addr3[6];
+ 	__le16 seq_ctrl;
+-	__u8 addr4[6];
++	u8 addr4[6];
+ } __attribute__ ((packed));
+ 
+ 
+ struct ieee80211_mgmt {
+ 	__le16 frame_control;
+ 	__le16 duration;
+-	__u8 da[6];
+-	__u8 sa[6];
+-	__u8 bssid[6];
++	u8 da[6];
++	u8 sa[6];
++	u8 bssid[6];
+ 	__le16 seq_ctrl;
+ 	union {
+ 		struct {
+@@ -119,7 +119,7 @@ struct ieee80211_mgmt {
+ 			__le16 auth_transaction;
+ 			__le16 status_code;
+ 			/* possibly followed by Challenge text */
+-			__u8 variable[0];
++			u8 variable[0];
+ 		} __attribute__ ((packed)) auth;
+ 		struct {
+ 			__le16 reason_code;
+@@ -135,14 +135,14 @@ struct ieee80211_mgmt {
+ 			__le16 status_code;
+ 			__le16 aid;
+ 			/* followed by Supported rates */
+-			__u8 variable[0];
++			u8 variable[0];
+ 		} __attribute__ ((packed)) assoc_resp, reassoc_resp;
+ 		struct {
+ 			__le16 capab_info;
+ 			__le16 listen_interval;
+-			__u8 current_ap[6];
++			u8 current_ap[6];
+ 			/* followed by SSID and Supported rates */
+-			__u8 variable[0];
++			u8 variable[0];
+ 		} __attribute__ ((packed)) reassoc_req;
+ 		struct {
+ 			__le16 reason_code;
+@@ -153,11 +153,11 @@ struct ieee80211_mgmt {
+ 			__le16 capab_info;
+ 			/* followed by some of SSID, Supported rates,
+ 			 * FH Params, DS Params, CF Params, IBSS Params, TIM */
+-			__u8 variable[0];
++			u8 variable[0];
+ 		} __attribute__ ((packed)) beacon;
+ 		struct {
+ 			/* only variable items: SSID, Supported rates */
+-			__u8 variable[0];
++			u8 variable[0];
+ 		} __attribute__ ((packed)) probe_req;
+ 		struct {
+ 			__le64 timestamp;
+@@ -165,24 +165,24 @@ struct ieee80211_mgmt {
+ 			__le16 capab_info;
+ 			/* followed by some of SSID, Supported rates,
+ 			 * FH Params, DS Params, CF Params, IBSS Params */
+-			__u8 variable[0];
++			u8 variable[0];
+ 		} __attribute__ ((packed)) probe_resp;
+ 		struct {
+-			__u8 category;
++			u8 category;
+ 			union {
+ 				struct {
+-					__u8 action_code;
+-					__u8 dialog_token;
+-					__u8 status_code;
+-					__u8 variable[0];
++					u8 action_code;
++					u8 dialog_token;
++					u8 status_code;
++					u8 variable[0];
+ 				} __attribute__ ((packed)) wme_action;
+ 				struct{
+-					__u8 action_code;
+-					__u8 element_id;
+-					__u8 length;
+-					__u8 switch_mode;
+-					__u8 new_chan;
+-					__u8 switch_count;
++					u8 action_code;
++					u8 element_id;
++					u8 length;
++					u8 switch_mode;
++					u8 new_chan;
++					u8 switch_count;
+ 				} __attribute__((packed)) chan_switch;
+ 			} u;
+ 		} __attribute__ ((packed)) action;
+@@ -194,14 +194,14 @@ struct ieee80211_mgmt {
+ struct ieee80211_rts {
+ 	__le16 frame_control;
+ 	__le16 duration;
+-	__u8 ra[6];
+-	__u8 ta[6];
++	u8 ra[6];
++	u8 ta[6];
+ } __attribute__ ((packed));
+ 
+ struct ieee80211_cts {
+ 	__le16 frame_control;
+ 	__le16 duration;
+-	__u8 ra[6];
++	u8 ra[6];
+ } __attribute__ ((packed));
+ 
+ 
