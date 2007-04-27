@@ -1,94 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:37845 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1767366AbXDEV6L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 17:58:11 -0400
-Date: Thu, 5 Apr 2007 23:53:53 +0200
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Theo de Raadt <deraadt@cvs.openbsd.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Michael Buesch <mb@bu3sch.de>,
-	Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Joseph Jezak <josejx@gentoo.org>,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues
-Message-ID: <20070405235353.09e1e68d@localhost>
-In-Reply-To: <200704052056.l35KuTIr025210@cvs.openbsd.org>
-References: <46155E82.2040808@garzik.org>
-	<200704052056.l35KuTIr025210@cvs.openbsd.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga06.intel.com ([134.134.136.21]:17527 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756336AbXD0SDz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2007 14:03:55 -0400
+Message-ID: <46323671.2060803@linux.intel.com>
+Date: Fri, 27 Apr 2007 10:44:17 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: Jiri Benc <jbenc@suse.cz>
+CC: Andy Green <andy@warmcat.com>, Dan Williams <dcbw@redhat.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>	<200704251634.16604.flamingice@sourmilk.net>	<46312067.9090005@linux.intel.com>	<200704262023.52833.flamingice@sourmilk.net>	<1177684132.21025.36.camel@localhost.localdomain>	<20070427164208.25434f11@griffin.suse.cz>	<1177685793.21025.52.camel@localhost.localdomain>	<20070427172004.32b7bf4a@griffin.suse.cz>	<463216FA.6000206@warmcat.com> <20070427173633.506820ae@griffin.suse.cz>
+In-Reply-To: <20070427173633.506820ae@griffin.suse.cz>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 05 Apr 2007 14:56:29 -0600
-Theo de Raadt <deraadt@cvs.openbsd.org> wrote:
+Jiri Benc wrote:
+> On Fri, 27 Apr 2007 16:30:02 +0100, Andy Green wrote:
+>>> fixes the problem. Now, let's find something that fixes the problem as
+>>> well but doesn't remove the functionality. James already proposed a
+>>> solution that could work if a support for user space MLME is added. Do
+>>> you have an idea how to add it?
+>> Jiri, what functionality?  The ability to change frequency periodically?
+>>   Isn't that something mac80211 can do already?
+> 
+> Please see other mails in this thread. The opinions differ.
+> 
+> As long as it is implemented cleanly I have no objections against it.
+> 
+> Btw, the main argument for hw_scan was power consumption. I'd still
+> like to see numbers :-)
 
-> The Italian dude in particular was complaining bitterly in private
-      ^^^^^^^^^^^^
-Should this be considered an offense? What else?
+No, my main argument for hw_scan was latency to associate.  
 
-> mail about the whitespace similarities... good grief, not whitespace
-> similarities.  How SCO of him.
+I also think power consumption and overall system overhead is important; opinions vary on this (I think even the 18 seconds per hour that Michael asserts is worth it given that it doesn't impose any negative impact the end users flexibility)
 
-I want to show an example.
+If mac80211 can get scanning to consistently work as fast as hardware scanning, and can show that it doesn't negatively impact battery life, CPU load, or throughput (esp. while associated)--great!  Once that goal is reached then I can't think of a reason why we would want hardware scan offloading.
 
-Commit message for bcw revision 1.78:
-Read the whole SPROM content with a single routine to a own sprom struct.
+I don't have numbers to show you how much power a scan costs when done in SW vs. HW.  I do have numbers that show that if I don't use hw_scan, the scan takes more than twice as long.  A code profiler can show that there is a lot more processing going on in the host during a software scan than a hardware scan.  
 
-For those people who have reported about broken MAC address at attach
-time, this should fix the problem.
+There are also features enabled through Intel's wireless products that mac80211 currently doesn't support that you just can't do as efficiently in a 100% host based softmac solution.  I would love to enable those as well.  One example is concurrent scanning for multiple SSIDs in a single scan without having to send multiple probe requests from the [userspace->]mac80211->driver->hardware.
 
-An excerpt of bcw code:
-uint8_t bcw_sprom_crc(const uint16_t *sprom)
-{
-         int word;
-         uint8_t crc = 0xff;
-
-         for (word = 0; word < BCW_SPROM_SIZE - 1; word++) {
-                 crc = bcw_sprom_crc8(crc, sprom[word] & 0x00ff);
-                 crc = bcw_sprom_crc8(crc, (sprom[word] & 0xff00) >> 8);
-         }
-         crc = bcw_sprom_crc8(crc, sprom[BCW_SPROM_VERSION] & 0x00ff);
-         crc ^= 0xff;
- 
-         return (crc);
-}
-
-An excerpt of bcm43xx code:
-static u8 bcm43xx_sprom_crc(const u16 *sprom)
-{
-        int word;
-        u8 crc = 0xFF;
-
-        for (word = 0; word < BCM43xx_SPROM_SIZE - 1; word++) {
-                crc = bcm43xx_crc8(crc, sprom[word] & 0x00FF);
-                crc = bcm43xx_crc8(crc, (sprom[word] & 0xFF00) >> 8);
-        }
-        crc = bcm43xx_crc8(crc, sprom[BCM43xx_SPROM_VERSION] & 0x00FF);
-        crc ^= 0xFF;
-
-        return crc;
-}
-
-Diff here:
-http://www.openbsd.org/cgi-bin/cvsweb.cgi/src/sys/dev/ic/Attic/bcw.c.diff?r1=1.77&r2=1.78&f=h
-(here you can see that Marcus wrote some code for reading SPROM before this
-commit, but then here he replaces what he wrote with bcm43xx code.)
-
-I would like a precise answer here. Do you think that this specific case is
-a "mistake"?
-
-
---
-Ciao
-Stefano
+James
