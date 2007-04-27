@@ -1,95 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4804 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030872AbXDQTWv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2007 15:22:51 -0400
-Date: Tue, 17 Apr 2007 14:34:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jean Tourrilhes <jt@hpl.hp.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 2.6] WE-22 : prevent information leak on 64 bit
-Message-ID: <20070417183442.GE8633@tuxdriver.com>
-References: <20070323003116.GC2712@bougret.hpl.hp.com> <1175508410.23438.75.camel@johannes.berg> <20070417170820.GB22372@bougret.hpl.hp.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070417170820.GB22372@bougret.hpl.hp.com>
+Received: from smtp.rutgers.edu ([128.6.72.243]:25507 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755910AbXD0Pgi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2007 11:36:38 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: James Ketrenos <jketreno@linux.intel.com>
+Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
+Date: Fri, 27 Apr 2007 11:32:15 -0400
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <200704262023.52833.flamingice@sourmilk.net> <46317888.9040909@linux.intel.com>
+In-Reply-To: <46317888.9040909@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart5356628.tuBiNt8dzm";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200704271132.22346.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 17, 2007 at 10:08:20AM -0700, Jean Tourrilhes wrote:
-> On Mon, Apr 02, 2007 at 12:06:50PM +0200, Johannes Berg wrote:
-> > 
-> > Jean Tourrilhes wrote :
-> > > 	Johannes Berg discovered that kernel space was leaking to
-> > > userspace on 64 bit platform. He made a first patch to fix that. This
-> > > is an improved version of his patch.
-> > > 	This was tested on 2.6.21-rc4. Would you mind pushing that
-> > > upstream ?
-> > 
-> > Just FYI. This patch applies with rejects in net/core/rtnetlink.c and
-> > net/core/wireless.c to wireless-dev. The changes in those two files can
-> > be ignored completely since they affect only the removed
-> > wext-over-netlink interface.
-> > 
-> > johannes
-> 
-> 	I'm sorry to have to write this e-mail. But this incident is
-> completely opposed to the ideal of FreeSoftware/OpenSource and
-> demonstrate some of the bad politics happening in Linux.
-> 
-> 	First, I'm the current active maintainer of the
-> wext-over-netlink interface, and nobody bothered to even 'inform' me
-> about its removal, let alone consult with me.
+--nextPart5356628.tuBiNt8dzm
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Honestly, most of us thought you weren't interested.
+On Friday 27 April 2007 00:14, James Ketrenos wrote:
+> If done right, the stack would set up the list of channels to scan, wheth=
+er
+> to scan the channel active or passive, and the template for the probe
+> request to use.
+>
+> For sw based scans, the stack would then have a mechanism for executing
+> that scan through a series of tunes, transmits, etc.  For hw scans, it
+> would pass that structure to the driver which would package it for the
+> hardware and pass it down.
+>
+> Upon completion of the scan (sw or hw) the notification would come back to
+> the stack to let it know scanning is complete.
+>
+Yes, this addresses many of the deficiencies in the current hw_scan api, bu=
+t=20
+that wasn't what I was concerned about.
 
-> 	This shows a complete lack of courtesy and a total disrespect
-> to the concept of maintainer, basically some people are just second
-> class citizens.
+> > What's the big bottleneck that justifies moving this to
+> > hardware?
+>
+> With the 3945 its mainly power consumption.
+>
+Ok. Since you did not provide any numbers to back up that assertion, let's =
+try=20
+to find the upper bound for the cost of using software scanning.
 
-I'm sorry that you are upset.  I do not believe any disrespect was
-intended.
+With NetworkManager, userspace requests a scan about every 2 minutes when=20
+connected. Assume that each scan takes 3 seconds. Assume that things are=20
+ridiculously inefficient and software scanning keeps the cpu on for an=20
+additional 20% of the scanning time. This keeps the CPU on unnecessarily fo=
+r=20
+18 seconds every hour, assuming nothing else is running. With an additional=
+=20
+assumption that all the additional CPU time that goes into software scan=20
+directly subtracts from the battery life, this results in a loss of about 2=
+=20
+minutes and a half of battery life.. for a laptop that can last 8 hours.
 
-> 	Second, there is no technical justification to such decision,
-> it's just plain politics. I would agree that for the vast majority of
-> people, this API was useless, as any work in progress. But, it is
-> maintained (by me), it is not causing any technical issue, for those
-> people it's not compiled in (i.e. no bloat), it is not causing bugs
-> and not preventing other code to be merged in the kernel.
-> 	Therefore a purely politic decision.
+An upper bound of 18 seconds of battery life lost per hour sounds okay to m=
+e=20
+especially when it assumes the user is just letting the laptop idle. In=20
+practice, I think that the difference is going to be negligible.. but what =
+I=20
+think is going to happen and my guess at the upper bound doesn't matter muc=
+h.=20
+If you can provide numbers, this discussion becomes significantly more=20
+productive.
 
-I would not call it politics, but I do not want to split hairs.
+=2DMichael Wu
 
-This API was controversial and mostly unwelcome from the start.
-It was ridiculed as "ioctls over netlink" at the last kernel summit.
-It is widely regarded as less of a solution and more of an extension
-to a problem.
+--nextPart5356628.tuBiNt8dzm
+Content-Type: application/pgp-signature
 
-One of the objections to having merged the API was that _if_ it were
-to gain users then we would have to carry that maintenance burden
-ad infinitum.  This fear was already beginning to be confirmed by the
-efforts at maintaining WE compatibility in cfg80211.  Since there were
-(thankfully) still no users and only compatibility headaches from
-maintaining it, Johannes wanted to remove the code, and I consented
-to his request.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-I wish you would not view this as a personal issue.  Your contributions
-are certainly welcome in general.  We just don't see any benefit from
-keeping this code around as we move forward.
+iD8DBQBGMheGT3Oqt9AH4aERAk4/AJ0bKHrb70sbKD7By5RueE0d6c25owCeMM8f
+Il5wv0wAl9/ltLM19vQMuhE=
+=08+J
+-----END PGP SIGNATURE-----
 
-Again, I am terribly sorry that this was a surprise to you.  I will be
-sure to communicate with you directly should another such issue arise.
-
-> 	By the way : don't bother replying to this e-mail, nothing
-> good will come of it.
-
-Hopefully that isn't totally true...
-
-Regards,
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+--nextPart5356628.tuBiNt8dzm--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
