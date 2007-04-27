@@ -1,83 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:14207 "EHLO
-	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1946018AbXDCWRc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Apr 2007 18:17:32 -0400
-From: Daniel Drake <dsd@gentoo.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: kune@deine-taler.de
-Subject: [PATCH] zd1211rw: Fix E2P_PHY_REG patching
-Message-Id: <20070403221737.3473A7B409F@zog.reactivated.net>
-Date: Tue,  3 Apr 2007 23:17:37 +0100 (BST)
+Received: from styx.suse.cz ([82.119.242.94]:47164 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755959AbXD0Trd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2007 15:47:33 -0400
+Date: Fri, 27 Apr 2007 21:47:54 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Dan Williams <dcbw@redhat.com>
+Cc: James Ketrenos <jketreno@linux.intel.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
+Message-ID: <20070427214754.532ccfda@griffin.suse.cz>
+In-Reply-To: <1177702975.4438.0.camel@localhost.localdomain>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+	<200704251634.16604.flamingice@sourmilk.net>
+	<46312067.9090005@linux.intel.com>
+	<200704262023.52833.flamingice@sourmilk.net>
+	<1177684132.21025.36.camel@localhost.localdomain>
+	<20070427164208.25434f11@griffin.suse.cz>
+	<1177685793.21025.52.camel@localhost.localdomain>
+	<20070427172004.32b7bf4a@griffin.suse.cz>
+	<46322CA9.7090606@linux.intel.com>
+	<20070427201054.61b9bc4c@griffin.suse.cz>
+	<1177702975.4438.0.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Due to conflicting/confusing defines in the vendor driver, we were
-reading E2P_PHY_REG from the wrong location.
+On Fri, 27 Apr 2007 15:42:55 -0400, Dan Williams wrote:
+> I don't see how they could possibly conflict methodically.  They are two
+> paths to the same result.  Or do you mean currently conflict technically
+> in the code?
 
-CR157 patching was slightly incorrect in that the vendor driver only
-patches in an 8-bit value, whereas we were patching 24 bits.
+The latter.
 
-Additionally, CR157 patching was happening on both zd1211 and zd1211b,
-but this should only happen on zd1211.
+ Jiri
 
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
-Signed-off-by: Ulrich Kunitz <kune@deine-taler.de>
----
- zd_chip.c |   11 +++--------
- zd_chip.h |    2 +-
- 2 files changed, 4 insertions(+), 9 deletions(-)
-
-Index: linux/drivers/net/wireless/zd1211rw/zd_chip.c
-===================================================================
---- linux.orig/drivers/net/wireless/zd1211rw/zd_chip.c
-+++ linux/drivers/net/wireless/zd1211rw/zd_chip.c
-@@ -593,16 +593,16 @@ int zd_chip_unlock_phy_regs(struct zd_ch
- 	return r;
- }
- 
--/* CR157 can be optionally patched by the EEPROM */
-+/* CR157 can be optionally patched by the EEPROM for original ZD1211 */
- static int patch_cr157(struct zd_chip *chip)
- {
- 	int r;
--	u32 value;
-+	u16 value;
- 
- 	if (!chip->patch_cr157)
- 		return 0;
- 
--	r = zd_ioread32_locked(chip, &value, E2P_PHY_REG);
-+	r = zd_ioread16_locked(chip, &value, E2P_PHY_REG);
- 	if (r)
- 		return r;
- 
-@@ -792,11 +792,6 @@ static int zd1211b_hw_reset_phy(struct z
- 		goto out;
- 
- 	r = zd_iowrite16a_locked(chip, ioreqs, ARRAY_SIZE(ioreqs));
--	if (r)
--		goto unlock;
--
--	r = patch_cr157(chip);
--unlock:
- 	t = zd_chip_unlock_phy_regs(chip);
- 	if (t && !r)
- 		r = t;
-Index: linux/drivers/net/wireless/zd1211rw/zd_chip.h
-===================================================================
---- linux.orig/drivers/net/wireless/zd1211rw/zd_chip.h
-+++ linux/drivers/net/wireless/zd1211rw/zd_chip.h
-@@ -641,8 +641,8 @@ enum {
-  * also only 11 channels. */
- #define E2P_ALLOWED_CHANNEL	E2P_DATA(0x18)
- 
--#define E2P_PHY_REG		E2P_DATA(0x1a)
- #define E2P_DEVICE_VER		E2P_DATA(0x20)
-+#define E2P_PHY_REG		E2P_DATA(0x25)
- #define E2P_36M_CAL_VALUE1	E2P_DATA(0x28)
- #define E2P_36M_CAL_VALUE2      E2P_DATA(0x2a)
- #define E2P_36M_CAL_VALUE3      E2P_DATA(0x2c)
+-- 
+Jiri Benc
+SUSE Labs
