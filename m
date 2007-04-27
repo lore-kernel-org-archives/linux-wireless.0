@@ -1,90 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:60521 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753296AbXDWU6H (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2007 16:58:07 -0400
-Message-ID: <462D1DD8.8060507@warmcat.com>
-Date: Mon, 23 Apr 2007 21:58:00 +0100
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 03/13] mac80211: fix virtual interface related locking
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <20070423184812.7029.7682.stgit@magic.sourmilk.net>
-In-Reply-To: <20070423184812.7029.7682.stgit@magic.sourmilk.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mx1.redhat.com ([66.187.233.31]:43956 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754092AbXD0RqQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2007 13:46:16 -0400
+Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Andy Green <andy@warmcat.com>, Jiri Benc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1177687364.3565.36.camel@johannes.berg>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+	 <200704251634.16604.flamingice@sourmilk.net>
+	 <46312067.9090005@linux.intel.com>
+	 <200704262023.52833.flamingice@sourmilk.net>
+	 <1177684132.21025.36.camel@localhost.localdomain>
+	 <20070427164208.25434f11@griffin.suse.cz>
+	 <1177685793.21025.52.camel@localhost.localdomain>
+	 <463213D7.9070604@warmcat.com>  <1177687364.3565.36.camel@johannes.berg>
+Content-Type: text/plain
+Date: Fri, 27 Apr 2007 13:49:22 -0400
+Message-Id: <1177696162.30796.4.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
+On Fri, 2007-04-27 at 17:22 +0200, Johannes Berg wrote:
+> On Fri, 2007-04-27 at 16:16 +0100, Andy Green wrote:
+> 
+> > Yeah but this isn't "in hardware" -- it's in firmware: software that
+> > runs of a different, vendor-specific, CPU.
+> 
+> [...]
+> 
+> Guys, this discussion is deteriorating rapidly!
+> 
+> The diff to rip out the hw_scan callback is tiny, and since it'd need to
+> be worked on anyway to add notification when scanning is done, IMHO it
+> is little more work to remove the scan now and add it back in one patch
+> including the notification. That just pushes the problem back to those
+> people who want/need it and then they can decide if it's worth the
+> effort and if they can show that it brings enough advantages.
 
-Hi Michael -
+This discussion has made it pretty clear that if hw_scan ever goes out,
+it's going to be really difficult to get it back _in_ at all, even if it
+works.
 
-Couldn't get this to apply on current wireless-dev, and there is a 
-trailing whitespace.  Maybe it's a problem with a script I concocted to 
-extract the patch from saved Thunderbird 2.0 mails... ?  Is it just that 
-wireless-dev changed inbetweentimes?
+Dan
 
-$ git pull
-Already up-to-date.
-$ guilt push
-Applying patch..mac80211-Add-radiotap-support.patch
-Patch applied.
-$ guilt push
-Applying patch..sync-with-radiotap-header-in-wireless-2.6.patch
-Patch applied.
-$ guilt push
-Applying patch..mac80211-fix-virtual-interface-related-locking.patch
-Adds trailing whitespace.
-Context reduced to (1/1) to apply fragment at 30
-error: patch failed: net/mac80211/ieee80211_cfg.c:45
-error: net/mac80211/ieee80211_cfg.c: patch does not apply
-To force apply this patch, use 'guilt push -f'
-$
+> The current cfg80211 scanning API is pretty much modeled on the 802.11
+> MLME interface and as such should be easy to push through to the
+> firmware if necessary, even through mac80211.
+> 
+> johannes
 
-Failing chunk:
-
-> diff --git a/net/mac80211/ieee80211_cfg.c b/net/mac80211/ieee80211_cfg.c
-> index e370b4b..0069826 100644
-> --- a/net/mac80211/ieee80211_cfg.c
-> +++ b/net/mac80211/ieee80211_cfg.c
-...
-> @@ -45,16 +44,12 @@ static int ieee80211_add_iface(struct wiphy *wiphy, char *name,
->  		return -EINVAL;
->  	}
->  
-> -	res = ieee80211_if_add(local->mdev, name, 0, &new_dev);
-> -	if (res == 0)
-> -		ieee80211_if_set_type(new_dev, itype);
-> -	return res;
-> +	return ieee80211_if_add(local->mdev, name, NULL, itype);
->  }
-
-
-...
-
-> diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-> index 2ff762d..502010e 100644
-> --- a/net/mac80211/ieee80211_ioctl.c
-> +++ b/net/mac80211/ieee80211_ioctl.c
-> @@ -1003,23 +1003,30 @@ static int ieee80211_ioctl_add_if(struct net_device *dev,
->  		if (left < sizeof(struct hostapd_if_wds))
->  			return -EPROTO;
->  
-> -		res = ieee80211_if_add(dev, param->u.if_info.name, 0, &new_dev);
-> +		res = ieee80211_if_add(dev, param->u.if_info.name, &new_dev,
-> +				       IEEE80211_IF_TYPE_WDS);
->  		if (res)
->  			return res;
-> -		ieee80211_if_set_type(new_dev, IEEE80211_IF_TYPE_WDS);
->  		res = ieee80211_if_update_wds(new_dev, wds->remote_addr);
-> -		if (res)
-> -			__ieee80211_if_del(wdev_priv(dev->ieee80211_ptr),
-> -					   IEEE80211_DEV_TO_SUB_IF(new_dev));
-> +		if (unlikely(res)) {
-> +			struct ieee80211_local *local =
-> +				wdev_priv(dev->ieee80211_ptr);
-> +			struct ieee80211_sub_if_data *sdata = <<<<<<----- trailing space
-
--Andy
