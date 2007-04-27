@@ -1,111 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server8.tchmachines.com ([216.180.241.250]:56792 "EHLO
-	server8.tchmachines.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031289AbXD2ThO (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:17581 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753009AbXD0VWu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Apr 2007 15:37:14 -0400
+	Fri, 27 Apr 2007 17:22:50 -0400
 From: Michael Wu <flamingice@sourmilk.net>
 To: Jiri Benc <jbenc@suse.cz>
-Subject: Re: "Stable" branch of mac80211
-Date: Sun, 29 Apr 2007 14:14:14 -0400
-Cc: linux-wireless@vger.kernel.org,
+Subject: Re: [PATCH 10/13] mac80211: set bssid to broadcast before scan
+Date: Fri, 27 Apr 2007 17:18:25 -0400
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
 	John Linville <linville@tuxdriver.com>
-References: <20070429194855.451b9e7c@logostar.upir.cz>
-In-Reply-To: <20070429194855.451b9e7c@logostar.upir.cz>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <20070427194015.602759a1@griffin.suse.cz> <200704271550.01153.flamingice@sourmilk.net>
+In-Reply-To: <200704271550.01153.flamingice@sourmilk.net>
 MIME-Version: 1.0
 Content-Type: multipart/signed;
-  boundary="nextPart1360264.PQ71BQaaiS";
+  boundary="nextPart12667035.yxHF6DXHFo";
   protocol="application/pgp-signature";
   micalg=pgp-sha1
-Message-Id: <200704291414.19963.flamingice@sourmilk.net>
+Message-Id: <200704271718.29137.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1360264.PQ71BQaaiS
+--nextPart12667035.yxHF6DXHFo
 Content-Type: multipart/mixed;
-  boundary="Boundary-01=_2BONG4GWPaRawu0"
+  boundary="Boundary-01=_himMG9MZmgimgWw"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
 
---Boundary-01=_2BONG4GWPaRawu0
+--Boundary-01=_himMG9MZmgimgWw
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
 
-On Sunday 29 April 2007 13:48, Jiri Benc wrote:
-> Please note that this branch is expected to be rebased frequently and all
-> patches are subject to change.
+On Friday 27 April 2007 15:49, Michael Wu wrote:
+> On Friday 27 April 2007 13:40, Jiri Benc wrote:
+> > I agree.
+> >
+> > And I'd like to see some way to disable this feature for sane cards.
 >
-wireless-dev has been updated recently. One of the conflicts can be resolve=
-d=20
-easily. There's also an API change which conflicts with the qdisc fixes=20
-because tcf_destroy is no longer exported. A patch for that is attached.
-
-Once updated to the latest wireless-dev, it should be fairly easy to pull=20
-together a patch for net-2.6 since wireless-dev should have all the major=20
-networking API changes for 2.6.22. I think mac80211 can be pushed to net-2.=
-6=20
-after that. What do you think?
+> Here you go.
+>
+> Thanks,
+> -Michael Wu
+And here's one that *really* works.
 
 Thanks,
-=2DMichael Wu
+-Michael Wu
 
---Boundary-01=_2BONG4GWPaRawu0
+--Boundary-01=_himMG9MZmgimgWw
 Content-Type: text/x-diff;
-  charset="iso-8859-1";
-  name="19-fix-tcf-api-update.diff"
+  charset="iso-8859-15";
+  name="11-reset-bssid-before-scan.diff"
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline;
-	filename="19-fix-tcf-api-update.diff"
+	filename="11-reset-bssid-before-scan.diff"
 
-mac80211: update qdisc code to use tcf_destroy_chain
+mac80211: set bssid to broadcast before scan
 
 =46rom: Michael Wu <flamingice@sourmilk.net>
 
-tcf_destroy is no longer exported. Use tcf_destroy_chain instead.
+This patch sets the BSSID to broadcast before scanning to ensure that the
+hardware filter does not filter probe responses.
 
 Signed-off-by: Michael Wu <flamingice@sourmilk.net>
 =2D--
 
- net/mac80211/wme.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+ include/net/mac80211.h       |    4 ++++
+ net/mac80211/ieee80211.c     |    7 ++++++-
+ net/mac80211/ieee80211_sta.c |   11 +++++++++++
+ 3 files changed, 21 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 1cb6358..9874d9a 100644
-=2D-- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -354,13 +354,10 @@ static void wme_qdiscop_destroy(struct Qdisc* qd)
- 	struct ieee80211_sched_data *q =3D qdisc_priv(qd);
- 	struct ieee80211_local *local =3D wdev_priv(qd->dev->ieee80211_ptr);
- 	struct ieee80211_hw *hw =3D &local->hw;
-=2D	struct tcf_proto *tp;
- 	int queue;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index cade956..2da0d31 100644
+=2D-- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -524,6 +524,10 @@ struct ieee80211_hw {
+ 	 * normal operation. */
+ #define IEEE80211_HW_MONITOR_DURING_OPER (1<<9)
 =20
-=2D	while ((tp =3D q->filter_list) !=3D NULL) {
-=2D		q->filter_list =3D tp->next;
-=2D		tcf_destroy(tp);
-=2D	}
-+	tcf_destroy_chain(q->filter_list);
-+	q->filter_list =3D NULL;
++	/* Device does not need BSSID filter set to broadcast in order to
++	 * receive all probe responses while scanning */
++#define IEEE80211_HW_NO_PROBE_FILTERING (1<<10)
++
+ 	/* please fill this gap when adding new flags */
 =20
- 	for (queue=3D0; queue < hw->queues; queue++) {
- 		skb_queue_purge(&q->requeued[queue]);
+ 	/* calculate Michael MIC for an MSDU when doing hwcrypto */
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index f6a71ce..4976493 100644
+=2D-- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -2015,6 +2015,7 @@ static int __ieee80211_if_config(struct net_device *d=
+ev,
+ 	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_if_conf conf;
++	static const u8 scan_bssid[] =3D { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+=20
+ 	if (!local->ops->config_interface || !netif_running(dev))
+ 		return 0;
+@@ -2023,7 +2024,11 @@ static int __ieee80211_if_config(struct net_device *=
+dev,
+ 	conf.type =3D sdata->type;
+ 	if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA ||
+ 	    sdata->type =3D=3D IEEE80211_IF_TYPE_IBSS) {
+=2D		conf.bssid =3D sdata->u.sta.bssid;
++		if (local->sta_scanning &&
++		    local->scan_dev =3D=3D dev)
++			conf.bssid =3D scan_bssid;
++		else
++			conf.bssid =3D sdata->u.sta.bssid;
+ 		conf.ssid =3D sdata->u.sta.ssid;
+ 		conf.ssid_len =3D sdata->u.sta.ssid_len;
+ 		conf.generic_elem =3D sdata->u.sta.extra_ie;
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 7cb2dd3..7b12d7d 100644
+=2D-- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -2577,6 +2577,11 @@ void ieee80211_scan_completed(struct ieee80211_hw *h=
+w)
+ 		printk(KERN_DEBUG "%s: failed to restore operational"
+ 		       "channel after scan\n", dev->name);
+=20
++	if (!(local->hw.flags & IEEE80211_HW_NO_PROBE_FILTERING))
++		if (ieee80211_if_config(dev))
++			printk(KERN_DEBUG "%s: failed to restore operational"
++			       "BSSID after scan\n", dev->name);
++
+ 	memset(&wrqu, 0, sizeof(wrqu));
+ 	wireless_send_event(dev, SIOCGIWSCAN, &wrqu, NULL);
+=20
+@@ -2736,6 +2741,12 @@ static int ieee80211_sta_start_scan(struct net_devic=
+e *dev,
+ 					 list);
+ 	local->scan_channel_idx =3D 0;
+ 	local->scan_dev =3D dev;
++
++	if (!(local->hw.flags & IEEE80211_HW_NO_PROBE_FILTERING))
++		if (ieee80211_if_config(dev))
++			printk(KERN_DEBUG "%s: failed to set BSSID for scan\n",
++			       dev->name);
++
+ 	/* TODO: start scan as soon as all nullfunc frames are ACKed */
+ 	queue_delayed_work(local->hw.workqueue, &local->scan_work,
+ 			   IEEE80211_CHANNEL_TIME);
 
---Boundary-01=_2BONG4GWPaRawu0--
+--Boundary-01=_himMG9MZmgimgWw--
 
---nextPart1360264.PQ71BQaaiS
+--nextPart12667035.yxHF6DXHFo
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBGNOB7T3Oqt9AH4aERAphjAKCAYcLmG+vrCcqRSbjUdePSvGQKBgCfWLc1
-aChZyChVGLGIl6dEVg3i7K4=
-=YqZi
+iD8DBQBGMmilT3Oqt9AH4aERAoVqAKDXrzoN0HBT4GIxdYjmh3pX2g4HNACgm4zS
+nIwiccRnQHvAPTAbH66SVik=
+=gQLz
 -----END PGP SIGNATURE-----
 
---nextPart1360264.PQ71BQaaiS--
+--nextPart12667035.yxHF6DXHFo--
 -: 
 To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 the body of a message to majordomo@vger.kernel.org: 
