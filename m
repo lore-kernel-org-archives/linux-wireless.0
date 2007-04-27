@@ -1,38 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:56012 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933069AbXDAOCh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Apr 2007 10:02:37 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so1294455uga
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Apr 2007 07:02:36 -0700 (PDT)
-To: "John Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: new USB ID for rt73usb
-Date: Sun, 1 Apr 2007 16:01:55 +0200
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200704011601.56030.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from styx.suse.cz ([82.119.242.94]:41622 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756003AbXD0PgM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2007 11:36:12 -0400
+Date: Fri, 27 Apr 2007 17:36:33 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Andy Green <andy@warmcat.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
+Message-ID: <20070427173633.506820ae@griffin.suse.cz>
+In-Reply-To: <463216FA.6000206@warmcat.com>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+	<200704251634.16604.flamingice@sourmilk.net>
+	<46312067.9090005@linux.intel.com>
+	<200704262023.52833.flamingice@sourmilk.net>
+	<1177684132.21025.36.camel@localhost.localdomain>
+	<20070427164208.25434f11@griffin.suse.cz>
+	<1177685793.21025.52.camel@localhost.localdomain>
+	<20070427172004.32b7bf4a@griffin.suse.cz>
+	<463216FA.6000206@warmcat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will add a new USB ID for the rt73usb driver
+On Fri, 27 Apr 2007 16:30:02 +0100, Andy Green wrote:
+> > fixes the problem. Now, let's find something that fixes the problem as
+> > well but doesn't remove the functionality. James already proposed a
+> > solution that could work if a support for user space MLME is added. Do
+> > you have an idea how to add it?
+> 
+> Jiri, what functionality?  The ability to change frequency periodically?
+>   Isn't that something mac80211 can do already?
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Please see other mails in this thread. The opinions differ.
 
----
+As long as it is implemented cleanly I have no objections against it.
 
-diff --git a/drivers/net/wireless/mac80211/rt2x00/rt73usb.c b/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
-index 7b3b878..21bb298 100644
---- a/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/mac80211/rt2x00/rt73usb.c
-@@ -2938,6 +2938,7 @@ static struct usb_device_id rt73usb_device_table[] = {
- 	{ USB_DEVICE(0x1690, 0x0722) },
- 	/* ASUS */
- 	{ USB_DEVICE(0x0b05, 0x1723) },
-+	{ USB_DEVICE(0x0b05, 0x1724) },
- 	/* Belkin */
- 	{ USB_DEVICE(0x050d, 0x7050) },
- 	{ USB_DEVICE(0x050d, 0x705a) },
+Btw, the main argument for hw_scan was power consumption. I'd still
+like to see numbers :-)
+
+Thanks,
+
+ Jiri
+
+-- 
+Jiri Benc
+SUSE Labs
