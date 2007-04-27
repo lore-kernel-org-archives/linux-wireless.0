@@ -1,113 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:35776
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767358AbXDEVxE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 17:53:04 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Theo de Raadt <deraadt@cvs.openbsd.org>
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues
-Date: Thu, 5 Apr 2007 23:52:12 +0200
-Cc: Jeff Garzik <jeff@garzik.org>,
-	Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Joseph Jezak <josejx@gentoo.org>,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-References: <200704052133.l35LXmZA032186@cvs.openbsd.org>
-In-Reply-To: <200704052133.l35LXmZA032186@cvs.openbsd.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200704052352.13253.mb@bu3sch.de>
+Received: from mx1.redhat.com ([66.187.233.31]:49845 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756969AbXD0SGD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2007 14:06:03 -0400
+Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
+From: Dan Williams <dcbw@redhat.com>
+To: Andy Green <andy@warmcat.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <463213D7.9070604@warmcat.com>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
+	 <200704251634.16604.flamingice@sourmilk.net>
+	 <46312067.9090005@linux.intel.com>
+	 <200704262023.52833.flamingice@sourmilk.net>
+	 <1177684132.21025.36.camel@localhost.localdomain>
+	 <20070427164208.25434f11@griffin.suse.cz>
+	 <1177685793.21025.52.camel@localhost.localdomain>
+	 <463213D7.9070604@warmcat.com>
+Content-Type: text/plain
+Date: Fri, 27 Apr 2007 14:09:19 -0400
+Message-Id: <1177697359.30796.19.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 05 April 2007 23:33, Theo de Raadt wrote:
-> > We put THOUSANDS of hours of work into bcm43xx and you
-> > simply relicense it without permission. Your point being?
+On Fri, 2007-04-27 at 16:16 +0100, Andy Green wrote:
+> Dan Williams wrote:
 > 
-> It was an accident for him to commit it.  But it was no accident you
-> decided to make a public fuss about it.  Now you have your public
-> fuss.
+> > we're not being open enough to functionality that might be in hardware.
+> > Holding a 100% software line with mac80211 is just IMHO wrong and
+> > short-sighted.  The stack needs to be flexible WRT to the hardware
 > 
-> > > > Snipped?  I presume, then, you admit you are misrepresenting others' 
-> > > > opinions in this thread.
-> > > 
-> > > No, there was a side discussion about whitespace and variable naming,
-> > > and even algorithms covered by the GPL.  Gimme a break.  These were
-> > > essentially claimed by some of the examples shown by Michael.  Go look
-> > > carefully.
-> > 
-> > You simply don't get it. These were EXAMPLES of why we think the
-> > code was copied 1:1. This has NOTHING to do with copyright law
-> > at this point. It simply shows: "Oh look, you named that variable
-> > or that function exactly like I did, although the specs did not
-> > suggest naming. Unlikely to be so by coincidence."
+> Yeah but this isn't "in hardware" -- it's in firmware: software that
+
+I know that.  But to the driver, it might as well be in hardware.  The
+driver and stack doesn't care where the functionality lives (silicon or
+firmware) as long as the firmware does what's needed.
+
+> runs of a different, vendor-specific, CPU.  Let's not talk about magic
+> and impressive "hardware" when the truth is we only talk about the same
+> software action on another CPU.  The problems with this particular
+> offload to firmware:
 > 
-> Those were just 'EXAMPLES'?  So you had no evidence?  Why would you
-> show examples of white space and variable naming when you had real
-> evidence?  Or did you think that the examples would be evidence?
+>  - it is vendor-specific
+
+So is everything a driver does because the vendors make the hardware and
+firmware.  We never get anywhere by being vendor-hostile.  We also never
+get anywhere by kissing vendor ass.  We need to toe a line in between.
+
+>  - it is not time-critical.  In fact it just sits there for tens of ms.
+>  The extra us lost going through mac80211 when it wants to change the
+> frequency should not be measurable.  It's not like it is some special
+> DSP in there that is computing PI faster than the main CPU in the box
+> can.  It is just changing the frequency now and then, which can
+> perfectly well be done in the stack
+
+I'm using hw_scan as a vehicle for my larger point.  But the point is
+still valid even if hw_scan is not time critical.
+
+>  - it is not exploitable in other ways.  If we want to talk about
+> "short-sighted", let's talk about managing what can be very generic RF
+> hardware in a way that can never do anything but IEEE802.11a/b/g actions
+
+We can't and shouldn't try to coerce every piece of hardware into a 100%
+userspace-controllable SDR.  While that would pretty much solve all
+_our_ problems (but not everyone else's), it's a pipe-dream and
+unrealistic.
+
+> > capabilities of the parts that we expect to use it.  Saying no to
+> > hardware scanning just because it can also be done in software too is
+> > wrong.
 > 
-> Of COURSE Marcus was reading your driver at the same time.  That's
-> explicitly permitted by law.  He can read it, and then he can rewrite
-> it to do the same thing but with his own 'expression' and there is
-> nothing you or anyone else can do about it because you chose to use
-> Copyright law to govern distribution.
-
-You would not say this, if you'd have read and compared bcw to bcm43xx.
-Reading code and writing it down again _IS_ copying. (Although I
-doubt he did this, as copy'n'paste results in the same result).
-
-
-Theo, you are a GREAT psychologic engineer.
-You really make people feel they have done something wrong. But in
-reality they are the victims. In reality bcm43xx developers are the
-victims, because YOU, the openbsd developers, violated our
-copyright in the first place.
-You can not deny that and every independent lawyer on earth would
-judge the same way.
-It is simply obvious that the code was copied and NOT rewritten.
-You have no point in saying the opposite now by takling bullshit
-about "reading code" and "writing something down blabla".
-
-> > > The Italian dude in particular was complaining bitterly in private
-> > > mail about the whitespace similarities... good grief, not whitespace
-> > > similarities.  How SCO of him.
-> > 
-> > Yeah. Must be coincidence that you typed whitespace exactly like
-> > we did. I'm sure this didn't come from copying, but from coincidence.
+> To be clear, this isn't a "hardware" action, just an opaque software API
+> specific to that chipset, and that runs on a CPU in the chipset.
 > 
-> Or an accident.
+> > with.  It's already in, right?  Ripping it out for a 100% software
+> > agenda is wrong.  Let's take out crypto offload then too if we're going
+> 
+> The iwlwifi proposal is for an opaque vendor-specific firmware API, that
+> is also "100% software".  Don't get confused by the bogus magic alleged
+> "hardware" nomenclature.
 
-How can you type in code by accident that looks like mine?
-I mean, you can get and infinite amount of monkeys with typewriters
-and an infinite amount of time and you will end up with my code, but
-that story doesn't count for me.
+I've been burned by wifi firmware/hardware a lot in the past.  All
+firmware is a black box API.  But the reality of life is that we're not
+going to open all vendor firmware overnight, and I can't actually think
+of any vendor that provides the source and build tools for their
+firmware.  That's a reality we have to deal with.  We can and should
+encourage openness; but hostility gets us nowhere.
 
+Just because it's a black box _doesn't_ mean we make it impossible to
+utilize specific features that some hardware has, like crypto offload or
+hwscan.  _That's_ the short-sighted part.  We need to keep flexibility
+in the stack to make this sort of thing possible and let people
+experiment with it.
 
-AND! Let's simply pretend it was really an accident. However that could
-happen. How would that make the situation different? You have violated
-the copyright of the bcm43xx developers. That's the fact that you can
-not deny. You have dealt with it. Fine. I offered you a way to deal
-with it in a much more elegant way. You didn't like it. Fine.
+Dan
 
-I'm fine with this. Know what? I don't care anymore about you, openbsd guys.
-Do what you'd like to do. I'm out of your business.
-In future don't violate my copyright anymore, and you won't hear anything
-from me anymore.
+> > to take a consistently 100% software line.  Again, it's not either
+> > software or hardware; it's a spectrum of capabilities and we shouldn't
+> > be making the stack _less_ flexible.
+> 
+> Yeah let's make the stack completely flexible and either keep control of
+> the scan action in the stack, or eventually move it to usermode, in both
+> cases doing the scan action well ONCE for ALL drivers.
+> 
+> -Andy
 
-I know I already said this, but now I won't respond to you anymore
-(unless you insult me personally again, perhaps).
-
--- 
-Greetings Michael.
