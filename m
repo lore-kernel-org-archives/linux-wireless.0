@@ -1,34 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from deine-taler.de ([217.160.107.63]:58556 "EHLO
-	p15091797.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965480AbXDGH4G (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:45335 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755431AbXD0HOS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Apr 2007 03:56:06 -0400
-Date: Sat, 7 Apr 2007 09:56:03 +0200
-From: Ulrich Kunitz <kune@deine-taler.de>
-To: Jouni Malinen <j@w1.fi>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RFC: ieee80211: Spamming of log resulting from packets with ExtIV not set
-Message-ID: <20070407075603.GA1724@p15091797.pureserver.info>
-References: <4616DD7E.6010606@lwfinger.net> <20070407013848.GG16197@jm.kir.nu> <46171B36.6090108@lwfinger.net> <20070407043310.GH16197@jm.kir.nu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070407043310.GH16197@jm.kir.nu>
+	Fri, 27 Apr 2007 03:14:18 -0400
+Message-ID: <46319E31.4090101@linux.intel.com>
+Date: Thu, 26 Apr 2007 23:54:41 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: Michael Wu <flamingice@sourmilk.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <200704251634.16604.flamingice@sourmilk.net> <46312067.9090005@linux.intel.com> <200704262023.52833.flamingice@sourmilk.net>
+In-Reply-To: <200704262023.52833.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07-04-06 21:33 Jouni Malinen wrote:
+Michael Wu wrote:
 
-> I would expect most wlan designs to do FCS error filtering in hardware,
-> so this could be just lack of configuring something differently or
-> dropping frames based on one of the RX flags. If the exact mechanism for
-> this is not known, I would recommend validating FCS in software prior to
-> processing the its contents (or trying to decrypt it for that matter).
+> How fast is hardware scanning? 
 
-Just for clarification: ZD1211 does the FCS check in hardware, but
-reports the packet to the host with an error bit set, so the
-driver needs to filter the packet out.
+I just hooked the hw scanning back up in iwlwifi (as of iwlwifi-0.0.14)  The driver wasn't calling ieee80211_scan_complete() before to tell the stack the scan was done, so no results were being passing up.
 
--- 
-Uli Kunitz
+Anyway, I ran a quick test of using hw_scan enabled and disabled on a system with 15 active and 17 passive channels.
+
+	hw scan: 2.2s
+	sw scan: 4.7s
+
+So the SW scan wasn't the 10s that I stated before (although it sure felt like 10s before I ran it with 'time')  But anyway... the hw scan is currently beating out sw scanning by ~54%, at least here.
+
+James
