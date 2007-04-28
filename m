@@ -1,51 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:44553 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756096AbXD0Rjy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2007 13:39:54 -0400
-Date: Fri, 27 Apr 2007 19:40:15 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org,
+Received: from smtp.rutgers.edu ([128.6.72.243]:52986 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965966AbXD1QmI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Apr 2007 12:42:08 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 3/7] mac80211: kill ceiling_div
+Date: Sat, 28 Apr 2007 12:36:01 -0400
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org,
 	John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH 10/13] mac80211: set bssid to broadcast before scan
-Message-ID: <20070427194015.602759a1@griffin.suse.cz>
-In-Reply-To: <1177431851.3528.36.camel@johannes.berg>
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-	<20070423184814.7029.99423.stgit@magic.sourmilk.net>
-	<1177431851.3528.36.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Message-Id: <20070428163601.27203.68605.stgit@magic.sourmilk.net>
+In-Reply-To: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
+References: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
+Content-Type: text/plain;
+  charset=utf-8;
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 24 Apr 2007 18:24:11 +0200, Johannes Berg wrote:
-> On Mon, 2007-04-23 at 14:48 -0400, Michael Wu wrote:
-> 
-> > --- a/net/mac80211/ieee80211_i.h
-> > +++ b/net/mac80211/ieee80211_i.h
-> > @@ -502,6 +502,7 @@ struct ieee80211_local {
-> >  	struct ieee80211_hw_mode *oper_hw_mode, *scan_hw_mode;
-> >  	u8 scan_ssid[IEEE80211_MAX_SSID_LEN];
-> >  	size_t scan_ssid_len;
-> > +	u8 scan_bssid[ETH_ALEN];
-> >  	struct list_head sta_bss_list;
-> >  	struct ieee80211_sta_bss *sta_bss_hash[STA_HASH_SIZE];
-> >  	spinlock_t sta_bss_lock;
-> 
-> Do you see any use for setting scan_bssid to anything other than the
-> broadcast address? It doesn't seem useful to add this field here at this
-> time.
+From: Michael Wu <flamingice@sourmilk.net>
 
-I agree.
+kernel.h provides a macro which does the same thing as ceiling_div.
 
-And I'd like to see some way to disable this feature for sane cards.
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
-Thanks,
+ net/mac80211/ieee80211.c |   14 ++++----------
+ 1 files changed, 4 insertions(+), 10 deletions(-)
 
- Jiri
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 4d7c035..66fb4db 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -612,12 +612,6 @@ ieee80211_tx_h_wep_encrypt(struct ieee80211_txrx_data *tx)
+ }
+ 
+ 
+-static inline int ceiling_div(int dividend, int divisor)
+-{
+-	return ((dividend + divisor - 1) / divisor);
+-}
+-
+-
+ static int ieee80211_frame_duration(struct ieee80211_local *local, size_t len,
+ 				    int rate, int erp, int short_preamble)
+ {
+@@ -629,7 +623,7 @@ static int ieee80211_frame_duration(struct ieee80211_local *local, size_t len,
+ 	 * also include SIFS.
+ 	 *
+ 	 * rate is in 100 kbps, so divident is multiplied by 10 in the
+-	 * ceiling_div() operations.
++	 * DIV_ROUND_UP() operations.
+ 	 */
+ 
+ 	if (local->hw.conf.phymode == MODE_IEEE80211A || erp ||
+@@ -651,8 +645,8 @@ static int ieee80211_frame_duration(struct ieee80211_local *local, size_t len,
+ 		dur = 16; /* SIFS + signal ext */
+ 		dur += 16; /* 17.3.2.3: T_PREAMBLE = 16 usec */
+ 		dur += 4; /* 17.3.2.3: T_SIGNAL = 4 usec */
+-		dur += 4 * ceiling_div((16 + 8 * (len + 4) + 6) * 10,
+-				       4 * rate); /* T_SYM x N_SYM */
++		dur += 4 * DIV_ROUND_UP((16 + 8 * (len + 4) + 6) * 10,
++					4 * rate); /* T_SYM x N_SYM */
+ 	} else {
+ 		/*
+ 		 * 802.11b or 802.11g with 802.11b compatibility:
+@@ -667,7 +661,7 @@ static int ieee80211_frame_duration(struct ieee80211_local *local, size_t len,
+ 		dur = 10; /* aSIFSTime = 10 usec */
+ 		dur += short_preamble ? (72 + 24) : (144 + 48);
+ 
+-		dur += ceiling_div(8 * (len + 4) * 10, rate);
++		dur += DIV_ROUND_UP(8 * (len + 4) * 10, rate);
+ 	}
+ 
+ 	return dur;
 
--- 
-Jiri Benc
-SUSE Labs
