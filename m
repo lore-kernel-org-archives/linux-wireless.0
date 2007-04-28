@@ -1,38 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:47000 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1945956AbXDLJkO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2007 05:40:14 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1Hbvmc-0004ZD-J0
-	for linux-wireless@vger.kernel.org; Thu, 12 Apr 2007 11:40:02 +0200
-Received: from 176.Red-83-55-60.dynamicIP.rima-tde.net ([83.55.60.176])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2007 11:40:02 +0200
-Received: from nonihil by 176.Red-83-55-60.dynamicIP.rima-tde.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2007 11:40:02 +0200
-To: linux-wireless@vger.kernel.org
-From: nihil <nonihil@gmail.com>
-Subject: OpenBSD bcw: Possible GPL license violation issues
-Date: Thu, 12 Apr 2007 09:28:13 +0000 (UTC)
-Message-ID: <loom.20070412T112535-688@post.gmane.org>
+Received: from styx.suse.cz ([82.119.242.94]:33473 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754649AbXD1N2u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Apr 2007 09:28:50 -0400
+Date: Sat, 28 Apr 2007 15:28:47 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Add channel to scan results
+Message-ID: <20070428152847.48436588@logostar.upir.cz>
+In-Reply-To: <462c3c1f.8rt9VKvruWRkx5ts%Larry.Finger@lwfinger.net>
+References: <462c3c1f.8rt9VKvruWRkx5ts%Larry.Finger@lwfinger.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I suggest a whole new license:
+Sun, 22 Apr 2007 23:54:55 -0500, Larry Finger pise:
+> The scan results from mac80211 list only the frequency for any access
+> point found. This patch adds the channel to the output as well.
 
-"NPL (Nihil Public License):
+Applied, thanks!
 
-ex nihilo nihil fit."
+ Jiri
 
-Meaning: If you take the effort to write/copy/publish/whatever code, you might
-aswell use it and give others the possibility to do so.
-
-Regards,
-
-Figura Priuationis
-
+-- 
+Jiri Benc
+SUSE Labs
