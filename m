@@ -1,92 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([198.107.51.143]:2311 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2993062AbXDRTSc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2007 15:18:32 -0400
-Message-ID: <46266EF9.3050001@canonical.com>
-Date: Wed, 18 Apr 2007 13:18:17 -0600
-From: Tim Gardner <tim.gardner@canonical.com>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	kernel-team@lists.ubuntu.com
-Subject: Re: [PATCH] Fix NetworkManager/wpa_supplicant race condition
-References: <462649E3.4000208@canonical.com> <1176916954.20244.14.camel@localhost.localdomain>
-In-Reply-To: <1176916954.20244.14.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp.rutgers.edu ([128.6.72.243]:52990 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965967AbXD1QmJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Apr 2007 12:42:09 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 4/7] mac80211: eliminate forward declarations in ieee80211.c
+Date: Sat, 28 Apr 2007 12:36:02 -0400
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Message-Id: <20070428163601.27203.53866.stgit@magic.sourmilk.net>
+In-Reply-To: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
+References: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
+Content-Type: text/plain;
+  charset=utf-8;
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> On Wed, 2007-04-18 at 10:40 -0600, Tim Gardner wrote:
->> This patch fixes an assumption made by wpa_supplicant. Any time
->> wpa_supplicant requests to set an ESSID (e.g., associate), it expects an
->> event notifying that association has completed. If the Networkmanager
->> has already setup an association, such as for an open auth AP, then the
->> request to associate by wpa_supplicant will be ignored.
->>
->> If Networkmanager is requested to restart the connection, such as by
->> clicking on the SSID, then wpa_supplicant is allowed to build the
->> association from scratch, which always works.
->>
->> https://bugs.launchpad.net/ubuntu/+source/linux-source-2.6.20/+bug/103768
->>
->> By always emitting this event, am I causing any unintended side effects?
-> 
-> Interesting.  Setting the SSID should _always_ trigger a reassociation,
-> and therefore eventually trigger an SIOCGIWAP event to userspace.  So
-> this patch looks right from the behavioral point of view.
-> 
-> But it doesn't look right from the technical perspective.  Why isn't
-> softmac trying to reassociate?  Does it automatically reassociate if
-> parameters, like auth mode, keys, WPA, etc are set and so therefore,
-> when it comes around to the SSID being set it doesn't really matter?  If
-> so, we should still be sending the event, and this patch is OK.  But can
-> somebody _guarantee_ that if I authenticate to an AP, then later call
-> SIOCSIWENCODE, and then SIOCSIWESSID to the same SSID, that the new WEP
-> keys have been applied and a reassociation has occurred?  If the auth
-> mode is shared key, a reassociation attempt needs to happen.
-> 
-> WEXT convention is that setting the SSID or BSSID triggers reassociation
-> with the current parameters.  I'd argue that softmac should be starting
-> the association process over again when either SIOCSIWESSID or
-> SIOCSIWBSSID is called.
-> 
-> Dan
-> 
->> rtg
->> plain text document attachment (bug_103768)
->> diff --git a/net/ieee80211/softmac/ieee80211softmac_wx.c b/net/ieee80211/softmac/ieee80211softmac_wx.c
->> index fa2f7da..cc2e8ba 100644
->> --- a/net/ieee80211/softmac/ieee80211softmac_wx.c
->> +++ b/net/ieee80211/softmac/ieee80211softmac_wx.c
->> @@ -88,6 +88,13 @@ ieee80211softmac_wx_set_essid(struct net_device *net_dev,
->>  		   !memcmp(n->essid.data, extra, n->essid.len)) {
->>  			dprintk(KERN_INFO PFX "Already associating or associated to "MAC_FMT"\n",
->>  				MAC_ARG(sm->associnfo.bssid));
->> +			/* wpa_supplicant expects an association event, regardless of prior
->> +			 * association state. If associating, then the associnfo.work task
->> +			 * will send the appropriate event.
->> +			 */
->> +			if (sm->associnfo.associated)
->> +				ieee80211softmac_call_events_locked(sm,
->> +					IEEE80211SOFTMAC_EVENT_ASSOCIATED, n);
->>  			goto out;
->>  		} else {
->>  			dprintk(KERN_INFO PFX "Canceling existing associate request!\n");
-> 
+From: Michael Wu <flamingice@sourmilk.net>
 
-I don't think simply reassociating is sufficient. Consider what happens
-if the authentication algorithm is changed. ieee80211_wx_set_auth() does
-nothing more then set some values. A subsequent attempt to reassociate
-would get all hosed up.
+ieee80211_get_bssid can be moved up in ieee80211 to avoid declaring it at
+the top of the file. ieee80211_mgmt_start_xmit is used after it's defined
+so it doesn't need to be declared at the top.
 
-A quick look at ieee80211_ioctl_siwessid() shows that it always forces
-an authentication cycle.
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
-I'll experiment a little to see how the Softmac can be driven through an
-authentication/association cycle on calls to SIOCSIWESSID or SIOCSIWAP.
+ net/mac80211/ieee80211.c |   73 +++++++++++++++++++++-------------------------
+ 1 files changed, 34 insertions(+), 39 deletions(-)
 
-rtg
--- 
-Tim Gardner tim.gardner@ubuntu.com
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 66fb4db..4fd2300 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -55,11 +55,6 @@ static const unsigned char eapol_header[] =
+ 	{ 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e };
+ 
+ 
+-static u8 * ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len);
+-
+-static int ieee80211_mgmt_start_xmit(struct sk_buff *skb,
+-				     struct net_device *dev);
+-
+ static inline void ieee80211_include_sequence(struct ieee80211_sub_if_data *sdata,
+ 					      struct ieee80211_hdr *hdr)
+ {
+@@ -250,6 +245,40 @@ static void ieee80211_key_threshold_notify(struct net_device *dev,
+ }
+ 
+ 
++static u8 * ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len)
++{
++	u16 fc;
++
++	if (len < 24)
++		return NULL;
++
++	fc = le16_to_cpu(hdr->frame_control);
++
++	switch (fc & IEEE80211_FCTL_FTYPE) {
++	case IEEE80211_FTYPE_DATA:
++		switch (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
++		case IEEE80211_FCTL_TODS:
++			return hdr->addr1;
++		case (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS):
++			return NULL;
++		case IEEE80211_FCTL_FROMDS:
++			return hdr->addr2;
++		case 0:
++			return hdr->addr3;
++		}
++		break;
++	case IEEE80211_FTYPE_MGMT:
++		return hdr->addr3;
++	case IEEE80211_FTYPE_CTL:
++		if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PSPOLL)
++			return hdr->addr1;
++		else
++			return NULL;
++	}
++
++	return NULL;
++}
++
+ int ieee80211_get_hdrlen(u16 fc)
+ {
+ 	int hdrlen = 24;
+@@ -3654,40 +3683,6 @@ ieee80211_rx_h_passive_scan(struct ieee80211_txrx_data *rx)
+ }
+ 
+ 
+-static u8 * ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len)
+-{
+-	u16 fc;
+-
+-	if (len < 24)
+-		return NULL;
+-
+-	fc = le16_to_cpu(hdr->frame_control);
+-
+-	switch (fc & IEEE80211_FCTL_FTYPE) {
+-	case IEEE80211_FTYPE_DATA:
+-		switch (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
+-		case IEEE80211_FCTL_TODS:
+-			return hdr->addr1;
+-		case (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS):
+-			return NULL;
+-		case IEEE80211_FCTL_FROMDS:
+-			return hdr->addr2;
+-		case 0:
+-			return hdr->addr3;
+-		}
+-		break;
+-	case IEEE80211_FTYPE_MGMT:
+-		return hdr->addr3;
+-	case IEEE80211_FTYPE_CTL:
+-		if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PSPOLL)
+-			return hdr->addr1;
+-		else
+-			return NULL;
+-	}
+-
+-	return NULL;
+-}
+-
+ static void ieee80211_rx_michael_mic_report(struct net_device *dev,
+ 					    struct ieee80211_hdr *hdr,
+ 					    struct sta_info *sta,
+
