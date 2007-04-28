@@ -1,63 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:42657
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751208AbXDWT7h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2007 15:59:37 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Linville, John" <linville@tuxdriver.com>
-Subject: Please pull from http://bu3sch.de/git/wireless-dev.git/ for-linville
-Date: Mon, 23 Apr 2007 21:58:31 +0200
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200704232158.31599.mb@bu3sch.de>
+Received: from styx.suse.cz ([82.119.242.94]:60847 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1031525AbXD1Mba (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Apr 2007 08:31:30 -0400
+Date: Sat, 28 Apr 2007 14:31:23 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: Oops in ieee80211_register_hw
+Message-ID: <20070428143123.5a1a905a@logostar.upir.cz>
+In-Reply-To: <200704272026.11196.flamingice@sourmilk.net>
+References: <20070427233738.5842decf@griffin.suse.cz>
+	<200704272026.11196.flamingice@sourmilk.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following changes since commit 45dd8a7fad4145243dcc4391e80c73c21623ed91:
-  Michael Wu:
-        mac80211: remove ieee80211_netif_oper from mac80211.h
+On Fri, 27 Apr 2007 20:26:06 -0400, Michael Wu wrote:
+> I've attached a patch. I don't have the hardware so I don't know if it'll 
+> work, but it seems right to me.
 
-are found in the git repository at:
+It fixes the problem for me. Thanks!
 
-  http://bu3sch.de/git/wireless-dev.git/ for-linville
+ Jiri
 
-Larry Finger:
-      bcm43xx-mac80211: Fix error in initiallizing max RSSI and max signal
-      bcm43xx-mac80211: Fix machine checks on PPC with rev 1 PHYs
-      bcm43xx-mac80211: Fix machine check on PPC for phy->rev == 1
-      bcm43xx-mac80211: Fix machine check on PPC for phy->rev == 1
-      bcm43xx-mac80211: Fix machine check on PPC for phy->rev == 1
 
-Michael Buesch:
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-dev
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-dev
-      bcm43xx-mac80211: Use fallback rate from mac80211
-      ssb: Fix some error path cleanup bugs.
-      ssb: Code cleanup: Move printk to the specific register funcs.
-      bcm43xx-mac80211: Setting phy->gmode in wireless_core_reset is redundant.
-      bcm43xx-mac80211: Add parenthesis around bitwise ops.
-      bcm43xx-mac80211: Add HW-RNG support.
-      bcm43xx-mac80211: Workaround: Disable gmode in early PHY init for PHY rev == 1
-      bcm43xx-mac80211: Fix typo in agcsetup
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-dev
-
-Will Dyson:
-      bcm43xx-mac80211: Catch dma mapping failures.
-      bcm43xx-mac80211: Fix error path memory leak
-      bcm43xx-mac80211: Work around 30bit DMA limitation
-
- drivers/net/wireless/mac80211/bcm43xx/Kconfig      |    1 
- drivers/net/wireless/mac80211/bcm43xx/bcm43xx.h    |   14 ++
- .../net/wireless/mac80211/bcm43xx/bcm43xx_dma.c    |  106 ++++++++++++++++--
- .../net/wireless/mac80211/bcm43xx/bcm43xx_main.c   |   61 +++++++++-
- .../net/wireless/mac80211/bcm43xx/bcm43xx_phy.c    |  136 ++++++++++++++---------
- .../net/wireless/mac80211/bcm43xx/bcm43xx_xmit.c   |   40 +++----
- drivers/ssb/main.c                                 |   35 ++---
- drivers/ssb/pci.c                                  |    7 +
- 8 files changed, 280 insertions(+), 120 deletions(-)
+> ssb_devices_register sets sdev->dev after the device is registered. This
+> moves it before device_register so it can be used during probe if an
+> appropriate driver is found during device_register.
+> 
+> Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+> ---
+> 
+>  drivers/ssb/main.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+> index 682aa5c..c8afd1b 100644
+> --- a/drivers/ssb/main.c
+> +++ b/drivers/ssb/main.c
+> @@ -364,6 +364,7 @@ static int ssb_devices_register(struct ssb_bus *bus)
+>  
+>  		dev->release = ssb_release_dev;
+>  		dev->bus = &ssb_bustype;
+> +		sdev->dev = dev;
+>  		snprintf(dev->bus_id, sizeof(dev->bus_id),
+>  			 "ssb%d:%d", bus->busnumber, dev_idx);
+>  
+> @@ -391,7 +392,6 @@ static int ssb_devices_register(struct ssb_bus *bus)
+>  			kfree(devwrap);
+>  			goto error;
+>  		}
+> -		sdev->dev = dev;
+>  		dev_idx++;
+>  	}
+>  
 
 -- 
-Greetings Michael.
+Jiri Benc
+SUSE Labs
