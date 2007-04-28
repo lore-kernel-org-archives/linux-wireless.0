@@ -1,62 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57689 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767232AbXDEUjs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 16:39:48 -0400
-Message-ID: <46155E82.2040808@garzik.org>
-Date: Thu, 05 Apr 2007 16:39:30 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: Theo de Raadt <deraadt@cvs.openbsd.org>
-CC: Michael Buesch <mb@bu3sch.de>,
-	Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Joseph Jezak <josejx@gentoo.org>,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues
-References: <200704052028.l35KSeZF003479@cvs.openbsd.org>
-In-Reply-To: <200704052028.l35KSeZF003479@cvs.openbsd.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from smtp.rutgers.edu ([128.6.72.243]:26023 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965975AbXD1QmJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Apr 2007 12:42:09 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 6/7] mac80211: suppress warnings
+Date: Sat, 28 Apr 2007 12:36:02 -0400
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Message-Id: <20070428163602.27203.25629.stgit@magic.sourmilk.net>
+In-Reply-To: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
+References: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
+Content-Type: text/plain;
+  charset=utf-8;
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Theo de Raadt wrote:
->> Theo de Raadt wrote:
->>>> This is a blatant misrepresentation of the emails you've been reading.
->>> So you feel that Michael's "public scolding" approach was the common
->>> sense approach?
->> No, I do not.
-> 
-> Why are you the first person in the entire GPL community to admit that
-> what Michael did might have some problems?
+From: Michael Wu <flamingice@sourmilk.net>
 
-<shrug>  Probably because of the confrontation tone of the entire 
-thread.  Everybody's on the offensive, and not willing to admit mistakes.
+This eliminates warnings from gcc and sparse.
 
-A private email SHOULD be the first approach for a copyright issue like 
-this, regardless of whether its a private person or a corp.
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
+ net/mac80211/ieee80211.c |    8 +++-----
+ 1 files changed, 3 insertions(+), 5 deletions(-)
 
-> Shall I keep replying until everyone gets it?
-
-Whatever makes you happy :)
-
-
-> <rest deleted, because the above line is so important>
-
-Snipped?  I presume, then, you admit you are misrepresenting others' 
-opinions in this thread.
-
-	Jeff
-
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 4fd2300..2b6cb06 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -952,8 +952,6 @@ ieee80211_tx_h_check_assoc(struct ieee80211_txrx_data *tx)
+ 	if (unlikely(!tx->u.tx.mgmt_interface && tx->sdata->ieee802_1x &&
+ 		     !(sta_flags & WLAN_STA_AUTHORIZED))) {
+ #ifdef CONFIG_MAC80211_DEBUG
+-		struct ieee80211_hdr *hdr =
+-			(struct ieee80211_hdr *) tx->skb->data;
+ 		printk(KERN_DEBUG "%s: dropped frame to " MAC_FMT
+ 		       " (unauthorized port)\n", tx->dev->name,
+ 		       MAC_ARG(hdr->addr1));
+@@ -2049,7 +2047,7 @@ static int __ieee80211_if_config(struct net_device *dev,
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_if_conf conf;
+-	static const u8 scan_bssid[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
++	static u8 scan_bssid[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+ 
+ 	if (!local->ops->config_interface || !netif_running(dev))
+ 		return 0;
+@@ -2758,7 +2756,7 @@ ieee80211_fill_frame_info(struct ieee80211_local *local,
+ 				htonl(ieee80211_phytype_dsss_dot11_turbo);
+ 			break;
+ 		default:
+-			fi->phytype = 0xAAAAAAAA;
++			fi->phytype = htonl(0xAAAAAAAA);
+ 			break;
+ 		}
+ 		fi->channel = htonl(status->channel);
+@@ -2779,7 +2777,7 @@ ieee80211_fill_frame_info(struct ieee80211_local *local,
+ 		}
+ 
+ 		fi->antenna = htonl(status->antenna);
+-		fi->priority = 0xffffffff; /* no clue */
++		fi->priority = htonl(0xffffffff); /* no clue */
+ 		fi->ssi_type = htonl(ieee80211_ssi_raw);
+ 		fi->ssi_signal = htonl(status->ssi);
+ 		fi->ssi_noise = 0x00000000;
 
