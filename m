@@ -1,47 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:37082 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1767252AbXDETjh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 15:39:37 -0400
-Date: Thu, 5 Apr 2007 21:35:22 +0200
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Theo de Raadt <deraadt@cvs.openbsd.org>,
-	Joseph Jezak <josejx@gentoo.org>,
-	Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues
-Message-ID: <20070405213522.22a8526a@localhost>
-In-Reply-To: <200704052125.12599.mb@bu3sch.de>
-References: <200704051913.l35JDww5000087@cvs.openbsd.org>
-	<200704052125.12599.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from smtp.rutgers.edu ([128.6.72.243]:41816 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965972AbXD1QmJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Apr 2007 12:42:09 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 7/7] mac80211: Allow drivers to configure default regulatory domain
+Date: Sat, 28 Apr 2007 12:36:02 -0400
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Message-Id: <20070428163602.27203.93106.stgit@magic.sourmilk.net>
+In-Reply-To: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
+References: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
+Content-Type: text/plain;
+  charset=utf-8;
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 5 Apr 2007 21:25:11 +0200
-Michael Buesch <mb@bu3sch.de> wrote:
+From: Michael Wu <flamingice@sourmilk.net>
 
-> This is a lie.
-> Read the whole thread again!
+This patch allows drivers to configure the default set of channels if the
+device reports its default regulatory domain.
 
-He will never do. He has to maintain his outstanding messages/time ratio.
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
-It's awesome that there are people on this world who can think so fast. Or
-who don't even need to.
+ include/net/mac80211.h   |    8 ++++++--
+ net/mac80211/ieee80211.c |    3 ++-
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index f0cfe88..96321be 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -52,7 +52,9 @@
+  * freq, and val fields. Other fields will be filled in by 80211.o based on
+  * hostapd information and low-level driver does not need to use them. The
+  * limits for each channel will be provided in 'struct ieee80211_conf' when
+- * configuring the low-level driver with hw->config callback. */
++ * configuring the low-level driver with hw->config callback. If a device has
++ * a default regulatory domain, IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED
++ * can be set to let the driver configure all fields */
+ struct ieee80211_channel {
+ 	short chan; /* channel number (IEEE 802.11) */
+ 	short freq; /* frequency in MHz */
+@@ -528,7 +530,9 @@ struct ieee80211_hw {
+ 	 * receive all probe responses while scanning */
+ #define IEEE80211_HW_NO_PROBE_FILTERING (1<<10)
+ 
+-	/* please fill this gap when adding new flags */
++	/* Channels are already configured to the default regulatory domain
++	 * specified in the device's EEPROM */
++#define IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED (1<<11)
+ 
+ 	/* calculate Michael MIC for an MSDU when doing hwcrypto */
+ #define IEEE80211_HW_TKIP_INCLUDE_MMIC (1<<12)
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 2b6cb06..f609e6c 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -4837,7 +4837,8 @@ int ieee80211_register_hwmode(struct ieee80211_hw *hw,
+ 		local->hw.conf.chan = local->oper_channel;
+ 	}
+ 
+-	ieee80211_init_client(local->mdev);
++	if (!(hw->flags & IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED))
++		ieee80211_init_client(local->mdev);
+ 
+ 	return 0;
+ }
 
---
-Ciao
-Stefano
