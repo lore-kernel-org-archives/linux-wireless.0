@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gundega.hpl.hp.com ([192.6.19.190]:54934 "EHLO
-	gundega.hpl.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750897AbXDQVTz (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:41812 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965959AbXD1QmI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2007 17:19:55 -0400
-Date: Tue, 17 Apr 2007 14:19:00 -0700
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 2.6] WE-22 : prevent information leak on 64 bit
-Message-ID: <20070417211859.GB22897@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <20070323003116.GC2712@bougret.hpl.hp.com> <1175508410.23438.75.camel@johannes.berg> <20070417170820.GB22372@bougret.hpl.hp.com> <20070417183442.GE8633@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070417183442.GE8633@tuxdriver.com>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+	Sat, 28 Apr 2007 12:42:08 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 1/7] mac80211: move radiotap removal code to right function
+Date: Sat, 28 Apr 2007 12:36:01 -0400
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Message-Id: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
+Content-Type: text/plain;
+  charset=utf-8;
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 17, 2007 at 02:34:42PM -0400, John W. Linville wrote:
-> On Tue, Apr 17, 2007 at 10:08:20AM -0700, Jean Tourrilhes wrote:
-> > 
-> > 	First, I'm the current active maintainer of the
-> > wext-over-netlink interface, and nobody bothered to even 'inform' me
-> > about its removal, let alone consult with me.
-> 
-> Honestly, most of us thought you weren't interested.
+From: Michael Wu <flamingice@sourmilk.net>
 
-	Please !
+A chunk from the radiotap patch landed in the wrong function when the patch
+was being updated. This moves it to the right function.
 
-> This API was controversial and mostly unwelcome from the start.
-> It was ridiculed as "ioctls over netlink" at the last kernel summit.
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
-	Which is complete FUD. In that case, the whole RtNetlink can
-be classified as "ioctls over netlink".
+ net/mac80211/ieee80211.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-> One of the objections to having merged the API was that _if_ it were
-> to gain users then we would have to carry that maintenance burden
-> ad infinitum.
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index e4aa4aa..851400a 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -3280,6 +3280,9 @@ ieee80211_rx_h_monitor(struct ieee80211_txrx_data *rx)
+ 		return TXRX_QUEUED;
+ 	}
+ 
++	if (rx->u.rx.status->flag & RX_FLAG_RADIOTAP)
++		skb_pull(rx->skb, ieee80211_get_radiotap_len(rx->skb));
++
+ 	return TXRX_CONTINUE;
+ }
+ 
+@@ -3472,9 +3475,6 @@ ieee80211_rx_h_sta_process(struct ieee80211_txrx_data *rx)
+ 		return TXRX_QUEUED;
+ 	}
+ 
+-	if (rx->u.rx.status->flag & RX_FLAG_RADIOTAP)
+-		skb_pull(rx->skb, ieee80211_get_radiotap_len(rx->skb));
+-
+ 	return TXRX_CONTINUE;
+ }
+ 
 
-	More FUD. It does not add any new commands. The proof is in
-the pudding, no change was needed in any driver to support it,
-therefore it could not have added any burden on any compatibility
-layer.
-
-> Regards,
-> 
-> John
-
-	Have fun...
-
-	Jean
