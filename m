@@ -1,26 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38242
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755238AbXD0Dsq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2007 23:48:46 -0400
-Date: Thu, 26 Apr 2007 20:48:54 -0700 (PDT)
-Message-Id: <20070426.204854.92515397.davem@davemloft.net>
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	jt@hpl.hp.com
-Subject: Re: [PATCH 0/9] various wext cleanups
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20070424180732.371620000@sipsolutions.net>
-References: <20070424180732.371620000@sipsolutions.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4910 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161486AbXD2VwJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Apr 2007 17:52:09 -0400
+Date: Sat, 28 Apr 2007 20:28:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: jeff@garzik.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH] libertas: fix for wireless Kconfig changes
+Message-ID: <20070429002844.GA11225@tuxdriver.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 24 Apr 2007 20:07:32 +0200
+Need to change the libertas Kconfig entry to match changes made for
+other wireless drivers.
 
-> This patch series contains various cleanups to the wireless extensions code.
-
-All applied, thanks Johannes.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index c4b3dc2..cb09e6b 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -267,7 +267,7 @@ config IPW2200_DEBUG
+ 
+ config LIBERTAS_USB
+ 	tristate "Marvell Libertas 8388 802.11a/b/g cards"
+-	depends on NET_RADIO && USB
++	depends on USB && WLAN_80211
+ 	select FW_LOADER
+ 	---help---
+ 	  A driver for Marvell Libertas 8388 USB devices.
+-- 
+John W. Linville
+linville@tuxdriver.com
