@@ -1,36 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:64772 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1031098AbXDQPx6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2007 11:53:58 -0400
-Message-ID: <4624EE01.4020808@lwfinger.net>
-Date: Tue, 17 Apr 2007 10:55:45 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
+Received: from styx.suse.cz ([82.119.242.94]:44846 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754482AbXD2Aec (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Apr 2007 20:34:32 -0400
+Received: from logostar.upir.cz (r2u241.net.upc.cz [62.245.84.241])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.suse.cz (SUSE LINUX ESMTP Mailer) with ESMTP id 05FCA628062
+	for <linux-wireless@vger.kernel.org>; Sun, 29 Apr 2007 02:34:30 +0200 (CEST)
+Date: Sun, 29 Apr 2007 02:34:29 +0200
+From: Jiri Benc <jbenc@suse.cz>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH] ieee80211: Fix missing global needed for IEEE80211_DEBUG_XX  macros in ieee80211_crypt
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: [PATCH] mac80211: add copyrights
+Message-ID: <20070429023429.5bca2c6a@logostar.upir.cz>
+In-Reply-To: <20070429023215.40c2aea7@logostar.upir.cz>
+References: <20070429023215.40c2aea7@logostar.upir.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using any of the IEEE80211_DEBUG_XXXX macros in any ieee80211_crypt routine
-built as a module results in a missing global for 'ieee80211_debug_level'.
-The fix is to export the symbol in ieee80211.
+I have been lazy with adding my copyright to some files.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
+
 ---
+ include/net/mac80211.h       |    1 +
+ net/mac80211/ieee80211.c     |    1 +
+ net/mac80211/ieee80211_i.h   |    1 +
+ net/mac80211/ieee80211_sta.c |    1 +
+ net/mac80211/sta_info.c      |    1 +
+ 5 files changed, 5 insertions(+)
 
-Index: wireless-2.6/net/ieee80211/ieee80211_module.c
-===================================================================
---- wireless-2.6.orig/net/ieee80211/ieee80211_module.c
-+++ wireless-2.6/net/ieee80211/ieee80211_module.c
-@@ -229,6 +229,7 @@ void free_ieee80211(struct net_device *d
-
-  static int debug = 0;
-  u32 ieee80211_debug_level = 0;
-+EXPORT_SYMBOL_GPL(ieee80211_debug_level);
-  static struct proc_dir_entry *ieee80211_proc = NULL;
-
-  static int show_debug_level(char *page, char **start, off_t offset,
-
+--- dscape.orig/include/net/mac80211.h
++++ dscape/include/net/mac80211.h
+@@ -1,6 +1,7 @@
+ /*
+  * Low-level hardware driver -- IEEE 802.11 driver (80211.o) interface
+  * Copyright 2002-2005, Devicescape Software, Inc.
++ * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+--- dscape.orig/net/mac80211/ieee80211.c
++++ dscape/net/mac80211/ieee80211.c
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright 2002-2005, Instant802 Networks, Inc.
+  * Copyright 2005-2006, Devicescape Software, Inc.
++ * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+--- dscape.orig/net/mac80211/ieee80211_i.h
++++ dscape/net/mac80211/ieee80211_i.h
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright 2002-2005, Instant802 Networks, Inc.
+  * Copyright 2005, Devicescape Software, Inc.
++ * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+--- dscape.orig/net/mac80211/ieee80211_sta.c
++++ dscape/net/mac80211/ieee80211_sta.c
+@@ -3,6 +3,7 @@
+  * Copyright 2003, Jouni Malinen <jkmaline@cc.hut.fi>
+  * Copyright 2004, Instant802 Networks, Inc.
+  * Copyright 2005, Devicescape Software, Inc.
++ * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+  *
+  * This program is free software; you can redistribute it and/or modify
+--- dscape.orig/net/mac80211/sta_info.c
++++ dscape/net/mac80211/sta_info.c
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright 2002-2005, Instant802 Networks, Inc.
++ * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
