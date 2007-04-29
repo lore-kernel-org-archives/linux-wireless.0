@@ -1,82 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:25567 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030886AbXDMXVS (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:50472 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756302AbXD2Pb2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2007 19:21:18 -0400
+	Sun, 29 Apr 2007 11:31:28 -0400
 From: Michael Wu <flamingice@sourmilk.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH] mac80211: Report correct wireless statistics
-Date: Fri, 13 Apr 2007 19:18:20 -0400
-Cc: Dan Williams <dcbw@redhat.com>,
-	John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
-References: <461877ea.cyxM3SSnr6WhYkjX%Larry.Finger@lwfinger.net> <200704091902.14301.flamingice@sourmilk.net> <461AE160.6060404@lwfinger.net>
-In-Reply-To: <461AE160.6060404@lwfinger.net>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH] mac80211: remove hostapd scanning
+Date: Sun, 29 Apr 2007 11:27:00 -0400
+Cc: linux-wireless@vger.kernel.org
+References: <20070429155623.3a7f1a67@logostar.upir.cz>
+In-Reply-To: <20070429155623.3a7f1a67@logostar.upir.cz>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart9807661.MWb1Iz70VB";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200704131918.24758.flamingice@sourmilk.net>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200704291127.00777.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart9807661.MWb1Iz70VB
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-
-On Monday 09 April 2007 20:59, Larry Finger wrote:
-> I changed signal to qual and (r)ssi to level. Once these changes were mad=
-e,
-> iwconfig gives me the following:
+On Sunday 29 April 2007 09:56, Jiri Benc wrote:
+> This removes passive_scan callback with associated code. The whole thing is
+> not a job for a driver and can be done in a much cleaner way using user
+> space MLME. Besides, nobody (not even hostapd) uses that call.
 >
-> Link Quality=3D57/100  Signal level=3D-37 dBm  Noise level=3D-70 dBm
->
-> The patch is pretty large and touches a lot of files, but if one is to be
-> able to bisect around it, it has to be a single commit. As the patch
-> entitled "[PATCH] bcm43xx-mac80211: Fix error in initiallizing max RSSI a=
-nd
-> max signal" has been accepted into Michael Buesch's tree, I have assumed
-> that it is already included.
->
-I would prefer having the bcm43xx-mac80211 fix and the renaming separated i=
-nto=20
-two patches.
+Well, if we're gonna get rid of this, we can kill ieee80211_netif_oper for 
+good since ieee80211_scan.c was the last user.
 
-Also, why wasn't max_rssi changed to max_level? I'm not so sure about doing=
-=20
-s/rssi/level/, however. s/rssi/signal/ sounds better to me. (which makes it=
-=20
-sound similar to your other patch, except rssi is eliminated because one=20
-variable needs to do RSSI/dBm and the other needs to be more general than=20
-just another RSSI statistic)
+--
+mac80211: remove ieee80211_netif_oper
 
-The change from "rssi=3D%d" to "level=3D%d" looks wrong to me. If any users=
-pace=20
-app is parsing that info, that breaks it. Then again, that information is=20
-actually redundant since we report IWEVQUAL earlier so it should just be=20
-removed. I'll post a patch.
+From: Michael Wu <flamingice@sourmilk.net>
 
-Thanks,
-=2DMichael Wu
+Without ieee80211_scan.c, nothing uses ieee80211_netif_oper now. This patch
+removes it.
 
---nextPart9807661.MWb1Iz70VB
-Content-Type: application/pgp-signature
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+ net/mac80211/ieee80211.c   |   35 -----------------------------------
+ net/mac80211/ieee80211_i.h |    6 ------
+ 2 files changed, 0 insertions(+), 41 deletions(-)
 
-iD8DBQBGIA/AT3Oqt9AH4aERAtCGAJ9kYhp7mdu115NOPeg3Dqjlz7b4WwCeMiOt
-CZvTFGXKENHdqcETXdFBjck=
-=xKtN
------END PGP SIGNATURE-----
-
---nextPart9807661.MWb1Iz70VB--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index d4dd85a..958d02d 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -4865,41 +4865,6 @@ void ieee80211_free_hw(struct ieee80211_hw *hw)
+ }
+ EXPORT_SYMBOL(ieee80211_free_hw);
+ 
+-/* Perform netif operations on all configured interfaces */
+-int ieee80211_netif_oper(struct ieee80211_hw *hw, Netif_Oper op)
+-{
+-	struct ieee80211_local *local = hw_to_local(hw);
+-	struct net_device *dev = local->mdev;
+-
+-	switch (op) {
+-	case NETIF_ATTACH:
+-		netif_device_attach(dev);
+-		break;
+-	case NETIF_DETACH:
+-		netif_device_detach(dev);
+-		break;
+-	case NETIF_START:
+-		netif_start_queue(dev);
+-		break;
+-	case NETIF_STOP:
+-		break;
+-	case NETIF_WAKE:
+-		netif_wake_queue(dev);
+-		if (/* FIX: 802.11 qdisc in use */ 1)
+-			__netif_schedule(dev);
+-		break;
+-	case NETIF_IS_STOPPED:
+-		if (netif_queue_stopped(dev))
+-			return 1;
+-		break;
+-	case NETIF_UPDATE_TX_START:
+-		dev->trans_start = jiffies;
+-		break;
+-	}
+-
+-	return 0;
+-}
+-
+ void ieee80211_wake_queue(struct ieee80211_hw *hw, int queue)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 525db14..6c9a162 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -728,12 +728,6 @@ void ieee80211_if_mgmt_setup(struct net_device *dev);
+ int ieee80211_init_rate_ctrl_alg(struct ieee80211_local *local,
+ 				 const char *name);
+ struct net_device_stats *ieee80211_dev_stats(struct net_device *dev);
+-/* This function is deprecated. */
+-typedef enum {
+-	NETIF_ATTACH, NETIF_DETACH, NETIF_START, NETIF_STOP, NETIF_WAKE,
+-	NETIF_IS_STOPPED, NETIF_UPDATE_TX_START
+-} Netif_Oper;
+-int ieee80211_netif_oper(struct ieee80211_hw *hw, Netif_Oper op);
+ 
+ /* ieee80211_ioctl.c */
+ int ieee80211_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
