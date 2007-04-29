@@ -1,62 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:27870 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757294AbXD0VGp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2007 17:06:45 -0400
-Message-ID: <4632614B.8060102@linux.intel.com>
-Date: Fri, 27 Apr 2007 13:47:07 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
-MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <20070423184814.7029.8413.stgit@magic.sourmilk.net>
-In-Reply-To: <20070423184814.7029.8413.stgit@magic.sourmilk.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from styx.suse.cz ([82.119.242.94]:53112 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753309AbXD2Ktf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Apr 2007 06:49:35 -0400
+Date: Sun, 29 Apr 2007 12:49:29 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/4] mac80211: document requirement for atomicity of  callbacks
+Message-ID: <20070429124929.417ef7da@logostar.upir.cz>
+In-Reply-To: <200704291115.43657.mb@bu3sch.de>
+References: <20070429023215.40c2aea7@logostar.upir.cz>
+	<20070429023345.43e09faf@logostar.upir.cz>
+	<200704291115.43657.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
-> From: Michael Wu <flamingice@sourmilk.net>
+On Sun, 29 Apr 2007 11:15:43 +0200, Michael Buesch wrote:
+> On Sunday 29 April 2007 02:33:45 Jiri Benc wrote:
+> > +	 * Must be atomic. */
+> >  	int (*set_key)(struct ieee80211_hw *hw, set_key_cmd cmd,
+> >  		       u8 *addr, struct ieee80211_key_conf *key, int aid);
 > 
-> The hw_scan callback breaks the auto AP selection code in ieee80211_sta.c.
-> No in-tree drivers use it either. This patch removes it.
+> I think USB drivers and bcm43xx violate that. We can't easily workaround it
+> without doing the operation async.
 
-The auto AP selection code is broken because ieee80211_sta_config_auth wasn't selecting a network if the RSSI was negative.)
+I know. Unfortunately, it's not easy to fix that in mac80211. I really want
+this call not to be atomic and will try to change it later, but it's not a
+priority now.
+
+For now, just always return success and complain to dmesg if something goes
+wrong during setting of the key in a workqueue.
 
 Thanks,
-James
 
-----
+ Jiri
 
-[PATCH] Fix ieee80211_sta_config_auth to select networks if rssi < 0
-
-The rssi check was against the top_rssi being less than the network
-rssi.  However, 0 is higher than all negative rssi, so if an adapter
-returned negative rssi values, auto AP selection would never work.
-
-This patch changes behavior such if no network is currently selected it
-ignores the rssi comparison and picks the network that matches all other criteria.
-
-Signed-off-by: James Ketrenos <jketreno@linux.intel.com>
----
- net/mac80211/ieee80211_sta.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 92e575a..6889e79 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -2249,7 +2249,7 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
- 		    !ieee80211_sta_match_ssid(ifsta, bss->ssid, bss->ssid_len))
- 			continue;
- 
--		if (top_rssi < bss->rssi) {
-+		if (!selected || top_rssi < bss->rssi) {
- 			selected = bss;
- 			top_rssi = bss->rssi;
- 		}
 -- 
-1.5.0.6
+Jiri Benc
+SUSE Labs
