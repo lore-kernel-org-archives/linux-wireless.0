@@ -1,62 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:58823 "EHLO polimi.it"
+Received: from styx.suse.cz ([82.119.242.94]:57049 "EHLO mail.suse.cz"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1767321AbXDEVXm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 17:23:42 -0400
-Date: Thu, 5 Apr 2007 23:19:10 +0200
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Theo de Raadt <deraadt@cvs.openbsd.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Pavel Roskin" <proski@gnu.org>, "Michael Buesch" <mb@bu3sch.de>,
-	"Joseph Jezak" <josejx@gentoo.org>,
-	"Marcus Glocker" <mglocker@openbsd.org>,
-	"Jon Simola" <jsimola@gmail.com>,
-	"Theo de Raadt" <deraadt@theos.com>,
-	"Martin Langer" <martin-langer@gmx.de>,
-	"Danny van Dyk" <kugelfang@gentoo.org>,
-	"Andreas Jaggi" <andreas.jaggi@waterwave.ch>,
-	"Larry Finger" <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"John Linville" <linville@tuxdriver.com>,
-	"Greg kh" <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues
-Message-ID: <20070405231910.6969b7ac@localhost>
-In-Reply-To: <200704052010.l35KA9S6024250@cvs.openbsd.org>
-References: <43e72e890704051257n1ae26c64k3e05614bea843729@mail.gmail.com>
-	<200704052010.l35KA9S6024250@cvs.openbsd.org>
+	id S933273AbXD2OWE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Apr 2007 10:22:04 -0400
+Date: Sun, 29 Apr 2007 16:22:02 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: remove passive_scan handler
+Message-ID: <20070429162202.07bfa98a@logostar.upir.cz>
+In-Reply-To: <200704291602.46275.IvDoorn@gmail.com>
+References: <20070429155736.322076b3@logostar.upir.cz>
+	<200704291602.46275.IvDoorn@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 05 Apr 2007 14:10:09 -0600
-Theo de Raadt <deraadt@cvs.openbsd.org> wrote:
+On Sun, 29 Apr 2007 16:02:46 +0200, Ivo van Doorn wrote:
+> Ehm, please check my rt2x00 git pull request of yesterday. ;)
+> To quote myself:
+> "Perhaps the most interesting thing would be the removal
+> of passive scan support, because it was a purely software based
+> solution that (if really required) could best be resolved in mac80211
+> rather then the driver for devices that don't support such a thing in the
+> hardware."
 
-> No, Marcus Glocker decided this entirely on his own accord.  I gave
-> him specific instructions to decide as he sees fit.  I told him I did
-> not want to influence him.
+Didn't notice that :-)
 
-Oh, and sure you didn't, with your personal flamewar!
+> When John pulls the upstream branch of rt2x00 git, passive scanning will
+> already be removed. :)
 
-You made a drama out of a simple issue. We have been so stupid to follow
-you.
+Nice. Thanks.
 
-So, what's driving you crazy right now, sorted by relevance:
-1) we went public;
-2) we don't believe that Marcus copied code by mistake;
-3) we are inhuman and we lack empathy.
+ Jiri
 
-About the third one, we can't do anything. Coding bcm43xx made us inhuman.
-Plus, we are engineers or even worse species. We even use GPL. Really sorry
-about that.
-
-Now, about the first and second ones. Would telling you you are right help
-you to stop whining and let people focus on the real issue? In case, I
-would promptly tell you that you are right and we are wrong.
-
-
---
-Ciao
-Stefano
+-- 
+Jiri Benc
+SUSE Labs
