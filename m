@@ -1,251 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:45155 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965764AbXDGKvl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Apr 2007 06:51:41 -0400
-Message-Id: <20070407105138.465992816@warmcat.com>
-References: <20070407105058.762762192@warmcat.com>
-Date: Sat, 07 Apr 2007 11:51:00 +0100
-From: andy@warmcat.com
+Received: from styx.suse.cz ([82.119.242.94]:44839 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754489AbXD2AdF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Apr 2007 20:33:05 -0400
+Received: from logostar.upir.cz (r2u241.net.upc.cz [62.245.84.241])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.suse.cz (SUSE LINUX ESMTP Mailer) with ESMTP id 67C09628062
+	for <linux-wireless@vger.kernel.org>; Sun, 29 Apr 2007 02:33:04 +0200 (CEST)
+Date: Sun, 29 Apr 2007 02:33:03 +0200
+From: Jiri Benc <jbenc@suse.cz>
 To: linux-wireless@vger.kernel.org
-Cc: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 2/7] mac80211: Add radiotap support
+Subject: [PATCH 2/4] mac80211: remove test_mode
+Message-ID: <20070429023303.6106567b@logostar.upir.cz>
+In-Reply-To: <20070429023215.40c2aea7@logostar.upir.cz>
+References: <20070429023215.40c2aea7@logostar.upir.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+Testing of a radio is a driver-specific debug feature and doesn't belong to
+the stack. Drivers should implement it using debugfs.
 
-This patch makes mac80211 monitor interfaces use radiotap headers. It also
-provides a flag to let a driver specify a frame has a radiotap header and
-another flag to let the driver know if adding a radiotap header would be
-helpful.
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
 
-Thanks to Andy Green <andy@warmcat.com> for testing earlier versions of
-this patch.
-
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
 ---
+ include/net/mac80211.h         |   28 ------------------
+ net/mac80211/hostapd_ioctl.h   |    2 -
+ net/mac80211/ieee80211_ioctl.c |   63 -----------------------------------------
+ 3 files changed, 93 deletions(-)
 
- include/net/mac80211.h         |    8 +++-
- net/mac80211/ieee80211.c       |   75 ++++++++++++++++++++++++++++++++++------
- net/mac80211/ieee80211_iface.c |    2 +
- 3 files changed, 70 insertions(+), 15 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 916b21b..3b22369 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -216,9 +216,6 @@ struct ieee80211_tx_control {
- 	int ifindex;	/* internal */
- };
+--- dscape.orig/include/net/mac80211.h
++++ dscape/include/net/mac80211.h
+@@ -687,12 +687,6 @@ struct ieee80211_ops {
+ 	int (*get_stats)(struct ieee80211_hw *hw,
+ 			 struct ieee80211_low_level_stats *stats);
  
--#define RX_FLAG_MMIC_ERROR       0x1
--#define RX_FLAG_DECRYPTED	0x2
+-	/* Enable/disable test modes; mode = IEEE80211_TEST_* */
+-	int (*test_mode)(struct ieee80211_hw *hw, int mode);
 -
- /* Receive status. The low-level driver should provide this information
-  * (the subset supported by hardware) to the 802.11 code with each received
-  * frame. */
-@@ -232,6 +229,9 @@ struct ieee80211_rx_status {
- 	int noise;
- 	int antenna;
- 	int rate;
-+#define RX_FLAG_MMIC_ERROR	(1<<0)
-+#define RX_FLAG_DECRYPTED	(1<<1)
-+#define RX_FLAG_RADIOTAP	(1<<2)
- 	int flag;
- };
+-	/* Configuration of test parameters */
+-	int (*test_param)(struct ieee80211_hw *hw, int param, int value);
+-
+ 	/* For devices that generate their own beacons and probe response
+ 	 * or association responses this updates the state of privacy_invoked
+ 	 * returns 0 for success or an error number */
+@@ -1056,28 +1050,6 @@ void ieee80211_scan_completed(struct iee
+ int  ieee80211_radar_status(struct ieee80211_hw *hw, int channel,
+ 			    int radar, int radar_type);
  
-@@ -278,6 +278,8 @@ struct ieee80211_conf {
- #define IEEE80211_CONF_SHORT_SLOT_TIME	(1<<0) /* use IEEE 802.11g Short Slot
- 						* Time */
- #define IEEE80211_CONF_SSID_HIDDEN	(1<<1) /* do not broadcast the ssid */
-+#define IEEE80211_CONF_RADIOTAP		(1<<2) /* use radiotap if supported
-+						  check this bit at RX time */
- 	u32 flags;			/* configuration flags defined above */
+-/* Test modes */
+-enum {
+-	IEEE80211_TEST_DISABLE = 0 /* terminate testing */,
+-	IEEE80211_TEST_UNMASK_CHANNELS = 1 /* allow all channels to be used */,
+-	IEEE80211_TEST_CONTINUOUS_TX = 2,
+-};
+-
+-/* Test parameters */
+-enum {
+-	/* TX power in hardware specific raw value */
+-	IEEE80211_TEST_PARAM_TX_POWER_RAW = 0,
+-	/* TX rate in hardware specific raw value */
+-	IEEE80211_TEST_PARAM_TX_RATE_RAW = 1,
+-	/* Continuous TX pattern (32-bit) */
+-	IEEE80211_TEST_PARAM_TX_PATTERN = 2,
+-	/* TX power in 0.1 dBm, 100 = 10 dBm */
+-	IEEE80211_TEST_PARAM_TX_POWER = 3,
+-	/* TX rate in 100 kbps, 540 = 54 Mbps */
+-	IEEE80211_TEST_PARAM_TX_RATE = 4,
+-	IEEE80211_TEST_PARAM_TX_ANT_SEL_RAW = 5,
+-};
+-
+ /* return a pointer to the source address (SA) */
+ static inline u8 *ieee80211_get_SA(struct ieee80211_hdr *hdr)
+ {
+--- dscape.orig/net/mac80211/hostapd_ioctl.h
++++ dscape/net/mac80211/hostapd_ioctl.h
+@@ -20,7 +20,6 @@
+ #define PRISM2_IOCTL_PRISM2_PARAM (SIOCIWFIRSTPRIV + 0)
+ #define PRISM2_IOCTL_GET_PRISM2_PARAM (SIOCIWFIRSTPRIV + 1)
+ #define PRISM2_IOCTL_HOSTAPD (SIOCIWFIRSTPRIV + 3)
+-#define PRISM2_IOCTL_TEST_PARAM (SIOCIWFIRSTPRIV + 4)
  
- 	u8 power_level;			/* transmit power limit for current
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index c390c85..bbf58a3 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -8,6 +8,7 @@
-  */
- 
- #include <net/mac80211.h>
-+#include <net/ieee80211_radiotap.h>
- #include <linux/module.h>
- #include <linux/init.h>
- #include <linux/netdevice.h>
-@@ -292,6 +293,14 @@ int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
+ /* PRISM2_IOCTL_PRISM2_PARAM ioctl() subtypes:
+  * This table is no longer added to, the whole sub-ioctl
+@@ -41,7 +40,6 @@ enum {
+ 	PRISM2_PARAM_DROP_UNENCRYPTED = 1002,
+ 	PRISM2_PARAM_PREAMBLE = 1003,
+ 	PRISM2_PARAM_SHORT_SLOT_TIME = 1006,
+-	PRISM2_PARAM_TEST_MODE = 1007,
+ 	PRISM2_PARAM_NEXT_MODE = 1008,
+ 	PRISM2_PARAM_CLEAR_KEYS = 1009,
+ 	PRISM2_PARAM_RADIO_ENABLED = 1010,
+--- dscape.orig/net/mac80211/ieee80211_ioctl.c
++++ dscape/net/mac80211/ieee80211_ioctl.c
+@@ -2189,38 +2189,6 @@ static int ieee80211_ioctl_giwretry(stru
+ 	return 0;
  }
- EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
  
-+static int ieee80211_get_radiotap_len(struct sk_buff *skb)
-+{
-+	struct ieee80211_radiotap_header *hdr =
-+		(struct ieee80211_radiotap_header *) skb->data;
-+
-+	return le16_to_cpu(hdr->it_len);
-+}
-+
- #ifdef CONFIG_MAC80211_LOWTX_FRAME_DUMP
- static void ieee80211_dump_frame(const char *ifname, const char *title,
- 				 const struct sk_buff *skb)
-@@ -2339,6 +2348,7 @@ static int ieee80211_open(struct net_device *dev)
- 		/* run the interface in a "soft monitor" mode */
- 		local->monitors++;
- 		local->open_count++;
-+		local->hw.conf.flags |= IEEE80211_CONF_RADIOTAP;
- 		return 0;
- 	}
- 	ieee80211_start_soft_monitor(local);
-@@ -2387,9 +2397,10 @@ static int ieee80211_open(struct net_device *dev)
- 	}
- 	local->open_count++;
- 
--	if (sdata->type == IEEE80211_IF_TYPE_MNTR)
-+	if (sdata->type == IEEE80211_IF_TYPE_MNTR) {
- 		local->monitors++;
--	else
-+		local->hw.conf.flags |= IEEE80211_CONF_RADIOTAP;
-+	} else
- 		ieee80211_if_config(dev);
- 
- 	if (sdata->type == IEEE80211_IF_TYPE_STA &&
-@@ -2414,13 +2425,18 @@ static int ieee80211_stop(struct net_device *dev)
- 		/* remove "soft monitor" interface */
- 		local->open_count--;
- 		local->monitors--;
-+		if (!local->monitors)
-+			local->hw.conf.flags &= ~IEEE80211_CONF_RADIOTAP;
- 		return 0;
- 	}
- 
- 	netif_stop_queue(dev);
- 
--	if (sdata->type == IEEE80211_IF_TYPE_MNTR)
-+	if (sdata->type == IEEE80211_IF_TYPE_MNTR) {
- 		local->monitors--;
-+		if (!local->monitors)
-+			local->hw.conf.flags &= ~IEEE80211_CONF_RADIOTAP;
-+	}
- 
- 	local->open_count--;
- 	if (local->open_count == 0) {
-@@ -2766,26 +2782,53 @@ ieee80211_rx_monitor(struct net_device *dev, struct sk_buff *skb,
- 		     struct ieee80211_rx_status *status)
+-
+-static void ieee80211_ioctl_unmask_channels(struct ieee80211_local *local)
+-{
+-	struct ieee80211_hw_mode *mode;
+-	int c;
+-
+-	list_for_each_entry(mode, &local->modes_list, list) {
+-		for (c = 0; c < mode->num_channels; c++) {
+-			struct ieee80211_channel *chan = &mode->channels[c];
+-			chan->flag |= IEEE80211_CHAN_W_SCAN;
+-		}
+-	}
+-}
+-
+-
+-static int ieee80211_ioctl_test_mode(struct net_device *dev, int mode)
+-{
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	int ret = -EOPNOTSUPP;
+-
+-	if (mode == IEEE80211_TEST_UNMASK_CHANNELS) {
+-		ieee80211_ioctl_unmask_channels(local);
+-		ret = 0;
+-	}
+-
+-	if (local->ops->test_mode)
+-		ret = local->ops->test_mode(local_to_hw(local), mode);
+-
+-	return ret;
+-}
+-
+-
+ static int ieee80211_ioctl_clear_keys(struct net_device *dev)
  {
  	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	struct ieee80211_frame_info *fi;
- 	struct ieee80211_sub_if_data *sdata;
--	const size_t hlen = sizeof(struct ieee80211_frame_info)
--				- sizeof(fi->msg_type);
-+	struct ieee80211_rate *rate;
-+	struct ieee80211_rtap_hdr {
-+		struct ieee80211_radiotap_header hdr;
-+		u8 flags;
-+		u8 rate;
-+		__le16 chan_freq;
-+		__le16 chan_flags;
-+		u8 antsignal;
-+	} __attribute__ ((packed)) *rthdr;
+@@ -2537,10 +2505,6 @@ static int ieee80211_ioctl_prism2_param(
+ 					local_to_hw(local), value);
+ 		break;
  
- 	skb->dev = dev;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	if (skb_headroom(skb) < hlen) {
-+	if (status->flag & RX_FLAG_RADIOTAP)
-+		goto out;
-+
-+	if (skb_headroom(skb) < sizeof(*rthdr)) {
- 		I802_DEBUG_INC(local->rx_expand_skb_head);
--		if (pskb_expand_head(skb, hlen, 0, GFP_ATOMIC)) {
-+		if (pskb_expand_head(skb, sizeof(*rthdr), 0, GFP_ATOMIC)) {
- 			dev_kfree_skb(skb);
- 			return;
- 		}
- 	}
- 
--	fi = (struct ieee80211_frame_info *) skb_push(skb, hlen);
-+	rthdr = (struct ieee80211_rtap_hdr *) skb_push(skb, sizeof(*rthdr));
-+	memset(rthdr, 0, sizeof(*rthdr));
-+	rthdr->hdr.it_len = cpu_to_le16(sizeof(*rthdr));
-+	rthdr->hdr.it_present =
-+		cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
-+			    (1 << IEEE80211_RADIOTAP_RATE) |
-+			    (1 << IEEE80211_RADIOTAP_CHANNEL) |
-+			    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL));
-+	rthdr->flags = local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS ?
-+		       IEEE80211_RADIOTAP_F_FCS : 0;
-+	rate = ieee80211_get_rate(local, status->phymode, status->rate);
-+	if (rate)
-+		rthdr->rate = rate->rate / 5;
-+	rthdr->chan_freq = cpu_to_le16(status->freq);
-+	rthdr->chan_flags =
-+		status->phymode == MODE_IEEE80211A ?
-+		cpu_to_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ) :
-+		cpu_to_le16(IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ);
-+	rthdr->antsignal = status->ssi;
- 
--	ieee80211_fill_frame_info(local, fi, status);
-+ out:
- 	sdata->stats.rx_packets++;
- 	sdata->stats.rx_bytes += skb->len;
- 
-@@ -3189,6 +3232,9 @@ ieee80211_rx_h_monitor(struct ieee80211_txrx_data *rx)
- 		return TXRX_QUEUED;
- 	}
- 
-+	if (rx->u.rx.status->flag & RX_FLAG_RADIOTAP)
-+		skb_pull(rx->skb, ieee80211_get_radiotap_len(rx->skb));
-+
- 	return TXRX_CONTINUE;
+-	case PRISM2_PARAM_TEST_MODE:
+-		ret = ieee80211_ioctl_test_mode(dev, value);
+-		break;
+-
+ 	case PRISM2_PARAM_NEXT_MODE:
+ 		local->next_mode = value;
+ 		break;
+@@ -2871,27 +2835,6 @@ static int ieee80211_ioctl_get_prism2_pa
+ 	return ret;
  }
  
-@@ -3756,6 +3802,12 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct ieee80211_txrx_data rx;
- 	u16 type;
- 	int multicast;
-+	int radiotap_len = 0;
-+
-+	if (status->flag & RX_FLAG_RADIOTAP) {
-+		radiotap_len = ieee80211_get_radiotap_len(skb);
-+		skb_pull(skb, radiotap_len);
-+	}
+-
+-static int ieee80211_ioctl_test_param(struct net_device *dev,
+-				      struct iw_request_info *info,
+-				      void *wrqu, char *extra)
+-{
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	int *i = (int *) extra;
+-	int param = *i;
+-	int value = *(i + 1);
+-
+-	if (!capable(CAP_NET_ADMIN))
+-		return -EPERM;
+-
+-	if (local->ops->test_param)
+-		return local->ops->test_param(local_to_hw(local),
+-					     param, value);
+-
+-	return -EOPNOTSUPP;
+-}
+-
+-
+ static int ieee80211_ioctl_siwmlme(struct net_device *dev,
+ 				   struct iw_request_info *info,
+ 				   struct iw_point *data, char *extra)
+@@ -3177,8 +3120,6 @@ static const struct iw_priv_args ieee802
+ 	{ PRISM2_IOCTL_GET_PRISM2_PARAM,
+ 	  IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
+ 	  IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1, "get_param" },
+-	{ PRISM2_IOCTL_TEST_PARAM,
+-	  IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 2, 0, "test_param" },
+ };
  
- 	hdr = (struct ieee80211_hdr *) skb->data;
- 	memset(&rx, 0, sizeof(rx));
-@@ -3792,6 +3844,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		goto end;
- 	skb = rx.skb;
  
-+	skb_push(skb, radiotap_len);
- 	if (sta && !sta->assoc_ap && !(sta->flags & WLAN_STA_WDS) &&
- 	    !local->iff_promiscs && !multicast) {
- 		rx.u.rx.ra_match = 1;
-@@ -3800,7 +3853,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	} else {
- 		struct ieee80211_sub_if_data *prev = NULL;
- 		struct sk_buff *skb_new;
--		u8 *bssid = ieee80211_get_bssid(hdr, skb->len);
-+		u8 *bssid = ieee80211_get_bssid(hdr, skb->len - radiotap_len);
- 
- 		list_for_each_entry(sdata, &local->sub_if_list, list) {
- 			rx.u.rx.ra_match = 1;
-diff --git a/net/mac80211/ieee80211_iface.c b/net/mac80211/ieee80211_iface.c
-index b1b20ba..495177b 100644
---- a/net/mac80211/ieee80211_iface.c
-+++ b/net/mac80211/ieee80211_iface.c
-@@ -192,7 +192,7 @@ void ieee80211_if_set_type(struct net_device *dev, int type)
- 		break;
- 	}
- 	case IEEE80211_IF_TYPE_MNTR:
--		dev->type = ARPHRD_IEEE80211_PRISM;
-+		dev->type = ARPHRD_IEEE80211_RADIOTAP;
- 		break;
- 	default:
- 		printk(KERN_WARNING "%s: %s: Unknown interface type 0x%x",
-
--- 
+@@ -3190,10 +3131,6 @@ int ieee80211_ioctl(struct net_device *d
+ 	switch (cmd) {
+ 		/* Private ioctls (iwpriv) that have not yet been converted
+ 		 * into new wireless extensions API */
+-	case PRISM2_IOCTL_TEST_PARAM:
+-		ret = ieee80211_ioctl_test_param(dev, NULL, &wrq->u,
+-						 (char *) &wrq->u);
+-		break;
+ 	case PRISM2_IOCTL_HOSTAPD:
+ 		if (!capable(CAP_NET_ADMIN)) ret = -EPERM;
+ 		else ret = ieee80211_ioctl_priv_hostapd(dev, &wrq->u.data);
