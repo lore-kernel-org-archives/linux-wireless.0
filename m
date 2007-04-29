@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:47684 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030275AbXDCO0D (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59370
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933185AbXD2MyE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Apr 2007 10:26:03 -0400
-Message-ID: <461263FF.7040707@lwfinger.net>
-Date: Tue, 03 Apr 2007 09:26:07 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Sun, 29 Apr 2007 08:54:04 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH 3/4] mac80211: document requirement for atomicity of callbacks
+Date: Sun, 29 Apr 2007 14:53:47 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <20070429023215.40c2aea7@logostar.upir.cz> <200704291115.43657.mb@bu3sch.de> <20070429124929.417ef7da@logostar.upir.cz>
+In-Reply-To: <20070429124929.417ef7da@logostar.upir.cz>
 MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: WPA does not connect to bcm43xx-mac80211 when using NetworkManager
-References: <460E2B8C.4030002@gmail.com>	 <200703311503.53445.flamingice@sourmilk.net>	 <f6ca9fed0703311256m1b14ec35p836a62de532dd804@mail.gmail.com>	 <200703311700.52792.flamingice@sourmilk.net>	 <1175388624.10282.0.camel@localhost.localdomain>	 <46107D79.3060706@lwfinger.net> <1175487124.30381.16.camel@localhost.localdomain>
-In-Reply-To: <1175487124.30381.16.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200704291453.47601.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> On Sun, 2007-04-01 at 22:50 -0500, Larry Finger wrote:
->> Dan,
->>
->> My bcm43xx-mac80211 system generates the following log entries when trying to connect using WPA-PSK
->> TKIP controlled by NetworkManager. The same configuration works with bcm43xx-softmac.
+On Sunday 29 April 2007 12:49:29 Jiri Benc wrote:
+> On Sun, 29 Apr 2007 11:15:43 +0200, Michael Buesch wrote:
+> > On Sunday 29 April 2007 02:33:45 Jiri Benc wrote:
+> > > +	 * Must be atomic. */
+> > >  	int (*set_key)(struct ieee80211_hw *hw, set_key_cmd cmd,
+> > >  		       u8 *addr, struct ieee80211_key_conf *key, int aid);
+> > 
+> > I think USB drivers and bcm43xx violate that. We can't easily workaround it
+> > without doing the operation async.
 > 
-> So what you're saying here is that NM works with softmac, but doesn't
-> work with mac80211?
-
-Yes.
-
+> I know. Unfortunately, it's not easy to fix that in mac80211. I really want
+> this call not to be atomic and will try to change it later, but it's not a
+> priority now.
 > 
-> Hmm; any idea why that happens?  Can we figure out more about the
-> association process inside the driver?  If it works with wpa_supplicant,
-> can you increase the debugging output of wpa_supplicant in the NM
-> sources in nm-device-802-11-wireless.c in supplicant_exec() by adding
-> another argument to argv with the value '-ddd'?
+> For now, just always return success and complain to dmesg if something goes
+> wrong during setting of the key in a workqueue.
 
-What version of NM will work with dbus-glib 0.71? I grabbed the svn archive, found it needed 0.72, 
-and tried to install a newer version. I messed everything up and had to reinstall openSUSE again. I 
-certainly don't want to go through that again!
+Ok, I see. But I want to note that this might be more problematic
+then just a lost error code. It might race.
+For example it might race with the EAPOL KEY authentication stuff.
+So I think we must also workaround that by disabling TX queues
+until the key configuration request has actually happened
+on the device.
 
-Larry
-
+-- 
+Greetings Michael.
