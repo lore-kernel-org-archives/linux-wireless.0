@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([143.182.124.22]:21231 "EHLO
-	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030654AbXDLSMB (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:56057
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754418AbXD2TCX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2007 14:12:01 -0400
-Message-ID: <461E766F.7010701@linux.intel.com>
-Date: Thu, 12 Apr 2007 11:11:59 -0700
-From: mabbas <mabbas@linux.intel.com>
-MIME-Version: 1.0
+	Sun, 29 Apr 2007 15:02:23 -0400
+From: Michael Buesch <mb@bu3sch.de>
 To: Michael Wu <flamingice@sourmilk.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Jouni Malinen <jkm@devicescape.com>,
-	Simon Barber <simon@devicescape.com>
-Subject: Re: [patch 2/5] Add basic support for IEEE 802.11n discovery and  association
-References: <1174909105.1364.53.camel@dell-4965.jf.intel.com> <200704111630.06160.flamingice@sourmilk.net> <461D5FC5.5070404@linux.intel.com> <200704111856.55885.flamingice@sourmilk.net>
-In-Reply-To: <200704111856.55885.flamingice@sourmilk.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: Oops in ieee80211_register_hw
+Date: Sun, 29 Apr 2007 21:01:44 +0200
+Cc: Jiri Benc <jbenc@suse.cz>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Buesch <mbuesch@freenet.de>
+References: <20070427233738.5842decf@griffin.suse.cz> <200704272026.11196.flamingice@sourmilk.net>
+In-Reply-To: <200704272026.11196.flamingice@sourmilk.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200704292101.45018.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
-> On Wednesday 11 April 2007 18:23, mabbas wrote:
->   
->> where i can get mac80211 userspace mlme?
->> Mohamed
->>     
-> It's wpa_supplicant with mlme code turned on.
->
-> Git repo: git://w1.fi/srv/git/hostap.git
->
-> -Michael
-just adding the hooks to userspace mlme would be enough to get these 
-patches accepted. then I can look into wpa_supplicant.
-Mohamed
-> 	
->   
+On Saturday 28 April 2007 02:26:06 Michael Wu wrote:
+> On Friday 27 April 2007 17:37, Jiri Benc wrote:
+> > has anyone an idea what's going on here?
+> >
+> > How to reproduce:
+> > 1. modprobe bcm43xx_mac80211
+> > 2. plug in my cardbus bcm4318 card
+> > (note that if I swap these two steps, the oops doesn't occur)
+> >
+> > By adding debug printks, I located the place where the null dereference
+> > happens. Please note that I have Michael Wu's latest patches applied.
+> > It's in
+> > 	name = wiphy_dev(local->hw.wiphy)->driver->name;
+> > and wiphy_dev(local->hw.wiphy) is NULL.
+> >
+> I've attached a patch. I don't have the hardware so I don't know if it'll 
+> work, but it seems right to me.
+
+Thanks for that patch. It's almost right.
+I committed the right fix.
+http://bu3sch.de/gitweb?p=wireless-dev.git;a=commitdiff;h=7371ae7ba51fb380681584c9132540ff5a86604a
+
+-- 
+Greetings Michael.
