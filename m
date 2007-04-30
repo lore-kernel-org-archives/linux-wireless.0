@@ -1,66 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:45185
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966269AbXDGSr7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Apr 2007 14:47:59 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] bcm43xx-mac80211: Fix error in initiallizing max RSSI and max signal
-Date: Sat, 7 Apr 2007 20:47:23 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <4617dc25.vXqEEvwca/gaq2Cw%Larry.Finger@lwfinger.net>
-In-Reply-To: <4617dc25.vXqEEvwca/gaq2Cw%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200704072047.24192.mb@bu3sch.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4001 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946705AbXD3TWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Apr 2007 15:22:13 -0400
+Date: Mon, 30 Apr 2007 14:45:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: James Ketrenos <jketreno@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: "Stable" branch of mac80211
+Message-ID: <20070430184558.GD5994@tuxdriver.com>
+References: <20070429194855.451b9e7c@logostar.upir.cz> <46361EE3.6060107@linux.intel.com> <20070430192951.26bdf1df@griffin.suse.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070430192951.26bdf1df@griffin.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 07 April 2007 20:00, Larry Finger wrote:
-> In bcm43xx-mac80211, the max_rssi and max_signal values sent to mac80211 are reversed.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> John,
-> 
-> This is wireless-dev material.
+On Mon, Apr 30, 2007 at 07:29:51PM +0200, Jiri Benc wrote:
+> On Mon, 30 Apr 2007 09:52:51 -0700, James Ketrenos wrote:
 
-I applied it to my tree, thanks.
+> > I assume the entire new tree will be marked as 'experimental', so what
+> > is the advantage gained by pulling this code out now?
+> 
+> Once the code is in vanilla, user space interfaces are set in stone.
+> Regarding .11n, untested and unreviewed patches shouldn't go to vanilla.
 
-> Michael,
-> 
-> It can also be applied to the mb tree.
-> 
-> Larry
-> 
->  bcm43xx_main.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> Index: wireless-dev/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
-> ===================================================================
-> --- wireless-dev.orig/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
-> +++ wireless-dev/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
-> @@ -3760,8 +3760,8 @@ static int bcm43xx_wireless_init(struct 
->  		    IEEE80211_HW_MONITOR_DURING_OPER |
->  		    IEEE80211_HW_DEVICE_HIDES_WEP |
->  		    IEEE80211_HW_WEP_INCLUDE_IV;
-> -	hw->max_rssi = -110;
-> -	hw->max_signal = BCM43xx_RX_MAX_SSI;
-> +	hw->max_signal = -110;
-> +	hw->max_rssi = BCM43xx_RX_MAX_SSI;
->  	hw->max_noise = -110;
->  	hw->queues = 1;
->  	SET_IEEE80211_DEV(hw, dev->dev);
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-
+ACK
 -- 
-Greetings Michael.
+John W. Linville
+linville@tuxdriver.com
