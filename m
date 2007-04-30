@@ -1,72 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cvs.openbsd.org ([199.185.137.3]:15877 "EHLO cvs.openbsd.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767196AbXDESf6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2007 14:35:58 -0400
-Message-Id: <200704051832.l35IWcXk001005@cvs.openbsd.org>
-To: Michael Buesch <mb@bu3sch.de>
-cc: Joseph Jezak <josejx@gentoo.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Marcus Glocker <mglocker@openbsd.org>,
-	Jon Simola <jsimola@gmail.com>,
-	Theo de Raadt <deraadt@theos.com>,
-	Martin Langer <martin-langer@gmx.de>,
-	Danny van Dyk <kugelfang@gentoo.org>,
-	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
-	Larry Finger <larry.finger@lwfinger.net>, Quaker.Fang@sun.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	Greg kh <greg@kroah.com>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org,
-	license-violation@gpl-violations.org
-Subject: Re: OpenBSD bcw: Possible GPL license violation issues 
-In-reply-to: Your message of "Thu, 05 Apr 2007 20:30:03 +0200."
-             <200704052030.03939.mb@bu3sch.de>
-Date: Thu, 05 Apr 2007 12:32:38 -0600
-From: Theo de Raadt <deraadt@cvs.openbsd.org>
+Received: from styx.suse.cz ([82.119.242.94]:59875 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1031037AbXD3R3Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Apr 2007 13:29:16 -0400
+Date: Mon, 30 Apr 2007 19:29:51 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: James Ketrenos <jketreno@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: "Stable" branch of mac80211
+Message-ID: <20070430192951.26bdf1df@griffin.suse.cz>
+In-Reply-To: <46361EE3.6060107@linux.intel.com>
+References: <20070429194855.451b9e7c@logostar.upir.cz>
+	<46361EE3.6060107@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Thursday 05 April 2007 20:00, Theo de Raadt wrote:
-> > The most striking thing about this is that I am sure you guys are
-> > treating Marcus worse than you would treat a company using your code
-> > against license.  You would privately mail a company, I am sure of it.
+On Mon, 30 Apr 2007 09:52:51 -0700, James Ketrenos wrote:
+> I'm curious what the criteria was for removing code from 'stable'  
 > 
-> This is the proof that you read mails in the way you want
-> them to be. You should indead read my mail and _not_ interpret
-> your personal foobar into my words.
-
-On the contrary, I am reading the mails in the way that Marcus Glocker
-read it, before he deleted the driver, because I have at least some
-fucking empathy in my soul.
-
-> We do not treat Marcus bad in any way.
-
-That is a complete lie.  You called him a thief, and PRESUMED that he
-did it on purpose.  In later mails privately to me you said that you
-did not call him a thief of even imply it (I quote, "the word thief
-was not even in my mind when I wrote it"), but then in your next
-public mail you directly contradicted that again by saying you are
-completely convinced he did it on purpose.  You cannot have it both
-ways; there is only one interpretation, that being that you are
-accusing him of theft, just in other words.
-
-> The opposite is true. We offered the explicit opportunity to
-> get (some of the) code relicensed, if he starts to work together
-> with us.
-
-You have no understanding of how human beings work.  You maligned someone
-by saying he did it intentionally, therefore your explicit opportunities
-are bullshit.  Or are you now going to say that all the functions he
-is using are OK to use?
-
-No, you wanted him to come begging, after you called him a thief.  You
-obviously have no understanding of how human beings operate.
-
-> > Your postings have been simply inhuman.
-> > 
-> > And I will go out of my way to ensure that anyone in the future
-> > understands that is our viewpoint on this.
+> Are there known bugs/oops?  Is it known to be broken, or ?  
 > 
-> fine.
+> For code we know we ultimately want to be redone, removed, or whatever,
+> I can understand not wanting to merge the code.
 
+AP and user space MLME mode don't have clarified user space interface.
+We don't want to support the current mess (mgmt interface) forever. WDS
+is tightly linked with AP.
+
+802.11n code is not deeply reviewed by anyone and thus it's unclear
+whether it will need to be changed (I already heard some objections) or
+not.
+
+> However we ultimately want AP, WDS, and 802.11n.
+
+We ultimately want STA mode and - maybe - IBSS. Other things are just
+nice to have. They will still stay in wireless-dev, of course.
+
+> At least with 802.11n, I haven't seen anything indicating the code
+> needs to be done any differently than it is currently being done.  
+
+Nobody uses it. I don't see a reason why it needs to go in now. I
+really want those patches to be reviewed by someone before considering
+them "stable". It can be me, but I need some time to study .11n draft,
+or someone else experienced with different hw designs.
+
+> I assume the entire new tree will be marked as 'experimental', so what
+> is the advantage gained by pulling this code out now?
+
+Once the code is in vanilla, user space interfaces are set in stone.
+Regarding .11n, untested and unreviewed patches shouldn't go to vanilla.
+
+Thanks,
+
+ Jiri
+
+-- 
+Jiri Benc
+SUSE Labs
