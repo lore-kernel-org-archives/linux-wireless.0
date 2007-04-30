@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:23287 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161505AbXDWS6S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2007 14:58:18 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 05/13] mac80211: remove statistics callback for master device
-Date: Mon, 23 Apr 2007 14:48:13 -0400
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Message-Id: <20070423184813.7029.95204.stgit@magic.sourmilk.net>
-In-Reply-To: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+Received: from styx.suse.cz ([82.119.242.94]:58038 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1946167AbXD3QKe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Apr 2007 12:10:34 -0400
+Date: Mon, 30 Apr 2007 18:11:08 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH] mac80211: destroy workqueue in error path
+Message-ID: <20070430181108.3ce0edb1@griffin.suse.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+Created workqueue is not destroyed when ieee80211_register_hw fails.
 
-Statistics were never updated properly for the master device, so don't
-bother reporting them.
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
 ---
+ net/mac80211/ieee80211.c |    1 +
+ 1 files changed, 1 insertion(+)
 
- net/mac80211/ieee80211.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+--- mac80211.orig/net/mac80211/ieee80211.c
++++ mac80211/net/mac80211/ieee80211.c
+@@ -4902,6 +4902,7 @@ fail_dev:
+ 	sta_info_stop(local);
+ fail_sta_info:
+ 	debugfs_hw_del(local);
++	destroy_workqueue(local->hw.workqueue);
+ fail_workqueue:
+ 	wiphy_unregister(local->hw.wiphy);
+ 	return result;
 
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 7743ca0..8a3c749 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -4694,7 +4694,6 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 	sta_info_init(local);
- 
- 	mdev->hard_start_xmit = ieee80211_master_start_xmit;
--	mdev->get_stats = ieee80211_get_stats;
- 	mdev->open = ieee80211_master_open;
- 	mdev->stop = ieee80211_master_stop;
- 	mdev->type = ARPHRD_IEEE80211;
 
+-- 
+Jiri Benc
+SUSE Labs
