@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:41812 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965959AbXD1QmI (ORCPT
+Received: from fencepost.gnu.org ([199.232.76.164]:36560 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423726AbXD3Vsv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2007 12:42:08 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 1/7] mac80211: move radiotap removal code to right function
-Date: Sat, 28 Apr 2007 12:36:01 -0400
+	Mon, 30 Apr 2007 17:48:51 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1Hidh3-0001Kl-JO
+	for linux-wireless@vger.kernel.org; Mon, 30 Apr 2007 17:46:01 -0400
+Subject: Re: [PATCH] mac80211: mark as experimental
+From: Pavel Roskin <proski@gnu.org>
 To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Message-Id: <20070428163601.27203.32016.stgit@magic.sourmilk.net>
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20070430201742.1f53aa40@griffin.suse.cz>
+References: <20070430201742.1f53aa40@griffin.suse.cz>
+Content-Type: text/plain
+Date: Mon, 30 Apr 2007 17:48:43 -0400
+Message-Id: <1177969723.26986.30.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+On Mon, 2007-04-30 at 20:17 +0200, Jiri Benc wrote:
+> Make the stack depend on EXPERIMENTAL. Also, change the name from "dscape"
+> to "mac80211".
 
-A chunk from the radiotap patch landed in the wrong function when the patch
-was being updated. This moves it to the right function.
+Why is it needed to make mac80211 EXPERIMENTAL?  With mac80211 already
+in Ubuntu 7.04 and in the forthcoming Fedora 7, it must have received
+more testing than some drivers not marked as EXPERIMENTAL.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+I don't think enabling mac80211 per se would destabilize the kernel.
+Individual drivers could be marked experimental.  In particular,
+bcm43xx_mac80211 needs such designation, since the softmac version is
+much better currently.
 
- net/mac80211/ieee80211.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+If we encourage enabling mac80211, it would make it easier for the users
+to compile and test mac80211 based drivers, such as iwlwifi.  Even
+bcm43xx_mac80211 could be packaged separately to allow compilation
+against an existing kernel for the users who want to test it without
+upgrading the kernel.
 
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index e4aa4aa..851400a 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -3280,6 +3280,9 @@ ieee80211_rx_h_monitor(struct ieee80211_txrx_data *rx)
- 		return TXRX_QUEUED;
- 	}
- 
-+	if (rx->u.rx.status->flag & RX_FLAG_RADIOTAP)
-+		skb_pull(rx->skb, ieee80211_get_radiotap_len(rx->skb));
-+
- 	return TXRX_CONTINUE;
- }
- 
-@@ -3472,9 +3475,6 @@ ieee80211_rx_h_sta_process(struct ieee80211_txrx_data *rx)
- 		return TXRX_QUEUED;
- 	}
- 
--	if (rx->u.rx.status->flag & RX_FLAG_RADIOTAP)
--		skb_pull(rx->skb, ieee80211_get_radiotap_len(rx->skb));
--
- 	return TXRX_CONTINUE;
- }
- 
+In my opinion, marking mac80211 as EXPERIMENTAL would hinder testing of
+mac80211 drivers without having any positive effect on the users who
+want stability.
+
+-- 
+Regards,
+Pavel Roskin
 
