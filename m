@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:5580 "EHLO
+Received: from mga06.intel.com ([134.134.136.21]:39573 "EHLO
 	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756933AbXD0RWN (ORCPT
+	with ESMTP id S1946490AbXD3RMc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2007 13:22:13 -0400
-Message-ID: <46322CA9.7090606@linux.intel.com>
-Date: Fri, 27 Apr 2007 10:02:33 -0700
+	Mon, 30 Apr 2007 13:12:32 -0400
+Message-ID: <46361EE3.6060107@linux.intel.com>
+Date: Mon, 30 Apr 2007 09:52:51 -0700
 From: James Ketrenos <jketreno@linux.intel.com>
 MIME-Version: 1.0
 To: Jiri Benc <jbenc@suse.cz>
-CC: Dan Williams <dcbw@redhat.com>,
+CC: linux-wireless@vger.kernel.org,
 	Michael Wu <flamingice@sourmilk.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
-References: <20070423184811.7029.24949.stgit@magic.sourmilk.net>	<200704251634.16604.flamingice@sourmilk.net>	<46312067.9090005@linux.intel.com>	<200704262023.52833.flamingice@sourmilk.net>	<1177684132.21025.36.camel@localhost.localdomain>	<20070427164208.25434f11@griffin.suse.cz>	<1177685793.21025.52.camel@localhost.localdomain> <20070427172004.32b7bf4a@griffin.suse.cz>
-In-Reply-To: <20070427172004.32b7bf4a@griffin.suse.cz>
+	John Linville <linville@tuxdriver.com>
+Subject: Re: "Stable" branch of mac80211
+References: <20070429194855.451b9e7c@logostar.upir.cz>
+In-Reply-To: <20070429194855.451b9e7c@logostar.upir.cz>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Jiri Benc wrote:
-> The problem is that Michael during fixing of the stack for mainline
-> inclusion encountered a problem with the current implementation of the
-> hw scanning. We need to fix that problem.
+> Hi,
+> 
+> I've created a new 'stable' branch in my tree
+> (git://git.kernel.org/pub/scm/linux/kernel/git/jbenc/mac80211.git). It
+> contains patches that strip mac80211 down to a stable version. The purpose
+> of this branch is to prepare mac80211 for vanilla inclusion.
+...
+> Currently, it contains following patches:
+> 
+>       mac80211: remove 802.11n parts
+>       mac80211: remove WPA testing stuff
+>       mac80211: remove hostapd ioctls
+>       mac80211: remove nonstable iwpriv ioctls
+>       mac80211: remove iwpriv ioctls with wext equivalent
+>       mac80211: remove AP and WDS support
 
-All his patch does is delete the hw_scan callback.  It doesn't *fix* anything.
+I'm curious what the criteria was for removing code from 'stable'  
 
-> The proposed solution (removing of the hw_scan callback) obviously
-> fixes the problem. 
+Are there known bugs/oops?  Is it known to be broken, or ?  
 
-No, it doesn't fix the problem--it removes the functionality.  Deleting automatic AP selection "fixes the problem" too.
+For code we know we ultimately want to be redone, removed, or whatever, I can understand not wanting to merge the code.  However we ultimately want AP, WDS, and 802.11n.  At least with 802.11n, I haven't seen anything indicating the code needs to be done any differently than it is currently being done.  
 
-> Now, let's find something that fixes the problem as
-> well but doesn't remove the functionality. James already proposed a
-> solution that could work if a support for user space MLME is added. Do
-> you have an idea how to add it?
-
-userspace MLME needs to have a scan command if you really want to have efficient scanning controlled by userspace.  Tuning, waiting, tuning, waiting, tx, listening, tuning, ... introduces a *lot* of userspace/kernel/hardware bouncing.
-
-The userspace MLME can evolve over time.  
-
-User space can try and do sw scanning even if the hw_scan callback is setup.  Nothing about adding hw_scan prevents userspace from thrashing between the kernel, the drivers, and the host to chew up extra CPU cycles.
+I assume the entire new tree will be marked as 'experimental', so what is the advantage gained by pulling this code out now?
 
 James
