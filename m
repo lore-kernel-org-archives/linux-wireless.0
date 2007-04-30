@@ -1,89 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:55156 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1031219AbXDQRGp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2007 13:06:45 -0400
-Message-ID: <4624FF0C.5000105@lwfinger.net>
-Date: Tue, 17 Apr 2007 12:08:28 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+Received: from 84-16-245-18.internetserviceteam.com ([84.16.245.18]:58885 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1423196AbXD3MV7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Apr 2007 08:21:59 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by hauke-m.de (Postfix) with ESMTP id 67D37164F7
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2007 13:58:23 +0200 (CEST)
+Received: from hauke-m.de ([84.16.245.18])
+	by localhost (vs9007 [84.16.245.18]) (amavisd-new, port 10024)
+	with ESMTP id 03221-10 for <linux-wireless@vger.kernel.org>;
+	Mon, 30 Apr 2007 13:58:15 +0200 (CEST)
+Received: from [192.168.0.2] (p5480a40f.dip0.t-ipconnect.de [84.128.164.15])
+	by hauke-m.de (Postfix) with ESMTP id 503F3164F3
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2007 13:58:15 +0200 (CEST)
+Message-ID: <4635D9D9.1080005@hauke-m.de>
+Date: Mon, 30 Apr 2007 13:58:17 +0200
+From: Hauke Mehrtens <hauke_nospam@hauke-m.de>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] bcm43xx-mac80211: Fix machine checks on PPC with rev  1 PHYs
-References: <461d0815.ip3FDr8RDQXyCT4U%Larry.Finger@lwfinger.net>	<20070413000950.GC3470@tuxdriver.com> <461EDB39.6080806@lwfinger.net>
-In-Reply-To: <461EDB39.6080806@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: linux-wireless@vger.kernel.org
+Subject: rtl8187 loosing connection to AP
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-In case you cannot find it, here is a copy of David's patch.
+I have an other problem with the rtl8187 driver for mac80211.
+I am using wpa_supplicant with wext with a static IP address and ubuntu=
+ 7.04
 
-Larry
+Sometimes (round about every 3 hours) it loses the connection probably
+because of some person being between the AP and the card for a small
+period of time, but now I saw a second wireless card logging in the tim=
+e
+range when my card lost the connection, so I can't say exactly what
+causes the problem.
 
- From David Woodhouse.
+iwconfig says the connection is up and associated to the right AP but
+the Signal level is something about 12/65 and not 21/65 as normal and
+the Link Quality is always about 44/64.
+In dmesg no message appears
+When pinging the AP only TX bytes are send and the RX bytes don't move
+in ifconfig.
 
-It's very simple... if we use inw instead of readw for the faulting I/O
-access, then the machine check gets trapped. We can do this because on
-PPC, PCI I/O is actually memory-mapped. The CPU doesn't have a separate
-I/O space and instructions. So we just compensate for the address at
-which PCI I/O is mapped, and abuse inw().
+After stopping and restarting the connection manually with debian's
+ifdown and ifup it doesn't find any AP only "modprobe -r rtl8187" and
+"modprobe rtl8187" works for getting the connection up again.
 
-Then we make bcm43xx_phy_read() print the register it tried to access
-whenever it gets 0xFFFF, and stick a WARN_ON(1) in the machine check
-handler when it detects a machine check caused by an I/O access...
+Now I have tested to jam the signal after the connection was lost and I
+got these messages from dmesg:
 
---- ../linux-2.6.20.ppc64/./drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c	2007-04-14 
-21:51:02.000000000 +0100
-+++ ./drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c	2007-04-16 01:39:44.000000000 +0100
-@@ -269,10 +270,13 @@ static inline u16 adjust_phyreg_for_phyt
-  u16 bcm43xx_phy_read(struct bcm43xx_wldev *dev, u16 offset)
-  {
-  	struct bcm43xx_phy *phy = &dev->phy;
+The AP 00:40:05:cc:38:b4 was running all the time.
+
+[10155.912837] wlan0: No ProbeResp from current AP 00:40:05:cc:38:b4 -
+assume out of range
+[10156.016649] wlan0: starting scan
+[10157.289982] wlan0: scan completed
+[10157.349069] wlan0: No STA entry for own AP 00:40:05:cc:38:b4
+[10162.339520] wlan0: starting scan
+[10163.612845] wlan0: scan completed
+[10163.670995] wlan0: No STA entry for own AP 00:40:05:cc:38:b4
+[10168.662296] wlan0: starting scan
+[10169.935636] wlan0: scan completed
+[10169.993801] wlan0: No STA entry for own AP 00:40:05:cc:38:b4
+[10174.985171] wlan0: starting scan
+[10176.258543] wlan0: scan completed
+[10176.316600] wlan0: No STA entry for own AP 00:40:05:cc:38:b4
+[10181.324027] wlan0: starting scan
+[10182.597374] wlan0: scan completed
+[10182.655369] wlan0: No STA entry for own AP 00:40:05:cc:38:b4
+[10187.646843] wlan0: starting scan
+[10188.920201] wlan0: scan completed
+[10188.978221] wlan0: No STA entry for own AP 00:40:05:cc:38:b4
+[10193.969671] wlan0: starting scan
+[10195.243014] wlan0: scan completed
+[10195.300967] wlan0: No STA entry for own AP 00:40:05:cc:38:b4
+[10200.292497] wlan0: starting scan
+[10201.565811] wlan0: scan completed
+[10201.623766] wlan0: No STA entry for own AP 00:40:05:cc:38:b4
+[10206.615296] wlan0: starting scan
+[10207.888627] wlan0: scan completed
+[10207.947189] wlan0: No STA entry for own AP 00:40:05:cc:38:b4
+[10212.938207] wlan0: starting scan
+[10214.211526] wlan0: scan completed
+[10214.269498] wlan0: No STA entry for own AP 00:40:05:cc:38:b4
+[10219.261170] wlan0: starting scan
+[10220.519913] wlan0: scan completed
+[10220.578938] wlan0: No STA entry for own AP 00:40:05:cc:38:b4
+[10225.570102] wlan0: starting scan
+[10235.056946] wmaster0: Does not support passive scan, disabled
+[10235.406471] wlan0: starting scan
+[10236.681814] wlan0: scan completed
+[10236.739947] wlan0: starting scan
+[10238.019091] wlan0: scan completed
+[10243.069709] wlan0: starting scan
+[10244.315804] wlan0: scan completed
+[10245.653922] wlan0: no IPv6 routers present
+[10249.366207] wlan0: starting scan
+[10250.639630] wlan0: scan completed
+=2E........
+[10331.349275] wlan0: starting scan
+[10332.578674] wlan0: scan completed
+- --
+Hauke Mehrtens
+
+
+Hauke Mehrtens
+Westpreu=C3=9Fenweg 10
+27442 Gnarrenburg
+Tel.  : 04763/1745
+Mobil : 0151/10778862
+ICQ   : 160871207
+Web   : www.hauke-m.de
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFGNdnZrcX0gpXFjnsRAt4BAJ4yQ9irW2Nz+FKLG0JrAHJYgexxPQCeNXzg
+CByR8ApiKJBNHP2iaj5ndHY=3D
+=3DA57G
+-----END PGP SIGNATURE-----
 -
-+	uint16_t foo;
-  	offset = adjust_phyreg_for_phytype(phy, offset);
-  	bcm43xx_write16(dev, BCM43xx_MMIO_PHY_CONTROL, offset);
--	return bcm43xx_read16(dev, BCM43xx_MMIO_PHY_DATA);
-+	foo = bcm43xx_read16(dev, BCM43xx_MMIO_PHY_DATA);
-+	if (foo == 0xffff)
-+		printk(KERN_DEBUG "Read phy reg %x; got 0xFFFF.\n", offset);
-+	return foo;
-  }
-
-  void bcm43xx_phy_write(struct bcm43xx_wldev *dev, u16 offset, u16 val)
---- ../linux-2.6.20.ppc64/./drivers/ssb/pci.c	2007-04-14 21:51:02.000000000 +0100
-+++ ./drivers/ssb/pci.c	2007-04-15 23:44:27.000000000 +0100
-@@ -475,6 +475,7 @@ static u16 ssb_pci_read16(struct ssb_dev
-  		if (unlikely(ssb_pci_switch_core(bus, dev)))
-  			return 0xFFFF;
-  	}
-+	return inw(bus->mmio + offset - isa_io_base);
-  	return readw(bus->mmio + offset);
-  }
-
---- ../linux-2.6.20.ppc64/./arch/powerpc/kernel/traps.c	2007-04-14 21:50:40.000000000 +0100
-+++ ./arch/powerpc/kernel/traps.c	2007-04-15 23:45:48.000000000 +0100
-@@ -343,8 +343,10 @@ void machine_check_exception(struct pt_r
-  		return;
-  	}
-
--	if (check_io_access(regs))
-+	if (check_io_access(regs)) {
-+		WARN_ON(1);
-  		return;
-+	}
-
-  #if defined(CONFIG_4xx) && !defined(CONFIG_440A)
-  	if (reason & ESR_IMCP) {
-
--- 
-dwmw2
-
-_______________________________________________
-Bcm43xx-dev mailing list
-Bcm43xx-dev@lists.berlios.de
-https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
