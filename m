@@ -1,76 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:36097 "EHLO mail.dvmed.net"
+Received: from mx1.redhat.com ([66.187.233.31]:42929 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757382AbXEQF5M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 May 2007 01:57:12 -0400
-Message-ID: <464BEEB0.8030402@garzik.org>
-Date: Thu, 17 May 2007 01:57:04 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: James Ketrenos <jketreno@linux.intel.com>
-CC: Randy Dunlap <randy.dunlap@oracle.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers
-References: <464B7B7C.5080800@linux.intel.com> <20070516182700.912a21ed.randy.dunlap@oracle.com> <464BD9D4.4020909@linux.intel.com>
-In-Reply-To: <464BD9D4.4020909@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1030621AbXEALuO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 May 2007 07:50:14 -0400
+Subject: Re: [PATCH] libertas: fix for wireless Kconfig changes
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: jeff@garzik.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <20070429002844.GA11225@tuxdriver.com>
+References: <20070429002844.GA11225@tuxdriver.com>
+Content-Type: text/plain
+Date: Tue, 01 May 2007 07:53:38 -0400
+Message-Id: <1178020418.21671.3.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lindent is only the first step.
+On Sat, 2007-04-28 at 20:28 -0400, John W. Linville wrote:
+> Need to change the libertas Kconfig entry to match changes made for
+> other wireless drivers.
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+> index c4b3dc2..cb09e6b 100644
+> --- a/drivers/net/wireless/Kconfig
+> +++ b/drivers/net/wireless/Kconfig
+> @@ -267,7 +267,7 @@ config IPW2200_DEBUG
+>  
+>  config LIBERTAS_USB
+>  	tristate "Marvell Libertas 8388 802.11a/b/g cards"
+> -	depends on NET_RADIO && USB
+> +	depends on USB && WLAN_80211
+>  	select FW_LOADER
+>  	---help---
+>  	  A driver for Marvell Libertas 8388 USB devices.
 
-You then have to go through the code and undo the damage it does.
+Will apply, we need to pull in wireless-dev first to get the NET_RADIO
+name change.
 
-For instance,
-
-> +               rc = wait_event_interruptible_timeout(priv->
-> +                                                     wait_command_queue,
-> +                                                     !(priv->
-> +                                                       status &
-> +                                                       STATUS_HCMD_ACTIVE),
-> +                                                     HOST_COMPLETE_TIMEOUT);
-
-you SHOULD (using IETF RFC language) violate the 80-column limit, when 
-the alternative is word-wrapping at silly boundaries like the middle of 
-a de-ref.
-
-Or,
-
-> +       iwl_write_restricted(priv, FH_RCSR_CONFIG(0),
-> +                            ALM_FH_RCSR_RX_CONFIG_REG_VAL_DMA_CHNL_EN_ENABLE
-> +                            |
-> +                            ALM_FH_RCSR_RX_CONFIG_REG_VAL_RDRBD_EN_ENABLE
-> +                            |
-> +                            ALM_FH_RCSR_RX_CONFIG_REG_BIT_WR_STTS_EN
-> +                            |
-> +                            ALM_FH_RCSR_RX_CONFIG_REG_VAL_MAX_FRAG_SIZE_128
-> +                            | (RX_QUEUE_SIZE_LOG <<
-> +                               ALM_FH_RCSR_RX_CONFIG_REG_POS_RBDC_SIZE)
-> +                            |
-> +                            ALM_FH_RCSR_RX_CONFIG_REG_VAL_IRQ_DEST_INT_HOST
-> +                            | (1 << ALM_FH_RCSR_RX_CONFIG_REG_POS_IRQ_RBTH)
-> +                            | ALM_FH_RCSR_RX_CONFIG_REG_VAL_MSG_MODE_FH);
-> +
-
-you SHOULD NOT waste an entire line on a single '|'.
-
-As an aside, remove the redundant "_REG_BIT_" and "_REG_VAL_" stuff.  It 
-makes too-long symbols even longer.
-
-As an aside #2,
-
-> +#if IWL == 4965
-> +           (rxon1->ofdm_ht_single_stream_basic_rates ==
-> +            rxon2->ofdm_ht_single_stream_basic_rates) &&
-> +           (rxon1->ofdm_ht_dual_stream_basic_rates ==
-> +            rxon2->ofdm_ht_dual_stream_basic_rates) &&
-> +           (rxon1->rx_chain == rxon2->rx_chain) &&
-> +#endif
-
-
-those #if's should go away.
-
-	Jeff
-
+Dan
 
