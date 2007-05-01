@@ -1,61 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:49522 "EHLO
-	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2993232AbXEBO2Y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 May 2007 10:28:24 -0400
-Date: Wed, 02 May 2007 09:28:05 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Add support for SIOCGIWRATE ioctl to provide  rate information
-Message-ID: <46389ff5.oRExYGz42A2aZRmj%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([66.187.233.31]:42553 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754389AbXEALr5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 May 2007 07:47:57 -0400
+Subject: Re: [PATCH] mac80211: mark as experimental
+From: Dan Williams <dcbw@redhat.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1177969723.26986.30.camel@dv>
+References: <20070430201742.1f53aa40@griffin.suse.cz>
+	 <1177969723.26986.30.camel@dv>
+Content-Type: text/plain
+Date: Tue, 01 May 2007 07:51:11 -0400
+Message-Id: <1178020272.21671.1.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At present, transmission rate information for mac80211 is available only
-if verbose debugging is turned on, and then only in the logs. This patch
-implements the SIOCGIWRATE ioctl, which adds the current transmission rate to
-the output of iwconfig.
+On Mon, 2007-04-30 at 17:48 -0400, Pavel Roskin wrote:
+> On Mon, 2007-04-30 at 20:17 +0200, Jiri Benc wrote:
+> > Make the stack depend on EXPERIMENTAL. Also, change the name from "dscape"
+> > to "mac80211".
+> 
+> Why is it needed to make mac80211 EXPERIMENTAL?  With mac80211 already
+> in Ubuntu 7.04 and in the forthcoming Fedora 7, it must have received
+> more testing than some drivers not marked as EXPERIMENTAL.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+It's still just not there yet, especially WRT compatibility behavior for
+WEXT.  I don't know if that justifies EXPERIMENTAL status, but most
+drivers don't appear to be production ready, from user reports.
 
-Index: wireless-dev/net/mac80211/ieee80211_ioctl.c
-===================================================================
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c
-@@ -2064,6 +2064,22 @@ static int ieee80211_ioctl_giwscan(struc
- }
- 
- 
-+static int ieee80211_ioctl_giwrate(struct net_device *dev,
-+				  struct iw_request_info *info,
-+				  struct iw_param *rate, char *extra)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct sta_info * sta;
-+	struct ieee80211_sub_if_data * sdata;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	sta = sta_info_get(local, sdata->u.sta.bssid);
-+	if (!sta)
-+		return -ENODEV;
-+	rate->value = local->oper_hw_mode->rates[sta->txrate].rate * 100000;
-+	return 0;
-+}
-+
- static int ieee80211_ioctl_siwrts(struct net_device *dev,
- 				  struct iw_request_info *info,
- 				  struct iw_param *rts, char *extra)
-@@ -3247,7 +3263,7 @@ static const iw_handler ieee80211_handle
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) NULL,				/* SIOCSIWRATE */
--	(iw_handler) NULL,				/* SIOCGIWRATE */
-+	(iw_handler) ieee80211_ioctl_giwrate,		/* SIOCGIWRATE */
- 	(iw_handler) ieee80211_ioctl_siwrts,		/* SIOCSIWRTS */
- 	(iw_handler) ieee80211_ioctl_giwrts,		/* SIOCGIWRTS */
- 	(iw_handler) ieee80211_ioctl_siwfrag,		/* SIOCSIWFRAG */
+Dan
+
+> I don't think enabling mac80211 per se would destabilize the kernel.
+> Individual drivers could be marked experimental.  In particular,
+> bcm43xx_mac80211 needs such designation, since the softmac version is
+> much better currently.
+> 
+> If we encourage enabling mac80211, it would make it easier for the users
+> to compile and test mac80211 based drivers, such as iwlwifi.  Even
+> bcm43xx_mac80211 could be packaged separately to allow compilation
+> against an existing kernel for the users who want to test it without
+> upgrading the kernel.
+> 
+> In my opinion, marking mac80211 as EXPERIMENTAL would hinder testing of
+> mac80211 drivers without having any positive effect on the users who
+> want stability.
+> 
+
