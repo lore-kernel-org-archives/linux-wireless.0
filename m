@@ -1,34 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:48832 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754804AbXEKCpH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 22:45:07 -0400
-Subject: Re: [PATCH 00/19] libertas cleanups (for 2.6.22)
-From: Dan Williams <dcbw@redhat.com>
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <464392FB.1000203@garzik.org>
-References: <1178829040.6356.1.camel@localhost.localdomain>
-	 <464392FB.1000203@garzik.org>
-Content-Type: text/plain
-Date: Thu, 10 May 2007 22:48:35 -0400
-Message-Id: <1178851715.8607.6.camel@localhost.localdomain>
+Received: from styx.suse.cz ([82.119.242.94]:58807 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1423655AbXEAVKe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 May 2007 17:10:34 -0400
+Date: Tue, 1 May 2007 23:10:28 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Ulrich Kunitz <kune@deine-taler.de>
+Cc: Daniel Drake <dsd@gentoo.org>, linville@tuxdriver.com,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] zd1211rw-mac80211: limit URB buffering in tx path
+Message-ID: <20070501231028.4cfa4053@logostar.upir.cz>
+In-Reply-To: <20070501195008.GA14294@p15091797.pureserver.info>
+References: <20070501030100.BDE3D7B409F@zog.reactivated.net>
+	<20070501123411.081c43c6@logostar.upir.cz>
+	<20070501195008.GA14294@p15091797.pureserver.info>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-05-10 at 17:47 -0400, Jeff Garzik wrote:
-> Dan Williams wrote:
-> > This set contains libertas cleanups for 2.6.22.
+On Tue, 1 May 2007 21:50:08 +0200, Ulrich Kunitz wrote:
+> On 07-05-01 12:34 Jiri Benc wrote:
+> > On Tue,  1 May 2007 04:01:00 +0100 (BST), Daniel Drake wrote:
+> > > The old code allowed unlimited buffing of tx frames in URBs
+> > > submitted for transfer to the device. This patch stops the
+> > > ieee80211_hw queue(s) if to many URBs are ready for submit to the
+> > > device. Actually the ZD1211 device supports currently only one
+> > > queue.
+> > 
+> > This doesn't look correct to me. The limits should be per queue and you
+> > should always stop queues selectively.
 > 
-> Patches 1 - 19 did not appear?
-> 
-> Only patch #0 (to which I'm replying) appeared.
+> The old ZD1211 chip doesn't support queuing and the new ZD1211B
+> chip has support, but it is unclear how to put packets in the
+> different queues. However the error condition here is, that
+> packets can't be transmitted over the USB, which will affect all
+> queues.
 
-Was waiting until it showed up, and had to catch a bus home.  Posting
-them now.
+Really? From what you wrote ("if too many URBs are ready for submit") it
+seems that the code is triggered when the queue is just full. That's not
+necessarily an error condition and the only thing needed to do is to stop
+the queue. Unless zd1211 is really special here (and then I'd like to know
+how is it special).
 
-Dan
+> Sure one could manage different high level marks for the
+> different queues, but this is all theoretical currently. I could
+> have coded with the explicit knowledge that we support only one
+> queue, but it is really work the hassle.
 
+If you support one queue only, call ieee80211_stop_queue(hw, 0). Calling
+ieee80211_stop_queues if you have just a full queue is wrong.
 
+Thanks,
+
+ Jiri
+
+-- 
+Jiri Benc
+SUSE Labs
