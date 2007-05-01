@@ -1,87 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from daemonizer.de ([87.230.16.230]:33695 "EHLO daemonizer.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753071AbXE1OMU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2007 10:12:20 -0400
-From: Maximilian Engelhardt <maxi@daemonizer.de>
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: b44: regression in 2.6.22 (resend)
-Date: Mon, 28 May 2007 16:12:12 +0200
-Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Stephen Hemminger <shemminger@linux-foundation.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-References: <20070525172431.60affaca@freepuppy> <200705280240.17910.maxi@daemonizer.de> <200705281249.56106.mb@bu3sch.de>
-In-Reply-To: <200705281249.56106.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart131155292.T37GDDYD6P";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705281612.15649.maxi@daemonizer.de>
+Received: from styx.suse.cz ([82.119.242.94]:39388 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753089AbXEABAU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Apr 2007 21:00:20 -0400
+Date: Tue, 1 May 2007 03:00:14 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: linux-wireless@vger.kernel.org
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: "Stable" branch of mac80211
+Message-ID: <20070501030014.6523f08a@logostar.upir.cz>
+In-Reply-To: <20070429194855.451b9e7c@logostar.upir.cz>
+References: <20070429194855.451b9e7c@logostar.upir.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart131155292.T37GDDYD6P
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Sun, 29 Apr 2007 19:48:55 +0200, Jiri Benc wrote:
+> I've created a new 'stable' branch in my tree
+> (git://git.kernel.org/pub/scm/linux/kernel/git/jbenc/mac80211.git). It
+> contains patches that strip mac80211 down to a stable version. The purpose
+> of this branch is to prepare mac80211 for vanilla inclusion.
 
-On Monday 28 May 2007, Michael Buesch wrote:
-> Can you also test the following patch?
-> I think there's a bug in b44 that is doesn't properly discard
-> shared IRQs, so it might possibly generate a NAPI storm, dunno.
-> Worth a try.
->
-> Index: linux-2.6.22-rc3/drivers/net/b44.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-2.6.22-rc3.orig/drivers/net/b44.c	2007-05-27 23:01:44.000000000
-> +0200 +++ linux-2.6.22-rc3/drivers/net/b44.c	2007-05-28 12:48:27.000000000
-> +0200 @@ -911,6 +911,8 @@ static irqreturn_t b44_interrupt(int irq
->  	spin_lock(&bp->lock);
->
->  	istat =3D br32(bp, B44_ISTAT);
-> +	if (istat =3D=3D 0xFFFFFFFF)
-> +		goto out; /* Shared IRQ not for us */
->  	imask =3D br32(bp, B44_IMASK);
->
->  	/* The interrupt mask register controls which interrupt bits
-> @@ -942,6 +944,7 @@ irq_ack:
->  		bw32(bp, B44_ISTAT, istat);
->  		br32(bp, B44_ISTAT);
->  	}
-> +out:
->  	spin_unlock(&bp->lock);
->  	return IRQ_RETVAL(handled);
->  }
+And preliminary patches targeted for net-2.6 are in
+http://kernel.org/pub/linux/kernel/people/jbenc/mac80211/
 
-I did try this patch on a affected kernel, but I didn't notice any big=20
-difference. Perhaps the kernel is a bit less slow during the test, but It's=
-=20
-hard to tell.
+Please review and test (for testing purposes, a huge patch with all
+mac80211 drivers currently in wireless-dev can be found at
+http://kernel.org/pub/linux/kernel/people/jbenc/mac80211-test/drivers.patch).
 
-Maxi
+Thanks,
 
---nextPart131155292.T37GDDYD6P
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+ Jiri
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQBGWuM/Oimwv528XGERAoUpAJ9FKsdLlvEpiWlkV2IhB/Xz3G+nWwCfUKiZ
-GmNPAZpmjrs+C8scjd2yxM8=
-=Pqqs
------END PGP SIGNATURE-----
-
---nextPart131155292.T37GDDYD6P--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Jiri Benc
+SUSE Labs
