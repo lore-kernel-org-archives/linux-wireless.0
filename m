@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4920 "EHLO ra.tuxdriver.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2534 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934428AbXEGRCg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2007 13:02:36 -0400
-Date: Mon, 7 May 2007 12:44:39 -0400
+	id S1423574AbXEAOWS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 May 2007 10:22:18 -0400
+Date: Tue, 1 May 2007 09:54:54 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	linux-wireless@vger.kernel.org, marcelo@kvack.org,
-	linux-kernel@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6 (was Re: Please pull 'libertas' branch of wireless-2.6)
-Message-ID: <20070507164439.GE5125@tuxdriver.com>
-References: <20070227205649.GH5826@tuxdriver.com> <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org> <20070507104117.GA31601@infradead.org> <1178539423.3032.24.camel@localhost.localdomain> <20070507141143.GB5125@tuxdriver.com> <463F443A.5000306@garzik.org> <1178552878.5760.4.camel@localhost.localdomain> <463F4A5E.6000501@garzik.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: jeff@garzik.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] libertas: fix for wireless Kconfig changes
+Message-ID: <20070501135454.GD8604@tuxdriver.com>
+References: <20070429002844.GA11225@tuxdriver.com> <1178020418.21671.3.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <463F4A5E.6000501@garzik.org>
+In-Reply-To: <1178020418.21671.3.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 07, 2007 at 11:48:46AM -0400, Jeff Garzik wrote:
-> Dan Williams wrote:
-> >So, either we push it off until 2.6.23, or it gets merged as-is and we
-> >clean it up as we go along, which we'll certainly do.
+On Tue, May 01, 2007 at 07:53:38AM -0400, Dan Williams wrote:
+> On Sat, 2007-04-28 at 20:28 -0400, John W. Linville wrote:
+> > Need to change the libertas Kconfig entry to match changes made for
+> > other wireless drivers.
+> > 
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > ---
+> > diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+> > index c4b3dc2..cb09e6b 100644
+> > --- a/drivers/net/wireless/Kconfig
+> > +++ b/drivers/net/wireless/Kconfig
+> > @@ -267,7 +267,7 @@ config IPW2200_DEBUG
+> >  
+> >  config LIBERTAS_USB
+> >  	tristate "Marvell Libertas 8388 802.11a/b/g cards"
+> > -	depends on NET_RADIO && USB
+> > +	depends on USB && WLAN_80211
+> >  	select FW_LOADER
+> >  	---help---
+> >  	  A driver for Marvell Libertas 8388 USB devices.
 > 
-> Um, it was merged a while ago.
-> 
-> That's why John's email, and my own, are discussing the revert of the 
-> driver, not the merge of the driver.
-> 
-> The executive decision has been made.
+> Will apply, we need to pull in wireless-dev first to get the NET_RADIO
+> name change.
 
-Yep, let's keep it -- and keep Dan and Marcelo on the hook... :-)
+No, that is already in Linus' tree via Jeff's tree.
+
+Jeff, I figured you would just apply the patch.  If you'd prefer I
+can send a pull request, but I don't have anything else pending ATM.
 
 John
 -- 
