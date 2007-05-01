@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57361 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751234AbXE2Wjj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2007 18:39:39 -0400
-Message-ID: <465CABA3.10003@pobox.com>
-Date: Tue, 29 May 2007 18:39:31 -0400
-From: Jeff Garzik <jgarzik@pobox.com>
-MIME-Version: 1.0
-To: Gary Zambrano <zambrano@broadcom.com>
-CC: Michael Buesch <mb@bu3sch.de>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Hemminger <shemminger@linux-foundation.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	netdev@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: b44: regression in 2.6.22 (resend)
-References: <20070525172431.60affaca@freepuppy> <200705281655.15105.mb@bu3sch.de> <1180448075.17146.12.camel@dhcp-10-12-136-115.broadcom.com> <200705292245.22940.mb@bu3sch.de> <1180472741.17711.19.camel@dhcp-10-12-136-115.broadcom.com>
-In-Reply-To: <1180472741.17711.19.camel@dhcp-10-12-136-115.broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from styx.suse.cz ([82.119.242.94]:47287 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1031153AbXEAKeR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 May 2007 06:34:17 -0400
+Date: Tue, 1 May 2007 12:34:11 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Daniel Drake <dsd@gentoo.org>
+Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, kune@deine-taler.de
+Subject: Re: [PATCH] zd1211rw-mac80211: limit URB buffering in tx path
+Message-ID: <20070501123411.081c43c6@logostar.upir.cz>
+In-Reply-To: <20070501030100.BDE3D7B409F@zog.reactivated.net>
+References: <20070501030100.BDE3D7B409F@zog.reactivated.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gary Zambrano wrote:
-> The b44 interrupt status reg returns a value of 0 if no interrupts are
-> pending. The b44 uses a mask to determine which bits (events) can
-> generate device interrupts on the system. If the masked interrupt status
-> register bits are not asserted, then the b44 will return to the system
-> with handled = 0. 
-> So, I think the way the b44 interrupt code is written should be ok and
-> not a bug. 
+On Tue,  1 May 2007 04:01:00 +0100 (BST), Daniel Drake wrote:
+> The old code allowed unlimited buffing of tx frames in URBs
+> submitted for transfer to the device. This patch stops the
+> ieee80211_hw queue(s) if to many URBs are ready for submit to the
+> device. Actually the ZD1211 device supports currently only one
+> queue.
 
+This doesn't look correct to me. The limits should be per queue and you
+should always stop queues selectively.
 
-This is normal.
+The ieee80211_stop_queues/ieee80211_wake_queues are for another purposes
+and should be used only rarely - one example is Michael Buesch's comment
+about a need to stop sending frames while tuning to a new channel in a
+workqueue.
 
-We check for 0xffffffff because that is often how a fault is indicated, 
-when the memory location is read during or immediately after hotplug (or 
-if the PCI bus is truly faulty).  So for most hardware, you see
+> +/**
+> + * wake_queues - wakes all queues
+> + * @hw: a &struct ieee80211_hw pointer
+> + *
+> + * Such a function is not provided by mac80211, so we have to provide them on
+> + * our own.
+> + */
+> +static void wake_queues(struct ieee80211_hw *hw)
 
-tmp = read(irq status)
-if (!tmp)
-	return irq-none		/* no irq events raised */
-if (tmp == 0xffffffff)
-	return irq-none		/* hot unplug or h/w fault */
+It is :-) Look for ieee80211_wake_queues. But as I said, you shouldn't need
+that.
 
-and the method that determines no interrupt handling is needed.
+Thanks,
 
-Regards,
+ Jiri
 
-	Jeff
-
-
+-- 
+Jiri Benc
+SUSE Labs
