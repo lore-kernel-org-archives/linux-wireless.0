@@ -1,59 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:16025 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750789AbXEYQPV (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:47062 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031219AbXEAN0P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2007 12:15:21 -0400
-Date: Fri, 25 May 2007 09:20:08 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
+	Tue, 1 May 2007 09:26:15 -0400
+Subject: Re: d80211: How does TX flow control work?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jan Kiszka <jan.kiszka@web.de>
+Cc: Jiri Benc <jbenc@suse.cz>, Ivo Van Doorn <ivdoorn@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
 	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [PATCH 3/3] mac80211: debugfs support for TSM and DLS
-Message-Id: <20070525092008.287b5ecd.randy.dunlap@oracle.com>
-In-Reply-To: <20070525115244.GA23364@mail.intel.com>
-References: <20070525115244.GA23364@mail.intel.com>
+In-Reply-To: <46373B94.4080307@web.de>
+References: <459A5945.80909@web.de>
+	 <20070103185203.2754e059@griffin.suse.cz>	<459BF179.6000906@web.de>
+	 <20070103191853.4f440b8b@griffin.suse.cz>	<459BFB05.9040608@web.de>
+	 <45A03825.9080807@web.de>	<45A2A728.1070404@web.de>
+	 <1175029130.5151.6.camel@johannes.berg>	<460B7CAA.4020604@web.de>
+	 <4637195E.5050907@web.de> <20070501124733.47c45dd0@logostar.upir.cz>
+	 <46371B71.2090508@web.de> <1178017466.3483.20.camel@johannes.berg>
+	 <46373B94.4080307@web.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-AoiBU+l+tVIcs8ERd75d"
+Date: Tue, 01 May 2007 15:26:48 +0200
+Message-Id: <1178026008.4157.0.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 25 May 2007 19:52:44 +0800 Zhu Yi wrote:
 
->  net/mac80211/debugfs_netdev.c |  332 +++++++++++++++++++++++++++++++++++++++++
->  net/mac80211/ieee80211_i.h    |   33 ++++
->  2 files changed, 365 insertions(+), 0 deletions(-)
-> 
-> diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-> index 9e39646..e0f77f9 100644
-> --- a/net/mac80211/debugfs_netdev.c
-> +++ b/net/mac80211/debugfs_netdev.c
+--=-AoiBU+l+tVIcs8ERd75d
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> +#define DEBUGFS_QOS_DEL(name)						\
-> +	debugfs_remove(sdata->debugfs.sta.qos.name);			\
-> +	sdata->debugfs.sta.qos.name = NULL;
+On Tue, 2007-05-01 at 15:07 +0200, Jan Kiszka wrote:
+> Johannes Berg wrote:
+> > On Tue, 2007-05-01 at 12:50 +0200, Jan Kiszka wrote:
+> >=20
+> >> Could you point me to the patch(es) in question? I only have 2MBit/s
+> >> downlink, so that downloading only the patch would speed things up her=
+e.
+> >=20
+> > http://git.kernel.org/?p=3Dlinux/kernel/git/linville/wireless-dev.git;a=
+=3Dcommit;h=3D00a908826e778b39a802013729f7826c2d575360
+> >=20
+>=20
+> Nope, doesn't help. And I wonder how this piece should do so: It just
+> performs a sanity check on ifconfig up, right? But the "tc qdisc del"
+> runs here _after_ wlan0 got configured.
 
-Enclose multi-line macros inside braces, or even better, inside
+I never managed to reproduce that part anyway. I hadn't tried removing
+the qdisc when the device is down, but when it's up I never managed
+to... odd
 
-	do {
-		/* multi-lines */
-	} while (0);
+johannes
 
+--=-AoiBU+l+tVIcs8ERd75d
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> +#define DEBUGFS_TSINFO_DEL(name)					\
-> +	debugfs_remove(sdata->debugfs.sta.tsinfo.name);			\
-> +	sdata->debugfs.sta.tsinfo.name = NULL;
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-ditto.
+iD8DBQBGN0AW/ETPhpq3jKURAlqiAKC14GgAAi/rCq9H74CGPXJFSSddDwCdGvUR
+t9mVK1djxrqQSX2aaoi4KE0=
+=RuUi
+-----END PGP SIGNATURE-----
 
-> +#define DEBUGFS_TSPEC_DEL(name)						\
-> +	debugfs_remove(sdata->debugfs.sta.tspec.name);			\
-> +	sdata->debugfs.sta.tspec.name = NULL;
+--=-AoiBU+l+tVIcs8ERd75d--
 
-ditto.
-
-
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
