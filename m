@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35259 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756335AbXEVHGQ (ORCPT
+Received: from deine-taler.de ([217.160.107.63]:58096 "EHLO
+	p15091797.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754662AbXEAWkq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2007 03:06:16 -0400
-Subject: [PATCH] mac80211: use debugfs_rename
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: John Linville <linville@tuxdriver.com>
-Content-Type: text/plain
-Date: Mon, 21 May 2007 21:04:53 +0200
-Message-Id: <1179774293.6070.3.camel@johannes.berg>
+	Tue, 1 May 2007 18:40:46 -0400
+Date: Wed, 2 May 2007 00:40:45 +0200
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: Daniel Drake <dsd@gentoo.org>, linville@tuxdriver.com,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] zd1211rw-mac80211: limit URB buffering in tx path
+Message-ID: <20070501224045.GA26845@p15091797.pureserver.info>
+References: <20070501030100.BDE3D7B409F@zog.reactivated.net> <20070501123411.081c43c6@logostar.upir.cz> <20070501195008.GA14294@p15091797.pureserver.info> <20070501231028.4cfa4053@logostar.upir.cz>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070501231028.4cfa4053@logostar.upir.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the new debugfs_rename function in mac80211's debugfs where
-necessary.
+On 07-05-01 23:10 Jiri Benc wrote:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Really? From what you wrote ("if too many URBs are ready for submit") it
+> seems that the code is triggered when the queue is just full. That's not
+> necessarily an error condition and the only thing needed to do is to stop
+> the queue. Unless zd1211 is really special here (and then I'd like to know
+> how is it special).
 
----
-debugfs_rename hasn't actually been merged yet, but I hope it will be
-merged soon. URL is
-http://article.gmane.org/gmane.linux.file-systems/14819
+Jiri, even if ZD1211B supports multiple queues, there is only one
+USB endpoint receiving packets for transmission. I suppose that
+the queue for the packet can be set in the control data for the
+packet. However if the device doesn't read USB blocks anymore, all
+queues will be affected. At this point in time I have to stop all
+queues. Sure I could care for the different priorities of the
+queues by stopping low-priority queues earlier, but if the user is
+overloading the device, I have to stop all queues.
 
-This patch should also apply against net-2.6
+> If you support one queue only, call ieee80211_stop_queue(hw, 0). Calling
+> ieee80211_stop_queues if you have just a full queue is wrong.
 
- net/mac80211/debugfs_netdev.c |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+Again I don't just have a full queue, I cannot send any packets to
+the device anymore. Under this condition I simply stop all queues,
+not caring whether there are 1 or 1024. Sure with the explicit
+knowledge that I have only one queue, I could stop it explicitly,
+but this would require a change of the code as soon as a second
+queue comes into play.
 
---- wireless-dev.orig/net/mac80211/debugfs_netdev.c	2007-05-21 17:59:03.538418048 +0200
-+++ wireless-dev/net/mac80211/debugfs_netdev.c	2007-05-21 18:03:31.768418048 +0200
-@@ -398,6 +398,8 @@ static int netdev_notify(struct notifier
- {
- 	struct net_device *dev = ndev;
- 	char buf[10+IFNAMSIZ];
-+	struct dentry *dir;
-+	struct ieee80211_sub_if_data *sdata;
- 
- 	if (state != NETDEV_CHANGENAME)
- 		return 0;
-@@ -408,10 +410,12 @@ static int netdev_notify(struct notifier
- 	if (dev->ieee80211_ptr->wiphy->privid != mac80211_wiphy_privid)
- 		return 0;
- 
--	/* TODO
- 	sprintf(buf, "netdev:%s", dev->name);
--	debugfs_rename(IEEE80211_DEV_TO_SUB_IF(dev)->debugfsdir, buf);
--	*/
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	dir = sdata->debugfsdir;
-+	if (!debugfs_rename(dir->d_parent, dir, dir->d_parent, buf))
-+		printk(KERN_ERR "mac80211: debugfs: failed to rename debugfs "
-+		       "dir to %s\n", buf);
- 
- 	return 0;
- }
-
-
+-- 
+Uli Kunitz
