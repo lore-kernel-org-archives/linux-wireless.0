@@ -1,29 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49981
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763501AbXEZUSN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 16:18:13 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH] bcm43xx-mac80211: Fix for tx_bias equal to 0xFF
-Date: Sat, 26 May 2007 22:18:08 +0200
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <465869ce.8wcEX9q9ZmHxX2m3%Larry.Finger@lwfinger.net> <200705261919.39143.mb@bu3sch.de> <46587492.6070106@lwfinger.net>
-In-Reply-To: <46587492.6070106@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200705262218.08413.mb@bu3sch.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4611 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S2993230AbXEBOWk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 May 2007 10:22:40 -0400
+Date: Wed, 2 May 2007 10:11:25 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Compilation error with latest wireless-dev
+Message-ID: <20070502141125.GC6187@tuxdriver.com>
+References: <4638161D.7020106@lwfinger.net> <20070502023406.0efnk48888owckc8@webmail.spamcop.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070502023406.0efnk48888owckc8@webmail.spamcop.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 26 May 2007 19:55:30 Larry Finger wrote:
-> With it, my 4311 connects with bcm43xx-mac80211. Without it, no connection.
+On Wed, May 02, 2007 at 02:34:06AM -0400, Pavel Roskin wrote:
+> Quoting Larry Finger <Larry.Finger@lwfinger.net>:
+> 
+> > Compiling wireless-dev (commit d2f859f56c9f00f093f943cf810a863a5aa2e10f)
+> > results in the following
+> > error when building modules:
+> >
+> > WARNING: "tcf_destroy_chain" [net/mac80211/mac80211.ko] undefined!
+> > make[1]: *** [__modpost] Error 1
+> > make: *** [modules] Error 2
+> >
+> > In my configuration, net/sched/sch_api.c where tcf_destroy_chain is defined
+> > is not compiled. The
+> > network-related configuration parameters are:
+> 
+> Same problem here.  CONFIG_NET_SCH_FIFO was enabled, apparently by
+> net/mac80211/Kconfig, but CONFIG_NET_SCHED.  Selecting the later (but none of
+> the schedulers) fixed the compile error.
 
-Ok, it seems to fix the itssi thing, but that re-enables
-txpower adjustment, which reveals the whole bunch of bugs in there. :)
-So before I can merge this, I have to fix these bugs there.
+So, should net/mac80211/Kconfig select NET_SCHED instead?  Or should
+NET_SCH_FIFO select it?
 
+If the latter, will that cause any circular problems given that
+NET_SCHED already selects NET_SCH_FIFO?
+
+Any Kconfig experts have an opinion?
+
+John
 -- 
-Greetings Michael.
+John W. Linville
+linville@tuxdriver.com
