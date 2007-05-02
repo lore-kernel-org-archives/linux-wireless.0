@@ -1,50 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:41133 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934430AbXEGQwX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2007 12:52:23 -0400
-Date: Mon, 7 May 2007 18:52:24 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Allow sleeping in set_key op
-Message-ID: <20070507185224.45f98d56@midnight.suse.cz>
-In-Reply-To: <200705062037.35037.mb@bu3sch.de>
-References: <200705062037.35037.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:63508 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S2993293AbXEBO4R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 May 2007 10:56:17 -0400
+Message-ID: <4638A68C.3000600@lwfinger.net>
+Date: Wed, 02 May 2007 09:56:12 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: dragoran <drago01@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: mac80211 and signal strength reporting
+References: <46384D34.9080505@gmail.com>
+In-Reply-To: <46384D34.9080505@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 6 May 2007 20:37:34 +0200 Michael Buesch wrote:
-> [...]
->  static void finish_sta_info_free(struct ieee80211_local *local,
->  				 struct sta_info *sta)
->  {
-> +	sta_info_key_disable(local, sta);
-> +
->  #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
->  	printk(KERN_DEBUG "%s: Removed STA " MAC_FMT "\n",
->  	       local->mdev->name, MAC_ARG(sta->addr));
-> @@ -213,6 +246,16 @@ static void finish_sta_info_free(struct 
->  	sta_info_put(sta);
->  }
+dragoran wrote:
+> Hello,
+> while testing iwlwifi (which works fine now btw) I noticed that the 
+> signal strenght reporting when using mac80211 is broken:
+> iwconfig only show dBm value....
+> gnome-netstatus always shows 0%
+> networkmanager always shows 100%
+> whats going on? does some has any idea?
+> is this a known bug or is iwlwifi the culprit?
 
-There is a race here. You already removed the sta from sta_hash list
-and you're not protected by any lock. Thus, it is possible to add a new
-station with the same address before finish_sta_info_free is called.
-When this happens, you call the set_key handler for the new key and
-after that you call it again with DISABLE_KEY.
+A little of both. The wireless statistics code in mac80211 has some strange conventions. I worked 
+for a while on improving it, but there are multiple opinions regarding the use of terms such as 
+"level" and "signal". After a few tries, I dropped that part and made bcm43xx-mac80211 conform to 
+the mac80211 conventions. Now there are lines like "Link Quality=77/100  Signal level=-49 dBm  Noise 
+level=-73 dBm" in the iwconfig output. These values look reasonable.
 
-It's not easy to get this right. I remember also problems with
-dereferencing already freed key when I thought about possible ways to
-solve exactly this problem.
-
-Thanks,
-
- Jiri
-
--- 
-Jiri Benc
-SUSE Labs
+Larry
