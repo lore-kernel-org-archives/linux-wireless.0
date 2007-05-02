@@ -1,281 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:49862 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:41722 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754831AbXEKCuK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 22:50:10 -0400
-Subject: Re: [PATCH 01/19] libertas: remove WPA_SUPPLICANT structure
+	id S1755063AbXEBMHe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 May 2007 08:07:34 -0400
+Subject: Re: [PATCH] libertas: fix for wireless Kconfig changes
 From: Dan Williams <dcbw@redhat.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1178851833.8607.9.camel@localhost.localdomain>
-References: <1178851833.8607.9.camel@localhost.localdomain>
+Cc: jeff@garzik.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <20070501135454.GD8604@tuxdriver.com>
+References: <20070429002844.GA11225@tuxdriver.com>
+	 <1178020418.21671.3.camel@localhost.localdomain>
+	 <20070501135454.GD8604@tuxdriver.com>
 Content-Type: text/plain
-Date: Thu, 10 May 2007 22:53:34 -0400
-Message-Id: <1178852014.8607.19.camel@localhost.localdomain>
+Date: Wed, 02 May 2007 08:10:55 -0400
+Message-Id: <1178107855.31220.21.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-05-10 at 22:50 -0400, Dan Williams wrote:
-> Start to normalize bss_descriptor with ieee80211_network so we can
-> eventually replace bss_descriptor more easily.
+On Tue, 2007-05-01 at 09:54 -0400, John W. Linville wrote:
+> On Tue, May 01, 2007 at 07:53:38AM -0400, Dan Williams wrote:
+> > On Sat, 2007-04-28 at 20:28 -0400, John W. Linville wrote:
+> > > Need to change the libertas Kconfig entry to match changes made for
+> > > other wireless drivers.
+> > > 
+> > > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > > ---
+> > > diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+> > > index c4b3dc2..cb09e6b 100644
+> > > --- a/drivers/net/wireless/Kconfig
+> > > +++ b/drivers/net/wireless/Kconfig
+> > > @@ -267,7 +267,7 @@ config IPW2200_DEBUG
+> > >  
+> > >  config LIBERTAS_USB
+> > >  	tristate "Marvell Libertas 8388 802.11a/b/g cards"
+> > > -	depends on NET_RADIO && USB
+> > > +	depends on USB && WLAN_80211
+> > >  	select FW_LOADER
+> > >  	---help---
+> > >  	  A driver for Marvell Libertas 8388 USB devices.
+> > 
+> > Will apply, we need to pull in wireless-dev first to get the NET_RADIO
+> > name change.
+> 
+> No, that is already in Linus' tree via Jeff's tree.
+> 
+> Jeff, I figured you would just apply the patch.  If you'd prefer I
+> can send a pull request, but I don't have anything else pending ATM.
 
-Ignore this one, accidentally sent outside the thread.
+Really?  Marcelo said he pulled 2.6.21 into the libertas tree but that
+didn't appear to touch drivers/net/wireless/Kconfig at all...
 
-> Signed-off-by: Dan Williams <dcbw@redhat.com>
-> ---
->  drivers/net/wireless/libertas/scan.c |  115 +++++++++++++--------------------
->  drivers/net/wireless/libertas/scan.h |    8 ++-
->  2 files changed, 50 insertions(+), 73 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
-> index e187062..400558a 100644
-> --- a/drivers/net/wireless/libertas/scan.c
-> +++ b/drivers/net/wireless/libertas/scan.c
-> @@ -95,10 +95,9 @@ static int is_network_compatible(wlan_adapter * adapter, int index, int mode)
->  		if (adapter->secinfo.WEPstatus == wlan802_11WEPdisabled
->  		    && !adapter->secinfo.WPAenabled
->  		    && !adapter->secinfo.WPA2enabled
-> -		    && adapter->scantable[index].wpa_supplicant.wpa_ie[0] !=
-> -		    WPA_IE
-> -		    && adapter->scantable[index].wpa2_supplicant.wpa_ie[0] !=
-> -		    WPA2_IE && adapter->secinfo.Encryptionmode == CIPHER_NONE
-> +		    && adapter->scantable[index].wpa_ie[0] != WPA_IE
-> +		    && adapter->scantable[index].rsn_ie[0] != WPA2_IE
-> +		    && adapter->secinfo.Encryptionmode == CIPHER_NONE
->  		    && !adapter->scantable[index].privacy) {
->  			/* no security */
->  			LEAVE();
-> @@ -113,21 +112,17 @@ static int is_network_compatible(wlan_adapter * adapter, int index, int mode)
->  		} else if (adapter->secinfo.WEPstatus == wlan802_11WEPdisabled
->  			   && adapter->secinfo.WPAenabled
->  			   && !adapter->secinfo.WPA2enabled
-> -			   && (adapter->scantable[index].wpa_supplicant.
-> -			       wpa_ie[0]
-> -			       == WPA_IE)
-> +			   && (adapter->scantable[index].wpa_ie[0] == WPA_IE)
->  			   /* privacy bit may NOT be set in some APs like LinkSys WRT54G
->  			      && adapter->scantable[index].privacy */
->  		    ) {
->  			/* WPA enabled */
-> -            lbs_pr_debug(1,
-> +			lbs_pr_debug(1,
->  			       "is_network_compatible() WPA: index=%d wpa_ie=%#x "
->  			       "wpa2_ie=%#x WEP=%s WPA=%s WPA2=%s Encmode=%#x "
->  			       "privacy=%#x\n", index,
-> -			       adapter->scantable[index].wpa_supplicant.
-> -			       wpa_ie[0],
-> -			       adapter->scantable[index].wpa2_supplicant.
-> -			       wpa_ie[0],
-> +			       adapter->scantable[index].wpa_ie[0],
-> +			       adapter->scantable[index].rsn_ie[0],
->  			       (adapter->secinfo.WEPstatus ==
->  				wlan802_11WEPenabled) ? "e" : "d",
->  			       (adapter->secinfo.WPAenabled) ? "e" : "d",
-> @@ -139,21 +134,17 @@ static int is_network_compatible(wlan_adapter * adapter, int index, int mode)
->  		} else if (adapter->secinfo.WEPstatus == wlan802_11WEPdisabled
->  			   && !adapter->secinfo.WPAenabled
->  			   && adapter->secinfo.WPA2enabled
-> -			   && (adapter->scantable[index].wpa2_supplicant.
-> -			       wpa_ie[0]
-> -			       == WPA2_IE)
-> +			   && (adapter->scantable[index].rsn_ie[0] == WPA2_IE)
->  			   /* privacy bit may NOT be set in some APs like LinkSys WRT54G
->  			      && adapter->scantable[index].privacy */
->  		    ) {
->  			/* WPA2 enabled */
-> -            lbs_pr_debug(1,
-> +			lbs_pr_debug(1,
->  			       "is_network_compatible() WPA2: index=%d wpa_ie=%#x "
->  			       "wpa2_ie=%#x WEP=%s WPA=%s WPA2=%s Encmode=%#x "
->  			       "privacy=%#x\n", index,
-> -			       adapter->scantable[index].wpa_supplicant.
-> -			       wpa_ie[0],
-> -			       adapter->scantable[index].wpa2_supplicant.
-> -			       wpa_ie[0],
-> +			       adapter->scantable[index].wpa_ie[0],
-> +			       adapter->scantable[index].rsn_ie[0],
->  			       (adapter->secinfo.WEPstatus ==
->  				wlan802_11WEPenabled) ? "e" : "d",
->  			       (adapter->secinfo.WPAenabled) ? "e" : "d",
-> @@ -165,35 +156,30 @@ static int is_network_compatible(wlan_adapter * adapter, int index, int mode)
->  		} else if (adapter->secinfo.WEPstatus == wlan802_11WEPdisabled
->  			   && !adapter->secinfo.WPAenabled
->  			   && !adapter->secinfo.WPA2enabled
-> -			   && (adapter->scantable[index].wpa_supplicant.
-> -			       wpa_ie[0]
-> -			       != WPA_IE)
-> -			   && (adapter->scantable[index].wpa2_supplicant.
-> -			       wpa_ie[0]
-> -			       != WPA2_IE)
-> +			   && (adapter->scantable[index].wpa_ie[0] != WPA_IE)
-> +			   && (adapter->scantable[index].rsn_ie[0] != WPA2_IE)
->  			   && adapter->secinfo.Encryptionmode != CIPHER_NONE
->  			   && adapter->scantable[index].privacy) {
->  			/* dynamic WEP enabled */
-> -            lbs_pr_debug(1,
-> +			lbs_pr_debug(1,
->  			       "is_network_compatible() dynamic WEP: index=%d "
->  			       "wpa_ie=%#x wpa2_ie=%#x Encmode=%#x privacy=%#x\n",
->  			       index,
-> -			       adapter->scantable[index].wpa_supplicant.
-> -			       wpa_ie[0],
-> -			       adapter->scantable[index].wpa2_supplicant.
-> -			       wpa_ie[0], adapter->secinfo.Encryptionmode,
-> +			       adapter->scantable[index].wpa_ie[0],
-> +			       adapter->scantable[index].rsn_ie[0],
-> +			       adapter->secinfo.Encryptionmode,
->  			       adapter->scantable[index].privacy);
->  			LEAVE();
->  			return index;
->  		}
->  
->  		/* security doesn't match */
-> -        lbs_pr_debug(1,
-> +		lbs_pr_debug(1,
->  		       "is_network_compatible() FAILED: index=%d wpa_ie=%#x "
->  		       "wpa2_ie=%#x WEP=%s WPA=%s WPA2=%s Encmode=%#x privacy=%#x\n",
->  		       index,
-> -		       adapter->scantable[index].wpa_supplicant.wpa_ie[0],
-> -		       adapter->scantable[index].wpa2_supplicant.wpa_ie[0],
-> +		       adapter->scantable[index].wpa_ie[0],
-> +		       adapter->scantable[index].rsn_ie[0],
->  		       (adapter->secinfo.WEPstatus ==
->  			wlan802_11WEPenabled) ? "e" : "d",
->  		       (adapter->secinfo.WPAenabled) ? "e" : "d",
-> @@ -924,8 +910,6 @@ static int InterpretBSSDescriptionWithIE(struct bss_descriptor * pBSSEntry,
->  	u8 founddatarateie;
->  	int bytesleftforcurrentbeacon;
->  
-> -	struct WPA_SUPPLICANT *pwpa_supplicant;
-> -	struct WPA_SUPPLICANT *pwpa2_supplicant;
->  	struct IE_WPA *pIe;
->  	const u8 oui01[4] = { 0x00, 0x50, 0xf2, 0x01 };
->  
-> @@ -962,9 +946,6 @@ static int InterpretBSSDescriptionWithIE(struct bss_descriptor * pBSSEntry,
->  
->  	bytesleftforcurrentbeacon = beaconsize;
->  
-> -	pwpa_supplicant = &pBSSEntry->wpa_supplicant;
-> -	pwpa2_supplicant = &pBSSEntry->wpa2_supplicant;
-> -
->  	memcpy(pBSSEntry->macaddress, pcurrentptr, ETH_ALEN);
->  	lbs_pr_debug(1, "InterpretIE: AP MAC Addr-%x:%x:%x:%x:%x:%x\n",
->  	       pBSSEntry->macaddress[0], pBSSEntry->macaddress[1],
-> @@ -1160,27 +1141,27 @@ static int InterpretBSSDescriptionWithIE(struct bss_descriptor * pBSSEntry,
->  #define IE_ID_LEN_FIELDS_BYTES 2
->  			pIe = (struct IE_WPA *)pcurrentptr;
->  
-> -			if (!memcmp(pIe->oui, oui01, sizeof(oui01))) {
-> -				pwpa_supplicant->wpa_ie_len
-> -				    = min_t(size_t, elemlen + IE_ID_LEN_FIELDS_BYTES,
-> -					  sizeof(pwpa_supplicant->wpa_ie));
-> -				memcpy(pwpa_supplicant->wpa_ie,
-> -				       pcurrentptr,
-> -				       pwpa_supplicant->wpa_ie_len);
-> -				lbs_dbg_hex("InterpretIE: Resp WPA_IE",
-> -					pwpa_supplicant->wpa_ie, elemlen);
-> -			}
-> +			if (memcmp(pIe->oui, oui01, sizeof(oui01)))
-> +				break;
-> +
-> +			pBSSEntry->wpa_ie_len = min_t(size_t,
-> +				elemlen + IE_ID_LEN_FIELDS_BYTES,
-> +				sizeof(pBSSEntry->wpa_ie));
-> +			memcpy(pBSSEntry->wpa_ie, pcurrentptr,
-> +				pBSSEntry->wpa_ie_len);
-> +			lbs_dbg_hex("InterpretIE: Resp WPA_IE",
-> +				pBSSEntry->wpa_ie, elemlen);
->  			break;
->  		case WPA2_IE:
->  			pIe = (struct IE_WPA *)pcurrentptr;
-> -			pwpa2_supplicant->wpa_ie_len
-> -			    = min_t(size_t, elemlen + IE_ID_LEN_FIELDS_BYTES,
-> -				  sizeof(pwpa2_supplicant->wpa_ie));
-> -			memcpy(pwpa2_supplicant->wpa_ie,
-> -			       pcurrentptr, pwpa2_supplicant->wpa_ie_len);
-> -
-> +			
-> +			pBSSEntry->rsn_ie_len = min_t(size_t,
-> +				elemlen + IE_ID_LEN_FIELDS_BYTES,
-> +				sizeof(pBSSEntry->rsn_ie));
-> +			memcpy(pBSSEntry->rsn_ie, pcurrentptr,
-> +				pBSSEntry->rsn_ie_len);
->  			lbs_dbg_hex("InterpretIE: Resp WPA2_IE",
-> -				pwpa2_supplicant->wpa_ie, elemlen);
-> +				pBSSEntry->rsn_ie, elemlen);
->  			break;
->  		case TIM:
->  			break;
-> @@ -1745,30 +1726,24 @@ int libertas_get_scan(struct net_device *dev, struct iw_request_info *info,
->  		/* Add new value to event */
->  		current_val = current_ev + IW_EV_LCP_LEN;
->  
-> -		if (adapter->scantable[i].wpa2_supplicant.wpa_ie[0] == WPA2_IE) {
-> +		if (adapter->scantable[i].rsn_ie[0] == WPA2_IE) {
->  			memset(&iwe, 0, sizeof(iwe));
->  			memset(buf, 0, sizeof(buf));
-> -			memcpy(buf, adapter->scantable[i].
-> -						wpa2_supplicant.wpa_ie,
-> -					adapter->scantable[i].wpa2_supplicant.
-> -						wpa_ie_len);
-> +			memcpy(buf, adapter->scantable[i].rsn_ie,
-> +					adapter->scantable[i].rsn_ie_len);
->  			iwe.cmd = IWEVGENIE;
-> -			iwe.u.data.length = adapter->scantable[i].
-> -					wpa2_supplicant.wpa_ie_len;
-> +			iwe.u.data.length = adapter->scantable[i].rsn_ie_len;
->  			iwe.len = IW_EV_POINT_LEN + iwe.u.data.length;
->  			current_ev = iwe_stream_add_point(current_ev, end_buf,
->  					&iwe, buf);
->  		}
-> -		if (adapter->scantable[i].wpa_supplicant.wpa_ie[0] == WPA_IE) {
-> +		if (adapter->scantable[i].wpa_ie[0] == WPA_IE) {
->  			memset(&iwe, 0, sizeof(iwe));
->  			memset(buf, 0, sizeof(buf));
-> -			memcpy(buf, adapter->scantable[i].
-> -						wpa_supplicant.wpa_ie,
-> -					adapter->scantable[i].wpa_supplicant.
-> -						wpa_ie_len);
-> +			memcpy(buf, adapter->scantable[i].wpa_ie,
-> +					adapter->scantable[i].wpa_ie_len);
->  			iwe.cmd = IWEVGENIE;
-> -			iwe.u.data.length = adapter->scantable[i].
-> -					wpa_supplicant.wpa_ie_len;
-> +			iwe.u.data.length = adapter->scantable[i].wpa_ie_len;
->  			iwe.len = IW_EV_POINT_LEN + iwe.u.data.length;
->  			current_ev = iwe_stream_add_point(current_ev, end_buf,
->  					&iwe, buf);
-> diff --git a/drivers/net/wireless/libertas/scan.h b/drivers/net/wireless/libertas/scan.h
-> index d93aa7f..1a8756e 100644
-> --- a/drivers/net/wireless/libertas/scan.h
-> +++ b/drivers/net/wireless/libertas/scan.h
-> @@ -10,6 +10,7 @@
->  #ifndef _WLAN_SCAN_H
->  #define _WLAN_SCAN_H
->  
-> +#include <net/ieee80211.h>
->  #include "hostcmd.h"
->  
->  /**
-> @@ -170,9 +171,10 @@ struct bss_descriptor {
->  
->  	struct ieeetypes_countryinfofullset countryinfo;
->  
-> -	struct WPA_SUPPLICANT wpa_supplicant;
-> -	struct WPA_SUPPLICANT wpa2_supplicant;
-> -
-> +	u8 wpa_ie[MAX_WPA_IE_LEN];
-> +	size_t wpa_ie_len;
-> +	u8 rsn_ie[MAX_WPA_IE_LEN];
-> +	size_t rsn_ie_len;
->  };
->  
->  extern int libertas_SSID_cmp(struct WLAN_802_11_SSID *ssid1,
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dan
+
 
