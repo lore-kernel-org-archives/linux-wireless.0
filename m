@@ -1,133 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from daemonizer.de ([87.230.16.230]:36368 "EHLO daemonizer.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753480AbXEZJjf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 05:39:35 -0400
-From: Maximilian Engelhardt <maxi@daemonizer.de>
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-Date: Sat, 26 May 2007 11:39:28 +0200
-Cc: Uwe Bugla <uwe.bugla@gmx.de>, linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-References: <20070524195616.234280@gmx.net> <200705252140.22635.uwe.bugla@gmx.de> <200705260700.28777.mb@bu3sch.de>
-In-Reply-To: <200705260700.28777.mb@bu3sch.de>
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:57235 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S2992728AbXEBEj7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 May 2007 00:39:59 -0400
+Message-ID: <4638161D.7020106@lwfinger.net>
+Date: Tue, 01 May 2007 23:39:57 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart14756496.I17Vm8ygjv";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705261139.31007.maxi@daemonizer.de>
+To: wireless <linux-wireless@vger.kernel.org>
+Subject: Compilation error with latest wireless-dev
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart14756496.I17Vm8ygjv
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Compiling wireless-dev (commit d2f859f56c9f00f093f943cf810a863a5aa2e10f) results in the following 
+error when building modules:
 
-On Saturday 26 May 2007, Michael Buesch wrote:
-> On Friday 25 May 2007 21:40, Uwe Bugla wrote:
-> > Am Freitag, 25. Mai 2007 20:48 schrieben Sie:
-> > > On Fri, 25 May 2007 17:59:29 +0200, Uwe Bugla wrote:
-> > > > Perhaps someone reading this could try to reproduce that problem on
-> > > > his machine.
-> > > > Now who of the readers owes a Broadcom 4401 NIC and can please try =
-to
-> > > > test kernel 2.6.22-rc2-mm1?
-> > > >
-> > > > Those NICs have been used very very often as onboard controllers,
-> > > > especially on ASUS boards.
-> > >
-> > > I've been using 2.6.22-rc2 for some time and now I compiled 2.6.22-rc=
-2-
-> > > mm1 and both work fine with the BCM4401 in my laptop.
-> > >
-> > > Maxi
-> >
-> > Hello Maxi,
-> >
-> > That may be true for your Laptop, but it unfortunately isn't true for my
-> > ASUS mainboard onboard controller.
-> >
-> > Unfortunately I cannot confirm this:
-> >
-> > My broadcom 4401 driver is not part of a notebook, but instead part of =
-an
-> > ASUS P4PE mainboard.
-> >
-> > At my second attempt I went the conventional path (i. e. ignoring the
-> > fact that
-> > "Broadcom 4400 ethernet support appears twice in section "Network device
-> > support":
-> >
-> > Whether you leave out "EISA, VLB, PCI and on board controllers" or not =
-it
-> > simply appears twice in kernel config! This is bug number 1.
->
-> No it is NOT a bug.
-> It simply shows again that you don't know how b44, ssb or anything related
-> works.
->
-> Would you _please_ take a look at the code, before calling features bugs.
-> And yes, this IS a feature. It is a feature to get b44 running on an
-> OpenWRT embedded device. These devices don't have a PCI bus. So b44 MUST
-> NOT depend on "EISA, VLB, PCI and on board controllers".
-> "Broadcom 4400 PCI device support" does depend on "EISA, VLB, PCI and on
-> board controllers".
->
-> Everything is correct.
-> Bug number 1 is solved.
-> qed
->
-> > This time I do get a "good" interrupt: IRQ 21 for the the device.
-> >
-> > BUT:
-> >
-> > Trying to ping another machine fails saying:
-> >
-> > "destination host unreachable"
-> >
-> >
-> > That means, Although the interrupt is fine now, the device is still not
-> > functionable.
->
-> And it's completely impossible that you did a mistake when configuring
-> the device? Typo in the IP? Typo in the gateway or DNS entries?
-> Try it again, please.
-> And please try with current wireless-dev tree.
->
-> And I simply do not get it why you suddenly get a good IRQ number, like
-> everybody else does, without fixing The Bug (tm).
+WARNING: "tcf_destroy_chain" [net/mac80211/mac80211.ko] undefined!
+make[1]: *** [__modpost] Error 1
+make: *** [modules] Error 2
 
-I did run my 2.6.22-rc2-mm1 kernel a bit longer and noticed that I was wron=
-g=20
-in my first mail. The driver does work with my 4401 and network traffic see=
-m=20
-to get out and in fine, but it has huge performance problems. If I do some=
-=20
-pings and traceroutes I sometimes get response times of only a few ms but I=
-=20
-also get times of a few seconds. Also trying to play games is totally=20
-impossible. This doesn't happen with 2.6.22-rc2 and 2.6.22-rc3.
+In my configuration, net/sched/sch_api.c where tcf_destroy_chain is defined is not compiled. The
+network-related configuration parameters are:
 
-Maxi
+#
+# Networking
+#
+CONFIG_NET=y
 
---nextPart14756496.I17Vm8ygjv
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+#
+# Networking options
+#
+CONFIG_PACKET=m
+CONFIG_PACKET_MMAP=y
+CONFIG_UNIX=y
+CONFIG_XFRM=y
+CONFIG_XFRM_USER=m
+# CONFIG_XFRM_SUB_POLICY is not set
+# CONFIG_XFRM_MIGRATE is not set
+CONFIG_NET_KEY=m
+# CONFIG_NET_KEY_MIGRATE is not set
+CONFIG_INET=y
+CONFIG_IP_MULTICAST=y
+CONFIG_IP_ADVANCED_ROUTER=y
+CONFIG_ASK_IP_FIB_HASH=y
+# CONFIG_IP_FIB_TRIE is not set
+CONFIG_IP_FIB_HASH=y
+CONFIG_IP_MULTIPLE_TABLES=y
+CONFIG_IP_ROUTE_MULTIPATH=y
+# CONFIG_IP_ROUTE_MULTIPATH_CACHED is not set
+CONFIG_IP_ROUTE_VERBOSE=y
+CONFIG_IP_PNP=y
+CONFIG_IP_PNP_DHCP=y
+CONFIG_IP_PNP_BOOTP=y
+CONFIG_IP_PNP_RARP=y
+CONFIG_NET_IPIP=m
+CONFIG_NET_IPGRE=m
+CONFIG_NET_IPGRE_BROADCAST=y
+CONFIG_IP_MROUTE=y
+CONFIG_IP_PIMSM_V1=y
+CONFIG_IP_PIMSM_V2=y
+# CONFIG_ARPD is not set
+CONFIG_SYN_COOKIES=y
+CONFIG_INET_AH=m
+CONFIG_INET_ESP=m
+CONFIG_INET_IPCOMP=m
+CONFIG_INET_XFRM_TUNNEL=m
+CONFIG_INET_TUNNEL=m
+CONFIG_INET_XFRM_MODE_TRANSPORT=m
+CONFIG_INET_XFRM_MODE_TUNNEL=m
+CONFIG_INET_XFRM_MODE_BEET=y
+CONFIG_INET_DIAG=m
+CONFIG_INET_TCP_DIAG=m
+# CONFIG_TCP_CONG_ADVANCED is not set
+CONFIG_TCP_CONG_CUBIC=y
+CONFIG_DEFAULT_TCP_CONG="cubic"
+# CONFIG_TCP_MD5SIG is not set
+# CONFIG_IPV6 is not set
+# CONFIG_INET6_XFRM_TUNNEL is not set
+# CONFIG_INET6_TUNNEL is not set
+# CONFIG_NETWORK_SECMARK is not set
+# CONFIG_NETFILTER is not set
+#
+# Wireless
+#
+CONFIG_CFG80211=m
+CONFIG_NL80211=y
+CONFIG_WIRELESS_EXT=y
+CONFIG_MAC80211=m
+CONFIG_MAC80211_DEBUGFS=y
+CONFIG_MAC80211_DEBUG=y
+# CONFIG_MAC80211_VERBOSE_DEBUG is not set
+# CONFIG_MAC80211_LOWTX_FRAME_DUMP is not set
+# CONFIG_TKIP_DEBUG is not set
+# CONFIG_MAC80211_DEBUG_COUNTERS is not set
+# CONFIG_HOSTAPD_WPA_TESTING is not set
+# CONFIG_MAC80211_IBSS_DEBUG is not set
+# CONFIG_MAC80211_VERBOSE_PS_DEBUG is not set
+# CONFIG_IEEE80211 is not set
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQBGWABSOimwv528XGERAkiaAKDptjswUs7gXj5teD0ww9AFyzz7uwCfdg85
-5BiaqLMeNdGL93Xn0aQ35KE=
-=wI4V
------END PGP SIGNATURE-----
-
---nextPart14756496.I17Vm8ygjv--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+Larry
