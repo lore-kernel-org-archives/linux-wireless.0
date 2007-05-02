@@ -1,34 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56184 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757436AbXEVXA0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2007 19:00:26 -0400
-Message-ID: <46537603.6040208@garzik.org>
-Date: Tue, 22 May 2007 19:00:19 -0400
-From: Jeff Garzik <jeff@garzik.org>
+Received: from stinky.trash.net ([213.144.137.162]:37442 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2993259AbXEBOfV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 May 2007 10:35:21 -0400
+Message-ID: <4638A163.8030505@trash.net>
+Date: Wed, 02 May 2007 16:34:11 +0200
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-To: James Ketrenos <jketreno@linux.intel.com>
-CC: Michael Wu <flamingice@sourmilk.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers
-References: <464B7B7C.5080800@linux.intel.com> <200705162151.32910.flamingice@sourmilk.net> <46534172.5040106@linux.intel.com>
-In-Reply-To: <46534172.5040106@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Jiri Benc <jbenc@suse.cz>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Fix for missing global (tcf_destroy_chain)  in build
+References: <46389ebb.JZh37v8gJUSOn1+U%Larry.Finger@lwfinger.net>
+In-Reply-To: <46389ebb.JZh37v8gJUSOn1+U%Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-James Ketrenos wrote:
-> That said -- if the driver can execute in parallel to the stack for some 
-> operations, shouldn't they remain on their own workqueues so the work 
-> can be divided up vs. having *everything* routed through one 
-> singlethread workqueue?
+Larry Finger wrote:
+> If MAC80211 is selected in the configuration without also selecting NET_SCHED,
+> there is a missing global (tcf_destroy_chain) in the build.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> 
+> Index: wireless-dev/net/mac80211/Kconfig
+> ===================================================================
+> --- wireless-dev.orig/net/mac80211/Kconfig
+> +++ wireless-dev/net/mac80211/Kconfig
+> @@ -9,6 +9,7 @@ config MAC80211
+>  	select WIRELESS_EXT
+>  	select CFG80211
+>  	select NET_SCH_FIFO
+> +	select NET_SCHED
 
-Just because it -can-, does not mean it should.
 
-Unless there is a -proven- need for the operations to be parallel, you 
-should avoid the burden of such complexity.
-
-	Jeff
-
+That pretty much defeats the reason why CONFIG_NET_SCH_FIFO was created.
+So far without CONFIG_NET_SCHED the wme scheduler didn't even register,
+so it seems the proper fix is to get rid of all #ifdef CONFIG_NET_SCHED
+and simply avoid building it.
 
