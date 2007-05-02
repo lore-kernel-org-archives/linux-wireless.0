@@ -1,50 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41942 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934692AbXEHIrG (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:44597 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S2993248AbXEBPWI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2007 04:47:06 -0400
-Subject: Re: Please pull 'upstream' branch of wireless-2.6
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>, jeff@garzik.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <1178572550.11805.7.camel@localhost.localdomain>
-References: <20070507175121.GF5125@tuxdriver.com>
-	 <1178572550.11805.7.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tPa19ckNh83blEZ4tVmV"
-Date: Tue, 08 May 2007 10:49:07 +0200
-Message-Id: <1178614147.18162.30.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 2 May 2007 11:22:08 -0400
+Message-ID: <4638AC8C.9060706@lwfinger.net>
+Date: Wed, 02 May 2007 10:21:48 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Patrick McHardy <kaber@trash.net>
+CC: Jiri Benc <jbenc@suse.cz>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Fix for missing global (tcf_destroy_chain)  in build
+References: <46389ebb.JZh37v8gJUSOn1+U%Larry.Finger@lwfinger.net> <4638A163.8030505@trash.net>
+In-Reply-To: <4638A163.8030505@trash.net>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Patrick McHardy wrote:
+> 
+> 
+> That pretty much defeats the reason why CONFIG_NET_SCH_FIFO was created.
+> So far without CONFIG_NET_SCHED the wme scheduler didn't even register,
+> so it seems the proper fix is to get rid of all #ifdef CONFIG_NET_SCHED
+> and simply avoid building it.
 
---=-tPa19ckNh83blEZ4tVmV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+At least this "fix" lets the system build. Whomever broke it needs to do the proper fix.
 
-On Mon, 2007-05-07 at 17:15 -0400, Dan Williams wrote:
-
-> So the kconfig changes with s/NET_RADIO/NET_80211 (or whatever it was)
-> are in for 2.6.22?  Or is that for 2.6.23?
-
-http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3Dcomm=
-it;h=3D2a5e1c0eb9efe26eed1dd072fe08de5797a7efd5
-
-johannes
-
---=-tPa19ckNh83blEZ4tVmV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGQDmC/ETPhpq3jKURAtFfAJ9E6qSxe7L8uSdEtZFJApdnJ5GuEgCgmXlm
-R0k6sEMZky8AxkLCSk0vkp4=
-=9Vfh
------END PGP SIGNATURE-----
-
---=-tPa19ckNh83blEZ4tVmV--
-
+Larry
