@@ -1,48 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:36711 "EHLO mail.dvmed.net"
+Received: from baikonur.stro.at ([213.239.196.228]:3216 "EHLO baikonur.stro.at"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031757AbXEHU4J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2007 16:56:09 -0400
-Message-ID: <4640E3BF.8080401@garzik.org>
-Date: Tue, 08 May 2007 16:55:27 -0400
-From: Jeff Garzik <jeff@garzik.org>
+	id S1162174AbXECQvJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 May 2007 12:51:09 -0400
+Date: Thu, 3 May 2007 18:52:40 +0200
+From: maximilian attems <max@stro.at>
+To: yi.zhu@intel.com, jketreno@linux.intel.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [patch] iwp2200: make use of MODULE_FIRMWARE
+Message-ID: <20070503165240.GA20914@stro.at>
 MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: penberg@cs.helsinki.fi, linville@tuxdriver.com, dcbw@redhat.com,
-	hch@infradead.org, linux-wireless@vger.kernel.org,
-	marcelo@kvack.org, linux-kernel@vger.kernel.org,
-	akpm@linux-foundation.org, torvalds@linux-foundation.org
-Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6
-References: <20070507141143.GB5125@tuxdriver.com>	<463F443A.5000306@garzik.org>	<84144f020705080247v74ebcd26y27c2f1e61529b215@mail.gmail.com> <20070508.132737.104034594.davem@davemloft.net>
-In-Reply-To: <20070508.132737.104034594.davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller wrote:
-> From: "Pekka Enberg" <penberg@cs.helsinki.fi>
->> On 5/7/07, Jeff Garzik <jeff@garzik.org> wrote:
->>> Open source is about release early, release often.  Not "hide code in a
->>> dark corner until Christoph thinks it is perfect."  We have high
->>> standards for upstream merged code, but that standard is not perfection.
->> Please. This has nothing to do with Christoph. (1) the driver seems to
->> break every Linux coding style convention known to man and (2) adds a
->> new ABI with bunch of ioctls() that apparently haven't been reviewed
->> properly. That's just not acceptable for mainline kernel!
+modinfo output is helpful to build an nfsroot initramfs 
 
-> I completely agree, these things should be corrected and if the the
-> author is being totally unresponsive to Christoph's review that's even
-> worse.
+Signed-off-by: maximilian attems <max@stro.at>
 
-Um, the maintainer replied yesterday morning[1] that libertas-2.6.git 
-has already been updated for these requests, will be updated some more, 
-and overall was responsive to the entire list of Christoph requests.
+diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+index 7cb2052..6b181c6 100644
+--- a/drivers/net/wireless/ipw2200.c
++++ b/drivers/net/wireless/ipw2200.c
+@@ -81,6 +81,9 @@ MODULE_DESCRIPTION(DRV_DESCRIPTION);
+ MODULE_VERSION(DRV_VERSION);
+ MODULE_AUTHOR(DRV_COPYRIGHT);
+ MODULE_LICENSE("GPL");
++MODULE_FIRMWARE("ipw2200-bss.fw");
++MODULE_FIRMWARE("ipw2200-ibss.fw");
++MODULE_FIRMWARE("ipw2200-sniffer.fw");
+ 
+ static int cmdlog = 0;
+ static int debug = 0;
 
-I'm mainly concerned with removing the unnecessary ioctls before 2.6.22 
-release, since that affects userspace.  The vast majority of other stuff 
-is cosmetic, which is being worked on, but lower priority in my book.
-
-	Jeff
-
-
-[1] Message-ID <1178539423.3032.24.camel@localhost.localdomain>
