@@ -1,68 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-141-230-6-89.ipcom.comunitel.net ([89.6.230.141]:50161
-	"EHLO traven.no-ip.org" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751348AbXEYNCl (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:46008 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754756AbXECXnr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2007 09:02:41 -0400
-Date: Fri, 25 May 2007 15:04:44 +0200
-From: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-To: developers@islsm.org, linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
-Subject: [PATCH 2/2] use list_for_each() for iteration in Prism 54 driver
-Message-ID: <20070525130444.GG31790@traven>
-References: <20070525125630.GE31790@traven>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070525125630.GE31790@traven>
+	Thu, 3 May 2007 19:43:47 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH] mac80211: prevent a wme_qdiscop_init BUG on other devices
+Date: Thu, 03 May 2007 19:41:54 -0400
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Message-Id: <20070503234154.5115.24916.stgit@magic.sourmilk.net>
+Content-Type: text/plain;
+  charset=utf-8;
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use list_for_each() in the Prism54 driver to iterate over the MAC list
+From: Michael Wu <flamingice@sourmilk.net>
 
-Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+This prevents a BUG if the ieee80211 qdisc is being registered on a net dev
+without ieee80211_ptr set.
 
---
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
-diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-index 283be4a..34cf13c 100644
---- a/drivers/net/wireless/prism54/isl_ioctl.c
-+++ b/drivers/net/wireless/prism54/isl_ioctl.c
-@@ -1861,7 +1861,7 @@ prism54_del_mac(struct net_device *ndev, struct iw_request_info *info,
- 
- 	if (down_interruptible(&acl->sem))
- 		return -ERESTARTSYS;
--	for (ptr = acl->mac_list.next; ptr != &acl->mac_list; ptr = ptr->next) {
-+	list_for_each(ptr, &acl->mac_list) {
- 		entry = list_entry(ptr, struct mac_entry, _list);
- 
- 		if (memcmp(entry->addr, addr->sa_data, ETH_ALEN) == 0) {
-@@ -1891,7 +1891,7 @@ prism54_get_mac(struct net_device *ndev, struct iw_request_info *info,
- 	if (down_interruptible(&acl->sem))
- 		return -ERESTARTSYS;
- 
--	for (ptr = acl->mac_list.next; ptr != &acl->mac_list; ptr = ptr->next) {
-+	list_for_each(ptr, &acl->mac_list) {
- 		entry = list_entry(ptr, struct mac_entry, _list);
- 
- 		memcpy(dst->sa_data, entry->addr, ETH_ALEN);
-@@ -1972,7 +1972,7 @@ prism54_mac_accept(struct islpci_acl *acl, char *mac)
- 		return 1;
- 	}
- 
--	for (ptr = acl->mac_list.next; ptr != &acl->mac_list; ptr = ptr->next) {
-+	list_for_each(ptr, &acl->mac_list) {
- 		entry = list_entry(ptr, struct mac_entry, _list);
- 		if (memcmp(entry->addr, mac, ETH_ALEN) == 0) {
- 			res = 1;
+ net/mac80211/wme.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
 
--- 
-Matthias Kaehlcke
-Linux Application Developer
-Barcelona
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 3823f15..d9f4f37 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -389,10 +389,13 @@ static int wme_qdiscop_init(struct Qdisc *qd, struct rtattr *opt)
+ {
+ 	struct ieee80211_sched_data *q = qdisc_priv(qd);
+ 	struct net_device *dev = qd->dev;
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	int queues = local->hw.queues;
++	struct ieee80211_local *local;
++	int queues;
+ 	int err = 0, i;
+ 
++	if (!dev->ieee80211_ptr)
++		return -EINVAL;
++
+ 	/* check this device is an ieee80211 master type device */
+ 	if (dev->type != ARPHRD_IEEE80211)
+ 		return -EINVAL;
+@@ -406,6 +409,9 @@ static int wme_qdiscop_init(struct Qdisc *qd, struct rtattr *opt)
+ 	if (qd->flags & TCQ_F_INGRESS)
+ 		return -EINVAL;
+ 
++	local = wdev_priv(dev->ieee80211_ptr);
++	queues = local->hw.queues;
++
+ 	/* if options were passed in, set them */
+ 	if (opt) {
+ 		err = wme_qdiscop_tune(qd, opt);
 
-               If sharing a thing in no way diminishes it,
-               it is not rightly owned if it is not shared
-                                                                 .''`.
-    using free software / Debian GNU/Linux | http://debian.org  : :'  :
-                                                                `. `'`
-gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
