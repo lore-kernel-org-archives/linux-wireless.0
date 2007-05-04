@@ -1,65 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail7.sea5.speakeasy.net ([69.17.117.9]:42346 "EHLO
-	mail7.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755923AbXE1Qm0 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46509 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767830AbXEDLGO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2007 12:42:26 -0400
-Message-Id: <20070528164200.239326973@localhost>
-References: <20070528163845.448090722@localhost>
-Date: Mon, 28 May 2007 09:38:46 -0700
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] hostap: Allocate enough tailroom for TKIP
+	Fri, 4 May 2007 07:06:14 -0400
+Subject: Re: [PATCH V3] mac80211: Add support for SIOCGIWRATE ioctl to   provide rate information
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>
+In-Reply-To: <20070504130019.2f0911ca@griffin.suse.cz>
+References: <463a8a92.jFmmjY4cDnfJeisJ%Larry.Finger@lwfinger.net>
+	 <1178276312.7408.9.camel@johannes.berg>
+	 <20070504130019.2f0911ca@griffin.suse.cz>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5z/aPywKdJTAENWtsPEp"
+Date: Fri, 04 May 2007 13:07:13 +0200
+Message-Id: <1178276834.7408.11.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Brandon Craig Rhodes <brandon@rhodesmill.org>
 
-When hostap_tx_encrypt() tries to allocate enough headroom and
-tailroom for ieee80211 encryption, it only makes enough room for the
-"mpdu" phase of the operation, but forgets about the "msdu" phase.
-(For TKIP, these two phases require, respectively, 4 and 8 bytes of
-tailroom, per the "ieee80211_crypt_tkip" structure at the bottom of
-net/ieee80211/ieee80211_crypt_tkip.c.)
+--=-5z/aPywKdJTAENWtsPEp
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Brandon Craig Rhodes <brandon@rhodesmill.org>
-Signed-off-by: Jouni Malinen <j@w1.fi>
+On Fri, 2007-05-04 at 13:00 +0200, Jiri Benc wrote:
+> On Fri, 04 May 2007 12:58:32 +0200, Johannes Berg wrote:
+> > Is this racy if somebody changes the type of the interface at the same
+> > time? Would a fix be to sta_info_get() beforehand? I really don't know
+> > without digging the code, Jiri, Michael?
+>=20
+> It's under rtnl, so that's fine.
 
+Hah, good point, sorry.
 
-Index: linux-2.6/drivers/net/wireless/hostap/hostap_80211_tx.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/hostap/hostap_80211_tx.c
-+++ linux-2.6/drivers/net/wireless/hostap/hostap_80211_tx.c
-@@ -311,7 +311,7 @@ static struct sk_buff * hostap_tx_encryp
- 	local_info_t *local;
- 	struct ieee80211_hdr_4addr *hdr;
- 	u16 fc;
--	int hdr_len, res;
-+	int prefix_len, postfix_len, hdr_len, res;
- 
- 	iface = netdev_priv(skb->dev);
- 	local = iface->local;
-@@ -337,10 +337,13 @@ static struct sk_buff * hostap_tx_encryp
- 	if (skb == NULL)
- 		return NULL;
- 
--	if ((skb_headroom(skb) < crypt->ops->extra_mpdu_prefix_len ||
--	     skb_tailroom(skb) < crypt->ops->extra_mpdu_postfix_len) &&
--	    pskb_expand_head(skb, crypt->ops->extra_mpdu_prefix_len,
--			     crypt->ops->extra_mpdu_postfix_len, GFP_ATOMIC)) {
-+	prefix_len = crypt->ops->extra_mpdu_prefix_len +
-+		crypt->ops->extra_msdu_prefix_len;
-+	postfix_len = crypt->ops->extra_mpdu_postfix_len +
-+		crypt->ops->extra_msdu_postfix_len;
-+	if ((skb_headroom(skb) < prefix_len ||
-+	     skb_tailroom(skb) < postfix_len) &&
-+	    pskb_expand_head(skb, prefix_len, postfix_len, GFP_ATOMIC)) {
- 		kfree_skb(skb);
- 		return NULL;
- 	}
+johannes
 
---
+--=-5z/aPywKdJTAENWtsPEp
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGOxPh/ETPhpq3jKURAsvPAJ9GWiNj/ys185sfEiK+4wkzAiIFMQCeO8xU
+5xO0TuadvoY8jFiSk1HE0tQ=
+=4FfD
+-----END PGP SIGNATURE-----
+
+--=-5z/aPywKdJTAENWtsPEp--
+
