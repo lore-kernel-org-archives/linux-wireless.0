@@ -1,66 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:15773 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757306AbXEJP46 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 11:56:58 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH V3] mac80211: Add support for SIOCGIWRATE ioctl to provide rate information
-Date: Thu, 10 May 2007 11:56:08 -0400
-Cc: Jiri Benc <jbenc@suse.cz>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-References: <463a8a92.jFmmjY4cDnfJeisJ%Larry.Finger@lwfinger.net> <200705100016.45876.flamingice@sourmilk.net> <46433293.9010002@lwfinger.net>
-In-Reply-To: <46433293.9010002@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1607506.m393BZbVNT";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705101156.12588.flamingice@sourmilk.net>
+Received: from styx.suse.cz ([82.119.242.94]:35991 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755364AbXEDOqI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 May 2007 10:46:08 -0400
+Date: Fri, 4 May 2007 16:45:59 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH v2] mac80211: prevent a wme_qdiscop_init BUG on other  devices
+Message-ID: <20070504164559.730fd662@griffin.suse.cz>
+In-Reply-To: <20070504010231.5274.99328.stgit@magic.sourmilk.net>
+References: <20070504010231.5274.99328.stgit@magic.sourmilk.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1607506.m393BZbVNT
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Thu, 03 May 2007 21:02:31 -0400, Michael Wu wrote:
+> This prevents a BUG if the ieee80211 qdisc is being registered on a net dev
+> without ieee80211_ptr set. It also ensures the device is a mac80211 device.
 
-On Thursday 10 May 2007 10:56, Larry Finger wrote:
-> Why has the review of this patch been so strung out? Everything you comme=
-nt
-> on here was in versions 1 & 2, but not mentioned in any review of those
-> versions.
->
-Sorry, I've been busy. I'm pretty sure these issues are the last ones.
+Applied, thanks!
 
-> As to the usefulness of this function, I am testing in infrastructure, not
-> ad-hoc, mode, and the output matches the average rate in the log files if
-> debugging is enabled. If the address in u.sta.bssid is not correct, which
-> address should I be using? I still maintain that the user is entitled to
-> know the transmission rate from user space even if debugging is turned of=
-f,
-> and that this function is needed.
->
-I didn't say infrastructure wasn't gonna work. That's the one that should=20
-work. However, adhoc probably won't.
+ Jiri
 
-=2DMichael Wu
-
---nextPart1607506.m393BZbVNT
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGQ0CcT3Oqt9AH4aERAsJPAJ9xA452YANgSd+e2mUQ5k0AXWxrLgCgkdl7
-pGnklOgAJ8i8MCTROKM5Pcw=
-=Ng8Y
------END PGP SIGNATURE-----
-
---nextPart1607506.m393BZbVNT--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Jiri Benc
+SUSE Labs
