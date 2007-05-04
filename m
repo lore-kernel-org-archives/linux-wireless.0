@@ -1,76 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:58036 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1759863AbXEZQ0P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 12:26:15 -0400
-From: Uwe Bugla <uwe.bugla@gmx.de>
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-Date: Sat, 26 May 2007 18:20:52 +0200
-References: <20070524195616.234280@gmx.net> <200705261750.48816.mb@bu3sch.de> <20070526091309.0af20971.akpm@linux-foundation.org>
-In-Reply-To: <20070526091309.0af20971.akpm@linux-foundation.org>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
+Received: from fmmailgate01.web.de ([217.72.192.221]:52294 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031435AbXEDRXM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 May 2007 13:23:12 -0400
+Message-ID: <463B6BB9.2050701@web.de>
+Date: Fri, 04 May 2007 19:22:01 +0200
+From: Jan Kiszka <jan.kiszka@web.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200705261820.52240.uwe.bugla@gmx.de>
+To: Jiri Benc <jbenc@suse.cz>
+CC: linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [PATCH] mac80211: don't break without 802.11 qdisc
+References: <20070504014159.3ed9d594@logostar.upir.cz>
+In-Reply-To: <20070504014159.3ed9d594@logostar.upir.cz>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig2F8B426DEAA4574C306A7EAA"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Samstag, 26. Mai 2007 18:13 schrieben Sie:
-> On Sat, 26 May 2007 17:50:48 +0200 Michael Buesch <mb@bu3sch.de> wrote:
-> > Andrew,
-> >
-> > I am going to ignore Uwe from now on. It's simply impossible
-> > to debug the problem the way he is responding.
-> > Well, I'm not the first person in the Linux community adding
-> > him to the killfile, ... .
->
-> Well yes, there are some personality issues here ;) But the main thing is
-> to struggle on and fix this bug, wherever it lies.
->
-> > I ask to try wireless-dev, as the driver works perfectly fine
-> > for me there, but he refuses to try it, too. So I'm stuck.
->
-> I don't think he knows how to obtain it.
->
-> Uwe, http://userweb.kernel.org/~akpm/git-wireless.patch.gz is the current
-> wireless tree.  That's a patch against 2.6.22-rc3.  Could you please test
-> that?  If that works then we know that the bug probably lies outside the
-> b44 driver (or it was subsequently fixed).
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig2F8B426DEAA4574C306A7EAA
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: quoted-printable
 
-Thank you, Andrew, just wait for a while. I am gonna try.....
+Jiri Benc wrote:
+> Jan, could you test if this patch fixes your problems with removing of
+> 802.11 qdisc? (It applies on top of the patch
+> http://git.kernel.org/?p=3Dlinux/kernel/git/linville/wireless-dev.git;a=
+=3Dcommitdiff_plain;h=3D00a908826e778b39a802013729f7826c2d575360 )
 
->
-> > I already tried your -mm kernel, but it crashes on my machine
-> > for other reasons. (Yeah, I should look into them, too :P )
->
-> err, please do.  Just the oops trace would be a start.
->
-> > Andrew, is it possible that the breakage was introduced in the
-> > merge process somehow? Didn't the patch apply cleanly? Are there
-> > other changes to b44 I should know about in your tree?
->
-> Only git-wireless.net modifies b44.c but if we're having IRQ assignment
-> problems then we'd need to look elsewhere.  I guess you could diff
-> rc2-mm1's b44.c against the expected version.
->
-> > If it is really impossible to debug this problem, I'd like to
-> > suggest you to drop the b44-ssb port completely.
->
-> Well we don't know if that'll fix it.
->
-> I believe that Uwe said that reverting the b44.c changes from rc2-mm1 fixes
-> things for him?  Odd, but it still doesn't rule out acip/pci/platform
-> changes as being the cause.
+Depends on how we define "fix": I'm still able to tweak the qdisc of
+wmaster0 (and so will shorewall). That may or may not lead to some BUG
+(WARN_ON) of the 80211 stack later on as it used to, I need to watch a
+bit longer.
 
-No, Andrew, not odd, but simply real! And Maximilian Engelhardt replied 
-something similar on that.... : )
+What should be the effect of the patch? Catch, revert, or even prevent
+this qdisc change of a shutdown and/or running wlan device?
 
-Cheers
+Jan
 
-Uwe
 
+--------------enig2F8B426DEAA4574C306A7EAA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFGO2u5niDOoMHTA+kRAja9AJ9Y1kkKNn3oYFh51A8ABE8xPnqjPACdE1Zk
+rC9XDFyr1bqHUko4/q22NOI=
+=Tern
+-----END PGP SIGNATURE-----
+
+--------------enig2F8B426DEAA4574C306A7EAA--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
