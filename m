@@ -1,46 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3780 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755164AbXE3TBU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2007 15:01:20 -0400
-Date: Wed, 30 May 2007 14:30:33 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 4/4] mac80211: avoid null ptr deref in ieee80211_ibss_add_sta
-Message-ID: <20070530183033.GG3610@tuxdriver.com>
-References: <20070530182538.GB3610@tuxdriver.com> <20070530182807.GD3610@tuxdriver.com> <20070530182858.GE3610@tuxdriver.com> <20070530182946.GF3610@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070530182946.GF3610@tuxdriver.com>
+Received: from smtp.rutgers.edu ([128.6.72.243]:14945 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1767568AbXEDBES (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 May 2007 21:04:18 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH v2] mac80211: prevent a wme_qdiscop_init BUG on other devices
+Date: Thu, 03 May 2007 21:02:31 -0400
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Message-Id: <20070504010231.5274.99328.stgit@magic.sourmilk.net>
+Content-Type: text/plain;
+  charset=utf-8;
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: John W. Linville <linville@tuxdriver.com>
+From: Michael Wu <flamingice@sourmilk.net>
 
-avoid sdata null pointer dereference in ieee80211_ibss_add_sta.
+This prevents a BUG if the ieee80211 qdisc is being registered on a net dev
+without ieee80211_ptr set. It also ensures the device is a mac80211 device.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
 ---
- net/mac80211/ieee80211_sta.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index dbac858..9f30ae4 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -2997,7 +2997,7 @@ struct sta_info * ieee80211_ibss_add_sta(struct net_device *dev,
+ net/mac80211/wme.c |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 3823f15..89ce815 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -389,10 +389,15 @@ static int wme_qdiscop_init(struct Qdisc *qd, struct rtattr *opt)
  {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct sta_info *sta;
--	struct ieee80211_sub_if_data *sdata = NULL;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_sched_data *q = qdisc_priv(qd);
+ 	struct net_device *dev = qd->dev;
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	int queues = local->hw.queues;
++	struct ieee80211_local *local;
++	int queues;
+ 	int err = 0, i;
  
- 	/* TODO: Could consider removing the least recently used entry and
- 	 * allow new one to be added. */
--- 
-1.5.0.6
++	/* check that device is a mac80211 device */
++	if (!dev->ieee80211_ptr ||
++	    dev->ieee80211_ptr->wiphy->privid != mac80211_wiphy_privid)
++		return -EINVAL;
++
+ 	/* check this device is an ieee80211 master type device */
+ 	if (dev->type != ARPHRD_IEEE80211)
+ 		return -EINVAL;
+@@ -406,6 +411,9 @@ static int wme_qdiscop_init(struct Qdisc *qd, struct rtattr *opt)
+ 	if (qd->flags & TCQ_F_INGRESS)
+ 		return -EINVAL;
+ 
++	local = wdev_priv(dev->ieee80211_ptr);
++	queues = local->hw.queues;
++
+ 	/* if options were passed in, set them */
+ 	if (opt) {
+ 		err = wme_qdiscop_tune(qd, opt);
 
--- 
-John W. Linville
-linville@tuxdriver.com
