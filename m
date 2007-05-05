@@ -1,62 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:38113
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752772AbXEZPu4 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43062
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754643AbXEEStU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 11:50:56 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-Date: Sat, 26 May 2007 17:50:48 +0200
-Cc: Uwe Bugla <uwe.bugla@gmx.de>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-References: <20070524195616.234280@gmx.net> <200705260700.28777.mb@bu3sch.de> <200705261240.55153.uwe.bugla@gmx.de>
-In-Reply-To: <200705261240.55153.uwe.bugla@gmx.de>
-MIME-Version: 1.0
-Message-Id: <200705261750.48816.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-15"
+	Sat, 5 May 2007 14:49:20 -0400
+Date: Sat, 05 May 2007 11:49:06 -0700 (PDT)
+Message-Id: <20070505.114906.71553321.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/4] add mac80211 wireless infrastructure
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20070505031749.GA5308@tuxdriver.com>
+References: <20070505031749.GA5308@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrew,
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 4 May 2007 23:17:49 -0400
 
-I am going to ignore Uwe from now on. It's simply impossible
-to debug the problem the way he is responding.
-Well, I'm not the first person in the Linux community adding
-him to the killfile, ... .
-I ask to try wireless-dev, as the driver works perfectly fine
-for me there, but he refuses to try it, too. So I'm stuck.
-I already tried your -mm kernel, but it crashes on my machine
-for other reasons. (Yeah, I should look into them, too :P )
+> This series adds the mac80211 component.  This is the new wireless
+> infrastructure for "softmac"-style wireless hardware.  It originated
+> as code contributed by Devicescape, and has been under development by
+> the community for well over a year.  Thanks are due especially to Jiri
+> Benc and Michael Wu as well as Johannes Berg and a number of other
+> contributors who have worked to hammer this into its current form.
+> 
+> This component was in -mm for most of the 2.6.21 cycle, with few
+> reported bugs.  The code is also currently available in Fedora rawhide
+> where it has performed well.
+> 
+> The wireless developers would like this to be considered for merge
+> in time for 2.6.22.  Patches for at least one mac80211-based driver
+> will follow shortly.
 
-Andrew, is it possible that the breakage was introduced in the
-merge process somehow? Didn't the patch apply cleanly? Are there
-other changes to b44 I should know about in your tree?
-
-If it is really impossible to debug this problem, I'd like to
-suggest you to drop the b44-ssb port completely.
-I'm not going to destroy my nerves any further with guys like
-Uwe, so I'll include the b44-ssb port in the OpenWRT tree
-and be done with it.
-Although I would be very sad about it, as my longterm goal was
-to make a vanilla kernel run on the OpenWRT devices... .
-
-But maybe we can get another tester for -mm with similiar problems,
-who is not bullshitting the whole time and is also going to
-test wireless-dev to make sure it's not a merge bug.
-
-
------------
-
-And Uwe: Remember, I am not payed for this. I do _all_ this
-in my free time.
-So sentences like: "So, the ball has been in your court
-for two days now, and you simply keep on hesitating
-to take action now."
-are _completely_ displaced in this discussion.
-
--- 
-Greetings Michael.
+Applied and pushed out to net-2.6, I'll push this stuff to
+Linus, thanks a lot!
