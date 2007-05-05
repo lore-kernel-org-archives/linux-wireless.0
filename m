@@ -1,125 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:62783 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754323AbXEJWZA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 18:25:00 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so699992uga
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2007 15:24:58 -0700 (PDT)
-Message-ID: <1ba2fa240705101524x2676a09eyeff3b71ed2542478@mail.gmail.com>
-Date: Fri, 11 May 2007 01:24:58 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Jiri Benc" <jbenc@suse.cz>
-Subject: Re: Specifing rate control algorithm?
-Cc: jketreno <jketreno@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Michael Wu" <flamingice@sourmilk.net>
-In-Reply-To: <20070510212355.6c13cde8@griffin.suse.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <464253CE.2030504@linux.intel.com>
-	 <20070510132756.2ca660a0@midnight.suse.cz>
-	 <46434596.6010908@linux.intel.com>
-	 <20070510194233.335004b7@griffin.suse.cz>
-	 <46437DC8.2060805@linux.intel.com>
-	 <20070510212355.6c13cde8@griffin.suse.cz>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4024 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1767979AbXEEEC5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 May 2007 00:02:57 -0400
+Date: Fri, 4 May 2007 23:17:49 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 0/4] add mac80211 wireless infrastructure
+Message-ID: <20070505031749.GA5308@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/10/07, Jiri Benc <jbenc@suse.cz> wrote:
-> On Thu, 10 May 2007 13:17:12 -0700, jketreno wrote:
-> > > Please send your rate control algorithm first so we can know why are
-> > > you requesting this.
-> >
-> > I told you the reason why I am requesting this.  Do you think I'm lying
-> > or trying to trick you?
->
-> I'm not convinced your request is reasonable. But as Jouni pointed out,
-> there _could be_ some specific circumstances under which it could make
-> sense. I'm not aware of any such circumstance now.
->
-> You said you have a code. Show it. I can assure you that if it turns
-> out from the code that your request is valid, you will have no problems
-> with your patch.
->
-> We're opensource. Please keep that in mind. If you need to prove
-> something, send a code.
+This series adds the mac80211 component.  This is the new wireless
+infrastructure for "softmac"-style wireless hardware.  It originated
+as code contributed by Devicescape, and has been under development by
+the community for well over a year.  Thanks are due especially to Jiri
+Benc and Michael Wu as well as Johannes Berg and a number of other
+contributors who have worked to hammer this into its current form.
 
-The code is available why should it be paste it to the email.
+This component was in -mm for most of the 2.6.21 cycle, with few
+reported bugs.  The code is also currently available in Fedora rawhide
+where it has performed well.
 
-> > Generic algorithms aren't as capable as hardware specific algorithms
-> > when you factor performance, latency, system utilization, power
-> > consumption, etc.  Optimal algorithms are written to take advantage of
-> > the capabilities exposed by the hardware.
->
-> You said the same about hardware scanning. Michael showed you that's
-> not true.
->
-Michael has shortened the dwell time on the channel, while hw scanning
-has shorten switching time from the channel to channel and no the time
-you are listening on the channel
-I wouldn't call it an optimization. Did he measured the power consumption ?
+The wireless developers would like this to be considered for merge
+in time for 2.6.22.  Patches for at least one mac80211-based driver
+will follow shortly.
 
-> > The 3945, as an example, let's you configure the hardware with a set of
-> > rates, retries per rate, and a fallback order.  You submit one Tx
-> > request to the hardware and it then performs all the retries,
-> > fallbacks, etc without host interaction over overhead.
->
-> I don't see anything fundamentally different from other hardware.
->
-The God is in the details
+Thanks,
 
-> > The rate control algorithm needs to be aware of the attempts made by
-> > the hardware.  The specific mechanism by which the 3945 sets up those
-> > rates is device specific.  The mechanism by which the results are
-> > reported back are device specific.  The functions related to selecting
-> > the Tx rate are called twice for *EVERY PACKET*.  Anything you can do
-> > to make that code-path faster and leaner for the specific device it is
-> > using is a win.  Hardware specific beats generic.
->
-> Okay, show the code. Maybe we will be able to find a better way to deal
-> with that.
->
-> > Might other hardware devices also support some type of rate fallback or
-> > automatic retries?  Maybe.
->
-> They do.
->
-> > Do they all do it the same way?  No.
->
-> That's valid for almost everything in the stack. Yet we have (and want
-> to have) one stack and don't want each driver to implement its parts on
-> their own.
->
-> > Is it worth slowing down hot code paths in the name of "generic
-> > software"? Absolutely not.
->
-> If the slowdown is not big, yes, it is. Unifying things almost always
-> means you need to accept some trade-offs.
+John
+---
 
-Clean API gives you the ability to enjoy from the both worlds. WiFi is
-about mobility power saving and therefore hw offloading is essential.
-What worth the few more lines of the code that gives you this ability
-this is also a trade-off.
+The following changes since commit dc87c3985e9b442c60994308a96f887579addc39:
+  Linus Torvalds (1):
+        libata: honour host controllers that want just one host
 
-> > PS.  You're free to download the 3945 specific rate control algorithm
-> > if you want.  It has been part of the GPL ipw3945 driver for over a
-> > year at http://ipw3945.sf.net.  You can also find it refactored in
-> > iwlwifi at http://intellinuxgraphics.org.
->
-> Could you send just the rate control algorithm (or an excerpt of it)
-> to this list so more people will look at it?
->
-> Thanks.
->
->  Jiri
->
-> --
-> Jiri Benc
-> SUSE Labs
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+are found in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git mac80211
+
+Jiri Benc (4):
+      mac80211: add generic include/linux/ieee80211.h
+      mac80211: add mac80211 wireless stack
+      mac80211: add debugfs attributes
+      mac80211: add maintainers entry for mac80211
+
+ MAINTAINERS                     |   10 +
+ include/linux/ieee80211.h       |  342 +++
+ include/net/mac80211.h          | 1045 ++++++++
+ net/Kconfig                     |    1 +
+ net/Makefile                    |    4 +-
+ net/mac80211/Kconfig            |   78 +
+ net/mac80211/Makefile           |   20 +
+ net/mac80211/aes_ccm.c          |  155 ++
+ net/mac80211/aes_ccm.h          |   26 +
+ net/mac80211/debugfs.c          |  433 ++++
+ net/mac80211/debugfs.h          |   16 +
+ net/mac80211/debugfs_key.c      |  252 ++
+ net/mac80211/debugfs_key.h      |   34 +
+ net/mac80211/debugfs_netdev.c   |  440 ++++
+ net/mac80211/debugfs_netdev.h   |   30 +
+ net/mac80211/debugfs_sta.c      |  246 ++
+ net/mac80211/debugfs_sta.h      |   12 +
+ net/mac80211/hostapd_ioctl.h    |  108 +
+ net/mac80211/ieee80211.c        | 4984 +++++++++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_cfg.c    |   66 +
+ net/mac80211/ieee80211_cfg.h    |    9 +
+ net/mac80211/ieee80211_common.h |   98 +
+ net/mac80211/ieee80211_i.h      |  798 +++++++
+ net/mac80211/ieee80211_iface.c  |  352 +++
+ net/mac80211/ieee80211_ioctl.c  | 1822 ++++++++++++++
+ net/mac80211/ieee80211_key.h    |  106 +
+ net/mac80211/ieee80211_led.c    |   91 +
+ net/mac80211/ieee80211_led.h    |   32 +
+ net/mac80211/ieee80211_rate.c   |  140 ++
+ net/mac80211/ieee80211_rate.h   |  144 ++
+ net/mac80211/ieee80211_sta.c    | 3060 ++++++++++++++++++++++++
+ net/mac80211/michael.c          |  104 +
+ net/mac80211/michael.h          |   20 +
+ net/mac80211/rc80211_simple.c   |  432 ++++
+ net/mac80211/sta_info.c         |  470 ++++
+ net/mac80211/sta_info.h         |  164 ++
+ net/mac80211/tkip.c             |  341 +++
+ net/mac80211/tkip.h             |   36 +
+ net/mac80211/wep.c              |  328 +++
+ net/mac80211/wep.h              |   40 +
+ net/mac80211/wme.c              |  678 ++++++
+ net/mac80211/wme.h              |   57 +
+ net/mac80211/wpa.c              |  660 ++++++
+ net/mac80211/wpa.h              |   31 +
+ 44 files changed, 18313 insertions(+), 2 deletions(-)
+ create mode 100644 include/linux/ieee80211.h
+ create mode 100644 include/net/mac80211.h
+ create mode 100644 net/mac80211/Kconfig
+ create mode 100644 net/mac80211/Makefile
+ create mode 100644 net/mac80211/aes_ccm.c
+ create mode 100644 net/mac80211/aes_ccm.h
+ create mode 100644 net/mac80211/debugfs.c
+ create mode 100644 net/mac80211/debugfs.h
+ create mode 100644 net/mac80211/debugfs_key.c
+ create mode 100644 net/mac80211/debugfs_key.h
+ create mode 100644 net/mac80211/debugfs_netdev.c
+ create mode 100644 net/mac80211/debugfs_netdev.h
+ create mode 100644 net/mac80211/debugfs_sta.c
+ create mode 100644 net/mac80211/debugfs_sta.h
+ create mode 100644 net/mac80211/hostapd_ioctl.h
+ create mode 100644 net/mac80211/ieee80211.c
+ create mode 100644 net/mac80211/ieee80211_cfg.c
+ create mode 100644 net/mac80211/ieee80211_cfg.h
+ create mode 100644 net/mac80211/ieee80211_common.h
+ create mode 100644 net/mac80211/ieee80211_i.h
+ create mode 100644 net/mac80211/ieee80211_iface.c
+ create mode 100644 net/mac80211/ieee80211_ioctl.c
+ create mode 100644 net/mac80211/ieee80211_key.h
+ create mode 100644 net/mac80211/ieee80211_led.c
+ create mode 100644 net/mac80211/ieee80211_led.h
+ create mode 100644 net/mac80211/ieee80211_rate.c
+ create mode 100644 net/mac80211/ieee80211_rate.h
+ create mode 100644 net/mac80211/ieee80211_sta.c
+ create mode 100644 net/mac80211/michael.c
+ create mode 100644 net/mac80211/michael.h
+ create mode 100644 net/mac80211/rc80211_simple.c
+ create mode 100644 net/mac80211/sta_info.c
+ create mode 100644 net/mac80211/sta_info.h
+ create mode 100644 net/mac80211/tkip.c
+ create mode 100644 net/mac80211/tkip.h
+ create mode 100644 net/mac80211/wep.c
+ create mode 100644 net/mac80211/wep.h
+ create mode 100644 net/mac80211/wme.c
+ create mode 100644 net/mac80211/wme.h
+ create mode 100644 net/mac80211/wpa.c
+ create mode 100644 net/mac80211/wpa.h
+
+Individual patches can be found here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/mac80211/
+
+-- 
+John W. Linville
+linville@tuxdriver.com
