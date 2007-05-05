@@ -1,2880 +1,2335 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:54075 "EHLO mx1.redhat.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3079 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754665AbXEGVNR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2007 17:13:17 -0400
-Subject: Re: Please pull 'upstream' branch of wireless-2.6
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: jeff@garzik.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <20070507175121.GF5125@tuxdriver.com>
-References: <20070507175121.GF5125@tuxdriver.com>
-Content-Type: text/plain
-Date: Mon, 07 May 2007 17:15:50 -0400
-Message-Id: <1178572550.11805.7.camel@localhost.localdomain>
+	id S1161631AbXEEPhP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 May 2007 11:37:15 -0400
+Date: Sat, 5 May 2007 09:45:28 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4 (resend)] mac80211: add debugfs attributes
+Message-ID: <20070505134528.GC4155@tuxdriver.com>
+References: <20070505031749.GA5308@tuxdriver.com> <20070505134255.GA4155@tuxdriver.com> <20070505134438.GB4155@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070505134438.GB4155@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-05-07 at 13:51 -0400, John W. Linville wrote:
-> The following changes since commit 15700770ef7c5d12e2f1659d2ddbeb3f658d9f37:
->   Linus Torvalds (1):
->         Merge git://git.kernel.org/.../sam/kbuild
-> 
-> are found in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream
-> 
-> Daniel Drake (1):
->       zd1211rw: Add ID for ZyXEL AG-225H v2
-> 
-> Geert Uytterhoeven (1):
->       mac80211: include <linux/delay.h> instead of <asm/delay.h>
-> 
-> Ivo van Doorn (1):
->       Add 93cx6 eeprom library
-> 
-> John W. Linville (1):
->       libertas: fix for wireless Kconfig changes
+From: Jiri Benc <jbenc@suse.cz>
 
-So the kconfig changes with s/NET_RADIO/NET_80211 (or whatever it was)
-are in for 2.6.22?  Or is that for 2.6.23?
+Export various mac80211 internal variables through debugfs.
 
-Dan
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/Kconfig           |    9 +
+ net/mac80211/Makefile          |    1 +
+ net/mac80211/debugfs.c         |  433 +++++++++++++++++++++++++++++++++++++++
+ net/mac80211/debugfs.h         |   16 ++
+ net/mac80211/debugfs_key.c     |  252 +++++++++++++++++++++++
+ net/mac80211/debugfs_key.h     |   34 +++
+ net/mac80211/debugfs_netdev.c  |  440 ++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/debugfs_netdev.h  |   30 +++
+ net/mac80211/debugfs_sta.c     |  246 ++++++++++++++++++++++
+ net/mac80211/debugfs_sta.h     |   12 +
+ net/mac80211/ieee80211.c       |   14 ++
+ net/mac80211/ieee80211_i.h     |  127 ++++++++++++
+ net/mac80211/ieee80211_iface.c |    8 +
+ net/mac80211/ieee80211_ioctl.c |   22 ++-
+ net/mac80211/ieee80211_key.h   |   17 ++
+ net/mac80211/ieee80211_rate.h  |   22 ++
+ net/mac80211/rc80211_simple.c  |   71 +++++++
+ net/mac80211/sta_info.c        |  108 +++++++++-
+ net/mac80211/sta_info.h        |   19 ++
+ 19 files changed, 1866 insertions(+), 15 deletions(-)
+ create mode 100644 net/mac80211/debugfs.c
+ create mode 100644 net/mac80211/debugfs.h
+ create mode 100644 net/mac80211/debugfs_key.c
+ create mode 100644 net/mac80211/debugfs_key.h
+ create mode 100644 net/mac80211/debugfs_netdev.c
+ create mode 100644 net/mac80211/debugfs_netdev.h
+ create mode 100644 net/mac80211/debugfs_sta.c
+ create mode 100644 net/mac80211/debugfs_sta.h
 
-> Larry Finger (3):
->       ieee80211: add ieee80211_channel_to_freq
->       ieee80211: include frequency in scan results
->       bcm43xx: Remove dead configuration variable CONFIG_947XX
-> 
-> Matthew Davidson (1):
->       zd1211rw: Add ID for Sitecom WL-117
-> 
-> Michael Wu (1):
->       Add rtl8187 wireless driver
-> 
-> Ulrich Kunitz (1):
->       zd1211rw: Added new USB id for Planex GW-US54ZGL
-> 
->  MAINTAINERS                                    |   10 +
->  drivers/misc/Kconfig                           |    6 +
->  drivers/misc/Makefile                          |    1 +
->  drivers/misc/eeprom_93cx6.c                    |  347 +++++++++++
->  drivers/net/wireless/Kconfig                   |    4 +-
->  drivers/net/wireless/Makefile                  |    3 +
->  drivers/net/wireless/bcm43xx/bcm43xx.h         |   18 +-
->  drivers/net/wireless/bcm43xx/bcm43xx_dma.c     |    4 -
->  drivers/net/wireless/bcm43xx/bcm43xx_main.c    |   81 ---
->  drivers/net/wireless/bcm43xx/bcm43xx_main.h    |   19 -
->  drivers/net/wireless/rtl818x/Kconfig           |   16 +
->  drivers/net/wireless/rtl818x/Makefile          |    2 +
->  drivers/net/wireless/rtl818x/rtl8187.h         |  125 ++++
->  drivers/net/wireless/rtl818x/rtl8187_dev.c     |  730 +++++++++++++++++++++++
->  drivers/net/wireless/rtl818x/rtl8187_rtl8225.c |  744 ++++++++++++++++++++++++
->  drivers/net/wireless/rtl818x/rtl8187_rtl8225.h |   30 +
->  drivers/net/wireless/rtl818x/rtl818x.h         |  212 +++++++
->  drivers/net/wireless/zd1211rw/zd_usb.c         |    4 +
->  include/linux/eeprom_93cx6.h                   |   77 +++
->  include/net/ieee80211.h                        |    2 +
->  net/ieee80211/ieee80211_geo.c                  |   16 +
->  net/ieee80211/ieee80211_wx.c                   |    8 +-
->  net/mac80211/ieee80211_sta.c                   |    2 +-
->  23 files changed, 2338 insertions(+), 123 deletions(-)
->  create mode 100644 drivers/misc/eeprom_93cx6.c
->  create mode 100644 drivers/net/wireless/rtl818x/Kconfig
->  create mode 100644 drivers/net/wireless/rtl818x/Makefile
->  create mode 100644 drivers/net/wireless/rtl818x/rtl8187.h
->  create mode 100644 drivers/net/wireless/rtl818x/rtl8187_dev.c
->  create mode 100644 drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
->  create mode 100644 drivers/net/wireless/rtl818x/rtl8187_rtl8225.h
->  create mode 100644 drivers/net/wireless/rtl818x/rtl818x.h
->  create mode 100644 include/linux/eeprom_93cx6.h
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 0492dd8..c72774f 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -2935,6 +2935,16 @@ S:	Maintained
->  RISCOM8 DRIVER
->  S:	Orphan
->  
-> +RTL818X WIRELESS DRIVER
-> +P:	Michael Wu
-> +M:	flamingice@sourmilk.net
-> +P:	Andrea Merello
-> +M:	andreamrl@tiscali.it
-> +L:	linux-wireless@vger.kernel.org
-> +W:	http://linuxwireless.org/
-> +T:	git kernel.org:/pub/scm/linux/kernel/git/mwu/mac80211-drivers.git
-> +S:	Maintained
-> +
->  S3 SAVAGE FRAMEBUFFER DRIVER
->  P:	Antonino Daplas
->  M:	adaplas@gmail.com
-> diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-> index a3c525b..607a180 100644
-> --- a/drivers/misc/Kconfig
-> +++ b/drivers/misc/Kconfig
-> @@ -178,4 +178,10 @@ config THINKPAD_ACPI_BAY
->  
->  	  If you are not sure, say Y here.
->  
-> +config EEPROM_93CX6
-> +	tristate "EEPROM 93CX6 support"
-> +	---help---
-> +	  This is a driver for the EEPROM chipsets 93c46 and 93c66.
-> +	  The driver supports both read as well as write commands.
-> +
->  endmenu
-> diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-> index e325164..42b34a9 100644
-> --- a/drivers/misc/Makefile
-> +++ b/drivers/misc/Makefile
-> @@ -13,3 +13,4 @@ obj-$(CONFIG_TIFM_7XX1)       	+= tifm_7xx1.o
->  obj-$(CONFIG_SGI_IOC4)		+= ioc4.o
->  obj-$(CONFIG_SONY_LAPTOP)	+= sony-laptop.o
->  obj-$(CONFIG_THINKPAD_ACPI)	+= thinkpad_acpi.o
-> +obj-$(CONFIG_EEPROM_93CX6)	+= eeprom_93cx6.o
-> diff --git a/drivers/misc/eeprom_93cx6.c b/drivers/misc/eeprom_93cx6.c
-> new file mode 100644
-> index 0000000..a948ddc
-> --- /dev/null
-> +++ b/drivers/misc/eeprom_93cx6.c
-> @@ -0,0 +1,347 @@
-> +/*
-> +	Copyright (C) 2004 - 2006 rt2x00 SourceForge Project
-> +	<http://rt2x00.serialmonkey.com>
-> +
-> +	This program is free software; you can redistribute it and/or modify
-> +	it under the terms of the GNU General Public License as published by
-> +	the Free Software Foundation; either version 2 of the License, or
-> +	(at your option) any later version.
-> +
-> +	This program is distributed in the hope that it will be useful,
-> +	but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-> +	GNU General Public License for more details.
-> +
-> +	You should have received a copy of the GNU General Public License
-> +	along with this program; if not, write to the
-> +	Free Software Foundation, Inc.,
-> +	59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-> + */
-> +
-> +/*
-> +	Module: eeprom_93cx6
-> +	Abstract: EEPROM reader routines for 93cx6 chipsets.
-> +	Supported chipsets: 93c46 & 93c66.
-> + */
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/module.h>
-> +#include <linux/version.h>
-> +#include <linux/delay.h>
-> +#include <linux/eeprom_93cx6.h>
-> +
-> +MODULE_AUTHOR("http://rt2x00.serialmonkey.com");
-> +MODULE_VERSION("1.0");
-> +MODULE_DESCRIPTION("EEPROM 93cx6 chip driver");
-> +MODULE_LICENSE("GPL");
-> +
-> +static inline void eeprom_93cx6_pulse_high(struct eeprom_93cx6 *eeprom)
-> +{
-> +	eeprom->reg_data_clock = 1;
-> +	eeprom->register_write(eeprom);
-> +	udelay(1);
-> +}
-> +
-> +static inline void eeprom_93cx6_pulse_low(struct eeprom_93cx6 *eeprom)
-> +{
-> +	eeprom->reg_data_clock = 0;
-> +	eeprom->register_write(eeprom);
-> +	udelay(1);
-> +}
-> +
-> +static void eeprom_93cx6_startup(struct eeprom_93cx6 *eeprom)
-> +{
-> +	/*
-> +	 * Clear all flags, and enable chip select.
-> +	 */
-> +	eeprom->register_read(eeprom);
-> +	eeprom->reg_data_in = 0;
-> +	eeprom->reg_data_out = 0;
-> +	eeprom->reg_data_clock = 0;
-> +	eeprom->reg_chip_select = 1;
-> +	eeprom->register_write(eeprom);
-> +
-> +	/*
-> +	 * kick a pulse.
-> +	 */
-> +	eeprom_93cx6_pulse_high(eeprom);
-> +	eeprom_93cx6_pulse_low(eeprom);
-> +}
-> +
-> +static void eeprom_93cx6_cleanup(struct eeprom_93cx6 *eeprom)
-> +{
-> +	/*
-> +	 * Clear chip_select and data_in flags.
-> +	 */
-> +	eeprom->register_read(eeprom);
-> +	eeprom->reg_data_in = 0;
-> +	eeprom->reg_chip_select = 0;
-> +	eeprom->register_write(eeprom);
-> +
-> +	/*
-> +	 * kick a pulse.
-> +	 */
-> +	eeprom_93cx6_pulse_high(eeprom);
-> +	eeprom_93cx6_pulse_low(eeprom);
-> +}
-> +
-> +static void eeprom_93cx6_write_bits(struct eeprom_93cx6 *eeprom,
-> +	const u16 data, const u16 count)
-> +{
-> +	unsigned int i;
-> +
-> +	eeprom->register_read(eeprom);
-> +
-> +	/*
-> +	 * Clear data flags.
-> +	 */
-> +	eeprom->reg_data_in = 0;
-> +	eeprom->reg_data_out = 0;
-> +
-> +	/*
-> +	 * Start writing all bits.
-> +	 */
-> +	for (i = count; i > 0; i--) {
-> +		/*
-> +		 * Check if this bit needs to be set.
-> +		 */
-> +		eeprom->reg_data_in = !!(data & (1 << (i - 1)));
-> +
-> +		/*
-> +		 * Write the bit to the eeprom register.
-> +		 */
-> +		eeprom->register_write(eeprom);
-> +
-> +		/*
-> +		 * Kick a pulse.
-> +		 */
-> +		eeprom_93cx6_pulse_high(eeprom);
-> +		eeprom_93cx6_pulse_low(eeprom);
-> +	}
-> +
-> +	eeprom->reg_data_in = 0;
-> +	eeprom->register_write(eeprom);
-> +}
-> +
-> +static void eeprom_93cx6_read_bits(struct eeprom_93cx6 *eeprom,
-> +	u16 *data, const u16 count)
-> +{
-> +	unsigned int i;
-> +	u16 buf = 0;
-> +
-> +	eeprom->register_read(eeprom);
-> +
-> +	/*
-> +	 * Clear data flags.
-> +	 */
-> +	eeprom->reg_data_in = 0;
-> +	eeprom->reg_data_out = 0;
-> +
-> +	/*
-> +	 * Start reading all bits.
-> +	 */
-> +	for (i = count; i > 0; i--) {
-> +		eeprom_93cx6_pulse_high(eeprom);
-> +
-> +		eeprom->register_read(eeprom);
-> +
-> +		/*
-> +		 * Clear data_in flag.
-> +		 */
-> +		eeprom->reg_data_in = 0;
-> +
-> +		/*
-> +		 * Read if the bit has been set.
-> +		 */
-> +		if (eeprom->reg_data_out)
-> +			buf |= (1 << (i - 1));
-> +
-> +		eeprom_93cx6_pulse_low(eeprom);
-> +	}
-> +
-> +	*data = buf;
-> +}
-> +
-> +static void eeprom_93cx6_ewen(struct eeprom_93cx6 *eeprom)
-> +{
-> +	/*
-> +	 * Initialize the eeprom register
-> +	 */
-> +	eeprom_93cx6_startup(eeprom);
-> +
-> +	/*
-> +	 * Select the read opcode and the word to be read.
-> +	 */
-> +	eeprom_93cx6_write_bits(eeprom, PCI_EEPROM_EWEN_OPCODE, 5);
-> +	eeprom_93cx6_write_bits(eeprom, 0, 6);
-> +
-> +	/*
-> +	 * Cleanup eeprom register.
-> +	 */
-> +	eeprom_93cx6_cleanup(eeprom);
-> +}
-> +
-> +static void eeprom_93cx6_ewds(struct eeprom_93cx6 *eeprom)
-> +{
-> +	/*
-> +	 * Initialize the eeprom register
-> +	 */
-> +	eeprom_93cx6_startup(eeprom);
-> +
-> +	/*
-> +	 * Select the read opcode and the word to be read.
-> +	 */
-> +	eeprom_93cx6_write_bits(eeprom, PCI_EEPROM_EWDS_OPCODE, 5);
-> +	eeprom_93cx6_write_bits(eeprom, 0, 6);
-> +
-> +	/*
-> +	 * Cleanup eeprom register.
-> +	 */
-> +	eeprom_93cx6_cleanup(eeprom);
-> +}
-> +
-> +/**
-> + * eeprom_93cx6_read - Read multiple words from eeprom
-> + * @eeprom: Pointer to eeprom structure
-> + * @word: Word index from where we should start reading
-> + * @data: target pointer where the information will have to be stored
-> + *
-> + * This function will read the eeprom data as host-endian word
-> + * into the given data pointer.
-> + */
-> +void eeprom_93cx6_read(struct eeprom_93cx6 *eeprom, const u8 word,
-> +	u16 *data)
-> +{
-> +	u16 command;
-> +
-> +	/*
-> +	 * Initialize the eeprom register
-> +	 */
-> +	eeprom_93cx6_startup(eeprom);
-> +
-> +	/*
-> +	 * Select the read opcode and the word to be read.
-> +	 */
-> +	command = (PCI_EEPROM_READ_OPCODE << eeprom->width) | word;
-> +	eeprom_93cx6_write_bits(eeprom, command,
-> +		PCI_EEPROM_WIDTH_OPCODE + eeprom->width);
-> +
-> +	/*
-> +	 * Read the requested 16 bits.
-> +	 */
-> +	eeprom_93cx6_read_bits(eeprom, data, 16);
-> +
-> +	/*
-> +	 * Cleanup eeprom register.
-> +	 */
-> +	eeprom_93cx6_cleanup(eeprom);
-> +}
-> +EXPORT_SYMBOL_GPL(eeprom_93cx6_read);
-> +
-> +/**
-> + * eeprom_93cx6_multiread - Read multiple words from eeprom
-> + * @eeprom: Pointer to eeprom structure
-> + * @word: Word index from where we should start reading
-> + * @data: target pointer where the information will have to be stored
-> + * @words: Number of words that should be read.
-> + *
-> + * This function will read all requested words from the eeprom,
-> + * this is done by calling eeprom_93cx6_read() multiple times.
-> + * But with the additional change that while the eeprom_93cx6_read
-> + * will return host ordered bytes, this method will return little
-> + * endian words.
-> + */
-> +void eeprom_93cx6_multiread(struct eeprom_93cx6 *eeprom, const u8 word,
-> +	__le16 *data, const u16 words)
-> +{
-> +	unsigned int i;
-> +	u16 tmp;
-> +
-> +	for (i = 0; i < words; i++) {
-> +		tmp = 0;
-> +		eeprom_93cx6_read(eeprom, word + i, &tmp);
-> +		data[i] = cpu_to_le16(tmp);
-> +	}
-> +}
-> +EXPORT_SYMBOL_GPL(eeprom_93cx6_multiread);
-> +
-> +/**
-> + * eeprom_93cx6_write - Write multiple words to the eeprom
-> + * @eeprom: Pointer to eeprom structure
-> + * @word: Word index from where we should start writing
-> + * @data: Data that will be written
-> + *
-> + * This function will write the eeprom data as host-endian word
-> + * from the given data pointer.
-> + */
-> +void eeprom_93cx6_write(struct eeprom_93cx6 *eeprom, const u8 word,
-> +	u16 data)
-> +{
-> +	u16 command;
-> +
-> +	/*
-> +	 * select the ewen opcode.
-> +	 */
-> +	eeprom_93cx6_ewen(eeprom);
-> +
-> +	/*
-> +	 * Initialize the eeprom register
-> +	 */
-> +	eeprom_93cx6_startup(eeprom);
-> +
-> +	/*
-> +	 * Select the write opcode and the word to be read.
-> +	 */
-> +	command = (PCI_EEPROM_WRITE_OPCODE << eeprom->width) | word;
-> +	eeprom_93cx6_write_bits(eeprom, command,
-> +		PCI_EEPROM_WIDTH_OPCODE + eeprom->width);
-> +
-> +	/*
-> +	 * Write the requested 16 bits.
-> +	 */
-> +	eeprom_93cx6_write_bits(eeprom, data, 16);
-> +
-> +	/*
-> +	 * Cleanup eeprom register.
-> +	 */
-> +	eeprom_93cx6_cleanup(eeprom);
-> +
-> +	/*
-> +	 * Take a short break.
-> +	 */
-> +	msleep(10000);
-> +
-> +	/*
-> +	 * select the ewen opcode.
-> +	 */
-> +	eeprom_93cx6_ewds(eeprom);
-> +
-> +	/*
-> +	 * Cleanup eeprom register.
-> +	 */
-> +	eeprom_93cx6_cleanup(eeprom);
-> +}
-> +EXPORT_SYMBOL_GPL(eeprom_93cx6_write);
-> +
-> +
-> +/**
-> + * eeprom_93cx6_multiwrite - Write multiple words to the eeprom
-> + * @eeprom: Pointer to eeprom structure
-> + * @word: Word index from where we should start writing
-> + * @data: Pointer where the information will be read from
-> + * @words: Number of words that should be written.
-> + *
-> + * This function will write all requested words to the eeprom,
-> + * this is done by calling eeprom_93cx6_write() multiple times.
-> + * This method accepts little endian data, so it will first be
-> + * converted into host endian.
-> + */
-> +void eeprom_93cx6_multiwrite(struct eeprom_93cx6 *eeprom, const u8 word,
-> +	__le16 *data, const u16 words)
-> +{
-> +	unsigned int i;
-> +
-> +	for (i = 0; i < words; i++)
-> +		eeprom_93cx6_write(eeprom, word + i, le16_to_cpu(data[i]));
-> +}
-> +EXPORT_SYMBOL_GPL(eeprom_93cx6_multiwrite);
-> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-> index 0184614..6ff5a8a 100644
-> --- a/drivers/net/wireless/Kconfig
-> +++ b/drivers/net/wireless/Kconfig
-> @@ -267,7 +267,7 @@ config IPW2200_DEBUG
->  
->  config LIBERTAS_USB
->  	tristate "Marvell Libertas 8388 802.11a/b/g cards"
-> -	depends on NET_RADIO && USB
-> +	depends on USB && WLAN_80211
->  	select FW_LOADER
->  	---help---
->  	  A driver for Marvell Libertas 8388 USB devices.
-> @@ -542,4 +542,6 @@ source "drivers/net/wireless/hostap/Kconfig"
->  source "drivers/net/wireless/bcm43xx/Kconfig"
->  source "drivers/net/wireless/zd1211rw/Kconfig"
->  
-> +source "drivers/net/wireless/rtl818x/Kconfig"
-> +
->  endmenu
-> diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-> index d212460..198c992 100644
-> --- a/drivers/net/wireless/Makefile
-> +++ b/drivers/net/wireless/Makefile
-> @@ -44,3 +44,6 @@ obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
->  
->  obj-$(CONFIG_USB_ZD1201)	+= zd1201.o
->  obj-$(CONFIG_LIBERTAS_USB)     += libertas/
-> +
-> +# Drivers using mac80211 stack (net/mac80211)
-> +obj-$(CONFIG_RTL818X)		+= rtl818x/
-> diff --git a/drivers/net/wireless/bcm43xx/bcm43xx.h b/drivers/net/wireless/bcm43xx/bcm43xx.h
-> index f8483c1..10e07e8 100644
-> --- a/drivers/net/wireless/bcm43xx/bcm43xx.h
-> +++ b/drivers/net/wireless/bcm43xx/bcm43xx.h
-> @@ -658,12 +658,6 @@ struct bcm43xx_pio {
->  
->  #define BCM43xx_MAX_80211_CORES		2
->  
-> -#ifdef CONFIG_BCM947XX
-> -#define core_offset(bcm) (bcm)->current_core_offset
-> -#else
-> -#define core_offset(bcm) 0
-> -#endif
-> -
->  /* Generic information about a core. */
->  struct bcm43xx_coreinfo {
->  	u8 available:1,
-> @@ -789,10 +783,6 @@ struct bcm43xx_private {
->  
->  	/* The currently active core. */
->  	struct bcm43xx_coreinfo *current_core;
-> -#ifdef CONFIG_BCM947XX
-> -	/** current core memory offset */
-> -	u32 current_core_offset;
-> -#endif
->  	struct bcm43xx_coreinfo *active_80211_core;
->  	/* coreinfo structs for all possible cores follow.
->  	 * Note that a core might not exist.
-> @@ -943,25 +933,25 @@ struct bcm43xx_lopair * bcm43xx_get_lopair(struct bcm43xx_phyinfo *phy,
->  static inline
->  u16 bcm43xx_read16(struct bcm43xx_private *bcm, u16 offset)
->  {
-> -	return ioread16(bcm->mmio_addr + core_offset(bcm) + offset);
-> +	return ioread16(bcm->mmio_addr + offset);
->  }
->  
->  static inline
->  void bcm43xx_write16(struct bcm43xx_private *bcm, u16 offset, u16 value)
->  {
-> -	iowrite16(value, bcm->mmio_addr + core_offset(bcm) + offset);
-> +	iowrite16(value, bcm->mmio_addr + offset);
->  }
->  
->  static inline
->  u32 bcm43xx_read32(struct bcm43xx_private *bcm, u16 offset)
->  {
-> -	return ioread32(bcm->mmio_addr + core_offset(bcm) + offset);
-> +	return ioread32(bcm->mmio_addr + offset);
->  }
->  
->  static inline
->  void bcm43xx_write32(struct bcm43xx_private *bcm, u16 offset, u32 value)
->  {
-> -	iowrite32(value, bcm->mmio_addr + core_offset(bcm) + offset);
-> +	iowrite32(value, bcm->mmio_addr + offset);
->  }
->  
->  static inline
-> diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_dma.c b/drivers/net/wireless/bcm43xx/bcm43xx_dma.c
-> index e3d2e61..1f7731f 100644
-> --- a/drivers/net/wireless/bcm43xx/bcm43xx_dma.c
-> +++ b/drivers/net/wireless/bcm43xx/bcm43xx_dma.c
-> @@ -660,10 +660,6 @@ struct bcm43xx_dmaring * bcm43xx_setup_dmaring(struct bcm43xx_private *bcm,
->  	ring->routing = BCM43xx_DMA32_CLIENTTRANS;
->  	if (dma64)
->  		ring->routing = BCM43xx_DMA64_CLIENTTRANS;
-> -#ifdef CONFIG_BCM947XX
-> -	if (bcm->pci_dev->bus->number == 0)
-> -		ring->routing = dma64 ? BCM43xx_DMA64_NOTRANS : BCM43xx_DMA32_NOTRANS;
-> -#endif
->  
->  	ring->bcm = bcm;
->  	ring->nr_slots = nr_slots;
-> diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-> index 5e96bca..ef6b253 100644
-> --- a/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-> +++ b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-> @@ -61,10 +61,6 @@ MODULE_AUTHOR("Stefano Brivio");
->  MODULE_AUTHOR("Michael Buesch");
->  MODULE_LICENSE("GPL");
->  
-> -#ifdef CONFIG_BCM947XX
-> -extern char *nvram_get(char *name);
-> -#endif
-> -
->  #if defined(CONFIG_BCM43XX_DMA) && defined(CONFIG_BCM43XX_PIO)
->  static int modparam_pio;
->  module_param_named(pio, modparam_pio, int, 0444);
-> @@ -142,10 +138,6 @@ MODULE_PARM_DESC(fwpostfix, "Postfix for .fw files. Useful for using multiple fi
->  	{ PCI_VENDOR_ID_BROADCOM, 0x4324, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
->  	/* Broadcom 43XG 802.11b/g */
->  	{ PCI_VENDOR_ID_BROADCOM, 0x4325, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-> -#ifdef CONFIG_BCM947XX
-> -	/* SB bus on BCM947xx */
-> -	{ PCI_VENDOR_ID_BROADCOM, 0x0800, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-> -#endif
->  	{ 0 },
->  };
->  MODULE_DEVICE_TABLE(pci, bcm43xx_pci_tbl);
-> @@ -786,9 +778,6 @@ static int bcm43xx_sprom_extract(struct bcm43xx_private *bcm)
->  {
->  	u16 value;
->  	u16 *sprom;
-> -#ifdef CONFIG_BCM947XX
-> -	char *c;
-> -#endif
->  
->  	sprom = kzalloc(BCM43xx_SPROM_SIZE * sizeof(u16),
->  			GFP_KERNEL);
-> @@ -796,28 +785,7 @@ static int bcm43xx_sprom_extract(struct bcm43xx_private *bcm)
->  		printk(KERN_ERR PFX "sprom_extract OOM\n");
->  		return -ENOMEM;
->  	}
-> -#ifdef CONFIG_BCM947XX
-> -	sprom[BCM43xx_SPROM_BOARDFLAGS2] = atoi(nvram_get("boardflags2"));
-> -	sprom[BCM43xx_SPROM_BOARDFLAGS] = atoi(nvram_get("boardflags"));
-> -
-> -	if ((c = nvram_get("il0macaddr")) != NULL)
-> -		e_aton(c, (char *) &(sprom[BCM43xx_SPROM_IL0MACADDR]));
-> -
-> -	if ((c = nvram_get("et1macaddr")) != NULL)
-> -		e_aton(c, (char *) &(sprom[BCM43xx_SPROM_ET1MACADDR]));
-> -
-> -	sprom[BCM43xx_SPROM_PA0B0] = atoi(nvram_get("pa0b0"));
-> -	sprom[BCM43xx_SPROM_PA0B1] = atoi(nvram_get("pa0b1"));
-> -	sprom[BCM43xx_SPROM_PA0B2] = atoi(nvram_get("pa0b2"));
-> -
-> -	sprom[BCM43xx_SPROM_PA1B0] = atoi(nvram_get("pa1b0"));
-> -	sprom[BCM43xx_SPROM_PA1B1] = atoi(nvram_get("pa1b1"));
-> -	sprom[BCM43xx_SPROM_PA1B2] = atoi(nvram_get("pa1b2"));
-> -
-> -	sprom[BCM43xx_SPROM_BOARDREV] = atoi(nvram_get("boardrev"));
-> -#else
->  	bcm43xx_sprom_read(bcm, sprom);
-> -#endif
->  
->  	/* boardflags2 */
->  	value = sprom[BCM43xx_SPROM_BOARDFLAGS2];
-> @@ -1225,12 +1193,6 @@ static int _switch_core(struct bcm43xx_private *bcm, int core)
->  			goto error;
->  		udelay(10);
->  	}
-> -#ifdef CONFIG_BCM947XX
-> -	if (bcm->pci_dev->bus->number == 0)
-> -		bcm->current_core_offset = 0x1000 * core;
-> -	else
-> -		bcm->current_core_offset = 0;
-> -#endif
->  
->  	return 0;
->  error:
-> @@ -1387,19 +1349,6 @@ void bcm43xx_wireless_core_reset(struct bcm43xx_private *bcm, int connect_phy)
->  
->  	if ((bcm43xx_core_enabled(bcm)) &&
->  	    !bcm43xx_using_pio(bcm)) {
-> -//FIXME: Do we _really_ want #ifndef CONFIG_BCM947XX here?
-> -#if 0
-> -#ifndef CONFIG_BCM947XX
-> -		/* reset all used DMA controllers. */
-> -		bcm43xx_dmacontroller_tx_reset(bcm, BCM43xx_MMIO_DMA1_BASE);
-> -		bcm43xx_dmacontroller_tx_reset(bcm, BCM43xx_MMIO_DMA2_BASE);
-> -		bcm43xx_dmacontroller_tx_reset(bcm, BCM43xx_MMIO_DMA3_BASE);
-> -		bcm43xx_dmacontroller_tx_reset(bcm, BCM43xx_MMIO_DMA4_BASE);
-> -		bcm43xx_dmacontroller_rx_reset(bcm, BCM43xx_MMIO_DMA1_BASE);
-> -		if (bcm->current_core->rev < 5)
-> -			bcm43xx_dmacontroller_rx_reset(bcm, BCM43xx_MMIO_DMA4_BASE);
-> -#endif
-> -#endif
->  	}
->  	if (bcm43xx_status(bcm) == BCM43xx_STAT_SHUTTINGDOWN) {
->  		bcm43xx_write32(bcm, BCM43xx_MMIO_STATUS_BITFIELD,
-> @@ -2140,32 +2089,11 @@ out:
->  	return err;
->  }
->  
-> -#ifdef CONFIG_BCM947XX
-> -static struct pci_device_id bcm43xx_47xx_ids[] = {
-> -	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4324) },
-> -	{ 0 }
-> -};
-> -#endif
-> -
->  static int bcm43xx_initialize_irq(struct bcm43xx_private *bcm)
->  {
->  	int err;
->  
->  	bcm->irq = bcm->pci_dev->irq;
-> -#ifdef CONFIG_BCM947XX
-> -	if (bcm->pci_dev->bus->number == 0) {
-> -		struct pci_dev *d;
-> -		struct pci_device_id *id;
-> -		for (id = bcm43xx_47xx_ids; id->vendor; id++) {
-> -			d = pci_get_device(id->vendor, id->device, NULL);
-> -			if (d != NULL) {
-> -				bcm->irq = d->irq;
-> -				pci_dev_put(d);
-> -				break;
-> -			}
-> -		}
-> -	}
-> -#endif
->  	err = request_irq(bcm->irq, bcm43xx_interrupt_handler,
->  			  IRQF_SHARED, KBUILD_MODNAME, bcm);
->  	if (err)
-> @@ -2645,10 +2573,6 @@ static int bcm43xx_probe_cores(struct bcm43xx_private *bcm)
->  			chip_id_16 = 0x4610;
->  		else if ((pci_device >= 0x4710) && (pci_device <= 0x4715))
->  			chip_id_16 = 0x4710;
-> -#ifdef CONFIG_BCM947XX
-> -		else if ((pci_device >= 0x4320) && (pci_device <= 0x4325))
-> -			chip_id_16 = 0x4309;
-> -#endif
->  		else {
->  			printk(KERN_ERR PFX "Could not determine Chip ID\n");
->  			return -ENODEV;
-> @@ -4144,11 +4068,6 @@ static int __devinit bcm43xx_init_one(struct pci_dev *pdev,
->  	struct bcm43xx_private *bcm;
->  	int err;
->  
-> -#ifdef CONFIG_BCM947XX
-> -	if ((pdev->bus->number == 0) && (pdev->device != 0x0800))
-> -		return -ENODEV;
-> -#endif
-> -
->  #ifdef DEBUG_SINGLE_DEVICE_ONLY
->  	if (strcmp(pci_name(pdev), DEBUG_SINGLE_DEVICE_ONLY))
->  		return -ENODEV;
-> diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_main.h b/drivers/net/wireless/bcm43xx/bcm43xx_main.h
-> index f763571..c8f3c53 100644
-> --- a/drivers/net/wireless/bcm43xx/bcm43xx_main.h
-> +++ b/drivers/net/wireless/bcm43xx/bcm43xx_main.h
-> @@ -33,25 +33,6 @@
->  
->  #include "bcm43xx.h"
->  
-> -#ifdef CONFIG_BCM947XX
-> -#define atoi(str) simple_strtoul(((str != NULL) ? str : ""), NULL, 0)
-> -
-> -static inline void e_aton(char *str, char *dest)
-> -{
-> -	int i = 0;
-> -	u16 *d = (u16 *) dest;
-> -
-> -	for (;;) {
-> -		dest[i++] = (char) simple_strtoul(str, NULL, 16);
-> -		str += 2;
-> -		if (!*str++ || i == 6)
-> -			break;
-> -	}
-> -	for (i = 0; i < 3; i++)
-> -		d[i] = cpu_to_be16(d[i]);
-> -}
-> -#endif
-> -
->  #define P4D_BYT3S(magic, nr_bytes)	u8 __p4dding##magic[nr_bytes]
->  #define P4D_BYTES(line, nr_bytes)	P4D_BYT3S(line, nr_bytes)
->  /* Magic helper macro to pad structures. Ignore those above. It's magic. */
-> diff --git a/drivers/net/wireless/rtl818x/Kconfig b/drivers/net/wireless/rtl818x/Kconfig
-> new file mode 100644
-> index 0000000..e2c27f8
-> --- /dev/null
-> +++ b/drivers/net/wireless/rtl818x/Kconfig
-> @@ -0,0 +1,16 @@
-> +config RTL818X
-> +	bool
-> +	default n
-> +
-> +config RTL8187
-> +	tristate "Realtek 8187 USB support"
-> +	depends on MAC80211 && USB && WLAN_80211 && EXPERIMENTAL
-> +	select RTL818X
-> +	select EEPROM_93CX6
-> +	---help---
-> +	  This is a driver for RTL8187 based cards.
-> +	  These are USB based chips found in cards such as:
-> +
-> +	  Netgear WG111v2
-> +
-> +	  Thanks to Realtek for their support!
-> diff --git a/drivers/net/wireless/rtl818x/Makefile b/drivers/net/wireless/rtl818x/Makefile
-> new file mode 100644
-> index 0000000..fe5dd6f
-> --- /dev/null
-> +++ b/drivers/net/wireless/rtl818x/Makefile
-> @@ -0,0 +1,2 @@
-> +rtl8187-objs		:= rtl8187_dev.o rtl8187_rtl8225.o
-> +obj-$(CONFIG_RTL8187)	+= rtl8187.o
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187.h b/drivers/net/wireless/rtl818x/rtl8187.h
-> new file mode 100644
-> index 0000000..bd0b6f9
-> --- /dev/null
-> +++ b/drivers/net/wireless/rtl818x/rtl8187.h
-> @@ -0,0 +1,125 @@
-> +#ifndef RTL8187_H
-> +#define RTL8187_H
-> +
-> +#include "rtl818x.h"
-> +
-> +#define RTL8187_REQT_READ	0xC0
-> +#define RTL8187_REQT_WRITE	0x40
-> +#define RTL8187_REQ_GET_REG	0x05
-> +#define RTL8187_REQ_SET_REG	0x05
-> +
-> +#define RTL8187_MAX_RX		0x9C4
-> +
-> +struct rtl8187_rx_info {
-> +	struct urb *urb;
-> +	struct ieee80211_hw *dev;
-> +};
-> +
-> +struct rtl8187_rx_hdr {
-> +	__le16 len;
-> +	__le16 rate;
-> +	u8 noise;
-> +	u8 signal;
-> +	u8 agc;
-> +	u8 reserved;
-> +	__le64 mac_time;
-> +} __attribute__((packed));
-> +
-> +struct rtl8187_tx_info {
-> +	struct ieee80211_tx_control *control;
-> +	struct urb *urb;
-> +	struct ieee80211_hw *dev;
-> +};
-> +
-> +struct rtl8187_tx_hdr {
-> +	__le32 flags;
-> +#define RTL8187_TX_FLAG_NO_ENCRYPT	(1 << 15)
-> +#define RTL8187_TX_FLAG_MORE_FRAG	(1 << 17)
-> +#define RTL8187_TX_FLAG_CTS		(1 << 18)
-> +#define RTL8187_TX_FLAG_RTS		(1 << 23)
-> +	__le16 rts_duration;
-> +	__le16 len;
-> +	__le32 retry;
-> +} __attribute__((packed));
-> +
-> +struct rtl8187_priv {
-> +	/* common between rtl818x drivers */
-> +	struct rtl818x_csr *map;
-> +	void (*rf_init)(struct ieee80211_hw *);
-> +	int mode;
-> +
-> +	/* rtl8187 specific */
-> +	struct ieee80211_channel channels[14];
-> +	struct ieee80211_rate rates[12];
-> +	struct ieee80211_hw_mode modes[2];
-> +	struct usb_device *udev;
-> +	u8 *hwaddr;
-> +	u16 txpwr_base;
-> +	u8 asic_rev;
-> +	struct sk_buff_head rx_queue;
-> +};
-> +
-> +void rtl8187_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
-> +
-> +static inline u8 rtl818x_ioread8(struct rtl8187_priv *priv, u8 *addr)
-> +{
-> +	u8 val;
-> +
-> +	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
-> +			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
-> +			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
-> +
-> +	return val;
-> +}
-> +
-> +static inline u16 rtl818x_ioread16(struct rtl8187_priv *priv, __le16 *addr)
-> +{
-> +	__le16 val;
-> +
-> +	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
-> +			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
-> +			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
-> +
-> +	return le16_to_cpu(val);
-> +}
-> +
-> +static inline u32 rtl818x_ioread32(struct rtl8187_priv *priv, __le32 *addr)
-> +{
-> +	__le32 val;
-> +
-> +	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
-> +			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
-> +			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
-> +
-> +	return le32_to_cpu(val);
-> +}
-> +
-> +static inline void rtl818x_iowrite8(struct rtl8187_priv *priv,
-> +				    u8 *addr, u8 val)
-> +{
-> +	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
-> +			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
-> +			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
-> +}
-> +
-> +static inline void rtl818x_iowrite16(struct rtl8187_priv *priv,
-> +				     __le16 *addr, u16 val)
-> +{
-> +	__le16 buf = cpu_to_le16(val);
-> +
-> +	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
-> +			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
-> +			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
-> +}
-> +
-> +static inline void rtl818x_iowrite32(struct rtl8187_priv *priv,
-> +				     __le32 *addr, u32 val)
-> +{
-> +	__le32 buf = cpu_to_le32(val);
-> +
-> +	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
-> +			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
-> +			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
-> +}
-> +
-> +#endif /* RTL8187_H */
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> new file mode 100644
-> index 0000000..8f9e781
-> --- /dev/null
-> +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> @@ -0,0 +1,730 @@
-> +
-> +/*
-> + * Linux device driver for RTL8187
-> + *
-> + * Copyright 2007 Michael Wu <flamingice@sourmilk.net>
-> + * Copyright 2007 Andrea Merello <andreamrl@tiscali.it>
-> + *
-> + * Based on the r8187 driver, which is:
-> + * Copyright 2005 Andrea Merello <andreamrl@tiscali.it>, et al.
-> + *
-> + * Thanks to Realtek for their support!
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 as
-> + * published by the Free Software Foundation.
-> + */
-> +
-> +#include <linux/init.h>
-> +#include <linux/usb.h>
-> +#include <linux/delay.h>
-> +#include <linux/etherdevice.h>
-> +#include <linux/eeprom_93cx6.h>
-> +#include <net/mac80211.h>
-> +
-> +#include "rtl8187.h"
-> +#include "rtl8187_rtl8225.h"
-> +
-> +MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
-> +MODULE_AUTHOR("Andrea Merello <andreamrl@tiscali.it>");
-> +MODULE_DESCRIPTION("RTL8187 USB wireless driver");
-> +MODULE_LICENSE("GPL");
-> +
-> +static struct usb_device_id rtl8187_table[] __devinitdata = {
-> +	/* Realtek */
-> +	{USB_DEVICE(0x0bda, 0x8187)},
-> +	/* Netgear */
-> +	{USB_DEVICE(0x0846, 0x6100)},
-> +	{USB_DEVICE(0x0846, 0x6a00)},
-> +	{}
-> +};
-> +
-> +MODULE_DEVICE_TABLE(usb, rtl8187_table);
-> +
-> +void rtl8187_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +
-> +	data <<= 8;
-> +	data |= addr | 0x80;
-> +
-> +	rtl818x_iowrite8(priv, &priv->map->PHY[3], (data >> 24) & 0xFF);
-> +	rtl818x_iowrite8(priv, &priv->map->PHY[2], (data >> 16) & 0xFF);
-> +	rtl818x_iowrite8(priv, &priv->map->PHY[1], (data >> 8) & 0xFF);
-> +	rtl818x_iowrite8(priv, &priv->map->PHY[0], data & 0xFF);
-> +
-> +	mdelay(1);
-> +}
-> +
-> +static void rtl8187_tx_cb(struct urb *urb)
-> +{
-> +	struct ieee80211_tx_status status = { {0} };
-> +	struct sk_buff *skb = (struct sk_buff *)urb->context;
-> +	struct rtl8187_tx_info *info = (struct rtl8187_tx_info *)skb->cb;
-> +
-> +	usb_free_urb(info->urb);
-> +	if (info->control)
-> +		memcpy(&status.control, info->control, sizeof(status.control));
-> +	kfree(info->control);
-> +	skb_pull(skb, sizeof(struct rtl8187_tx_hdr));
-> +	status.flags |= IEEE80211_TX_STATUS_ACK;
-> +	ieee80211_tx_status_irqsafe(info->dev, skb, &status);
-> +}
-> +
-> +static int rtl8187_tx(struct ieee80211_hw *dev, struct sk_buff *skb,
-> +		      struct ieee80211_tx_control *control)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	struct rtl8187_tx_hdr *hdr;
-> +	struct rtl8187_tx_info *info;
-> +	struct urb *urb;
-> +	u32 tmp;
-> +
-> +	urb = usb_alloc_urb(0, GFP_ATOMIC);
-> +	if (!urb) {
-> +		kfree_skb(skb);
-> +		return 0;
-> +	}
-> +
-> +	hdr = (struct rtl8187_tx_hdr *)skb_push(skb, sizeof(*hdr));
-> +	tmp = skb->len - sizeof(*hdr);
-> +	tmp |= RTL8187_TX_FLAG_NO_ENCRYPT;
-> +	tmp |= control->rts_cts_rate << 19;
-> +	tmp |= control->tx_rate << 24;
-> +	if (ieee80211_get_morefrag((struct ieee80211_hdr *)skb))
-> +		tmp |= RTL8187_TX_FLAG_MORE_FRAG;
-> +	if (control->flags & IEEE80211_TXCTL_USE_RTS_CTS) {
-> +		tmp |= RTL8187_TX_FLAG_RTS;
-> +		hdr->rts_duration =
-> +			ieee80211_rts_duration(dev, skb->len, control);
-> +	}
-> +	if (control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT)
-> +		tmp |= RTL8187_TX_FLAG_CTS;
-> +	hdr->flags = cpu_to_le32(tmp);
-> +	hdr->len = 0;
-> +	tmp = control->retry_limit << 8;
-> +	hdr->retry = cpu_to_le32(tmp);
-> +
-> +	info = (struct rtl8187_tx_info *)skb->cb;
-> +	info->control = kmemdup(control, sizeof(*control), GFP_ATOMIC);
-> +	info->urb = urb;
-> +	info->dev = dev;
-> +	usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, 2),
-> +			  hdr, skb->len, rtl8187_tx_cb, skb);
-> +	usb_submit_urb(urb, GFP_ATOMIC);
-> +
-> +	return 0;
-> +}
-> +
-> +static void rtl8187_rx_cb(struct urb *urb)
-> +{
-> +	struct sk_buff *skb = (struct sk_buff *)urb->context;
-> +	struct rtl8187_rx_info *info = (struct rtl8187_rx_info *)skb->cb;
-> +	struct ieee80211_hw *dev = info->dev;
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	struct rtl8187_rx_hdr *hdr;
-> +	struct ieee80211_rx_status rx_status = { 0 };
-> +	int rate, signal;
-> +
-> +	if (unlikely(urb->status)) {
-> +		info->urb = NULL;
-> +		usb_free_urb(urb);
-> +		return;
-> +	}
-> +
-> +	skb_unlink(skb, &priv->rx_queue);
-> +	skb_put(skb, urb->actual_length);
-> +	hdr = (struct rtl8187_rx_hdr *)(skb_tail_pointer(skb) - sizeof(*hdr));
-> +	skb_trim(skb, le16_to_cpu(hdr->len) & 0x0FFF);
-> +
-> +	signal = hdr->agc >> 1;
-> +	rate = (le16_to_cpu(hdr->rate) >> 4) & 0xF;
-> +	if (rate > 3) {	/* OFDM rate */
-> +		if (signal > 90)
-> +			signal = 90;
-> +		else if (signal < 25)
-> +			signal = 25;
-> +		signal = 90 - signal;
-> +	} else {	/* CCK rate */
-> +		if (signal > 95)
-> +			signal = 95;
-> +		else if (signal < 30)
-> +			signal = 30;
-> +		signal = 95 - signal;
-> +	}
-> +
-> +	rx_status.antenna = (hdr->signal >> 7) & 1;
-> +	rx_status.signal = 64 - min(hdr->noise, (u8)64);
-> +	rx_status.ssi = signal;
-> +	rx_status.rate = rate;
-> +	rx_status.freq = dev->conf.freq;
-> +	rx_status.channel = dev->conf.channel;
-> +	rx_status.phymode = dev->conf.phymode;
-> +	rx_status.mactime = le64_to_cpu(hdr->mac_time);
-> +	ieee80211_rx_irqsafe(dev, skb, &rx_status);
-> +
-> +	skb = dev_alloc_skb(RTL8187_MAX_RX);
-> +	if (unlikely(!skb)) {
-> +		usb_free_urb(urb);
-> +		/* TODO check rx queue length and refill *somewhere* */
-> +		return;
-> +	}
-> +
-> +	info = (struct rtl8187_rx_info *)skb->cb;
-> +	info->urb = urb;
-> +	info->dev = dev;
-> +	urb->transfer_buffer = skb_tail_pointer(skb);
-> +	urb->context = skb;
-> +	skb_queue_tail(&priv->rx_queue, skb);
-> +
-> +	usb_submit_urb(urb, GFP_ATOMIC);
-> +}
-> +
-> +static int rtl8187_init_urbs(struct ieee80211_hw *dev)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	struct urb *entry;
-> +	struct sk_buff *skb;
-> +	struct rtl8187_rx_info *info;
-> +
-> +	while (skb_queue_len(&priv->rx_queue) < 8) {
-> +		skb = __dev_alloc_skb(RTL8187_MAX_RX, GFP_KERNEL);
-> +		if (!skb)
-> +			break;
-> +		entry = usb_alloc_urb(0, GFP_KERNEL);
-> +		if (!entry) {
-> +			kfree_skb(skb);
-> +			break;
-> +		}
-> +		usb_fill_bulk_urb(entry, priv->udev,
-> +				  usb_rcvbulkpipe(priv->udev, 1),
-> +				  skb_tail_pointer(skb),
-> +				  RTL8187_MAX_RX, rtl8187_rx_cb, skb);
-> +		info = (struct rtl8187_rx_info *)skb->cb;
-> +		info->urb = entry;
-> +		info->dev = dev;
-> +		skb_queue_tail(&priv->rx_queue, skb);
-> +		usb_submit_urb(entry, GFP_KERNEL);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int rtl8187_init_hw(struct ieee80211_hw *dev)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	u8 reg;
-> +	int i;
-> +
-> +	/* reset */
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
-> +	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
-> +	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
-> +	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, RTL8225_ANAPARAM_ON);
-> +	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
-> +	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0);
-> +
-> +	mdelay(200);
-> +	rtl818x_iowrite8(priv, (u8 *)0xFE18, 0x10);
-> +	rtl818x_iowrite8(priv, (u8 *)0xFE18, 0x11);
-> +	rtl818x_iowrite8(priv, (u8 *)0xFE18, 0x00);
-> +	mdelay(200);
-> +
-> +	reg = rtl818x_ioread8(priv, &priv->map->CMD);
-> +	reg &= (1 << 1);
-> +	reg |= RTL818X_CMD_RESET;
-> +	rtl818x_iowrite8(priv, &priv->map->CMD, reg);
-> +
-> +	i = 10;
-> +	do {
-> +		mdelay(2);
-> +		if (!(rtl818x_ioread8(priv, &priv->map->CMD) &
-> +		      RTL818X_CMD_RESET))
-> +			break;
-> +	} while (--i);
-> +
-> +	if (!i) {
-> +		printk(KERN_ERR "%s: Reset timeout!\n", wiphy_name(dev->wiphy));
-> +		return -ETIMEDOUT;
-> +	}
-> +
-> +	/* reload registers from eeprom */
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_LOAD);
-> +
-> +	i = 10;
-> +	do {
-> +		mdelay(4);
-> +		if (!(rtl818x_ioread8(priv, &priv->map->EEPROM_CMD) &
-> +		      RTL818X_EEPROM_CMD_CONFIG))
-> +			break;
-> +	} while (--i);
-> +
-> +	if (!i) {
-> +		printk(KERN_ERR "%s: eeprom reset timeout!\n",
-> +		       wiphy_name(dev->wiphy));
-> +		return -ETIMEDOUT;
-> +	}
-> +
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
-> +	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
-> +	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
-> +	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, RTL8225_ANAPARAM_ON);
-> +	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
-> +	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
-> +
-> +	/* setup card */
-> +	rtl818x_iowrite8(priv, (u8 *)0xFF85, 0);
-> +	rtl818x_iowrite8(priv, &priv->map->GPIO, 0);
-> +
-> +	rtl818x_iowrite8(priv, (u8 *)0xFF85, 4);
-> +	rtl818x_iowrite8(priv, &priv->map->GPIO, 1);
-> +	rtl818x_iowrite8(priv, &priv->map->GP_ENABLE, 0);
-> +
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
-> +	for (i = 0; i < ETH_ALEN; i++)
-> +		rtl818x_iowrite8(priv, &priv->map->MAC[i], priv->hwaddr[i]);
-> +
-> +	rtl818x_iowrite16(priv, (__le16 *)0xFFF4, 0xFFFF);
-> +	reg = rtl818x_ioread8(priv, &priv->map->CONFIG1);
-> +	reg &= 0x3F;
-> +	reg |= 0x80;
-> +	rtl818x_iowrite8(priv, &priv->map->CONFIG1, reg);
-> +
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
-> +
-> +	rtl818x_iowrite32(priv, &priv->map->INT_TIMEOUT, 0);
-> +	rtl818x_iowrite8(priv, &priv->map->WPA_CONF, 0);
-> +	rtl818x_iowrite8(priv, &priv->map->RATE_FALLBACK, 0x81);
-> +
-> +	// TODO: set RESP_RATE and BRSR properly
-> +	rtl818x_iowrite8(priv, &priv->map->RESP_RATE, (8 << 4) | 0);
-> +	rtl818x_iowrite16(priv, &priv->map->BRSR, 0x01F3);
-> +
-> +	/* host_usb_init */
-> +	rtl818x_iowrite8(priv, (u8 *)0xFF85, 0);
-> +	rtl818x_iowrite8(priv, &priv->map->GPIO, 0);
-> +	reg = rtl818x_ioread8(priv, (u8 *)0xFE53);
-> +	rtl818x_iowrite8(priv, (u8 *)0xFE53, reg | (1 << 7));
-> +	rtl818x_iowrite8(priv, (u8 *)0xFF85, 4);
-> +	rtl818x_iowrite8(priv, &priv->map->GPIO, 0x20);
-> +	rtl818x_iowrite8(priv, &priv->map->GP_ENABLE, 0);
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, 0x80);
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, 0x80);
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x80);
-> +	mdelay(100);
-> +
-> +	rtl818x_iowrite32(priv, &priv->map->RF_TIMING, 0x000a8008);
-> +	rtl818x_iowrite16(priv, &priv->map->BRSR, 0xFFFF);
-> +	rtl818x_iowrite32(priv, &priv->map->RF_PARA, 0x00100044);
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
-> +	rtl818x_iowrite8(priv, &priv->map->CONFIG3, 0x44);
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FF7);
-> +	mdelay(100);
-> +
-> +	priv->rf_init(dev);
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->BRSR, 0x01F3);
-> +	reg = rtl818x_ioread16(priv, &priv->map->PGSELECT) & 0xfffe;
-> +	rtl818x_iowrite16(priv, &priv->map->PGSELECT, reg | 0x1);
-> +	rtl818x_iowrite16(priv, (__le16 *)0xFFFE, 0x10);
-> +	rtl818x_iowrite8(priv, &priv->map->TALLY_SEL, 0x80);
-> +	rtl818x_iowrite8(priv, (u8 *)0xFFFF, 0x60);
-> +	rtl818x_iowrite16(priv, &priv->map->PGSELECT, reg);
-> +
-> +	return 0;
-> +}
-> +
-> +static void rtl8187_set_channel(struct ieee80211_hw *dev, int channel)
-> +{
-> +	u32 reg;
-> +	struct rtl8187_priv *priv = dev->priv;
-> +
-> +	reg = rtl818x_ioread32(priv, &priv->map->TX_CONF);
-> +	/* Enable TX loopback on MAC level to avoid TX during channel
-> +	 * changes, as this has be seen to causes problems and the
-> +	 * card will stop work until next reset
-> +	 */
-> +	rtl818x_iowrite32(priv, &priv->map->TX_CONF,
-> +			  reg | RTL818X_TX_CONF_LOOPBACK_MAC);
-> +	mdelay(10);
-> +	rtl8225_rf_set_channel(dev, channel);
-> +	mdelay(10);
-> +	rtl818x_iowrite32(priv, &priv->map->TX_CONF, reg);
-> +}
-> +
-> +static int rtl8187_open(struct ieee80211_hw *dev)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	u32 reg;
-> +	int ret;
-> +
-> +	ret = rtl8187_init_hw(dev);
-> +	if (ret)
-> +		return ret;
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0xFFFF);
-> +
-> +	rtl8187_init_urbs(dev);
-> +
-> +	reg = RTL818X_RX_CONF_ONLYERLPKT |
-> +	      RTL818X_RX_CONF_RX_AUTORESETPHY |
-> +	      RTL818X_RX_CONF_BSSID |
-> +	      RTL818X_RX_CONF_MGMT |
-> +	      RTL818X_RX_CONF_CTRL |
-> +	      RTL818X_RX_CONF_DATA |
-> +	      (7 << 13 /* RX FIFO threshold NONE */) |
-> +	      (7 << 10 /* MAX RX DMA */) |
-> +	      RTL818X_RX_CONF_BROADCAST |
-> +	      RTL818X_RX_CONF_MULTICAST |
-> +	      RTL818X_RX_CONF_NICMAC;
-> +	if (priv->mode == IEEE80211_IF_TYPE_MNTR)
-> +		reg |= RTL818X_RX_CONF_MONITOR;
-> +
-> +	rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
-> +
-> +	reg = rtl818x_ioread8(priv, &priv->map->CW_CONF);
-> +	reg &= ~RTL818X_CW_CONF_PERPACKET_CW_SHIFT;
-> +	reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
-> +	rtl818x_iowrite8(priv, &priv->map->CW_CONF, reg);
-> +
-> +	reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
-> +	reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT;
-> +	reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
-> +	reg &= ~RTL818X_TX_AGC_CTL_FEEDBACK_ANT;
-> +	rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
-> +
-> +	reg  = RTL818X_TX_CONF_CW_MIN |
-> +	       (7 << 21 /* MAX TX DMA */) |
-> +	       RTL818X_TX_CONF_NO_ICV;
-> +	rtl818x_iowrite32(priv, &priv->map->TX_CONF, reg);
-> +
-> +	reg = rtl818x_ioread8(priv, &priv->map->CMD);
-> +	reg |= RTL818X_CMD_TX_ENABLE;
-> +	reg |= RTL818X_CMD_RX_ENABLE;
-> +	rtl818x_iowrite8(priv, &priv->map->CMD, reg);
-> +
-> +	return 0;
-> +}
-> +
-> +static int rtl8187_stop(struct ieee80211_hw *dev)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	struct rtl8187_rx_info *info;
-> +	struct sk_buff *skb;
-> +	u32 reg;
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0);
-> +
-> +	reg = rtl818x_ioread8(priv, &priv->map->CMD);
-> +	reg &= ~RTL818X_CMD_TX_ENABLE;
-> +	reg &= ~RTL818X_CMD_RX_ENABLE;
-> +	rtl818x_iowrite8(priv, &priv->map->CMD, reg);
-> +
-> +	rtl8225_rf_stop(dev);
-> +
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
-> +	reg = rtl818x_ioread8(priv, &priv->map->CONFIG4);
-> +	rtl818x_iowrite8(priv, &priv->map->CONFIG4, reg | RTL818X_CONFIG4_VCOOFF);
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
-> +
-> +	while ((skb = skb_dequeue(&priv->rx_queue))) {
-> +		info = (struct rtl8187_rx_info *)skb->cb;
-> +		if (!info->urb)
-> +			continue;
-> +
-> +		usb_kill_urb(info->urb);
-> +		kfree_skb(skb);
-> +	}
-> +	return 0;
-> +}
-> +
-> +static int rtl8187_add_interface(struct ieee80211_hw *dev,
-> +				 struct ieee80211_if_init_conf *conf)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +
-> +	/* NOTE: using IEEE80211_IF_TYPE_MGMT to indicate no mode selected */
-> +	if (priv->mode != IEEE80211_IF_TYPE_MGMT)
-> +		return -1;
-> +
-> +	switch (conf->type) {
-> +	case IEEE80211_IF_TYPE_STA:
-> +	case IEEE80211_IF_TYPE_MNTR:
-> +		priv->mode = conf->type;
-> +		break;
-> +	default:
-> +		return -EOPNOTSUPP;
-> +	}
-> +
-> +	priv->hwaddr = conf->mac_addr;
-> +
-> +	return 0;
-> +}
-> +
-> +static void rtl8187_remove_interface(struct ieee80211_hw *dev,
-> +				     struct ieee80211_if_init_conf *conf)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	priv->mode = IEEE80211_IF_TYPE_MGMT;
-> +}
-> +
-> +static int rtl8187_config(struct ieee80211_hw *dev, struct ieee80211_conf *conf)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	rtl8187_set_channel(dev, conf->channel);
-> +
-> +	rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
-> +
-> +	if (conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME)
-> +		rtl818x_iowrite8(priv, &priv->map->SLOT, 0x9);
-> +	else
-> +		rtl818x_iowrite8(priv, &priv->map->SLOT, 0x14);
-> +
-> +	switch (conf->phymode) {
-> +	case MODE_IEEE80211B:
-> +		rtl818x_iowrite8(priv, &priv->map->DIFS, 0x24);
-> +		rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x24);
-> +		rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0xa5);
-> +		break;
-> +	case MODE_IEEE80211G:
-> +		rtl818x_iowrite8(priv, &priv->map->DIFS, 0x14);
-> +		rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x14);
-> +		rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0x73);
-> +		break;
-> +	default:
-> +		BUG();
-> +		break;
-> +	}
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->ATIM_WND, 2);
-> +	rtl818x_iowrite16(priv, &priv->map->ATIMTR_INTERVAL, 100);
-> +	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL, 100);
-> +	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL_TIME, 100);
-> +	return 0;
-> +}
-> +
-> +static int rtl8187_config_interface(struct ieee80211_hw *dev, int if_id,
-> +				    struct ieee80211_if_conf *conf)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	int i;
-> +
-> +	for (i = 0; i < ETH_ALEN; i++)
-> +		rtl818x_iowrite8(priv, &priv->map->BSSID[i], conf->bssid[i]);
-> +
-> +	if (is_valid_ether_addr(conf->bssid))
-> +		rtl818x_iowrite8(priv, &priv->map->MSR, RTL818X_MSR_INFRA);
-> +	else
-> +		rtl818x_iowrite8(priv, &priv->map->MSR, RTL818X_MSR_NO_LINK);
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct ieee80211_ops rtl8187_ops = {
-> +	.tx			= rtl8187_tx,
-> +	.open			= rtl8187_open,
-> +	.stop			= rtl8187_stop,
-> +	.add_interface		= rtl8187_add_interface,
-> +	.remove_interface	= rtl8187_remove_interface,
-> +	.config			= rtl8187_config,
-> +	.config_interface	= rtl8187_config_interface,
-> +};
-> +
-> +static void rtl8187_register_read(struct eeprom_93cx6 *eeprom)
-> +{
-> +	struct ieee80211_hw *dev = eeprom->data;
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	u8 reg = rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
-> +
-> +	eeprom->reg_data_in = reg & RTL818X_EEPROM_CMD_WRITE;
-> +	eeprom->reg_data_out = reg & RTL818X_EEPROM_CMD_READ;
-> +	eeprom->reg_data_clock = reg & RTL818X_EEPROM_CMD_CK;
-> +	eeprom->reg_chip_select = reg & RTL818X_EEPROM_CMD_CS;
-> +}
-> +
-> +static void rtl8187_register_write(struct eeprom_93cx6 *eeprom)
-> +{
-> +	struct ieee80211_hw *dev = eeprom->data;
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	u8 reg = RTL818X_EEPROM_CMD_PROGRAM;
-> +
-> +	if (eeprom->reg_data_in)
-> +		reg |= RTL818X_EEPROM_CMD_WRITE;
-> +	if (eeprom->reg_data_out)
-> +		reg |= RTL818X_EEPROM_CMD_READ;
-> +	if (eeprom->reg_data_clock)
-> +		reg |= RTL818X_EEPROM_CMD_CK;
-> +	if (eeprom->reg_chip_select)
-> +		reg |= RTL818X_EEPROM_CMD_CS;
-> +
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, reg);
-> +	udelay(10);
-> +}
-> +
-> +static int __devinit rtl8187_probe(struct usb_interface *intf,
-> +				   const struct usb_device_id *id)
-> +{
-> +	struct usb_device *udev = interface_to_usbdev(intf);
-> +	struct ieee80211_hw *dev;
-> +	struct rtl8187_priv *priv;
-> +	struct eeprom_93cx6 eeprom;
-> +	struct ieee80211_channel *channel;
-> +	u16 txpwr, reg;
-> +	int err, i;
-> +
-> +	dev = ieee80211_alloc_hw(sizeof(*priv), &rtl8187_ops);
-> +	if (!dev) {
-> +		printk(KERN_ERR "rtl8187: ieee80211 alloc failed\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	priv = dev->priv;
-> +
-> +	SET_IEEE80211_DEV(dev, &intf->dev);
-> +	usb_set_intfdata(intf, dev);
-> +	priv->udev = udev;
-> +
-> +	usb_get_dev(udev);
-> +
-> +	skb_queue_head_init(&priv->rx_queue);
-> +	memcpy(priv->channels, rtl818x_channels, sizeof(rtl818x_channels));
-> +	memcpy(priv->rates, rtl818x_rates, sizeof(rtl818x_rates));
-> +	priv->map = (struct rtl818x_csr *)0xFF00;
-> +	priv->modes[0].mode = MODE_IEEE80211G;
-> +	priv->modes[0].num_rates = ARRAY_SIZE(rtl818x_rates);
-> +	priv->modes[0].rates = priv->rates;
-> +	priv->modes[0].num_channels = ARRAY_SIZE(rtl818x_channels);
-> +	priv->modes[0].channels = priv->channels;
-> +	priv->modes[1].mode = MODE_IEEE80211B;
-> +	priv->modes[1].num_rates = 4;
-> +	priv->modes[1].rates = priv->rates;
-> +	priv->modes[1].num_channels = ARRAY_SIZE(rtl818x_channels);
-> +	priv->modes[1].channels = priv->channels;
-> +	priv->mode = IEEE80211_IF_TYPE_MGMT;
-> +	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
-> +		     IEEE80211_HW_RX_INCLUDES_FCS |
-> +		     IEEE80211_HW_WEP_INCLUDE_IV |
-> +		     IEEE80211_HW_DATA_NULLFUNC_ACK;
-> +	dev->extra_tx_headroom = sizeof(struct rtl8187_tx_hdr);
-> +	dev->queues = 1;
-> +	dev->max_rssi = 65;
-> +	dev->max_signal = 64;
-> +
-> +	for (i = 0; i < 2; i++)
-> +		if ((err = ieee80211_register_hwmode(dev, &priv->modes[i])))
-> +			goto err_free_dev;
-> +
-> +	eeprom.data = dev;
-> +	eeprom.register_read = rtl8187_register_read;
-> +	eeprom.register_write = rtl8187_register_write;
-> +	if (rtl818x_ioread32(priv, &priv->map->RX_CONF) & (1 << 6))
-> +		eeprom.width = PCI_EEPROM_WIDTH_93C66;
-> +	else
-> +		eeprom.width = PCI_EEPROM_WIDTH_93C46;
-> +
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
-> +	udelay(10);
-> +
-> +	eeprom_93cx6_multiread(&eeprom, 0x7,
-> +			       (__le16 __force *)dev->wiphy->perm_addr, 3);
-> +	if (!is_valid_ether_addr(dev->wiphy->perm_addr)) {
-> +		printk(KERN_WARNING "rtl8187: Invalid hwaddr! Using randomly generated MAC address\n");
-> +		random_ether_addr(dev->wiphy->perm_addr);
-> +	}
-> +
-> +	channel = priv->channels;
-> +	for (i = 0; i < 3; i++) {
-> +		eeprom_93cx6_read(&eeprom, 0x16 + i, &txpwr);
-> +		(*channel++).val = txpwr & 0xFF;
-> +		(*channel++).val = txpwr >> 8;
-> +	}
-> +	for (i = 0; i < 2; i++) {
-> +		eeprom_93cx6_read(&eeprom, 0x3D + i, &txpwr);
-> +		(*channel++).val = txpwr & 0xFF;
-> +		(*channel++).val = txpwr >> 8;
-> +	}
-> +	for (i = 0; i < 2; i++) {
-> +		eeprom_93cx6_read(&eeprom, 0x1B + i, &txpwr);
-> +		(*channel++).val = txpwr & 0xFF;
-> +		(*channel++).val = txpwr >> 8;
-> +	}
-> +
-> +	eeprom_93cx6_read(&eeprom, 0x05, &priv->txpwr_base);
-> +
-> +	reg = rtl818x_ioread16(priv, &priv->map->PGSELECT) & ~1;
-> +	rtl818x_iowrite16(priv, &priv->map->PGSELECT, reg | 1);
-> +	/* 0 means asic B-cut, we should use SW 3 wire
-> +	 * bit-by-bit banging for radio. 1 means we can use
-> +	 * USB specific request to write radio registers */
-> +	priv->asic_rev = rtl818x_ioread8(priv, (u8 *)0xFFFE) & 0x3;
-> +	rtl818x_iowrite16(priv, &priv->map->PGSELECT, reg);
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
-> +
-> +	rtl8225_write(dev, 0, 0x1B7);
-> +
-> +	if (rtl8225_read(dev, 8) != 0x588 || rtl8225_read(dev, 9) != 0x700)
-> +		priv->rf_init = rtl8225_rf_init;
-> +	else
-> +		priv->rf_init = rtl8225z2_rf_init;
-> +
-> +	rtl8225_write(dev, 0, 0x0B7);
-> +
-> +	err = ieee80211_register_hw(dev);
-> +	if (err) {
-> +		printk(KERN_ERR "rtl8187: Cannot register device\n");
-> +		goto err_free_dev;
-> +	}
-> +
-> +	printk(KERN_INFO "%s: hwaddr " MAC_FMT ", rtl8187 V%d + %s\n",
-> +	       wiphy_name(dev->wiphy), MAC_ARG(dev->wiphy->perm_addr),
-> +	       priv->asic_rev, priv->rf_init == rtl8225_rf_init ?
-> +	       "rtl8225" : "rtl8225z2");
-> +
-> +	return 0;
-> +
-> + err_free_dev:
-> +	ieee80211_free_hw(dev);
-> +	usb_set_intfdata(intf, NULL);
-> +	usb_put_dev(udev);
-> +	return err;
-> +}
-> +
-> +static void __devexit rtl8187_disconnect(struct usb_interface *intf)
-> +{
-> +	struct ieee80211_hw *dev = usb_get_intfdata(intf);
-> +	struct rtl8187_priv *priv;
-> +
-> +	if (!dev)
-> +		return;
-> +
-> +	ieee80211_unregister_hw(dev);
-> +
-> +	priv = dev->priv;
-> +	usb_put_dev(interface_to_usbdev(intf));
-> +	ieee80211_free_hw(dev);
-> +}
-> +
-> +static struct usb_driver rtl8187_driver = {
-> +	.name		= KBUILD_MODNAME,
-> +	.id_table	= rtl8187_table,
-> +	.probe		= rtl8187_probe,
-> +	.disconnect	= rtl8187_disconnect,
-> +};
-> +
-> +static int __init rtl8187_init(void)
-> +{
-> +	return usb_register(&rtl8187_driver);
-> +}
-> +
-> +static void __exit rtl8187_exit(void)
-> +{
-> +	usb_deregister(&rtl8187_driver);
-> +}
-> +
-> +module_init(rtl8187_init);
-> +module_exit(rtl8187_exit);
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c b/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
-> new file mode 100644
-> index 0000000..a89f023
-> --- /dev/null
-> +++ b/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
-> @@ -0,0 +1,744 @@
-> +
-> +/*
-> + * Radio tuning for RTL8225 on RTL8187
-> + *
-> + * Copyright 2007 Michael Wu <flamingice@sourmilk.net>
-> + * Copyright 2007 Andrea Merello <andreamrl@tiscali.it>
-> + *
-> + * Based on the r8187 driver, which is:
-> + * Copyright 2005 Andrea Merello <andreamrl@tiscali.it>, et al.
-> + *
-> + * Thanks to Realtek for their support!
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 as
-> + * published by the Free Software Foundation.
-> + */
-> +
-> +#include <linux/init.h>
-> +#include <linux/usb.h>
-> +#include <net/mac80211.h>
-> +
-> +#include "rtl8187.h"
-> +#include "rtl8187_rtl8225.h"
-> +
-> +static void rtl8225_write_bitbang(struct ieee80211_hw *dev, u8 addr, u16 data)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	u16 reg80, reg84, reg82;
-> +	u32 bangdata;
-> +	int i;
-> +
-> +	bangdata = (data << 4) | (addr & 0xf);
-> +
-> +	reg80 = rtl818x_ioread16(priv, &priv->map->RFPinsOutput) & 0xfff3;
-> +	reg82 = rtl818x_ioread16(priv, &priv->map->RFPinsEnable);
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, reg82 | 0x7);
-> +
-> +	reg84 = rtl818x_ioread16(priv, &priv->map->RFPinsSelect);
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84 | 0x7);
-> +	udelay(10);
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
-> +	udelay(2);
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80);
-> +	udelay(10);
-> +
-> +	for (i = 15; i >= 0; i--) {
-> +		u16 reg = reg80 | (bangdata & (1 << i)) >> i;
-> +
-> +		if (i & 1)
-> +			rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg);
-> +
-> +		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg | (1 << 1));
-> +		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg | (1 << 1));
-> +
-> +		if (!(i & 1))
-> +			rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg);
-> +	}
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
-> +	udelay(10);
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84);
-> +	mdelay(2);
-> +}
-> +
-> +static void rtl8225_write_8051(struct ieee80211_hw *dev, u8 addr, u16 data)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	u16 reg80, reg82, reg84;
-> +
-> +	reg80 = rtl818x_ioread16(priv, &priv->map->RFPinsOutput);
-> +	reg82 = rtl818x_ioread16(priv, &priv->map->RFPinsEnable);
-> +	reg84 = rtl818x_ioread16(priv, &priv->map->RFPinsSelect);
-> +
-> +	reg80 &= ~(0x3 << 2);
-> +	reg84 &= ~0xF;
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, reg82 | 0x0007);
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84 | 0x0007);
-> +	udelay(10);
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
-> +	udelay(2);
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80);
-> +	udelay(10);
-> +
-> +	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
-> +			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
-> +			addr, 0x8225, &data, sizeof(data), HZ / 2);
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
-> +	udelay(10);
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84);
-> +	mdelay(2);
-> +}
-> +
-> +void rtl8225_write(struct ieee80211_hw *dev, u8 addr, u16 data)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +
-> +	if (priv->asic_rev)
-> +		rtl8225_write_8051(dev, addr, data);
-> +	else
-> +		rtl8225_write_bitbang(dev, addr, data);
-> +}
-> +
-> +u16 rtl8225_read(struct ieee80211_hw *dev, u8 addr)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	u16 reg80, reg82, reg84, out;
-> +	int i;
-> +
-> +	reg80 = rtl818x_ioread16(priv, &priv->map->RFPinsOutput);
-> +	reg82 = rtl818x_ioread16(priv, &priv->map->RFPinsEnable);
-> +	reg84 = rtl818x_ioread16(priv, &priv->map->RFPinsSelect);
-> +
-> +	reg80 &= ~0xF;
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, reg82 | 0x000F);
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84 | 0x000F);
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
-> +	udelay(4);
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80);
-> +	udelay(5);
-> +
-> +	for (i = 4; i >= 0; i--) {
-> +		u16 reg = reg80 | ((addr >> i) & 1);
-> +
-> +		if (!(i & 1)) {
-> +			rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg);
-> +			udelay(1);
-> +		}
-> +
-> +		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
-> +				  reg | (1 << 1));
-> +		udelay(2);
-> +		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
-> +				  reg | (1 << 1));
-> +		udelay(2);
-> +
-> +		if (i & 1) {
-> +			rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg);
-> +			udelay(1);
-> +		}
-> +	}
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
-> +			  reg80 | (1 << 3) | (1 << 1));
-> +	udelay(2);
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
-> +			  reg80 | (1 << 3));
-> +	udelay(2);
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
-> +			  reg80 | (1 << 3));
-> +	udelay(2);
-> +
-> +	out = 0;
-> +	for (i = 11; i >= 0; i--) {
-> +		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
-> +				  reg80 | (1 << 3));
-> +		udelay(1);
-> +		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
-> +				  reg80 | (1 << 3) | (1 << 1));
-> +		udelay(2);
-> +		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
-> +				  reg80 | (1 << 3) | (1 << 1));
-> +		udelay(2);
-> +		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
-> +				  reg80 | (1 << 3) | (1 << 1));
-> +		udelay(2);
-> +
-> +		if (rtl818x_ioread16(priv, &priv->map->RFPinsInput) & (1 << 1))
-> +			out |= 1 << i;
-> +
-> +		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
-> +				  reg80 | (1 << 3));
-> +		udelay(2);
-> +	}
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
-> +			  reg80 | (1 << 3) | (1 << 2));
-> +	udelay(2);
-> +
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, reg82);
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84);
-> +	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, 0x03A0);
-> +
-> +	return out;
-> +}
-> +
-> +static const u16 rtl8225bcd_rxgain[] = {
-> +	0x0400, 0x0401, 0x0402, 0x0403, 0x0404, 0x0405, 0x0408, 0x0409,
-> +	0x040a, 0x040b, 0x0502, 0x0503, 0x0504, 0x0505, 0x0540, 0x0541,
-> +	0x0542, 0x0543, 0x0544, 0x0545, 0x0580, 0x0581, 0x0582, 0x0583,
-> +	0x0584, 0x0585, 0x0588, 0x0589, 0x058a, 0x058b, 0x0643, 0x0644,
-> +	0x0645, 0x0680, 0x0681, 0x0682, 0x0683, 0x0684, 0x0685, 0x0688,
-> +	0x0689, 0x068a, 0x068b, 0x068c, 0x0742, 0x0743, 0x0744, 0x0745,
-> +	0x0780, 0x0781, 0x0782, 0x0783, 0x0784, 0x0785, 0x0788, 0x0789,
-> +	0x078a, 0x078b, 0x078c, 0x078d, 0x0790, 0x0791, 0x0792, 0x0793,
-> +	0x0794, 0x0795, 0x0798, 0x0799, 0x079a, 0x079b, 0x079c, 0x079d,
-> +	0x07a0, 0x07a1, 0x07a2, 0x07a3, 0x07a4, 0x07a5, 0x07a8, 0x07a9,
-> +	0x07aa, 0x07ab, 0x07ac, 0x07ad, 0x07b0, 0x07b1, 0x07b2, 0x07b3,
-> +	0x07b4, 0x07b5, 0x07b8, 0x07b9, 0x07ba, 0x07bb, 0x07bb
-> +};
-> +
-> +static const u8 rtl8225_agc[] = {
-> +	0x9e, 0x9e, 0x9e, 0x9e, 0x9e, 0x9e, 0x9e, 0x9e,
-> +	0x9d, 0x9c, 0x9b, 0x9a, 0x99, 0x98, 0x97, 0x96,
-> +	0x95, 0x94, 0x93, 0x92, 0x91, 0x90, 0x8f, 0x8e,
-> +	0x8d, 0x8c, 0x8b, 0x8a, 0x89, 0x88, 0x87, 0x86,
-> +	0x85, 0x84, 0x83, 0x82, 0x81, 0x80, 0x3f, 0x3e,
-> +	0x3d, 0x3c, 0x3b, 0x3a, 0x39, 0x38, 0x37, 0x36,
-> +	0x35, 0x34, 0x33, 0x32, 0x31, 0x30, 0x2f, 0x2e,
-> +	0x2d, 0x2c, 0x2b, 0x2a, 0x29, 0x28, 0x27, 0x26,
-> +	0x25, 0x24, 0x23, 0x22, 0x21, 0x20, 0x1f, 0x1e,
-> +	0x1d, 0x1c, 0x1b, 0x1a, 0x19, 0x18, 0x17, 0x16,
-> +	0x15, 0x14, 0x13, 0x12, 0x11, 0x10, 0x0f, 0x0e,
-> +	0x0d, 0x0c, 0x0b, 0x0a, 0x09, 0x08, 0x07, 0x06,
-> +	0x05, 0x04, 0x03, 0x02, 0x01, 0x01, 0x01, 0x01,
-> +	0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-> +	0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-> +	0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01
-> +};
-> +
-> +static const u8 rtl8225_gain[] = {
-> +	0x23, 0x88, 0x7c, 0xa5,	/* -82dBm */
-> +	0x23, 0x88, 0x7c, 0xb5,	/* -82dBm */
-> +	0x23, 0x88, 0x7c, 0xc5,	/* -82dBm */
-> +	0x33, 0x80, 0x79, 0xc5,	/* -78dBm */
-> +	0x43, 0x78, 0x76, 0xc5,	/* -74dBm */
-> +	0x53, 0x60, 0x73, 0xc5,	/* -70dBm */
-> +	0x63, 0x58, 0x70, 0xc5,	/* -66dBm */
-> +};
-> +
-> +static const u8 rtl8225_threshold[] = {
-> +	0x8d, 0x8d, 0x8d, 0x8d, 0x9d, 0xad, 0xbd
-> +};
-> +
-> +static const u8 rtl8225_tx_gain_cck_ofdm[] = {
-> +	0x02, 0x06, 0x0e, 0x1e, 0x3e, 0x7e
-> +};
-> +
-> +static const u8 rtl8225_tx_power_cck[] = {
-> +	0x18, 0x17, 0x15, 0x11, 0x0c, 0x08, 0x04, 0x02,
-> +	0x1b, 0x1a, 0x17, 0x13, 0x0e, 0x09, 0x04, 0x02,
-> +	0x1f, 0x1e, 0x1a, 0x15, 0x10, 0x0a, 0x05, 0x02,
-> +	0x22, 0x21, 0x1d, 0x18, 0x11, 0x0b, 0x06, 0x02,
-> +	0x26, 0x25, 0x21, 0x1b, 0x14, 0x0d, 0x06, 0x03,
-> +	0x2b, 0x2a, 0x25, 0x1e, 0x16, 0x0e, 0x07, 0x03
-> +};
-> +
-> +static const u8 rtl8225_tx_power_cck_ch14[] = {
-> +	0x18, 0x17, 0x15, 0x0c, 0x00, 0x00, 0x00, 0x00,
-> +	0x1b, 0x1a, 0x17, 0x0e, 0x00, 0x00, 0x00, 0x00,
-> +	0x1f, 0x1e, 0x1a, 0x0f, 0x00, 0x00, 0x00, 0x00,
-> +	0x22, 0x21, 0x1d, 0x11, 0x00, 0x00, 0x00, 0x00,
-> +	0x26, 0x25, 0x21, 0x13, 0x00, 0x00, 0x00, 0x00,
-> +	0x2b, 0x2a, 0x25, 0x15, 0x00, 0x00, 0x00, 0x00
-> +};
-> +
-> +static const u8 rtl8225_tx_power_ofdm[] = {
-> +	0x80, 0x90, 0xa2, 0xb5, 0xcb, 0xe4
-> +};
-> +
-> +static const u32 rtl8225_chan[] = {
-> +	0x085c, 0x08dc, 0x095c, 0x09dc, 0x0a5c, 0x0adc, 0x0b5c,
-> +	0x0bdc, 0x0c5c, 0x0cdc, 0x0d5c, 0x0ddc, 0x0e5c, 0x0f72
-> +};
-> +
-> +static void rtl8225_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	u8 cck_power, ofdm_power;
-> +	const u8 *tmp;
-> +	u32 reg;
-> +	int i;
-> +
-> +	cck_power = priv->channels[channel - 1].val & 0xF;
-> +	ofdm_power = priv->channels[channel - 1].val >> 4;
-> +
-> +	cck_power = min(cck_power, (u8)11);
-> +	ofdm_power = min(ofdm_power, (u8)35);
-> +
-> +	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_CCK,
-> +			 rtl8225_tx_gain_cck_ofdm[cck_power / 6] >> 1);
-> +
-> +	if (channel == 14)
-> +		tmp = &rtl8225_tx_power_cck_ch14[(cck_power % 6) * 8];
-> +	else
-> +		tmp = &rtl8225_tx_power_cck[(cck_power % 6) * 8];
-> +
-> +	for (i = 0; i < 8; i++)
-> +		rtl8225_write_phy_cck(dev, 0x44 + i, *tmp++);
-> +
-> +	mdelay(1); // FIXME: optional?
-> +
-> +	/* anaparam2 on */
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
-> +	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
-> +	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
-> +	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
-> +	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
-> +
-> +	rtl8225_write_phy_ofdm(dev, 2, 0x42);
-> +	rtl8225_write_phy_ofdm(dev, 6, 0x00);
-> +	rtl8225_write_phy_ofdm(dev, 8, 0x00);
-> +
-> +	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_OFDM,
-> +			 rtl8225_tx_gain_cck_ofdm[ofdm_power / 6] >> 1);
-> +
-> +	tmp = &rtl8225_tx_power_ofdm[ofdm_power % 6];
-> +
-> +	rtl8225_write_phy_ofdm(dev, 5, *tmp);
-> +	rtl8225_write_phy_ofdm(dev, 7, *tmp);
-> +
-> +	mdelay(1);
-> +}
-> +
-> +void rtl8225_rf_init(struct ieee80211_hw *dev)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	int i;
-> +
-> +	rtl8225_write(dev, 0x0, 0x067); mdelay(1);
-> +	rtl8225_write(dev, 0x1, 0xFE0); mdelay(1);
-> +	rtl8225_write(dev, 0x2, 0x44D); mdelay(1);
-> +	rtl8225_write(dev, 0x3, 0x441); mdelay(1);
-> +	rtl8225_write(dev, 0x4, 0x486); mdelay(1);
-> +	rtl8225_write(dev, 0x5, 0xBC0); mdelay(1);
-> +	rtl8225_write(dev, 0x6, 0xAE6); mdelay(1);
-> +	rtl8225_write(dev, 0x7, 0x82A); mdelay(1);
-> +	rtl8225_write(dev, 0x8, 0x01F); mdelay(1);
-> +	rtl8225_write(dev, 0x9, 0x334); mdelay(1);
-> +	rtl8225_write(dev, 0xA, 0xFD4); mdelay(1);
-> +	rtl8225_write(dev, 0xB, 0x391); mdelay(1);
-> +	rtl8225_write(dev, 0xC, 0x050); mdelay(1);
-> +	rtl8225_write(dev, 0xD, 0x6DB); mdelay(1);
-> +	rtl8225_write(dev, 0xE, 0x029); mdelay(1);
-> +	rtl8225_write(dev, 0xF, 0x914); mdelay(100);
-> +
-> +	rtl8225_write(dev, 0x2, 0xC4D); mdelay(200);
-> +	rtl8225_write(dev, 0x2, 0x44D); mdelay(200);
-> +
-> +	if (!(rtl8225_read(dev, 6) & (1 << 7))) {
-> +		rtl8225_write(dev, 0x02, 0x0c4d);
-> +		mdelay(200);
-> +		rtl8225_write(dev, 0x02, 0x044d);
-> +		mdelay(100);
-> +		if (!(rtl8225_read(dev, 6) & (1 << 7)))
-> +			printk(KERN_WARNING "%s: RF Calibration Failed! %x\n",
-> +			       wiphy_name(dev->wiphy), rtl8225_read(dev, 6));
-> +	}
-> +
-> +	rtl8225_write(dev, 0x0, 0x127);
-> +
-> +	for (i = 0; i < ARRAY_SIZE(rtl8225bcd_rxgain); i++) {
-> +		rtl8225_write(dev, 0x1, i + 1);
-> +		rtl8225_write(dev, 0x2, rtl8225bcd_rxgain[i]);
-> +	}
-> +
-> +	rtl8225_write(dev, 0x0, 0x027);
-> +	rtl8225_write(dev, 0x0, 0x22F);
-> +
-> +	for (i = 0; i < ARRAY_SIZE(rtl8225_agc); i++) {
-> +		rtl8225_write_phy_ofdm(dev, 0xB, rtl8225_agc[i]);
-> +		mdelay(1);
-> +		rtl8225_write_phy_ofdm(dev, 0xA, 0x80 + i);
-> +		mdelay(1);
-> +	}
-> +
-> +	mdelay(1);
-> +
-> +	rtl8225_write_phy_ofdm(dev, 0x00, 0x01); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x01, 0x02); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x02, 0x42); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x03, 0x00); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x04, 0x00); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x05, 0x00); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x06, 0x40); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x07, 0x00); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x08, 0x40); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x09, 0xfe); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x0a, 0x09); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x0b, 0x80); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x0c, 0x01); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x0e, 0xd3); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x0f, 0x38); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x10, 0x84); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x11, 0x06); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x12, 0x20); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x13, 0x20); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x14, 0x00); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x15, 0x40); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x16, 0x00); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x17, 0x40); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x18, 0xef); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x19, 0x19); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x1a, 0x20); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x1b, 0x76); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x1c, 0x04); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x1e, 0x95); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x1f, 0x75); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x20, 0x1f); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x21, 0x27); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x22, 0x16); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x24, 0x46); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x25, 0x20); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x27, 0x88); mdelay(1);
-> +
-> +	rtl8225_write_phy_ofdm(dev, 0x0d, rtl8225_gain[2 * 4]);
-> +	rtl8225_write_phy_ofdm(dev, 0x1b, rtl8225_gain[2 * 4 + 2]);
-> +	rtl8225_write_phy_ofdm(dev, 0x1d, rtl8225_gain[2 * 4 + 3]);
-> +	rtl8225_write_phy_ofdm(dev, 0x23, rtl8225_gain[2 * 4 + 1]);
-> +
-> +	rtl8225_write_phy_cck(dev, 0x00, 0x98); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x03, 0x20); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x04, 0x7e); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x05, 0x12); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x06, 0xfc); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x07, 0x78); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x08, 0x2e); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x10, 0x9b); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x11, 0x88); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x12, 0x47); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x13, 0xd0);
-> +	rtl8225_write_phy_cck(dev, 0x19, 0x00);
-> +	rtl8225_write_phy_cck(dev, 0x1a, 0xa0);
-> +	rtl8225_write_phy_cck(dev, 0x1b, 0x08);
-> +	rtl8225_write_phy_cck(dev, 0x40, 0x86);
-> +	rtl8225_write_phy_cck(dev, 0x41, 0x8d); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x42, 0x15); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x43, 0x18); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x44, 0x1f); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x45, 0x1e); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x46, 0x1a); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x47, 0x15); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x48, 0x10); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x49, 0x0a); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x4a, 0x05); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x4b, 0x02); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x4c, 0x05); mdelay(1);
-> +
-> +	rtl818x_iowrite8(priv, &priv->map->TESTR, 0x0D);
-> +
-> +	rtl8225_rf_set_tx_power(dev, 1);
-> +
-> +	/* RX antenna default to A */
-> +	rtl8225_write_phy_cck(dev, 0x10, 0x9b); mdelay(1);	/* B: 0xDB */
-> +	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); mdelay(1);	/* B: 0x10 */
-> +
-> +	rtl818x_iowrite8(priv, &priv->map->TX_ANTENNA, 0x03);	/* B: 0x00 */
-> +	mdelay(1);
-> +	rtl818x_iowrite32(priv, (__le32 *)0xFF94, 0x3dc00002);
-> +
-> +	/* set sensitivity */
-> +	rtl8225_write(dev, 0x0c, 0x50);
-> +	rtl8225_write_phy_ofdm(dev, 0x0d, rtl8225_gain[2 * 4]);
-> +	rtl8225_write_phy_ofdm(dev, 0x1b, rtl8225_gain[2 * 4 + 2]);
-> +	rtl8225_write_phy_ofdm(dev, 0x1d, rtl8225_gain[2 * 4 + 3]);
-> +	rtl8225_write_phy_ofdm(dev, 0x23, rtl8225_gain[2 * 4 + 1]);
-> +	rtl8225_write_phy_cck(dev, 0x41, rtl8225_threshold[2]);
-> +}
-> +
-> +static const u8 rtl8225z2_tx_power_cck_ch14[] = {
-> +	0x36, 0x35, 0x2e, 0x1b, 0x00, 0x00, 0x00, 0x00
-> +};
-> +
-> +static const u8 rtl8225z2_tx_power_cck[] = {
-> +	0x36, 0x35, 0x2e, 0x25, 0x1c, 0x12, 0x09, 0x04
-> +};
-> +
-> +static const u8 rtl8225z2_tx_power_ofdm[] = {
-> +	0x42, 0x00, 0x40, 0x00, 0x40
-> +};
-> +
-> +static const u8 rtl8225z2_tx_gain_cck_ofdm[] = {
-> +	0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-> +	0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
-> +	0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11,
-> +	0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-> +	0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d,
-> +	0x1e, 0x1f, 0x20, 0x21, 0x22, 0x23
-> +};
-> +
-> +static void rtl8225z2_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	u8 cck_power, ofdm_power;
-> +	const u8 *tmp;
-> +	u32 reg;
-> +	int i;
-> +
-> +	cck_power = priv->channels[channel - 1].val & 0xF;
-> +	ofdm_power = priv->channels[channel - 1].val >> 4;
-> +
-> +	cck_power = min(cck_power, (u8)15);
-> +	cck_power += priv->txpwr_base & 0xF;
-> +	cck_power = min(cck_power, (u8)35);
-> +
-> +	ofdm_power = min(ofdm_power, (u8)15);
-> +	ofdm_power += priv->txpwr_base >> 4;
-> +	ofdm_power = min(ofdm_power, (u8)35);
-> +
-> +	if (channel == 14)
-> +		tmp = rtl8225z2_tx_power_cck_ch14;
-> +	else
-> +		tmp = rtl8225z2_tx_power_cck;
-> +
-> +	for (i = 0; i < 8; i++)
-> +		rtl8225_write_phy_cck(dev, 0x44 + i, *tmp++);
-> +
-> +	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_CCK,
-> +			 rtl8225z2_tx_gain_cck_ofdm[cck_power]);
-> +	mdelay(1);
-> +
-> +	/* anaparam2 on */
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
-> +	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
-> +	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
-> +	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
-> +	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
-> +
-> +	rtl8225_write_phy_ofdm(dev, 2, 0x42);
-> +	rtl8225_write_phy_ofdm(dev, 5, 0x00);
-> +	rtl8225_write_phy_ofdm(dev, 6, 0x40);
-> +	rtl8225_write_phy_ofdm(dev, 7, 0x00);
-> +	rtl8225_write_phy_ofdm(dev, 8, 0x40);
-> +
-> +	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_OFDM,
-> +			 rtl8225z2_tx_gain_cck_ofdm[ofdm_power]);
-> +	mdelay(1);
-> +}
-> +
-> +static const u16 rtl8225z2_rxgain[] = {
-> +	0x0400, 0x0401, 0x0402, 0x0403, 0x0404, 0x0405, 0x0408, 0x0409,
-> +	0x040a, 0x040b, 0x0502, 0x0503, 0x0504, 0x0505, 0x0540, 0x0541,
-> +	0x0542, 0x0543, 0x0544, 0x0545, 0x0580, 0x0581, 0x0582, 0x0583,
-> +	0x0584, 0x0585, 0x0588, 0x0589, 0x058a, 0x058b, 0x0643, 0x0644,
-> +	0x0645, 0x0680, 0x0681, 0x0682, 0x0683, 0x0684, 0x0685, 0x0688,
-> +	0x0689, 0x068a, 0x068b, 0x068c, 0x0742, 0x0743, 0x0744, 0x0745,
-> +	0x0780, 0x0781, 0x0782, 0x0783, 0x0784, 0x0785, 0x0788, 0x0789,
-> +	0x078a, 0x078b, 0x078c, 0x078d, 0x0790, 0x0791, 0x0792, 0x0793,
-> +	0x0794, 0x0795, 0x0798, 0x0799, 0x079a, 0x079b, 0x079c, 0x079d,
-> +	0x07a0, 0x07a1, 0x07a2, 0x07a3, 0x07a4, 0x07a5, 0x07a8, 0x07a9,
-> +	0x03aa, 0x03ab, 0x03ac, 0x03ad, 0x03b0, 0x03b1, 0x03b2, 0x03b3,
-> +	0x03b4, 0x03b5, 0x03b8, 0x03b9, 0x03ba, 0x03bb, 0x03bb
-> +};
-> +
-> +static const u8 rtl8225z2_gain_bg[] = {
-> +	0x23, 0x15, 0xa5, /* -82-1dBm */
-> +	0x23, 0x15, 0xb5, /* -82-2dBm */
-> +	0x23, 0x15, 0xc5, /* -82-3dBm */
-> +	0x33, 0x15, 0xc5, /* -78dBm */
-> +	0x43, 0x15, 0xc5, /* -74dBm */
-> +	0x53, 0x15, 0xc5, /* -70dBm */
-> +	0x63, 0x15, 0xc5  /* -66dBm */
-> +};
-> +
-> +void rtl8225z2_rf_init(struct ieee80211_hw *dev)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +	int i;
-> +
-> +	rtl8225_write(dev, 0x0, 0x2BF); mdelay(1);
-> +	rtl8225_write(dev, 0x1, 0xEE0); mdelay(1);
-> +	rtl8225_write(dev, 0x2, 0x44D); mdelay(1);
-> +	rtl8225_write(dev, 0x3, 0x441); mdelay(1);
-> +	rtl8225_write(dev, 0x4, 0x8C3); mdelay(1);
-> +	rtl8225_write(dev, 0x5, 0xC72); mdelay(1);
-> +	rtl8225_write(dev, 0x6, 0x0E6); mdelay(1);
-> +	rtl8225_write(dev, 0x7, 0x82A); mdelay(1);
-> +	rtl8225_write(dev, 0x8, 0x03F); mdelay(1);
-> +	rtl8225_write(dev, 0x9, 0x335); mdelay(1);
-> +	rtl8225_write(dev, 0xa, 0x9D4); mdelay(1);
-> +	rtl8225_write(dev, 0xb, 0x7BB); mdelay(1);
-> +	rtl8225_write(dev, 0xc, 0x850); mdelay(1);
-> +	rtl8225_write(dev, 0xd, 0xCDF); mdelay(1);
-> +	rtl8225_write(dev, 0xe, 0x02B); mdelay(1);
-> +	rtl8225_write(dev, 0xf, 0x114); mdelay(100);
-> +
-> +	rtl8225_write(dev, 0x0, 0x1B7);
-> +
-> +	for (i = 0; i < ARRAY_SIZE(rtl8225z2_rxgain); i++) {
-> +		rtl8225_write(dev, 0x1, i + 1);
-> +		rtl8225_write(dev, 0x2, rtl8225z2_rxgain[i]);
-> +	}
-> +
-> +	rtl8225_write(dev, 0x3, 0x080);
-> +	rtl8225_write(dev, 0x5, 0x004);
-> +	rtl8225_write(dev, 0x0, 0x0B7);
-> +	rtl8225_write(dev, 0x2, 0xc4D);
-> +
-> +	mdelay(200);
-> +	rtl8225_write(dev, 0x2, 0x44D);
-> +	mdelay(100);
-> +
-> +	if (!(rtl8225_read(dev, 6) & (1 << 7))) {
-> +		rtl8225_write(dev, 0x02, 0x0C4D);
-> +		mdelay(200);
-> +		rtl8225_write(dev, 0x02, 0x044D);
-> +		mdelay(100);
-> +		if (!(rtl8225_read(dev, 6) & (1 << 7)))
-> +			printk(KERN_WARNING "%s: RF Calibration Failed! %x\n",
-> +			       wiphy_name(dev->wiphy), rtl8225_read(dev, 6));
-> +	}
-> +
-> +	mdelay(200);
-> +
-> +	rtl8225_write(dev, 0x0, 0x2BF);
-> +
-> +	for (i = 0; i < ARRAY_SIZE(rtl8225_agc); i++) {
-> +		rtl8225_write_phy_ofdm(dev, 0xB, rtl8225_agc[i]);
-> +		mdelay(1);
-> +		rtl8225_write_phy_ofdm(dev, 0xA, 0x80 + i);
-> +		mdelay(1);
-> +	}
-> +
-> +	mdelay(1);
-> +
-> +	rtl8225_write_phy_ofdm(dev, 0x00, 0x01); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x01, 0x02); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x02, 0x42); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x03, 0x00); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x04, 0x00); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x05, 0x00); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x06, 0x40); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x07, 0x00); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x08, 0x40); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x09, 0xfe); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x0a, 0x08); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x0b, 0x80); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x0c, 0x01); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x0d, 0x43);
-> +	rtl8225_write_phy_ofdm(dev, 0x0e, 0xd3); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x0f, 0x38); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x10, 0x84); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x11, 0x07); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x12, 0x20); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x13, 0x20); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x14, 0x00); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x15, 0x40); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x16, 0x00); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x17, 0x40); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x18, 0xef); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x19, 0x19); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x1a, 0x20); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x1b, 0x15); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x1c, 0x04); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x1d, 0xc5); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x1e, 0x95); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x1f, 0x75); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x20, 0x1f); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x21, 0x17); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x22, 0x16); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x23, 0x80); mdelay(1); //FIXME: not needed?
-> +	rtl8225_write_phy_ofdm(dev, 0x24, 0x46); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x25, 0x00); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); mdelay(1);
-> +	rtl8225_write_phy_ofdm(dev, 0x27, 0x88); mdelay(1);
-> +
-> +	rtl8225_write_phy_ofdm(dev, 0x0b, rtl8225z2_gain_bg[4 * 3]);
-> +	rtl8225_write_phy_ofdm(dev, 0x1b, rtl8225z2_gain_bg[4 * 3 + 1]);
-> +	rtl8225_write_phy_ofdm(dev, 0x1d, rtl8225z2_gain_bg[4 * 3 + 2]);
-> +	rtl8225_write_phy_ofdm(dev, 0x21, 0x37);
-> +
-> +	rtl8225_write_phy_cck(dev, 0x00, 0x98); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x03, 0x20); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x04, 0x7e); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x05, 0x12); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x06, 0xfc); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x07, 0x78); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x08, 0x2e); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x10, 0x9b); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x11, 0x88); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x12, 0x47); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x13, 0xd0);
-> +	rtl8225_write_phy_cck(dev, 0x19, 0x00);
-> +	rtl8225_write_phy_cck(dev, 0x1a, 0xa0);
-> +	rtl8225_write_phy_cck(dev, 0x1b, 0x08);
-> +	rtl8225_write_phy_cck(dev, 0x40, 0x86);
-> +	rtl8225_write_phy_cck(dev, 0x41, 0x8d); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x42, 0x15); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x43, 0x18); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x44, 0x36); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x45, 0x35); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x46, 0x2e); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x47, 0x25); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x48, 0x1c); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x49, 0x12); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x4a, 0x09); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x4b, 0x04); mdelay(1);
-> +	rtl8225_write_phy_cck(dev, 0x4c, 0x05); mdelay(1);
-> +
-> +	rtl818x_iowrite8(priv, (u8 *)0xFF5B, 0x0D); mdelay(1);
-> +
-> +	rtl8225z2_rf_set_tx_power(dev, 1);
-> +
-> +	/* RX antenna default to A */
-> +	rtl8225_write_phy_cck(dev, 0x10, 0x9b); mdelay(1);	/* B: 0xDB */
-> +	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); mdelay(1);	/* B: 0x10 */
-> +
-> +	rtl818x_iowrite8(priv, &priv->map->TX_ANTENNA, 0x03);	/* B: 0x00 */
-> +	mdelay(1);
-> +	rtl818x_iowrite32(priv, (__le32 *)0xFF94, 0x3dc00002);
-> +}
-> +
-> +void rtl8225_rf_stop(struct ieee80211_hw *dev)
-> +{
-> +	u8 reg;
-> +	struct rtl8187_priv *priv = dev->priv;
-> +
-> +	rtl8225_write(dev, 0x4, 0x1f); mdelay(1);
-> +
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
-> +	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
-> +	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
-> +	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_OFF);
-> +	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, RTL8225_ANAPARAM_OFF);
-> +	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
-> +	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
-> +}
-> +
-> +void rtl8225_rf_set_channel(struct ieee80211_hw *dev, int channel)
-> +{
-> +	struct rtl8187_priv *priv = dev->priv;
-> +
-> +	if (priv->rf_init == rtl8225_rf_init)
-> +		rtl8225_rf_set_tx_power(dev, channel);
-> +	else
-> +		rtl8225z2_rf_set_tx_power(dev, channel);
-> +
-> +	rtl8225_write(dev, 0x7, rtl8225_chan[channel - 1]);
-> +	mdelay(10);
-> +}
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187_rtl8225.h b/drivers/net/wireless/rtl818x/rtl8187_rtl8225.h
-> new file mode 100644
-> index 0000000..ed28118
-> --- /dev/null
-> +++ b/drivers/net/wireless/rtl818x/rtl8187_rtl8225.h
-> @@ -0,0 +1,30 @@
-> +#ifndef RTL8187_RTL8225_H
-> +#define RTL8187_RTL8225_H
-> +
-> +#define RTL8225_ANAPARAM_ON	0xa0000a59
-> +#define RTL8225_ANAPARAM2_ON	0x860c7312
-> +#define RTL8225_ANAPARAM_OFF	0xa00beb59
-> +#define RTL8225_ANAPARAM2_OFF	0x840dec11
-> +
-> +void rtl8225_write(struct ieee80211_hw *, u8 addr, u16 data);
-> +u16  rtl8225_read(struct ieee80211_hw *, u8 addr);
-> +
-> +void rtl8225_rf_init(struct ieee80211_hw *);
-> +void rtl8225z2_rf_init(struct ieee80211_hw *);
-> +void rtl8225_rf_stop(struct ieee80211_hw *);
-> +void rtl8225_rf_set_channel(struct ieee80211_hw *, int);
-> +
-> +
-> +static inline void rtl8225_write_phy_ofdm(struct ieee80211_hw *dev,
-> +					  u8 addr, u32 data)
-> +{
-> +	rtl8187_write_phy(dev, addr, data);
-> +}
-> +
-> +static inline void rtl8225_write_phy_cck(struct ieee80211_hw *dev,
-> +					 u8 addr, u32 data)
-> +{
-> +	rtl8187_write_phy(dev, addr, data | 0x10000);
-> +}
-> +
-> +#endif /* RTL8187_RTL8225_H */
-> diff --git a/drivers/net/wireless/rtl818x/rtl818x.h b/drivers/net/wireless/rtl818x/rtl818x.h
-> new file mode 100644
-> index 0000000..e4ee946
-> --- /dev/null
-> +++ b/drivers/net/wireless/rtl818x/rtl818x.h
-> @@ -0,0 +1,212 @@
-> +#ifndef RTL818X_H
-> +#define RTL818X_H
-> +
-> +struct rtl818x_csr {
-> +	u8	MAC[6];
-> +	u8	reserved_0[2];
-> +	__le32	MAR[2];
-> +	u8	RX_FIFO_COUNT;
-> +	u8	reserved_1;
-> +	u8	TX_FIFO_COUNT;
-> +	u8	BQREQ;
-> +	u8	reserved_2[4];
-> +	__le32	TSFT[2];
-> +	__le32	TLPDA;
-> +	__le32	TNPDA;
-> +	__le32	THPDA;
-> +	__le16	BRSR;
-> +	u8	BSSID[6];
-> +	u8	RESP_RATE;
-> +	u8	EIFS;
-> +	u8	reserved_3[1];
-> +	u8	CMD;
-> +#define RTL818X_CMD_TX_ENABLE		(1 << 2)
-> +#define RTL818X_CMD_RX_ENABLE		(1 << 3)
-> +#define RTL818X_CMD_RESET		(1 << 4)
-> +	u8	reserved_4[4];
-> +	__le16	INT_MASK;
-> +	__le16	INT_STATUS;
-> +#define RTL818X_INT_RX_OK		(1 <<  0)
-> +#define RTL818X_INT_RX_ERR		(1 <<  1)
-> +#define RTL818X_INT_TXL_OK		(1 <<  2)
-> +#define RTL818X_INT_TXL_ERR		(1 <<  3)
-> +#define RTL818X_INT_RX_DU		(1 <<  4)
-> +#define RTL818X_INT_RX_FO		(1 <<  5)
-> +#define RTL818X_INT_TXN_OK		(1 <<  6)
-> +#define RTL818X_INT_TXN_ERR		(1 <<  7)
-> +#define RTL818X_INT_TXH_OK		(1 <<  8)
-> +#define RTL818X_INT_TXH_ERR		(1 <<  9)
-> +#define RTL818X_INT_TXB_OK		(1 << 10)
-> +#define RTL818X_INT_TXB_ERR		(1 << 11)
-> +#define RTL818X_INT_ATIM		(1 << 12)
-> +#define RTL818X_INT_BEACON		(1 << 13)
-> +#define RTL818X_INT_TIME_OUT		(1 << 14)
-> +#define RTL818X_INT_TX_FO		(1 << 15)
-> +	__le32	TX_CONF;
-> +#define RTL818X_TX_CONF_LOOPBACK_MAC	(1 << 17)
-> +#define RTL818X_TX_CONF_NO_ICV		(1 << 19)
-> +#define RTL818X_TX_CONF_DISCW		(1 << 20)
-> +#define RTL818X_TX_CONF_R8180_ABCD	(2 << 25)
-> +#define RTL818X_TX_CONF_R8180_F		(3 << 25)
-> +#define RTL818X_TX_CONF_R8185_ABC	(4 << 25)
-> +#define RTL818X_TX_CONF_R8185_D		(5 << 25)
-> +#define RTL818X_TX_CONF_HWVER_MASK	(7 << 25)
-> +#define RTL818X_TX_CONF_CW_MIN		(1 << 31)
-> +	__le32	RX_CONF;
-> +#define RTL818X_RX_CONF_MONITOR		(1 <<  0)
-> +#define RTL818X_RX_CONF_NICMAC		(1 <<  1)
-> +#define RTL818X_RX_CONF_MULTICAST	(1 <<  2)
-> +#define RTL818X_RX_CONF_BROADCAST	(1 <<  3)
-> +#define RTL818X_RX_CONF_DATA		(1 << 18)
-> +#define RTL818X_RX_CONF_CTRL		(1 << 19)
-> +#define RTL818X_RX_CONF_MGMT		(1 << 20)
-> +#define RTL818X_RX_CONF_BSSID		(1 << 23)
-> +#define RTL818X_RX_CONF_RX_AUTORESETPHY	(1 << 28)
-> +#define RTL818X_RX_CONF_ONLYERLPKT	(1 << 31)
-> +	__le32	INT_TIMEOUT;
-> +	__le32	TBDA;
-> +	u8	EEPROM_CMD;
-> +#define RTL818X_EEPROM_CMD_READ		(1 << 0)
-> +#define RTL818X_EEPROM_CMD_WRITE	(1 << 1)
-> +#define RTL818X_EEPROM_CMD_CK		(1 << 2)
-> +#define RTL818X_EEPROM_CMD_CS		(1 << 3)
-> +#define RTL818X_EEPROM_CMD_NORMAL	(0 << 6)
-> +#define RTL818X_EEPROM_CMD_LOAD		(1 << 6)
-> +#define RTL818X_EEPROM_CMD_PROGRAM	(2 << 6)
-> +#define RTL818X_EEPROM_CMD_CONFIG	(3 << 6)
-> +	u8	CONFIG0;
-> +	u8	CONFIG1;
-> +	u8	CONFIG2;
-> +	__le32	ANAPARAM;
-> +	u8	MSR;
-> +#define RTL818X_MSR_NO_LINK		(0 << 2)
-> +#define RTL818X_MSR_ADHOC		(1 << 2)
-> +#define RTL818X_MSR_INFRA		(2 << 2)
-> +	u8	CONFIG3;
-> +#define RTL818X_CONFIG3_ANAPARAM_WRITE	(1 << 6)
-> +	u8	CONFIG4;
-> +#define RTL818X_CONFIG4_POWEROFF	(1 << 6)
-> +#define RTL818X_CONFIG4_VCOOFF		(1 << 7)
-> +	u8	TESTR;
-> +	u8	reserved_9[2];
-> +	__le16	PGSELECT;
-> +	__le32	ANAPARAM2;
-> +	u8	reserved_10[12];
-> +	__le16	BEACON_INTERVAL;
-> +	__le16	ATIM_WND;
-> +	__le16	BEACON_INTERVAL_TIME;
-> +	__le16	ATIMTR_INTERVAL;
-> +	u8	reserved_11[4];
-> +	u8	PHY[4];
-> +	__le16	RFPinsOutput;
-> +	__le16	RFPinsEnable;
-> +	__le16	RFPinsSelect;
-> +	__le16	RFPinsInput;
-> +	__le32	RF_PARA;
-> +	__le32	RF_TIMING;
-> +	u8	GP_ENABLE;
-> +	u8	GPIO;
-> +	u8	reserved_12[10];
-> +	u8	TX_AGC_CTL;
-> +#define RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT		(1 << 0)
-> +#define RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT	(1 << 1)
-> +#define RTL818X_TX_AGC_CTL_FEEDBACK_ANT			(1 << 2)
-> +	u8	TX_GAIN_CCK;
-> +	u8	TX_GAIN_OFDM;
-> +	u8	TX_ANTENNA;
-> +	u8	reserved_13[16];
-> +	u8	WPA_CONF;
-> +	u8	reserved_14[3];
-> +	u8	SIFS;
-> +	u8	DIFS;
-> +	u8	SLOT;
-> +	u8	reserved_15[5];
-> +	u8	CW_CONF;
-> +#define RTL818X_CW_CONF_PERPACKET_CW_SHIFT	(1 << 0)
-> +#define RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT	(1 << 1)
-> +	u8	CW_VAL;
-> +	u8	RATE_FALLBACK;
-> +	u8	reserved_16[25];
-> +	u8	CONFIG5;
-> +	u8	TX_DMA_POLLING;
-> +	u8	reserved_17[2];
-> +	__le16	CWR;
-> +	u8	RETRY_CTR;
-> +	u8	reserved_18[5];
-> +	__le32	RDSAR;
-> +	u8	reserved_19[18];
-> +	u16	TALLY_CNT;
-> +	u8	TALLY_SEL;
-> +} __attribute__((packed));
-> +
-> +static const struct ieee80211_rate rtl818x_rates[] = {
-> +	{ .rate = 10,
-> +	  .val = 0,
-> +	  .flags = IEEE80211_RATE_CCK },
-> +	{ .rate = 20,
-> +	  .val = 1,
-> +	  .flags = IEEE80211_RATE_CCK },
-> +	{ .rate = 55,
-> +	  .val = 2,
-> +	  .flags = IEEE80211_RATE_CCK },
-> +	{ .rate = 110,
-> +	  .val = 3,
-> +	  .flags = IEEE80211_RATE_CCK },
-> +	{ .rate = 60,
-> +	  .val = 4,
-> +	  .flags = IEEE80211_RATE_OFDM },
-> +	{ .rate = 90,
-> +	  .val = 5,
-> +	  .flags = IEEE80211_RATE_OFDM },
-> +	{ .rate = 120,
-> +	  .val = 6,
-> +	  .flags = IEEE80211_RATE_OFDM },
-> +	{ .rate = 180,
-> +	  .val = 7,
-> +	  .flags = IEEE80211_RATE_OFDM },
-> +	{ .rate = 240,
-> +	  .val = 8,
-> +	  .flags = IEEE80211_RATE_OFDM },
-> +	{ .rate = 360,
-> +	  .val = 9,
-> +	  .flags = IEEE80211_RATE_OFDM },
-> +	{ .rate = 480,
-> +	  .val = 10,
-> +	  .flags = IEEE80211_RATE_OFDM },
-> +	{ .rate = 540,
-> +	  .val = 11,
-> +	  .flags = IEEE80211_RATE_OFDM },
-> +};
-> +
-> +static const struct ieee80211_channel rtl818x_channels[] = {
-> +	{ .chan = 1,
-> +	  .freq = 2412},
-> +	{ .chan = 2,
-> +	  .freq = 2417},
-> +	{ .chan = 3,
-> +	  .freq = 2422},
-> +	{ .chan = 4,
-> +	  .freq = 2427},
-> +	{ .chan = 5,
-> +	  .freq = 2432},
-> +	{ .chan = 6,
-> +	  .freq = 2437},
-> +	{ .chan = 7,
-> +	  .freq = 2442},
-> +	{ .chan = 8,
-> +	  .freq = 2447},
-> +	{ .chan = 9,
-> +	  .freq = 2452},
-> +	{ .chan = 10,
-> +	  .freq = 2457},
-> +	{ .chan = 11,
-> +	  .freq = 2462},
-> +	{ .chan = 12,
-> +	  .freq = 2467},
-> +	{ .chan = 13,
-> +	  .freq = 2472},
-> +	{ .chan = 14,
-> +	  .freq = 2484}
-> +};
-> +
-> +#endif /* RTL818X_H */
-> diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-> index e04cffc..8459549 100644
-> --- a/drivers/net/wireless/zd1211rw/zd_usb.c
-> +++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-> @@ -40,6 +40,7 @@ static struct usb_device_id usb_ids[] = {
->  	{ USB_DEVICE(0x126f, 0xa006), .driver_info = DEVICE_ZD1211 },
->  	{ USB_DEVICE(0x6891, 0xa727), .driver_info = DEVICE_ZD1211 },
->  	{ USB_DEVICE(0x0df6, 0x9071), .driver_info = DEVICE_ZD1211 },
-> +	{ USB_DEVICE(0x0df6, 0x9075), .driver_info = DEVICE_ZD1211 },
->  	{ USB_DEVICE(0x157e, 0x300b), .driver_info = DEVICE_ZD1211 },
->  	{ USB_DEVICE(0x079b, 0x004a), .driver_info = DEVICE_ZD1211 },
->  	{ USB_DEVICE(0x1740, 0x2000), .driver_info = DEVICE_ZD1211 },
-> @@ -67,8 +68,11 @@ static struct usb_device_id usb_ids[] = {
->  	{ USB_DEVICE(0x0586, 0x3410), .driver_info = DEVICE_ZD1211B },
->  	{ USB_DEVICE(0x0baf, 0x0121), .driver_info = DEVICE_ZD1211B },
->  	{ USB_DEVICE(0x0586, 0x3412), .driver_info = DEVICE_ZD1211B },
-> +	{ USB_DEVICE(0x0586, 0x3413), .driver_info = DEVICE_ZD1211B },
-> +	{ USB_DEVICE(0x0053, 0x5301), .driver_info = DEVICE_ZD1211B },
->  	/* "Driverless" devices that need ejecting */
->  	{ USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
-> +	{ USB_DEVICE(0x0ace, 0x20ff), .driver_info = DEVICE_INSTALLER },
->  	{}
->  };
->  
-> diff --git a/include/linux/eeprom_93cx6.h b/include/linux/eeprom_93cx6.h
-> new file mode 100644
-> index 0000000..4b9be59
-> --- /dev/null
-> +++ b/include/linux/eeprom_93cx6.h
-> @@ -0,0 +1,77 @@
-> +/*
-> +	Copyright (C) 2004 - 2006 rt2x00 SourceForge Project
-> +	<http://rt2x00.serialmonkey.com>
-> +
-> +	This program is free software; you can redistribute it and/or modify
-> +	it under the terms of the GNU General Public License as published by
-> +	the Free Software Foundation; either version 2 of the License, or
-> +	(at your option) any later version.
-> +
-> +	This program is distributed in the hope that it will be useful,
-> +	but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-> +	GNU General Public License for more details.
-> +
-> +	You should have received a copy of the GNU General Public License
-> +	along with this program; if not, write to the
-> +	Free Software Foundation, Inc.,
-> +	59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-> + */
-> +
-> +/*
-> +	Module: eeprom_93cx6
-> +	Abstract: EEPROM reader datastructures for 93cx6 chipsets.
-> +	Supported chipsets: 93c46 & 93c66.
-> + */
-> +
-> +/*
-> + * EEPROM operation defines.
-> + */
-> +#define PCI_EEPROM_WIDTH_93C46	6
-> +#define PCI_EEPROM_WIDTH_93C66	8
-> +#define PCI_EEPROM_WIDTH_OPCODE	3
-> +#define PCI_EEPROM_WRITE_OPCODE	0x05
-> +#define PCI_EEPROM_READ_OPCODE	0x06
-> +#define PCI_EEPROM_EWDS_OPCODE	0x10
-> +#define PCI_EEPROM_EWEN_OPCODE	0x13
-> +
-> +/**
-> + * struct eeprom_93cx6 - control structure for setting the commands
-> + * for reading the eeprom data.
-> + * @data: private pointer for the driver.
-> + * @register_read(struct eeprom_93cx6 *eeprom): handler to
-> + * read the eeprom register, this function should set all reg_* fields.
-> + * @register_write(struct eeprom_93cx6 *eeprom): handler to
-> + * write to the eeprom register by using all reg_* fields.
-> + * @width: eeprom width, should be one of the PCI_EEPROM_WIDTH_* defines
-> + * @reg_data_in: register field to indicate data input
-> + * @reg_data_out: register field to indicate data output
-> + * @reg_data_clock: register field to set the data clock
-> + * @reg_chip_select: register field to set the chip select
-> + *
-> + * This structure is used for the communication between the driver
-> + * and the eeprom_93cx6 handlers for reading the eeprom.
-> + */
-> +struct eeprom_93cx6 {
-> +	void *data;
-> +
-> +	void (*register_read)(struct eeprom_93cx6 *eeprom);
-> +	void (*register_write)(struct eeprom_93cx6 *eeprom);
-> +
-> +	int width;
-> +
-> +	char reg_data_in;
-> +	char reg_data_out;
-> +	char reg_data_clock;
-> +	char reg_chip_select;
-> +};
-> +
-> +extern void eeprom_93cx6_read(struct eeprom_93cx6 *eeprom,
-> +	const u8 word, u16 *data);
-> +extern void eeprom_93cx6_multiread(struct eeprom_93cx6 *eeprom,
-> +	const u8 word, __le16 *data, const u16 words);
-> +
-> +extern void eeprom_93cx6_write(struct eeprom_93cx6 *eeprom,
-> +	const u8 word, u16 data);
-> +extern void eeprom_93cx6_multiwrite(struct eeprom_93cx6 *eeprom,
-> +	const u8 word, __le16 *data, const u16 words);
-> diff --git a/include/net/ieee80211.h b/include/net/ieee80211.h
-> index d56b292..bbd85cd 100644
-> --- a/include/net/ieee80211.h
-> +++ b/include/net/ieee80211.h
-> @@ -1291,6 +1291,8 @@ extern u8 ieee80211_get_channel_flags(struct ieee80211_device *ieee,
->  extern const struct ieee80211_channel *ieee80211_get_channel(struct
->  							     ieee80211_device
->  							     *ieee, u8 channel);
-> +extern u32 ieee80211_channel_to_freq(struct ieee80211_device * ieee,
-> +				      u8 channel);
->  
->  /* ieee80211_wx.c */
->  extern int ieee80211_wx_get_scan(struct ieee80211_device *ieee,
-> diff --git a/net/ieee80211/ieee80211_geo.c b/net/ieee80211/ieee80211_geo.c
-> index 305a09d..960ad13 100644
-> --- a/net/ieee80211/ieee80211_geo.c
-> +++ b/net/ieee80211/ieee80211_geo.c
-> @@ -94,6 +94,21 @@ int ieee80211_channel_to_index(struct ieee80211_device *ieee, u8 channel)
->  	return -1;
->  }
->  
-> +u32 ieee80211_channel_to_freq(struct ieee80211_device * ieee, u8 channel)
-> +{
-> +	const struct ieee80211_channel * ch;
-> +
-> +	/* Driver needs to initialize the geography map before using
-> +	 * these helper functions */
-> +	if (ieee->geo.bg_channels == 0 && ieee->geo.a_channels == 0)
-> +		return 0;
-> +
-> +	ch = ieee80211_get_channel(ieee, channel);
-> +	if (!ch->channel)
-> +		return 0;
-> +	return ch->freq;
-> +}
-> +
->  u8 ieee80211_freq_to_channel(struct ieee80211_device * ieee, u32 freq)
->  {
->  	int i;
-> @@ -174,6 +189,7 @@ EXPORT_SYMBOL(ieee80211_get_channel);
->  EXPORT_SYMBOL(ieee80211_get_channel_flags);
->  EXPORT_SYMBOL(ieee80211_is_valid_channel);
->  EXPORT_SYMBOL(ieee80211_freq_to_channel);
-> +EXPORT_SYMBOL(ieee80211_channel_to_freq);
->  EXPORT_SYMBOL(ieee80211_channel_to_index);
->  EXPORT_SYMBOL(ieee80211_set_geo);
->  EXPORT_SYMBOL(ieee80211_get_geo);
-> diff --git a/net/ieee80211/ieee80211_wx.c b/net/ieee80211/ieee80211_wx.c
-> index cee5e13..523a137 100644
-> --- a/net/ieee80211/ieee80211_wx.c
-> +++ b/net/ieee80211/ieee80211_wx.c
-> @@ -89,15 +89,17 @@ static char *ieee80211_translate_scan(struct ieee80211_device *ieee,
->  		start = iwe_stream_add_event(start, stop, &iwe, IW_EV_UINT_LEN);
->  	}
->  
-> -	/* Add frequency/channel */
-> +	/* Add channel and frequency */
->  	iwe.cmd = SIOCGIWFREQ;
-> -/*	iwe.u.freq.m = ieee80211_frequency(network->channel, network->mode);
-> -	iwe.u.freq.e = 3; */
->  	iwe.u.freq.m = network->channel;
->  	iwe.u.freq.e = 0;
->  	iwe.u.freq.i = 0;
->  	start = iwe_stream_add_event(start, stop, &iwe, IW_EV_FREQ_LEN);
->  
-> +	iwe.u.freq.m = ieee80211_channel_to_freq(ieee, network->channel);
-> +	iwe.u.freq.e = 6;
-> +	start = iwe_stream_add_event(start, stop, &iwe, IW_EV_FREQ_LEN);
-> +
->  	/* Add encryption capability */
->  	iwe.cmd = SIOCGIWENCODE;
->  	if (network->capability & WLAN_CAPABILITY_PRIVACY)
-> diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-> index 822917d..3e07e9d 100644
-> --- a/net/mac80211/ieee80211_sta.c
-> +++ b/net/mac80211/ieee80211_sta.c
-> @@ -17,6 +17,7 @@
->   * scan result table filtering (by capability (privacy, IBSS/BSS, WPA/RSN IE,
->   *    SSID)
->   */
-> +#include <linux/delay.h>
->  #include <linux/if_ether.h>
->  #include <linux/skbuff.h>
->  #include <linux/netdevice.h>
-> @@ -27,7 +28,6 @@
->  #include <linux/rtnetlink.h>
->  #include <net/iw_handler.h>
->  #include <asm/types.h>
-> -#include <asm/delay.h>
->  
->  #include <net/mac80211.h>
->  #include "ieee80211_i.h"
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index d761b53..6fffb38 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -20,6 +20,15 @@ config MAC80211_LEDS
+ 	This option enables a few LED triggers for different
+ 	packet receive/transmit events.
+ 
++config MAC80211_DEBUGFS
++	bool "Export mac80211 internals in DebugFS"
++	depends on MAC80211 && DEBUG_FS
++	---help---
++	  Select this to see extensive information about
++	  the internal state of mac80211 in debugfs.
++
++	  Say N unless you know you need this.
++
+ config MAC80211_DEBUG
+ 	bool "Enable debugging output"
+ 	depends on MAC80211
+diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
+index 79dea99..e9738da 100644
+--- a/net/mac80211/Makefile
++++ b/net/mac80211/Makefile
+@@ -1,6 +1,7 @@
+ obj-$(CONFIG_MAC80211) += mac80211.o rc80211_simple.o
+ 
+ mac80211-objs-$(CONFIG_MAC80211_LEDS) += ieee80211_led.o
++mac80211-objs-$(CONFIG_MAC80211_DEBUGFS) += debugfs.o debugfs_sta.o debugfs_netdev.o debugfs_key.o
+ 
+ mac80211-objs := \
+ 	ieee80211.o \
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+new file mode 100644
+index 0000000..bb6c0fe
+--- /dev/null
++++ b/net/mac80211/debugfs.c
+@@ -0,0 +1,433 @@
++/*
++ * mac80211 debugfs for wireless PHYs
++ *
++ * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
++ *
++ * GPLv2
++ *
++ */
++
++#include <linux/debugfs.h>
++#include <linux/rtnetlink.h>
++#include "ieee80211_i.h"
++#include "ieee80211_rate.h"
++#include "debugfs.h"
++
++int mac80211_open_file_generic(struct inode *inode, struct file *file)
++{
++	file->private_data = inode->i_private;
++	return 0;
++}
++
++static const char *ieee80211_mode_str(int mode)
++{
++	switch (mode) {
++	case MODE_IEEE80211A:
++		return "IEEE 802.11a";
++	case MODE_IEEE80211B:
++		return "IEEE 802.11b";
++	case MODE_IEEE80211G:
++		return "IEEE 802.11g";
++	case MODE_ATHEROS_TURBO:
++		return "Atheros Turbo (5 GHz)";
++	default:
++		return "UNKNOWN";
++	}
++}
++
++static ssize_t modes_read(struct file *file, char __user *userbuf,
++			  size_t count, loff_t *ppos)
++{
++	struct ieee80211_local *local = file->private_data;
++	struct ieee80211_hw_mode *mode;
++	char buf[150], *p = buf;
++
++	/* FIXME: locking! */
++	list_for_each_entry(mode, &local->modes_list, list) {
++		p += scnprintf(p, sizeof(buf)+buf-p,
++			       "%s\n", ieee80211_mode_str(mode->mode));
++	}
++
++	return simple_read_from_buffer(userbuf, count, ppos, buf, p-buf);
++}
++
++static const struct file_operations modes_ops = {
++	.read = modes_read,
++	.open = mac80211_open_file_generic,
++};
++
++#define DEBUGFS_READONLY_FILE(name, buflen, fmt, value...)		\
++static ssize_t name## _read(struct file *file, char __user *userbuf,	\
++			    size_t count, loff_t *ppos)			\
++{									\
++	struct ieee80211_local *local = file->private_data;		\
++	char buf[buflen];						\
++	int res;							\
++									\
++	res = scnprintf(buf, buflen, fmt "\n", ##value);		\
++	return simple_read_from_buffer(userbuf, count, ppos, buf, res);	\
++}									\
++									\
++static const struct file_operations name## _ops = {			\
++	.read = name## _read,						\
++	.open = mac80211_open_file_generic,				\
++};
++
++#define DEBUGFS_ADD(name)						\
++	local->debugfs.name = debugfs_create_file(#name, 0444, phyd,	\
++						  local, &name## _ops);
++
++#define DEBUGFS_DEL(name)						\
++	debugfs_remove(local->debugfs.name);				\
++	local->debugfs.name = NULL;
++
++
++DEBUGFS_READONLY_FILE(channel, 20, "%d",
++		      local->hw.conf.channel);
++DEBUGFS_READONLY_FILE(frequency, 20, "%d",
++		      local->hw.conf.freq);
++DEBUGFS_READONLY_FILE(radar_detect, 20, "%d",
++		      local->hw.conf.radar_detect);
++DEBUGFS_READONLY_FILE(antenna_sel_tx, 20, "%d",
++		      local->hw.conf.antenna_sel_tx);
++DEBUGFS_READONLY_FILE(antenna_sel_rx, 20, "%d",
++		      local->hw.conf.antenna_sel_rx);
++DEBUGFS_READONLY_FILE(bridge_packets, 20, "%d",
++		      local->bridge_packets);
++DEBUGFS_READONLY_FILE(key_tx_rx_threshold, 20, "%d",
++		      local->key_tx_rx_threshold);
++DEBUGFS_READONLY_FILE(rts_threshold, 20, "%d",
++		      local->rts_threshold);
++DEBUGFS_READONLY_FILE(fragmentation_threshold, 20, "%d",
++		      local->fragmentation_threshold);
++DEBUGFS_READONLY_FILE(short_retry_limit, 20, "%d",
++		      local->short_retry_limit);
++DEBUGFS_READONLY_FILE(long_retry_limit, 20, "%d",
++		      local->long_retry_limit);
++DEBUGFS_READONLY_FILE(total_ps_buffered, 20, "%d",
++		      local->total_ps_buffered);
++DEBUGFS_READONLY_FILE(mode, 20, "%s",
++		      ieee80211_mode_str(local->hw.conf.phymode));
++DEBUGFS_READONLY_FILE(wep_iv, 20, "%#06x",
++		      local->wep_iv & 0xffffff);
++DEBUGFS_READONLY_FILE(tx_power_reduction, 20, "%d.%d dBm",
++		      local->hw.conf.tx_power_reduction / 10,
++		      local->hw.conf.tx_power_reduction & 10);
++DEBUGFS_READONLY_FILE(rate_ctrl_alg, 100, "%s",
++		      local->rate_ctrl ? local->rate_ctrl->ops->name : "<unset>");
++
++/* statistics stuff */
++
++static inline int rtnl_lock_local(struct ieee80211_local *local)
++{
++	rtnl_lock();
++	if (unlikely(local->reg_state != IEEE80211_DEV_REGISTERED)) {
++		rtnl_unlock();
++		return -ENODEV;
++	}
++	return 0;
++}
++
++#define DEBUGFS_STATS_FILE(name, buflen, fmt, value...)			\
++	DEBUGFS_READONLY_FILE(stats_ ##name, buflen, fmt, ##value)
++
++static ssize_t format_devstat_counter(struct ieee80211_local *local,
++	char __user *userbuf,
++	size_t count, loff_t *ppos,
++	int (*printvalue)(struct ieee80211_low_level_stats *stats, char *buf,
++			  int buflen))
++{
++	struct ieee80211_low_level_stats stats;
++	char buf[20];
++	int res;
++
++	if (!local->ops->get_stats)
++		return -EOPNOTSUPP;
++
++	res = rtnl_lock_local(local);
++	if (res)
++		return res;
++
++	res = local->ops->get_stats(local_to_hw(local), &stats);
++	rtnl_unlock();
++	if (!res)
++		res = printvalue(&stats, buf, sizeof(buf));
++	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
++}
++
++#define DEBUGFS_DEVSTATS_FILE(name)					\
++static int print_devstats_##name(struct ieee80211_low_level_stats *stats,\
++				 char *buf, int buflen)			\
++{									\
++	return scnprintf(buf, buflen, "%u\n", stats->name);		\
++}									\
++static ssize_t stats_ ##name## _read(struct file *file,			\
++				     char __user *userbuf,		\
++				     size_t count, loff_t *ppos)	\
++{									\
++	return format_devstat_counter(file->private_data,		\
++				      userbuf,				\
++				      count,				\
++				      ppos,				\
++				      print_devstats_##name);		\
++}									\
++									\
++static const struct file_operations stats_ ##name## _ops = {		\
++	.read = stats_ ##name## _read,					\
++	.open = mac80211_open_file_generic,				\
++};
++
++#define DEBUGFS_STATS_ADD(name)						\
++	local->debugfs.stats.name = debugfs_create_file(#name, 0444, statsd,\
++		local, &stats_ ##name## _ops);
++
++#define DEBUGFS_STATS_DEL(name)						\
++	debugfs_remove(local->debugfs.stats.name);			\
++	local->debugfs.stats.name = NULL;
++
++DEBUGFS_STATS_FILE(transmitted_fragment_count, 20, "%u",
++		   local->dot11TransmittedFragmentCount);
++DEBUGFS_STATS_FILE(multicast_transmitted_frame_count, 20, "%u",
++		   local->dot11MulticastTransmittedFrameCount);
++DEBUGFS_STATS_FILE(failed_count, 20, "%u",
++		   local->dot11FailedCount);
++DEBUGFS_STATS_FILE(retry_count, 20, "%u",
++		   local->dot11RetryCount);
++DEBUGFS_STATS_FILE(multiple_retry_count, 20, "%u",
++		   local->dot11MultipleRetryCount);
++DEBUGFS_STATS_FILE(frame_duplicate_count, 20, "%u",
++		   local->dot11FrameDuplicateCount);
++DEBUGFS_STATS_FILE(received_fragment_count, 20, "%u",
++		   local->dot11ReceivedFragmentCount);
++DEBUGFS_STATS_FILE(multicast_received_frame_count, 20, "%u",
++		   local->dot11MulticastReceivedFrameCount);
++DEBUGFS_STATS_FILE(transmitted_frame_count, 20, "%u",
++		   local->dot11TransmittedFrameCount);
++DEBUGFS_STATS_FILE(wep_undecryptable_count, 20, "%u",
++		   local->dot11WEPUndecryptableCount);
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
++DEBUGFS_STATS_FILE(tx_handlers_drop, 20, "%u",
++		   local->tx_handlers_drop);
++DEBUGFS_STATS_FILE(tx_handlers_queued, 20, "%u",
++		   local->tx_handlers_queued);
++DEBUGFS_STATS_FILE(tx_handlers_drop_unencrypted, 20, "%u",
++		   local->tx_handlers_drop_unencrypted);
++DEBUGFS_STATS_FILE(tx_handlers_drop_fragment, 20, "%u",
++		   local->tx_handlers_drop_fragment);
++DEBUGFS_STATS_FILE(tx_handlers_drop_wep, 20, "%u",
++		   local->tx_handlers_drop_wep);
++DEBUGFS_STATS_FILE(tx_handlers_drop_not_assoc, 20, "%u",
++		   local->tx_handlers_drop_not_assoc);
++DEBUGFS_STATS_FILE(tx_handlers_drop_unauth_port, 20, "%u",
++		   local->tx_handlers_drop_unauth_port);
++DEBUGFS_STATS_FILE(rx_handlers_drop, 20, "%u",
++		   local->rx_handlers_drop);
++DEBUGFS_STATS_FILE(rx_handlers_queued, 20, "%u",
++		   local->rx_handlers_queued);
++DEBUGFS_STATS_FILE(rx_handlers_drop_nullfunc, 20, "%u",
++		   local->rx_handlers_drop_nullfunc);
++DEBUGFS_STATS_FILE(rx_handlers_drop_defrag, 20, "%u",
++		   local->rx_handlers_drop_defrag);
++DEBUGFS_STATS_FILE(rx_handlers_drop_short, 20, "%u",
++		   local->rx_handlers_drop_short);
++DEBUGFS_STATS_FILE(rx_handlers_drop_passive_scan, 20, "%u",
++		   local->rx_handlers_drop_passive_scan);
++DEBUGFS_STATS_FILE(tx_expand_skb_head, 20, "%u",
++		   local->tx_expand_skb_head);
++DEBUGFS_STATS_FILE(tx_expand_skb_head_cloned, 20, "%u",
++		   local->tx_expand_skb_head_cloned);
++DEBUGFS_STATS_FILE(rx_expand_skb_head, 20, "%u",
++		   local->rx_expand_skb_head);
++DEBUGFS_STATS_FILE(rx_expand_skb_head2, 20, "%u",
++		   local->rx_expand_skb_head2);
++DEBUGFS_STATS_FILE(rx_handlers_fragments, 20, "%u",
++		   local->rx_handlers_fragments);
++DEBUGFS_STATS_FILE(tx_status_drop, 20, "%u",
++		   local->tx_status_drop);
++
++static ssize_t stats_wme_rx_queue_read(struct file *file,
++				       char __user *userbuf,
++				       size_t count, loff_t *ppos)
++{
++	struct ieee80211_local *local = file->private_data;
++	char buf[NUM_RX_DATA_QUEUES*15], *p = buf;
++	int i;
++
++	for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p,
++			       "%u\n", local->wme_rx_queue[i]);
++
++	return simple_read_from_buffer(userbuf, count, ppos, buf, p-buf);
++}
++
++static const struct file_operations stats_wme_rx_queue_ops = {
++	.read = stats_wme_rx_queue_read,
++	.open = mac80211_open_file_generic,
++};
++
++static ssize_t stats_wme_tx_queue_read(struct file *file,
++				       char __user *userbuf,
++				       size_t count, loff_t *ppos)
++{
++	struct ieee80211_local *local = file->private_data;
++	char buf[NUM_TX_DATA_QUEUES*15], *p = buf;
++	int i;
++
++	for (i = 0; i < NUM_TX_DATA_QUEUES; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p,
++			       "%u\n", local->wme_tx_queue[i]);
++
++	return simple_read_from_buffer(userbuf, count, ppos, buf, p-buf);
++}
++
++static const struct file_operations stats_wme_tx_queue_ops = {
++	.read = stats_wme_tx_queue_read,
++	.open = mac80211_open_file_generic,
++};
++#endif
++
++DEBUGFS_DEVSTATS_FILE(dot11ACKFailureCount);
++DEBUGFS_DEVSTATS_FILE(dot11RTSFailureCount);
++DEBUGFS_DEVSTATS_FILE(dot11FCSErrorCount);
++DEBUGFS_DEVSTATS_FILE(dot11RTSSuccessCount);
++
++
++void debugfs_hw_add(struct ieee80211_local *local)
++{
++	struct dentry *phyd = local->hw.wiphy->debugfsdir;
++	struct dentry *statsd;
++
++	if (!phyd)
++		return;
++
++	local->debugfs.stations = debugfs_create_dir("stations", phyd);
++	local->debugfs.keys = debugfs_create_dir("keys", phyd);
++
++	DEBUGFS_ADD(channel);
++	DEBUGFS_ADD(frequency);
++	DEBUGFS_ADD(radar_detect);
++	DEBUGFS_ADD(antenna_sel_tx);
++	DEBUGFS_ADD(antenna_sel_rx);
++	DEBUGFS_ADD(bridge_packets);
++	DEBUGFS_ADD(key_tx_rx_threshold);
++	DEBUGFS_ADD(rts_threshold);
++	DEBUGFS_ADD(fragmentation_threshold);
++	DEBUGFS_ADD(short_retry_limit);
++	DEBUGFS_ADD(long_retry_limit);
++	DEBUGFS_ADD(total_ps_buffered);
++	DEBUGFS_ADD(mode);
++	DEBUGFS_ADD(wep_iv);
++	DEBUGFS_ADD(tx_power_reduction);
++	DEBUGFS_ADD(modes);
++
++	statsd = debugfs_create_dir("statistics", phyd);
++	local->debugfs.statistics = statsd;
++
++	/* if the dir failed, don't put all the other things into the root! */
++	if (!statsd)
++		return;
++
++	DEBUGFS_STATS_ADD(transmitted_fragment_count);
++	DEBUGFS_STATS_ADD(multicast_transmitted_frame_count);
++	DEBUGFS_STATS_ADD(failed_count);
++	DEBUGFS_STATS_ADD(retry_count);
++	DEBUGFS_STATS_ADD(multiple_retry_count);
++	DEBUGFS_STATS_ADD(frame_duplicate_count);
++	DEBUGFS_STATS_ADD(received_fragment_count);
++	DEBUGFS_STATS_ADD(multicast_received_frame_count);
++	DEBUGFS_STATS_ADD(transmitted_frame_count);
++	DEBUGFS_STATS_ADD(wep_undecryptable_count);
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
++	DEBUGFS_STATS_ADD(tx_handlers_drop);
++	DEBUGFS_STATS_ADD(tx_handlers_queued);
++	DEBUGFS_STATS_ADD(tx_handlers_drop_unencrypted);
++	DEBUGFS_STATS_ADD(tx_handlers_drop_fragment);
++	DEBUGFS_STATS_ADD(tx_handlers_drop_wep);
++	DEBUGFS_STATS_ADD(tx_handlers_drop_not_assoc);
++	DEBUGFS_STATS_ADD(tx_handlers_drop_unauth_port);
++	DEBUGFS_STATS_ADD(rx_handlers_drop);
++	DEBUGFS_STATS_ADD(rx_handlers_queued);
++	DEBUGFS_STATS_ADD(rx_handlers_drop_nullfunc);
++	DEBUGFS_STATS_ADD(rx_handlers_drop_defrag);
++	DEBUGFS_STATS_ADD(rx_handlers_drop_short);
++	DEBUGFS_STATS_ADD(rx_handlers_drop_passive_scan);
++	DEBUGFS_STATS_ADD(tx_expand_skb_head);
++	DEBUGFS_STATS_ADD(tx_expand_skb_head_cloned);
++	DEBUGFS_STATS_ADD(rx_expand_skb_head);
++	DEBUGFS_STATS_ADD(rx_expand_skb_head2);
++	DEBUGFS_STATS_ADD(rx_handlers_fragments);
++	DEBUGFS_STATS_ADD(tx_status_drop);
++	DEBUGFS_STATS_ADD(wme_tx_queue);
++	DEBUGFS_STATS_ADD(wme_rx_queue);
++#endif
++	DEBUGFS_STATS_ADD(dot11ACKFailureCount);
++	DEBUGFS_STATS_ADD(dot11RTSFailureCount);
++	DEBUGFS_STATS_ADD(dot11FCSErrorCount);
++	DEBUGFS_STATS_ADD(dot11RTSSuccessCount);
++}
++
++void debugfs_hw_del(struct ieee80211_local *local)
++{
++	DEBUGFS_DEL(channel);
++	DEBUGFS_DEL(frequency);
++	DEBUGFS_DEL(radar_detect);
++	DEBUGFS_DEL(antenna_sel_tx);
++	DEBUGFS_DEL(antenna_sel_rx);
++	DEBUGFS_DEL(bridge_packets);
++	DEBUGFS_DEL(key_tx_rx_threshold);
++	DEBUGFS_DEL(rts_threshold);
++	DEBUGFS_DEL(fragmentation_threshold);
++	DEBUGFS_DEL(short_retry_limit);
++	DEBUGFS_DEL(long_retry_limit);
++	DEBUGFS_DEL(total_ps_buffered);
++	DEBUGFS_DEL(mode);
++	DEBUGFS_DEL(wep_iv);
++	DEBUGFS_DEL(tx_power_reduction);
++	DEBUGFS_DEL(modes);
++
++	DEBUGFS_STATS_DEL(transmitted_fragment_count);
++	DEBUGFS_STATS_DEL(multicast_transmitted_frame_count);
++	DEBUGFS_STATS_DEL(failed_count);
++	DEBUGFS_STATS_DEL(retry_count);
++	DEBUGFS_STATS_DEL(multiple_retry_count);
++	DEBUGFS_STATS_DEL(frame_duplicate_count);
++	DEBUGFS_STATS_DEL(received_fragment_count);
++	DEBUGFS_STATS_DEL(multicast_received_frame_count);
++	DEBUGFS_STATS_DEL(transmitted_frame_count);
++	DEBUGFS_STATS_DEL(wep_undecryptable_count);
++	DEBUGFS_STATS_DEL(num_scans);
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
++	DEBUGFS_STATS_DEL(tx_handlers_drop);
++	DEBUGFS_STATS_DEL(tx_handlers_queued);
++	DEBUGFS_STATS_DEL(tx_handlers_drop_unencrypted);
++	DEBUGFS_STATS_DEL(tx_handlers_drop_fragment);
++	DEBUGFS_STATS_DEL(tx_handlers_drop_wep);
++	DEBUGFS_STATS_DEL(tx_handlers_drop_not_assoc);
++	DEBUGFS_STATS_DEL(tx_handlers_drop_unauth_port);
++	DEBUGFS_STATS_DEL(rx_handlers_drop);
++	DEBUGFS_STATS_DEL(rx_handlers_queued);
++	DEBUGFS_STATS_DEL(rx_handlers_drop_nullfunc);
++	DEBUGFS_STATS_DEL(rx_handlers_drop_defrag);
++	DEBUGFS_STATS_DEL(rx_handlers_drop_short);
++	DEBUGFS_STATS_DEL(rx_handlers_drop_passive_scan);
++	DEBUGFS_STATS_DEL(tx_expand_skb_head);
++	DEBUGFS_STATS_DEL(tx_expand_skb_head_cloned);
++	DEBUGFS_STATS_DEL(rx_expand_skb_head);
++	DEBUGFS_STATS_DEL(rx_expand_skb_head2);
++	DEBUGFS_STATS_DEL(rx_handlers_fragments);
++	DEBUGFS_STATS_DEL(tx_status_drop);
++	DEBUGFS_STATS_DEL(wme_tx_queue);
++	DEBUGFS_STATS_DEL(wme_rx_queue);
++#endif
++	DEBUGFS_STATS_DEL(dot11ACKFailureCount);
++	DEBUGFS_STATS_DEL(dot11RTSFailureCount);
++	DEBUGFS_STATS_DEL(dot11FCSErrorCount);
++	DEBUGFS_STATS_DEL(dot11RTSSuccessCount);
++
++	debugfs_remove(local->debugfs.statistics);
++	local->debugfs.statistics = NULL;
++	debugfs_remove(local->debugfs.stations);
++	local->debugfs.stations = NULL;
++	debugfs_remove(local->debugfs.keys);
++	local->debugfs.keys = NULL;
++}
+diff --git a/net/mac80211/debugfs.h b/net/mac80211/debugfs.h
+new file mode 100644
+index 0000000..dd25419
+--- /dev/null
++++ b/net/mac80211/debugfs.h
+@@ -0,0 +1,16 @@
++#ifndef __MAC80211_DEBUGFS_H
++#define __MAC80211_DEBUGFS_H
++
++#ifdef CONFIG_MAC80211_DEBUGFS
++extern void debugfs_hw_add(struct ieee80211_local *local);
++extern void debugfs_hw_del(struct ieee80211_local *local);
++extern int mac80211_open_file_generic(struct inode *inode, struct file *file);
++#else
++static inline void debugfs_hw_add(struct ieee80211_local *local)
++{
++	return;
++}
++static inline void debugfs_hw_del(struct ieee80211_local *local) {}
++#endif
++
++#endif /* __MAC80211_DEBUGFS_H */
+diff --git a/net/mac80211/debugfs_key.c b/net/mac80211/debugfs_key.c
+new file mode 100644
+index 0000000..7d56dc9
+--- /dev/null
++++ b/net/mac80211/debugfs_key.c
+@@ -0,0 +1,252 @@
++/*
++ * Copyright 2003-2005	Devicescape Software, Inc.
++ * Copyright (c) 2006	Jiri Benc <jbenc@suse.cz>
++ * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/kobject.h>
++#include "ieee80211_i.h"
++#include "ieee80211_key.h"
++#include "debugfs.h"
++#include "debugfs_key.h"
++
++#define KEY_READ(name, buflen, format_string)				\
++static ssize_t key_##name##_read(struct file *file,			\
++				 char __user *userbuf,			\
++				 size_t count, loff_t *ppos)		\
++{									\
++	char buf[buflen];						\
++	struct ieee80211_key *key = file->private_data;			\
++	int res = scnprintf(buf, buflen, format_string, key->name);	\
++	return simple_read_from_buffer(userbuf, count, ppos, buf, res);	\
++}
++#define KEY_READ_D(name) KEY_READ(name, 20, "%d\n")
++
++#define KEY_OPS(name)							\
++static const struct file_operations key_ ##name## _ops = {		\
++	.read = key_##name##_read,					\
++	.open = mac80211_open_file_generic,				\
++}
++
++#define KEY_FILE(name, format)						\
++		 KEY_READ_##format(name)				\
++		 KEY_OPS(name)
++
++KEY_FILE(keylen, D);
++KEY_FILE(force_sw_encrypt, D);
++KEY_FILE(keyidx, D);
++KEY_FILE(hw_key_idx, D);
++KEY_FILE(tx_rx_count, D);
++
++static ssize_t key_algorithm_read(struct file *file,
++				  char __user *userbuf,
++				  size_t count, loff_t *ppos)
++{
++	char *alg;
++	struct ieee80211_key *key = file->private_data;
++
++	switch (key->alg) {
++	case ALG_WEP:
++		alg = "WEP\n";
++		break;
++	case ALG_TKIP:
++		alg = "TKIP\n";
++		break;
++	case ALG_CCMP:
++		alg = "CCMP\n";
++		break;
++	default:
++		return 0;
++	}
++	return simple_read_from_buffer(userbuf, count, ppos, alg, strlen(alg));
++}
++KEY_OPS(algorithm);
++
++static ssize_t key_tx_spec_read(struct file *file, char __user *userbuf,
++				size_t count, loff_t *ppos)
++{
++	const u8 *tpn;
++	char buf[20];
++	int len;
++	struct ieee80211_key *key = file->private_data;
++
++	switch (key->alg) {
++	case ALG_WEP:
++		len = scnprintf(buf, sizeof(buf), "\n");
++	case ALG_TKIP:
++		len = scnprintf(buf, sizeof(buf), "%08x %04x\n",
++				key->u.tkip.iv32,
++				key->u.tkip.iv16);
++	case ALG_CCMP:
++		tpn = key->u.ccmp.tx_pn;
++		len = scnprintf(buf, sizeof(buf), "%02x%02x%02x%02x%02x%02x\n",
++				tpn[0], tpn[1], tpn[2], tpn[3], tpn[4], tpn[5]);
++	default:
++		return 0;
++	}
++	return simple_read_from_buffer(userbuf, count, ppos, buf, len);
++}
++KEY_OPS(tx_spec);
++
++static ssize_t key_rx_spec_read(struct file *file, char __user *userbuf,
++				size_t count, loff_t *ppos)
++{
++	struct ieee80211_key *key = file->private_data;
++	char buf[14*NUM_RX_DATA_QUEUES+1], *p = buf;
++	int i, len;
++	const u8 *rpn;
++
++	switch (key->alg) {
++	case ALG_WEP:
++		len = scnprintf(buf, sizeof(buf), "\n");
++	case ALG_TKIP:
++		for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
++			p += scnprintf(p, sizeof(buf)+buf-p,
++				       "%08x %04x\n",
++				       key->u.tkip.iv32_rx[i],
++				       key->u.tkip.iv16_rx[i]);
++		len = p - buf;
++	case ALG_CCMP:
++		for (i = 0; i < NUM_RX_DATA_QUEUES; i++) {
++			rpn = key->u.ccmp.rx_pn[i];
++			p += scnprintf(p, sizeof(buf)+buf-p,
++				       "%02x%02x%02x%02x%02x%02x\n",
++				       rpn[0], rpn[1], rpn[2],
++				       rpn[3], rpn[4], rpn[5]);
++		}
++		len = p - buf;
++	default:
++		return 0;
++	}
++	return simple_read_from_buffer(userbuf, count, ppos, buf, len);
++}
++KEY_OPS(rx_spec);
++
++static ssize_t key_replays_read(struct file *file, char __user *userbuf,
++				size_t count, loff_t *ppos)
++{
++	struct ieee80211_key *key = file->private_data;
++	char buf[20];
++	int len;
++
++	if (key->alg != ALG_CCMP)
++		return 0;
++	len = scnprintf(buf, sizeof(buf), "%u\n", key->u.ccmp.replays);
++	return simple_read_from_buffer(userbuf, count, ppos, buf, len);
++}
++KEY_OPS(replays);
++
++static ssize_t key_key_read(struct file *file, char __user *userbuf,
++			    size_t count, loff_t *ppos)
++{
++	struct ieee80211_key *key = file->private_data;
++	int i, res, bufsize = 2*key->keylen+2;
++	char *buf = kmalloc(bufsize, GFP_KERNEL);
++	char *p = buf;
++
++	for (i = 0; i < key->keylen; i++)
++		p += scnprintf(p, bufsize+buf-p, "%02x", key->key[i]);
++	p += scnprintf(p, bufsize+buf-p, "\n");
++	res = simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
++	kfree(buf);
++	return res;
++}
++KEY_OPS(key);
++
++#define DEBUGFS_ADD(name) \
++	key->debugfs.name = debugfs_create_file(#name, 0400,\
++				key->debugfs.dir, key, &key_##name##_ops);
++
++void ieee80211_debugfs_key_add(struct ieee80211_local *local,
++			       struct ieee80211_key *key)
++{
++	char buf[20];
++
++	if (!local->debugfs.keys)
++		return;
++
++	sprintf(buf, "%d", key->keyidx);
++	key->debugfs.dir = debugfs_create_dir(buf,
++					local->debugfs.keys);
++
++	if (!key->debugfs.dir)
++		return;
++
++	DEBUGFS_ADD(keylen);
++	DEBUGFS_ADD(force_sw_encrypt);
++	DEBUGFS_ADD(keyidx);
++	DEBUGFS_ADD(hw_key_idx);
++	DEBUGFS_ADD(tx_rx_count);
++	DEBUGFS_ADD(algorithm);
++	DEBUGFS_ADD(tx_spec);
++	DEBUGFS_ADD(rx_spec);
++	DEBUGFS_ADD(replays);
++	DEBUGFS_ADD(key);
++};
++
++#define DEBUGFS_DEL(name) \
++	debugfs_remove(key->debugfs.name); key->debugfs.name = NULL;
++
++void ieee80211_debugfs_key_remove(struct ieee80211_key *key)
++{
++	if (!key)
++		return;
++
++	DEBUGFS_DEL(keylen);
++	DEBUGFS_DEL(force_sw_encrypt);
++	DEBUGFS_DEL(keyidx);
++	DEBUGFS_DEL(hw_key_idx);
++	DEBUGFS_DEL(tx_rx_count);
++	DEBUGFS_DEL(algorithm);
++	DEBUGFS_DEL(tx_spec);
++	DEBUGFS_DEL(rx_spec);
++	DEBUGFS_DEL(replays);
++	DEBUGFS_DEL(key);
++
++	debugfs_remove(key->debugfs.stalink);
++	key->debugfs.stalink = NULL;
++	debugfs_remove(key->debugfs.dir);
++	key->debugfs.dir = NULL;
++}
++void ieee80211_debugfs_key_add_default(struct ieee80211_sub_if_data *sdata)
++{
++	char buf[50];
++
++	if (!sdata->debugfsdir)
++		return;
++
++	sprintf(buf, "../keys/%d", sdata->default_key->keyidx);
++	sdata->debugfs.default_key =
++		debugfs_create_symlink("default_key", sdata->debugfsdir, buf);
++}
++void ieee80211_debugfs_key_remove_default(struct ieee80211_sub_if_data *sdata)
++{
++	if (!sdata)
++		return;
++
++	debugfs_remove(sdata->debugfs.default_key);
++	sdata->debugfs.default_key = NULL;
++}
++void ieee80211_debugfs_key_sta_link(struct ieee80211_key *key,
++				    struct sta_info *sta)
++{
++	char buf[50];
++
++	if (!key->debugfs.dir)
++		return;
++
++	sprintf(buf, "../sta/" MAC_FMT, MAC_ARG(sta->addr));
++	key->debugfs.stalink =
++		debugfs_create_symlink("station", key->debugfs.dir, buf);
++}
++
++void ieee80211_debugfs_key_sta_del(struct ieee80211_key *key,
++				   struct sta_info *sta)
++{
++	debugfs_remove(key->debugfs.stalink);
++	key->debugfs.stalink = NULL;
++}
+diff --git a/net/mac80211/debugfs_key.h b/net/mac80211/debugfs_key.h
+new file mode 100644
+index 0000000..aecfce3
+--- /dev/null
++++ b/net/mac80211/debugfs_key.h
+@@ -0,0 +1,34 @@
++#ifndef __MAC80211_DEBUGFS_KEY_H
++#define __MAC80211_DEBUGFS_KEY_H
++
++#ifdef CONFIG_MAC80211_DEBUGFS
++void ieee80211_debugfs_key_add(struct ieee80211_local *local,
++			       struct ieee80211_key *key);
++void ieee80211_debugfs_key_remove(struct ieee80211_key *key);
++void ieee80211_debugfs_key_add_default(struct ieee80211_sub_if_data *sdata);
++void ieee80211_debugfs_key_remove_default(struct ieee80211_sub_if_data *sdata);
++void ieee80211_debugfs_key_sta_link(struct ieee80211_key *key,
++				    struct sta_info *sta);
++void ieee80211_debugfs_key_sta_del(struct ieee80211_key *key,
++				   struct sta_info *sta);
++#else
++static inline void ieee80211_debugfs_key_add(struct ieee80211_local *local,
++					     struct ieee80211_key *key)
++{}
++static inline void ieee80211_debugfs_key_remove(struct ieee80211_key *key)
++{}
++static inline void ieee80211_debugfs_key_add_default(
++	struct ieee80211_sub_if_data *sdata)
++{}
++static inline void ieee80211_debugfs_key_remove_default(
++	struct ieee80211_sub_if_data *sdata)
++{}
++static inline void ieee80211_debugfs_key_sta_link(
++	struct ieee80211_key *key, struct sta_info *sta)
++{}
++static inline void ieee80211_debugfs_key_sta_del(struct ieee80211_key *key,
++						 struct sta_info *sta)
++{}
++#endif
++
++#endif /* __MAC80211_DEBUGFS_KEY_H */
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+new file mode 100644
+index 0000000..9e39646
+--- /dev/null
++++ b/net/mac80211/debugfs_netdev.c
+@@ -0,0 +1,440 @@
++/*
++ * Copyright (c) 2006	Jiri Benc <jbenc@suse.cz>
++ * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/kernel.h>
++#include <linux/device.h>
++#include <linux/if.h>
++#include <linux/interrupt.h>
++#include <linux/netdevice.h>
++#include <linux/rtnetlink.h>
++#include <linux/notifier.h>
++#include <net/mac80211.h>
++#include <net/cfg80211.h>
++#include "ieee80211_i.h"
++#include "ieee80211_rate.h"
++#include "debugfs.h"
++#include "debugfs_netdev.h"
++
++static ssize_t ieee80211_if_read(
++	struct ieee80211_sub_if_data *sdata,
++	char __user *userbuf,
++	size_t count, loff_t *ppos,
++	ssize_t (*format)(const struct ieee80211_sub_if_data *, char *, int))
++{
++	char buf[70];
++	ssize_t ret = -EINVAL;
++
++	read_lock(&dev_base_lock);
++	if (sdata->dev->reg_state == NETREG_REGISTERED) {
++		ret = (*format)(sdata, buf, sizeof(buf));
++		ret = simple_read_from_buffer(userbuf, count, ppos, buf, ret);
++	}
++	read_unlock(&dev_base_lock);
++	return ret;
++}
++
++#define IEEE80211_IF_FMT(name, field, format_string)			\
++static ssize_t ieee80211_if_fmt_##name(					\
++	const struct ieee80211_sub_if_data *sdata, char *buf,		\
++	int buflen)							\
++{									\
++	return scnprintf(buf, buflen, format_string, sdata->field);	\
++}
++#define IEEE80211_IF_FMT_DEC(name, field)				\
++		IEEE80211_IF_FMT(name, field, "%d\n")
++#define IEEE80211_IF_FMT_HEX(name, field)				\
++		IEEE80211_IF_FMT(name, field, "%#x\n")
++#define IEEE80211_IF_FMT_SIZE(name, field)				\
++		IEEE80211_IF_FMT(name, field, "%zd\n")
++
++#define IEEE80211_IF_FMT_ATOMIC(name, field)				\
++static ssize_t ieee80211_if_fmt_##name(					\
++	const struct ieee80211_sub_if_data *sdata,			\
++	char *buf, int buflen)						\
++{									\
++	return scnprintf(buf, buflen, "%d\n", atomic_read(&sdata->field));\
++}
++
++#define IEEE80211_IF_FMT_MAC(name, field)				\
++static ssize_t ieee80211_if_fmt_##name(					\
++	const struct ieee80211_sub_if_data *sdata, char *buf,		\
++	int buflen)							\
++{									\
++	return scnprintf(buf, buflen, MAC_FMT "\n", MAC_ARG(sdata->field));\
++}
++
++#define __IEEE80211_IF_FILE(name)					\
++static ssize_t ieee80211_if_read_##name(struct file *file,		\
++					char __user *userbuf,		\
++					size_t count, loff_t *ppos)	\
++{									\
++	return ieee80211_if_read(file->private_data,			\
++				 userbuf, count, ppos,			\
++				 ieee80211_if_fmt_##name);		\
++}									\
++static const struct file_operations name##_ops = {			\
++	.read = ieee80211_if_read_##name,				\
++	.open = mac80211_open_file_generic,				\
++}
++
++#define IEEE80211_IF_FILE(name, field, format)				\
++		IEEE80211_IF_FMT_##format(name, field)			\
++		__IEEE80211_IF_FILE(name)
++
++/* common attributes */
++IEEE80211_IF_FILE(channel_use, channel_use, DEC);
++IEEE80211_IF_FILE(drop_unencrypted, drop_unencrypted, DEC);
++IEEE80211_IF_FILE(eapol, eapol, DEC);
++IEEE80211_IF_FILE(ieee8021_x, ieee802_1x, DEC);
++
++/* STA/IBSS attributes */
++IEEE80211_IF_FILE(state, u.sta.state, DEC);
++IEEE80211_IF_FILE(bssid, u.sta.bssid, MAC);
++IEEE80211_IF_FILE(prev_bssid, u.sta.prev_bssid, MAC);
++IEEE80211_IF_FILE(ssid_len, u.sta.ssid_len, SIZE);
++IEEE80211_IF_FILE(aid, u.sta.aid, DEC);
++IEEE80211_IF_FILE(ap_capab, u.sta.ap_capab, HEX);
++IEEE80211_IF_FILE(capab, u.sta.capab, HEX);
++IEEE80211_IF_FILE(extra_ie_len, u.sta.extra_ie_len, SIZE);
++IEEE80211_IF_FILE(auth_tries, u.sta.auth_tries, DEC);
++IEEE80211_IF_FILE(assoc_tries, u.sta.assoc_tries, DEC);
++IEEE80211_IF_FILE(auth_algs, u.sta.auth_algs, HEX);
++IEEE80211_IF_FILE(auth_alg, u.sta.auth_alg, DEC);
++IEEE80211_IF_FILE(auth_transaction, u.sta.auth_transaction, DEC);
++
++static ssize_t ieee80211_if_fmt_flags(
++	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
++{
++	return scnprintf(buf, buflen, "%s%s%s%s%s%s%s\n",
++			 sdata->u.sta.ssid_set ? "SSID\n" : "",
++			 sdata->u.sta.bssid_set ? "BSSID\n" : "",
++			 sdata->u.sta.prev_bssid_set ? "prev BSSID\n" : "",
++			 sdata->u.sta.authenticated ? "AUTH\n" : "",
++			 sdata->u.sta.associated ? "ASSOC\n" : "",
++			 sdata->u.sta.probereq_poll ? "PROBEREQ POLL\n" : "",
++			 sdata->u.sta.use_protection ? "CTS prot\n" : "");
++}
++__IEEE80211_IF_FILE(flags);
++
++/* AP attributes */
++IEEE80211_IF_FILE(num_sta_ps, u.ap.num_sta_ps, ATOMIC);
++IEEE80211_IF_FILE(dtim_period, u.ap.dtim_period, DEC);
++IEEE80211_IF_FILE(dtim_count, u.ap.dtim_count, DEC);
++IEEE80211_IF_FILE(num_beacons, u.ap.num_beacons, DEC);
++IEEE80211_IF_FILE(force_unicast_rateidx, u.ap.force_unicast_rateidx, DEC);
++IEEE80211_IF_FILE(max_ratectrl_rateidx, u.ap.max_ratectrl_rateidx, DEC);
++
++static ssize_t ieee80211_if_fmt_num_buffered_multicast(
++	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
++{
++	return scnprintf(buf, buflen, "%u\n",
++			 skb_queue_len(&sdata->u.ap.ps_bc_buf));
++}
++__IEEE80211_IF_FILE(num_buffered_multicast);
++
++static ssize_t ieee80211_if_fmt_beacon_head_len(
++	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
++{
++	if (sdata->u.ap.beacon_head)
++		return scnprintf(buf, buflen, "%d\n",
++				 sdata->u.ap.beacon_head_len);
++	return scnprintf(buf, buflen, "\n");
++}
++__IEEE80211_IF_FILE(beacon_head_len);
++
++static ssize_t ieee80211_if_fmt_beacon_tail_len(
++	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
++{
++	if (sdata->u.ap.beacon_tail)
++		return scnprintf(buf, buflen, "%d\n",
++				 sdata->u.ap.beacon_tail_len);
++	return scnprintf(buf, buflen, "\n");
++}
++__IEEE80211_IF_FILE(beacon_tail_len);
++
++/* WDS attributes */
++IEEE80211_IF_FILE(peer, u.wds.remote_addr, MAC);
++
++/* VLAN attributes */
++IEEE80211_IF_FILE(vlan_id, u.vlan.id, DEC);
++
++/* MONITOR attributes */
++static ssize_t ieee80211_if_fmt_mode(
++	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
++{
++	struct ieee80211_local *local = sdata->local;
++
++	return scnprintf(buf, buflen, "%s\n",
++			 ((local->hw.flags & IEEE80211_HW_MONITOR_DURING_OPER) ||
++			  local->open_count == local->monitors) ?
++			 "hard" : "soft");
++}
++__IEEE80211_IF_FILE(mode);
++
++
++#define DEBUGFS_ADD(name, type)\
++	sdata->debugfs.type.name = debugfs_create_file(#name, 0444,\
++		sdata->debugfsdir, sdata, &name##_ops);
++
++static void add_sta_files(struct ieee80211_sub_if_data *sdata)
++{
++	DEBUGFS_ADD(channel_use, sta);
++	DEBUGFS_ADD(drop_unencrypted, sta);
++	DEBUGFS_ADD(eapol, sta);
++	DEBUGFS_ADD(ieee8021_x, sta);
++	DEBUGFS_ADD(state, sta);
++	DEBUGFS_ADD(bssid, sta);
++	DEBUGFS_ADD(prev_bssid, sta);
++	DEBUGFS_ADD(ssid_len, sta);
++	DEBUGFS_ADD(aid, sta);
++	DEBUGFS_ADD(ap_capab, sta);
++	DEBUGFS_ADD(capab, sta);
++	DEBUGFS_ADD(extra_ie_len, sta);
++	DEBUGFS_ADD(auth_tries, sta);
++	DEBUGFS_ADD(assoc_tries, sta);
++	DEBUGFS_ADD(auth_algs, sta);
++	DEBUGFS_ADD(auth_alg, sta);
++	DEBUGFS_ADD(auth_transaction, sta);
++	DEBUGFS_ADD(flags, sta);
++}
++
++static void add_ap_files(struct ieee80211_sub_if_data *sdata)
++{
++	DEBUGFS_ADD(channel_use, ap);
++	DEBUGFS_ADD(drop_unencrypted, ap);
++	DEBUGFS_ADD(eapol, ap);
++	DEBUGFS_ADD(ieee8021_x, ap);
++	DEBUGFS_ADD(num_sta_ps, ap);
++	DEBUGFS_ADD(dtim_period, ap);
++	DEBUGFS_ADD(dtim_count, ap);
++	DEBUGFS_ADD(num_beacons, ap);
++	DEBUGFS_ADD(force_unicast_rateidx, ap);
++	DEBUGFS_ADD(max_ratectrl_rateidx, ap);
++	DEBUGFS_ADD(num_buffered_multicast, ap);
++	DEBUGFS_ADD(beacon_head_len, ap);
++	DEBUGFS_ADD(beacon_tail_len, ap);
++}
++
++static void add_wds_files(struct ieee80211_sub_if_data *sdata)
++{
++	DEBUGFS_ADD(channel_use, wds);
++	DEBUGFS_ADD(drop_unencrypted, wds);
++	DEBUGFS_ADD(eapol, wds);
++	DEBUGFS_ADD(ieee8021_x, wds);
++	DEBUGFS_ADD(peer, wds);
++}
++
++static void add_vlan_files(struct ieee80211_sub_if_data *sdata)
++{
++	DEBUGFS_ADD(channel_use, vlan);
++	DEBUGFS_ADD(drop_unencrypted, vlan);
++	DEBUGFS_ADD(eapol, vlan);
++	DEBUGFS_ADD(ieee8021_x, vlan);
++	DEBUGFS_ADD(vlan_id, vlan);
++}
++
++static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
++{
++	DEBUGFS_ADD(mode, monitor);
++}
++
++static void add_files(struct ieee80211_sub_if_data *sdata)
++{
++	if (!sdata->debugfsdir)
++		return;
++
++	switch (sdata->type) {
++	case IEEE80211_IF_TYPE_STA:
++	case IEEE80211_IF_TYPE_IBSS:
++		add_sta_files(sdata);
++		break;
++	case IEEE80211_IF_TYPE_AP:
++		add_ap_files(sdata);
++		break;
++	case IEEE80211_IF_TYPE_WDS:
++		add_wds_files(sdata);
++		break;
++	case IEEE80211_IF_TYPE_MNTR:
++		add_monitor_files(sdata);
++		break;
++	case IEEE80211_IF_TYPE_VLAN:
++		add_vlan_files(sdata);
++		break;
++	default:
++		break;
++	}
++}
++
++#define DEBUGFS_DEL(name, type)\
++	debugfs_remove(sdata->debugfs.type.name);\
++	sdata->debugfs.type.name = NULL;
++
++static void del_sta_files(struct ieee80211_sub_if_data *sdata)
++{
++	DEBUGFS_DEL(channel_use, sta);
++	DEBUGFS_DEL(drop_unencrypted, sta);
++	DEBUGFS_DEL(eapol, sta);
++	DEBUGFS_DEL(ieee8021_x, sta);
++	DEBUGFS_DEL(state, sta);
++	DEBUGFS_DEL(bssid, sta);
++	DEBUGFS_DEL(prev_bssid, sta);
++	DEBUGFS_DEL(ssid_len, sta);
++	DEBUGFS_DEL(aid, sta);
++	DEBUGFS_DEL(ap_capab, sta);
++	DEBUGFS_DEL(capab, sta);
++	DEBUGFS_DEL(extra_ie_len, sta);
++	DEBUGFS_DEL(auth_tries, sta);
++	DEBUGFS_DEL(assoc_tries, sta);
++	DEBUGFS_DEL(auth_algs, sta);
++	DEBUGFS_DEL(auth_alg, sta);
++	DEBUGFS_DEL(auth_transaction, sta);
++	DEBUGFS_DEL(flags, sta);
++}
++
++static void del_ap_files(struct ieee80211_sub_if_data *sdata)
++{
++	DEBUGFS_DEL(channel_use, ap);
++	DEBUGFS_DEL(drop_unencrypted, ap);
++	DEBUGFS_DEL(eapol, ap);
++	DEBUGFS_DEL(ieee8021_x, ap);
++	DEBUGFS_DEL(num_sta_ps, ap);
++	DEBUGFS_DEL(dtim_period, ap);
++	DEBUGFS_DEL(dtim_count, ap);
++	DEBUGFS_DEL(num_beacons, ap);
++	DEBUGFS_DEL(force_unicast_rateidx, ap);
++	DEBUGFS_DEL(max_ratectrl_rateidx, ap);
++	DEBUGFS_DEL(num_buffered_multicast, ap);
++	DEBUGFS_DEL(beacon_head_len, ap);
++	DEBUGFS_DEL(beacon_tail_len, ap);
++}
++
++static void del_wds_files(struct ieee80211_sub_if_data *sdata)
++{
++	DEBUGFS_DEL(channel_use, wds);
++	DEBUGFS_DEL(drop_unencrypted, wds);
++	DEBUGFS_DEL(eapol, wds);
++	DEBUGFS_DEL(ieee8021_x, wds);
++	DEBUGFS_DEL(peer, wds);
++}
++
++static void del_vlan_files(struct ieee80211_sub_if_data *sdata)
++{
++	DEBUGFS_DEL(channel_use, vlan);
++	DEBUGFS_DEL(drop_unencrypted, vlan);
++	DEBUGFS_DEL(eapol, vlan);
++	DEBUGFS_DEL(ieee8021_x, vlan);
++	DEBUGFS_DEL(vlan_id, vlan);
++}
++
++static void del_monitor_files(struct ieee80211_sub_if_data *sdata)
++{
++	DEBUGFS_DEL(mode, monitor);
++}
++
++static void del_files(struct ieee80211_sub_if_data *sdata, int type)
++{
++	if (!sdata->debugfsdir)
++		return;
++
++	switch (type) {
++	case IEEE80211_IF_TYPE_STA:
++	case IEEE80211_IF_TYPE_IBSS:
++		del_sta_files(sdata);
++		break;
++	case IEEE80211_IF_TYPE_AP:
++		del_ap_files(sdata);
++		break;
++	case IEEE80211_IF_TYPE_WDS:
++		del_wds_files(sdata);
++		break;
++	case IEEE80211_IF_TYPE_MNTR:
++		del_monitor_files(sdata);
++		break;
++	case IEEE80211_IF_TYPE_VLAN:
++		del_vlan_files(sdata);
++		break;
++	default:
++		break;
++	}
++}
++
++static int notif_registered;
++
++void ieee80211_debugfs_add_netdev(struct ieee80211_sub_if_data *sdata)
++{
++	char buf[10+IFNAMSIZ];
++
++	if (!notif_registered)
++		return;
++
++	sprintf(buf, "netdev:%s", sdata->dev->name);
++	sdata->debugfsdir = debugfs_create_dir(buf,
++		sdata->local->hw.wiphy->debugfsdir);
++}
++
++void ieee80211_debugfs_remove_netdev(struct ieee80211_sub_if_data *sdata)
++{
++	del_files(sdata, sdata->type);
++	debugfs_remove(sdata->debugfsdir);
++	sdata->debugfsdir = NULL;
++}
++
++void ieee80211_debugfs_change_if_type(struct ieee80211_sub_if_data *sdata,
++				      int oldtype)
++{
++	del_files(sdata, oldtype);
++	add_files(sdata);
++}
++
++static int netdev_notify(struct notifier_block * nb,
++			 unsigned long state,
++			 void *ndev)
++{
++	struct net_device *dev = ndev;
++	char buf[10+IFNAMSIZ];
++
++	if (state != NETDEV_CHANGENAME)
++		return 0;
++
++	if (!dev->ieee80211_ptr || !dev->ieee80211_ptr->wiphy)
++		return 0;
++
++	if (dev->ieee80211_ptr->wiphy->privid != mac80211_wiphy_privid)
++		return 0;
++
++	/* TODO
++	sprintf(buf, "netdev:%s", dev->name);
++	debugfs_rename(IEEE80211_DEV_TO_SUB_IF(dev)->debugfsdir, buf);
++	*/
++
++	return 0;
++}
++
++static struct notifier_block mac80211_debugfs_netdev_notifier = {
++	.notifier_call = netdev_notify,
++};
++
++void ieee80211_debugfs_netdev_init(void)
++{
++	int err;
++
++	err = register_netdevice_notifier(&mac80211_debugfs_netdev_notifier);
++	if (err) {
++		printk(KERN_ERR
++		       "mac80211: failed to install netdev notifier,"
++		       " disabling per-netdev debugfs!\n");
++	} else
++		notif_registered = 1;
++}
++
++void ieee80211_debugfs_netdev_exit(void)
++{
++	unregister_netdevice_notifier(&mac80211_debugfs_netdev_notifier);
++	notif_registered = 0;
++}
+diff --git a/net/mac80211/debugfs_netdev.h b/net/mac80211/debugfs_netdev.h
+new file mode 100644
+index 0000000..a690071
+--- /dev/null
++++ b/net/mac80211/debugfs_netdev.h
+@@ -0,0 +1,30 @@
++/* routines exported for debugfs handling */
++
++#ifndef __IEEE80211_DEBUGFS_NETDEV_H
++#define __IEEE80211_DEBUGFS_NETDEV_H
++
++#ifdef CONFIG_MAC80211_DEBUGFS
++void ieee80211_debugfs_add_netdev(struct ieee80211_sub_if_data *sdata);
++void ieee80211_debugfs_remove_netdev(struct ieee80211_sub_if_data *sdata);
++void ieee80211_debugfs_change_if_type(struct ieee80211_sub_if_data *sdata,
++				     int oldtype);
++void ieee80211_debugfs_netdev_init(void);
++void ieee80211_debugfs_netdev_exit(void);
++#else
++static inline void ieee80211_debugfs_add_netdev(
++	struct ieee80211_sub_if_data *sdata)
++{}
++static inline void ieee80211_debugfs_remove_netdev(
++	struct ieee80211_sub_if_data *sdata)
++{}
++static inline void ieee80211_debugfs_change_if_type(
++	struct ieee80211_sub_if_data *sdata, int oldtype)
++{}
++static inline void ieee80211_debugfs_netdev_init(void)
++{}
++
++static inline void ieee80211_debugfs_netdev_exit(void)
++{}
++#endif
++
++#endif /* __IEEE80211_DEBUGFS_NETDEV_H */
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+new file mode 100644
+index 0000000..d41e696
+--- /dev/null
++++ b/net/mac80211/debugfs_sta.c
+@@ -0,0 +1,246 @@
++/*
++ * Copyright 2003-2005	Devicescape Software, Inc.
++ * Copyright (c) 2006	Jiri Benc <jbenc@suse.cz>
++ * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/debugfs.h>
++#include <linux/ieee80211.h>
++#include "ieee80211_i.h"
++#include "debugfs.h"
++#include "debugfs_sta.h"
++#include "sta_info.h"
++
++/* sta attributtes */
++
++#define STA_READ(name, buflen, field, format_string)			\
++static ssize_t sta_ ##name## _read(struct file *file,			\
++				   char __user *userbuf,		\
++				   size_t count, loff_t *ppos)		\
++{									\
++	int res;							\
++	struct sta_info *sta = file->private_data;			\
++	char buf[buflen];						\
++	res = scnprintf(buf, buflen, format_string, sta->field);	\
++	return simple_read_from_buffer(userbuf, count, ppos, buf, res);	\
++}
++#define STA_READ_D(name, field) STA_READ(name, 20, field, "%d\n")
++#define STA_READ_U(name, field) STA_READ(name, 20, field, "%u\n")
++#define STA_READ_LU(name, field) STA_READ(name, 20, field, "%lu\n")
++#define STA_READ_S(name, field) STA_READ(name, 20, field, "%s\n")
++
++#define STA_READ_RATE(name, field)					\
++static ssize_t sta_##name##_read(struct file *file,			\
++				 char __user *userbuf,			\
++				 size_t count, loff_t *ppos)		\
++{									\
++	struct sta_info *sta = file->private_data;			\
++	struct ieee80211_local *local = wdev_priv(sta->dev->ieee80211_ptr);\
++	struct ieee80211_hw_mode *mode = local->oper_hw_mode;		\
++	char buf[20];							\
++	int res = scnprintf(buf, sizeof(buf), "%d\n",			\
++			    (sta->field >= 0 &&				\
++			    sta->field < mode->num_rates) ?		\
++			    mode->rates[sta->field].rate : -1);		\
++	return simple_read_from_buffer(userbuf, count, ppos, buf, res);	\
++}
++
++#define STA_OPS(name)							\
++static const struct file_operations sta_ ##name## _ops = {		\
++	.read = sta_##name##_read,					\
++	.open = mac80211_open_file_generic,				\
++}
++
++#define STA_FILE(name, field, format)					\
++		STA_READ_##format(name, field)				\
++		STA_OPS(name)
++
++STA_FILE(aid, aid, D);
++STA_FILE(key_idx_compression, key_idx_compression, D);
++STA_FILE(dev, dev->name, S);
++STA_FILE(vlan_id, vlan_id, D);
++STA_FILE(rx_packets, rx_packets, LU);
++STA_FILE(tx_packets, tx_packets, LU);
++STA_FILE(rx_bytes, rx_bytes, LU);
++STA_FILE(tx_bytes, tx_bytes, LU);
++STA_FILE(rx_duplicates, num_duplicates, LU);
++STA_FILE(rx_fragments, rx_fragments, LU);
++STA_FILE(rx_dropped, rx_dropped, LU);
++STA_FILE(tx_fragments, tx_fragments, LU);
++STA_FILE(tx_filtered, tx_filtered_count, LU);
++STA_FILE(txrate, txrate, RATE);
++STA_FILE(last_txrate, last_txrate, RATE);
++STA_FILE(tx_retry_failed, tx_retry_failed, LU);
++STA_FILE(tx_retry_count, tx_retry_count, LU);
++STA_FILE(last_rssi, last_rssi, D);
++STA_FILE(last_signal, last_signal, D);
++STA_FILE(last_noise, last_noise, D);
++STA_FILE(channel_use, channel_use, D);
++STA_FILE(wep_weak_iv_count, wep_weak_iv_count, D);
++
++static ssize_t sta_flags_read(struct file *file, char __user *userbuf,
++			      size_t count, loff_t *ppos)
++{
++	char buf[100];
++	struct sta_info *sta = file->private_data;
++	int res = scnprintf(buf, sizeof(buf), "%s%s%s%s%s%s%s%s%s",
++		sta->flags & WLAN_STA_AUTH ? "AUTH\n" : "",
++		sta->flags & WLAN_STA_ASSOC ? "ASSOC\n" : "",
++		sta->flags & WLAN_STA_PS ? "PS\n" : "",
++		sta->flags & WLAN_STA_TIM ? "TIM\n" : "",
++		sta->flags & WLAN_STA_PERM ? "PERM\n" : "",
++		sta->flags & WLAN_STA_AUTHORIZED ? "AUTHORIZED\n" : "",
++		sta->flags & WLAN_STA_SHORT_PREAMBLE ? "SHORT PREAMBLE\n" : "",
++		sta->flags & WLAN_STA_WME ? "WME\n" : "",
++		sta->flags & WLAN_STA_WDS ? "WDS\n" : "");
++	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
++}
++STA_OPS(flags);
++
++static ssize_t sta_num_ps_buf_frames_read(struct file *file,
++					  char __user *userbuf,
++					  size_t count, loff_t *ppos)
++{
++	char buf[20];
++	struct sta_info *sta = file->private_data;
++	int res = scnprintf(buf, sizeof(buf), "%u\n",
++			    skb_queue_len(&sta->ps_tx_buf));
++	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
++}
++STA_OPS(num_ps_buf_frames);
++
++static ssize_t sta_last_ack_rssi_read(struct file *file, char __user *userbuf,
++				      size_t count, loff_t *ppos)
++{
++	char buf[100];
++	struct sta_info *sta = file->private_data;
++	int res = scnprintf(buf, sizeof(buf), "%d %d %d\n",
++			    sta->last_ack_rssi[0],
++			    sta->last_ack_rssi[1],
++			    sta->last_ack_rssi[2]);
++	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
++}
++STA_OPS(last_ack_rssi);
++
++static ssize_t sta_last_ack_ms_read(struct file *file, char __user *userbuf,
++				    size_t count, loff_t *ppos)
++{
++	char buf[20];
++	struct sta_info *sta = file->private_data;
++	int res = scnprintf(buf, sizeof(buf), "%d\n",
++			    sta->last_ack ?
++			    jiffies_to_msecs(jiffies - sta->last_ack) : -1);
++	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
++}
++STA_OPS(last_ack_ms);
++
++static ssize_t sta_inactive_ms_read(struct file *file, char __user *userbuf,
++				    size_t count, loff_t *ppos)
++{
++	char buf[20];
++	struct sta_info *sta = file->private_data;
++	int res = scnprintf(buf, sizeof(buf), "%d\n",
++			    jiffies_to_msecs(jiffies - sta->last_rx));
++	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
++}
++STA_OPS(inactive_ms);
++
++static ssize_t sta_last_seq_ctrl_read(struct file *file, char __user *userbuf,
++				      size_t count, loff_t *ppos)
++{
++	char buf[15*NUM_RX_DATA_QUEUES], *p = buf;
++	int i;
++	struct sta_info *sta = file->private_data;
++	for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%x ",
++			       sta->last_seq_ctrl[i]);
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n");
++	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
++}
++STA_OPS(last_seq_ctrl);
++
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
++static ssize_t sta_wme_rx_queue_read(struct file *file, char __user *userbuf,
++				     size_t count, loff_t *ppos)
++{
++	char buf[15*NUM_RX_DATA_QUEUES], *p = buf;
++	int i;
++	struct sta_info *sta = file->private_data;
++	for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%u ",
++			       sta->wme_rx_queue[i]);
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n");
++	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
++}
++STA_OPS(wme_rx_queue);
++
++static ssize_t sta_wme_tx_queue_read(struct file *file, char __user *userbuf,
++				     size_t count, loff_t *ppos)
++{
++	char buf[15*NUM_TX_DATA_QUEUES], *p = buf;
++	int i;
++	struct sta_info *sta = file->private_data;
++	for (i = 0; i < NUM_TX_DATA_QUEUES; i++)
++		p += scnprintf(p, sizeof(buf)+buf-p, "%u ",
++			       sta->wme_tx_queue[i]);
++	p += scnprintf(p, sizeof(buf)+buf-p, "\n");
++	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
++}
++STA_OPS(wme_tx_queue);
++#endif
++
++#define DEBUGFS_ADD(name) \
++	sta->debugfs.name = debugfs_create_file(#name, 0444, \
++		sta->debugfs.dir, sta, &sta_ ##name## _ops);
++
++#define DEBUGFS_DEL(name) \
++	debugfs_remove(sta->debugfs.name);\
++	sta->debugfs.name = NULL;
++
++
++void ieee80211_sta_debugfs_add(struct sta_info *sta)
++{
++	char buf[3*6];
++	struct dentry *stations_dir = sta->local->debugfs.stations;
++
++	if (!stations_dir)
++		return;
++
++	sprintf(buf, MAC_FMT, MAC_ARG(sta->addr));
++
++	sta->debugfs.dir = debugfs_create_dir(buf, stations_dir);
++	if (!sta->debugfs.dir)
++		return;
++
++	DEBUGFS_ADD(flags);
++	DEBUGFS_ADD(num_ps_buf_frames);
++	DEBUGFS_ADD(last_ack_rssi);
++	DEBUGFS_ADD(last_ack_ms);
++	DEBUGFS_ADD(inactive_ms);
++	DEBUGFS_ADD(last_seq_ctrl);
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
++	DEBUGFS_ADD(wme_rx_queue);
++	DEBUGFS_ADD(wme_tx_queue);
++#endif
++}
++
++void ieee80211_sta_debugfs_remove(struct sta_info *sta)
++{
++	DEBUGFS_DEL(flags);
++	DEBUGFS_DEL(num_ps_buf_frames);
++	DEBUGFS_DEL(last_ack_rssi);
++	DEBUGFS_DEL(last_ack_ms);
++	DEBUGFS_DEL(inactive_ms);
++	DEBUGFS_DEL(last_seq_ctrl);
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
++	DEBUGFS_DEL(wme_rx_queue);
++	DEBUGFS_DEL(wme_tx_queue);
++#endif
++
++	debugfs_remove(sta->debugfs.dir);
++	sta->debugfs.dir = NULL;
++}
+diff --git a/net/mac80211/debugfs_sta.h b/net/mac80211/debugfs_sta.h
+new file mode 100644
+index 0000000..574a1cd
+--- /dev/null
++++ b/net/mac80211/debugfs_sta.h
+@@ -0,0 +1,12 @@
++#ifndef __MAC80211_DEBUGFS_STA_H
++#define __MAC80211_DEBUGFS_STA_H
++
++#ifdef CONFIG_MAC80211_DEBUGFS
++void ieee80211_sta_debugfs_add(struct sta_info *sta);
++void ieee80211_sta_debugfs_remove(struct sta_info *sta);
++#else
++static inline void ieee80211_sta_debugfs_add(struct sta_info *sta) {}
++static inline void ieee80211_sta_debugfs_remove(struct sta_info *sta) {}
++#endif
++
++#endif /* __MAC80211_DEBUGFS_STA_H */
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 48a832d..6e36df6 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -35,6 +35,9 @@
+ #include "aes_ccm.h"
+ #include "ieee80211_led.h"
+ #include "ieee80211_cfg.h"
++#include "debugfs.h"
++#include "debugfs_netdev.h"
++#include "debugfs_key.h"
+ 
+ /* privid for wiphys to determine whether they belong to us or not */
+ void *mac80211_wiphy_privid = &mac80211_wiphy_privid;
+@@ -108,6 +111,7 @@ static void ieee80211_key_release(struct kref *kref)
+ 	key = container_of(kref, struct ieee80211_key, kref);
+ 	if (key->alg == ALG_CCMP)
+ 		ieee80211_aes_key_free(key->u.ccmp.tfm);
++	ieee80211_debugfs_key_remove(key);
+ 	kfree(key);
+ }
+ 
+@@ -4704,6 +4708,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		goto fail_workqueue;
+ 	}
+ 
++	debugfs_hw_add(local);
++
+ 	local->hw.conf.beacon_int = 1000;
+ 
+ 	local->wstats_flags |= local->hw.max_rssi ?
+@@ -4731,6 +4737,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if (result < 0)
+ 		goto fail_dev;
+ 
++	ieee80211_debugfs_add_netdev(IEEE80211_DEV_TO_SUB_IF(local->mdev));
++
+ 	result = ieee80211_init_rate_ctrl_alg(local, NULL);
+ 	if (result < 0) {
+ 		printk(KERN_DEBUG "%s: Failed to initialize rate control "
+@@ -4765,11 +4773,13 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ fail_wep:
+ 	rate_control_deinitialize(local);
+ fail_rate:
++	ieee80211_debugfs_remove_netdev(IEEE80211_DEV_TO_SUB_IF(local->mdev));
+ 	unregister_netdevice(local->mdev);
+ fail_dev:
+ 	rtnl_unlock();
+ 	sta_info_stop(local);
+ fail_sta_info:
++	debugfs_hw_del(local);
+ 	destroy_workqueue(local->hw.workqueue);
+ fail_workqueue:
+ 	wiphy_unregister(local->hw.wiphy);
+@@ -4844,6 +4854,7 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ 	ieee80211_clear_tx_pending(local);
+ 	sta_info_stop(local);
+ 	rate_control_deinitialize(local);
++	debugfs_hw_del(local);
+ 
+ 	for (i = 0; i < NUM_IEEE80211_MODES; i++) {
+ 		kfree(local->supp_rates[i]);
+@@ -4953,6 +4964,8 @@ static int __init ieee80211_init(void)
+ 		return ret;
+ 	}
+ 
++	ieee80211_debugfs_netdev_init();
++
+ 	return 0;
+ }
+ 
+@@ -4960,6 +4973,7 @@ static int __init ieee80211_init(void)
+ static void __exit ieee80211_exit(void)
+ {
+ 	ieee80211_wme_unregister();
++	ieee80211_debugfs_netdev_exit();
+ }
+ 
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ae94d64..af4d14d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -307,6 +307,65 @@ struct ieee80211_sub_if_data {
+ 	} u;
+ 	int channel_use;
+ 	int channel_use_raw;
++
++#ifdef CONFIG_MAC80211_DEBUGFS
++	struct dentry *debugfsdir;
++	union {
++		struct {
++			struct dentry *channel_use;
++			struct dentry *drop_unencrypted;
++			struct dentry *eapol;
++			struct dentry *ieee8021_x;
++			struct dentry *state;
++			struct dentry *bssid;
++			struct dentry *prev_bssid;
++			struct dentry *ssid_len;
++			struct dentry *aid;
++			struct dentry *ap_capab;
++			struct dentry *capab;
++			struct dentry *extra_ie_len;
++			struct dentry *auth_tries;
++			struct dentry *assoc_tries;
++			struct dentry *auth_algs;
++			struct dentry *auth_alg;
++			struct dentry *auth_transaction;
++			struct dentry *flags;
++		} sta;
++		struct {
++			struct dentry *channel_use;
++			struct dentry *drop_unencrypted;
++			struct dentry *eapol;
++			struct dentry *ieee8021_x;
++			struct dentry *num_sta_ps;
++			struct dentry *dtim_period;
++			struct dentry *dtim_count;
++			struct dentry *num_beacons;
++			struct dentry *force_unicast_rateidx;
++			struct dentry *max_ratectrl_rateidx;
++			struct dentry *num_buffered_multicast;
++			struct dentry *beacon_head_len;
++			struct dentry *beacon_tail_len;
++		} ap;
++		struct {
++			struct dentry *channel_use;
++			struct dentry *drop_unencrypted;
++			struct dentry *eapol;
++			struct dentry *ieee8021_x;
++			struct dentry *peer;
++		} wds;
++		struct {
++			struct dentry *channel_use;
++			struct dentry *drop_unencrypted;
++			struct dentry *eapol;
++			struct dentry *ieee8021_x;
++			struct dentry *vlan_id;
++		} vlan;
++		struct {
++			struct dentry *mode;
++		} monitor;
++		struct dentry *default_key;
++	} debugfs;
++#endif
+ };
+ 
+ #define IEEE80211_DEV_TO_SUB_IF(dev) netdev_priv(dev)
+@@ -444,6 +503,10 @@ struct ieee80211_local {
+ 	u32 stat_time;
+ 	struct timer_list stat_timer;
+ 
++#ifdef CONFIG_MAC80211_DEBUGFS
++	struct work_struct sta_debugfs_add;
++#endif
++
+ 	enum {
+ 		STA_ANTENNA_SEL_AUTO = 0,
+ 		STA_ANTENNA_SEL_SW_CTRL = 1,
+@@ -500,6 +563,70 @@ struct ieee80211_local {
+ 				* (1 << MODE_*) */
+ 
+ 	int user_space_mlme;
++
++#ifdef CONFIG_MAC80211_DEBUGFS
++	struct local_debugfsdentries {
++		struct dentry *channel;
++		struct dentry *frequency;
++		struct dentry *radar_detect;
++		struct dentry *antenna_sel_tx;
++		struct dentry *antenna_sel_rx;
++		struct dentry *bridge_packets;
++		struct dentry *key_tx_rx_threshold;
++		struct dentry *rts_threshold;
++		struct dentry *fragmentation_threshold;
++		struct dentry *short_retry_limit;
++		struct dentry *long_retry_limit;
++		struct dentry *total_ps_buffered;
++		struct dentry *mode;
++		struct dentry *wep_iv;
++		struct dentry *tx_power_reduction;
++		struct dentry *modes;
++		struct dentry *statistics;
++		struct local_debugfsdentries_statsdentries {
++			struct dentry *transmitted_fragment_count;
++			struct dentry *multicast_transmitted_frame_count;
++			struct dentry *failed_count;
++			struct dentry *retry_count;
++			struct dentry *multiple_retry_count;
++			struct dentry *frame_duplicate_count;
++			struct dentry *received_fragment_count;
++			struct dentry *multicast_received_frame_count;
++			struct dentry *transmitted_frame_count;
++			struct dentry *wep_undecryptable_count;
++			struct dentry *num_scans;
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
++			struct dentry *tx_handlers_drop;
++			struct dentry *tx_handlers_queued;
++			struct dentry *tx_handlers_drop_unencrypted;
++			struct dentry *tx_handlers_drop_fragment;
++			struct dentry *tx_handlers_drop_wep;
++			struct dentry *tx_handlers_drop_not_assoc;
++			struct dentry *tx_handlers_drop_unauth_port;
++			struct dentry *rx_handlers_drop;
++			struct dentry *rx_handlers_queued;
++			struct dentry *rx_handlers_drop_nullfunc;
++			struct dentry *rx_handlers_drop_defrag;
++			struct dentry *rx_handlers_drop_short;
++			struct dentry *rx_handlers_drop_passive_scan;
++			struct dentry *tx_expand_skb_head;
++			struct dentry *tx_expand_skb_head_cloned;
++			struct dentry *rx_expand_skb_head;
++			struct dentry *rx_expand_skb_head2;
++			struct dentry *rx_handlers_fragments;
++			struct dentry *tx_status_drop;
++			struct dentry *wme_tx_queue;
++			struct dentry *wme_rx_queue;
++#endif
++			struct dentry *dot11ACKFailureCount;
++			struct dentry *dot11RTSFailureCount;
++			struct dentry *dot11FCSErrorCount;
++			struct dentry *dot11RTSSuccessCount;
++		} stats;
++		struct dentry *stations;
++		struct dentry *keys;
++	} debugfs;
++#endif
+ };
+ 
+ static inline struct ieee80211_local *hw_to_local(
+diff --git a/net/mac80211/ieee80211_iface.c b/net/mac80211/ieee80211_iface.c
+index 64267d4..cf0f32e 100644
+--- a/net/mac80211/ieee80211_iface.c
++++ b/net/mac80211/ieee80211_iface.c
+@@ -14,6 +14,7 @@
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+ #include "sta_info.h"
++#include "debugfs_netdev.h"
+ 
+ void ieee80211_if_sdata_init(struct ieee80211_sub_if_data *sdata)
+ {
+@@ -73,6 +74,7 @@ int ieee80211_if_add(struct net_device *dev, const char *name,
+ 	if (ret)
+ 		goto fail;
+ 
++	ieee80211_debugfs_add_netdev(sdata);
+ 	ieee80211_if_set_type(ndev, type);
+ 
+ 	write_lock_bh(&local->sub_if_lock);
+@@ -126,6 +128,8 @@ int ieee80211_if_add_mgmt(struct ieee80211_local *local)
+ 	if (ret)
+ 		goto fail;
+ 
++	ieee80211_debugfs_add_netdev(nsdata);
++
+ 	if (local->open_count > 0)
+ 		dev_open(ndev);
+ 	local->apdev = ndev;
+@@ -142,6 +146,7 @@ void ieee80211_if_del_mgmt(struct ieee80211_local *local)
+ 
+ 	ASSERT_RTNL();
+ 	apdev = local->apdev;
++	ieee80211_debugfs_remove_netdev(IEEE80211_DEV_TO_SUB_IF(apdev));
+ 	local->apdev = NULL;
+ 	unregister_netdevice(apdev);
+ }
+@@ -150,6 +155,7 @@ void ieee80211_if_set_type(struct net_device *dev, int type)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	int oldtype = sdata->type;
+ 
+ 	sdata->type = type;
+ 	switch (type) {
+@@ -195,6 +201,7 @@ void ieee80211_if_set_type(struct net_device *dev, int type)
+ 		printk(KERN_WARNING "%s: %s: Unknown interface type 0x%x",
+ 		       dev->name, __FUNCTION__, type);
+ 	}
++	ieee80211_debugfs_change_if_type(sdata, oldtype);
+ 	ieee80211_update_default_wep_only(local);
+ }
+ 
+@@ -303,6 +310,7 @@ void __ieee80211_if_del(struct ieee80211_local *local,
+ {
+ 	struct net_device *dev = sdata->dev;
+ 
++	ieee80211_debugfs_remove_netdev(sdata);
+ 	unregister_netdevice(dev);
+ 	/* Except master interface, the net_device will be freed by
+ 	 * net_device->destructor (i. e. ieee80211_if_free). */
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index 73909ec..352f03b 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -25,6 +25,7 @@
+ #include "ieee80211_rate.h"
+ #include "wpa.h"
+ #include "aes_ccm.h"
++#include "debugfs_key.h"
+ 
+ static int ieee80211_regdom = 0x10; /* FCC */
+ module_param(ieee80211_regdom, int, 0444);
+@@ -180,8 +181,11 @@ static int ieee80211_set_encryption(struct net_device *dev, u8 *sta_addr,
+ 		}
+ 		kfree(keyconf);
+ 
+-		if (set_tx_key || sdata->default_key == key)
++		if (set_tx_key || sdata->default_key == key) {
++			ieee80211_debugfs_key_remove_default(sdata);
+ 			sdata->default_key = NULL;
++		}
++		ieee80211_debugfs_key_remove(key);
+ 		if (sta)
+ 			sta->key = NULL;
+ 		else
+@@ -221,13 +225,19 @@ static int ieee80211_set_encryption(struct net_device *dev, u8 *sta_addr,
+ 			}
+ 		}
+ 
+-		if (set_tx_key || sdata->default_key == old_key)
++		if (set_tx_key || sdata->default_key == old_key) {
++			ieee80211_debugfs_key_remove_default(sdata);
+ 			sdata->default_key = NULL;
++		}
++		ieee80211_debugfs_key_remove(old_key);
+ 		if (sta)
+ 			sta->key = key;
+ 		else
+ 			sdata->keys[idx] = key;
+ 		ieee80211_key_free(old_key);
++		ieee80211_debugfs_key_add(local, key);
++		if (sta)
++			ieee80211_debugfs_key_sta_link(key, sta);
+ 
+ 		if (try_hwaccel &&
+ 		    (alg == ALG_WEP || alg == ALG_TKIP || alg == ALG_CCMP))
+@@ -236,6 +246,8 @@ static int ieee80211_set_encryption(struct net_device *dev, u8 *sta_addr,
+ 
+ 	if (set_tx_key || (!sta && !sdata->default_key && key)) {
+ 		sdata->default_key = key;
++		if (key)
++			ieee80211_debugfs_key_add_default(sdata);
+ 
+ 		if (local->ops->set_key_idx &&
+ 		    local->ops->set_key_idx(local_to_hw(local), idx))
+@@ -1505,8 +1517,12 @@ static int ieee80211_ioctl_siwencode(struct net_device *dev,
+ 		alg = ALG_NONE;
+ 	else if (erq->length == 0) {
+ 		/* No key data - just set the default TX key index */
+-		if (sdata->default_key != sdata->keys[idx])
++		if (sdata->default_key != sdata->keys[idx]) {
++			ieee80211_debugfs_key_remove_default(sdata);
+ 			sdata->default_key = sdata->keys[idx];
++			if (sdata->default_key)
++				ieee80211_debugfs_key_add_default(sdata);
++		}
+ 		return 0;
+ 	}
+ 
+diff --git a/net/mac80211/ieee80211_key.h b/net/mac80211/ieee80211_key.h
+index da67d87..c333849 100644
+--- a/net/mac80211/ieee80211_key.h
++++ b/net/mac80211/ieee80211_key.h
+@@ -83,6 +83,23 @@ struct ieee80211_key {
+ 					* (used only for broadcast keys). */
+ 	s8 keyidx; /* WEP key index */
+ 
++#ifdef CONFIG_MAC80211_DEBUGFS
++	struct {
++		struct dentry *stalink;
++		struct dentry *dir;
++		struct dentry *keylen;
++		struct dentry *force_sw_encrypt;
++		struct dentry *keyidx;
++		struct dentry *hw_key_idx;
++		struct dentry *tx_rx_count;
++		struct dentry *algorithm;
++		struct dentry *tx_spec;
++		struct dentry *rx_spec;
++		struct dentry *replays;
++		struct dentry *key;
++	} debugfs;
++#endif
++
+ 	u8 key[0];
+ };
+ 
+diff --git a/net/mac80211/ieee80211_rate.h b/net/mac80211/ieee80211_rate.h
+index 710f568..f021a02 100644
+--- a/net/mac80211/ieee80211_rate.h
++++ b/net/mac80211/ieee80211_rate.h
+@@ -56,6 +56,9 @@ struct rate_control_ops {
+ 
+ 	int (*add_attrs)(void *priv, struct kobject *kobj);
+ 	void (*remove_attrs)(void *priv, struct kobject *kobj);
++	void (*add_sta_debugfs)(void *priv, void *priv_sta,
++				struct dentry *dir);
++	void (*remove_sta_debugfs)(void *priv, void *priv_sta);
+ };
+ 
+ struct rate_control_ref {
+@@ -119,4 +122,23 @@ static inline void rate_control_free_sta(struct rate_control_ref *ref,
+ 	ref->ops->free_sta(ref->priv, priv);
+ }
+ 
++static inline void rate_control_add_sta_debugfs(struct sta_info *sta)
++{
++#ifdef CONFIG_MAC80211_DEBUGFS
++	struct rate_control_ref *ref = sta->rate_ctrl;
++	if (sta->debugfs.dir && ref->ops->add_sta_debugfs)
++		ref->ops->add_sta_debugfs(ref->priv, sta->rate_ctrl_priv,
++					  sta->debugfs.dir);
++#endif
++}
++
++static inline void rate_control_remove_sta_debugfs(struct sta_info *sta)
++{
++#ifdef CONFIG_MAC80211_DEBUGFS
++	struct rate_control_ref *ref = sta->rate_ctrl;
++	if (ref->ops->remove_sta_debugfs)
++		ref->ops->remove_sta_debugfs(ref->priv, sta->rate_ctrl_priv);
++#endif
++}
++
+ #endif /* IEEE80211_RATE_H */
+diff --git a/net/mac80211/rc80211_simple.c b/net/mac80211/rc80211_simple.c
+index 68bddae..2048cfd 100644
+--- a/net/mac80211/rc80211_simple.c
++++ b/net/mac80211/rc80211_simple.c
+@@ -18,6 +18,7 @@
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+ #include "ieee80211_rate.h"
++#include "debugfs.h"
+ 
+ 
+ /* This is a minimal implementation of TX rate controlling that can be used
+@@ -121,6 +122,11 @@ struct sta_rate_control {
+ 	unsigned long avg_rate_update;
+ 	u32 tx_avg_rate_sum;
+ 	u32 tx_avg_rate_num;
++
++#ifdef CONFIG_MAC80211_DEBUGFS
++	struct dentry *tx_avg_rate_sum_dentry;
++	struct dentry *tx_avg_rate_num_dentry;
++#endif
+ };
+ 
+ 
+@@ -327,6 +333,67 @@ static void rate_control_simple_free_sta(void *priv, void *priv_sta)
+ 	kfree(rctrl);
+ }
+ 
++#ifdef CONFIG_MAC80211_DEBUGFS
++
++static int open_file_generic(struct inode *inode, struct file *file)
++{
++	file->private_data = inode->i_private;
++	return 0;
++}
++
++static ssize_t sta_tx_avg_rate_sum_read(struct file *file,
++					char __user *userbuf,
++					size_t count, loff_t *ppos)
++{
++	struct sta_rate_control *srctrl = file->private_data;
++	char buf[20];
++
++	sprintf(buf, "%d\n", srctrl->tx_avg_rate_sum);
++	return simple_read_from_buffer(userbuf, count, ppos, buf, strlen(buf));
++}
++
++static const struct file_operations sta_tx_avg_rate_sum_ops = {
++	.read = sta_tx_avg_rate_sum_read,
++	.open = open_file_generic,
++};
++
++static ssize_t sta_tx_avg_rate_num_read(struct file *file,
++					char __user *userbuf,
++					size_t count, loff_t *ppos)
++{
++	struct sta_rate_control *srctrl = file->private_data;
++	char buf[20];
++
++	sprintf(buf, "%d\n", srctrl->tx_avg_rate_num);
++	return simple_read_from_buffer(userbuf, count, ppos, buf, strlen(buf));
++}
++
++static const struct file_operations sta_tx_avg_rate_num_ops = {
++	.read = sta_tx_avg_rate_num_read,
++	.open = open_file_generic,
++};
++
++static void rate_control_simple_add_sta_debugfs(void *priv, void *priv_sta,
++						struct dentry *dir)
++{
++	struct sta_rate_control *srctrl = priv_sta;
++
++	srctrl->tx_avg_rate_num_dentry =
++		debugfs_create_file("rc_simple_sta_tx_avg_rate_num", 0400,
++				    dir, srctrl, &sta_tx_avg_rate_num_ops);
++	srctrl->tx_avg_rate_sum_dentry =
++		debugfs_create_file("rc_simple_sta_tx_avg_rate_sum", 0400,
++				    dir, srctrl, &sta_tx_avg_rate_sum_ops);
++}
++
++static void rate_control_simple_remove_sta_debugfs(void *priv, void *priv_sta)
++{
++	struct sta_rate_control *srctrl = priv_sta;
++
++	debugfs_remove(srctrl->tx_avg_rate_sum_dentry);
++	debugfs_remove(srctrl->tx_avg_rate_num_dentry);
++}
++#endif
+ 
+ static struct rate_control_ops rate_control_simple = {
+ 	.module = THIS_MODULE,
+@@ -339,6 +406,10 @@ static struct rate_control_ops rate_control_simple = {
+ 	.free = rate_control_simple_free,
+ 	.alloc_sta = rate_control_simple_alloc_sta,
+ 	.free_sta = rate_control_simple_free_sta,
++#ifdef CONFIG_MAC80211_DEBUGFS
++	.add_sta_debugfs = rate_control_simple_add_sta_debugfs,
++	.remove_sta_debugfs = rate_control_simple_remove_sta_debugfs,
++#endif
+ };
+ 
+ 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index cddaf57..ab7b1f0 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -19,6 +19,8 @@
+ #include "ieee80211_i.h"
+ #include "ieee80211_rate.h"
+ #include "sta_info.h"
++#include "debugfs_key.h"
++#include "debugfs_sta.h"
+ 
+ /* Caller must hold local->sta_lock */
+ static void sta_info_hash_add(struct ieee80211_local *local,
+@@ -120,6 +122,8 @@ static void sta_info_release(struct kref *kref)
+ 	}
+ 	rate_control_free_sta(sta->rate_ctrl, sta->rate_ctrl_priv);
+ 	rate_control_put(sta->rate_ctrl);
++	if (sta->key)
++		ieee80211_debugfs_key_sta_del(sta->key, sta);
+ 	kfree(sta);
+ }
+ 
+@@ -173,9 +177,42 @@ struct sta_info * sta_info_add(struct ieee80211_local *local,
+ 	       local->mdev->name, MAC_ARG(addr));
+ #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
+ 
++#ifdef CONFIG_MAC80211_DEBUGFS
++	if (!in_interrupt()) {
++		sta->debugfs_registered = 1;
++		ieee80211_sta_debugfs_add(sta);
++		rate_control_add_sta_debugfs(sta);
++	} else {
++		/* debugfs entry adding might sleep, so schedule process
++		 * context task for adding entry for STAs that do not yet
++		 * have one. */
++		queue_work(local->hw.workqueue, &local->sta_debugfs_add);
++	}
++#endif
++
+ 	return sta;
+ }
+ 
++static void finish_sta_info_free(struct ieee80211_local *local,
++				 struct sta_info *sta)
++{
++#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
++	printk(KERN_DEBUG "%s: Removed STA " MAC_FMT "\n",
++	       local->mdev->name, MAC_ARG(sta->addr));
++#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
++
++	if (sta->key) {
++		ieee80211_debugfs_key_remove(sta->key);
++		ieee80211_key_free(sta->key);
++		sta->key = NULL;
++	}
++
++	rate_control_remove_sta_debugfs(sta);
++	ieee80211_sta_debugfs_remove(sta);
++
++	sta_info_put(sta);
++}
++
+ static void sta_info_remove(struct sta_info *sta)
+ {
+ 	struct ieee80211_local *local = sta->local;
+@@ -239,17 +276,13 @@ void sta_info_free(struct sta_info *sta, int locked)
+ 		sta->key_idx_compression = HW_KEY_IDX_INVALID;
+ 	}
+ 
+-#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+-	printk(KERN_DEBUG "%s: Removed STA " MAC_FMT "\n",
+-	       local->mdev->name, MAC_ARG(sta->addr));
+-#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
+-
+-	if (sta->key) {
+-		ieee80211_key_free(sta->key);
+-		sta->key = NULL;
+-	}
+-
+-	sta_info_put(sta);
++#ifdef CONFIG_MAC80211_DEBUGFS
++	if (in_atomic()) {
++		list_add(&sta->list, &local->deleted_sta_list);
++		queue_work(local->hw.workqueue, &local->sta_debugfs_add);
++	} else
++#endif
++		finish_sta_info_free(local, sta);
+ }
+ 
+ 
+@@ -322,6 +355,50 @@ static void sta_info_cleanup(unsigned long data)
+ 	add_timer(&local->sta_cleanup);
+ }
+ 
++#ifdef CONFIG_MAC80211_DEBUGFS
++static void sta_info_debugfs_add_task(struct work_struct *work)
++{
++	struct ieee80211_local *local =
++		container_of(work, struct ieee80211_local, sta_debugfs_add);
++	struct sta_info *sta, *tmp;
++
++	while (1) {
++		spin_lock_bh(&local->sta_lock);
++		if (!list_empty(&local->deleted_sta_list)) {
++			sta = list_entry(local->deleted_sta_list.next,
++					 struct sta_info, list);
++			list_del(local->deleted_sta_list.next);
++		} else
++			sta = NULL;
++		spin_unlock_bh(&local->sta_lock);
++		if (!sta)
++			break;
++		finish_sta_info_free(local, sta);
++	}
++
++	while (1) {
++		sta = NULL;
++		spin_lock_bh(&local->sta_lock);
++		list_for_each_entry(tmp, &local->sta_list, list) {
++			if (!tmp->debugfs_registered) {
++				sta = tmp;
++				__sta_info_get(sta);
++				break;
++			}
++		}
++		spin_unlock_bh(&local->sta_lock);
++
++		if (!sta)
++			break;
++
++		sta->debugfs_registered = 1;
++		ieee80211_sta_debugfs_add(sta);
++		rate_control_add_sta_debugfs(sta);
++		sta_info_put(sta);
++	}
++}
++#endif
++
+ void sta_info_init(struct ieee80211_local *local)
+ {
+ 	spin_lock_init(&local->sta_lock);
+@@ -332,6 +409,10 @@ void sta_info_init(struct ieee80211_local *local)
+ 	local->sta_cleanup.expires = jiffies + STA_INFO_CLEANUP_INTERVAL;
+ 	local->sta_cleanup.data = (unsigned long) local;
+ 	local->sta_cleanup.function = sta_info_cleanup;
++
++#ifdef CONFIG_MAC80211_DEBUGFS
++	INIT_WORK(&local->sta_debugfs_add, sta_info_debugfs_add_task);
++#endif
+ }
+ 
+ int sta_info_start(struct ieee80211_local *local)
+@@ -347,7 +428,10 @@ void sta_info_stop(struct ieee80211_local *local)
+ 	del_timer(&local->sta_cleanup);
+ 
+ 	list_for_each_entry_safe(sta, tmp, &local->sta_list, list) {
+-		/*  We don't need locking at this point. */
++		/* sta_info_free must be called with 0 as the last
++		 * parameter to ensure all debugfs sta entries are
++		 * unregistered. We don't need locking at this
++		 * point. */
+ 		sta_info_free(sta, 0);
+ 	}
+ }
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index f26e1c2..b5591d2 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -98,6 +98,9 @@ struct sta_info {
+ 				  * filtering; used only if sta->key is not
+ 				  * set */
+ 
++#ifdef CONFIG_MAC80211_DEBUGFS
++	int debugfs_registered;
++#endif
+ 	int assoc_ap; /* whether this is an AP that we are
+ 		       * associated with as a client */
+ 
+@@ -109,6 +112,22 @@ struct sta_info {
+ 	int vlan_id;
+ 
+ 	u16 listen_interval;
++
++#ifdef CONFIG_MAC80211_DEBUGFS
++	struct sta_info_debugfsdentries {
++		struct dentry *dir;
++		struct dentry *flags;
++		struct dentry *num_ps_buf_frames;
++		struct dentry *last_ack_rssi;
++		struct dentry *last_ack_ms;
++		struct dentry *inactive_ms;
++		struct dentry *last_seq_ctrl;
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
++		struct dentry *wme_rx_queue;
++		struct dentry *wme_tx_queue;
++#endif
++	} debugfs;
++#endif
+ };
+ 
+ 
+-- 
+1.5.0.6
 
+-- 
+John W. Linville
+linville@tuxdriver.com
