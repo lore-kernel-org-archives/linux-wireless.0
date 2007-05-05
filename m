@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:21244 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751434AbXEZPv2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 11:51:28 -0400
-Received: by an-out-0708.google.com with SMTP id d31so313672and
-        for <linux-wireless@vger.kernel.org>; Sat, 26 May 2007 08:51:27 -0700 (PDT)
-Message-ID: <8e6f94720705260851k34c3d1fam16ab96c13375b11d@mail.gmail.com>
-Date: Sat, 26 May 2007 11:51:27 -0400
-From: "Will Dyson" <will.dyson@gmail.com>
-To: "Michael Wu" <flamingice@sourmilk.net>
-Subject: Re: BUG: at net/mac80211/ieee80211.c:1280 ieee80211_tx()
-Cc: linux-wireless@vger.kernel.org,
-	"Broadcom Linux" <bcm43xx-dev@lists.berlios.de>,
-	"Jiri Benc" <jbenc@suse.cz>
-In-Reply-To: <200705252224.18457.flamingice@sourmilk.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <8e6f94720705251637o71a13d71w70199a3057048592@mail.gmail.com>
-	 <200705251805.25696.flamingice@sourmilk.net>
-	 <8e6f94720705252110k46be0397v5f446aabdf34fe3f@mail.gmail.com>
-	 <200705252224.18457.flamingice@sourmilk.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3079 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161475AbXEEPhK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 May 2007 11:37:10 -0400
+Date: Sat, 5 May 2007 09:46:20 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 4/4 (resend)] mac80211: add maintainers entry for mac80211
+Message-ID: <20070505134620.GD4155@tuxdriver.com>
+References: <20070505031749.GA5308@tuxdriver.com> <20070505134255.GA4155@tuxdriver.com> <20070505134438.GB4155@tuxdriver.com> <20070505134528.GC4155@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070505134528.GC4155@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/26/07, Michael Wu <flamingice@sourmilk.net> wrote:
-> On Friday 25 May 2007 21:10, Will Dyson wrote:
-> > On 5/25/07, Michael Wu <flamingice@sourmilk.net> wrote:
-> > > On Friday 25 May 2007 16:37, Will Dyson wrote:
-> > > > But I've got ton's of these in my log:
-> > > >
-> > > >  BUG: at net/mac80211/ieee80211.c:1280 ieee80211_tx()
-> > >
-> > > Do you have CONFIG_NET_SCHED on?
-> >
-> > I do not have it set in this kernel. Should I?
-> It may help. mac80211 didn't work correctly without it before and I'm not
-> entirely sure if it works correctly now without that.
+From: Jiri Benc <jbenc@suse.cz>
 
-Ok. I'll try it.
+Add MAINTAINERS entry for mac80211.
 
-For what it's worth, I can no-longer reproduce this error (although it
-was reproducible across several reboots yesterday).
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ MAINTAINERS |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index af1c792..5ba3d1d 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2209,6 +2209,16 @@ M:	philb@gnu.org
+ W:	http://www.tazenda.demon.co.uk/phil/linux-hp
+ S:	Maintained
+ 
++MAC80211
++P:	Jiri Benc
++M:	jbenc@suse.cz
++P:	Michael Wu
++M:	flamingice@sourmilk.net
++L:	linux-wireless@vger.kernel.org
++W:	http://linuxwireless.org/
++T:	git kernel.org:/pub/scm/linux/kernel/git/jbenc/mac80211.git
++S:	Maintained
++
+ MARVELL YUKON / SYSKONNECT DRIVER
+ P:	Mirko Lindner
+ M: 	mlindner@syskonnect.de
+-- 
+1.5.0.6
 
 -- 
-Will Dyson
+John W. Linville
+linville@tuxdriver.com
