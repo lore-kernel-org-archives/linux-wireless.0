@@ -1,93 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:52358 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755287AbXEXGoM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2007 02:44:12 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: yi.zhu@intel.com
-Subject: Re: [PATCH 2/3] mac80211: IEEE802.11e/WMM TS management and DLS support
-Date: Wed, 23 May 2007 23:42:26 -0700
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jiri Benc <jbenc@suse.cz>
-References: <20070514051526.GA25582@mail.intel.com>
-In-Reply-To: <20070514051526.GA25582@mail.intel.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2568344.lVya32VBWn";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705232342.31882.flamingice@sourmilk.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2860 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754512AbXEEWc3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 May 2007 18:32:29 -0400
+Date: Sat, 5 May 2007 18:25:01 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: 2.6.21-mm1
+Message-ID: <20070505222501.GD23938@tuxdriver.com>
+References: <20070505014955.8f3990b5.akpm@linux-foundation.org> <463CA74C.8080008@gmail.com> <20070505114811.f824c902.akpm@linux-foundation.org> <200705052348.49994.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200705052348.49994.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2568344.lVya32VBWn
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Sat, May 05, 2007 at 11:48:49PM +0200, Michael Buesch wrote:
+> On Saturday 05 May 2007 20:48:11 Andrew Morton wrote:
+> > On Sat, 05 May 2007 17:48:28 +0200 Maciej Rutecki <maciej.rutecki@gmail.com> wrote:
+> > 
+> > > Andrew Morton pisze:
+> > > > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21/2.6.21-mm1/
+> > > > 
+> > > > 
+> > > 
+> > > CC [M]  lib/zlib_deflate/deflate_syms.o
+> > >   LD [M]  lib/zlib_deflate/zlib_deflate.o
+> > >   Building modules, stage 2.
+> > >   MODPOST 791 modules
+> > > ERROR: "ssb_pcihost_register" [drivers/net/b44.ko] undefined!
+> > > ERROR: "ssb_pcihost_unregister" [drivers/net/b44.ko] undefined!
+> > > make[2]: *** [__modpost] Error 1
+> > > make[1]: *** [modules] Error 2
+> > > make[1]: Leaving directory `/usr/src/linux-mm'
+> > > make: *** [debian/stamp-build-kernel] Error 2
+> 
+> config B44_PCI
+> 	bool "Broadcom 4400 PCI device support"
+> 	depends on B44 && NET_PCI
+> 
+> We simply need a SELECT SSB_PCIHOST here. Not sure why it's not there.
+> I thought it used to be there.
 
-On Sunday 13 May 2007 22:15, Zhu Yi wrote:
-> +#define DLS_STATUS_OK		0
-> +#define DLS_STATUS_NOLINK	1
-> +#define DLS_STATUS_SETUP	2
-> +struct dls_info {
-> +	atomic_t refcnt;
-> +	int status;
-> +	u8 addr[ETH_ALEN];
-> +	struct dls_info *hnext; /* next entry in hash table list */
-> +	u32 timeout;
-> +	u32 supp_rates;
-> +};
-> +
-The dls_info code looks like it was copied from the sta_info code and modif=
-ied=20
-to store what you need. No good.
+That may have only been applied to the mm-master branch, which now
+no longer exists.  I'll patch it now.
 
-Instead, you should modify struct sta_info to hold the information necessar=
-y.=20
-This also allows the rate control to work properly. AFAICT, mac80211 will=20
-send all frames in DLS at the lowest rate because this code does not set up=
- a=20
-sta_info for its destination. An appropriate sta_info entry is also necessa=
-ry =20
-to be able to set up encryption properly. (of course, user space can also s=
-et=20
-up a sta_info entry after setting up a DLS entry and make things work=20
-correctly.. but that's dumb)
-
-There is also a need for some way to notify the low level driver that it=20
-should not attempt any power management after a direct link is established=
-=20
-(or that it should, once all DLS links are torn down). This callback/hook i=
-s=20
-also necessary to configure PS in hardware correctly in general and get rid=
-=20
-of the management frame sniffing that iwlwifi is currently doing to achieve=
-=20
-this.
-
-> + if (dls_link_status(&sdata->u.sta, hdr.addr1) =3D=3D DLS_STATUS_OK){
-How is this line suppose to work? I don't see hdr.addr1 initialized at any=
-=20
-point before this.
-
-=2DMichael Wu
-
---nextPart2568344.lVya32VBWn
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGVTPXT3Oqt9AH4aERAhC+AJ0QpjGAzQoNzfAynz0tj1gVLa/i3gCfQMCQ
-1Zww+E1hfRhTP1LB8a+WTj0=
-=9DIb
------END PGP SIGNATURE-----
-
---nextPart2568344.lVya32VBWn--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
