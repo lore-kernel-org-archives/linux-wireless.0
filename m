@@ -1,61 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:49926 "EHLO mx1.redhat.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3767 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751208AbXEJT65 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 15:58:57 -0400
-Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6
-From: Dan Williams <dcbw@redhat.com>
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>,
-	Marcelo Tosatti <marcelo@kvack.org>,
-	David Miller <davem@davemloft.net>, penberg@cs.helsinki.fi,
-	linville@tuxdriver.com, hch@infradead.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	akpm@linux-foundation.org, torvalds@linux-foundation.org
-In-Reply-To: <46424018.2010306@garzik.org>
-References: <20070507141143.GB5125@tuxdriver.com>
-	 <463F443A.5000306@garzik.org>
-	 <84144f020705080247v74ebcd26y27c2f1e61529b215@mail.gmail.com>
-	 <20070508.132737.104034594.davem@davemloft.net>
-	 <4640E3BF.8080401@garzik.org>
-	 <1178659763.14888.2.camel@localhost.localdomain>
-	 <4640FC76.4090908@garzik.org> <20070508234118.GA3472@dmt>
-	 <1178674020.16181.4.camel@localhost.localdomain>
-	 <20070509142516.a31467c5.randy.dunlap@oracle.com>
-	 <1178746884.9590.18.camel@localhost.localdomain>
-	 <46424018.2010306@garzik.org>
-Content-Type: text/plain
-Date: Thu, 10 May 2007 14:35:44 -0400
-Message-Id: <1178822144.4028.0.camel@localhost.localdomain>
+	id S1754830AbXEFSC7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 May 2007 14:02:59 -0400
+Date: Sun, 6 May 2007 13:38:33 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Jeff Garzik <jeff@garzik.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Gary Zambrano <zambrano@broadcom.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de, ralf@linux-mips.org,
+	davej@codemonkey.org.uk, mtakahashi@kanno.co.jp
+Subject: Re: Merging SSB upstream
+Message-ID: <20070506173833.GA4717@tuxdriver.com>
+References: <200705060303.17594.mb@bu3sch.de> <20070506020051.GA30917@tuxdriver.com> <200705061144.27817.mb@bu3sch.de>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200705061144.27817.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-05-09 at 17:41 -0400, Jeff Garzik wrote:
-> Dan Williams wrote:
-> > I can fix those up; but setting KBUILD_VERBOSE=1 and recompiling doesn't
-> > show any of them in current libertas-2.6; -Wall is definitely defined.
-> > Is there another way to enable something give yet more verbose debug
-> > output?
-> 
-> 
-> The copious libertas warnings are present in vanilla upstream 
-> linux-2.6.git.
-> 
-> Just do "make allmodconfig && make -sj4".
-> 
-> 	Jeff
-> 
-> 
-> P.S. Make sure libertas is free of sparse warnings, as all drivers 
-> should be.  Read Documentation/sparse.txt.
+On Sun, May 06, 2007 at 11:44:27AM +0200, Michael Buesch wrote:
+> On Sunday 06 May 2007 04:00:51 John W. Linville wrote:
 
-Sparse stuff fixed.  Still getting working on 64-bit compiles.
-
-Dan
-
-> 	Jeff
+> > I had to remove 
+> > the b44 ssb changes from fedora because a) users reported problems;
 > 
-> 
-> 
+> Which problems were that? The 2 compile issues?
+> Trivial to fix if that's the only issue. ;)
 
+I knew you would ask that... :-)
+
+I don't think there was a bugzilla, but Dave Jones forwarded an email
+to me from "MASAO TAKAHASHI" in late February.  Takahashi-san (forgive
+me if I did that wrong) was complaining about tx timeouts after I
+had added the full wireless-dev patchset to rawhide.  Removing the
+b44 bits of the patch seemed to remove the problem.
+
+That's all the info I have.  Perhaps Dave or Takahashi-san can add
+to the description?
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
