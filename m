@@ -1,58 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([207.189.120.12]:36128 "EHLO smtp.osdl.org"
+Received: from mx1.redhat.com ([66.187.233.31]:49338 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757804AbXETFVB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 May 2007 01:21:01 -0400
-Date: Sat, 19 May 2007 22:20:14 -0700
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Dan Williams <dcbw@redhat.com>,
+	id S933388AbXEGMAZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2007 08:00:25 -0400
+Subject: Re: Please pull 'libertas' branch of wireless-2.6
+From: Dan Williams <dcbw@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jeff Garzik <jeff@garzik.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Florin Malita <fmalita@gmail.com>, marcelo@kvack.org,
-	linville@redhat.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas: skb dereferenced after netif_rx
-Message-ID: <20070519222014.45f11138@freepuppy>
-In-Reply-To: <464FA894.8090008@garzik.org>
-References: <464B7127.5080502@gmail.com>
-	<20070518180903.GC3492@tuxdriver.com>
-	<1179622601.9453.4.camel@xo-28-0B-88.localdomain>
-	<464FA894.8090008@garzik.org>
+	linux-wireless@vger.kernel.org, marcelo@kvack.org,
+	linux-kernel@vger.kernel.org, akpm@osdl.org
+In-Reply-To: <20070507104117.GA31601@infradead.org>
+References: <20070227205649.GH5826@tuxdriver.com>
+	 <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org>
+	 <20070507104117.GA31601@infradead.org>
+Content-Type: text/plain
+Date: Mon, 07 May 2007 08:03:43 -0400
+Message-Id: <1178539423.3032.24.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 19 May 2007 21:47:00 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
-
-> Dan Williams wrote:
-> > On Fri, 2007-05-18 at 14:09 -0400, John W. Linville wrote:
-> >> On Wed, May 16, 2007 at 05:01:27PM -0400, Florin Malita wrote:
-> >>> In libertas_process_rxed_packet() and process_rxed_802_11_packet() the 
-> >>> skb is dereferenced after being passed to netif_rx (called from 
-> >>> libertas_upload_rx_packet). Spotted by Coverity (1658, 1659).
-> >>  
-> >> Relocating the libertas_upload_rx_packet call is fine, but...
-> >>
-> >>> Also, libertas_upload_rx_packet() unconditionally returns 0 so the error 
-> >>> check is dead code - might as well take it out.
-> >> Is this merely an implementation detail?  Or an absolute fact?
-> >> If the former is true, then we should preserve the error
-> >> checking.  If the latter, then we should change the signature of
-> >> libertas_upload_rx_packet to return void.
-> > 
-> > According to the comments, netif_rx always succeeds.  I think we should
-> > just change the return type to void since there's nothing else in that
-> > function that can fail.
+On Mon, 2007-05-07 at 11:41 +0100, Christoph Hellwig wrote:
+> On Sat, Mar 03, 2007 at 05:21:40AM +0000, Christoph Hellwig wrote:
+> > Umm, I can't remember the updated driver ever beeig posted for review.
+> > And to be honest I'd be surprised if it's in a good shape already.
 > 
-> According to the implementation, netif_rx() can fail.
-> 
-> 	Jeff
+> Of course it's not anywhere near good shape.  Almost all items from my
+> review were completely ignored, and we have another totoally substandard
+> wireless driver with crappy thread handling, a huge number of broken private
+> ioctls and partially absymal codingstyle.
 
-Yeah, it was the old congestion levels that got dropped.
-The skb is always consumed so the the return value is informational only.
+ - things like 11d.[ch] don't have business of being in a driver,
+   this should be somewhere in common code.
 
+There is no common code for this.  mac80211 will eventually grow a
+utility library that libertas will hopefully be able to attach to.
 
--- 
-Stephen Hemminger <shemminger@linux-foundation.org>
+ - please get rid of the ENTER/LEAVE macros
+
+People have said that many drivers do this, and it's quite useful for
+debugging.
+
+ - please get rid of all your private ioctls and iwpriv stuff
+   (should I add !!!! here)
+
+Any ioctls that have equivalents in WEXT or ethtool can certainly be
+removed.  Mesh ones like fwt_reset, bt_reset, mesh_get_ttl, etc have no
+current equivalents and will need to stick around.  I've already removed
+all the ones that were relevant for WPA and moved them to standard WEXT
+calls.
+
+ - most of types.h should not be there but you should be using
+   the types from include/linux/*80211*
+
+I've already updated libertas-2.6 git with a ton of updates for this.
+
+In any case, lets push off any merge until 2.6.23 so the rest of the
+comments can be dealt with:
+
+ - the __le* annotation issue you mentioned in the mail is important.
+ - there shouldn't be a LICENSE file in individual driver directories,
+   especially if it's just plain old GPLv2.
+ - please get rid of setting -DFOO flags in the Makefile, just use
+   these directly as config symbols.
+ - there shouldn't be a README file in the driver directory, this
+   should be in Documentation/
+ - please don't use wlan_* foo types.  a) this should be structs, not
+   typedefs, and b) wlan is an utterly generic name for beeing inside
+   a driver.
+ - there seems to be lots of tabs vs spaces messups
+ - there's an awful lot of headers without clear divided
+responsibilities,
+   there should be only a few ones left (internal interfaces and hw
+   interface basically)
+ - having lowercase names for lots of hw commands is a very bad idea
+   for readability
+ - etc
+
+Dan
+
+> And I didn't even get a reply to my mail addressing the concerns above.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
