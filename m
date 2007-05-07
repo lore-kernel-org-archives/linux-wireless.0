@@ -1,55 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:46683 "EHLO mx1.redhat.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4920 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751571AbXEJObq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 10:31:46 -0400
-Subject: Re: Please pull 'master' branch of libertas (for 2.6.22)
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20070510013523.GA4544@tuxdriver.com>
-References: <1178745375.9590.5.camel@localhost.localdomain>
-	 <20070510013523.GA4544@tuxdriver.com>
-Content-Type: text/plain
-Date: Thu, 10 May 2007 10:35:13 -0400
-Message-Id: <1178807713.23307.1.camel@localhost.localdomain>
+	id S934428AbXEGRCg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2007 13:02:36 -0400
+Date: Mon, 7 May 2007 12:44:39 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	linux-wireless@vger.kernel.org, marcelo@kvack.org,
+	linux-kernel@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6 (was Re: Please pull 'libertas' branch of wireless-2.6)
+Message-ID: <20070507164439.GE5125@tuxdriver.com>
+References: <20070227205649.GH5826@tuxdriver.com> <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org> <20070507104117.GA31601@infradead.org> <1178539423.3032.24.camel@localhost.localdomain> <20070507141143.GB5125@tuxdriver.com> <463F443A.5000306@garzik.org> <1178552878.5760.4.camel@localhost.localdomain> <463F4A5E.6000501@garzik.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <463F4A5E.6000501@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-05-09 at 21:35 -0400, John W. Linville wrote:
-> On Wed, May 09, 2007 at 05:16:14PM -0400, Dan Williams wrote:
+On Mon, May 07, 2007 at 11:48:46AM -0400, Jeff Garzik wrote:
+> Dan Williams wrote:
+> >So, either we push it off until 2.6.23, or it gets merged as-is and we
+> >clean it up as we go along, which we'll certainly do.
 > 
-> > This is latest libertas git and should be pushed to 2.6.22.  It takes
-> > care of a few of Christoph's objections, including ioctl removal,
-> > version.h removal, and debug define cleanups.
-> > 
-> > git://git.infradead.org/libertas-2.6.git
+> Um, it was merged a while ago.
 > 
-> Dan,
+> That's why John's email, and my own, are discussing the revert of the 
+> driver, not the merge of the driver.
 > 
-> There is a problem...the libertas-2.6 tree doesn't have a "clean"
-> history.  It appears to have the entire development history of the
-> libertas project.  We need something more concise and "sanitized"
-> for pushing upstream.
+> The executive decision has been made.
 
-Yeah; that sucks.  I've pulled wireless-2.6 and I'm adding
-cleanup/review patches now.  What I may not be able to do, depending on
-time, is fix the warnings and sparse stuff Randy brought up.
+Yep, let's keep it -- and keep Dan and Marcelo on the hook... :-)
 
-Dan
-
-> We do not really want the patches for new development, at least not
-> for 2.6.22.  Could you help identify which patches in the history
-> correspond to review fixes?
-> 
-> I can generate a single diff, but it is huge ("34 files changed, 3069
-> insertions(+), 5643 deletions(-)") and it isn't clear to me that it
-> is only cleanups.  Perhaps you could split this up into a few separate
-> patches?  Especially those patches specific to review comments?
-> 
-> I'm sorry...I know this is a PITA.  I appreciate your effort and
-> cooperation.
-> 
-> John
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
