@@ -1,142 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:28505 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753049AbXEQDbg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2007 23:31:36 -0400
-Date: Wed, 16 May 2007 20:35:05 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: James Ketrenos <jketreno@linux.intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers [part 2/2]
-Message-Id: <20070516203505.556df4f9.randy.dunlap@oracle.com>
-In-Reply-To: <464B7B7C.5080800@linux.intel.com>
-References: <464B7B7C.5080800@linux.intel.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4174 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965536AbXEGQDA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2007 12:03:00 -0400
+Date: Mon, 7 May 2007 11:38:48 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	linux-wireless@vger.kernel.org, marcelo@kvack.org,
+	linux-kernel@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6 (was Re: Please pull 'libertas' branch of wireless-2.6)
+Message-ID: <20070507153848.GD5125@tuxdriver.com>
+References: <20070227205649.GH5826@tuxdriver.com> <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org> <20070507104117.GA31601@infradead.org> <1178539423.3032.24.camel@localhost.localdomain> <20070507141143.GB5125@tuxdriver.com> <463F443A.5000306@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <463F443A.5000306@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 16 May 2007 14:45:32 -0700 James Ketrenos wrote:
+On Mon, May 07, 2007 at 11:22:34AM -0400, Jeff Garzik wrote:
 
-> This patch adds the iwlwifi project directory and sources needed to 
-> build the mac80211 based wireless drivers for the Intel PRO/Wireless 
-> 3945ABG/BG Network Connection and Intel Wireless WiFi Link AGN adapters.
+> Open source is about release early, release often.  Not "hide code in a 
+> dark corner until Christoph thinks it is perfect."  We have high 
+> standards for upstream merged code, but that standard is not perfection. 
+>  Perfect is the enemy of good.
 > 
-> Signed-off-by: James Ketrenos <jketreno@linux.intel.com>
-> 
-> NOTE:  The patch is 597k and can be found at:
-> 
-> 	http://intellinuxwireless.org/iwlwifi/0001-Add-iwlwifi-wireless-drivers.patch
-> 
-> Patch is against wireless-dev commit-id be8662897~
+> I would rather see the libertas-2.6 git changes pulled into upstream, 
+> and am not inclined to revert a WORKING DRIVER at this point, a driver 
+> that is actively maintained and has seen quite a bit of improvement 
+> since it initially appeared.
 
+Perhaps I was a bit hasty.  Given Dan's response I thought that I
+had missed something.
 
-1.  Can't this:
+But, you are right -- the driver works now, and Dan and company are
+sure to be around to keep working on it.
 
-+	if (sizeof(priv->eeprom) != 1024) {
-+		IWL_ERROR("EEPROM structure size incorrect!\n");
-+		return -EINVAL;
-+	}
+> Plus, that leaves the kernel history less polluted.
 
-use this instead of 1024 ?
-+#define IWL4965_EEPROM_IMAGE_SIZE  (0x200 * sizeof(u16))
+Consider the request withdrawn.
 
-2.  Use of bitfields:  bitfields are not (guaranteed to be) portable
-across a wire interface to some other CPU architecture.
-Are all bitfield uses always local to the running driver?
-They should be.
+Thanks,
 
-3.  What are all of those "volatile" C keywords doing in struct
-iwl_shared?
-See http://lwn.net/Articles/232961/ : "The trouble with volatile"
-
-4.  Don't list the parameters like this:
-
-+static const struct iwl_channel_info *iwl4965_get_current_txpower_info(struct
-+								       iwl_priv
-+								       *priv,
-+								       u8 *
-+								       band,
-+								       u8 *
-+								       channel,
-+								       u8 *
-+								       is_fat,
-+								       u8 *
-+								       ctrl_chan_high)
-+{
-
-Just do more like this:
-
-+static const struct iwl_channel_info *iwl4965_get_current_txpower_info(
-+						struct iwl_priv *priv,
-+						u8 *band,
-+						u8 *channel,
-+						u8 *is_fat,
-+						u8 *ctrl_chan_high)
-+{
-
-5.  This function:
-
-+static inline u8 iwl4965_get_dma_hi_address(dma_addr_t addr)
-+{
-+#ifdef _X86_64_TYPES_H
-+	return addr >> 32;
-+#else
-+#ifdef _I386_TYPES_H
-+	return 0;
-+#else
-+#error "unsupported architecture"
-+#endif
-+#endif
-+}
-
-a.  For i386, dma_addr_t can still be 64 bits.  See asm-i386/types.h:
-
-#ifdef CONFIG_HIGHMEM64G
-typedef u64 dma_addr_t;
-#else
-typedef u32 dma_addr_t;
-#endif
-
-b.  Should use CONFIG_64BIT instead of checking _X64_64_TYPES_H or
-_I386_TYPES_H.
-
-c.  can just shift addr 32 bits right (in 2 shifts) in all cases:
-
-	return (addr >> 16) >> 16;
-
-6.  No need to init rc:
-
-+int iwl_hw_setup_bootstrap(struct iwl_priv *priv)
-+{
-+	int rc = 0;
-+
-+	/* Load bootstrap instructions into bootstrap state machine, for
-+	 *   restoring after suspend/resume and rfkill power-downs */
-+	rc = iwl4965_load_bsm(priv, priv->ucode_boot.v_addr,
-+			      priv->ucode_boot.len);
-
-7.  No need to init hwVersion:
-
-+void iwl_hw_card_show_info(struct iwl_priv *priv)
-+{
-+	u16 hwVersion = 0;
-+
-+	hwVersion = priv->eeprom.board_revision_4965;
-
-8.  Too many BUG_ON()s.  Try to recover or return -ERRORs instead.
-
-9.  printk() calls should use KERN_* levels.
-
-10. Don't use C99-style // comments.
-
-
-
-and as Andrew's -mm announcements and my sig say, use
-Documentation/SubmitChecklist to see what else needs to be done.
-
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
