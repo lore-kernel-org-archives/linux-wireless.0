@@ -1,70 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:15298 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:49780 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757578AbXEUVoP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 May 2007 17:44:15 -0400
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [PATCH]  Add iwlwifi wireless drivers [part 2/2]
-Date: Tue, 22 May 2007 00:43:55 +0300
-Message-ID: <D0122E209EBF8D4CAB38EC6A8AF244E5028B1C57@hasmsx412.ger.corp.intel.com>
-In-Reply-To: <46520ABC.1070604@oracle.com>
-From: "Cohen, Guy" <guy.cohen@intel.com>
-To: "Randy Dunlap" <randy.dunlap@oracle.com>,
-	"Jeff Garzik" <jeff@garzik.org>
-Cc: "Christoph Hellwig" <hch@infradead.org>,
-	"James Ketrenos" <jketreno@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>
+	id S934348AbXEGPok (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2007 11:44:40 -0400
+Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6 (was Re:  Please pull 'libertas' branch of wireless-2.6)
+From: Dan Williams <dcbw@redhat.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	linux-wireless@vger.kernel.org, marcelo@kvack.org,
+	linux-kernel@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+In-Reply-To: <463F443A.5000306@garzik.org>
+References: <20070227205649.GH5826@tuxdriver.com>
+	 <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org>
+	 <20070507104117.GA31601@infradead.org>
+	 <1178539423.3032.24.camel@localhost.localdomain>
+	 <20070507141143.GB5125@tuxdriver.com>  <463F443A.5000306@garzik.org>
+Content-Type: text/plain
+Date: Mon, 07 May 2007 11:47:58 -0400
+Message-Id: <1178552878.5760.4.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2007-05-07 at 11:22 -0400, Jeff Garzik wrote:
+> John W. Linville wrote:
+> > On Mon, May 07, 2007 at 08:03:43AM -0400, Dan Williams wrote:
+> >> On Mon, 2007-05-07 at 11:41 +0100, Christoph Hellwig wrote:
+> > 
+> >>> Of course it's not anywhere near good shape.  Almost all items from my
+> >>> review were completely ignored, and we have another totoally substandard
+> >>> wireless driver with crappy thread handling, a huge number of broken private
+> >>> ioctls and partially absymal codingstyle.
+> > 
+> >> I've already updated libertas-2.6 git with a ton of updates for this.
+> >>
+> >> In any case, lets push off any merge until 2.6.23 so the rest of the
+> >> comments can be dealt with:
+> > 
+> > Alright...Jeff, would you please pull the following branch for upstream ASAP:
+> > 
+> > 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git revert-libertas
+> 
+> This is leading from behind :/  We don't need to blow about in the wind 
+> here.  If you reviewed the driver in depth -- which I assumed because of 
+> the trust placed in you as wireless maintainer -- then this situation 
+> really should not be happening.  You need to know the status of new 
+> drivers you are pushing upstream: what work is left to do, what has been 
+> done, what state the driver is in.
+> 
+> I view this request as a failure of the trust network :(
+> 
+> For my part, I _did_ review it.  Twice.  Once in the early days, and 
+> once when I pulled it into my netdev-2.6.git tree.  libertas needs the 
+> changes mentioned in this thread.  But the driver is in workable shape 
+> to be USED while being improved.  I strongly dislike people being cowed 
+> into not merging a driver for years, because the driver in question does 
+> not meet Christoph's idea of perfection.
+> 
+> Open source is about release early, release often.  Not "hide code in a 
+> dark corner until Christoph thinks it is perfect."  We have high 
+> standards for upstream merged code, but that standard is not perfection. 
+>   Perfect is the enemy of good.
+> 
+> I would rather see the libertas-2.6 git changes pulled into upstream, 
+> and am not inclined to revert a WORKING DRIVER at this point, a driver 
+> that is actively maintained and has seen quite a bit of improvement 
+> since it initially appeared.
+> 
+> IMO, Linux users best served by avoiding this silly song and dance, now 
+> that the driver is upstream.
 
+Ok, somebody make an executive decision then.  As it stands, the driver
+_does_ work.  Everyone understands it needs the cleanups that Christoph
+has mentioned, and those of us who work on it certainly will keep
+cleaning it up to hopefully match Christoph's expectations.  Some of
+that has already been done in upstream git.
 
-From: Randy Dunlap [mailto:randy.dunlap@oracle.com]
->Jeff Garzik wrote:
->> Cohen, Guy wrote:
->>> Support for big-endian platforms (as well as AP mode) for iwlwifi is
->>> currently *planned* to be added by Intel in the near future for
-several
->>> purposes.
->>
->>> However, the vast majority of iwlwifi users at this point run it
-over
->>> little-endian platforms. _Delaying_ the inclusion of iwlwifi driver
-will
->>> not assist iwlwifi-over-big-endian-platform users in any way, but
-the
->>> impact on the rest of the users is clear.
->>
->>
->> All Linux drivers that use the proper APIs are transparently portable
-to
->> either little endian or big endian, 32-bit or 64-bit machines.
->>
->> If your driver is not portable, then it is not using the proper APIs,
->> and needs updating.
->>
->> Next time, write the driver using the correct APIs and you will not
-run
->> into these sort of problems...
->
->Ack.  Basically same idea for coding style issues also.
->Do it right the first time, don't have to redo it.
->
+So, either we push it off until 2.6.23, or it gets merged as-is and we
+clean it up as we go along, which we'll certainly do.
 
-You two are right. Any other reply from my side will be dumb... We will
-learn the lesson...
+Dan
 
-But at this point (we can't change the past nor the present), we would
-like to focus on more urgent issues with iwlwifi in the immediate term
-and delay a bit the big-endian support. Is this acceptable?
+> Plus, that leaves the kernel history less polluted.
+> 
+> 	Jeff
+> 
+> 
+> 
+> 
 
->--
->~Randy
->*** Remember to use Documentation/SubmitChecklist when testing your
-code
->***
