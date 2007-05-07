@@ -1,619 +1,2873 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 91-65-240-14-dynip.superkabel.de ([91.65.240.14]:39511 "EHLO
-	charon.n2.diac24.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1756170AbXEOPfO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2007 11:35:14 -0400
-Date: Tue, 15 May 2007 17:28:42 +0200
-From: David LAMPARTER <lists@diac24.net>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Subject: Panic in ieee_80211_ibss_add_sta when trying to join ad-hoc network (rt2500pci)
-Message-ID: <20070515152842.GA26481@charon.n2.diac24.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2926 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934405AbXEGSDH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2007 14:03:07 -0400
+Date: Mon, 7 May 2007 13:51:21 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: jeff@garzik.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Please pull 'upstream' branch of wireless-2.6
+Message-ID: <20070507175121.GF5125@tuxdriver.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="NMuMz9nt05w80d4+"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The following changes since commit 15700770ef7c5d12e2f1659d2ddbeb3f658d9f37:
+  Linus Torvalds (1):
+        Merge git://git.kernel.org/.../sam/kbuild
 
---NMuMz9nt05w80d4+
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+are found in the git repository at:
 
-Hello,
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream
 
+Daniel Drake (1):
+      zd1211rw: Add ID for ZyXEL AG-225H v2
 
-while trying to get my wireless to work (a Ralink RT2560, as
-sold in a Fujitsu-Siemens Amilo A 1630), I've been hitting the
-following Panic twice:
+Geert Uytterhoeven (1):
+      mac80211: include <linux/delay.h> instead of <asm/delay.h>
 
-BUG: unable to handle kernel NULL pointer derference at virtual address 00000218
-[...]
-EIP is at ieee80211_ibss_add_sta+0xae/0x130
-[...]
-EIP: [<c05773fe>] ieee_80211_ibss_add_sta+0xae/0x130 SS:ESP 0068:f641dc38
-Kernel panic - not syncing: Fatal exception in interrupt
+Ivo van Doorn (1):
+      Add 93cx6 eeprom library
 
-The bug seems to be triggered as soon as the stack tries to
-join my router's ad-hoc; it happen either directly when
-doing "ip l s wlan0 up" as well as when doing
-"iwconfig wlan0 essid equinox" (when it did not immediately
-find the network).
+John W. Linville (1):
+      libertas: fix for wireless Kconfig changes
 
-Kernel version is 2.6.21-ge42d23f4 (git checkout from
-git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-dev,
-about a few hours old.)
+Larry Finger (3):
+      ieee80211: add ieee80211_channel_to_freq
+      ieee80211: include frequency in scan results
+      bcm43xx: Remove dead configuration variable CONFIG_947XX
 
-Full information set available at http://celeste.diac24.net/rtpanic/
-(includes pictures of the panics, in case I have a typo somewhere)
-Requests for more information / patches welcome, but expect delayed
-response.
+Matthew Davidson (1):
+      zd1211rw: Add ID for Sitecom WL-117
 
-More information attached.
+Michael Wu (1):
+      Add rtl8187 wireless driver
 
+Ulrich Kunitz (1):
+      zd1211rw: Added new USB id for Planex GW-US54ZGL
 
-Greetings,
+ MAINTAINERS                                    |   10 +
+ drivers/misc/Kconfig                           |    6 +
+ drivers/misc/Makefile                          |    1 +
+ drivers/misc/eeprom_93cx6.c                    |  347 +++++++++++
+ drivers/net/wireless/Kconfig                   |    4 +-
+ drivers/net/wireless/Makefile                  |    3 +
+ drivers/net/wireless/bcm43xx/bcm43xx.h         |   18 +-
+ drivers/net/wireless/bcm43xx/bcm43xx_dma.c     |    4 -
+ drivers/net/wireless/bcm43xx/bcm43xx_main.c    |   81 ---
+ drivers/net/wireless/bcm43xx/bcm43xx_main.h    |   19 -
+ drivers/net/wireless/rtl818x/Kconfig           |   16 +
+ drivers/net/wireless/rtl818x/Makefile          |    2 +
+ drivers/net/wireless/rtl818x/rtl8187.h         |  125 ++++
+ drivers/net/wireless/rtl818x/rtl8187_dev.c     |  730 +++++++++++++++++++++++
+ drivers/net/wireless/rtl818x/rtl8187_rtl8225.c |  744 ++++++++++++++++++++++++
+ drivers/net/wireless/rtl818x/rtl8187_rtl8225.h |   30 +
+ drivers/net/wireless/rtl818x/rtl818x.h         |  212 +++++++
+ drivers/net/wireless/zd1211rw/zd_usb.c         |    4 +
+ include/linux/eeprom_93cx6.h                   |   77 +++
+ include/net/ieee80211.h                        |    2 +
+ net/ieee80211/ieee80211_geo.c                  |   16 +
+ net/ieee80211/ieee80211_wx.c                   |    8 +-
+ net/mac80211/ieee80211_sta.c                   |    2 +-
+ 23 files changed, 2338 insertions(+), 123 deletions(-)
+ create mode 100644 drivers/misc/eeprom_93cx6.c
+ create mode 100644 drivers/net/wireless/rtl818x/Kconfig
+ create mode 100644 drivers/net/wireless/rtl818x/Makefile
+ create mode 100644 drivers/net/wireless/rtl818x/rtl8187.h
+ create mode 100644 drivers/net/wireless/rtl818x/rtl8187_dev.c
+ create mode 100644 drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
+ create mode 100644 drivers/net/wireless/rtl818x/rtl8187_rtl8225.h
+ create mode 100644 drivers/net/wireless/rtl818x/rtl818x.h
+ create mode 100644 include/linux/eeprom_93cx6.h
 
-David Lamparter
-
-
-
-
---NMuMz9nt05w80d4+
-Content-Type: text/plain; charset=utf-8
-Content-Description: panic text
-Content-Disposition: inline; filename=bugtext
-
-BUG: unable to handle kernel NULL pointer derference at virtual address 00000218
- printing eip:
-c05773fe
-*pde = 00000000
-Oops: 0000 [#1]
-PREEMPT
-Modules linked in: rt2500pci rt2x00pci rt2x00lib radeon drm
-CPU:    0
-EIP:    0060:[<c05773fe>]    Not tainted VLI
-EFLAGS: 0010286    (2.6.21-ge42d23f3 #8)
-EIP is at ieee80211_ibss_add_sta+0xae/0x130
-eax: f76292c0   ebx: f78c381c   ecx: 00000000   edx: 00000102
-esi: f6a091a0   edi: f76292c0   ebp: f6bb8000   esp: f641dc38
-ds: 007b   es: 007b   fs: 0000  gs: 0033  ss: 0068
-Process ip (pid: 1621, ti=f641c000 task=f78f8c30 task.ti=f641c000)
-Stack: 00000020 f782f800 00000000 00000001 000000e3 0000000f 000000ae 000000eb
-       f6bb8000 f6a091a0 c193e8c0 f78c3822 f6bb83a0 00000002 f78c3812 c0569b8a
-       f78c381c df82f5ea f7e90458 f7cfea10 00000001 f7cfea28 00000018 00000000
-Call Trace:
- [<c0569b8a>] __ieee80211_rx+0xa5a/0xc10
- [<c0180b5a>] dentry_iput+0xda/0x120
- [<c056c34f>] ieee80211_tasklet_handler+0xaf/0xe0
- [<c02f3c9f>] _atomic_dec_and_loc+0x2f/0x50
- [<c0121c43>] tasklet_action+0x33/0x70
- [<c0121b72>] __do_softirq+0x52/0xa0
- [<c0121c05>] do_softirq+0x45/0x50
- [<c0122023>] local_bh_enable+0x53/0xa0
- [<c047f74b>] dev_mc_upload+0x3b/0x50
- [<c047d16c>] dev_open+0x5c/0x80
- [<c056d017>] ieee80211_open+0x317/0x420
- [<c0121b86>] __do_softirq+0x66/0xa0
- [<c047d149>] dev_open+0x39/0x80
- [<c047b8cc>] dev_change_flags+0x5c/0x140
- [<c04c3613>] devinet_ioctl+0x563/0x6e0
- [<c0472310>] sock_ioctl+0x0/0x1c0
- [<c04723bf>] sock_ioctl+0xaf/0x1c0
- [<c0472310>] sock_ioctl+0x0/0x1c0
- [<c017b81b>] do_ioctl+0x2b/0x90
- [<c017b8dc>] vfs_ioctl+0x5c/0x2b0
- [<c017bb6d>] sys_ioctl+0x3d/0x70
- [<c010406e>] sysenter_past_esp+0x5f/0x85
- =======================
-Code: 00 00 00 c7 04 24 5c 09 6d c0 89 44 24 04 e8 fa 5f ba ff 89 d9 89 ea 89 f0 c7 04 24 20 00 00 00 e8 48 d1 ff ff 85 c0 89 c7 74 95 <a1> 18 02 00 00 8b 97 8c 00 00 00 89 f1 89 47 64 8b 87 88 00 00
-EIP: [<c05773fe>] ieee_80211_ibss_add_sta+0xae/0x130 SS:ESP 0068:f641dc38
-Kernel panic - not syncing: Fatal exception in interrupt
-
-
---NMuMz9nt05w80d4+
-Content-Type: text/plain; charset=utf-8
-Content-Description: kernel version
-Content-Disposition: inline; filename=proc_version
-
-Linux version 2.6.21-ge42d23f4 (root@neptune) (gcc version 4.1.2) #8 PREEMPT Tue May 15 14:08:04 CEST 2007
-
---NMuMz9nt05w80d4+
-Content-Type: text/plain; charset=utf-8
-Content-Description: lspci output
-Content-Disposition: attachment; filename=lspci
-
-00:00.0 Host bridge: Silicon Integrated Systems [SiS] 755 Host (rev 01)
-	Subsystem: Silicon Integrated Systems [SiS] 755 Host
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort+ >SERR- <PERR-
-	Latency: 32
-	Region 0: Memory at e0000000 (32-bit, non-prefetchable) [size=128M]
-	Capabilities: [a0] AGP version 3.0
-		Status: RQ=32 Iso- ArqSz=2 Cal=3 SBA+ ITACoh- GART64- HTrans- 64bit- FW- AGP3+ Rate=x4,x8
-		Command: RQ=1 ArqSz=0 Cal=0 SBA+ AGP+ GART64- 64bit- FW- Rate=x8
-	Capabilities: [d0] HyperTransport: Slave or Primary Interface
-		!!! Possibly incomplete decoding
-		Command: BaseUnitID=0 UnitCnt=9 MastHost- DefDir-
-		Link Control 0: CFlE- CST- CFE- <LkFail- Init+ EOC+ TXO- <CRCErr=0
-		Link Config 0: MLWI=16bit MLWO=16bit LWI=16bit LWO=16bit
-		Link Control 1: CFlE- CST- CFE- <LkFail+ Init- EOC+ TXO+ <CRCErr=0
-		Link Config 1: MLWI=N/C MLWO=N/C LWI=N/C LWO=N/C
-		Revision ID: 1.02
-	Capabilities: [f0] HyperTransport: Interrupt Discovery and Configuration
-
-00:01.0 PCI bridge: Silicon Integrated Systems [SiS] SG86C202 (prog-if 00 [Normal decode])
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap- 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 64
-	Bus: primary=00, secondary=01, subordinate=01, sec-latency=64
-	I/O behind bridge: 0000c000-0000cfff
-	Memory behind bridge: fea00000-feafffff
-	Prefetchable memory behind bridge: ee900000-fe8fffff
-	Secondary status: 66MHz+ FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-	BridgeCtl: Parity- SERR+ NoISA- VGA+ MAbort- >Reset- FastB2B-
-
-00:02.0 ISA bridge: Silicon Integrated Systems [SiS] SiS963 [MuTIOL Media IO] (rev 25)
-	Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 0
-
-00:02.1 SMBus: Silicon Integrated Systems [SiS] SiS961/2 SMBus Controller
-	Control: I/O+ Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Interrupt: pin B routed to IRQ 0
-	Region 4: I/O ports at 0c00 [size=32]
-
-00:02.5 IDE interface: Silicon Integrated Systems [SiS] 5513 [IDE] (prog-if 80 [Master])
-	Subsystem: Fujitsu Siemens Computer GmbH Unknown device 105f
-	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 128
-	Region 0: [virtual] Memory at 000001f0 (32-bit, non-prefetchable) [disabled] [size=8]
-	Region 1: [virtual] Memory at 000003f0 (type 3, non-prefetchable) [disabled] [size=1]
-	Region 2: [virtual] Memory at 00000170 (32-bit, non-prefetchable) [disabled] [size=8]
-	Region 3: [virtual] Memory at 00000370 (type 3, non-prefetchable) [disabled] [size=1]
-	Region 4: I/O ports at ffa0 [size=16]
-
-00:02.6 Modem: Silicon Integrated Systems [SiS] AC'97 Modem Controller (rev a0) (prog-if 00 [Generic])
-	Subsystem: Fujitsu Siemens Computer GmbH Unknown device 105f
-	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 64 (13000ns min, 2750ns max)
-	Interrupt: pin C routed to IRQ 22
-	Region 0: I/O ports at e400 [size=256]
-	Region 1: I/O ports at e000 [size=128]
-	Capabilities: [48] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-
-00:02.7 Multimedia audio controller: Silicon Integrated Systems [SiS] AC'97 Sound Controller (rev a0)
-	Subsystem: Fujitsu Siemens Computer GmbH Unknown device 105f
-	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 64 (13000ns min, 2750ns max)
-	Interrupt: pin C routed to IRQ 22
-	Region 0: I/O ports at e800 [size=256]
-	Region 1: I/O ports at ec00 [size=128]
-	Capabilities: [48] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-
-00:03.0 USB Controller: Silicon Integrated Systems [SiS] USB 1.0 Controller (rev 0f) (prog-if 10 [OHCI])
-	Subsystem: Fujitsu Siemens Computer GmbH Unknown device 105f
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 64 (20000ns max)
-	Interrupt: pin A routed to IRQ 20
-	Region 0: Memory at febfd000 (32-bit, non-prefetchable) [size=4K]
-
-00:03.1 USB Controller: Silicon Integrated Systems [SiS] USB 1.0 Controller (rev 0f) (prog-if 10 [OHCI])
-	Subsystem: Fujitsu Siemens Computer GmbH Unknown device 105f
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 64 (20000ns max)
-	Interrupt: pin B routed to IRQ 21
-	Region 0: Memory at febfe000 (32-bit, non-prefetchable) [size=4K]
-
-00:03.3 USB Controller: Silicon Integrated Systems [SiS] USB 2.0 Controller (prog-if 20 [EHCI])
-	Subsystem: Fujitsu Siemens Computer GmbH Unknown device 105f
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 64 (20000ns max)
-	Interrupt: pin D routed to IRQ 19
-	Region 0: Memory at febff000 (32-bit, non-prefetchable) [size=4K]
-	Capabilities: [50] Power Management version 2
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-
-00:04.0 Ethernet controller: Silicon Integrated Systems [SiS] SiS900 PCI Fast Ethernet (rev 91)
-	Subsystem: Fujitsu Siemens Computer GmbH Unknown device 105f
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 64 (13000ns min, 2750ns max)
-	Interrupt: pin A routed to IRQ 18
-	Region 0: I/O ports at d800 [size=256]
-	Region 1: Memory at febfc000 (32-bit, non-prefetchable) [size=4K]
-	Expansion ROM at febc0000 [disabled] [size=128K]
-	Capabilities: [40] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
-		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-
-00:06.0 FireWire (IEEE 1394): Texas Instruments TSB43AB22/A IEEE-1394a-2000 Controller (PHY/Link) (prog-if 10 [OHCI])
-	Subsystem: Fujitsu Siemens Computer GmbH Unknown device 105f
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 64 (500ns min, 1000ns max), Cache Line Size 10
-	Interrupt: pin A routed to IRQ 5
-	Region 0: Memory at febfb800 (32-bit, non-prefetchable) [size=2K]
-	Region 1: Memory at febf4000 (32-bit, non-prefetchable) [size=16K]
-	Capabilities: [44] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold-)
-		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-
-00:09.0 CardBus bridge: O2 Micro, Inc. OZ711M1/MC1 4-in-1 MemoryCardBus Controller (rev 20)
-	Subsystem: Fujitsu Siemens Computer GmbH Unknown device 105f
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping+ SERR- FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 168, Cache Line Size 10
-	Interrupt: pin A routed to IRQ 16
-	Region 0: Memory at 60000000 (32-bit, non-prefetchable) [size=4K]
-	Bus: primary=00, secondary=02, subordinate=05, sec-latency=176
-	Memory window 0: 50000000-53fff000 (prefetchable)
-	Memory window 1: 54000000-57fff000
-	I/O window 0: 00001000-000010ff
-	I/O window 1: 00001400-000014ff
-	BridgeCtl: Parity- SERR- ISA- VGA- MAbort- >Reset- 16bInt+ PostWrite+
-	16-bit legacy interface ports at 0001
-
-00:09.1 CardBus bridge: O2 Micro, Inc. OZ711M1/MC1 4-in-1 MemoryCardBus Controller (rev 20)
-	Subsystem: Fujitsu Siemens Computer GmbH Unknown device 105f
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping+ SERR- FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 168, Cache Line Size 10
-	Interrupt: pin A routed to IRQ 16
-	Region 0: Memory at 60001000 (32-bit, non-prefetchable) [size=4K]
-	Bus: primary=00, secondary=06, subordinate=09, sec-latency=176
-	Memory window 0: 58000000-5bfff000 (prefetchable)
-	Memory window 1: 5c000000-5ffff000
-	I/O window 0: 00001800-000018ff
-	I/O window 1: 00001c00-00001cff
-	BridgeCtl: Parity- SERR- ISA- VGA- MAbort- >Reset- 16bInt+ PostWrite+
-	16-bit legacy interface ports at 0001
-
-00:09.2 System peripheral: O2 Micro, Inc. OZ711Mx 4-in-1 MemoryCardBus Accelerator
-	Subsystem: Fujitsu Siemens Computer GmbH Unknown device 105f
-	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Interrupt: pin A routed to IRQ 11
-	Region 0: Memory at febfa000 (32-bit, non-prefetchable) [size=4K]
-	Capabilities: [a0] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
-		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-
-00:0b.0 Network controller: RaLink RT2500 802.11g Cardbus/mini-PCI (rev 01)
-	Subsystem: Micro-Star International Co., Ltd. Unknown device 6833
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 64, Cache Line Size 10
-	Interrupt: pin A routed to IRQ 18
-	Region 0: Memory at febf8000 (32-bit, non-prefetchable) [size=8K]
-	Capabilities: [40] Power Management version 2
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-
-00:18.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] HyperTransport Technology Configuration
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Capabilities: [80] HyperTransport: Host or Secondary Interface
-		!!! Possibly incomplete decoding
-		Command: WarmRst+ DblEnd-
-		Link Control: CFlE- CST- CFE- <LkFail- Init+ EOC- TXO- <CRCErr=0
-		Link Config: MLWI=16bit MLWO=16bit LWI=16bit LWO=16bit
-		Revision ID: 1.02
-
-00:18.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Address Map
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-
-00:18.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] DRAM Controller
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-
-00:18.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Miscellaneous Control
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-
-01:00.0 VGA compatible controller: ATI Technologies Inc RV350 [Mobility Radeon 9600 M10] (prog-if 00 [VGA])
-	Subsystem: Fujitsu Siemens Computer GmbH Unknown device 105f
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 64 (2000ns min), Cache Line Size 10
-	Interrupt: pin A routed to IRQ 17
-	Region 0: Memory at f0000000 (32-bit, prefetchable) [size=128M]
-	Region 1: I/O ports at c800 [size=256]
-	Region 2: Memory at feaf0000 (32-bit, non-prefetchable) [size=64K]
-	Expansion ROM at feac0000 [disabled] [size=128K]
-	Capabilities: [58] AGP version 3.0
-		Status: RQ=256 Iso- ArqSz=0 Cal=0 SBA+ ITACoh- GART64- HTrans- 64bit- FW+ AGP3+ Rate=x4,x8
-		Command: RQ=32 ArqSz=2 Cal=0 SBA+ AGP+ GART64- 64bit- FW- Rate=x8
-	Capabilities: [50] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-
-
---NMuMz9nt05w80d4+
-Content-Type: application/x-gunzip
-Content-Description: config.gz
-Content-Disposition: attachment; filename="proc_config.gz"
-Content-Transfer-Encoding: base64
-
-H4sIAI6dSUYCA5RcW4/btrZ+768w0gOcXWC3Y3smziQ4OQBFUTZrSWRIype8EO6MkhqdGace
-T5r8+70oyTYpkXJ2gbaj9S3eF9eNpH/+6ecBejnsHjeH7d3m4eH74HP5VO43h/J+8Lj5qxzc
-7Z4+bT+/G9zvnv73MCjvtwcokW6fXr4N/ir3T+XD4Gu5f97unt4Nxr9NfhuPAFYv5SDbfB+M
-Xg9G1+9uJu/G48F4OHzz088/YZYndKpXtxN9PX7//fg9JTkRFGtFM3Km4pThuWSFwEQvkcKz
-mE27ZSousiC5kr2gjgRDMUZSndkMGhOuZcE5ExYgFcJzJRC03MVIhviMCYBSQjgRVrswsPNH
-lhXnj48sJzrOULePVKIAwKChLjkqPLMwWxI6nVm9RALPdIbWeoYWRHOskxi30EISCWNAkeZo
-CqNRosBWDXFGrQ+SHOeMwgy+unrY/nH1uLt/eSifr/6nyFFGtCApQZJc/VYLzaufYMF/HuDd
-fQmydHjZbw/fBw/lV5CZ3ZcDiMzzWSDICuYRFj9XKD03Cis2J7lmuZYZd1dNz4nIicVLc6o0
-yRcwNNPHjKr31+O6B9NKpB8Gz+Xh5cu5TagGpQtYPsry969e+cgaFYpZK7+010Ou5YJyM6kw
-yKYTMM+5HGyfB0+7g2mvxWv+j5XVa84kXensQ0EKS/AjGWsuGCZSaoTtNWkjenF9BhWScxBc
-ex8YEqxdCnLgVlQBKw+NMsPJilzRfGqPrYAt5I7tBKEipsozajqv/7BWaX4cOAzCXlEYWpFo
-OaOJej+6PVcNE5ZIGAEXBCNFYk8rwgzP7mmUmjEvKpEQsbfHGGvGQdvQj0QnTGgJf/iXrV6u
-U0GSRSSOvf0oaDyaOOIBZav/odRa8jl8yXUmuxRd853aOtHJClQRbFLpE60ZUzy1VQIXNFdz
-S2ZskKSJxqC7LBi2rE4Ku4tJocjKUhY57ASas5hYnSac2UUkneYoTWJLmmA7C5tQqWGbIGcZ
-yc6fi6xm0ZX0OWrVKCl7ZmRaRN51lSmLfCKidGbGVA3gxAwSvq474SlSTYvMzJIMazWS7jb3
-mz8eQJlVam/w/PLly25/OCuUjMVFas9RTdBFnoLl6ZBB7rAXbJSP09emjBT4pJrS1DsFc2C1
-garv0cPu7q/Bw+Z7uT/3NzKK1G4kjfy75bShmK5sopcplUmnWcoG8u7P0kzX3tL2lEk8I7HO
-GeOO+mzoyCfnRzAmKE5pbknwEcHJB7s2MFmoSFWrtg58rM/T5JElULHpfk+pplvvX919+rux
-hXy/uyufn3f7weH7l3KweboffCqNaSyt2VEUzBt4CxJ29nmQOdOzj+fPGVh70Hyy3maOqICt
-9PTKuFyusTIUUJ25d3YMuGBr8AtEEM+LDH0IorLIMtcqOHBEp62Oum1TuZRBtPF6jBcT5CHy
-zXA49MIcCbSgwt+57Pp24gduQsDrHkBJHMSybOXHJqEKOehHWmSUXoD78cyPGrsw7i1440fn
-gd7O33gEMZvfOooNi0Iyv0rJSJJQTJhfRLMlzfEMvKpJLzzuRa/9Gi+bEjB309WoB9VpYPXw
-WtBVcA0WFOFrPQ6Dby6JfWB344yv8GzqBCM6HWmMQA01rtXExlYotgyPWEJgo00NQAbrMmWC
-qllmr1UVNcyQ1BQctrEurv2jaLNNbjw9PkVoKKWRANeudlPd3i+5XjIxl5rNXYDmi5S3hhq5
-7nml8BhHcadwM1GTG5c8ZQzGzSluN6VIamIlgRlv9Q+omoMrq2GGIVQtMheGve8SMnBJsyLT
-mBfGokP8cnNS6JyoWplbSt7QSFakZnqEcrQ3OMQk48YI5f7Nc2RYsBTcKSTWnkVoeGzfsS4U
-zdPWSLlnaoBIWZdcRVC+mWQeYoZJh2AGlaA6FHQ2gMH4jZoRAY6ZZzyLrIq/zx4eA7GPkHd+
-6O08uNEEiRhTCV0V3G+EMoohgIEVDOzFTIqWzHEID4BUuQHJdv/4z2ZfDuL99mvtGZ0DjDgO
-uCtpqkVU+EEcRwE3J2fGVfD7uA1y48R5DXFyM/UJjEkUsCSRRL0ffsPD+p9Wfa00QwLiC1QI
-zlGUkhYowRaD3gnCJCUQ5QLOxLrZMi4HbPFqf0BwanSykzHpLX3sVobywpW0mEr4S9HpGfYH
-G6e+d5ncRtxWm55W5ezenqozQby9TyRPqdJcVYkPkCR5VhvgAlYJMqknNxFV3XyTaXH6fmQv
-EVfEscBIzRotQ11Te2RQQjgxcEJ9sTLBmGWOPz/7qEcBFwyg8euhTyY/6uvhsFuLn/f99Vn6
-5hDfOSoSCyRnOi68/jCfrSU1egomWxhhHtWifCotiNFjyghlX3EwX9P8XPzYNMwELPQilqwl
-r7WYH2XyHLzX8cHun3I/eNw8bT6Xj+XT4ZgoG/wLYU7/PUA8++UcKHDHOPNMp2SK8NpvDTLQ
-IFExDYE/kGeRLFFLZNKehQR/0HIdTHkVG7daUdVk06rxmF5D3++/bp7uyvsBrvKCL/uNGVQV
-/dQDpk+Hcv9pc1f+MpDtoNpUYU0hfNVpVx+tyirpRIYxX1EDdMog3CJESCki1m1qoRSM1yUu
-aExYi5ag3PGkDC2G7eyZ51OniJRMtOppbF+nLgSL4nfGqlJdO+iMIkV4bvK6ek2QeD9s97Mt
-ODZI2hPF2ZK0ew3SpUjLOQKhabk7FavRvAjCcdEZoowCI+RZJ/EASnKQ7Mu/X8qnu++D57vN
-w/bp81mojP+VCPLBOmtoKFq5VuhErybBQze62lE6NgClYDCpL51hVVynC6ZsoTkRCYP1zTHx
-1mnzGo8UTAYmfZV3K/VymCWTaOFv9L9qjOUxgabiQEtAg5oWYGmqxo5rZZZq8OWUHLnvukVG
-Ymr5AG6oLei6VWPJ2VIHglKX500oU3LiuG1HFCfgqJrcEG1VqcdWDs5NjHBCYtgPXGOIqgXN
-2Q+w0p5Mx5lLZjQ86Jv6NKyva83k6rzKTY6DfCnLp6LIe/EZSGo4OXOWOdHZvM9/gm98bx0S
-BaWgVuoQoSU/MDkQZ3bzoi/PZxvLMZhYjjNM0b8HhEr4b4bhP/CXbXWxs+jwCZIdUeZXTjWc
-ZfVnD0tMwfL6DlFqGOWW6TEk06JLqWtwaceGWz0m5kQzKnx6qXa76zNPCXFMZ7BACg4jZClm
-SlNhadvmyNOEg07+V6JARsVPl/jb2OsYwubMo5NThTESsVles7JXeLO/h2X/pZu/rxnd8Zoi
-wWHVsD3jFbtJ6GtMZQegzDn8M63BIpz7+esd9G3wx357/9lOCK/Nsei5WPWp2bhNERSzWZuo
-aJtCIC5QhZ0/bzhrH8EZfjx5M34biJ7Hw7dj75yYYZkI/hTFnD352ts1otLZieRbefdyqM5X
-Pm3Nf3b7x83BmoWI5kmmzAGWc9ZXUxEr/NncBs+om4atmszLwz+7/V+OZ5ATdVyPM9w9rwZT
-OCf2Xqu+YbvZAV2RU+sUbZWIzP2qrGqLJIsIVGNK8boFZHRqsmTWgQC0NyfrDqHLSXO7q5Rr
-iPVgZZybEEBF8cL4CLEWMJmOX2aOhblOaGSyejP3wLsigxXzeQZuoVb7HKKgytmSDlY13nBA
-YNqH1ZnNuJcFItfHPhhcFZb1six/gCf2NgO2LWKSOP3jOW9/63iGeWtSDdmkoPwHJA2DQMIX
-2Ro5oJzyc49qylS0pKci+a7FmCWqhtDuFc1kphcj/1I36NjNGHNvKLnOwRVkc+osvukTmrUI
-RPIWhfImz2ATqz0Caq11J8TkVH3EekuZNIyC5ZXuBZ82R13BYwCOCOwuF4wpmrZ7gXmLbCjw
-5/S07zxQBPrzsUPFhZ++JFItGfNVNIO/PCVmMkBfQ0jooS/IFEkP3VxxqOKmLpRybz05A/I5
-T3sEIP70+7knDpqm4DHT/jPdiOJevJrBXg4zYb0M1VT0nP5ai9EpK4jr87fg41jfv/qnfAYb
-tLt/Zc9gFr+W9JQyovzdYLHdH142DwNZ7iFuctMstvsMm3ThPVrni4m9+xcTc4lkgWwjVFFr
-y2BOCRIfAqKesBZQX7ORYG90bN9zMLti0tnuk+5+n3Q3vKk3o3zSZgwqgUmAelENTC7ogUmv
-IrDRaoKaO0dVotU2GDAeSVWL0mmvGnbYdJpKikgJ4t5ygX6YMzSTn82QmPsNRkJT5aZcTsSg
-9xsJGk+JU7q58LcvjfMEbtzBI42d+uEv2NJzxza5kG7dj+sypPbN0Nxcccpzc1Vl3uRbY8sY
-WqhLVa07ck49Zu5CTbQun9Z1QWiqmDZG99EHSKy4rQKdGpFJofjSdQ5Xorh/WHp2Pb4OQFTg
-AAJzaYJKncsAA+fBBiXKSQiioUKqMwB1EobH7lqv2iJvQ7AfxBTsLE6RlDRZO1Pr44NetLdD
-b4FYYt63dyzWSlQe+zjypJboC0xGqvtZWFuMPUxgMzIpAzyZuVdtjivM3dsLPHkerRWRF7l6
-xn9m6ut4zRVjzPsZ5AUGY0v68BlJORG9LCnJpxCF9LJUl437ODKEL+AXJqyJCHvrqAyDMWC9
-Fc3WMiaLfp65UmtOenk+FEyhXg5BUJr1cjQasIdBmTD2EkflW1zgEuYucx/LD+wRE8Uel/rk
-eV02c47u5YubkG41icz61LAVdAFbpSz8QReglHvCaKDX3aYcPJspccLTE6iY9AOCYEcf2BjB
-uR9As0ArKvUDbJkTEagrjoUrhTXauBotaqPpBPndZED9oKNMHaRw9Wyic6Ta3yARJG7lGs41
-ZEjCGgkUk2DPmuysHwZxM5kjPyhRRlqegumQzDNubil774M1PH4fxCBt02tobdfA0Bob3W68
-z0GpGuae+jteSTUMyrsSkE/T0Ex6RLZBPHJ5LNMVwJO7UEiQp24fBFq2SUgcN1oX8IslAOfB
-NDrj6ySoNQb/sp/B/BJWIhO7oclJQ3So1NPhibXJVQCAMCVUJhFoGoBmaai69jaf2OppMZkR
-2DghBlepWEAWAkhBJzcdrLtCk7BymPQqlYlfSO1CnrmoJao+daoy/D9gPY4hVqJJ1F7KBgPA
-pPAK21JakOoM3AEdTWcht8OxvvYiKGO2LbURwb106ie33CYLcd0hC+h4JhYmlb+ZRYryUHcF
-4enaC8ahiTF9036oq+Pt7oUqdCTPojdGqZIX4wn/oKoAxVP5zW720ZDaWcmaEULe+aK6w2G1
-hGn8/N+1p02ZcctzOQPBHILNdd3tnEoENue2oYqvf6xi0HTs/Wg4tMY4rx+vzjZ3zflPp/7w
-danjjIJ1jUjnVMm4tT8+ee00gPnWcTTVmZwGzjwbBhb9jnMV5plB1NG5HdxhkDM0ch6PnJAs
-ft0ZG0QY+NLYrOdV3J9jRSoLppOs52CwcY0eGrXe3mCYfk/xNHWOGuFzHDg7WQU6hdLAheDx
-a/+DJ8T9j9AI/J/4V2YJY6qTqJ25/bCT5krc1W4/+LTZ7gd/v5QvZUs2jeRVj4oCxz7SWGhq
-52DzysmR+nicY59sDg7l88HTAqjZKcmDoq88kn8+4kUZuMHUl96mIkanrPUevMcv+91hd7d7
-sF+GiVpdn5dL+JcbfFWW2YdyUDnoTHCRnCY6B7cVX/0iIkUS1K+0T2wrNDF098ZrRe8ohLqZ
-p097c13lV3OXYHBfft3eldYFplolUNFFrMrBqmnD06473j19dh4anh/5QUAri1zHzHghnYLs
-4f5ioyZX4G21Klzut5sH8+rf7UB9fb235kJG1Xz5NROdgpNGUp24DR/FS2KD2FO/pHnE8rhd
-oH3FP1ChzLARlU6tKKXBGhep7AEpCmIZloFuRLbtB6EbYzvaM+4BZs63SFzxPpEglrEOZYzv
-lxO3KkOAruhTUr4F1TGhB53RmJ881IeX8rDbHf7sLrRVAFNYbKfxmlQNx76kUQMo8OKuhiOc
-jYfXqz4OjkbDXoYEGu/BY5WO+oqra9wHpwWpbhL11XBhkIsZ9t+eQhAgrAT3xfLmCoVoHhZX
-i7Pc7suH8tlaDJxMjaUcWXo/bRGW1Pw8g6wek1uvjRFu8R0pOiWx+wL5CIQdI0oIqXh8T7CT
-OU2tqKj+BveUF6eMWlzLWuxqz+rnG7Z3DXnA2ipdKpOLSJl9pQlc++opOWzHrLqzHhU0tbI3
-ybK6peUeeVUD07Ggi8Cj14aBLATxnz/LtdQziFDEgkrW1azgOT2Vdwew8L8OXp62n7bl/eDl
-GYb6ZQPD/r9f/7/5TZX6+2H79Ff1XPt8JZflOQQYLKB+VPfdN9/sNw8P4OhW1ql74w0J98yz
-IdQvhTu0o29hP6Q9QrIwbiALvbc9stU34Xq5poEXs0ccrW5v37ydeF8n1Ryj8e3N6Vbdw8vn
-+qnBw+a7ZwZy5+pNdR3Ha+d511kB5uYKsPXGvtaXjkU8Pp9P4tC4aEyCD+8x/6AD1vQIYwr7
-uofHNB4j/HYy7GUpWq/EOgyYLaujIu8roSNT2nrUfyos1lyxtPVmvsOWX/gNArm67R9E1AsL
-5Is9cCxYZvxeHC/sq+s22fxASWKe2lu/TuIyLCu/MhRdaAZqRRM164hWtn2+88kNjTKNpH9J
-+AzlivkxOaXmqqn/sbaiSVb9Aoi/n7KQJrBRgVXKwDXqgSXL1324mtF8bp7kVg+D/OsEHJ4V
-IoSbqX57jVeT44aDSb2Cfzm9ypLsSqRpd3vDxrJ8nOPPWMTkrB3KzTM4uCVYnd3di3lzVYW1
-V9v78rfDt4O5hjr4s3z4crV9+rQbQLxrtmrlDHm3OKBaQp96ZXAWa+p9OWrVElNpXTdoCPUh
-X3WfxPt7NxAcy34lQFKIHPpbxnGgbphp0v/zIDFJUsb5+hKXxJL2d8J99WVmtflxIucCtaGf
-n3zV4RhM7N2f2y9Q7VEarv54+fxp+82+UW0KNg/Qvaoqiyc3w0ujAPXfP4jWS4GaYjIu4I9Q
-8cEX1dYs8G8E+5CJloNyrJslScSCnmjD5PmxgG5FXNHJeNSvMT8GXl/a0pqh9ruIFlo9KPF3
-uOFgebo2Qt7bGUTwZLxa9fOkdPR6dd3Pk8Vvbi7Voyhd9RurSlD6a1GCJinp58Hr2zGevO3v
-MpavX4+HF1muf4Dldb964ur6wqAMy2TSy/J79UQ+77fleDQe9veXwxr0b0R1Ox5dX2bpryWX
-t29uRv3zwmM8HoLwaZbGP8aYk2X/+BfLeb/ClpRmaNpnKySFFR1d+7aeTPHbIbmwTkpk47f9
-a7CgCORzdWG7KHw7wf9h7Lqa3caR9V9R7cvMVI13RCpR99Y8QCQlwWIyASr4RSXbGlvXJ7hO
-qLX31180QEoAiQbPg4PQHwIRG40Ow6GHrfEjKdPeXaS1X8K+QLeLntPUIoIX50stuLAIz0pC
-BQfCeWn11BeaJk/w+8hXmKBdEGuVNRxQH1H2ZtbtUw6hfv9yef7+5+Dl9OP85yCM3gmW5w/d
-X1c9rsYJHa5LlWpvYkPOGQK4lmoTXF0LX1mrDLvMLHu8P+sD8Dz4/fzvr/8WXzP4v9fv50+P
-P6+WV4P717uXy4+78yCpMoOdkt2mmJ2kypBRksak4u7PWWe8kny1otkKHxIWkkwwu4csxArf
-EcolrBFOyG/iT6eHZ2h7t7kMrLDbk8qELMM+BJV/94AYYW+BJHTBCDLr7h7/80654rTJhtWc
-D91n32h3FFvCXq4mvCECNcd2DvWtqEhNkUnoroDQcOauQAHQXfsKmveUMh+7AFHBj9TPHSWA
-mQc7OAaNlGHKENlOvCJy2xJHCvY2c8U43EBcMYw4GiKOd4rd8IAumFOxwhDeUvVGuh95c8/R
-4zF2S1IrpeKV4JKjPCU0w2GriK8di6lwrbQMXFU46QRzXqJ29cLRfor4WFOLk8eOicQO6WQU
-BmLG+jjog+x/EHQNXSDBd4duOm3fxVobaeEqIApH88lPN33oOjlZMXJ8JC5oVjOIFbggQ3Wl
-aR9XW9lKAaT87NOX0w/QvrHwCLXFLlkTb+LvEYNnCVk6JmkNyWj2nhzRnq5RH/A1VSPU1Jgg
-s7K1oJRoCU7YdyYrNPhd7qggE022On+RRl1ZiZ6Wiq2FZuAhRE+CwoadFEOpoEmz3SJr2ngy
-7ZQxAe9Ga1LErbKudpf2LS46SjMqtxQi6voMWb6CH/NBWnAH77isGEVuNYoEfICLjKynJrPl
-wIZXlYE3mo8Hvy8vT2d4/fnD2jRaxvDKY5MriCKghCsv8/rp+dfzy/lee00xXnEA3Niv2uXh
-4ePDy9Pj3V2bd2gyFyFNDtne0Zhjvg6p3iqLiP3WFvCpU4PbNLYofENnQCdIlXdwNuBqSczX
-8l8QMYJPDt3urYWxVhRt5fg4aijJjuZXLVDBJ+BTrMVF3J7faAaP3fUDVfttDjx4pXnF4gXP
-MEv3bqU3tQ6xKGioK5FHVZoaZjTwDI8x1fGHiiT0Y2y7Q/AqaxmWiYFpy5SUQLcMH84vNlG4
-oGAqNWJ8bZ494pdv8JYmdjux7Tw+DUSF6afLyx/GR8Oggh95/UWUGtc/sf0UhzTGPMBV2Qp5
-MwnBDimjqBbNNs6ivDyOwry7E/HXu8uPwT+n+8vdr8FD/9iJLk5oYT5l+t5wvLeORgsqE8Af
-ql1ir6gpwiopckaQPS+Kx3u7UKVR6wgQOWuUzr2hnTcQVU78qfNM3kv1oB6EbLtdianwrBJP
-qRzVdv8iEjE/qGkUeJ7XfvO50SNS8DiUHuiWFGFkFmP7O44SqGJFRyvkdijfUTC+NsYIS7EA
-MnuPZ4SzOMXmub9pO/u4EgOxLyJXTCDx3LYLMsrmpnfAuKAhyqdXWQSm9fapi7m+BhWfck0z
-jLGc+8ORh67rAgKOcPvkAcYDNj7TtVmcYbboib9Bx8n+xRkLRgEiJV4TcUys7YNxiJMk3y0R
-NrYMvOkc0ediHiI9ZJsV0oObA8L0b+ZBQvFB2YJHRoowdpyu8gyRA2d7e4XiAjTCZAekpSvU
-HcWhKRKLEwb+8T1ECleT7S2k+xUSz8BHNt70UFJviPSwaOQ+zo7YvEqT/bhzc9Jpja87dRg9
-fj8/DEpwg2M5mHlXy6VRTxqIBaZDd6DQW5SohtCuUfj1LC6YSnJA3jZpsfOxDQBo2AuDYBri
-khN2xHTGCC3tfQ8uGBEFIPD2mqClHUPmOpN2yWiCyM+LkrJ0Yj8JQOHuY+T5SNZ1Ls4XRJQX
-pmOxAK6qXdbIGf5ezPR787fUybekydNRYxkFZTwctk6AG20iaWaGqYcdGCoDNloln41wmmwg
-Lk8gURq0vv/W9ZOxRenlSoae97xyZ+1ErQVJ4AV7B23WWUfwNQ3jTpSkoqNoGxIeopNiQ3YY
-fwDkAjyYIF5DgS7bNRmidPEHDrxWMIIOwIghJFKll599EHizPZJP6qxHoeTNbbkFbzhFJnsD
-WSVTf0icEPHHGwZDJ6ZIsCnVINKQzYKRu5RS3JuYXIdOmPhkcODBYjfsI6lKZNQUf4oq2O0Q
-hmcZRfYVt6YFwtgXLda5SS40ZXrxQ4lqTO8ekNzWPoY0+RpjJkGKVHi+11NBy8QwDIfEBYuk
-kxgjMS0KE5YbhrTM/hEsWYftCysmBQXpVGlnE+B1Kk9MryV1zCS9aEgC7zOYJy9JB6e4pfjP
-zckKZVEm7oK1GMd8vYm6AgAuTuQf3x4ffmkOlrUbdMtKqDZs+PH6gt46ld6u/loLCcflEjxb
-g55xdzt7Pj/dgdDx0nh7fm4Vd5TyC3BP8MuefiwYqfYolYVlLNie/d8gFndjDn8Huq9vBXqf
-HwTEzkhIAGctukGNt6rprUzx1m42Ar3bUXg2cm7ig1Tz0SKF1SmCz9gsjFfgK0XceTaICuUV
-k2x6IXveC8niHUcOxVtreL4jO3JAO00OjB79SobUYL4l6UiSgtnSQW4u/tX3nhtR7CHilk1D
-e066hEgPGxtNWlsXOc24GYfrSs+rcL1BIhwpGItLikiOFIAURRLLghygLRN3FEIc81JMXHCC
-sXFNXbAe5i4AtEKtDnywqB7QRKUVISs2ZXfa7ygTW1Z2XHAkaKCCiWuWYMF7QfRYxmnO4zeB
-fAdKzExWgBFeX3HSPzHYKjkwh5igmh8KUcl/nNUkSWtTkfvD+vT0RYYIoX/lg0bh4BppoaR6
-VEr4eaTBcOy3E8Xf7dilkBzywA9nnnGBVZSClNi6rwEhLDVr+AcgizuAsXhVKpi+a1WtSCod
-EHffFL6dnk6f4UXudtNs7v/aR2yl+ybzcF3vtLSb1IBrBPAFiwqw1VKt3dZmUUsnQT2a1DZx
-XYWJOnPQimihRO+PD+8k4VllbxlitMt4z2xKUuBJdh4cC37QtjH1zI8mqjCKf/uTqXGNzLiV
-YSmK1uEFL2zduz0tUmoaS6f0uBYdliAmM03cXjt/uasdsNp4n21JNH+5rehH5Wg+HSPRAARv
-igl/QT+9sF1XyMqQiYufoEZqrwBo3EFLI3sFQJExpwy4DC+FFpZtaYRw80BmiB9MSZORs1Dy
-1lGsLexaI5MsU52FjsDhYrS0X2yBWApezF7MEdzl5Fm7tHRF0MKwzwUa9j0yH9m2lCh1VYDP
-ll1Hs+jKQulhEBHdgPZSKs6TMSaRvQGQl450R7ZIBK8wmI2mP4+rAhECgrksSlSavh36VQdy
-Vz8k6qZ/e5Ueb5ncN7QwZMabGIQlEwsSUWKX5NoTtiZ8zlYySJoK+tG9oBSpVbwYij+FfTGL
-dSMDGlg9qW5bvjz90PhxlOxpy12pSA7XIlluhPVDbTggd18fny4v3+51/lxAIUKeirikvdyq
-5CK0xyO40buaGlDV9dCHsATWl+FQabcjGtxX+nTkpu8d9DSaTaYuMrxpoXTBhriI3hAlgqb3
-GKW6IlIAPQd5NsMLV5aBfXTBv6zWDlSZd7cSA6HI+GcwmvI4dAQzOJLQFsBY5RUrej7RFCBU
-4nQ07KTNp3tDUQFSOWIaB0QZChmTdQEA215rWoGIyiU5z6M8H1nN3s53d6eH86OY7jD/w2+X
-H3beSDBwJTtGzBuNZgj/doPMxlb+VAGUIdmtw5p0sWaDyWxsI5D5ZDRHcsw9Q6JUk8ROOg1m
-+CJVhsSo8toNArtFD2RRsb561rSrBwdqSh2pDjPjcTBH8CegpYRpfn+hxPT0XLuzqpWDurIN
-yCj2zQXR3UixOpZWXC6lR6ZrgY1OUF1yqxzC/YnR/4XUw7ZdqKKTmGrPvz0PvHf/uYgt9tOr
-cdDsbI8f612aG7orMgF0kZxzkIjPq1ZVWblR0WzsBT2Q1Bsi5lkmZvIGzPQNmHk/ZtTbnrk/
-HjpW4CbgcVrYlg2RekHu4vm+8Pp2gGlPny1nXjCcLN0Y8LNT9kEKJOxPA1klEy9ATHg1jD/s
-wcBWAb3mBFEeuDfHJEUYgxtg5ho5QZ7Yxk2k91U8C3oAwbAP0Nf0YNIH6GvkvK8Nc98JENu+
-N/XmfZjpdOKuSDH+/Zix7/6immNwY1IWjmep9yZQz/cr2GI0dzdL8AvTYErcGO5hb6k3SOD3
-bEa7YDQLvKgXM38Lxn8DZtQHSWbBhLM+1NSfrZdvAMU9qHVECndlUgLN0hCRz8Bx52IiHh8u
-n58H7HJ3+fz4MFicPn//AQydwbyxhV0t/Z/Xh8/ShRzuSypdRmJStZQibiXcn79cTrZro9QW
-PmKPOdF2gam/RGTRfnEWSZXlE1ZPpx/f4OM7TNRCBtMU94hjEkZNKDVNs/5Klr7qj0rxVpPg
-iUwtyk1h45pXMLGr2CKgiy7PP8DRCa5eHFFWJOTQNMyubbUi0vm2zRuR0UFX/zpxRCMr+hhF
-2tVb/A7FnyVNEjNYXU2AEOuiONIhSDPYRWLet0U6eNxpSrM/bitMU7ALc63DBVrmBUM+NF7G
-ZRlHR5q3Gyn6s6WjrJNTEoJLB6TY65gbfSJjiij/9axVG6eJ/AreknUrI4en0z0wv//8I3jz
-b428wbL0oN9piWkaCGqR+hgpPCzi0sckYgJAyhAlMZpQkqFjQFPGUaLoZ2+KEmOGDv86DqsF
-Tl3h88aLPFSHUNAdAlxBhSA76IdiwhJBS2LBvyIsFWRFZcpytvEy39vnWi2S/dVJMgVot2R9
-chofpsi4xhWMND+0hMMtKtrnI5SCS2eAStHJnMW5WPwUnZWbAyLgELQRJv+GOSdlHx5K5sHU
-HzmWUYJODw5Oo/BlgoU2kQsXrXEV5xHafVtQmTefsxtLoOfHO7GJNEeP8tPWORfF4uy+24nE
-EOye8iVYW4OOC0ypProYyo+xLqJWBz6LE+NQkSYs3TqXJUlj5c3J9mhoIR/LnMugTYgqfsat
-m7dIPwY/tQjCdYo3NVzV5qaMp+asXh++aMKOvJIxlZWZTBNPPbk8vP5U0AF5+vzt8nL+/PL6
-dNby6ZGYxY92yG1IKsLUTGDxhyrOQlP5riaoPrXdEQU9ZyxOq8QsLaV70ZG5Hl2jrhVNBL27
-Fc2YpX7VMAAhbSh5aPlGaHlDaeKstUuPDhlJaSganOUlVnzNNYE1eR29ViPWBnO3iPJG+Teq
-2J8RdxHQDKu5XeMEsfMwDllIOJ+JqRrFYeeb2qNltkhwbxTR/ZNDxwuydVAZ8garely+Z1fe
-dILddqGMohojDwZyPoiuTknmmw8D9eMdtb7XQXdEXhDM0UJJwkbDoYuMPuYpOp2MJ3ibHW6D
-bmTJv6U4qAqw078h+27yyEH+yEcj5OAF+oIHsz1KDcnQG05xckox/W1JZmM/8Fzk6d5Rt3zS
-JFWEGe7DjCdlQhydI/YVF1ncjJzZVfFjd/HjnuJxurhvE5xIcVocrvPRCiWD5ssq7yHTPkD0
-Hq8/rbzhxuuj42MbZ/ByM+yhOypg3nwUOMlTnLxMA8c2tI6Ig6dWCFY4ifhaF1d8b+b5bro/
-Rs4j2axgPzQPoiY1bZ8Hm7xceb6jtpTEoLc3ckzCPebiGMhZ6k/w3aEI9+sSpZa04JgnVElP
-45Hvos6nbuoEz83yjIZbusAc+wLr5OC41WlKAt+xe9X0nq1/u/d9vJmHdOnaXiUjIDUX4SoU
-W01KkEMTRF3unVWZdOz9gxMREko+YKo2SN3bfddq0pw3kWyaqVah+GTlxuDxQT0en16/XB6t
-T8hyjLsx4PMf54eag2YdVXrJdQO/ltokYbKzF9XV9eSaRrVCt8aeiUTjAZFiDB4Mja4UrpUB
-3doqp07SVFVBjRkx4hDb2xIxtRFETd0F2tC5tsmJUaoAeMd1qN0nDAo4c0BIcZvUEbFae8TU
-D4C2daI5qMwgJTXZ7Vu6EqWiBjU4z2/AWMWKOItQes7tA7p+fH5xPoZDZuiebsfKVFYklB8p
-yy20Ms/5cV0tjpxbqBwMnHYyVki7YyR9AWbE4lAnGW7cLyM5sMLzpntoHzKF8lvzzT5pVQNu
-X/EO7GlTGwriTXEtV+h2zVXdInw4k8Dz2ojroNVGGeHd6fm5G/dAzmz9xixN6ZRe7TW+Ss7j
-/xnImnhegkTq/HD6dHd+lm6H/pSud35TPvIuz9+bJfdb4/D+/vRrcLp7fhx8Og8ezucv5y//
-Kz0U6wWuz3c/pHPie4i2DM6Jn+5bwcM0eLuH6mSHfM5AEU6WZNGLW5ZxjGne6jjKIswo16hW
-HBq9IPF/wntRLIrK4fxNsMmkF/a+Sgu2zvurJYk4tkgvbEPKFEcl4AvYJneTJ8b96StimQ15
-0ygMHD0tXbTyeIOsNKX8cq1LBbixB3ypGJv5Q2sTa7V5sQuKjC82waDsCyku6MxTJUSopXB4
-RyqYy+OxBiO0DMEa5g24ztFvxZWbkYc8O2iwRcf3tg21W1Mer2PXnFZAcR8D54lhnMToM57e
-hYXvOWxmG9ShKCFGSBr0IeO0iFfIvKkhSx6JE0x6PbKVsKwykOr2VdSJpGED0cLkOa2Y3lLi
-aPWmvmxwR8QKQJ+SYmn3Dzotdn2Qxm6pcO0nBrQXlrDe5m/yBU0gJlwfMA35sfKR25mOy9ls
-5g/fAsM8A2mwjGxTkrlnYZH4o+EI2VjWBeLoWsMwsuzdAhiNS/DwpULs9KH7p418QH1PEIs+
-DehwdKShwM173jsh8jSjWdy/8aDXF5NhR06KOKVTfJoIqo/vpCSqeIUPGKniku1IgjN+Jc0n
-jvMwiVc5h8sUjnBwlWLIyoO0IFjFjirwAprdNzzMQkRRT8HAMQI+6MUaAini40gjaVeK0uW+
-HSeOHUQqDdV6JPh0oeLWtNiuHJwN3hW8BL9NW7ooCXds/zTfkVIMKo7gMeN2Lp8lgnf+cr5v
-R7cD4ur05ev5xWYrD2WuCNq/adoVMcCQd55txOWsibB1tdyLmLqtNvrPMqMZCwuS+NPl61fj
-TiKz8pKuVi1tEJ3QNbyxgcBRex17xF6K4E1KvmgxKE0kxMvDZQGXG5vtivg7owuSdS9dcUTC
-wbvB+enpEWyw4BET1MKgoKczlAMc7u8lYX84oo3KQtoll2fBefLLPdzmHj9/v/UYWC+1fNiE
-ZueX4FjF4qlA2j1lfAnKQEtmGCiqdHj8syS3zCv19GNFYxCQJ4h7mPAYlVv7TAarCWipZbNt
-8oFFxHDmLBpUpme+EwJqq3Nk62wwJZuEo55yKEs8fxg4MXuBmDgR0vQC2SINTDCyGj70dJn8
-kHHwhg7xu5LOu9MLXMZbdbRyh6kMY28biclk1DdYs3HPYI0DHkydkO1oaLmvPT68C4uq1XSl
-VyhuqPGDuGvadQpTcoyzFbW4EYGM4d3l/PBilHUTciqVhtefl7vL6enXVYHRFvSUDT1z6kjq
-9vL08nq6u/y3Jf/YbDUzH/FDvYqYSSSNmgW/vECkUykD1gYs3nMfwgvdtxKOe/DAf1vnTXKR
-M7oX9zLjKtsQWRxWJebA7lqw1SmNoI6O+n5TJ1jaMXK1Y/SWdoxltDqbCsR70+uI+IkaCIl6
-0oWMiKbthjEVXOSSqR69TcomWVqI2udtA5HBNMBw02bUeiu+3S86ydo3OsDZP+8lxv7BeslN
-9Gj1tcbvD1XOjVAne6RSjWxtNBCQ++pqyfxWO6800E5BieK+KipCiGWeYp9Ps5zTpe45WSUI
-lknXxul8+4dlyo9bm/mVovitvEYEsOha6c2AveI51kZFGxsDsgQfK3pCLUaq+1ptQDIUy1/R
-NpLbRGeXoCyfT6dDo5j3eUJ1x8IfBUinV9HS2Fjgd5ZcX5OinP21JPyvjNurFLSj+eiRMpHH
-/t3bK1rLXatBScWhAoTE49HMRqc53GmY+JZ/XZ4fg2Ayf+f968rH8mZ+36zSIQnbFSSx3F3j
-7z2fX788Dv6xfeEtspuesAHN/VaaYMWMWdFizXhadH7aluq6Emx9stCxddL/N3Ysy23jsF/J
-9L4HP2Mf9kBJtKXqWZJy0l40TjZNPU3sjGvvTv5+AcmWSYoUdfB4BIAk+ALBB4CqIHJoekZS
-tcrNX2fUGa6x1JpKDgg7iaXQwHZc2ItC93U2tEftST07itqmlt80iiTVN489zBV23LfscWrH
-Qt9a1qays640kOoBxKplu2saqYrH9For4PrQzDShjt+bif6tjq4aprj/QEgQoeWC8bIL0IGS
-PABh2Mkz0AsOTCUHTdEyQPiSv6z6MjGTq4SeFQLtU8kEdmI5E3orQMFdkxdENC40pTlaZkyO
-Mtx8V2uuvptsoOi5Z2J6AgNIWDcxVRUzb6Ys6DcUL2L1zXMbHd7TRgxCQAhfZZ/ZsUZkGZqZ
-X9hGLchYYp/f1sG+LEwSpdjClrjeIovPD3lvWsDWHKPaZE2wIV+9+yUgObMbjVkz4CsHBUmj
-NXHRCMIiBw2GLDBSKKtZSyHZT8HYxROKhHhUUYYaxYWXXn/BPE+AO1AQF3MHi+h1qTZuaosz
-OxIOUkdGGJDXUVQiGDDvyKZ0dV99k+igoSsXMyhi5wszUSMcYaf178tdst2/nrevL9I5WRt9
-XhYLt/n095fz6edfiy8y6qp+VKB+KNJRxt1b3D6oRBaPCwrRwvIaWSMaDyEaVNwAxhfzITzN
-R0OIhjBuOTnRiKZDiIY0gSUCpUa0dBMtJwNyWg7p4OVkQDstpwN4Wtzb2wk0flSXq4U7m9F4
-CNtAZXRKn6DvBD+K1El3LX6kT6srYuzkfOKkcNd+5qSYOynunRRLJ8XIXZnR1NK6LcFMb8s4
-jxYVs+Zco0tLrqVYLdr93u7P6bh7Op/Qrufw/Psu3e5Bth6VY7YkNZy6Q7pb4PKuLIYd0gpd
-MK9vgyNvYNKOJgaIR9vNZ4yhc97ufm2ff+/2r7e80CdqHbt6lZA1lxQ91cNg4+TLvPpk+PSi
-Sksuuqc9rWqAse1gFWLfpO1yhh58MQSalydcjXWD9um2jQYlAWXcWlaTOMYgQEk3Ux6aXZwF
-VIDWXluloWJcFmoE0pAGaD7NLYEq0AbJjr+UnBDPym7BKE0L0eWXCWhZQR8tr5iv6PouwXLL
-eSm+iDLdt5pG0ldQQ4EZVCRJcktQO5ZvaE1kc8qp8gJtQmnhKA+yQrssNAVcYS37+Itz76vN
-bLyhCKN1mNLU2hHwu1h1dftCP6PU0Ju0ryaRxVd8bZtY1V6JLf3XxAWC0mHK29qV+WUlYOJi
-iE39Wumm1saBMPN4ORbKvtY7V5PyTglLvl9kgWFWCeLH0PdsleQPfR2PdFXJjb4bUe/cvr0d
-0CTu6fyKBLv98+H9A8TgE+zZ/9udft3xw89TbeDOz38+Xvb/4Dvx3WQxV4RqM3PywBaQdBrX
-jJiOHHAPsYrwaXlaXA6BpJNeQKZFgUdn0oFlXoL8u9ofXvzKPp+Pu9On9LxZdqRt89/RPS1u
-Eh4/P06H18Y7RffFtM++F0J6Ttx8o58xxZrxAvaS2I+KUD6/vWBCwsMOMCUZ9JWBGDZ7HeCj
-73WBWak6yL9mHEyNR04X5KyTDw/JyAQcy2Emb+DZaNwBPxQNVOdFrJnmB0fFr1ej8QKtYN81
-BPW9TiGmNigQqCdO2IN8TnFNjn+BnZeAckMNVvW/+Zzi2u8YDIqHfTTiIR9IUs0sl5HXDqCs
-0AxrtNFprAZAXTn7hIuZi6A3B0FJD1/MnxoYi0PygwR9uZKs9CLe129NiAvDTIj8kNAE/3vr
-xfzJ2LcX4MMykiQRMY1v0zuD1jPpcy1euu9ZWsY3VUECXIk741rC1T363oOHOWnE1w4K2vcx
-u6cjXhkfD+fTbi9z40WCUQySSWUu/Mr3IyHUOvsjW//7VSRgnTQ2IrSu8kIm8qwt/gPjIoEy
-cOlQGXrr5tal7aPgFA1nTLAqlgOcSHAvNYJXXIIXqFNIFxsENjU56DY6SD25RViQku7lGPrJ
-Bd3YcG0G0KreTagroRflvGIYbUHKPkZlGBRmktRBhf8HFf5eZI7UAAA=
-
---NMuMz9nt05w80d4+
-Content-Type: text/plain; charset=utf-8
-Content-Description: relevant .config
-Content-Disposition: inline; filename=relevant_config
-
-CONFIG_CFG80211=y
-CONFIG_NL80211=y
-CONFIG_MAC80211=y
-CONFIG_MAC80211_LEDS=y
-# CONFIG_MAC80211_DEBUG is not set
-# CONFIG_IEEE80211 is not set
-# CONFIG_WLAN_PRE80211 is not set
-CONFIG_WLAN_80211=y
-# CONFIG_BCM43XX_MAC80211 is not set
-CONFIG_RT2X00=m
-CONFIG_RT2X00_LIB=m
-CONFIG_RT2X00_LIB_PCI=m
-# CONFIG_RT2400PCI is not set
-CONFIG_RT2500PCI=m
-# CONFIG_RT2500USB is not set
-# CONFIG_RT2X00_DEBUG is not set
-# CONFIG_ZD1211RW_MAC80211 is not set
-
---NMuMz9nt05w80d4+--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 0492dd8..c72774f 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2935,6 +2935,16 @@ S:	Maintained
+ RISCOM8 DRIVER
+ S:	Orphan
+ 
++RTL818X WIRELESS DRIVER
++P:	Michael Wu
++M:	flamingice@sourmilk.net
++P:	Andrea Merello
++M:	andreamrl@tiscali.it
++L:	linux-wireless@vger.kernel.org
++W:	http://linuxwireless.org/
++T:	git kernel.org:/pub/scm/linux/kernel/git/mwu/mac80211-drivers.git
++S:	Maintained
++
+ S3 SAVAGE FRAMEBUFFER DRIVER
+ P:	Antonino Daplas
+ M:	adaplas@gmail.com
+diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+index a3c525b..607a180 100644
+--- a/drivers/misc/Kconfig
++++ b/drivers/misc/Kconfig
+@@ -178,4 +178,10 @@ config THINKPAD_ACPI_BAY
+ 
+ 	  If you are not sure, say Y here.
+ 
++config EEPROM_93CX6
++	tristate "EEPROM 93CX6 support"
++	---help---
++	  This is a driver for the EEPROM chipsets 93c46 and 93c66.
++	  The driver supports both read as well as write commands.
++
+ endmenu
+diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
+index e325164..42b34a9 100644
+--- a/drivers/misc/Makefile
++++ b/drivers/misc/Makefile
+@@ -13,3 +13,4 @@ obj-$(CONFIG_TIFM_7XX1)       	+= tifm_7xx1.o
+ obj-$(CONFIG_SGI_IOC4)		+= ioc4.o
+ obj-$(CONFIG_SONY_LAPTOP)	+= sony-laptop.o
+ obj-$(CONFIG_THINKPAD_ACPI)	+= thinkpad_acpi.o
++obj-$(CONFIG_EEPROM_93CX6)	+= eeprom_93cx6.o
+diff --git a/drivers/misc/eeprom_93cx6.c b/drivers/misc/eeprom_93cx6.c
+new file mode 100644
+index 0000000..a948ddc
+--- /dev/null
++++ b/drivers/misc/eeprom_93cx6.c
+@@ -0,0 +1,347 @@
++/*
++	Copyright (C) 2004 - 2006 rt2x00 SourceForge Project
++	<http://rt2x00.serialmonkey.com>
++
++	This program is free software; you can redistribute it and/or modify
++	it under the terms of the GNU General Public License as published by
++	the Free Software Foundation; either version 2 of the License, or
++	(at your option) any later version.
++
++	This program is distributed in the hope that it will be useful,
++	but WITHOUT ANY WARRANTY; without even the implied warranty of
++	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++	GNU General Public License for more details.
++
++	You should have received a copy of the GNU General Public License
++	along with this program; if not, write to the
++	Free Software Foundation, Inc.,
++	59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++/*
++	Module: eeprom_93cx6
++	Abstract: EEPROM reader routines for 93cx6 chipsets.
++	Supported chipsets: 93c46 & 93c66.
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/version.h>
++#include <linux/delay.h>
++#include <linux/eeprom_93cx6.h>
++
++MODULE_AUTHOR("http://rt2x00.serialmonkey.com");
++MODULE_VERSION("1.0");
++MODULE_DESCRIPTION("EEPROM 93cx6 chip driver");
++MODULE_LICENSE("GPL");
++
++static inline void eeprom_93cx6_pulse_high(struct eeprom_93cx6 *eeprom)
++{
++	eeprom->reg_data_clock = 1;
++	eeprom->register_write(eeprom);
++	udelay(1);
++}
++
++static inline void eeprom_93cx6_pulse_low(struct eeprom_93cx6 *eeprom)
++{
++	eeprom->reg_data_clock = 0;
++	eeprom->register_write(eeprom);
++	udelay(1);
++}
++
++static void eeprom_93cx6_startup(struct eeprom_93cx6 *eeprom)
++{
++	/*
++	 * Clear all flags, and enable chip select.
++	 */
++	eeprom->register_read(eeprom);
++	eeprom->reg_data_in = 0;
++	eeprom->reg_data_out = 0;
++	eeprom->reg_data_clock = 0;
++	eeprom->reg_chip_select = 1;
++	eeprom->register_write(eeprom);
++
++	/*
++	 * kick a pulse.
++	 */
++	eeprom_93cx6_pulse_high(eeprom);
++	eeprom_93cx6_pulse_low(eeprom);
++}
++
++static void eeprom_93cx6_cleanup(struct eeprom_93cx6 *eeprom)
++{
++	/*
++	 * Clear chip_select and data_in flags.
++	 */
++	eeprom->register_read(eeprom);
++	eeprom->reg_data_in = 0;
++	eeprom->reg_chip_select = 0;
++	eeprom->register_write(eeprom);
++
++	/*
++	 * kick a pulse.
++	 */
++	eeprom_93cx6_pulse_high(eeprom);
++	eeprom_93cx6_pulse_low(eeprom);
++}
++
++static void eeprom_93cx6_write_bits(struct eeprom_93cx6 *eeprom,
++	const u16 data, const u16 count)
++{
++	unsigned int i;
++
++	eeprom->register_read(eeprom);
++
++	/*
++	 * Clear data flags.
++	 */
++	eeprom->reg_data_in = 0;
++	eeprom->reg_data_out = 0;
++
++	/*
++	 * Start writing all bits.
++	 */
++	for (i = count; i > 0; i--) {
++		/*
++		 * Check if this bit needs to be set.
++		 */
++		eeprom->reg_data_in = !!(data & (1 << (i - 1)));
++
++		/*
++		 * Write the bit to the eeprom register.
++		 */
++		eeprom->register_write(eeprom);
++
++		/*
++		 * Kick a pulse.
++		 */
++		eeprom_93cx6_pulse_high(eeprom);
++		eeprom_93cx6_pulse_low(eeprom);
++	}
++
++	eeprom->reg_data_in = 0;
++	eeprom->register_write(eeprom);
++}
++
++static void eeprom_93cx6_read_bits(struct eeprom_93cx6 *eeprom,
++	u16 *data, const u16 count)
++{
++	unsigned int i;
++	u16 buf = 0;
++
++	eeprom->register_read(eeprom);
++
++	/*
++	 * Clear data flags.
++	 */
++	eeprom->reg_data_in = 0;
++	eeprom->reg_data_out = 0;
++
++	/*
++	 * Start reading all bits.
++	 */
++	for (i = count; i > 0; i--) {
++		eeprom_93cx6_pulse_high(eeprom);
++
++		eeprom->register_read(eeprom);
++
++		/*
++		 * Clear data_in flag.
++		 */
++		eeprom->reg_data_in = 0;
++
++		/*
++		 * Read if the bit has been set.
++		 */
++		if (eeprom->reg_data_out)
++			buf |= (1 << (i - 1));
++
++		eeprom_93cx6_pulse_low(eeprom);
++	}
++
++	*data = buf;
++}
++
++static void eeprom_93cx6_ewen(struct eeprom_93cx6 *eeprom)
++{
++	/*
++	 * Initialize the eeprom register
++	 */
++	eeprom_93cx6_startup(eeprom);
++
++	/*
++	 * Select the read opcode and the word to be read.
++	 */
++	eeprom_93cx6_write_bits(eeprom, PCI_EEPROM_EWEN_OPCODE, 5);
++	eeprom_93cx6_write_bits(eeprom, 0, 6);
++
++	/*
++	 * Cleanup eeprom register.
++	 */
++	eeprom_93cx6_cleanup(eeprom);
++}
++
++static void eeprom_93cx6_ewds(struct eeprom_93cx6 *eeprom)
++{
++	/*
++	 * Initialize the eeprom register
++	 */
++	eeprom_93cx6_startup(eeprom);
++
++	/*
++	 * Select the read opcode and the word to be read.
++	 */
++	eeprom_93cx6_write_bits(eeprom, PCI_EEPROM_EWDS_OPCODE, 5);
++	eeprom_93cx6_write_bits(eeprom, 0, 6);
++
++	/*
++	 * Cleanup eeprom register.
++	 */
++	eeprom_93cx6_cleanup(eeprom);
++}
++
++/**
++ * eeprom_93cx6_read - Read multiple words from eeprom
++ * @eeprom: Pointer to eeprom structure
++ * @word: Word index from where we should start reading
++ * @data: target pointer where the information will have to be stored
++ *
++ * This function will read the eeprom data as host-endian word
++ * into the given data pointer.
++ */
++void eeprom_93cx6_read(struct eeprom_93cx6 *eeprom, const u8 word,
++	u16 *data)
++{
++	u16 command;
++
++	/*
++	 * Initialize the eeprom register
++	 */
++	eeprom_93cx6_startup(eeprom);
++
++	/*
++	 * Select the read opcode and the word to be read.
++	 */
++	command = (PCI_EEPROM_READ_OPCODE << eeprom->width) | word;
++	eeprom_93cx6_write_bits(eeprom, command,
++		PCI_EEPROM_WIDTH_OPCODE + eeprom->width);
++
++	/*
++	 * Read the requested 16 bits.
++	 */
++	eeprom_93cx6_read_bits(eeprom, data, 16);
++
++	/*
++	 * Cleanup eeprom register.
++	 */
++	eeprom_93cx6_cleanup(eeprom);
++}
++EXPORT_SYMBOL_GPL(eeprom_93cx6_read);
++
++/**
++ * eeprom_93cx6_multiread - Read multiple words from eeprom
++ * @eeprom: Pointer to eeprom structure
++ * @word: Word index from where we should start reading
++ * @data: target pointer where the information will have to be stored
++ * @words: Number of words that should be read.
++ *
++ * This function will read all requested words from the eeprom,
++ * this is done by calling eeprom_93cx6_read() multiple times.
++ * But with the additional change that while the eeprom_93cx6_read
++ * will return host ordered bytes, this method will return little
++ * endian words.
++ */
++void eeprom_93cx6_multiread(struct eeprom_93cx6 *eeprom, const u8 word,
++	__le16 *data, const u16 words)
++{
++	unsigned int i;
++	u16 tmp;
++
++	for (i = 0; i < words; i++) {
++		tmp = 0;
++		eeprom_93cx6_read(eeprom, word + i, &tmp);
++		data[i] = cpu_to_le16(tmp);
++	}
++}
++EXPORT_SYMBOL_GPL(eeprom_93cx6_multiread);
++
++/**
++ * eeprom_93cx6_write - Write multiple words to the eeprom
++ * @eeprom: Pointer to eeprom structure
++ * @word: Word index from where we should start writing
++ * @data: Data that will be written
++ *
++ * This function will write the eeprom data as host-endian word
++ * from the given data pointer.
++ */
++void eeprom_93cx6_write(struct eeprom_93cx6 *eeprom, const u8 word,
++	u16 data)
++{
++	u16 command;
++
++	/*
++	 * select the ewen opcode.
++	 */
++	eeprom_93cx6_ewen(eeprom);
++
++	/*
++	 * Initialize the eeprom register
++	 */
++	eeprom_93cx6_startup(eeprom);
++
++	/*
++	 * Select the write opcode and the word to be read.
++	 */
++	command = (PCI_EEPROM_WRITE_OPCODE << eeprom->width) | word;
++	eeprom_93cx6_write_bits(eeprom, command,
++		PCI_EEPROM_WIDTH_OPCODE + eeprom->width);
++
++	/*
++	 * Write the requested 16 bits.
++	 */
++	eeprom_93cx6_write_bits(eeprom, data, 16);
++
++	/*
++	 * Cleanup eeprom register.
++	 */
++	eeprom_93cx6_cleanup(eeprom);
++
++	/*
++	 * Take a short break.
++	 */
++	msleep(10000);
++
++	/*
++	 * select the ewen opcode.
++	 */
++	eeprom_93cx6_ewds(eeprom);
++
++	/*
++	 * Cleanup eeprom register.
++	 */
++	eeprom_93cx6_cleanup(eeprom);
++}
++EXPORT_SYMBOL_GPL(eeprom_93cx6_write);
++
++
++/**
++ * eeprom_93cx6_multiwrite - Write multiple words to the eeprom
++ * @eeprom: Pointer to eeprom structure
++ * @word: Word index from where we should start writing
++ * @data: Pointer where the information will be read from
++ * @words: Number of words that should be written.
++ *
++ * This function will write all requested words to the eeprom,
++ * this is done by calling eeprom_93cx6_write() multiple times.
++ * This method accepts little endian data, so it will first be
++ * converted into host endian.
++ */
++void eeprom_93cx6_multiwrite(struct eeprom_93cx6 *eeprom, const u8 word,
++	__le16 *data, const u16 words)
++{
++	unsigned int i;
++
++	for (i = 0; i < words; i++)
++		eeprom_93cx6_write(eeprom, word + i, le16_to_cpu(data[i]));
++}
++EXPORT_SYMBOL_GPL(eeprom_93cx6_multiwrite);
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 0184614..6ff5a8a 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -267,7 +267,7 @@ config IPW2200_DEBUG
+ 
+ config LIBERTAS_USB
+ 	tristate "Marvell Libertas 8388 802.11a/b/g cards"
+-	depends on NET_RADIO && USB
++	depends on USB && WLAN_80211
+ 	select FW_LOADER
+ 	---help---
+ 	  A driver for Marvell Libertas 8388 USB devices.
+@@ -542,4 +542,6 @@ source "drivers/net/wireless/hostap/Kconfig"
+ source "drivers/net/wireless/bcm43xx/Kconfig"
+ source "drivers/net/wireless/zd1211rw/Kconfig"
+ 
++source "drivers/net/wireless/rtl818x/Kconfig"
++
+ endmenu
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index d212460..198c992 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -44,3 +44,6 @@ obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
+ 
+ obj-$(CONFIG_USB_ZD1201)	+= zd1201.o
+ obj-$(CONFIG_LIBERTAS_USB)     += libertas/
++
++# Drivers using mac80211 stack (net/mac80211)
++obj-$(CONFIG_RTL818X)		+= rtl818x/
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx.h b/drivers/net/wireless/bcm43xx/bcm43xx.h
+index f8483c1..10e07e8 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx.h
++++ b/drivers/net/wireless/bcm43xx/bcm43xx.h
+@@ -658,12 +658,6 @@ struct bcm43xx_pio {
+ 
+ #define BCM43xx_MAX_80211_CORES		2
+ 
+-#ifdef CONFIG_BCM947XX
+-#define core_offset(bcm) (bcm)->current_core_offset
+-#else
+-#define core_offset(bcm) 0
+-#endif
+-
+ /* Generic information about a core. */
+ struct bcm43xx_coreinfo {
+ 	u8 available:1,
+@@ -789,10 +783,6 @@ struct bcm43xx_private {
+ 
+ 	/* The currently active core. */
+ 	struct bcm43xx_coreinfo *current_core;
+-#ifdef CONFIG_BCM947XX
+-	/** current core memory offset */
+-	u32 current_core_offset;
+-#endif
+ 	struct bcm43xx_coreinfo *active_80211_core;
+ 	/* coreinfo structs for all possible cores follow.
+ 	 * Note that a core might not exist.
+@@ -943,25 +933,25 @@ struct bcm43xx_lopair * bcm43xx_get_lopair(struct bcm43xx_phyinfo *phy,
+ static inline
+ u16 bcm43xx_read16(struct bcm43xx_private *bcm, u16 offset)
+ {
+-	return ioread16(bcm->mmio_addr + core_offset(bcm) + offset);
++	return ioread16(bcm->mmio_addr + offset);
+ }
+ 
+ static inline
+ void bcm43xx_write16(struct bcm43xx_private *bcm, u16 offset, u16 value)
+ {
+-	iowrite16(value, bcm->mmio_addr + core_offset(bcm) + offset);
++	iowrite16(value, bcm->mmio_addr + offset);
+ }
+ 
+ static inline
+ u32 bcm43xx_read32(struct bcm43xx_private *bcm, u16 offset)
+ {
+-	return ioread32(bcm->mmio_addr + core_offset(bcm) + offset);
++	return ioread32(bcm->mmio_addr + offset);
+ }
+ 
+ static inline
+ void bcm43xx_write32(struct bcm43xx_private *bcm, u16 offset, u32 value)
+ {
+-	iowrite32(value, bcm->mmio_addr + core_offset(bcm) + offset);
++	iowrite32(value, bcm->mmio_addr + offset);
+ }
+ 
+ static inline
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_dma.c b/drivers/net/wireless/bcm43xx/bcm43xx_dma.c
+index e3d2e61..1f7731f 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_dma.c
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_dma.c
+@@ -660,10 +660,6 @@ struct bcm43xx_dmaring * bcm43xx_setup_dmaring(struct bcm43xx_private *bcm,
+ 	ring->routing = BCM43xx_DMA32_CLIENTTRANS;
+ 	if (dma64)
+ 		ring->routing = BCM43xx_DMA64_CLIENTTRANS;
+-#ifdef CONFIG_BCM947XX
+-	if (bcm->pci_dev->bus->number == 0)
+-		ring->routing = dma64 ? BCM43xx_DMA64_NOTRANS : BCM43xx_DMA32_NOTRANS;
+-#endif
+ 
+ 	ring->bcm = bcm;
+ 	ring->nr_slots = nr_slots;
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+index 5e96bca..ef6b253 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_main.c
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+@@ -61,10 +61,6 @@ MODULE_AUTHOR("Stefano Brivio");
+ MODULE_AUTHOR("Michael Buesch");
+ MODULE_LICENSE("GPL");
+ 
+-#ifdef CONFIG_BCM947XX
+-extern char *nvram_get(char *name);
+-#endif
+-
+ #if defined(CONFIG_BCM43XX_DMA) && defined(CONFIG_BCM43XX_PIO)
+ static int modparam_pio;
+ module_param_named(pio, modparam_pio, int, 0444);
+@@ -142,10 +138,6 @@ MODULE_PARM_DESC(fwpostfix, "Postfix for .fw files. Useful for using multiple fi
+ 	{ PCI_VENDOR_ID_BROADCOM, 0x4324, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+ 	/* Broadcom 43XG 802.11b/g */
+ 	{ PCI_VENDOR_ID_BROADCOM, 0x4325, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+-#ifdef CONFIG_BCM947XX
+-	/* SB bus on BCM947xx */
+-	{ PCI_VENDOR_ID_BROADCOM, 0x0800, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+-#endif
+ 	{ 0 },
+ };
+ MODULE_DEVICE_TABLE(pci, bcm43xx_pci_tbl);
+@@ -786,9 +778,6 @@ static int bcm43xx_sprom_extract(struct bcm43xx_private *bcm)
+ {
+ 	u16 value;
+ 	u16 *sprom;
+-#ifdef CONFIG_BCM947XX
+-	char *c;
+-#endif
+ 
+ 	sprom = kzalloc(BCM43xx_SPROM_SIZE * sizeof(u16),
+ 			GFP_KERNEL);
+@@ -796,28 +785,7 @@ static int bcm43xx_sprom_extract(struct bcm43xx_private *bcm)
+ 		printk(KERN_ERR PFX "sprom_extract OOM\n");
+ 		return -ENOMEM;
+ 	}
+-#ifdef CONFIG_BCM947XX
+-	sprom[BCM43xx_SPROM_BOARDFLAGS2] = atoi(nvram_get("boardflags2"));
+-	sprom[BCM43xx_SPROM_BOARDFLAGS] = atoi(nvram_get("boardflags"));
+-
+-	if ((c = nvram_get("il0macaddr")) != NULL)
+-		e_aton(c, (char *) &(sprom[BCM43xx_SPROM_IL0MACADDR]));
+-
+-	if ((c = nvram_get("et1macaddr")) != NULL)
+-		e_aton(c, (char *) &(sprom[BCM43xx_SPROM_ET1MACADDR]));
+-
+-	sprom[BCM43xx_SPROM_PA0B0] = atoi(nvram_get("pa0b0"));
+-	sprom[BCM43xx_SPROM_PA0B1] = atoi(nvram_get("pa0b1"));
+-	sprom[BCM43xx_SPROM_PA0B2] = atoi(nvram_get("pa0b2"));
+-
+-	sprom[BCM43xx_SPROM_PA1B0] = atoi(nvram_get("pa1b0"));
+-	sprom[BCM43xx_SPROM_PA1B1] = atoi(nvram_get("pa1b1"));
+-	sprom[BCM43xx_SPROM_PA1B2] = atoi(nvram_get("pa1b2"));
+-
+-	sprom[BCM43xx_SPROM_BOARDREV] = atoi(nvram_get("boardrev"));
+-#else
+ 	bcm43xx_sprom_read(bcm, sprom);
+-#endif
+ 
+ 	/* boardflags2 */
+ 	value = sprom[BCM43xx_SPROM_BOARDFLAGS2];
+@@ -1225,12 +1193,6 @@ static int _switch_core(struct bcm43xx_private *bcm, int core)
+ 			goto error;
+ 		udelay(10);
+ 	}
+-#ifdef CONFIG_BCM947XX
+-	if (bcm->pci_dev->bus->number == 0)
+-		bcm->current_core_offset = 0x1000 * core;
+-	else
+-		bcm->current_core_offset = 0;
+-#endif
+ 
+ 	return 0;
+ error:
+@@ -1387,19 +1349,6 @@ void bcm43xx_wireless_core_reset(struct bcm43xx_private *bcm, int connect_phy)
+ 
+ 	if ((bcm43xx_core_enabled(bcm)) &&
+ 	    !bcm43xx_using_pio(bcm)) {
+-//FIXME: Do we _really_ want #ifndef CONFIG_BCM947XX here?
+-#if 0
+-#ifndef CONFIG_BCM947XX
+-		/* reset all used DMA controllers. */
+-		bcm43xx_dmacontroller_tx_reset(bcm, BCM43xx_MMIO_DMA1_BASE);
+-		bcm43xx_dmacontroller_tx_reset(bcm, BCM43xx_MMIO_DMA2_BASE);
+-		bcm43xx_dmacontroller_tx_reset(bcm, BCM43xx_MMIO_DMA3_BASE);
+-		bcm43xx_dmacontroller_tx_reset(bcm, BCM43xx_MMIO_DMA4_BASE);
+-		bcm43xx_dmacontroller_rx_reset(bcm, BCM43xx_MMIO_DMA1_BASE);
+-		if (bcm->current_core->rev < 5)
+-			bcm43xx_dmacontroller_rx_reset(bcm, BCM43xx_MMIO_DMA4_BASE);
+-#endif
+-#endif
+ 	}
+ 	if (bcm43xx_status(bcm) == BCM43xx_STAT_SHUTTINGDOWN) {
+ 		bcm43xx_write32(bcm, BCM43xx_MMIO_STATUS_BITFIELD,
+@@ -2140,32 +2089,11 @@ out:
+ 	return err;
+ }
+ 
+-#ifdef CONFIG_BCM947XX
+-static struct pci_device_id bcm43xx_47xx_ids[] = {
+-	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4324) },
+-	{ 0 }
+-};
+-#endif
+-
+ static int bcm43xx_initialize_irq(struct bcm43xx_private *bcm)
+ {
+ 	int err;
+ 
+ 	bcm->irq = bcm->pci_dev->irq;
+-#ifdef CONFIG_BCM947XX
+-	if (bcm->pci_dev->bus->number == 0) {
+-		struct pci_dev *d;
+-		struct pci_device_id *id;
+-		for (id = bcm43xx_47xx_ids; id->vendor; id++) {
+-			d = pci_get_device(id->vendor, id->device, NULL);
+-			if (d != NULL) {
+-				bcm->irq = d->irq;
+-				pci_dev_put(d);
+-				break;
+-			}
+-		}
+-	}
+-#endif
+ 	err = request_irq(bcm->irq, bcm43xx_interrupt_handler,
+ 			  IRQF_SHARED, KBUILD_MODNAME, bcm);
+ 	if (err)
+@@ -2645,10 +2573,6 @@ static int bcm43xx_probe_cores(struct bcm43xx_private *bcm)
+ 			chip_id_16 = 0x4610;
+ 		else if ((pci_device >= 0x4710) && (pci_device <= 0x4715))
+ 			chip_id_16 = 0x4710;
+-#ifdef CONFIG_BCM947XX
+-		else if ((pci_device >= 0x4320) && (pci_device <= 0x4325))
+-			chip_id_16 = 0x4309;
+-#endif
+ 		else {
+ 			printk(KERN_ERR PFX "Could not determine Chip ID\n");
+ 			return -ENODEV;
+@@ -4144,11 +4068,6 @@ static int __devinit bcm43xx_init_one(struct pci_dev *pdev,
+ 	struct bcm43xx_private *bcm;
+ 	int err;
+ 
+-#ifdef CONFIG_BCM947XX
+-	if ((pdev->bus->number == 0) && (pdev->device != 0x0800))
+-		return -ENODEV;
+-#endif
+-
+ #ifdef DEBUG_SINGLE_DEVICE_ONLY
+ 	if (strcmp(pci_name(pdev), DEBUG_SINGLE_DEVICE_ONLY))
+ 		return -ENODEV;
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_main.h b/drivers/net/wireless/bcm43xx/bcm43xx_main.h
+index f763571..c8f3c53 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_main.h
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_main.h
+@@ -33,25 +33,6 @@
+ 
+ #include "bcm43xx.h"
+ 
+-#ifdef CONFIG_BCM947XX
+-#define atoi(str) simple_strtoul(((str != NULL) ? str : ""), NULL, 0)
+-
+-static inline void e_aton(char *str, char *dest)
+-{
+-	int i = 0;
+-	u16 *d = (u16 *) dest;
+-
+-	for (;;) {
+-		dest[i++] = (char) simple_strtoul(str, NULL, 16);
+-		str += 2;
+-		if (!*str++ || i == 6)
+-			break;
+-	}
+-	for (i = 0; i < 3; i++)
+-		d[i] = cpu_to_be16(d[i]);
+-}
+-#endif
+-
+ #define P4D_BYT3S(magic, nr_bytes)	u8 __p4dding##magic[nr_bytes]
+ #define P4D_BYTES(line, nr_bytes)	P4D_BYT3S(line, nr_bytes)
+ /* Magic helper macro to pad structures. Ignore those above. It's magic. */
+diff --git a/drivers/net/wireless/rtl818x/Kconfig b/drivers/net/wireless/rtl818x/Kconfig
+new file mode 100644
+index 0000000..e2c27f8
+--- /dev/null
++++ b/drivers/net/wireless/rtl818x/Kconfig
+@@ -0,0 +1,16 @@
++config RTL818X
++	bool
++	default n
++
++config RTL8187
++	tristate "Realtek 8187 USB support"
++	depends on MAC80211 && USB && WLAN_80211 && EXPERIMENTAL
++	select RTL818X
++	select EEPROM_93CX6
++	---help---
++	  This is a driver for RTL8187 based cards.
++	  These are USB based chips found in cards such as:
++
++	  Netgear WG111v2
++
++	  Thanks to Realtek for their support!
+diff --git a/drivers/net/wireless/rtl818x/Makefile b/drivers/net/wireless/rtl818x/Makefile
+new file mode 100644
+index 0000000..fe5dd6f
+--- /dev/null
++++ b/drivers/net/wireless/rtl818x/Makefile
+@@ -0,0 +1,2 @@
++rtl8187-objs		:= rtl8187_dev.o rtl8187_rtl8225.o
++obj-$(CONFIG_RTL8187)	+= rtl8187.o
+diff --git a/drivers/net/wireless/rtl818x/rtl8187.h b/drivers/net/wireless/rtl818x/rtl8187.h
+new file mode 100644
+index 0000000..bd0b6f9
+--- /dev/null
++++ b/drivers/net/wireless/rtl818x/rtl8187.h
+@@ -0,0 +1,125 @@
++#ifndef RTL8187_H
++#define RTL8187_H
++
++#include "rtl818x.h"
++
++#define RTL8187_REQT_READ	0xC0
++#define RTL8187_REQT_WRITE	0x40
++#define RTL8187_REQ_GET_REG	0x05
++#define RTL8187_REQ_SET_REG	0x05
++
++#define RTL8187_MAX_RX		0x9C4
++
++struct rtl8187_rx_info {
++	struct urb *urb;
++	struct ieee80211_hw *dev;
++};
++
++struct rtl8187_rx_hdr {
++	__le16 len;
++	__le16 rate;
++	u8 noise;
++	u8 signal;
++	u8 agc;
++	u8 reserved;
++	__le64 mac_time;
++} __attribute__((packed));
++
++struct rtl8187_tx_info {
++	struct ieee80211_tx_control *control;
++	struct urb *urb;
++	struct ieee80211_hw *dev;
++};
++
++struct rtl8187_tx_hdr {
++	__le32 flags;
++#define RTL8187_TX_FLAG_NO_ENCRYPT	(1 << 15)
++#define RTL8187_TX_FLAG_MORE_FRAG	(1 << 17)
++#define RTL8187_TX_FLAG_CTS		(1 << 18)
++#define RTL8187_TX_FLAG_RTS		(1 << 23)
++	__le16 rts_duration;
++	__le16 len;
++	__le32 retry;
++} __attribute__((packed));
++
++struct rtl8187_priv {
++	/* common between rtl818x drivers */
++	struct rtl818x_csr *map;
++	void (*rf_init)(struct ieee80211_hw *);
++	int mode;
++
++	/* rtl8187 specific */
++	struct ieee80211_channel channels[14];
++	struct ieee80211_rate rates[12];
++	struct ieee80211_hw_mode modes[2];
++	struct usb_device *udev;
++	u8 *hwaddr;
++	u16 txpwr_base;
++	u8 asic_rev;
++	struct sk_buff_head rx_queue;
++};
++
++void rtl8187_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
++
++static inline u8 rtl818x_ioread8(struct rtl8187_priv *priv, u8 *addr)
++{
++	u8 val;
++
++	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
++			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
++			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++
++	return val;
++}
++
++static inline u16 rtl818x_ioread16(struct rtl8187_priv *priv, __le16 *addr)
++{
++	__le16 val;
++
++	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
++			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
++			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++
++	return le16_to_cpu(val);
++}
++
++static inline u32 rtl818x_ioread32(struct rtl8187_priv *priv, __le32 *addr)
++{
++	__le32 val;
++
++	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
++			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
++			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++
++	return le32_to_cpu(val);
++}
++
++static inline void rtl818x_iowrite8(struct rtl8187_priv *priv,
++				    u8 *addr, u8 val)
++{
++	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
++			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
++			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++}
++
++static inline void rtl818x_iowrite16(struct rtl8187_priv *priv,
++				     __le16 *addr, u16 val)
++{
++	__le16 buf = cpu_to_le16(val);
++
++	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
++			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
++			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
++}
++
++static inline void rtl818x_iowrite32(struct rtl8187_priv *priv,
++				     __le32 *addr, u32 val)
++{
++	__le32 buf = cpu_to_le32(val);
++
++	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
++			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
++			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
++}
++
++#endif /* RTL8187_H */
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+new file mode 100644
+index 0000000..8f9e781
+--- /dev/null
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -0,0 +1,730 @@
++
++/*
++ * Linux device driver for RTL8187
++ *
++ * Copyright 2007 Michael Wu <flamingice@sourmilk.net>
++ * Copyright 2007 Andrea Merello <andreamrl@tiscali.it>
++ *
++ * Based on the r8187 driver, which is:
++ * Copyright 2005 Andrea Merello <andreamrl@tiscali.it>, et al.
++ *
++ * Thanks to Realtek for their support!
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/init.h>
++#include <linux/usb.h>
++#include <linux/delay.h>
++#include <linux/etherdevice.h>
++#include <linux/eeprom_93cx6.h>
++#include <net/mac80211.h>
++
++#include "rtl8187.h"
++#include "rtl8187_rtl8225.h"
++
++MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
++MODULE_AUTHOR("Andrea Merello <andreamrl@tiscali.it>");
++MODULE_DESCRIPTION("RTL8187 USB wireless driver");
++MODULE_LICENSE("GPL");
++
++static struct usb_device_id rtl8187_table[] __devinitdata = {
++	/* Realtek */
++	{USB_DEVICE(0x0bda, 0x8187)},
++	/* Netgear */
++	{USB_DEVICE(0x0846, 0x6100)},
++	{USB_DEVICE(0x0846, 0x6a00)},
++	{}
++};
++
++MODULE_DEVICE_TABLE(usb, rtl8187_table);
++
++void rtl8187_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data)
++{
++	struct rtl8187_priv *priv = dev->priv;
++
++	data <<= 8;
++	data |= addr | 0x80;
++
++	rtl818x_iowrite8(priv, &priv->map->PHY[3], (data >> 24) & 0xFF);
++	rtl818x_iowrite8(priv, &priv->map->PHY[2], (data >> 16) & 0xFF);
++	rtl818x_iowrite8(priv, &priv->map->PHY[1], (data >> 8) & 0xFF);
++	rtl818x_iowrite8(priv, &priv->map->PHY[0], data & 0xFF);
++
++	mdelay(1);
++}
++
++static void rtl8187_tx_cb(struct urb *urb)
++{
++	struct ieee80211_tx_status status = { {0} };
++	struct sk_buff *skb = (struct sk_buff *)urb->context;
++	struct rtl8187_tx_info *info = (struct rtl8187_tx_info *)skb->cb;
++
++	usb_free_urb(info->urb);
++	if (info->control)
++		memcpy(&status.control, info->control, sizeof(status.control));
++	kfree(info->control);
++	skb_pull(skb, sizeof(struct rtl8187_tx_hdr));
++	status.flags |= IEEE80211_TX_STATUS_ACK;
++	ieee80211_tx_status_irqsafe(info->dev, skb, &status);
++}
++
++static int rtl8187_tx(struct ieee80211_hw *dev, struct sk_buff *skb,
++		      struct ieee80211_tx_control *control)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	struct rtl8187_tx_hdr *hdr;
++	struct rtl8187_tx_info *info;
++	struct urb *urb;
++	u32 tmp;
++
++	urb = usb_alloc_urb(0, GFP_ATOMIC);
++	if (!urb) {
++		kfree_skb(skb);
++		return 0;
++	}
++
++	hdr = (struct rtl8187_tx_hdr *)skb_push(skb, sizeof(*hdr));
++	tmp = skb->len - sizeof(*hdr);
++	tmp |= RTL8187_TX_FLAG_NO_ENCRYPT;
++	tmp |= control->rts_cts_rate << 19;
++	tmp |= control->tx_rate << 24;
++	if (ieee80211_get_morefrag((struct ieee80211_hdr *)skb))
++		tmp |= RTL8187_TX_FLAG_MORE_FRAG;
++	if (control->flags & IEEE80211_TXCTL_USE_RTS_CTS) {
++		tmp |= RTL8187_TX_FLAG_RTS;
++		hdr->rts_duration =
++			ieee80211_rts_duration(dev, skb->len, control);
++	}
++	if (control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT)
++		tmp |= RTL8187_TX_FLAG_CTS;
++	hdr->flags = cpu_to_le32(tmp);
++	hdr->len = 0;
++	tmp = control->retry_limit << 8;
++	hdr->retry = cpu_to_le32(tmp);
++
++	info = (struct rtl8187_tx_info *)skb->cb;
++	info->control = kmemdup(control, sizeof(*control), GFP_ATOMIC);
++	info->urb = urb;
++	info->dev = dev;
++	usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, 2),
++			  hdr, skb->len, rtl8187_tx_cb, skb);
++	usb_submit_urb(urb, GFP_ATOMIC);
++
++	return 0;
++}
++
++static void rtl8187_rx_cb(struct urb *urb)
++{
++	struct sk_buff *skb = (struct sk_buff *)urb->context;
++	struct rtl8187_rx_info *info = (struct rtl8187_rx_info *)skb->cb;
++	struct ieee80211_hw *dev = info->dev;
++	struct rtl8187_priv *priv = dev->priv;
++	struct rtl8187_rx_hdr *hdr;
++	struct ieee80211_rx_status rx_status = { 0 };
++	int rate, signal;
++
++	if (unlikely(urb->status)) {
++		info->urb = NULL;
++		usb_free_urb(urb);
++		return;
++	}
++
++	skb_unlink(skb, &priv->rx_queue);
++	skb_put(skb, urb->actual_length);
++	hdr = (struct rtl8187_rx_hdr *)(skb_tail_pointer(skb) - sizeof(*hdr));
++	skb_trim(skb, le16_to_cpu(hdr->len) & 0x0FFF);
++
++	signal = hdr->agc >> 1;
++	rate = (le16_to_cpu(hdr->rate) >> 4) & 0xF;
++	if (rate > 3) {	/* OFDM rate */
++		if (signal > 90)
++			signal = 90;
++		else if (signal < 25)
++			signal = 25;
++		signal = 90 - signal;
++	} else {	/* CCK rate */
++		if (signal > 95)
++			signal = 95;
++		else if (signal < 30)
++			signal = 30;
++		signal = 95 - signal;
++	}
++
++	rx_status.antenna = (hdr->signal >> 7) & 1;
++	rx_status.signal = 64 - min(hdr->noise, (u8)64);
++	rx_status.ssi = signal;
++	rx_status.rate = rate;
++	rx_status.freq = dev->conf.freq;
++	rx_status.channel = dev->conf.channel;
++	rx_status.phymode = dev->conf.phymode;
++	rx_status.mactime = le64_to_cpu(hdr->mac_time);
++	ieee80211_rx_irqsafe(dev, skb, &rx_status);
++
++	skb = dev_alloc_skb(RTL8187_MAX_RX);
++	if (unlikely(!skb)) {
++		usb_free_urb(urb);
++		/* TODO check rx queue length and refill *somewhere* */
++		return;
++	}
++
++	info = (struct rtl8187_rx_info *)skb->cb;
++	info->urb = urb;
++	info->dev = dev;
++	urb->transfer_buffer = skb_tail_pointer(skb);
++	urb->context = skb;
++	skb_queue_tail(&priv->rx_queue, skb);
++
++	usb_submit_urb(urb, GFP_ATOMIC);
++}
++
++static int rtl8187_init_urbs(struct ieee80211_hw *dev)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	struct urb *entry;
++	struct sk_buff *skb;
++	struct rtl8187_rx_info *info;
++
++	while (skb_queue_len(&priv->rx_queue) < 8) {
++		skb = __dev_alloc_skb(RTL8187_MAX_RX, GFP_KERNEL);
++		if (!skb)
++			break;
++		entry = usb_alloc_urb(0, GFP_KERNEL);
++		if (!entry) {
++			kfree_skb(skb);
++			break;
++		}
++		usb_fill_bulk_urb(entry, priv->udev,
++				  usb_rcvbulkpipe(priv->udev, 1),
++				  skb_tail_pointer(skb),
++				  RTL8187_MAX_RX, rtl8187_rx_cb, skb);
++		info = (struct rtl8187_rx_info *)skb->cb;
++		info->urb = entry;
++		info->dev = dev;
++		skb_queue_tail(&priv->rx_queue, skb);
++		usb_submit_urb(entry, GFP_KERNEL);
++	}
++
++	return 0;
++}
++
++static int rtl8187_init_hw(struct ieee80211_hw *dev)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	u8 reg;
++	int i;
++
++	/* reset */
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, RTL8225_ANAPARAM_ON);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
++
++	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0);
++
++	mdelay(200);
++	rtl818x_iowrite8(priv, (u8 *)0xFE18, 0x10);
++	rtl818x_iowrite8(priv, (u8 *)0xFE18, 0x11);
++	rtl818x_iowrite8(priv, (u8 *)0xFE18, 0x00);
++	mdelay(200);
++
++	reg = rtl818x_ioread8(priv, &priv->map->CMD);
++	reg &= (1 << 1);
++	reg |= RTL818X_CMD_RESET;
++	rtl818x_iowrite8(priv, &priv->map->CMD, reg);
++
++	i = 10;
++	do {
++		mdelay(2);
++		if (!(rtl818x_ioread8(priv, &priv->map->CMD) &
++		      RTL818X_CMD_RESET))
++			break;
++	} while (--i);
++
++	if (!i) {
++		printk(KERN_ERR "%s: Reset timeout!\n", wiphy_name(dev->wiphy));
++		return -ETIMEDOUT;
++	}
++
++	/* reload registers from eeprom */
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_LOAD);
++
++	i = 10;
++	do {
++		mdelay(4);
++		if (!(rtl818x_ioread8(priv, &priv->map->EEPROM_CMD) &
++		      RTL818X_EEPROM_CMD_CONFIG))
++			break;
++	} while (--i);
++
++	if (!i) {
++		printk(KERN_ERR "%s: eeprom reset timeout!\n",
++		       wiphy_name(dev->wiphy));
++		return -ETIMEDOUT;
++	}
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, RTL8225_ANAPARAM_ON);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
++
++	/* setup card */
++	rtl818x_iowrite8(priv, (u8 *)0xFF85, 0);
++	rtl818x_iowrite8(priv, &priv->map->GPIO, 0);
++
++	rtl818x_iowrite8(priv, (u8 *)0xFF85, 4);
++	rtl818x_iowrite8(priv, &priv->map->GPIO, 1);
++	rtl818x_iowrite8(priv, &priv->map->GP_ENABLE, 0);
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
++	for (i = 0; i < ETH_ALEN; i++)
++		rtl818x_iowrite8(priv, &priv->map->MAC[i], priv->hwaddr[i]);
++
++	rtl818x_iowrite16(priv, (__le16 *)0xFFF4, 0xFFFF);
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG1);
++	reg &= 0x3F;
++	reg |= 0x80;
++	rtl818x_iowrite8(priv, &priv->map->CONFIG1, reg);
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
++
++	rtl818x_iowrite32(priv, &priv->map->INT_TIMEOUT, 0);
++	rtl818x_iowrite8(priv, &priv->map->WPA_CONF, 0);
++	rtl818x_iowrite8(priv, &priv->map->RATE_FALLBACK, 0x81);
++
++	// TODO: set RESP_RATE and BRSR properly
++	rtl818x_iowrite8(priv, &priv->map->RESP_RATE, (8 << 4) | 0);
++	rtl818x_iowrite16(priv, &priv->map->BRSR, 0x01F3);
++
++	/* host_usb_init */
++	rtl818x_iowrite8(priv, (u8 *)0xFF85, 0);
++	rtl818x_iowrite8(priv, &priv->map->GPIO, 0);
++	reg = rtl818x_ioread8(priv, (u8 *)0xFE53);
++	rtl818x_iowrite8(priv, (u8 *)0xFE53, reg | (1 << 7));
++	rtl818x_iowrite8(priv, (u8 *)0xFF85, 4);
++	rtl818x_iowrite8(priv, &priv->map->GPIO, 0x20);
++	rtl818x_iowrite8(priv, &priv->map->GP_ENABLE, 0);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, 0x80);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, 0x80);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x80);
++	mdelay(100);
++
++	rtl818x_iowrite32(priv, &priv->map->RF_TIMING, 0x000a8008);
++	rtl818x_iowrite16(priv, &priv->map->BRSR, 0xFFFF);
++	rtl818x_iowrite32(priv, &priv->map->RF_PARA, 0x00100044);
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, 0x44);
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FF7);
++	mdelay(100);
++
++	priv->rf_init(dev);
++
++	rtl818x_iowrite16(priv, &priv->map->BRSR, 0x01F3);
++	reg = rtl818x_ioread16(priv, &priv->map->PGSELECT) & 0xfffe;
++	rtl818x_iowrite16(priv, &priv->map->PGSELECT, reg | 0x1);
++	rtl818x_iowrite16(priv, (__le16 *)0xFFFE, 0x10);
++	rtl818x_iowrite8(priv, &priv->map->TALLY_SEL, 0x80);
++	rtl818x_iowrite8(priv, (u8 *)0xFFFF, 0x60);
++	rtl818x_iowrite16(priv, &priv->map->PGSELECT, reg);
++
++	return 0;
++}
++
++static void rtl8187_set_channel(struct ieee80211_hw *dev, int channel)
++{
++	u32 reg;
++	struct rtl8187_priv *priv = dev->priv;
++
++	reg = rtl818x_ioread32(priv, &priv->map->TX_CONF);
++	/* Enable TX loopback on MAC level to avoid TX during channel
++	 * changes, as this has be seen to causes problems and the
++	 * card will stop work until next reset
++	 */
++	rtl818x_iowrite32(priv, &priv->map->TX_CONF,
++			  reg | RTL818X_TX_CONF_LOOPBACK_MAC);
++	mdelay(10);
++	rtl8225_rf_set_channel(dev, channel);
++	mdelay(10);
++	rtl818x_iowrite32(priv, &priv->map->TX_CONF, reg);
++}
++
++static int rtl8187_open(struct ieee80211_hw *dev)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	u32 reg;
++	int ret;
++
++	ret = rtl8187_init_hw(dev);
++	if (ret)
++		return ret;
++
++	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0xFFFF);
++
++	rtl8187_init_urbs(dev);
++
++	reg = RTL818X_RX_CONF_ONLYERLPKT |
++	      RTL818X_RX_CONF_RX_AUTORESETPHY |
++	      RTL818X_RX_CONF_BSSID |
++	      RTL818X_RX_CONF_MGMT |
++	      RTL818X_RX_CONF_CTRL |
++	      RTL818X_RX_CONF_DATA |
++	      (7 << 13 /* RX FIFO threshold NONE */) |
++	      (7 << 10 /* MAX RX DMA */) |
++	      RTL818X_RX_CONF_BROADCAST |
++	      RTL818X_RX_CONF_MULTICAST |
++	      RTL818X_RX_CONF_NICMAC;
++	if (priv->mode == IEEE80211_IF_TYPE_MNTR)
++		reg |= RTL818X_RX_CONF_MONITOR;
++
++	rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
++
++	reg = rtl818x_ioread8(priv, &priv->map->CW_CONF);
++	reg &= ~RTL818X_CW_CONF_PERPACKET_CW_SHIFT;
++	reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
++	rtl818x_iowrite8(priv, &priv->map->CW_CONF, reg);
++
++	reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
++	reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT;
++	reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
++	reg &= ~RTL818X_TX_AGC_CTL_FEEDBACK_ANT;
++	rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
++
++	reg  = RTL818X_TX_CONF_CW_MIN |
++	       (7 << 21 /* MAX TX DMA */) |
++	       RTL818X_TX_CONF_NO_ICV;
++	rtl818x_iowrite32(priv, &priv->map->TX_CONF, reg);
++
++	reg = rtl818x_ioread8(priv, &priv->map->CMD);
++	reg |= RTL818X_CMD_TX_ENABLE;
++	reg |= RTL818X_CMD_RX_ENABLE;
++	rtl818x_iowrite8(priv, &priv->map->CMD, reg);
++
++	return 0;
++}
++
++static int rtl8187_stop(struct ieee80211_hw *dev)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	struct rtl8187_rx_info *info;
++	struct sk_buff *skb;
++	u32 reg;
++
++	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0);
++
++	reg = rtl818x_ioread8(priv, &priv->map->CMD);
++	reg &= ~RTL818X_CMD_TX_ENABLE;
++	reg &= ~RTL818X_CMD_RX_ENABLE;
++	rtl818x_iowrite8(priv, &priv->map->CMD, reg);
++
++	rtl8225_rf_stop(dev);
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG4);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG4, reg | RTL818X_CONFIG4_VCOOFF);
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
++
++	while ((skb = skb_dequeue(&priv->rx_queue))) {
++		info = (struct rtl8187_rx_info *)skb->cb;
++		if (!info->urb)
++			continue;
++
++		usb_kill_urb(info->urb);
++		kfree_skb(skb);
++	}
++	return 0;
++}
++
++static int rtl8187_add_interface(struct ieee80211_hw *dev,
++				 struct ieee80211_if_init_conf *conf)
++{
++	struct rtl8187_priv *priv = dev->priv;
++
++	/* NOTE: using IEEE80211_IF_TYPE_MGMT to indicate no mode selected */
++	if (priv->mode != IEEE80211_IF_TYPE_MGMT)
++		return -1;
++
++	switch (conf->type) {
++	case IEEE80211_IF_TYPE_STA:
++	case IEEE80211_IF_TYPE_MNTR:
++		priv->mode = conf->type;
++		break;
++	default:
++		return -EOPNOTSUPP;
++	}
++
++	priv->hwaddr = conf->mac_addr;
++
++	return 0;
++}
++
++static void rtl8187_remove_interface(struct ieee80211_hw *dev,
++				     struct ieee80211_if_init_conf *conf)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	priv->mode = IEEE80211_IF_TYPE_MGMT;
++}
++
++static int rtl8187_config(struct ieee80211_hw *dev, struct ieee80211_conf *conf)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	rtl8187_set_channel(dev, conf->channel);
++
++	rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
++
++	if (conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME)
++		rtl818x_iowrite8(priv, &priv->map->SLOT, 0x9);
++	else
++		rtl818x_iowrite8(priv, &priv->map->SLOT, 0x14);
++
++	switch (conf->phymode) {
++	case MODE_IEEE80211B:
++		rtl818x_iowrite8(priv, &priv->map->DIFS, 0x24);
++		rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x24);
++		rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0xa5);
++		break;
++	case MODE_IEEE80211G:
++		rtl818x_iowrite8(priv, &priv->map->DIFS, 0x14);
++		rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x14);
++		rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0x73);
++		break;
++	default:
++		BUG();
++		break;
++	}
++
++	rtl818x_iowrite16(priv, &priv->map->ATIM_WND, 2);
++	rtl818x_iowrite16(priv, &priv->map->ATIMTR_INTERVAL, 100);
++	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL, 100);
++	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL_TIME, 100);
++	return 0;
++}
++
++static int rtl8187_config_interface(struct ieee80211_hw *dev, int if_id,
++				    struct ieee80211_if_conf *conf)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	int i;
++
++	for (i = 0; i < ETH_ALEN; i++)
++		rtl818x_iowrite8(priv, &priv->map->BSSID[i], conf->bssid[i]);
++
++	if (is_valid_ether_addr(conf->bssid))
++		rtl818x_iowrite8(priv, &priv->map->MSR, RTL818X_MSR_INFRA);
++	else
++		rtl818x_iowrite8(priv, &priv->map->MSR, RTL818X_MSR_NO_LINK);
++
++	return 0;
++}
++
++static const struct ieee80211_ops rtl8187_ops = {
++	.tx			= rtl8187_tx,
++	.open			= rtl8187_open,
++	.stop			= rtl8187_stop,
++	.add_interface		= rtl8187_add_interface,
++	.remove_interface	= rtl8187_remove_interface,
++	.config			= rtl8187_config,
++	.config_interface	= rtl8187_config_interface,
++};
++
++static void rtl8187_register_read(struct eeprom_93cx6 *eeprom)
++{
++	struct ieee80211_hw *dev = eeprom->data;
++	struct rtl8187_priv *priv = dev->priv;
++	u8 reg = rtl818x_ioread8(priv, &priv->map->EEPROM_CMD);
++
++	eeprom->reg_data_in = reg & RTL818X_EEPROM_CMD_WRITE;
++	eeprom->reg_data_out = reg & RTL818X_EEPROM_CMD_READ;
++	eeprom->reg_data_clock = reg & RTL818X_EEPROM_CMD_CK;
++	eeprom->reg_chip_select = reg & RTL818X_EEPROM_CMD_CS;
++}
++
++static void rtl8187_register_write(struct eeprom_93cx6 *eeprom)
++{
++	struct ieee80211_hw *dev = eeprom->data;
++	struct rtl8187_priv *priv = dev->priv;
++	u8 reg = RTL818X_EEPROM_CMD_PROGRAM;
++
++	if (eeprom->reg_data_in)
++		reg |= RTL818X_EEPROM_CMD_WRITE;
++	if (eeprom->reg_data_out)
++		reg |= RTL818X_EEPROM_CMD_READ;
++	if (eeprom->reg_data_clock)
++		reg |= RTL818X_EEPROM_CMD_CK;
++	if (eeprom->reg_chip_select)
++		reg |= RTL818X_EEPROM_CMD_CS;
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, reg);
++	udelay(10);
++}
++
++static int __devinit rtl8187_probe(struct usb_interface *intf,
++				   const struct usb_device_id *id)
++{
++	struct usb_device *udev = interface_to_usbdev(intf);
++	struct ieee80211_hw *dev;
++	struct rtl8187_priv *priv;
++	struct eeprom_93cx6 eeprom;
++	struct ieee80211_channel *channel;
++	u16 txpwr, reg;
++	int err, i;
++
++	dev = ieee80211_alloc_hw(sizeof(*priv), &rtl8187_ops);
++	if (!dev) {
++		printk(KERN_ERR "rtl8187: ieee80211 alloc failed\n");
++		return -ENOMEM;
++	}
++
++	priv = dev->priv;
++
++	SET_IEEE80211_DEV(dev, &intf->dev);
++	usb_set_intfdata(intf, dev);
++	priv->udev = udev;
++
++	usb_get_dev(udev);
++
++	skb_queue_head_init(&priv->rx_queue);
++	memcpy(priv->channels, rtl818x_channels, sizeof(rtl818x_channels));
++	memcpy(priv->rates, rtl818x_rates, sizeof(rtl818x_rates));
++	priv->map = (struct rtl818x_csr *)0xFF00;
++	priv->modes[0].mode = MODE_IEEE80211G;
++	priv->modes[0].num_rates = ARRAY_SIZE(rtl818x_rates);
++	priv->modes[0].rates = priv->rates;
++	priv->modes[0].num_channels = ARRAY_SIZE(rtl818x_channels);
++	priv->modes[0].channels = priv->channels;
++	priv->modes[1].mode = MODE_IEEE80211B;
++	priv->modes[1].num_rates = 4;
++	priv->modes[1].rates = priv->rates;
++	priv->modes[1].num_channels = ARRAY_SIZE(rtl818x_channels);
++	priv->modes[1].channels = priv->channels;
++	priv->mode = IEEE80211_IF_TYPE_MGMT;
++	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
++		     IEEE80211_HW_RX_INCLUDES_FCS |
++		     IEEE80211_HW_WEP_INCLUDE_IV |
++		     IEEE80211_HW_DATA_NULLFUNC_ACK;
++	dev->extra_tx_headroom = sizeof(struct rtl8187_tx_hdr);
++	dev->queues = 1;
++	dev->max_rssi = 65;
++	dev->max_signal = 64;
++
++	for (i = 0; i < 2; i++)
++		if ((err = ieee80211_register_hwmode(dev, &priv->modes[i])))
++			goto err_free_dev;
++
++	eeprom.data = dev;
++	eeprom.register_read = rtl8187_register_read;
++	eeprom.register_write = rtl8187_register_write;
++	if (rtl818x_ioread32(priv, &priv->map->RX_CONF) & (1 << 6))
++		eeprom.width = PCI_EEPROM_WIDTH_93C66;
++	else
++		eeprom.width = PCI_EEPROM_WIDTH_93C46;
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
++	udelay(10);
++
++	eeprom_93cx6_multiread(&eeprom, 0x7,
++			       (__le16 __force *)dev->wiphy->perm_addr, 3);
++	if (!is_valid_ether_addr(dev->wiphy->perm_addr)) {
++		printk(KERN_WARNING "rtl8187: Invalid hwaddr! Using randomly generated MAC address\n");
++		random_ether_addr(dev->wiphy->perm_addr);
++	}
++
++	channel = priv->channels;
++	for (i = 0; i < 3; i++) {
++		eeprom_93cx6_read(&eeprom, 0x16 + i, &txpwr);
++		(*channel++).val = txpwr & 0xFF;
++		(*channel++).val = txpwr >> 8;
++	}
++	for (i = 0; i < 2; i++) {
++		eeprom_93cx6_read(&eeprom, 0x3D + i, &txpwr);
++		(*channel++).val = txpwr & 0xFF;
++		(*channel++).val = txpwr >> 8;
++	}
++	for (i = 0; i < 2; i++) {
++		eeprom_93cx6_read(&eeprom, 0x1B + i, &txpwr);
++		(*channel++).val = txpwr & 0xFF;
++		(*channel++).val = txpwr >> 8;
++	}
++
++	eeprom_93cx6_read(&eeprom, 0x05, &priv->txpwr_base);
++
++	reg = rtl818x_ioread16(priv, &priv->map->PGSELECT) & ~1;
++	rtl818x_iowrite16(priv, &priv->map->PGSELECT, reg | 1);
++	/* 0 means asic B-cut, we should use SW 3 wire
++	 * bit-by-bit banging for radio. 1 means we can use
++	 * USB specific request to write radio registers */
++	priv->asic_rev = rtl818x_ioread8(priv, (u8 *)0xFFFE) & 0x3;
++	rtl818x_iowrite16(priv, &priv->map->PGSELECT, reg);
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
++
++	rtl8225_write(dev, 0, 0x1B7);
++
++	if (rtl8225_read(dev, 8) != 0x588 || rtl8225_read(dev, 9) != 0x700)
++		priv->rf_init = rtl8225_rf_init;
++	else
++		priv->rf_init = rtl8225z2_rf_init;
++
++	rtl8225_write(dev, 0, 0x0B7);
++
++	err = ieee80211_register_hw(dev);
++	if (err) {
++		printk(KERN_ERR "rtl8187: Cannot register device\n");
++		goto err_free_dev;
++	}
++
++	printk(KERN_INFO "%s: hwaddr " MAC_FMT ", rtl8187 V%d + %s\n",
++	       wiphy_name(dev->wiphy), MAC_ARG(dev->wiphy->perm_addr),
++	       priv->asic_rev, priv->rf_init == rtl8225_rf_init ?
++	       "rtl8225" : "rtl8225z2");
++
++	return 0;
++
++ err_free_dev:
++	ieee80211_free_hw(dev);
++	usb_set_intfdata(intf, NULL);
++	usb_put_dev(udev);
++	return err;
++}
++
++static void __devexit rtl8187_disconnect(struct usb_interface *intf)
++{
++	struct ieee80211_hw *dev = usb_get_intfdata(intf);
++	struct rtl8187_priv *priv;
++
++	if (!dev)
++		return;
++
++	ieee80211_unregister_hw(dev);
++
++	priv = dev->priv;
++	usb_put_dev(interface_to_usbdev(intf));
++	ieee80211_free_hw(dev);
++}
++
++static struct usb_driver rtl8187_driver = {
++	.name		= KBUILD_MODNAME,
++	.id_table	= rtl8187_table,
++	.probe		= rtl8187_probe,
++	.disconnect	= rtl8187_disconnect,
++};
++
++static int __init rtl8187_init(void)
++{
++	return usb_register(&rtl8187_driver);
++}
++
++static void __exit rtl8187_exit(void)
++{
++	usb_deregister(&rtl8187_driver);
++}
++
++module_init(rtl8187_init);
++module_exit(rtl8187_exit);
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c b/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
+new file mode 100644
+index 0000000..a89f023
+--- /dev/null
++++ b/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
+@@ -0,0 +1,744 @@
++
++/*
++ * Radio tuning for RTL8225 on RTL8187
++ *
++ * Copyright 2007 Michael Wu <flamingice@sourmilk.net>
++ * Copyright 2007 Andrea Merello <andreamrl@tiscali.it>
++ *
++ * Based on the r8187 driver, which is:
++ * Copyright 2005 Andrea Merello <andreamrl@tiscali.it>, et al.
++ *
++ * Thanks to Realtek for their support!
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/init.h>
++#include <linux/usb.h>
++#include <net/mac80211.h>
++
++#include "rtl8187.h"
++#include "rtl8187_rtl8225.h"
++
++static void rtl8225_write_bitbang(struct ieee80211_hw *dev, u8 addr, u16 data)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	u16 reg80, reg84, reg82;
++	u32 bangdata;
++	int i;
++
++	bangdata = (data << 4) | (addr & 0xf);
++
++	reg80 = rtl818x_ioread16(priv, &priv->map->RFPinsOutput) & 0xfff3;
++	reg82 = rtl818x_ioread16(priv, &priv->map->RFPinsEnable);
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, reg82 | 0x7);
++
++	reg84 = rtl818x_ioread16(priv, &priv->map->RFPinsSelect);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84 | 0x7);
++	udelay(10);
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
++	udelay(2);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80);
++	udelay(10);
++
++	for (i = 15; i >= 0; i--) {
++		u16 reg = reg80 | (bangdata & (1 << i)) >> i;
++
++		if (i & 1)
++			rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg);
++
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg | (1 << 1));
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg | (1 << 1));
++
++		if (!(i & 1))
++			rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg);
++	}
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
++	udelay(10);
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
++	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84);
++	mdelay(2);
++}
++
++static void rtl8225_write_8051(struct ieee80211_hw *dev, u8 addr, u16 data)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	u16 reg80, reg82, reg84;
++
++	reg80 = rtl818x_ioread16(priv, &priv->map->RFPinsOutput);
++	reg82 = rtl818x_ioread16(priv, &priv->map->RFPinsEnable);
++	reg84 = rtl818x_ioread16(priv, &priv->map->RFPinsSelect);
++
++	reg80 &= ~(0x3 << 2);
++	reg84 &= ~0xF;
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, reg82 | 0x0007);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84 | 0x0007);
++	udelay(10);
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
++	udelay(2);
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80);
++	udelay(10);
++
++	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
++			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
++			addr, 0x8225, &data, sizeof(data), HZ / 2);
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
++	udelay(10);
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
++	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84);
++	mdelay(2);
++}
++
++void rtl8225_write(struct ieee80211_hw *dev, u8 addr, u16 data)
++{
++	struct rtl8187_priv *priv = dev->priv;
++
++	if (priv->asic_rev)
++		rtl8225_write_8051(dev, addr, data);
++	else
++		rtl8225_write_bitbang(dev, addr, data);
++}
++
++u16 rtl8225_read(struct ieee80211_hw *dev, u8 addr)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	u16 reg80, reg82, reg84, out;
++	int i;
++
++	reg80 = rtl818x_ioread16(priv, &priv->map->RFPinsOutput);
++	reg82 = rtl818x_ioread16(priv, &priv->map->RFPinsEnable);
++	reg84 = rtl818x_ioread16(priv, &priv->map->RFPinsSelect);
++
++	reg80 &= ~0xF;
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, reg82 | 0x000F);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84 | 0x000F);
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
++	udelay(4);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80);
++	udelay(5);
++
++	for (i = 4; i >= 0; i--) {
++		u16 reg = reg80 | ((addr >> i) & 1);
++
++		if (!(i & 1)) {
++			rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg);
++			udelay(1);
++		}
++
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++				  reg | (1 << 1));
++		udelay(2);
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++				  reg | (1 << 1));
++		udelay(2);
++
++		if (i & 1) {
++			rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg);
++			udelay(1);
++		}
++	}
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++			  reg80 | (1 << 3) | (1 << 1));
++	udelay(2);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++			  reg80 | (1 << 3));
++	udelay(2);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++			  reg80 | (1 << 3));
++	udelay(2);
++
++	out = 0;
++	for (i = 11; i >= 0; i--) {
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++				  reg80 | (1 << 3));
++		udelay(1);
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++				  reg80 | (1 << 3) | (1 << 1));
++		udelay(2);
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++				  reg80 | (1 << 3) | (1 << 1));
++		udelay(2);
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++				  reg80 | (1 << 3) | (1 << 1));
++		udelay(2);
++
++		if (rtl818x_ioread16(priv, &priv->map->RFPinsInput) & (1 << 1))
++			out |= 1 << i;
++
++		rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++				  reg80 | (1 << 3));
++		udelay(2);
++	}
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput,
++			  reg80 | (1 << 3) | (1 << 2));
++	udelay(2);
++
++	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, reg82);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, reg84);
++	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, 0x03A0);
++
++	return out;
++}
++
++static const u16 rtl8225bcd_rxgain[] = {
++	0x0400, 0x0401, 0x0402, 0x0403, 0x0404, 0x0405, 0x0408, 0x0409,
++	0x040a, 0x040b, 0x0502, 0x0503, 0x0504, 0x0505, 0x0540, 0x0541,
++	0x0542, 0x0543, 0x0544, 0x0545, 0x0580, 0x0581, 0x0582, 0x0583,
++	0x0584, 0x0585, 0x0588, 0x0589, 0x058a, 0x058b, 0x0643, 0x0644,
++	0x0645, 0x0680, 0x0681, 0x0682, 0x0683, 0x0684, 0x0685, 0x0688,
++	0x0689, 0x068a, 0x068b, 0x068c, 0x0742, 0x0743, 0x0744, 0x0745,
++	0x0780, 0x0781, 0x0782, 0x0783, 0x0784, 0x0785, 0x0788, 0x0789,
++	0x078a, 0x078b, 0x078c, 0x078d, 0x0790, 0x0791, 0x0792, 0x0793,
++	0x0794, 0x0795, 0x0798, 0x0799, 0x079a, 0x079b, 0x079c, 0x079d,
++	0x07a0, 0x07a1, 0x07a2, 0x07a3, 0x07a4, 0x07a5, 0x07a8, 0x07a9,
++	0x07aa, 0x07ab, 0x07ac, 0x07ad, 0x07b0, 0x07b1, 0x07b2, 0x07b3,
++	0x07b4, 0x07b5, 0x07b8, 0x07b9, 0x07ba, 0x07bb, 0x07bb
++};
++
++static const u8 rtl8225_agc[] = {
++	0x9e, 0x9e, 0x9e, 0x9e, 0x9e, 0x9e, 0x9e, 0x9e,
++	0x9d, 0x9c, 0x9b, 0x9a, 0x99, 0x98, 0x97, 0x96,
++	0x95, 0x94, 0x93, 0x92, 0x91, 0x90, 0x8f, 0x8e,
++	0x8d, 0x8c, 0x8b, 0x8a, 0x89, 0x88, 0x87, 0x86,
++	0x85, 0x84, 0x83, 0x82, 0x81, 0x80, 0x3f, 0x3e,
++	0x3d, 0x3c, 0x3b, 0x3a, 0x39, 0x38, 0x37, 0x36,
++	0x35, 0x34, 0x33, 0x32, 0x31, 0x30, 0x2f, 0x2e,
++	0x2d, 0x2c, 0x2b, 0x2a, 0x29, 0x28, 0x27, 0x26,
++	0x25, 0x24, 0x23, 0x22, 0x21, 0x20, 0x1f, 0x1e,
++	0x1d, 0x1c, 0x1b, 0x1a, 0x19, 0x18, 0x17, 0x16,
++	0x15, 0x14, 0x13, 0x12, 0x11, 0x10, 0x0f, 0x0e,
++	0x0d, 0x0c, 0x0b, 0x0a, 0x09, 0x08, 0x07, 0x06,
++	0x05, 0x04, 0x03, 0x02, 0x01, 0x01, 0x01, 0x01,
++	0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
++	0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
++	0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01
++};
++
++static const u8 rtl8225_gain[] = {
++	0x23, 0x88, 0x7c, 0xa5,	/* -82dBm */
++	0x23, 0x88, 0x7c, 0xb5,	/* -82dBm */
++	0x23, 0x88, 0x7c, 0xc5,	/* -82dBm */
++	0x33, 0x80, 0x79, 0xc5,	/* -78dBm */
++	0x43, 0x78, 0x76, 0xc5,	/* -74dBm */
++	0x53, 0x60, 0x73, 0xc5,	/* -70dBm */
++	0x63, 0x58, 0x70, 0xc5,	/* -66dBm */
++};
++
++static const u8 rtl8225_threshold[] = {
++	0x8d, 0x8d, 0x8d, 0x8d, 0x9d, 0xad, 0xbd
++};
++
++static const u8 rtl8225_tx_gain_cck_ofdm[] = {
++	0x02, 0x06, 0x0e, 0x1e, 0x3e, 0x7e
++};
++
++static const u8 rtl8225_tx_power_cck[] = {
++	0x18, 0x17, 0x15, 0x11, 0x0c, 0x08, 0x04, 0x02,
++	0x1b, 0x1a, 0x17, 0x13, 0x0e, 0x09, 0x04, 0x02,
++	0x1f, 0x1e, 0x1a, 0x15, 0x10, 0x0a, 0x05, 0x02,
++	0x22, 0x21, 0x1d, 0x18, 0x11, 0x0b, 0x06, 0x02,
++	0x26, 0x25, 0x21, 0x1b, 0x14, 0x0d, 0x06, 0x03,
++	0x2b, 0x2a, 0x25, 0x1e, 0x16, 0x0e, 0x07, 0x03
++};
++
++static const u8 rtl8225_tx_power_cck_ch14[] = {
++	0x18, 0x17, 0x15, 0x0c, 0x00, 0x00, 0x00, 0x00,
++	0x1b, 0x1a, 0x17, 0x0e, 0x00, 0x00, 0x00, 0x00,
++	0x1f, 0x1e, 0x1a, 0x0f, 0x00, 0x00, 0x00, 0x00,
++	0x22, 0x21, 0x1d, 0x11, 0x00, 0x00, 0x00, 0x00,
++	0x26, 0x25, 0x21, 0x13, 0x00, 0x00, 0x00, 0x00,
++	0x2b, 0x2a, 0x25, 0x15, 0x00, 0x00, 0x00, 0x00
++};
++
++static const u8 rtl8225_tx_power_ofdm[] = {
++	0x80, 0x90, 0xa2, 0xb5, 0xcb, 0xe4
++};
++
++static const u32 rtl8225_chan[] = {
++	0x085c, 0x08dc, 0x095c, 0x09dc, 0x0a5c, 0x0adc, 0x0b5c,
++	0x0bdc, 0x0c5c, 0x0cdc, 0x0d5c, 0x0ddc, 0x0e5c, 0x0f72
++};
++
++static void rtl8225_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	u8 cck_power, ofdm_power;
++	const u8 *tmp;
++	u32 reg;
++	int i;
++
++	cck_power = priv->channels[channel - 1].val & 0xF;
++	ofdm_power = priv->channels[channel - 1].val >> 4;
++
++	cck_power = min(cck_power, (u8)11);
++	ofdm_power = min(ofdm_power, (u8)35);
++
++	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_CCK,
++			 rtl8225_tx_gain_cck_ofdm[cck_power / 6] >> 1);
++
++	if (channel == 14)
++		tmp = &rtl8225_tx_power_cck_ch14[(cck_power % 6) * 8];
++	else
++		tmp = &rtl8225_tx_power_cck[(cck_power % 6) * 8];
++
++	for (i = 0; i < 8; i++)
++		rtl8225_write_phy_cck(dev, 0x44 + i, *tmp++);
++
++	mdelay(1); // FIXME: optional?
++
++	/* anaparam2 on */
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
++
++	rtl8225_write_phy_ofdm(dev, 2, 0x42);
++	rtl8225_write_phy_ofdm(dev, 6, 0x00);
++	rtl8225_write_phy_ofdm(dev, 8, 0x00);
++
++	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_OFDM,
++			 rtl8225_tx_gain_cck_ofdm[ofdm_power / 6] >> 1);
++
++	tmp = &rtl8225_tx_power_ofdm[ofdm_power % 6];
++
++	rtl8225_write_phy_ofdm(dev, 5, *tmp);
++	rtl8225_write_phy_ofdm(dev, 7, *tmp);
++
++	mdelay(1);
++}
++
++void rtl8225_rf_init(struct ieee80211_hw *dev)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	int i;
++
++	rtl8225_write(dev, 0x0, 0x067); mdelay(1);
++	rtl8225_write(dev, 0x1, 0xFE0); mdelay(1);
++	rtl8225_write(dev, 0x2, 0x44D); mdelay(1);
++	rtl8225_write(dev, 0x3, 0x441); mdelay(1);
++	rtl8225_write(dev, 0x4, 0x486); mdelay(1);
++	rtl8225_write(dev, 0x5, 0xBC0); mdelay(1);
++	rtl8225_write(dev, 0x6, 0xAE6); mdelay(1);
++	rtl8225_write(dev, 0x7, 0x82A); mdelay(1);
++	rtl8225_write(dev, 0x8, 0x01F); mdelay(1);
++	rtl8225_write(dev, 0x9, 0x334); mdelay(1);
++	rtl8225_write(dev, 0xA, 0xFD4); mdelay(1);
++	rtl8225_write(dev, 0xB, 0x391); mdelay(1);
++	rtl8225_write(dev, 0xC, 0x050); mdelay(1);
++	rtl8225_write(dev, 0xD, 0x6DB); mdelay(1);
++	rtl8225_write(dev, 0xE, 0x029); mdelay(1);
++	rtl8225_write(dev, 0xF, 0x914); mdelay(100);
++
++	rtl8225_write(dev, 0x2, 0xC4D); mdelay(200);
++	rtl8225_write(dev, 0x2, 0x44D); mdelay(200);
++
++	if (!(rtl8225_read(dev, 6) & (1 << 7))) {
++		rtl8225_write(dev, 0x02, 0x0c4d);
++		mdelay(200);
++		rtl8225_write(dev, 0x02, 0x044d);
++		mdelay(100);
++		if (!(rtl8225_read(dev, 6) & (1 << 7)))
++			printk(KERN_WARNING "%s: RF Calibration Failed! %x\n",
++			       wiphy_name(dev->wiphy), rtl8225_read(dev, 6));
++	}
++
++	rtl8225_write(dev, 0x0, 0x127);
++
++	for (i = 0; i < ARRAY_SIZE(rtl8225bcd_rxgain); i++) {
++		rtl8225_write(dev, 0x1, i + 1);
++		rtl8225_write(dev, 0x2, rtl8225bcd_rxgain[i]);
++	}
++
++	rtl8225_write(dev, 0x0, 0x027);
++	rtl8225_write(dev, 0x0, 0x22F);
++
++	for (i = 0; i < ARRAY_SIZE(rtl8225_agc); i++) {
++		rtl8225_write_phy_ofdm(dev, 0xB, rtl8225_agc[i]);
++		mdelay(1);
++		rtl8225_write_phy_ofdm(dev, 0xA, 0x80 + i);
++		mdelay(1);
++	}
++
++	mdelay(1);
++
++	rtl8225_write_phy_ofdm(dev, 0x00, 0x01); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x01, 0x02); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x02, 0x42); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x03, 0x00); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x04, 0x00); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x05, 0x00); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x06, 0x40); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x07, 0x00); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x08, 0x40); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x09, 0xfe); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x0a, 0x09); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x0b, 0x80); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x0c, 0x01); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x0e, 0xd3); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x0f, 0x38); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x10, 0x84); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x11, 0x06); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x12, 0x20); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x13, 0x20); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x14, 0x00); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x15, 0x40); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x16, 0x00); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x17, 0x40); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x18, 0xef); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x19, 0x19); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x1a, 0x20); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x1b, 0x76); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x1c, 0x04); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x1e, 0x95); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x1f, 0x75); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x20, 0x1f); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x21, 0x27); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x22, 0x16); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x24, 0x46); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x25, 0x20); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x27, 0x88); mdelay(1);
++
++	rtl8225_write_phy_ofdm(dev, 0x0d, rtl8225_gain[2 * 4]);
++	rtl8225_write_phy_ofdm(dev, 0x1b, rtl8225_gain[2 * 4 + 2]);
++	rtl8225_write_phy_ofdm(dev, 0x1d, rtl8225_gain[2 * 4 + 3]);
++	rtl8225_write_phy_ofdm(dev, 0x23, rtl8225_gain[2 * 4 + 1]);
++
++	rtl8225_write_phy_cck(dev, 0x00, 0x98); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x03, 0x20); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x04, 0x7e); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x05, 0x12); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x06, 0xfc); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x07, 0x78); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x08, 0x2e); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x10, 0x9b); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x11, 0x88); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x12, 0x47); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x13, 0xd0);
++	rtl8225_write_phy_cck(dev, 0x19, 0x00);
++	rtl8225_write_phy_cck(dev, 0x1a, 0xa0);
++	rtl8225_write_phy_cck(dev, 0x1b, 0x08);
++	rtl8225_write_phy_cck(dev, 0x40, 0x86);
++	rtl8225_write_phy_cck(dev, 0x41, 0x8d); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x42, 0x15); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x43, 0x18); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x44, 0x1f); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x45, 0x1e); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x46, 0x1a); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x47, 0x15); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x48, 0x10); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x49, 0x0a); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x4a, 0x05); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x4b, 0x02); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x4c, 0x05); mdelay(1);
++
++	rtl818x_iowrite8(priv, &priv->map->TESTR, 0x0D);
++
++	rtl8225_rf_set_tx_power(dev, 1);
++
++	/* RX antenna default to A */
++	rtl8225_write_phy_cck(dev, 0x10, 0x9b); mdelay(1);	/* B: 0xDB */
++	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); mdelay(1);	/* B: 0x10 */
++
++	rtl818x_iowrite8(priv, &priv->map->TX_ANTENNA, 0x03);	/* B: 0x00 */
++	mdelay(1);
++	rtl818x_iowrite32(priv, (__le32 *)0xFF94, 0x3dc00002);
++
++	/* set sensitivity */
++	rtl8225_write(dev, 0x0c, 0x50);
++	rtl8225_write_phy_ofdm(dev, 0x0d, rtl8225_gain[2 * 4]);
++	rtl8225_write_phy_ofdm(dev, 0x1b, rtl8225_gain[2 * 4 + 2]);
++	rtl8225_write_phy_ofdm(dev, 0x1d, rtl8225_gain[2 * 4 + 3]);
++	rtl8225_write_phy_ofdm(dev, 0x23, rtl8225_gain[2 * 4 + 1]);
++	rtl8225_write_phy_cck(dev, 0x41, rtl8225_threshold[2]);
++}
++
++static const u8 rtl8225z2_tx_power_cck_ch14[] = {
++	0x36, 0x35, 0x2e, 0x1b, 0x00, 0x00, 0x00, 0x00
++};
++
++static const u8 rtl8225z2_tx_power_cck[] = {
++	0x36, 0x35, 0x2e, 0x25, 0x1c, 0x12, 0x09, 0x04
++};
++
++static const u8 rtl8225z2_tx_power_ofdm[] = {
++	0x42, 0x00, 0x40, 0x00, 0x40
++};
++
++static const u8 rtl8225z2_tx_gain_cck_ofdm[] = {
++	0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
++	0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
++	0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11,
++	0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
++	0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d,
++	0x1e, 0x1f, 0x20, 0x21, 0x22, 0x23
++};
++
++static void rtl8225z2_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	u8 cck_power, ofdm_power;
++	const u8 *tmp;
++	u32 reg;
++	int i;
++
++	cck_power = priv->channels[channel - 1].val & 0xF;
++	ofdm_power = priv->channels[channel - 1].val >> 4;
++
++	cck_power = min(cck_power, (u8)15);
++	cck_power += priv->txpwr_base & 0xF;
++	cck_power = min(cck_power, (u8)35);
++
++	ofdm_power = min(ofdm_power, (u8)15);
++	ofdm_power += priv->txpwr_base >> 4;
++	ofdm_power = min(ofdm_power, (u8)35);
++
++	if (channel == 14)
++		tmp = rtl8225z2_tx_power_cck_ch14;
++	else
++		tmp = rtl8225z2_tx_power_cck;
++
++	for (i = 0; i < 8; i++)
++		rtl8225_write_phy_cck(dev, 0x44 + i, *tmp++);
++
++	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_CCK,
++			 rtl8225z2_tx_gain_cck_ofdm[cck_power]);
++	mdelay(1);
++
++	/* anaparam2 on */
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
++
++	rtl8225_write_phy_ofdm(dev, 2, 0x42);
++	rtl8225_write_phy_ofdm(dev, 5, 0x00);
++	rtl8225_write_phy_ofdm(dev, 6, 0x40);
++	rtl8225_write_phy_ofdm(dev, 7, 0x00);
++	rtl8225_write_phy_ofdm(dev, 8, 0x40);
++
++	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_OFDM,
++			 rtl8225z2_tx_gain_cck_ofdm[ofdm_power]);
++	mdelay(1);
++}
++
++static const u16 rtl8225z2_rxgain[] = {
++	0x0400, 0x0401, 0x0402, 0x0403, 0x0404, 0x0405, 0x0408, 0x0409,
++	0x040a, 0x040b, 0x0502, 0x0503, 0x0504, 0x0505, 0x0540, 0x0541,
++	0x0542, 0x0543, 0x0544, 0x0545, 0x0580, 0x0581, 0x0582, 0x0583,
++	0x0584, 0x0585, 0x0588, 0x0589, 0x058a, 0x058b, 0x0643, 0x0644,
++	0x0645, 0x0680, 0x0681, 0x0682, 0x0683, 0x0684, 0x0685, 0x0688,
++	0x0689, 0x068a, 0x068b, 0x068c, 0x0742, 0x0743, 0x0744, 0x0745,
++	0x0780, 0x0781, 0x0782, 0x0783, 0x0784, 0x0785, 0x0788, 0x0789,
++	0x078a, 0x078b, 0x078c, 0x078d, 0x0790, 0x0791, 0x0792, 0x0793,
++	0x0794, 0x0795, 0x0798, 0x0799, 0x079a, 0x079b, 0x079c, 0x079d,
++	0x07a0, 0x07a1, 0x07a2, 0x07a3, 0x07a4, 0x07a5, 0x07a8, 0x07a9,
++	0x03aa, 0x03ab, 0x03ac, 0x03ad, 0x03b0, 0x03b1, 0x03b2, 0x03b3,
++	0x03b4, 0x03b5, 0x03b8, 0x03b9, 0x03ba, 0x03bb, 0x03bb
++};
++
++static const u8 rtl8225z2_gain_bg[] = {
++	0x23, 0x15, 0xa5, /* -82-1dBm */
++	0x23, 0x15, 0xb5, /* -82-2dBm */
++	0x23, 0x15, 0xc5, /* -82-3dBm */
++	0x33, 0x15, 0xc5, /* -78dBm */
++	0x43, 0x15, 0xc5, /* -74dBm */
++	0x53, 0x15, 0xc5, /* -70dBm */
++	0x63, 0x15, 0xc5  /* -66dBm */
++};
++
++void rtl8225z2_rf_init(struct ieee80211_hw *dev)
++{
++	struct rtl8187_priv *priv = dev->priv;
++	int i;
++
++	rtl8225_write(dev, 0x0, 0x2BF); mdelay(1);
++	rtl8225_write(dev, 0x1, 0xEE0); mdelay(1);
++	rtl8225_write(dev, 0x2, 0x44D); mdelay(1);
++	rtl8225_write(dev, 0x3, 0x441); mdelay(1);
++	rtl8225_write(dev, 0x4, 0x8C3); mdelay(1);
++	rtl8225_write(dev, 0x5, 0xC72); mdelay(1);
++	rtl8225_write(dev, 0x6, 0x0E6); mdelay(1);
++	rtl8225_write(dev, 0x7, 0x82A); mdelay(1);
++	rtl8225_write(dev, 0x8, 0x03F); mdelay(1);
++	rtl8225_write(dev, 0x9, 0x335); mdelay(1);
++	rtl8225_write(dev, 0xa, 0x9D4); mdelay(1);
++	rtl8225_write(dev, 0xb, 0x7BB); mdelay(1);
++	rtl8225_write(dev, 0xc, 0x850); mdelay(1);
++	rtl8225_write(dev, 0xd, 0xCDF); mdelay(1);
++	rtl8225_write(dev, 0xe, 0x02B); mdelay(1);
++	rtl8225_write(dev, 0xf, 0x114); mdelay(100);
++
++	rtl8225_write(dev, 0x0, 0x1B7);
++
++	for (i = 0; i < ARRAY_SIZE(rtl8225z2_rxgain); i++) {
++		rtl8225_write(dev, 0x1, i + 1);
++		rtl8225_write(dev, 0x2, rtl8225z2_rxgain[i]);
++	}
++
++	rtl8225_write(dev, 0x3, 0x080);
++	rtl8225_write(dev, 0x5, 0x004);
++	rtl8225_write(dev, 0x0, 0x0B7);
++	rtl8225_write(dev, 0x2, 0xc4D);
++
++	mdelay(200);
++	rtl8225_write(dev, 0x2, 0x44D);
++	mdelay(100);
++
++	if (!(rtl8225_read(dev, 6) & (1 << 7))) {
++		rtl8225_write(dev, 0x02, 0x0C4D);
++		mdelay(200);
++		rtl8225_write(dev, 0x02, 0x044D);
++		mdelay(100);
++		if (!(rtl8225_read(dev, 6) & (1 << 7)))
++			printk(KERN_WARNING "%s: RF Calibration Failed! %x\n",
++			       wiphy_name(dev->wiphy), rtl8225_read(dev, 6));
++	}
++
++	mdelay(200);
++
++	rtl8225_write(dev, 0x0, 0x2BF);
++
++	for (i = 0; i < ARRAY_SIZE(rtl8225_agc); i++) {
++		rtl8225_write_phy_ofdm(dev, 0xB, rtl8225_agc[i]);
++		mdelay(1);
++		rtl8225_write_phy_ofdm(dev, 0xA, 0x80 + i);
++		mdelay(1);
++	}
++
++	mdelay(1);
++
++	rtl8225_write_phy_ofdm(dev, 0x00, 0x01); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x01, 0x02); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x02, 0x42); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x03, 0x00); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x04, 0x00); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x05, 0x00); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x06, 0x40); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x07, 0x00); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x08, 0x40); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x09, 0xfe); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x0a, 0x08); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x0b, 0x80); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x0c, 0x01); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x0d, 0x43);
++	rtl8225_write_phy_ofdm(dev, 0x0e, 0xd3); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x0f, 0x38); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x10, 0x84); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x11, 0x07); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x12, 0x20); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x13, 0x20); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x14, 0x00); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x15, 0x40); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x16, 0x00); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x17, 0x40); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x18, 0xef); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x19, 0x19); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x1a, 0x20); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x1b, 0x15); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x1c, 0x04); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x1d, 0xc5); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x1e, 0x95); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x1f, 0x75); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x20, 0x1f); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x21, 0x17); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x22, 0x16); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x23, 0x80); mdelay(1); //FIXME: not needed?
++	rtl8225_write_phy_ofdm(dev, 0x24, 0x46); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x25, 0x00); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); mdelay(1);
++	rtl8225_write_phy_ofdm(dev, 0x27, 0x88); mdelay(1);
++
++	rtl8225_write_phy_ofdm(dev, 0x0b, rtl8225z2_gain_bg[4 * 3]);
++	rtl8225_write_phy_ofdm(dev, 0x1b, rtl8225z2_gain_bg[4 * 3 + 1]);
++	rtl8225_write_phy_ofdm(dev, 0x1d, rtl8225z2_gain_bg[4 * 3 + 2]);
++	rtl8225_write_phy_ofdm(dev, 0x21, 0x37);
++
++	rtl8225_write_phy_cck(dev, 0x00, 0x98); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x03, 0x20); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x04, 0x7e); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x05, 0x12); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x06, 0xfc); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x07, 0x78); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x08, 0x2e); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x10, 0x9b); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x11, 0x88); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x12, 0x47); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x13, 0xd0);
++	rtl8225_write_phy_cck(dev, 0x19, 0x00);
++	rtl8225_write_phy_cck(dev, 0x1a, 0xa0);
++	rtl8225_write_phy_cck(dev, 0x1b, 0x08);
++	rtl8225_write_phy_cck(dev, 0x40, 0x86);
++	rtl8225_write_phy_cck(dev, 0x41, 0x8d); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x42, 0x15); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x43, 0x18); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x44, 0x36); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x45, 0x35); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x46, 0x2e); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x47, 0x25); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x48, 0x1c); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x49, 0x12); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x4a, 0x09); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x4b, 0x04); mdelay(1);
++	rtl8225_write_phy_cck(dev, 0x4c, 0x05); mdelay(1);
++
++	rtl818x_iowrite8(priv, (u8 *)0xFF5B, 0x0D); mdelay(1);
++
++	rtl8225z2_rf_set_tx_power(dev, 1);
++
++	/* RX antenna default to A */
++	rtl8225_write_phy_cck(dev, 0x10, 0x9b); mdelay(1);	/* B: 0xDB */
++	rtl8225_write_phy_ofdm(dev, 0x26, 0x90); mdelay(1);	/* B: 0x10 */
++
++	rtl818x_iowrite8(priv, &priv->map->TX_ANTENNA, 0x03);	/* B: 0x00 */
++	mdelay(1);
++	rtl818x_iowrite32(priv, (__le32 *)0xFF94, 0x3dc00002);
++}
++
++void rtl8225_rf_stop(struct ieee80211_hw *dev)
++{
++	u8 reg;
++	struct rtl8187_priv *priv = dev->priv;
++
++	rtl8225_write(dev, 0x4, 0x1f); mdelay(1);
++
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
++	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_OFF);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, RTL8225_ANAPARAM_OFF);
++	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
++	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
++}
++
++void rtl8225_rf_set_channel(struct ieee80211_hw *dev, int channel)
++{
++	struct rtl8187_priv *priv = dev->priv;
++
++	if (priv->rf_init == rtl8225_rf_init)
++		rtl8225_rf_set_tx_power(dev, channel);
++	else
++		rtl8225z2_rf_set_tx_power(dev, channel);
++
++	rtl8225_write(dev, 0x7, rtl8225_chan[channel - 1]);
++	mdelay(10);
++}
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_rtl8225.h b/drivers/net/wireless/rtl818x/rtl8187_rtl8225.h
+new file mode 100644
+index 0000000..ed28118
+--- /dev/null
++++ b/drivers/net/wireless/rtl818x/rtl8187_rtl8225.h
+@@ -0,0 +1,30 @@
++#ifndef RTL8187_RTL8225_H
++#define RTL8187_RTL8225_H
++
++#define RTL8225_ANAPARAM_ON	0xa0000a59
++#define RTL8225_ANAPARAM2_ON	0x860c7312
++#define RTL8225_ANAPARAM_OFF	0xa00beb59
++#define RTL8225_ANAPARAM2_OFF	0x840dec11
++
++void rtl8225_write(struct ieee80211_hw *, u8 addr, u16 data);
++u16  rtl8225_read(struct ieee80211_hw *, u8 addr);
++
++void rtl8225_rf_init(struct ieee80211_hw *);
++void rtl8225z2_rf_init(struct ieee80211_hw *);
++void rtl8225_rf_stop(struct ieee80211_hw *);
++void rtl8225_rf_set_channel(struct ieee80211_hw *, int);
++
++
++static inline void rtl8225_write_phy_ofdm(struct ieee80211_hw *dev,
++					  u8 addr, u32 data)
++{
++	rtl8187_write_phy(dev, addr, data);
++}
++
++static inline void rtl8225_write_phy_cck(struct ieee80211_hw *dev,
++					 u8 addr, u32 data)
++{
++	rtl8187_write_phy(dev, addr, data | 0x10000);
++}
++
++#endif /* RTL8187_RTL8225_H */
+diff --git a/drivers/net/wireless/rtl818x/rtl818x.h b/drivers/net/wireless/rtl818x/rtl818x.h
+new file mode 100644
+index 0000000..e4ee946
+--- /dev/null
++++ b/drivers/net/wireless/rtl818x/rtl818x.h
+@@ -0,0 +1,212 @@
++#ifndef RTL818X_H
++#define RTL818X_H
++
++struct rtl818x_csr {
++	u8	MAC[6];
++	u8	reserved_0[2];
++	__le32	MAR[2];
++	u8	RX_FIFO_COUNT;
++	u8	reserved_1;
++	u8	TX_FIFO_COUNT;
++	u8	BQREQ;
++	u8	reserved_2[4];
++	__le32	TSFT[2];
++	__le32	TLPDA;
++	__le32	TNPDA;
++	__le32	THPDA;
++	__le16	BRSR;
++	u8	BSSID[6];
++	u8	RESP_RATE;
++	u8	EIFS;
++	u8	reserved_3[1];
++	u8	CMD;
++#define RTL818X_CMD_TX_ENABLE		(1 << 2)
++#define RTL818X_CMD_RX_ENABLE		(1 << 3)
++#define RTL818X_CMD_RESET		(1 << 4)
++	u8	reserved_4[4];
++	__le16	INT_MASK;
++	__le16	INT_STATUS;
++#define RTL818X_INT_RX_OK		(1 <<  0)
++#define RTL818X_INT_RX_ERR		(1 <<  1)
++#define RTL818X_INT_TXL_OK		(1 <<  2)
++#define RTL818X_INT_TXL_ERR		(1 <<  3)
++#define RTL818X_INT_RX_DU		(1 <<  4)
++#define RTL818X_INT_RX_FO		(1 <<  5)
++#define RTL818X_INT_TXN_OK		(1 <<  6)
++#define RTL818X_INT_TXN_ERR		(1 <<  7)
++#define RTL818X_INT_TXH_OK		(1 <<  8)
++#define RTL818X_INT_TXH_ERR		(1 <<  9)
++#define RTL818X_INT_TXB_OK		(1 << 10)
++#define RTL818X_INT_TXB_ERR		(1 << 11)
++#define RTL818X_INT_ATIM		(1 << 12)
++#define RTL818X_INT_BEACON		(1 << 13)
++#define RTL818X_INT_TIME_OUT		(1 << 14)
++#define RTL818X_INT_TX_FO		(1 << 15)
++	__le32	TX_CONF;
++#define RTL818X_TX_CONF_LOOPBACK_MAC	(1 << 17)
++#define RTL818X_TX_CONF_NO_ICV		(1 << 19)
++#define RTL818X_TX_CONF_DISCW		(1 << 20)
++#define RTL818X_TX_CONF_R8180_ABCD	(2 << 25)
++#define RTL818X_TX_CONF_R8180_F		(3 << 25)
++#define RTL818X_TX_CONF_R8185_ABC	(4 << 25)
++#define RTL818X_TX_CONF_R8185_D		(5 << 25)
++#define RTL818X_TX_CONF_HWVER_MASK	(7 << 25)
++#define RTL818X_TX_CONF_CW_MIN		(1 << 31)
++	__le32	RX_CONF;
++#define RTL818X_RX_CONF_MONITOR		(1 <<  0)
++#define RTL818X_RX_CONF_NICMAC		(1 <<  1)
++#define RTL818X_RX_CONF_MULTICAST	(1 <<  2)
++#define RTL818X_RX_CONF_BROADCAST	(1 <<  3)
++#define RTL818X_RX_CONF_DATA		(1 << 18)
++#define RTL818X_RX_CONF_CTRL		(1 << 19)
++#define RTL818X_RX_CONF_MGMT		(1 << 20)
++#define RTL818X_RX_CONF_BSSID		(1 << 23)
++#define RTL818X_RX_CONF_RX_AUTORESETPHY	(1 << 28)
++#define RTL818X_RX_CONF_ONLYERLPKT	(1 << 31)
++	__le32	INT_TIMEOUT;
++	__le32	TBDA;
++	u8	EEPROM_CMD;
++#define RTL818X_EEPROM_CMD_READ		(1 << 0)
++#define RTL818X_EEPROM_CMD_WRITE	(1 << 1)
++#define RTL818X_EEPROM_CMD_CK		(1 << 2)
++#define RTL818X_EEPROM_CMD_CS		(1 << 3)
++#define RTL818X_EEPROM_CMD_NORMAL	(0 << 6)
++#define RTL818X_EEPROM_CMD_LOAD		(1 << 6)
++#define RTL818X_EEPROM_CMD_PROGRAM	(2 << 6)
++#define RTL818X_EEPROM_CMD_CONFIG	(3 << 6)
++	u8	CONFIG0;
++	u8	CONFIG1;
++	u8	CONFIG2;
++	__le32	ANAPARAM;
++	u8	MSR;
++#define RTL818X_MSR_NO_LINK		(0 << 2)
++#define RTL818X_MSR_ADHOC		(1 << 2)
++#define RTL818X_MSR_INFRA		(2 << 2)
++	u8	CONFIG3;
++#define RTL818X_CONFIG3_ANAPARAM_WRITE	(1 << 6)
++	u8	CONFIG4;
++#define RTL818X_CONFIG4_POWEROFF	(1 << 6)
++#define RTL818X_CONFIG4_VCOOFF		(1 << 7)
++	u8	TESTR;
++	u8	reserved_9[2];
++	__le16	PGSELECT;
++	__le32	ANAPARAM2;
++	u8	reserved_10[12];
++	__le16	BEACON_INTERVAL;
++	__le16	ATIM_WND;
++	__le16	BEACON_INTERVAL_TIME;
++	__le16	ATIMTR_INTERVAL;
++	u8	reserved_11[4];
++	u8	PHY[4];
++	__le16	RFPinsOutput;
++	__le16	RFPinsEnable;
++	__le16	RFPinsSelect;
++	__le16	RFPinsInput;
++	__le32	RF_PARA;
++	__le32	RF_TIMING;
++	u8	GP_ENABLE;
++	u8	GPIO;
++	u8	reserved_12[10];
++	u8	TX_AGC_CTL;
++#define RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT		(1 << 0)
++#define RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT	(1 << 1)
++#define RTL818X_TX_AGC_CTL_FEEDBACK_ANT			(1 << 2)
++	u8	TX_GAIN_CCK;
++	u8	TX_GAIN_OFDM;
++	u8	TX_ANTENNA;
++	u8	reserved_13[16];
++	u8	WPA_CONF;
++	u8	reserved_14[3];
++	u8	SIFS;
++	u8	DIFS;
++	u8	SLOT;
++	u8	reserved_15[5];
++	u8	CW_CONF;
++#define RTL818X_CW_CONF_PERPACKET_CW_SHIFT	(1 << 0)
++#define RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT	(1 << 1)
++	u8	CW_VAL;
++	u8	RATE_FALLBACK;
++	u8	reserved_16[25];
++	u8	CONFIG5;
++	u8	TX_DMA_POLLING;
++	u8	reserved_17[2];
++	__le16	CWR;
++	u8	RETRY_CTR;
++	u8	reserved_18[5];
++	__le32	RDSAR;
++	u8	reserved_19[18];
++	u16	TALLY_CNT;
++	u8	TALLY_SEL;
++} __attribute__((packed));
++
++static const struct ieee80211_rate rtl818x_rates[] = {
++	{ .rate = 10,
++	  .val = 0,
++	  .flags = IEEE80211_RATE_CCK },
++	{ .rate = 20,
++	  .val = 1,
++	  .flags = IEEE80211_RATE_CCK },
++	{ .rate = 55,
++	  .val = 2,
++	  .flags = IEEE80211_RATE_CCK },
++	{ .rate = 110,
++	  .val = 3,
++	  .flags = IEEE80211_RATE_CCK },
++	{ .rate = 60,
++	  .val = 4,
++	  .flags = IEEE80211_RATE_OFDM },
++	{ .rate = 90,
++	  .val = 5,
++	  .flags = IEEE80211_RATE_OFDM },
++	{ .rate = 120,
++	  .val = 6,
++	  .flags = IEEE80211_RATE_OFDM },
++	{ .rate = 180,
++	  .val = 7,
++	  .flags = IEEE80211_RATE_OFDM },
++	{ .rate = 240,
++	  .val = 8,
++	  .flags = IEEE80211_RATE_OFDM },
++	{ .rate = 360,
++	  .val = 9,
++	  .flags = IEEE80211_RATE_OFDM },
++	{ .rate = 480,
++	  .val = 10,
++	  .flags = IEEE80211_RATE_OFDM },
++	{ .rate = 540,
++	  .val = 11,
++	  .flags = IEEE80211_RATE_OFDM },
++};
++
++static const struct ieee80211_channel rtl818x_channels[] = {
++	{ .chan = 1,
++	  .freq = 2412},
++	{ .chan = 2,
++	  .freq = 2417},
++	{ .chan = 3,
++	  .freq = 2422},
++	{ .chan = 4,
++	  .freq = 2427},
++	{ .chan = 5,
++	  .freq = 2432},
++	{ .chan = 6,
++	  .freq = 2437},
++	{ .chan = 7,
++	  .freq = 2442},
++	{ .chan = 8,
++	  .freq = 2447},
++	{ .chan = 9,
++	  .freq = 2452},
++	{ .chan = 10,
++	  .freq = 2457},
++	{ .chan = 11,
++	  .freq = 2462},
++	{ .chan = 12,
++	  .freq = 2467},
++	{ .chan = 13,
++	  .freq = 2472},
++	{ .chan = 14,
++	  .freq = 2484}
++};
++
++#endif /* RTL818X_H */
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+index e04cffc..8459549 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -40,6 +40,7 @@ static struct usb_device_id usb_ids[] = {
+ 	{ USB_DEVICE(0x126f, 0xa006), .driver_info = DEVICE_ZD1211 },
+ 	{ USB_DEVICE(0x6891, 0xa727), .driver_info = DEVICE_ZD1211 },
+ 	{ USB_DEVICE(0x0df6, 0x9071), .driver_info = DEVICE_ZD1211 },
++	{ USB_DEVICE(0x0df6, 0x9075), .driver_info = DEVICE_ZD1211 },
+ 	{ USB_DEVICE(0x157e, 0x300b), .driver_info = DEVICE_ZD1211 },
+ 	{ USB_DEVICE(0x079b, 0x004a), .driver_info = DEVICE_ZD1211 },
+ 	{ USB_DEVICE(0x1740, 0x2000), .driver_info = DEVICE_ZD1211 },
+@@ -67,8 +68,11 @@ static struct usb_device_id usb_ids[] = {
+ 	{ USB_DEVICE(0x0586, 0x3410), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x0baf, 0x0121), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x0586, 0x3412), .driver_info = DEVICE_ZD1211B },
++	{ USB_DEVICE(0x0586, 0x3413), .driver_info = DEVICE_ZD1211B },
++	{ USB_DEVICE(0x0053, 0x5301), .driver_info = DEVICE_ZD1211B },
+ 	/* "Driverless" devices that need ejecting */
+ 	{ USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
++	{ USB_DEVICE(0x0ace, 0x20ff), .driver_info = DEVICE_INSTALLER },
+ 	{}
+ };
+ 
+diff --git a/include/linux/eeprom_93cx6.h b/include/linux/eeprom_93cx6.h
+new file mode 100644
+index 0000000..4b9be59
+--- /dev/null
++++ b/include/linux/eeprom_93cx6.h
+@@ -0,0 +1,77 @@
++/*
++	Copyright (C) 2004 - 2006 rt2x00 SourceForge Project
++	<http://rt2x00.serialmonkey.com>
++
++	This program is free software; you can redistribute it and/or modify
++	it under the terms of the GNU General Public License as published by
++	the Free Software Foundation; either version 2 of the License, or
++	(at your option) any later version.
++
++	This program is distributed in the hope that it will be useful,
++	but WITHOUT ANY WARRANTY; without even the implied warranty of
++	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++	GNU General Public License for more details.
++
++	You should have received a copy of the GNU General Public License
++	along with this program; if not, write to the
++	Free Software Foundation, Inc.,
++	59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++/*
++	Module: eeprom_93cx6
++	Abstract: EEPROM reader datastructures for 93cx6 chipsets.
++	Supported chipsets: 93c46 & 93c66.
++ */
++
++/*
++ * EEPROM operation defines.
++ */
++#define PCI_EEPROM_WIDTH_93C46	6
++#define PCI_EEPROM_WIDTH_93C66	8
++#define PCI_EEPROM_WIDTH_OPCODE	3
++#define PCI_EEPROM_WRITE_OPCODE	0x05
++#define PCI_EEPROM_READ_OPCODE	0x06
++#define PCI_EEPROM_EWDS_OPCODE	0x10
++#define PCI_EEPROM_EWEN_OPCODE	0x13
++
++/**
++ * struct eeprom_93cx6 - control structure for setting the commands
++ * for reading the eeprom data.
++ * @data: private pointer for the driver.
++ * @register_read(struct eeprom_93cx6 *eeprom): handler to
++ * read the eeprom register, this function should set all reg_* fields.
++ * @register_write(struct eeprom_93cx6 *eeprom): handler to
++ * write to the eeprom register by using all reg_* fields.
++ * @width: eeprom width, should be one of the PCI_EEPROM_WIDTH_* defines
++ * @reg_data_in: register field to indicate data input
++ * @reg_data_out: register field to indicate data output
++ * @reg_data_clock: register field to set the data clock
++ * @reg_chip_select: register field to set the chip select
++ *
++ * This structure is used for the communication between the driver
++ * and the eeprom_93cx6 handlers for reading the eeprom.
++ */
++struct eeprom_93cx6 {
++	void *data;
++
++	void (*register_read)(struct eeprom_93cx6 *eeprom);
++	void (*register_write)(struct eeprom_93cx6 *eeprom);
++
++	int width;
++
++	char reg_data_in;
++	char reg_data_out;
++	char reg_data_clock;
++	char reg_chip_select;
++};
++
++extern void eeprom_93cx6_read(struct eeprom_93cx6 *eeprom,
++	const u8 word, u16 *data);
++extern void eeprom_93cx6_multiread(struct eeprom_93cx6 *eeprom,
++	const u8 word, __le16 *data, const u16 words);
++
++extern void eeprom_93cx6_write(struct eeprom_93cx6 *eeprom,
++	const u8 word, u16 data);
++extern void eeprom_93cx6_multiwrite(struct eeprom_93cx6 *eeprom,
++	const u8 word, __le16 *data, const u16 words);
+diff --git a/include/net/ieee80211.h b/include/net/ieee80211.h
+index d56b292..bbd85cd 100644
+--- a/include/net/ieee80211.h
++++ b/include/net/ieee80211.h
+@@ -1291,6 +1291,8 @@ extern u8 ieee80211_get_channel_flags(struct ieee80211_device *ieee,
+ extern const struct ieee80211_channel *ieee80211_get_channel(struct
+ 							     ieee80211_device
+ 							     *ieee, u8 channel);
++extern u32 ieee80211_channel_to_freq(struct ieee80211_device * ieee,
++				      u8 channel);
+ 
+ /* ieee80211_wx.c */
+ extern int ieee80211_wx_get_scan(struct ieee80211_device *ieee,
+diff --git a/net/ieee80211/ieee80211_geo.c b/net/ieee80211/ieee80211_geo.c
+index 305a09d..960ad13 100644
+--- a/net/ieee80211/ieee80211_geo.c
++++ b/net/ieee80211/ieee80211_geo.c
+@@ -94,6 +94,21 @@ int ieee80211_channel_to_index(struct ieee80211_device *ieee, u8 channel)
+ 	return -1;
+ }
+ 
++u32 ieee80211_channel_to_freq(struct ieee80211_device * ieee, u8 channel)
++{
++	const struct ieee80211_channel * ch;
++
++	/* Driver needs to initialize the geography map before using
++	 * these helper functions */
++	if (ieee->geo.bg_channels == 0 && ieee->geo.a_channels == 0)
++		return 0;
++
++	ch = ieee80211_get_channel(ieee, channel);
++	if (!ch->channel)
++		return 0;
++	return ch->freq;
++}
++
+ u8 ieee80211_freq_to_channel(struct ieee80211_device * ieee, u32 freq)
+ {
+ 	int i;
+@@ -174,6 +189,7 @@ EXPORT_SYMBOL(ieee80211_get_channel);
+ EXPORT_SYMBOL(ieee80211_get_channel_flags);
+ EXPORT_SYMBOL(ieee80211_is_valid_channel);
+ EXPORT_SYMBOL(ieee80211_freq_to_channel);
++EXPORT_SYMBOL(ieee80211_channel_to_freq);
+ EXPORT_SYMBOL(ieee80211_channel_to_index);
+ EXPORT_SYMBOL(ieee80211_set_geo);
+ EXPORT_SYMBOL(ieee80211_get_geo);
+diff --git a/net/ieee80211/ieee80211_wx.c b/net/ieee80211/ieee80211_wx.c
+index cee5e13..523a137 100644
+--- a/net/ieee80211/ieee80211_wx.c
++++ b/net/ieee80211/ieee80211_wx.c
+@@ -89,15 +89,17 @@ static char *ieee80211_translate_scan(struct ieee80211_device *ieee,
+ 		start = iwe_stream_add_event(start, stop, &iwe, IW_EV_UINT_LEN);
+ 	}
+ 
+-	/* Add frequency/channel */
++	/* Add channel and frequency */
+ 	iwe.cmd = SIOCGIWFREQ;
+-/*	iwe.u.freq.m = ieee80211_frequency(network->channel, network->mode);
+-	iwe.u.freq.e = 3; */
+ 	iwe.u.freq.m = network->channel;
+ 	iwe.u.freq.e = 0;
+ 	iwe.u.freq.i = 0;
+ 	start = iwe_stream_add_event(start, stop, &iwe, IW_EV_FREQ_LEN);
+ 
++	iwe.u.freq.m = ieee80211_channel_to_freq(ieee, network->channel);
++	iwe.u.freq.e = 6;
++	start = iwe_stream_add_event(start, stop, &iwe, IW_EV_FREQ_LEN);
++
+ 	/* Add encryption capability */
+ 	iwe.cmd = SIOCGIWENCODE;
+ 	if (network->capability & WLAN_CAPABILITY_PRIVACY)
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 822917d..3e07e9d 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -17,6 +17,7 @@
+  * scan result table filtering (by capability (privacy, IBSS/BSS, WPA/RSN IE,
+  *    SSID)
+  */
++#include <linux/delay.h>
+ #include <linux/if_ether.h>
+ #include <linux/skbuff.h>
+ #include <linux/netdevice.h>
+@@ -27,7 +28,6 @@
+ #include <linux/rtnetlink.h>
+ #include <net/iw_handler.h>
+ #include <asm/types.h>
+-#include <asm/delay.h>
+ 
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+-- 
+John W. Linville
+linville@tuxdriver.com
