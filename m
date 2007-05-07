@@ -1,57 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:43261
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:45938
 	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966701AbXEGUgb (ORCPT
+	with ESMTP id S966549AbXEGUuu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2007 16:36:31 -0400
+	Mon, 7 May 2007 16:50:50 -0400
 From: Michael Buesch <mb@bu3sch.de>
-To: "Gary Zambrano" <zambrano@broadcom.com>
-Subject: Re: Merging SSB upstream
-Date: Mon, 7 May 2007 22:35:58 +0200
-Cc: "Jeff Garzik" <jeff@garzik.org>,
-	"John Linville" <linville@tuxdriver.com>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de
-References: <200705060303.17594.mb@bu3sch.de> <463D4770.9060903@garzik.org> <1178556198.8350.2.camel@dhcp-10-12-136-115.broadcom.com>
-In-Reply-To: <1178556198.8350.2.camel@dhcp-10-12-136-115.broadcom.com>
+To: Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [PATCH] mac80211: Allow sleeping in set_key op
+Date: Mon, 7 May 2007 22:50:42 +0200
+Cc: Jiri Benc <jbenc@suse.cz>, John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200705062037.35037.mb@bu3sch.de> <200705071517.21331.flamingice@sourmilk.net>
+In-Reply-To: <200705071517.21331.flamingice@sourmilk.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-15"
-Message-Id: <200705072235.58587.mb@bu3sch.de>
+Message-Id: <200705072250.42407.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 07 May 2007 18:43:18 Gary Zambrano wrote:
-> On Sat, 2007-05-05 at 23:11 -0400, Jeff Garzik wrote:
-> > Michael Buesch wrote:
-> > > So, now that mac80211 is merged upstream, I think it's
-> > > time to merge SSB and the b44-ssb port upstream.
-> > > Note that bcm43xx-mac80211 is _not_ ready for upstream, yet.
-> > > 
-> > > What do you think? I'd like to merge ssb as-is, although
-> > > the embedded-device parts are not quite finished, yet.
-> > > But they don't interfere with the non-embedded parts used
-> > > by b44 and the bcm43xx PCI cards.
-> > > So we _could_ remove the ssb-mips code, but I don't like to
-> > > do that for better maintainability. It doesn't hurt anyone IMO.
-> > 
-> > What does Ralf (MIPS maintainer) and Gary (Broadcom maintainer) think?
-> > 
-> > For my part, I'm not going to render even a tentative opinion without a 
-> > link to actual code.
-> > 
-> > Last I saw of the code, and descriptions in IRC, it sounded sane.
-> > 
-> > 	Jeff
-> > 
-> 
-> I would like to put some test mileage behind the ssb.
-> We had a hard time testing it a while back, so we will try the latest.
+On Monday 07 May 2007 21:17:14 Michael Wu wrote:
+> On Sunday 06 May 2007 14:37, Michael Buesch wrote:
+> > Allow drivers to sleep in the setkey function, as it's rather
+> > complicated to defer set_key to a workqueue in the driver
+> > (error code is lost, keyconf->hw_key_idx is possibly hard
+> > to get right.)
+> >
+> I'd rather not defer to a workqueue. That just patches over the awkward 
+> locking that the sta_info code has, which is really the reason why you can't 
+> sleep in set_key.
 
-Ok, nice to hear. :)
-I stresstested latest ssb on my b44 card and it works fine here.
-No TX timeouts or something.
+Well, but it seems nobody is fixing the locking. I was told it's
+almost impossible or something like that. ;)
+This is just trying to fix showstopper bugs for bcm43xx.
 
 -- 
 Greetings Michael.
