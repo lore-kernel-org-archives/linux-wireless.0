@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41222
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933962AbXEEVtI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 May 2007 17:49:08 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: 2.6.21-mm1
-Date: Sat, 5 May 2007 23:48:49 +0200
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <20070505014955.8f3990b5.akpm@linux-foundation.org> <463CA74C.8080008@gmail.com> <20070505114811.f824c902.akpm@linux-foundation.org>
-In-Reply-To: <20070505114811.f824c902.akpm@linux-foundation.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:3646 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934438AbXEGSEN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2007 14:04:13 -0400
+Subject: Re: Merging SSB upstream
+From: "Gary Zambrano" <zambrano@broadcom.com>
+To: "Jeff Garzik" <jeff@garzik.org>
+cc: "Michael Buesch" <mb@bu3sch.de>,
+	"John Linville" <linville@tuxdriver.com>,
+	"Andrew Morton" <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de
+In-Reply-To: <463D4770.9060903@garzik.org>
+References: <200705060303.17594.mb@bu3sch.de>
+ <463D4770.9060903@garzik.org>
+Date: Mon, 07 May 2007 09:43:18 -0700
+Message-ID: <1178556198.8350.2.camel@dhcp-10-12-136-115.broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200705052348.49994.mb@bu3sch.de>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 05 May 2007 20:48:11 Andrew Morton wrote:
-> On Sat, 05 May 2007 17:48:28 +0200 Maciej Rutecki <maciej.rutecki@gmail.com> wrote:
-> 
-> > Andrew Morton pisze:
-> > > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21/2.6.21-mm1/
-> > > 
-> > > 
+On Sat, 2007-05-05 at 23:11 -0400, Jeff Garzik wrote:
+> Michael Buesch wrote:
+> > So, now that mac80211 is merged upstream, I think it's
+> > time to merge SSB and the b44-ssb port upstream.
+> > Note that bcm43xx-mac80211 is _not_ ready for upstream, yet.
 > > 
-> > CC [M]  lib/zlib_deflate/deflate_syms.o
-> >   LD [M]  lib/zlib_deflate/zlib_deflate.o
-> >   Building modules, stage 2.
-> >   MODPOST 791 modules
-> > ERROR: "ssb_pcihost_register" [drivers/net/b44.ko] undefined!
-> > ERROR: "ssb_pcihost_unregister" [drivers/net/b44.ko] undefined!
-> > make[2]: *** [__modpost] Error 1
-> > make[1]: *** [modules] Error 2
-> > make[1]: Leaving directory `/usr/src/linux-mm'
-> > make: *** [debian/stamp-build-kernel] Error 2
+> > What do you think? I'd like to merge ssb as-is, although
+> > the embedded-device parts are not quite finished, yet.
+> > But they don't interfere with the non-embedded parts used
+> > by b44 and the bcm43xx PCI cards.
+> > So we _could_ remove the ssb-mips code, but I don't like to
+> > do that for better maintainability. It doesn't hurt anyone IMO.
+> 
+> What does Ralf (MIPS maintainer) and Gary (Broadcom maintainer) think?
+> 
+> For my part, I'm not going to render even a tentative opinion without a 
+> link to actual code.
+> 
+> Last I saw of the code, and descriptions in IRC, it sounded sane.
+> 
+> 	Jeff
+> 
 
-config B44_PCI
-	bool "Broadcom 4400 PCI device support"
-	depends on B44 && NET_PCI
+I would like to put some test mileage behind the ssb.
+We had a hard time testing it a while back, so we will try the latest.
+Thanks,
+Gary
 
-We simply need a SELECT SSB_PCIHOST here. Not sure why it's not there.
-I thought it used to be there.
-
--- 
-Greetings Michael.
