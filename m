@@ -1,63 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.231]:27730 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756380AbXEUOac (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:35623 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S967187AbXEGXSA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 May 2007 10:30:32 -0400
-Received: by wx-out-0506.google.com with SMTP id i26so300599wxd
-        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2007 07:30:31 -0700 (PDT)
-Date: Mon, 21 May 2007 22:30:22 +0800
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	jeff@garzik.org, Florin Malita <fmalita@gmail.com>
-Subject: Re: [2.6 patch] drivers/net/wireless/libertas/rx.c: fix  use-after-free
-Message-ID: <20070521143022.GA26452@kernel.sg>
-Reply-To: Eugene Teo <eugeneteo@kernel.sg>
-References: <464DD957.9040803@redhat.com> <20070518174623.GA3492@tuxdriver.com> <464E6B82.40607@redhat.com> <20070521133124.GB9621@tuxdriver.com>
+	Mon, 7 May 2007 19:18:00 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH v2] Add rtl8187 wireless driver
+Date: Mon, 7 May 2007 19:17:20 -0400
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Andrea Merello <andrea.merello@gmail.com>
+References: <200705071022.11711.flamingice@sourmilk.net> <463F44E6.5030705@garzik.org>
+In-Reply-To: <463F44E6.5030705@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070521133124.GB9621@tuxdriver.com>
-From: Eugene Teo <eugeneteo@kernel.sg>
+Content-Type: multipart/signed;
+  boundary="nextPart2189907.2cFA0iq48g";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200705071917.25414.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-<quote sender="John W. Linville">
-> On Sat, May 19, 2007 at 11:14:10AM +0800, Eugene Teo wrote:
-> > John W. Linville wrote:
-> 
-> > >>  done:
-> > >>         LEAVE();
-> > >>
-> > >> -       skb->protocol = __constant_htons(0x0019);       /* ETH_P_80211_RAW */
-> > >> -
-> > > 
-> > > Except for this part...is this intentional?
-> > 
-> > skb could have been freed by then. And, in libertas_upload_rx_packet(), skb->protocol
-> > is initialized by eth_type_trans(skb, priv->wlan_dev.netdev).
-> 
-> OK, I see that.  Looks like Florin has reposted his patch, still
-> without this hunk.  Would you like to submit a patch for this hunk?
+--nextPart2189907.2cFA0iq48g
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-skb could have been freed by then. Also, in libertas_upload_rx_packet(),
-skb->protocol is initialized by eth_type_trans().
+On Monday 07 May 2007 11:25, Jeff Garzik wrote:
+> I am a bit skeptical that multiple files are needed.  It seems like
+> drivers/net/wireless/rtl818x.c would be a better path, a la tg3.c.
+>
+The radio tuning stuff could be stuffed into rtl8187_dev.c, but I like to k=
+eep=20
+it separate since rtl8187_rtl8225.c tends to contain all the radio tuning=20
+black magic that no one really understands except for the engineers at=20
+Realtek, whereas rtl8187_dev.c is mostly straightforward. rtl8187 can also=
+=20
+(in theory) use another radio chip (rtl8255). The two headers - rtl818x.h a=
+nd=20
+rtl8187.h cannot be merged because the definitions in rtl818x.h are shared=
+=20
+between the usb and pci drivers.
 
-Cc: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Eugene Teo <eugeneteo@kernel.sg>
----
+I rather not combine any files, though I don't mind collapsing the driver=20
+another level. However, I think other driver authors much prefer having the=
+ir=20
+own directory, and I'd like to keep the drivers consistently in their own=20
+directory or all together in drivers/net/wireless.
 
-diff -uprN -X 2.6.22-rc2/Documentation/dontdiff 2.6.22-rc2.default/drivers/net/wireless/libertas/rx.c 2.6.22-rc2/drivers/net/wireless/libertas/rx.c
---- 2.6.22-rc2.default/drivers/net/wireless/libertas/rx.c	2007-05-21 22:07:50.000000000 +0800
-+++ 2.6.22-rc2/drivers/net/wireless/libertas/rx.c	2007-05-21 22:08:44.000000000 +0800
-@@ -453,7 +453,5 @@ static int process_rxed_802_11_packet(wl
- done:
- 	LEAVE();
- 
--	skb->protocol = __constant_htons(0x0019);	/* ETH_P_80211_RAW */
--
- 	return (ret);
- }
+=2DMichael Wu
 
--- 
-1024D/58DF8823 print 47B9 90F6 AE4A 9C51 37E0  D6E1 EA84 C6A2 58DF 8823
-main(i) { putchar(182623909 >> (i-1) * 5&31|!!(i<7)<<6) && main(++i); }
+--nextPart2189907.2cFA0iq48g
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGP7OFT3Oqt9AH4aERAmm+AJ9q/zNHoJLkOw2AUfa7Ul6q/8gqSwCgv1mw
+KoabnWvKEJnRtWzZ+5037Ec=
+=Heln
+-----END PGP SIGNATURE-----
+
+--nextPart2189907.2cFA0iq48g--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
