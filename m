@@ -1,63 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:52434 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754913AbXEXHlj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2007 03:41:39 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Subject: Re: [PATCH 2/3] mac80211: IEEE802.11e/WMM TS management and DLS support
-Date: Thu, 24 May 2007 00:39:53 -0700
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jiri Benc <jbenc@suse.cz>
-References: <20070514051526.GA25582@mail.intel.com> <200705232342.31882.flamingice@sourmilk.net> <1179992075.6150.30.camel@debian.sh.intel.com>
-In-Reply-To: <1179992075.6150.30.camel@debian.sh.intel.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:46242 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934289AbXEGPXM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2007 11:23:12 -0400
+Message-ID: <463F443A.5000306@garzik.org>
+Date: Mon, 07 May 2007 11:22:34 -0400
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2144698.i31T9CEaG9";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705240039.57564.flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Dan Williams <dcbw@redhat.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	linux-wireless@vger.kernel.org, marcelo@kvack.org,
+	linux-kernel@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6 (was Re:  Please pull 'libertas' branch of wireless-2.6)
+References: <20070227205649.GH5826@tuxdriver.com> <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org> <20070507104117.GA31601@infradead.org> <1178539423.3032.24.camel@localhost.localdomain> <20070507141143.GB5125@tuxdriver.com>
+In-Reply-To: <20070507141143.GB5125@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2144698.i31T9CEaG9
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+John W. Linville wrote:
+> On Mon, May 07, 2007 at 08:03:43AM -0400, Dan Williams wrote:
+>> On Mon, 2007-05-07 at 11:41 +0100, Christoph Hellwig wrote:
+> 
+>>> Of course it's not anywhere near good shape.  Almost all items from my
+>>> review were completely ignored, and we have another totoally substandard
+>>> wireless driver with crappy thread handling, a huge number of broken private
+>>> ioctls and partially absymal codingstyle.
+> 
+>> I've already updated libertas-2.6 git with a ton of updates for this.
+>>
+>> In any case, lets push off any merge until 2.6.23 so the rest of the
+>> comments can be dealt with:
+> 
+> Alright...Jeff, would you please pull the following branch for upstream ASAP:
+> 
+> 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git revert-libertas
 
-On Thursday 24 May 2007 00:34, Zhu Yi wrote:
-> > > + if (dls_link_status(&sdata->u.sta, hdr.addr1) =3D=3D DLS_STATUS_OK){
-> >
-> > How is this line suppose to work? I don't see hdr.addr1 initialized at
-> > any point before this.
->
-> DLS must be setup before it can be used. The addr1 is inserted into the
-> dls hash table when the QSTA received a successful DLS response or
-> accepted a DLS request.
->
-AFAICT, dls_link_status uses the second argument to look up the dls entry f=
-or=20
-the destination address. At this point, hdr.addr1 is not initialized to=20
-anything, so something is wrong here.
+This is leading from behind :/  We don't need to blow about in the wind 
+here.  If you reviewed the driver in depth -- which I assumed because of 
+the trust placed in you as wireless maintainer -- then this situation 
+really should not be happening.  You need to know the status of new 
+drivers you are pushing upstream: what work is left to do, what has been 
+done, what state the driver is in.
 
-=2DMichael Wu
+I view this request as a failure of the trust network :(
 
---nextPart2144698.i31T9CEaG9
-Content-Type: application/pgp-signature
+For my part, I _did_ review it.  Twice.  Once in the early days, and 
+once when I pulled it into my netdev-2.6.git tree.  libertas needs the 
+changes mentioned in this thread.  But the driver is in workable shape 
+to be USED while being improved.  I strongly dislike people being cowed 
+into not merging a driver for years, because the driver in question does 
+not meet Christoph's idea of perfection.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Open source is about release early, release often.  Not "hide code in a 
+dark corner until Christoph thinks it is perfect."  We have high 
+standards for upstream merged code, but that standard is not perfection. 
+  Perfect is the enemy of good.
 
-iD8DBQBGVUFNT3Oqt9AH4aERApCcAJ0WawW5EZfzSEDm+GPenY9lmcH/awCgxclK
-1jOwVubgTXdpN5dqu0bI8/A=
-=eEFv
------END PGP SIGNATURE-----
+I would rather see the libertas-2.6 git changes pulled into upstream, 
+and am not inclined to revert a WORKING DRIVER at this point, a driver 
+that is actively maintained and has seen quite a bit of improvement 
+since it initially appeared.
 
---nextPart2144698.i31T9CEaG9--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+IMO, Linux users best served by avoiding this silly song and dance, now 
+that the driver is upstream.
+
+Plus, that leaves the kernel history less polluted.
+
+	Jeff
+
+
+
+
