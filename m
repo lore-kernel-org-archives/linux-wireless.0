@@ -1,79 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:42948 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756727AbXEMBaY (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.226]:11492 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754367AbXEGOpw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 May 2007 21:30:24 -0400
-From: Michael Wu <flamingice@sourmilk.net>
+	Mon, 7 May 2007 10:45:52 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1420705wxd
+        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2007 07:45:50 -0700 (PDT)
 To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 1/2] Add 93cx6 eeprom library
-Date: Sat, 12 May 2007 21:29:24 -0400
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-References: <200705111559.41153.flamingice@sourmilk.net> <20070512191749.GA6018@tuxdriver.com>
-In-Reply-To: <20070512191749.GA6018@tuxdriver.com>
+Subject: Please pull 'upstream' branch of rt2x00
+Date: Mon, 7 May 2007 16:44:04 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart9994858.PreklQ3glZ";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705122129.28655.flamingice@sourmilk.net>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200705071644.04150.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart9994858.PreklQ3glZ
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Hi John,
 
-On Saturday 12 May 2007 15:17, John W. Linville wrote:
-> On Fri, May 11, 2007 at 03:59:40PM -0400, Michael Wu wrote:
-> > +static inline void eeprom_93cx6_pulse_high(struct eeprom_93cx6 *eeprom)
-> > +{
-> > +	eeprom->reg_data_clock = 1;
-> > +	eeprom->register_write(eeprom);
-> > +	udelay(1);
-> > +}
-> > +
-> > +static inline void eeprom_93cx6_pulse_low(struct eeprom_93cx6 *eeprom)
-> > +{
-> > +	eeprom->reg_data_clock = 0;
-> > +	eeprom->register_write(eeprom);
-> > +	udelay(1);
-> > +}
->
-> I'm with Jeff, these udelay's should go.  If they belong anywhere, it
-> would be in the write routines provided by the caller.  For example, the
-> routines provided by rtl8187 already have a delay in them.  Other
-> hardware might actually have a hardware timer to implement delays (hey,
-> it's possible).  Either way, this delay is superfluous.
->
-Will remove.
+Here is the latest rt2x00 update. It is a rather small one.
+Only 1 real fix, and the second path is cosmetic since it
+will start a proper versioning of rt2x00.
 
-> > +}
-> > +EXPORT_SYMBOL_GPL(eeprom_93cx6_multiread);
-> > +
->
-> It's pedantic, but I hate empty lines at the end of files...
->
-OK.
+This will most likely be the last pull request for the next 1 or 2 months
+due to developer/time/health shortage.
 
-Thanks,
--Michael Wu
+The TODO list for rt2x00 has been expanding over the last few days,
+so as soon as I am fully back there will be quite a lot to do. ;)
+(http://rt2x00.serialmonkey.com/wiki/index.php?title=Rt2x00_beta#rt2x00_beta_status_page)
 
---nextPart9994858.PreklQ3glZ
-Content-Type: application/pgp-signature
+Ivo
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+---
 
-iD8DBQBGRmn4T3Oqt9AH4aERAo4YAKCACXWIQaaosMfHPuDBxymDHpKNGwCfRl/C
-hMuEJ1YAZxTP15JRwx9jJpE=
-=9uU5
------END PGP SIGNATURE-----
+The following changes since commit 5209b1eff0b1891d8bb002eb067a11b4caa5f5bc:
+  John W. Linville (1):
+        Merge branch 'from-linus'
 
---nextPart9994858.PreklQ3glZ--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+are found in the git repository at:
+
+  http://git.serialmonkey.com/rt2x00.git/ upstream
+
+Ivo van Doorn (2):
+      rt2x00: release 2.0.0
+      Merge branch 'wireless-dev'
+
+Jan Kiszka (1):
+      rt2x00: Fix master beacon setup
+
+ drivers/net/wireless/mac80211/rt2x00/rt2400pci.c |    8 +++-----
+ drivers/net/wireless/mac80211/rt2x00/rt2500pci.c |    8 +++-----
+ drivers/net/wireless/mac80211/rt2x00/rt2500usb.c |    8 +++-----
+ drivers/net/wireless/mac80211/rt2x00/rt2x00.h    |    3 +--
+ drivers/net/wireless/mac80211/rt2x00/rt2x00dev.c |   17 -----------------
+ drivers/net/wireless/mac80211/rt2x00/rt2x00mac.c |   14 +++++++++++++-
+ drivers/net/wireless/mac80211/rt2x00/rt2x00pci.c |   17 -----------------
+ drivers/net/wireless/mac80211/rt2x00/rt2x00usb.c |   19 +------------------
+ drivers/net/wireless/mac80211/rt2x00/rt61pci.c   |    8 +++-----
+ drivers/net/wireless/mac80211/rt2x00/rt73usb.c   |    8 +++-----
+ 10 files changed, 30 insertions(+), 80 deletions(-)
