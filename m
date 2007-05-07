@@ -1,145 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4024 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767979AbXEEEC5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 May 2007 00:02:57 -0400
-Date: Fri, 4 May 2007 23:17:49 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 0/4] add mac80211 wireless infrastructure
-Message-ID: <20070505031749.GA5308@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from smtp.rutgers.edu ([128.6.72.243]:62670 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S967175AbXEGXbY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2007 19:31:24 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Please pull 'upstream' branch of wireless-2.6
+Date: Mon, 7 May 2007 19:30:44 -0400
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+References: <20070507175121.GF5125@tuxdriver.com> <463FB1A0.3070608@garzik.org>
+In-Reply-To: <463FB1A0.3070608@garzik.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1658612.QJkmOeGF0b";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200705071930.48469.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series adds the mac80211 component.  This is the new wireless
-infrastructure for "softmac"-style wireless hardware.  It originated
-as code contributed by Devicescape, and has been under development by
-the community for well over a year.  Thanks are due especially to Jiri
-Benc and Michael Wu as well as Johannes Berg and a number of other
-contributors who have worked to hammer this into its current form.
+--nextPart1658612.QJkmOeGF0b
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-This component was in -mm for most of the 2.6.21 cycle, with few
-reported bugs.  The code is also currently available in Fedora rawhide
-where it has performed well.
+On Monday 07 May 2007 19:09, Jeff Garzik wrote:
+> The general idea is everything you want in 2.6.22 should be prepared and
+> in -mm BEFORE 2.6.21 is released, and the 2.6.22 merge window opens.
+>
+rtl8187 has been in -mm since 2.6.21-rc2-mm1.
 
-The wireless developers would like this to be considered for merge
-in time for 2.6.22.  Patches for at least one mac80211-based driver
-will follow shortly.
+-Michael Wu
 
-Thanks,
+--nextPart1658612.QJkmOeGF0b
+Content-Type: application/pgp-signature
 
-John
----
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-The following changes since commit dc87c3985e9b442c60994308a96f887579addc39:
-  Linus Torvalds (1):
-        libata: honour host controllers that want just one host
+iD8DBQBGP7aoT3Oqt9AH4aERAig7AJ4unozi2KOvSthQpjc1qJsisXZhcwCgk0YP
+xpbv5f3lBK1XFkQGLMFeKpA=
+=KYX4
+-----END PGP SIGNATURE-----
 
-are found in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git mac80211
-
-Jiri Benc (4):
-      mac80211: add generic include/linux/ieee80211.h
-      mac80211: add mac80211 wireless stack
-      mac80211: add debugfs attributes
-      mac80211: add maintainers entry for mac80211
-
- MAINTAINERS                     |   10 +
- include/linux/ieee80211.h       |  342 +++
- include/net/mac80211.h          | 1045 ++++++++
- net/Kconfig                     |    1 +
- net/Makefile                    |    4 +-
- net/mac80211/Kconfig            |   78 +
- net/mac80211/Makefile           |   20 +
- net/mac80211/aes_ccm.c          |  155 ++
- net/mac80211/aes_ccm.h          |   26 +
- net/mac80211/debugfs.c          |  433 ++++
- net/mac80211/debugfs.h          |   16 +
- net/mac80211/debugfs_key.c      |  252 ++
- net/mac80211/debugfs_key.h      |   34 +
- net/mac80211/debugfs_netdev.c   |  440 ++++
- net/mac80211/debugfs_netdev.h   |   30 +
- net/mac80211/debugfs_sta.c      |  246 ++
- net/mac80211/debugfs_sta.h      |   12 +
- net/mac80211/hostapd_ioctl.h    |  108 +
- net/mac80211/ieee80211.c        | 4984 +++++++++++++++++++++++++++++++++++++++
- net/mac80211/ieee80211_cfg.c    |   66 +
- net/mac80211/ieee80211_cfg.h    |    9 +
- net/mac80211/ieee80211_common.h |   98 +
- net/mac80211/ieee80211_i.h      |  798 +++++++
- net/mac80211/ieee80211_iface.c  |  352 +++
- net/mac80211/ieee80211_ioctl.c  | 1822 ++++++++++++++
- net/mac80211/ieee80211_key.h    |  106 +
- net/mac80211/ieee80211_led.c    |   91 +
- net/mac80211/ieee80211_led.h    |   32 +
- net/mac80211/ieee80211_rate.c   |  140 ++
- net/mac80211/ieee80211_rate.h   |  144 ++
- net/mac80211/ieee80211_sta.c    | 3060 ++++++++++++++++++++++++
- net/mac80211/michael.c          |  104 +
- net/mac80211/michael.h          |   20 +
- net/mac80211/rc80211_simple.c   |  432 ++++
- net/mac80211/sta_info.c         |  470 ++++
- net/mac80211/sta_info.h         |  164 ++
- net/mac80211/tkip.c             |  341 +++
- net/mac80211/tkip.h             |   36 +
- net/mac80211/wep.c              |  328 +++
- net/mac80211/wep.h              |   40 +
- net/mac80211/wme.c              |  678 ++++++
- net/mac80211/wme.h              |   57 +
- net/mac80211/wpa.c              |  660 ++++++
- net/mac80211/wpa.h              |   31 +
- 44 files changed, 18313 insertions(+), 2 deletions(-)
- create mode 100644 include/linux/ieee80211.h
- create mode 100644 include/net/mac80211.h
- create mode 100644 net/mac80211/Kconfig
- create mode 100644 net/mac80211/Makefile
- create mode 100644 net/mac80211/aes_ccm.c
- create mode 100644 net/mac80211/aes_ccm.h
- create mode 100644 net/mac80211/debugfs.c
- create mode 100644 net/mac80211/debugfs.h
- create mode 100644 net/mac80211/debugfs_key.c
- create mode 100644 net/mac80211/debugfs_key.h
- create mode 100644 net/mac80211/debugfs_netdev.c
- create mode 100644 net/mac80211/debugfs_netdev.h
- create mode 100644 net/mac80211/debugfs_sta.c
- create mode 100644 net/mac80211/debugfs_sta.h
- create mode 100644 net/mac80211/hostapd_ioctl.h
- create mode 100644 net/mac80211/ieee80211.c
- create mode 100644 net/mac80211/ieee80211_cfg.c
- create mode 100644 net/mac80211/ieee80211_cfg.h
- create mode 100644 net/mac80211/ieee80211_common.h
- create mode 100644 net/mac80211/ieee80211_i.h
- create mode 100644 net/mac80211/ieee80211_iface.c
- create mode 100644 net/mac80211/ieee80211_ioctl.c
- create mode 100644 net/mac80211/ieee80211_key.h
- create mode 100644 net/mac80211/ieee80211_led.c
- create mode 100644 net/mac80211/ieee80211_led.h
- create mode 100644 net/mac80211/ieee80211_rate.c
- create mode 100644 net/mac80211/ieee80211_rate.h
- create mode 100644 net/mac80211/ieee80211_sta.c
- create mode 100644 net/mac80211/michael.c
- create mode 100644 net/mac80211/michael.h
- create mode 100644 net/mac80211/rc80211_simple.c
- create mode 100644 net/mac80211/sta_info.c
- create mode 100644 net/mac80211/sta_info.h
- create mode 100644 net/mac80211/tkip.c
- create mode 100644 net/mac80211/tkip.h
- create mode 100644 net/mac80211/wep.c
- create mode 100644 net/mac80211/wep.h
- create mode 100644 net/mac80211/wme.c
- create mode 100644 net/mac80211/wme.h
- create mode 100644 net/mac80211/wpa.c
- create mode 100644 net/mac80211/wpa.h
-
-Individual patches can be found here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/mac80211/
-
--- 
-John W. Linville
-linville@tuxdriver.com
+--nextPart1658612.QJkmOeGF0b--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
