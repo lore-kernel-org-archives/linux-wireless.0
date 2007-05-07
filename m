@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4606 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753197AbXEaWYk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2007 18:24:40 -0400
-Date: Thu, 31 May 2007 17:16:05 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: Please pull 'libertas' branch of wireless-2.6
-Message-ID: <20070531211605.GA30161@tuxdriver.com>
-References: <20070529183347.GD3496@tuxdriver.com> <465D8538.8070507@garzik.org> <1180538928.17163.10.camel@xo-28-0B-88.localdomain> <1180645997.18078.8.camel@xo-28-0B-88.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1180645997.18078.8.camel@xo-28-0B-88.localdomain>
+Received: from smtp.rutgers.edu ([128.6.72.243]:40528 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753289AbXEGHxP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2007 03:53:15 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: John Linville <linville@tuxdriver.com>
+Subject: mac80211-drivers pull request (week18)
+Cc: linux-wireless@vger.kernel.org,
+	Andrea Merello <andrea.merello@gmail.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>
+MIME-Version: 1.0
+Date: Mon, 7 May 2007 03:52:39 -0400
+Content-Type: multipart/signed;
+  boundary="nextPart15308741.cnq8Wpm4Nl";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200705070352.44018.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 31, 2007 at 05:13:17PM -0400, Dan Williams wrote:
-> On Wed, 2007-05-30 at 11:28 -0400, Dan Williams wrote:
-> > On Wed, 2007-05-30 at 10:07 -0400, Jeff Garzik wrote:
-> > > John W. Linville wrote:
-> > > > Lots of stuff here...probably best for 2.6.23...
-> > > 
-> > > Is this best for Linux users... or just easy for developers?
-> > > 
-> > > Won't putting off all these fixes until 2.6.23 leave the driver released 
-> > > in 2.6.22 in shoddy shape?
+--nextPart15308741.cnq8Wpm4Nl
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-> > If you think all the bits from this should just go to 2.6.22, that's
-> > fine with me.  But I don't feel comfortable making that call given what
-> > I thought were the constraints on pushing changes through during an rc
-> > cycle.  When the merge window was open, we backported critical bug fixes
-> > and necessary merge-requirement cleanups to the code in linville's tree,
-> > but avoided changes that didn't impact function.
-> 
-> Any response on these points yet?  I've got yet more cleanups and a few
-> other things queued in libertas-2.6 but I'd like to see where this
-> discussion goes before sending a pull request for the new bits.
+Hi John,
 
-As for me, I have no great problem w/ the whole batch going to 2.6.22.
-The driver is still new and most acknowledge it still has significant
-defficiencies.  Most (but probably not all) of the patches would seem
-to fit some definition of bug fix anyway.  I was just trying to err
-on the side of caution and follow the normal "bugfixes in -rc" process.
+Please pull
+git://git.kernel.org/pub/scm/linux/kernel/git/mwu/mac80211-drivers.git
+for these patches:
 
-Jeff, the branch in question is based off a vanilla 2.6.22-rc3.
-So it is safe to pull (from a "won't mess-up my tree" perspective)
-if you are so inclined.
+rtl818x-week18 branch:
+Michael Wu (8):
+      rtl818x: update register definitions
+      rtl8187: use RTL818X_EEPROM_CMD_* everywhere
+      rtl8187: improve printk messages
+      rtl8187: set RTS duration
+      rtl8187: remove software sequence number code
+      rtl8187: eliminate warnings and improve reset code
+      rtl8187: report correct RX rate
+      rtl8187: avoid accessing skb->tail directly
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Stefano Brivio (1):
+      rtl818x-mac80211: fix coding style
+
+Thanks,
+-Michael Wu
+
+--nextPart15308741.cnq8Wpm4Nl
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGPtrLT3Oqt9AH4aERAjFnAJ96JenfPl4STR6R+L7bGew9tQnzdgCgnBLJ
+9QeuTKoxeOPCkxxMVzXp8Z8=
+=tx5g
+-----END PGP SIGNATURE-----
+
+--nextPart15308741.cnq8Wpm4Nl--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
