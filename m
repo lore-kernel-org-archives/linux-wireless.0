@@ -1,45 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35225 "EHLO mail.dvmed.net"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4689 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754112AbXEFDLy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 May 2007 23:11:54 -0400
-Message-ID: <463D4770.9060903@garzik.org>
-Date: Sat, 05 May 2007 23:11:44 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: John Linville <linville@tuxdriver.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Gary Zambrano <zambrano@broadcom.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: Merging SSB upstream
-References: <200705060303.17594.mb@bu3sch.de>
-In-Reply-To: <200705060303.17594.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S967313AbXEHAC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2007 20:02:27 -0400
+Date: Mon, 7 May 2007 19:38:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: Please pull 'upstream' branch of wireless-2.6
+Message-ID: <20070507233811.GB4245@tuxdriver.com>
+References: <20070507175121.GF5125@tuxdriver.com> <463FB1A0.3070608@garzik.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <463FB1A0.3070608@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> So, now that mac80211 is merged upstream, I think it's
-> time to merge SSB and the b44-ssb port upstream.
-> Note that bcm43xx-mac80211 is _not_ ready for upstream, yet.
+On Mon, May 07, 2007 at 07:09:20PM -0400, Jeff Garzik wrote:
+> John W. Linville wrote:
+
+> >Ivo van Doorn (1):
+> >      Add 93cx6 eeprom library
+
+> >Michael Wu (1):
+> >      Add rtl8187 wireless driver
+
+I presume these are the two parts you question.  (Just checking...)
+
+> The normal development process is:
 > 
-> What do you think? I'd like to merge ssb as-is, although
-> the embedded-device parts are not quite finished, yet.
-> But they don't interfere with the non-embedded parts used
-> by b44 and the bcm43xx PCI cards.
-> So we _could_ remove the ssb-mips code, but I don't like to
-> do that for better maintainability. It doesn't hurt anyone IMO.
+> * commit new code to your repository
+> * that goes into -mm for public testing and review
+> * merge window opens
+> * the code that has seen public testing and review goes upstream
+> 
+> The general idea is everything you want in 2.6.22 should be prepared and 
+> in -mm BEFORE 2.6.21 is released, and the 2.6.22 merge window opens.
+> 
+> It's quite normal for fixes and minor changes to trickle in after the 
+> push that follows the merge window opening.  But new drivers that have 
+> not been through this process do not fall under "fixes and minor changes."
+ 
+I agree whole-heartedly.
 
-What does Ralf (MIPS maintainer) and Gary (Broadcom maintainer) think?
+The whole mac80211 driver package (including rtl8187) has been in -mm
+(and rawhide) for most of the 2.6.21 development cycle.  The rtl8187
+driver in particular has been relatively stable for the past couple
+of months ("3 files changed, 13 insertions(+), 4 deletions(-)" since
+7 March 2007), and it seems to work well.
 
-For my part, I'm not going to render even a tentative opinion without a 
-link to actual code.
+> I also did not see any response to my "better as a single file driver" 
+> suggestion.
 
-Last I saw of the code, and descriptions in IRC, it sounded sane.
+Yes, I see that now.  Do you consider this a merge requirement?
 
-	Jeff
+My main concern pre-merge would be accidentally destabilizing the code
+while stitching the files together.  Other than that, the suggestion
+seems worthwhile.  However, I think Michael plans to expand the driver
+to support rtl8180 and rtl8185.  This may factor into why he chose
+to organize the code the way he has.
 
+> So, I'll pull if you remove the two late additions.
 
+Any chance that you find the comments above persuasive? :-)
 
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
