@@ -1,38 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:51234 "EHLO
-	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767567AbXEDBCo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2007 21:02:44 -0400
-Date: Thu, 03 May 2007 20:01:02 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] bcm43xx: Remove dead configuration variable CONFIG_947XX
-Message-ID: <463a85ce.UNBcSKi9Miz2B6RG%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:3816 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966533AbXEHSCh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2007 14:02:37 -0400
+Date: Tue, 8 May 2007 13:39:07 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: jeff@garzik.org
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Please pull 'upstream' branch of wireless-2.6
+Message-ID: <20070508173907.GH6479@tuxdriver.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The CONFIG_BCM947XX configuration variable was designed for use by the
-embedded device used by the OpenWRT project. The device has been shifted
-to the ssb driver in bcm43xx-mac80211 and will not be used with SoftMAC.
-Accordingly, this "dead" configuration variable is removed.
+The following changes since commit 5b94f675f57e4ff16c8fda09088d7480a84dcd91:
+  Linus Torvalds (1):
+        Merge master.kernel.org:/.../davem/sparc-2.6
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+are found in the git repository at:
 
- bcm43xx.h      |   18 ++----------
- bcm43xx_dma.c  |    4 --
- bcm43xx_main.c |   81 ---------------------------------------------------------
- bcm43xx_main.h |   19 -------------
- 4 files changed, 4 insertions(+), 118 deletions(-)
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream
 
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx.h
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx.h
+Daniel Drake (1):
+      zd1211rw: Add ID for ZyXEL AG-225H v2
+
+Larry Finger (3):
+      ieee80211: add ieee80211_channel_to_freq
+      ieee80211: include frequency in scan results
+      bcm43xx: Remove dead configuration variable CONFIG_947XX
+
+Matthew Davidson (1):
+      zd1211rw: Add ID for Sitecom WL-117
+
+Ulrich Kunitz (1):
+      zd1211rw: Added new USB id for Planex GW-US54ZGL
+
+ drivers/net/wireless/bcm43xx/bcm43xx.h      |   18 +-----
+ drivers/net/wireless/bcm43xx/bcm43xx_dma.c  |    4 -
+ drivers/net/wireless/bcm43xx/bcm43xx_main.c |   81 ---------------------------
+ drivers/net/wireless/bcm43xx/bcm43xx_main.h |   19 ------
+ drivers/net/wireless/zd1211rw/zd_usb.c      |    4 +
+ include/net/ieee80211.h                     |    2 +
+ net/ieee80211/ieee80211_geo.c               |   16 +++++
+ net/ieee80211/ieee80211_wx.c                |    8 ++-
+ 8 files changed, 31 insertions(+), 121 deletions(-)
+
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx.h b/drivers/net/wireless/bcm43xx/bcm43xx.h
+index f8483c1..10e07e8 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx.h
++++ b/drivers/net/wireless/bcm43xx/bcm43xx.h
 @@ -658,12 +658,6 @@ struct bcm43xx_pio {
  
  #define BCM43xx_MAX_80211_CORES		2
@@ -57,7 +74,7 @@ Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx.h
  	struct bcm43xx_coreinfo *active_80211_core;
  	/* coreinfo structs for all possible cores follow.
  	 * Note that a core might not exist.
-@@ -943,25 +933,25 @@ struct bcm43xx_lopair * bcm43xx_get_lopa
+@@ -943,25 +933,25 @@ struct bcm43xx_lopair * bcm43xx_get_lopair(struct bcm43xx_phyinfo *phy,
  static inline
  u16 bcm43xx_read16(struct bcm43xx_private *bcm, u16 offset)
  {
@@ -87,11 +104,11 @@ Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx.h
  }
  
  static inline
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_dma.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_dma.c
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_dma.c
-@@ -660,10 +660,6 @@ struct bcm43xx_dmaring * bcm43xx_setup_d
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_dma.c b/drivers/net/wireless/bcm43xx/bcm43xx_dma.c
+index e3d2e61..1f7731f 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_dma.c
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_dma.c
+@@ -660,10 +660,6 @@ struct bcm43xx_dmaring * bcm43xx_setup_dmaring(struct bcm43xx_private *bcm,
  	ring->routing = BCM43xx_DMA32_CLIENTTRANS;
  	if (dma64)
  		ring->routing = BCM43xx_DMA64_CLIENTTRANS;
@@ -102,10 +119,10 @@ Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_dma.c
  
  	ring->bcm = bcm;
  	ring->nr_slots = nr_slots;
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.c
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_main.c b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
+index 5e96bca..ef6b253 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_main.c
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_main.c
 @@ -61,10 +61,6 @@ MODULE_AUTHOR("Stefano Brivio");
  MODULE_AUTHOR("Michael Buesch");
  MODULE_LICENSE("GPL");
@@ -117,7 +134,7 @@ Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
  #if defined(CONFIG_BCM43XX_DMA) && defined(CONFIG_BCM43XX_PIO)
  static int modparam_pio;
  module_param_named(pio, modparam_pio, int, 0444);
-@@ -142,10 +138,6 @@ MODULE_PARM_DESC(fwpostfix, "Postfix for
+@@ -142,10 +138,6 @@ MODULE_PARM_DESC(fwpostfix, "Postfix for .fw files. Useful for using multiple fi
  	{ PCI_VENDOR_ID_BROADCOM, 0x4324, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
  	/* Broadcom 43XG 802.11b/g */
  	{ PCI_VENDOR_ID_BROADCOM, 0x4325, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
@@ -128,7 +145,7 @@ Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
  	{ 0 },
  };
  MODULE_DEVICE_TABLE(pci, bcm43xx_pci_tbl);
-@@ -786,9 +778,6 @@ static int bcm43xx_sprom_extract(struct 
+@@ -786,9 +778,6 @@ static int bcm43xx_sprom_extract(struct bcm43xx_private *bcm)
  {
  	u16 value;
  	u16 *sprom;
@@ -138,7 +155,7 @@ Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
  
  	sprom = kzalloc(BCM43xx_SPROM_SIZE * sizeof(u16),
  			GFP_KERNEL);
-@@ -796,28 +785,7 @@ static int bcm43xx_sprom_extract(struct 
+@@ -796,28 +785,7 @@ static int bcm43xx_sprom_extract(struct bcm43xx_private *bcm)
  		printk(KERN_ERR PFX "sprom_extract OOM\n");
  		return -ENOMEM;
  	}
@@ -167,7 +184,7 @@ Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
  
  	/* boardflags2 */
  	value = sprom[BCM43xx_SPROM_BOARDFLAGS2];
-@@ -1225,12 +1193,6 @@ static int _switch_core(struct bcm43xx_p
+@@ -1225,12 +1193,6 @@ static int _switch_core(struct bcm43xx_private *bcm, int core)
  			goto error;
  		udelay(10);
  	}
@@ -180,7 +197,7 @@ Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
  
  	return 0;
  error:
-@@ -1387,19 +1349,6 @@ void bcm43xx_wireless_core_reset(struct 
+@@ -1387,19 +1349,6 @@ void bcm43xx_wireless_core_reset(struct bcm43xx_private *bcm, int connect_phy)
  
  	if ((bcm43xx_core_enabled(bcm)) &&
  	    !bcm43xx_using_pio(bcm)) {
@@ -233,7 +250,7 @@ Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
  	err = request_irq(bcm->irq, bcm43xx_interrupt_handler,
  			  IRQF_SHARED, KBUILD_MODNAME, bcm);
  	if (err)
-@@ -2645,10 +2573,6 @@ static int bcm43xx_probe_cores(struct bc
+@@ -2645,10 +2573,6 @@ static int bcm43xx_probe_cores(struct bcm43xx_private *bcm)
  			chip_id_16 = 0x4610;
  		else if ((pci_device >= 0x4710) && (pci_device <= 0x4715))
  			chip_id_16 = 0x4710;
@@ -244,7 +261,7 @@ Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
  		else {
  			printk(KERN_ERR PFX "Could not determine Chip ID\n");
  			return -ENODEV;
-@@ -4144,11 +4068,6 @@ static int __devinit bcm43xx_init_one(st
+@@ -4144,11 +4068,6 @@ static int __devinit bcm43xx_init_one(struct pci_dev *pdev,
  	struct bcm43xx_private *bcm;
  	int err;
  
@@ -256,10 +273,10 @@ Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.c
  #ifdef DEBUG_SINGLE_DEVICE_ONLY
  	if (strcmp(pci_name(pdev), DEBUG_SINGLE_DEVICE_ONLY))
  		return -ENODEV;
-Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.h
-===================================================================
---- wireless-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_main.h
-+++ wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.h
+diff --git a/drivers/net/wireless/bcm43xx/bcm43xx_main.h b/drivers/net/wireless/bcm43xx/bcm43xx_main.h
+index f763571..c8f3c53 100644
+--- a/drivers/net/wireless/bcm43xx/bcm43xx_main.h
++++ b/drivers/net/wireless/bcm43xx/bcm43xx_main.h
 @@ -33,25 +33,6 @@
  
  #include "bcm43xx.h"
@@ -286,3 +303,102 @@ Index: wireless-2.6/drivers/net/wireless/bcm43xx/bcm43xx_main.h
  #define P4D_BYT3S(magic, nr_bytes)	u8 __p4dding##magic[nr_bytes]
  #define P4D_BYTES(line, nr_bytes)	P4D_BYT3S(line, nr_bytes)
  /* Magic helper macro to pad structures. Ignore those above. It's magic. */
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+index e04cffc..8459549 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -40,6 +40,7 @@ static struct usb_device_id usb_ids[] = {
+ 	{ USB_DEVICE(0x126f, 0xa006), .driver_info = DEVICE_ZD1211 },
+ 	{ USB_DEVICE(0x6891, 0xa727), .driver_info = DEVICE_ZD1211 },
+ 	{ USB_DEVICE(0x0df6, 0x9071), .driver_info = DEVICE_ZD1211 },
++	{ USB_DEVICE(0x0df6, 0x9075), .driver_info = DEVICE_ZD1211 },
+ 	{ USB_DEVICE(0x157e, 0x300b), .driver_info = DEVICE_ZD1211 },
+ 	{ USB_DEVICE(0x079b, 0x004a), .driver_info = DEVICE_ZD1211 },
+ 	{ USB_DEVICE(0x1740, 0x2000), .driver_info = DEVICE_ZD1211 },
+@@ -67,8 +68,11 @@ static struct usb_device_id usb_ids[] = {
+ 	{ USB_DEVICE(0x0586, 0x3410), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x0baf, 0x0121), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x0586, 0x3412), .driver_info = DEVICE_ZD1211B },
++	{ USB_DEVICE(0x0586, 0x3413), .driver_info = DEVICE_ZD1211B },
++	{ USB_DEVICE(0x0053, 0x5301), .driver_info = DEVICE_ZD1211B },
+ 	/* "Driverless" devices that need ejecting */
+ 	{ USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
++	{ USB_DEVICE(0x0ace, 0x20ff), .driver_info = DEVICE_INSTALLER },
+ 	{}
+ };
+ 
+diff --git a/include/net/ieee80211.h b/include/net/ieee80211.h
+index d56b292..bbd85cd 100644
+--- a/include/net/ieee80211.h
++++ b/include/net/ieee80211.h
+@@ -1291,6 +1291,8 @@ extern u8 ieee80211_get_channel_flags(struct ieee80211_device *ieee,
+ extern const struct ieee80211_channel *ieee80211_get_channel(struct
+ 							     ieee80211_device
+ 							     *ieee, u8 channel);
++extern u32 ieee80211_channel_to_freq(struct ieee80211_device * ieee,
++				      u8 channel);
+ 
+ /* ieee80211_wx.c */
+ extern int ieee80211_wx_get_scan(struct ieee80211_device *ieee,
+diff --git a/net/ieee80211/ieee80211_geo.c b/net/ieee80211/ieee80211_geo.c
+index 305a09d..960ad13 100644
+--- a/net/ieee80211/ieee80211_geo.c
++++ b/net/ieee80211/ieee80211_geo.c
+@@ -94,6 +94,21 @@ int ieee80211_channel_to_index(struct ieee80211_device *ieee, u8 channel)
+ 	return -1;
+ }
+ 
++u32 ieee80211_channel_to_freq(struct ieee80211_device * ieee, u8 channel)
++{
++	const struct ieee80211_channel * ch;
++
++	/* Driver needs to initialize the geography map before using
++	 * these helper functions */
++	if (ieee->geo.bg_channels == 0 && ieee->geo.a_channels == 0)
++		return 0;
++
++	ch = ieee80211_get_channel(ieee, channel);
++	if (!ch->channel)
++		return 0;
++	return ch->freq;
++}
++
+ u8 ieee80211_freq_to_channel(struct ieee80211_device * ieee, u32 freq)
+ {
+ 	int i;
+@@ -174,6 +189,7 @@ EXPORT_SYMBOL(ieee80211_get_channel);
+ EXPORT_SYMBOL(ieee80211_get_channel_flags);
+ EXPORT_SYMBOL(ieee80211_is_valid_channel);
+ EXPORT_SYMBOL(ieee80211_freq_to_channel);
++EXPORT_SYMBOL(ieee80211_channel_to_freq);
+ EXPORT_SYMBOL(ieee80211_channel_to_index);
+ EXPORT_SYMBOL(ieee80211_set_geo);
+ EXPORT_SYMBOL(ieee80211_get_geo);
+diff --git a/net/ieee80211/ieee80211_wx.c b/net/ieee80211/ieee80211_wx.c
+index cee5e13..523a137 100644
+--- a/net/ieee80211/ieee80211_wx.c
++++ b/net/ieee80211/ieee80211_wx.c
+@@ -89,15 +89,17 @@ static char *ieee80211_translate_scan(struct ieee80211_device *ieee,
+ 		start = iwe_stream_add_event(start, stop, &iwe, IW_EV_UINT_LEN);
+ 	}
+ 
+-	/* Add frequency/channel */
++	/* Add channel and frequency */
+ 	iwe.cmd = SIOCGIWFREQ;
+-/*	iwe.u.freq.m = ieee80211_frequency(network->channel, network->mode);
+-	iwe.u.freq.e = 3; */
+ 	iwe.u.freq.m = network->channel;
+ 	iwe.u.freq.e = 0;
+ 	iwe.u.freq.i = 0;
+ 	start = iwe_stream_add_event(start, stop, &iwe, IW_EV_FREQ_LEN);
+ 
++	iwe.u.freq.m = ieee80211_channel_to_freq(ieee, network->channel);
++	iwe.u.freq.e = 6;
++	start = iwe_stream_add_event(start, stop, &iwe, IW_EV_FREQ_LEN);
++
+ 	/* Add encryption capability */
+ 	iwe.cmd = SIOCGIWENCODE;
+ 	if (network->capability & WLAN_CAPABILITY_PRIVACY)
+-- 
+John W. Linville
+linville@tuxdriver.com
