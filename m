@@ -1,62 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2922 "EHLO ra.tuxdriver.com"
+Received: from waste.org ([66.93.16.53]:47766 "EHLO waste.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757022AbXENSCm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2007 14:02:42 -0400
-Date: Mon, 14 May 2007 13:45:07 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+	id S1755019AbXEHGOJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2007 02:14:09 -0400
+Date: Tue, 8 May 2007 01:12:55 -0500
+From: Matt Mackall <mpm@selenic.com>
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 1/2] Add 93cx6 eeprom library
-Message-ID: <20070514174507.GA6999@tuxdriver.com>
-References: <200705111559.41153.flamingice@sourmilk.net> <20070512191749.GA6018@tuxdriver.com> <20070513185038.GA27009@havoc.gtf.org>
-Mime-Version: 1.0
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	linux-wireless@vger.kernel.org, marcelo@kvack.org,
+	linux-kernel@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6 (was Re: Please pull 'libertas' branch of wireless-2.6)
+Message-ID: <20070508061255.GT11166@waste.org>
+References: <20070227205649.GH5826@tuxdriver.com> <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org> <20070507104117.GA31601@infradead.org> <1178539423.3032.24.camel@localhost.localdomain> <20070507141143.GB5125@tuxdriver.com> <463F443A.5000306@garzik.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070513185038.GA27009@havoc.gtf.org>
+In-Reply-To: <463F443A.5000306@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 13, 2007 at 02:50:38PM -0400, Jeff Garzik wrote:
-> On Sat, May 12, 2007 at 03:17:49PM -0400, John W. Linville wrote:
-> > On Fri, May 11, 2007 at 03:59:40PM -0400, Michael Wu wrote:
-> > 
-> > > +static inline void eeprom_93cx6_pulse_high(struct eeprom_93cx6 *eeprom)
-> > > +{
-> > > +	eeprom->reg_data_clock = 1;
-> > > +	eeprom->register_write(eeprom);
-> > > +	udelay(1);
-> > > +}
-> > > +
-> > > +static inline void eeprom_93cx6_pulse_low(struct eeprom_93cx6 *eeprom)
-> > > +{
-> > > +	eeprom->reg_data_clock = 0;
-> > > +	eeprom->register_write(eeprom);
-> > > +	udelay(1);
-> > > +}
-> > 
-> > I'm with Jeff, these udelay's should go.  If they belong anywhere, it
-> > would be in the write routines provided by the caller.  For example, the
-> > routines provided by rtl8187 already have a delay in them.  Other
-> > hardware might actually have a hardware timer to implement delays (hey,
-> > it's possible).  Either way, this delay is superfluous.
+On Mon, May 07, 2007 at 11:22:34AM -0400, Jeff Garzik wrote:
+> John W. Linville wrote:
+> >On Mon, May 07, 2007 at 08:03:43AM -0400, Dan Williams wrote:
+> >>On Mon, 2007-05-07 at 11:41 +0100, Christoph Hellwig wrote:
+> >
+> >>>Of course it's not anywhere near good shape.  Almost all items from my
+> >>>review were completely ignored, and we have another totoally substandard
+> >>>wireless driver with crappy thread handling, a huge number of broken 
+> >>>private
+> >>>ioctls and partially absymal codingstyle.
+> >
+> >>I've already updated libertas-2.6 git with a ton of updates for this.
+> >>
+> >>In any case, lets push off any merge until 2.6.23 so the rest of the
+> >>comments can be dealt with:
+> >
+> >Alright...Jeff, would you please pull the following branch for upstream 
+> >ASAP:
+> >
+> >	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git revert-libertas
 > 
-> I don't claim the delays were superfluous, I was just wondering if they
-> were papering over write-posting bugs.
+> This is leading from behind :/  We don't need to blow about in the wind 
+> here.  If you reviewed the driver in depth -- which I assumed because of 
+> the trust placed in you as wireless maintainer -- then this situation 
+> really should not be happening.  You need to know the status of new 
+> drivers you are pushing upstream: what work is left to do, what has been 
+> done, what state the driver is in.
+> 
+> I view this request as a failure of the trust network :(
+> 
+> For my part, I _did_ review it.  Twice.  Once in the early days, and 
+> once when I pulled it into my netdev-2.6.git tree.  libertas needs the 
+> changes mentioned in this thread.  But the driver is in workable shape 
+> to be USED while being improved.  I strongly dislike people being cowed 
+> into not merging a driver for years, because the driver in question does 
+> not meet Christoph's idea of perfection.
 
-OK, let's straighten this out...datasheet here:
+It's a shame to expose new ABI bits that we expect to change to
+mainline. Getting rid of obsolete interfaces is next to impossible so
+the introduction of new interfaces really does warrant serious
+consideration.
 
-	http://ww1.microchip.com/downloads/en/DeviceDoc/21749F.pdf
+Can we come up with a scheme to keep the new ioctls introduced by this
+driver from leaking over into distro-land before they get reworked?
+Like preemptively adding a deprecation printk?
 
-Figure 1-1 and Table 1-2 on pages 4-5 indicate that both Clock High
-Time and Clock Low Time have largest minimum times of 450ns.  So,
-the udelay(1) here seems both appropriately sized and appropriately
-placed here as part of the eeprom access protocol.
-
-This does shift Jeff's original question re: write posting onto the
-->register_write routines passed-in by rtl8187 instead.
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Mathematics is the supreme nostalgia of our time.
