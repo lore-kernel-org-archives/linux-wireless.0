@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2718 "EHLO ra.tuxdriver.com"
+Received: from kanga.kvack.org ([66.96.29.28]:49693 "EHLO kanga.kvack.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756218AbXEKAcp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 20:32:45 -0400
-Date: Thu, 10 May 2007 20:12:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Jiri Benc <jbenc@suse.cz>, jketreno <jketreno@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: Specifing rate control algorithm?
-Message-ID: <20070511001212.GB6971@tuxdriver.com>
-References: <464253CE.2030504@linux.intel.com> <20070510132756.2ca660a0@midnight.suse.cz> <46434596.6010908@linux.intel.com> <20070510194233.335004b7@griffin.suse.cz> <46437DC8.2060805@linux.intel.com> <20070510212355.6c13cde8@griffin.suse.cz> <1ba2fa240705101524x2676a09eyeff3b71ed2542478@mail.gmail.com>
+	id S967979AbXEHXlL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2007 19:41:11 -0400
+Date: Tue, 8 May 2007 20:41:18 -0300
+From: Marcelo Tosatti <marcelo@kvack.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Dan Williams <dcbw@redhat.com>, David Miller <davem@davemloft.net>,
+	penberg@cs.helsinki.fi, linville@tuxdriver.com, hch@infradead.org,
+	linux-wireless@vger.kernel.org, marcelo@kvack.org,
+	linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+	torvalds@linux-foundation.org
+Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6
+Message-ID: <20070508234118.GA3472@dmt>
+References: <20070507141143.GB5125@tuxdriver.com> <463F443A.5000306@garzik.org> <84144f020705080247v74ebcd26y27c2f1e61529b215@mail.gmail.com> <20070508.132737.104034594.davem@davemloft.net> <4640E3BF.8080401@garzik.org> <1178659763.14888.2.camel@localhost.localdomain> <4640FC76.4090908@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240705101524x2676a09eyeff3b71ed2542478@mail.gmail.com>
+In-Reply-To: <4640FC76.4090908@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 11, 2007 at 01:24:58AM +0300, Tomas Winkler wrote:
-> On 5/10/07, Jiri Benc <jbenc@suse.cz> wrote:
-> >On Thu, 10 May 2007 13:17:12 -0700, jketreno wrote:
-
-> >> Generic algorithms aren't as capable as hardware specific algorithms
-> >> when you factor performance, latency, system utilization, power
-> >> consumption, etc.  Optimal algorithms are written to take advantage of
-> >> the capabilities exposed by the hardware.
-> >
-> >You said the same about hardware scanning. Michael showed you that's
-> >not true.
-> >
-> Michael has shortened the dwell time on the channel, while hw scanning
-> has shorten switching time from the channel to channel and no the time
-> you are listening on the channel
-> I wouldn't call it an optimization. Did he measured the power consumption ?
-
-This was going to be my question, and I think it is a worthy point. :-)
-
-John
-
-> >If the slowdown is not big, yes, it is. Unifying things almost always
-> >means you need to accept some trade-offs.
+On Tue, May 08, 2007 at 06:40:54PM -0400, Jeff Garzik wrote:
+> Dan Williams wrote:
+> >I'll audit the list of ioctls and remove ones that may be objectionable,
+> >and we'll go back through them after 2.6.22 and add back in ones that
+> >are actually required.  Keep the API/ABI small and expand if necessary.
+> >What's the timeframe required here?  Linville said a few days at the
+> >most.
 > 
-> Clean API gives you the ability to enjoy from the both worlds. WiFi is
-> about mobility power saving and therefore hw offloading is essential.
-> What worth the few more lines of the code that gives you this ability
-> this is also a trade-off.
+> Ideally, before 2.6.22-rc1.  No set date, but generally it's a week or 
+> two after merge window opens.
+> 
+> But even if you miss -rc1, we MUST get in the ioctl removal before 
+> 2.6.22 release.  This is certainly exception to the "nothing but bug 
+> fixes" rule -- or perhaps it is following the rule, if you consider the 
+> ioctls' existence a bug :)
+> 
+> Getting the CodingStyle fixes in before 2.6.22-rc1 would be nice, but, 
+> as I noted, lower priority than serious stuff like ioctl consideration.
 
-Agreed.  FWIW, power saving is worthwhile even for fixed stations as well.
+There is also a bunch of updates pending. I'm sending them over this
+week.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Dan: I'll be sending everything thats currently in our tree but not
+mainline.
