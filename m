@@ -1,33 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:4653 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:58180 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757505AbXEXCTd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2007 22:19:33 -0400
-Subject: Re: [UPDATED] IEEE802.11e/WMM TS management and DLS support
-From: Zhu Yi <yi.zhu@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20070514051456.GA25562@mail.intel.com>
-References: <20070514051456.GA25562@mail.intel.com>
+	id S967896AbXEHV0H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2007 17:26:07 -0400
+Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6
+From: Dan Williams <dcbw@redhat.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: David Miller <davem@davemloft.net>, penberg@cs.helsinki.fi,
+	linville@tuxdriver.com, hch@infradead.org,
+	linux-wireless@vger.kernel.org, marcelo@kvack.org,
+	linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+	torvalds@linux-foundation.org
+In-Reply-To: <4640E3BF.8080401@garzik.org>
+References: <20070507141143.GB5125@tuxdriver.com>
+	 <463F443A.5000306@garzik.org>
+	 <84144f020705080247v74ebcd26y27c2f1e61529b215@mail.gmail.com>
+	 <20070508.132737.104034594.davem@davemloft.net>
+	 <4640E3BF.8080401@garzik.org>
 Content-Type: text/plain
-Date: Thu, 24 May 2007 10:19:45 +0800
-Message-Id: <1179973185.6150.19.camel@debian.sh.intel.com>
+Date: Tue, 08 May 2007 17:29:23 -0400
+Message-Id: <1178659763.14888.2.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-05-14 at 13:14 +0800, Zhu Yi wrote:
-> Hi,
+On Tue, 2007-05-08 at 16:55 -0400, Jeff Garzik wrote:
+> David Miller wrote:
+> > From: "Pekka Enberg" <penberg@cs.helsinki.fi>
+> >> On 5/7/07, Jeff Garzik <jeff@garzik.org> wrote:
+> >>> Open source is about release early, release often.  Not "hide code in a
+> >>> dark corner until Christoph thinks it is perfect."  We have high
+> >>> standards for upstream merged code, but that standard is not perfection.
+> >> Please. This has nothing to do with Christoph. (1) the driver seems to
+> >> break every Linux coding style convention known to man and (2) adds a
+> >> new ABI with bunch of ioctls() that apparently haven't been reviewed
+> >> properly. That's just not acceptable for mainline kernel!
 > 
-> The following patches updated the IEEE802.11e/WMM patches submitted to
-> netdev months before. Please apply.
+> > I completely agree, these things should be corrected and if the the
+> > author is being totally unresponsive to Christoph's review that's even
+> > worse.
 > 
-> [PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
-> [PATCH 2/3] mac80211: IEEE802.11e/WMM TS management and DLS support
-> [PATCH 3/3] mac80211: debugfs support for TSM and DLS
+> Um, the maintainer replied yesterday morning[1] that libertas-2.6.git 
+> has already been updated for these requests, will be updated some more, 
+> and overall was responsive to the entire list of Christoph requests.
+> 
+> I'm mainly concerned with removing the unnecessary ioctls before 2.6.22 
+> release, since that affects userspace.  The vast majority of other stuff 
+> is cosmetic, which is being worked on, but lower priority in my book.
 
-It has been more than 1 week. Any comments and decisions on these
-patches?
+I'll audit the list of ioctls and remove ones that may be objectionable,
+and we'll go back through them after 2.6.22 and add back in ones that
+are actually required.  Keep the API/ABI small and expand if necessary.
+What's the timeframe required here?  Linville said a few days at the
+most.
 
-Thanks,
--yi
+Dan
+
