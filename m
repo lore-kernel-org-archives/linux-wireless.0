@@ -1,126 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-141-230-6-89.ipcom.comunitel.net ([89.6.230.141]:38334
-	"EHLO traven.no-ip.org" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751154AbXE0Khz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 May 2007 06:37:55 -0400
-Date: Sun, 27 May 2007 12:39:51 +0200
-From: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-To: developers@islsm.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, akpm@linux-foundation.org
-Subject: [PATCH 2/2] use list_for_each_entry() for iteration in Prism 54 driver
-Message-ID: <20070527103951.GK31790@traven>
-References: <20070525125630.GE31790@traven> <20070525130444.GG31790@traven>
+Received: from srv5.dvmed.net ([207.36.208.214]:37713 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S968505AbXEHWlP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2007 18:41:15 -0400
+Message-ID: <4640FC76.4090908@garzik.org>
+Date: Tue, 08 May 2007 18:40:54 -0400
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070525130444.GG31790@traven>
+To: Dan Williams <dcbw@redhat.com>
+CC: David Miller <davem@davemloft.net>, penberg@cs.helsinki.fi,
+	linville@tuxdriver.com, hch@infradead.org,
+	linux-wireless@vger.kernel.org, marcelo@kvack.org,
+	linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+	torvalds@linux-foundation.org
+Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6
+References: <20070507141143.GB5125@tuxdriver.com>	 <463F443A.5000306@garzik.org>	 <84144f020705080247v74ebcd26y27c2f1e61529b215@mail.gmail.com>	 <20070508.132737.104034594.davem@davemloft.net>	 <4640E3BF.8080401@garzik.org> <1178659763.14888.2.camel@localhost.localdomain>
+In-Reply-To: <1178659763.14888.2.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El Fri, May 25, 2007 at 03:04:44PM +0200 Matthias Kaehlcke ha dit:
+Dan Williams wrote:
+> I'll audit the list of ioctls and remove ones that may be objectionable,
+> and we'll go back through them after 2.6.22 and add back in ones that
+> are actually required.  Keep the API/ABI small and expand if necessary.
+> What's the timeframe required here?  Linville said a few days at the
+> most.
 
-> Use list_for_each() in the Prism54 driver to iterate over the MAC list
+Ideally, before 2.6.22-rc1.  No set date, but generally it's a week or 
+two after merge window opens.
 
-In response to a similar patch Christoph Hellwig suggests the use of
-list_for_each_entry() instead of list_for_each(). Here is a evolution
-of the patch that takes into account Christophs' suggestion
+But even if you miss -rc1, we MUST get in the ioctl removal before 
+2.6.22 release.  This is certainly exception to the "nothing but bug 
+fixes" rule -- or perhaps it is following the rule, if you consider the 
+ioctls' existence a bug :)
 
---
+Getting the CodingStyle fixes in before 2.6.22-rc1 would be nice, but, 
+as I noted, lower priority than serious stuff like ioctl consideration.
 
-Prism54 driver: Use list_for_each_entry() instead of manual iteration
-and substitute a list_for_each_safe() loop with
-list_for_each_entry_safe()
+	Jeff
 
-Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
 
---
-
-diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-index 283be4a..585f599 100644
---- a/drivers/net/wireless/prism54/isl_ioctl.c
-+++ b/drivers/net/wireless/prism54/isl_ioctl.c
-@@ -1853,7 +1853,6 @@ prism54_del_mac(struct net_device *ndev, struct iw_request_info *info,
- 	islpci_private *priv = netdev_priv(ndev);
- 	struct islpci_acl *acl = &priv->acl;
- 	struct mac_entry *entry;
--	struct list_head *ptr;
- 	struct sockaddr *addr = (struct sockaddr *) extra;
- 
- 	if (addr->sa_family != ARPHRD_ETHER)
-@@ -1861,11 +1860,9 @@ prism54_del_mac(struct net_device *ndev, struct iw_request_info *info,
- 
- 	if (down_interruptible(&acl->sem))
- 		return -ERESTARTSYS;
--	for (ptr = acl->mac_list.next; ptr != &acl->mac_list; ptr = ptr->next) {
--		entry = list_entry(ptr, struct mac_entry, _list);
--
-+	list_for_each_entry(entry, &acl->mac_list, _list) {
- 		if (memcmp(entry->addr, addr->sa_data, ETH_ALEN) == 0) {
--			list_del(ptr);
-+			list_del(&entry->_list);
- 			acl->size--;
- 			kfree(entry);
- 			up(&acl->sem);
-@@ -1883,7 +1880,6 @@ prism54_get_mac(struct net_device *ndev, struct iw_request_info *info,
- 	islpci_private *priv = netdev_priv(ndev);
- 	struct islpci_acl *acl = &priv->acl;
- 	struct mac_entry *entry;
--	struct list_head *ptr;
- 	struct sockaddr *dst = (struct sockaddr *) extra;
- 
- 	dwrq->length = 0;
-@@ -1891,9 +1887,7 @@ prism54_get_mac(struct net_device *ndev, struct iw_request_info *info,
- 	if (down_interruptible(&acl->sem))
- 		return -ERESTARTSYS;
- 
--	for (ptr = acl->mac_list.next; ptr != &acl->mac_list; ptr = ptr->next) {
--		entry = list_entry(ptr, struct mac_entry, _list);
--
-+	list_for_each_entry(entry, &acl->mac_list, _list) {
- 		memcpy(dst->sa_data, entry->addr, ETH_ALEN);
- 		dst->sa_family = ARPHRD_ETHER;
- 		dwrq->length++;
-@@ -1960,7 +1954,6 @@ prism54_get_policy(struct net_device *ndev, struct iw_request_info *info,
- static int
- prism54_mac_accept(struct islpci_acl *acl, char *mac)
- {
--	struct list_head *ptr;
- 	struct mac_entry *entry;
- 	int res = 0;
- 
-@@ -1972,8 +1965,7 @@ prism54_mac_accept(struct islpci_acl *acl, char *mac)
- 		return 1;
- 	}
- 
--	for (ptr = acl->mac_list.next; ptr != &acl->mac_list; ptr = ptr->next) {
--		entry = list_entry(ptr, struct mac_entry, _list);
-+	list_for_each_entry(entry, &acl->mac_list, _list) {
- 		if (memcmp(entry->addr, mac, ETH_ALEN) == 0) {
- 			res = 1;
- 			break;
-@@ -2216,11 +2208,9 @@ prism54_wpa_bss_ie_init(islpci_private *priv)
- void
- prism54_wpa_bss_ie_clean(islpci_private *priv)
- {
--	struct list_head *ptr, *n;
-+	struct islpci_bss_wpa_ie *bss, *n;
- 
--	list_for_each_safe(ptr, n, &priv->bss_wpa_list) {
--		struct islpci_bss_wpa_ie *bss;
--		bss = list_entry(ptr, struct islpci_bss_wpa_ie, list);
-+	list_for_each_entry_safe(bss, n, &priv->bss_wpa_list, list) {
- 		kfree(bss);
- 	}
- }
-
--- 
-Matthias Kaehlcke
-Linux Application Developer
-Barcelona
-
-    I am incapable of conceiving infinity, and yet I do not accept finity
-                          (Simone de Beauvoir)
-                                                                 .''`.
-    using free software / Debian GNU/Linux | http://debian.org  : :'  :
-                                                                `. `'`
-gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
