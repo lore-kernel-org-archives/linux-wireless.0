@@ -1,66 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:41064 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752590AbXE0SL4 (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:63142 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S967344AbXEHAEF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 May 2007 14:11:56 -0400
+	Mon, 7 May 2007 20:04:05 -0400
 From: Michael Wu <flamingice@sourmilk.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [RFC/T] mac80211: Implementation of SIOCSIWRATE
-Date: Sun, 27 May 2007 11:09:51 -0700
-Cc: mabbas@linux.intel.com, Jiri Benc <jbenc@suse.cz>,
-	linux-wireless@vger.kernel.org
-References: <46585cd1.xDmttJDPjdAQW3Wz%Larry.Finger@lwfinger.net> <200705261631.05971.flamingice@sourmilk.net> <4658E023.3020800@lwfinger.net>
-In-Reply-To: <4658E023.3020800@lwfinger.net>
+To: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH v2] Add rtl8187 wireless driver
+Date: Mon, 7 May 2007 20:03:24 -0400
+Cc: jeff@garzik.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	andrea.merello@gmail.com
+References: <200705071022.11711.flamingice@sourmilk.net> <200705071917.25414.flamingice@sourmilk.net> <20070507.162518.35013789.davem@davemloft.net>
+In-Reply-To: <20070507.162518.35013789.davem@davemloft.net>
 MIME-Version: 1.0
 Content-Type: multipart/signed;
-  boundary="nextPart1888684.D0B5M9XkAU";
+  boundary="nextPart1562274.oebPpi6ZBI";
   protocol="application/pgp-signature";
   micalg=pgp-sha1
-Message-Id: <200705271109.55908.flamingice@sourmilk.net>
+Message-Id: <200705072003.29448.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1888684.D0B5M9XkAU
+--nextPart1562274.oebPpi6ZBI
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
 
-On Saturday 26 May 2007 18:34, Larry Finger wrote:
-> Michael Wu wrote:
-> > No. Use force_unicast_rateidx and max_ratectrl_rateidx.
+On Monday 07 May 2007 19:25, David Miller wrote:
+> I know this sounds trite, but when merging and researching up to 450
+> patches at a time like I have to, this stuff starts to matter.
 >
-> I did a quick check for a description of the hostap (prism2) ioctl's, but
-> didn't find them, and I'm not sure how these parameters are used. Could y=
-ou
-> suggest a reference?
+> Please put things as high in the directory hierachy as possible and
+> when you can put the entire driver into a single source file do so.
 >
-force_unicast_rateidx is exactly as it sounds - it forces the rate of unica=
-st=20
-frames to a particular rate. max_ratectrl_rateidx also does as you'd expect=
- -=20
-it sets an upper bound for the rates that are used. These two are exactly=20
-what you need to implement siwrate as specified in the iwconfig man page an=
-d=20
-it works for client, adhoc, and master mode. Just grep for these two fields=
+Sure. I generally prefer that too, but all the drivers I put in wireless-de=
+v=20
+were put in separate directories because I didn't want to break the pattern.
+
+> The only significant argument you present is the code sharing one for
+> the radio stuff, but that isn't realized yet and you can certainly
+> split the code out once you make that sharing a reality.
+Having different modules for different radio chips really isn't the point o=
+f=20
+keeping it in a separate file. (in fact, rtl8187_rtl8225.c actually contain=
+s=20
+support for two versions of the rtl8225 radio) It's just that=20
+rtl8187_rtl8225.c is basically a bunch of numbers with a bit of glue code t=
+o=20
+send them to the hardware. Not much is missed if you decide not to look at=
 =20
-and you'll see how the code sets and uses it.
+how the radio tuning works, and I like to avoid looking at that code if I=20
+can. It's also consistent with how the (unreleased) rtl8180 driver works,=20
+which really does have support for different radios in different files.
+
+But of course, we can just make an exception for rtl8187. Would merging the=
+=20
+files together make that much of a difference for you?
 
 =2DMichael Wu
 
---nextPart1888684.D0B5M9XkAU
+--nextPart1562274.oebPpi6ZBI
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBGWclzT3Oqt9AH4aERAmFjAJ41yekjrB1g5JN6lwbybs9DFTAlGQCfTr+N
-HX06FEyS1mN6UZR/yxmBlT4=
-=Heb8
+iD8DBQBGP75RT3Oqt9AH4aERArWhAKDIrPlqESQGRu1liJUy71aLRXlsfQCguNLG
+gCDrRTO/dxU5G92aSk5dAiA=
+=/gYw
 -----END PGP SIGNATURE-----
 
---nextPart1888684.D0B5M9XkAU--
+--nextPart1562274.oebPpi6ZBI--
 -: 
 To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 the body of a message to majordomo@vger.kernel.org: 
