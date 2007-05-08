@@ -1,127 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:55880 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759987AbXE1Bnp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 May 2007 21:43:45 -0400
-Date: Mon, 28 May 2007 09:43:16 +0800
-From: Zhu Yi <yi.zhu@intel.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [PATCH 3/3] mac80211: debugfs support for TSM and DLS
-Message-ID: <20070528014316.GA416@mail.intel.com>
-Reply-To: yi.zhu@intel.com
-References: <20070525115244.GA23364@mail.intel.com> <20070525092008.287b5ecd.randy.dunlap@oracle.com> <200705251826.04821.mb@bu3sch.de>
+Received: from smtp.rutgers.edu ([128.6.72.243]:19213 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S966504AbXEHRJn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2007 13:09:43 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: James Ketrenos <jketreno@linux.intel.com>
+Subject: Re: [PATCH 09/13] mac80211: remove hw_scan callback
+Date: Tue, 8 May 2007 13:08:47 -0400
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
+	Andy Green <andy@warmcat.com>
+References: <20070423184811.7029.24949.stgit@magic.sourmilk.net> <200704262023.52833.flamingice@sourmilk.net> <46319E31.4090101@linux.intel.com>
+In-Reply-To: <46319E31.4090101@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200705251826.04821.mb@bu3sch.de>
+Content-Type: multipart/signed;
+  boundary="nextPart1471188.3SqzCXpgeR";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200705081308.52200.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 25, 2007 at 06:26:04PM +0200, Michael Buesch wrote:
-> On Friday 25 May 2007 18:20:08 Randy Dunlap wrote:
-> > On Fri, 25 May 2007 19:52:44 +0800 Zhu Yi wrote:
-> > 
-> > >  net/mac80211/debugfs_netdev.c |  332 +++++++++++++++++++++++++++++++++++++++++
-> > >  net/mac80211/ieee80211_i.h    |   33 ++++
-> > >  2 files changed, 365 insertions(+), 0 deletions(-)
-> > > 
-> > > diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-> > > index 9e39646..e0f77f9 100644
-> > > --- a/net/mac80211/debugfs_netdev.c
-> > > +++ b/net/mac80211/debugfs_netdev.c
-> > 
-> > > +#define DEBUGFS_QOS_DEL(name)						\
-> > > +	debugfs_remove(sdata->debugfs.sta.qos.name);			\
-> > > +	sdata->debugfs.sta.qos.name = NULL;
-> > 
-> > Enclose multi-line macros inside braces, or even better, inside
-> > 
-> > 	do {
-> > 		/* multi-lines */
-> > 	} while (0);
-> 
-> Remove the semicolon.
+--nextPart1471188.3SqzCXpgeR
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_f6KQGoWPfPuBiI1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-I'd agree. But the existed DEBUGFS_DEL one also needs to be changed.
-Here is the patch against the "[PATCH 3/3] mac80211: debugfs support
-for TSM and DLS"
+--Boundary-01=_f6KQGoWPfPuBiI1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Thanks,
--yi
+On Friday 27 April 2007 02:54, James Ketrenos wrote:
+> 	hw scan: 2.2s
+> 	sw scan: 4.7s
+>
+Alright, so I put together a patch to optimize software scanning a little a=
+nd=20
+tune the delays to be a bit closer to what the iwlwifi firmware uses. I don=
+'t=20
+actually have a ipw3945 card, so I asked Andy Green to test it. Here are hi=
+s=20
+results:
+
+options iwlwifi disable_hw_scan=3D0 debug=3D0x800
+
+real    0m2.974s
+real    0m2.855s
+real    0m2.853s
+real    0m2.753s
+
+options iwlwifi disable_hw_scan=3D1 debug=3D0x800
+
+real    0m2.754s
+real    0m2.753s
+real    0m2.757s
+real    0m2.754s
+
+The hw scans settle around 2.753s so there's basically no difference in spe=
+ed=20
+between sw and hw scan for this particular case. This is with 11 active, 2=
+=20
+passive 2.4ghz channels and 4 active, 16 passive 5.4ghz channels. For peopl=
+e=20
+not in Europe, software scanning should be roughly 20ms slower due to some=
+=20
+(fixable) dumbness in the ieee80211_sta scanning code.
+
+Patch containing the optimizations and delay adjustments attached.=20
+IEEE80211_HW_NO_PROBE_FILTER also needs to be set in dev->flags (or=20
+the "[PATCH 10/13] mac80211: set bssid to broadcast before scan" patch back=
+ed=20
+out) in order for software scanning to work with iwlwifi.
+
+=2DMichael Wu
+
+--Boundary-01=_f6KQGoWPfPuBiI1
+Content-Type: text/x-diff;
+  charset="iso-8859-1";
+  name="26-optimize-scanning.diff"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="26-optimize-scanning.diff"
+
+mac80211: optimize scanning code
+
+=46rom: Michael Wu <flamingice@sourmilk.net>
 
 
->From 7886ec6ddcc25af5ba3d0284ea3ac7c99bb99da0 Mon Sep 17 00:00:00 2001
-From: Zhu Yi <yi.zhu@intel.com>
-Date: Mon, 28 May 2007 09:41:19 +0800
-Subject: [PATCH 4/4] mac80211: use do { } while (0) for multi-line macros
+=2D--
 
-Use do { } while (0) for multi-line macros
+ net/mac80211/ieee80211_sta.c |   13 +++++++------
+ 1 files changed, 7 insertions(+), 6 deletions(-)
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- net/mac80211/debugfs_netdev.c |   26 +++++++++++++++++---------
- 1 files changed, 17 insertions(+), 9 deletions(-)
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index d0a3aa0..f3017a1 100644
+=2D-- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -45,9 +45,8 @@
+ #define IEEE80211_SCAN_INTERVAL_SLOW (15 * HZ)
+ #define IEEE80211_IBSS_JOIN_TIMEOUT (20 * HZ)
+=20
+=2D#define IEEE80211_PROBE_DELAY (HZ / 33)
+=2D#define IEEE80211_CHANNEL_TIME (HZ / 33)
+=2D#define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 5)
++#define IEEE80211_CHANNEL_TIME (HZ / 50)
++#define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 9)
+ #define IEEE80211_SCAN_RESULT_EXPIRE (10 * HZ)
+ #define IEEE80211_IBSS_MERGE_INTERVAL (30 * HZ)
+ #define IEEE80211_IBSS_INACTIVITY_LIMIT (60 * HZ)
+@@ -2669,15 +2668,17 @@ void ieee80211_sta_scan_work(struct work_struct *wo=
+rk)
+ 		if (skip)
+ 			break;
+=20
+=2D		next_delay =3D IEEE80211_PROBE_DELAY +
+=2D			     usecs_to_jiffies(local->hw.channel_change_time);
++		next_delay =3D usecs_to_jiffies(local->hw.channel_change_time);
+ 		local->scan_state =3D SCAN_SEND_PROBE;
+=2D		break;
++		if (local->hw.channel_change_time)
++			break;
+ 	case SCAN_SEND_PROBE:
+ 		if (local->scan_channel->flag & IEEE80211_CHAN_W_ACTIVE_SCAN) {
+ 			ieee80211_send_probe_req(dev, NULL, local->scan_ssid,
+ 						 local->scan_ssid_len);
+ 			next_delay =3D IEEE80211_CHANNEL_TIME;
++			if (local->scan_hw_mode->mode =3D=3D MODE_IEEE80211A)
++				next_delay >>=3D 1;
+ 		} else
+ 			next_delay =3D IEEE80211_PASSIVE_CHANNEL_TIME;
+ 		local->scan_state =3D SCAN_SET_CHANNEL;
 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index e0f77f9..b9409ee 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -119,8 +119,10 @@ static const struct file_operations qos_ ##name## _ops = {		\
- 		sdata, &qos_ ##name## _ops);
- 
- #define DEBUGFS_QOS_DEL(name)						\
--	debugfs_remove(sdata->debugfs.sta.qos.name);			\
--	sdata->debugfs.sta.qos.name = NULL;
-+	do {								\
-+		debugfs_remove(sdata->debugfs.sta.qos.name);		\
-+		sdata->debugfs.sta.qos.name = NULL;			\
-+	} while (0)
- 
- DEBUGFS_QOS_FILE(addts_11e, ieee80211_send_addts);
- DEBUGFS_QOS_FILE(addts_wmm, wmm_send_addts);
-@@ -281,8 +283,10 @@ static const struct file_operations tsinfo_ ##_name## _ops = {		\
- 				    sdata, &tsinfo_UP_ops);
- 
- #define DEBUGFS_TSINFO_DEL(name)					\
--	debugfs_remove(sdata->debugfs.sta.tsinfo.name);			\
--	sdata->debugfs.sta.tsinfo.name = NULL;
-+	do {								\
-+		debugfs_remove(sdata->debugfs.sta.tsinfo.name);		\
-+		sdata->debugfs.sta.tsinfo.name = NULL;			\
-+	} while (0)
- 
- DEBUGFS_TSINFO_FILE(TSID, 8, 15);
- DEBUGFS_TSINFO_FILE(DIR, 0, 3);
-@@ -325,8 +329,10 @@ static const struct file_operations tspec_ ##name## _ops = {		\
- 		0444, tspecd, sdata, &tspec_ ##name## _ops);
- 
- #define DEBUGFS_TSPEC_DEL(name)						\
--	debugfs_remove(sdata->debugfs.sta.tspec.name);			\
--	sdata->debugfs.sta.tspec.name = NULL;
-+	do {								\
-+		debugfs_remove(sdata->debugfs.sta.tspec.name);		\
-+		sdata->debugfs.sta.tspec.name = NULL;			\
-+	} while (0)
- 
- DEBUGFS_TSPEC_FILE(nominal_msdu_size);
- DEBUGFS_TSPEC_FILE(max_msdu_size);
-@@ -569,9 +575,11 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
- 	}
- }
- 
--#define DEBUGFS_DEL(name, type)\
--	debugfs_remove(sdata->debugfs.type.name);\
--	sdata->debugfs.type.name = NULL;
-+#define DEBUGFS_DEL(name, type)					\
-+	do {							\
-+		debugfs_remove(sdata->debugfs.type.name);	\
-+		sdata->debugfs.type.name = NULL;		\
-+	} while (0)
- 
- static void del_sta_files(struct ieee80211_sub_if_data *sdata)
- {
--- 
-1.5.0.rc2.g73a2
+--Boundary-01=_f6KQGoWPfPuBiI1--
+
+--nextPart1471188.3SqzCXpgeR
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGQK6kT3Oqt9AH4aERAn26AJ9iKhTKRRDl9j5mY6hTFu8ik4g+xgCfQ2jE
+t4LNDfoKiEx7gNkpLI/XWEU=
+=rjB5
+-----END PGP SIGNATURE-----
+
+--nextPart1471188.3SqzCXpgeR--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
