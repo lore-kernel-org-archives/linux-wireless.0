@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41530
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752965AbXEHU1h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2007 16:27:37 -0400
-Date: Tue, 08 May 2007 13:27:37 -0700 (PDT)
-Message-Id: <20070508.132737.104034594.davem@davemloft.net>
-To: penberg@cs.helsinki.fi
-Cc: jeff@garzik.org, linville@tuxdriver.com, dcbw@redhat.com,
-	hch@infradead.org, linux-wireless@vger.kernel.org,
-	marcelo@kvack.org, linux-kernel@vger.kernel.org,
-	akpm@linux-foundation.org, torvalds@linux-foundation.org
-Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <84144f020705080247v74ebcd26y27c2f1e61529b215@mail.gmail.com>
-References: <20070507141143.GB5125@tuxdriver.com>
-	<463F443A.5000306@garzik.org>
-	<84144f020705080247v74ebcd26y27c2f1e61529b215@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from srv5.dvmed.net ([207.36.208.214]:36783 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967774AbXEHVAU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2007 17:00:20 -0400
+Message-ID: <4640E4CE.1030506@garzik.org>
+Date: Tue, 08 May 2007 16:59:58 -0400
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+CC: Matt Mackall <mpm@selenic.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	linux-wireless@vger.kernel.org, marcelo@kvack.org,
+	linux-kernel@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6 (was Re:  Please pull 'libertas' branch of wireless-2.6)
+References: <20070227205649.GH5826@tuxdriver.com> <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org> <20070507104117.GA31601@infradead.org> <1178539423.3032.24.camel@localhost.localdomain> <20070507141143.GB5125@tuxdriver.com> <463F443A.5000306@garzik.org> <20070508061255.GT11166@waste.org> <464034C2.3030007@yahoo.com.au>
+In-Reply-To: <464034C2.3030007@yahoo.com.au>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Pekka Enberg" <penberg@cs.helsinki.fi>
-Date: Tue, 8 May 2007 12:47:34 +0300
-
-> On 5/7/07, Jeff Garzik <jeff@garzik.org> wrote:
-> > Open source is about release early, release often.  Not "hide code in a
-> > dark corner until Christoph thinks it is perfect."  We have high
-> > standards for upstream merged code, but that standard is not perfection.
+Nick Piggin wrote:
+> Two things on top of a lot of people's pet peeves list are lack of
+> good review bandwidth, and poor driver code! So it is sad this was
+> merged without Christoph's comments being addressed. "it works for
+> me, we can fix it later" is probably a big reason for quality
+> problems of some parts of the kernel.
 > 
-> Please. This has nothing to do with Christoph. (1) the driver seems to
-> break every Linux coding style convention known to man and (2) adds a
-> new ABI with bunch of ioctls() that apparently haven't been reviewed
-> properly. That's just not acceptable for mainline kernel!
+> As for Christoph's idea of perfection... it usually isn't a bad
+> thing. And he is quite reasonable if you explain your good reason
+> to disagree or do something differently. The attitude of ignoring
+> comments can be really demotivating for a reviewer.
 
-I completely agree, these things should be corrected and if the the
-author is being totally unresponsive to Christoph's review that's even
-worse.
+I guess it's a good thing that the maintainer was not ignoring the 
+review comments, then...
 
-Every piece of code that I've written that Christoph has reviewed has
-become significantly better because of his review.
+(please review the thread before replying, next time)
+
+	Jeff
+
+
