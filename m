@@ -1,33 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:43972 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754297AbXERXFv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2007 19:05:51 -0400
-Date: Sat, 19 May 2007 00:04:45 +0100
-From: Christoph Hellwig <hch@infradead.org>
-To: James Ketrenos <jketreno@linux.intel.com>
-Cc: Jeff Garzik <jeff@garzik.org>,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers [part 2/2]
-Message-ID: <20070518230445.GA29062@infradead.org>
-References: <464B7B7C.5080800@linux.intel.com> <20070516203505.556df4f9.randy.dunlap@oracle.com> <464E0DB5.5010802@linux.intel.com> <464E233A.6060209@garzik.org> <464E1B4A.8050105@linux.intel.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4775 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966153AbXEHQCk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2007 12:02:40 -0400
+Date: Tue, 8 May 2007 11:50:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: include <linux/delay.h> instead of <asm/delay.h>
+Message-ID: <20070508155011.GD6479@tuxdriver.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <464E1B4A.8050105@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 18, 2007 at 02:31:54PM -0700, James Ketrenos wrote:
-> Alright; I'll add replacing the bitfields with bitwise access to the todo 
-> list.
-> 
-> Are you OK with us marking the driver as not working on big endian for now 
-> and getting this one fixed over time?
+From: Geert Uytterhoeven <geert@linux-m68k.org>
 
-Given that Intel still hasn't fixed the older ipw2X00 drivers for big
-endian despite clong-time onstant prodding I'm dead set against this.
-It just won't happen if you don't do it now.
+|   CC      net/mac80211/ieee80211_sta.o
+| In file included from linux/net/mac80211/ieee80211_sta.c:31:
+| include2/asm/delay.h: In function '__const_udelay':
+| include2/asm/delay.h:33: error: 'loops_per_jiffy' undeclared (first use in this function)
+| include2/asm/delay.h:33: error: (Each undeclared identifier is reported only once
+| include2/asm/delay.h:33: error: for each function it appears in.)
 
+mac80211: include <linux/delay.h> instead of <asm/delay.h>
+
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/ieee80211_sta.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 822917d..3e07e9d 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -17,6 +17,7 @@
+  * scan result table filtering (by capability (privacy, IBSS/BSS, WPA/RSN IE,
+  *    SSID)
+  */
++#include <linux/delay.h>
+ #include <linux/if_ether.h>
+ #include <linux/skbuff.h>
+ #include <linux/netdevice.h>
+@@ -27,7 +28,6 @@
+ #include <linux/rtnetlink.h>
+ #include <net/iw_handler.h>
+ #include <asm/types.h>
+-#include <asm/delay.h>
+ 
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+-- 
+1.5.0.6
