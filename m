@@ -1,69 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2398 "EHLO ra.tuxdriver.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3813 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757272AbXEORds (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2007 13:33:48 -0400
-Date: Tue, 15 May 2007 13:12:02 -0400
+	id S966359AbXEHSC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2007 14:02:27 -0400
+Date: Tue, 8 May 2007 13:38:11 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: David LAMPARTER <lists@diac24.net>
+To: jeff@garzik.org
 Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: Panic in ieee_80211_ibss_add_sta when trying to join ad-hoc network (rt2500pci)
-Message-ID: <20070515171202.GD15105@tuxdriver.com>
-References: <20070515152842.GA26481@charon.n2.diac24.net>
+Subject: Re: Please pull 'upstream' branch of wireless-2.6
+Message-ID: <20070508173811.GG6479@tuxdriver.com>
+References: <20070507175121.GF5125@tuxdriver.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070515152842.GA26481@charon.n2.diac24.net>
+In-Reply-To: <20070507175121.GF5125@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 15, 2007 at 05:28:42PM +0200, David LAMPARTER wrote:
+This request is withdrawn.  New request to follow.
 
-> BUG: unable to handle kernel NULL pointer derference at virtual address 00000218
-> [...]
-> EIP is at ieee80211_ibss_add_sta+0xae/0x130
-> [...]
-> EIP: [<c05773fe>] ieee_80211_ibss_add_sta+0xae/0x130 SS:ESP 0068:f641dc38
-> Kernel panic - not syncing: Fatal exception in interrupt
+On Mon, May 07, 2007 at 01:51:21PM -0400, John W. Linville wrote:
+> The following changes since commit 15700770ef7c5d12e2f1659d2ddbeb3f658d9f37:
+>   Linus Torvalds (1):
+>         Merge git://git.kernel.org/.../sam/kbuild
 > 
-> The bug seems to be triggered as soon as the stack tries to
-> join my router's ad-hoc; it happen either directly when
-> doing "ip l s wlan0 up" as well as when doing
-> "iwconfig wlan0 essid equinox" (when it did not immediately
-> find the network).
-
-Probably because of this:
-
-	struct ieee80211_sub_if_data *sdata = NULL;
-...
-	sta->supp_rates = sdata->u.sta.supp_rates_bits;
-
-Patch below...does this work better?  Looks like upstream needs
-it too...
-
-John
-
----
-Avoid sdata null pointer dereference in ieee80211_ibss_add_sta.
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-
- net/mac80211/ieee80211_sta.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index a36c6f3..dd36cc6 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -3154,7 +3154,7 @@ struct sta_info * ieee80211_ibss_add_sta(struct net_device *dev,
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct sta_info *sta;
--	struct ieee80211_sub_if_data *sdata = NULL;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
- 	/* TODO: Could consider removing the least recently used entry and
- 	 * allow new one to be added. */
+> are found in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream
+> 
+> Daniel Drake (1):
+>       zd1211rw: Add ID for ZyXEL AG-225H v2
+> 
+> Geert Uytterhoeven (1):
+>       mac80211: include <linux/delay.h> instead of <asm/delay.h>
+> 
+> Ivo van Doorn (1):
+>       Add 93cx6 eeprom library
+> 
+> John W. Linville (1):
+>       libertas: fix for wireless Kconfig changes
+> 
+> Larry Finger (3):
+>       ieee80211: add ieee80211_channel_to_freq
+>       ieee80211: include frequency in scan results
+>       bcm43xx: Remove dead configuration variable CONFIG_947XX
+> 
+> Matthew Davidson (1):
+>       zd1211rw: Add ID for Sitecom WL-117
+> 
+> Michael Wu (1):
+>       Add rtl8187 wireless driver
+> 
+> Ulrich Kunitz (1):
+>       zd1211rw: Added new USB id for Planex GW-US54ZGL
 
 -- 
 John W. Linville
