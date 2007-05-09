@@ -1,62 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from daemonizer.de ([87.230.16.230]:58470 "EHLO daemonizer.de"
+Received: from mx1.redhat.com ([66.187.233.31]:50371 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750814AbXEYTWS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2007 15:22:18 -0400
-From: Maximilian Engelhardt <maxi@daemonizer.de>
-Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-References: <20070524195616.234280@gmx.net>
-	<200705251559.49807.uwe.bugla@gmx.de> <200705251652.19911.mb@bu3sch.de>
-	<200705251759.30065.uwe.bugla@gmx.de>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>, mb@bu3sch.de,
-	uwe.bugla@gmx.de
-Date: Fri, 25 May 2007 20:48:02 +0200
-Content-Type: multipart/signed;
-  boundary="nextPart2011387.J2bNc92kcN";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705252048.11931.maxi@daemonizer.de>
+	id S1755256AbXEIViY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 May 2007 17:38:24 -0400
+Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6
+From: Dan Williams <dcbw@redhat.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Marcelo Tosatti <marcelo@kvack.org>, Jeff Garzik <jeff@garzik.org>,
+	David Miller <davem@davemloft.net>, penberg@cs.helsinki.fi,
+	linville@tuxdriver.com, hch@infradead.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	akpm@linux-foundation.org, torvalds@linux-foundation.org
+In-Reply-To: <20070509142516.a31467c5.randy.dunlap@oracle.com>
+References: <20070507141143.GB5125@tuxdriver.com>
+	 <463F443A.5000306@garzik.org>
+	 <84144f020705080247v74ebcd26y27c2f1e61529b215@mail.gmail.com>
+	 <20070508.132737.104034594.davem@davemloft.net>
+	 <4640E3BF.8080401@garzik.org>
+	 <1178659763.14888.2.camel@localhost.localdomain>
+	 <4640FC76.4090908@garzik.org> <20070508234118.GA3472@dmt>
+	 <1178674020.16181.4.camel@localhost.localdomain>
+	 <20070509142516.a31467c5.randy.dunlap@oracle.com>
+Content-Type: text/plain
+Date: Wed, 09 May 2007 17:41:24 -0400
+Message-Id: <1178746884.9590.18.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2011387.J2bNc92kcN
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Wed, 2007-05-09 at 14:25 -0700, Randy Dunlap wrote:
+> On Tue, 08 May 2007 21:27:00 -0400 Dan Williams wrote:
+> 
+> > On Tue, 2007-05-08 at 20:41 -0300, Marcelo Tosatti wrote:
+> > > On Tue, May 08, 2007 at 06:40:54PM -0400, Jeff Garzik wrote:
+> > > > Dan Williams wrote:
+> > > > >I'll audit the list of ioctls and remove ones that may be objectionable,
+> > > > >and we'll go back through them after 2.6.22 and add back in ones that
+> > > > >are actually required.  Keep the API/ABI small and expand if necessary.
+> > > > >What's the timeframe required here?  Linville said a few days at the
+> > > > >most.
+> > > > 
+> > > > Ideally, before 2.6.22-rc1.  No set date, but generally it's a week or 
+> > > > two after merge window opens.
+> > > > 
+> > > > But even if you miss -rc1, we MUST get in the ioctl removal before 
+> > > > 2.6.22 release.  This is certainly exception to the "nothing but bug 
+> > > > fixes" rule -- or perhaps it is following the rule, if you consider the 
+> > > > ioctls' existence a bug :)
+> > > > 
+> > > > Getting the CodingStyle fixes in before 2.6.22-rc1 would be nice, but, 
+> > > > as I noted, lower priority than serious stuff like ioctl consideration.
+> > > 
+> > > There is also a bunch of updates pending. I'm sending them over this
+> > > week.
+> > > 
+> > > Dan: I'll be sending everything thats currently in our tree but not
+> > > mainline.
+> > 
+> > I'm going through the ioctls as we speak...  what else was pending?
+> 
+> All of the printk format warnings & cast warnings from 2.6.21-mm2 ??
 
-On Fri, 25 May 2007 17:59:29 +0200, Uwe Bugla wrote:
+I can fix those up; but setting KBUILD_VERBOSE=1 and recompiling doesn't
+show any of them in current libertas-2.6; -Wall is definitely defined.
+Is there another way to enable something give yet more verbose debug
+output?
 
->=20
-> Perhaps someone reading this could try to reproduce that problem on his
-> machine.
-> Now who of the readers owes a Broadcom 4401 NIC and can please try to
-> test kernel 2.6.22-rc2-mm1?
->=20
-> Those NICs have been used very very often as onboard controllers,
-> especially on ASUS boards.
+Thanks,
+Dan
 
-I've been using 2.6.22-rc2 for some time and now I compiled 2.6.22-rc2-
-mm1 and both work fine with the BCM4401 in my laptop.
+> 
+> drivers/net/wireless/libertas/rx.c: In function 'libertas_process_rxed_packet':
+> drivers/net/wireless/libertas/rx.c:213: warning: format '%d' expects type 'int', but argument 3 has type 'long unsigned int'
+> drivers/net/wireless/libertas/rx.c:213: warning: format '%d' expects type 'int', but argument 4 has type 'long unsigned int'
+> drivers/net/wireless/libertas/rx.c: In function 'process_rxed_802_11_packet':
+> drivers/net/wireless/libertas/rx.c:367: warning: format '%d' expects type 'int', but argument 3 has type 'long unsigned int'
+> drivers/net/wireless/libertas/rx.c:367: warning: format '%d' expects type 'int', but argument 4 has type 'long unsigned int'
+> drivers/net/wireless/libertas/tx.c: In function 'SendSinglePacket':
+> drivers/net/wireless/libertas/tx.c:81: warning: format '%d' expects type 'int', but argument 3 has type 'long unsigned int'
+> drivers/net/wireless/libertas/cmd.c: In function 'libertas_queue_cmd':
+> drivers/net/wireless/libertas/cmd.c:950: warning: cast from pointer to integer of different size
+> drivers/net/wireless/libertas/cmd.c: In function 'DownloadcommandToStation':
+> drivers/net/wireless/libertas/cmd.c:979: warning: cast from pointer to integer of different size
+> drivers/net/wireless/libertas/cmd.c:979: warning: cast from pointer to integer of different size
+> drivers/net/wireless/libertas/cmd.c: In function 'libertas_prepare_and_send_command':
+> drivers/net/wireless/libertas/cmd.c:1177: warning: cast from pointer to integer of different size
+> drivers/net/wireless/libertas/scan.c: In function 'InterpretBSSDescriptionWithIE':
+> drivers/net/wireless/libertas/scan.c:1118: warning: format '%d' expects type 'int', but argument 3 has type 'long unsigned int'
+> drivers/net/wireless/libertas/scan.c: In function 'libertas_get_scan':
+> drivers/net/wireless/libertas/scan.c:1586: warning: format '%d' expects type 'int', but argument 5 has type 'long unsigned int'
+> drivers/net/wireless/libertas/join.c: In function 'libertas_cmd_80211_ad_hoc_join':
+> drivers/net/wireless/libertas/join.c:789: warning: cast from pointer to integer of different size
+> drivers/net/wireless/libertas/ioctl.c: In function 'wlan_set_linkmode_ioctl':
+> drivers/net/wireless/libertas/ioctl.c:696: warning: cast from pointer to integer of different size
+> drivers/net/wireless/libertas/ioctl.c: In function 'wlan_set_radiomode_ioctl':
+> drivers/net/wireless/libertas/ioctl.c:728: warning: cast from pointer to integer of different size
+> drivers/net/wireless/libertas/ioctl.c: In function 'wlan_set_debugmode_ioctl':
+> drivers/net/wireless/libertas/ioctl.c:757: warning: cast from pointer to integer of different size
+> drivers/net/wireless/libertas/ioctl.c: In function 'wlan_fwt_cleanup_ioctl':
+> drivers/net/wireless/libertas/ioctl.c:1779: warning: cast to pointer from integer of different size
+> drivers/net/wireless/libertas/ioctl.c: In function 'wlan_fwt_time_ioctl':
+> drivers/net/wireless/libertas/ioctl.c:1810: warning: cast to pointer from integer of different size
+> drivers/net/wireless/libertas/ioctl.c: In function 'wlan_mesh_get_ttl_ioctl':
+> drivers/net/wireless/libertas/ioctl.c:1839: warning: cast to pointer from integer of different size
+> drivers/net/wireless/libertas/ioctl.c: In function 'libertas_do_ioctl':
+> drivers/net/wireless/libertas/ioctl.c:1947: warning: cast from pointer to integer of different size
+> drivers/net/wireless/libertas/ioctl.c:2025: warning: cast from pointer to integer of different size
+> drivers/net/wireless/libertas/ioctl.c:2171: warning: cast from pointer to integer of different size
+> drivers/net/wireless/libertas/ioctl.c:2188: warning: cast to pointer from integer of different size
+> drivers/net/wireless/libertas/ioctl.c:2192: warning: cast to pointer from integer of different size
+> drivers/net/wireless/libertas/ioctl.c:2196: warning: cast to pointer from integer of different size
+> drivers/net/wireless/libertas/debugfs.c: In function 'libertas_parse_ssid':
+> drivers/net/wireless/libertas/debugfs.c:279: warning: comparison of distinct pointer types lacks a cast
+> drivers/net/wireless/libertas/debugfs.c: In function 'wlan_debugfs_read':
+> drivers/net/wireless/libertas/debugfs.c:1823: warning: cast to pointer from integer of different size
+> drivers/net/wireless/libertas/debugfs.c:1825: warning: cast to pointer from integer of different size
+> drivers/net/wireless/libertas/debugfs.c:1827: warning: cast to pointer from integer of different size
+> drivers/net/wireless/libertas/debugfs.c: In function 'wlan_debugfs_write':
+> drivers/net/wireless/libertas/debugfs.c:1884: warning: cast to pointer from integer of different size
+> drivers/net/wireless/libertas/debugfs.c:1886: warning: cast to pointer from integer of different size
+> drivers/net/wireless/libertas/debugfs.c:1888: warning: cast to pointer from integer of different size
+> drivers/net/wireless/libertas/debugfs.c: At top level:
+> drivers/net/wireless/libertas/debugfs.c:1900: warning: initialization from incompatible pointer type
+> drivers/net/wireless/libertas/debugfs.c: In function 'libertas_debug_init':
+> drivers/net/wireless/libertas/debugfs.c:1919: warning: cast from pointer to integer of different size
+> drivers/net/wireless/libertas/if_usb.c: In function '__if_usb_submit_rx_urb':
+> drivers/net/wireless/libertas/if_usb.c:393: warning: passing argument 4 of 'usb_fill_bulk_urb' makes pointer from integer without a cast
+> 
+> 
+> 
+> 
+> > Louis has a few on libertas-dev list.  We also need to pull wireless-2.6
+> > into libertas before we send linville a pull request, I think.
+> 
+> 
+> ---
+> ~Randy
+> *** Remember to use Documentation/SubmitChecklist when testing your code ***
 
-Maxi
-
---nextPart2011387.J2bNc92kcN
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQBGVy9rOimwv528XGERAs01AJ40Pz8pwHToiviKOXvHfMsfgTUQDgCgmogc
-INSe0NTxtiGuqL3ew1Ic7Lg=
-=72ya
------END PGP SIGNATURE-----
-
---nextPart2011387.J2bNc92kcN--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
