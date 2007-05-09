@@ -1,48 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3778 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755164AbXE3TBQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2007 15:01:16 -0400
-Date: Wed, 30 May 2007 14:29:46 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 3/4] mac80211: always set carrier status on open
-Message-ID: <20070530182946.GF3610@tuxdriver.com>
-References: <20070530182538.GB3610@tuxdriver.com> <20070530182807.GD3610@tuxdriver.com> <20070530182858.GE3610@tuxdriver.com>
+Received: from agminet01.oracle.com ([141.146.126.228]:13769 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753091AbXEIVVo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 May 2007 17:21:44 -0400
+Date: Wed, 9 May 2007 14:25:16 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Marcelo Tosatti <marcelo@kvack.org>, Jeff Garzik <jeff@garzik.org>,
+	David Miller <davem@davemloft.net>, penberg@cs.helsinki.fi,
+	linville@tuxdriver.com, hch@infradead.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	akpm@linux-foundation.org, torvalds@linux-foundation.org
+Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6
+Message-Id: <20070509142516.a31467c5.randy.dunlap@oracle.com>
+In-Reply-To: <1178674020.16181.4.camel@localhost.localdomain>
+References: <20070507141143.GB5125@tuxdriver.com>
+	<463F443A.5000306@garzik.org>
+	<84144f020705080247v74ebcd26y27c2f1e61529b215@mail.gmail.com>
+	<20070508.132737.104034594.davem@davemloft.net>
+	<4640E3BF.8080401@garzik.org>
+	<1178659763.14888.2.camel@localhost.localdomain>
+	<4640FC76.4090908@garzik.org>
+	<20070508234118.GA3472@dmt>
+	<1178674020.16181.4.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070530182858.GE3610@tuxdriver.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+On Tue, 08 May 2007 21:27:00 -0400 Dan Williams wrote:
 
-ieee80211_open should always set the carrier status since we may have set
-it to off before.
+> On Tue, 2007-05-08 at 20:41 -0300, Marcelo Tosatti wrote:
+> > On Tue, May 08, 2007 at 06:40:54PM -0400, Jeff Garzik wrote:
+> > > Dan Williams wrote:
+> > > >I'll audit the list of ioctls and remove ones that may be objectionable,
+> > > >and we'll go back through them after 2.6.22 and add back in ones that
+> > > >are actually required.  Keep the API/ABI small and expand if necessary.
+> > > >What's the timeframe required here?  Linville said a few days at the
+> > > >most.
+> > > 
+> > > Ideally, before 2.6.22-rc1.  No set date, but generally it's a week or 
+> > > two after merge window opens.
+> > > 
+> > > But even if you miss -rc1, we MUST get in the ioctl removal before 
+> > > 2.6.22 release.  This is certainly exception to the "nothing but bug 
+> > > fixes" rule -- or perhaps it is following the rule, if you consider the 
+> > > ioctls' existence a bug :)
+> > > 
+> > > Getting the CodingStyle fixes in before 2.6.22-rc1 would be nice, but, 
+> > > as I noted, lower priority than serious stuff like ioctl consideration.
+> > 
+> > There is also a bunch of updates pending. I'm sending them over this
+> > week.
+> > 
+> > Dan: I'll be sending everything thats currently in our tree but not
+> > mainline.
+> 
+> I'm going through the ioctls as we speak...  what else was pending?
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+All of the printk format warnings & cast warnings from 2.6.21-mm2 ??
+
+
+drivers/net/wireless/libertas/rx.c: In function 'libertas_process_rxed_packet':
+drivers/net/wireless/libertas/rx.c:213: warning: format '%d' expects type 'int', but argument 3 has type 'long unsigned int'
+drivers/net/wireless/libertas/rx.c:213: warning: format '%d' expects type 'int', but argument 4 has type 'long unsigned int'
+drivers/net/wireless/libertas/rx.c: In function 'process_rxed_802_11_packet':
+drivers/net/wireless/libertas/rx.c:367: warning: format '%d' expects type 'int', but argument 3 has type 'long unsigned int'
+drivers/net/wireless/libertas/rx.c:367: warning: format '%d' expects type 'int', but argument 4 has type 'long unsigned int'
+drivers/net/wireless/libertas/tx.c: In function 'SendSinglePacket':
+drivers/net/wireless/libertas/tx.c:81: warning: format '%d' expects type 'int', but argument 3 has type 'long unsigned int'
+drivers/net/wireless/libertas/cmd.c: In function 'libertas_queue_cmd':
+drivers/net/wireless/libertas/cmd.c:950: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/cmd.c: In function 'DownloadcommandToStation':
+drivers/net/wireless/libertas/cmd.c:979: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/cmd.c:979: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/cmd.c: In function 'libertas_prepare_and_send_command':
+drivers/net/wireless/libertas/cmd.c:1177: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/scan.c: In function 'InterpretBSSDescriptionWithIE':
+drivers/net/wireless/libertas/scan.c:1118: warning: format '%d' expects type 'int', but argument 3 has type 'long unsigned int'
+drivers/net/wireless/libertas/scan.c: In function 'libertas_get_scan':
+drivers/net/wireless/libertas/scan.c:1586: warning: format '%d' expects type 'int', but argument 5 has type 'long unsigned int'
+drivers/net/wireless/libertas/join.c: In function 'libertas_cmd_80211_ad_hoc_join':
+drivers/net/wireless/libertas/join.c:789: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/ioctl.c: In function 'wlan_set_linkmode_ioctl':
+drivers/net/wireless/libertas/ioctl.c:696: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/ioctl.c: In function 'wlan_set_radiomode_ioctl':
+drivers/net/wireless/libertas/ioctl.c:728: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/ioctl.c: In function 'wlan_set_debugmode_ioctl':
+drivers/net/wireless/libertas/ioctl.c:757: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/ioctl.c: In function 'wlan_fwt_cleanup_ioctl':
+drivers/net/wireless/libertas/ioctl.c:1779: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/ioctl.c: In function 'wlan_fwt_time_ioctl':
+drivers/net/wireless/libertas/ioctl.c:1810: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/ioctl.c: In function 'wlan_mesh_get_ttl_ioctl':
+drivers/net/wireless/libertas/ioctl.c:1839: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/ioctl.c: In function 'libertas_do_ioctl':
+drivers/net/wireless/libertas/ioctl.c:1947: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/ioctl.c:2025: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/ioctl.c:2171: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/ioctl.c:2188: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/ioctl.c:2192: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/ioctl.c:2196: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/debugfs.c: In function 'libertas_parse_ssid':
+drivers/net/wireless/libertas/debugfs.c:279: warning: comparison of distinct pointer types lacks a cast
+drivers/net/wireless/libertas/debugfs.c: In function 'wlan_debugfs_read':
+drivers/net/wireless/libertas/debugfs.c:1823: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/debugfs.c:1825: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/debugfs.c:1827: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/debugfs.c: In function 'wlan_debugfs_write':
+drivers/net/wireless/libertas/debugfs.c:1884: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/debugfs.c:1886: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/debugfs.c:1888: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/debugfs.c: At top level:
+drivers/net/wireless/libertas/debugfs.c:1900: warning: initialization from incompatible pointer type
+drivers/net/wireless/libertas/debugfs.c: In function 'libertas_debug_init':
+drivers/net/wireless/libertas/debugfs.c:1919: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/if_usb.c: In function '__if_usb_submit_rx_urb':
+drivers/net/wireless/libertas/if_usb.c:393: warning: passing argument 4 of 'usb_fill_bulk_urb' makes pointer from integer without a cast
+
+
+
+
+> Louis has a few on libertas-dev list.  We also need to pull wireless-2.6
+> into libertas before we send linville a pull request, I think.
+
+
 ---
- net/mac80211/ieee80211.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 145604a..4e84f24 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -2474,6 +2474,8 @@ static int ieee80211_open(struct net_device *dev)
- 	if (sdata->type == IEEE80211_IF_TYPE_STA &&
- 	    !local->user_space_mlme)
- 		netif_carrier_off(dev);
-+	else
-+		netif_carrier_on(dev);
- 
- 	netif_start_queue(dev);
- 	return 0;
--- 
-1.5.0.6
-
--- 
-John W. Linville
-linville@tuxdriver.com
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
