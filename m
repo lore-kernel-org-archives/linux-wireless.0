@@ -1,60 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:37162 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1161764AbXEBVOm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 May 2007 17:14:42 -0400
-Received: from griffin.suse.cz (griffin.suse.cz [10.20.1.99])
-	by mail.suse.cz (SUSE LINUX ESMTP Mailer) with ESMTP id 787E46280B5
-	for <linux-wireless@vger.kernel.org>; Wed,  2 May 2007 23:14:41 +0200 (CEST)
-Date: Wed, 2 May 2007 23:14:25 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: fix false lockdep warning
-Message-ID: <20070502231425.135f87b4@griffin.suse.cz>
+Received: from mx1.redhat.com ([66.187.233.31]:36919 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S968535AbXEIBXr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2007 21:23:47 -0400
+Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6
+From: Dan Williams <dcbw@redhat.com>
+To: Marcelo Tosatti <marcelo@kvack.org>
+Cc: Jeff Garzik <jeff@garzik.org>, David Miller <davem@davemloft.net>,
+	penberg@cs.helsinki.fi, linville@tuxdriver.com, hch@infradead.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	akpm@linux-foundation.org, torvalds@linux-foundation.org
+In-Reply-To: <20070508234118.GA3472@dmt>
+References: <20070507141143.GB5125@tuxdriver.com>
+	 <463F443A.5000306@garzik.org>
+	 <84144f020705080247v74ebcd26y27c2f1e61529b215@mail.gmail.com>
+	 <20070508.132737.104034594.davem@davemloft.net>
+	 <4640E3BF.8080401@garzik.org>
+	 <1178659763.14888.2.camel@localhost.localdomain>
+	 <4640FC76.4090908@garzik.org>  <20070508234118.GA3472@dmt>
+Content-Type: text/plain
+Date: Tue, 08 May 2007 21:27:00 -0400
+Message-Id: <1178674020.16181.4.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes lockdep aware of xmit_lock hierarchy between master and virtual
-interfaces.
+On Tue, 2007-05-08 at 20:41 -0300, Marcelo Tosatti wrote:
+> On Tue, May 08, 2007 at 06:40:54PM -0400, Jeff Garzik wrote:
+> > Dan Williams wrote:
+> > >I'll audit the list of ioctls and remove ones that may be objectionable,
+> > >and we'll go back through them after 2.6.22 and add back in ones that
+> > >are actually required.  Keep the API/ABI small and expand if necessary.
+> > >What's the timeframe required here?  Linville said a few days at the
+> > >most.
+> > 
+> > Ideally, before 2.6.22-rc1.  No set date, but generally it's a week or 
+> > two after merge window opens.
+> > 
+> > But even if you miss -rc1, we MUST get in the ioctl removal before 
+> > 2.6.22 release.  This is certainly exception to the "nothing but bug 
+> > fixes" rule -- or perhaps it is following the rule, if you consider the 
+> > ioctls' existence a bug :)
+> > 
+> > Getting the CodingStyle fixes in before 2.6.22-rc1 would be nice, but, 
+> > as I noted, lower priority than serious stuff like ioctl consideration.
+> 
+> There is also a bunch of updates pending. I'm sending them over this
+> week.
+> 
+> Dan: I'll be sending everything thats currently in our tree but not
+> mainline.
 
-Signed-off-by: Jiri Benc <jbenc@suse.cz>
+I'm going through the ioctls as we speak...  what else was pending?
+Louis has a few on libertas-dev list.  We also need to pull wireless-2.6
+into libertas before we send linville a pull request, I think.
 
----
- net/mac80211/ieee80211.c |   12 +++++++++++-
- 1 files changed, 11 insertions(+), 1 deletion(-)
-
---- mac80211.orig/net/mac80211/ieee80211.c
-+++ mac80211/net/mac80211/ieee80211.c
-@@ -2167,6 +2167,16 @@ static int ieee80211_change_mtu_apdev(st
- 	return 0;
- }
- 
-+enum netif_tx_lock_class {
-+	TX_LOCK_NORMAL,
-+	TX_LOCK_MASTER,
-+}
-+
-+static inline void netif_tx_lock_nested(struct net_device *dev, int subclass)
-+{
-+	spin_lock_nested(&dev->_xmit_lock, subclass);
-+	dev->xmit_lock_owner = smp_processor_id();
-+}
- 
- static void ieee80211_set_multicast_list(struct net_device *dev)
- {
-@@ -2174,7 +2184,7 @@ static void ieee80211_set_multicast_list
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	unsigned short flags;
- 
--	netif_tx_lock(local->mdev);
-+	netif_tx_lock_nested(local->mdev, TX_LOCK_MASTER);
- 	if (((dev->flags & IFF_ALLMULTI) != 0) ^ (sdata->allmulti != 0)) {
- 		if (sdata->allmulti) {
- 			sdata->allmulti = 0;
+Dan
 
 
--- 
-Jiri Benc
-SUSE Labs
