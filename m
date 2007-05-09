@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:56052 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755362AbXEVXB7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2007 19:01:59 -0400
-Message-ID: <465362EA.9090008@linux.intel.com>
-Date: Tue, 22 May 2007 14:38:50 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:48126 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754218AbXEIVmG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 May 2007 17:42:06 -0400
+Message-ID: <46424018.2010306@garzik.org>
+Date: Wed, 09 May 2007 17:41:44 -0400
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-To: Jeff Garzik <jeff@garzik.org>
+To: Dan Williams <dcbw@redhat.com>
 CC: Randy Dunlap <randy.dunlap@oracle.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers
-References: <464B7B7C.5080800@linux.intel.com> <20070516182700.912a21ed.randy.dunlap@oracle.com> <464BD9D4.4020909@linux.intel.com> <464BEEB0.8030402@garzik.org>
-In-Reply-To: <464BEEB0.8030402@garzik.org>
+	Marcelo Tosatti <marcelo@kvack.org>,
+	David Miller <davem@davemloft.net>, penberg@cs.helsinki.fi,
+	linville@tuxdriver.com, hch@infradead.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	akpm@linux-foundation.org, torvalds@linux-foundation.org
+Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6
+References: <20070507141143.GB5125@tuxdriver.com>	 <463F443A.5000306@garzik.org>	 <84144f020705080247v74ebcd26y27c2f1e61529b215@mail.gmail.com>	 <20070508.132737.104034594.davem@davemloft.net>	 <4640E3BF.8080401@garzik.org>	 <1178659763.14888.2.camel@localhost.localdomain>	 <4640FC76.4090908@garzik.org> <20070508234118.GA3472@dmt>	 <1178674020.16181.4.camel@localhost.localdomain>	 <20070509142516.a31467c5.randy.dunlap@oracle.com> <1178746884.9590.18.camel@localhost.localdomain>
+In-Reply-To: <1178746884.9590.18.camel@localhost.localdomain>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jeff Garzik wrote:
+Dan Williams wrote:
+> I can fix those up; but setting KBUILD_VERBOSE=1 and recompiling doesn't
+> show any of them in current libertas-2.6; -Wall is definitely defined.
+> Is there another way to enable something give yet more verbose debug
+> output?
 
-> As an aside #2,
-> 
->> +#if IWL == 4965
->> +           (rxon1->ofdm_ht_single_stream_basic_rates ==
->> +            rxon2->ofdm_ht_single_stream_basic_rates) &&
->> +           (rxon1->ofdm_ht_dual_stream_basic_rates ==
->> +            rxon2->ofdm_ht_dual_stream_basic_rates) &&
->> +           (rxon1->rx_chain == rxon2->rx_chain) &&
->> +#endif
-> 
-> 
-> those #if's should go away.
 
-Agreed.  We'll continue working to remove those over time.
+The copious libertas warnings are present in vanilla upstream 
+linux-2.6.git.
 
-Originally the intent was to have a single driver that supported the 4965 and 3945 via run-time switching.  As development moved forward, switching to a build-time approach made more sense.  base.c was then isolated from the hardware specific code and the specific HW functionality was moved into iwl-3945 and iwl-4965.  The remaining chunks are small code pieces where that work hasn't yet completed.
+Just do "make allmodconfig && make -sj4".
 
-James
+	Jeff
 
-> 
->     Jeff
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+P.S. Make sure libertas is free of sparse warnings, as all drivers 
+should be.  Read Documentation/sparse.txt.
+
+	Jeff
+
+
+
