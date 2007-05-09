@@ -1,75 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:57918
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752783AbXEZSDZ (ORCPT
+Received: from dhost002-68.dex002.intermedia.net ([64.78.20.34]:43066 "EHLO
+	DHOST002-68.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754460AbXEIP2k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 14:03:25 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Uwe Bugla <uwe.bugla@gmx.de>
-Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-Date: Sat, 26 May 2007 20:03:17 +0200
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-References: <20070524195616.234280@gmx.net> <200705261918.09469.mb@bu3sch.de> <200705261924.33802.uwe.bugla@gmx.de>
-In-Reply-To: <200705261924.33802.uwe.bugla@gmx.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200705262003.17403.mb@bu3sch.de>
+	Wed, 9 May 2007 11:28:40 -0400
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Wed, 9 May 2007 08:28:55 -0700
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] mac80211: fail back to use associate from reassociate
+Message-ID: <20070509152855.GB941@devicescape.com>
+References: <20070509054152.GA30839@mail.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070509054152.GA30839@mail.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 26 May 2007 19:24:33 Uwe Bugla wrote:
-> Am Samstag, 26. Mai 2007 19:18 schrieben Sie:
-> > On Saturday 26 May 2007 19:04:04 Uwe Bugla wrote:
-> > > Yes, sure! But the help text is very unlucky and humble, and it is not
-> > > clear enough in the sense of being distinctive enough, just clear and
-> > > comprehensive.
-> >
-> > Why don't you simply submit a patch to change the helptext then?
-> > I'm not sure why you refuse to DO anything about the "mess", but
-> > instead keep poking me that I am responsible somehow to fix it up
-> > for you...
+On Wed, May 09, 2007 at 01:41:52PM +0800, Zhu Yi wrote:
+
+> mac80211: fail back to use associate from reassociate failure
 > 
-> I need exception examples for doing so. What are the exception examples?
-> 
-> Apart from that you have don nothing except than guessing around.
+> Some APs have strict checking between associate and reassociate. In
+> a case when an AP is restarted during a connection, it denies the
+> mac80211 reassoc request since this is a new association for the AP.
+> To fix this problem, we need to check the status code against
+> WLAN_STATUS_REASSOC_NO_ASSOC and clear ifsta->prev_bssid_set in
+> handling the association failure response.
 
-Admit it. You don't know how debugging is done in the real world.
-Debugging _IS_ guessing around.
-
-> Now here comes the LAST proof that your code is buggy:
-> 
-> A. It's not mm-implementation
-> B. It's not user behaviour or fault
-> C. It's not an ACPI issue
-> 
-> BUT ONE AND ONLY:
-> 
-> D. It's your code that is buggy, without any doubt!
-
-Blahblah. Did you even read the mail I CCed to you?
-It "proves" (to use your wording) the exact opposite.
-
-> OK, went Andrew's path: patched 2.6.22-rc3 with wireless tree:
-> 
-> Result: The NIC driver b44 and ssb are loaded correctly, but refuse to work
-> (no network communication possible).
-
-Ok, please take git and get my development tree and try with that:
-
-git clone http://bu3sch.de/git/wireless-dev.git
-
-It's based on 2.6.22-rc1 and it works fine for me.
-
-> dmesg:
-> 
-...
-
-Ok, config and dmesg looks OK to me, now.
-
+Can you please identify such an AP? This sounds like a workaround that
+makes the non-AP STA (client) behave in a way that does not match with
+IEEE 802.11 standard and in general, I'm against this change without a
+very good reason for it. This type of change would, e.g., break IEEE
+802.11r fast transition which can only be done using reassociation.
 
 -- 
-Greetings Michael.
+Jouni Malinen                                            PGP id EFC895FA
