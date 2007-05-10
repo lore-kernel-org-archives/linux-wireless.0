@@ -1,153 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:43047 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751160AbXE0Aqf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 20:46:35 -0400
-Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-From: Dan Williams <dcbw@redhat.com>
-To: Uwe Bugla <uwe.bugla@gmx.de>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <200705262332.50640.uwe.bugla@gmx.de>
-References: <20070524195616.234280@gmx.net>
-	 <200705262139.54353.uwe.bugla@gmx.de> <200705262149.09948.mb@bu3sch.de>
-	 <200705262332.50640.uwe.bugla@gmx.de>
-Content-Type: text/plain
-Date: Sat, 26 May 2007 17:52:31 -0400
-Message-Id: <1180216351.24168.7.camel@xo-28-0B-88.localdomain>
-Mime-Version: 1.0
+Received: from ug-out-1314.google.com ([66.249.92.169]:62783 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754323AbXEJWZA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2007 18:25:00 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so699992uga
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2007 15:24:58 -0700 (PDT)
+Message-ID: <1ba2fa240705101524x2676a09eyeff3b71ed2542478@mail.gmail.com>
+Date: Fri, 11 May 2007 01:24:58 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Jiri Benc" <jbenc@suse.cz>
+Subject: Re: Specifing rate control algorithm?
+Cc: jketreno <jketreno@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Michael Wu" <flamingice@sourmilk.net>
+In-Reply-To: <20070510212355.6c13cde8@griffin.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <464253CE.2030504@linux.intel.com>
+	 <20070510132756.2ca660a0@midnight.suse.cz>
+	 <46434596.6010908@linux.intel.com>
+	 <20070510194233.335004b7@griffin.suse.cz>
+	 <46437DC8.2060805@linux.intel.com>
+	 <20070510212355.6c13cde8@griffin.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2007-05-26 at 23:32 +0200, Uwe Bugla wrote:
-> Am Samstag, 26. Mai 2007 21:49 schrieben Sie:
-> > On Saturday 26 May 2007 21:39:54 Uwe Bugla wrote:
-> > > Am Samstag, 26. Mai 2007 21:19 schrieben Sie:
-> > > > Uwe, please try the following patch:
-> > > >
-> > > > Index: bu3sch-wireless-dev/drivers/net/b44.c
-> > > > ===================================================================
-> > > > --- bu3sch-wireless-dev.orig/drivers/net/b44.c	2007-05-18
-> > > > 18:09:50.000000000 +0200 +++
-> > > > bu3sch-wireless-dev/drivers/net/b44.c	2007-05-26 21:18:28.000000000
-> > > > +0200 @@ -2201,10 +2201,12 @@ static int __devinit b44_init_one(struct
-> > > > printk("%2.2x%c", dev->dev_addr[i],
-> > > >  		       i == 5 ? '\n' : ':');
-> > > >
-> > > > +#if 0
-> > > >  	/* Initialize phy */
-> > > >  	spin_lock_irq(&bp->lock);
-> > > >  	b44_chip_reset(bp);
-> > > >  	spin_unlock_irq(&bp->lock);
-> > > > +#endif
-> > > >
-> > > >  	return 0;
-> > >
-> > > Against what kernel please?
-> > > Just try to be a bit more eloquent, man!
+On 5/10/07, Jiri Benc <jbenc@suse.cz> wrote:
+> On Thu, 10 May 2007 13:17:12 -0700, jketreno wrote:
+> > > Please send your rate control algorithm first so we can know why are
+> > > you requesting this.
 > >
-> > Against a kernel which does not work for you, of course.
-> >
-> > Sometimes I wonder... (no better not say that).
-> 
-> YES! And I wonder TOO, definitely!
-> 
-> Quand meme (now, if you do not speak french: Above all that), I applied your 
-> patch against 2.6.22-rc2-mm1. Just to show my cooperation willing to get 
-> your "dream" being fulfilled!
-> 
-> Result is: No change!
-> Non-functionable b44-device at all!
-> 
-> Hint: Although being a "non-hacker" or "non-developer" I do have stepped 
-> across some experienced developer people who at least added some code to make 
-> their modules function in the following way:
-> 
-> modprobe xyz debug=1 (or debug=2 or debug=3 or debug=4 or debug=5 or debug=6)
-> 
-> In so far, if you continue to state that debugging is nothing but guessing 
-> around wildly you are definitely wrong, showing us all your missing code 
-> hacker experience. If you DO continue like this every step will be a torture 
-> not only for me but for the reading folks as well.
-> 
-> But every human being is here to learn and develop: In so far I am very 
-> optimistic!
-> 
-> Apart from the Kconfig chaos that seems to be subordinate in your personal 
-> rating scale, you at least could have added some functions like the above 
-> mentioned functions.
-> 
-> The fact that you simply ignored to imply those functions and continue to call 
-> other people dumb shows exactly how small and humble you are.
-> 
-> Apart from that:
-> The message that you rooted to my place was no "proof" at all for any kind of 
-> disfunctionality or compatibility issue!
-> 
-> In that message the lack of performance of the "enclosed" or "old" 
-> or "complete" b44 module (i. e. PCI-only module) was criticised, NOT the one 
-> ripped by you personally into two modules called b44 and ssb.
-> 
-> In so far I would deeply appreciate you personally to stick to the facts in 
-> your personal lack of knowledge about the b44 driver instead of playing bad 
-> politics against other people like me and others.
-> 
-> 
-> Hello my dear Andrew Morton,
-> 
-> Could you please do me and the rest of the world two favours?
-> 
-> A. Rip Michael Buesches code out of the mm-tree
-> 
-> B. Give Michael Buesch a fair chance to revise his disfunctionable code 
-> outside the mm-tree and / or the vanilla mainline.
-> 
-> Side note for the what and why:
-> 
-> I like to help avoid dangers by testing the mm-tree.
-> BUT:
-> 
-> If real debugging conforms to nothing but guessing around wildly let me tell 
-> you that I do not appreciate to be part of that torture due to the lack of 
-> experience of some German spare time hacker.
-> 
-> A: proven by facts not knowing or even wanting to know how to imply 
-> appropriate functionable debug parametres in his driver code
-> 
-> B: non-cooperative as far as Kconfig help features are concerned (i. E. help 
-> to understand the issues for users
-> 
-> C: calling all people simply dumb who do not know about his personal issues at 
-> all
-> 
-> Thank you, Andrew Morton! You are real fine!
+> > I told you the reason why I am requesting this.  Do you think I'm lying
+> > or trying to trick you?
+>
+> I'm not convinced your request is reasonable. But as Jouni pointed out,
+> there _could be_ some specific circumstances under which it could make
+> sense. I'm not aware of any such circumstance now.
+>
+> You said you have a code. Show it. I can assure you that if it turns
+> out from the code that your request is valid, you will have no problems
+> with your patch.
+>
+> We're opensource. Please keep that in mind. If you need to prove
+> something, send a code.
 
-Everyone just needs to cool down.  And you both (Uwe and Michael) just
-need to try debugging the problem.
+The code is available why should it be paste it to the email.
 
-Abstracting the SSB code into a library is clearly the correct solution,
-rather than having the same code in two separate places.  The whole
-_point_ of having code in various trees (wireless, mm, etc) is to find
-these bugs before the patches hit mainline.  Even testing on > 3
-machines may not uncover subtle bugs (for example, different behavior on
-different silicon revisions, especially in reverse-engineered parts),
-it's only something Michael can test so far before other people have to
-pick it up and test it.  And that's where you come in, Uwe.
+> > Generic algorithms aren't as capable as hardware specific algorithms
+> > when you factor performance, latency, system utilization, power
+> > consumption, etc.  Optimal algorithms are written to take advantage of
+> > the capabilities exposed by the hardware.
+>
+> You said the same about hardware scanning. Michael showed you that's
+> not true.
+>
+Michael has shortened the dwell time on the channel, while hw scanning
+has shorten switching time from the channel to channel and no the time
+you are listening on the channel
+I wouldn't call it an optimization. Did he measured the power consumption ?
 
-So both of you should actually just stop the name-calling, suck it up,
-and debug the problem.  We're getting nothing done here.
+> > The 3945, as an example, let's you configure the hardware with a set of
+> > rates, retries per rate, and a fallback order.  You submit one Tx
+> > request to the hardware and it then performs all the retries,
+> > fallbacks, etc without host interaction over overhead.
+>
+> I don't see anything fundamentally different from other hardware.
+>
+The God is in the details
 
-Dan
+> > The rate control algorithm needs to be aware of the attempts made by
+> > the hardware.  The specific mechanism by which the 3945 sets up those
+> > rates is device specific.  The mechanism by which the results are
+> > reported back are device specific.  The functions related to selecting
+> > the Tx rate are called twice for *EVERY PACKET*.  Anything you can do
+> > to make that code-path faster and leaner for the specific device it is
+> > using is a win.  Hardware specific beats generic.
+>
+> Okay, show the code. Maybe we will be able to find a better way to deal
+> with that.
+>
+> > Might other hardware devices also support some type of rate fallback or
+> > automatic retries?  Maybe.
+>
+> They do.
+>
+> > Do they all do it the same way?  No.
+>
+> That's valid for almost everything in the stack. Yet we have (and want
+> to have) one stack and don't want each driver to implement its parts on
+> their own.
+>
+> > Is it worth slowing down hot code paths in the name of "generic
+> > software"? Absolutely not.
+>
+> If the slowdown is not big, yes, it is. Unifying things almost always
+> means you need to accept some trade-offs.
 
-> Sincerely
-> 
-> Uwe
+Clean API gives you the ability to enjoy from the both worlds. WiFi is
+about mobility power saving and therefore hw offloading is essential.
+What worth the few more lines of the code that gives you this ability
+this is also a trade-off.
+
+> > PS.  You're free to download the 3945 specific rate control algorithm
+> > if you want.  It has been part of the GPL ipw3945 driver for over a
+> > year at http://ipw3945.sf.net.  You can also find it refactored in
+> > iwlwifi at http://intellinuxgraphics.org.
+>
+> Could you send just the rate control algorithm (or an excerpt of it)
+> to this list so more people will look at it?
+>
+> Thanks.
+>
+>  Jiri
+>
+> --
+> Jiri Benc
+> SUSE Labs
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+>
