@@ -1,69 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3671 "EHLO ra.tuxdriver.com"
+Received: from mx1.redhat.com ([66.187.233.31]:39734 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755964AbXERSCu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2007 14:02:50 -0400
-Date: Fri, 18 May 2007 13:47:21 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Eugene Teo <eteo@redhat.com>
-Cc: linux-kernel@vger.kernel.org, jeff@garzik.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [2.6 patch] drivers/net/wireless/libertas/fw.c: fix use-before-check
-Message-ID: <20070518174721.GB3492@tuxdriver.com>
-References: <464DDD29.3000009@redhat.com>
+	id S1755309AbXEJTXk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2007 15:23:40 -0400
+Subject: Re: Please pull 'master' branch of libertas (for 2.6.22)
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1178807713.23307.1.camel@localhost.localdomain>
+References: <1178745375.9590.5.camel@localhost.localdomain>
+	 <20070510013523.GA4544@tuxdriver.com>
+	 <1178807713.23307.1.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Thu, 10 May 2007 15:27:09 -0400
+Message-Id: <1178825229.4028.4.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <464DDD29.3000009@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This should be sent to linux-wireless (and CC'ed to me) as well...
+On Thu, 2007-05-10 at 10:35 -0400, Dan Williams wrote:
+> On Wed, 2007-05-09 at 21:35 -0400, John W. Linville wrote:
+> > On Wed, May 09, 2007 at 05:16:14PM -0400, Dan Williams wrote:
+> > 
+> > > This is latest libertas git and should be pushed to 2.6.22.  It takes
+> > > care of a few of Christoph's objections, including ioctl removal,
+> > > version.h removal, and debug define cleanups.
+> > > 
+> > > git://git.infradead.org/libertas-2.6.git
+> > 
+> > Dan,
+> > 
+> > There is a problem...the libertas-2.6 tree doesn't have a "clean"
+> > history.  It appears to have the entire development history of the
+> > libertas project.  We need something more concise and "sanitized"
+> > for pushing upstream.
+> 
+> Yeah; that sucks.  I've pulled wireless-2.6 and I'm adding
+> cleanup/review patches now.  What I may not be able to do, depending on
+> time, is fix the warnings and sparse stuff Randy brought up.
 
-On Sat, May 19, 2007 at 01:06:49AM +0800, Eugene Teo wrote:
-> NULL checks should be performed before the dereference.
+I've had the time to do the sparse fixes and am finishing up the compile
+warnings.
+
+Dan
+
+> Dan
 > 
-> Spotted by the Coverity checker.
+> > We do not really want the patches for new development, at least not
+> > for 2.6.22.  Could you help identify which patches in the history
+> > correspond to review fixes?
+> > 
+> > I can generate a single diff, but it is huge ("34 files changed, 3069
+> > insertions(+), 5643 deletions(-)") and it isn't clear to me that it
+> > is only cleanups.  Perhaps you could split this up into a few separate
+> > patches?  Especially those patches specific to review comments?
+> > 
+> > I'm sorry...I know this is a PITA.  I appreciate your effort and
+> > cooperation.
+> > 
+> > John
 > 
-> Signed-off-by: Eugene Teo <eteo@redhat.com>
-> 
-> diff --git a/drivers/net/wireless/libertas/fw.c b/drivers/net/wireless/libertas/fw.c
-> index 441123c..5c63c9b 100644
-> --- a/drivers/net/wireless/libertas/fw.c
-> +++ b/drivers/net/wireless/libertas/fw.c
-> @@ -333,18 +333,22 @@ static void command_timer_fn(unsigned long data)
->         unsigned long flags;
-> 
->         ptempnode = adapter->cur_cmd;
-> +       if (ptempnode == NULL) {
-> +               lbs_pr_debug(1, "PTempnode Empty\n");
-> +               return;
-> +       }
-> +
->         cmd = (struct cmd_ds_command *)ptempnode->bufvirtualaddr;
-> +       if (!cmd) {
-> +               lbs_pr_debug(1, "cmd is NULL\n");
-> +               return;
-> +       }
-> 
->         lbs_pr_info("command_timer_fn fired (%x)\n", cmd->command);
-> 
->         if (!adapter->fw_ready)
->                 return;
-> 
-> -       if (ptempnode == NULL) {
-> -               lbs_pr_debug(1, "PTempnode Empty\n");
-> -               return;
-> -       }
 > -
->         spin_lock_irqsave(&adapter->driver_lock, flags);
->         adapter->cur_cmd = NULL;
->         spin_unlock_irqrestore(&adapter->driver_lock, flags);
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
 
--- 
-John W. Linville
-linville@tuxdriver.com
