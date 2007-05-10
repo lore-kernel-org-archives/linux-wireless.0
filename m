@@ -1,78 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4733 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753185AbXEaT2z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2007 15:28:55 -0400
-Date: Thu, 31 May 2007 14:12:10 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 2.6.23] mac80211: Add support for SIOCGIWRATE ioctl
-Message-ID: <20070531181210.GC3706@tuxdriver.com>
+Received: from dhost002-11.dex002.intermedia.net ([64.78.21.77]:34444 "EHLO
+	dhost002-11.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755745AbXEJRY6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2007 13:24:58 -0400
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Thu, 10 May 2007 10:25:10 -0700
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kumar Gala <galak@kernel.crashing.org>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: support for bridging ethernet and 802.11
+Message-ID: <20070510172510.GE24712@devicescape.com>
+References: <CCA1D7C0-D44A-450D-A76E-DAE792E0CB37@kernel.crashing.org> <1178816781.3806.31.camel@johannes.berg> <20070510171213.GD24712@devicescape.com> <1178817575.3806.36.camel@johannes.berg>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1178817575.3806.36.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Larry Finger <Larry.Finger@lwfinger.net>
+On Thu, May 10, 2007 at 07:19:35PM +0200, Johannes Berg wrote:
 
-At present, transmission rate information for mac80211 is available only
-if verbose debugging is turned on, and then only in the logs. This patch
-implements the SIOCGIWRATE ioctl, which adds the current transmission rate to
-the output of iwconfig.
+> Ah forgot about that, I had only thought about AP/wired bridging. How
+> would the prism driver actually do bridging in STA mode though?
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/ieee80211_ioctl.c |   25 ++++++++++++++++++++++++-
- 1 files changed, 24 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-index 352f03b..66e8a97 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -838,6 +838,29 @@ static int ieee80211_ioctl_giwscan(struct net_device *dev,
- }
- 
- 
-+static int ieee80211_ioctl_giwrate(struct net_device *dev,
-+				  struct iw_request_info *info,
-+				  struct iw_param *rate, char *extra)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct sta_info *sta;
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	if (sdata->type == IEEE80211_IF_TYPE_STA)
-+		sta = sta_info_get(local, sdata->u.sta.bssid);
-+	else
-+		return -EOPNOTSUPP;
-+	if (!sta)
-+		return -ENODEV;
-+	if (sta->txrate < local->oper_hw_mode->num_rates)
-+		rate->value = local->oper_hw_mode->rates[sta->txrate].rate * 100000;
-+	else
-+		rate->value = 0;
-+	sta_info_put(sta);
-+	return 0;
-+}
-+
- static int ieee80211_ioctl_siwrts(struct net_device *dev,
- 				  struct iw_request_info *info,
- 				  struct iw_param *rts, char *extra)
-@@ -1779,7 +1802,7 @@ static const iw_handler ieee80211_handler[] =
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) NULL,				/* SIOCSIWRATE */
--	(iw_handler) NULL,				/* SIOCGIWRATE */
-+	(iw_handler) ieee80211_ioctl_giwrate,		/* SIOCGIWRATE */
- 	(iw_handler) ieee80211_ioctl_siwrts,		/* SIOCSIWRTS */
- 	(iw_handler) ieee80211_ioctl_giwrts,		/* SIOCGIWRTS */
- 	(iw_handler) ieee80211_ioctl_siwfrag,		/* SIOCSIWFRAG */
--- 
-1.5.0.6
+If that is referring to Host AP driver, there is support for using WDS
+in client mode. If the AP understands this, the client could use
+standard frames for its own packets (i.e., SA=own MAC addr) and WDS
+frames for frames from all other addresses. There are some experimental
+modes in Host AP driver that (if I remember correctly ;-) may allow this
+to be used on a single netdev (i.e., no additional netdev needed for the
+WDS link) and as such, this would look like working layer 2 bridging
+between wlan0 and eth0 even in managed mode.
 
 -- 
-John W. Linville
-linville@tuxdriver.com
+Jouni Malinen                                            PGP id EFC895FA
