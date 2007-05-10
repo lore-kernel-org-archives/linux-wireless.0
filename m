@@ -1,58 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:50298 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754476AbXEDMin (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 May 2007 08:38:43 -0400
-Message-ID: <463B28F1.4020107@redhat.com>
-Date: Fri, 04 May 2007 14:37:05 +0200
-From: Michal Schmidt <mschmidt@redhat.com>
-MIME-Version: 1.0
-To: Matteo Croce <rootkit85@yahoo.it>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: airo works badly
-References: <200705041410.02269.rootkit85@yahoo.it>
-In-Reply-To: <200705041410.02269.rootkit85@yahoo.it>
-Content-Type: text/plain; charset=UTF-8
+Received: from dhost002-53.dex002.intermedia.net ([64.78.21.155]:23058 "EHLO
+	dhost002-53.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758923AbXEJRL7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2007 13:11:59 -0400
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Thu, 10 May 2007 10:12:13 -0700
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kumar Gala <galak@kernel.crashing.org>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: support for bridging ethernet and 802.11
+Message-ID: <20070510171213.GD24712@devicescape.com>
+References: <CCA1D7C0-D44A-450D-A76E-DAE792E0CB37@kernel.crashing.org> <1178816781.3806.31.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1178816781.3806.31.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(CCing linux-wireless, other people might have ideas)
+On Thu, May 10, 2007 at 07:06:21PM +0200, Johannes Berg wrote:
 
-Matteo Croce skrev:
-> Every day i gets offline after reading this in the syslog:
-> 
-> May  3 15:25:30 raver kernel: airo(): Probing for PCI adapters
-> May  3 15:25:30 raver kernel: airo(eth0): cmd:111 status:7f11 rsp0:2 rsp1:0 rsp2:0
-> May  3 15:25:30 raver kernel: airo(eth0): Doing fast bap_reads
-> May  3 15:25:30 raver kernel: airo(eth0): WPA is supported.
-> May  3 15:25:30 raver kernel: airo(eth0): MAC enabled 0:d:29:4f:c:be
-> May  3 15:25:30 raver kernel: airo(): Finished probing for PCI adapters
-> May  3 17:59:36 raver kernel: airo(eth0): Bad size 8192
-> May  3 18:47:52 raver kernel: airo(eth0): Bad size 8192
-> May  3 19:05:47 raver kernel: airo(eth0): Bad size 8192
-> May  3 19:08:08 raver kernel: airo(eth0): Bad size 8192
-> May  3 19:20:07 raver kernel: airo(eth0): airo: BAP setup error too many retries
-> May  3 19:20:07 raver kernel: airo(eth0): airo: BAP setup error too many retries
-> May  3 19:20:09 raver kernel: airo(eth0): airo: BAP setup error too many retries
-> May  3 19:20:09 raver kernel: airo(eth0): airo: BAP setup error too many retries
-> May  3 19:20:09 raver kernel: airo(eth0): airo: BAP setup error too many retries
-> May  3 19:20:09 raver kernel: airo(eth0): airo: BAP setup error too many retries
-> May  3 19:20:09 raver kernel: airo(eth0): airo: BAP setup error too many retries
-> May  3 19:20:09 raver kernel: airo(eth0): airo: BAP setup error too many retries
-> May  3 19:20:09 raver kernel: airo(eth0): airo: BAP setup error too many retries
-> May  3 19:20:09 raver kernel: airo(eth0): airo: BAP setup error too many retries
-> May  3 19:20:09 raver kernel: airo(eth0): airo: BAP setup error too many retries
-> May  3 19:20:10 raver kernel: airo(eth0): airo: BAP setup error too many retries
-> May  3 19:20:10 raver kernel: airo(eth0): airo: BAP setup error too many retries
+> On Thu, 2007-05-10 at 11:18 -0500, Kumar Gala wrote:
+> > I'm wondering how to tell if a given driver/device in the kernel  
+> > supports the ability to bridge between ethernet and 802.11.  From  
+> > searching the web it looks like only the prism driver/device supports  
+> > this.
 
-Hi,
+> Normally wireless drivers do 802.3 framing as the 802.11 standard more
+> or less requires, so it should "just work". Am I missing something?
 
-What kernel version are you using? Is this a regression? If so, what was
-the last version that worked well?
-What if you rmmod the driver and then reload it? Does it make it work again?
-What hardware is it exactly? The airo driver supports more than one type
-of card.
-Are you doing anything special with the card, like running some wifi
-monitoring application for instance?
+IEEE 802.11 allows only the own MAC address to be used as the source
+address (addr2) when operating as a non-AP STA in BSS (client in Managed
+mode). In other words, layer 2 bridging does not work properly. AP mode
+and WDS links can be used for bridging without problems, but this will
+of course require the driver to support these.
 
-Michal
+-- 
+Jouni Malinen                                            PGP id EFC895FA
