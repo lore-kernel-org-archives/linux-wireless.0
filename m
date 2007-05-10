@@ -1,31 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:55208 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932224AbXEGKlk (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53256 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754130AbXEJRD4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2007 06:41:40 -0400
-Date: Mon, 7 May 2007 11:41:17 +0100
-From: Christoph Hellwig <hch@infradead.org>
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, marcelo@kvack.org,
-	linux-kernel@vger.kernel.org, akpm@osdl.org
-Subject: Re: Please pull 'libertas' branch of wireless-2.6
-Message-ID: <20070507104117.GA31601@infradead.org>
-References: <20070227205649.GH5826@tuxdriver.com> <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org>
+	Thu, 10 May 2007 13:03:56 -0400
+Subject: Re: support for bridging ethernet and 802.11
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kumar Gala <galak@kernel.crashing.org>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <CCA1D7C0-D44A-450D-A76E-DAE792E0CB37@kernel.crashing.org>
+References: <CCA1D7C0-D44A-450D-A76E-DAE792E0CB37@kernel.crashing.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/+vkCqKKoBzGwJSRtpku"
+Date: Thu, 10 May 2007 19:06:21 +0200
+Message-Id: <1178816781.3806.31.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070303052140.GA31075@infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 03, 2007 at 05:21:40AM +0000, Christoph Hellwig wrote:
-> Umm, I can't remember the updated driver ever beeig posted for review.
-> And to be honest I'd be surprised if it's in a good shape already.
 
-Of course it's not anywhere near good shape.  Almost all items from my
-review were completely ignored, and we have another totoally substandard
-wireless driver with crappy thread handling, a huge number of broken private
-ioctls and partially absymal codingstyle.
+--=-/+vkCqKKoBzGwJSRtpku
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-And I didn't even get a reply to my mail addressing the concerns above.
+[adding linux-wireless]
+
+On Thu, 2007-05-10 at 11:18 -0500, Kumar Gala wrote:
+> I'm wondering how to tell if a given driver/device in the kernel =20
+> supports the ability to bridge between ethernet and 802.11.  From =20
+> searching the web it looks like only the prism driver/device supports =20
+> this.
+
+Normally wireless drivers do 802.3 framing as the 802.11 standard more
+or less requires, so it should "just work". Am I missing something?
+
+johannes
+
+--=-/+vkCqKKoBzGwJSRtpku
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGQ1EN/ETPhpq3jKURAtqGAJ9iAYgHtJeWKEiPsz/7F5gpHpqlhQCdEtLp
+E6ksXe33JxxG+rne2UzRPiI=
+=oCG2
+-----END PGP SIGNATURE-----
+
+--=-/+vkCqKKoBzGwJSRtpku--
+
