@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:36894 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760852AbXEKJIK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 May 2007 05:08:10 -0400
-Message-ID: <46443266.4060102@garzik.org>
-Date: Fri, 11 May 2007 05:07:50 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: Andy Green <andy@warmcat.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Tomas Winkler <tomasw@gmail.com>, Jiri Benc <jbenc@suse.cz>,
-	jketreno <jketreno@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
+Received: from dhost002-39.dex002.intermedia.net ([64.78.21.124]:9807 "EHLO
+	dhost002-39.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755424AbXEJPsn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2007 11:48:43 -0400
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Thu, 10 May 2007 08:48:59 -0700
+To: Jiri Benc <jbenc@suse.cz>
+Cc: James Ketrenos <jketreno@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Subject: Re: Specifing rate control algorithm?
-References: <464253CE.2030504@linux.intel.com> <20070510132756.2ca660a0@midnight.suse.cz> <46434596.6010908@linux.intel.com> <20070510194233.335004b7@griffin.suse.cz> <46437DC8.2060805@linux.intel.com> <20070510212355.6c13cde8@griffin.suse.cz> <1ba2fa240705101524x2676a09eyeff3b71ed2542478@mail.gmail.com> <20070511001212.GB6971@tuxdriver.com> <464424A7.2040301@warmcat.com>
-In-Reply-To: <464424A7.2040301@warmcat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Message-ID: <20070510154859.GA24712@devicescape.com>
+References: <464253CE.2030504@linux.intel.com> <20070510132756.2ca660a0@midnight.suse.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070510132756.2ca660a0@midnight.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andy Green wrote:
-> Sexy-sounding "hw offloading" is a very different thing to migrating off
-> open code and putting it in vendor-specific closed source firmware.  The
-> firmware is just code like any other, for an embedded ARM7 or similar,
-> except that it is customized for a specific vendor hardware
-> implementation and you will never see the sources.  What I understand is
-> being talked about (maybe unlike the scan stuff this actually is in
-> hardware, but I doubt it) is ignoring code in the stack and instead
-> implementing pretty much the same code privately, to compile to a binary
-> blob you can't see source for or even reverse according to its license.
->  That is a lot less romantic than mysterious hardware just waiting to be
-> used.
+On Thu, May 10, 2007 at 01:27:56PM +0200, Jiri Benc wrote:
 
-OTOH, this is all vague, paranoid hand-waving since I'm guessing you 
-don't know the internals of the Intel hardware.
+> A driver is not supposed to set rate control. Under no circumstances.
+> If you know about a bug in default rate control algorithm, fix it and
+> send a patch. Otherwise, fix your driver.
 
-We'll see what happens when Intel posts code to specify a different rate 
-control algorithm.
+I don't think I would fully agree with this. Sure, the default rate
+control algorithm should work with all drivers, but it is quite possible
+that some rate control algorithms do not work with all drivers and some
+combinations are much better than the "default algorithm". In other
+words, I think there is benefit in drivers being able to "suggest" a
+rate control algorithm to be used and there is not much point having to
+force the user space to do this selection for the initial rate control
+algorithm. Sure, this should still be something that can be changed from
+user space, but the defaults selection could as well be the best
+available combination.
 
-	Jeff
+Some hardware designs provide extra functionality that can be used to
+improve rate control algorithm and as such, they may benefit greatly
+from a specific rate control implementation. Because of this, there was
+originally possibility for allowing the rate control algorithms to know
+the driver name and use this to select whether to allow the algorithm to
+be used with the driver. The request here was for a bit different way of
+doing this, but anyway, I see value in this whichever way it would be
+implemented.
 
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
