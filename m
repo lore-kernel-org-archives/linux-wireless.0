@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4735 "EHLO ra.tuxdriver.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4519 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753185AbXEaT26 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2007 15:28:58 -0400
-Date: Thu, 31 May 2007 14:04:45 -0400
+	id S1753689AbXEJCCb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 May 2007 22:02:31 -0400
+Date: Wed, 9 May 2007 21:35:23 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [TAKE 2][PATCH 0/3] IEEE802.11e/WMM TS management and DLS support
-Message-ID: <20070531180445.GB3706@tuxdriver.com>
-References: <20070525115205.GA23301@mail.intel.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'master' branch of libertas (for 2.6.22)
+Message-ID: <20070510013523.GA4544@tuxdriver.com>
+References: <1178745375.9590.5.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070525115205.GA23301@mail.intel.com>
+In-Reply-To: <1178745375.9590.5.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 25, 2007 at 07:52:05PM +0800, Zhu Yi wrote:
+On Wed, May 09, 2007 at 05:16:14PM -0400, Dan Williams wrote:
 
-> The following patches updated my previous IEEE802.11e/WMM patches
-> based on the comments from Michael Wu. Please apply.
+> This is latest libertas git and should be pushed to 2.6.22.  It takes
+> care of a few of Christoph's objections, including ioctl removal,
+> version.h removal, and debug define cleanups.
 > 
-> [PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
-> [PATCH 2/3] mac80211: IEEE802.11e/WMM TS management and DLS support
-> [PATCH 3/3] mac80211: debugfs support for TSM and DLS
+> git://git.infradead.org/libertas-2.6.git
 
-Yi,
+Dan,
 
-Please also submit a patch series that applies against linux-2.6.22-rc3
-(or later) and adds whatever else might be needed that is missing
-there.  This one changes code that is currently only in wireless-dev.
+There is a problem...the libertas-2.6 tree doesn't have a "clean"
+history.  It appears to have the entire development history of the
+libertas project.  We need something more concise and "sanitized"
+for pushing upstream.
 
-Thanks,
+We do not really want the patches for new development, at least not
+for 2.6.22.  Could you help identify which patches in the history
+correspond to review fixes?
+
+I can generate a single diff, but it is huge ("34 files changed, 3069
+insertions(+), 5643 deletions(-)") and it isn't clear to me that it
+is only cleanups.  Perhaps you could split this up into a few separate
+patches?  Especially those patches specific to review comments?
+
+I'm sorry...I know this is a PITA.  I appreciate your effort and
+cooperation.
 
 John
 -- 
