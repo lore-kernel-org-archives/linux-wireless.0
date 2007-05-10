@@ -1,103 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:57235 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S2992728AbXEBEj7 (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:14501 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754568AbXEJERb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 May 2007 00:39:59 -0400
-Message-ID: <4638161D.7020106@lwfinger.net>
-Date: Tue, 01 May 2007 23:39:57 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 10 May 2007 00:17:31 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH V3] mac80211: Add support for SIOCGIWRATE ioctl to provide rate information
+Date: Thu, 10 May 2007 00:16:41 -0400
+Cc: Jiri Benc <jbenc@suse.cz>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+References: <463a8a92.jFmmjY4cDnfJeisJ%Larry.Finger@lwfinger.net>
+In-Reply-To: <463a8a92.jFmmjY4cDnfJeisJ%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: Compilation error with latest wireless-dev
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart7511773.9UE4mGkFBZ";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200705100016.45876.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Compiling wireless-dev (commit d2f859f56c9f00f093f943cf810a863a5aa2e10f) results in the following 
-error when building modules:
+--nextPart7511773.9UE4mGkFBZ
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-WARNING: "tcf_destroy_chain" [net/mac80211/mac80211.ko] undefined!
-make[1]: *** [__modpost] Error 1
-make: *** [modules] Error 2
+On Thursday 03 May 2007 21:21, Larry Finger wrote:
+> +static int ieee80211_ioctl_giwrate(struct net_device *dev,
+> +				  struct iw_request_info *info,
+> +				  struct iw_param *rate, char *extra)
+> +{
+> +	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
+> +	struct sta_info * sta;
+> +	struct ieee80211_sub_if_data * sdata;
+Eliminate the spaces between * and the variable name.
 
-In my configuration, net/sched/sch_api.c where tcf_destroy_chain is defined is not compiled. The
-network-related configuration parameters are:
+> +
+> +	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
+> +	if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA ||
+> +	    sdata->type =3D=3D IEEE80211_IF_TYPE_IBSS)
+> +		sta =3D sta_info_get(local, sdata->u.sta.bssid);
+> +	else
+> +		return -EOPNOTSUPP;
+> +	if (!sta)
+> +		return -ENODEV;
+> +	rate->value =3D local->oper_hw_mode->rates[sta->txrate].rate * 100000;
+The index from sta->txrate needs to be checked to make sure it is less than=
+=20
+mode->num_rates.
 
-#
-# Networking
-#
-CONFIG_NET=y
+Also, this function is safe in adhoc mode.. but it most likely won't do=20
+anything useful since all the sta entries have different addresses and it i=
+s=20
+likely that none of them are the same as the one in sdata->u.sta.bssid.
 
-#
-# Networking options
-#
-CONFIG_PACKET=m
-CONFIG_PACKET_MMAP=y
-CONFIG_UNIX=y
-CONFIG_XFRM=y
-CONFIG_XFRM_USER=m
-# CONFIG_XFRM_SUB_POLICY is not set
-# CONFIG_XFRM_MIGRATE is not set
-CONFIG_NET_KEY=m
-# CONFIG_NET_KEY_MIGRATE is not set
-CONFIG_INET=y
-CONFIG_IP_MULTICAST=y
-CONFIG_IP_ADVANCED_ROUTER=y
-CONFIG_ASK_IP_FIB_HASH=y
-# CONFIG_IP_FIB_TRIE is not set
-CONFIG_IP_FIB_HASH=y
-CONFIG_IP_MULTIPLE_TABLES=y
-CONFIG_IP_ROUTE_MULTIPATH=y
-# CONFIG_IP_ROUTE_MULTIPATH_CACHED is not set
-CONFIG_IP_ROUTE_VERBOSE=y
-CONFIG_IP_PNP=y
-CONFIG_IP_PNP_DHCP=y
-CONFIG_IP_PNP_BOOTP=y
-CONFIG_IP_PNP_RARP=y
-CONFIG_NET_IPIP=m
-CONFIG_NET_IPGRE=m
-CONFIG_NET_IPGRE_BROADCAST=y
-CONFIG_IP_MROUTE=y
-CONFIG_IP_PIMSM_V1=y
-CONFIG_IP_PIMSM_V2=y
-# CONFIG_ARPD is not set
-CONFIG_SYN_COOKIES=y
-CONFIG_INET_AH=m
-CONFIG_INET_ESP=m
-CONFIG_INET_IPCOMP=m
-CONFIG_INET_XFRM_TUNNEL=m
-CONFIG_INET_TUNNEL=m
-CONFIG_INET_XFRM_MODE_TRANSPORT=m
-CONFIG_INET_XFRM_MODE_TUNNEL=m
-CONFIG_INET_XFRM_MODE_BEET=y
-CONFIG_INET_DIAG=m
-CONFIG_INET_TCP_DIAG=m
-# CONFIG_TCP_CONG_ADVANCED is not set
-CONFIG_TCP_CONG_CUBIC=y
-CONFIG_DEFAULT_TCP_CONG="cubic"
-# CONFIG_TCP_MD5SIG is not set
-# CONFIG_IPV6 is not set
-# CONFIG_INET6_XFRM_TUNNEL is not set
-# CONFIG_INET6_TUNNEL is not set
-# CONFIG_NETWORK_SECMARK is not set
-# CONFIG_NETFILTER is not set
-#
-# Wireless
-#
-CONFIG_CFG80211=m
-CONFIG_NL80211=y
-CONFIG_WIRELESS_EXT=y
-CONFIG_MAC80211=m
-CONFIG_MAC80211_DEBUGFS=y
-CONFIG_MAC80211_DEBUG=y
-# CONFIG_MAC80211_VERBOSE_DEBUG is not set
-# CONFIG_MAC80211_LOWTX_FRAME_DUMP is not set
-# CONFIG_TKIP_DEBUG is not set
-# CONFIG_MAC80211_DEBUG_COUNTERS is not set
-# CONFIG_HOSTAPD_WPA_TESTING is not set
-# CONFIG_MAC80211_IBSS_DEBUG is not set
-# CONFIG_MAC80211_VERBOSE_PS_DEBUG is not set
-# CONFIG_IEEE80211 is not set
+=2DMichael Wu
 
-Larry
+--nextPart7511773.9UE4mGkFBZ
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGQpytT3Oqt9AH4aERArU+AJ0XRb/fJI+B0VhG0BTEmI23XLmc9wCfRyPY
+yRhri0bGYspq69IBiEwujxg=
+=s+1g
+-----END PGP SIGNATURE-----
+
+--nextPart7511773.9UE4mGkFBZ--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
