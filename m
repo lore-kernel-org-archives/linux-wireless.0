@@ -1,70 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4689 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967313AbXEHAC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2007 20:02:27 -0400
-Date: Mon, 7 May 2007 19:38:11 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: Please pull 'upstream' branch of wireless-2.6
-Message-ID: <20070507233811.GB4245@tuxdriver.com>
-References: <20070507175121.GF5125@tuxdriver.com> <463FB1A0.3070608@garzik.org>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:48304 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755293AbXEJRRM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2007 13:17:12 -0400
+Subject: Re: support for bridging ethernet and 802.11
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jkm@devicescape.com>
+Cc: Kumar Gala <galak@kernel.crashing.org>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070510171213.GD24712@devicescape.com>
+References: <CCA1D7C0-D44A-450D-A76E-DAE792E0CB37@kernel.crashing.org>
+	 <1178816781.3806.31.camel@johannes.berg>
+	 <20070510171213.GD24712@devicescape.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nKaMrXWUmLmwEwt2cFx0"
+Date: Thu, 10 May 2007 19:19:35 +0200
+Message-Id: <1178817575.3806.36.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <463FB1A0.3070608@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 07, 2007 at 07:09:20PM -0400, Jeff Garzik wrote:
-> John W. Linville wrote:
 
-> >Ivo van Doorn (1):
-> >      Add 93cx6 eeprom library
+--=-nKaMrXWUmLmwEwt2cFx0
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> >Michael Wu (1):
-> >      Add rtl8187 wireless driver
+On Thu, 2007-05-10 at 10:12 -0700, Jouni Malinen wrote:
 
-I presume these are the two parts you question.  (Just checking...)
+> IEEE 802.11 allows only the own MAC address to be used as the source
+> address (addr2) when operating as a non-AP STA in BSS (client in Managed
+> mode). In other words, layer 2 bridging does not work properly. AP mode
+> and WDS links can be used for bridging without problems, but this will
+> of course require the driver to support these.
 
-> The normal development process is:
-> 
-> * commit new code to your repository
-> * that goes into -mm for public testing and review
-> * merge window opens
-> * the code that has seen public testing and review goes upstream
-> 
-> The general idea is everything you want in 2.6.22 should be prepared and 
-> in -mm BEFORE 2.6.21 is released, and the 2.6.22 merge window opens.
-> 
-> It's quite normal for fixes and minor changes to trickle in after the 
-> push that follows the merge window opening.  But new drivers that have 
-> not been through this process do not fall under "fixes and minor changes."
- 
-I agree whole-heartedly.
+Ah forgot about that, I had only thought about AP/wired bridging. How
+would the prism driver actually do bridging in STA mode though?
 
-The whole mac80211 driver package (including rtl8187) has been in -mm
-(and rawhide) for most of the 2.6.21 development cycle.  The rtl8187
-driver in particular has been relatively stable for the past couple
-of months ("3 files changed, 13 insertions(+), 4 deletions(-)" since
-7 March 2007), and it seems to work well.
+johannes
 
-> I also did not see any response to my "better as a single file driver" 
-> suggestion.
+--=-nKaMrXWUmLmwEwt2cFx0
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Yes, I see that now.  Do you consider this a merge requirement?
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-My main concern pre-merge would be accidentally destabilizing the code
-while stitching the files together.  Other than that, the suggestion
-seems worthwhile.  However, I think Michael plans to expand the driver
-to support rtl8180 and rtl8185.  This may factor into why he chose
-to organize the code the way he has.
+iD8DBQBGQ1Qn/ETPhpq3jKURArwUAKCfY8Q+izvfWWc4tskc55j2fD1kMACgmEHd
+AqI1LFxfFKq4a0LhZKfiEy8=
+=R2cc
+-----END PGP SIGNATURE-----
 
-> So, I'll pull if you remove the two late additions.
+--=-nKaMrXWUmLmwEwt2cFx0--
 
-Any chance that you find the comments above persuasive? :-)
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
