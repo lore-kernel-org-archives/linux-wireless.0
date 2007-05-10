@@ -1,90 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:23931 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758332AbXEWBHm (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:51601 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759210AbXEJSqV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2007 21:07:42 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: James Ketrenos <jketreno@linux.intel.com>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers
-Date: Tue, 22 May 2007 18:06:02 -0700
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <464B7B7C.5080800@linux.intel.com> <200705162151.32910.flamingice@sourmilk.net> <46534172.5040106@linux.intel.com>
-In-Reply-To: <46534172.5040106@linux.intel.com>
+	Thu, 10 May 2007 14:46:21 -0400
+Message-ID: <46437DC8.2060805@linux.intel.com>
+Date: Thu, 10 May 2007 13:17:12 -0700
+From: jketreno <jketreno@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1840989.tycNgW2dOK";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705221806.07696.flamingice@sourmilk.net>
+To: Jiri Benc <jbenc@suse.cz>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: Specifing rate control algorithm?
+References: <464253CE.2030504@linux.intel.com>	<20070510132756.2ca660a0@midnight.suse.cz>	<46434596.6010908@linux.intel.com> <20070510194233.335004b7@griffin.suse.cz>
+In-Reply-To: <20070510194233.335004b7@griffin.suse.cz>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1840989.tycNgW2dOK
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Jiri Benc wrote:
+> On Thu, 10 May 2007 09:17:26 -0700, James Ketrenos wrote:
+>> We've written an open source rate control algorithm that can take
+>> advantage of features our hardware has, that our users, testing,
+>> research, and development has shown to be advantageous in terms of
+>> solid performance, system overhead, power consumption, etc.
+> 
+> Please send your rate control algorithm first so we can know why are
+> you requesting this. 
 
-On Tuesday 22 May 2007 12:16, James Ketrenos wrote:
-> > - Read and set the MAC address before calling ieee80211_register_hw.
->
-> We're calling SET_IEEE80211_PERM_ADDR before we call ieee80211_register_h=
-w.
->  Is there something else we should be doing?
->
-Well, after jumping through a few hoops to find ieee80211_register_hw, it=20
-appears you're right.
+I told you the reason why I am requesting this.  Do you think I'm lying or trying to trick you?
 
-However, I don't like it. Bringing the hardware up should be deferred as mu=
-ch=20
-as possible to when the user actually brings the interface up. ipw2200 can=
-=20
-defer firmware loading to interface open time while still reading the mac=20
-address from the eeprom.. why not ipw3945? (the ipw2200 driver doesn't=20
-actually do this, but it should. I know it can.)
+Generic algorithms aren't as capable as hardware specific algorithms when you factor performance, latency, system utilization, power consumption, etc.  Optimal algorithms are written to take advantage of the capabilities exposed by the hardware.
 
-Also, the code doesn't appear to support changing the mac address at all. T=
-he=20
-mac address given by conf->mac_addr should be the address that your driver=
-=20
-uses.
+The 3945, as an example, let's you configure the hardware with a set of rates, retries per rate, and a fallback order.  You submit one Tx request to the hardware and it then performs all the retries, fallbacks, etc without host interaction over overhead.  The rate control algorithm needs to be aware of the attempts made by the hardware.  The specific mechanism by which the 3945 sets up those rates is device specific.  The mechanism by which the results are reported back are device specific.  The functions related to selecting the Tx rate are called twice for *EVERY PACKET*.  Anything you can do to make that code-path faster and leaner for the specific device it is using is a win.  Hardware specific beats generic.
 
-> That said -- if the driver can execute in parallel to the stack for some
-> operations, shouldn't they remain on their own workqueues so the work can
-> be divided up vs. having *everything* routed through one singlethread
-> workqueue?
->
-Your choice. mac80211 needs a workqueue regardless so it's made available t=
-o=20
-drivers. Many callbacks are called on this workqueue so drivers don't need =
-to=20
-defer work to their own workqueue (and can actually return error values).
+Might other hardware devices also support some type of rate fallback or automatic retries?  Maybe.  Do they all do it the same way?  No.  Is it worth slowing down hot code paths in the name of "generic software"?  Absolutely not.
 
-> > - Why are probe requests being dropped in adhoc mode? (assuming hardware
-> > handles it.. but the message output for that doesn't sound like it)
->
-> It only drops them if the adapter is not in the associated state (the card
-> is configured with the RXON_FLAG_ASSOC_MSK bit clear)
->
-I think this decision making belongs in mac80211.
+James
 
-=2DMichael Wu
-
---nextPart1840989.tycNgW2dOK
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGU5N/T3Oqt9AH4aERAlVLAJ49jLe9Fzden8hNfnOHRBglz91LuACgtRoN
-6s7775DVc6UXPZdvYagm4Oo=
-=3HUP
------END PGP SIGNATURE-----
-
---nextPart1840989.tycNgW2dOK--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+PS.  You're free to download the 3945 specific rate control algorithm if you want.  It has been part of the GPL ipw3945 driver for over a year at http://ipw3945.sf.net.  You can also find it refactored in iwlwifi at http://intellinuxgraphics.org.
