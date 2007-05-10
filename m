@@ -1,49 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from deine-taler.de ([217.160.107.63]:58096 "EHLO
-	p15091797.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754662AbXEAWkq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2007 18:40:46 -0400
-Date: Wed, 2 May 2007 00:40:45 +0200
-From: Ulrich Kunitz <kune@deine-taler.de>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: Daniel Drake <dsd@gentoo.org>, linville@tuxdriver.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] zd1211rw-mac80211: limit URB buffering in tx path
-Message-ID: <20070501224045.GA26845@p15091797.pureserver.info>
-References: <20070501030100.BDE3D7B409F@zog.reactivated.net> <20070501123411.081c43c6@logostar.upir.cz> <20070501195008.GA14294@p15091797.pureserver.info> <20070501231028.4cfa4053@logostar.upir.cz>
+Received: from styx.suse.cz ([82.119.242.94]:55253 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1759609AbXEJTX6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2007 15:23:58 -0400
+Date: Thu, 10 May 2007 21:23:55 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: jketreno <jketreno@linux.intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: Specifing rate control algorithm?
+Message-ID: <20070510212355.6c13cde8@griffin.suse.cz>
+In-Reply-To: <46437DC8.2060805@linux.intel.com>
+References: <464253CE.2030504@linux.intel.com>
+	<20070510132756.2ca660a0@midnight.suse.cz>
+	<46434596.6010908@linux.intel.com>
+	<20070510194233.335004b7@griffin.suse.cz>
+	<46437DC8.2060805@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070501231028.4cfa4053@logostar.upir.cz>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07-05-01 23:10 Jiri Benc wrote:
+On Thu, 10 May 2007 13:17:12 -0700, jketreno wrote:
+> > Please send your rate control algorithm first so we can know why are
+> > you requesting this. 
+> 
+> I told you the reason why I am requesting this.  Do you think I'm lying
+> or trying to trick you?
 
-> Really? From what you wrote ("if too many URBs are ready for submit") it
-> seems that the code is triggered when the queue is just full. That's not
-> necessarily an error condition and the only thing needed to do is to stop
-> the queue. Unless zd1211 is really special here (and then I'd like to know
-> how is it special).
+I'm not convinced your request is reasonable. But as Jouni pointed out,
+there _could be_ some specific circumstances under which it could make
+sense. I'm not aware of any such circumstance now.
 
-Jiri, even if ZD1211B supports multiple queues, there is only one
-USB endpoint receiving packets for transmission. I suppose that
-the queue for the packet can be set in the control data for the
-packet. However if the device doesn't read USB blocks anymore, all
-queues will be affected. At this point in time I have to stop all
-queues. Sure I could care for the different priorities of the
-queues by stopping low-priority queues earlier, but if the user is
-overloading the device, I have to stop all queues.
+You said you have a code. Show it. I can assure you that if it turns
+out from the code that your request is valid, you will have no problems
+with your patch.
 
-> If you support one queue only, call ieee80211_stop_queue(hw, 0). Calling
-> ieee80211_stop_queues if you have just a full queue is wrong.
+We're opensource. Please keep that in mind. If you need to prove
+something, send a code.
 
-Again I don't just have a full queue, I cannot send any packets to
-the device anymore. Under this condition I simply stop all queues,
-not caring whether there are 1 or 1024. Sure with the explicit
-knowledge that I have only one queue, I could stop it explicitly,
-but this would require a change of the code as soon as a second
-queue comes into play.
+> Generic algorithms aren't as capable as hardware specific algorithms
+> when you factor performance, latency, system utilization, power
+> consumption, etc.  Optimal algorithms are written to take advantage of
+> the capabilities exposed by the hardware.
+
+You said the same about hardware scanning. Michael showed you that's
+not true.
+
+> The 3945, as an example, let's you configure the hardware with a set of
+> rates, retries per rate, and a fallback order.  You submit one Tx
+> request to the hardware and it then performs all the retries,
+> fallbacks, etc without host interaction over overhead. 
+
+I don't see anything fundamentally different from other hardware.
+
+> The rate control algorithm needs to be aware of the attempts made by
+> the hardware.  The specific mechanism by which the 3945 sets up those
+> rates is device specific.  The mechanism by which the results are
+> reported back are device specific.  The functions related to selecting
+> the Tx rate are called twice for *EVERY PACKET*.  Anything you can do
+> to make that code-path faster and leaner for the specific device it is
+> using is a win.  Hardware specific beats generic.
+
+Okay, show the code. Maybe we will be able to find a better way to deal
+with that.
+
+> Might other hardware devices also support some type of rate fallback or
+> automatic retries?  Maybe.
+
+They do.
+
+> Do they all do it the same way?  No.
+
+That's valid for almost everything in the stack. Yet we have (and want
+to have) one stack and don't want each driver to implement its parts on
+their own.
+
+> Is it worth slowing down hot code paths in the name of "generic
+> software"? Absolutely not.
+
+If the slowdown is not big, yes, it is. Unifying things almost always
+means you need to accept some trade-offs.
+
+> PS.  You're free to download the 3945 specific rate control algorithm
+> if you want.  It has been part of the GPL ipw3945 driver for over a
+> year at http://ipw3945.sf.net.  You can also find it refactored in
+> iwlwifi at http://intellinuxgraphics.org.
+
+Could you send just the rate control algorithm (or an excerpt of it)
+to this list so more people will look at it?
+
+Thanks.
+
+ Jiri
 
 -- 
-Uli Kunitz
+Jiri Benc
+SUSE Labs
