@@ -1,128 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:38780 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1759056AbXEZViO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 17:38:14 -0400
-From: Uwe Bugla <uwe.bugla@gmx.de>
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-Date: Sat, 26 May 2007 23:32:50 +0200
-References: <20070524195616.234280@gmx.net> <200705262139.54353.uwe.bugla@gmx.de> <200705262149.09948.mb@bu3sch.de>
-In-Reply-To: <200705262149.09948.mb@bu3sch.de>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
+Received: from mog.warmcat.com ([62.193.232.24]:33505 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751555AbXEKIJP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 May 2007 04:09:15 -0400
+Message-ID: <464424A7.2040301@warmcat.com>
+Date: Fri, 11 May 2007 09:09:11 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200705262332.50640.uwe.bugla@gmx.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Tomas Winkler <tomasw@gmail.com>, Jiri Benc <jbenc@suse.cz>,
+	jketreno <jketreno@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: Specifing rate control algorithm?
+References: <464253CE.2030504@linux.intel.com> <20070510132756.2ca660a0@midnight.suse.cz> <46434596.6010908@linux.intel.com> <20070510194233.335004b7@griffin.suse.cz> <46437DC8.2060805@linux.intel.com> <20070510212355.6c13cde8@griffin.suse.cz> <1ba2fa240705101524x2676a09eyeff3b71ed2542478@mail.gmail.com> <20070511001212.GB6971@tuxdriver.com>
+In-Reply-To: <20070511001212.GB6971@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Samstag, 26. Mai 2007 21:49 schrieben Sie:
-> On Saturday 26 May 2007 21:39:54 Uwe Bugla wrote:
-> > Am Samstag, 26. Mai 2007 21:19 schrieben Sie:
-> > > Uwe, please try the following patch:
-> > >
-> > > Index: bu3sch-wireless-dev/drivers/net/b44.c
-> > > ===================================================================
-> > > --- bu3sch-wireless-dev.orig/drivers/net/b44.c	2007-05-18
-> > > 18:09:50.000000000 +0200 +++
-> > > bu3sch-wireless-dev/drivers/net/b44.c	2007-05-26 21:18:28.000000000
-> > > +0200 @@ -2201,10 +2201,12 @@ static int __devinit b44_init_one(struct
-> > > printk("%2.2x%c", dev->dev_addr[i],
-> > >  		       i == 5 ? '\n' : ':');
-> > >
-> > > +#if 0
-> > >  	/* Initialize phy */
-> > >  	spin_lock_irq(&bp->lock);
-> > >  	b44_chip_reset(bp);
-> > >  	spin_unlock_irq(&bp->lock);
-> > > +#endif
-> > >
-> > >  	return 0;
-> >
-> > Against what kernel please?
-> > Just try to be a bit more eloquent, man!
->
-> Against a kernel which does not work for you, of course.
->
-> Sometimes I wonder... (no better not say that).
+John W. Linville wrote:
+> On Fri, May 11, 2007 at 01:24:58AM +0300, Tomas Winkler wrote:
+>> On 5/10/07, Jiri Benc <jbenc@suse.cz> wrote:
+>>> On Thu, 10 May 2007 13:17:12 -0700, jketreno wrote:
+> 
+>>>> Generic algorithms aren't as capable as hardware specific algorithms
+>>>> when you factor performance, latency, system utilization, power
+>>>> consumption, etc.  Optimal algorithms are written to take advantage of
+>>>> the capabilities exposed by the hardware.
+>>> You said the same about hardware scanning. Michael showed you that's
+>>> not true.
+>>>
+>> Michael has shortened the dwell time on the channel, while hw scanning
+>> has shorten switching time from the channel to channel and no the time
+>> you are listening on the channel
+>> I wouldn't call it an optimization. Did he measured the power consumption ?
+> 
+> This was going to be my question, and I think it is a worthy point. :-)
 
-YES! And I wonder TOO, definitely!
+The scan "power savings" in question are so small as to not be
+measurable. The stack is only involved at the time it changes the
+channel... a few tens of us of CPU time over the multiple seconds of
+scan action... and the scan action itself only happens at long intervals.
 
-Quand meme (now, if you do not speak french: Above all that), I applied your 
-patch against 2.6.22-rc2-mm1. Just to show my cooperation willing to get 
-your "dream" being fulfilled!
+Is this really about commercial product differentiation? "Our hardware
+does faster 'hardware' scan" is good for Intel, even though the truth
+would more properly be expressed as "we took scan away from the open
+stack and put it in the closed source firmware binary blob where our
+implementation is a special modal thing that sooner or later will cause
+side effects, and there are space constraints and less of an OS API
+structure to lean on and the code is not reviewed". (I assume everyone
+who has used ipw3945 and even iwlwifi is familiar with MICROCODE ERROR
+and bad things arising from that.)  And in the end as was pointed out
+beforehand, the scan implementation in the firmware is not measurably
+faster or more saving of power anyway.
 
-Result is: No change!
-Non-functionable b44-device at all!
+(While I was writing this the 3945 on this box lost association, and
+when I tried to reinsert the driver modprobe stalled and I see permanent
+100% CPU usage on both cores.  That's a genuine low hanging fruit for
+"powersaving" on iwl3945/iwlwifi ;-) )
 
-Hint: Although being a "non-hacker" or "non-developer" I do have stepped 
-across some experienced developer people who at least added some code to make 
-their modules function in the following way:
+>>> If the slowdown is not big, yes, it is. Unifying things almost always
+>>> means you need to accept some trade-offs.
+>> Clean API gives you the ability to enjoy from the both worlds. WiFi is
+>> about mobility power saving and therefore hw offloading is essential.
 
-modprobe xyz debug=1 (or debug=2 or debug=3 or debug=4 or debug=5 or debug=6)
+Sexy-sounding "hw offloading" is a very different thing to migrating off
+open code and putting it in vendor-specific closed source firmware.  The
+firmware is just code like any other, for an embedded ARM7 or similar,
+except that it is customized for a specific vendor hardware
+implementation and you will never see the sources.  What I understand is
+being talked about (maybe unlike the scan stuff this actually is in
+hardware, but I doubt it) is ignoring code in the stack and instead
+implementing pretty much the same code privately, to compile to a binary
+blob you can't see source for or even reverse according to its license.
+ That is a lot less romantic than mysterious hardware just waiting to be
+used.
 
-In so far, if you continue to state that debugging is nothing but guessing 
-around wildly you are definitely wrong, showing us all your missing code 
-hacker experience. If you DO continue like this every step will be a torture 
-not only for me but for the reading folks as well.
+If we are far from the AP and only say 5.5Mbps rate packets get through,
+then there is presumably adaptation to that in the stack, it is not like
+it will sequence through 54Mbps -> 48Mbps -> ... 5.5Mbps each time,
+instead any effective rate limiting action will react to the situation
+by issuing mainly 5.5Mbps packets that get through first time and
+probing with faster packets occasionally to see if the situation was
+better.  *Therefore any effective rate adaptation acts to limit any
+benefit that can come from tagging packets with rate lists in firmware
+as is proposed*.  Put another way the meaning of rate limiting is to
+attempt to minimize effective airtime including the wasted restransmits
+at rates that never get through.  So if there are excessive retransmits
+going on due to poor selection of tx rate for the circumstances (rather
+than interference) then isn't it better to address that in the stack so
+all devices can benefit from a smarter algorithm? (not least in
+recouping the wasted airtime and power used for TX that did not get through)
 
-But every human being is here to learn and develop: In so far I am very 
-optimistic!
+Collecting numbers on the retransmit probability per packet for
+different environments would be interesting anyway aside from all this,
+allowing objective metrics on rate management performance, but you would
+think it would be an important element of making the decision to pursue
+doing all the work to tag packets with rate lists in the firmware.
 
-Apart from the Kconfig chaos that seems to be subordinate in your personal 
-rating scale, you at least could have added some functions like the above 
-mentioned functions.
+>> What worth the few more lines of the code that gives you this ability
+>> this is also a trade-off.
+> 
+> Agreed.  FWIW, power saving is worthwhile even for fixed stations as well.
 
-The fact that you simply ignored to imply those functions and continue to call 
-other people dumb shows exactly how small and humble you are.
+Anyone can propose anything and just slip the word patriot- er -
+powersaving in a few times.  The true issue here is how much stuff that
+can and should be done in the open, shared stack are you willing to see
+in a vendor-specific binary blob (with support for the vendor-specific
+blobby APIs added to the stack) to get claimed advantages (eg,
+powersaving, scan speed) that aren't shown to hold water.  I can imagine
+sometimes the benefits can be genuine and strong and you have to work
+with it, but the other times...
 
-Apart from that:
-The message that you rooted to my place was no "proof" at all for any kind of 
-disfunctionality or compatibility issue!
-
-In that message the lack of performance of the "enclosed" or "old" 
-or "complete" b44 module (i. e. PCI-only module) was criticised, NOT the one 
-ripped by you personally into two modules called b44 and ssb.
-
-In so far I would deeply appreciate you personally to stick to the facts in 
-your personal lack of knowledge about the b44 driver instead of playing bad 
-politics against other people like me and others.
-
-
-Hello my dear Andrew Morton,
-
-Could you please do me and the rest of the world two favours?
-
-A. Rip Michael Buesches code out of the mm-tree
-
-B. Give Michael Buesch a fair chance to revise his disfunctionable code 
-outside the mm-tree and / or the vanilla mainline.
-
-Side note for the what and why:
-
-I like to help avoid dangers by testing the mm-tree.
-BUT:
-
-If real debugging conforms to nothing but guessing around wildly let me tell 
-you that I do not appreciate to be part of that torture due to the lack of 
-experience of some German spare time hacker.
-
-A: proven by facts not knowing or even wanting to know how to imply 
-appropriate functionable debug parametres in his driver code
-
-B: non-cooperative as far as Kconfig help features are concerned (i. E. help 
-to understand the issues for users
-
-C: calling all people simply dumb who do not know about his personal issues at 
-all
-
-Thank you, Andrew Morton! You are real fine!
-
-Sincerely
-
-Uwe
+-Andy
