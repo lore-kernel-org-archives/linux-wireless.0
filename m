@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:15553 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1766739AbXEBQuo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 May 2007 12:50:44 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH V2] mac80211: Add support for SIOCGIWRATE ioctl to provide rate information
-Date: Wed, 2 May 2007 12:50:27 -0400
-Cc: Jiri Benc <jbenc@suse.cz>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-References: <4638a51c.ohaY83u2vcHGHvr4%Larry.Finger@lwfinger.net>
-In-Reply-To: <4638a51c.ohaY83u2vcHGHvr4%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1415705.hAoENg8LOo";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705021250.32440.flamingice@sourmilk.net>
+Received: from mx1.redhat.com ([66.187.233.31]:49555 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755992AbXEKCsg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2007 22:48:36 -0400
+Subject: [PATCH 02/19] libertas: use <net/ieee80211.h> for MAX_WPA_IE_LEN
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1178829040.6356.1.camel@localhost.localdomain>
+References: <1178829040.6356.1.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Thu, 10 May 2007 22:52:04 -0400
+Message-Id: <1178851924.8607.13.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1415705.hAoENg8LOo
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+---
+ drivers/net/wireless/libertas/dev.h |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-On Wednesday 02 May 2007 10:50, Larry Finger wrote:
-> +static int ieee80211_ioctl_giwrate(struct net_device *dev,
-> +				  struct iw_request_info *info,
-> +				  struct iw_param *rate, char *extra)
-> +{
-> +	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
-> +	struct sta_info * sta;
-> +	struct ieee80211_sub_if_data * sdata;
-> +
-> +	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-> +	sta =3D sta_info_get(local, sdata->u.sta.bssid);
-Need to check if the interface is IEEE80211_IF_TYPE_STA or=20
-IEEE80211_IF_TYPE_IBSS before you can do this.
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index b1f876f..295e7d0 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -10,6 +10,7 @@
+ #include <linux/wireless.h>
+ #include <linux/ethtool.h>
+ #include <linux/debugfs.h>
++#include <net/ieee80211.h>
+ 
+ #include "defs.h"
+ #include "scan.h"
+@@ -198,7 +199,6 @@ struct assoc_request {
+ 	struct wlan_802_11_security secinfo;
+ 
+ 	/** WPA Information Elements*/
+-#define MAX_WPA_IE_LEN 64
+ 	u8 wpa_ie[MAX_WPA_IE_LEN];
+ 	u8 wpa_ie_len;
+ };
+@@ -339,7 +339,6 @@ struct _wlan_adapter {
+ 	struct WLAN_802_11_KEY wpa_unicast_key;
+ 
+ 	/** WPA Information Elements*/
+-#define MAX_WPA_IE_LEN 64
+ 	u8 wpa_ie[MAX_WPA_IE_LEN];
+ 	u8 wpa_ie_len;
+ 
+-- 
+1.5.0.6
 
-=2DMichael Wu
 
---nextPart1415705.hAoENg8LOo
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGOMFYT3Oqt9AH4aERAk+nAKCWpSND0WFJzTfUQX7VuqHtSqlV0gCdEDrf
-c6lsn9duKbUfY2TzD7lWkIM=
-=dBDw
------END PGP SIGNATURE-----
-
---nextPart1415705.hAoENg8LOo--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
