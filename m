@@ -1,48 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([207.189.120.12]:41813 "EHLO smtp.osdl.org"
+Received: from srv5.dvmed.net ([207.36.208.214]:42448 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751068AbXE2VRu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2007 17:17:50 -0400
-Date: Tue, 29 May 2007 14:01:55 -0700
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: "Gary Zambrano" <zambrano@broadcom.com>,
-	"Maximilian Engelhardt" <maxi@daemonizer.de>,
-	"linux-kernel" <linux-kernel@vger.kernel.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"Arnaldo Carvalho de Melo" <acme@ghostprotocols.net>,
-	"Jeff Garzik" <jgarzik@pobox.com>, netdev@vger.kernel.org,
-	"Andrew Morton" <akpm@linux-foundation.org>
-Subject: Re: b44: regression in 2.6.22 (resend)
-Message-ID: <20070529140155.07693380@freepuppy>
-In-Reply-To: <200705292245.22940.mb@bu3sch.de>
-References: <20070525172431.60affaca@freepuppy>
-	<200705281655.15105.mb@bu3sch.de>
-	<1180448075.17146.12.camel@dhcp-10-12-136-115.broadcom.com>
-	<200705292245.22940.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S933409AbXEKU7e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 May 2007 16:59:34 -0400
+Message-ID: <4644D934.7050001@garzik.org>
+Date: Fri, 11 May 2007 16:59:32 -0400
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'libertas' branch of wireless-2.6
+References: <20070511192604.GC3474@tuxdriver.com>
+In-Reply-To: <20070511192604.GC3474@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am busy bisecting the real cause. Unfortunately, oprofile doesn't work
-on the laptop, and build time sucks...
+John W. Linville wrote:
+> The following changes since commit 1f8a6b658a943b4f04a1fc7b3a420360202c86cd:
+>   Linus Torvalds (1):
+>         Merge git://git.kernel.org/.../bunk/trivial
+> 
+> are found in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git libertas
 
-This how I think the IRQ should work:
+pulled
 
---- a/drivers/net/b44.c	2007-05-29 09:47:53.000000000 -0700
-+++ b/drivers/net/b44.c	2007-05-29 09:49:50.000000000 -0700
-@@ -908,9 +908,11 @@ static irqreturn_t b44_interrupt(int irq
- 	u32 istat, imask;
- 	int handled = 0;
- 
--	spin_lock(&bp->lock);
--
- 	istat = br32(bp, B44_ISTAT);
-+	if (istat == 0 || istat == ~0)
-+		return IRQ_NONE;
-+
-+	spin_lock(&bp->lock);
- 	imask = br32(bp, B44_IMASK);
- 
- 	/* The interrupt mask register controls which interrupt bits
+
