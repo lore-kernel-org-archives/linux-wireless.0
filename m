@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:50040 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756883AbXEKCvO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 22:51:14 -0400
-Subject: [PATCH 06/19] libertas: remove incorrect vi modelines
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1178829040.6356.1.camel@localhost.localdomain>
-References: <1178829040.6356.1.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Thu, 10 May 2007 22:54:46 -0400
-Message-Id: <1178852086.8607.23.camel@localhost.localdomain>
+Received: from styx.suse.cz ([82.119.242.94]:44406 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753153AbXEKKVl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 May 2007 06:21:41 -0400
+Date: Fri, 11 May 2007 12:21:35 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Cc: jketreno <jketreno@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Michael Wu" <flamingice@sourmilk.net>
+Subject: Re: Specifing rate control algorithm?
+Message-ID: <20070511122135.108b60eb@logostar.upir.cz>
+In-Reply-To: <1ba2fa240705101524x2676a09eyeff3b71ed2542478@mail.gmail.com>
+References: <464253CE.2030504@linux.intel.com>
+	<20070510132756.2ca660a0@midnight.suse.cz>
+	<46434596.6010908@linux.intel.com>
+	<20070510194233.335004b7@griffin.suse.cz>
+	<46437DC8.2060805@linux.intel.com>
+	<20070510212355.6c13cde8@griffin.suse.cz>
+	<1ba2fa240705101524x2676a09eyeff3b71ed2542478@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
----
- drivers/net/wireless/libertas/join.h |    3 ---
- drivers/net/wireless/libertas/scan.c |    3 ---
- drivers/net/wireless/libertas/scan.h |    3 ---
- 3 files changed, 0 insertions(+), 9 deletions(-)
+On Fri, 11 May 2007 01:24:58 +0300, Tomas Winkler wrote:
+> The code is available why should it be paste it to the email.
 
-diff --git a/drivers/net/wireless/libertas/join.h
-b/drivers/net/wireless/libertas/join.h
-index 8efa245..0e6d928 100644
---- a/drivers/net/wireless/libertas/join.h
-+++ b/drivers/net/wireless/libertas/join.h
-@@ -1,6 +1,3 @@
--/* -*- mode: C; tab-width: 4; indent-tabs-mode: nil -*- */
--/* vi: set expandtab shiftwidth=4 tabstop=4 textwidth=78: */
--
- /**
-   * Interface for the wlan infrastructure and adhoc join routines
-   *
-diff --git a/drivers/net/wireless/libertas/scan.c
-b/drivers/net/wireless/libertas/scan.c
-index 400558a..29b1192 100644
---- a/drivers/net/wireless/libertas/scan.c
-+++ b/drivers/net/wireless/libertas/scan.c
-@@ -1,6 +1,3 @@
--/* -*- mode: C; tab-width: 4; indent-tabs-mode: nil -*- */
--/* vi: set expandtab shiftwidth=4 tabstop=4 textwidth=78: */
--
- /**
-   * Functions implementing wlan scan IOCTL and firmware command APIs
-   *
-diff --git a/drivers/net/wireless/libertas/scan.h
-b/drivers/net/wireless/libertas/scan.h
-index 1a8756e..486bdc4 100644
---- a/drivers/net/wireless/libertas/scan.h
-+++ b/drivers/net/wireless/libertas/scan.h
-@@ -1,6 +1,3 @@
--/* -*- mode: C; tab-width: 4; indent-tabs-mode: nil -*- */
--/* vi: set expandtab shiftwidth=4 tabstop=4 textwidth=78: */
--
- /**
-   * Interface for the wlan network scan routines
-   *
+Because the development happens on this list and in wireless-dev git tree
+and not somewhere on sourceforge?
+
+Thinking about it, I'd say it's time for Intel to stop hiding in the corner
+and send iwlwifi driver for a review and inclusion in wireless-dev. I think
+something like this could work:
+
+1. send the driver (without all things that would require changing of the
+   mac80211 stack) and ask for a review
+
+2. when all comments are addressed, ask for inclusion in wireless-dev
+
+3. send a patch that modifies/add a feature to mac80211 _together_ with a
+   second patch that makes use of such feature in iwlwifi
+
+4. repeat 3 for each new/modified feature you want in mac80211
+
+Thanks,
+
+ Jiri
+
 -- 
-1.5.0.6
-
-
-
+Jiri Benc
+SUSE Labs
