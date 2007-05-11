@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3907 "EHLO ra.tuxdriver.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:36894 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755459AbXEUOC5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 May 2007 10:02:57 -0400
-Date: Mon, 21 May 2007 09:31:24 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Eugene Teo <eteo@redhat.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	jeff@garzik.org, Florin Malita <fmalita@gmail.com>
-Subject: Re: [2.6 patch] drivers/net/wireless/libertas/rx.c: fix use-after-free
-Message-ID: <20070521133124.GB9621@tuxdriver.com>
-References: <464DD957.9040803@redhat.com> <20070518174623.GA3492@tuxdriver.com> <464E6B82.40607@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <464E6B82.40607@redhat.com>
+	id S1760852AbXEKJIK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 May 2007 05:08:10 -0400
+Message-ID: <46443266.4060102@garzik.org>
+Date: Fri, 11 May 2007 05:07:50 -0400
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: Andy Green <andy@warmcat.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Tomas Winkler <tomasw@gmail.com>, Jiri Benc <jbenc@suse.cz>,
+	jketreno <jketreno@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: Specifing rate control algorithm?
+References: <464253CE.2030504@linux.intel.com> <20070510132756.2ca660a0@midnight.suse.cz> <46434596.6010908@linux.intel.com> <20070510194233.335004b7@griffin.suse.cz> <46437DC8.2060805@linux.intel.com> <20070510212355.6c13cde8@griffin.suse.cz> <1ba2fa240705101524x2676a09eyeff3b71ed2542478@mail.gmail.com> <20070511001212.GB6971@tuxdriver.com> <464424A7.2040301@warmcat.com>
+In-Reply-To: <464424A7.2040301@warmcat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 19, 2007 at 11:14:10AM +0800, Eugene Teo wrote:
-> John W. Linville wrote:
+Andy Green wrote:
+> Sexy-sounding "hw offloading" is a very different thing to migrating off
+> open code and putting it in vendor-specific closed source firmware.  The
+> firmware is just code like any other, for an embedded ARM7 or similar,
+> except that it is customized for a specific vendor hardware
+> implementation and you will never see the sources.  What I understand is
+> being talked about (maybe unlike the scan stuff this actually is in
+> hardware, but I doubt it) is ignoring code in the stack and instead
+> implementing pretty much the same code privately, to compile to a binary
+> blob you can't see source for or even reverse according to its license.
+>  That is a lot less romantic than mysterious hardware just waiting to be
+> used.
 
-> >>  done:
-> >>         LEAVE();
-> >>
-> >> -       skb->protocol = __constant_htons(0x0019);       /* ETH_P_80211_RAW */
-> >> -
-> > 
-> > Except for this part...is this intentional?
-> 
-> skb could have been freed by then. And, in libertas_upload_rx_packet(), skb->protocol
-> is initialized by eth_type_trans(skb, priv->wlan_dev.netdev).
+OTOH, this is all vague, paranoid hand-waving since I'm guessing you 
+don't know the internals of the Intel hardware.
 
-OK, I see that.  Looks like Florin has reposted his patch, still
-without this hunk.  Would you like to submit a patch for this hunk?
+We'll see what happens when Intel posts code to specify a different rate 
+control algorithm.
 
-Thanks,
+	Jeff
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+
