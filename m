@@ -1,42 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47960 "EHLO mail.dvmed.net"
+Received: from mx1.redhat.com ([66.187.233.31]:52717 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750885AbXEXVRY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2007 17:17:24 -0400
-Message-ID: <465600E0.5080502@garzik.org>
-Date: Thu, 24 May 2007 17:17:20 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
+	id S1754017AbXEKDFW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2007 23:05:22 -0400
+Subject: [PATCH 17/19] libertas: fix missing unlock in TX error path
+From: Dan Williams <dcbw@redhat.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-CC: netdev@vger.kernel.og, linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'upstream-fixes' branch of wireless-2.6
-References: <20070522151751.GA5993@tuxdriver.com>
-In-Reply-To: <20070522151751.GA5993@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1178829040.6356.1.camel@localhost.localdomain>
+References: <1178829040.6356.1.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Thu, 10 May 2007 23:08:54 -0400
+Message-Id: <1178852934.8607.50.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> The following changes since commit 55b637c6a003a8c4850b41a2c2fd6942d8a7f530:
->   Linus Torvalds (1):
->         Linux v2.6.22-rc2
-> 
-> are found in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-fixes
-> 
-> Eugene Teo (2):
->       drivers/net/wireless/libertas/fw.c: fix use-before-check
->       drivers/net/wireless/libertas/rx.c: fix use-after-free
-> 
-> Florin Malita (1):
->       libertas: skb dereferenced after netif_rx
-> 
->  drivers/net/wireless/libertas/decl.h |    2 +-
->  drivers/net/wireless/libertas/fw.c   |   14 +++++++++-----
->  drivers/net/wireless/libertas/rx.c   |   24 +++++-------------------
->  3 files changed, 15 insertions(+), 25 deletions(-)
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+---
+ drivers/net/wireless/libertas/if_usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-pulled
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index 54853d8..f2d37d9 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -626,6 +626,7 @@ static void if_usb_receive(struct urb *urb)
+ 			    cardp->usb_event_cause);
+ 		if (cardp->usb_event_cause & 0xffff0000) {
+ 			libertas_send_tx_feedback(priv);
++			spin_unlock(&priv->adapter->driver_lock);
+ 			break;
+ 		}
+ 		cardp->usb_event_cause = le32_to_cpu(cardp->usb_event_cause) << 3;
+-- 
+1.5.0.6
+
 
 
