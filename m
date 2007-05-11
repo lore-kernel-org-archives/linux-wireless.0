@@ -1,97 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:1811 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754934AbXERWnS (ORCPT
+Received: from dhost002-58.dex002.intermedia.net ([64.78.21.227]:29758 "EHLO
+	dhost002-58.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755140AbXEKPlw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2007 18:43:18 -0400
-Message-ID: <464E1B4A.8050105@linux.intel.com>
-Date: Fri, 18 May 2007 14:31:54 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
-MIME-Version: 1.0
-To: Jeff Garzik <jeff@garzik.org>
-CC: Randy Dunlap <randy.dunlap@oracle.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers [part 2/2]
-References: <464B7B7C.5080800@linux.intel.com> <20070516203505.556df4f9.randy.dunlap@oracle.com> <464E0DB5.5010802@linux.intel.com> <464E233A.6060209@garzik.org>
-In-Reply-To: <464E233A.6060209@garzik.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 11 May 2007 11:41:52 -0400
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Fri, 11 May 2007 08:42:03 -0700
+To: Andy Green <andy@warmcat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Tomas Winkler <tomasw@gmail.com>, Jiri Benc <jbenc@suse.cz>,
+	jketreno <jketreno@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: Specifing rate control algorithm?
+Message-ID: <20070511154203.GD16929@devicescape.com>
+References: <20070510132756.2ca660a0@midnight.suse.cz> <46434596.6010908@linux.intel.com> <20070510194233.335004b7@griffin.suse.cz> <46437DC8.2060805@linux.intel.com> <20070510212355.6c13cde8@griffin.suse.cz> <1ba2fa240705101524x2676a09eyeff3b71ed2542478@mail.gmail.com> <20070511001212.GB6971@tuxdriver.com> <464424A7.2040301@warmcat.com> <20070511142355.GB16929@devicescape.com> <464485FE.1020603@warmcat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <464485FE.1020603@warmcat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jeff Garzik wrote:
-> James Ketrenos wrote:
->> Randy Dunlap wrote:
->>> 2.  Use of bitfields:  bitfields are not (guaranteed to be) portable
->>> across a wire interface to some other CPU architecture.
->>> Are all bitfield uses always local to the running driver?
->>> They should be.
->>
->> The bitfields are between the hw/ucode (__le) and the driver.  Are you 
->> saying the bitfields won't be compatible if the driver is compiled and 
->> running on big endian?  Shouldn't le16_to_cpu() fix that?  I just 
->> noticed the types in iwl-4965-hw.h weren't endian specific; I've 
->> updated that (u16, u32, u64 -> __le16, __le32, __le64)
+On Fri, May 11, 2007 at 04:04:30PM +0100, Andy Green wrote:
+
+> Could I possibly be talking about this?
+
+> http://marc.info/?l=linux-wireless&m=117882282325836&w=2
 > 
-> Use of bitfields, as defined in the C standard, should be avoided at all 
-> costs.  It requires you to define structures twice -- once for LE, and 
-> once for BE.  It generates demonstrably sub-optimal code on all known 
-> compilers.  And in general, people tend to screw them up.
-> 
-> Drivers should be using bitwise integer math rather than bitfields.
-> 
-> As for u8/u16/u32/u64 integer mixes, you must still pay attention to 
-> structure layout and compiler padding, in addition to endian issues 
-> (which are lessened once bitfields are gone).
+> You understand re-reading this that when he talks about "You submit one
+> Tx request to the [']hardware['] and it then performs all the retries,
+> fallbacks, etc without host interaction over overhead." this is stuff in
+> the closed-source firmware?  Aka "binary blob" with restrictive license?
 
-Alright; I'll add replacing the bitfields with bitwise access to the todo list.
+So? I don't see what this has to do with mac80211 rate control algorithm
+selection. This is about 802.11 functionality that has very strict
+timing requirements (SIFS between frame and ack and then re-try if no
+ack received). That is (I would say, has to, in most cases) be done
+somewhere else than on the host CPU. In other words, this is something
+that really needs to be in the wlan hardware or firmware.
 
-Are you OK with us marking the driver as not working on big endian for now and getting this one fixed over time?
+> Is it really true this is a feature of hardware and not closed-source
+> firmware?  Because if I was designing such a thing - and I have designed
+> similarly complex silicon - damnned if I would allocate pure hardware to
+> it.  Since the device already has a concept of firmware, as we can all
+> see, I would instead implement these multistage actions with the
+> firmware.  Which happens to be closed source by Intel's choice.
 
->>> 3.  What are all of those "volatile" C keywords doing in struct
->>> iwl_shared?
->>> See http://lwn.net/Articles/232961/ : "The trouble with volatile"
->>
->> If a reference shared through memory mapped IO with a device that can 
->> change the value at any time, doesn't it need to be volatile?  'struct 
->> iwl_shared' is allocated with pci_alloc_consistent and the physical 
->> address is provided to the hardware for it to update whenever it sees 
->> fit.
-> 
-> volatile should not be in your driver at all.
-> 
-> See the innumerable threads on LKML, including one current one.
+I do not know ipw3945 design, but I do know other wlan chipsets that do
+indeed take care of TX rate control between retries of the _same frame_
+in hardware. No firmware involved there. Then again, I really do not
+follow this logic of firmware being some horrible thing that simply
+cannot be allowed to do anything. In this particular case, this really
+has to be done at the wlan chip, not at the host CPU due to timing
+requirements.
 
-I tried reading through the thread.  From what I gathered, it sounds like if I want to read a value from a memory location where the adapter could be writing to it I would just call rmb() before I access the memory?  And when writing to a value, call wmb() immediately after I write to it?  And expunge 'volatile' from my vocabulary.
+> AIUI the proposal is to tag packets with lists of rates to retry at.
+> But if the aimed-for and typical case is that you get through on the
+> first try, how interesting is it really to migrate the retry action to a
+> closed-source and per-vendor (or per-device) implementation instead of
+> coming through the rate selection action in the stack.
 
-> 
->>> 8.  Too many BUG_ON()s.  Try to recover or return -ERRORs instead.
->>
->> I pulled out two that shouldn't have been there.
->>
->> The rest are currently there map to bugs which are easily introduced 
->> through code changes but which may not cause an immediately visible 
->> bug at run-time.  Typically they are placed where an eventual printk() 
->> at that location during debugging of a user bug resulted in the 
->> critical "ah-ha!" that led to fixing it.  I've added comments to the 
->> BUG_ON's that didn't have comments already.
->>
->> I suppose we could try and introduce a new driver recovery mechanism 
->> that, upon detection, throws a stack trace and then shuts down the 
->> driver (vs. throwing a kernel OOPs) requiring user space to unload and 
->> reload the driver.  That would still be a sucky situation, but at 
->> least it wouldn't cause a system failure requiring a reboot...  does 
->> such a mechanism already exist?
-> 
-> In general, you should not be checking for programmer mistakes at every 
-> level.  Only use BUG_ON() for mistakes that have happened in the past in 
-> this driver, AND are likely to occur in the future, AND do not cause 
-> problems easily detectable simply by allowing the code to screw up.
+Being able to vary the TX rate on the SIFS-retries can produce huge
+improvements to rate adaption. I see this a very much valid reason for
+providing an alternative rate control algorithm that can take advantage
+of the hardware/firmware features.
 
-That has been the general goal in where the BUG_ONs are.  
+> Stack == mac80211.  No: what James is talking about, as I quoted above,
+> is a firmware implementation of "per-packet rate-list automatic retry"
+> that requires special support in mac80211.
 
-There were a couple that weren't doing that (which were yanked).  
+I can only say that we see this quite differently and all I've seen from
+James so far on this topic makes sense and should be supported in
+mac80211. Firmware implementation does _not_ replace the mac80211 rate
+control algorithm, but modified mac80211 rate control algorithm can be
+used to improve rate adaption in this case and such modifications would
+not benefit (or be possible) with some other wlan chipsets. Thus, need
+for multiple mac80211 rate control algorithms and benefit from drivers
+being able to propose which one to use by default.
 
-I've updated iwl_send_cmd which was using BUG_ON but could use printk and return a failure code.
+> Let me ask: is it really so impossible to create a generic "nearly
+> optimal" algorithm for rate selection in the stack that you have to
+> offload the task to $DRIVER?  What is it about the awesome software
+> running in $DRIVER or $DEVICE that can do a better job than mac80211
+> ever can?
 
-James
+Yes, in practice, it is more or loess impossible with the timing
+requirements on 802.11 retries. This is not about driver vs. mac80211,
+this is about the timing differences between wlan chip vs. host CPU. I
+don't want to implement all rate control stuff in hardware/firmware, but
+the part that involves first couple of retransmission of frames that are
+not acked within SIFS really falls for the wlan hardware (including
+firmware, if used in the design) category, not host CPU, if aiming for
+the best possible rate control.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
