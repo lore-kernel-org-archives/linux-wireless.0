@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2838 "EHLO ra.tuxdriver.com"
+Received: from mx1.redhat.com ([66.187.233.31]:48832 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757029AbXELTcl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 May 2007 15:32:41 -0400
-Date: Sat, 12 May 2007 15:17:49 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 1/2] Add 93cx6 eeprom library
-Message-ID: <20070512191749.GA6018@tuxdriver.com>
-References: <200705111559.41153.flamingice@sourmilk.net>
+	id S1754804AbXEKCpH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2007 22:45:07 -0400
+Subject: Re: [PATCH 00/19] libertas cleanups (for 2.6.22)
+From: Dan Williams <dcbw@redhat.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <464392FB.1000203@garzik.org>
+References: <1178829040.6356.1.camel@localhost.localdomain>
+	 <464392FB.1000203@garzik.org>
+Content-Type: text/plain
+Date: Thu, 10 May 2007 22:48:35 -0400
+Message-Id: <1178851715.8607.6.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200705111559.41153.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 11, 2007 at 03:59:40PM -0400, Michael Wu wrote:
+On Thu, 2007-05-10 at 17:47 -0400, Jeff Garzik wrote:
+> Dan Williams wrote:
+> > This set contains libertas cleanups for 2.6.22.
+> 
+> Patches 1 - 19 did not appear?
+> 
+> Only patch #0 (to which I'm replying) appeared.
 
-> +static inline void eeprom_93cx6_pulse_high(struct eeprom_93cx6 *eeprom)
-> +{
-> +	eeprom->reg_data_clock = 1;
-> +	eeprom->register_write(eeprom);
-> +	udelay(1);
-> +}
-> +
-> +static inline void eeprom_93cx6_pulse_low(struct eeprom_93cx6 *eeprom)
-> +{
-> +	eeprom->reg_data_clock = 0;
-> +	eeprom->register_write(eeprom);
-> +	udelay(1);
-> +}
+Was waiting until it showed up, and had to catch a bus home.  Posting
+them now.
 
-I'm with Jeff, these udelay's should go.  If they belong anywhere, it
-would be in the write routines provided by the caller.  For example, the
-routines provided by rtl8187 already have a delay in them.  Other
-hardware might actually have a hardware timer to implement delays (hey,
-it's possible).  Either way, this delay is superfluous.
+Dan
 
-> +}
-> +EXPORT_SYMBOL_GPL(eeprom_93cx6_multiread);
-> +
 
-It's pedantic, but I hate empty lines at the end of files...
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
