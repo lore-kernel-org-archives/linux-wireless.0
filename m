@@ -1,136 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3157 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765233AbXE2S4O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2007 14:56:14 -0400
-Date: Tue, 29 May 2007 14:30:37 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: jeff@garzik.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Please pull 'upstream-fixes' branch of wireless-2.6
-Message-ID: <20070529183037.GB3496@tuxdriver.com>
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:51353 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755072AbXEKBOS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2007 21:14:18 -0400
+Received: from shell0.pdx.osdl.net (fw.osdl.org [65.172.181.6])
+	by smtp1.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id l4B1EGXi012256
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 10 May 2007 18:14:18 -0700
+Received: from akpm.corp.google.com (shell0.pdx.osdl.net [10.9.0.31])
+	by shell0.pdx.osdl.net (8.13.1/8.11.6) with SMTP id l4B1EGTm003025
+	for <linux-wireless@vger.kernel.org>; Thu, 10 May 2007 18:14:16 -0700
+Date: Thu, 10 May 2007 18:14:16 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: linux-wireless@vger.kernel.org
+Subject: libertas driver
+Message-Id: <20070510181416.8637b466.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following changes since commit c420bc9f09a0926b708c3edb27eacba434a4=
-f4ba:
-  Linus Torvalds (1):
-        Linux 2.6.22-rc3
 
-are found in the git repository at:
+x86_64 build is a bit ugly.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.g=
-it upstream-fixes
+drivers/net/wireless/libertas/tx.c: In function 'SendSinglePacket':
+drivers/net/wireless/libertas/tx.c:81: warning: format '%d' expects type 'int', but argument 3 has type 'long unsigned int'
+drivers/net/wireless/libertas/rx.c: In function 'libertas_process_rxed_packet':
+drivers/net/wireless/libertas/rx.c:213: warning: format '%d' expects type 'int', but argument 3 has type 'long unsigned int'
+drivers/net/wireless/libertas/rx.c:213: warning: format '%d' expects type 'int', but argument 4 has type 'long unsigned int'
+drivers/net/wireless/libertas/rx.c: In function 'process_rxed_802_11_packet':
+drivers/net/wireless/libertas/rx.c:367: warning: format '%d' expects type 'int', but argument 3 has type 'long unsigned int'
+drivers/net/wireless/libertas/rx.c:367: warning: format '%d' expects type 'int', but argument 4 has type 'long unsigned int'
+drivers/net/wireless/libertas/cmd.c: In function 'libertas_queue_cmd':
+drivers/net/wireless/libertas/cmd.c:950: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/cmd.c: In function 'DownloadcommandToStation':
+drivers/net/wireless/libertas/cmd.c:979: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/cmd.c:979: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/cmd.c: In function 'libertas_prepare_and_send_command':
+drivers/net/wireless/libertas/cmd.c:1177: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/join.c: In function 'libertas_cmd_80211_ad_hoc_join':
+drivers/net/wireless/libertas/join.c:789: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/scan.c: In function 'InterpretBSSDescriptionWithIE':
+drivers/net/wireless/libertas/scan.c:1118: warning: format '%d' expects type 'int', but argument 3 has type 'long unsigned int'
+drivers/net/wireless/libertas/scan.c: In function 'libertas_get_scan':
+drivers/net/wireless/libertas/scan.c:1586: warning: format '%d' expects type 'int', but argument 5 has type 'long unsigned int'
+drivers/net/wireless/libertas/debugfs.c: In function 'libertas_parse_ssid':
+drivers/net/wireless/libertas/debugfs.c:279: warning: comparison of distinct pointer types lacks a cast
+drivers/net/wireless/libertas/debugfs.c: In function 'wlan_debugfs_read':
+drivers/net/wireless/libertas/debugfs.c:1823: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/debugfs.c:1825: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/debugfs.c:1827: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/debugfs.c: In function 'wlan_debugfs_write':
+drivers/net/wireless/libertas/debugfs.c:1884: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/debugfs.c:1886: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/debugfs.c:1888: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/debugfs.c: At top level:
+drivers/net/wireless/libertas/debugfs.c:1900: warning: initialization from incompatible pointer type
+drivers/net/wireless/libertas/debugfs.c: In function 'libertas_debug_init':
+drivers/net/wireless/libertas/debugfs.c:1919: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/ioctl.c: In function 'wlan_set_linkmode_ioctl':
+drivers/net/wireless/libertas/ioctl.c:696: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/ioctl.c: In function 'wlan_set_radiomode_ioctl':
+drivers/net/wireless/libertas/ioctl.c:728: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/ioctl.c: In function 'wlan_set_debugmode_ioctl':
+drivers/net/wireless/libertas/ioctl.c:757: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/ioctl.c: In function 'wlan_fwt_cleanup_ioctl':
+drivers/net/wireless/libertas/ioctl.c:1779: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/ioctl.c: In function 'wlan_fwt_time_ioctl':
+drivers/net/wireless/libertas/ioctl.c:1810: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/ioctl.c: In function 'wlan_mesh_get_ttl_ioctl':
+drivers/net/wireless/libertas/ioctl.c:1839: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/ioctl.c: In function 'libertas_do_ioctl':
+drivers/net/wireless/libertas/ioctl.c:1947: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/ioctl.c:2025: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/ioctl.c:2171: warning: cast from pointer to integer of different size
+drivers/net/wireless/libertas/ioctl.c:2188: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/ioctl.c:2192: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/ioctl.c:2196: warning: cast to pointer from integer of different size
+drivers/net/wireless/libertas/if_usb.c: In function '__if_usb_submit_rx_urb':
+drivers/net/wireless/libertas/if_usb.c:393: warning: passing argument 4 of 'usb_fill_bulk_urb' makes pointer from integer without a cast
 
-Akinobu Mita (2):
-      ieee80211: fix incomplete error message
-      softmac: alloc_ieee80211() NULL check
 
-Bj=F6rn Steinbrink (1):
-      prism54: fix monitor mode oops
+And all this annotation
 
-Brandon Craig Rhodes (1):
-      hostap: Allocate enough tailroom for TKIP
+/**
+ *  @brief Convert mw value to dbm value
+ *
+ *  @param mw      the value of mw
+ *  @return        the value of dbm
+ */
 
- drivers/net/wireless/hostap/hostap_80211_tx.c   |   13 ++++++++-----
- drivers/net/wireless/prism54/islpci_eth.c       |    5 +++--
- net/ieee80211/ieee80211_module.c                |    2 +-
- net/ieee80211/softmac/ieee80211softmac_module.c |    5 ++++-
- 4 files changed, 16 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/hostap/hostap_80211_tx.c b/drivers/ne=
-t/wireless/hostap/hostap_80211_tx.c
-index 246fac0..3df3c60 100644
---- a/drivers/net/wireless/hostap/hostap_80211_tx.c
-+++ b/drivers/net/wireless/hostap/hostap_80211_tx.c
-@@ -311,7 +311,7 @@ static struct sk_buff * hostap_tx_encrypt(struct sk=
-_buff *skb,
- 	local_info_t *local;
- 	struct ieee80211_hdr_4addr *hdr;
- 	u16 fc;
--	int hdr_len, res;
-+	int prefix_len, postfix_len, hdr_len, res;
-=20
- 	iface =3D netdev_priv(skb->dev);
- 	local =3D iface->local;
-@@ -337,10 +337,13 @@ static struct sk_buff * hostap_tx_encrypt(struct =
-sk_buff *skb,
- 	if (skb =3D=3D NULL)
- 		return NULL;
-=20
--	if ((skb_headroom(skb) < crypt->ops->extra_mpdu_prefix_len ||
--	     skb_tailroom(skb) < crypt->ops->extra_mpdu_postfix_len) &&
--	    pskb_expand_head(skb, crypt->ops->extra_mpdu_prefix_len,
--			     crypt->ops->extra_mpdu_postfix_len, GFP_ATOMIC)) {
-+	prefix_len =3D crypt->ops->extra_mpdu_prefix_len +
-+		crypt->ops->extra_msdu_prefix_len;
-+	postfix_len =3D crypt->ops->extra_mpdu_postfix_len +
-+		crypt->ops->extra_msdu_postfix_len;
-+	if ((skb_headroom(skb) < prefix_len ||
-+	     skb_tailroom(skb) < postfix_len) &&
-+	    pskb_expand_head(skb, prefix_len, postfix_len, GFP_ATOMIC)) {
- 		kfree_skb(skb);
- 		return NULL;
- 	}
-diff --git a/drivers/net/wireless/prism54/islpci_eth.c b/drivers/net/wi=
-reless/prism54/islpci_eth.c
-index dd070cc..f49eb06 100644
---- a/drivers/net/wireless/prism54/islpci_eth.c
-+++ b/drivers/net/wireless/prism54/islpci_eth.c
-@@ -378,9 +378,10 @@ islpci_eth_receive(islpci_private *priv)
- 	display_buffer((char *) skb->data, skb->len);
- #endif
- 	/* take care of monitor mode and spy monitoring. */
--	if (unlikely(priv->iw_mode =3D=3D IW_MODE_MONITOR))
-+	if (unlikely(priv->iw_mode =3D=3D IW_MODE_MONITOR)) {
-+		skb->dev =3D ndev;
- 		discard =3D islpci_monitor_rx(priv, &skb);
--	else {
-+	} else {
- 		if (unlikely(skb->data[2 * ETH_ALEN] =3D=3D 0)) {
- 			/* The packet has a rx_annex. Read it for spy monitoring, Then
- 			 * remove it, while keeping the 2 leading MAC addr.
-diff --git a/net/ieee80211/ieee80211_module.c b/net/ieee80211/ieee80211=
-_module.c
-index 7ec6610..17ad278 100644
---- a/net/ieee80211/ieee80211_module.c
-+++ b/net/ieee80211/ieee80211_module.c
-@@ -140,7 +140,7 @@ struct net_device *alloc_ieee80211(int sizeof_priv)
-=20
- 	dev =3D alloc_etherdev(sizeof(struct ieee80211_device) + sizeof_priv)=
-;
- 	if (!dev) {
--		IEEE80211_ERROR("Unable to network device.\n");
-+		IEEE80211_ERROR("Unable to allocate network device.\n");
- 		goto failed;
- 	}
- 	ieee =3D netdev_priv(dev);
-diff --git a/net/ieee80211/softmac/ieee80211softmac_module.c b/net/ieee=
-80211/softmac/ieee80211softmac_module.c
-index e9cdc66..c308756 100644
---- a/net/ieee80211/softmac/ieee80211softmac_module.c
-+++ b/net/ieee80211/softmac/ieee80211softmac_module.c
-@@ -33,7 +33,10 @@ struct net_device *alloc_ieee80211softmac(int sizeof=
-_priv)
- 	struct ieee80211softmac_device *softmac;
- 	struct net_device *dev;
-=20
--	dev =3D alloc_ieee80211(sizeof(struct ieee80211softmac_device) + size=
-of_priv);
-+	dev =3D alloc_ieee80211(sizeof(*softmac) + sizeof_priv);
-+	if (!dev)
-+		return NULL;
-+
- 	softmac =3D ieee80211_priv(dev);
- 	softmac->dev =3D dev;
- 	softmac->ieee =3D netdev_priv(dev);
---=20
-John W. Linville
-linville@tuxdriver.com
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+will be converted to kerneldoc form, I trust?
