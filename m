@@ -1,181 +1,267 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.sea5.speakeasy.net ([69.17.117.5]:35309 "EHLO
-	mail3.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757631AbXE1Qm3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2007 12:42:29 -0400
-Message-Id: <20070528164202.620537050@localhost>
-References: <20070528163845.448090722@localhost>
-Date: Mon, 28 May 2007 09:38:49 -0700
-From: Jouni Malinen <j@w1.fi>
+Received: from mx1.redhat.com ([66.187.233.31]:50369 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756901AbXEKCxL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2007 22:53:11 -0400
+Subject: [PATCH 09/19] libertas: Use standard values instead of  WLAN_802_11_AUTHENTICATION_MODE
+From: Dan Williams <dcbw@redhat.com>
 To: "John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/4] hostap: Remove driver version number
+In-Reply-To: <1178829040.6356.1.camel@localhost.localdomain>
+References: <1178829040.6356.1.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Thu, 10 May 2007 22:56:42 -0400
+Message-Id: <1178852202.8607.29.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver version number has not been updated since the driver was
-included in the main kernel tree and there is no plan on updating this
-in the future either. At this point, the only correct way to refer to
-the version is to use the kernel version. The 0.4.4 version is
-confusing since there are external version with higher version number
-even though they are not actually any newer than the in-tree version.
+Remove WLAN_802_11_AUTHENTICATION_MODE enum and use IW_AUTH_ALG_* instead.
 
-Let's get rid of the version number in the kernel tree in order to
-avoid this kind of confusion.
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+---
+ drivers/net/wireless/libertas/assoc.c |    3 +-
+ drivers/net/wireless/libertas/defs.h  |    7 ----
+ drivers/net/wireless/libertas/dev.h   |    2 +-
+ drivers/net/wireless/libertas/fw.c    |    2 +-
+ drivers/net/wireless/libertas/join.c  |   31 +++++++++++++++----
+ drivers/net/wireless/libertas/wext.c  |   52 ++++++++++----------------------
+ 6 files changed, 43 insertions(+), 54 deletions(-)
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
-
-
-Index: linux-2.6/drivers/net/wireless/hostap/hostap_config.h
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/hostap/hostap_config.h
-+++ linux-2.6/drivers/net/wireless/hostap/hostap_config.h
-@@ -1,8 +1,6 @@
- #ifndef HOSTAP_CONFIG_H
- #define HOSTAP_CONFIG_H
+diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
+index dfffabc..7ebd836 100644
+--- a/drivers/net/wireless/libertas/assoc.c
++++ b/drivers/net/wireless/libertas/assoc.c
+@@ -300,8 +300,7 @@ static int should_deauth_infrastructure(wlan_adapter *adapter,
+ 	}
  
--#define PRISM2_VERSION "0.4.4-kernel"
+ 	if (test_bit(ASSOC_FLAG_SECINFO, &assoc_req->flags)) {
+-		if (adapter->secinfo.authmode !=
+-		    assoc_req->secinfo.authmode) {
++		if (adapter->secinfo.auth_mode != assoc_req->secinfo.auth_mode) {
+ 			lbs_pr_debug(1, "Deauthenticating due to updated security "
+ 				"info in configuration request.\n");
+ 			return 1;
+diff --git a/drivers/net/wireless/libertas/defs.h b/drivers/net/wireless/libertas/defs.h
+index a6dee5e..9f54593 100644
+--- a/drivers/net/wireless/libertas/defs.h
++++ b/drivers/net/wireless/libertas/defs.h
+@@ -276,13 +276,6 @@ enum WLAN_802_11_NETWORK_INFRASTRUCTURE {
+ 	wlan802_11infrastructuremax
+ };
+ 
+-/** WLAN_802_11_AUTHENTICATION_MODE */
+-enum WLAN_802_11_AUTHENTICATION_MODE {
+-	wlan802_11authmodeopen = 0x00,
+-	wlan802_11authmodeshared = 0x01,
+-	wlan802_11authmodenetworkEAP = 0x80,
+-};
 -
- /* In the previous versions of Host AP driver, support for user space version
-  * of IEEE 802.11 management (hostapd) used to be disabled in the default
-  * configuration. From now on, support for hostapd is always included and it is
-Index: linux-2.6/drivers/net/wireless/hostap/hostap_cs.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/hostap/hostap_cs.c
-+++ linux-2.6/drivers/net/wireless/hostap/hostap_cs.c
-@@ -22,7 +22,6 @@
- #include "hostap_wlan.h"
+ /** WLAN_802_11_WEP_STATUS */
+ enum WLAN_802_11_WEP_STATUS {
+ 	wlan802_11WEPenabled,
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index 440b96d..eb490a6 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -58,7 +58,7 @@ struct wlan_802_11_security {
+ 	u8 WPAenabled;
+ 	u8 WPA2enabled;
+ 	enum WLAN_802_11_WEP_STATUS WEPstatus;
+-	enum WLAN_802_11_AUTHENTICATION_MODE authmode;
++	u8 auth_mode;
+ };
  
+ /** Current Basic Service Set State Structure */
+diff --git a/drivers/net/wireless/libertas/fw.c b/drivers/net/wireless/libertas/fw.c
+index 6911113..f2d626d 100644
+--- a/drivers/net/wireless/libertas/fw.c
++++ b/drivers/net/wireless/libertas/fw.c
+@@ -200,7 +200,7 @@ static void wlan_init_adapter(wlan_private * priv)
+ 		memset(&adapter->wep_keys[i], 0, sizeof(struct WLAN_802_11_KEY));
+ 	adapter->wep_tx_keyidx = 0;
+ 	adapter->secinfo.WEPstatus = wlan802_11WEPdisabled;
+-	adapter->secinfo.authmode = wlan802_11authmodeopen;
++	adapter->secinfo.auth_mode = IW_AUTH_ALG_OPEN_SYSTEM;
+ 	adapter->inframode = wlan802_11infrastructure;
  
--static char *version = PRISM2_VERSION " (Jouni Malinen <j@w1.fi>)";
- static dev_info_t dev_info = "hostap_cs";
- 
- MODULE_AUTHOR("Jouni Malinen");
-@@ -30,7 +29,6 @@ MODULE_DESCRIPTION("Support for Intersil
- 		   "cards (PC Card).");
- MODULE_SUPPORTED_DEVICE("Intersil Prism2-based WLAN cards (PC Card)");
- MODULE_LICENSE("GPL");
--MODULE_VERSION(PRISM2_VERSION);
- 
- 
- static int ignore_cis_vcc;
-@@ -910,14 +908,12 @@ static struct pcmcia_driver hostap_drive
- 
- static int __init init_prism2_pccard(void)
+ 	adapter->assoc_req = NULL;
+diff --git a/drivers/net/wireless/libertas/join.c b/drivers/net/wireless/libertas/join.c
+index 11682cb..a52bbc6 100644
+--- a/drivers/net/wireless/libertas/join.c
++++ b/drivers/net/wireless/libertas/join.c
+@@ -398,22 +398,39 @@ int libertas_cmd_80211_authenticate(wlan_private * priv,
+ 				 void *pdata_buf)
  {
--	printk(KERN_INFO "%s: %s\n", dev_info, version);
- 	return pcmcia_register_driver(&hostap_driver);
+ 	wlan_adapter *adapter = priv->adapter;
+-	struct cmd_ds_802_11_authenticate *pauthenticate =
+-	    &cmd->params.auth;
++ 	struct cmd_ds_802_11_authenticate *pauthenticate = &cmd->params.auth;
++ 	int ret = -1;
+ 	u8 *bssid = pdata_buf;
+ 
+ 	cmd->command = cpu_to_le16(cmd_802_11_authenticate);
+-	cmd->size =
+-	    cpu_to_le16(sizeof(struct cmd_ds_802_11_authenticate)
+-			     + S_DS_GEN);
++	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_authenticate)
++	                        + S_DS_GEN);
++
++	/* translate auth mode to 802.11 defined wire value */
++	switch (adapter->secinfo.auth_mode) {
++	case IW_AUTH_ALG_OPEN_SYSTEM:
++		pauthenticate->authtype = 0x00;
++		break;
++	case IW_AUTH_ALG_SHARED_KEY:
++		pauthenticate->authtype = 0x01;
++		break;
++	case IW_AUTH_ALG_LEAP:
++		pauthenticate->authtype = 0x80;
++		break;
++	default:
++		lbs_pr_debug(1, "AUTH_CMD: invalid auth alg 0x%X\n",
++		             adapter->secinfo.auth_mode);
++		goto out;
++	}
+ 
+-	pauthenticate->authtype = adapter->secinfo.authmode;
+ 	memcpy(pauthenticate->macaddr, bssid, ETH_ALEN);
+ 
+ 	lbs_pr_debug(1, "AUTH_CMD: Bssid is : %x:%x:%x:%x:%x:%x\n",
+ 	       bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
++	ret = 0;
+ 
+-	return 0;
++out:
++	return ret;
  }
  
- static void __exit exit_prism2_pccard(void)
- {
- 	pcmcia_unregister_driver(&hostap_driver);
--	printk(KERN_INFO "%s: Driver unloaded\n", dev_info);
- }
+ int libertas_cmd_80211_deauthenticate(wlan_private * priv,
+diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
+index cfce23d..22eacd2 100644
+--- a/drivers/net/wireless/libertas/wext.c
++++ b/drivers/net/wireless/libertas/wext.c
+@@ -1772,13 +1772,13 @@ static int wlan_get_encode(struct net_device *dev,
+ 	dwrq->flags = 0;
  
+ 	/* Authentication method */
+-	switch (adapter->secinfo.authmode) {
+-	case wlan802_11authmodeopen:
++	switch (adapter->secinfo.auth_mode) {
++	case IW_AUTH_ALG_OPEN_SYSTEM:
+ 		dwrq->flags = IW_ENCODE_OPEN;
+ 		break;
  
-Index: linux-2.6/drivers/net/wireless/hostap/hostap_ioctl.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/hostap/hostap_ioctl.c
-+++ linux-2.6/drivers/net/wireless/hostap/hostap_ioctl.c
-@@ -3893,8 +3893,6 @@ static void prism2_get_drvinfo(struct ne
- 	local = iface->local;
+-	case wlan802_11authmodeshared:
+-	case wlan802_11authmodenetworkEAP:
++	case IW_AUTH_ALG_SHARED_KEY:
++	case IW_AUTH_ALG_LEAP:
+ 		dwrq->flags = IW_ENCODE_RESTRICTED;
+ 		break;
+ 	default:
+@@ -1915,7 +1915,7 @@ static void disable_wep(struct assoc_request *assoc_req)
+ 	int i;
  
- 	strncpy(info->driver, "hostap", sizeof(info->driver) - 1);
--	strncpy(info->version, PRISM2_VERSION,
--		sizeof(info->version) - 1);
- 	snprintf(info->fw_version, sizeof(info->fw_version) - 1,
- 		 "%d.%d.%d", (local->sta_fw_ver >> 16) & 0xff,
- 		 (local->sta_fw_ver >> 8) & 0xff,
-Index: linux-2.6/drivers/net/wireless/hostap/hostap_main.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/hostap/hostap_main.c
-+++ linux-2.6/drivers/net/wireless/hostap/hostap_main.c
-@@ -37,7 +37,6 @@
- MODULE_AUTHOR("Jouni Malinen");
- MODULE_DESCRIPTION("Host AP common routines");
- MODULE_LICENSE("GPL");
--MODULE_VERSION(PRISM2_VERSION);
+ 	/* Set Open System auth mode */
+-	assoc_req->secinfo.authmode = wlan802_11authmodeopen;
++	assoc_req->secinfo.auth_mode = IW_AUTH_ALG_OPEN_SYSTEM;
  
- #define TX_TIMEOUT (2 * HZ)
+ 	/* Clear WEP keys and mark WEP as disabled */
+ 	assoc_req->secinfo.WEPstatus = wlan802_11WEPdisabled;
+@@ -1984,9 +1984,9 @@ static int wlan_set_encode(struct net_device *dev,
+ 		set_bit(ASSOC_FLAG_WEP_TX_KEYIDX, &assoc_req->flags);
  
-Index: linux-2.6/drivers/net/wireless/hostap/hostap_pci.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/hostap/hostap_pci.c
-+++ linux-2.6/drivers/net/wireless/hostap/hostap_pci.c
-@@ -20,7 +20,6 @@
- #include "hostap_wlan.h"
+ 	if (dwrq->flags & IW_ENCODE_RESTRICTED) {
+-		assoc_req->secinfo.authmode = wlan802_11authmodeshared;
++		assoc_req->secinfo.auth_mode = IW_AUTH_ALG_SHARED_KEY;
+ 	} else if (dwrq->flags & IW_ENCODE_OPEN) {
+-		assoc_req->secinfo.authmode = wlan802_11authmodeopen;
++		assoc_req->secinfo.auth_mode = IW_AUTH_ALG_OPEN_SYSTEM;
+ 	}
  
+ out:
+@@ -2144,11 +2144,9 @@ static int wlan_set_encodeext(struct net_device *dev,
+ 			goto out;
  
--static char *version = PRISM2_VERSION " (Jouni Malinen <j@w1.fi>)";
- static char *dev_info = "hostap_pci";
+ 		if (dwrq->flags & IW_ENCODE_RESTRICTED) {
+-			assoc_req->secinfo.authmode =
+-			    wlan802_11authmodeshared;
++			assoc_req->secinfo.auth_mode = IW_AUTH_ALG_SHARED_KEY;
+ 		} else if (dwrq->flags & IW_ENCODE_OPEN) {
+-			assoc_req->secinfo.authmode =
+-			    wlan802_11authmodeopen;
++			assoc_req->secinfo.auth_mode = IW_AUTH_ALG_OPEN_SYSTEM;
+ 		}
  
+ 		/* Mark the various WEP bits as modified */
+@@ -2334,14 +2332,12 @@ static int wlan_set_auth(struct net_device *dev,
+ 		if (dwrq->value & IW_AUTH_WPA_VERSION_WPA) {
+ 			assoc_req->secinfo.WPAenabled = 1;
+ 			assoc_req->secinfo.WEPstatus = wlan802_11WEPdisabled;
+-			assoc_req->secinfo.authmode =
+-			    wlan802_11authmodeopen;
++			assoc_req->secinfo.auth_mode = IW_AUTH_ALG_OPEN_SYSTEM;
+ 		}
+ 		if (dwrq->value & IW_AUTH_WPA_VERSION_WPA2) {
+ 			assoc_req->secinfo.WPA2enabled = 1;
+ 			assoc_req->secinfo.WEPstatus = wlan802_11WEPdisabled;
+-			assoc_req->secinfo.authmode =
+-			    wlan802_11authmodeopen;
++			assoc_req->secinfo.auth_mode = IW_AUTH_ALG_OPEN_SYSTEM;
+ 		}
+ 		updated = 1;
+ 		break;
+@@ -2359,14 +2355,11 @@ static int wlan_set_auth(struct net_device *dev,
  
-@@ -29,7 +28,6 @@ MODULE_DESCRIPTION("Support for Intersil
- 		   "PCI cards.");
- MODULE_SUPPORTED_DEVICE("Intersil Prism2.5-based WLAN PCI cards");
- MODULE_LICENSE("GPL");
--MODULE_VERSION(PRISM2_VERSION);
+ 	case IW_AUTH_80211_AUTH_ALG:
+ 		if (dwrq->value & IW_AUTH_ALG_SHARED_KEY) {
+-			assoc_req->secinfo.authmode =
+-			    wlan802_11authmodeshared;
++			assoc_req->secinfo.auth_mode = IW_AUTH_ALG_SHARED_KEY;
+ 		} else if (dwrq->value & IW_AUTH_ALG_OPEN_SYSTEM) {
+-			assoc_req->secinfo.authmode =
+-			    wlan802_11authmodeopen;
++			assoc_req->secinfo.auth_mode = IW_AUTH_ALG_OPEN_SYSTEM;
+ 		} else if (dwrq->value & IW_AUTH_ALG_LEAP) {
+-			assoc_req->secinfo.authmode =
+-			    wlan802_11authmodenetworkEAP;
++			assoc_req->secinfo.auth_mode = IW_AUTH_ALG_LEAP;
+ 		} else {
+ 			ret = -EINVAL;
+ 		}
+@@ -2380,8 +2373,7 @@ static int wlan_set_auth(struct net_device *dev,
+ 				assoc_req->secinfo.WPAenabled = 1;
+ 				assoc_req->secinfo.WPA2enabled = 1;
+ 				assoc_req->secinfo.WEPstatus = wlan802_11WEPdisabled;
+-				assoc_req->secinfo.authmode =
+-				    wlan802_11authmodeopen;
++				assoc_req->secinfo.auth_mode = IW_AUTH_ALG_OPEN_SYSTEM;
+ 			}
+ 		} else {
+ 			assoc_req->secinfo.WPAenabled = 0;
+@@ -2438,19 +2430,7 @@ static int wlan_get_auth(struct net_device *dev,
+ 		break;
  
+ 	case IW_AUTH_80211_AUTH_ALG:
+-		switch (adapter->secinfo.authmode) {
+-		case wlan802_11authmodeshared:
+-			dwrq->value = IW_AUTH_ALG_SHARED_KEY;
+-			break;
+-		case wlan802_11authmodeopen:
+-			dwrq->value = IW_AUTH_ALG_OPEN_SYSTEM;
+-			break;
+-		case wlan802_11authmodenetworkEAP:
+-			dwrq->value = IW_AUTH_ALG_LEAP;
+-			break;
+-		default:
+-			break;
+-		}
++		dwrq->value = adapter->secinfo.auth_mode;
+ 		break;
  
- /* struct local_info::hw_priv */
-@@ -462,8 +460,6 @@ static struct pci_driver prism2_pci_drv_
- 
- static int __init init_prism2_pci(void)
- {
--	printk(KERN_INFO "%s: %s\n", dev_info, version);
--
- 	return pci_register_driver(&prism2_pci_drv_id);
- }
- 
-@@ -471,7 +467,6 @@ static int __init init_prism2_pci(void)
- static void __exit exit_prism2_pci(void)
- {
- 	pci_unregister_driver(&prism2_pci_drv_id);
--	printk(KERN_INFO "%s: Driver unloaded\n", dev_info);
- }
- 
- 
-Index: linux-2.6/drivers/net/wireless/hostap/hostap_plx.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/hostap/hostap_plx.c
-+++ linux-2.6/drivers/net/wireless/hostap/hostap_plx.c
-@@ -23,7 +23,6 @@
- #include "hostap_wlan.h"
- 
- 
--static char *version = PRISM2_VERSION " (Jouni Malinen <j@w1.fi>)";
- static char *dev_info = "hostap_plx";
- 
- 
-@@ -32,7 +31,6 @@ MODULE_DESCRIPTION("Support for Intersil
- 		   "cards (PLX).");
- MODULE_SUPPORTED_DEVICE("Intersil Prism2-based WLAN cards (PLX)");
- MODULE_LICENSE("GPL");
--MODULE_VERSION(PRISM2_VERSION);
- 
- 
- static int ignore_cis;
-@@ -623,8 +621,6 @@ static struct pci_driver prism2_plx_drv_
- 
- static int __init init_prism2_plx(void)
- {
--	printk(KERN_INFO "%s: %s\n", dev_info, version);
--
- 	return pci_register_driver(&prism2_plx_drv_id);
- }
- 
-@@ -632,7 +628,6 @@ static int __init init_prism2_plx(void)
- static void __exit exit_prism2_plx(void)
- {
- 	pci_unregister_driver(&prism2_plx_drv_id);
--	printk(KERN_INFO "%s: Driver unloaded\n", dev_info);
- }
- 
- 
-
---
-
+ 	case IW_AUTH_WPA_ENABLED:
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.5.0.6
+
+
+
