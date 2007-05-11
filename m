@@ -1,105 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:34145 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1758290AbXEZQTm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 12:19:42 -0400
-From: Uwe Bugla <uwe.bugla@gmx.de>
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-Date: Sat, 26 May 2007 18:14:18 +0200
-References: <20070524195616.234280@gmx.net> <200705261240.55153.uwe.bugla@gmx.de> <200705261750.48816.mb@bu3sch.de>
-In-Reply-To: <200705261750.48816.mb@bu3sch.de>
+Received: from mx1.redhat.com ([66.187.233.31]:53866 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757563AbXEKDKd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2007 23:10:33 -0400
+Subject: Re: libertas driver
+From: Dan Williams <dcbw@redhat.com>
+To: Jeff Garzik <jeff@garzik.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200705261814.18917.uwe.bugla@gmx.de>
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4643D3FC.9070308@garzik.org>
+References: <20070510181416.8637b466.akpm@linux-foundation.org>
+	 <4643D3FC.9070308@garzik.org>
+Content-Type: text/plain
+Date: Thu, 10 May 2007 23:14:24 -0400
+Message-Id: <1178853264.8607.61.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Samstag, 26. Mai 2007 17:50 schrieben Sie:
-> Andrew,
->
-> I am going to ignore Uwe from now on. It's simply impossible
-> to debug the problem the way he is responding.
-> Well, I'm not the first person in the Linux community adding
-> him to the killfile, ... .
-> I ask to try wireless-dev, as the driver works perfectly fine
-> for me there, but he refuses to try it, too. So I'm stuck.
+On Thu, 2007-05-10 at 22:25 -0400, Jeff Garzik wrote:
+> Andrew Morton wrote:
+> > x86_64 build is a bit ugly.
+> 
+> Not sure what happened to his mailer (patch #0 of 19 appeared), but:
+> http://people.redhat.com/dcbw/libertas-patches/
+> 
+> Patches 18 and 19 address several of these.
 
-A. Where can I get wireless-dev, please?
-B. Against what kernel can I apply it?
-C. How must this stuff be applied?
+16, 18, and 19 should take care of all the issues I (and Randy) found by
+sparse and building on x86-64.
 
-Three clear questions, three clear answers please, if we want get forward.
+Thanks,
+Dan
 
-Apart from that I do not owe a wireless device, and i more and more get the 
-impression that you simply do not want to rework your code.
-You rather search hungrily for excuses to point to some voluntary other side 
-as soon as your code does not seem to work as expected and as soon as 
-responsibilty issues are concerned.
 
-So what tester would enjoy such a stubborn behaviour?
-And additionally: Without getting paid for all the time effort?
-
-> I already tried your -mm kernel, but it crashes on my machine
-> for other reasons. (Yeah, I should look into them, too :P )
->
-> Andrew, is it possible that the breakage was introduced in the
-> merge process somehow? Didn't the patch apply cleanly? Are there
-> other changes to b44 I should know about in your tree?
-
-I think you can easily compare your wireless-dev code (where can I download 
-it?) with the patch in the mm-tree. A simple diff will do I suppose.
-
->
-> If it is really impossible to debug this problem, I'd like to
-> suggest you to drop the b44-ssb port completely.
-> I'm not going to destroy my nerves any further with guys like
-> Uwe, so I'll include the b44-ssb port in the OpenWRT tree
-> and be done with it.
-
-As I stated already, debugging is not impossible!
-In fact your responses didn't even mention real debugging as a choice.
-To debug the issue I need the debug command line parametres for both ssb and 
-b44. I cannot guess them, as there is no documentation available, neither for 
-b44 nor for ssb. So what are the debug parametres please?
-
-> Although I would be very sad about it, as my longterm goal was
-> to make a vanilla kernel run on the OpenWRT devices... .
-
-It is not my primary goal to leave you alone with this......
-
->
-> But maybe we can get another tester for -mm with similiar problems,
-> who is not bullshitting the whole time and is also going to
-> test wireless-dev to make sure it's not a merge bug.
-
-No, we need simply friendlier code developers without that immense arrogance 
-behaviour that you show. That's it.
-
->
->
-> -----------
->
-> And Uwe: Remember, I am not payed for this. I do _all_ this
-> in my free time.
-> So sentences like: "So, the ball has been in your court
-> for two days now, and you simply keep on hesitating
-> to take action now."
-> are _completely_ displaced in this discussion.
-
-Yes. And I am doing this in my spare time too. And what I do not like is 
-simply guessing around (ACPI bug, typo errors at DNS and nonsense like that 
-etc.) plus this gesture going: "You are dumb, you are not understanding 
-anything etc."
-
-Cheers and happy reflection
-
-Uwe
-
-P. S.: My door is open, although the whole issue starts to nerve me due to 
-your behaviour.
