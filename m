@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:35959 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754214AbXEQD4x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2007 23:56:53 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers
-Date: Wed, 16 May 2007 23:55:30 -0400
-Cc: James Ketrenos <jketreno@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <464B7B7C.5080800@linux.intel.com> <200705162151.32910.flamingice@sourmilk.net> <464BC459.4030105@garzik.org>
-In-Reply-To: <464BC459.4030105@garzik.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2635872.XGUDnyOYyr";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705162355.35495.flamingice@sourmilk.net>
+Received: from mx1.redhat.com ([66.187.233.31]:49686 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756057AbXEKCtI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2007 22:49:08 -0400
+Subject: [PATCH 03/19] libertas: fix size of SSID comparison in stop_adhoc  check
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1178829040.6356.1.camel@localhost.localdomain>
+References: <1178829040.6356.1.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Thu, 10 May 2007 22:52:37 -0400
+Message-Id: <1178851957.8607.15.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2635872.XGUDnyOYyr
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+---
+ drivers/net/wireless/libertas/assoc.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-On Wednesday 16 May 2007 22:56, Jeff Garzik wrote:
-> This is the maintainer's personal preference.  I put them in all my
-> drivers, and they look perfectly fine here.
->
-I consider it generally ugly and to be avoided. These seem to be placed onl=
-y=20
-in the mac80211 callbacks so it's more of a tool to figure out when mac8021=
-1=20
-uses callbacks.. doesn't really belong here IMHO.
+diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
+index b55c7f5..dfffabc 100644
+--- a/drivers/net/wireless/libertas/assoc.c
++++ b/drivers/net/wireless/libertas/assoc.c
+@@ -333,7 +333,7 @@ static int should_stop_adhoc(wlan_adapter *adapter,
+ 	if (adapter->curbssparams.ssid.ssidlength != assoc_req->ssid.ssidlength)
+ 		return 1;
+ 	if (memcmp(adapter->curbssparams.ssid.ssid, assoc_req->ssid.ssid,
+-			sizeof(struct WLAN_802_11_SSID)))
++			adapter->curbssparams.ssid.ssidlength))
+ 		return 1;
+ 
+ 	/* FIXME: deal with 'auto' mode somehow */
+-- 
+1.5.0.6
 
-But.. if James likes them, fine. I haven't seen anything better using the g=
-cc=20
-mcount stuff Christoph Hellwig was talking about so this is the only option.
 
-=2DMichael Wu
 
---nextPart2635872.XGUDnyOYyr
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGS9I3T3Oqt9AH4aERAgc2AKCYzTbBl9uKrhkb1BI+xAJTVs/mlwCggVcl
-r1NW356v8XwLz/Xq24+Kc1s=
-=V1VC
------END PGP SIGNATURE-----
-
---nextPart2635872.XGUDnyOYyr--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
