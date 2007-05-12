@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:65326 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755997AbXEOSxo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2007 14:53:44 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Panic in ieee_80211_ibss_add_sta when trying to join ad-hoc network (rt2500pci)
-Date: Tue, 15 May 2007 14:52:26 -0400
-Cc: David LAMPARTER <lists@diac24.net>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
-References: <20070515152842.GA26481@charon.n2.diac24.net> <20070515171202.GD15105@tuxdriver.com>
-In-Reply-To: <20070515171202.GD15105@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3759009.mGGXOxUsHL";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705151452.32246.flamingice@sourmilk.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2838 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757029AbXELTcl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 May 2007 15:32:41 -0400
+Date: Sat, 12 May 2007 15:17:49 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 1/2] Add 93cx6 eeprom library
+Message-ID: <20070512191749.GA6018@tuxdriver.com>
+References: <200705111559.41153.flamingice@sourmilk.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200705111559.41153.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3759009.mGGXOxUsHL
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Fri, May 11, 2007 at 03:59:40PM -0400, Michael Wu wrote:
 
-On Tuesday 15 May 2007 13:12, John W. Linville wrote:\
-> Patch below...does this work better?  Looks like upstream needs
-> it too...
->
-ACK. Looks like I forgot to set sdata after removing the code that set it.
+> +static inline void eeprom_93cx6_pulse_high(struct eeprom_93cx6 *eeprom)
+> +{
+> +	eeprom->reg_data_clock = 1;
+> +	eeprom->register_write(eeprom);
+> +	udelay(1);
+> +}
+> +
+> +static inline void eeprom_93cx6_pulse_low(struct eeprom_93cx6 *eeprom)
+> +{
+> +	eeprom->reg_data_clock = 0;
+> +	eeprom->register_write(eeprom);
+> +	udelay(1);
+> +}
 
-Thanks,
--Michael Wu
+I'm with Jeff, these udelay's should go.  If they belong anywhere, it
+would be in the write routines provided by the caller.  For example, the
+routines provided by rtl8187 already have a delay in them.  Other
+hardware might actually have a hardware timer to implement delays (hey,
+it's possible).  Either way, this delay is superfluous.
 
---nextPart3759009.mGGXOxUsHL
-Content-Type: application/pgp-signature
+> +}
+> +EXPORT_SYMBOL_GPL(eeprom_93cx6_multiread);
+> +
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+It's pedantic, but I hate empty lines at the end of files...
 
-iD8DBQBGSgFwT3Oqt9AH4aERAmOPAJsE8aKfad8gta0HSkKfwaUIIJ1WigCg2WV/
-9O0Tw/57c++wmrCMyg/FpXs=
-=qC2G
------END PGP SIGNATURE-----
-
---nextPart3759009.mGGXOxUsHL--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
