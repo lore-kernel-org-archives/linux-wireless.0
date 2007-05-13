@@ -1,63 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:43451
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750746AbXE1Poi (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:42948 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756727AbXEMBaY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2007 11:44:38 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Stephen Hemminger <shemminger@linux-foundation.org>
-Subject: Re: b44: regression in 2.6.22 (resend)
-Date: Mon, 28 May 2007 17:43:31 +0200
-Cc: Maximilian Engelhardt <maxi@daemonizer.de>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-References: <20070525172431.60affaca@freepuppy> <200705281714.25841.mb@bu3sch.de> <1180366371.4952.5.camel@chaos>
-In-Reply-To: <1180366371.4952.5.camel@chaos>
+	Sat, 12 May 2007 21:30:24 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 1/2] Add 93cx6 eeprom library
+Date: Sat, 12 May 2007 21:29:24 -0400
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+References: <200705111559.41153.flamingice@sourmilk.net> <20070512191749.GA6018@tuxdriver.com>
+In-Reply-To: <20070512191749.GA6018@tuxdriver.com>
 MIME-Version: 1.0
-Message-Id: <200705281743.32134.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Content-Type: multipart/signed;
+  boundary="nextPart9994858.PreklQ3glZ";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200705122129.28655.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 28 May 2007 17:32:51 Thomas Gleixner wrote:
-> On Mon, 2007-05-28 at 17:14 +0200, Michael Buesch wrote:
-> > > The -oldconfig1 is the kernel that had no problems and the other shows the b44 
-> > > problem. So if High Resolution Timer Support is disabled everything works 
-> > > fine and if I enable it the problems do appear again.
-> > > 
-> > > I didn't test this on my 2.6.22-rc3 kernel yet, but I guess disabling High 
-> > > Resolution Timer Support will also solve the problem there.
-> > > 
-> > > The older kernels I tried also work perfectly fine and they didn't have the 
-> > > High Resolution Timer Support yet.
-> > 
-> > So, that's interesting, indeed.
-> > Any idea what's going on, someone? Thomas?
-> 
-> Not off the top of my head.
-> 
-> Maximilian, does the kernel work otherwise (I mean aside of the b44
-> driver) ? 
-> 
-> Can you please keep CONFIG_HIGH_RES_TIMERS and CONFIG_NOHZ and try the
-> following combinations on the kernel command line:
-> 
-> 1) highres=off nohz=off (should be the same as your working config)
-> 2) highres=off
-> 3) nohz=off
-> 
-> Michael, is anything in the b44 driver timer driven ?
+--nextPart9994858.PreklQ3glZ
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-NAPI perhaps. I don't know. Steve may know.
+On Saturday 12 May 2007 15:17, John W. Linville wrote:
+> On Fri, May 11, 2007 at 03:59:40PM -0400, Michael Wu wrote:
+> > +static inline void eeprom_93cx6_pulse_high(struct eeprom_93cx6 *eeprom)
+> > +{
+> > +	eeprom->reg_data_clock = 1;
+> > +	eeprom->register_write(eeprom);
+> > +	udelay(1);
+> > +}
+> > +
+> > +static inline void eeprom_93cx6_pulse_low(struct eeprom_93cx6 *eeprom)
+> > +{
+> > +	eeprom->reg_data_clock = 0;
+> > +	eeprom->register_write(eeprom);
+> > +	udelay(1);
+> > +}
+>
+> I'm with Jeff, these udelay's should go.  If they belong anywhere, it
+> would be in the write routines provided by the caller.  For example, the
+> routines provided by rtl8187 already have a delay in them.  Other
+> hardware might actually have a hardware timer to implement delays (hey,
+> it's possible).  Either way, this delay is superfluous.
+>
+Will remove.
 
-The only timer in b44 is to update stats every second. I doubt
-that this can cause such an issue. It's not involved in transmission.
+> > +}
+> > +EXPORT_SYMBOL_GPL(eeprom_93cx6_multiread);
+> > +
+>
+> It's pedantic, but I hate empty lines at the end of files...
+>
+OK.
 
--- 
-Greetings Michael.
+Thanks,
+-Michael Wu
+
+--nextPart9994858.PreklQ3glZ
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGRmn4T3Oqt9AH4aERAo4YAKCACXWIQaaosMfHPuDBxymDHpKNGwCfRl/C
+hMuEJ1YAZxTP15JRwx9jJpE=
+=9uU5
+-----END PGP SIGNATURE-----
+
+--nextPart9994858.PreklQ3glZ--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
