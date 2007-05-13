@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51397 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751389AbXEYKCg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2007 06:02:36 -0400
-Subject: Re: Linux Magazin article on mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4655A7C2.6030600@warmcat.com>
-References: <4655A7C2.6030600@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Np1GCerKRzraxQO9wjuJ"
-Date: Fri, 25 May 2007 12:02:31 +0200
-Message-Id: <1180087351.3604.8.camel@johannes.berg>
+Received: from havoc.gtf.org ([69.61.125.42]:52994 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754462AbXEMSun (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 May 2007 14:50:43 -0400
+Date: Sun, 13 May 2007 14:50:38 -0400
+From: Jeff Garzik <jeff@garzik.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 1/2] Add 93cx6 eeprom library
+Message-ID: <20070513185038.GA27009@havoc.gtf.org>
+References: <200705111559.41153.flamingice@sourmilk.net> <20070512191749.GA6018@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070512191749.GA6018@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, May 12, 2007 at 03:17:49PM -0400, John W. Linville wrote:
+> On Fri, May 11, 2007 at 03:59:40PM -0400, Michael Wu wrote:
+> 
+> > +static inline void eeprom_93cx6_pulse_high(struct eeprom_93cx6 *eeprom)
+> > +{
+> > +	eeprom->reg_data_clock = 1;
+> > +	eeprom->register_write(eeprom);
+> > +	udelay(1);
+> > +}
+> > +
+> > +static inline void eeprom_93cx6_pulse_low(struct eeprom_93cx6 *eeprom)
+> > +{
+> > +	eeprom->reg_data_clock = 0;
+> > +	eeprom->register_write(eeprom);
+> > +	udelay(1);
+> > +}
+> 
+> I'm with Jeff, these udelay's should go.  If they belong anywhere, it
+> would be in the write routines provided by the caller.  For example, the
+> routines provided by rtl8187 already have a delay in them.  Other
+> hardware might actually have a hardware timer to implement delays (hey,
+> it's possible).  Either way, this delay is superfluous.
 
---=-Np1GCerKRzraxQO9wjuJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I don't claim the delays were superfluous, I was just wondering if they
+were papering over write-posting bugs.
 
-On Thu, 2007-05-24 at 15:57 +0100, Andy Green wrote:
-> Hi folks -
->=20
-> Just saw from my referrer logs
->=20
-> http://www.linux-magazin.de/online_artikel/neuer_wlan_stack_fuer_den_linu=
-x_kernel/(kategorie)/382
+	Jeff
 
-Hah, damn, why didn't he tell me that he published it? Oh well... I told
-him about penumbra, maybe that'll get some more attention that way
-too :)
 
-johannes
-
---=-Np1GCerKRzraxQO9wjuJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGVrQ2/ETPhpq3jKURAgonAJ9tvW6K8XGjYsJPQ+5RM7MPkzIIRgCfTbRO
-KjMQDzr4ZThTj8PwD7k7McI=
-=5vfA
------END PGP SIGNATURE-----
-
---=-Np1GCerKRzraxQO9wjuJ--
 
