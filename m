@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4498 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934100AbXEGOdZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2007 10:33:25 -0400
-Date: Mon, 7 May 2007 10:11:43 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Jeff Garzik <jeff@garzik.org>, linux-wireless@vger.kernel.org,
-	marcelo@kvack.org, linux-kernel@vger.kernel.org, akpm@osdl.org
-Subject: Please pull 'revert-libertas' branch of wireless-2.6 (was Re: Please pull 'libertas' branch of wireless-2.6)
-Message-ID: <20070507141143.GB5125@tuxdriver.com>
-References: <20070227205649.GH5826@tuxdriver.com> <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org> <20070507104117.GA31601@infradead.org> <1178539423.3032.24.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1178539423.3032.24.camel@localhost.localdomain>
+Received: from ug-out-1314.google.com ([66.249.92.170]:42475 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757000AbXENU73 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2007 16:59:29 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so1433645uga
+        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2007 13:59:22 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH v3 1/2] Add 93cx6 eeprom library
+Date: Mon, 14 May 2007 22:57:50 +0200
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+References: <200705140138.52596.flamingice@sourmilk.net> <200705141700.21900.IvDoorn@gmail.com> <20070514181323.GB6999@tuxdriver.com>
+In-Reply-To: <20070514181323.GB6999@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200705142257.50726.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 07, 2007 at 08:03:43AM -0400, Dan Williams wrote:
-> On Mon, 2007-05-07 at 11:41 +0100, Christoph Hellwig wrote:
+Hi,
 
-> > Of course it's not anywhere near good shape.  Almost all items from my
-> > review were completely ignored, and we have another totoally substandard
-> > wireless driver with crappy thread handling, a huge number of broken private
-> > ioctls and partially absymal codingstyle.
-
-> I've already updated libertas-2.6 git with a ton of updates for this.
+> > > The udelay is necessary to set a limit on how fast the eeprom is operated.. 
+> > > but not on all hardware, apparently. adm8211 just uses a read from the eeprom 
+> > > register to perform the delay.
+> > 
+> > Ok, then I'll update rt2x00 to perform the delay during register_write as well. :)
 > 
-> In any case, lets push off any merge until 2.6.23 so the rest of the
-> comments can be dealt with:
+> Actually, see the end of the thread from the previous 93cx6 patch
+> Michael posted on Friday.  I think these delays are actually alright,
+> but they could use a comment.  How about the patch below (applied on
+> top of the previous version)?
 
-Alright...Jeff, would you please pull the following branch for upstream ASAP:
+Not a problem, I'll create one for wireless-dev but it should be applicable
+for wireless with Michael's patch as well. :)
 
-	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git revert-libertas
-
-Thanks,
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Ivo
