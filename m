@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:8453 "EHLO annwn13.rutgers.edu"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755108AbXEJSPX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 14:15:23 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH V4] mac80211: Add support for SIOCGIWRATE ioctl to provide rate information
-Date: Thu, 10 May 2007 14:14:33 -0400
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-References: <46435ace.oKGIdoTGgDdGQs74%Larry.Finger@lwfinger.net>
-In-Reply-To: <46435ace.oKGIdoTGgDdGQs74%Larry.Finger@lwfinger.net>
+Received: from ug-out-1314.google.com ([66.249.92.173]:51652 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756223AbXENVHd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2007 17:07:33 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so1435187uga
+        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2007 14:07:32 -0700 (PDT)
+To: "John Linville" <linville@tuxdriver.com>
+Subject: [PATCH] eeprom_93cx6: Add comment for 1us delay after pulse
+Date: Mon, 14 May 2007 23:06:01 +0200
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1190810.kb9ukj1uY2";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705101414.37098.flamingice@sourmilk.net>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200705142306.01172.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1190810.kb9ukj1uY2
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+This will add a comment for the 1us delay which is taken
+after the pulse has been switched. The 1us delay is based
+on the specifications so that should be made clear.
 
-On Thursday 10 May 2007 13:47, Larry Finger wrote:
-> +	if (sta->txrate >=3D 0 && sta->txrate <=3D local->oper_hw_mode->num_rat=
-es)
-sta->txrate will never be negative unless there's a bug somewhere so that=20
-check should be removed.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-'<=3D' isn't quite right. sta->txrate =3D=3D local->oper_hw_mode->num_rates=
- is not a=20
-valid index.
+---
 
-=2DMichael Wu
-
---nextPart1190810.kb9ukj1uY2
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGQ2ENT3Oqt9AH4aERAiDLAJ4gWpfiF0ybVpbAsRLb+Z+LRB+4MgCdEj9h
-20GPwJPJYsE/HyyJ1D8QD7A=
-=Dh+r
------END PGP SIGNATURE-----
-
---nextPart1190810.kb9ukj1uY2--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+diff --git a/drivers/misc/eeprom_93cx6.c b/drivers/misc/eeprom_93cx6.c
+index a948ddc..8c8b43f 100644
+--- a/drivers/misc/eeprom_93cx6.c
++++ b/drivers/misc/eeprom_93cx6.c
+@@ -39,6 +39,12 @@ static inline void eeprom_93cx6_pulse_high(struct eeprom_93cx6 *eeprom)
+ {
+ 	eeprom->reg_data_clock = 1;
+ 	eeprom->register_write(eeprom);
++
++	/*
++	 * Add a short delay for the pulse to work.
++	 * According to the specifications the minimal time
++	 * should be 450ns so a 1us delay is sufficient.
++	 */
+ 	udelay(1);
+ }
+ 
+@@ -46,6 +52,12 @@ static inline void eeprom_93cx6_pulse_low(struct eeprom_93cx6 *eeprom)
+ {
+ 	eeprom->reg_data_clock = 0;
+ 	eeprom->register_write(eeprom);
++
++	/*
++	 * Add a short delay for the pulse to work.
++	 * According to the specifications the minimal time
++	 * should be 450ns so a 1us delay is sufficient.
++	 */
+ 	udelay(1);
+ }
+ 
