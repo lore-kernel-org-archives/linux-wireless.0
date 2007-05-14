@@ -1,48 +1,250 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:42729
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762798AbXEZQVX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 12:21:23 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-Date: Sat, 26 May 2007 18:21:16 +0200
-Cc: Uwe Bugla <uwe.bugla@gmx.de>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-References: <20070524195616.234280@gmx.net> <200705261750.48816.mb@bu3sch.de> <20070526091309.0af20971.akpm@linux-foundation.org>
-In-Reply-To: <20070526091309.0af20971.akpm@linux-foundation.org>
+Received: from mga02.intel.com ([134.134.136.20]:61484 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757102AbXENFP3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2007 01:15:29 -0400
+Date: Mon, 14 May 2007 13:15:12 +0800
+From: Zhu Yi <yi.zhu@intel.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
+Message-ID: <20070514051512.GA25572@mail.intel.com>
+Reply-To: yi.zhu@intel.com
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200705261821.16355.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 26 May 2007 18:13:09 Andrew Morton wrote:
-> > I already tried your -mm kernel, but it crashes on my machine
-> > for other reasons. (Yeah, I should look into them, too :P )
-> 
-> err, please do.  Just the oops trace would be a start.
+Add data types and structures for IEEE802.11e/WMM TS management and DLS.
 
-Yes, I will look into it. I think it was related to my
-onboard RTL networking chip. When trying to bring it down,
-it oopses the machine. But I'm not sure what happens exactly, yet.
-I'll take a look at it.
-
-> > Andrew, is it possible that the breakage was introduced in the
-> > merge process somehow? Didn't the patch apply cleanly? Are there
-> > other changes to b44 I should know about in your tree?
-> 
-> Only git-wireless.net modifies b44.c but if we're having IRQ assignment
-> problems then we'd need to look elsewhere.
-
-I think we don't have IRQ assignment problems. Uwe simply disabled
-b44-PCI support in his first bugreport (I guess). So there was
-no b44-PCI driver loaded.
-Later on he said that it does magically work now...
-
--- 
-Greetings Michael.
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+--
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 0cd2d35..00e9f99 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -123,6 +123,52 @@ struct ieee80211_ht_additional_info {
+ 	u8 basic_set[16];
+ }__attribute__ ((packed));
+ 
++
++#define IEEE80211_TSINFO_TYPE(a)	((a.short1 & 0x0001) >> 0)
++#define IEEE80211_TSINFO_TSID(a)	((a.short1 & 0x001E) >> 1)
++#define IEEE80211_TSINFO_DIR(a)		((a.short1 & 0x0060) >> 5)
++#define IEEE80211_TSINFO_POLICY(a)	((a.short1 & 0x0180) >> 7)
++#define IEEE80211_TSINFO_AGG(a)		((a.short1 & 0x0200) >> 9)
++#define IEEE80211_TSINFO_APSD(a)	((a.short1 & 0x0400) >> 10)
++#define IEEE80211_TSINFO_UP(a)		((a.short1 & 0x3800) >> 11)
++#define IEEE80211_TSINFO_ACK(a)		((a.short1 & 0xC000) >> 14)
++#define IEEE80211_TSINFO_SCHEDULE(a)	((a.byte3 & 0x01) >> 0)
++
++#define SET_TSINFO_TYPE(i, d)		(i.short1 |= (d << 0) & 0x0001)
++#define SET_TSINFO_TSID(i, d)		(i.short1 |= (d << 1) & 0x001E)
++#define SET_TSINFO_DIR(i, d)		(i.short1 |= (d << 5) & 0x0060)
++#define SET_TSINFO_POLICY(i, d)		(i.short1 |= (d << 7) & 0x0180)
++#define SET_TSINFO_AGG(i, d)		(i.short1 |= (d << 9) & 0x0200)
++#define SET_TSINFO_APSD(i, d)		(i.short1 |= (d << 10) & 0x0400)
++#define SET_TSINFO_UP(i, d)		(i.short1 |= (d << 11) & 0x3800)
++#define SET_TSINFO_ACK(i, d)		(i.short1 |= (d << 14) & 0xC000)
++#define SET_TSINFO_SCHEDULE(i, d)	(i.byte3 |= (d << 0) & 0x01)
++
++struct ieee80211_ts_info {
++	__le16 short1;
++	u8 byte3;
++} __attribute__ ((packed));
++
++struct ieee80211_elem_tspec {
++	struct ieee80211_ts_info ts_info;
++	__le16 nominal_msdu_size;
++	__le16 max_msdu_size;
++	__le32 min_service_interval;
++	__le32 max_service_interval;
++	__le32 inactivity_interval;
++	__le32 suspension_interval;
++	__le32 service_start_time;
++	__le32 min_data_rate;
++	__le32 mean_data_rate;
++	__le32 peak_data_rate;
++	__le32 burst_size;
++	__le32 delay_bound;
++	__le32 min_phy_rate;
++	__le16 surplus_band_allow;
++	__le16 medium_time;
++} __attribute__ ((packed));
++
++
+ struct ieee80211_mgmt {
+ 	__le16 frame_control;
+ 	__le16 duration;
+@@ -190,9 +236,51 @@ struct ieee80211_mgmt {
+ 				struct {
+ 					u8 action_code;
+ 					u8 dialog_token;
++					u8 variable[0];
++				} __attribute__ ((packed)) addts_req;
++				struct {
++					u8 action_code;
++					u8 dialog_token;
++					__le16 status_code;
++					u8 variable[0];
++				} __attribute__ ((packed)) addts_resp;
++				struct {
++					u8 action_code;
++					struct ieee80211_ts_info ts_info;
++					__le16 reason_code;
++				} __attribute__ ((packed)) delts;
++				struct {
++					u8 action_code;
++					u8 dialog_token;
+ 					u8 status_code;
+ 					u8 variable[0];
+ 				} __attribute__ ((packed)) wme_action;
++				struct {
++					u8 action_code;
++					u8 dest[6];
++					u8 src[6];
++					__le16 capab_info;
++					__le16 timeout;
++					/* Followed by Supported Rates and
++					 * Extended Supported Rates */
++					u8 variable[0];
++				} __attribute__ ((packed)) dls_req;
++				struct {
++					u8 action_code;
++					__le16 status_code;
++					u8 dest[6];
++					u8 src[6];
++					/* Followed by Capability Information,
++					 * Supported Rates and Extended
++					 * Supported Rates */
++					u8 variable[0];
++				} __attribute__ ((packed)) dls_resp;
++				struct {
++					u8 action_code;
++					u8 dest[6];
++					u8 src[6];
++					__le16 reason_code;
++				} __attribute__ ((packed)) dls_teardown;
+ 				struct{
+ 					u8 action_code;
+ 					u8 element_id;
+@@ -287,8 +375,6 @@ enum ieee80211_statuscode {
+ 	/* 802.11g */
+ 	WLAN_STATUS_ASSOC_DENIED_NOSHORTTIME = 25,
+ 	WLAN_STATUS_ASSOC_DENIED_NODSSSOFDM = 26,
+-	/* 802.11e */
+-	WLAN_STATUS_REQUEST_DECLINED = 37,
+ 	/* 802.11i */
+ 	WLAN_STATUS_INVALID_IE = 40,
+ 	WLAN_STATUS_INVALID_GROUP_CIPHER = 41,
+@@ -297,6 +383,18 @@ enum ieee80211_statuscode {
+ 	WLAN_STATUS_UNSUPP_RSN_VERSION = 44,
+ 	WLAN_STATUS_INVALID_RSN_IE_CAP = 45,
+ 	WLAN_STATUS_CIPHER_SUITE_REJECTED = 46,
++	/* 802.11e */
++	WLAN_STATUS_UNSPECIFIED_QOS = 32,
++	WLAN_STATUS_ASSOC_DENIED_NOBANDWIDTH = 33,
++	WLAN_STATUS_ASSOC_DENIED_LOWACK = 34,
++	WLAN_STATUS_ASSOC_DENIED_UNSUPP_QOS = 35,
++	WLAN_STATUS_REQUEST_DECLINED = 37,
++	WLAN_STATUS_INVALID_QOS_PARAM = 38,
++	WLAN_STATUS_CHANGE_TSPEC = 39,
++	WLAN_STATUS_WAIT_TS_DELAY = 47,
++	WLAN_STATUS_NO_DIRECT_LINK = 48,
++	WLAN_STATUS_STA_NOT_PRESENT = 49,
++	WLAN_STATUS_STA_NOT_QSTA = 50,
+ };
+ 
+ 
+@@ -327,6 +425,16 @@ enum ieee80211_reasoncode {
+ 	WLAN_REASON_INVALID_RSN_IE_CAP = 22,
+ 	WLAN_REASON_IEEE8021X_FAILED = 23,
+ 	WLAN_REASON_CIPHER_SUITE_REJECTED = 24,
++	/* 802.11e */
++	WLAN_REASON_DISASSOC_UNSPECIFIED_QOS = 32,
++	WLAN_REASON_DISASSOC_QAP_NO_BANDWIDTH = 33,
++	WLAN_REASON_DISASSOC_LOW_ACK = 34,
++	WLAN_REASON_DISASSOC_QAP_EXCEED_TXOP = 35,
++	WLAN_REASON_QSTA_LEAVE_QBSS = 36,
++	WLAN_REASON_QSTA_NOT_USE = 37,
++	WLAN_REASON_QSTA_REQUIRE_SETUP = 38,
++	WLAN_REASON_QSTA_TIMEOUT = 39,
++	WLAN_REASON_QSTA_CIPHER_NOT_SUPP = 45,
+ };
+ 
+ 
+@@ -339,6 +447,20 @@ enum ieee80211_category {
+ 	WLAN_CATEGORY_WMM = 17,
+ };
+ 
++/* QoS Action Code */
++enum ieee80211_qos_actioncode {
++	WLAN_ACTION_QOS_ADDTS_REQ = 0,
++	WLAN_ACTION_QOS_ADDTS_RESP = 1,
++	WLAN_ACTION_QOS_DELTS = 2,
++	WLAN_ACTION_QOS_SCHEDULE = 3,
++};
++
++/* DLS Action Code */
++enum ieee80211_dls_actioncode {
++	WLAN_ACTION_DLS_REQ = 0,
++	WLAN_ACTION_DLS_RESP = 1,
++	WLAN_ACTION_DLS_TEARDOWN = 2,
++};
+ 
+ /* BACK Action Code */
+ enum ieee80211_back_actioncode {
+@@ -362,6 +484,15 @@ enum ieee80211_eid {
+ 	WLAN_EID_HP_PARAMS = 8,
+ 	WLAN_EID_HP_TABLE = 9,
+ 	WLAN_EID_REQUEST = 10,
++	/* 802.11e */
++	WLAN_EID_QBSS_LOAD = 11,
++	WLAN_EID_EDCA_PARAM_SET = 12,
++	WLAN_EID_TSPEC = 13,
++	WLAN_EID_TCLAS = 14,
++	WLAN_EID_SCHEDULE = 15,
++	WLAN_EID_TS_DELAY = 43,
++	WLAN_EID_TCLAS_PROCESSING = 44,
++	WLAN_EID_QOS_CAPA = 46,
+ 	/* 802.11h */
+ 	WLAN_EID_PWR_CONSTRAINT = 32,
+ 	WLAN_EID_PWR_CAPABILITY = 33,
+@@ -400,4 +531,37 @@ enum ieee80211_eid {
+ 
+ #define WLAN_MAX_KEY_LEN		32
+ 
++enum ieee80211_tsinfo_direction {
++	WLAN_TSINFO_UPLINK = 0,
++	WLAN_TSINFO_DOWNLINK = 1,
++	WLAN_TSINFO_DIRECTLINK = 2,
++	WLAN_TSINFO_BIDIRECTIONAL = 3,
++};
++
++enum ieee80211_tsinfo_access {
++	WLAN_TSINFO_EDCA = 1,
++	WLAN_TSINFO_HCCA = 2,
++	WLAN_TSINFO_HEMM = 3,
++};
++
++enum ieee80211_tsinfo_psb {
++	WLAN_TSINFO_PSB_LEGACY = 0,
++	WLAN_TSINFO_PSB_APSD = 1,
++};
++
++
++/* WI-FI Alliance OUI Type and Subtype */
++enum wifi_oui_type {
++	WIFI_OUI_TYPE_WPA = 1,
++	WIFI_OUI_TYPE_WMM = 2,
++	WIFI_OUI_TYPE_WSC = 4,
++	WIFI_OUI_TYPE_PSD = 6,
++};
++
++enum wifi_oui_stype_wmm {
++	WIFI_OUI_STYPE_WMM_INFO = 0,
++	WIFI_OUI_STYPE_WMM_PARAM = 1,
++	WIFI_OUI_STYPE_WMM_TSPEC = 2,
++};
++
+ #endif /* IEEE80211_H */
