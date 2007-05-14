@@ -1,271 +1,366 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:49187 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754917AbXEKCrE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 22:47:04 -0400
-Subject: [PATCH 01/19] libertas: remove WPA_SUPPLICANT structure
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Thu, 10 May 2007 22:50:33 -0400
-Message-Id: <1178851833.8607.9.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from smtp.rutgers.edu ([128.6.72.243]:58250 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757696AbXENFmK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2007 01:42:10 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH v3 1/2] Add 93cx6 eeprom library
+To: John Linville <linville@tuxdriver.com>
+Date: Mon, 14 May 2007 01:38:52 -0400
+Message-Id: <200705140138.52596.flamingice@sourmilk.net>
+MIME-Version: 1.0
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Start to normalize bss_descriptor with ieee80211_network so we can
-eventually replace bss_descriptor more easily.
+From: Ivo van Doorn <ivdoorn@gmail.com>
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+This patch adds a library for reading from 93cx6 eeproms.
+
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
 ---
- drivers/net/wireless/libertas/scan.c |  115 +++++++++++++--------------------
- drivers/net/wireless/libertas/scan.h |    8 ++-
- 2 files changed, 50 insertions(+), 73 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
-index e187062..400558a 100644
---- a/drivers/net/wireless/libertas/scan.c
-+++ b/drivers/net/wireless/libertas/scan.c
-@@ -95,10 +95,9 @@ static int is_network_compatible(wlan_adapter * adapter, int index, int mode)
- 		if (adapter->secinfo.WEPstatus == wlan802_11WEPdisabled
- 		    && !adapter->secinfo.WPAenabled
- 		    && !adapter->secinfo.WPA2enabled
--		    && adapter->scantable[index].wpa_supplicant.wpa_ie[0] !=
--		    WPA_IE
--		    && adapter->scantable[index].wpa2_supplicant.wpa_ie[0] !=
--		    WPA2_IE && adapter->secinfo.Encryptionmode == CIPHER_NONE
-+		    && adapter->scantable[index].wpa_ie[0] != WPA_IE
-+		    && adapter->scantable[index].rsn_ie[0] != WPA2_IE
-+		    && adapter->secinfo.Encryptionmode == CIPHER_NONE
- 		    && !adapter->scantable[index].privacy) {
- 			/* no security */
- 			LEAVE();
-@@ -113,21 +112,17 @@ static int is_network_compatible(wlan_adapter * adapter, int index, int mode)
- 		} else if (adapter->secinfo.WEPstatus == wlan802_11WEPdisabled
- 			   && adapter->secinfo.WPAenabled
- 			   && !adapter->secinfo.WPA2enabled
--			   && (adapter->scantable[index].wpa_supplicant.
--			       wpa_ie[0]
--			       == WPA_IE)
-+			   && (adapter->scantable[index].wpa_ie[0] == WPA_IE)
- 			   /* privacy bit may NOT be set in some APs like LinkSys WRT54G
- 			      && adapter->scantable[index].privacy */
- 		    ) {
- 			/* WPA enabled */
--            lbs_pr_debug(1,
-+			lbs_pr_debug(1,
- 			       "is_network_compatible() WPA: index=%d wpa_ie=%#x "
- 			       "wpa2_ie=%#x WEP=%s WPA=%s WPA2=%s Encmode=%#x "
- 			       "privacy=%#x\n", index,
--			       adapter->scantable[index].wpa_supplicant.
--			       wpa_ie[0],
--			       adapter->scantable[index].wpa2_supplicant.
--			       wpa_ie[0],
-+			       adapter->scantable[index].wpa_ie[0],
-+			       adapter->scantable[index].rsn_ie[0],
- 			       (adapter->secinfo.WEPstatus ==
- 				wlan802_11WEPenabled) ? "e" : "d",
- 			       (adapter->secinfo.WPAenabled) ? "e" : "d",
-@@ -139,21 +134,17 @@ static int is_network_compatible(wlan_adapter * adapter, int index, int mode)
- 		} else if (adapter->secinfo.WEPstatus == wlan802_11WEPdisabled
- 			   && !adapter->secinfo.WPAenabled
- 			   && adapter->secinfo.WPA2enabled
--			   && (adapter->scantable[index].wpa2_supplicant.
--			       wpa_ie[0]
--			       == WPA2_IE)
-+			   && (adapter->scantable[index].rsn_ie[0] == WPA2_IE)
- 			   /* privacy bit may NOT be set in some APs like LinkSys WRT54G
- 			      && adapter->scantable[index].privacy */
- 		    ) {
- 			/* WPA2 enabled */
--            lbs_pr_debug(1,
-+			lbs_pr_debug(1,
- 			       "is_network_compatible() WPA2: index=%d wpa_ie=%#x "
- 			       "wpa2_ie=%#x WEP=%s WPA=%s WPA2=%s Encmode=%#x "
- 			       "privacy=%#x\n", index,
--			       adapter->scantable[index].wpa_supplicant.
--			       wpa_ie[0],
--			       adapter->scantable[index].wpa2_supplicant.
--			       wpa_ie[0],
-+			       adapter->scantable[index].wpa_ie[0],
-+			       adapter->scantable[index].rsn_ie[0],
- 			       (adapter->secinfo.WEPstatus ==
- 				wlan802_11WEPenabled) ? "e" : "d",
- 			       (adapter->secinfo.WPAenabled) ? "e" : "d",
-@@ -165,35 +156,30 @@ static int is_network_compatible(wlan_adapter * adapter, int index, int mode)
- 		} else if (adapter->secinfo.WEPstatus == wlan802_11WEPdisabled
- 			   && !adapter->secinfo.WPAenabled
- 			   && !adapter->secinfo.WPA2enabled
--			   && (adapter->scantable[index].wpa_supplicant.
--			       wpa_ie[0]
--			       != WPA_IE)
--			   && (adapter->scantable[index].wpa2_supplicant.
--			       wpa_ie[0]
--			       != WPA2_IE)
-+			   && (adapter->scantable[index].wpa_ie[0] != WPA_IE)
-+			   && (adapter->scantable[index].rsn_ie[0] != WPA2_IE)
- 			   && adapter->secinfo.Encryptionmode != CIPHER_NONE
- 			   && adapter->scantable[index].privacy) {
- 			/* dynamic WEP enabled */
--            lbs_pr_debug(1,
-+			lbs_pr_debug(1,
- 			       "is_network_compatible() dynamic WEP: index=%d "
- 			       "wpa_ie=%#x wpa2_ie=%#x Encmode=%#x privacy=%#x\n",
- 			       index,
--			       adapter->scantable[index].wpa_supplicant.
--			       wpa_ie[0],
--			       adapter->scantable[index].wpa2_supplicant.
--			       wpa_ie[0], adapter->secinfo.Encryptionmode,
-+			       adapter->scantable[index].wpa_ie[0],
-+			       adapter->scantable[index].rsn_ie[0],
-+			       adapter->secinfo.Encryptionmode,
- 			       adapter->scantable[index].privacy);
- 			LEAVE();
- 			return index;
- 		}
+ drivers/misc/Kconfig         |    6 +
+ drivers/misc/Makefile        |    1 
+ drivers/misc/eeprom_93cx6.c  |  226 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/eeprom_93cx6.h |   72 +++++++++++++
+ 4 files changed, 305 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+index a3c525b..607a180 100644
+--- a/drivers/misc/Kconfig
++++ b/drivers/misc/Kconfig
+@@ -178,4 +178,10 @@ config THINKPAD_ACPI_BAY
  
- 		/* security doesn't match */
--        lbs_pr_debug(1,
-+		lbs_pr_debug(1,
- 		       "is_network_compatible() FAILED: index=%d wpa_ie=%#x "
- 		       "wpa2_ie=%#x WEP=%s WPA=%s WPA2=%s Encmode=%#x privacy=%#x\n",
- 		       index,
--		       adapter->scantable[index].wpa_supplicant.wpa_ie[0],
--		       adapter->scantable[index].wpa2_supplicant.wpa_ie[0],
-+		       adapter->scantable[index].wpa_ie[0],
-+		       adapter->scantable[index].rsn_ie[0],
- 		       (adapter->secinfo.WEPstatus ==
- 			wlan802_11WEPenabled) ? "e" : "d",
- 		       (adapter->secinfo.WPAenabled) ? "e" : "d",
-@@ -924,8 +910,6 @@ static int InterpretBSSDescriptionWithIE(struct bss_descriptor * pBSSEntry,
- 	u8 founddatarateie;
- 	int bytesleftforcurrentbeacon;
+ 	  If you are not sure, say Y here.
  
--	struct WPA_SUPPLICANT *pwpa_supplicant;
--	struct WPA_SUPPLICANT *pwpa2_supplicant;
- 	struct IE_WPA *pIe;
- 	const u8 oui01[4] = { 0x00, 0x50, 0xf2, 0x01 };
- 
-@@ -962,9 +946,6 @@ static int InterpretBSSDescriptionWithIE(struct bss_descriptor * pBSSEntry,
- 
- 	bytesleftforcurrentbeacon = beaconsize;
- 
--	pwpa_supplicant = &pBSSEntry->wpa_supplicant;
--	pwpa2_supplicant = &pBSSEntry->wpa2_supplicant;
--
- 	memcpy(pBSSEntry->macaddress, pcurrentptr, ETH_ALEN);
- 	lbs_pr_debug(1, "InterpretIE: AP MAC Addr-%x:%x:%x:%x:%x:%x\n",
- 	       pBSSEntry->macaddress[0], pBSSEntry->macaddress[1],
-@@ -1160,27 +1141,27 @@ static int InterpretBSSDescriptionWithIE(struct bss_descriptor * pBSSEntry,
- #define IE_ID_LEN_FIELDS_BYTES 2
- 			pIe = (struct IE_WPA *)pcurrentptr;
- 
--			if (!memcmp(pIe->oui, oui01, sizeof(oui01))) {
--				pwpa_supplicant->wpa_ie_len
--				    = min_t(size_t, elemlen + IE_ID_LEN_FIELDS_BYTES,
--					  sizeof(pwpa_supplicant->wpa_ie));
--				memcpy(pwpa_supplicant->wpa_ie,
--				       pcurrentptr,
--				       pwpa_supplicant->wpa_ie_len);
--				lbs_dbg_hex("InterpretIE: Resp WPA_IE",
--					pwpa_supplicant->wpa_ie, elemlen);
--			}
-+			if (memcmp(pIe->oui, oui01, sizeof(oui01)))
-+				break;
++config EEPROM_93CX6
++	tristate "EEPROM 93CX6 support"
++	---help---
++	  This is a driver for the EEPROM chipsets 93c46 and 93c66.
++	  The driver supports the read command.
 +
-+			pBSSEntry->wpa_ie_len = min_t(size_t,
-+				elemlen + IE_ID_LEN_FIELDS_BYTES,
-+				sizeof(pBSSEntry->wpa_ie));
-+			memcpy(pBSSEntry->wpa_ie, pcurrentptr,
-+				pBSSEntry->wpa_ie_len);
-+			lbs_dbg_hex("InterpretIE: Resp WPA_IE",
-+				pBSSEntry->wpa_ie, elemlen);
- 			break;
- 		case WPA2_IE:
- 			pIe = (struct IE_WPA *)pcurrentptr;
--			pwpa2_supplicant->wpa_ie_len
--			    = min_t(size_t, elemlen + IE_ID_LEN_FIELDS_BYTES,
--				  sizeof(pwpa2_supplicant->wpa_ie));
--			memcpy(pwpa2_supplicant->wpa_ie,
--			       pcurrentptr, pwpa2_supplicant->wpa_ie_len);
--
-+			
-+			pBSSEntry->rsn_ie_len = min_t(size_t,
-+				elemlen + IE_ID_LEN_FIELDS_BYTES,
-+				sizeof(pBSSEntry->rsn_ie));
-+			memcpy(pBSSEntry->rsn_ie, pcurrentptr,
-+				pBSSEntry->rsn_ie_len);
- 			lbs_dbg_hex("InterpretIE: Resp WPA2_IE",
--				pwpa2_supplicant->wpa_ie, elemlen);
-+				pBSSEntry->rsn_ie, elemlen);
- 			break;
- 		case TIM:
- 			break;
-@@ -1745,30 +1726,24 @@ int libertas_get_scan(struct net_device *dev, struct iw_request_info *info,
- 		/* Add new value to event */
- 		current_val = current_ev + IW_EV_LCP_LEN;
- 
--		if (adapter->scantable[i].wpa2_supplicant.wpa_ie[0] == WPA2_IE) {
-+		if (adapter->scantable[i].rsn_ie[0] == WPA2_IE) {
- 			memset(&iwe, 0, sizeof(iwe));
- 			memset(buf, 0, sizeof(buf));
--			memcpy(buf, adapter->scantable[i].
--						wpa2_supplicant.wpa_ie,
--					adapter->scantable[i].wpa2_supplicant.
--						wpa_ie_len);
-+			memcpy(buf, adapter->scantable[i].rsn_ie,
-+					adapter->scantable[i].rsn_ie_len);
- 			iwe.cmd = IWEVGENIE;
--			iwe.u.data.length = adapter->scantable[i].
--					wpa2_supplicant.wpa_ie_len;
-+			iwe.u.data.length = adapter->scantable[i].rsn_ie_len;
- 			iwe.len = IW_EV_POINT_LEN + iwe.u.data.length;
- 			current_ev = iwe_stream_add_point(current_ev, end_buf,
- 					&iwe, buf);
- 		}
--		if (adapter->scantable[i].wpa_supplicant.wpa_ie[0] == WPA_IE) {
-+		if (adapter->scantable[i].wpa_ie[0] == WPA_IE) {
- 			memset(&iwe, 0, sizeof(iwe));
- 			memset(buf, 0, sizeof(buf));
--			memcpy(buf, adapter->scantable[i].
--						wpa_supplicant.wpa_ie,
--					adapter->scantable[i].wpa_supplicant.
--						wpa_ie_len);
-+			memcpy(buf, adapter->scantable[i].wpa_ie,
-+					adapter->scantable[i].wpa_ie_len);
- 			iwe.cmd = IWEVGENIE;
--			iwe.u.data.length = adapter->scantable[i].
--					wpa_supplicant.wpa_ie_len;
-+			iwe.u.data.length = adapter->scantable[i].wpa_ie_len;
- 			iwe.len = IW_EV_POINT_LEN + iwe.u.data.length;
- 			current_ev = iwe_stream_add_point(current_ev, end_buf,
- 					&iwe, buf);
-diff --git a/drivers/net/wireless/libertas/scan.h b/drivers/net/wireless/libertas/scan.h
-index d93aa7f..1a8756e 100644
---- a/drivers/net/wireless/libertas/scan.h
-+++ b/drivers/net/wireless/libertas/scan.h
-@@ -10,6 +10,7 @@
- #ifndef _WLAN_SCAN_H
- #define _WLAN_SCAN_H
- 
-+#include <net/ieee80211.h>
- #include "hostcmd.h"
- 
- /**
-@@ -170,9 +171,10 @@ struct bss_descriptor {
- 
- 	struct ieeetypes_countryinfofullset countryinfo;
- 
--	struct WPA_SUPPLICANT wpa_supplicant;
--	struct WPA_SUPPLICANT wpa2_supplicant;
--
-+	u8 wpa_ie[MAX_WPA_IE_LEN];
-+	size_t wpa_ie_len;
-+	u8 rsn_ie[MAX_WPA_IE_LEN];
-+	size_t rsn_ie_len;
- };
- 
- extern int libertas_SSID_cmp(struct WLAN_802_11_SSID *ssid1,
-
+ endmenu
+diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
+index e325164..42b34a9 100644
+--- a/drivers/misc/Makefile
++++ b/drivers/misc/Makefile
+@@ -13,3 +13,4 @@ obj-$(CONFIG_TIFM_7XX1)       	+= tifm_7
+ obj-$(CONFIG_SGI_IOC4)		+= ioc4.o
+ obj-$(CONFIG_SONY_LAPTOP)	+= sony-laptop.o
+ obj-$(CONFIG_THINKPAD_ACPI)	+= thinkpad_acpi.o
++obj-$(CONFIG_EEPROM_93CX6)	+= eeprom_93cx6.o
+diff --git a/drivers/misc/eeprom_93cx6.c b/drivers/misc/eeprom_93cx6.c
+new file mode 100644
+index 0000000..2fd9cfe
+--- /dev/null
++++ b/drivers/misc/eeprom_93cx6.c
+@@ -0,0 +1,226 @@
++/*
++	Copyright (C) 2004 - 2006 rt2x00 SourceForge Project
++	<http://rt2x00.serialmonkey.com>
++
++	This program is free software; you can redistribute it and/or modify
++	it under the terms of the GNU General Public License as published by
++	the Free Software Foundation; either version 2 of the License, or
++	(at your option) any later version.
++
++	This program is distributed in the hope that it will be useful,
++	but WITHOUT ANY WARRANTY; without even the implied warranty of
++	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++	GNU General Public License for more details.
++
++	You should have received a copy of the GNU General Public License
++	along with this program; if not, write to the
++	Free Software Foundation, Inc.,
++	59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++/*
++	Module: eeprom_93cx6
++	Abstract: EEPROM reader routines for 93cx6 chipsets.
++	Supported chipsets: 93c46 & 93c66.
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/version.h>
++#include <linux/delay.h>
++#include <linux/eeprom_93cx6.h>
++
++MODULE_AUTHOR("http://rt2x00.serialmonkey.com");
++MODULE_VERSION("1.0");
++MODULE_DESCRIPTION("EEPROM 93cx6 chip driver");
++MODULE_LICENSE("GPL");
++
++static inline void eeprom_93cx6_pulse_high(struct eeprom_93cx6 *eeprom)
++{
++	eeprom->reg_data_clock = 1;
++	eeprom->register_write(eeprom);
++}
++
++static inline void eeprom_93cx6_pulse_low(struct eeprom_93cx6 *eeprom)
++{
++	eeprom->reg_data_clock = 0;
++	eeprom->register_write(eeprom);
++}
++
++static void eeprom_93cx6_startup(struct eeprom_93cx6 *eeprom)
++{
++	/*
++	 * Clear all flags, and enable chip select.
++	 */
++	eeprom->register_read(eeprom);
++	eeprom->reg_data_in = 0;
++	eeprom->reg_data_out = 0;
++	eeprom->reg_data_clock = 0;
++	eeprom->reg_chip_select = 1;
++	eeprom->register_write(eeprom);
++
++	/*
++	 * kick a pulse.
++	 */
++	eeprom_93cx6_pulse_high(eeprom);
++	eeprom_93cx6_pulse_low(eeprom);
++}
++
++static void eeprom_93cx6_cleanup(struct eeprom_93cx6 *eeprom)
++{
++	/*
++	 * Clear chip_select and data_in flags.
++	 */
++	eeprom->register_read(eeprom);
++	eeprom->reg_data_in = 0;
++	eeprom->reg_chip_select = 0;
++	eeprom->register_write(eeprom);
++
++	/*
++	 * kick a pulse.
++	 */
++	eeprom_93cx6_pulse_high(eeprom);
++	eeprom_93cx6_pulse_low(eeprom);
++}
++
++static void eeprom_93cx6_write_bits(struct eeprom_93cx6 *eeprom,
++	const u16 data, const u16 count)
++{
++	unsigned int i;
++
++	eeprom->register_read(eeprom);
++
++	/*
++	 * Clear data flags.
++	 */
++	eeprom->reg_data_in = 0;
++	eeprom->reg_data_out = 0;
++
++	/*
++	 * Start writing all bits.
++	 */
++	for (i = count; i > 0; i--) {
++		/*
++		 * Check if this bit needs to be set.
++		 */
++		eeprom->reg_data_in = !!(data & (1 << (i - 1)));
++
++		/*
++		 * Write the bit to the eeprom register.
++		 */
++		eeprom->register_write(eeprom);
++
++		/*
++		 * Kick a pulse.
++		 */
++		eeprom_93cx6_pulse_high(eeprom);
++		eeprom_93cx6_pulse_low(eeprom);
++	}
++
++	eeprom->reg_data_in = 0;
++	eeprom->register_write(eeprom);
++}
++
++static void eeprom_93cx6_read_bits(struct eeprom_93cx6 *eeprom,
++	u16 *data, const u16 count)
++{
++	unsigned int i;
++	u16 buf = 0;
++
++	eeprom->register_read(eeprom);
++
++	/*
++	 * Clear data flags.
++	 */
++	eeprom->reg_data_in = 0;
++	eeprom->reg_data_out = 0;
++
++	/*
++	 * Start reading all bits.
++	 */
++	for (i = count; i > 0; i--) {
++		eeprom_93cx6_pulse_high(eeprom);
++
++		eeprom->register_read(eeprom);
++
++		/*
++		 * Clear data_in flag.
++		 */
++		eeprom->reg_data_in = 0;
++
++		/*
++		 * Read if the bit has been set.
++		 */
++		if (eeprom->reg_data_out)
++			buf |= (1 << (i - 1));
++
++		eeprom_93cx6_pulse_low(eeprom);
++	}
++
++	*data = buf;
++}
++
++/**
++ * eeprom_93cx6_read - Read multiple words from eeprom
++ * @eeprom: Pointer to eeprom structure
++ * @word: Word index from where we should start reading
++ * @data: target pointer where the information will have to be stored
++ *
++ * This function will read the eeprom data as host-endian word
++ * into the given data pointer.
++ */
++void eeprom_93cx6_read(struct eeprom_93cx6 *eeprom, const u8 word,
++	u16 *data)
++{
++	u16 command;
++
++	/*
++	 * Initialize the eeprom register
++	 */
++	eeprom_93cx6_startup(eeprom);
++
++	/*
++	 * Select the read opcode and the word to be read.
++	 */
++	command = (PCI_EEPROM_READ_OPCODE << eeprom->width) | word;
++	eeprom_93cx6_write_bits(eeprom, command,
++		PCI_EEPROM_WIDTH_OPCODE + eeprom->width);
++
++	/*
++	 * Read the requested 16 bits.
++	 */
++	eeprom_93cx6_read_bits(eeprom, data, 16);
++
++	/*
++	 * Cleanup eeprom register.
++	 */
++	eeprom_93cx6_cleanup(eeprom);
++}
++EXPORT_SYMBOL_GPL(eeprom_93cx6_read);
++
++/**
++ * eeprom_93cx6_multiread - Read multiple words from eeprom
++ * @eeprom: Pointer to eeprom structure
++ * @word: Word index from where we should start reading
++ * @data: target pointer where the information will have to be stored
++ * @words: Number of words that should be read.
++ *
++ * This function will read all requested words from the eeprom,
++ * this is done by calling eeprom_93cx6_read() multiple times.
++ * But with the additional change that while the eeprom_93cx6_read
++ * will return host ordered bytes, this method will return little
++ * endian words.
++ */
++void eeprom_93cx6_multiread(struct eeprom_93cx6 *eeprom, const u8 word,
++	__le16 *data, const u16 words)
++{
++	unsigned int i;
++	u16 tmp;
++
++	for (i = 0; i < words; i++) {
++		tmp = 0;
++		eeprom_93cx6_read(eeprom, word + i, &tmp);
++		data[i] = cpu_to_le16(tmp);
++	}
++}
++EXPORT_SYMBOL_GPL(eeprom_93cx6_multiread);
+diff --git a/include/linux/eeprom_93cx6.h b/include/linux/eeprom_93cx6.h
+new file mode 100644
+index 0000000..d774b77
+--- /dev/null
++++ b/include/linux/eeprom_93cx6.h
+@@ -0,0 +1,72 @@
++/*
++	Copyright (C) 2004 - 2006 rt2x00 SourceForge Project
++	<http://rt2x00.serialmonkey.com>
++
++	This program is free software; you can redistribute it and/or modify
++	it under the terms of the GNU General Public License as published by
++	the Free Software Foundation; either version 2 of the License, or
++	(at your option) any later version.
++
++	This program is distributed in the hope that it will be useful,
++	but WITHOUT ANY WARRANTY; without even the implied warranty of
++	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++	GNU General Public License for more details.
++
++	You should have received a copy of the GNU General Public License
++	along with this program; if not, write to the
++	Free Software Foundation, Inc.,
++	59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++/*
++	Module: eeprom_93cx6
++	Abstract: EEPROM reader datastructures for 93cx6 chipsets.
++	Supported chipsets: 93c46 & 93c66.
++ */
++
++/*
++ * EEPROM operation defines.
++ */
++#define PCI_EEPROM_WIDTH_93C46	6
++#define PCI_EEPROM_WIDTH_93C66	8
++#define PCI_EEPROM_WIDTH_OPCODE	3
++#define PCI_EEPROM_WRITE_OPCODE	0x05
++#define PCI_EEPROM_READ_OPCODE	0x06
++#define PCI_EEPROM_EWDS_OPCODE	0x10
++#define PCI_EEPROM_EWEN_OPCODE	0x13
++
++/**
++ * struct eeprom_93cx6 - control structure for setting the commands
++ * for reading the eeprom data.
++ * @data: private pointer for the driver.
++ * @register_read(struct eeprom_93cx6 *eeprom): handler to
++ * read the eeprom register, this function should set all reg_* fields.
++ * @register_write(struct eeprom_93cx6 *eeprom): handler to
++ * write to the eeprom register by using all reg_* fields.
++ * @width: eeprom width, should be one of the PCI_EEPROM_WIDTH_* defines
++ * @reg_data_in: register field to indicate data input
++ * @reg_data_out: register field to indicate data output
++ * @reg_data_clock: register field to set the data clock
++ * @reg_chip_select: register field to set the chip select
++ *
++ * This structure is used for the communication between the driver
++ * and the eeprom_93cx6 handlers for reading the eeprom.
++ */
++struct eeprom_93cx6 {
++	void *data;
++
++	void (*register_read)(struct eeprom_93cx6 *eeprom);
++	void (*register_write)(struct eeprom_93cx6 *eeprom);
++
++	int width;
++
++	char reg_data_in;
++	char reg_data_out;
++	char reg_data_clock;
++	char reg_chip_select;
++};
++
++extern void eeprom_93cx6_read(struct eeprom_93cx6 *eeprom,
++	const u8 word, u16 *data);
++extern void eeprom_93cx6_multiread(struct eeprom_93cx6 *eeprom,
++	const u8 word, __le16 *data, const u16 words);
 
