@@ -1,40 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4179 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965540AbXEGQDU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2007 12:03:20 -0400
-Date: Mon, 7 May 2007 11:34:50 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ben Dooks <ben-linux@fluff.org>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/2] Add 93cx6 eeprom library
-Message-ID: <20070507153450.GC5125@tuxdriver.com>
-References: <200705070346.04982.flamingice@sourmilk.net> <20070507142715.GB32546@fluff.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070507142715.GB32546@fluff.org.uk>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49615
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755799AbXENRrl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2007 13:47:41 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH] mac80211: Allow sleeping in set_key op
+Date: Mon, 14 May 2007 19:47:17 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200705062037.35037.mb@bu3sch.de> <200705072244.23736.mb@bu3sch.de> <20070514193715.4fffabda@griffin.suse.cz>
+In-Reply-To: <20070514193715.4fffabda@griffin.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200705141947.17927.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 07, 2007 at 02:27:15PM +0000, Ben Dooks wrote:
-> On Mon, May 07, 2007 at 03:46:04AM -0400, Michael Wu wrote:
-> > From: Ivo van Doorn <ivdoorn@gmail.com>
+On Monday 14 May 2007 19:37:15 Jiri Benc wrote:
+> On Mon, 7 May 2007 22:44:23 +0200, Michael Buesch wrote:
+> > On Monday 07 May 2007 18:52:24 Jiri Benc wrote:
+> > > There is a race here. You already removed the sta from sta_hash list
+> > > and you're not protected by any lock. Thus, it is possible to add a new
+> > > station with the same address before finish_sta_info_free is called.
+> > > When this happens, you call the set_key handler for the new key and
+> > > after that you call it again with DISABLE_KEY.
+> > > 
+> > > It's not easy to get this right. I remember also problems with
+> > > dereferencing already freed key when I thought about possible ways to
+> > > solve exactly this problem.
 > > 
-> > This patch adds a library for reading from and writing to 93cx6 eeproms.
+> > I'm not sure this race exists.
+> > You assume that when a new key is added with the same mac as before
+> > it overrides the old key.
 > 
-> This looks remarkably like an SPI device, why not use the
-> spi framework to drive this?
+> Yes.
 
-This isn't intended to be a user-visible device.  Rather, it
-is a support library for internal use by drivers to read hardware
-configuration info, etc.  Given that, do we really need something as
-heavy as implementing an SPI master, etc?
+I think that's an invalid assumption.
+The key is per-bss and not per bssid-address; although that is
+mostly the same, except for such cornercases like this race.
 
-John
+> > I think that's a bug in the driver then.
+> > IMO the driver _must_ keep track of used key "slots" and don't
+> > re-allocate them for new keys until disable-key is called.
+> 
+> How the hardware will act if you supply two different keys for the same
+> MAC address? And later, how do you recognize which of these two keys is
+> being disabled?
+
+That's what hw_key_idx is for.
+
+> > And that's exactly what bcm43xx does.
+> > 
+> > IMO it's a bug in the driver, when it overrides a key that's not
+> > DISABLEd.
+> > 
+> > Short: I don't think there is a race, and if, then it's a driver bug.
+> 
+> I must admit I don't know how exactly keys are handled in all possible
+> hardware. So I just want to be sure and keep exact serialization here.
+> If there is a consensus that serialization is not needed here, well,
+> it's easier then.
+> 
+> Do you know how other drivers work regarding this?
+
+I'm sorry, no.
+
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
