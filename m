@@ -1,71 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:35623 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S967187AbXEGXSA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2007 19:18:00 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH v2] Add rtl8187 wireless driver
-Date: Mon, 7 May 2007 19:17:20 -0400
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Andrea Merello <andrea.merello@gmail.com>
-References: <200705071022.11711.flamingice@sourmilk.net> <463F44E6.5030705@garzik.org>
-In-Reply-To: <463F44E6.5030705@garzik.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2189907.2cFA0iq48g";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705071917.25414.flamingice@sourmilk.net>
+Received: from styx.suse.cz ([82.119.242.94]:47522 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754308AbXENRFs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2007 13:05:48 -0400
+Date: Mon, 14 May 2007 19:05:45 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V5] mac80211: Add support for SIOCGIWRATE ioctl to  provide rate information
+Message-ID: <20070514190545.39ba42e7@griffin.suse.cz>
+In-Reply-To: <46436a83.ryrsLlZyRAF/iwC6%Larry.Finger@lwfinger.net>
+References: <46436a83.ryrsLlZyRAF/iwC6%Larry.Finger@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2189907.2cFA0iq48g
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Thu, 10 May 2007 13:54:59 -0500, Larry Finger wrote:
+> +	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> +	if (sdata->type == IEEE80211_IF_TYPE_STA ||
+> +	    sdata->type == IEEE80211_IF_TYPE_IBSS)
+> +		sta = sta_info_get(local, sdata->u.sta.bssid);
 
-On Monday 07 May 2007 11:25, Jeff Garzik wrote:
-> I am a bit skeptical that multiple files are needed.  It seems like
-> drivers/net/wireless/rtl818x.c would be a better path, a la tg3.c.
->
-The radio tuning stuff could be stuffed into rtl8187_dev.c, but I like to k=
-eep=20
-it separate since rtl8187_rtl8225.c tends to contain all the radio tuning=20
-black magic that no one really understands except for the engineers at=20
-Realtek, whereas rtl8187_dev.c is mostly straightforward. rtl8187 can also=
-=20
-(in theory) use another radio chip (rtl8255). The two headers - rtl818x.h a=
-nd=20
-rtl8187.h cannot be merged because the definitions in rtl818x.h are shared=
-=20
-between the usb and pci drivers.
+Quoting Michael's comment about V3 version of your patch:
 
-I rather not combine any files, though I don't mind collapsing the driver=20
-another level. However, I think other driver authors much prefer having the=
-ir=20
-own directory, and I'd like to keep the drivers consistently in their own=20
-directory or all together in drivers/net/wireless.
+> Also, this function is safe in adhoc mode.. but it most likely won't do
+> anything useful since all the sta entries have different addresses and
+> it is likely that none of them are the same as the one in
+> sdata->u.sta.bssid.
 
-=2DMichael Wu
+Do you have some reason for implementing this function for IBSS mode?
+If not, could you return -EOPNOTSUPP in IBSS mode?
 
---nextPart2189907.2cFA0iq48g
-Content-Type: application/pgp-signature
+Thanks,
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+ Jiri
 
-iD8DBQBGP7OFT3Oqt9AH4aERAmm+AJ9q/zNHoJLkOw2AUfa7Ul6q/8gqSwCgv1mw
-KoabnWvKEJnRtWzZ+5037Ec=
-=Heln
------END PGP SIGNATURE-----
-
---nextPart2189907.2cFA0iq48g--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Jiri Benc
+SUSE Labs
