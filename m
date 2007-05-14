@@ -1,104 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from daemonizer.de ([87.230.16.230]:39808 "EHLO daemonizer.de"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3238 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751490AbXE1U4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2007 16:56:44 -0400
-From: Maximilian Engelhardt <maxi@daemonizer.de>
-To: Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: b44: regression in 2.6.22 (resend)
-Date: Mon, 28 May 2007 22:55:46 +0200
-Cc: Michael Buesch <mb@bu3sch.de>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Hemminger <shemminger@linux-foundation.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-References: <20070525172431.60affaca@freepuppy> <200705281944.05030.maxi@daemonizer.de> <1180380230.3657.3.camel@chaos>
-In-Reply-To: <1180380230.3657.3.camel@chaos>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1755595.g61BcoufYt";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705282255.56490.maxi@daemonizer.de>
+	id S1757294AbXENSch (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2007 14:32:37 -0400
+Date: Mon, 14 May 2007 14:13:23 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 1/2] Add 93cx6 eeprom library
+Message-ID: <20070514181323.GB6999@tuxdriver.com>
+References: <200705140138.52596.flamingice@sourmilk.net> <a32f33a40705132349h367ba18aoa046d5583329ead@mail.gmail.com> <200705141056.01199.flamingice@sourmilk.net> <200705141700.21900.IvDoorn@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200705141700.21900.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1755595.g61BcoufYt
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-
-On Monday 28 May 2007, Thomas Gleixner wrote:
-> On Mon, 2007-05-28 at 19:44 +0200, Maximilian Engelhardt wrote:
-> > > Can you please keep CONFIG_HIGH_RES_TIMERS and CONFIG_NOHZ and try the
-> > > following combinations on the kernel command line:
+On Mon, May 14, 2007 at 05:00:21PM +0200, Ivo van Doorn wrote:
+> On Monday 14 May 2007 16:55, Michael Wu wrote:
+> > On Monday 14 May 2007 02:49, Ivo Van Doorn wrote:
+> > > For the record: I am still not happy with the removal of the udelay() from
+> > > the pulse methods as they were indicated by the original Ralink code.
+> > > But since I cannot test the effect on Ralink eeprom reading at this time,
+> > > and I could otherwise just add it to the register_write handler if
+> > > required, I am signing this off anyway.
 > > >
-> > > 1) highres=3Doff nohz=3Doff (should be the same as your working confi=
-g)
-> > > 2) highres=3Doff
-> > > 3) nohz=3Doff
-> >
-> > I tested this with my 2.6.22-rc3 kernel, here are the results:
-> >
-> > without any special boot parameters: problem does appear
-> > highres=3Doff nohz=3Doff: problem does not appear
-> > highres=3Doff: problem does not appear
-> > nohz=3Doff: problem does appear
->
-> Is there any other strange behavior of the high res enabled kernel than
-> the b44 problem ?
+> > The udelay is necessary to set a limit on how fast the eeprom is operated.. 
+> > but not on all hardware, apparently. adm8211 just uses a read from the eeprom 
+> > register to perform the delay.
+> 
+> Ok, then I'll update rt2x00 to perform the delay during register_write as well. :)
 
-I didn't notice anything.
+Actually, see the end of the thread from the previous 93cx6 patch
+Michael posted on Friday.  I think these delays are actually alright,
+but they could use a comment.  How about the patch below (applied on
+top of the previous version)?
 
->
-> > I additionally built my 2.6.22-rc2-mm1 kernel without High Resolution
-> > Timer, but the high ping problem is still there.
->
-> Hmm, that's mysterious. Wild guess is that highres exposes the hidden
-> "feature" in a different way than rc2-mm1 does.
+John
 
-I think the bug in 2.6.21/22-rc3 is a different one that the one in=20
-2.6.22-rc2-mm1, but that's also only a wild guess :)
+P.S.  No need to repost any 93cx6 patches, I have them.
+---
 
-I'll explain this a bit:
-In 2.6.21/22-rc3 is the same b44 driver that has been in the stock kernels =
-for=20
-some time. With this driver and High Resolution Timer turned on I get=20
-problems using iperf. The problems are that the systems becomes really slow=
-=20
-and unresponsive.  Michael Buesch thought this could be an IRQ storm which=
-=20
-sounds logical to me. This bug did never happen to me before I startet the=
-=20
-iperf test.
 
-The other issue happens only with 2.6.22-rc2-mm1 which includes the b44 ssb=
-=20
-spilt. It's independed wether High Resolution Timer is turned on or off I=20
-always get very varying and high ping times. The iperf-test doesn't show th=
-e=20
-problems from 2.6.21/22-rc3.
+[PATCH] eeprom_93cx6: add comment explaining clocking delays
 
-Maxi
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
---nextPart1755595.g61BcoufYt
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQBGW0HcOimwv528XGERAjPfAJ9EUNLUXjxAFnid3vcXhWQj8dTVnQCeJIQ9
-uISFyuLmxhfgJnmcR71RtAI=
-=exhi
------END PGP SIGNATURE-----
-
---nextPart1755595.g61BcoufYt--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+diff --git a/drivers/misc/eeprom_93cx6.c b/drivers/misc/eeprom_93cx6.c
+index bfcb434..1f615ac 100644
+--- a/drivers/misc/eeprom_93cx6.c
++++ b/drivers/misc/eeprom_93cx6.c
+@@ -39,6 +39,8 @@ static inline void eeprom_93cx6_pulse_high(struct eeprom_93cx6 *eeprom)
+ {
+ 	eeprom->reg_data_clock = 1;
+ 	eeprom->register_write(eeprom);
++
++	/* honor T_ckh hold requirements from datasheet */
+ 	udelay(1);
+ }
+ 
+@@ -46,6 +48,8 @@ static inline void eeprom_93cx6_pulse_low(struct eeprom_93cx6 *eeprom)
+ {
+ 	eeprom->reg_data_clock = 0;
+ 	eeprom->register_write(eeprom);
++
++	/* honor T_ckl hold requirements from datasheet */
+ 	udelay(1);
+ }
+ 
+-- 
+John W. Linville
+linville@tuxdriver.com
