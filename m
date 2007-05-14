@@ -1,50 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4549 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754347AbXEFCdR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 May 2007 22:33:17 -0400
-Date: Sat, 5 May 2007 22:00:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+Received: from styx.suse.cz ([82.119.242.94]:48411 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754985AbXENRhQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2007 13:37:16 -0400
+Date: Mon, 14 May 2007 19:37:15 +0200
+From: Jiri Benc <jbenc@suse.cz>
 To: Michael Buesch <mb@bu3sch.de>
-Cc: Jeff Garzik <jeff@garzik.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Gary Zambrano <zambrano@broadcom.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, ralf@linux-mips.org
-Subject: Re: Merging SSB upstream
-Message-ID: <20070506020051.GA30917@tuxdriver.com>
-References: <200705060303.17594.mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Allow sleeping in set_key op
+Message-ID: <20070514193715.4fffabda@griffin.suse.cz>
+In-Reply-To: <200705072244.23736.mb@bu3sch.de>
+References: <200705062037.35037.mb@bu3sch.de>
+	<20070507185224.45f98d56@midnight.suse.cz>
+	<200705072244.23736.mb@bu3sch.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200705060303.17594.mb@bu3sch.de>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 06, 2007 at 03:03:17AM +0200, Michael Buesch wrote:
-> So, now that mac80211 is merged upstream, I think it's
-> time to merge SSB and the b44-ssb port upstream.
-> Note that bcm43xx-mac80211 is _not_ ready for upstream, yet.
- 
-ACK, unfortunately.
+On Mon, 7 May 2007 22:44:23 +0200, Michael Buesch wrote:
+> On Monday 07 May 2007 18:52:24 Jiri Benc wrote:
+> > There is a race here. You already removed the sta from sta_hash list
+> > and you're not protected by any lock. Thus, it is possible to add a new
+> > station with the same address before finish_sta_info_free is called.
+> > When this happens, you call the set_key handler for the new key and
+> > after that you call it again with DISABLE_KEY.
+> > 
+> > It's not easy to get this right. I remember also problems with
+> > dereferencing already freed key when I thought about possible ways to
+> > solve exactly this problem.
+> 
+> I'm not sure this race exists.
+> You assume that when a new key is added with the same mac as before
+> it overrides the old key.
 
-> What do you think? I'd like to merge ssb as-is, although
-> the embedded-device parts are not quite finished, yet.
-> But they don't interfere with the non-embedded parts used
-> by b44 and the bcm43xx PCI cards.
+Yes.
 
-How much testing have you (and others) done w/ b44?  I had to remove
-the b44 ssb changes from fedora because a) users reported problems;
-and b) I was more worried about wireless than b44+ssb. (sorry!)
+> I think that's a bug in the driver then.
+> IMO the driver _must_ keep track of used key "slots" and don't
+> re-allocate them for new keys until disable-key is called.
 
-So, has anyone been using b44 in -mm?
+How the hardware will act if you supply two different keys for the same
+MAC address? And later, how do you recognize which of these two keys is
+being disabled?
 
-> So we _could_ remove the ssb-mips code, but I don't like to
-> do that for better maintainability. It doesn't hurt anyone IMO.
+> And that's exactly what bcm43xx does.
+> 
+> IMO it's a bug in the driver, when it overrides a key that's not
+> DISABLEd.
+> 
+> Short: I don't think there is a race, and if, then it's a driver bug.
 
-I guess I don't see a problem w/ merging the mips part, as long as the
-b44 part has been thoroughly tested.  I wonder if Ralf has an opinion?
+I must admit I don't know how exactly keys are handled in all possible
+hardware. So I just want to be sure and keep exact serialization here.
+If there is a consensus that serialization is not needed here, well,
+it's easier then.
 
-John
+Do you know how other drivers work regarding this?
+
+Thanks,
+
+ Jiri
+
 -- 
-John W. Linville
-linville@tuxdriver.com
+Jiri Benc
+SUSE Labs
