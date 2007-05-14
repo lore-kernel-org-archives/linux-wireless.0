@@ -1,32 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:60657 "EHLO
-	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759651AbXEZRKB (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.170]:44685 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754644AbXENPCB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 13:10:01 -0400
-Date: Sat, 26 May 2007 12:09:34 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] bcm43xx-mac80211: Fix for tx_bias equal to 0xFF
-Message-ID: <465869ce.8wcEX9q9ZmHxX2m3%Larry.Finger@lwfinger.net>
+	Mon, 14 May 2007 11:02:01 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so1358713uga
+        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2007 08:01:53 -0700 (PDT)
+To: Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [PATCH v3 1/2] Add 93cx6 eeprom library
+Date: Mon, 14 May 2007 17:00:21 +0200
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200705140138.52596.flamingice@sourmilk.net> <a32f33a40705132349h367ba18aoa046d5583329ead@mail.gmail.com> <200705141056.01199.flamingice@sourmilk.net>
+In-Reply-To: <200705141056.01199.flamingice@sourmilk.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200705141700.21900.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Index: wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
-===================================================================
---- wireless-mb.orig/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
-+++ wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_phy.c
-@@ -4122,6 +4122,10 @@ void bcm43xx_radio_set_txpower_bg(struct
- 	tx_magn = _tx_magn;
- 	phy->bbatt = baseband_attenuation;
- 	phy->rfatt = radio_attenuation;
-+	if (tx_bias == 0xFF) {
-+		bcm43xx_lo_g_measure(dev);
-+		tx_bias = phy->lo_control->tx_bias;
-+	}
- 
- 	/* Set Baseband Attenuation on device. */
- 	bcm43xx_phy_set_baseband_attenuation(dev, baseband_attenuation);
+On Monday 14 May 2007 16:55, Michael Wu wrote:
+> On Monday 14 May 2007 02:49, Ivo Van Doorn wrote:
+> > For the record: I am still not happy with the removal of the udelay() from
+> > the pulse methods as they were indicated by the original Ralink code.
+> > But since I cannot test the effect on Ralink eeprom reading at this time,
+> > and I could otherwise just add it to the register_write handler if
+> > required, I am signing this off anyway.
+> >
+> The udelay is necessary to set a limit on how fast the eeprom is operated.. 
+> but not on all hardware, apparently. adm8211 just uses a read from the eeprom 
+> register to perform the delay.
+
+Ok, then I'll update rt2x00 to perform the delay during register_write as well. :)
+
+Ivo
