@@ -1,76 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:14501 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754568AbXEJERb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 00:17:31 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH V3] mac80211: Add support for SIOCGIWRATE ioctl to provide rate information
-Date: Thu, 10 May 2007 00:16:41 -0400
-Cc: Jiri Benc <jbenc@suse.cz>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-References: <463a8a92.jFmmjY4cDnfJeisJ%Larry.Finger@lwfinger.net>
-In-Reply-To: <463a8a92.jFmmjY4cDnfJeisJ%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart7511773.9UE4mGkFBZ";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705100016.45876.flamingice@sourmilk.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2398 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757272AbXEORds (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 May 2007 13:33:48 -0400
+Date: Tue, 15 May 2007 13:12:02 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David LAMPARTER <lists@diac24.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: Panic in ieee_80211_ibss_add_sta when trying to join ad-hoc network (rt2500pci)
+Message-ID: <20070515171202.GD15105@tuxdriver.com>
+References: <20070515152842.GA26481@charon.n2.diac24.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070515152842.GA26481@charon.n2.diac24.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart7511773.9UE4mGkFBZ
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Tue, May 15, 2007 at 05:28:42PM +0200, David LAMPARTER wrote:
 
-On Thursday 03 May 2007 21:21, Larry Finger wrote:
-> +static int ieee80211_ioctl_giwrate(struct net_device *dev,
-> +				  struct iw_request_info *info,
-> +				  struct iw_param *rate, char *extra)
-> +{
-> +	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
-> +	struct sta_info * sta;
-> +	struct ieee80211_sub_if_data * sdata;
-Eliminate the spaces between * and the variable name.
+> BUG: unable to handle kernel NULL pointer derference at virtual address 00000218
+> [...]
+> EIP is at ieee80211_ibss_add_sta+0xae/0x130
+> [...]
+> EIP: [<c05773fe>] ieee_80211_ibss_add_sta+0xae/0x130 SS:ESP 0068:f641dc38
+> Kernel panic - not syncing: Fatal exception in interrupt
+> 
+> The bug seems to be triggered as soon as the stack tries to
+> join my router's ad-hoc; it happen either directly when
+> doing "ip l s wlan0 up" as well as when doing
+> "iwconfig wlan0 essid equinox" (when it did not immediately
+> find the network).
 
-> +
-> +	sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-> +	if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA ||
-> +	    sdata->type =3D=3D IEEE80211_IF_TYPE_IBSS)
-> +		sta =3D sta_info_get(local, sdata->u.sta.bssid);
-> +	else
-> +		return -EOPNOTSUPP;
-> +	if (!sta)
-> +		return -ENODEV;
-> +	rate->value =3D local->oper_hw_mode->rates[sta->txrate].rate * 100000;
-The index from sta->txrate needs to be checked to make sure it is less than=
-=20
-mode->num_rates.
+Probably because of this:
 
-Also, this function is safe in adhoc mode.. but it most likely won't do=20
-anything useful since all the sta entries have different addresses and it i=
-s=20
-likely that none of them are the same as the one in sdata->u.sta.bssid.
+	struct ieee80211_sub_if_data *sdata = NULL;
+...
+	sta->supp_rates = sdata->u.sta.supp_rates_bits;
 
-=2DMichael Wu
+Patch below...does this work better?  Looks like upstream needs
+it too...
 
---nextPart7511773.9UE4mGkFBZ
-Content-Type: application/pgp-signature
+John
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+---
+Avoid sdata null pointer dereference in ieee80211_ibss_add_sta.
 
-iD8DBQBGQpytT3Oqt9AH4aERArU+AJ0XRb/fJI+B0VhG0BTEmI23XLmc9wCfRyPY
-yRhri0bGYspq69IBiEwujxg=
-=s+1g
------END PGP SIGNATURE-----
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
 
---nextPart7511773.9UE4mGkFBZ--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+ net/mac80211/ieee80211_sta.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index a36c6f3..dd36cc6 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -3154,7 +3154,7 @@ struct sta_info * ieee80211_ibss_add_sta(struct net_device *dev,
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct sta_info *sta;
+-	struct ieee80211_sub_if_data *sdata = NULL;
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	/* TODO: Could consider removing the least recently used entry and
+ 	 * allow new one to be added. */
+
+-- 
+John W. Linville
+linville@tuxdriver.com
