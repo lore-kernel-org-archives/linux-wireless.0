@@ -1,66 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:34571 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S2993248AbXEBObw (ORCPT
+Received: from dhost002-17.dex002.intermedia.net ([64.78.21.83]:5493 "EHLO
+	dhost002-17.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753984AbXEONDX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 May 2007 10:31:52 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] mac80211: Add support for SIOCGIWRATE ioctl to provide rate information
-Date: Wed, 2 May 2007 10:31:32 -0400
-Cc: Jiri Benc <jbenc@suse.cz>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-References: <46389ff5.oRExYGz42A2aZRmj%Larry.Finger@lwfinger.net>
-In-Reply-To: <46389ff5.oRExYGz42A2aZRmj%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3971499.cWLTUyXQF6";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705021031.40728.flamingice@sourmilk.net>
+	Tue, 15 May 2007 09:03:23 -0400
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Tue, 15 May 2007 06:03:40 -0700
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] mac80211: fail back to use associate from reassociate
+Message-ID: <20070515130340.GA25641@devicescape.com>
+References: <20070509054152.GA30839@mail.intel.com> <20070509152855.GB941@devicescape.com> <1178767250.3045.36.camel@debian.sh.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1178767250.3045.36.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3971499.cWLTUyXQF6
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Thu, May 10, 2007 at 11:20:50AM +0800, Zhu Yi wrote:
 
-On Wednesday 02 May 2007 10:28, Larry Finger wrote:
-> +static int ieee80211_ioctl_giwrate(struct net_device *dev,
-> +				  struct iw_request_info *info,
-> +				  struct iw_param *rate, char *extra)
-> +{
-> +	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-> +	struct sta_info * sta;
-> +	struct ieee80211_sub_if_data * sdata;
-> +
-> +	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +	sta = sta_info_get(local, sdata->u.sta.bssid);
-> +	if (!sta)
-> +		return -ENODEV;
-> +	rate->value = local->oper_hw_mode->rates[sta->txrate].rate * 100000;
-> +	return 0;
-> +}
-> +
-Memory leak. You need a sta_info_put.
+> I take it an error handling code. When an AP denies a STA reassociation
+> request with the reason "there is no previous association, why do you
+> send reassociation request to me?", this is an indication for the STA to
+> switch to association request and retry. Currently, mac80211 just try
+> reassociation over and over. The result is it can never associate with
+> the AP.
 
--Michael Wu
+OK. This sounds reasonable. I went through the IEEE 802.11 standard and
+it does not seem to describe this part of re-association process in any
+level of detail apart from allocation a status code for reporting
+failures to validate association status.
 
---nextPart3971499.cWLTUyXQF6
-Content-Type: application/pgp-signature
+> In .11r, can AP reject reassociation request if there is no previous
+> association from the same STA?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+.11r does not use this status code. I was concerned about this in
+general, i.e., anything that converts re-association to association
+sounds somewhat undesired, but it looks like this particular status code
+could be the only exception for this. I still don't see how the AP in
+this case would have known about the association status for the full ESS
+(since I don't see how it would know that it is the only AP in the ESS).
+Anyway, non-AP STA does not have enough context to determine what
+exactly happen, so it cannot really do much more than either stop trying
+to re-associate or try to associate what is what your change is
+proposing ot do.
 
-iD8DBQBGOKDMT3Oqt9AH4aERAiuDAJwMExNhdn2DIgY8tMR4P3iNVAY+OACgrsR/
-Rtw2Nmd3EERVJwFJ1+tCyJc=
-=rFxd
------END PGP SIGNATURE-----
-
---nextPart3971499.cWLTUyXQF6--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Jouni Malinen                                            PGP id EFC895FA
