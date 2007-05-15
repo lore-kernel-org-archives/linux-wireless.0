@@ -1,88 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:64201 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755929AbXEQFj2 (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:65326 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755997AbXEOSxo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 May 2007 01:39:28 -0400
-Message-ID: <464BD9D4.4020909@linux.intel.com>
-Date: Wed, 16 May 2007 21:28:04 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
+	Tue, 15 May 2007 14:53:44 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Panic in ieee_80211_ibss_add_sta when trying to join ad-hoc network (rt2500pci)
+Date: Tue, 15 May 2007 14:52:26 -0400
+Cc: David LAMPARTER <lists@diac24.net>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
+References: <20070515152842.GA26481@charon.n2.diac24.net> <20070515171202.GD15105@tuxdriver.com>
+In-Reply-To: <20070515171202.GD15105@tuxdriver.com>
 MIME-Version: 1.0
-To: Randy Dunlap <randy.dunlap@oracle.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers
-References: <464B7B7C.5080800@linux.intel.com> <20070516182700.912a21ed.randy.dunlap@oracle.com>
-In-Reply-To: <20070516182700.912a21ed.randy.dunlap@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart3759009.mGGXOxUsHL";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200705151452.32246.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Randy Dunlap wrote:
-> On Wed, 16 May 2007 14:45:32 -0700 James Ketrenos wrote:
-> 
->> This patch adds the iwlwifi project directory and sources needed to 
->> build the mac80211 based wireless drivers for the Intel PRO/Wireless 
->> 3945ABG/BG Network Connection and Intel Wireless WiFi Link AGN adapters.
->>
->> Signed-off-by: James Ketrenos <jketreno@linux.intel.com>
->> ---
->>
->> NOTE:  The patch is 597k and can be found at:
->>
->> 	http://intellinuxwireless.org/iwlwifi/0001-Add-iwlwifi-wireless-drivers.patch
->>
->> Patch is against wireless-dev commit-id be8662897~
-> 
-> 
-> Some comments/review, mostly not-code-related:
-...
-> 3.  Indent labels: with 0 or 1 space, not with 7 spaces.
-> Using 7 spaces hides them, makes them too difficult to see/find.
+--nextPart3759009.mGGXOxUsHL
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-I can correct this with:
+On Tuesday 15 May 2007 13:12, John W. Linville wrote:\
+> Patch below...does this work better?  Looks like upstream needs
+> it too...
+>
+ACK. Looks like I forgot to set sdata after removing the code that set it.
 
-	sed -i -e 's,^\(.*\)default:,foo\1default:,g' \
-		-e 's,^[[:space:]]*\([[:alpha:]]\+[[:alnum:]]*:\)$, \1,g' \
-		-e 's,^foo\(.*\)default:,\1default:,g' origin/*.[ch]
-
-However scripts/Lindent undoes it.  Is there a way to keep Lindent from indenting labels?  When I looked at indent's man page it only talked about case labels.
-
-...
-> 12.  36 lines end with trailing whitespace.   :( 
-
-I must have forgotten to run Lindent on the final code.  I'll run it (or just a sed to remove the trailing whitespace) on the code before I submit the version that addresses all the comments.
-
-...
-> 15.  Limit source lines to <= 80 columns (this patch contains
-> over 200 lines that are > 80 columns).
-> 
-
-Confirmed 239 instances of > 80 columns by:
-
-	for i in *.[ch]; do 
-		echo $i
-		sed -e 's,\t,        ,g' $i | 
-			grep -n '^.\{80\}.\+$'
-	done
-
-I thought Lindent would handle that prettily, but I guess not.  
-
-It seems to have enforced 80-column on some lines (sticking a bunch of right justified parameters) and on others it has made things a lot worse.   
-
-Lindent seems to have converted space-justified column alignment into tab-justified column alignment, which frequently doesn't fit in 80 columns.  For example:
-
-          1         2         3         4         5         6         7
-01234567890123456789012345678901234567890123456789012345678901234567890123456789
-int param_antenna = 0;<-10spc->/* def: 0 = both antennas (use diversity) */
-
-was changed to:
-
-         1         2         3         4         5         6         7
-01234567890123456789012345678901234567890123456789012345678901234567890123456789
-int param_antenna = 0;<-  two tabs  ->/* def: 0 = both antennas (use diversity) */
-
-Is there another tool people use besides Lindent to enforce style?
- 
 Thanks,
-James
+-Michael Wu
+
+--nextPart3759009.mGGXOxUsHL
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGSgFwT3Oqt9AH4aERAmOPAJsE8aKfad8gta0HSkKfwaUIIJ1WigCg2WV/
+9O0Tw/57c++wmrCMyg/FpXs=
+=qC2G
+-----END PGP SIGNATURE-----
+
+--nextPart3759009.mGGXOxUsHL--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
