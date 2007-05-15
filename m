@@ -1,44 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:42929 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030621AbXEALuO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2007 07:50:14 -0400
-Subject: Re: [PATCH] libertas: fix for wireless Kconfig changes
-From: Dan Williams <dcbw@redhat.com>
+Received: from 91-65-240-14-dynip.superkabel.de ([91.65.240.14]:43498 "EHLO
+	charon.n2.diac24.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1756541AbXEOTdN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 May 2007 15:33:13 -0400
+Date: Tue, 15 May 2007 21:33:09 +0200
+From: David Lamparter <lists@diac24.net>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: jeff@garzik.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <20070429002844.GA11225@tuxdriver.com>
-References: <20070429002844.GA11225@tuxdriver.com>
-Content-Type: text/plain
-Date: Tue, 01 May 2007 07:53:38 -0400
-Message-Id: <1178020418.21671.3.camel@localhost.localdomain>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: mac80211 ad-hoc: carrier not set up [was: Panic in ieee_80211_ibss_add_sta]
+Message-ID: <20070515193309.GA29184@charon.n2.diac24.net>
+References: <20070515152842.GA26481@charon.n2.diac24.net> <20070515171202.GD15105@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20070515171202.GD15105@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2007-04-28 at 20:28 -0400, John W. Linville wrote:
-> Need to change the libertas Kconfig entry to match changes made for
-> other wireless drivers.
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
-> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-> index c4b3dc2..cb09e6b 100644
-> --- a/drivers/net/wireless/Kconfig
-> +++ b/drivers/net/wireless/Kconfig
-> @@ -267,7 +267,7 @@ config IPW2200_DEBUG
->  
->  config LIBERTAS_USB
->  	tristate "Marvell Libertas 8388 802.11a/b/g cards"
-> -	depends on NET_RADIO && USB
-> +	depends on USB && WLAN_80211
->  	select FW_LOADER
->  	---help---
->  	  A driver for Marvell Libertas 8388 USB devices.
+On Tue, May 15, 2007 at 01:12:02PM -0400, John W. Linville wrote:
+> Patch below...does this work better?  Looks like upstream needs
+> it too...
 
-Will apply, we need to pull in wireless-dev first to get the NET_RADIO
-name change.
+Yup, this fixes it. Thanks for the quick fix.
 
-Dan
+However, ad-hoc still does not work, since the network device's
+carrier status does not seem to be properly set. (It remains
+in NO-CARRIER even after "wlan0: Selected IBSS BSSID
+92:68:a2:db:de:45 based on configured SSID". I dirtily hacked
+around that with the following two-liner:
+
+--- wireless-dev/net/mac80211/ieee80211_sta.c.orig	2007-05-15 20:19:55.000000000 +0200
++++ wireless-dev/net/mac80211/ieee80211_sta.c	2007-05-15 21:19:38.362587215 +0200
+@@ -2448,6 +2448,7 @@
+ 	mod_timer(&ifsta->timer, jiffies + IEEE80211_IBSS_MERGE_INTERVAL);
+ 
+ 	ieee80211_rx_bss_put(dev, bss);
++	netif_carrier_on(dev);
+ 
+ 	return res;
+ }
+@@ -2648,6 +2649,7 @@
+ 
+ 	ifsta->ssid_set = len ? 1 : 0;
+ 	if (sdata->type == IEEE80211_IF_TYPE_IBSS && !ifsta->bssid_set) {
++		netif_carrier_off(dev);
+ 		ifsta->ibss_join_req = jiffies;
+ 		ifsta->state = IEEE80211_IBSS_SEARCH;
+ 		return ieee80211_sta_find_ibss(dev, ifsta);
+
+
+However, I have NO CLUE WHAT I'M DOING THERE! Make a proper fix!
+(Especially, I think it needs more netif_carrier_off calls in
+different places.)
+
+
+Anyway, thanks for my now-working wireless,
+
+David Lamparter
 
