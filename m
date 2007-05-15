@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4342 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755452AbXEEFc0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 May 2007 01:32:26 -0400
-Date: Sat, 5 May 2007 01:26:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/4] add mac80211 wireless infrastructure
-Message-ID: <20070505052635.GB6041@tuxdriver.com>
-References: <20070505031749.GA5308@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070505031749.GA5308@tuxdriver.com>
+Received: from host2.marvell.com ([65.219.4.2]:48085 "EHLO maili.marvell.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1759156AbXEOJgN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 May 2007 05:36:13 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [PATCH] mac80211: fail back to use associate from reassociate
+Date: Tue, 15 May 2007 02:36:12 -0700
+Message-ID: <9C9B2DC3D78A6142AC8D10C89669528603F63BAC@msiexch01.marvell.com>
+In-Reply-To: <1179211965.3045.170.camel@debian.sh.intel.com>
+References: <20070509054152.GA30839@mail.intel.com> <20070509152855.GB941@devicescape.com> <1178767250.3045.36.camel@debian.sh.intel.com> <9C9B2DC3D78A6142AC8D10C89669528603F63B68@msiexch01.marvell.com> <1179211965.3045.170.camel@debian.sh.intel.com>
+From: "Sandesh Goel" <sgoel@marvell.com>
+To: "Zhu Yi" <yi.zhu@intel.com>
+Cc: "Jouni Malinen" <jkm@devicescape.com>,
+	<linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 04, 2007 at 11:17:49PM -0400, John W. Linville wrote:
 
-> The wireless developers would like this to be considered for merge
-> in time for 2.6.22.  Patches for at least one mac80211-based driver
-> will follow shortly.
 
-Ooops!  I forgot to add a "From: Jiri Benc..." line to the top of
-the mailed patches.
+-----Original Message-----
+From: Zhu Yi [mailto:yi.zhu@intel.com] 
+Sent: Tuesday, May 15, 2007 12:23 PM
+To: Sandesh Goel
+Cc: Jouni Malinen; linux-wireless@vger.kernel.org; John W. Linville
+Subject: RE: [PATCH] mac80211: fail back to use associate from
+reassociate
 
-Dave, can you add that before applying them?  Or shall I resend?
+On Mon, 2007-05-14 at 22:41 -0700, Sandesh Goel wrote:
+> Therefore, the AP should not return the said error code
+> (WLAN_STATUS_REASSOC_NO_ASSOC) unless it has checked (using some inter
+> AP protocol) that no other AP in the ESS has an existing association
+> with the requesting STA. If the AP is returning the error without
+> doing this check, I would think that it is an AP bug. 
 
-Also, if you apply the copies on my kernel.org page or if you pull
-from git then the Author information should already be correct:
+The AP was the only one in the ESS, so it should be OK.
+[Sandesh] 
+[Sandesh] How does the AP know that it is the only one in the ESS? It
+can't surely assume that. Is it configured with this information? Did it
+try to find out if there are other APs in the ESS? E.g. would it behave
+differently if you setup another AP in your ESS?
 
-	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git mac80211
+> It would be interesting to know which AP behaves in this way and
+> whether
+> is really does the check correctly or not. Note that the AP itself
+> having rebooted shouldn't cause this error code to be returned, which
+> is what I found strange. 
 
-Sorry for the confusion!
+Do you mean the AP should remember all its associated STAs before it
+rebooted?
+[Sandesh] 
+[Sandesh] I didn't say that AP needs to remember that. However, it
+should honor the reassoc request if it is not sure about whether the
+requesting STA was associated in the ESS or not.
 
-John
-
-P.S.  Hmmm...I would have thought that I would have seen the patches
-I sent by now...?  Did the list eat them?  I don't think they were
-that big...?  Let me know if I need to re-send.
--- 
-John W. Linville
-linville@tuxdriver.com
+Thanks,
+-yi
