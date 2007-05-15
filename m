@@ -1,57 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2224 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933251AbXEEUDL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 May 2007 16:03:11 -0400
-Date: Sat, 5 May 2007 12:00:56 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: davem@davemloft.net, jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/4] add mac80211 wireless infrastructure
-Message-ID: <20070505160056.GH4155@tuxdriver.com>
-References: <20070505031749.GA5308@tuxdriver.com> <20070505093336.GA9307@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070505093336.GA9307@infradead.org>
+Received: from wx-out-0506.google.com ([66.249.82.232]:65161 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758509AbXEOWBL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 May 2007 18:01:11 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so2087941wxd
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2007 15:01:09 -0700 (PDT)
+To: David Lamparter <lists@diac24.net>
+Subject: Re: mac80211 ad-hoc: carrier not set up [was: Panic in ieee_80211_ibss_add_sta]
+Date: Tue, 15 May 2007 23:59:28 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+References: <20070515152842.GA26481@charon.n2.diac24.net> <20070515171202.GD15105@tuxdriver.com> <20070515193309.GA29184@charon.n2.diac24.net>
+In-Reply-To: <20070515193309.GA29184@charon.n2.diac24.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200705152359.29200.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 05, 2007 at 10:33:36AM +0100, Christoph Hellwig wrote:
-> On Fri, May 04, 2007 at 11:17:49PM -0400, John W. Linville wrote:
+Hi,
 
-> > This component was in -mm for most of the 2.6.21 cycle, with few
-> > reported bugs.  The code is also currently available in Fedora rawhide
-> > where it has performed well.
-> > 
-> > The wireless developers would like this to be considered for merge
-> > in time for 2.6.22.  Patches for at least one mac80211-based driver
-> > will follow shortly.
+> However, ad-hoc still does not work, since the network device's
+> carrier status does not seem to be properly set. (It remains
+> in NO-CARRIER even after "wlan0: Selected IBSS BSSID
+> 92:68:a2:db:de:45 based on configured SSID". I dirtily hacked
+> around that with the following two-liner:
+
+I was aware of the recent rt2x00 adhoc breakage but hadn't looked into it yet,
+the below suggestion about the netif_carrier does make sense though,
+since the last report it was working was before rt2x00 removed the ieee80211_netif
+calls, and the first report of its breakage was some time after the removal.
+(Since a lot of code has been moved around in between the ieee80211_netif wasn't
+the first thing that I would have thought of as a probable cause. ;) )
+
+> --- wireless-dev/net/mac80211/ieee80211_sta.c.orig	2007-05-15 20:19:55.000000000 +0200
+> +++ wireless-dev/net/mac80211/ieee80211_sta.c	2007-05-15 21:19:38.362587215 +0200
+> @@ -2448,6 +2448,7 @@
+>  	mod_timer(&ifsta->timer, jiffies + IEEE80211_IBSS_MERGE_INTERVAL);
+>  
+>  	ieee80211_rx_bss_put(dev, bss);
+> +	netif_carrier_on(dev);
+>  
+>  	return res;
+>  }
+> @@ -2648,6 +2649,7 @@
+>  
+>  	ifsta->ssid_set = len ? 1 : 0;
+>  	if (sdata->type == IEEE80211_IF_TYPE_IBSS && !ifsta->bssid_set) {
+> +		netif_carrier_off(dev);
+>  		ifsta->ibss_join_req = jiffies;
+>  		ifsta->state = IEEE80211_IBSS_SEARCH;
+>  		return ieee80211_sta_find_ibss(dev, ifsta);
 > 
-> Please send out patches for review first.  Last time I looked through
-> the stuff in -mm there were a lot of things that were in pretty bad
-> shape still.
+> 
+> However, I have NO CLUE WHAT I'M DOING THERE! Make a proper fix!
+> (Especially, I think it needs more netif_carrier_off calls in
+> different places.)
+> 
+> 
+> Anyway, thanks for my now-working wireless,
 
-I had a little email trouble w/ the orignal patch post.  I hand edited
-some headers and I must have screwed them up.
-
-Anyway, the patches have been reposted and they seem to have made
-it through to the list.  Please do look at them -- I'm sure they can
-benefit from your loving eye.  :-)
-
-The patches are also available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/mac80211/
-
-I realize this is a bit late in the merge cycle -- this timing is the
-best we could manage.  If the patches are fatally flawed then we can
-try for 2.6.23.  But if possible, we would like to get them into the
-current cycle.
-
-FWIW, the patches have been paired-down a bit from what is in -mm,
-including the removal of AP and WDS mode support and related ioctls.
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Ivo
