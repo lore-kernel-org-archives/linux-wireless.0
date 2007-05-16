@@ -1,80 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1569 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750699AbXE2PV2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2007 11:21:28 -0400
-Subject: Re: b44: regression in 2.6.22 (resend)
-From: "Gary Zambrano" <zambrano@broadcom.com>
-To: "Maximilian Engelhardt" <maxi@daemonizer.de>
-cc: "Thomas Gleixner" <tglx@linutronix.de>,
-	"Michael Buesch" <mb@bu3sch.de>,
-	"linux-kernel" <linux-kernel@vger.kernel.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"Stephen Hemminger" <shemminger@linux-foundation.org>,
-	"Arnaldo Carvalho de Melo" <acme@ghostprotocols.net>,
-	"Jeff Garzik" <jgarzik@pobox.com>, netdev@vger.kernel.org,
-	"Andrew Morton" <akpm@linux-foundation.org>
-In-Reply-To: <200705282255.56490.maxi@daemonizer.de>
-References: <20070525172431.60affaca@freepuppy>
- <200705281944.05030.maxi@daemonizer.de> <1180380230.3657.3.camel@chaos>
- <200705282255.56490.maxi@daemonizer.de>
-Date: Tue, 29 May 2007 06:58:43 -0700
-Message-ID: <1180447123.17146.4.camel@dhcp-10-12-136-115.broadcom.com>
+Received: from mga06.intel.com ([134.134.136.21]:8641 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756579AbXEPW45 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 May 2007 18:56:57 -0400
+Message-ID: <464B7B7C.5080800@linux.intel.com>
+Date: Wed, 16 May 2007 14:45:32 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH]  Add iwlwifi wireless drivers
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-05-28 at 13:55 -0700, Maximilian Engelhardt wrote:
-> On Monday 28 May 2007, Thomas Gleixner wrote:
-> > On Mon, 2007-05-28 at 19:44 +0200, Maximilian Engelhardt wrote:
-> > > > Can you please keep CONFIG_HIGH_RES_TIMERS and CONFIG_NOHZ and try the
-> > > > following combinations on the kernel command line:
-> > > >
-> > > > 1) highres=off nohz=off (should be the same as your working config)
-> > > > 2) highres=off
-> > > > 3) nohz=off
-> > >
-> > > I tested this with my 2.6.22-rc3 kernel, here are the results:
-> > >
-> > > without any special boot parameters: problem does appear
-> > > highres=off nohz=off: problem does not appear
-> > > highres=off: problem does not appear
-> > > nohz=off: problem does appear
-> >
-> > Is there any other strange behavior of the high res enabled kernel than
-> > the b44 problem ?
-> 
-> I didn't notice anything.
-> 
-> >
-> > > I additionally built my 2.6.22-rc2-mm1 kernel without High Resolution
-> > > Timer, but the high ping problem is still there.
-> >
-> > Hmm, that's mysterious. Wild guess is that highres exposes the hidden
-> > "feature" in a different way than rc2-mm1 does.
-> 
-> I think the bug in 2.6.21/22-rc3 is a different one that the one in 
-> 2.6.22-rc2-mm1, but that's also only a wild guess :)
-> 
-> I'll explain this a bit:
-> In 2.6.21/22-rc3 is the same b44 driver that has been in the stock kernels for 
-> some time. With this driver and High Resolution Timer turned on I get 
-> problems using iperf. The problems are that the systems becomes really slow 
-> and unresponsive.  Michael Buesch thought this could be an IRQ storm which 
-> sounds logical to me. This bug did never happen to me before I startet the 
-> iperf test.
+This patch adds the iwlwifi project directory and sources needed to 
+build the mac80211 based wireless drivers for the Intel PRO/Wireless 
+3945ABG/BG Network Connection and Intel Wireless WiFi Link AGN adapters.
 
+Signed-off-by: James Ketrenos <jketreno@linux.intel.com>
+---
+ drivers/net/wireless/mac80211/Kconfig              |    1 +
+ drivers/net/wireless/mac80211/Makefile             |    1 +
+ drivers/net/wireless/mac80211/iwlwifi/Kconfig      |   96 +
+ drivers/net/wireless/mac80211/iwlwifi/Makefile     |   27 +
+ drivers/net/wireless/mac80211/iwlwifi/base.c       | 8146 ++++++++++++++++++++
+ .../net/wireless/mac80211/iwlwifi/iwl-3945-hw.h    |   88 +
+ .../net/wireless/mac80211/iwlwifi/iwl-3945-rs.h    |  175 +
+ drivers/net/wireless/mac80211/iwlwifi/iwl-3945.c   | 2389 ++++++
+ drivers/net/wireless/mac80211/iwlwifi/iwl-3945.h   |   54 +
+ .../net/wireless/mac80211/iwlwifi/iwl-4965-hw.h    |  909 +++
+ drivers/net/wireless/mac80211/iwlwifi/iwl-4965.c   | 3637 +++++++++
+ drivers/net/wireless/mac80211/iwlwifi/iwl-4965.h   |  177 +
+ .../net/wireless/mac80211/iwlwifi/iwl-channel.h    |  164 +
+ .../net/wireless/mac80211/iwlwifi/iwl-commands.h   |  664 ++
+ drivers/net/wireless/mac80211/iwlwifi/iwl-debug.h  |  141 +
+ drivers/net/wireless/mac80211/iwlwifi/iwl-eeprom.h |  325 +
+ .../net/wireless/mac80211/iwlwifi/iwl-helpers.h    |  250 +
+ drivers/net/wireless/mac80211/iwlwifi/iwl-hw.h     | 1490 ++++
+ drivers/net/wireless/mac80211/iwlwifi/iwl-io.h     |  454 ++
+ drivers/net/wireless/mac80211/iwlwifi/iwl-priv.h   |  344 +
+ .../net/wireless/mac80211/iwlwifi/iwl-spectrum.h   |   91 +
+ drivers/net/wireless/mac80211/iwlwifi/iwlwifi.h    |  665 ++
+ 22 files changed, 20288 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/Kconfig
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/Makefile
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/base.c
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-3945-hw.h
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-3945-rs.h
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-3945.c
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-3945.h
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-4965-hw.h
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-4965.c
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-4965.h
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-channel.h
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-commands.h
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-debug.h
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-eeprom.h
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-helpers.h
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-hw.h
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-io.h
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-priv.h
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-spectrum.h
+ create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwlwifi.h
 
-Can you please check to see if you notice anything out of the ordinary
-using netperf in place of iperf in your high res timer on/off testbed?
+NOTE:  The patch is 597k and can be found at:
 
-Thanks,
-Gary
+	http://intellinuxwireless.org/iwlwifi/0001-Add-iwlwifi-wireless-drivers.patch
 
-
-
-
-
-
-
+Patch is against wireless-dev commit-id be8662897~
