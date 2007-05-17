@@ -1,51 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:36310
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933506AbXEFJpA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 May 2007 05:45:00 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Merging SSB upstream
-Date: Sun, 6 May 2007 11:44:27 +0200
-Cc: Jeff Garzik <jeff@garzik.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Gary Zambrano <zambrano@broadcom.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, ralf@linux-mips.org
-References: <200705060303.17594.mb@bu3sch.de> <20070506020051.GA30917@tuxdriver.com>
-In-Reply-To: <20070506020051.GA30917@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200705061144.27817.mb@bu3sch.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4900 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755240AbXEQQDG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 May 2007 12:03:06 -0400
+Date: Thu, 17 May 2007 11:31:26 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-wireless@vger.kernel.org,
+	David Miller <davem@davemloft.net>,
+	Andrea Merello <andrea.merello@gmail.com>
+Subject: Re: [PATCH 2/2] Add rtl8187 wireless driver
+Message-ID: <20070517153126.GA7720@tuxdriver.com>
+References: <20070511195642.8042.20407.stgit@panda.sourmilk.net> <200705122156.43796.flamingice@sourmilk.net> <20070514202929.GD6999@tuxdriver.com> <200705170148.06683.flamingice@sourmilk.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200705170148.06683.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 06 May 2007 04:00:51 John W. Linville wrote:
-> On Sun, May 06, 2007 at 03:03:17AM +0200, Michael Buesch wrote:
-> > So, now that mac80211 is merged upstream, I think it's
-> > time to merge SSB and the b44-ssb port upstream.
-> > Note that bcm43xx-mac80211 is _not_ ready for upstream, yet.
->  
-> ACK, unfortunately.
-> 
-> > What do you think? I'd like to merge ssb as-is, although
-> > the embedded-device parts are not quite finished, yet.
-> > But they don't interfere with the non-embedded parts used
-> > by b44 and the bcm43xx PCI cards.
-> 
-> How much testing have you (and others) done w/ b44?
+On Thu, May 17, 2007 at 01:48:02AM -0400, Michael Wu wrote:
+> On Monday 14 May 2007 16:29, John W. Linville wrote:
+> > If you don't know why it is there, how about a comment indicating
+> > what gave you the notion of putting it there?  E.g. "copied from
+> > realtek example code" or somesuch?
+> >
+> The driver is mostly a port of the original r8187 driver.
+ 
+OK.  We still could use a "reminder" comment before magic bits.
 
-Well, it works for me with my b44 card I got from broadcom.
-There are really only 2 or 3 different b44 cards, so chances are damn
-high it will work for all.
+> > For this block in particular, I think you had stated that the
+> > hardware works without it.  Is there any reason not to just remove it?
+> > Just precaution?
+> >
+> Yes. Don't want to change code that's known to be working at this point.
 
-> I had to remove 
-> the b44 ssb changes from fedora because a) users reported problems;
+Understandable.  Please add a "magic from realtek" comment.
+ 
+> > > > More magic number tables of unknown origin...you get the idea. :-)  I
+> > > > realize that these are either copied straight from a datasheet or from
+> > > > someone's reverse engineered sources -- let's just have a comment
+> > > > saying so for each block of these.
+> > >
+> > > The *entire* rtl8187_rtl8225.c file is full of magic numbers. I'm not
+> > > willing to put comments saying so for every single function/definition. I
+> > > really don't know what's going on in that file.
+> >
+> > OK, "each block" would be excessive if they all come from the
+> > same place.  A single comment is probably fine.  I do see "Based on
+> > the r8187 driver" at the top, but more information would be better.
+> > Since Andrea is still around maybe the origin of that information is
+> > still identifiable?
+> >
+> The r8187 driver is still around. (Realtek has it on their website) For the 
+> most part, that information is comes from some Realtek engineer(s).
 
-Which problems were that? The 2 compile issues?
-Trivial to fix if that's the only issue. ;)
+Fine.  How about a (hopefully permanent) URL?
 
+> > [linville-t43.mobile]:> sparse example.c
+> > example.c:15:12: warning: mixing different enum types
+> > example.c:15:12:     int [signed] enum bar  versus
+> > example.c:15:12:     int [signed] enum foo
+> >
+> That's what I thought.. but it's not that useful for me. Using the wrong 
+> register bit definition is extremely unlikely to happen. (I've never done 
+> it.) However, using the wrong size register read or write function happens 
+> and has been caught a number of times by the register typechecking.
+
+At the risk of belaboring the point... :-)
+
+--------------------------------------------------------------------------------
+
+/* definitions to make things work outside of kernel... */
+
+#define __bitwise __attribute__((bitwise))
+#define __force __attribute__((force))
+
+typedef unsigned int __u32;
+typedef __u32 __bitwise __le32;
+
+typedef unsigned short __u16;
+typedef __u16 __bitwise __le16;
+
+/* example starts here... */
+
+enum foo {
+	FOO_BIT_BLAH	= (__force __le32)(1 << 1),
+	FOO_BIT_BLECH	= (__force __le32)(1 << 2),
+};
+
+enum bar {
+	BAR_BIT_BLAH	= (__force __le16)(1 << 3),
+	BAR_BIT_BLECH	= (__force __le16)(1 << 4),
+};
+
+static void blather(void)
+{
+	enum foo drizzle;
+	__le16 drazzle;
+
+	drizzle = BAR_BIT_BLAH;
+
+	drazzle = (__force __le16)5;
+	drizzle = drazzle;
+}
+
+--------------------------------------------------------------------------------
+
+[linville-t43.mobile]:> sparse -Wall example.c
+example.c:29:10: warning: incorrect type in assignment (different base types)
+example.c:29:10:    expected restricted unsigned int enum foo drizzle
+example.c:29:10:    got restricted unsigned short enum bar [toplevel] BAR_BIT_BLAH
+example.c:29:12: warning: mixing different enum types
+example.c:29:12:     restricted unsigned short enum bar  versus
+example.c:29:12:     restricted unsigned int enum foo
+example.c:32:10: warning: incorrect type in assignment (different base types)
+example.c:32:10:    expected restricted unsigned int enum foo drizzle
+example.c:32:10:    got restricted unsigned short [assigned] [usertype] drazzle
+
+Again, I don't really see this as a merge blocker.  But, it is worth
+considering.
+
+So, how about you sprinkle-in a couple more comments for the magic
+copied from Realtek and resubmit?  Thanks!
+
+John
 -- 
-Greetings Michael.
+John W. Linville
+linville@tuxdriver.com
