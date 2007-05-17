@@ -1,97 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-58.dex002.intermedia.net ([64.78.21.227]:29758 "EHLO
-	dhost002-58.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755140AbXEKPlw (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:36475 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756037AbXEQFt3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 May 2007 11:41:52 -0400
-From: "Jouni Malinen" <jkm@devicescape.com>
-Date: Fri, 11 May 2007 08:42:03 -0700
-To: Andy Green <andy@warmcat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Tomas Winkler <tomasw@gmail.com>, Jiri Benc <jbenc@suse.cz>,
-	jketreno <jketreno@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: Specifing rate control algorithm?
-Message-ID: <20070511154203.GD16929@devicescape.com>
-References: <20070510132756.2ca660a0@midnight.suse.cz> <46434596.6010908@linux.intel.com> <20070510194233.335004b7@griffin.suse.cz> <46437DC8.2060805@linux.intel.com> <20070510212355.6c13cde8@griffin.suse.cz> <1ba2fa240705101524x2676a09eyeff3b71ed2542478@mail.gmail.com> <20070511001212.GB6971@tuxdriver.com> <464424A7.2040301@warmcat.com> <20070511142355.GB16929@devicescape.com> <464485FE.1020603@warmcat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <464485FE.1020603@warmcat.com>
+	Thu, 17 May 2007 01:49:29 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 2/2] Add rtl8187 wireless driver
+Date: Thu, 17 May 2007 01:48:02 -0400
+Cc: Jeff Garzik <jeff@garzik.org>, linux-wireless@vger.kernel.org,
+	David Miller <davem@davemloft.net>,
+	Andrea Merello <andrea.merello@gmail.com>
+References: <20070511195642.8042.20407.stgit@panda.sourmilk.net> <200705122156.43796.flamingice@sourmilk.net> <20070514202929.GD6999@tuxdriver.com>
+In-Reply-To: <20070514202929.GD6999@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart131045661.kD45mmJZz5";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200705170148.06683.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 11, 2007 at 04:04:30PM +0100, Andy Green wrote:
+--nextPart131045661.kD45mmJZz5
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> Could I possibly be talking about this?
+On Monday 14 May 2007 16:29, John W. Linville wrote:
+> If you don't know why it is there, how about a comment indicating
+> what gave you the notion of putting it there?  E.g. "copied from
+> realtek example code" or somesuch?
+>
+The driver is mostly a port of the original r8187 driver.
 
-> http://marc.info/?l=linux-wireless&m=117882282325836&w=2
-> 
-> You understand re-reading this that when he talks about "You submit one
-> Tx request to the [']hardware['] and it then performs all the retries,
-> fallbacks, etc without host interaction over overhead." this is stuff in
-> the closed-source firmware?  Aka "binary blob" with restrictive license?
+> For this block in particular, I think you had stated that the
+> hardware works without it.  Is there any reason not to just remove it?
+> Just precaution?
+>
+Yes. Don't want to change code that's known to be working at this point.
 
-So? I don't see what this has to do with mac80211 rate control algorithm
-selection. This is about 802.11 functionality that has very strict
-timing requirements (SIFS between frame and ack and then re-try if no
-ack received). That is (I would say, has to, in most cases) be done
-somewhere else than on the host CPU. In other words, this is something
-that really needs to be in the wlan hardware or firmware.
+> > > More magic number tables of unknown origin...you get the idea. :-)  I
+> > > realize that these are either copied straight from a datasheet or from
+> > > someone's reverse engineered sources -- let's just have a comment
+> > > saying so for each block of these.
+> >
+> > The *entire* rtl8187_rtl8225.c file is full of magic numbers. I'm not
+> > willing to put comments saying so for every single function/definition.=
+ I
+> > really don't know what's going on in that file.
+>
+> OK, "each block" would be excessive if they all come from the
+> same place.  A single comment is probably fine.  I do see "Based on
+> the r8187 driver" at the top, but more information would be better.
+> Since Andrea is still around maybe the origin of that information is
+> still identifiable?
+>
+The r8187 driver is still around. (Realtek has it on their website) For the=
+=20
+most part, that information is comes from some Realtek engineer(s).
 
-> Is it really true this is a feature of hardware and not closed-source
-> firmware?  Because if I was designing such a thing - and I have designed
-> similarly complex silicon - damnned if I would allocate pure hardware to
-> it.  Since the device already has a concept of firmware, as we can all
-> see, I would instead implement these multistage actions with the
-> firmware.  Which happens to be closed source by Intel's choice.
+> -------------------------------------------------------------------------=
+=2D-
+>-----
+>
+> enum foo {
+> 	FOO_BIT_BLAH	=3D (1 << 1),
+> 	FOO_BIT_BLECH	=3D (1 << 2),
+> };
+>
+> enum bar {
+> 	BAR_BIT_BLAH	=3D (1 << 3),
+> 	BAR_BIT_BLECH	=3D (1 << 4),
+> };
+>
+> void blather(void)
+> {
+> 	enum foo drizzle;
+>
+> 	drizzle =3D BAR_BIT_BLAH;
+> }
+>
+> -------------------------------------------------------------------------=
+=2D-
+>-----
+>
+> [linville-t43.mobile]:> sparse example.c
+> example.c:15:12: warning: mixing different enum types
+> example.c:15:12:     int [signed] enum bar  versus
+> example.c:15:12:     int [signed] enum foo
+>
+That's what I thought.. but it's not that useful for me. Using the wrong=20
+register bit definition is extremely unlikely to happen. (I've never done=20
+it.) However, using the wrong size register read or write function happens=
+=20
+and has been caught a number of times by the register typechecking.
 
-I do not know ipw3945 design, but I do know other wlan chipsets that do
-indeed take care of TX rate control between retries of the _same frame_
-in hardware. No firmware involved there. Then again, I really do not
-follow this logic of firmware being some horrible thing that simply
-cannot be allowed to do anything. In this particular case, this really
-has to be done at the wlan chip, not at the host CPU due to timing
-requirements.
+> Interdiff from the prior version also shows this:
+>
+> @@ -485,25 +485,16 @@
+>
+>  	rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
+>
+> -	if (conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME)
+> +	if (conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME) {
+>  		rtl818x_iowrite8(priv, &priv->map->SLOT, 0x9);
+> -	else
+> +		rtl818x_iowrite8(priv, &priv->map->DIFS, 0x14);
+> +		rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x14);
+> +		rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0x73);
+> +	} else {
+>  		rtl818x_iowrite8(priv, &priv->map->SLOT, 0x14);
+> -
+> -	switch (conf->phymode) {
+> -	case MODE_IEEE80211B:
+>  		rtl818x_iowrite8(priv, &priv->map->DIFS, 0x24);
+>  		rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x24);
+>  		rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0xa5);
+> -		break;
+> -	case MODE_IEEE80211G:
+> -		rtl818x_iowrite8(priv, &priv->map->DIFS, 0x14);
+> -		rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x14);
+> -		rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0x73);
+> -		break;
+> -	default:
+> -		BUG();
+> -		break;
+>  	}
+>
+>  	rtl818x_iowrite16(priv, &priv->map->ATIM_WND, 2);
+>
+> Which seems alright, but I wanted to make sure it was intentional.
+>
+Yup, it's intentional.
 
-> AIUI the proposal is to tag packets with lists of rates to retry at.
-> But if the aimed-for and typical case is that you get through on the
-> first try, how interesting is it really to migrate the retry action to a
-> closed-source and per-vendor (or per-device) implementation instead of
-> coming through the rate selection action in the stack.
+=2DMichael Wu
 
-Being able to vary the TX rate on the SIFS-retries can produce huge
-improvements to rate adaption. I see this a very much valid reason for
-providing an alternative rate control algorithm that can take advantage
-of the hardware/firmware features.
+--nextPart131045661.kD45mmJZz5
+Content-Type: application/pgp-signature
 
-> Stack == mac80211.  No: what James is talking about, as I quoted above,
-> is a firmware implementation of "per-packet rate-list automatic retry"
-> that requires special support in mac80211.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-I can only say that we see this quite differently and all I've seen from
-James so far on this topic makes sense and should be supported in
-mac80211. Firmware implementation does _not_ replace the mac80211 rate
-control algorithm, but modified mac80211 rate control algorithm can be
-used to improve rate adaption in this case and such modifications would
-not benefit (or be possible) with some other wlan chipsets. Thus, need
-for multiple mac80211 rate control algorithms and benefit from drivers
-being able to propose which one to use by default.
+iD8DBQBGS+yWT3Oqt9AH4aERAnyBAJ49bOrNDTDqeXovZ4vEuBpJ8IRpiwCggHw2
+SYTqfFOlAmXqBV0L89tFKBI=
+=1+Sp
+-----END PGP SIGNATURE-----
 
-> Let me ask: is it really so impossible to create a generic "nearly
-> optimal" algorithm for rate selection in the stack that you have to
-> offload the task to $DRIVER?  What is it about the awesome software
-> running in $DRIVER or $DEVICE that can do a better job than mac80211
-> ever can?
-
-Yes, in practice, it is more or loess impossible with the timing
-requirements on 802.11 retries. This is not about driver vs. mac80211,
-this is about the timing differences between wlan chip vs. host CPU. I
-don't want to implement all rate control stuff in hardware/firmware, but
-the part that involves first couple of retransmission of frames that are
-not acked within SIFS really falls for the wlan hardware (including
-firmware, if used in the design) category, not host CPU, if aiming for
-the best possible rate control.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+--nextPart131045661.kD45mmJZz5--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
