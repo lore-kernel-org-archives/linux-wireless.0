@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from deine-taler.de ([217.160.107.63]:55683 "EHLO
-	p15091797.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751642AbXEATuJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2007 15:50:09 -0400
-Date: Tue, 1 May 2007 21:50:08 +0200
-From: Ulrich Kunitz <kune@deine-taler.de>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: Daniel Drake <dsd@gentoo.org>, linville@tuxdriver.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] zd1211rw-mac80211: limit URB buffering in tx path
-Message-ID: <20070501195008.GA14294@p15091797.pureserver.info>
-References: <20070501030100.BDE3D7B409F@zog.reactivated.net> <20070501123411.081c43c6@logostar.upir.cz>
+Received: from smtp.osdl.org ([207.189.120.12]:58904 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757767AbXEQPTf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 May 2007 11:19:35 -0400
+Date: Thu, 17 May 2007 08:03:15 -0700
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: James Ketrenos <jketreno@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers [part 2/2]
+Message-ID: <20070517080315.710d656e@freepuppy>
+In-Reply-To: <20070516203505.556df4f9.randy.dunlap@oracle.com>
+References: <464B7B7C.5080800@linux.intel.com>
+	<20070516203505.556df4f9.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070501123411.081c43c6@logostar.upir.cz>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07-05-01 12:34 Jiri Benc wrote:
+On Wed, 16 May 2007 20:35:05 -0700
+Randy Dunlap <randy.dunlap@oracle.com> wrote:
 
-> On Tue,  1 May 2007 04:01:00 +0100 (BST), Daniel Drake wrote:
-> > The old code allowed unlimited buffing of tx frames in URBs
-> > submitted for transfer to the device. This patch stops the
-> > ieee80211_hw queue(s) if to many URBs are ready for submit to the
-> > device. Actually the ZD1211 device supports currently only one
-> > queue.
+> On Wed, 16 May 2007 14:45:32 -0700 James Ketrenos wrote:
 > 
-> This doesn't look correct to me. The limits should be per queue and you
-> should always stop queues selectively.
-
-The old ZD1211 chip doesn't support queuing and the new ZD1211B
-chip has support, but it is unclear how to put packets in the
-different queues. However the error condition here is, that
-packets can't be transmitted over the USB, which will affect all
-queues. Sure one could manage different high level marks for the
-different queues, but this is all theoretical currently. I could
-have coded with the explicit knowledge that we support only one
-queue, but it is really work the hassle.
-
-> > +/**
-> > + * wake_queues - wakes all queues
-> > + * @hw: a &struct ieee80211_hw pointer
-> > + *
-> > + * Such a function is not provided by mac80211, so we have to provide them on
-> > + * our own.
-> > + */
-> > +static void wake_queues(struct ieee80211_hw *hw)
+> > This patch adds the iwlwifi project directory and sources needed to 
+> > build the mac80211 based wireless drivers for the Intel PRO/Wireless 
+> > 3945ABG/BG Network Connection and Intel Wireless WiFi Link AGN adapters.
+> > 
+> > Signed-off-by: James Ketrenos <jketreno@linux.intel.com>
+> > 
+> > NOTE:  The patch is 597k and can be found at:
+> > 
+> > 	http://intellinuxwireless.org/iwlwifi/0001-Add-iwlwifi-wireless-drivers.patch
+> > 
+> > Patch is against wireless-dev commit-id be8662897~
 > 
-> It is :-) Look for ieee80211_wake_queues. But as I said, you shouldn't need
-> that.
+> 
+> 1.  Can't this:
+> 
+> +	if (sizeof(priv->eeprom) != 1024) {
+> +		IWL_ERROR("EEPROM structure size incorrect!\n");
+> +		return -EINVAL;
+> +	}
+> 
+> use this instead of 1024 ?
+> +#define IWL4965_EEPROM_IMAGE_SIZE  (0x200 * sizeof(u16))
 
-I provided the patch to add ieee80211_wake_queues(). Sorry for
-missing the moment, when it has been integrated. I will update the
-patch.
+Why not BUILD_BUG_ON()?
+
 
 -- 
-Uli Kunitz
+Stephen Hemminger <shemminger@linux-foundation.org>
