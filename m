@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([213.239.205.134]:57827 "EHLO mail.tglx.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750900AbXE1Pcy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2007 11:32:54 -0400
-Subject: Re: b44: regression in 2.6.22 (resend)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Maximilian Engelhardt <maxi@daemonizer.de>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Hemminger <shemminger@linux-foundation.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-In-Reply-To: <200705281714.25841.mb@bu3sch.de>
-References: <20070525172431.60affaca@freepuppy>
-	 <200705281216.51690.mb@bu3sch.de> <200705281609.49859.maxi@daemonizer.de>
-	 <200705281714.25841.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Mon, 28 May 2007 17:32:51 +0200
-Message-Id: <1180366371.4952.5.camel@chaos>
-Mime-Version: 1.0
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:44373
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754315AbXEQUmE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 May 2007 16:42:04 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 2/2] Add rtl8187 wireless driver
+Date: Thu, 17 May 2007 22:41:18 +0200
+Cc: "Michael Wu" <flamingice@sourmilk.net>,
+	"John Linville" <linville@tuxdriver.com>,
+	"Jeff Garzik" <jeff@garzik.org>, linux-wireless@vger.kernel.org,
+	"David Miller" <davem@davemloft.net>,
+	"Andrea Merello" <andrea.merello@gmail.com>
+References: <20070511195642.8042.20407.stgit@panda.sourmilk.net> <200705111602.18729.flamingice@sourmilk.net> <43e72e890705171243g7e3d65e4ne43b5956e13f44db@mail.gmail.com>
+In-Reply-To: <43e72e890705171243g7e3d65e4ne43b5956e13f44db@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200705172241.18515.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-05-28 at 17:14 +0200, Michael Buesch wrote:
-> > The -oldconfig1 is the kernel that had no problems and the other shows the b44 
-> > problem. So if High Resolution Timer Support is disabled everything works 
-> > fine and if I enable it the problems do appear again.
-> > 
-> > I didn't test this on my 2.6.22-rc3 kernel yet, but I guess disabling High 
-> > Resolution Timer Support will also solve the problem there.
-> > 
-> > The older kernels I tried also work perfectly fine and they didn't have the 
-> > High Resolution Timer Support yet.
+On Thursday 17 May 2007 21:43:37 Luis R. Rodriguez wrote:
+> On 5/11/07, Michael Wu <flamingice@sourmilk.net> wrote:
 > 
-> So, that's interesting, indeed.
-> Any idea what's going on, someone? Thomas?
+> > diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
+> > new file mode 100644
+> > index 0000000..10bec9d
+> > --- /dev/null
+> > +++ b/drivers/net/wireless/rtl8187_dev.c
+> 
+> ...
+> 
+> > +static int rtl8187_tx(struct ieee80211_hw *dev, struct sk_buff *skb,
+> > +                     struct ieee80211_tx_control *control)
+> > +{
+> 
+> ...
+> 
+> > +       info->control = kmemdup(control, sizeof(*control), GFP_ATOMIC);
+> 
+> kmemdup can fail, add:
+> 
+> if (!info->control)
+>   return -ENOMEM;
 
-Not off the top of my head.
+The TX callback expects one of the following return types:
 
-Maximilian, does the kernel work otherwise (I mean aside of the b44
-driver) ? 
+080 /* Driver transmit return codes */
+081 #define NETDEV_TX_OK 0          /* driver took care of packet */
+082 #define NETDEV_TX_BUSY 1        /* driver tx path was busy*/
+083 #define NETDEV_TX_LOCKED -1     /* driver tx lock was already taken */
 
-Can you please keep CONFIG_HIGH_RES_TIMERS and CONFIG_NOHZ and try the
-following combinations on the kernel command line:
+So most likely you want NETDEV_TX_BUSY here.
 
-1) highres=off nohz=off (should be the same as your working config)
-2) highres=off
-3) nohz=off
-
-Michael, is anything in the b44 driver timer driven ?
-
-Thanks,
-
-	tglx
-
-
+-- 
+Greetings Michael.
