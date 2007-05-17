@@ -1,75 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hoefnix.telenet-ops.be ([195.130.132.54]:38321 "EHLO
-	hoefnix.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754438AbXEBKCa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 May 2007 06:02:30 -0400
-Received: from asia.telenet-ops.be (asia.telenet-ops.be [195.130.137.74])
-	by hoefnix.telenet-ops.be (Postfix) with ESMTP id DBA009D4D0
-	for <linux-wireless@vger.kernel.org>; Wed,  2 May 2007 12:02:18 +0200 (CEST)
-Message-ID: <46387E7E.7040300@telenet.be>
-Date: Wed, 02 May 2007 12:05:18 +0000
-From: ian <ischram@telenet.be>
-MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Compilation error with latest wireless-dev
-References: <4638161D.7020106@lwfinger.net> <20070502023406.0efnk48888owckc8@webmail.spamcop.net>
-In-Reply-To: <20070502023406.0efnk48888owckc8@webmail.spamcop.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from smtp.osdl.org ([207.189.120.12]:58904 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757892AbXEQPTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 May 2007 11:19:36 -0400
+Date: Thu, 17 May 2007 08:05:40 -0700
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: James Ketrenos <jketreno@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers [part 2/2]
+Message-ID: <20070517080540.4db88dd4@freepuppy>
+In-Reply-To: <20070516203505.556df4f9.randy.dunlap@oracle.com>
+References: <464B7B7C.5080800@linux.intel.com>
+	<20070516203505.556df4f9.randy.dunlap@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have had the same experience. pretty frustrating to see the dns queries being 
-answered. But all the kernel does is send an "ICMP port unreachable" back to the 
-dns server.
+On Wed, 16 May 2007 20:35:05 -0700
+Randy Dunlap <randy.dunlap@oracle.com> wrote:
 
-The only thing I can think of that could cause this is "netpoll" trapping the rx
-But I only say that because there were some recent changes to that code, and 
-the name sounds suspicious ;)
 
-The compile error went away when I selected NET_SCHED which was the
-"QoS/and fair queing" entry in menuconfig.
+> 
+> 5.  This function:
+> 
+> +static inline u8 iwl4965_get_dma_hi_address(dma_addr_t addr)
+> +{
+> +#ifdef _X86_64_TYPES_H
+> +	return addr >> 32;
+> +#else
+> +#ifdef _I386_TYPES_H
+> +	return 0;
+> +#else
+> +#error "unsupported architecture"
+> +#endif
+> +#endif
+> +}
+> 
+> a.  For i386, dma_addr_t can still be 64 bits.  See asm-i386/types.h:
+> 
+> #ifdef CONFIG_HIGHMEM64G
+> typedef u64 dma_addr_t;
+> #else
+> typedef u32 dma_addr_t;
+> #endif
+> 
+> b.  Should use CONFIG_64BIT instead of checking _X64_64_TYPES_H or
+> _I386_TYPES_H.
+> 
+> c.  can just shift addr 32 bits right (in 2 shifts) in all cases:
+> 
+> 	return (addr >> 16) >> 16;
+>
 
-cheers Ian.
+I did this in sky2 driver:
 
-Pavel Roskin wrote:
-> Quoting Larry Finger <Larry.Finger@lwfinger.net>:
-> 
->> Compiling wireless-dev (commit d2f859f56c9f00f093f943cf810a863a5aa2e10f)
->> results in the following
->> error when building modules:
->>
->> WARNING: "tcf_destroy_chain" [net/mac80211/mac80211.ko] undefined!
->> make[1]: *** [__modpost] Error 1
->> make: *** [modules] Error 2
->>
->> In my configuration, net/sched/sch_api.c where tcf_destroy_chain is defined
->> is not compiled. The
->> network-related configuration parameters are:
-> 
-> Same problem here.  CONFIG_NET_SCH_FIFO was enabled, apparently by
-> net/mac80211/Kconfig, but CONFIG_NET_SCHED.  Selecting the later (but none of
-> the schedulers) fixed the compile error.
-> 
-> However, the is something weird with the new kernel.  DNS has stopped working. 
-> Under the new kernel, DNS requests get "port unreachable" ICMP responses seen
-> in Wireshark (sorry, I would have to reboot to get the exact message).  The DNS
-> server is in a different subnet.  I can ping it and even telnet (over TCP) to
-> the DNS port 53.
-> 
-> Under the old kernel, the DNS requests are answered properly.
-> 
-> There is no way netdev folks can be unaware of it, so it's just a word of
-> caution, not a bugreport.
-> 
-> --
-> Regards,
-> Pavel Roskin
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+/* Return high part of DMA address (could be 32 or 64 bit) */
+static inline u32 high32(dma_addr_t a)
+{
+	return sizeof(a) > sizeof(u32) ? (a >> 16) >> 16 : 0;
+}
+
+
+
+-- 
+Stephen Hemminger <shemminger@linux-foundation.org>
