@@ -1,70 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:44650
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752810AbXEZFC6 (ORCPT
+Received: from rgminet01.oracle.com ([148.87.113.118]:13354 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755753AbXEQBYA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 01:02:58 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: BUG: at net/mac80211/ieee80211.c:1280 ieee80211_tx()
-Date: Sat, 26 May 2007 07:02:56 +0200
-Cc: "Will Dyson" <will.dyson@gmail.com>, linux-wireless@vger.kernel.org
-References: <8e6f94720705251637o71a13d71w70199a3057048592@mail.gmail.com>
-In-Reply-To: <8e6f94720705251637o71a13d71w70199a3057048592@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200705260702.56851.mb@bu3sch.de>
+	Wed, 16 May 2007 21:24:00 -0400
+Date: Wed, 16 May 2007 18:27:00 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: James Ketrenos <jketreno@linux.intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers
+Message-Id: <20070516182700.912a21ed.randy.dunlap@oracle.com>
+In-Reply-To: <464B7B7C.5080800@linux.intel.com>
+References: <464B7B7C.5080800@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 26 May 2007 01:37, Will Dyson wrote:
-> Hi all,
-> 
-> First, the good news: bcm43xx-mac80211 in wireless-dev now works about
-> as well for me as the old driver. Similar connection reliability,
-> upload speed and download speed. Woo!
+On Wed, 16 May 2007 14:45:32 -0700 James Ketrenos wrote:
 
-Whoo, nice. :)
-/me pours a bottle of beer to everybody on the list.
+> This patch adds the iwlwifi project directory and sources needed to 
+> build the mac80211 based wireless drivers for the Intel PRO/Wireless 
+> 3945ABG/BG Network Connection and Intel Wireless WiFi Link AGN adapters.
+> 
+> Signed-off-by: James Ketrenos <jketreno@linux.intel.com>
+> ---
+> 
+> NOTE:  The patch is 597k and can be found at:
+> 
+> 	http://intellinuxwireless.org/iwlwifi/0001-Add-iwlwifi-wireless-drivers.patch
+> 
+> Patch is against wireless-dev commit-id be8662897~
 
-> But I've got ton's of these in my log:
-> 
->  BUG: at net/mac80211/ieee80211.c:1280 ieee80211_tx()
 
-Hm, probably mac80211 bug. Not sure. I didn't look at the code, yet.
+Some comments/review, mostly not-code-related:
 
->  Call Trace:
->   [<ffffffff805866a3>] ieee80211_master_start_xmit+0x5f3/0x680
->   [<ffffffff804d447d>] dev_hard_start_xmit+0x26d/0x2d0
->   [<ffffffff804e4781>] __qdisc_run+0xd1/0x260
->   [<ffffffff804d6a87>] dev_queue_xmit+0x1a7/0x370
->   [<ffffffff8058a45b>] ieee80211_subif_start_xmit+0x34b/0x590
->   [<ffffffff804ce3a7>] kfree_skb+0x17/0x30
->   [<ffffffff804d447d>] dev_hard_start_xmit+0x26d/0x2d0
->   [<ffffffff804e4781>] __qdisc_run+0xd1/0x260
->   [<ffffffff804d6a87>] dev_queue_xmit+0x1a7/0x370
->   [<ffffffff804f9bef>] ip_output+0x19f/0x340
->   [<ffffffff804f9069>] ip_queue_xmit+0x219/0x430
->   [<ffffffff80295fe0>] __pollwait+0x0/0x110
->   [<ffffffff8050a82e>] tcp_transmit_skb+0x40e/0x7c0
->   [<ffffffff8022ce00>] default_wake_function+0x0/0x10
->   [<ffffffff8050c4bb>] __tcp_push_pending_frames+0x11b/0x940
->   [<ffffffff8059c6a8>] csum_partial_copy_from_user+0x88/0x120
->   [<ffffffff80500b66>] tcp_sendmsg+0x876/0xc80
->   [<ffffffff8022ce0d>] default_wake_function+0xd/0x10
->   [<ffffffff8022ba37>] __wake_up_common+0x47/0x70
->   [<ffffffff8051e795>] inet_sendmsg+0x45/0x80
->   [<ffffffff804c7161>] sock_aio_write+0x101/0x110
->   [<ffffffff80286071>] do_sync_write+0xf1/0x130
->   [<ffffffff80246f80>] autoremove_wake_function+0x0/0x40
->   [<ffffffff8023688e>] current_fs_time+0x3e/0x40
->   [<ffffffff80286999>] vfs_write+0x159/0x170
->   [<ffffffff80286fa0>] sys_write+0x50/0x90
->   [<ffffffff8020a1ae>] system_call+0x7e/0x83
-> 
-> Kernel: wireless-dev latest from git
-> Arch: x86-64
-> 
-> My boot log is attached for full hardware information.
-> 
+1.  Indent Kconfig help text with one tab + 2 spaces (not 8 spaces).
+
+2.  Convert function comment blocks into kernel-doc.  E.g., this one:
+
++/**
++ * Deallocate DMA queue.
++ *
++ * Empty queue by removing and destroying all BD's.
++ * Free all buffers.
++ *
++ * @param dev
++ * @param q
+
+(These param names are not correct.)
+
++ */
+
+would be:
+
+/**
+ * iwl_tx_queue_free - Deallocate DMA queue
+ * @priv:  describe this param
+ * @txq:  describe this param
+ *
+ * Empty queue by removing and destroying all BD's.
+ * Free all buffers.
+ */
+
+Preferably at least all non-static functions will be documented
+with kernel-doc.
+
+3.  Indent labels: with 0 or 1 space, not with 7 spaces.
+Using 7 spaces hides them, makes them too difficult to see/find.
+
+4.  Please don't use /** to begin comment blocks that are not
+in kernel-doc format.
+
+5.  Some inline functions may be too large.  E.g., this one:
++static inline int full_rxon_required(struct iwl_priv *priv)
+
+6.  What does 0x40 mean here?  (don't use magic values)
++	if (res->hdr.flags & 0x40) {
+
+7.  This test can be shortened (lots of instances):
+
++		if (is_broadcast_ether_addr(header->addr1) ||
++		    is_multicast_ether_addr(header->addr1))
++			return !compare_ether_addr(header->addr3, priv->bssid);
+
+since (quoting include/linux/etherdevic.h):
+ * By definition the broadcast address is also a multicast address.
+
+8.  Multi-line comment format has a '*' on each line:
++/*
++  handle build REPLY_TX command notification.
++*/
+
+so add '*' in lots of places.
+
+9.  in is_duplicate_packet(), the
++	case IEEE80211_IF_TYPE_IBSS:{
+block is indented one extra tab.
+
+10. typo:
++ * When FW adwances 'R' index, all entries between old and
+            advances
+
+11. Don't indent #endif like this:
+
++#if IWL == 3945
++	u8 rate = beacon->beacon_notify_hdr.rate;
++#elif IWL == 4965
++	u8 rate = beacon->beacon_notify_hdr.rate.rate;
++	#endif
+
+12.  36 lines end with trailing whitespace.  :(
+
+13.  Need blank line before and after functions (several of these):
+
++#define ERROR_START_OFFSET  (1 * sizeof(u32))
++#define ERROR_ELEM_SIZE     (7 * sizeof(u32))
++static void iwl_dump_nic_error_log(struct iwl_priv *priv)
++{
+
+14.  sysfs files should contain only 1 value.  Compare
+
++static ssize_t show_tune(struct device *d,
++			 struct device_attribute *attr, char *buf)
++{
++	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
++
++	return sprintf(buf, "%d %d\n",
++		       priv->phymode, priv->active_rxon.channel);
++}
+
+and show_channels()  [probably others].
+
+15.  Limit source lines to <= 80 columns (this patch contains
+over 200 lines that are > 80 columns).
+
+16.  Don't use such obfuscated wrappers like these:
+
++#define IWL_NOP {}
++#define IWL_NOP_RET(x) { return x; }
+
+just open-code them.
+
+
+OK, my eyes are glazing over.  I'll check the rest of it later.
+
+I hope that some of the wireless developers also review it (since
+I'm not one).
+
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
