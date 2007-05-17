@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2860 "EHLO ra.tuxdriver.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3313 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754512AbXEEWc3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 May 2007 18:32:29 -0400
-Date: Sat, 5 May 2007 18:25:01 -0400
+	id S1758649AbXEQRdM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 May 2007 13:33:12 -0400
+Date: Thu, 17 May 2007 13:16:59 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.21-mm1
-Message-ID: <20070505222501.GD23938@tuxdriver.com>
-References: <20070505014955.8f3990b5.akpm@linux-foundation.org> <463CA74C.8080008@gmail.com> <20070505114811.f824c902.akpm@linux-foundation.org> <200705052348.49994.mb@bu3sch.de>
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: fail back to use associate from reassociate failure
+Message-ID: <20070517171659.GB7720@tuxdriver.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200705052348.49994.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 05, 2007 at 11:48:49PM +0200, Michael Buesch wrote:
-> On Saturday 05 May 2007 20:48:11 Andrew Morton wrote:
-> > On Sat, 05 May 2007 17:48:28 +0200 Maciej Rutecki <maciej.rutecki@gmail.com> wrote:
-> > 
-> > > Andrew Morton pisze:
-> > > > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21/2.6.21-mm1/
-> > > > 
-> > > > 
-> > > 
-> > > CC [M]  lib/zlib_deflate/deflate_syms.o
-> > >   LD [M]  lib/zlib_deflate/zlib_deflate.o
-> > >   Building modules, stage 2.
-> > >   MODPOST 791 modules
-> > > ERROR: "ssb_pcihost_register" [drivers/net/b44.ko] undefined!
-> > > ERROR: "ssb_pcihost_unregister" [drivers/net/b44.ko] undefined!
-> > > make[2]: *** [__modpost] Error 1
-> > > make[1]: *** [modules] Error 2
-> > > make[1]: Leaving directory `/usr/src/linux-mm'
-> > > make: *** [debian/stamp-build-kernel] Error 2
-> 
-> config B44_PCI
-> 	bool "Broadcom 4400 PCI device support"
-> 	depends on B44 && NET_PCI
-> 
-> We simply need a SELECT SSB_PCIHOST here. Not sure why it's not there.
-> I thought it used to be there.
+From: Zhu Yi <yi.zhu@intel.com>
 
-That may have only been applied to the mm-master branch, which now
-no longer exists.  I'll patch it now.
+Some APs have strict checking between associate and reassociate. In
+a case when an AP is restarted during a connection, it denies the
+mac80211 reassoc request since this is a new association for the AP.
+To fix this problem, we need to check the status code against
+WLAN_STATUS_REASSOC_NO_ASSOC and clear ifsta->prev_bssid_set in
+handling the association failure response.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+
+ net/mac80211/ieee80211_sta.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index b003912..dacd2d3 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -1182,6 +1182,8 @@ static void ieee80211_rx_mgmt_assoc_resp(struct net_device *dev,
+ 	if (status_code != WLAN_STATUS_SUCCESS) {
+ 		printk(KERN_DEBUG "%s: AP denied association (code=%d)\n",
+ 		       dev->name, status_code);
++		if (status_code == WLAN_STATUS_REASSOC_NO_ASSOC)
++			ifsta->prev_bssid_set = 0;
+ 		return;
+ 	}
+ 
