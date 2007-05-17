@@ -1,74 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3238 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757294AbXENSch (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2007 14:32:37 -0400
-Date: Mon, 14 May 2007 14:13:23 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] Add 93cx6 eeprom library
-Message-ID: <20070514181323.GB6999@tuxdriver.com>
-References: <200705140138.52596.flamingice@sourmilk.net> <a32f33a40705132349h367ba18aoa046d5583329ead@mail.gmail.com> <200705141056.01199.flamingice@sourmilk.net> <200705141700.21900.IvDoorn@gmail.com>
+Received: from agminet01.oracle.com ([141.146.126.228]:28505 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753049AbXEQDbg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 May 2007 23:31:36 -0400
+Date: Wed, 16 May 2007 20:35:05 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: James Ketrenos <jketreno@linux.intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers [part 2/2]
+Message-Id: <20070516203505.556df4f9.randy.dunlap@oracle.com>
+In-Reply-To: <464B7B7C.5080800@linux.intel.com>
+References: <464B7B7C.5080800@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200705141700.21900.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 14, 2007 at 05:00:21PM +0200, Ivo van Doorn wrote:
-> On Monday 14 May 2007 16:55, Michael Wu wrote:
-> > On Monday 14 May 2007 02:49, Ivo Van Doorn wrote:
-> > > For the record: I am still not happy with the removal of the udelay() from
-> > > the pulse methods as they were indicated by the original Ralink code.
-> > > But since I cannot test the effect on Ralink eeprom reading at this time,
-> > > and I could otherwise just add it to the register_write handler if
-> > > required, I am signing this off anyway.
-> > >
-> > The udelay is necessary to set a limit on how fast the eeprom is operated.. 
-> > but not on all hardware, apparently. adm8211 just uses a read from the eeprom 
-> > register to perform the delay.
+On Wed, 16 May 2007 14:45:32 -0700 James Ketrenos wrote:
+
+> This patch adds the iwlwifi project directory and sources needed to 
+> build the mac80211 based wireless drivers for the Intel PRO/Wireless 
+> 3945ABG/BG Network Connection and Intel Wireless WiFi Link AGN adapters.
 > 
-> Ok, then I'll update rt2x00 to perform the delay during register_write as well. :)
+> Signed-off-by: James Ketrenos <jketreno@linux.intel.com>
+> 
+> NOTE:  The patch is 597k and can be found at:
+> 
+> 	http://intellinuxwireless.org/iwlwifi/0001-Add-iwlwifi-wireless-drivers.patch
+> 
+> Patch is against wireless-dev commit-id be8662897~
 
-Actually, see the end of the thread from the previous 93cx6 patch
-Michael posted on Friday.  I think these delays are actually alright,
-but they could use a comment.  How about the patch below (applied on
-top of the previous version)?
 
-John
+1.  Can't this:
 
-P.S.  No need to repost any 93cx6 patches, I have them.
++	if (sizeof(priv->eeprom) != 1024) {
++		IWL_ERROR("EEPROM structure size incorrect!\n");
++		return -EINVAL;
++	}
+
+use this instead of 1024 ?
++#define IWL4965_EEPROM_IMAGE_SIZE  (0x200 * sizeof(u16))
+
+2.  Use of bitfields:  bitfields are not (guaranteed to be) portable
+across a wire interface to some other CPU architecture.
+Are all bitfield uses always local to the running driver?
+They should be.
+
+3.  What are all of those "volatile" C keywords doing in struct
+iwl_shared?
+See http://lwn.net/Articles/232961/ : "The trouble with volatile"
+
+4.  Don't list the parameters like this:
+
++static const struct iwl_channel_info *iwl4965_get_current_txpower_info(struct
++								       iwl_priv
++								       *priv,
++								       u8 *
++								       band,
++								       u8 *
++								       channel,
++								       u8 *
++								       is_fat,
++								       u8 *
++								       ctrl_chan_high)
++{
+
+Just do more like this:
+
++static const struct iwl_channel_info *iwl4965_get_current_txpower_info(
++						struct iwl_priv *priv,
++						u8 *band,
++						u8 *channel,
++						u8 *is_fat,
++						u8 *ctrl_chan_high)
++{
+
+5.  This function:
+
++static inline u8 iwl4965_get_dma_hi_address(dma_addr_t addr)
++{
++#ifdef _X86_64_TYPES_H
++	return addr >> 32;
++#else
++#ifdef _I386_TYPES_H
++	return 0;
++#else
++#error "unsupported architecture"
++#endif
++#endif
++}
+
+a.  For i386, dma_addr_t can still be 64 bits.  See asm-i386/types.h:
+
+#ifdef CONFIG_HIGHMEM64G
+typedef u64 dma_addr_t;
+#else
+typedef u32 dma_addr_t;
+#endif
+
+b.  Should use CONFIG_64BIT instead of checking _X64_64_TYPES_H or
+_I386_TYPES_H.
+
+c.  can just shift addr 32 bits right (in 2 shifts) in all cases:
+
+	return (addr >> 16) >> 16;
+
+6.  No need to init rc:
+
++int iwl_hw_setup_bootstrap(struct iwl_priv *priv)
++{
++	int rc = 0;
++
++	/* Load bootstrap instructions into bootstrap state machine, for
++	 *   restoring after suspend/resume and rfkill power-downs */
++	rc = iwl4965_load_bsm(priv, priv->ucode_boot.v_addr,
++			      priv->ucode_boot.len);
+
+7.  No need to init hwVersion:
+
++void iwl_hw_card_show_info(struct iwl_priv *priv)
++{
++	u16 hwVersion = 0;
++
++	hwVersion = priv->eeprom.board_revision_4965;
+
+8.  Too many BUG_ON()s.  Try to recover or return -ERRORs instead.
+
+9.  printk() calls should use KERN_* levels.
+
+10. Don't use C99-style // comments.
+
+
+
+and as Andrew's -mm announcements and my sig say, use
+Documentation/SubmitChecklist to see what else needs to be done.
+
 ---
-
-
-[PATCH] eeprom_93cx6: add comment explaining clocking delays
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-diff --git a/drivers/misc/eeprom_93cx6.c b/drivers/misc/eeprom_93cx6.c
-index bfcb434..1f615ac 100644
---- a/drivers/misc/eeprom_93cx6.c
-+++ b/drivers/misc/eeprom_93cx6.c
-@@ -39,6 +39,8 @@ static inline void eeprom_93cx6_pulse_high(struct eeprom_93cx6 *eeprom)
- {
- 	eeprom->reg_data_clock = 1;
- 	eeprom->register_write(eeprom);
-+
-+	/* honor T_ckh hold requirements from datasheet */
- 	udelay(1);
- }
- 
-@@ -46,6 +48,8 @@ static inline void eeprom_93cx6_pulse_low(struct eeprom_93cx6 *eeprom)
- {
- 	eeprom->reg_data_clock = 0;
- 	eeprom->register_write(eeprom);
-+
-+	/* honor T_ckl hold requirements from datasheet */
- 	udelay(1);
- }
- 
--- 
-John W. Linville
-linville@tuxdriver.com
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
