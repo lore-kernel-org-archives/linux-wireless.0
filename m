@@ -1,38 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:45938
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966549AbXEGUuu (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:57779 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754911AbXEQIw7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2007 16:50:50 -0400
-From: Michael Buesch <mb@bu3sch.de>
+	Thu, 17 May 2007 04:52:59 -0400
+Date: Thu, 17 May 2007 09:52:54 +0100
+From: Christoph Hellwig <hch@infradead.org>
 To: Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [PATCH] mac80211: Allow sleeping in set_key op
-Date: Mon, 7 May 2007 22:50:42 +0200
-Cc: Jiri Benc <jbenc@suse.cz>, John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200705062037.35037.mb@bu3sch.de> <200705071517.21331.flamingice@sourmilk.net>
-In-Reply-To: <200705071517.21331.flamingice@sourmilk.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200705072250.42407.mb@bu3sch.de>
+Cc: James Ketrenos <jketreno@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers
+Message-ID: <20070517085254.GA27058@infradead.org>
+References: <464B7B7C.5080800@linux.intel.com> <200705162151.32910.flamingice@sourmilk.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200705162151.32910.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 07 May 2007 21:17:14 Michael Wu wrote:
-> On Sunday 06 May 2007 14:37, Michael Buesch wrote:
-> > Allow drivers to sleep in the setkey function, as it's rather
-> > complicated to defer set_key to a workqueue in the driver
-> > (error code is lost, keyconf->hw_key_idx is possibly hard
-> > to get right.)
+On Wed, May 16, 2007 at 09:51:28PM -0400, Michael Wu wrote:
+> On Wednesday 16 May 2007 17:45, James Ketrenos wrote:
+> > This patch adds the iwlwifi project directory and sources needed to
+> > build the mac80211 based wireless drivers for the Intel PRO/Wireless
+> > 3945ABG/BG Network Connection and Intel Wireless WiFi Link AGN adapters.
 > >
-> I'd rather not defer to a workqueue. That just patches over the awkward 
-> locking that the sta_info code has, which is really the reason why you can't 
-> sleep in set_key.
+> Looks much better than when I last checked. A few comments:
+> 
+> - The enter/leave stuff should be removed.
+> - Many of the in_interrupt() checks are unnecessary. Jiri recently documented 
+> which callbacks need to be atomic - the ones that don't need to be atomic 
+> definitely won't be called in an interrupt.
 
-Well, but it seems nobody is fixing the locking. I was told it's
-almost impossible or something like that. ;)
-This is just trying to fix showstopper bugs for bcm43xx.
+Actually not some but all.  Drivers should never use in_interrupt().
 
--- 
-Greetings Michael.
