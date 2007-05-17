@@ -1,58 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:58180 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967896AbXEHV0H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2007 17:26:07 -0400
-Subject: Re: Please pull 'revert-libertas' branch of wireless-2.6
-From: Dan Williams <dcbw@redhat.com>
+Received: from smtp.rutgers.edu ([128.6.72.243]:35959 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754214AbXEQD4x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 May 2007 23:56:53 -0400
+From: Michael Wu <flamingice@sourmilk.net>
 To: Jeff Garzik <jeff@garzik.org>
-Cc: David Miller <davem@davemloft.net>, penberg@cs.helsinki.fi,
-	linville@tuxdriver.com, hch@infradead.org,
-	linux-wireless@vger.kernel.org, marcelo@kvack.org,
-	linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-	torvalds@linux-foundation.org
-In-Reply-To: <4640E3BF.8080401@garzik.org>
-References: <20070507141143.GB5125@tuxdriver.com>
-	 <463F443A.5000306@garzik.org>
-	 <84144f020705080247v74ebcd26y27c2f1e61529b215@mail.gmail.com>
-	 <20070508.132737.104034594.davem@davemloft.net>
-	 <4640E3BF.8080401@garzik.org>
-Content-Type: text/plain
-Date: Tue, 08 May 2007 17:29:23 -0400
-Message-Id: <1178659763.14888.2.camel@localhost.localdomain>
-Mime-Version: 1.0
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers
+Date: Wed, 16 May 2007 23:55:30 -0400
+Cc: James Ketrenos <jketreno@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <464B7B7C.5080800@linux.intel.com> <200705162151.32910.flamingice@sourmilk.net> <464BC459.4030105@garzik.org>
+In-Reply-To: <464BC459.4030105@garzik.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart2635872.XGUDnyOYyr";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200705162355.35495.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-05-08 at 16:55 -0400, Jeff Garzik wrote:
-> David Miller wrote:
-> > From: "Pekka Enberg" <penberg@cs.helsinki.fi>
-> >> On 5/7/07, Jeff Garzik <jeff@garzik.org> wrote:
-> >>> Open source is about release early, release often.  Not "hide code in a
-> >>> dark corner until Christoph thinks it is perfect."  We have high
-> >>> standards for upstream merged code, but that standard is not perfection.
-> >> Please. This has nothing to do with Christoph. (1) the driver seems to
-> >> break every Linux coding style convention known to man and (2) adds a
-> >> new ABI with bunch of ioctls() that apparently haven't been reviewed
-> >> properly. That's just not acceptable for mainline kernel!
-> 
-> > I completely agree, these things should be corrected and if the the
-> > author is being totally unresponsive to Christoph's review that's even
-> > worse.
-> 
-> Um, the maintainer replied yesterday morning[1] that libertas-2.6.git 
-> has already been updated for these requests, will be updated some more, 
-> and overall was responsive to the entire list of Christoph requests.
-> 
-> I'm mainly concerned with removing the unnecessary ioctls before 2.6.22 
-> release, since that affects userspace.  The vast majority of other stuff 
-> is cosmetic, which is being worked on, but lower priority in my book.
+--nextPart2635872.XGUDnyOYyr
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I'll audit the list of ioctls and remove ones that may be objectionable,
-and we'll go back through them after 2.6.22 and add back in ones that
-are actually required.  Keep the API/ABI small and expand if necessary.
-What's the timeframe required here?  Linville said a few days at the
-most.
+On Wednesday 16 May 2007 22:56, Jeff Garzik wrote:
+> This is the maintainer's personal preference.  I put them in all my
+> drivers, and they look perfectly fine here.
+>
+I consider it generally ugly and to be avoided. These seem to be placed onl=
+y=20
+in the mac80211 callbacks so it's more of a tool to figure out when mac8021=
+1=20
+uses callbacks.. doesn't really belong here IMHO.
 
-Dan
+But.. if James likes them, fine. I haven't seen anything better using the g=
+cc=20
+mcount stuff Christoph Hellwig was talking about so this is the only option.
 
+=2DMichael Wu
+
+--nextPart2635872.XGUDnyOYyr
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGS9I3T3Oqt9AH4aERAgc2AKCYzTbBl9uKrhkb1BI+xAJTVs/mlwCggVcl
+r1NW356v8XwLz/Xq24+Kc1s=
+=V1VC
+-----END PGP SIGNATURE-----
+
+--nextPart2635872.XGUDnyOYyr--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
