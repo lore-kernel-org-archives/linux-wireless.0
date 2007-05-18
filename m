@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:54212 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932117AbXEIFlt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2007 01:41:49 -0400
-Date: Wed, 9 May 2007 13:41:52 +0800
-From: Zhu Yi <yi.zhu@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: fail back to use associate from reassociate
-Message-ID: <20070509054152.GA30839@mail.intel.com>
-Reply-To: yi.zhu@intel.com
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35064 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754375AbXERHEX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 May 2007 03:04:23 -0400
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers [part 2/2]
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stephen Hemminger <shemminger@linux-foundation.org>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070517080540.4db88dd4@freepuppy>
+References: <464B7B7C.5080800@linux.intel.com>
+	 <20070516203505.556df4f9.randy.dunlap@oracle.com>
+	 <20070517080540.4db88dd4@freepuppy>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-vinAXe/8kzToeNELV/1i"
+Date: Fri, 18 May 2007 09:04:16 +0200
+Message-Id: <1179471857.3658.12.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-mac80211: fail back to use associate from reassociate failure
+--=-vinAXe/8kzToeNELV/1i
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Some APs have strict checking between associate and reassociate. In
-a case when an AP is restarted during a connection, it denies the
-mac80211 reassoc request since this is a new association for the AP.
-To fix this problem, we need to check the status code against
-WLAN_STATUS_REASSOC_NO_ASSOC and clear ifsta->prev_bssid_set in
-handling the association failure response.
+On Thu, 2007-05-17 at 08:05 -0700, Stephen Hemminger wrote:
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+> I did this in sky2 driver:
+>=20
+> /* Return high part of DMA address (could be 32 or 64 bit) */
+> static inline u32 high32(dma_addr_t a)
+> {
+> 	return sizeof(a) > sizeof(u32) ? (a >> 16) >> 16 : 0;
+> }
 
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index b003912..dacd2d3 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -1182,6 +1182,8 @@ static void ieee80211_rx_mgmt_assoc_resp(struct net_device *dev,
- 	if (status_code != WLAN_STATUS_SUCCESS) {
- 		printk(KERN_DEBUG "%s: AP denied association (code=%d)\n",
- 		       dev->name, status_code);
-+		if (status_code == WLAN_STATUS_REASSOC_NO_ASSOC)
-+			ifsta->prev_bssid_set = 0;
- 		return;
- 	}
- 
+Note that akpm recently added a macro/inline for this to the tree which
+IIRC went to Linus.
+
+johannes
+
+--=-vinAXe/8kzToeNELV/1i
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGTU/w/ETPhpq3jKURAsJuAJwJLJHv8DJUggl+ATFMV0ml5FTxqwCfe3Cp
+X7JWNeOgy4tyKUG24UVAfVw=
+=+JsI
+-----END PGP SIGNATURE-----
+
+--=-vinAXe/8kzToeNELV/1i--
+
