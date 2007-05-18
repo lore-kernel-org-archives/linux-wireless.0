@@ -1,74 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:40031 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756099AbXETAyO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 May 2007 20:54:14 -0400
-Subject: Re: [PATCH] libertas: skb dereferenced after netif_rx
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Florin Malita <fmalita@gmail.com>, marcelo@kvack.org,
-	linville@redhat.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070518180903.GC3492@tuxdriver.com>
-References: <464B7127.5080502@gmail.com>
-	 <20070518180903.GC3492@tuxdriver.com>
-Content-Type: text/plain
-Date: Sat, 19 May 2007 20:56:41 -0400
-Message-Id: <1179622601.9453.4.camel@xo-28-0B-88.localdomain>
-Mime-Version: 1.0
+Received: from mga06.intel.com ([134.134.136.21]:19763 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751744AbXERUMm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 May 2007 16:12:42 -0400
+Message-ID: <464DF7FC.5070702@linux.intel.com>
+Date: Fri, 18 May 2007 12:01:16 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: Randy Dunlap <randy.dunlap@oracle.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers
+References: <464B7B7C.5080800@linux.intel.com> <20070516182700.912a21ed.randy.dunlap@oracle.com>
+In-Reply-To: <20070516182700.912a21ed.randy.dunlap@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-05-18 at 14:09 -0400, John W. Linville wrote:
-> On Wed, May 16, 2007 at 05:01:27PM -0400, Florin Malita wrote:
-> > In libertas_process_rxed_packet() and process_rxed_802_11_packet() the 
-> > skb is dereferenced after being passed to netif_rx (called from 
-> > libertas_upload_rx_packet). Spotted by Coverity (1658, 1659).
->  
-> Relocating the libertas_upload_rx_packet call is fine, but...
+Randy Dunlap wrote:
+>> 	http://intellinuxwireless.org/iwlwifi/0001-Add-iwlwifi-wireless-drivers.patch
+> Some comments/review, mostly not-code-related:
 > 
-> > Also, libertas_upload_rx_packet() unconditionally returns 0 so the error 
-> > check is dead code - might as well take it out.
-> 
-> Is this merely an implementation detail?  Or an absolute fact?
-> If the former is true, then we should preserve the error
-> checking.  If the latter, then we should change the signature of
-> libertas_upload_rx_packet to return void.
 
-According to the comments, netif_rx always succeeds.  I think we should
-just change the return type to void since there's nothing else in that
-function that can fail.
+Here is the current status (everything not described below has been fixed in GIT, and is available in the patch at http://intellinuxwireless.org/iwlwifi/0001-v2-Add-iwlwifi-wireless-drivers.patch:
 
-Dan
+> 2.  Convert function comment blocks into kernel-doc.  E.g., this one:
+Fixed this part.
+...
+> Preferably at least all non-static functions will be documented
+> with kernel-doc.
 
+I updated and added some of these.  Improving the kernel-doc (and comments in general) over time is on the list of things to do.
 
-> > Signed-off-by: Florin Malita <fmalita@gmail.com>
+> 14.  sysfs files should contain only 1 value.  Compare
 > 
-> > 	lbs_pr_debug(1, "RX Data: size of actual packet = %d\n", skb->len);
-> > -	if (libertas_upload_rx_packet(priv, skb)) {
-> > -		lbs_pr_debug(1, "RX error: libertas_upload_rx_packet"
-> > -		       " returns failure\n");
-> > -		ret = -1;
-> > -		goto done;
-> > -	}
-> > 	priv->stats.rx_bytes += skb->len;
-> > 	priv->stats.rx_packets++;
-> > 
-> > +	libertas_upload_rx_packet(priv, skb);
-> > +
-> > 	ret = 0;
-> > done:
-> > 	LEAVE();
+> +static ssize_t show_tune(struct device *d,
+> +			 struct device_attribute *attr, char *buf)
+> +{
+> +	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
+> +
+> +	return sprintf(buf, "%d %d\n",
+> +		       priv->phymode, priv->active_rxon.channel);
+> +}
 > 
-> Another potential patch is to remove the "ret = 0" line before the
-> "done" label, since ret is initialized at the head of the function.
-> Come to think of it, you can probably remove the "= 0" part of ret's
-> declaration as well (in both functions).
-> 
-> Hth!
-> 
-> John
-> 
-> P.S.  Also, please make sure to send wireless patches to
-> linux-wireless@vger.kernel.org and CC me.
+> and show_channels()  [probably others].
 
+I've modified show/store_tune to take and return a single value encoding the band and channel (since they are locked together and can't be set separately without introducing temporary state logic; tuning to channel 6 could be done in the 2.4GHz band or the 5.2GHz band)
+
+I've added fixing show_channels to the list of things to change; the approach currently used has been *very* useful, without any additional tools or scripts, to be able to just cat a file and see the supported channel map by the driver.  Having to do an ls on a directory to see the bands, and within each band to do an ls to see the channels, and within each channel to then have a single flags attribute seems painful from a system overhead as well as usability standpoint (although making a graphical tool on top of it would be easier...)
+
+We also need to look at cleaning up / fixing how the measurement requests can be performed, etc.  
+
+The power_level sysfs attribute currently has a single parameter for setting it, and in showing it it provides back the single parameter and a text translation with additional information about the setting.  Ex (with a slight change I committed vs. what was in the original patch):
+
+% echo 3 > /sys/bus/pci/drivers/iwl3945/*/power_level
+% cat /sys/bus/pci/drivers/iwl3945/*/power_level
+3 (Timeout 75ms, Period 1000ms)
+
+> 15.  Limit source lines to <= 80 columns (this patch contains
+> over 200 lines that are > 80 columns).
+
+Fixed in the .c files.  Still have 155 instances in the .h files (most due to mid-line tabs)
+
+---
+
+Are you OK with iwlwifi addressing the above post-merge into wireless-dev?
+
+James
