@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:14945 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1767568AbXEDBES (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:34472 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754078AbXERWFv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2007 21:04:18 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH v2] mac80211: prevent a wme_qdiscop_init BUG on other devices
-Date: Thu, 03 May 2007 21:02:31 -0400
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Message-Id: <20070504010231.5274.99328.stgit@magic.sourmilk.net>
-Content-Type: text/plain;
-  charset=utf-8;
-  format=fixed
+	Fri, 18 May 2007 18:05:51 -0400
+Message-ID: <464E1283.80509@linux.intel.com>
+Date: Fri, 18 May 2007 13:54:27 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: Jeff Garzik <jeff@garzik.org>
+CC: Randy Dunlap <randy.dunlap@oracle.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers
+References: <464B7B7C.5080800@linux.intel.com> <20070516182700.912a21ed.randy.dunlap@oracle.com> <464DF7FC.5070702@linux.intel.com> <464E134D.60000@garzik.org>
+In-Reply-To: <464E134D.60000@garzik.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+Jeff Garzik wrote:
+> James Ketrenos wrote:
+>> Randy Dunlap wrote:
+>>> 15.  Limit source lines to <= 80 columns (this patch contains
+>>> over 200 lines that are > 80 columns).
+>>
+>> Fixed in the .c files.  Still have 155 instances in the .h files (most 
+>> due to mid-line tabs)
+> 
+> See my email on this subject.  This is NOT a hard and fast rule.  If you 
+> have to do something stupid to the formatting to get it to fit, then you 
+> are moving in the wrong direction.
 
-This prevents a BUG if the ieee80211 qdisc is being registered on a net dev
-without ieee80211_ptr set. It also ensures the device is a mac80211 device.
+The bulk of the problems in the .h files are caused by Lindent injecting tabs instead of spaces between the C language item and the comment describing it, blowing the comments over 80.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+That said, some of the define names are horrendously long... over time we can get those cleaned up w/ some sed scripts.
 
- net/mac80211/wme.c |   12 ++++++++++--
- 1 files changed, 10 insertions(+), 2 deletions(-)
+> As an aside, sometimes long lines are an indication that a function 
+> needs to be broken up into smaller sub-functions.
 
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 3823f15..89ce815 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -389,10 +389,15 @@ static int wme_qdiscop_init(struct Qdisc *qd, struct rtattr *opt)
- {
- 	struct ieee80211_sched_data *q = qdisc_priv(qd);
- 	struct net_device *dev = qd->dev;
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	int queues = local->hw.queues;
-+	struct ieee80211_local *local;
-+	int queues;
- 	int err = 0, i;
- 
-+	/* check that device is a mac80211 device */
-+	if (!dev->ieee80211_ptr ||
-+	    dev->ieee80211_ptr->wiphy->privid != mac80211_wiphy_privid)
-+		return -EINVAL;
-+
- 	/* check this device is an ieee80211 master type device */
- 	if (dev->type != ARPHRD_IEEE80211)
- 		return -EINVAL;
-@@ -406,6 +411,9 @@ static int wme_qdiscop_init(struct Qdisc *qd, struct rtattr *opt)
- 	if (qd->flags & TCQ_F_INGRESS)
- 		return -EINVAL;
- 
-+	local = wdev_priv(dev->ieee80211_ptr);
-+	queues = local->hw.queues;
-+
- 	/* if options were passed in, set them */
- 	if (opt) {
- 		err = wme_qdiscop_tune(qd, opt);
+Nod.
 
+James
