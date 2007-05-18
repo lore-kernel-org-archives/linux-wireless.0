@@ -1,37 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-11.dex002.intermedia.net ([64.78.21.77]:34444 "EHLO
-	dhost002-11.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755745AbXEJRY6 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:51517
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750893AbXERRjU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 13:24:58 -0400
-From: "Jouni Malinen" <jkm@devicescape.com>
-Date: Thu, 10 May 2007 10:25:10 -0700
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kumar Gala <galak@kernel.crashing.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: support for bridging ethernet and 802.11
-Message-ID: <20070510172510.GE24712@devicescape.com>
-References: <CCA1D7C0-D44A-450D-A76E-DAE792E0CB37@kernel.crashing.org> <1178816781.3806.31.camel@johannes.berg> <20070510171213.GD24712@devicescape.com> <1178817575.3806.36.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1178817575.3806.36.camel@johannes.berg>
+	Fri, 18 May 2007 13:39:20 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>
+Subject: bcm43xx-mac80211 freezes on heavy RX
+Date: Fri, 18 May 2007 19:38:36 +0200
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200705181938.36503.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 10, 2007 at 07:19:35PM +0200, Johannes Berg wrote:
+I am seeing freezes when doing heavy RX with
+bcm43xx-mac80211. It triggers when continuously
+downloading some file with wget from a machine in
+the network over the wireless link.
 
-> Ah forgot about that, I had only thought about AP/wired bridging. How
-> would the prism driver actually do bridging in STA mode though?
+I'm not sure what causes the freeze. Does someone see
+this with other devices on the mac80211 stack?
+It simply completely freezes the whole system.
+No message, nothing. Very strange.
 
-If that is referring to Host AP driver, there is support for using WDS
-in client mode. If the AP understands this, the client could use
-standard frames for its own packets (i.e., SA=own MAC addr) and WDS
-frames for frames from all other addresses. There are some experimental
-modes in Host AP driver that (if I remember correctly ;-) may allow this
-to be used on a single netdev (i.e., no additional netdev needed for the
-WDS link) and as such, this would look like working layer 2 bridging
-between wlan0 and eth0 even in managed mode.
+I'm using my development tree.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Greetings Michael.
