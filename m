@@ -1,63 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out26.alice.it ([85.33.2.26]:3334 "EHLO
-	smtp-out26.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752233AbXEXVg1 (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:43368 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759209AbXERGvd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2007 17:36:27 -0400
-From: Matteo Croce <rootkit85@yahoo.it>
-To: linux-wireless@vger.kernel.org
-Subject: Re: airo works badly
-Date: Thu, 24 May 2007 23:22:18 +0200
-References: <200705060231.28480.rootkit85@yahoo.it> <20070514182336.GC6999@tuxdriver.com>
-In-Reply-To: <20070514182336.GC6999@tuxdriver.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Michal Schmidt <mschmidt@redhat.com>
+	Fri, 18 May 2007 02:51:33 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 2/2] Add rtl8187 wireless driver
+Date: Fri, 18 May 2007 02:50:03 -0400
+Cc: "John Linville" <linville@tuxdriver.com>,
+	"Jeff Garzik" <jeff@garzik.org>, linux-wireless@vger.kernel.org,
+	"David Miller" <davem@davemloft.net>,
+	"Andrea Merello" <andrea.merello@gmail.com>
+References: <20070511195642.8042.20407.stgit@panda.sourmilk.net> <200705111602.18729.flamingice@sourmilk.net> <43e72e890705171243g7e3d65e4ne43b5956e13f44db@mail.gmail.com>
+In-Reply-To: <43e72e890705171243g7e3d65e4ne43b5956e13f44db@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200705242322.18761.rootkit85@yahoo.it>
+Content-Type: multipart/signed;
+  boundary="nextPart1569614.yOfLNtvmRI";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200705180250.08911.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 14 May 2007 20:23:36 you wrote:
-> On Sun, May 06, 2007 at 02:31:28AM +0200, Matteo Croce wrote:
-> > Now I get another error while ifdown && ifup again:
-> >
-> > airo(eth0): Max tries exceeded when issueing command
-> > airo(eth0): enable_MAC: Cannot enable MAC, err=65535
-> > airo(eth0): Max tries exceeded when issueing command
+--nextPart1569614.yOfLNtvmRI
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+
+On Thursday 17 May 2007 15:43, Luis R. Rodriguez wrote:
+> kmemdup can fail, add:
 >
-> Per our IRC conversation, it seems that this problem emerged for you
-> between 2.6.16 and 2.6.17.  Please try using git-bisect to determine
-> exactly which patch caused this issue for you.
+> if (!info->control)
+>   return -ENOMEM;
 >
-> Thanks,
->
-> John
+info->control being NULL is not fatal. The callback checks if it's actually=
+=20
+set before using it.
 
-Just before teh network goes down i notice a slowdown, i investigated and i 
-discovered
-that the card drops big (not _so_ big) packets:
+=2DMichael Wu
 
-[~]$ ping 192.168.0.2 -c 6 -s 482
-PING 192.168.0.2 (192.168.0.2) 482(510) bytes of data.
-490 bytes from 192.168.0.2: icmp_seq=1 ttl=127 time=5.65 ms
-490 bytes from 192.168.0.2: icmp_seq=2 ttl=127 time=2.66 ms
-490 bytes from 192.168.0.2: icmp_seq=3 ttl=127 time=2.69 ms
-490 bytes from 192.168.0.2: icmp_seq=4 ttl=127 time=2.67 ms
-490 bytes from 192.168.0.2: icmp_seq=5 ttl=127 time=2.66 ms
-490 bytes from 192.168.0.2: icmp_seq=6 ttl=127 time=2.66 ms
+--nextPart1569614.yOfLNtvmRI
+Content-Type: application/pgp-signature
 
---- 192.168.0.2 ping statistics ---
-6 packets transmitted, 6 received, 0% packet loss, time 5021ms
-rtt min/avg/max/mdev = 2.663/3.169/5.659/1.115 ms
-[~]$ ping 192.168.0.2 -c 6 -s 483
-PING 192.168.0.2 (192.168.0.2) 483(511) bytes of data.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
---- 192.168.0.2 ping statistics ---
-6 packets transmitted, 0 received, 100% packet loss, time 5001ms
+iD8DBQBGTUygT3Oqt9AH4aERAkz1AJ92xk75Jh3LOPUwD+abHLXPmgD4CgCgqqiu
+pjC9LA7FPxy5DDD4qmpOucs=
+=ABOf
+-----END PGP SIGNATURE-----
 
-[~]$ 
-
-Note: 192.168.0.2 is the Access point, so it is teh first node in the net.
+--nextPart1569614.yOfLNtvmRI--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
