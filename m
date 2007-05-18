@@ -1,61 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:13533 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754696AbXENO5I (ORCPT
+Received: from agminet01.oracle.com ([141.146.126.228]:11112 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755063AbXERWKb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2007 10:57:08 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: "Ivo Van Doorn" <ivdoorn@gmail.com>
-Subject: Re: [PATCH v3 1/2] Add 93cx6 eeprom library
-Date: Mon, 14 May 2007 10:55:56 -0400
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200705140138.52596.flamingice@sourmilk.net> <a32f33a40705132349h367ba18aoa046d5583329ead@mail.gmail.com>
-In-Reply-To: <a32f33a40705132349h367ba18aoa046d5583329ead@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1312275.mTsP9La7GT";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705141056.01199.flamingice@sourmilk.net>
+	Fri, 18 May 2007 18:10:31 -0400
+Date: Fri, 18 May 2007 15:13:35 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: James Ketrenos <jketreno@linux.intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers [part 2/2]
+Message-Id: <20070518151335.a3a756da.randy.dunlap@oracle.com>
+In-Reply-To: <464E0DB5.5010802@linux.intel.com>
+References: <464B7B7C.5080800@linux.intel.com>
+	<20070516203505.556df4f9.randy.dunlap@oracle.com>
+	<464E0DB5.5010802@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1312275.mTsP9La7GT
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Fri, 18 May 2007 13:33:57 -0700 James Ketrenos wrote:
 
-On Monday 14 May 2007 02:49, Ivo Van Doorn wrote:
-> For the record: I am still not happy with the removal of the udelay() from
-> the pulse methods as they were indicated by the original Ralink code.
-> But since I cannot test the effect on Ralink eeprom reading at this time,
-> and I could otherwise just add it to the register_write handler if
-> required, I am signing this off anyway.
->
-The udelay is necessary to set a limit on how fast the eeprom is operated..=
-=20
-but not on all hardware, apparently. adm8211 just uses a read from the eepr=
-om=20
-register to perform the delay.
+> > 2.  Use of bitfields:  bitfields are not (guaranteed to be) portable
+> > across a wire interface to some other CPU architecture.
+> > Are all bitfield uses always local to the running driver?
+> > They should be.
+> 
+> The bitfields are between the hw/ucode (__le) and the driver.  Are you saying the bitfields won't be compatible if the driver is compiled and running on big endian?  Shouldn't le16_to_cpu() fix that?  I just noticed the types in iwl-4965-hw.h weren't endian specific; I've updated that (u16, u32, u64 -> __le16, __le32, __le64)
 
-Thanks,
-=2DMichael Wu
 
---nextPart1312275.mTsP9La7GT
-Content-Type: application/pgp-signature
+I'm just saying that something like
+	struct bits {
+		u32	priority :4;
+		u32	flags :12;
+		u32	direction :1;
+		u32	status :15;
+	};
+when built on x86[-64] and then sent over a network connection
+to a big-endian machine won't necessarily be looked at correctly
+on the receiving machine.  There is no guarantee of bitfield order
+from one platform to another.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+> > 3.  What are all of those "volatile" C keywords doing in struct
+> > iwl_shared?
+> > See http://lwn.net/Articles/232961/ : "The trouble with volatile"
+> 
+> If a reference shared through memory mapped IO with a device that can change the value at any time, doesn't it need to be volatile?  'struct iwl_shared' is allocated with pci_alloc_consistent and the physical address is provided to the hardware for it to update whenever it sees fit.
 
-iD8DBQBGSHiBT3Oqt9AH4aERAmkMAJ4ikyPZofWLNUyBUaZIkBZiBCDpQQCg07pM
-jap7XTZJrOTFypZM0vKqSwA=
-=P+iM
------END PGP SIGNATURE-----
+That's a good question.  You probably know as much about it as I do.
 
---nextPart1312275.mTsP9La7GT--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+Does the driver access those mmIO regions by something direct like
+	*mmio =
+or does the driver use some kind of access routines to read/write
+the mmIO regions, such as readb()/writeb()?
+
+If the former, then I expect that those should be changed/fixed,
+but I'd prefer to have Jeff G. answer that if he would.
+
+
+> > 4.  Don't list the parameters like this:
+> 
+> Lindent == bad.  I've fixed the instances of this munging I've come across.
+
+Indeed.  Too bad.
+
+> > 8.  Too many BUG_ON()s.  Try to recover or return -ERRORs instead.
+> 
+> I pulled out two that shouldn't have been there.
+> 
+> The rest are currently there map to bugs which are easily introduced through code changes but which may not cause an immediately visible bug at run-time.  Typically they are placed where an eventual printk() at that location during debugging of a user bug resulted in the critical "ah-ha!" that led to fixing it.  I've added comments to the BUG_ON's that didn't have comments already.
+> 
+> I suppose we could try and introduce a new driver recovery mechanism that, upon detection, throws a stack trace and then shuts down the driver (vs. throwing a kernel OOPs) requiring user space to unload and reload the driver.  That would still be a sucky situation, but at least it wouldn't cause a system failure requiring a reboot...  does such a mechanism already exist?
+
+You can call dump_stack() or use WARN_ON(), but you'll have roll your
+own shut-down-the-driver methods AFAIK.
+
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
