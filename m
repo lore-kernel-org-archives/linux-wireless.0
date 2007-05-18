@@ -1,185 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from daemonizer.de ([87.230.16.230]:50890 "EHLO daemonizer.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750994AbXE0TZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 May 2007 15:25:40 -0400
-From: Maximilian Engelhardt <maxi@daemonizer.de>
-To: Michael Buesch <mb@bu3sch.de>,
-	"linux-kernel" <linux-kernel@vger.kernel.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: Re: b44: regression in 2.6.22 (resend)
-Date: Sun, 27 May 2007 21:25:17 +0200
-Cc: Stephen Hemminger <shemminger@linux-foundation.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-References: <20070525172431.60affaca@freepuppy> <200705261901.18110.mb@bu3sch.de>
-In-Reply-To: <200705261901.18110.mb@bu3sch.de>
+Received: from mga06.intel.com ([134.134.136.21]:1811 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754934AbXERWnS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 May 2007 18:43:18 -0400
+Message-ID: <464E1B4A.8050105@linux.intel.com>
+Date: Fri, 18 May 2007 14:31:54 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
 MIME-Version: 1.0
-Message-Id: <200705272125.25506.maxi@daemonizer.de>
-Content-Type: multipart/signed;
-  boundary="nextPart1690049.q556Q8Z98W";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+To: Jeff Garzik <jeff@garzik.org>
+CC: Randy Dunlap <randy.dunlap@oracle.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers [part 2/2]
+References: <464B7B7C.5080800@linux.intel.com> <20070516203505.556df4f9.randy.dunlap@oracle.com> <464E0DB5.5010802@linux.intel.com> <464E233A.6060209@garzik.org>
+In-Reply-To: <464E233A.6060209@garzik.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1690049.q556Q8Z98W
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Jeff Garzik wrote:
+> James Ketrenos wrote:
+>> Randy Dunlap wrote:
+>>> 2.  Use of bitfields:  bitfields are not (guaranteed to be) portable
+>>> across a wire interface to some other CPU architecture.
+>>> Are all bitfield uses always local to the running driver?
+>>> They should be.
+>>
+>> The bitfields are between the hw/ucode (__le) and the driver.  Are you 
+>> saying the bitfields won't be compatible if the driver is compiled and 
+>> running on big endian?  Shouldn't le16_to_cpu() fix that?  I just 
+>> noticed the types in iwl-4965-hw.h weren't endian specific; I've 
+>> updated that (u16, u32, u64 -> __le16, __le32, __le64)
+> 
+> Use of bitfields, as defined in the C standard, should be avoided at all 
+> costs.  It requires you to define structures twice -- once for LE, and 
+> once for BE.  It generates demonstrably sub-optimal code on all known 
+> compilers.  And in general, people tend to screw them up.
+> 
+> Drivers should be using bitwise integer math rather than bitfields.
+> 
+> As for u8/u16/u32/u64 integer mixes, you must still pay attention to 
+> structure layout and compiler padding, in addition to endian issues 
+> (which are lessened once bitfields are gone).
 
-I send this again because my first mail accidently had html code in it and=
-=20
-might have been filtered by some people.
+Alright; I'll add replacing the bitfields with bitwise access to the todo list.
 
-On Saturday 26 May 2007, Michael Buesch wrote:
-> On Saturday 26 May 2007 02:24:31 Stephen Hemminger wrote:
-> > Something is broken with the b44 driver in 2.6.22-rc1 or later. Now
-> > bisecting. The performance (with iperf) for receiving is normally 94Mbi=
-ts
-> > or more. But something happened that dropped performance to less than
-> > 1Mbit, probably corrupted packets.
-> >
-> > There is nothing obvious in the commit log for drivers/net/b44.c, so it
-> > probably is something more general.
-> >
-> >
-> > Looking at the code in b44_rx(), I see a couple unrelated of bugs:
-> > 1. In the small packet case it recycles the skb before copying data
-> > out... Not good if new data arrives overwriting existing data.
-> >
-> > 2. Macros like RX_PKT_BUF_SZ that depend on local variables are evil!!
->
-> Very interesting!
-> 2.6.22 doesn't include ssb, does it?
->
-> Adding CCs to make reporters of another bugreport aware of this.
+Are you OK with us marking the driver as not working on big endian for now and getting this one fixed over time?
 
-I did some more tests with my BCM4401 and different kernels, here are the=20
-results:
+>>> 3.  What are all of those "volatile" C keywords doing in struct
+>>> iwl_shared?
+>>> See http://lwn.net/Articles/232961/ : "The trouble with volatile"
+>>
+>> If a reference shared through memory mapped IO with a device that can 
+>> change the value at any time, doesn't it need to be volatile?  'struct 
+>> iwl_shared' is allocated with pci_alloc_consistent and the physical 
+>> address is provided to the hardware for it to update whenever it sees 
+>> fit.
+> 
+> volatile should not be in your driver at all.
+> 
+> See the innumerable threads on LKML, including one current one.
 
-2.6.21.1:
+I tried reading through the thread.  From what I gathered, it sounds like if I want to read a value from a memory location where the adapter could be writing to it I would just call rmb() before I access the memory?  And when writing to a value, call wmb() immediately after I write to it?  And expunge 'volatile' from my vocabulary.
 
-iperf:
-[  5] local 192.168.1.2 port 58414 connected with 192.168.1.1 port 5001
-[  5]  0.0-60.6 sec  1.13 MBytes    157 Kbits/sec
-[  4] local 192.168.1.2 port 5001 connected with 192.168.1.1 port 57837
-[  4]  0.0-63.1 sec  2.82 MBytes    375 Kbits/sec
+> 
+>>> 8.  Too many BUG_ON()s.  Try to recover or return -ERRORs instead.
+>>
+>> I pulled out two that shouldn't have been there.
+>>
+>> The rest are currently there map to bugs which are easily introduced 
+>> through code changes but which may not cause an immediately visible 
+>> bug at run-time.  Typically they are placed where an eventual printk() 
+>> at that location during debugging of a user bug resulted in the 
+>> critical "ah-ha!" that led to fixing it.  I've added comments to the 
+>> BUG_ON's that didn't have comments already.
+>>
+>> I suppose we could try and introduce a new driver recovery mechanism 
+>> that, upon detection, throws a stack trace and then shuts down the 
+>> driver (vs. throwing a kernel OOPs) requiring user space to unload and 
+>> reload the driver.  That would still be a sucky situation, but at 
+>> least it wouldn't cause a system failure requiring a reboot...  does 
+>> such a mechanism already exist?
+> 
+> In general, you should not be checking for programmer mistakes at every 
+> level.  Only use BUG_ON() for mistakes that have happened in the past in 
+> this driver, AND are likely to occur in the future, AND do not cause 
+> problems easily detectable simply by allowing the code to screw up.
 
-koala:~# ping -c10 192.168.1.1
-PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
-64 bytes from 192.168.1.1: icmp_seq=3D1 ttl=3D64 time=3D0.241 ms
-64 bytes from 192.168.1.1: icmp_seq=3D2 ttl=3D64 time=3D0.215 ms
-64 bytes from 192.168.1.1: icmp_seq=3D3 ttl=3D64 time=3D0.230 ms
-64 bytes from 192.168.1.1: icmp_seq=3D4 ttl=3D64 time=3D0.238 ms
-64 bytes from 192.168.1.1: icmp_seq=3D5 ttl=3D64 time=3D0.229 ms
-64 bytes from 192.168.1.1: icmp_seq=3D6 ttl=3D64 time=3D0.228 ms
-64 bytes from 192.168.1.1: icmp_seq=3D7 ttl=3D64 time=3D0.231 ms
-64 bytes from 192.168.1.1: icmp_seq=3D8 ttl=3D64 time=3D0.229 ms
-64 bytes from 192.168.1.1: icmp_seq=3D9 ttl=3D64 time=3D0.228 ms
-64 bytes from 192.168.1.1: icmp_seq=3D10 ttl=3D64 time=3D0.237 ms
+That has been the general goal in where the BUG_ONs are.  
 
-=2D-- 192.168.1.1 ping statistics ---
-10 packets transmitted, 10 received, 0% packet loss, time 8998ms
-rtt min/avg/max/mdev =3D 0.215/0.230/0.241/0.018 ms
+There were a couple that weren't doing that (which were yanked).  
 
-The system was unusable while i ran the iperf test, when I moved the mouse =
-it=20
-was only jumping around and doing anything like starting programs or=20
-switching the desktop first happend after iperf had finished it's test.
+I've updated iwl_send_cmd which was using BUG_ON but could use printk and return a failure code.
 
-I did a http downlaod with wget and got 11.23M/s.
-
-
-2.6.22-rc3:
-
-[  5] local 192.168.1.2 port 46557 connected with 192.168.1.1 port 5001
-[  5]  0.0-60.4 sec  58.9 MBytes  8.18 Mbits/sec
-[  4] local 192.168.1.2 port 5001 connected with 192.168.1.1 port 51633
-[  4]  0.0-63.1 sec  7.27 MBytes    967 Kbits/sec
-
-koala:~# ping -c10 192.168.1.1
-PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
-64 bytes from 192.168.1.1: icmp_seq=3D1 ttl=3D64 time=3D0.243 ms
-64 bytes from 192.168.1.1: icmp_seq=3D2 ttl=3D64 time=3D0.234 ms
-64 bytes from 192.168.1.1: icmp_seq=3D3 ttl=3D64 time=3D0.238 ms
-64 bytes from 192.168.1.1: icmp_seq=3D4 ttl=3D64 time=3D0.235 ms
-64 bytes from 192.168.1.1: icmp_seq=3D5 ttl=3D64 time=3D0.230 ms
-64 bytes from 192.168.1.1: icmp_seq=3D6 ttl=3D64 time=3D0.317 ms
-64 bytes from 192.168.1.1: icmp_seq=3D7 ttl=3D64 time=3D0.232 ms
-64 bytes from 192.168.1.1: icmp_seq=3D8 ttl=3D64 time=3D0.232 ms
-64 bytes from 192.168.1.1: icmp_seq=3D9 ttl=3D64 time=3D0.228 ms
-64 bytes from 192.168.1.1: icmp_seq=3D10 ttl=3D64 time=3D0.238 ms
-
-=2D-- 192.168.1.1 ping statistics ---
-10 packets transmitted, 10 received, 0% packet loss, time 8997ms
-rtt min/avg/max/mdev =3D 0.228/0.242/0.317/0.031 ms
-
-System responsiveness was the same as with 2.6.21.1.
-
-wget got 11.23M/s, again same as 2.6.21.1.
-
-
-2.6.22-rc2-mm1:
-
-[  5] local 192.168.1.2 port 42198 connected with 192.168.1.1 port 5001
-[  5]  0.0-60.1 sec    402 MBytes  56.1 Mbits/sec
-[  4] local 192.168.1.2 port 5001 connected with 192.168.1.1 port 48598
-[  4]  0.0-63.0 sec    177 MBytes  23.6 Mbits/sec
-
-koala:~# ping -c10 192.168.1.1
-PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
-64 bytes from 192.168.1.1: icmp_seq=3D1 ttl=3D64 time=3D39.8 ms
-64 bytes from 192.168.1.1: icmp_seq=3D2 ttl=3D64 time=3D52.7 ms
-64 bytes from 192.168.1.1: icmp_seq=3D3 ttl=3D64 time=3D86.7 ms
-64 bytes from 192.168.1.1: icmp_seq=3D4 ttl=3D64 time=3D8.22 ms
-64 bytes from 192.168.1.1: icmp_seq=3D5 ttl=3D64 time=3D32.1 ms
-64 bytes from 192.168.1.1: icmp_seq=3D6 ttl=3D64 time=3D56.0 ms
-64 bytes from 192.168.1.1: icmp_seq=3D7 ttl=3D64 time=3D80.0 ms
-64 bytes from 192.168.1.1: icmp_seq=3D8 ttl=3D64 time=3D1.52 ms
-64 bytes from 192.168.1.1: icmp_seq=3D9 ttl=3D64 time=3D25.4 ms
-64 bytes from 192.168.1.1: icmp_seq=3D10 ttl=3D64 time=3D49.3 ms
-
-=2D-- 192.168.1.1 ping statistics ---
-10 packets transmitted, 10 received, 0% packet loss, time 9000ms
-rtt min/avg/max/mdev =3D 1.526/43.207/86.700/26.369 ms
-
-Here system responsiveness was ok whil I ran iperf, I didn't notic anything=
-=20
-anomalous.
-
-When I tried the wget http download the tranfer did stall and from this poi=
-nt=20
-on I couldn't send or receive anything on my BCM4401 anymore. Taken the=20
-interface down and up again didn't help anything. I wonder if this is Uwe's=
-=20
-problem
-
-on all the kernels there apperaded nothing special in dmesg.
-
-for the iperf test I connect my BCM4401 directly with an e100. The system w=
-ith=20
-the e100 was iperf server and ran fine all over the test.
-
-Maxi
-
---nextPart1690049.q556Q8Z98W
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQBGWdslOimwv528XGERAqWrAJ0RAT9itb1CylS5IVfmig+QFxvSTACeIYIb
-Lw4L6a7jeXbBfu4A5ljmWwE=
-=pe3p
------END PGP SIGNATURE-----
-
---nextPart1690049.q556Q8Z98W--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+James
