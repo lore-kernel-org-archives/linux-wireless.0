@@ -1,56 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:55195 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756431AbXEVUjJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2007 16:39:09 -0400
-Message-ID: <46534172.5040106@linux.intel.com>
-Date: Tue, 22 May 2007 12:16:02 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
-MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers
-References: <464B7B7C.5080800@linux.intel.com> <200705162151.32910.flamingice@sourmilk.net>
-In-Reply-To: <200705162151.32910.flamingice@sourmilk.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from smtp.osdl.org ([207.189.120.12]:52430 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755487AbXESFYj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 May 2007 01:24:39 -0400
+Date: Fri, 18 May 2007 22:23:08 -0700
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Florin Malita <fmalita@gmail.com>, marcelo@kvack.org,
+	linville@redhat.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: skb dereferenced after netif_rx
+Message-ID: <20070518222308.11c2b34d@localhost>
+In-Reply-To: <20070518180903.GC3492@tuxdriver.com>
+References: <464B7127.5080502@gmail.com>
+	<20070518180903.GC3492@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
-> On Wednesday 16 May 2007 17:45, James Ketrenos wrote:
->> This patch adds the iwlwifi project directory and sources needed to
->> build the mac80211 based wireless drivers for the Intel PRO/Wireless
->> 3945ABG/BG Network Connection and Intel Wireless WiFi Link AGN adapters.
->>
-> Looks much better than when I last checked. A few comments:
+On Fri, 18 May 2007 14:09:03 -0400
+"John W. Linville" <linville@tuxdriver.com> wrote:
 
-I've attempted to address everything not discussed below in the updated code.  That said --
+> On Wed, May 16, 2007 at 05:01:27PM -0400, Florin Malita wrote:
+> > In libertas_process_rxed_packet() and process_rxed_802_11_packet() the 
+> > skb is dereferenced after being passed to netif_rx (called from 
+> > libertas_upload_rx_packet). Spotted by Coverity (1658, 1659).
+>  
+> Relocating the libertas_upload_rx_packet call is fine, but...
+> 
+> > Also, libertas_upload_rx_packet() unconditionally returns 0 so the error 
+> > check is dead code - might as well take it out.
+> 
+> Is this merely an implementation detail?  Or an absolute fact?
+> If the former is true, then we should preserve the error
+> checking.  If the latter, then we should change the signature of
+> libertas_upload_rx_packet to return void.
 
-> - Read and set the MAC address before calling ieee80211_register_hw.
-
-We're calling SET_IEEE80211_PERM_ADDR before we call ieee80211_register_hw.  Is there something else we should be doing?
-
-> - mac80211 (very recently) sets up a workqueue for the driver to use so you 
-> don't need to create your own anymore.
-
-In addition to the workqueue created when you call ieee80211_register_hw?  We need to have a workqueue for initializing the adapter and uCode before we call ieee80211_register_hw.  If ieee80211_alloc_hw created the workqueue, that would work for us (assuming there aren't going to be any side effects from us flushing the workqueue before we call ieee80211_free_hw/ieee80211_unregister_hw)
-
-That said -- if the driver can execute in parallel to the stack for some operations, shouldn't they remain on their own workqueues so the work can be divided up vs. having *everything* routed through one singlethread workqueue?
-
-> - Why are probe requests being dropped in adhoc mode? (assuming hardware 
-> handles it.. but the message output for that doesn't sound like it)
-
-It only drops them if the adapter is not in the associated state (the card is configured with the RXON_FLAG_ASSOC_MSK bit clear)
-
-> - If you don't want to add a radiotap header all the time, you should check 
-> the IEEE80211_CONF_RADIOTAP flag to see if a radiotap header is desired by 
-> the stack. (not whether or not we're configured as IEEE80211_IF_TYPE_MNTR)
-
-I have this on the todo list.  
-
-Thanks for the time you spent looking over the code.
-
-James
-
+netif_rx() used to return a value in older kernels.
