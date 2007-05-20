@@ -1,36 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42008
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753435AbXEaIYz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2007 04:24:55 -0400
-Date: Thu, 31 May 2007 01:25:08 -0700 (PDT)
-Message-Id: <20070531.012508.18299215.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 0/4] mac80211 fixes for 2.6.22
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20070530182538.GB3610@tuxdriver.com>
-References: <20070530182538.GB3610@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from srv5.dvmed.net ([207.36.208.214]:59246 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756757AbXETBrL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 May 2007 21:47:11 -0400
+Message-ID: <464FA894.8090008@garzik.org>
+Date: Sat, 19 May 2007 21:47:00 -0400
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: Dan Williams <dcbw@redhat.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Florin Malita <fmalita@gmail.com>, marcelo@kvack.org,
+	linville@redhat.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: skb dereferenced after netif_rx
+References: <464B7127.5080502@gmail.com>	 <20070518180903.GC3492@tuxdriver.com> <1179622601.9453.4.camel@xo-28-0B-88.localdomain>
+In-Reply-To: <1179622601.9453.4.camel@xo-28-0B-88.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 30 May 2007 14:25:38 -0400
+Dan Williams wrote:
+> On Fri, 2007-05-18 at 14:09 -0400, John W. Linville wrote:
+>> On Wed, May 16, 2007 at 05:01:27PM -0400, Florin Malita wrote:
+>>> In libertas_process_rxed_packet() and process_rxed_802_11_packet() the 
+>>> skb is dereferenced after being passed to netif_rx (called from 
+>>> libertas_upload_rx_packet). Spotted by Coverity (1658, 1659).
+>>  
+>> Relocating the libertas_upload_rx_packet call is fine, but...
+>>
+>>> Also, libertas_upload_rx_packet() unconditionally returns 0 so the error 
+>>> check is dead code - might as well take it out.
+>> Is this merely an implementation detail?  Or an absolute fact?
+>> If the former is true, then we should preserve the error
+>> checking.  If the latter, then we should change the signature of
+>> libertas_upload_rx_packet to return void.
+> 
+> According to the comments, netif_rx always succeeds.  I think we should
+> just change the return type to void since there's nothing else in that
+> function that can fail.
 
-> Some bug fixes that should be applied to 2.6.22:
-> 
->       mac80211: fail back to use associate from reassociate
->       mac80211: fix memory leak when defrag fragments
->       mac80211: always set carrier status on open
->       mac80211: avoid null ptr deref in ieee80211_ibss_add_sta
-> 
-> These are also available in the wireless-2.6 git tree:
-> 
-> 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git mac80211
-> 
-> Please apply at your earliest convenience!
+According to the implementation, netif_rx() can fail.
 
-Looks good, pulled, thanks a lot John.
+	Jeff
+
+
+
