@@ -1,91 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52144 "EHLO mail.dvmed.net"
+Received: from blackbox.passys.nl ([80.126.219.73]:37273 "EHLO mail.passys.nl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754693AbXERWGb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2007 18:06:31 -0400
-Message-ID: <464E233A.6060209@garzik.org>
-Date: Fri, 18 May 2007 18:05:46 -0400
-From: Jeff Garzik <jeff@garzik.org>
+	id S1755583AbXETOYg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 May 2007 10:24:36 -0400
+Received: from [192.168.0.102] (a6008.upc-a.chello.nl [62.163.6.8])
+	by mail.passys.nl (Postfix) with ESMTP id EC15827CEE
+	for <linux-wireless@vger.kernel.org>; Sun, 20 May 2007 16:24:34 +0200 (CEST)
+Message-ID: <46505A79.9060308@passys.nl>
+Date: Sun, 20 May 2007 16:26:01 +0200
+From: Hendrik-Jan Heins <hjh@passys.nl>
 MIME-Version: 1.0
-To: James Ketrenos <jketreno@linux.intel.com>
-CC: Randy Dunlap <randy.dunlap@oracle.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers [part 2/2]
-References: <464B7B7C.5080800@linux.intel.com> <20070516203505.556df4f9.randy.dunlap@oracle.com> <464E0DB5.5010802@linux.intel.com>
-In-Reply-To: <464E0DB5.5010802@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: linux-wireless@vger.kernel.org
+Subject: Re: Hermes II driver
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigEC6E84E178F691C1F3DB908E"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-James Ketrenos wrote:
-> Randy Dunlap wrote:
->> 2.  Use of bitfields:  bitfields are not (guaranteed to be) portable
->> across a wire interface to some other CPU architecture.
->> Are all bitfield uses always local to the running driver?
->> They should be.
-> 
-> The bitfields are between the hw/ucode (__le) and the driver.  Are you 
-> saying the bitfields won't be compatible if the driver is compiled and 
-> running on big endian?  Shouldn't le16_to_cpu() fix that?  I just 
-> noticed the types in iwl-4965-hw.h weren't endian specific; I've updated 
-> that (u16, u32, u64 -> __le16, __le32, __le64)
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigEC6E84E178F691C1F3DB908E
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Use of bitfields, as defined in the C standard, should be avoided at all 
-costs.  It requires you to define structures twice -- once for LE, and 
-once for BE.  It generates demonstrably sub-optimal code on all known 
-compilers.  And in general, people tend to screw them up.
+Holger,
 
-Drivers should be using bitwise integer math rather than bitfields.
+I really don't know much about the driver itself, as I don't own such a
+card and I never used the driver.
+I do know that the builder got it working on a kernel 2.6.18 (he didn't
+try anything newer).
+I also have no idea what agere driver version is the basis for his packag=
+e.
 
-As for u8/u16/u32/u64 integer mixes, you must still pay attention to 
-structure layout and compiler padding, in addition to endian issues 
-(which are lessened once bitfields are gone).
+I guess the best way to get more answers is to send an e-mail to the
+address mentioned in my previous message.
 
+Sorry I can't be of more help.
 
->> 3.  What are all of those "volatile" C keywords doing in struct
->> iwl_shared?
->> See http://lwn.net/Articles/232961/ : "The trouble with volatile"
-> 
-> If a reference shared through memory mapped IO with a device that can 
-> change the value at any time, doesn't it need to be volatile?  'struct 
-> iwl_shared' is allocated with pci_alloc_consistent and the physical 
-> address is provided to the hardware for it to update whenever it sees fit.
+Hendrik-Jan
 
-volatile should not be in your driver at all.
-
-See the innumerable threads on LKML, including one current one.
+--=20
+Publieke GnuPG sleutel beschikbaar op de volgende keyserver: pgpkeys.mit.=
+edu
+Public GnuPG key available at keyserver pgpkeys.mit.edu
 
 
->> 8.  Too many BUG_ON()s.  Try to recover or return -ERRORs instead.
-> 
-> I pulled out two that shouldn't have been there.
-> 
-> The rest are currently there map to bugs which are easily introduced 
-> through code changes but which may not cause an immediately visible bug 
-> at run-time.  Typically they are placed where an eventual printk() at 
-> that location during debugging of a user bug resulted in the critical 
-> "ah-ha!" that led to fixing it.  I've added comments to the BUG_ON's 
-> that didn't have comments already.
-> 
-> I suppose we could try and introduce a new driver recovery mechanism 
-> that, upon detection, throws a stack trace and then shuts down the 
-> driver (vs. throwing a kernel OOPs) requiring user space to unload and 
-> reload the driver.  That would still be a sucky situation, but at least 
-> it wouldn't cause a system failure requiring a reboot...  does such a 
-> mechanism already exist?
-
-In general, you should not be checking for programmer mistakes at every 
-level.  Only use BUG_ON() for mistakes that have happened in the past in 
-this driver, AND are likely to occur in the future, AND do not cause 
-problems easily detectable simply by allowing the code to screw up.
 
 
->> 9.  printk() calls should use KERN_* levels.
-> Fixed.
+--------------enigEC6E84E178F691C1F3DB908E
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-dev_xxx stuff is preferred over printk(), actually :)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-	Jeff
+iD8DBQFGUFp8lpzDGKCS86sRAm1vAJ4uzPQz8iBmoSXL4qVvOw5J0cL7VQCeP2FH
+kjpVWy4FahI/5gEBQByzvAc=
+=gmQ/
+-----END PGP SIGNATURE-----
 
-
+--------------enigEC6E84E178F691C1F3DB908E--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
