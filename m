@@ -1,52 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53256 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754130AbXEJRD4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 13:03:56 -0400
-Subject: Re: support for bridging ethernet and 802.11
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kumar Gala <galak@kernel.crashing.org>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <CCA1D7C0-D44A-450D-A76E-DAE792E0CB37@kernel.crashing.org>
-References: <CCA1D7C0-D44A-450D-A76E-DAE792E0CB37@kernel.crashing.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/+vkCqKKoBzGwJSRtpku"
-Date: Thu, 10 May 2007 19:06:21 +0200
-Message-Id: <1178816781.3806.31.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from srv5.dvmed.net ([207.36.208.214]:60295 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756888AbXETGhQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 May 2007 02:37:16 -0400
+Message-ID: <464FEC5B.1060708@garzik.org>
+Date: Sun, 20 May 2007 02:36:11 -0400
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: Stephen Hemminger <shemminger@linux-foundation.org>
+CC: Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Florin Malita <fmalita@gmail.com>, marcelo@kvack.org,
+	linville@redhat.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: skb dereferenced after netif_rx
+References: <464B7127.5080502@gmail.com>	<20070518180903.GC3492@tuxdriver.com>	<1179622601.9453.4.camel@xo-28-0B-88.localdomain>	<464FA894.8090008@garzik.org> <20070519222014.45f11138@freepuppy>
+In-Reply-To: <20070519222014.45f11138@freepuppy>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Stephen Hemminger wrote:
+> The skb is always consumed so the the return value is informational only.
 
---=-/+vkCqKKoBzGwJSRtpku
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yes, this is true.  Handing off an skb to netif_rx() relieves the driver 
+of further responsibility for it.
 
-[adding linux-wireless]
+	Jeff
 
-On Thu, 2007-05-10 at 11:18 -0500, Kumar Gala wrote:
-> I'm wondering how to tell if a given driver/device in the kernel =20
-> supports the ability to bridge between ethernet and 802.11.  From =20
-> searching the web it looks like only the prism driver/device supports =20
-> this.
-
-Normally wireless drivers do 802.3 framing as the 802.11 standard more
-or less requires, so it should "just work". Am I missing something?
-
-johannes
-
---=-/+vkCqKKoBzGwJSRtpku
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGQ1EN/ETPhpq3jKURAtqGAJ9iAYgHtJeWKEiPsz/7F5gpHpqlhQCdEtLp
-E6ksXe33JxxG+rne2UzRPiI=
-=oCG2
------END PGP SIGNATURE-----
-
---=-/+vkCqKKoBzGwJSRtpku--
 
