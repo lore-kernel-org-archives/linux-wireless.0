@@ -1,40 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:39388 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753089AbXEABAU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Apr 2007 21:00:20 -0400
-Date: Tue, 1 May 2007 03:00:14 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: linux-wireless@vger.kernel.org
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: "Stable" branch of mac80211
-Message-ID: <20070501030014.6523f08a@logostar.upir.cz>
-In-Reply-To: <20070429194855.451b9e7c@logostar.upir.cz>
-References: <20070429194855.451b9e7c@logostar.upir.cz>
+Received: from smtp.osdl.org ([207.189.120.12]:36128 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757804AbXETFVB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 May 2007 01:21:01 -0400
+Date: Sat, 19 May 2007 22:20:14 -0700
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Florin Malita <fmalita@gmail.com>, marcelo@kvack.org,
+	linville@redhat.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: skb dereferenced after netif_rx
+Message-ID: <20070519222014.45f11138@freepuppy>
+In-Reply-To: <464FA894.8090008@garzik.org>
+References: <464B7127.5080502@gmail.com>
+	<20070518180903.GC3492@tuxdriver.com>
+	<1179622601.9453.4.camel@xo-28-0B-88.localdomain>
+	<464FA894.8090008@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 29 Apr 2007 19:48:55 +0200, Jiri Benc wrote:
-> I've created a new 'stable' branch in my tree
-> (git://git.kernel.org/pub/scm/linux/kernel/git/jbenc/mac80211.git). It
-> contains patches that strip mac80211 down to a stable version. The purpose
-> of this branch is to prepare mac80211 for vanilla inclusion.
+On Sat, 19 May 2007 21:47:00 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
 
-And preliminary patches targeted for net-2.6 are in
-http://kernel.org/pub/linux/kernel/people/jbenc/mac80211/
+> Dan Williams wrote:
+> > On Fri, 2007-05-18 at 14:09 -0400, John W. Linville wrote:
+> >> On Wed, May 16, 2007 at 05:01:27PM -0400, Florin Malita wrote:
+> >>> In libertas_process_rxed_packet() and process_rxed_802_11_packet() the 
+> >>> skb is dereferenced after being passed to netif_rx (called from 
+> >>> libertas_upload_rx_packet). Spotted by Coverity (1658, 1659).
+> >>  
+> >> Relocating the libertas_upload_rx_packet call is fine, but...
+> >>
+> >>> Also, libertas_upload_rx_packet() unconditionally returns 0 so the error 
+> >>> check is dead code - might as well take it out.
+> >> Is this merely an implementation detail?  Or an absolute fact?
+> >> If the former is true, then we should preserve the error
+> >> checking.  If the latter, then we should change the signature of
+> >> libertas_upload_rx_packet to return void.
+> > 
+> > According to the comments, netif_rx always succeeds.  I think we should
+> > just change the return type to void since there's nothing else in that
+> > function that can fail.
+> 
+> According to the implementation, netif_rx() can fail.
+> 
+> 	Jeff
 
-Please review and test (for testing purposes, a huge patch with all
-mac80211 drivers currently in wireless-dev can be found at
-http://kernel.org/pub/linux/kernel/people/jbenc/mac80211-test/drivers.patch).
+Yeah, it was the old congestion levels that got dropped.
+The skb is always consumed so the the return value is informational only.
 
-Thanks,
-
- Jiri
 
 -- 
-Jiri Benc
-SUSE Labs
+Stephen Hemminger <shemminger@linux-foundation.org>
