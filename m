@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4519 "EHLO ra.tuxdriver.com"
+Received: from mga03.intel.com ([143.182.124.21]:46718 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753689AbXEJCCb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2007 22:02:31 -0400
-Date: Wed, 9 May 2007 21:35:23 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'master' branch of libertas (for 2.6.22)
-Message-ID: <20070510013523.GA4544@tuxdriver.com>
-References: <1178745375.9590.5.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1178745375.9590.5.camel@localhost.localdomain>
+	id S1757749AbXEUUMZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 May 2007 16:12:25 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [PATCH]  Add iwlwifi wireless drivers [part 2/2]
+Date: Mon, 21 May 2007 23:12:17 +0300
+Message-ID: <D0122E209EBF8D4CAB38EC6A8AF244E5028B1C2D@hasmsx412.ger.corp.intel.com>
+In-Reply-To: <20070521181543.GA838@infradead.org>
+From: "Cohen, Guy" <guy.cohen@intel.com>
+To: "Christoph Hellwig" <hch@infradead.org>,
+	"James Ketrenos" <jketreno@linux.intel.com>
+Cc: "Jeff Garzik" <jeff@garzik.org>,
+	"Randy Dunlap" <randy.dunlap@oracle.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 09, 2007 at 05:16:14PM -0400, Dan Williams wrote:
 
-> This is latest libertas git and should be pushed to 2.6.22.  It takes
-> care of a few of Christoph's objections, including ioctl removal,
-> version.h removal, and debug define cleanups.
-> 
-> git://git.infradead.org/libertas-2.6.git
+Hi,
 
-Dan,
+Support for big-endian platforms (as well as AP mode) for iwlwifi is
+currently *planned* to be added by Intel in the near future for several
+purposes.
 
-There is a problem...the libertas-2.6 tree doesn't have a "clean"
-history.  It appears to have the entire development history of the
-libertas project.  We need something more concise and "sanitized"
-for pushing upstream.
+However, the vast majority of iwlwifi users at this point run it over
+little-endian platforms. _Delaying_ the inclusion of iwlwifi driver will
+not assist iwlwifi-over-big-endian-platform users in any way, but the
+impact on the rest of the users is clear.
 
-We do not really want the patches for new development, at least not
-for 2.6.22.  Could you help identify which patches in the history
-correspond to review fixes?
+We got many comments from the community and we thank you for that. We do
+our best to fix all of them in timely manner for the benefit of
+everyone. If something falls between the cracks it is only because of
+limited resources, priority issues, human mistakes or alike and not
+because of flippancy or anything like that. I hope you understand that.
 
-I can generate a single diff, but it is huge ("34 files changed, 3069
-insertions(+), 5643 deletions(-)") and it isn't clear to me that it
-is only cleanups.  Perhaps you could split this up into a few separate
-patches?  Especially those patches specific to review comments?
+Guy.
 
-I'm sorry...I know this is a PITA.  I appreciate your effort and
-cooperation.
+PS
+I marked *planned* with asterisks so no one mixes it by mistake with
+*committed* and attack me if Intel stops making HW and SW, etc :)
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+
+On 5/21/07, Christoph Hellwig <hch@infradead.org> wrote:
+>On Mon, May 21, 2007 at 09:48:30AM -0700, James Ketrenos wrote:
+>> Second, regarding your prior thread, you more or less demanded that
+the
+>> driver maintainer send you hardware.  That isn't fair or reasonable.
+>
+> No, that's entirely false.  I'd more than happy to have it fixed
+without
+> me beeing involved.  I offered to test it in case it's really that
+> difficult to get a foreign endian machine inside intel.
