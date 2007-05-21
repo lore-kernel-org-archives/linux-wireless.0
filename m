@@ -1,44 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:34472 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754078AbXERWFv (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.242]:18721 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761261AbXEUOvw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2007 18:05:51 -0400
-Message-ID: <464E1283.80509@linux.intel.com>
-Date: Fri, 18 May 2007 13:54:27 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
+	Mon, 21 May 2007 10:51:52 -0400
+Received: by an-out-0708.google.com with SMTP id d18so379400and
+        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2007 07:51:51 -0700 (PDT)
+Message-ID: <4651B1FA.3010201@gmail.com>
+Date: Mon, 21 May 2007 10:51:38 -0400
+From: Florin Malita <fmalita@gmail.com>
 MIME-Version: 1.0
-To: Jeff Garzik <jeff@garzik.org>
-CC: Randy Dunlap <randy.dunlap@oracle.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers
-References: <464B7B7C.5080800@linux.intel.com> <20070516182700.912a21ed.randy.dunlap@oracle.com> <464DF7FC.5070702@linux.intel.com> <464E134D.60000@garzik.org>
-In-Reply-To: <464E134D.60000@garzik.org>
+To: David Miller <davem@davemloft.net>
+CC: jeff@garzik.org, dcbw@redhat.com, linville@tuxdriver.com,
+	marcelo@kvack.org, linville@redhat.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: skb dereferenced after netif_rx
+References: <20070518180903.GC3492@tuxdriver.com>	<1179622601.9453.4.camel@xo-28-0B-88.localdomain>	<464FA894.8090008@garzik.org> <20070520.003832.59470116.davem@davemloft.net>
+In-Reply-To: <20070520.003832.59470116.davem@davemloft.net>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jeff Garzik wrote:
-> James Ketrenos wrote:
->> Randy Dunlap wrote:
->>> 15.  Limit source lines to <= 80 columns (this patch contains
->>> over 200 lines that are > 80 columns).
->>
->> Fixed in the .c files.  Still have 155 instances in the .h files (most 
->> due to mid-line tabs)
-> 
-> See my email on this subject.  This is NOT a hard and fast rule.  If you 
-> have to do something stupid to the formatting to get it to fit, then you 
-> are moving in the wrong direction.
+David Miller wrote:
+> From: Jeff Garzik <jeff@garzik.org>
+> Date: Sat, 19 May 2007 21:47:00 -0400
+>   
+>> According to the implementation, netif_rx() can fail.
+>>     
+>
+> It doesn't exactly "fail", but it does give return values
+> which indicate RX congestion.
+>   
 
-The bulk of the problems in the .h files are caused by Lindent injecting tabs instead of spaces between the C language item and the comment describing it, blowing the comments over 80.
+Assuming you're referring to NET_RX_CN_*, this doesn't seem to be the 
+case anymore: it appears netif_rx can only return NET_RX_SUCCESS or 
+NET_RX_DROP.
 
-That said, some of the define names are horrendously long... over time we can get those cleaned up w/ some sed scripts.
+The congestion level constants are hardly used at all - if they are 
+left-overs, would it make sense ripping them out completely?
 
-> As an aside, sometimes long lines are an indication that a function 
-> needs to be broken up into smaller sub-functions.
+Either way I believe the following should be OK:
 
-Nod.
 
-James
+Remove inaccurate netif_rx() return value comments.
+
+Signed-off-by: Florin Malita <fmalita@gmail.com>
+---
+
+ dev.c |    3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/net/core/dev.c b/net/core/dev.c
+index f2b6111..79f5d90 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -1628,9 +1628,6 @@ DEFINE_PER_CPU(struct netif_rx_stats, netdev_rx_stat) = { 0, };
+  *
+  *	return values:
+  *	NET_RX_SUCCESS	(no congestion)
+- *	NET_RX_CN_LOW   (low congestion)
+- *	NET_RX_CN_MOD   (moderate congestion)
+- *	NET_RX_CN_HIGH  (high congestion)
+  *	NET_RX_DROP     (packet was dropped)
+  *
+  */
+
