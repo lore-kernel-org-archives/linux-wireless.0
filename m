@@ -1,110 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from daemonizer.de ([87.230.16.230]:52392 "EHLO daemonizer.de"
+Received: from srv5.dvmed.net ([207.36.208.214]:45782 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754824AbXE0Vqj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 May 2007 17:46:39 -0400
-From: Maximilian Engelhardt <maxi@daemonizer.de>
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: b44: regression in 2.6.22 (resend)
-Date: Sun, 27 May 2007 23:46:16 +0200
-Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Stephen Hemminger <shemminger@linux-foundation.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-References: <20070525172431.60affaca@freepuppy> <200705272236.42628.maxi@daemonizer.de> <200705272246.16960.mb@bu3sch.de>
-In-Reply-To: <200705272246.16960.mb@bu3sch.de>
+	id S1763787AbXEUWQY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 May 2007 18:16:24 -0400
+Message-ID: <46521A1C.8040708@garzik.org>
+Date: Mon, 21 May 2007 18:15:56 -0400
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart13571105.gMBMrhRZdQ";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705272346.19760.maxi@daemonizer.de>
+To: "Cohen, Guy" <guy.cohen@intel.com>
+CC: Randy Dunlap <randy.dunlap@oracle.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers [part 2/2]
+References: <D0122E209EBF8D4CAB38EC6A8AF244E5028B1C57@hasmsx412.ger.corp.intel.com>
+In-Reply-To: <D0122E209EBF8D4CAB38EC6A8AF244E5028B1C57@hasmsx412.ger.corp.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart13571105.gMBMrhRZdQ
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Cohen, Guy wrote:
+> But at this point (we can't change the past nor the present), we would
+> like to focus on more urgent issues with iwlwifi in the immediate term
+> and delay a bit the big-endian support. Is this acceptable?
 
-On Sunday 27 May 2007, Michael Buesch wrote:
-> On Sunday 27 May 2007 22:36:39 Maximilian Engelhardt wrote:
-> > When I ran 2.6.21.1 or 2.6.22-rc3 without any debugging tools just in
-> > normal use I didn't notice any problems. It did work fine as I would
-> > expect it. I think the wget and ping tests here are as they should be.
-> >
-> > With 2.6.22-rc2-mm1 I noticed that connections seem to be slower. The
-> > ping test does confirm this, because here response times are very high.
-> > As far as I can remember the wget download rate was a bit slower than
-> > 2.6.21.1 or 2.6.22-rc3 till it stalled.
-> > I would expect it to be someting like the other two kernels. The two
-> > problems I see are the high ping times and the fact that the card stopp=
-ed
-> > working.
-> >
-> > I don't know why the iperf results are so different from my personal
-> > experience. I guess the fact that I get so bad results with 2.6.21.1 and
-> > 2.6.22-rc3 is that iperf does something that causes the system to be
-> > extremely slow and thus degrading performance. This could be a bug
-> > somewhere in the b44 driver of 2.6.21.1 and 2.6.22-RC3 that has
-> > unintended been fixed by the ssb switch, but that's only a roughly gues=
-s.
->
-> Ok. I guess (Yes I do :D) that there is an IRQ storm or something like
-> that, because you say that your system is becoming very slow and
-> unresponsive. It sounds like an IRQ is not ACKed correctly and so keeps
-> triggering and stalling the system. I'll take a look at a few diffs...
-> Do you see significant differences in the "hi" and/or "si" times in top?
-> Do you see a significant difference in the /proc/interrupts count. For
-> example that the kernel that works worse generates 10 times the IRQ count
-> for the same amount of data.
 
-ok, here are the results:
+Your internal schedule is your internal schedule.
 
-Using 2.6.22-rc3 I get lot's of hi during TX and lots of hi and si during R=
-X.
-Using 2.6.22-rc3-mm1 hi and si are significantly lower.
-It's difficult to give absolute numbers, because top refreshes very slow, b=
-ut=20
-with 2.6.22-rc3 hi is about 30% during TX and RX and si is 0% during TX and=
-=20
-50% during RX. With Using 2.6.22-rc3-mm1 hi is 0% during TX and 0.3% during=
-=20
-RX and si is 10% during TX and 0% during RX.
+But as I previously stated, getting rid of the bitfields and using the 
+proper (portable) Linux driver API is a hard merge requirement.
 
-When I do the same test on both kernels I get about 10 times (yes, it's rea=
-lly=20
-about ten times like in your example) more interrupts with 2.6.22-rc3 than=
-=20
-with 2.6.22-rc3-mm1.
+	Jeff
 
-An additional thing I noticed it that it's not the BCM4401 card that stops=
-=20
-working but my e100 card. If I take the e100 card down and up again the=20
-connection is working again, so the BCM4401 doesn't have a "stops working"=
-=20
-bug for me.
 
-Maxi
-
---nextPart13571105.gMBMrhRZdQ
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQBGWfwrOimwv528XGERAiRQAKCppkNe/vGsseEZc7dhV9Bi37kVFwCgi/hH
-JBquJ1vl8K3Nlo24tWO/5Pw=
-=WHFe
------END PGP SIGNATURE-----
-
---nextPart13571105.gMBMrhRZdQ--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
