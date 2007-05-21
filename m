@@ -1,71 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:36204
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757997AbXEZPhD (ORCPT
+Received: from agminet01.oracle.com ([141.146.126.228]:20180 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756011AbXEUVHU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 11:37:03 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Uwe Bugla <uwe.bugla@gmx.de>
-Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-Date: Sat, 26 May 2007 17:36:57 +0200
-Cc: Maximilian Engelhardt <maxi@daemonizer.de>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-References: <20070524195616.234280@gmx.net> <200705260700.28777.mb@bu3sch.de> <200705261240.55153.uwe.bugla@gmx.de>
-In-Reply-To: <200705261240.55153.uwe.bugla@gmx.de>
+	Mon, 21 May 2007 17:07:20 -0400
+Message-ID: <46520ABC.1070604@oracle.com>
+Date: Mon, 21 May 2007 14:10:20 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200705261736.57362.mb@bu3sch.de>
+To: Jeff Garzik <jeff@garzik.org>
+CC: "Cohen, Guy" <guy.cohen@intel.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers [part 2/2]
+References: <D0122E209EBF8D4CAB38EC6A8AF244E5028B1C2D@hasmsx412.ger.corp.intel.com> <465208CA.8090201@garzik.org>
+In-Reply-To: <465208CA.8090201@garzik.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 26 May 2007 12:40:54 Uwe Bugla wrote:
-> Yes! This sort of mistakes is completely impossible, as I use to work with 
-> aliases rather than IP adresses. The machine I tried to ping (i. e. my 
-> router) is called Jerry (as a reminiscence to Mr. "Captan Trips" from 
-> Grateful Dead), and thus "ping jerry" returned the following:
+Jeff Garzik wrote:
+> Cohen, Guy wrote:
+>> Support for big-endian platforms (as well as AP mode) for iwlwifi is
+>> currently *planned* to be added by Intel in the near future for several
+>> purposes.
 > 
-> "destination host unreachable"
+>> However, the vast majority of iwlwifi users at this point run it over
+>> little-endian platforms. _Delaying_ the inclusion of iwlwifi driver will
+>> not assist iwlwifi-over-big-endian-platform users in any way, but the
+>> impact on the rest of the users is clear.
 > 
-> Above that, I state for the second time now that I reverted your patches in 
-> 2.6.22-rc2-mm1 with the effect that everything worked perfectly!
-> Maxi said something at least similar. So how many proofs do you need, Mister 
-> Buesch, to finally pick up patchworking now?? 
+> 
+> All Linux drivers that use the proper APIs are transparently portable to 
+> either little endian or big endian, 32-bit or 64-bit machines.
+> 
+> If your driver is not portable, then it is not using the proper APIs, 
+> and needs updating.
+> 
+> Next time, write the driver using the correct APIs and you will not run 
+> into these sort of problems...
 
-How about you stopping with your fucking aggressive wording??
-
-> > Try it again, please.
-> 
-> NO!
-> 
-> > And please try with current wireless-dev tree.
-> 
-> A. I do not know where to download that wireless-dev tree.
-> B. I do not know how to implement it into mm or mainline
-> C. I have given enough sophisticated proof that your stuff in mm-tree is 
-> highly incomplete / buggy.
-
-Ok,
-
-D. As you are not going to help me debugging, I am not going to fix.
-
-> >
-> > And I simply do not get it why you suddenly get a good IRQ number, like
-> > everybody else does, without fixing The Bug (tm).
-> 
-> That consequence I already explained:
-> But it's a pleasure for me to repeat it once more:
-> 
-> When you are saying Y to "EISA, VLB, PCI and on board controllers"
-> 
-> you simply do get not only completely different interrupts for the b4401 
-> device, but you get also completely different module dependencies.
-
-That is EXPECTED and I already explained that.
-It is a feature. Not a bug.
-
+Ack.  Basically same idea for coding style issues also.
+Do it right the first time, don't have to redo it.
 
 -- 
-Greetings Michael.
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
