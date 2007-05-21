@@ -1,134 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:53387 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754294AbXEKDIP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 23:08:15 -0400
-Subject: [PATCH 05/19] libertas: remove setauthalg private ioctl
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1178852055.8607.21.camel@localhost.localdomain>
-References: <1178829040.6356.1.camel@localhost.localdomain>
-	 <1178852055.8607.21.camel@localhost.localdomain>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35259 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756335AbXEVHGQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 May 2007 03:06:16 -0400
+Subject: [PATCH] mac80211: use debugfs_rename
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: John Linville <linville@tuxdriver.com>
 Content-Type: text/plain
-Date: Thu, 10 May 2007 23:11:46 -0400
-Message-Id: <1178853106.8607.56.camel@localhost.localdomain>
+Date: Mon, 21 May 2007 21:04:53 +0200
+Message-Id: <1179774293.6070.3.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I screwed up formatting, please use this one.
+Use the new debugfs_rename function in mac80211's debugfs where
+necessary.
 
-Obsoleted by SIOCSIWAUTH's IW_AUTH_80211_AUTH_ALG option introduced
-by WE-18.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
 ---
- drivers/net/wireless/libertas/defs.h  |    7 -----
- drivers/net/wireless/libertas/ioctl.c |   45 ---------------------------------
- drivers/net/wireless/libertas/wext.c  |    6 ----
- 3 files changed, 0 insertions(+), 58 deletions(-)
+debugfs_rename hasn't actually been merged yet, but I hope it will be
+merged soon. URL is
+http://article.gmane.org/gmane.linux.file-systems/14819
 
-diff --git a/drivers/net/wireless/libertas/defs.h b/drivers/net/wireless/libertas/defs.h
-index 888a007..15fcb2c 100644
---- a/drivers/net/wireless/libertas/defs.h
-+++ b/drivers/net/wireless/libertas/defs.h
-@@ -223,13 +223,6 @@ enum SNRNF_DATA {
- 	MAX_TYPE_AVG
- };
- 
--/** WLAN_802_11_AUTH_ALG*/
--enum WLAN_802_11_AUTH_ALG {
--	AUTH_ALG_OPEN_SYSTEM = 1,
--	AUTH_ALG_SHARED_KEY = 2,
--	AUTH_ALG_NETWORK_EAP = 8,
--};
--
- /** WLAN_802_11_ENCRYPTION_MODE */
- enum WLAN_802_11_ENCRYPTION_MODE {
- 	CIPHER_NONE,
-diff --git a/drivers/net/wireless/libertas/ioctl.c b/drivers/net/wireless/libertas/ioctl.c
-index c53c0f9..f70930a 100644
---- a/drivers/net/wireless/libertas/ioctl.c
-+++ b/drivers/net/wireless/libertas/ioctl.c
-@@ -577,47 +577,6 @@ static int wlan_set_multiple_dtim_ioctl(wlan_private * priv, struct ifreq *req)
- 	return ret;
- }
- 
--/**
-- *  @brief Set authentication mode
-- *  @param priv                 A pointer to wlan_private structure
-- *  @param req			A pointer to ifreq structure
-- *  @return 	   		0 --success, otherwise fail
-- */
--static int wlan_setauthalg_ioctl(wlan_private * priv, struct ifreq *req)
--{
--	int alg;
--	struct iwreq *wrq = (struct iwreq *)req;
--	wlan_adapter *adapter = priv->adapter;
--
--	if (wrq->u.data.flags == 0) {
--		//from iwpriv subcmd
--		alg = SUBCMD_DATA(wrq);
--	} else {
--		//from wpa_supplicant subcmd
--		if (copy_from_user(&alg, wrq->u.data.pointer, sizeof(alg))) {
--			lbs_pr_debug(1, "Copy from user failed\n");
--			return -EFAULT;
--		}
--	}
--
--	lbs_pr_debug(1, "auth alg is %#x\n", alg);
--
--	switch (alg) {
--	case AUTH_ALG_SHARED_KEY:
--		adapter->secinfo.authmode = wlan802_11authmodeshared;
--		break;
--	case AUTH_ALG_NETWORK_EAP:
--		adapter->secinfo.authmode =
--		    wlan802_11authmodenetworkEAP;
--		break;
--	case AUTH_ALG_OPEN_SYSTEM:
--	default:
--		adapter->secinfo.authmode = wlan802_11authmodeopen;
--		break;
--	}
--	return 0;
--}
--
- static int wlan_setencryptionmode_ioctl(wlan_private * priv, struct ifreq *req)
+This patch should also apply against net-2.6
+
+ net/mac80211/debugfs_netdev.c |   10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+--- wireless-dev.orig/net/mac80211/debugfs_netdev.c	2007-05-21 17:59:03.538418048 +0200
++++ wireless-dev/net/mac80211/debugfs_netdev.c	2007-05-21 18:03:31.768418048 +0200
+@@ -398,6 +398,8 @@ static int netdev_notify(struct notifier
  {
- 	int mode;
-@@ -2043,10 +2002,6 @@ int libertas_do_ioctl(struct net_device *dev, struct ifreq *req, int cmd)
- 			ret = wlan_set_multiple_dtim_ioctl(priv, req);
- 			break;
+ 	struct net_device *dev = ndev;
+ 	char buf[10+IFNAMSIZ];
++	struct dentry *dir;
++	struct ieee80211_sub_if_data *sdata;
  
--		case WLANSETAUTHALG:
--			ret = wlan_setauthalg_ioctl(priv, req);
--			break;
--
- 		case WLANSETENCRYPTIONMODE:
- 			ret = wlan_setencryptionmode_ioctl(priv, req);
- 			break;
-diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-index 81ee83c..d161787 100644
---- a/drivers/net/wireless/libertas/wext.c
-+++ b/drivers/net/wireless/libertas/wext.c
-@@ -1082,12 +1082,6 @@ static const struct iw_priv_args wlan_private_args[] = {
- 	 IW_PRIV_TYPE_NONE,
- 	 "settxant"},
- 	{
--	 WLANSETAUTHALG,
--	 IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
--	 IW_PRIV_TYPE_NONE,
--	 "authalgs",
--	 },
--	{
- 	 WLANSETENCRYPTIONMODE,
- 	 IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
- 	 IW_PRIV_TYPE_NONE,
--- 
-1.5.0.6
-
+ 	if (state != NETDEV_CHANGENAME)
+ 		return 0;
+@@ -408,10 +410,12 @@ static int netdev_notify(struct notifier
+ 	if (dev->ieee80211_ptr->wiphy->privid != mac80211_wiphy_privid)
+ 		return 0;
+ 
+-	/* TODO
+ 	sprintf(buf, "netdev:%s", dev->name);
+-	debugfs_rename(IEEE80211_DEV_TO_SUB_IF(dev)->debugfsdir, buf);
+-	*/
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	dir = sdata->debugfsdir;
++	if (!debugfs_rename(dir->d_parent, dir, dir->d_parent, buf))
++		printk(KERN_ERR "mac80211: debugfs: failed to rename debugfs "
++		       "dir to %s\n", buf);
+ 
+ 	return 0;
+ }
 
 
