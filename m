@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:58807 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1423655AbXEAVKe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2007 17:10:34 -0400
-Date: Tue, 1 May 2007 23:10:28 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Ulrich Kunitz <kune@deine-taler.de>
-Cc: Daniel Drake <dsd@gentoo.org>, linville@tuxdriver.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] zd1211rw-mac80211: limit URB buffering in tx path
-Message-ID: <20070501231028.4cfa4053@logostar.upir.cz>
-In-Reply-To: <20070501195008.GA14294@p15091797.pureserver.info>
-References: <20070501030100.BDE3D7B409F@zog.reactivated.net>
-	<20070501123411.081c43c6@logostar.upir.cz>
-	<20070501195008.GA14294@p15091797.pureserver.info>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from srv5.dvmed.net ([207.36.208.214]:45266 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760811AbXEUVCa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 May 2007 17:02:30 -0400
+Message-ID: <465208CA.8090201@garzik.org>
+Date: Mon, 21 May 2007 17:02:02 -0400
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: "Cohen, Guy" <guy.cohen@intel.com>
+CC: Christoph Hellwig <hch@infradead.org>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers [part 2/2]
+References: <D0122E209EBF8D4CAB38EC6A8AF244E5028B1C2D@hasmsx412.ger.corp.intel.com>
+In-Reply-To: <D0122E209EBF8D4CAB38EC6A8AF244E5028B1C2D@hasmsx412.ger.corp.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 1 May 2007 21:50:08 +0200, Ulrich Kunitz wrote:
-> On 07-05-01 12:34 Jiri Benc wrote:
-> > On Tue,  1 May 2007 04:01:00 +0100 (BST), Daniel Drake wrote:
-> > > The old code allowed unlimited buffing of tx frames in URBs
-> > > submitted for transfer to the device. This patch stops the
-> > > ieee80211_hw queue(s) if to many URBs are ready for submit to the
-> > > device. Actually the ZD1211 device supports currently only one
-> > > queue.
-> > 
-> > This doesn't look correct to me. The limits should be per queue and you
-> > should always stop queues selectively.
-> 
-> The old ZD1211 chip doesn't support queuing and the new ZD1211B
-> chip has support, but it is unclear how to put packets in the
-> different queues. However the error condition here is, that
-> packets can't be transmitted over the USB, which will affect all
-> queues.
+Cohen, Guy wrote:
+> Support for big-endian platforms (as well as AP mode) for iwlwifi is
+> currently *planned* to be added by Intel in the near future for several
+> purposes.
 
-Really? From what you wrote ("if too many URBs are ready for submit") it
-seems that the code is triggered when the queue is just full. That's not
-necessarily an error condition and the only thing needed to do is to stop
-the queue. Unless zd1211 is really special here (and then I'd like to know
-how is it special).
+> However, the vast majority of iwlwifi users at this point run it over
+> little-endian platforms. _Delaying_ the inclusion of iwlwifi driver will
+> not assist iwlwifi-over-big-endian-platform users in any way, but the
+> impact on the rest of the users is clear.
 
-> Sure one could manage different high level marks for the
-> different queues, but this is all theoretical currently. I could
-> have coded with the explicit knowledge that we support only one
-> queue, but it is really work the hassle.
 
-If you support one queue only, call ieee80211_stop_queue(hw, 0). Calling
-ieee80211_stop_queues if you have just a full queue is wrong.
+All Linux drivers that use the proper APIs are transparently portable to 
+either little endian or big endian, 32-bit or 64-bit machines.
 
-Thanks,
+If your driver is not portable, then it is not using the proper APIs, 
+and needs updating.
 
- Jiri
+Next time, write the driver using the correct APIs and you will not run 
+into these sort of problems...
 
--- 
-Jiri Benc
-SUSE Labs
+	Jeff
+
+
+
+
