@@ -1,115 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33029
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757718AbXEYOwv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2007 10:52:51 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Uwe Bugla <uwe.bugla@gmx.de>
-Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-Date: Fri, 25 May 2007 16:52:19 +0200
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <20070524195616.234280@gmx.net> <200705251512.09878.mb@bu3sch.de> <200705251559.49807.uwe.bugla@gmx.de>
-In-Reply-To: <200705251559.49807.uwe.bugla@gmx.de>
-MIME-Version: 1.0
-Message-Id: <200705251652.19911.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3940 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S936418AbXEVPc4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 May 2007 11:32:56 -0400
+Date: Tue, 22 May 2007 11:17:51 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: jeff@garzik.org
+Cc: netdev@vger.kernel.og, linux-wireless@vger.kernel.org
+Subject: Please pull 'upstream-fixes' branch of wireless-2.6
+Message-ID: <20070522151751.GA5993@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 25 May 2007 15:59:49 Uwe Bugla wrote:
-> Well if you're so clever in software development then please provide an 
-> exception handling for the ssb module which is specifically NOT needed by my 
-> onboard controller, OK?
-> Just provide compatibility to non-wireless NICs, i. e. to non-ssb devices.
+The following changes since commit 55b637c6a003a8c4850b41a2c2fd6942d8a7f530:
+  Linus Torvalds (1):
+        Linux v2.6.22-rc2
 
-What are you talking about?
+are found in the git repository at:
 
-> I think you cannot just bind ssb tightly to b44.c, can you?
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-fixes
 
-You have no clue about how the b44 hardware works, do you?
+Eugene Teo (2):
+      drivers/net/wireless/libertas/fw.c: fix use-before-check
+      drivers/net/wireless/libertas/rx.c: fix use-after-free
 
-> In so far the way how ssb is attached is buggy and wrong, apart from the fact 
-> that my controller is broken, disfunctional.
+Florin Malita (1):
+      libertas: skb dereferenced after netif_rx
 
-Please explain in detail how ssb is wrong.
+ drivers/net/wireless/libertas/decl.h |    2 +-
+ drivers/net/wireless/libertas/fw.c   |   14 +++++++++-----
+ drivers/net/wireless/libertas/rx.c   |   24 +++++-------------------
+ 3 files changed, 15 insertions(+), 25 deletions(-)
 
-> That's how I understand Andrew Morton's guideline: "Test your patches on three 
-> different machines before sending them in."
-> In so far I do expect that you at least take the effort of testing your stuff 
-> with a PCI NIC or onboard NIC of the BCM4401 class of NICs before you send 
-> your stuff in.
-
-> In so far you just cannot delegate the testing to other people before you are 
-> sending in that stuff.
-> That's what Andrew tried to explain to you.
-
-I tested this code on _all_ of my machines. These include:
-Big-Endian powerpc machine.
-Little-Endian i386 machine.
-OpenWRT router device (ssb is capable of booting this device,
-with some additional code, which is in the OpenWRT tree).
-
-So, now I count the machines (not that this number matters AT ALL):
-One, two, three. Oh, there we go. What a surprise...
-
-> I am convinced that your solution runs on your machine, but the solution that 
-> you provide looks very rude, doesn't it?
-
-No, explain why.
-In fact, it's considered to be a very elegant solution by various
-developers who actually have a clue about how the hardware works.
-ssb scales from a small MIPS embedded device to real big machines. 
-
-> > Please provide more information on the actual _issue_.
-> 
-> Sure, no problem:
-> 
-> 02:05.0 Ethernet controller: Broadcom Corporation BCM4401 100Base-T (rev 01)
->         Subsystem: ASUSTeK Computer Inc. A7V8X motherboard
->         Flags: bus master, fast devsel, latency 32, IRQ 17
->         Memory at f1000000 (32-bit, non-prefetchable) [size=8K]
->         Capabilities: <access denied>
-> 
-> >
-> > In this whole mail you basically only state that:
-> > > IRQ 255 looks very idiotic, doesn't it?
-> >
-> > Explain that in detail, please. Why do you think it's wrong?
-> 
-> The "traditional" IRQ table provides TWO cascaded blocks of 8 interrupt 
-> numbers.
-> Gives a spectrum from 0 to 15, doesn't it?
->
-> The ACPI system enlarges that, and on at least my system the highest interrupt 
-> number is 21. Now if there were some more cards installed the maximum number 
-> would perhaps amount to 25.
-> 
-> In so far an IRQ value of 255 looks a bit very very strange, doesn't it?
-
-On your architecture, perhaps. I don't know.
-
-> > Which IRQ number do you get with the old b44 driver?
-> 
-> IRQ 17
-
-Ok, now I show you the code which determines the IRQ number in ssb:
-
-	sdev->irq = bus->host_pci->irq;
-
-That's simple, isn't it?
-It simply copies the IRQ number from the original PCI device.
-
-I bet your bug is _not_ caused by ssb, but by some other breakage
-in another subsystem. Maybe ACPI or APIC is broken? Try to boot
-the machine without ACPI and/or APIC.
-
-
-I just downloaded latest -mm to test it on my machine, but the machine
-keeps freezing with that kernel. But I get IRQ 21 for the b44 device.
-
+diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
+index 606bdd0..dfe2764 100644
+--- a/drivers/net/wireless/libertas/decl.h
++++ b/drivers/net/wireless/libertas/decl.h
+@@ -46,7 +46,7 @@ u32 libertas_index_to_data_rate(u8 index);
+ u8 libertas_data_rate_to_index(u32 rate);
+ void libertas_get_fwversion(wlan_adapter * adapter, char *fwversion, int maxlen);
+ 
+-int libertas_upload_rx_packet(wlan_private * priv, struct sk_buff *skb);
++void libertas_upload_rx_packet(wlan_private * priv, struct sk_buff *skb);
+ 
+ /** The proc fs interface */
+ int libertas_process_rx_command(wlan_private * priv);
+diff --git a/drivers/net/wireless/libertas/fw.c b/drivers/net/wireless/libertas/fw.c
+index 441123c..5c63c9b 100644
+--- a/drivers/net/wireless/libertas/fw.c
++++ b/drivers/net/wireless/libertas/fw.c
+@@ -333,18 +333,22 @@ static void command_timer_fn(unsigned long data)
+ 	unsigned long flags;
+ 
+ 	ptempnode = adapter->cur_cmd;
++	if (ptempnode == NULL) {
++		lbs_pr_debug(1, "PTempnode Empty\n");
++		return;
++	}
++
+ 	cmd = (struct cmd_ds_command *)ptempnode->bufvirtualaddr;
++	if (!cmd) {
++		lbs_pr_debug(1, "cmd is NULL\n");
++		return;
++	}
+ 
+ 	lbs_pr_info("command_timer_fn fired (%x)\n", cmd->command);
+ 
+ 	if (!adapter->fw_ready)
+ 		return;
+ 
+-	if (ptempnode == NULL) {
+-		lbs_pr_debug(1, "PTempnode Empty\n");
+-		return;
+-	}
+-
+ 	spin_lock_irqsave(&adapter->driver_lock, flags);
+ 	adapter->cur_cmd = NULL;
+ 	spin_unlock_irqrestore(&adapter->driver_lock, flags);
+diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
+index d17924f..96619a3 100644
+--- a/drivers/net/wireless/libertas/rx.c
++++ b/drivers/net/wireless/libertas/rx.c
+@@ -136,7 +136,7 @@ static void wlan_compute_rssi(wlan_private * priv, struct rxpd *p_rx_pd)
+ 	LEAVE();
+ }
+ 
+-int libertas_upload_rx_packet(wlan_private * priv, struct sk_buff *skb)
++void libertas_upload_rx_packet(wlan_private * priv, struct sk_buff *skb)
+ {
+ 	lbs_pr_debug(1, "skb->data=%p\n", skb->data);
+ 
+@@ -148,8 +148,6 @@ int libertas_upload_rx_packet(wlan_private * priv, struct sk_buff *skb)
+ 	skb->ip_summed = CHECKSUM_UNNECESSARY;
+ 
+ 	netif_rx(skb);
+-
+-	return 0;
+ }
+ 
+ /**
+@@ -269,15 +267,11 @@ int libertas_process_rxed_packet(wlan_private * priv, struct sk_buff *skb)
+ 	wlan_compute_rssi(priv, p_rx_pd);
+ 
+ 	lbs_pr_debug(1, "RX Data: size of actual packet = %d\n", skb->len);
+-	if (libertas_upload_rx_packet(priv, skb)) {
+-		lbs_pr_debug(1, "RX error: libertas_upload_rx_packet"
+-		       " returns failure\n");
+-		ret = -1;
+-		goto done;
+-	}
+ 	priv->stats.rx_bytes += skb->len;
+ 	priv->stats.rx_packets++;
+ 
++	libertas_upload_rx_packet(priv, skb);
++
+ 	ret = 0;
+ done:
+ 	LEAVE();
+@@ -438,22 +432,14 @@ static int process_rxed_802_11_packet(wlan_private * priv, struct sk_buff *skb)
+ 	wlan_compute_rssi(priv, prxpd);
+ 
+ 	lbs_pr_debug(1, "RX Data: size of actual packet = %d\n", skb->len);
+-
+-	if (libertas_upload_rx_packet(priv, skb)) {
+-		lbs_pr_debug(1, "RX error: libertas_upload_rx_packet "
+-			"returns failure\n");
+-		ret = -1;
+-		goto done;
+-	}
+-
+ 	priv->stats.rx_bytes += skb->len;
+ 	priv->stats.rx_packets++;
+ 
++	libertas_upload_rx_packet(priv, skb);
++
+ 	ret = 0;
+ done:
+ 	LEAVE();
+ 
+-	skb->protocol = __constant_htons(0x0019);	/* ETH_P_80211_RAW */
+-
+ 	return (ret);
+ }
 -- 
-Greetings Michael.
+John W. Linville
+linville@tuxdriver.com
