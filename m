@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:53866 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757563AbXEKDKd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 23:10:33 -0400
-Subject: Re: libertas driver
-From: Dan Williams <dcbw@redhat.com>
+Received: from mga06.intel.com ([134.134.136.21]:56052 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755362AbXEVXB7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 May 2007 19:01:59 -0400
+Message-ID: <465362EA.9090008@linux.intel.com>
+Date: Tue, 22 May 2007 14:38:50 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4643D3FC.9070308@garzik.org>
-References: <20070510181416.8637b466.akpm@linux-foundation.org>
-	 <4643D3FC.9070308@garzik.org>
-Content-Type: text/plain
-Date: Thu, 10 May 2007 23:14:24 -0400
-Message-Id: <1178853264.8607.61.camel@localhost.localdomain>
-Mime-Version: 1.0
+CC: Randy Dunlap <randy.dunlap@oracle.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers
+References: <464B7B7C.5080800@linux.intel.com> <20070516182700.912a21ed.randy.dunlap@oracle.com> <464BD9D4.4020909@linux.intel.com> <464BEEB0.8030402@garzik.org>
+In-Reply-To: <464BEEB0.8030402@garzik.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-05-10 at 22:25 -0400, Jeff Garzik wrote:
-> Andrew Morton wrote:
-> > x86_64 build is a bit ugly.
+Jeff Garzik wrote:
+
+> As an aside #2,
 > 
-> Not sure what happened to his mailer (patch #0 of 19 appeared), but:
-> http://people.redhat.com/dcbw/libertas-patches/
+>> +#if IWL == 4965
+>> +           (rxon1->ofdm_ht_single_stream_basic_rates ==
+>> +            rxon2->ofdm_ht_single_stream_basic_rates) &&
+>> +           (rxon1->ofdm_ht_dual_stream_basic_rates ==
+>> +            rxon2->ofdm_ht_dual_stream_basic_rates) &&
+>> +           (rxon1->rx_chain == rxon2->rx_chain) &&
+>> +#endif
 > 
-> Patches 18 and 19 address several of these.
+> 
+> those #if's should go away.
 
-16, 18, and 19 should take care of all the issues I (and Randy) found by
-sparse and building on x86-64.
+Agreed.  We'll continue working to remove those over time.
 
-Thanks,
-Dan
+Originally the intent was to have a single driver that supported the 4965 and 3945 via run-time switching.  As development moved forward, switching to a build-time approach made more sense.  base.c was then isolated from the hardware specific code and the specific HW functionality was moved into iwl-3945 and iwl-4965.  The remaining chunks are small code pieces where that work hasn't yet completed.
 
+James
 
+> 
+>     Jeff
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
