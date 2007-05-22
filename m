@@ -1,52 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46291 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934400AbXEGPZ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2007 11:25:29 -0400
-Message-ID: <463F44E6.5030705@garzik.org>
-Date: Mon, 07 May 2007 11:25:26 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Andrea Merello <andrea.merello@gmail.com>
-Subject: Re: [PATCH v2] Add rtl8187 wireless driver
-References: <200705071022.11711.flamingice@sourmilk.net>
-In-Reply-To: <200705071022.11711.flamingice@sourmilk.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:33930 "EHLO
+	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756542AbXEVADv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 May 2007 20:03:51 -0400
+From: Daniel Drake <dsd@gentoo.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: kune@deine-taler.de
+Subject: [PATCH] zd1211rw-mac80211: Make CCK gain patching conditional on RF type
+Message-Id: <20070522000355.469E07B409F@zog.reactivated.net>
+Date: Tue, 22 May 2007 01:03:54 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
-> This patch adds a mac80211 based wireless driver for the rtl8187 USB
-> wireless card.
-> 
-> Signed-off-by: Michael Wu <flamingice@sourmilk.net>
-> ---
-> 
->  MAINTAINERS                                    |   10 
->  drivers/net/wireless/Kconfig                   |    2 
->  drivers/net/wireless/Makefile                  |    3 
->  drivers/net/wireless/rtl818x/Kconfig           |   16 +
->  drivers/net/wireless/rtl818x/Makefile          |    2 
->  drivers/net/wireless/rtl818x/rtl8187.h         |  125 ++++
->  drivers/net/wireless/rtl818x/rtl8187_dev.c     |  730 ++++++++++++++++++++++++
->  drivers/net/wireless/rtl818x/rtl8187_rtl8225.c |  744 ++++++++++++++++++++++++
->  drivers/net/wireless/rtl818x/rtl8187_rtl8225.h |   30 +
->  drivers/net/wireless/rtl818x/rtl818x.h         |  212 +++++++
->  10 files changed, 1874 insertions(+), 0 deletions(-)
+The vendor driver code suggests that CR47 patching happens on every channel
+change for every RF (depending on bit 8 in POD).
 
-Much better.
+Due to a bug in their driver (upper bits of RF_Mode get zeroed out, then
+are examined for 1s when setting some other flags), this isn't actually
+what happens, and their generic CCK patching routine never takes effect.
 
-For the record, new wireless drivers go TO John Linville for merging 
-(and he pushes to me, in turn).
+Some of their RF configurations do include explicit (duplicated) code
+for CR47 patching though. This patch makes zd1211rw match that
+behaviour.
 
-I am a bit skeptical that multiple files are needed.  It seems like 
-drivers/net/wireless/rtl818x.c would be a better path, a la tg3.c.
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+---
+ drivers/net/wireless/mac80211/zd1211rw/zd_chip.c   |    2 +-
+ drivers/net/wireless/mac80211/zd1211rw/zd_rf.h     |   14 ++++++++++++++
+ .../net/wireless/mac80211/zd1211rw/zd_rf_al2230.c  |    1 +
+ .../net/wireless/mac80211/zd1211rw/zd_rf_al7230b.c |    1 +
+ 4 files changed, 17 insertions(+), 1 deletions(-)
 
-	Jeff
-
-
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
+index 4078fbe..fcf78ab 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
+@@ -1261,7 +1261,7 @@ static int patch_cck_gain(struct zd_chip *chip)
+ 	int r;
+ 	u32 value;
+ 
+-	if (!chip->patch_cck_gain)
++	if (!chip->patch_cck_gain || !zd_rf_should_patch_cck_gain(&chip->rf))
+ 		return 0;
+ 
+ 	ZD_ASSERT(mutex_is_locked(&chip->mutex));
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_rf.h b/drivers/net/wireless/mac80211/zd1211rw/zd_rf.h
+index 6dced2a..44c46e2 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_rf.h
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_rf.h
+@@ -52,6 +52,12 @@ struct zd_rf {
+ 	 * defaults to 1 (yes) */
+ 	u8 update_channel_int:1;
+ 
++	/* whether CR47 should be patched from the EEPROM, if the appropriate
++	 * flag is set in the POD. The vendor driver suggests that this should
++	 * be done for all RF's, but a bug in their code prevents but their 
++	 * HW_OverWritePhyRegFromE2P() routine from ever taking effect. */
++	u8 patch_cck_gain:1;
++
+ 	/* private RF driver data */
+ 	void *priv;
+ 
+@@ -84,6 +90,14 @@ static inline int zd_rf_should_update_pwr_int(struct zd_rf *rf)
+ 	return rf->update_channel_int;
+ }
+ 
++static inline int zd_rf_should_patch_cck_gain(struct zd_rf *rf)
++{
++	return rf->patch_cck_gain;
++}
++
++int zd_rf_patch_6m_band_edge(struct zd_rf *rf, u8 channel);
++int zd_rf_generic_patch_6m(struct zd_rf *rf, u8 channel);
++
+ /* Functions for individual RF chips */
+ 
+ int zd_rf_init_rf2959(struct zd_rf *rf);
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al2230.c b/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al2230.c
+index 511392a..e7a4ecf 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al2230.c
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al2230.c
+@@ -432,5 +432,6 @@ int zd_rf_init_al2230(struct zd_rf *rf)
+ 		rf->switch_radio_on = zd1211_al2230_switch_radio_on;
+ 	}
+ 	rf->patch_6m_band_edge = zd_rf_generic_patch_6m;
++	rf->patch_cck_gain = 1;
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al7230b.c b/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al7230b.c
+index 5e5e9dd..f4e8b6a 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al7230b.c
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al7230b.c
+@@ -483,6 +483,7 @@ int zd_rf_init_al7230b(struct zd_rf *rf)
+ 		rf->switch_radio_on = zd1211_al7230b_switch_radio_on;
+ 		rf->set_channel = zd1211_al7230b_set_channel;
+ 		rf->patch_6m_band_edge = zd_rf_generic_patch_6m;
++		rf->patch_cck_gain = 1;
+ 	}
+ 
+ 	rf->switch_radio_off = al7230b_switch_radio_off;
+-- 
+1.5.2
 
