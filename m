@@ -1,75 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:36374
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753693AbXE0VO3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 May 2007 17:14:29 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Maximilian Engelhardt <maxi@daemonizer.de>
-Subject: Re: b44: regression in 2.6.22 (resend)
-Date: Sun, 27 May 2007 23:13:32 +0200
-Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Stephen Hemminger <shemminger@linux-foundation.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-References: <20070525172431.60affaca@freepuppy> <200705261901.18110.mb@bu3sch.de> <200705272125.25506.maxi@daemonizer.de>
-In-Reply-To: <200705272125.25506.maxi@daemonizer.de>
+Received: from srv5.dvmed.net ([207.36.208.214]:56184 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757436AbXEVXA0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 May 2007 19:00:26 -0400
+Message-ID: <46537603.6040208@garzik.org>
+Date: Tue, 22 May 2007 19:00:19 -0400
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200705272313.33129.mb@bu3sch.de>
+To: James Ketrenos <jketreno@linux.intel.com>
+CC: Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers
+References: <464B7B7C.5080800@linux.intel.com> <200705162151.32910.flamingice@sourmilk.net> <46534172.5040106@linux.intel.com>
+In-Reply-To: <46534172.5040106@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 27 May 2007 21:25:17 Maximilian Engelhardt wrote:
-> 2.6.21.1:
-> [  5] local 192.168.1.2 port 58414 connected with 192.168.1.1 port 5001
-> [  5]  0.0-60.6 sec  1.13 MBytes    157 Kbits/sec
-> [  4] local 192.168.1.2 port 5001 connected with 192.168.1.1 port 57837
-> [  4]  0.0-63.1 sec  2.82 MBytes    375 Kbits/sec
+James Ketrenos wrote:
+> That said -- if the driver can execute in parallel to the stack for some 
+> operations, shouldn't they remain on their own workqueues so the work 
+> can be divided up vs. having *everything* routed through one 
+> singlethread workqueue?
 
-> 2.6.22-rc3:
-> [  5] local 192.168.1.2 port 46557 connected with 192.168.1.1 port 5001
-> [  5]  0.0-60.4 sec  58.9 MBytes  8.18 Mbits/sec
-> [  4] local 192.168.1.2 port 5001 connected with 192.168.1.1 port 51633
-> [  4]  0.0-63.1 sec  7.27 MBytes    967 Kbits/sec
+Just because it -can-, does not mean it should.
 
-This is the diff between these two kernels.
-I'm not sure why you see a much better TX throughput here.
+Unless there is a -proven- need for the operations to be parallel, you 
+should avoid the burden of such complexity.
 
-Can you re-check to make sure it's not just some test-jitter?
+	Jeff
 
 
---- linux-2.6.21.1/drivers/net/b44.c    2007-05-27 22:58:01.000000000 +0200
-+++ linux-2.6.22-rc3/drivers/net/b44.c  2007-05-27 23:01:44.000000000 +0200
-@@ -825,12 +825,11 @@
-                        if (copy_skb == NULL)
-                                goto drop_it_no_recycle;
- 
--                       copy_skb->dev = bp->dev;
-                        skb_reserve(copy_skb, 2);
-                        skb_put(copy_skb, len);
-                        /* DMA sync done above, copy just the actual packet */
--                       memcpy(copy_skb->data, skb->data+bp->rx_offset, len);
--
-+                       skb_copy_from_linear_data_offset(skb, bp->rx_offset,
-+                                                        copy_skb->data, len);
-                        skb = copy_skb;
-                }
-                skb->ip_summed = CHECKSUM_NONE;
-@@ -1007,7 +1006,8 @@
-                        goto err_out;
-                }
- 
--               memcpy(skb_put(bounce_skb, len), skb->data, skb->len);
-+               skb_copy_from_linear_data(skb, skb_put(bounce_skb, len),
-+                                         skb->len);
-                dev_kfree_skb_any(skb);
-                skb = bounce_skb;
-        }
-
--- 
-Greetings Michael.
