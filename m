@@ -1,55 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:60077 "EHLO mx1.redhat.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2892 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753794AbXE3PZD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2007 11:25:03 -0400
-Subject: Re: Please pull 'libertas' branch of wireless-2.6
-From: Dan Williams <dcbw@redhat.com>
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <465D8538.8070507@garzik.org>
-References: <20070529183347.GD3496@tuxdriver.com>
-	 <465D8538.8070507@garzik.org>
-Content-Type: text/plain
-Date: Wed, 30 May 2007 11:28:48 -0400
-Message-Id: <1180538928.17163.10.camel@xo-28-0B-88.localdomain>
+	id S1757218AbXEVTDY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 May 2007 15:03:24 -0400
+Date: Tue, 22 May 2007 14:39:56 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: James Ketrenos <jketreno@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers
+Message-ID: <20070522183956.GB5993@tuxdriver.com>
+References: <464B7B7C.5080800@linux.intel.com> <20070516182700.912a21ed.randy.dunlap@oracle.com> <464DF7FC.5070702@linux.intel.com> <20070518140619.a7e30a56.randy.dunlap@oracle.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070518140619.a7e30a56.randy.dunlap@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-05-30 at 10:07 -0400, Jeff Garzik wrote:
-> John W. Linville wrote:
-> > Lots of stuff here...probably best for 2.6.23...
+On Fri, May 18, 2007 at 02:06:19PM -0700, Randy Dunlap wrote:
+> On Fri, 18 May 2007 12:01:16 -0700 James Ketrenos wrote:
 > 
-> Is this best for Linux users... or just easy for developers?
+> > Randy Dunlap wrote:
+> > >> 	http://intellinuxwireless.org/iwlwifi/0001-Add-iwlwifi-wireless-drivers.patch
+> > > Some comments/review, mostly not-code-related:
+> > > 
+> > 
+> > Here is the current status (everything not described below has been fixed in GIT, and is available in the patch at http://intellinuxwireless.org/iwlwifi/0001-v2-Add-iwlwifi-wireless-drivers.patch:
+> > 
 > 
-> Won't putting off all these fixes until 2.6.23 leave the driver released 
-> in 2.6.22 in shoddy shape?
+> [specific updates clipped]
+> 
+> > Are you OK with iwlwifi addressing the above post-merge into wireless-dev?
+> 
+> /me points to Mr. Linville.  :)
 
-Not really; it more or less works there.  What's gone on since then is
-general driver cleanup (Christoph's comments and more), splitting the
-driver so that other bus types can use it (SDIO for example once
-Pierre's SDIO patches get upstream), wireless extensions fixes, etc.
+I'm happy to take it into wireless-dev at this point.
 
-> libertas is upstream now, so we cannot pretend that the driver is 
-> completely independent from upstream release cycles and maintenance.
+James, will you be posting an updated patch?
 
-True, but some of the stuff in here I didn't think would be suitable
-during an -rc cycle, for example the driver splitting and the cleanups
-that don't impact function at all, but are good to do nonetheless.
-
-> libertas fixes should go upstream immediately, since we are in a bugfix 
-> cycle, and since libertas (from upstream perspective) is about to make 
-> its big debut on the world stage.
-
-If you think all the bits from this should just go to 2.6.22, that's
-fine with me.  But I don't feel comfortable making that call given what
-I thought were the constraints on pushing changes through during an rc
-cycle.  When the merge window was open, we backported critical bug fixes
-and necessary merge-requirement cleanups to the code in linville's tree,
-but avoided changes that didn't impact function.
-
-Dan
-
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
