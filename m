@@ -1,72 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49615
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755799AbXENRrl (ORCPT
+Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:26266 "EHLO
+	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755966AbXEVAAb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2007 13:47:41 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH] mac80211: Allow sleeping in set_key op
-Date: Mon, 14 May 2007 19:47:17 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200705062037.35037.mb@bu3sch.de> <200705072244.23736.mb@bu3sch.de> <20070514193715.4fffabda@griffin.suse.cz>
-In-Reply-To: <20070514193715.4fffabda@griffin.suse.cz>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200705141947.17927.mb@bu3sch.de>
+	Mon, 21 May 2007 20:00:31 -0400
+From: Daniel Drake <dsd@gentoo.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: kune@deine-taler.de
+Subject: [PATCH] zd1211rw-mac80211: Extend RF layer
+Message-Id: <20070522000030.19D897B409F@zog.reactivated.net>
+Date: Tue, 22 May 2007 01:00:29 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 14 May 2007 19:37:15 Jiri Benc wrote:
-> On Mon, 7 May 2007 22:44:23 +0200, Michael Buesch wrote:
-> > On Monday 07 May 2007 18:52:24 Jiri Benc wrote:
-> > > There is a race here. You already removed the sta from sta_hash list
-> > > and you're not protected by any lock. Thus, it is possible to add a new
-> > > station with the same address before finish_sta_info_free is called.
-> > > When this happens, you call the set_key handler for the new key and
-> > > after that you call it again with DISABLE_KEY.
-> > > 
-> > > It's not easy to get this right. I remember also problems with
-> > > dereferencing already freed key when I thought about possible ways to
-> > > solve exactly this problem.
-> > 
-> > I'm not sure this race exists.
-> > You assume that when a new key is added with the same mac as before
-> > it overrides the old key.
-> 
-> Yes.
+These changes are needed for UW2453 RF support:
 
-I think that's an invalid assumption.
-The key is per-bss and not per bssid-address; although that is
-mostly the same, except for such cornercases like this race.
+Add pointer which RF drivers can use to store private RF data
+Add exit hook so that RF drivers can free private data
+Allow RF's to disable the generic TX power integration handling code
 
-> > I think that's a bug in the driver then.
-> > IMO the driver _must_ keep track of used key "slots" and don't
-> > re-allocate them for new keys until disable-key is called.
-> 
-> How the hardware will act if you supply two different keys for the same
-> MAC address? And later, how do you recognize which of these two keys is
-> being disabled?
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+---
+ drivers/net/wireless/mac80211/zd1211rw/zd_chip.c |    3 +++
+ drivers/net/wireless/mac80211/zd1211rw/zd_rf.c   |    6 ++++++
+ drivers/net/wireless/mac80211/zd1211rw/zd_rf.h   |   13 +++++++++++++
+ 3 files changed, 22 insertions(+), 0 deletions(-)
 
-That's what hw_key_idx is for.
-
-> > And that's exactly what bcm43xx does.
-> > 
-> > IMO it's a bug in the driver, when it overrides a key that's not
-> > DISABLEd.
-> > 
-> > Short: I don't think there is a race, and if, then it's a driver bug.
-> 
-> I must admit I don't know how exactly keys are handled in all possible
-> hardware. So I just want to be sure and keep exact serialization here.
-> If there is a consensus that serialization is not needed here, well,
-> it's easier then.
-> 
-> Do you know how other drivers work regarding this?
-
-I'm sorry, no.
-
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
+index 8dc8f88..4078fbe 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
+@@ -1228,6 +1228,9 @@ static int update_channel_integration_and_calibration(struct zd_chip *chip,
+ {
+ 	int r;
+ 
++	if (!zd_rf_should_update_pwr_int(&chip->rf))
++		return 0;
++
+ 	r = update_pwr_int(chip, channel);
+ 	if (r)
+ 		return r;
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_rf.c b/drivers/net/wireless/mac80211/zd1211rw/zd_rf.c
+index 549c23b..c4981ad 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_rf.c
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_rf.c
+@@ -52,10 +52,16 @@ const char *zd_rf_name(u8 type)
+ void zd_rf_init(struct zd_rf *rf)
+ {
+ 	memset(rf, 0, sizeof(*rf));
++
++	/* default to update channel integration, as almost all RF's do want
++	 * this */
++	rf->update_channel_int = 1;
+ }
+ 
+ void zd_rf_clear(struct zd_rf *rf)
+ {
++	if (rf->clear)
++		rf->clear(rf);
+ 	ZD_MEMCLEAR(rf, sizeof(*rf));
+ }
+ 
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_rf.h b/drivers/net/wireless/mac80211/zd1211rw/zd_rf.h
+index aa9cc10..c204f9a 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_rf.h
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_rf.h
+@@ -48,12 +48,20 @@ struct zd_rf {
+ 
+ 	u8 channel;
+ 
++	/* whether channel integration and calibration should be updated
++	 * defaults to 1 (yes) */
++	u8 update_channel_int:1;
++
++	/* private RF driver data */
++	void *priv;
++
+ 	/* RF-specific functions */
+ 	int (*init_hw)(struct zd_rf *rf);
+ 	int (*set_channel)(struct zd_rf *rf, u8 channel);
+ 	int (*switch_radio_on)(struct zd_rf *rf);
+ 	int (*switch_radio_off)(struct zd_rf *rf);
+ 	int (*patch_6m_band_edge)(struct zd_rf *rf, u8 channel);
++	void (*clear)(struct zd_rf *rf);
+ };
+ 
+ const char *zd_rf_name(u8 type);
+@@ -71,6 +79,11 @@ int zd_switch_radio_off(struct zd_rf *rf);
+ int zd_rf_patch_6m_band_edge(struct zd_rf *rf, u8 channel);
+ int zd_rf_generic_patch_6m(struct zd_rf *rf, u8 channel);
+ 
++static inline int zd_rf_should_update_pwr_int(struct zd_rf *rf)
++{
++	return rf->update_channel_int;
++}
++
+ /* Functions for individual RF chips */
+ 
+ int zd_rf_init_rf2959(struct zd_rf *rf);
 -- 
-Greetings Michael.
+1.5.2
+
