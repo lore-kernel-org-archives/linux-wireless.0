@@ -1,40 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:42475 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757000AbXENU73 (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:62863 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S966090AbXEWAUA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2007 16:59:29 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so1433645uga
-        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2007 13:59:22 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH v3 1/2] Add 93cx6 eeprom library
-Date: Mon, 14 May 2007 22:57:50 +0200
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-References: <200705140138.52596.flamingice@sourmilk.net> <200705141700.21900.IvDoorn@gmail.com> <20070514181323.GB6999@tuxdriver.com>
-In-Reply-To: <20070514181323.GB6999@tuxdriver.com>
+	Tue, 22 May 2007 20:20:00 -0400
+Message-ID: <46537536.8070500@linux.intel.com>
+Date: Tue, 22 May 2007 15:56:54 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200705142257.50726.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Jeff Garzik <jeff@garzik.org>
+CC: Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers
+References: <464B7B7C.5080800@linux.intel.com> <200705162151.32910.flamingice@sourmilk.net> <46534172.5040106@linux.intel.com> <46537603.6040208@garzik.org> <4653654F.1060708@linux.intel.com> <46537FA4.2040907@garzik.org>
+In-Reply-To: <46537FA4.2040907@garzik.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-> > > The udelay is necessary to set a limit on how fast the eeprom is operated.. 
-> > > but not on all hardware, apparently. adm8211 just uses a read from the eeprom 
-> > > register to perform the delay.
-> > 
-> > Ok, then I'll update rt2x00 to perform the delay during register_write as well. :)
+Jeff Garzik wrote:
+> James Ketrenos wrote:
+>> Jeff Garzik wrote:
+>>> James Ketrenos wrote:
+>>>> That said -- if the driver can execute in parallel to the stack for 
+>>>> some operations, shouldn't they remain on their own workqueues so 
+>>>> the work can be divided up vs. having *everything* routed through 
+>>>> one singlethread workqueue?
+>>>
+>>> Just because it -can-, does not mean it should.
+>>>
+>>> Unless there is a -proven- need for the operations to be parallel, 
+>>> you should avoid the burden of such complexity.
+>>
+>> There is no additional complexity by having the driver create its own 
+>> workqueue; it just calls create_workqueue during probe and 
+>> destroy_workqueue during remove.
 > 
-> Actually, see the end of the thread from the previous 93cx6 patch
-> Michael posted on Friday.  I think these delays are actually alright,
-> but they could use a comment.  How about the patch below (applied on
-> top of the previous version)?
+> That is obviously false.  Ignoring the additional code and memory usage, 
+> you must additionally evaluate the potential for deadlocks and races.
 
-Not a problem, I'll create one for wireless-dev but it should be applicable
-for wireless with Michael's patch as well. :)
+So you're saying that by using mac80211's workqueue a driver no longer has to worry about any deadlocks or race conditions?  That is obviously false.
 
-Ivo
+> And then there is the Linus mantra:  do what you must, and no more.  No 
+> need for additional workqueues has been demonstrated.  (which I noticed 
+> your response completely skipped -- an implicit admission of lack of need)
+
+Funny.  I noticed you completely deleted the part of my original email that listed one reason why we can't just use mac80211's workqueue currently:
+
+"We need to have a workqueue for initializing the adapter and uCode before we call ieee80211_register_hw.  If ieee80211_alloc_hw created the workqueue, that would work for us (assuming there aren't going to be any side effects from us flushing the workqueue before we call ieee80211_free_hw/ieee80211_unregister_hw) "
+
+I didn't say we can't use mac80211's workqueue if it was created/destroyed during alloc/free vs. hw register.  
+
+I asked a question about if work can execute in parallel, shouldn't we let it -- and you came back saying I have to prove a need to execute in parallel.  I get your point -- Linux isn't about innovation, discussion, or putting code out and having it evolve and stand the test of time.  Its about doing exhaustive experimentation in house, putting together a thesis, and then submitting it to the mailing list.  I'll do my best to follow that model moving forward.
+
+Thanks,
+James
+
+> 
+>     Jeff
+> 
