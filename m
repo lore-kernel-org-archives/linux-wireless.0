@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3079 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161475AbXEEPhK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 May 2007 11:37:10 -0400
-Date: Sat, 5 May 2007 09:46:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 4/4 (resend)] mac80211: add maintainers entry for mac80211
-Message-ID: <20070505134620.GD4155@tuxdriver.com>
-References: <20070505031749.GA5308@tuxdriver.com> <20070505134255.GA4155@tuxdriver.com> <20070505134438.GB4155@tuxdriver.com> <20070505134528.GC4155@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070505134528.GC4155@tuxdriver.com>
+Received: from mga06.intel.com ([134.134.136.21]:40474 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755450AbXEWU6e (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 May 2007 16:58:34 -0400
+Message-ID: <4654965D.1020401@linux.intel.com>
+Date: Wed, 23 May 2007 12:30:37 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: Jeff Garzik <jeff@garzik.org>
+CC: Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers
+References: <464B7B7C.5080800@linux.intel.com> <200705162151.32910.flamingice@sourmilk.net> <46534172.5040106@linux.intel.com> <46537603.6040208@garzik.org> <4653654F.1060708@linux.intel.com> <46537FA4.2040907@garzik.org> <46537536.8070500@linux.intel.com> <465391A5.4090608@garzik.org> <46548538.9080002@linux.intel.com> <46549D08.3010109@garzik.org>
+In-Reply-To: <46549D08.3010109@garzik.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jiri Benc <jbenc@suse.cz>
+Jeff Garzik wrote:
+> James Ketrenos wrote:
+>> Given the API mac80211 exposes, and how the stack operates, I don't 
+>> see how using ifsta->work as the workqueue allows the driver to no 
+>> longer evaluate the potential for deadlocks and races.
+> 
+> For the operations in the workqueue, they are obviously serialized.
 
-Add MAINTAINERS entry for mac80211.
+And the inverse is also true -- operations not on the workqueue are not serialized.  The driver must handle both.
 
-Signed-off-by: Jiri Benc <jbenc@suse.cz>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- MAINTAINERS |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+>> To make the most use of the processing and power resources available, 
+>> you must execute in parallel.
+> 
+> That's some impressive English parsing, but clearly wrong on the face of 
+> it.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index af1c792..5ba3d1d 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2209,6 +2209,16 @@ M:	philb@gnu.org
- W:	http://www.tazenda.demon.co.uk/phil/linux-hp
- S:	Maintained
- 
-+MAC80211
-+P:	Jiri Benc
-+M:	jbenc@suse.cz
-+P:	Michael Wu
-+M:	flamingice@sourmilk.net
-+L:	linux-wireless@vger.kernel.org
-+W:	http://linuxwireless.org/
-+T:	git kernel.org:/pub/scm/linux/kernel/git/jbenc/mac80211.git
-+S:	Maintained
-+
- MARVELL YUKON / SYSKONNECT DRIVER
- P:	Mirko Lindner
- M: 	mlindner@syskonnect.de
--- 
-1.5.0.6
+If you have N cores on a CPU and more than one is up, but only one gets to do anything because you've serialized everything onto a single workqueue, you are wasting CPU resources.  When you waste CPU resources you decrease system efficiency and increase power consumption.  
 
--- 
-John W. Linville
-linville@tuxdriver.com
+If you have N cores and only one is up, then the scheduler can decide to run serially if it wants, or wake up a core, or do whatever it wants.  The driver certainly shouldn't dictate policy and force everything to run serially.
+
+> The Linus mantra cited is about MINIMALIZATION.  When you say "to 
+> make the most use of..." you are MAXIMIZING something that need not be 
+> maximized.
+
+I'm really not following what your point is here.  In an attempt to twist my words, you're now saying we shouldn't maximize system efficiency.
+
+> As repeated many times, there is no NEED to execute this slow path stuff 
+> in parallel.  
+
+I must have missed the thread where you said that many times, let alone where you proved that there is no benefit or need to  running "this slow path stuff" (however you are defining that to be) in parallel.
+
+A driver should not be written in a way which suppresses the kernel's ability to optimize execution by forcing serialization of disjointed operations through a single workqueue.
+
+James
