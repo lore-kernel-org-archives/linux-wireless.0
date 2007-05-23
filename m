@@ -1,38 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:39050
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752783AbXEZTFI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 15:05:08 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-Date: Sat, 26 May 2007 21:04:50 +0200
-Cc: Uwe Bugla <uwe.bugla@gmx.de>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-References: <20070524195616.234280@gmx.net> <200705261750.48816.mb@bu3sch.de> <20070526091309.0af20971.akpm@linux-foundation.org>
-In-Reply-To: <20070526091309.0af20971.akpm@linux-foundation.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:57325 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756985AbXEWA6V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 May 2007 20:58:21 -0400
+Message-ID: <465391A5.4090608@garzik.org>
+Date: Tue, 22 May 2007 20:58:13 -0400
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200705262104.51248.mb@bu3sch.de>
+To: James Ketrenos <jketreno@linux.intel.com>
+CC: Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH]  Add iwlwifi wireless drivers
+References: <464B7B7C.5080800@linux.intel.com> <200705162151.32910.flamingice@sourmilk.net> <46534172.5040106@linux.intel.com> <46537603.6040208@garzik.org> <4653654F.1060708@linux.intel.com> <46537FA4.2040907@garzik.org> <46537536.8070500@linux.intel.com>
+In-Reply-To: <46537536.8070500@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 26 May 2007 18:13:09 Andrew Morton wrote:
-> > I ask to try wireless-dev, as the driver works perfectly fine
-> > for me there, but he refuses to try it, too. So I'm stuck.
+James Ketrenos wrote:
+> Jeff Garzik wrote:
+>> James Ketrenos wrote:
+>>> Jeff Garzik wrote:
+>>>> James Ketrenos wrote:
+>>>>> That said -- if the driver can execute in parallel to the stack for 
+>>>>> some operations, shouldn't they remain on their own workqueues so 
+>>>>> the work can be divided up vs. having *everything* routed through 
+>>>>> one singlethread workqueue?
+>>>>
+>>>> Just because it -can-, does not mean it should.
+>>>>
+>>>> Unless there is a -proven- need for the operations to be parallel, 
+>>>> you should avoid the burden of such complexity.
+>>>
+>>> There is no additional complexity by having the driver create its own 
+>>> workqueue; it just calls create_workqueue during probe and 
+>>> destroy_workqueue during remove.
+>>
+>> That is obviously false.  Ignoring the additional code and memory 
+>> usage, you must additionally evaluate the potential for deadlocks and 
+>> races.
 > 
-> I don't think he knows how to obtain it.
-> 
-> Uwe, http://userweb.kernel.org/~akpm/git-wireless.patch.gz is the current
-> wireless tree.  That's a patch against 2.6.22-rc3.  Could you please test
-> that?  If that works then we know that the bug probably lies outside the
-> b44 driver (or it was subsequently fixed).
+> So you're saying that by using mac80211's workqueue a driver no longer 
+> has to worry about any deadlocks or race conditions?  That is obviously 
+> false.
 
-I just tried this patch on my BCM4401-B0 and it works there, too.
+Don't be dense.  If two operations are guaranteed to go down the same 
+pipeline, then there is a clear sequence guarantee that is not present 
+if operations are [needlessly] parallel.
 
--- 
-Greetings Michael.
+
+
+> I didn't say we can't use mac80211's workqueue if it was 
+> created/destroyed during alloc/free vs. hw register. 
+> I asked a question about if work can execute in parallel, shouldn't we 
+> let it
+
+Without justification for the additional complexity, the answer is no.
+
+	Jeff
+
+
