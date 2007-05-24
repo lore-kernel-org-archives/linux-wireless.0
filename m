@@ -1,81 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:11112 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755063AbXERWKb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2007 18:10:31 -0400
-Date: Fri, 18 May 2007 15:13:35 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: James Ketrenos <jketreno@linux.intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers [part 2/2]
-Message-Id: <20070518151335.a3a756da.randy.dunlap@oracle.com>
-In-Reply-To: <464E0DB5.5010802@linux.intel.com>
-References: <464B7B7C.5080800@linux.intel.com>
-	<20070516203505.556df4f9.randy.dunlap@oracle.com>
-	<464E0DB5.5010802@linux.intel.com>
+Received: from mga01.intel.com ([192.55.52.88]:3020 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755952AbXEXHvP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 May 2007 03:51:15 -0400
+Subject: Re: [PATCH 3/3] mac80211: debugfs support for TSM and DLS
+From: Zhu Yi <yi.zhu@intel.com>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200705240012.51922.flamingice@sourmilk.net>
+References: <20070514051535.GA25591@mail.intel.com>
+	 <200705240012.51922.flamingice@sourmilk.net>
+Content-Type: text/plain
+Date: Thu, 24 May 2007 15:51:24 +0800
+Message-Id: <1179993084.6150.43.camel@debian.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 18 May 2007 13:33:57 -0700 James Ketrenos wrote:
+On Thu, 2007-05-24 at 00:12 -0700, Michael Wu wrote:
+> These chunks were present in the second patch of this series.
 
-> > 2.  Use of bitfields:  bitfields are not (guaranteed to be) portable
-> > across a wire interface to some other CPU architecture.
-> > Are all bitfield uses always local to the running driver?
-> > They should be.
-> 
-> The bitfields are between the hw/ucode (__le) and the driver.  Are you saying the bitfields won't be compatible if the driver is compiled and running on big endian?  Shouldn't le16_to_cpu() fix that?  I just noticed the types in iwl-4965-hw.h weren't endian specific; I've updated that (u16, u32, u64 -> __le16, __le32, __le64)
+Yup. Will remove.
 
+> So, who is going to be responsible for configuring DLS and TS? If we're going 
+> to leave this policy up to userspace.. why not implement most of the DLS 
+> handshake/teardown code in wpa_supplicant directly? It would make the 
+> remaining DLS code in the kernel much more straightforward.
 
-I'm just saying that something like
-	struct bits {
-		u32	priority :4;
-		u32	flags :12;
-		u32	direction :1;
-		u32	status :15;
-	};
-when built on x86[-64] and then sent over a network connection
-to a big-endian machine won't necessarily be looked at correctly
-on the receiving machine.  There is no guarantee of bitfield order
-from one platform to another.
+Agreed. The end users should never use the debugfs stuff. These symbols
+are exported for debug and testing. I'd agree to move the policy things
+to wpa_supplicant. 
 
-> > 3.  What are all of those "volatile" C keywords doing in struct
-> > iwl_shared?
-> > See http://lwn.net/Articles/232961/ : "The trouble with volatile"
-> 
-> If a reference shared through memory mapped IO with a device that can change the value at any time, doesn't it need to be volatile?  'struct iwl_shared' is allocated with pci_alloc_consistent and the physical address is provided to the hardware for it to update whenever it sees fit.
+> However, that's still more of an implementation detail. I'm curious about how 
+> DLS would actually get initiated and used if I am, for example, transferring 
+> a large file from one STA to another on the same AP. It seems like the sort 
+> of information needed to make this decision are similar to what is needed to 
+> decide when to set up BA.
 
-That's a good question.  You probably know as much about it as I do.
+In the DLS request side, with this patch, you can setup the target MAC
+address via debugfs "dls_mac" and set 1 to "dls_op" (of course, these
+will be done by wpa_supplicant in the future). So that mac80211 will
+initiate DLS setup process. In the receiver side, currently, it accepts
+or denies the DLS request based on the debugfs "dls_op" value. In the
+future, the decision should be done by userspace via wpa_supplicant or
+cfg80211.
 
-Does the driver access those mmIO regions by something direct like
-	*mmio =
-or does the driver use some kind of access routines to read/write
-the mmIO regions, such as readb()/writeb()?
-
-If the former, then I expect that those should be changed/fixed,
-but I'd prefer to have Jeff G. answer that if he would.
-
-
-> > 4.  Don't list the parameters like this:
-> 
-> Lindent == bad.  I've fixed the instances of this munging I've come across.
-
-Indeed.  Too bad.
-
-> > 8.  Too many BUG_ON()s.  Try to recover or return -ERRORs instead.
-> 
-> I pulled out two that shouldn't have been there.
-> 
-> The rest are currently there map to bugs which are easily introduced through code changes but which may not cause an immediately visible bug at run-time.  Typically they are placed where an eventual printk() at that location during debugging of a user bug resulted in the critical "ah-ha!" that led to fixing it.  I've added comments to the BUG_ON's that didn't have comments already.
-> 
-> I suppose we could try and introduce a new driver recovery mechanism that, upon detection, throws a stack trace and then shuts down the driver (vs. throwing a kernel OOPs) requiring user space to unload and reload the driver.  That would still be a sucky situation, but at least it wouldn't cause a system failure requiring a reboot...  does such a mechanism already exist?
-
-You can call dump_stack() or use WARN_ON(), but you'll have roll your
-own shut-down-the-driver methods AFAIK.
-
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+Thanks,
+-yi
