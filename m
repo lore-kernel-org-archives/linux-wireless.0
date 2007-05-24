@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:49686 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:45532 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756057AbXEKCtI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 22:49:08 -0400
-Subject: [PATCH 03/19] libertas: fix size of SSID comparison in stop_adhoc  check
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1178829040.6356.1.camel@localhost.localdomain>
-References: <1178829040.6356.1.camel@localhost.localdomain>
+	id S1754964AbXEXHe0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 May 2007 03:34:26 -0400
+Subject: Re: [PATCH 2/3] mac80211: IEEE802.11e/WMM TS management and DLS  support
+From: Zhu Yi <yi.zhu@intel.com>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jiri Benc <jbenc@suse.cz>
+In-Reply-To: <200705232342.31882.flamingice@sourmilk.net>
+References: <20070514051526.GA25582@mail.intel.com>
+	 <200705232342.31882.flamingice@sourmilk.net>
 Content-Type: text/plain
-Date: Thu, 10 May 2007 22:52:37 -0400
-Message-Id: <1178851957.8607.15.camel@localhost.localdomain>
+Date: Thu, 24 May 2007 15:34:34 +0800
+Message-Id: <1179992075.6150.30.camel@debian.sh.intel.com>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
----
- drivers/net/wireless/libertas/assoc.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Wed, 2007-05-23 at 23:42 -0700, Michael Wu wrote:
+> The dls_info code looks like it was copied from the sta_info code and modified 
+> to store what you need. No good.
+> 
+> Instead, you should modify struct sta_info to hold the information necessary. 
 
-diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-index b55c7f5..dfffabc 100644
---- a/drivers/net/wireless/libertas/assoc.c
-+++ b/drivers/net/wireless/libertas/assoc.c
-@@ -333,7 +333,7 @@ static int should_stop_adhoc(wlan_adapter *adapter,
- 	if (adapter->curbssparams.ssid.ssidlength != assoc_req->ssid.ssidlength)
- 		return 1;
- 	if (memcmp(adapter->curbssparams.ssid.ssid, assoc_req->ssid.ssid,
--			sizeof(struct WLAN_802_11_SSID)))
-+			adapter->curbssparams.ssid.ssidlength))
- 		return 1;
- 
- 	/* FIXME: deal with 'auto' mode somehow */
--- 
-1.5.0.6
+OK.
 
+> > + if (dls_link_status(&sdata->u.sta, hdr.addr1) == DLS_STATUS_OK){
+> How is this line suppose to work? I don't see hdr.addr1 initialized at any 
+> point before this.
 
+DLS must be setup before it can be used. The addr1 is inserted into the
+dls hash table when the QSTA received a successful DLS response or
+accepted a DLS request.
 
+Thanks,
+-yi
