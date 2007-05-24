@@ -1,66 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:40528 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753289AbXEGHxP (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:52434 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754913AbXEXHlj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2007 03:53:15 -0400
+	Thu, 24 May 2007 03:41:39 -0400
 From: Michael Wu <flamingice@sourmilk.net>
-To: John Linville <linville@tuxdriver.com>
-Subject: mac80211-drivers pull request (week18)
+To: Zhu Yi <yi.zhu@intel.com>
+Subject: Re: [PATCH 2/3] mac80211: IEEE802.11e/WMM TS management and DLS support
+Date: Thu, 24 May 2007 00:39:53 -0700
 Cc: linux-wireless@vger.kernel.org,
-	Andrea Merello <andrea.merello@gmail.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jiri Benc <jbenc@suse.cz>
+References: <20070514051526.GA25582@mail.intel.com> <200705232342.31882.flamingice@sourmilk.net> <1179992075.6150.30.camel@debian.sh.intel.com>
+In-Reply-To: <1179992075.6150.30.camel@debian.sh.intel.com>
 MIME-Version: 1.0
-Date: Mon, 7 May 2007 03:52:39 -0400
 Content-Type: multipart/signed;
-  boundary="nextPart15308741.cnq8Wpm4Nl";
+  boundary="nextPart2144698.i31T9CEaG9";
   protocol="application/pgp-signature";
   micalg=pgp-sha1
-Message-Id: <200705070352.44018.flamingice@sourmilk.net>
+Message-Id: <200705240039.57564.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart15308741.cnq8Wpm4Nl
+--nextPart2144698.i31T9CEaG9
 Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
 
-Hi John,
+On Thursday 24 May 2007 00:34, Zhu Yi wrote:
+> > > + if (dls_link_status(&sdata->u.sta, hdr.addr1) =3D=3D DLS_STATUS_OK){
+> >
+> > How is this line suppose to work? I don't see hdr.addr1 initialized at
+> > any point before this.
+>
+> DLS must be setup before it can be used. The addr1 is inserted into the
+> dls hash table when the QSTA received a successful DLS response or
+> accepted a DLS request.
+>
+AFAICT, dls_link_status uses the second argument to look up the dls entry f=
+or=20
+the destination address. At this point, hdr.addr1 is not initialized to=20
+anything, so something is wrong here.
 
-Please pull
-git://git.kernel.org/pub/scm/linux/kernel/git/mwu/mac80211-drivers.git
-for these patches:
+=2DMichael Wu
 
-rtl818x-week18 branch:
-Michael Wu (8):
-      rtl818x: update register definitions
-      rtl8187: use RTL818X_EEPROM_CMD_* everywhere
-      rtl8187: improve printk messages
-      rtl8187: set RTS duration
-      rtl8187: remove software sequence number code
-      rtl8187: eliminate warnings and improve reset code
-      rtl8187: report correct RX rate
-      rtl8187: avoid accessing skb->tail directly
-
-Stefano Brivio (1):
-      rtl818x-mac80211: fix coding style
-
-Thanks,
--Michael Wu
-
---nextPart15308741.cnq8Wpm4Nl
+--nextPart2144698.i31T9CEaG9
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBGPtrLT3Oqt9AH4aERAjFnAJ96JenfPl4STR6R+L7bGew9tQnzdgCgnBLJ
-9QeuTKoxeOPCkxxMVzXp8Z8=
-=tx5g
+iD8DBQBGVUFNT3Oqt9AH4aERApCcAJ0WawW5EZfzSEDm+GPenY9lmcH/awCgxclK
+1jOwVubgTXdpN5dqu0bI8/A=
+=eEFv
 -----END PGP SIGNATURE-----
 
---nextPart15308741.cnq8Wpm4Nl--
+--nextPart2144698.i31T9CEaG9--
 -: 
 To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 the body of a message to majordomo@vger.kernel.org: 
