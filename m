@@ -1,39 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:48528
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753760AbXEZUHB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 16:07:01 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH] bcm43xx-mac80211: Fix for tx_bias equal to 0xFF
-Date: Sat, 26 May 2007 22:06:53 +0200
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <465869ce.8wcEX9q9ZmHxX2m3%Larry.Finger@lwfinger.net> <200705261919.39143.mb@bu3sch.de> <46587492.6070106@lwfinger.net>
-In-Reply-To: <46587492.6070106@lwfinger.net>
+Received: from daemonizer.de ([87.230.16.230]:58470 "EHLO daemonizer.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750814AbXEYTWS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 May 2007 15:22:18 -0400
+From: Maximilian Engelhardt <maxi@daemonizer.de>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+References: <20070524195616.234280@gmx.net>
+	<200705251559.49807.uwe.bugla@gmx.de> <200705251652.19911.mb@bu3sch.de>
+	<200705251759.30065.uwe.bugla@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200705262206.53388.mb@bu3sch.de>
+To: linux-wireless@vger.kernel.org,
+	"linux-kernel" <linux-kernel@vger.kernel.org>, mb@bu3sch.de,
+	uwe.bugla@gmx.de
+Date: Fri, 25 May 2007 20:48:02 +0200
+Content-Type: multipart/signed;
+  boundary="nextPart2011387.J2bNc92kcN";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200705252048.11931.maxi@daemonizer.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 26 May 2007 19:55:30 Larry Finger wrote:
-> Michael Buesch wrote:
-> > 
-> > Ok, on which specification bits is this actually based? :)
-> > txpower_bg still needs a rewrite, and I have a patch for that in
-> > the pipeline, but it's still buggy due to missing specs stuff.
-> > 
-> 
-> It is not in the V4 specifications that I have found, but the V3 (softmac) driver does this "fixup". 
+--nextPart2011387.J2bNc92kcN
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I cannot find this in the sm driver. Can you give me a hint
-where to search?
+On Fri, 25 May 2007 17:59:29 +0200, Uwe Bugla wrote:
 
-> With it, my 4311 connects with bcm43xx-mac80211. Without it, no connection.
+>=20
+> Perhaps someone reading this could try to reproduce that problem on his
+> machine.
+> Now who of the readers owes a Broadcom 4401 NIC and can please try to
+> test kernel 2.6.22-rc2-mm1?
+>=20
+> Those NICs have been used very very often as onboard controllers,
+> especially on ASUS boards.
 
-Ok, nice.
+I've been using 2.6.22-rc2 for some time and now I compiled 2.6.22-rc2-
+mm1 and both work fine with the BCM4401 in my laptop.
 
--- 
-Greetings Michael.
+Maxi
+
+--nextPart2011387.J2bNc92kcN
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBGVy9rOimwv528XGERAs01AJ40Pz8pwHToiviKOXvHfMsfgTUQDgCgmogc
+INSe0NTxtiGuqL3ew1Ic7Lg=
+=72ya
+-----END PGP SIGNATURE-----
+
+--nextPart2011387.J2bNc92kcN--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
