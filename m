@@ -1,67 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:39734 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755309AbXEJTXk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 15:23:40 -0400
-Subject: Re: Please pull 'master' branch of libertas (for 2.6.22)
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1178807713.23307.1.camel@localhost.localdomain>
-References: <1178745375.9590.5.camel@localhost.localdomain>
-	 <20070510013523.GA4544@tuxdriver.com>
-	 <1178807713.23307.1.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Thu, 10 May 2007 15:27:09 -0400
-Message-Id: <1178825229.4028.4.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mog.warmcat.com ([62.193.232.24]:50310 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753524AbXEYKWB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 May 2007 06:22:01 -0400
+Message-ID: <4656B8C5.4010409@warmcat.com>
+Date: Fri, 25 May 2007 11:21:57 +0100
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Linux Magazin article on mac80211
+References: <4655A7C2.6030600@warmcat.com> <1180087351.3604.8.camel@johannes.berg>
+In-Reply-To: <1180087351.3604.8.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-05-10 at 10:35 -0400, Dan Williams wrote:
-> On Wed, 2007-05-09 at 21:35 -0400, John W. Linville wrote:
-> > On Wed, May 09, 2007 at 05:16:14PM -0400, Dan Williams wrote:
-> > 
-> > > This is latest libertas git and should be pushed to 2.6.22.  It takes
-> > > care of a few of Christoph's objections, including ioctl removal,
-> > > version.h removal, and debug define cleanups.
-> > > 
-> > > git://git.infradead.org/libertas-2.6.git
-> > 
-> > Dan,
-> > 
-> > There is a problem...the libertas-2.6 tree doesn't have a "clean"
-> > history.  It appears to have the entire development history of the
-> > libertas project.  We need something more concise and "sanitized"
-> > for pushing upstream.
+Johannes Berg wrote:
+> On Thu, 2007-05-24 at 15:57 +0100, Andy Green wrote:
+>> Hi folks -
+>>
+>> Just saw from my referrer logs
+>>
+>> http://www.linux-magazin.de/online_artikel/neuer_wlan_stack_fuer_den_linux_kernel/(kategorie)/382
 > 
-> Yeah; that sucks.  I've pulled wireless-2.6 and I'm adding
-> cleanup/review patches now.  What I may not be able to do, depending on
-> time, is fix the warnings and sparse stuff Randy brought up.
+> Hah, damn, why didn't he tell me that he published it? Oh well... I told
+> him about penumbra, maybe that'll get some more attention that way
+> too :)
 
-I've had the time to do the sparse fixes and am finishing up the compile
-warnings.
+Thanks I appreciate the mention :-))   I will freshen the injection
+patch in the next few days and propose it once more.  I also adapted
+aircrack to work with the mac80211 monitor mode injection in the meanwhile.
 
-Dan
-
-> Dan
-> 
-> > We do not really want the patches for new development, at least not
-> > for 2.6.22.  Could you help identify which patches in the history
-> > correspond to review fixes?
-> > 
-> > I can generate a single diff, but it is huge ("34 files changed, 3069
-> > insertions(+), 5643 deletions(-)") and it isn't clear to me that it
-> > is only cleanups.  Perhaps you could split this up into a few separate
-> > patches?  Especially those patches specific to review comments?
-> > 
-> > I'm sorry...I know this is a PITA.  I appreciate your effort and
-> > cooperation.
-> > 
-> > John
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+-Andy
