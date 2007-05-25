@@ -1,36 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:7367 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756737AbXEVXMJ (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:45483
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751133AbXEYNQr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2007 19:12:09 -0400
-Message-ID: <4653654F.1060708@linux.intel.com>
-Date: Tue, 22 May 2007 14:49:03 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
+	Fri, 25 May 2007 09:16:47 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Uwe Bugla <uwe.bugla@gmx.de>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Date: Fri, 25 May 2007 15:16:18 +0200
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20070524195616.234280@gmx.net> <20070524130659.de435bd4.akpm@linux-foundation.org> <200705242316.48558.uwe.bugla@gmx.de>
+In-Reply-To: <200705242316.48558.uwe.bugla@gmx.de>
 MIME-Version: 1.0
-To: Jeff Garzik <jeff@garzik.org>
-CC: Michael Wu <flamingice@sourmilk.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers
-References: <464B7B7C.5080800@linux.intel.com> <200705162151.32910.flamingice@sourmilk.net> <46534172.5040106@linux.intel.com> <46537603.6040208@garzik.org>
-In-Reply-To: <46537603.6040208@garzik.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200705251516.19173.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jeff Garzik wrote:
-> James Ketrenos wrote:
->> That said -- if the driver can execute in parallel to the stack for 
->> some operations, shouldn't they remain on their own workqueues so the 
->> work can be divided up vs. having *everything* routed through one 
->> singlethread workqueue?
-> 
-> Just because it -can-, does not mean it should.
-> 
-> Unless there is a -proven- need for the operations to be parallel, you 
-> should avoid the burden of such complexity.
+On Thursday 24 May 2007 23:16:48 Uwe Bugla wrote:
+> Above that, the commiter DID IGNORE your baselines of testing, but at the same 
+> time got highly profile-neurotic regarding the copyright issue of 2007, 
+> didn't he (Let's call this a basic instinct of our precedents: the apes: 
+> shouting: I, I, I, more, more, more)?
 
-There is no additional complexity by having the driver create its own workqueue; it just calls create_workqueue during probe and destroy_workqueue during remove.
+????
 
-James
+-- 
+Greetings Michael.
