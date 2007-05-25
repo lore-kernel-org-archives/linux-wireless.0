@@ -1,55 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48304 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755293AbXEJRRM (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:47553
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752150AbXEYQYS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 13:17:12 -0400
-Subject: Re: support for bridging ethernet and 802.11
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jkm@devicescape.com>
-Cc: Kumar Gala <galak@kernel.crashing.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20070510171213.GD24712@devicescape.com>
-References: <CCA1D7C0-D44A-450D-A76E-DAE792E0CB37@kernel.crashing.org>
-	 <1178816781.3806.31.camel@johannes.berg>
-	 <20070510171213.GD24712@devicescape.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nKaMrXWUmLmwEwt2cFx0"
-Date: Thu, 10 May 2007 19:19:35 +0200
-Message-Id: <1178817575.3806.36.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 25 May 2007 12:24:18 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Uwe Bugla <uwe.bugla@gmx.de>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Date: Fri, 25 May 2007 18:23:35 +0200
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20070524195616.234280@gmx.net> <200705251652.19911.mb@bu3sch.de> <200705251759.30065.uwe.bugla@gmx.de>
+In-Reply-To: <200705251759.30065.uwe.bugla@gmx.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200705251823.35584.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday 25 May 2007 17:59:29 Uwe Bugla wrote:
+> Am Freitag, 25. Mai 2007 16:52 schrieben Sie:
+> > On Friday 25 May 2007 15:59:49 Uwe Bugla wrote:
+> > > Well if you're so clever in software development then please provide an
+> > > exception handling for the ssb module which is specifically NOT needed by
+> > > my onboard controller, OK?
+> > > Just provide compatibility to non-wireless NICs, i. e. to non-ssb
+> > > devices.
+> >
+> > What are you talking about?
+> 
+> First of all, what is an ssb device please? AFAICS it looks like an extension 
+> of b44.c as far as module selection is concerned in kernel configuration.
+> 
+> What it's function / purpose?
+> Does its function / purpose apply to every platform?
 
---=-nKaMrXWUmLmwEwt2cFx0
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The Sonics Silicon Backplane (ssb) is _part_ of the b44 device.
+It ALWAYS has been.
+In earlier drivers the ssb code was included in the b44 driver.
 
-On Thu, 2007-05-10 at 10:12 -0700, Jouni Malinen wrote:
+> >
+> > > I think you cannot just bind ssb tightly to b44.c, can you?
+> >
+> > You have no clue about how the b44 hardware works, do you?
+> 
+> Should I? My broadcom 4401 is broken, but only in that specific mm1-tree.
+> It's not broken in 2.6.22-rc2 for instance. So that's your patch that breaks 
+> it.
 
-> IEEE 802.11 allows only the own MAC address to be used as the source
-> address (addr2) when operating as a non-AP STA in BSS (client in Managed
-> mode). In other words, layer 2 bridging does not work properly. AP mode
-> and WDS links can be used for bridging without problems, but this will
-> of course require the driver to support these.
+I doubt that very much.
+In the wireless-dev tree, which includes the _exactly_ same ssb abd b44
+version as -mm, it works fine. I just verified this.
+I'm almost 100% sure that your kernel is broken in a completely different
+way unrelated to ssb.
+In the initial mail you said that the IRQ output of lspci says that
+the IRQ was 255? If lspci is really saying IRQ 255 this is _NOT_ a ssb
+bug, but some bug in either the PCI subsystem or some other IRQ related
+subsystem (APIC, ACPI or something else).
 
-Ah forgot about that, I had only thought about AP/wired bridging. How
-would the prism driver actually do bridging in STA mode though?
+> > > In so far the way how ssb is attached is buggy and wrong, apart from the
+> > > fact that my controller is broken, disfunctional.
+> >
+> > Please explain in detail how ssb is wrong.
+> 
+> I do not state that ssb is wrong, but I state that the ATTACHMENT of ssb to 
+> b44.c is wrong. That's a big difference.
+> In all earlier kernels that b44 device has been fine, and ssb has never been 
+> seen.
 
-johannes
+The ssb code was included in the b44 driver module.
 
---=-nKaMrXWUmLmwEwt2cFx0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+> > So, now I count the machines (not that this number matters AT ALL):
+> > One, two, three. Oh, there we go. What a surprise...
+> 
+> Nice for you, but on my machine it is broken, the broadcom 4401 onboard NIC 
+> controller is unusable.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+And you are not even TRYING to resolve it.
+What should I do, in your opinion?? It works for me. W.t.f. should I do?
 
-iD8DBQBGQ1Qn/ETPhpq3jKURArwUAKCfY8Q+izvfWWc4tskc55j2fD1kMACgmEHd
-AqI1LFxfFKq4a0LhZKfiEy8=
-=R2cc
------END PGP SIGNATURE-----
+> Do you mean to build a kernel without any ACPI functions?
 
---=-nKaMrXWUmLmwEwt2cFx0--
+There are kernel commandline options for this.
+I think (don't remember 100%) they are noapic and noacpi
 
+
+-- 
+Greetings Michael.
