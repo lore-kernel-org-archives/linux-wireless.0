@@ -1,105 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:26266 "EHLO
-	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755966AbXEVAAb (ORCPT
+Received: from static-141-230-6-89.ipcom.comunitel.net ([89.6.230.141]:50161
+	"EHLO traven.no-ip.org" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751348AbXEYNCl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 May 2007 20:00:31 -0400
-From: Daniel Drake <dsd@gentoo.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: kune@deine-taler.de
-Subject: [PATCH] zd1211rw-mac80211: Extend RF layer
-Message-Id: <20070522000030.19D897B409F@zog.reactivated.net>
-Date: Tue, 22 May 2007 01:00:29 +0100 (BST)
+	Fri, 25 May 2007 09:02:41 -0400
+Date: Fri, 25 May 2007 15:04:44 +0200
+From: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+To: developers@islsm.org, linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+Subject: [PATCH 2/2] use list_for_each() for iteration in Prism 54 driver
+Message-ID: <20070525130444.GG31790@traven>
+References: <20070525125630.GE31790@traven>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070525125630.GE31790@traven>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These changes are needed for UW2453 RF support:
+Use list_for_each() in the Prism54 driver to iterate over the MAC list
 
-Add pointer which RF drivers can use to store private RF data
-Add exit hook so that RF drivers can free private data
-Allow RF's to disable the generic TX power integration handling code
+Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
 
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
----
- drivers/net/wireless/mac80211/zd1211rw/zd_chip.c |    3 +++
- drivers/net/wireless/mac80211/zd1211rw/zd_rf.c   |    6 ++++++
- drivers/net/wireless/mac80211/zd1211rw/zd_rf.h   |   13 +++++++++++++
- 3 files changed, 22 insertions(+), 0 deletions(-)
+--
 
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
-index 8dc8f88..4078fbe 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
-@@ -1228,6 +1228,9 @@ static int update_channel_integration_and_calibration(struct zd_chip *chip,
- {
- 	int r;
+diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
+index 283be4a..34cf13c 100644
+--- a/drivers/net/wireless/prism54/isl_ioctl.c
++++ b/drivers/net/wireless/prism54/isl_ioctl.c
+@@ -1861,7 +1861,7 @@ prism54_del_mac(struct net_device *ndev, struct iw_request_info *info,
  
-+	if (!zd_rf_should_update_pwr_int(&chip->rf))
-+		return 0;
-+
- 	r = update_pwr_int(chip, channel);
- 	if (r)
- 		return r;
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_rf.c b/drivers/net/wireless/mac80211/zd1211rw/zd_rf.c
-index 549c23b..c4981ad 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_rf.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_rf.c
-@@ -52,10 +52,16 @@ const char *zd_rf_name(u8 type)
- void zd_rf_init(struct zd_rf *rf)
- {
- 	memset(rf, 0, sizeof(*rf));
-+
-+	/* default to update channel integration, as almost all RF's do want
-+	 * this */
-+	rf->update_channel_int = 1;
- }
+ 	if (down_interruptible(&acl->sem))
+ 		return -ERESTARTSYS;
+-	for (ptr = acl->mac_list.next; ptr != &acl->mac_list; ptr = ptr->next) {
++	list_for_each(ptr, &acl->mac_list) {
+ 		entry = list_entry(ptr, struct mac_entry, _list);
  
- void zd_rf_clear(struct zd_rf *rf)
- {
-+	if (rf->clear)
-+		rf->clear(rf);
- 	ZD_MEMCLEAR(rf, sizeof(*rf));
- }
+ 		if (memcmp(entry->addr, addr->sa_data, ETH_ALEN) == 0) {
+@@ -1891,7 +1891,7 @@ prism54_get_mac(struct net_device *ndev, struct iw_request_info *info,
+ 	if (down_interruptible(&acl->sem))
+ 		return -ERESTARTSYS;
  
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_rf.h b/drivers/net/wireless/mac80211/zd1211rw/zd_rf.h
-index aa9cc10..c204f9a 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_rf.h
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_rf.h
-@@ -48,12 +48,20 @@ struct zd_rf {
+-	for (ptr = acl->mac_list.next; ptr != &acl->mac_list; ptr = ptr->next) {
++	list_for_each(ptr, &acl->mac_list) {
+ 		entry = list_entry(ptr, struct mac_entry, _list);
  
- 	u8 channel;
+ 		memcpy(dst->sa_data, entry->addr, ETH_ALEN);
+@@ -1972,7 +1972,7 @@ prism54_mac_accept(struct islpci_acl *acl, char *mac)
+ 		return 1;
+ 	}
  
-+	/* whether channel integration and calibration should be updated
-+	 * defaults to 1 (yes) */
-+	u8 update_channel_int:1;
-+
-+	/* private RF driver data */
-+	void *priv;
-+
- 	/* RF-specific functions */
- 	int (*init_hw)(struct zd_rf *rf);
- 	int (*set_channel)(struct zd_rf *rf, u8 channel);
- 	int (*switch_radio_on)(struct zd_rf *rf);
- 	int (*switch_radio_off)(struct zd_rf *rf);
- 	int (*patch_6m_band_edge)(struct zd_rf *rf, u8 channel);
-+	void (*clear)(struct zd_rf *rf);
- };
- 
- const char *zd_rf_name(u8 type);
-@@ -71,6 +79,11 @@ int zd_switch_radio_off(struct zd_rf *rf);
- int zd_rf_patch_6m_band_edge(struct zd_rf *rf, u8 channel);
- int zd_rf_generic_patch_6m(struct zd_rf *rf, u8 channel);
- 
-+static inline int zd_rf_should_update_pwr_int(struct zd_rf *rf)
-+{
-+	return rf->update_channel_int;
-+}
-+
- /* Functions for individual RF chips */
- 
- int zd_rf_init_rf2959(struct zd_rf *rf);
+-	for (ptr = acl->mac_list.next; ptr != &acl->mac_list; ptr = ptr->next) {
++	list_for_each(ptr, &acl->mac_list) {
+ 		entry = list_entry(ptr, struct mac_entry, _list);
+ 		if (memcmp(entry->addr, mac, ETH_ALEN) == 0) {
+ 			res = 1;
+
 -- 
-1.5.2
+Matthias Kaehlcke
+Linux Application Developer
+Barcelona
 
+               If sharing a thing in no way diminishes it,
+               it is not rightly owned if it is not shared
+                                                                 .''`.
+    using free software / Debian GNU/Linux | http://debian.org  : :'  :
+                                                                `. `'`
+gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
