@@ -1,40 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:52717 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754017AbXEKDFW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 23:05:22 -0400
-Subject: [PATCH 17/19] libertas: fix missing unlock in TX error path
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1178829040.6356.1.camel@localhost.localdomain>
-References: <1178829040.6356.1.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Thu, 10 May 2007 23:08:54 -0400
-Message-Id: <1178852934.8607.50.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:57918
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752783AbXEZSDZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 May 2007 14:03:25 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Uwe Bugla <uwe.bugla@gmx.de>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Date: Sat, 26 May 2007 20:03:17 +0200
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel" <linux-kernel@vger.kernel.org>
+References: <20070524195616.234280@gmx.net> <200705261918.09469.mb@bu3sch.de> <200705261924.33802.uwe.bugla@gmx.de>
+In-Reply-To: <200705261924.33802.uwe.bugla@gmx.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200705262003.17403.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
----
- drivers/net/wireless/libertas/if_usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+On Saturday 26 May 2007 19:24:33 Uwe Bugla wrote:
+> Am Samstag, 26. Mai 2007 19:18 schrieben Sie:
+> > On Saturday 26 May 2007 19:04:04 Uwe Bugla wrote:
+> > > Yes, sure! But the help text is very unlucky and humble, and it is not
+> > > clear enough in the sense of being distinctive enough, just clear and
+> > > comprehensive.
+> >
+> > Why don't you simply submit a patch to change the helptext then?
+> > I'm not sure why you refuse to DO anything about the "mess", but
+> > instead keep poking me that I am responsible somehow to fix it up
+> > for you...
+> 
+> I need exception examples for doing so. What are the exception examples?
+> 
+> Apart from that you have don nothing except than guessing around.
 
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index 54853d8..f2d37d9 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -626,6 +626,7 @@ static void if_usb_receive(struct urb *urb)
- 			    cardp->usb_event_cause);
- 		if (cardp->usb_event_cause & 0xffff0000) {
- 			libertas_send_tx_feedback(priv);
-+			spin_unlock(&priv->adapter->driver_lock);
- 			break;
- 		}
- 		cardp->usb_event_cause = le32_to_cpu(cardp->usb_event_cause) << 3;
+Admit it. You don't know how debugging is done in the real world.
+Debugging _IS_ guessing around.
+
+> Now here comes the LAST proof that your code is buggy:
+> 
+> A. It's not mm-implementation
+> B. It's not user behaviour or fault
+> C. It's not an ACPI issue
+> 
+> BUT ONE AND ONLY:
+> 
+> D. It's your code that is buggy, without any doubt!
+
+Blahblah. Did you even read the mail I CCed to you?
+It "proves" (to use your wording) the exact opposite.
+
+> OK, went Andrew's path: patched 2.6.22-rc3 with wireless tree:
+> 
+> Result: The NIC driver b44 and ssb are loaded correctly, but refuse to work
+> (no network communication possible).
+
+Ok, please take git and get my development tree and try with that:
+
+git clone http://bu3sch.de/git/wireless-dev.git
+
+It's based on 2.6.22-rc1 and it works fine for me.
+
+> dmesg:
+> 
+...
+
+Ok, config and dmesg looks OK to me, now.
+
+
 -- 
-1.5.0.6
-
-
-
+Greetings Michael.
