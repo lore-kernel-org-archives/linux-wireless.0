@@ -1,52 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:15021 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753554AbXEZSlL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 14:41:11 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so1236059mue
-        for <linux-wireless@vger.kernel.org>; Sat, 26 May 2007 11:41:09 -0700 (PDT)
-Message-ID: <40f323d00705261141m7c32d2b8h7059b4b35ed066c9@mail.gmail.com>
-Date: Sat, 26 May 2007 20:41:09 +0200
-From: "Benoit Boissinot" <bboissin@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-Cc: "Uwe Bugla" <uwe.bugla@gmx.de>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	"Maximilian Engelhardt" <maxi@daemonizer.de>,
+Received: from electric-eye.fr.zoreil.com ([213.41.134.224]:57809 "EHLO
+	fr.zoreil.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752783AbXEZUXw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 May 2007 16:23:52 -0400
+Date: Sat, 26 May 2007 22:22:43 +0200
+From: Francois Romieu <romieu@fr.zoreil.com>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Uwe Bugla <uwe.bugla@gmx.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
 	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <200705261918.09469.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <20070524195616.234280@gmx.net> <200705261840.45896.mb@bu3sch.de>
-	 <200705261904.04496.uwe.bugla@gmx.de>
-	 <200705261918.09469.mb@bu3sch.de>
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Message-ID: <20070526202243.GB4487@electric-eye.fr.zoreil.com>
+References: <20070524195616.234280@gmx.net> <200705262003.17403.mb@bu3sch.de> <20070526111934.e4650b6f.akpm@linux-foundation.org> <200705262138.05501.uwe.bugla@gmx.de> <46589133.9010608@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <46589133.9010608@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/26/07, Michael Buesch <mb@bu3sch.de> wrote:
-> On Saturday 26 May 2007 19:04:04 Uwe Bugla wrote:
-> > Yes, sure! But the help text is very unlucky and humble, and it is not clear
-> > enough in the sense of being distinctive enough, just clear and
-> > comprehensive.
->
-> Why don't you simply submit a patch to change the helptext then?
+Larry Finger <larry.finger@lwfinger.net> :
+[...]
+> 2. the output of dmesg from the non-functioning kernel
+> 
+> 3. your .config used to create your non-functioning kernel.
 
-Is that ok ?
+They are already in the thread.
 
-Discourage people from deselecting B44_PCI
-
-Signed-off-by: Benoit Boissinot <benoit.boissinot@ens-lyon.org>
-
---- kernel.orig/drivers/net/Kconfig	2007-05-26 20:38:02.000000000 +0200
-+++ kernel/drivers/net/Kconfig	2007-05-26 20:38:15.000000000 +0200
-@@ -1449,7 +1449,7 @@
- 	help
- 	  Support for b44 PCI devices.
-
--	  Say Y
-+	  Unless you know what you are doing, say Y here.
-
- config FORCEDETH
- 	tristate "nForce Ethernet support"
+-- 
+Ueimor
