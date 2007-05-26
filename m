@@ -1,59 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:36799 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752783AbXEZTCX (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49981
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763501AbXEZUSN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 15:02:23 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH V6] mac80211: Add support for SIOCGIWRATE ioctl to provide rate information
-Date: Sat, 26 May 2007 12:00:21 -0700
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-References: <4653b189.dPwlgw4JKvpc7kFq%Larry.Finger@lwfinger.net>
-In-Reply-To: <4653b189.dPwlgw4JKvpc7kFq%Larry.Finger@lwfinger.net>
+	Sat, 26 May 2007 16:18:13 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH] bcm43xx-mac80211: Fix for tx_bias equal to 0xFF
+Date: Sat, 26 May 2007 22:18:08 +0200
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <465869ce.8wcEX9q9ZmHxX2m3%Larry.Finger@lwfinger.net> <200705261919.39143.mb@bu3sch.de> <46587492.6070106@lwfinger.net>
+In-Reply-To: <46587492.6070106@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3445730.esMPEJW4EW";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705261200.26762.flamingice@sourmilk.net>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200705262218.08413.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3445730.esMPEJW4EW
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Saturday 26 May 2007 19:55:30 Larry Finger wrote:
+> With it, my 4311 connects with bcm43xx-mac80211. Without it, no connection.
 
-On Tuesday 22 May 2007 20:14, Larry Finger wrote:
-> At present, transmission rate information for mac80211 is available only
-> if verbose debugging is turned on, and then only in the logs. This patch
-> implements the SIOCGIWRATE ioctl, which adds the current transmission rate
-> to the output of iwconfig.
->
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->
-ACK.
+Ok, it seems to fix the itssi thing, but that re-enables
+txpower adjustment, which reveals the whole bunch of bugs in there. :)
+So before I can merge this, I have to fix these bugs there.
 
-Thanks,
--Michael Wu
-
---nextPart3445730.esMPEJW4EW
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGWIPKT3Oqt9AH4aERAiAJAKCAqXtETFGHQTcg58vLeNhdFRyhzgCdHVkp
-TLM16Hbw7GamLfe2xkQSzNs=
-=uOa6
------END PGP SIGNATURE-----
-
---nextPart3445730.esMPEJW4EW--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Greetings Michael.
