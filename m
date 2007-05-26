@@ -1,369 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:23827 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754173AbXEKUEB (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:38113
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752772AbXEZPu4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 May 2007 16:04:01 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 1/2] Add 93cx6 eeprom library
-To: John Linville <linville@tuxdriver.com>
-Date: Fri, 11 May 2007 15:59:40 -0400
-Message-Id: <200705111559.41153.flamingice@sourmilk.net>
+	Sat, 26 May 2007 11:50:56 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Date: Sat, 26 May 2007 17:50:48 +0200
+Cc: Uwe Bugla <uwe.bugla@gmx.de>,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel" <linux-kernel@vger.kernel.org>
+References: <20070524195616.234280@gmx.net> <200705260700.28777.mb@bu3sch.de> <200705261240.55153.uwe.bugla@gmx.de>
+In-Reply-To: <200705261240.55153.uwe.bugla@gmx.de>
 MIME-Version: 1.0
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Message-Id: <200705261750.48816.mb@bu3sch.de>
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Andrew,
 
-This patch adds a library for reading from and writing to 93cx6 eeproms.
+I am going to ignore Uwe from now on. It's simply impossible
+to debug the problem the way he is responding.
+Well, I'm not the first person in the Linux community adding
+him to the killfile, ... .
+I ask to try wireless-dev, as the driver works perfectly fine
+for me there, but he refuses to try it, too. So I'm stuck.
+I already tried your -mm kernel, but it crashes on my machine
+for other reasons. (Yeah, I should look into them, too :P )
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+Andrew, is it possible that the breakage was introduced in the
+merge process somehow? Didn't the patch apply cleanly? Are there
+other changes to b44 I should know about in your tree?
 
- drivers/misc/Kconfig         |    6 +
- drivers/misc/Makefile        |    1 
- drivers/misc/eeprom_93cx6.c  |  229 ++++++++++++++++++++++++++++++++++++++++++
- include/linux/eeprom_93cx6.h |   72 +++++++++++++
- 4 files changed, 308 insertions(+), 0 deletions(-)
+If it is really impossible to debug this problem, I'd like to
+suggest you to drop the b44-ssb port completely.
+I'm not going to destroy my nerves any further with guys like
+Uwe, so I'll include the b44-ssb port in the OpenWRT tree
+and be done with it.
+Although I would be very sad about it, as my longterm goal was
+to make a vanilla kernel run on the OpenWRT devices... .
 
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index a3c525b..607a180 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -178,4 +178,10 @@ config THINKPAD_ACPI_BAY
- 
- 	  If you are not sure, say Y here.
- 
-+config EEPROM_93CX6
-+	tristate "EEPROM 93CX6 support"
-+	---help---
-+	  This is a driver for the EEPROM chipsets 93c46 and 93c66.
-+	  The driver supports both read as well as write commands.
-+
- endmenu
-diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-index e325164..42b34a9 100644
---- a/drivers/misc/Makefile
-+++ b/drivers/misc/Makefile
-@@ -13,3 +13,4 @@ obj-$(CONFIG_TIFM_7XX1)       	+= tifm_7
- obj-$(CONFIG_SGI_IOC4)		+= ioc4.o
- obj-$(CONFIG_SONY_LAPTOP)	+= sony-laptop.o
- obj-$(CONFIG_THINKPAD_ACPI)	+= thinkpad_acpi.o
-+obj-$(CONFIG_EEPROM_93CX6)	+= eeprom_93cx6.o
-diff --git a/drivers/misc/eeprom_93cx6.c b/drivers/misc/eeprom_93cx6.c
-new file mode 100644
-index 0000000..bfcb434
---- /dev/null
-+++ b/drivers/misc/eeprom_93cx6.c
-@@ -0,0 +1,229 @@
-+/*
-+	Copyright (C) 2004 - 2006 rt2x00 SourceForge Project
-+	<http://rt2x00.serialmonkey.com>
-+
-+	This program is free software; you can redistribute it and/or modify
-+	it under the terms of the GNU General Public License as published by
-+	the Free Software Foundation; either version 2 of the License, or
-+	(at your option) any later version.
-+
-+	This program is distributed in the hope that it will be useful,
-+	but WITHOUT ANY WARRANTY; without even the implied warranty of
-+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+	GNU General Public License for more details.
-+
-+	You should have received a copy of the GNU General Public License
-+	along with this program; if not, write to the
-+	Free Software Foundation, Inc.,
-+	59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ */
-+
-+/*
-+	Module: eeprom_93cx6
-+	Abstract: EEPROM reader routines for 93cx6 chipsets.
-+	Supported chipsets: 93c46 & 93c66.
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/version.h>
-+#include <linux/delay.h>
-+#include <linux/eeprom_93cx6.h>
-+
-+MODULE_AUTHOR("http://rt2x00.serialmonkey.com");
-+MODULE_VERSION("1.0");
-+MODULE_DESCRIPTION("EEPROM 93cx6 chip driver");
-+MODULE_LICENSE("GPL");
-+
-+static inline void eeprom_93cx6_pulse_high(struct eeprom_93cx6 *eeprom)
-+{
-+	eeprom->reg_data_clock = 1;
-+	eeprom->register_write(eeprom);
-+	udelay(1);
-+}
-+
-+static inline void eeprom_93cx6_pulse_low(struct eeprom_93cx6 *eeprom)
-+{
-+	eeprom->reg_data_clock = 0;
-+	eeprom->register_write(eeprom);
-+	udelay(1);
-+}
-+
-+static void eeprom_93cx6_startup(struct eeprom_93cx6 *eeprom)
-+{
-+	/*
-+	 * Clear all flags, and enable chip select.
-+	 */
-+	eeprom->register_read(eeprom);
-+	eeprom->reg_data_in = 0;
-+	eeprom->reg_data_out = 0;
-+	eeprom->reg_data_clock = 0;
-+	eeprom->reg_chip_select = 1;
-+	eeprom->register_write(eeprom);
-+
-+	/*
-+	 * kick a pulse.
-+	 */
-+	eeprom_93cx6_pulse_high(eeprom);
-+	eeprom_93cx6_pulse_low(eeprom);
-+}
-+
-+static void eeprom_93cx6_cleanup(struct eeprom_93cx6 *eeprom)
-+{
-+	/*
-+	 * Clear chip_select and data_in flags.
-+	 */
-+	eeprom->register_read(eeprom);
-+	eeprom->reg_data_in = 0;
-+	eeprom->reg_chip_select = 0;
-+	eeprom->register_write(eeprom);
-+
-+	/*
-+	 * kick a pulse.
-+	 */
-+	eeprom_93cx6_pulse_high(eeprom);
-+	eeprom_93cx6_pulse_low(eeprom);
-+}
-+
-+static void eeprom_93cx6_write_bits(struct eeprom_93cx6 *eeprom,
-+	const u16 data, const u16 count)
-+{
-+	unsigned int i;
-+
-+	eeprom->register_read(eeprom);
-+
-+	/*
-+	 * Clear data flags.
-+	 */
-+	eeprom->reg_data_in = 0;
-+	eeprom->reg_data_out = 0;
-+
-+	/*
-+	 * Start writing all bits.
-+	 */
-+	for (i = count; i > 0; i--) {
-+		/*
-+		 * Check if this bit needs to be set.
-+		 */
-+		eeprom->reg_data_in = !!(data & (1 << (i - 1)));
-+
-+		/*
-+		 * Write the bit to the eeprom register.
-+		 */
-+		eeprom->register_write(eeprom);
-+
-+		/*
-+		 * Kick a pulse.
-+		 */
-+		eeprom_93cx6_pulse_high(eeprom);
-+		eeprom_93cx6_pulse_low(eeprom);
-+	}
-+
-+	eeprom->reg_data_in = 0;
-+	eeprom->register_write(eeprom);
-+}
-+
-+static void eeprom_93cx6_read_bits(struct eeprom_93cx6 *eeprom,
-+	u16 *data, const u16 count)
-+{
-+	unsigned int i;
-+	u16 buf = 0;
-+
-+	eeprom->register_read(eeprom);
-+
-+	/*
-+	 * Clear data flags.
-+	 */
-+	eeprom->reg_data_in = 0;
-+	eeprom->reg_data_out = 0;
-+
-+	/*
-+	 * Start reading all bits.
-+	 */
-+	for (i = count; i > 0; i--) {
-+		eeprom_93cx6_pulse_high(eeprom);
-+
-+		eeprom->register_read(eeprom);
-+
-+		/*
-+		 * Clear data_in flag.
-+		 */
-+		eeprom->reg_data_in = 0;
-+
-+		/*
-+		 * Read if the bit has been set.
-+		 */
-+		if (eeprom->reg_data_out)
-+			buf |= (1 << (i - 1));
-+
-+		eeprom_93cx6_pulse_low(eeprom);
-+	}
-+
-+	*data = buf;
-+}
-+
-+/**
-+ * eeprom_93cx6_read - Read multiple words from eeprom
-+ * @eeprom: Pointer to eeprom structure
-+ * @word: Word index from where we should start reading
-+ * @data: target pointer where the information will have to be stored
-+ *
-+ * This function will read the eeprom data as host-endian word
-+ * into the given data pointer.
-+ */
-+void eeprom_93cx6_read(struct eeprom_93cx6 *eeprom, const u8 word,
-+	u16 *data)
-+{
-+	u16 command;
-+
-+	/*
-+	 * Initialize the eeprom register
-+	 */
-+	eeprom_93cx6_startup(eeprom);
-+
-+	/*
-+	 * Select the read opcode and the word to be read.
-+	 */
-+	command = (PCI_EEPROM_READ_OPCODE << eeprom->width) | word;
-+	eeprom_93cx6_write_bits(eeprom, command,
-+		PCI_EEPROM_WIDTH_OPCODE + eeprom->width);
-+
-+	/*
-+	 * Read the requested 16 bits.
-+	 */
-+	eeprom_93cx6_read_bits(eeprom, data, 16);
-+
-+	/*
-+	 * Cleanup eeprom register.
-+	 */
-+	eeprom_93cx6_cleanup(eeprom);
-+}
-+EXPORT_SYMBOL_GPL(eeprom_93cx6_read);
-+
-+/**
-+ * eeprom_93cx6_multiread - Read multiple words from eeprom
-+ * @eeprom: Pointer to eeprom structure
-+ * @word: Word index from where we should start reading
-+ * @data: target pointer where the information will have to be stored
-+ * @words: Number of words that should be read.
-+ *
-+ * This function will read all requested words from the eeprom,
-+ * this is done by calling eeprom_93cx6_read() multiple times.
-+ * But with the additional change that while the eeprom_93cx6_read
-+ * will return host ordered bytes, this method will return little
-+ * endian words.
-+ */
-+void eeprom_93cx6_multiread(struct eeprom_93cx6 *eeprom, const u8 word,
-+	__le16 *data, const u16 words)
-+{
-+	unsigned int i;
-+	u16 tmp;
-+
-+	for (i = 0; i < words; i++) {
-+		tmp = 0;
-+		eeprom_93cx6_read(eeprom, word + i, &tmp);
-+		data[i] = cpu_to_le16(tmp);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(eeprom_93cx6_multiread);
-+
-diff --git a/include/linux/eeprom_93cx6.h b/include/linux/eeprom_93cx6.h
-new file mode 100644
-index 0000000..d774b77
---- /dev/null
-+++ b/include/linux/eeprom_93cx6.h
-@@ -0,0 +1,72 @@
-+/*
-+	Copyright (C) 2004 - 2006 rt2x00 SourceForge Project
-+	<http://rt2x00.serialmonkey.com>
-+
-+	This program is free software; you can redistribute it and/or modify
-+	it under the terms of the GNU General Public License as published by
-+	the Free Software Foundation; either version 2 of the License, or
-+	(at your option) any later version.
-+
-+	This program is distributed in the hope that it will be useful,
-+	but WITHOUT ANY WARRANTY; without even the implied warranty of
-+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+	GNU General Public License for more details.
-+
-+	You should have received a copy of the GNU General Public License
-+	along with this program; if not, write to the
-+	Free Software Foundation, Inc.,
-+	59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ */
-+
-+/*
-+	Module: eeprom_93cx6
-+	Abstract: EEPROM reader datastructures for 93cx6 chipsets.
-+	Supported chipsets: 93c46 & 93c66.
-+ */
-+
-+/*
-+ * EEPROM operation defines.
-+ */
-+#define PCI_EEPROM_WIDTH_93C46	6
-+#define PCI_EEPROM_WIDTH_93C66	8
-+#define PCI_EEPROM_WIDTH_OPCODE	3
-+#define PCI_EEPROM_WRITE_OPCODE	0x05
-+#define PCI_EEPROM_READ_OPCODE	0x06
-+#define PCI_EEPROM_EWDS_OPCODE	0x10
-+#define PCI_EEPROM_EWEN_OPCODE	0x13
-+
-+/**
-+ * struct eeprom_93cx6 - control structure for setting the commands
-+ * for reading the eeprom data.
-+ * @data: private pointer for the driver.
-+ * @register_read(struct eeprom_93cx6 *eeprom): handler to
-+ * read the eeprom register, this function should set all reg_* fields.
-+ * @register_write(struct eeprom_93cx6 *eeprom): handler to
-+ * write to the eeprom register by using all reg_* fields.
-+ * @width: eeprom width, should be one of the PCI_EEPROM_WIDTH_* defines
-+ * @reg_data_in: register field to indicate data input
-+ * @reg_data_out: register field to indicate data output
-+ * @reg_data_clock: register field to set the data clock
-+ * @reg_chip_select: register field to set the chip select
-+ *
-+ * This structure is used for the communication between the driver
-+ * and the eeprom_93cx6 handlers for reading the eeprom.
-+ */
-+struct eeprom_93cx6 {
-+	void *data;
-+
-+	void (*register_read)(struct eeprom_93cx6 *eeprom);
-+	void (*register_write)(struct eeprom_93cx6 *eeprom);
-+
-+	int width;
-+
-+	char reg_data_in;
-+	char reg_data_out;
-+	char reg_data_clock;
-+	char reg_chip_select;
-+};
-+
-+extern void eeprom_93cx6_read(struct eeprom_93cx6 *eeprom,
-+	const u8 word, u16 *data);
-+extern void eeprom_93cx6_multiread(struct eeprom_93cx6 *eeprom,
-+	const u8 word, __le16 *data, const u16 words);
+But maybe we can get another tester for -mm with similiar problems,
+who is not bullshitting the whole time and is also going to
+test wireless-dev to make sure it's not a merge bug.
 
+
+-----------
+
+And Uwe: Remember, I am not payed for this. I do _all_ this
+in my free time.
+So sentences like: "So, the ball has been in your court
+for two days now, and you simply keep on hesitating
+to take action now."
+are _completely_ displaced in this discussion.
+
+-- 
+Greetings Michael.
