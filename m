@@ -1,69 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:56634 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751209AbXEZXdC (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:56042
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752783AbXEZVAp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 19:33:02 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>, mabbas@linux.intel.com
-Subject: Re: [RFC/T] mac80211: Implementation of SIOCSIWRATE
-Date: Sat, 26 May 2007 16:31:00 -0700
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-References: <46585cd1.xDmttJDPjdAQW3Wz%Larry.Finger@lwfinger.net>
-In-Reply-To: <46585cd1.xDmttJDPjdAQW3Wz%Larry.Finger@lwfinger.net>
+	Sat, 26 May 2007 17:00:45 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Uwe Bugla <uwe.bugla@gmx.de>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Date: Sat, 26 May 2007 23:00:36 +0200
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+References: <20070524195616.234280@gmx.net> <46589133.9010608@lwfinger.net> <200705262233.15529.uwe.bugla@gmx.de>
+In-Reply-To: <200705262233.15529.uwe.bugla@gmx.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2741602.C36GTJp2VS";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200705261631.05971.flamingice@sourmilk.net>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200705262300.36611.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2741602.C36GTJp2VS
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Saturday 26 May 2007 22:33:13 Uwe Bugla wrote:
+> Am Samstag, 26. Mai 2007 21:57 schrieben Sie:
+> > Uwe Bugla wrote:
+> > > OK, applied this one against 2.6.22-rc3, assuming a typo error by you,
+> > > Andrew.
+> > >
+> > > Result is: No change: non functionable b44 device!
+> >
+> > Could you please send the following:
+> >
+> > 1. the output of lsmod from the non-functioning kernel
+> 
+> Nonsense!
+> As I stated already, both modules (i. e. b44 and ssb) are loaded correctly.
+> So please read the thread before you post that, not vice versa!
 
-On Saturday 26 May 2007 09:14, Larry Finger wrote:
-> From: mabbas@linux.intel.com
->
-> The WEXT ioctl SIOCSIWRATE is not implemented in mac80211. This patch
-> adds the missing routine. It supports the 'auto' keyword, fixed rates,
-> and the combination of 'auto' and a fixed rate to select an upper bound.
->
-> Signed-off-by: mabbas@linux.intel.com
-Please sign off with both your name and email address.
+Ok, Uwe. Now I show you some real life examples how you and how
+someone who is polite answers to the same question:
 
-> Index: wireless-dev/net/mac80211/sta_info.h
-> ===================================================================
-> --- wireless-dev.orig/net/mac80211/sta_info.h
-> +++ wireless-dev/net/mac80211/sta_info.h
-> @@ -58,6 +58,9 @@ struct sta_info {
->  	unsigned int wep_weak_iv_count; /* number of RX frames with weak IV */
->
->  	unsigned long last_rx;
-> +	u32 restricted_tx_rates; /* bitmap of user restricted tx rates in
-> +				  * u.sta.restricted_tx_rates, if 0 use all
-> +				  * available rates */
-No. Use force_unicast_rateidx and max_ratectrl_rateidx.
+You:
+> Nonsense!
+> As I stated already, both modules (i. e. b44 and ssb) are loaded correctly.
+> So please read the thread before you post that, not vice versa!
 
--Michael Wu
+> They are already in the thread. So please leave me alone with those lazy
+> hints! Read bfore you post, not vice versa!
 
---nextPart2741602.C36GTJp2VS
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Someone who is polite:
+> They are already in the thread.
 
-iD8DBQBGWMM5T3Oqt9AH4aERApvIAKDN8nI9Zb0FFskq595Ct7U1w82/OgCeJJzA
-FS/l+trzCXvxuOird0D4IjY=
-=vShG
------END PGP SIGNATURE-----
 
---nextPart2741602.C36GTJp2VS--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+So you see the difference? And do you see why everybody in this
+thread is so pissed about you?
+
+-- 
+Greetings Michael.
