@@ -1,46 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41299
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753674AbXEZTTZ (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38115
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751625AbXEZWmq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 15:19:25 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Uwe Bugla <uwe.bugla@gmx.de>
+	Sat, 26 May 2007 18:42:46 -0400
+Date: Sat, 26 May 2007 15:42:50 -0700 (PDT)
+Message-Id: <20070526.154250.92569699.davem@davemloft.net>
+To: uwe.bugla@gmx.de
+Cc: mb@bu3sch.de, maxi@daemonizer.de, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-Date: Sat, 26 May 2007 21:19:19 +0200
-Cc: "Benoit Boissinot" <bboissin@gmail.com>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	"Maximilian Engelhardt" <maxi@daemonizer.de>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-References: <20070524195616.234280@gmx.net> <40f323d00705261141m7c32d2b8h7059b4b35ed066c9@mail.gmail.com> <200705262058.37454.uwe.bugla@gmx.de>
-In-Reply-To: <200705262058.37454.uwe.bugla@gmx.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200705262119.19675.mb@bu3sch.de>
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <200705261240.55153.uwe.bugla@gmx.de>
+References: <200705252140.22635.uwe.bugla@gmx.de>
+	<200705260700.28777.mb@bu3sch.de>
+	<200705261240.55153.uwe.bugla@gmx.de>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Uwe, please try the following patch:
+From: Uwe Bugla <uwe.bugla@gmx.de>
+Date: Sat, 26 May 2007 12:40:54 +0200
 
-Index: bu3sch-wireless-dev/drivers/net/b44.c
-===================================================================
---- bu3sch-wireless-dev.orig/drivers/net/b44.c	2007-05-18 18:09:50.000000000 +0200
-+++ bu3sch-wireless-dev/drivers/net/b44.c	2007-05-26 21:18:28.000000000 +0200
-@@ -2201,10 +2201,12 @@ static int __devinit b44_init_one(struct
- 		printk("%2.2x%c", dev->dev_addr[i],
- 		       i == 5 ? '\n' : ':');
- 
-+#if 0
- 	/* Initialize phy */
- 	spin_lock_irq(&bp->lock);
- 	b44_chip_reset(bp);
- 	spin_unlock_irq(&bp->lock);
-+#endif
- 
- 	return 0;
- 
+> Am Samstag, 26. Mai 2007 07:00 schrieben Sie:
+> > Try it again, please.
+> 
+> NO!
 
--- 
-Greetings Michael.
+Your not a nice person, and consistently so, therefore you can't post
+to the mailing lists I run any more.
