@@ -1,92 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:57957 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750962AbXEJSFs (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:13945 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752085AbXEZBHa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 14:05:48 -0400
-Message-ID: <46437446.6030302@linux.intel.com>
-Date: Thu, 10 May 2007 12:36:38 -0700
-From: jketreno <jketreno@linux.intel.com>
+	Fri, 25 May 2007 21:07:30 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "Will Dyson" <will.dyson@gmail.com>
+Subject: Re: BUG: at net/mac80211/ieee80211.c:1280 ieee80211_tx()
+Date: Fri, 25 May 2007 18:05:20 -0700
+Cc: linux-wireless@vger.kernel.org,
+	"Broadcom Linux" <bcm43xx-dev@lists.berlios.de>,
+	Jiri Benc <jbenc@suse.cz>
+References: <8e6f94720705251637o71a13d71w70199a3057048592@mail.gmail.com>
+In-Reply-To: <8e6f94720705251637o71a13d71w70199a3057048592@mail.gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: Specifing rate control algorithm?
-References: <464253CE.2030504@linux.intel.com>	 <20070510132756.2ca660a0@midnight.suse.cz>	 <46434596.6010908@linux.intel.com> <1178817104.3806.33.camel@johannes.berg>
-In-Reply-To: <1178817104.3806.33.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart2368174.0oZgf0cOcV";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200705251805.25696.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Thu, 2007-05-10 at 09:17 -0700, James Ketrenos wrote:
-> 
->> This commit simply adds an optional rate control algorithm name
->> parameter to ieeee80211_register_hw.
-> 
-> Why don't we just add a char *preferred_rate_control; to the hw
-> definition structure instead? That way, we can even show it in
-> sys/debugfs later so the user will still know what the driver preferred
-> after changing it.
-> 
-> johannes
+--nextPart2368174.0oZgf0cOcV
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-How's this?
+On Friday 25 May 2007 16:37, Will Dyson wrote:
+> But I've got ton's of these in my log:
+>
+>  BUG: at net/mac80211/ieee80211.c:1280 ieee80211_tx()
+>
+Do you have CONFIG_NET_SCHED on?
 
+If you do, can you check what qdisc is attached to the master device? This=
+=20
+command should do it if you only have one mac80211 device on your system:
 
-[PATCH] mac80211: Add preferred_rate_control to ieee80211_hw
+tc qdisc show dev wmaster0
 
-There may be a hardware specific rate control algorithm a driver wishes
-to use.  Currently, however, the stack assigns the first loaded
-algorithm to all drivers calling ieee80211_register_hw.
+I suspect the patch that made mac80211 work without the ieee80211 qdisc mig=
+ht=20
+not be working correctly.
 
-This commit simply adds an preferred_rate_control to ieee80211_hw and
-updates ieee80211_register_hw to use it.
+=2DMichael Wu
 
-Signed-off-by: James Ketrenos <jketreno@linux.intel.com>
----
- include/net/mac80211.h   |    4 ++++
- net/mac80211/ieee80211.c |   10 +++++++---
- 2 files changed, 11 insertions(+), 3 deletions(-)
+--nextPart2368174.0oZgf0cOcV
+Content-Type: application/pgp-signature
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index ef9b613..f9ad839 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -533,6 +533,10 @@ struct ieee80211_hw {
- 	/* Number of available hardware TX queues for data packets.
- 	 * WMM requires at least four queues. */
- 	int queues;
-+
-+	/* Preferred rate control algorithm. Leave as NULL for stack
-+	 * to select algorithm */
-+	char *preferred_rate_control;
- };
- 
- static inline void SET_IEEE80211_DEV(struct ieee80211_hw *hw, struct device *dev)
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 873ccb0..6dcc002 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -4875,10 +4875,14 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 
- 	ieee80211_debugfs_add_netdev(IEEE80211_DEV_TO_SUB_IF(local->mdev));
- 
--	result = ieee80211_init_rate_ctrl_alg(local, NULL);
-+	result = ieee80211_init_rate_ctrl_alg(local, 
-+					      hw->preferred_rate_control);
-+
- 	if (result < 0) {
--		printk(KERN_DEBUG "%s: Failed to initialize rate control "
--		       "algorithm\n", local->mdev->name);
-+		printk(KERN_DEBUG "%s: Failed to initialize %s rate control "
-+		       "algorithm\n", local->mdev->name,
-+		       hw->preferred_rate_control ? 
-+		       hw->preferred_rate_control : "default");
- 		goto fail_rate;
- 	}
- 
--- 
-1.5.1.3
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGV4fVT3Oqt9AH4aERApBuAJ0SCideWTh2mBxkKF81pUAJOMOL1wCfRmCc
+GoSOQqU74eMu/hlNn8RN8hY=
+=1tSe
+-----END PGP SIGNATURE-----
+
+--nextPart2368174.0oZgf0cOcV--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
