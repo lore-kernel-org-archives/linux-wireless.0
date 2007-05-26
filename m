@@ -1,62 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:47319 "EHLO
-	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2993227AbXEBOvC (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:56634 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751209AbXEZXdC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 May 2007 10:51:02 -0400
-Date: Wed, 02 May 2007 09:50:04 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH V2] mac80211: Add support for SIOCGIWRATE ioctl to provide rate information
-Message-ID: <4638a51c.ohaY83u2vcHGHvr4%Larry.Finger@lwfinger.net>
+	Sat, 26 May 2007 19:33:02 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>, mabbas@linux.intel.com
+Subject: Re: [RFC/T] mac80211: Implementation of SIOCSIWRATE
+Date: Sat, 26 May 2007 16:31:00 -0700
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+References: <46585cd1.xDmttJDPjdAQW3Wz%Larry.Finger@lwfinger.net>
+In-Reply-To: <46585cd1.xDmttJDPjdAQW3Wz%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed;
+  boundary="nextPart2741602.C36GTJp2VS";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200705261631.05971.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At present, transmission rate information for mac80211 is available only
-if verbose debugging is turned on, and then only in the logs. This patch
-implements the SIOCGIWRATE ioctl, which adds the current transmission rate to
-the output of iwconfig.
+--nextPart2741602.C36GTJp2VS
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+On Saturday 26 May 2007 09:14, Larry Finger wrote:
+> From: mabbas@linux.intel.com
+>
+> The WEXT ioctl SIOCSIWRATE is not implemented in mac80211. This patch
+> adds the missing routine. It supports the 'auto' keyword, fixed rates,
+> and the combination of 'auto' and a fixed rate to select an upper bound.
+>
+> Signed-off-by: mabbas@linux.intel.com
+Please sign off with both your name and email address.
 
-Index: wireless-dev/net/mac80211/ieee80211_ioctl.c
-===================================================================
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c
-@@ -2013,6 +2013,23 @@ static int ieee80211_ioctl_giwscan(struc
- }
- 
- 
-+static int ieee80211_ioctl_giwrate(struct net_device *dev,
-+				  struct iw_request_info *info,
-+				  struct iw_param *rate, char *extra)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct sta_info * sta;
-+	struct ieee80211_sub_if_data * sdata;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	sta = sta_info_get(local, sdata->u.sta.bssid);
-+	if (!sta)
-+		return -ENODEV;
-+	rate->value = local->oper_hw_mode->rates[sta->txrate].rate * 100000;
-+	sta_info_put(sta);
-+	return 0;
-+}
-+
- static int ieee80211_ioctl_siwrts(struct net_device *dev,
- 				  struct iw_request_info *info,
- 				  struct iw_param *rts, char *extra)
-@@ -3137,7 +3154,7 @@ static const iw_handler ieee80211_handle
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) NULL,				/* SIOCSIWRATE */
--	(iw_handler) NULL,				/* SIOCGIWRATE */
-+	(iw_handler) ieee80211_ioctl_giwrate,		/* SIOCGIWRATE */
- 	(iw_handler) ieee80211_ioctl_siwrts,		/* SIOCSIWRTS */
- 	(iw_handler) ieee80211_ioctl_giwrts,		/* SIOCGIWRTS */
- 	(iw_handler) ieee80211_ioctl_siwfrag,		/* SIOCSIWFRAG */
+> Index: wireless-dev/net/mac80211/sta_info.h
+> ===================================================================
+> --- wireless-dev.orig/net/mac80211/sta_info.h
+> +++ wireless-dev/net/mac80211/sta_info.h
+> @@ -58,6 +58,9 @@ struct sta_info {
+>  	unsigned int wep_weak_iv_count; /* number of RX frames with weak IV */
+>
+>  	unsigned long last_rx;
+> +	u32 restricted_tx_rates; /* bitmap of user restricted tx rates in
+> +				  * u.sta.restricted_tx_rates, if 0 use all
+> +				  * available rates */
+No. Use force_unicast_rateidx and max_ratectrl_rateidx.
+
+-Michael Wu
+
+--nextPart2741602.C36GTJp2VS
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGWMM5T3Oqt9AH4aERApvIAKDN8nI9Zb0FFskq595Ct7U1w82/OgCeJJzA
+FS/l+trzCXvxuOird0D4IjY=
+=vShG
+-----END PGP SIGNATURE-----
+
+--nextPart2741602.C36GTJp2VS--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
