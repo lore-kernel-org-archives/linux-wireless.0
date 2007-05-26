@@ -1,74 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:42904
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750994AbXE0Tpm (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.187]:15021 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753554AbXEZSlL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 May 2007 15:45:42 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Maximilian Engelhardt <maxi@daemonizer.de>
-Subject: Re: b44: regression in 2.6.22 (resend)
-Date: Sun, 27 May 2007 21:45:00 +0200
-Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Stephen Hemminger <shemminger@linux-foundation.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-References: <20070525172431.60affaca@freepuppy> <200705261901.18110.mb@bu3sch.de> <200705272125.25506.maxi@daemonizer.de>
-In-Reply-To: <200705272125.25506.maxi@daemonizer.de>
+	Sat, 26 May 2007 14:41:11 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so1236059mue
+        for <linux-wireless@vger.kernel.org>; Sat, 26 May 2007 11:41:09 -0700 (PDT)
+Message-ID: <40f323d00705261141m7c32d2b8h7059b4b35ed066c9@mail.gmail.com>
+Date: Sat, 26 May 2007 20:41:09 +0200
+From: "Benoit Boissinot" <bboissin@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Cc: "Uwe Bugla" <uwe.bugla@gmx.de>,
+	"Andrew Morton" <akpm@linux-foundation.org>,
+	"Maximilian Engelhardt" <maxi@daemonizer.de>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <200705261918.09469.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200705272145.00796.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <20070524195616.234280@gmx.net> <200705261840.45896.mb@bu3sch.de>
+	 <200705261904.04496.uwe.bugla@gmx.de>
+	 <200705261918.09469.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 27 May 2007 21:25:17 Maximilian Engelhardt wrote:
-> 2.6.22-rc3:
-> 
-> [  5] local 192.168.1.2 port 46557 connected with 192.168.1.1 port 5001
-> [  5]  0.0-60.4 sec  58.9 MBytes  8.18 Mbits/sec
-> [  4] local 192.168.1.2 port 5001 connected with 192.168.1.1 port 51633
-> [  4]  0.0-63.1 sec  7.27 MBytes    967 Kbits/sec
+On 5/26/07, Michael Buesch <mb@bu3sch.de> wrote:
+> On Saturday 26 May 2007 19:04:04 Uwe Bugla wrote:
+> > Yes, sure! But the help text is very unlucky and humble, and it is not clear
+> > enough in the sense of being distinctive enough, just clear and
+> > comprehensive.
+>
+> Why don't you simply submit a patch to change the helptext then?
 
-Why do we have two different measurements here? Is one TX and one RX?
-Which one?
+Is that ok ?
 
-> koala:~# ping -c10 192.168.1.1
-> PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
-> 64 bytes from 192.168.1.1: icmp_seq=1 ttl=64 time=0.243 ms
-> 64 bytes from 192.168.1.1: icmp_seq=2 ttl=64 time=0.234 ms
-> 64 bytes from 192.168.1.1: icmp_seq=3 ttl=64 time=0.238 ms
-> 64 bytes from 192.168.1.1: icmp_seq=4 ttl=64 time=0.235 ms
-> 64 bytes from 192.168.1.1: icmp_seq=5 ttl=64 time=0.230 ms
-> 64 bytes from 192.168.1.1: icmp_seq=6 ttl=64 time=0.317 ms
-> 64 bytes from 192.168.1.1: icmp_seq=7 ttl=64 time=0.232 ms
-> 64 bytes from 192.168.1.1: icmp_seq=8 ttl=64 time=0.232 ms
-> 64 bytes from 192.168.1.1: icmp_seq=9 ttl=64 time=0.228 ms
-> 64 bytes from 192.168.1.1: icmp_seq=10 ttl=64 time=0.238 ms
-> 
-> --- 192.168.1.1 ping statistics ---
-> 10 packets transmitted, 10 received, 0% packet loss, time 8997ms
-> rtt min/avg/max/mdev = 0.228/0.242/0.317/0.031 ms
-> 
-> System responsiveness was the same as with 2.6.21.1.
-> 
-> wget got 11.23M/s, again same as 2.6.21.1.
-> 
-> 
-> 2.6.22-rc2-mm1:
-> 
-> [  5] local 192.168.1.2 port 42198 connected with 192.168.1.1 port 5001
-> [  5]  0.0-60.1 sec    402 MBytes  56.1 Mbits/sec
-> [  4] local 192.168.1.2 port 5001 connected with 192.168.1.1 port 48598
-> [  4]  0.0-63.0 sec    177 MBytes  23.6 Mbits/sec
+Discourage people from deselecting B44_PCI
 
-So with -mm (with ssb) you actually get better performace
-then with plain 2.6.22-rc3?
+Signed-off-by: Benoit Boissinot <benoit.boissinot@ens-lyon.org>
 
-Can you elaborate a bit more about what you get an what you expect
-on which kernel?
+--- kernel.orig/drivers/net/Kconfig	2007-05-26 20:38:02.000000000 +0200
++++ kernel/drivers/net/Kconfig	2007-05-26 20:38:15.000000000 +0200
+@@ -1449,7 +1449,7 @@
+ 	help
+ 	  Support for b44 PCI devices.
 
--- 
-Greetings Michael.
+-	  Say Y
++	  Unless you know what you are doing, say Y here.
+
+ config FORCEDETH
+ 	tristate "nForce Ethernet support"
