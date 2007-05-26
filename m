@@ -1,70 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([207.189.120.13]:52316 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752772AbXEZQOA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 12:14:00 -0400
-Date: Sat, 26 May 2007 09:13:09 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Uwe Bugla <uwe.bugla@gmx.de>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
+Received: from mail.gmx.net ([213.165.64.20]:44870 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753733AbXEZTEB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 May 2007 15:04:01 -0400
+From: Uwe Bugla <uwe.bugla@gmx.de>
+To: "Benoit Boissinot" <bboissin@gmail.com>
 Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-Message-Id: <20070526091309.0af20971.akpm@linux-foundation.org>
-In-Reply-To: <200705261750.48816.mb@bu3sch.de>
-References: <20070524195616.234280@gmx.net>
-	<200705260700.28777.mb@bu3sch.de>
-	<200705261240.55153.uwe.bugla@gmx.de>
-	<200705261750.48816.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Date: Sat, 26 May 2007 20:58:37 +0200
+References: <20070524195616.234280@gmx.net> <200705261918.09469.mb@bu3sch.de> <40f323d00705261141m7c32d2b8h7059b4b35ed066c9@mail.gmail.com>
+In-Reply-To: <40f323d00705261141m7c32d2b8h7059b4b35ed066c9@mail.gmail.com>
+Cc: "Michael Buesch" <mb@bu3sch.de>,
+	"Andrew Morton" <akpm@linux-foundation.org>,
+	"Maximilian Engelhardt" <maxi@daemonizer.de>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200705262058.37454.uwe.bugla@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 26 May 2007 17:50:48 +0200 Michael Buesch <mb@bu3sch.de> wrote:
+Am Samstag, 26. Mai 2007 20:41 schrieben Sie:
+> On 5/26/07, Michael Buesch <mb@bu3sch.de> wrote:
+> > On Saturday 26 May 2007 19:04:04 Uwe Bugla wrote:
+> > > Yes, sure! But the help text is very unlucky and humble, and it is not
+> > > clear enough in the sense of being distinctive enough, just clear and
+> > > comprehensive.
+> >
+> > Why don't you simply submit a patch to change the helptext then?
+>
+> Is that ok ?
+>
+> Discourage people from deselecting B44_PCI
+>
+> Signed-off-by: Benoit Boissinot <benoit.boissinot@ens-lyon.org>
+>
+> --- kernel.orig/drivers/net/Kconfig	2007-05-26 20:38:02.000000000 +0200
+> +++ kernel/drivers/net/Kconfig	2007-05-26 20:38:15.000000000 +0200
+> @@ -1449,7 +1449,7 @@
+>  	help
+>  	  Support for b44 PCI devices.
+>
+> -	  Say Y
+> +	  Unless you know what you are doing, say Y here.
+>
+>  config FORCEDETH
+>  	tristate "nForce Ethernet support"
 
-> Andrew,
-> 
-> I am going to ignore Uwe from now on. It's simply impossible
-> to debug the problem the way he is responding.
-> Well, I'm not the first person in the Linux community adding
-> him to the killfile, ... .
+No, That is NOT OK! That's nothing but a joke, and if it is a joke : )
+it hits well in Mister Buesches direction. In so far it's 
+well-done : ) : ) : )
 
-Well yes, there are some personality issues here ;) But the main thing is
-to struggle on and fix this bug, wherever it lies.
+To be honest:
 
-> I ask to try wireless-dev, as the driver works perfectly fine
-> for me there, but he refuses to try it, too. So I'm stuck.
+I expect at least TWO explained cases:
 
-I don't think he knows how to obtain it.
+A. The case in which the b44 module is a PCI module (onboard, additional PCI 
+card etc.).
 
-Uwe, http://userweb.kernel.org/~akpm/git-wireless.patch.gz is the current
-wireless tree.  That's a patch against 2.6.22-rc3.  Could you please test
-that?  If that works then we know that the bug probably lies outside the
-b44 driver (or it was subsequently fixed).
+B. At least one well described case in which the b44 module is a bus 
+independent one.
 
-> I already tried your -mm kernel, but it crashes on my machine
-> for other reasons. (Yeah, I should look into them, too :P )
+Apart from that, it is Michael's task to explain the what and why, not mine 
+and not yours! It is him that wants his stuff being pulled into mainline, and 
+in so far he very well can do the "dirty work" of documentation, explanation.
 
-err, please do.  Just the oops trace would be a start.
+But the issue is: He is not ready to DO that! Only if it fires back!
 
-> Andrew, is it possible that the breakage was introduced in the
-> merge process somehow? Didn't the patch apply cleanly? Are there
-> other changes to b44 I should know about in your tree?
+Cheers
 
-Only git-wireless.net modifies b44.c but if we're having IRQ assignment
-problems then we'd need to look elsewhere.  I guess you could diff
-rc2-mm1's b44.c against the expected version.
-
-
-> If it is really impossible to debug this problem, I'd like to
-> suggest you to drop the b44-ssb port completely.
-
-Well we don't know if that'll fix it.
-
-I believe that Uwe said that reverting the b44.c changes from rc2-mm1 fixes
-things for him?  Odd, but it still doesn't rule out acip/pci/platform
-changes as being the cause.
-
+Uwe
