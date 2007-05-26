@@ -1,30 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42448 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933409AbXEKU7e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 May 2007 16:59:34 -0400
-Message-ID: <4644D934.7050001@garzik.org>
-Date: Fri, 11 May 2007 16:59:32 -0400
-From: Jeff Garzik <jeff@garzik.org>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:36294
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753733AbXEZSrA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 May 2007 14:47:00 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "Benoit Boissinot" <bboissin@gmail.com>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Date: Sat, 26 May 2007 20:46:46 +0200
+Cc: "Uwe Bugla" <uwe.bugla@gmx.de>,
+	"Andrew Morton" <akpm@linux-foundation.org>,
+	"Maximilian Engelhardt" <maxi@daemonizer.de>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+References: <20070524195616.234280@gmx.net> <200705261918.09469.mb@bu3sch.de> <40f323d00705261141m7c32d2b8h7059b4b35ed066c9@mail.gmail.com>
+In-Reply-To: <40f323d00705261141m7c32d2b8h7059b4b35ed066c9@mail.gmail.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'libertas' branch of wireless-2.6
-References: <20070511192604.GC3474@tuxdriver.com>
-In-Reply-To: <20070511192604.GC3474@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200705262046.47252.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> The following changes since commit 1f8a6b658a943b4f04a1fc7b3a420360202c86cd:
->   Linus Torvalds (1):
->         Merge git://git.kernel.org/.../bunk/trivial
+On Saturday 26 May 2007 20:41:09 Benoit Boissinot wrote:
+> On 5/26/07, Michael Buesch <mb@bu3sch.de> wrote:
+> > On Saturday 26 May 2007 19:04:04 Uwe Bugla wrote:
+> > > Yes, sure! But the help text is very unlucky and humble, and it is not clear
+> > > enough in the sense of being distinctive enough, just clear and
+> > > comprehensive.
+> >
+> > Why don't you simply submit a patch to change the helptext then?
 > 
-> are found in the git repository at:
+> Is that ok ?
 > 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git libertas
+> Discourage people from deselecting B44_PCI
 
-pulled
+To me this is ok. But I think I have no voting right here.
+Uwe has to decide which helptext he would understand. ;)
+
+> Signed-off-by: Benoit Boissinot <benoit.boissinot@ens-lyon.org>
+> 
+> --- kernel.orig/drivers/net/Kconfig	2007-05-26 20:38:02.000000000 +0200
+> +++ kernel/drivers/net/Kconfig	2007-05-26 20:38:15.000000000 +0200
+> @@ -1449,7 +1449,7 @@
+>  	help
+>  	  Support for b44 PCI devices.
+> 
+> -	  Say Y
+> +	  Unless you know what you are doing, say Y here.
+> 
+>  config FORCEDETH
+>  	tristate "nForce Ethernet support"
+> 
+> 
 
 
+
+-- 
+Greetings Michael.
