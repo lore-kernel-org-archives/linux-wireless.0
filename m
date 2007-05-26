@@ -1,43 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:28626 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752443AbXEOGxT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2007 02:53:19 -0400
-Subject: RE: [PATCH] mac80211: fail back to use associate from reassociate
-From: Zhu Yi <yi.zhu@intel.com>
-To: Sandesh Goel <sgoel@marvell.com>
-Cc: Jouni Malinen <jkm@devicescape.com>,
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:36204
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757997AbXEZPhD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 May 2007 11:37:03 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Uwe Bugla <uwe.bugla@gmx.de>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Date: Sat, 26 May 2007 17:36:57 +0200
+Cc: Maximilian Engelhardt <maxi@daemonizer.de>,
 	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <9C9B2DC3D78A6142AC8D10C89669528603F63B68@msiexch01.marvell.com>
-References: <20070509054152.GA30839@mail.intel.com>
-	 <20070509152855.GB941@devicescape.com>
-	 <1178767250.3045.36.camel@debian.sh.intel.com>
-	 <9C9B2DC3D78A6142AC8D10C89669528603F63B68@msiexch01.marvell.com>
-Content-Type: text/plain
-Date: Tue, 15 May 2007 14:52:45 +0800
-Message-Id: <1179211965.3045.170.camel@debian.sh.intel.com>
-Mime-Version: 1.0
+	"linux-kernel" <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+References: <20070524195616.234280@gmx.net> <200705260700.28777.mb@bu3sch.de> <200705261240.55153.uwe.bugla@gmx.de>
+In-Reply-To: <200705261240.55153.uwe.bugla@gmx.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200705261736.57362.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-05-14 at 22:41 -0700, Sandesh Goel wrote:
-> Therefore, the AP should not return the said error code
-> (WLAN_STATUS_REASSOC_NO_ASSOC) unless it has checked (using some inter
-> AP protocol) that no other AP in the ESS has an existing association
-> with the requesting STA. If the AP is returning the error without
-> doing this check, I would think that it is an AP bug. 
+On Saturday 26 May 2007 12:40:54 Uwe Bugla wrote:
+> Yes! This sort of mistakes is completely impossible, as I use to work with 
+> aliases rather than IP adresses. The machine I tried to ping (i. e. my 
+> router) is called Jerry (as a reminiscence to Mr. "Captan Trips" from 
+> Grateful Dead), and thus "ping jerry" returned the following:
+> 
+> "destination host unreachable"
+> 
+> Above that, I state for the second time now that I reverted your patches in 
+> 2.6.22-rc2-mm1 with the effect that everything worked perfectly!
+> Maxi said something at least similar. So how many proofs do you need, Mister 
+> Buesch, to finally pick up patchworking now?? 
 
-The AP was the only one in the ESS, so it should be OK.
+How about you stopping with your fucking aggressive wording??
 
-> It would be interesting to know which AP behaves in this way and
-> whether
-> is really does the check correctly or not. Note that the AP itself
-> having rebooted shouldn't cause this error code to be returned, which
-> is what I found strange. 
+> > Try it again, please.
+> 
+> NO!
+> 
+> > And please try with current wireless-dev tree.
+> 
+> A. I do not know where to download that wireless-dev tree.
+> B. I do not know how to implement it into mm or mainline
+> C. I have given enough sophisticated proof that your stuff in mm-tree is 
+> highly incomplete / buggy.
 
-Do you mean the AP should remember all its associated STAs before it
-rebooted?
+Ok,
 
-Thanks,
--yi
+D. As you are not going to help me debugging, I am not going to fix.
+
+> >
+> > And I simply do not get it why you suddenly get a good IRQ number, like
+> > everybody else does, without fixing The Bug (tm).
+> 
+> That consequence I already explained:
+> But it's a pleasure for me to repeat it once more:
+> 
+> When you are saying Y to "EISA, VLB, PCI and on board controllers"
+> 
+> you simply do get not only completely different interrupts for the b4401 
+> device, but you get also completely different module dependencies.
+
+That is EXPECTED and I already explained that.
+It is a feature. Not a bug.
+
+
+-- 
+Greetings Michael.
