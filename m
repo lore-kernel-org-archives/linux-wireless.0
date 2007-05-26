@@ -1,50 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4611 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2993230AbXEBOWk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 May 2007 10:22:40 -0400
-Date: Wed, 2 May 2007 10:11:25 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Compilation error with latest wireless-dev
-Message-ID: <20070502141125.GC6187@tuxdriver.com>
-References: <4638161D.7020106@lwfinger.net> <20070502023406.0efnk48888owckc8@webmail.spamcop.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070502023406.0efnk48888owckc8@webmail.spamcop.net>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:40525
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753554AbXEZTO4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 May 2007 15:14:56 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Uwe Bugla <uwe.bugla@gmx.de>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Date: Sat, 26 May 2007 21:14:48 +0200
+Cc: "Benoit Boissinot" <bboissin@gmail.com>,
+	"Andrew Morton" <akpm@linux-foundation.org>,
+	"Maximilian Engelhardt" <maxi@daemonizer.de>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+References: <20070524195616.234280@gmx.net> <40f323d00705261141m7c32d2b8h7059b4b35ed066c9@mail.gmail.com> <200705262058.37454.uwe.bugla@gmx.de>
+In-Reply-To: <200705262058.37454.uwe.bugla@gmx.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200705262114.48825.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 02, 2007 at 02:34:06AM -0400, Pavel Roskin wrote:
-> Quoting Larry Finger <Larry.Finger@lwfinger.net>:
-> 
-> > Compiling wireless-dev (commit d2f859f56c9f00f093f943cf810a863a5aa2e10f)
-> > results in the following
-> > error when building modules:
+On Saturday 26 May 2007 20:58:37 Uwe Bugla wrote:
+> Am Samstag, 26. Mai 2007 20:41 schrieben Sie:
+> > On 5/26/07, Michael Buesch <mb@bu3sch.de> wrote:
+> > > On Saturday 26 May 2007 19:04:04 Uwe Bugla wrote:
+> > > > Yes, sure! But the help text is very unlucky and humble, and it is not
+> > > > clear enough in the sense of being distinctive enough, just clear and
+> > > > comprehensive.
+> > >
+> > > Why don't you simply submit a patch to change the helptext then?
 > >
-> > WARNING: "tcf_destroy_chain" [net/mac80211/mac80211.ko] undefined!
-> > make[1]: *** [__modpost] Error 1
-> > make: *** [modules] Error 2
+> > Is that ok ?
 > >
-> > In my configuration, net/sched/sch_api.c where tcf_destroy_chain is defined
-> > is not compiled. The
-> > network-related configuration parameters are:
+> > Discourage people from deselecting B44_PCI
+> >
+> > Signed-off-by: Benoit Boissinot <benoit.boissinot@ens-lyon.org>
+> >
+> > --- kernel.orig/drivers/net/Kconfig	2007-05-26 20:38:02.000000000 +0200
+> > +++ kernel/drivers/net/Kconfig	2007-05-26 20:38:15.000000000 +0200
+> > @@ -1449,7 +1449,7 @@
+> >  	help
+> >  	  Support for b44 PCI devices.
+> >
+> > -	  Say Y
+> > +	  Unless you know what you are doing, say Y here.
+> >
+> >  config FORCEDETH
+> >  	tristate "nForce Ethernet support"
 > 
-> Same problem here.  CONFIG_NET_SCH_FIFO was enabled, apparently by
-> net/mac80211/Kconfig, but CONFIG_NET_SCHED.  Selecting the later (but none of
-> the schedulers) fixed the compile error.
+> No, That is NOT OK! That's nothing but a joke, and if it is a joke : )
+> it hits well in Mister Buesches direction. In so far it's 
+> well-done : ) : ) : )
 
-So, should net/mac80211/Kconfig select NET_SCHED instead?  Or should
-NET_SCH_FIFO select it?
+See what I meant, Benoit?
 
-If the latter, will that cause any circular problems given that
-NET_SCHED already selects NET_SCH_FIFO?
+> To be honest:
+> 
+> I expect at least TWO explained cases:
+> 
+> A. The case in which the b44 module is a PCI module (onboard, additional PCI 
+> card etc.).
+> 
+> B. At least one well described case in which the b44 module is a bus 
+> independent one.
 
-Any Kconfig experts have an opinion?
+You still didn't get it, right?
+b44-ssb is a SSB device driver. No PCI, nothing. To get this working
+on PCI you need to enable the PCI glue. Which is enabled by default.
+It even includes the comment "Say Y". If you say N nevertheless it's
+your fault.
+What's so hard to understand about this? We have LOTS of drivers in the
+kernel that work _exactly_ the same way. There is a base module to drive
+the hardware and several glue drivers. If you de-select the glue driver
+it doesn't work.
+If you use your old config and do not DISABLE some option you will
+not experience a regression (at least regarding to the kconfig stuff.
+There's still your transmission bug left).
 
-John
+> Apart from that, it is Michael's task to explain the what and why, not mine 
+> and not yours! It is him that wants his stuff being pulled into mainline, and 
+
+My task is _nothing_. This is opensource. If you don't like
+something about it, go and fix it. But don't say it's the _task_ of others
+to fix things you don't like. I am not payed to do this for you.
+Though, I'd like to resolve it.
+
+> in so far he very well can do the "dirty work" of documentation, explanation.
+
+I explained it several times now. I'm not sure what else I should
+say about it.
+
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
