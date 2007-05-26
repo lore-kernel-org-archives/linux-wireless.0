@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59246 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756757AbXETBrL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 May 2007 21:47:11 -0400
-Message-ID: <464FA894.8090008@garzik.org>
-Date: Sat, 19 May 2007 21:47:00 -0400
-From: Jeff Garzik <jeff@garzik.org>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:48528
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753760AbXEZUHB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 May 2007 16:07:01 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH] bcm43xx-mac80211: Fix for tx_bias equal to 0xFF
+Date: Sat, 26 May 2007 22:06:53 +0200
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <465869ce.8wcEX9q9ZmHxX2m3%Larry.Finger@lwfinger.net> <200705261919.39143.mb@bu3sch.de> <46587492.6070106@lwfinger.net>
+In-Reply-To: <46587492.6070106@lwfinger.net>
 MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Florin Malita <fmalita@gmail.com>, marcelo@kvack.org,
-	linville@redhat.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas: skb dereferenced after netif_rx
-References: <464B7127.5080502@gmail.com>	 <20070518180903.GC3492@tuxdriver.com> <1179622601.9453.4.camel@xo-28-0B-88.localdomain>
-In-Reply-To: <1179622601.9453.4.camel@xo-28-0B-88.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200705262206.53388.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> On Fri, 2007-05-18 at 14:09 -0400, John W. Linville wrote:
->> On Wed, May 16, 2007 at 05:01:27PM -0400, Florin Malita wrote:
->>> In libertas_process_rxed_packet() and process_rxed_802_11_packet() the 
->>> skb is dereferenced after being passed to netif_rx (called from 
->>> libertas_upload_rx_packet). Spotted by Coverity (1658, 1659).
->>  
->> Relocating the libertas_upload_rx_packet call is fine, but...
->>
->>> Also, libertas_upload_rx_packet() unconditionally returns 0 so the error 
->>> check is dead code - might as well take it out.
->> Is this merely an implementation detail?  Or an absolute fact?
->> If the former is true, then we should preserve the error
->> checking.  If the latter, then we should change the signature of
->> libertas_upload_rx_packet to return void.
+On Saturday 26 May 2007 19:55:30 Larry Finger wrote:
+> Michael Buesch wrote:
+> > 
+> > Ok, on which specification bits is this actually based? :)
+> > txpower_bg still needs a rewrite, and I have a patch for that in
+> > the pipeline, but it's still buggy due to missing specs stuff.
+> > 
 > 
-> According to the comments, netif_rx always succeeds.  I think we should
-> just change the return type to void since there's nothing else in that
-> function that can fail.
+> It is not in the V4 specifications that I have found, but the V3 (softmac) driver does this "fixup". 
 
-According to the implementation, netif_rx() can fail.
+I cannot find this in the sm driver. Can you give me a hint
+where to search?
 
-	Jeff
+> With it, my 4311 connects with bcm43xx-mac80211. Without it, no connection.
 
+Ok, nice.
 
-
+-- 
+Greetings Michael.
