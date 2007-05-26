@@ -1,47 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49165
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1757562AbXEJLgJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 07:36:09 -0400
-Date: Thu, 10 May 2007 04:36:12 -0700 (PDT)
-Message-Id: <20070510.043612.112287450.davem@davemloft.net>
-To: mb@bu3sch.de
-Cc: flamingice@sourmilk.net, jeff@garzik.org, linville@tuxdriver.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'upstream-rtl8187' branch of wireless-2.6
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200705101323.41310.mb@bu3sch.de>
-References: <46425564.3040505@garzik.org>
-	<200705092216.26880.flamingice@sourmilk.net>
-	<200705101323.41310.mb@bu3sch.de>
+Received: from electric-eye.fr.zoreil.com ([213.41.134.224]:33749 "EHLO
+	fr.zoreil.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754050AbXEZRDh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 May 2007 13:03:37 -0400
+Date: Sat, 26 May 2007 18:46:31 +0200
+From: Francois Romieu <romieu@fr.zoreil.com>
+To: Uwe Bugla <uwe.bugla@gmx.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Michael Buesch <mb@bu3sch.de>,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Message-ID: <20070526164631.GA2176@electric-eye.fr.zoreil.com>
+References: <20070524195616.234280@gmx.net> <200705261750.48816.mb@bu3sch.de> <20070526091309.0af20971.akpm@linux-foundation.org> <200705261820.52240.uwe.bugla@gmx.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200705261820.52240.uwe.bugla@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Buesch <mb@bu3sch.de>
-Date: Thu, 10 May 2007 13:23:40 +0200
-
-> Nah, Jeff. Please don't go this path.
-> If we have to remove all magic numbers from drivers, we'd have to either
-> *) Drop reverse engineered drivers like bcm43xx completely.
-> *) Clutter them with completely useless defines such as
->    #define RADIO_UNKNOWN97A_REG	0x97A
+Uwe Bugla <uwe.bugla@gmx.de> :
+> Am Samstag, 26. Mai 2007 18:13 schrieben Sie:
+[...]
+> > Uwe, http://userweb.kernel.org/~akpm/git-wireless.patch.gz is the current
+> > wireless tree.  That's a patch against 2.6.22-rc3.  Could you please test
+> > that?  If that works then we know that the bug probably lies outside the
+> > b44 driver (or it was subsequently fixed).
 > 
-> Better leave such magic registers/values in the code as-is
-> and probably convert them to good defines later, if reverse engineering
-> found out the meaning. That's what I'm doing for bcm43xx and it makes
-> a _whole_ lot more sense.
+> Thank you, Andrew, just wait for a while. I am gonna try.....
 
-One good point I'd like to bring up is that someone reading this code
-might not know any of this.
+Please post the .config and the dmesg for the kernels that you try too.
 
-If you use a macro name that says it's a register you don't know the
-meaning of, that's information and useful information at that.
-
-This isn't for you, it's for other people reading the driver.
-
-If you are suddenly unable to do any work on the driver at all, the
-more information you leave around the better even if it seems trite
-and useless to you.
+-- 
+Ueimor
