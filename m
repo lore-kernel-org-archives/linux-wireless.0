@@ -1,59 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58651 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762815AbXEYNBj (ORCPT
+Received: from smtp1.linux-foundation.org ([207.189.120.13]:52316 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752772AbXEZQOA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2007 09:01:39 -0400
-Subject: Re: Linux Magazin article on mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4656B8C5.4010409@warmcat.com>
-References: <4655A7C2.6030600@warmcat.com>
-	 <1180087351.3604.8.camel@johannes.berg>  <4656B8C5.4010409@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3zZSc+E8Ne4Rt+yjkTI7"
-Date: Fri, 25 May 2007 15:01:38 +0200
-Message-Id: <1180098098.3604.46.camel@johannes.berg>
+	Sat, 26 May 2007 12:14:00 -0400
+Date: Sat, 26 May 2007 09:13:09 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Uwe Bugla <uwe.bugla@gmx.de>,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel" <linux-kernel@vger.kernel.org>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Message-Id: <20070526091309.0af20971.akpm@linux-foundation.org>
+In-Reply-To: <200705261750.48816.mb@bu3sch.de>
+References: <20070524195616.234280@gmx.net>
+	<200705260700.28777.mb@bu3sch.de>
+	<200705261240.55153.uwe.bugla@gmx.de>
+	<200705261750.48816.mb@bu3sch.de>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 26 May 2007 17:50:48 +0200 Michael Buesch <mb@bu3sch.de> wrote:
 
---=-3zZSc+E8Ne4Rt+yjkTI7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Andrew,
+> 
+> I am going to ignore Uwe from now on. It's simply impossible
+> to debug the problem the way he is responding.
+> Well, I'm not the first person in the Linux community adding
+> him to the killfile, ... .
 
-On Fri, 2007-05-25 at 11:21 +0100, Andy Green wrote:
+Well yes, there are some personality issues here ;) But the main thing is
+to struggle on and fix this bug, wherever it lies.
 
-> Thanks I appreciate the mention :-))   I will freshen the injection
-> patch in the next few days and propose it once more.=20
+> I ask to try wireless-dev, as the driver works perfectly fine
+> for me there, but he refuses to try it, too. So I'm stuck.
 
-:)
-I had been doing similar things last year btw, but not for file transfer
-but peer to peer location services. It might be very interesting to
-split up penumbra into one daemon for communication and one for the
-actual usage of that communication. Then, the communication daemon could
-be very small code and even be setuid, or possibly use dbus. Thoughts?
+I don't think he knows how to obtain it.
 
->  I also adapted
-> aircrack to work with the mac80211 monitor mode injection in the meanwhil=
-e.
+Uwe, http://userweb.kernel.org/~akpm/git-wireless.patch.gz is the current
+wireless tree.  That's a patch against 2.6.22-rc3.  Could you please test
+that?  If that works then we know that the bug probably lies outside the
+b44 driver (or it was subsequently fixed).
 
-Cool.
+> I already tried your -mm kernel, but it crashes on my machine
+> for other reasons. (Yeah, I should look into them, too :P )
 
-johannes
+err, please do.  Just the oops trace would be a start.
 
---=-3zZSc+E8Ne4Rt+yjkTI7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+> Andrew, is it possible that the breakage was introduced in the
+> merge process somehow? Didn't the patch apply cleanly? Are there
+> other changes to b44 I should know about in your tree?
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Only git-wireless.net modifies b44.c but if we're having IRQ assignment
+problems then we'd need to look elsewhere.  I guess you could diff
+rc2-mm1's b44.c against the expected version.
 
-iD8DBQBGVt4x/ETPhpq3jKURAppjAKCuL59O3xUc4ecSj+fm5P6oiWuv8QCfVbHk
-wsEVD3iNwuq2Osmmgcrs0e4=
-=gb/q
------END PGP SIGNATURE-----
 
---=-3zZSc+E8Ne4Rt+yjkTI7--
+> If it is really impossible to debug this problem, I'd like to
+> suggest you to drop the b44-ssb port completely.
+
+Well we don't know if that'll fix it.
+
+I believe that Uwe said that reverting the b44.c changes from rc2-mm1 fixes
+things for him?  Odd, but it still doesn't rule out acip/pci/platform
+changes as being the cause.
 
