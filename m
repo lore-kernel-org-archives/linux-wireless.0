@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:29573 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752299AbXE0Ocf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 May 2007 10:32:35 -0400
-Received: by py-out-1112.google.com with SMTP id a73so2348719pye
-        for <linux-wireless@vger.kernel.org>; Sun, 27 May 2007 07:32:35 -0700 (PDT)
-Date: Sun, 27 May 2007 23:25:00 +0900
-From: Akinobu Mita <akinobu.mita@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	James Ketrenos <jketreno@linux.intel.com>
-Subject: [PATCH] ieee80211: fix incomplete error message
-Message-ID: <20070527142459.GA13087@APFDCB5C>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail.gmx.net ([213.165.64.20]:33271 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752681AbXEZTn3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 May 2007 15:43:29 -0400
+From: Uwe Bugla <uwe.bugla@gmx.de>
+To: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Date: Sat, 26 May 2007 21:38:05 +0200
+References: <20070524195616.234280@gmx.net> <200705262003.17403.mb@bu3sch.de> <20070526111934.e4650b6f.akpm@linux-foundation.org>
+In-Reply-To: <20070526111934.e4650b6f.akpm@linux-foundation.org>
+Cc: Uwe Bugla <uwe.bugla@gmx.de>,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel" <linux-kernel@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200705262138.05501.uwe.bugla@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix error message:
-Unable to network device. --> Unable to allocate network device.
+Am Samstag, 26. Mai 2007 20:19 schrieben Sie:
+> On Sat, 26 May 2007 20:03:17 +0200 Michael Buesch <mb@bu3sch.de> wrote:
+> > Ok, please take git and get my development tree and try with that:
+> >
+> > git clone http://bu3sch.de/git/wireless-dev.git
+> >
+> > It's based on 2.6.22-rc1 and it works fine for me.
+>
+> Uwe has a slow connection, and getting the whole git thing
+> set up would be quite a lump of effort.
+>
+> I prepared a diff of the above tree against 2.6.21-rc3.  It is at
+> http://userweb.kernel.org/~akpm/git-mb.patch.gz
 
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: James Ketrenos <jketreno@linux.intel.com>
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+OK, applied this one against 2.6.22-rc3, assuming a typo error by you, Andrew.
 
----
- net/ieee80211/ieee80211_module.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Result is: No change: non functionable b44 device!
 
-Index: 2.6-mm/net/ieee80211/ieee80211_module.c
-===================================================================
---- 2.6-mm.orig/net/ieee80211/ieee80211_module.c
-+++ 2.6-mm/net/ieee80211/ieee80211_module.c
-@@ -140,7 +140,7 @@ struct net_device *alloc_ieee80211(int s
- 
- 	dev = alloc_etherdev(sizeof(struct ieee80211_device) + sizeof_priv);
- 	if (!dev) {
--		IEEE80211_ERROR("Unable to network device.\n");
-+		IEEE80211_ERROR("Unable to allocate network device.\n");
- 		goto failed;
- 	}
- 	ieee = netdev_priv(dev);
+Thank you for your help!
+
+Uwe
