@@ -1,107 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:33930 "EHLO
-	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756542AbXEVADv (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:35866
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751515AbXEZV6j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 May 2007 20:03:51 -0400
-From: Daniel Drake <dsd@gentoo.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: kune@deine-taler.de
-Subject: [PATCH] zd1211rw-mac80211: Make CCK gain patching conditional on RF type
-Message-Id: <20070522000355.469E07B409F@zog.reactivated.net>
-Date: Tue, 22 May 2007 01:03:54 +0100 (BST)
+	Sat, 26 May 2007 17:58:39 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Uwe Bugla <uwe.bugla@gmx.de>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Date: Sat, 26 May 2007 23:58:29 +0200
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+References: <20070524195616.234280@gmx.net> <200705262149.09948.mb@bu3sch.de> <200705262332.50640.uwe.bugla@gmx.de>
+In-Reply-To: <200705262332.50640.uwe.bugla@gmx.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200705262358.30038.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The vendor driver code suggests that CR47 patching happens on every channel
-change for every RF (depending on bit 8 in POD).
+On Saturday 26 May 2007 23:32:50 Uwe Bugla wrote:
 
-Due to a bug in their driver (upper bits of RF_Mode get zeroed out, then
-are examined for 1s when setting some other flags), this isn't actually
-what happens, and their generic CCK patching routine never takes effect.
+> Hint: Although being a "non-hacker" or "non-developer" I do have stepped 
+...
+> In so far, if you continue to state that debugging is nothing but guessing 
+> around wildly you are definitely wrong, showing us all your missing code 
+> hacker experience. If you DO continue like this every step will be a torture 
+> not only for me but for the reading folks as well.
 
-Some of their RF configurations do include explicit (duplicated) code
-for CR47 patching though. This patch makes zd1211rw match that
-behaviour.
+You REALLY want to tell me, a developer and maintainer of several
+big projects, how debugging is done, being a non-developer and non-hacker?
+I can't believe what I am reading here.
 
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
----
- drivers/net/wireless/mac80211/zd1211rw/zd_chip.c   |    2 +-
- drivers/net/wireless/mac80211/zd1211rw/zd_rf.h     |   14 ++++++++++++++
- .../net/wireless/mac80211/zd1211rw/zd_rf_al2230.c  |    1 +
- .../net/wireless/mac80211/zd1211rw/zd_rf_al7230b.c |    1 +
- 4 files changed, 17 insertions(+), 1 deletions(-)
+> The fact that you simply ignored to imply those functions and continue to call 
+> other people dumb shows exactly how small and humble you are.
 
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
-index 4078fbe..fcf78ab 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
-@@ -1261,7 +1261,7 @@ static int patch_cck_gain(struct zd_chip *chip)
- 	int r;
- 	u32 value;
- 
--	if (!chip->patch_cck_gain)
-+	if (!chip->patch_cck_gain || !zd_rf_should_patch_cck_gain(&chip->rf))
- 		return 0;
- 
- 	ZD_ASSERT(mutex_is_locked(&chip->mutex));
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_rf.h b/drivers/net/wireless/mac80211/zd1211rw/zd_rf.h
-index 6dced2a..44c46e2 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_rf.h
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_rf.h
-@@ -52,6 +52,12 @@ struct zd_rf {
- 	 * defaults to 1 (yes) */
- 	u8 update_channel_int:1;
- 
-+	/* whether CR47 should be patched from the EEPROM, if the appropriate
-+	 * flag is set in the POD. The vendor driver suggests that this should
-+	 * be done for all RF's, but a bug in their code prevents but their 
-+	 * HW_OverWritePhyRegFromE2P() routine from ever taking effect. */
-+	u8 patch_cck_gain:1;
-+
- 	/* private RF driver data */
- 	void *priv;
- 
-@@ -84,6 +90,14 @@ static inline int zd_rf_should_update_pwr_int(struct zd_rf *rf)
- 	return rf->update_channel_int;
- }
- 
-+static inline int zd_rf_should_patch_cck_gain(struct zd_rf *rf)
-+{
-+	return rf->patch_cck_gain;
-+}
-+
-+int zd_rf_patch_6m_band_edge(struct zd_rf *rf, u8 channel);
-+int zd_rf_generic_patch_6m(struct zd_rf *rf, u8 channel);
-+
- /* Functions for individual RF chips */
- 
- int zd_rf_init_rf2959(struct zd_rf *rf);
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al2230.c b/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al2230.c
-index 511392a..e7a4ecf 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al2230.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al2230.c
-@@ -432,5 +432,6 @@ int zd_rf_init_al2230(struct zd_rf *rf)
- 		rf->switch_radio_on = zd1211_al2230_switch_radio_on;
- 	}
- 	rf->patch_6m_band_edge = zd_rf_generic_patch_6m;
-+	rf->patch_cck_gain = 1;
- 	return 0;
- }
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al7230b.c b/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al7230b.c
-index 5e5e9dd..f4e8b6a 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al7230b.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al7230b.c
-@@ -483,6 +483,7 @@ int zd_rf_init_al7230b(struct zd_rf *rf)
- 		rf->switch_radio_on = zd1211_al7230b_switch_radio_on;
- 		rf->set_channel = zd1211_al7230b_set_channel;
- 		rf->patch_6m_band_edge = zd_rf_generic_patch_6m;
-+		rf->patch_cck_gain = 1;
- 	}
- 
- 	rf->switch_radio_off = al7230b_switch_radio_off;
+Please quote me where I called someone dumb.
+Ah, yes. I am inhuman and whatever. We know that already.
+
+> Apart from that:
+> The message that you rooted to my place was no "proof" at all for any kind of 
+> disfunctionality or compatibility issue!
+> 
+> In that message the lack of performance of the "enclosed" or "old" 
+> or "complete" b44 module (i. e. PCI-only module) was criticised, NOT the one 
+> ripped by you personally into two modules called b44 and ssb.
+
+Ah, no? I think you didn't completely understand the mail.
+Steve reported a bug in b44 2.6.22. Please note that 2.6.22 does NOT include
+ssb. But I'm sure you'll find a way to make me responsible for
+this bug, anyway.
+b44 is buggy and this is NOT caused by ssb. Re-read steve's mail.
+
+> In so far I would deeply appreciate you personally to stick to the facts in 
+> your personal lack of knowledge about the b44 driver instead of playing bad 
+> politics against other people like me and others.
+
+Oh, poor poor guy.
+I lack knowledge about b44? Oh, I suppose that was a typo and you
+meant yourself.
+
+> Hello my dear Andrew Morton,
+> 
+> Could you please do me and the rest of the world two favours?
+> 
+> A. Rip Michael Buesches code out of the mm-tree
+> 
+> B. Give Michael Buesch a fair chance to revise his disfunctionable code 
+> outside the mm-tree and / or the vanilla mainline.
+
+Andrew, I see that you are in a bad situation now.
+I respect every decision you make. But please still
+consider that b44 works perfectly well for me. I tested it
+today on _all_ kernels that did not work for Uwe in this thread.
+On my device (BCM4401-B0) it works on all of these kernels.
+
+I'd suggest we leave the code in the -mm tree and wait for
+someone else to show up with a bugreport.
+It's simply impossible to debug this problem with the help of Uwe.
+
+> C: calling all people simply dumb who do not know about his personal issues at 
+> all
+
+Please quote this, Uwe.
+
+> Thank you, Andrew Morton! You are real fine!
+> 
+> Sincerely
+> 
+> Uwe
+> 
+> 
+
+Uwe, I just added you to my killfile.
+Don't bother sending mail to me any longer. It will not arrive.
+I'm not interested in your stupid "bugreports" anymore, as they are
+useless and consist only of personal insults and
+personal miscreditations.
+Welcome to the killfile of yet another kernel developer.
+
 -- 
-1.5.2
-
+Greetings Michael.
