@@ -1,69 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:45350 "EHLO
-	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756568AbXEJRsF (ORCPT
+Received: from smtp1.linux-foundation.org ([207.189.120.13]:38869 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753674AbXEZSUZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 13:48:05 -0400
-Date: Thu, 10 May 2007 12:47:58 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH V4] mac80211: Add support for SIOCGIWRATE ioctl to provide rate information
-Message-ID: <46435ace.oKGIdoTGgDdGQs74%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 26 May 2007 14:20:25 -0400
+Date: Sat, 26 May 2007 11:19:34 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Uwe Bugla <uwe.bugla@gmx.de>,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel" <linux-kernel@vger.kernel.org>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Message-Id: <20070526111934.e4650b6f.akpm@linux-foundation.org>
+In-Reply-To: <200705262003.17403.mb@bu3sch.de>
+References: <20070524195616.234280@gmx.net>
+	<200705261918.09469.mb@bu3sch.de>
+	<200705261924.33802.uwe.bugla@gmx.de>
+	<200705262003.17403.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At present, transmission rate information for mac80211 is available only
-if verbose debugging is turned on, and then only in the logs. This patch
-implements the SIOCGIWRATE ioctl, which adds the current transmission rate to
-the output of iwconfig.
+On Sat, 26 May 2007 20:03:17 +0200 Michael Buesch <mb@bu3sch.de> wrote:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+> Ok, please take git and get my development tree and try with that:
+> 
+> git clone http://bu3sch.de/git/wireless-dev.git
+> 
+> It's based on 2.6.22-rc1 and it works fine for me.
 
-Index: wireless-dev/net/mac80211/ieee80211_ioctl.c
-===================================================================
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c
-@@ -2013,6 +2013,30 @@ static int ieee80211_ioctl_giwscan(struc
- }
- 
- 
-+static int ieee80211_ioctl_giwrate(struct net_device *dev,
-+				  struct iw_request_info *info,
-+				  struct iw_param *rate, char *extra)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct sta_info *sta;
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	if (sdata->type == IEEE80211_IF_TYPE_STA ||
-+	    sdata->type == IEEE80211_IF_TYPE_IBSS)
-+		sta = sta_info_get(local, sdata->u.sta.bssid);
-+	else
-+		return -EOPNOTSUPP;
-+	if (!sta)
-+		return -ENODEV;
-+	if (sta->txrate >= 0 && sta->txrate <= local->oper_hw_mode->num_rates)
-+		rate->value = local->oper_hw_mode->rates[sta->txrate].rate * 100000;
-+	else
-+		rate->value = 0;
-+	sta_info_put(sta);
-+	return 0;
-+}
-+
- static int ieee80211_ioctl_siwrts(struct net_device *dev,
- 				  struct iw_request_info *info,
- 				  struct iw_param *rts, char *extra)
-@@ -3137,7 +3161,7 @@ static const iw_handler ieee80211_handle
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) NULL,				/* SIOCSIWRATE */
--	(iw_handler) NULL,				/* SIOCGIWRATE */
-+	(iw_handler) ieee80211_ioctl_giwrate,		/* SIOCGIWRATE */
- 	(iw_handler) ieee80211_ioctl_siwrts,		/* SIOCSIWRTS */
- 	(iw_handler) ieee80211_ioctl_giwrts,		/* SIOCGIWRTS */
- 	(iw_handler) ieee80211_ioctl_siwfrag,		/* SIOCSIWFRAG */
+Uwe has a slow connection, and getting the whole git thing
+set up would be quite a lump of effort.
+
+I prepared a diff of the above tree against 2.6.21-rc3.  It is at
+http://userweb.kernel.org/~akpm/git-mb.patch.gz
