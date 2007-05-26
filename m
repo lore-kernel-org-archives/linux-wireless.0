@@ -1,55 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41198 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753078AbXEALDs (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:44339
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752741AbXEZFAb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2007 07:03:48 -0400
-Subject: Re: d80211: How does TX flow control work?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jan Kiszka <jan.kiszka@web.de>
-Cc: Jiri Benc <jbenc@suse.cz>, Ivo Van Doorn <ivdoorn@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <46371B71.2090508@web.de>
-References: <459A5945.80909@web.de>
-	 <20070103185203.2754e059@griffin.suse.cz>	<459BF179.6000906@web.de>
-	 <20070103191853.4f440b8b@griffin.suse.cz>	<459BFB05.9040608@web.de>
-	 <45A03825.9080807@web.de>	<45A2A728.1070404@web.de>
-	 <1175029130.5151.6.camel@johannes.berg>	<460B7CAA.4020604@web.de>
-	 <4637195E.5050907@web.de> <20070501124733.47c45dd0@logostar.upir.cz>
-	 <46371B71.2090508@web.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RlPAVUljJK+iorTlyRTd"
-Date: Tue, 01 May 2007 13:04:26 +0200
-Message-Id: <1178017466.3483.20.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 26 May 2007 01:00:31 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Uwe Bugla <uwe.bugla@gmx.de>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Date: Sat, 26 May 2007 07:00:28 +0200
+Cc: Maximilian Engelhardt <maxi@daemonizer.de>,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel" <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+References: <20070524195616.234280@gmx.net> <200705252048.11931.maxi@daemonizer.de> <200705252140.22635.uwe.bugla@gmx.de>
+In-Reply-To: <200705252140.22635.uwe.bugla@gmx.de>
+MIME-Version: 1.0
+Message-Id: <200705260700.28777.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday 25 May 2007 21:40, Uwe Bugla wrote:
+> Am Freitag, 25. Mai 2007 20:48 schrieben Sie:
+> > On Fri, 25 May 2007 17:59:29 +0200, Uwe Bugla wrote:
+> > > Perhaps someone reading this could try to reproduce that problem on his
+> > > machine.
+> > > Now who of the readers owes a Broadcom 4401 NIC and can please try to
+> > > test kernel 2.6.22-rc2-mm1?
+> > >
+> > > Those NICs have been used very very often as onboard controllers,
+> > > especially on ASUS boards.
+> >
+> > I've been using 2.6.22-rc2 for some time and now I compiled 2.6.22-rc2-
+> > mm1 and both work fine with the BCM4401 in my laptop.
+> >
+> > Maxi
+> 
+> Hello Maxi,
+> 
+> That may be true for your Laptop, but it unfortunately isn't true for my ASUS 
+> mainboard onboard controller.
+> 
+> Unfortunately I cannot confirm this:
+> 
+> My broadcom 4401 driver is not part of a notebook, but instead part of an ASUS 
+> P4PE mainboard.
+> 
+> At my second attempt I went the conventional path (i. e. ignoring the fact 
+> that
+> "Broadcom 4400 ethernet support appears twice in section "Network device 
+> support":
+> 
+> Whether you leave out "EISA, VLB, PCI and on board controllers" or not it 
+> simply appears twice in kernel config! This is bug number 1.
 
---=-RlPAVUljJK+iorTlyRTd
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+No it is NOT a bug.
+It simply shows again that you don't know how b44, ssb or anything related works.
 
-On Tue, 2007-05-01 at 12:50 +0200, Jan Kiszka wrote:
+Would you _please_ take a look at the code, before calling features bugs.
+And yes, this IS a feature. It is a feature to get b44 running on an OpenWRT
+embedded device. These devices don't have a PCI bus. So b44 MUST NOT depend
+on "EISA, VLB, PCI and on board controllers".
+"Broadcom 4400 PCI device support" does depend on "EISA, VLB, PCI and on board controllers".
 
-> Could you point me to the patch(es) in question? I only have 2MBit/s
-> downlink, so that downloading only the patch would speed things up here.
+Everything is correct.
+Bug number 1 is solved.
+qed
 
-http://git.kernel.org/?p=3Dlinux/kernel/git/linville/wireless-dev.git;a=3Dc=
-ommit;h=3D00a908826e778b39a802013729f7826c2d575360
+> This time I do get a "good" interrupt: IRQ 21 for the the device.
+> 
+> BUT:
+> 
+> Trying to ping another machine fails saying:
+> 
+> "destination host unreachable"
+> 
+> 
+> That means, Although the interrupt is fine now, the device is still not 
+> functionable.
 
-johannes
+And it's completely impossible that you did a mistake when configuring
+the device? Typo in the IP? Typo in the gateway or DNS entries?
+Try it again, please.
+And please try with current wireless-dev tree.
 
---=-RlPAVUljJK+iorTlyRTd
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGNx66/ETPhpq3jKURAiKjAKCzIQcqY9jIMKUMS7vWDOX4Sv3EaQCgpkzW
-7UsBDncX3CDppZ1WlixtPfE=
-=X70t
------END PGP SIGNATURE-----
-
---=-RlPAVUljJK+iorTlyRTd--
-
+And I simply do not get it why you suddenly get a good IRQ number, like everybody
+else does, without fixing The Bug (tm).
