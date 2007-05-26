@@ -1,67 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43805 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757237AbXEWKQn (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41299
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753674AbXEZTTZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2007 06:16:43 -0400
-Subject: RE: [PATCH V6] mac80211: Add support for SIOCGIWRATE ioctl to  provide rate information
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <569491.18256.qm@web51409.mail.re2.yahoo.com>
-References: <569491.18256.qm@web51409.mail.re2.yahoo.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-o/OhXETZ9OCvZaJG6+DA"
-Date: Wed, 23 May 2007 12:18:15 +0200
-Message-Id: <1179915496.14317.4.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 26 May 2007 15:19:25 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Uwe Bugla <uwe.bugla@gmx.de>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Date: Sat, 26 May 2007 21:19:19 +0200
+Cc: "Benoit Boissinot" <bboissin@gmail.com>,
+	"Andrew Morton" <akpm@linux-foundation.org>,
+	"Maximilian Engelhardt" <maxi@daemonizer.de>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+References: <20070524195616.234280@gmx.net> <40f323d00705261141m7c32d2b8h7059b4b35ed066c9@mail.gmail.com> <200705262058.37454.uwe.bugla@gmx.de>
+In-Reply-To: <200705262058.37454.uwe.bugla@gmx.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200705262119.19675.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Uwe, please try the following patch:
 
---=-o/OhXETZ9OCvZaJG6+DA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Index: bu3sch-wireless-dev/drivers/net/b44.c
+===================================================================
+--- bu3sch-wireless-dev.orig/drivers/net/b44.c	2007-05-18 18:09:50.000000000 +0200
++++ bu3sch-wireless-dev/drivers/net/b44.c	2007-05-26 21:18:28.000000000 +0200
+@@ -2201,10 +2201,12 @@ static int __devinit b44_init_one(struct
+ 		printk("%2.2x%c", dev->dev_addr[i],
+ 		       i == 5 ? '\n' : ':');
+ 
++#if 0
+ 	/* Initialize phy */
+ 	spin_lock_irq(&bp->lock);
+ 	b44_chip_reset(bp);
+ 	spin_unlock_irq(&bp->lock);
++#endif
+ 
+ 	return 0;
+ 
 
-Joerg,
-
-it is recommended practice to never remove people from CC, that applies
-to From: too, so you should have sent a copy of your mail directly to
-Larry as well.
-
-> what does SIOCGIWRATE do for IBSS networks? In this case you might
-> have a different rate for every node in your network. Looking up just
-> "sdata->u.sta.bssid" is insufficient because the BSSID of an IBSS
-> network is not a real MAC address (after all, there is no AP).
-
-Nothing. It returns -EOPNOTSUPP, read the code.
-
-> I would very much like an official way to enumerate the current rates
-> for all known stations in an IBSS network. This information would be
-> useful for AdHoc routing: Currently most approaches use packet loss to
-> weight different links. In this case a link might look better than it
-> actually is, because rate control already lowered the current rate to
-> a level where no packet loss occured whereas another link with higher
-> data rate looks bad because it drops a packet now and than.
->=20
-> Is there a way to get this information?
-
-No. Feel free to come up with a spec and implement it for
-cfg80211/nl80211
-
-johannes
-
---=-o/OhXETZ9OCvZaJG6+DA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGVBTn/ETPhpq3jKURAh3pAKCg7x28IWcDhO6tRJEyddUk2MKd4gCfXPTG
-9tEj3CMeC+gdjUDRJqE6xs4=
-=yfp6
------END PGP SIGNATURE-----
-
---=-o/OhXETZ9OCvZaJG6+DA--
-
+-- 
+Greetings Michael.
