@@ -1,60 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:35648
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1423125AbXEEF5T (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 May 2007 01:57:19 -0400
-Date: Fri, 04 May 2007 22:57:21 -0700 (PDT)
-Message-Id: <20070504.225721.42774143.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/4] add mac80211 wireless infrastructure
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20070505052635.GB6041@tuxdriver.com>
-References: <20070505031749.GA5308@tuxdriver.com>
-	<20070505052635.GB6041@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from smtpout.mac.com ([17.250.248.175]:55988 "EHLO smtpout.mac.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752721AbXE0OB4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 May 2007 10:01:56 -0400
+In-Reply-To: <97963914@web.de>
+References: <97963914@web.de>
+Mime-Version: 1.0 (Apple Message framework v752.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Message-Id: <78D1CB13-325C-477D-8824-41D08D663161@mac.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	Michael Buesch <mb@bu3sch.de>
+From: Kyle Moffett <mrmacman_g4@mac.com>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Date: Sun, 27 May 2007 09:41:12 -0400
+To: Uwe Bugla <Watzmann@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Sat, 5 May 2007 01:26:35 -0400
+On May 27, 2007, at 06:46:51, Uwe Bugla wrote:
+> [...insults and flamage...]
 
-> On Fri, May 04, 2007 at 11:17:49PM -0400, John W. Linville wrote:
-> 
-> > The wireless developers would like this to be considered for merge
-> > in time for 2.6.22.  Patches for at least one mac80211-based driver
-> > will follow shortly.
-> 
-> Ooops!  I forgot to add a "From: Jiri Benc..." line to the top of
-> the mailed patches.
-> 
-> Dave, can you add that before applying them?  Or shall I resend?
+Uwe, when people ban you from posting to mailing lists it's  
+incredibly rude to create a new email account and continue the same  
+flamage that got you banned in the first place.  Why don't you go  
+elsewhere until you can learn to be respectful and polite and keep a  
+civil tone with people who are trying to help you?  At such time you  
+may be welcome once more on these lists, but not until then.
 
-That's not a problem.
+Cheers,
+Kyle Moffett
 
-Usually I just assume that the first Signed-off-by is the
-author if I don't get a "From: " else i figure it out
-by context.
-
-> P.S.  Hmmm...I would have thought that I would have seen the patches
-> I sent by now...?  Did the list eat them?  I don't think they were
-> that big...?  Let me know if I need to re-send.
-
-Something caused them to be filtered.  Let's see what vger had
-to say:
-
---
-Subject: TABOO linux-wireless@vger.kernel.org: global taboo header: m/^Status:/ 
-...
-Status:	RO
-X-Spam-Status: No, score=-4.3 required=3.0 tests=ALL_TRUSTED,AWL,BAYES_00,
-	SPF_HELO_PASS,SPF_PASS autolearn=unavailable version=3.1.8-gr1
-X-Spam-Checker-Version:	SpamAssassin 3.1.8-gr1 (2007-02-13) on ra.tuxdriver.com
---
-
-Dammit John, get that tuxdriver.com spam filter fixed!
-:-)
-
+P.S: Don't bother replying since your new email address has already  
+been placed adjacent to the old one in my killfile.
