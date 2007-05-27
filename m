@@ -1,39 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([207.189.120.13]:52324 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752150AbXEYQ53 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2007 12:57:29 -0400
-Date: Fri, 25 May 2007 09:56:18 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
+Received: from daemonizer.de ([87.230.16.230]:52706 "EHLO daemonizer.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753968AbXE0WQY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 May 2007 18:16:24 -0400
+From: Maximilian Engelhardt <maxi@daemonizer.de>
 To: Michael Buesch <mb@bu3sch.de>
-Cc: Uwe Bugla <uwe.bugla@gmx.de>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-Message-Id: <20070525095618.1cd86672.akpm@linux-foundation.org>
-In-Reply-To: <200705251652.19911.mb@bu3sch.de>
-References: <20070524195616.234280@gmx.net>
-	<200705251512.09878.mb@bu3sch.de>
-	<200705251559.49807.uwe.bugla@gmx.de>
-	<200705251652.19911.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: Re: b44: regression in 2.6.22 (resend)
+Date: Mon, 28 May 2007 00:15:59 +0200
+Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Stephen Hemminger <shemminger@linux-foundation.org>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+References: <20070525172431.60affaca@freepuppy> <200705272125.25506.maxi@daemonizer.de> <200705272313.33129.mb@bu3sch.de>
+In-Reply-To: <200705272313.33129.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1256911.S444X9Ocex";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200705280016.02776.maxi@daemonizer.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 25 May 2007 16:52:19 +0200 Michael Buesch <mb@bu3sch.de> wrote:
+--nextPart1256911.S444X9Ocex
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> I bet your bug is _not_ caused by ssb, but by some other breakage
-> in another subsystem. Maybe ACPI or APIC is broken? Try to boot
-> the machine without ACPI and/or APIC.
+On Sunday 27 May 2007, Michael Buesch wrote:
+> On Sunday 27 May 2007 21:25:17 Maximilian Engelhardt wrote:
+> > 2.6.21.1:
+> > [  5] local 192.168.1.2 port 58414 connected with 192.168.1.1 port 5001
+> > [  5]  0.0-60.6 sec  1.13 MBytes    157 Kbits/sec
+> > [  4] local 192.168.1.2 port 5001 connected with 192.168.1.1 port 57837
+> > [  4]  0.0-63.1 sec  2.82 MBytes    375 Kbits/sec
+> >
+> > 2.6.22-rc3:
+> > [  5] local 192.168.1.2 port 46557 connected with 192.168.1.1 port 5001
+> > [  5]  0.0-60.4 sec  58.9 MBytes  8.18 Mbits/sec
+> > [  4] local 192.168.1.2 port 5001 connected with 192.168.1.1 port 51633
+> > [  4]  0.0-63.1 sec  7.27 MBytes    967 Kbits/sec
+>
+> This is the diff between these two kernels.
+> I'm not sure why you see a much better TX throughput here.
+>
+> Can you re-check to make sure it's not just some test-jitter?
+>
+2.6.21.1:
 
-It wouldn't be the first time.
+[  5] local 192.168.1.2 port 54423 connected with 192.168.1.1 port 5001
+[  5]  0.0-60.3 sec  3.06 MBytes    426 Kbits/sec
+[  4] local 192.168.1.2 port 5001 connected with 192.168.1.1 port 41053
+[  4]  0.0-163.0 sec    130 MBytes  6.67 Mbits/sec
 
-Uwe, please generate the `dmesg -s 1000000' output for 2.6.22-rc2 and for
-2.6.22-rc2-mm1, feed them through `diff -u' and see if you can spot any
-interesting-looking differences in the PCI/ACPI/IRQ area.  Send both the
-files to me and I'll stick them on a server and then I'll see if we can
-hunt down the perpetrator.
 
-Thanks.
+2.6.22-rc3:
+
+[  5] local 192.168.1.2 port 46002 connected with 192.168.1.1 port 5001
+[  5]  0.0-61.5 sec  84.0 MBytes  11.5 Mbits/sec
+[  4] local 192.168.1.2 port 5001 connected with 192.168.1.1 port 44379
+[  4]  0.0-93.8 sec  30.6 MBytes  2.74 Mbits/sec
+
+=46or TX the iperf server reports the same values as the client (all values=
+ are=20
+from the client) but for RX they are differen:
+
+2.6.21.1: (iperf server log):
+
+[  5] local 192.168.1.1 port 5001 connected with 192.168.1.2 port 54423
+[  5]  0.0-60.5 sec  3.06 MBytes    425 Kbits/sec
+[  5] local 192.168.1.1 port 41053 connected with 192.168.1.2 port 5001
+[  5]  0.0-63.1 sec    130 MBytes  17.2 Mbits/sec
+
+
+2.6.22-rc3 (iperf server log):
+
+[  4] local 192.168.1.1 port 5001 connected with 192.168.1.2 port 46002
+[  4]  0.0-61.6 sec  84.0 MBytes  11.5 Mbits/sec
+[  4] local 192.168.1.1 port 44379 connected with 192.168.1.2 port 5001
+[  4]  0.0-63.3 sec  30.6 MBytes  4.06 Mbits/sec
+
+I have no idea how iperf internally works and what can cause such different=
+=20
+results here.
+
+>
+> --- linux-2.6.21.1/drivers/net/b44.c    2007-05-27 22:58:01.000000000 +02=
+00
+> +++ linux-2.6.22-rc3/drivers/net/b44.c  2007-05-27 23:01:44.000000000 +02=
+00
+> @@ -825,12 +825,11 @@
+>                         if (copy_skb =3D=3D NULL)
+>                                 goto drop_it_no_recycle;
+>
+> -                       copy_skb->dev =3D bp->dev;
+>                         skb_reserve(copy_skb, 2);
+>                         skb_put(copy_skb, len);
+>                         /* DMA sync done above, copy just the actual pack=
+et
+> */ -                       memcpy(copy_skb->data, skb->data+bp->rx_offset,
+> len); -
+> +                       skb_copy_from_linear_data_offset(skb,
+> bp->rx_offset, +                                                      =20
+> copy_skb->data, len); skb =3D copy_skb;
+>                 }
+>                 skb->ip_summed =3D CHECKSUM_NONE;
+> @@ -1007,7 +1006,8 @@
+>                         goto err_out;
+>                 }
+>
+> -               memcpy(skb_put(bounce_skb, len), skb->data, skb->len);
+> +               skb_copy_from_linear_data(skb, skb_put(bounce_skb, len),
+> +                                         skb->len);
+>                 dev_kfree_skb_any(skb);
+>                 skb =3D bounce_skb;
+>         }
+
+
+
+--nextPart1256911.S444X9Ocex
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBGWgMiOimwv528XGERAjsHAKDR1KjfwQMgZRyMFZcGuwbHbaxJcQCgtMPZ
+RX0ulE+gPKEVDo3hgfqfA6U=
+=uMCj
+-----END PGP SIGNATURE-----
+
+--nextPart1256911.S444X9Ocex--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
