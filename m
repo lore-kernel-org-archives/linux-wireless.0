@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:51888 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752097AbXEAPkx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2007 11:40:53 -0400
-Date: Tue, 1 May 2007 17:40:44 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] wireless-dev: remove duplicate inclusion of wireless/ in  Makefile
-Message-ID: <20070501174044.231074ea@logostar.upir.cz>
+Received: from py-out-1112.google.com ([64.233.166.178]:31772 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752071AbXE0OeH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 May 2007 10:34:07 -0400
+Received: by py-out-1112.google.com with SMTP id a73so2349178pye
+        for <linux-wireless@vger.kernel.org>; Sun, 27 May 2007 07:34:06 -0700 (PDT)
+Date: Sun, 27 May 2007 23:26:31 +0900
+From: Akinobu Mita <akinobu.mita@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joe Jezak <josejx@gentoo.org>, Daniel Drake <dsd@gentoo.org>
+Subject: [PATCH] softmac: alloc_ieee80211() NULL check
+Message-ID: <20070527142631.GA13105@APFDCB5C>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wireless/ directory is included two times in net/Makefile.
+This patch adds missing NULL check and trims a line longer than 80 columns.
 
-Signed-off-by: Jiri Benc <jbenc@suse.cz>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: Joe Jezak <josejx@gentoo.org>
+Cc: Daniel Drake <dsd@gentoo.org>
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
 
 ---
- net/Makefile |    2 --
- 1 files changed, 2 deletions(-)
+ net/ieee80211/softmac/ieee80211softmac_module.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
---- mac80211.orig/net/Makefile
-+++ mac80211/net/Makefile
-@@ -55,5 +55,3 @@ obj-$(CONFIG_IUCV)		+= iucv/
- ifeq ($(CONFIG_NET),y)
- obj-$(CONFIG_SYSCTL)		+= sysctl_net.o
- endif
--
--obj-y				+= wireless/
-
-
--- 
-Jiri Benc
-SUSE Labs
+Index: 2.6-mm/net/ieee80211/softmac/ieee80211softmac_module.c
+===================================================================
+--- 2.6-mm.orig/net/ieee80211/softmac/ieee80211softmac_module.c
++++ 2.6-mm/net/ieee80211/softmac/ieee80211softmac_module.c
+@@ -33,7 +33,10 @@ struct net_device *alloc_ieee80211softma
+ 	struct ieee80211softmac_device *softmac;
+ 	struct net_device *dev;
+ 
+-	dev = alloc_ieee80211(sizeof(struct ieee80211softmac_device) + sizeof_priv);
++	dev = alloc_ieee80211(sizeof(*softmac) + sizeof_priv);
++	if (!dev)
++		return NULL;
++
+ 	softmac = ieee80211_priv(dev);
+ 	softmac->dev = dev;
+ 	softmac->ieee = netdev_priv(dev);
