@@ -1,36 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2293 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2992549AbXEBCwQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2007 22:52:16 -0400
-Date: Tue, 1 May 2007 22:16:56 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jiri Benc <jbenc@suse.cz>, Daniel Drake <dsd@gentoo.org>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] zd1211rw-mac80211: limit URB buffering in tx path
-Message-ID: <20070502021656.GB5621@tuxdriver.com>
-References: <20070501030100.BDE3D7B409F@zog.reactivated.net> <20070501123411.081c43c6@logostar.upir.cz> <20070501195008.GA14294@p15091797.pureserver.info>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070501195008.GA14294@p15091797.pureserver.info>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:36374
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753693AbXE0VO3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 May 2007 17:14:29 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Maximilian Engelhardt <maxi@daemonizer.de>
+Subject: Re: b44: regression in 2.6.22 (resend)
+Date: Sun, 27 May 2007 23:13:32 +0200
+Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Stephen Hemminger <shemminger@linux-foundation.org>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+References: <20070525172431.60affaca@freepuppy> <200705261901.18110.mb@bu3sch.de> <200705272125.25506.maxi@daemonizer.de>
+In-Reply-To: <200705272125.25506.maxi@daemonizer.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200705272313.33129.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 01, 2007 at 09:50:08PM +0200, Ulrich Kunitz wrote:
-> On 07-05-01 12:34 Jiri Benc wrote:
+On Sunday 27 May 2007 21:25:17 Maximilian Engelhardt wrote:
+> 2.6.21.1:
+> [  5] local 192.168.1.2 port 58414 connected with 192.168.1.1 port 5001
+> [  5]  0.0-60.6 sec  1.13 MBytes    157 Kbits/sec
+> [  4] local 192.168.1.2 port 5001 connected with 192.168.1.1 port 57837
+> [  4]  0.0-63.1 sec  2.82 MBytes    375 Kbits/sec
 
-> > It is :-) Look for ieee80211_wake_queues. But as I said, you shouldn't need
-> > that.
-> 
-> I provided the patch to add ieee80211_wake_queues(). Sorry for
-> missing the moment, when it has been integrated. I will update the
-> patch.
+> 2.6.22-rc3:
+> [  5] local 192.168.1.2 port 46557 connected with 192.168.1.1 port 5001
+> [  5]  0.0-60.4 sec  58.9 MBytes  8.18 Mbits/sec
+> [  4] local 192.168.1.2 port 5001 connected with 192.168.1.1 port 51633
+> [  4]  0.0-63.1 sec  7.27 MBytes    967 Kbits/sec
 
-No need, I have adjusted the patch accordingly.
+This is the diff between these two kernels.
+I'm not sure why you see a much better TX throughput here.
 
-Thanks,
+Can you re-check to make sure it's not just some test-jitter?
 
-John
+
+--- linux-2.6.21.1/drivers/net/b44.c    2007-05-27 22:58:01.000000000 +0200
++++ linux-2.6.22-rc3/drivers/net/b44.c  2007-05-27 23:01:44.000000000 +0200
+@@ -825,12 +825,11 @@
+                        if (copy_skb == NULL)
+                                goto drop_it_no_recycle;
+ 
+-                       copy_skb->dev = bp->dev;
+                        skb_reserve(copy_skb, 2);
+                        skb_put(copy_skb, len);
+                        /* DMA sync done above, copy just the actual packet */
+-                       memcpy(copy_skb->data, skb->data+bp->rx_offset, len);
+-
++                       skb_copy_from_linear_data_offset(skb, bp->rx_offset,
++                                                        copy_skb->data, len);
+                        skb = copy_skb;
+                }
+                skb->ip_summed = CHECKSUM_NONE;
+@@ -1007,7 +1006,8 @@
+                        goto err_out;
+                }
+ 
+-               memcpy(skb_put(bounce_skb, len), skb->data, skb->len);
++               skb_copy_from_linear_data(skb, skb_put(bounce_skb, len),
++                                         skb->len);
+                dev_kfree_skb_any(skb);
+                skb = bounce_skb;
+        }
+
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
