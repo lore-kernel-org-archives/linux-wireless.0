@@ -1,249 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:48476 "EHLO
-	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755641AbXEZQOm (ORCPT
+Received: from fmmailgate09.web.de ([217.72.192.184]:37143 "EHLO
+	fmmailgate09.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750790AbXE0Kqy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 12:14:42 -0400
-Date: Sat, 26 May 2007 11:14:09 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC/T] mac80211: Implementation of SIOCSIWRATE
-Message-ID: <46585cd1.xDmttJDPjdAQW3Wz%Larry.Finger@lwfinger.net>
+	Sun, 27 May 2007 06:46:54 -0400
+Date: Sun, 27 May 2007 12:46:51 +0200
+Message-Id: <97963914@web.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Uwe Bugla <Watzmann@web.de>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: mabbas@linux.intel.com
+Am Samstag, 26. Mai 2007 23:52 schrieben Sie:
+> On Sat, 2007-05-26 at 23:32 +0200, Uwe Bugla wrote:
+> > Am Samstag, 26. Mai 2007 21:49 schrieben Sie:
+> > > On Saturday 26 May 2007 21:39:54 Uwe Bugla wrote:
+> > > > Am Samstag, 26. Mai 2007 21:19 schrieben Sie:
+> > > > > Uwe, please try the following patch:
+> > > > >
+> > > > > Index: bu3sch-wireless-dev/drivers/net/b44.c
+> > > > > ===================================================================
+> > > > > --- bu3sch-wireless-dev.orig/drivers/net/b44.c        2007-05-18
+> > > > > 18:09:50.000000000 +0200 +++
+> > > > > bu3sch-wireless-dev/drivers/net/b44.c 2007-05-26 21:18:28.000000000
+> > > > > +0200 @@ -2201,10 +2201,12 @@ static int __devinit
+> > > > > b44_init_one(struct printk("%2.2x%c", dev->dev_addr[i],
+> > > > >                      i == 5 ? '\n' : ':');
+> > > > >
+> > > > > +#if 0
+> > > > >       /* Initialize phy */
+> > > > >       spin_lock_irq(&bp->lock);
+> > > > >       b44_chip_reset(bp);
+> > > > >       spin_unlock_irq(&bp->lock);
+> > > > > +#endif
+> > > > >
+> > > > >       return 0;
+> > > >
+> > > > Against what kernel please?
+> > > > Just try to be a bit more eloquent, man!
+> > >
+> > > Against a kernel which does not work for you, of course.
+> > >
+> > > Sometimes I wonder... (no better not say that).
+> >
+> > YES! And I wonder TOO, definitely!
+> >
+> > Quand meme (now, if you do not speak french: Above all that), I applied
+> > your patch against 2.6.22-rc2-mm1. Just to show my cooperation willing to
+> > get your "dream" being fulfilled!
+> >
+> > Result is: No change!
+> > Non-functionable b44-device at all!
+> >
+> > Hint: Although being a "non-hacker" or "non-developer" I do have stepped
+> > across some experienced developer people who at least added some code to
+> > make their modules function in the following way:
+> >
+> > modprobe xyz debug=1 (or debug=2 or debug=3 or debug=4 or debug=5 or
+> > debug=6)
+> >
+> > In so far, if you continue to state that debugging is nothing but
+> > guessing around wildly you are definitely wrong, showing us all your
+> > missing code hacker experience. If you DO continue like this every step
+> > will be a torture not only for me but for the reading folks as well.
+> >
+> > But every human being is here to learn and develop: In so far I am very
+> > optimistic!
+> >
+> > Apart from the Kconfig chaos that seems to be subordinate in your
+> > personal rating scale, you at least could have added some functions like
+> > the above mentioned functions.
+> >
+> > The fact that you simply ignored to imply those functions and continue to
+> > call other people dumb shows exactly how small and humble you are.
+> >
+> > Apart from that:
+> > The message that you rooted to my place was no "proof" at all for any
+> > kind of disfunctionality or compatibility issue!
+> >
+> > In that message the lack of performance of the "enclosed" or "old"
+> > or "complete" b44 module (i. e. PCI-only module) was criticised, NOT the
+> > one ripped by you personally into two modules called b44 and ssb.
+> >
+> > In so far I would deeply appreciate you personally to stick to the facts
+> > in your personal lack of knowledge about the b44 driver instead of
+> > playing bad politics against other people like me and others.
+> >
+> >
+> > Hello my dear Andrew Morton,
+> >
+> > Could you please do me and the rest of the world two favours?
+> >
+> > A. Rip Michael Buesches code out of the mm-tree
+> >
+> > B. Give Michael Buesch a fair chance to revise his disfunctionable code
+> > outside the mm-tree and / or the vanilla mainline.
+> >
+> > Side note for the what and why:
+> >
+> > I like to help avoid dangers by testing the mm-tree.
+> > BUT:
+> >
+> > If real debugging conforms to nothing but guessing around wildly let me
+> > tell you that I do not appreciate to be part of that torture due to the
+> > lack of experience of some German spare time hacker.
+> >
+> > A: proven by facts not knowing or even wanting to know how to imply
+> > appropriate functionable debug parametres in his driver code
+> >
+> > B: non-cooperative as far as Kconfig help features are concerned (i. E.
+> > help to understand the issues for users
+> >
+> > C: calling all people simply dumb who do not know about his personal
+> > issues at all
+> >
+> > Thank you, Andrew Morton! You are real fine!
+>
+> Everyone just needs to cool down.  And you both (Uwe and Michael) just
+> need to try debugging the problem.
+>
+> Abstracting the SSB code into a library is clearly the correct solution,
+> rather than having the same code in two separate places.  The whole
+> _point_ of having code in various trees (wireless, mm, etc) is to find
+> these bugs before the patches hit mainline.  Even testing on > 3
+> machines may not uncover subtle bugs (for example, different behavior on
+> different silicon revisions, especially in reverse-engineered parts),
 
-The WEXT ioctl SIOCSIWRATE is not implemented in mac80211. This patch
-adds the missing routine. It supports the 'auto' keyword, fixed rates,
-and the combination of 'auto' and a fixed rate to select an upper bound.
+yes, and to simplify that you need additional commandline parametres 
+(debug=1,2,3,4,5 f. ex.).
+Those debug levels provide:
+1. different verbose levels of printed output, sent to specific logs like 
+kern.log for example
+2. different hexadecimal outprints who show what sub-part of the driver is 
+working as expected and what part is not
+3. if the driver is loaded correctly but refuses to work as expected while 
+the "traditional" one without "outsourced" ssb backplane works as expected 
+there must be some technique to move the what and why into system logs, just 
+to establish facts instead of guessing around.
+4. If that technique is not provided by the author of the code then that is a 
+proof for the author's lack of experience. As I said already: Too many cooks 
+do spoil the pap.
 
-Signed-off-by: mabbas@linux.intel.com
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+If debugging is limited to dmesg, .config and guessing around, then I call 
+such a code a real poor and crude one.
 
-Index: wireless-dev/net/mac80211/ieee80211_ioctl.c
-===================================================================
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c
-@@ -2013,6 +2013,54 @@ static int ieee80211_ioctl_giwscan(struc
- }
- 
- 
-+static int ieee80211_ioctl_siwrate(struct net_device *dev,
-+				  struct iw_request_info *info,
-+				  struct iw_param *rate, char *extra)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_hw_mode *mode;
-+	int i;
-+	u32 target_rate = rate->value /100000;
-+	u32 fixed = rate->fixed;
-+	u32 supp = 0;
-+	struct ieee80211_sub_if_data *sdata;
-+	struct sta_info *sta = NULL;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	mode = local->oper_hw_mode;
-+	if (sdata->type != IEEE80211_IF_TYPE_STA)
-+		return -EOPNOTSUPP;
-+	sta = sta_info_get(local, sdata->u.sta.bssid);
-+	if (!sta)
-+		return -ENODEV;
-+	/* value = -1, fixed = 0 means auto only, so we should use
-+	 * all rates offered by AP
-+	 * value = X, fixed = 1 means only rate X
-+	 * value = X, fixed = 0 means all rates lower equal X */
-+	for (i=0; i< mode->num_rates; i++) {
-+		struct ieee80211_rate *rates = &mode->rates[i];
-+		int target = rates->rate;
-+
-+		if (mode->mode == MODE_ATHEROS_TURBO ||
-+		    mode->mode == MODE_ATHEROS_TURBOG)
-+			target *= 2;
-+		if ((target_rate == target) && fixed) {
-+			supp |= BIT(i);
-+			sta->txrate = i;
-+			break;
-+		}
-+		if ((!fixed && (target_rate >= target)) || (rate->value < 0)) {
-+			supp |= BIT(i);
-+			if (target_rate == target)
-+				sta->txrate = i;
-+		}
-+	}
-+	sdata->u.sta.restricted_tx_rates = supp;
-+	sta->restricted_tx_rates = supp;
-+	sta_info_put(sta);
-+	return 0;
-+};
-+
- static int ieee80211_ioctl_giwrate(struct net_device *dev,
- 				  struct iw_request_info *info,
- 				  struct iw_param *rate, char *extra)
-@@ -3159,7 +3207,7 @@ static const iw_handler ieee80211_handle
- 	(iw_handler) NULL,				/* SIOCGIWNICKN */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) NULL,				/* -- hole -- */
--	(iw_handler) NULL,				/* SIOCSIWRATE */
-+	(iw_handler) ieee80211_ioctl_siwrate,		/* SIOCSIWRATE */
- 	(iw_handler) ieee80211_ioctl_giwrate,		/* SIOCGIWRATE */
- 	(iw_handler) ieee80211_ioctl_siwrts,		/* SIOCSIWRTS */
- 	(iw_handler) ieee80211_ioctl_giwrts,		/* SIOCGIWRTS */
-Index: wireless-dev/net/mac80211/ieee80211_i.h
-===================================================================
---- wireless-dev.orig/net/mac80211/ieee80211_i.h
-+++ wireless-dev/net/mac80211/ieee80211_i.h
-@@ -269,6 +269,7 @@ struct ieee80211_if_sta {
- 	unsigned long ibss_join_req;
- 	struct sk_buff *probe_resp; /* ProbeResp template for IBSS */
- 	u32 supp_rates_bits;
-+	u32 restricted_tx_rates; /* bitmap of user restricted tx rate */
- 
- 	int wmm_last_param_set;
- };
-Index: wireless-dev/net/mac80211/ieee80211_sta.c
-===================================================================
---- wireless-dev.orig/net/mac80211/ieee80211_sta.c
-+++ wireless-dev/net/mac80211/ieee80211_sta.c
-@@ -1255,7 +1255,7 @@ static void ieee80211_rx_mgmt_assoc_resp
- 				rates |= BIT(j);
- 	}
- 	sta->supp_rates = rates;
--
-+	sta->restricted_tx_rates = ifsta->restricted_tx_rates;
- 	if (elems.ht_extra_param && elems.ht_cap_param && elems.wmm_param &&
- 	    ifsta->ht_enabled && local->ops->conf_ht){
- 		int rc;
-@@ -1500,6 +1500,7 @@ static void ieee80211_rx_bss_info(struct
- 			 * supported to avoid issues with TX rate ctrl. */
- 			sta->supp_rates = sdata->u.sta.supp_rates_bits;
- 		}
-+		sta->restricted_tx_rates = sdata->u.sta.restricted_tx_rates;
- 		if (sta->supp_rates != prev_rates) {
- 			printk(KERN_DEBUG "%s: updated supp_rates set for "
- 			       MAC_FMT " based on beacon info (0x%x & 0x%x -> "
-@@ -3176,6 +3177,8 @@ struct sta_info * ieee80211_ibss_add_sta
- 		return NULL;
- 
- 	sta->supp_rates = sdata->u.sta.supp_rates_bits;
-+	/* restricted suup rate if the user specifies it */
-+	sta->restricted_tx_rates= sdata->u.sta.restricted_tx_rates;
- 
- 	rate_control_rate_init(sta, local);
- 
-Index: wireless-dev/net/mac80211/rc80211_simple.c
-===================================================================
---- wireless-dev.orig/net/mac80211/rc80211_simple.c
-+++ wireless-dev/net/mac80211/rc80211_simple.c
-@@ -38,6 +38,7 @@ static void rate_control_rate_inc(struct
- 	struct ieee80211_hw_mode *mode;
- 	int i = sta->txrate;
- 	int maxrate;
-+	u32 supp;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
- 	if (sdata->bss && sdata->bss->force_unicast_rateidx > -1) {
-@@ -45,6 +46,9 @@ static void rate_control_rate_inc(struct
- 		return;
- 	}
- 
-+	supp = sta->supp_rates & sta->restricted_tx_rates;
-+	if (supp == 0)
-+		supp = sta->supp_rates;
- 	mode = local->oper_hw_mode;
- 	maxrate = sdata->bss ? sdata->bss->max_ratectrl_rateidx : -1;
- 
-@@ -53,7 +57,7 @@ static void rate_control_rate_inc(struct
- 
- 	while (i + 1 < mode->num_rates) {
- 		i++;
--		if (sta->supp_rates & BIT(i) &&
-+		if (supp & BIT(i) &&
- 		    mode->rates[i].flags & IEEE80211_RATE_SUPPORTED &&
- 		    (maxrate < 0 || i <= maxrate)) {
- 			sta->txrate = i;
-@@ -69,6 +73,7 @@ static void rate_control_rate_dec(struct
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_hw_mode *mode;
- 	int i = sta->txrate;
-+	u32 supp;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(sta->dev);
- 	if (sdata->bss && sdata->bss->force_unicast_rateidx > -1) {
-@@ -80,9 +85,12 @@ static void rate_control_rate_dec(struct
- 	if (i > mode->num_rates)
- 		i = mode->num_rates;
- 
-+	supp = sta->supp_rates & sta->restricted_tx_rates;
-+	if (supp == 0)
-+		supp = sta->supp_rates;
- 	while (i > 0) {
- 		i--;
--		if (sta->supp_rates & BIT(i) &&
-+		if (supp & BIT(i) &&
- 		    mode->rates[i].flags & IEEE80211_RATE_SUPPORTED) {
- 			sta->txrate = i;
- 			break;
-@@ -234,6 +242,7 @@ rate_control_simple_get_rate(void *priv,
- 	struct sta_info *sta;
- 	int rateidx, nonerp_idx;
- 	u16 fc;
-+	u32 supp;
- 
- 	memset(extra, 0, sizeof(*extra));
- 
-@@ -261,11 +270,14 @@ rate_control_simple_get_rate(void *priv,
- 		rateidx = mode->num_rates - 1;
- 
- 	sta->last_txrate = rateidx;
-+	supp = sta->supp_rates & sta->restricted_tx_rates;
-+	if (supp == 0)
-+		supp = sta->supp_rates;
- 	nonerp_idx = rateidx;
- 	while (nonerp_idx > 0 &&
- 	       ((mode->rates[nonerp_idx].flags & IEEE80211_RATE_ERP) ||
- 		!(mode->rates[nonerp_idx].flags & IEEE80211_RATE_SUPPORTED) ||
--		!(sta->supp_rates & BIT(nonerp_idx))))
-+		!(supp & BIT(nonerp_idx))))
- 		nonerp_idx--;
- 	extra->nonerp = &mode->rates[nonerp_idx];
- 
-@@ -281,14 +293,19 @@ static void rate_control_simple_rate_ini
- {
- 	struct ieee80211_hw_mode *mode;
- 	int i;
-+	u32 supp;
-+
- 	sta->txrate = 0;
- 	mode = local->oper_hw_mode;
- 	/* TODO: what is a good starting rate for STA? About middle? Maybe not
- 	 * the lowest or the highest rate.. Could consider using RSSI from
- 	 * previous packets? Need to have IEEE 802.1X auth succeed immediately
- 	 * after assoc.. */
-+	supp = sta->supp_rates & sta->restricted_tx_rates;
-+	if (supp == 0)
-+		supp = sta->supp_rates;
- 	for (i = 0; i < mode->num_rates; i++) {
--		if ((sta->supp_rates & BIT(i)) &&
-+		if ((supp & BIT(i)) &&
- 		    (mode->rates[i].flags & IEEE80211_RATE_SUPPORTED))
- 			sta->txrate = i;
- 	}
-Index: wireless-dev/net/mac80211/sta_info.h
-===================================================================
---- wireless-dev.orig/net/mac80211/sta_info.h
-+++ wireless-dev/net/mac80211/sta_info.h
-@@ -58,6 +58,9 @@ struct sta_info {
- 	unsigned int wep_weak_iv_count; /* number of RX frames with weak IV */
- 
- 	unsigned long last_rx;
-+	u32 restricted_tx_rates; /* bitmap of user restricted tx rates in
-+				  * u.sta.restricted_tx_rates, if 0 use all
-+				  * available rates */
- 	u32 supp_rates; /* bitmap of supported rates in local->curr_rates */
- 	int txrate; /* index in local->curr_rates */
- 	int last_txrate; /* last rate used to send a frame to this STA */
+> it's only something Michael can test so far before other people have to
+> pick it up and test it.
+
+Theoretically: yes. Practically: No, due to the personal withdraws of the 
+latest cook.
+
+Michael in fact thinks that if he is producing code he can delegate everything 
+else to other people, replying "for me it works" like a parrot.
+
+In so far, not only the code itself is quite rude and crude, but the author of 
+the code is too, transforming the testing procedure into a torture due to the 
+author's (i. e. the latest cook's) proven personal and technical 
+incompetence. 
+
+> And that's where you come in, Uwe. 
+
+Yes.
+
+>
+> So both of you should actually just stop the name-calling, suck it up,
+> and debug the problem.  We're getting nothing done here.
+>
+> Dan
+
+You cannot debug the problem for the reasons that I already described, and I 
+will not spend my time with this crude stuff anymore.
+
+My proposal is: Gary Zambrowski should revise that code (the only one Cced 
+being employed at broadcom.com, the manufacturer).
+
+Until the job is done by Gary Andrew Morton should rip this stuff out of the 
+mm-tree for being rude, crude, immature.
+
+Uwe
+
+_______________________________________________________________
+SMS schreiben mit WEB.DE FreeMail - einfach, schnell und
+kostenguenstig. Jetzt gleich testen! http://f.web.de/?mc=021192
+
