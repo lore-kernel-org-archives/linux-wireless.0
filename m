@@ -1,68 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:52105 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753278AbXEKDCY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2007 23:02:24 -0400
-Subject: [PATCH 15/19] libertas: Clean up debug defines
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1178829040.6356.1.camel@localhost.localdomain>
-References: <1178829040.6356.1.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Thu, 10 May 2007 23:05:55 -0400
-Message-Id: <1178852755.8607.45.camel@localhost.localdomain>
+Received: from py-out-1112.google.com ([64.233.166.180]:29573 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752299AbXE0Ocf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 May 2007 10:32:35 -0400
+Received: by py-out-1112.google.com with SMTP id a73so2348719pye
+        for <linux-wireless@vger.kernel.org>; Sun, 27 May 2007 07:32:35 -0700 (PDT)
+Date: Sun, 27 May 2007 23:25:00 +0900
+From: Akinobu Mita <akinobu.mita@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	James Ketrenos <jketreno@linux.intel.com>
+Subject: [PATCH] ieee80211: fix incomplete error message
+Message-ID: <20070527142459.GA13087@APFDCB5C>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+Fix error message:
+Unable to network device. --> Unable to allocate network device.
+
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: James Ketrenos <jketreno@linux.intel.com>
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+
 ---
- drivers/net/wireless/libertas/Makefile |    8 --------
- drivers/net/wireless/libertas/defs.h   |    5 +++++
- 2 files changed, 5 insertions(+), 8 deletions(-)
+ net/ieee80211/ieee80211_module.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/libertas/Makefile b/drivers/net/wireless/libertas/Makefile
-index 19e38d9..56a8ea1 100644
---- a/drivers/net/wireless/libertas/Makefile
-+++ b/drivers/net/wireless/libertas/Makefile
-@@ -1,5 +1,3 @@
--# EXTRA_CFLAGS += -Wpacked
--
- usb8xxx-objs := main.o fw.o wext.o \
- 		rx.o tx.o cmd.o 	  \
- 		cmdresp.o scan.o	  \
-@@ -7,12 +5,6 @@ usb8xxx-objs := main.o fw.o wext.o \
- 		ioctl.o debugfs.o	  \
- 		ethtool.o assoc.o
+Index: 2.6-mm/net/ieee80211/ieee80211_module.c
+===================================================================
+--- 2.6-mm.orig/net/ieee80211/ieee80211_module.c
++++ 2.6-mm/net/ieee80211/ieee80211_module.c
+@@ -140,7 +140,7 @@ struct net_device *alloc_ieee80211(int s
  
--ifeq ($(CONFIG_LIBERTAS_USB_DEBUG), y)
--EXTRA_CFLAGS += -DDEBUG -DPROC_DEBUG
--endif
--
--
--#EXTRA_CFLAGS +=
- usb8xxx-objs += if_bootcmd.o
- usb8xxx-objs += if_usb.o
- 
-diff --git a/drivers/net/wireless/libertas/defs.h b/drivers/net/wireless/libertas/defs.h
-index 9156bbc..80dd9ea 100644
---- a/drivers/net/wireless/libertas/defs.h
-+++ b/drivers/net/wireless/libertas/defs.h
-@@ -9,6 +9,11 @@
- 
- extern unsigned int libertas_debug;
- 
-+#ifdef CONFIG_LIBERTAS_DEBUG
-+#define DEBUG
-+#define PROC_DEBUG
-+#endif
-+
- #define DRV_NAME		"usb8xxx"
- 
- #define lbs_pr_info(format, args...) \
--- 
-1.5.0.6
-
-
-
+ 	dev = alloc_etherdev(sizeof(struct ieee80211_device) + sizeof_priv);
+ 	if (!dev) {
+-		IEEE80211_ERROR("Unable to network device.\n");
++		IEEE80211_ERROR("Unable to allocate network device.\n");
+ 		goto failed;
+ 	}
+ 	ieee = netdev_priv(dev);
