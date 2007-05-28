@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41058 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755216AbXEMIWw (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:55159 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751620AbXE1Svw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 May 2007 04:22:52 -0400
-Subject: Re: [PATCH 1/2] Add 93cx6 eeprom library
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200705131013.15985.IvDoorn@gmail.com>
-References: <200705111559.41153.flamingice@sourmilk.net>
-	 <20070512191749.GA6018@tuxdriver.com>
-	 <200705131013.15985.IvDoorn@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZkRpsARFGJUph9NfZas4"
-Date: Sun, 13 May 2007 10:22:54 +0200
-Message-Id: <1179044574.2647.26.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 28 May 2007 14:51:52 -0400
+Message-ID: <465B24C5.6060401@lwfinger.net>
+Date: Mon, 28 May 2007 13:51:49 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Wu <flamingice@sourmilk.net>
+CC: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
+	mabbas@linux.intel.com
+Subject: Re: [RFC/T #2] mac80211: Implementation of SIOCSIWRATE
+References: <465a2d72.zG8j8542QjPLcafO%Larry.Finger@lwfinger.net> <200705280210.10893.flamingice@sourmilk.net>
+In-Reply-To: <200705280210.10893.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michael Wu wrote:
+> On Sunday 27 May 2007 18:16, Larry Finger wrote:
+>> From: mabbas <mabbas@linux.intel.com>
+>>
+>> The WEXT ioctl SIOCSIWRATE is not implemented in mac80211. This patch
+>> adds the missing routine. It supports the 'auto' keyword, fixed rates,
+>> and the combination of 'auto' and a fixed rate to select an upper bound.
+>>
+>> Signed-off-by: mabbas <mabbas@linux.intel.com>
+> Full name please.
 
---=-ZkRpsARFGJUph9NfZas4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm working on getting his name.
 
-On Sun, 2007-05-13 at 10:13 +0200, Ivo van Doorn wrote:
+>> Index: wireless-dev/net/mac80211/ieee80211_i.h
+>> ===================================================================
+>> --- wireless-dev.orig/net/mac80211/ieee80211_i.h
+>> +++ wireless-dev/net/mac80211/ieee80211_i.h
+>> @@ -269,6 +269,7 @@ struct ieee80211_if_sta {
+>>  	unsigned long ibss_join_req;
+>>  	struct sk_buff *probe_resp; /* ProbeResp template for IBSS */
+>>  	u32 supp_rates_bits;
+>> +	u32 restricted_tx_rates; /* bitmap of user restricted tx rate */
+>>
+> No. max_ratectrl_rateidx and force_unicast_rateidx can do everything you need. 
+> Look more carefully at how the rate control code works with those two fields. 
+> The only file that needs to be patched to add support for this is 
+> ieee80211_ioctl.c because this feature was always supported. (with 
+> non-standard prism2/hostap ioctls)
 
-> > > +}
-> > > +EXPORT_SYMBOL_GPL(eeprom_93cx6_multiread);
-> > > +
-> >=20
-> > It's pedantic, but I hate empty lines at the end of files...
->=20
-> GCC usually complains when a file does not have a empty line
-> at the end of the file.
+I think I understand now. I could see how the two existing variables can be used for the maximum 
+rate, but not for the range of rates implied when the 'auto' keyword of the iwconfig command is 
+used. Now I see that sta->supp_rates and sdata->u.sta.supp_rates_bits can be used for the necessary 
+bitmaps. I was reluctant to destroy them, but now I see that they will be rebuilt with later calls 
+to iwconfig.
 
-Nah, it only complains when the file ends with a character other than
-'\n', i.e. the last line has contents. This would be represented as
+I am testing the new version and will be sending it along later.
 
-+EXPORT_SYMBOL_GPL(eeprom_93cx6_multiread);
-+\ No newline at end of file
+Larry
 
-in a unified diff, where that "\ No newline at end of file" text is not
-part of the hunk (that is, the hunk linecount doesn't include it)
 
-:)
-
-johannes
-
---=-ZkRpsARFGJUph9NfZas4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGRsrd/ETPhpq3jKURAoc4AJwNmxjo1CwW1u7K6bSXPUoTdLNbJgCgiGBH
-iW4FJ8YgX/cwvdUPPPU2EfU=
-=fLT9
------END PGP SIGNATURE-----
-
---=-ZkRpsARFGJUph9NfZas4--
 
