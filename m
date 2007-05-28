@@ -1,48 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56578 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755877AbXEVXl2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2007 19:41:28 -0400
-Message-ID: <46537FA4.2040907@garzik.org>
-Date: Tue, 22 May 2007 19:41:24 -0400
-From: Jeff Garzik <jeff@garzik.org>
+Received: from mail3.sea5.speakeasy.net ([69.17.117.5]:58271 "EHLO
+	mail3.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752757AbXE1CvQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 May 2007 22:51:16 -0400
+Date: Sun, 27 May 2007 19:44:10 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>,
+	Christoph Hellwig <hch@infradead.org>, hostap@shmoo.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	akpm@linux-foundation.org
+Subject: Re: [PATCH 1/2] use list_for_each_entry() for iteration in hostap_ap.c
+Message-ID: <20070528024409.GV5416@jm.kir.nu>
+References: <20070525125630.GE31790@traven> <20070525130308.GF31790@traven> <20070525143005.GB10669@infradead.org> <20070527102824.GJ31790@traven>
 MIME-Version: 1.0
-To: James Ketrenos <jketreno@linux.intel.com>
-CC: Michael Wu <flamingice@sourmilk.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers
-References: <464B7B7C.5080800@linux.intel.com> <200705162151.32910.flamingice@sourmilk.net> <46534172.5040106@linux.intel.com> <46537603.6040208@garzik.org> <4653654F.1060708@linux.intel.com>
-In-Reply-To: <4653654F.1060708@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070527102824.GJ31790@traven>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-James Ketrenos wrote:
-> Jeff Garzik wrote:
->> James Ketrenos wrote:
->>> That said -- if the driver can execute in parallel to the stack for 
->>> some operations, shouldn't they remain on their own workqueues so the 
->>> work can be divided up vs. having *everything* routed through one 
->>> singlethread workqueue?
->>
->> Just because it -can-, does not mean it should.
->>
->> Unless there is a -proven- need for the operations to be parallel, you 
->> should avoid the burden of such complexity.
-> 
-> There is no additional complexity by having the driver create its own 
-> workqueue; it just calls create_workqueue during probe and 
-> destroy_workqueue during remove.
+On Sun, May 27, 2007 at 12:28:24PM +0200, Matthias Kaehlcke wrote:
 
-That is obviously false.  Ignoring the additional code and memory usage, 
-you must additionally evaluate the potential for deadlocks and races.
+> thanks for your comment, here's a patch that uses
+> list_for_each_entry(), additionally to the initial patch it
+> substitutes some list_for_each() loops by list_for_each_entry()
 
-And then there is the Linus mantra:  do what you must, and no more.  No 
-need for additional workqueues has been demonstrated.  (which I noticed 
-your response completely skipped -- an implicit admission of lack of need)
+Thanks! I added this to my list of patches for the driver.
 
-	Jeff
+Could you please send a Signed-off-by line for this later version of the
+patch? You did it for the first version, but just to be sure, it would
+be prefered to see this explicitly for each version.
 
-
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
