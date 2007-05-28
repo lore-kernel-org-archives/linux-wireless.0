@@ -1,38 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:44685 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754644AbXENPCB (ORCPT
+Received: from mail3.sea5.speakeasy.net ([69.17.117.5]:35309 "EHLO
+	mail3.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757631AbXE1Qm3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2007 11:02:01 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so1358713uga
-        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2007 08:01:53 -0700 (PDT)
-To: Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [PATCH v3 1/2] Add 93cx6 eeprom library
-Date: Mon, 14 May 2007 17:00:21 +0200
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200705140138.52596.flamingice@sourmilk.net> <a32f33a40705132349h367ba18aoa046d5583329ead@mail.gmail.com> <200705141056.01199.flamingice@sourmilk.net>
-In-Reply-To: <200705141056.01199.flamingice@sourmilk.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200705141700.21900.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Mon, 28 May 2007 12:42:29 -0400
+Message-Id: <20070528164202.620537050@localhost>
+References: <20070528163845.448090722@localhost>
+Date: Mon, 28 May 2007 09:38:49 -0700
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/4] hostap: Remove driver version number
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 14 May 2007 16:55, Michael Wu wrote:
-> On Monday 14 May 2007 02:49, Ivo Van Doorn wrote:
-> > For the record: I am still not happy with the removal of the udelay() from
-> > the pulse methods as they were indicated by the original Ralink code.
-> > But since I cannot test the effect on Ralink eeprom reading at this time,
-> > and I could otherwise just add it to the register_write handler if
-> > required, I am signing this off anyway.
-> >
-> The udelay is necessary to set a limit on how fast the eeprom is operated.. 
-> but not on all hardware, apparently. adm8211 just uses a read from the eeprom 
-> register to perform the delay.
+The driver version number has not been updated since the driver was
+included in the main kernel tree and there is no plan on updating this
+in the future either. At this point, the only correct way to refer to
+the version is to use the kernel version. The 0.4.4 version is
+confusing since there are external version with higher version number
+even though they are not actually any newer than the in-tree version.
 
-Ok, then I'll update rt2x00 to perform the delay during register_write as well. :)
+Let's get rid of the version number in the kernel tree in order to
+avoid this kind of confusion.
 
-Ivo
+Signed-off-by: Jouni Malinen <j@w1.fi>
+
+
+Index: linux-2.6/drivers/net/wireless/hostap/hostap_config.h
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/hostap/hostap_config.h
++++ linux-2.6/drivers/net/wireless/hostap/hostap_config.h
+@@ -1,8 +1,6 @@
+ #ifndef HOSTAP_CONFIG_H
+ #define HOSTAP_CONFIG_H
+ 
+-#define PRISM2_VERSION "0.4.4-kernel"
+-
+ /* In the previous versions of Host AP driver, support for user space version
+  * of IEEE 802.11 management (hostapd) used to be disabled in the default
+  * configuration. From now on, support for hostapd is always included and it is
+Index: linux-2.6/drivers/net/wireless/hostap/hostap_cs.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/hostap/hostap_cs.c
++++ linux-2.6/drivers/net/wireless/hostap/hostap_cs.c
+@@ -22,7 +22,6 @@
+ #include "hostap_wlan.h"
+ 
+ 
+-static char *version = PRISM2_VERSION " (Jouni Malinen <j@w1.fi>)";
+ static dev_info_t dev_info = "hostap_cs";
+ 
+ MODULE_AUTHOR("Jouni Malinen");
+@@ -30,7 +29,6 @@ MODULE_DESCRIPTION("Support for Intersil
+ 		   "cards (PC Card).");
+ MODULE_SUPPORTED_DEVICE("Intersil Prism2-based WLAN cards (PC Card)");
+ MODULE_LICENSE("GPL");
+-MODULE_VERSION(PRISM2_VERSION);
+ 
+ 
+ static int ignore_cis_vcc;
+@@ -910,14 +908,12 @@ static struct pcmcia_driver hostap_drive
+ 
+ static int __init init_prism2_pccard(void)
+ {
+-	printk(KERN_INFO "%s: %s\n", dev_info, version);
+ 	return pcmcia_register_driver(&hostap_driver);
+ }
+ 
+ static void __exit exit_prism2_pccard(void)
+ {
+ 	pcmcia_unregister_driver(&hostap_driver);
+-	printk(KERN_INFO "%s: Driver unloaded\n", dev_info);
+ }
+ 
+ 
+Index: linux-2.6/drivers/net/wireless/hostap/hostap_ioctl.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/hostap/hostap_ioctl.c
++++ linux-2.6/drivers/net/wireless/hostap/hostap_ioctl.c
+@@ -3893,8 +3893,6 @@ static void prism2_get_drvinfo(struct ne
+ 	local = iface->local;
+ 
+ 	strncpy(info->driver, "hostap", sizeof(info->driver) - 1);
+-	strncpy(info->version, PRISM2_VERSION,
+-		sizeof(info->version) - 1);
+ 	snprintf(info->fw_version, sizeof(info->fw_version) - 1,
+ 		 "%d.%d.%d", (local->sta_fw_ver >> 16) & 0xff,
+ 		 (local->sta_fw_ver >> 8) & 0xff,
+Index: linux-2.6/drivers/net/wireless/hostap/hostap_main.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/hostap/hostap_main.c
++++ linux-2.6/drivers/net/wireless/hostap/hostap_main.c
+@@ -37,7 +37,6 @@
+ MODULE_AUTHOR("Jouni Malinen");
+ MODULE_DESCRIPTION("Host AP common routines");
+ MODULE_LICENSE("GPL");
+-MODULE_VERSION(PRISM2_VERSION);
+ 
+ #define TX_TIMEOUT (2 * HZ)
+ 
+Index: linux-2.6/drivers/net/wireless/hostap/hostap_pci.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/hostap/hostap_pci.c
++++ linux-2.6/drivers/net/wireless/hostap/hostap_pci.c
+@@ -20,7 +20,6 @@
+ #include "hostap_wlan.h"
+ 
+ 
+-static char *version = PRISM2_VERSION " (Jouni Malinen <j@w1.fi>)";
+ static char *dev_info = "hostap_pci";
+ 
+ 
+@@ -29,7 +28,6 @@ MODULE_DESCRIPTION("Support for Intersil
+ 		   "PCI cards.");
+ MODULE_SUPPORTED_DEVICE("Intersil Prism2.5-based WLAN PCI cards");
+ MODULE_LICENSE("GPL");
+-MODULE_VERSION(PRISM2_VERSION);
+ 
+ 
+ /* struct local_info::hw_priv */
+@@ -462,8 +460,6 @@ static struct pci_driver prism2_pci_drv_
+ 
+ static int __init init_prism2_pci(void)
+ {
+-	printk(KERN_INFO "%s: %s\n", dev_info, version);
+-
+ 	return pci_register_driver(&prism2_pci_drv_id);
+ }
+ 
+@@ -471,7 +467,6 @@ static int __init init_prism2_pci(void)
+ static void __exit exit_prism2_pci(void)
+ {
+ 	pci_unregister_driver(&prism2_pci_drv_id);
+-	printk(KERN_INFO "%s: Driver unloaded\n", dev_info);
+ }
+ 
+ 
+Index: linux-2.6/drivers/net/wireless/hostap/hostap_plx.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/hostap/hostap_plx.c
++++ linux-2.6/drivers/net/wireless/hostap/hostap_plx.c
+@@ -23,7 +23,6 @@
+ #include "hostap_wlan.h"
+ 
+ 
+-static char *version = PRISM2_VERSION " (Jouni Malinen <j@w1.fi>)";
+ static char *dev_info = "hostap_plx";
+ 
+ 
+@@ -32,7 +31,6 @@ MODULE_DESCRIPTION("Support for Intersil
+ 		   "cards (PLX).");
+ MODULE_SUPPORTED_DEVICE("Intersil Prism2-based WLAN cards (PLX)");
+ MODULE_LICENSE("GPL");
+-MODULE_VERSION(PRISM2_VERSION);
+ 
+ 
+ static int ignore_cis;
+@@ -623,8 +621,6 @@ static struct pci_driver prism2_plx_drv_
+ 
+ static int __init init_prism2_plx(void)
+ {
+-	printk(KERN_INFO "%s: %s\n", dev_info, version);
+-
+ 	return pci_register_driver(&prism2_plx_drv_id);
+ }
+ 
+@@ -632,7 +628,6 @@ static int __init init_prism2_plx(void)
+ static void __exit exit_prism2_plx(void)
+ {
+ 	pci_unregister_driver(&prism2_plx_drv_id);
+-	printk(KERN_INFO "%s: Driver unloaded\n", dev_info);
+ }
+ 
+ 
+
+--
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
