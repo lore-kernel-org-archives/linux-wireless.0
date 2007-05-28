@@ -1,28 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:46205 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755241AbXENFPN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2007 01:15:13 -0400
-Date: Mon, 14 May 2007 13:14:56 +0800
-From: Zhu Yi <yi.zhu@intel.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [UPDATED] IEEE802.11e/WMM TS management and DLS support
-Message-ID: <20070514051456.GA25562@mail.intel.com>
-Reply-To: yi.zhu@intel.com
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:60746
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751434AbXE1AZV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 May 2007 20:25:21 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Maximilian Engelhardt <maxi@daemonizer.de>
+Subject: Re: b44: regression in 2.6.22 (resend)
+Date: Mon, 28 May 2007 02:24:40 +0200
+Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Stephen Hemminger <shemminger@linux-foundation.org>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+References: <20070525172431.60affaca@freepuppy> <200705272313.33129.mb@bu3sch.de> <200705280016.02776.maxi@daemonizer.de>
+In-Reply-To: <200705280016.02776.maxi@daemonizer.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200705280224.40506.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Ok, another question: On which CPU architecture are you?
 
-The following patches updated the IEEE802.11e/WMM patches submitted to
-netdev months before. Please apply.
-
-[PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
-[PATCH 2/3] mac80211: IEEE802.11e/WMM TS management and DLS support
-[PATCH 3/3] mac80211: debugfs support for TSM and DLS
-
-Thanks,
--yi
+-- 
+Greetings Michael.
