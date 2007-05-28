@@ -1,106 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:35866
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751515AbXEZV6j (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 17:58:39 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Uwe Bugla <uwe.bugla@gmx.de>
-Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-Date: Sat, 26 May 2007 23:58:29 +0200
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
+Received: from mga01.intel.com ([192.55.52.88]:55880 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759987AbXE1Bnp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 May 2007 21:43:45 -0400
+Date: Mon, 28 May 2007 09:43:16 +0800
+From: Zhu Yi <yi.zhu@intel.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>,
 	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-References: <20070524195616.234280@gmx.net> <200705262149.09948.mb@bu3sch.de> <200705262332.50640.uwe.bugla@gmx.de>
-In-Reply-To: <200705262332.50640.uwe.bugla@gmx.de>
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [PATCH 3/3] mac80211: debugfs support for TSM and DLS
+Message-ID: <20070528014316.GA416@mail.intel.com>
+Reply-To: yi.zhu@intel.com
+References: <20070525115244.GA23364@mail.intel.com> <20070525092008.287b5ecd.randy.dunlap@oracle.com> <200705251826.04821.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200705262358.30038.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200705251826.04821.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 26 May 2007 23:32:50 Uwe Bugla wrote:
-
-> Hint: Although being a "non-hacker" or "non-developer" I do have stepped 
-...
-> In so far, if you continue to state that debugging is nothing but guessing 
-> around wildly you are definitely wrong, showing us all your missing code 
-> hacker experience. If you DO continue like this every step will be a torture 
-> not only for me but for the reading folks as well.
-
-You REALLY want to tell me, a developer and maintainer of several
-big projects, how debugging is done, being a non-developer and non-hacker?
-I can't believe what I am reading here.
-
-> The fact that you simply ignored to imply those functions and continue to call 
-> other people dumb shows exactly how small and humble you are.
-
-Please quote me where I called someone dumb.
-Ah, yes. I am inhuman and whatever. We know that already.
-
-> Apart from that:
-> The message that you rooted to my place was no "proof" at all for any kind of 
-> disfunctionality or compatibility issue!
+On Fri, May 25, 2007 at 06:26:04PM +0200, Michael Buesch wrote:
+> On Friday 25 May 2007 18:20:08 Randy Dunlap wrote:
+> > On Fri, 25 May 2007 19:52:44 +0800 Zhu Yi wrote:
+> > 
+> > >  net/mac80211/debugfs_netdev.c |  332 +++++++++++++++++++++++++++++++++++++++++
+> > >  net/mac80211/ieee80211_i.h    |   33 ++++
+> > >  2 files changed, 365 insertions(+), 0 deletions(-)
+> > > 
+> > > diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+> > > index 9e39646..e0f77f9 100644
+> > > --- a/net/mac80211/debugfs_netdev.c
+> > > +++ b/net/mac80211/debugfs_netdev.c
+> > 
+> > > +#define DEBUGFS_QOS_DEL(name)						\
+> > > +	debugfs_remove(sdata->debugfs.sta.qos.name);			\
+> > > +	sdata->debugfs.sta.qos.name = NULL;
+> > 
+> > Enclose multi-line macros inside braces, or even better, inside
+> > 
+> > 	do {
+> > 		/* multi-lines */
+> > 	} while (0);
 > 
-> In that message the lack of performance of the "enclosed" or "old" 
-> or "complete" b44 module (i. e. PCI-only module) was criticised, NOT the one 
-> ripped by you personally into two modules called b44 and ssb.
+> Remove the semicolon.
 
-Ah, no? I think you didn't completely understand the mail.
-Steve reported a bug in b44 2.6.22. Please note that 2.6.22 does NOT include
-ssb. But I'm sure you'll find a way to make me responsible for
-this bug, anyway.
-b44 is buggy and this is NOT caused by ssb. Re-read steve's mail.
+I'd agree. But the existed DEBUGFS_DEL one also needs to be changed.
+Here is the patch against the "[PATCH 3/3] mac80211: debugfs support
+for TSM and DLS"
 
-> In so far I would deeply appreciate you personally to stick to the facts in 
-> your personal lack of knowledge about the b44 driver instead of playing bad 
-> politics against other people like me and others.
+Thanks,
+-yi
 
-Oh, poor poor guy.
-I lack knowledge about b44? Oh, I suppose that was a typo and you
-meant yourself.
 
-> Hello my dear Andrew Morton,
-> 
-> Could you please do me and the rest of the world two favours?
-> 
-> A. Rip Michael Buesches code out of the mm-tree
-> 
-> B. Give Michael Buesch a fair chance to revise his disfunctionable code 
-> outside the mm-tree and / or the vanilla mainline.
+>From 7886ec6ddcc25af5ba3d0284ea3ac7c99bb99da0 Mon Sep 17 00:00:00 2001
+From: Zhu Yi <yi.zhu@intel.com>
+Date: Mon, 28 May 2007 09:41:19 +0800
+Subject: [PATCH 4/4] mac80211: use do { } while (0) for multi-line macros
 
-Andrew, I see that you are in a bad situation now.
-I respect every decision you make. But please still
-consider that b44 works perfectly well for me. I tested it
-today on _all_ kernels that did not work for Uwe in this thread.
-On my device (BCM4401-B0) it works on all of these kernels.
+Use do { } while (0) for multi-line macros
 
-I'd suggest we leave the code in the -mm tree and wait for
-someone else to show up with a bugreport.
-It's simply impossible to debug this problem with the help of Uwe.
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ net/mac80211/debugfs_netdev.c |   26 +++++++++++++++++---------
+ 1 files changed, 17 insertions(+), 9 deletions(-)
 
-> C: calling all people simply dumb who do not know about his personal issues at 
-> all
-
-Please quote this, Uwe.
-
-> Thank you, Andrew Morton! You are real fine!
-> 
-> Sincerely
-> 
-> Uwe
-> 
-> 
-
-Uwe, I just added you to my killfile.
-Don't bother sending mail to me any longer. It will not arrive.
-I'm not interested in your stupid "bugreports" anymore, as they are
-useless and consist only of personal insults and
-personal miscreditations.
-Welcome to the killfile of yet another kernel developer.
-
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index e0f77f9..b9409ee 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -119,8 +119,10 @@ static const struct file_operations qos_ ##name## _ops = {		\
+ 		sdata, &qos_ ##name## _ops);
+ 
+ #define DEBUGFS_QOS_DEL(name)						\
+-	debugfs_remove(sdata->debugfs.sta.qos.name);			\
+-	sdata->debugfs.sta.qos.name = NULL;
++	do {								\
++		debugfs_remove(sdata->debugfs.sta.qos.name);		\
++		sdata->debugfs.sta.qos.name = NULL;			\
++	} while (0)
+ 
+ DEBUGFS_QOS_FILE(addts_11e, ieee80211_send_addts);
+ DEBUGFS_QOS_FILE(addts_wmm, wmm_send_addts);
+@@ -281,8 +283,10 @@ static const struct file_operations tsinfo_ ##_name## _ops = {		\
+ 				    sdata, &tsinfo_UP_ops);
+ 
+ #define DEBUGFS_TSINFO_DEL(name)					\
+-	debugfs_remove(sdata->debugfs.sta.tsinfo.name);			\
+-	sdata->debugfs.sta.tsinfo.name = NULL;
++	do {								\
++		debugfs_remove(sdata->debugfs.sta.tsinfo.name);		\
++		sdata->debugfs.sta.tsinfo.name = NULL;			\
++	} while (0)
+ 
+ DEBUGFS_TSINFO_FILE(TSID, 8, 15);
+ DEBUGFS_TSINFO_FILE(DIR, 0, 3);
+@@ -325,8 +329,10 @@ static const struct file_operations tspec_ ##name## _ops = {		\
+ 		0444, tspecd, sdata, &tspec_ ##name## _ops);
+ 
+ #define DEBUGFS_TSPEC_DEL(name)						\
+-	debugfs_remove(sdata->debugfs.sta.tspec.name);			\
+-	sdata->debugfs.sta.tspec.name = NULL;
++	do {								\
++		debugfs_remove(sdata->debugfs.sta.tspec.name);		\
++		sdata->debugfs.sta.tspec.name = NULL;			\
++	} while (0)
+ 
+ DEBUGFS_TSPEC_FILE(nominal_msdu_size);
+ DEBUGFS_TSPEC_FILE(max_msdu_size);
+@@ -569,9 +575,11 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
+ 	}
+ }
+ 
+-#define DEBUGFS_DEL(name, type)\
+-	debugfs_remove(sdata->debugfs.type.name);\
+-	sdata->debugfs.type.name = NULL;
++#define DEBUGFS_DEL(name, type)					\
++	do {							\
++		debugfs_remove(sdata->debugfs.type.name);	\
++		sdata->debugfs.type.name = NULL;		\
++	} while (0)
+ 
+ static void del_sta_files(struct ieee80211_sub_if_data *sdata)
+ {
 -- 
-Greetings Michael.
+1.5.0.rc2.g73a2
