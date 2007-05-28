@@ -1,96 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:31481 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753131AbXE0OfP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 May 2007 10:35:15 -0400
-Received: by py-out-1112.google.com with SMTP id a73so2349535pye
-        for <linux-wireless@vger.kernel.org>; Sun, 27 May 2007 07:35:15 -0700 (PDT)
-Date: Sun, 27 May 2007 23:27:40 +0900
-From: Akinobu Mita <akinobu.mita@gmail.com>
+Received: from smtp2.it.da.ut.ee ([193.40.5.67]:32880 "EHLO smtp2.it.da.ut.ee"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761338AbXE1JMo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 May 2007 05:12:44 -0400
+Received: from math.ut.ee (math.ut.ee [193.40.36.2])
+	by smtp2.it.da.ut.ee (Postfix) with ESMTP id 109E04C037BB
+	for <linux-wireless@vger.kernel.org>; Mon, 28 May 2007 11:45:26 +0300 (EEST)
+Received: from localhost (localhost [127.0.0.1])
+	by math.ut.ee (Postfix) with ESMTP id 07FFA6ADEB
+	for <linux-wireless@vger.kernel.org>; Mon, 28 May 2007 11:45:26 +0300 (EEST)
+Date: Mon, 28 May 2007 11:45:25 +0300 (EEST)
+From: Meelis Roos <mroos@linux.ee>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Joe Jezak <josejx@gentoo.org>, Daniel Drake <dsd@gentoo.org>
-Subject: [PATCH] softmac: use list_for_each_entry
-Message-ID: <20070527142740.GB13105@APFDCB5C>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: libertas 64-bit warning
+Message-ID: <Pine.SOC.4.64.0705281143380.1596@math>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup using list_for_each_entry.
+While compiling libertas on sparc64 for test:
 
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Joe Jezak <josejx@gentoo.org>
-Cc: Daniel Drake <dsd@gentoo.org>
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+  CC [M]  drivers/net/wireless/libertas/debugfs.o
+drivers/net/wireless/libertas/debugfs.c: In function 'libertas_getscantable':
+drivers/net/wireless/libertas/debugfs.c:92: warning: format '%08llx' expects type 'long long unsigned int', but argument 4 has type '__le64'
+drivers/net/wireless/libertas/debugfs.c:92: warning: format '%08llx' expects type 'long long unsigned int', but argument 4 has type '__le64'
 
----
- net/ieee80211/softmac/ieee80211softmac_module.c |   32 ++++++++----------------
- 1 file changed, 11 insertions(+), 21 deletions(-)
+Looks like wrong format string specifier.
 
-Index: 2.6-mm/net/ieee80211/softmac/ieee80211softmac_module.c
-===================================================================
---- 2.6-mm.orig/net/ieee80211/softmac/ieee80211softmac_module.c
-+++ 2.6-mm/net/ieee80211/softmac/ieee80211softmac_module.c
-@@ -456,18 +456,13 @@ void
- ieee80211softmac_add_network_locked(struct ieee80211softmac_device *mac,
- 	struct ieee80211softmac_network *add_net)
- {
--	struct list_head *list_ptr;
--	struct ieee80211softmac_network *softmac_net = NULL;
-+	struct ieee80211softmac_network *softmac_net;
- 
--	list_for_each(list_ptr, &mac->network_list) {
--		softmac_net = list_entry(list_ptr, struct ieee80211softmac_network, list);
-+	list_for_each_entry(softmac_net, &mac->network_list, list) {
- 		if(!memcmp(softmac_net->bssid, add_net->bssid, ETH_ALEN))
--			break;
--		else
--			softmac_net = NULL;
-+			return;
- 	}
--	if(softmac_net == NULL)
--		list_add(&(add_net->list), &mac->network_list);
-+	list_add(&(add_net->list), &mac->network_list);
- }
- 
- /* Add a network to the list, with locking */
-@@ -506,16 +501,13 @@ struct ieee80211softmac_network *
- ieee80211softmac_get_network_by_bssid_locked(struct ieee80211softmac_device *mac,
- 	u8 *bssid)
- {
--	struct list_head *list_ptr;
--	struct ieee80211softmac_network *softmac_net = NULL;
--	list_for_each(list_ptr, &mac->network_list) {
--		softmac_net = list_entry(list_ptr, struct ieee80211softmac_network, list);
-+	struct ieee80211softmac_network *softmac_net;
-+
-+	list_for_each_entry(softmac_net, &mac->network_list, list) {
- 		if(!memcmp(softmac_net->bssid, bssid, ETH_ALEN))
--			break;
--		else
--			softmac_net = NULL;
-+			return softmac_net;
- 	}
--	return softmac_net;
-+	return NULL;
- }
- 
- /* Get a network from the list by BSSID with locking */
-@@ -537,11 +529,9 @@ struct ieee80211softmac_network *
- ieee80211softmac_get_network_by_essid_locked(struct ieee80211softmac_device *mac,
- 	struct ieee80211softmac_essid *essid)
- {
--	struct list_head *list_ptr;
--	struct ieee80211softmac_network *softmac_net = NULL;
-+	struct ieee80211softmac_network *softmac_net;
- 
--	list_for_each(list_ptr, &mac->network_list) {
--		softmac_net = list_entry(list_ptr, struct ieee80211softmac_network, list);
-+	list_for_each_entry(softmac_net, &mac->network_list, list) {
- 		if (softmac_net->essid.len == essid->len &&
- 			!memcmp(softmac_net->essid.data, essid->data, essid->len))
- 			return softmac_net;
+-- 
+Meelis Roos (mroos@linux.ee)
