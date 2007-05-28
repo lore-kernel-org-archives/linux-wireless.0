@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:54150 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757790AbXEVTwc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2007 15:52:32 -0400
-Message-ID: <46533683.2030304@linux.intel.com>
-Date: Tue, 22 May 2007 11:29:23 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Randy Dunlap <randy.dunlap@oracle.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers
-References: <464B7B7C.5080800@linux.intel.com> <20070516182700.912a21ed.randy.dunlap@oracle.com> <464DF7FC.5070702@linux.intel.com> <20070518140619.a7e30a56.randy.dunlap@oracle.com> <20070522183956.GB5993@tuxdriver.com>
-In-Reply-To: <20070522183956.GB5993@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from www.osadl.org ([213.239.205.134]:59760 "EHLO mail.tglx.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751554AbXE1TXw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 May 2007 15:23:52 -0400
+Subject: Re: b44: regression in 2.6.22 (resend)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Maximilian Engelhardt <maxi@daemonizer.de>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Hemminger <shemminger@linux-foundation.org>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+In-Reply-To: <200705281944.05030.maxi@daemonizer.de>
+References: <20070525172431.60affaca@freepuppy>
+	 <200705281714.25841.mb@bu3sch.de> <1180366371.4952.5.camel@chaos>
+	 <200705281944.05030.maxi@daemonizer.de>
+Content-Type: text/plain
+Date: Mon, 28 May 2007 21:23:50 +0200
+Message-Id: <1180380230.3657.3.camel@chaos>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Fri, May 18, 2007 at 02:06:19PM -0700, Randy Dunlap wrote:
->> On Fri, 18 May 2007 12:01:16 -0700 James Ketrenos wrote:
->>
->>> Randy Dunlap wrote:
->>>>> 	http://intellinuxwireless.org/iwlwifi/0001-Add-iwlwifi-wireless-drivers.patch
->>>> Some comments/review, mostly not-code-related:
->>>>
->>> Here is the current status (everything not described below has been fixed in GIT, and is available in the patch at http://intellinuxwireless.org/iwlwifi/0001-v2-Add-iwlwifi-wireless-drivers.patch:
->>>
->> [specific updates clipped]
->>
->>> Are you OK with iwlwifi addressing the above post-merge into wireless-dev?
->> /me points to Mr. Linville.  :)
+On Mon, 2007-05-28 at 19:44 +0200, Maximilian Engelhardt wrote:
+> > Can you please keep CONFIG_HIGH_RES_TIMERS and CONFIG_NOHZ and try the
+> > following combinations on the kernel command line:
+> >
+> > 1) highres=off nohz=off (should be the same as your working config)
+> > 2) highres=off
+> > 3) nohz=off
 > 
-> I'm happy to take it into wireless-dev at this point.
+> I tested this with my 2.6.22-rc3 kernel, here are the results:
 > 
-> James, will you be posting an updated patch?
+> without any special boot parameters: problem does appear
+> highres=off nohz=off: problem does not appear
+> highres=off: problem does not appear
+> nohz=off: problem does appear
 
-Yes.  I'm testing the code w/ the bitfield usage removed and finishing up a few of the items from Michael's list.  By end of day today I hope to have an updated patch for you.
+Is there any other strange behavior of the high res enabled kernel than
+the b44 problem ?
 
-Thanks,
-James
+> I additionally built my 2.6.22-rc2-mm1 kernel without High Resolution Timer, 
+> but the high ping problem is still there.
+
+Hmm, that's mysterious. Wild guess is that highres exposes the hidden
+"feature" in a different way than rc2-mm1 does.
+
+	tglx
+
+
