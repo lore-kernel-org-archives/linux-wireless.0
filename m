@@ -1,61 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:48085 "EHLO maili.marvell.com"
+Received: from www.osadl.org ([213.239.205.134]:57827 "EHLO mail.tglx.de"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1759156AbXEOJgN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2007 05:36:13 -0400
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [PATCH] mac80211: fail back to use associate from reassociate
-Date: Tue, 15 May 2007 02:36:12 -0700
-Message-ID: <9C9B2DC3D78A6142AC8D10C89669528603F63BAC@msiexch01.marvell.com>
-In-Reply-To: <1179211965.3045.170.camel@debian.sh.intel.com>
-References: <20070509054152.GA30839@mail.intel.com> <20070509152855.GB941@devicescape.com> <1178767250.3045.36.camel@debian.sh.intel.com> <9C9B2DC3D78A6142AC8D10C89669528603F63B68@msiexch01.marvell.com> <1179211965.3045.170.camel@debian.sh.intel.com>
-From: "Sandesh Goel" <sgoel@marvell.com>
-To: "Zhu Yi" <yi.zhu@intel.com>
-Cc: "Jouni Malinen" <jkm@devicescape.com>,
-	<linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
+	id S1750900AbXE1Pcy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 May 2007 11:32:54 -0400
+Subject: Re: b44: regression in 2.6.22 (resend)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Maximilian Engelhardt <maxi@daemonizer.de>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Hemminger <shemminger@linux-foundation.org>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+In-Reply-To: <200705281714.25841.mb@bu3sch.de>
+References: <20070525172431.60affaca@freepuppy>
+	 <200705281216.51690.mb@bu3sch.de> <200705281609.49859.maxi@daemonizer.de>
+	 <200705281714.25841.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Mon, 28 May 2007 17:32:51 +0200
+Message-Id: <1180366371.4952.5.camel@chaos>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2007-05-28 at 17:14 +0200, Michael Buesch wrote:
+> > The -oldconfig1 is the kernel that had no problems and the other shows the b44 
+> > problem. So if High Resolution Timer Support is disabled everything works 
+> > fine and if I enable it the problems do appear again.
+> > 
+> > I didn't test this on my 2.6.22-rc3 kernel yet, but I guess disabling High 
+> > Resolution Timer Support will also solve the problem there.
+> > 
+> > The older kernels I tried also work perfectly fine and they didn't have the 
+> > High Resolution Timer Support yet.
+> 
+> So, that's interesting, indeed.
+> Any idea what's going on, someone? Thomas?
 
+Not off the top of my head.
 
------Original Message-----
-From: Zhu Yi [mailto:yi.zhu@intel.com] 
-Sent: Tuesday, May 15, 2007 12:23 PM
-To: Sandesh Goel
-Cc: Jouni Malinen; linux-wireless@vger.kernel.org; John W. Linville
-Subject: RE: [PATCH] mac80211: fail back to use associate from
-reassociate
+Maximilian, does the kernel work otherwise (I mean aside of the b44
+driver) ? 
 
-On Mon, 2007-05-14 at 22:41 -0700, Sandesh Goel wrote:
-> Therefore, the AP should not return the said error code
-> (WLAN_STATUS_REASSOC_NO_ASSOC) unless it has checked (using some inter
-> AP protocol) that no other AP in the ESS has an existing association
-> with the requesting STA. If the AP is returning the error without
-> doing this check, I would think that it is an AP bug. 
+Can you please keep CONFIG_HIGH_RES_TIMERS and CONFIG_NOHZ and try the
+following combinations on the kernel command line:
 
-The AP was the only one in the ESS, so it should be OK.
-[Sandesh] 
-[Sandesh] How does the AP know that it is the only one in the ESS? It
-can't surely assume that. Is it configured with this information? Did it
-try to find out if there are other APs in the ESS? E.g. would it behave
-differently if you setup another AP in your ESS?
+1) highres=off nohz=off (should be the same as your working config)
+2) highres=off
+3) nohz=off
 
-> It would be interesting to know which AP behaves in this way and
-> whether
-> is really does the check correctly or not. Note that the AP itself
-> having rebooted shouldn't cause this error code to be returned, which
-> is what I found strange. 
-
-Do you mean the AP should remember all its associated STAs before it
-rebooted?
-[Sandesh] 
-[Sandesh] I didn't say that AP needs to remember that. However, it
-should honor the reassoc request if it is not sure about whether the
-requesting STA was associated in the ESS or not.
+Michael, is anything in the b44 driver timer driven ?
 
 Thanks,
--yi
+
+	tglx
+
+
