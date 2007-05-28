@@ -1,29 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:47598 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754228AbXEYLwI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2007 07:52:08 -0400
-Date: Fri, 25 May 2007 19:52:05 +0800
-From: Zhu Yi <yi.zhu@intel.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: [TAKE 2][PATCH 0/3] IEEE802.11e/WMM TS management and DLS support
-Message-ID: <20070525115205.GA23301@mail.intel.com>
-Reply-To: yi.zhu@intel.com
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:43451
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750746AbXE1Poi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 May 2007 11:44:38 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Stephen Hemminger <shemminger@linux-foundation.org>
+Subject: Re: b44: regression in 2.6.22 (resend)
+Date: Mon, 28 May 2007 17:43:31 +0200
+Cc: Maximilian Engelhardt <maxi@daemonizer.de>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+References: <20070525172431.60affaca@freepuppy> <200705281714.25841.mb@bu3sch.de> <1180366371.4952.5.camel@chaos>
+In-Reply-To: <1180366371.4952.5.camel@chaos>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-Id: <200705281743.32134.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Monday 28 May 2007 17:32:51 Thomas Gleixner wrote:
+> On Mon, 2007-05-28 at 17:14 +0200, Michael Buesch wrote:
+> > > The -oldconfig1 is the kernel that had no problems and the other shows the b44 
+> > > problem. So if High Resolution Timer Support is disabled everything works 
+> > > fine and if I enable it the problems do appear again.
+> > > 
+> > > I didn't test this on my 2.6.22-rc3 kernel yet, but I guess disabling High 
+> > > Resolution Timer Support will also solve the problem there.
+> > > 
+> > > The older kernels I tried also work perfectly fine and they didn't have the 
+> > > High Resolution Timer Support yet.
+> > 
+> > So, that's interesting, indeed.
+> > Any idea what's going on, someone? Thomas?
+> 
+> Not off the top of my head.
+> 
+> Maximilian, does the kernel work otherwise (I mean aside of the b44
+> driver) ? 
+> 
+> Can you please keep CONFIG_HIGH_RES_TIMERS and CONFIG_NOHZ and try the
+> following combinations on the kernel command line:
+> 
+> 1) highres=off nohz=off (should be the same as your working config)
+> 2) highres=off
+> 3) nohz=off
+> 
+> Michael, is anything in the b44 driver timer driven ?
 
-The following patches updated my previous IEEE802.11e/WMM patches
-based on the comments from Michael Wu. Please apply.
+NAPI perhaps. I don't know. Steve may know.
 
-[PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
-[PATCH 2/3] mac80211: IEEE802.11e/WMM TS management and DLS support
-[PATCH 3/3] mac80211: debugfs support for TSM and DLS
+The only timer in b44 is to update stats every second. I doubt
+that this can cause such an issue. It's not involved in transmission.
 
-Thanks,
--yi
+-- 
+Greetings Michael.
