@@ -1,60 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:11084 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.173]:37933 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755948AbXEMIOr (ORCPT
+	with ESMTP id S1751830AbXE2Mxt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 May 2007 04:14:47 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so1118426uga
-        for <linux-wireless@vger.kernel.org>; Sun, 13 May 2007 01:14:45 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 1/2] Add 93cx6 eeprom library
-Date: Sun, 13 May 2007 10:13:15 +0200
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-References: <200705111559.41153.flamingice@sourmilk.net> <20070512191749.GA6018@tuxdriver.com>
-In-Reply-To: <20070512191749.GA6018@tuxdriver.com>
+	Tue, 29 May 2007 08:53:49 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so1851514ugf
+        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2007 05:53:47 -0700 (PDT)
+Message-ID: <465C2253.4070307@googlemail.com>
+Date: Tue, 29 May 2007 14:53:39 +0200
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200705131013.15985.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org,
+	Ben Collins <bcollins@ubuntu.com>, yoshfuji@linux-ipv6.org,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	linux-wireless@vger.kernel.org, developers@islsm.org,
+	=?ISO-8859-2?Q?Bj=F6rn_Steinbrink?= <B.Steinbrink@gmx.de>,
+	linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>,
+	Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>,
+	Francis Russell <francisrussell@btopenworld.com>,
+	Alan Cox <alan@redhat.com>, sparclinux@vger.kernel.org,
+	David Miller <davem@davemloft.net>,
+	"Horst H. von Brand" <vonbrand@inf.utfsm.cl>
+Subject: Re: [2/3] 2.6.22-rc3: known regressions with patches
+References: <465C203A.1020200@googlemail.com>
+In-Reply-To: <465C203A.1020200@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-2
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 12 May 2007 21:17, John W. Linville wrote:
-> On Fri, May 11, 2007 at 03:59:40PM -0400, Michael Wu wrote:
-> 
-> > +static inline void eeprom_93cx6_pulse_high(struct eeprom_93cx6 *eeprom)
-> > +{
-> > +	eeprom->reg_data_clock = 1;
-> > +	eeprom->register_write(eeprom);
-> > +	udelay(1);
-> > +}
-> > +
-> > +static inline void eeprom_93cx6_pulse_low(struct eeprom_93cx6 *eeprom)
-> > +{
-> > +	eeprom->reg_data_clock = 0;
-> > +	eeprom->register_write(eeprom);
-> > +	udelay(1);
-> > +}
-> 
-> I'm with Jeff, these udelay's should go.  If they belong anywhere, it
-> would be in the write routines provided by the caller.  For example, the
-> routines provided by rtl8187 already have a delay in them.  Other
-> hardware might actually have a hardware timer to implement delays (hey,
-> it's possible).  Either way, this delay is superfluous.
+Hi all,
 
-This udelay() was taken from the original implementation by Ralink,
-They didn't place a comment about why the udelay should be there,
-but apparently they did it for some reason...
+Here is a list of some known regressions in 2.6.22-rc3
+with patches available.
 
-> > +}
-> > +EXPORT_SYMBOL_GPL(eeprom_93cx6_multiread);
-> > +
-> 
-> It's pedantic, but I hate empty lines at the end of files...
+=46eel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
 
-GCC usually complains when a file does not have a empty line
-at the end of the file.
 
-Ivo
+
+Networking
+
+Subject    : Oops with prism54 in 2.6.22-rc3
+References : http://lkml.org/lkml/2007/5/26/54
+Submitter  : Maximilian Engelhardt <maxi@daemonizer.de>
+Handled-By : Bj=F6rn Steinbrink <B.Steinbrink@gmx.de>=20
+Patch      : http://lkml.org/lkml/2007/5/27/182
+Status     : patch available
+
+
+Subject    : OOPS triggered by ip(8) deconfiguring a network interface
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8491
+Submitter  : Ben Collins <bcollins@ubuntu.com>
+Patch      : http://marc.info/?l=3Dlinux-netdev&m=3D117915849224816&w=3D=
+2
+             commit 5632c5152aa621885d87ea0b8fdd5a6bb9f69c6f
+Status     : bug probably fixed
+
+SATA/PATA
+
+Subject    : pata_via appears to incorrectly detects 40-pin cable
+References : http://lkml.org/lkml/2007/5/17/273
+Submitter  : Francis Russell <francisrussell@btopenworld.com>
+Status     : Not really a regression. Alan seems to have a general fix.
+             (Tejun Heo)
+
+Subject    : libata reset-seq merge broke sata_sil on sh
+References : http://lkml.org/lkml/2007/5/10/63
+Submitter  : Paul Mundt <lethal@linux-sh.org>
+Handled-By : Tejun Heo <htejun@gmail.com>
+Caused-By  : commit 4750def52cb2c21732dda9aa1d43a07db37b0186
+Patch      : http://lkml.org/lkml/2007/5/19/161
+Status     : patch available
+
+
+
+Sparc64
+
+Subject    : arch/sparc64/time.c doesn't compile on Ultra 1 (no PCI)
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8540
+Submitter  : Horst H. von Brand <vonbrand@inf.utfsm.cl>
+Status     : patch available
+
+
+
+Regards,
+Michal
+
+--
+"Najbardziej brakowa=B3o mi twojego milczenia."
+-- Andrzej Sapkowski "Co=B6 wi=EAcej"
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
