@@ -1,66 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3222 "EHLO ra.tuxdriver.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1569 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755911AbXERScw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2007 14:32:52 -0400
-Date: Fri, 18 May 2007 14:09:03 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Florin Malita <fmalita@gmail.com>
-Cc: marcelo@kvack.org, linville@redhat.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas: skb dereferenced after netif_rx
-Message-ID: <20070518180903.GC3492@tuxdriver.com>
-References: <464B7127.5080502@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <464B7127.5080502@gmail.com>
+	id S1750699AbXE2PV2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2007 11:21:28 -0400
+Subject: Re: b44: regression in 2.6.22 (resend)
+From: "Gary Zambrano" <zambrano@broadcom.com>
+To: "Maximilian Engelhardt" <maxi@daemonizer.de>
+cc: "Thomas Gleixner" <tglx@linutronix.de>,
+	"Michael Buesch" <mb@bu3sch.de>,
+	"linux-kernel" <linux-kernel@vger.kernel.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"Stephen Hemminger" <shemminger@linux-foundation.org>,
+	"Arnaldo Carvalho de Melo" <acme@ghostprotocols.net>,
+	"Jeff Garzik" <jgarzik@pobox.com>, netdev@vger.kernel.org,
+	"Andrew Morton" <akpm@linux-foundation.org>
+In-Reply-To: <200705282255.56490.maxi@daemonizer.de>
+References: <20070525172431.60affaca@freepuppy>
+ <200705281944.05030.maxi@daemonizer.de> <1180380230.3657.3.camel@chaos>
+ <200705282255.56490.maxi@daemonizer.de>
+Date: Tue, 29 May 2007 06:58:43 -0700
+Message-ID: <1180447123.17146.4.camel@dhcp-10-12-136-115.broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 16, 2007 at 05:01:27PM -0400, Florin Malita wrote:
-> In libertas_process_rxed_packet() and process_rxed_802_11_packet() the 
-> skb is dereferenced after being passed to netif_rx (called from 
-> libertas_upload_rx_packet). Spotted by Coverity (1658, 1659).
- 
-Relocating the libertas_upload_rx_packet call is fine, but...
-
-> Also, libertas_upload_rx_packet() unconditionally returns 0 so the error 
-> check is dead code - might as well take it out.
-
-Is this merely an implementation detail?  Or an absolute fact?
-If the former is true, then we should preserve the error
-checking.  If the latter, then we should change the signature of
-libertas_upload_rx_packet to return void.
-
-> Signed-off-by: Florin Malita <fmalita@gmail.com>
-
-> 	lbs_pr_debug(1, "RX Data: size of actual packet = %d\n", skb->len);
-> -	if (libertas_upload_rx_packet(priv, skb)) {
-> -		lbs_pr_debug(1, "RX error: libertas_upload_rx_packet"
-> -		       " returns failure\n");
-> -		ret = -1;
-> -		goto done;
-> -	}
-> 	priv->stats.rx_bytes += skb->len;
-> 	priv->stats.rx_packets++;
+On Mon, 2007-05-28 at 13:55 -0700, Maximilian Engelhardt wrote:
+> On Monday 28 May 2007, Thomas Gleixner wrote:
+> > On Mon, 2007-05-28 at 19:44 +0200, Maximilian Engelhardt wrote:
+> > > > Can you please keep CONFIG_HIGH_RES_TIMERS and CONFIG_NOHZ and try the
+> > > > following combinations on the kernel command line:
+> > > >
+> > > > 1) highres=off nohz=off (should be the same as your working config)
+> > > > 2) highres=off
+> > > > 3) nohz=off
+> > >
+> > > I tested this with my 2.6.22-rc3 kernel, here are the results:
+> > >
+> > > without any special boot parameters: problem does appear
+> > > highres=off nohz=off: problem does not appear
+> > > highres=off: problem does not appear
+> > > nohz=off: problem does appear
+> >
+> > Is there any other strange behavior of the high res enabled kernel than
+> > the b44 problem ?
 > 
-> +	libertas_upload_rx_packet(priv, skb);
-> +
-> 	ret = 0;
-> done:
-> 	LEAVE();
+> I didn't notice anything.
+> 
+> >
+> > > I additionally built my 2.6.22-rc2-mm1 kernel without High Resolution
+> > > Timer, but the high ping problem is still there.
+> >
+> > Hmm, that's mysterious. Wild guess is that highres exposes the hidden
+> > "feature" in a different way than rc2-mm1 does.
+> 
+> I think the bug in 2.6.21/22-rc3 is a different one that the one in 
+> 2.6.22-rc2-mm1, but that's also only a wild guess :)
+> 
+> I'll explain this a bit:
+> In 2.6.21/22-rc3 is the same b44 driver that has been in the stock kernels for 
+> some time. With this driver and High Resolution Timer turned on I get 
+> problems using iperf. The problems are that the systems becomes really slow 
+> and unresponsive.  Michael Buesch thought this could be an IRQ storm which 
+> sounds logical to me. This bug did never happen to me before I startet the 
+> iperf test.
 
-Another potential patch is to remove the "ret = 0" line before the
-"done" label, since ret is initialized at the head of the function.
-Come to think of it, you can probably remove the "= 0" part of ret's
-declaration as well (in both functions).
 
-Hth!
+Can you please check to see if you notice anything out of the ordinary
+using netperf in place of iperf in your high res timer on/off testbed?
 
-John
+Thanks,
+Gary
 
-P.S.  Also, please make sure to send wireless patches to
-linux-wireless@vger.kernel.org and CC me.
--- 
-John W. Linville
-linville@tuxdriver.com
+
+
+
+
+
+
