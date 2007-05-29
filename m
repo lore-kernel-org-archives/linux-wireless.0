@@ -1,72 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:8641 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756579AbXEPW45 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2007 18:56:57 -0400
-Message-ID: <464B7B7C.5080800@linux.intel.com>
-Date: Wed, 16 May 2007 14:45:32 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:2602 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751000AbXE2W72 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2007 18:59:28 -0400
+Subject: Re: b44: regression in 2.6.22 (resend)
+From: "Gary Zambrano" <zambrano@broadcom.com>
+To: "Jeff Garzik" <jgarzik@pobox.com>
+cc: "Michael Buesch" <mb@bu3sch.de>,
+	"Maximilian Engelhardt" <maxi@daemonizer.de>,
+	"linux-kernel" <linux-kernel@vger.kernel.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"Stephen Hemminger" <shemminger@linux-foundation.org>,
+	"Arnaldo Carvalho de Melo" <acme@ghostprotocols.net>,
+	netdev@vger.kernel.org, "Andrew Morton" <akpm@linux-foundation.org>
+In-Reply-To: <465CABA3.10003@pobox.com>
+References: <20070525172431.60affaca@freepuppy>
+ <200705281655.15105.mb@bu3sch.de>
+ <1180448075.17146.12.camel@dhcp-10-12-136-115.broadcom.com>
+ <200705292245.22940.mb@bu3sch.de>
+ <1180472741.17711.19.camel@dhcp-10-12-136-115.broadcom.com>
+ <465CABA3.10003@pobox.com>
+Date: Tue, 29 May 2007 14:36:51 -0700
+Message-ID: <1180474611.17711.26.camel@dhcp-10-12-136-115.broadcom.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH]  Add iwlwifi wireless drivers
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the iwlwifi project directory and sources needed to 
-build the mac80211 based wireless drivers for the Intel PRO/Wireless 
-3945ABG/BG Network Connection and Intel Wireless WiFi Link AGN adapters.
+On Tue, 2007-05-29 at 18:39 -0400, Jeff Garzik wrote:
 
-Signed-off-by: James Ketrenos <jketreno@linux.intel.com>
----
- drivers/net/wireless/mac80211/Kconfig              |    1 +
- drivers/net/wireless/mac80211/Makefile             |    1 +
- drivers/net/wireless/mac80211/iwlwifi/Kconfig      |   96 +
- drivers/net/wireless/mac80211/iwlwifi/Makefile     |   27 +
- drivers/net/wireless/mac80211/iwlwifi/base.c       | 8146 ++++++++++++++++++++
- .../net/wireless/mac80211/iwlwifi/iwl-3945-hw.h    |   88 +
- .../net/wireless/mac80211/iwlwifi/iwl-3945-rs.h    |  175 +
- drivers/net/wireless/mac80211/iwlwifi/iwl-3945.c   | 2389 ++++++
- drivers/net/wireless/mac80211/iwlwifi/iwl-3945.h   |   54 +
- .../net/wireless/mac80211/iwlwifi/iwl-4965-hw.h    |  909 +++
- drivers/net/wireless/mac80211/iwlwifi/iwl-4965.c   | 3637 +++++++++
- drivers/net/wireless/mac80211/iwlwifi/iwl-4965.h   |  177 +
- .../net/wireless/mac80211/iwlwifi/iwl-channel.h    |  164 +
- .../net/wireless/mac80211/iwlwifi/iwl-commands.h   |  664 ++
- drivers/net/wireless/mac80211/iwlwifi/iwl-debug.h  |  141 +
- drivers/net/wireless/mac80211/iwlwifi/iwl-eeprom.h |  325 +
- .../net/wireless/mac80211/iwlwifi/iwl-helpers.h    |  250 +
- drivers/net/wireless/mac80211/iwlwifi/iwl-hw.h     | 1490 ++++
- drivers/net/wireless/mac80211/iwlwifi/iwl-io.h     |  454 ++
- drivers/net/wireless/mac80211/iwlwifi/iwl-priv.h   |  344 +
- .../net/wireless/mac80211/iwlwifi/iwl-spectrum.h   |   91 +
- drivers/net/wireless/mac80211/iwlwifi/iwlwifi.h    |  665 ++
- 22 files changed, 20288 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/Kconfig
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/Makefile
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/base.c
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-3945-hw.h
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-3945-rs.h
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-3945.c
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-3945.h
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-4965-hw.h
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-4965.c
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-4965.h
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-channel.h
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-commands.h
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-debug.h
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-eeprom.h
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-helpers.h
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-hw.h
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-io.h
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-priv.h
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwl-spectrum.h
- create mode 100644 drivers/net/wireless/mac80211/iwlwifi/iwlwifi.h
+> We check for 0xffffffff because that is often how a fault is indicated, 
+> when the memory location is read during or immediately after hotplug (or 
+> if the PCI bus is truly faulty).  So for most hardware, you see
+> 
+> tmp = read(irq status)
+> if (!tmp)
+> 	return irq-none		/* no irq events raised */
+> if (tmp == 0xffffffff)
+> 	return irq-none		/* hot unplug or h/w fault */
+> 
+> and the method that determines no interrupt handling is needed.
+> 
 
-NOTE:  The patch is 597k and can be found at:
+I guess you are right, but then shouldn't the driver be checking for
+faults in other parts of the code too? What if a fault/hotplug occurs
+immediately after an interrupt, but before a tx?
+Thanks,
+Gary
 
-	http://intellinuxwireless.org/iwlwifi/0001-Add-iwlwifi-wireless-drivers.patch
-
-Patch is against wireless-dev commit-id be8662897~
