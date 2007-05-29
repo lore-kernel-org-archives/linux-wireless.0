@@ -1,88 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:49338 "EHLO mx1.redhat.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:3931 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933388AbXEGMAZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2007 08:00:25 -0400
-Subject: Re: Please pull 'libertas' branch of wireless-2.6
-From: Dan Williams <dcbw@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jeff Garzik <jeff@garzik.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, marcelo@kvack.org,
-	linux-kernel@vger.kernel.org, akpm@osdl.org
-In-Reply-To: <20070507104117.GA31601@infradead.org>
-References: <20070227205649.GH5826@tuxdriver.com>
-	 <45E8CF5E.5090305@garzik.org> <20070303052140.GA31075@infradead.org>
-	 <20070507104117.GA31601@infradead.org>
+	id S1750838AbXE2PhQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2007 11:37:16 -0400
+Subject: Re: b44: regression in 2.6.22 (resend)
+From: "Gary Zambrano" <zambrano@broadcom.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+cc: "Maximilian Engelhardt" <maxi@daemonizer.de>,
+	"linux-kernel" <linux-kernel@vger.kernel.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"Stephen Hemminger" <shemminger@linux-foundation.org>,
+	"Arnaldo Carvalho de Melo" <acme@ghostprotocols.net>,
+	"Jeff Garzik" <jgarzik@pobox.com>, netdev@vger.kernel.org,
+	"Andrew Morton" <akpm@linux-foundation.org>
+In-Reply-To: <200705281655.15105.mb@bu3sch.de>
+References: <20070525172431.60affaca@freepuppy>
+ <200705281249.56106.mb@bu3sch.de>
+ <200705281612.15649.maxi@daemonizer.de>
+ <200705281655.15105.mb@bu3sch.de>
+Date: Tue, 29 May 2007 07:14:35 -0700
+Message-ID: <1180448075.17146.12.camel@dhcp-10-12-136-115.broadcom.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Mon, 07 May 2007 08:03:43 -0400
-Message-Id: <1178539423.3032.24.camel@localhost.localdomain>
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-05-07 at 11:41 +0100, Christoph Hellwig wrote:
-> On Sat, Mar 03, 2007 at 05:21:40AM +0000, Christoph Hellwig wrote:
-> > Umm, I can't remember the updated driver ever beeig posted for review.
-> > And to be honest I'd be surprised if it's in a good shape already.
+On Mon, 2007-05-28 at 16:55 +0200, Michael Buesch wrote:
+> On Monday 28 May 2007 16:12:12 Maximilian Engelhardt wrote:
+> > On Monday 28 May 2007, Michael Buesch wrote:
+> > > Can you also test the following patch?
+> > > I think there's a bug in b44 that is doesn't properly discard
+> > > shared IRQs, so it might possibly generate a NAPI storm, dunno.
+> > > Worth a try.
+> > >
+> > > Index: linux-2.6.22-rc3/drivers/net/b44.c
+> > > ===================================================================
+> > > --- linux-2.6.22-rc3.orig/drivers/net/b44.c	2007-05-27 23:01:44.000000000
+> > > +0200 +++ linux-2.6.22-rc3/drivers/net/b44.c	2007-05-28 12:48:27.000000000
+> > > +0200 @@ -911,6 +911,8 @@ static irqreturn_t b44_interrupt(int irq
+> > >  	spin_lock(&bp->lock);
+> > >
+> > >  	istat = br32(bp, B44_ISTAT);
+> > > +	if (istat == 0xFFFFFFFF)
+> > > +		goto out; /* Shared IRQ not for us */
+> > >  	imask = br32(bp, B44_IMASK);
+> > >
+> > >  	/* The interrupt mask register controls which interrupt bits
+> > > @@ -942,6 +944,7 @@ irq_ack:
+> > >  		bw32(bp, B44_ISTAT, istat);
+> > >  		br32(bp, B44_ISTAT);
+> > >  	}
+> > > +out:
+> > >  	spin_unlock(&bp->lock);
+> > >  	return IRQ_RETVAL(handled);
+> > >  }
+> > 
+> > I did try this patch on a affected kernel, but I didn't notice any big 
+> > difference. Perhaps the kernel is a bit less slow during the test, but It's 
+> > hard to tell.
 > 
-> Of course it's not anywhere near good shape.  Almost all items from my
-> review were completely ignored, and we have another totoally substandard
-> wireless driver with crappy thread handling, a huge number of broken private
-> ioctls and partially absymal codingstyle.
+> Ok, but anyway. I think this is a bug and needs to be fixed this way. Gary?
+> 
 
- - things like 11d.[ch] don't have business of being in a driver,
-   this should be somewhere in common code.
+Thanks Michael.
+No, I don't think this is a bug and it does not need to be fixed.
+Thanks,
+Gary
 
-There is no common code for this.  mac80211 will eventually grow a
-utility library that libertas will hopefully be able to attach to.
-
- - please get rid of the ENTER/LEAVE macros
-
-People have said that many drivers do this, and it's quite useful for
-debugging.
-
- - please get rid of all your private ioctls and iwpriv stuff
-   (should I add !!!! here)
-
-Any ioctls that have equivalents in WEXT or ethtool can certainly be
-removed.  Mesh ones like fwt_reset, bt_reset, mesh_get_ttl, etc have no
-current equivalents and will need to stick around.  I've already removed
-all the ones that were relevant for WPA and moved them to standard WEXT
-calls.
-
- - most of types.h should not be there but you should be using
-   the types from include/linux/*80211*
-
-I've already updated libertas-2.6 git with a ton of updates for this.
-
-In any case, lets push off any merge until 2.6.23 so the rest of the
-comments can be dealt with:
-
- - the __le* annotation issue you mentioned in the mail is important.
- - there shouldn't be a LICENSE file in individual driver directories,
-   especially if it's just plain old GPLv2.
- - please get rid of setting -DFOO flags in the Makefile, just use
-   these directly as config symbols.
- - there shouldn't be a README file in the driver directory, this
-   should be in Documentation/
- - please don't use wlan_* foo types.  a) this should be structs, not
-   typedefs, and b) wlan is an utterly generic name for beeing inside
-   a driver.
- - there seems to be lots of tabs vs spaces messups
- - there's an awful lot of headers without clear divided
-responsibilities,
-   there should be only a few ones left (internal interfaces and hw
-   interface basically)
- - having lowercase names for lots of hw commands is a very bad idea
-   for readability
- - etc
-
-Dan
-
-> And I didn't even get a reply to my mail addressing the concerns above.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
