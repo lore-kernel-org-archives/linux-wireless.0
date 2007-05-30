@@ -1,30 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:35991 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755364AbXEDOqI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 May 2007 10:46:08 -0400
-Date: Fri, 4 May 2007 16:45:59 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH v2] mac80211: prevent a wme_qdiscop_init BUG on other  devices
-Message-ID: <20070504164559.730fd662@griffin.suse.cz>
-In-Reply-To: <20070504010231.5274.99328.stgit@magic.sourmilk.net>
-References: <20070504010231.5274.99328.stgit@magic.sourmilk.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from srv5.dvmed.net ([207.36.208.214]:34041 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756485AbXE3OHz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 May 2007 10:07:55 -0400
+Message-ID: <465D8538.8070507@garzik.org>
+Date: Wed, 30 May 2007 10:07:52 -0400
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: Please pull 'libertas' branch of wireless-2.6
+References: <20070529183347.GD3496@tuxdriver.com>
+In-Reply-To: <20070529183347.GD3496@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 03 May 2007 21:02:31 -0400, Michael Wu wrote:
-> This prevents a BUG if the ieee80211 qdisc is being registered on a net dev
-> without ieee80211_ptr set. It also ensures the device is a mac80211 device.
+John W. Linville wrote:
+> Lots of stuff here...probably best for 2.6.23...
 
-Applied, thanks!
+Is this best for Linux users... or just easy for developers?
 
- Jiri
+Won't putting off all these fixes until 2.6.23 leave the driver released 
+in 2.6.22 in shoddy shape?
 
--- 
-Jiri Benc
-SUSE Labs
+libertas is upstream now, so we cannot pretend that the driver is 
+completely independent from upstream release cycles and maintenance.
+
+libertas fixes should go upstream immediately, since we are in a bugfix 
+cycle, and since libertas (from upstream perspective) is about to make 
+its big debut on the world stage.
+
+	Jeff
+
+
+
