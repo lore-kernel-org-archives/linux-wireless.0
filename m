@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from electric-eye.fr.zoreil.com ([213.41.134.224]:33749 "EHLO
-	fr.zoreil.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754050AbXEZRDh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2007 13:03:37 -0400
-Date: Sat, 26 May 2007 18:46:31 +0200
-From: Francois Romieu <romieu@fr.zoreil.com>
-To: Uwe Bugla <uwe.bugla@gmx.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-Message-ID: <20070526164631.GA2176@electric-eye.fr.zoreil.com>
-References: <20070524195616.234280@gmx.net> <200705261750.48816.mb@bu3sch.de> <20070526091309.0af20971.akpm@linux-foundation.org> <200705261820.52240.uwe.bugla@gmx.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3780 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755164AbXE3TBU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 May 2007 15:01:20 -0400
+Date: Wed, 30 May 2007 14:30:33 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 4/4] mac80211: avoid null ptr deref in ieee80211_ibss_add_sta
+Message-ID: <20070530183033.GG3610@tuxdriver.com>
+References: <20070530182538.GB3610@tuxdriver.com> <20070530182807.GD3610@tuxdriver.com> <20070530182858.GE3610@tuxdriver.com> <20070530182946.GF3610@tuxdriver.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200705261820.52240.uwe.bugla@gmx.de>
+In-Reply-To: <20070530182946.GF3610@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Uwe Bugla <uwe.bugla@gmx.de> :
-> Am Samstag, 26. Mai 2007 18:13 schrieben Sie:
-[...]
-> > Uwe, http://userweb.kernel.org/~akpm/git-wireless.patch.gz is the current
-> > wireless tree.  That's a patch against 2.6.22-rc3.  Could you please test
-> > that?  If that works then we know that the bug probably lies outside the
-> > b44 driver (or it was subsequently fixed).
-> 
-> Thank you, Andrew, just wait for a while. I am gonna try.....
+From: John W. Linville <linville@tuxdriver.com>
 
-Please post the .config and the dmesg for the kernels that you try too.
+avoid sdata null pointer dereference in ieee80211_ibss_add_sta.
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/ieee80211_sta.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index dbac858..9f30ae4 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -2997,7 +2997,7 @@ struct sta_info * ieee80211_ibss_add_sta(struct net_device *dev,
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct sta_info *sta;
+-	struct ieee80211_sub_if_data *sdata = NULL;
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	/* TODO: Could consider removing the least recently used entry and
+ 	 * allow new one to be added. */
+-- 
+1.5.0.6
 
 -- 
-Ueimor
+John W. Linville
+linville@tuxdriver.com
