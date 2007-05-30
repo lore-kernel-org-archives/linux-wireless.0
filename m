@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:38702 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757101AbXEWQoM (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:63018 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753731AbXE3VYI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2007 12:44:12 -0400
-Message-ID: <46545AC0.4070301@linux.intel.com>
-Date: Wed, 23 May 2007 08:16:16 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
+	Wed, 30 May 2007 17:24:08 -0400
+Message-ID: <465DEB75.9070400@lwfinger.net>
+Date: Wed, 30 May 2007 16:24:05 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-To: Jeff Garzik <jeff@garzik.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [PATCH v3]  Add iwlwifi wireless drivers
-References: <464B7B7C.5080800@linux.intel.com> <465365B3.4090408@linux.intel.com> <4653939B.9020904@garzik.org>
-In-Reply-To: <4653939B.9020904@garzik.org>
+To: Michael Wu <flamingice@sourmilk.net>
+CC: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
+	mabbas@linux.intel.com
+Subject: Re: [PATCH] mac80211: Implementation of SIOCSIWRATE
+References: <465c68e1.+11Pl6vbVkaPA39A%Larry.Finger@lwfinger.net> <200705292345.50212.flamingice@sourmilk.net>
+In-Reply-To: <200705292345.50212.flamingice@sourmilk.net>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jeff Garzik wrote:
-> James Ketrenos wrote:
->> An updated full patch (v3) to add the driver is available at:
->>         
->> http://intellinuxwireless.org/iwlwifi/0001-v3-Add-iwlwifi-wireless-drivers.patch 
-> 
-> 
-> Quick review attached.
-> 
->     Jeff
+Michael Wu wrote:
+> On Tuesday 29 May 2007 10:54, Larry Finger wrote:
+>> From: Mohamed Abbas <mabbas@linux.intel.com>
+>>
+> So.. how much of this is still from mabbas now?
 
-Thanks for the review.  
+Only a small fraction of his original patch is left, but he contributed about half of what is left. 
+I think he still needs credit.
 
-Hopefully once in wireless-dev, we (more than just me, myself, and I) can work to get these knocked off in iterative small commits vs. having to paste a monolithic driver add patch that makes git-bisect near useless.  Some of your review comments impact code which can have significant ripple effects -- I would like to be able to manage those changes here vs. solely with the iwlwifi community of users.
+>> +	/* value = -1, rate->fixed = 0 means auto only, so use all rates
+>> +	 * value = X, rate->fixed = 1 means only rate X
+>> +	 * value = X, rate->fixed = 0 means all rates <= X */
+> Only the second case actually works with this code.
+> 
+> When a frame is being transmitted, the rate control runs this little bit of 
+> code (rc80211_simple.c, line 255):
+> 
+>         if (sdata->bss && sdata->bss->force_unicast_rateidx > -1)
+>                 sta->txrate = sdata->bss->force_unicast_rateidx;
+> 
+> This means:
+> 1. If force_unicast_rateidx is set to 0 or higher, the tx rate will be fixed 
+> to just that one rate, and..
+> 2. sta->txrate is automatically set from force_unicast_rateidx as necessary.
 
-James
+I'm testing a revised version now.
+
+Larry
