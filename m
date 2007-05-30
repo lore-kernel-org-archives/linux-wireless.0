@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([207.189.120.12]:58904 "EHLO smtp.osdl.org"
+Received: from mx1.redhat.com ([66.187.233.31]:60077 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757767AbXEQPTf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 May 2007 11:19:35 -0400
-Date: Thu, 17 May 2007 08:03:15 -0700
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: James Ketrenos <jketreno@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers [part 2/2]
-Message-ID: <20070517080315.710d656e@freepuppy>
-In-Reply-To: <20070516203505.556df4f9.randy.dunlap@oracle.com>
-References: <464B7B7C.5080800@linux.intel.com>
-	<20070516203505.556df4f9.randy.dunlap@oracle.com>
+	id S1753794AbXE3PZD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 May 2007 11:25:03 -0400
+Subject: Re: Please pull 'libertas' branch of wireless-2.6
+From: Dan Williams <dcbw@redhat.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <465D8538.8070507@garzik.org>
+References: <20070529183347.GD3496@tuxdriver.com>
+	 <465D8538.8070507@garzik.org>
+Content-Type: text/plain
+Date: Wed, 30 May 2007 11:28:48 -0400
+Message-Id: <1180538928.17163.10.camel@xo-28-0B-88.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 16 May 2007 20:35:05 -0700
-Randy Dunlap <randy.dunlap@oracle.com> wrote:
+On Wed, 2007-05-30 at 10:07 -0400, Jeff Garzik wrote:
+> John W. Linville wrote:
+> > Lots of stuff here...probably best for 2.6.23...
+> 
+> Is this best for Linux users... or just easy for developers?
+> 
+> Won't putting off all these fixes until 2.6.23 leave the driver released 
+> in 2.6.22 in shoddy shape?
 
-> On Wed, 16 May 2007 14:45:32 -0700 James Ketrenos wrote:
-> 
-> > This patch adds the iwlwifi project directory and sources needed to 
-> > build the mac80211 based wireless drivers for the Intel PRO/Wireless 
-> > 3945ABG/BG Network Connection and Intel Wireless WiFi Link AGN adapters.
-> > 
-> > Signed-off-by: James Ketrenos <jketreno@linux.intel.com>
-> > 
-> > NOTE:  The patch is 597k and can be found at:
-> > 
-> > 	http://intellinuxwireless.org/iwlwifi/0001-Add-iwlwifi-wireless-drivers.patch
-> > 
-> > Patch is against wireless-dev commit-id be8662897~
-> 
-> 
-> 1.  Can't this:
-> 
-> +	if (sizeof(priv->eeprom) != 1024) {
-> +		IWL_ERROR("EEPROM structure size incorrect!\n");
-> +		return -EINVAL;
-> +	}
-> 
-> use this instead of 1024 ?
-> +#define IWL4965_EEPROM_IMAGE_SIZE  (0x200 * sizeof(u16))
+Not really; it more or less works there.  What's gone on since then is
+general driver cleanup (Christoph's comments and more), splitting the
+driver so that other bus types can use it (SDIO for example once
+Pierre's SDIO patches get upstream), wireless extensions fixes, etc.
 
-Why not BUILD_BUG_ON()?
+> libertas is upstream now, so we cannot pretend that the driver is 
+> completely independent from upstream release cycles and maintenance.
+
+True, but some of the stuff in here I didn't think would be suitable
+during an -rc cycle, for example the driver splitting and the cleanups
+that don't impact function at all, but are good to do nonetheless.
+
+> libertas fixes should go upstream immediately, since we are in a bugfix 
+> cycle, and since libertas (from upstream perspective) is about to make 
+> its big debut on the world stage.
+
+If you think all the bits from this should just go to 2.6.22, that's
+fine with me.  But I don't feel comfortable making that call given what
+I thought were the constraints on pushing changes through during an rc
+cycle.  When the merge window was open, we backported critical bug fixes
+and necessary merge-requirement cleanups to the code in linville's tree,
+but avoided changes that didn't impact function.
+
+Dan
 
 
--- 
-Stephen Hemminger <shemminger@linux-foundation.org>
