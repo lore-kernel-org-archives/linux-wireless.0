@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:36621 "EHLO mail.dvmed.net"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3778 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754956AbXEWT7K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2007 15:59:10 -0400
-Message-ID: <46549D08.3010109@garzik.org>
-Date: Wed, 23 May 2007 15:59:04 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: James Ketrenos <jketreno@linux.intel.com>
-CC: Michael Wu <flamingice@sourmilk.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH]  Add iwlwifi wireless drivers
-References: <464B7B7C.5080800@linux.intel.com> <200705162151.32910.flamingice@sourmilk.net> <46534172.5040106@linux.intel.com> <46537603.6040208@garzik.org> <4653654F.1060708@linux.intel.com> <46537FA4.2040907@garzik.org> <46537536.8070500@linux.intel.com> <465391A5.4090608@garzik.org> <46548538.9080002@linux.intel.com>
-In-Reply-To: <46548538.9080002@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1755164AbXE3TBQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 May 2007 15:01:16 -0400
+Date: Wed, 30 May 2007 14:29:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 3/4] mac80211: always set carrier status on open
+Message-ID: <20070530182946.GF3610@tuxdriver.com>
+References: <20070530182538.GB3610@tuxdriver.com> <20070530182807.GD3610@tuxdriver.com> <20070530182858.GE3610@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070530182858.GE3610@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-James Ketrenos wrote:
-> Given the API mac80211 exposes, and how the stack operates, I don't see 
-> how using ifsta->work as the workqueue allows the driver to no longer 
-> evaluate the potential for deadlocks and races.
+From: Michael Wu <flamingice@sourmilk.net>
 
-For the operations in the workqueue, they are obviously serialized.
+ieee80211_open should always set the carrier status since we may have set
+it to off before.
 
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/ieee80211.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-> The second argument you made:
-> 
->    "And then there is the Linus mantra:  do what you must, and no more.  
-> No need for additional workqueues has been demonstrated."
-> 
-> To make the most use of the processing and power resources available, 
-> you must execute in parallel.
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 145604a..4e84f24 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -2474,6 +2474,8 @@ static int ieee80211_open(struct net_device *dev)
+ 	if (sdata->type == IEEE80211_IF_TYPE_STA &&
+ 	    !local->user_space_mlme)
+ 		netif_carrier_off(dev);
++	else
++		netif_carrier_on(dev);
+ 
+ 	netif_start_queue(dev);
+ 	return 0;
+-- 
+1.5.0.6
 
-That's some impressive English parsing, but clearly wrong on the face of 
-it.  The Linus mantra cited is about MINIMALIZATION.  When you say "to 
-make the most use of..." you are MAXIMIZING something that need not be 
-maximized.
-
-As repeated many times, there is no NEED to execute this slow path stuff 
-in parallel.  Though yes, I agree parallel execution maximized power drain.
-
-	Jeff
-
-
+-- 
+John W. Linville
+linville@tuxdriver.com
