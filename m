@@ -1,33 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:51517
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750893AbXERRjU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2007 13:39:20 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>
-Subject: bcm43xx-mac80211 freezes on heavy RX
-Date: Fri, 18 May 2007 19:38:36 +0200
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200705181938.36503.mb@bu3sch.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3777 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755091AbXE3TBP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 May 2007 15:01:15 -0400
+Date: Wed, 30 May 2007 14:28:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 2/4] mac80211: fix memory leak when defrag fragments
+Message-ID: <20070530182858.GE3610@tuxdriver.com>
+References: <20070530182538.GB3610@tuxdriver.com> <20070530182807.GD3610@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070530182807.GD3610@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am seeing freezes when doing heavy RX with
-bcm43xx-mac80211. It triggers when continuously
-downloading some file with wget from a machine in
-the network over the wireless link.
+From: Hong Liu <hong.liu@intel.com>
 
-I'm not sure what causes the freeze. Does someone see
-this with other devices on the mac80211 stack?
-It simply completely freezes the whole system.
-No message, nothing. Very strange.
+We forget to free all the fragments when defraging them into one packet.
 
-I'm using my development tree.
+Signed-off-by: Hong Liu <hong.liu@intel.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/ieee80211.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 6e36df6..145604a 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -3278,8 +3278,10 @@ ieee80211_rx_h_defragment(struct ieee80211_txrx_data *rx)
+ 			return TXRX_DROP;
+ 		}
+ 	}
+-	while ((skb = __skb_dequeue(&entry->skb_list)))
++	while ((skb = __skb_dequeue(&entry->skb_list))) {
+ 		memcpy(skb_put(rx->skb, skb->len), skb->data, skb->len);
++		dev_kfree_skb(skb);
++	}
+ 
+ 	/* Complete frame has been reassembled - process it now */
+ 	rx->fragmented = 1;
+-- 
+1.5.0.6
 
 -- 
-Greetings Michael.
+John W. Linville
+linville@tuxdriver.com
