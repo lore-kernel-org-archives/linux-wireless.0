@@ -1,64 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:47988
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751210AbXE3KqZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2007 06:46:25 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Gary Zambrano" <zambrano@broadcom.com>
-Subject: Re: b44: regression in 2.6.22 (resend)
-Date: Wed, 30 May 2007 12:45:16 +0200
-Cc: "Jeff Garzik" <jgarzik@pobox.com>,
-	"Maximilian Engelhardt" <maxi@daemonizer.de>,
-	"linux-kernel" <linux-kernel@vger.kernel.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"Stephen Hemminger" <shemminger@linux-foundation.org>,
-	"Arnaldo Carvalho de Melo" <acme@ghostprotocols.net>,
-	netdev@vger.kernel.org, "Andrew Morton" <akpm@linux-foundation.org>
-References: <20070525172431.60affaca@freepuppy> <465CABA3.10003@pobox.com> <1180474611.17711.26.camel@dhcp-10-12-136-115.broadcom.com>
-In-Reply-To: <1180474611.17711.26.camel@dhcp-10-12-136-115.broadcom.com>
-MIME-Version: 1.0
-Message-Id: <200705301245.16983.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4606 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753197AbXEaWYk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 May 2007 18:24:40 -0400
+Date: Thu, 31 May 2007 17:16:05 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: Please pull 'libertas' branch of wireless-2.6
+Message-ID: <20070531211605.GA30161@tuxdriver.com>
+References: <20070529183347.GD3496@tuxdriver.com> <465D8538.8070507@garzik.org> <1180538928.17163.10.camel@xo-28-0B-88.localdomain> <1180645997.18078.8.camel@xo-28-0B-88.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1180645997.18078.8.camel@xo-28-0B-88.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 29 May 2007 23:36:51 Gary Zambrano wrote:
-> On Tue, 2007-05-29 at 18:39 -0400, Jeff Garzik wrote:
+On Thu, May 31, 2007 at 05:13:17PM -0400, Dan Williams wrote:
+> On Wed, 2007-05-30 at 11:28 -0400, Dan Williams wrote:
+> > On Wed, 2007-05-30 at 10:07 -0400, Jeff Garzik wrote:
+> > > John W. Linville wrote:
+> > > > Lots of stuff here...probably best for 2.6.23...
+> > > 
+> > > Is this best for Linux users... or just easy for developers?
+> > > 
+> > > Won't putting off all these fixes until 2.6.23 leave the driver released 
+> > > in 2.6.22 in shoddy shape?
+
+> > If you think all the bits from this should just go to 2.6.22, that's
+> > fine with me.  But I don't feel comfortable making that call given what
+> > I thought were the constraints on pushing changes through during an rc
+> > cycle.  When the merge window was open, we backported critical bug fixes
+> > and necessary merge-requirement cleanups to the code in linville's tree,
+> > but avoided changes that didn't impact function.
 > 
-> > We check for 0xffffffff because that is often how a fault is indicated, 
-> > when the memory location is read during or immediately after hotplug (or 
-> > if the PCI bus is truly faulty).  So for most hardware, you see
-> > 
-> > tmp = read(irq status)
-> > if (!tmp)
-> > 	return irq-none		/* no irq events raised */
-> > if (tmp == 0xffffffff)
-> > 	return irq-none		/* hot unplug or h/w fault */
-> > 
-> > and the method that determines no interrupt handling is needed.
-> > 
-> 
-> I guess you are right, but then shouldn't the driver be checking for
-> faults in other parts of the code too? What if a fault/hotplug occurs
-> immediately after an interrupt, but before a tx?
-> Thanks,
+> Any response on these points yet?  I've got yet more cleanups and a few
+> other things queued in libertas-2.6 but I'd like to see where this
+> discussion goes before sending a pull request for the new bits.
 
-Well, in general it's not desired (or even possible) to check every
-single MMIO access. General practice is to check on entering the IRQ handler
-and on values from registers or DMA which could crash the driver.
-For example on DMA we get some cookie back from the device in the TX
-status report that says which packet this was associated to.
-That value is used to look up a table.
-In bcm43xx I initialize that to 0 in the driver, which is not a valid value.
-Later I check for that. So if the device is unplugged before DMA was
-on that value was complete it will recognize it and it won't crash.
+As for me, I have no great problem w/ the whole batch going to 2.6.22.
+The driver is still new and most acknowledge it still has significant
+defficiencies.  Most (but probably not all) of the patches would seem
+to fit some definition of bug fix anyway.  I was just trying to err
+on the side of caution and follow the normal "bugfixes in -rc" process.
 
-In general we can only do our very best to prevent bad sideeffects from
-a pull-in-full-operation. We can't do much here anyway. Best we can do
-is to _try_ to prevent a crash. It might not always be 100% possible
-to do so, though.
+Jeff, the branch in question is based off a vanilla 2.6.22-rc3.
+So it is safe to pull (from a "won't mess-up my tree" perspective)
+if you are so inclined.
 
+John
 -- 
-Greetings Michael.
+John W. Linville
+linville@tuxdriver.com
