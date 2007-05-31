@@ -1,146 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:36901 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1763137AbXEYSrk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2007 14:47:40 -0400
-From: Uwe Bugla <uwe.bugla@gmx.de>
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: BUG in 2.6.22-rc2-mm1: NIC module b44.c broken (Broadcom 4400)
-Date: Fri, 25 May 2007 20:42:17 +0200
-References: <20070524195616.234280@gmx.net> <200705251652.19911.mb@bu3sch.de> <20070525095618.1cd86672.akpm@linux-foundation.org>
-In-Reply-To: <20070525095618.1cd86672.akpm@linux-foundation.org>
-Cc: Michael Buesch <mb@bu3sch.de>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
+Received: from smtp.rutgers.edu ([128.6.72.243]:51986 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759166AbXEaT6P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 May 2007 15:58:15 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [TAKE 2][PATCH 0/3] IEEE802.11e/WMM TS management and DLS support
+Date: Thu, 31 May 2007 12:55:36 -0700
+Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
+References: <20070525115205.GA23301@mail.intel.com> <20070531180445.GB3706@tuxdriver.com>
+In-Reply-To: <20070531180445.GB3706@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200705252042.17680.uwe.bugla@gmx.de>
+Content-Type: multipart/signed;
+  boundary="nextPart14227755.zkWdLR6rT9";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200705311255.40416.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Freitag, 25. Mai 2007 18:56 schrieben Sie:
-> On Fri, 25 May 2007 16:52:19 +0200 Michael Buesch <mb@bu3sch.de> wrote:
-> > I bet your bug is _not_ caused by ssb, but by some other breakage
-> > in another subsystem. Maybe ACPI or APIC is broken? Try to boot
-> > the machine without ACPI and/or APIC.
+--nextPart14227755.zkWdLR6rT9
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+
+On Thursday 31 May 2007 11:04, John W. Linville wrote:
+> On Fri, May 25, 2007 at 07:52:05PM +0800, Zhu Yi wrote:
+> > The following patches updated my previous IEEE802.11e/WMM patches
+> > based on the comments from Michael Wu. Please apply.
+> >
+> > [PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
+> > [PATCH 2/3] mac80211: IEEE802.11e/WMM TS management and DLS support
+> > [PATCH 3/3] mac80211: debugfs support for TSM and DLS
 >
-> It wouldn't be the first time.
+> Yi,
 >
-> Uwe, please generate the `dmesg -s 1000000' output for 2.6.22-rc2 and for
-> 2.6.22-rc2-mm1, feed them through `diff -u' and see if you can spot any
-> interesting-looking differences in the PCI/ACPI/IRQ area.  Send both the
-> files to me and I'll stick them on a server and then I'll see if we can
-> hunt down the perpetrator.
+> Please also submit a patch series that applies against linux-2.6.22-rc3
+> (or later) and adds whatever else might be needed that is missing
+> there.  This one changes code that is currently only in wireless-dev.
 >
-> Thanks.
+> Thanks,
+>
+> John
+This is nowhere near ready to go upstream and it requires some bits from th=
+e=20
+802.11n patches which didn't make it.
 
-Hi everybody,
+=2DMichael Wu
 
-unfortunately Andrew's path can be proven to be wrong:
-There is no bug in the ACPI area at all.
+--nextPart14227755.zkWdLR6rT9
+Content-Type: application/pgp-signature
 
-I reverted the following modules in 2.6.22-rc2-mm1:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
---- linux-2.6.22-rc2/drivers/net/b44.c	2007-05-19 02:24:07.000000000 -0700
-+++ devel/drivers/net/b44.c	2007-05-22 21:55:36.000000000 -0700
+iD8DBQBGXyg8T3Oqt9AH4aERAr6HAKDWmJN17E20PpL9H6qPmvrT7kcxJwCbBMOd
+VXS7HgdmdCwEIC8y5e0O07M=
+=ehLG
+-----END PGP SIGNATURE-----
 
-AND:
-
---- linux-2.6.22-rc2/drivers/net/b44.h	2007-04-25 23:42:17.000000000 -0700
-+++ devel/drivers/net/b44.h	2007-05-22 21:55:36.000000000 -0700
-
-AND:
-
---- linux-2.6.22-rc2/drivers/usb/host/ohci-hcd.c	2007-05-19 
-02:24:07.000000000 -0700
-+++ devel/drivers/usb/host/ohci-hcd.c	2007-05-22 21:55:36.000000000 -0700
-
-AND:
-
---- /dev/null	2007-05-07 19:14:32.301975000 -0700
-+++ devel/drivers/usb/host/ohci-ssb.c	2007-05-22 21:55:36.000000000 -0700
-
-
-RESULT:
-
-Broadcom 4401 is working purrfectly! YUP!
-
-Apart from that the kernel configuration menu of 2.6.22-rc2-mm1 is highly 
-confusing:
-
-Kernel Config differences:
-
-In kernel 2.6.21.2 you are bound to go:
-
-EISA, VLB, PCI and onboard controllers Y
-
-Broadcom 4400 ethernet support m
-
-
-Whereas in Kernel 2.6.22-rc2-mm1 is completely confusing:
-
-1. There is a menu called Sonics Silicon Backplane, which does not
-exist in 2.6.21.2.
-
-2. In Section Network device support Y
-Ethernet (10 or 100Mbit) Y
-
-you got 2 confusing choices:
-
-Option A:
-EISA, VLB, PCI and onboard controllers Y
-
-Broadcom 4400 ethernet support m
-
-Broadcom 4400 PCI device support y
-
-This enables "Sonic Silicon Backplane support m"
-
-OR, and this is in fact confusing:
-
-Option B:
-
-Leave OUT (!!!) EISA, VLB, PCI and onboard controllers Y
-
-Simply: Broadcom 4400 ethernet support m
-
-This enables "Sonic Silicon Backplane support m"
-
-Option B is proved to be working with the patch against the b44.c module
-reverted  in 2.6.22-rc2-mm1.
-
-If it is NOT reverted, Option B fails, but the confusion stays:
-
-You do not get the idea whether
-
-"Support for SSB on PCI bus host m" is necessary or not!
-
-And above that, THIS ONE:
-
-"Broadcom 4400 ethernet support m"
-
-should never appear when THIS one:
-
-"EISA, VLB, PCI and onboard controllers Y"
-
-is DESELECTED, should it??
-
-And that's it exactly what I meant when I mentioned that the ATTACHMENT of ssb 
-to b44 is highly buggy!
-
-I hope, Michael, that you believe that now.
-
-If you need lspci -v or / and dmesg to prove that I am right and you are 
-wrong:
-
-Pleasure for me, just ask please!
-
-Cheers
-
-Uwe
-
-P. S.: In clear words:
-
-I higly suspect that simply the kernel config bindings are highly buggy and 
-chaotic.
+--nextPart14227755.zkWdLR6rT9--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
