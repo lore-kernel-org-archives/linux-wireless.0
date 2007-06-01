@@ -1,42 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:34352 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752170AbXFKPWN (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:29272 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760441AbXFASsA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 11:22:13 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id F18F48D762
-	for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2007 17:22:07 +0200 (CEST)
-Message-Id: <20070611152210.400383149@warmcat.com>
-References: <20070611152120.078733592@warmcat.com>
-Date: Mon, 11 Jun 2007 16:21:22 +0100
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Cc: Andy Green <andy@warmcat.com>
-Subject: [PATCH Try#9 2/4] mac80211: Define present bitmap extend bit mask
+	Fri, 1 Jun 2007 14:48:00 -0400
+Message-ID: <4660503C.9080309@linux.intel.com>
+Date: Fri, 01 Jun 2007 09:58:36 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Update stop_queues kdoc
+References: <200706011129.12432.mb@bu3sch.de>
+In-Reply-To: <200706011129.12432.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Used to detect if the field presence mask is extended
+Michael Buesch wrote:
+> This updates stop_queue(s) kdoc as currently there's
+> a undocumented dependency.
+> 
+> Stopping the queue from anywhere else than the ops->tx()
+> callback will result in a hard to debug deadlock and
+> system freeze (on UP).
+...
+> --
+> 
+> I'd still prefer someone fixes the issue. I don't understand
+> the code well enough to fix it.
 
-Signed-off-by: Andy Green <andy@warmcat.com>
+Perhaps having ieee80211_stop_queue keep a mac80211 internal state flag that is checked within the Tx operation before the driver's Tx callback is made.  Then, if that bit is set, mac80211 can invoke the internal "deadlock if outside of Tx" queue stop action to halt Tx?  
 
----
- include/net/ieee80211_radiotap.h |    2 ++
- 1 file changed, 2 insertions(+)
+In this way we are putting in a work around that doesn't result in an API change, and that can eventually (hopefully) be fixed the "right way" (whatever that may end up being)
 
-Index: wireless-dev/include/net/ieee80211_radiotap.h
-===================================================================
---- wireless-dev.orig/include/net/ieee80211_radiotap.h
-+++ wireless-dev/include/net/ieee80211_radiotap.h
-@@ -90,6 +90,8 @@ struct ieee80211_radiotap_header {
- 				 */
- };
- 
-+#define IEEE80211_RADIOTAP_PRESENT_EXTEND_MASK 0x80000000
-+
- /* Name                                 Data type    Units
-  * ----                                 ---------    -----
-  *
-
--- 
+James
