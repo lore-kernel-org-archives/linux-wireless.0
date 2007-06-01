@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:38311 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752325AbXFYVZs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2007 17:25:48 -0400
-Subject: Please pull libertas-2.6 'upstream-fixes' branch
-From: Dan Williams <dcbw@redhat.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Mon, 25 Jun 2007 17:29:52 -0400
-Message-Id: <1182806992.10966.4.camel@xo-13-A4-25.localdomain>
-Mime-Version: 1.0
+Received: from wa-out-1112.google.com ([209.85.146.176]:60390 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761227AbXFAShL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jun 2007 14:37:11 -0400
+Received: by wa-out-1112.google.com with SMTP id j4so603657wah
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jun 2007 11:37:10 -0700 (PDT)
+Message-ID: <5b9417770706011137q59962e95y6d810b236e6c0c3a@mail.gmail.com>
+Date: Fri, 1 Jun 2007 13:37:10 -0500
+From: "John H." <mistamaila@gmail.com>
+To: "Larry Finger" <larry.finger@lwfinger.net>
+Subject: Re: Upgrade to f7 breaks bcm43xx module
+Cc: "Broadcom Linux" <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <5b9417770706011123s3a54c43ep69257321e8102719@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <5b9417770706011111u20f32192s960961dc8693f00e@mail.gmail.com>
+	 <4660630E.7040701@lwfinger.net>
+	 <5b9417770706011123s3a54c43ep69257321e8102719@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+I mean, the correct files to populate /lib/firmware(as I assume that's
+what you mean).
 
-The following changes since commit 188e1f81ba31af1b65a2f3611df4c670b092bbac:
-  Linus Torvalds (1):
-        Linux 2.6.22-rc5
+I don't see it, or the instructions, on
+http://bcm43xx.berlios.de/
 
-are found in the git repository at:
-
-  git://git.infradead.org/libertas-2.6/ upstream-fixes
-
-Dan Williams (4):
-      libertas: style fixes
-      libertas: kill wlan_scan_process_results
-      libertas: fix WPA associations by handling ENABLE_RSN correctly
-      libertas: remove private ioctls
-
- drivers/net/wireless/libertas/Makefile  |    2 +-
- drivers/net/wireless/libertas/README    |  275 --------
- drivers/net/wireless/libertas/assoc.c   |   28 +-
- drivers/net/wireless/libertas/cmd.c     |   12 +-
- drivers/net/wireless/libertas/cmdresp.c |   21 +
- drivers/net/wireless/libertas/hostcmd.h |    2 +-
- drivers/net/wireless/libertas/ioctl.c   | 1081 -------------------------------
- drivers/net/wireless/libertas/main.c    |    8 +-
- drivers/net/wireless/libertas/scan.c    |   51 +--
- drivers/net/wireless/libertas/wext.c    |  152 -----
- drivers/net/wireless/libertas/wext.h    |   45 +--
- 11 files changed, 79 insertions(+), 1598 deletions(-)
- delete mode 100644 drivers/net/wireless/libertas/ioctl.c
-
-
+On 6/1/07, John H. <mistamaila@gmail.com> wrote:
+> Thanks for the prompt response.
+>
+> I have a dell e1505.  Do I need an updated fwcutter as well?  What is
+> the actual driver I need?  The device is broadcom 1390?
+>
+>
+> On 6/1/07, Larry Finger <larry.finger@lwfinger.net> wrote:
+> > John H. wrote:
+> > > bcm43xx mac80211:
+> > > YOUR FIRMWARE IS TOO OLD. Firmware from binary drivers older than
+> > > version 4.x is unsupported. You must upgrade your firmware files.
+> > >
+> > > I get that now with f7 and 2.6.21 and didn't with fc6 2.6.20.
+> > >
+> > > However, I read that the error is not what it sounds like.  What is
+> > > the solution?
+> >
+> > The error is _EXACTLY_ what it sounds like. With fc6, you were using bcm43xx-softmac, which uses V3
+> > firmware. With fc7, you switched to bcm43xx-mac80211, which needs V4 firmware - just what the error
+> > message said. The solution is to download a V4 driver and create the appropriate firmware.
+> >
+> > Larry
+> >
+>
