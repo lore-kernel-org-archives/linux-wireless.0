@@ -1,70 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:58918 "EHLO mga01.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3302 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755460AbXFUCKJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2007 22:10:09 -0400
-Subject: [PATCH]mac80211: add support for iwlist channel (3rd try)
-From: Hong Liu <hong.liu@intel.com>
-To: Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Thu, 21 Jun 2007 10:07:08 +0800
-Message-Id: <1182391628.27548.8.camel@napa-sdv1.sh.intel.com>
+	id S1751157AbXFASyT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jun 2007 14:54:19 -0400
+Date: Fri, 1 Jun 2007 14:18:38 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "John H." <mistamaila@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
+Subject: Re: Upgrade to f7 breaks bcm43xx module
+Message-ID: <20070601181838.GB5663@tuxdriver.com>
+References: <5b9417770706011111u20f32192s960961dc8693f00e@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5b9417770706011111u20f32192s960961dc8693f00e@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add supported channels info in SIOCGIWRANGE implementation.
+On Fri, Jun 01, 2007 at 01:11:51PM -0500, John H. wrote:
+> bcm43xx mac80211:
+> YOUR FIRMWARE IS TOO OLD. Firmware from binary drivers older than
+> version 4.x is unsupported. You must upgrade your firmware files.
+> 
+> I get that now with f7 and 2.6.21 and didn't with fc6 2.6.20.
+> 
+> However, I read that the error is not what it sounds like.  What is
+> the solution?
 
-Signed-off-by: Hong Liu <hong.liu@intel.com>
----
- net/mac80211/ieee80211_ioctl.c |   25 +++++++++++++++++++++++++
- 1 files changed, 25 insertions(+), 0 deletions(-)
+You might start by posting on a Fedora list, lest ye draw the ire of
+any other distro users on this list... :-)
 
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-index fcea8b2..9b5122a 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -1500,6 +1500,8 @@ static int ieee80211_ioctl_giwrange(struct net_device *dev,
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct iw_range *range = (struct iw_range *) extra;
-+	struct ieee80211_hw_mode *mode = NULL;
-+	int c = 0;
- 
- 	data->length = sizeof(struct iw_range);
- 	memset(range, 0, sizeof(struct iw_range));
-@@ -1533,6 +1535,29 @@ static int ieee80211_ioctl_giwrange(struct net_device *dev,
- 	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
- 			  IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
- 
-+	list_for_each_entry(mode, &local->modes_list, list) {
-+		int i = 0;
-+
-+		if (!(local->enabled_modes & (1 << mode->mode)) ||
-+		    (local->hw_modes & local->enabled_modes &
-+		     (1 << MODE_IEEE80211G) && mode->mode == MODE_IEEE80211B))
-+			continue;
-+
-+		while (i < mode->num_channels && c < IW_MAX_FREQUENCIES) {
-+			struct ieee80211_channel *chan = &mode->channels[i];
-+
-+			if (chan->flag & IEEE80211_CHAN_W_SCAN) {
-+				range->freq[c].i = chan->chan;
-+				range->freq[c].m = chan->freq * 100000;
-+				range->freq[c].e = 1;
-+				c++;
-+			}
-+			i++;
-+		}
-+	}
-+	range->num_channels = c;
-+	range->num_frequency = c;
-+
- 	IW_EVENT_CAPA_SET_KERNEL(range->event_capa);
- 	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWTHRSPY);
- 	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWAP);
+In the meantime, I suggest you extract firmware[1] from the wl_apsta.o
+file in this archive:
+
+	http://downloads.openwrt.org/sources/broadcom-wl-4.80.53.0.tar.bz2
+
+Hth!
+
+John
+
+[1] Using bcm43xx-fwcutter, of course.
 -- 
-1.5.0.5
-
+John W. Linville
+linville@tuxdriver.com
