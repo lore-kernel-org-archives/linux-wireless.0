@@ -1,40 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:43591 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751468AbXFKP1b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 11:27:31 -0400
-Message-ID: <466D69E0.7020204@warmcat.com>
-Date: Mon, 11 Jun 2007 16:27:28 +0100
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org,
-	Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH Try#8 3/4] cfg80211: Radiotap parser
-References: <20070611095400.206844675@warmcat.com>	 <20070611095846.511945296@warmcat.com> <1181560668.29767.8.camel@johannes.berg>
-In-Reply-To: <1181560668.29767.8.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:8543 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752856AbXFABEu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 May 2007 21:04:50 -0400
+Subject: Re: [TAKE 2][PATCH 0/3] IEEE802.11e/WMM TS management and DLS  support
+From: Zhu Yi <yi.zhu@intel.com>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200705311255.40416.flamingice@sourmilk.net>
+References: <20070525115205.GA23301@mail.intel.com>
+	 <20070531180445.GB3706@tuxdriver.com>
+	 <200705311255.40416.flamingice@sourmilk.net>
+Content-Type: text/plain
+Date: Fri, 01 Jun 2007 09:04:54 +0800
+Message-Id: <1180659895.3109.104.camel@debian.sh.intel.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
+On Thu, 2007-05-31 at 12:55 -0700, Michael Wu wrote:
+> This is nowhere near ready to go upstream and it requires some bits
+> from the 802.11n patches which didn't make it. 
 
-Hi Johannes -
+Can you speak what is needed for 11n and where to find the 11n patches?
 
->> + * care of alignment handling and extended present fields.  interator->this_arg
-> 
-> typo: "interator", also I don't understand why you would want to change
-> this_arg?
-
-Thanks for the comments which I addressed in try #9.
-
-iterator->this_arg can make sense to increment when you are walking
-through one of the compound arguments, like the channel one, the comment
-means you don't have to take care to preserve it during the processing
-of any argument in your loop.
-
-I did move the function comments into cfg80211 but I didn't prefer it
-and when I read Randy's take I moved them back.
-
--Andy
+Thanks,
+-yi
