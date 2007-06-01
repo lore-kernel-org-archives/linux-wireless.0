@@ -1,35 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:37837 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760073AbXFASS4 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:51623
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759665AbXFAVnr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2007 14:18:56 -0400
-Message-ID: <4660630E.7040701@lwfinger.net>
-Date: Fri, 01 Jun 2007 13:18:54 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Fri, 1 Jun 2007 17:43:47 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH V2] bcm43xx-mac80211: Make wireless statistics yield reasonable values
+Date: Fri, 1 Jun 2007 23:43:23 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <46608cb3.kcEmWfiAoSA+svnR%Larry.Finger@lwfinger.net>
+In-Reply-To: <46608cb3.kcEmWfiAoSA+svnR%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "John H." <mistamaila@gmail.com>
-CC: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Upgrade to f7 breaks bcm43xx module
-References: <5b9417770706011111u20f32192s960961dc8693f00e@mail.gmail.com>
-In-Reply-To: <5b9417770706011111u20f32192s960961dc8693f00e@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200706012343.24225.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John H. wrote:
-> bcm43xx mac80211:
-> YOUR FIRMWARE IS TOO OLD. Firmware from binary drivers older than
-> version 4.x is unsupported. You must upgrade your firmware files.
+On Friday 01 June 2007 23:16:35 Larry Finger wrote:
+> The changes contained herein are needed to get reasonable numbers for wireless
+> statistics in bcm43xx-mac80211.
 > 
-> I get that now with f7 and 2.6.21 and didn't with fc6 2.6.20.
-> 
-> However, I read that the error is not what it sounds like.  What is
-> the solution?
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-The error is _EXACTLY_ what it sounds like. With fc6, you were using bcm43xx-softmac, which uses V3 
-firmware. With fc7, you switched to bcm43xx-mac80211, which needs V4 firmware - just what the error 
-message said. The solution is to download a V4 driver and create the appropriate firmware.
+If nobody else complains, go for a merge, John. :)
 
-Larry
+-- 
+Greetings Michael.
