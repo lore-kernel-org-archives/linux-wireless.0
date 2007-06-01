@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:51877 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756794AbXFBS5o (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:17852 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1761466AbXFATV1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jun 2007 14:57:44 -0400
-Date: Sat, 2 Jun 2007 20:57:46 +0200
-From: Adrian Bunk <bunk@stusta.de>
-To: Dan Williams <dan.j.williams@intel.com>, mingo@redhat.com,
-	neilb@suse.de, "John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>
-Cc: linux-raid@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: multiple xor_block() functions
-Message-ID: <20070602185746.GI5500@stusta.de>
+	Fri, 1 Jun 2007 15:21:27 -0400
+Message-ID: <46605814.1090806@linux.intel.com>
+Date: Fri, 01 Jun 2007 10:32:04 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: Michael Wu <flamingice@sourmilk.net>
+CC: Michael Buesch <mb@bu3sch.de>, Jiri Benc <jbenc@suse.cz>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Update stop_queues kdoc
+References: <200706011129.12432.mb@bu3sch.de> <4660503C.9080309@linux.intel.com> <200706011204.23666.flamingice@sourmilk.net>
+In-Reply-To: <200706011204.23666.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-include/linux/raid/xor.h:extern void xor_block(unsigned int count, unsigned int bytes, void **ptr);
-drivers/md/xor.c:xor_block(unsigned int count, unsigned int bytes, void **ptr)
-drivers/md/xor.c:EXPORT_SYMBOL(xor_block);
+Michael Wu wrote:
+> On Friday 01 June 2007 09:58, James Ketrenos wrote:
+>> In this way we are putting in a work around that doesn't result in an API
+>> change, and that can eventually (hopefully) be fixed the "right way"
+>> (whatever that may end up being)
+>>
+> A workaround could be implemented, but I currently don't see any cases where 
+> stopping/waking the queue outside of open/stop/tx is necessary or correct. 
 
-and
+Is calling the ieee80211_stop_queue[s] from open/stop OK then?  The doc update said only in ops->tx.  Should the driver be calling it in the stop callback, or will the stack stop the queues for us?
 
-net/ieee80211/ieee80211_crypt_ccmp.c:static inline void xor_block(u8 * b, u8 * a, size_t len)
+iwlwifi currently calls ieee80211_stop_queue from the Tx handler and calls ieee80211_stop_queues in the event the adapter is reset (due to HW error, RF kill transition, hw tear down, etc.) as it asynchronously brings re-initializes the hardware.
 
+We definitely need to wake the queue outside of open/stop/tx.  If you stop the queue due to the HW ring being full, you won't be able to wake the queue until the HW has asynchronously freed a Tx slot.
 
-At least one of them has to be renamed.
+iwlwifi calls ieee80211_wake_queue during buffer reclaiming after the HW indicates the Tx has completed. 
 
+James
 
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+> (in bcm43xx, stopping the tx rings is more correct and effective for what is 
+> being done there - stopping TX so the radio can be recalibrated)
+> 
+> -Michael Wu
