@@ -1,58 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from waste.org ([66.93.16.53]:38062 "EHLO waste.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751453AbXFQEr6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jun 2007 00:47:58 -0400
-Date: Sat, 16 Jun 2007 23:46:36 -0500
-From: Matt Mackall <mpm@selenic.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	dcbw@redhat.com, hs4233@mail.mn-solutions.de,
-	linux-kernel@vger.kernel.org, marcelo@kvack.org
-Subject: Re: libertas (private) ioctls vs. nl80211
-Message-ID: <20070617044636.GL11166@waste.org>
-References: <1181757483.29767.99.camel@johannes.berg> <20070614170901.GA13384@infradead.org> <20070614103836.23b07a72.akpm@linux-foundation.org> <20070614181307.GA16856@infradead.org> <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org> <20070614190936.GA28917@tuxdriver.com> <20070614125618.a7338ad8.akpm@linux-foundation.org> <20070614200844.GC28917@tuxdriver.com>
+Received: from wx-out-0506.google.com ([66.249.82.231]:25721 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762814AbXFASNi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jun 2007 14:13:38 -0400
+Received: by wx-out-0506.google.com with SMTP id t15so586124wxc
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jun 2007 11:13:38 -0700 (PDT)
+Message-ID: <1ba2fa240706011113x37fc35b0mf673abd1243cd36a@mail.gmail.com>
+Date: Fri, 1 Jun 2007 21:13:37 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: mac80211 initial rate: a question
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	"Broadcom Linux" <bcm43xx-dev@lists.berlios.de>
+In-Reply-To: <466045F2.6010708@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070614200844.GC28917@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <466045F2.6010708@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 14, 2007 at 04:08:44PM -0400, John W. Linville wrote:
-> On Thu, Jun 14, 2007 at 12:56:18PM -0700, Andrew Morton wrote:
-> > On Thu, 14 Jun 2007 15:09:36 -0400
-> > "John W. Linville" <linville@tuxdriver.com> wrote:
-> > 
-> > > It does not make sense to me to rip this out purely for aesthetic
-> > > reasons.
-> > 
-> > Aesthetics are good, but that's not the main issue.
-> > 
-> > What is most worrying is that there appears to be a risk that these
-> > newly-added interfaces will later become obsoleted by another interface. 
-> > This means that we'll need to maintain, test and support _both_ interfaces
-> > for a very long time.  This is the sort of foot-shooting we should avoid.
-> 
-> True enough.  However, I hope you will agree that we should not
-> confuse foresight with speculation.
-> 
-> At present there is no sign on the horizon of either any mac80211
-> mesh code or any other full-MAC wireless driver supporting mesh.
-> Without either of those, it would seem imprudent to rush toward
-> a gneric configuration interface even if nl80211 was prepared to
-> sprout one.
+What about making the initial rate to be configurable in rc80211_simple.c ?
 
-Making it generic may be premature optimization.
 
-But at the very least, we should deal with the three other problems
-Christoph has pointed out: subfunctions, pointer indirections, and
-32on64 cleanliness.
-
-That last one may come back to bite you in a couple years' time, if not
-other people. It's a major pain in the ass.
-
--- 
-Mathematics is the supreme nostalgia of our time.
+On 6/1/07, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> In routine rate_control_simple_rate_init in net/mac80211/rc80211_simple.c, there is a comment that says
+>
+>          /* TODO: what is a good starting rate for STA? About middle? Maybe not
+>           * the lowest or the highest rate.. Could consider using RSSI from
+>           * previous packets? Need to have IEEE 802.1X auth succeed immediately
+>           * after assoc.. */
+>
+> After that the code goes on to set the rate equal to the last one in the rate table, which might be
+> the highest rate. Although that rate might be OK for most of the devices using mac80211, it
+> certainly is not for bcm43xx, which does not have the ability to transmit or receive at speeds much
+> above 1 Mbs. In a private patch circulated only on the bcm43xx mailing list, I changed this routine
+> to set an initial rate of 1 Mbs, which certainly helps bcm43xx authenticate and communicate with the
+> DHCP server.
+>
+> If this low rate were to be set for all drivers, how rapidly would the rate-control algorithm
+> respond? Would this cause a serious performance degradation?
+>
+> Larry
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
