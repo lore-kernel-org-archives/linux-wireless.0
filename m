@@ -1,39 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47925 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751993AbXF3IG0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jun 2007 04:06:26 -0400
-Subject: Re: [RFC/PATCH] debug workqueue deadlocks with lockdep
-From: Ingo Molnar <mingo@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arjan van de Ven <arjan@linux.intel.com>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Peter Zijlstra <a.p.zijlstra@chello.nl>,
-	Oleg Nesterov <oleg@tv-sign.ru>, mingo@elte.hu,
-	Thomas Sattler <tsattler@gmx.de>
-In-Reply-To: <1183052001.4089.2.camel@johannes.berg>
-References: <1182969638.4769.56.camel@johannes.berg>
-	 <1183048429.4089.1.camel@johannes.berg>
-	 <1183052001.4089.2.camel@johannes.berg>
-Content-Type: text/plain
-Date: Sat, 30 Jun 2007 10:05:28 +0200
-Message-Id: <1183190728.7932.43.camel@earth4>
-Mime-Version: 1.0
+Received: from smtp.rutgers.edu ([128.6.72.243]:34063 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750972AbXFATEd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jun 2007 15:04:33 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: James Ketrenos <jketreno@linux.intel.com>
+Subject: Re: [PATCH] mac80211: Update stop_queues kdoc
+Date: Fri, 1 Jun 2007 12:04:18 -0700
+Cc: Michael Buesch <mb@bu3sch.de>, Jiri Benc <jbenc@suse.cz>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200706011129.12432.mb@bu3sch.de> <4660503C.9080309@linux.intel.com>
+In-Reply-To: <4660503C.9080309@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart2484113.AxSnzkvUBu";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200706011204.23666.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-06-28 at 19:33 +0200, Johannes Berg wrote:
-> No, that's not right either, but Arjan just helped me a bit with how
-> lockdep works and I think I have the right idea now. Ignore this for
-> now, I'll send a new patch in a few days.
+--nextPart2484113.AxSnzkvUBu
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-ok. But in general, this is a very nice idea!
+On Friday 01 June 2007 09:58, James Ketrenos wrote:
+> In this way we are putting in a work around that doesn't result in an API
+> change, and that can eventually (hopefully) be fixed the "right way"
+> (whatever that may end up being)
+>
+A workaround could be implemented, but I currently don't see any cases wher=
+e=20
+stopping/waking the queue outside of open/stop/tx is necessary or correct.=
+=20
+(in bcm43xx, stopping the tx rings is more correct and effective for what i=
+s=20
+being done there - stopping TX so the radio can be recalibrated)
 
-i've Cc:-ed Oleg. Oleg, what do you think? I think we should keep all
-the workqueue APIs specified in a form that makes them lockdep coverable
-like Johannes did. This debug mechanism could have helped with the
-recent DVB lockup that Thomas Sattler reported.
+=2DMichael Wu
 
-	Ingo
+--nextPart2484113.AxSnzkvUBu
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGYG23T3Oqt9AH4aERApMAAKCdPLbUpEDw0XynBKUdwKFW8RLFtQCgtOyN
+Nb2Xz5Acs9zrVNZ+ehBZGIE=
+=uUlX
+-----END PGP SIGNATURE-----
+
+--nextPart2484113.AxSnzkvUBu--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
