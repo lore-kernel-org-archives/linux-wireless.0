@@ -1,56 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:48364 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751888AbXF2Ff0 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:54530
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757593AbXFAJyK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2007 01:35:26 -0400
-From: Michael Wu <flamingice@sourmilk.net>
+	Fri, 1 Jun 2007 05:54:10 -0400
+From: Michael Buesch <mb@bu3sch.de>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: separate monitor/subif_start_xmit
-Date: Thu, 28 Jun 2007 22:35:41 -0700
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Andy Green <andy@warmcat.com>
-References: <1182433144.21939.6.camel@johannes.berg>
-In-Reply-To: <1182433144.21939.6.camel@johannes.berg>
+Subject: Re: [PATCH] mac80211: Update stop_queues kdoc
+Date: Fri, 1 Jun 2007 11:53:46 +0200
+Cc: Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200706011129.12432.mb@bu3sch.de> <1180691291.18266.3.camel@johannes.berg>
+In-Reply-To: <1180691291.18266.3.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1244695.TvKuT6PDWx";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200706282235.46522.flamingice@sourmilk.net>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200706011153.46914.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1244695.TvKuT6PDWx
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Friday 01 June 2007 11:48:11 Johannes Berg wrote:
+> On Fri, 2007-06-01 at 11:29 +0200, Michael Buesch wrote:
+> > This updates stop_queue(s) kdoc as currently there's
+> > a undocumented dependency.
+> > 
+> > Stopping the queue from anywhere else than the ops->tx()
+> > callback will result in a hard to debug deadlock and
+> > system freeze (on UP).
+> 
+> Ugh. Any way to actually detect a wrong spot to call it at runtime?
 
-On Thursday 21 June 2007 06:39, Johannes Berg wrote:
-> +	skb_set_network_header(skb, len + sizeof(struct ieee80211_hdr));
-> +	skb_set_transport_header(skb, len + sizeof(struct ieee80211_hdr));
-> +
-Hm, just noticed a potential problem with this. sizeof(struct ieee80211_hdr=
-)=20
-can't be used since ieee80211 headers are variable sized and the smallest=20
-frames can end up being smaller than the 4 addr header.
+Probably by verifying if netif_tx_lock is locked somehow.
+But I'm not sure.
 
-=2DMichael Wu
-
---nextPart1244695.TvKuT6PDWx
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGhJoyT3Oqt9AH4aERAlgzAKC6cGqiUGnE06arKfDGPU+XZxvE2wCggsft
-2Ha7IA2ty7QPfqr/6IU5oK4=
-=ojbu
------END PGP SIGNATURE-----
-
---nextPart1244695.TvKuT6PDWx--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Greetings Michael.
