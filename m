@@ -1,53 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:35346 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752116AbXFLIHS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2007 04:07:18 -0400
-Subject: Re: [Take 2] mac80211 IEEE802.11e/WMM code cleanup
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1181584907.29767.30.camel@johannes.berg>
-References: <20070611085950.GA5540@mail.intel.com>
-	 <1181584907.29767.30.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 12 Jun 2007 16:06:09 +0800
-Message-Id: <1181635570.4758.22.camel@debian.sh.intel.com>
-Mime-Version: 1.0
+Received: from wa-out-1112.google.com ([209.85.146.182]:19942 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751504AbXFASzG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jun 2007 14:55:06 -0400
+Received: by wa-out-1112.google.com with SMTP id j4so610963wah
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jun 2007 11:55:06 -0700 (PDT)
+Message-ID: <5b9417770706011155q50519ecftd3e4b8114102664f@mail.gmail.com>
+Date: Fri, 1 Jun 2007 13:55:06 -0500
+From: "John H." <mistamaila@gmail.com>
+To: "Larry Finger" <larry.finger@lwfinger.net>
+Subject: Re: Upgrade to f7 breaks bcm43xx module
+Cc: "Broadcom Linux" <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <5b9417770706011137q59962e95y6d810b236e6c0c3a@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <5b9417770706011111u20f32192s960961dc8693f00e@mail.gmail.com>
+	 <4660630E.7040701@lwfinger.net>
+	 <5b9417770706011123s3a54c43ep69257321e8102719@mail.gmail.com>
+	 <5b9417770706011137q59962e95y6d810b236e6c0c3a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-06-11 at 20:01 +0200, Johannes Berg wrote:
-> Hi Yi,
-> 
-> In sta_process_dls_req, you currently always accept DLS. I'm not sure
-> how well power save mode works in mac80211 (probably not at all, someone
-> versed in 802.11 should probably look at it some time soon), but once
-> DLS is set up power saving must be disabled by the DLS peer. This,
-> however, possibly leads to battery lifetime diminishing, so always
-> accepting the direct link might not be desirable. Any thoughts?
+Sorry, I got it all fixed.  The XP installation on my system had the
+file.  There is a warning that says
 
-You are right. I once had the debugfs file on the DLS request response
-side to to indicate accept or deny all DLS requests. But after a second
-thought, maybe a MAC list is better? But this is just for testing not a
-real API.
+Warning! Idle-TSSI.... Disabling TX power adjustment.
 
-> Should we have user-space controlled list of DLS possible DLS peers? Or
-> call out to userspace via nl80211 to make a decision? The list would be
-> easy by simply adding a sta_info for a possible DLS peer, callout also
-> shouldn't be too hard by sending a message to some QoS nl80211 multicast
-> group and possibly not responding to the DLS request at all when our
-> userspace doesn't accept it (that way it'll just time out on the other
-> side).
+But I assume it's nothing?  Hopefully this doesn't have the speed
+problems that required a patch before.
 
-Right. For the real API, I'd prefer the kernel to send an event to
-userspace (daemon) via netlink (nl80211) and let user space to make the
-decision. This way mac80211 doesn't need to manage the user prefered DLS
-list itself. Another benefit is the DLS connection could be established
-interactively. For example when a user is VIing in Xwindows, a pop up
-window from NetworkManager asks "MAC address XX:XX:.. wants to setup a
-DLS connection with you, do you accept?"
+Thanks again!
 
-Thanks,
--yi
+
+
+On 6/1/07, John H. <mistamaila@gmail.com> wrote:
+> I mean, the correct files to populate /lib/firmware(as I assume that's
+> what you mean).
+>
+> I don't see it, or the instructions, on
+> http://bcm43xx.berlios.de/
+>
+> On 6/1/07, John H. <mistamaila@gmail.com> wrote:
+> > Thanks for the prompt response.
+> >
+> > I have a dell e1505.  Do I need an updated fwcutter as well?  What is
+> > the actual driver I need?  The device is broadcom 1390?
+> >
+> >
+> > On 6/1/07, Larry Finger <larry.finger@lwfinger.net> wrote:
+> > > John H. wrote:
+> > > > bcm43xx mac80211:
+> > > > YOUR FIRMWARE IS TOO OLD. Firmware from binary drivers older than
+> > > > version 4.x is unsupported. You must upgrade your firmware files.
+> > > >
+> > > > I get that now with f7 and 2.6.21 and didn't with fc6 2.6.20.
+> > > >
+> > > > However, I read that the error is not what it sounds like.  What is
+> > > > the solution?
+> > >
+> > > The error is _EXACTLY_ what it sounds like. With fc6, you were using bcm43xx-softmac, which uses V3
+> > > firmware. With fc7, you switched to bcm43xx-mac80211, which needs V4 firmware - just what the error
+> > > message said. The solution is to download a V4 driver and create the appropriate firmware.
+> > >
+> > > Larry
+> > >
+> >
+>
