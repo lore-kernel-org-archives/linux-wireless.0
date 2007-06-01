@@ -1,74 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4585 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754926AbXFNT0N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2007 15:26:13 -0400
-Date: Thu, 14 Jun 2007 15:09:36 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	dcbw@redhat.com, hs4233@mail.mn-solutions.de,
-	linux-kernel@vger.kernel.org, marcelo@kvack.org
-Subject: Re: libertas (private) ioctls vs. nl80211
-Message-ID: <20070614190936.GA28917@tuxdriver.com>
-References: <1181757483.29767.99.camel@johannes.berg> <20070614170901.GA13384@infradead.org> <20070614103836.23b07a72.akpm@linux-foundation.org> <20070614181307.GA16856@infradead.org> <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org>
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:50659 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760351AbXFARzd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jun 2007 13:55:33 -0400
+Message-ID: <46605D8C.1030004@lwfinger.net>
+Date: Fri, 01 Jun 2007 12:55:24 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Broadcom Linux <bcm43xx-dev@lists.berlios.de>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Locking problem in bcm43xx-mac80211
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 14, 2007 at 11:23:11AM -0700, Linus Torvalds wrote:
-> 
-> 
-> On Thu, 14 Jun 2007, Christoph Hellwig wrote:
-> >
-> > > I suspect that the probability of your proposal succeeding would be increased
-> > > if you could prepare a patch...
-> > 
-> > Here we go:
+When a 'modprobe -r bcm43xx-mac80211' command is given with the interface up, the following kernel 
+BUG is issued:
 
-FWIW, I do appreciate the patch rather than just mere
-complaining... :-)
+ssb: Switching to ChipCommon core, index 0
+ssb: Switching to IEEE 802.11 core, index 1
+bcm43xx_mac80211: Radio turned off
+BUG: sleeping function called from invalid context at kernel/mutex.c:86
+in_atomic():1, irqs_disabled():0
+2 locks held by modprobe/6053:
+  #0:  (rtnl_mutex){--..}, at: [<ffffffff803f0d63>] mutex_lock+0x2a/0x2e
+  #1:  (&local->sta_lock){-+..}, at: [<ffffffff882622a5>] sta_info_flush+0x20/0x77 [mac80211]
 
-> I don't mind ripping them out, but it makes sense only if people are 
-> actually signed up to implementing this on a higher layer. As such, I'd 
-> need to get a sign-off from somebody actually involved in wireless mesh 
-> stuff etc.
+Call Trace:
+  [<ffffffff8024c830>] debug_show_held_locks+0x22/0x24
+  [<ffffffff8022ab32>] __might_sleep+0xd9/0xdb
+  [<ffffffff803f0d56>] mutex_lock+0x1d/0x2e
+  [<ffffffff8829dc3a>] :bcm43xx_mac80211:bcm43xx_dev_set_key+0xc3/0x2e4
+  [<ffffffff8028eea5>] __kmalloc+0x17e/0x18e
+  [<ffffffff882621bf>] :mac80211:sta_info_free+0xec/0x1b2
+  [<ffffffff882622cf>] :mac80211:sta_info_flush+0x4a/0x77
+  [<ffffffff8826c5bf>] :mac80211:ieee80211_if_reinit+0x29c/0x2c7
+  [<ffffffff80398de0>] unregister_netdevice+0x17e/0x201
+  [<ffffffff8826bd06>] :mac80211:__ieee80211_if_del+0x1d/0x21
+  [<ffffffff8825a985>] :mac80211:ieee80211_unregister_hw+0xbc/0x216
+  [<ffffffff8829cf95>] :bcm43xx_mac80211:bcm43xx_remove+0x53/0x7f
+  [<ffffffff8828f23b>] :ssb:ssb_device_remove+0x2b/0x39
+  [<ffffffff8036cab5>] __device_release_driver+0x93/0xb3
+  [<ffffffff8036d03d>] driver_detach+0xdb/0x11e
+  [<ffffffff8036c529>] bus_remove_driver+0x75/0x97
+  [<ffffffff8036d0b1>] driver_unregister+0x9/0xb
+  [<ffffffff8828eddb>] :ssb:ssb_driver_unregister+0xd/0xf
+  [<ffffffff882b0964>] :bcm43xx_mac80211:bcm43xx_exit+0x10/0x23
+  [<ffffffff80257a82>] sys_delete_module+0x1b5/0x1e6
+  [<ffffffff8024db6a>] trace_hardirqs_on+0x11c/0x147
+  [<ffffffff803f1dcb>] trace_hardirqs_on_thunk+0x35/0x37
+  [<ffffffff80209f9e>] system_call+0x7e/0x83
 
-I'm not aware of any project working on wireless mesh in mac80211 at
-the moment, serious or otherwise.  I think one would be worthwhile,
-but I don't know of anyone working on it.
+WARNING: at kernel/mutex.c:132 __mutex_lock_common()
 
-> Please? I do agree that the private iwpriv interface seems to be totally 
-> the wrong thing to do, but I want to see this as a first step towards a 
-> better situation, rather than just a "remove code that is ugly" issue!
+Call Trace:
+  [<ffffffff803f0b23>] __mutex_lock_slowpath+0x6a/0x280
+  [<ffffffff8020b5f3>] dump_stack+0x15/0x17
+  [<ffffffff803f0d63>] mutex_lock+0x2a/0x2e
+  [<ffffffff8829dc3a>] :bcm43xx_mac80211:bcm43xx_dev_set_key+0xc3/0x2e4
+  [<ffffffff8028eea5>] __kmalloc+0x17e/0x18e
+  [<ffffffff882621bf>] :mac80211:sta_info_free+0xec/0x1b2
+  [<ffffffff882622cf>] :mac80211:sta_info_flush+0x4a/0x77
+  [<ffffffff8826c5bf>] :mac80211:ieee80211_if_reinit+0x29c/0x2c7
+  [<ffffffff80398de0>] unregister_netdevice+0x17e/0x201
+  [<ffffffff8826bd06>] :mac80211:__ieee80211_if_del+0x1d/0x21
+  [<ffffffff8825a985>] :mac80211:ieee80211_unregister_hw+0xbc/0x216
+  [<ffffffff8829cf95>] :bcm43xx_mac80211:bcm43xx_remove+0x53/0x7f
+  [<ffffffff8828f23b>] :ssb:ssb_device_remove+0x2b/0x39
+  [<ffffffff8036cab5>] __device_release_driver+0x93/0xb3
+  [<ffffffff8036d03d>] driver_detach+0xdb/0x11e
+  [<ffffffff8036c529>] bus_remove_driver+0x75/0x97
+  [<ffffffff8036d0b1>] driver_unregister+0x9/0xb
+  [<ffffffff8828eddb>] :ssb:ssb_driver_unregister+0xd/0xf
+  [<ffffffff882b0964>] :bcm43xx_mac80211:bcm43xx_exit+0x10/0x23
+  [<ffffffff80257a82>] sys_delete_module+0x1b5/0x1e6
+  [<ffffffff8024db6a>] trace_hardirqs_on+0x11c/0x147
+  [<ffffffff803f1dcb>] trace_hardirqs_on_thunk+0x35/0x37
+  [<ffffffff80209f9e>] system_call+0x7e/0x83
 
-Private wireless extensions are ugly, even uglier in some ways than
-normal private ioctls.  However, they have been used in the past for
-just this sort of thing (i.e. something a given driver can do but is
-not generically available).
+ACPI: PCI interrupt for device 0000:01:00.0 disabled
+ACPI: PCI Interrupt 0000:01:00.0[A] -> Link [LK2E] -> GSI 19 (level, high) -> IRQ 19
 
-We don't have either generic functionality
-for mesh in mac80211 or even other drivers doing mesh on their own,
-so there is nothing to validate a generic configuration option.
-Further, while the beginnings of nl80211 are available it will still
-be some non-zero time before it is even mature enough to replace
-truly generic configuration facilities in the wireless extensions.
+I don't know what would happen if an 'ifdown' command were issued first, as I am using 
+NetworkManager to control the interface, and it prevents usage of ifdown.
 
-> Comments?
+Larry
 
-Aside from simply carrying an out-of-stream patch, the OLPC and
-libertas driver people would have only the alternative of hacking-up
-a debugfs configuration regime.  Is it worthwhile to obligate them
-to either alternative?  What is to be gained?
-
-It does not make sense to me to rip this out purely for aesthetic
-reasons.
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
