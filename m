@@ -1,30 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3383 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754159AbXFEMYV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2007 08:24:21 -0400
-Date: Tue, 5 Jun 2007 07:57:01 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: warnings in git-wireless
-Message-ID: <20070605115701.GA5391@tuxdriver.com>
-References: <20070605020614.3f06b2ab.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070605020614.3f06b2ab.akpm@linux-foundation.org>
+Received: from wa-out-1112.google.com ([209.85.146.180]:42001 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760788AbXFASXq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jun 2007 14:23:46 -0400
+Received: by wa-out-1112.google.com with SMTP id j4so597939wah
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jun 2007 11:23:45 -0700 (PDT)
+Message-ID: <5b9417770706011123s3a54c43ep69257321e8102719@mail.gmail.com>
+Date: Fri, 1 Jun 2007 13:23:44 -0500
+From: "John H." <mistamaila@gmail.com>
+To: "Larry Finger" <larry.finger@lwfinger.net>
+Subject: Re: Upgrade to f7 breaks bcm43xx module
+Cc: "Broadcom Linux" <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4660630E.7040701@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <5b9417770706011111u20f32192s960961dc8693f00e@mail.gmail.com>
+	 <4660630E.7040701@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 05, 2007 at 02:06:14AM -0700, Andrew Morton wrote:
+Thanks for the prompt response.
 
-> Please, don't anybody dare think about thinking about letting this anywhere
-> near mainline until it has had a thorough review.  Or at least, a little bit
-> of review.
+I have a dell e1505.  Do I need an updated fwcutter as well?  What is
+the actual driver I need?  The device is broadcom 1390?
 
-Don't worry -- I assure you that everyone is aware of the issues.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+On 6/1/07, Larry Finger <larry.finger@lwfinger.net> wrote:
+> John H. wrote:
+> > bcm43xx mac80211:
+> > YOUR FIRMWARE IS TOO OLD. Firmware from binary drivers older than
+> > version 4.x is unsupported. You must upgrade your firmware files.
+> >
+> > I get that now with f7 and 2.6.21 and didn't with fc6 2.6.20.
+> >
+> > However, I read that the error is not what it sounds like.  What is
+> > the solution?
+>
+> The error is _EXACTLY_ what it sounds like. With fc6, you were using bcm43xx-softmac, which uses V3
+> firmware. With fc7, you switched to bcm43xx-mac80211, which needs V4 firmware - just what the error
+> message said. The solution is to download a V4 driver and create the appropriate firmware.
+>
+> Larry
+>
