@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:64160 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753344AbXFUBqc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2007 21:46:32 -0400
-Subject: Re: [patch]mac80211: add support for iwlist channel
-From: Hong Liu <hong.liu@intel.com>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-In-Reply-To: <200706200008.47770.flamingice@sourmilk.net>
-References: <1182156425.15928.7.camel@napa-sdv1.sh.intel.com>
-	 <200706182212.55862.flamingice@sourmilk.net>
-	 <1182308588.19178.17.camel@napa-sdv1.sh.intel.com>
-	 <200706200008.47770.flamingice@sourmilk.net>
-Content-Type: text/plain
-Date: Thu, 21 Jun 2007 09:43:31 +0800
-Message-Id: <1182390211.27548.3.camel@napa-sdv1.sh.intel.com>
-Mime-Version: 1.0
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:51877 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756794AbXFBS5o (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Jun 2007 14:57:44 -0400
+Date: Sat, 2 Jun 2007 20:57:46 +0200
+From: Adrian Bunk <bunk@stusta.de>
+To: Dan Williams <dan.j.williams@intel.com>, mingo@redhat.com,
+	neilb@suse.de, "John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>
+Cc: linux-raid@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: multiple xor_block() functions
+Message-ID: <20070602185746.GI5500@stusta.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-06-20 at 00:08 -0700, Michael Wu wrote:
-> On Tuesday 19 June 2007 20:03, Hong Liu wrote:
-> > +	struct ieee80211_hw_mode *mode = NULL;
-> > +	int c = 0;
-> > +
-> Shouldn't add an extra empty line here.
-> 
-> > +			if (chan->flag & IEEE80211_CHAN_W_SCAN) {
-> > +				range->freq[c].i = chan->chan;
-> > +				range->freq[c].m = chan->freq * 100000;
-> > +				range->freq[c].e = 1;
-> > +			}
-> > +			++j; ++c;
-> c shouldn't be incremented if the channel is being skipped.
-> 
+include/linux/raid/xor.h:extern void xor_block(unsigned int count, unsigned int bytes, void **ptr);
+drivers/md/xor.c:xor_block(unsigned int count, unsigned int bytes, void **ptr)
+drivers/md/xor.c:EXPORT_SYMBOL(xor_block);
 
-Oh, silly mistake. Thanks for pointing it out.
+and
 
-Thanks,
-Hong
+net/ieee80211/ieee80211_crypt_ccmp.c:static inline void xor_block(u8 * b, u8 * a, size_t len)
 
-> Also, two minor comments on the style since this patch needs to be revised 
-> anyway - using ++x instead of x++ looks a bit odd, and using 'int j' 
-> when 'int i' is available is also a little strange.
-> 
-> Patch looks good otherwise.
-> 
-> -Michael Wu
+
+At least one of them has to be renamed.
+
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
