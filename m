@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.237]:30458 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752036AbXFLOVB (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.173]:36063 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756601AbXFBNR5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2007 10:21:01 -0400
-Received: by wx-out-0506.google.com with SMTP id t15so1804354wxc
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2007 07:21:00 -0700 (PDT)
-Message-ID: <1ba2fa240706120721y78f7f4e1u2ff795b0bdedcca2@mail.gmail.com>
-Date: Tue, 12 Jun 2007 17:21:00 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Zhu Yi" <yi.zhu@intel.com>
-Subject: Re: [Take 2] mac80211 IEEE802.11e/WMM code cleanup
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1181636314.4758.30.camel@debian.sh.intel.com>
+	Sat, 2 Jun 2007 09:17:57 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so408684ugf
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Jun 2007 06:17:55 -0700 (PDT)
+Message-ID: <7b4bf7ff0706020617l4cf50359g8358e4aa2b359999@mail.gmail.com>
+Date: Sat, 2 Jun 2007 15:17:55 +0200
+From: "Olivier Cornu" <o.cornu@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: [PATCH] mac80211: Update stop_queues kdoc
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200706012342.20592.mb@bu3sch.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <20070611085950.GA5540@mail.intel.com>
-	 <1181584907.29767.30.camel@johannes.berg>
-	 <1ba2fa240706120037g767a330fsa1e838f378ce2b58@mail.gmail.com>
-	 <1181636314.4758.30.camel@debian.sh.intel.com>
+References: <200706011129.12432.mb@bu3sch.de> <200706012242.52226.mb@bu3sch.de>
+	 <7b4bf7ff0706011400g3d03afb6n18106773f18fade6@mail.gmail.com>
+	 <200706012342.20592.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6/12/07, Zhu Yi <yi.zhu@intel.com> wrote:
-> On Tue, 2007-06-12 at 10:37 +0300, Tomas Winkler wrote:
-> > This is correct that power save must be disabled explicitly in this
-> > implementation.  Usually you want to establish DLS for increasing
-> > throughput so you won't go to power save mode anyway.
+2007/6/1, Michael Buesch <mb@bu3sch.de>:
+> On Friday 01 June 2007 23:00:16 Olivier Cornu wrote:
+> > The only call to ieee80211_stop_queue() grep can find is in
+> > bcm43xx_dma.c:1171, i.e. bcm43xx_dma_tx(). And bcm43xx_dma_tx() is
+> > only called from bcm43xx_tx().
+> > What did i miss?
 >
-> Right.
->
-> > One other thing is encryption, the path for peer key handshake must be
-> > opened in mac80211 in addition to this patch.
->
-> Authentication or encryption? I don't think either mac80211 or
-> wpa_supplicant supports IBSS WPA/WPA2 currently, right. For WEP, it
-> should work since both DLS peers use the same key as set in the AP.
->
+> Periodic work. I removed that in my current tree.
+> And I think we also call it when resetting the device. But I'm not sure.
 
-Authentication is against AP in any case. In addition you have peer
-key hand shake for exchanging  encryption keys.  It is similar to
-EAPOL hand shake, need to keep port closed till the keys are
-available. This should be supported in supplicant.
-WEP is global to bss so there is no problem.
+I guess i see why we did not understand each other: these are calls to
+ieee80211_stop_queues, not directly to ieee80211_stop_queue (even
+though stop_queues ultimately calls stop_queue).
+The difference is relevant because, if some kind of locking (for
+example) was needed in the special contexts stop_queues only might be
+called from, these locks would be held inside stop_queues, around its
+stop_queue calls. :)
 
-> Thanks,
-> -yi
->
+Is there any way to tell mac80211 the device is in a [temporary]
+"non-functional" state (reset, association loss...) ?
