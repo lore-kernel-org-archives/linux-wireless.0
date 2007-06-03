@@ -1,64 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58152 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932730AbXFHJGM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2007 05:06:12 -0400
-Subject: Re: [PATCH] mac80211: rc80211_lowest, a dumb rate control algorithm
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <20070608105900.4c401e14@griffin.suse.cz>
-References: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>
-	 <20070607221939.444e9d74@griffin.suse.cz>
-	 <20070607222113.0f752bf8@griffin.suse.cz>
-	 <20070607222210.1a445cd7@griffin.suse.cz> <4668A7E5.3070500@lwfinger.net>
-	 <20070608105900.4c401e14@griffin.suse.cz>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-m93NJvzBmkD51zWV36S8"
-Date: Fri, 08 Jun 2007 11:06:28 +0200
-Message-Id: <1181293589.6533.25.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from daemonizer.de ([87.230.16.230]:53807 "EHLO daemonizer.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751690AbXFCQ1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Jun 2007 12:27:16 -0400
+From: Maximilian Engelhardt <maxi@daemonizer.de>
+To: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: b44: regression in 2.6.22 (resend)
+Date: Sun, 3 Jun 2007 18:26:02 +0200
+Cc: Michael Buesch <mb@bu3sch.de>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Hemminger <shemminger@linux-foundation.org>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+References: <20070525172431.60affaca@freepuppy> <200705281944.05030.maxi@daemonizer.de> <1180380230.3657.3.camel@chaos>
+In-Reply-To: <1180380230.3657.3.camel@chaos>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart2176219.MicN8hRCvA";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200706031826.06891.maxi@daemonizer.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-m93NJvzBmkD51zWV36S8
-Content-Type: text/plain
+--nextPart2176219.MicN8hRCvA
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Fri, 2007-06-08 at 10:59 +0200, Jiri Benc wrote:
+On Monday 28 May 2007, Thomas Gleixner wrote:
+> On Mon, 2007-05-28 at 19:44 +0200, Maximilian Engelhardt wrote:
+> > > Can you please keep CONFIG_HIGH_RES_TIMERS and CONFIG_NOHZ and try the
+> > > following combinations on the kernel command line:
+> > >
+> > > 1) highres=3Doff nohz=3Doff (should be the same as your working confi=
+g)
+> > > 2) highres=3Doff
+> > > 3) nohz=3Doff
+> >
+> > I tested this with my 2.6.22-rc3 kernel, here are the results:
+> >
+> > without any special boot parameters: problem does appear
+> > highres=3Doff nohz=3Doff: problem does not appear
+> > highres=3Doff: problem does not appear
+> > nohz=3Doff: problem does appear
+>
+> Is there any other strange behavior of the high res enabled kernel than
+> the b44 problem ?
 
-> > I do not think this particular rate control algorithm is needed. A patc=
-h has been submitted that=20
-> > will allow the user to use the SIOCSIWRATE ioctl to lock in a rate. In =
-addition, a patch that=20
-> > changes rc80211_simple to set the initial rate to the lowest supported =
-value has also been=20
-> > submitted. With these two alternatives, everything that this proposed m=
-odule does is supported in=20
-> > other ways.
->=20
-> Ok.
+I didn't notice anything in the past (as I wrote). But today I did some tes=
+ts=20
+for an updated version of the p54 mac80211 wlan driver and I noticed exactl=
+y=20
+the same problem:
 
-Actually, I'd vote for having this rate control algorithm anyway because
-it's basically a rate control algorithm template you can copy and
-modify. rc80211_simple is quite a bit more sophisticated over that.
+when booting with highres=3Doff everything is fine.
+But when I boot an highres enabled kernel and I do the iperf-test with the =
+p54=20
+driver, my systems becomes unresponsive during the test. It seems to be=20
+exactly the same problem I have with the b44 driver.
+So this might not be a bug in the b44 code but a bug somewhere in the linux=
+=20
+networking code.
 
-johannes
+I did the test with an 2.6.22-rc3-git4 kernel and the p54 driver built=20
+external as module.=20
 
---=-m93NJvzBmkD51zWV36S8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Maxi
+
+--nextPart2176219.MicN8hRCvA
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.6 (GNU/Linux)
 
-iD8DBQBGaRwU/ETPhpq3jKURAgE9AKClzjnbkSEb2sJrzEpQ5X9yxGuqOACfbrXl
-OmNMZT0J5bkwhgu6e6dM0pc=
-=bMYQ
+iD8DBQBGYuueOimwv528XGERAqZNAJ9jz78DPqrgzhMYyeFI7FAKmsx96QCfULJ3
+CWJqCY3C3RIgMcsYRSgz5Q0=
+=Fr+1
 -----END PGP SIGNATURE-----
 
---=-m93NJvzBmkD51zWV36S8--
-
+--nextPart2176219.MicN8hRCvA--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
