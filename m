@@ -1,66 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2820 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757132AbXFLByw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 21:54:52 -0400
-Date: Mon, 11 Jun 2007 21:24:11 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] mac80211: Set low initial rate in rc80211_simple
-Message-ID: <20070612012411.GI20422@tuxdriver.com>
-References: <20070610.181704.73383002.davem@davemloft.net> <20070612012228.GG20422@tuxdriver.com> <20070612012319.GH20422@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070612012319.GH20422@tuxdriver.com>
+Received: from an-out-0708.google.com ([209.85.132.249]:50661 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750816AbXFCTeR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Jun 2007 15:34:17 -0400
+Received: by an-out-0708.google.com with SMTP id d31so290174and
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Jun 2007 12:34:17 -0700 (PDT)
+Message-ID: <8e6f94720706031234y77761bb8m8abeda67d48f9dd5@mail.gmail.com>
+Date: Sun, 3 Jun 2007 15:34:17 -0400
+From: "Will Dyson" <will.dyson@gmail.com>
+To: "Michael Wu" <flamingice@sourmilk.net>
+Subject: Re: BUG: at net/mac80211/ieee80211.c:1280 ieee80211_tx()
+Cc: linux-wireless@vger.kernel.org,
+	"Broadcom Linux" <bcm43xx-dev@lists.berlios.de>,
+	"Jiri Benc" <jbenc@suse.cz>
+In-Reply-To: <8e6f94720705260851k34c3d1fam16ab96c13375b11d@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <8e6f94720705251637o71a13d71w70199a3057048592@mail.gmail.com>
+	 <200705251805.25696.flamingice@sourmilk.net>
+	 <8e6f94720705252110k46be0397v5f446aabdf34fe3f@mail.gmail.com>
+	 <200705252224.18457.flamingice@sourmilk.net>
+	 <8e6f94720705260851k34c3d1fam16ab96c13375b11d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Larry Finger <Larry.Finger@lwfinger.net>
+On 5/26/07, Will Dyson <will.dyson@gmail.com> wrote:
+> On 5/26/07, Michael Wu <flamingice@sourmilk.net> wrote:
+> > On Friday 25 May 2007 21:10, Will Dyson wrote:
+> > > On 5/25/07, Michael Wu <flamingice@sourmilk.net> wrote:
+> > > > On Friday 25 May 2007 16:37, Will Dyson wrote:
+> > > > > But I've got ton's of these in my log:
+> > > > >
+> > > > >  BUG: at net/mac80211/ieee80211.c:1280 ieee80211_tx()
+> > > >
+> > > > Do you have CONFIG_NET_SCHED on?
+> > >
+> > > I do not have it set in this kernel. Should I?
+> > It may help. mac80211 didn't work correctly without it before and I'm not
+> > entirely sure if it works correctly now without that.
+>
+> Ok. I'll try it.
+>
+> For what it's worth, I can no-longer reproduce this error (although it
+> was reproducible across several reboots yesterday).
 
-The initial rate for STA's using rc80211_simple is set to the last
-rate in the rate table. For situations for which the signal is weak,
-the rate may be too high for authentication and association. Although
-the rc80211_simple module will adjust the speed, the response may not
-be fast enough for a successful connection. This modification sets the
-initial rate to the lowest supported value.
+Followup:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/rc80211_simple.c |   12 +++++++-----
- 1 files changed, 7 insertions(+), 5 deletions(-)
+The warning did eventually show up again in the kernel without
+CONFIG_NET_SCHED. Runing a week with CONFIG_NET_SCHED without a
+recurrence. So that seems to have solved it.
 
-diff --git a/net/mac80211/rc80211_simple.c b/net/mac80211/rc80211_simple.c
-index 2048cfd..5ae7fc4 100644
---- a/net/mac80211/rc80211_simple.c
-+++ b/net/mac80211/rc80211_simple.c
-@@ -283,14 +283,16 @@ static void rate_control_simple_rate_init(void *priv, void *priv_sta,
- 	int i;
- 	sta->txrate = 0;
- 	mode = local->oper_hw_mode;
--	/* TODO: what is a good starting rate for STA? About middle? Maybe not
--	 * the lowest or the highest rate.. Could consider using RSSI from
--	 * previous packets? Need to have IEEE 802.1X auth succeed immediately
--	 * after assoc.. */
-+	/* TODO: This routine should consider using RSSI from previous packets
-+	 * as we need to have IEEE 802.1X auth succeed immediately after assoc..
-+	 * Until that method is implemented, we will use the lowest supported rate
-+	 * as a workaround, */
- 	for (i = 0; i < mode->num_rates; i++) {
- 		if ((sta->supp_rates & BIT(i)) &&
--		    (mode->rates[i].flags & IEEE80211_RATE_SUPPORTED))
-+		    (mode->rates[i].flags & IEEE80211_RATE_SUPPORTED)) {
- 			sta->txrate = i;
-+			break;
-+		}
- 	}
- }
- 
--- 
-1.5.0.6
+If mac80211 needs CONFIG_NET_SCHED, shouldn't mac80211 select or depend on it?
 
 -- 
-John W. Linville
-linville@tuxdriver.com
+Will Dyson
