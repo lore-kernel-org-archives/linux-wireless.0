@@ -1,42 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:52431 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757098AbXFZMCq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2007 08:02:46 -0400
-Subject: Re: Please pull libertas-2.6 'upstream-fixes' branch
-From: Dan Williams <dcbw@redhat.com>
-To: Jeff Garzik <jeff@garzik.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4680E5E5.9000300@garzik.org>
-References: <1182806992.10966.4.camel@xo-13-A4-25.localdomain>
-	 <4680E5E5.9000300@garzik.org>
-Content-Type: text/plain
-Date: Tue, 26 Jun 2007 08:06:30 -0400
-Message-Id: <1182859590.15750.0.camel@xo-13-A4-25.localdomain>
-Mime-Version: 1.0
+Received: from mu-out-0910.google.com ([209.85.134.187]:53542 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756897AbXFCKdi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Jun 2007 06:33:38 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so1378306mue
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Jun 2007 03:33:36 -0700 (PDT)
+Message-ID: <7b4bf7ff0706030333j21152541hed9384e965cacaa9@mail.gmail.com>
+Date: Sun, 3 Jun 2007 12:33:36 +0200
+From: "Olivier Cornu" <o.cornu@gmail.com>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] mac80211: Add module parameter for setting initial rate in rc80211_simple
+Cc: "Jiri Benc" <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+In-Reply-To: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-06-26 at 06:09 -0400, Jeff Garzik wrote:
-> Dan Williams wrote:
-> > Hi John,
-> > 
-> > The following changes since commit 188e1f81ba31af1b65a2f3611df4c670b092bbac:
-> >   Linus Torvalds (1):
-> >         Linux 2.6.22-rc5
-> > 
-> > are found in the git repository at:
-> > 
-> >   git://git.infradead.org/libertas-2.6/ upstream-fixes
-> 
-> I think John's on vacation.  If you don't hear from him in 24-48 hours, 
-> please resend this to me, just to make sure it makes 2.6.22.
+2007/6/2, Larry Finger <Larry.Finger@lwfinger.net>:
+> The initial rate for STA's using rc80211_simple is set to the last
+> rate in the rate table. This is too fast for the bcm43xx-mac80211
+> driver. To correct this situation without affecting any other driver,
+> an initial_rate parameter is added to the rc80211_simple module.
 
-He _should_ be back by now, but I'll make sure it gets where it needs to
-go in any case.
+What if two different mac80211 device drivers need two different initial rates?
 
-Thanks!
-Dan
-
-
+--
+Olivier Cornu
