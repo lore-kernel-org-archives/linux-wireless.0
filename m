@@ -1,39 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40891 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753378AbXFUKnK (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.224]:47839 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750818AbXFCUXb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2007 06:43:10 -0400
-Subject: [PATCH] mac80211: remove ieee80211_msg_passive_scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 21 Jun 2007 00:15:52 +0200
-Message-Id: <1182377752.3714.108.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 3 Jun 2007 16:23:31 -0400
+Received: by wx-out-0506.google.com with SMTP id t15so994093wxc
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Jun 2007 13:23:31 -0700 (PDT)
+Message-ID: <3871229b0706031323w5c8e3589r973b8735ed3e1f85@mail.gmail.com>
+Date: Sun, 3 Jun 2007 22:23:31 +0200
+From: "Jean-Baptiste Note" <jbnote@gmail.com>
+Reply-To: jean-baptiste.note@m4x.org
+To: "Jan Willies" <jan@willies.info>
+Subject: Re: [Developers] ISL3880IK crashes with 2.6.19.1 / .21.1
+Cc: developers@islsm.org, linux-wireless@vger.kernel.org
+In-Reply-To: <46631BD2.20704@willies.info>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <46631BD2.20704@willies.info>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This constant is unused.
+Hi,
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Any chance you could decode the oops ? If you're recompiling the
+kernel yourself, include symbols (can't remember the option name), or
+run ksymoops...
 
----
- net/mac80211/ieee80211_common.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- wireless-dev.orig/net/mac80211/ieee80211_common.h	2007-06-20 01:40:13.217360230 +0200
-+++ wireless-dev/net/mac80211/ieee80211_common.h	2007-06-20 01:40:23.577360230 +0200
-@@ -47,7 +47,7 @@ enum ieee80211_msg_type {
- 	ieee80211_msg_normal = 0,
- 	ieee80211_msg_tx_callback_ack = 1,
- 	ieee80211_msg_tx_callback_fail = 2,
--	ieee80211_msg_passive_scan = 3,
-+	/* hole at 3, was ieee80211_msg_passive_scan but unused */
- 	ieee80211_msg_wep_frame_unknown_key = 4,
- 	ieee80211_msg_michael_mic_failure = 5,
- 	/* hole at 6, was monitor but never sent to userspace */
-
-
+JB
