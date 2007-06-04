@@ -1,101 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51630 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751493AbXFWVrG (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:9722 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752382AbXFDM2b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jun 2007 17:47:06 -0400
-Subject: Re: [WIP] mac80211: kill mgmt interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <467CE130.2080306@warmcat.com>
-References: <1182418939.10821.8.camel@johannes.berg>
-	 <20070621143558.68fc8e4a@griffin.suse.cz>
-	 <1182429920.21939.1.camel@johannes.berg>
-	 <20070621151441.500d62d5@griffin.suse.cz>
-	 <20070622154545.29eeebdb@griffin.suse.cz> <467BDCB1.1010604@warmcat.com>
-	 <1182526221.21939.94.camel@johannes.berg>
-	 <20070622174953.500817e0@griffin.suse.cz>
-	 <1182543620.21939.98.camel@johannes.berg>  <467CB691.2090806@warmcat.com>
-	 <1182581630.21939.105.camel@johannes.berg>  <467CE130.2080306@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TEsFXOkthTIHb0rqCFf7"
-Date: Sat, 23 Jun 2007 23:48:33 +0200
-Message-Id: <1182635313.21939.122.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 4 Jun 2007 08:28:31 -0400
+Received: from lin01.mn-solutions.de (pD95F9AAC.dip0.t-ipconnect.de [217.95.154.172])
+	by s131.mittwaldmedien.de (Postfix) with ESMTP id 9EFBD5E586F
+	for <linux-wireless@vger.kernel.org>; Mon,  4 Jun 2007 14:28:30 +0200 (CEST)
+Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id D102F1E002B
+	for <linux-wireless@vger.kernel.org>; Mon,  4 Jun 2007 14:28:25 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: AW: Drivers that do not honor regulatory restrictions
+Date: Mon, 4 Jun 2007 14:28:25 +0200
+References: <297494.10588.qm@web51404.mail.re2.yahoo.com>
+In-Reply-To: <297494.10588.qm@web51404.mail.re2.yahoo.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200706041428.25375.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> 1575         { 2412, 2484, 20, 6 } /* IEEE 802.11b/g, channels
+> 1..13 */,
+>
+> did the trick.
 
---=-TEsFXOkthTIHb0rqCFf7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Not sure if that is the right place .... but if you change the 
+frequency, you should also change the comment:
 
-On Sat, 2007-06-23 at 10:00 +0100, Andy Green wrote:
-> Johannes Berg wrote:
->=20
-> > On the other hand, I do consider userspace MLME needs slightly
-> > different; it needs to be able to have frames encrypted, needs to see
-> > frames that have been decrypted even though they would otherwise be
-> > dropped [and this is very different to what you want], and probably
-> > more.
->=20
-> Fair enough, but injection is a separate issue from RX, despite one
-> usually needs both.  That there is no standard way to inject on
-> mac80211, regardless of the RX situation is a major lack.  If injection
-> is not treated as a separate valid action then it will constantly be
-> delayed as part of some larger effort, when it is valuable in itself.
+     /* IEEE 802.11b/g, channels 1..14 */
 
-Don't get me wrong, I fully support your patches. I can see usefulness
-in what you're doing there, I even based my recent patch-frenzy on top
-of your patches ;) But I'm not fully convinced that this will be the
-best path for the userspace MLME (in whatever form); I do however think
-that it is the best option for wireless analysis/hacking/... tools or
-something like your penumbra.
-
-> But Jiri's encapsulation method is an improvement if it can be
-> implemented okay for unassociated interfaces and so on.
-
-Not convinced; it solves only a minor part of the problem, the hard
-things aren't solved (like that we need to see the decrypted frames that
-would normally be dropped by the kernel). Hence, I don't see any value
-in it by itself without solving the harder parts as well (or better even
-first), when solving that may end up using netlink for frames anyway.
-
-> I don't have anything against it, but for me the packets I am injecting
-> are normal network traffic and sending them like that seems the most
-> natural way.  For RX down in userspace it is marginally simpler to use
-> libpcap monitoring and the same handle for injection and rx.
-
-Right; I see that your situation wildly differs from the userspace MLME
-and that in that situation this is the best and easiest thing to do.
-
->  I
-> definitely think having two paths to injection is not necessary, but for
-> splitting out normally invisible management packets to go down a
-> separate netlink socket instead of encapsulating them I don't mind
-> either way.
-
-I think what we need to accept is that the long-touted concept of a
-"userspace MLME" isn't really that, while it's dead simple to do
-*everything* in userspace by using a monitor interface with injection
-and then a tun interface that isn't really what we want. We want to push
-parts of the complexity to userspace while still having it
-kernel-assisted for various reasons like performance.
-
-johannes
-
---=-TEsFXOkthTIHb0rqCFf7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGfZUx/ETPhpq3jKURAjHbAJ0a6RXnA9icCrHVs0L7BjTfsyWisQCcCV0e
-QZgOhpT4yvSpl38N4VO/JiY=
-=NATs
------END PGP SIGNATURE-----
-
---=-TEsFXOkthTIHb0rqCFf7--
-
+would be better.
