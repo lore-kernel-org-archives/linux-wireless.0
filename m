@@ -1,81 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42251 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:46602 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751413AbXFWGwd (ORCPT
+	with ESMTP id S1753820AbXFDLlJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jun 2007 02:52:33 -0400
-Subject: Re: [WIP] mac80211: kill mgmt interface
+	Mon, 4 Jun 2007 07:41:09 -0400
+Subject: Re: [PATCH] cfg80211: fix signed macaddress in sysfs
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <467CB691.2090806@warmcat.com>
-References: <1182418939.10821.8.camel@johannes.berg>
-	 <20070621143558.68fc8e4a@griffin.suse.cz>
-	 <1182429920.21939.1.camel@johannes.berg>
-	 <20070621151441.500d62d5@griffin.suse.cz>
-	 <20070622154545.29eeebdb@griffin.suse.cz> <467BDCB1.1010604@warmcat.com>
-	 <1182526221.21939.94.camel@johannes.berg>
-	 <20070622174953.500817e0@griffin.suse.cz>
-	 <1182543620.21939.98.camel@johannes.berg>  <467CB691.2090806@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fls3WQF1S7a/0zvT0Bth"
-Date: Sat, 23 Jun 2007 08:53:50 +0200
-Message-Id: <1182581630.21939.105.camel@johannes.berg>
+To: David Lamparter <lists@diac24.net>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	netdev <netdev@vger.kernel.org>
+In-Reply-To: <20070603220651.GA22070@charon.n2.diac24.net>
+References: <20070603220651.GA22070@charon.n2.diac24.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DgnVOIkgZl/ZSpy8FCBp"
+Date: Mon, 04 Jun 2007 13:40:55 +0200
+Message-Id: <1180957255.11026.67.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-fls3WQF1S7a/0zvT0Bth
+--=-DgnVOIkgZl/ZSpy8FCBp
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2007-06-23 at 06:58 +0100, Andy Green wrote:
-> Johannes Berg wrote:
+On Mon, 2007-06-04 at 00:06 +0200, David Lamparter wrote:
+> Fix signedness mixup making mac addresses show up strangely
+> (like 00:11:22:33:44:ffffffaa) in /sys/class/ieee80211/*/macaddress.
+
+Huh, my mistake, patch looks good. Do we care for this in .22 still?
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+
+> Signed-off-by: David Lamparter <equinox@diac24.net>
+> ---
 >=20
-> >> I think netlink is fine if it is used for injection too (at least of
-> >> management frames and WPA stuff).
-> >=20
-> > I don't disagree. I'd even say that having both injection interfaces is
-> > fine since they really cover different use cases.
+>  net/wireless/sysfs.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 >=20
-> What are these different usage cases such that you need to maintain the
-> two different ways of doing it?
+> diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
+> index 7844be4..374d16d 100644
+> --- a/net/wireless/sysfs.c
+> +++ b/net/wireless/sysfs.c
+> @@ -33,7 +33,7 @@ static ssize_t _show_permaddr(struct device *dev,
+>                               struct device_attribute *attr,
+>                               char *buf)
+>  {
+> -       char *addr =3D dev_to_rdev(dev)->wiphy.perm_addr;
+> +       unsigned char *addr =3D dev_to_rdev(dev)->wiphy.perm_addr;
+> =20
+>         return sprintf(buf, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n",
+>                        addr[0], addr[1], addr[2], addr[3], addr[4], addr[=
+5]);
 
-Well one is yours which is rather similar to the "security-related"
-tools (airsnort, aireplay, ...), you want to be able to send the frame
-as much as you hand it to the kernel as possible.
-
-On the other hand, I do consider userspace MLME needs slightly
-different; it needs to be able to have frames encrypted, needs to see
-frames that have been decrypted even though they would otherwise be
-dropped [and this is very different to what you want], and probably
-more.
-
-I haven't seen a good proposal to unify this. To me, Jiri's proposal of
-packing what is essentially out-of-band data into some sort of special
-frames is no use, and your proposal to use monitor mode interfaces is
-perfect for the first use case, but still leaves us with more
-out-of-band data that the userspace MLME needs and hence doesn't gain us
-much.
-
-Who started this anti-nl80211 thing anyway? I still don't see what's so
-wrong with sending frames down a PF_NETLINK socket rather than a
-PF_PACKET socket.
+This probably should also use MAC_FMT/MAC_ARG, hah. Oh well, I'll fix it
+up later.
 
 johannes
 
---=-fls3WQF1S7a/0zvT0Bth
+--=-DgnVOIkgZl/ZSpy8FCBp
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGfMN+/ETPhpq3jKURAqy3AJ91x/fHRgjws00SBKqi1/5GVgrsPQCeOq2u
-esbSnWcax4rgTyiX9ubYb2M=
-=8Q9g
+iD8DBQBGY/pH/ETPhpq3jKURAg93AJ9wojXQKFh9zZ5GkfmAaWfgDMTUkACfSj1e
+0veaauLDU90uX8sNCAS1FnQ=
+=5fEw
 -----END PGP SIGNATURE-----
 
---=-fls3WQF1S7a/0zvT0Bth--
+--=-DgnVOIkgZl/ZSpy8FCBp--
 
