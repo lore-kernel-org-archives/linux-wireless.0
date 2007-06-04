@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:33070 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752264AbXFXIkQ (ORCPT
+Received: from web51404.mail.re2.yahoo.com ([206.190.38.183]:31586 "HELO
+	web51404.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751795AbXFDMD6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jun 2007 04:40:16 -0400
-Message-ID: <467E2DC0.30804@warmcat.com>
-Date: Sun, 24 Jun 2007 09:39:28 +0100
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
+	Mon, 4 Jun 2007 08:03:58 -0400
+Date: Mon, 4 Jun 2007 05:03:57 -0700 (PDT)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: AW: Drivers that do not honor regulatory restrictions
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [WIP] mac80211: kill mgmt interface
-References: <1182418939.10821.8.camel@johannes.berg>	 <20070621143558.68fc8e4a@griffin.suse.cz>	 <1182429920.21939.1.camel@johannes.berg>	 <20070621151441.500d62d5@griffin.suse.cz>	 <20070622154545.29eeebdb@griffin.suse.cz>	<467BDCB1.1010604@warmcat.com>	 <1182526221.21939.94.camel@johannes.berg>	 <20070622174953.500817e0@griffin.suse.cz>	 <1182543620.21939.98.camel@johannes.berg>	<467CB691.2090806@warmcat.com>	 <1182581630.21939.105.camel@johannes.berg>	 <20070623134451.643dd40c@logostar.upir.cz>  <467D10BA.80104@warmcat.com> <1182635467.21939.125.camel@johannes.berg>
-In-Reply-To: <1182635467.21939.125.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ascii
+Message-ID: <297494.10588.qm@web51404.mail.re2.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
+Johannes Berg wrote: 
+> No, that would've been the driver, the firmware has nothing to do with 
+> the radio frequency at all. 
+>  
+> johannes 
+ 
+Actually it was mac80211. In ieee80211_ioctl.c the allowed frequencies for Japan are defined this way: 
+ 
+1574 static const struct ieee80211_channel_range ieee80211_mkk_channels[] = { 
+ 1575         { 2412, 2472, 20, 6 } /* IEEE 802.11b/g, channels 1..13 */, 
+ 1576         { 5170, 5240, 20, 6 } /* IEEE 802.11a, channels 34..48 */, 
+ 1577         { 5260, 5320, 20, 6 } /* IEEE 802.11a, channels 52..64 */, 
+ 1578         { 0 } 
+ 1579 }; 
 
->> but actually I quite liked your encapsulation
->> thing -- in itself is compatible with working in any mode.  The only
->> problem with it right now is that it seems when mananged mode interfaces
->>  are not associated, they are in a netif_carrier_off() state or similar.
-> 
-> Oh, good point, I forgot about that in my other reply. Yeah, we really
-> want to go to IFF_DORMANT too and that really stops us from doing
-> anything. Also, if we do QoS on the interfaces then the qdisc might end
-> up dropping our packets if we don't do special hacks around that, again
-> something we cannot accept.
+This prevents channel 14 from being used. Changing line 1575 to 
+ 
+1575         { 2412, 2484, 20, 6 } /* IEEE 802.11b/g, channels 1..13 */, 
 
-That definitely is a bit of a problem for using Managed mode wlan0 for
-injection, since it shuts off packets outside of mac80211 when
-unassociated.  The "solution" if one was wanted would be to stop using
-the interface-level mechanism and let everything through and filter in
-hard_start_xmit() so only injected packets were accepted.
+did the trick.
 
-This is only the case on managed mode interfaces though, a feature of
-the encapsulated method was that it removed the dependence on
-specifically Monitor Mode to determine that an incoming TX packet had
-the radiotap format -- aside from Managed it still works fine on Monitor
-Mode interfaces (and presumably the other modes) with or without an
-associated interface on the device.  To be clear it works exactly the
-same on Monitor Mode as Try #13 just requiring a 14-byte ethhdr at the
-start of the injected packet.
+BTW: ieee80211_ioctl_set_regulatory_domain changes conf->regulatory_domain, but this seems not to change the selected frequency table (that one is selected solely based on the module parameter "ieee80211_regdom". Why are there two places to store the regdomain (that seem to be used from different places)?
+ 
+--   
+Regards 
+  
+       Joerg 
+ 
+ 
+ 
 
-Anyway I don't want to argue myself out of an ACK ;-)  I think what I'll
-do is post a try #14 using encapsulation that works on wlan0 too but
-needs it associated, but on the understanding that try #13 is not
-deprecated if people prefer it.
 
--Andy
+
+
+       __________________________________ Yahoo! Clever - Der einfachste Weg, Fragen zu stellen und Wissenswertes mit Anderen zu teilen. www.yahoo.de/clever
+
