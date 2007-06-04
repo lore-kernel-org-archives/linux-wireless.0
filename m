@@ -1,75 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:45750 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751974AbXFLLgL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2007 07:36:11 -0400
-Date: Tue, 12 Jun 2007 13:36:08 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 2/6] mac80211: remove global tsinfo debugfs variables
-Message-ID: <20070612133608.5f6e9b60@logostar.upir.cz>
-In-Reply-To: <1181530652.3042.27.camel@debian.sh.intel.com>
-References: <20070608170342.GA17253@mail.intel.com>
-	<1181331767.6533.98.camel@johannes.berg>
-	<1181530652.3042.27.camel@debian.sh.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga06.intel.com ([134.134.136.21]:54065 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760012AbXFDUCI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jun 2007 16:02:08 -0400
+Message-ID: <46645478.20002@linux.intel.com>
+Date: Mon, 04 Jun 2007 11:05:44 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Add module parameter for setting initial rate  in rc80211_simple
+References: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net> <46644D8F.2010400@linux.intel.com>
+In-Reply-To: <46644D8F.2010400@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 11 Jun 2007 10:57:32 +0800, Zhu Yi wrote:
-> > Actually, now
-> > that I understand it, don't you think it'd be easier to understand if
-> > you had two write-only (!) files
-> >  * dls/teardown
-> >  * dls/request
-> > and writing a mac address to each one would trigger the operation for
-> > that mac address?
-
-I like this idea. It should be also used for send_addts and similar - would
-be better than the "write anything here to trigger the event" concept.
-
-> > That way, you have it atomically and no problem with
-> > two processes stomping each other (since now you write the mac address
-> > and then the operation). That would be much closer to the nl80211
-> > interface where I'd probably just have two commands NL80211_REQUEST_DLS
-> > and NL80211_TEARDOWN_DLS that both take an ATTR_MAC_ADDRESS (in addition
-> > to the virtual interface).
-> > 
-> > Same for tspec, even though I haven't seen where it's used, why not have
-> > a single file that accepts the whole tspec information element that
-> > userspace has pieced together,
+James Ketrenos wrote:
+> Larry Finger wrote:
+>> The initial rate for STA's using rc80211_simple is set to the last
+>> rate in the rate table. This is too fast for the bcm43xx-mac80211
+>> driver.
+>> To correct this situation without affecting any other driver,
+>> an initial_rate parameter is added to the rc80211_simple module. This
+>> parameter is set to 10 times the desired initial rate. If the parameter
+>> is zero or not set, the original behavior is kept. If the parameter
+>> does not match a valid rate, the first rate in the table will be set.
 > 
-> When I sent the patch the first time which used sysfs, the comment was
-> one value per file (Is this still true for debugfs?). So I split them
-> up. The drawback for all values in one file is the user has to remember
-> all the values and their orders.
-
-Johannes probably meant a binary blob prepared by user space. That still
-complies to the one value per file rule.
-
-> The DLS is easier because it only has one parameter (peer mac address)
-> now. I programed it the same way as tspec. So when we find to need more
-> parameters for DLS setup, we can add another debugfs file for the new
-> parameter instead of combining multiple parameters in one file.
+> Initial rate selection should be based on the RSSI of the last frame(s) 
+> received from the target network.  One way to do that would be for the 
+> driver to map a minimum RSSI value to each rate.  If the RSSI for the 
+> target network is greater than the value listed, that rate could be used 
+> for initial selection.  The ieee80211_rate with the highest 'rate', 
+> which is in the supported rates mask and with a min_rssi <= the AP's 
+> reported RSSI, is selected.
 > 
-> I'd agree I didn't pay a lot of attentions to the debugfs interface
-> design since I thought it was used for occasional debug only. Please
-> tell me what which do you prefer: one value per file or multiple values
-> per file so that we can do one shot parameter passing? So I don't need
-> to switch them back and forth.
+> The mechanism by which the magic values for min_rssi are determined for 
+> each rate is more observational than scientific--and is vendor 
+> specific.  You can pick a set of values, but different hardware and 
+> environments will yield different levels of success / failure.  Some 
+> hardware can be very lenient if it has automatic hardware retry.  Other 
+> hardware will need to be very conservative (since, as you point out, the 
+> first few frames Tx/Rx'd are important)
 
-Depends on how long you want to keep this debugfs interface. If it's just a
-few months matter and it's never going to hit vanilla, it's probably not
-worth the effort to rewrite it.
+I didn't state it above -- doing what is described requires adding one unsigned char (min_rssi) to ieee80211_rate in mac80211.h and then modifying rc80211_simple to take advantage of that information (so if you're grepping for min_rssi and can't find it, that's why...)
 
-Thanks,
+James
 
- Jiri
-
--- 
-Jiri Benc
-SUSE Labs
+> 
+> James
+> 
+>>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
