@@ -1,55 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([213.239.205.134]:55554 "EHLO mail.tglx.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758829AbXFDT0Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2007 15:26:24 -0400
-Subject: Re: iperf: performance regression (was b44 driver problem?)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Stephen Hemminger <shemminger@linux-foundation.org>
-Cc: Ulrich Drepper <drepper@gmail.com>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	Michael Buesch <mb@bu3sch.de>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Ingo Molnar <mingo@elte.hu>
-In-Reply-To: <1180983647.4404.38.camel@chaos>
-References: <20070525172431.60affaca@freepuppy>
-	 <200705281944.05030.maxi@daemonizer.de> <1180380230.3657.3.camel@chaos>
-	 <200706031826.06891.maxi@daemonizer.de> <1180939188.4404.5.camel@chaos>
-	 <20070604090918.42386fbb@freepuppy> <1180974958.4404.24.camel@chaos>
-	 <20070604095924.651d91c8@freepuppy> <1180978368.4404.29.camel@chaos>
-	 <20070604105158.31ede1f5@freepuppy>  <1180983647.4404.38.camel@chaos>
-Content-Type: text/plain
-Date: Mon, 04 Jun 2007 21:26:18 +0200
-Message-Id: <1180985178.4404.48.camel@chaos>
-Mime-Version: 1.0
+Received: from mga06.intel.com ([134.134.136.21]:52166 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1762448AbXFDTcg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jun 2007 15:32:36 -0400
+Message-ID: <46644D8F.2010400@linux.intel.com>
+Date: Mon, 04 Jun 2007 10:36:15 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Add module parameter for setting initial rate  in rc80211_simple
+References: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>
+In-Reply-To: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-06-04 at 21:00 +0200, Thomas Gleixner wrote:
-> > 
-> > Yes, the following patch makes iperf work better than ever.
-> > But are other broken applications going to have same problem.
-> > Sounds like the old "who runs first" fork() problems.
-> 
-> Not really. The fork() "who runs first" problem is nowhere specified.
-> 
-> usleep(0) is well defined:
-> 
-> .... If the value of useconds is 0, then the call has no effect.
-> 
-> So the call into the kernel has been wrong for quite a time.
-> 
+Larry Finger wrote:
+> The initial rate for STA's using rc80211_simple is set to the last
+> rate in the rate table. This is too fast for the bcm43xx-mac80211
+> driver. 
+>
+> To correct this situation without affecting any other driver,
+> an initial_rate parameter is added to the rc80211_simple module. This
+> parameter is set to 10 times the desired initial rate. If the parameter
+> is zero or not set, the original behavior is kept. If the parameter
+> does not match a valid rate, the first rate in the table will be set.
 
-Just for clarification: I'm not saying that we should break the (broken)
-user space ABI. I'm going to work out a patch which prints out a warning
-(limited number per boot) and emulating the old behavior by a call to
-yield() along with an entry into (mis)feature-removal.txt.
+Initial rate selection should be based on the RSSI of the last frame(s) received from the target network.  One way to do that would be for the driver to map a minimum RSSI value to each rate.  If the RSSI for the target network is greater than the value listed, that rate could be used for initial selection.  The ieee80211_rate with the highest 'rate', which is in the supported rates mask and with a min_rssi <= the AP's reported RSSI, is selected.
 
-	tglx
+The mechanism by which the magic values for min_rssi are determined for each rate is more observational than scientific--and is vendor specific.  You can pick a set of values, but different hardware and environments will yield different levels of success / failure.  Some hardware can be very lenient if it has automatic hardware retry.  Other hardware will need to be very conservative (since, as you point out, the first few frames Tx/Rx'd are important)
 
+James
 
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
