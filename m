@@ -1,83 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59659 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751226AbXFNJJz (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.176]:37749 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756036AbXFDWnK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2007 05:09:55 -0400
-Subject: Re: [Take 2] mac80211 IEEE802.11e/WMM code cleanup
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	David Lamparter <lists@diac24.net>
-In-Reply-To: <1181635570.4758.22.camel@debian.sh.intel.com>
-References: <20070611085950.GA5540@mail.intel.com>
-	 <1181584907.29767.30.camel@johannes.berg>
-	 <1181635570.4758.22.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Xg72uLcrSD4cVBNYp05D"
-Date: Thu, 14 Jun 2007 09:36:47 +0200
-Message-Id: <1181806608.9058.22.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 4 Jun 2007 18:43:10 -0400
+Received: by py-out-1112.google.com with SMTP id a29so2571929pyi
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Jun 2007 15:43:09 -0700 (PDT)
+Message-ID: <43e72e890706041543o493980dbwaa885739a2c8ec08@mail.gmail.com>
+Date: Mon, 4 Jun 2007 18:43:09 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Daniel Drake" <dsd@gentoo.org>,
+	"Michael Wu" <flamingice@sourmilk.net>
+Subject: Re: mac80211 regulatory domain confusion
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4661DCC7.7090907@gentoo.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+References: <4661DCC7.7090907@gentoo.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 6/2/07, Daniel Drake <dsd@gentoo.org> wrote:
+> One of the items preventing us moving zd1211rw to mac80211 is the lack
+> of regulatory domain support in zd1211rw-mac80211.
 
---=-Xg72uLcrSD4cVBNYp05D
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Its debatable if this should be a blocker for new drivers going into
+mainline. I don't think it should be. We are essentially providing
+software and going the extra mile by implementing policy in places
+where some vendors decided to get away with not doing it in hardware
+due to economics. We do our best. If a vendor sales a USB gun and
+there is a driver for it should the driver go into mainline (lets just
+assume everyone wants one for their next birthday OK)? Absolutely.
+Vendors and regulatory agencies should know better than relying on the
+premise of security through obscurity for policy ;)
 
-Alright, let me try to summarise what we want as API for DLS:
+> In the softmac driver, we read the regulatory domain code out of the
+> EEPROM, and look it up in a driver-supplied "allowed channels" table,
+> and base future decisions from that.
 
- * NL80211_CMD_GET_DLS_PEER
-   doit: simple boolean answer: is DLS set up with given peer?
-   dump: give all DLS peers
- * NL80211_CMD_SET_DLS_PEER [_CMD_REQUEST_DLS]
-   request setup of DLS
- * NL80211_CMD_NEW_DLS_PEER
-   kernel notification about a newly setup DLS connection
- * NL80211_CMD_DEL_DLS_PEER [_CMD_TEARDOWN_DLS]
-   request teardown of DLS connection
+This can be done now as well but it will all hopefully be replaced
+eventually with something more centralized. I was hoping to have been
+able to provide a more centralized replacement by now but it hasn't
+been possible. The problem is we need a good complete regulatory agent
+replacement. mac80211 provides some regulatory domain control but its
+very minimal and the db for this should not be in-kernel but in
+userspace. It will be a while before we are able to centralize all
+this properly -- think cfg80211, some frequency broker for handling
+interferences between all sorts of radio devices, and userspace
+regulatory db.
 
- * NL80211_CMD_NEW_DLS_REQUEST
-   kernel notification for DLS request from the other side
- * NL80211_CMD_SET_DLS_REQUEST
-   send DLS response to given peer with given status
-(* NL80211_CMD_GET_DLS_REQUEST
- * NL80211_CMD_DEL_DLS_REQUEST
-   make no sense)
+> The current mac80211 port appears to allow all channels everywhere.
+>
+> I've seen the patch titled "d80211: Allow drivers to configure default
+> regulatory domain". This is a confusing - if the driver sets the
+> IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED flag, then
+> ieee80211_init_client is not called?
 
-I tried ordering these by get/set/new/del quads as David suggested but I
-don't think it makes sense for DLS request, I suppose we have somewhat
-different requirements and I think I'd rather have different names as in
-brackets above. Then again, that could get confusing with
-_CMD_REQUEST_DLS and _CMD_NEW_DLS_REQUEST...
+This does not seem right -- IIRC the idea was that if the driver can
+read an eeprom value for a default regulatory domain then the driver
+would populate ieee80211_regdom accordingly. The routine
+ieee80211_unmask_channel() is just a bit smart about regulatory
+domains (handles scanning rules for FCC, and ranges for MKK and FCC).
+Any temporary hacks for regulatory control can go there.
 
-For me, that settles the DLS API. That API is easily implementable by
-the userspace MLME as well.
+> If ieee80211_init_client is all about applying a default regulatory
+> domain to some internal structures, perhaps it should be renamed. If
+> it's about, say, initializing a wireless client device, perhaps the
+> check for default regdomain logic should be moved into that function.
 
+ACK -- this should simply be renamed.
 
-Now, for TS, it seems that most of the work is with handling the
-response to an ADD TS request. Also, the current code doesn't seem to
-allow using TCLAS or TCLAS processing information for the ADDTS request
-frame. For the response, I suppose you'll be adding it, but I'm not sure
-we want to have all the complexity for the request. Maybe we should
-simply require the ADDTS/DELTS request frames to be injected and we
-handle the responses with some notifications via nl80211?
+> Even after reading the discussion following that patch, I'm confused as
+> to what the driver should be doing and what the stack should be doing.
+> The ZD1211 hardware is capable of communicating on all channels, but the
+> software is what enforces the regdomain restrictions.
 
+Populating ieee80211_regdom accordingly depending on the eeprom's
+regulatory defuallt domain and updating the list of available
+ieee80211_channel_range's we have (only FCC and MKK are there so far)
+seems like a worthy temporary solution. A switch statement on
+ieee80211_init_client() can be added for regdomain which points
+channel_range to the right channel_range.
 
-johannes
+> James Ketrenos wrote:
+> > "regdomains" are not static maps; they evolve over time as
+> > governments change their regulations.  The channels and features
+> > supported by hardware is static based on what the device was
+> > certified for.
+>
+> So, this suggests that zd1211rw should be reading the EEPROM, looking up
+> allowable channels, and formulating the ieee80211_hw_mode structures
+> based on the results.
 
---=-Xg72uLcrSD4cVBNYp05D
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+NACK -- I'd say leave the ieee80211_hw_mode on zd1211rw as is and help
+advance ieee80211_init_client() and friends as a temporary solution
+for now.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+> If we do that, should we also be setting the
+> IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED flag? From the description of
+> the flag, it sounds like we should:
+>
+> /* Channels are already configured to the default regulatory domain
+>   * specified in the device's EEPROM */
+>
+> We would then bypass various logic in ieee80211_unmask_channel(), but it
+> seems to me that the logic there should be being applied regardless of
+> whether the driver suggested a regdomain or not. That function is also
+> confusing in that it refers to "the firmware" -- whose firmware?
 
-iD8DBQBGcPAP/ETPhpq3jKURAhpiAJ9z7ItWSfRX8BVewPMa3Z3yHhzlfwCdFjZ6
-F41WRTHiM8HKxCfsjR3B6vg=
-=0ivp
------END PGP SIGNATURE-----
+The behavior of IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED needs to be
+fixed IMO. We can nuke those firmware comments IMO.
 
---=-Xg72uLcrSD4cVBNYp05D--
-
+  Luis
