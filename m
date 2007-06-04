@@ -1,67 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:47546 "EHLO
-	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756531AbXFBSwQ (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:60126 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755719AbXFDRNw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jun 2007 14:52:16 -0400
-Date: Sat, 02 Jun 2007 13:51:59 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Add module parameter for setting initial rate  in rc80211_simple
-Message-ID: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 4 Jun 2007 13:13:52 -0400
+Date: Mon, 4 Jun 2007 09:59:24 -0700
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Ulrich Drepper <drepper@gmail.com>
+Cc: Maximilian Engelhardt <maxi@daemonizer.de>,
+	Michael Buesch <mb@bu3sch.de>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: iperf: performance regression (was b44 driver problem?)
+Message-ID: <20070604095924.651d91c8@freepuppy>
+In-Reply-To: <1180974958.4404.24.camel@chaos>
+References: <20070525172431.60affaca@freepuppy>
+	<200705281944.05030.maxi@daemonizer.de>
+	<1180380230.3657.3.camel@chaos>
+	<200706031826.06891.maxi@daemonizer.de>
+	<1180939188.4404.5.camel@chaos>
+	<20070604090918.42386fbb@freepuppy>
+	<1180974958.4404.24.camel@chaos>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The initial rate for STA's using rc80211_simple is set to the last
-rate in the rate table. This is too fast for the bcm43xx-mac80211
-driver. To correct this situation without affecting any other driver,
-an initial_rate parameter is added to the rc80211_simple module. This
-parameter is set to 10 times the desired initial rate. If the parameter
-is zero or not set, the original behavior is kept. If the parameter
-does not match a valid rate, the first rate in the table will be set.
+On Mon, 04 Jun 2007 18:35:58 +0200
+Thomas Gleixner <tglx@linutronix.de> wrote:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+> On Mon, 2007-06-04 at 09:09 -0700, Stephen Hemminger wrote:
+> > > > I did the test with an 2.6.22-rc3-git4 kernel and the p54 driver built 
+> > > > external as module. 
+> > > 
+> > > Can you look at iperf to figure out, whether it does some weird timer
+> > > stuff (high frequency interval timer or such) ? Either check the code or
+> > > strace it.
+> >
+> > It is the receiver doing a tight loop doing gettimeofday/recv calls.
+> > 
+> > 
+> > sendto(-1227715616, 0xc, 3085438964, 0, {...}, 3067249832) = 0
+> > gettimeofday({1180973726, 981615}, NULL) = 0
+> > gettimeofday({1180973726, 981751}, NULL) = 0
+> > futex(0x8055c64, 0x5 /* FUTEX_??? */, 1) = 1
+> > futex(0x8055c90, FUTEX_WAKE, 1) = 0
+> > recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
+> > gettimeofday({1180973726, 982754}, NULL) = 0
+> > recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
+> > gettimeofday({1180973726, 983790}, NULL) = 0
+> 
+> Well, gettimeofday() is not affected by the highres code, but
+> 
+> > nanosleep({0, 0}, NULL) = 0
+> > nanosleep({0, 0}, NULL) = 0
+> 
+> is. The nanosleep call with a relative timeout of 0 returns immediately
+> with highres enabled, while it sleeps at least until the next tick
+> arrives when highres is off. Are there more of those stupid sleeps in
+> the code ?
 
-Index: wireless-dev/net/mac80211/rc80211_simple.c
-===================================================================
---- wireless-dev.orig/net/mac80211/rc80211_simple.c
-+++ wireless-dev/net/mac80211/rc80211_simple.c
-@@ -31,6 +31,10 @@
- 
- MODULE_ALIAS("rc80211_default");
- 
-+static int modparam_initial_rate;
-+module_param_named(initial_rate, modparam_initial_rate, int, 0444);
-+MODULE_PARM_DESC(initial_rate, "set initial rate in Mbs*10");
-+
- static void rate_control_rate_inc(struct ieee80211_local *local,
- 				  struct sta_info *sta)
- {
-@@ -283,14 +287,18 @@ static void rate_control_simple_rate_ini
- 	int i;
- 	sta->txrate = 0;
- 	mode = local->oper_hw_mode;
--	/* TODO: what is a good starting rate for STA? About middle? Maybe not
--	 * the lowest or the highest rate.. Could consider using RSSI from
--	 * previous packets? Need to have IEEE 802.1X auth succeed immediately
--	 * after assoc.. */
-+	/* The starting rate for STA is set to the last rate in the table
-+	 * unless the module was loaded with the 'initial_rate' parameter,
-+	 * which is set to 10 times the desired rate. If an illegal value
-+	 * is used for the parameter, the first rate in the table will be used. */
- 	for (i = 0; i < mode->num_rates; i++) {
- 		if ((sta->supp_rates & BIT(i)) &&
- 		    (mode->rates[i].flags & IEEE80211_RATE_SUPPORTED))
--			sta->txrate = i;
-+			if (modparam_initial_rate) {
-+				if (mode->rates[i].rate == modparam_initial_rate)
-+					sta->txrate = i;
-+			} else
-+				sta->txrate = i;
- 	}
- }
- 
+GLIBC pthread_mutex does it, YES it is a problem!
+Looks like the old behavior is required for ABI compatibility.
+
+iperf server has several threads. One thread is using pthread_mutex_lock
+to wait for the other thread.  It looks like pthread_mutex_lock is using
+nanosleep as yield().
+
+Multi-thread strace shows how this could kill performance.
+These are with old 2.6.20 kernel that doesn't have the problem:
+
+sendto(-1210930208, 0xc, 3085438964, 0, {...}, 3084035240) = 0
+socket(PF_INET, SOCK_STREAM, IPPROTO_IP) = 3
+setsockopt(3, SOL_SOCKET, SO_REUSEADDR, [1], 4)         = 0
+bind(3, {sa_family=AF_INET, sin_port=htons(5001), sin_addr=inet_addr("0.0.0.0")}, 16)   = 0
+listen(3, 5)                            = 0
+futex(0x8055c64, 0x5 /* FUTEX_??? */, 1) = 1
+accept(3, {sa_family=AF_INET, sin_port=htons(49973), sin_addr=inet_addr("192.168.0.14")}, [16]) = 4
+getsockname(4, {sa_family=AF_INET, sin_port=htons(5001), sin_addr=inet_addr("192.168.0.12")}, [16]) = 0
+recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 24, 0) = 24
+mmap2(NULL, 8392704, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb6528000
+mprotect(0xb6528000, 4096, PROT_NONE)   = 0
+clone(child_stack=0xb6d284a4, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID|CLONE_DETACHED, parent_tidptr=0xb6d28bd8, {entry_number:6, base_addr:0xb6d28b90, limit:1048575, seg_32bit:1, contents:0, read_exec_only:0, limit_in_pages:1, seg_not_present:0, useable:1}, child_tidptr=0xb6d28bd8) = 5622
+accept(3, 0x8058b98, [128]) = ? ERESTARTSYS (To be restarted)
+
+==============
+
+sendto(-1219322912, 0xc, 3085438964, 0, {...}, 3075642536) = 0
+futex(0x8055d04, 0x5 /* FUTEX_??? */, 1) = 1
+futex(0x8055d30, FUTEX_WAKE, 1) = 1
+futex(0x8055c64, FUTEX_WAIT, 1, NULL) = 0
+futex(0x8055d04, 0x5 /* FUTEX_??? */, 1) = 1
+futex(0x8055d30, FUTEX_WAKE, 1)         = 1
+futex(0x8055c90, FUTEX_WAKE, 1)         = 0
+getsockopt(3, SOL_SOCKET, SO_RCVBUF, [87380], [4]) = 0
+fstat64(1, {st_mode=S_IFCHR|0620, st_rdev=makedev(136, 0), ...}) = 0
+mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7fb0000
+write(1, "--------------------------------"..., 61) = 61
+write(1, "Server listening on TCP port 500"..., 34) = 34
+write(1, "TCP window size: 85.3 KByte (def"..., 38) = 38
+write(1, "--------------------------------"..., 61) = 61
+nanosleep({0, 0}, NULL)                 = 0
+futex(0x8055d04, 0x5 /* FUTEX_??? */, 1) = 1
+futex(0x8055d30, FUTEX_WAKE, 1)         = 1
+futex(0x8055c64, FUTEX_WAIT, 3, NULL) = 0
+futex(0x8055c90, FUTEX_WAIT, 2, NULL)         = -1 EAGAIN (Resource temporarily unavailable)
+futex(0x8055d04, 0x5 /* FUTEX_??? */, 1)                               = 1
+futex(0x8055d30, FUTEX_WAKE, 1)                          = 0
+futex(0x8055c90, FUTEX_WAKE, 1)                               = 0
+write(1, "[  4] local 192.168.0.12 port 50"..., 74)                          = 74
+nanosleep({0, 0}, NULL) = 0
+nanosleep({0, 0}, NULL) = 0
+nanosleep({0, 0}, NULL) = 0
+nanosleep({0, 0}, NULL) = 0
+nanosleep({0, 0}, NULL) = 0
+nanosleep({0, 0}, NULL)                      = 0
+nanosleep({0, 0}, NULL)                           = 0
+nanosleep({0, 0}, NULL) = 0
+
+...
+
+nanosleep({0, 0}, NULL) = 0
+nanosleep({0, 0}, NULL) = 0
+nanosleep({0, 0}, NULL) = 0
+nanosleep({0, 0}, NULL) = 0
+nanosleep({0, 0}, NULL) = 0
+nanosleep({0, 0}, NULL)                 = 0
+write(1, "[  4]  0.0-30.2 sec    336 MByte"..., 50)                     = 50
+nanosleep({0, 0}, NULL) = 0
+nanosleep({0, 0}, NULL) = 0
+futex(0x8055d04, 0x5 /* FUTEX_??? */, 1) = 1
+futex(0x8055d30, FUTEX_WAKE, 1) = 0
+futex(0x8055c64, FUTEX_WAIT, 5, NULL) = -1 EINTR (Interrupted system call)
+
+===============
+
+sendto(-1227715616, 0xc, 3085438964, 0, {...}, 3067249832) = 0
+gettimeofday({1180973726, 981615}, NULL) = 0
+gettimeofday({1180973726, 981751}, NULL) = 0
+futex(0x8055c64, 0x5 /* FUTEX_??? */, 1) = 1
+futex(0x8055c90, FUTEX_WAKE, 1) = 0
+recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
+gettimeofday({1180973726, 982754}, NULL) = 0
+recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
+gettimeofday({1180973726, 983790}, NULL) = 0
+recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
+gettimeofday({1180973726, 984355}, NULL) = 0
+recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
+
+...
+
+gettimeofday({1180973757, 172338}, NULL) = 0
+recv(4, "45678901234567890123456789012345"..., 8192, 0) = 1448
+gettimeofday({1180973757, 172437}, NULL) = 0
+recv(4, "23456789012345678901234567890123"..., 8192, 0) = 1448
+gettimeofday({1180973757, 172576}, NULL) = 0
+recv(4, "01234567890123456789012345678901"..., 8192, 0) = 1632
+gettimeofday({1180973757, 172752}, NULL) = 0
+recv(4, "", 8192, 0)                    = 0
+gettimeofday({1180973757, 172797}, NULL) = 0
+gettimeofday({1180973757, 172817}, NULL) = 0
+nanosleep({0, 0}, NULL) = 0
+nanosleep({0, 0}, NULL)                 = 0
+close(4)                     = 0
+futex(0x8055d04, 0x5 /* FUTEX_??? */, 1) = 1
+futex(0x8055d30, FUTEX_WAKE, 1) = 0
+_exit(0)                                = ?
+
+
+
