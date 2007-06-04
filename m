@@ -1,53 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.225]:8511 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752895AbXFLHho (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2007 03:37:44 -0400
-Received: by wx-out-0506.google.com with SMTP id t15so1708261wxc
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2007 00:37:43 -0700 (PDT)
-Message-ID: <1ba2fa240706120037g767a330fsa1e838f378ce2b58@mail.gmail.com>
-Date: Tue, 12 Jun 2007 10:37:43 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [Take 2] mac80211 IEEE802.11e/WMM code cleanup
-Cc: yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1181584907.29767.30.camel@johannes.berg>
+Received: from daemonizer.de ([87.230.16.230]:38432 "EHLO daemonizer.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752736AbXFDUxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jun 2007 16:53:30 -0400
+From: Maximilian Engelhardt <maxi@daemonizer.de>
+To: Stephen Hemminger <shemminger@linux-foundation.org>
+Subject: Re: iperf: performance regression (was b44 driver problem?)
+Date: Mon, 4 Jun 2007 22:52:36 +0200
+Cc: Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>,
+	Ulrich Drepper <drepper@gmail.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+References: <20070525172431.60affaca@freepuppy> <200706042148.02450.maxi@daemonizer.de> <20070604130225.08e45b72@freepuppy>
+In-Reply-To: <20070604130225.08e45b72@freepuppy>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <20070611085950.GA5540@mail.intel.com>
-	 <1181584907.29767.30.camel@johannes.berg>
+Content-Type: multipart/signed;
+  boundary="nextPart1781395.qdN5C00hYe";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200706042252.40025.maxi@daemonizer.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6/11/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Hi Yi,
->
-> In sta_process_dls_req, you currently always accept DLS. I'm not sure
-> how well power save mode works in mac80211 (probably not at all, someone
-> versed in 802.11 should probably look at it some time soon), but once
-> DLS is set up power saving must be disabled by the DLS peer. This,
-> however, possibly leads to battery lifetime diminishing, so always
-> accepting the direct link might not be desirable. Any thoughts?
->
+--nextPart1781395.qdN5C00hYe
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-This is correct that power save must be disabled explicitly in this
-implementation.  Usually you want to establish DLS for increasing
-throughput so you won't go to power save mode anyway.
-
-One other thing is encryption, the path for peer key handshake must be
-opened in mac80211 in addition to this patch.
-
-
-> Should we have user-space controlled list of DLS possible DLS peers? Or
-> call out to userspace via nl80211 to make a decision? The list would be
-> easy by simply adding a sta_info for a possible DLS peer, callout also
-> shouldn't be too hard by sending a message to some QoS nl80211 multicast
-> group and possibly not responding to the DLS request at all when our
-> userspace doesn't accept it (that way it'll just time out on the other
-> side).
+On Monday 04 June 2007, Stephen Hemminger wrote:
+> On Mon, 4 Jun 2007 21:47:59 +0200
 >
-> johannes
+> Maximilian Engelhardt <maxi@daemonizer.de> wrote:
+> > On Monday 04 June 2007, Ingo Molnar wrote:
+> > > * Stephen Hemminger <shemminger@linux-foundation.org> wrote:
+> > > > Yes, the following patch makes iperf work better than ever. But are
+> > > > other broken applications going to have same problem. Sounds like t=
+he
+> > > > old "who runs first" fork() problems.
+> > >
+> > > this is the first such app and really, and even for this app: i've be=
+en
+> > > frequently running iperf on -rt kernels for _years_ and never noticed
+> > > how buggy its 'locking' code was, and that it would under some
+> > > circumstances use up the whole CPU on high-res timers.
+> >
+> > I must admit I don't know much about that topic, but there is one thing=
+ I
+> > don't understand. Why is iperf (even if it's buggy) able to use up the
+> > whole cpu? I didn't run it as root but as my normal user so it should
+> > have limited rights. Shouldn't the linux scheduler distribute cpu time
+> > among all running processes?
 >
+> In this case, there are two threads. One is receiving data and the other
+> is spinning checking on progress. If the spinning thread doesn't yield,
+> it will end up using it's whole quantum (10ms at 100hz), before the
+> scheduler lets the receiver run again. If the receiving thread doesn't
+> get to run then on a UP the performance stinks.
 >
+Ok, let's see if I got this right:
+If there are other processes that want cpu time they will get it after the=
+=20
+quantum for the iperf thread is used up. So cpu time will be distributed=20
+among other processes, but it takes some time until they get it and this=20
+increases latency.
+
+> The problem only showed up laptop because most of my other systems are
+> SMP (or fake SMP/HT), and usually set HZ to 1000 not 100.
+
+Hm, on my laptop (Pentium M) I have configured CONFIG_HZ_300 and CONFIG_NO_=
+HZ.
+On my desktop PC (Athlon 2000+, also UP) I also have CONFIG_HZ_300 and=20
+CONFIG_NO_HZ but didn't notice the problem.
+
+Maxi
+
+--nextPart1781395.qdN5C00hYe
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBGZHuXOimwv528XGERArEsAKDgMGu94r/glT+KaM30/ryWhocb3QCgsxPc
+ENx/hbwtIaDWZCeEcpHEjRk=
+=Yhkf
+-----END PGP SIGNATURE-----
+
+--nextPart1781395.qdN5C00hYe--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
