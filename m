@@ -1,62 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.247]:50447 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754987AbXFJR1W (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:32995 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752689AbXFDLoN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jun 2007 13:27:22 -0400
-Received: by an-out-0708.google.com with SMTP id d31so335952and
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2007 10:27:21 -0700 (PDT)
-Message-ID: <1d9d9b240706101027m7e6aef2er25474fd6e9459e9e@mail.gmail.com>
-Date: Sun, 10 Jun 2007 19:27:21 +0200
-From: "David Planella" <david.planella@googlemail.com>
-To: "linux-wireless@hauke-m.de" <linux-wireless@hauke-m.de>
-Subject: Re: The future of the TI ACX wireless driver
-Cc: acx100-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <466C2F94.8050501@hauke-m.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-References: <1d9d9b240706100735k374b5800ie64370e1e9bff1ef@mail.gmail.com>
-	 <466C2F94.8050501@hauke-m.de>
+	Mon, 4 Jun 2007 07:44:13 -0400
+Subject: Re: [PATCH] mac80211: Add module parameter for setting initial  rate in rc80211_simple
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+In-Reply-To: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>
+References: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YThe+QWS2EB/3f6dpOFj"
+Date: Mon, 04 Jun 2007 13:44:32 +0200
+Message-Id: <1180957473.11026.70.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hauke,
 
-Thanks for your reply. See the inline comments:
+--=-YThe+QWS2EB/3f6dpOFj
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-2007/6/10, linux-wireless@hauke-m.de <linux-wireless@hauke-m.de>:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
->
-> Hi
->
-> Nice work David.
->
-> I have extracted the acxsm driver out of the wireless-2.6 git tree and
-> made it compile on at least kernel 2.6.20 and 2.6.22-rc4
-> It can be found here:
-> http://www.hauke-m.de/fileadmin/acx/tiacx-20070522.tar.bz2
->
+On Sat, 2007-06-02 at 13:51 -0500, Larry Finger wrote:
+> The initial rate for STA's using rc80211_simple is set to the last
+> rate in the rate table. This is too fast for the bcm43xx-mac80211
+> driver. To correct this situation without affecting any other driver,
+> an initial_rate parameter is added to the rc80211_simple module. This
+> parameter is set to 10 times the desired initial rate. If the parameter
+> is zero or not set, the original behavior is kept. If the parameter
+> does not match a valid rate, the first rate in the table will be set.
 
-I do not think more effort should be put in the softmac version, but
-rather concentrate on the mac80211 version. I'm having a look at the
-patch Jeff Williams sent earlier on today, but as I said, cannot
-promise anything.
+I think I'd like to see your "start at 1M" patch merged rather than this
+new API. If rc80211_simple migrates quickly enough then it'll migrate to
+54M quickly without causing much performance loss, if not we need a
+better rate control algorithm anyway.
 
-> I also chanced some lines in the normal acx driver so it compiles with
-> kenrel 2.6.22 and later
-> http://www.hauke-m.de/fileadmin/acx/acx-20070610.tar.bz2
->
+johannes
 
-you might want to send a patch to acx100-devel or to Andreas Mohr for that.
+--=-YThe+QWS2EB/3f6dpOFj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> I will write some pages into the Wiki for these versions, so everyone
-> can test them.
->
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Yes, that would be good. A page with instructions on how to compile
-the latest acx-mac80211 would even be better.
+iD8DBQBGY/sg/ETPhpq3jKURAktFAKCGhdgJfqhpo4cYTneBFhL/SGn8JwCggXNJ
+CWddd7YwTWI7ao/b6rIB0xg=
+=LTNa
+-----END PGP SIGNATURE-----
 
-Regards,
-David.
+--=-YThe+QWS2EB/3f6dpOFj--
+
