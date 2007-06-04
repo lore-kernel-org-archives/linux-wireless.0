@@ -1,59 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:58213 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752520AbXFWIaF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jun 2007 04:30:05 -0400
-Message-ID: <467CD9EC.1020405@warmcat.com>
-Date: Sat, 23 Jun 2007 09:29:32 +0100
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Jiri Benc <jbenc@suse.cz>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [WIP] mac80211: kill mgmt interface
-References: <1182418939.10821.8.camel@johannes.berg>	<20070621143558.68fc8e4a@griffin.suse.cz>	<1182429920.21939.1.camel@johannes.berg>	<20070621151441.500d62d5@griffin.suse.cz>	<20070622154545.29eeebdb@griffin.suse.cz>	<467BDCB1.1010604@warmcat.com> <20070622173940.30280046@griffin.suse.cz> <467C003C.30803@warmcat.com>
-In-Reply-To: <467C003C.30803@warmcat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from www.osadl.org ([213.239.205.134]:46992 "EHLO mail.tglx.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1759969AbXFDTBF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jun 2007 15:01:05 -0400
+Subject: Re: iperf: performance regression (was b44 driver problem?)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Stephen Hemminger <shemminger@linux-foundation.org>
+Cc: Ulrich Drepper <drepper@gmail.com>,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	Michael Buesch <mb@bu3sch.de>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Ingo Molnar <mingo@elte.hu>
+In-Reply-To: <20070604105158.31ede1f5@freepuppy>
+References: <20070525172431.60affaca@freepuppy>
+	 <200705281944.05030.maxi@daemonizer.de> <1180380230.3657.3.camel@chaos>
+	 <200706031826.06891.maxi@daemonizer.de> <1180939188.4404.5.camel@chaos>
+	 <20070604090918.42386fbb@freepuppy> <1180974958.4404.24.camel@chaos>
+	 <20070604095924.651d91c8@freepuppy> <1180978368.4404.29.camel@chaos>
+	 <20070604105158.31ede1f5@freepuppy>
+Content-Type: text/plain
+Date: Mon, 04 Jun 2007 21:00:47 +0200
+Message-Id: <1180983647.4404.38.camel@chaos>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andy Green wrote:
-> Jiri Benc wrote:
+On Mon, 2007-06-04 at 10:51 -0700, Stephen Hemminger wrote:
+> > I doubt that. This is in the iperf code itself.
+> > 
+> > void thread_rest ( void ) {
+> > #if defined( HAVE_THREAD )
+> > #if defined( HAVE_POSIX_THREAD )
+> >     // TODO add checks for sched_yield or pthread_yield and call that
+> >     // if available
+> >     usleep( 0 );
+> > 
+> > ----------^^^^
+> > 
+> > It results in a nanosleep({0,0}, NULL)
+> > 
+> > 	tglx
+> > 
 > 
->> On Fri, 22 Jun 2007 15:29:05 +0100, Andy Green wrote:
->>> But for any nontrivial use, you need to capture RX and not blindly
->>> inject, and so you have a monitor mode interface up anyway.
->> No, why? You can encapsulate received management frames (only the ones
->> that need to go to user space or so) in the same way and send them
->> through the regular interface.
-> 
-> For my usage case I want specific unencrypted packets filtered by a MAC
-> address that isn't part of the authenticated network, so the reception
-> action needs to be effectively promisc a la Monitor mode, not just
-> "received management frames".  But I guess it can be done with IFF_PROMISC.
-> 
-> By piping everything down "wlan0" normal packets will not have the
-> radiotap metadata on their capture, but presumably the abnormal packets
-> can have it via a special ethernet frame type + radiotap header.  Maybe
-> it doesn't matter for any actual use.
+> Yes, the following patch makes iperf work better than ever.
+> But are other broken applications going to have same problem.
+> Sounds like the old "who runs first" fork() problems.
 
-I've converted the injection patches and packetspammer[1] to use this
-encapsulation method.  I added
+Not really. The fork() "who runs first" problem is nowhere specified.
 
-#define ETH_P_80211_RT	0x001B		/* Radiotap + 80211 encapsulation */
+usleep(0) is well defined:
 
-to ./include/linux/if_ether.h to define the new ethtype.
+.... If the value of useconds is 0, then the call has no effect.
 
-My results at the moment are that my encapsulated injected packets are
-dropped before reaching wlan0's dev->hard_start_xmit(), but if I send
-them to a second network interface for the same device configured into
-monitor mode, then they are injected correctly and go out on the air.
+So the call into the kernel has been wrong for quite a time.
 
-Any ideas about where to look or what to do about the packets getting
-dropped on wlan0?  wlan0 is "up" and has its channel set, but is not
-associated to anything during this test.
+	tglx
 
--Andy
 
-[1] in git at http://git.warmcat.com
