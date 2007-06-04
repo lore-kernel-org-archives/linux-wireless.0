@@ -1,56 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47352 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751317AbXFZI6e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2007 04:58:34 -0400
-Received: from [131.234.77.29]
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1I36sb-00035s-4J
-	for linux-wireless@vger.kernel.org; Tue, 26 Jun 2007 09:58:33 +0100
-Subject: mac80211/bcm43xx deadlock
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-lFL96FX9ey2uws9reFUy"
-Date: Tue, 26 Jun 2007 10:59:41 +0200
-Message-Id: <1182848382.3830.5.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from daemonizer.de ([87.230.16.230]:37992 "EHLO daemonizer.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753483AbXFDTsw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jun 2007 15:48:52 -0400
+From: Maximilian Engelhardt <maxi@daemonizer.de>
+To: Ingo Molnar <mingo@elte.hu>
+Subject: Re: iperf: performance regression (was b44 driver problem?)
+Date: Mon, 4 Jun 2007 21:47:59 +0200
+Cc: Stephen Hemminger <shemminger@linux-foundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ulrich Drepper <drepper@gmail.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+References: <20070525172431.60affaca@freepuppy> <20070604105158.31ede1f5@freepuppy> <20070604193206.GA13271@elte.hu>
+In-Reply-To: <20070604193206.GA13271@elte.hu>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1294756.CnZEpMUT4R";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200706042148.02450.maxi@daemonizer.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-lFL96FX9ey2uws9reFUy
-Content-Type: text/plain
+--nextPart1294756.CnZEpMUT4R
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Hey,
+On Monday 04 June 2007, Ingo Molnar wrote:
+> * Stephen Hemminger <shemminger@linux-foundation.org> wrote:
+> > Yes, the following patch makes iperf work better than ever. But are
+> > other broken applications going to have same problem. Sounds like the
+> > old "who runs first" fork() problems.
+>
+> this is the first such app and really, and even for this app: i've been
+> frequently running iperf on -rt kernels for _years_ and never noticed
+> how buggy its 'locking' code was, and that it would under some
+> circumstances use up the whole CPU on high-res timers.
 
-I just managed to deadlock bcm43xx when I was trying to do something
-with iwconfig at the same time as telling network manager to shut off
-the interface. It stayed up and things were locked up.
+I must admit I don't know much about that topic, but there is one thing I=20
+don't understand. Why is iperf (even if it's buggy) able to use up the whol=
+e=20
+cpu? I didn't run it as root but as my normal user so it should have limite=
+d=20
+rights. Shouldn't the linux scheduler distribute cpu time among all running=
+=20
+processes?
 
-I haven't been able to analyse it yet, I dumped process stacks a few
-times and put the resulting log at
-http://johannes.sipsolutions.net/files/mac80211-bcm43xx-deadlock
+Maxi
 
-Note that many processes are in rtnl_lock() but wpa_supplicant is stuck
-in wait_for_completion.
-
-johannes
-
---=-lFL96FX9ey2uws9reFUy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart1294756.CnZEpMUT4R
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.6 (GNU/Linux)
 
-iD8DBQBGgNV8/ETPhpq3jKURAuhFAKC4KST8h8r1BpqkoO/WRp7OlJFPqQCghVl3
-yt/e6GQ2d0Xsa1kxPso28FI=
-=v0mS
+iD8DBQBGZGxyOimwv528XGERAslBAKDFEN/kVetmUZatC669/yQ+Gds8LQCg0ce3
+j/jrso2q5DkyFYTWaCF8fjw=
+=e1os
 -----END PGP SIGNATURE-----
 
---=-lFL96FX9ey2uws9reFUy--
-
+--nextPart1294756.CnZEpMUT4R--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
