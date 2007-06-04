@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:52718 "EHLO mail.suse.cz"
+Received: from www.osadl.org ([213.239.205.134]:55554 "EHLO mail.tglx.de"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757004AbXFVPty (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2007 11:49:54 -0400
-Date: Fri, 22 Jun 2007 17:49:53 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Andy Green <andy@warmcat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [WIP] mac80211: kill mgmt interface
-Message-ID: <20070622174953.500817e0@griffin.suse.cz>
-In-Reply-To: <1182526221.21939.94.camel@johannes.berg>
-References: <1182418939.10821.8.camel@johannes.berg>
-	<20070621143558.68fc8e4a@griffin.suse.cz>
-	<1182429920.21939.1.camel@johannes.berg>
-	<20070621151441.500d62d5@griffin.suse.cz>
-	<20070622154545.29eeebdb@griffin.suse.cz>
-	<467BDCB1.1010604@warmcat.com>
-	<1182526221.21939.94.camel@johannes.berg>
+	id S1758829AbXFDT0Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jun 2007 15:26:24 -0400
+Subject: Re: iperf: performance regression (was b44 driver problem?)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Stephen Hemminger <shemminger@linux-foundation.org>
+Cc: Ulrich Drepper <drepper@gmail.com>,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	Michael Buesch <mb@bu3sch.de>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Ingo Molnar <mingo@elte.hu>
+In-Reply-To: <1180983647.4404.38.camel@chaos>
+References: <20070525172431.60affaca@freepuppy>
+	 <200705281944.05030.maxi@daemonizer.de> <1180380230.3657.3.camel@chaos>
+	 <200706031826.06891.maxi@daemonizer.de> <1180939188.4404.5.camel@chaos>
+	 <20070604090918.42386fbb@freepuppy> <1180974958.4404.24.camel@chaos>
+	 <20070604095924.651d91c8@freepuppy> <1180978368.4404.29.camel@chaos>
+	 <20070604105158.31ede1f5@freepuppy>  <1180983647.4404.38.camel@chaos>
+Content-Type: text/plain
+Date: Mon, 04 Jun 2007 21:26:18 +0200
+Message-Id: <1180985178.4404.48.camel@chaos>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 22 Jun 2007 17:30:21 +0200, Johannes Berg wrote:
-> In addition, we still have the problem with receiving encrypted eapol
-> frames etc. that we really need to see unencrypted but can't make it to
-> the network interface.
+On Mon, 2007-06-04 at 21:00 +0200, Thomas Gleixner wrote:
+> > 
+> > Yes, the following patch makes iperf work better than ever.
+> > But are other broken applications going to have same problem.
+> > Sounds like the old "who runs first" fork() problems.
+> 
+> Not really. The fork() "who runs first" problem is nowhere specified.
+> 
+> usleep(0) is well defined:
+> 
+> .... If the value of useconds is 0, then the call has no effect.
+> 
+> So the call into the kernel has been wrong for quite a time.
+> 
 
-Hm, are you able to get such management frames if you're not root (or
-has CAP_NET_RAW capabilities)?
+Just for clarification: I'm not saying that we should break the (broken)
+user space ABI. I'm going to work out a patch which prints out a warning
+(limited number per boot) and emulating the old behavior by a call to
+yield() along with an entry into (mis)feature-removal.txt.
 
-> I'm still for using netlink. It's just a socket too after all, and
-> what's the conceptual difference between packing network packets into
-> other packets or packing them into netlink messages? I don't see why
-> people are so dead set against using nl80211 for the userspace MLME
-> needs including frame stuff.
+	tglx
 
-I think netlink is fine if it is used for injection too (at least of
-management frames and WPA stuff).
 
- Jiri
-
--- 
-Jiri Benc
-SUSE Labs
