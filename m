@@ -1,60 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:54065 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1760012AbXFDUCI (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.187]:42866 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763843AbXFEOoL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2007 16:02:08 -0400
-Message-ID: <46645478.20002@linux.intel.com>
-Date: Mon, 04 Jun 2007 11:05:44 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
+	Tue, 5 Jun 2007 10:44:11 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so55678nfb
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jun 2007 07:44:11 -0700 (PDT)
+Message-ID: <466576AB.1090806@googlemail.com>
+Date: Tue, 05 Jun 2007 16:43:55 +0200
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Add module parameter for setting initial rate  in rc80211_simple
-References: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net> <46644D8F.2010400@linux.intel.com>
-In-Reply-To: <46644D8F.2010400@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+	Michael Buesch <mb@bu3sch.de>,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Gary Zambrano <zambrano@broadcom.com>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Andrey Borzenkov <arvidjaar@mail.ru>,
+	Paulo Pereira <pfmp.404@gmail.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Bjorn Helgaas <bjorn.helgaas@hp.com>,
+	linux-pcmcia@lists.infradead.org,
+	Robert de Rooy <robert.de.rooy@gmail.com>,
+	Alan Cox <alan@redhat.com>, Tejun Heo <htejun@gmail.com>
+Subject: Re: [3/5] 2.6.22-rc4: known regressions
+References: <46657407.1000108@googlemail.com>
+In-Reply-To: <46657407.1000108@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-2;
+	format=flowed
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-James Ketrenos wrote:
-> Larry Finger wrote:
->> The initial rate for STA's using rc80211_simple is set to the last
->> rate in the rate table. This is too fast for the bcm43xx-mac80211
->> driver.
->> To correct this situation without affecting any other driver,
->> an initial_rate parameter is added to the rc80211_simple module. This
->> parameter is set to 10 times the desired initial rate. If the parameter
->> is zero or not set, the original behavior is kept. If the parameter
->> does not match a valid rate, the first rate in the table will be set.
-> 
-> Initial rate selection should be based on the RSSI of the last frame(s) 
-> received from the target network.  One way to do that would be for the 
-> driver to map a minimum RSSI value to each rate.  If the RSSI for the 
-> target network is greater than the value listed, that rate could be used 
-> for initial selection.  The ieee80211_rate with the highest 'rate', 
-> which is in the supported rates mask and with a min_rssi <= the AP's 
-> reported RSSI, is selected.
-> 
-> The mechanism by which the magic values for min_rssi are determined for 
-> each rate is more observational than scientific--and is vendor 
-> specific.  You can pick a set of values, but different hardware and 
-> environments will yield different levels of success / failure.  Some 
-> hardware can be very lenient if it has automatic hardware retry.  Other 
-> hardware will need to be very conservative (since, as you point out, the 
-> first few frames Tx/Rx'd are important)
+Hi all,
 
-I didn't state it above -- doing what is described requires adding one unsigned char (min_rssi) to ieee80211_rate in mac80211.h and then modifying rc80211_simple to take advantage of that information (so if you're grepping for min_rssi and can't find it, that's why...)
+Here is a list of some known regressions in 2.6.22-rc4.
 
-James
+=46eel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
 
-> 
-> James
-> 
->>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+Networking
+
+Subject    : list_add corruption. prev->next should be next (f7d28794),=
+ but was f0df8ed4 (prev=3Df0df8ed4) Kernel Bug at lib/list_debug.c:33
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8561
+Submitter  : Paulo Pereira <pfmp.404@gmail.com>
+Handled-By : Alan Stern <stern@rowland.harvard.edu>
+Status     : problem is being debugged
+
+Subject    : no irda0 interface (2.6.21 was OK), smsc does not find chi=
+p
+References : http://lkml.org/lkml/2007/6/3/16
+Submitter  : Andrey Borzenkov <arvidjaar@mail.ru>
+Handled-By : Samuel Ortiz <samuel@sortiz.org>
+             Bjorn Helgaas <bjorn.helgaas@hp.com>
+Status     : problem is being debugged
+
+Subject    : b44: regression in 2.6.22
+References : http://lkml.org/lkml/2007/5/27/108
+Submitter  : Maximilian Engelhardt <maxi@daemonizer.de>
+Handled-By : Gary Zambrano <zambrano@broadcom.com>
+             Michael Buesch <mb@bu3sch.de>
+             Thomas Gleixner <tglx@linutronix.de>
+Status     : problem is being debugged
+
+
+
+PCMCIA
+
+Subject    : libata and legacy ide pcmcia failure
+References : http://lkml.org/lkml/2007/5/17/305
+Submitter  : Robert de Rooy <robert.de.rooy@gmail.com>
+Status     : Unknown
+
+
+
+Regards,
+Michal
+
+--
+"Najbardziej brakowa=B3o mi twojego milczenia."
+-- Andrzej Sapkowski "Co=B6 wi=EAcej"
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
