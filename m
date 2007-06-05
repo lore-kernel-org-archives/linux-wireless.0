@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:60390 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761227AbXFAShL (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:37090 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762844AbXFEX1Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2007 14:37:11 -0400
-Received: by wa-out-1112.google.com with SMTP id j4so603657wah
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Jun 2007 11:37:10 -0700 (PDT)
-Message-ID: <5b9417770706011137q59962e95y6d810b236e6c0c3a@mail.gmail.com>
-Date: Fri, 1 Jun 2007 13:37:10 -0500
-From: "John H." <mistamaila@gmail.com>
-To: "Larry Finger" <larry.finger@lwfinger.net>
-Subject: Re: Upgrade to f7 breaks bcm43xx module
-Cc: "Broadcom Linux" <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <5b9417770706011123s3a54c43ep69257321e8102719@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <5b9417770706011111u20f32192s960961dc8693f00e@mail.gmail.com>
-	 <4660630E.7040701@lwfinger.net>
-	 <5b9417770706011123s3a54c43ep69257321e8102719@mail.gmail.com>
+	Tue, 5 Jun 2007 19:27:16 -0400
+Date: Tue, 5 Jun 2007 16:26:33 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: James Ketrenos <jketreno@linux.intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: warnings in git-wireless
+Message-Id: <20070605162633.8aed0a21.akpm@linux-foundation.org>
+In-Reply-To: <4665C393.2000507@linux.intel.com>
+References: <20070605020614.3f06b2ab.akpm@linux-foundation.org>
+	<20070605115701.GA5391@tuxdriver.com>
+	<4665C393.2000507@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I mean, the correct files to populate /lib/firmware(as I assume that's
-what you mean).
+On Tue, 05 Jun 2007 13:12:03 -0700
+James Ketrenos <jketreno@linux.intel.com> wrote:
 
-I don't see it, or the instructions, on
-http://bcm43xx.berlios.de/
+> John W. Linville wrote:
+> > On Tue, Jun 05, 2007 at 02:06:14AM -0700, Andrew Morton wrote:
+> > 
+> >> Please, don't anybody dare think about thinking about letting this anywhere
+> >> near mainline until it has had a thorough review.  Or at least, a little bit
+> >> of review.
+> > 
+> > Don't worry -- I assure you that everyone is aware of the issues.
+> > 
+> > John
+> 
+> Yes, we certainly don't want a driver to be "near mainline" that does things that the rest of the kernel and other drivers are doing.  We should force them to stay out-of-tree until any and everything is resolved.  Heaven forbid that the code should be merged, contributed, and improved upon as a community.
 
-On 6/1/07, John H. <mistamaila@gmail.com> wrote:
-> Thanks for the prompt response.
->
-> I have a dell e1505.  Do I need an updated fwcutter as well?  What is
-> the actual driver I need?  The device is broadcom 1390?
->
->
-> On 6/1/07, Larry Finger <larry.finger@lwfinger.net> wrote:
-> > John H. wrote:
-> > > bcm43xx mac80211:
-> > > YOUR FIRMWARE IS TOO OLD. Firmware from binary drivers older than
-> > > version 4.x is unsupported. You must upgrade your firmware files.
-> > >
-> > > I get that now with f7 and 2.6.21 and didn't with fc6 2.6.20.
-> > >
-> > > However, I read that the error is not what it sounds like.  What is
-> > > the solution?
-> >
-> > The error is _EXACTLY_ what it sounds like. With fc6, you were using bcm43xx-softmac, which uses V3
-> > firmware. With fc7, you switched to bcm43xx-mac80211, which needs V4 firmware - just what the error
-> > message said. The solution is to download a V4 driver and create the appropriate firmware.
-> >
-> > Larry
-> >
->
+That isn't the only decision criterion.
+
+Overall the c files look reasonable to me: a few little things like large
+on-stack arrays built at runtim which I think could be assembled at
+compile-time, various unneeded casts, a bit of space-vs-tab confusion, but
+nothing serious leaps out.
+
+So perhaps that header file was unrepresentative.  It is seriously
+duplicative and bloaty though.
+
+
+
+This:
+
+akpm:/usr/src/25> perl scripts/checkpatch.pl patches/git-wireless.patch | wc -l
+9941
+
+should be an endless source of fun.
+
