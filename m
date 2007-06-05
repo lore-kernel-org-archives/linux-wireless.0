@@ -1,97 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:33901 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759765AbXFKKjS (ORCPT
+Received: from 91-65-240-14-dynip.superkabel.de ([91.65.240.14]:34428 "EHLO
+	charon.n2.diac24.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1762516AbXFEOJ0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 06:39:18 -0400
-Message-Id: <20070611103914.481787013@warmcat.com>
-References: <20070611103828.961999956@warmcat.com>
-Date: Mon, 11 Jun 2007 11:38:29 +0100
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
-	Andy Green <andy@warmcat.com>
-Subject: [PATCH 1/2] zd1211rw-mac80211: return hardware specific tx rate code for rx status
+	Tue, 5 Jun 2007 10:09:26 -0400
+Date: Tue, 5 Jun 2007 16:09:24 +0200
+From: David Lamparter <lists@diac24.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: nl80211 status? (implying cfg80211 status)
+Message-ID: <20070605140924.GC5221@charon.n2.diac24.net>
+References: <20070604193034.GA16350@charon.n2.diac24.net> <1181040798.8274.10.camel@johannes.berg> <1181051870.8274.17.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1181051870.8274.17.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-zd1211rw-mac80211 uses different hardware-specific codings to talk about
-rates when doing transmit and receive.  Because mac80211 looks up the rx
-rate against the rates table used for selecting hardware-specific coding for
-tx, the rate returned in the rx_status struct needs to be adjusted to use the
-coding used to hardware-specific tx rates.  This patch performs this adjustment.
+Hooray, message crossing :)
 
-Without this patch the radiotap-based monitor stuff reports a "0.0Mbps" rate for
-all packets from this driver.
+> What I'd do if I had time now is add things to nl80211/cfg80211 and then
+> implement the calls in mac80211 (or a fullmac driver of your choice.)
+> Then write the appropriate userspace tool for testing and see if it
+> works, i.e. you can associate, do key operations etc. Use WEP for now,
+> and then maybe modify wpa_supplicant too for nl80211. Then, at some
+> point, you have wpa_supplicant working on mac80211 (or the driver). Then
+> in theory you don't need wext any more, and as an afterthought you can
+> still add wext compatibility so the deprecated wireless tools continue
+> to work.
 
-CC: Daniel Drake <dsd@gentoo.org>
-CC: Ulrich Kunitz <kune@deine-taler.de>
-Signed-off-by: Andy Green <andy@warmcat.com>
+Yeah, I agree. Guess I overshooted a bit on converting wext. For the
+userspace part I started by adding some genetlink helper functions to
+iproute2, will try to get them upstream later. (tomorrow)
+
+I'm hoping to add an "ip wireless" part, since iproute2 already has all the
+netlink stuff and I really like its syntax. I rudimentarily started hacking
+it up, which is why I noticed there's no PHY configuration command.
+
+For the kernel part, if I were to work on it, I'd be adding it to mac80211.
+The only 802.11 devices I own are a laptop with a rt2500 and a WRT router,
+and developing for that router isn't that fun.
+
+
+David
 
 ---
- drivers/net/wireless/mac80211/zd1211rw/zd_chip.c |   22 ++++++++++++++++++++++
- drivers/net/wireless/mac80211/zd1211rw/zd_chip.h |    2 ++
- drivers/net/wireless/mac80211/zd1211rw/zd_mac.c  |    2 +-
- 3 files changed, 25 insertions(+), 1 deletion(-)
 
-Index: wireless-dev/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
-+++ wireless-dev/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
-@@ -1569,6 +1569,28 @@ u16 zd_rx_rate(const void *rx_frame, con
- 	return rate;
- }
- 
-+int zd_rx_rate_using_tx_format(const void *rx_frame,
-+   const struct rx_status *status)
-+{
-+	if (status->frame_status & ZD_RX_OFDM) {
-+		return ZD_CS_OFDM | (zd_ofdm_plcp_header_rate(rx_frame) & 0xf);
-+	}
-+
-+	switch (zd_cck_plcp_header_rate(rx_frame)) {
-+	case ZD_CCK_SIGNAL_1M:
-+		return ZD_CS_CCK_RATE_1M;
-+	case ZD_CCK_SIGNAL_2M:
-+		return ZD_CS_CCK_RATE_2M;
-+	case ZD_CCK_SIGNAL_5M5:
-+		return ZD_CS_CCK_RATE_5_5M;
-+	case ZD_CCK_SIGNAL_11M:
-+		return ZD_CS_CCK_RATE_11M;
-+	default:
-+		return 0;
-+	}
-+
-+}
-+
- int zd_chip_switch_radio_on(struct zd_chip *chip)
- {
- 	int r;
-Index: wireless-dev/drivers/net/wireless/mac80211/zd1211rw/zd_chip.h
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/mac80211/zd1211rw/zd_chip.h
-+++ wireless-dev/drivers/net/wireless/mac80211/zd1211rw/zd_chip.h
-@@ -877,6 +877,8 @@ u8 zd_rx_qual_percent(const void *rx_fra
- u8 zd_rx_strength_percent(u8 rssi);
- 
- u16 zd_rx_rate(const void *rx_frame, const struct rx_status *status);
-+int zd_rx_rate_using_tx_format(const void *rx_frame,
-+   const struct rx_status *status);
- 
- struct zd_mc_hash {
- 	u32 low;
-Index: wireless-dev/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
-+++ wireless-dev/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
-@@ -642,7 +642,7 @@ static int fill_rx_stats(struct ieee8021
- 	stats->signal = zd_rx_qual_percent(buffer,
- 		                          length - sizeof(struct rx_status),
- 		                          status);
--	stats->rate = zd_rx_rate(buffer, status);
-+	stats->rate = zd_rx_rate_using_tx_format(buffer, status);
- 
- 	return 0;
- }
+[equinox@neptune]:~/src/iproute2/ip # ./ip w
+0: phy0
+RTNETLINK answers: Operation not supported
+    6: wlan0: association status unknown
+RTNETLINK answers: Operation not supported
+    5: wmaster0: association status unknown
 
--- 
