@@ -1,53 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51404.mail.re2.yahoo.com ([206.190.38.183]:31586 "HELO
-	web51404.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751795AbXFDMD6 (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:5575 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1762318AbXFEWOs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2007 08:03:58 -0400
-Date: Mon, 4 Jun 2007 05:03:57 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: AW: Drivers that do not honor regulatory restrictions
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
+	Tue, 5 Jun 2007 18:14:48 -0400
+Message-ID: <4665C393.2000507@linux.intel.com>
+Date: Tue, 05 Jun 2007 13:12:03 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ascii
-Message-ID: <297494.10588.qm@web51404.mail.re2.yahoo.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: warnings in git-wireless
+References: <20070605020614.3f06b2ab.akpm@linux-foundation.org> <20070605115701.GA5391@tuxdriver.com>
+In-Reply-To: <20070605115701.GA5391@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote: 
-> No, that would've been the driver, the firmware has nothing to do with 
-> the radio frequency at all. 
->  
-> johannes 
- 
-Actually it was mac80211. In ieee80211_ioctl.c the allowed frequencies for Japan are defined this way: 
- 
-1574 static const struct ieee80211_channel_range ieee80211_mkk_channels[] = { 
- 1575         { 2412, 2472, 20, 6 } /* IEEE 802.11b/g, channels 1..13 */, 
- 1576         { 5170, 5240, 20, 6 } /* IEEE 802.11a, channels 34..48 */, 
- 1577         { 5260, 5320, 20, 6 } /* IEEE 802.11a, channels 52..64 */, 
- 1578         { 0 } 
- 1579 }; 
+John W. Linville wrote:
+> On Tue, Jun 05, 2007 at 02:06:14AM -0700, Andrew Morton wrote:
+> 
+>> Please, don't anybody dare think about thinking about letting this anywhere
+>> near mainline until it has had a thorough review.  Or at least, a little bit
+>> of review.
+> 
+> Don't worry -- I assure you that everyone is aware of the issues.
+> 
+> John
 
-This prevents channel 14 from being used. Changing line 1575 to 
- 
-1575         { 2412, 2484, 20, 6 } /* IEEE 802.11b/g, channels 1..13 */, 
+Yes, we certainly don't want a driver to be "near mainline" that does things that the rest of the kernel and other drivers are doing.  We should force them to stay out-of-tree until any and everything is resolved.  Heaven forbid that the code should be merged, contributed, and improved upon as a community.
 
-did the trick.
+You'd think these guys were trying to enable folks with a driver so they can use the hardware they bought or something.  Its almost laughable.  What idiots.
 
-BTW: ieee80211_ioctl_set_regulatory_domain changes conf->regulatory_domain, but this seems not to change the selected frequency table (that one is selected solely based on the module parameter "ieee80211_regdom". Why are there two places to store the regdomain (that seem to be used from different places)?
- 
---   
-Regards 
-  
-       Joerg 
- 
- 
- 
-
-
-
-
-       __________________________________ Yahoo! Clever - Der einfachste Weg, Fragen zu stellen und Wissenswertes mit Anderen zu teilen. www.yahoo.de/clever
-
+James
