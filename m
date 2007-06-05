@@ -1,37 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:42204 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1763334AbXFKCoI (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:32976 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763729AbXFEK4J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jun 2007 22:44:08 -0400
-Message-ID: <466CB6F6.1020706@lwfinger.net>
-Date: Sun, 10 Jun 2007 21:44:07 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Daniel Drake <dsd@gentoo.org>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RFC: Regulatory info in mac80211
-References: <4665CCE7.5090409@lwfinger.net> <466A2383.50001@gentoo.org>
-In-Reply-To: <466A2383.50001@gentoo.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 5 Jun 2007 06:56:09 -0400
+Subject: Re: nl80211 status? (implying cfg80211 status)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Lamparter <lists@diac24.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20070604193034.GA16350@charon.n2.diac24.net>
+References: <20070604193034.GA16350@charon.n2.diac24.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3DsUXjw2HoAFVhbIcDKD"
+Date: Tue, 05 Jun 2007 12:53:18 +0200
+Message-Id: <1181040798.8274.10.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Drake wrote:
-> Larry Finger wrote:
->> 5. There should be a scheme for translating country codes based on the 
->> outdated table 105 in Corrigendum 1 for 802.11b. This is the basis for 
->> the EEPROM data in the ZD1211 hardware. Note, this scheme is far too 
->> limited to be the only one available. If the translation code is 
->> needed for more than one driver, it should be placed in mac80211.
-> 
-> You might wish to treat the fact that the ZD1211 EEPROM regdomain field 
-> appears to correspond to the 802.11b specs as just a coincidence. Some 
-> newer devices have regdomain values that are not in that table (and are 
-> not even mentioned in the vendor driver...)
 
-That was my intent from the start. The two European countries (France and Spain) that are mentioned 
-in that table have the wrong channels assigned; however, if some driver asked for either of those 
-regions, we will supply the channel data that is current today.
+--=-3DsUXjw2HoAFVhbIcDKD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Larry
+Hi David,
+
+> together with a friend of mine, I recently pondered about making linux
+> wireless configuration utilities more friendly to use. He did some =20
+> hacking to add wext to iproute2, but got "use nl80211" as reply. (cf.
+> http://marc.info/?l=3Dlinux-netdev&m=3D117305184005985&w=3D2)
+
+Ah right, I remember that. Yeah, wext isn't really going anywhere.
+
+> However, nl80211 still isn't near any usable state. Worse yet, even
+> the API is nowhere near sufficient for replacing wext. So I was
+> wondering if anyone is working on this. (google pointed me to
+> pynl80211, hence Cc: Johannes)
+
+This, unfortunately, is true. If you look at the wireless-dev version of
+include/linux/nl80211.h that's what I planned right now and that should
+(unless I forgot something) be sufficient to replace some more wext
+things, but there are also things missing, notably event reporting.
+However, there's also hardly any code to unwrap the netlink messages and
+translate them to cfg80211 calls (what there is is all in
+net/wireless/nl80211.c).
+
+> As far as I understand, the first thing to tackle is converting
+> everything to cfg80211 and making wext call cfg80211 functions,
+> putting all the compatibility cruft into that layer while at it.
+
+I wouldn't necessarily start with that.
+
+>  This
+> could be done incrementally, step-by-step, couldn't it?
+
+Yes, it could
+
+>  Or is there
+> major restructuring planned? If not, I'd certainly like spending a bit
+> of work on this (my time is as limited as everyone's, but I do have
+> some wasted time here and there). However, a proper outline of the API
+> needs to be thought of first.
+
+The outline of what the nl80211 userspace API provides is in
+include/linux/nl80211.h, the outline of what cfg80211 provides is in
+include/net/cfg80211.h (both in wireless-dev, mainline contains *really*
+stripped down versions)
+
+> My very-humble totally-irrelevant opinion would be that nl80211 should
+> provide all neccessary operations, only much more cleanly than wext
+> ;).
+
+That's the plan :)
+
+>  So that means, at least a PHY configuration command (am I missing
+> something or is there none yet?) with attributes to specify channel &
+> co.
+
+Oh, heh, that does indeed seem to be missing...
+
+>  The "set association" command might be extended to work for
+> interfaces.
+
+Not sure what you mean here. The NL80211_CMD_ASSOCIATE command as I see
+it is modeled after the 802.11 mlme interface, nl80211.h says:
+
+> * @NL80211_CMD_ASSOCIATE: associate with the given parameters
+>  *      (%NL80211_ATTR_SSID is mandatory, %NL80211_ATTR_TIMEOUT_TU,
+>  *      %NL80211_ATTR_BSSID, %NL80211_ATTR_CHANNEL, %NL80211_ATTR_PHYMODE=
+,
+>  *      and %NL80211_ATTR_IE may be given)
+
+Hence, here we also have the ability to set the phy mode/channel. We
+still need an explicit command for that though for monitor interfaces.
+
+>  Proprietary/custom driver extensions could be handled as
+> special attributes and/or special commands. (that explicitly excludes
+> the PRISM2 cruft though, those are actually rather generic IMHO)
+
+Do I look dead yet? No way. Proprietary/custom driver extensions live in
+debugfs. If you need something that's generally useful, we can add it to
+nl80211/cfg80211, otherwise you get to feel the pain of having it in
+debugfs.
+
+> P.S.: While I'm aware that changing kernel APIs is a very bad idea,
+> I'm really thinking nl80211 isn't frozen yet. As far as I can tell,
+> only iwspy and pynl80211 are using it at all. This hopefully won't end
+> up as a compatibility nightmare AGAIN?
+
+Oh, I very much agree, nl80211 isn't frozen yet (except for that tiny
+part that's in mainline already). And all of nl80211 API are the numbers
+in the nl80211.h header file that userspace gets to see, so...
+
+johannes
+
+--=-3DsUXjw2HoAFVhbIcDKD
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGZUCd/ETPhpq3jKURAqw4AJ0aHaYgFFuy77REhLlTPSqDHM4/owCcCHCV
+E37+XEAZjQrczoUjbQRP3Z0=
+=tH0A
+-----END PGP SIGNATURE-----
+
+--=-3DsUXjw2HoAFVhbIcDKD--
+
