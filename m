@@ -1,113 +1,459 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:43948 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752685AbXFSFO3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2007 01:14:29 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Hong Liu <hong.liu@intel.com>
-Subject: Re: [patch]mac80211: add support for iwlist channel
-Date: Mon, 18 Jun 2007 22:12:51 -0700
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-References: <1182156425.15928.7.camel@napa-sdv1.sh.intel.com>
-In-Reply-To: <1182156425.15928.7.camel@napa-sdv1.sh.intel.com>
+Received: from mga01.intel.com ([192.55.52.88]:43902 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752755AbXFFIXJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2007 04:23:09 -0400
+Date: Wed, 6 Jun 2007 16:22:39 +0800
+From: Zhu Yi <yi.zhu@intel.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 3/3] mac80211: debugfs support for TSM and DLS
+Message-ID: <20070606082239.GA28667@mail.intel.com>
+Reply-To: yi.zhu@intel.com
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3663441.YNQDIpp2UW";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200706182212.55862.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3663441.YNQDIpp2UW
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+This adds the debugfs support for the TSM and DLS features. All
+the stuff will be in the new directory
+/sys/kernel/debug/ieee80211/phy0/netdev:wlan0/qos/ in STA mode.
 
-On Monday 18 June 2007 01:47, Hong Liu wrote:
-> +static int is_duplicate_channel(struct ieee80211_channel *chan,
-> +				struct iw_freq *freq, int count)
-> +{
-> +	int i;
-> +
-> +	for (i =3D 0; i < count; i++, freq++)
-> +		if (chan->chan =3D=3D freq->i)
-> +			return 1;
-> +
-> +	return 0;
-> +}
-> +
-Currently, the only situation in which channels are duplicated is when ther=
-e's=20
-an 11g mode registered. The scanning code in ieee80211_sta.c=20
-(ieee80211_sta_scan_work) checks for this specifically:
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ net/mac80211/debugfs_netdev.c |  346 ++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/ieee80211_i.h    |   33 ++++
+ 2 files changed, 376 insertions(+), 3 deletions(-)
 
-(local->hw_modes & local->enabled_modes & (1 << MODE_IEEE80211G) &&
- mode->mode =3D=3D MODE_IEEE80211B)
-
-MODE_IEEE80211B is skipped if MODE_IEEE80211G is enabled. Modes should be=20
-skipped instead of channels.
-
-> +static void ieee80211_get_supp_channels(struct ieee80211_local *local,
-> +				struct iw_range *range)
-> +{
-> +	struct ieee80211_hw_mode *mode =3D NULL;
-> +	int c =3D 0, j;
-> +
-> +	list_for_each_entry(mode, &local->modes_list, list) {
-> +		for (j =3D 0;
-> +		     j < mode->num_channels && c < IW_MAX_FREQUENCIES; j++) {
-This looks somewhat awkward. How about something like:
-
-int j =3D 0;
-(check if this mode is disabled or duplicates channels here)
-while (j++ < mode->num_channels && c++ < IW_MAX_FREQUENCIES) {
-
-> +			struct ieee80211_channel *chan =3D &mode->channels[j];
-> +
-> +			if (is_duplicate_channel(chan, range->freq, c))
-> +				continue;
-> +			range->freq[c].i =3D chan->chan;
-> +			range->freq[c].m =3D chan->freq * 100000;
-> +			range->freq[c].e =3D 1;
-> +			c++;
-> +		}
-> +	}
-> +	range->num_channels =3D c;
-> +	range->num_frequency =3D c;
-> +}
->
->  static int ieee80211_ioctl_giwrange(struct net_device *dev,
->  				 struct iw_request_info *info,
-> @@ -1533,6 +1567,8 @@ static int ieee80211_ioctl_giwrange(struct net_devi=
-ce
-> *dev, range->enc_capa =3D IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
->  			  IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
->
-> +	ieee80211_get_supp_channels(local, range);
-> +
-Should be fine to just put all the logic here. No other code will use that=
-=20
-function.
-
-=2DMichael Wu
-
---nextPart3663441.YNQDIpp2UW
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGd2XXT3Oqt9AH4aERAkwrAJ9lbmI7Eki6rvp+dbg60J0paC1sKwCfc1wa
-4xPjF8i4HDx5tN18yMldacg=
-=QkMf
------END PGP SIGNATURE-----
-
---nextPart3663441.YNQDIpp2UW--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 9e39646..b9409ee 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -87,6 +87,270 @@ static const struct file_operations name##_ops = {			\
+ 		IEEE80211_IF_FMT_##format(name, field)			\
+ 		__IEEE80211_IF_FILE(name)
+ 
++static struct ieee80211_elem_tspec _tspec = {
++	.nominal_msdu_size = 200,
++	.inactivity_interval = 40,
++	.mean_data_rate = 40000,
++	.min_phy_rate = 6000000,
++	.surplus_band_allow = 8192,
++	.medium_time = 30,
++};
++static u8 _dls_mac[ETH_ALEN];
++
++#define DEBUGFS_QOS_FILE(name, f)					\
++static ssize_t qos_ ##name## _write(struct file *file,			\
++				    const char __user *userbuf,		\
++				    size_t count, loff_t *ppos)		\
++{									\
++	struct ieee80211_sub_if_data *sdata = file->private_data;	\
++									\
++	f(sdata->dev, &sdata->u.sta, &_tspec);				\
++									\
++	return count;							\
++}									\
++									\
++static const struct file_operations qos_ ##name## _ops = {		\
++	.write = qos_ ##name## _write,					\
++	.open = mac80211_open_file_generic,				\
++};
++
++#define DEBUGFS_QOS_ADD(name)						\
++	sdata->debugfs.sta.qos.name = debugfs_create_file(#name, 0444, qosd,\
++		sdata, &qos_ ##name## _ops);
++
++#define DEBUGFS_QOS_DEL(name)						\
++	do {								\
++		debugfs_remove(sdata->debugfs.sta.qos.name);		\
++		sdata->debugfs.sta.qos.name = NULL;			\
++	} while (0)
++
++DEBUGFS_QOS_FILE(addts_11e, ieee80211_send_addts);
++DEBUGFS_QOS_FILE(addts_wmm, wmm_send_addts);
++DEBUGFS_QOS_FILE(delts_11e, ieee80211_send_delts);
++DEBUGFS_QOS_FILE(delts_wmm, wmm_send_delts);
++
++static ssize_t qos_if_dls_mac(const struct ieee80211_sub_if_data *sdata,
++			      char *buf, int buflen)
++{
++	return scnprintf(buf, buflen, MAC_FMT "\n", MAC_ARG(_dls_mac));
++}
++
++static ssize_t qos_dls_mac_read(struct file *file,
++				char __user *userbuf,
++				size_t count, loff_t *ppos)
++{
++	return ieee80211_if_read(file->private_data,
++				 userbuf, count, ppos,
++				 qos_if_dls_mac);
++}
++
++static ssize_t qos_dls_mac_write(struct file *file, const char __user *userbuf,
++				 size_t count, loff_t *ppos)
++{
++	struct ieee80211_sub_if_data *sdata = file->private_data;
++	char buf[20];
++	size_t size;
++	u8 m[ETH_ALEN];
++
++	size = min(sizeof(buf) - 1, count);
++	buf[size] = '\0';
++	if (copy_from_user(buf, userbuf, size))
++		return -EFAULT;
++
++	if (sscanf(buf, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx",
++		   &((u8*)(m))[0], &((u8*)(m))[1], &((u8*)(m))[2],
++		   &((u8*)(m))[3], &((u8*)(m))[4], &((u8*)(m))[5]) != ETH_ALEN){
++		printk(KERN_ERR "%s: sscanf input error\n", sdata->dev->name);
++		return -EINVAL;
++	}
++	memcpy(_dls_mac, m, ETH_ALEN);
++	return count;
++}
++
++static const struct file_operations qos_dls_mac_ops = {
++	.read = qos_dls_mac_read,
++	.write = qos_dls_mac_write,
++	.open = mac80211_open_file_generic,
++};
++
++static ssize_t qos_if_dls_op(const struct ieee80211_sub_if_data *sdata,
++			     char *buf, int buflen)
++{
++	return scnprintf(buf, buflen,
++			 "DLS Operation: Setup = 1; Teardown = 2\n");
++}
++
++static ssize_t qos_dls_op_read(struct file *file, char __user *userbuf,
++			       size_t count, loff_t *ppos)
++{
++	return ieee80211_if_read(file->private_data,
++				 userbuf, count, ppos,
++				 qos_if_dls_op);
++}
++
++static ssize_t qos_dls_op_write(struct file *file, const char __user *userbuf,
++				 size_t count, loff_t *ppos)
++{
++	struct ieee80211_sub_if_data *sdata = file->private_data;
++	char buf[20];
++	size_t size;
++	unsigned int opt;
++
++	size = min(sizeof(buf) - 1, count);
++	buf[size] = '\0';
++	if (copy_from_user(buf, userbuf, size))
++		return -EFAULT;
++
++	if (sscanf(buf, "%u", &opt) != 1) {
++		printk(KERN_ERR "%s: sscanf input error\n", sdata->dev->name);
++		return -EINVAL;
++	}
++	switch (opt) {
++	case 1:
++		ieee80211_send_dls_req(sdata->dev, &sdata->u.sta, _dls_mac, 0);
++		break;
++	case 2:
++		ieee80211_send_dls_teardown(sdata->dev, &sdata->u.sta, _dls_mac,
++					    WLAN_REASON_QSTA_NOT_USE);
++		break;
++	default:
++		printk(KERN_ERR "Unknown DLS Operation: %d\n", opt);
++		break;
++	}
++	return count;
++}
++
++static const struct file_operations qos_dls_op_ops = {
++	.read = qos_dls_op_read,
++	.write = qos_dls_op_write,
++	.open = mac80211_open_file_generic,
++};
++
++#define DEBUGFS_TSINFO_FILE(_name, min_val, max_val)			\
++static ssize_t tsinfo_ ##_name## _read(struct file *file,		\
++				       char __user *userbuf,		\
++				       size_t count, loff_t *ppos)	\
++{									\
++	char buf[20];							\
++	int res = scnprintf(buf, count, "%u\n",				\
++			IEEE80211_TSINFO_## _name (_tspec.ts_info));	\
++	return simple_read_from_buffer(userbuf, count, ppos, buf, res);	\
++}									\
++									\
++static ssize_t tsinfo_ ##_name## _write(struct file *file,		\
++				        const char __user *userbuf,	\
++				        size_t count, loff_t *ppos)	\
++{									\
++	char buf[20];							\
++	size_t size;							\
++	int val;							\
++									\
++	size = min(sizeof(buf) - 1, count);				\
++	buf[size] = '\0';						\
++	if (copy_from_user(buf, userbuf, size))				\
++		return -EFAULT;						\
++									\
++	val = simple_strtoul(buf, NULL, 0);				\
++	if ((val < min_val) || (val > max_val)) {			\
++		struct ieee80211_sub_if_data *sdata = file->private_data;\
++		printk(KERN_ERR "%s: set value (%u) out of range "	\
++		       "[%u, %u]\n",sdata->dev->name,val,min_val,max_val);\
++		return -EINVAL;						\
++	}								\
++	SET_TSINFO_ ##_name (_tspec.ts_info, val);			\
++	return count;							\
++}									\
++									\
++static const struct file_operations tsinfo_ ##_name## _ops = {		\
++	.read = tsinfo_ ##_name## _read,				\
++	.write = tsinfo_ ##_name## _write,				\
++	.open = mac80211_open_file_generic,				\
++};
++
++#define DEBUGFS_TSINFO_ADD_TSID						\
++	sdata->debugfs.sta.tsinfo.tsid =				\
++		debugfs_create_file("tsid", 0444, tsinfod,		\
++				    sdata, &tsinfo_TSID_ops);
++
++#define DEBUGFS_TSINFO_ADD_DIR						\
++	sdata->debugfs.sta.tsinfo.direction =				\
++		debugfs_create_file("direction", 0444, tsinfod,		\
++				    sdata, &tsinfo_DIR_ops);
++
++#define DEBUGFS_TSINFO_ADD_UP						\
++	sdata->debugfs.sta.tsinfo.up =					\
++		debugfs_create_file("up", 0444, tsinfod,		\
++				    sdata, &tsinfo_UP_ops);
++
++#define DEBUGFS_TSINFO_DEL(name)					\
++	do {								\
++		debugfs_remove(sdata->debugfs.sta.tsinfo.name);		\
++		sdata->debugfs.sta.tsinfo.name = NULL;			\
++	} while (0)
++
++DEBUGFS_TSINFO_FILE(TSID, 8, 15);
++DEBUGFS_TSINFO_FILE(DIR, 0, 3);
++DEBUGFS_TSINFO_FILE(UP, 0, 7);
++
++#define DEBUGFS_TSPEC_FILE(name)					\
++static ssize_t tspec_ ##name## _read(struct file *file,			\
++				      char __user *userbuf,		\
++				      size_t count, loff_t *ppos)	\
++{									\
++	char buf[20];							\
++	int res = scnprintf(buf, count, "%u\n", _tspec.name);		\
++	return simple_read_from_buffer(userbuf, count, ppos, buf, res);	\
++}									\
++									\
++static ssize_t tspec_ ##name## _write(struct file *file,		\
++				       const char __user *userbuf,	\
++				       size_t count, loff_t *ppos)	\
++{									\
++	char buf[20];							\
++	size_t size;							\
++									\
++	size = min(sizeof(buf) - 1, count);				\
++	buf[size] = '\0';						\
++	if (copy_from_user(buf, userbuf, size))				\
++		return -EFAULT;						\
++									\
++	_tspec.name = simple_strtoul(buf, NULL, 0);			\
++	return count;							\
++}									\
++									\
++static const struct file_operations tspec_ ##name## _ops = {		\
++	.read = tspec_ ##name## _read,					\
++	.write = tspec_ ##name## _write,				\
++	.open = mac80211_open_file_generic,				\
++};
++
++#define DEBUGFS_TSPEC_ADD(name)						\
++	sdata->debugfs.sta.tspec.name = debugfs_create_file(#name,	\
++		0444, tspecd, sdata, &tspec_ ##name## _ops);
++
++#define DEBUGFS_TSPEC_DEL(name)						\
++	do {								\
++		debugfs_remove(sdata->debugfs.sta.tspec.name);		\
++		sdata->debugfs.sta.tspec.name = NULL;			\
++	} while (0)
++
++DEBUGFS_TSPEC_FILE(nominal_msdu_size);
++DEBUGFS_TSPEC_FILE(max_msdu_size);
++DEBUGFS_TSPEC_FILE(min_service_interval);
++DEBUGFS_TSPEC_FILE(max_service_interval);
++DEBUGFS_TSPEC_FILE(inactivity_interval);
++DEBUGFS_TSPEC_FILE(suspension_interval);
++DEBUGFS_TSPEC_FILE(service_start_time);
++DEBUGFS_TSPEC_FILE(min_data_rate);
++DEBUGFS_TSPEC_FILE(mean_data_rate);
++DEBUGFS_TSPEC_FILE(peak_data_rate);
++DEBUGFS_TSPEC_FILE(burst_size);
++DEBUGFS_TSPEC_FILE(delay_bound);
++DEBUGFS_TSPEC_FILE(min_phy_rate);
++DEBUGFS_TSPEC_FILE(surplus_band_allow);
++DEBUGFS_TSPEC_FILE(medium_time);
++
++
+ /* common attributes */
+ IEEE80211_IF_FILE(channel_use, channel_use, DEC);
+ IEEE80211_IF_FILE(drop_unencrypted, drop_unencrypted, DEC);
+@@ -184,6 +448,10 @@ __IEEE80211_IF_FILE(mode);
+ 
+ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
+ {
++	struct dentry *qosd;
++	struct dentry *tsinfod;
++	struct dentry *tspecd;
++
+ 	DEBUGFS_ADD(channel_use, sta);
+ 	DEBUGFS_ADD(drop_unencrypted, sta);
+ 	DEBUGFS_ADD(eapol, sta);
+@@ -202,6 +470,42 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
+ 	DEBUGFS_ADD(auth_alg, sta);
+ 	DEBUGFS_ADD(auth_transaction, sta);
+ 	DEBUGFS_ADD(flags, sta);
++
++	qosd = debugfs_create_dir("qos", sdata->debugfsdir);
++	sdata->debugfs.sta.qos_dir = qosd;
++
++	DEBUGFS_QOS_ADD(addts_11e);
++	DEBUGFS_QOS_ADD(addts_wmm);
++	DEBUGFS_QOS_ADD(delts_11e);
++	DEBUGFS_QOS_ADD(delts_wmm);
++	DEBUGFS_QOS_ADD(dls_mac);
++	DEBUGFS_QOS_ADD(dls_op);
++
++	tsinfod = debugfs_create_dir("ts_info", qosd);
++	sdata->debugfs.sta.tsinfo_dir = tsinfod;
++
++	DEBUGFS_TSINFO_ADD_TSID;
++	DEBUGFS_TSINFO_ADD_DIR;
++	DEBUGFS_TSINFO_ADD_UP;
++
++	tspecd = debugfs_create_dir("tspec", qosd);
++	sdata->debugfs.sta.tspec_dir = tspecd;
++
++	DEBUGFS_TSPEC_ADD(nominal_msdu_size);
++	DEBUGFS_TSPEC_ADD(max_msdu_size);
++	DEBUGFS_TSPEC_ADD(min_service_interval);
++	DEBUGFS_TSPEC_ADD(max_service_interval);
++	DEBUGFS_TSPEC_ADD(inactivity_interval);
++	DEBUGFS_TSPEC_ADD(suspension_interval);
++	DEBUGFS_TSPEC_ADD(service_start_time);
++	DEBUGFS_TSPEC_ADD(min_data_rate);
++	DEBUGFS_TSPEC_ADD(mean_data_rate);
++	DEBUGFS_TSPEC_ADD(peak_data_rate);
++	DEBUGFS_TSPEC_ADD(burst_size);
++	DEBUGFS_TSPEC_ADD(delay_bound);
++	DEBUGFS_TSPEC_ADD(min_phy_rate);
++	DEBUGFS_TSPEC_ADD(surplus_band_allow);
++	DEBUGFS_TSPEC_ADD(medium_time);
+ }
+ 
+ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
+@@ -271,9 +575,11 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
+ 	}
+ }
+ 
+-#define DEBUGFS_DEL(name, type)\
+-	debugfs_remove(sdata->debugfs.type.name);\
+-	sdata->debugfs.type.name = NULL;
++#define DEBUGFS_DEL(name, type)					\
++	do {							\
++		debugfs_remove(sdata->debugfs.type.name);	\
++		sdata->debugfs.type.name = NULL;		\
++	} while (0)
+ 
+ static void del_sta_files(struct ieee80211_sub_if_data *sdata)
+ {
+@@ -295,6 +601,40 @@ static void del_sta_files(struct ieee80211_sub_if_data *sdata)
+ 	DEBUGFS_DEL(auth_alg, sta);
+ 	DEBUGFS_DEL(auth_transaction, sta);
+ 	DEBUGFS_DEL(flags, sta);
++
++	DEBUGFS_TSINFO_DEL(tsid);
++	DEBUGFS_TSINFO_DEL(direction);
++	DEBUGFS_TSINFO_DEL(up);
++
++	DEBUGFS_TSPEC_DEL(nominal_msdu_size);
++	DEBUGFS_TSPEC_DEL(max_msdu_size);
++	DEBUGFS_TSPEC_DEL(min_service_interval);
++	DEBUGFS_TSPEC_DEL(max_service_interval);
++	DEBUGFS_TSPEC_DEL(inactivity_interval);
++	DEBUGFS_TSPEC_DEL(suspension_interval);
++	DEBUGFS_TSPEC_DEL(service_start_time);
++	DEBUGFS_TSPEC_DEL(min_data_rate);
++	DEBUGFS_TSPEC_DEL(mean_data_rate);
++	DEBUGFS_TSPEC_DEL(peak_data_rate);
++	DEBUGFS_TSPEC_DEL(burst_size);
++	DEBUGFS_TSPEC_DEL(delay_bound);
++	DEBUGFS_TSPEC_DEL(min_phy_rate);
++	DEBUGFS_TSPEC_DEL(surplus_band_allow);
++	DEBUGFS_TSPEC_DEL(medium_time);
++
++	DEBUGFS_QOS_DEL(addts_11e);
++	DEBUGFS_QOS_DEL(addts_wmm);
++	DEBUGFS_QOS_DEL(delts_11e);
++	DEBUGFS_QOS_DEL(delts_wmm);
++	DEBUGFS_QOS_DEL(dls_mac);
++	DEBUGFS_QOS_DEL(dls_op);
++
++	debugfs_remove(sdata->debugfs.sta.tspec_dir);
++	sdata->debugfs.sta.tspec_dir = NULL;
++	debugfs_remove(sdata->debugfs.sta.tsinfo_dir);
++	sdata->debugfs.sta.tsinfo_dir = NULL;
++	debugfs_remove(sdata->debugfs.sta.qos_dir);
++	sdata->debugfs.sta.qos_dir = NULL;
+ }
+ 
+ static void del_ap_files(struct ieee80211_sub_if_data *sdata)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c6c3a25..1f95cb1 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -355,6 +355,39 @@ struct ieee80211_sub_if_data {
+ 			struct dentry *auth_alg;
+ 			struct dentry *auth_transaction;
+ 			struct dentry *flags;
++			struct dentry *qos_dir;
++			struct {
++				struct dentry *addts_11e;
++				struct dentry *addts_wmm;
++				struct dentry *delts_11e;
++				struct dentry *delts_wmm;
++				struct dentry *dls_mac;
++				struct dentry *dls_op;
++			} qos;
++			struct dentry *tsinfo_dir;
++			struct {
++				struct dentry *tsid;
++				struct dentry *direction;
++				struct dentry *up;
++			} tsinfo;
++			struct dentry *tspec_dir;
++			struct {
++				struct dentry *nominal_msdu_size;
++				struct dentry *max_msdu_size;
++				struct dentry *min_service_interval;
++				struct dentry *max_service_interval;
++				struct dentry *inactivity_interval;
++				struct dentry *suspension_interval;
++				struct dentry *service_start_time;
++				struct dentry *min_data_rate;
++				struct dentry *mean_data_rate;
++				struct dentry *peak_data_rate;
++				struct dentry *burst_size;
++				struct dentry *delay_bound;
++				struct dentry *min_phy_rate;
++				struct dentry *surplus_band_allow;
++				struct dentry *medium_time;
++			} tspec;
+ 		} sta;
+ 		struct {
+ 			struct dentry *channel_use;
+-- 
+1.5.0.rc2.g73a2
