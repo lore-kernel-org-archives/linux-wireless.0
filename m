@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3302 "EHLO ra.tuxdriver.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3381 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751157AbXFASyT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2007 14:54:19 -0400
-Date: Fri, 1 Jun 2007 14:18:38 -0400
+	id S1751098AbXFFPyZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2007 11:54:25 -0400
+Date: Wed, 6 Jun 2007 11:30:23 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: "John H." <mistamaila@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
-Subject: Re: Upgrade to f7 breaks bcm43xx module
-Message-ID: <20070601181838.GB5663@tuxdriver.com>
-References: <5b9417770706011111u20f32192s960961dc8693f00e@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Marvell CB35 cardbus cards
+Message-ID: <20070606153023.GC4572@tuxdriver.com>
+References: <1181061336.8274.36.camel@johannes.berg> <20070606150438.GB4572@tuxdriver.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5b9417770706011111u20f32192s960961dc8693f00e@mail.gmail.com>
+In-Reply-To: <20070606150438.GB4572@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 01, 2007 at 01:11:51PM -0500, John H. wrote:
-> bcm43xx mac80211:
-> YOUR FIRMWARE IS TOO OLD. Firmware from binary drivers older than
-> version 4.x is unsupported. You must upgrade your firmware files.
+On Wed, Jun 06, 2007 at 11:04:38AM -0400, John W. Linville wrote:
+> On Tue, Jun 05, 2007 at 06:35:36PM +0200, Johannes Berg wrote:
+> > Does anybody have such a card? I just found some code for it. It's based
+> > on net80211, is anybody interested in that?
 > 
-> I get that now with f7 and 2.6.21 and didn't with fc6 2.6.20.
-> 
-> However, I read that the error is not what it sounds like.  What is
-> the solution?
+> I have a device, and probably a copy of the code you have.  A driver is
+> in progress -- just (hopefully) resolved some firmware loading issues.
 
-You might start by posting on a Fedora list, lest ye draw the ire of
-any other distro users on this list... :-)
-
-In the meantime, I suggest you extract firmware[1] from the wl_apsta.o
-file in this archive:
-
-	http://downloads.openwrt.org/sources/broadcom-wl-4.80.53.0.tar.bz2
-
-Hth!
+Ooops...I misread 35 as 85.  Well, I do have the hardware.  And the
+driver appears to have some similarities to what I've been doing...I'll
+add it to my list...
 
 John
-
-[1] Using bcm43xx-fwcutter, of course.
 -- 
 John W. Linville
 linville@tuxdriver.com
