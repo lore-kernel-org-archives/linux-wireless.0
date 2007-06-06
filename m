@@ -1,65 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45301 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:36019 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751909AbXFVIvb (ORCPT
+	with ESMTP id S1751124AbXFFOJK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2007 04:51:31 -0400
-Subject: [PATCH] remove PRISM2_PARAM_DROP_UNENCRYPTED ioctl
+	Wed, 6 Jun 2007 10:09:10 -0400
+Subject: Re: Marvell CB35 cardbus cards
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 22 Jun 2007 10:13:30 +0200
-Message-Id: <1182500010.21939.64.camel@johannes.berg>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1181138252.20573.3.camel@xo-28-0B-88.localdomain>
+References: <1181061336.8274.36.camel@johannes.berg>
+	 <1181138252.20573.3.camel@xo-28-0B-88.localdomain>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4ThS4K+8jsiE/7j+OgXP"
+Date: Wed, 06 Jun 2007 16:09:02 +0200
+Message-Id: <1181138943.3666.0.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Interestingly, wpa_supplicant doesn't use it, but uses the
-currently unsupported IW_AUTH_DROP_UNENCRYPTED. So I guess
-it doesn't matter anyway.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+--=-4ThS4K+8jsiE/7j+OgXP
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
- net/mac80211/hostapd_ioctl.h   |    1 -
- net/mac80211/ieee80211_ioctl.c |    8 --------
- 2 files changed, 9 deletions(-)
+On Wed, 2007-06-06 at 09:57 -0400, Dan Williams wrote:
+> On Tue, 2007-06-05 at 18:35 +0200, Johannes Berg wrote:
+> > Does anybody have such a card? I just found some code for it. It's base=
+d
+> > on net80211, is anybody interested in that?
+>=20
+> Oh, and what's the license on the code?  If it's GPL, would be useful to
+> take a look and see how different it is.
 
---- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-06-22 10:10:28.658632620 +0200
-+++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-06-22 10:11:24.588632620 +0200
-@@ -34,7 +34,6 @@ enum {
- 
- 	/* Instant802 additions */
- 	PRISM2_PARAM_CTS_PROTECT_ERP_FRAMES = 1001,
--	PRISM2_PARAM_DROP_UNENCRYPTED = 1002,
- 	PRISM2_PARAM_PREAMBLE = 1003,
- 	PRISM2_PARAM_SHORT_SLOT_TIME = 1006,
- 	PRISM2_PARAM_NEXT_MODE = 1008,
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-06-22 10:10:26.648632620 +0200
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-06-22 10:11:35.598632620 +0200
-@@ -2171,10 +2171,6 @@ static int ieee80211_ioctl_prism2_param(
- 		local->cts_protect_erp_frames = value;
- 		break;
- 
--	case PRISM2_PARAM_DROP_UNENCRYPTED:
--		sdata->drop_unencrypted = value;
--		break;
--
- 	case PRISM2_PARAM_PREAMBLE:
- 		local->short_preamble = value;
- 		break;
-@@ -2369,10 +2365,6 @@ static int ieee80211_ioctl_get_prism2_pa
- 		*param = local->cts_protect_erp_frames;
- 		break;
- 
--	case PRISM2_PARAM_DROP_UNENCRYPTED:
--		*param = sdata->drop_unencrypted;
--		break;
--
- 	case PRISM2_PARAM_PREAMBLE:
- 		*param = local->short_preamble;
- 		break;
+It says GPL on it and was in a random Linksys GPL tarball I downloaded.
 
+I uploaded it at http://johannes.sipsolutions.net/files/marvell.tar.bz2
+
+johannes
+
+--=-4ThS4K+8jsiE/7j+OgXP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGZr/+/ETPhpq3jKURAgz3AKCoo2rmBOgh8Li+4hsnAkiRXAKLcACeO40q
+ct5GHJvpnqR9A2vxhGkoLoU=
+=7fs7
+-----END PGP SIGNATURE-----
+
+--=-4ThS4K+8jsiE/7j+OgXP--
 
