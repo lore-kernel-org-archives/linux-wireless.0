@@ -1,36 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:5575 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1762318AbXFEWOs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2007 18:14:48 -0400
-Message-ID: <4665C393.2000507@linux.intel.com>
-Date: Tue, 05 Jun 2007 13:12:03 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: warnings in git-wireless
-References: <20070605020614.3f06b2ab.akpm@linux-foundation.org> <20070605115701.GA5391@tuxdriver.com>
-In-Reply-To: <20070605115701.GA5391@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([66.187.233.31]:59931 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755713AbXFFNxJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2007 09:53:09 -0400
+Subject: Re: Marvell CB35 cardbus cards
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1181061336.8274.36.camel@johannes.berg>
+References: <1181061336.8274.36.camel@johannes.berg>
+Content-Type: text/plain
+Date: Wed, 06 Jun 2007 09:57:32 -0400
+Message-Id: <1181138252.20573.3.camel@xo-28-0B-88.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Tue, Jun 05, 2007 at 02:06:14AM -0700, Andrew Morton wrote:
-> 
->> Please, don't anybody dare think about thinking about letting this anywhere
->> near mainline until it has had a thorough review.  Or at least, a little bit
->> of review.
-> 
-> Don't worry -- I assure you that everyone is aware of the issues.
-> 
-> John
+On Tue, 2007-06-05 at 18:35 +0200, Johannes Berg wrote:
+> Does anybody have such a card? I just found some code for it. It's based
+> on net80211, is anybody interested in that?
 
-Yes, we certainly don't want a driver to be "near mainline" that does things that the rest of the kernel and other drivers are doing.  We should force them to stay out-of-tree until any and everything is resolved.  Heaven forbid that the code should be merged, contributed, and improved upon as a community.
+Oh, and what's the license on the code?  If it's GPL, would be useful to
+take a look and see how different it is.
 
-You'd think these guys were trying to enable folks with a driver so they can use the hardware they bought or something.  Its almost laughable.  What idiots.
+dan
 
-James
