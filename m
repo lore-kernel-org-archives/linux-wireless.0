@@ -1,73 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:32771 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965738AbXFHBUe (ORCPT
+Received: from web51404.mail.re2.yahoo.com ([206.190.38.183]:29381 "HELO
+	web51404.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755745AbXFFKAU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2007 21:20:34 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH V2] mac80211: Implementation of SIOCSIWRATE
-Date: Thu, 7 Jun 2007 18:19:41 -0700
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-References: <4668a64b.VmU9f2GpA2itSuFx%Larry.Finger@lwfinger.net>
-In-Reply-To: <4668a64b.VmU9f2GpA2itSuFx%Larry.Finger@lwfinger.net>
+	Wed, 6 Jun 2007 06:00:20 -0400
+Date: Wed, 6 Jun 2007 03:00:18 -0700 (PDT)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: RE: RFC: Regulatory info in mac80211
+To: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart4062484.aObavMgCNI";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200706071819.45603.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=ascii
+Message-ID: <645600.8486.qm@web51404.mail.re2.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart4062484.aObavMgCNI
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Larry Finger wrote:
 
-On Thursday 07 June 2007 17:43, Larry Finger wrote:
-> +	sdata->u.sta.supp_rates_bits =3D supp;
-Can't do this unless you verify sdata->type is IEEE80211_IF_TYPE_STA or=20
-IEEE80211_IF_TYPE_IBSS.
 
-Also, what rate(s) we choose to TX at doesn't have much to do with what rat=
-es=20
-we actually support. I don't think this should be set.
 
-> +	if (sdata->type =3D=3D IEEE80211_IF_TYPE_STA) {
-> +		sta =3D sta_info_get(local, sdata->u.sta.bssid);
-> +		if (sta) {
-> +			sta->txrate =3D sdata->u.ap.max_ratectrl_rateidx;
-This is automatically set as soon as the next frame is TXed, as said before=
- in=20
-the previous review.
+> 1. The regulatory information is too dynamic to be placed in the kernel.
 
-> +			sta->supp_rates =3D supp;
-This is definitely wrong. What rates we support has nothing to do with what=
-=20
-rates the AP supports.
 
-One last thing - max_ratectrl_rateidx should be set to -1 to indicate no=20
-maximum. Not doing this will cause problems when switching from one hw mode=
-=20
-to another with a different number of rates.
 
-=2DMichael Wu
+And not all regulatory information is public: as I wrote in a previous message:
 
---nextPart4062484.aObavMgCNI
-Content-Type: application/pgp-signature
+I work for a company that has special regulatory permission to use channels
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+outside those freely available with tx power of up to 4W. This is a legitimate
 
-iD8DBQBGaK6xT3Oqt9AH4aERAh8VAKDRjm61/jI02/Pyu41/mGFNBom1qgCfcvqY
-u9AEu7nEFN+uyJiXRGnsjWo=
-=oa9I
------END PGP SIGNATURE-----
+use case that should not be forbidden by a new regdomain framework (I can always
 
---nextPart4062484.aObavMgCNI--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+hack around this, but that's just a hack, not a clean solution).
+
+
+
+Regarding a user space daemon: keep in mind special use cases like NFSroot over WLAN.
+
+
+
+> 2. The regulatory database should be in an ASCII file for easy updating. This database should be 
+
+> read by a userspace daemon that reformats the information and supplies it to mac80211 upon demand.
+
+
+
+OK.
+
+
+
+> 3. There should be some sort of checking to verify that the database has not been hacked to modify 
+
+> transmission power, etc. in an illegal manner. Obviously, no foolproof means of enforcing this does 
+
+> not exist; however, we should prevent the crudest form of modifications.
+
+Define "illegal manner". For me it is perfectly legal to use channel 14 in Europe with 4W tx power. I admit that this is a
+
+special interest, but nonetheless perfectly legal.
+
+
+
+
+
+--  
+
+Regards
+
+ 
+
+       Joerg
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+       __________________________________ Yahoo! Clever - Der einfachste Weg, Fragen zu stellen und Wissenswertes mit Anderen zu teilen. www.yahoo.de/clever
+
