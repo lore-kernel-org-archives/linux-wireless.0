@@ -1,34 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2268 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754830AbXFLPyj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2007 11:54:39 -0400
-Date: Tue, 12 Jun 2007 11:40:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: Please pull libertas-2.6
-Message-ID: <20070612154019.GE310@tuxdriver.com>
-References: <1181102122.18061.8.camel@xo-28-0B-88.localdomain> <200706121519.09758.hs4233@mail.mn-solutions.de> <20070612140529.GD310@tuxdriver.com> <200706121715.33187.hs4233@mail.mn-solutions.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200706121715.33187.hs4233@mail.mn-solutions.de>
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:36056 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757958AbXFFNrB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2007 09:47:01 -0400
+Message-ID: <4666BAD3.8020903@lwfinger.net>
+Date: Wed, 06 Jun 2007 08:46:59 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Joerg Pommnitz <pommnitz@yahoo.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: RFC: Regulatory info in mac80211
+References: <645600.8486.qm@web51404.mail.re2.yahoo.com>
+In-Reply-To: <645600.8486.qm@web51404.mail.re2.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 12, 2007 at 05:15:33PM +0200, Holger Schurig wrote:
-
-> So, my plan is to submit the driver (or the patchset for the 
-> driver) to either libertas-dev or wireless-dev as soon as I get 
-> my first association to an AP via it. We can than think if the 
-> driver should be added to some GIT tree. From then on I'll start 
-> sending incremental patches.
+Joerg Pommnitz wrote:
+> Larry Finger wrote:
 > 
-> Do you think that makes sense?
+> And not all regulatory information is public: as I wrote in a previous message:
+> I work for a company that has special regulatory permission to use channels
+> outside those freely available with tx power of up to 4W. This is a legitimate
+> use case that should not be forbidden by a new regdomain framework (I can always
+> hack around this, but that's just a hack, not a clean solution).
 
-Sounds great to me... :-)
+As this usage is not allowed by any other user, I think it should be forbidden. Your hack will be to 
+alter the database. As I stated earlier, it will be nearly possible to prevent such hacking, there 
+will always be a back door for users like you.
+> 
+> Regarding a user space daemon: keep in mind special use cases like NFSroot over WLAN.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+This is a "chicken and egg" problem. That may require limiting such usage to the default/fallback 
+configuration.
+
+>> 3. There should be some sort of checking to verify that the database has not been hacked to modify 
+>> transmission power, etc. in an illegal manner. Obviously, no foolproof means of enforcing this does 
+>> not exist; however, we should prevent the crudest form of modifications.
+> 
+> Define "illegal manner". For me it is perfectly legal to use channel 14 in Europe with 4W tx power. I admit that this is a
+> special interest, but nonetheless perfectly legal.
+
+If I did that, it would be illegal. Similarly, if I were to hack my AP to use channel 14 in the US, 
+it would be illegal at any power. These are the kinds of things that should not be easy for just any 
+user to change. I certainly hope that the final result of this effort can handle your special needs 
+without any kernel changes, unlike with the current version of mac80211.
+
+Larry
+
