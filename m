@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:52705 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759055AbXFAVoc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2007 17:44:32 -0400
-Subject: Re: Please pull 'libertas' branch of wireless-2.6
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <20070531211605.GA30161@tuxdriver.com>
-References: <20070529183347.GD3496@tuxdriver.com>
-	 <465D8538.8070507@garzik.org>
-	 <1180538928.17163.10.camel@xo-28-0B-88.localdomain>
-	 <1180645997.18078.8.camel@xo-28-0B-88.localdomain>
-	 <20070531211605.GA30161@tuxdriver.com>
-Content-Type: text/plain
-Date: Fri, 01 Jun 2007 17:48:18 -0400
-Message-Id: <1180734498.30974.1.camel@xo-28-0B-88.localdomain>
+Received: from pentafluge.infradead.org ([213.146.154.40]:46882 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751244AbXFFHU0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2007 03:20:26 -0400
+Date: Wed, 6 Jun 2007 08:20:16 +0100
+From: Christoph Hellwig <hch@infradead.org>
+To: James Ketrenos <jketreno@linux.intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: warnings in git-wireless
+Message-ID: <20070606072016.GA4805@infradead.org>
+References: <20070605020614.3f06b2ab.akpm@linux-foundation.org> <20070605115701.GA5391@tuxdriver.com> <4665C393.2000507@linux.intel.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4665C393.2000507@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-05-31 at 17:16 -0400, John W. Linville wrote:
-> On Thu, May 31, 2007 at 05:13:17PM -0400, Dan Williams wrote:
-> > On Wed, 2007-05-30 at 11:28 -0400, Dan Williams wrote:
-> > > On Wed, 2007-05-30 at 10:07 -0400, Jeff Garzik wrote:
-> > > > John W. Linville wrote:
-> > > > > Lots of stuff here...probably best for 2.6.23...
-> > > > 
-> > > > Is this best for Linux users... or just easy for developers?
-> > > > 
-> > > > Won't putting off all these fixes until 2.6.23 leave the driver released 
-> > > > in 2.6.22 in shoddy shape?
+On Tue, Jun 05, 2007 at 01:12:03PM -0700, James Ketrenos wrote:
+> Yes, we certainly don't want a driver to be "near mainline" that does 
+> things that the rest of the kernel and other drivers are doing.  We should 
+> force them to stay out-of-tree until any and everything is resolved.  
+> Heaven forbid that the code should be merged, contributed, and improved 
+> upon as a community.
 > 
-> > > If you think all the bits from this should just go to 2.6.22, that's
-> > > fine with me.  But I don't feel comfortable making that call given what
-> > > I thought were the constraints on pushing changes through during an rc
-> > > cycle.  When the merge window was open, we backported critical bug fixes
-> > > and necessary merge-requirement cleanups to the code in linville's tree,
-> > > but avoided changes that didn't impact function.
-> > 
-> > Any response on these points yet?  I've got yet more cleanups and a few
-> > other things queued in libertas-2.6 but I'd like to see where this
-> > discussion goes before sending a pull request for the new bits.
+> You'd think these guys were trying to enable folks with a driver so they 
+> can use the hardware they bought or something.  Its almost laughable.  What 
+> idiots.
+
+Maybe you should make sure your companies publishes specs or useable drivers
+earlier, and you should stop writing crap code instead of these hypocritical 
+comments.  We're a big project and we need to be up to some standards before
+we can put code in that we'll have to maintain then.
+
 > 
-> As for me, I have no great problem w/ the whole batch going to 2.6.22.
-> The driver is still new and most acknowledge it still has significant
-> defficiencies.  Most (but probably not all) of the patches would seem
-> to fit some definition of bug fix anyway.  I was just trying to err
-> on the side of caution and follow the normal "bugfixes in -rc" process.
-> 
-> Jeff, the branch in question is based off a vanilla 2.6.22-rc3.
-> So it is safe to pull (from a "won't mess-up my tree" perspective)
-> if you are so inclined.
-
-Ok; if Jeff is so inclined, we'll push further libertas
-cleanups/bugfixes/etc to you, and then you upstream to Jeff, targetted
-for inclusion in 2.6.22.
-
-Dan
-
-
+> James
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---end quoted text---
