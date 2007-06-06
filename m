@@ -1,53 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:15057 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759964AbXF1BkH (ORCPT
+Received: from rgminet01.oracle.com ([148.87.113.118]:27546 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935229AbXFFWD4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2007 21:40:07 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] mac80211: Export short-preamble bit to drivers
-Date: Wed, 27 Jun 2007 18:40:05 -0700
-Cc: Jiri Benc <jbenc@suse.cz>, John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200706251628.00838.mb@bu3sch.de>
-In-Reply-To: <200706251628.00838.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1974830.1Mui1nz4f7";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200706271840.09719.flamingice@sourmilk.net>
+	Wed, 6 Jun 2007 18:03:56 -0400
+Date: Wed, 6 Jun 2007 15:02:54 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: linux-wireless@vger.kernel.org
+Cc: akpm <akpm@linux-foundation.org>, jbenc@suse.cz,
+	flamingice@sourmilk.net
+Subject: [PATCH -mm] mac80211: fix 1-bit bitfield to unsigned
+Message-Id: <20070606150254.de49d627.randy.dunlap@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1974830.1Mui1nz4f7
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-On Monday 25 June 2007 07:28, Michael Buesch wrote:
-> +#define IEEE80211_CONF_SHORT_PREAMBLE	(1<<3) /* use short preamble
-> +						* with IEEE 802.11b */
-Shouldn't this be more of a "short preamble allowed" bit rather than "use=20
-short preamble"? After all, short preamble is usually configured per frame.
+Fix 17 of these pairs of sparse warnings since it's difficult for a 1-bit
+bitfield to have both a value bit and a sign bit.
 
-=2DMichael Wu
+net/mac80211/sta_info.h:105:16: error: dubious bitfield without explicit `signed' or `unsigned'
+net/mac80211/sta_info.h:107:15: error: dubious bitfield without explicit `signed' or `unsigned'
 
---nextPart1974830.1Mui1nz4f7
-Content-Type: application/pgp-signature
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ net/mac80211/sta_info.h |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGgxF5T3Oqt9AH4aERAsWaAJ4owpgIg5bZPF+g8GnJG1AbJ6NK4wCfW6GA
-bghDpEA8RGfKoSPa6JZ5JzE=
-=VwEE
------END PGP SIGNATURE-----
-
---nextPart1974830.1Mui1nz4f7--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+--- linux-2.6.22-rc4-mm1.orig/net/mac80211/sta_info.h
++++ linux-2.6.22-rc4-mm1/net/mac80211/sta_info.h
+@@ -102,9 +102,9 @@ struct sta_info {
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	int debugfs_registered;
+ #endif
+-	int assoc_ap:1; /* whether this is an AP that we are
+-			 * associated with as a client */
+-	int dls_sta:1; /* whether this stations is a DLS peer of us */
++	unsigned int assoc_ap:1; /* whether this is an AP that we are
++				  * associated with as a client */
++	unsigned int dls_sta:1; /* whether this stations is a DLS peer of us */
+ 
+ #define DLS_STATUS_OK		0
+ #define DLS_STATUS_NOLINK	1
