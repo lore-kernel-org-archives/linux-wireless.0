@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:51892 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754839AbXFLNFF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2007 09:05:05 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 941698D763
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2007 15:05:00 +0200 (CEST)
-Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id 03E28104A3
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2007 13:05:26 +0000 (UTC)
-Message-Id: <20070612130435.896010304@warmcat.com>
-Date: Tue, 12 Jun 2007 14:04:35 +0100
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH Try#11 0/4] Radiotap injection for Monitor Mode
+Received: from styx.suse.cz ([82.119.242.94]:50823 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1761588AbXFGUTd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2007 16:19:33 -0400
+Date: Thu, 7 Jun 2007 22:19:39 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Add module parameter for setting initial rate  in rc80211_simple
+Message-ID: <20070607221939.444e9d74@griffin.suse.cz>
+In-Reply-To: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>
+References: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches add the ability to inject packets down a monitor mode interface for 
-transmission according to a prepended radiotap header.
+On Sat, 02 Jun 2007 13:51:59 -0500, Larry Finger wrote:
+> The initial rate for STA's using rc80211_simple is set to the last
+> rate in the rate table. This is too fast for the bcm43xx-mac80211
+> driver. To correct this situation without affecting any other driver,
+> an initial_rate parameter is added to the rc80211_simple module. This
+> parameter is set to 10 times the desired initial rate. If the parameter
+> is zero or not set, the original behavior is kept. If the parameter
+> does not match a valid rate, the first rate in the table will be set.
 
-For injecting packets, the you issue a packet using libpcap or a SOCK_PACKET
-socket down an interface to the wireless device that is in Monitor Mode.  The packet
-has a normal radiotap header prepended to the IEEE80211 header.  The radiotap header
-is variable length depending on what the user wants to specify, currently the
-transmit rate, power and antenna can be specified using normal radiotap semantics.
-Any other entries are skipped.
+Don't misuse module parameters, please. If you have more devices, this
+single parameter will affect all of them. That's not a good approach,
+especially when the value you are trying to change can be changed on
+the fly.
 
-The radiotap parser is broken out into its own file under cfg80211.
+I understand the problems you have with tx power control, but modifying
+a stack because of a buggy driver (I know it's not your nor anyone
+else's fault and nothing can be done with this now) isn't a right way
+to go.
 
-A usermode app packetspammer is available from here
+The correct approach is to write a new rate control module. Note that
+this should be still understood as a temporary solution, as you have no
+factual reason for depending on a specific rate control module.
 
-http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
+See the following patches.
 
-which allows easy injection of these packets from the commandline.  At the moment it
-loops issuing packets at a variety of rates which can be seen from another
-machine's monitor mode interface on the same channel.  There are instructions for
-build and using it on the page above.
+However, I'm not against setting the initial value to the lowest rate
+available. As Johannes pointed out, if the rate control algorithm isn't
+able to quickly migrate to higher rates, it's a good candidate for
+rewrite.
 
-Currently it has been tested for both rx and tx using zd1211rw-mac80211.
+Thanks,
 
-The patches are based against current wireless-dev.
+ Jiri
 
-I also added some documentation files which explains how to use the injection
-functionality and radiotap header notes.
 -- 
+Jiri Benc
+SUSE Labs
