@@ -1,82 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39196 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757466AbXFMME7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2007 08:04:59 -0400
-Subject: Re: [RFC] {cfg,nl}80211 API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Lamparter <lists@diac24.net>
-Cc: Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <20070611230434.GA13221@charon.n2.diac24.net>
-References: <20070611230434.GA13221@charon.n2.diac24.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BtjyIB/4/C7NkbbenqKS"
-Date: Wed, 13 Jun 2007 12:22:35 +0200
-Message-Id: <1181730155.29767.77.camel@johannes.berg>
+Received: from styx.suse.cz ([82.119.242.94]:52251 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1760755AbXFGUnO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2007 16:43:14 -0400
+Date: Thu, 7 Jun 2007 22:43:15 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: IEEE802.11e/WMM TS management and DLS support
+Message-ID: <20070607224315.6dadffca@griffin.suse.cz>
+In-Reply-To: <20070606082152.GA28639@mail.intel.com>
+References: <20070606082152.GA28639@mail.intel.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 6 Jun 2007 16:21:54 +0800, Zhu Yi wrote:
+> This is a patch series for IEEE802.11e/WMM support against
+> linux-2.6.22-rc4.
+> 
+> [PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
+> [PATCH 2/3] mac80211: IEEE802.11e/WMM TS management and DLS support
+> [PATCH 3/3] mac80211: debugfs support for TSM and DLS
 
---=-BtjyIB/4/C7NkbbenqKS
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+John,
 
-Hi,
+I see you already applied those patches. I haven't had a time to look
+at the second patch in this resent version yet, but even from the first
+and third one it's clear they still need a lot of work (for example,
+adding cfg80211 support instead of that debugfs interface isn't going
+to be a few lines long patch).
 
-> - struct ieee80211_channel:
->   use (phymode, channel, 80211n-mode) as "key"; kill off frequency
->   (which will move to some get_channel_foobar function)
+Please revert them.
 
-Hmm. Maybe we should've kept frequency. How do we want to handle
-dot11ChannelStartingFactor (see 17.3.8.3.2 Channel numbering in
-802.11j), I quote:
+Thanks,
 
-Change the text of 17.3.8.3.2 as follows:
-Channel center frequencies are defined at every integral multiple of 5 MHz =
-above Channel starting
-frequency. The relationship between center frequency and channel number is =
-given by Equation (27):
+ Jiri
 
-   Channel center frequency =3D Channel starting frequency + (nch =C3=97 5)=
- (MHz)                      (27)
-
-where
-                              is 0,1,... 200,
-   nch
-   Channel starting frequency is defined as dot11ChannelStartingFactor =C3=
-=97 500 kHz or
-                              is defined as 5 GHz for systems where dot11Re=
-gulatoryClassesRequired is
-                              false or not defined.
-                              For example, dot11ChannelStartingFactor =3D 1=
-0 000 indicates that Channel
-                              zero center frequency is 5.000 GHz. The value=
- NULL for nch shall be
-                              reserved, and a channel center frequency of 5=
-.000 GHz shall be indicated by
-                              dot11ChannelStartingFactor =3D 8000 and nch =
-=3D 200. An SME managing
-                              multiple channel sets can change the channel =
-set being managed by changing
-                              the value of dot11ChannelStartingFactor.
-
-
-johannes
-
---=-BtjyIB/4/C7NkbbenqKS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGb8Vq/ETPhpq3jKURAndwAKCQbvLe4JP1avcTGdsgVQ35/vm8/wCdG+9P
-QqJCJqTsRFudTZ59Yo2ZVGA=
-=uJe9
------END PGP SIGNATURE-----
-
---=-BtjyIB/4/C7NkbbenqKS--
-
+-- 
+Jiri Benc
+SUSE Labs
