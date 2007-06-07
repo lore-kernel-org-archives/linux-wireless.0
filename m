@@ -1,91 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from daemonizer.de ([87.230.16.230]:53807 "EHLO daemonizer.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751690AbXFCQ1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jun 2007 12:27:16 -0400
-From: Maximilian Engelhardt <maxi@daemonizer.de>
-To: Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: b44: regression in 2.6.22 (resend)
-Date: Sun, 3 Jun 2007 18:26:02 +0200
-Cc: Michael Buesch <mb@bu3sch.de>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:38199 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755211AbXFGBE2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2007 21:04:28 -0400
+Date: Wed, 6 Jun 2007 18:04:21 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: James Ketrenos <jketreno@linux.intel.com>
+Cc: NetDev <netdev@vger.kernel.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Hemminger <shemminger@linux-foundation.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-References: <20070525172431.60affaca@freepuppy> <200705281944.05030.maxi@daemonizer.de> <1180380230.3657.3.camel@chaos>
-In-Reply-To: <1180380230.3657.3.camel@chaos>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2176219.MicN8hRCvA";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200706031826.06891.maxi@daemonizer.de>
+	linux-sparse@vger.kernel.org
+Subject: Re: warnings in git-wireless
+Message-Id: <20070606180421.c575f24b.akpm@linux-foundation.org>
+In-Reply-To: <4667364A.4040803@linux.intel.com>
+References: <20070605020614.3f06b2ab.akpm@linux-foundation.org>
+	<46671E5D.9070304@linux.intel.com>
+	<20070606163534.6a6cffb7.akpm@linux-foundation.org>
+	<4667364A.4040803@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2176219.MicN8hRCvA
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Wed, 06 Jun 2007 15:33:46 -0700 James Ketrenos <jketreno@linux.intel.com> wrote:
 
-On Monday 28 May 2007, Thomas Gleixner wrote:
-> On Mon, 2007-05-28 at 19:44 +0200, Maximilian Engelhardt wrote:
-> > > Can you please keep CONFIG_HIGH_RES_TIMERS and CONFIG_NOHZ and try the
-> > > following combinations on the kernel command line:
-> > >
-> > > 1) highres=3Doff nohz=3Doff (should be the same as your working confi=
-g)
-> > > 2) highres=3Doff
-> > > 3) nohz=3Doff
-> >
-> > I tested this with my 2.6.22-rc3 kernel, here are the results:
-> >
-> > without any special boot parameters: problem does appear
-> > highres=3Doff nohz=3Doff: problem does not appear
-> > highres=3Doff: problem does not appear
-> > nohz=3Doff: problem does appear
->
-> Is there any other strange behavior of the high res enabled kernel than
-> the b44 problem ?
+> Andrew Morton wrote:
+> > On Wed, 06 Jun 2007 13:51:41 -0700 James Ketrenos <jketreno@linux.intel.com> wrote:
+> > 
+> >>>>  * make C=2 CF=-Wall will complain if you use ARRAY_SIZE on global data
+> >>>>  */
+> >>>> #define GLOBAL_ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+> >>> This is identical to ARRAY_SIZE.
+> >>>
+> >>> And if there's some problem with ARRAY_SIZE then fix ARRAY_SIZE!  Don't go 
+> >>> off and create some private thing and leave everyone else twisting in the
+> >>> wind.
+> >> The code was resolving the sparse warnings.  
+> > 
+> ...
+> > Your GLOBAL_ARRAY_SIZE() is, afaict, identical to ARRAY_SIZE().
+> 
+> >From include/linux/kernel.h
+> 
+> #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))
 
-I didn't notice anything in the past (as I wrote). But today I did some tes=
-ts=20
-for an updated version of the p54 mac80211 wlan driver and I noticed exactl=
-y=20
-the same problem:
+o crap, sorry, I was looking at one of the other definitions of ARRAY_SIZE :(
 
-when booting with highres=3Doff everything is fine.
-But when I boot an highres enabled kernel and I do the iperf-test with the =
-p54=20
-driver, my systems becomes unresponsive during the test. It seems to be=20
-exactly the same problem I have with the b44 driver.
-So this might not be a bug in the b44 code but a bug somewhere in the linux=
-=20
-networking code.
 
-I did the test with an 2.6.22-rc3-git4 kernel and the p54 driver built=20
-external as module.=20
+> >From drivers/net/wireless/mac80211/iwlwifi/iwl-helpers.h
+> 
+> #define GLOBAL_ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+> 
+> The '+ __must_be_array(arr)' part of ARRAY_SIZE was causing sparse to complain 
+> with:
+> 
+> drivers/net/wireless/mac80211/iwlwifi/base.c:4646:22: error: cannot size expression
+> ...
 
-Maxi
+OK, that's a problem in sparse, I guess.
 
---nextPart2176219.MicN8hRCvA
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+There _should_ be some #ifdeffable thing which is being passed to cpp when
+we run sparse (but I'm not sure what it is).  If there is such a thing then
+we could disable the __must_be_array() thing during sparse runs.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+But longer-term, sparse should be taught about __must_be_array().
 
-iD8DBQBGYuueOimwv528XGERAqZNAJ9jz78DPqrgzhMYyeFI7FAKmsx96QCfULJ3
-CWJqCY3C3RIgMcsYRSgz5Q0=
-=Fr+1
------END PGP SIGNATURE-----
+> When I had run my builds, I had restricted the sparse checks to just iwlwifi 
+> (vs. checking the rest of the kernel).
+> 
+> I just ran it C=2 CF=-Wall against the rest of the kernel and do see other code 
+> with the same problem, eg:
+> 
+> sound/core/memalloc.c:521:14: error: cannot size expression
+> ...
+> 
+> I had erroneously thought it was just a problem with iwlwifi...
+> 
 
---nextPart2176219.MicN8hRCvA--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
