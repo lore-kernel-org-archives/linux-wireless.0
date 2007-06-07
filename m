@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39526 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752107AbXFVIji (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:46519 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762479AbXFGVWy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2007 04:39:38 -0400
-Subject: [PATCH] cfg80211: use debugfs_rename
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 21 Jun 2007 18:30:57 +0200
-Message-Id: <1182443457.21939.47.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 7 Jun 2007 17:22:54 -0400
+Message-ID: <4668772C.1000107@lwfinger.net>
+Date: Thu, 07 Jun 2007 16:22:52 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Jiri Benc <jbenc@suse.cz>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Add module parameter for setting initial rate  in rc80211_simple
+References: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net> <20070607221939.444e9d74@griffin.suse.cz>
+In-Reply-To: <20070607221939.444e9d74@griffin.suse.cz>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Jiri Benc wrote:
+> 
+> Don't misuse module parameters, please. If you have more devices, this
+> single parameter will affect all of them. That's not a good approach,
+> especially when the value you are trying to change can be changed on
+> the fly.
+--- snip ---
+> However, I'm not against setting the initial value to the lowest rate
+> available. As Johannes pointed out, if the rate control algorithm isn't
+> able to quickly migrate to higher rates, it's a good candidate for
+> rewrite.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+I'm more than a little confused. First you tell me that setting the initial rate with a module 
+parameter is bad because it sets a value for all _MY_ devices, then you say that you will allow a 
+change that would affect _EVERYONE'S_ devices. Huh? I wrote the code the way I did because I thought 
+it was much better to allow a local solution rather than a global one.
 
----
- net/wireless/core.c |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
-
---- wireless-dev.orig/net/wireless/core.c	2007-05-21 18:37:40.541805077 +0200
-+++ wireless-dev/net/wireless/core.c	2007-05-21 21:01:03.481611481 +0200
-@@ -162,10 +162,15 @@ int cfg80211_dev_rename(struct cfg80211_
- 
- 	/* this will check for collisions */
- 	result = device_rename(&rdev->wiphy.dev, newname);
--	if (!result)
-+	if (result)
- 		return result;
- 
--	/* TODO: do debugfs rename! */
-+	if (!debugfs_rename(rdev->wiphy.debugfsdir->d_parent,
-+			    rdev->wiphy.debugfsdir,
-+			    rdev->wiphy.debugfsdir->d_parent,
-+			    newname))
-+		printk(KERN_ERR "cfg80211: failed to rename debugfs dir to %s!\n",
-+		       newname);
- 
- 	nl80211_notify_dev_rename(rdev);
- 
-
+Larry
 
