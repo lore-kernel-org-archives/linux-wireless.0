@@ -1,52 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:37374 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751640AbXF3T7i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jun 2007 15:59:38 -0400
-Subject: Re: drivers/net/wireless/libertas/rx.c: use-after-free
-From: Dan Williams <dcbw@redhat.com>
-To: Adrian Bunk <bunk@stusta.de>
-Cc: linville@tuxdriver.com,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20070629195116.GG6087@stusta.de>
-References: <20070629195116.GG6087@stusta.de>
-Content-Type: text/plain
-Date: Sat, 30 Jun 2007 16:02:46 -0400
-Message-Id: <1183233766.9150.2.camel@xo-13-A4-25.localdomain>
+Received: from styx.suse.cz ([82.119.242.94]:59146 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1763962AbXFGWkL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2007 18:40:11 -0400
+Date: Fri, 8 Jun 2007 00:40:09 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: jketreno <jketreno@linux.intel.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: IEEE802.11e/WMM TS management and DLS support
+Message-ID: <20070608004009.46c3d6ea@logostar.upir.cz>
+In-Reply-To: <4668DE0F.7060302@linux.intel.com>
+References: <20070606082152.GA28639@mail.intel.com>
+	<20070607224315.6dadffca@griffin.suse.cz>
+	<4668D293.1010908@linux.intel.com>
+	<200706071412.54918.flamingice@sourmilk.net>
+	<4668DE0F.7060302@linux.intel.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-06-29 at 21:51 +0200, Adrian Bunk wrote:
-> The Coverity checker spotted the following use-after-free of "skb" in 
-> drivers/net/wireless/libertas/rx.c introduced by
-> commit 9012b28a407511fb355f6d2176a12d4653489672 (WTF did this commit
-> with the title "libertas: make debug configurable" add the 
-> "skb->protocol = __constant_htons(0x0019);" line?):
+On Thu, 07 Jun 2007 21:41:51 -0700, jketreno wrote:
+> In addition to the updated patches against wireless-dev incorporating 
+> feedback, John asked Yi to provide the WME patches against Linus' tree.  
+> He did..
+> 
+> Now, a month after Yi's patches were originally sent out, Jiri cited things 
+> he doesn't like
 
-Holger, that's all you :)
+I apologize it took me so long. On the other hand, I wrote at least some of
+the comments when the patches were sent out first time many months ago and
+they still haven't been addressed.
 
-dan
+> --things which can be addressed through patches to the code 
+> vs. having to re-apply a monolithic patch.
 
-> <--  snip  -->
-> 
-> ...
-> static int process_rxed_802_11_packet(wlan_private * priv, struct sk_buff *skb)
-> {
-> ...
->         libertas_upload_rx_packet(priv, skb);
-> 
->         ret = 0;
-> 
-> done:
->         skb->protocol = __constant_htons(0x0019);       /* ETH_P_80211_RAW */
-> ...
-> 
-> <--  snip  -->
-> 
-> 
-> cu
-> Adrian
-> 
+That could work if there are just minor issues in the code. That's not this
+case, the patches have still major ones.
 
+> Nothing is perfect the first time--and nothing will ever get done so long
+> as an aggressive and offensive position is held in regard to outside
+> contribution.
+
+I hope I wasn't aggressive. If it sounded that way, I apologize, I didn't
+mean to. Be assured that nobody is trying to offense "outside
+contributions" (there is nothing like that, btw, everyone can contribute
+and is considered the same), the only merit is a quality of code.
+
+Let's work on fixing those patches and when they are ready I will be more
+than happy to let them be applied - everybody will profit from them.
+
+Unfortunately, I won't have a time to look deeply into the second patch
+until a beginning of next week. (But you can use that time for fixing the
+third patch ;-))
+
+Thanks,
+
+ Jiri
+
+-- 
+Jiri Benc
+SUSE Labs
