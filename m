@@ -1,269 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39598 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752925AbXFVIlH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2007 04:41:07 -0400
-Message-Id: <20070621221756.722965000@sipsolutions.net>
-References: <20070621221603.778432000@sipsolutions.net>
-Date: Fri, 22 Jun 2007 00:16:06 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-Subject: [PATCH 03/14] mac80211: rx cleanups (1)
+Received: from styx.suse.cz ([82.119.242.94]:51532 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1763288AbXFGUaw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2007 16:30:52 -0400
+Date: Thu, 7 Jun 2007 22:30:58 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
+Message-ID: <20070607223058.44122be4@griffin.suse.cz>
+In-Reply-To: <20070606082210.GA28649@mail.intel.com>
+References: <20070606082210.GA28649@mail.intel.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make some really indented code more readable by outdenting.
+On Wed, 6 Jun 2007 16:22:10 +0800, Zhu Yi wrote:
+> --- a/include/linux/ieee80211.h
+> +++ b/include/linux/ieee80211.h
+> @@ -106,6 +106,52 @@ struct ieee80211_hdr {
+>  } __attribute__ ((packed));
+>  
+>  
+> +
+> +#define IEEE80211_TSINFO_TYPE(a)	((a.short1 & 0x0001) >> 0)
+> +#define IEEE80211_TSINFO_TSID(a)	((a.short1 & 0x001E) >> 1)
+> +#define IEEE80211_TSINFO_DIR(a)		((a.short1 & 0x0060) >> 5)
+> +#define IEEE80211_TSINFO_POLICY(a)	((a.short1 & 0x0180) >> 7)
+> +#define IEEE80211_TSINFO_AGG(a)		((a.short1 & 0x0200) >> 9)
+> +#define IEEE80211_TSINFO_APSD(a)	((a.short1 & 0x0400) >> 10)
+> +#define IEEE80211_TSINFO_UP(a)		((a.short1 & 0x3800) >> 11)
+> +#define IEEE80211_TSINFO_ACK(a)		((a.short1 & 0xC000) >> 14)
+> +#define IEEE80211_TSINFO_SCHEDULE(a)	((a.byte3 & 0x01) >> 0)
+> +
+> +#define SET_TSINFO_TYPE(i, d)		(i.short1 |= (d << 0) & 0x0001)
+> +#define SET_TSINFO_TSID(i, d)		(i.short1 |= (d << 1) & 0x001E)
+> +#define SET_TSINFO_DIR(i, d)		(i.short1 |= (d << 5) & 0x0060)
+> +#define SET_TSINFO_POLICY(i, d)		(i.short1 |= (d << 7) & 0x0180)
+> +#define SET_TSINFO_AGG(i, d)		(i.short1 |= (d << 9) & 0x0200)
+> +#define SET_TSINFO_APSD(i, d)		(i.short1 |= (d << 10) & 0x0400)
+> +#define SET_TSINFO_UP(i, d)		(i.short1 |= (d << 11) & 0x3800)
+> +#define SET_TSINFO_ACK(i, d)		(i.short1 |= (d << 14) & 0xC000)
+> +#define SET_TSINFO_SCHEDULE(i, d)	(i.byte3 |= (d << 0) & 0x01)
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Please add IEEE80211_ prefix here as well. For consistency and not
+polluting a name space.
 
----
- net/mac80211/rx.c |  198 +++++++++++++++++++++++++++---------------------------
- 1 file changed, 101 insertions(+), 97 deletions(-)
+> [...]
+> +enum ieee80211_tsinfo_psb {
+> +	WLAN_TSINFO_PSB_LEGACY = 0,
+> +	WLAN_TSINFO_PSB_APSD = 1,
+> +};
+> +
+> +
+> +/* WI-FI Alliance OUI Type and Subtype */
+> +enum wifi_oui_type {
+> +	WIFI_OUI_TYPE_WPA = 1,
+> +	WIFI_OUI_TYPE_WMM = 2,
+> +	WIFI_OUI_TYPE_WSC = 4,
+> +	WIFI_OUI_TYPE_PSD = 6,
+> +};
+> +
+> +enum wifi_oui_stype_wmm {
+> +	WIFI_OUI_STYPE_WMM_INFO = 0,
+> +	WIFI_OUI_STYPE_WMM_PARAM = 1,
+> +	WIFI_OUI_STYPE_WMM_TSPEC = 2,
+> +};
 
---- wireless-dev.orig/net/mac80211/rx.c	2007-06-21 19:38:16.118638003 +0200
-+++ wireless-dev/net/mac80211/rx.c	2007-06-21 20:45:17.428638003 +0200
-@@ -1243,21 +1243,24 @@ static inline ieee80211_txrx_result __ie
- 
- 	for (handler = handlers; *handler != NULL; handler++) {
- 		res = (*handler)(rx);
--		if (res != TXRX_CONTINUE) {
--			if (res == TXRX_DROP) {
--				I802_DEBUG_INC(local->rx_handlers_drop);
--				if (sta)
--					sta->rx_dropped++;
--			}
--			if (res == TXRX_QUEUED)
--				I802_DEBUG_INC(local->rx_handlers_queued);
-+
-+		switch (res) {
-+		case TXRX_CONTINUE:
-+			continue;
-+		case TXRX_DROP:
-+			I802_DEBUG_INC(local->rx_handlers_drop);
-+			if (sta)
-+				sta->rx_dropped++;
-+			break;
-+		case TXRX_QUEUED:
-+			I802_DEBUG_INC(local->rx_handlers_queued);
- 			break;
- 		}
-+		break;
- 	}
- 
--	if (res == TXRX_DROP) {
-+	if (res == TXRX_DROP)
- 		dev_kfree_skb(rx->skb);
--	}
- 	return res;
- }
- 
-@@ -1409,6 +1412,9 @@ void __ieee80211_rx(struct ieee80211_hw 
- 	u16 type;
- 	int multicast;
- 	int radiotap_len = 0;
-+	struct ieee80211_sub_if_data *prev = NULL;
-+	struct sk_buff *skb_new;
-+	u8 *bssid;
- 
- 	if (status->flag & RX_FLAG_RADIOTAP) {
- 		radiotap_len = ieee80211_get_radiotap_len(skb->data);
-@@ -1456,108 +1462,106 @@ void __ieee80211_rx(struct ieee80211_hw 
- 		rx.u.rx.ra_match = 1;
- 		ieee80211_invoke_rx_handlers(local, local->rx_handlers, &rx,
- 					     sta);
--	} else {
--		struct ieee80211_sub_if_data *prev = NULL;
--		struct sk_buff *skb_new;
--		u8 *bssid = ieee80211_get_bssid(hdr, skb->len - radiotap_len);
--
--		read_lock(&local->sub_if_lock);
--		list_for_each_entry(sdata, &local->sub_if_list, list) {
--			rx.u.rx.ra_match = 1;
--			switch (sdata->type) {
--			case IEEE80211_IF_TYPE_STA:
--				if (!bssid)
-+		sta_info_put(sta);
-+		return;
-+	}
-+
-+	bssid = ieee80211_get_bssid(hdr, skb->len - radiotap_len);
-+
-+	read_lock(&local->sub_if_lock);
-+	list_for_each_entry(sdata, &local->sub_if_list, list) {
-+		rx.u.rx.ra_match = 1;
-+		switch (sdata->type) {
-+		case IEEE80211_IF_TYPE_STA:
-+			if (!bssid)
-+				continue;
-+			if (!ieee80211_bssid_match(bssid,
-+						   sdata->u.sta.bssid)) {
-+				if (!rx.u.rx.in_scan)
- 					continue;
--				if (!ieee80211_bssid_match(bssid,
--							sdata->u.sta.bssid)) {
--					if (!rx.u.rx.in_scan)
--						continue;
--					rx.u.rx.ra_match = 0;
--				} else if (!multicast &&
--					   compare_ether_addr(sdata->dev->dev_addr,
--							      hdr->addr1) != 0) {
--					if (!sdata->promisc)
--						continue;
--					rx.u.rx.ra_match = 0;
--				}
--				break;
--			case IEEE80211_IF_TYPE_IBSS:
--				if (!bssid)
-+				rx.u.rx.ra_match = 0;
-+			} else if (!multicast &&
-+				   compare_ether_addr(sdata->dev->dev_addr,
-+						      hdr->addr1) != 0) {
-+				if (!sdata->promisc)
- 					continue;
--				if (!ieee80211_bssid_match(bssid,
--							sdata->u.sta.bssid)) {
--					if (!rx.u.rx.in_scan)
--						continue;
--					rx.u.rx.ra_match = 0;
--				} else if (!multicast &&
--					   compare_ether_addr(sdata->dev->dev_addr,
--							      hdr->addr1) != 0) {
--					if (!sdata->promisc)
--						continue;
--					rx.u.rx.ra_match = 0;
--				} else if (!sta)
--					sta = rx.sta =
--						ieee80211_ibss_add_sta(sdata->dev,
--								       skb, bssid,
--								       hdr->addr2);
--				break;
--			case IEEE80211_IF_TYPE_AP:
--				if (!bssid) {
--					if (compare_ether_addr(sdata->dev->dev_addr,
--							       hdr->addr1) != 0)
--						continue;
--				} else if (!ieee80211_bssid_match(bssid,
--							sdata->dev->dev_addr)) {
--					if (!rx.u.rx.in_scan)
--						continue;
--					rx.u.rx.ra_match = 0;
--				}
--				if (sdata->dev == local->mdev &&
--				    !rx.u.rx.in_scan)
--					/* do not receive anything via
--					 * master device when not scanning */
-+				rx.u.rx.ra_match = 0;
-+			}
-+			break;
-+		case IEEE80211_IF_TYPE_IBSS:
-+			if (!bssid)
-+				continue;
-+			if (!ieee80211_bssid_match(bssid,
-+						sdata->u.sta.bssid)) {
-+				if (!rx.u.rx.in_scan)
- 					continue;
--				break;
--			case IEEE80211_IF_TYPE_WDS:
--				if (bssid ||
--				    (rx.fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
-+				rx.u.rx.ra_match = 0;
-+			} else if (!multicast &&
-+				   compare_ether_addr(sdata->dev->dev_addr,
-+						      hdr->addr1) != 0) {
-+				if (!sdata->promisc)
- 					continue;
--				if (compare_ether_addr(sdata->u.wds.remote_addr,
--						       hdr->addr2) != 0)
-+				rx.u.rx.ra_match = 0;
-+			} else if (!sta)
-+				sta = rx.sta =
-+					ieee80211_ibss_add_sta(sdata->dev,
-+							       skb, bssid,
-+							       hdr->addr2);
-+			break;
-+		case IEEE80211_IF_TYPE_AP:
-+			if (!bssid) {
-+				if (compare_ether_addr(sdata->dev->dev_addr,
-+						       hdr->addr1))
- 					continue;
--				break;
--			}
--
--			if (prev) {
--				skb_new = skb_copy(skb, GFP_ATOMIC);
--				if (!skb_new) {
--					if (net_ratelimit())
--						printk(KERN_DEBUG "%s: failed to copy "
--						       "multicast frame for %s",
--						       local->mdev->name, prev->dev->name);
-+			} else if (!ieee80211_bssid_match(bssid,
-+						sdata->dev->dev_addr)) {
-+				if (!rx.u.rx.in_scan)
- 					continue;
--				}
--				rx.skb = skb_new;
--				rx.dev = prev->dev;
--				rx.sdata = prev;
--				ieee80211_invoke_rx_handlers(local,
--							     local->rx_handlers,
--							     &rx, sta);
-+				rx.u.rx.ra_match = 0;
- 			}
--			prev = sdata;
-+			if (sdata->dev == local->mdev && !rx.u.rx.in_scan)
-+				/* do not receive anything via
-+				 * master device when not scanning */
-+				continue;
-+			break;
-+		case IEEE80211_IF_TYPE_WDS:
-+			if (bssid ||
-+			    (rx.fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
-+				continue;
-+			if (compare_ether_addr(sdata->u.wds.remote_addr,
-+					       hdr->addr2))
-+				continue;
-+			break;
- 		}
-+
- 		if (prev) {
--			rx.skb = skb;
-+			skb_new = skb_copy(skb, GFP_ATOMIC);
-+			if (!skb_new) {
-+				if (net_ratelimit())
-+					printk(KERN_DEBUG "%s: failed to copy "
-+					       "multicast frame for %s",
-+					       local->mdev->name, prev->dev->name);
-+				continue;
-+			}
-+			rx.skb = skb_new;
- 			rx.dev = prev->dev;
- 			rx.sdata = prev;
- 			ieee80211_invoke_rx_handlers(local, local->rx_handlers,
- 						     &rx, sta);
--		} else
--			dev_kfree_skb(skb);
--		read_unlock(&local->sub_if_lock);
-+		}
-+		prev = sdata;
- 	}
-+	if (prev) {
-+		rx.skb = skb;
-+		rx.dev = prev->dev;
-+		rx.sdata = prev;
-+		ieee80211_invoke_rx_handlers(local, local->rx_handlers,
-+					     &rx, sta);
-+	} else
-+		dev_kfree_skb(skb);
-+	read_unlock(&local->sub_if_lock);
- 
--  end:
-+ end:
- 	if (sta)
- 		sta_info_put(sta);
- }
+Please don't invent new useless prefixes. Also, a registered trademark
+doesn't seem to be a good prefix.
+
+Thanks,
+
+ Jiri
 
 -- 
-
+Jiri Benc
+SUSE Labs
