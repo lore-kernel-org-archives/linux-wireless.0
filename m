@@ -1,82 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50460 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35553 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752521AbXFTLQc (ORCPT
+	with ESMTP id S934345AbXFHKd7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2007 07:16:32 -0400
-Subject: Re: [PATCH Try#lucky13 3/3] mac80211: Monitor mode radiotap-based  packet injection
+	Fri, 8 Jun 2007 06:33:59 -0400
+Subject: Re: userspace MLME
 From: Johannes Berg <johannes@sipsolutions.net>
-To: andy@warmcat.com
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Jiri Benc <jbenc@suse.cz>
-In-Reply-To: <20070614123704.801683087@warmcat.com>
-References: <20070614123316.868155662@warmcat.com>
-	 <20070614123704.801683087@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BoxwivUrgYqEKcRHSX33"
-Date: Tue, 19 Jun 2007 22:45:15 +0200
-Message-Id: <1182285915.3714.5.camel@johannes.berg>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>,
+	Zhu Yi <yi.zhu@intel.com>, Jiri Benc <jbenc@suse.cz>
+In-Reply-To: <1181295319.6533.50.camel@johannes.berg>
+References: <1181295319.6533.50.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Wz6QH6wv94WW3yIgHklT"
+Date: Fri, 08 Jun 2007 12:34:13 +0200
+Message-Id: <1181298853.6533.58.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-BoxwivUrgYqEKcRHSX33
+--=-Wz6QH6wv94WW3yIgHklT
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Nothing about this patch, I'm fine with it, but a comment for future use
-cases of this where we'll need some changes.
+On Fri, 2007-06-08 at 11:35 +0200, Johannes Berg wrote:
 
-> @@ -1284,15 +1442,26 @@ static int ieee80211_tx(struct net_devic
->  		return 0;
->  	}
-> =20
-> -	__ieee80211_tx_prepare(&tx, skb, dev, control);
-> +	res_prepare =3D __ieee80211_tx_prepare(&tx, skb, dev, control);
-> +
-> +	if (res_prepare =3D=3D TXRX_DROP) {
-> +		dev_kfree_skb(skb);
-> +		return 0;
-> +	}
-> +
->  	sta =3D tx.sta;
->  	tx.u.tx.mgmt_interface =3D mgmt;
->  	tx.u.tx.mode =3D local->hw.conf.mode;
-> =20
-> -	for (handler =3D local->tx_handlers; *handler !=3D NULL; handler++) {
-> -		res =3D (*handler)(&tx);
-> -		if (res !=3D TXRX_CONTINUE)
-> -			break;
-> +	if (res_prepare =3D=3D TXRX_QUEUED) { /* if it was an injected packet *=
-/
-> +		res =3D TXRX_CONTINUE;
-> +	} else {
-> +		for (handler =3D local->tx_handlers; *handler !=3D NULL;
-> +		     handler++) {
-> +			res =3D (*handler)(&tx);
-> +			if (res !=3D TXRX_CONTINUE)
-> +				break;
-> +		}
+>  1) repost/integrate the injection patches
 
-I think I mentioned it before; we'll have to split up TX handlers here
-to get proper sequence numbering for devices that do it in software,
-otherwise we won't be able to send packets with the right sequence
-number on such devices.
+1b) do that filtering work we talked about
+1c) implement the variety of monitor modes and that promisc bit
+    passing through to drivers
+
+> [1] Actually, I'd think that *all* commands should be forwarded to the
+> userspace MLME except for commands *from* the userspace MLME. That way,
+> the userspace MLME can act as a filter for commands which should make a
+> whole bunch of things easier.
+
+Ok so I just talked about this with Thomas Graf and Herbert Xu and
+Herbert suggested that we solves the "single userspace MLME" only issue
+in userspace. Then, we create a new multicast group for "userspace MLME"
+that it signs up for. Then, we can use netlink_has_listeners to decide
+whether there's a userspace MLME or not (we could even add a new command
+"is userspace MLME present" based on that)
 
 johannes
 
---=-BoxwivUrgYqEKcRHSX33
+--=-Wz6QH6wv94WW3yIgHklT
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGeEBb/ETPhpq3jKURAmUZAKCryAWyvZoGvg295h7R94DUB0STcwCgja97
-b49oAYHuh8M7VSzm+xK46Fo=
-=aBnk
+iD8DBQBGaTCl/ETPhpq3jKURAt8RAJ9IS8HyI+kn87AGr6Jz1X7uAcAEvgCfZsZl
+i17LDgmTOF1kgVZI5pnDtK0=
+=6MmS
 -----END PGP SIGNATURE-----
 
---=-BoxwivUrgYqEKcRHSX33--
+--=-Wz6QH6wv94WW3yIgHklT--
 
