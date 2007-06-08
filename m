@@ -1,50 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51411 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752136AbXFVJIF (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:63806 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755959AbXFHFIN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2007 05:08:05 -0400
-Subject: Re: [PATCH 00/14] major mac80211 restructuring/cleanups
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+	Fri, 8 Jun 2007 01:08:13 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH V2] mac80211: Implementation of SIOCSIWRATE
+Date: Thu, 7 Jun 2007 22:07:37 -0700
 Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-In-Reply-To: <20070621221603.778432000@sipsolutions.net>
-References: <20070621221603.778432000@sipsolutions.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-88ePewjkrt1bM3xqgzqn"
-Date: Fri, 22 Jun 2007 11:09:15 +0200
-Message-Id: <1182503355.21939.70.camel@johannes.berg>
-Mime-Version: 1.0
+References: <4668a64b.VmU9f2GpA2itSuFx%Larry.Finger@lwfinger.net> <200706071819.45603.flamingice@sourmilk.net> <4668D4C4.1050808@lwfinger.net>
+In-Reply-To: <4668D4C4.1050808@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart2835992.goYs0OeqRJ";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200706072207.37421.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-88ePewjkrt1bM3xqgzqn
-Content-Type: text/plain
+--nextPart2835992.goYs0OeqRJ
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Apparently 1 and 8 were too large:
+On Thursday 07 June 2007 21:02, Larry Finger wrote:
+> If sta->supp_rates is not changed, how do you lock in a single rate as
+> would be expected from an 'iwconfig ethX rate 11M'? Won't the following
+> code in the rate_control_rate_dec routine of rc80211_simple just decrease
+> the rate if it wants to?
+>
+>          while (i > 0) {
+>                  i--;
+>                  if (sta->supp_rates & BIT(i) &&
+>                      mode->rates[i].flags & IEEE80211_RATE_SUPPORTED) {
+>                          sta->txrate =3D i;
+>                          break;
+>                  }
+>          }
+>
+No, because the code right above it checks for force_unicast_rateidx and ex=
+its=20
+if it's set.
 
-(1)
-http://johannes.sipsolutions.net/patches/kernel/all/2007-06-22-09:08/033-sp=
-lit-rx.patch
+=2DMichael Wu
 
-(8)
-http://johannes.sipsolutions.net/patches/kernel/all/2007-06-22-09:08/040-sp=
-lit-out-tx-handlers.patch
-
-johannes
-
---=-88ePewjkrt1bM3xqgzqn
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart2835992.goYs0OeqRJ
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBGe5G7/ETPhpq3jKURAqwDAJ9xsctDGfhFrcU03+X5SsfjVtudRQCdEpWP
-itjXWQaraQOevcs2+xvm7Y8=
-=2NSm
+iD8DBQBGaOQZT3Oqt9AH4aERAoNEAKCcZinlw65X5d2XHBDdTzvyGeXQqACgnZ24
+K+wSIR8xtUN0KuALCi5MtI0=
+=VOvV
 -----END PGP SIGNATURE-----
 
---=-88ePewjkrt1bM3xqgzqn--
-
+--nextPart2835992.goYs0OeqRJ--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
