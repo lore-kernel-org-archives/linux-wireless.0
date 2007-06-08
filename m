@@ -1,56 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:61954 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761881AbXFAQAA (ORCPT
+Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:63002 "EHLO
+	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762575AbXFHAoO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2007 12:00:00 -0400
-Message-ID: <46604279.3070908@lwfinger.net>
-Date: Fri, 01 Jun 2007 10:59:53 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Thu, 7 Jun 2007 20:44:14 -0400
+Date: Thu, 07 Jun 2007 19:43:55 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH V2] mac80211: Implementation of SIOCSIWRATE
+Message-ID: <4668a64b.VmU9f2GpA2itSuFx%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Akinobu Mita <akinobu.mita@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Joe Jezak <josejx@gentoo.org>, Daniel Drake <dsd@gentoo.org>
-Subject: Re: [PATCH] softmac: use list_for_each_entry
-References: <20070527142740.GB13105@APFDCB5C> <1180643064.18266.2.camel@johannes.berg>
-In-Reply-To: <1180643064.18266.2.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+From: Mohamed Abbas <mabbas@linux.intel.com>
 
-Johannes Berg wrote:
-> On Sun, 2007-05-27 at 23:27 +0900, Akinobu Mita wrote:
->> Cleanup using list_for_each_entry.
-> 
->> This patch adds missing NULL check and trims a line longer than 80
->> columns.
-> 
-> Both patches look good to me but I do wonder why you're actually looking
-> at this code :)
-> 
-> I sure hope somebody will port bcm43xx driver to mac80211 (again) soon
-> so we can remove softmac.
+The WEXT ioctl SIOCSIWRATE is not implemented in mac80211. This patch
+adds the missing routine. It supports the 'auto' keyword, fixed rates,
+and the combination of 'auto' and a fixed rate to select an upper bound.
 
-As it is impossible to predict how long until we can remove softmac, such patches should be 
-accepted. You understand that I'm not looking for problems in softmac.
+Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-As we discussed earlier, bcm43xx-softmac has to be ported to mac80211 to support 802.11b-only cards, 
-as the V4 firmware does not accommodate them. I had started this project by changing the namespace 
-to bcm4301. That patch went into Linville's wireless-dev pending list. I then started learning the 
-interface to mac80211. For a number of reasons, that step was going slowly. Michael Wu recently 
-offered to take over, which seemed reasonable given his familiarity with mac80211.
+ ieee80211_ioctl.c |   51 ++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 50 insertions(+), 1 deletion(-)
 
-When Michael Wu gets a version of bcm4301-mac80211 that compiles cleanly, I will be testing it as he 
-doesn't have the hardware. For my testing purposes, the 802.11g stuff will still be there. Once I 
-get it working, I plan to post a patch to get as much testing as possible.
-
-In the earlier discussion, we also concluded that the product of a conversion from softmac to 
-mac80211 should not be included in mainline, with the exception of the b-only code. Depending on how 
-long the port and testing take, and the state of bcm43xx-mac80211 at that time, a reversal of that 
-earlier decision may be in order.
-
-Larry
+Index: wireless-dev/net/mac80211/ieee80211_ioctl.c
+===================================================================
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c
+@@ -2013,6 +2013,55 @@ static int ieee80211_ioctl_giwscan(struc
+ }
+ 
+ 
++static int ieee80211_ioctl_siwrate(struct net_device *dev,
++				  struct iw_request_info *info,
++				  struct iw_param *rate, char *extra)
++{
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_hw_mode *mode;
++	int i;
++	u32 target_rate = rate->value / 100000;
++	u32 supp = 0;
++	struct ieee80211_sub_if_data *sdata;
++	struct sta_info *sta;
++
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	mode = local->oper_hw_mode;
++	/* value = -1, rate->fixed = 0 means auto only, so use all rates
++	 * value = X, rate->fixed = 1 means only rate X
++	 * value = X, rate->fixed = 0 means all rates <= X */
++	for (i=0; i< mode->num_rates; i++) {
++		struct ieee80211_rate *rates = &mode->rates[i];
++		int target = rates->rate;
++
++		if (mode->mode == MODE_ATHEROS_TURBO ||
++		    mode->mode == MODE_ATHEROS_TURBOG)
++			target *= 2;
++		if ((target_rate == target) && rate->fixed) {
++			supp |= BIT(i);
++			sdata->u.ap.force_unicast_rateidx = i;
++			sdata->u.ap.max_ratectrl_rateidx = i;
++			break;
++		}
++		if ((!rate->fixed && (target <= target_rate)) || (rate->value < 0)) {
++			supp |= BIT(i);
++			sdata->u.ap.force_unicast_rateidx = -1;
++			if (target_rate == target)
++				sdata->u.ap.max_ratectrl_rateidx = i;
++		}
++	}
++	sdata->u.sta.supp_rates_bits = supp;
++	if (sdata->type == IEEE80211_IF_TYPE_STA) {
++		sta = sta_info_get(local, sdata->u.sta.bssid);
++		if (sta) {
++			sta->txrate = sdata->u.ap.max_ratectrl_rateidx;
++			sta->supp_rates = supp;
++			sta_info_put(sta);
++		}
++	}
++	return 0;
++}
++
+ static int ieee80211_ioctl_giwrate(struct net_device *dev,
+ 				  struct iw_request_info *info,
+ 				  struct iw_param *rate, char *extra)
+@@ -3159,7 +3208,7 @@ static const iw_handler ieee80211_handle
+ 	(iw_handler) NULL,				/* SIOCGIWNICKN */
+ 	(iw_handler) NULL,				/* -- hole -- */
+ 	(iw_handler) NULL,				/* -- hole -- */
+-	(iw_handler) NULL,				/* SIOCSIWRATE */
++	(iw_handler) ieee80211_ioctl_siwrate,		/* SIOCSIWRATE */
+ 	(iw_handler) ieee80211_ioctl_giwrate,		/* SIOCGIWRATE */
+ 	(iw_handler) ieee80211_ioctl_siwrts,		/* SIOCSIWRTS */
+ 	(iw_handler) ieee80211_ioctl_giwrts,		/* SIOCGIWRTS */
