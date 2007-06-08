@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59180 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756800AbXFPWRN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jun 2007 18:17:13 -0400
-Subject: Re: [RFC PATCH] bcm43xx QoS support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
-	Joseph Jezak <josejx@gentoo.org>
-In-Reply-To: <1ba2fa240706161438lfd629e4j7317bb62340c82a3@mail.gmail.com>
-References: <200706161328.53726.mb@bu3sch.de>
-	 <1ba2fa240706161438lfd629e4j7317bb62340c82a3@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4NMnY6wNwc7gk47HES9B"
-Date: Sun, 17 Jun 2007 00:17:37 +0200
-Message-Id: <1182032257.23681.1.camel@johannes.berg>
+Received: from styx.suse.cz ([82.119.242.94]:33824 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S968526AbXFHKQV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jun 2007 06:16:21 -0400
+Date: Fri, 8 Jun 2007 12:16:28 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
+Message-ID: <20070608121628.6c6a810d@griffin.suse.cz>
+In-Reply-To: <1181274019.3039.129.camel@debian.sh.intel.com>
+References: <20070606082210.GA28649@mail.intel.com>
+	<200706071914.56402.flamingice@sourmilk.net>
+	<1181274019.3039.129.camel@debian.sh.intel.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 08 Jun 2007 11:40:19 +0800, Zhu Yi wrote:
+> On Thu, 2007-06-07 at 19:14 -0700, Michael Wu wrote:
+> > > +#define SET_TSINFO_ACK(i, d)         (i.short1 |= (d << 14) &
+> > 0xC000)
+> > > +
+> > Everything that touches short1 looks broken on big endian. 
+> 
+> No. These are safe on all endians as long as you touch short1 with these
+> macros. Because from the macro mask, you can see no value d is more than
+> a byte.
 
---=-4NMnY6wNwc7gk47HES9B
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+No. Michael is right and I'm really blind I haven't seen that myself.
+That's totally broken. You cannot do _any_ bit operation on __le16.
 
-On Sun, 2007-06-17 at 00:38 +0300, Tomas Winkler wrote:
-> iwlwifi supports QoS. It has queues 4 hw for WMM access categories 2
-> hw queus for HCCA.
+Let's assume that a value of short1 is 0x34 0x12 (two bytes as stored
+in a memory). Now let's look at the result of (short1 & 0xff).
 
-But it too can't ever create QoS-data frames or negotiate TXOPs afaict,
-unless it does more than we want in hardware.
+On a LE platform that's (0x1234 & 0xff), i.e. 0x34.
 
-> There is also a discussion about supporting hardware queues in qdisc
-> in netdev.
+On a BE platform that's (0x3412 & 0xff), i.e. 0x12.
 
-Which isn't really a concern to the driver since only mac80211 will need
-to be changed for that.
+How that could be correct?
 
-I suppose the question is: what are we missing in mac80211 now? It seems
-that we have no way of sending out QoS-data frames and that seems weird.
-Nor do we parse TXOP information etc. Possibly this is because we
-support WME and that's based on an early 802.11e draft?
+ Jiri
 
-johannes
-
---=-4NMnY6wNwc7gk47HES9B
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGdGGB/ETPhpq3jKURAtL6AKCpTSM7s2oUjzop7kt2wOvX3LB25wCfbc6W
-VKLEBVyIkIGV3mBxkxOVohs=
-=hLm7
------END PGP SIGNATURE-----
-
---=-4NMnY6wNwc7gk47HES9B--
-
+-- 
+Jiri Benc
+SUSE Labs
