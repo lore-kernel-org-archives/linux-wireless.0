@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:52166 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1762448AbXFDTcg (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:63802 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752864AbXFHECO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2007 15:32:36 -0400
-Message-ID: <46644D8F.2010400@linux.intel.com>
-Date: Mon, 04 Jun 2007 10:36:15 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
+	Fri, 8 Jun 2007 00:02:14 -0400
+Message-ID: <4668D4C4.1050808@lwfinger.net>
+Date: Thu, 07 Jun 2007 23:02:12 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
+To: Michael Wu <flamingice@sourmilk.net>
 CC: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Add module parameter for setting initial rate  in rc80211_simple
-References: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>
-In-Reply-To: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH V2] mac80211: Implementation of SIOCSIWRATE
+References: <4668a64b.VmU9f2GpA2itSuFx%Larry.Finger@lwfinger.net> <200706071819.45603.flamingice@sourmilk.net>
+In-Reply-To: <200706071819.45603.flamingice@sourmilk.net>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> The initial rate for STA's using rc80211_simple is set to the last
-> rate in the rate table. This is too fast for the bcm43xx-mac80211
-> driver. 
->
-> To correct this situation without affecting any other driver,
-> an initial_rate parameter is added to the rc80211_simple module. This
-> parameter is set to 10 times the desired initial rate. If the parameter
-> is zero or not set, the original behavior is kept. If the parameter
-> does not match a valid rate, the first rate in the table will be set.
+Michael Wu wrote:
+> On Thursday 07 June 2007 17:43, Larry Finger wrote:
 
-Initial rate selection should be based on the RSSI of the last frame(s) received from the target network.  One way to do that would be for the driver to map a minimum RSSI value to each rate.  If the RSSI for the target network is greater than the value listed, that rate could be used for initial selection.  The ieee80211_rate with the highest 'rate', which is in the supported rates mask and with a min_rssi <= the AP's reported RSSI, is selected.
+>> +			sta->supp_rates = supp;
+> This is definitely wrong. What rates we support has nothing to do with what 
+> rates the AP supports.
 
-The mechanism by which the magic values for min_rssi are determined for each rate is more observational than scientific--and is vendor specific.  You can pick a set of values, but different hardware and environments will yield different levels of success / failure.  Some hardware can be very lenient if it has automatic hardware retry.  Other hardware will need to be very conservative (since, as you point out, the first few frames Tx/Rx'd are important)
+If sta->supp_rates is not changed, how do you lock in a single rate as would be expected from an 
+'iwconfig ethX rate 11M'? Won't the following code in the rate_control_rate_dec routine of 
+rc80211_simple just decrease the rate if it wants to?
 
-James
+         while (i > 0) {
+                 i--;
+                 if (sta->supp_rates & BIT(i) &&
+                     mode->rates[i].flags & IEEE80211_RATE_SUPPORTED) {
+                         sta->txrate = i;
+                         break;
+                 }
+         }
 
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+Larry
