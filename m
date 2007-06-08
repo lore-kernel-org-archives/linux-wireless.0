@@ -1,36 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:33292 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751925AbXFYQbW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2007 12:31:22 -0400
-Message-ID: <467FE3BE.5040206@redhat.com>
-Date: Mon, 25 Jun 2007 17:48:14 +0200
-From: Michal Schmidt <mschmidt@redhat.com>
+Received: from mx2.go2.pl ([193.17.41.42]:43818 "EHLO poczta.o2.pl"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S937694AbXFHVr4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jun 2007 17:47:56 -0400
+Received: from poczta.o2.pl (mx2 [127.0.0.1])
+	by poczta.o2.pl (Postfix) with ESMTP id A79EA748075
+	for <linux-wireless@vger.kernel.org>; Fri,  8 Jun 2007 23:47:51 +0200 (CEST)
+Received: from Z-98C0293EFA704 (87-205-45-25.adsl.inetia.pl [87.205.45.25])
+	by poczta.o2.pl (Postfix) with ESMTP
+	for <linux-wireless@vger.kernel.org>; Fri,  8 Jun 2007 23:47:51 +0200 (CEST)
+Date: Fri, 8 Jun 2007 23:47:32 +0200
+From: zergavis <zergavis@o2.pl>
+Reply-To: zergavis <zergavis@o2.pl>
+Message-ID: <622435923.20070608234732@o2.pl>
+To: linux-wireless@vger.kernel.org
+Subject: Re[2]: mac80211 "wme.c:398" error
+In-Reply-To: <466992FD.4050608@linux.intel.com>
+References: <1279688715.20070608205031@o2.pl> <1181330294.6533.81.camel@johannes.berg> <466992FD.4050608@linux.intel.com>
 MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Matteo Croce <rootkit85@yahoo.it>, linux-wireless@vger.kernel.org
-Subject: Re: airo
-References: <200706061903.13228.rootkit85@yahoo.it>	 <46693003.8090406@redhat.com> <200706091519.29319.rootkit85@yahoo.it>	 <200706091816.47618.rootkit85@yahoo.it>  <467FD362.8000602@redhat.com> <1182783939.5449.1.camel@xo-13-A4-25.localdomain> <467FDC79.6090102@redhat.com>
-In-Reply-To: <467FDC79.6090102@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Schmidt wrote:
-> Dan Williams wrote:
->> Wow, that's somewhat ugly.  Do other drivers just not have this problem,
->> or have they worked around it in similar or different ways?  Just trying
->> to understand if the scope of the issue is wider than just airo.
-> 
-> For instance, drivers/net/wireless/atmel.c looks very similar, so I
-> guess it has the same race. With airo the race is just more visible,
-> because of all the long sleeps it does between getting the name with
-> dev_alloc_name and finally registering it.
-> 
-> eepro100.c takes rtnl_lock to avoid the issue. So does ns83820.c - it
-> has a big comment about how ugly it is.
+> If you turn *off* CONFIG_NET_SCHED, it should build and run fine
 
-A cleaner way would be to do most of the initialization later, from the
-->open() method. I'll explore how workable this approach would be.
+Thanks, it works :) There was a problem with:
 
-Michal
+et/built-in.o: In function `rtnl_setlink':
+rtnetlink.c:(.text+0x157bb): undefined reference to `wireless_rtnetlink_set'
+net/built-in.o: In function `rtnl_getlink':
+rtnetlink.c:(.text+0x15980): undefined reference to `wireless_rtnetlink_get'
+
+but swiching off rtnetlink in wireless drivers fix it.
+
+I will try mac80211-8.0.1 version in a few hours.
+
+thanks,
+pawel
+
