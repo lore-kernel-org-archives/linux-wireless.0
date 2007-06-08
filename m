@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:60514 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751168AbXFNSYu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2007 14:24:50 -0400
-Date: Thu, 14 Jun 2007 11:23:11 -0700 (PDT)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Christoph Hellwig <hch@infradead.org>
-cc: Andrew Morton <akpm@linux-foundation.org>,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	dcbw@redhat.com, hs4233@mail.mn-solutions.de,
-	linux-kernel@vger.kernel.org
-Subject: Re: libertas (private) ioctls vs. nl80211
-In-Reply-To: <20070614181307.GA16856@infradead.org>
-Message-ID: <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org>
-References: <1181757483.29767.99.camel@johannes.berg> <20070614170901.GA13384@infradead.org>
- <20070614103836.23b07a72.akpm@linux-foundation.org>
- <20070614181307.GA16856@infradead.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=us-ascii
+Received: from mga01.intel.com ([192.55.52.88]:33028 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933212AbXFHBfR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2007 21:35:17 -0400
+Subject: Re: [PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
+From: Zhu Yi <yi.zhu@intel.com>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>
+In-Reply-To: <20070607223058.44122be4@griffin.suse.cz>
+References: <20070606082210.GA28649@mail.intel.com>
+	 <20070607223058.44122be4@griffin.suse.cz>
+Content-Type: text/plain
+Date: Fri, 08 Jun 2007 09:34:37 +0800
+Message-Id: <1181266477.3039.97.camel@debian.sh.intel.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On Thu, 14 Jun 2007, Christoph Hellwig wrote:
->
-> > I suspect that the probability of your proposal succeeding would be increased
-> > if you could prepare a patch...
+On Thu, 2007-06-07 at 22:30 +0200, Jiri Benc wrote:
+> > +#define SET_TSINFO_SCHEDULE(i, d)	(i.byte3 |= (d << 0) & 0x01)
 > 
-> Here we go:
+> Please add IEEE80211_ prefix here as well. For consistency and not
+> polluting a name space.
 
-I don't mind ripping them out, but it makes sense only if people are 
-actually signed up to implementing this on a higher layer. As such, I'd 
-need to get a sign-off from somebody actually involved in wireless mesh 
-stuff etc.
+Point accepted.
 
-Please? I do agree that the private iwpriv interface seems to be totally 
-the wrong thing to do, but I want to see this as a first step towards a 
-better situation, rather than just a "remove code that is ugly" issue!
+> > +enum wifi_oui_stype_wmm {
+> > +	WIFI_OUI_STYPE_WMM_INFO = 0,
+> > +	WIFI_OUI_STYPE_WMM_PARAM = 1,
+> > +	WIFI_OUI_STYPE_WMM_TSPEC = 2,
+> > +};
+> 
+> Please don't invent new useless prefixes. Also, a registered trademark
+> doesn't seem to be a good prefix.
 
-Comments?
+I think we have talked this early and now you know correctly WIFI is not
+a trademark. You define IEEE80211_STYPE_ASSOC_REQ, etc, but defines
+those for Wi-Fi with WLAN prefix? WLAN prefix should be used by symbols
+defined by mac80211, for example: WLAN_CAPABILITY_ESS.
 
-		Linus
+Thanks,
+-yi
