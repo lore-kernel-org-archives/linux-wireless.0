@@ -1,32 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:51610 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752606AbXFKQTL (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:50044 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754778AbXFHFGF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 12:19:11 -0400
-Message-ID: <466D75FD.9090809@lwfinger.net>
-Date: Mon, 11 Jun 2007 11:19:09 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Fri, 8 Jun 2007 01:06:05 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH V3] mac80211: Set low initial rate in rc80211_simple
+Date: Thu, 7 Jun 2007 22:05:21 -0700
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+References: <4668c71b.E0vXnFMnxxm8I5gE%Larry.Finger@lwfinger.net> <200706072038.36708.flamingice@sourmilk.net> <4668D1BB.40705@lwfinger.net>
+In-Reply-To: <4668D1BB.40705@lwfinger.net>
 MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2] mac80211: Implementation of SIOCSIWRATE
-References: <4668a64b.VmU9f2GpA2itSuFx%Larry.Finger@lwfinger.net> <200706071819.45603.flamingice@sourmilk.net> <4668C577.4030008@lwfinger.net> <200706072012.56652.flamingice@sourmilk.net>
-In-Reply-To: <200706072012.56652.flamingice@sourmilk.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart1193994.ljxoNYFWvd";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200706072205.27902.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
-> On Thursday 07 June 2007 19:56, Larry Finger wrote:
->> When I leave this part out, the rate _NEVER_ gets set, no matter what you
->> say. My experiments say that it is needed.
->>
-> That's because force_unicast_rateidx and max_ratectrl_rateidx is being set in 
-> the wrong struct ieee80211_if_ap. (how did I miss that..) sdata->u.ap is only 
-> valid when sdata->type == IEEE80211_IF_TYPE_AP, yet it's being accessed 
-> without any mode checks. sdata->bss should be used instead.
+--nextPart1193994.ljxoNYFWvd
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Does sdata->bss need to be checked to verify that it is not NULL?
+On Thursday 07 June 2007 20:49, Larry Finger wrote:
+> Does mode->rates[0].flags automatically have IEEE80211_RATE_SUPPORTED set?
+> That wasn't clear to me.
+>
+Yes. (see ieee80211_prepare_rates)
 
-Larry
+-Michael Wu
+
+--nextPart1193994.ljxoNYFWvd
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGaOOXT3Oqt9AH4aERAv8IAJwInPJuASZweZ2kzvkSjQngpbzSxwCfThXU
+h/cMgDULNpmMfYDOubjgN7w=
+=7ZtQ
+-----END PGP SIGNATURE-----
+
+--nextPart1193994.ljxoNYFWvd--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
