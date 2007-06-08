@@ -1,70 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:51383
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753349AbXFAJa1 (ORCPT
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:35650 "EHLO
+	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965077AbXFHCyv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2007 05:30:27 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH] mac80211: Update stop_queues kdoc
-Date: Fri, 1 Jun 2007 11:29:12 +0200
-Cc: Jiri Benc <jbenc@suse.cz>, John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
+	Thu, 7 Jun 2007 22:54:51 -0400
+Date: Thu, 07 Jun 2007 21:54:46 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH V2] mac80211: Set low initial rate in rc80211_simple
+Message-ID: <4668c4f6.9foQu67PRVz5Fh3G%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Message-Id: <200706011129.12432.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This updates stop_queue(s) kdoc as currently there's
-a undocumented dependency.
+The initial rate for STA's using rc80211_simple is set to the last
+rate in the rate table. For situations for which the signal is weak,
+the rate may be too high for authentication and association. Although
+the rc80211_simple module will adjust the speed, the response may not
+be fast enough for a successful connection. This modification sets the
+initial rate to the lowest supported value.
 
-Stopping the queue from anywhere else than the ops->tx()
-callback will result in a hard to debug deadlock and
-system freeze (on UP).
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Here's an example stacktrace that has been captured only
-by special debugging patches to the PPC-decrementer to
-detect this machine freeze.
-http://bu3sch.de/misc/freeze1.jpg
-http://bu3sch.de/misc/freeze2.jpg
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
-Index: mac80211/include/net/mac80211.h
+Index: wireless-dev/net/mac80211/rc80211_simple.c
 ===================================================================
---- mac80211.orig/include/net/mac80211.h	2007-06-01 11:20:32.000000000 +0200
-+++ mac80211/include/net/mac80211.h	2007-06-01 11:23:02.000000000 +0200
-@@ -967,6 +967,10 @@ void ieee80211_wake_queue(struct ieee802
-  * @queue: queue number (counted from zero).
-  *
-  * Drivers should use this function instead of netif_stop_queue.
-+ *
-+ * It's currently only safe to call this function from the
-+ * ops->tx() callback. Calls from elsewhere will result in
-+ * hard to debug deadlocks (freezes the system on UP).
-  */
- void ieee80211_stop_queue(struct ieee80211_hw *hw, int queue);
- 
-@@ -983,6 +987,10 @@ void ieee80211_start_queues(struct ieee8
-  * @hw: pointer as obtained from ieee80211_alloc_hw().
-  *
-  * Drivers should use this function instead of netif_stop_queue.
-+ *
-+ * It's currently only safe to call this function from the
-+ * ops->tx() callback. Calls from elsewhere will result in
-+ * hard to debug deadlocks (freezes the system on UP).
-  */
- void ieee80211_stop_queues(struct ieee80211_hw *hw);
- 
-
-
---
-
-I'd still prefer someone fixes the issue. I don't understand
-the code well enough to fix it.
-
-
--- 
-Greetings Michael.
+--- wireless-dev.orig/net/mac80211/rc80211_simple.c
++++ wireless-dev/net/mac80211/rc80211_simple.c
+@@ -283,10 +283,10 @@ static void rate_control_simple_rate_ini
+ 	int i;
+ 	sta->txrate = 0;
+ 	mode = local->oper_hw_mode;
+-	/* TODO: what is a good starting rate for STA? About middle? Maybe not
+-	 * the lowest or the highest rate.. Could consider using RSSI from
+-	 * previous packets? Need to have IEEE 802.1X auth succeed immediately
+-	 * after assoc.. */
++	/* TODO: This routine should consider using RSSI from previous packets
++	 * as we need to have IEEE 802.1X auth succeed immediately after assoc..
++	 * Until that method is implemented, we will use the lowest supported rate
++	 * as a workaround, */
+ 	for (i = 0; i < mode->num_rates; i++) {
+ 		if ((sta->supp_rates & BIT(i)) &&
+ 		    (mode->rates[i].flags & IEEE80211_RATE_SUPPORTED))
