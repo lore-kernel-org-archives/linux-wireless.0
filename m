@@ -1,37 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail8.sea5.speakeasy.net ([69.17.117.10]:54867 "EHLO
-	mail8.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751106AbXFTNll (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:33987 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S966457AbXFHDjh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2007 09:41:41 -0400
-Date: Wed, 20 Jun 2007 06:41:21 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: ieee80211_set_aid_for_sta?
-Message-ID: <20070620134121.GY5361@jm.kir.nu>
-References: <1182296370.3714.21.camel@johannes.berg>
+	Thu, 7 Jun 2007 23:39:37 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH V3] mac80211: Set low initial rate in rc80211_simple
+Date: Thu, 7 Jun 2007 20:38:27 -0700
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+References: <4668c71b.E0vXnFMnxxm8I5gE%Larry.Finger@lwfinger.net>
+In-Reply-To: <4668c71b.E0vXnFMnxxm8I5gE%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1182296370.3714.21.camel@johannes.berg>
+Content-Type: multipart/signed;
+  boundary="nextPart1474228.qm12186NhP";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200706072038.36708.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 20, 2007 at 01:39:30AM +0200, Johannes Berg wrote:
+--nextPart1474228.qm12186NhP
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-> As with the radar stuff, I don't see any users of
-> ieee80211_set_aid_for_sta. It seems to be useful when firmware
-> establishes sta MAC->AID mapping, but hostapd doesn't handle that
-> currently. Remove until we find new hardware requiring it?
+On Thursday 07 June 2007 20:03, Larry Finger wrote:
+>  	for (i = 0; i < mode->num_rates; i++) {
+>  		if ((sta->supp_rates & BIT(i)) &&
+>  		    (mode->rates[i].flags & IEEE80211_RATE_SUPPORTED))
+>  			sta->txrate = i;
+> +			break;
+>  	}
+Uh, what's the point of having a loop if you're gonna do that? ;)
 
-hostapd has code for using it, but it is commented out in the open
-source version. I don't remember why that was done, but I would assume
-it would have required more changes that I did want to do at the point
-when merging this from Devicescape version.
+-Michael Wu
 
-Anyway, this was needed with a PrismGT card where the firmware was
-indeed taking care of AID selection and then reporting the selected AID
-to hostapd. I don't have anything against removing it for now.
+--nextPart1474228.qm12186NhP
+Content-Type: application/pgp-signature
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGaM88T3Oqt9AH4aERAnAZAJ9bFh1sWaOOknfMVpkb8O0TyQL1UwCeNfQj
+duBcUZJ0LgJXlxtirreIegA=
+=P0ra
+-----END PGP SIGNATURE-----
+
+--nextPart1474228.qm12186NhP--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
