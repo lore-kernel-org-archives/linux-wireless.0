@@ -1,32 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp156.iad.emailsrvr.com ([207.97.245.156]:41530 "EHLO
-	smtp156.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752190AbXFIDvP (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45894 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S940099AbXFHIKk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2007 23:51:15 -0400
-Message-ID: <466A2383.50001@gentoo.org>
-Date: Fri, 08 Jun 2007 23:50:27 -0400
-From: Daniel Drake <dsd@gentoo.org>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RFC: Regulatory info in mac80211
-References: <4665CCE7.5090409@lwfinger.net>
-In-Reply-To: <4665CCE7.5090409@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 8 Jun 2007 04:10:40 -0400
+Subject: Re: [PATCH -mm] mac80211: fix 1-bit bitfield to unsigned
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: linux-wireless@vger.kernel.org, akpm <akpm@linux-foundation.org>,
+	jbenc@suse.cz, flamingice@sourmilk.net, Zhu Yi <yi.zhu@intel.com>
+In-Reply-To: <20070606150254.de49d627.randy.dunlap@oracle.com>
+References: <20070606150254.de49d627.randy.dunlap@oracle.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/Sim/ZQ6ZeT32LThNq+f"
+Date: Fri, 08 Jun 2007 10:10:54 +0200
+Message-Id: <1181290254.6533.11.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> 5. There should be a scheme for translating country codes based on the 
-> outdated table 105 in Corrigendum 1 for 802.11b. This is the basis for 
-> the EEPROM data in the ZD1211 hardware. Note, this scheme is far too 
-> limited to be the only one available. If the translation code is needed 
-> for more than one driver, it should be placed in mac80211.
 
-You might wish to treat the fact that the ZD1211 EEPROM regdomain field 
-appears to correspond to the 802.11b specs as just a coincidence. Some 
-newer devices have regdomain values that are not in that table (and are 
-not even mentioned in the vendor driver...)
+--=-/Sim/ZQ6ZeT32LThNq+f
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Daniel
+Very interesting. We were wondering why the latest git tree doesn't show
+tons of endianness warnings, but it appears that when sparse finds these
+dubious bitfields it turns off all other warnings.
+
+Zhu Yi, can you apply this patch to your tree and review your code and
+the sparse output and stick le16_to_cpu()/le32_to_cpu() into the
+appropriate places? A whole bunch of things there are endianness broken
+and sparse probably only gives you an approximation of what errors there
+are.
+
+johannes
+
+--=-/Sim/ZQ6ZeT32LThNq+f
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGaQ8O/ETPhpq3jKURAvGxAJ9V66fTj9fmRHKOuU+W2ovKniwobQCgoywn
+NpdGL8hRxUTmFv9EH9xrips=
+=Kv1u
+-----END PGP SIGNATURE-----
+
+--=-/Sim/ZQ6ZeT32LThNq+f--
+
