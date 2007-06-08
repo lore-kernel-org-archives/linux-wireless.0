@@ -1,72 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:58977 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762862AbXFEUv6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2007 16:51:58 -0400
-Message-ID: <4665CCE7.5090409@lwfinger.net>
-Date: Tue, 05 Jun 2007 15:51:51 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mga01.intel.com ([192.55.52.88]:24248 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759732AbXFHREN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jun 2007 13:04:13 -0400
+Date: Sat, 9 Jun 2007 01:03:28 +0800
+From: Zhu Yi <yi.zhu@intel.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/6] mac80211: Add IEEE80211_ prefix to SET_TSINFO_{} macros
+Message-ID: <20070608170328.GA17244@mail.intel.com>
+Reply-To: yi.zhu@intel.com
 MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: RFC: Regulatory info in mac80211
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Given the recent discussions of regulatory/geographic domain compliance (or lack thereof) in 
-mac80211, and the fact that the software is mainlined in 2.6.22, it seems a good time to start 
-planning for full implementation of regulatory information in mac80211.
+Add IEEE80211_ prefix to SET_TSINFO_{} macros
 
-Roughly a year ago, I worked on such a scheme for ieee80211, but put the project on hold when I 
-learned that ieee80211 and ieee80211_softmac, which is used by my driver of interest, would be 
-replaced by mac80211. The project was far from complete; however, a number of individuals responded 
-to my RFC's and suggested the following (the netdev archives should contain the E-mails):
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ include/linux/ieee80211.h     |   18 +++++++++---------
+ net/mac80211/debugfs_netdev.c |    2 +-
+ net/mac80211/ieee80211_sta.c  |   20 ++++++++++----------
+ 3 files changed, 20 insertions(+), 20 deletions(-)
 
-1. The regulatory information is too dynamic to be placed in the kernel.
-
-2. The regulatory database should be in an ASCII file for easy updating. This database should be 
-read by a userspace daemon that reformats the information and supplies it to mac80211 upon demand.
-
-3. There should be some sort of checking to verify that the database has not been hacked to modify 
-transmission power, etc. in an illegal manner. Obviously, no foolproof means of enforcing this does 
-not exist; however, we should prevent the crudest form of modifications.
-
-4. The database should incorporate the parameters needed for 802.11a, 802.11b/g/n, 802.11d, and 802.11h.
-
-5. There should be a scheme for translating country codes based on the outdated table 105 in 
-Corrigendum 1 for 802.11b. This is the basis for the EEPROM data in the ZD1211 hardware. Note, this 
-scheme is far too limited to be the only one available. If the translation code is needed for more 
-than one driver, it should be placed in mac80211.
-
-6. In case of errors such as the user daemon not running, database corruption, an illegal region 
-code from the driver, etc., mac80211 should set a default set of parameters that are legal 
-everywhere, and log a suitable error message.
-
-7. ??
-
-To begin such an undertaking, the following steps need to be done:
-
-1. Decide what information is required. These data include, but are not limited to, the band, the 
-maximum E.I.R.P. in dBm, whether the data are for indoors/outdoors/both, an indication regarding the 
-use of active vs passive scans, allowed protocols, etc. I don't know enough about 802.11h to know 
-what data will be required.
-
-2. Accumulate the necessary regulatory data for the world. I found a source for such information. 
-Although its price (2500 euro) was a significant problem, the NDA that went with it was a show 
-stopper. The diversity of regulations is much greater than I expected. Although, I had only 
-collected data on roughly half the countries in the ISO 3166 country codes, I had found 12 distinct 
-sets of rules for the 2.4 GHz band and 17 sets in the 5 GHz bands, without any 802.11h information.
-
-3. Decide on how to store this information within mac80211.
-
-4. Decide on the structure of the ASCII database and the means of communication between the daemon 
-and the kernel.
-
-5. Prepare the data file and code the userspace and kernel components.
-
-6. Other....
-
-I welcome your comments.
-
-Larry
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 00e9f99..31368bc 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -134,15 +134,15 @@ struct ieee80211_ht_additional_info {
+ #define IEEE80211_TSINFO_ACK(a)		((a.short1 & 0xC000) >> 14)
+ #define IEEE80211_TSINFO_SCHEDULE(a)	((a.byte3 & 0x01) >> 0)
+ 
+-#define SET_TSINFO_TYPE(i, d)		(i.short1 |= (d << 0) & 0x0001)
+-#define SET_TSINFO_TSID(i, d)		(i.short1 |= (d << 1) & 0x001E)
+-#define SET_TSINFO_DIR(i, d)		(i.short1 |= (d << 5) & 0x0060)
+-#define SET_TSINFO_POLICY(i, d)		(i.short1 |= (d << 7) & 0x0180)
+-#define SET_TSINFO_AGG(i, d)		(i.short1 |= (d << 9) & 0x0200)
+-#define SET_TSINFO_APSD(i, d)		(i.short1 |= (d << 10) & 0x0400)
+-#define SET_TSINFO_UP(i, d)		(i.short1 |= (d << 11) & 0x3800)
+-#define SET_TSINFO_ACK(i, d)		(i.short1 |= (d << 14) & 0xC000)
+-#define SET_TSINFO_SCHEDULE(i, d)	(i.byte3 |= (d << 0) & 0x01)
++#define IEEE80211_SET_TSINFO_TYPE(i, d)		(i.short1 |= (d << 0) & 0x0001)
++#define IEEE80211_SET_TSINFO_TSID(i, d)		(i.short1 |= (d << 1) & 0x001E)
++#define IEEE80211_SET_TSINFO_DIR(i, d)		(i.short1 |= (d << 5) & 0x0060)
++#define IEEE80211_SET_TSINFO_POLICY(i, d)	(i.short1 |= (d << 7) & 0x0180)
++#define IEEE80211_SET_TSINFO_AGG(i, d)		(i.short1 |= (d << 9) & 0x0200)
++#define IEEE80211_SET_TSINFO_APSD(i, d)		(i.short1 |= (d << 10) & 0x0400)
++#define IEEE80211_SET_TSINFO_UP(i, d)		(i.short1 |= (d << 11) & 0x3800)
++#define IEEE80211_SET_TSINFO_ACK(i, d)		(i.short1 |= (d << 14) & 0xC000)
++#define IEEE80211_SET_TSINFO_SCHEDULE(i, d)	(i.byte3 |= (d << 0) & 0x01)
+ 
+ struct ieee80211_ts_info {
+ 	__le16 short1;
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index b9409ee..7be0d90 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -257,7 +257,7 @@ static ssize_t tsinfo_ ##_name## _write(struct file *file,		\
+ 		       "[%u, %u]\n",sdata->dev->name,val,min_val,max_val);\
+ 		return -EINVAL;						\
+ 	}								\
+-	SET_TSINFO_ ##_name (_tspec.ts_info, val);			\
++	IEEE80211_SET_TSINFO_ ##_name (sdata->u.sta.tspec.ts_info, val);\
+ 	return count;							\
+ }									\
+ 									\
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 8bd8031..ace0a99 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -859,11 +859,11 @@ void ieee80211_send_delts(struct net_device *dev,
+ 	memset(&mgmt->u.action.u.delts.ts_info, 0,
+ 			sizeof(struct ieee80211_ts_info));
+ 
+-	SET_TSINFO_TSID(tp->ts_info, tsid);
+-	SET_TSINFO_DIR(tp->ts_info, direction);
+-	SET_TSINFO_POLICY(tp->ts_info, WLAN_TSINFO_EDCA);
+-	SET_TSINFO_APSD(tp->ts_info, WLAN_TSINFO_PSB_LEGACY);
+-	SET_TSINFO_UP(tp->ts_info, ifsta->ts_data[tsid][index].up);
++	IEEE80211_SET_TSINFO_TSID(tp->ts_info, tsid);
++	IEEE80211_SET_TSINFO_DIR(tp->ts_info, direction);
++	IEEE80211_SET_TSINFO_POLICY(tp->ts_info, WLAN_TSINFO_EDCA);
++	IEEE80211_SET_TSINFO_APSD(tp->ts_info, WLAN_TSINFO_PSB_LEGACY);
++	IEEE80211_SET_TSINFO_UP(tp->ts_info, ifsta->ts_data[tsid][index].up);
+ 
+ 	ieee80211_sta_tx(dev, skb, 0);
+ }
+@@ -930,11 +930,11 @@ void wmm_send_delts(struct net_device *dev,
+ 	tspec = (struct ieee80211_elem_tspec *)pos;
+ 	memset(tspec, 0, sizeof(*tspec));
+ 
+-	SET_TSINFO_TSID(tspec->ts_info, tsid);
+-	SET_TSINFO_DIR(tspec->ts_info, direction);
+-	SET_TSINFO_POLICY(tspec->ts_info, WLAN_TSINFO_EDCA);
+-	SET_TSINFO_APSD(tspec->ts_info, WLAN_TSINFO_PSB_LEGACY);
+-	SET_TSINFO_UP(tspec->ts_info, ifsta->ts_data[tsid][index].up);
++	IEEE80211_SET_TSINFO_TSID(tspec->ts_info, tsid);
++	IEEE80211_SET_TSINFO_DIR(tspec->ts_info, direction);
++	IEEE80211_SET_TSINFO_POLICY(tspec->ts_info, WLAN_TSINFO_EDCA);
++	IEEE80211_SET_TSINFO_APSD(tspec->ts_info, WLAN_TSINFO_PSB_LEGACY);
++	IEEE80211_SET_TSINFO_UP(tspec->ts_info, ifsta->ts_data[tsid][index].up);
+ 
+ 	ieee80211_sta_tx(dev, skb, 0);
+ }
+-- 
+1.5.0.rc2.g73a2
