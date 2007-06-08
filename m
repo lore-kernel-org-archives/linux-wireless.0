@@ -1,65 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40861 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753197AbXFUKme (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:20041 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S935002AbXFHBhs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2007 06:42:34 -0400
-Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: mabbas <mabbas@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <46137FF2.6020203@linux.intel.com>
-References: <1174909200.1364.56.camel@dell-4965.jf.intel.com>
-	 <1175111599.5151.123.camel@johannes.berg>
-	 <46137FF2.6020203@linux.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-W1W1EwvSAAdEKlOdzs4o"
-Date: Wed, 20 Jun 2007 23:13:39 +0200
-Message-Id: <1182374019.3714.87.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 7 Jun 2007 21:37:48 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] mac80211: Set low initial rate in rc80211_simple
+Date: Thu, 7 Jun 2007 18:37:08 -0700
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+References: <4668a726.gQ0fmk5ZDAnWoXla%Larry.Finger@lwfinger.net>
+In-Reply-To: <4668a726.gQ0fmk5ZDAnWoXla%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart16878390.3o9VBemi3o";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200706071837.13084.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-W1W1EwvSAAdEKlOdzs4o
-Content-Type: text/plain
+--nextPart16878390.3o9VBemi3o
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Mohamed,
+On Thursday 07 June 2007 17:47, Larry Finger wrote:
+> +		    (mode->rates[i].flags & IEEE80211_RATE_SUPPORTED)) {
+> +			if (mode->rates[i].rate < min_rate) {
+> +				min_rate =3D mode->rates[i].rate;
+> +				sta->txrate =3D i;
+> +			}
+You can just use the first supported rate you find. The rest of the rate=20
+control code makes the assumption that lower rate indices are more reliable=
+=20
+than higher ones.
 
-> +		padding =3D calc_pad_len(subframe_len);
-> +		/* the last MSDU has no padding */
-> +		if (subframe_len > remaining)
-> +			return TXRX_DROP;
-> +
-> +		frame =3D dev_alloc_skb(local->hw.extra_tx_headroom +=20
-> +				      subframe_len);
-> +
-> +		if (frame =3D=3D NULL)=20
-> +			return TXRX_DROP;
-> +
-> +		memcpy(skb_put(frame, subframe_len), (u8*)eth, subframe_len);
-> +		frame->mac.raw =3D frame->data;
-> +		skb2 =3D NULL;
+=2DMichael Wu
 
-Here you allocate a new frame which can be sent back to the device when
-one of the aggregated frames was a multicast frame and we're an AP
-device. You also correctly add extra_tx_headroom, but it seems that this
-is missing some skb_reserve(extra_tx_headroom), no? Could you make a
-patch adding it? I'm not sure I fully understand the code there.
-
-johannes
-
---=-W1W1EwvSAAdEKlOdzs4o
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart16878390.3o9VBemi3o
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBGeZiC/ETPhpq3jKURAguRAKCFNbO3GCv9W9nZ0uP6oekaZZc6QgCdFpUd
-QIDUNS3YEo8ztPMPXSrKupU=
-=Nr7N
+iD8DBQBGaLLJT3Oqt9AH4aERAgLyAKCBL6sjG4ftM0ad8QwwAEgkGP33VwCaAuA5
+xMh17PRqm5KTwvaBuZvYZo8=
+=tvb7
 -----END PGP SIGNATURE-----
 
---=-W1W1EwvSAAdEKlOdzs4o--
-
+--nextPart16878390.3o9VBemi3o--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
