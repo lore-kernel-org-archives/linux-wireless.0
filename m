@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:62521 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752026AbXFLTuo (ORCPT
+Received: from dhost002-59.dex002.intermedia.net ([64.78.21.242]:16986 "EHLO
+	dhost002-59.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751381AbXFHVpD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2007 15:50:44 -0400
-Received: by an-out-0708.google.com with SMTP id d31so486315and
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2007 12:50:44 -0700 (PDT)
-Message-ID: <1d9d9b240706121250uc8e52f8s146285fc37f13562@mail.gmail.com>
-Date: Tue, 12 Jun 2007 21:50:43 +0200
-From: "David Planella" <david.planella@googlemail.com>
-To: acx100@hauke-m.de
-Subject: ACX100 Website
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Fri, 8 Jun 2007 17:45:03 -0400
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Fri, 8 Jun 2007 14:45:34 -0700
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V3] mac80211: Set low initial rate in rc80211_simple
+Message-ID: <20070608214534.GB26702@devicescape.com>
+References: <200706072205.27902.flamingice@sourmilk.net> <20070608112146.2df3608c@griffin.suse.cz> <20070608145821.GD14078@devicescape.com> <43e72e890706081112k76e17827t4c66dbccdcee0e03@mail.gmail.com> <20070608183446.GJ14078@devicescape.com> <43e72e890706081310j47ed891cl1ebb132e65517db3@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890706081310j47ed891cl1ebb132e65517db3@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hauke,
+On Fri, Jun 08, 2007 at 04:10:10PM -0400, Luis R. Rodriguez wrote:
+> On 6/8/07, Jouni Malinen <jkm@devicescape.com> wrote:
 
-I noticed you created a page for building the mac80211 acx driver, nice job!
+> >One related issue is the requirement for not transmitting continuously
+> >for longer than a quite short time period before sensing the medium
+> >again (this is from Japan).
 
-Anyway, what I wanted to say, as I noticed you are the webmaster of
-the acx100 driver project:
+> Wow, aren't those regulatory requirements breaking the spec? I wonder
+> if loading a different rate algorithm depending on regdomain would do
+> the job in a case like this.
 
-* The links on the wiki pointing to the forum and the mailing list
-(the ones always on the left of the page) are broken. I guess
-sourceforge changed the links.
+What do you mean by breaking the spec? Local regulations come first and
+whatever is to be used to transmit better comply with those no matter
+what the IEEE 802.11 standard says. Just using a different rate
+algorithm may not be enough to handle this kind of cases. There needs
+to be a way to enforce some rules like the maximum continuous
+transmission at a lower layer and somehow adjust the parameters if
+needed.
 
-* The same applies for those links on the main project site.
+This particular rule may not be too much of an issue for now since it
+came up in a case where non-standard TX rate were used (i.e., something
+below the minimum used in 802.11a). Anyway, we should try to be able to
+handle whatever rules comes up now or in the future. Of course, one way
+of handling limitations is not to allow transmissions at all, but that
+may not always be the ideal solution.
 
-But more importantly, it seems that the acx100 mailing list is down.
-None of the messages from the thread [1] on netdev the other day seem
-to have appeared in acx100-devel, although all the posters CC'ed
-acx100-devel. That could be a bit of a problem, since I don't know
-whether everyone in acx100-devel follows netdev or linux-wireless, so
-the last bit of activity on the driver might go unnoticed for some
-users.
-
-I just thought I'd mention it.
-
-Regards,
-David Planella.
-
-[1] http://www.spinics.net/lists/netdev/msg33265.html
+-- 
+Jouni Malinen                                            PGP id EFC895FA
