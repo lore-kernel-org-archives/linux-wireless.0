@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 91-65-240-14-dynip.superkabel.de ([91.65.240.14]:56576 "EHLO
-	charon.n2.diac24.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1755594AbXFLNPT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2007 09:15:19 -0400
-Date: Tue, 12 Jun 2007 15:15:00 +0200
-From: David Lamparter <dl@diac24.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Lamparter <lists@diac24.net>, Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] {cfg,nl}80211 API
-Message-ID: <20070612131458.GA6411@charon.n2.diac24.net>
-References: <20070611230434.GA13221@charon.n2.diac24.net> <1181639707.29767.57.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20070611230434.GA13221@charon.n2.diac24.net>
+Received: from styx.suse.cz ([82.119.242.94]:33690 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1763013AbXFHKHZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jun 2007 06:07:25 -0400
+Date: Fri, 8 Jun 2007 12:07:32 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
+Message-ID: <20070608120732.419332ee@griffin.suse.cz>
+In-Reply-To: <1181266477.3039.97.camel@debian.sh.intel.com>
+References: <20070606082210.GA28649@mail.intel.com>
+	<20070607223058.44122be4@griffin.suse.cz>
+	<1181266477.3039.97.camel@debian.sh.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, 08 Jun 2007 09:34:37 +0800, Zhu Yi wrote:
+> On Thu, 2007-06-07 at 22:30 +0200, Jiri Benc wrote:
+> > > +#define SET_TSINFO_SCHEDULE(i, d)	(i.byte3 |= (d << 0) & 0x01)
+> > 
+> > Please add IEEE80211_ prefix here as well. For consistency and not
+> > polluting a name space.
+> 
+> Point accepted.
 
-just for fun, I created a graph of wext->nl80211 mappings:
-http://git.spaceboyz.net/?p=nl80211/nl80211-meta.git;a=blob_plain;f=nl80211-map.png;hb=865687f294a84d7847ed7a05aa63de5cbb1a0c89
-- wext stuff marked red means I have no idea what that ioctl does
-- lines marked blue mean I'm not sure whether that's correct
-- nl80211 cmds in lowercase and light green aren't outlined yet
+Thanks :-)
 
-So, what's left?
-> - more PHY config stuff?
->   - TX power? Should be able to configure a lower value...
->   - antenna selection?
-      - antenna diversity, as noted by Holger Schurig
-- the entire regulatory stuff
+> I think we have talked this early and now you know correctly WIFI is not
+> a trademark. You define IEEE80211_STYPE_ASSOC_REQ, etc, but defines
+> those for Wi-Fi with WLAN prefix? WLAN prefix should be used by symbols
+> defined by mac80211, for example: WLAN_CAPABILITY_ESS.
 
-For this, my first idea (included in that graph) would be to have a
-GET_REGULATORY_CAPS command which returns whether the device has a fixed
-list of regdomains or whether it can load anything. Depending on that,
-either SELECT_REGDOMAIN or SET_CHANLIST can be used. For the chanlist,
-there would be additional attributes specifying stuff like max power,
-active scanning, etc.
+You and Jouni are right, WLAN_ is used for IEEE 802.11 stuff. So
+another prefix makes sense here. And I realized my other comment wasn't
+meaningful too, as also IEEE 802.11 is a trademark. ACK for those
+names, thanks for the clarification.
 
-Other new:
-- {get,set}{mac,radio} for tx power (within regulatory limits), retry
-  stuff, antennas?, etc.
+ Jiri
 
-What I totally missed is that there also is no rate configuration command
-yet (!). Do we want that in SET_CHANNEL? (and rename it to SET_PHY?)
-
--David
-
+-- 
+Jiri Benc
+SUSE Labs
