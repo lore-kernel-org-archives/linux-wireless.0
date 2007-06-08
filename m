@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39081 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754893AbXFMT5N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2007 15:57:13 -0400
-Message-ID: <46704C14.8010907@garzik.org>
-Date: Wed, 13 Jun 2007 15:57:08 -0400
-From: Jeff Garzik <jeff@garzik.org>
+Received: from mga06.intel.com ([134.134.136.21]:15746 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S969363AbXFHUtV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jun 2007 16:49:21 -0400
+Message-ID: <4669A477.9080203@linux.intel.com>
+Date: Fri, 08 Jun 2007 11:48:23 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Dan Williams <dcbw@redhat.com>
-Subject: Re: Please pull 'libertas-upstream' branch of wireless-2.6
-References: <20070529183347.GD3496@tuxdriver.com> <20070612210544.GF310@tuxdriver.com> <20070612210658.GG310@tuxdriver.com> <20070612210814.GH310@tuxdriver.com>
-In-Reply-To: <20070612210814.GH310@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: zergavis <zergavis@o2.pl>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: mac80211 "wme.c:398" error
+References: <1279688715.20070608205031@o2.pl>
+In-Reply-To: <1279688715.20070608205031@o2.pl>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> Patches identified by the libertas team as suitable for 2.6.23...
+zergavis wrote:
+> Hi,
 > 
-> ---
+> My name is Pawel Bieniek, and I'm new on this list.
 > 
-> The following changes since commit 82fde74b94f11eee1e9c30e43fb162f80a5e63c0:
->   Luis Carlos (1):
->         libertas: convert libertas_mpp into anycast_mask
+> Today I was trying to compile mac80211 into my kernel (2.6.21.4) on
+> archlinux. I need it to run intel 4965AGN on my toshiba satelite A200
+> notebook.
 > 
-> are found in the git repository at:
+> Unfortunately, it returns an error during compilation:
 > 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git libertas-upstream
+> net/mac80211/wme.c: In function 'wme_qdiscop_destroy':
+> net/mac80211/wme.c:358: warning: implicit declaration of function 
+> 'tcf_destroy_chain'
+> net/mac80211/wme.c: In function 'wme_qdiscop_init':
+> net/mac80211/wme.c:398: warning: dereferencing 'void *' pointer
+> net/mac80211/wme.c:398: error: request for member 'wiphy' in something not 
+> a structure or union
+> 
+> Could someone help me handle with this?
 
-since it sounds like some additional 2.6.22 (warning?) fixes will be 
-coming, I'm going to hold off pulling this.  I would rather the wireless 
-maintainer sort out the merging in this case :)  Once 2.6.22 is all 
-upstream, please do resend this push...
+I just uploaded mac80211-8.0.1.tgz at:
 
+	http://intellinuxwireless.org/?p=mac80211?n=downloads
 
+I ran a build tests against 2.6.18 and 2.6.21-rc1.
+
+I did a run-time test on 2.6.21-rc1 (32-bit) w/ iwl3945 and CONFIG_NET_SCHED=y
+
+Let me know if you have any more build issues.
+
+Thanks,
+James
