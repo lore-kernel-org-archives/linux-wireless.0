@@ -1,53 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4072 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752112AbXFNU0h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2007 16:26:37 -0400
-Date: Thu, 14 Jun 2007 16:08:44 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	dcbw@redhat.com, hs4233@mail.mn-solutions.de,
-	linux-kernel@vger.kernel.org, marcelo@kvack.org
-Subject: Re: libertas (private) ioctls vs. nl80211
-Message-ID: <20070614200844.GC28917@tuxdriver.com>
-References: <1181757483.29767.99.camel@johannes.berg> <20070614170901.GA13384@infradead.org> <20070614103836.23b07a72.akpm@linux-foundation.org> <20070614181307.GA16856@infradead.org> <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org> <20070614190936.GA28917@tuxdriver.com> <20070614125618.a7338ad8.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070614125618.a7338ad8.akpm@linux-foundation.org>
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:44872 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933212AbXFHAur (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2007 20:50:47 -0400
+Message-ID: <4668A7E5.3070500@lwfinger.net>
+Date: Thu, 07 Jun 2007 19:50:45 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Jiri Benc <jbenc@suse.cz>
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [PATCH] mac80211: rc80211_lowest, a dumb rate control algorithm
+References: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>	<20070607221939.444e9d74@griffin.suse.cz>	<20070607222113.0f752bf8@griffin.suse.cz> <20070607222210.1a445cd7@griffin.suse.cz>
+In-Reply-To: <20070607222210.1a445cd7@griffin.suse.cz>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 14, 2007 at 12:56:18PM -0700, Andrew Morton wrote:
-> On Thu, 14 Jun 2007 15:09:36 -0400
-> "John W. Linville" <linville@tuxdriver.com> wrote:
+Jiri Benc wrote:
+> This allows the lowest rate to be used all time.
 > 
-> > It does not make sense to me to rip this out purely for aesthetic
-> > reasons.
+> To switch to this algorithm:
+> echo -n lowest > {your_debugfs_mount_point}/ieee80211/phy?/rate_ctrl_alg
 > 
-> Aesthetics are good, but that's not the main issue.
-> 
-> What is most worrying is that there appears to be a risk that these
-> newly-added interfaces will later become obsoleted by another interface. 
-> This means that we'll need to maintain, test and support _both_ interfaces
-> for a very long time.  This is the sort of foot-shooting we should avoid.
+> Signed-off-by: Jiri Benc <jbenc@suse.cz>
 
-True enough.  However, I hope you will agree that we should not
-confuse foresight with speculation.
+I do not think this particular rate control algorithm is needed. A patch has been submitted that 
+will allow the user to use the SIOCSIWRATE ioctl to lock in a rate. In addition, a patch that 
+changes rc80211_simple to set the initial rate to the lowest supported value has also been 
+submitted. With these two alternatives, everything that this proposed module does is supported in 
+other ways.
 
-At present there is no sign on the horizon of either any mac80211
-mesh code or any other full-MAC wireless driver supporting mesh.
-Without either of those, it would seem imprudent to rush toward
-a gneric configuration interface even if nl80211 was prepared to
-sprout one.
+Larry
 
-John
-
-P.S.  If someone wants to announce either mesh support for mac80211
-or a driver for a new full-MAC device supporting mesh, I'm prepared
-to be wrong! :-)
--- 
-John W. Linville
-linville@tuxdriver.com
