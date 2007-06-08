@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:48424
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752592AbXFTVBp (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58861 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752819AbXFHTR6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2007 17:01:45 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] bcm43xx: honour promisc bit even in monitor mode
-Date: Wed, 20 Jun 2007 23:01:25 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1182295838.3714.14.camel@johannes.berg>
-In-Reply-To: <1182295838.3714.14.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200706202301.25890.mb@bu3sch.de>
+	Fri, 8 Jun 2007 15:17:58 -0400
+Subject: Re: mac80211 "wme.c:398" error
+From: Johannes Berg <johannes@sipsolutions.net>
+To: zergavis <zergavis@o2.pl>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1279688715.20070608205031@o2.pl>
+References: <1279688715.20070608205031@o2.pl>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ocQUZ8EoqgfkKgehivXX"
+Date: Fri, 08 Jun 2007 21:18:14 +0200
+Message-Id: <1181330294.6533.81.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 20 June 2007 01:30:38 Johannes Berg wrote:
-> When bcm43xx goes into monitor mode, it always is a promisc monitor
-> mode. For the hostapd using monitor interfaces, we'll want to only go
-> into monitor mode if it's really required. I previously thought that
-> this requires changes to mac80211, but mac80211 does in fact already
-> seem to handle IFF_PROMISC appropriately. Hence, this change is the
-> only required to get proper semantics for a monitor interface that
-> isn't in promiscuous mode on bcm43xx.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> 
-> ---
-> Since wireshark/tcpdump by default still set IFF_PROMISC everything will
-> work just fine, but if somebody really wants a monitor interface that
-> isn't promisc this makes it work too. However, you'll of course get all
-> packets still if any other interface is set promisc. We don't do any
-> promisc/non-promisc filtering in the stack when multiple monitor
-> interfaces are open.
 
-Applied, thanks.
+--=-ocQUZ8EoqgfkKgehivXX
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Greetings Michael.
+On Fri, 2007-06-08 at 20:50 +0200, zergavis wrote:
+
+> net/mac80211/wme.c: In function 'wme_qdiscop_destroy':
+> net/mac80211/wme.c:358: warning: implicit declaration of function=20
+> 'tcf_destroy_chain'
+> net/mac80211/wme.c: In function 'wme_qdiscop_init':
+> net/mac80211/wme.c:398: warning: dereferencing 'void *' pointer
+> net/mac80211/wme.c:398: error: request for member 'wiphy' in something no=
+t=20
+> a structure or union
+>=20
+> Could someone help me handle with this?
+
+enable CONFIG_NET_SCHED for now.
+
+johannes
+
+--=-ocQUZ8EoqgfkKgehivXX
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGaat1/ETPhpq3jKURAjQCAJsGbz3JPJLr8ClojtXtQe5oln0PCwCeKjkZ
+AzV6Cmkz4NKzZL8qFOtIkoE=
+=q69F
+-----END PGP SIGNATURE-----
+
+--=-ocQUZ8EoqgfkKgehivXX--
+
