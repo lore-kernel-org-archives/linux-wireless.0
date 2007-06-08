@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51409.mail.re2.yahoo.com ([206.190.38.188]:29345 "HELO
-	web51409.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758894AbXFHKGq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2007 06:06:46 -0400
-Date: Fri, 8 Jun 2007 03:06:45 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: Re: Status IBSS/Ad-Hoc and AP/Master mode support in zd1211rw-mac80211?
-To: linux-wireless@vger.kernel.org
+Received: from mga06.intel.com ([134.134.136.21]:35505 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754952AbXFGV1D (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2007 17:27:03 -0400
+Message-ID: <4668DBE1.5090201@linux.intel.com>
+Date: Thu, 07 Jun 2007 21:32:33 -0700
+From: jketreno <jketreno@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-ID: <999439.54687.qm@web51409.mail.re2.yahoo.com>
+To: Jiri Benc <jbenc@suse.cz>
+CC: yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
+References: <20070606082210.GA28649@mail.intel.com> <20070607223058.44122be4@griffin.suse.cz>
+In-Reply-To: <20070607223058.44122be4@griffin.suse.cz>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please can somebody reply?
+Jiri Benc wrote:
+> On Wed, 6 Jun 2007 16:22:10 +0800, Zhu Yi wrote:
+>> --- a/include/linux/ieee80211.h
+>> +++ b/include/linux/ieee80211.h
+>> @@ -106,6 +106,52 @@ struct ieee80211_hdr {
+...
+>> +enum wifi_oui_stype_wmm {
+>> +	WIFI_OUI_STYPE_WMM_INFO = 0,
+>> +	WIFI_OUI_STYPE_WMM_PARAM = 1,
+>> +	WIFI_OUI_STYPE_WMM_TSPEC = 2,
+>> +};
+> 
+> Please don't invent new useless prefixes.
 
-I have a USB adapter supported by this driver sitting on my shelf and a=
-m afraid to open the box because I might have to send it back.
-=20
--- =20
-Regards
-=20
-       Joerg
+It doesn't really look like he invented a 'new useless' prefix.  It looks to me like he picked a prefix that correlates attribution of the data declaration to the entity that created it.  You may not like that he provided attribution, but that doesn't mean its useless.
 
------ Urspr=FCngliche Mail ----
-Von: Joerg Pommnitz <pommnitz@yahoo.com>
-An: linux-wireless@vger.kernel.org
-Gesendet: Mittwoch, den 6. Juni 2007, 15:30:09 Uhr
-Betreff: Status IBSS/Ad-Hoc and AP/Master mode support in zd1211rw-mac8=
-0211?
+If you'd rather use a different prefix, send a patch to fix it.
 
-Hello all,
-according to http://www.linuxwireless.org/en/users/Drivers/zd1211rw
-neither IBSS nor AP mode is currently working in zd1211rw-mac80211.
-Is this information still correct? If so, any idea what it would take t=
-o get
-this working?
-=20
--- =20
-Thanks in advance
+> Also, a registered trademark doesn't seem to be a good prefix.
 
-=20
-       Joerg
-=20
+Who holds 'WIFI' as a registered trademark?
 
-
-
-
-
-
-       __________________________________ Yahoo! Clever - Der einfachst=
-e Weg, Fragen zu stellen und Wissenswertes mit Anderen zu teilen. www.y=
-ahoo.de/clever
-
-
-
-
-
-
-
-      __________________________________  Kennt man wirklich jeden =FCb=
-er 3 Ecken? Die Antworten gibt's bei Yahoo! Clever. www.yahoo.de/clever
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James
