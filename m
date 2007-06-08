@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:34350 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751955AbXFKPWN (ORCPT
+Received: from dhost002-73.dex002.intermedia.net ([64.78.20.109]:19819 "EHLO
+	DHOST002-73.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S969680AbXFHSeE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 11:22:13 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 5D7058D125
-	for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2007 17:22:07 +0200 (CEST)
-Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id EA3041048A
-	for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2007 15:22:32 +0000 (UTC)
-Message-Id: <20070611152120.078733592@warmcat.com>
-Date: Mon, 11 Jun 2007 16:21:20 +0100
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH Try#9 0/4] Radiotap injection for Monitor Mode
+	Fri, 8 Jun 2007 14:34:04 -0400
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Fri, 8 Jun 2007 11:34:46 -0700
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V3] mac80211: Set low initial rate in rc80211_simple
+Message-ID: <20070608183446.GJ14078@devicescape.com>
+References: <200706072205.27902.flamingice@sourmilk.net> <20070608112146.2df3608c@griffin.suse.cz> <20070608145821.GD14078@devicescape.com> <43e72e890706081112k76e17827t4c66dbccdcee0e03@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890706081112k76e17827t4c66dbccdcee0e03@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches add the ability to inject packets down a monitor mode interface for 
-transmission according to a prepended radiotap header.
+On Fri, Jun 08, 2007 at 02:12:57PM -0400, Luis R. Rodriguez wrote:
+> On 6/8/07, Jouni Malinen <jkm@devicescape.com> wrote:
+> >There are some odd cases, where disabling the lowest supported rate may
+> >even be required due to regulatory rules..
 
-For injecting packets, the you issue a packet using libpcap or a SOCK_PACKET
-socket down an interface to the wireless device that is in Monitor Mode.  The packet
-has a normal radiotap header prepended to the IEEE80211 header.  The radiotap header
-is variable length depending on what the user wants to specify, currently the
-transmit rate, power and antenna can be specified using normal radiotap semantics.
-Any other entries are skipped.
+> Just curious -- are you aware of a regulatory domain where this is the
+> case? Who defines those rules? For example, AFAICT FCC only talk about
+> power, and spectrum ranges. Where would I even look for these type of
+> restrictions?
 
-The radiotap parser is broken out into its own file under cfg80211.
+I don't remember all the details, but one case I've heard of was about
+a rule that specified high bandwidth wireless operations and what
+exactly would be high enough to be acceptable. And no, this was not
+from FCC. Unfortunately, I do not have any good pointers for where to
+look for this type of restrictions in an easy to use form (as in
+something that I could easily understand ;-).
 
-A usermode app packetspammer is available from here
+One related issue is the requirement for not transmitting continuously
+for longer than a quite short time period before sensing the medium
+again (this is from Japan). This may require at least fragmentation
+based on TX rate (i.e., if low rate is used, fragmentation threshold
+needs to be set lower) and in some cases, it may just be easier to drop
+the lowest TX rates completely to avoid frames that may take long time
+to transmit.
 
-http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
-
-which allows easy injection of these packets from the commandline.  At the moment it
-loops issuing packets at a variety of rates which can be seen from another
-machine's monitor mode interface on the same channel.  There are instructions for
-build and using it on the page above.
-
-Currently it has been tested for both rx and tx using zd1211rw-mac80211.
-
-The patches are based against current wireless-dev.
-
-I also added some documentation files which explains how to use the injection
-functionality and radiotap header notes.
 -- 
+Jouni Malinen                                            PGP id EFC895FA
