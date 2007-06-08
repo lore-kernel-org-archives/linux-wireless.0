@@ -1,55 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:50034 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764547AbXF2Nfl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2007 09:35:41 -0400
-From: Michal Schmidt <mschmidt@redhat.com>
-Subject: [PATCH 1/5] airo: disable the PCI device when unloading module
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	Matteo Croce <rootkit85@yahoo.it>
-Date: Fri, 29 Jun 2007 15:33:30 +0200
-Message-ID: <20070629133330.6658.44086.stgit@localhost.localdomain>
-In-Reply-To: <20070629131841.6658.76381.stgit@localhost.localdomain>
-References: <20070629131841.6658.76381.stgit@localhost.localdomain>
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:58292 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1763659AbXFHM1Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jun 2007 08:27:24 -0400
+Message-ID: <46694B29.4060304@lwfinger.net>
+Date: Fri, 08 Jun 2007 07:27:21 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [PATCH] mac80211: rc80211_lowest, a dumb rate control algorithm
+References: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>	 <20070607221939.444e9d74@griffin.suse.cz>	 <20070607222113.0f752bf8@griffin.suse.cz>	 <20070607222210.1a445cd7@griffin.suse.cz> <4668A7E5.3070500@lwfinger.net>	 <20070608105900.4c401e14@griffin.suse.cz> <1181293589.6533.25.camel@johannes.berg>
+In-Reply-To: <1181293589.6533.25.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix an assymetry between pci_{enable,disable}_device. airo did not disable
-the PCI device when unloading the module. This caused suspend failures
-after modprobe -r airo && modprobe airo.
+Johannes Berg wrote:
+> On Fri, 2007-06-08 at 10:59 +0200, Jiri Benc wrote:
+> 
+>>> I do not think this particular rate control algorithm is needed. A patch has been submitted that 
+>>> will allow the user to use the SIOCSIWRATE ioctl to lock in a rate. In addition, a patch that 
+>>> changes rc80211_simple to set the initial rate to the lowest supported value has also been 
+>>> submitted. With these two alternatives, everything that this proposed module does is supported in 
+>>> other ways.
+>> Ok.
+> 
+> Actually, I'd vote for having this rate control algorithm anyway because
+> it's basically a rate control algorithm template you can copy and
+> modify. rc80211_simple is quite a bit more sophisticated over that.
+> 
+> johannes
 
-Signed-off-by: Michal Schmidt <mschmidt@redhat.com>
----
+If the comments include the idea that this is an template for the rate control mechanism, I withdraw 
+my objection.
 
- drivers/net/wireless/airo.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index 2d3a180..57da70b 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -5597,8 +5597,10 @@ static int __devinit airo_pci_probe(struct pci_dev *pdev,
- 			dev = _init_airo_card(pdev->irq, pdev->resource[0].start, 0, pdev, &pdev->dev);
- 	else
- 			dev = _init_airo_card(pdev->irq, pdev->resource[2].start, 0, pdev, &pdev->dev);
--	if (!dev)
-+	if (!dev) {
-+		pci_disable_device(pdev);
- 		return -ENODEV;
-+	}
- 
- 	pci_set_drvdata(pdev, dev);
- 	return 0;
-@@ -5610,6 +5612,8 @@ static void __devexit airo_pci_remove(struct pci_dev *pdev)
- 
- 	airo_print_info(dev->name, "Unregistering...");
- 	stop_airo_card(dev, 1);
-+	pci_disable_device(pdev);
-+	pci_set_drvdata(pdev, NULL);
- }
- 
- static int airo_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+Larry
 
