@@ -1,31 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:53542 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756897AbXFCKdi (ORCPT
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:59263 "EHLO
+	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764488AbXFHAru (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jun 2007 06:33:38 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so1378306mue
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Jun 2007 03:33:36 -0700 (PDT)
-Message-ID: <7b4bf7ff0706030333j21152541hed9384e965cacaa9@mail.gmail.com>
-Date: Sun, 3 Jun 2007 12:33:36 +0200
-From: "Olivier Cornu" <o.cornu@gmail.com>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] mac80211: Add module parameter for setting initial rate in rc80211_simple
-Cc: "Jiri Benc" <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-In-Reply-To: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>
+	Thu, 7 Jun 2007 20:47:50 -0400
+Date: Thu, 07 Jun 2007 19:47:34 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Set low initial rate in rc80211_simple
+Message-ID: <4668a726.gQ0fmk5ZDAnWoXla%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/6/2, Larry Finger <Larry.Finger@lwfinger.net>:
-> The initial rate for STA's using rc80211_simple is set to the last
-> rate in the rate table. This is too fast for the bcm43xx-mac80211
-> driver. To correct this situation without affecting any other driver,
-> an initial_rate parameter is added to the rc80211_simple module.
+The initial rate for STA's using rc80211_simple is set to the last
+rate in the rate table. For situations for which the signal is weak,
+the rate may be too high for authentication and association. Although
+the rc80211_simple module will adjust the speed, the response may not
+be fast enough for a successful connection. This modification sets the
+initial rate to the lowest supported value.
 
-What if two different mac80211 device drivers need two different initial rates?
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
---
-Olivier Cornu
+
+Index: wireless-dev/net/mac80211/rc80211_simple.c
+===================================================================
+--- wireless-dev.orig/net/mac80211/rc80211_simple.c
++++ wireless-dev/net/mac80211/rc80211_simple.c
+@@ -281,16 +281,21 @@ static void rate_control_simple_rate_ini
+ {
+ 	struct ieee80211_hw_mode *mode;
+ 	int i;
++	int min_rate = 1000;
++
+ 	sta->txrate = 0;
+ 	mode = local->oper_hw_mode;
+-	/* TODO: what is a good starting rate for STA? About middle? Maybe not
+-	 * the lowest or the highest rate.. Could consider using RSSI from
+-	 * previous packets? Need to have IEEE 802.1X auth succeed immediately
+-	 * after assoc.. */
+-	for (i = 0; i < mode->num_rates; i++) {
++	/* TODO: This routine should consider using RSSI from previous packets
++	 * as we need to have IEEE 802.1X auth succeed immediately after assoc..
++	 * Until that method is implemented, we will use the lowest supported rate
++	 * as a workaround, */
++	for (i = 0; i < mode->num_rates; i++)
+ 		if ((sta->supp_rates & BIT(i)) &&
+-		    (mode->rates[i].flags & IEEE80211_RATE_SUPPORTED))
+-			sta->txrate = i;
++		    (mode->rates[i].flags & IEEE80211_RATE_SUPPORTED)) {
++			if (mode->rates[i].rate < min_rate) {
++				min_rate = mode->rates[i].rate;
++				sta->txrate = i;
++			}
+ 	}
+ }
+ 
