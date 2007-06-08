@@ -1,63 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57344 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756745AbXF1Qdk (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:53213 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S969960AbXFIAQG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2007 12:33:40 -0400
-Subject: Re: [RFC/PATCH] debug workqueue deadlocks with lockdep
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ingo Molnar <mingo@redhat.com>
-Cc: Arjan van de Ven <arjan@linux.intel.com>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1182969638.4769.56.camel@johannes.berg>
-References: <1182969638.4769.56.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uMpuGcvJ42F0wUS/qSa5"
-Date: Thu, 28 Jun 2007 18:33:49 +0200
-Message-Id: <1183048429.4089.1.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 8 Jun 2007 20:16:06 -0400
+Message-ID: <4669D4EA.3010401@linux.intel.com>
+Date: Fri, 08 Jun 2007 15:15:06 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: Please pull patch-bomb for iwlwifi
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch series catches wireless-dev up to the stand-alone 
+iwlwifi tree.
 
---=-uMpuGcvJ42F0wUS/qSa5
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I don't have a kernel tree for pulls to be made against.  The commit 
+series for the changes below can be found in the patch bomb:
 
-On Wed, 2007-06-27 at 20:40 +0200, Johannes Berg wrote:
+    iwlwifi-8af8d95343e10cae5876907dc5b75b536c53bcb3.tgz
+at
+    http://intellinuxwireless.org/iwlwifi/patches/
 
-> --- linux-2.6-git.orig/kernel/workqueue.c	2007-06-27 19:10:35.183199046 +=
-0200
-> +++ linux-2.6-git/kernel/workqueue.c	2007-06-27 20:30:00.896667168 +0200
-> @@ -61,8 +61,15 @@ struct workqueue_struct {
->  	const char *name;
->  	int singlethread;
->  	int freezeable;		/* Freeze threads during suspend */
-> +#ifdef CONFIG_LOCKDEP
-> +	struct lockdep_map lockdep_map;
-> +#endif
->  };
-> =20
-> +#ifdef CONFIG_LOCKDEP
-> +static struct lock_class_key wq_lockdep_key;
-> +#endif
+This is based on wireless-dev commit:
 
-I think I misunderstood how lockdep works because the output was
-actually wrong, should the key be part of the workqueue_struct as well?
+    3480b61c08559777c57b95e346507b26253ca8bb
 
-johannes
+Signed-off-by: James Ketrenos <jketreno@linux.intel.com>
+---
+ drivers/net/wireless/mac80211/iwlwifi/Makefile       |    6 
+ drivers/net/wireless/mac80211/iwlwifi/base.c         |  809 +++++--
+ drivers/net/wireless/mac80211/iwlwifi/iwl-3945-rs.c  |  969 +++++++++
+ drivers/net/wireless/mac80211/iwlwifi/iwl-3945-rs.h  |   72 
+ drivers/net/wireless/mac80211/iwlwifi/iwl-3945.c     |   33 
+ drivers/net/wireless/mac80211/iwlwifi/iwl-4965-hw.h  |  263 +-
+ drivers/net/wireless/mac80211/iwlwifi/iwl-4965-rs.c  | 2013 +++++++++++++++++++
+ drivers/net/wireless/mac80211/iwlwifi/iwl-4965-rs.h  |  285 ++
+ drivers/net/wireless/mac80211/iwlwifi/iwl-4965.c     | 1586 ++++++++++----
+ drivers/net/wireless/mac80211/iwlwifi/iwl-4965.h     |   88 
+ drivers/net/wireless/mac80211/iwlwifi/iwl-channel.h  |   26 
+ drivers/net/wireless/mac80211/iwlwifi/iwl-commands.h |   55 
+ drivers/net/wireless/mac80211/iwlwifi/iwl-debug.h    |    6 
+ drivers/net/wireless/mac80211/iwlwifi/iwl-eeprom.h   |   44 
+ drivers/net/wireless/mac80211/iwlwifi/iwl-helpers.h  |  117 -
+ drivers/net/wireless/mac80211/iwlwifi/iwl-hw.h       |   91 
+ drivers/net/wireless/mac80211/iwlwifi/iwl-io.h       |   38 
+ drivers/net/wireless/mac80211/iwlwifi/iwl-priv.h     |   17 
+ drivers/net/wireless/mac80211/iwlwifi/iwlwifi.h      |   37 
+ 19 files changed, 5532 insertions(+), 1023 deletions(-)
+---
+Ben M Cahill (1):
+      iwlwifi: Improve readability and content of 4965 error log.
 
---=-uMpuGcvJ42F0wUS/qSa5
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Hong Liu (12):
+      iwlwifi: remove priv->down and add priv->restart
+      iwlwifi: fix rf-kill problem
+      iwlwifi: rf-kill resume fix
+      iwlwifi: fix wireless interface missing after resume
+      iwlwifi: station manipulation functions cleanup
+      iwlwifi: reformat function iwl_sync_staion
+      iwlwifi: replace warn_unused_result with __must_check
+      iwlwifi: kill magic nums in iwl_eeprom_init
+      iwlwifi: free ucode_data_backup
+      iwlwifi: remove IWL == 3945 block in iwl-4965.c
+      iwlwifi: fix iwl_read_ucode endian issue
+      iwlwifi: remove FREE_FRAME_THRESHOLD reference
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+James Ketrenos (14):
+      iwlwifi: Removed iwl_link_up and repurposed iwl_link_down
+      iwlwifi: Add 3945 specific rate control algorithm back in
+      iwlwifi: Added comment indicating why pci.h is needed in iwlwifi.h
+      iwlwifi: Update version base.c stamp to 0.0.22
+      iwlwifi: Leading whitespace problem typo.
+      iwlwifi: Update version base.c stamp to 0.0.24
+      iwlwifi: Fix warning in iwl_set_bits on 32-bit boundary bit-fields
+      iwlwifi: Removed old comment about iwl-4965.c not being functional
+      iwlwifi: whitespace fixes for labels incorrectly indented
+      iwlwifi: Fixed clean_whitespace to correct leading spaces vs. tabs
+      iwlwifi: Fixed leading space vs. tab inconsistencies
+      iwlwifi: Fixed problem with building when CONFIG_IWLWIFI_HT=n
+      iwlwifi: Resolve style issues reported by checkpatch.pl
+      iwlwifi: Update version base.c stamp to 0.0.25
 
-iD8DBQBGg+Lt/ETPhpq3jKURAgK7AKCTY4e2N/M+4rWX8PrM8Toyuq+LZACgiPDn
-9TjECpFb/ZM3wuUpmYdOhRk=
-=OmGJ
------END PGP SIGNATURE-----
+Mohamed Abbas (2):
+      iwlwifi: add iwl4965 rate scaling
+      iwlwifi: add 11n connection support
 
---=-uMpuGcvJ42F0wUS/qSa5--
+Tomas Winkler (6):
+      iwlwifi: removed unused constant MAX_REAL_TX_QUEUE_NUM
+      iwlwifi: RTS_DEFAULT_RETRY_LIMIT FIX (4965)
+      iwlwifi: correct tx cmd byte count constants
+      iwlwifi: iwlwifif: iwl4965_kw_free fix
+      iwlwifi: ieee80211_get_qos_ctrl - corrected
+      iwlwifi: iwl_dma_addr2rbd_ptr - commit
 
+mabbas (6):
+      iwlwifi: Calculate 4965 temperature immediately after "initialize" alive
+      iwlwifi: Replace "-", which could easily be misread as a negative sign, with ":"
+      iwlwifi: fix stabilty with switching between AP
+      iwlwifi: reset 11n data on startup
+      iwlwifi: add sensitivity calibration
+      iwlwifi: add ibss connection support
