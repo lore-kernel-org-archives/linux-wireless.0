@@ -1,39 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 91-65-240-14-dynip.superkabel.de ([91.65.240.14]:50783 "EHLO
-	charon.n2.diac24.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1756468AbXFMMeN (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39603 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S968785AbXFHIVU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2007 08:34:13 -0400
-Date: Wed, 13 Jun 2007 14:33:35 +0200
-From: David Lamparter <lists@diac24.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: David Lamparter <lists@diac24.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211: use nl80211_* enums
-Message-ID: <20070613123333.GA3440@charon.n2.diac24.net>
-References: <20070611221224.GA10598@charon.n2.diac24.net> <200706122355.36078.flamingice@sourmilk.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <200706122355.36078.flamingice@sourmilk.net>
+	Fri, 8 Jun 2007 04:21:20 -0400
+Subject: Re: [PATCH -mm] mac80211: fix 1-bit bitfield to unsigned
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: linux-wireless@vger.kernel.org, akpm <akpm@linux-foundation.org>,
+	jbenc@suse.cz, flamingice@sourmilk.net, Zhu Yi <yi.zhu@intel.com>
+In-Reply-To: <1181290254.6533.11.camel@johannes.berg>
+References: <20070606150254.de49d627.randy.dunlap@oracle.com>
+	 <1181290254.6533.11.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-paRMEoO2uUUzr45Ur96U"
+Date: Fri, 08 Jun 2007 10:21:36 +0200
+Message-Id: <1181290896.6533.16.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > +#include <linux/nl80211.h>
->
-> It seems to me that cfg80211 shouldn't depend on nl80211, so the 
-> nl80211_iftype enum should be moved to cfg80211.h and become cfg80211_iftype.
 
-That's not possible because nl80211_{iftype,phymode} are userspace API.
-If they were defined in cfg80211.h, nl80211.h would need to at least mirror
-them. And since nl80211.h can't include cfg80211.h (since the former is a
-"public" header supposed to go to /usr/include with some linux-headers-*
-package), this way around is the simplest and cleanest solution.
+--=-paRMEoO2uUUzr45Ur96U
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Anyway, I don't really think including a header to be a "dependency". You
-can disable the nl80211 implementation and still use the API enum just
-fine. (Note that nl80211.h contains enums, more enums and ONLY enums :)
+On Fri, 2007-06-08 at 10:10 +0200, Johannes Berg wrote:
+> Very interesting. We were wondering why the latest git tree doesn't show
+> tons of endianness warnings, but it appears that when sparse finds these
+> dubious bitfields it turns off all other warnings.
+>=20
+> Zhu Yi, can you apply this patch to your tree and review your code and
+> the sparse output and stick le16_to_cpu()/le32_to_cpu() into the
+> appropriate places? A whole bunch of things there are endianness broken
+> and sparse probably only gives you an approximation of what errors there
+> are.
 
--David
+Oh, forgot to mention you need to run
+make C=3D2 CHECKFLAGS=3D"-D__CHECK_ENDIAN__" M=3Dnet/mac80211/
+
+(if you weren't aware already.)
+
+johannes
+
+--=-paRMEoO2uUUzr45Ur96U
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGaRGQ/ETPhpq3jKURArUTAJ4zL4cUsq7Ua165kLJLnu4+YAoqNgCgsod3
+A245WUKgLmTyyPL0FdyMOTQ=
+=Awlt
+-----END PGP SIGNATURE-----
+
+--=-paRMEoO2uUUzr45Ur96U--
 
