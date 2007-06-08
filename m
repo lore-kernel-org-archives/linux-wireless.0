@@ -1,161 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39665 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753207AbXFVImj (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:46431 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967760AbXFHNfL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2007 04:42:39 -0400
-Message-Id: <20070621221800.482300000@sipsolutions.net>
-References: <20070621221603.778432000@sipsolutions.net>
-Date: Fri, 22 Jun 2007 00:16:15 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-Subject: [PATCH 12/14] mac80211: move some rate control functions out of  ieee80211.c
-Mime-Version: 1.0
+	Fri, 8 Jun 2007 09:35:11 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: IEEE802.11e/WMM TS management and DLS support
+Date: Fri, 8 Jun 2007 16:35:04 +0300
+Message-ID: <D0122E209EBF8D4CAB38EC6A8AF244E502A6AC1F@hasmsx412.ger.corp.intel.com>
+In-Reply-To: <1181295029.6533.45.camel@johannes.berg>
+From: "Cohen, Guy" <guy.cohen@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Michael Wu" <flamingice@sourmilk.net>, "Jouni Malinen" <j@w1.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I think these can go with rate control just as well and it makes
-ieee80211.c more readable.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
----
- net/mac80211/ieee80211.c      |   41 -----------------------------------------
- net/mac80211/ieee80211_i.h    |    2 --
- net/mac80211/ieee80211_rate.c |   42 ++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/ieee80211_rate.h |    6 ++++++
- 4 files changed, 48 insertions(+), 43 deletions(-)
+>> Switch to DLS intelligently in the user space sounds good
+>> but it doesn't relate to the kernel <-> user space API, you can do it
+>> all in the user space.
+>
+> Actually, it does, because you do need all the information to make
+that
+> decision. I don't think we have per-MAC-address traffic statistics or
+> something.
 
---- wireless-dev.orig/net/mac80211/ieee80211.c	2007-06-21 23:41:18.698638003 +0200
-+++ wireless-dev/net/mac80211/ieee80211.c	2007-06-21 23:41:34.598638003 +0200
-@@ -1546,47 +1546,6 @@ void ieee80211_if_mgmt_setup(struct net_
- 	dev->destructor = ieee80211_if_free;
- }
- 
--int ieee80211_init_rate_ctrl_alg(struct ieee80211_local *local,
--				 const char *name)
--{
--	struct rate_control_ref *ref, *old;
--
--	ASSERT_RTNL();
--	if (local->open_count || netif_running(local->mdev) ||
--	    (local->apdev && netif_running(local->apdev)))
--		return -EBUSY;
--
--	ref = rate_control_alloc(name, local);
--	if (!ref) {
--		printk(KERN_WARNING "%s: Failed to select rate control "
--		       "algorithm\n", local->mdev->name);
--		return -ENOENT;
--	}
--
--	old = local->rate_ctrl;
--	local->rate_ctrl = ref;
--	if (old) {
--		rate_control_put(old);
--		sta_info_flush(local, NULL);
--	}
--
--	printk(KERN_DEBUG "%s: Selected rate control "
--	       "algorithm '%s'\n", local->mdev->name,
--	       ref->ops->name);
--
--
--	return 0;
--}
--
--static void rate_control_deinitialize(struct ieee80211_local *local)
--{
--	struct rate_control_ref *ref;
--
--	ref = local->rate_ctrl;
--	local->rate_ctrl = NULL;
--	rate_control_put(ref);
--}
--
- 
- struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 					const struct ieee80211_ops *ops)
---- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-06-21 23:42:31.898638003 +0200
-+++ wireless-dev/net/mac80211/ieee80211_i.h	2007-06-21 23:43:44.138638003 +0200
-@@ -803,8 +803,6 @@ void ieee80211_tx_set_iswep(struct ieee8
- int ieee80211_if_update_wds(struct net_device *dev, u8 *remote_addr);
- void ieee80211_if_setup(struct net_device *dev);
- void ieee80211_if_mgmt_setup(struct net_device *dev);
--int ieee80211_init_rate_ctrl_alg(struct ieee80211_local *local,
--				 const char *name);
- struct net_device_stats *ieee80211_dev_stats(struct net_device *dev);
- struct ieee80211_rate *ieee80211_get_rate(struct ieee80211_local *local,
- 					  int phymode, int hwrate);
---- wireless-dev.orig/net/mac80211/ieee80211_rate.c	2007-06-21 23:41:37.238638003 +0200
-+++ wireless-dev/net/mac80211/ieee80211_rate.c	2007-06-21 23:44:56.968638003 +0200
-@@ -9,6 +9,7 @@
-  */
- 
- #include <linux/kernel.h>
-+#include <linux/rtnetlink.h>
- #include "ieee80211_rate.h"
- #include "ieee80211_i.h"
- 
-@@ -138,3 +139,44 @@ void rate_control_put(struct rate_contro
- {
- 	kref_put(&ref->kref, rate_control_release);
- }
-+
-+int ieee80211_init_rate_ctrl_alg(struct ieee80211_local *local,
-+				 const char *name)
-+{
-+	struct rate_control_ref *ref, *old;
-+
-+	ASSERT_RTNL();
-+	if (local->open_count || netif_running(local->mdev) ||
-+	    (local->apdev && netif_running(local->apdev)))
-+		return -EBUSY;
-+
-+	ref = rate_control_alloc(name, local);
-+	if (!ref) {
-+		printk(KERN_WARNING "%s: Failed to select rate control "
-+		       "algorithm\n", local->mdev->name);
-+		return -ENOENT;
-+	}
-+
-+	old = local->rate_ctrl;
-+	local->rate_ctrl = ref;
-+	if (old) {
-+		rate_control_put(old);
-+		sta_info_flush(local, NULL);
-+	}
-+
-+	printk(KERN_DEBUG "%s: Selected rate control "
-+	       "algorithm '%s'\n", local->mdev->name,
-+	       ref->ops->name);
-+
-+
-+	return 0;
-+}
-+
-+void rate_control_deinitialize(struct ieee80211_local *local)
-+{
-+	struct rate_control_ref *ref;
-+
-+	ref = local->rate_ctrl;
-+	local->rate_ctrl = NULL;
-+	rate_control_put(ref);
-+}
---- wireless-dev.orig/net/mac80211/ieee80211_rate.h	2007-06-21 23:42:58.208638003 +0200
-+++ wireless-dev/net/mac80211/ieee80211_rate.h	2007-06-21 23:43:54.298638003 +0200
-@@ -141,4 +141,10 @@ static inline void rate_control_remove_s
- #endif
- }
- 
-+
-+/* functions for rate control related to a device */
-+int ieee80211_init_rate_ctrl_alg(struct ieee80211_local *local,
-+				 const char *name);
-+void rate_control_deinitialize(struct ieee80211_local *local);
-+
- #endif /* IEEE80211_RATE_H */
+FWIW, need to take into consideration:
 
--- 
+1) STA1 and STA2 are close to each other, but far from the AP. DLS will
+most probably improve the link between them and the medium utilization.
 
+2) STA1 and STA2 are far away from each other and the AP is between
+them. DLS _may_ deteriorate the connection between STAs and the medium
+utilization, or even may not be possible at all.
+
+IMO, The decision to initiate a DLS link should _ideally_ be based not
+only on the traffic properties but also on statistics of the actual rate
+used between each of the participants including packets sent to/from the
+peer STA (This is not easy as it requires the initiating STA to get into
+promiscuous mode for some time while it is connected to the AP, prior to
+establishing the DLS).
+
+Perhaps providing the user a manual way to configure DLS connection
+between two STAs is good enough for now and can be useful also later
+when an intelligent method is in place.
+
+Guy.
