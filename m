@@ -1,94 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:42866 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763843AbXFEOoL (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:20777 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S966465AbXFHDNi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2007 10:44:11 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so55678nfb
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jun 2007 07:44:11 -0700 (PDT)
-Message-ID: <466576AB.1090806@googlemail.com>
-Date: Tue, 05 Jun 2007 16:43:55 +0200
+	Thu, 7 Jun 2007 23:13:38 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH V2] mac80211: Implementation of SIOCSIWRATE
+Date: Thu, 7 Jun 2007 20:12:52 -0700
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+References: <4668a64b.VmU9f2GpA2itSuFx%Larry.Finger@lwfinger.net> <200706071819.45603.flamingice@sourmilk.net> <4668C577.4030008@lwfinger.net>
+In-Reply-To: <4668C577.4030008@lwfinger.net>
 MIME-Version: 1.0
-To: Linus Torvalds <torvalds@linux-foundation.org>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
-	Michael Buesch <mb@bu3sch.de>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Gary Zambrano <zambrano@broadcom.com>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Andrey Borzenkov <arvidjaar@mail.ru>,
-	Paulo Pereira <pfmp.404@gmail.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Bjorn Helgaas <bjorn.helgaas@hp.com>,
-	linux-pcmcia@lists.infradead.org,
-	Robert de Rooy <robert.de.rooy@gmail.com>,
-	Alan Cox <alan@redhat.com>, Tejun Heo <htejun@gmail.com>
-Subject: Re: [3/5] 2.6.22-rc4: known regressions
-References: <46657407.1000108@googlemail.com>
-In-Reply-To: <46657407.1000108@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-2;
-	format=flowed
-From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart3266336.lrfYDDyjEG";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200706072012.56652.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+--nextPart3266336.lrfYDDyjEG
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Here is a list of some known regressions in 2.6.22-rc4.
+On Thursday 07 June 2007 19:56, Larry Finger wrote:
+> When I leave this part out, the rate _NEVER_ gets set, no matter what you
+> say. My experiments say that it is needed.
+>
+That's because force_unicast_rateidx and max_ratectrl_rateidx is being set =
+in=20
+the wrong struct ieee80211_if_ap. (how did I miss that..) sdata->u.ap is on=
+ly=20
+valid when sdata->type =3D=3D IEEE80211_IF_TYPE_AP, yet it's being accessed=
+=20
+without any mode checks. sdata->bss should be used instead.
 
-=46eel free to add new regressions/remove fixed etc.
-http://kernelnewbies.org/known_regressions
+=2DMichael Wu
 
+--nextPart3266336.lrfYDDyjEG
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-Networking
+iD8DBQBGaMk4T3Oqt9AH4aERAvv+AKDZ5f5pVSfA06tvhaHJze6aOn+EUwCeJm1M
+sGSr0vqaL+SvvazpsDkDrNs=
+=wSdt
+-----END PGP SIGNATURE-----
 
-Subject    : list_add corruption. prev->next should be next (f7d28794),=
- but was f0df8ed4 (prev=3Df0df8ed4) Kernel Bug at lib/list_debug.c:33
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8561
-Submitter  : Paulo Pereira <pfmp.404@gmail.com>
-Handled-By : Alan Stern <stern@rowland.harvard.edu>
-Status     : problem is being debugged
-
-Subject    : no irda0 interface (2.6.21 was OK), smsc does not find chi=
-p
-References : http://lkml.org/lkml/2007/6/3/16
-Submitter  : Andrey Borzenkov <arvidjaar@mail.ru>
-Handled-By : Samuel Ortiz <samuel@sortiz.org>
-             Bjorn Helgaas <bjorn.helgaas@hp.com>
-Status     : problem is being debugged
-
-Subject    : b44: regression in 2.6.22
-References : http://lkml.org/lkml/2007/5/27/108
-Submitter  : Maximilian Engelhardt <maxi@daemonizer.de>
-Handled-By : Gary Zambrano <zambrano@broadcom.com>
-             Michael Buesch <mb@bu3sch.de>
-             Thomas Gleixner <tglx@linutronix.de>
-Status     : problem is being debugged
-
-
-
-PCMCIA
-
-Subject    : libata and legacy ide pcmcia failure
-References : http://lkml.org/lkml/2007/5/17/305
-Submitter  : Robert de Rooy <robert.de.rooy@gmail.com>
-Status     : Unknown
-
-
-
-Regards,
-Michal
-
---
-"Najbardziej brakowa=B3o mi twojego milczenia."
--- Andrzej Sapkowski "Co=B6 wi=EAcej"
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--nextPart3266336.lrfYDDyjEG--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
