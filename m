@@ -1,110 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 91-65-240-14-dynip.superkabel.de ([91.65.240.14]:34913 "EHLO
-	charon.n2.diac24.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1752854AbXFMNSV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2007 09:18:21 -0400
-Date: Wed, 13 Jun 2007 15:18:13 +0200
-From: David Lamparter <lists@diac24.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Lamparter <lists@diac24.net>, Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-Subject: Re: [RFC] {cfg,nl}80211 API - 802.11j
-Message-ID: <20070613131812.GA5493@charon.n2.diac24.net>
-References: <20070611230434.GA13221@charon.n2.diac24.net> <1181730155.29767.77.camel@johannes.berg>
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:43308 "EHLO amd.ucw.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1759620AbXFIWAr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jun 2007 18:00:47 -0400
+Date: Sat, 9 Jun 2007 23:57:12 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Cc: ipw2100-admin@linux.intel.com
+Subject: Re: ipw3945 driver in recent -mm kernels
+Message-ID: <20070609215712.GA13678@elf.ucw.cz>
+References: <20070609192703.GA6410@elf.ucw.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1181730155.29767.77.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070609192703.GA6410@elf.ucw.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > - struct ieee80211_channel:
-> >   use (phymode, channel, 80211n-mode) as "key"; kill off frequency
-> >   (which will move to some get_channel_foobar function)
->=20
-> Hmm. Maybe we should've kept frequency. How do we want to handle
-> dot11ChannelStartingFactor (see 17.3.8.3.2 Channel numbering in
-> 802.11j), I quote:
->=20
-> Change the text of 17.3.8.3.2 as follows:
-> Channel center frequencies are defined at every integral multiple of =
-5 MHz above Channel starting
-> frequency. The relationship between center frequency and channel numb=
-er is given by Equation (27):
->=20
->    Channel center frequency =3D Channel starting frequency + (nch =C3=
-=97 5) (MHz)                      (27)
->=20
+Hi!
 
-(nl80211 part:)
+> I tried to use `subj`, but hit few problems:
+> 
+> There's no maintainers entry. Should
+> 
+>  James P. Ketrenos <ipw2100-admin@linux.intel.com> 
+> 
+> be listed as a maintainer?
+> 
+> Kconfig mentions...
+> 
+>           See <file:Documentation/networking/README.iwlwifi> for
+>           information on the capabilities currently enabled in this
+>           driver and for tips for debugging issues and problems.
+> 
+> ...but that file does not exist.
 
-Well, I would handle it exactly like that. Keep channel numbers, add
-channel starting frequency as configurable (regulatory?) parameter for =
-the
-device.
+More problems: 
 
-The mapping between channel numbers an frequencies, while for most case=
-s
-fixed, can't be assumed to be so under all circumstances. Applications
-should use CMD_GET_CHANLIST to get a list of stuff supported. If the de=
-vice
-is configured to use 11j 4.9GHz band, that list might for example conta=
-in:
+I managed to load the firmware and insert the module.... but I had
+radio kill switch on. It complained that kill switch is on, but
+turning it off did not help. Module unload/reload was neccessary to
+get it to work.
 
- mode=3D80211A   channel=3D184  # frequency=3D4920
- mode=3D80211A10 channel=3D184  # frequency=3D4920
- mode=3D80211A10 channel=3D186  # frequency=3D4930
+I still do not see the wlan led. It seems to scan okay, but I can't
+seem to connect, and I get this in logs:
 
-(no idea whether that channel exists, example pulled from hot air using
-channel start =3D 4000M)
+Jun  9 23:53:21 amd kernel: wlan0: deauthenticated
+Jun  9 23:53:21 amd kernel: wlan0: RX deauthentication from
+00:11:2f:0e:95:a0 (reason=4)
+Jun  9 23:53:21 amd last message repeated 2 times
+Jun  9 23:53:22 amd kernel: wlan0: authenticate with AP
+00:11:2f:0e:95:a0
+Jun  9 23:53:22 amd kernel: wlan0: RX authentication from
+00:11:2f:0e:95:a0 (alg=0 transaction=2 status=0)
+Jun  9 23:53:22 amd kernel: wlan0: authenticated
+Jun  9 23:53:22 amd kernel: wlan0: associate with AP 00:11:2f:0e:95:a0
+Jun  9 23:53:22 amd kernel: wlan0: authentication frame received from
+00:11:2f:0e:95:a0, but not in authenticate state - ignored
+Jun  9 23:53:22 amd last message repeated 2 times
+Jun  9 23:53:22 amd kernel: wlan0: RX ReassocResp from
+00:11:2f:0e:95:a0 (capab=0x401 status=0 aid=2)
+Jun  9 23:53:22 amd kernel: wlan0: associated
+Jun  9 23:53:24 amd kernel: wlan0: No ProbeResp from current AP
+00:11:2f:0e:95:a0 - assume out of range
+Jun  9 23:53:43 amd kernel: e1000: eth0: e1000_watchdog: NIC Link is
+Up 100 Mbps Full Duplex, Flow Control: RX/TX
+Jun  9 23:53:43 amd kernel: e1000: eth0: e1000_watchdog: 10/100 speed:
+disabling TSO
+Jun  9 23:53:56 amd kernel: wlan0: No STA entry for own AP
+00:11:2f:0e:95:a0
+Jun  9 23:54:12 amd kernel: iwl3945: Microcode SW error detected.
+Restarting 0x82000000.
+Jun  9 23:54:12 amd kernel: iwl3945: Error Reply type 0x0000003A cmd
+REPLY_RXON_ASSOC (0x11) seq 0x0447 ser 0x00000000
+Jun  9 23:54:12 amd kernel: iwl3945: Error setting RXON_ASSOC
+configuration (-5).
+Jun  9 23:54:13 amd kernel: iwl3945: Error sending REPLY_RXON: time
+out after 500ms.
+Jun  9 23:54:13 amd kernel: iwl3945: Error setting new configuration
+(-110).
+Jun  9 23:54:15 amd kernel: iwl3945: Error sending REPLY_ADD_STA: time
+out after 500ms.
+Jun  9 23:54:15 amd kernel: iwl3945: ipw going down
+Jun  9 23:54:15 amd kernel: iwl3945: Can't stop Rx DMA.
+Jun  9 23:54:15 amd kernel: iwl3945: Grabbing access while already
+held at line 825.
+Jun  9 23:54:15 amd kernel: iwl3945: Microcode SW error detected.
+Restarting 0x82000000.
+Jun  9 23:54:15 amd kernel: iwl3945: Error Reply type 0x000004EB cmd
+REPLY_TX_PWR_TABLE_CMD (0x97) seq 0x0402 ser 0x00000000
+Jun  9 23:54:15 amd kernel: iwl3945: ipw going down
+Jun  9 23:54:16 amd kernel: iwl3945: Can't stop Rx DMA.
+Jun  9 23:54:16 amd kernel: iwl3945: Grabbing access while already
+held at line 825.
+Jun  9 23:54:16 amd kernel: iwl3945: Microcode SW error detected.
+Restarting 0x82000000.
+Jun  9 23:54:16 amd kernel: iwl3945: Error Reply type 0x000004EB cmd
+REPLY_TX_PWR_TABLE_CMD (0x97) seq 0x0402 ser 0x00000000
+Jun  9 23:54:16 amd kernel: iwl3945: ipw going down
+Jun  9 23:54:17 amd kernel: iwl3945: Can't stop Rx DMA.
+Jun  9 23:54:17 amd kernel: iwl3945: Grabbing access while already
+held at line 825.
 
-(cfg80211 part:)
+What are the next steps?
 
-Now the real question is how to handle that inside the kernel... you're
-right, unless we introduce a channel_to_freq function which takes both
-the channel structure *and* the base frequency as parameters, we need t=
-o
-have the frequency in struct ieee80211_channel.
+									Pavel
 
-Anyone feel like elaborating (dis)advantages of those two? Drivers migh=
-t
-actually be setting their RF using the channel value, having a non-matc=
-hing
-freq might confuse things... OTOH, having the final frequency is nice
-too... this requires some thought :/.
-
-=2E.. since for most devices there is a fixed (phymode)->(channel_start=
-)
-mapping, I'm tempted to say "have channel_start be a mode parameter" fo=
-r
-now.
-
-Anyway, 802.11j needs configurable channel *width* too (10M/20M). I'd a=
-dd
-it as "80211A10" phymode; that wouldn't require any new API or stuff. A=
-nd
-for setting the channel starting frequency, the regulatory API might bo=
-th
-make sense and be the closest thing related.
-
-
-(btw, I think we should multicast NL80211_CMD_NEW_CHANLIST notification=
-s
-on regulatory updates).
-
-
--David
-
-P.S.: Just for fun, we could actually have the set_channel part work on
-802.16 (WiMAX) devices too :) - we only need to return an appropriate
-channel list, define a phymode value and *poof* universal channel switc=
-her
-:)
-P.P.S.: Just joking.
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
