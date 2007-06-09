@@ -1,29 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:55268 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760204AbXFABBf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2007 21:01:35 -0400
-Subject: Re: [TAKE 2][PATCH 0/3] IEEE802.11e/WMM TS management and DLS  support
-From: Zhu Yi <yi.zhu@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <20070531180445.GB3706@tuxdriver.com>
-References: <20070525115205.GA23301@mail.intel.com>
-	 <20070531180445.GB3706@tuxdriver.com>
-Content-Type: text/plain
-Date: Fri, 01 Jun 2007 09:01:39 +0800
-Message-Id: <1180659699.3109.101.camel@debian.sh.intel.com>
-Mime-Version: 1.0
+Received: from smtp156.iad.emailsrvr.com ([207.97.245.156]:41530 "EHLO
+	smtp156.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752190AbXFIDvP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jun 2007 23:51:15 -0400
+Message-ID: <466A2383.50001@gentoo.org>
+Date: Fri, 08 Jun 2007 23:50:27 -0400
+From: Daniel Drake <dsd@gentoo.org>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RFC: Regulatory info in mac80211
+References: <4665CCE7.5090409@lwfinger.net>
+In-Reply-To: <4665CCE7.5090409@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-05-31 at 14:04 -0400, John W. Linville wrote:
-> Please also submit a patch series that applies against
-> linux-2.6.22-rc3 (or later) and adds whatever else might be needed
-> that is missing there.  This one changes code that is currently only
-> in wireless-dev. 
+Larry Finger wrote:
+> 5. There should be a scheme for translating country codes based on the 
+> outdated table 105 in Corrigendum 1 for 802.11b. This is the basis for 
+> the EEPROM data in the ZD1211 hardware. Note, this scheme is far too 
+> limited to be the only one available. If the translation code is needed 
+> for more than one driver, it should be placed in mac80211.
 
-Thanks! Will do.
+You might wish to treat the fact that the ZD1211 EEPROM regdomain field 
+appears to correspond to the 802.11b specs as just a coincidence. Some 
+newer devices have regdomain values that are not in that table (and are 
+not even mentioned in the vendor driver...)
 
--yi
+Daniel
