@@ -1,65 +1,409 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:8055 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753919AbXFLPPj (ORCPT
+Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:7516 "EHLO
+	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751619AbXFISHR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2007 11:15:39 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Please pull libertas-2.6
-Date: Tue, 12 Jun 2007 17:15:33 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>
-References: <1181102122.18061.8.camel@xo-28-0B-88.localdomain> <200706121519.09758.hs4233@mail.mn-solutions.de> <20070612140529.GD310@tuxdriver.com>
-In-Reply-To: <20070612140529.GD310@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200706121715.33187.hs4233@mail.mn-solutions.de>
+	Sat, 9 Jun 2007 14:07:17 -0400
+From: Daniel Drake <dsd@gentoo.org>
+To: jbenc@suse.cz
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: regulatory domain cleanup
+Message-Id: <20070609180715.02BC17B409F@zog.reactivated.net>
+Date: Sat,  9 Jun 2007 19:07:14 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> FWIW, waiting for the merge window is generally frowned upon. 
-> If at all possible you should submit patches now or ASAP so
-> that Jeff and I have a reasonable chance to review them and
-> they can make their way into -mm for some testing BEFORE the
-> merge window opens.
+Currently, a function misnamed ieee80211_init_client() is used to handle
+regulatory domain control. It is called from
+ieee80211_register_hwmode(), which typically runs 2 or 3 times
+(802.11a/b/g), but each time it iterates over all the modes.
 
-Yeah, but I'm still very much unfinished. It can:
+This patch cleans this up and removes the confusion:
+ieee80211_init_client was effectively renamed to
+ieee80211_set_default_regdomain and is now run on a per-mode basis
+(doesn't have to deal with netdevs). I also moved the regdomain handling
+code into its own file and added some documentation.
 
-* detect the card
-* setup the IO window
-* setup the ISR
-* download helper firmware
-* download real firmware
-* react to some (not ALL!) interrupts
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+---
+ net/mac80211/Makefile          |    1 +
+ net/mac80211/ieee80211.c       |    3 +-
+ net/mac80211/ieee80211_i.h     |    5 +-
+ net/mac80211/ieee80211_ioctl.c |  133 ----------------------------------
+ net/mac80211/regdomain.c       |  157 ++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 164 insertions(+), 135 deletions(-)
+ create mode 100644 net/mac80211/regdomain.c
 
-But, for example, it can not:
+diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
+index 40fe07c..0a88dd3 100644
+--- a/net/mac80211/Makefile
++++ b/net/mac80211/Makefile
+@@ -13,6 +13,7 @@ mac80211-objs := \
+ 	ieee80211_iface.o \
+ 	ieee80211_rate.o \
+ 	michael.o \
++	regdomain.o \
+ 	tkip.o \
+ 	aes_ccm.o \
+ 	wme.o \
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index e903197..113ae9d 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -4962,7 +4962,7 @@ int ieee80211_register_hwmode(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	if (!(hw->flags & IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED))
+-		ieee80211_init_client(local->mdev);
++		ieee80211_set_default_regdomain(mode);
+ 
+ 	return 0;
+ }
+@@ -5113,6 +5113,7 @@ static int __init ieee80211_init(void)
+ 	}
+ 
+ 	ieee80211_debugfs_netdev_init();
++	ieee80211_regdomain_init();
+ 
+ 	return 0;
+ }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 2bb34ff..49bb645 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -833,7 +833,6 @@ void ieee80211_update_default_wep_only(struct ieee80211_local *local);
+ /* ieee80211_ioctl.c */
+ int ieee80211_set_compression(struct ieee80211_local *local,
+ 			      struct net_device *dev, struct sta_info *sta);
+-int ieee80211_init_client(struct net_device *dev);
+ int ieee80211_set_channel(struct ieee80211_local *local, int channel, int freq);
+ /* ieee80211_sta.c */
+ void ieee80211_sta_timer(unsigned long data);
+@@ -895,6 +894,10 @@ void ieee80211_if_sdata_init(struct ieee80211_sub_if_data *sdata);
+ int ieee80211_if_add_mgmt(struct ieee80211_local *local);
+ void ieee80211_if_del_mgmt(struct ieee80211_local *local);
+ 
++/* regdomain.c */
++void ieee80211_regdomain_init(void);
++void ieee80211_set_default_regdomain(struct ieee80211_hw_mode *mode);
++
+ /* for wiphy privid */
+ extern void *mac80211_wiphy_privid;
+ 
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index 36dc32a..fcea8b2 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -27,20 +27,6 @@
+ #include "aes_ccm.h"
+ #include "debugfs_key.h"
+ 
+-static int ieee80211_regdom = 0x10; /* FCC */
+-module_param(ieee80211_regdom, int, 0444);
+-MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain; 64=MKK");
+-
+-/*
+- * If firmware is upgraded by the vendor, additional channels can be used based
+- * on the new Japanese regulatory rules. This is indicated by setting
+- * ieee80211_japan_5ghz module parameter to one when loading the 80211 kernel
+- * module.
+- */
+-static int ieee80211_japan_5ghz /* = 0 */;
+-module_param(ieee80211_japan_5ghz, int, 0444);
+-MODULE_PARM_DESC(ieee80211_japan_5ghz, "Vendor-updated firmware for 5 GHz");
+-
+ 
+ static int ieee80211_ioctl_set_beacon(struct net_device *dev,
+ 				      struct prism2_hostapd_param *param,
+@@ -1556,125 +1542,6 @@ static int ieee80211_ioctl_giwrange(struct net_device *dev,
+ }
+ 
+ 
+-struct ieee80211_channel_range {
+-	short start_freq;
+-	short end_freq;
+-	unsigned char power_level;
+-	unsigned char antenna_max;
+-};
+-
+-static const struct ieee80211_channel_range ieee80211_fcc_channels[] = {
+-	{ 2412, 2462, 27, 6 } /* IEEE 802.11b/g, channels 1..11 */,
+-	{ 5180, 5240, 17, 6 } /* IEEE 802.11a, channels 36..48 */,
+-	{ 5260, 5320, 23, 6 } /* IEEE 802.11a, channels 52..64 */,
+-	{ 5745, 5825, 30, 6 } /* IEEE 802.11a, channels 149..165, outdoor */,
+-	{ 0 }
+-};
+-
+-static const struct ieee80211_channel_range ieee80211_mkk_channels[] = {
+-	{ 2412, 2472, 20, 6 } /* IEEE 802.11b/g, channels 1..13 */,
+-	{ 5170, 5240, 20, 6 } /* IEEE 802.11a, channels 34..48 */,
+-	{ 5260, 5320, 20, 6 } /* IEEE 802.11a, channels 52..64 */,
+-	{ 0 }
+-};
+-
+-
+-static const struct ieee80211_channel_range *channel_range =
+-	ieee80211_fcc_channels;
+-
+-
+-static void ieee80211_unmask_channel(struct net_device *dev, int mode,
+-				     struct ieee80211_channel *chan)
+-{
+-	int i;
+-
+-	chan->flag = 0;
+-
+-	if (ieee80211_regdom == 64 &&
+-	    (mode == MODE_ATHEROS_TURBO || mode == MODE_ATHEROS_TURBOG)) {
+-		/* Do not allow Turbo modes in Japan. */
+-		return;
+-	}
+-
+-	for (i = 0; channel_range[i].start_freq; i++) {
+-		const struct ieee80211_channel_range *r = &channel_range[i];
+-		if (r->start_freq <= chan->freq && r->end_freq >= chan->freq) {
+-			if (ieee80211_regdom == 64 && !ieee80211_japan_5ghz &&
+-			    chan->freq >= 5260 && chan->freq <= 5320) {
+-				/*
+-				 * Skip new channels in Japan since the
+-				 * firmware was not marked having been upgraded
+-				 * by the vendor.
+-				 */
+-				continue;
+-			}
+-
+-			if (ieee80211_regdom == 0x10 &&
+-			    (chan->freq == 5190 || chan->freq == 5210 ||
+-			     chan->freq == 5230)) {
+-				    /* Skip MKK channels when in FCC domain. */
+-				    continue;
+-			}
+-
+-			chan->flag |= IEEE80211_CHAN_W_SCAN |
+-				IEEE80211_CHAN_W_ACTIVE_SCAN |
+-				IEEE80211_CHAN_W_IBSS;
+-			chan->power_level = r->power_level;
+-			chan->antenna_max = r->antenna_max;
+-
+-			if (ieee80211_regdom == 64 &&
+-			    (chan->freq == 5170 || chan->freq == 5190 ||
+-			     chan->freq == 5210 || chan->freq == 5230)) {
+-				/*
+-				 * New regulatory rules in Japan have backwards
+-				 * compatibility with old channels in 5.15-5.25
+-				 * GHz band, but the station is not allowed to
+-				 * use active scan on these old channels.
+-				 */
+-				chan->flag &= ~IEEE80211_CHAN_W_ACTIVE_SCAN;
+-			}
+-
+-			if (ieee80211_regdom == 64 &&
+-			    (chan->freq == 5260 || chan->freq == 5280 ||
+-			     chan->freq == 5300 || chan->freq == 5320)) {
+-				/*
+-				 * IBSS is not allowed on 5.25-5.35 GHz band
+-				 * due to radar detection requirements.
+-				 */
+-				chan->flag &= ~IEEE80211_CHAN_W_IBSS;
+-			}
+-
+-			break;
+-		}
+-	}
+-}
+-
+-
+-static int ieee80211_unmask_channels(struct net_device *dev)
+-{
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	struct ieee80211_hw_mode *mode;
+-	int c;
+-
+-	list_for_each_entry(mode, &local->modes_list, list) {
+-		for (c = 0; c < mode->num_channels; c++) {
+-			ieee80211_unmask_channel(dev, mode->mode,
+-						 &mode->channels[c]);
+-		}
+-	}
+-	return 0;
+-}
+-
+-
+-int ieee80211_init_client(struct net_device *dev)
+-{
+-	if (ieee80211_regdom == 0x40)
+-		channel_range = ieee80211_mkk_channels;
+-	ieee80211_unmask_channels(dev);
+-	return 0;
+-}
+-
+-
+ static int ieee80211_ioctl_siwmode(struct net_device *dev,
+ 				   struct iw_request_info *info,
+ 				   __u32 *mode, char *extra)
+diff --git a/net/mac80211/regdomain.c b/net/mac80211/regdomain.c
+new file mode 100644
+index 0000000..32e5dca
+--- /dev/null
++++ b/net/mac80211/regdomain.c
+@@ -0,0 +1,157 @@
++/*
++ * Copyright 2002-2005, Instant802 Networks, Inc.
++ * Copyright 2005-2006, Devicescape Software, Inc.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++/*
++ * This regulatory domain control implementation is known to be incomplete
++ * and confusing. mac80211 regulatory domain control will be significantly
++ * reworked in the not-too-distant future.
++ *
++ * For now, drivers wishing to control which channels are and aren't available
++ * are advised as follows:
++ *  - set the IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED flag
++ *  - continue to include *ALL* possible channels in the modes registered
++ *    through ieee80211_register_hwmode()
++ *  - for each allowable ieee80211_channel structure registered in the above
++ *    call, set the flag member to some meaningful value such as
++ *    IEEE80211_CHAN_W_SCAN | IEEE80211_CHAN_W_ACTIVE_SCAN |
++ *    IEEE80211_CHAN_W_IBSS.
++ *  - leave flag as 0 for non-allowable channels
++ *
++ * The usual implementation is for a driver to read a device EEPROM to
++ * determine which regulatory domain it should be operating under, then
++ * looking up the allowable channels in a driver-local table, then performing
++ * the above.
++ */
++
++#include <linux/module.h>
++#include <linux/netdevice.h>
++#include <net/mac80211.h>
++
++static int ieee80211_regdom = 0x10; /* FCC */
++module_param(ieee80211_regdom, int, 0444);
++MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain; 64=MKK");
++
++/*
++ * If firmware is upgraded by the vendor, additional channels can be used based
++ * on the new Japanese regulatory rules. This is indicated by setting
++ * ieee80211_japan_5ghz module parameter to one when loading the 80211 kernel
++ * module.
++ */
++static int ieee80211_japan_5ghz /* = 0 */;
++module_param(ieee80211_japan_5ghz, int, 0444);
++MODULE_PARM_DESC(ieee80211_japan_5ghz, "Vendor-updated firmware for 5 GHz");
++
++
++struct ieee80211_channel_range {
++	short start_freq;
++	short end_freq;
++	unsigned char power_level;
++	unsigned char antenna_max;
++};
++
++static const struct ieee80211_channel_range ieee80211_fcc_channels[] = {
++	{ 2412, 2462, 27, 6 } /* IEEE 802.11b/g, channels 1..11 */,
++	{ 5180, 5240, 17, 6 } /* IEEE 802.11a, channels 36..48 */,
++	{ 5260, 5320, 23, 6 } /* IEEE 802.11a, channels 52..64 */,
++	{ 5745, 5825, 30, 6 } /* IEEE 802.11a, channels 149..165, outdoor */,
++	{ 0 }
++};
++
++static const struct ieee80211_channel_range ieee80211_mkk_channels[] = {
++	{ 2412, 2472, 20, 6 } /* IEEE 802.11b/g, channels 1..13 */,
++	{ 5170, 5240, 20, 6 } /* IEEE 802.11a, channels 34..48 */,
++	{ 5260, 5320, 20, 6 } /* IEEE 802.11a, channels 52..64 */,
++	{ 0 }
++};
++
++
++static const struct ieee80211_channel_range *channel_range =
++	ieee80211_fcc_channels;
++
++
++static void ieee80211_unmask_channel(int mode, struct ieee80211_channel *chan)
++{
++	int i;
++
++	chan->flag = 0;
++
++	if (ieee80211_regdom == 64 &&
++	    (mode == MODE_ATHEROS_TURBO || mode == MODE_ATHEROS_TURBOG)) {
++		/* Do not allow Turbo modes in Japan. */
++		return;
++	}
++
++	for (i = 0; channel_range[i].start_freq; i++) {
++		const struct ieee80211_channel_range *r = &channel_range[i];
++		if (r->start_freq <= chan->freq && r->end_freq >= chan->freq) {
++			if (ieee80211_regdom == 64 && !ieee80211_japan_5ghz &&
++			    chan->freq >= 5260 && chan->freq <= 5320) {
++				/*
++				 * Skip new channels in Japan since the
++				 * firmware was not marked having been upgraded
++				 * by the vendor.
++				 */
++				continue;
++			}
++
++			if (ieee80211_regdom == 0x10 &&
++			    (chan->freq == 5190 || chan->freq == 5210 ||
++			     chan->freq == 5230)) {
++				    /* Skip MKK channels when in FCC domain. */
++				    continue;
++			}
++
++			chan->flag |= IEEE80211_CHAN_W_SCAN |
++				IEEE80211_CHAN_W_ACTIVE_SCAN |
++				IEEE80211_CHAN_W_IBSS;
++			chan->power_level = r->power_level;
++			chan->antenna_max = r->antenna_max;
++
++			if (ieee80211_regdom == 64 &&
++			    (chan->freq == 5170 || chan->freq == 5190 ||
++			     chan->freq == 5210 || chan->freq == 5230)) {
++				/*
++				 * New regulatory rules in Japan have backwards
++				 * compatibility with old channels in 5.15-5.25
++				 * GHz band, but the station is not allowed to
++				 * use active scan on these old channels.
++				 */
++				chan->flag &= ~IEEE80211_CHAN_W_ACTIVE_SCAN;
++			}
++
++			if (ieee80211_regdom == 64 &&
++			    (chan->freq == 5260 || chan->freq == 5280 ||
++			     chan->freq == 5300 || chan->freq == 5320)) {
++				/*
++				 * IBSS is not allowed on 5.25-5.35 GHz band
++				 * due to radar detection requirements.
++				 */
++				chan->flag &= ~IEEE80211_CHAN_W_IBSS;
++			}
++
++			break;
++		}
++	}
++}
++
++
++void ieee80211_set_default_regdomain(struct ieee80211_hw_mode *mode)
++{
++	int c;
++	for (c = 0; c < mode->num_channels; c++)
++		ieee80211_unmask_channel(mode->mode, &mode->channels[c]);
++}
++
++
++void ieee80211_regdomain_init(void)
++{
++	if (ieee80211_regdom == 0x40)
++		channel_range = ieee80211_mkk_channels;
++}
++
+-- 
+1.5.2.1
 
-* send commands to the device (I'm close, but
-  not yet there)
-* receive results from the device (dito)
-* receive data from the device (hey, even skb's
-  are new to me)
-* send data to the device
-
-So, in short: the driver isn't yet usable in any way. And so I 
-doubt you would want to see my current skeleton :-)
-
-
-
-I referred to the merge window because I doubt that I'll get my 
-code early enought into a submitable form -- and if I can't it 
-submit to YOU before the merge window closes, then you can't put 
-it upstream either. And so it might be that the libertas_cs code 
-will end up in 2.6.24, not 2.6.23. And Dan even mentioned 
-2.6.22, which is out-of-the-question, because a new driver is 
-hardly a fix.
-
-So, my plan is to submit the driver (or the patchset for the 
-driver) to either libertas-dev or wireless-dev as soon as I get 
-my first association to an AP via it. We can than think if the 
-driver should be added to some GIT tree. From then on I'll start 
-sending incremental patches.
-
-Do you think that makes sense?
