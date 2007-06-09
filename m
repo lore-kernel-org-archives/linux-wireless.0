@@ -1,45 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:18401 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1763761AbXFEXyP (ORCPT
+Received: from tur.go2.pl ([193.17.41.50]:33423 "EHLO tur.go2.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754621AbXFINI6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2007 19:54:15 -0400
-From: =?utf-8?q?I=C3=B1aky_P=C3=A9rez-Gonz=C3=A1lez?=
-	<inaky.perez-gonzalez@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: RFC: Regulatory info in mac80211
-Date: Tue, 5 Jun 2007 16:54:13 -0700
-Cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	"Tim Gardner" <tim.gardner@canonical.com>,
-	"Marcel Holtmann" <marcel@holtmann.org>,
-	"James Ketrenos" <jketreno@linux.intel.com>,
-	"Alan Cox" <alan@lxorguk.ukuu.org.uk>,
-	"Matt Norwood" <norwood@softwarefreedom.org>
-References: <4665CCE7.5090409@lwfinger.net> <43e72e890706051635s4c1d0a70p7e334edd8c6b3a38@mail.gmail.com>
-In-Reply-To: <43e72e890706051635s4c1d0a70p7e334edd8c6b3a38@mail.gmail.com>
+	Sat, 9 Jun 2007 09:08:58 -0400
+Received: from poczta.o2.pl (mx10.go2.pl [193.17.41.74])
+	by tur.go2.pl (o2.pl Mailer 2.0.1) with ESMTP id 34EA8230080
+	for <linux-wireless@vger.kernel.org>; Sat,  9 Jun 2007 15:08:54 +0200 (CEST)
+Date: Sat, 9 Jun 2007 15:06:56 +0200
+From: zergavis <zergavis@o2.pl>
+Reply-To: zergavis <zergavis@o2.pl>
+Message-ID: <679650342.20070609150656@o2.pl>
+To: James Ketrenos <jketreno@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re[2]: mac80211 "wme.c:398" error
+In-Reply-To: <4669A477.9080203@linux.intel.com>
+References: <1279688715.20070608205031@o2.pl> <4669A477.9080203@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200706051654.13712.inaky.perez-gonzalez@intel.com>
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 05 June 2007, Luis R. Rodriguez wrote:
-> On 6/5/07, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+Witam!
 
+W li=9Ccie datowanym 8 czerwca 2007 (20:48:23) napisano:
 
-> Besides having cfg80211 speak regulatory domains another idea is to
-> have a central frequency broker in the kernel so that besides just
-> working as a frequency broker for 802.11 regulatory compliance it can
-> also enhance interoperability between the different supported radio
-> types -- 802.11, bluetooth, ultrawideband (and any other that is added
-> to the kernel). This idea is still under development:
-> 
-> http://linuxwireless.org/en/developers/FrequencyBroker
+> zergavis wrote:
+>> Hi,
+>>=20
+>> My name is Pawel Bieniek, and I'm new on this list.
+>>=20
+>> Today I was trying to compile mac80211 into my kernel (2.6.21.4) on
+>> archlinux. I need it to run intel 4965AGN on my toshiba satelite A20=
+0
+>> notebook.
+>>=20
+>> Unfortunately, it returns an error during compilation:
+> I did a run-time test on 2.6.21-rc1 (32-bit) w/ iwl3945 and CONFIG_NE=
+T_SCHED=3Dy
 
-Which reminds me I have to add a link to the code repos.
+> Let me know if you have any more build issues.
+
+On 2.6.21.4 build ran just perfect.
+
+There were problems with build debug output for mac80211 (same wme.c -
+request for member 'wiphy'). I was enab=80le it to compile for test.
+Without debug output, it works fine.
 
 Thanks,
+pawel
 
--- Inaky
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
