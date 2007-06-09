@@ -1,74 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48735 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757999AbXFRIgZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2007 04:36:25 -0400
-Subject: Re: nl/cfg80211 scan result/event handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1182093224.14209.7.camel@xo-28-0B-88.localdomain>
-References: <1182023372.9058.68.camel@johannes.berg>
-	 <1182093224.14209.7.camel@xo-28-0B-88.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2AM3M0WRPabJ9lCrsRQO"
-Date: Mon, 18 Jun 2007 10:37:03 +0200
-Message-Id: <1182155823.5924.3.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from tur.go2.pl ([193.17.41.50]:56093 "EHLO tur.go2.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755295AbXFIXGJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jun 2007 19:06:09 -0400
+Received: from poczta.o2.pl (mx12.go2.pl [193.17.41.142])
+	by tur.go2.pl (o2.pl Mailer 2.0.1) with ESMTP id B8644230CC4
+	for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2007 01:06:06 +0200 (CEST)
+Received: from poczta.o2.pl (mx12 [127.0.0.1])
+	by poczta.o2.pl (Postfix) with ESMTP id 826513E805C
+	for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2007 01:00:02 +0200 (CEST)
+Received: from Z-98C0293EFA704 (87-205-40-155.adsl.inetia.pl [87.205.40.155])
+	by poczta.o2.pl (Postfix) with ESMTP
+	for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2007 01:00:02 +0200 (CEST)
+Date: Sun, 10 Jun 2007 00:59:57 +0200
+From: zergavis <zergavis@o2.pl>
+Reply-To: zergavis <zergavis@o2.pl>
+Message-ID: <93387350.20070610005957@o2.pl>
+To: linux-wireless@vger.kernel.org
+Subject: iwlwifi - not compatible with xorg 7.1 and i810 ??
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-2AM3M0WRPabJ9lCrsRQO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+It's sounds silly, but new iwlwifi-0.0.25 crash down Xorg server. The
+problem is intel i810 video driver.
 
-On Sun, 2007-06-17 at 11:13 -0400, Dan Williams wrote:
+In my toshiba A200 I've got intel945GM pci-e video card. It run
+normal on xf-video-i810 driver (kernel support of 945 is experimental)
+on archlinux.
 
-> Just to be clear, 'struct wireless_dev' isn't tied to mac80211 at all,
-> right?  Cause we're going to need to use these functions in fullmac
-> drivers too.
+When I install iwlwifi-0.0.25 (make, make install) for 4965AGN and
+restart xserver, it crash...
 
-Right. It completely lives in net/wireless or include/net/wireless.h and
-is just the abstraction that cfg80211 requires to know that a given
-netdev is wireless and where cfg80211 stores stuff it needs. You
-allocate this along with the struct netdev and whatever private struct
-you need.
+Error log:
 
->   And is the n_results/**sr stuff supposed to allow multiple
-> scan results to be added?  If that's the case, you might want to make
-> the function end with an 's' too, just to be clear.  "add_scan_result"
-> makes it sound like it should just add one scan result.
+(EE) I810(0): V_BIOS Address 0x80 out of range
+(EE) I810(0): VBE initialization failed.
+(EE) Screen(s) found, but none have a usable configuration.
 
-Yeah, makes sense to add the 's'. I was thinking that some drivers get
-everything in one go so it's more efficient to build it in one go wrt.
-allocating the netlink message, but others get results piecewise and we
-don't need to bother them with storing them. I'm not sure though whether
-cfg80211 should centrally cache and expire scan results for when scan
-results are requested but no new scan should be done. I think it
-probably should.
+Fatal server error:
+no screens found
 
-> Sounds fine to me; this is essentially what we've got now and I think it
-> works ok.  There's two cases where this would be used: (a) a triggered
-> scan, and (b) background scan.  Should work fine in both cases.
+Now i just go to iwlwifi-0.0.25 and make uninstall. Server restart - and
+xorg run perfectly, but iwl4965 is uninstalled :(
 
-Yeah, that should work in both cases, although some care will have to be
-taken that no background scan goes active while a triggered scan is
-running or something like that.
+xorg.conf and other X configuration files or drivers are not changing during
+this process. Only install and uninstall of iwlwifi-0.0.25...
 
-johannes
+Is there any known solution to fix this up?
 
---=-2AM3M0WRPabJ9lCrsRQO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGdkQv/ETPhpq3jKURAr1OAKCHgdkNo0AVpyX7MpswmrVnx8PMxgCeNNfs
-9wyghaozCxOBWYG0M/D5cVo=
-=COTz
------END PGP SIGNATURE-----
-
---=-2AM3M0WRPabJ9lCrsRQO--
+regards,
+pawel
 
