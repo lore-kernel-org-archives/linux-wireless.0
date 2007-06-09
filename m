@@ -1,58 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39603 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43643 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S968785AbXFHIVU (ORCPT
+	with ESMTP id S1750928AbXFIJIM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2007 04:21:20 -0400
-Subject: Re: [PATCH -mm] mac80211: fix 1-bit bitfield to unsigned
+	Sat, 9 Jun 2007 05:08:12 -0400
+Subject: your nl80211 work
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: linux-wireless@vger.kernel.org, akpm <akpm@linux-foundation.org>,
-	jbenc@suse.cz, flamingice@sourmilk.net, Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <1181290254.6533.11.camel@johannes.berg>
-References: <20070606150254.de49d627.randy.dunlap@oracle.com>
-	 <1181290254.6533.11.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-paRMEoO2uUUzr45Ur96U"
-Date: Fri, 08 Jun 2007 10:21:36 +0200
-Message-Id: <1181290896.6533.16.camel@johannes.berg>
+To: David Lamparter <lists@diac24.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mJolaNg+8CO09WxUQpBq"
+Date: Sat, 09 Jun 2007 11:07:23 +0200
+Message-Id: <1181380044.3566.11.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-paRMEoO2uUUzr45Ur96U
+--=-mJolaNg+8CO09WxUQpBq
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2007-06-08 at 10:10 +0200, Johannes Berg wrote:
-> Very interesting. We were wondering why the latest git tree doesn't show
-> tons of endianness warnings, but it appears that when sparse finds these
-> dubious bitfields it turns off all other warnings.
->=20
-> Zhu Yi, can you apply this patch to your tree and review your code and
-> the sparse output and stick le16_to_cpu()/le32_to_cpu() into the
-> appropriate places? A whole bunch of things there are endianness broken
-> and sparse probably only gives you an approximation of what errors there
-> are.
+Hey,
 
-Oh, forgot to mention you need to run
-make C=3D2 CHECKFLAGS=3D"-D__CHECK_ENDIAN__" M=3Dnet/mac80211/
+Just saw on IRC that you linked to
+http://git.spaceboyz.net/nl80211/nl80211-dev.git and took a quick look.
 
-(if you weren't aware already.)
+Some comments.
+
+You say that
+
++ * @NL80211_CMD_GET_INTERFACE: request an interface's configuration.
++ *     either a dump request on a %NL80211_ATTR_WIPHY or a specific get
++ *      on a %NL80211_ATTR_IFINDEX is supported.
+
+unfortunately, it can't be a dump request. The problem is that when you
+have a dump request and possibly multiple virtual interfaces, and one of
+them is controlled by the userspace MLME, then you need to call out to
+the userspace MLME (via netlink too) to get the configuration. That,
+however, can't be done while holding locks which would be required for
+the dump request.
+
++       /* %input: wiphy */
++       NL80211_CMD_SET_CHANNEL,
+
+The %... annotations were for my pynl80211 tool, feel free to leave them
+off. In this case, it should probably be
+ %input: wiphy, channel, phymode
+but if you don't want to test it with pynl80211 don't bother.
+
+
++       int     (*get_channel)(struct wiphy *wiphy, int *chan, int *freq,
++                              enum nl80211_phymode *phymode);
++       int     (*set_channel)(struct wiphy *wiphy, int chan, int freq, /* =
+XXX both?! */
++                              enum nl80211_phymode *phymode);
+
+I don't think both are useful. Somewhere we need a library function to
+convert from (chan, phymode) to frequency and back though. Although even
+frequency isn't unique when you get to .11N or the atheros turbo foo.
+
+
++               case MODE_IEEE80211A:
++               case MODE_ATHEROS_TURBO:
++                       *phymode =3D NL80211_PHYMODE_A;
+
+Are those Atheros Turbo modes actually useful these days in mac80211? If
+so we probably should support them in nl80211 too, but I don't really
+know, I guess Jouni is the only one who ever used them?
+
+In any case, looks pretty good :)
 
 johannes
 
---=-paRMEoO2uUUzr45Ur96U
+--=-mJolaNg+8CO09WxUQpBq
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGaRGQ/ETPhpq3jKURArUTAJ4zL4cUsq7Ua165kLJLnu4+YAoqNgCgsod3
-A245WUKgLmTyyPL0FdyMOTQ=
-=Awlt
+iD8DBQBGam3K/ETPhpq3jKURAq7QAKClVQAzgLvzuq4wqt3WvQkt0J86iQCfQSRd
+UHe9JUjhgH7slCEzV4RA7DY=
+=DNlW
 -----END PGP SIGNATURE-----
 
---=-paRMEoO2uUUzr45Ur96U--
+--=-mJolaNg+8CO09WxUQpBq--
 
