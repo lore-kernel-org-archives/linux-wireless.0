@@ -1,105 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:42689 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757893AbXFDSGU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2007 14:06:20 -0400
-Date: Mon, 4 Jun 2007 10:51:58 -0700
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ulrich Drepper <drepper@gmail.com>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	Michael Buesch <mb@bu3sch.de>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Ingo Molnar <mingo@elte.hu>
-Subject: Re: iperf: performance regression (was b44 driver problem?)
-Message-ID: <20070604105158.31ede1f5@freepuppy>
-In-Reply-To: <1180978368.4404.29.camel@chaos>
-References: <20070525172431.60affaca@freepuppy>
-	<200705281944.05030.maxi@daemonizer.de>
-	<1180380230.3657.3.camel@chaos>
-	<200706031826.06891.maxi@daemonizer.de>
-	<1180939188.4404.5.camel@chaos>
-	<20070604090918.42386fbb@freepuppy>
-	<1180974958.4404.24.camel@chaos>
-	<20070604095924.651d91c8@freepuppy>
-	<1180978368.4404.29.camel@chaos>
+Received: from mx1.redhat.com ([66.187.233.31]:33002 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752066AbXFINuh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jun 2007 09:50:37 -0400
+Subject: Re: your nl80211 work
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Lamparter <lists@diac24.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1181391299.3566.17.camel@johannes.berg>
+References: <1181380044.3566.11.camel@johannes.berg>
+	 <20070609113859.GA10836@charon.n2.diac24.net>
+	 <1181391299.3566.17.camel@johannes.berg>
+Content-Type: text/plain
+Date: Sat, 09 Jun 2007 09:54:09 -0400
+Message-Id: <1181397249.23205.10.camel@xo-28-0B-88.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 04 Jun 2007 19:32:48 +0200
-Thomas Gleixner <tglx@linutronix.de> wrote:
-
-> On Mon, 2007-06-04 at 09:59 -0700, Stephen Hemminger wrote:
-> > > > gettimeofday({1180973726, 982754}, NULL) = 0
-> > > > recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-> > > > gettimeofday({1180973726, 983790}, NULL) = 0
-> > > 
-> > > Well, gettimeofday() is not affected by the highres code, but
-> > > 
-> > > > nanosleep({0, 0}, NULL) = 0
-> > > > nanosleep({0, 0}, NULL) = 0
-> > > 
-> > > is. The nanosleep call with a relative timeout of 0 returns immediately
-> > > with highres enabled, while it sleeps at least until the next tick
-> > > arrives when highres is off. Are there more of those stupid sleeps in
-> > > the code ?
-> > 
-> > GLIBC pthread_mutex does it, YES it is a problem!
-> > Looks like the old behavior is required for ABI compatibility.
-> >
-> > iperf server has several threads. One thread is using pthread_mutex_lock
-> > to wait for the other thread.  It looks like pthread_mutex_lock is using
-> > nanosleep as yield().
+On Sat, 2007-06-09 at 14:14 +0200, Johannes Berg wrote:
+> On Sat, 2007-06-09 at 13:39 +0200, David Lamparter wrote:
 > 
-> I doubt that. This is in the iperf code itself.
+> > Ah, I didn't think about that. Well, next try next luck... Hmm. Maybe we
+> > should include the list of interfaces into the GET_WIPHY command and have
+> > GET_INTERFACE never return a list?
 > 
-> void thread_rest ( void ) {
-> #if defined( HAVE_THREAD )
-> #if defined( HAVE_POSIX_THREAD )
->     // TODO add checks for sched_yield or pthread_yield and call that
->     // if available
->     usleep( 0 );
+> Actually, I only thought about that yesterday too when thinking about
+> the userspace MLME thing (see my other post)
 > 
-> ----------^^^^
+> > Yeah, I was hoping for feedback on this one. For one, do we even bother to
+> > return the frequency via nl80211? There's no attribute for it yet, and I
+> > don't know if this is too useful. Maybe it can be included in the channel
+> > list, so if an application really wants to know the frequency, it can look
+> > up the table using channel+phymode as key and get it.
 > 
-> It results in a nanosleep({0,0}, NULL)
+> I think Dan said that he'd really like to see the kernel have a
+> frequency table somehow so not all userspace programs need to convert
+
+Well, at least have one that all 802.11 _drivers_ can use at the very
+least, I know of 5 or 6 places in the kernel right now that have this
+sort of info.  Even just inlines in ieee80211.h or something for
+chan->freq, freq->chan, freq->band, chan->band, etc.  Max allowed power
+levels and stuff as well.
+
+WRT to userspace, if there's an easy way to put this into headers that
+get exported to userspace headers, I think that would be useful.
+Otherwise everybody has to keep rewriting these, both mac80211, fullmac
+drivers, userspace programs like NetworkManager and wpa_supplicant, etc.
+
+Dan
+
+> themselves and introduce bugs and be updated all the time for new
+> things. But just having it in the channel list seems sufficient, or have
+> it in cfg80211 and pass it via nl80211 but not read it on incoming
+> requests nor bother the driver with it, i.e. create it from
+> channel/phymode in nl80211.c itself.
 > 
-> 	tglx
-> 
+> johannes
 
-Yes, the following patch makes iperf work better than ever.
-But are other broken applications going to have same problem.
-Sounds like the old "who runs first" fork() problems.
-
---- iperf-2.0.2/compat/Thread.c.orig	2005-05-03 08:15:51.000000000 -0700
-+++ iperf-2.0.2/compat/Thread.c	2007-06-04 10:54:21.000000000 -0700
-@@ -405,9 +405,13 @@
- void thread_rest ( void ) {
- #if defined( HAVE_THREAD )
- #if defined( HAVE_POSIX_THREAD )
--    // TODO add checks for sched_yield or pthread_yield and call that
--    // if available
-+
-+#if defined( _POSIX_PRIORITY_SCHEDULING )
-+    sched_yield();
-+#else
-     usleep( 0 );
-+#endif
-+
- #else // Win32
-     SwitchToThread( );
- #endif
-
-
-
-
--- 
-Stephen Hemminger <shemminger@linux-foundation.org>
