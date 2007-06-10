@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:22947 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754889AbXFKWCG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 18:02:06 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] mac80211: Don't stop tx queue on master device while scanning.
-Date: Mon, 11 Jun 2007 15:01:11 -0700
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	Jiri Benc <jbenc@suse.cz>,
-	Mattias Nissler <mattias.nissler@gmx.de>
-References: <200706081531.14086.IvDoorn@gmail.com> <20070611212021.GJ10397@tuxdriver.com> <200706111459.54871.flamingice@sourmilk.net>
-In-Reply-To: <200706111459.54871.flamingice@sourmilk.net>
+Received: from 84-16-245-18.internetserviceteam.com ([84.16.245.18]:47291 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757895AbXFJRhX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Jun 2007 13:37:23 -0400
+Message-ID: <466C2F94.8050501@hauke-m.de>
+Date: Sun, 10 Jun 2007 19:06:28 +0200
+From: linux-wireless@hauke-m.de
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3616660.RYG4pZc5fV";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200706111501.11731.flamingice@sourmilk.net>
+To: David Planella <david.planella@googlemail.com>
+Cc: acx100-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: The future of the TI ACX wireless driver
+References: <1d9d9b240706100735k374b5800ie64370e1e9bff1ef@mail.gmail.com>
+In-Reply-To: <1d9d9b240706100735k374b5800ie64370e1e9bff1ef@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3616660.RYG4pZc5fV
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-On Monday 11 June 2007 14:59, Michael Wu wrote:
-> Did this actually get to linux-wireless? I never saw it.
->
-Nevermind, I see it. Missed it for some reason..
+Hi
 
--Michael Wu
+Nice work David.
 
---nextPart3616660.RYG4pZc5fV
-Content-Type: application/pgp-signature
+I have extracted the acxsm driver out of the wireless-2.6 git tree and
+made it compile on at least kernel 2.6.20 and 2.6.22-rc4
+It can be found here:
+http://www.hauke-m.de/fileadmin/acx/tiacx-20070522.tar.bz2
 
+I also chanced some lines in the normal acx driver so it compiles with
+kenrel 2.6.22 and later
+http://www.hauke-m.de/fileadmin/acx/acx-20070610.tar.bz2
+
+Bouth are loading on my system, but I can't test them because I haven't
+got any acx100 chip based card any more, it would be nice to get
+positive feedback, when it's working.
+
+I will write some pages into the Wiki for these versions, so everyone
+can test them.
+
+I am not a big kernel hacker but I want to learn it too.
+
+Hauke Mehrtens
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-iD8DBQBGbcYnT3Oqt9AH4aERApqRAKC4+0V8/1aIlGnLkZ6u/LnpRYdXMQCfX7Py
-wB6dXfNgWrVetXTmK4DZZbg=
-=92En
+iD8DBQFGbC+UrcX0gpXFjnsRAiZvAJ9HqeLhYD71ziIY8nn1/s165IgW9wCeOkta
+jcvdcupbincXF0WpXVQse5s=
+=1Dty
 -----END PGP SIGNATURE-----
-
---nextPart3616660.RYG4pZc5fV--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
