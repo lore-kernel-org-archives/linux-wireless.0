@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52280 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753625AbXFVJ74 (ORCPT
+Received: from mailout5.parasun.com ([204.174.16.215]:49774 "EHLO
+	mailout5.parasun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753406AbXFJPjI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2007 05:59:56 -0400
-Subject: Re: [PATCH] mac80211: kill antenna select ioctls
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200706221132.30211.mb@bu3sch.de>
-References: <1182499821.21939.62.camel@johannes.berg>
-	 <200706221132.30211.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zjGJYbeCECj+CvEfvVXI"
-Date: Fri, 22 Jun 2007 12:01:04 +0200
-Message-Id: <1182506464.21939.81.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 10 Jun 2007 11:39:08 -0400
+Date: Sun, 10 Jun 2007 10:21:32 -0500 (CDT)
+From: Jeff Williams <angelbane@ou.edu>
+To: David Planella <david.planella@googlemail.com>
+cc: acx100-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: The future of the TI ACX wireless driver
+In-Reply-To: <1d9d9b240706100735k374b5800ie64370e1e9bff1ef@mail.gmail.com>
+Message-ID: <Pine.LNX.4.64.0706101014520.2936@dulcinea>
+References: <1d9d9b240706100735k374b5800ie64370e1e9bff1ef@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> * Mac80211 driver, which uses the seemingly
+> soon-to-be-included-in-kernel mac80211 stack, available on the
+> wireless-dev tree (the stack, not the driver).
+> This release is only available here [2] and needs some work before
+> being included in wireless-dev, since it was released at the time when
+> mac80211 was still called d80211. In any case, having had a quick look
+> at the code, I believe that replacing the d80211.h header reference to
+> mac80211.h and maybe refactoring some functions might be all what is
+> needed for an initial compilation. Note that I haven't got any
+> previous driver or kernel module development experience, so I might be
+> wrong here. What would also be needed is to merge all changes from the
+> softmac and plain drivers.
+>
+You can find a updated-as-of-last-month mac80211 pci driver at 
+http://airgo.wdwconsulting.net/acx-mac80211-20070510.patch.bz2
+it may or may not work, it compiles, it responds with aps to iwlist sc. 
+Enabling ACX_MAC80211_USB will cause the build to fail. I'll be happy to 
+take patches and bug reports.
 
---=-zjGJYbeCECj+CvEfvVXI
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+thanks,
 
-On Fri, 2007-06-22 at 11:32 +0200, Michael Buesch wrote:
-> On Friday 22 June 2007 10:10:20 Johannes Berg wrote:
-> > Not used anywhere.
->=20
-> It's used in bcm43xx.
-> Though, I'm not sure anybody in userspace actually calls this strange ioc=
-tl.
-
-That's what I meant, it's not used in userspace.
-
-johannes
-
---=-zjGJYbeCECj+CvEfvVXI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGe53g/ETPhpq3jKURAvUKAKCUdTPhUrsbH0lAWNNlK/aZERuVYACZAXmB
-1JmyXZWeinckB30xTK1WwoM=
-=d8j5
------END PGP SIGNATURE-----
-
---=-zjGJYbeCECj+CvEfvVXI--
-
+Jeff Williams
