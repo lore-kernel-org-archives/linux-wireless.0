@@ -1,63 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:48952 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751082AbXFLUva (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.246]:1586 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751512AbXFJOfZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2007 16:51:30 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH V2] mac80211: Implementation of SIOCSIWRATE
-Date: Tue, 12 Jun 2007 13:50:22 -0700
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-References: <4668a64b.VmU9f2GpA2itSuFx%Larry.Finger@lwfinger.net> <200706071819.45603.flamingice@sourmilk.net> <466F037C.9080403@lwfinger.net>
-In-Reply-To: <466F037C.9080403@lwfinger.net>
+	Sun, 10 Jun 2007 10:35:25 -0400
+Received: by an-out-0708.google.com with SMTP id d31so329926and
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2007 07:35:24 -0700 (PDT)
+Message-ID: <1d9d9b240706100735k374b5800ie64370e1e9bff1ef@mail.gmail.com>
+Date: Sun, 10 Jun 2007 16:35:23 +0200
+From: "David Planella" <david.planella@googlemail.com>
+To: acx100-devel@lists.sourceforge.net
+Subject: The future of the TI ACX wireless driver
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1307476.pkSekkCMCL";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200706121350.26402.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1307476.pkSekkCMCL
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Hi all,
 
-On Tuesday 12 June 2007 13:35, Larry Finger wrote:
-> Michael Wu wrote:
-> > One last thing - max_ratectrl_rateidx should be set to -1 to indicate no
-> > maximum. Not doing this will cause problems when switching from one hw
-> > mode to another with a different number of rates.
->
-> I don't understand this last part. If we use the upper-limit form of the
-> rate command, isn't that indicated to the rate-setting routine by having
-> max_ratectrl_index set to the upper limit, and force_unicast_rateidx set =
-to
-> -1?
-Yes. However, when you're not setting the upper limit, max_ratectrl_index=20
-needs to be set to -1. The current code sets max_ratectrl_index to the=20
-highest rate index it can find to configure full auto rate selection or fix=
-ed=20
-rate when it should set -1 instead.
+I just wanted to mention that I have updated the ACX driver's wiki in
+order to at least keep up with the current state of things regarding
+the driver and the kernel.
 
-=2DMichael Wu
+I've rearranged the contents and added some information to the main
+page at http://acx100.sourceforge.net/wiki/Main_Page. In case there
+are any active or inactive developers reading this, please also have a
+look at the new
+http://acx100.sourceforge.net/wiki/Main_Page#Development and
+http://acx100.sourceforge.net/wiki/History sections (the latter one
+being still pretty much under construction), and feel free to comment,
+correct or add to the information shown there.
 
---nextPart1307476.pkSekkCMCL
-Content-Type: application/pgp-signature
+Regarding the current state of the driver, from what I could gather
+from the mailing list posts scattered through netdev, acx100-devel and
+acx-users and probably other places, there are three current versions
+of the driver:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+* "Plain" driver, which uses a homegrown wireless stack and does not
+support WPA.
+The last release (0.3.36) [1] was made for this flavour of the driver,
+which is the one shipped with distributions such as Ubuntu. Andreas
+Mohr said that after this release he'd concentrate on the softmac
+version.
 
-iD8DBQBGbwcST3Oqt9AH4aERAswLAKDFVTcNn5XyBbUnkZMfiyhBKAoBYgCeP3DA
-Sbc/K5MGjr5bDPpjt9rxmC8=
-=2ukC
------END PGP SIGNATURE-----
+* Softmac driver, which uses the in-kernel ieee80211softmac layer for
+the common wireless functions.
+The code for this driver has been in the wireless-2.6 tree (under
+tiacx) for some time, and if I understand it correctly includes the
+changes from the 0.3.35 version of the "plain" driver but not yet
+those of the 0.3.36 version.
 
---nextPart1307476.pkSekkCMCL--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+* Mac80211 driver, which uses the seemingly
+soon-to-be-included-in-kernel mac80211 stack, available on the
+wireless-dev tree (the stack, not the driver).
+This release is only available here [2] and needs some work before
+being included in wireless-dev, since it was released at the time when
+mac80211 was still called d80211. In any case, having had a quick look
+at the code, I believe that replacing the d80211.h header reference to
+mac80211.h and maybe refactoring some functions might be all what is
+needed for an initial compilation. Note that I haven't got any
+previous driver or kernel module development experience, so I might be
+wrong here. What would also be needed is to merge all changes from the
+softmac and plain drivers.
+
+I am writing this in the hope of getting some exposure and some
+interest in the driver for an eventual kernel inclusion. As far as I
+understand, there are only two active developers at the moment, so I
+guess any help would be appreciated.
+
+I think the natural course of action should be to first get the
+mac80211 driver in shape for inclusion in the wireless-dev tree and
+then continue development from there.
+
+I (and maybe someone else) would be willing to help on this, but might
+need some 'mentoring' from the developers, since as I mentioned I've
+got no previous experience with linux modules or 80211. I have started
+looking at the acx-d80211 code, but I cannot promise anything.
+
+Any comments will be greatly appreciated.
+
+Note: I'm CC'ing netdev and linux-wireless as well. I think
+linux-wireless should be more appropriate, but previous posts
+regarding the tiacx driver were sent to netdev.
+
+Kind regards,
+David.
+
+[1] Announcement:
+http://sourceforge.net/mailarchive/forum.php?thread_name=20070101224549.GA21249%40rhlx01.hs-esslingen.de&forum_name=acx100-users
+[2] http://www.cmartin.tk/acx/acx-d80211-20060709.tar.bz2
