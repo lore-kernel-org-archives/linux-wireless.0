@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3501 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757667AbXFMOyi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2007 10:54:38 -0400
-Date: Wed, 13 Jun 2007 10:31:52 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Andy Green <andy@warmcat.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:52181 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751021AbXFKHfj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2007 03:35:39 -0400
+Date: Mon, 11 Jun 2007 00:35:29 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Mario Guenterberg <mg@havelsoft.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH Try#10 4/4] mac80211: Monitor mode radiotap-based packet injection
-Message-ID: <20070613143152.GC5576@tuxdriver.com>
-References: <20070612095551.323709697@warmcat.com> <20070612095658.362328798@warmcat.com> <200706122254.43782.flamingice@sourmilk.net> <20070613130020.GB5576@tuxdriver.com> <466FFA99.90003@warmcat.com>
+Subject: Re: some iwlwifi problems
+Message-Id: <20070611003529.2a0c1136.akpm@linux-foundation.org>
+In-Reply-To: <20070607082609.GA4603@/bin/dnsdomainname>
+References: <20070607082609.GA4603@/bin/dnsdomainname>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <466FFA99.90003@warmcat.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 13, 2007 at 03:09:29PM +0100, Andy Green wrote:
-> John W. Linville wrote:
-> > On Tue, Jun 12, 2007 at 10:54:38PM -0700, Michael Wu wrote:
-> > 
-> >> These patches should be pretty good now. I suggest CCing John Linville, 
-> >> Johannes Berg, and Jiri Benc on the next series. I'd like to get these 
-> >> patches in soon if there are no other issues. 12 tries should be enough to 
-> >> get this right. ;)
-> > 
-> > Amen. :-)
+On Thu, 7 Jun 2007 10:26:09 +0200 Mario Guenterberg <mg@havelsoft.com> wrote:
+
+> Hi...
 > 
-> *shrug*  Y'all welcome.  The main thing I'll take away though is the two
-> solid months (out of three since the first patch) of complete silence.
+> I have compiled the 2.6.22-rc4 kernel with the mm1 patchset.
+> It works fine for my z16m lenovo laptop. The only mistake I have is
+> the iwlwifi driver for the Intel Corporation PRO/Wireless 3945ABG
+> network controller. The bitrate settings are sometimes very different.
+> Sometimes it says 6 Mb/s, sometimes 11 Mb/s or 54 Mb/s and maybe 
+> sometimes 5.5 Mb/s.
+> 
+> The other thing is the message in log:
+> wlan0: duplicate address detected!
+> I have no machine with the same address in my network and no other
+> accesspoint in the range of my wlan.
+> 
+> With the 2.6.22.3 kernel and the iwp3945 driver the bitrate settings 
+> only 54 Mb/s and the message never found in logs.
+> 
 
-Well, sorry about that...but in that time we've had a 2.6.21 merge
-window fire drill for mac80211, a bunch of libertas patches, a tough
-review of rtl8187, and arguments/reviews/discussions about .11n
-support, .11e/WMM support, hardware scanning support, etc.  Also,
-it was end of term for a number of contributors who are full-time
-students, and it was crunch time for the release of Fedora 7 (which
-has a lot more wireless stuff in it than any previous Fedora release).
-
-In the end, you did the right thing: keep posting the patches until
-they get the proper attentions.  Thanks for persevering!
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+(cc linux-wireless)
