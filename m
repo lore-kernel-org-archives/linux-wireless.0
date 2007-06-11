@@ -1,48 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51847 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758645AbXFFLlg (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:34351 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752112AbXFKPWO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2007 07:41:36 -0400
-Subject: RE: RFC: Regulatory info in mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <645600.8486.qm@web51404.mail.re2.yahoo.com>
-References: <645600.8486.qm@web51404.mail.re2.yahoo.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-n5tC9xRkWG1KxosayZgJ"
-Date: Wed, 06 Jun 2007 13:41:45 +0200
-Message-Id: <1181130106.8274.43.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 11 Jun 2007 11:22:14 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id ACFE38D759
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2007 17:22:07 +0200 (CEST)
+Message-Id: <20070611152210.169114424@warmcat.com>
+References: <20070611152120.078733592@warmcat.com>
+Date: Mon, 11 Jun 2007 16:21:21 +0100
+From: andy@warmcat.com
+To: linux-wireless@vger.kernel.org
+Cc: Andy Green <andy@warmcat.com>
+Subject: [PATCH Try#9 1/4] mac80211: Monitor mode radiotap injection docs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Andy Green <andy@warmcat.com>
+Signed-off-by: Andy Green <andy@warmcat.com>
 
---=-n5tC9xRkWG1KxosayZgJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2007-06-06 at 03:00 -0700, Joerg Pommnitz wrote:
+---
+ Documentation/networking/mac80211-injection.txt |   59 +++++++++++++++++
+ Documentation/networking/radiotap-headers.txt   |   79 ++++++++++++++++++++++++
+ 2 files changed, 138 insertions(+)
 
-> Regarding a user space daemon: keep in mind special use cases like NFSroo=
-t over WLAN.
+Index: wireless-dev/Documentation/networking/mac80211-injection.txt
+===================================================================
+--- /dev/null
++++ wireless-dev/Documentation/networking/mac80211-injection.txt
+@@ -0,0 +1,59 @@
++How to use packet injection with mac80211
++=========================================
++
++mac80211 now allows arbitrary packets to be injected down any Monitor Mode
++interface from userland.  The packet you inject needs to be composed in the
++following format:
++
++ [ radiotap header  ]
++ [ ieee80211 header ]
++ [ payload ]
++
++The radiotap format is discussed in
++./Documentation/networking/radiotap-headers.txt.
++
++Despite 13 radiotap argument types are currently defined, most only make sense
++to appear on received packets.  Currently three kinds of argument are used by
++the injection code, although it knows to skip any other arguments that are
++present (facilitating replay of captured radiotap headers directly):
++
++ - IEEE80211_RADIOTAP_RATE - u8 arg in 500kbps units (0x02 --> 1Mbps)
++
++ - IEEE80211_RADIOTAP_ANTENNA - u8 arg, 0x00 = ant1, 0x01 = ant2
++
++ - IEEE80211_RADIOTAP_DBM_TX_POWER - u8 arg, dBm
++
++Here is an example valid radiotap header defining these three parameters
++
++	0x00, 0x00, // <-- radiotap version
++	0x0b, 0x00, // <- radiotap header length
++	0x04, 0x0c, 0x00, 0x00, // <-- bitmap
++	0x6c, // <-- rate
++	0x0c, //<-- tx power
++	0x01 //<-- antenna
++
++The ieee80211 header follows immediately afterwards, looking for example like
++this:
++
++	0x08, 0x01, 0x00, 0x00,
++	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
++	0x13, 0x22, 0x33, 0x44, 0x55, 0x66,
++	0x13, 0x22, 0x33, 0x44, 0x55, 0x66,
++	0x10, 0x86
++
++Then lastly there is the payload.
++
++After composing the packet contents, it is sent by send()-ing it to a logical
++mac80211 interface that is in Monitor mode.  Libpcap can also be used,
++(which is easier than doing the work to bind the socket to the right
++interface), along the following lines:
++
++	ppcap = pcap_open_live(szInterfaceName, 800, 1, 20, szErrbuf);
++...
++	r = pcap_inject(ppcap, u8aSendBuffer, nLength);
++
++You can also find sources for a complete inject test applet here:
++
++http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
++
++Andy Green <andy@warmcat.com>
+Index: wireless-dev/Documentation/networking/radiotap-headers.txt
+===================================================================
+--- /dev/null
++++ wireless-dev/Documentation/networking/radiotap-headers.txt
+@@ -0,0 +1,79 @@
++How to use radiotap headers
++===========================
++
++Pointer to the radiotap include file
++------------------------------------
++
++Radiotap headers are variable-length and extensible, you can get most of the
++information you need to know on them from:
++
++./include/net/ieee80211_radiotap.h
++
++This document gives an overview and warns on some corner cases.
++
++
++Structure of the header
++-----------------------
++
++There is a fixed portion at the start which contains a u32 bitmap that defines
++if the possible argument associated with that bit is present or not.  So if b0
++of the it_present member of ieee80211_radiotap_header is set, it means that
++the header for argument index 0 (IEEE80211_RADIOTAP_TSFT) is present in the
++argument area.
++
++   < 8-byte ieee80211_radiotap_header >
++   [ <possible argument bitmap extensions ... > ]
++   [ <argument> ... ]
++
++At the moment there are only 13 possible argument indexes defined, but in case
++we run out of space in the u32 it_present member, it is defined that b31 set
++indicates that there is another u32 bitmap following (shown as "possible
++argument bitmap extensions..." above), and the start of the arguments is moved
++forward 4 bytes each time.
++
++Note also that the it_len member __le16 is set to the total number of bytes
++covered by the ieee80211_radiotap_header and any arguments following.
++
++
++Requirements for arguments
++--------------------------
++
++After the fixed part of the header, the arguments follow for each argument
++index whose matching bit is set in the it_present member of
++ieee80211_radiotap_header.
++
++ - the arguments are all stored little-endian!
++
++ - the argument payload for a given argument index has a fixed size.  So
++   IEEE80211_RADIOTAP_TSFT being present always indicates an 8-byte argument is
++   present.  See the comments in ./include/net/ieee80211_radiotap.h for a nice
++   breakdown of all the argument sizes
++
++ - the arguments must be aligned to a boundary of the argument size using
++   padding.  So a u16 argument must start on the next u16 boundary if it isn't
++   already on one, a u32 must start on the next u32 boundary and so on.
++
++ - "alignment" is relative to the start of the ieee80211_radiotap_header, ie,
++   the first byte of the radiotap header.  The absolute alignment of that first
++   byte isn't defined.  So even if the whole radiotap header is starting at, eg,
++   address 0x00000003, still the first byte of the radiotap header is treated as
++   0 for alignment purposes.
++
++ - The arguments for a given argument index can be a compound of multiple types
++   together.  For example IEEE80211_RADIOTAP_CHANNEL has an argument payload
++   consisting of two u16s of total length 4.  When this happens, the padding
++   rule is applied dealing with a u16, NOT dealing with a 4-byte single entity.
++
++
++Example valid radiotap header
++-----------------------------
++
++	0x00, 0x00, // <-- radiotap version + pad byte
++	0x0b, 0x00, // <- radiotap header length
++	0x04, 0x0c, 0x00, 0x00, // <-- bitmap
++	0x6c, // <-- rate (in 500kHz units)
++	0x0c, //<-- tx power
++	0x01 //<-- antenna
++
++
++Andy Green <andy@warmcat.com>
 
-That isn't going to be possible in any case since we require userspace
-to set up wireless links.
-
-johannes
-
---=-n5tC9xRkWG1KxosayZgJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGZp15/ETPhpq3jKURAgF5AJ9kG1UEdmJNohX8k1QRwv88E8s2gACffAle
-hef+mV9p1oEtmIWAJxkEnXo=
-=Rcrb
------END PGP SIGNATURE-----
-
---=-n5tC9xRkWG1KxosayZgJ--
-
+-- 
