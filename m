@@ -1,64 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:57812 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760236AbXFDUPz (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49984 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753045AbXFKIQ4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2007 16:15:55 -0400
-Date: Mon, 4 Jun 2007 13:02:25 -0700
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: Maximilian Engelhardt <maxi@daemonizer.de>
-Cc: Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>,
-	Ulrich Drepper <drepper@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: iperf: performance regression (was b44 driver problem?)
-Message-ID: <20070604130225.08e45b72@freepuppy>
-In-Reply-To: <200706042148.02450.maxi@daemonizer.de>
-References: <20070525172431.60affaca@freepuppy>
-	<20070604105158.31ede1f5@freepuppy>
-	<20070604193206.GA13271@elte.hu>
-	<200706042148.02450.maxi@daemonizer.de>
+	Mon, 11 Jun 2007 04:16:56 -0400
+Subject: [PATCH] fix oversight in "mac80211: Set low initial rate in  rc80211_simple"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain
+Date: Mon, 11 Jun 2007 08:10:41 +0200
+Message-Id: <1181542241.3566.23.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 4 Jun 2007 21:47:59 +0200
-Maximilian Engelhardt <maxi@daemonizer.de> wrote:
+This fixes a logic oversight in the patch "mac80211: Set low initial
+rate in rc80211_simple".
 
-> On Monday 04 June 2007, Ingo Molnar wrote:
-> > * Stephen Hemminger <shemminger@linux-foundation.org> wrote:
-> > > Yes, the following patch makes iperf work better than ever. But are
-> > > other broken applications going to have same problem. Sounds like the
-> > > old "who runs first" fork() problems.
-> >
-> > this is the first such app and really, and even for this app: i've been
-> > frequently running iperf on -rt kernels for _years_ and never noticed
-> > how buggy its 'locking' code was, and that it would under some
-> > circumstances use up the whole CPU on high-res timers.
-> 
-> I must admit I don't know much about that topic, but there is one thing I 
-> don't understand. Why is iperf (even if it's buggy) able to use up the whole 
-> cpu? I didn't run it as root but as my normal user so it should have limited 
-> rights. Shouldn't the linux scheduler distribute cpu time among all running 
-> processes?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-In this case, there are two threads. One is receiving data and the other
-is spinning checking on progress. If the spinning thread doesn't yield,
-it will end up using it's whole quantum (10ms at 100hz), before the
-scheduler lets the receiver run again. If the receiving thread doesn't
-get to run then on a UP the performance stinks.
+--- wireless-dev.orig/net/mac80211/rc80211_simple.c	2007-06-11 08:08:55.301879260 +0200
++++ wireless-dev/net/mac80211/rc80211_simple.c	2007-06-11 08:09:06.791879260 +0200
+@@ -289,9 +289,10 @@ static void rate_control_simple_rate_ini
+ 	 * as a workaround, */
+ 	for (i = 0; i < mode->num_rates; i++) {
+ 		if ((sta->supp_rates & BIT(i)) &&
+-		    (mode->rates[i].flags & IEEE80211_RATE_SUPPORTED))
++		    (mode->rates[i].flags & IEEE80211_RATE_SUPPORTED)) {
+ 			sta->txrate = i;
+ 			break;
++		}
+ 	}
+ }
+ 
 
-The problem only showed up laptop because most of my other systems are
-SMP (or fake SMP/HT), and usually set HZ to 1000 not 100.
 
-It kind of reminds me of the family road trip with the kids in the back
-seat going "Are we there yet?"
-
--- 
-Stephen Hemminger <shemminger@linux-foundation.org>
