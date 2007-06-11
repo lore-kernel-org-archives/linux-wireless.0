@@ -1,64 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.polimi.it ([131.175.12.3]:45222 "EHLO polimi.it"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2346 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933584AbXFGT1Z convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2007 15:27:25 -0400
-From: stefano.brivio@polimi.it
-Message-ID: <20070607212718.c9chfckmosg4w0wk@webmail.polimi.it>
-Date: Thu, 07 Jun 2007 21:27:18 +0200
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RFC: Regulatory info in mac80211
-References: <4665CCE7.5090409@lwfinger.net> <20070607091040.2b2f1d00@morte>
-	<43e72e890706071152n2d687497va9449d330e2078b4@mail.gmail.com>
-In-Reply-To: <43e72e890706071152n2d687497va9449d330e2078b4@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+	id S1753733AbXFKWYl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2007 18:24:41 -0400
+Date: Mon, 11 Jun 2007 18:13:25 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Please pull libertas-2.6
+Message-ID: <20070611221325.GL10397@tuxdriver.com>
+References: <1181102122.18061.8.camel@xo-28-0B-88.localdomain> <1181396495.23205.0.camel@xo-28-0B-88.localdomain> <20070611201222.GI10397@tuxdriver.com> <1181597511.6131.2.camel@xo-28-0B-88.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1181597511.6131.2.camel@xo-28-0B-88.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting "Luis R. Rodriguez" <mcgrof@gmail.com>:
+On Mon, Jun 11, 2007 at 05:31:51PM -0400, Dan Williams wrote:
+> On Mon, 2007-06-11 at 16:12 -0400, John W. Linville wrote:
 
-> A bigger issue for users is support. As you very well know reverse
-> engineering is a long tedious process; we are essentially doomed to
-> reverse engineering  wireless drivers for some wireless devices where
-> regulatory compliance sits in the driver due to vendor fears on legal
-> liability. I'm not saying their fears are justified by any means I'm
-> just saying those fears do exist by some vendors and unfortunately we
-> suffer the consequences. So if we can do some sort of best effort,
-> perhaps we can steer some vendors to support us.
+> > Jeff had expressed a willingness to accept the previous batch
+> > of libertas patches and pass them to Linus for 2.6.22.  However,
+> > judging by the titles above this patch looks more like clean-ups and
+> > new development.  Any objection to this batch being targeted at 2.6.23?
+> 
+> Some are pretty important (the 3 from Luis and the bottom 2 from me, and
+> the "anycast mask" patch from HEAD, for example).  I guess if Jeff
+> wouldn't mind accepting this set, I'd prefer to push them all for 2.6.22
+> and be be done with 2.6.22 except for bugfixes.  Otherwise I can give
+> you a list of commit IDs to cherry-pick or something like that.
 
-I would say that we should do our best in supporting users instead.
+Best if you sent me a cherry-pick list, I think...
 
-Furthermore, I understand your concerns, but:
-1) I think that a weak regulatory domain support (such as commented  
-defines in the mac80211 code) is sufficient to claim we comply with  
-regulatory domains, while avoiding to hassle users.
-2) We won't get any vendor to support us thanks to regulatory  
-compliance. There are just some weird vendors such as Broadcom and  
-some friendly vendors such as Realtek: it's unrealistic that vendors  
-such as Broadcom would ever change their mind. You may say my point is  
-short-sighted, but I really can't think that we can steer a vendor to  
-support us just by complying to regulatory domains: it looks clear to  
-me that Broadcom and other weird vendors such as TI are just  
-ridicolously trying to protect IP. Or are you talking about the  
-almost-friendly vendors like Intel?
-3) The GPL license, in my humble opinion, aims at the most possible  
-freedom. I don't care if vendors support us if we don't aim at this.
-
-However, as you can see, I CC'ed Theo DeRaadt, who, being an expert  
-about these issues, will sure provide us with the best advice about  
-what to do.
-
-
---
-Ciao
-Stefano
-
-
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
