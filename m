@@ -1,108 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51397 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751227AbXFFDvj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2007 23:51:39 -0400
-Subject: Please pull libertas-2.6
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Tue, 05 Jun 2007 23:55:22 -0400
-Message-Id: <1181102122.18061.8.camel@xo-28-0B-88.localdomain>
-Mime-Version: 1.0
+Received: from 91-65-240-14-dynip.superkabel.de ([91.65.240.14]:49704 "EHLO
+	charon.n2.diac24.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753075AbXFKWNA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2007 18:13:00 -0400
+Date: Tue, 12 Jun 2007 00:12:26 +0200
+From: David Lamparter <lists@diac24.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] cfg80211: use nl80211_* enums
+Message-ID: <20070611221224.GA10598@charon.n2.diac24.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Use enum nl80211_phymode and nl80211_iftype where appropriate. Update
+mac80211 and nl80211 to match.
 
-Changes since you last pulled are mainly Christoph-inspired cleanups, a
-few bug fixes, mesh scanning, and a few more mesh-specific knobs (though
-most likely general to 802.11s implementations, not just the CozyBit
-one).
-
-Per the email thread with jgarzik from the last pull, everything from
-libertas-2.6 'master' branch is currently targeted at _2.6.22_.
-
-Thanks,
-Dan
+Signed-off-by: David Lamparter <equinox@diac24.net>
 
 ---
+ include/net/cfg80211.h       |    9 +++++----
+ net/mac80211/ieee80211_cfg.c |    2 +-
+ net/wireless/nl80211.c       |    4 ++--
+ 3 files changed, 8 insertions(+), 7 deletions(-)
 
-The following changes since commit fce1142de24730373ab0f922896f81e225e132d7:
-  John W. Linville (1):
-        Merge branch 'libertas'
-
-are found in the git repository at:
-
-  git://git.infradead.org/libertas-2.6
-
-Dan Williams (24):
-      libertas: actually remove version.h
-      libertas: kill wlan_scan_process_results
-      libertas: kill ieeetypes_capinfo bitfield, use ieee80211.h types
-      libertas: rename WLAN_802_11_KEY to enc_key and clean up usage
-      libertas: clean up indentation in libertas_association_worker
-      libertas: clean up 802.11 IE post-scan handling
-      libertas: rename private ioctl constants and clean up ioctl handling
-      libertas: remove if_bootcmd.c
-      libertas: fix mixed-case abuse in cmd_ds_802_11_scan
-      libertas: fix mixed-case abuse in cmd_ds_802_11_ad_hoc_result
-      libertas: fix mixed-case abuse in cmd_ds_802_11_ad_hoc_start
-      libertas: re-uppercase command defines and other constants
-      libertas: fix debug build breakage due to field rename
-      libertas: remove thread.h and make kthread usage clearer
-      libertas: new mesh control knobs
-      libertas: bump version to 322.p1
-      libertas: wlan_ -> libertas_ rename in ioctl.c
-      libertas: fix more mixed-case abuse
-      libertas: move generic firmware reset command to common code
-      libertas: wlan_ -> libertas_ function prefix renames for main.c
-      libertas: simplify and clean up data rate handling
-      libertas: fix MESH_[GET/SET]_BCASTR ioctl, clean up ioctl subcmd handling
-      libertas: actually send mesh frames to mesh netdev
-
-Luis Carlos Cobo (1):
-      libertas: specific mesh scan for mshX interface
-
-Luis Carlos Cobo Rus (2):
-      libertas: pull current channel from firmware on mesh autostart
-      libertas: deauthenticate from AP in channel switch
-
- drivers/net/wireless/libertas/11d.c        |   22 +-
- drivers/net/wireless/libertas/Makefile     |    1 -
- drivers/net/wireless/libertas/README       |   65 ++++
- drivers/net/wireless/libertas/assoc.c      |   98 ++++---
- drivers/net/wireless/libertas/assoc.h      |    2 +
- drivers/net/wireless/libertas/cmd.c        |  338 ++++++++++----------
- drivers/net/wireless/libertas/cmdresp.c    |  173 +++++-----
- drivers/net/wireless/libertas/debugfs.c    |  130 ++++----
- drivers/net/wireless/libertas/decl.h       |    6 +-
- drivers/net/wireless/libertas/defs.h       |   66 ++---
- drivers/net/wireless/libertas/dev.h        |   35 +--
- drivers/net/wireless/libertas/ethtool.c    |    8 +-
- drivers/net/wireless/libertas/fw.c         |   43 ++--
- drivers/net/wireless/libertas/host.h       |  438 +++++++++++++-------------
- drivers/net/wireless/libertas/hostcmd.h    |   69 ++---
- drivers/net/wireless/libertas/if_bootcmd.c |   40 ---
- drivers/net/wireless/libertas/if_usb.c     |   58 ++--
- drivers/net/wireless/libertas/if_usb.h     |    1 -
- drivers/net/wireless/libertas/ioctl.c      |  478 +++++++++++++++-------------
- drivers/net/wireless/libertas/join.c       |  374 +++++++++++-----------
- drivers/net/wireless/libertas/join.h       |    2 +
- drivers/net/wireless/libertas/main.c       |  232 ++++++++------
- drivers/net/wireless/libertas/rx.c         |   14 +-
- drivers/net/wireless/libertas/scan.c       |  355 ++++++++-------------
- drivers/net/wireless/libertas/scan.h       |   10 +-
- drivers/net/wireless/libertas/thread.h     |   52 ---
- drivers/net/wireless/libertas/tx.c         |    2 +-
- drivers/net/wireless/libertas/types.h      |   65 +----
- drivers/net/wireless/libertas/version.h    |    1 -
- drivers/net/wireless/libertas/wext.c       |  428 ++++++++------------------
- drivers/net/wireless/libertas/wext.h       |   68 +++--
- 33 files changed, 1731 insertions(+), 1975 deletions(-)
- delete mode 100644 drivers/net/wireless/libertas/if_bootcmd.c
- delete mode 100644 drivers/net/wireless/libertas/thread.h
- delete mode 100644 drivers/net/wireless/libertas/version.h
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 813706a..1398c21 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3,6 +3,7 @@
+ 
+ #include <linux/netlink.h>
+ #include <linux/skbuff.h>
++#include <linux/nl80211.h>
+ #include <net/genetlink.h>
+ 
+ /*
+@@ -18,7 +19,7 @@
+  * @active: scan actively or passively on this channel
+  */
+ struct scan_channel {
+-	int phymode;
++	enum nl80211_phymode phymode;
+ 	u32 channel;
+ 	int active;
+ };
+@@ -36,7 +37,7 @@ struct scan_channel {
+ struct scan_params {
+ 	int n_channels;
+ 	int active;
+-	int phymode;
++	enum nl80211_phymode phymode;
+ 	struct scan_channel *channels;
+ };
+ 
+@@ -116,10 +117,10 @@ struct wiphy;
+  */
+ struct cfg80211_ops {
+ 	int	(*add_virtual_intf)(struct wiphy *wiphy, char *name,
+-				    unsigned int type);
++				    enum nl80211_iftype type);
+ 	int	(*del_virtual_intf)(struct wiphy *wiphy, int ifindex);
+ 	int	(*change_virtual_intf)(struct wiphy *wiphy, int ifindex,
+-				       unsigned int type);
++				       enum nl80211_iftype type);
+ 
+ 	int	(*associate)(struct wiphy *wiphy, struct net_device *dev,
+ 			     struct association_params *params);
+diff --git a/net/mac80211/ieee80211_cfg.c b/net/mac80211/ieee80211_cfg.c
+index 0069826..8f85bc2 100644
+--- a/net/mac80211/ieee80211_cfg.c
++++ b/net/mac80211/ieee80211_cfg.c
+@@ -13,7 +13,7 @@
+ #include "ieee80211_cfg.h"
+ 
+ static int ieee80211_add_iface(struct wiphy *wiphy, char *name,
+-			       unsigned int type)
++			       enum nl80211_iftype type)
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+ 	int itype;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d6a44a3..ffbe628 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -293,7 +293,7 @@ static int nl80211_add_virt_intf(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *drv;
+ 	int err;
+-	unsigned int type = NL80211_IFTYPE_UNSPECIFIED;
++	enum nl80211_iftype type = NL80211_IFTYPE_UNSPECIFIED;
+ 
+ 	if (!info->attrs[NL80211_ATTR_IFNAME])
+ 		return -EINVAL;
+@@ -353,7 +353,7 @@ static int nl80211_change_virt_intf(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *drv;
+ 	int err, ifindex;
+-	unsigned int type;
++	enum nl80211_iftype type;
+ 	struct net_device *dev;
+ 
+ 	if (info->attrs[NL80211_ATTR_IFTYPE]) {
+-- 
+1.5.2.1
 
