@@ -1,73 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2817 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757065AbXFLByt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 21:54:49 -0400
-Date: Mon, 11 Jun 2007 21:18:43 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] mac80211: Don't stop tx queue on master device while scanning.
-Message-ID: <20070612011843.GF20422@tuxdriver.com>
-References: <20070612011616.GC20422@tuxdriver.com> <20070612011716.GD20422@tuxdriver.com> <20070612011802.GE20422@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070612011802.GE20422@tuxdriver.com>
+Received: from smtp.rutgers.edu ([128.6.72.243]:40716 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752734AbXFKSMP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2007 14:12:15 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH V3] mac80211: Set low initial rate in rc80211_simple
+Date: Mon, 11 Jun 2007 11:11:07 -0700
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+References: <4668c71b.E0vXnFMnxxm8I5gE%Larry.Finger@lwfinger.net> <200706072038.36708.flamingice@sourmilk.net> <20070611173112.GC10397@tuxdriver.com>
+In-Reply-To: <20070611173112.GC10397@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1496993.oTEozNSsac";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200706111111.11547.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mattias Nissler <mattias.nissler@gmx.de>
+--nextPart1496993.oTEozNSsac
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-mac80211 stops the tx queues during scans. This is wrong with respect
-to the master deivce tx queue, since stopping it prevents any probes
-from being sent during the scan. Instead, they accumulate in the queue
-and are only sent after the scan is finished, which is obviously
-wrong.
+On Monday 11 June 2007 10:31, John W. Linville wrote:
+> How about "I think you forgot some curly braces"?  Until Johannes
+> posted his patch (which you could have done just as easily) I had no
+> idea what you were talking about here...
+>
+Well, I did end up explaining it later after it was obvious that Larry Fing=
+er=20
+didn't understand what I mean.
 
-Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/ieee80211_sta.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+As for posting a patch to fix it? I figured Larry Finger would post a fixed=
+=20
+patch after I explained the comment. I didn't think you were going to merge=
+=20
+it.
 
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 9f30ae4..91b545c 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -2592,11 +2592,17 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
- 
- 	read_lock(&local->sub_if_lock);
- 	list_for_each_entry(sdata, &local->sub_if_list, list) {
-+
-+		/* No need to wake the master device. */
-+		if (sdata->dev == local->mdev)
-+			continue;
-+
- 		if (sdata->type == IEEE80211_IF_TYPE_STA) {
- 			if (sdata->u.sta.associated)
- 				ieee80211_send_nullfunc(local, sdata, 0);
- 			ieee80211_sta_timer((unsigned long)sdata);
- 		}
-+
- 		netif_wake_queue(sdata->dev);
- 	}
- 	read_unlock(&local->sub_if_lock);
-@@ -2738,6 +2744,12 @@ static int ieee80211_sta_start_scan(struct net_device *dev,
- 
- 	read_lock(&local->sub_if_lock);
- 	list_for_each_entry(sdata, &local->sub_if_list, list) {
-+
-+		/* Don't stop the master interface, otherwise we can't transmit
-+		 * probes! */
-+		if (sdata->dev == local->mdev)
-+			continue;
-+
- 		netif_stop_queue(sdata->dev);
- 		if (sdata->type == IEEE80211_IF_TYPE_STA &&
- 		    sdata->u.sta.associated)
--- 
-1.5.0.6
+=2DMichael Wu
 
--- 
-John W. Linville
-linville@tuxdriver.com
+--nextPart1496993.oTEozNSsac
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGbZA/T3Oqt9AH4aERArQjAJ9UsaFICYfUNfvimeeP0Yy7p7w5ZwCgsy5g
+k7MeJhRxvkTCL2IEazFY0C0=
+=H9l+
+-----END PGP SIGNATURE-----
+
+--nextPart1496993.oTEozNSsac--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
