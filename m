@@ -1,41 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:52181 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751021AbXFKHfj (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53966 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759081AbXFLHFi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 03:35:39 -0400
-Date: Mon, 11 Jun 2007 00:35:29 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Mario Guenterberg <mg@havelsoft.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: some iwlwifi problems
-Message-Id: <20070611003529.2a0c1136.akpm@linux-foundation.org>
-In-Reply-To: <20070607082609.GA4603@/bin/dnsdomainname>
-References: <20070607082609.GA4603@/bin/dnsdomainname>
+	Tue, 12 Jun 2007 03:05:38 -0400
+Subject: Re: [Take 2] mac80211 IEEE802.11e/WMM code cleanup
+From: Johannes Berg <johannes@sipsolutions.net>
+To: yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20070611085950.GA5540@mail.intel.com>
+References: <20070611085950.GA5540@mail.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Jh2VHo/fdIw19KNVKdQC"
+Date: Mon, 11 Jun 2007 20:01:47 +0200
+Message-Id: <1181584907.29767.30.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 7 Jun 2007 10:26:09 +0200 Mario Guenterberg <mg@havelsoft.com> wrote:
 
-> Hi...
-> 
-> I have compiled the 2.6.22-rc4 kernel with the mm1 patchset.
-> It works fine for my z16m lenovo laptop. The only mistake I have is
-> the iwlwifi driver for the Intel Corporation PRO/Wireless 3945ABG
-> network controller. The bitrate settings are sometimes very different.
-> Sometimes it says 6 Mb/s, sometimes 11 Mb/s or 54 Mb/s and maybe 
-> sometimes 5.5 Mb/s.
-> 
-> The other thing is the message in log:
-> wlan0: duplicate address detected!
-> I have no machine with the same address in my network and no other
-> accesspoint in the range of my wlan.
-> 
-> With the 2.6.22.3 kernel and the iwp3945 driver the bitrate settings 
-> only 54 Mb/s and the message never found in logs.
-> 
+--=-Jh2VHo/fdIw19KNVKdQC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-(cc linux-wireless)
+Hi Yi,
+
+In sta_process_dls_req, you currently always accept DLS. I'm not sure
+how well power save mode works in mac80211 (probably not at all, someone
+versed in 802.11 should probably look at it some time soon), but once
+DLS is set up power saving must be disabled by the DLS peer. This,
+however, possibly leads to battery lifetime diminishing, so always
+accepting the direct link might not be desirable. Any thoughts?
+
+Should we have user-space controlled list of DLS possible DLS peers? Or
+call out to userspace via nl80211 to make a decision? The list would be
+easy by simply adding a sta_info for a possible DLS peer, callout also
+shouldn't be too hard by sending a message to some QoS nl80211 multicast
+group and possibly not responding to the DLS request at all when our
+userspace doesn't accept it (that way it'll just time out on the other
+side).
+
+johannes
+
+--=-Jh2VHo/fdIw19KNVKdQC
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGbY4K/ETPhpq3jKURAro2AKC4UsT7FzMEEXfx42RgrokY6wGpBgCeMIpr
+fbOxLXdI994xIlDnXMc7qoc=
+=eRLq
+-----END PGP SIGNATURE-----
+
+--=-Jh2VHo/fdIw19KNVKdQC--
+
