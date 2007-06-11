@@ -1,53 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51447 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41763 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752425AbXFVJJJ (ORCPT
+	with ESMTP id S1751109AbXFKLRT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2007 05:09:09 -0400
-Subject: Re: [WIP] mac80211: kill mgmt interface
+	Mon, 11 Jun 2007 07:17:19 -0400
+Subject: Re: [PATCH Try#8 3/4] cfg80211: Radiotap parser
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200268.51153.qm@web51411.mail.re2.yahoo.com>
-References: <200268.51153.qm@web51411.mail.re2.yahoo.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8WbomQ/0MMEP7YNMp6lO"
-Date: Fri, 22 Jun 2007 11:10:22 +0200
-Message-Id: <1182503422.21939.73.camel@johannes.berg>
+To: andy@warmcat.com
+Cc: linux-wireless@vger.kernel.org,
+	Randy Dunlap <randy.dunlap@oracle.com>
+In-Reply-To: <20070611095846.511945296@warmcat.com>
+References: <20070611095400.206844675@warmcat.com>
+	 <20070611095846.511945296@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JV5fI8yC5Y/gG6NnlPF8"
+Date: Mon, 11 Jun 2007 13:17:48 +0200
+Message-Id: <1181560668.29767.8.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-8WbomQ/0MMEP7YNMp6lO
+--=-JV5fI8yC5Y/gG6NnlPF8
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Is there any way you can make your mails thread correctly? Maybe by
-using a proper MUA?
+Hi Andy,
 
-> Regarding user-space MLME and special interfaces:
-> mac80211 allows for multiple virtual interfaces on top of one physical NI=
-C, right?=20
-> Can one run multiple MLME (e.g. hostapd) instances to run multiple virtua=
-l master mode interfaces
-> for different networks? With different BSSID?
+Thanks for the repost.
 
-Only if the underlaying hardware and driver support that. No current
-drivers do.
+> +/* Radiotap header iteration
+> + *   implemented in net/wireless/radiotap.c
+> + *
+> + * call __ieee80211_radiotap_iterator_init() to init a semi-opaque itera=
+tor
+> + * struct ieee80211_radiotap_iterator (no need to init the struct before=
+hand)
+> + * then loop calling __ieee80211_radiotap_iterator_next()... it returns =
+-1
+> + * if there are no more args in the header, or the next argument type in=
+dex
+> + * that is present.  The iterator's this_arg member points to the start =
+of the
+> + * argument associated with the current argument index that is present,
+> + * which can be found in the iterator's this_arg_index member.  This arg
+> + * index corresponds to the IEEE80211_RADIOTAP_... defines.
+> + */
+
+I don't think this will show up in the kdoc output, but it sure would be
+nice. Maybe it could be part of the description of
+ieee80211_radiotap_iterator as a 'how to use this iterator' section (see
+kernel-doc-nano-HOWTO.txt, it talks about sections)? Or maybe as
+kernel-doc for the functions themselves.
+
+> +/**
+> + * ieee80211_radiotap_iterator_init - radiotap parser iterator initializ=
+ation
+
+Oh, you have kerneldoc comments in the source file. Does anyone know
+which is preferable? I usually put everything into the header file that
+is not implementation-detail.
+
+> +		 * no need to check again for blowing past stated radiotap
+> +		 * header length, becuase ieee80211_radiotap_iterator_next
+                                    ^^^^^^^
+typo
+
+> + * care of alignment handling and extended present fields.  interator->t=
+his_arg
+
+typo: "interator", also I don't understand why you would want to change
+this_arg?
 
 johannes
 
---=-8WbomQ/0MMEP7YNMp6lO
+--=-JV5fI8yC5Y/gG6NnlPF8
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGe5H9/ETPhpq3jKURAr5+AJ9dxX0DqSxgcIeCzlaIR/+360D+5ACeKP1L
-PLn+GEkMl2361LE9i7nocvc=
-=yy5h
+iD8DBQBGbS9c/ETPhpq3jKURAtZNAKCHCs2IRLA0R26UVxCHXam2daHyZACgjfqO
++zGWWOWL/5ytzg2Sag1KSIw=
+=P0++
 -----END PGP SIGNATURE-----
 
---=-8WbomQ/0MMEP7YNMp6lO--
+--=-JV5fI8yC5Y/gG6NnlPF8--
 
