@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out112.alice.it ([85.37.17.112]:3278 "EHLO
-	smtp-out112.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754884AbXF1Ocd (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54268 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751163AbXFKLpY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2007 10:32:33 -0400
-From: Matteo Croce <rootkit85@yahoo.it>
-To: Michal Schmidt <mschmidt@redhat.com>
-Subject: Re: [PATCH 0/4] airo fixes
-Date: Thu, 28 Jun 2007 16:31:41 +0200
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200706281631.41273.rootkit85@yahoo.it>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+	Mon, 11 Jun 2007 07:45:24 -0400
+Subject: Re: [PATCH 2/2] bcm43xx-mac80211: Fix reported rx frequency and   channel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: andy@warmcat.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <1181561185.29767.18.camel@johannes.berg>
+References: <20070611103828.961999956@warmcat.com>
+	 <20070611103914.577674038@warmcat.com>
+	 <1181561185.29767.18.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1tnJLahduT+ys36rKX57"
+Date: Mon, 11 Jun 2007 13:45:55 +0200
+Message-Id: <1181562355.29767.21.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Wed, 2007-06-27 at 23:14 +0200, Michal Schmidt wrote:
-> Hello,
->
-> this is a series of four patches for the airo driver:
->
-> 1/4: airo: don't use the interface name so much before registration
-> 2/4: airo: delay parts of initialization until the netdev is up
-> 3/4: airo: disable the PCI device when unloading module
-> 4/4: airo: start with radio off
->
-> The first two fix the race condition Matteo Croce was experiencing.
-> The third one fixes a bug I noticed during testing.
-> The last one saves some power when the card is not used.
 
-I have applied your 4 patches on both a vanilla 2.6.21.5 kernel and
-a 2.6.22-rc6 wireless-dev one, and i found that only patches 1/4 and 2/4 are 
-good.
-the 3/4 one gives this bogus output:
+--=-1tnJLahduT+ys36rKX57
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-airo(): Probing for PCI adapters
-PCI: Setting latency timer of device 0000:05:08.0 to 64
-airo(eth%d): cmd:111 status:7f11 rsp0:2 rsp1:0 rsp2:0
-airo(eth%d): Doing fast bap_reads
-airo(): WPA is supported.
-airo(eth0): MAC enabled 0:d:29:4f:c:be
-airo(): Finished probing for PCI adapters
 
-and the 4/4 definitely broke all:
+> Damn. This is a firmware thing, the firmware later changed because they
+> needed more than 2 bits for the PHY type so things were shifted up by
+> one. That means the actual channel ID mask will be 0x7f8 now and this is
+> in the current specs. Can you please post which firmware you're using?
+> We'll want to force people to use newer firmware with this behaviour
+> -or- figure out at what point they made the transition...
 
-airo(): Probing for PCI adapters
-PCI: Setting latency timer of device 0000:05:08.0 to 64
-airo(eth%d): cmd:111 status:7f11 rsp0:2 rsp1:0 rsp2:0
-airo(eth%d): Doing fast bap_reads
-airo(eth%d): Bad MAC enable reason = 2, rid = 0, offset = 0
-airo(eth%d): MAC could not be enabled
-airo(): Finished probing for PCI adapters
+See bottom of http://bcm-v4.sipsolutions.net/802.11/RX
+
+Actually, I guess we can test this. Beacons contain the channel, we can
+determine the frequency from that and see what's going on. I'll leave it
+to Michael to decide what to do.
+
+johannes
+
+--=-1tnJLahduT+ys36rKX57
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGbTXz/ETPhpq3jKURAqRWAKCeihD/d9fGPVuy5aKJUwoBpoQsXgCgsBKi
+VSZzvCK8aL+a9Th4RxAFnmo=
+=f/wa
+-----END PGP SIGNATURE-----
+
+--=-1tnJLahduT+ys36rKX57--
+
