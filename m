@@ -1,35 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:6508 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763753AbXFHByd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2007 21:54:33 -0400
-Subject: Re: IEEE802.11e/WMM TS management and DLS support
-From: Zhu Yi <yi.zhu@intel.com>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: jketreno <jketreno@linux.intel.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070608004009.46c3d6ea@logostar.upir.cz>
-References: <20070606082152.GA28639@mail.intel.com>
-	 <20070607224315.6dadffca@griffin.suse.cz>
-	 <4668D293.1010908@linux.intel.com>
-	 <200706071412.54918.flamingice@sourmilk.net>
-	 <4668DE0F.7060302@linux.intel.com>
-	 <20070608004009.46c3d6ea@logostar.upir.cz>
-Content-Type: text/plain
-Date: Fri, 08 Jun 2007 09:53:49 +0800
-Message-Id: <1181267629.3039.102.camel@debian.sh.intel.com>
-Mime-Version: 1.0
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:6810 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751021AbXFKGgi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2007 02:36:38 -0400
+Received: from lin01.mn-solutions.de (pD95F9680.dip0.t-ipconnect.de [217.95.150.128])
+	by s131.mittwaldmedien.de (Postfix) with ESMTP id 3A1025E45C3
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2007 08:36:36 +0200 (CEST)
+Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 3721B1E002B
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2007 08:36:30 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Marvell CB35 cardbus cards
+Date: Mon, 11 Jun 2007 08:36:29 +0200
+References: <1181061336.8274.36.camel@johannes.berg> <20070606150438.GB4572@tuxdriver.com>
+In-Reply-To: <20070606150438.GB4572@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200706110836.29921.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-06-08 at 00:40 +0200, Jiri Benc wrote:
-> I apologize it took me so long. On the other hand, I wrote at least some of
-> the comments when the patches were sent out first time many months ago and
-> they still haven't been addressed.
+> I have a device, and probably a copy of the code you have.  A
+> driver is in progress -- just (hopefully) resolved some
+> firmware loading issues.
 
-I think I have all addressed all the comments from the list last time.
-If you still have _valid_ comments, please point out.
+My driver downloads the firmware fine, and I just started to 
+implement the ISR. The patches are not yet in "fine" format, 
+e.g. scripts/checkpatch.pl (from 2.6.22-rc4) still complains 
+about minor issues.
 
--yi
+Patches are against libertas-2.6
+
+http://projects.linuxtogo.org/plugins/scmsvn/viewcvs.php/trunk/libertas-patches/?root=marvell8385
