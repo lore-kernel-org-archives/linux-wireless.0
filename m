@@ -1,38 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:40932 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756886AbXFMNAs (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:33903 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758659AbXFKKjR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2007 09:00:48 -0400
-Message-ID: <466FEA7B.3000101@lwfinger.net>
-Date: Wed, 13 Jun 2007 08:00:43 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Pavel Machek <pavel@ucw.cz>
-CC: James Ketrenos <jketreno@linux.intel.com>,
-	kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: Re: ipw3945 driver in recent -mm kernels
-References: <20070609192703.GA6410@elf.ucw.cz> <20070609215712.GA13678@elf.ucw.cz> <466DA14D.6080309@linux.intel.com> <20070613110718.GA1800@elf.ucw.cz>
-In-Reply-To: <20070613110718.GA1800@elf.ucw.cz>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 11 Jun 2007 06:39:17 -0400
+Message-Id: <20070611103914.577674038@warmcat.com>
+References: <20070611103828.961999956@warmcat.com>
+Date: Mon, 11 Jun 2007 11:38:30 +0100
+From: andy@warmcat.com
+To: linux-wireless@vger.kernel.org
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	Michael Buesch <mb@bu3sch.de>, Andy Green <andy@warmcat.com>
+Subject: [PATCH 2/2] bcm43xx-mac80211: Fix reported rx frequency and channel
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Machek wrote:
-> Hi!
-> 
-> BTW could we get some more reasonable path? Currently wifi drivers are
-> in
-> 
-> drivers/net/wireless/mac80211/iwlwifi
-> 
-> ...ouch. drivers/mac80211/iwlwifi would be better...
+bcm43xx-mac80211 is reporting bogus frequencies and channels back to
+mac80211 at the moment (eg, actual ch1 (2412MHz) reported as 2424MHz).
 
-NACK. Having _ALL_ wireless drivers under drivers/net/wireless/ is correct. I would vote, however, 
-for collapsing out the mac80211 directory once all softmac drivers are converted to mac80211 and all 
-the duplications are removed.
+Prior to this patch, the hardware rx channel value is reported as
+starting at 0x18 and rising by 0x0a per channel.  Code in bcm43xx_xmit.c
+tries to take this value and add 2400 to it to get the rx frequency.
+It seems the intention is that the hardware reports the (rx freq - 2400),
+so we want the value starting at 0x0c and rising by 0x05 per channel.
 
-Larry
+If the value read is shifted one more bit to the right, it will
+succeed in doing this.  Therefore this patch increases the shifting constant
+by one and reduces the mask by one lsb.
 
+The rx frequency reported in the radiotap rx and then, eg, tcpdump,
+is then correct.  I didn't test ch 14 but I guess the hardware is
+consistent about it.
 
+CC: Larry Finger <larry.finger@lwfinger.net>
+CC: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Andy Green <andy@warmcat.com>
+
+diff --git a/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h b/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h
+index 44fa515..0372064 100644
+--- a/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h
++++ b/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h
+@@ -190,8 +190,8 @@ struct bcm43xx_rxhdr_fw4 {
+ /* RX channel */
+ #define BCM43xx_RX_CHAN_GAIN		0xFC00 /* Gain */
+ #define BCM43xx_RX_CHAN_GAIN_SHIFT	10
+-#define BCM43xx_RX_CHAN_ID		0x03FC /* Channel ID */
+-#define BCM43xx_RX_CHAN_ID_SHIFT	2
++#define BCM43xx_RX_CHAN_ID		0x03F8 /* Channel ID */
++#define BCM43xx_RX_CHAN_ID_SHIFT	3
+ #define BCM43xx_RX_CHAN_PHYTYPE		0x0003 /* PHY type */
+ 
+ 
+
+-- 
