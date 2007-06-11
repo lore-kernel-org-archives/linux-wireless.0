@@ -1,69 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:36030 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751355AbXFLJfz (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:34352 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752170AbXFKPWN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2007 05:35:55 -0400
-Subject: Re: [Take 2] mac80211 IEEE802.11e/WMM code cleanup
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <1181635570.4758.22.camel@debian.sh.intel.com>
-References: <20070611085950.GA5540@mail.intel.com>
-	 <1181584907.29767.30.camel@johannes.berg>
-	 <1181635570.4758.22.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sd6L+1cwd+RI857bURdQ"
-Date: Tue, 12 Jun 2007 11:35:49 +0200
-Message-Id: <1181640950.29767.62.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 11 Jun 2007 11:22:13 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id F18F48D762
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2007 17:22:07 +0200 (CEST)
+Message-Id: <20070611152210.400383149@warmcat.com>
+References: <20070611152120.078733592@warmcat.com>
+Date: Mon, 11 Jun 2007 16:21:22 +0100
+From: andy@warmcat.com
+To: linux-wireless@vger.kernel.org
+Cc: Andy Green <andy@warmcat.com>
+Subject: [PATCH Try#9 2/4] mac80211: Define present bitmap extend bit mask
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Used to detect if the field presence mask is extended
 
---=-sd6L+1cwd+RI857bURdQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Andy Green <andy@warmcat.com>
 
-On Tue, 2007-06-12 at 16:06 +0800, Zhu Yi wrote:
+---
+ include/net/ieee80211_radiotap.h |    2 ++
+ 1 file changed, 2 insertions(+)
 
-> You are right. I once had the debugfs file on the DLS request response
-> side to to indicate accept or deny all DLS requests. But after a second
-> thought, maybe a MAC list is better? But this is just for testing not a
-> real API.
+Index: wireless-dev/include/net/ieee80211_radiotap.h
+===================================================================
+--- wireless-dev.orig/include/net/ieee80211_radiotap.h
++++ wireless-dev/include/net/ieee80211_radiotap.h
+@@ -90,6 +90,8 @@ struct ieee80211_radiotap_header {
+ 				 */
+ };
+ 
++#define IEEE80211_RADIOTAP_PRESENT_EXTEND_MASK 0x80000000
++
+ /* Name                                 Data type    Units
+  * ----                                 ---------    -----
+  *
 
-Alright.
-
-> Right. For the real API, I'd prefer the kernel to send an event to
-> userspace (daemon) via netlink (nl80211) and let user space to make the
-> decision. This way mac80211 doesn't need to manage the user prefered DLS
-> list itself. Another benefit is the DLS connection could be established
-> interactively. For example when a user is VIing in Xwindows, a pop up
-> window from NetworkManager asks "MAC address XX:XX:.. wants to setup a
-> DLS connection with you, do you accept?"
-
-Yeah, I disagree with bothering the user with it, but the idea sounds
-sane in that a userspace daemon is allowed to make the decision.
-
-And putting it into the kernel now is actually a good thing, it forces
-us to think about the use cases. When we stick it all into the userspace
-MLME are we sure that the userspace MLME is the right place to make the
-decision? I don't think it is, so we need the MLME API anyway.
-
-johannes
-
---=-sd6L+1cwd+RI857bURdQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGbmj1/ETPhpq3jKURAv6mAJ4oc6oksUDg/KFzXahBJQiARggLqQCgkICe
-N8QWxZ3bgeLTLu7rFulVCr0=
-=kHxP
------END PGP SIGNATURE-----
-
---=-sd6L+1cwd+RI857bURdQ--
-
+-- 
