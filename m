@@ -1,46 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41463 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762234AbXFFLg4 (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:33902 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758907AbXFKKjR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2007 07:36:56 -0400
-Received: from [131.234.79.252]
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Hvtor-0002n7-U4
-	for linux-wireless@vger.kernel.org; Wed, 06 Jun 2007 12:36:54 +0100
-Subject: Marvell CB35 cardbus cards
-From: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 11 Jun 2007 06:39:17 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id B56028D761
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2007 12:39:13 +0200 (CEST)
+Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
+	by armbox7.home.warmcat.com (Postfix) with ESMTP id 5FEBC13C7A
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2007 10:39:37 +0000 (UTC)
+Message-Id: <20070611103828.961999956@warmcat.com>
+Date: Mon, 11 Jun 2007 11:38:28 +0100
+From: andy@warmcat.com
 To: linux-wireless@vger.kernel.org
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NHYu9rvD8cbiz/Ouwh4Q"
-Date: Tue, 05 Jun 2007 18:35:36 +0200
-Message-Id: <1181061336.8274.36.camel@johannes.berg>
-Mime-Version: 1.0
+Subject: [PATCH 0/2] Small driver fixes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-NHYu9rvD8cbiz/Ouwh4Q
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-Does anybody have such a card? I just found some code for it. It's based
-on net80211, is anybody interested in that?
-
-johannes
-
---=-NHYu9rvD8cbiz/Ouwh4Q
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGZZDY/ETPhpq3jKURAhQIAJ9LfPKhGP1/6r2OHeNZ3qTvZ3MB/wCglwrU
-d6oXvIcbINkoRc+9kYpoTBw=
-=079z
------END PGP SIGNATURE-----
-
---=-NHYu9rvD8cbiz/Ouwh4Q--
-
+Couple of things don't work properly with radiotap rx yet.  These patches make them work.
+-- 
