@@ -1,190 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:59222 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755112AbXFYOik (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2007 10:38:40 -0400
-Message-ID: <467FD362.8000602@redhat.com>
-Date: Mon, 25 Jun 2007 16:38:26 +0200
-From: Michal Schmidt <mschmidt@redhat.com>
-MIME-Version: 1.0
-To: Matteo Croce <rootkit85@yahoo.it>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: airo
-References: <200706061903.13228.rootkit85@yahoo.it> <46693003.8090406@redhat.com> <200706091519.29319.rootkit85@yahoo.it> <200706091816.47618.rootkit85@yahoo.it>
-In-Reply-To: <200706091816.47618.rootkit85@yahoo.it>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60462 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750773AbXFKL0D (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2007 07:26:03 -0400
+Subject: Re: [PATCH 2/2] bcm43xx-mac80211: Fix reported rx frequency and  channel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: andy@warmcat.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <20070611103914.577674038@warmcat.com>
+References: <20070611103828.961999956@warmcat.com>
+	 <20070611103914.577674038@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rlGn8IfKkuiqqdPnOrPv"
+Date: Mon, 11 Jun 2007 13:26:25 +0200
+Message-Id: <1181561185.29767.18.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matteo Croce wrote:
-> after booting i have this situation:
->
-> root@raver:~# lsmod |fgrep airo
-> airo                   80016  0
-> root@raver:~# dmesg |fgrep airo
-> airo(): Probing for PCI adapters
-> airo(eth1): cmd:111 status:7f11 rsp0:2 rsp1:0 rsp2:0
-> airo(eth1): Doing fast bap_reads
-> airo(eth1): WPA is supported.
-> airo(eth1): Couldn't register_netdev
-> airo(): Finished probing for PCI adapters
-> root@raver:~#
->
-> I have to do this to connect:
->
-> root@raver:~# rmmod airo
-> root@raver:~# modprobe airo
-> root@raver:~# dmesg |fgrep airo
-> airo(): Probing for PCI adapters
-> airo(eth1): cmd:111 status:7f11 rsp0:2 rsp1:0 rsp2:0
-> airo(eth1): Doing fast bap_reads
-> airo(eth1): WPA is supported.
-> airo(eth1): Couldn't register_netdev
-> airo(): Finished probing for PCI adapters
-> airo(): Probing for PCI adapters
-> airo(eth0): cmd:111 status:7f11 rsp0:2 rsp1:0 rsp2:0
-> airo(eth0): Doing fast bap_reads
-> airo(eth0): WPA is supported.
-> airo(eth0): MAC enabled 0:d:29:4f:c:be
-> airo(): Finished probing for PCI adapters
-> root@raver:~#
->   
 
-Hi Matteo,
+--=-rlGn8IfKkuiqqdPnOrPv
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-It looks like some other network interface gets renamed from "eth0" to
-"eth1" at the same time the airo driver is initializing the card. Does
-it happen always after booting? Do you have other network interfaces?
-This patch should fix it. Can you test it?
 
-Michal
+> --- a/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h
+> +++ b/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h
+> @@ -190,8 +190,8 @@ struct bcm43xx_rxhdr_fw4 {
+>  /* RX channel */
+>  #define BCM43xx_RX_CHAN_GAIN		0xFC00 /* Gain */
+>  #define BCM43xx_RX_CHAN_GAIN_SHIFT	10
+> -#define BCM43xx_RX_CHAN_ID		0x03FC /* Channel ID */
+> -#define BCM43xx_RX_CHAN_ID_SHIFT	2
+> +#define BCM43xx_RX_CHAN_ID		0x03F8 /* Channel ID */
+> +#define BCM43xx_RX_CHAN_ID_SHIFT	3
+>  #define BCM43xx_RX_CHAN_PHYTYPE		0x0003 /* PHY type */
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index 2d3a180..1a350b3 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -41,6 +41,7 @@
- 
- #include <linux/netdevice.h>
- #include <linux/etherdevice.h>
-+#include <linux/rtnetlink.h>
- #include <linux/skbuff.h>
- #include <linux/if_arp.h>
- #include <linux/ioport.h>
-@@ -2802,10 +2803,6 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
- 		airo_print_err("", "Couldn't alloc_etherdev");
- 		return NULL;
-         }
--	if (dev_alloc_name(dev, dev->name) < 0) {
--		airo_print_err("", "Couldn't get name!");
--		goto err_out_free;
--	}
- 
- 	ai = dev->priv;
- 	ai->wifidev = NULL;
-@@ -2813,7 +2810,7 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
- 	ai->jobs = 0;
- 	ai->dev = dev;
- 	if (pci && (pci->device == 0x5000 || pci->device == 0xa504)) {
--		airo_print_dbg(dev->name, "Found an MPI350 card");
-+		airo_print_dbg("", "Found an MPI350 card");
- 		set_bit(FLAG_MPI, &ai->flags);
- 	}
- 	spin_lock_init(&ai->aux_lock);
-@@ -2821,14 +2818,11 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
- 	ai->config.len = 0;
- 	ai->pci = pci;
- 	init_waitqueue_head (&ai->thr_wait);
--	ai->airo_thread_task = kthread_run(airo_thread, dev, dev->name);
--	if (IS_ERR(ai->airo_thread_task))
--		goto err_out_free;
- 	ai->tfm = NULL;
- 	add_airo_dev(ai);
- 
- 	if (airo_networks_allocate (ai))
--		goto err_out_thr;
-+		goto err_out_free;
- 	airo_networks_initialize (ai);
- 
- 	/* The Airo-specific entries in the device structure. */
-@@ -2855,16 +2849,31 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
- 	reset_card (dev, 1);
- 	msleep(400);
- 
-+	rtnl_lock();  /* Makes sure no device registers our name. */
-+	if (dev_alloc_name(dev, dev->name) < 0) {
-+		airo_print_err("", "Couldn't get name!");
-+		rtnl_unlock();
-+		goto err_out_nets;
-+	}
-+
-+	ai->airo_thread_task = kthread_run(airo_thread, dev, dev->name);
-+	if (IS_ERR(ai->airo_thread_task)) {
-+		rtnl_unlock();
-+		goto err_out_nets;
-+	}
-+
- 	rc = request_irq( dev->irq, airo_interrupt, IRQF_SHARED, dev->name, dev );
- 	if (rc) {
- 		airo_print_err(dev->name, "register interrupt %d failed, rc %d",
- 				irq, rc);
--		goto err_out_nets;
-+		rtnl_unlock();
-+		goto err_out_thr;
- 	}
- 	if (!is_pcmcia) {
- 		if (!request_region( dev->base_addr, 64, dev->name )) {
- 			rc = -EBUSY;
- 			airo_print_err(dev->name, "Couldn't request region");
-+			rtnl_unlock();
- 			goto err_out_irq;
- 		}
- 	}
-@@ -2872,6 +2881,7 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
- 	if (test_bit(FLAG_MPI,&ai->flags)) {
- 		if (mpi_map_card(ai, pci, dev->name)) {
- 			airo_print_err(dev->name, "Could not map memory");
-+			rtnl_unlock();
- 			goto err_out_res;
- 		}
- 	}
-@@ -2880,6 +2890,7 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
- 		if ( setup_card( ai, dev->dev_addr, 1 ) != SUCCESS ) {
- 			airo_print_err(dev->name, "MAC could not be enabled" );
- 			rc = -EIO;
-+			rtnl_unlock();
- 			goto err_out_map;
- 		}
- 	} else if (!test_bit(FLAG_MPI,&ai->flags)) {
-@@ -2899,9 +2910,10 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
- 		ai->bssListRidLen = sizeof(BSSListRid) - sizeof(BSSListRidExtra);
- 	}
- 
--	rc = register_netdev(dev);
-+	rc = register_netdevice(dev);
-+	rtnl_unlock();
- 	if (rc) {
--		airo_print_err(dev->name, "Couldn't register_netdev");
-+		airo_print_err(dev->name, "Couldn't register_netdevice");
- 		goto err_out_map;
- 	}
- 	ai->wifidev = init_wifidev(ai, dev);
-@@ -2942,13 +2954,13 @@ err_out_res:
- 	        release_region( dev->base_addr, 64 );
- err_out_irq:
- 	free_irq(dev->irq, dev);
--err_out_nets:
--	airo_networks_free(ai);
- err_out_thr:
--	del_airo_dev(ai);
- 	set_bit(JOB_DIE, &ai->jobs);
- 	kthread_stop(ai->airo_thread_task);
-+err_out_nets:
-+	airo_networks_free(ai);
- err_out_free:
-+	del_airo_dev(ai);
- 	free_netdev(dev);
- 	return NULL;
- }
+Damn. This is a firmware thing, the firmware later changed because they
+needed more than 2 bits for the PHY type so things were shifted up by
+one. That means the actual channel ID mask will be 0x7f8 now and this is
+in the current specs. Can you please post which firmware you're using?
+We'll want to force people to use newer firmware with this behaviour
+-or- figure out at what point they made the transition...
 
+johannes
+
+--=-rlGn8IfKkuiqqdPnOrPv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGbTFh/ETPhpq3jKURAuveAJ4+Nvlw+5yVEz8USu6Q1UteYmHmnwCdHmyI
+mnA+yWr+eR3lgXEl3LXFrts=
+=PrCL
+-----END PGP SIGNATURE-----
+
+--=-rlGn8IfKkuiqqdPnOrPv--
 
