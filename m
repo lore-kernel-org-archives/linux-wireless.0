@@ -1,136 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from daemonizer.de ([87.230.16.230]:55386 "EHLO daemonizer.de"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4684 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755664AbXFPV2B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jun 2007 17:28:01 -0400
-From: Maximilian Engelhardt <maxi@daemonizer.de>
-To: netdev <netdev@vger.kernel.org>
-Subject: b44: high ping times with wireless-dev
-Date: Sat, 16 Jun 2007 23:27:43 +0200
-Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	Gary Zambrano <zambrano@broadcom.com>,
-	Stephen Hemminger <shemminger@linux-foundation.org>,
-	"Jeff Garzik" <jgarzik@pobox.com>,
-	"Arnaldo Carvalho de Melo" <acme@ghostprotocols.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart9854408.IIlnzTzavd";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200706162327.47413.maxi@daemonizer.de>
+	id S1752436AbXFKUYd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2007 16:24:33 -0400
+Date: Mon, 11 Jun 2007 16:12:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Please pull libertas-2.6
+Message-ID: <20070611201222.GI10397@tuxdriver.com>
+References: <1181102122.18061.8.camel@xo-28-0B-88.localdomain> <1181396495.23205.0.camel@xo-28-0B-88.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1181396495.23205.0.camel@xo-28-0B-88.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart9854408.IIlnzTzavd
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Sat, Jun 09, 2007 at 09:41:35AM -0400, Dan Williams wrote:
+> On Tue, 2007-06-05 at 23:55 -0400, Dan Williams wrote:
+> > Hi,
+> > 
+> > Changes since you last pulled are mainly Christoph-inspired cleanups, a
+> > few bug fixes, mesh scanning, and a few more mesh-specific knobs (though
+> > most likely general to 802.11s implementations, not just the CozyBit
+> > one).
+> > 
+> > Per the email thread with jgarzik from the last pull, everything from
+> > libertas-2.6 'master' branch is currently targeted at _2.6.22_.
+> 
+> Any comments here John?
 
-Hello,
+Sorry, last week was rather busy...
 
-I recently did some test and found out something interesting about the b44=
-=20
-problem I wrote earlier.=20
+> > Dan Williams (24):
+> >       libertas: actually remove version.h
+> >       libertas: kill wlan_scan_process_results
+> >       libertas: kill ieeetypes_capinfo bitfield, use ieee80211.h types
+> >       libertas: rename WLAN_802_11_KEY to enc_key and clean up usage
+> >       libertas: clean up indentation in libertas_association_worker
+> >       libertas: clean up 802.11 IE post-scan handling
+> >       libertas: rename private ioctl constants and clean up ioctl handling
+> >       libertas: remove if_bootcmd.c
+> >       libertas: fix mixed-case abuse in cmd_ds_802_11_scan
+> >       libertas: fix mixed-case abuse in cmd_ds_802_11_ad_hoc_result
+> >       libertas: fix mixed-case abuse in cmd_ds_802_11_ad_hoc_start
+> >       libertas: re-uppercase command defines and other constants
+> >       libertas: fix debug build breakage due to field rename
+> >       libertas: remove thread.h and make kthread usage clearer
+> >       libertas: new mesh control knobs
+> >       libertas: bump version to 322.p1
+> >       libertas: wlan_ -> libertas_ rename in ioctl.c
+> >       libertas: fix more mixed-case abuse
+> >       libertas: move generic firmware reset command to common code
+> >       libertas: wlan_ -> libertas_ function prefix renames for main.c
+> >       libertas: simplify and clean up data rate handling
+> >       libertas: fix MESH_[GET/SET]_BCASTR ioctl, clean up ioctl subcmd handling
+> >       libertas: actually send mesh frames to mesh netdev
+> > 
+> > Luis Carlos Cobo (1):
+> >       libertas: specific mesh scan for mshX interface
+> > 
+> > Luis Carlos Cobo Rus (2):
+> >       libertas: pull current channel from firmware on mesh autostart
+> >       libertas: deauthenticate from AP in channel switch
 
-The problem is the following:
-When I use my BCM4401 with the b44 driver in wireless-dev I get very high p=
-ing=20
-times looking like this:
+Jeff had expressed a willingness to accept the previous batch
+of libertas patches and pass them to Linus for 2.6.22.  However,
+judging by the titles above this patch looks more like clean-ups and
+new development.  Any objection to this batch being targeted at 2.6.23?
 
-64 bytes from 172.30.10.1: icmp_seq=3D1 ttl=3D64 time=3D1863 ms
-64 bytes from 172.30.10.1: icmp_seq=3D2 ttl=3D64 time=3D855 ms
-64 bytes from 172.30.10.1: icmp_seq=3D3 ttl=3D64 time=3D1855 ms
-64 bytes from 172.30.10.1: icmp_seq=3D4 ttl=3D64 time=3D855 ms
-64 bytes from 172.30.10.1: icmp_seq=3D5 ttl=3D64 time=3D1854 ms
-64 bytes from 172.30.10.1: icmp_seq=3D6 ttl=3D64 time=3D854 ms
-64 bytes from 172.30.10.1: icmp_seq=3D7 ttl=3D64 time=3D1851 ms
-64 bytes from 172.30.10.1: icmp_seq=3D8 ttl=3D64 time=3D851 ms
-64 bytes from 172.30.10.1: icmp_seq=3D9 ttl=3D64 time=3D1851 ms
-64 bytes from 172.30.10.1: icmp_seq=3D10 ttl=3D64 time=3D851 ms
-
-I also found out that shortly after I boot my laptop and log into kde ping=
-=20
-times are not that high but start to increase very quickly:
-
-64 bytes from 172.30.10.1: icmp_seq=3D53 ttl=3D64 time=3D2.19 ms
-64 bytes from 172.30.10.1: icmp_seq=3D54 ttl=3D64 time=3D2.22 ms
-64 bytes from 172.30.10.1: icmp_seq=3D55 ttl=3D64 time=3D2.20 ms
-64 bytes from 172.30.10.1: icmp_seq=3D56 ttl=3D64 time=3D2.20 ms
-64 bytes from 172.30.10.1: icmp_seq=3D57 ttl=3D64 time=3D18.6 ms
-64 bytes from 172.30.10.1: icmp_seq=3D58 ttl=3D64 time=3D1268 ms
-64 bytes from 172.30.10.1: icmp_seq=3D59 ttl=3D64 time=3D268 ms
-64 bytes from 172.30.10.1: icmp_seq=3D60 ttl=3D64 time=3D1268 ms
-64 bytes from 172.30.10.1: icmp_seq=3D61 ttl=3D64 time=3D268 ms
-64 bytes from 172.30.10.1: icmp_seq=3D62 ttl=3D64 time=3D6.08 ms
-64 bytes from 172.30.10.1: icmp_seq=3D63 ttl=3D64 time=3D268 ms
-64 bytes from 172.30.10.1: icmp_seq=3D64 ttl=3D64 time=3D1264 ms
-64 bytes from 172.30.10.1: icmp_seq=3D65 ttl=3D64 time=3D264 ms
-
-After some time digging around I found out something really interesting. Wh=
-en=20
-I play some music ping times are immediately lower. If I stop playing music=
-=20
-they are back to the same times as they were before.
-
-I guess that there is a problem with interrupts so I post some information =
-of=20
-my system in hope it will be usefull.
-
-maxi@koala:~$ cat /proc/interrupts
-          CPU0      =20
- 0:     126317    XT-PIC-XT        timer
- 1:       3600    XT-PIC-XT        i8042
- 2:          0    XT-PIC-XT        cascade
- 7:          1    XT-PIC-XT        parport0
- 8:          1    XT-PIC-XT        rtc
- 9:      17371    XT-PIC-XT        acpi
-10:      13237    XT-PIC-XT        firewire_ohci, yenta, yenta, ehci_hcd:us=
-b1,=20
-uhci_hcd:usb3, uhci_hcd:usb4, Intel 82801DB-ICH4, Intel 82801DB-ICH4 Modem,=
-=20
-eth0
-11:      89059    XT-PIC-XT        uhci_hcd:usb2, i915@pci:0000:00:02.0
-12:        632    XT-PIC-XT        i8042
-14:      10354    XT-PIC-XT        libata
-15:       7408    XT-PIC-XT        libata
-NMI:          0=20
-ERR:          0
-
-
-[...]
-ACPI: PCI Interrupt Link [LNKD] enabled at IRQ 10
-ACPI: PCI Interrupt 0000:02:02.0[A] -> Link [LNKD] -> GSI 10 (level, low) -=
->=20
-IRQ 10
-ssb: Sonics Silicon Backplane found on PCI device 0000:02:02.0
-b44.c:v2.0
-eth0: Broadcom 44xx/47xx 10/100BaseT Ethernet 00:c0:9f:29:99:a7
-[...]
-
-This problem did only happen with wireless-dev (checkout this evening) and=
-=20
-with -mm kernels I used some time ago for testing. Currently I'm running=20
-2.6.22-rc4 that works perfectly fine and doesn't show that problem.
-
-Maxi
-
---nextPart9854408.IIlnzTzavd
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQBGdFXTOimwv528XGERAlEVAKDBDmhNPMN8i4bJKsuisJgvHqgGswCg5Pgh
-9wUy0qGH9zi/fBpQMCYxG1I=
-=HxBs
------END PGP SIGNATURE-----
-
---nextPart9854408.IIlnzTzavd--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
