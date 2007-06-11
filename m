@@ -1,56 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:14620 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753783AbXFKJBg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 05:01:36 -0400
-Date: Mon, 11 Jun 2007 17:00:37 +0800
-From: Zhu Yi <yi.zhu@intel.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 6/6] mac80211: Fix sparse error for sta_last_seq_ctrl_read
-Message-ID: <20070611090037.GA5601@mail.intel.com>
-Reply-To: yi.zhu@intel.com
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:42204 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1763334AbXFKCoI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Jun 2007 22:44:08 -0400
+Message-ID: <466CB6F6.1020706@lwfinger.net>
+Date: Sun, 10 Jun 2007 21:44:07 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Daniel Drake <dsd@gentoo.org>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RFC: Regulatory info in mac80211
+References: <4665CCE7.5090409@lwfinger.net> <466A2383.50001@gentoo.org>
+In-Reply-To: <466A2383.50001@gentoo.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix sparse error for sta_last_seq_ctrl_read and comment variable for
-debugfs_rename TODO.
+Daniel Drake wrote:
+> Larry Finger wrote:
+>> 5. There should be a scheme for translating country codes based on the 
+>> outdated table 105 in Corrigendum 1 for 802.11b. This is the basis for 
+>> the EEPROM data in the ZD1211 hardware. Note, this scheme is far too 
+>> limited to be the only one available. If the translation code is 
+>> needed for more than one driver, it should be placed in mac80211.
+> 
+> You might wish to treat the fact that the ZD1211 EEPROM regdomain field 
+> appears to correspond to the 802.11b specs as just a coincidence. Some 
+> newer devices have regdomain values that are not in that table (and are 
+> not even mentioned in the vendor driver...)
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- net/mac80211/debugfs_netdev.c |    2 ++
- net/mac80211/debugfs_sta.c    |    2 +-
- 2 files changed, 3 insertions(+), 1 deletions(-)
+That was my intent from the start. The two European countries (France and Spain) that are mentioned 
+in that table have the wrong channels assigned; however, if some driver asked for either of those 
+regions, we will supply the channel data that is current today.
 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 5e50817..52a32e4 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -734,7 +734,9 @@ static int netdev_notify(struct notifier_block * nb,
- 			 void *ndev)
- {
- 	struct net_device *dev = ndev;
-+	/* TODO
- 	char buf[10+IFNAMSIZ];
-+	*/
- 
- 	if (state != NETDEV_CHANGENAME)
- 		return 0;
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index fc1a024..6cfe35a 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -158,7 +158,7 @@ static ssize_t sta_last_seq_ctrl_read(struct file *file, char __user *userbuf,
- 	struct sta_info *sta = file->private_data;
- 	for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
- 		p += scnprintf(p, sizeof(buf)+buf-p, "%x ",
--			       sta->last_seq_ctrl[i]);
-+			       le16_to_cpu(sta->last_seq_ctrl[i]));
- 	p += scnprintf(p, sizeof(buf)+buf-p, "\n");
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
- }
--- 
-1.5.0.rc2.g73a2
+Larry
