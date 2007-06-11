@@ -1,66 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34197 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754134AbXFIMOo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jun 2007 08:14:44 -0400
-Subject: Re: your nl80211 work
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Lamparter <lists@diac24.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20070609113859.GA10836@charon.n2.diac24.net>
-References: <1181380044.3566.11.camel@johannes.berg>
-	 <20070609113859.GA10836@charon.n2.diac24.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bmqxENtDki6Xs7XYIG4m"
-Date: Sat, 09 Jun 2007 14:14:58 +0200
-Message-Id: <1181391299.3566.17.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3757 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756731AbXFKTzg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2007 15:55:36 -0400
+Date: Mon, 11 Jun 2007 15:18:54 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	Akinobu Mita <akinobu.mita@gmail.com>,
+	linux-wireless@vger.kernel.org, Joe Jezak <josejx@gentoo.org>,
+	Daniel Drake <dsd@gentoo.org>
+Subject: Re: [PATCH] softmac: use list_for_each_entry
+Message-ID: <20070611191854.GG10397@tuxdriver.com>
+References: <20070527142740.GB13105@APFDCB5C> <1180643064.18266.2.camel@johannes.berg> <46604279.3070908@lwfinger.net> <1180725169.11026.29.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1180725169.11026.29.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Jun 01, 2007 at 09:12:49PM +0200, Johannes Berg wrote:
+> On Fri, 2007-06-01 at 10:59 -0500, Larry Finger wrote:
 
---=-bmqxENtDki6Xs7XYIG4m
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > In the earlier discussion, we also concluded that the product of a conversion from softmac to 
+> > mac80211 should not be included in mainline, with the exception of the b-only code. Depending on how 
+> > long the port and testing take, and the state of bcm43xx-mac80211 at that time, a reversal of that 
+> > earlier decision may be in order.
+> 
+> I'd think that once somebody has time for it both port and testing
+> should go pretty soon, and I'd think that we can do that sooner than fix
+> the current bcm43xx-mac80211, in which case IMHO the result should be
+> included in mainline seeing that zd1211rw will probably be ready for
+> mac80211 in the .23 timeframe. That means that at that point we might
+> even be able to drop softmac already if the second straightforward (here
+> I mean without any other changes to the driver) bcm43xx port is ready :)
 
-On Sat, 2007-06-09 at 13:39 +0200, David Lamparter wrote:
+FWIW, I would like to see a mac80211-based port of the current
+bcm43xx driver available as soon as it is ready, without waiting to
+strip-out the non-b portions.  This should help us abandon softmac
+as soon as possible.
 
-> Ah, I didn't think about that. Well, next try next luck... Hmm. Maybe we
-> should include the list of interfaces into the GET_WIPHY command and have
-> GET_INTERFACE never return a list?
+Plus, we may need to consider preserving the driver in its current
+form (aside from the softmac -> mac80211 port) for some time as a
+compatibility aid for those who already have working configurations
+with the "bcm43xx" driver.  Forcing a happy user to locate new firmware
+for no obvious benefit to them is not very nice (as I have learned
+so well w/ Fedora 7)...
 
-Actually, I only thought about that yesterday too when thinking about
-the userspace MLME thing (see my other post)
-
-> Yeah, I was hoping for feedback on this one. For one, do we even bother t=
-o
-> return the frequency via nl80211? There's no attribute for it yet, and I
-> don't know if this is too useful. Maybe it can be included in the channel
-> list, so if an application really wants to know the frequency, it can loo=
-k
-> up the table using channel+phymode as key and get it.
-
-I think Dan said that he'd really like to see the kernel have a
-frequency table somehow so not all userspace programs need to convert
-themselves and introduce bugs and be updated all the time for new
-things. But just having it in the channel list seems sufficient, or have
-it in cfg80211 and pass it via nl80211 but not read it on incoming
-requests nor bother the driver with it, i.e. create it from
-channel/phymode in nl80211.c itself.
-
-johannes
-
---=-bmqxENtDki6Xs7XYIG4m
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGapnB/ETPhpq3jKURAjusAKCZrDNrE1swX9Us0FEBCFb5isFNQgCgpuZk
-UsW3nkQUr/qom4GkERzq0II=
-=EE4e
------END PGP SIGNATURE-----
-
---=-bmqxENtDki6Xs7XYIG4m--
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
