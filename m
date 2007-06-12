@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57454 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751781AbXF1RdG (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:1159 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754787AbXFLNTP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2007 13:33:06 -0400
-Subject: Re: [RFC/PATCH] debug workqueue deadlocks with lockdep
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ingo Molnar <mingo@redhat.com>
-Cc: Arjan van de Ven <arjan@linux.intel.com>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1183048429.4089.1.camel@johannes.berg>
-References: <1182969638.4769.56.camel@johannes.berg>
-	 <1183048429.4089.1.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hKxaA+x3qOVrHv+4Lq6Z"
-Date: Thu, 28 Jun 2007 19:33:21 +0200
-Message-Id: <1183052001.4089.2.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 12 Jun 2007 09:19:15 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+Subject: Re: Please pull libertas-2.6
+Date: Tue, 12 Jun 2007 15:19:09 +0200
+References: <1181102122.18061.8.camel@xo-28-0B-88.localdomain> <200706120843.48517.hs4233@mail.mn-solutions.de> <1181649582.17599.4.camel@xo-28-0B-88.localdomain>
+In-Reply-To: <1181649582.17599.4.camel@xo-28-0B-88.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200706121519.09758.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> Well; I'm going to commit that one really soon to
+> libertas-2.6, but I don't think it's 2.6.22 material mainly
+> because there's no code for CF cards in libertas-2.6 yet
+> anyway...
 
---=-hKxaA+x3qOVrHv+4Lq6Z
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Right, it's not 2.6.22 material. That's why I asked for inclusion 
+in libertas-2.6 once I heard that you & Linville are 
+cherry-picking bugfixes.
 
-On Thu, 2007-06-28 at 18:33 +0200, Johannes Berg wrote:
 
-> I think I misunderstood how lockdep works because the output was
-> actually wrong, should the key be part of the workqueue_struct as well?
+But I hope to be far enought so that the driver (marked 
+EXPERIMENTAL) works so that I can submit it to 2.6.23.
 
-No, that's not right either, but Arjan just helped me a bit with how
-lockdep works and I think I have the right idea now. Ignore this for
-now, I'll send a new patch in a few days.
+I just fear that the merge-window for 2.6.23 opens too early for 
+me :-)
 
-johannes
 
---=-hKxaA+x3qOVrHv+4Lq6Z
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGg/Dh/ETPhpq3jKURAjddAJ9YQtTPMEbFM5zKxN9YWs+3gpuPYQCgodvk
-/2MzgMCk7jqPK1XcFKe7aew=
-=kBZb
------END PGP SIGNATURE-----
-
---=-hKxaA+x3qOVrHv+4Lq6Z--
-
+BTW, my posted patch introduces one sparse-warning (forgot to 
+declare a function "static"). However, sparse also found another 
+variable (in join.c). So I can send you an updated version of my 
+remove-fw patch to fix my own sparse warning ...  or another 
+patch that fixes both warnings.
