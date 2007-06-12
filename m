@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:33987 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S966457AbXFHDjh (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:60758 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754872AbXFLQqo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2007 23:39:37 -0400
+	Tue, 12 Jun 2007 12:46:44 -0400
 From: Michael Wu <flamingice@sourmilk.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH V3] mac80211: Set low initial rate in rc80211_simple
-Date: Thu, 7 Jun 2007 20:38:27 -0700
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-References: <4668c71b.E0vXnFMnxxm8I5gE%Larry.Finger@lwfinger.net>
-In-Reply-To: <4668c71b.E0vXnFMnxxm8I5gE%Larry.Finger@lwfinger.net>
+To: "Mark Powell" <Mark.Powell@csr.com>
+Subject: Re: [RFC] {cfg,nl}80211 API
+Date: Tue, 12 Jun 2007 09:45:30 -0700
+Cc: "David Lamparter" <dl@diac24.net>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"David Lamparter" <lists@diac24.net>,
+	"Dan Williams" <dcbw@redhat.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <20070611230434.GA13221@charon.n2.diac24.net> <20070612131458.GA6411@charon.n2.diac24.net> <F3555D2D288C3C4CBA0001C074188F119F88C3@cameurexb01.EUROPE.ROOT.PRI>
+In-Reply-To: <F3555D2D288C3C4CBA0001C074188F119F88C3@cameurexb01.EUROPE.ROOT.PRI>
 MIME-Version: 1.0
 Content-Type: multipart/signed;
-  boundary="nextPart1474228.qm12186NhP";
+  boundary="nextPart2087260.XKBSH4LOyk";
   protocol="application/pgp-signature";
   micalg=pgp-sha1
-Message-Id: <200706072038.36708.flamingice@sourmilk.net>
+Message-Id: <200706120945.41154.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1474228.qm12186NhP
+--nextPart2087260.XKBSH4LOyk
 Content-Type: text/plain;
   charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
 
-On Thursday 07 June 2007 20:03, Larry Finger wrote:
->  	for (i = 0; i < mode->num_rates; i++) {
->  		if ((sta->supp_rates & BIT(i)) &&
->  		    (mode->rates[i].flags & IEEE80211_RATE_SUPPORTED))
->  			sta->txrate = i;
-> +			break;
->  	}
-Uh, what's the point of having a loop if you're gonna do that? ;)
+On Tuesday 12 June 2007 06:58, Mark Powell wrote:
+> Very interesting. It raised a question in my mind...
+> When associating to a WPA network, at what point should the driver open
+> the controlled port?
+> With wext/wpa_supplicant, the driver relies on knowing that the
+> supplicant sets the pairwise key first and group key second and can open
+> the controlled port after the second key.
+>
+> Can we tie down the correct behaviour more tightly in cfg80211/nl80211?
+>
+Shouldn't wpa_supplicant know when the connection is ready? It has support =
+for=20
+dormant mode, so the link can be held down by userspace until it is ready.=
+=20
+The driver shouldn't need to figure out when the link is ready to go up.
 
--Michael Wu
+=2DMichael Wu
 
---nextPart1474228.qm12186NhP
+--nextPart2087260.XKBSH4LOyk
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBGaM88T3Oqt9AH4aERAnAZAJ9bFh1sWaOOknfMVpkb8O0TyQL1UwCeNfQj
-duBcUZJ0LgJXlxtirreIegA=
-=P0ra
+iD8DBQBGbs21T3Oqt9AH4aERApfBAJ9EWc4KtUXRZs5fkQ7cnkFoeN1H5wCgw5B3
+/+uSd3eUDjv80Soc2aocQKo=
+=b4xk
 -----END PGP SIGNATURE-----
 
---nextPart1474228.qm12186NhP--
+--nextPart2087260.XKBSH4LOyk--
 -: 
 To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 the body of a message to majordomo@vger.kernel.org: 
