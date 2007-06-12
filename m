@@ -1,85 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:7878 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757560AbXFMT7J (ORCPT
+Received: from 91-65-240-14-dynip.superkabel.de ([91.65.240.14]:56576 "EHLO
+	charon.n2.diac24.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1755594AbXFLNPT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2007 15:59:09 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so496617ugf
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2007 12:59:08 -0700 (PDT)
-Message-ID: <46704C4D.5010803@googlemail.com>
-Date: Wed, 13 Jun 2007 21:58:05 +0200
+	Tue, 12 Jun 2007 09:15:19 -0400
+Date: Tue, 12 Jun 2007 15:15:00 +0200
+From: David Lamparter <dl@diac24.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Lamparter <lists@diac24.net>, Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] {cfg,nl}80211 API
+Message-ID: <20070612131458.GA6411@charon.n2.diac24.net>
+References: <20070611230434.GA13221@charon.n2.diac24.net> <1181639707.29767.57.camel@johannes.berg>
 MIME-Version: 1.0
-To: Linus Torvalds <torvalds@linux-foundation.org>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Andrey Borzenkov <arvidjaar@mail.ru>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Bjorn Helgaas <bjorn.helgaas@hp.com>,
-	Stephen Smalley <sds@tycho.nsa.gov>,
-	James Morris <jmorris@namei.org>,
-	Eric Paris <eparis@parisplace.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Paulo Pereira <pfmp.404@gmail.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [2/2] 2.6.22-rc4: known regressions with patches v3
-References: <46704B5D.5020106@googlemail.com>
-In-Reply-To: <46704B5D.5020106@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
-From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20070611230434.GA13221@charon.n2.diac24.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Hi,
 
-Here is a list of some known regressions in 2.6.22-rc4
-with patches available.
+just for fun, I created a graph of wext->nl80211 mappings:
+http://git.spaceboyz.net/?p=nl80211/nl80211-meta.git;a=blob_plain;f=nl80211-map.png;hb=865687f294a84d7847ed7a05aa63de5cbb1a0c89
+- wext stuff marked red means I have no idea what that ioctl does
+- lines marked blue mean I'm not sure whether that's correct
+- nl80211 cmds in lowercase and light green aren't outlined yet
 
-Feel free to add new regressions/remove fixed etc.
-http://kernelnewbies.org/known_regressions
+So, what's left?
+> - more PHY config stuff?
+>   - TX power? Should be able to configure a lower value...
+>   - antenna selection?
+      - antenna diversity, as noted by Holger Schurig
+- the entire regulatory stuff
 
+For this, my first idea (included in that graph) would be to have a
+GET_REGULATORY_CAPS command which returns whether the device has a fixed
+list of regdomains or whether it can load anything. Depending on that,
+either SELECT_REGDOMAIN or SET_CHANLIST can be used. For the chanlist,
+there would be additional attributes specifying stuff like max power,
+active scanning, etc.
 
+Other new:
+- {get,set}{mac,radio} for tx power (within regulatory limits), retry
+  stuff, antennas?, etc.
 
-Networking
+What I totally missed is that there also is no rate configuration command
+yet (!). Do we want that in SET_CHANNEL? (and rename it to SET_PHY?)
 
-Subject    : no irda0 interface (2.6.21 was OK), smsc does not find chip
-References : http://lkml.org/lkml/2007/6/3/16
-Submitter  : Andrey Borzenkov <arvidjaar@mail.ru>
-Handled-By : Samuel Ortiz <samuel@sortiz.org>
-             Bjorn Helgaas <bjorn.helgaas@hp.com>
-Patch      : http://lkml.org/lkml/2007/6/7/237
-Status     : patch was suggested
+-David
 
-
-
-SELinux
-
-Subject    : very high non-preempt latency in context_struct_compute_av()
-References : http://lkml.org/lkml/2007/6/4/78
-Submitter  : Ingo Molnar <mingo@elte.hu>
-Handled-By : Stephen Smalley <sds@tycho.nsa.gov>
-             James Morris <jmorris@namei.org>
-Patch      : http://lkml.org/lkml/2007/6/7/334
-Status     : patch available
-
-
-
-USB
-
-Subject    : list_add corruption. prev->next should be next (f7d28794), but was f0df8ed4 (prev=f0df8ed4) Kernel Bug at lib/list_debug.c:33
-References : http://bugzilla.kernel.org/show_bug.cgi?id=8561
-Submitter  : Paulo Pereira <pfmp.404@gmail.com>
-Handled-By : Alan Stern <stern@rowland.harvard.edu>
-Patch      : http://bugzilla.kernel.org/show_bug.cgi?id=8561#c8
-Status     : patch was suggested
-
-
-
-Regards,
-Michal
-
--- 
-LOG
-http://www.stardust.webpages.pl/log/
