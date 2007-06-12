@@ -1,90 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:41733 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758440AbXFUQgI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2007 12:36:08 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so614272ugf
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2007 09:36:07 -0700 (PDT)
-Message-ID: <467AA8D2.5050305@googlemail.com>
-Date: Thu, 21 Jun 2007 18:35:30 +0200
-MIME-Version: 1.0
-To: Linus Torvalds <torvalds@linux-foundation.org>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Christoph Lameter <clameter@sgi.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Andrea Righi <righiandr@users.sourceforge.net>,
-	Nicolas Ferre <nicolas.ferre@rfo.atmel.com>,
-	Marc Pignat <marc.pignat@hevs.ch>,
-	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Andrey Borzenkov <arvidjaar@mail.ru>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Bjorn Helgaas <bjorn.helgaas@hp.com>,
-	Chad Tindel <ctindel@users.sourceforge.net>,
-	Olaf Hering <olaf@aepfle.de>
-Subject: Re: [2/2] 2.6.22-rc5: known regressions with patches v2
-References: <467AA7E3.3030404@googlemail.com>
-In-Reply-To: <467AA7E3.3030404@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
-From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:51062 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754203AbXFLMEt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jun 2007 08:04:49 -0400
+Subject: Re: [RFC] {cfg,nl}80211 API
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Lamparter <lists@diac24.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1181639707.29767.57.camel@johannes.berg>
+References: <20070611230434.GA13221@charon.n2.diac24.net>
+	 <1181639707.29767.57.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 12 Jun 2007 08:08:36 -0400
+Message-Id: <1181650117.17599.12.camel@xo-28-0B-88.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Tue, 2007-06-12 at 11:15 +0200, Johannes Berg wrote:
+> Hi David,
+> 
+> Great stuff!
+> 
+> >   - getting virtual interfaces works via ifindex, which needs to be known.
+> >     - no dumping (would have locking issues with userspace MLME)
+> >     - use list of vifs from GET_WIPHY
+> >     - only thing it currently should return is vif type. essid & stuff
+> >       should be retrievable via GET_ASSOCIATION, which won't be valid for
+> >       monitor interfaces
+> 
+> Hmm, in fact, if we go that route then we can do dumping for vifs (by
+> wiphy I guess) since all this information is available in the kernel,
+> only GET_ASSOCIATION should need a callout. vif type can be dumped just
+> fine.
+> 
+> > So, what's left?
+> > - more PHY config stuff?
+> >   - TX power? Should be able to configure a lower value...
+> 
+> Yeah, but as we said, this really needs to tie in with any regulatory
+> stuff.
+> 
+> >   - antenna selection?
+> 
+> Sounds reasonable, needs automatic/... but for .11n it might need some
+> more things. Not sure.
 
-Here is a list of some known regressions in 2.6.22-rc5
-with patches available.
+Just a quick question; for .11n and later, do we care about being as
+detailed as specifying each antenna and whether or not each antenna can
+be used for TX and/or RX, and then being able to assign specific
+antennas to either TX or RX?  Or does hardware expose a simpler
+interface like "2x2" or "3x2"?  That means either:
 
-Feel free to add new regressions/remove fixed etc.
-http://kernelnewbies.org/known_regressions
+set-antennas([(1, TX & RX), (2, TX & RX), (3, RX)])
 
-(BTW. There is a new category called "Will be fixed in 2.6.23")
+or
 
+set-antennas(tx=2, rx=3)
 
-
-Memory management
-
-Subject    : bug in i386 MTRR initialization
-References : http://lkml.org/lkml/2007/5/19/93
-Submitter  : Andrea Righi <righiandr@users.sourceforge.net>
-Status     : patch available
-
-
-
-MMC
-
-Subject    : Oops in a driver while using SLUB as a SLAB allocator
-References : http://lkml.org/lkml/2007/6/21/69
-Submitter  : Nicolas Ferre <nicolas.ferre@rfo.atmel.com>
-Handled-By : Marc Pignat <marc.pignat@hevs.ch>
-Patch      : http://lkml.org/lkml/2007/6/21/140
-Status     : patch available
-
-
-
-Networking
-
-Subject    : ERROR: "__ucmpdi2" [drivers/net/s2io.ko] undefined!
-References : http://lkml.org/lkml/2007/6/19/310
-Submitter  : Olaf Hering <olaf@aepfle.de>
-Patch      : http://lkml.org/lkml/2007/6/19/382
-Status     : patch was suggested
-
-Subject    : no irda0 interface (2.6.21 was OK), smsc does not find chip
-References : http://lkml.org/lkml/2007/6/3/16
-Submitter  : Andrey Borzenkov <arvidjaar@mail.ru>
-Handled-By : Samuel Ortiz <samuel@sortiz.org>
-             Bjorn Helgaas <bjorn.helgaas@hp.com>
-Patch      : http://lkml.org/lkml/2007/6/7/237
-Status     : patch was suggested
+Dan
 
 
-
-Regards,
-Michal
-
---
-LOG
-http://www.stardust.webpages.pl/log/
