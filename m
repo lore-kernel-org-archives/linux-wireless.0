@@ -1,85 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:41053 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752155AbXFTP4U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2007 11:56:20 -0400
-Message-ID: <4679672D.4060503@linux.intel.com>
-Date: Wed, 20 Jun 2007 10:43:09 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
-MIME-Version: 1.0
-To: Jiri Benc <jbenc@suse.cz>
-CC: Hong Liu <hong.liu@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [patch]mac80211: add support for iwlist channel
-References: <1182156425.15928.7.camel@napa-sdv1.sh.intel.com>	<20070619105024.3c6c68e3@griffin.suse.cz>	<1182305425.19178.12.camel@napa-sdv1.sh.intel.com> <20070620115559.301e10eb@griffin.suse.cz>
-In-Reply-To: <20070620115559.301e10eb@griffin.suse.cz>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from ra.tuxdriver.com ([70.61.120.52]:3199 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752751AbXFLVym (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jun 2007 17:54:42 -0400
+Date: Tue, 12 Jun 2007 17:26:41 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: jeff@garzik.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Dan Williams <dcbw@redhat.com>
+Subject: Please pull 'libertas' branch of wireless-2.6 (resent w/o attachment)
+Message-ID: <20070612212641.GI310@tuxdriver.com>
+References: <20070529183347.GD3496@tuxdriver.com> <20070612210544.GF310@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070612210544.GF310@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Benc wrote:
-> On Wed, 20 Jun 2007 10:10:25 +0800, Hong Liu wrote:
->> What is the meaning of IEEE80211_CHAN_W_SCAN flag? I can't find any
->> description of this flag.
-> 
-> It means we can tune to that channel. That way you can have all
-> channels the hardware support in the channel list in ieee80211_hw_mode
-> struct and mask out channels disallowed by the regulations.
+Resending w/o the attached patch, in case it was too big...yikes!
 
-The following isn't in patch form; thought I'd write it up for some
-discussion purposes....
+Individual patches are available here:
 
-SCAN renamed TUNE, and a couple adds:
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/libertas
 
-/**
- * enum ieee80211_channel_flags - Channel flag bit values
- * @IEEE80211_CHAN_W_TUNE: Hardware can tune to this channel
- * @IEEE80211_CHAN_W_ACTIVE: Channel can be used for active scanning
- * @IEEE80211_CHAN_W_IBSS: Hardware can act as IBSS Master
- * @IEEE80211_CHAN_W_RADAR: Radar spectrum enforcement applies
- * @IEEE80211_CHAN_W_TX_ALLOWED: Tx is allowed
- *
- * Any channel can be added to ieee80211_hw_mode.  If the TUNE flag
- * is not set, however, the channel will never be used.
- *
- * When the ACTIVE bit is set, probe requests can be sent
- * during scans.  If the ACTIVE bit is not set, a probe request
- * can only be sent if other 802.11 traffic is detected.
- *
- * In order to support IBSS mode, a channel must have both the
- * ACTIVE and IBSS bits set.
- *
- * On channels where RADAR is set, certain restrictions apply
- * regarding when a channel can be used.  If the client hardware
- * can detect and enforce RF silence upon radar detection, then
- * the client can transmit on RADAR channels regardless of if
- * other 802.11 RF activity exists on the channel.  If, however
- * the client hardware can not detect and enforce RF silence
- * on a radar channel, the client must "follow" another source
- * of 802.11 traffic.  This means no transmission is allowed
- * on a RADAR channel *until* traffic from a 802.11 access point
- * has been detected.  And then traffic can only be allowed so
- * long as that AP exists and is within range (so that 802.11h
- * CSA frames can be received).
- *
- * A channel without the TX_ALLOWED bit set *can not* be used
- * for any type of transmission and can only be used for passive
- * listening.  This is useful for performing network audits.
- *
- * When using the legacy wireless extension SIOGIWRANGE, only
- * channels with the TUNE and TX_ALLOWED bits will be
- * returned.  Most users of SIOGIWRANGE expect to be able to
- * use the returned results for a network association -- the
- * lack of being able to tune or transmit make a channel
- * unusable in that situation.
- */
-enum ieee80211_channel_flags {
-	IEEE80211_CHAN_W_TUNE = (1 << 0),
-	IEEE80211_CHAN_W_ACTIVE_SCAN = (1 << 1),
-	IEEE80211_CHAN_W_IBSS = (1 << 2),
-	IEEE80211_CHAN_W_RADAR = (1 << 3),
-	IEEE80211_CHAN_W_TX_ALLOWED = (1 << 4),
-};
+John
+
+---
+
+Jeff,
+
+This is the same as the previous pull request, only rebased on
+2.6.22-rc4.  Since this is a big pull already, I didn't want to
+complicate it with the additional patches identified by the libertas
+team as 2.6.22-worthy.
+
+John
+
+---
+
+The following changes since commit 5ecd3100e695228ac5e0ce0e325e252c0f11806f:
+  Linus Torvalds (1):
+        Linux 2.6.22-rc4
+
+are found in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git libertas
+
+Chris Ball (1):
+      libertas: wakeup both mesh and normal wakeup when getting out of scan
+
+Dan Williams (25):
+      libertas: call SET_NETDEV_DEV from common code
+      libertas: replace 'macaddress' with 'bssid'
+      libertas: correctly unregister mesh netdev on error
+      libertas: don't tear down netdev in libertas_activate_card
+      libertas: make scan result handling more flexible
+      libertas: fix 'keep previous scan' behavior
+      libertas: move channel changing into association framework
+      libertas: make association paths consistent
+      libertas: use MAC_FMT and MAC_ARG where appropriate
+      libertas: use compare_ether_addr() rather than memcmp() where appropriate
+      libertas: fix debug enter/leave prints for libertas_execute_next_command
+      libertas: correctly balance locking in libertas_process_rx_command
+      libertas: correct error report paths for wlan_fwt_list_ioctl
+      libertas: fix deadlock SIOCGIWSCAN handler
+      libertas: fix default adhoc channel
+      libertas: honor specific channel requests during association
+      libertas: send SIOCGIWSCAN event after partial scans too
+      libertas: debug print spacing fixes in assoc.c
+      libertas: add more verbose debugging to libertas_cmd_80211_authenticate
+      libertas: Make WPA work through supplicant handshake
+      libertas: sparse fixes
+      libertas: tweak association debug output
+      libertas: remove structure WLAN_802_11_SSID and libertas_escape_essid
+      libertas: remove WPA_SUPPLICANT structure
+      libertas: reduce SSID and BSSID mixed-case abuse
+
+David Woodhouse (6):
+      libertas: fix character set in README
+      libertas: first pass at fixing up endianness issues
+      libertas: More endianness fixes.
+      libertas: more endianness fixes, in tx.c this time
+      libertas: don't byte-swap firmware version number. It's a byte array.
+      libertas: fix big-endian associate command.
+
+Holger Schurig (23):
+      libertas: rename wlan_association_worker
+      libertas: a debug output was missing a newline
+      libertas: fix removal of all debugfs files
+      libertas: remove __FILE__ from debug output
+      libertas: remove unused/superfluous definitions of DEV_NAME_LEN
+      libertas: move vendor & product id's into if_usb.c
+      libertas: make libertas_wlan_data_rates static
+      libertas: exclude non-used code when PROC_DEBUG is not set
+      libertas: make debug configurable
+      libertas: tune debug code
+      libertas: single out mesh code
+      libertas: change debug output of libertas_interrupt()
+      libertas: get rid of libertas_sbi_get_priv()
+      libertas: fix SSID output
+      libertas: changed some occurences of kmalloc() + memset(&a,0,sz) to kzalloc()
+      libertas: move reset_device() code main.c to if_usb.c
+      libertas: split wlan_add_card()
+      libertas: indirect all hardware access via hw_XXXX functions
+      libertas: move contents of fw.h to decl.h
+      libertas: split module into two (libertas.ko and usb8xxx.ko)
+      libertas: fix RESET logic at unload time
+      libertas: let DRV_NAME be overridable
+      libertas: remove unused variables in wlan_dev_t
+
+Javier Cardona (2):
+      libertas: fixed transmission flow control on the mesh interface
+      libertas: added transmission failures to mesh statistics
+
+Luis Carlos Cobo (4):
+      libertas: fixed incorrect assigment of fcs errors to frag errors
+      libertas: add URB debug info
+      libertas: fixed kernel oops on module/card removal
+      libertas: updated mesh commands for 5.220.9.p11
+
+Luis Carlos Cobo Rus (6):
+      libertas: version bump (321p0) and cmds update for new fw (5.220.10.p0)
+      libertas: cleanup of fwt_list_route processing
+      libertas: updated readme file
+      libertas: make mac address configuration work with mesh interface too
+      libertas: split wext for eth and msh
+      libertas: support for mesh autostart on firmware 5.220.11
+
+Marcelo Tosatti (5):
+      libertas: scan two channels per scan command
+      libertas: remove deprecated pm_register and associated code
+      libertas: fix scanning from associate path
+      libertas: fix error handling of card initialization
+      libertas: fix oops on rmmod
+
+ drivers/net/wireless/Kconfig               |   19 +-
+ drivers/net/wireless/libertas/11d.c        |  152 ++--
+ drivers/net/wireless/libertas/11d.h        |    6 +-
+ drivers/net/wireless/libertas/Makefile     |    4 +-
+ drivers/net/wireless/libertas/README       |   52 +-
+ drivers/net/wireless/libertas/assoc.c      |  345 +++++---
+ drivers/net/wireless/libertas/assoc.h      |    8 +-
+ drivers/net/wireless/libertas/cmd.c        |  559 +++++------
+ drivers/net/wireless/libertas/cmdresp.c    |  375 ++++----
+ drivers/net/wireless/libertas/debugfs.c    |  432 ++++----
+ drivers/net/wireless/libertas/decl.h       |   20 +-
+ drivers/net/wireless/libertas/defs.h       |  101 ++-
+ drivers/net/wireless/libertas/dev.h        |   98 +-
+ drivers/net/wireless/libertas/ethtool.c    |   55 +-
+ drivers/net/wireless/libertas/fw.c         |  111 +--
+ drivers/net/wireless/libertas/fw.h         |   13 -
+ drivers/net/wireless/libertas/host.h       |   13 +-
+ drivers/net/wireless/libertas/hostcmd.h    |  392 ++++----
+ drivers/net/wireless/libertas/if_bootcmd.c |    6 +-
+ drivers/net/wireless/libertas/if_usb.c     |  448 +++++----
+ drivers/net/wireless/libertas/if_usb.h     |   32 +-
+ drivers/net/wireless/libertas/ioctl.c      |  286 ++++--
+ drivers/net/wireless/libertas/join.c       |  464 ++++-----
+ drivers/net/wireless/libertas/join.h       |   13 +-
+ drivers/net/wireless/libertas/main.c       |  673 ++++++-------
+ drivers/net/wireless/libertas/rx.c         |   63 +-
+ drivers/net/wireless/libertas/sbi.h        |   40 -
+ drivers/net/wireless/libertas/scan.c       | 1529 +++++++++++++---------------
+ drivers/net/wireless/libertas/scan.h       |   81 +-
+ drivers/net/wireless/libertas/thread.h     |    8 +-
+ drivers/net/wireless/libertas/tx.c         |   74 +-
+ drivers/net/wireless/libertas/types.h      |   63 +-
+ drivers/net/wireless/libertas/wext.c       |  778 ++++++++-------
+ drivers/net/wireless/libertas/wext.h       |   13 +-
+ 34 files changed, 3679 insertions(+), 3647 deletions(-)
+ delete mode 100644 drivers/net/wireless/libertas/fw.h
+ delete mode 100644 drivers/net/wireless/libertas/sbi.h
+
+-- 
+John W. Linville
+linville@tuxdriver.com
