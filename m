@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:50863 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751231AbXFWEei (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.225]:8511 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752895AbXFLHho (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jun 2007 00:34:38 -0400
-Date: Fri, 22 Jun 2007 21:34:06 -0700
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: Yi Zhu <yi.zhu@intel.com>
-Cc: James Ketrenos <jketreno@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] ipw2200: rf kill switch polling power saving
-Message-ID: <20070622213406.68a538ef@oldman>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 12 Jun 2007 03:37:44 -0400
+Received: by wx-out-0506.google.com with SMTP id t15so1708261wxc
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2007 00:37:43 -0700 (PDT)
+Message-ID: <1ba2fa240706120037g767a330fsa1e838f378ce2b58@mail.gmail.com>
+Date: Tue, 12 Jun 2007 10:37:43 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [Take 2] mac80211 IEEE802.11e/WMM code cleanup
+Cc: yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1181584907.29767.30.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <20070611085950.GA5540@mail.intel.com>
+	 <1181584907.29767.30.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make the ipw2200 driver polling of rf kill switch occur on second boundaries to reduce
-power. Making all the wakeup's in the system occur together reduces power, and keeps
-CPU in idle longer.
+On 6/11/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> Hi Yi,
+>
+> In sta_process_dls_req, you currently always accept DLS. I'm not sure
+> how well power save mode works in mac80211 (probably not at all, someone
+> versed in 802.11 should probably look at it some time soon), but once
+> DLS is set up power saving must be disabled by the DLS peer. This,
+> however, possibly leads to battery lifetime diminishing, so always
+> accepting the direct link might not be desirable. Any thoughts?
+>
 
-Signed-off-by: Stephen Hemminger <shemminger@linux-foundation.org>
+This is correct that power save must be disabled explicitly in this
+implementation.  Usually you want to establish DLS for increasing
+throughput so you won't go to power save mode anyway.
 
---- a/drivers/net/wireless/ipw2200.c	2007-06-22 09:11:41.000000000 -0700
-+++ b/drivers/net/wireless/ipw2200.c	2007-06-22 09:16:24.000000000 -0700
-@@ -1751,7 +1751,7 @@ static int ipw_radio_kill_sw(struct ipw_
- 			/* Make sure the RF_KILL check timer is running */
- 			cancel_delayed_work(&priv->rf_kill);
- 			queue_delayed_work(priv->workqueue, &priv->rf_kill,
--					   2 * HZ);
-+					   round_jiffies(2 * HZ));
- 		} else
- 			queue_work(priv->workqueue, &priv->up);
- 	}
-@@ -4690,7 +4690,8 @@ static void ipw_rx_notification(struct i
- 			else if (priv->config & CFG_BACKGROUND_SCAN
- 				 && priv->status & STATUS_ASSOCIATED)
- 				queue_delayed_work(priv->workqueue,
--						   &priv->request_scan, HZ);
-+						   &priv->request_scan,
-+						   round_jiffies(HZ));
- 
- 			/* Send an empty event to user space.
- 			 * We don't send the received data on the event because
+One other thing is encryption, the path for peer key handshake must be
+opened in mac80211 in addition to this patch.
+
+
+> Should we have user-space controlled list of DLS possible DLS peers? Or
+> call out to userspace via nl80211 to make a decision? The list would be
+> easy by simply adding a sta_info for a possible DLS peer, callout also
+> shouldn't be too hard by sending a message to some QoS nl80211 multicast
+> group and possibly not responding to the DLS request at all when our
+> userspace doesn't accept it (that way it'll just time out on the other
+> side).
+>
+> johannes
+>
+>
