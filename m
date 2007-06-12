@@ -1,42 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:51891 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755516AbXFLNFF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2007 09:05:05 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 926858D762
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2007 15:05:00 +0200 (CEST)
-Message-Id: <20070612130502.052183994@warmcat.com>
-References: <20070612130435.896010304@warmcat.com>
-Date: Tue, 12 Jun 2007 14:04:37 +0100
-From: andy@warmcat.com
+Received: from ra.tuxdriver.com ([70.61.120.52]:2964 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753504AbXFLBYb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2007 21:24:31 -0400
+Received: from ra.tuxdriver.com (ra.tuxdriver.com [127.0.0.1])
+	by ra.tuxdriver.com (8.14.0/8.13.7) with ESMTP id l5C1OMdY029481
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2007 21:24:28 -0400
+Received: (from uucp@localhost)
+	by ra.tuxdriver.com (8.14.0/8.14.0/Submit) with UUCP id l5C1FU7X029227
+	for linux-wireless@vger.kernel.org; Mon, 11 Jun 2007 21:15:30 -0400
+Received: from linville-t43.mobile (linville-t43.mobile [127.0.0.1])
+	by linville-t43.mobile (8.13.8/8.13.8) with ESMTP id l5C165Pe023312
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2007 21:06:05 -0400
+Received: (from linville@localhost)
+	by linville-t43.mobile (8.13.8/8.13.8/Submit) id l5C165ZU023311
+	for linux-wireless@vger.kernel.org; Mon, 11 Jun 2007 21:06:05 -0400
+Date: Mon, 11 Jun 2007 21:06:05 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Cc: Andy Green <andy@warmcat.com>
-Subject: [PATCH Try#11 2/4] mac80211: Define present bitmap extend bit mask
+Subject: changes in wireless-2.6 tree
+Message-ID: <20070612010605.GB20422@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Used to detect if the field presence mask is extended
+Just a heads-up on some wireless-2.6 tree changes...
 
-Signed-off-by: Andy Green <andy@warmcat.com>
+I'm dropping the following branches:
 
----
- include/net/ieee80211_radiotap.h |    2 ++
- 1 file changed, 2 insertions(+)
+	adm8211
+	prism54usb
+	tiacx
 
-Index: wireless-dev/include/net/ieee80211_radiotap.h
-===================================================================
---- wireless-dev.orig/include/net/ieee80211_radiotap.h
-+++ wireless-dev/include/net/ieee80211_radiotap.h
-@@ -90,6 +90,8 @@ struct ieee80211_radiotap_header {
- 				 */
- };
- 
-+#define IEEE80211_RADIOTAP_PRESENT_EXTEND_MASK 0x80000000
-+
- /* Name                                 Data type    Units
-  * ----                                 ---------    -----
-  *
+All of them will be available here for now:
 
+	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-legacy.git
+
+I don't know how many people actually are interested in these.
+The first two have mac80211-based alternatives already in wireless-dev,
+and an out-of-tree mac80211-based alternative exists for tiacx as well.
+Anyway, none of the new wireless-legacy drivers will ever go upstream,
+so I see no more point in maintaining them in wireless-2.6 any longer.
+
+Also, I have traditionally used the wireless-2.6 "master" branch as
+a collection branch which pulled from all the other branches (and was
+constantly rebased).  I will now use an "everything" branch for that
+purpose and leave my "master" branch as a vanilla pull from Linus --
+this seems to be the more canonical usage pattern.
+
+There are a number of other branches as well -- most of these are there
+for administrative purposes and can be safely ignored by most users.
+
+Anyway, FYI...
+
+John
 -- 
+John W. Linville
+linville@tuxdriver.com
