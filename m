@@ -1,84 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail8.sea5.speakeasy.net ([69.17.117.10]:56640 "EHLO
-	mail8.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750818AbXFUNgP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2007 09:36:15 -0400
-Date: Thu, 21 Jun 2007 06:35:56 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [WIP] mac80211: kill mgmt interface
-Message-ID: <20070621133556.GJ5361@jm.kir.nu>
-References: <1182418939.10821.8.camel@johannes.berg>
-MIME-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:3566 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752176AbXFLOYn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jun 2007 10:24:43 -0400
+Date: Tue, 12 Jun 2007 10:05:29 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+Subject: Re: Please pull libertas-2.6
+Message-ID: <20070612140529.GD310@tuxdriver.com>
+References: <1181102122.18061.8.camel@xo-28-0B-88.localdomain> <200706120843.48517.hs4233@mail.mn-solutions.de> <1181649582.17599.4.camel@xo-28-0B-88.localdomain> <200706121519.09758.hs4233@mail.mn-solutions.de>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1182418939.10821.8.camel@johannes.berg>
+In-Reply-To: <200706121519.09758.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 21, 2007 at 11:42:19AM +0200, Johannes Berg wrote:
+On Tue, Jun 12, 2007 at 03:19:09PM +0200, Holger Schurig wrote:
+> > Well; I'm going to commit that one really soon to
+> > libertas-2.6, but I don't think it's 2.6.22 material mainly
+> > because there's no code for CF cards in libertas-2.6 yet
+> > anyway...
+> 
+> Right, it's not 2.6.22 material. That's why I asked for inclusion 
+> in libertas-2.6 once I heard that you & Linville are 
+> cherry-picking bugfixes.
+> 
+> 
+> But I hope to be far enought so that the driver (marked 
+> EXPERIMENTAL) works so that I can submit it to 2.6.23.
+> 
+> I just fear that the merge-window for 2.6.23 opens too early for 
+> me :-)
 
-> This patch kills the management interface type now that we can
-> see transmitted frames on monitor interfaces.
+FWIW, waiting for the merge window is generally frowned upon.  If at
+all possible you should submit patches now or ASAP so that Jeff and
+I have a reasonable chance to review them and they can make their
+way into -mm for some testing BEFORE the merge window opens.
 
-Has someone tested that this works with programs that use the management
-interface (mainly, hostapd and wpa_supplicant)? Is all the needed
-functionality available with the alternative solution?
+Hth!
 
-> I renamed the req_tx_status to reliable_tx_mntr and the flag
-> constant as well since that's what they now mean. It is always
-> set for injected frames so that hostapd can rely on seeing the
-> frames it sent.
-
-I'm not sure I follow this explanation fully.. How would hostapd learn
-whether the destination address acknowledged a unicast frame?
-
-> There are a few minor remaining problems:
->  * some notifications are now missing
->    (radar, key threshold, michael MIC failure, wep unknown key)
->    [radar, key threshold aren't used anywhere so can probably
->     be left out for now]
-
-I would not remove key threshold notification and we must most certainly
-not remove Michal MIC failure before there is a reliable way of doing
-the same functionality.
-
->  * injected frames aren't sent to AC_VO pending on the radiotap
->    definition for access category
-
-This is not good either since management frames should be sent at a high
-priority.
-
-> The biggest problem, however, and I'm not sure how to solve it, is
-> that hostapd will see either encrypted or unencrypted frames on the
-> monitor interface depending on whether hardware encryption is used
-> or not. However, hostapd really needs to see eapol frames to do
-> whatever it needs to with them. Right now, I don't really have an
-> idea except maybe to send these packets to hostapd via nl80211,
-> or to introduce some sort of "decrypted soft monitor" iface.
-
-If I've understood correctly (please correct me, if not), this patch is
-proposing to remove an interface that works currently and leave the
-stack in state that does not work. I can only strongly recommend this
-patch not to be applied at this point. It is not a good direction to
-start removing working code before there is a good alternative available
-and that alternative has actually been tested to provide the needed
-functionality.
-
-I don't really see need for getting rid of the management interface, but
-if there is consensus on doing that, we would need to have another way
-of being able to receive and transmit management frames and data frames
-from/to user space in a way that provides at least following
-functionality:
-- transmit management frames at high priority
-- control whether transmitted frames will be encrypted or not
-- get callback to report TX status for unicast frames (whether the
-  receiver sent control::ack for the frame)
-- receive management frames
-- receive data frames EAPOL/etc. ethertypes in decrypted form
-- delivery of notifications to user space for Michael MIC errors and
-  other similar events
-
+John
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+John W. Linville
+linville@tuxdriver.com
