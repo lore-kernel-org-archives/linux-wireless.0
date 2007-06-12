@@ -1,56 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:23543 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750725AbXFNQhM (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:8055 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753919AbXFLPPj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2007 12:37:12 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [Take 2] mac80211 IEEE802.11e/WMM code cleanup
-Date: Thu, 14 Jun 2007 09:35:45 -0700
-Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	David Lamparter <lists@diac24.net>
-References: <20070611085950.GA5540@mail.intel.com> <1181635570.4758.22.camel@debian.sh.intel.com> <1181806608.9058.22.camel@johannes.berg>
-In-Reply-To: <1181806608.9058.22.camel@johannes.berg>
+	Tue, 12 Jun 2007 11:15:39 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Please pull libertas-2.6
+Date: Tue, 12 Jun 2007 17:15:33 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+References: <1181102122.18061.8.camel@xo-28-0B-88.localdomain> <200706121519.09758.hs4233@mail.mn-solutions.de> <20070612140529.GD310@tuxdriver.com>
+In-Reply-To: <20070612140529.GD310@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1686703.CBhJz8jC7S";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200706140935.50779.flamingice@sourmilk.net>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200706121715.33187.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1686703.CBhJz8jC7S
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+> FWIW, waiting for the merge window is generally frowned upon. 
+> If at all possible you should submit patches now or ASAP so
+> that Jeff and I have a reasonable chance to review them and
+> they can make their way into -mm for some testing BEFORE the
+> merge window opens.
 
-On Thursday 14 June 2007 00:36, Johannes Berg wrote:
-> For me, that settles the DLS API. That API is easily implementable by
-> the userspace MLME as well.
->
-This API is unnecessary. The most that is needed is a bit indicating whethe=
-r=20
-or not an sta_info entry is DLS or not.
+Yeah, but I'm still very much unfinished. It can:
 
-=2DMichael Wu
+* detect the card
+* setup the IO window
+* setup the ISR
+* download helper firmware
+* download real firmware
+* react to some (not ALL!) interrupts
 
---nextPart1686703.CBhJz8jC7S
-Content-Type: application/pgp-signature
+But, for example, it can not:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+* send commands to the device (I'm close, but
+  not yet there)
+* receive results from the device (dito)
+* receive data from the device (hey, even skb's
+  are new to me)
+* send data to the device
 
-iD8DBQBGcW5mT3Oqt9AH4aERAnrxAJ9LaPIKUME5puEIkozALX7TykcmfgCfdiaw
-MndIp+5XG2/bRWfvpQTXyec=
-=9Wnw
------END PGP SIGNATURE-----
+So, in short: the driver isn't yet usable in any way. And so I 
+doubt you would want to see my current skeleton :-)
 
---nextPart1686703.CBhJz8jC7S--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+
+
+I referred to the merge window because I doubt that I'll get my 
+code early enought into a submitable form -- and if I can't it 
+submit to YOU before the merge window closes, then you can't put 
+it upstream either. And so it might be that the libertas_cs code 
+will end up in 2.6.24, not 2.6.23. And Dan even mentioned 
+2.6.22, which is out-of-the-question, because a new driver is 
+hardly a fix.
+
+So, my plan is to submit the driver (or the patchset for the 
+driver) to either libertas-dev or wireless-dev as soon as I get 
+my first association to an AP via it. We can than think if the 
+driver should be added to some GIT tree. From then on I'll start 
+sending incremental patches.
+
+Do you think that makes sense?
