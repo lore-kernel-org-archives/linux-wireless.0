@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:52820 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750946AbXFKJBJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 05:01:09 -0400
-Date: Mon, 11 Jun 2007 17:00:10 +0800
-From: Zhu Yi <yi.zhu@intel.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 3/6] mac80211: fix typo in net/mac80211/ieee80211_sta.c
-Message-ID: <20070611090010.GA5570@mail.intel.com>
-Reply-To: yi.zhu@intel.com
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mog.warmcat.com ([62.193.232.24]:58180 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751974AbXFLJ5E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jun 2007 05:57:04 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 6C15D8D763
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2007 11:56:58 +0200 (CEST)
+Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
+	by armbox7.home.warmcat.com (Postfix) with ESMTP id 81D3D10486
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2007 09:57:23 +0000 (UTC)
+Message-Id: <20070612095551.323709697@warmcat.com>
+Date: Tue, 12 Jun 2007 10:55:51 +0100
+From: andy@warmcat.com
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH Try#10 0/4] Radiotap injection for Monitor Mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix typo in net/mac80211/ieee80211_sta.c.
+These patches add the ability to inject packets down a monitor mode interface for 
+transmission according to a prepended radiotap header.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- net/mac80211/ieee80211.c     |    2 +-
- net/mac80211/ieee80211_sta.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+For injecting packets, the you issue a packet using libpcap or a SOCK_PACKET
+socket down an interface to the wireless device that is in Monitor Mode.  The packet
+has a normal radiotap header prepended to the IEEE80211 header.  The radiotap header
+is variable length depending on what the user wants to specify, currently the
+transmit rate, power and antenna can be specified using normal radiotap semantics.
+Any other entries are skipped.
 
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index e903197..ffec69b 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -1557,7 +1557,7 @@ static int ieee80211_subif_start_xmit(struct sk_buff *skb,
- 		memcpy(hdr.addr4, skb->data + ETH_ALEN, ETH_ALEN);
- 		hdrlen = 30;
- 	} else if (sdata->type == IEEE80211_IF_TYPE_STA) {
--		if (dls_link_status(local, skb->data) == DLS_STATUS_OK){
-+		if (dls_link_status(local, skb->data) == DLS_STATUS_OK) {
- 			/* DA SA BSSID */
- 			memcpy(hdr.addr1, skb->data, ETH_ALEN);
- 			memcpy(hdr.addr2, skb->data + ETH_ALEN, ETH_ALEN);
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index fc77345..af9419e 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -826,7 +826,7 @@ void ieee80211_send_delts(struct net_device *dev,
- 	u8 index = ieee80211_ts_index(direction);
- 
- 	if (ifsta->ts_data[tsid][index].status == TS_STATUS_UNUSED) {
--		printk(KERN_DEBUG "%s: Tring to delete an ACM disabled TS "
-+		printk(KERN_DEBUG "%s: Trying to delete an ACM disabled TS "
- 		       "(%u:%u)\n", dev->name, tsid, direction);
- 		return;
- 	}
+The radiotap parser is broken out into its own file under cfg80211.
+
+A usermode app packetspammer is available from here
+
+http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
+
+which allows easy injection of these packets from the commandline.  At the moment it
+loops issuing packets at a variety of rates which can be seen from another
+machine's monitor mode interface on the same channel.  There are instructions for
+build and using it on the page above.
+
+Currently it has been tested for both rx and tx using zd1211rw-mac80211.
+
+The patches are based against current wireless-dev.
+
+I also added some documentation files which explains how to use the injection
+functionality and radiotap header notes.
 -- 
-1.5.0.rc2.g73a2
