@@ -1,46 +1,450 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:27546 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935229AbXFFWD4 (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:51889 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754787AbXFLNFG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2007 18:03:56 -0400
-Date: Wed, 6 Jun 2007 15:02:54 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
+	Tue, 12 Jun 2007 09:05:06 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id CBFD08D125
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2007 15:04:59 +0200 (CEST)
+Message-Id: <20070612130502.157979021@warmcat.com>
+References: <20070612130435.896010304@warmcat.com>
+Date: Tue, 12 Jun 2007 14:04:38 +0100
+From: andy@warmcat.com
 To: linux-wireless@vger.kernel.org
-Cc: akpm <akpm@linux-foundation.org>, jbenc@suse.cz,
-	flamingice@sourmilk.net
-Subject: [PATCH -mm] mac80211: fix 1-bit bitfield to unsigned
-Message-Id: <20070606150254.de49d627.randy.dunlap@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Cc: Andy Green <andy@warmcat.com>
+Subject: [PATCH Try#11 3/4] cfg80211: Radiotap parser
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+Generic code to walk through the fields in a radiotap header, accounting
+for nasties like extended "field present" bitfields and alignment rules
 
-Fix 17 of these pairs of sparse warnings since it's difficult for a 1-bit
-bitfield to have both a value bit and a sign bit.
+Try #11
+ - parser returns enum retcode - Johannes Berg
 
-net/mac80211/sta_info.h:105:16: error: dubious bitfield without explicit `signed' or `unsigned'
-net/mac80211/sta_info.h:107:15: error: dubious bitfield without explicit `signed' or `unsigned'
+Try #10  comments from Michael Wu
+ - kill some spaces between * and var/arg
+ - weed out cut-n-pasted #includes that aren't actually used
+ - kill vertical justification
+ - kill unneccessary parenthesis in some expressions
+ - sizeof() on dereferenced vars not types
+ - ulong pointer arithmetic!  Good catch!
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Try #9 (of the radiotap patchset) thanks to Johannes Berg's feedback
+ - Add docs to nano kernel docs
+ - Add docs to Documentation/networking/radiotap-headers.txt
+ - Fix typos
+
+Try #2
+ - added sanity check to extended present bitmap u32 walking code - disallow
+   possibility to walk past the end of the radiotap header length
+
+Try #1
+ - Based on Johannes Berg's comments, broke out the radiotap parsing into
+   its own file as part of cfg80211
+ - From same comments, added mask constant for b31 of arg presence bitfield
+   to ieee80211_radiotap.h
+ - Fixed subtle but nasty bug with alignment: args in the radiotap area are
+   aligned *relative to the start of the header* now.  The header is not
+   guaranteed to align to anything (it is randomly in an skb data area).
+
+Signed-off-by: Andy Green <andy@warmcat.com>
+
+===================================================
+
 ---
- net/mac80211/sta_info.h |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ Documentation/networking/radiotap-headers.txt |   60 ++++++
+ include/net/cfg80211.h                        |   45 ++++
+ net/wireless/Makefile                         |    2 
+ net/wireless/radiotap.c                       |  245 ++++++++++++++++++++++++++
+ 4 files changed, 351 insertions(+), 1 deletion(-)
 
---- linux-2.6.22-rc4-mm1.orig/net/mac80211/sta_info.h
-+++ linux-2.6.22-rc4-mm1/net/mac80211/sta_info.h
-@@ -102,9 +102,9 @@ struct sta_info {
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	int debugfs_registered;
- #endif
--	int assoc_ap:1; /* whether this is an AP that we are
--			 * associated with as a client */
--	int dls_sta:1; /* whether this stations is a DLS peer of us */
-+	unsigned int assoc_ap:1; /* whether this is an AP that we are
-+				  * associated with as a client */
-+	unsigned int dls_sta:1; /* whether this stations is a DLS peer of us */
+Index: wireless-dev/include/net/cfg80211.h
+===================================================================
+--- wireless-dev.orig/include/net/cfg80211.h
++++ wireless-dev/include/net/cfg80211.h
+@@ -74,6 +74,51 @@ struct key_params {
+ 	u32 cipher;
+ };
  
- #define DLS_STATUS_OK		0
- #define DLS_STATUS_NOLINK	1
++
++/* Radiotap header iteration
++ *   implemented in net/wireless/radiotap.c
++ *   docs in Documentation/networking/radiotap-headers.txt
++ */
++/**
++ * struct ieee80211_radiotap_iterator - tracks walk thru present radiotap args
++ * @rtheader: pointer to the radiotap header we are walking through
++ * @max_length: length of radiotap header in cpu byte ordering
++ * @this_arg_index: IEEE80211_RADIOTAP_... index of current arg
++ * @this_arg: pointer to current radiotap arg
++ * @arg_index: internal next argument index
++ * @arg: internal next argument pointer
++ * @next_bitmap: internal pointer to next present u32
++ * @bitmap_shifter: internal shifter for curr u32 bitmap, b0 set == arg present
++ */
++
++struct ieee80211_radiotap_iterator {
++	struct ieee80211_radiotap_header *rtheader;
++	int max_length;
++	int this_arg_index;
++	u8 *this_arg;
++
++	int arg_index;
++	u8 *arg;
++	__le32 *next_bitmap;
++	u32 bitmap_shifter;
++};
++
++typedef enum  {
++	RADIOTAP_PARSER_OK = 0,
++	RADIOTAP_PARSER_DONE,
++	RADIOTAP_PARSER_INVALID
++} ieee80211_radiotap_parser_retcode_t;
++
++extern ieee80211_radiotap_parser_retcode_t ieee80211_radiotap_iterator_init(
++   struct ieee80211_radiotap_iterator *iterator,
++   struct ieee80211_radiotap_header *radiotap_header,
++   int max_length
++);
++
++extern ieee80211_radiotap_parser_retcode_t ieee80211_radiotap_iterator_next(
++   struct ieee80211_radiotap_iterator *iterator);
++
++
+ /* from net/wireless.h */
+ struct wiphy;
+ 
+Index: wireless-dev/net/wireless/Makefile
+===================================================================
+--- wireless-dev.orig/net/wireless/Makefile
++++ wireless-dev/net/wireless/Makefile
+@@ -1,5 +1,5 @@
+ obj-$(CONFIG_WIRELESS_EXT) += wext.o
+ obj-$(CONFIG_CFG80211) += cfg80211.o
+ 
+-cfg80211-y += core.o sysfs.o
++cfg80211-y += core.o sysfs.o radiotap.o
+ cfg80211-$(CONFIG_NL80211) += nl80211.o
+Index: wireless-dev/net/wireless/radiotap.c
+===================================================================
+--- /dev/null
++++ wireless-dev/net/wireless/radiotap.c
+@@ -0,0 +1,245 @@
++/*
++ * Radiotap parser
++ *
++ * Copyright 2007		Andy Green <andy@warmcat.com>
++ */
++
++#include <linux/err.h>
++#include <net/cfg80211.h>
++#include <net/ieee80211_radiotap.h>
++
++/* function prototypes and related defs are in include/net/cfg80211.h */
++
++/**
++ * ieee80211_radiotap_iterator_init - radiotap parser iterator initialization
++ * @iterator: radiotap_iterator to initialize
++ * @radiotap_header: radiotap header to parse
++ * @max_length: total length we can parse into (eg, whole packet length)
++ *
++ * Returns: RADIOTAP_PARSER_OK or RADIOTAP_PARSER_INVALID if there is
++ *  a problem.
++ *
++ * This function initializes an opaque iterator struct which can then
++ * be passed to ieee80211_radiotap_iterator_next() to visit every radiotap
++ * argument which is present in the header.  It knows about extended
++ * present headers and handles them.
++ *
++ * How to use:
++ * call __ieee80211_radiotap_iterator_init() to init a semi-opaque iterator
++ * struct ieee80211_radiotap_iterator (no need to init the struct beforehand)
++ * checking for a good RADIOTAP_PARSER_OK return code.  Then loop calling
++ * __ieee80211_radiotap_iterator_next()... it returns either RADIOTAP_PARSER_OK,
++ * RADIOTAP_PARSER_DONE if there are no more args to parse, or
++ * RADIOTAP_PARSER_INVALID if there is a problem.
++ * The iterator's @this_arg member points to the start of the argument
++ * associated with the current argument index that is present, which can be
++ * found in the iterator's @this_arg_index member.  This arg index corresponds
++ * to the IEEE80211_RADIOTAP_... defines.
++ *
++ * Radiotap header length:
++ * You can find the CPU-endian total radiotap header length in
++ * iterator->max_length after executing ieee80211_radiotap_iterator_init()
++ * successfully.
++ *
++ * Example code:
++ * See Documentation/networking/radiotap-headers.txt
++ */
++
++ieee80211_radiotap_parser_retcode_t ieee80211_radiotap_iterator_init(
++    struct ieee80211_radiotap_iterator * iterator,
++    struct ieee80211_radiotap_header * radiotap_header,
++    int max_length)
++{
++	/* Linux only supports version 0 radiotap format */
++	if (radiotap_header->it_version)
++		return RADIOTAP_PARSER_INVALID;
++
++	/* sanity check for allowed length and radiotap length field */
++	if (max_length < le16_to_cpu(radiotap_header->it_len))
++		return RADIOTAP_PARSER_INVALID;
++
++	iterator->rtheader = radiotap_header;
++	iterator->max_length = le16_to_cpu(radiotap_header->it_len);
++	iterator->arg_index = 0;
++	iterator->bitmap_shifter = le32_to_cpu(radiotap_header->it_present);
++	iterator->arg = (u8 *)radiotap_header + sizeof(*radiotap_header);
++	iterator->this_arg = 0;
++
++	/* find payload start allowing for extended bitmap(s) */
++
++	if (unlikely(iterator->bitmap_shifter &
++		     IEEE80211_RADIOTAP_PRESENT_EXTEND_MASK)) {
++		while (le32_to_cpu(*((u32 *)iterator->arg)) &
++				   IEEE80211_RADIOTAP_PRESENT_EXTEND_MASK) {
++			iterator->arg += sizeof(u32);
++
++			/*
++			 * check for insanity where the present bitmaps
++			 * keep claiming to extend up to or even beyond the
++			 * stated radiotap header length
++			 */
++
++			if (((ulong)iterator->arg -
++			     (ulong)iterator->rtheader) > iterator->max_length)
++				return RADIOTAP_PARSER_INVALID;
++		}
++
++		iterator->arg += sizeof(u32);
++
++		/*
++		 * no need to check again for blowing past stated radiotap
++		 * header length, because ieee80211_radiotap_iterator_next
++		 * checks it before it is dereferenced
++		 */
++	}
++
++	/* we are all initialized happily */
++
++	return RADIOTAP_PARSER_OK;
++}
++
++EXPORT_SYMBOL(ieee80211_radiotap_iterator_init);
++
++
++/**
++ * ieee80211_radiotap_iterator_next - return next radiotap parser iterator arg
++ * @iterator: radiotap_iterator to move to next arg (if any)
++ *
++ * Returns: RADIOTAP_PARSER_OK if there is an argument to handle, or
++ * RADIOTAP_PARSER_DONE if there are no more args or RADIOTAP_PARSER_INVALID
++ * if there is something else wrong.
++ *
++ * This function returns the next radiotap arg index (IEEE80211_RADIOTAP_*)
++ * and sets iterator->this_arg to point to the payload for the arg.  It takes
++ * care of alignment handling and extended present fields.  iterator->this_arg
++ * can be changed by the caller (eg, incremented to move inside a compound
++ * argument like IEEE80211_RADIOTAP_CHANNEL).  The args pointed to are in
++ * little-endian format whatever the endianess of your CPU.
++ */
++
++ieee80211_radiotap_parser_retcode_t ieee80211_radiotap_iterator_next(
++    struct ieee80211_radiotap_iterator * iterator)
++{
++
++	/*
++	 * small length lookup table for all radiotap types we heard of
++	 * starting from b0 in the bitmap, so we can walk the payload
++	 * area of the radiotap header
++	 *
++	 * There is a requirement to pad args, so that args
++	 * of a given length must begin at a boundary of that length
++	 * -- but note that compound args are allowed (eg, 2 x u16
++	 * for IEEE80211_RADIOTAP_CHANNEL) so total arg length is not
++	 * a reliable indicator of alignment requirement.
++	 *
++	 * upper nybble: content alignment for arg
++	 * lower nybble: content length for arg
++	 */
++
++	static const u8 rt_sizes[] = {
++		[IEEE80211_RADIOTAP_TSFT] = 0x88,
++		[IEEE80211_RADIOTAP_FLAGS] = 0x11,
++		[IEEE80211_RADIOTAP_RATE] = 0x11,
++		[IEEE80211_RADIOTAP_CHANNEL] = 0x24,
++		[IEEE80211_RADIOTAP_FHSS] = 0x22,
++		[IEEE80211_RADIOTAP_DBM_ANTSIGNAL] = 0x11,
++		[IEEE80211_RADIOTAP_DBM_ANTNOISE] = 0x11,
++		[IEEE80211_RADIOTAP_LOCK_QUALITY] = 0x22,
++		[IEEE80211_RADIOTAP_TX_ATTENUATION] = 0x22,
++		[IEEE80211_RADIOTAP_DB_TX_ATTENUATION] = 0x22,
++		[IEEE80211_RADIOTAP_DBM_TX_POWER] = 0x11,
++		[IEEE80211_RADIOTAP_ANTENNA] = 0x11,
++		[IEEE80211_RADIOTAP_DB_ANTSIGNAL] = 0x11,
++		[IEEE80211_RADIOTAP_DB_ANTNOISE] = 0x11
++		/*
++		 * add more here as they are defined in
++		 * include/net/ieee80211_radiotap.h
++		 */
++	};
++
++	/*
++	 * for every radiotap entry we can at
++	 * least skip (by knowing the length)...
++	 */
++
++	while (iterator->arg_index < sizeof(rt_sizes)) {
++		int hit = 0;
++
++		if (!(iterator->bitmap_shifter & 1))
++			goto next_entry; /* arg not present */
++
++		/*
++		 * arg is present, account for alignment padding
++		 *  8-bit args can be at any alignment
++		 * 16-bit args must start on 16-bit boundary
++		 * 32-bit args must start on 32-bit boundary
++		 * 64-bit args must start on 64-bit boundary
++		 *
++		 * note that total arg size can differ from alignment of
++		 * elements inside arg, so we use upper nybble of length
++		 * table to base alignment on
++		 *
++		 * also note: these alignments are ** relative to the
++		 * start of the radiotap header **.  There is no guarantee
++		 * that the radiotap header itself is aligned on any
++		 * kind of boundary.
++		 */
++
++		if (((ulong)iterator->arg - (ulong)iterator->rtheader) &
++		    ((rt_sizes[iterator->arg_index] >> 4) - 1))
++			iterator->arg_index +=
++				(rt_sizes[iterator->arg_index] >> 4) -
++				((((int)iterator->arg) -
++				 ((int)iterator->rtheader)) &
++				 ((rt_sizes[iterator->arg_index] >> 4) - 1));
++
++		/*
++		 * this is what we will return to user, but we need to
++		 * move on first so next call has something fresh to test
++		 */
++		iterator->this_arg_index = iterator->arg_index;
++		iterator->this_arg = iterator->arg;
++		hit = 1;
++
++		/* internally move on the size of this arg */
++		iterator->arg += rt_sizes[iterator->arg_index] & 0x0f;
++
++		/*
++		 * check for insanity where we are given a bitmap that
++		 * claims to have more arg content than the length of the
++		 * radiotap section.  We will normally end up equalling this
++		 * max_length on the last arg, never exceeding it.
++		 */
++
++		if (((ulong)iterator->arg - (ulong)iterator->rtheader) >
++		    iterator->max_length)
++			return RADIOTAP_PARSER_INVALID;
++
++	next_entry:
++		iterator->arg_index++;
++		if (unlikely((iterator->arg_index & 31) == 0)) {
++			/* completed current u32 bitmap */
++			if (iterator->bitmap_shifter & 1) {
++				/* b31 was set, there is more */
++				/* move to next u32 bitmap */
++				iterator->bitmap_shifter =
++				    le32_to_cpu(*iterator->next_bitmap);
++				iterator->next_bitmap++;
++			} else {
++				/* no more bitmaps: end */
++				iterator->arg_index = sizeof(rt_sizes);
++			}
++		} else { /* just try the next bit */
++			iterator->bitmap_shifter >>= 1;
++		}
++
++		/* if we found a valid arg earlier, return it now */
++		if (hit)
++			return RADIOTAP_PARSER_OK;
++	}
++
++	/* we don't know how to handle any more args, we're done */
++	return RADIOTAP_PARSER_DONE;
++}
++
++EXPORT_SYMBOL(ieee80211_radiotap_iterator_next);
+Index: wireless-dev/Documentation/networking/radiotap-headers.txt
+===================================================================
+--- wireless-dev.orig/Documentation/networking/radiotap-headers.txt
++++ wireless-dev/Documentation/networking/radiotap-headers.txt
+@@ -76,4 +76,64 @@ Example valid radiotap header
+ 	0x01 //<-- antenna
+ 
+ 
++Using the Radiotap Parser
++-------------------------
++
++If you are having to parse a radiotap struct, you can radically simplify the
++job by using the radiotap parser that lives in net/wireless/radiotap.c and has
++its prototypes available in include/net/cfg80211.h.  You use it like this:
++
++#include <net/cfg80211.h>
++
++/* buf points to the start of the radiotap header part */
++
++int MyFunction(u8 * buf, int buflen)
++{
++	int pkt_rate_100kHz = 0, antenna = 0, pwr = 0;
++	struct ieee80211_radiotap_iterator iterator;
++	ieee80211_radiotap_parser_retcode_t ret =
++		ieee80211_radiotap_iterator_init(&iterator, buf, buflen);
++
++	while (ret == RADIOTAP_PARSER_OK) {
++
++	 	ret = ieee80211_radiotap_iterator_next(&iterator);
++
++		if (ret != RADIOTAP_PARSER_OK)
++			continue;
++
++		/* see if this argument is something we can use */
++
++		switch (iterator.this_arg_index) {
++		case IEEE80211_RADIOTAP_RATE:
++			/* radiotap "rate" u8 is in
++			 * 500kbps units, eg, 0x02=1Mbps
++			 */
++			pkt_rate_100kHz = (*iterator.this_arg) * 5;
++			break;
++
++		case IEEE80211_RADIOTAP_ANTENNA:
++			/* radiotap uses 0 for 1st ant */
++			antenna = *iterator.this_arg);
++			break;
++
++		case IEEE80211_RADIOTAP_DBM_TX_POWER:
++			pwr = *iterator.this_arg;
++			break;
++
++		default:
++			break;
++		}
++	}  /* while more rt headers */
++
++	if (ret != RADIOTAP_PARSER_DONE)
++		return TXRX_DROP;
++
++	/* discard the radiotap header part */
++	buf += iterator.max_length;
++	buflen -= iterator.max_length;
++
++	...
++
++}
++
+ Andy Green <andy@warmcat.com>
+
+-- 
