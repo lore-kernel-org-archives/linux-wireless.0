@@ -1,49 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:33157 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753537AbXFMJjr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2007 05:39:47 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 1D4EE8D762
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2007 11:39:43 +0200 (CEST)
-Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id 6A5B6104B9
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2007 09:40:08 +0000 (UTC)
-Message-Id: <20070613093732.535166329@warmcat.com>
-Date: Wed, 13 Jun 2007 10:37:32 +0100
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH Try#12 0/3] Radiotap injection for Monitor Mode
+Received: from ra.tuxdriver.com ([70.61.120.52]:2268 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754830AbXFLPyj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jun 2007 11:54:39 -0400
+Date: Tue, 12 Jun 2007 11:40:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: Re: Please pull libertas-2.6
+Message-ID: <20070612154019.GE310@tuxdriver.com>
+References: <1181102122.18061.8.camel@xo-28-0B-88.localdomain> <200706121519.09758.hs4233@mail.mn-solutions.de> <20070612140529.GD310@tuxdriver.com> <200706121715.33187.hs4233@mail.mn-solutions.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200706121715.33187.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches add the ability to inject packets down a monitor mode interface for 
-transmission according to a prepended radiotap header.
+On Tue, Jun 12, 2007 at 05:15:33PM +0200, Holger Schurig wrote:
 
-For injecting packets, the you issue a packet using libpcap or a SOCK_PACKET
-socket down an interface to the wireless device that is in Monitor Mode.  The packet
-has a normal radiotap header prepended to the IEEE80211 header.  The radiotap header
-is variable length depending on what the user wants to specify, currently the
-transmit rate, power and antenna can be specified using normal radiotap semantics.
-Any other entries are skipped.
+> So, my plan is to submit the driver (or the patchset for the 
+> driver) to either libertas-dev or wireless-dev as soon as I get 
+> my first association to an AP via it. We can than think if the 
+> driver should be added to some GIT tree. From then on I'll start 
+> sending incremental patches.
+> 
+> Do you think that makes sense?
 
-The radiotap parser is broken out into its own file under cfg80211.
+Sounds great to me... :-)
 
-A usermode app packetspammer is available from here
-
-http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
-
-which allows easy injection of these packets from the commandline.  At the moment it
-loops issuing packets at a variety of rates which can be seen from another
-machine's monitor mode interface on the same channel.  There are instructions for
-build and using it on the page above along with Fedora 7 binary and source RPMS.
-There is now also a -f switch to allow testing of the FCS flag on injected packets.
-
-Currently it has been tested for both rx and tx using zd1211rw-mac80211.
-
-The patches are based against current wireless-dev.
-
-I also added some documentation files which explains how to use the injection
-functionality and radiotap header notes.
---  
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
