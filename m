@@ -1,47 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59009 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752744AbXFMUg0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2007 16:36:26 -0400
-Date: Wed, 13 Jun 2007 13:35:02 -0700
-From: Greg KH <gregkh@suse.de>
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Andrey Borzenkov <arvidjaar@mail.ru>,
-	Bjorn Helgaas <bjorn.helgaas@hp.com>,
-	Stephen Smalley <sds@tycho.nsa.gov>,
-	James Morris <jmorris@namei.org>,
-	Eric Paris <eparis@parisplace.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	Paulo Pereira <pfmp.404@gmail.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [2/2] 2.6.22-rc4: known regressions with patches v3
-Message-ID: <20070613203501.GA5708@suse.de>
-References: <46704B5D.5020106@googlemail.com> <46704C4D.5010803@googlemail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <46704C4D.5010803@googlemail.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45912
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751254AbXFLVOE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jun 2007 17:14:04 -0400
+Date: Tue, 12 Jun 2007 14:14:20 -0700 (PDT)
+Message-Id: <20070612.141420.10763729.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: mac80211 fixes for 2.6.22
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20070612011616.GC20422@tuxdriver.com>
+References: <20070612011616.GC20422@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 13, 2007 at 09:58:05PM +0200, Michal Piotrowski wrote:
->  USB
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 11 Jun 2007 21:16:16 -0400
+
+> Here are a few mac80211 patches appropriate for 2.6.22.
 > 
->  Subject    : list_add corruption. prev->next should be next (f7d28794), but 
->  was f0df8ed4 (prev=f0df8ed4) Kernel Bug at lib/list_debug.c:33
->  References : http://bugzilla.kernel.org/show_bug.cgi?id=8561
->  Submitter  : Paulo Pereira <pfmp.404@gmail.com>
->  Handled-By : Alan Stern <stern@rowland.harvard.edu>
->  Patch      : http://bugzilla.kernel.org/show_bug.cgi?id=8561#c8
->  Status     : patch was suggested
+> Individual patches to follow, or you can pull at your leisure...
+...
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git mac80211-fixes
 
-I'm pretty sure this wasn't a "regression" and was always there, and
-that the proposed patch did fix the solution, right Paulo and Alan?
-
-thanks,
-
-greg k-h
+Pulled, thanks John.
