@@ -1,63 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47707 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751708AbXFOSiI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2007 14:38:08 -0400
-Subject: Re: libertas (private) ioctls vs. nl80211
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Holger Schurig <hs4233@mail.mn-solutions.de>
-In-Reply-To: <1181757483.29767.99.camel@johannes.berg>
-References: <1181757483.29767.99.camel@johannes.berg>
-Content-Type: text/plain
-Date: Fri, 15 Jun 2007 14:42:32 -0400
-Message-Id: <1181932952.7676.17.camel@xo-28-0B-88.localdomain>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52713 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751162AbXFNJIO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2007 05:08:14 -0400
+Subject: rt2x00firmware.c missing some include
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4E5fjcA+51JoU5+6xm3B"
+Date: Wed, 13 Jun 2007 23:41:11 +0200
+Message-Id: <1181770871.29767.139.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-06-13 at 19:58 +0200, Johannes Berg wrote:
-> Hi,
-> 
-> With the recent activity around cfg/nl80211 I was wondering if the
-> libertas people could offer some input on what configuration 802.11s
-> requires, or even could start specifying some preliminary nl80211
-> commands for 802.11s.
 
-I only have a general idea of what sorts of configurables mesh
-implementations would need, unfortunately.  I could probably figure that
-out from people that would know though.  The standard is still draft
-though, and changing pretty heavily recently.  Some things that are
-useful are tuning the data rates of route requests, poking the
-forwarding table, setting power management options etc.  On the debugfs
-side, being able to add static mappings to the forwarding and blinding
-tables are nice.  Looking towards 802.11s, we'll need methods to set up
-encryption keys between pairs of nodes and dealing with whatever
-authentication methods the committees come up with.
+--=-4E5fjcA+51JoU5+6xm3B
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-> The reason I'm saying this is that I'd really like to see a full-mac
-> driver use cfg80211 unlike softmac drivers where only mac80211 is
-> involved, just to try out the APIs a bit more. And libertas seemed to be
-> a suitable candidate to me... Maybe some other driver would be better? I
+I get
 
-I'd like to see if we can do this too.  Were I to convert some drivers,
-I'd start first with libertas and then do airo.  They are both pretty
-simple.  For the libertas case, the straight cfg80211 work should be
-done first and then we can move on to mesh-specific stuff.
+  CC [M]  drivers/net/wireless/mac80211/rt2x00/rt2x00firmware.o
+drivers/net/wireless/mac80211/rt2x00/rt2x00firmware.c: In function =E2=80=
+=98rt2x00lib_load_firmware_wait=E2=80=99:
+drivers/net/wireless/mac80211/rt2x00/rt2x00firmware.c:123: warning: implici=
+t declaration of function =E2=80=98msleep=E2=80=99
 
-> personally have no full-mac hardware available nor much time/interested
-> right now but I'm sure some form of full-mac hardware could be made
-> available to interested hackers.
+on powerpc. I suppose on your system something pulls in the relevant
+header already.
 
-Yes, we can give out a few Libertas USB 8388 dongles to interested
-parties; I've already personally given 2 to Luis to put in their testbed
-and sent one to Holger Schurig who's working on the CF 8385 port.  We're
-trying to work out a more formal run of USB 8388 dongles than the
-"engineering samples" we're getting right now.  School servers need them
-too, and we need something a lot more rugged than an un-canned bare
-PCB :)
+johannes
 
-Dan
+--=-4E5fjcA+51JoU5+6xm3B
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGcGR3/ETPhpq3jKURAut6AJ9zl13o0NSLm9ZDnpgil/+VB5F0pwCdFvXp
+Dr7VNfjdbgnc1q2k/hOgPWY=
+=/sT5
+-----END PGP SIGNATURE-----
+
+--=-4E5fjcA+51JoU5+6xm3B--
 
