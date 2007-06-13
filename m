@@ -1,43 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail5.sea5.speakeasy.net ([69.17.117.7]:44751 "EHLO
-	mail5.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760366AbXFBToI (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:25543 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754306AbXFMGr7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jun 2007 15:44:08 -0400
-Date: Sat, 2 Jun 2007 12:43:22 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, mingo@redhat.com,
-	neilb@suse.de, "John W. Linville" <linville@tuxdriver.com>,
-	linux-raid@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: multiple xor_block() functions
-Message-ID: <20070602194321.GB31754@jm.kir.nu>
-References: <20070602185746.GI5500@stusta.de>
+	Wed, 13 Jun 2007 02:47:59 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "Mark Powell" <Mark.Powell@csr.com>
+Subject: Re: [RFC] {cfg,nl}80211 API
+Date: Tue, 12 Jun 2007 23:46:54 -0700
+Cc: "David Lamparter" <dl@diac24.net>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"David Lamparter" <lists@diac24.net>,
+	"Dan Williams" <dcbw@redhat.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <20070611230434.GA13221@charon.n2.diac24.net> <200706120945.41154.flamingice@sourmilk.net> <F3555D2D288C3C4CBA0001C074188F119F8913@cameurexb01.EUROPE.ROOT.PRI>
+In-Reply-To: <F3555D2D288C3C4CBA0001C074188F119F8913@cameurexb01.EUROPE.ROOT.PRI>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070602185746.GI5500@stusta.de>
+Content-Type: multipart/signed;
+  boundary="nextPart2751354.vG6mUV1dNI";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200706122346.59935.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 02, 2007 at 08:57:46PM +0200, Adrian Bunk wrote:
-> include/linux/raid/xor.h:extern void xor_block(unsigned int count, unsigned int bytes, void **ptr);
-> drivers/md/xor.c:xor_block(unsigned int count, unsigned int bytes, void **ptr)
-> drivers/md/xor.c:EXPORT_SYMBOL(xor_block);
-> 
-> and
-> 
-> net/ieee80211/ieee80211_crypt_ccmp.c:static inline void xor_block(u8 * b, u8 * a, size_t len)
-> 
-> 
-> At least one of them has to be renamed.
+--nextPart2751354.vG6mUV1dNI
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Why? Not that I would really mind renaming one of these, but I don't see
-a good reason for it. ieee80211_crypt_ccmp.c should not include
-linux/raid/xor.h and the xor_block() in CCMP code is a static inline
-function that should not show up outside the scope of this file. Do we
-have some magic that makes exported symbols pollute name space for
-inlined helper functions?
+On Tuesday 12 June 2007 10:01, Mark Powell wrote:
+> This is to do with the operation of the "Controlled Port" as specified
+> by 802.1x, which is handled by the driver. When the key exchanges are
+> complete and the link is secure, then data is allowed to flow. With
+> wext, the driver has to guess when this state is reached, based on
+> knowledge of how wpa_supplicant uses wext.
+>
+=46rom Documentation/networking/operstates.txt:
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+However, an interface is not usable just because the admin enabled it
+=2D ethernet requires to be plugged into the switch and, depending on
+a site's networking policy and configuration, an 802.1X authentication
+to be performed before user data can be transferred. Operational state
+shows the ability of an interface to transmit this user data.
+
+Thanks to 802.1X, userspace must be granted the possibility to
+influence operational state. To accommodate this, operational state is
+split into two parts: Two flags that can be set by the driver only, and
+a RFC2863 compatible state that is derived from these flags, a policy,
+and changeable from userspace under certain rules.
+=2D---
+
+Dormant state allow userspace to control the state of an interface well eno=
+ugh=20
+to do 802.1x properly, regardless of whether it is wired or wireless.=20
+wpa_supplicant already uses this AFAIK. Drivers don't need to do anything.
+
+=2DMichael Wu
+
+--nextPart2751354.vG6mUV1dNI
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGb5LjT3Oqt9AH4aERAvbeAJ9dp+W0mYG018MgJqbgdbgN0DOlQACbBWgp
+jMP/7qGadlJ2LixQeH0Cz+4=
+=3hn8
+-----END PGP SIGNATURE-----
+
+--nextPart2751354.vG6mUV1dNI--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
