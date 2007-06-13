@@ -1,76 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41383 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967446AbXFHJfF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2007 05:35:05 -0400
-Subject: userspace MLME
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3010 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753109AbXFMDYl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jun 2007 23:24:41 -0400
+Date: Tue, 12 Jun 2007 22:57:50 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>,
-	Zhu Yi <yi.zhu@intel.com>, Jiri Benc <jbenc@suse.cz>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KTwqEZodNporkIfB5nnP"
-Date: Fri, 08 Jun 2007 11:35:19 +0200
-Message-Id: <1181295319.6533.50.camel@johannes.berg>
+Cc: davem@davemloft.net, jeff@garzik.org
+Subject: wireless administrivia (12 June 2007)
+Message-ID: <20070613025750.GE4187@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Just a quick memorandum...
 
---=-KTwqEZodNporkIfB5nnP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I will be on vacation next week.  My availability will be limited
+starting Saturday (16 June) and stretching through the following
+weekend.  I will have some electronic accessibility and intend to
+check-in at least once a day.  However, I also intend to enjoy the
+company of friends, my spouse, and my numerous (legitimate) offspring
+as well as some tinkering with my own projects. :-)
 
-Here's a repost of my thoughts I just posted deep in that other thread.
-If you read it, please reply here, otherwise it's good that I'm
-reposting, right? :) Sorry for sending it twice, but some more thoughts
-might follow so I'd rather split it off from the other thread
+Shortly after my vacation I will be off to sunny Canada for OLS2007.
+I hope to see some of you there.  I'm a bit portly, with short brown
+(turning gray) hair and I'll probably have a tag with my name on
+it -- men of Canada lock up your daughters! :-)  Well if you see me,
+feel free to say hello!  Fedora users are especially welcome... :-)
 
-IMHO, in order to get the userspace MLME idea to take off, somebody
-really needs to
+So anyway, if you have any patches that need to get in (especially
+for 2.6.22) then you should send them ASAP.  I expect that I can
+handle any truly "hot" emergency patches that might come-in during
+the next two weeks, but anything less important (or more complicated)
+than that will likely be delayed.
 
- 1) repost/integrate the injection patches
- 2) implement a nl80211 API for the userspace MLME
- 3) fix the userspace MLME implementation stuff in mac80211 to work with
-    the injection patches and the new nl80211 API
- 4) publish an adapted userspace MLME that uses this (or patches to wpa
-    supplicant)
- 5) write some documentation
- 6) put that userspace MLME into git, publish the tree on kernel.org and
-    maintain it
- 7) decree that wpa supplicant is on-topic for linux-wireless
+Also, if you have anything you are holding for the 2.6.23 merge window
+then go ahead and post that as well.  It would be best to give me,
+Jeff, and Dave as much time to review things as possible.  Drivers
+currently sitting in wireless-dev would be good candidates for posting,
+provided that they meet style and maintainability requirements, etc.
 
+The above leads to something I mentioned in another thread.  I would
+like to reduce the delta between wireless-dev and upstream as much
+as possible and as soon as possible.  Pursuant to that, I would like
+to set a goal for the group:
 
-Some of these have sub-points:
- 2a) in mac80211, rip out all the userspace MLME stuff and analyse what
-     is required
- 2b) add the commands to nl80211 (make sure that only one userspace MLME
-     can drive a single interface)
- 2c) add the commands to cfg80211
- 2d) re-implement the commands in mac80211 based on cfg80211
- 2e) since we want to be able to configure the userspace MLME through
-     the kernel, implement nl80211 command forwarding to the userspace
-     MLME [1]
+	I would like to see anything which is currently sitting in
+	wireless-dev be ready for an upstream merge by the time the
+	2.6.24 (yes, 24) merge window opens.
 
-[1] Actually, I'd think that *all* commands should be forwarded to the
-userspace MLME except for commands *from* the userspace MLME. That way,
-the userspace MLME can act as a filter for commands which should make a
-whole bunch of things easier.
+The above is a "soft" goal -- I will almost certainly not be kicking
+things out of wireless-dev simply for failing to meet it.  Still, I
+think this is a worthy goal and is doable for many parts of the tree.
+I appreciate the effort that I expect will be exerted in order to
+meet it.
 
-johannes
+Well, thanks for your attention...feel free to ask questions...
 
---=-KTwqEZodNporkIfB5nnP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGaSLW/ETPhpq3jKURAgnEAJ9JsB8/xmFVE0393Z/oeAOmIaFxowCglabG
-dtWUgP393LbrMRwVd8I3xlo=
-=4Zvf
------END PGP SIGNATURE-----
-
---=-KTwqEZodNporkIfB5nnP--
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
