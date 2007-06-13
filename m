@@ -1,50 +1,362 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50466 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752521AbXFTLQf (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:33160 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755356AbXFMJjs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2007 07:16:35 -0400
-Subject: [PATCH] bcm43xx: honour promisc bit even in monitor mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Michael Buesch <mb@bu3sch.de>
-Content-Type: text/plain
-Date: Wed, 20 Jun 2007 01:30:38 +0200
-Message-Id: <1182295838.3714.14.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 13 Jun 2007 05:39:48 -0400
+Message-Id: <20070613093943.738206787@warmcat.com>
+References: <20070613093732.535166329@warmcat.com>
+Date: Wed, 13 Jun 2007 10:37:35 +0100
+From: andy@warmcat.com
+To: linux-wireless@vger.kernel.org
+Cc: John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Benc <jbenc@suse.cz>, Andy Green <andy@warmcat.com>
+Subject: [PATCH Try#12 3/3] mac80211: Monitor mode radiotap-based packet injection
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When bcm43xx goes into monitor mode, it always is a promisc monitor
-mode. For the hostapd using monitor interfaces, we'll want to only go
-into monitor mode if it's really required. I previously thought that
-this requires changes to mac80211, but mac80211 does in fact already
-seem to handle IFF_PROMISC appropriately. Hence, this change is the
-only required to get proper semantics for a monitor interface that
-isn't in promiscuous mode on bcm43xx.
+Try #12 Comments from Michael Wu
+ - Revert enum retcode stuff
+ - Handle flags, checking if FCS marked as present and snipping it
+ - kill a blank line
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Try #11
+ - Change parser loop code around to deal with enum retcodes
+
+Try #10  Comments from Michael Wu
+ - __ieee80211_convert_radiotap_to_control_and_remove ->
+   __ieee80211_parse_tx_radiotap
+ - death to vertical justification
+ - -ve to negative
+ - struct ieee80211_hw_mode should be called "mode" by convention
+
+Try #9
+ - Normalize multiline comment style
+
+Try #6
+ - Accounted for various comments from Johannes Berg
+ - Radiotap parsing is moved to cfg80211 as requested in a separate patch
+
+Try #5
+ - De-indent last few indented comments
+
+Try #4
+ - All from Michael Wu's feedback: further style heresies removed
+ - took account of radiotap arg alignment requirement.  n-byte arg must be
+   placed on n-byte boundary using padding where necessary
+
+Try #3
+ - moved to Michael Wu's method of tracking if we came in on a
+   monitor interface by using ifindex
+ - removed older proposed monitor interface tracking method and flags
+ - style fixes
+ - removed duped #include that is present in Michael Wu's patch already
+
+Try #2
+ - took Michael Wu's advice about better tools and basing on wireless-dev
+ - took Luis Rodriguez's advice about coding style makeover
+ - took Pavel Roskin's advice about little-endian radiotap
+
+CC: John Linville <linville@tuxdriver.com>
+CC: Johannes Berg <johannes@sipsolutions.net>
+CC: Jiri Benc <jbenc@suse.cz>
+Signed-off-by: Andy Green <andy@warmcat.com>
+
 
 ---
-Since wireshark/tcpdump by default still set IFF_PROMISC everything will
-work just fine, but if somebody really wants a monitor interface that
-isn't promisc this makes it work too. However, you'll of course get all
-packets still if any other interface is set promisc. We don't do any
-promisc/non-promisc filtering in the stack when multiple monitor
-interfaces are open.
+ net/mac80211/ieee80211.c |  225 ++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 215 insertions(+), 10 deletions(-)
 
- drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c |    1 -
- 1 file changed, 1 deletion(-)
-
---- wireless-dev.orig/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c	2007-06-20 01:03:35.547360230 +0200
-+++ wireless-dev/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c	2007-06-20 01:03:42.467360230 +0200
-@@ -1939,7 +1939,6 @@ static void bcm43xx_adjust_opmode(struct
- 		}
+Index: wireless-dev/net/mac80211/ieee80211.c
+===================================================================
+--- wireless-dev.orig/net/mac80211/ieee80211.c
++++ wireless-dev/net/mac80211/ieee80211.c
+@@ -1118,7 +1118,132 @@ ieee80211_tx_h_ps_buf(struct ieee80211_t
+ }
+ 
+ 
+-static void inline
++/*
++ * deal with packet injection down monitor interface
++ * with Radiotap Header -- only called for monitor mode interface
++ */
++
++static ieee80211_txrx_result
++__ieee80211_parse_tx_radiotap(
++	struct ieee80211_txrx_data *tx,
++	struct sk_buff *skb, struct ieee80211_tx_control *control)
++{
++	/*
++	 * this is the moment to interpret and discard the radiotap header that
++	 * must be at the start of the packet injected in Monitor mode
++	 *
++	 * Need to take some care with endian-ness since radiotap
++	 * args are little-endian
++	 */
++
++	struct ieee80211_radiotap_iterator iterator;
++	struct ieee80211_radiotap_header *rthdr =
++		(struct ieee80211_radiotap_header *) skb->data;
++	struct ieee80211_hw_mode *mode = tx->local->hw.conf.mode;
++	int ret = ieee80211_radiotap_iterator_init(&iterator, rthdr, skb->len);
++
++	/*
++	 * default control situation for all injected packets
++	 * FIXME: this does not suit all usage cases, expand to allow control
++	 */
++
++	control->retry_limit = 1; /* no retry */
++	control->key_idx = -1; /* no encryption key */
++	control->flags &= ~(IEEE80211_TXCTL_USE_RTS_CTS |
++			    IEEE80211_TXCTL_USE_CTS_PROTECT);
++	control->flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT |
++			  IEEE80211_TXCTL_NO_ACK;
++	control->antenna_sel_tx = 0; /* default to default antenna */
++
++	/*
++	 * for every radiotap entry that is present
++	 * (ieee80211_radiotap_iterator_next returns -ENOENT when no more
++	 * entries present, or -EINVAL on error)
++	 */
++
++	while (!ret) {
++		int i, target_rate;
++
++	 	ret = ieee80211_radiotap_iterator_next(&iterator);
++
++		if (ret)
++			continue;
++
++		/* see if this argument is something we can use */
++		switch (iterator.this_arg_index) {
++		case IEEE80211_RADIOTAP_RATE:
++			/*
++			 * radiotap rate u8 is in 500kbps units eg, 0x02=1Mbps
++			 * ieee80211 rate int is in 100kbps units eg, 0x0a=1Mbps
++			 */
++			target_rate = (*iterator.this_arg) * 5;
++			for (i = 0; i < mode->num_rates; i++) {
++				struct ieee80211_rate *r = &mode->rates[i];
++
++				if (r->rate > target_rate)
++					continue;
++
++				control->rate = r;
++
++				if (r->flags & IEEE80211_RATE_PREAMBLE2)
++					control->tx_rate = r->val2;
++				else
++					control->tx_rate = r->val;
++
++				/* end on exact match */
++				if (r->rate == target_rate)
++					i = mode->num_rates;
++			}
++			break;
++
++		case IEEE80211_RADIOTAP_ANTENNA:
++			/*
++			 * radiotap uses 0 for 1st ant, mac80211 is 1 for
++			 * 1st ant
++			 */
++			control->antenna_sel_tx = (*iterator.this_arg) + 1;
++			break;
++
++		case IEEE80211_RADIOTAP_DBM_TX_POWER:
++			control->power_level = *iterator.this_arg;
++			break;
++
++		case IEEE80211_RADIOTAP_FLAGS:
++			if (*iterator.this_arg & IEEE80211_RADIOTAP_F_FCS) {
++				/*
++				 * this indicates that the skb we have been
++				 * handed has the 32-bit FCS CRC at the end...
++				 * we should react to that by snipping it off
++				 * because it will be recomputed and added
++				 * on transmission
++				 */
++				if (skb->len < (iterator.max_length + FCS_LEN))
++					return TXRX_DROP;
++
++				skb_trim(skb, skb->len - FCS_LEN);
++			}
++			break;
++
++		default:
++			break;
++		}
++	}
++
++	if (ret != -ENOENT) /* ie, if we didn't simply run out of fields */
++		return TXRX_DROP;
++
++	/*
++	 * remove the radiotap header
++	 * iterator->max_length was sanity-checked against
++	 * skb->len by iterator init
++	 */
++	skb_pull(skb, iterator.max_length);
++
++	return TXRX_CONTINUE;
++}
++
++
++static ieee80211_txrx_result inline
+ __ieee80211_tx_prepare(struct ieee80211_txrx_data *tx,
+ 		       struct sk_buff *skb,
+ 		       struct net_device *dev,
+@@ -1126,6 +1251,9 @@ __ieee80211_tx_prepare(struct ieee80211_
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	struct ieee80211_sub_if_data *sdata;
++	ieee80211_txrx_result res = TXRX_CONTINUE;
++
+ 	int hdrlen;
+ 
+ 	memset(tx, 0, sizeof(*tx));
+@@ -1135,7 +1263,32 @@ __ieee80211_tx_prepare(struct ieee80211_
+ 	tx->sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	tx->sta = sta_info_get(local, hdr->addr1);
+ 	tx->fc = le16_to_cpu(hdr->frame_control);
++
++	/*
++	 * set defaults for things that can be set by
++	 * injected radiotap headers
++	 */
+ 	control->power_level = local->hw.conf.power_level;
++	control->antenna_sel_tx = local->hw.conf.antenna_sel_tx;
++	if (local->sta_antenna_sel != STA_ANTENNA_SEL_AUTO && tx->sta)
++		control->antenna_sel_tx = tx->sta->antenna_sel_tx;
++
++	/* process and remove the injection radiotap header */
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	if (unlikely(sdata->type == IEEE80211_IF_TYPE_MNTR)) {
++		if (__ieee80211_parse_tx_radiotap(tx, skb, control) ==
++								TXRX_DROP) {
++			return TXRX_DROP;
++		}
++		/*
++		 * we removed the radiotap header after this point,
++		 * we filled control with what we could use
++		 * set to the actual ieee header now
++		 */
++		hdr = (struct ieee80211_hdr *) skb->data;
++		res = TXRX_QUEUED; /* indication it was monitor packet */
++	}
++
+ 	tx->u.tx.control = control;
+ 	tx->u.tx.unicast = !is_multicast_ether_addr(hdr->addr1);
+ 	if (is_multicast_ether_addr(hdr->addr1))
+@@ -1152,9 +1305,6 @@ __ieee80211_tx_prepare(struct ieee80211_
+ 		control->flags |= IEEE80211_TXCTL_CLEAR_DST_MASK;
+ 		tx->sta->clear_dst_mask = 0;
  	}
- 	if (wl->monitor) {
--		ctl |= BCM43xx_MACCTL_PROMISC;
- 		ctl |= BCM43xx_MACCTL_KEEP_CTL;
- 		if (modparam_mon_keep_bad)
- 			ctl |= BCM43xx_MACCTL_KEEP_BAD;
+-	control->antenna_sel_tx = local->hw.conf.antenna_sel_tx;
+-	if (local->sta_antenna_sel != STA_ANTENNA_SEL_AUTO && tx->sta)
+-		control->antenna_sel_tx = tx->sta->antenna_sel_tx;
+ 	hdrlen = ieee80211_get_hdrlen(tx->fc);
+ 	if (skb->len > hdrlen + sizeof(rfc1042_header) + 2) {
+ 		u8 *pos = &skb->data[hdrlen + sizeof(rfc1042_header)];
+@@ -1162,6 +1312,7 @@ __ieee80211_tx_prepare(struct ieee80211_
+ 	}
+ 	control->flags |= IEEE80211_TXCTL_FIRST_FRAGMENT;
+ 
++	return res;
+ }
+ 
+ static int inline is_ieee80211_device(struct net_device *dev,
+@@ -1274,7 +1425,7 @@ static int ieee80211_tx(struct net_devic
+ 	struct sta_info *sta;
+ 	ieee80211_tx_handler *handler;
+ 	struct ieee80211_txrx_data tx;
+-	ieee80211_txrx_result res = TXRX_DROP;
++	ieee80211_txrx_result res = TXRX_DROP, res_prepare;
+ 	int ret, i;
+ 
+ 	WARN_ON(__ieee80211_queue_pending(local, control->queue));
+@@ -1284,15 +1435,26 @@ static int ieee80211_tx(struct net_devic
+ 		return 0;
+ 	}
+ 
+-	__ieee80211_tx_prepare(&tx, skb, dev, control);
++	res_prepare = __ieee80211_tx_prepare(&tx, skb, dev, control);
++
++	if (res_prepare == TXRX_DROP) {
++		dev_kfree_skb(skb);
++		return 0;
++	}
++
+ 	sta = tx.sta;
+ 	tx.u.tx.mgmt_interface = mgmt;
+ 	tx.u.tx.mode = local->hw.conf.mode;
+ 
+-	for (handler = local->tx_handlers; *handler != NULL; handler++) {
+-		res = (*handler)(&tx);
+-		if (res != TXRX_CONTINUE)
+-			break;
++	if (res_prepare == TXRX_QUEUED) { /* if it was an injected packet */
++		res = TXRX_CONTINUE;
++	} else {
++		for (handler = local->tx_handlers; *handler != NULL;
++		     handler++) {
++			res = (*handler)(&tx);
++			if (res != TXRX_CONTINUE)
++				break;
++		}
+ 	}
+ 
+ 	skb = tx.skb; /* handlers are allowed to change skb */
+@@ -1531,6 +1693,49 @@ static int ieee80211_subif_start_xmit(st
+ 		goto fail;
+ 	}
+ 
++	if (unlikely(sdata->type == IEEE80211_IF_TYPE_MNTR)) {
++		struct ieee80211_radiotap_header * prthdr =
++			(struct ieee80211_radiotap_header *)skb->data;
++
++		/*
++		 * there must be a radiotap header at the
++		 * start in this case
++		 */
++		if (unlikely(prthdr->it_version)) {
++			/* only version 0 is supported  */
++			ret = 0;
++			goto fail;
++		}
++
++		skb->dev = local->mdev;
++
++		pkt_data = (struct ieee80211_tx_packet_data *)skb->cb;
++		memset(pkt_data, 0, sizeof(*pkt_data));
++		pkt_data->ifindex = sdata->dev->ifindex;
++		pkt_data->mgmt_iface = 0;
++		pkt_data->do_not_encrypt = 1;
++
++		/* above needed because we set skb device to master */
++
++		/*
++		 * fix up the pointers accounting for the radiotap
++		 * header still being in there.  We are being given
++		 * a precooked IEEE80211 header so no need for
++		 * normal processing
++		 */
++		skb_set_mac_header(skb, prthdr->it_len);
++		skb_set_network_header(skb, prthdr->it_len + sizeof(hdr));
++		skb_set_transport_header(skb, prthdr->it_len + sizeof(hdr));
++
++		/*
++		 * pass the radiotap header up to
++		 * the next stage intact
++		 */
++		dev_queue_xmit(skb);
++
++		return 0;
++	}
++
+ 	nh_pos = skb_network_header(skb) - skb->data;
+ 	h_pos = skb_transport_header(skb) - skb->data;
+ 
 
-
+-- 
