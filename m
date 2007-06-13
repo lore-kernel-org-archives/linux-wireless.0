@@ -1,48 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:45008 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965945AbXFHSM6 (ORCPT
+Received: from 91-65-240-14-dynip.superkabel.de ([91.65.240.14]:50783 "EHLO
+	charon.n2.diac24.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1756468AbXFMMeN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2007 14:12:58 -0400
-Received: by py-out-1112.google.com with SMTP id a29so1376357pyi
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Jun 2007 11:12:57 -0700 (PDT)
-Message-ID: <43e72e890706081112k76e17827t4c66dbccdcee0e03@mail.gmail.com>
-Date: Fri, 8 Jun 2007 14:12:57 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Jouni Malinen" <jkm@devicescape.com>
-Subject: Re: [PATCH V3] mac80211: Set low initial rate in rc80211_simple
-Cc: "Jiri Benc" <jbenc@suse.cz>,
-	"Michael Wu" <flamingice@sourmilk.net>,
-	"Larry Finger" <larry.finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070608145821.GD14078@devicescape.com>
+	Wed, 13 Jun 2007 08:34:13 -0400
+Date: Wed, 13 Jun 2007 14:33:35 +0200
+From: David Lamparter <lists@diac24.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: David Lamparter <lists@diac24.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: use nl80211_* enums
+Message-ID: <20070613123333.GA3440@charon.n2.diac24.net>
+References: <20070611221224.GA10598@charon.n2.diac24.net> <200706122355.36078.flamingice@sourmilk.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-References: <200706072205.27902.flamingice@sourmilk.net>
-	 <20070608112146.2df3608c@griffin.suse.cz>
-	 <20070608145821.GD14078@devicescape.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <200706122355.36078.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6/8/07, Jouni Malinen <jkm@devicescape.com> wrote:
-> On Fri, Jun 08, 2007 at 11:21:46AM +0200, Jiri Benc wrote:
-> > On Thu, 7 Jun 2007 22:05:21 -0700, Michael Wu wrote:
-> > > On Thursday 07 June 2007 20:49, Larry Finger wrote:
-> > > > Does mode->rates[0].flags automatically have IEEE80211_RATE_SUPPORTED set?
-> > > > That wasn't clear to me.
-> > > >
-> > > Yes. (see ieee80211_prepare_rates)
-> >
-> > No :-) In theory, you can use PRISM2_HOSTAPD_SET_RATE_SETS ioctl to
-> > disable the lowest available rate. Yes, that's deprecated and bad thing
-> > to do; but unfortunately, it can be done with the current code.
+> > +#include <linux/nl80211.h>
 >
-> There are some odd cases, where disabling the lowest supported rate may
-> even be required due to regulatory rules..
+> It seems to me that cfg80211 shouldn't depend on nl80211, so the 
+> nl80211_iftype enum should be moved to cfg80211.h and become cfg80211_iftype.
 
-Just curious -- are you aware of a regulatory domain where this is the
-case? Who defines those rules? For example, AFAICT FCC only talk about
-power, and spectrum ranges. Where would I even look for these type of
-restrictions?
+That's not possible because nl80211_{iftype,phymode} are userspace API.
+If they were defined in cfg80211.h, nl80211.h would need to at least mirror
+them. And since nl80211.h can't include cfg80211.h (since the former is a
+"public" header supposed to go to /usr/include with some linux-headers-*
+package), this way around is the simplest and cleanest solution.
 
-  Luis
+Anyway, I don't really think including a header to be a "dependency". You
+can disable the nl80211 implementation and still use the API enum just
+fine. (Note that nl80211.h contains enums, more enums and ONLY enums :)
+
+-David
+
