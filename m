@@ -1,58 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47846 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754718AbXF1J4r (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.175]:7878 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757560AbXFMT7J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2007 05:56:47 -0400
-Subject: Re: [PATCH] mac80211: Export short-preamble bit to drivers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Michael Buesch <mb@bu3sch.de>, Jiri Benc <jbenc@suse.cz>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200706271840.09719.flamingice@sourmilk.net>
-References: <200706251628.00838.mb@bu3sch.de>
-	 <200706271840.09719.flamingice@sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0svyYmcuoKNXnojwvx+M"
-Date: Thu, 28 Jun 2007 11:57:00 +0200
-Message-Id: <1183024620.4769.80.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 13 Jun 2007 15:59:09 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so496617ugf
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2007 12:59:08 -0700 (PDT)
+Message-ID: <46704C4D.5010803@googlemail.com>
+Date: Wed, 13 Jun 2007 21:58:05 +0200
+MIME-Version: 1.0
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Andrey Borzenkov <arvidjaar@mail.ru>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Bjorn Helgaas <bjorn.helgaas@hp.com>,
+	Stephen Smalley <sds@tycho.nsa.gov>,
+	James Morris <jmorris@namei.org>,
+	Eric Paris <eparis@parisplace.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Paulo Pereira <pfmp.404@gmail.com>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [2/2] 2.6.22-rc4: known regressions with patches v3
+References: <46704B5D.5020106@googlemail.com>
+In-Reply-To: <46704B5D.5020106@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi all,
 
---=-0svyYmcuoKNXnojwvx+M
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Here is a list of some known regressions in 2.6.22-rc4
+with patches available.
 
-On Wed, 2007-06-27 at 18:40 -0700, Michael Wu wrote:
-> On Monday 25 June 2007 07:28, Michael Buesch wrote:
-> > +#define IEEE80211_CONF_SHORT_PREAMBLE	(1<<3) /* use short preamble
-> > +						* with IEEE 802.11b */
-> Shouldn't this be more of a "short preamble allowed" bit rather than "use=
-=20
-> short preamble"? After all, short preamble is usually configured per fram=
-e.
+Feel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
 
-I don't think we ever care about configuring it per-frame and currently
-can't afaik, so I don't think we can rightfully say "short preamble
-allowed" unless we want to confuse driver authors about who is
-responsible for then determining whether to use it or not for each
-frame.
 
-johannes
 
---=-0svyYmcuoKNXnojwvx+M
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Networking
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Subject    : no irda0 interface (2.6.21 was OK), smsc does not find chip
+References : http://lkml.org/lkml/2007/6/3/16
+Submitter  : Andrey Borzenkov <arvidjaar@mail.ru>
+Handled-By : Samuel Ortiz <samuel@sortiz.org>
+             Bjorn Helgaas <bjorn.helgaas@hp.com>
+Patch      : http://lkml.org/lkml/2007/6/7/237
+Status     : patch was suggested
 
-iD8DBQBGg4Xs/ETPhpq3jKURAv2FAJ0R6oFgsHhH3K0ypZGuEIBTY+ZOSgCdF7Ff
-uRpUKjeoLGUHfp2zIjpCeHo=
-=XIJd
------END PGP SIGNATURE-----
 
---=-0svyYmcuoKNXnojwvx+M--
 
+SELinux
+
+Subject    : very high non-preempt latency in context_struct_compute_av()
+References : http://lkml.org/lkml/2007/6/4/78
+Submitter  : Ingo Molnar <mingo@elte.hu>
+Handled-By : Stephen Smalley <sds@tycho.nsa.gov>
+             James Morris <jmorris@namei.org>
+Patch      : http://lkml.org/lkml/2007/6/7/334
+Status     : patch available
+
+
+
+USB
+
+Subject    : list_add corruption. prev->next should be next (f7d28794), but was f0df8ed4 (prev=f0df8ed4) Kernel Bug at lib/list_debug.c:33
+References : http://bugzilla.kernel.org/show_bug.cgi?id=8561
+Submitter  : Paulo Pereira <pfmp.404@gmail.com>
+Handled-By : Alan Stern <stern@rowland.harvard.edu>
+Patch      : http://bugzilla.kernel.org/show_bug.cgi?id=8561#c8
+Status     : patch was suggested
+
+
+
+Regards,
+Michal
+
+-- 
+LOG
+http://www.stardust.webpages.pl/log/
