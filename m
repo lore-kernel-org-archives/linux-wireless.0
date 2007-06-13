@@ -1,33 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41498
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762026AbXFAUmA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2007 16:42:00 -0400
-From: Michael Buesch <mb@bu3sch.de>
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:60713 "EHLO amd.ucw.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757232AbXFMLmc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2007 07:42:32 -0400
+Date: Wed, 13 Jun 2007 13:07:18 +0200
+From: Pavel Machek <pavel@ucw.cz>
 To: James Ketrenos <jketreno@linux.intel.com>
-Subject: Re: [PATCH] mac80211: Update stop_queues kdoc
-Date: Fri, 1 Jun 2007 22:41:04 +0200
-Cc: Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200706011129.12432.mb@bu3sch.de> <200706011204.23666.flamingice@sourmilk.net> <46605814.1090806@linux.intel.com>
-In-Reply-To: <46605814.1090806@linux.intel.com>
+Cc: kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: Re: ipw3945 driver in recent -mm kernels
+Message-ID: <20070613110718.GA1800@elf.ucw.cz>
+References: <20070609192703.GA6410@elf.ucw.cz> <20070609215712.GA13678@elf.ucw.cz> <466DA14D.6080309@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200706012241.05103.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <466DA14D.6080309@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 01 June 2007 19:32:04 James Ketrenos wrote:
-> iwlwifi currently calls ieee80211_stop_queue from the Tx handler and calls ieee80211_stop_queues in the event the adapter is reset (due to HW error, RF kill transition, hw tear down, etc.) as it asynchronously brings re-initializes the hardware.
+Hi!
 
-I think we do that in bcm43xx, too, and I think it is
-indeed racy, too. So it may trigger the freeze, too.
-A workaround might be to aquire the netdev_tx_lock around
-the stop_queues call. But I'm not sure.
+BTW could we get some more reasonable path? Currently wifi drivers are
+in
 
+drivers/net/wireless/mac80211/iwlwifi
+
+...ouch. drivers/mac80211/iwlwifi would be better...
+
+> > I still do not see the wlan led. It seems to scan okay, but I can't
+> > seem to connect, and I get this in logs:
+> > 
+> > Jun  9 23:53:21 amd kernel: wlan0: deauthenticated
+> > Jun  9 23:53:21 amd kernel: wlan0: RX deauthentication from
+> > 00:11:2f:0e:95:a0 (reason=4)
+> 
+> >From Table 19 in the IEEE 802.11 spec lists reason 4 a 
+> 'disassociation due to inactivity'  Odd that it would happen during
+>  association.  Were you able to associate at all before you
+> started seeing the problem?
+
+No, I could not get any connection.
+
+
+> > Jun  9 23:53:21 amd last message repeated 2 times
+> > Jun  9 23:53:22 amd kernel: wlan0: authenticate with AP
+> > 00:11:2f:0e:95:a0
+...
+> 
+> This may be related to mac80211's link activity detection
+> at times immediately following an association/reassociation.
+> 
+> I've seen similar behavior here; a temporary work around I am using is 
+> to disable the 'lost link detection' in mac80211.  
+
+Trying with that patch:
+
+root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
+insmod iwl3945.ko
+root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
+killall klogd
+root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
+iwlist wlan0 scan
+Warning: Driver for device wlan0 has been compiled with version 22
+of Wireless Extension, while this program supports up to version 17.
+Some things may be broken...
+
+wlan0     Interface doesn't support scanning : Network is down
+
+root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
+ifconfig wlan0 up
+root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
+iwlist wlan0 scan
+Warning: Driver for device wlan0 has been compiled with version 22
+of Wireless Extension, while this program supports up to version 17.
+Some things may be broken...
+
+wlan0     Scan completed :
+          Cell 01 - Address: 00:11:2F:0E:95:A0
+                    ESSID:"pavel"
+                    Mode:Master
+                    Channel:1
+                    Frequency:2.412 GHz
+                    Quality=88/100  Signal level=-45 dBm
+                    Encryption key:off
+                    Bit Rate:1 Mb/s
+                    Bit Rate:2 Mb/s
+                    Bit Rate:5.5 Mb/s
+                    Bit Rate:11 Mb/s
+                    Bit Rate:6 Mb/s
+                    Bit Rate:9 Mb/s
+                    Bit Rate:12 Mb/s
+                    Bit Rate:18 Mb/s
+                    Bit Rate:24 Mb/s
+                    Bit Rate:36 Mb/s
+                    Bit Rate:48 Mb/s
+                    Bit Rate:54 Mb/s
+                    Extra:tsf=000001d9866dbe25
+
+root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
+iwconfig wlan0 essid pavel
+root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
+iwl3945: REPLY_ADD_STA failed
+
+root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
+ifconfig eth0 down
+root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
+iwconfig
+eth0      no wireless extensions.
+
+lo        no wireless extensions.
+
+irlan0    no wireless extensions.
+
+wmaster0  no wireless extensions.
+
+Warning: Driver for device wlan0 has been compiled with version 22
+of Wireless Extension, while this program supports up to version 17.
+Some things may be broken...
+
+wlan0     IEEE 802.11g  ESSID:"pavel"
+          Mode:Managed  Frequency:2.412 GHz  Access Point:
+00:11:2F:0E:95:A0
+          Bit Rate=11 Mb/s
+          Retry min limit:7   RTS thr:off   Fragment thr=2346 B
+          Encryption key:off
+          Link Quality=77/100  Signal level=-40 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
+ifconfig wlan0 10.0.0.6 up
+root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi# ping
+10.0.0.3
+PING 10.0.0.3 (10.0.0.3): 56 data bytes
+
+
+(no link here).
+
+Aha, so I pressed ^c and  attempted to kick it into life, and got some errors:
+
+root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
+ifconfig wlan0 down
+root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
+ifconfig wlan0 up
+iwl3945: Microcode SW error detected.  Restarting 0x82000000.
+iwl3945: Error Reply type 0x0000003A cmd REPLY_RXON_ASSOC (0x11) seq
+0x0430 ser 0x00000000
+iwl3945: Error setting RXON_ASSOC configuration (-5).
+iwl3945: Error sending REPLY_RXON: time out after 500ms.
+iwl3945: Error setting new configuration (-110).
+iwl3945: Error sending REPLY_ADD_STA: time out after 500ms.
+iwl3945: ipw going down
+root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
+iwl3945: Can't stop Rx DMA.
+iwl3945: Grabbing access while already held at line 825.
+iwl3945: Microcode SW error detected.  Restarting 0x82000000.
+iwl3945: Error Reply type 0x000004EB cmd REPLY_TX_PWR_TABLE_CMD (0x97)
+seq 0x0402 ser 0x00000000
+iwl3945: ipw going down
+iwl3945: Can't stop Rx DMA.
+iwl3945: Grabbing access while already held at line 825.
+
+...I'll turn on the microcode debug now.
+										Pavel
 
 -- 
-Greetings Michael.
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
