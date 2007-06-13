@@ -1,50 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:29061 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S968864AbXFHREi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2007 13:04:38 -0400
-Date: Sat, 9 Jun 2007 01:03:55 +0800
-From: Zhu Yi <yi.zhu@intel.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 3/6] mac80211: fix 1-bit bitfield to unsigned
-Message-ID: <20070608170355.GA17262@mail.intel.com>
-Reply-To: yi.zhu@intel.com
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49533 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758263AbXFMPqg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2007 11:46:36 -0400
+Subject: Re: [PATCH Try#11 3/4] cfg80211: Radiotap parser
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: andy@warmcat.com, linux-wireless@vger.kernel.org
+In-Reply-To: <200706122242.08045.flamingice@sourmilk.net>
+References: <20070612130435.896010304@warmcat.com>
+	 <20070612130502.157979021@warmcat.com>
+	 <200706122242.08045.flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EwyvQ/2KSzxPKJ3IbgXB"
+Date: Wed, 13 Jun 2007 17:46:36 +0200
+Message-Id: <1181749596.29767.82.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 17 of these pairs of sparse warnings since it's difficult for a 1-bit
-bitfield to have both a value bit and a sign bit.
 
-net/mac80211/sta_info.h:105:16: error: dubious bitfield without explicit
-`signed' or `unsigned'
-net/mac80211/sta_info.h:107:15: error: dubious bitfield without explicit
-`signed' or `unsigned'
+--=-EwyvQ/2KSzxPKJ3IbgXB
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- net/mac80211/sta_info.h |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+On Tue, 2007-06-12 at 22:42 -0700, Michael Wu wrote:
+> On Tuesday 12 June 2007 06:04, andy@warmcat.com wrote:
+> > +typedef enum  {
+> > +       RADIOTAP_PARSER_OK =3D 0,
+> > +       RADIOTAP_PARSER_DONE,
+> > +       RADIOTAP_PARSER_INVALID
+> > +} ieee80211_radiotap_parser_retcode_t;
 
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 3eb3649..1179c32 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -102,9 +102,9 @@ struct sta_info {
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	int debugfs_registered;
- #endif
--	int assoc_ap:1; /* whether this is an AP that we are
--			 * associated with as a client */
--	int dls_sta:1; /* whether this stations is a DLS peer of us */
-+	unsigned int assoc_ap:1; /* whether this is an AP that we are
-+				  * associated with as a client */
-+	unsigned int dls_sta:1; /* whether this stations is a DLS peer of us */
- 
- #define DLS_STATUS_OK		0
- #define DLS_STATUS_NOLINK	1
--- 
-1.5.0.rc2.g73a2
+> Yuck. I much prefer the standard error codes used in the previous version=
+..
+
+I would as well, but as I outlined before we basically have four things
+that can happen
+ * we found a next item we understood
+ * we have a parser error
+ * we reached the end
+ * we found an item we can't support (and thus we don't support any
+   further ones either assuming we add support sequentially)
+
+I would like to be able to distinguish all these cases, the previous
+version couldn't distinguish between the last two. However, I'm not
+convinced that error codes are reasonable for something that isn't an
+error (i.e. reaching the end)
+
+johannes
+
+--=-EwyvQ/2KSzxPKJ3IbgXB
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGcBFb/ETPhpq3jKURAo1kAJoDjtJHBjfbf85WIOSbz0Y3E8J/kwCghGYK
+tRCEVKtOpyBtqfDRh5N6Kw8=
+=STG5
+-----END PGP SIGNATURE-----
+
+--=-EwyvQ/2KSzxPKJ3IbgXB--
+
