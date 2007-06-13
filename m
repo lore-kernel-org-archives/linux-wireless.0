@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.249]:50661 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750816AbXFCTeR (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:35634
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752193AbXFMNXr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jun 2007 15:34:17 -0400
-Received: by an-out-0708.google.com with SMTP id d31so290174and
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Jun 2007 12:34:17 -0700 (PDT)
-Message-ID: <8e6f94720706031234y77761bb8m8abeda67d48f9dd5@mail.gmail.com>
-Date: Sun, 3 Jun 2007 15:34:17 -0400
-From: "Will Dyson" <will.dyson@gmail.com>
-To: "Michael Wu" <flamingice@sourmilk.net>
-Subject: Re: BUG: at net/mac80211/ieee80211.c:1280 ieee80211_tx()
-Cc: linux-wireless@vger.kernel.org,
-	"Broadcom Linux" <bcm43xx-dev@lists.berlios.de>,
-	"Jiri Benc" <jbenc@suse.cz>
-In-Reply-To: <8e6f94720705260851k34c3d1fam16ab96c13375b11d@mail.gmail.com>
+	Wed, 13 Jun 2007 09:23:47 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: ipw3945 driver in recent -mm kernels
+Date: Wed, 13 Jun 2007 15:22:56 +0200
+Cc: Pavel Machek <pavel@ucw.cz>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+References: <20070609192703.GA6410@elf.ucw.cz> <20070613110718.GA1800@elf.ucw.cz> <466FEA7B.3000101@lwfinger.net>
+In-Reply-To: <466FEA7B.3000101@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <8e6f94720705251637o71a13d71w70199a3057048592@mail.gmail.com>
-	 <200705251805.25696.flamingice@sourmilk.net>
-	 <8e6f94720705252110k46be0397v5f446aabdf34fe3f@mail.gmail.com>
-	 <200705252224.18457.flamingice@sourmilk.net>
-	 <8e6f94720705260851k34c3d1fam16ab96c13375b11d@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200706131522.56559.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/26/07, Will Dyson <will.dyson@gmail.com> wrote:
-> On 5/26/07, Michael Wu <flamingice@sourmilk.net> wrote:
-> > On Friday 25 May 2007 21:10, Will Dyson wrote:
-> > > On 5/25/07, Michael Wu <flamingice@sourmilk.net> wrote:
-> > > > On Friday 25 May 2007 16:37, Will Dyson wrote:
-> > > > > But I've got ton's of these in my log:
-> > > > >
-> > > > >  BUG: at net/mac80211/ieee80211.c:1280 ieee80211_tx()
-> > > >
-> > > > Do you have CONFIG_NET_SCHED on?
-> > >
-> > > I do not have it set in this kernel. Should I?
-> > It may help. mac80211 didn't work correctly without it before and I'm not
-> > entirely sure if it works correctly now without that.
->
-> Ok. I'll try it.
->
-> For what it's worth, I can no-longer reproduce this error (although it
-> was reproducible across several reboots yesterday).
+On Wednesday 13 June 2007 15:00:43 Larry Finger wrote:
+> Pavel Machek wrote:
+> > Hi!
+> > 
+> > BTW could we get some more reasonable path? Currently wifi drivers are
+> > in
+> > 
+> > drivers/net/wireless/mac80211/iwlwifi
+> > 
+> > ...ouch. drivers/mac80211/iwlwifi would be better...
+> 
+> NACK. Having _ALL_ wireless drivers under drivers/net/wireless/ is correct. I would vote, however, 
+> for collapsing out the mac80211 directory once all softmac drivers are converted to mac80211 and all 
+> the duplications are removed.
 
-Followup:
-
-The warning did eventually show up again in the kernel without
-CONFIG_NET_SCHED. Runing a week with CONFIG_NET_SCHED without a
-recurrence. So that seems to have solved it.
-
-If mac80211 needs CONFIG_NET_SCHED, shouldn't mac80211 select or depend on it?
+It's gonna happen exactly that way.
+We discussed that at the DTL Wireless Summit 2006.
 
 -- 
-Will Dyson
+Greetings Michael.
