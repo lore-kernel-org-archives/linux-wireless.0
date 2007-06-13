@@ -1,65 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60765 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756726AbXFVP3M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2007 11:29:12 -0400
-Subject: Re: [WIP] mac80211: kill mgmt interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <467BDCB1.1010604@warmcat.com>
-References: <1182418939.10821.8.camel@johannes.berg>
-	 <20070621143558.68fc8e4a@griffin.suse.cz>
-	 <1182429920.21939.1.camel@johannes.berg>
-	 <20070621151441.500d62d5@griffin.suse.cz>
-	 <20070622154545.29eeebdb@griffin.suse.cz>  <467BDCB1.1010604@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-veIBgfr4Z9YJcenR6VHi"
-Date: Fri, 22 Jun 2007 17:30:21 +0200
-Message-Id: <1182526221.21939.94.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:56463 "EHLO amd.ucw.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755315AbXFMKwt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2007 06:52:49 -0400
+Date: Wed, 13 Jun 2007 12:52:43 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: James Ketrenos <jketreno@linux.intel.com>
+Cc: kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: Re: ipw3945 driver in recent -mm kernels
+Message-ID: <20070613105243.GA15368@elf.ucw.cz>
+References: <20070609192703.GA6410@elf.ucw.cz> <20070609215712.GA13678@elf.ucw.cz> <466DA14D.6080309@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <466DA14D.6080309@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi!
 
---=-veIBgfr4Z9YJcenR6VHi
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Forgot to include changes outside of drivers/net/wireless/mac80211/iwlwifi/
+> 
+> Zhu Yi is the maintainer for the iwlwifi driver (Cc: on this email)
 
-On Fri, 2007-06-22 at 15:29 +0100, Andy Green wrote:
+Thanks.
 
-> > I have a new idea. Maybe it will turn out to have fatal design or
-> > implementation problems, but anyway.
+> >>
+> >> be listed as a maintainer?
+> >>
+> >> Kconfig mentions...
+> >>
+> >>           See <file:Documentation/networking/README.iwlwifi> for
+> >>           information on the capabilities currently enabled in this
+> >>           driver and for tips for debugging issues and problems.
+> 
+> We'll remove that from the Kconfig until we get the document updated
+> to reflect the current status.
 
-> But for any nontrivial use, you need to capture RX and not blindly
-> inject, and so you have a monitor mode interface up anyway.  The
-> footprint in the political networking space is less if it just goes in
-> as a monitor mode TX action.
+Actually, It is probably better to just include the docs.
 
-In addition, we still have the problem with receiving encrypted eapol
-frames etc. that we really need to see unencrypted but can't make it to
-the network interface.
+(I'll test the patch now).
+								Pavel
 
-I'm still for using netlink. It's just a socket too after all, and
-what's the conceptual difference between packing network packets into
-other packets or packing them into netlink messages? I don't see why
-people are so dead set against using nl80211 for the userspace MLME
-needs including frame stuff.
-
-johannes
-
---=-veIBgfr4Z9YJcenR6VHi
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGe+sN/ETPhpq3jKURAnwWAKCluN/UHs5CgOo7ItjGdlpQOtGLmACeKmw3
-eH3lffeZuzxqmytYwEQWBQU=
-=HPx2
------END PGP SIGNATURE-----
-
---=-veIBgfr4Z9YJcenR6VHi--
-
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
