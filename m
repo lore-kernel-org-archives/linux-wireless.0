@@ -1,34 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:40212 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S964949AbXFHDtR (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:33157 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753537AbXFMJjr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2007 23:49:17 -0400
-Message-ID: <4668D1BB.40705@lwfinger.net>
-Date: Thu, 07 Jun 2007 22:49:15 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V3] mac80211: Set low initial rate in rc80211_simple
-References: <4668c71b.E0vXnFMnxxm8I5gE%Larry.Finger@lwfinger.net> <200706072038.36708.flamingice@sourmilk.net>
-In-Reply-To: <200706072038.36708.flamingice@sourmilk.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 13 Jun 2007 05:39:47 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 1D4EE8D762
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2007 11:39:43 +0200 (CEST)
+Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
+	by armbox7.home.warmcat.com (Postfix) with ESMTP id 6A5B6104B9
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2007 09:40:08 +0000 (UTC)
+Message-Id: <20070613093732.535166329@warmcat.com>
+Date: Wed, 13 Jun 2007 10:37:32 +0100
+From: andy@warmcat.com
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH Try#12 0/3] Radiotap injection for Monitor Mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
-> On Thursday 07 June 2007 20:03, Larry Finger wrote:
->>  	for (i = 0; i < mode->num_rates; i++) {
->>  		if ((sta->supp_rates & BIT(i)) &&
->>  		    (mode->rates[i].flags & IEEE80211_RATE_SUPPORTED))
->>  			sta->txrate = i;
->> +			break;
->>  	}
-> Uh, what's the point of having a loop if you're gonna do that? ;)
+These patches add the ability to inject packets down a monitor mode interface for 
+transmission according to a prepended radiotap header.
 
-Does mode->rates[0].flags automatically have IEEE80211_RATE_SUPPORTED set? That wasn't clear to me.
+For injecting packets, the you issue a packet using libpcap or a SOCK_PACKET
+socket down an interface to the wireless device that is in Monitor Mode.  The packet
+has a normal radiotap header prepended to the IEEE80211 header.  The radiotap header
+is variable length depending on what the user wants to specify, currently the
+transmit rate, power and antenna can be specified using normal radiotap semantics.
+Any other entries are skipped.
 
-Larry
+The radiotap parser is broken out into its own file under cfg80211.
 
+A usermode app packetspammer is available from here
 
+http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
+
+which allows easy injection of these packets from the commandline.  At the moment it
+loops issuing packets at a variety of rates which can be seen from another
+machine's monitor mode interface on the same channel.  There are instructions for
+build and using it on the page above along with Fedora 7 binary and source RPMS.
+There is now also a -f switch to allow testing of the FCS flag on injected packets.
+
+Currently it has been tested for both rx and tx using zd1211rw-mac80211.
+
+The patches are based against current wireless-dev.
+
+I also added some documentation files which explains how to use the injection
+functionality and radiotap header notes.
+--  
