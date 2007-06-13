@@ -1,71 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43061 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52647 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752546AbXF0N6O (ORCPT
+	with ESMTP id S1751123AbXFNJGT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2007 09:58:14 -0400
-Subject: Re: [PATCH] mac80211: Export short-preamble bit to drivers
+	Thu, 14 Jun 2007 05:06:19 -0400
+Subject: Re: [PATCH Try#12 2/3] cfg80211: Radiotap parser
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Jiri Benc <jbenc@suse.cz>, John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200706271533.57189.mb@bu3sch.de>
-References: <200706251628.00838.mb@bu3sch.de>
-	 <1182934500.4769.8.camel@johannes.berg>  <200706271533.57189.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EH5hp6UE6CAsbG5Kcd/y"
-Date: Wed, 27 Jun 2007 15:58:20 +0200
-Message-Id: <1182952700.4769.16.camel@johannes.berg>
+To: andy@warmcat.com
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Jiri Benc <jbenc@suse.cz>
+In-Reply-To: <20070613093943.634743151@warmcat.com>
+References: <20070613093732.535166329@warmcat.com>
+	 <20070613093943.634743151@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ekqKiCyDG08zSNMezy5g"
+Date: Wed, 13 Jun 2007 20:47:47 +0200
+Message-Id: <1181760467.29767.130.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-EH5hp6UE6CAsbG5Kcd/y
+--=-ekqKiCyDG08zSNMezy5g
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2007-06-27 at 15:33 +0200, Michael Buesch wrote:
-> On Wednesday 27 June 2007 10:55:00 Johannes Berg wrote:
-> > On Mon, 2007-06-25 at 16:28 +0200, Michael Buesch wrote:
-> >=20
-> > >  	case PRISM2_PARAM_PREAMBLE:
-> > > -		local->short_preamble =3D value;
-> > > +		if (value)
-> > > +			local_to_hw(local)->conf.flags |=3D IEEE80211_CONF_SHORT_PREAMBLE=
-;
-> > > +		else
-> > > +			local_to_hw(local)->conf.flags &=3D ~IEEE80211_CONF_SHORT_PREAMBL=
-E;
-> > > +		if (ieee80211_hw_config(local))
-> > > +			ret =3D -EINVAL;
-> >=20
-> > any reason not to return the actual error code from hw_config here? Not
-> > that it'll be any different from -EINVAL I expect...
-> >=20
-> > johannes
-> >=20
->=20
-> Another thing, while we are at it.
-> How is locking for the conf structure actually done? How is it
-> made impossible to read the value of "flags" in another thread,
-> while we update it in a non-atomic way, here?
+Hi Andy,
 
-I don't see any locking, though we do have this code running under rtnl
-so you might need to check the other accesses.
+Sorry, I really hate doing this, but I found yet another problem :/
+
+Hi Andy,
+
+Sorry, I really hate having comments again and again but never really
+thought about this earlier, the FCS removal thing you added made me
+think...
+
+
+> + * @max_length: total length we can parse into (eg, whole packet length)
+
+> +	/* sanity check for allowed length and radiotap length field */
+> +	if (max_length < le16_to_cpu(radiotap_header->it_len))
+> +		return -EINVAL;
+
+> +	iterator->max_length =3D le16_to_cpu(radiotap_header->it_len);
+
+This is fine, at first sight, but if you let the caller modify the skb
+like mac80211 now does with stripping the FCS, the max length really
+needs to be passed to each invocation of
+ieee80211_radiotap_iterator_next in order to catch invalid skbs. Mind
+you, we wouldn't Oops since trimming just moves the skb tail pointer,
+but something that indicated a longer length and then just have a packet
+like
+
+0x00, 0x00, // <-- radiotap version
+0x08, 0x00, // <- radiotap header length
+0x10, 0x00, 0x00, 0x00, // <-- bitmap, FCS bit set
+
+which might not do the right thing and it'd be better IMHO to catch it
+explicitly.
+
+Also related to FCS, if you respin I think I'd like to have an explicit
+"0x00" entry in rt_sizes for it so it's obvious that it's intentionally
+0, otherwise I'll post a patch after the code goes in.
+
+Another question: since there's no alignment requirement for the skb
+that contains the radiotap header, I think you need something like
+
+iterator->bitmap_shifter =3D=20
+	le32_to_cpu(get_unaligned(iterator->next_bitmap))
+
+instead of
+
+> +                               iterator->bitmap_shifter =3D
+> +                                   le32_to_cpu(*iterator->next_bitmap);
+
+in many places.
 
 johannes
 
---=-EH5hp6UE6CAsbG5Kcd/y
+--=-ekqKiCyDG08zSNMezy5g
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGgmz8/ETPhpq3jKURAkbwAJ9njmKzk23wEshYARemBjtkyl2XPACcDRrE
-tBJDXm+jSOJtpeKyhsoDfOk=
-=nuuH
+iD8DBQBGcDvT/ETPhpq3jKURAttsAJ4+PssurHr+GtuB+sKb7tTraY1SYQCdG3sm
+6UGnY6VhkpJNfWCMAGtJBBo=
+=J+Xq
 -----END PGP SIGNATURE-----
 
---=-EH5hp6UE6CAsbG5Kcd/y--
+--=-ekqKiCyDG08zSNMezy5g--
 
