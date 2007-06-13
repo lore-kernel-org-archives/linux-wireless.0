@@ -1,199 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:63895 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S969021AbXFHRFA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2007 13:05:00 -0400
-Date: Sat, 9 Jun 2007 01:04:16 +0800
-From: Zhu Yi <yi.zhu@intel.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 5/6] mac80211: Fix sparse error for the IEEE802.11e/WMM code
-Message-ID: <20070608170416.GA17280@mail.intel.com>
-Reply-To: yi.zhu@intel.com
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60715 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758168AbXFMQJK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2007 12:09:10 -0400
+Subject: RE: [RFC] {cfg,nl}80211 API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mark Powell <Mark.Powell@csr.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	David Lamparter <dl@diac24.net>,
+	David Lamparter <lists@diac24.net>,
+	Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <F3555D2D288C3C4CBA0001C074188F119F8913@cameurexb01.EUROPE.ROOT.PRI>
+References: <20070611230434.GA13221@charon.n2.diac24.net>
+	 <20070612131458.GA6411@charon.n2.diac24.net>
+	 <F3555D2D288C3C4CBA0001C074188F119F88C3@cameurexb01.EUROPE.ROOT.PRI>
+	 <200706120945.41154.flamingice@sourmilk.net>
+	 <F3555D2D288C3C4CBA0001C074188F119F8913@cameurexb01.EUROPE.ROOT.PRI>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nOPPHGKSLpc9Gr/l6B9h"
+Date: Wed, 13 Jun 2007 18:08:57 +0200
+Message-Id: <1181750937.29767.89.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix sparse error for the IEEE802.11e/WMM code
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- net/mac80211/debugfs_netdev.c  |   40 ++++++++++++++++++++--------------------
- net/mac80211/ieee80211_i.h     |    2 +-
- net/mac80211/ieee80211_iface.c |   12 ++++++------
- net/mac80211/ieee80211_sta.c   |   10 +++++-----
- 4 files changed, 32 insertions(+), 32 deletions(-)
+--=-nOPPHGKSLpc9Gr/l6B9h
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index a1c5fcc..5e50817 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -94,7 +94,7 @@ static ssize_t qos_ ##name## _write(struct file *file,			\
- {									\
- 	struct ieee80211_sub_if_data *sdata = file->private_data;	\
- 									\
--	f(sdata->dev, &sdata->u.sta, &sdata->u.sta.tspec);				\
-+	f(sdata->dev, &sdata->u.sta, &sdata->u.sta.tspec);		\
- 									\
- 	return count;							\
- }									\
-@@ -247,7 +247,6 @@ static ssize_t tsinfo_ ##_name## _write(struct file *file,		\
- 									\
- 	val = simple_strtoul(buf, NULL, 0);				\
- 	if ((val < min_val) || (val > max_val)) {			\
--		struct ieee80211_sub_if_data *sdata = file->private_data;\
- 		printk(KERN_ERR "%s: set value (%u) out of range "	\
- 		       "[%u, %u]\n",sdata->dev->name,val,min_val,max_val);\
- 		return -EINVAL;						\
-@@ -287,14 +286,15 @@ DEBUGFS_TSINFO_FILE(TSID, 8, 15);
- DEBUGFS_TSINFO_FILE(DIR, 0, 3);
- DEBUGFS_TSINFO_FILE(UP, 0, 7);
- 
--#define DEBUGFS_TSPEC_FILE(name)					\
-+#define DEBUGFS_TSPEC_FILE(name, format_string, endian_f1, endian_f2)	\
- static ssize_t tspec_ ##name## _read(struct file *file,			\
- 				      char __user *userbuf,		\
- 				      size_t count, loff_t *ppos)	\
- {									\
- 	char buf[20];							\
- 	struct ieee80211_sub_if_data *sdata = file->private_data;	\
--	int res = scnprintf(buf, count, "%u\n", sdata->u.sta.tspec.name);\
-+	int res = scnprintf(buf, count, format_string "\n",		\
-+			    endian_f1(sdata->u.sta.tspec.name));	\
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);	\
- }									\
- 									\
-@@ -311,7 +311,7 @@ static ssize_t tspec_ ##name## _write(struct file *file,		\
- 	if (copy_from_user(buf, userbuf, size))				\
- 		return -EFAULT;						\
- 									\
--	sdata->u.sta.tspec.name = simple_strtoul(buf, NULL, 0);		\
-+	sdata->u.sta.tspec.name = endian_f2(simple_strtoul(buf, NULL, 0));\
- 	return count;							\
- }									\
- 									\
-@@ -331,21 +331,21 @@ static const struct file_operations tspec_ ##name## _ops = {		\
- 		sdata->debugfs.sta.tspec.name = NULL;			\
- 	} while (0)
- 
--DEBUGFS_TSPEC_FILE(nominal_msdu_size);
--DEBUGFS_TSPEC_FILE(max_msdu_size);
--DEBUGFS_TSPEC_FILE(min_service_interval);
--DEBUGFS_TSPEC_FILE(max_service_interval);
--DEBUGFS_TSPEC_FILE(inactivity_interval);
--DEBUGFS_TSPEC_FILE(suspension_interval);
--DEBUGFS_TSPEC_FILE(service_start_time);
--DEBUGFS_TSPEC_FILE(min_data_rate);
--DEBUGFS_TSPEC_FILE(mean_data_rate);
--DEBUGFS_TSPEC_FILE(peak_data_rate);
--DEBUGFS_TSPEC_FILE(burst_size);
--DEBUGFS_TSPEC_FILE(delay_bound);
--DEBUGFS_TSPEC_FILE(min_phy_rate);
--DEBUGFS_TSPEC_FILE(surplus_band_allow);
--DEBUGFS_TSPEC_FILE(medium_time);
-+DEBUGFS_TSPEC_FILE(nominal_msdu_size, "%hu", le16_to_cpu, cpu_to_le16);
-+DEBUGFS_TSPEC_FILE(max_msdu_size, "%hu", le16_to_cpu, cpu_to_le16);
-+DEBUGFS_TSPEC_FILE(min_service_interval, "%u", le32_to_cpu, cpu_to_le32);
-+DEBUGFS_TSPEC_FILE(max_service_interval, "%u", le32_to_cpu, cpu_to_le32);
-+DEBUGFS_TSPEC_FILE(inactivity_interval, "%u", le32_to_cpu, cpu_to_le32);
-+DEBUGFS_TSPEC_FILE(suspension_interval, "%u", le32_to_cpu, cpu_to_le32);
-+DEBUGFS_TSPEC_FILE(service_start_time, "%u", le32_to_cpu, cpu_to_le32);
-+DEBUGFS_TSPEC_FILE(min_data_rate, "%u", le32_to_cpu, cpu_to_le32);
-+DEBUGFS_TSPEC_FILE(mean_data_rate, "%u", le32_to_cpu, cpu_to_le32);
-+DEBUGFS_TSPEC_FILE(peak_data_rate, "%u", le32_to_cpu, cpu_to_le32);
-+DEBUGFS_TSPEC_FILE(burst_size, "%u", le32_to_cpu, cpu_to_le32);
-+DEBUGFS_TSPEC_FILE(delay_bound, "%u", le32_to_cpu, cpu_to_le32);
-+DEBUGFS_TSPEC_FILE(min_phy_rate, "%u", le32_to_cpu, cpu_to_le32);
-+DEBUGFS_TSPEC_FILE(surplus_band_allow, "%hu", le16_to_cpu, cpu_to_le16);
-+DEBUGFS_TSPEC_FILE(medium_time, "%hu", le16_to_cpu, cpu_to_le16);
- 
- 
- /* common attributes */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 52a85c9..ed4e19b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -877,7 +877,7 @@ void wmm_send_delts(struct net_device *dev,
- 		    struct ieee80211_elem_tspec *tp);
- void ieee80211_send_dls_req(struct net_device *dev,
- 			    struct ieee80211_if_sta *ifsta,
--			    u8 *addr, u32 timeout);
-+			    u8 *addr, u16 timeout);
- void ieee80211_send_dls_teardown(struct net_device *dev,
- 				 struct ieee80211_if_sta *ifsta,
- 				 u8 *mac, u16 reason);
-diff --git a/net/mac80211/ieee80211_iface.c b/net/mac80211/ieee80211_iface.c
-index f4a6500..683d275 100644
---- a/net/mac80211/ieee80211_iface.c
-+++ b/net/mac80211/ieee80211_iface.c
-@@ -199,12 +199,12 @@ void ieee80211_if_set_type(struct net_device *dev, int type)
- 		ifsta->dot11EDCAAveragingPeriod = 5;
- 		ifsta->MPDUExchangeTime = 0;
- #ifdef CONFIG_MAC80211_DEBUGFS
--		ifsta->tspec.nominal_msdu_size = 200,
--		ifsta->tspec.inactivity_interval = 40,
--		ifsta->tspec.mean_data_rate = 40000,
--		ifsta->tspec.min_phy_rate = 6000000,
--		ifsta->tspec.surplus_band_allow = 8192,
--		ifsta->tspec.medium_time = 30,
-+		ifsta->tspec.nominal_msdu_size = cpu_to_le16(200),
-+		ifsta->tspec.inactivity_interval = cpu_to_le32(40),
-+		ifsta->tspec.mean_data_rate = cpu_to_le32(40000),
-+		ifsta->tspec.min_phy_rate = cpu_to_le32(6000000),
-+		ifsta->tspec.surplus_band_allow = cpu_to_le16(8192),
-+		ifsta->tspec.medium_time = cpu_to_le16(30),
- #endif
- 
- 		msdata = IEEE80211_DEV_TO_SUB_IF(sdata->local->mdev);
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index ace0a99..0159ff9 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -714,7 +714,7 @@ static void ieee80211_send_disassoc(struct net_device *dev,
- }
- 
- 
--int ieee80211_ts_index(u8 direction)
-+static int ieee80211_ts_index(u8 direction)
- {
- 	if (direction == WLAN_TSINFO_DOWNLINK ||
- 	    direction == WLAN_TSINFO_DIRECTLINK)
-@@ -822,7 +822,7 @@ void ieee80211_send_delts(struct net_device *dev,
- 	struct sk_buff *skb;
- 	u8 tsid = IEEE80211_TSINFO_TSID(tp->ts_info);
- 	u8 direction = IEEE80211_TSINFO_DIR(tp->ts_info);
--	u32 medium_time = tp->medium_time;
-+	u16 medium_time = le16_to_cpu(tp->medium_time);
- 	u8 index = ieee80211_ts_index(direction);
- 
- 	if (ifsta->ts_data[tsid][index].status == TS_STATUS_UNUSED) {
-@@ -878,7 +878,7 @@ void wmm_send_delts(struct net_device *dev,
- 	struct sk_buff *skb;
- 	u8 tsid = IEEE80211_TSINFO_TSID(tp->ts_info);
- 	u8 direction = IEEE80211_TSINFO_DIR(tp->ts_info);
--	u32 medium_time = tp->medium_time;
-+	u16 medium_time = le16_to_cpu(tp->medium_time);
- 	u8 index = ieee80211_ts_index(direction);
- 	u8 *pos;
- 
-@@ -942,7 +942,7 @@ void wmm_send_delts(struct net_device *dev,
- 
- void ieee80211_send_dls_req(struct net_device *dev,
- 			    struct ieee80211_if_sta *ifsta,
--			    u8 *addr, u32 timeout)
-+			    u8 *addr, u16 timeout)
- {
- 	struct ieee80211_hw_mode *mode;
- 	struct sk_buff *skb;
-@@ -972,7 +972,7 @@ void ieee80211_send_dls_req(struct net_device *dev,
- 	memcpy(mgmt->u.action.u.dls_req.dest, addr, ETH_ALEN);
- 	memcpy(mgmt->u.action.u.dls_req.src, dev->dev_addr, ETH_ALEN);
- 	mgmt->u.action.u.dls_req.capab_info = cpu_to_le16(ifsta->ap_capab);
--	mgmt->u.action.u.dls_req.timeout = timeout;
-+	mgmt->u.action.u.dls_req.timeout = cpu_to_le16(timeout);
- 
- 	/* Add supported rates and extended supported rates */
- 	supp_rates = skb_put(skb, 2);
--- 
-1.5.0.rc2.g73a2
+On Tue, 2007-06-12 at 18:01 +0100, Mark Powell wrote:
+
+> This is to do with the operation of the "Controlled Port" as specified
+> by 802.1x, which is handled by the driver. When the key exchanges are
+> complete and the link is secure, then data is allowed to flow. With
+> wext, the driver has to guess when this state is reached, based on
+> knowledge of how wpa_supplicant uses wext.
+
+Is that really something the driver needs to handle? I see controlled
+port operation in mac80211 but I didn't dig yet why it is necessary. As
+Michael points out, shouldn't it be possible to handle it entirely from
+userland? What userland are you using that needs the driver doing it?
+
+Of course, there's the question of whether to accept packets anyway or
+not, I think that's what the 8021x setting in mac80211 does. Not sure.
+
+johannes
+
+--=-nOPPHGKSLpc9Gr/l6B9h
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGcBaZ/ETPhpq3jKURAhC/AKCpEy04DxppOsRGW+k9hKernfyFmACfbk/u
+VkG2xn2Rk8o8uqCIBBp611I=
+=aT7Q
+-----END PGP SIGNATURE-----
+
+--=-nOPPHGKSLpc9Gr/l6B9h--
+
