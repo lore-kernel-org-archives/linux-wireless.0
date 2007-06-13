@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39637 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752280AbXFVIlr (ORCPT
+Received: from 91-65-240-14-dynip.superkabel.de ([91.65.240.14]:54456 "EHLO
+	charon.n2.diac24.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753470AbXFMNZs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2007 04:41:47 -0400
-Message-Id: <20070621221757.067028000@sipsolutions.net>
-References: <20070621221603.778432000@sipsolutions.net>
-Date: Fri, 22 Jun 2007 00:16:07 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-Subject: [PATCH 04/14] mac80211: split ieee80211_rx_h_check handler
-Mime-Version: 1.0
+	Wed, 13 Jun 2007 09:25:48 -0400
+Date: Wed, 13 Jun 2007 15:25:36 +0200
+From: David Lamparter <lists@diac24.net>
+To: Mark Powell <Mark.Powell@csr.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	David Lamparter <lists@diac24.net>,
+	Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] {cfg,nl}80211 API
+Message-ID: <20070613132536.GB5493@charon.n2.diac24.net>
+References: <20070611230434.GA13221@charon.n2.diac24.net> <20070612131458.GA6411@charon.n2.diac24.net> <F3555D2D288C3C4CBA0001C074188F119F88C3@cameurexb01.EUROPE.ROOT.PRI> <200706120945.41154.flamingice@sourmilk.net> <F3555D2D288C3C4CBA0001C074188F119F8913@cameurexb01.EUROPE.ROOT.PRI>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <F3555D2D288C3C4CBA0001C074188F119F8913@cameurexb01.EUROPE.ROOT.PRI>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ieee80211_rx_h_check handler really does two things, it's
-a lot easier to understand if it's split into ieee80211_rx_h_check
-and ieee80211_rx_h_load_key, and it may be possible in the future
-to optimise the key loading to not do it for each interface.
+> > Shouldn't wpa_supplicant know when the connection is ready? 
+> > It has support for dormant mode, so the link can be held down 
+> > by userspace until it is ready. 
+> > The driver shouldn't need to figure out when the link is 
+> > ready to go up.
+> 
+> This is to do with the operation of the "Controlled Port" as specified
+> by 802.1x, which is handled by the driver. When the key exchanges are
+> complete and the link is secure, then data is allowed to flow. With
+> wext, the driver has to guess when this state is reached, based on
+> knowledge of how wpa_supplicant uses wext.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+I don't know too much about WPA, so, er... is it possible for a device to
+have a set of keys configured and still not be operational?
 
----
- net/mac80211/rx.c |   12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+Basing operational state on a sequence of set-key operations is obviously
+weird, but basing it on having a full set of keys might actually be right,
+IF and only IF those two statements are equivalent, so - are they?
 
---- wireless-dev.orig/net/mac80211/rx.c	2007-06-21 20:48:50.578638003 +0200
-+++ wireless-dev/net/mac80211/rx.c	2007-06-21 20:50:38.678638003 +0200
-@@ -248,7 +248,6 @@ static ieee80211_txrx_result
- ieee80211_rx_h_check(struct ieee80211_txrx_data *rx)
- {
- 	struct ieee80211_hdr *hdr;
--	int always_sta_key;
- 	hdr = (struct ieee80211_hdr *) rx->skb->data;
- 
- 	/* Drop duplicate 802.11 retransmissions (IEEE 802.11 Chap. 9.2.9) */
-@@ -316,6 +315,16 @@ ieee80211_rx_h_check(struct ieee80211_tx
- 		return TXRX_QUEUED;
- 	}
- 
-+	return TXRX_CONTINUE;
-+}
-+
-+
-+static ieee80211_txrx_result
-+ieee80211_rx_h_load_key(struct ieee80211_txrx_data *rx)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
-+	int always_sta_key;
-+
- 	if (rx->sdata->type == IEEE80211_IF_TYPE_STA)
- 		always_sta_key = 0;
- 	else
-@@ -1373,6 +1382,7 @@ ieee80211_rx_handler ieee80211_rx_handle
- 	ieee80211_rx_h_monitor,
- 	ieee80211_rx_h_passive_scan,
- 	ieee80211_rx_h_check,
-+	ieee80211_rx_h_load_key,
- 	ieee80211_rx_h_sta_process,
- 	ieee80211_rx_h_ccmp_decrypt,
- 	ieee80211_rx_h_tkip_decrypt,
+-David
 
--- 
+P.S.: anyone got some WPA doc/spec pointer for me?
 
