@@ -1,56 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:33038 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758805AbXF0VSJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2007 17:18:09 -0400
-Message-ID: <4682D3F3.9050202@redhat.com>
-Date: Wed, 27 Jun 2007 23:17:39 +0200
-From: Michal Schmidt <mschmidt@redhat.com>
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:47777 "EHLO amd.ucw.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756886AbXFMNFF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2007 09:05:05 -0400
+Date: Wed, 13 Jun 2007 15:04:58 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: James Ketrenos <jketreno@linux.intel.com>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: Re: ipw3945 driver in recent -mm kernels
+Message-ID: <20070613130458.GB2390@elf.ucw.cz>
+References: <20070609192703.GA6410@elf.ucw.cz> <20070609215712.GA13678@elf.ucw.cz> <466DA14D.6080309@linux.intel.com> <20070613110718.GA1800@elf.ucw.cz> <466FEA7B.3000101@lwfinger.net>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	Matteo Croce <rootkit85@yahoo.it>
-Subject: [PATCH 3/4] airo: disable the PCI device when unloading module
-References: <4682D323.2010605@redhat.com>
-In-Reply-To: <4682D323.2010605@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <466FEA7B.3000101@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix an assymetry between pci_{enable,disable}_device. airo did not disable
-the PCI device when unloading the module. This caused suspend failures
-after modprobe -r airo && modprobe airo.
+On Wed 2007-06-13 08:00:43, Larry Finger wrote:
+> Pavel Machek wrote:
+> >Hi!
+> >
+> >BTW could we get some more reasonable path? Currently wifi drivers are
+> >in
+> >
+> >drivers/net/wireless/mac80211/iwlwifi
+> >
+> >...ouch. drivers/mac80211/iwlwifi would be better...
+> 
+> NACK. Having _ALL_ wireless drivers under drivers/net/wireless/ is correct. 
+> I would vote, however, for collapsing out the mac80211 directory once all 
+> softmac drivers are converted to mac80211 and all the duplications are 
+> removed.
 
-Signed-off-by: Michal Schmidt <mschmidt@redhat.com>
-
----
- drivers/net/wireless/airo.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index 63a4aaa..d46d27a 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -5603,8 +5603,10 @@ static int __devinit airo_pci_probe(struct pci_dev *pdev,
- 			dev = _init_airo_card(pdev->irq, pdev->resource[0].start, 0, pdev, &pdev->dev);
- 	else
- 			dev = _init_airo_card(pdev->irq, pdev->resource[2].start, 0, pdev, &pdev->dev);
--	if (!dev)
-+	if (!dev) {
-+		pci_disable_device(pdev);
- 		return -ENODEV;
-+	}
- 
- 	pci_set_drvdata(pdev, dev);
- 	return 0;
-@@ -5616,6 +5618,8 @@ static void __devexit airo_pci_remove(struct pci_dev *pdev)
- 
- 	airo_print_info(dev->name, "Unregistering...");
- 	stop_airo_card(dev, 1);
-+	pci_disable_device(pdev);
-+	pci_set_drvdata(pdev, NULL);
- }
- 
- static int airo_pci_suspend(struct pci_dev *pdev, pm_message_t state)
-
-
+Anything that makes it less deep is good idea.
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
