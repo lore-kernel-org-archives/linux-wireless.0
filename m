@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:59360 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S936592AbXFGWtL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2007 18:49:11 -0400
-Date: Fri, 8 Jun 2007 00:49:09 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: jketreno <jketreno@linux.intel.com>
-Cc: yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
-Message-ID: <20070608004909.7322f394@logostar.upir.cz>
-In-Reply-To: <4668DBE1.5090201@linux.intel.com>
-References: <20070606082210.GA28649@mail.intel.com>
-	<20070607223058.44122be4@griffin.suse.cz>
-	<4668DBE1.5090201@linux.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from nz-out-0506.google.com ([64.233.162.232]:2354 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756390AbXFMW7K (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2007 18:59:10 -0400
+Received: by nz-out-0506.google.com with SMTP id n1so386544nzf
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2007 15:59:09 -0700 (PDT)
+Message-ID: <c02c330c0706131559i28ce1126mdd01f84eb91f779b@mail.gmail.com>
+Date: Thu, 14 Jun 2007 00:59:08 +0200
+From: "Kasper F. Brandt" <poizan42@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] fix for endian bug in rtl8187
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 07 Jun 2007 21:32:33 -0700, jketreno wrote:
-> It doesn't really look like he invented a 'new useless' prefix.  It looks
-> to me like he picked a prefix that correlates attribution of the data
-> declaration to the entity that created it.  You may not like that he
-> provided attribution, but that doesn't mean its useless.
+Hello
 
-By "useless", I meant "if you use a WLAN_ prefix like in all other #defines
-in that file, it will do the same job". Ok, I understand the argument about
-attribution, but it shouldn't be in exchange of consistency and clarity.
+The following patch fixes a bug in the mac80211 rtl8187 driver that
+would prevent it from initializing the hardware correctly on
+big-endian machines.
 
-> If you'd rather use a different prefix, send a patch to fix it.
+--- a/drivers/net/wireless/mac80211/rtl818x/rtl8187_rtl8225.c	2007-06-14
+00:24:52.000000000 +0200
++++ b/drivers/net/wireless/mac80211/rtl818x/rtl8187_rtl8225.c	2007-06-14
+00:27:17.000000000 +0200
+@@ -70,6 +70,7 @@
+ {
+ 	struct rtl8187_priv *priv = dev->priv;
+ 	u16 reg80, reg82, reg84;
++	__le16 buf;
 
-I'd appreciate if you use a WLAN_ prefix in the next respin of the patch.
+ 	reg80 = rtl818x_ioread16(priv, &priv->map->RFPinsOutput);
+ 	reg82 = rtl818x_ioread16(priv, &priv->map->RFPinsEnable);
+@@ -88,9 +89,11 @@
+ 	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80);
+ 	udelay(10);
 
-> Who holds 'WIFI' as a registered trademark?
++	buf = cpu_to_le16(data);
++
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+-			addr, 0x8225, &data, sizeof(data), HZ / 2);
++			addr, 0x8225, &buf, sizeof(buf), HZ / 2);
 
-Wi-Fi Alliance? Ok, it's "Wi-Fi", but you can use only capitals in macros
-and you cannot use dash, so it looks really similar.
+ 	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, reg80 | (1 << 2));
+ 	udelay(10);
 
-Thanks,
-
- Jiri
-
--- 
-Jiri Benc
-SUSE Labs
+------------------------------
+- Kasper F. Brandt
