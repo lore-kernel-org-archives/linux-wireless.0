@@ -1,111 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:43308 "EHLO amd.ucw.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1759620AbXFIWAr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jun 2007 18:00:47 -0400
-Date: Sat, 9 Jun 2007 23:57:12 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Cc: ipw2100-admin@linux.intel.com
-Subject: Re: ipw3945 driver in recent -mm kernels
-Message-ID: <20070609215712.GA13678@elf.ucw.cz>
-References: <20070609192703.GA6410@elf.ucw.cz>
-MIME-Version: 1.0
+Received: from dhost002-71.dex002.intermedia.net ([64.78.20.99]:17123 "EHLO
+	dhost002-71.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753777AbXFMDnq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jun 2007 23:43:46 -0400
+From: "Jouni Malinen" <jkm@devicescape.com>
+Date: Tue, 12 Jun 2007 20:44:31 -0700
+To: David Lamparter <lists@diac24.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Atheros Turbo modes / API [was: nl80211]
+Message-ID: <20070613034431.GE895@devicescape.com>
+References: <1181380044.3566.11.camel@johannes.berg> <20070609114907.GC10836@charon.n2.diac24.net>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070609192703.GA6410@elf.ucw.cz>
+In-Reply-To: <20070609114907.GC10836@charon.n2.diac24.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+On Sat, Jun 09, 2007 at 01:49:07PM +0200, David Lamparter wrote:
+> > +               case MODE_ATHEROS_TURBO:
 
-> I tried to use `subj`, but hit few problems:
-> 
-> There's no maintainers entry. Should
-> 
->  James P. Ketrenos <ipw2100-admin@linux.intel.com> 
-> 
-> be listed as a maintainer?
-> 
-> Kconfig mentions...
-> 
->           See <file:Documentation/networking/README.iwlwifi> for
->           information on the capabilities currently enabled in this
->           driver and for tips for debugging issues and problems.
-> 
-> ...but that file does not exist.
+> > Are those Atheros Turbo modes actually useful these days in mac80211? If
+> > so we probably should support them in nl80211 too, but I don't really
+> > know, I guess Jouni is the only one who ever used them?
 
-More problems: 
+> Jouni? Is this (a) still in use, and (b) how should it be made available to
+> userspace? We could either add additional modes to nl80211_phymode -or- add
+> a NL80211_ATTR_ATHEROS_TURBO as boolean tag -or- plunge it into debugfs...
 
-I managed to load the firmware and insert the module.... but I had
-radio kill switch on. It complained that kill switch is on, but
-turning it off did not help. Module unload/reload was neccessary to
-get it to work.
+Well, some people may use Atheros Turbo mode, but taken into account
+that this is a vendor specific extension and 802.11n will take care of
+similar enhancements in a standard way, I don't think there is much
+point in trying to maintain any level of support for these in mac80211.
 
-I still do not see the wlan led. It seems to scan okay, but I can't
-seem to connect, and I get this in logs:
-
-Jun  9 23:53:21 amd kernel: wlan0: deauthenticated
-Jun  9 23:53:21 amd kernel: wlan0: RX deauthentication from
-00:11:2f:0e:95:a0 (reason=4)
-Jun  9 23:53:21 amd last message repeated 2 times
-Jun  9 23:53:22 amd kernel: wlan0: authenticate with AP
-00:11:2f:0e:95:a0
-Jun  9 23:53:22 amd kernel: wlan0: RX authentication from
-00:11:2f:0e:95:a0 (alg=0 transaction=2 status=0)
-Jun  9 23:53:22 amd kernel: wlan0: authenticated
-Jun  9 23:53:22 amd kernel: wlan0: associate with AP 00:11:2f:0e:95:a0
-Jun  9 23:53:22 amd kernel: wlan0: authentication frame received from
-00:11:2f:0e:95:a0, but not in authenticate state - ignored
-Jun  9 23:53:22 amd last message repeated 2 times
-Jun  9 23:53:22 amd kernel: wlan0: RX ReassocResp from
-00:11:2f:0e:95:a0 (capab=0x401 status=0 aid=2)
-Jun  9 23:53:22 amd kernel: wlan0: associated
-Jun  9 23:53:24 amd kernel: wlan0: No ProbeResp from current AP
-00:11:2f:0e:95:a0 - assume out of range
-Jun  9 23:53:43 amd kernel: e1000: eth0: e1000_watchdog: NIC Link is
-Up 100 Mbps Full Duplex, Flow Control: RX/TX
-Jun  9 23:53:43 amd kernel: e1000: eth0: e1000_watchdog: 10/100 speed:
-disabling TSO
-Jun  9 23:53:56 amd kernel: wlan0: No STA entry for own AP
-00:11:2f:0e:95:a0
-Jun  9 23:54:12 amd kernel: iwl3945: Microcode SW error detected.
-Restarting 0x82000000.
-Jun  9 23:54:12 amd kernel: iwl3945: Error Reply type 0x0000003A cmd
-REPLY_RXON_ASSOC (0x11) seq 0x0447 ser 0x00000000
-Jun  9 23:54:12 amd kernel: iwl3945: Error setting RXON_ASSOC
-configuration (-5).
-Jun  9 23:54:13 amd kernel: iwl3945: Error sending REPLY_RXON: time
-out after 500ms.
-Jun  9 23:54:13 amd kernel: iwl3945: Error setting new configuration
-(-110).
-Jun  9 23:54:15 amd kernel: iwl3945: Error sending REPLY_ADD_STA: time
-out after 500ms.
-Jun  9 23:54:15 amd kernel: iwl3945: ipw going down
-Jun  9 23:54:15 amd kernel: iwl3945: Can't stop Rx DMA.
-Jun  9 23:54:15 amd kernel: iwl3945: Grabbing access while already
-held at line 825.
-Jun  9 23:54:15 amd kernel: iwl3945: Microcode SW error detected.
-Restarting 0x82000000.
-Jun  9 23:54:15 amd kernel: iwl3945: Error Reply type 0x000004EB cmd
-REPLY_TX_PWR_TABLE_CMD (0x97) seq 0x0402 ser 0x00000000
-Jun  9 23:54:15 amd kernel: iwl3945: ipw going down
-Jun  9 23:54:16 amd kernel: iwl3945: Can't stop Rx DMA.
-Jun  9 23:54:16 amd kernel: iwl3945: Grabbing access while already
-held at line 825.
-Jun  9 23:54:16 amd kernel: iwl3945: Microcode SW error detected.
-Restarting 0x82000000.
-Jun  9 23:54:16 amd kernel: iwl3945: Error Reply type 0x000004EB cmd
-REPLY_TX_PWR_TABLE_CMD (0x97) seq 0x0402 ser 0x00000000
-Jun  9 23:54:16 amd kernel: iwl3945: ipw going down
-Jun  9 23:54:17 amd kernel: iwl3945: Can't stop Rx DMA.
-Jun  9 23:54:17 amd kernel: iwl3945: Grabbing access while already
-held at line 825.
-
-What are the next steps?
-
-									Pavel
+For this reason, most of the Atheros specific stuff was already removed
+and only some references to the special channels remained. I haven't
+bothered importing support for these into hostapd either. Consequently,
+I would just go ahead and remove all references to MODE_ATHEROS_TURBO,
+MODE_ATHEROS_TURBOG, and related functionality and comments from
+mac80211.
 
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Jouni Malinen                                            PGP id EFC895FA
