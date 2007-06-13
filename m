@@ -1,53 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3757 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756731AbXFKTzg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 15:55:36 -0400
-Date: Mon, 11 Jun 2007 15:18:54 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	Akinobu Mita <akinobu.mita@gmail.com>,
-	linux-wireless@vger.kernel.org, Joe Jezak <josejx@gentoo.org>,
-	Daniel Drake <dsd@gentoo.org>
-Subject: Re: [PATCH] softmac: use list_for_each_entry
-Message-ID: <20070611191854.GG10397@tuxdriver.com>
-References: <20070527142740.GB13105@APFDCB5C> <1180643064.18266.2.camel@johannes.berg> <46604279.3070908@lwfinger.net> <1180725169.11026.29.camel@johannes.berg>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38926 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756933AbXFMPyW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2007 11:54:22 -0400
+Subject: Re: [PATCH] cfg80211: use nl80211_* enums
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Lamparter <lists@diac24.net>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070613123333.GA3440@charon.n2.diac24.net>
+References: <20070611221224.GA10598@charon.n2.diac24.net>
+	 <200706122355.36078.flamingice@sourmilk.net>
+	 <20070613123333.GA3440@charon.n2.diac24.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sKdFPpdsHpDS3JeuWqGD"
+Date: Wed, 13 Jun 2007 17:53:52 +0200
+Message-Id: <1181750032.29767.84.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1180725169.11026.29.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 01, 2007 at 09:12:49PM +0200, Johannes Berg wrote:
-> On Fri, 2007-06-01 at 10:59 -0500, Larry Finger wrote:
 
-> > In the earlier discussion, we also concluded that the product of a conversion from softmac to 
-> > mac80211 should not be included in mainline, with the exception of the b-only code. Depending on how 
-> > long the port and testing take, and the state of bcm43xx-mac80211 at that time, a reversal of that 
-> > earlier decision may be in order.
-> 
-> I'd think that once somebody has time for it both port and testing
-> should go pretty soon, and I'd think that we can do that sooner than fix
-> the current bcm43xx-mac80211, in which case IMHO the result should be
-> included in mainline seeing that zd1211rw will probably be ready for
-> mac80211 in the .23 timeframe. That means that at that point we might
-> even be able to drop softmac already if the second straightforward (here
-> I mean without any other changes to the driver) bcm43xx port is ready :)
+--=-sKdFPpdsHpDS3JeuWqGD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-FWIW, I would like to see a mac80211-based port of the current
-bcm43xx driver available as soon as it is ready, without waiting to
-strip-out the non-b portions.  This should help us abandon softmac
-as soon as possible.
+On Wed, 2007-06-13 at 14:33 +0200, David Lamparter wrote:
 
-Plus, we may need to consider preserving the driver in its current
-form (aside from the softmac -> mac80211 port) for some time as a
-compatibility aid for those who already have working configurations
-with the "bcm43xx" driver.  Forcing a happy user to locate new firmware
-for no obvious benefit to them is not very nice (as I have learned
-so well w/ Fedora 7)...
+> That's not possible because nl80211_{iftype,phymode} are userspace API.
+> If they were defined in cfg80211.h, nl80211.h would need to at least mirr=
+or
+> them. And since nl80211.h can't include cfg80211.h (since the former is a
+> "public" header supposed to go to /usr/include with some linux-headers-*
+> package), this way around is the simplest and cleanest solution.
+>=20
+> Anyway, I don't really think including a header to be a "dependency". You
+> can disable the nl80211 implementation and still use the API enum just
+> fine. (Note that nl80211.h contains enums, more enums and ONLY enums :)
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Good explanation, I was just going to write the same :)
+Michael, pulling in nl80211.h is the only sensible thing to do unless
+you want to duplicate a bunch of things and translate them in nl80211.c
+
+johannes
+
+--=-sKdFPpdsHpDS3JeuWqGD
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGcBMQ/ETPhpq3jKURAi70AKC7hq9GFBKRHyc+3FN9dYwVucWS5gCfaWBG
+nCyln4lX33kTyPAOInGL1y0=
+=TqSs
+-----END PGP SIGNATURE-----
+
+--=-sKdFPpdsHpDS3JeuWqGD--
+
