@@ -1,109 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:27069 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751336AbXFKJA5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 05:00:57 -0400
-Date: Mon, 11 Jun 2007 16:59:58 +0800
-From: Zhu Yi <yi.zhu@intel.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 1/6] mac80211: Add IEEE80211_ prefix to SET_TSINFO_{} macros
-Message-ID: <20070611085957.GA5549@mail.intel.com>
-Reply-To: yi.zhu@intel.com
+Received: from smtp.rutgers.edu ([128.6.72.243]:11557 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751624AbXFMFnG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2007 01:43:06 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: andy@warmcat.com
+Subject: Re: [PATCH Try#11 3/4] cfg80211: Radiotap parser
+Date: Tue, 12 Jun 2007 22:42:03 -0700
+Cc: linux-wireless@vger.kernel.org,
+	"Johannes Berg" <johannes@sipsolutions.net>
+References: <20070612130435.896010304@warmcat.com> <20070612130502.157979021@warmcat.com>
+In-Reply-To: <20070612130502.157979021@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed;
+  boundary="nextPart9381852.uTGkktKxJt";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200706122242.08045.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add IEEE80211_ prefix to SET_TSINFO_{} macros
+--nextPart9381852.uTGkktKxJt
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- include/linux/ieee80211.h     |   18 +++++++++---------
- net/mac80211/debugfs_netdev.c |    2 +-
- net/mac80211/ieee80211_sta.c  |   20 ++++++++++----------
- 3 files changed, 20 insertions(+), 20 deletions(-)
+On Tuesday 12 June 2007 06:04, andy@warmcat.com wrote:
+> +typedef enum  {
+> +       RADIOTAP_PARSER_OK = 0,
+> +       RADIOTAP_PARSER_DONE,
+> +       RADIOTAP_PARSER_INVALID
+> +} ieee80211_radiotap_parser_retcode_t;
+Yuck. I much prefer the standard error codes used in the previous version..
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 00e9f99..31368bc 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -134,15 +134,15 @@ struct ieee80211_ht_additional_info {
- #define IEEE80211_TSINFO_ACK(a)		((a.short1 & 0xC000) >> 14)
- #define IEEE80211_TSINFO_SCHEDULE(a)	((a.byte3 & 0x01) >> 0)
- 
--#define SET_TSINFO_TYPE(i, d)		(i.short1 |= (d << 0) & 0x0001)
--#define SET_TSINFO_TSID(i, d)		(i.short1 |= (d << 1) & 0x001E)
--#define SET_TSINFO_DIR(i, d)		(i.short1 |= (d << 5) & 0x0060)
--#define SET_TSINFO_POLICY(i, d)		(i.short1 |= (d << 7) & 0x0180)
--#define SET_TSINFO_AGG(i, d)		(i.short1 |= (d << 9) & 0x0200)
--#define SET_TSINFO_APSD(i, d)		(i.short1 |= (d << 10) & 0x0400)
--#define SET_TSINFO_UP(i, d)		(i.short1 |= (d << 11) & 0x3800)
--#define SET_TSINFO_ACK(i, d)		(i.short1 |= (d << 14) & 0xC000)
--#define SET_TSINFO_SCHEDULE(i, d)	(i.byte3 |= (d << 0) & 0x01)
-+#define IEEE80211_SET_TSINFO_TYPE(i, d)		(i.short1 |= (d << 0) & 0x0001)
-+#define IEEE80211_SET_TSINFO_TSID(i, d)		(i.short1 |= (d << 1) & 0x001E)
-+#define IEEE80211_SET_TSINFO_DIR(i, d)		(i.short1 |= (d << 5) & 0x0060)
-+#define IEEE80211_SET_TSINFO_POLICY(i, d)	(i.short1 |= (d << 7) & 0x0180)
-+#define IEEE80211_SET_TSINFO_AGG(i, d)		(i.short1 |= (d << 9) & 0x0200)
-+#define IEEE80211_SET_TSINFO_APSD(i, d)		(i.short1 |= (d << 10) & 0x0400)
-+#define IEEE80211_SET_TSINFO_UP(i, d)		(i.short1 |= (d << 11) & 0x3800)
-+#define IEEE80211_SET_TSINFO_ACK(i, d)		(i.short1 |= (d << 14) & 0xC000)
-+#define IEEE80211_SET_TSINFO_SCHEDULE(i, d)	(i.byte3 |= (d << 0) & 0x01)
- 
- struct ieee80211_ts_info {
- 	__le16 short1;
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index b9409ee..7be0d90 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -257,7 +257,7 @@ static ssize_t tsinfo_ ##_name## _write(struct file *file,		\
- 		       "[%u, %u]\n",sdata->dev->name,val,min_val,max_val);\
- 		return -EINVAL;						\
- 	}								\
--	SET_TSINFO_ ##_name (_tspec.ts_info, val);			\
-+	IEEE80211_SET_TSINFO_ ##_name (sdata->u.sta.tspec.ts_info, val);\
- 	return count;							\
- }									\
- 									\
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 9fdd265..fc77345 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -859,11 +859,11 @@ void ieee80211_send_delts(struct net_device *dev,
- 	memset(&mgmt->u.action.u.delts.ts_info, 0,
- 			sizeof(struct ieee80211_ts_info));
- 
--	SET_TSINFO_TSID(tp->ts_info, tsid);
--	SET_TSINFO_DIR(tp->ts_info, direction);
--	SET_TSINFO_POLICY(tp->ts_info, WLAN_TSINFO_EDCA);
--	SET_TSINFO_APSD(tp->ts_info, WLAN_TSINFO_PSB_LEGACY);
--	SET_TSINFO_UP(tp->ts_info, ifsta->ts_data[tsid][index].up);
-+	IEEE80211_SET_TSINFO_TSID(tp->ts_info, tsid);
-+	IEEE80211_SET_TSINFO_DIR(tp->ts_info, direction);
-+	IEEE80211_SET_TSINFO_POLICY(tp->ts_info, WLAN_TSINFO_EDCA);
-+	IEEE80211_SET_TSINFO_APSD(tp->ts_info, WLAN_TSINFO_PSB_LEGACY);
-+	IEEE80211_SET_TSINFO_UP(tp->ts_info, ifsta->ts_data[tsid][index].up);
- 
- 	ieee80211_sta_tx(dev, skb, 0);
- }
-@@ -930,11 +930,11 @@ void wmm_send_delts(struct net_device *dev,
- 	tspec = (struct ieee80211_elem_tspec *)pos;
- 	memset(tspec, 0, sizeof(*tspec));
- 
--	SET_TSINFO_TSID(tspec->ts_info, tsid);
--	SET_TSINFO_DIR(tspec->ts_info, direction);
--	SET_TSINFO_POLICY(tspec->ts_info, WLAN_TSINFO_EDCA);
--	SET_TSINFO_APSD(tspec->ts_info, WLAN_TSINFO_PSB_LEGACY);
--	SET_TSINFO_UP(tspec->ts_info, ifsta->ts_data[tsid][index].up);
-+	IEEE80211_SET_TSINFO_TSID(tspec->ts_info, tsid);
-+	IEEE80211_SET_TSINFO_DIR(tspec->ts_info, direction);
-+	IEEE80211_SET_TSINFO_POLICY(tspec->ts_info, WLAN_TSINFO_EDCA);
-+	IEEE80211_SET_TSINFO_APSD(tspec->ts_info, WLAN_TSINFO_PSB_LEGACY);
-+	IEEE80211_SET_TSINFO_UP(tspec->ts_info, ifsta->ts_data[tsid][index].up);
- 
- 	ieee80211_sta_tx(dev, skb, 0);
- }
--- 
-1.5.0.rc2.g73a2
+> +extern ieee80211_radiotap_parser_retcode_t ieee80211_radiotap_iterator_init(
+> +   struct ieee80211_radiotap_iterator *iterator,
+> +   struct ieee80211_radiotap_header *radiotap_header,
+> +   int max_length
+> +);
+Move the end of the parenthesis up a line to max_length.
+
+> +ieee80211_radiotap_parser_retcode_t ieee80211_radiotap_iterator_init(
+> +    struct ieee80211_radiotap_iterator * iterator,
+                                           ^
+
+> +    struct ieee80211_radiotap_header * radiotap_header,
+                                         ^
+
+> +	/* find payload start allowing for extended bitmap(s) */
+> +
+> +	if (unlikely(iterator->bitmap_shifter &
+> +		     IEEE80211_RADIOTAP_PRESENT_EXTEND_MASK)) {
+> +		while (le32_to_cpu(*((u32 *)iterator->arg)) &
+                                    ^                    ^
+
+> +ieee80211_radiotap_parser_retcode_t ieee80211_radiotap_iterator_next(
+> +    struct ieee80211_radiotap_iterator * iterator)
+                                           ^
+
+> +		if (((ulong)iterator->arg - (ulong)iterator->rtheader) &
+> +		    ((rt_sizes[iterator->arg_index] >> 4) - 1))
+> +			iterator->arg_index +=
+> +				(rt_sizes[iterator->arg_index] >> 4) -
+> +				((((int)iterator->arg) -
+> +				 ((int)iterator->rtheader)) &
+> +				 ((rt_sizes[iterator->arg_index] >> 4) - 1));
+> +
+This part would probably look better if you stored:
+
+((ulong)iterator->arg - (ulong)iterator->rtheader) & ((rt_sizes[iterator->arg_index] >> 4) - 1)
+
+into a temporary variable.
+
+-Michael Wu
+
+--nextPart9381852.uTGkktKxJt
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGb4OwT3Oqt9AH4aERAqE2AKC0MluRB9r5qUGXwFrxLb07wfGSlwCgmTgm
+oRhbTZke9YvCpEM86VH9opo=
+=Hl4n
+-----END PGP SIGNATURE-----
+
+--nextPart9381852.uTGkktKxJt--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
