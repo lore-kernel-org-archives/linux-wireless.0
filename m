@@ -1,66 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:50917
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758360AbXFQMM6 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40917
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753167AbXFMIFx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jun 2007 08:12:58 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Maximilian Engelhardt <maxi@daemonizer.de>
-Subject: Re: b44: high ping times with wireless-dev
-Date: Sun, 17 Jun 2007 14:12:44 +0200
-Cc: netdev <netdev@vger.kernel.org>,
-	"linux-kernel" <linux-kernel@vger.kernel.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Gary Zambrano <zambrano@broadcom.com>,
-	Stephen Hemminger <shemminger@linux-foundation.org>,
-	"Jeff Garzik" <jgarzik@pobox.com>,
-	"Arnaldo Carvalho de Melo" <acme@ghostprotocols.net>
-References: <200706162327.47413.maxi@daemonizer.de> <200706171255.40155.mb@bu3sch.de> <200706171403.34299.maxi@daemonizer.de>
-In-Reply-To: <200706171403.34299.maxi@daemonizer.de>
-MIME-Version: 1.0
-Message-Id: <200706171412.45074.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-15"
+	Wed, 13 Jun 2007 04:05:53 -0400
+Date: Wed, 13 Jun 2007 01:06:10 -0700 (PDT)
+Message-Id: <20070613.010610.08321860.davem@davemloft.net>
+To: hs4233@mail.mn-solutions.de
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: libertas warnings in upstream
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <200706130953.57827.hs4233@mail.mn-solutions.de>
+References: <Pine.SOC.4.64.0706131022450.12888@math>
+	<200706130953.57827.hs4233@mail.mn-solutions.de>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 17 June 2007 14:03:30 Maximilian Engelhardt wrote:
-> On Sunday 17 June 2007, Michael Buesch wrote:
-> > On Saturday 16 June 2007 23:27:43 Maximilian Engelhardt wrote:
-> > > [...]
-> > > ACPI: PCI Interrupt Link [LNKD] enabled at IRQ 10
-> > > ACPI: PCI Interrupt 0000:02:02.0[A] -> Link [LNKD] -> GSI 10 (level, low)
-> > > -> IRQ 10
-> > > ssb: Sonics Silicon Backplane found on PCI device 0000:02:02.0
-> > > b44.c:v2.0
-> > > eth0: Broadcom 44xx/47xx 10/100BaseT Ethernet 00:c0:9f:29:99:a7
-> > > [...]
-> >
-> > Ok, I prepared two debugging patches.
-> >
-> > Please enable SonicsSiliconBackplane Debugging in the kernel kconfig,
-> > so I can get more detail information about your card.
-> > Device Drivers/Sonics Silicon Backplane/SSB debugging
-> > (Must disable "No SSB kernel messages")
-> >
-> > Please apply and test the attached debugging patches in a row.
-> > So apply patch 1 and test if it works again. If not, apply
-> > patch 2 and test if it works.
-> > Always save complete dmesg log on each test run and send it to me.
-> >
-> > Thanks for testing.
-> > (This time it seems we are actually getting somewhere, when
-> > dealing with sane people. :D )
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+Date: Wed, 13 Jun 2007 09:53:57 +0200
+
+> > Tried to test-compile libertas on a 64-bit platform.
 > 
-> I did the tests with my kernel where only the card is on interrupt 10. dmesg 
-> is attached.
-> With the first patch applied networking does work again. I also additionally 
-> tried patch2 and it also does work.
+> I don't have a 64 bit machine and can't therefore say anything
+> about those 64 issues. However, sparse doesn't moan about
+> anything, not sure if sparse checks 64bit issues on a 32bit
+> machine.
 
-Great!
-To me this seems to be a silicon bug. The IRQ routing value, which is read
-from the chip here, is hardcoded in the old b44 driver.
-I'll implement a workaround for this and submit a patch.
+You don't need 64-bit hardware, don't use this as a reason,
+it's invalid.
 
--- 
-Greetings Michael.
+There are lots of cross-build setups available out there, precompiled
+and everything.
+
+sparse can do 64-bit checking if you build using it for a 64-bit
+target.  So if you have a cross compile setup, sparse will also do the
+right thing.
