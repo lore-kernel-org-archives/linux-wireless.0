@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:56463 "EHLO amd.ucw.cz"
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:50376 "EHLO amd.ucw.cz"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755315AbXFMKwt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2007 06:52:49 -0400
-Date: Wed, 13 Jun 2007 12:52:43 +0200
+	id S1757699AbXFMLq0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2007 07:46:26 -0400
+Date: Wed, 13 Jun 2007 13:46:13 +0200
 From: Pavel Machek <pavel@ucw.cz>
 To: James Ketrenos <jketreno@linux.intel.com>
 Cc: kernel list <linux-kernel@vger.kernel.org>,
 	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
 Subject: Re: ipw3945 driver in recent -mm kernels
-Message-ID: <20070613105243.GA15368@elf.ucw.cz>
-References: <20070609192703.GA6410@elf.ucw.cz> <20070609215712.GA13678@elf.ucw.cz> <466DA14D.6080309@linux.intel.com>
+Message-ID: <20070613114613.GA1998@elf.ucw.cz>
+References: <20070609192703.GA6410@elf.ucw.cz> <20070609215712.GA13678@elf.ucw.cz> <466DA14D.6080309@linux.intel.com> <20070613114326.GA1973@elf.ucw.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <466DA14D.6080309@linux.intel.com>
+In-Reply-To: <20070613114326.GA1973@elf.ucw.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi!
 
-> Forgot to include changes outside of drivers/net/wireless/mac80211/iwlwifi/
-> 
-> Zhu Yi is the maintainer for the iwlwifi driver (Cc: on this email)
+> Thanks for help. I was finaly able to make it to work. It is quite
+> sensitive to order of commands... and still does not light the led up
+> on x60, but it works. (Part of problem was that it tried to associate
+> in 5GHz range, and another part was my error in configuring IP
+> addresses).
 
-Thanks.
+root@amd:~# tcpspray -n 10 -b 10000000  10.0.0.2
 
-> >>
-> >> be listed as a maintainer?
-> >>
-> >> Kconfig mentions...
-> >>
-> >>           See <file:Documentation/networking/README.iwlwifi> for
-> >>           information on the capabilities currently enabled in this
-> >>           driver and for tips for debugging issues and problems.
-> 
-> We'll remove that from the Kconfig until we get the document updated
-> to reflect the current status.
+Transmitted 100000000 bytes in 131.993797 seconds (739.855 kbytes/s)
 
-Actually, It is probably better to just include the docs.
+Hmm, is this normal? 1MB/sec is 8Mbit.
 
-(I'll test the patch now).
-								Pavel
+root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
+iwconfig
+eth0      no wireless extensions.
+
+lo        no wireless extensions.
+
+irlan0    no wireless extensions.
+
+wmaster0  no wireless extensions.
+
+Warning: Driver for device wlan0 has been compiled with version 22
+of Wireless Extension, while this program supports up to version 17.
+Some things may be broken...
+
+wlan0     IEEE 802.11g  ESSID:"pavel"
+          Mode:Managed  Frequency:2.412 GHz  Access Point:
+00:11:2F:0E:95:A0
+          Bit Rate=11 Mb/s
+          Retry min limit:7   RTS thr:off   Fragment thr=2346 B
+          Encryption key:off
+          Link Quality=81/100  Signal level=-31 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
+
+Aha, bit rate=11 Mb/sec. .. Ok, I do not need 50Mb/sec, but it would
+be nice. ASUS AP claims 80211g 54Mbps in big bold letters :-).
+									Pavel
 
 -- 
 (english) http://www.livejournal.com/~pavelmachek
