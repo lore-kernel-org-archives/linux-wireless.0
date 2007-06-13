@@ -1,57 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43415
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S967111AbXEGXZP (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52641 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751109AbXFNJGK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2007 19:25:15 -0400
-Date: Mon, 07 May 2007 16:25:18 -0700 (PDT)
-Message-Id: <20070507.162518.35013789.davem@davemloft.net>
-To: flamingice@sourmilk.net
-Cc: jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	andrea.merello@gmail.com
-Subject: Re: [PATCH v2] Add rtl8187 wireless driver
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200705071917.25414.flamingice@sourmilk.net>
-References: <200705071022.11711.flamingice@sourmilk.net>
-	<463F44E6.5030705@garzik.org>
-	<200705071917.25414.flamingice@sourmilk.net>
+	Thu, 14 Jun 2007 05:06:10 -0400
+Subject: more nl80211/iw tool code comments
+From: Johannes Berg <johannes@sipsolutions.net>
+To: equinox@diac24.net
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-C+2XuA3GG227lxsck8fO"
+Date: Wed, 13 Jun 2007 20:23:37 +0200
+Message-Id: <1181759017.29767.117.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
-Date: Mon, 7 May 2007 19:17:20 -0400
 
-> On Monday 07 May 2007 11:25, Jeff Garzik wrote:
-> > I am a bit skeptical that multiple files are needed.  It seems like
-> > drivers/net/wireless/rtl818x.c would be a better path, a la tg3.c.
-> >
-> The radio tuning stuff could be stuffed into rtl8187_dev.c, but I like to keep 
-> it separate since rtl8187_rtl8225.c tends to contain all the radio tuning 
-> black magic that no one really understands except for the engineers at 
-> Realtek, whereas rtl8187_dev.c is mostly straightforward. rtl8187 can also 
-> (in theory) use another radio chip (rtl8255). The two headers - rtl818x.h and 
-> rtl8187.h cannot be merged because the definitions in rtl818x.h are shared 
-> between the usb and pci drivers.
-> 
-> I rather not combine any files, though I don't mind collapsing the driver 
-> another level. However, I think other driver authors much prefer having their 
-> own directory, and I'd like to keep the drivers consistently in their own 
-> directory or all together in drivers/net/wireless.
+--=-C+2XuA3GG227lxsck8fO
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I certainly don't like it, sometimes I won't look at how e1000 (for
-example) does things when researching a patch or some aspect of the
-networking simply because I have to type in and TAB complete another
-directory to get into where the driver's source file live.
+Hi,
 
-I know this sounds trite, but when merging and researching up to 450
-patches at a time like I have to, this stuff starts to matter.
+Just briefly looked at your iw tool. Code looks really good, very
+readable and understandable :)
 
-Please put things as high in the directory hierachy as possible and
-when you can put the entire driver into a single source file do so.
+A few thoughts/comments:
 
-The only significant argument you present is the code sharing one for
-the radio stuff, but that isn't realized yet and you can certainly
-split the code out once you make that sharing a reality.
+get_phymode should probably be more strict and not accept things like
+"IEEEabg" as A mode. IMHO the only valid things should be
+"IEEE<space>802.11<single char>"
+"802.11<single char>"
+"<single char>"
+
+
+get_iftype should accept "ap-vlan" which str_iftype returns, although
+it's not really useful for use by hand anyway, I think.
+
+
+You have
+
+iw phy set      [ phy ] DEVICE [ CHANSPEC ] [ name NEWNAME ]
+
+and we discussed on IRC that it might make sense to have the same for
+nl80211. On the surface, that makes sense, however, it does add a
+complication in that we need to either specify that you cannot combine
+some attributes (which doesn't really make sense), or we need to take
+quite a bit of care with atomicity; setting the channel and changing the
+phy name can both fail individually but having them in one netlink
+message implies that it's one transaction. I'm not sure the somewhat
+cleaner API and saving one command number is worth the additional
+transactional safety we need to be careful with then.
+
+So I'd like to reverse my previously stated opinion and say that I now
+think that putting these orthogonal things into different commands would
+be better so that we don't run into this transaction problem.
+
+Of course, that doesn't counter the other thing, namely that commands
+could (should?) be named NL80211_CMD_WIPHY_NAME_{SET,GET,NEW} (del?) and
+occur in groups etc.
+
+
+Another thing: Maybe it should be possible to say "phy# 1" in addition
+to "phy phy1" so that it's easier to write scripts that don't care about
+concurrent phy name changes? Just a thought.
+
+
+
+
+johannes
+
+--=-C+2XuA3GG227lxsck8fO
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGcDYo/ETPhpq3jKURAuh6AJ97RVQRWn/6KJ3WY8Y1z2ycXZZhiACggcB7
+9SFHpjJEThq9VFSsk579JDM=
+=OT84
+-----END PGP SIGNATURE-----
+
+--=-C+2XuA3GG227lxsck8fO--
+
