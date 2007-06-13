@@ -1,48 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-73.dex002.intermedia.net ([64.78.20.109]:19819 "EHLO
-	DHOST002-73.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S969680AbXFHSeE (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:42369 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758871AbXFMSav (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2007 14:34:04 -0400
-From: "Jouni Malinen" <jkm@devicescape.com>
-Date: Fri, 8 Jun 2007 11:34:46 -0700
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V3] mac80211: Set low initial rate in rc80211_simple
-Message-ID: <20070608183446.GJ14078@devicescape.com>
-References: <200706072205.27902.flamingice@sourmilk.net> <20070608112146.2df3608c@griffin.suse.cz> <20070608145821.GD14078@devicescape.com> <43e72e890706081112k76e17827t4c66dbccdcee0e03@mail.gmail.com>
+	Wed, 13 Jun 2007 14:30:51 -0400
+Date: Wed, 13 Jun 2007 11:29:39 -0700
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	James Ketrenos <jketreno@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] iwlwifi: MSI support
+Message-ID: <20070613112939.3b73f928@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890706081112k76e17827t4c66dbccdcee0e03@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 08, 2007 at 02:12:57PM -0400, Luis R. Rodriguez wrote:
-> On 6/8/07, Jouni Malinen <jkm@devicescape.com> wrote:
-> >There are some odd cases, where disabling the lowest supported rate may
-> >even be required due to regulatory rules..
+Add Message Signal Interrupt support to iwlwifi. Tested on 3945.
+Enable by default, but have parameter to disable for buggy platforms.
 
-> Just curious -- are you aware of a regulatory domain where this is the
-> case? Who defines those rules? For example, AFAICT FCC only talk about
-> power, and spectrum ranges. Where would I even look for these type of
-> restrictions?
+Signed-off-by: Stephen Hemminger <shemminger@linux-foundation.org>
 
-I don't remember all the details, but one case I've heard of was about
-a rule that specified high bandwidth wireless operations and what
-exactly would be high enough to be acceptable. And no, this was not
-from FCC. Unfortunately, I do not have any good pointers for where to
-look for this type of restrictions in an easy to use form (as in
-something that I could easily understand ;-).
-
-One related issue is the requirement for not transmitting continuously
-for longer than a quite short time period before sensing the medium
-again (this is from Japan). This may require at least fragmentation
-based on TX rate (i.e., if low rate is used, fragmentation threshold
-needs to be set lower) and in some cases, it may just be easier to drop
-the lowest TX rates completely to avoid frames that may take long time
-to transmit.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+--- a/drivers/net/wireless/mac80211/iwlwifi/base.c	2007-06-13 11:10:10.000000000 -0700
++++ b/drivers/net/wireless/mac80211/iwlwifi/base.c	2007-06-13 11:26:30.000000000 -0700
+@@ -80,6 +80,8 @@ int param_antenna = 0;      /* def: 0 = 
+ int param_hwcrypto = 0;     /* def: using software encryption */
+ int param_qos_enable = 0;
+ 
++static int disable_msi;
++
+ /*
+  * module name, copyright, version, etc.
+  * NOTE: DRV_NAME is defined in iwlwifi.h for use by iwl-debug.h and printk
+@@ -8117,6 +8119,10 @@ static int iwl_pci_probe(struct pci_dev 
+ 	/* If power management is turned on, default to AC mode */
+ 	priv->power_mode = IWL_POWER_AC;
+ 	priv->user_txpower_limit = IWL_DEFAULT_TX_POWER;
++
++	if (!disable_msi)
++		pci_enable_msi(pdev);
++
+ 	err = request_irq(pdev->irq, iwl_isr, IRQF_SHARED, DRV_NAME, priv);
+ 	if (err) {
+ 		IWL_ERROR("Error allocating IRQ %d\n", pdev->irq);
+@@ -8155,6 +8161,7 @@ static int iwl_pci_probe(struct pci_dev 
+ 	sysfs_remove_group(&pdev->dev.kobj, &iwl_attribute_group);
+ 
+  out_release_irq:
++	pci_disable_msi(pdev);
+ 	free_irq(pdev->irq, priv);
+ 
+  out_destroy_workqueue:
+@@ -8224,6 +8231,8 @@ static void iwl_pci_remove(struct pci_de
+ 	destroy_workqueue(priv->workqueue);
+ 	priv->workqueue = NULL;
+ 
++	pci_disable_msi(pdev);
++
+ 	free_irq(pdev->irq, priv);
+ 	iounmap(priv->hw_base);
+ 	pci_release_regions(pdev);
+@@ -8352,6 +8361,9 @@ static void __exit iwl_exit(void)
+ 	pci_unregister_driver(&iwl_driver);
+ }
+ 
++module_param(disable_msi, int, 0);
++MODULE_PARM_DESC(disable_msi, "Disable Message Signaled Interrupt (MSI)");
++
+ module_param_named(antenna, param_antenna, int, 0444);
+ MODULE_PARM_DESC(antenna, "select antenna (1=Main, 2=Aux, default 0 [both])");
+ module_param_named(disable, param_disable, int, 0444);
