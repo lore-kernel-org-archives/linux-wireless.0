@@ -1,28 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:25708 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751023AbXFLJ76 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2007 05:59:58 -0400
-Received: from lin01.mn-solutions.de (pD95FC1A8.dip0.t-ipconnect.de [217.95.193.168])
-	by s131.mittwaldmedien.de (Postfix) with ESMTP id 7202C5E5A79
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2007 11:59:57 +0200 (CEST)
-Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id 490EE1E002B
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2007 11:59:53 +0200 (CEST)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] {cfg,nl}80211 API
-Date: Tue, 12 Jun 2007 11:59:53 +0200
-References: <20070611230434.GA13221@charon.n2.diac24.net>
-In-Reply-To: <20070611230434.GA13221@charon.n2.diac24.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200706121159.53089.hs4233@mail.mn-solutions.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4380 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752377AbXFMAYq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jun 2007 20:24:46 -0400
+Date: Tue, 12 Jun 2007 20:03:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: Please pull 'libertas-fixes' branch of wireless-2.6
+Message-ID: <20070613000312.GB4187@tuxdriver.com>
+References: <20070529183347.GD3496@tuxdriver.com> <20070612210544.GF310@tuxdriver.com> <20070612210658.GG310@tuxdriver.com> <466F242B.1030900@garzik.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <466F242B.1030900@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->   - antenna selection?
+On Tue, Jun 12, 2007 at 06:54:35PM -0400, Jeff Garzik wrote:
+> John W. Linville wrote:
+> >Fixes identified by the libertas team as important for 2.6.22...
+> >
+> >---
+> >
+> >The following changes since commit 
+> >717c9339202a42ae7bec7d3c4b84deecdcae9f81:
+> >  Dan Williams (1):
+> >        libertas: reduce SSID and BSSID mixed-case abuse
+> >
+> >are found in the git repository at:
+> >
+> >  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git 
+> >  libertas-fixes
+> >
+> >Dan Williams (1):
+> >      libertas: actually send mesh frames to mesh netdev
+> >
+> >Luis Carlos (1):
+> >      libertas: convert libertas_mpp into anycast_mask
+> >
+> >Luis Carlos Cobo Rus (2):
+> >      libertas: pull current channel from firmware on mesh autostart
+> >      libertas: deauthenticate from AP in channel switch
+> 
+> Just to be clear, you intend 'libertas' and 'libertas-fixes' (in that 
+> order) for 2.6.22, and 'libertas-upstream' for 2.6.23?
 
-not only antenna, but also antenna diversity
+Yes, correct.
+
+Thanks,
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
