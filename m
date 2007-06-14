@@ -1,45 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:33028 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:47847 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933212AbXFHBfR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2007 21:35:17 -0400
-Subject: Re: [PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
-From: Zhu Yi <yi.zhu@intel.com>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <20070607223058.44122be4@griffin.suse.cz>
-References: <20070606082210.GA28649@mail.intel.com>
-	 <20070607223058.44122be4@griffin.suse.cz>
+	id S1756892AbXFNWvh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2007 18:51:37 -0400
+Subject: Re: libertas (private) ioctls vs. nl80211
+From: Dan Williams <dcbw@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jeff Garzik <jeff@garzik.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	hs4233@mail.mn-solutions.de, linux-kernel@vger.kernel.org
+In-Reply-To: <20070614223125.GA28235@infradead.org>
+References: <1181757483.29767.99.camel@johannes.berg>
+	 <20070614170901.GA13384@infradead.org>
+	 <20070614103836.23b07a72.akpm@linux-foundation.org>
+	 <20070614181307.GA16856@infradead.org>
+	 <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org>
+	 <46718D81.9080402@garzik.org>
+	 <1181859755.23567.3.camel@xo-28-0B-88.localdomain>
+	 <20070614223125.GA28235@infradead.org>
 Content-Type: text/plain
-Date: Fri, 08 Jun 2007 09:34:37 +0800
-Message-Id: <1181266477.3039.97.camel@debian.sh.intel.com>
+Date: Thu, 14 Jun 2007 18:55:58 -0400
+Message-Id: <1181861758.23567.26.camel@xo-28-0B-88.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-06-07 at 22:30 +0200, Jiri Benc wrote:
-> > +#define SET_TSINFO_SCHEDULE(i, d)	(i.byte3 |= (d << 0) & 0x01)
+On Thu, 2007-06-14 at 23:31 +0100, Christoph Hellwig wrote:
+> On Thu, Jun 14, 2007 at 06:22:35PM -0400, Dan Williams wrote:
+> > And that's what I did in the last pull you got from John; all pointless
+> > and duplicated ioctls were removed.  The only ones left are mesh
+> > tweakables, an LED GPIO control ioctl, and a regulatory region/domain
+> > thing.  I agree the interface is somewhat ugly (like the
+> > char-128/char-128 ones that return information from the mesh forwarding
+> > table), and I also agree that we need to move to using netlink for this
+> > sort of stuff in the future.  There are _no_ ioctls that duplicate WEXT
+> > functionality.
 > 
-> Please add IEEE80211_ prefix here as well. For consistency and not
-> polluting a name space.
+> The problem is not any kind of duplication.  The problem is that the
+> interface is plain and simply bad.  If anyone else would come in with
+> an ioctl interface using pointer indirections and subfunctions which
+> is horribly complex and not 32on64 clean they would get beaten up.
 
-Point accepted.
+I agree that it's suboptimal; I tried to clean it up and bashed my head
+against the current iwpriv system for about 2 days before concluding
+that the iwpriv stuff is just too insane to actually use.  We both want
+a well-defined, clean, generic 802.11s-type interface, make no mistake.
+Unfortunately, we don't have any framework which that interface could
+use (ie, nl80211 or cfg80211).  That's unlikely to land until 2.6.23 or
+even later.  And the regulatory stuff is still probably 6 months away
+from agreement.
 
-> > +enum wifi_oui_stype_wmm {
-> > +	WIFI_OUI_STYPE_WMM_INFO = 0,
-> > +	WIFI_OUI_STYPE_WMM_PARAM = 1,
-> > +	WIFI_OUI_STYPE_WMM_TSPEC = 2,
-> > +};
-> 
-> Please don't invent new useless prefixes. Also, a registered trademark
-> doesn't seem to be a good prefix.
+So if everybody is objecting to _any_ new private ioctls, even if they
+don't duplicate WEXT functionality, whatever; rip them out and we'll
+maintain them out-of-kernel or something until there's a nicer framework
+to piggy-back the mesh tune-ables on.
 
-I think we have talked this early and now you know correctly WIFI is not
-a trademark. You define IEEE80211_STYPE_ASSOC_REQ, etc, but defines
-those for Wi-Fi with WLAN prefix? WLAN prefix should be used by symbols
-defined by mac80211, for example: WLAN_CAPABILITY_ESS.
+Dan
 
-Thanks,
--yi
+> So even if the interface is not going to be generic it needs to be
+> done properly and document.  And once it's documented you've actually
+> layed down the first building block have it generic.  If no other
+> driver actually implements the same kind of non-standardized mesh
+> interface it'll stay that way, if other pop up they can implement
+> the same interface and eventually we'll grow a generic layer helping
+> out with it.
+
