@@ -1,110 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 91-65-240-14-dynip.superkabel.de ([91.65.240.14]:49704 "EHLO
-	charon.n2.diac24.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1753075AbXFKWNA (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.180]:37999 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755318AbXFNXp3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 18:13:00 -0400
-Date: Tue, 12 Jun 2007 00:12:26 +0200
-From: David Lamparter <lists@diac24.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] cfg80211: use nl80211_* enums
-Message-ID: <20070611221224.GA10598@charon.n2.diac24.net>
+	Thu, 14 Jun 2007 19:45:29 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so906925wah
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2007 16:45:28 -0700 (PDT)
+Message-ID: <c02c330c0706141645v4f26cf2bo7730c4bdff94969d@mail.gmail.com>
+Date: Fri, 15 Jun 2007 01:45:28 +0200
+From: "Kasper F. Brandt" <poizan42@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Got rtl8187 somewhat working in master mode with hostapd
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/mixed;
+	boundary="----=_Part_44813_27793738.1181864728494"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use enum nl80211_phymode and nl80211_iftype where appropriate. Update
-mac80211 and nl80211 to match.
+------=_Part_44813_27793738.1181864728494
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Signed-off-by: David Lamparter <equinox@diac24.net>
+Hello
+I have managed to get my rtl8187 based wireless USB dongle (a Netgear
+WG111/v2) working in master mode - but with some strange problems and
+some even stranger workarounds. But first things first - i have
+attached the modifications i have made to the driver (patch is against
+wireless-dev git head) - they are not really doing anything else than
+simply "enabling" master mode. It doesn't seems to be sending any
+beacons when simply put into master mode (should the driver somehow
+tell mac80211 that it's not generating them itself?) But when i use
+hostapd everything seems to be working - until i try to associated...
 
----
- include/net/cfg80211.h       |    9 +++++----
- net/mac80211/ieee80211_cfg.c |    2 +-
- net/wireless/nl80211.c       |    4 ++--
- 3 files changed, 8 insertions(+), 7 deletions(-)
+Without any encyption i could associated my laptop to the ap (actually
+a Linksys NSLU2 using big-endian arm) - but i couldn't get any data
+both ways. My laptop would see the packages sent from the ap and
+answer them, but the ap wouldn't get the packages - at least most of
+the time :/ Furthermore my laptop disconnected from the ap every 5 (or
+maybe 10) seconds and associated with the ap again.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 813706a..1398c21 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3,6 +3,7 @@
- 
- #include <linux/netlink.h>
- #include <linux/skbuff.h>
-+#include <linux/nl80211.h>
- #include <net/genetlink.h>
- 
- /*
-@@ -18,7 +19,7 @@
-  * @active: scan actively or passively on this channel
-  */
- struct scan_channel {
--	int phymode;
-+	enum nl80211_phymode phymode;
- 	u32 channel;
- 	int active;
- };
-@@ -36,7 +37,7 @@ struct scan_channel {
- struct scan_params {
- 	int n_channels;
- 	int active;
--	int phymode;
-+	enum nl80211_phymode phymode;
- 	struct scan_channel *channels;
- };
- 
-@@ -116,10 +117,10 @@ struct wiphy;
-  */
- struct cfg80211_ops {
- 	int	(*add_virtual_intf)(struct wiphy *wiphy, char *name,
--				    unsigned int type);
-+				    enum nl80211_iftype type);
- 	int	(*del_virtual_intf)(struct wiphy *wiphy, int ifindex);
- 	int	(*change_virtual_intf)(struct wiphy *wiphy, int ifindex,
--				       unsigned int type);
-+				       enum nl80211_iftype type);
- 
- 	int	(*associate)(struct wiphy *wiphy, struct net_device *dev,
- 			     struct association_params *params);
-diff --git a/net/mac80211/ieee80211_cfg.c b/net/mac80211/ieee80211_cfg.c
-index 0069826..8f85bc2 100644
---- a/net/mac80211/ieee80211_cfg.c
-+++ b/net/mac80211/ieee80211_cfg.c
-@@ -13,7 +13,7 @@
- #include "ieee80211_cfg.h"
- 
- static int ieee80211_add_iface(struct wiphy *wiphy, char *name,
--			       unsigned int type)
-+			       enum nl80211_iftype type)
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	int itype;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d6a44a3..ffbe628 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -293,7 +293,7 @@ static int nl80211_add_virt_intf(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *drv;
- 	int err;
--	unsigned int type = NL80211_IFTYPE_UNSPECIFIED;
-+	enum nl80211_iftype type = NL80211_IFTYPE_UNSPECIFIED;
- 
- 	if (!info->attrs[NL80211_ATTR_IFNAME])
- 		return -EINVAL;
-@@ -353,7 +353,7 @@ static int nl80211_change_virt_intf(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *drv;
- 	int err, ifindex;
--	unsigned int type;
-+	enum nl80211_iftype type;
- 	struct net_device *dev;
- 
- 	if (info->attrs[NL80211_ATTR_IFTYPE]) {
--- 
-1.5.2.1
+But when i started tcpdump on my nslu2, so i could find out what was
+going wrong, it suddenly worked. I could send data both ways without
+any problems - but my laptop was disconnecting and reconnecting about
+every 5 seconds when it wasn't receiving anything. As a temporary
+workaround i can keep the connection alive by having a ping running in
+the background. And well beside of that it seems to be working just
+fine - even with encryption.
 
+So why does it suddenly work when i start tcpdump? It's putting the
+interface into promiscous mode but when i tried to do that manually it
+didn't work...
+And why does the client keep on disconnection after a short time of
+inactivity? Is an accesspoint usually sending some sort of keep-alive
+packets that mac80211 doesn't send automatically when the interface is
+in master mode?
+
+I really hope someone can help me out with this.
+
+- Kasper F. Brandt
+
+------=_Part_44813_27793738.1181864728494
+Content-Type: application/octet-stream; name=rtl8187-enable-mastermode.patch
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_f2xvp5ic
+Content-Disposition: attachment; filename="rtl8187-enable-mastermode.patch"
+
+LS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFjODAyMTEvcnRsODE4N19kZXYuYwkyMDA3LTA2
+LTEzIDE0OjEwOjIyLjAwMDAwMDAwMCArMDIwMAorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9t
+YWM4MDIxMS9ydGw4MTg3X2Rldi5jCTIwMDctMDYtMTUgMDA6MjU6NTIuMDAwMDAwMDAwICswMjAw
+CkBAIC00NjAsNiArNDYwLDcgQEAKIAlzd2l0Y2ggKGNvbmYtPnR5cGUpIHsKIAljYXNlIElFRUU4
+MDIxMV9JRl9UWVBFX1NUQToKIAljYXNlIElFRUU4MDIxMV9JRl9UWVBFX01OVFI6CisJY2FzZSBJ
+RUVFODAyMTFfSUZfVFlQRV9BUDoKIAkJcHJpdi0+bW9kZSA9IGNvbmYtPnR5cGU7CiAJCWJyZWFr
+OwogCWRlZmF1bHQ6CkBAIC01MTAsMTMgKzUxMSwyMCBAQAogCXN0cnVjdCBydGw4MTg3X3ByaXYg
+KnByaXYgPSBkZXYtPnByaXY7CiAJaW50IGk7CiAKLQlmb3IgKGkgPSAwOyBpIDwgRVRIX0FMRU47
+IGkrKykKLQkJcnRsODE4eF9pb3dyaXRlOChwcml2LCAmcHJpdi0+bWFwLT5CU1NJRFtpXSwgY29u
+Zi0+YnNzaWRbaV0pOwotCi0JaWYgKGlzX3ZhbGlkX2V0aGVyX2FkZHIoY29uZi0+YnNzaWQpKQot
+CQlydGw4MTh4X2lvd3JpdGU4KHByaXYsICZwcml2LT5tYXAtPk1TUiwgUlRMODE4WF9NU1JfSU5G
+UkEpOworCWlmIChwcml2LT5tb2RlID09IElFRUU4MDIxMV9JRl9UWVBFX0FQKSB7CisJCWlmICgh
+Y29uZi0+YnNzaWQpCisJCQljb25mLT5ic3NpZCA9IHByaXYtPmh3YWRkcjsKKwl9CiAJZWxzZQot
+CQlydGw4MTh4X2lvd3JpdGU4KHByaXYsICZwcml2LT5tYXAtPk1TUiwgUlRMODE4WF9NU1JfTk9f
+TElOSyk7CisJeworCQlmb3IgKGkgPSAwOyBpIDwgRVRIX0FMRU47IGkrKykKKwkJCXJ0bDgxOHhf
+aW93cml0ZTgocHJpdiwgJnByaXYtPm1hcC0+QlNTSURbaV0sIGNvbmYtPmJzc2lkW2ldKTsKKwor
+CQlpZiAoaXNfdmFsaWRfZXRoZXJfYWRkcihjb25mLT5ic3NpZCkpCisJCQlydGw4MTh4X2lvd3Jp
+dGU4KHByaXYsICZwcml2LT5tYXAtPk1TUiwgUlRMODE4WF9NU1JfSU5GUkEpOworCQllbHNlCisJ
+CQlydGw4MTh4X2lvd3JpdGU4KHByaXYsICZwcml2LT5tYXAtPk1TUiwgUlRMODE4WF9NU1JfTk9f
+TElOSyk7CisJfQogCiAJcmV0dXJuIDA7CiB9Cg==
+------=_Part_44813_27793738.1181864728494--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
