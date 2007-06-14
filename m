@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:48264 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751229AbXFNSsz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2007 14:48:55 -0400
-Message-ID: <46718D81.9080402@garzik.org>
-Date: Thu, 14 Jun 2007 14:48:33 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: Linus Torvalds <torvalds@linux-foundation.org>
-CC: Christoph Hellwig <hch@infradead.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	dcbw@redhat.com, hs4233@mail.mn-solutions.de,
-	linux-kernel@vger.kernel.org
-Subject: Re: libertas (private) ioctls vs. nl80211
-References: <1181757483.29767.99.camel@johannes.berg> <20070614170901.GA13384@infradead.org> <20070614103836.23b07a72.akpm@linux-foundation.org> <20070614181307.GA16856@infradead.org> <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org>
-In-Reply-To: <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:51882 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751480AbXFNUSQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2007 16:18:16 -0400
+Date: Thu, 14 Jun 2007 13:17:54 -0700
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: James Ketrenos <jketreno@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi MSI support (rev3)
+Message-ID: <20070614131754.7e0797b9@localhost>
+In-Reply-To: <46718E7A.6090001@garzik.org>
+References: <20070614114809.39106c17@localhost>
+	<46718E7A.6090001@garzik.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Linus Torvalds wrote:
+On Thu, 14 Jun 2007 14:52:42 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
+
+> Stephen Hemminger wrote:
+> > The previous patch would crash on remove. pci_disable_msi has to be
+> > called after free_irq.  FYI - pci_disable_msi is safe if MSI hasn't been
+> > enabled.
+> > 
+> > --- a/drivers/net/wireless/mac80211/iwlwifi/base.c	2007-06-13 11:10:10.000000000 -0700
+> > +++ b/drivers/net/wireless/mac80211/iwlwifi/base.c	2007-06-14 11:47:01.000000000 -0700
+> > @@ -8117,10 +8117,13 @@ static int iwl_pci_probe(struct pci_dev 
+> >  	/* If power management is turned on, default to AC mode */
+> >  	priv->power_mode = IWL_POWER_AC;
+> >  	priv->user_txpower_limit = IWL_DEFAULT_TX_POWER;
+> > +
+> > +	pci_enable_msi(pdev);
 > 
-> On Thu, 14 Jun 2007, Christoph Hellwig wrote:
->>> I suspect that the probability of your proposal succeeding would be increased
->>> if you could prepare a patch...
->> Here we go:
-> 
-> I don't mind ripping them out, but it makes sense only if people are 
-> actually signed up to implementing this on a higher layer. As such, I'd 
-> need to get a sign-off from somebody actually involved in wireless mesh 
-> stuff etc.
+> The API wants fixing, if code that fails to check return value of 
+> pci_enable_msi() is being written.
 
-Correct me if I'm wrong, linux-wireless, but AFAIK there has never been 
-a single post or line of code written for a generic wireless _mesh_ 
-interface.
-
-My general sentiment is -- remove the pointless and iw-duplicated 
-ioctls, but leave the mesh ones that won't see generic counterparts for 
-years.
-
-	Jeff
-
-
+Why, what would be worth doing?
