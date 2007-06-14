@@ -1,61 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:33002 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752066AbXFINuh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jun 2007 09:50:37 -0400
-Subject: Re: your nl80211 work
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Lamparter <lists@diac24.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1181391299.3566.17.camel@johannes.berg>
-References: <1181380044.3566.11.camel@johannes.berg>
-	 <20070609113859.GA10836@charon.n2.diac24.net>
-	 <1181391299.3566.17.camel@johannes.berg>
-Content-Type: text/plain
-Date: Sat, 09 Jun 2007 09:54:09 -0400
-Message-Id: <1181397249.23205.10.camel@xo-28-0B-88.localdomain>
-Mime-Version: 1.0
+Received: from mog.warmcat.com ([62.193.232.24]:40662 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751130AbXFNMhI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2007 08:37:08 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 1F4DD8D125
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2007 14:37:03 +0200 (CEST)
+Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
+	by armbox7.home.warmcat.com (Postfix) with ESMTP id A5E77FB36
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2007 12:37:32 +0000 (UTC)
+Message-Id: <20070614123316.868155662@warmcat.com>
+Date: Thu, 14 Jun 2007 13:33:16 +0100
+From: andy@warmcat.com
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH Try#lucky13 0/3] Radiotap injection for Monitor Mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2007-06-09 at 14:14 +0200, Johannes Berg wrote:
-> On Sat, 2007-06-09 at 13:39 +0200, David Lamparter wrote:
-> 
-> > Ah, I didn't think about that. Well, next try next luck... Hmm. Maybe we
-> > should include the list of interfaces into the GET_WIPHY command and have
-> > GET_INTERFACE never return a list?
-> 
-> Actually, I only thought about that yesterday too when thinking about
-> the userspace MLME thing (see my other post)
-> 
-> > Yeah, I was hoping for feedback on this one. For one, do we even bother to
-> > return the frequency via nl80211? There's no attribute for it yet, and I
-> > don't know if this is too useful. Maybe it can be included in the channel
-> > list, so if an application really wants to know the frequency, it can look
-> > up the table using channel+phymode as key and get it.
-> 
-> I think Dan said that he'd really like to see the kernel have a
-> frequency table somehow so not all userspace programs need to convert
+These patches add the ability to inject packets down a monitor mode interface for 
+transmission according to a prepended radiotap header.
 
-Well, at least have one that all 802.11 _drivers_ can use at the very
-least, I know of 5 or 6 places in the kernel right now that have this
-sort of info.  Even just inlines in ieee80211.h or something for
-chan->freq, freq->chan, freq->band, chan->band, etc.  Max allowed power
-levels and stuff as well.
+For injecting packets, the you issue a packet using libpcap or a SOCK_PACKET
+socket down an interface to the wireless device that is in Monitor Mode.  The packet
+has a normal radiotap header prepended to the IEEE80211 header.  The radiotap header
+is variable length depending on what the user wants to specify, currently the
+transmit rate, power and antenna can be specified using normal radiotap semantics.
+Any other entries are skipped.
 
-WRT to userspace, if there's an easy way to put this into headers that
-get exported to userspace headers, I think that would be useful.
-Otherwise everybody has to keep rewriting these, both mac80211, fullmac
-drivers, userspace programs like NetworkManager and wpa_supplicant, etc.
+The radiotap parser is broken out into its own file under cfg80211.
 
-Dan
+A usermode app packetspammer is available from here
 
-> themselves and introduce bugs and be updated all the time for new
-> things. But just having it in the channel list seems sufficient, or have
-> it in cfg80211 and pass it via nl80211 but not read it on incoming
-> requests nor bother the driver with it, i.e. create it from
-> channel/phymode in nl80211.c itself.
-> 
-> johannes
+http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
+http://git.warmcat.com/?p=packetspammer.git;a=summary
 
+which allows easy injection of these packets from the commandline.  At the moment it
+loops issuing packets at a variety of rates which can be seen from another
+machine's monitor mode interface on the same channel.  There are instructions for
+build and using it on the page above along with Fedora 7 binary and source RPMS.
+There is now also a -f switch to allow testing of the FCS flag on injected packets.
+
+Currently it has been tested for both rx and tx using zd1211rw-mac80211.
+
+The patches are based against current wireless-dev.
+
+I also added some documentation files which explains how to use the injection
+functionality and radiotap header notes.
+
+Thanks to Michael Wu and Johannes Berg for review and bugfinding.
+-- 
