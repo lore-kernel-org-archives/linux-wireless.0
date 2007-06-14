@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50473 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752521AbXFTLQq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2007 07:16:46 -0400
-Subject: ieee80211_radar_status?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Jouni Malinen <j@w1.fi>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bRALrzPAzw5RVDnRrQAO"
-Date: Wed, 20 Jun 2007 01:36:21 +0200
-Message-Id: <1182296182.3714.19.camel@johannes.berg>
+Received: from mx1.redhat.com ([66.187.233.31]:38234 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753891AbXFNWTN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2007 18:19:13 -0400
+Subject: Re: libertas (private) ioctls vs. nl80211
+From: Dan Williams <dcbw@redhat.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	hs4233@mail.mn-solutions.de, linux-kernel@vger.kernel.org
+In-Reply-To: <46718D81.9080402@garzik.org>
+References: <1181757483.29767.99.camel@johannes.berg>
+	 <20070614170901.GA13384@infradead.org>
+	 <20070614103836.23b07a72.akpm@linux-foundation.org>
+	 <20070614181307.GA16856@infradead.org>
+	 <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org>
+	 <46718D81.9080402@garzik.org>
+Content-Type: text/plain
+Date: Thu, 14 Jun 2007 18:22:35 -0400
+Message-Id: <1181859755.23567.3.camel@xo-28-0B-88.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2007-06-14 at 14:48 -0400, Jeff Garzik wrote:
+> Linus Torvalds wrote:
+> > 
+> > On Thu, 14 Jun 2007, Christoph Hellwig wrote:
+> >>> I suspect that the probability of your proposal succeeding would be increased
+> >>> if you could prepare a patch...
+> >> Here we go:
+> > 
+> > I don't mind ripping them out, but it makes sense only if people are 
+> > actually signed up to implementing this on a higher layer. As such, I'd 
+> > need to get a sign-off from somebody actually involved in wireless mesh 
+> > stuff etc.
+> 
+> Correct me if I'm wrong, linux-wireless, but AFAIK there has never been 
+> a single post or line of code written for a generic wireless _mesh_ 
+> interface.
+> 
+> My general sentiment is -- remove the pointless and iw-duplicated 
+> ioctls, but leave the mesh ones that won't see generic counterparts for 
+> years.
 
---=-bRALrzPAzw5RVDnRrQAO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+And that's what I did in the last pull you got from John; all pointless
+and duplicated ioctls were removed.  The only ones left are mesh
+tweakables, an LED GPIO control ioctl, and a regulatory region/domain
+thing.  I agree the interface is somewhat ugly (like the
+char-128/char-128 ones that return information from the mesh forwarding
+table), and I also agree that we need to move to using netlink for this
+sort of stuff in the future.  There are _no_ ioctls that duplicate WEXT
+functionality.
 
-Hi,
+Dan
 
-Is there any documentation for the arguments to ieee80211_radar_status?
-I don't see anything in the header files and drivers nor any use in
-wpa_supplicant and hostapd.
-
-When moving to nl80211, this shall be handled there, but since we don't
-have anybody using it right now we might as well kill it off completely
-until we need it (again).
-
-johannes
-
---=-bRALrzPAzw5RVDnRrQAO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGeGh1/ETPhpq3jKURAjw3AJ4lHs83JecOYjI+Siyh/hOuOCPu5gCfUolr
-7J3tlcZl0w1lTLAt2HTDlJ8=
-=Ds1H
------END PGP SIGNATURE-----
-
---=-bRALrzPAzw5RVDnRrQAO--
 
