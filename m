@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:60985 "EHLO mx1.redhat.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:48264 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751348AbXFYVF6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2007 17:05:58 -0400
-Subject: Re: airo
-From: Dan Williams <dcbw@redhat.com>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: Matteo Croce <rootkit85@yahoo.it>,
-	Michal Schmidt <mschmidt@redhat.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <46801C71.6070107@lwfinger.net>
-References: <200706061903.13228.rootkit85@yahoo.it>
-	 <200706091816.47618.rootkit85@yahoo.it> <467FD362.8000602@redhat.com>
-	 <200706252127.32427.rootkit85@yahoo.it>  <46801C71.6070107@lwfinger.net>
-Content-Type: text/plain
-Date: Mon, 25 Jun 2007 17:10:34 -0400
-Message-Id: <1182805834.10966.0.camel@xo-13-A4-25.localdomain>
-Mime-Version: 1.0
+	id S1751229AbXFNSsz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2007 14:48:55 -0400
+Message-ID: <46718D81.9080402@garzik.org>
+Date: Thu, 14 Jun 2007 14:48:33 -0400
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: Christoph Hellwig <hch@infradead.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	dcbw@redhat.com, hs4233@mail.mn-solutions.de,
+	linux-kernel@vger.kernel.org
+Subject: Re: libertas (private) ioctls vs. nl80211
+References: <1181757483.29767.99.camel@johannes.berg> <20070614170901.GA13384@infradead.org> <20070614103836.23b07a72.akpm@linux-foundation.org> <20070614181307.GA16856@infradead.org> <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org>
+In-Reply-To: <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-06-25 at 14:50 -0500, Larry Finger wrote:
-> Matteo Croce wrote:
-> > Exactly, the boot process goes so:
-> > 1) udev loads forcedeth.ko and it gets eth0
-> > 2) udev also loads airo.ko
-> > 3) forcedeth loads very fast and udev renames it to eth1 according to /etc/iftab
-> > 4) airo slowly init the card and try to get eth1 as name, but found it busy and die()
-> > 
-> > Personally I solved this by deleting forcedeth.ko. I know that it's ugly, but I don't use wired etherned
-> > and i hate do "rmmod airo ; modprobe airo" at every boot, also in a shell script.
+Linus Torvalds wrote:
 > 
-> What does /etc/udev/rules.d/30-net_persistent_names.rules say about the name for the MAC address of 
-> the wired interface? On my system, the wired one is forced to be eth0 and the wireless to be eth1.
+> On Thu, 14 Jun 2007, Christoph Hellwig wrote:
+>>> I suspect that the probability of your proposal succeeding would be increased
+>>> if you could prepare a patch...
+>> Here we go:
+> 
+> I don't mind ripping them out, but it makes sense only if people are 
+> actually signed up to implementing this on a higher layer. As such, I'd 
+> need to get a sign-off from somebody actually involved in wireless mesh 
+> stuff etc.
 
-Even so, drivers need to be safe against device renames at any stage.
+Correct me if I'm wrong, linux-wireless, but AFAIK there has never been 
+a single post or line of code written for a generic wireless _mesh_ 
+interface.
 
-Dan
+My general sentiment is -- remove the pointless and iw-duplicated 
+ioctls, but leave the mesh ones that won't see generic counterparts for 
+years.
+
+	Jeff
 
 
