@@ -1,43 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51411.mail.re2.yahoo.com ([206.190.39.152]:26593 "HELO
-	web51411.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754301AbXFUVud convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2007 17:50:33 -0400
-Date: Thu, 21 Jun 2007 14:50:32 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: Re: [WIP] mac80211: kill mgmt interface
-To: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-ID: <200268.51153.qm@web51411.mail.re2.yahoo.com>
+Received: from mx1.redhat.com ([66.187.233.31]:45405 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751818AbXFNWoW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2007 18:44:22 -0400
+Subject: Re: libertas (private) ioctls vs. nl80211
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, akpm@osdl.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <200706142203.13779.hs4233@mail.mn-solutions.de>
+References: <1181757483.29767.99.camel@johannes.berg>
+	 <20070614170901.GA13384@infradead.org>
+	 <200706142203.13779.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Thu, 14 Jun 2007 18:48:32 -0400
+Message-Id: <1181861312.23567.18.camel@xo-28-0B-88.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Regarding user-space MLME and special interfaces:
-mac80211 allows for multiple virtual interfaces on top of one physical =
-NIC, right?=20
-Can one run multiple MLME (e.g. hostapd) instances to run multiple virt=
-ual master mode interfaces
-for different networks? With different BSSID?
-=20
--- =20
-Regards
-=20
-       Joerg
-=20
+On Thu, 2007-06-14 at 22:03 +0200, Holger Schurig wrote:
+> > Independent of any nl80211 status the private libertas ioctls have to
+> > go.  Not only don't we want private ioctls for mesh networking but
+> > rather have it as driver-independent interface, but the actual
+> > libertas interface is the worst possible choice.
+> 
+> I have been told that the Libertas mesh functionality is not 802.11s, 
+
+Technically this is correct.  A bit more back-story though.  802.11s is
+still in draft form.  It'll be there for a while yet.  Stuff like
+authentication and encryption are in heavy flux.  Previously, the mesh
+stuff was using the 4th value in the 802.11 frame type.  But it turns
+out that a lot of fullmac parts can't handle that because they drop
+those frames in silicon.  So the standard is moving towards using WDS
+frames without changing the frame type, which is what the Marvell
+implementation is _already_ using.  I repeat, the standard is moving
+towards the Marvell mesh implementation.  Furthermore, the CozyBit guys
+who wrote the Marvell mesh implementation are heavily involved in the
+802.11s standards groups anyway.
+
+> Marvell brew their own beer (because it predates 802.11s, I guess). 
+> However, for the kernel I'd see more an interface that supports 
+> 802.11s --- or is flexible to support both this and the libertas one.
+
+Definitely; 
+
+> I also have two related observations:
+> 
+> If I'm correctt, the only non-mesh ioctl in ioctl.c is the led_gpio 
+> ioctl. Theoretically one can abstract this, many WLAN chips have GPIOs. 
+
+Plus the set_region call that can be replaced by whatever the regulatory
+stuff comes up with.
+
+> But mostly there is no documentation available about how those GPIOs 
+> are used, where they are soldered to etc. To blindly allow changing 
+> arbitrary GPIOs migth even be harmful to the hardware.
+> 
+> That said: with the USB 8388 dongle that I have, the LED GPIO iwpriv 
+> call didn't do anything. Not sure if it works on OLPC ... but I doubt 
+> that one can see the LEDs there ...
+
+I think it's all dependent on the firmware; do you know what version of
+the CF firmware you have?  The ledgpio function is apparently from an
+older version of the firmware but is still in our 8388 5.x branch.
+There's apparently a new command for this sort of thing.
+
+> Another thing: I'm working on a CF 8385 based driver. Here I have a 
+> firmware that does not (as far as I know this undocumented pile of 
+> bytes) have any mesh functionality at all. So I need a way from if_cs.c 
+> to disable all those iwpriv ioctls. Haven't thought about this issue 
+> yet, other things are more pressing right now. However, I already don't 
+> create the mshX interface.
+
+Well, can't the ioctl stuff just return -EOPNOTSUPP or something if mesh
+isn't available?
+
+Dan
 
 
-
-
-
-__________________________________________________
-Do You Yahoo!?
-Sie sind Spam leid? Yahoo! Mail verf=FCgt =FCber einen herausragenden S=
-chutz gegen Massenmails.=20
-http://mail.yahoo.com=20
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
