@@ -1,42 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:52204 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761771AbXF2MHK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2007 08:07:10 -0400
-Subject: Re: build #301 failed for 2.6.22-rc6-g0471448 in  drivers/net/wireless/libertas/usb8xxx.ko
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Toralf =?ISO-8859-1?Q?F=F6rster?= <toralf.foerster@gmx.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1183108826.4089.30.camel@johannes.berg>
-References: <200706291117.35231.toralf.foerster@gmx.de>
-	 <1183108826.4089.30.camel@johannes.berg>
-Content-Type: text/plain
-Date: Fri, 29 Jun 2007 08:10:24 -0400
-Message-Id: <1183119024.30222.7.camel@xo-13-A4-25.localdomain>
-Mime-Version: 1.0
+Received: from mog.warmcat.com ([62.193.232.24]:33390 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754692AbXFNH5H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2007 03:57:07 -0400
+Message-ID: <4670F4CE.1020106@warmcat.com>
+Date: Thu, 14 Jun 2007 08:57:02 +0100
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Michael Wu <flamingice@sourmilk.net>
+CC: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Jiri Benc <jbenc@suse.cz>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH Try#12 0/3] Radiotap injection for Monitor Mode
+References: <20070613093732.535166329@warmcat.com> <200706140018.41188.flamingice@sourmilk.net>
+In-Reply-To: <200706140018.41188.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-06-29 at 11:20 +0200, Johannes Berg wrote:
-> Hi,
-> 
-> > ERROR: "libertas_remove_mesh" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
-> > ERROR: "libertas_add_card" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
-> > ERROR: "libertas_send_tx_feedback" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
-> > ERROR: "libertas_prepare_and_send_command" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
-> > ERROR: "libertas_remove_card" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
-> > ERROR: "libertas_add_mesh" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
-> > ERROR: "libertas_process_rxed_packet" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
-> > ERROR: "libertas_interrupt" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
-> > ERROR: "libertas_activate_card" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
-> 
-> > CONFIG_LIBERTAS=y
-> > CONFIG_LIBERTAS_USB=m
-> 
-> looks like a bunch of missing EXPORT_SYMBOL(_GPL?) statements.
+Michael Wu wrote:
+> On Wednesday 13 June 2007 02:37, andy@warmcat.com wrote:
+>> These patches add the ability to inject packets down a monitor mode
+>> interface for transmission according to a prepended radiotap header.
+>>
+> I've attached a patch to address remaining issues found by git, sparse, and 
+> checkpatch.pl. With that, ACK.
 
-Thanks! I'll get that fixed up on Monday...
+Thanks for all the work you and Johannes put in with review and bug finding.
 
-Dan
-
+-Andy
