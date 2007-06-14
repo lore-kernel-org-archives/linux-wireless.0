@@ -1,63 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:33751 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933269AbXFHQx5 (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:26704 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750821AbXFNUCu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2007 12:53:57 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH V3] mac80211: Set low initial rate in rc80211_simple
-Date: Fri, 8 Jun 2007 09:35:36 -0700
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-References: <4668c71b.E0vXnFMnxxm8I5gE%Larry.Finger@lwfinger.net> <200706072205.27902.flamingice@sourmilk.net> <20070608112146.2df3608c@griffin.suse.cz>
-In-Reply-To: <20070608112146.2df3608c@griffin.suse.cz>
+	Thu, 14 Jun 2007 16:02:50 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Christoph Hellwig <hch@infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	akpm@osdl.org, linux-kernel@vger.kernel.org
+Subject: Re: libertas (private) ioctls vs. nl80211
+Date: Thu, 14 Jun 2007 22:03:13 +0200
+References: <1181757483.29767.99.camel@johannes.berg> <20070614170901.GA13384@infradead.org>
+In-Reply-To: <20070614170901.GA13384@infradead.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1212763.UXQSnCCK0s";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200706080935.40267.flamingice@sourmilk.net>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200706142203.13779.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1212763.UXQSnCCK0s
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+> Independent of any nl80211 status the private libertas ioctls have to
+> go.  Not only don't we want private ioctls for mesh networking but
+> rather have it as driver-independent interface, but the actual
+> libertas interface is the worst possible choice.
 
-On Friday 08 June 2007 02:21, Jiri Benc wrote:
-> No :-) In theory, you can use PRISM2_HOSTAPD_SET_RATE_SETS ioctl to
-> disable the lowest available rate. Yes, that's deprecated and bad thing
-> to do; but unfortunately, it can be done with the current code.
->
-Oh, nevermind, I didn't notice the [0] index.=20
+I have been told that the Libertas mesh functionality is not 802.11s, 
+Marvell brew their own beer (because it predates 802.11s, I guess). 
+However, for the kernel I'd see more an interface that supports 
+802.11s --- or is flexible to support both this and the libertas one.
 
-> Larry's patch is IMHO correct.
->
-I was pointing out the fact that the loop now unconditionally stops after t=
-he=20
-first iteration, which does not seem like what was intended given the=20
-indentation level of the break. mode->rates[0].flags has nothing to do with=
-=20
-my comment though I answered that question (wrongly) anyway. :)
 
-=2DMichael Wu
+I also have two related observations:
 
---nextPart1212763.UXQSnCCK0s
-Content-Type: application/pgp-signature
+If I'm correctt, the only non-mesh ioctl in ioctl.c is the led_gpio 
+ioctl. Theoretically one can abstract this, many WLAN chips have GPIOs. 
+But mostly there is no documentation available about how those GPIOs 
+are used, where they are soldered to etc. To blindly allow changing 
+arbitrary GPIOs migth even be harmful to the hardware.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+That said: with the USB 8388 dongle that I have, the LED GPIO iwpriv 
+call didn't do anything. Not sure if it works on OLPC ... but I doubt 
+that one can see the LEDs there ...
 
-iD8DBQBGaYVcT3Oqt9AH4aERAoMRAJ9//ZJ1xGas60Iq0LfOMOqIdZkvqwCfWJmS
-s/PdEnvL0Uxr7Qrqu2fXmbA=
-=MwT0
------END PGP SIGNATURE-----
 
---nextPart1212763.UXQSnCCK0s--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+Another thing: I'm working on a CF 8385 based driver. Here I have a 
+firmware that does not (as far as I know this undocumented pile of 
+bytes) have any mesh functionality at all. So I need a way from if_cs.c 
+to disable all those iwpriv ioctls. Haven't thought about this issue 
+yet, other things are more pressing right now. However, I already don't 
+create the mshX interface.
+
