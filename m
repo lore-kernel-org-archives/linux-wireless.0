@@ -1,72 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49855 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753358AbXFKIVx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 04:21:53 -0400
-Subject: Re: [PATCH 2/6] mac80211: remove global tsinfo debugfs variables
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1181530652.3042.27.camel@debian.sh.intel.com>
-References: <20070608170342.GA17253@mail.intel.com>
-	 <1181331767.6533.98.camel@johannes.berg>
-	 <1181530652.3042.27.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-y0SxiQ9s8mquJ4F5ngCO"
-Date: Mon, 11 Jun 2007 10:21:49 +0200
-Message-Id: <1181550109.3566.38.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4585 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754926AbXFNT0N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2007 15:26:13 -0400
+Date: Thu, 14 Jun 2007 15:09:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	dcbw@redhat.com, hs4233@mail.mn-solutions.de,
+	linux-kernel@vger.kernel.org, marcelo@kvack.org
+Subject: Re: libertas (private) ioctls vs. nl80211
+Message-ID: <20070614190936.GA28917@tuxdriver.com>
+References: <1181757483.29767.99.camel@johannes.berg> <20070614170901.GA13384@infradead.org> <20070614103836.23b07a72.akpm@linux-foundation.org> <20070614181307.GA16856@infradead.org> <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jun 14, 2007 at 11:23:11AM -0700, Linus Torvalds wrote:
+> 
+> 
+> On Thu, 14 Jun 2007, Christoph Hellwig wrote:
+> >
+> > > I suspect that the probability of your proposal succeeding would be increased
+> > > if you could prepare a patch...
+> > 
+> > Here we go:
 
---=-y0SxiQ9s8mquJ4F5ngCO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+FWIW, I do appreciate the patch rather than just mere
+complaining... :-)
 
-On Mon, 2007-06-11 at 10:57 +0800, Zhu Yi wrote:
+> I don't mind ripping them out, but it makes sense only if people are 
+> actually signed up to implementing this on a higher layer. As such, I'd 
+> need to get a sign-off from somebody actually involved in wireless mesh 
+> stuff etc.
 
-> When I sent the patch the first time which used sysfs, the comment was
-> one value per file (Is this still true for debugfs?).
+I'm not aware of any project working on wireless mesh in mac80211 at
+the moment, serious or otherwise.  I think one would be worthwhile,
+but I don't know of anyone working on it.
 
-Hah, yeah, that's the regular rule for sysfs, but debugfs basically has
-no rules ;)
+> Please? I do agree that the private iwpriv interface seems to be totally 
+> the wrong thing to do, but I want to see this as a first step towards a 
+> better situation, rather than just a "remove code that is ugly" issue!
 
-> The DLS is easier because it only has one parameter (peer mac address)
-> now. I programed it the same way as tspec. So when we find to need more
-> parameters for DLS setup, we can add another debugfs file for the new
-> parameter instead of combining multiple parameters in one file.
+Private wireless extensions are ugly, even uglier in some ways than
+normal private ioctls.  However, they have been used in the past for
+just this sort of thing (i.e. something a given driver can do but is
+not generically available).
 
-Alright. I don't think it matters much anyway.
+We don't have either generic functionality
+for mesh in mac80211 or even other drivers doing mesh on their own,
+so there is nothing to validate a generic configuration option.
+Further, while the beginnings of nl80211 are available it will still
+be some non-zero time before it is even mature enough to replace
+truly generic configuration facilities in the wireless extensions.
 
-> I'd agree I didn't pay a lot of attentions to the debugfs interface
-> design since I thought it was used for occasional debug only. Please
-> tell me what which do you prefer: one value per file or multiple values
-> per file so that we can do one shot parameter passing? So I don't need
-> to switch them back and forth.
+> Comments?
 
-No, don't bother, too much work for too little gain. Maybe gather some
-thoughts on the nl80211 interface instead :) I personally prefer
-one-shot parameter passing because it's closer to what we'll be doing
-with nl80211 so we can model the interface like nl80211, however, the
-interface between the debugfs and the regular mac80211 code could still
-be modelled after nl80211 (it could even call some cfg80211 stuff when
-that's added)
+Aside from simply carrying an out-of-stream patch, the OLPC and
+libertas driver people would have only the alternative of hacking-up
+a debugfs configuration regime.  Is it worthwhile to obligate them
+to either alternative?  What is to be gained?
 
-johannes
+It does not make sense to me to rip this out purely for aesthetic
+reasons.
 
---=-y0SxiQ9s8mquJ4F5ngCO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGbQYd/ETPhpq3jKURAnwWAKCFUxWjPLsVePgqoI610XI9Js+46gCgl7Wv
-dRnoUJBn9LBorIXtlbxkyVc=
-=D2vj
------END PGP SIGNATURE-----
-
---=-y0SxiQ9s8mquJ4F5ngCO--
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
