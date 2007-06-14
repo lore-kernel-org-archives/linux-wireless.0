@@ -1,64 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fallback.mail.elte.hu ([157.181.151.13]:47008 "EHLO
-	fallback.mail.elte.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754342AbXFDTiz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2007 15:38:55 -0400
-Received: from mx3.mail.elte.hu ([157.181.1.138])
-	by fallback.mail.elte.hu with esmtp (Exim)
-	id 1HvIOD-0003c0-QE
-	from <mingo@elte.hu>
-	for <linux-wireless@vger.kernel.org>; Mon, 04 Jun 2007 21:38:53 +0200
-Date: Mon, 4 Jun 2007 21:32:06 +0200
-From: Ingo Molnar <mingo@elte.hu>
-To: Stephen Hemminger <shemminger@linux-foundation.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ulrich Drepper <drepper@gmail.com>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	Michael Buesch <mb@bu3sch.de>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: iperf: performance regression (was b44 driver problem?)
-Message-ID: <20070604193206.GA13271@elte.hu>
-References: <20070525172431.60affaca@freepuppy> <200705281944.05030.maxi@daemonizer.de> <1180380230.3657.3.camel@chaos> <200706031826.06891.maxi@daemonizer.de> <1180939188.4404.5.camel@chaos> <20070604090918.42386fbb@freepuppy> <1180974958.4404.24.camel@chaos> <20070604095924.651d91c8@freepuppy> <1180978368.4404.29.camel@chaos> <20070604105158.31ede1f5@freepuppy>
-MIME-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4072 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752112AbXFNU0h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2007 16:26:37 -0400
+Date: Thu, 14 Jun 2007 16:08:44 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	dcbw@redhat.com, hs4233@mail.mn-solutions.de,
+	linux-kernel@vger.kernel.org, marcelo@kvack.org
+Subject: Re: libertas (private) ioctls vs. nl80211
+Message-ID: <20070614200844.GC28917@tuxdriver.com>
+References: <1181757483.29767.99.camel@johannes.berg> <20070614170901.GA13384@infradead.org> <20070614103836.23b07a72.akpm@linux-foundation.org> <20070614181307.GA16856@infradead.org> <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org> <20070614190936.GA28917@tuxdriver.com> <20070614125618.a7338ad8.akpm@linux-foundation.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070604105158.31ede1f5@freepuppy>
+In-Reply-To: <20070614125618.a7338ad8.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jun 14, 2007 at 12:56:18PM -0700, Andrew Morton wrote:
+> On Thu, 14 Jun 2007 15:09:36 -0400
+> "John W. Linville" <linville@tuxdriver.com> wrote:
+> 
+> > It does not make sense to me to rip this out purely for aesthetic
+> > reasons.
+> 
+> Aesthetics are good, but that's not the main issue.
+> 
+> What is most worrying is that there appears to be a risk that these
+> newly-added interfaces will later become obsoleted by another interface. 
+> This means that we'll need to maintain, test and support _both_ interfaces
+> for a very long time.  This is the sort of foot-shooting we should avoid.
 
-* Stephen Hemminger <shemminger@linux-foundation.org> wrote:
+True enough.  However, I hope you will agree that we should not
+confuse foresight with speculation.
 
-> Yes, the following patch makes iperf work better than ever. But are 
-> other broken applications going to have same problem. Sounds like the 
-> old "who runs first" fork() problems.
+At present there is no sign on the horizon of either any mac80211
+mesh code or any other full-MAC wireless driver supporting mesh.
+Without either of those, it would seem imprudent to rush toward
+a gneric configuration interface even if nl80211 was prepared to
+sprout one.
 
-this is the first such app and really, and even for this app: i've been 
-frequently running iperf on -rt kernels for _years_ and never noticed 
-how buggy its 'locking' code was, and that it would under some 
-circumstances use up the whole CPU on high-res timers.
+John
 
-If this were a widespread problem then the right solution would be to 
-preserve the old behavior. The child-runs-first thing was an unspecified 
-detail and many apps grew to depend on how the kernel did it - and when 
-we changed it all hell broke lose. Even today, when i switch off 
-child-runs-first, Gnome would not start up because some of its startup 
-threads are racy and hang :-/
-
-I googled for usleep(0) quickly (on google.com/codesearch and on 
-google.com) and it didnt seem to suggest that the problem is widespread. 
-(3 hits on the code-search site, all were false positives.)
-
-so ... if this situation were even just a little bit more serious i'd 
-argue for working this around and implementing some API quirk. But right 
-now i'm leaning towards just saying that the iperf fix exists and fixes 
-the problem, and that we already have kernels out with the new behavior. 
-Maybe we should add a once-per-boot printk to flesh out any other apps? 
-I'd be surprised if there was more than iperf.
-
-	Ingo
+P.S.  If someone wants to announce either mesh support for mac80211
+or a driver for a new full-MAC device supporting mesh, I'm prepared
+to be wrong! :-)
+-- 
+John W. Linville
+linville@tuxdriver.com
