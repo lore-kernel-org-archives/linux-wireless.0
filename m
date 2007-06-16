@@ -1,85 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:42186
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751967AbXFVKPp (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:46754 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753924AbXFPWu6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2007 06:15:45 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: Please pull bcm43xx-mac80211
-Date: Fri, 22 Jun 2007 12:13:21 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200706221213.21855.mb@bu3sch.de>
+	Sat, 16 Jun 2007 18:50:58 -0400
+Date: Sat, 16 Jun 2007 15:49:46 -0700
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: Maximilian Engelhardt <maxi@daemonizer.de>
+Cc: netdev <netdev@vger.kernel.org>,
+	"linux-kernel" <linux-kernel@vger.kernel.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>,
+	Gary Zambrano <zambrano@broadcom.com>,
+	"Jeff Garzik" <jgarzik@pobox.com>,
+	"Arnaldo Carvalho de Melo" <acme@ghostprotocols.net>
+Subject: Re: b44: high ping times with wireless-dev
+Message-ID: <20070616154946.5fb6b013@localhost.localdomain>
+In-Reply-To: <200706162327.47413.maxi@daemonizer.de>
+References: <200706162327.47413.maxi@daemonizer.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's growing..., better pull it :P
-This log includes all the stuff from the last pull request, too.
+On Sat, 16 Jun 2007 23:27:43 +0200
+Maximilian Engelhardt <maxi@daemonizer.de> wrote:
 
+> Hello,
+> 
+> I recently did some test and found out something interesting about the b44 
+> problem I wrote earlier. 
+> 
+> The problem is the following:
+> When I use my BCM4401 with the b44 driver in wireless-dev I get very high ping 
+> times looking like this:
+> 
+> 64 bytes from 172.30.10.1: icmp_seq=1 ttl=64 time=1863 ms
+> 64 bytes from 172.30.10.1: icmp_seq=2 ttl=64 time=855 ms
+> 64 bytes from 172.30.10.1: icmp_seq=3 ttl=64 time=1855 ms
+> 64 bytes from 172.30.10.1: icmp_seq=4 ttl=64 time=855 ms
+> 64 bytes from 172.30.10.1: icmp_seq=5 ttl=64 time=1854 ms
+> 64 bytes from 172.30.10.1: icmp_seq=6 ttl=64 time=854 ms
+> 64 bytes from 172.30.10.1: icmp_seq=7 ttl=64 time=1851 ms
+> 64 bytes from 172.30.10.1: icmp_seq=8 ttl=64 time=851 ms
+> 64 bytes from 172.30.10.1: icmp_seq=9 ttl=64 time=1851 ms
+> 64 bytes from 172.30.10.1: icmp_seq=10 ttl=64 time=851 ms
+> 
+> I also found out that shortly after I boot my laptop and log into kde ping 
+> times are not that high but start to increase very quickly:
+> 
+> 64 bytes from 172.30.10.1: icmp_seq=53 ttl=64 time=2.19 ms
+> 64 bytes from 172.30.10.1: icmp_seq=54 ttl=64 time=2.22 ms
+> 64 bytes from 172.30.10.1: icmp_seq=55 ttl=64 time=2.20 ms
+> 64 bytes from 172.30.10.1: icmp_seq=56 ttl=64 time=2.20 ms
+> 64 bytes from 172.30.10.1: icmp_seq=57 ttl=64 time=18.6 ms
+> 64 bytes from 172.30.10.1: icmp_seq=58 ttl=64 time=1268 ms
+> 64 bytes from 172.30.10.1: icmp_seq=59 ttl=64 time=268 ms
+> 64 bytes from 172.30.10.1: icmp_seq=60 ttl=64 time=1268 ms
+> 64 bytes from 172.30.10.1: icmp_seq=61 ttl=64 time=268 ms
+> 64 bytes from 172.30.10.1: icmp_seq=62 ttl=64 time=6.08 ms
+> 64 bytes from 172.30.10.1: icmp_seq=63 ttl=64 time=268 ms
+> 64 bytes from 172.30.10.1: icmp_seq=64 ttl=64 time=1264 ms
+> 64 bytes from 172.30.10.1: icmp_seq=65 ttl=64 time=264 ms
+> 
+> After some time digging around I found out something really interesting. When 
+> I play some music ping times are immediately lower. If I stop playing music 
+> they are back to the same times as they were before.
+> 
+> I guess that there is a problem with interrupts so I post some information of 
+> my system in hope it will be usefull.
+> 
+> maxi@koala:~$ cat /proc/interrupts
+>           CPU0       
+>  0:     126317    XT-PIC-XT        timer
+>  1:       3600    XT-PIC-XT        i8042
+>  2:          0    XT-PIC-XT        cascade
+>  7:          1    XT-PIC-XT        parport0
+>  8:          1    XT-PIC-XT        rtc
+>  9:      17371    XT-PIC-XT        acpi
+> 10:      13237    XT-PIC-XT        firewire_ohci, yenta, yenta, ehci_hcd:usb1, 
+> uhci_hcd:usb3, uhci_hcd:usb4, Intel 82801DB-ICH4, Intel 82801DB-ICH4 Modem, 
+> eth0
+> 11:      89059    XT-PIC-XT        uhci_hcd:usb2, i915@pci:0000:00:02.0
+> 12:        632    XT-PIC-XT        i8042
+> 14:      10354    XT-PIC-XT        libata
+> 15:       7408    XT-PIC-XT        libata
+> NMI:          0 
+> ERR:          0
+> 
+> 
+> [...]
+> ACPI: PCI Interrupt Link [LNKD] enabled at IRQ 10
+> ACPI: PCI Interrupt 0000:02:02.0[A] -> Link [LNKD] -> GSI 10 (level, low) -> 
+> IRQ 10
+> ssb: Sonics Silicon Backplane found on PCI device 0000:02:02.0
+> b44.c:v2.0
+> eth0: Broadcom 44xx/47xx 10/100BaseT Ethernet 00:c0:9f:29:99:a7
+> [...]
+> 
+> This problem did only happen with wireless-dev (checkout this evening) and 
+> with -mm kernels I used some time ago for testing. Currently I'm running 
+> 2.6.22-rc4 that works perfectly fine and doesn't show that problem.
+> 
+> Maxi
 
-The following changes since commit 9181e959da76d85d688d8ec763702ed2f3b4edf9:
-  John W. Linville:
-        rt2x00firmware.c: include delay.h to avoid build error on ppc64
+Can you build with APIC for uniprocessor.
 
-are found in the git repository at:
+There is lots of IRQ sharing, so
+ - one of the other device's may be not handling shared IRQ properly.
+   Try unloading firewhire modem and yenta devices.
 
-  http://bu3sch.de/git/wireless-dev.git/ for-linville
+ - IRQ might be set edge triggered which doesn't work with NAPI
+	or shared IRQ.
 
-Johannes Berg:
-      bcm43xx: honour promisc bit even in monitor mode
-
-Michael Buesch:
-      bcm43xx-mac80211: Don't stop the mac80211 software queues in pwork.
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-dev
-      bcm43xx-mac80211: Use the mac80211 provided workqueue
-      bcm43xx-mac80211: Fix mutex leakage in pwork.
-      bcm43xx-mac80211: Flush the workqueue to make sure periodic work has finished.
-      bcm43xx-mac80211: Implement runtime debugging mechanism.
-      bcm43xx-mac80211: Code to inject TX ring overflows.
-      bcm43xx-mac80211: Rewrite the attenuation adjustment.
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-dev
-      ssb: Fix maxpwr and itssi read.
-      bcm43xx-mac80211: Add more txpower debugging.
-      bcm43xx-mac80211: add debugfs file to manually control txpower
-      bcm43xx-mac80211: Some LO cleanups
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-dev
-      bcm43xx-mac80211: Use the dynamic min/max values for adjusting the attenuation.
-      ssb: b44 sprom workaround; avoid warning message
-      ssb: Rewrite invariants fetching code.
-      ssb: Replace ceildiv() by DIV_ROUND_UP()
-      bcm43xx-mac80211: Kill all huge udelay()s.
-      bcm43xx-mac80211: Add cond_resched() into LO calibration.
-      bcm43xx-mac80211: Fix rate memory init for A-PHY.
-      bcm43xx-mac80211: Fix MAC address upload.
-      bcm43xx-mac80211: Also write BSSID macfilter.
-      bcm43xx-mac80211: Add pwork debugging.
-      bcm43xx-mac80211: Run TX without taking the global spinlock.
-
- drivers/net/wireless/mac80211/bcm43xx/bcm43xx.h    |   39 +
- .../wireless/mac80211/bcm43xx/bcm43xx_debugfs.c    |  216 ++++++++-
- .../wireless/mac80211/bcm43xx/bcm43xx_debugfs.h    |   23 +
- .../net/wireless/mac80211/bcm43xx/bcm43xx_dma.c    |  189 ++++++--
- .../net/wireless/mac80211/bcm43xx/bcm43xx_dma.h    |   12 
- .../net/wireless/mac80211/bcm43xx/bcm43xx_leds.c   |    4 
- drivers/net/wireless/mac80211/bcm43xx/bcm43xx_lo.c |  117 ++--
- drivers/net/wireless/mac80211/bcm43xx/bcm43xx_lo.h |    6 
- .../net/wireless/mac80211/bcm43xx/bcm43xx_main.c   |  202 ++++----
- .../net/wireless/mac80211/bcm43xx/bcm43xx_pcmcia.c |    7 
- .../net/wireless/mac80211/bcm43xx/bcm43xx_phy.c    |  565 ++++++++++++-----------
- .../net/wireless/mac80211/bcm43xx/bcm43xx_phy.h    |   23 -
- .../net/wireless/mac80211/bcm43xx/bcm43xx_xmit.c   |   48 ++
- .../net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h   |   17 +
- drivers/ssb/driver_chipcommon.c                    |   20 -
- drivers/ssb/main.c                                 |   49 +-
- drivers/ssb/pci.c                                  |   76 ++-
- drivers/ssb/pcmcia.c                               |    7 
- drivers/ssb/ssb_private.h                          |   22 -
- include/linux/ssb/ssb.h                            |   41 +
- include/linux/ssb/ssb_regs.h                       |   12 
- 21 files changed, 1085 insertions(+), 610 deletions(-)
 
 -- 
-Greetings Michael.
+Stephen Hemminger <shemminger@linux-foundation.org>
