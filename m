@@ -1,50 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:32859 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764949AbXFAUwk (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59969 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751619AbXFPTtB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2007 16:52:40 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so17128nfb
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Jun 2007 13:52:38 -0700 (PDT)
-Message-ID: <7b4bf7ff0706011352h767cc901l2636dfa60d3faaaa@mail.gmail.com>
-Date: Fri, 1 Jun 2007 22:52:38 +0200
-From: "Olivier Cornu" <o.cornu@gmail.com>
-To: "James Ketrenos" <jketreno@linux.intel.com>
-Subject: Re: [PATCH] mac80211: Update stop_queues kdoc
-Cc: "Michael Wu" <flamingice@sourmilk.net>,
-	"Michael Buesch" <mb@bu3sch.de>, "Jiri Benc" <jbenc@suse.cz>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <46605814.1090806@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <200706011129.12432.mb@bu3sch.de>
-	 <4660503C.9080309@linux.intel.com>
-	 <200706011204.23666.flamingice@sourmilk.net>
-	 <46605814.1090806@linux.intel.com>
+	Sat, 16 Jun 2007 15:49:01 -0400
+Received: from [84.135.217.188] (helo=[10.0.0.4])
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.67)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1HzeGa-0008EO-03
+	for linux-wireless@vger.kernel.org; Sat, 16 Jun 2007 20:49:00 +0100
+Subject: nl/cfg80211 scan result/event handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Aziz8q1bWG25CcWw94FU"
+Date: Sat, 16 Jun 2007 21:49:32 +0200
+Message-Id: <1182023372.9058.68.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/6/1, James Ketrenos <jketreno@linux.intel.com>:
-> Michael Wu wrote:
-> > A workaround could be implemented, but I currently don't see any cases where
-> > stopping/waking the queue outside of open/stop/tx is necessary or correct.
->
-> Is calling the ieee80211_stop_queue[s] from open/stop OK then?  The doc update said only in ops->tx.  Should the driver be calling it in the stop callback, or will the stack stop the queues for us?
->
-> iwlwifi currently calls ieee80211_stop_queue from the Tx handler and calls ieee80211_stop_queues in the event the adapter is reset (due to HW error, RF kill transition, hw tear down, etc.) as it asynchronously brings re-initializes the hardware.
 
-Out of pure "design intuition", there seems to be a real difference
-between stop_queue and stop_queues. In other words, stop_queues should
-not be seen as just a shortcut for multi-ring devices, as each should
-actually be called from different contexts:
- - stop_queue will indeed stop one queue only, but stopping a single
-queue seems to make sense only on tx (when a tx_ring gets full).
- - stop_queues on the other hand means stop all queues, and this
-should only be needed on stop, reset, etc (why would you stop all
-queues on tx?). In this regard, a single ring device should probably
-still call stop_queues in these contexts.
-(The same difference makes sense for the wake_... counterparts)
+--=-Aziz8q1bWG25CcWw94FU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---
-Olivier Cornu
+Hey,
+
+Just a few notes as I'm thinking about these things. I probably won't be
+implementing this quickly so I'm telling you, but who knows, maybe I'll
+get around to it and then... Here's hoping for some feedback :)
+
+Right now I'm thinking along the lines of:
+void cfg80211_key_threshold_notify(struct wireless_dev *wdev,
+				   int txrx_count,
+				   u8 *mac);
+
+or
+void cfg80211_radar_notify(struct wireless_dev *wdev,
+			   phymode, channel, ...)
+
+and then cfg80211 is responsible for sending the appropriate nl80211
+messages or doing whatever else to notify userspace.
+
+As for scan results, we want those broadcast as well. I was thinking
+that we have basically these choices:
+ 1) drivers (stack) aggregate data
+ 2) drivers (stack) call a function for each result
+ 3) hybrid
+
+I tend towards 3 because it allows both, in a fashion like this:
+
+cfg80211_add_scan_result(struct wireless_dev *wdev,
+			 int n_results,
+			 struct scan_result **sr);
+cfg80211_scan_finished(struct wireless_dev *wdev);
+
+and for the add_scan_result calls cfg80211 simply starts creating the
+nl80211 message and then multicasts it to those who want it
+(NL80211_GROUP_SCAN or such) on _scan_finished()
+
+Thoughts?
+
+johannes
+
+--=-Aziz8q1bWG25CcWw94FU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGdD7M/ETPhpq3jKURApGfAKCPkgdubzR/iLnk8MBsh4WDiPp/hgCcCaAF
+knjejbRIEEWuj+7Dv/LxY2g=
+=ChP0
+-----END PGP SIGNATURE-----
+
+--=-Aziz8q1bWG25CcWw94FU--
+
