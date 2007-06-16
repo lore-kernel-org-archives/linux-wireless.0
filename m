@@ -1,177 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3199 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752751AbXFLVym (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2007 17:54:42 -0400
-Date: Tue, 12 Jun 2007 17:26:41 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: jeff@garzik.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Dan Williams <dcbw@redhat.com>
-Subject: Please pull 'libertas' branch of wireless-2.6 (resent w/o attachment)
-Message-ID: <20070612212641.GI310@tuxdriver.com>
-References: <20070529183347.GD3496@tuxdriver.com> <20070612210544.GF310@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070612210544.GF310@tuxdriver.com>
+Received: from wx-out-0506.google.com ([66.249.82.234]:7118 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753939AbXFPXaC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Jun 2007 19:30:02 -0400
+Received: by wx-out-0506.google.com with SMTP id t15so1186972wxc
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Jun 2007 16:30:02 -0700 (PDT)
+Message-ID: <1ba2fa240706161630r1fdb2ac1m87039a088c7d6bfd@mail.gmail.com>
+Date: Sun, 17 Jun 2007 02:30:02 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC PATCH] bcm43xx QoS support
+Cc: "Michael Buesch" <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
+	"Jiri Benc" <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
+	"Joseph Jezak" <josejx@gentoo.org>
+In-Reply-To: <1182032257.23681.1.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <200706161328.53726.mb@bu3sch.de>
+	 <1ba2fa240706161438lfd629e4j7317bb62340c82a3@mail.gmail.com>
+	 <1182032257.23681.1.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Resending w/o the attached patch, in case it was too big...yikes!
+On 6/17/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Sun, 2007-06-17 at 00:38 +0300, Tomas Winkler wrote:
+> > iwlwifi supports QoS. It has queues 4 hw for WMM access categories 2
+> > hw queus for HCCA.
+>
+> But it too can't ever create QoS-data frames or negotiate TXOPs afaict,
+> unless it does more than we want in hardware.
 
-Individual patches are available here:
+ True
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/libertas
+> > There is also a discussion about supporting hardware queues in qdisc
+> > in netdev.
+>
+> Which isn't really a concern to the driver since only mac80211 will need
+> to be changed for that.
+>
+I'm not sure it's only mac80211 problem as driver is responsible for
+stopping and waking up the queues. Only driver knows whether hw queue
+is full or not.
 
-John
+> I suppose the question is: what are we missing in mac80211 now? It seems
+> that we have no way of sending out QoS-data frames and that seems weird.
 
----
+QoS frame are send just fine by mac80211 (at least under iwlwifi),
+only the sequence numbers has to be overwritten in driver since the
+current handler doesn't advance them per TID.
 
-Jeff,
+> Nor do we parse TXOP information etc. Possibly this is because we
+> support WME and that's based on an early 802.11e draft?
 
-This is the same as the previous pull request, only rebased on
-2.6.22-rc4.  Since this is a big pull already, I didn't want to
-complicate it with the additional patches identified by the libertas
-team as 2.6.22-worthy.
+I addition wme.c qdisc scheduler is rather naive one, it only
+statically assign priorities, it wouldn't pass WMM certification I
+guess.
 
-John
 
----
-
-The following changes since commit 5ecd3100e695228ac5e0ce0e325e252c0f11806f:
-  Linus Torvalds (1):
-        Linux 2.6.22-rc4
-
-are found in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git libertas
-
-Chris Ball (1):
-      libertas: wakeup both mesh and normal wakeup when getting out of scan
-
-Dan Williams (25):
-      libertas: call SET_NETDEV_DEV from common code
-      libertas: replace 'macaddress' with 'bssid'
-      libertas: correctly unregister mesh netdev on error
-      libertas: don't tear down netdev in libertas_activate_card
-      libertas: make scan result handling more flexible
-      libertas: fix 'keep previous scan' behavior
-      libertas: move channel changing into association framework
-      libertas: make association paths consistent
-      libertas: use MAC_FMT and MAC_ARG where appropriate
-      libertas: use compare_ether_addr() rather than memcmp() where appropriate
-      libertas: fix debug enter/leave prints for libertas_execute_next_command
-      libertas: correctly balance locking in libertas_process_rx_command
-      libertas: correct error report paths for wlan_fwt_list_ioctl
-      libertas: fix deadlock SIOCGIWSCAN handler
-      libertas: fix default adhoc channel
-      libertas: honor specific channel requests during association
-      libertas: send SIOCGIWSCAN event after partial scans too
-      libertas: debug print spacing fixes in assoc.c
-      libertas: add more verbose debugging to libertas_cmd_80211_authenticate
-      libertas: Make WPA work through supplicant handshake
-      libertas: sparse fixes
-      libertas: tweak association debug output
-      libertas: remove structure WLAN_802_11_SSID and libertas_escape_essid
-      libertas: remove WPA_SUPPLICANT structure
-      libertas: reduce SSID and BSSID mixed-case abuse
-
-David Woodhouse (6):
-      libertas: fix character set in README
-      libertas: first pass at fixing up endianness issues
-      libertas: More endianness fixes.
-      libertas: more endianness fixes, in tx.c this time
-      libertas: don't byte-swap firmware version number. It's a byte array.
-      libertas: fix big-endian associate command.
-
-Holger Schurig (23):
-      libertas: rename wlan_association_worker
-      libertas: a debug output was missing a newline
-      libertas: fix removal of all debugfs files
-      libertas: remove __FILE__ from debug output
-      libertas: remove unused/superfluous definitions of DEV_NAME_LEN
-      libertas: move vendor & product id's into if_usb.c
-      libertas: make libertas_wlan_data_rates static
-      libertas: exclude non-used code when PROC_DEBUG is not set
-      libertas: make debug configurable
-      libertas: tune debug code
-      libertas: single out mesh code
-      libertas: change debug output of libertas_interrupt()
-      libertas: get rid of libertas_sbi_get_priv()
-      libertas: fix SSID output
-      libertas: changed some occurences of kmalloc() + memset(&a,0,sz) to kzalloc()
-      libertas: move reset_device() code main.c to if_usb.c
-      libertas: split wlan_add_card()
-      libertas: indirect all hardware access via hw_XXXX functions
-      libertas: move contents of fw.h to decl.h
-      libertas: split module into two (libertas.ko and usb8xxx.ko)
-      libertas: fix RESET logic at unload time
-      libertas: let DRV_NAME be overridable
-      libertas: remove unused variables in wlan_dev_t
-
-Javier Cardona (2):
-      libertas: fixed transmission flow control on the mesh interface
-      libertas: added transmission failures to mesh statistics
-
-Luis Carlos Cobo (4):
-      libertas: fixed incorrect assigment of fcs errors to frag errors
-      libertas: add URB debug info
-      libertas: fixed kernel oops on module/card removal
-      libertas: updated mesh commands for 5.220.9.p11
-
-Luis Carlos Cobo Rus (6):
-      libertas: version bump (321p0) and cmds update for new fw (5.220.10.p0)
-      libertas: cleanup of fwt_list_route processing
-      libertas: updated readme file
-      libertas: make mac address configuration work with mesh interface too
-      libertas: split wext for eth and msh
-      libertas: support for mesh autostart on firmware 5.220.11
-
-Marcelo Tosatti (5):
-      libertas: scan two channels per scan command
-      libertas: remove deprecated pm_register and associated code
-      libertas: fix scanning from associate path
-      libertas: fix error handling of card initialization
-      libertas: fix oops on rmmod
-
- drivers/net/wireless/Kconfig               |   19 +-
- drivers/net/wireless/libertas/11d.c        |  152 ++--
- drivers/net/wireless/libertas/11d.h        |    6 +-
- drivers/net/wireless/libertas/Makefile     |    4 +-
- drivers/net/wireless/libertas/README       |   52 +-
- drivers/net/wireless/libertas/assoc.c      |  345 +++++---
- drivers/net/wireless/libertas/assoc.h      |    8 +-
- drivers/net/wireless/libertas/cmd.c        |  559 +++++------
- drivers/net/wireless/libertas/cmdresp.c    |  375 ++++----
- drivers/net/wireless/libertas/debugfs.c    |  432 ++++----
- drivers/net/wireless/libertas/decl.h       |   20 +-
- drivers/net/wireless/libertas/defs.h       |  101 ++-
- drivers/net/wireless/libertas/dev.h        |   98 +-
- drivers/net/wireless/libertas/ethtool.c    |   55 +-
- drivers/net/wireless/libertas/fw.c         |  111 +--
- drivers/net/wireless/libertas/fw.h         |   13 -
- drivers/net/wireless/libertas/host.h       |   13 +-
- drivers/net/wireless/libertas/hostcmd.h    |  392 ++++----
- drivers/net/wireless/libertas/if_bootcmd.c |    6 +-
- drivers/net/wireless/libertas/if_usb.c     |  448 +++++----
- drivers/net/wireless/libertas/if_usb.h     |   32 +-
- drivers/net/wireless/libertas/ioctl.c      |  286 ++++--
- drivers/net/wireless/libertas/join.c       |  464 ++++-----
- drivers/net/wireless/libertas/join.h       |   13 +-
- drivers/net/wireless/libertas/main.c       |  673 ++++++-------
- drivers/net/wireless/libertas/rx.c         |   63 +-
- drivers/net/wireless/libertas/sbi.h        |   40 -
- drivers/net/wireless/libertas/scan.c       | 1529 +++++++++++++---------------
- drivers/net/wireless/libertas/scan.h       |   81 +-
- drivers/net/wireless/libertas/thread.h     |    8 +-
- drivers/net/wireless/libertas/tx.c         |   74 +-
- drivers/net/wireless/libertas/types.h      |   63 +-
- drivers/net/wireless/libertas/wext.c       |  778 ++++++++-------
- drivers/net/wireless/libertas/wext.h       |   13 +-
- 34 files changed, 3679 insertions(+), 3647 deletions(-)
- delete mode 100644 drivers/net/wireless/libertas/fw.h
- delete mode 100644 drivers/net/wireless/libertas/sbi.h
-
--- 
-John W. Linville
-linville@tuxdriver.com
+> johannes
+>
+>
