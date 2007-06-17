@@ -1,204 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:49602 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:34993 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765132AbXF2Neg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2007 09:34:36 -0400
-From: Michal Schmidt <mschmidt@redhat.com>
-Subject: [PATCH 2/5] airo: delay some initialization until the netdev is up
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	Matteo Croce <rootkit85@yahoo.it>
-Date: Fri, 29 Jun 2007 15:33:36 +0200
-Message-ID: <20070629133336.6658.46135.stgit@localhost.localdomain>
-In-Reply-To: <20070629131841.6658.76381.stgit@localhost.localdomain>
-References: <20070629131841.6658.76381.stgit@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	id S1751837AbXFQPZ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jun 2007 11:25:59 -0400
+Subject: Re: [Take 2] mac80211 IEEE802.11e/WMM code cleanup
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Wu <flamingice@sourmilk.net>, Zhu Yi <yi.zhu@intel.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	David Lamparter <lists@diac24.net>
+In-Reply-To: <1182019869.9058.57.camel@johannes.berg>
+References: <20070611085950.GA5540@mail.intel.com>
+	 <200706140935.50779.flamingice@sourmilk.net>
+	 <1181996855.9058.39.camel@johannes.berg>
+	 <200706161129.13782.flamingice@sourmilk.net>
+	 <1182019869.9058.57.camel@johannes.berg>
+Content-Type: text/plain
+Date: Sun, 17 Jun 2007 11:29:23 -0400
+Message-Id: <1182094164.14209.18.camel@xo-28-0B-88.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-airo's kernel thread and the IRQ handler are needed only when the interface
-is up.
+On Sat, 2007-06-16 at 20:51 +0200, Johannes Berg wrote:
+> On Sat, 2007-06-16 at 11:29 -0700, Michael Wu wrote:
+> 
+> > I think that decision was made without much consideration to the 
+> > implementation details. 
+> 
+> I don't think the implementation details are much of a problem. It's
+> just a bit of message bouncing which is trivial. Except of course when
+> you consider wext, but hey, no need to consider that for this discussion
+> since you're proposing ditching wext completely. Not that I don't want
+> to ditch it, but people still use it and probably will. Heck, people
+> still use 'ifconfig'...
+> 
+> > I thought it was a good idea then, but passing 
+> > messages from userspace to the kernel and then to userspace again is really a 
+> > waste of time.
+> 
+> It's not happening a lot so it's not a waste of *much* time ;)
+> 
+> > NetworkManager already uses wpa_supplicant to avoid all the 
+> > nasty details of dealing with wireless configuration, so why not keep using 
+> > it for everything instead of hiding wpa_supplicant behind nl80211?
+> 
+> I hope that nm would start using nl80211 instead of talking to
+> wpa_supplicant and just start wpa_supplicant if necessary. Or maybe some
+> startup scripts start the userspace MLME (wpa_supplicant) for the
+> interfaces during boot/hotplug.
 
-Signed-off-by: Michal Schmidt <mschmidt@redhat.com>
----
+NM uses wpa_supplicant for 3 basic things:
 
- drivers/net/wireless/airo.c |   80 ++++++++++++++++++++++++-------------------
- 1 files changed, 45 insertions(+), 35 deletions(-)
+1) configuration of an 802.11 connection
+2) getting scan results
+3) WPA/802.1x
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index 57da70b..37aa619 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -1926,28 +1926,55 @@ static int readStatsRid(struct airo_info*ai, StatsRid *sr, int rid, int lock) {
- 	return rc;
- }
- 
-+static void try_auto_wep(struct airo_info *ai)
-+{
-+	if (auto_wep && !(ai->flags & FLAG_RADIO_DOWN)) {
-+		ai->expires = RUN_AT(3*HZ);
-+		wake_up_interruptible(&ai->thr_wait);
-+	}
-+}
-+
- static int airo_open(struct net_device *dev) {
--	struct airo_info *info = dev->priv;
-+	struct airo_info *ai = dev->priv;
- 	Resp rsp;
-+	int rc = 0;
- 
--	if (test_bit(FLAG_FLASHING, &info->flags))
-+	if (test_bit(FLAG_FLASHING, &ai->flags))
- 		return -EIO;
- 
- 	/* Make sure the card is configured.
- 	 * Wireless Extensions may postpone config changes until the card
- 	 * is open (to pipeline changes and speed-up card setup). If
- 	 * those changes are not yet commited, do it now - Jean II */
--	if (test_bit (FLAG_COMMIT, &info->flags)) {
--		disable_MAC(info, 1);
--		writeConfigRid(info, 1);
-+	if (test_bit(FLAG_COMMIT, &ai->flags)) {
-+		disable_MAC(ai, 1);
-+		writeConfigRid(ai, 1);
- 	}
- 
--	if (info->wifidev != dev) {
-+	if (ai->wifidev != dev) {
-+		clear_bit(JOB_DIE, &ai->jobs);
-+		ai->airo_thread_task = kthread_run(airo_thread, dev, dev->name);
-+		if (IS_ERR(ai->airo_thread_task))
-+			return (int)PTR_ERR(ai->airo_thread_task);
-+		
-+		rc = request_irq(dev->irq, airo_interrupt, IRQF_SHARED,
-+			dev->name, dev);
-+		if (rc) {
-+			airo_print_err(dev->name,
-+				"register interrupt %d failed, rc %d",
-+				dev->irq, rc);
-+			set_bit(JOB_DIE, &ai->jobs);
-+			kthread_stop(ai->airo_thread_task);
-+			return rc;
-+		}
-+		
- 		/* Power on the MAC controller (which may have been disabled) */
--		clear_bit(FLAG_RADIO_DOWN, &info->flags);
--		enable_interrupts(info);
-+		clear_bit(FLAG_RADIO_DOWN, &ai->flags);
-+		enable_interrupts(ai);
-+
-+		try_auto_wep(ai);
- 	}
--	enable_MAC(info, &rsp, 1);
-+	enable_MAC(ai, &rsp, 1);
- 
- 	netif_start_queue(dev);
- 	return 0;
-@@ -2392,6 +2419,11 @@ static int airo_close(struct net_device *dev) {
- 		disable_MAC(ai, 1);
- #endif
- 		disable_interrupts( ai );
-+
-+		free_irq(dev->irq, dev);
-+		
-+		set_bit(JOB_DIE, &ai->jobs);
-+		kthread_stop(ai->airo_thread_task);
- 	}
- 	return 0;
- }
-@@ -2403,7 +2435,6 @@ void stop_airo_card( struct net_device *dev, int freeres )
- 	set_bit(FLAG_RADIO_DOWN, &ai->flags);
- 	disable_MAC(ai, 1);
- 	disable_interrupts(ai);
--	free_irq( dev->irq, dev );
- 	takedown_proc_entry( dev, ai );
- 	if (test_bit(FLAG_REGISTERED, &ai->flags)) {
- 		unregister_netdev( dev );
-@@ -2414,9 +2445,6 @@ void stop_airo_card( struct net_device *dev, int freeres )
- 		}
- 		clear_bit(FLAG_REGISTERED, &ai->flags);
- 	}
--	set_bit(JOB_DIE, &ai->jobs);
--	kthread_stop(ai->airo_thread_task);
--
- 	/*
- 	 * Clean out tx queue
- 	 */
-@@ -2821,14 +2849,11 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
- 	ai->config.len = 0;
- 	ai->pci = pci;
- 	init_waitqueue_head (&ai->thr_wait);
--	ai->airo_thread_task = kthread_run(airo_thread, dev, dev->name);
--	if (IS_ERR(ai->airo_thread_task))
--		goto err_out_free;
- 	ai->tfm = NULL;
- 	add_airo_dev(ai);
- 
- 	if (airo_networks_allocate (ai))
--		goto err_out_thr;
-+		goto err_out_free;
- 	airo_networks_initialize (ai);
- 
- 	/* The Airo-specific entries in the device structure. */
-@@ -2851,21 +2876,16 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
- 	dev->base_addr = port;
- 
- 	SET_NETDEV_DEV(dev, dmdev);
-+	SET_MODULE_OWNER(dev);
- 
- 	reset_card (dev, 1);
- 	msleep(400);
- 
--	rc = request_irq( dev->irq, airo_interrupt, IRQF_SHARED, dev->name, dev );
--	if (rc) {
--		airo_print_err(dev->name, "register interrupt %d failed, rc %d",
--				irq, rc);
--		goto err_out_nets;
--	}
- 	if (!is_pcmcia) {
- 		if (!request_region( dev->base_addr, 64, dev->name )) {
- 			rc = -EBUSY;
- 			airo_print_err(dev->name, "Couldn't request region");
--			goto err_out_irq;
-+			goto err_out_nets;
- 		}
- 	}
- 
-@@ -2921,8 +2941,6 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
- 	if (setup_proc_entry(dev, dev->priv) < 0)
- 		goto err_out_wifi;
- 
--	netif_start_queue(dev);
--	SET_MODULE_OWNER(dev);
- 	return dev;
- 
- err_out_wifi:
-@@ -2940,14 +2958,9 @@ err_out_map:
- err_out_res:
- 	if (!is_pcmcia)
- 	        release_region( dev->base_addr, 64 );
--err_out_irq:
--	free_irq(dev->irq, dev);
- err_out_nets:
- 	airo_networks_free(ai);
--err_out_thr:
- 	del_airo_dev(ai);
--	set_bit(JOB_DIE, &ai->jobs);
--	kthread_stop(ai->airo_thread_task);
- err_out_free:
- 	free_netdev(dev);
- 	return NULL;
-@@ -3919,10 +3932,7 @@ static u16 setup_card(struct airo_info *ai, u8 *mac, int lock)
- 		rc = readWepKeyRid(ai, &wkr, 0, lock);
- 	} while(lastindex != wkr.kindex);
- 
--	if (auto_wep) {
--		ai->expires = RUN_AT(3*HZ);
--		wake_up_interruptible(&ai->thr_wait);
--	}
-+	try_auto_wep(ai);
- 
- 	return SUCCESS;
- }
+wpa_supplicant doesn't separate the configuration/setup of an interface
+from the 802.1x stuff, mainly because it has to do things like derive
+keys and push them down to the driver at specific times.  These two
+functions are pretty intimately related.  And since NM needs WPA
+support, it uses wpa_supplicant for the 802.1x/WPA stuff.  The only
+stuff left is open & static WEP, which wpa_supplicant also handles.  So
+it was a no-brainer to push all the wireless config to wpa_supplicant
+and have NM just feed wpa_supplicant the config info.
+
+NM now gets its scan results from wpa_supplicant because drivers used to
+get (and some still do) very confused when multiple processes would
+request scans and get results.  There was a nice race between
+wpa_supplicant and NM in some drivers (airo in particular) where
+wpa_supplicant would request a scan, and the driver would signal
+results, but by the time NM saw the event and requested the results,
+wpa_supplicant had already consumed them.  This was "fixed" by making
+drivers age scan results like ipw2x00 over a number of scans and not
+erasing them right away after the scan was done.
+
+I like pushing most of the config stuff to wpa_supplicant, because that
+basically means that all of that is in _one_ project.  When
+nl80211/cfg80211 land and start getting adopted, that means that only
+_one_ of {NM, wpa_supplicant} needs to get ported over, instead of two.
+
+Dan
+
+> > This is 
+> > more simple and direct and allows the kernel to expose exactly what the 
+> > hardware/kernel can do. Userspace won't have to change much and nl80211 won't 
+> > have to support every possible thing a userspace MLME would want.
+> 
+> It's not that the kernel will have to support everything that a
+> userspace MLME would want, but rather that the kernel needs to support
+> everything the MLME would want, to support fullmac drivers.
+> 
+> Another counter: when you have a tool like 'iw' that David wrote, then
+> it'll need to look for the userspace MLME every time you invoke it and
+> start communicating with it instead of the kernel. That's likely a waste
+> of much more time than just bouncing the messages.
+> 
+> johannes
 
