@@ -1,33 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:18445 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755578AbXFKJAt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 05:00:49 -0400
-Date: Mon, 11 Jun 2007 16:59:50 +0800
-From: Zhu Yi <yi.zhu@intel.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [Take 2] mac80211 IEEE802.11e/WMM code cleanup
-Message-ID: <20070611085950.GA5540@mail.intel.com>
-Reply-To: yi.zhu@intel.com
+Received: from mail7.sea5.speakeasy.net ([69.17.117.9]:33366 "EHLO
+	mail7.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751023AbXFQOyU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jun 2007 10:54:20 -0400
+Date: Sun, 17 Jun 2007 10:47:37 -0400 (EDT)
+From: James Morris <jmorris@namei.org>
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Christoph Lameter <clameter@sgi.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Andrea Righi <righiandr@users.sourceforge.net>,
+	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Andrey Borzenkov <arvidjaar@mail.ru>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Bjorn Helgaas <bjorn.helgaas@hp.com>,
+	Chad Tindel <ctindel@users.sourceforge.net>,
+	Dan Aloni <da-x@monatomic.org>,
+	Jay Vosburgh <fubar@us.ibm.com>,
+	Stephen Hemminger <shemminger@linux-foundation.org>,
+	Stephen Smalley <sds@tycho.nsa.gov>,
+	Eric Paris <eparis@parisplace.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	linux-usb-devel@lists.sourceforge.net,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Paulo Pereira <pfmp.404@gmail.com>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [2/2] 2.6.22-rc5: known regressions with patches
+In-Reply-To: <46754400.2080101@googlemail.com>
+Message-ID: <Line.LNX.4.64.0706171046190.1178@localhost.localdomain>
+References: <4675430B.2000304@googlemail.com> <46754400.2080101@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Linville,
+On Sun, 17 Jun 2007, Michal Piotrowski wrote:
 
-Here is a V2 patch series to cleanup the 11e/WMM code in wireless-dev
-GIT head 3480b61c08559777c57b95e346507b26253ca8bb after reviewed by
-Johannes Berg. Please apply.
+> SELinux
+> 
+> Subject    : very high non-preempt latency in context_struct_compute_av()
+> References : http://lkml.org/lkml/2007/6/4/78
+> Submitter  : Ingo Molnar <mingo@elte.hu>
+> Handled-By : Stephen Smalley <sds@tycho.nsa.gov>
+>             James Morris <jmorris@namei.org>
+> Patch      : http://lkml.org/lkml/2007/6/7/334
+> Status     : patch available
 
-[PATCH 1/6] mac80211: Add IEEE80211_ prefix to SET_TSINFO_{} macros
-[PATCH 2/6] mac80211: Fix TSINFO macros endian issue
-[PATCH 3/6] mac80211: fix typo in net/mac80211/ieee80211_sta.c
-[PATCH 4/6] mac80211: remove global tsinfo debugfs variables
-[PATCH 5/6] mac80211: Fix sparse error for the IEEE802.11e/WMM code
-[PATCH 6/6] mac80211: Fix sparse error for sta_last_seq_ctrl_read
+This patch is queued for -mm, and will be submitted for 2.6.23.
 
-Thanks,
--yi
+
+
+- James
+-- 
+James Morris
+<jmorris@namei.org>
