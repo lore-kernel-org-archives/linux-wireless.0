@@ -1,61 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb.errno.com ([69.12.149.25]:4343 "EHLO ebb.errno.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753185AbXFUW0y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2007 18:26:54 -0400
-Message-ID: <467AFB5F.6050100@errno.com>
-Date: Thu, 21 Jun 2007 15:27:43 -0700
-From: Sam Leffler <sam@errno.com>
-MIME-Version: 1.0
-To: Andy Green <andy@warmcat.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: radiotap for TX
-References: <1182375853.3714.103.camel@johannes.berg> <467AE460.1070606@errno.com> <467AE9D8.2030602@warmcat.com>
-In-Reply-To: <467AE9D8.2030602@warmcat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49739 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758527AbXFQMD6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jun 2007 08:03:58 -0400
+Subject: wireless userspace MLME and generic netlink vs. multicast (was:  Re: [Take 2] mac80211 IEEE802.11e/WMM code cleanup)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	David Lamparter <lists@diac24.net>,
+	Thomas Graf <tgraf@suug.ch>, netdev <netdev@vger.kernel.org>
+In-Reply-To: <200706161516.16447.flamingice@sourmilk.net>
+References: <20070611085950.GA5540@mail.intel.com>
+	 <200706161129.13782.flamingice@sourmilk.net>
+	 <1182019869.9058.57.camel@johannes.berg>
+	 <200706161516.16447.flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cnSohpizq01nHsi0itZT"
+Date: Sun, 17 Jun 2007 14:03:51 +0200
+Message-Id: <1182081831.23681.29.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[radiotap mailing list dropped since it is members only]
 
-Andy Green wrote:
-> Sam Leffler wrote:
-> 
->> Note that using a monitor mode interface for transmit is a bad idea.  It
->> is likely you will encounter devices that disallow any packet transmit
->> when operating in monitor mode.  In practice this can be worked around
->> by using a non-monitor operating mode for the device (e.g. adhoc mode
->> w/o setting up beacons) but exporting this notion to user mode is bad
->> IMO.  In net80211 there is an adhoc-demo mode which is essentially adhoc
->> mode which was originally added for functionality found in old lucent
->> cards but more recently has been used for building applications that
->> want a "raw 802.11 device".
-> 
-> Hi -
-> 
-> In mac80211 you can run multiple network interfaces off the one physical
-> device, so you can have an associated WPA connection on one network
-> interface and another logical "monitor mode" network interface up on the
-> one physical device.  "Monitor mode" in this case can be the results of
-> a promiscuous hardware RX that is filtered for the Managed mode logical
-> interface ... this is AIUI.  So in that way "Monitor Mode" no longer
-> means a single modal device setting, but really the delivery somehow of
-> packets to a logical network interface that belongs to the physical device.
+--=-cnSohpizq01nHsi0itZT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I've had working vap code for >3 years.
+[if you haven't seen the rest of the thread skip down to the =3D=3D=3D mark=
+]
 
-> 
-> Injecting down a "monitor mode interface" then only means to use a
-> logical network interface that locally is configured to "Monitor Mode",
-> it doesn't have the same definite implication for physical device
-> configuration as before mac80211.  (Well.. AIUI).  So hopefully this
-> objection may not apply.
+On Sat, 2007-06-16 at 15:16 -0700, Michael Wu wrote:
 
-As I described, some devices may allow rx-only operation on channels 
-otherwise disallowed by regulatory constraints.  As such overloading 
-monitor operation with transmit is just a bad idea if you want to take 
-full advantage of what h/w provides.  I'm just suggesting that you're 
-defining an abstraction that's going to get you into trouble.
+> > I don't think the implementation details are much of a problem. It's
+> > just a bit of message bouncing which is trivial. Except of course when
+> > you consider wext, but hey, no need to consider that for this discussio=
+n
+> > since you're proposing ditching wext completely. Not that I don't want
+> > to ditch it, but people still use it and probably will. Heck, people
+> > still use 'ifconfig'...
+> >
+> I'm not proposing to ditch wext completely. When did I say that?
 
-	Sam
+You're saying that you want people to communicate directly with the
+userspace MLME, so wext is out.
+
+> It's a waste of time when nl80211 needs to be patched every time we want =
+an=20
+> additional command in the userspace MLME.
+
+I actually see this as a benefit, that way the API gets some review...
+Also, if you want to use a userspace library, that library will need
+patching everytime you need an additional MLME command; if you don't
+have any formal API then of course you don't have that problem but that
+also means that all the applications aren't able to interoperate
+properly.
+
+It sounds to me like you're proposing that wpa_supplicant is the only
+supported userspace MLME and that wpa_cli is the only way to configure
+it, basically. I sure hope that isn't so.
+
+> I don't think the needs of a firmware based MLME are necessarily the same=
+ as a=20
+> userspace MLME. Some commands will certainly be the same, but just becaus=
+e=20
+> the commands are there doesn't mean it's good to make them work if you ha=
+ve=20
+> to fake it. The kernel should show what the hardware/stack can do and not=
+hing=20
+> more.
+
+No, you don't understand. Of course something should tell you what your
+wireless connection can do. But if there's a userspace MLME used to
+implement that wireless connection then that userspace MLME tells you
+what it can do, which is fine.
+
+Saying that it's not good to make commands work is like saying every
+tiny hardware difference should get new API to perfectly match that
+particular hardware instead of using common API to work with all
+hardware in a unified way.
+
+That's the goal here anyway, to work with hardware in a unified way. And
+hopefully there'll be more userspace MLMEs rather than just
+wpa_supplicant. There's xsupplicant too, maybe it'll have some support,
+who knows.
+
+[=3D=3D=3D]
+
+Yes, talking with the userspace MLME via netlink is some form of IPC. In
+fact, I just had this idea that instead of having the kernel bounce
+messages to the userspace MLME we could instead have a MLME-multicast
+group. The kernel listens on that multicast group and executes the
+commands if no other program is listening on the group, and the
+configuration programs simply multicast the configuration requests.
+We'll have to sort out in userspace that we never have two MLMEs running
+at the same time, but that is far less effort than trying to sort out
+finding the MLME in userspace. It also lets us control the API.
+
+At the same time, however, this doesn't seem to be implementable using
+generic netlink right now because we cannot allow non-root users to
+listen on the MLME-multicast group (this isn't actually possible for
+normal netlink either right now because we need non-root users listening
+on other groups, but that could be easily solved with a patch to give a
+non-root group mask instead of a flag for the netlink code)
+
+However, digging through the code it seems that generic netlink is a bit
+weird with multicast anyway. Right now, what you do as a userspace
+application is you ask for multicast on the generic netlink socket, but
+you can then talk to multiple families. As far as I can tell that means
+that you'll be receiving multicasts for ACPI events and for nl80211
+events if they happen to use the same groups. I'd think that generic
+netlink should be integrated a bit better and it should be possible to
+sign up for groups within a family.
+
+When then it also becomes possible to disallow certain groups for
+non-root users, we should be able to solve the userspace MLME problem by
+using a multicast group as above, I haven't tested it yet though.
+
+johannes
+
+--=-cnSohpizq01nHsi0itZT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGdSMm/ETPhpq3jKURAgk0AJ9/ffT23Ie2gkh6qQZ/uWgexQxR8gCgiOiQ
+DScmPzRpiUg0oQcfdd3WOe8=
+=t22g
+-----END PGP SIGNATURE-----
+
+--=-cnSohpizq01nHsi0itZT--
+
