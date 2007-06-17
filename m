@@ -1,87 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38651 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S938115AbXFHTme (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:50917
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758360AbXFQMM6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2007 15:42:34 -0400
-Subject: Re: [PATCH 2/6] mac80211: remove global tsinfo debugfs variables
-From: Johannes Berg <johannes@sipsolutions.net>
-To: yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20070608170342.GA17253@mail.intel.com>
-References: <20070608170342.GA17253@mail.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QPiJqfzwu8Ub9BvmU3SJ"
-Date: Fri, 08 Jun 2007 21:42:47 +0200
-Message-Id: <1181331767.6533.98.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 17 Jun 2007 08:12:58 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Maximilian Engelhardt <maxi@daemonizer.de>
+Subject: Re: b44: high ping times with wireless-dev
+Date: Sun, 17 Jun 2007 14:12:44 +0200
+Cc: netdev <netdev@vger.kernel.org>,
+	"linux-kernel" <linux-kernel@vger.kernel.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Gary Zambrano <zambrano@broadcom.com>,
+	Stephen Hemminger <shemminger@linux-foundation.org>,
+	"Jeff Garzik" <jgarzik@pobox.com>,
+	"Arnaldo Carvalho de Melo" <acme@ghostprotocols.net>
+References: <200706162327.47413.maxi@daemonizer.de> <200706171255.40155.mb@bu3sch.de> <200706171403.34299.maxi@daemonizer.de>
+In-Reply-To: <200706171403.34299.maxi@daemonizer.de>
+MIME-Version: 1.0
+Message-Id: <200706171412.45074.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday 17 June 2007 14:03:30 Maximilian Engelhardt wrote:
+> On Sunday 17 June 2007, Michael Buesch wrote:
+> > On Saturday 16 June 2007 23:27:43 Maximilian Engelhardt wrote:
+> > > [...]
+> > > ACPI: PCI Interrupt Link [LNKD] enabled at IRQ 10
+> > > ACPI: PCI Interrupt 0000:02:02.0[A] -> Link [LNKD] -> GSI 10 (level, low)
+> > > -> IRQ 10
+> > > ssb: Sonics Silicon Backplane found on PCI device 0000:02:02.0
+> > > b44.c:v2.0
+> > > eth0: Broadcom 44xx/47xx 10/100BaseT Ethernet 00:c0:9f:29:99:a7
+> > > [...]
+> >
+> > Ok, I prepared two debugging patches.
+> >
+> > Please enable SonicsSiliconBackplane Debugging in the kernel kconfig,
+> > so I can get more detail information about your card.
+> > Device Drivers/Sonics Silicon Backplane/SSB debugging
+> > (Must disable "No SSB kernel messages")
+> >
+> > Please apply and test the attached debugging patches in a row.
+> > So apply patch 1 and test if it works again. If not, apply
+> > patch 2 and test if it works.
+> > Always save complete dmesg log on each test run and send it to me.
+> >
+> > Thanks for testing.
+> > (This time it seems we are actually getting somewhere, when
+> > dealing with sane people. :D )
+> 
+> I did the tests with my kernel where only the card is on interrupt 10. dmesg 
+> is attached.
+> With the first patch applied networking does work again. I also additionally 
+> tried patch2 and it also does work.
 
---=-QPiJqfzwu8Ub9BvmU3SJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Great!
+To me this seems to be a silicon bug. The IRQ routing value, which is read
+from the chip here, is hardcoded in the old b44 driver.
+I'll implement a workaround for this and submit a patch.
 
-On Sat, 2007-06-09 at 01:03 +0800, Zhu Yi wrote:
-
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -21,6 +21,7 @@
->  #include <linux/workqueue.h>
->  #include <linux/types.h>
->  #include <linux/spinlock.h>
-> +//#include <linux/ieee80211.h>
-
-Is that accidentally in that patch or does that serve a purpose?
-
-> +#ifdef CONFIG_MAC80211_DEBUGFS
-> +	struct ieee80211_elem_tspec tspec;
-> +	u8 dls_mac[ETH_ALEN];
-> +#endif
-
-Not sure I understand this. What's the point of the tspec element here?=20
-I just tried to find where it's actually used but couldn't, I guess I'm
-blind.
-
-However, why do we even need a whole bunch of these files? For the QoS
-stuff I can see what you're doing, you have the DLS MAC address in
-debugfs and then a debugfs operations file that calls
-ieee80211_send_dls_req or ieee80211_send_dls_teardown. Actually, now
-that I understand it, don't you think it'd be easier to understand if
-you had two write-only (!) files
- * dls/teardown
- * dls/request
-and writing a mac address to each one would trigger the operation for
-that mac address? That way, you have it atomically and no problem with
-two processes stomping each other (since now you write the mac address
-and then the operation). That would be much closer to the nl80211
-interface where I'd probably just have two commands NL80211_REQUEST_DLS
-and NL80211_TEARDOWN_DLS that both take an ATTR_MAC_ADDRESS (in addition
-to the virtual interface).
-
-Same for tspec, even though I haven't seen where it's used, why not have
-a single file that accepts the whole tspec information element that
-userspace has pieced together, this is the same thing we're doing with
-the information element for inclusion in the association request (wext's
-GENIE request, which IMHO should be called ASSOC_EXTRA_IE or something,
-nl80211 has it too already). Then, this tspec information element could
-be read in one go and then used in whatever way necessary when it's
-written (after suitable sanity checks on it)
-
-johannes
-
---=-QPiJqfzwu8Ub9BvmU3SJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGabE2/ETPhpq3jKURAuElAKClbjhG/4PfiqDu8s6wOJ+t6k9ezACfcxPg
-RTqSKhKY253tVkfz5dadwVI=
-=i0Ez
------END PGP SIGNATURE-----
-
---=-QPiJqfzwu8Ub9BvmU3SJ--
-
+-- 
+Greetings Michael.
