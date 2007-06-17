@@ -1,52 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:40662 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751130AbXFNMhI (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.190]:22308 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759232AbXFQOYZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2007 08:37:08 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 1F4DD8D125
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2007 14:37:03 +0200 (CEST)
-Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id A5E77FB36
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2007 12:37:32 +0000 (UTC)
-Message-Id: <20070614123316.868155662@warmcat.com>
-Date: Thu, 14 Jun 2007 13:33:16 +0100
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH Try#lucky13 0/3] Radiotap injection for Monitor Mode
+	Sun, 17 Jun 2007 10:24:25 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so51086nfb
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Jun 2007 07:24:24 -0700 (PDT)
+Message-ID: <46754400.2080101@googlemail.com>
+Date: Sun, 17 Jun 2007 16:24:00 +0200
+MIME-Version: 1.0
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Christoph Lameter <clameter@sgi.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Andrea Righi <righiandr@users.sourceforge.net>,
+	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Andrey Borzenkov <arvidjaar@mail.ru>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Bjorn Helgaas <bjorn.helgaas@hp.com>,
+	Chad Tindel <ctindel@users.sourceforge.net>,
+	Dan Aloni <da-x@monatomic.org>,
+	Jay Vosburgh <fubar@us.ibm.com>,
+	Stephen Hemminger <shemminger@linux-foundation.org>,
+	Stephen Smalley <sds@tycho.nsa.gov>,
+	James Morris <jmorris@namei.org>,
+	Eric Paris <eparis@parisplace.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	linux-usb-devel@lists.sourceforge.net,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Paulo Pereira <pfmp.404@gmail.com>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [2/2] 2.6.22-rc5: known regressions with patches
+References: <4675430B.2000304@googlemail.com>
+In-Reply-To: <4675430B.2000304@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches add the ability to inject packets down a monitor mode interface for 
-transmission according to a prepended radiotap header.
+Hi all,
 
-For injecting packets, the you issue a packet using libpcap or a SOCK_PACKET
-socket down an interface to the wireless device that is in Monitor Mode.  The packet
-has a normal radiotap header prepended to the IEEE80211 header.  The radiotap header
-is variable length depending on what the user wants to specify, currently the
-transmit rate, power and antenna can be specified using normal radiotap semantics.
-Any other entries are skipped.
+Here is a list of some known regressions in 2.6.22-rc5
+with patches available.
 
-The radiotap parser is broken out into its own file under cfg80211.
+Feel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
 
-A usermode app packetspammer is available from here
 
-http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
-http://git.warmcat.com/?p=packetspammer.git;a=summary
 
-which allows easy injection of these packets from the commandline.  At the moment it
-loops issuing packets at a variety of rates which can be seen from another
-machine's monitor mode interface on the same channel.  There are instructions for
-build and using it on the page above along with Fedora 7 binary and source RPMS.
-There is now also a -f switch to allow testing of the FCS flag on injected packets.
+Memory management
 
-Currently it has been tested for both rx and tx using zd1211rw-mac80211.
+Subject    : bug in i386 MTRR initialization
+References : http://lkml.org/lkml/2007/5/19/93
+Submitter  : Andrea Righi <righiandr@users.sourceforge.net>
+Status     : patch available
 
-The patches are based against current wireless-dev.
 
-I also added some documentation files which explains how to use the injection
-functionality and radiotap header notes.
 
-Thanks to Michael Wu and Johannes Berg for review and bugfinding.
--- 
+Networking
+Subject    : commit 9093bbb2d96d0184f037cea9b4e952a44ebe7c32 broke the bonding driver
+References : http://lkml.org/lkml/2007/6/13/65
+Submitter  : Dan Aloni <da-x@monatomic.org>
+Handled-By : Stephen Hemminger <shemminger@linux-foundation.org>
+Status     : patch available
+             (I cannot find it in archives. Stephen, please resend the patch)
+
+Subject    : no irda0 interface (2.6.21 was OK), smsc does not find chip
+References : http://lkml.org/lkml/2007/6/3/16
+Submitter  : Andrey Borzenkov <arvidjaar@mail.ru>
+Handled-By : Samuel Ortiz <samuel@sortiz.org>
+             Bjorn Helgaas <bjorn.helgaas@hp.com>
+Patch      : http://lkml.org/lkml/2007/6/7/237
+Status     : patch was suggested
+
+
+
+SELinux
+
+Subject    : very high non-preempt latency in context_struct_compute_av()
+References : http://lkml.org/lkml/2007/6/4/78
+Submitter  : Ingo Molnar <mingo@elte.hu>
+Handled-By : Stephen Smalley <sds@tycho.nsa.gov>
+             James Morris <jmorris@namei.org>
+Patch      : http://lkml.org/lkml/2007/6/7/334
+Status     : patch available
+
+
+
+USB
+
+Subject    : list_add corruption. prev->next should be next (f7d28794), but was f0df8ed4 (prev=f0df8ed4) Kernel Bug at lib/list_debug.c:33
+References : http://bugzilla.kernel.org/show_bug.cgi?id=8561
+Submitter  : Paulo Pereira <pfmp.404@gmail.com>
+Handled-By : Alan Stern <stern@rowland.harvard.edu>
+Patch      : http://bugzilla.kernel.org/show_bug.cgi?id=8561#c8
+Status     : patch was suggested
+
+
+
+Regards,
+Michal
+
+--
+LOG
+http://www.stardust.webpages.pl/log/
