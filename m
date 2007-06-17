@@ -1,70 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49007 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751200AbXFLJTO (ORCPT
+Received: from fallback.mail.elte.hu ([157.181.151.13]:49980 "EHLO
+	fallback.mail.elte.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750764AbXFQPWE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2007 05:19:14 -0400
-Subject: Re: [RFC] {cfg,nl}80211 API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Lamparter <lists@diac24.net>
-Cc: Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20070611230434.GA13221@charon.n2.diac24.net>
-References: <20070611230434.GA13221@charon.n2.diac24.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jFfve0Qc9pARRrr2lR1h"
-Date: Tue, 12 Jun 2007 11:15:07 +0200
-Message-Id: <1181639707.29767.57.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 17 Jun 2007 11:22:04 -0400
+Date: Sun, 17 Jun 2007 17:14:50 +0200
+From: Ingo Molnar <mingo@elte.hu>
+To: James Morris <jmorris@namei.org>
+Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Christoph Lameter <clameter@sgi.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Andrea Righi <righiandr@users.sourceforge.net>,
+	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Andrey Borzenkov <arvidjaar@mail.ru>,
+	Bjorn Helgaas <bjorn.helgaas@hp.com>,
+	Chad Tindel <ctindel@users.sourceforge.net>,
+	Dan Aloni <da-x@monatomic.org>,
+	Jay Vosburgh <fubar@us.ibm.com>,
+	Stephen Hemminger <shemminger@linux-foundation.org>,
+	Stephen Smalley <sds@tycho.nsa.gov>,
+	Eric Paris <eparis@parisplace.org>,
+	linux-usb-devel@lists.sourceforge.net,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Paulo Pereira <pfmp.404@gmail.com>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [2/2] 2.6.22-rc5: known regressions with patches
+Message-ID: <20070617151450.GA11762@elte.hu>
+References: <4675430B.2000304@googlemail.com> <46754400.2080101@googlemail.com> <Line.LNX.4.64.0706171046190.1178@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <Line.LNX.4.64.0706171046190.1178@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-jFfve0Qc9pARRrr2lR1h
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+* James Morris <jmorris@namei.org> wrote:
 
-Hi David,
+> > SELinux
+> > 
+> > Subject    : very high non-preempt latency in context_struct_compute_av()
+> > References : http://lkml.org/lkml/2007/6/4/78
+> > Submitter  : Ingo Molnar <mingo@elte.hu>
+> > Handled-By : Stephen Smalley <sds@tycho.nsa.gov>
+> >             James Morris <jmorris@namei.org>
+> > Patch      : http://lkml.org/lkml/2007/6/7/334
+> > Status     : patch available
+> 
+> This patch is queued for -mm, and will be submitted for 2.6.23.
 
-Great stuff!
+and that is fine with me - think this is a pre-existing problem so not a 
+new regression in .22.
 
->   - getting virtual interfaces works via ifindex, which needs to be known=
-..
->     - no dumping (would have locking issues with userspace MLME)
->     - use list of vifs from GET_WIPHY
->     - only thing it currently should return is vif type. essid & stuff
->       should be retrievable via GET_ASSOCIATION, which won't be valid for
->       monitor interfaces
-
-Hmm, in fact, if we go that route then we can do dumping for vifs (by
-wiphy I guess) since all this information is available in the kernel,
-only GET_ASSOCIATION should need a callout. vif type can be dumped just
-fine.
-
-> So, what's left?
-> - more PHY config stuff?
->   - TX power? Should be able to configure a lower value...
-
-Yeah, but as we said, this really needs to tie in with any regulatory
-stuff.
-
->   - antenna selection?
-
-Sounds reasonable, needs automatic/... but for .11n it might need some
-more things. Not sure.
-
-johannes
-
---=-jFfve0Qc9pARRrr2lR1h
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGbmQb/ETPhpq3jKURAhWhAKCrjZw/LzEss5eLlsnuXqGR+lyS3ACfRFWF
-pLXnFRbm11OxTdmH7R9PPbY=
-=MjLo
------END PGP SIGNATURE-----
-
---=-jFfve0Qc9pARRrr2lR1h--
-
+	Ingo
