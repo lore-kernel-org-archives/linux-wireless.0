@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:43724 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751507AbXFTRF2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2007 13:05:28 -0400
-Date: Wed, 20 Jun 2007 19:05:27 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: James Ketrenos <jketreno@linux.intel.com>
-Cc: Hong Liu <hong.liu@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [patch]mac80211: add support for iwlist channel
-Message-ID: <20070620190527.0c0c2031@griffin.suse.cz>
-In-Reply-To: <46796FCB.9090300@linux.intel.com>
-References: <1182156425.15928.7.camel@napa-sdv1.sh.intel.com>
-	<20070619105024.3c6c68e3@griffin.suse.cz>
-	<1182305425.19178.12.camel@napa-sdv1.sh.intel.com>
-	<20070620115559.301e10eb@griffin.suse.cz>
-	<4679672D.4060503@linux.intel.com>
-	<20070620182558.47871535@griffin.suse.cz>
-	<46796FCB.9090300@linux.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:38163
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751449AbXFQCcz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Jun 2007 22:32:55 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Maximilian Engelhardt <maxi@daemonizer.de>
+Subject: Re: b44: high ping times with wireless-dev
+Date: Sun, 17 Jun 2007 04:32:40 +0200
+Cc: Stephen Hemminger <shemminger@linux-foundation.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel" <linux-kernel@vger.kernel.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Gary Zambrano <zambrano@broadcom.com>,
+	"Jeff Garzik" <jgarzik@pobox.com>,
+	"Arnaldo Carvalho de Melo" <acme@ghostprotocols.net>
+References: <200706162327.47413.maxi@daemonizer.de> <20070616154946.5fb6b013@localhost.localdomain> <200706170242.24214.maxi@daemonizer.de>
+In-Reply-To: <200706170242.24214.maxi@daemonizer.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200706170432.40958.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 20 Jun 2007 11:19:55 -0700, James Ketrenos wrote:
-> Is there any mechanism for documenting where we would like things
-> to eventually go?  A "future" tag we can stick on things (in the
-> documentation, etc.)?
+On Sunday 17 June 2007 02:42:18 Maximilian Engelhardt wrote:
+> I did build a kernel without the three mentioned above but the problem is 
+> still the same. I also did remove everything but eth0 on interrupt 10 so the 
+> only device using that interrupt is eth0 and then the card completely stopped 
+> working.
 
-Wiki at linuxwireless.org could be a good place.
-
- Jiri
+_That_ is interesting...
+Maybe the IRQ isn't correctly wired up on the backplane and
+it doesn't generate IRQs at all (so it only worked, because other devices
+on the same IRQ line triggered the line).
+I'll take a look at that code.
 
 -- 
-Jiri Benc
-SUSE Labs
+Greetings Michael.
