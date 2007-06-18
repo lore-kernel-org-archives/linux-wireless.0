@@ -1,56 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:56014 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38759 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752213AbXFZLcX (ORCPT
+	with ESMTP id S1754724AbXFRIqH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2007 07:32:23 -0400
-Received: from [131.234.77.29]
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1I39HR-00044T-RA
-	for linux-wireless@vger.kernel.org; Tue, 26 Jun 2007 12:32:21 +0100
-Subject: Re: mac80211/bcm43xx deadlock
+	Mon, 18 Jun 2007 04:46:07 -0400
+Subject: Re: wireless userspace MLME and generic netlink vs. multicast  (was: Re: [Take 2] mac80211 IEEE802.11e/WMM code cleanup)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <1182848382.3830.5.camel@johannes.berg>
-References: <1182848382.3830.5.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Z2CC+Q3tjNQ9xSEM7tSj"
-Date: Tue, 26 Jun 2007 12:14:09 +0200
-Message-Id: <1182852849.3830.9.camel@johannes.berg>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	David Lamparter <lists@diac24.net>,
+	Thomas Graf <tgraf@suug.ch>, netdev <netdev@vger.kernel.org>
+In-Reply-To: <1182132527.4092.90.camel@debian.sh.intel.com>
+References: <20070611085950.GA5540@mail.intel.com>
+	 <200706161129.13782.flamingice@sourmilk.net>
+	 <1182019869.9058.57.camel@johannes.berg>
+	 <200706161516.16447.flamingice@sourmilk.net>
+	 <1182081831.23681.29.camel@johannes.berg>
+	 <1182132527.4092.90.camel@debian.sh.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QCboUc+5MAhad1C6Zaxw"
+Date: Mon, 18 Jun 2007 10:46:18 +0200
+Message-Id: <1182156378.5924.13.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-Z2CC+Q3tjNQ9xSEM7tSj
+--=-QCboUc+5MAhad1C6Zaxw
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2007-06-26 at 10:59 +0200, Johannes Berg wrote:
+On Mon, 2007-06-18 at 10:08 +0800, Zhu Yi wrote:
 
-> I haven't been able to analyse it yet, I dumped process stacks a few
-> times and put the resulting log at
-> http://johannes.sipsolutions.net/files/mac80211-bcm43xx-deadlock
+> OK. This is the key of the discussion.
 
-Got it. ieee80211_sta_config_auth is running off the workqueue and doing
-rtnl_lock while ieee80211_if_shutdown is trying to flush the workqueue
-with the rtnl lock held. Nice one, anybody have ideas how to fix? Why
-does ieee80211_sta_config_auth need to take the rtnl anyway?
+I agree.
+
+> Do we take wpa_supplicant the
+> only implementation of userspace MLME or even decision making (ie. DLS
+> config) daemon?=20
+
+I think it's a combination of these facts. I don't think DLS decision
+making can properly live in wpa_supplicant, it'll need to be integrated
+into various multimedia frameworks for example. What Michael is
+basically proposing from what I can tell is that all these frameworks
+rely on wpa_supplicant's socket-based configuration to tell
+wpa_supplicant about it.
+
+> If so, we don't need the API. Otherwise we'd better have
+> the API in the kernel because we cannot expect both userspace MLME
+> implentation A and B support the same API (via IPC) for configuration.
+
+Exactly. On the one hand I guess you could argue that if the MLME
+implementation would be in the kernel there'd only be one as well, but
+on the other hand I'd rather be able to have various different MLMEs.
+Maybe the xsupplicant project is interested in doing some of this as
+well, or maybe some of the various wireless testing tools would like to
+be an MLME too under some circumstances...
 
 johannes
 
---=-Z2CC+Q3tjNQ9xSEM7tSj
+--=-QCboUc+5MAhad1C6Zaxw
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGgObx/ETPhpq3jKURAmGCAJ9M/CQLkVmHoHFyZ4lnKzsXXuJcbACcDaNp
-Nr3PnkDl3YM5WWQnN9l2q9s=
-=rod1
+iD8DBQBGdkZZ/ETPhpq3jKURArlIAJ48K9m6YyoR5VgxjK1hwmllZAB8swCeIES1
+BYsjx+sJKV0QcGiVMoHmMn8=
+=ojgq
 -----END PGP SIGNATURE-----
 
---=-Z2CC+Q3tjNQ9xSEM7tSj--
+--=-QCboUc+5MAhad1C6Zaxw--
 
