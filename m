@@ -1,80 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:60141
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752813AbXFPSXL (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58616 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754316AbXFRIk5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jun 2007 14:23:11 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: Please pull latest and greatest bcm43xx
-Date: Sat, 16 Jun 2007 20:17:47 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200706162017.47516.mb@bu3sch.de>
+	Mon, 18 Jun 2007 04:40:57 -0400
+Subject: Re: [Take 2] mac80211 IEEE802.11e/WMM code cleanup
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Michael Wu <flamingice@sourmilk.net>, Zhu Yi <yi.zhu@intel.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	David Lamparter <lists@diac24.net>
+In-Reply-To: <1182094164.14209.18.camel@xo-28-0B-88.localdomain>
+References: <20070611085950.GA5540@mail.intel.com>
+	 <200706140935.50779.flamingice@sourmilk.net>
+	 <1181996855.9058.39.camel@johannes.berg>
+	 <200706161129.13782.flamingice@sourmilk.net>
+	 <1182019869.9058.57.camel@johannes.berg>
+	 <1182094164.14209.18.camel@xo-28-0B-88.localdomain>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-J8YIh/ppJDdPB57vn1+T"
+Date: Mon, 18 Jun 2007 10:41:36 +0200
+Message-Id: <1182156096.5924.7.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
 
-Please pull for-linville branch of my tree.
-It contains a lot of bugfixes and makes a _big_ step towards
-mergability for mainline.
-It's not 100% ready for a merge, yet, but we are making good progress.
-The transmission power problems on the 4306, that were one of the big
-merge blockers, seem almost all fixed. I get good performance now.
-I also added lots of txpower debugging stuff so one can actually
-see what's going on and how it's scaling.
-Together with Michael Wu's sta-locking rewrite patch for
-mac80211 we have the most critical merge blockers resolved now.
+--=-J8YIh/ppJDdPB57vn1+T
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I'd like people to test this code.
-It will spew a big assertion failure and a stacktrace on loading.
-Ignore that for now. It's known and considered nonfatal for now.
+On Sun, 2007-06-17 at 11:29 -0400, Dan Williams wrote:
 
+> NM uses wpa_supplicant for 3 basic things:
 
+<snip good explanation, thanks>
 
-The following changes since commit 9181e959da76d85d688d8ec763702ed2f3b4edf9:
-  John W. Linville:
-        rt2x00firmware.c: include delay.h to avoid build error on ppc64
+> I like pushing most of the config stuff to wpa_supplicant, because that
+> basically means that all of that is in _one_ project.  When
+> nl80211/cfg80211 land and start getting adopted, that means that only
+> _one_ of {NM, wpa_supplicant} needs to get ported over, instead of two.
 
-are found in the git repository at:
+I can understand that. I guess I'm still dreaming of some sort of ideal
+world where NM and wpa_supplicant use nl80211 to communicate so that it
+is easier to use a different userspace MLME maybe, or maybe just have
+another program like 'iw' work together with the whole lot easily as
+well.
 
-  http://bu3sch.de/git/wireless-dev.git/ for-linville
+johannes
 
-Michael Buesch:
-      bcm43xx-mac80211: Don't stop the mac80211 software queues in pwork.
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-dev
-      bcm43xx-mac80211: Use the mac80211 provided workqueue
-      bcm43xx-mac80211: Fix mutex leakage in pwork.
-      bcm43xx-mac80211: Flush the workqueue to make sure periodic work has finished.
-      bcm43xx-mac80211: Implement runtime debugging mechanism.
-      bcm43xx-mac80211: Code to inject TX ring overflows.
-      bcm43xx-mac80211: Rewrite the attenuation adjustment.
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-dev
-      ssb: Fix maxpwr and itssi read.
-      bcm43xx-mac80211: Add more txpower debugging.
-      bcm43xx-mac80211: add debugfs file to manually control txpower
-      bcm43xx-mac80211: Some LO cleanups
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-dev
-      bcm43xx-mac80211: Use the dynamic min/max values for adjusting the attenuation.
+--=-J8YIh/ppJDdPB57vn1+T
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
- drivers/net/wireless/mac80211/bcm43xx/bcm43xx.h    |   29 +
- .../wireless/mac80211/bcm43xx/bcm43xx_debugfs.c    |  210 +++++++++
- .../wireless/mac80211/bcm43xx/bcm43xx_debugfs.h    |   21 +
- .../net/wireless/mac80211/bcm43xx/bcm43xx_dma.c    |   63 +++
- .../net/wireless/mac80211/bcm43xx/bcm43xx_dma.h    |   10 
- drivers/net/wireless/mac80211/bcm43xx/bcm43xx_lo.c |  107 ++--
- drivers/net/wireless/mac80211/bcm43xx/bcm43xx_lo.h |    6 
- .../net/wireless/mac80211/bcm43xx/bcm43xx_main.c   |   64 +--
- .../net/wireless/mac80211/bcm43xx/bcm43xx_phy.c    |  515 ++++++++++++-----------
- .../net/wireless/mac80211/bcm43xx/bcm43xx_phy.h    |   23 +
- .../net/wireless/mac80211/bcm43xx/bcm43xx_xmit.c   |   18 +
- .../net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h   |    2 
- drivers/ssb/pci.c                                  |   12 
- include/linux/ssb/ssb_regs.h                       |   12 
- 14 files changed, 693 insertions(+), 399 deletions(-)
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
--- 
-Greetings Michael.
+iD8DBQBGdkVA/ETPhpq3jKURAg0gAKCMy949L/is/ZS8VAbZbgn6a9AEswCghSmX
+lpx1Wv4ezU40iz/2STxOjss=
+=Rxib
+-----END PGP SIGNATURE-----
+
+--=-J8YIh/ppJDdPB57vn1+T--
+
