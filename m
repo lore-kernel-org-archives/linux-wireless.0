@@ -1,72 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:42369 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758871AbXFMSav (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55679 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761178AbXFRLBL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2007 14:30:51 -0400
-Date: Wed, 13 Jun 2007 11:29:39 -0700
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	James Ketrenos <jketreno@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] iwlwifi: MSI support
-Message-ID: <20070613112939.3b73f928@localhost>
+	Mon, 18 Jun 2007 07:01:11 -0400
+Subject: Re: phy mode, channel -> freq mapping (was RE: more nl80211/iw  tool code comments)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sandesh Goel <sgoel@marvell.com>
+Cc: David Lamparter <lists@diac24.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <285925A4DF50FC408669C6302216838D024899@sc-exch02.marvell.com>
+References: <1181759017.29767.117.camel@johannes.berg>
+	 <20070614142925.GA24414@charon.n2.diac24.net>
+	 <285925A4DF50FC408669C6302216838D024899@sc-exch02.marvell.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-suyVcwxpAF0yBhc3gS+q"
+Date: Mon, 18 Jun 2007 13:01:48 +0200
+Message-Id: <1182164508.5924.19.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add Message Signal Interrupt support to iwlwifi. Tested on 3945.
-Enable by default, but have parameter to disable for buggy platforms.
 
-Signed-off-by: Stephen Hemminger <shemminger@linux-foundation.org>
+--=-suyVcwxpAF0yBhc3gS+q
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- a/drivers/net/wireless/mac80211/iwlwifi/base.c	2007-06-13 11:10:10.000000000 -0700
-+++ b/drivers/net/wireless/mac80211/iwlwifi/base.c	2007-06-13 11:26:30.000000000 -0700
-@@ -80,6 +80,8 @@ int param_antenna = 0;      /* def: 0 = 
- int param_hwcrypto = 0;     /* def: using software encryption */
- int param_qos_enable = 0;
- 
-+static int disable_msi;
-+
- /*
-  * module name, copyright, version, etc.
-  * NOTE: DRV_NAME is defined in iwlwifi.h for use by iwl-debug.h and printk
-@@ -8117,6 +8119,10 @@ static int iwl_pci_probe(struct pci_dev 
- 	/* If power management is turned on, default to AC mode */
- 	priv->power_mode = IWL_POWER_AC;
- 	priv->user_txpower_limit = IWL_DEFAULT_TX_POWER;
-+
-+	if (!disable_msi)
-+		pci_enable_msi(pdev);
-+
- 	err = request_irq(pdev->irq, iwl_isr, IRQF_SHARED, DRV_NAME, priv);
- 	if (err) {
- 		IWL_ERROR("Error allocating IRQ %d\n", pdev->irq);
-@@ -8155,6 +8161,7 @@ static int iwl_pci_probe(struct pci_dev 
- 	sysfs_remove_group(&pdev->dev.kobj, &iwl_attribute_group);
- 
-  out_release_irq:
-+	pci_disable_msi(pdev);
- 	free_irq(pdev->irq, priv);
- 
-  out_destroy_workqueue:
-@@ -8224,6 +8231,8 @@ static void iwl_pci_remove(struct pci_de
- 	destroy_workqueue(priv->workqueue);
- 	priv->workqueue = NULL;
- 
-+	pci_disable_msi(pdev);
-+
- 	free_irq(pdev->irq, priv);
- 	iounmap(priv->hw_base);
- 	pci_release_regions(pdev);
-@@ -8352,6 +8361,9 @@ static void __exit iwl_exit(void)
- 	pci_unregister_driver(&iwl_driver);
- }
- 
-+module_param(disable_msi, int, 0);
-+MODULE_PARM_DESC(disable_msi, "Disable Message Signaled Interrupt (MSI)");
-+
- module_param_named(antenna, param_antenna, int, 0444);
- MODULE_PARM_DESC(antenna, "select antenna (1=Main, 2=Aux, default 0 [both])");
- module_param_named(disable, param_disable, int, 0444);
+Hi,
+
+> I think it is cleaner to define a parameter called BAND which can take
+> values 2.4 GHz, 5 GHz and so on. Then, the combination of BAND and
+> CHANNEL will uniquely define the operating frequency.
+
+<phymode stuff snipped>
+
+> I wasn't sure if this has already been thought about. I look forward to
+> being educated if I am missing something.
+
+Good point. I hadn't really considered this but a/g or n cards really
+make it necessary to distinguish here, and regulatory stuff would also
+benefit from defining it that way.
+
+johannes
+
+--=-suyVcwxpAF0yBhc3gS+q
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGdmYc/ETPhpq3jKURAtP6AJ0Ukww/MuLxHSVc4PoEA5Hmu5ggDgCePa47
+6FvY6onVgXAMIOHfEpx+xQA=
+=ZQ+5
+-----END PGP SIGNATURE-----
+
+--=-suyVcwxpAF0yBhc3gS+q--
+
