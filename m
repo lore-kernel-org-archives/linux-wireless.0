@@ -1,43 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:22477 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759193AbXFGUr0 (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:58988 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760861AbXFRSok (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2007 16:47:26 -0400
-Message-ID: <4668D293.1010908@linux.intel.com>
-Date: Thu, 07 Jun 2007 20:52:51 -0700
-From: jketreno <jketreno@linux.intel.com>
-MIME-Version: 1.0
-To: Jiri Benc <jbenc@suse.cz>
-CC: "John W. Linville" <linville@tuxdriver.com>, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: IEEE802.11e/WMM TS management and DLS support
-References: <20070606082152.GA28639@mail.intel.com> <20070607224315.6dadffca@griffin.suse.cz>
-In-Reply-To: <20070607224315.6dadffca@griffin.suse.cz>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 18 Jun 2007 14:44:40 -0400
+Date: Mon, 18 Jun 2007 19:44:36 +0100
+From: Christoph Hellwig <hch@infradead.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	hs4233@mail.mn-solutions.de, linux-kernel@vger.kernel.org,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: libertas (private) ioctls vs. nl80211
+Message-ID: <20070618184436.GC17479@infradead.org>
+References: <1181757483.29767.99.camel@johannes.berg> <20070614170901.GA13384@infradead.org> <20070614103836.23b07a72.akpm@linux-foundation.org> <20070614181307.GA16856@infradead.org> <1182188327.22149.5.camel@xo-28-0B-88.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1182188327.22149.5.camel@xo-28-0B-88.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Benc wrote:
-> On Wed, 6 Jun 2007 16:21:54 +0800, Zhu Yi wrote:
->> This is a patch series for IEEE802.11e/WMM support against
->> linux-2.6.22-rc4.
->>
->> [PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
->> [PATCH 2/3] mac80211: IEEE802.11e/WMM TS management and DLS support
->> [PATCH 3/3] mac80211: debugfs support for TSM and DLS
+On Mon, Jun 18, 2007 at 01:38:47PM -0400, Dan Williams wrote:
+> On Thu, 2007-06-14 at 19:13 +0100, Christoph Hellwig wrote:
+> > > I suspect that the probability of your proposal succeeding would be increased
+> > > if you could prepare a patch...
 > 
-> John,
-> 
-> I see you already applied those patches. I haven't had a time to look
-> at the second patch in this resent version yet, but even from the first
-> and third one it's clear they still need a lot of work (for example,
-> adding cfg80211 support instead of that debugfs interface isn't going
-> to be a few lines long patch).
-> 
-> Please revert them.
+> Applied to upstream-fixes branch of libertas-2.6 which is destined for
+> 2.6.22; I hope you don't mind that I just added the Signed-off-by for
+> you.
 
-Or better yet, let's develop them as a community by submitting patches to fix them.
-
-James
+Adding a signed off line for a patch that purely removes codes seems
+rather pointless to me, but feel free to add it if you care.
