@@ -1,59 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:56346 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752351AbXFKPM7 (ORCPT
+Received: from host2.marvell.com ([65.219.4.2]:23033 "EHLO maili.marvell.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751220AbXFSEux convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 11:12:59 -0400
-Message-ID: <466D662C.7040809@oracle.com>
-Date: Mon, 11 Jun 2007 08:11:40 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
+	Tue, 19 Jun 2007 00:50:53 -0400
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: andy@warmcat.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH Try#8 3/4] cfg80211: Radiotap parser
-References: <20070611095400.206844675@warmcat.com>	 <20070611095846.511945296@warmcat.com> <1181560668.29767.8.camel@johannes.berg>
-In-Reply-To: <1181560668.29767.8.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: phy mode, channel -> freq mapping (was RE: more nl80211/iw tool code comments)
+Date: Mon, 18 Jun 2007 21:50:50 -0700
+Message-ID: <285925A4DF50FC408669C6302216838D112212@sc-exch02.marvell.com>
+References: <1181759017.29767.117.camel@johannes.berg> <20070614142925.GA24414@charon.n2.diac24.net> <285925A4DF50FC408669C6302216838D024899@sc-exch02.marvell.com> <1182164508.5924.19.camel@johannes.berg> <1ba2fa240706180525i561b0abex6c39d18e7b7b461e@mail.gmail.com>
+From: "Sandesh Goel" <sgoel@marvell.com>
+To: "Tomas Winkler" <tomasw@gmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+Cc: "David Lamparter" <lists@diac24.net>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> Hi Andy,
-> 
-> Thanks for the repost.
-> 
->> +/* Radiotap header iteration
->> + *   implemented in net/wireless/radiotap.c
->> + *
->> + * call __ieee80211_radiotap_iterator_init() to init a semi-opaque iterator
->> + * struct ieee80211_radiotap_iterator (no need to init the struct beforehand)
->> + * then loop calling __ieee80211_radiotap_iterator_next()... it returns -1
->> + * if there are no more args in the header, or the next argument type index
->> + * that is present.  The iterator's this_arg member points to the start of the
->> + * argument associated with the current argument index that is present,
->> + * which can be found in the iterator's this_arg_index member.  This arg
->> + * index corresponds to the IEEE80211_RADIOTAP_... defines.
->> + */
-> 
-> I don't think this will show up in the kdoc output, but it sure would be
-> nice. Maybe it could be part of the description of
-> ieee80211_radiotap_iterator as a 'how to use this iterator' section (see
-> kernel-doc-nano-HOWTO.txt, it talks about sections)? Or maybe as
-> kernel-doc for the functions themselves.
-> 
->> +/**
->> + * ieee80211_radiotap_iterator_init - radiotap parser iterator initialization
-> 
-> Oh, you have kerneldoc comments in the source file. Does anyone know
-> which is preferable? I usually put everything into the header file that
-> is not implementation-detail.
 
-We mostly put kernel-doc into source files (i.e., not header files).
-We use kernel-doc in header files for inline functions, macros,
-structs, unions, etc., but function kernel-doc blocks are meant to
-immediately precede their functions.
+The so called "turbo" mode extensions provided by various vendors
+roughly fall into 3 categories
 
+1. MAC extensions such as frame bursting, aggregation, using more
+aggressive transmit parameters etc
+2. PHY extensions such as using proprietary modulation/coding, MIMO etc
+3. RF extensions such as using larger channel width, also sometimes
+called channel bonding
 
--- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+All of these have been adequately addressed by 802.11e, WMM and 802.11n
+and there exist modes which allow these to be done in a standard
+compliant and interoperable manner. In my opinion, the linux wireless
+stack would do well to stay away from the proprietary extensions and
+thus minimize confusion. 
+
+At most, we could allow an API for enable/disable turbo mode which would
+allow the specific driver/firmware to do whatever magic it wants under
+the hood without polluting the rest of the stack.
+
+Thanks,
+Sandesh
+
+-----Original Message-----
+From: Tomas Winkler [mailto:tomasw@gmail.com] 
+Sent: Monday, June 18, 2007 5:55 PM
+To: Johannes Berg
+Cc: Sandesh Goel; David Lamparter; linux-wireless
+Subject: Re: phy mode, channel -> freq mapping (was RE: more nl80211/iw
+tool code comments)
+
+On 6/18/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> Hi,
+>
+> > I think it is cleaner to define a parameter called BAND which can
+take
+> > values 2.4 GHz, 5 GHz and so on. Then, the combination of BAND and
+> > CHANNEL will uniquely define the operating frequency.
+>
+> <phymode stuff snipped>
+>
+> > I wasn't sure if this has already been thought about. I look forward
+to
+> > being educated if I am missing something.
+>
+> Good point. I hadn't really considered this but a/g or n cards really
+> make it necessary to distinguish here, and regulatory stuff would also
+> benefit from defining it that way.
+>
+I have to agree that the phymode lost is relevance. and band channel
+couple has more meaning
+
+In this context, what atheros turbo phy mode is? What channel, band
+does it operate?
+
+Thanks
+Tomas
+
+> johannes
+>
+>
