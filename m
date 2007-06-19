@@ -1,57 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51187 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50460 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757308AbXF1K7Z (ORCPT
+	with ESMTP id S1752521AbXFTLQc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2007 06:59:25 -0400
-Subject: Re: [PATCH 00/14] major mac80211 restructuring/cleanups
+	Wed, 20 Jun 2007 07:16:32 -0400
+Subject: Re: [PATCH Try#lucky13 3/3] mac80211: Monitor mode radiotap-based  packet injection
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-In-Reply-To: <1182503355.21939.70.camel@johannes.berg>
-References: <20070621221603.778432000@sipsolutions.net>
-	 <1182503355.21939.70.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DP/PAYXzb5n/W5r/A0Rm"
-Date: Thu, 28 Jun 2007 12:59:43 +0200
-Message-Id: <1183028384.4769.86.camel@johannes.berg>
+To: andy@warmcat.com
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Jiri Benc <jbenc@suse.cz>
+In-Reply-To: <20070614123704.801683087@warmcat.com>
+References: <20070614123316.868155662@warmcat.com>
+	 <20070614123704.801683087@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BoxwivUrgYqEKcRHSX33"
+Date: Tue, 19 Jun 2007 22:45:15 +0200
+Message-Id: <1182285915.3714.5.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-DP/PAYXzb5n/W5r/A0Rm
+--=-BoxwivUrgYqEKcRHSX33
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2007-06-22 at 11:09 +0200, Johannes Berg wrote:
-> Apparently 1 and 8 were too large:
->=20
-> (1)
-> http://johannes.sipsolutions.net/patches/kernel/all/2007-06-22-09:08/033-=
-split-rx.patch
->=20
-> (8)
-> http://johannes.sipsolutions.net/patches/kernel/all/2007-06-22-09:08/040-=
-split-out-tx-handlers.patch
+Nothing about this patch, I'm fine with it, but a comment for future use
+cases of this where we'll need some changes.
 
-I should have mentioned that these also reorder the rx handlers to be in
-the same order as they're invoked in which makes reading that code a lot
-easier since you can just read it top-down without worrying about
-jumping around to find the correct order all the time.
+> @@ -1284,15 +1442,26 @@ static int ieee80211_tx(struct net_devic
+>  		return 0;
+>  	}
+> =20
+> -	__ieee80211_tx_prepare(&tx, skb, dev, control);
+> +	res_prepare =3D __ieee80211_tx_prepare(&tx, skb, dev, control);
+> +
+> +	if (res_prepare =3D=3D TXRX_DROP) {
+> +		dev_kfree_skb(skb);
+> +		return 0;
+> +	}
+> +
+>  	sta =3D tx.sta;
+>  	tx.u.tx.mgmt_interface =3D mgmt;
+>  	tx.u.tx.mode =3D local->hw.conf.mode;
+> =20
+> -	for (handler =3D local->tx_handlers; *handler !=3D NULL; handler++) {
+> -		res =3D (*handler)(&tx);
+> -		if (res !=3D TXRX_CONTINUE)
+> -			break;
+> +	if (res_prepare =3D=3D TXRX_QUEUED) { /* if it was an injected packet *=
+/
+> +		res =3D TXRX_CONTINUE;
+> +	} else {
+> +		for (handler =3D local->tx_handlers; *handler !=3D NULL;
+> +		     handler++) {
+> +			res =3D (*handler)(&tx);
+> +			if (res !=3D TXRX_CONTINUE)
+> +				break;
+> +		}
+
+I think I mentioned it before; we'll have to split up TX handlers here
+to get proper sequence numbering for devices that do it in software,
+otherwise we won't be able to send packets with the right sequence
+number on such devices.
 
 johannes
 
---=-DP/PAYXzb5n/W5r/A0Rm
+--=-BoxwivUrgYqEKcRHSX33
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGg5Sf/ETPhpq3jKURAhAlAJ91s1NTtv083uWzWStraGWf+og51gCgrKE7
-VkL1QVgYC1TuMGGdiLg5Fgs=
-=1KsE
+iD8DBQBGeEBb/ETPhpq3jKURAmUZAKCryAWyvZoGvg295h7R94DUB0STcwCgja97
+b49oAYHuh8M7VSzm+xK46Fo=
+=aBnk
 -----END PGP SIGNATURE-----
 
---=-DP/PAYXzb5n/W5r/A0Rm--
+--=-BoxwivUrgYqEKcRHSX33--
 
