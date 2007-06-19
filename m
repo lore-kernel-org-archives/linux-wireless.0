@@ -1,52 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([213.239.205.134]:58345 "EHLO mail.tglx.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751944AbXFDGjv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2007 02:39:51 -0400
-Subject: Re: b44: regression in 2.6.22 (resend)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Maximilian Engelhardt <maxi@daemonizer.de>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Hemminger <shemminger@linux-foundation.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-In-Reply-To: <200706031826.06891.maxi@daemonizer.de>
-References: <20070525172431.60affaca@freepuppy>
-	 <200705281944.05030.maxi@daemonizer.de> <1180380230.3657.3.camel@chaos>
-	 <200706031826.06891.maxi@daemonizer.de>
+Received: from mx1.redhat.com ([66.187.233.31]:53020 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754185AbXFSL7U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jun 2007 07:59:20 -0400
+Subject: Re: Update about libertas CompactFlash 8585 driver
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org, marvell8385-devel@linuxtogo.org,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <200706190959.53476.hs4233@mail.mn-solutions.de>
+References: <200706190959.53476.hs4233@mail.mn-solutions.de>
 Content-Type: text/plain
-Date: Mon, 04 Jun 2007 08:39:48 +0200
-Message-Id: <1180939188.4404.5.camel@chaos>
+Date: Tue, 19 Jun 2007 08:00:59 -0400
+Message-Id: <1182254459.18364.11.camel@xo-28-0B-88.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2007-06-03 at 18:26 +0200, Maximilian Engelhardt wrote:
-> > Is there any other strange behavior of the high res enabled kernel than
-> > the b44 problem ?
-> 
-> I didn't notice anything in the past (as I wrote). But today I did some tests 
-> for an updated version of the p54 mac80211 wlan driver and I noticed exactly 
-> the same problem:
-> 
-> when booting with highres=off everything is fine.
-> But when I boot an highres enabled kernel and I do the iperf-test with the p54 
-> driver, my systems becomes unresponsive during the test. It seems to be 
-> exactly the same problem I have with the b44 driver.
-> So this might not be a bug in the b44 code but a bug somewhere in the linux 
-> networking code.
-> 
-> I did the test with an 2.6.22-rc3-git4 kernel and the p54 driver built 
-> external as module. 
+On Tue, 2007-06-19 at 09:59 +0200, Holger Schurig wrote:
+> My CF driver for the 8385 now can associate. But currently I also 
+> have a bunch of serious and not-so-serious bugs:
 
-Can you look at iperf to figure out, whether it does some weird timer
-stuff (high frequency interval timer or such) ? Either check the code or
-strace it.
+FYI, I re-did the libertas-2.6 tree on infradead per Linville's
+suggestion.  You'll want to use the 'libertas' branch of libertas-2.6,
+which is also where I pushed all your recent patches from libertas-dev.
+The 'libertas' branch will exist until sometime around 2.6.23 when all
+the cleanups are done, and then we'll switch to just pushing most
+patches directly to linux-wireless@vger.
 
-	tglx
+> Associating
+> -----------
+> Sometimes, this command sequence is enought:
+> 
+>     ifconfig eth1 up
+>     iwconfig eth1 essid key BLAHBLAH
+>     iwconfig eth1 key s:BLAH1
+> 
+> But sometimes I have to do that to get a an association:
+> 
+>     ifconfig eth1 up
+>     iwconfig eth1 essid key BLAHBLAH
+>     iwconfig eth1 key s:BLAH1
+>     iwconfig eth1 essid key BLAHBLAH
+> 
+> This does not happen with the 8388 USB dongle, so I guess there 
+> is an issue between firmware v5.0 vica v5.1.
 
+It would be useful to get a full debug of the driver with the following
+set for libertas_debug:
+
+ENTER, LEAVE, MAIN, WEXT, SCAN, ASSOC, JOIN, CMD, FW
+
+The association code batches up WEXT calls and commits them to firmware
+after a timeout.  I'd like to see the traces to see exactly when the
+driver calls each of the hardware commands.
+
+> Not re-associating
+> ------------------
+> When I am associated from to an Access Point, and actively 
+> de-associate the client on the AP, then I get the dissassociate 
+> event back ... but then the driver stays where it is. It does no 
+> re-scan and try to re-associate to the best AP it can find.
+> 
+> This happens also with the reference 8388 USB dongle, so it's a 
+> general bug in libertas.
+
+This behavior is expected; usually when you get a forced disassociation
+from an external source, the driver will report the disassociation and
+wait to be told what to do.  Some firmware tries to reassociate, but in
+general the drivers shouldn't be doing this sort of thing, that's what
+userspace tools are for.  For example, how do you do a driver-level
+reassociation when you're doing WPA or Dynamic WEP?  You can't unless
+you have userspace tools to handle the EAP exchanges for you.  I don't
+see why open/WEP should be that much different.  However, I'm not
+dead-set against trying 1 or 2 reassociations in open/static-WEP.
+
+> Some softirq problem
+> --------------------
+> Sometimes I get the kernel error "NOHZ: local_softirq_pending 
+> 08". This line comes out 5 or 10 times. That nonwithstanding, 
+> the driver works.
+> 
+> My system has lots of other devices on IRQ 11: yenta, yenta, 
+> ehci_hcd:usb1, uhci_hcd:usb2, uhci_hcd:usb3, uhci_hcd:usb4 and 
+> libertas_cs. There are no USB devices attached, Kernel is from 
+> the libertas2.6 tree, so it's similar to 2.6.22-rc4. Oh, and I 
+> don't have hyperthreading.
+> 
+> 
+> 
+> Power management is hosed
+> -------------------------
+> After "iwconfig eth1 power on" almost nothing works anymore. 
+> Sometimes one or two pings came throught, but with extremely 
+> long delays. And then I get "libertas: tx watch dog timeout"
+> 
+> The reference USB 8388 dongle doesn't have this problem.
+
+Hmm; no idea on this one, but obviously your firmware doesn't like power
+save mode as the current driver does it :)  Does the Marvell 8686 SDIO
+driver have anything you can use to debug this or maybe see if the
+non-USB devices use slightly different code?
+
+Dan
 
