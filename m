@@ -1,39 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:46813 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751584AbXFRCKj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jun 2007 22:10:39 -0400
-Subject: Re: wireless userspace MLME and generic netlink vs. multicast  (was: Re: [Take 2] mac80211 IEEE802.11e/WMM code cleanup)
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	David Lamparter <lists@diac24.net>,
-	Thomas Graf <tgraf@suug.ch>, netdev <netdev@vger.kernel.org>
-In-Reply-To: <1182081831.23681.29.camel@johannes.berg>
-References: <20070611085950.GA5540@mail.intel.com>
-	 <200706161129.13782.flamingice@sourmilk.net>
-	 <1182019869.9058.57.camel@johannes.berg>
-	 <200706161516.16447.flamingice@sourmilk.net>
-	 <1182081831.23681.29.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 18 Jun 2007 10:08:47 +0800
-Message-Id: <1182132527.4092.90.camel@debian.sh.intel.com>
+Received: from styx.suse.cz ([82.119.242.94]:48898 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754148AbXFSIuK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jun 2007 04:50:10 -0400
+Date: Tue, 19 Jun 2007 10:50:24 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Hong Liu <hong.liu@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [patch]mac80211: add support for iwlist channel
+Message-ID: <20070619105024.3c6c68e3@griffin.suse.cz>
+In-Reply-To: <1182156425.15928.7.camel@napa-sdv1.sh.intel.com>
+References: <1182156425.15928.7.camel@napa-sdv1.sh.intel.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2007-06-17 at 14:03 +0200, Johannes Berg wrote:
-> It sounds to me like you're proposing that wpa_supplicant is the only
-> supported userspace MLME and that wpa_cli is the only way to configure
-> it, basically. I sure hope that isn't so. 
+On Mon, 18 Jun 2007 16:47:05 +0800, Hong Liu wrote:
+> +static void ieee80211_get_supp_channels(struct ieee80211_local *local,
+> +				struct iw_range *range)
+> +{
+> +	struct ieee80211_hw_mode *mode = NULL;
+> +	int c = 0, j;
+> +
+> +	list_for_each_entry(mode, &local->modes_list, list) {
+> +		for (j = 0;
+> +		     j < mode->num_channels && c < IW_MAX_FREQUENCIES; j++) {
+> +			struct ieee80211_channel *chan = &mode->channels[j];
+> +
+> +			if (is_duplicate_channel(chan, range->freq, c))
+> +				continue;
+> +			range->freq[c].i = chan->chan;
+> +			range->freq[c].m = chan->freq * 100000;
+> +			range->freq[c].e = 1;
+> +			c++;
+> +		}
 
-OK. This is the key of the discussion. Do we take wpa_supplicant the
-only implementation of userspace MLME or even decision making (ie. DLS
-config) daemon? If so, we don't need the API. Otherwise we'd better have
-the API in the kernel because we cannot expect both userspace MLME
-implentation A and B support the same API (via IPC) for configuration.
+I don't know exactly what results are supposed to be returned by this
+ioctl, but given the fact SIOCSIWFREQ allows only channels with
+the IEEE80211_CHAN_W_SCAN flag set, shouldn't only channels with this
+flag be returned here?
 
 Thanks,
--yi
+
+ Jiri
+
+-- 
+Jiri Benc
+SUSE Labs
