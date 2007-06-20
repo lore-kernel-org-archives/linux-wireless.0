@@ -1,54 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:63928 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S968142AbXFHRFN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2007 13:05:13 -0400
-Date: Sat, 9 Jun 2007 01:04:30 +0800
-From: Zhu Yi <yi.zhu@intel.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 6/6] mac80211: Fix one more sparse error
-Message-ID: <20070608170430.GA17289@mail.intel.com>
-Reply-To: yi.zhu@intel.com
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from styx.suse.cz ([82.119.242.94]:56062 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751571AbXFTLqH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2007 07:46:07 -0400
+Date: Wed, 20 Jun 2007 13:46:04 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] clarify some mac80211 things
+Message-ID: <20070620134604.72ecbbc7@griffin.suse.cz>
+In-Reply-To: <1182333960.3714.54.camel@johannes.berg>
+References: <1182333960.3714.54.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix one more sparse error and comment variable for debugfs_rename TODO.
+On Wed, 20 Jun 2007 12:05:59 +0200, Johannes Berg wrote:
+> The semantics of not having an add_interface callback are not well
+> defined, this callback is required because otherwise you cannot obtain
+> the requested MAC address of the device. Change the documentation to
+> reflect this, add a note about having no MAC address at all, add a
+> warning that mac_addr in struct ieee80211_if_init_conf can be NULL and
+> finally verify that a few callbacks are assigned by way of BUG_ON()
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- net/mac80211/debugfs_netdev.c |    2 ++
- net/mac80211/debugfs_sta.c    |    2 +-
- 2 files changed, 3 insertions(+), 1 deletions(-)
+Acked-by: Jiri Benc <jbenc@suse.cz>
 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 5e50817..52a32e4 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -734,7 +734,9 @@ static int netdev_notify(struct notifier_block * nb,
- 			 void *ndev)
- {
- 	struct net_device *dev = ndev;
-+	/* TODO
- 	char buf[10+IFNAMSIZ];
-+	*/
- 
- 	if (state != NETDEV_CHANGENAME)
- 		return 0;
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index fc1a024..6cfe35a 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -158,7 +158,7 @@ static ssize_t sta_last_seq_ctrl_read(struct file *file, char __user *userbuf,
- 	struct sta_info *sta = file->private_data;
- 	for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
- 		p += scnprintf(p, sizeof(buf)+buf-p, "%x ",
--			       sta->last_seq_ctrl[i]);
-+			       le16_to_cpu(sta->last_seq_ctrl[i]));
- 	p += scnprintf(p, sizeof(buf)+buf-p, "\n");
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
- }
+
+Maybe it's a time to finally get rid of open and stop callbacks...
+
+ Jiri
+
 -- 
-1.5.0.rc2.g73a2
+Jiri Benc
+SUSE Labs
