@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:39186 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751403AbXFVNPQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2007 09:15:16 -0400
-Date: Fri, 22 Jun 2007 15:15:14 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [WIP] mac80211: kill mgmt interface
-Message-ID: <20070622151514.028a644d@griffin.suse.cz>
-In-Reply-To: <200268.51153.qm@web51411.mail.re2.yahoo.com>
-References: <200268.51153.qm@web51411.mail.re2.yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail8.sea5.speakeasy.net ([69.17.117.10]:54867 "EHLO
+	mail8.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751106AbXFTNll (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2007 09:41:41 -0400
+Date: Wed, 20 Jun 2007 06:41:21 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: ieee80211_set_aid_for_sta?
+Message-ID: <20070620134121.GY5361@jm.kir.nu>
+References: <1182296370.3714.21.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1182296370.3714.21.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please always use "reply to all" when replying to mails from Linux
-mailing lists.
+On Wed, Jun 20, 2007 at 01:39:30AM +0200, Johannes Berg wrote:
 
-On Thu, 21 Jun 2007 14:50:32 -0700 (PDT), Joerg Pommnitz wrote:
-> Regarding user-space MLME and special interfaces:
-> mac80211 allows for multiple virtual interfaces on top of one physical NIC, right? 
+> As with the radar stuff, I don't see any users of
+> ieee80211_set_aid_for_sta. It seems to be useful when firmware
+> establishes sta MAC->AID mapping, but hostapd doesn't handle that
+> currently. Remove until we find new hardware requiring it?
 
-Yes.
+hostapd has code for using it, but it is commented out in the open
+source version. I don't remember why that was done, but I would assume
+it would have required more changes that I did want to do at the point
+when merging this from Devicescape version.
 
-> Can one run multiple MLME (e.g. hostapd) instances to run multiple virtual master mode interfaces
-> for different networks? With different BSSID?
-
-I don't think that would be ever possible when using monitor
-interfaces.
-
-On the other hand, it doesn't make much sense to support that. The
-interfaces are not completely independent, e.g. you cannot tune to
-different channels on different virtual interfaces. Therefore, at least
-a minimal knowledge about virtual interfaces would be needed in more
-complicated user space MLMEs.
-
- Jiri
+Anyway, this was needed with a PrismGT card where the firmware was
+indeed taking care of AID selection and then reporting the selected AID
+to hostapd. I don't have anything against removing it for now.
 
 -- 
-Jiri Benc
-SUSE Labs
+Jouni Malinen                                            PGP id EFC895FA
