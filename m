@@ -1,101 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:34993 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751837AbXFQPZ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jun 2007 11:25:59 -0400
-Subject: Re: [Take 2] mac80211 IEEE802.11e/WMM code cleanup
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Wu <flamingice@sourmilk.net>, Zhu Yi <yi.zhu@intel.com>,
-	linux-wireless@vger.kernel.org,
+Received: from mga06.intel.com ([134.134.136.21]:30512 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752334AbXFTQdK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2007 12:33:10 -0400
+Message-ID: <46796FCB.9090300@linux.intel.com>
+Date: Wed, 20 Jun 2007 11:19:55 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: Jiri Benc <jbenc@suse.cz>
+CC: Hong Liu <hong.liu@intel.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	David Lamparter <lists@diac24.net>
-In-Reply-To: <1182019869.9058.57.camel@johannes.berg>
-References: <20070611085950.GA5540@mail.intel.com>
-	 <200706140935.50779.flamingice@sourmilk.net>
-	 <1181996855.9058.39.camel@johannes.berg>
-	 <200706161129.13782.flamingice@sourmilk.net>
-	 <1182019869.9058.57.camel@johannes.berg>
-Content-Type: text/plain
-Date: Sun, 17 Jun 2007 11:29:23 -0400
-Message-Id: <1182094164.14209.18.camel@xo-28-0B-88.localdomain>
-Mime-Version: 1.0
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [patch]mac80211: add support for iwlist channel
+References: <1182156425.15928.7.camel@napa-sdv1.sh.intel.com>	<20070619105024.3c6c68e3@griffin.suse.cz>	<1182305425.19178.12.camel@napa-sdv1.sh.intel.com>	<20070620115559.301e10eb@griffin.suse.cz>	<4679672D.4060503@linux.intel.com> <20070620182558.47871535@griffin.suse.cz>
+In-Reply-To: <20070620182558.47871535@griffin.suse.cz>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2007-06-16 at 20:51 +0200, Johannes Berg wrote:
-> On Sat, 2007-06-16 at 11:29 -0700, Michael Wu wrote:
+Jiri Benc wrote:
+> On Wed, 20 Jun 2007 10:43:09 -0700, James Ketrenos wrote:
+>> [...]
+>> /**
+>>  * enum ieee80211_channel_flags - Channel flag bit values
+>>  * @IEEE80211_CHAN_W_TUNE: Hardware can tune to this channel
+>>  * @IEEE80211_CHAN_W_ACTIVE: Channel can be used for active scanning
+>>  * @IEEE80211_CHAN_W_IBSS: Hardware can act as IBSS Master
+>>  * @IEEE80211_CHAN_W_RADAR: Radar spectrum enforcement applies
+>>  * @IEEE80211_CHAN_W_TX_ALLOWED: Tx is allowed
 > 
-> > I think that decision was made without much consideration to the 
-> > implementation details. 
+> Looks good, except...
 > 
-> I don't think the implementation details are much of a problem. It's
-> just a bit of message bouncing which is trivial. Except of course when
-> you consider wext, but hey, no need to consider that for this discussion
-> since you're proposing ditching wext completely. Not that I don't want
-> to ditch it, but people still use it and probably will. Heck, people
-> still use 'ifconfig'...
+>> [...]
+>>  * A channel without the TX_ALLOWED bit set *can not* be used
+>>  * for any type of transmission and can only be used for passive
+>>  * listening.  This is useful for performing network audits.
 > 
-> > I thought it was a good idea then, but passing 
-> > messages from userspace to the kernel and then to userspace again is really a 
-> > waste of time.
-> 
-> It's not happening a lot so it's not a waste of *much* time ;)
-> 
-> > NetworkManager already uses wpa_supplicant to avoid all the 
-> > nasty details of dealing with wireless configuration, so why not keep using 
-> > it for everything instead of hiding wpa_supplicant behind nl80211?
-> 
-> I hope that nm would start using nl80211 instead of talking to
-> wpa_supplicant and just start wpa_supplicant if necessary. Or maybe some
-> startup scripts start the userspace MLME (wpa_supplicant) for the
-> interfaces during boot/hotplug.
+> I don't find this useful. The stack isn't aware of anything like this.
+> Do you plan to add a support for this flag? Also, cfg80211/nl80211
+> would need to be taught of it.
 
-NM uses wpa_supplicant for 3 basic things:
+If its not useful for anyone else, we can have it just in iwlwifi.  
+I don't know if any other hardware supports tuning to channels they 
+can't transmit on.
 
-1) configuration of an 802.11 connection
-2) getting scan results
-3) WPA/802.1x
+I have personally found it very useful here when using my laptop to 
+troubleshoot other wireless issues in geographies where I can't 
+transmit -- but I can sniff the packets to tell people what to fix.
 
-wpa_supplicant doesn't separate the configuration/setup of an interface
-from the 802.1x stuff, mainly because it has to do things like derive
-keys and push them down to the driver at specific times.  These two
-functions are pretty intimately related.  And since NM needs WPA
-support, it uses wpa_supplicant for the 802.1x/WPA stuff.  The only
-stuff left is open & static WEP, which wpa_supplicant also handles.  So
-it was a no-brainer to push all the wireless config to wpa_supplicant
-and have NM just feed wpa_supplicant the config info.
+For now, since nothing else in the stack can do anything with it,
+I'd just assume yank it.  I don't have the time to implement it all
+in right now.
 
-NM now gets its scan results from wpa_supplicant because drivers used to
-get (and some still do) very confused when multiple processes would
-request scans and get results.  There was a nice race between
-wpa_supplicant and NM in some drivers (airo in particular) where
-wpa_supplicant would request a scan, and the driver would signal
-results, but by the time NM saw the event and requested the results,
-wpa_supplicant had already consumed them.  This was "fixed" by making
-drivers age scan results like ipw2x00 over a number of scans and not
-erasing them right away after the scan was done.
+Is there any mechanism for documenting where we would like things
+to eventually go?  A "future" tag we can stick on things (in the
+documentation, etc.)?
 
-I like pushing most of the config stuff to wpa_supplicant, because that
-basically means that all of that is in _one_ project.  When
-nl80211/cfg80211 land and start getting adopted, that means that only
-_one_ of {NM, wpa_supplicant} needs to get ported over, instead of two.
+James
 
-Dan
-
-> > This is 
-> > more simple and direct and allows the kernel to expose exactly what the 
-> > hardware/kernel can do. Userspace won't have to change much and nl80211 won't 
-> > have to support every possible thing a userspace MLME would want.
 > 
-> It's not that the kernel will have to support everything that a
-> userspace MLME would want, but rather that the kernel needs to support
-> everything the MLME would want, to support fullmac drivers.
+> Thanks,
 > 
-> Another counter: when you have a tool like 'iw' that David wrote, then
-> it'll need to look for the userspace MLME every time you invoke it and
-> start communicating with it instead of the kernel. That's likely a waste
-> of much more time than just bouncing the messages.
+>  Jiri
 > 
-> johannes
-
