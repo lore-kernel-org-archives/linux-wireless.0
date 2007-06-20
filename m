@@ -1,103 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:52858 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753366AbXFYJsg (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.181]:21888 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752982AbXFTMAY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2007 05:48:36 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so1248679ugf
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2007 02:48:35 -0700 (PDT)
-Message-ID: <467F8F63.2070101@googlemail.com>
-Date: Mon, 25 Jun 2007 11:48:19 +0200
+	Wed, 20 Jun 2007 08:00:24 -0400
+Received: by ik-out-1112.google.com with SMTP id b32so139697ika
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2007 05:00:22 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] clarify some mac80211 things
+Date: Wed, 20 Jun 2007 13:48:33 +0200
+Cc: Jiri Benc <jbenc@suse.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1182333960.3714.54.camel@johannes.berg> <20070620134604.72ecbbc7@griffin.suse.cz> <1182340310.3714.65.camel@johannes.berg>
+In-Reply-To: <1182340310.3714.65.camel@johannes.berg>
 MIME-Version: 1.0
-To: Linus Torvalds <torvalds@linux-foundation.org>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Olaf Hering <olaf@aepfle.de>,
-	=?ISO-8859-2?Q?Ville_Syrj=E4l=E4?= <syrjala@sci.fi>,
-	Christoph Lameter <clameter@sgi.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Andrea Righi <righiandr@users.sourceforge.net>,
-	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Andrey Borzenkov <arvidjaar@mail.ru>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Bjorn Helgaas <bjorn.helgaas@hp.com>,
-	Chad Tindel <ctindel@users.sourceforge.net>,
-	Olaf Hering <olaf@aepfle.de>
-Subject: Re: [2/2] 2.6.22-rc6: known regressions with patches
-References: <467F894C.4000604@googlemail.com>
-In-Reply-To: <467F894C.4000604@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-2;
-	format=flowed
-From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200706201348.33834.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Wednesday 20 June 2007 13:51, Johannes Berg wrote:
+> On Wed, 2007-06-20 at 13:46 +0200, Jiri Benc wrote:
+> 
+> > Maybe it's a time to finally get rid of open and stop callbacks...
+> 
+> Fine with me, there isn't really much point in them and it'll definitely
+> simplify code. Since drivers need to keep track anyway they won't be
+> more complicated... bcm43xx for example doesn't use it anyway...
 
-Here is a list of some known regressions in 2.6.22-rc6
-with patches available.
+Ehm, I'll fix rt2x00 to stop using those callback functions as soon as possible then. ;)
 
-=46eel free to add new regressions/remove fixed etc.
-http://kernelnewbies.org/known_regressions
-
-*STATISTICS* (a.k.a. list of aces)
-
-Name                    Regressions fixed since 21-Jun-2007
-Andi Kleen                             1
-Hugh Dickins                           1
-Jean Delvare                           1
-
-
-
-=46BDEV
-
-Subject    : mach64 breakage in 2.6.22
-References : http://lkml.org/lkml/2007/6/14/73
-Submitter  : Olaf Hering <olaf@aepfle.de>
-Handled-By : Ville Syrj=E4l=E4 <syrjala@sci.fi>
-Patch      : http://lkml.org/lkml/2007/6/21/216
-Status     : patch was suggested
-
-
-
-Memory management
-
-Subject    : bug in i386 MTRR initialization
-References : http://lkml.org/lkml/2007/5/19/93
-Submitter  : Andrea Righi <righiandr@users.sourceforge.net>
-Status     : patch available
-
-
-
-Networking
-
-Subject    : ERROR: "__ucmpdi2" [drivers/net/s2io.ko] undefined!
-References : http://lkml.org/lkml/2007/6/19/310
-Submitter  : Olaf Hering <olaf@aepfle.de>
-Patch      : http://lkml.org/lkml/2007/6/19/382
-Status     : patch was suggested
-
-Subject    : no irda0 interface (2.6.21 was OK), smsc does not find chi=
-p
-References : http://lkml.org/lkml/2007/6/3/16
-Submitter  : Andrey Borzenkov <arvidjaar@mail.ru>
-Handled-By : Samuel Ortiz <samuel@sortiz.org>
-             Bjorn Helgaas <bjorn.helgaas@hp.com>
-Patch      : http://lkml.org/lkml/2007/6/7/237
-Status     : patch was suggested
-
-
-
-Regards,
-Michal
-
---
-LOG
-http://www.stardust.webpages.pl/log/
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ivo
