@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:34662 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751433AbXFXTsZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jun 2007 15:48:25 -0400
-Message-ID: <467E98C0.80304@warmcat.com>
-Date: Sun, 24 Jun 2007 17:16:00 +0100
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:28373 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758321AbXFTCNU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jun 2007 22:13:20 -0400
+Subject: Re: [patch]mac80211: add support for iwlist channel
+From: Hong Liu <hong.liu@intel.com>
 To: Jiri Benc <jbenc@suse.cz>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH Try#14 1/4] mac80211: Monitor mode radiotap injection  docs
-References: <20070624085757.244871712@warmcat.com>	<20070624090144.845936552@warmcat.com>	<1182677792.21939.130.camel@johannes.berg> <20070624125113.551ad748@logostar.upir.cz>
-In-Reply-To: <20070624125113.551ad748@logostar.upir.cz>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070619105024.3c6c68e3@griffin.suse.cz>
+References: <1182156425.15928.7.camel@napa-sdv1.sh.intel.com>
+	 <20070619105024.3c6c68e3@griffin.suse.cz>
+Content-Type: text/plain
+Date: Wed, 20 Jun 2007 10:10:25 +0800
+Message-Id: <1182305425.19178.12.camel@napa-sdv1.sh.intel.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Benc wrote:
-> On Sun, 24 Jun 2007 11:36:32 +0200, Johannes Berg wrote:
->> On Sun, 2007-06-24 at 09:57 +0100, andy@warmcat.com wrote:
->>> plain text document attachment (mac80211-docs-radiotap-usage.patch)
->>> Try #14
->>>  - Documented Jiri Benc's injection encapsulation method
+On Tue, 2007-06-19 at 10:50 +0200, Jiri Benc wrote:
+> On Mon, 18 Jun 2007 16:47:05 +0800, Hong Liu wrote:
+> > +static void ieee80211_get_supp_channels(struct ieee80211_local *local,
+> > +				struct iw_range *range)
+> > +{
+> > +	struct ieee80211_hw_mode *mode = NULL;
+> > +	int c = 0, j;
+> > +
+> > +	list_for_each_entry(mode, &local->modes_list, list) {
+> > +		for (j = 0;
+> > +		     j < mode->num_channels && c < IW_MAX_FREQUENCIES; j++) {
+> > +			struct ieee80211_channel *chan = &mode->channels[j];
+> > +
+> > +			if (is_duplicate_channel(chan, range->freq, c))
+> > +				continue;
+> > +			range->freq[c].i = chan->chan;
+> > +			range->freq[c].m = chan->freq * 100000;
+> > +			range->freq[c].e = 1;
+> > +			c++;
+> > +		}
 > 
-> Hm, replied to the other (kill mgmt interface) thread without looking
-> through other mails :-(
-> 
->> I still don't see the point since we've previously established that it
->> won't help on other interfaces (qdiscs, ...); for monitor interfaces #13
->> is enough and much simpler.
->>
->> I'd vote for applying #13.
-> 
-> Agreed.
+> I don't know exactly what results are supposed to be returned by this
+> ioctl, but given the fact SIOCSIWFREQ allows only channels with
+> the IEEE80211_CHAN_W_SCAN flag set, shouldn't only channels with this
+> flag be returned here?
 
-Great, well let's go with that.
+> Thanks,
+> 
+>  Jiri
+> 
 
--Andy
+
+What is the meaning of IEEE80211_CHAN_W_SCAN flag? I can't find any
+description of this flag.
+
+Thanks,
+Hong
