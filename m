@@ -1,62 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:59369 "EHLO
-	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762951AbXFAVRQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2007 17:17:16 -0400
-Date: Fri, 01 Jun 2007 16:16:35 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH V2] bcm43xx-mac80211: Make wireless statistics yield  reasonable values
-Message-ID: <46608cb3.kcEmWfiAoSA+svnR%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:8761 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757515AbXFTF7x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2007 01:59:53 -0400
+Subject: [PATCH]mac80211: add support for iwlist channel (2nd rev)
+From: Hong Liu <hong.liu@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Wed, 20 Jun 2007 13:56:57 +0800
+Message-Id: <1182319017.19178.34.camel@napa-sdv1.sh.intel.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The changes contained herein are needed to get reasonable numbers for wireless
-statistics in bcm43xx-mac80211.
+Add supported channels info in SIOCGIWRANGE implementation.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Hong Liu <hong.liu@intel.com>
 ---
+ net/mac80211/ieee80211_ioctl.c |   25 +++++++++++++++++++++++++
+ 1 files changed, 25 insertions(+), 0 deletions(-)
 
- bcm43xx_main.c |    4 ++--
- bcm43xx_xmit.c |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-Index: wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.c
-===================================================================
---- wireless-mb.orig/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.c
-+++ wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.c
-@@ -517,12 +517,12 @@ void bcm43xx_rx(struct bcm43xx_wldev *de
- 		}
- 	}
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index fcea8b2..3c09a93 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -1500,6 +1500,9 @@ static int ieee80211_ioctl_giwrange(struct net_device *dev,
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct iw_range *range = (struct iw_range *) extra;
++	struct ieee80211_hw_mode *mode = NULL;
++	int c = 0;
++
  
--	status.signal = bcm43xx_rssi_postprocess(dev, jssi,
-+	status.ssi = bcm43xx_rssi_postprocess(dev, jssi,
- 					      (phystat0 & BCM43xx_RX_PHYST0_OFDM),
- 					      (phystat0 & BCM43xx_RX_PHYST0_GAINCTL),
- 					      (phystat3 & BCM43xx_RX_PHYST3_TRSTATE));
- 	status.noise = dev->stats.link_noise;
--	status.ssi = jssi;
-+	status.signal = jssi; /* this looks wrong, but is what mac80211 wants */
- 	if (phystat0 & BCM43xx_RX_PHYST0_OFDM)
- 		status.rate = bcm43xx_plcp_get_bitrate_ofdm(plcp);
- 	else
-Index: wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
-===================================================================
---- wireless-mb.orig/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
-+++ wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
-@@ -3799,8 +3799,8 @@ static int bcm43xx_wireless_init(struct 
- 		    IEEE80211_HW_MONITOR_DURING_OPER |
- 		    IEEE80211_HW_DEVICE_HIDES_WEP |
- 		    IEEE80211_HW_WEP_INCLUDE_IV;
--	hw->max_signal = -110;
--	hw->max_rssi = BCM43xx_RX_MAX_SSI;
-+	hw->max_signal = 100;
-+	hw->max_rssi = -110;
- 	hw->max_noise = -110;
- 	hw->queues = 1;
- 	SET_IEEE80211_DEV(hw, dev->dev);
+ 	data->length = sizeof(struct iw_range);
+ 	memset(range, 0, sizeof(struct iw_range));
+@@ -1533,6 +1536,28 @@ static int ieee80211_ioctl_giwrange(struct net_device *dev,
+ 	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
+ 			  IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
+ 
++	list_for_each_entry(mode, &local->modes_list, list) {
++		int j = 0;
++
++		if (!(local->enabled_modes & (1 << mode->mode)) ||
++		     (local->hw_modes & local->enabled_modes &
++		      (1 << MODE_IEEE80211G) && mode->mode == MODE_IEEE80211B))
++			continue;
++
++		while (j < mode->num_channels && c < IW_MAX_FREQUENCIES) {
++			struct ieee80211_channel *chan = &mode->channels[j];
++
++			if (chan->flag & IEEE80211_CHAN_W_SCAN) {
++				range->freq[c].i = chan->chan;
++				range->freq[c].m = chan->freq * 100000;
++				range->freq[c].e = 1;
++			}
++			++j; ++c;
++		}
++	}
++	range->num_channels = c;
++	range->num_frequency = c;
++
+ 	IW_EVENT_CAPA_SET_KERNEL(range->event_capa);
+ 	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWTHRSPY);
+ 	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWAP);
+-- 
+1.5.0.5
+
