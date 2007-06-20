@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60471 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330AbXF0OVU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2007 10:21:20 -0400
-Subject: Re: mac80211/bcm43xx deadlock
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <1182953184.4769.24.camel@johannes.berg>
-References: <1182848382.3830.5.camel@johannes.berg>
-	 <200706261617.45713.mb@bu3sch.de> <1182937106.4769.10.camel@johannes.berg>
-	 <200706271448.58087.mb@bu3sch.de>  <1182953184.4769.24.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9VrCKV9xhhQW2TyhrLOw"
-Date: Wed, 27 Jun 2007 16:21:30 +0200
-Message-Id: <1182954090.4769.28.camel@johannes.berg>
+Received: from styx.suse.cz ([82.119.242.94]:41661 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752432AbXFTQ0A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2007 12:26:00 -0400
+Date: Wed, 20 Jun 2007 18:25:58 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: James Ketrenos <jketreno@linux.intel.com>
+Cc: Hong Liu <hong.liu@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [patch]mac80211: add support for iwlist channel
+Message-ID: <20070620182558.47871535@griffin.suse.cz>
+In-Reply-To: <4679672D.4060503@linux.intel.com>
+References: <1182156425.15928.7.camel@napa-sdv1.sh.intel.com>
+	<20070619105024.3c6c68e3@griffin.suse.cz>
+	<1182305425.19178.12.camel@napa-sdv1.sh.intel.com>
+	<20070620115559.301e10eb@griffin.suse.cz>
+	<4679672D.4060503@linux.intel.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 20 Jun 2007 10:43:09 -0700, James Ketrenos wrote:
+> [...]
+> /**
+>  * enum ieee80211_channel_flags - Channel flag bit values
+>  * @IEEE80211_CHAN_W_TUNE: Hardware can tune to this channel
+>  * @IEEE80211_CHAN_W_ACTIVE: Channel can be used for active scanning
+>  * @IEEE80211_CHAN_W_IBSS: Hardware can act as IBSS Master
+>  * @IEEE80211_CHAN_W_RADAR: Radar spectrum enforcement applies
+>  * @IEEE80211_CHAN_W_TX_ALLOWED: Tx is allowed
 
---=-9VrCKV9xhhQW2TyhrLOw
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Looks good, except...
 
-On Wed, 2007-06-27 at 16:06 +0200, Johannes Berg wrote:
+> [...]
+>  * A channel without the TX_ALLOWED bit set *can not* be used
+>  * for any type of transmission and can only be used for passive
+>  * listening.  This is useful for performing network audits.
 
-> I'm not convinced this is the same thing, the deadlock here is simply
-> that something running on the workqueue is trying to rtnl_lock() while
-> flushing the workqueue is done under rtnl.
+I don't find this useful. The stack isn't aware of anything like this.
+Do you plan to add a support for this flag? Also, cfg80211/nl80211
+would need to be taught of it.
 
-Looking again, Michael agrees that this is not the same deadlock he's
-talking about, so back to the drawing board.
+Thanks,
 
-I shall be trying to add lockdep support for this sort of thing, but
-until then how can we fix this? What exactly does the rtnl protect in
-ieee80211_sta_config_auth?
+ Jiri
 
-johannes
-
---=-9VrCKV9xhhQW2TyhrLOw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGgnJq/ETPhpq3jKURAv7EAJ4u9ywb5UfL1PLzdCQ+4oMbkLRzPACfRJjg
-wfvjZizViS6YDZz5YDnf5x0=
-=mel6
------END PGP SIGNATURE-----
-
---=-9VrCKV9xhhQW2TyhrLOw--
-
+-- 
+Jiri Benc
+SUSE Labs
