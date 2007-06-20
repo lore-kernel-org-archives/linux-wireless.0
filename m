@@ -1,84 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:46947 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752848AbXFTNhn (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50537 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753510AbXFTLSi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2007 09:37:43 -0400
-Received: by py-out-1112.google.com with SMTP id a29so346445pyi
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2007 06:37:42 -0700 (PDT)
-Message-ID: <6bffcb0e0706200637m33b02ea7le7c8f64c66e159b2@mail.gmail.com>
-Date: Wed, 20 Jun 2007 15:37:41 +0200
-From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
-To: "Stephen Hemminger" <shemminger@linux-foundation.org>
-Subject: Re: [2/2] 2.6.22-rc5: known regressions with patches
-Cc: "Linus Torvalds" <torvalds@linux-foundation.org>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Christoph Lameter" <clameter@sgi.com>,
-	"Dave Airlie" <airlied@linux.ie>,
-	"Andrea Righi" <righiandr@users.sourceforge.net>,
-	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
-	"Samuel Ortiz" <samuel@sortiz.org>,
-	"Andrey Borzenkov" <arvidjaar@mail.ru>,
-	"Bjorn Helgaas" <bjorn.helgaas@hp.com>,
-	"Chad Tindel" <ctindel@users.sourceforge.net>,
-	"Dan Aloni" <da-x@monatomic.org>,
-	"Jay Vosburgh" <fubar@us.ibm.com>,
-	"Stephen Smalley" <sds@tycho.nsa.gov>,
-	"James Morris" <jmorris@namei.org>,
-	"Eric Paris" <eparis@parisplace.org>,
-	"Ingo Molnar" <mingo@elte.hu>,
-	linux-usb-devel@lists.sourceforge.net,
-	"Greg Kroah-Hartman" <gregkh@suse.de>,
-	"Paulo Pereira" <pfmp.404@gmail.com>,
-	"Alan Stern" <stern@rowland.harvard.edu>
-In-Reply-To: <20070618100905.7fc1176c@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <4675430B.2000304@googlemail.com> <46754400.2080101@googlemail.com>
-	 <20070618100905.7fc1176c@localhost.localdomain>
+	Wed, 20 Jun 2007 07:18:38 -0400
+Subject: driver bugs with changed mac address
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Daniel Drake <dsd@gentoo.org>,
+	Michael Wu <flamingice@sourmilk.net>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YpFdMJiSn4UinAcrjhDv"
+Date: Wed, 20 Jun 2007 12:05:38 +0200
+Message-Id: <1182333938.3714.53.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18/06/07, Stephen Hemminger <shemminger@linux-foundation.org> wrote:
-> On Sun, 17 Jun 2007 16:24:00 +0200
-> Michal Piotrowski <michal.k.k.piotrowski@gmail.com> wrote:
->
-> > Hi all,
-> >
-> > Here is a list of some known regressions in 2.6.22-rc5
-> > with patches available.
-> >
-> > Feel free to add new regressions/remove fixed etc.
-> > http://kernelnewbies.org/known_regressions
-> >
-> >
-> >
-> > Memory management
-> >
-> > Subject    : bug in i386 MTRR initialization
-> > References : http://lkml.org/lkml/2007/5/19/93
-> > Submitter  : Andrea Righi <righiandr@users.sourceforge.net>
-> > Status     : patch available
-> >
-> >
-> >
-> > Networking
-> > Subject    : commit 9093bbb2d96d0184f037cea9b4e952a44ebe7c32 broke the bonding driver
-> > References : http://lkml.org/lkml/2007/6/13/65
-> > Submitter  : Dan Aloni <da-x@monatomic.org>
-> > Handled-By : Stephen Hemminger <shemminger@linux-foundation.org>
-> > Status     : patch available
-> >              (I cannot find it in archives. Stephen, please resend the patch)
-> >
->
-> http://www.mail-archive.com/netdev@vger.kernel.org/msg40352.html
 
-Thanks!
+--=-YpFdMJiSn4UinAcrjhDv
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Regards,
-Michal
+Hi,
 
--- 
-LOG
-http://www.stardust.webpages.pl/log/
+I was just looking through some bcm43xx code and noticed that when you
+set a different mac address for some interface, then it is stored to
+wl->mac_addr but this is only ever used in
+bcm43xx_write_mac_bssid_templates and not in bcm43xx_wireless_core_init.
+
+iwlwifi on the other hand completely ignores the mac address after
+printing it out.
+
+Also in bcm43xx, when the interface is removed again wl->mac_addr isn't
+set to NULL when the interface that the MAC belonged to is deleted, so
+that the mac address stays programmed on the card and we continue to ACK
+packets for that MAC address.
+
+In zd1211, we start with hwaddr =3D dev->wiphy->perm_addr which isn't
+correct either, for a pure monitor mode we want to start with a zero mac
+addr to avoid acking packets. Also, zd1211rw will end up having a NULL
+hwaddr when a monitor interface is added, most likely segfaulting in
+zd_write_mac_addr then.
+
+The NULL mac address will also happen to rtl818x and possibly p54 (at
+least when that gets monitor mode support)
+
+Whew. So much for our little mac address audit.
+
+johannes
+
+--=-YpFdMJiSn4UinAcrjhDv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGePvy/ETPhpq3jKURApXpAJ4rdjC6972gHlMBaAW5pmHa1lJE3ACfR3UX
+1TSMqNxEW55j//EU+3wRKHQ=
+=/6ZH
+-----END PGP SIGNATURE-----
+
+--=-YpFdMJiSn4UinAcrjhDv--
+
