@@ -1,96 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:35809
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751407AbXFVJdH (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40861 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753197AbXFUKme (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2007 05:33:07 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: kill antenna select ioctls
-Date: Fri, 22 Jun 2007 11:32:29 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1182499821.21939.62.camel@johannes.berg>
-In-Reply-To: <1182499821.21939.62.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200706221132.30211.mb@bu3sch.de>
+	Thu, 21 Jun 2007 06:42:34 -0400
+Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: mabbas <mabbas@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <46137FF2.6020203@linux.intel.com>
+References: <1174909200.1364.56.camel@dell-4965.jf.intel.com>
+	 <1175111599.5151.123.camel@johannes.berg>
+	 <46137FF2.6020203@linux.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-W1W1EwvSAAdEKlOdzs4o"
+Date: Wed, 20 Jun 2007 23:13:39 +0200
+Message-Id: <1182374019.3714.87.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 22 June 2007 10:10:20 Johannes Berg wrote:
-> Not used anywhere.
 
-It's used in bcm43xx.
-Though, I'm not sure anybody in userspace actually calls this strange ioctl.
+--=-W1W1EwvSAAdEKlOdzs4o
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+Mohamed,
 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> 
-> ---
->  net/mac80211/hostapd_ioctl.h   |    2 --
->  net/mac80211/ieee80211_ioctl.c |   20 --------------------
->  2 files changed, 22 deletions(-)
-> 
-> --- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-06-22 10:08:24.558632620 +0200
-> +++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-06-22 10:08:56.158632620 +0200
-> @@ -31,8 +31,6 @@ enum {
->  	PRISM2_PARAM_HOST_ENCRYPT = 17,
->  	PRISM2_PARAM_HOST_DECRYPT = 18,
->  	PRISM2_PARAM_IEEE_802_1X = 23,
-> -	PRISM2_PARAM_ANTSEL_TX = 24,
-> -	PRISM2_PARAM_ANTSEL_RX = 25,
->  
->  	/* Instant802 additions */
->  	PRISM2_PARAM_CTS_PROTECT_ERP_FRAMES = 1001,
-> --- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-06-22 10:08:59.318632620 +0200
-> +++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-06-22 10:09:10.418632620 +0200
-> @@ -2167,18 +2167,6 @@ static int ieee80211_ioctl_prism2_param(
->  			sdata->ieee802_1x = value;
->  		break;
->  
-> -	case PRISM2_PARAM_ANTSEL_TX:
-> -		local->hw.conf.antenna_sel_tx = value;
-> -		if (ieee80211_hw_config(local))
-> -			ret = -EINVAL;
-> -		break;
-> -
-> -	case PRISM2_PARAM_ANTSEL_RX:
-> -		local->hw.conf.antenna_sel_rx = value;
-> -		if (ieee80211_hw_config(local))
-> -			ret = -EINVAL;
-> -		break;
-> -
->  	case PRISM2_PARAM_CTS_PROTECT_ERP_FRAMES:
->  		local->cts_protect_erp_frames = value;
->  		break;
-> @@ -2377,14 +2365,6 @@ static int ieee80211_ioctl_get_prism2_pa
->  		*param = sdata->ieee802_1x;
->  		break;
->  
-> -	case PRISM2_PARAM_ANTSEL_TX:
-> -		*param = local->hw.conf.antenna_sel_tx;
-> -		break;
-> -
-> -	case PRISM2_PARAM_ANTSEL_RX:
-> -		*param = local->hw.conf.antenna_sel_rx;
-> -		break;
-> -
->  	case PRISM2_PARAM_CTS_PROTECT_ERP_FRAMES:
->  		*param = local->cts_protect_erp_frames;
->  		break;
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+> +		padding =3D calc_pad_len(subframe_len);
+> +		/* the last MSDU has no padding */
+> +		if (subframe_len > remaining)
+> +			return TXRX_DROP;
+> +
+> +		frame =3D dev_alloc_skb(local->hw.extra_tx_headroom +=20
+> +				      subframe_len);
+> +
+> +		if (frame =3D=3D NULL)=20
+> +			return TXRX_DROP;
+> +
+> +		memcpy(skb_put(frame, subframe_len), (u8*)eth, subframe_len);
+> +		frame->mac.raw =3D frame->data;
+> +		skb2 =3D NULL;
 
+Here you allocate a new frame which can be sent back to the device when
+one of the aggregated frames was a multicast frame and we're an AP
+device. You also correctly add extra_tx_headroom, but it seems that this
+is missing some skb_reserve(extra_tx_headroom), no? Could you make a
+patch adding it? I'm not sure I fully understand the code there.
 
+johannes
 
--- 
-Greetings Michael.
+--=-W1W1EwvSAAdEKlOdzs4o
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGeZiC/ETPhpq3jKURAguRAKCFNbO3GCv9W9nZ0uP6oekaZZc6QgCdFpUd
+QIDUNS3YEo8ztPMPXSrKupU=
+=Nr7N
+-----END PGP SIGNATURE-----
+
+--=-W1W1EwvSAAdEKlOdzs4o--
+
