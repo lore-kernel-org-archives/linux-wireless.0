@@ -1,52 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:36796 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751708AbXFYS2P (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2007 14:28:15 -0400
-Date: Mon, 25 Jun 2007 11:27:32 -0700 (PDT)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-cc: Andrew Morton <akpm@linux-foundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Olaf Hering <olaf@aepfle.de>, Ville Syrj?l? <syrjala@sci.fi>,
-	Christoph Lameter <clameter@sgi.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Andrea Righi <righiandr@users.sourceforge.net>,
-	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Andrey Borzenkov <arvidjaar@mail.ru>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Bjorn Helgaas <bjorn.helgaas@hp.com>,
-	Chad Tindel <ctindel@users.sourceforge.net>,
-	Olaf Hering <olaf@aepfle.de>
-Subject: Re: [2/2] 2.6.22-rc6: known regressions with patches
-In-Reply-To: <467F8F63.2070101@googlemail.com>
-Message-ID: <alpine.LFD.0.98.0706251126040.3593@woody.linux-foundation.org>
-References: <467F894C.4000604@googlemail.com>
- <467F8F63.2070101@googlemail.com>
+Received: from ebb.errno.com ([69.12.149.25]:1519 "EHLO ebb.errno.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753097AbXFUVC2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jun 2007 17:02:28 -0400
+Message-ID: <467AE460.1070606@errno.com>
+Date: Thu, 21 Jun 2007 13:49:36 -0700
+From: Sam Leffler <sam@errno.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: radiotap@ojctech.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Andy Green <andy@warmcat.com>
+Subject: Re: radiotap for TX
+References: <1182375853.3714.103.camel@johannes.berg>
+In-Reply-To: <1182375853.3714.103.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On Mon, 25 Jun 2007, Michal Piotrowski wrote:
+Johannes Berg wrote:
+> Hey,
 > 
-> Memory management
+> I'm currently working on using radiotap for some stuff in the Linux
+> wireless stack (mac80211), and ran across the case where we want
+> userspace to be able to send the frame to a high-priority queue. I'm
+> thinking this should probably be in radiotap.
 > 
-> Subject    : bug in i386 MTRR initialization
-> References : http://lkml.org/lkml/2007/5/19/93
-> Submitter  : Andrea Righi <righiandr@users.sourceforge.net>
-> Status     : patch available
+> There are also other things that need to be controlled via radiotap,
+> here's what I can propose so far:
+> 
+>  * IEEE80211_RADIOTAP_SEND_AC		u8		access category
+>  *
+>  *	Indicates which access category to send the frame in, 0-3.
+>  *
+>  * IEEE80211_RADIOTAP_SEND_FLAGS	u8		flags
+>  *
+>    IEEE80211_RADIOTAP_SEND_FLAG_ENCRYPT (1<<0)
+>    /* encrypt with key for the station named in addr1 or default key */
+> 
+>    IEEE80211_RADIOTAP_SEND_FLAG_AUTO_RTSCTS (1<<1)
+>    /* automatically decide whether rts/cts are used, if unset then
+>     * rts/cts are used depending on IEEE80211_RADIOTAP_F_TX_{CTS,RTS} */
+> 
+>    IEEE80211_RADIOTAP_SEND_FLAG_RATE_CONTROL (1<<2)
+>    /* should rate control be applied to this algorithm? if not, take
+>     * the value of IEEE80211_RADIOTAP_RATE or lowest rate */
+> 
+>    IEEE80211_RADIOTAP_SEND_FLAG_SEQNR (1<<3)
+>    /* set if the sequence number in the packet shouldn't be changed,
+>     * if not set then the packet is sequence numbered properly */
+> 
+> So far that's all I would need, but some regular fields would also be
+> used like I said above for example IEEE80211_RADIOTAP_F_TX_{CTS,RTS}. A
+> good text on using radiotap for this purpose should probably be written,
+> I think somebody other than Andy and me was working on something like
+> this so we really should work together and define this properly.
 
-This one wasn't a bug in the first place, it was just the regular warning 
-for kmalloc-size-0. The "BUG" string was confusing and has been fixed, and 
-the warning for size-0 has gone away and been replaced by returning a 
-pointer that will fault on dereference instead.
+This is the control state available on FreeBSD for doing raw 802.11 
+frame xmit (packets need not include all this; I've just provided the 
+most complete set of knobs):
 
-So please remove this one.
+         uint8_t         ibp_flags;
+#define IEEE80211_BPF_SHORTPRE  0x01    /* tx with short preamble */
+#define IEEE80211_BPF_NOACK     0x02    /* tx with no ack */
+#define IEEE80211_BPF_CRYPTO    0x04    /* tx with h/w encryption */
+#define IEEE80211_BPF_FCS       0x10    /* frame incldues FCS */
+#define IEEE80211_BPF_DATAPAD   0x20    /* frame includes data padding */
+#define IEEE80211_BPF_RTS       0x40    /* tx with RTS/CTS */
+#define IEEE80211_BPF_CTS       0x80    /* tx with CTS only */
+         uint8_t         ibp_pri;        /* WME/WMM AC+tx antenna */
+         uint8_t         ibp_try0;       /* series 1 try count */
+         uint8_t         ibp_rate0;      /* series 1 IEEE tx rate */
+         uint8_t         ibp_power;      /* tx power (device units) */
+         uint8_t         ibp_ctsrate;    /* IEEE tx rate for CTS */
+         uint8_t         ibp_try1;       /* series 2 try count */
+         uint8_t         ibp_rate1;      /* series 2 IEEE tx rate */
+         uint8_t         ibp_try2;       /* series 3 try count */
+         uint8_t         ibp_rate2;      /* series 3 IEEE tx rate */
+         uint8_t         ibp_try3;       /* series 4 try count */
+         uint8_t         ibp_rate3;      /* series 4 IEEE tx rate */
 
-		Linus
+Note that using a monitor mode interface for transmit is a bad idea.  It 
+is likely you will encounter devices that disallow any packet transmit 
+when operating in monitor mode.  In practice this can be worked around 
+by using a non-monitor operating mode for the device (e.g. adhoc mode 
+w/o setting up beacons) but exporting this notion to user mode is bad 
+IMO.  In net80211 there is an adhoc-demo mode which is essentially adhoc 
+mode which was originally added for functionality found in old lucent 
+cards but more recently has been used for building applications that 
+want a "raw 802.11 device".
+
+	Sam
