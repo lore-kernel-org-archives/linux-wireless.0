@@ -1,36 +1,269 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:53756 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761887AbXFATY4 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39598 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752925AbXFVIlH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2007 15:24:56 -0400
-Message-ID: <46607281.4060802@lwfinger.net>
-Date: Fri, 01 Jun 2007 14:24:49 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John H." <mistamaila@gmail.com>
-CC: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Upgrade to f7 breaks bcm43xx module
-References: <5b9417770706011111u20f32192s960961dc8693f00e@mail.gmail.com>	 <4660630E.7040701@lwfinger.net>	 <5b9417770706011123s3a54c43ep69257321e8102719@mail.gmail.com>	 <5b9417770706011137q59962e95y6d810b236e6c0c3a@mail.gmail.com> <5b9417770706011155q50519ecftd3e4b8114102664f@mail.gmail.com>
-In-Reply-To: <5b9417770706011155q50519ecftd3e4b8114102664f@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 22 Jun 2007 04:41:07 -0400
+Message-Id: <20070621221756.722965000@sipsolutions.net>
+References: <20070621221603.778432000@sipsolutions.net>
+Date: Fri, 22 Jun 2007 00:16:06 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+Subject: [PATCH 03/14] mac80211: rx cleanups (1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John H. wrote:
-> Sorry, I got it all fixed.  The XP installation on my system had the
-> file.  There is a warning that says
-> 
-> Warning! Idle-TSSI.... Disabling TX power adjustment.
-> 
-> But I assume it's nothing?  Hopefully this doesn't have the speed
-> problems that required a patch before.
+Make some really indented code more readable by outdenting.
 
-It is not 'nothing', but there is no known fix. With the bcm43xx-mac80211 driver, I can use only a 
-rate of 1 Mbs. Others do better, but there are no patches.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-If you want a bcm43xx kernel that doesn't require patching, you need 2.6.22-rc3.
+---
+ net/mac80211/rx.c |  198 +++++++++++++++++++++++++++---------------------------
+ 1 file changed, 101 insertions(+), 97 deletions(-)
 
-Larry
+--- wireless-dev.orig/net/mac80211/rx.c	2007-06-21 19:38:16.118638003 +0200
++++ wireless-dev/net/mac80211/rx.c	2007-06-21 20:45:17.428638003 +0200
+@@ -1243,21 +1243,24 @@ static inline ieee80211_txrx_result __ie
+ 
+ 	for (handler = handlers; *handler != NULL; handler++) {
+ 		res = (*handler)(rx);
+-		if (res != TXRX_CONTINUE) {
+-			if (res == TXRX_DROP) {
+-				I802_DEBUG_INC(local->rx_handlers_drop);
+-				if (sta)
+-					sta->rx_dropped++;
+-			}
+-			if (res == TXRX_QUEUED)
+-				I802_DEBUG_INC(local->rx_handlers_queued);
++
++		switch (res) {
++		case TXRX_CONTINUE:
++			continue;
++		case TXRX_DROP:
++			I802_DEBUG_INC(local->rx_handlers_drop);
++			if (sta)
++				sta->rx_dropped++;
++			break;
++		case TXRX_QUEUED:
++			I802_DEBUG_INC(local->rx_handlers_queued);
+ 			break;
+ 		}
++		break;
+ 	}
+ 
+-	if (res == TXRX_DROP) {
++	if (res == TXRX_DROP)
+ 		dev_kfree_skb(rx->skb);
+-	}
+ 	return res;
+ }
+ 
+@@ -1409,6 +1412,9 @@ void __ieee80211_rx(struct ieee80211_hw 
+ 	u16 type;
+ 	int multicast;
+ 	int radiotap_len = 0;
++	struct ieee80211_sub_if_data *prev = NULL;
++	struct sk_buff *skb_new;
++	u8 *bssid;
+ 
+ 	if (status->flag & RX_FLAG_RADIOTAP) {
+ 		radiotap_len = ieee80211_get_radiotap_len(skb->data);
+@@ -1456,108 +1462,106 @@ void __ieee80211_rx(struct ieee80211_hw 
+ 		rx.u.rx.ra_match = 1;
+ 		ieee80211_invoke_rx_handlers(local, local->rx_handlers, &rx,
+ 					     sta);
+-	} else {
+-		struct ieee80211_sub_if_data *prev = NULL;
+-		struct sk_buff *skb_new;
+-		u8 *bssid = ieee80211_get_bssid(hdr, skb->len - radiotap_len);
+-
+-		read_lock(&local->sub_if_lock);
+-		list_for_each_entry(sdata, &local->sub_if_list, list) {
+-			rx.u.rx.ra_match = 1;
+-			switch (sdata->type) {
+-			case IEEE80211_IF_TYPE_STA:
+-				if (!bssid)
++		sta_info_put(sta);
++		return;
++	}
++
++	bssid = ieee80211_get_bssid(hdr, skb->len - radiotap_len);
++
++	read_lock(&local->sub_if_lock);
++	list_for_each_entry(sdata, &local->sub_if_list, list) {
++		rx.u.rx.ra_match = 1;
++		switch (sdata->type) {
++		case IEEE80211_IF_TYPE_STA:
++			if (!bssid)
++				continue;
++			if (!ieee80211_bssid_match(bssid,
++						   sdata->u.sta.bssid)) {
++				if (!rx.u.rx.in_scan)
+ 					continue;
+-				if (!ieee80211_bssid_match(bssid,
+-							sdata->u.sta.bssid)) {
+-					if (!rx.u.rx.in_scan)
+-						continue;
+-					rx.u.rx.ra_match = 0;
+-				} else if (!multicast &&
+-					   compare_ether_addr(sdata->dev->dev_addr,
+-							      hdr->addr1) != 0) {
+-					if (!sdata->promisc)
+-						continue;
+-					rx.u.rx.ra_match = 0;
+-				}
+-				break;
+-			case IEEE80211_IF_TYPE_IBSS:
+-				if (!bssid)
++				rx.u.rx.ra_match = 0;
++			} else if (!multicast &&
++				   compare_ether_addr(sdata->dev->dev_addr,
++						      hdr->addr1) != 0) {
++				if (!sdata->promisc)
+ 					continue;
+-				if (!ieee80211_bssid_match(bssid,
+-							sdata->u.sta.bssid)) {
+-					if (!rx.u.rx.in_scan)
+-						continue;
+-					rx.u.rx.ra_match = 0;
+-				} else if (!multicast &&
+-					   compare_ether_addr(sdata->dev->dev_addr,
+-							      hdr->addr1) != 0) {
+-					if (!sdata->promisc)
+-						continue;
+-					rx.u.rx.ra_match = 0;
+-				} else if (!sta)
+-					sta = rx.sta =
+-						ieee80211_ibss_add_sta(sdata->dev,
+-								       skb, bssid,
+-								       hdr->addr2);
+-				break;
+-			case IEEE80211_IF_TYPE_AP:
+-				if (!bssid) {
+-					if (compare_ether_addr(sdata->dev->dev_addr,
+-							       hdr->addr1) != 0)
+-						continue;
+-				} else if (!ieee80211_bssid_match(bssid,
+-							sdata->dev->dev_addr)) {
+-					if (!rx.u.rx.in_scan)
+-						continue;
+-					rx.u.rx.ra_match = 0;
+-				}
+-				if (sdata->dev == local->mdev &&
+-				    !rx.u.rx.in_scan)
+-					/* do not receive anything via
+-					 * master device when not scanning */
++				rx.u.rx.ra_match = 0;
++			}
++			break;
++		case IEEE80211_IF_TYPE_IBSS:
++			if (!bssid)
++				continue;
++			if (!ieee80211_bssid_match(bssid,
++						sdata->u.sta.bssid)) {
++				if (!rx.u.rx.in_scan)
+ 					continue;
+-				break;
+-			case IEEE80211_IF_TYPE_WDS:
+-				if (bssid ||
+-				    (rx.fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
++				rx.u.rx.ra_match = 0;
++			} else if (!multicast &&
++				   compare_ether_addr(sdata->dev->dev_addr,
++						      hdr->addr1) != 0) {
++				if (!sdata->promisc)
+ 					continue;
+-				if (compare_ether_addr(sdata->u.wds.remote_addr,
+-						       hdr->addr2) != 0)
++				rx.u.rx.ra_match = 0;
++			} else if (!sta)
++				sta = rx.sta =
++					ieee80211_ibss_add_sta(sdata->dev,
++							       skb, bssid,
++							       hdr->addr2);
++			break;
++		case IEEE80211_IF_TYPE_AP:
++			if (!bssid) {
++				if (compare_ether_addr(sdata->dev->dev_addr,
++						       hdr->addr1))
+ 					continue;
+-				break;
+-			}
+-
+-			if (prev) {
+-				skb_new = skb_copy(skb, GFP_ATOMIC);
+-				if (!skb_new) {
+-					if (net_ratelimit())
+-						printk(KERN_DEBUG "%s: failed to copy "
+-						       "multicast frame for %s",
+-						       local->mdev->name, prev->dev->name);
++			} else if (!ieee80211_bssid_match(bssid,
++						sdata->dev->dev_addr)) {
++				if (!rx.u.rx.in_scan)
+ 					continue;
+-				}
+-				rx.skb = skb_new;
+-				rx.dev = prev->dev;
+-				rx.sdata = prev;
+-				ieee80211_invoke_rx_handlers(local,
+-							     local->rx_handlers,
+-							     &rx, sta);
++				rx.u.rx.ra_match = 0;
+ 			}
+-			prev = sdata;
++			if (sdata->dev == local->mdev && !rx.u.rx.in_scan)
++				/* do not receive anything via
++				 * master device when not scanning */
++				continue;
++			break;
++		case IEEE80211_IF_TYPE_WDS:
++			if (bssid ||
++			    (rx.fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
++				continue;
++			if (compare_ether_addr(sdata->u.wds.remote_addr,
++					       hdr->addr2))
++				continue;
++			break;
+ 		}
++
+ 		if (prev) {
+-			rx.skb = skb;
++			skb_new = skb_copy(skb, GFP_ATOMIC);
++			if (!skb_new) {
++				if (net_ratelimit())
++					printk(KERN_DEBUG "%s: failed to copy "
++					       "multicast frame for %s",
++					       local->mdev->name, prev->dev->name);
++				continue;
++			}
++			rx.skb = skb_new;
+ 			rx.dev = prev->dev;
+ 			rx.sdata = prev;
+ 			ieee80211_invoke_rx_handlers(local, local->rx_handlers,
+ 						     &rx, sta);
+-		} else
+-			dev_kfree_skb(skb);
+-		read_unlock(&local->sub_if_lock);
++		}
++		prev = sdata;
+ 	}
++	if (prev) {
++		rx.skb = skb;
++		rx.dev = prev->dev;
++		rx.sdata = prev;
++		ieee80211_invoke_rx_handlers(local, local->rx_handlers,
++					     &rx, sta);
++	} else
++		dev_kfree_skb(skb);
++	read_unlock(&local->sub_if_lock);
+ 
+-  end:
++ end:
+ 	if (sta)
+ 		sta_info_put(sta);
+ }
+
+-- 
 
