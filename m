@@ -1,71 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:62742 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S966375AbXFHCPc (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:49056 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750978AbXFUX2J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2007 22:15:32 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: yi.zhu@intel.com
-Subject: Re: [PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
-Date: Thu, 7 Jun 2007 19:14:52 -0700
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jiri Benc <jbenc@suse.cz>
-References: <20070606082210.GA28649@mail.intel.com>
-In-Reply-To: <20070606082210.GA28649@mail.intel.com>
+	Thu, 21 Jun 2007 19:28:09 -0400
+Message-ID: <467B097F.4030806@warmcat.com>
+Date: Fri, 22 Jun 2007 00:27:59 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2756693.5u9BNL005o";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200706071914.56402.flamingice@sourmilk.net>
+To: Jiri Benc <jbenc@suse.cz>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [WIP] mac80211: kill mgmt interface
+References: <1182418939.10821.8.camel@johannes.berg>	<20070621143558.68fc8e4a@griffin.suse.cz>	<1182429920.21939.1.camel@johannes.berg> <20070621151441.500d62d5@griffin.suse.cz>
+In-Reply-To: <20070621151441.500d62d5@griffin.suse.cz>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2756693.5u9BNL005o
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Jiri Benc wrote:
+> On Thu, 21 Jun 2007 14:45:19 +0200, Johannes Berg wrote:
+>> On Thu, 2007-06-21 at 14:35 +0200, Jiri Benc wrote:
+>>
+>>> 1. I'm still not sure if using monitor interface for this purpose is a
+>>> good idea. Given the fact we want to switch to user space MLME, this
+>>> will mean that at least one monitor interface is always present. So we
+>>> got rid of management interface just to introduce another user visible
+>>> magic interface.
+>> Well, that's not a bad point, but at least it's not created via magic
+>> ioctls etc.
+> 
+> That's true. Still, couldn't we find a better solution?
 
-On Wednesday 06 June 2007 01:22, Zhu Yi wrote:
-> +#define IEEE80211_TSINFO_TYPE(a)	((a.short1 & 0x0001) >> 0)
-> +#define IEEE80211_TSINFO_TSID(a)	((a.short1 & 0x001E) >> 1)
-> +#define IEEE80211_TSINFO_DIR(a)		((a.short1 & 0x0060) >> 5)
-> +#define IEEE80211_TSINFO_POLICY(a)	((a.short1 & 0x0180) >> 7)
-> +#define IEEE80211_TSINFO_AGG(a)		((a.short1 & 0x0200) >> 9)
-> +#define IEEE80211_TSINFO_APSD(a)	((a.short1 & 0x0400) >> 10)
-> +#define IEEE80211_TSINFO_UP(a)		((a.short1 & 0x3800) >> 11)
-> +#define IEEE80211_TSINFO_ACK(a)		((a.short1 & 0xC000) >> 14)
-> +#define IEEE80211_TSINFO_SCHEDULE(a)	((a.byte3 & 0x01) >> 0)
-> +
-> +#define SET_TSINFO_TYPE(i, d)		(i.short1 |= (d << 0) & 0x0001)
-> +#define SET_TSINFO_TSID(i, d)		(i.short1 |= (d << 1) & 0x001E)
-> +#define SET_TSINFO_DIR(i, d)		(i.short1 |= (d << 5) & 0x0060)
-> +#define SET_TSINFO_POLICY(i, d)		(i.short1 |= (d << 7) & 0x0180)
-> +#define SET_TSINFO_AGG(i, d)		(i.short1 |= (d << 9) & 0x0200)
-> +#define SET_TSINFO_APSD(i, d)		(i.short1 |= (d << 10) & 0x0400)
-> +#define SET_TSINFO_UP(i, d)		(i.short1 |= (d << 11) & 0x3800)
-> +#define SET_TSINFO_ACK(i, d)		(i.short1 |= (d << 14) & 0xC000)
-> +#define SET_TSINFO_SCHEDULE(i, d)	(i.byte3 |= (d << 0) & 0x01)
-> +
-Everything that touches short1 looks broken on big endian.
+There probably isn't a better solution for passing actual packets back
+and forth than an actual network interface.  They are made for the task,
+solid and well debugged, and can deal with heavy traffic cleanly.
 
--Michael Wu
+> I know that netlink isn't designed for this kind of things. But if we
+> don't have any other idea, I'd still prefer that over a dedicated
+> network interface.
 
---nextPart2756693.5u9BNL005o
-Content-Type: application/pgp-signature
+If the only objection to the network interface is purely cosmetic in
+usermode, and there is no technical complaint about it otherwise, maybe
+changing it is not the right answer.  For example if the spawned
+interface naming followed a convention like .wlan0_mlme consistently,
+usermode apps could filter on that.  Although I admit the 2001 release
+date of latest net-tools does not hold out much hope for ifconfig...
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+http://www.tazenda.demon.co.uk/phil/net-tools/
 
-iD8DBQBGaLugT3Oqt9AH4aERAq/OAKCORKzjNPALTLCd2OdP8wDJsGKjVACeOOwO
-8VTMdQt6IBthnx2DbhdPOmE=
-=peSg
------END PGP SIGNATURE-----
-
---nextPart2756693.5u9BNL005o--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-Andy
