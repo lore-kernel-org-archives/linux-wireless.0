@@ -1,62 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([213.239.205.134]:39626 "EHLO mail.tglx.de"
+Received: from styx.suse.cz ([82.119.242.94]:41374 "EHLO mail.suse.cz"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751134AbXFDQgE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2007 12:36:04 -0400
-Subject: Re: b44: regression in 2.6.22 (resend)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Stephen Hemminger <shemminger@linux-foundation.org>
-Cc: Maximilian Engelhardt <maxi@daemonizer.de>,
-	Michael Buesch <mb@bu3sch.de>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-In-Reply-To: <20070604090918.42386fbb@freepuppy>
-References: <20070525172431.60affaca@freepuppy>
-	 <200705281944.05030.maxi@daemonizer.de> <1180380230.3657.3.camel@chaos>
-	 <200706031826.06891.maxi@daemonizer.de> <1180939188.4404.5.camel@chaos>
-	 <20070604090918.42386fbb@freepuppy>
-Content-Type: text/plain
-Date: Mon, 04 Jun 2007 18:35:58 +0200
-Message-Id: <1180974958.4404.24.camel@chaos>
+	id S1754045AbXFUNOn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jun 2007 09:14:43 -0400
+Date: Thu, 21 Jun 2007 15:14:41 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [WIP] mac80211: kill mgmt interface
+Message-ID: <20070621151441.500d62d5@griffin.suse.cz>
+In-Reply-To: <1182429920.21939.1.camel@johannes.berg>
+References: <1182418939.10821.8.camel@johannes.berg>
+	<20070621143558.68fc8e4a@griffin.suse.cz>
+	<1182429920.21939.1.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-06-04 at 09:09 -0700, Stephen Hemminger wrote:
-> > > I did the test with an 2.6.22-rc3-git4 kernel and the p54 driver built 
-> > > external as module. 
-> > 
-> > Can you look at iperf to figure out, whether it does some weird timer
-> > stuff (high frequency interval timer or such) ? Either check the code or
-> > strace it.
->
-> It is the receiver doing a tight loop doing gettimeofday/recv calls.
+On Thu, 21 Jun 2007 14:45:19 +0200, Johannes Berg wrote:
+> On Thu, 2007-06-21 at 14:35 +0200, Jiri Benc wrote:
 > 
+> > 1. I'm still not sure if using monitor interface for this purpose is a
+> > good idea. Given the fact we want to switch to user space MLME, this
+> > will mean that at least one monitor interface is always present. So we
+> > got rid of management interface just to introduce another user visible
+> > magic interface.
 > 
-> sendto(-1227715616, 0xc, 3085438964, 0, {...}, 3067249832) = 0
-> gettimeofday({1180973726, 981615}, NULL) = 0
-> gettimeofday({1180973726, 981751}, NULL) = 0
-> futex(0x8055c64, 0x5 /* FUTEX_??? */, 1) = 1
-> futex(0x8055c90, FUTEX_WAKE, 1) = 0
-> recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-> gettimeofday({1180973726, 982754}, NULL) = 0
-> recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-> gettimeofday({1180973726, 983790}, NULL) = 0
+> Well, that's not a bad point, but at least it's not created via magic
+> ioctls etc.
 
-Well, gettimeofday() is not affected by the highres code, but
+That's true. Still, couldn't we find a better solution?
 
-> nanosleep({0, 0}, NULL) = 0
-> nanosleep({0, 0}, NULL) = 0
+I know that netlink isn't designed for this kind of things. But if we
+don't have any other idea, I'd still prefer that over a dedicated
+network interface.
 
-is. The nanosleep call with a relative timeout of 0 returns immediately
-with highres enabled, while it sleeps at least until the next tick
-arrives when highres is off. Are there more of those stupid sleeps in
-the code ?
+> Actually, I first thought that as well, but in fact the userspace MLME
+> in wpa_supplicant doesn't even need to connect these events, it simply
+> checks which auth sequence number it sent and then assumes that whatever
+> it did was correct and adds the sta to the associated/auth list on the
+> callback.
 
-	tglx
+If some program needs to get frames it injected back with a status,
+there should exist an easy way to determine which status corresponds
+with which frame. If there is no need to determine this, what is the
+reason for returning back injected frames in the first place?
 
+ Jiri
 
+-- 
+Jiri Benc
+SUSE Labs
