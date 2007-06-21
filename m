@@ -1,66 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:55764 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:58918 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751996AbXF1OYl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2007 10:24:41 -0400
-Message-ID: <4683C49F.8050803@redhat.com>
-Date: Thu, 28 Jun 2007 16:24:31 +0200
-From: Michal Schmidt <mschmidt@redhat.com>
-MIME-Version: 1.0
-To: Matteo Croce <rootkit85@yahoo.it>
-CC: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH 0/4] airo fixes
-References: <200706281551.37334.rootkit85@yahoo.it>
-In-Reply-To: <200706281551.37334.rootkit85@yahoo.it>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1755460AbXFUCKJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2007 22:10:09 -0400
+Subject: [PATCH]mac80211: add support for iwlist channel (3rd try)
+From: Hong Liu <hong.liu@intel.com>
+To: Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Thu, 21 Jun 2007 10:07:08 +0800
+Message-Id: <1182391628.27548.8.camel@napa-sdv1.sh.intel.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matteo Croce skrev:
->> On Wed, 2007-06-27 at 23:14 +0200, Michal Schmidt wrote:
->> Hello,
->>
->> this is a series of four patches for the airo driver:
->>
->> 1/4: airo: don't use the interface name so much before registration
->> 2/4: airo: delay parts of initialization until the netdev is up
->> 3/4: airo: disable the PCI device when unloading module
->> 4/4: airo: start with radio off
->>
->> The first two fix the race condition Matteo Croce was experiencing.
->> The third one fixes a bug I noticed during testing.
->> The last one saves some power when the card is not used.
-> 
-> I have applied your 4 patches on both a vanilla 2.6.21.5 kernel and
-> a 2.6.22-rc6 wireless-dev one, and i found that only patches 1/4 and 2/4 are 
-> good.
+Add supported channels info in SIOCGIWRANGE implementation.
 
-> the 3/4 one gives this bogus output:
-> 
-> airo(): Probing for PCI adapters
-> PCI: Setting latency timer of device 0000:05:08.0 to 64
-> airo(eth%d): cmd:111 status:7f11 rsp0:2 rsp1:0 rsp2:0
-> airo(eth%d): Doing fast bap_reads
-> airo(): WPA is supported.
-> airo(eth0): MAC enabled 0:d:29:4f:c:be
-> airo(): Finished probing for PCI adapters
+Signed-off-by: Hong Liu <hong.liu@intel.com>
+---
+ net/mac80211/ieee80211_ioctl.c |   25 +++++++++++++++++++++++++
+ 1 files changed, 25 insertions(+), 0 deletions(-)
 
-I must have missed some pieces still printing the device name before 
-registration. This should be just cosmetic. I understand the card still 
-works in this case?
-
-> and the 4/4 definitely broke all:
-> 
-> airo(): Probing for PCI adapters
-> PCI: Setting latency timer of device 0000:05:08.0 to 64
-> airo(eth%d): cmd:111 status:7f11 rsp0:2 rsp1:0 rsp2:0
-> airo(eth%d): Doing fast bap_reads
-> airo(eth%d): Bad MAC enable reason = 2, rid = 0, offset = 0
-> airo(eth%d): MAC could not be enabled
-> airo(): Finished probing for PCI adapters
-
-That's worse. I'll see how it is possible.
-Thanks for testing!
-
-Michal
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index fcea8b2..9b5122a 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -1500,6 +1500,8 @@ static int ieee80211_ioctl_giwrange(struct net_device *dev,
+ {
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct iw_range *range = (struct iw_range *) extra;
++	struct ieee80211_hw_mode *mode = NULL;
++	int c = 0;
+ 
+ 	data->length = sizeof(struct iw_range);
+ 	memset(range, 0, sizeof(struct iw_range));
+@@ -1533,6 +1535,29 @@ static int ieee80211_ioctl_giwrange(struct net_device *dev,
+ 	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
+ 			  IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
+ 
++	list_for_each_entry(mode, &local->modes_list, list) {
++		int i = 0;
++
++		if (!(local->enabled_modes & (1 << mode->mode)) ||
++		    (local->hw_modes & local->enabled_modes &
++		     (1 << MODE_IEEE80211G) && mode->mode == MODE_IEEE80211B))
++			continue;
++
++		while (i < mode->num_channels && c < IW_MAX_FREQUENCIES) {
++			struct ieee80211_channel *chan = &mode->channels[i];
++
++			if (chan->flag & IEEE80211_CHAN_W_SCAN) {
++				range->freq[c].i = chan->chan;
++				range->freq[c].m = chan->freq * 100000;
++				range->freq[c].e = 1;
++				c++;
++			}
++			i++;
++		}
++	}
++	range->num_channels = c;
++	range->num_frequency = c;
++
+ 	IW_EVENT_CAPA_SET_KERNEL(range->event_capa);
+ 	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWTHRSPY);
+ 	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWAP);
+-- 
+1.5.0.5
 
