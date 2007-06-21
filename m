@@ -1,130 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:36545 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756427AbXFDQWf (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:48318 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753872AbXFULCs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2007 12:22:35 -0400
-Date: Mon, 4 Jun 2007 09:09:18 -0700
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Maximilian Engelhardt <maxi@daemonizer.de>,
-	Michael Buesch <mb@bu3sch.de>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: b44: regression in 2.6.22 (resend)
-Message-ID: <20070604090918.42386fbb@freepuppy>
-In-Reply-To: <1180939188.4404.5.camel@chaos>
-References: <20070525172431.60affaca@freepuppy>
-	<200705281944.05030.maxi@daemonizer.de>
-	<1180380230.3657.3.camel@chaos>
-	<200706031826.06891.maxi@daemonizer.de>
-	<1180939188.4404.5.camel@chaos>
+	Thu, 21 Jun 2007 07:02:48 -0400
+Subject: Re: [PATCH] mac80211: show transmitted frames on monitor interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1182417915.10821.1.camel@johannes.berg>
+References: <1182417915.10821.1.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WqQoIE06vqgvsq9X4xoE"
+Date: Thu, 21 Jun 2007 13:03:53 +0200
+Message-Id: <1182423833.10821.11.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 04 Jun 2007 08:39:48 +0200
-Thomas Gleixner <tglx@linutronix.de> wrote:
 
-> On Sun, 2007-06-03 at 18:26 +0200, Maximilian Engelhardt wrote:
-> > > Is there any other strange behavior of the high res enabled kernel than
-> > > the b44 problem ?
-> > 
-> > I didn't notice anything in the past (as I wrote). But today I did some tests 
-> > for an updated version of the p54 mac80211 wlan driver and I noticed exactly 
-> > the same problem:
-> > 
-> > when booting with highres=off everything is fine.
-> > But when I boot an highres enabled kernel and I do the iperf-test with the p54 
-> > driver, my systems becomes unresponsive during the test. It seems to be 
-> > exactly the same problem I have with the b44 driver.
-> > So this might not be a bug in the b44 code but a bug somewhere in the linux 
-> > networking code.
-> > 
-> > I did the test with an 2.6.22-rc3-git4 kernel and the p54 driver built 
-> > external as module. 
-> 
-> Can you look at iperf to figure out, whether it does some weird timer
-> stuff (high frequency interval timer or such) ? Either check the code or
-> strace it.
-> 
-> 	tglx
-> 
-> 
+--=-WqQoIE06vqgvsq9X4xoE
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+Hmm, another thing is that with hw crypto you'll see the outgoing frames
+unencrypted, but with sw crypto they'll be encrypted. That's expected,
+but I suppose it'd be nice to tell the program seeing the frames which
+is the case, the frame control bit could be updated for example..
 
-It is the receiver doing a tight loop doing gettimeofday/recv calls.
+johannes
 
+--=-WqQoIE06vqgvsq9X4xoE
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-sendto(-1227715616, 0xc, 3085438964, 0, {...}, 3067249832) = 0
-gettimeofday({1180973726, 981615}, NULL) = 0
-gettimeofday({1180973726, 981751}, NULL) = 0
-futex(0x8055c64, 0x5 /* FUTEX_??? */, 1) = 1
-futex(0x8055c90, FUTEX_WAKE, 1) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 982754}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 983790}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 984355}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 984706}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 985111}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 985499}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 986088}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 986436}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 986916}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 987397}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 987872}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 988440}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 988823}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 989314}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 990029}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 990890}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 991803}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 992616}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 993105}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 993585}, NULL) = 0
-recv(4, "\0\0\0\0\0\0\0\1\0\0\23\211\0\0\0\0\0\0\0\0\377\377\364"..., 8192, 0) = 8192
-gettimeofday({1180973726, 994014}, NULL) = 0
-...
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-recv(4, "45678901234567890123456789012345"..., 8192, 0) = 1448
-gettimeofday({1180973757, 172437}, NULL) = 0
-recv(4, "23456789012345678901234567890123"..., 8192, 0) = 1448
-gettimeofday({1180973757, 172576}, NULL) = 0
-recv(4, "01234567890123456789012345678901"..., 8192, 0) = 1632
-gettimeofday({1180973757, 172752}, NULL) = 0
-recv(4, "", 8192, 0)                    = 0
-gettimeofday({1180973757, 172797}, NULL) = 0
-gettimeofday({1180973757, 172817}, NULL) = 0
-nanosleep({0, 0}, NULL) = 0
-nanosleep({0, 0}, NULL)                 = 0
-close(4)                     = 0
-futex(0x8055d04, 0x5 /* FUTEX_??? */, 1) = 1
-futex(0x8055d30, FUTEX_WAKE, 1) = 0
-_exit(0)
+iD8DBQBGelsY/ETPhpq3jKURAuKcAKC7LDTmr0mp6iBeBrfI4NXaMucu3ACfcD2K
+ZUcG35RoUV3vJ/n68l6i8Xk=
+=Kmm3
+-----END PGP SIGNATURE-----
 
--- 
-Stephen Hemminger <shemminger@linux-foundation.org>
+--=-WqQoIE06vqgvsq9X4xoE--
+
