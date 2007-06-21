@@ -1,62 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:40716 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752734AbXFKSMP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 14:12:15 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH V3] mac80211: Set low initial rate in rc80211_simple
-Date: Mon, 11 Jun 2007 11:11:07 -0700
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-References: <4668c71b.E0vXnFMnxxm8I5gE%Larry.Finger@lwfinger.net> <200706072038.36708.flamingice@sourmilk.net> <20070611173112.GC10397@tuxdriver.com>
-In-Reply-To: <20070611173112.GC10397@tuxdriver.com>
+Received: from web51411.mail.re2.yahoo.com ([206.190.39.152]:26593 "HELO
+	web51411.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754301AbXFUVud convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jun 2007 17:50:33 -0400
+Date: Thu, 21 Jun 2007 14:50:32 -0700 (PDT)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: Re: [WIP] mac80211: kill mgmt interface
+To: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1496993.oTEozNSsac";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200706111111.11547.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=iso-8859-1
+Message-ID: <200268.51153.qm@web51411.mail.re2.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1496993.oTEozNSsac
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-
-On Monday 11 June 2007 10:31, John W. Linville wrote:
-> How about "I think you forgot some curly braces"?  Until Johannes
-> posted his patch (which you could have done just as easily) I had no
-> idea what you were talking about here...
->
-Well, I did end up explaining it later after it was obvious that Larry Fing=
-er=20
-didn't understand what I mean.
-
-As for posting a patch to fix it? I figured Larry Finger would post a fixed=
+Regarding user-space MLME and special interfaces:
+mac80211 allows for multiple virtual interfaces on top of one physical =
+NIC, right?=20
+Can one run multiple MLME (e.g. hostapd) instances to run multiple virt=
+ual master mode interfaces
+for different networks? With different BSSID?
 =20
-patch after I explained the comment. I didn't think you were going to merge=
+-- =20
+Regards
 =20
-it.
+       Joerg
+=20
 
-=2DMichael Wu
 
---nextPart1496993.oTEozNSsac
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBGbZA/T3Oqt9AH4aERArQjAJ9UsaFICYfUNfvimeeP0Yy7p7w5ZwCgsy5g
-k7MeJhRxvkTCL2IEazFY0C0=
-=H9l+
------END PGP SIGNATURE-----
 
---nextPart1496993.oTEozNSsac--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+__________________________________________________
+Do You Yahoo!?
+Sie sind Spam leid? Yahoo! Mail verf=FCgt =FCber einen herausragenden S=
+chutz gegen Massenmails.=20
+http://mail.yahoo.com=20
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
