@@ -1,66 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49533 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758263AbXFMPqg (ORCPT
+Received: from mail8.sea5.speakeasy.net ([69.17.117.10]:56640 "EHLO
+	mail8.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750818AbXFUNgP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2007 11:46:36 -0400
-Subject: Re: [PATCH Try#11 3/4] cfg80211: Radiotap parser
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: andy@warmcat.com, linux-wireless@vger.kernel.org
-In-Reply-To: <200706122242.08045.flamingice@sourmilk.net>
-References: <20070612130435.896010304@warmcat.com>
-	 <20070612130502.157979021@warmcat.com>
-	 <200706122242.08045.flamingice@sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EwyvQ/2KSzxPKJ3IbgXB"
-Date: Wed, 13 Jun 2007 17:46:36 +0200
-Message-Id: <1181749596.29767.82.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 21 Jun 2007 09:36:15 -0400
+Date: Thu, 21 Jun 2007 06:35:56 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [WIP] mac80211: kill mgmt interface
+Message-ID: <20070621133556.GJ5361@jm.kir.nu>
+References: <1182418939.10821.8.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1182418939.10821.8.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jun 21, 2007 at 11:42:19AM +0200, Johannes Berg wrote:
 
---=-EwyvQ/2KSzxPKJ3IbgXB
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> This patch kills the management interface type now that we can
+> see transmitted frames on monitor interfaces.
 
-On Tue, 2007-06-12 at 22:42 -0700, Michael Wu wrote:
-> On Tuesday 12 June 2007 06:04, andy@warmcat.com wrote:
-> > +typedef enum  {
-> > +       RADIOTAP_PARSER_OK =3D 0,
-> > +       RADIOTAP_PARSER_DONE,
-> > +       RADIOTAP_PARSER_INVALID
-> > +} ieee80211_radiotap_parser_retcode_t;
+Has someone tested that this works with programs that use the management
+interface (mainly, hostapd and wpa_supplicant)? Is all the needed
+functionality available with the alternative solution?
 
-> Yuck. I much prefer the standard error codes used in the previous version=
-..
+> I renamed the req_tx_status to reliable_tx_mntr and the flag
+> constant as well since that's what they now mean. It is always
+> set for injected frames so that hostapd can rely on seeing the
+> frames it sent.
 
-I would as well, but as I outlined before we basically have four things
-that can happen
- * we found a next item we understood
- * we have a parser error
- * we reached the end
- * we found an item we can't support (and thus we don't support any
-   further ones either assuming we add support sequentially)
+I'm not sure I follow this explanation fully.. How would hostapd learn
+whether the destination address acknowledged a unicast frame?
 
-I would like to be able to distinguish all these cases, the previous
-version couldn't distinguish between the last two. However, I'm not
-convinced that error codes are reasonable for something that isn't an
-error (i.e. reaching the end)
+> There are a few minor remaining problems:
+>  * some notifications are now missing
+>    (radar, key threshold, michael MIC failure, wep unknown key)
+>    [radar, key threshold aren't used anywhere so can probably
+>     be left out for now]
 
-johannes
+I would not remove key threshold notification and we must most certainly
+not remove Michal MIC failure before there is a reliable way of doing
+the same functionality.
 
---=-EwyvQ/2KSzxPKJ3IbgXB
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+>  * injected frames aren't sent to AC_VO pending on the radiotap
+>    definition for access category
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+This is not good either since management frames should be sent at a high
+priority.
 
-iD8DBQBGcBFb/ETPhpq3jKURAo1kAJoDjtJHBjfbf85WIOSbz0Y3E8J/kwCghGYK
-tRCEVKtOpyBtqfDRh5N6Kw8=
-=STG5
------END PGP SIGNATURE-----
+> The biggest problem, however, and I'm not sure how to solve it, is
+> that hostapd will see either encrypted or unencrypted frames on the
+> monitor interface depending on whether hardware encryption is used
+> or not. However, hostapd really needs to see eapol frames to do
+> whatever it needs to with them. Right now, I don't really have an
+> idea except maybe to send these packets to hostapd via nl80211,
+> or to introduce some sort of "decrypted soft monitor" iface.
 
---=-EwyvQ/2KSzxPKJ3IbgXB--
+If I've understood correctly (please correct me, if not), this patch is
+proposing to remove an interface that works currently and leave the
+stack in state that does not work. I can only strongly recommend this
+patch not to be applied at this point. It is not a good direction to
+start removing working code before there is a good alternative available
+and that alternative has actually been tested to provide the needed
+functionality.
 
+I don't really see need for getting rid of the management interface, but
+if there is consensus on doing that, we would need to have another way
+of being able to receive and transmit management frames and data frames
+from/to user space in a way that provides at least following
+functionality:
+- transmit management frames at high priority
+- control whether transmitted frames will be encrypted or not
+- get callback to report TX status for unicast frames (whether the
+  receiver sent control::ack for the frame)
+- receive management frames
+- receive data frames EAPOL/etc. ethertypes in decrypted form
+- delivery of notifications to user space for Michael MIC errors and
+  other similar events
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
