@@ -1,37 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.185]:19848 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753268AbXFBSly (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39526 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752107AbXFVIji (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jun 2007 14:41:54 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so1156570mue
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Jun 2007 11:41:53 -0700 (PDT)
-Message-ID: <7b4bf7ff0706021141g35c6e978m85988f5114ff81a9@mail.gmail.com>
-Date: Sat, 2 Jun 2007 20:41:53 +0200
-From: "Olivier Cornu" <o.cornu@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: [PATCH] mac80211: Update stop_queues kdoc
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200706021537.58602.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <200706011129.12432.mb@bu3sch.de> <200706012342.20592.mb@bu3sch.de>
-	 <7b4bf7ff0706020617l4cf50359g8358e4aa2b359999@mail.gmail.com>
-	 <200706021537.58602.mb@bu3sch.de>
+	Fri, 22 Jun 2007 04:39:38 -0400
+Subject: [PATCH] cfg80211: use debugfs_rename
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 21 Jun 2007 18:30:57 +0200
+Message-Id: <1182443457.21939.47.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/6/2, Michael Buesch <mb@bu3sch.de>:
-> On Saturday 02 June 2007 15:17:55 Olivier Cornu wrote:
-> > Is there any way to tell mac80211 the device is in a [temporary]
-> > "non-functional" state (reset, association loss...) ?
->
-> As far as I can see ieee80211_stop_queues() is exactly for that, but
-> it's broken.
 
-_If_ it is so, then stop_queues is misnamed.
-In its current form, stop_queues suggests to driver writers it is just
-a shortcut to save them looping through each queue to stop them all.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
---
-Olivier Cornu
+---
+ net/wireless/core.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+--- wireless-dev.orig/net/wireless/core.c	2007-05-21 18:37:40.541805077 +0200
++++ wireless-dev/net/wireless/core.c	2007-05-21 21:01:03.481611481 +0200
+@@ -162,10 +162,15 @@ int cfg80211_dev_rename(struct cfg80211_
+ 
+ 	/* this will check for collisions */
+ 	result = device_rename(&rdev->wiphy.dev, newname);
+-	if (!result)
++	if (result)
+ 		return result;
+ 
+-	/* TODO: do debugfs rename! */
++	if (!debugfs_rename(rdev->wiphy.debugfsdir->d_parent,
++			    rdev->wiphy.debugfsdir,
++			    rdev->wiphy.debugfsdir->d_parent,
++			    newname))
++		printk(KERN_ERR "cfg80211: failed to rename debugfs dir to %s!\n",
++		       newname);
+ 
+ 	nl80211_notify_dev_rename(rdev);
+ 
+
+
