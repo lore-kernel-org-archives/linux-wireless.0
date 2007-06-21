@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:52414 "EHLO pasmtpB.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760916AbXFRS4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2007 14:56:20 -0400
-Date: Mon, 18 Jun 2007 20:57:04 +0200
-From: Sam Ravnborg <sam@ravnborg.org>
-To: Christoph Hellwig <hch@infradead.org>,
-	Dan Williams <dcbw@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	hs4233@mail.mn-solutions.de, linux-kernel@vger.kernel.org,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: libertas (private) ioctls vs. nl80211
-Message-ID: <20070618185704.GA25340@uranus.ravnborg.org>
-References: <1181757483.29767.99.camel@johannes.berg> <20070614170901.GA13384@infradead.org> <20070614103836.23b07a72.akpm@linux-foundation.org> <20070614181307.GA16856@infradead.org> <1182188327.22149.5.camel@xo-28-0B-88.localdomain> <20070618184436.GC17479@infradead.org>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33734 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751708AbXFVIjT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2007 04:39:19 -0400
+Subject: [PATCH] mac80211: use debugfs_rename
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 21 Jun 2007 18:30:19 +0200
+Message-Id: <1182443419.21939.44.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070618184436.GC17479@infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 18, 2007 at 07:44:36PM +0100, Christoph Hellwig wrote:
-> On Mon, Jun 18, 2007 at 01:38:47PM -0400, Dan Williams wrote:
-> > On Thu, 2007-06-14 at 19:13 +0100, Christoph Hellwig wrote:
-> > > > I suspect that the probability of your proposal succeeding would be increased
-> > > > if you could prepare a patch...
-> > 
-> > Applied to upstream-fixes branch of libertas-2.6 which is destined for
-> > 2.6.22; I hope you don't mind that I just added the Signed-off-by for
-> > you.
-> 
-> Adding a signed off line for a patch that purely removes codes seems
-> rather pointless to me, but feel free to add it if you care.
-THe Signed-off-by: document the path a given patch have taken on its way
-to the final acceptance and does not have any significance whatsoever
-about the content of the patch. Anyone on the Signed-of-by route
-may change the patch (and I often do so) without further notice.
 
-So judging if a Signed-off-by: should be added or not based on
-patch content is wrong. It is a patch anyway.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-That said the legal(in a loose definition of legal) rationale may
-be of much less significance when trivially removing some code.
-But we use the same mechanish even to cover spelling corrections.
+---
+ net/mac80211/debugfs_netdev.c |   12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-	Sam
+--- wireless-dev.orig/net/mac80211/debugfs_netdev.c	2007-06-13 22:45:54.798817885 +0200
++++ wireless-dev/net/mac80211/debugfs_netdev.c	2007-06-13 23:06:25.448817885 +0200
+@@ -734,9 +734,9 @@ static int netdev_notify(struct notifier
+ 			 void *ndev)
+ {
+ 	struct net_device *dev = ndev;
+-	/* TODO
+ 	char buf[10+IFNAMSIZ];
+-	*/
++	struct dentry *dir;
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	if (state != NETDEV_CHANGENAME)
+ 		return 0;
+@@ -747,10 +747,12 @@ static int netdev_notify(struct notifier
+ 	if (dev->ieee80211_ptr->wiphy->privid != mac80211_wiphy_privid)
+ 		return 0;
+ 
+-	/* TODO
+ 	sprintf(buf, "netdev:%s", dev->name);
+-	debugfs_rename(IEEE80211_DEV_TO_SUB_IF(dev)->debugfsdir, buf);
+-	*/
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	dir = sdata->debugfsdir;
++	if (!debugfs_rename(dir->d_parent, dir, dir->d_parent, buf))
++		printk(KERN_ERR "mac80211: debugfs: failed to rename debugfs "
++		       "dir to %s\n", buf);
+ 
+ 	return 0;
+ }
+
+
