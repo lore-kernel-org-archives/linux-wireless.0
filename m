@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-1.dex002.intermedia.net ([64.78.21.6]:43078 "EHLO
-	dhost002-1.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755399AbXFHO5j (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2007 10:57:39 -0400
-From: "Jouni Malinen" <jkm@devicescape.com>
-Date: Fri, 8 Jun 2007 07:58:21 -0700
-To: Jiri Benc <jbenc@suse.cz>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V3] mac80211: Set low initial rate in rc80211_simple
-Message-ID: <20070608145821.GD14078@devicescape.com>
-References: <200706072205.27902.flamingice@sourmilk.net> <20070608112146.2df3608c@griffin.suse.cz>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070608112146.2df3608c@griffin.suse.cz>
+Received: from ebb.errno.com ([69.12.149.25]:4343 "EHLO ebb.errno.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753185AbXFUW0y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jun 2007 18:26:54 -0400
+Message-ID: <467AFB5F.6050100@errno.com>
+Date: Thu, 21 Jun 2007 15:27:43 -0700
+From: Sam Leffler <sam@errno.com>
+MIME-Version: 1.0
+To: Andy Green <andy@warmcat.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: radiotap for TX
+References: <1182375853.3714.103.camel@johannes.berg> <467AE460.1070606@errno.com> <467AE9D8.2030602@warmcat.com>
+In-Reply-To: <467AE9D8.2030602@warmcat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 08, 2007 at 11:21:46AM +0200, Jiri Benc wrote:
-> On Thu, 7 Jun 2007 22:05:21 -0700, Michael Wu wrote:
-> > On Thursday 07 June 2007 20:49, Larry Finger wrote:
-> > > Does mode->rates[0].flags automatically have IEEE80211_RATE_SUPPORTED set?
-> > > That wasn't clear to me.
-> > >
-> > Yes. (see ieee80211_prepare_rates)
+[radiotap mailing list dropped since it is members only]
+
+Andy Green wrote:
+> Sam Leffler wrote:
 > 
-> No :-) In theory, you can use PRISM2_HOSTAPD_SET_RATE_SETS ioctl to
-> disable the lowest available rate. Yes, that's deprecated and bad thing
-> to do; but unfortunately, it can be done with the current code.
+>> Note that using a monitor mode interface for transmit is a bad idea.  It
+>> is likely you will encounter devices that disallow any packet transmit
+>> when operating in monitor mode.  In practice this can be worked around
+>> by using a non-monitor operating mode for the device (e.g. adhoc mode
+>> w/o setting up beacons) but exporting this notion to user mode is bad
+>> IMO.  In net80211 there is an adhoc-demo mode which is essentially adhoc
+>> mode which was originally added for functionality found in old lucent
+>> cards but more recently has been used for building applications that
+>> want a "raw 802.11 device".
+> 
+> Hi -
+> 
+> In mac80211 you can run multiple network interfaces off the one physical
+> device, so you can have an associated WPA connection on one network
+> interface and another logical "monitor mode" network interface up on the
+> one physical device.  "Monitor mode" in this case can be the results of
+> a promiscuous hardware RX that is filtered for the Managed mode logical
+> interface ... this is AIUI.  So in that way "Monitor Mode" no longer
+> means a single modal device setting, but really the delivery somehow of
+> packets to a logical network interface that belongs to the physical device.
 
-There are some odd cases, where disabling the lowest supported rate may
-even be required due to regulatory rules.. Regardless of whether it is
-considered bad thing or not in general, I would hope that this
-functionality remains and all rate control algorithms prepare to handle
-such an anomaly.
+I've had working vap code for >3 years.
 
-> Larry's patch is IMHO correct.
+> 
+> Injecting down a "monitor mode interface" then only means to use a
+> logical network interface that locally is configured to "Monitor Mode",
+> it doesn't have the same definite implication for physical device
+> configuration as before mac80211.  (Well.. AIUI).  So hopefully this
+> objection may not apply.
 
-Agreed.
+As I described, some devices may allow rx-only operation on channels 
+otherwise disallowed by regulatory constraints.  As such overloading 
+monitor operation with transmit is just a bad idea if you want to take 
+full advantage of what h/w provides.  I'm just suggesting that you're 
+defining an abstraction that's going to get you into trouble.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+	Sam
