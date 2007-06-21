@@ -1,34 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:58988 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760861AbXFRSok (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39609 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755234AbXFVIlQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2007 14:44:40 -0400
-Date: Mon, 18 Jun 2007 19:44:36 +0100
-From: Christoph Hellwig <hch@infradead.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	hs4233@mail.mn-solutions.de, linux-kernel@vger.kernel.org,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: libertas (private) ioctls vs. nl80211
-Message-ID: <20070618184436.GC17479@infradead.org>
-References: <1181757483.29767.99.camel@johannes.berg> <20070614170901.GA13384@infradead.org> <20070614103836.23b07a72.akpm@linux-foundation.org> <20070614181307.GA16856@infradead.org> <1182188327.22149.5.camel@xo-28-0B-88.localdomain>
+	Fri, 22 Jun 2007 04:41:16 -0400
+Message-Id: <20070621221800.021680000@sipsolutions.net>
+References: <20070621221603.778432000@sipsolutions.net>
+Date: Fri, 22 Jun 2007 00:16:14 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+Subject: [PATCH 11/14] mac80211: regdomain.c needs to include ieee80211_i.h
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1182188327.22149.5.camel@xo-28-0B-88.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 18, 2007 at 01:38:47PM -0400, Dan Williams wrote:
-> On Thu, 2007-06-14 at 19:13 +0100, Christoph Hellwig wrote:
-> > > I suspect that the probability of your proposal succeeding would be increased
-> > > if you could prepare a patch...
-> 
-> Applied to upstream-fixes branch of libertas-2.6 which is destined for
-> 2.6.22; I hope you don't mind that I just added the Signed-off-by for
-> you.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Adding a signed off line for a patch that purely removes codes seems
-rather pointless to me, but feel free to add it if you care.
+---
+ net/mac80211/regdomain.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+--- wireless-dev.orig/net/mac80211/regdomain.c	2007-06-21 23:36:58.758638003 +0200
++++ wireless-dev/net/mac80211/regdomain.c	2007-06-21 23:37:19.988638003 +0200
+@@ -32,6 +32,7 @@
+ #include <linux/module.h>
+ #include <linux/netdevice.h>
+ #include <net/mac80211.h>
++#include "ieee80211_i.h"
+ 
+ static int ieee80211_regdom = 0x10; /* FCC */
+ module_param(ieee80211_regdom, int, 0444);
+
+-- 
+
