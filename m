@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2850 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753167AbXFMNZC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2007 09:25:02 -0400
-Date: Wed, 13 Jun 2007 08:56:00 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: James Ketrenos <jketreno@linux.intel.com>,
-	kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: Re: ipw3945 driver in recent -mm kernels
-Message-ID: <20070613125559.GA5576@tuxdriver.com>
-References: <20070609192703.GA6410@elf.ucw.cz> <20070609215712.GA13678@elf.ucw.cz> <466DA14D.6080309@linux.intel.com> <20070613110718.GA1800@elf.ucw.cz>
+Received: from styx.suse.cz ([82.119.242.94]:39186 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751403AbXFVNPQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2007 09:15:16 -0400
+Date: Fri, 22 Jun 2007 15:15:14 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Joerg Pommnitz <pommnitz@yahoo.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [WIP] mac80211: kill mgmt interface
+Message-ID: <20070622151514.028a644d@griffin.suse.cz>
+In-Reply-To: <200268.51153.qm@web51411.mail.re2.yahoo.com>
+References: <200268.51153.qm@web51411.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070613110718.GA1800@elf.ucw.cz>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 13, 2007 at 01:07:18PM +0200, Pavel Machek wrote:
-> Hi!
-> 
-> BTW could we get some more reasonable path? Currently wifi drivers are
-> in
-> 
-> drivers/net/wireless/mac80211/iwlwifi
-> 
-> ...ouch. drivers/mac80211/iwlwifi would be better...
+Please always use "reply to all" when replying to mails from Linux
+mailing lists.
 
-Since -mm is pulling from wireless-dev, the current path matches the
-other mac80211-based drivers.
+On Thu, 21 Jun 2007 14:50:32 -0700 (PDT), Joerg Pommnitz wrote:
+> Regarding user-space MLME and special interfaces:
+> mac80211 allows for multiple virtual interfaces on top of one physical NIC, right? 
 
-For upstream probably drivers/net/wireless/iwlwifi or even just
-drivers/net/wireless...  I have no objection to moving it in
-wireless-dev either.
+Yes.
 
-John
+> Can one run multiple MLME (e.g. hostapd) instances to run multiple virtual master mode interfaces
+> for different networks? With different BSSID?
+
+I don't think that would be ever possible when using monitor
+interfaces.
+
+On the other hand, it doesn't make much sense to support that. The
+interfaces are not completely independent, e.g. you cannot tune to
+different channels on different virtual interfaces. Therefore, at least
+a minimal knowledge about virtual interfaces would be needed in more
+complicated user space MLMEs.
+
+ Jiri
+
 -- 
-John W. Linville
-linville@tuxdriver.com
+Jiri Benc
+SUSE Labs
