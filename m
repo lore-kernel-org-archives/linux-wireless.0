@@ -1,168 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:60713 "EHLO amd.ucw.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757232AbXFMLmc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2007 07:42:32 -0400
-Date: Wed, 13 Jun 2007 13:07:18 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: James Ketrenos <jketreno@linux.intel.com>
-Cc: kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: Re: ipw3945 driver in recent -mm kernels
-Message-ID: <20070613110718.GA1800@elf.ucw.cz>
-References: <20070609192703.GA6410@elf.ucw.cz> <20070609215712.GA13678@elf.ucw.cz> <466DA14D.6080309@linux.intel.com>
+Received: from mog.warmcat.com ([62.193.232.24]:49399 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752657AbXFVRBH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2007 13:01:07 -0400
+Message-ID: <467C003C.30803@warmcat.com>
+Date: Fri, 22 Jun 2007 18:00:44 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <466DA14D.6080309@linux.intel.com>
+To: Jiri Benc <jbenc@suse.cz>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [WIP] mac80211: kill mgmt interface
+References: <1182418939.10821.8.camel@johannes.berg>	<20070621143558.68fc8e4a@griffin.suse.cz>	<1182429920.21939.1.camel@johannes.berg>	<20070621151441.500d62d5@griffin.suse.cz>	<20070622154545.29eeebdb@griffin.suse.cz>	<467BDCB1.1010604@warmcat.com> <20070622173940.30280046@griffin.suse.cz>
+In-Reply-To: <20070622173940.30280046@griffin.suse.cz>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Jiri Benc wrote:
 
-BTW could we get some more reasonable path? Currently wifi drivers are
-in
-
-drivers/net/wireless/mac80211/iwlwifi
-
-...ouch. drivers/mac80211/iwlwifi would be better...
-
-> > I still do not see the wlan led. It seems to scan okay, but I can't
-> > seem to connect, and I get this in logs:
-> > 
-> > Jun  9 23:53:21 amd kernel: wlan0: deauthenticated
-> > Jun  9 23:53:21 amd kernel: wlan0: RX deauthentication from
-> > 00:11:2f:0e:95:a0 (reason=4)
+> On Fri, 22 Jun 2007 15:29:05 +0100, Andy Green wrote:
+>> But for any nontrivial use, you need to capture RX and not blindly
+>> inject, and so you have a monitor mode interface up anyway.
 > 
-> >From Table 19 in the IEEE 802.11 spec lists reason 4 a 
-> 'disassociation due to inactivity'  Odd that it would happen during
->  association.  Were you able to associate at all before you
-> started seeing the problem?
+> No, why? You can encapsulate received management frames (only the ones
+> that need to go to user space or so) in the same way and send them
+> through the regular interface.
 
-No, I could not get any connection.
+For my usage case I want specific unencrypted packets filtered by a MAC
+address that isn't part of the authenticated network, so the reception
+action needs to be effectively promisc a la Monitor mode, not just
+"received management frames".  But I guess it can be done with IFF_PROMISC.
 
+By piping everything down "wlan0" normal packets will not have the
+radiotap metadata on their capture, but presumably the abnormal packets
+can have it via a special ethernet frame type + radiotap header.  Maybe
+it doesn't matter for any actual use.
 
-> > Jun  9 23:53:21 amd last message repeated 2 times
-> > Jun  9 23:53:22 amd kernel: wlan0: authenticate with AP
-> > 00:11:2f:0e:95:a0
-...
-> 
-> This may be related to mac80211's link activity detection
-> at times immediately following an association/reassociation.
-> 
-> I've seen similar behavior here; a temporary work around I am using is 
-> to disable the 'lost link detection' in mac80211.  
-
-Trying with that patch:
-
-root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
-insmod iwl3945.ko
-root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
-killall klogd
-root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
-iwlist wlan0 scan
-Warning: Driver for device wlan0 has been compiled with version 22
-of Wireless Extension, while this program supports up to version 17.
-Some things may be broken...
-
-wlan0     Interface doesn't support scanning : Network is down
-
-root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
-ifconfig wlan0 up
-root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
-iwlist wlan0 scan
-Warning: Driver for device wlan0 has been compiled with version 22
-of Wireless Extension, while this program supports up to version 17.
-Some things may be broken...
-
-wlan0     Scan completed :
-          Cell 01 - Address: 00:11:2F:0E:95:A0
-                    ESSID:"pavel"
-                    Mode:Master
-                    Channel:1
-                    Frequency:2.412 GHz
-                    Quality=88/100  Signal level=-45 dBm
-                    Encryption key:off
-                    Bit Rate:1 Mb/s
-                    Bit Rate:2 Mb/s
-                    Bit Rate:5.5 Mb/s
-                    Bit Rate:11 Mb/s
-                    Bit Rate:6 Mb/s
-                    Bit Rate:9 Mb/s
-                    Bit Rate:12 Mb/s
-                    Bit Rate:18 Mb/s
-                    Bit Rate:24 Mb/s
-                    Bit Rate:36 Mb/s
-                    Bit Rate:48 Mb/s
-                    Bit Rate:54 Mb/s
-                    Extra:tsf=000001d9866dbe25
-
-root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
-iwconfig wlan0 essid pavel
-root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
-iwl3945: REPLY_ADD_STA failed
-
-root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
-ifconfig eth0 down
-root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
-iwconfig
-eth0      no wireless extensions.
-
-lo        no wireless extensions.
-
-irlan0    no wireless extensions.
-
-wmaster0  no wireless extensions.
-
-Warning: Driver for device wlan0 has been compiled with version 22
-of Wireless Extension, while this program supports up to version 17.
-Some things may be broken...
-
-wlan0     IEEE 802.11g  ESSID:"pavel"
-          Mode:Managed  Frequency:2.412 GHz  Access Point:
-00:11:2F:0E:95:A0
-          Bit Rate=11 Mb/s
-          Retry min limit:7   RTS thr:off   Fragment thr=2346 B
-          Encryption key:off
-          Link Quality=77/100  Signal level=-40 dBm
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
-ifconfig wlan0 10.0.0.6 up
-root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi# ping
-10.0.0.3
-PING 10.0.0.3 (10.0.0.3): 56 data bytes
-
-
-(no link here).
-
-Aha, so I pressed ^c and  attempted to kick it into life, and got some errors:
-
-root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
-ifconfig wlan0 down
-root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
-ifconfig wlan0 up
-iwl3945: Microcode SW error detected.  Restarting 0x82000000.
-iwl3945: Error Reply type 0x0000003A cmd REPLY_RXON_ASSOC (0x11) seq
-0x0430 ser 0x00000000
-iwl3945: Error setting RXON_ASSOC configuration (-5).
-iwl3945: Error sending REPLY_RXON: time out after 500ms.
-iwl3945: Error setting new configuration (-110).
-iwl3945: Error sending REPLY_ADD_STA: time out after 500ms.
-iwl3945: ipw going down
-root@amd:/data/l/linux-mm/drivers/net/wireless/mac80211/iwlwifi#
-iwl3945: Can't stop Rx DMA.
-iwl3945: Grabbing access while already held at line 825.
-iwl3945: Microcode SW error detected.  Restarting 0x82000000.
-iwl3945: Error Reply type 0x000004EB cmd REPLY_TX_PWR_TABLE_CMD (0x97)
-seq 0x0402 ser 0x00000000
-iwl3945: ipw going down
-iwl3945: Can't stop Rx DMA.
-iwl3945: Grabbing access while already held at line 825.
-
-...I'll turn on the microcode debug now.
-										Pavel
-
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+-Andy
