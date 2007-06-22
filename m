@@ -1,55 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58074 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755475AbXFHJDt (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.185]:20927 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752080AbXFVJmP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2007 05:03:49 -0400
-Subject: Re: [PATCH] mac80211: rc80211_lowest, a dumb rate control algorithm
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <20070608105900.4c401e14@griffin.suse.cz>
-References: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>
-	 <20070607221939.444e9d74@griffin.suse.cz>
-	 <20070607222113.0f752bf8@griffin.suse.cz>
-	 <20070607222210.1a445cd7@griffin.suse.cz> <4668A7E5.3070500@lwfinger.net>
-	 <20070608105900.4c401e14@griffin.suse.cz>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hLzKInkk7r1zNzegxdCq"
-Date: Fri, 08 Jun 2007 11:04:04 +0200
-Message-Id: <1181293444.6533.22.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 22 Jun 2007 05:42:15 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so989377mue
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2007 02:42:13 -0700 (PDT)
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH] mac80211: kill antenna select ioctls
+Date: Fri, 22 Jun 2007 11:28:49 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1182499821.21939.62.camel@johannes.berg> <200706221132.30211.mb@bu3sch.de>
+In-Reply-To: <200706221132.30211.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200706221128.50091.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday 22 June 2007 11:32, Michael Buesch wrote:
+> On Friday 22 June 2007 10:10:20 Johannes Berg wrote:
+> > Not used anywhere.
+> 
+> It's used in bcm43xx.
+> Though, I'm not sure anybody in userspace actually calls this strange ioctl.
 
---=-hLzKInkk7r1zNzegxdCq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+rt2x00 uses these antenna_sel_{t,r}x fields,
+but they are also set within the rate selection.
+So with the ioctls taken out, the fields itself
+will still be changed.
 
-On Fri, 2007-06-08 at 10:59 +0200, Jiri Benc wrote:
+In the legacy Ralink drivers, antenna selection was based
+on the rssi value. Since rate_control conrtrols the rate based
+on (among other things) the rssi it could take control of these
+2 fields as well.
 
-> I'd still like to apply the patch allowing to change rate control
-> algorithm, but I'd like to hear Johannes' comments first - I suspect he
-> won't like what I did with his macros :-)
+Ivo
 
-Oh, I don't care much about those macros, just wanted to save myself
-some typing ;)
-
-johannes
-
---=-hLzKInkk7r1zNzegxdCq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGaRuE/ETPhpq3jKURArcoAJ9iPfgsk806c9btcNYqbBZIPkDR6gCgglls
-MRwR9QAEVi9DRBMwE7X/zTQ=
-=mvXt
------END PGP SIGNATURE-----
-
---=-hLzKInkk7r1zNzegxdCq--
-
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> > 
+> > ---
+> >  net/mac80211/hostapd_ioctl.h   |    2 --
+> >  net/mac80211/ieee80211_ioctl.c |   20 --------------------
+> >  2 files changed, 22 deletions(-)
+> > 
+> > --- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-06-22 10:08:24.558632620 +0200
+> > +++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-06-22 10:08:56.158632620 +0200
+> > @@ -31,8 +31,6 @@ enum {
+> >  	PRISM2_PARAM_HOST_ENCRYPT = 17,
+> >  	PRISM2_PARAM_HOST_DECRYPT = 18,
+> >  	PRISM2_PARAM_IEEE_802_1X = 23,
+> > -	PRISM2_PARAM_ANTSEL_TX = 24,
+> > -	PRISM2_PARAM_ANTSEL_RX = 25,
+> >  
+> >  	/* Instant802 additions */
+> >  	PRISM2_PARAM_CTS_PROTECT_ERP_FRAMES = 1001,
+> > --- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-06-22 10:08:59.318632620 +0200
+> > +++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-06-22 10:09:10.418632620 +0200
+> > @@ -2167,18 +2167,6 @@ static int ieee80211_ioctl_prism2_param(
+> >  			sdata->ieee802_1x = value;
+> >  		break;
+> >  
+> > -	case PRISM2_PARAM_ANTSEL_TX:
+> > -		local->hw.conf.antenna_sel_tx = value;
+> > -		if (ieee80211_hw_config(local))
+> > -			ret = -EINVAL;
+> > -		break;
+> > -
+> > -	case PRISM2_PARAM_ANTSEL_RX:
+> > -		local->hw.conf.antenna_sel_rx = value;
+> > -		if (ieee80211_hw_config(local))
+> > -			ret = -EINVAL;
+> > -		break;
+> > -
+> >  	case PRISM2_PARAM_CTS_PROTECT_ERP_FRAMES:
+> >  		local->cts_protect_erp_frames = value;
+> >  		break;
+> > @@ -2377,14 +2365,6 @@ static int ieee80211_ioctl_get_prism2_pa
+> >  		*param = sdata->ieee802_1x;
+> >  		break;
+> >  
+> > -	case PRISM2_PARAM_ANTSEL_TX:
+> > -		*param = local->hw.conf.antenna_sel_tx;
+> > -		break;
+> > -
+> > -	case PRISM2_PARAM_ANTSEL_RX:
+> > -		*param = local->hw.conf.antenna_sel_rx;
+> > -		break;
+> > -
+> >  	case PRISM2_PARAM_CTS_PROTECT_ERP_FRAMES:
+> >  		*param = local->cts_protect_erp_frames;
+> >  		break;
+> > 
+> > 
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> > 
+> 
+> 
+> 
