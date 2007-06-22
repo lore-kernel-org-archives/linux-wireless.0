@@ -1,75 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from daemonizer.de ([87.230.16.230]:37992 "EHLO daemonizer.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753483AbXFDTsw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2007 15:48:52 -0400
-From: Maximilian Engelhardt <maxi@daemonizer.de>
-To: Ingo Molnar <mingo@elte.hu>
-Subject: Re: iperf: performance regression (was b44 driver problem?)
-Date: Mon, 4 Jun 2007 21:47:59 +0200
-Cc: Stephen Hemminger <shemminger@linux-foundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ulrich Drepper <drepper@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-References: <20070525172431.60affaca@freepuppy> <20070604105158.31ede1f5@freepuppy> <20070604193206.GA13271@elte.hu>
-In-Reply-To: <20070604193206.GA13271@elte.hu>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1294756.CnZEpMUT4R";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200706042148.02450.maxi@daemonizer.de>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60765 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756726AbXFVP3M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2007 11:29:12 -0400
+Subject: Re: [WIP] mac80211: kill mgmt interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andy Green <andy@warmcat.com>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <467BDCB1.1010604@warmcat.com>
+References: <1182418939.10821.8.camel@johannes.berg>
+	 <20070621143558.68fc8e4a@griffin.suse.cz>
+	 <1182429920.21939.1.camel@johannes.berg>
+	 <20070621151441.500d62d5@griffin.suse.cz>
+	 <20070622154545.29eeebdb@griffin.suse.cz>  <467BDCB1.1010604@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-veIBgfr4Z9YJcenR6VHi"
+Date: Fri, 22 Jun 2007 17:30:21 +0200
+Message-Id: <1182526221.21939.94.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1294756.CnZEpMUT4R
-Content-Type: text/plain;
-  charset="iso-8859-1"
+
+--=-veIBgfr4Z9YJcenR6VHi
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Monday 04 June 2007, Ingo Molnar wrote:
-> * Stephen Hemminger <shemminger@linux-foundation.org> wrote:
-> > Yes, the following patch makes iperf work better than ever. But are
-> > other broken applications going to have same problem. Sounds like the
-> > old "who runs first" fork() problems.
->
-> this is the first such app and really, and even for this app: i've been
-> frequently running iperf on -rt kernels for _years_ and never noticed
-> how buggy its 'locking' code was, and that it would under some
-> circumstances use up the whole CPU on high-res timers.
+On Fri, 2007-06-22 at 15:29 +0100, Andy Green wrote:
 
-I must admit I don't know much about that topic, but there is one thing I=20
-don't understand. Why is iperf (even if it's buggy) able to use up the whol=
-e=20
-cpu? I didn't run it as root but as my normal user so it should have limite=
-d=20
-rights. Shouldn't the linux scheduler distribute cpu time among all running=
-=20
-processes?
+> > I have a new idea. Maybe it will turn out to have fatal design or
+> > implementation problems, but anyway.
 
-Maxi
+> But for any nontrivial use, you need to capture RX and not blindly
+> inject, and so you have a monitor mode interface up anyway.  The
+> footprint in the political networking space is less if it just goes in
+> as a monitor mode TX action.
 
---nextPart1294756.CnZEpMUT4R
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+In addition, we still have the problem with receiving encrypted eapol
+frames etc. that we really need to see unencrypted but can't make it to
+the network interface.
+
+I'm still for using netlink. It's just a socket too after all, and
+what's the conceptual difference between packing network packets into
+other packets or packing them into netlink messages? I don't see why
+people are so dead set against using nl80211 for the userspace MLME
+needs including frame stuff.
+
+johannes
+
+--=-veIBgfr4Z9YJcenR6VHi
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBGZGxyOimwv528XGERAslBAKDFEN/kVetmUZatC669/yQ+Gds8LQCg0ce3
-j/jrso2q5DkyFYTWaCF8fjw=
-=e1os
+iD8DBQBGe+sN/ETPhpq3jKURAnwWAKCluN/UHs5CgOo7ItjGdlpQOtGLmACeKmw3
+eH3lffeZuzxqmytYwEQWBQU=
+=HPx2
 -----END PGP SIGNATURE-----
 
---nextPart1294756.CnZEpMUT4R--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+--=-veIBgfr4Z9YJcenR6VHi--
+
