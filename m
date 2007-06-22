@@ -1,54 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:41374 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754045AbXFUNOn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2007 09:14:43 -0400
-Date: Thu, 21 Jun 2007 15:14:41 +0200
-From: Jiri Benc <jbenc@suse.cz>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:35809
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751407AbXFVJdH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2007 05:33:07 -0400
+From: Michael Buesch <mb@bu3sch.de>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [WIP] mac80211: kill mgmt interface
-Message-ID: <20070621151441.500d62d5@griffin.suse.cz>
-In-Reply-To: <1182429920.21939.1.camel@johannes.berg>
-References: <1182418939.10821.8.camel@johannes.berg>
-	<20070621143558.68fc8e4a@griffin.suse.cz>
-	<1182429920.21939.1.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: Re: [PATCH] mac80211: kill antenna select ioctls
+Date: Fri, 22 Jun 2007 11:32:29 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1182499821.21939.62.camel@johannes.berg>
+In-Reply-To: <1182499821.21939.62.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200706221132.30211.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 21 Jun 2007 14:45:19 +0200, Johannes Berg wrote:
-> On Thu, 2007-06-21 at 14:35 +0200, Jiri Benc wrote:
+On Friday 22 June 2007 10:10:20 Johannes Berg wrote:
+> Not used anywhere.
+
+It's used in bcm43xx.
+Though, I'm not sure anybody in userspace actually calls this strange ioctl.
+
+
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 > 
-> > 1. I'm still not sure if using monitor interface for this purpose is a
-> > good idea. Given the fact we want to switch to user space MLME, this
-> > will mean that at least one monitor interface is always present. So we
-> > got rid of management interface just to introduce another user visible
-> > magic interface.
+> ---
+>  net/mac80211/hostapd_ioctl.h   |    2 --
+>  net/mac80211/ieee80211_ioctl.c |   20 --------------------
+>  2 files changed, 22 deletions(-)
 > 
-> Well, that's not a bad point, but at least it's not created via magic
-> ioctls etc.
+> --- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-06-22 10:08:24.558632620 +0200
+> +++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-06-22 10:08:56.158632620 +0200
+> @@ -31,8 +31,6 @@ enum {
+>  	PRISM2_PARAM_HOST_ENCRYPT = 17,
+>  	PRISM2_PARAM_HOST_DECRYPT = 18,
+>  	PRISM2_PARAM_IEEE_802_1X = 23,
+> -	PRISM2_PARAM_ANTSEL_TX = 24,
+> -	PRISM2_PARAM_ANTSEL_RX = 25,
+>  
+>  	/* Instant802 additions */
+>  	PRISM2_PARAM_CTS_PROTECT_ERP_FRAMES = 1001,
+> --- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-06-22 10:08:59.318632620 +0200
+> +++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-06-22 10:09:10.418632620 +0200
+> @@ -2167,18 +2167,6 @@ static int ieee80211_ioctl_prism2_param(
+>  			sdata->ieee802_1x = value;
+>  		break;
+>  
+> -	case PRISM2_PARAM_ANTSEL_TX:
+> -		local->hw.conf.antenna_sel_tx = value;
+> -		if (ieee80211_hw_config(local))
+> -			ret = -EINVAL;
+> -		break;
+> -
+> -	case PRISM2_PARAM_ANTSEL_RX:
+> -		local->hw.conf.antenna_sel_rx = value;
+> -		if (ieee80211_hw_config(local))
+> -			ret = -EINVAL;
+> -		break;
+> -
+>  	case PRISM2_PARAM_CTS_PROTECT_ERP_FRAMES:
+>  		local->cts_protect_erp_frames = value;
+>  		break;
+> @@ -2377,14 +2365,6 @@ static int ieee80211_ioctl_get_prism2_pa
+>  		*param = sdata->ieee802_1x;
+>  		break;
+>  
+> -	case PRISM2_PARAM_ANTSEL_TX:
+> -		*param = local->hw.conf.antenna_sel_tx;
+> -		break;
+> -
+> -	case PRISM2_PARAM_ANTSEL_RX:
+> -		*param = local->hw.conf.antenna_sel_rx;
+> -		break;
+> -
+>  	case PRISM2_PARAM_CTS_PROTECT_ERP_FRAMES:
+>  		*param = local->cts_protect_erp_frames;
+>  		break;
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-That's true. Still, couldn't we find a better solution?
 
-I know that netlink isn't designed for this kind of things. But if we
-don't have any other idea, I'd still prefer that over a dedicated
-network interface.
-
-> Actually, I first thought that as well, but in fact the userspace MLME
-> in wpa_supplicant doesn't even need to connect these events, it simply
-> checks which auth sequence number it sent and then assumes that whatever
-> it did was correct and adds the sta to the associated/auth list on the
-> callback.
-
-If some program needs to get frames it injected back with a status,
-there should exist an easy way to determine which status corresponds
-with which frame. If there is no need to determine this, what is the
-reason for returning back injected frames in the first place?
-
- Jiri
 
 -- 
-Jiri Benc
-SUSE Labs
+Greetings Michael.
