@@ -1,57 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47668 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S938268AbXFHHXK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2007 03:23:10 -0400
-Subject: Re: [PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <1181266477.3039.97.camel@debian.sh.intel.com>
-References: <20070606082210.GA28649@mail.intel.com>
-	 <20070607223058.44122be4@griffin.suse.cz>
-	 <1181266477.3039.97.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KL9vklekKc0wW6Hnxr+N"
-Date: Fri, 08 Jun 2007 09:23:25 +0200
-Message-Id: <1181287405.6533.4.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from mx2.math.uh.edu ([129.7.128.33]:33903 "EHLO mx2.math.uh.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750898AbXFVEuk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2007 00:50:40 -0400
+Received: from epithumia.math.uh.edu ([129.7.128.2])
+	by mx2.math.uh.edu with esmtps (TLSv1:AES256-SHA:256)
+	(Exim 4.67)
+	(envelope-from <tibbs@math.uh.edu>)
+	id 1I1aiI-0007zZ-H6
+	for linux-wireless@vger.kernel.org; Thu, 21 Jun 2007 23:25:39 -0500
+Received: from epithumia.math.uh.edu (epithumia.math.uh.edu [127.0.0.1])
+	by epithumia.math.uh.edu (8.13.8/8.12.5) with ESMTP id l5M4Pctn006282
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2007 23:25:38 -0500
+To: linux-wireless@vger.kernel.org
+Subject: iwl3945 problems
+From: Jason L Tibbitts III <tibbs@math.uh.edu>
+Date: 21 Jun 2007 23:25:38 -0500
+Message-ID: <ufa8xacfwe5.fsf@epithumia.math.uh.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I've been trying new versions of the iwlwifi driver for a while now,
+and while the situation for most folks seems to be improving, I'm not
+having much luck.  I'm running 0.0.32 patched into the latest Fedora
+kernel (which is basically 2.6.21.5 plus the current wireless-dev
+tree).  This version is improved over some previous versions which
+would periodically freeze the machine for a few seconds, but I can
+still see no networks or even do a scan.  (iwlist scan just hangs for
+about 15 seconds.)  I'm using version 2.14.3 of the microcode.
 
---=-KL9vklekKc0wW6Hnxr+N
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+An interesting note is that the ipw3945 driver never worked on this
+hardware either.  It manages to at least see networks, but won't
+associate.  Unfortunately it does work fine under that other OS.
 
-On Fri, 2007-06-08 at 09:34 +0800, Zhu Yi wrote:
+The machine is a Sony Vaio TXN17P; lspci shows:
 
-> I think we have talked this early and now you know correctly WIFI is not
-> a trademark. You define IEEE80211_STYPE_ASSOC_REQ, etc, but defines
-> those for Wi-Fi with WLAN prefix? WLAN prefix should be used by symbols
-> defined by mac80211, for example: WLAN_CAPABILITY_ESS.
+01:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG
+Network Connection (rev 02)
 
-FWIW, I agree, and not using WIFI_ because it might be a trademark...
-Jiri, feel free to put a note in the header that "all mentioned names
-may be trademarks of their respective owners" or something, but
-something that is defined by the wifi alliance should reasonably be
-called WIFI_... too.
+Here are the iwl3945-related kernel messages:
+iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for Linux, 0.0.32d
+iwl3945: Copyright(c) 2003-2007 Intel Corporation
+iwl3945: Detected Intel PRO/Wireless 3945BG Network Connection
+iwl3945: Unhandled INTA bits 0x04000000
+iwl3945: Disabled INTA bits 0x04000000 were pending
+iwl3945:    with FH_INT = 0x00000000
+iwl3945: Channel 12 [2.4GHz] is Tx only -- skipping.
+iwl3945: Channel 13 [2.4GHz] is Tx only -- skipping.
+iwl3945: Channel 14 [2.4GHz] is Tx only -- skipping.
+iwl3945: Channel 183 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 184 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 185 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 187 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 188 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 189 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 192 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 196 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 7 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 8 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 11 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 12 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 16 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 34 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 36 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 38 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 40 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 42 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 44 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 46 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 48 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 52 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 56 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 60 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 64 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 100 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 104 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 108 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 112 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 116 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 120 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 124 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 128 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 132 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 136 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 140 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 145 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 149 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 153 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 157 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 161 [5.2GHz] is Tx only -- skipping.
+iwl3945: Channel 165 [5.2GHz] is Tx only -- skipping.
+iwl3945: Tunable channels: 11 802.11bg, 0 802.11a channels
+wmaster0: Selected rate control algorithm 'iwl-3945-rs'
+iwl3945: Microcode SW error detected.  Restarting 0x82000008.
+iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq 0x4418 ser 0x0000004B
+iwl3945: ipw going down
+iwl3945: Can't stop Rx DMA.
+iwl3945: Grabbing access while already held at line 825.
 
-johannes
+Any assistance would be greatly appreciated.
 
---=-KL9vklekKc0wW6Hnxr+N
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGaQPt/ETPhpq3jKURAga1AJ90SRwH+KqqgWk5270Rx1d3qqu9dwCfWW9/
-7JSGTpXTpz9uYFCGLeAtQKg=
-=7UZC
------END PGP SIGNATURE-----
-
---=-KL9vklekKc0wW6Hnxr+N--
-
+ - J<
