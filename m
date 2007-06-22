@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:3696 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755118AbXFGVgS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2007 17:36:18 -0400
-Message-ID: <4668DE0F.7060302@linux.intel.com>
-Date: Thu, 07 Jun 2007 21:41:51 -0700
-From: jketreno <jketreno@linux.intel.com>
-MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: Jiri Benc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: IEEE802.11e/WMM TS management and DLS support
-References: <20070606082152.GA28639@mail.intel.com> <20070607224315.6dadffca@griffin.suse.cz> <4668D293.1010908@linux.intel.com> <200706071412.54918.flamingice@sourmilk.net>
-In-Reply-To: <200706071412.54918.flamingice@sourmilk.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from styx.suse.cz ([82.119.242.94]:52718 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757004AbXFVPty (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2007 11:49:54 -0400
+Date: Fri, 22 Jun 2007 17:49:53 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Andy Green <andy@warmcat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [WIP] mac80211: kill mgmt interface
+Message-ID: <20070622174953.500817e0@griffin.suse.cz>
+In-Reply-To: <1182526221.21939.94.camel@johannes.berg>
+References: <1182418939.10821.8.camel@johannes.berg>
+	<20070621143558.68fc8e4a@griffin.suse.cz>
+	<1182429920.21939.1.camel@johannes.berg>
+	<20070621151441.500d62d5@griffin.suse.cz>
+	<20070622154545.29eeebdb@griffin.suse.cz>
+	<467BDCB1.1010604@warmcat.com>
+	<1182526221.21939.94.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
-> On Thursday 07 June 2007 20:52, jketreno wrote:
->> Or better yet, let's develop them as a community by submitting patches to
->> fix them.
->>
-> Easier to ask forgiveness than to get permission, eh?
-> 
-> No thanks.
+On Fri, 22 Jun 2007 17:30:21 +0200, Johannes Berg wrote:
+> In addition, we still have the problem with receiving encrypted eapol
+> frames etc. that we really need to see unencrypted but can't make it to
+> the network interface.
 
-Forgiveness for what?  
+Hm, are you able to get such management frames if you're not root (or
+has CAP_NET_RAW capabilities)?
 
-In addition to the updated patches against wireless-dev incorporating 
-feedback, John asked Yi to provide the WME patches against Linus' tree.  
-He did..
+> I'm still for using netlink. It's just a socket too after all, and
+> what's the conceptual difference between packing network packets into
+> other packets or packing them into netlink messages? I don't see why
+> people are so dead set against using nl80211 for the userspace MLME
+> needs including frame stuff.
 
-Now, a month after Yi's patches were originally sent out, Jiri cited things 
-he doesn't like--things which can be addressed through patches to the code 
-vs. having to re-apply a monolithic patch.
+I think netlink is fine if it is used for injection too (at least of
+management frames and WPA stuff).
 
-Nothing is perfect the first time--and nothing will ever get done so long
-as an aggressive and offensive position is held in regard to outside
-contribution.
+ Jiri
 
-James
-
-
-> 
-> -Michael Wu
+-- 
+Jiri Benc
+SUSE Labs
