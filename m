@@ -1,85 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40897 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752011AbXFKIZD (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:23655 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750898AbXFVFHG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 04:25:03 -0400
-Subject: Re: [PATCH 2/3] mac80211: IEEE802.11e/WMM TS management and DLS  support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <1181535089.3042.72.camel@debian.sh.intel.com>
-References: <20070606082223.GA28658@mail.intel.com>
-	 <1181157532.3398.20.camel@johannes.berg>
-	 <1181535089.3042.72.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SWbRmdQuh5tq55ifLLbt"
-Date: Mon, 11 Jun 2007 10:25:29 +0200
-Message-Id: <1181550329.3566.43.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 22 Jun 2007 01:07:06 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Jouni Malinen <j@w1.fi>
+Subject: Re: [WIP] mac80211: kill mgmt interface
+Date: Thu, 21 Jun 2007 22:05:12 -0700
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1182418939.10821.8.camel@johannes.berg> <20070621133556.GJ5361@jm.kir.nu>
+In-Reply-To: <20070621133556.GJ5361@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart2515396.sW31APrrCi";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200706212205.16642.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-SWbRmdQuh5tq55ifLLbt
-Content-Type: text/plain
+--nextPart2515396.sW31APrrCi
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Mon, 2007-06-11 at 12:11 +0800, Zhu Yi wrote:
+On Thursday 21 June 2007 06:35, Jouni Malinen wrote:
+> On Thu, Jun 21, 2007 at 11:42:19AM +0200, Johannes Berg wrote:
+> > This patch kills the management interface type now that we can
+> > see transmitted frames on monitor interfaces.
+>
+> Has someone tested that this works with programs that use the management
+> interface (mainly, hostapd and wpa_supplicant)? Is all the needed
+> functionality available with the alternative solution?
+>
+The management interface shouldn't be killed until hostap and wpa_supplican=
+t=20
+can work with monitor interfaces.
 
-> > > +					case WIFI_OUI_STYPE_WMM_TSPEC:
-> > > +						if (elen !=3D 61) {
-> > > +							printk(KERN_ERR "Wrong "
-> > > +							       "TSPEC size.\n");
-> > > +							break;
-> >=20
-> > That printk should be rate limited.
->=20
-> Umm, I followed the same way as other MLME parsing functions ie.
-> ieee80211_rx_mgmt_assoc_resp. It seems they also didn't rate limit these
-> cases. This only happens on broken APs. Do you think we really need to
-> rate limit here?
+> > I renamed the req_tx_status to reliable_tx_mntr and the flag
+> > constant as well since that's what they now mean. It is always
+> > set for injected frames so that hostapd can rely on seeing the
+> > frames it sent.
+>
+> I'm not sure I follow this explanation fully.. How would hostapd learn
+> whether the destination address acknowledged a unicast frame?
+>
+It's the same as the management interface - hostap receives the same frame =
+it=20
+sent, with a header that says whether or not it was ACKed.
 
-Ok, wrt. all the rate limiting I thought of. You rightfully pointed out
-that the current code is just as broken, hence I'm ok with adding these
-like this and I'll go through and fix them later. My rationale with many
-of these is that somebody could inject random packets appearing to come
-from our AP and cause us to write a log line for every packet they
-inject by intentionally injecting malformed packets. We should protect
-against that.
+> > The biggest problem, however, and I'm not sure how to solve it, is
+> > that hostapd will see either encrypted or unencrypted frames on the
+> > monitor interface depending on whether hardware encryption is used
+> > or not. However, hostapd really needs to see eapol frames to do
+> > whatever it needs to with them. Right now, I don't really have an
+> > idea except maybe to send these packets to hostapd via nl80211,
+> > or to introduce some sort of "decrypted soft monitor" iface.
+>
+> If I've understood correctly (please correct me, if not), this patch is
+> proposing to remove an interface that works currently and leave the
+> stack in state that does not work. I can only strongly recommend this
+> patch not to be applied at this point. It is not a good direction to
+> start removing working code before there is a good alternative available
+> and that alternative has actually been tested to provide the needed
+> functionality.
+>
+Agreed. However, it is marked WIP and has spawned some good discussion. :)
 
-> I got a lot of this message during my testing. The APs use some
-> (private) OUIs we don't support now. I guess there will be quite a lot
-> messages even if we rate limit here.
+> I don't really see need for getting rid of the management interface, but
+> if there is consensus on doing that, we would need to have another way
+> of being able to receive and transmit management frames and data frames
+> from/to user space in a way that provides at least following
+> functionality:
+> - transmit management frames at high priority
+Should be fine to hardcode this for now since the current mgmt interface=20
+doesn't allow control over this.
 
-Oh right, like those Broadcom IEs they use for a-mpdu even on .11G...
+> - control whether transmitted frames will be encrypted or not
+IEEE80211_RADIOTAP_F_WEP should be appropriate, I think. (despite its somew=
+hat=20
+misleading name)
 
-> Yes we can do this. But free it here helps to shrink the hash table
-> size. The problem is: the original sta_info doesn't a status -- if a
-> sta_info appears in the hash table, it is active; otherwise it is not.
-> But since DLS requires setup stage, I added the status code to
-> distinguish setuping and active. But for inactive state, we can either
-> set the DLS status to inactive or remove the sta_info completely. Since
-> normally a DLS connection won't be setup and teardown that often, I
-> select to free the sta_info to indicate it as inactive.
+> - get callback to report TX status for unicast frames (whether the
+>   receiver sent control::ack for the frame)
+This is provided by [PATCH] mac80211: show transmitted frames on monitor=20
+interfaces.
 
-Makes sense. I thought we had a sta info item for each peer we ever
-discovered but I guess that isn't true.
+> - receive management frames
+Well, it's a monitor interface, so it's more of a challenge to receive just=
+=20
+the desired frames. Hopefully packet filter works well enough for this..
 
-johannes
+> - receive data frames EAPOL/etc. ethertypes in decrypted form
+We should be able to receive this on the other interface which is handling =
+all=20
+the data frames, right?
 
---=-SWbRmdQuh5tq55ifLLbt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+> - delivery of notifications to user space for Michael MIC errors and
+>   other similar events
+nl80211 should be appropriate for this. nl80211 is probably the biggest=20
+blocker before removing the mgmt interface completely.. everything else is=
+=20
+*almost* there.
+
+=2DMichael Wu
+
+--nextPart2515396.sW31APrrCi
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBGbQb5/ETPhpq3jKURAueZAJ4pywzeNFusZ3JGLpNfmCRfnQMYPQCgrvnf
-cAl7aPllaLKcYPNRhaJgo88=
-=b+6z
+iD8DBQBGe1iMT3Oqt9AH4aERAm/LAKDJNGjVfMtcSKj0iYddNUuf9wQuiQCfeyCw
+kNceVbxX8P3Q6Rgy+MbZp94=
+=Cfy2
 -----END PGP SIGNATURE-----
 
---=-SWbRmdQuh5tq55ifLLbt--
-
+--nextPart2515396.sW31APrrCi--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
