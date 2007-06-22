@@ -1,114 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:5619 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S939218AbXFHHqE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2007 03:46:04 -0400
-Date: Fri, 8 Jun 2007 15:45:19 +0800
-From: Zhu Yi <yi.zhu@intel.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/2] mac80211: Add IEEE80211_ prefix to SET_TSINFO_{} macros
-Message-ID: <20070608074519.GA4998@mail.intel.com>
-Reply-To: yi.zhu@intel.com
+Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:46893 "EHLO
+	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753661AbXFVROT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2007 13:14:19 -0400
+Date: Fri, 22 Jun 2007 12:13:49 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH V3] mac80211: Implementation of SIOCSIWRATE
+Message-ID: <467c034d.Jst2WOCyrN+34hJl%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[ My original mail was rejected due to I used SET_TSINFO_XXX in the
-  subject. I replace it with SET_TSINFO_{} now. A better name, please? ]
+From: Mohamed Abbas <mabbas@linux.intel.com>
 
-The following 2 patches against wireless-dev tip fix some comments
-addressed early today.
+The WEXT ioctl SIOCSIWRATE is not implemented in mac80211. This patch
+adds the missing routine. It supports the 'auto' keyword, fixed rates,
+and the combination of 'auto' and a fixed rate to select an upper bound.
 
-Add IEEE80211_ prefix to SET_TSINFO_{} macros
-
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- include/linux/ieee80211.h     |   18 +++++++++---------
- net/mac80211/debugfs_netdev.c |    2 +-
- net/mac80211/ieee80211_sta.c  |   20 ++++++++++----------
- 3 files changed, 20 insertions(+), 20 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 00e9f99..31368bc 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -134,15 +134,15 @@ struct ieee80211_ht_additional_info {
- #define IEEE80211_TSINFO_ACK(a)		((a.short1 & 0xC000) >> 14)
- #define IEEE80211_TSINFO_SCHEDULE(a)	((a.byte3 & 0x01) >> 0)
- 
--#define SET_TSINFO_TYPE(i, d)		(i.short1 |= (d << 0) & 0x0001)
--#define SET_TSINFO_TSID(i, d)		(i.short1 |= (d << 1) & 0x001E)
--#define SET_TSINFO_DIR(i, d)		(i.short1 |= (d << 5) & 0x0060)
--#define SET_TSINFO_POLICY(i, d)		(i.short1 |= (d << 7) & 0x0180)
--#define SET_TSINFO_AGG(i, d)		(i.short1 |= (d << 9) & 0x0200)
--#define SET_TSINFO_APSD(i, d)		(i.short1 |= (d << 10) & 0x0400)
--#define SET_TSINFO_UP(i, d)		(i.short1 |= (d << 11) & 0x3800)
--#define SET_TSINFO_ACK(i, d)		(i.short1 |= (d << 14) & 0xC000)
--#define SET_TSINFO_SCHEDULE(i, d)	(i.byte3 |= (d << 0) & 0x01)
-+#define IEEE80211_SET_TSINFO_TYPE(i, d)		(i.short1 |= (d << 0) & 0x0001)
-+#define IEEE80211_SET_TSINFO_TSID(i, d)		(i.short1 |= (d << 1) & 0x001E)
-+#define IEEE80211_SET_TSINFO_DIR(i, d)		(i.short1 |= (d << 5) & 0x0060)
-+#define IEEE80211_SET_TSINFO_POLICY(i, d)	(i.short1 |= (d << 7) & 0x0180)
-+#define IEEE80211_SET_TSINFO_AGG(i, d)		(i.short1 |= (d << 9) & 0x0200)
-+#define IEEE80211_SET_TSINFO_APSD(i, d)		(i.short1 |= (d << 10) & 0x0400)
-+#define IEEE80211_SET_TSINFO_UP(i, d)		(i.short1 |= (d << 11) & 0x3800)
-+#define IEEE80211_SET_TSINFO_ACK(i, d)		(i.short1 |= (d << 14) & 0xC000)
-+#define IEEE80211_SET_TSINFO_SCHEDULE(i, d)	(i.byte3 |= (d << 0) & 0x01)
- 
- struct ieee80211_ts_info {
- 	__le16 short1;
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index b9409ee..7be0d90 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -257,7 +257,7 @@ static ssize_t tsinfo_ ##_name## _write(struct file *file,		\
- 		       "[%u, %u]\n",sdata->dev->name,val,min_val,max_val);\
- 		return -EINVAL;						\
- 	}								\
--	SET_TSINFO_ ##_name (_tspec.ts_info, val);			\
-+	IEEE80211_SET_TSINFO_ ##_name (sdata->u.sta.tspec.ts_info, val);\
- 	return count;							\
- }									\
- 									\
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 8bd8031..ace0a99 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -859,11 +859,11 @@ void ieee80211_send_delts(struct net_device *dev,
- 	memset(&mgmt->u.action.u.delts.ts_info, 0,
- 			sizeof(struct ieee80211_ts_info));
- 
--	SET_TSINFO_TSID(tp->ts_info, tsid);
--	SET_TSINFO_DIR(tp->ts_info, direction);
--	SET_TSINFO_POLICY(tp->ts_info, WLAN_TSINFO_EDCA);
--	SET_TSINFO_APSD(tp->ts_info, WLAN_TSINFO_PSB_LEGACY);
--	SET_TSINFO_UP(tp->ts_info, ifsta->ts_data[tsid][index].up);
-+	IEEE80211_SET_TSINFO_TSID(tp->ts_info, tsid);
-+	IEEE80211_SET_TSINFO_DIR(tp->ts_info, direction);
-+	IEEE80211_SET_TSINFO_POLICY(tp->ts_info, WLAN_TSINFO_EDCA);
-+	IEEE80211_SET_TSINFO_APSD(tp->ts_info, WLAN_TSINFO_PSB_LEGACY);
-+	IEEE80211_SET_TSINFO_UP(tp->ts_info, ifsta->ts_data[tsid][index].up);
- 
- 	ieee80211_sta_tx(dev, skb, 0);
+ ieee80211_ioctl.c |   51 ++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 50 insertions(+), 1 deletion(-)
+
+Index: wireless-dev/net/mac80211/ieee80211_ioctl.c
+===================================================================
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c
+@@ -1880,6 +1880,44 @@ static int ieee80211_ioctl_giwscan(struc
  }
-@@ -930,11 +930,11 @@ void wmm_send_delts(struct net_device *dev,
- 	tspec = (struct ieee80211_elem_tspec *)pos;
- 	memset(tspec, 0, sizeof(*tspec));
  
--	SET_TSINFO_TSID(tspec->ts_info, tsid);
--	SET_TSINFO_DIR(tspec->ts_info, direction);
--	SET_TSINFO_POLICY(tspec->ts_info, WLAN_TSINFO_EDCA);
--	SET_TSINFO_APSD(tspec->ts_info, WLAN_TSINFO_PSB_LEGACY);
--	SET_TSINFO_UP(tspec->ts_info, ifsta->ts_data[tsid][index].up);
-+	IEEE80211_SET_TSINFO_TSID(tspec->ts_info, tsid);
-+	IEEE80211_SET_TSINFO_DIR(tspec->ts_info, direction);
-+	IEEE80211_SET_TSINFO_POLICY(tspec->ts_info, WLAN_TSINFO_EDCA);
-+	IEEE80211_SET_TSINFO_APSD(tspec->ts_info, WLAN_TSINFO_PSB_LEGACY);
-+	IEEE80211_SET_TSINFO_UP(tspec->ts_info, ifsta->ts_data[tsid][index].up);
  
- 	ieee80211_sta_tx(dev, skb, 0);
- }
--- 
-1.5.0.rc2.g73a2
++static int ieee80211_ioctl_siwrate(struct net_device *dev,
++				  struct iw_request_info *info,
++				  struct iw_param *rate, char *extra)
++{
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_hw_mode *mode;
++	int i;
++	u32 target_rate = rate->value / 100000;
++	struct ieee80211_sub_if_data *sdata;
++
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	if (!sdata->bss)
++		return -ENODEV;
++	mode = local->oper_hw_mode;
++	/* target_rate = -1, rate->fixed = 0 means auto only, so use all rates
++	 * target_rate = X, rate->fixed = 1 means only rate X
++	 * target_rate = X, rate->fixed = 0 means all rates <= X */
++	sdata->bss->max_ratectrl_rateidx = -1;
++	sdata->bss->force_unicast_rateidx = -1;
++	if (rate->value < 0)
++		return 0;
++	for (i=0; i< mode->num_rates; i++) {
++		struct ieee80211_rate *rates = &mode->rates[i];
++		int this_rate = rates->rate;
++
++		if (mode->mode == MODE_ATHEROS_TURBO ||
++		    mode->mode == MODE_ATHEROS_TURBOG)
++			this_rate *= 2;
++		if (target_rate == this_rate) {
++			sdata->bss->max_ratectrl_rateidx = i;
++			if (rate->fixed)
++				sdata->bss->force_unicast_rateidx = i;
++			break;
++		}
++	}
++	return 0;
++}
++
+ static int ieee80211_ioctl_giwrate(struct net_device *dev,
+ 				  struct iw_request_info *info,
+ 				  struct iw_param *rate, char *extra)
+@@ -3026,7 +3064,7 @@ static const iw_handler ieee80211_handle
+ 	(iw_handler) NULL,				/* SIOCGIWNICKN */
+ 	(iw_handler) NULL,				/* -- hole -- */
+ 	(iw_handler) NULL,				/* -- hole -- */
+-	(iw_handler) NULL,				/* SIOCSIWRATE */
++	(iw_handler) ieee80211_ioctl_siwrate,		/* SIOCSIWRATE */
+ 	(iw_handler) ieee80211_ioctl_giwrate,		/* SIOCGIWRATE */
+ 	(iw_handler) ieee80211_ioctl_siwrts,		/* SIOCSIWRTS */
+ 	(iw_handler) ieee80211_ioctl_giwrts,		/* SIOCGIWRTS */
