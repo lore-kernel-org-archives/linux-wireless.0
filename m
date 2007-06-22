@@ -1,67 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33052 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753961AbXFVUTI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2007 16:19:08 -0400
-Subject: Re: [WIP] mac80211: kill mgmt interface
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from styx.suse.cz ([82.119.242.94]:41860 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752472AbXFVNqR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2007 09:46:17 -0400
+Date: Fri, 22 Jun 2007 15:45:45 +0200
+From: Jiri Benc <jbenc@suse.cz>
 To: Jiri Benc <jbenc@suse.cz>
-Cc: Andy Green <andy@warmcat.com>,
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20070622174953.500817e0@griffin.suse.cz>
+Subject: Re: [WIP] mac80211: kill mgmt interface
+Message-ID: <20070622154545.29eeebdb@griffin.suse.cz>
+In-Reply-To: <20070621151441.500d62d5@griffin.suse.cz>
 References: <1182418939.10821.8.camel@johannes.berg>
-	 <20070621143558.68fc8e4a@griffin.suse.cz>
-	 <1182429920.21939.1.camel@johannes.berg>
-	 <20070621151441.500d62d5@griffin.suse.cz>
-	 <20070622154545.29eeebdb@griffin.suse.cz> <467BDCB1.1010604@warmcat.com>
-	 <1182526221.21939.94.camel@johannes.berg>
-	 <20070622174953.500817e0@griffin.suse.cz>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0nAm+vuGxvY6ODMP5klE"
-Date: Fri, 22 Jun 2007 22:20:20 +0200
-Message-Id: <1182543620.21939.98.camel@johannes.berg>
+	<20070621143558.68fc8e4a@griffin.suse.cz>
+	<1182429920.21939.1.camel@johannes.berg>
+	<20070621151441.500d62d5@griffin.suse.cz>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 21 Jun 2007 15:14:41 +0200, Jiri Benc wrote:
+> That's true. Still, couldn't we find a better solution?
 
---=-0nAm+vuGxvY6ODMP5klE
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I have a new idea. Maybe it will turn out to have fatal design or
+implementation problems, but anyway.
 
-On Fri, 2007-06-22 at 17:49 +0200, Jiri Benc wrote:
-> On Fri, 22 Jun 2007 17:30:21 +0200, Johannes Berg wrote:
-> > In addition, we still have the problem with receiving encrypted eapol
-> > frames etc. that we really need to see unencrypted but can't make it to
-> > the network interface.
->=20
-> Hm, are you able to get such management frames if you're not root (or
-> has CAP_NET_RAW capabilities)?
+First, I thought how all of this would be easier if we have a native
+802.11 (virtual) interfaces and don't translate from Ethernet. Then I
+realized it wouldn't help us much - we want to specify some parameters
+for each frame, so we'd have to use some encapsulation anyway to allow
+radiotap headers. Hm, wait a moment - why we cannot use the
+encapsulation we currently have? That means, why can't we encapsulate
+raw 802.11 frames in Ethernet frames?
 
-Currently? You need CAP_NET_ADMIN for PF_PACKET, but I'm not sure what
-would happen if we passed them up instead of dropping them. There must
-be a reason we currently drop them.
+Before you reject the whole idea, please think a moment about it.
 
+The actual implementation is not hard: use our own proprietary
+ethertype and use the whole 802.11 frame including MAC and radiotap
+header as a payload. We can even use the same format for sending
+management frames to the user space for hostapd's use without any extra
+interface.
 
-> I think netlink is fine if it is used for injection too (at least of
-> management frames and WPA stuff).
+Several things need to be handled first, of course:
 
-I don't disagree. I'd even say that having both injection interfaces is
-fine since they really cover different use cases.
+- Returning of tx status. That could be solved by adding a stamp into
+radiotap header of injected frame and returning a status (not the whole
+frame, just the stamp plus some relevant info) through netlink.
 
-johannes
+- Interference with bridging. We don't want our injected (or returned
+management) frame to be bridged. That could perhaps be solved by using
+a certain Ethernet destination address (our own address?), but I'm not
+sure here.
 
---=-0nAm+vuGxvY6ODMP5klE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+- There will probably more issues pop up.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+ Jiri
 
-iD8DBQBGfC8E/ETPhpq3jKURAnbFAJoD+WLGUEBTaEGdq88V54LYVvlyXgCgiX28
-a2eQ8ZXXdVMwiUSsADm8G8w=
-=YkHd
------END PGP SIGNATURE-----
-
---=-0nAm+vuGxvY6ODMP5klE--
-
+-- 
+Jiri Benc
+SUSE Labs
