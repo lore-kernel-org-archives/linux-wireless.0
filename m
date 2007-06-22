@@ -1,31 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:50372 "EHLO amd.ucw.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757581AbXFMLnd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2007 07:43:33 -0400
-Date: Wed, 13 Jun 2007 13:43:26 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: James Ketrenos <jketreno@linux.intel.com>
-Cc: kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: Re: ipw3945 driver in recent -mm kernels
-Message-ID: <20070613114326.GA1973@elf.ucw.cz>
-References: <20070609192703.GA6410@elf.ucw.cz> <20070609215712.GA13678@elf.ucw.cz> <466DA14D.6080309@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <466DA14D.6080309@linux.intel.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45301 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751909AbXFVIvb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2007 04:51:31 -0400
+Subject: [PATCH] remove PRISM2_PARAM_DROP_UNENCRYPTED ioctl
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 22 Jun 2007 10:13:30 +0200
+Message-Id: <1182500010.21939.64.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Interestingly, wpa_supplicant doesn't use it, but uses the
+currently unsupported IW_AUTH_DROP_UNENCRYPTED. So I guess
+it doesn't matter anyway.
 
-Thanks for help. I was finaly able to make it to work. It is quite
-sensitive to order of commands... and still does not light the led up
-on x60, but it works. (Part of problem was that it tried to associate
-in 5GHz range, and another part was my error in configuring IP
-addresses).
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-								Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+---
+ net/mac80211/hostapd_ioctl.h   |    1 -
+ net/mac80211/ieee80211_ioctl.c |    8 --------
+ 2 files changed, 9 deletions(-)
+
+--- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-06-22 10:10:28.658632620 +0200
++++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-06-22 10:11:24.588632620 +0200
+@@ -34,7 +34,6 @@ enum {
+ 
+ 	/* Instant802 additions */
+ 	PRISM2_PARAM_CTS_PROTECT_ERP_FRAMES = 1001,
+-	PRISM2_PARAM_DROP_UNENCRYPTED = 1002,
+ 	PRISM2_PARAM_PREAMBLE = 1003,
+ 	PRISM2_PARAM_SHORT_SLOT_TIME = 1006,
+ 	PRISM2_PARAM_NEXT_MODE = 1008,
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-06-22 10:10:26.648632620 +0200
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-06-22 10:11:35.598632620 +0200
+@@ -2171,10 +2171,6 @@ static int ieee80211_ioctl_prism2_param(
+ 		local->cts_protect_erp_frames = value;
+ 		break;
+ 
+-	case PRISM2_PARAM_DROP_UNENCRYPTED:
+-		sdata->drop_unencrypted = value;
+-		break;
+-
+ 	case PRISM2_PARAM_PREAMBLE:
+ 		local->short_preamble = value;
+ 		break;
+@@ -2369,10 +2365,6 @@ static int ieee80211_ioctl_get_prism2_pa
+ 		*param = local->cts_protect_erp_frames;
+ 		break;
+ 
+-	case PRISM2_PARAM_DROP_UNENCRYPTED:
+-		*param = sdata->drop_unencrypted;
+-		break;
+-
+ 	case PRISM2_PARAM_PREAMBLE:
+ 		*param = local->short_preamble;
+ 		break;
+
+
