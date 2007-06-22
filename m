@@ -1,55 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 91-65-240-14-dynip.superkabel.de ([91.65.240.14]:34428 "EHLO
-	charon.n2.diac24.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1762516AbXFEOJ0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2007 10:09:26 -0400
-Date: Tue, 5 Jun 2007 16:09:24 +0200
-From: David Lamparter <lists@diac24.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: nl80211 status? (implying cfg80211 status)
-Message-ID: <20070605140924.GC5221@charon.n2.diac24.net>
-References: <20070604193034.GA16350@charon.n2.diac24.net> <1181040798.8274.10.camel@johannes.berg> <1181051870.8274.17.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1181051870.8274.17.camel@johannes.berg>
+Received: from styx.suse.cz ([82.119.242.94]:51451 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752521AbXFVPjl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2007 11:39:41 -0400
+Date: Fri, 22 Jun 2007 17:39:40 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Andy Green <andy@warmcat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [WIP] mac80211: kill mgmt interface
+Message-ID: <20070622173940.30280046@griffin.suse.cz>
+In-Reply-To: <467BDCB1.1010604@warmcat.com>
+References: <1182418939.10821.8.camel@johannes.berg>
+	<20070621143558.68fc8e4a@griffin.suse.cz>
+	<1182429920.21939.1.camel@johannes.berg>
+	<20070621151441.500d62d5@griffin.suse.cz>
+	<20070622154545.29eeebdb@griffin.suse.cz>
+	<467BDCB1.1010604@warmcat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hooray, message crossing :)
+On Fri, 22 Jun 2007 15:29:05 +0100, Andy Green wrote:
+> But for any nontrivial use, you need to capture RX and not blindly
+> inject, and so you have a monitor mode interface up anyway.
 
-> What I'd do if I had time now is add things to nl80211/cfg80211 and then
-> implement the calls in mac80211 (or a fullmac driver of your choice.)
-> Then write the appropriate userspace tool for testing and see if it
-> works, i.e. you can associate, do key operations etc. Use WEP for now,
-> and then maybe modify wpa_supplicant too for nl80211. Then, at some
-> point, you have wpa_supplicant working on mac80211 (or the driver). Then
-> in theory you don't need wext any more, and as an afterthought you can
-> still add wext compatibility so the deprecated wireless tools continue
-> to work.
+No, why? You can encapsulate received management frames (only the ones
+that need to go to user space or so) in the same way and send them
+through the regular interface.
 
-Yeah, I agree. Guess I overshooted a bit on converting wext. For the
-userspace part I started by adding some genetlink helper functions to
-iproute2, will try to get them upstream later. (tomorrow)
+ Jiri
 
-I'm hoping to add an "ip wireless" part, since iproute2 already has all the
-netlink stuff and I really like its syntax. I rudimentarily started hacking
-it up, which is why I noticed there's no PHY configuration command.
-
-For the kernel part, if I were to work on it, I'd be adding it to mac80211.
-The only 802.11 devices I own are a laptop with a rt2500 and a WRT router,
-and developing for that router isn't that fun.
-
-
-David
-
----
-
-[equinox@neptune]:~/src/iproute2/ip # ./ip w
-0: phy0
-RTNETLINK answers: Operation not supported
-    6: wlan0: association status unknown
-RTNETLINK answers: Operation not supported
-    5: wmaster0: association status unknown
-
+-- 
+Jiri Benc
+SUSE Labs
