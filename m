@@ -1,69 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47847 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756892AbXFNWvh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2007 18:51:37 -0400
-Subject: Re: libertas (private) ioctls vs. nl80211
-From: Dan Williams <dcbw@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jeff Garzik <jeff@garzik.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	hs4233@mail.mn-solutions.de, linux-kernel@vger.kernel.org
-In-Reply-To: <20070614223125.GA28235@infradead.org>
-References: <1181757483.29767.99.camel@johannes.berg>
-	 <20070614170901.GA13384@infradead.org>
-	 <20070614103836.23b07a72.akpm@linux-foundation.org>
-	 <20070614181307.GA16856@infradead.org>
-	 <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org>
-	 <46718D81.9080402@garzik.org>
-	 <1181859755.23567.3.camel@xo-28-0B-88.localdomain>
-	 <20070614223125.GA28235@infradead.org>
-Content-Type: text/plain
-Date: Thu, 14 Jun 2007 18:55:58 -0400
-Message-Id: <1181861758.23567.26.camel@xo-28-0B-88.localdomain>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55580 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751964AbXFWVtj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jun 2007 17:49:39 -0400
+Subject: Re: [WIP] mac80211: kill mgmt interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andy Green <andy@warmcat.com>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <467D10BA.80104@warmcat.com>
+References: <1182418939.10821.8.camel@johannes.berg>
+	 <20070621143558.68fc8e4a@griffin.suse.cz>
+	 <1182429920.21939.1.camel@johannes.berg>
+	 <20070621151441.500d62d5@griffin.suse.cz>
+	 <20070622154545.29eeebdb@griffin.suse.cz>	<467BDCB1.1010604@warmcat.com>
+	 <1182526221.21939.94.camel@johannes.berg>
+	 <20070622174953.500817e0@griffin.suse.cz>
+	 <1182543620.21939.98.camel@johannes.berg>	<467CB691.2090806@warmcat.com>
+	 <1182581630.21939.105.camel@johannes.berg>
+	 <20070623134451.643dd40c@logostar.upir.cz>  <467D10BA.80104@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3e1nvbqxLdYtjZY4cMYC"
+Date: Sat, 23 Jun 2007 23:51:07 +0200
+Message-Id: <1182635467.21939.125.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-06-14 at 23:31 +0100, Christoph Hellwig wrote:
-> On Thu, Jun 14, 2007 at 06:22:35PM -0400, Dan Williams wrote:
-> > And that's what I did in the last pull you got from John; all pointless
-> > and duplicated ioctls were removed.  The only ones left are mesh
-> > tweakables, an LED GPIO control ioctl, and a regulatory region/domain
-> > thing.  I agree the interface is somewhat ugly (like the
-> > char-128/char-128 ones that return information from the mesh forwarding
-> > table), and I also agree that we need to move to using netlink for this
-> > sort of stuff in the future.  There are _no_ ioctls that duplicate WEXT
-> > functionality.
-> 
-> The problem is not any kind of duplication.  The problem is that the
-> interface is plain and simply bad.  If anyone else would come in with
-> an ioctl interface using pointer indirections and subfunctions which
-> is horribly complex and not 32on64 clean they would get beaten up.
 
-I agree that it's suboptimal; I tried to clean it up and bashed my head
-against the current iwpriv system for about 2 days before concluding
-that the iwpriv stuff is just too insane to actually use.  We both want
-a well-defined, clean, generic 802.11s-type interface, make no mistake.
-Unfortunately, we don't have any framework which that interface could
-use (ie, nl80211 or cfg80211).  That's unlikely to land until 2.6.23 or
-even later.  And the regulatory stuff is still probably 6 months away
-from agreement.
+--=-3e1nvbqxLdYtjZY4cMYC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-So if everybody is objecting to _any_ new private ioctls, even if they
-don't duplicate WEXT functionality, whatever; rip them out and we'll
-maintain them out-of-kernel or something until there's a nicer framework
-to piggy-back the mesh tune-ables on.
+On Sat, 2007-06-23 at 13:23 +0100, Andy Green wrote:
+> Jiri Benc wrote:
+> > On Sat, 23 Jun 2007 08:53:50 +0200, Johannes Berg wrote:
+> >> Who started this anti-nl80211 thing anyway? I still don't see what's s=
+o
+> >> wrong with sending frames down a PF_NETLINK socket rather than a
+> >> PF_PACKET socket.
+> >=20
+> > Perhaps it was just my misunderstanding about the monitor interface tx
+> > injection patches; I though this mechanism should be used for hostapd a=
+nd
+> > user space MLME, which I consider wrong. Johannes' comment about differ=
+ent
+> > needs (and thus having both injection through monitor iface and through
+> > netlink) makes perfectly sense, though.
+> >=20
+> > Andy, is using a monitor interface (for both injecting and receiving of
+> > frames) acceptable for you? If yes, let's drop my proposal (I said it m=
+ight
+> > turn up to be useless :-)), apply patches for monitor iface injection a=
+nd
+> > implement a netlink soultion as a replacement of the current management
+> > interface.
+>=20
+> Yes the existing Monitor Mode Try #13 is fine for me and the userland
+> projects I know about,=20
 
-Dan
+:)
 
-> So even if the interface is not going to be generic it needs to be
-> done properly and document.  And once it's documented you've actually
-> layed down the first building block have it generic.  If no other
-> driver actually implements the same kind of non-standardized mesh
-> interface it'll stay that way, if other pop up they can implement
-> the same interface and eventually we'll grow a generic layer helping
-> out with it.
+> but actually I quite liked your encapsulation
+> thing -- in itself is compatible with working in any mode.  The only
+> problem with it right now is that it seems when mananged mode interfaces
+>  are not associated, they are in a netif_carrier_off() state or similar.
+
+Oh, good point, I forgot about that in my other reply. Yeah, we really
+want to go to IFF_DORMANT too and that really stops us from doing
+anything. Also, if we do QoS on the interfaces then the qdisc might end
+up dropping our packets if we don't do special hacks around that, again
+something we cannot accept.
+
+johannes
+
+--=-3e1nvbqxLdYtjZY4cMYC
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGfZXL/ETPhpq3jKURAplAAJ9fLLf8WmmxIsUrl7OfhJzf7HXi4wCgrpKI
+Yfc7LDhnmK9HqGS5bC9arF4=
+=ZhfL
+-----END PGP SIGNATURE-----
+
+--=-3e1nvbqxLdYtjZY4cMYC--
 
