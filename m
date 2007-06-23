@@ -1,158 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from daemonizer.de ([87.230.16.230]:56485 "EHLO daemonizer.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757519AbXFQAmj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jun 2007 20:42:39 -0400
-From: Maximilian Engelhardt <maxi@daemonizer.de>
-To: Stephen Hemminger <shemminger@linux-foundation.org>
-Subject: Re: b44: high ping times with wireless-dev
-Date: Sun, 17 Jun 2007 02:42:18 +0200
-Cc: netdev <netdev@vger.kernel.org>,
-	"linux-kernel" <linux-kernel@vger.kernel.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	Gary Zambrano <zambrano@broadcom.com>,
-	"Jeff Garzik" <jgarzik@pobox.com>,
-	"Arnaldo Carvalho de Melo" <acme@ghostprotocols.net>
-References: <200706162327.47413.maxi@daemonizer.de> <20070616154946.5fb6b013@localhost.localdomain>
-In-Reply-To: <20070616154946.5fb6b013@localhost.localdomain>
+Received: from mog.warmcat.com ([62.193.232.24]:37914 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752585AbXFWJBD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jun 2007 05:01:03 -0400
+Message-ID: <467CE130.2080306@warmcat.com>
+Date: Sat, 23 Jun 2007 10:00:32 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart6097975.8HiZyJlsfT";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200706170242.24214.maxi@daemonizer.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [WIP] mac80211: kill mgmt interface
+References: <1182418939.10821.8.camel@johannes.berg>	 <20070621143558.68fc8e4a@griffin.suse.cz>	 <1182429920.21939.1.camel@johannes.berg>	 <20070621151441.500d62d5@griffin.suse.cz>	 <20070622154545.29eeebdb@griffin.suse.cz> <467BDCB1.1010604@warmcat.com>	 <1182526221.21939.94.camel@johannes.berg>	 <20070622174953.500817e0@griffin.suse.cz>	 <1182543620.21939.98.camel@johannes.berg>  <467CB691.2090806@warmcat.com> <1182581630.21939.105.camel@johannes.berg>
+In-Reply-To: <1182581630.21939.105.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart6097975.8HiZyJlsfT
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Johannes Berg wrote:
 
-On Sunday 17 June 2007, Stephen Hemminger wrote:
-> On Sat, 16 Jun 2007 23:27:43 +0200
->
-> Maximilian Engelhardt <maxi@daemonizer.de> wrote:
-> > Hello,
-> >
-> > I recently did some test and found out something interesting about the
-> > b44 problem I wrote earlier.
-> >
-> > The problem is the following:
-> > When I use my BCM4401 with the b44 driver in wireless-dev I get very hi=
-gh
-> > ping times looking like this:
-> >
-> > 64 bytes from 172.30.10.1: icmp_seq=3D1 ttl=3D64 time=3D1863 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D2 ttl=3D64 time=3D855 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D3 ttl=3D64 time=3D1855 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D4 ttl=3D64 time=3D855 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D5 ttl=3D64 time=3D1854 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D6 ttl=3D64 time=3D854 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D7 ttl=3D64 time=3D1851 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D8 ttl=3D64 time=3D851 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D9 ttl=3D64 time=3D1851 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D10 ttl=3D64 time=3D851 ms
-> >
-> > I also found out that shortly after I boot my laptop and log into kde
-> > ping times are not that high but start to increase very quickly:
-> >
-> > 64 bytes from 172.30.10.1: icmp_seq=3D53 ttl=3D64 time=3D2.19 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D54 ttl=3D64 time=3D2.22 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D55 ttl=3D64 time=3D2.20 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D56 ttl=3D64 time=3D2.20 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D57 ttl=3D64 time=3D18.6 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D58 ttl=3D64 time=3D1268 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D59 ttl=3D64 time=3D268 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D60 ttl=3D64 time=3D1268 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D61 ttl=3D64 time=3D268 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D62 ttl=3D64 time=3D6.08 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D63 ttl=3D64 time=3D268 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D64 ttl=3D64 time=3D1264 ms
-> > 64 bytes from 172.30.10.1: icmp_seq=3D65 ttl=3D64 time=3D264 ms
-> >
-> > After some time digging around I found out something really interesting.
-> > When I play some music ping times are immediately lower. If I stop
-> > playing music they are back to the same times as they were before.
-> >
-> > I guess that there is a problem with interrupts so I post some
-> > information of my system in hope it will be usefull.
-> >
-> > maxi@koala:~$ cat /proc/interrupts
-> >           CPU0
-> >  0:     126317    XT-PIC-XT        timer
-> >  1:       3600    XT-PIC-XT        i8042
-> >  2:          0    XT-PIC-XT        cascade
-> >  7:          1    XT-PIC-XT        parport0
-> >  8:          1    XT-PIC-XT        rtc
-> >  9:      17371    XT-PIC-XT        acpi
-> > 10:      13237    XT-PIC-XT        firewire_ohci, yenta, yenta,
-> > ehci_hcd:usb1, uhci_hcd:usb3, uhci_hcd:usb4, Intel 82801DB-ICH4, Intel
-> > 82801DB-ICH4 Modem, eth0
-> > 11:      89059    XT-PIC-XT        uhci_hcd:usb2, i915@pci:0000:00:02.0
-> > 12:        632    XT-PIC-XT        i8042
-> > 14:      10354    XT-PIC-XT        libata
-> > 15:       7408    XT-PIC-XT        libata
-> > NMI:          0
-> > ERR:          0
-> >
-> >
-> > [...]
-> > ACPI: PCI Interrupt Link [LNKD] enabled at IRQ 10
-> > ACPI: PCI Interrupt 0000:02:02.0[A] -> Link [LNKD] -> GSI 10 (level, lo=
-w)
-> > -> IRQ 10
-> > ssb: Sonics Silicon Backplane found on PCI device 0000:02:02.0
-> > b44.c:v2.0
-> > eth0: Broadcom 44xx/47xx 10/100BaseT Ethernet 00:c0:9f:29:99:a7
-> > [...]
-> >
-> > This problem did only happen with wireless-dev (checkout this evening)
-> > and with -mm kernels I used some time ago for testing. Currently I'm
-> > running 2.6.22-rc4 that works perfectly fine and doesn't show that
-> > problem.
-> >
-> > Maxi
->
-> Can you build with APIC for uniprocessor.
+> On the other hand, I do consider userspace MLME needs slightly
+> different; it needs to be able to have frames encrypted, needs to see
+> frames that have been decrypted even though they would otherwise be
+> dropped [and this is very different to what you want], and probably
+> more.
 
-I did enable CONFIG_X86_UP_APIC and CONFIG_X86_UP_IOAPIC and tried with lap=
-ic=20
-and apic=3Dforce but couldn't get APIC working.
+Fair enough, but injection is a separate issue from RX, despite one
+usually needs both.  That there is no standard way to inject on
+mac80211, regardless of the RX situation is a major lack.  If injection
+is not treated as a separate valid action then it will constantly be
+delayed as part of some larger effort, when it is valuable in itself.
 
->
-> There is lots of IRQ sharing, so
->  - one of the other device's may be not handling shared IRQ properly.
->    Try unloading firewhire modem and yenta devices.
->
->  - IRQ might be set edge triggered which doesn't work with NAPI
-> 	or shared IRQ.
+But Jiri's encapsulation method is an improvement if it can be
+implemented okay for unassociated interfaces and so on.
 
-I did build a kernel without the three mentioned above but the problem is=20
-still the same. I also did remove everything but eth0 on interrupt 10 so th=
-e=20
-only device using that interrupt is eth0 and then the card completely stopp=
-ed=20
-working.
+> I haven't seen a good proposal to unify this. To me, Jiri's proposal of
+> packing what is essentially out-of-band data into some sort of special
+> frames is no use, and your proposal to use monitor mode interfaces is
+> perfect for the first use case, but still leaves us with more
+> out-of-band data that the userspace MLME needs and hence doesn't gain us
+> much.
 
-Maxi
+Understood, it doesn't affect injection though.  Also the kernel packet
+filter stuff can easily filter on the ethertype part of the encapsulated
+packets.
 
---nextPart6097975.8HiZyJlsfT
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+> Who started this anti-nl80211 thing anyway? I still don't see what's so
+> wrong with sending frames down a PF_NETLINK socket rather than a
+> PF_PACKET socket.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+I don't have anything against it, but for me the packets I am injecting
+are normal network traffic and sending them like that seems the most
+natural way.  For RX down in userspace it is marginally simpler to use
+libpcap monitoring and the same handle for injection and rx.  I
+definitely think having two paths to injection is not necessary, but for
+splitting out normally invisible management packets to go down a
+separate netlink socket instead of encapsulating them I don't mind
+either way.
 
-iD8DBQBGdINwOimwv528XGERAtCDAKDf+ryWq+3sPSnEnf41/uegU3xlnACfSFLH
-v6ojEVuzum5Y0M9aWOOTYyk=
-=PzRh
------END PGP SIGNATURE-----
-
---nextPart6097975.8HiZyJlsfT--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-Andy
