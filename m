@@ -1,36 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:47182 "EHLO mail.suse.cz"
+Received: from styx.suse.cz ([82.119.242.94]:42188 "EHLO mail.suse.cz"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754364AbXFLMFq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2007 08:05:46 -0400
-Date: Tue, 12 Jun 2007 14:05:45 +0200
+	id S1753907AbXFWLoz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jun 2007 07:44:55 -0400
+Date: Sat, 23 Jun 2007 13:44:51 +0200
 From: Jiri Benc <jbenc@suse.cz>
-To: Daniel Drake <dsd@gentoo.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: regulatory domain cleanup
-Message-ID: <20070612140545.6a469560@logostar.upir.cz>
-In-Reply-To: <20070609180715.02BC17B409F@zog.reactivated.net>
-References: <20070609180715.02BC17B409F@zog.reactivated.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Andy Green <andy@warmcat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [WIP] mac80211: kill mgmt interface
+Message-ID: <20070623134451.643dd40c@logostar.upir.cz>
+In-Reply-To: <1182581630.21939.105.camel@johannes.berg>
+References: <1182418939.10821.8.camel@johannes.berg>
+	<20070621143558.68fc8e4a@griffin.suse.cz>
+	<1182429920.21939.1.camel@johannes.berg>
+	<20070621151441.500d62d5@griffin.suse.cz>
+	<20070622154545.29eeebdb@griffin.suse.cz>
+	<467BDCB1.1010604@warmcat.com>
+	<1182526221.21939.94.camel@johannes.berg>
+	<20070622174953.500817e0@griffin.suse.cz>
+	<1182543620.21939.98.camel@johannes.berg>
+	<467CB691.2090806@warmcat.com>
+	<1182581630.21939.105.camel@johannes.berg>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat,  9 Jun 2007 19:07:14 +0100 (BST), Daniel Drake wrote:
-> Currently, a function misnamed ieee80211_init_client() is used to handle
-> regulatory domain control. It is called from
-> ieee80211_register_hwmode(), which typically runs 2 or 3 times
-> (802.11a/b/g), but each time it iterates over all the modes.
-> 
-> This patch cleans this up and removes the confusion:
-> ieee80211_init_client was effectively renamed to
-> ieee80211_set_default_regdomain and is now run on a per-mode basis
-> (doesn't have to deal with netdevs). I also moved the regdomain handling
-> code into its own file and added some documentation.
-> 
-> Signed-off-by: Daniel Drake <dsd@gentoo.org>
+On Sat, 23 Jun 2007 08:53:50 +0200, Johannes Berg wrote:
+> Who started this anti-nl80211 thing anyway? I still don't see what's so
+> wrong with sending frames down a PF_NETLINK socket rather than a
+> PF_PACKET socket.
 
-Acked-by: Jiri Benc <jbenc@suse.cz>
+Perhaps it was just my misunderstanding about the monitor interface tx
+injection patches; I though this mechanism should be used for hostapd and
+user space MLME, which I consider wrong. Johannes' comment about different
+needs (and thus having both injection through monitor iface and through
+netlink) makes perfectly sense, though.
+
+Andy, is using a monitor interface (for both injecting and receiving of
+frames) acceptable for you? If yes, let's drop my proposal (I said it might
+turn up to be useless :-)), apply patches for monitor iface injection and
+implement a netlink soultion as a replacement of the current management
+interface.
+
+Thanks,
+
+ Jiri
 
 -- 
 Jiri Benc
