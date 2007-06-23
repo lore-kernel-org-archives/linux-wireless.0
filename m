@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout5.parasun.com ([204.174.16.215]:49774 "EHLO
-	mailout5.parasun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753406AbXFJPjI (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:55345 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750948AbXFWMXz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jun 2007 11:39:08 -0400
-Date: Sun, 10 Jun 2007 10:21:32 -0500 (CDT)
-From: Jeff Williams <angelbane@ou.edu>
-To: David Planella <david.planella@googlemail.com>
-cc: acx100-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: The future of the TI ACX wireless driver
-In-Reply-To: <1d9d9b240706100735k374b5800ie64370e1e9bff1ef@mail.gmail.com>
-Message-ID: <Pine.LNX.4.64.0706101014520.2936@dulcinea>
-References: <1d9d9b240706100735k374b5800ie64370e1e9bff1ef@mail.gmail.com>
+	Sat, 23 Jun 2007 08:23:55 -0400
+Message-ID: <467D10BA.80104@warmcat.com>
+Date: Sat, 23 Jun 2007 13:23:22 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+To: Jiri Benc <jbenc@suse.cz>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [WIP] mac80211: kill mgmt interface
+References: <1182418939.10821.8.camel@johannes.berg>	<20070621143558.68fc8e4a@griffin.suse.cz>	<1182429920.21939.1.camel@johannes.berg>	<20070621151441.500d62d5@griffin.suse.cz>	<20070622154545.29eeebdb@griffin.suse.cz>	<467BDCB1.1010604@warmcat.com>	<1182526221.21939.94.camel@johannes.berg>	<20070622174953.500817e0@griffin.suse.cz>	<1182543620.21939.98.camel@johannes.berg>	<467CB691.2090806@warmcat.com>	<1182581630.21939.105.camel@johannes.berg> <20070623134451.643dd40c@logostar.upir.cz>
+In-Reply-To: <20070623134451.643dd40c@logostar.upir.cz>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> * Mac80211 driver, which uses the seemingly
-> soon-to-be-included-in-kernel mac80211 stack, available on the
-> wireless-dev tree (the stack, not the driver).
-> This release is only available here [2] and needs some work before
-> being included in wireless-dev, since it was released at the time when
-> mac80211 was still called d80211. In any case, having had a quick look
-> at the code, I believe that replacing the d80211.h header reference to
-> mac80211.h and maybe refactoring some functions might be all what is
-> needed for an initial compilation. Note that I haven't got any
-> previous driver or kernel module development experience, so I might be
-> wrong here. What would also be needed is to merge all changes from the
-> softmac and plain drivers.
->
-You can find a updated-as-of-last-month mac80211 pci driver at 
-http://airgo.wdwconsulting.net/acx-mac80211-20070510.patch.bz2
-it may or may not work, it compiles, it responds with aps to iwlist sc. 
-Enabling ACX_MAC80211_USB will cause the build to fail. I'll be happy to 
-take patches and bug reports.
+Jiri Benc wrote:
+> On Sat, 23 Jun 2007 08:53:50 +0200, Johannes Berg wrote:
+>> Who started this anti-nl80211 thing anyway? I still don't see what's so
+>> wrong with sending frames down a PF_NETLINK socket rather than a
+>> PF_PACKET socket.
+> 
+> Perhaps it was just my misunderstanding about the monitor interface tx
+> injection patches; I though this mechanism should be used for hostapd and
+> user space MLME, which I consider wrong. Johannes' comment about different
+> needs (and thus having both injection through monitor iface and through
+> netlink) makes perfectly sense, though.
+> 
+> Andy, is using a monitor interface (for both injecting and receiving of
+> frames) acceptable for you? If yes, let's drop my proposal (I said it might
+> turn up to be useless :-)), apply patches for monitor iface injection and
+> implement a netlink soultion as a replacement of the current management
+> interface.
 
-thanks,
+Yes the existing Monitor Mode Try #13 is fine for me and the userland
+projects I know about, but actually I quite liked your encapsulation
+thing -- in itself is compatible with working in any mode.  The only
+problem with it right now is that it seems when mananged mode interfaces
+ are not associated, they are in a netif_carrier_off() state or similar.
+ If in the future it becomes possible to via netlink to target types of
+packets to come down any interface in encapsulated bubbles, then
+possibly it makes sense to use the encapsulated version.  But of course
+either way will be great compared to nothing.
 
-Jeff Williams
+-Andy
