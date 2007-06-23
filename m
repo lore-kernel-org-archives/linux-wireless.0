@@ -1,35 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:55650 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752970AbXFXJC3 (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:40754 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751234AbXFWErv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jun 2007 05:02:29 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id DDBD28CBE1
-	for <linux-wireless@vger.kernel.org>; Sun, 24 Jun 2007 11:02:25 +0200 (CEST)
-Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id D975314548
-	for <linux-wireless@vger.kernel.org>; Sun, 24 Jun 2007 09:03:10 +0000 (UTC)
-Message-Id: <20070624090145.041930029@warmcat.com>
-References: <20070624085757.244871712@warmcat.com>
-Date: Sun, 24 Jun 2007 09:58:00 +0100
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH Try#14 3/4] --- include/linux/if_ether.h | 1 + 1 file changed, 1 insertion(+)
+	Sat, 23 Jun 2007 00:47:51 -0400
+Date: Fri, 22 Jun 2007 21:46:50 -0700
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: Yi Zhu <yi.zhu@intel.com>
+Cc: James Ketrenos <jketreno@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] ipw2100: RF kill switch timer power save
+Message-ID: <20070622214650.690293f4@oldman>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Index: wireless-dev/include/linux/if_ether.h
-===================================================================
---- wireless-dev.orig/include/linux/if_ether.h
-+++ wireless-dev/include/linux/if_ether.h
-@@ -98,6 +98,7 @@
- #define ETH_P_ECONET	0x0018		/* Acorn Econet			*/
- #define ETH_P_HDLC	0x0019		/* HDLC frames			*/
- #define ETH_P_ARCNET	0x001A		/* 1A for ArcNet :-)            */
-+#define ETH_P_80211_RT	0x001B		/* Radiotap + 80211 encapsulation */
- 
- /*
-  *	This is an Ethernet frame header.
+Similar patch to ipw2200. Round the timer used for RF kill
+switch off to 1 second boundary to save power.
+Build tested only, don't have this hardware.
 
--- 
+Signed-off-by: Stephen Hemminger <shemminger@linux-foundation.org>
+
+--- la/drivers/net/wireless/ipw2100.c	2007-06-22 21:22:18.000000000 -0700
++++ lb/drivers/net/wireless/ipw2100.c	2007-06-22 21:24:25.000000000 -0700
+@@ -1768,7 +1768,8 @@ static int ipw2100_up(struct ipw2100_pri
+ 
+ 		if (priv->stop_rf_kill) {
+ 			priv->stop_rf_kill = 0;
+-			queue_delayed_work(priv->workqueue, &priv->rf_kill, HZ);
++			queue_delayed_work(priv->workqueue, &priv->rf_kill,
++					   round_jiffies(HZ));
+ 		}
+ 
+ 		deferred = 1;
+@@ -2098,7 +2099,7 @@ static void isr_indicate_rf_kill(struct 
+ 	/* Make sure the RF Kill check timer is running */
+ 	priv->stop_rf_kill = 0;
+ 	cancel_delayed_work(&priv->rf_kill);
+-	queue_delayed_work(priv->workqueue, &priv->rf_kill, HZ);
++	queue_delayed_work(priv->workqueue, &priv->rf_kill, round_jiffies(HZ));
+ }
+ 
+ static void isr_scan_complete(struct ipw2100_priv *priv, u32 status)
+@@ -4233,7 +4234,8 @@ static int ipw_radio_kill_sw(struct ipw2
+ 			/* Make sure the RF_KILL check timer is running */
+ 			priv->stop_rf_kill = 0;
+ 			cancel_delayed_work(&priv->rf_kill);
+-			queue_delayed_work(priv->workqueue, &priv->rf_kill, HZ);
++			queue_delayed_work(priv->workqueue, &priv->rf_kill,
++					   round_jiffies(HZ));
+ 		} else
+ 			schedule_reset(priv);
+ 	}
+@@ -5969,7 +5971,8 @@ static void ipw2100_rf_kill(struct work_
+ 	if (rf_kill_active(priv)) {
+ 		IPW_DEBUG_RF_KILL("RF Kill active, rescheduling GPIO check\n");
+ 		if (!priv->stop_rf_kill)
+-			queue_delayed_work(priv->workqueue, &priv->rf_kill, HZ);
++			queue_delayed_work(priv->workqueue, &priv->rf_kill,
++					   round_jiffies(HZ));
+ 		goto exit_unlock;
+ 	}
+ 
