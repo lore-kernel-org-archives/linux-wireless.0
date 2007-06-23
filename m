@@ -1,60 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:58957
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752925AbXF0OiT (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55748 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751422AbXFWVjt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2007 10:38:19 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: Export short-preamble bit to drivers
-Date: Wed, 27 Jun 2007 16:37:05 +0200
-Cc: Jiri Benc <jbenc@suse.cz>, John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200706251628.00838.mb@bu3sch.de> <200706271508.29188.mb@bu3sch.de> <1182954627.4769.30.camel@johannes.berg>
-In-Reply-To: <1182954627.4769.30.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200706271637.05587.mb@bu3sch.de>
+	Sat, 23 Jun 2007 17:39:49 -0400
+Subject: Re: [WIP] mac80211: kill mgmt interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andy Green <andy@warmcat.com>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <467CD9EC.1020405@warmcat.com>
+References: <1182418939.10821.8.camel@johannes.berg>
+	 <20070621143558.68fc8e4a@griffin.suse.cz>
+	 <1182429920.21939.1.camel@johannes.berg>
+	 <20070621151441.500d62d5@griffin.suse.cz>
+	 <20070622154545.29eeebdb@griffin.suse.cz>	<467BDCB1.1010604@warmcat.com>
+	 <20070622173940.30280046@griffin.suse.cz> <467C003C.30803@warmcat.com>
+	 <467CD9EC.1020405@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-a6wsAFO8pUalsMIv1LKF"
+Date: Sat, 23 Jun 2007 23:41:15 +0200
+Message-Id: <1182634875.21939.114.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 27 June 2007 16:30:27 Johannes Berg wrote:
-> On Wed, 2007-06-27 at 15:08 +0200, Michael Buesch wrote:
-> > On Wednesday 27 June 2007 10:55:00 Johannes Berg wrote:
-> > > On Mon, 2007-06-25 at 16:28 +0200, Michael Buesch wrote:
-> > > 
-> > > >  	case PRISM2_PARAM_PREAMBLE:
-> > > > -		local->short_preamble = value;
-> > > > +		if (value)
-> > > > +			local_to_hw(local)->conf.flags |= IEEE80211_CONF_SHORT_PREAMBLE;
-> > > > +		else
-> > > > +			local_to_hw(local)->conf.flags &= ~IEEE80211_CONF_SHORT_PREAMBLE;
-> > > > +		if (ieee80211_hw_config(local))
-> > > > +			ret = -EINVAL;
-> > > 
-> > > any reason not to return the actual error code from hw_config here? Not
-> > > that it'll be any different from -EINVAL I expect...
-> > 
-> > The reason is copy&paste from other PRISM2 IOCTLs ;)
-> > I'm OK with the real error code, too.
-> 
-> I don't really care either way.
-> 
-> > Though, the error code of hw_config is usually not useful _at all_.
-> > As it might not be the SHORT_PRMBL flag that produced it, but some of the
-> > other config settings.
-> > I would probably vote for any code in mac80211 to ignore that return value,
-> > except the places where a failure of hw_config would be fatal (init or
-> > places like that).
-> 
-> Yeah, there's a todo item saying that we need a way to just commit the
-> changed settings.
 
-Well, sane drivers should basically already do that, as most information
-is saved redundantly in the driver's structs. Especially for operations
-that can fail.
-So it's basically a TODO for drivers, rather than mac80211.
+--=-a6wsAFO8pUalsMIv1LKF
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Greetings Michael.
+On Sat, 2007-06-23 at 09:29 +0100, Andy Green wrote:
+
+> I've converted the injection patches and packetspammer[1] to use this
+> encapsulation method.  I added
+>=20
+> #define ETH_P_80211_RT	0x001B		/* Radiotap + 80211 encapsulation */
+>=20
+> to ./include/linux/if_ether.h to define the new ethtype.
+>=20
+> My results at the moment are that my encapsulated injected packets are
+> dropped before reaching wlan0's dev->hard_start_xmit(), but if I send
+> them to a second network interface for the same device configured into
+> monitor mode, then they are injected correctly and go out on the air.
+>=20
+> Any ideas about where to look or what to do about the packets getting
+> dropped on wlan0?
+
+Possibly the reframing code simply doesn't udnerstand and thus kills the
+packets?
+
+johannes
+
+--=-a6wsAFO8pUalsMIv1LKF
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGfZN7/ETPhpq3jKURAiBEAJ4kiU2M+Bf5/jwnrTgbl7itV5K82gCfTpmo
+UddGJYQedzB10aUzH7lj3DE=
+=D9MD
+-----END PGP SIGNATURE-----
+
+--=-a6wsAFO8pUalsMIv1LKF--
+
