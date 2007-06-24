@@ -1,78 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:60854 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1764608AbXFGWlX (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:33070 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752264AbXFXIkQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2007 18:41:23 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: jketreno <jketreno@linux.intel.com>
-Subject: Re: IEEE802.11e/WMM TS management and DLS support
-Date: Thu, 7 Jun 2007 15:40:36 -0700
-Cc: Jiri Benc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-References: <20070606082152.GA28639@mail.intel.com> <200706071412.54918.flamingice@sourmilk.net> <4668DE0F.7060302@linux.intel.com>
-In-Reply-To: <4668DE0F.7060302@linux.intel.com>
+	Sun, 24 Jun 2007 04:40:16 -0400
+Message-ID: <467E2DC0.30804@warmcat.com>
+Date: Sun, 24 Jun 2007 09:39:28 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2919834.eb3Sm0tSCJ";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200706071540.41665.flamingice@sourmilk.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [WIP] mac80211: kill mgmt interface
+References: <1182418939.10821.8.camel@johannes.berg>	 <20070621143558.68fc8e4a@griffin.suse.cz>	 <1182429920.21939.1.camel@johannes.berg>	 <20070621151441.500d62d5@griffin.suse.cz>	 <20070622154545.29eeebdb@griffin.suse.cz>	<467BDCB1.1010604@warmcat.com>	 <1182526221.21939.94.camel@johannes.berg>	 <20070622174953.500817e0@griffin.suse.cz>	 <1182543620.21939.98.camel@johannes.berg>	<467CB691.2090806@warmcat.com>	 <1182581630.21939.105.camel@johannes.berg>	 <20070623134451.643dd40c@logostar.upir.cz>  <467D10BA.80104@warmcat.com> <1182635467.21939.125.camel@johannes.berg>
+In-Reply-To: <1182635467.21939.125.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2919834.eb3Sm0tSCJ
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Johannes Berg wrote:
 
-On Thursday 07 June 2007 21:41, jketreno wrote:
-> Nothing is perfect the first time--and nothing will ever get done so long
-> as an aggressive and offensive position is held in regard to outside
-> contribution.
->
-Sure. But frankly, this code sucks. The original patch that I reviewed had=
-=20
-problems that indicated a total lack of testing.. and that was just for a=20
-subset of the patch series that I actually reviewed in detail. Even the=20
-design of the entire patch series is questionable even if we weren't trying=
-=20
-to move to a userspace MLME (and we need to, because kernel space MLME is a=
-=20
-*dead end*). The patch series also introduced sparse errors.
+>> but actually I quite liked your encapsulation
+>> thing -- in itself is compatible with working in any mode.  The only
+>> problem with it right now is that it seems when mananged mode interfaces
+>>  are not associated, they are in a netif_carrier_off() state or similar.
+> 
+> Oh, good point, I forgot about that in my other reply. Yeah, we really
+> want to go to IFF_DORMANT too and that really stops us from doing
+> anything. Also, if we do QoS on the interfaces then the qdisc might end
+> up dropping our packets if we don't do special hacks around that, again
+> something we cannot accept.
 
-Do I need to go on? Make the code suck less and we won't have to go through=
-=20
-this again. It's that simple. It's not about being aggressive or offensive.=
-=20
-It's about having some standards.
+That definitely is a bit of a problem for using Managed mode wlan0 for
+injection, since it shuts off packets outside of mac80211 when
+unassociated.  The "solution" if one was wanted would be to stop using
+the interface-level mechanism and let everything through and filter in
+hard_start_xmit() so only injected packets were accepted.
 
-Now of course, this also happened because Linville didn't see much and assu=
-med=20
-it was okay. If a patch needs review (and a patch series of this size *need=
-s*=20
-review), go ahead and ask for a review (or remind me I need to do one!). I=
-=20
-don't have much time this summer for writing code, but I will make sure I=20
-have time to review code, especially if Jiri Benc is not around.
+This is only the case on managed mode interfaces though, a feature of
+the encapsulated method was that it removed the dependence on
+specifically Monitor Mode to determine that an incoming TX packet had
+the radiotap format -- aside from Managed it still works fine on Monitor
+Mode interfaces (and presumably the other modes) with or without an
+associated interface on the device.  To be clear it works exactly the
+same on Monitor Mode as Try #13 just requiring a 14-byte ethhdr at the
+start of the injected packet.
 
-=2DMichael Wu
+Anyway I don't want to argue myself out of an ACK ;-)  I think what I'll
+do is post a try #14 using encapsulation that works on wlan0 too but
+needs it associated, but on the understanding that try #13 is not
+deprecated if people prefer it.
 
---nextPart2919834.eb3Sm0tSCJ
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGaIlpT3Oqt9AH4aERAn5BAKCISZT+89Jl4xwagstvlaFVMDoFHgCgrI15
-YJpbqYnwAkA43BdtCgtJ4B4=
-=hpW6
------END PGP SIGNATURE-----
-
---nextPart2919834.eb3Sm0tSCJ--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-Andy
