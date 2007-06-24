@@ -1,61 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:59263 "EHLO
-	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764488AbXFHAru (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:55740 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754072AbXFXLsH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2007 20:47:50 -0400
-Date: Thu, 07 Jun 2007 19:47:34 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Set low initial rate in rc80211_simple
-Message-ID: <4668a726.gQ0fmk5ZDAnWoXla%Larry.Finger@lwfinger.net>
+	Sun, 24 Jun 2007 07:48:07 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: wmm_acm setting
+Date: Sun, 24 Jun 2007 14:47:40 +0300
+Message-ID: <D0122E209EBF8D4CAB38EC6A8AF244E502BCD5AC@hasmsx412.ger.corp.intel.com>
+From: "Cohen, Guy" <guy.cohen@intel.com>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The initial rate for STA's using rc80211_simple is set to the last
-rate in the rate table. For situations for which the signal is weak,
-the rate may be too high for authentication and association. Although
-the rc80211_simple module will adjust the speed, the response may not
-be fast enough for a successful connection. This modification sets the
-initial rate to the lowest supported value.
+Hi,
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+In mac80211/ieee80211_sta.c, ieee80211_sta_wmm_params(), line ~267, is
+wmm_acm setting for case 1 (BK) and case 0 (BE) right (and not swapped)?
+
+Regards,
+Guy.
 
 
-Index: wireless-dev/net/mac80211/rc80211_simple.c
-===================================================================
---- wireless-dev.orig/net/mac80211/rc80211_simple.c
-+++ wireless-dev/net/mac80211/rc80211_simple.c
-@@ -281,16 +281,21 @@ static void rate_control_simple_rate_ini
- {
- 	struct ieee80211_hw_mode *mode;
- 	int i;
-+	int min_rate = 1000;
-+
- 	sta->txrate = 0;
- 	mode = local->oper_hw_mode;
--	/* TODO: what is a good starting rate for STA? About middle? Maybe not
--	 * the lowest or the highest rate.. Could consider using RSSI from
--	 * previous packets? Need to have IEEE 802.1X auth succeed immediately
--	 * after assoc.. */
--	for (i = 0; i < mode->num_rates; i++) {
-+	/* TODO: This routine should consider using RSSI from previous packets
-+	 * as we need to have IEEE 802.1X auth succeed immediately after assoc..
-+	 * Until that method is implemented, we will use the lowest supported rate
-+	 * as a workaround, */
-+	for (i = 0; i < mode->num_rates; i++)
- 		if ((sta->supp_rates & BIT(i)) &&
--		    (mode->rates[i].flags & IEEE80211_RATE_SUPPORTED))
--			sta->txrate = i;
-+		    (mode->rates[i].flags & IEEE80211_RATE_SUPPORTED)) {
-+			if (mode->rates[i].rate < min_rate) {
-+				min_rate = mode->rates[i].rate;
-+				sta->txrate = i;
-+			}
- 	}
- }
- 
+		switch (aci) {
+		case 1:
+			queue = IEEE80211_TX_QUEUE_DATA3;
+			if (acm) {
+				local->wmm_acm |= BIT(0) | BIT(3);
+			}
+			break;
+		case 2:
+			queue = IEEE80211_TX_QUEUE_DATA1;
+			if (acm) {
+				local->wmm_acm |= BIT(4) | BIT(5);
+			}
+			break;
+		case 3:
+			queue = IEEE80211_TX_QUEUE_DATA0;
+			if (acm) {
+				local->wmm_acm |= BIT(6) | BIT(7);
+			}
+			break;
+		case 0:
+		default:
+			queue = IEEE80211_TX_QUEUE_DATA2;
+			if (acm) {
+				local->wmm_acm |= BIT(1) | BIT(2);
+			}
+			break;
+		}
+
