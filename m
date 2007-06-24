@@ -1,84 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55797 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762160AbXFATaJ (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:55656 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753722AbXFXJC3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2007 15:30:09 -0400
-Subject: Re: mac80211 initial rate: a question
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
-In-Reply-To: <466045F2.6010708@lwfinger.net>
-References: <466045F2.6010708@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cTtEqJq4NA7BrdpXQSfw"
-Date: Fri, 01 Jun 2007 21:30:23 +0200
-Message-Id: <1180726223.11026.39.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 24 Jun 2007 05:02:29 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 47B658D149
+	for <linux-wireless@vger.kernel.org>; Sun, 24 Jun 2007 11:02:26 +0200 (CEST)
+Received: from meerkat.home.warmcat.com (flatcat [192.168.0.77])
+	by armbox7.home.warmcat.com (Postfix) with ESMTP id 498531454A
+	for <linux-wireless@vger.kernel.org>; Sun, 24 Jun 2007 09:03:12 +0000 (UTC)
+Message-Id: <20070624085757.244871712@warmcat.com>
+Date: Sun, 24 Jun 2007 09:57:57 +0100
+From: andy@warmcat.com
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH Try#14 0/4] Radiotap injection for any Mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+These patches add the ability to inject encapsulated packets down an interface for 
+transmission according to a prepended radiotap header.
 
---=-cTtEqJq4NA7BrdpXQSfw
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+For injecting packets, the you issue a packet using libpcap or a SOCK_PACKET
+socket down an interface to the wireless device that is in any Mode.  The packet
+has a 14 byte ethhdr of protocol type ETH_P_80211_RT encapsulating a normal 
+radiotap header prepended to the IEEE80211 header and payload.  The radiotap header
+is variable length depending on what the user wants to specify, currently the
+transmit rate, power and antenna can be specified using normal radiotap semantics.
+Any other entries are skipped.
 
-On Fri, 2007-06-01 at 11:14 -0500, Larry Finger wrote:
+The radiotap parser is broken out into its own file under cfg80211.
 
->          /* TODO: what is a good starting rate for STA? About middle? May=
-be not
->           * the lowest or the highest rate.. Could consider using RSSI fr=
-om
->           * previous packets? Need to have IEEE 802.1X auth succeed immed=
-iately
->           * after assoc.. */
->=20
-> After that the code goes on to set the rate equal to the last one in the =
-rate table, which might be=20
-> the highest rate.=20
+A usermode app packetspammer is available from here
 
-Yeah, I think that's very wrong.
+http://penumbra.warmcat.com/_twk/tiki-index.php?page=packetspammer
+http://git.warmcat.com/?p=packetspammer.git;a=summary
 
-> Although that rate might be OK for most of the devices using mac80211,
+which allows easy injection of these packets from the commandline.  At the moment it
+loops issuing packets at a variety of rates which can be seen from another
+machine's monitor mode interface on the same channel.  There are instructions for
+build and using it on the page above along with Fedora 7 binary and source RPMS.
+There is now also a -f switch to allow testing of the FCS flag on injected packets.
 
-Even then, if the AP is just in range it might not receive transmissions
-at 54M, depending on the fallback mechanism that might or might not be
-ok.
+Currently it has been tested for both rx and tx using zd1211rw-mac80211.
 
-> it=20
-> certainly is not for bcm43xx, which does not have the ability to transmit=
- or receive at speeds much=20
-> above 1 Mbs. In a private patch circulated only on the bcm43xx mailing li=
-st, I changed this routine=20
-> to set an initial rate of 1 Mbs, which certainly helps bcm43xx authentica=
-te and communicate with the=20
-> DHCP server.
+The patches are based against current wireless-dev.
 
-The thing about 802.1X is that you have a handshake with a few packets
-that need to go through or you need to restart, which is the wpa problem
-people are seeing currently with bcm43xx, but my brother also sees with
-madwifi/atheros in our living room upstairs (router is downstairs here)
+I also added some documentation files which explains how to use the injection
+functionality and radiotap header notes.
 
-> If this low rate were to be set for all drivers, how rapidly would the ra=
-te-control algorithm=20
-> respond? Would this cause a serious performance degradation?
-
-This, unfortunately, I don't know. I'd think the algorithm would adjust
-fast enough for it not to be an issue.
-
-johannes
-
---=-cTtEqJq4NA7BrdpXQSfw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGYHPO/ETPhpq3jKURAnK6AKCmC8QVbrsuPgJ8Db8dheovwEUknwCfYgkO
-G/cQoghJmXVp15G9eyF1ie8=
-=Yazl
------END PGP SIGNATURE-----
-
---=-cTtEqJq4NA7BrdpXQSfw--
-
+Thanks to Michael Wu and Johannes Berg for review and bugfinding.
+-- 
