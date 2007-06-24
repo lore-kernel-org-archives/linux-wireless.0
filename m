@@ -1,20 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:40665 "EHLO
+Received: from mog.warmcat.com ([62.193.232.24]:55653 "EHLO
 	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751303AbXFNMhJ (ORCPT
+	by vger.kernel.org with ESMTP id S1753708AbXFXJC3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2007 08:37:09 -0400
-Message-Id: <20070614123704.801683087@warmcat.com>
-References: <20070614123316.868155662@warmcat.com>
-Date: Thu, 14 Jun 2007 13:33:19 +0100
+	Sun, 24 Jun 2007 05:02:29 -0400
+Message-Id: <20070624090145.137856359@warmcat.com>
+References: <20070624085757.244871712@warmcat.com>
+Date: Sun, 24 Jun 2007 09:58:01 +0100
 From: andy@warmcat.com
 To: linux-wireless@vger.kernel.org
 Cc: John Linville <linville@tuxdriver.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
 	Jiri Benc <jbenc@suse.cz>, Andy Green <andy@warmcat.com>
-Subject: [PATCH Try#lucky13 3/3] mac80211: Monitor mode radiotap-based packet injection
+Subject: [PATCH Try#14 4/4] mac80211: Monitor mode radiotap-based packet injection
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
+
+Try #14
+ - Changed to Jiri Benc's injection encapsulation method
 
 Try #Lucky13
  - Integrated a patch from Michael Wu with  (Thanks again Michael)
@@ -73,8 +76,8 @@ Signed-off-by: Andy Green <andy@warmcat.com>
 
 
 ---
- net/mac80211/ieee80211.c |  234 ++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 224 insertions(+), 10 deletions(-)
+ net/mac80211/ieee80211.c |  283 +++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 273 insertions(+), 10 deletions(-)
 
 Index: wireless-dev/net/mac80211/ieee80211.c
 ===================================================================
@@ -88,7 +91,7 @@ Index: wireless-dev/net/mac80211/ieee80211.c
  
  #include "ieee80211_common.h"
  #include "ieee80211_i.h"
-@@ -1118,7 +1119,138 @@ ieee80211_tx_h_ps_buf(struct ieee80211_t
+@@ -1118,7 +1119,135 @@ ieee80211_tx_h_ps_buf(struct ieee80211_t
  }
  
  
@@ -107,10 +110,9 @@ Index: wireless-dev/net/mac80211/ieee80211.c
 +	 * this is the moment to interpret and discard the radiotap header that
 +	 * must be at the start of the packet injected in Monitor mode
 +	 *
-+	 * Need to take some care with endian-ness since radiotap
-+	 * args are little-endian
++	 * Need to take some care with endian-ness, since radiotap
++	 * args are always little-endian
 +	 */
-+
 +	struct ieee80211_radiotap_iterator iterator;
 +	struct ieee80211_radiotap_header *rthdr =
 +		(struct ieee80211_radiotap_header *) skb->data;
@@ -121,7 +123,6 @@ Index: wireless-dev/net/mac80211/ieee80211.c
 +	 * default control situation for all injected packets
 +	 * FIXME: this does not suit all usage cases, expand to allow control
 +	 */
-+
 +	control->retry_limit = 1; /* no retry */
 +	control->key_idx = -1; /* no encryption key */
 +	control->flags &= ~(IEEE80211_TXCTL_USE_RTS_CTS |
@@ -135,7 +136,6 @@ Index: wireless-dev/net/mac80211/ieee80211.c
 +	 * (ieee80211_radiotap_iterator_next returns -ENOENT when no more
 +	 * entries present, or -EINVAL on error)
 +	 */
-+
 +	while (!ret) {
 +		int i, target_rate;
 +
@@ -228,17 +228,16 @@ Index: wireless-dev/net/mac80211/ieee80211.c
  __ieee80211_tx_prepare(struct ieee80211_txrx_data *tx,
  		       struct sk_buff *skb,
  		       struct net_device *dev,
-@@ -1126,6 +1258,9 @@ __ieee80211_tx_prepare(struct ieee80211_
+@@ -1126,6 +1255,8 @@ __ieee80211_tx_prepare(struct ieee80211_
  {
  	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct ieee80211_sub_if_data *sdata;
 +	ieee80211_txrx_result res = TXRX_CONTINUE;
 +
  	int hdrlen;
  
  	memset(tx, 0, sizeof(*tx));
-@@ -1135,7 +1270,32 @@ __ieee80211_tx_prepare(struct ieee80211_
+@@ -1135,7 +1266,38 @@ __ieee80211_tx_prepare(struct ieee80211_
  	tx->sdata = IEEE80211_DEV_TO_SUB_IF(dev);
  	tx->sta = sta_info_get(local, hdr->addr1);
  	tx->fc = le16_to_cpu(hdr->frame_control);
@@ -252,11 +251,17 @@ Index: wireless-dev/net/mac80211/ieee80211.c
 +	if (local->sta_antenna_sel != STA_ANTENNA_SEL_AUTO && tx->sta)
 +		control->antenna_sel_tx = tx->sta->antenna_sel_tx;
 +
-+	/* process and remove the injection radiotap header */
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	if (unlikely(sdata->type == IEEE80211_IF_TYPE_MNTR)) {
++	/*
++	 * if the skb came in as in encapsulated injection packet, process
++	 * and then remove the radiotap header
++	 */
++	if (skb->protocol == ETH_P_80211_RT) {
++
++		printk("__ieee80211_tx_prepare sees ETH_P_80211_RT\n");
++
 +		if (__ieee80211_parse_tx_radiotap(tx, skb, control) ==
 +								TXRX_DROP) {
++			printk("  drop\n");
 +			return TXRX_DROP;
 +		}
 +		/*
@@ -265,13 +270,13 @@ Index: wireless-dev/net/mac80211/ieee80211.c
 +		 * set to the actual ieee header now
 +		 */
 +		hdr = (struct ieee80211_hdr *) skb->data;
-+		res = TXRX_QUEUED; /* indication it was monitor packet */
++		res = TXRX_QUEUED; /* indication it was injected packet */
 +	}
 +
  	tx->u.tx.control = control;
  	tx->u.tx.unicast = !is_multicast_ether_addr(hdr->addr1);
  	if (is_multicast_ether_addr(hdr->addr1))
-@@ -1152,9 +1312,6 @@ __ieee80211_tx_prepare(struct ieee80211_
+@@ -1152,9 +1314,6 @@ __ieee80211_tx_prepare(struct ieee80211_
  		control->flags |= IEEE80211_TXCTL_CLEAR_DST_MASK;
  		tx->sta->clear_dst_mask = 0;
  	}
@@ -281,7 +286,7 @@ Index: wireless-dev/net/mac80211/ieee80211.c
  	hdrlen = ieee80211_get_hdrlen(tx->fc);
  	if (skb->len > hdrlen + sizeof(rfc1042_header) + 2) {
  		u8 *pos = &skb->data[hdrlen + sizeof(rfc1042_header)];
-@@ -1162,6 +1319,7 @@ __ieee80211_tx_prepare(struct ieee80211_
+@@ -1162,6 +1321,7 @@ __ieee80211_tx_prepare(struct ieee80211_
  	}
  	control->flags |= IEEE80211_TXCTL_FIRST_FRAGMENT;
  
@@ -289,7 +294,7 @@ Index: wireless-dev/net/mac80211/ieee80211.c
  }
  
  static int inline is_ieee80211_device(struct net_device *dev,
-@@ -1274,7 +1432,7 @@ static int ieee80211_tx(struct net_devic
+@@ -1274,7 +1434,7 @@ static int ieee80211_tx(struct net_devic
  	struct sta_info *sta;
  	ieee80211_tx_handler *handler;
  	struct ieee80211_txrx_data tx;
@@ -298,7 +303,7 @@ Index: wireless-dev/net/mac80211/ieee80211.c
  	int ret, i;
  
  	WARN_ON(__ieee80211_queue_pending(local, control->queue));
-@@ -1284,15 +1442,26 @@ static int ieee80211_tx(struct net_devic
+@@ -1284,15 +1444,26 @@ static int ieee80211_tx(struct net_devic
  		return 0;
  	}
  
@@ -330,57 +335,111 @@ Index: wireless-dev/net/mac80211/ieee80211.c
  	}
  
  	skb = tx.skb; /* handlers are allowed to change skb */
-@@ -1531,6 +1700,51 @@ static int ieee80211_subif_start_xmit(st
- 		goto fail;
- 	}
+@@ -1493,6 +1664,76 @@ static int ieee80211_master_start_xmit(s
+ 	return ret;
+ }
  
-+	if (unlikely(sdata->type == IEEE80211_IF_TYPE_MNTR)) {
-+		struct ieee80211_radiotap_header *prthdr =
-+			(struct ieee80211_radiotap_header *)skb->data;
-+		u16 len;
++/*
++ * snips off the injection encapsulation ethernet header when the packet
++ * has been identified as coming into ieee80211_subif_start_xmit
++ * having the ETH_P_80211_RT type
++ */
++static int
++ieee80211_subif_tx_rt_encap_remove(struct sk_buff *skb, struct net_device *dev,
++    struct ieee80211_sub_if_data *sdata, struct ieee80211_local *local)
++{
++	struct ieee80211_tx_packet_data *pkt_data;
++	struct ieee80211_radiotap_header *prthdr;
++	u16 len;
 +
++	/*
++	 * snip off the encapsulating ethernet type header
++	 * caller ieee80211_subif_start_xmit confirmed we have at least
++	 * ETH_HLEN in the skb
++	 */
++	skb_pull(skb, ETH_HLEN);
++	prthdr = (struct ieee80211_radiotap_header *)skb->data;
++	/*
++	 * there must be a radiotap header at the
++	 * start in this case
++	 */
++	if (unlikely(skb->len < sizeof(*prthdr))) {
++		printk(KERN_DEBUG "%s: short skb (len=%d)\n",
++			dev->name, skb->len);
++		return -EINVAL;
++	}
++	/*
++	 * only version 0 is supported... must check here because
++	 * we are interested in the length inside in a moment
++	 */
++	if (unlikely(prthdr->it_version))
++		return -EINVAL;
++
++	skb->dev = local->mdev;
++	pkt_data = (struct ieee80211_tx_packet_data *)skb->cb;
++	memset(pkt_data, 0, sizeof(*pkt_data));
++	/* needed because we set skb device to master */
++	pkt_data->ifindex = sdata->dev->ifindex;
++	pkt_data->mgmt_iface = 0;
++	pkt_data->do_not_encrypt = 1;
++	/*
++	 * fix up the skb pointers accounting for the radiotap
++	 * header still being in there.  We are being given
++	 * a precooked IEEE80211 header so no need for
++	 * normal processing
++	 */
++	len = le16_to_cpu(get_unaligned(&prthdr->it_len));
++	/*
++	 * detect possible insantity with the reported rt length
++	 * vs the actual skb length
++	 */
++	if (unlikely(skb->len < (sizeof(*prthdr) + len))) {
++		printk(KERN_DEBUG "%s: short skb (len=%d)\n",
++			dev->name, skb->len);
++		return -EINVAL;
++	}
++	skb_set_mac_header(skb, len);
++	skb_set_network_header(skb, len + sizeof(struct ieee80211_hdr));
++	skb_set_transport_header(skb, len + sizeof(struct ieee80211_hdr));
++	/*
++	 * mark the SKB as having had the encapsulation so we can recognize
++	 * that this is an injected packet with radiotap subsequently
++	 */
++	skb->protocol = ETH_P_80211_RT;
++
++	return 0;
++}
+ 
+ /**
+  * ieee80211_subif_start_xmit - netif start_xmit function for Ethernet-type
+@@ -1537,6 +1778,28 @@ static int ieee80211_subif_start_xmit(st
+ 	/* convert Ethernet header to proper 802.11 header (based on
+ 	 * operation mode) */
+ 	ethertype = (skb->data[12] << 8) | skb->data[13];
++
++	/*
++	 * Case where an injected radiotap + 80211 packet is encapsulated
++	 * in a ETH_P_80211_RT frame
++	 */
++	if (ethertype == ETH_P_80211_RT) {
++		ret = 0; /* we should free the skb on fail */
 +		/*
-+		 * there must be a radiotap header at the
-+		 * start in this case
++		 * strip the encapsulating ethernet header and mark skb's
++		 * protocol as being ETH_P_80211_RT
 +		 */
-+		if (unlikely(prthdr->it_version)) {
-+			/* only version 0 is supported  */
-+			ret = 0;
++		if (ieee80211_subif_tx_rt_encap_remove(skb, dev, sdata, local))
 +			goto fail;
-+		}
-+
-+		skb->dev = local->mdev;
-+
-+		pkt_data = (struct ieee80211_tx_packet_data *)skb->cb;
-+		memset(pkt_data, 0, sizeof(*pkt_data));
-+		pkt_data->ifindex = sdata->dev->ifindex;
-+		pkt_data->mgmt_iface = 0;
-+		pkt_data->do_not_encrypt = 1;
-+
-+		/* above needed because we set skb device to master */
-+
 +		/*
-+		 * fix up the pointers accounting for the radiotap
-+		 * header still being in there.  We are being given
-+		 * a precooked IEEE80211 header so no need for
-+		 * normal processing
-+		 */
-+		len = le16_to_cpu(get_unaligned(&prthdr->it_len));
-+		skb_set_mac_header(skb, len);
-+		skb_set_network_header(skb, len + sizeof(hdr));
-+		skb_set_transport_header(skb, len + sizeof(hdr));
-+
-+		/*
-+		 * pass the radiotap header up to
-+		 * the next stage intact
++		 * pass the remaining radiotap header + 80211 header + payload
++		 * up to the next stage
 +		 */
 +		dev_queue_xmit(skb);
 +
 +		return 0;
 +	}
 +
- 	nh_pos = skb_network_header(skb) - skb->data;
- 	h_pos = skb_transport_header(skb) - skb->data;
+ 	/* TODO: handling for 802.1x authorized/unauthorized port */
+ 	fc = IEEE80211_FTYPE_DATA | IEEE80211_STYPE_DATA;
  
 
 -- 
