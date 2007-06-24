@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tur.go2.pl ([193.17.41.50]:33423 "EHLO tur.go2.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754621AbXFINI6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jun 2007 09:08:58 -0400
-Received: from poczta.o2.pl (mx10.go2.pl [193.17.41.74])
-	by tur.go2.pl (o2.pl Mailer 2.0.1) with ESMTP id 34EA8230080
-	for <linux-wireless@vger.kernel.org>; Sat,  9 Jun 2007 15:08:54 +0200 (CEST)
-Date: Sat, 9 Jun 2007 15:06:56 +0200
-From: zergavis <zergavis@o2.pl>
-Reply-To: zergavis <zergavis@o2.pl>
-Message-ID: <679650342.20070609150656@o2.pl>
-To: James Ketrenos <jketreno@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re[2]: mac80211 "wme.c:398" error
-In-Reply-To: <4669A477.9080203@linux.intel.com>
-References: <1279688715.20070608205031@o2.pl> <4669A477.9080203@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from styx.suse.cz ([82.119.242.94]:48673 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753980AbXFXKqL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Jun 2007 06:46:11 -0400
+Date: Sun, 24 Jun 2007 12:46:05 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Andy Green <andy@warmcat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [WIP] mac80211: kill mgmt interface
+Message-ID: <20070624124605.7eaffb71@logostar.upir.cz>
+In-Reply-To: <467E2DC0.30804@warmcat.com>
+References: <1182418939.10821.8.camel@johannes.berg>
+	<20070621143558.68fc8e4a@griffin.suse.cz>
+	<1182429920.21939.1.camel@johannes.berg>
+	<20070621151441.500d62d5@griffin.suse.cz>
+	<20070622154545.29eeebdb@griffin.suse.cz>
+	<467BDCB1.1010604@warmcat.com>
+	<1182526221.21939.94.camel@johannes.berg>
+	<20070622174953.500817e0@griffin.suse.cz>
+	<1182543620.21939.98.camel@johannes.berg>
+	<467CB691.2090806@warmcat.com>
+	<1182581630.21939.105.camel@johannes.berg>
+	<20070623134451.643dd40c@logostar.upir.cz>
+	<467D10BA.80104@warmcat.com>
+	<1182635467.21939.125.camel@johannes.berg>
+	<467E2DC0.30804@warmcat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Witam!
+On Sun, 24 Jun 2007 09:39:28 +0100, Andy Green wrote:
+> Anyway I don't want to argue myself out of an ACK ;-)  I think what I'll
+> do is post a try #14 using encapsulation that works on wlan0 too but
+> needs it associated, but on the understanding that try #13 is not
+> deprecated if people prefer it.
 
-W li=9Ccie datowanym 8 czerwca 2007 (20:48:23) napisano:
+Although that thing was my idea, I prefer #13. I think Johannes said that
+too and given the fact that #14 is just a subset of #13 (regarding
+functionality), you can save some time by not working on #14 ;-)
 
-> zergavis wrote:
->> Hi,
->>=20
->> My name is Pawel Bieniek, and I'm new on this list.
->>=20
->> Today I was trying to compile mac80211 into my kernel (2.6.21.4) on
->> archlinux. I need it to run intel 4965AGN on my toshiba satelite A20=
-0
->> notebook.
->>=20
->> Unfortunately, it returns an error during compilation:
-> I did a run-time test on 2.6.21-rc1 (32-bit) w/ iwl3945 and CONFIG_NE=
-T_SCHED=3Dy
+The only advantage of this would be not having monitor interface when using
+tools like aircrack. But this is so specific usage that we don't care.
 
-> Let me know if you have any more build issues.
+ Jiri
 
-On 2.6.21.4 build ran just perfect.
-
-There were problems with build debug output for mac80211 (same wme.c -
-request for member 'wiphy'). I was enab=80le it to compile for test.
-Without debug output, it works fine.
-
-Thanks,
-pawel
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jiri Benc
+SUSE Labs
