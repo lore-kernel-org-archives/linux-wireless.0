@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2261 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753361AbXF0QZr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2007 12:25:47 -0400
-Date: Wed, 27 Jun 2007 11:47:48 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-wireless@vger.kernel.org
-Subject: Re: Please pull libertas-2.6 'upstream-fixes' branch
-Message-ID: <20070627154748.GA13617@tuxdriver.com>
-References: <1182806992.10966.4.camel@xo-13-A4-25.localdomain> <4680E5E5.9000300@garzik.org> <1182859590.15750.0.camel@xo-13-A4-25.localdomain>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57716 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753945AbXFXJfF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Jun 2007 05:35:05 -0400
+Subject: Re: [PATCH Try#14 1/4] mac80211: Monitor mode radiotap injection  docs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: andy@warmcat.com
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Jiri Benc <jbenc@suse.cz>
+In-Reply-To: <20070624090144.845936552@warmcat.com>
+References: <20070624085757.244871712@warmcat.com>
+	 <20070624090144.845936552@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VXmki/ITfB8ysW0U95Zi"
+Date: Sun, 24 Jun 2007 11:36:32 +0200
+Message-Id: <1182677792.21939.130.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1182859590.15750.0.camel@xo-13-A4-25.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 26, 2007 at 08:06:30AM -0400, Dan Williams wrote:
-> On Tue, 2007-06-26 at 06:09 -0400, Jeff Garzik wrote:
-> > Dan Williams wrote:
-> > > Hi John,
-> > > 
-> > > The following changes since commit 188e1f81ba31af1b65a2f3611df4c670b092bbac:
-> > >   Linus Torvalds (1):
-> > >         Linux 2.6.22-rc5
-> > > 
-> > > are found in the git repository at:
-> > > 
-> > >   git://git.infradead.org/libertas-2.6/ upstream-fixes
-> > 
-> > I think John's on vacation.  If you don't hear from him in 24-48 hours, 
-> > please resend this to me, just to make sure it makes 2.6.22.
-> 
-> He _should_ be back by now, but I'll make sure it gets where it needs to
-> go in any case.
 
-I'm in Ottawa at OLS.  But, I should be able to handle this
-today...stay tuned! :-)
+--=-VXmki/ITfB8ysW0U95Zi
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+On Sun, 2007-06-24 at 09:57 +0100, andy@warmcat.com wrote:
+> plain text document attachment (mac80211-docs-radiotap-usage.patch)
+> Try #14
+>  - Documented Jiri Benc's injection encapsulation method
+
+I still don't see the point since we've previously established that it
+won't help on other interfaces (qdiscs, ...); for monitor interfaces #13
+is enough and much simpler.
+
+I'd vote for applying #13.
+
+johannes
+
+--=-VXmki/ITfB8ysW0U95Zi
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGfjsg/ETPhpq3jKURAv7rAKCZFuWbYhNeUolP+0RBiZ6bms3KbgCgg3Xf
+3lwAweq5T4mUNCSMyJCv7TQ=
+=DmBC
+-----END PGP SIGNATURE-----
+
+--=-VXmki/ITfB8ysW0U95Zi--
+
