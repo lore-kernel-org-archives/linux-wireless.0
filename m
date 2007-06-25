@@ -1,79 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:38199 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:36796 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755211AbXFGBE2 (ORCPT
+	by vger.kernel.org with ESMTP id S1751708AbXFYS2P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2007 21:04:28 -0400
-Date: Wed, 6 Jun 2007 18:04:21 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: James Ketrenos <jketreno@linux.intel.com>
-Cc: NetDev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-sparse@vger.kernel.org
-Subject: Re: warnings in git-wireless
-Message-Id: <20070606180421.c575f24b.akpm@linux-foundation.org>
-In-Reply-To: <4667364A.4040803@linux.intel.com>
-References: <20070605020614.3f06b2ab.akpm@linux-foundation.org>
-	<46671E5D.9070304@linux.intel.com>
-	<20070606163534.6a6cffb7.akpm@linux-foundation.org>
-	<4667364A.4040803@linux.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 25 Jun 2007 14:28:15 -0400
+Date: Mon, 25 Jun 2007 11:27:32 -0700 (PDT)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+cc: Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Olaf Hering <olaf@aepfle.de>, Ville Syrj?l? <syrjala@sci.fi>,
+	Christoph Lameter <clameter@sgi.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Andrea Righi <righiandr@users.sourceforge.net>,
+	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Andrey Borzenkov <arvidjaar@mail.ru>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Bjorn Helgaas <bjorn.helgaas@hp.com>,
+	Chad Tindel <ctindel@users.sourceforge.net>,
+	Olaf Hering <olaf@aepfle.de>
+Subject: Re: [2/2] 2.6.22-rc6: known regressions with patches
+In-Reply-To: <467F8F63.2070101@googlemail.com>
+Message-ID: <alpine.LFD.0.98.0706251126040.3593@woody.linux-foundation.org>
+References: <467F894C.4000604@googlemail.com>
+ <467F8F63.2070101@googlemail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 06 Jun 2007 15:33:46 -0700 James Ketrenos <jketreno@linux.intel.com> wrote:
-
-> Andrew Morton wrote:
-> > On Wed, 06 Jun 2007 13:51:41 -0700 James Ketrenos <jketreno@linux.intel.com> wrote:
-> > 
-> >>>>  * make C=2 CF=-Wall will complain if you use ARRAY_SIZE on global data
-> >>>>  */
-> >>>> #define GLOBAL_ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-> >>> This is identical to ARRAY_SIZE.
-> >>>
-> >>> And if there's some problem with ARRAY_SIZE then fix ARRAY_SIZE!  Don't go 
-> >>> off and create some private thing and leave everyone else twisting in the
-> >>> wind.
-> >> The code was resolving the sparse warnings.  
-> > 
-> ...
-> > Your GLOBAL_ARRAY_SIZE() is, afaict, identical to ARRAY_SIZE().
-> 
-> >From include/linux/kernel.h
-> 
-> #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))
-
-o crap, sorry, I was looking at one of the other definitions of ARRAY_SIZE :(
 
 
-> >From drivers/net/wireless/mac80211/iwlwifi/iwl-helpers.h
+On Mon, 25 Jun 2007, Michal Piotrowski wrote:
 > 
-> #define GLOBAL_ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+> Memory management
 > 
-> The '+ __must_be_array(arr)' part of ARRAY_SIZE was causing sparse to complain 
-> with:
-> 
-> drivers/net/wireless/mac80211/iwlwifi/base.c:4646:22: error: cannot size expression
-> ...
+> Subject    : bug in i386 MTRR initialization
+> References : http://lkml.org/lkml/2007/5/19/93
+> Submitter  : Andrea Righi <righiandr@users.sourceforge.net>
+> Status     : patch available
 
-OK, that's a problem in sparse, I guess.
+This one wasn't a bug in the first place, it was just the regular warning 
+for kmalloc-size-0. The "BUG" string was confusing and has been fixed, and 
+the warning for size-0 has gone away and been replaced by returning a 
+pointer that will fault on dereference instead.
 
-There _should_ be some #ifdeffable thing which is being passed to cpp when
-we run sparse (but I'm not sure what it is).  If there is such a thing then
-we could disable the __must_be_array() thing during sparse runs.
+So please remove this one.
 
-But longer-term, sparse should be taught about __must_be_array().
-
-> When I had run my builds, I had restricted the sparse checks to just iwlwifi 
-> (vs. checking the rest of the kernel).
-> 
-> I just ran it C=2 CF=-Wall against the rest of the kernel and do see other code 
-> with the same problem, eg:
-> 
-> sound/core/memalloc.c:521:14: error: cannot size expression
-> ...
-> 
-> I had erroneously thought it was just a problem with iwlwifi...
-> 
-
+		Linus
