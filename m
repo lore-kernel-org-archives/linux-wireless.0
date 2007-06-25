@@ -1,89 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41763 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751109AbXFKLRT (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:52858 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753366AbXFYJsg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 07:17:19 -0400
-Subject: Re: [PATCH Try#8 3/4] cfg80211: Radiotap parser
-From: Johannes Berg <johannes@sipsolutions.net>
-To: andy@warmcat.com
-Cc: linux-wireless@vger.kernel.org,
-	Randy Dunlap <randy.dunlap@oracle.com>
-In-Reply-To: <20070611095846.511945296@warmcat.com>
-References: <20070611095400.206844675@warmcat.com>
-	 <20070611095846.511945296@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JV5fI8yC5Y/gG6NnlPF8"
-Date: Mon, 11 Jun 2007 13:17:48 +0200
-Message-Id: <1181560668.29767.8.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 25 Jun 2007 05:48:36 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so1248679ugf
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2007 02:48:35 -0700 (PDT)
+Message-ID: <467F8F63.2070101@googlemail.com>
+Date: Mon, 25 Jun 2007 11:48:19 +0200
+MIME-Version: 1.0
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Olaf Hering <olaf@aepfle.de>,
+	=?ISO-8859-2?Q?Ville_Syrj=E4l=E4?= <syrjala@sci.fi>,
+	Christoph Lameter <clameter@sgi.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Andrea Righi <righiandr@users.sourceforge.net>,
+	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Andrey Borzenkov <arvidjaar@mail.ru>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Bjorn Helgaas <bjorn.helgaas@hp.com>,
+	Chad Tindel <ctindel@users.sourceforge.net>,
+	Olaf Hering <olaf@aepfle.de>
+Subject: Re: [2/2] 2.6.22-rc6: known regressions with patches
+References: <467F894C.4000604@googlemail.com>
+In-Reply-To: <467F894C.4000604@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-2;
+	format=flowed
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi all,
 
---=-JV5fI8yC5Y/gG6NnlPF8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Here is a list of some known regressions in 2.6.22-rc6
+with patches available.
 
-Hi Andy,
+=46eel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
 
-Thanks for the repost.
+*STATISTICS* (a.k.a. list of aces)
 
-> +/* Radiotap header iteration
-> + *   implemented in net/wireless/radiotap.c
-> + *
-> + * call __ieee80211_radiotap_iterator_init() to init a semi-opaque itera=
-tor
-> + * struct ieee80211_radiotap_iterator (no need to init the struct before=
-hand)
-> + * then loop calling __ieee80211_radiotap_iterator_next()... it returns =
--1
-> + * if there are no more args in the header, or the next argument type in=
-dex
-> + * that is present.  The iterator's this_arg member points to the start =
-of the
-> + * argument associated with the current argument index that is present,
-> + * which can be found in the iterator's this_arg_index member.  This arg
-> + * index corresponds to the IEEE80211_RADIOTAP_... defines.
-> + */
+Name                    Regressions fixed since 21-Jun-2007
+Andi Kleen                             1
+Hugh Dickins                           1
+Jean Delvare                           1
 
-I don't think this will show up in the kdoc output, but it sure would be
-nice. Maybe it could be part of the description of
-ieee80211_radiotap_iterator as a 'how to use this iterator' section (see
-kernel-doc-nano-HOWTO.txt, it talks about sections)? Or maybe as
-kernel-doc for the functions themselves.
 
-> +/**
-> + * ieee80211_radiotap_iterator_init - radiotap parser iterator initializ=
-ation
 
-Oh, you have kerneldoc comments in the source file. Does anyone know
-which is preferable? I usually put everything into the header file that
-is not implementation-detail.
+=46BDEV
 
-> +		 * no need to check again for blowing past stated radiotap
-> +		 * header length, becuase ieee80211_radiotap_iterator_next
-                                    ^^^^^^^
-typo
+Subject    : mach64 breakage in 2.6.22
+References : http://lkml.org/lkml/2007/6/14/73
+Submitter  : Olaf Hering <olaf@aepfle.de>
+Handled-By : Ville Syrj=E4l=E4 <syrjala@sci.fi>
+Patch      : http://lkml.org/lkml/2007/6/21/216
+Status     : patch was suggested
 
-> + * care of alignment handling and extended present fields.  interator->t=
-his_arg
 
-typo: "interator", also I don't understand why you would want to change
-this_arg?
 
-johannes
+Memory management
 
---=-JV5fI8yC5Y/gG6NnlPF8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Subject    : bug in i386 MTRR initialization
+References : http://lkml.org/lkml/2007/5/19/93
+Submitter  : Andrea Righi <righiandr@users.sourceforge.net>
+Status     : patch available
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iD8DBQBGbS9c/ETPhpq3jKURAtZNAKCHCs2IRLA0R26UVxCHXam2daHyZACgjfqO
-+zGWWOWL/5ytzg2Sag1KSIw=
-=P0++
------END PGP SIGNATURE-----
 
---=-JV5fI8yC5Y/gG6NnlPF8--
+Networking
 
+Subject    : ERROR: "__ucmpdi2" [drivers/net/s2io.ko] undefined!
+References : http://lkml.org/lkml/2007/6/19/310
+Submitter  : Olaf Hering <olaf@aepfle.de>
+Patch      : http://lkml.org/lkml/2007/6/19/382
+Status     : patch was suggested
+
+Subject    : no irda0 interface (2.6.21 was OK), smsc does not find chi=
+p
+References : http://lkml.org/lkml/2007/6/3/16
+Submitter  : Andrey Borzenkov <arvidjaar@mail.ru>
+Handled-By : Samuel Ortiz <samuel@sortiz.org>
+             Bjorn Helgaas <bjorn.helgaas@hp.com>
+Patch      : http://lkml.org/lkml/2007/6/7/237
+Status     : patch was suggested
+
+
+
+Regards,
+Michal
+
+--
+LOG
+http://www.stardust.webpages.pl/log/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
