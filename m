@@ -1,60 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60884 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758363AbXFMQNw (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:56136 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753170AbXFYTuM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2007 12:13:52 -0400
-Subject: Re: [PATCH Try#11 3/4] cfg80211: Radiotap parser
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
+	Mon, 25 Jun 2007 15:50:12 -0400
+Message-ID: <46801C71.6070107@lwfinger.net>
+Date: Mon, 25 Jun 2007 14:50:09 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Matteo Croce <rootkit85@yahoo.it>
+CC: Michal Schmidt <mschmidt@redhat.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <46701643.3040908@warmcat.com>
-References: <20070612130435.896010304@warmcat.com>
-	 <20070612130502.157979021@warmcat.com>
-	 <200706122242.08045.flamingice@sourmilk.net>
-	 <1181749596.29767.82.camel@johannes.berg>  <46701643.3040908@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GcukI61zhx7gMWELOLXD"
-Date: Wed, 13 Jun 2007 18:13:56 +0200
-Message-Id: <1181751236.29767.92.camel@johannes.berg>
-Mime-Version: 1.0
+Subject: Re: airo
+References: <200706061903.13228.rootkit85@yahoo.it> <200706091816.47618.rootkit85@yahoo.it> <467FD362.8000602@redhat.com> <200706252127.32427.rootkit85@yahoo.it>
+In-Reply-To: <200706252127.32427.rootkit85@yahoo.it>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Matteo Croce wrote:
+> Exactly, the boot process goes so:
+> 1) udev loads forcedeth.ko and it gets eth0
+> 2) udev also loads airo.ko
+> 3) forcedeth loads very fast and udev renames it to eth1 according to /etc/iftab
+> 4) airo slowly init the card and try to get eth1 as name, but found it busy and die()
+> 
+> Personally I solved this by deleting forcedeth.ko. I know that it's ugly, but I don't use wired etherned
+> and i hate do "rmmod airo ; modprobe airo" at every boot, also in a shell script.
 
---=-GcukI61zhx7gMWELOLXD
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+What does /etc/udev/rules.d/30-net_persistent_names.rules say about the name for the MAC address of 
+the wired interface? On my system, the wired one is forced to be eth0 and the wireless to be eth1.
 
-On Wed, 2007-06-13 at 17:07 +0100, Andy Green wrote:
-
-> Is it useful to report that there were items in the radiotap section
-> that were not illegal but were not comprehensible either?  Any app that
-> is written against the parser will be using the contempary list of
-> constants from ieee80211_radiotap.h, and anything added in there should
-> be added to radiotap.c.  Put another way you won't be in any better
-> position to understand or handle radiotap args that cfg80211 doesn't
-> understand than cfg80211 is itself.  Is there a case where you don't
-> want to ignore these unknown later entries that could appear?
-
-Good point, I guess you just want to ignore any new items hoping that
-they'll be orthogonal to the ones already there and thus you just don't
-handle them. In any case, if we need it we can still change it, so just
-leave as-is.
-
-johannes
-
---=-GcukI61zhx7gMWELOLXD
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGcBfD/ETPhpq3jKURAvIJAKCfxrue3zaL5zl90w7jrutdE+UlsgCgmilf
-jbUggDgSwr9SB6SR2TzFGe8=
-=BYFN
------END PGP SIGNATURE-----
-
---=-GcukI61zhx7gMWELOLXD--
-
+Larry
