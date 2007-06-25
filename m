@@ -1,64 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49849 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753182AbXFKIVn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 04:21:43 -0400
-Subject: Re: your nl80211 work
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: David Lamparter <lists@diac24.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1181397249.23205.10.camel@xo-28-0B-88.localdomain>
-References: <1181380044.3566.11.camel@johannes.berg>
-	 <20070609113859.GA10836@charon.n2.diac24.net>
-	 <1181391299.3566.17.camel@johannes.berg>
-	 <1181397249.23205.10.camel@xo-28-0B-88.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mIz+hTJei0ZxzwPrzNOZ"
-Date: Mon, 11 Jun 2007 10:16:41 +0200
-Message-Id: <1181549801.3566.32.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([66.187.233.31]:59222 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755112AbXFYOik (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jun 2007 10:38:40 -0400
+Message-ID: <467FD362.8000602@redhat.com>
+Date: Mon, 25 Jun 2007 16:38:26 +0200
+From: Michal Schmidt <mschmidt@redhat.com>
+MIME-Version: 1.0
+To: Matteo Croce <rootkit85@yahoo.it>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: airo
+References: <200706061903.13228.rootkit85@yahoo.it> <46693003.8090406@redhat.com> <200706091519.29319.rootkit85@yahoo.it> <200706091816.47618.rootkit85@yahoo.it>
+In-Reply-To: <200706091816.47618.rootkit85@yahoo.it>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Matteo Croce wrote:
+> after booting i have this situation:
+>
+> root@raver:~# lsmod |fgrep airo
+> airo                   80016  0
+> root@raver:~# dmesg |fgrep airo
+> airo(): Probing for PCI adapters
+> airo(eth1): cmd:111 status:7f11 rsp0:2 rsp1:0 rsp2:0
+> airo(eth1): Doing fast bap_reads
+> airo(eth1): WPA is supported.
+> airo(eth1): Couldn't register_netdev
+> airo(): Finished probing for PCI adapters
+> root@raver:~#
+>
+> I have to do this to connect:
+>
+> root@raver:~# rmmod airo
+> root@raver:~# modprobe airo
+> root@raver:~# dmesg |fgrep airo
+> airo(): Probing for PCI adapters
+> airo(eth1): cmd:111 status:7f11 rsp0:2 rsp1:0 rsp2:0
+> airo(eth1): Doing fast bap_reads
+> airo(eth1): WPA is supported.
+> airo(eth1): Couldn't register_netdev
+> airo(): Finished probing for PCI adapters
+> airo(): Probing for PCI adapters
+> airo(eth0): cmd:111 status:7f11 rsp0:2 rsp1:0 rsp2:0
+> airo(eth0): Doing fast bap_reads
+> airo(eth0): WPA is supported.
+> airo(eth0): MAC enabled 0:d:29:4f:c:be
+> airo(): Finished probing for PCI adapters
+> root@raver:~#
+>   
 
---=-mIz+hTJei0ZxzwPrzNOZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hi Matteo,
 
-On Sat, 2007-06-09 at 09:54 -0400, Dan Williams wrote:
+It looks like some other network interface gets renamed from "eth0" to
+"eth1" at the same time the airo driver is initializing the card. Does
+it happen always after booting? Do you have other network interfaces?
+This patch should fix it. Can you test it?
 
-> Well, at least have one that all 802.11 _drivers_ can use at the very
-> least, I know of 5 or 6 places in the kernel right now that have this
-> sort of info.  Even just inlines in ieee80211.h or something for
-> chan->freq, freq->chan, freq->band, chan->band, etc.  Max allowed power
-> levels and stuff as well.
+Michal
 
-Right, that's something we need to clean up as well, but I don't want to
-touch it before we have a concensus and more work on regulatory stuff.
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 2d3a180..1a350b3 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -41,6 +41,7 @@
+ 
+ #include <linux/netdevice.h>
+ #include <linux/etherdevice.h>
++#include <linux/rtnetlink.h>
+ #include <linux/skbuff.h>
+ #include <linux/if_arp.h>
+ #include <linux/ioport.h>
+@@ -2802,10 +2803,6 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 		airo_print_err("", "Couldn't alloc_etherdev");
+ 		return NULL;
+         }
+-	if (dev_alloc_name(dev, dev->name) < 0) {
+-		airo_print_err("", "Couldn't get name!");
+-		goto err_out_free;
+-	}
+ 
+ 	ai = dev->priv;
+ 	ai->wifidev = NULL;
+@@ -2813,7 +2810,7 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 	ai->jobs = 0;
+ 	ai->dev = dev;
+ 	if (pci && (pci->device == 0x5000 || pci->device == 0xa504)) {
+-		airo_print_dbg(dev->name, "Found an MPI350 card");
++		airo_print_dbg("", "Found an MPI350 card");
+ 		set_bit(FLAG_MPI, &ai->flags);
+ 	}
+ 	spin_lock_init(&ai->aux_lock);
+@@ -2821,14 +2818,11 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 	ai->config.len = 0;
+ 	ai->pci = pci;
+ 	init_waitqueue_head (&ai->thr_wait);
+-	ai->airo_thread_task = kthread_run(airo_thread, dev, dev->name);
+-	if (IS_ERR(ai->airo_thread_task))
+-		goto err_out_free;
+ 	ai->tfm = NULL;
+ 	add_airo_dev(ai);
+ 
+ 	if (airo_networks_allocate (ai))
+-		goto err_out_thr;
++		goto err_out_free;
+ 	airo_networks_initialize (ai);
+ 
+ 	/* The Airo-specific entries in the device structure. */
+@@ -2855,16 +2849,31 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 	reset_card (dev, 1);
+ 	msleep(400);
+ 
++	rtnl_lock();  /* Makes sure no device registers our name. */
++	if (dev_alloc_name(dev, dev->name) < 0) {
++		airo_print_err("", "Couldn't get name!");
++		rtnl_unlock();
++		goto err_out_nets;
++	}
++
++	ai->airo_thread_task = kthread_run(airo_thread, dev, dev->name);
++	if (IS_ERR(ai->airo_thread_task)) {
++		rtnl_unlock();
++		goto err_out_nets;
++	}
++
+ 	rc = request_irq( dev->irq, airo_interrupt, IRQF_SHARED, dev->name, dev );
+ 	if (rc) {
+ 		airo_print_err(dev->name, "register interrupt %d failed, rc %d",
+ 				irq, rc);
+-		goto err_out_nets;
++		rtnl_unlock();
++		goto err_out_thr;
+ 	}
+ 	if (!is_pcmcia) {
+ 		if (!request_region( dev->base_addr, 64, dev->name )) {
+ 			rc = -EBUSY;
+ 			airo_print_err(dev->name, "Couldn't request region");
++			rtnl_unlock();
+ 			goto err_out_irq;
+ 		}
+ 	}
+@@ -2872,6 +2881,7 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 	if (test_bit(FLAG_MPI,&ai->flags)) {
+ 		if (mpi_map_card(ai, pci, dev->name)) {
+ 			airo_print_err(dev->name, "Could not map memory");
++			rtnl_unlock();
+ 			goto err_out_res;
+ 		}
+ 	}
+@@ -2880,6 +2890,7 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 		if ( setup_card( ai, dev->dev_addr, 1 ) != SUCCESS ) {
+ 			airo_print_err(dev->name, "MAC could not be enabled" );
+ 			rc = -EIO;
++			rtnl_unlock();
+ 			goto err_out_map;
+ 		}
+ 	} else if (!test_bit(FLAG_MPI,&ai->flags)) {
+@@ -2899,9 +2910,10 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 		ai->bssListRidLen = sizeof(BSSListRid) - sizeof(BSSListRidExtra);
+ 	}
+ 
+-	rc = register_netdev(dev);
++	rc = register_netdevice(dev);
++	rtnl_unlock();
+ 	if (rc) {
+-		airo_print_err(dev->name, "Couldn't register_netdev");
++		airo_print_err(dev->name, "Couldn't register_netdevice");
+ 		goto err_out_map;
+ 	}
+ 	ai->wifidev = init_wifidev(ai, dev);
+@@ -2942,13 +2954,13 @@ err_out_res:
+ 	        release_region( dev->base_addr, 64 );
+ err_out_irq:
+ 	free_irq(dev->irq, dev);
+-err_out_nets:
+-	airo_networks_free(ai);
+ err_out_thr:
+-	del_airo_dev(ai);
+ 	set_bit(JOB_DIE, &ai->jobs);
+ 	kthread_stop(ai->airo_thread_task);
++err_out_nets:
++	airo_networks_free(ai);
+ err_out_free:
++	del_airo_dev(ai);
+ 	free_netdev(dev);
+ 	return NULL;
+ }
 
-> WRT to userspace, if there's an easy way to put this into headers that
-> get exported to userspace headers, I think that would be useful.
-> Otherwise everybody has to keep rewriting these, both mac80211, fullmac
-> drivers, userspace programs like NetworkManager and wpa_supplicant, etc.
-
-Right, except that when we add .11n or even .11y that'll require all
-userspace tools to be rewritten, so wouldn't it be easier to export the
-info via nl80211 right away?
-
-johannes
-
---=-mIz+hTJei0ZxzwPrzNOZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGbQTo/ETPhpq3jKURAtCDAJ9WElsYGDfx2vUPyvV/NGGafa+V7wCglyox
-WbWZ19gAMovA0/e7wvFLda4=
-=fr5n
------END PGP SIGNATURE-----
-
---=-mIz+hTJei0ZxzwPrzNOZ--
 
