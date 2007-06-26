@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:55076 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751446AbXFDUaF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2007 16:30:05 -0400
-Received: by py-out-1112.google.com with SMTP id a29so2515200pyi
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Jun 2007 13:30:01 -0700 (PDT)
-Message-ID: <43e72e890706041330yad26a1br2680593843375d66@mail.gmail.com>
-Date: Mon, 4 Jun 2007 16:30:01 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Holger Schurig" <hs4233@mail.mn-solutions.de>
-Subject: Re: AW: Drivers that do not honor regulatory restrictions
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200706041428.25375.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-References: <297494.10588.qm@web51404.mail.re2.yahoo.com>
-	 <200706041428.25375.hs4233@mail.mn-solutions.de>
+Received: from mx1.redhat.com ([66.187.233.31]:52431 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757098AbXFZMCq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2007 08:02:46 -0400
+Subject: Re: Please pull libertas-2.6 'upstream-fixes' branch
+From: Dan Williams <dcbw@redhat.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4680E5E5.9000300@garzik.org>
+References: <1182806992.10966.4.camel@xo-13-A4-25.localdomain>
+	 <4680E5E5.9000300@garzik.org>
+Content-Type: text/plain
+Date: Tue, 26 Jun 2007 08:06:30 -0400
+Message-Id: <1182859590.15750.0.camel@xo-13-A4-25.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6/4/07, Holger Schurig <hs4233@mail.mn-solutions.de> wrote:
-> > 1575         { 2412, 2484, 20, 6 } /* IEEE 802.11b/g, channels
-> > 1..13 */,
-> >
-> > did the trick.
->
-> Not sure if that is the right place .... but if you change the
-> frequency, you should also change the comment:
->
->      /* IEEE 802.11b/g, channels 1..14 */
->
-> would be better.
+On Tue, 2007-06-26 at 06:09 -0400, Jeff Garzik wrote:
+> Dan Williams wrote:
+> > Hi John,
+> > 
+> > The following changes since commit 188e1f81ba31af1b65a2f3611df4c670b092bbac:
+> >   Linus Torvalds (1):
+> >         Linux 2.6.22-rc5
+> > 
+> > are found in the git repository at:
+> > 
+> >   git://git.infradead.org/libertas-2.6/ upstream-fixes
+> 
+> I think John's on vacation.  If you don't hear from him in 24-48 hours, 
+> please resend this to me, just to make sure it makes 2.6.22.
 
-Regulatory domain code for mac80211 and in general for all Linux
-wireless needs some work so expect to see this behavior to change. For
-now drivers do their own work. Although mac80211 does some regulatory
-work it is pretty basic and minimal.
+He _should_ be back by now, but I'll make sure it gets where it needs to
+go in any case.
 
-  Luis
+Thanks!
+Dan
+
+
