@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:34530 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750912AbXFKUO3 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:47932 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751357AbXF0Jic (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 16:14:29 -0400
-Message-ID: <466DAD23.30602@lwfinger.net>
-Date: Mon, 11 Jun 2007 15:14:27 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Akinobu Mita <akinobu.mita@gmail.com>,
-	linux-wireless@vger.kernel.org, Joe Jezak <josejx@gentoo.org>,
-	Daniel Drake <dsd@gentoo.org>
-Subject: Re: [PATCH] softmac: use list_for_each_entry
-References: <20070527142740.GB13105@APFDCB5C> <1180643064.18266.2.camel@johannes.berg> <46604279.3070908@lwfinger.net> <1180725169.11026.29.camel@johannes.berg> <20070611191854.GG10397@tuxdriver.com>
-In-Reply-To: <20070611191854.GG10397@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 27 Jun 2007 05:38:32 -0400
+Subject: libertas warnings on ppc64
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Dan Williams <dcbw@redhat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-o69xgn/Lf2t/isBycgGl"
+Date: Tue, 26 Jun 2007 17:00:19 +0200
+Message-Id: <1182870019.3703.10.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Fri, Jun 01, 2007 at 09:12:49PM +0200, Johannes Berg wrote:
->> On Fri, 2007-06-01 at 10:59 -0500, Larry Finger wrote:
-> 
->>> In the earlier discussion, we also concluded that the product of a conversion from softmac to 
->>> mac80211 should not be included in mainline, with the exception of the b-only code. Depending on how 
->>> long the port and testing take, and the state of bcm43xx-mac80211 at that time, a reversal of that 
->>> earlier decision may be in order.
->> I'd think that once somebody has time for it both port and testing
->> should go pretty soon, and I'd think that we can do that sooner than fix
->> the current bcm43xx-mac80211, in which case IMHO the result should be
->> included in mainline seeing that zd1211rw will probably be ready for
->> mac80211 in the .23 timeframe. That means that at that point we might
->> even be able to drop softmac already if the second straightforward (here
->> I mean without any other changes to the driver) bcm43xx port is ready :)
-> 
-> FWIW, I would like to see a mac80211-based port of the current
-> bcm43xx driver available as soon as it is ready, without waiting to
-> strip-out the non-b portions.  This should help us abandon softmac
-> as soon as possible.
-> 
-> Plus, we may need to consider preserving the driver in its current
-> form (aside from the softmac -> mac80211 port) for some time as a
-> compatibility aid for those who already have working configurations
-> with the "bcm43xx" driver.  Forcing a happy user to locate new firmware
-> for no obvious benefit to them is not very nice (as I have learned
-> so well w/ Fedora 7)...
 
-I agree that we should do a port of the current bcm43xx driver to mac80211 ASAP. I also believe that 
-it needs to include the non-b portions, particularly for the initial testing, but I have no 
-objections to leaving it intact, at least until the new driver is better at operations.
+--=-o69xgn/Lf2t/isBycgGl
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Michael Wu offered to do the initial port, but I don't know what his progress has been.
+drivers/net/wireless/libertas/debugfs.c: In function
+=E2=80=98libertas_getscantable=E2=80=99:
+drivers/net/wireless/libertas/debugfs.c:85: warning: format =E2=80=98%08llx=
+=E2=80=99
+expects type =E2=80=98long long unsigned int=E2=80=99, but argument 4 has t=
+ype =E2=80=98u64=E2=80=99
+drivers/net/wireless/libertas/debugfs.c:85: warning: format =E2=80=98%08llx=
+=E2=80=99
+expects type =E2=80=98long long unsigned int=E2=80=99, but argument 4 has t=
+ype =E2=80=98u64=E2=80=99
 
-Larry
+Maybe these were addressed by the current pull request? Thought I'd let
+you know in any case.
+
+johannes
+
+--=-o69xgn/Lf2t/isBycgGl
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGgSoC/ETPhpq3jKURAr/aAJ9GABOTlCLqjP0B/JnBMftpbsb3GQCfXrdA
+qGxnH0c1PHAjEWKJvU7s5Nw=
+=EQzR
+-----END PGP SIGNATURE-----
+
+--=-o69xgn/Lf2t/isBycgGl--
+
