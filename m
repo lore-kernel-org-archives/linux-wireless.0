@@ -1,105 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.math.uh.edu ([129.7.128.33]:33903 "EHLO mx2.math.uh.edu"
+Received: from mx1.redhat.com ([66.187.233.31]:60958 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750898AbXFVEuk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2007 00:50:40 -0400
-Received: from epithumia.math.uh.edu ([129.7.128.2])
-	by mx2.math.uh.edu with esmtps (TLSv1:AES256-SHA:256)
-	(Exim 4.67)
-	(envelope-from <tibbs@math.uh.edu>)
-	id 1I1aiI-0007zZ-H6
-	for linux-wireless@vger.kernel.org; Thu, 21 Jun 2007 23:25:39 -0500
-Received: from epithumia.math.uh.edu (epithumia.math.uh.edu [127.0.0.1])
-	by epithumia.math.uh.edu (8.13.8/8.12.5) with ESMTP id l5M4Pctn006282
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2007 23:25:38 -0500
-To: linux-wireless@vger.kernel.org
-Subject: iwl3945 problems
-From: Jason L Tibbitts III <tibbs@math.uh.edu>
-Date: 21 Jun 2007 23:25:38 -0500
-Message-ID: <ufa8xacfwe5.fsf@epithumia.math.uh.edu>
+	id S1752098AbXF0VQ4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jun 2007 17:16:56 -0400
+Message-ID: <4682D3A6.40506@redhat.com>
+Date: Wed, 27 Jun 2007 23:16:22 +0200
+From: Michal Schmidt <mschmidt@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	Matteo Croce <rootkit85@yahoo.it>
+Subject: [PATCH 2/4] airo: delay parts of initialization until the netdev  is up
+References: <4682D323.2010605@redhat.com>
+In-Reply-To: <4682D323.2010605@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've been trying new versions of the iwlwifi driver for a while now,
-and while the situation for most folks seems to be improving, I'm not
-having much luck.  I'm running 0.0.32 patched into the latest Fedora
-kernel (which is basically 2.6.21.5 plus the current wireless-dev
-tree).  This version is improved over some previous versions which
-would periodically freeze the machine for a few seconds, but I can
-still see no networks or even do a scan.  (iwlist scan just hangs for
-about 15 seconds.)  I'm using version 2.14.3 of the microcode.
+airo's kernel thread and the IRQ handler are needed only when the interface
+is up.
+With their initialization moved to .open() there are no more users of
+dev->name before registration, so this fixes the race when the
+initialization could fail when another netdev stole airo's name.
 
-An interesting note is that the ipw3945 driver never worked on this
-hardware either.  It manages to at least see networks, but won't
-associate.  Unfortunately it does work fine under that other OS.
+Signed-off-by: Michal Schmidt <mschmidt@redhat.com>
 
-The machine is a Sony Vaio TXN17P; lspci shows:
+---
+ drivers/net/wireless/airo.c |   84 +++++++++++++++++++++++--------------------
+ 1 files changed, 45 insertions(+), 39 deletions(-)
 
-01:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG
-Network Connection (rev 02)
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 38346a5..63a4aaa 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -1928,28 +1928,55 @@ static int readStatsRid(struct airo_info*ai, StatsRid *sr, int rid, int lock) {
+ 	return rc;
+ }
+ 
++static void try_auto_wep(struct airo_info *ai)
++{
++	if (auto_wep && !(ai->flags & FLAG_RADIO_DOWN)) {
++		ai->expires = RUN_AT(3*HZ);
++		wake_up_interruptible(&ai->thr_wait);
++	}
++}
++
+ static int airo_open(struct net_device *dev) {
+-	struct airo_info *info = dev->priv;
++	struct airo_info *ai = dev->priv;
+ 	Resp rsp;
++	int rc = 0;
+ 
+-	if (test_bit(FLAG_FLASHING, &info->flags))
++	if (test_bit(FLAG_FLASHING, &ai->flags))
+ 		return -EIO;
+ 
+ 	/* Make sure the card is configured.
+ 	 * Wireless Extensions may postpone config changes until the card
+ 	 * is open (to pipeline changes and speed-up card setup). If
+ 	 * those changes are not yet commited, do it now - Jean II */
+-	if (test_bit (FLAG_COMMIT, &info->flags)) {
+-		disable_MAC(info, 1);
+-		writeConfigRid(info, 1);
++	if (test_bit(FLAG_COMMIT, &ai->flags)) {
++		disable_MAC(ai, 1);
++		writeConfigRid(ai, 1);
+ 	}
+ 
+-	if (info->wifidev != dev) {
++	if (ai->wifidev != dev) {
++		clear_bit(JOB_DIE, &ai->jobs);
++		ai->airo_thread_task = kthread_run(airo_thread, dev, dev->name);
++		if (IS_ERR(ai->airo_thread_task))
++			return (int)PTR_ERR(ai->airo_thread_task);
++		
++		rc = request_irq(dev->irq, airo_interrupt, IRQF_SHARED,
++			dev->name, dev);
++		if (rc) {
++			airo_print_err(dev->name,
++				"register interrupt %d failed, rc %d",
++				dev->irq, rc);
++			set_bit(JOB_DIE, &ai->jobs);
++			kthread_stop(ai->airo_thread_task);
++			return rc;
++		}
++		
+ 		/* Power on the MAC controller (which may have been disabled) */
+-		clear_bit(FLAG_RADIO_DOWN, &info->flags);
+-		enable_interrupts(info);
++		clear_bit(FLAG_RADIO_DOWN, &ai->flags);
++		enable_interrupts(ai);
++
++		try_auto_wep(ai);
+ 	}
+-	enable_MAC(info, &rsp, 1);
++	enable_MAC(ai, &rsp, 1);
+ 
+ 	netif_start_queue(dev);
+ 	return 0;
+@@ -2394,6 +2421,11 @@ static int airo_close(struct net_device *dev) {
+ 		disable_MAC(ai, 1);
+ #endif
+ 		disable_interrupts( ai );
++
++		free_irq(dev->irq, dev);
++		
++		set_bit(JOB_DIE, &ai->jobs);
++		kthread_stop(ai->airo_thread_task);
+ 	}
+ 	return 0;
+ }
+@@ -2405,7 +2437,6 @@ void stop_airo_card( struct net_device *dev, int freeres )
+ 	set_bit(FLAG_RADIO_DOWN, &ai->flags);
+ 	disable_MAC(ai, 1);
+ 	disable_interrupts(ai);
+-	free_irq( dev->irq, dev );
+ 	takedown_proc_entry( dev, ai );
+ 	if (test_bit(FLAG_REGISTERED, &ai->flags)) {
+ 		unregister_netdev( dev );
+@@ -2416,9 +2447,6 @@ void stop_airo_card( struct net_device *dev, int freeres )
+ 		}
+ 		clear_bit(FLAG_REGISTERED, &ai->flags);
+ 	}
+-	set_bit(JOB_DIE, &ai->jobs);
+-	kthread_stop(ai->airo_thread_task);
+-
+ 	/*
+ 	 * Clean out tx queue
+ 	 */
+@@ -2802,10 +2830,6 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 		airo_print_err("", "Couldn't alloc_etherdev");
+ 		return NULL;
+         }
+-	if (dev_alloc_name(dev, dev->name) < 0) {
+-		airo_print_err("", "Couldn't get name!");
+-		goto err_out_free;
+-	}
+ 
+ 	ai = dev->priv;
+ 	ai->wifidev = NULL;
+@@ -2821,14 +2845,11 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 	ai->config.len = 0;
+ 	ai->pci = pci;
+ 	init_waitqueue_head (&ai->thr_wait);
+-	ai->airo_thread_task = kthread_run(airo_thread, dev, dev->name);
+-	if (IS_ERR(ai->airo_thread_task))
+-		goto err_out_free;
+ 	ai->tfm = NULL;
+ 	add_airo_dev(ai);
+ 
+ 	if (airo_networks_allocate (ai))
+-		goto err_out_thr;
++		goto err_out_free;
+ 	airo_networks_initialize (ai);
+ 
+ 	/* The Airo-specific entries in the device structure. */
+@@ -2851,21 +2872,16 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 	dev->base_addr = port;
+ 
+ 	SET_NETDEV_DEV(dev, dmdev);
++	SET_MODULE_OWNER(dev);
+ 
+ 	reset_card (dev, 1);
+ 	msleep(400);
+ 
+-	rc = request_irq( dev->irq, airo_interrupt, IRQF_SHARED, dev->name, dev );
+-	if (rc) {
+-		airo_print_err(dev->name, "register interrupt %d failed, rc %d",
+-				irq, rc);
+-		goto err_out_nets;
+-	}
+ 	if (!is_pcmcia) {
+ 		if (!request_region(dev->base_addr, 64, DRV_NAME)) {
+ 			rc = -EBUSY;
+ 			airo_print_err("", "Couldn't request region");
+-			goto err_out_irq;
++			goto err_out_nets;
+ 		}
+ 	}
+ 
+@@ -2921,8 +2937,6 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 	if (setup_proc_entry(dev, dev->priv) < 0)
+ 		goto err_out_wifi;
+ 
+-	netif_start_queue(dev);
+-	SET_MODULE_OWNER(dev);
+ 	return dev;
+ 
+ err_out_wifi:
+@@ -2940,14 +2954,9 @@ err_out_map:
+ err_out_res:
+ 	if (!is_pcmcia)
+ 	        release_region( dev->base_addr, 64 );
+-err_out_irq:
+-	free_irq(dev->irq, dev);
+ err_out_nets:
+ 	airo_networks_free(ai);
+-err_out_thr:
+ 	del_airo_dev(ai);
+-	set_bit(JOB_DIE, &ai->jobs);
+-	kthread_stop(ai->airo_thread_task);
+ err_out_free:
+ 	free_netdev(dev);
+ 	return NULL;
+@@ -3919,10 +3928,7 @@ static u16 setup_card(struct airo_info *ai, u8 *mac, int lock)
+ 		rc = readWepKeyRid(ai, &wkr, 0, lock);
+ 	} while(lastindex != wkr.kindex);
+ 
+-	if (auto_wep) {
+-		ai->expires = RUN_AT(3*HZ);
+-		wake_up_interruptible(&ai->thr_wait);
+-	}
++	try_auto_wep(ai);
+ 
+ 	return SUCCESS;
+ }
 
-Here are the iwl3945-related kernel messages:
-iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for Linux, 0.0.32d
-iwl3945: Copyright(c) 2003-2007 Intel Corporation
-iwl3945: Detected Intel PRO/Wireless 3945BG Network Connection
-iwl3945: Unhandled INTA bits 0x04000000
-iwl3945: Disabled INTA bits 0x04000000 were pending
-iwl3945:    with FH_INT = 0x00000000
-iwl3945: Channel 12 [2.4GHz] is Tx only -- skipping.
-iwl3945: Channel 13 [2.4GHz] is Tx only -- skipping.
-iwl3945: Channel 14 [2.4GHz] is Tx only -- skipping.
-iwl3945: Channel 183 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 184 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 185 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 187 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 188 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 189 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 192 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 196 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 7 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 8 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 11 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 12 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 16 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 34 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 36 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 38 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 40 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 42 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 44 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 46 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 48 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 52 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 56 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 60 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 64 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 100 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 104 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 108 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 112 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 116 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 120 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 124 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 128 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 132 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 136 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 140 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 145 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 149 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 153 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 157 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 161 [5.2GHz] is Tx only -- skipping.
-iwl3945: Channel 165 [5.2GHz] is Tx only -- skipping.
-iwl3945: Tunable channels: 11 802.11bg, 0 802.11a channels
-wmaster0: Selected rate control algorithm 'iwl-3945-rs'
-iwl3945: Microcode SW error detected.  Restarting 0x82000008.
-iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq 0x4418 ser 0x0000004B
-iwl3945: ipw going down
-iwl3945: Can't stop Rx DMA.
-iwl3945: Grabbing access while already held at line 825.
 
-Any assistance would be greatly appreciated.
-
- - J<
