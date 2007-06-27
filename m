@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.polimi.it ([131.175.12.3]:33444 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758253AbXFCLZP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jun 2007 07:25:15 -0400
-From: stefano.brivio@polimi.it
-Message-ID: <20070603125053.77bjlj6kg0840ow8@webmail.polimi.it>
-Date: Sun, 03 Jun 2007 12:50:53 +0200
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Olivier Cornu <o.cornu@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Add module parameter for setting initial  rate in rc80211_simple
-References: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>
-	<7b4bf7ff0706030333j21152541hed9384e965cacaa9@mail.gmail.com>
-	<200706031245.31774.mb@bu3sch.de>
-In-Reply-To: <200706031245.31774.mb@bu3sch.de>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:42105
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753437AbXF0Mtj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jun 2007 08:49:39 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: mac80211/bcm43xx deadlock
+Date: Wed, 27 Jun 2007 14:48:57 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <1182848382.3830.5.camel@johannes.berg> <200706261617.45713.mb@bu3sch.de> <1182937106.4769.10.camel@johannes.berg>
+In-Reply-To: <1182937106.4769.10.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+  charset="iso-8859-15"
+Message-Id: <200706271448.58087.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Michael Buesch <mb@bu3sch.de>:
+On Wednesday 27 June 2007 11:38:26 Johannes Berg wrote:
+> On Tue, 2007-06-26 at 16:17 +0200, Michael Buesch wrote:
+> 
+> > That's a known bug.
+> > See the FIXME at stop_core() where we stop the mac80211-queues.
+> > mac80211 needs to be fixed to fix this. ;)
+> > We need a function to stop and flush the TX queues from
+> > _outside_ of the TX handlers.
+> 
+> Are you sure it's the same bug? I don't think we get into
 
-> (what's the lowest OFDM rate?) 9M?
+Pretty, yeah. I'm probably going to solve this bug elsewhere.
+Need to think about it.
 
-6M.
+> ieee80211_if_shutdown from bcm43xx itself.
 
+bcm43xx causes it only imlicitely. Calling ieee80211_stop_queues()
+(from outside of the TX path) will result in a deadlock in the
+qdisc handler, which will result in a complete system freeze on UP.
+So bcm43xx won't show up in the call-trace.
 
---
-Ciao
-Stefano
-
-
-
+-- 
+Greetings Michael.
