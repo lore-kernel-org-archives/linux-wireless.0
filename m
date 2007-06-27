@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50507 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753510AbXFTLRr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2007 07:17:47 -0400
-Subject: ieee80211_set_aid_for_sta?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Jouni Malinen <j@w1.fi>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hkBToRVUG3Pk/rT03ioV"
-Date: Wed, 20 Jun 2007 01:39:30 +0200
-Message-Id: <1182296370.3714.21.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2261 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753361AbXF0QZr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jun 2007 12:25:47 -0400
+Date: Wed, 27 Jun 2007 11:47:48 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-wireless@vger.kernel.org
+Subject: Re: Please pull libertas-2.6 'upstream-fixes' branch
+Message-ID: <20070627154748.GA13617@tuxdriver.com>
+References: <1182806992.10966.4.camel@xo-13-A4-25.localdomain> <4680E5E5.9000300@garzik.org> <1182859590.15750.0.camel@xo-13-A4-25.localdomain>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1182859590.15750.0.camel@xo-13-A4-25.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jun 26, 2007 at 08:06:30AM -0400, Dan Williams wrote:
+> On Tue, 2007-06-26 at 06:09 -0400, Jeff Garzik wrote:
+> > Dan Williams wrote:
+> > > Hi John,
+> > > 
+> > > The following changes since commit 188e1f81ba31af1b65a2f3611df4c670b092bbac:
+> > >   Linus Torvalds (1):
+> > >         Linux 2.6.22-rc5
+> > > 
+> > > are found in the git repository at:
+> > > 
+> > >   git://git.infradead.org/libertas-2.6/ upstream-fixes
+> > 
+> > I think John's on vacation.  If you don't hear from him in 24-48 hours, 
+> > please resend this to me, just to make sure it makes 2.6.22.
+> 
+> He _should_ be back by now, but I'll make sure it gets where it needs to
+> go in any case.
 
---=-hkBToRVUG3Pk/rT03ioV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm in Ottawa at OLS.  But, I should be able to handle this
+today...stay tuned! :-)
 
-Hi,
-
-As with the radar stuff, I don't see any users of
-ieee80211_set_aid_for_sta. It seems to be useful when firmware
-establishes sta MAC->AID mapping, but hostapd doesn't handle that
-currently. Remove until we find new hardware requiring it?
-
-johannes
-
---=-hkBToRVUG3Pk/rT03ioV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGeGky/ETPhpq3jKURAhIOAJ9+vdELomMmRGXxb2kBoxoTqNj2JACeLjBw
-LPADznjZyUwi8HmwHLLC3rQ=
-=E38z
------END PGP SIGNATURE-----
-
---=-hkBToRVUG3Pk/rT03ioV--
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
