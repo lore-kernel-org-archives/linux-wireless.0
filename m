@@ -1,77 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:46602 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753820AbXFDLlJ (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49335
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751120AbXF0NfS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2007 07:41:09 -0400
-Subject: Re: [PATCH] cfg80211: fix signed macaddress in sysfs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Lamparter <lists@diac24.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>
-In-Reply-To: <20070603220651.GA22070@charon.n2.diac24.net>
-References: <20070603220651.GA22070@charon.n2.diac24.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DgnVOIkgZl/ZSpy8FCBp"
-Date: Mon, 04 Jun 2007 13:40:55 +0200
-Message-Id: <1180957255.11026.67.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 27 Jun 2007 09:35:18 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: Export short-preamble bit to drivers
+Date: Wed, 27 Jun 2007 15:33:56 +0200
+Cc: Jiri Benc <jbenc@suse.cz>, John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200706251628.00838.mb@bu3sch.de> <1182934500.4769.8.camel@johannes.berg>
+In-Reply-To: <1182934500.4769.8.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200706271533.57189.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 27 June 2007 10:55:00 Johannes Berg wrote:
+> On Mon, 2007-06-25 at 16:28 +0200, Michael Buesch wrote:
+> 
+> >  	case PRISM2_PARAM_PREAMBLE:
+> > -		local->short_preamble = value;
+> > +		if (value)
+> > +			local_to_hw(local)->conf.flags |= IEEE80211_CONF_SHORT_PREAMBLE;
+> > +		else
+> > +			local_to_hw(local)->conf.flags &= ~IEEE80211_CONF_SHORT_PREAMBLE;
+> > +		if (ieee80211_hw_config(local))
+> > +			ret = -EINVAL;
+> 
+> any reason not to return the actual error code from hw_config here? Not
+> that it'll be any different from -EINVAL I expect...
+> 
+> johannes
+> 
 
---=-DgnVOIkgZl/ZSpy8FCBp
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Another thing, while we are at it.
+How is locking for the conf structure actually done? How is it
+made impossible to read the value of "flags" in another thread,
+while we update it in a non-atomic way, here?
 
-On Mon, 2007-06-04 at 00:06 +0200, David Lamparter wrote:
-> Fix signedness mixup making mac addresses show up strangely
-> (like 00:11:22:33:44:ffffffaa) in /sys/class/ieee80211/*/macaddress.
-
-Huh, my mistake, patch looks good. Do we care for this in .22 still?
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-
-> Signed-off-by: David Lamparter <equinox@diac24.net>
-> ---
->=20
->  net/wireless/sysfs.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
-> index 7844be4..374d16d 100644
-> --- a/net/wireless/sysfs.c
-> +++ b/net/wireless/sysfs.c
-> @@ -33,7 +33,7 @@ static ssize_t _show_permaddr(struct device *dev,
->                               struct device_attribute *attr,
->                               char *buf)
->  {
-> -       char *addr =3D dev_to_rdev(dev)->wiphy.perm_addr;
-> +       unsigned char *addr =3D dev_to_rdev(dev)->wiphy.perm_addr;
-> =20
->         return sprintf(buf, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n",
->                        addr[0], addr[1], addr[2], addr[3], addr[4], addr[=
-5]);
-
-This probably should also use MAC_FMT/MAC_ARG, hah. Oh well, I'll fix it
-up later.
-
-johannes
-
---=-DgnVOIkgZl/ZSpy8FCBp
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGY/pH/ETPhpq3jKURAg93AJ9wojXQKFh9zZ5GkfmAaWfgDMTUkACfSj1e
-0veaauLDU90uX8sNCAS1FnQ=
-=5fEw
------END PGP SIGNATURE-----
-
---=-DgnVOIkgZl/ZSpy8FCBp--
-
+-- 
+Greetings Michael.
