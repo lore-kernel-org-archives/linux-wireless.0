@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dhost002-86.dex002.intermedia.net ([64.78.20.226]:13494 "EHLO
-	dhost002-86.dex002.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966117AbXFGW7I (ORCPT
+Received: from smtp-out112.alice.it ([85.37.17.112]:3278 "EHLO
+	smtp-out112.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754884AbXF1Ocd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2007 18:59:08 -0400
-From: "Jouni Malinen" <jkm@devicescape.com>
-Date: Thu, 7 Jun 2007 15:59:49 -0700
-To: Jiri Benc <jbenc@suse.cz>
-Cc: jketreno <jketreno@linux.intel.com>, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [PATCH 1/3] mac80211: add IEEE802.11e/WMM structures
-Message-ID: <20070607225949.GL26739@devicescape.com>
-References: <4668DBE1.5090201@linux.intel.com> <20070608004909.7322f394@logostar.upir.cz>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070608004909.7322f394@logostar.upir.cz>
+	Thu, 28 Jun 2007 10:32:33 -0400
+From: Matteo Croce <rootkit85@yahoo.it>
+To: Michal Schmidt <mschmidt@redhat.com>
+Subject: Re: [PATCH 0/4] airo fixes
+Date: Thu, 28 Jun 2007 16:31:41 +0200
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Message-Id: <200706281631.41273.rootkit85@yahoo.it>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 08, 2007 at 12:49:09AM +0200, Jiri Benc wrote:
-> On Thu, 07 Jun 2007 21:32:33 -0700, jketreno wrote:
-> > It doesn't really look like he invented a 'new useless' prefix.  It looks
-> > to me like he picked a prefix that correlates attribution of the data
-> > declaration to the entity that created it.  You may not like that he
-> > provided attribution, but that doesn't mean its useless.
-> 
-> By "useless", I meant "if you use a WLAN_ prefix like in all other #defines
-> in that file, it will do the same job". Ok, I understand the argument about
-> attribution, but it shouldn't be in exchange of consistency and clarity.
+> On Wed, 2007-06-27 at 23:14 +0200, Michal Schmidt wrote:
+> Hello,
+>
+> this is a series of four patches for the airo driver:
+>
+> 1/4: airo: don't use the interface name so much before registration
+> 2/4: airo: delay parts of initialization until the netdev is up
+> 3/4: airo: disable the PCI device when unloading module
+> 4/4: airo: start with radio off
+>
+> The first two fix the race condition Matteo Croce was experiencing.
+> The third one fixes a bug I noticed during testing.
+> The last one saves some power when the card is not used.
 
-WLAN_ prefix is currently mostly (only?) used for values defined in
-IEEE 802.11 while the WMM parameters are defined in WFA specification,
-not IEEE 802.11.
+I have applied your 4 patches on both a vanilla 2.6.21.5 kernel and
+a 2.6.22-rc6 wireless-dev one, and i found that only patches 1/4 and 2/4 are 
+good.
+the 3/4 one gives this bogus output:
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+airo(): Probing for PCI adapters
+PCI: Setting latency timer of device 0000:05:08.0 to 64
+airo(eth%d): cmd:111 status:7f11 rsp0:2 rsp1:0 rsp2:0
+airo(eth%d): Doing fast bap_reads
+airo(): WPA is supported.
+airo(eth0): MAC enabled 0:d:29:4f:c:be
+airo(): Finished probing for PCI adapters
+
+and the 4/4 definitely broke all:
+
+airo(): Probing for PCI adapters
+PCI: Setting latency timer of device 0000:05:08.0 to 64
+airo(eth%d): cmd:111 status:7f11 rsp0:2 rsp1:0 rsp2:0
+airo(eth%d): Doing fast bap_reads
+airo(eth%d): Bad MAC enable reason = 2, rid = 0, offset = 0
+airo(eth%d): MAC could not be enabled
+airo(): Finished probing for PCI adapters
