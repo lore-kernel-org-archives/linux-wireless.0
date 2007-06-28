@@ -1,74 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39588 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752653AbXFVIlA (ORCPT
+Received: from smtp-out114.alice.it ([85.37.17.114]:2110 "EHLO
+	smtp-out114.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754309AbXF1Nw2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2007 04:41:00 -0400
-Message-Id: <20070621221757.805759000@sipsolutions.net>
-References: <20070621221603.778432000@sipsolutions.net>
-Date: Fri, 22 Jun 2007 00:16:09 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-Subject: [PATCH 06/14] mac80211: fix bug for per-sta stats
-Mime-Version: 1.0
+	Thu, 28 Jun 2007 09:52:28 -0400
+From: Matteo Croce <rootkit85@yahoo.it>
+To: Michal Schmidt <mschmidt@redhat.com>
+Subject: Re: [PATCH 0/4] airo fixes
+Date: Thu, 28 Jun 2007 15:51:37 +0200
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200706281551.37334.rootkit85@yahoo.it>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pre_rx handlers can't really touch sta since for IBSS it might not be
-assigned yet, it can create sta info structs on-the-fly.
+> On Wed, 2007-06-27 at 23:14 +0200, Michal Schmidt wrote:
+> Hello,
+>
+> this is a series of four patches for the airo driver:
+>
+> 1/4: airo: don't use the interface name so much before registration
+> 2/4: airo: delay parts of initialization until the netdev is up
+> 3/4: airo: disable the PCI device when unloading module
+> 4/4: airo: start with radio off
+>
+> The first two fix the race condition Matteo Croce was experiencing.
+> The third one fixes a bug I noticed during testing.
+> The last one saves some power when the card is not used.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+I have applied your 4 patches on both a vanilla 2.6.21.5 kernel and
+a 2.6.22-rc6 wireless-dev one, and i found that only patches 1/4 and 2/4 are 
+good.
+the 3/4 one gives this bogus output:
 
----
- net/mac80211/rx.c |   13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+airo(): Probing for PCI adapters
+PCI: Setting latency timer of device 0000:05:08.0 to 64
+airo(eth%d): cmd:111 status:7f11 rsp0:2 rsp1:0 rsp2:0
+airo(eth%d): Doing fast bap_reads
+airo(): WPA is supported.
+airo(eth0): MAC enabled 0:d:29:4f:c:be
+airo(): Finished probing for PCI adapters
 
---- wireless-dev.orig/net/mac80211/rx.c	2007-06-21 21:40:59.028638003 +0200
-+++ wireless-dev/net/mac80211/rx.c	2007-06-21 21:43:01.838638003 +0200
-@@ -28,6 +28,8 @@
- /* pre-rx handlers
-  *
-  * these don't have dev/sdata fields in the rx data
-+ * The sta value should also not be used because it may
-+ * be NULL even though a STA (in IBSS mode) will be added.
-  */
- 
- static ieee80211_txrx_result
-@@ -57,12 +59,11 @@ ieee80211_rx_h_parse_qos(struct ieee8021
- 		}
- 		rx->u.rx.qos_control = 0;
- 	}
--#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
-+
- 	I802_DEBUG_INC(rx->local->wme_rx_queue[tid]);
--	if (rx->sta) {
-+	/* only a debug counter, sta might not be assigned properly yet */
-+	if (rx->sta)
- 		I802_DEBUG_INC(rx->sta->wme_rx_queue[tid]);
--	}
--#endif /* CONFIG_MAC80211_DEBUG_COUNTERS */
- 
- 	rx->u.rx.queue = tid;
- 	rx->u.rx.is_agg_frame = is_agg_frame;
-@@ -119,8 +120,6 @@ ieee80211_rx_h_load_stats(struct ieee802
- 	/* Divide channel_use by 8 to avoid wrapping around the counter */
- 	load >>= CHAN_UTIL_SHIFT;
- 	local->channel_use_raw += load;
--	if (rx->sta)
--		rx->sta->channel_use_raw += load;
- 	rx->u.rx.load = load;
- 
- 	return TXRX_CONTINUE;
-@@ -140,6 +139,8 @@ ieee80211_rx_handler ieee80211_rx_pre_ha
- static ieee80211_txrx_result
- ieee80211_rx_h_if_stats(struct ieee80211_txrx_data *rx)
- {
-+	if (rx->sta)
-+		rx->sta->channel_use_raw += rx->u.rx.load;
- 	rx->sdata->channel_use_raw += rx->u.rx.load;
- 	return TXRX_CONTINUE;
- }
+and the 4/4 definitely broke all:
 
--- 
-
+airo(): Probing for PCI adapters
+PCI: Setting latency timer of device 0000:05:08.0 to 64
+airo(eth%d): cmd:111 status:7f11 rsp0:2 rsp1:0 rsp2:0
+airo(eth%d): Doing fast bap_reads
+airo(eth%d): Bad MAC enable reason = 2, rid = 0, offset = 0
+airo(eth%d): MAC could not be enabled
+airo(): Finished probing for PCI adapters
