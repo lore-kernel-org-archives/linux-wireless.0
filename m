@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:47384 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966629AbXFHDIm (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:15057 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759964AbXF1BkH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2007 23:08:42 -0400
-Message-ID: <4668C838.20301@lwfinger.net>
-Date: Thu, 07 Jun 2007 22:08:40 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Wed, 27 Jun 2007 21:40:07 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH] mac80211: Export short-preamble bit to drivers
+Date: Wed, 27 Jun 2007 18:40:05 -0700
+Cc: Jiri Benc <jbenc@suse.cz>, John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200706251628.00838.mb@bu3sch.de>
+In-Reply-To: <200706251628.00838.mb@bu3sch.de>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2] mac80211: Set low initial rate in rc80211_simple
-References: <4668c4f6.9foQu67PRVz5Fh3G%Larry.Finger@lwfinger.net>
-In-Reply-To: <4668c4f6.9foQu67PRVz5Fh3G%Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart1974830.1Mui1nz4f7";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200706271840.09719.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> The initial rate for STA's using rc80211_simple is set to the last
-> rate in the rate table. For situations for which the signal is weak,
-> the rate may be too high for authentication and association. Although
-> the rc80211_simple module will adjust the speed, the response may not
-> be fast enough for a successful connection. This modification sets the
-> initial rate to the lowest supported value.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> 
-> Index: wireless-dev/net/mac80211/rc80211_simple.c
-> ===================================================================
-> --- wireless-dev.orig/net/mac80211/rc80211_simple.c
-> +++ wireless-dev/net/mac80211/rc80211_simple.c
-> @@ -283,10 +283,10 @@ static void rate_control_simple_rate_ini
->  	int i;
->  	sta->txrate = 0;
->  	mode = local->oper_hw_mode;
-> -	/* TODO: what is a good starting rate for STA? About middle? Maybe not
-> -	 * the lowest or the highest rate.. Could consider using RSSI from
-> -	 * previous packets? Need to have IEEE 802.1X auth succeed immediately
-> -	 * after assoc.. */
-> +	/* TODO: This routine should consider using RSSI from previous packets
-> +	 * as we need to have IEEE 802.1X auth succeed immediately after assoc..
-> +	 * Until that method is implemented, we will use the lowest supported rate
-> +	 * as a workaround, */
->  	for (i = 0; i < mode->num_rates; i++) {
->  		if ((sta->supp_rates & BIT(i)) &&
->  		    (mode->rates[i].flags & IEEE80211_RATE_SUPPORTED))
-> 
+--nextPart1974830.1Mui1nz4f7
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I missed a refresh on this patch. Corrected one to follow.
+On Monday 25 June 2007 07:28, Michael Buesch wrote:
+> +#define IEEE80211_CONF_SHORT_PREAMBLE	(1<<3) /* use short preamble
+> +						* with IEEE 802.11b */
+Shouldn't this be more of a "short preamble allowed" bit rather than "use=20
+short preamble"? After all, short preamble is usually configured per frame.
 
-Larry
+=2DMichael Wu
 
+--nextPart1974830.1Mui1nz4f7
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGgxF5T3Oqt9AH4aERAsWaAJ4owpgIg5bZPF+g8GnJG1AbJ6NK4wCfW6GA
+bghDpEA8RGfKoSPa6JZ5JzE=
+=VwEE
+-----END PGP SIGNATURE-----
+
+--nextPart1974830.1Mui1nz4f7--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
