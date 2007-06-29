@@ -1,66 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50514 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752783AbXFTLR6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2007 07:17:58 -0400
-Received: from [131.234.77.145]
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1I0yCD-00072B-Md
-	for linux-wireless@vger.kernel.org; Wed, 20 Jun 2007 12:17:57 +0100
-Subject: notifications in nl80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dsb+OaEwrJSElpFGUVsY"
-Date: Wed, 20 Jun 2007 11:19:47 +0200
-Message-Id: <1182331187.3714.28.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([66.187.233.31]:50034 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1764547AbXF2Nfl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jun 2007 09:35:41 -0400
+From: Michal Schmidt <mschmidt@redhat.com>
+Subject: [PATCH 1/5] airo: disable the PCI device when unloading module
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	Matteo Croce <rootkit85@yahoo.it>
+Date: Fri, 29 Jun 2007 15:33:30 +0200
+Message-ID: <20070629133330.6658.44086.stgit@localhost.localdomain>
+In-Reply-To: <20070629131841.6658.76381.stgit@localhost.localdomain>
+References: <20070629131841.6658.76381.stgit@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Fix an assymetry between pci_{enable,disable}_device. airo did not disable
+the PCI device when unloading the module. This caused suspend failures
+after modprobe -r airo && modprobe airo.
 
---=-dsb+OaEwrJSElpFGUVsY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Michal Schmidt <mschmidt@redhat.com>
+---
 
-Hi,
+ drivers/net/wireless/airo.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-After the previous two mails it seems that of the notifications we
-currently send out, only these are left to implement in nl80211:
-
- * ieee80211_msg_wep_frame_unknown_key
-   low priority, makes sense but isn't used in hostapd/wpasupplicant
- * ieee80211_msg_key_threshold_notification
-   low priority, makes sense but isn't used in hostapd/wpasupplicant
- * ieee80211_msg_michael_mic_failure
-
-so really there's only one. All the others we can just delete (well, see
-the other two mails), and these
- * ieee80211_msg_normal
- * ieee80211_msg_tx_callback_ack
- * ieee80211_msg_tx_callback_fail
- * ieee80211_msg_sta_not_assoc
- * ieee80211_msg_passive_scan [completely unused]
-
-are not useful when we mirror back packets to monitor mode interfaces on
-tx status callback. That should actually be fairly easy to accomplish,
-and then we can drop management interfaces completely.
-
-johannes
-
---=-dsb+OaEwrJSElpFGUVsY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGePEz/ETPhpq3jKURAjDVAJ9Q1ZtUxON8uh72jxGQWFnUSVNWwQCeIu1Q
-mH2tRtKuDz1L3xYnNBTH5wA=
-=ixF/
------END PGP SIGNATURE-----
-
---=-dsb+OaEwrJSElpFGUVsY--
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 2d3a180..57da70b 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -5597,8 +5597,10 @@ static int __devinit airo_pci_probe(struct pci_dev *pdev,
+ 			dev = _init_airo_card(pdev->irq, pdev->resource[0].start, 0, pdev, &pdev->dev);
+ 	else
+ 			dev = _init_airo_card(pdev->irq, pdev->resource[2].start, 0, pdev, &pdev->dev);
+-	if (!dev)
++	if (!dev) {
++		pci_disable_device(pdev);
+ 		return -ENODEV;
++	}
+ 
+ 	pci_set_drvdata(pdev, dev);
+ 	return 0;
+@@ -5610,6 +5612,8 @@ static void __devexit airo_pci_remove(struct pci_dev *pdev)
+ 
+ 	airo_print_info(dev->name, "Unregistering...");
+ 	stop_airo_card(dev, 1);
++	pci_disable_device(pdev);
++	pci_set_drvdata(pdev, NULL);
+ }
+ 
+ static int airo_pci_suspend(struct pci_dev *pdev, pm_message_t state)
 
