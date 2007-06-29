@@ -1,36 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.181]:21888 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752982AbXFTMAY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2007 08:00:24 -0400
-Received: by ik-out-1112.google.com with SMTP id b32so139697ika
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2007 05:00:22 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] clarify some mac80211 things
-Date: Wed, 20 Jun 2007 13:48:33 +0200
-Cc: Jiri Benc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1182333960.3714.54.camel@johannes.berg> <20070620134604.72ecbbc7@griffin.suse.cz> <1182340310.3714.65.camel@johannes.berg>
-In-Reply-To: <1182340310.3714.65.camel@johannes.berg>
+Received: from mx1.redhat.com ([66.187.233.31]:49449 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763942AbXF2NeK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jun 2007 09:34:10 -0400
+From: Michal Schmidt <mschmidt@redhat.com>
+Subject: [PATCH 0/5] airo fixes (take 3)
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	Matteo Croce <rootkit85@yahoo.it>
+Date: Fri, 29 Jun 2007 15:33:25 +0200
+Message-ID: <20070629131841.6658.76381.stgit@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200706201348.33834.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 20 June 2007 13:51, Johannes Berg wrote:
-> On Wed, 2007-06-20 at 13:46 +0200, Jiri Benc wrote:
-> 
-> > Maybe it's a time to finally get rid of open and stop callbacks...
-> 
-> Fine with me, there isn't really much point in them and it'll definitely
-> simplify code. Since drivers need to keep track anyway they won't be
-> more complicated... bcm43xx for example doesn't use it anyway...
+Hi,
 
-Ehm, I'll fix rt2x00 to stop using those callback functions as soon as possible then. ;)
+here are some fixes for the airo driver:
 
-Ivo
+airo: disable the PCI device when unloading module
+airo: delay some initialization until the netdev is up
+airo: fix a race causing initialization failures
+airo: simpler calling convention for enable_MAC()
+airo: start with radio off
+
+I don't think my "take 2" series ever made it to the list or to any of you. I
+had some email problems. That series did not include the last patch, because
+Matteo Croce reported problems with it. I believe I fixed it now.
+
+Special note for Matteo:
+ You had a problem applying patches included in email bodies instead of
+ attachments...
+ I see that you are using KMail. I believe in KMail you can right-click on a
+ message, choose "Save As..." and save the whole email in mbox format and treat
+ the resulting file as a patch. The patch program should be clever enough to
+ ignore the text preceding the patch itself.
+
+Michal
+
