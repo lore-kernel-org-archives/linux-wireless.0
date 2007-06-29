@@ -1,55 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:33903 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758659AbXFKKjR (ORCPT
+Received: from smtp-out25.alice.it ([85.33.2.25]:2770 "EHLO
+	smtp-out25.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752397AbXF2T1X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2007 06:39:17 -0400
-Message-Id: <20070611103914.577674038@warmcat.com>
-References: <20070611103828.961999956@warmcat.com>
-Date: Mon, 11 Jun 2007 11:38:30 +0100
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>, Andy Green <andy@warmcat.com>
-Subject: [PATCH 2/2] bcm43xx-mac80211: Fix reported rx frequency and channel
+	Fri, 29 Jun 2007 15:27:23 -0400
+From: Matteo Croce <rootkit85@yahoo.it>
+To: Michal Schmidt <mschmidt@redhat.com>
+Subject: Re: [PATCH 0/5] airo fixes (take 3)
+Date: Fri, 29 Jun 2007 21:27:11 +0200
+References: <20070629131841.6658.76381.stgit@localhost.localdomain>
+In-Reply-To: <20070629131841.6658.76381.stgit@localhost.localdomain>
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200706292127.11418.rootkit85@yahoo.it>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-bcm43xx-mac80211 is reporting bogus frequencies and channels back to
-mac80211 at the moment (eg, actual ch1 (2412MHz) reported as 2424MHz).
+On Friday 29 June 2007 15:33:25 you wrote:
+> Hi,
+>
+> here are some fixes for the airo driver:
+>
+> airo: disable the PCI device when unloading module
+> airo: delay some initialization until the netdev is up
+> airo: fix a race causing initialization failures
+> airo: simpler calling convention for enable_MAC()
+> airo: start with radio off
+>
+> I don't think my "take 2" series ever made it to the list or to any of you.
+> I had some email problems. That series did not include the last patch,
+> because Matteo Croce reported problems with it. I believe I fixed it now.
+>
+> Special note for Matteo:
+>  You had a problem applying patches included in email bodies instead of
+>  attachments...
+>  I see that you are using KMail. I believe in KMail you can right-click on
+> a message, choose "Save As..." and save the whole email in mbox format and
+> treat the resulting file as a patch. The patch program should be clever
+> enough to ignore the text preceding the patch itself.
+>
+> Michal
 
-Prior to this patch, the hardware rx channel value is reported as
-starting at 0x18 and rising by 0x0a per channel.  Code in bcm43xx_xmit.c
-tries to take this value and add 2400 to it to get the rx frequency.
-It seems the intention is that the hardware reports the (rx freq - 2400),
-so we want the value starting at 0x0c and rising by 0x05 per channel.
+Thanks, it works very well even when loading another driver before:
 
-If the value read is shifted one more bit to the right, it will
-succeed in doing this.  Therefore this patch increases the shifting constant
-by one and reduces the mask by one lsb.
+forcedeth.c: Reverse Engineered nForce ethernet driver. Version 0.60.
+ACPI: PCI Interrupt Link [APCH] enabled at IRQ 23
+ACPI: PCI Interrupt 0000:00:0a.0[A] -> Link [APCH] -> GSI 23 (level, low) -> IRQ 23
+PCI: Setting latency timer of device 0000:00:0a.0 to 64
+forcedeth: using HIGHDMA
+airo(): Probing for PCI adapters
+eth0: forcedeth.c: subsystem: 0147b:1c12 bound to 0000:00:0a.0
+ACPI: PCI Interrupt Link [APC1] enabled at IRQ 16
+ACPI: PCI Interrupt 0000:05:08.0[A] -> Link [APC1] -> GSI 16 (level, low) -> IRQ 16
+PCI: Setting latency timer of device 0000:05:08.0 to 64
+airo(): cmd:111 status:7f11 rsp0:2 rsp1:0 rsp2:0
+airo(): Doing fast bap_reads
+airo(): WPA is supported.
+airo(eth0): MAC enabled 0:d:29:4f:c:be
+airo(): Finished probing for PCI adapters
 
-The rx frequency reported in the radiotap rx and then, eg, tcpdump,
-is then correct.  I didn't test ch 14 but I guess the hardware is
-consistent about it.
-
-CC: Larry Finger <larry.finger@lwfinger.net>
-CC: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: Andy Green <andy@warmcat.com>
-
-diff --git a/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h b/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h
-index 44fa515..0372064 100644
---- a/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h
-+++ b/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_xmit.h
-@@ -190,8 +190,8 @@ struct bcm43xx_rxhdr_fw4 {
- /* RX channel */
- #define BCM43xx_RX_CHAN_GAIN		0xFC00 /* Gain */
- #define BCM43xx_RX_CHAN_GAIN_SHIFT	10
--#define BCM43xx_RX_CHAN_ID		0x03FC /* Channel ID */
--#define BCM43xx_RX_CHAN_ID_SHIFT	2
-+#define BCM43xx_RX_CHAN_ID		0x03F8 /* Channel ID */
-+#define BCM43xx_RX_CHAN_ID_SHIFT	3
- #define BCM43xx_RX_CHAN_PHYTYPE		0x0003 /* PHY type */
- 
- 
-
--- 
+Cheers,
+Matteo Croce
