@@ -1,26 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp3.infineon.com ([203.126.106.229]:31009 "EHLO
-	smtp3.infineon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751216AbXFTLHR convert rfc822-to-8bit (ORCPT
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:44589 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752323AbXF2Tuy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2007 07:07:17 -0400
+	Fri, 29 Jun 2007 15:50:54 -0400
+Date: Fri, 29 Jun 2007 21:51:16 +0200
+From: Adrian Bunk <bunk@stusta.de>
+To: linville@tuxdriver.com,
+	Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: drivers/net/wireless/libertas/rx.c: use-after-free
+Message-ID: <20070629195116.GG6087@stusta.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: FullMAC develop
-Date: Wed, 20 Jun 2007 18:57:14 +0800
-Message-ID: <A2CE5E0A70B68046A98EB5145552E2770112BDEF@sinse303.ap.infineon.com>
-From: <Mandy.Peng@infineon.com>
-To: <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The Coverity checker spotted the following use-after-free of "skb" in 
+drivers/net/wireless/libertas/rx.c introduced by
+commit 9012b28a407511fb355f6d2176a12d4653489672 (WTF did this commit
+with the title "libertas: make debug configurable" add the 
+"skb->protocol = __constant_htons(0x0019);" line?):
 
-Dears,
+<--  snip  -->
 
-We are plane to develop a FullMAC chipset. May I skip the ether to
-802.11 frame transform since the chipset support all of the data path
-access to get high data throughput ?
+...
+static int process_rxed_802_11_packet(wlan_private * priv, struct sk_buff *skb)
+{
+...
+        libertas_upload_rx_packet(priv, skb);
 
-Regards,
-Mandy.
+        ret = 0;
+
+done:
+        skb->protocol = __constant_htons(0x0019);       /* ETH_P_80211_RAW */
+...
+
+<--  snip  -->
+
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
