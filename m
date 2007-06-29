@@ -1,1923 +1,4156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2259 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763004AbXF0V35 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2007 17:29:57 -0400
-Date: Wed, 27 Jun 2007 16:55:39 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: jeff@garzik.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	dcbw@redhat.com
-Subject: Please pull 'libertas-fixes' branch of wireless-2.6
-Message-ID: <20070627205539.GB13617@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail.gmx.net ([213.165.64.20]:43498 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754064AbXF2JRj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jun 2007 05:17:39 -0400
+From: Toralf =?iso-8859-15?q?F=F6rster?= <toralf.foerster@gmx.de>
+Date: Fri, 29 Jun 2007 11:17:32 +0200
+MIME-Version: 1.0
+Subject: build #301 failed for 2.6.22-rc6-g0471448 in drivers/net/wireless/libertas/usb8xxx.ko
+To: linux-wireless@vger.kernel.org
+Content-Type: multipart/signed;
+  boundary="nextPart15371141.zsh6OQpBmM";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200706291117.35231.toralf.foerster@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following changes since commit 189548642c5962e60c3667bdb3a703fe0bed12a6:
-  Linus Torvalds (1):
-        Linus 2.6.22-rc6
+--nextPart15371141.zsh6OQpBmM
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_t4MhGeMWxa/FR8+"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-are found in the git repository at:
+--Boundary-01=_t4MhGeMWxa/FR8+
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git libertas-fixes
+Hello,
 
-Dan Williams (4):
-      libertas: style fixes
-      libertas: kill wlan_scan_process_results
-      libertas: fix WPA associations by handling ENABLE_RSN correctly
-      libertas: remove private ioctls
+the build with the attached .config failed, make ends with:
+=2E..
+  OBJCOPY arch/i386/boot/vmlinux.bin
+  HOSTCC  arch/i386/boot/tools/build
+  BUILD   arch/i386/boot/bzImage
+Root device is (3, 8)
+Boot sector 512 bytes.
+Setup is 7161 bytes.
+System is 2114 kB
+Kernel: arch/i386/boot/bzImage is ready  (#1)
+  Building modules, stage 2.
+  MODPOST 355 modules
+ERROR: "libertas_remove_mesh" [drivers/net/wireless/libertas/usb8xxx.ko] un=
+defined!
+ERROR: "libertas_add_card" [drivers/net/wireless/libertas/usb8xxx.ko] undef=
+ined!
+ERROR: "libertas_send_tx_feedback" [drivers/net/wireless/libertas/usb8xxx.k=
+o] undefined!
+ERROR: "libertas_prepare_and_send_command" [drivers/net/wireless/libertas/u=
+sb8xxx.ko] undefined!
+ERROR: "libertas_remove_card" [drivers/net/wireless/libertas/usb8xxx.ko] un=
+defined!
+ERROR: "libertas_add_mesh" [drivers/net/wireless/libertas/usb8xxx.ko] undef=
+ined!
+ERROR: "libertas_process_rxed_packet" [drivers/net/wireless/libertas/usb8xx=
+x.ko] undefined!
+ERROR: "libertas_interrupt" [drivers/net/wireless/libertas/usb8xxx.ko] unde=
+fined!
+ERROR: "libertas_activate_card" [drivers/net/wireless/libertas/usb8xxx.ko] =
+undefined!
+make[1]: *** [__modpost] Error 1
+make: *** [modules] Error 2
 
- drivers/net/wireless/libertas/Makefile  |    2 +-
- drivers/net/wireless/libertas/README    |  275 --------
- drivers/net/wireless/libertas/assoc.c   |   28 +-
- drivers/net/wireless/libertas/cmd.c     |   12 +-
- drivers/net/wireless/libertas/cmdresp.c |   21 +
- drivers/net/wireless/libertas/hostcmd.h |    2 +-
- drivers/net/wireless/libertas/ioctl.c   | 1081 -------------------------------
- drivers/net/wireless/libertas/main.c    |    8 +-
- drivers/net/wireless/libertas/scan.c    |   51 +--
- drivers/net/wireless/libertas/wext.c    |  152 -----
- drivers/net/wireless/libertas/wext.h    |   45 +--
- 11 files changed, 79 insertions(+), 1598 deletions(-)
- delete mode 100644 drivers/net/wireless/libertas/ioctl.c
+The build was made with :
+$> make mrproper && make rndconfig && <tweak it to ThinkPad T41> && make ol=
+dconfig && make
 
-diff --git a/drivers/net/wireless/libertas/Makefile b/drivers/net/wireless/libertas/Makefile
-index a1097f5..32ed413 100644
---- a/drivers/net/wireless/libertas/Makefile
-+++ b/drivers/net/wireless/libertas/Makefile
-@@ -2,7 +2,7 @@ libertas-objs := main.o fw.o wext.o \
- 		rx.o tx.o cmd.o 	  \
- 		cmdresp.o scan.o	  \
- 		join.o 11d.o 		  \
--		ioctl.o debugfs.o	  \
-+		debugfs.o	  \
- 		ethtool.o assoc.o
- 
- usb8xxx-objs += if_bootcmd.o
-diff --git a/drivers/net/wireless/libertas/README b/drivers/net/wireless/libertas/README
-index 1f92f50..0b133ce 100644
---- a/drivers/net/wireless/libertas/README
-+++ b/drivers/net/wireless/libertas/README
-@@ -28,281 +28,6 @@ DRIVER LOADING
- 
- 		insmod usb8388.ko [fw_name=usb8388.bin]
- 
--=====================
--IWPRIV COMMAND
--=====================
--
--NAME
--	This manual describes the usage of private commands used in Marvell WLAN
--	Linux Driver. All the commands available in Wlanconfig will not be available
--	in the iwpriv.
--
--SYNOPSIS
--	iwpriv <ethX> <command> [sub-command] ...
--
--	iwpriv ethX setregioncode <n>
--	iwpriv ethX getregioncode
--
--Version 5 Command:
--	iwpriv ethX ledgpio <n>
--
--BT Commands:
--	The blinding table (BT) contains a list of mac addresses that will be,
--	by default, ignored by the firmware. It is also possible to invert this
--	behavior so that we will ignore all traffic except for the portion
--	coming from mac addresess in the list. It is primarily used for
--	debugging and testing networks.  It can be edited and inspected with
--	the following commands:
--
--	iwpriv ethX bt_reset
--	iwpriv ethX bt_add <mac_address>
--	iwpriv ethX bt_del <mac_address>
--	iwpriv ethX bt_list <id>
--	iwpriv ethX bt_get_invert <n>
--	iwpriv ethX bt_set_invert <n>
--
--FWT Commands:
--	The forwarding table (FWT) is a feature used to manage mesh network
--	routing in the firmware.  The FWT is essentially a routing table that
--	associates a destination mac address (da) with a next hop receiver
--	address (ra).  The FWT can be inspected and edited with the following
--	iwpriv commands, which are described in greater detail below.
--	Eventually, the table will be automatically maintained by a custom
--	routing protocol.
--
--	NOTE: FWT commands replace the previous DFT commands.  What were the DFT
--	commands?, you might ask.  They were an earlier API to the firmware that
--	implemented a simple MAC-layer forwarding mechanism.  In the unlikely
--	event that you were using these commands, you must migrate to the new
--	FWT commands which can be used to achieve the same functionality.
--
--	iwpriv ethX fwt_add [parameters]
--	iwpriv ethX fwt_del [parameters]
--	iwpriv ethX fwt_lookup [parameters]
--	iwpriv ethX fwt_list [parameters]
--	iwpriv ethX fwt_list_route [parameters]
--	iwpriv ethX fwt_list_neigh [parameters]
--	iwpriv ethX fwt_reset [parameters]
--	iwpriv ethX fwt_cleanup
--	iwpriv ethX fwt_time
--
--MESH Commands:
--
--	The MESH commands are used to configure various features of the mesh
--	routing protocol.  The following commands are supported:
--
--	iwpriv ethX mesh_get_ttl
--	iwpriv ethX mesh_set_ttl ttl
--
--DESCRIPTION
--	Those commands are used to send additional commands to the Marvell WLAN
--	card via the Linux device driver.
--
--	The ethX parameter specifies the network device that is to be used to
--		perform this command on. it could be eth0, eth1 etc.
--
--setregioncode
--	This command is used to set the region code in the station.
--	where value is 'region code' for various regions like
--	USA FCC, Canada IC, Spain, France, Europe ETSI,	Japan ...
--
--	Usage:
--		iwpriv ethX setregioncode 0x10: set region code to USA (0x10).
--
--getregioncode
--	This command is used to get the region code information set in the
--	station.
--
--ledgpio
--	This command is used to set/get LEDs.
--
--	iwpriv ethX ledgpio <LEDs>
--		will set the corresponding LED for the GPIO Line.
--
--	iwpriv ethX ledgpio
--		will give u which LEDs are Enabled.
--
--	Usage:
--		iwpriv eth1 ledgpio 1 0 2 1 3 4
--			will enable
--			LED 1 -> GPIO 0
--			LED 2 -> GPIO 1
--			LED 3 -> GPIO 4
--
--		iwpriv eth1 ledgpio
--			shows LED information in the format as mentioned above.
--
--	Note: LED0 is invalid
--	Note: Maximum Number of LEDs are 16.
--
--fwt_add
--	This command is used to insert an entry into the FWT table. The list of
--	parameters must follow the following structure:
--
--	iwpriv ethX fwt_add da ra [metric dir rate ssn dsn hopcount ttl expiration sleepmode snr]
--
--	The parameters between brackets are optional, but they must appear in
--	the order specified.  For example, if you want to specify the metric,
--	you must also specify the dir, ssn, and dsn but you need not specify the
--	hopcount, expiration, sleepmode, or snr.  Any unspecified parameters
--	will be assigned the defaults specified below.
--
--	The different parameters are:-
--		da		-- DA MAC address in the form 00:11:22:33:44:55
--		ra		-- RA MAC address in the form 00:11:22:33:44:55
--		metric		-- route metric (cost: smaller-metric routes are
--				   preferred, default is 0)
--		dir		-- direction (1 for direct, 0 for reverse,
--				   default is 1)
--		rate		-- data rate used for transmission to the RA,
--				   as specified for the rateadapt command,
--				   default is 3 (11Mbps)
--		ssn		-- Source Sequence Number (time at the RA for
--				   reverse routes.  Default is 0)
--		dsn		-- Destination Sequence Number (time at the DA
--				   for direct routes.  Default is 0)
--		hopcount	-- hop count (currently unused, default is 0)
--		ttl		-- TTL (Only used in reverse entries)
--		expiration	-- entry expiration (in ticks, where a tick is
--				   1024us, or ~ 1ms. Use 0 for an indefinite
--				   entry, default is 0)
--		sleepmode	-- RA's sleep mode (currently unused, default is
--				   0)
--		snr		-- SNR in the link to RA (currently unused,
--				   default is 0)
--
--	The command does not return anything.
--
--fwt_del
--	This command is used to remove an entry to the FWT table. The list of
--	parameters must follow the following structure:
--
--		iwpriv ethX fwt_del da ra [dir]
--
--	where the different parameters are:-
--		da		-- DA MAC address (in the form "00:11:22:33:44:55")
--		ra		-- RA MAC address (in the form "00:11:22:33:44:55")
--		dir		-- direction (1 for direct, 0 for reverse,
--				   default is 1)
--
--	The command does not return anything.
--
--fwt_lookup
--	This command is used to get the best route in the FWT table to a given
--	host. The only parameter is the MAC address of the host that is being
--	looked for.
--
--		iwpriv ethX fwt_lookup da
--
--	where:-
--		da		-- DA MAC address (in the form "00:11:22:33:44:55")
--
--	The command returns an output string identical to the one returned by
--	fwt_list described below.
--
--
--fwt_list
--	This command is used to list a route from the FWT table. The only
--	parameter is the index into the table. If you want to list all the
--	routes in a table, start with index=0, and keep listing until you get a
--	"(null)" string.  Note that the indicies may change as the fwt is
--	updated.  It is expected that most users will not use fwt_list directly,
--	but that a utility similar to the traditional route command will be used
--	to invoke fwt_list over and over.
--
--		iwpriv ethX fwt_list index
--
--	The output is a string of the following form:
--
--		da ra valid metric dir rate ssn dsn hopcount ttl expiration
--		sleepmode snr precursor
--
--	where the different fields are:-
--		da		-- DA MAC address (in the form "00:11:22:33:44:55")
--		ra		-- RA MAC address (in the form "00:11:22:33:44:55")
--		valid		-- whether the route is valid (0 if not valid)
--		metric		-- route metric (cost: smaller-metric routes are preferred)
--		dir		-- direction (1 for direct, 0 for reverse)
--		rate		-- data rate used for transmission to the RA,
--				   as specified for the rateadapt command
--		ssn		-- Source Sequence Number (time at the RA for reverse routes)
--		dsn		-- Destination Sequence Number (time at the DA for direct routes)
--		hopcount	-- hop count (currently unused)
--		ttl		-- TTL (only used in reverse entries)
--		expiration	-- entry expiration (in ticks, where a tick is 1024us, or ~ 1ms. Use 0 for an indefinite entry)
--		sleepmode	-- RA's sleep mode (currently unused)
--		snr		-- SNR in the link to RA (currently unused)
--		precursor	-- predecessor in direct routes
--
--fwt_list_route
--	This command is equivalent to fwt_list.
--
--fwt_list_neigh
--	This command is used to list a neighbor from the FWT table. The only
--	parameter is the neighbor ID. If you want to list all the neighbors in a
--	table, start with nid=0, and keep incrementing nid until you get a
--	"(null)" string.  Note that the nid from a fwt_list_route command can be
--	used as an input to this command.  Also note that this command is meant
--	mostly for debugging.  It is expected that users will use fwt_lookup.
--	One important reason for this is that the neighbor id may change as the
--	neighbor table is altered.
--
--		iwpriv ethX fwt_list_neigh nid
--
--	The output is a string of the following form:
--
--		ra sleepmode snr references
--
--	where the different fields are:-
--		ra		-- RA MAC address (in the form "00:11:22:33:44:55")
--		sleepmode	-- RA's sleep mode (currently unused)
--		snr		-- SNR in the link to RA (currently unused)
--		references	-- RA's reference counter
--
--fwt_reset
--	This command is used to reset the FWT table, getting rid of all the
--	entries. There are no input parameters.
--
--		iwpriv ethX fwt_reset
--
--	The command does not return anything.
--
--fwt_cleanup
--	This command is used to perform user-based garbage recollection. The
--	FWT table is checked, and all the entries that are expired or invalid
--	are cleaned. Note that this is exported to the driver for debugging
--	purposes, as garbage collection is also fired by the firmware when in
--	space problems. There are no input parameters.
--
--		iwpriv ethX fwt_cleanup
--
--	The command does returns the number of invalid/expired routes deleted.
--
--fwt_time
--	This command returns a card's internal time representation.  It is this
--	time that is used to represent the expiration times of FWT entries.  The
--	number is not consistent from card to card; it is simply a timer count.
--	The fwt_time command is used to inspect the timer so that expiration
--	times reported by fwt_list can be properly interpreted.
--
--		iwpriv ethX fwt_time
--
--mesh_get_ttl
--
--	The mesh ttl is the number of hops a mesh packet can traverse before it
--	is dropped.  This parameter is used to prevent infinite loops in the
--	mesh network.  The value returned by this function is the ttl assigned
--	to all mesh packets.  Currently there is no way to control the ttl on a
--	per packet or per socket basis.
--
--	iwpriv ethX mesh_get_ttl
--
--mesh_set_ttl ttl
--
--	Set the ttl.  The argument must be between 0 and 255.
--
--	iwpriv ethX mesh_set_ttl <ttl>
--
- =========================
- ETHTOOL
- =========================
-diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-index f67efa0..afd5617 100644
---- a/drivers/net/wireless/libertas/assoc.c
-+++ b/drivers/net/wireless/libertas/assoc.c
-@@ -323,6 +323,8 @@ static int assoc_helper_secinfo(wlan_private *priv,
- {
- 	wlan_adapter *adapter = priv->adapter;
- 	int ret = 0;
-+	u32 do_wpa;
-+	u32 rsn = 0;
- 
- 	lbs_deb_enter(LBS_DEB_ASSOC);
- 
-@@ -333,12 +335,34 @@ static int assoc_helper_secinfo(wlan_private *priv,
- 	if (ret)
- 		goto out;
- 
--	/* enable/disable RSN */
-+	/* If RSN is already enabled, don't try to enable it again, since
-+	 * ENABLE_RSN resets internal state machines and will clobber the
-+	 * 4-way WPA handshake.
-+	 */
-+
-+	/* Get RSN enabled/disabled */
- 	ret = libertas_prepare_and_send_command(priv,
- 				    cmd_802_11_enable_rsn,
- 				    cmd_act_set,
- 				    cmd_option_waitforrsp,
--				    0, assoc_req);
-+				    0, &rsn);
-+	if (ret) {
-+		lbs_deb_assoc("Failed to get RSN status: %d", ret);
-+		goto out;
-+	}
-+
-+	/* Don't re-enable RSN if it's already enabled */
-+	do_wpa = (assoc_req->secinfo.WPAenabled || assoc_req->secinfo.WPA2enabled);
-+	if (do_wpa == rsn)
-+		goto out;
-+
-+	/* Set RSN enabled/disabled */
-+	rsn = do_wpa;
-+	ret = libertas_prepare_and_send_command(priv,
-+				    cmd_802_11_enable_rsn,
-+				    cmd_act_set,
-+				    cmd_option_waitforrsp,
-+				    0, &rsn);
- 
- out:
- 	lbs_deb_leave_args(LBS_DEB_ASSOC, "ret %d", ret);
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 124e029..13f6528 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -228,17 +228,19 @@ static int wlan_cmd_802_11_enable_rsn(wlan_private * priv,
- 				      void * pdata_buf)
- {
- 	struct cmd_ds_802_11_enable_rsn *penableRSN = &cmd->params.enbrsn;
--	struct assoc_request * assoc_req = pdata_buf;
-+	u32 * enable = pdata_buf;
- 
- 	lbs_deb_enter(LBS_DEB_CMD);
- 
- 	cmd->command = cpu_to_le16(cmd_802_11_enable_rsn);
- 	cmd->size = cpu_to_le16(sizeof(*penableRSN) + S_DS_GEN);
- 	penableRSN->action = cpu_to_le16(cmd_action);
--	if (assoc_req->secinfo.WPAenabled || assoc_req->secinfo.WPA2enabled) {
--		penableRSN->enable = cpu_to_le16(cmd_enable_rsn);
--	} else {
--		penableRSN->enable = cpu_to_le16(cmd_disable_rsn);
-+
-+	if (cmd_action == cmd_act_set) {
-+		if (*enable)
-+			penableRSN->enable = cpu_to_le16(cmd_enable_rsn);
-+		else
-+			penableRSN->enable = cpu_to_le16(cmd_enable_rsn);
- 	}
- 
- 	lbs_deb_leave(LBS_DEB_CMD);
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index 0c3b9a5..6ac0d47 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -537,6 +537,24 @@ static int wlan_ret_get_log(wlan_private * priv,
- 	return 0;
- }
- 
-+static int libertas_ret_802_11_enable_rsn(wlan_private * priv,
-+                                          struct cmd_ds_command *resp)
-+{
-+	struct cmd_ds_802_11_enable_rsn *enable_rsn = &resp->params.enbrsn;
-+	wlan_adapter *adapter = priv->adapter;
-+	u32 * pdata_buf = adapter->cur_cmd->pdata_buf;
-+
-+	lbs_deb_enter(LBS_DEB_CMD);
-+
-+	if (enable_rsn->action == cpu_to_le16(cmd_act_get)) {
-+		if (pdata_buf)
-+			*pdata_buf = (u32) le16_to_cpu(enable_rsn->enable);
-+	}
-+
-+	lbs_deb_enter(LBS_DEB_CMD);
-+	return 0;
-+}
-+
- static inline int handle_cmd_response(u16 respcmd,
- 				      struct cmd_ds_command *resp,
- 				      wlan_private *priv)
-@@ -610,7 +628,10 @@ static inline int handle_cmd_response(u16 respcmd,
- 	case cmd_ret_802_11_authenticate:
- 	case cmd_ret_802_11_radio_control:
- 	case cmd_ret_802_11_beacon_stop:
-+		break;
-+
- 	case cmd_ret_802_11_enable_rsn:
-+		ret = libertas_ret_802_11_enable_rsn(priv, resp);
- 		break;
- 
- 	case cmd_ret_802_11_data_rate:
-diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
-index 3acf939..09b898f 100644
---- a/drivers/net/wireless/libertas/hostcmd.h
-+++ b/drivers/net/wireless/libertas/hostcmd.h
-@@ -503,7 +503,7 @@ struct cmd_ds_802_11_ad_hoc_join {
- struct cmd_ds_802_11_enable_rsn {
- 	__le16 action;
- 	__le16 enable;
--};
-+} __attribute__ ((packed));
- 
- struct MrvlIEtype_keyParamSet {
- 	/* type ID */
-diff --git a/drivers/net/wireless/libertas/ioctl.c b/drivers/net/wireless/libertas/ioctl.c
-deleted file mode 100644
-index f410815..0000000
---- a/drivers/net/wireless/libertas/ioctl.c
-+++ /dev/null
-@@ -1,1081 +0,0 @@
--/**
--  * This file contains ioctl functions
--  */
--
--#include <linux/ctype.h>
--#include <linux/delay.h>
--#include <linux/if.h>
--#include <linux/if_arp.h>
--#include <linux/wireless.h>
--
--#include <net/iw_handler.h>
--#include <net/ieee80211.h>
--
--#include "host.h"
--#include "radiotap.h"
--#include "decl.h"
--#include "defs.h"
--#include "dev.h"
--#include "join.h"
--#include "wext.h"
--
--#define MAX_SCAN_CELL_SIZE      (IW_EV_ADDR_LEN + \
--				IW_ESSID_MAX_SIZE + \
--				IW_EV_UINT_LEN + IW_EV_FREQ_LEN + \
--				IW_EV_QUAL_LEN + IW_ESSID_MAX_SIZE + \
--				IW_EV_PARAM_LEN + 40)	/* 40 for WPAIE */
--
--#define WAIT_FOR_SCAN_RRESULT_MAX_TIME (10 * HZ)
--
--static int wlan_set_region(wlan_private * priv, u16 region_code)
--{
--	int i;
--	int ret = 0;
--
--	for (i = 0; i < MRVDRV_MAX_REGION_CODE; i++) {
--		// use the region code to search for the index
--		if (region_code == libertas_region_code_to_index[i]) {
--			priv->adapter->regiontableindex = (u16) i;
--			priv->adapter->regioncode = region_code;
--			break;
--		}
--	}
--
--	// if it's unidentified region code
--	if (i >= MRVDRV_MAX_REGION_CODE) {
--		lbs_deb_ioctl("region Code not identified\n");
--		ret = -1;
--		goto done;
--	}
--
--	if (libertas_set_regiontable(priv, priv->adapter->regioncode, 0)) {
--		ret = -EINVAL;
--	}
--
--done:
--	lbs_deb_leave_args(LBS_DEB_IOCTL, "ret %d", ret);
--	return ret;
--}
--
--static inline int hex2int(char c)
--{
--	if (c >= '0' && c <= '9')
--		return (c - '0');
--	if (c >= 'a' && c <= 'f')
--		return (c - 'a' + 10);
--	if (c >= 'A' && c <= 'F')
--		return (c - 'A' + 10);
--	return -1;
--}
--
--/* Convert a string representation of a MAC address ("xx:xx:xx:xx:xx:xx")
--   into binary format (6 bytes).
--
--   This function expects that each byte is represented with 2 characters
--   (e.g., 11:2:11:11:11:11 is invalid)
--
-- */
--static char *eth_str2addr(char *ethstr, u8 * addr)
--{
--	int i, val, val2;
--	char *pos = ethstr;
--
--	/* get rid of initial blanks */
--	while (*pos == ' ' || *pos == '\t')
--		++pos;
--
--	for (i = 0; i < 6; i++) {
--		val = hex2int(*pos++);
--		if (val < 0)
--			return NULL;
--		val2 = hex2int(*pos++);
--		if (val2 < 0)
--			return NULL;
--		addr[i] = (val * 16 + val2) & 0xff;
--
--		if (i < 5 && *pos++ != ':')
--			return NULL;
--	}
--	return pos;
--}
--
--/* this writes xx:xx:xx:xx:xx:xx into ethstr
--   (ethstr must have space for 18 chars) */
--static int eth_addr2str(u8 * addr, char *ethstr)
--{
--	int i;
--	char *pos = ethstr;
--
--	for (i = 0; i < 6; i++) {
--		sprintf(pos, "%02x", addr[i] & 0xff);
--		pos += 2;
--		if (i < 5)
--			*pos++ = ':';
--	}
--	return 17;
--}
--
--/**
-- *  @brief          Add an entry to the BT table
-- *  @param priv     A pointer to wlan_private structure
-- *  @param req      A pointer to ifreq structure
-- *  @return         0 --success, otherwise fail
-- */
--static int wlan_bt_add_ioctl(wlan_private * priv, struct ifreq *req)
--{
--	struct iwreq *wrq = (struct iwreq *)req;
--	char ethaddrs_str[18];
--	char *pos;
--	u8 ethaddr[ETH_ALEN];
--	int ret;
--
--	lbs_deb_enter(LBS_DEB_IOCTL);
--
--	if (copy_from_user(ethaddrs_str, wrq->u.data.pointer,
--			   sizeof(ethaddrs_str)))
--		return -EFAULT;
--
--	if ((pos = eth_str2addr(ethaddrs_str, ethaddr)) == NULL) {
--		lbs_pr_info("BT_ADD: Invalid MAC address\n");
--		return -EINVAL;
--	}
--
--	lbs_deb_ioctl("BT: adding %s\n", ethaddrs_str);
--	ret = libertas_prepare_and_send_command(priv, cmd_bt_access,
--				      cmd_act_bt_access_add,
--				      cmd_option_waitforrsp, 0, ethaddr);
--	lbs_deb_leave_args(LBS_DEB_IOCTL, "ret %d", ret);
--	return ret;
--}
--
--/**
-- *  @brief          Delete an entry from the BT table
-- *  @param priv     A pointer to wlan_private structure
-- *  @param req      A pointer to ifreq structure
-- *  @return         0 --success, otherwise fail
-- */
--static int wlan_bt_del_ioctl(wlan_private * priv, struct ifreq *req)
--{
--	struct iwreq *wrq = (struct iwreq *)req;
--	char ethaddrs_str[18];
--	u8 ethaddr[ETH_ALEN];
--	char *pos;
--
--	lbs_deb_enter(LBS_DEB_IOCTL);
--
--	if (copy_from_user(ethaddrs_str, wrq->u.data.pointer,
--			   sizeof(ethaddrs_str)))
--		return -EFAULT;
--
--	if ((pos = eth_str2addr(ethaddrs_str, ethaddr)) == NULL) {
--		lbs_pr_info("Invalid MAC address\n");
--		return -EINVAL;
--	}
--
--	lbs_deb_ioctl("BT: deleting %s\n", ethaddrs_str);
--
--	return (libertas_prepare_and_send_command(priv,
--				      cmd_bt_access,
--				      cmd_act_bt_access_del,
--				      cmd_option_waitforrsp, 0, ethaddr));
--
--	lbs_deb_leave(LBS_DEB_IOCTL);
--	return 0;
--}
--
--/**
-- *  @brief          Reset all entries from the BT table
-- *  @param priv     A pointer to wlan_private structure
-- *  @return         0 --success, otherwise fail
-- */
--static int wlan_bt_reset_ioctl(wlan_private * priv)
--{
--	lbs_deb_enter(LBS_DEB_IOCTL);
--
--	lbs_pr_alert( "BT: resetting\n");
--
--	return (libertas_prepare_and_send_command(priv,
--				      cmd_bt_access,
--				      cmd_act_bt_access_reset,
--				      cmd_option_waitforrsp, 0, NULL));
--
--	lbs_deb_leave(LBS_DEB_IOCTL);
--	return 0;
--}
--
--/**
-- *  @brief          List an entry from the BT table
-- *  @param priv     A pointer to wlan_private structure
-- *  @param req      A pointer to ifreq structure
-- *  @return         0 --success, otherwise fail
-- */
--static int wlan_bt_list_ioctl(wlan_private * priv, struct ifreq *req)
--{
--	int pos;
--	char *addr1;
--	struct iwreq *wrq = (struct iwreq *)req;
--	/* used to pass id and store the bt entry returned by the FW */
--	union {
--		u32 id;
--		char addr1addr2[2 * ETH_ALEN];
--	} param;
--	static char outstr[64];
--	char *pbuf = outstr;
--	int ret;
--
--	lbs_deb_enter(LBS_DEB_IOCTL);
--
--	if (copy_from_user(outstr, wrq->u.data.pointer, sizeof(outstr))) {
--		lbs_deb_ioctl("Copy from user failed\n");
--		return -1;
--	}
--	param.id = simple_strtoul(outstr, NULL, 10);
--	pos = sprintf(pbuf, "%d: ", param.id);
--	pbuf += pos;
--
--	ret = libertas_prepare_and_send_command(priv, cmd_bt_access,
--				    cmd_act_bt_access_list,
--				    cmd_option_waitforrsp, 0,
--				    (char *)&param);
--
--	if (ret == 0) {
--		addr1 = param.addr1addr2;
--
--		pos = sprintf(pbuf, "BT includes node ");
--		pbuf += pos;
--		pos = eth_addr2str(addr1, pbuf);
--		pbuf += pos;
--	} else {
--		sprintf(pbuf, "(null)");
--		pbuf += pos;
--	}
--
--	wrq->u.data.length = strlen(outstr);
--	if (copy_to_user(wrq->u.data.pointer, (char *)outstr,
--			 wrq->u.data.length)) {
--		lbs_deb_ioctl("BT_LIST: Copy to user failed!\n");
--		return -EFAULT;
--	}
--
--	lbs_deb_leave(LBS_DEB_IOCTL);
--	return 0 ;
--}
--
--/**
-- *  @brief          Sets inverted state of blacklist (non-zero if inverted)
-- *  @param priv     A pointer to wlan_private structure
-- *  @param req      A pointer to ifreq structure
-- *  @return         0 --success, otherwise fail
-- */
--static int wlan_bt_set_invert_ioctl(wlan_private * priv, struct ifreq *req)
--{
--	int ret;
--	struct iwreq *wrq = (struct iwreq *)req;
--	union {
--		u32 id;
--		char addr1addr2[2 * ETH_ALEN];
--	} param;
--
--	lbs_deb_enter(LBS_DEB_IOCTL);
--
--	param.id = SUBCMD_DATA(wrq) ;
--	ret = libertas_prepare_and_send_command(priv, cmd_bt_access,
--				    cmd_act_bt_access_set_invert,
--				    cmd_option_waitforrsp, 0,
--				    (char *)&param);
--	if (ret != 0)
--		return -EFAULT;
--	lbs_deb_leave(LBS_DEB_IOCTL);
--	return 0;
--}
--
--/**
-- *  @brief          Gets inverted state of blacklist (non-zero if inverted)
-- *  @param priv     A pointer to wlan_private structure
-- *  @param req      A pointer to ifreq structure
-- *  @return         0 --success, otherwise fail
-- */
--static int wlan_bt_get_invert_ioctl(wlan_private * priv, struct ifreq *req)
--{
--	struct iwreq *wrq = (struct iwreq *)req;
--	int ret;
--	union {
--		u32 id;
--		char addr1addr2[2 * ETH_ALEN];
--	} param;
--
--	lbs_deb_enter(LBS_DEB_IOCTL);
--
--	ret = libertas_prepare_and_send_command(priv, cmd_bt_access,
--				    cmd_act_bt_access_get_invert,
--				    cmd_option_waitforrsp, 0,
--				    (char *)&param);
--
--	if (ret == 0)
--		wrq->u.param.value = le32_to_cpu(param.id);
--	else
--		return -EFAULT;
--
--	lbs_deb_leave(LBS_DEB_IOCTL);
--	return 0;
--}
--
--/**
-- *  @brief          Find the next parameter in an input string
-- *  @param ptr      A pointer to the input parameter string
-- *  @return         A pointer to the next parameter, or 0 if no parameters left.
-- */
--static char * next_param(char * ptr)
--{
--	if (!ptr) return NULL;
--	while (*ptr == ' ' || *ptr == '\t') ++ptr;
--	return (*ptr == '\0') ? NULL : ptr;
--}
--
--/**
-- *  @brief          Add an entry to the FWT table
-- *  @param priv     A pointer to wlan_private structure
-- *  @param req      A pointer to ifreq structure
-- *  @return         0 --success, otherwise fail
-- */
--static int wlan_fwt_add_ioctl(wlan_private * priv, struct ifreq *req)
--{
--	struct iwreq *wrq = (struct iwreq *)req;
--	char in_str[128];
--	static struct cmd_ds_fwt_access fwt_access;
--	char *ptr;
--	int ret;
--
--	lbs_deb_enter(LBS_DEB_IOCTL);
--
--	if (copy_from_user(in_str, wrq->u.data.pointer, sizeof(in_str)))
--		return -EFAULT;
--
--	if ((ptr = eth_str2addr(in_str, fwt_access.da)) == NULL) {
--		lbs_pr_alert( "FWT_ADD: Invalid MAC address 1\n");
--		return -EINVAL;
--	}
--
--	if ((ptr = eth_str2addr(ptr, fwt_access.ra)) == NULL) {
--		lbs_pr_alert( "FWT_ADD: Invalid MAC address 2\n");
--		return -EINVAL;
--	}
--
--	if ((ptr = next_param(ptr)))
--		fwt_access.metric =
--			cpu_to_le32(simple_strtoul(ptr, &ptr, 10));
--	else
--		fwt_access.metric = cpu_to_le32(FWT_DEFAULT_METRIC);
--
--	if ((ptr = next_param(ptr)))
--		fwt_access.dir = (u8)simple_strtoul(ptr, &ptr, 10);
--	else
--		fwt_access.dir = FWT_DEFAULT_DIR;
--
--	if ((ptr = next_param(ptr)))
--		fwt_access.rate = (u8) simple_strtoul(ptr, &ptr, 10);
--	else
--		fwt_access.rate = FWT_DEFAULT_RATE;
--
--	if ((ptr = next_param(ptr)))
--		fwt_access.ssn =
--			cpu_to_le32(simple_strtoul(ptr, &ptr, 10));
--	else
--		fwt_access.ssn = cpu_to_le32(FWT_DEFAULT_SSN);
--
--	if ((ptr = next_param(ptr)))
--		fwt_access.dsn =
--			cpu_to_le32(simple_strtoul(ptr, &ptr, 10));
--	else
--		fwt_access.dsn = cpu_to_le32(FWT_DEFAULT_DSN);
--
--	if ((ptr = next_param(ptr)))
--		fwt_access.hopcount = simple_strtoul(ptr, &ptr, 10);
--	else
--		fwt_access.hopcount = FWT_DEFAULT_HOPCOUNT;
--
--	if ((ptr = next_param(ptr)))
--		fwt_access.ttl = simple_strtoul(ptr, &ptr, 10);
--	else
--		fwt_access.ttl = FWT_DEFAULT_TTL;
--
--	if ((ptr = next_param(ptr)))
--		fwt_access.expiration =
--			cpu_to_le32(simple_strtoul(ptr, &ptr, 10));
--	else
--		fwt_access.expiration = cpu_to_le32(FWT_DEFAULT_EXPIRATION);
--
--	if ((ptr = next_param(ptr)))
--		fwt_access.sleepmode = (u8)simple_strtoul(ptr, &ptr, 10);
--	else
--		fwt_access.sleepmode = FWT_DEFAULT_SLEEPMODE;
--
--	if ((ptr = next_param(ptr)))
--		fwt_access.snr =
--			cpu_to_le32(simple_strtoul(ptr, &ptr, 10));
--	else
--		fwt_access.snr = cpu_to_le32(FWT_DEFAULT_SNR);
--
--#ifdef DEBUG
--	{
--		char ethaddr1_str[18], ethaddr2_str[18];
--		eth_addr2str(fwt_access.da, ethaddr1_str);
--		eth_addr2str(fwt_access.ra, ethaddr2_str);
--		lbs_deb_ioctl("FWT_ADD: adding (da:%s,%i,ra:%s)\n", ethaddr1_str,
--		       fwt_access.dir, ethaddr2_str);
--		lbs_deb_ioctl("FWT_ADD: ssn:%u dsn:%u met:%u hop:%u ttl:%u exp:%u slp:%u snr:%u\n",
--		       fwt_access.ssn, fwt_access.dsn, fwt_access.metric,
--		       fwt_access.hopcount, fwt_access.ttl, fwt_access.expiration,
--		       fwt_access.sleepmode, fwt_access.snr);
--	}
--#endif
--
--	ret = libertas_prepare_and_send_command(priv, cmd_fwt_access,
--						cmd_act_fwt_access_add,
--						cmd_option_waitforrsp, 0,
--						(void *)&fwt_access);
--
--	lbs_deb_leave_args(LBS_DEB_IOCTL, "ret %d", ret);
--	return ret;
--}
--
--/**
-- *  @brief          Delete an entry from the FWT table
-- *  @param priv     A pointer to wlan_private structure
-- *  @param req      A pointer to ifreq structure
-- *  @return         0 --success, otherwise fail
-- */
--static int wlan_fwt_del_ioctl(wlan_private * priv, struct ifreq *req)
--{
--	struct iwreq *wrq = (struct iwreq *)req;
--	char in_str[64];
--	static struct cmd_ds_fwt_access fwt_access;
--	char *ptr;
--	int ret;
--
--	lbs_deb_enter(LBS_DEB_IOCTL);
--
--	if (copy_from_user(in_str, wrq->u.data.pointer, sizeof(in_str)))
--		return -EFAULT;
--
--	if ((ptr = eth_str2addr(in_str, fwt_access.da)) == NULL) {
--		lbs_pr_alert( "FWT_DEL: Invalid MAC address 1\n");
--		return -EINVAL;
--	}
--
--	if ((ptr = eth_str2addr(ptr, fwt_access.ra)) == NULL) {
--		lbs_pr_alert( "FWT_DEL: Invalid MAC address 2\n");
--		return -EINVAL;
--	}
--
--	if ((ptr = next_param(ptr)))
--		fwt_access.dir = (u8)simple_strtoul(ptr, &ptr, 10);
--	else
--		fwt_access.dir = FWT_DEFAULT_DIR;
--
--#ifdef DEBUG
--	{
--		char ethaddr1_str[18], ethaddr2_str[18];
--		lbs_deb_ioctl("FWT_DEL: line is %s\n", in_str);
--		eth_addr2str(fwt_access.da, ethaddr1_str);
--		eth_addr2str(fwt_access.ra, ethaddr2_str);
--		lbs_deb_ioctl("FWT_DEL: removing (da:%s,ra:%s,dir:%d)\n", ethaddr1_str,
--		       ethaddr2_str, fwt_access.dir);
--	}
--#endif
--
--	ret = libertas_prepare_and_send_command(priv,
--						cmd_fwt_access,
--						cmd_act_fwt_access_del,
--						cmd_option_waitforrsp, 0,
--						(void *)&fwt_access);
--	lbs_deb_leave_args(LBS_DEB_IOCTL, "ret %d", ret);
--	return ret;
--}
--
--
--/**
-- *  @brief             Print route parameters
-- *  @param fwt_access  struct cmd_ds_fwt_access with route info
-- *  @param buf         destination buffer for route info
-- */
--static void print_route(struct cmd_ds_fwt_access fwt_access, char *buf)
--{
--	buf += sprintf(buf, " ");
--	buf += eth_addr2str(fwt_access.da, buf);
--	buf += sprintf(buf, " ");
--	buf += eth_addr2str(fwt_access.ra, buf);
--	buf += sprintf(buf, " %u", fwt_access.valid);
--	buf += sprintf(buf, " %u", le32_to_cpu(fwt_access.metric));
--	buf += sprintf(buf, " %u", fwt_access.dir);
--	buf += sprintf(buf, " %u", fwt_access.rate);
--	buf += sprintf(buf, " %u", le32_to_cpu(fwt_access.ssn));
--	buf += sprintf(buf, " %u", le32_to_cpu(fwt_access.dsn));
--	buf += sprintf(buf, " %u", fwt_access.hopcount);
--	buf += sprintf(buf, " %u", fwt_access.ttl);
--	buf += sprintf(buf, " %u", le32_to_cpu(fwt_access.expiration));
--	buf += sprintf(buf, " %u", fwt_access.sleepmode);
--	buf += sprintf(buf, " %u ", le32_to_cpu(fwt_access.snr));
--	buf += eth_addr2str(fwt_access.prec, buf);
--}
--
--/**
-- *  @brief          Lookup an entry in the FWT table
-- *  @param priv     A pointer to wlan_private structure
-- *  @param req      A pointer to ifreq structure
-- *  @return         0 --success, otherwise fail
-- */
--static int wlan_fwt_lookup_ioctl(wlan_private * priv, struct ifreq *req)
--{
--	struct iwreq *wrq = (struct iwreq *)req;
--	char in_str[64];
--	char *ptr;
--	static struct cmd_ds_fwt_access fwt_access;
--	static char out_str[128];
--	int ret;
--
--	lbs_deb_enter(LBS_DEB_IOCTL);
--
--	if (copy_from_user(in_str, wrq->u.data.pointer, sizeof(in_str)))
--		return -EFAULT;
--
--	if ((ptr = eth_str2addr(in_str, fwt_access.da)) == NULL) {
--		lbs_pr_alert( "FWT_LOOKUP: Invalid MAC address\n");
--		return -EINVAL;
--	}
--
--#ifdef DEBUG
--	{
--		char ethaddr1_str[18];
--		lbs_deb_ioctl("FWT_LOOKUP: line is %s\n", in_str);
--		eth_addr2str(fwt_access.da, ethaddr1_str);
--		lbs_deb_ioctl("FWT_LOOKUP: looking for (da:%s)\n", ethaddr1_str);
--	}
--#endif
--
--	ret = libertas_prepare_and_send_command(priv,
--						cmd_fwt_access,
--						cmd_act_fwt_access_lookup,
--						cmd_option_waitforrsp, 0,
--						(void *)&fwt_access);
--
--	if (ret == 0)
--		print_route(fwt_access, out_str);
--	else
--		sprintf(out_str, "(null)");
--
--	wrq->u.data.length = strlen(out_str);
--	if (copy_to_user(wrq->u.data.pointer, (char *)out_str,
--			 wrq->u.data.length)) {
--		lbs_deb_ioctl("FWT_LOOKUP: Copy to user failed!\n");
--		return -EFAULT;
--	}
--
--	lbs_deb_leave(LBS_DEB_IOCTL);
--	return 0;
--}
--
--/**
-- *  @brief          Reset all entries from the FWT table
-- *  @param priv     A pointer to wlan_private structure
-- *  @return         0 --success, otherwise fail
-- */
--static int wlan_fwt_reset_ioctl(wlan_private * priv)
--{
--	lbs_deb_ioctl("FWT: resetting\n");
--
--	return (libertas_prepare_and_send_command(priv,
--				      cmd_fwt_access,
--				      cmd_act_fwt_access_reset,
--				      cmd_option_waitforrsp, 0, NULL));
--}
--
--/**
-- *  @brief          List an entry from the FWT table
-- *  @param priv     A pointer to wlan_private structure
-- *  @param req      A pointer to ifreq structure
-- *  @return         0 --success, otherwise fail
-- */
--static int wlan_fwt_list_ioctl(wlan_private * priv, struct ifreq *req)
--{
--	struct iwreq *wrq = (struct iwreq *)req;
--	char in_str[8];
--	static struct cmd_ds_fwt_access fwt_access;
--	char *ptr = in_str;
--	static char out_str[128];
--	char *pbuf = out_str;
--	int ret = 0;
--
--	lbs_deb_enter(LBS_DEB_IOCTL);
--
--	if (copy_from_user(in_str, wrq->u.data.pointer, sizeof(in_str))) {
--		ret = -EFAULT;
--		goto out;
--	}
--
--	fwt_access.id = cpu_to_le32(simple_strtoul(ptr, &ptr, 10));
--
--#ifdef DEBUG
--	{
--		lbs_deb_ioctl("FWT_LIST: line is %s\n", in_str);
--		lbs_deb_ioctl("FWT_LIST: listing id:%i\n", le32_to_cpu(fwt_access.id));
--	}
--#endif
--
--	ret = libertas_prepare_and_send_command(priv, cmd_fwt_access,
--				    cmd_act_fwt_access_list,
--				    cmd_option_waitforrsp, 0, (void *)&fwt_access);
--
--	if (ret == 0)
--		print_route(fwt_access, pbuf);
--	else
--		pbuf += sprintf(pbuf, " (null)");
--
--	wrq->u.data.length = strlen(out_str);
--	if (copy_to_user(wrq->u.data.pointer, (char *)out_str,
--			 wrq->u.data.length)) {
--		lbs_deb_ioctl("FWT_LIST: Copy to user failed!\n");
--		ret = -EFAULT;
--		goto out;
--	}
--
--	ret = 0;
--
--out:
--	lbs_deb_leave(LBS_DEB_IOCTL);
--	return ret;
--}
--
--/**
-- *  @brief          List an entry from the FRT table
-- *  @param priv     A pointer to wlan_private structure
-- *  @param req      A pointer to ifreq structure
-- *  @return         0 --success, otherwise fail
-- */
--static int wlan_fwt_list_route_ioctl(wlan_private * priv, struct ifreq *req)
--{
--	struct iwreq *wrq = (struct iwreq *)req;
--	char in_str[64];
--	static struct cmd_ds_fwt_access fwt_access;
--	char *ptr = in_str;
--	static char out_str[128];
--	char *pbuf = out_str;
--	int ret;
--
--	lbs_deb_enter(LBS_DEB_IOCTL);
--
--	if (copy_from_user(in_str, wrq->u.data.pointer, sizeof(in_str)))
--		return -EFAULT;
--
--	fwt_access.id = cpu_to_le32(simple_strtoul(ptr, &ptr, 10));
--
--#ifdef DEBUG
--	{
--		lbs_deb_ioctl("FWT_LIST_ROUTE: line is %s\n", in_str);
--		lbs_deb_ioctl("FWT_LIST_ROUTE: listing id:%i\n", le32_to_cpu(fwt_access.id));
--	}
--#endif
--
--	ret = libertas_prepare_and_send_command(priv, cmd_fwt_access,
--				    cmd_act_fwt_access_list_route,
--				    cmd_option_waitforrsp, 0, (void *)&fwt_access);
--
--	if (ret == 0) {
--		print_route(fwt_access, pbuf);
--	} else
--		pbuf += sprintf(pbuf, " (null)");
--
--	wrq->u.data.length = strlen(out_str);
--	if (copy_to_user(wrq->u.data.pointer, (char *)out_str,
--			 wrq->u.data.length)) {
--		lbs_deb_ioctl("FWT_LIST_ROUTE: Copy to user failed!\n");
--		return -EFAULT;
--	}
--
--	lbs_deb_leave(LBS_DEB_IOCTL);
--	return 0;
--}
--
--/**
-- *  @brief          List an entry from the FNT table
-- *  @param priv     A pointer to wlan_private structure
-- *  @param req      A pointer to ifreq structure
-- *  @return         0 --success, otherwise fail
-- */
--static int wlan_fwt_list_neighbor_ioctl(wlan_private * priv, struct ifreq *req)
--{
--	struct iwreq *wrq = (struct iwreq *)req;
--	char in_str[8];
--	static struct cmd_ds_fwt_access fwt_access;
--	char *ptr = in_str;
--	static char out_str[128];
--	char *pbuf = out_str;
--	int ret;
--
--	lbs_deb_enter(LBS_DEB_IOCTL);
--
--	if (copy_from_user(in_str, wrq->u.data.pointer, sizeof(in_str)))
--		return -EFAULT;
--
--	memset(&fwt_access, 0, sizeof(fwt_access));
--	fwt_access.id = cpu_to_le32(simple_strtoul(ptr, &ptr, 10));
--
--#ifdef DEBUG
--	{
--		lbs_deb_ioctl("FWT_LIST_NEIGHBOR: line is %s\n", in_str);
--		lbs_deb_ioctl("FWT_LIST_NEIGHBOR: listing id:%i\n", le32_to_cpu(fwt_access.id));
--	}
--#endif
--
--	ret = libertas_prepare_and_send_command(priv, cmd_fwt_access,
--				    cmd_act_fwt_access_list_neighbor,
--				    cmd_option_waitforrsp, 0,
--				    (void *)&fwt_access);
--
--	if (ret == 0) {
--		pbuf += sprintf(pbuf, " ra ");
--		pbuf += eth_addr2str(fwt_access.ra, pbuf);
--		pbuf += sprintf(pbuf, "  slp %u", fwt_access.sleepmode);
--		pbuf += sprintf(pbuf, "  snr %u", le32_to_cpu(fwt_access.snr));
--		pbuf += sprintf(pbuf, "  ref %u", le32_to_cpu(fwt_access.references));
--	} else
--		pbuf += sprintf(pbuf, " (null)");
--
--	wrq->u.data.length = strlen(out_str);
--	if (copy_to_user(wrq->u.data.pointer, (char *)out_str,
--			 wrq->u.data.length)) {
--		lbs_deb_ioctl("FWT_LIST_NEIGHBOR: Copy to user failed!\n");
--		return -EFAULT;
--	}
--
--	lbs_deb_leave(LBS_DEB_IOCTL);
--	return 0;
--}
--
--/**
-- *  @brief          Cleans up the route (FRT) and neighbor (FNT) tables
-- *                  (Garbage Collection)
-- *  @param priv     A pointer to wlan_private structure
-- *  @param req      A pointer to ifreq structure
-- *  @return         0 --success, otherwise fail
-- */
--static int wlan_fwt_cleanup_ioctl(wlan_private * priv, struct ifreq *req)
--{
--	struct iwreq *wrq = (struct iwreq *)req;
--	static struct cmd_ds_fwt_access fwt_access;
--	int ret;
--
--	lbs_deb_enter(LBS_DEB_IOCTL);
--
--	lbs_deb_ioctl("FWT: cleaning up\n");
--
--	memset(&fwt_access, 0, sizeof(fwt_access));
--
--	ret = libertas_prepare_and_send_command(priv, cmd_fwt_access,
--				    cmd_act_fwt_access_cleanup,
--				    cmd_option_waitforrsp, 0,
--				    (void *)&fwt_access);
--
--	if (ret == 0)
--		wrq->u.param.value = le32_to_cpu(fwt_access.references);
--	else
--		return -EFAULT;
--
--	lbs_deb_leave(LBS_DEB_IOCTL);
--	return 0;
--}
--
--/**
-- *  @brief          Gets firmware internal time (debug purposes)
-- *  @param priv     A pointer to wlan_private structure
-- *  @param req      A pointer to ifreq structure
-- *  @return         0 --success, otherwise fail
-- */
--static int wlan_fwt_time_ioctl(wlan_private * priv, struct ifreq *req)
--{
--	struct iwreq *wrq = (struct iwreq *)req;
--	static struct cmd_ds_fwt_access fwt_access;
--	int ret;
--
--	lbs_deb_enter(LBS_DEB_IOCTL);
--
--	lbs_deb_ioctl("FWT: getting time\n");
--
--	memset(&fwt_access, 0, sizeof(fwt_access));
--
--	ret = libertas_prepare_and_send_command(priv, cmd_fwt_access,
--				    cmd_act_fwt_access_time,
--				    cmd_option_waitforrsp, 0,
--				    (void *)&fwt_access);
--
--	if (ret == 0)
--		wrq->u.param.value = le32_to_cpu(fwt_access.references);
--	else
--		return -EFAULT;
--
--	lbs_deb_leave(LBS_DEB_IOCTL);
--	return 0;
--}
--
--/**
-- *  @brief          Gets mesh ttl from firmware
-- *  @param priv     A pointer to wlan_private structure
-- *  @param req      A pointer to ifreq structure
-- *  @return         0 --success, otherwise fail
-- */
--static int wlan_mesh_get_ttl_ioctl(wlan_private * priv, struct ifreq *req)
--{
--	struct iwreq *wrq = (struct iwreq *)req;
--	struct cmd_ds_mesh_access mesh_access;
--	int ret;
--
--	lbs_deb_enter(LBS_DEB_IOCTL);
--
--	memset(&mesh_access, 0, sizeof(mesh_access));
--
--	ret = libertas_prepare_and_send_command(priv, cmd_mesh_access,
--				    cmd_act_mesh_get_ttl,
--				    cmd_option_waitforrsp, 0,
--				    (void *)&mesh_access);
--
--	if (ret == 0)
--		wrq->u.param.value = le32_to_cpu(mesh_access.data[0]);
--	else
--		return -EFAULT;
--
--	lbs_deb_leave(LBS_DEB_IOCTL);
--	return 0;
--}
--
--/**
-- *  @brief          Gets mesh ttl from firmware
-- *  @param priv     A pointer to wlan_private structure
-- *  @param ttl      New ttl value
-- *  @return         0 --success, otherwise fail
-- */
--static int wlan_mesh_set_ttl_ioctl(wlan_private * priv, int ttl)
--{
--	struct cmd_ds_mesh_access mesh_access;
--	int ret;
--
--	lbs_deb_enter(LBS_DEB_IOCTL);
--
--	if( (ttl > 0xff) || (ttl < 0) )
--		return -EINVAL;
--
--	memset(&mesh_access, 0, sizeof(mesh_access));
--	mesh_access.data[0] = cpu_to_le32(ttl);
--
--	ret = libertas_prepare_and_send_command(priv, cmd_mesh_access,
--						cmd_act_mesh_set_ttl,
--						cmd_option_waitforrsp, 0,
--						(void *)&mesh_access);
--
--	if (ret != 0)
--		ret = -EFAULT;
--
--	lbs_deb_leave(LBS_DEB_IOCTL);
--	return ret;
--}
--
--/**
-- *  @brief ioctl function - entry point
-- *
-- *  @param dev		A pointer to net_device structure
-- *  @param req	   	A pointer to ifreq structure
-- *  @param cmd 		command
-- *  @return 	   	0--success, otherwise fail
-- */
--int libertas_do_ioctl(struct net_device *dev, struct ifreq *req, int cmd)
--{
--	int subcmd = 0;
--	int idata = 0;
--	int *pdata;
--	int ret = 0;
--	wlan_private *priv = dev->priv;
--	wlan_adapter *adapter = priv->adapter;
--	struct iwreq *wrq = (struct iwreq *)req;
--
--	lbs_deb_enter(LBS_DEB_IOCTL);
--
--	lbs_deb_ioctl("libertas_do_ioctl: ioctl cmd = 0x%x\n", cmd);
--	switch (cmd) {
--	case WLAN_SETNONE_GETNONE:	/* set WPA mode on/off ioctl #20 */
--		switch (wrq->u.data.flags) {
--		case WLAN_SUBCMD_BT_RESET:	/* bt_reset */
--			wlan_bt_reset_ioctl(priv);
--			break;
--		case WLAN_SUBCMD_FWT_RESET:	/* fwt_reset */
--			wlan_fwt_reset_ioctl(priv);
--			break;
--		}		/* End of switch */
--		break;
--
--	case WLAN_SETONEINT_GETNONE:
--		/* The first 4 bytes of req->ifr_data is sub-ioctl number
--		 * after 4 bytes sits the payload.
--		 */
--		subcmd = wrq->u.data.flags;
--		if (!subcmd)
--			subcmd = (int)wrq->u.param.value;
--
--		switch (subcmd) {
--		case WLANSETREGION:
--			idata = SUBCMD_DATA(wrq);
--			ret = wlan_set_region(priv, (u16) idata);
--			break;
--		case WLAN_SUBCMD_MESH_SET_TTL:
--			idata = SUBCMD_DATA(wrq);
--			ret = wlan_mesh_set_ttl_ioctl(priv, idata);
--			break;
--
--		case WLAN_SUBCMD_BT_SET_INVERT:
--			ret = wlan_bt_set_invert_ioctl(priv, req);
--			break ;
--
--		default:
--			ret = -EOPNOTSUPP;
--			break;
--		}
--
--		break;
--
--	case WLAN_SET128CHAR_GET128CHAR:
--		switch ((int)wrq->u.data.flags) {
--		case WLAN_SUBCMD_BT_ADD:
--			ret = wlan_bt_add_ioctl(priv, req);
--			break;
--		case WLAN_SUBCMD_BT_DEL:
--			ret = wlan_bt_del_ioctl(priv, req);
--			break;
--		case WLAN_SUBCMD_BT_LIST:
--			ret = wlan_bt_list_ioctl(priv, req);
--			break;
--		case WLAN_SUBCMD_FWT_ADD:
--			ret = wlan_fwt_add_ioctl(priv, req);
--			break;
--		case WLAN_SUBCMD_FWT_DEL:
--			ret = wlan_fwt_del_ioctl(priv, req);
--			break;
--		case WLAN_SUBCMD_FWT_LOOKUP:
--			ret = wlan_fwt_lookup_ioctl(priv, req);
--			break;
--		case WLAN_SUBCMD_FWT_LIST_NEIGHBOR:
--			ret = wlan_fwt_list_neighbor_ioctl(priv, req);
--			break;
--		case WLAN_SUBCMD_FWT_LIST:
--			ret = wlan_fwt_list_ioctl(priv, req);
--			break;
--		case WLAN_SUBCMD_FWT_LIST_ROUTE:
--			ret = wlan_fwt_list_route_ioctl(priv, req);
--			break;
--		}
--		break;
--
--	case WLAN_SETNONE_GETONEINT:
--		switch (wrq->u.param.value) {
--		case WLANGETREGION:
--			pdata = (int *)wrq->u.name;
--			*pdata = (int)adapter->regioncode;
--			break;
--		case WLAN_SUBCMD_FWT_CLEANUP:	/* fwt_cleanup */
--			ret = wlan_fwt_cleanup_ioctl(priv, req);
--			break;
--
--		case WLAN_SUBCMD_FWT_TIME:	/* fwt_time */
--			ret = wlan_fwt_time_ioctl(priv, req);
--			break;
--
--		case WLAN_SUBCMD_MESH_GET_TTL:
--			ret = wlan_mesh_get_ttl_ioctl(priv, req);
--			break;
--
--		case WLAN_SUBCMD_BT_GET_INVERT:
--			ret = wlan_bt_get_invert_ioctl(priv, req);
--			break ;
--
--		default:
--			ret = -EOPNOTSUPP;
--
--		}
--
--		break;
--
--	case WLAN_SET_GET_SIXTEEN_INT:
--		switch ((int)wrq->u.data.flags) {
--		case WLAN_LED_GPIO_CTRL:
--			{
--				int i;
--				int data[16];
--
--				struct cmd_ds_802_11_led_ctrl ctrl;
--				struct mrvlietypes_ledgpio *gpio =
--				    (struct mrvlietypes_ledgpio *) ctrl.data;
--
--				memset(&ctrl, 0, sizeof(ctrl));
--				if (wrq->u.data.length > MAX_LEDS * 2)
--					return -ENOTSUPP;
--				if ((wrq->u.data.length % 2) != 0)
--					return -ENOTSUPP;
--				if (wrq->u.data.length == 0) {
--					ctrl.action =
--					    cpu_to_le16
--					    (cmd_act_get);
--				} else {
--					if (copy_from_user
--					    (data, wrq->u.data.pointer,
--					     sizeof(int) *
--					     wrq->u.data.length)) {
--						lbs_deb_ioctl(
--						       "Copy from user failed\n");
--						return -EFAULT;
--					}
--
--					ctrl.action =
--					    cpu_to_le16
--					    (cmd_act_set);
--					ctrl.numled = cpu_to_le16(0);
--					gpio->header.type =
--					    cpu_to_le16(TLV_TYPE_LED_GPIO);
--					gpio->header.len = wrq->u.data.length;
--					for (i = 0; i < wrq->u.data.length;
--					     i += 2) {
--						gpio->ledpin[i / 2].led =
--						    data[i];
--						gpio->ledpin[i / 2].pin =
--						    data[i + 1];
--					}
--				}
--				ret =
--				    libertas_prepare_and_send_command(priv,
--							  cmd_802_11_led_gpio_ctrl,
--							  0,
--							  cmd_option_waitforrsp,
--							  0, (void *)&ctrl);
--				for (i = 0; i < gpio->header.len; i += 2) {
--					data[i] = gpio->ledpin[i / 2].led;
--					data[i + 1] = gpio->ledpin[i / 2].pin;
--				}
--				if (copy_to_user(wrq->u.data.pointer, data,
--						 sizeof(int) *
--						 gpio->header.len)) {
--					lbs_deb_ioctl("Copy to user failed\n");
--					return -EFAULT;
--				}
--
--				wrq->u.data.length = gpio->header.len;
--			}
--			break;
--		}
--		break;
--
--	default:
--		ret = -EINVAL;
--		break;
--	}
--
--	lbs_deb_leave_args(LBS_DEB_IOCTL, "ret %d", ret);
--	return ret;
--}
--
--
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 623ab4b..4a59306 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -181,7 +181,8 @@ u16 libertas_region_code_to_index[MRVDRV_MAX_REGION_CODE] =
-  * @brief Get function for sysfs attribute anycast_mask
-  */
- static ssize_t libertas_anycast_get(struct device * dev,
--		struct device_attribute *attr, char * buf) {
-+		struct device_attribute *attr, char * buf)
-+{
- 	struct cmd_ds_mesh_access mesh_access;
- 
- 	memset(&mesh_access, 0, sizeof(mesh_access));
-@@ -197,7 +198,8 @@ static ssize_t libertas_anycast_get(struct device * dev,
-  * @brief Set function for sysfs attribute anycast_mask
-  */
- static ssize_t libertas_anycast_set(struct device * dev,
--		struct device_attribute *attr, const char * buf, size_t count) {
-+		struct device_attribute *attr, const char * buf, size_t count)
-+{
- 	struct cmd_ds_mesh_access mesh_access;
- 	uint32_t datum;
- 
-@@ -799,7 +801,6 @@ wlan_private *libertas_add_card(void *card, struct device *dmdev)
- 	dev->open = wlan_open;
- 	dev->hard_start_xmit = wlan_pre_start_xmit;
- 	dev->stop = wlan_close;
--	dev->do_ioctl = libertas_do_ioctl;
- 	dev->set_mac_address = wlan_set_mac_address;
- 	dev->tx_timeout = wlan_tx_timeout;
- 	dev->get_stats = wlan_get_stats;
-@@ -918,7 +919,6 @@ int libertas_add_mesh(wlan_private *priv, struct device *dev)
- 	mesh_dev->open = mesh_open;
- 	mesh_dev->hard_start_xmit = mesh_pre_start_xmit;
- 	mesh_dev->stop = mesh_close;
--	mesh_dev->do_ioctl = libertas_do_ioctl;
- 	mesh_dev->get_stats = wlan_get_stats;
- 	mesh_dev->set_mac_address = wlan_set_mac_address;
- 	mesh_dev->ethtool_ops = &libertas_ethtool_ops;
-diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
-index 606af50..c3043dc 100644
---- a/drivers/net/wireless/libertas/scan.c
-+++ b/drivers/net/wireless/libertas/scan.c
-@@ -215,38 +215,6 @@ done:
- }
- 
- /**
-- *  @brief Post process the scan table after a new scan command has completed
-- *
-- *  Inspect each entry of the scan table and try to find an entry that
-- *    matches our current associated/joined network from the scan.  If
-- *    one is found, update the stored copy of the bssdescriptor for our
-- *    current network.
-- *
-- *  Debug dump the current scan table contents if compiled accordingly.
-- *
-- *  @param priv   A pointer to wlan_private structure
-- *
-- *  @return       void
-- */
--static void wlan_scan_process_results(wlan_private * priv)
--{
--	wlan_adapter *adapter = priv->adapter;
--	struct bss_descriptor * iter_bss;
--	int i = 0;
--
--	if (adapter->connect_status == libertas_connected)
--		return;
--
--	mutex_lock(&adapter->lock);
--	list_for_each_entry (iter_bss, &adapter->network_list, list) {
--		lbs_deb_scan("Scan:(%02d) " MAC_FMT ", RSSI[%03d], SSID[%s]\n",
--		       i++, MAC_ARG(iter_bss->bssid), (s32) iter_bss->rssi,
--		       escape_essid(iter_bss->ssid, iter_bss->ssid_len));
--	}
--	mutex_unlock(&adapter->lock);
--}
--
--/**
-  *  @brief Create a channel list for the driver to scan based on region info
-  *
-  *  Use the driver region/band information to construct a comprehensive list
-@@ -791,6 +759,10 @@ int wlan_scan_networks(wlan_private * priv,
- 	u8 scancurrentchanonly;
- 	int maxchanperscan;
- 	int ret;
-+#ifdef CONFIG_LIBERTAS_DEBUG
-+	struct bss_descriptor * iter_bss;
-+	int i = 0;
-+#endif
- 
- 	lbs_deb_enter(LBS_DEB_ASSOC);
- 
-@@ -832,11 +804,16 @@ int wlan_scan_networks(wlan_private * priv,
- 				     puserscanin,
- 				     full_scan);
- 
--	/*  Process the resulting scan table:
--	 *    - Remove any bad ssids
--	 *    - Update our current BSS information from scan data
--	 */
--	wlan_scan_process_results(priv);
-+#ifdef CONFIG_LIBERTAS_DEBUG
-+	/* Dump the scan table */
-+	mutex_lock(&adapter->lock);
-+	list_for_each_entry (iter_bss, &adapter->network_list, list) {
-+		lbs_deb_scan("Scan:(%02d) " MAC_FMT ", RSSI[%03d], SSID[%s]\n",
-+		       i++, MAC_ARG(iter_bss->bssid), (s32) iter_bss->rssi,
-+		       escape_essid(iter_bss->ssid, iter_bss->ssid_len));
-+	}
-+	mutex_unlock(&adapter->lock);
-+#endif
- 
- 	if (priv->adapter->connect_status == libertas_connected) {
- 		netif_carrier_on(priv->dev);
-diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-index 8939251..f42b796 100644
---- a/drivers/net/wireless/libertas/wext.c
-+++ b/drivers/net/wireless/libertas/wext.c
-@@ -913,148 +913,6 @@ out:
- 	return 0;
- }
- 
--/*
-- * iwpriv settable callbacks
-- */
--
--static const iw_handler wlan_private_handler[] = {
--	NULL,			/* SIOCIWFIRSTPRIV */
--};
--
--static const struct iw_priv_args wlan_private_args[] = {
--	/*
--	 * { cmd, set_args, get_args, name }
--	 */
--	/* Using iwpriv sub-command feature */
--	{
--	 WLAN_SETONEINT_GETNONE,	/* IOCTL: 24 */
--	 IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
--	 IW_PRIV_TYPE_NONE,
--	 ""},
--	{
--	 WLANSETREGION,
--	 IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
--	 IW_PRIV_TYPE_NONE,
--	 "setregioncode"},
--	{
--	 WLAN_SUBCMD_MESH_SET_TTL,
--	 IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
--	 IW_PRIV_TYPE_NONE,
--	 "mesh_set_ttl"},
--	{
--	 WLAN_SETNONE_GETONEINT,
--	 IW_PRIV_TYPE_NONE,
--	 IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
--	 ""},
--	{
--	 WLANGETREGION,
--	 IW_PRIV_TYPE_NONE,
--	 IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
--	 "getregioncode"},
--	{
--	 WLAN_SUBCMD_FWT_CLEANUP,
--	 IW_PRIV_TYPE_NONE,
--	 IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
--	 "fwt_cleanup"},
--	{
--	 WLAN_SUBCMD_FWT_TIME,
--	 IW_PRIV_TYPE_NONE,
--	 IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
--	 "fwt_time"},
--	{
--	 WLAN_SUBCMD_MESH_GET_TTL,
--	 IW_PRIV_TYPE_NONE,
--	 IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
--	 "mesh_get_ttl"},
--	{
--	 WLAN_SETNONE_GETNONE,
--	 IW_PRIV_TYPE_NONE,
--	 IW_PRIV_TYPE_NONE,
--	 ""},
--	{
--	 WLAN_SUBCMD_FWT_RESET,
--	 IW_PRIV_TYPE_NONE,
--	 IW_PRIV_TYPE_NONE,
--	 "fwt_reset"},
--	{
--	 WLAN_SUBCMD_BT_RESET,
--	 IW_PRIV_TYPE_NONE,
--	 IW_PRIV_TYPE_NONE,
--	 "bt_reset"},
--	{
--	 WLAN_SET128CHAR_GET128CHAR,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 ""},
--	/* BT Management */
--	{
--	 WLAN_SUBCMD_BT_ADD,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 "bt_add"},
--	{
--	 WLAN_SUBCMD_BT_DEL,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 "bt_del"},
--	{
--	 WLAN_SUBCMD_BT_LIST,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 "bt_list"},
--	{
--	 WLAN_SUBCMD_BT_SET_INVERT,
--	 IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
--	 IW_PRIV_TYPE_NONE,
--	 "bt_set_invert"},
--	{
--	 WLAN_SUBCMD_BT_GET_INVERT,
--	 IW_PRIV_TYPE_NONE,
--	 IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
--	 "bt_get_invert"},
--	/* FWT Management */
--	{
--	 WLAN_SUBCMD_FWT_ADD,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 "fwt_add"},
--	{
--	 WLAN_SUBCMD_FWT_DEL,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 "fwt_del"},
--	{
--	 WLAN_SUBCMD_FWT_LOOKUP,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 "fwt_lookup"},
--	{
--	 WLAN_SUBCMD_FWT_LIST_NEIGHBOR,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 "fwt_list_neigh"},
--	{
--	 WLAN_SUBCMD_FWT_LIST,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 "fwt_list"},
--	{
--	 WLAN_SUBCMD_FWT_LIST_ROUTE,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 IW_PRIV_TYPE_CHAR | 128,
--	 "fwt_list_route"},
--	{
--	 WLAN_SET_GET_SIXTEEN_INT,
--	 IW_PRIV_TYPE_INT | 16,
--	 IW_PRIV_TYPE_INT | 16,
--	 ""},
--	{
--	 WLAN_LED_GPIO_CTRL,
--	 IW_PRIV_TYPE_INT | 16,
--	 IW_PRIV_TYPE_INT | 16,
--	 "ledgpio"},
--};
--
- static struct iw_statistics *wlan_get_wireless_stats(struct net_device *dev)
- {
- 	enum {
-@@ -2444,22 +2302,12 @@ static const iw_handler mesh_wlan_handler[] = {
- };
- struct iw_handler_def libertas_handler_def = {
- 	.num_standard	= sizeof(wlan_handler) / sizeof(iw_handler),
--	.num_private	= sizeof(wlan_private_handler) / sizeof(iw_handler),
--	.num_private_args = sizeof(wlan_private_args) /
--		sizeof(struct iw_priv_args),
- 	.standard	= (iw_handler *) wlan_handler,
--	.private	= (iw_handler *) wlan_private_handler,
--	.private_args	= (struct iw_priv_args *)wlan_private_args,
- 	.get_wireless_stats = wlan_get_wireless_stats,
- };
- 
- struct iw_handler_def mesh_handler_def = {
- 	.num_standard	= sizeof(mesh_wlan_handler) / sizeof(iw_handler),
--	.num_private	= sizeof(wlan_private_handler) / sizeof(iw_handler),
--	.num_private_args = sizeof(wlan_private_args) /
--		sizeof(struct iw_priv_args),
- 	.standard	= (iw_handler *) mesh_wlan_handler,
--	.private	= (iw_handler *) wlan_private_handler,
--	.private_args	= (struct iw_priv_args *)wlan_private_args,
- 	.get_wireless_stats = wlan_get_wireless_stats,
- };
-diff --git a/drivers/net/wireless/libertas/wext.h b/drivers/net/wireless/libertas/wext.h
-index d555056..3d5196c 100644
---- a/drivers/net/wireless/libertas/wext.h
-+++ b/drivers/net/wireless/libertas/wext.h
-@@ -7,45 +7,6 @@
- #define SUBCMD_OFFSET			4
- #define SUBCMD_DATA(x)			*((int *)(x->u.name + SUBCMD_OFFSET))
- 
--/** PRIVATE CMD ID */
--#define	WLANIOCTL			SIOCIWFIRSTPRIV
--
--#define WLAN_SETNONE_GETNONE	        (WLANIOCTL + 8)
--#define WLAN_SUBCMD_BT_RESET			13
--#define WLAN_SUBCMD_FWT_RESET			14
--
--#define WLAN_SETNONE_GETONEINT		(WLANIOCTL + 15)
--#define WLANGETREGION				1
--
--#define WLAN_SUBCMD_FWT_CLEANUP			15
--#define WLAN_SUBCMD_FWT_TIME			16
--#define WLAN_SUBCMD_MESH_GET_TTL		17
--#define WLAN_SUBCMD_BT_GET_INVERT		18
--
--#define WLAN_SETONEINT_GETNONE		(WLANIOCTL + 24)
--#define WLANSETREGION				8
--#define WLAN_SUBCMD_MESH_SET_TTL		18
--#define WLAN_SUBCMD_BT_SET_INVERT		19
--
--#define WLAN_SET128CHAR_GET128CHAR	(WLANIOCTL + 25)
--#define WLAN_SUBCMD_BT_ADD			18
--#define WLAN_SUBCMD_BT_DEL   			19
--#define WLAN_SUBCMD_BT_LIST			20
--#define WLAN_SUBCMD_FWT_ADD			21
--#define WLAN_SUBCMD_FWT_DEL   			22
--#define WLAN_SUBCMD_FWT_LOOKUP			23
--#define WLAN_SUBCMD_FWT_LIST_NEIGHBOR		24
--#define WLAN_SUBCMD_FWT_LIST			25
--#define WLAN_SUBCMD_FWT_LIST_ROUTE		26
--
--#define WLAN_SET_GET_SIXTEEN_INT       (WLANIOCTL + 29)
--#define WLAN_LED_GPIO_CTRL			5
--
--#define WLAN_LINKMODE_802_3			0
--#define WLAN_LINKMODE_802_11			2
--#define WLAN_RADIOMODE_NONE    			0
--#define WLAN_RADIOMODE_RADIOTAP			2
--
- /** wlan_ioctl_regrdwr */
- struct wlan_ioctl_regrdwr {
- 	/** Which register to access */
-@@ -57,9 +18,13 @@ struct wlan_ioctl_regrdwr {
- 	u32 value;
- };
- 
-+#define WLAN_LINKMODE_802_3			0
-+#define WLAN_LINKMODE_802_11			2
-+#define WLAN_RADIOMODE_NONE			0
-+#define WLAN_RADIOMODE_RADIOTAP			2
-+
- extern struct iw_handler_def libertas_handler_def;
- extern struct iw_handler_def mesh_handler_def;
--int libertas_do_ioctl(struct net_device *dev, struct ifreq *req, int i);
- int wlan_radio_ioctl(wlan_private * priv, u8 option);
- 
- #endif				/* _WLAN_WEXT_H_ */
--- 
-John W. Linville
-linville@tuxdriver.com
+Here's the config:
+
+#
+# Automatically generated make config: don't edit
+# Linux kernel version: 2.6.22-rc6
+# Fri Jun 29 10:23:19 2007
+#
+CONFIG_X86_32=3Dy
+CONFIG_GENERIC_TIME=3Dy
+CONFIG_CLOCKSOURCE_WATCHDOG=3Dy
+CONFIG_GENERIC_CLOCKEVENTS=3Dy
+CONFIG_LOCKDEP_SUPPORT=3Dy
+CONFIG_STACKTRACE_SUPPORT=3Dy
+CONFIG_SEMAPHORE_SLEEPERS=3Dy
+CONFIG_X86=3Dy
+CONFIG_MMU=3Dy
+CONFIG_ZONE_DMA=3Dy
+CONFIG_QUICKLIST=3Dy
+CONFIG_GENERIC_ISA_DMA=3Dy
+CONFIG_GENERIC_IOMAP=3Dy
+CONFIG_GENERIC_BUG=3Dy
+CONFIG_GENERIC_HWEIGHT=3Dy
+CONFIG_ARCH_MAY_HAVE_PC_FDC=3Dy
+CONFIG_DMI=3Dy
+CONFIG_DEFCONFIG_LIST=3D"/lib/modules/$UNAME_RELEASE/.config"
+
+#
+# Code maturity level options
+#
+# CONFIG_EXPERIMENTAL is not set
+CONFIG_BROKEN_ON_SMP=3Dy
+CONFIG_LOCK_KERNEL=3Dy
+CONFIG_INIT_ENV_ARG_LIMIT=3D32
+
+#
+# General setup
+#
+CONFIG_LOCALVERSION=3D""
+CONFIG_LOCALVERSION_AUTO=3Dy
+CONFIG_SWAP=3Dy
+CONFIG_SYSVIPC=3Dy
+# CONFIG_IPC_NS is not set
+CONFIG_SYSVIPC_SYSCTL=3Dy
+# CONFIG_BSD_PROCESS_ACCT is not set
+# CONFIG_TASKSTATS is not set
+CONFIG_UTS_NS=3Dy
+# CONFIG_AUDIT is not set
+CONFIG_IKCONFIG=3Dy
+CONFIG_IKCONFIG_PROC=3Dy
+CONFIG_LOG_BUF_SHIFT=3D14
+# CONFIG_SYSFS_DEPRECATED is not set
+CONFIG_RELAY=3Dy
+CONFIG_BLK_DEV_INITRD=3Dy
+CONFIG_INITRAMFS_SOURCE=3D""
+CONFIG_SYSCTL=3Dy
+# CONFIG_EMBEDDED is not set
+CONFIG_UID16=3Dy
+CONFIG_SYSCTL_SYSCALL=3Dy
+CONFIG_KALLSYMS=3Dy
+# CONFIG_KALLSYMS_EXTRA_PASS is not set
+CONFIG_HOTPLUG=3Dy
+CONFIG_PRINTK=3Dy
+CONFIG_BUG=3Dy
+CONFIG_ELF_CORE=3Dy
+CONFIG_BASE_FULL=3Dy
+CONFIG_FUTEX=3Dy
+CONFIG_ANON_INODES=3Dy
+CONFIG_EPOLL=3Dy
+CONFIG_SIGNALFD=3Dy
+CONFIG_TIMERFD=3Dy
+CONFIG_EVENTFD=3Dy
+CONFIG_SHMEM=3Dy
+CONFIG_VM_EVENT_COUNTERS=3Dy
+CONFIG_SLAB=3Dy
+# CONFIG_SLUB is not set
+# CONFIG_SLOB is not set
+CONFIG_RT_MUTEXES=3Dy
+# CONFIG_TINY_SHMEM is not set
+CONFIG_BASE_SMALL=3D0
+
+#
+# Loadable module support
+#
+CONFIG_MODULES=3Dy
+CONFIG_MODULE_UNLOAD=3Dy
+# CONFIG_MODVERSIONS is not set
+CONFIG_MODULE_SRCVERSION_ALL=3Dy
+# CONFIG_KMOD is not set
+
+#
+# Block layer
+#
+CONFIG_BLOCK=3Dy
+# CONFIG_LBD is not set
+# CONFIG_BLK_DEV_IO_TRACE is not set
+# CONFIG_LSF is not set
+
+#
+# IO Schedulers
+#
+CONFIG_IOSCHED_NOOP=3Dy
+CONFIG_IOSCHED_AS=3Dy
+CONFIG_IOSCHED_DEADLINE=3Dy
+CONFIG_IOSCHED_CFQ=3Dy
+# CONFIG_DEFAULT_AS is not set
+# CONFIG_DEFAULT_DEADLINE is not set
+CONFIG_DEFAULT_CFQ=3Dy
+# CONFIG_DEFAULT_NOOP is not set
+CONFIG_DEFAULT_IOSCHED=3D"cfq"
+
+#
+# Processor type and features
+#
+CONFIG_TICK_ONESHOT=3Dy
+# CONFIG_NO_HZ is not set
+CONFIG_HIGH_RES_TIMERS=3Dy
+# CONFIG_SMP is not set
+CONFIG_X86_PC=3Dy
+# CONFIG_X86_ELAN is not set
+# CONFIG_X86_VOYAGER is not set
+# CONFIG_X86_NUMAQ is not set
+# CONFIG_X86_SUMMIT is not set
+# CONFIG_X86_BIGSMP is not set
+# CONFIG_X86_VISWS is not set
+# CONFIG_X86_GENERICARCH is not set
+# CONFIG_X86_ES7000 is not set
+# CONFIG_M386 is not set
+# CONFIG_M486 is not set
+# CONFIG_M586 is not set
+# CONFIG_M586TSC is not set
+# CONFIG_M586MMX is not set
+# CONFIG_M686 is not set
+# CONFIG_MPENTIUMII is not set
+# CONFIG_MPENTIUMIII is not set
+CONFIG_MPENTIUMM=3Dy
+# CONFIG_MCORE2 is not set
+# CONFIG_MPENTIUM4 is not set
+# CONFIG_MK6 is not set
+# CONFIG_MK7 is not set
+# CONFIG_MK8 is not set
+# CONFIG_MCRUSOE is not set
+# CONFIG_MEFFICEON is not set
+# CONFIG_MWINCHIPC6 is not set
+# CONFIG_MWINCHIP2 is not set
+# CONFIG_MWINCHIP3D is not set
+# CONFIG_MGEODEGX1 is not set
+# CONFIG_MGEODE_LX is not set
+# CONFIG_MCYRIXIII is not set
+# CONFIG_MVIAC3_2 is not set
+# CONFIG_MVIAC7 is not set
+CONFIG_X86_GENERIC=3Dy
+CONFIG_X86_CMPXCHG=3Dy
+CONFIG_X86_L1_CACHE_SHIFT=3D7
+CONFIG_X86_XADD=3Dy
+CONFIG_RWSEM_XCHGADD_ALGORITHM=3Dy
+# CONFIG_ARCH_HAS_ILOG2_U32 is not set
+# CONFIG_ARCH_HAS_ILOG2_U64 is not set
+CONFIG_GENERIC_CALIBRATE_DELAY=3Dy
+CONFIG_X86_WP_WORKS_OK=3Dy
+CONFIG_X86_INVLPG=3Dy
+CONFIG_X86_BSWAP=3Dy
+CONFIG_X86_POPAD_OK=3Dy
+CONFIG_X86_CMPXCHG64=3Dy
+CONFIG_X86_GOOD_APIC=3Dy
+CONFIG_X86_INTEL_USERCOPY=3Dy
+CONFIG_X86_USE_PPRO_CHECKSUM=3Dy
+CONFIG_X86_TSC=3Dy
+CONFIG_X86_CMOV=3Dy
+CONFIG_X86_MINIMUM_CPU_MODEL=3D4
+CONFIG_HPET_TIMER=3Dy
+# CONFIG_PREEMPT_NONE is not set
+# CONFIG_PREEMPT_VOLUNTARY is not set
+CONFIG_PREEMPT=3Dy
+# CONFIG_PREEMPT_BKL is not set
+# CONFIG_X86_UP_APIC is not set
+CONFIG_X86_MCE=3Dy
+CONFIG_X86_MCE_NONFATAL=3Dy
+CONFIG_VM86=3Dy
+# CONFIG_TOSHIBA is not set
+# CONFIG_I8K is not set
+CONFIG_X86_REBOOTFIXUPS=3Dy
+CONFIG_MICROCODE=3Dy
+CONFIG_MICROCODE_OLD_INTERFACE=3Dy
+# CONFIG_X86_MSR is not set
+CONFIG_X86_CPUID=3Dm
+
+#
+# Firmware Drivers
+#
+# CONFIG_EDD is not set
+CONFIG_EFI_VARS=3Dy
+# CONFIG_DELL_RBU is not set
+CONFIG_DCDBAS=3Dy
+# CONFIG_NOHIGHMEM is not set
+# CONFIG_HIGHMEM4G is not set
+CONFIG_HIGHMEM64G=3Dy
+CONFIG_PAGE_OFFSET=3D0xC0000000
+CONFIG_HIGHMEM=3Dy
+CONFIG_X86_PAE=3Dy
+CONFIG_ARCH_POPULATES_NODE_MAP=3Dy
+CONFIG_FLATMEM=3Dy
+CONFIG_FLAT_NODE_MEM_MAP=3Dy
+# CONFIG_SPARSEMEM_STATIC is not set
+CONFIG_SPLIT_PTLOCK_CPUS=3D4
+CONFIG_RESOURCES_64BIT=3Dy
+CONFIG_ZONE_DMA_FLAG=3D1
+CONFIG_NR_QUICK=3D1
+# CONFIG_HIGHPTE is not set
+# CONFIG_MATH_EMULATION is not set
+CONFIG_MTRR=3Dy
+CONFIG_EFI=3Dy
+CONFIG_BOOT_IOREMAP=3Dy
+CONFIG_SECCOMP=3Dy
+CONFIG_HZ_100=3Dy
+# CONFIG_HZ_250 is not set
+# CONFIG_HZ_300 is not set
+# CONFIG_HZ_1000 is not set
+CONFIG_HZ=3D100
+# CONFIG_KEXEC is not set
+CONFIG_PHYSICAL_START=3D0x100000
+CONFIG_PHYSICAL_ALIGN=3D0x100000
+CONFIG_COMPAT_VDSO=3Dy
+CONFIG_ARCH_ENABLE_MEMORY_HOTPLUG=3Dy
+
+#
+# Power management options (ACPI, APM)
+#
+CONFIG_PM=3Dy
+CONFIG_PM_LEGACY=3Dy
+# CONFIG_PM_DEBUG is not set
+# CONFIG_PM_SYSFS_DEPRECATED is not set
+# CONFIG_SOFTWARE_SUSPEND is not set
+
+#
+# ACPI (Advanced Configuration and Power Interface) Support
+#
+CONFIG_ACPI=3Dy
+CONFIG_ACPI_SLEEP=3Dy
+CONFIG_ACPI_SLEEP_PROC_FS=3Dy
+# CONFIG_ACPI_SLEEP_PROC_SLEEP is not set
+# CONFIG_ACPI_PROCFS is not set
+CONFIG_ACPI_AC=3Dm
+# CONFIG_ACPI_BATTERY is not set
+CONFIG_ACPI_BUTTON=3Dm
+# CONFIG_ACPI_VIDEO is not set
+CONFIG_ACPI_FAN=3Dy
+# CONFIG_ACPI_PROCESSOR is not set
+# CONFIG_ACPI_ASUS is not set
+# CONFIG_ACPI_TOSHIBA is not set
+CONFIG_ACPI_BLACKLIST_YEAR=3D0
+# CONFIG_ACPI_DEBUG is not set
+CONFIG_ACPI_EC=3Dy
+CONFIG_ACPI_POWER=3Dy
+CONFIG_ACPI_SYSTEM=3Dy
+CONFIG_X86_PM_TIMER=3Dy
+# CONFIG_APM is not set
+
+#
+# CPU Frequency scaling
+#
+CONFIG_CPU_FREQ=3Dy
+CONFIG_CPU_FREQ_TABLE=3Dy
+# CONFIG_CPU_FREQ_DEBUG is not set
+CONFIG_CPU_FREQ_STAT=3Dy
+CONFIG_CPU_FREQ_STAT_DETAILS=3Dy
+CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=3Dy
+# CONFIG_CPU_FREQ_DEFAULT_GOV_USERSPACE is not set
+CONFIG_CPU_FREQ_GOV_PERFORMANCE=3Dy
+CONFIG_CPU_FREQ_GOV_POWERSAVE=3Dm
+CONFIG_CPU_FREQ_GOV_USERSPACE=3Dy
+CONFIG_CPU_FREQ_GOV_ONDEMAND=3Dm
+# CONFIG_CPU_FREQ_GOV_CONSERVATIVE is not set
+
+#
+# CPUFreq processor drivers
+#
+# CONFIG_X86_POWERNOW_K6 is not set
+# CONFIG_X86_POWERNOW_K7 is not set
+CONFIG_X86_GX_SUSPMOD=3Dy
+CONFIG_X86_SPEEDSTEP_CENTRINO=3Dm
+CONFIG_X86_SPEEDSTEP_CENTRINO_TABLE=3Dy
+# CONFIG_X86_SPEEDSTEP_ICH is not set
+# CONFIG_X86_P4_CLOCKMOD is not set
+CONFIG_X86_LONGRUN=3Dm
+
+#
+# shared options
+#
+# CONFIG_X86_SPEEDSTEP_LIB is not set
+
+#
+# Bus options (PCI, PCMCIA, EISA, MCA, ISA)
+#
+CONFIG_PCI=3Dy
+CONFIG_PCI_GOBIOS=3Dy
+# CONFIG_PCI_GOMMCONFIG is not set
+# CONFIG_PCI_GODIRECT is not set
+# CONFIG_PCI_GOANY is not set
+CONFIG_PCI_BIOS=3Dy
+# CONFIG_PCIEPORTBUS is not set
+# CONFIG_ARCH_SUPPORTS_MSI is not set
+CONFIG_ISA_DMA_API=3Dy
+CONFIG_ISA=3Dy
+# CONFIG_EISA is not set
+# CONFIG_MCA is not set
+CONFIG_SCx200=3Dm
+CONFIG_SCx200HR_TIMER=3Dm
+
+#
+# PCCARD (PCMCIA/CardBus) support
+#
+CONFIG_PCCARD=3Dy
+# CONFIG_PCMCIA_DEBUG is not set
+CONFIG_PCMCIA=3Dm
+CONFIG_PCMCIA_IOCTL=3Dy
+CONFIG_CARDBUS=3Dy
+
+#
+# PC-card bridges
+#
+CONFIG_YENTA=3Dm
+CONFIG_YENTA_O2=3Dy
+CONFIG_YENTA_RICOH=3Dy
+CONFIG_YENTA_TI=3Dy
+CONFIG_YENTA_ENE_TUNE=3Dy
+CONFIG_YENTA_TOSHIBA=3Dy
+# CONFIG_PD6729 is not set
+CONFIG_I82092=3Dm
+CONFIG_I82365=3Dm
+# CONFIG_TCIC is not set
+CONFIG_PCMCIA_PROBE=3Dy
+CONFIG_PCCARD_NONSTATIC=3Dm
+
+#
+# Executable file formats
+#
+CONFIG_BINFMT_ELF=3Dy
+# CONFIG_BINFMT_AOUT is not set
+CONFIG_BINFMT_MISC=3Dm
+
+#
+# Networking
+#
+CONFIG_NET=3Dy
+
+#
+# Networking options
+#
+CONFIG_PACKET=3Dy
+# CONFIG_PACKET_MMAP is not set
+# CONFIG_UNIX is not set
+CONFIG_XFRM=3Dy
+CONFIG_XFRM_USER=3Dy
+CONFIG_NET_KEY=3Dy
+CONFIG_INET=3Dy
+# CONFIG_IP_MULTICAST is not set
+# CONFIG_IP_ADVANCED_ROUTER is not set
+CONFIG_IP_FIB_HASH=3Dy
+CONFIG_IP_PNP=3Dy
+CONFIG_IP_PNP_DHCP=3Dy
+CONFIG_IP_PNP_BOOTP=3Dy
+# CONFIG_IP_PNP_RARP is not set
+# CONFIG_NET_IPIP is not set
+CONFIG_NET_IPGRE=3Dy
+CONFIG_SYN_COOKIES=3Dy
+CONFIG_INET_AH=3Dy
+CONFIG_INET_ESP=3Dy
+CONFIG_INET_IPCOMP=3Dy
+CONFIG_INET_XFRM_TUNNEL=3Dy
+CONFIG_INET_TUNNEL=3Dy
+CONFIG_INET_XFRM_MODE_TRANSPORT=3Dy
+CONFIG_INET_XFRM_MODE_TUNNEL=3Dy
+CONFIG_INET_XFRM_MODE_BEET=3Dy
+CONFIG_INET_DIAG=3Dy
+CONFIG_INET_TCP_DIAG=3Dy
+CONFIG_TCP_CONG_ADVANCED=3Dy
+CONFIG_TCP_CONG_BIC=3Dy
+CONFIG_TCP_CONG_CUBIC=3Dm
+CONFIG_TCP_CONG_WESTWOOD=3Dy
+CONFIG_TCP_CONG_HTCP=3Dy
+# CONFIG_DEFAULT_BIC is not set
+# CONFIG_DEFAULT_CUBIC is not set
+# CONFIG_DEFAULT_HTCP is not set
+# CONFIG_DEFAULT_VEGAS is not set
+CONFIG_DEFAULT_WESTWOOD=3Dy
+# CONFIG_DEFAULT_RENO is not set
+CONFIG_DEFAULT_TCP_CONG=3D"westwood"
+CONFIG_IPV6=3Dy
+# CONFIG_IPV6_PRIVACY is not set
+# CONFIG_IPV6_ROUTER_PREF is not set
+# CONFIG_INET6_AH is not set
+CONFIG_INET6_ESP=3Dm
+CONFIG_INET6_IPCOMP=3Dm
+CONFIG_INET6_XFRM_TUNNEL=3Dm
+CONFIG_INET6_TUNNEL=3Dm
+CONFIG_INET6_XFRM_MODE_TRANSPORT=3Dy
+CONFIG_INET6_XFRM_MODE_TUNNEL=3Dm
+CONFIG_INET6_XFRM_MODE_BEET=3Dm
+CONFIG_IPV6_SIT=3Dm
+# CONFIG_IPV6_TUNNEL is not set
+# CONFIG_NETLABEL is not set
+CONFIG_NETWORK_SECMARK=3Dy
+# CONFIG_NETFILTER is not set
+CONFIG_BRIDGE=3Dm
+CONFIG_VLAN_8021Q=3Dy
+CONFIG_DECNET=3Dy
+CONFIG_LLC=3Dm
+CONFIG_LLC2=3Dm
+CONFIG_IPX=3Dm
+# CONFIG_IPX_INTERN is not set
+# CONFIG_ATALK is not set
+
+#
+# QoS and/or fair queueing
+#
+CONFIG_NET_SCHED=3Dy
+CONFIG_NET_SCH_FIFO=3Dy
+
+#
+# Queueing/Scheduling
+#
+CONFIG_NET_SCH_CBQ=3Dm
+CONFIG_NET_SCH_HTB=3Dy
+CONFIG_NET_SCH_HFSC=3Dm
+# CONFIG_NET_SCH_PRIO is not set
+CONFIG_NET_SCH_RED=3Dy
+CONFIG_NET_SCH_SFQ=3Dm
+CONFIG_NET_SCH_TEQL=3Dm
+CONFIG_NET_SCH_TBF=3Dy
+CONFIG_NET_SCH_GRED=3Dm
+# CONFIG_NET_SCH_DSMARK is not set
+CONFIG_NET_SCH_NETEM=3Dm
+CONFIG_NET_SCH_INGRESS=3Dy
+
+#
+# Classification
+#
+CONFIG_NET_CLS=3Dy
+# CONFIG_NET_CLS_BASIC is not set
+CONFIG_NET_CLS_TCINDEX=3Dy
+# CONFIG_NET_CLS_ROUTE4 is not set
+# CONFIG_NET_CLS_FW is not set
+CONFIG_NET_CLS_U32=3Dy
+CONFIG_CLS_U32_PERF=3Dy
+CONFIG_CLS_U32_MARK=3Dy
+# CONFIG_NET_CLS_RSVP is not set
+# CONFIG_NET_CLS_RSVP6 is not set
+CONFIG_NET_EMATCH=3Dy
+CONFIG_NET_EMATCH_STACK=3D32
+# CONFIG_NET_EMATCH_CMP is not set
+CONFIG_NET_EMATCH_NBYTE=3Dy
+CONFIG_NET_EMATCH_U32=3Dy
+CONFIG_NET_EMATCH_META=3Dy
+# CONFIG_NET_EMATCH_TEXT is not set
+# CONFIG_NET_CLS_ACT is not set
+# CONFIG_NET_CLS_POLICE is not set
+# CONFIG_NET_CLS_IND is not set
+# CONFIG_NET_ESTIMATOR is not set
+
+#
+# Network testing
+#
+CONFIG_NET_PKTGEN=3Dy
+# CONFIG_HAMRADIO is not set
+CONFIG_IRDA=3Dy
+
+#
+# IrDA protocols
+#
+CONFIG_IRLAN=3Dm
+CONFIG_IRNET=3Dm
+CONFIG_IRCOMM=3Dm
+CONFIG_IRDA_ULTRA=3Dy
+
+#
+# IrDA options
+#
+# CONFIG_IRDA_CACHE_LAST_LSAP is not set
+CONFIG_IRDA_FAST_RR=3Dy
+# CONFIG_IRDA_DEBUG is not set
+
+#
+# Infrared-port device drivers
+#
+
+#
+# SIR device drivers
+#
+CONFIG_IRTTY_SIR=3Dm
+
+#
+# Dongle support
+#
+CONFIG_DONGLE=3Dy
+# CONFIG_ESI_DONGLE is not set
+CONFIG_ACTISYS_DONGLE=3Dm
+CONFIG_TEKRAM_DONGLE=3Dm
+# CONFIG_TOIM3232_DONGLE is not set
+CONFIG_LITELINK_DONGLE=3Dm
+
+#
+# Old SIR device drivers
+#
+# CONFIG_IRPORT_SIR is not set
+
+#
+# Old Serial dongle support
+#
+
+#
+# FIR device drivers
+#
+# CONFIG_USB_IRDA is not set
+CONFIG_NSC_FIR=3Dm
+CONFIG_WINBOND_FIR=3Dm
+# CONFIG_TOSHIBA_FIR is not set
+# CONFIG_VIA_FIR is not set
+CONFIG_BT=3Dm
+# CONFIG_BT_L2CAP is not set
+CONFIG_BT_SCO=3Dm
+
+#
+# Bluetooth device drivers
+#
+CONFIG_BT_HCIUSB=3Dm
+CONFIG_BT_HCIUSB_SCO=3Dy
+CONFIG_BT_HCIUART=3Dm
+# CONFIG_BT_HCIUART_H4 is not set
+CONFIG_BT_HCIUART_BCSP=3Dy
+# CONFIG_BT_HCIBCM203X is not set
+CONFIG_BT_HCIBPA10X=3Dm
+# CONFIG_BT_HCIBFUSB is not set
+# CONFIG_BT_HCIDTL1 is not set
+CONFIG_BT_HCIBT3C=3Dm
+# CONFIG_BT_HCIBLUECARD is not set
+CONFIG_BT_HCIBTUART=3Dm
+CONFIG_BT_HCIVHCI=3Dm
+
+#
+# Wireless
+#
+CONFIG_CFG80211=3Dy
+CONFIG_WIRELESS_EXT=3Dy
+CONFIG_IEEE80211=3Dy
+# CONFIG_IEEE80211_DEBUG is not set
+CONFIG_IEEE80211_CRYPT_WEP=3Dy
+CONFIG_IEEE80211_CRYPT_CCMP=3Dm
+# CONFIG_IEEE80211_CRYPT_TKIP is not set
+# CONFIG_RFKILL is not set
+
+#
+# Device Drivers
+#
+
+#
+# Generic Driver Options
+#
+CONFIG_STANDALONE=3Dy
+CONFIG_PREVENT_FIRMWARE_BUILD=3Dy
+CONFIG_FW_LOADER=3Dy
+# CONFIG_SYS_HYPERVISOR is not set
+
+#
+# Connector - unified userspace <-> kernelspace linker
+#
+CONFIG_CONNECTOR=3Dy
+CONFIG_PROC_EVENTS=3Dy
+# CONFIG_MTD is not set
+
+#
+# Parallel port support
+#
+CONFIG_PARPORT=3Dm
+CONFIG_PARPORT_PC=3Dm
+CONFIG_PARPORT_PC_PCMCIA=3Dm
+# CONFIG_PARPORT_GSC is not set
+CONFIG_PARPORT_AX88796=3Dm
+CONFIG_PARPORT_1284=3Dy
+CONFIG_PARPORT_NOT_PC=3Dy
+
+#
+# Plug and Play support
+#
+CONFIG_PNP=3Dy
+# CONFIG_PNP_DEBUG is not set
+
+#
+# Protocols
+#
+CONFIG_ISAPNP=3Dy
+CONFIG_PNPACPI=3Dy
+
+#
+# Block devices
+#
+# CONFIG_BLK_DEV_FD is not set
+# CONFIG_BLK_DEV_XD is not set
+# CONFIG_PARIDE is not set
+# CONFIG_BLK_CPQ_DA is not set
+# CONFIG_BLK_CPQ_CISS_DA is not set
+# CONFIG_BLK_DEV_DAC960 is not set
+# CONFIG_BLK_DEV_COW_COMMON is not set
+# CONFIG_BLK_DEV_LOOP is not set
+# CONFIG_BLK_DEV_NBD is not set
+# CONFIG_BLK_DEV_SX8 is not set
+# CONFIG_BLK_DEV_UB is not set
+# CONFIG_BLK_DEV_RAM is not set
+# CONFIG_CDROM_PKTCDVD is not set
+# CONFIG_ATA_OVER_ETH is not set
+
+#
+# Misc devices
+#
+# CONFIG_PHANTOM is not set
+# CONFIG_SGI_IOC4 is not set
+CONFIG_MSI_LAPTOP=3Dy
+CONFIG_SONY_LAPTOP=3Dy
+CONFIG_SONYPI_COMPAT=3Dy
+CONFIG_THINKPAD_ACPI=3Dm
+# CONFIG_THINKPAD_ACPI_DEBUG is not set
+# CONFIG_THINKPAD_ACPI_DOCK is not set
+# CONFIG_THINKPAD_ACPI_BAY is not set
+# CONFIG_BLINK is not set
+# CONFIG_IDE is not set
+
+#
+# SCSI device support
+#
+# CONFIG_RAID_ATTRS is not set
+# CONFIG_SCSI is not set
+# CONFIG_SCSI_NETLINK is not set
+# CONFIG_ATA is not set
+
+#
+# Old CD-ROM drivers (not SCSI, not IDE)
+#
+# CONFIG_CD_NO_IDESCSI is not set
+
+#
+# Multi-device support (RAID and LVM)
+#
+# CONFIG_MD is not set
+
+#
+# Fusion MPT device support
+#
+# CONFIG_FUSION is not set
+
+#
+# IEEE 1394 (FireWire) support
+#
+
+#
+# An alternative FireWire stack is available with EXPERIMENTAL=3Dy
+#
+CONFIG_IEEE1394=3Dm
+
+#
+# Subsystem Options
+#
+# CONFIG_IEEE1394_VERBOSEDEBUG is not set
+
+#
+# Controllers
+#
+CONFIG_IEEE1394_PCILYNX=3Dm
+# CONFIG_IEEE1394_OHCI1394 is not set
+
+#
+# Protocols
+#
+
+#
+# SBP-2 support (for storage devices) requires SCSI
+#
+# CONFIG_IEEE1394_ETH1394_ROM_ENTRY is not set
+# CONFIG_IEEE1394_RAWIO is not set
+
+#
+# I2O device support
+#
+# CONFIG_I2O is not set
+# CONFIG_MACINTOSH_DRIVERS is not set
+
+#
+# Network device support
+#
+CONFIG_NETDEVICES=3Dy
+# CONFIG_DUMMY is not set
+CONFIG_BONDING=3Dm
+# CONFIG_EQUALIZER is not set
+CONFIG_TUN=3Dy
+# CONFIG_NET_SB1000 is not set
+CONFIG_ARCNET=3Dm
+CONFIG_ARCNET_1201=3Dm
+CONFIG_ARCNET_1051=3Dm
+# CONFIG_ARCNET_RAW is not set
+# CONFIG_ARCNET_CAP is not set
+CONFIG_ARCNET_COM90xx=3Dm
+# CONFIG_ARCNET_COM90xxIO is not set
+# CONFIG_ARCNET_RIM_I is not set
+# CONFIG_ARCNET_COM20020 is not set
+# CONFIG_PHYLIB is not set
+
+#
+# Ethernet (10 or 100Mbit)
+#
+CONFIG_NET_ETHERNET=3Dy
+CONFIG_MII=3Dy
+CONFIG_HAPPYMEAL=3Dy
+CONFIG_SUNGEM=3Dm
+CONFIG_CASSINI=3Dm
+# CONFIG_NET_VENDOR_3COM is not set
+CONFIG_LANCE=3Dm
+CONFIG_NET_VENDOR_SMC=3Dy
+# CONFIG_WD80x3 is not set
+# CONFIG_ULTRA is not set
+CONFIG_SMC9194=3Dy
+CONFIG_NET_VENDOR_RACAL=3Dy
+CONFIG_NI52=3Dy
+CONFIG_NI65=3Dy
+
+#
+# Tulip family network device support
+#
+CONFIG_NET_TULIP=3Dy
+# CONFIG_TULIP is not set
+CONFIG_DE4X5=3Dy
+# CONFIG_WINBOND_840 is not set
+# CONFIG_DM9102 is not set
+# CONFIG_ULI526X is not set
+# CONFIG_PCMCIA_XIRCOM is not set
+# CONFIG_PCMCIA_XIRTULIP is not set
+CONFIG_DEPCA=3Dy
+# CONFIG_HP100 is not set
+# CONFIG_NET_ISA is not set
+# CONFIG_NET_PCI is not set
+CONFIG_NET_POCKET=3Dy
+# CONFIG_ATP is not set
+CONFIG_DE600=3Dm
+# CONFIG_DE620 is not set
+# CONFIG_NETDEV_1000 is not set
+# CONFIG_NETDEV_10000 is not set
+# CONFIG_TR is not set
+
+#
+# Wireless LAN
+#
+# CONFIG_WLAN_PRE80211 is not set
+CONFIG_WLAN_80211=3Dy
+# CONFIG_PCMCIA_RAYCS is not set
+CONFIG_IPW2100=3Dy
+# CONFIG_IPW2100_MONITOR is not set
+# CONFIG_IPW2100_DEBUG is not set
+# CONFIG_IPW2200 is not set
+CONFIG_LIBERTAS=3Dy
+CONFIG_LIBERTAS_USB=3Dm
+# CONFIG_LIBERTAS_DEBUG is not set
+# CONFIG_AIRO is not set
+CONFIG_HERMES=3Dy
+CONFIG_PLX_HERMES=3Dy
+CONFIG_TMD_HERMES=3Dy
+CONFIG_NORTEL_HERMES=3Dy
+# CONFIG_PCI_HERMES is not set
+# CONFIG_ATMEL is not set
+CONFIG_PCMCIA_HERMES=3Dm
+# CONFIG_PCMCIA_SPECTRUM is not set
+CONFIG_AIRO_CS=3Dm
+CONFIG_USB_ZD1201=3Dy
+CONFIG_HOSTAP=3Dy
+# CONFIG_HOSTAP_FIRMWARE is not set
+CONFIG_HOSTAP_PLX=3Dm
+CONFIG_HOSTAP_PCI=3Dy
+CONFIG_HOSTAP_CS=3Dm
+
+#
+# USB Network Adapters
+#
+CONFIG_USB_KAWETH=3Dm
+# CONFIG_USB_PEGASUS is not set
+CONFIG_USB_USBNET_MII=3Dy
+CONFIG_USB_USBNET=3Dy
+CONFIG_USB_NET_AX8817X=3Dy
+CONFIG_USB_NET_CDCETHER=3Dy
+CONFIG_USB_NET_DM9601=3Dm
+CONFIG_USB_NET_GL620A=3Dy
+# CONFIG_USB_NET_NET1080 is not set
+CONFIG_USB_NET_MCS7830=3Dy
+CONFIG_USB_NET_CDC_SUBSET=3Dm
+CONFIG_USB_ALI_M5632=3Dy
+# CONFIG_USB_AN2720 is not set
+# CONFIG_USB_BELKIN is not set
+# CONFIG_USB_ARMLINUX is not set
+CONFIG_USB_EPSON2888=3Dy
+CONFIG_USB_NET_ZAURUS=3Dy
+# CONFIG_NET_PCMCIA is not set
+CONFIG_WAN=3Dy
+CONFIG_HOSTESS_SV11=3Dm
+# CONFIG_COSA is not set
+CONFIG_LANMEDIA=3Dy
+CONFIG_SEALEVEL_4021=3Dm
+CONFIG_HDLC=3Dy
+# CONFIG_HDLC_RAW is not set
+CONFIG_HDLC_RAW_ETH=3Dm
+CONFIG_HDLC_CISCO=3Dm
+# CONFIG_HDLC_FR is not set
+CONFIG_HDLC_PPP=3Dm
+
+#
+# X.25/LAPB support is disabled
+#
+CONFIG_PCI200SYN=3Dy
+# CONFIG_WANXL is not set
+# CONFIG_PC300 is not set
+# CONFIG_PC300TOO is not set
+# CONFIG_N2 is not set
+CONFIG_C101=3Dm
+CONFIG_FARSYNC=3Dm
+# CONFIG_DSCC4 is not set
+CONFIG_DLCI=3Dy
+CONFIG_DLCI_MAX=3D8
+CONFIG_SDLA=3Dm
+CONFIG_SBNI=3Dm
+CONFIG_SBNI_MULTILINE=3Dy
+# CONFIG_FDDI is not set
+CONFIG_PLIP=3Dm
+CONFIG_PPP=3Dm
+CONFIG_PPP_FILTER=3Dy
+CONFIG_PPP_ASYNC=3Dm
+CONFIG_PPP_SYNC_TTY=3Dm
+CONFIG_PPP_DEFLATE=3Dm
+# CONFIG_PPP_BSDCOMP is not set
+# CONFIG_SLIP is not set
+CONFIG_SLHC=3Dm
+# CONFIG_NETPOLL is not set
+# CONFIG_NET_POLL_CONTROLLER is not set
+
+#
+# ISDN subsystem
+#
+CONFIG_ISDN=3Dy
+
+#
+# Old ISDN4Linux
+#
+CONFIG_ISDN_I4L=3Dm
+CONFIG_ISDN_PPP=3Dy
+# CONFIG_ISDN_PPP_VJ is not set
+CONFIG_ISDN_MPP=3Dy
+CONFIG_IPPP_FILTER=3Dy
+# CONFIG_ISDN_PPP_BSDCOMP is not set
+# CONFIG_ISDN_AUDIO is not set
+
+#
+# ISDN feature submodules
+#
+# CONFIG_ISDN_DRV_LOOP is not set
+# CONFIG_ISDN_DIVERSION is not set
+
+#
+# ISDN4Linux hardware drivers
+#
+
+#
+# Passive cards
+#
+# CONFIG_ISDN_DRV_HISAX is not set
+
+#
+# Active cards
+#
+# CONFIG_ISDN_DRV_ICN is not set
+# CONFIG_ISDN_DRV_PCBIT is not set
+CONFIG_ISDN_DRV_SC=3Dm
+# CONFIG_ISDN_DRV_ACT2000 is not set
+# CONFIG_HYSDN is not set
+
+#
+# Siemens Gigaset
+#
+# CONFIG_ISDN_DRV_GIGASET is not set
+
+#
+# CAPI subsystem
+#
+CONFIG_ISDN_CAPI=3Dm
+# CONFIG_ISDN_DRV_AVMB1_VERBOSE_REASON is not set
+# CONFIG_CAPI_TRACE is not set
+CONFIG_ISDN_CAPI_CAPI20=3Dm
+# CONFIG_ISDN_CAPI_CAPIDRV is not set
+
+#
+# CAPI hardware drivers
+#
+
+#
+# Active AVM cards
+#
+# CONFIG_CAPI_AVM is not set
+
+#
+# Active Eicon DIVA Server cards
+#
+# CONFIG_CAPI_EICON is not set
+
+#
+# Telephony Support
+#
+CONFIG_PHONE=3Dm
+CONFIG_PHONE_IXJ=3Dm
+CONFIG_PHONE_IXJ_PCMCIA=3Dm
+
+#
+# Input device support
+#
+CONFIG_INPUT=3Dy
+CONFIG_INPUT_FF_MEMLESS=3Dy
+CONFIG_INPUT_POLLDEV=3Dy
+
+#
+# Userland interfaces
+#
+CONFIG_INPUT_MOUSEDEV=3Dy
+# CONFIG_INPUT_MOUSEDEV_PSAUX is not set
+CONFIG_INPUT_MOUSEDEV_SCREEN_X=3D1024
+CONFIG_INPUT_MOUSEDEV_SCREEN_Y=3D768
+CONFIG_INPUT_JOYDEV=3Dy
+CONFIG_INPUT_TSDEV=3Dy
+CONFIG_INPUT_TSDEV_SCREEN_X=3D240
+CONFIG_INPUT_TSDEV_SCREEN_Y=3D320
+CONFIG_INPUT_EVDEV=3Dy
+CONFIG_INPUT_EVBUG=3Dm
+
+#
+# Input Device Drivers
+#
+CONFIG_INPUT_KEYBOARD=3Dy
+CONFIG_KEYBOARD_ATKBD=3Dy
+# CONFIG_KEYBOARD_SUNKBD is not set
+# CONFIG_KEYBOARD_LKKBD is not set
+CONFIG_KEYBOARD_XTKBD=3Dy
+CONFIG_KEYBOARD_NEWTON=3Dy
+# CONFIG_KEYBOARD_STOWAWAY is not set
+CONFIG_INPUT_MOUSE=3Dy
+CONFIG_MOUSE_PS2=3Dm
+CONFIG_MOUSE_PS2_ALPS=3Dy
+CONFIG_MOUSE_PS2_LOGIPS2PP=3Dy
+CONFIG_MOUSE_PS2_SYNAPTICS=3Dy
+CONFIG_MOUSE_PS2_LIFEBOOK=3Dy
+CONFIG_MOUSE_PS2_TRACKPOINT=3Dy
+# CONFIG_MOUSE_PS2_TOUCHKIT is not set
+CONFIG_MOUSE_SERIAL=3Dy
+CONFIG_MOUSE_APPLETOUCH=3Dm
+CONFIG_MOUSE_INPORT=3Dm
+# CONFIG_MOUSE_ATIXL is not set
+CONFIG_MOUSE_LOGIBM=3Dm
+# CONFIG_MOUSE_PC110PAD is not set
+CONFIG_MOUSE_VSXXXAA=3Dy
+# CONFIG_INPUT_JOYSTICK is not set
+# CONFIG_INPUT_TABLET is not set
+# CONFIG_INPUT_TOUCHSCREEN is not set
+# CONFIG_INPUT_MISC is not set
+
+#
+# Hardware I/O ports
+#
+CONFIG_SERIO=3Dy
+CONFIG_SERIO_I8042=3Dy
+CONFIG_SERIO_SERPORT=3Dm
+CONFIG_SERIO_CT82C710=3Dm
+CONFIG_SERIO_PARKBD=3Dm
+# CONFIG_SERIO_PCIPS2 is not set
+CONFIG_SERIO_LIBPS2=3Dy
+CONFIG_SERIO_RAW=3Dm
+# CONFIG_GAMEPORT is not set
+
+#
+# Character devices
+#
+CONFIG_VT=3Dy
+CONFIG_VT_CONSOLE=3Dy
+CONFIG_HW_CONSOLE=3Dy
+CONFIG_VT_HW_CONSOLE_BINDING=3Dy
+# CONFIG_SERIAL_NONSTANDARD is not set
+
+#
+# Serial drivers
+#
+# CONFIG_SERIAL_8250 is not set
+
+#
+# Non-8250 serial port support
+#
+# CONFIG_SERIAL_JSM is not set
+CONFIG_UNIX98_PTYS=3Dy
+# CONFIG_LEGACY_PTYS is not set
+CONFIG_PRINTER=3Dm
+CONFIG_LP_CONSOLE=3Dy
+CONFIG_PPDEV=3Dm
+CONFIG_TIPAR=3Dm
+
+#
+# IPMI
+#
+# CONFIG_IPMI_HANDLER is not set
+CONFIG_WATCHDOG=3Dy
+CONFIG_WATCHDOG_NOWAYOUT=3Dy
+
+#
+# Watchdog Device Drivers
+#
+# CONFIG_SOFT_WATCHDOG is not set
+# CONFIG_ACQUIRE_WDT is not set
+CONFIG_ADVANTECH_WDT=3Dm
+CONFIG_ALIM1535_WDT=3Dm
+CONFIG_ALIM7101_WDT=3Dy
+CONFIG_SC520_WDT=3Dm
+CONFIG_EUROTECH_WDT=3Dm
+# CONFIG_IB700_WDT is not set
+CONFIG_IBMASR=3Dm
+CONFIG_WAFER_WDT=3Dm
+# CONFIG_I6300ESB_WDT is not set
+CONFIG_ITCO_WDT=3Dy
+CONFIG_ITCO_VENDOR_SUPPORT=3Dy
+CONFIG_SC1200_WDT=3Dy
+CONFIG_SCx200_WDT=3Dm
+CONFIG_PC87413_WDT=3Dy
+# CONFIG_60XX_WDT is not set
+CONFIG_SBC8360_WDT=3Dy
+# CONFIG_CPU5_WDT is not set
+# CONFIG_SMSC37B787_WDT is not set
+CONFIG_W83627HF_WDT=3Dm
+CONFIG_W83697HF_WDT=3Dy
+CONFIG_W83877F_WDT=3Dy
+CONFIG_W83977F_WDT=3Dy
+CONFIG_MACHZ_WDT=3Dm
+CONFIG_SBC_EPX_C3_WATCHDOG=3Dy
+
+#
+# ISA-based Watchdog Cards
+#
+CONFIG_PCWATCHDOG=3Dm
+# CONFIG_MIXCOMWD is not set
+# CONFIG_WDT is not set
+
+#
+# PCI-based Watchdog Cards
+#
+# CONFIG_PCIPCWATCHDOG is not set
+CONFIG_WDTPCI=3Dy
+CONFIG_WDT_501_PCI=3Dy
+
+#
+# USB-based Watchdog Cards
+#
+# CONFIG_USBPCWATCHDOG is not set
+CONFIG_HW_RANDOM=3Dm
+CONFIG_HW_RANDOM_INTEL=3Dm
+CONFIG_HW_RANDOM_AMD=3Dm
+CONFIG_HW_RANDOM_GEODE=3Dm
+CONFIG_HW_RANDOM_VIA=3Dm
+CONFIG_NVRAM=3Dy
+# CONFIG_RTC is not set
+# CONFIG_GEN_RTC is not set
+CONFIG_DTLK=3Dy
+# CONFIG_R3964 is not set
+CONFIG_APPLICOM=3Dm
+CONFIG_AGP=3Dm
+CONFIG_AGP_ALI=3Dm
+# CONFIG_AGP_ATI is not set
+# CONFIG_AGP_AMD is not set
+# CONFIG_AGP_AMD64 is not set
+CONFIG_AGP_INTEL=3Dm
+# CONFIG_AGP_NVIDIA is not set
+# CONFIG_AGP_SIS is not set
+CONFIG_AGP_SWORKS=3Dm
+# CONFIG_AGP_VIA is not set
+# CONFIG_AGP_EFFICEON is not set
+# CONFIG_DRM is not set
+
+#
+# PCMCIA character devices
+#
+# CONFIG_SYNCLINK_CS is not set
+CONFIG_CARDMAN_4000=3Dm
+# CONFIG_CARDMAN_4040 is not set
+# CONFIG_MWAVE is not set
+CONFIG_SCx200_GPIO=3Dm
+# CONFIG_PC8736x_GPIO is not set
+CONFIG_NSC_GPIO=3Dm
+CONFIG_CS5535_GPIO=3Dm
+# CONFIG_RAW_DRIVER is not set
+CONFIG_HPET=3Dy
+# CONFIG_HPET_RTC_IRQ is not set
+# CONFIG_HPET_MMAP is not set
+# CONFIG_HANGCHECK_TIMER is not set
+
+#
+# TPM devices
+#
+CONFIG_DEVPORT=3Dy
+CONFIG_I2C=3Dy
+CONFIG_I2C_BOARDINFO=3Dy
+CONFIG_I2C_CHARDEV=3Dm
+
+#
+# I2C Algorithms
+#
+CONFIG_I2C_ALGOBIT=3Dy
+# CONFIG_I2C_ALGOPCF is not set
+CONFIG_I2C_ALGOPCA=3Dm
+
+#
+# I2C Hardware Bus support
+#
+CONFIG_I2C_ALI1535=3Dy
+CONFIG_I2C_ALI15X3=3Dm
+# CONFIG_I2C_AMD756 is not set
+# CONFIG_I2C_AMD8111 is not set
+# CONFIG_I2C_ELEKTOR is not set
+CONFIG_I2C_I801=3Dm
+# CONFIG_I2C_I810 is not set
+CONFIG_I2C_PIIX4=3Dy
+# CONFIG_I2C_NFORCE2 is not set
+# CONFIG_I2C_PARPORT is not set
+# CONFIG_I2C_PARPORT_LIGHT is not set
+CONFIG_I2C_PROSAVAGE=3Dy
+CONFIG_I2C_SIMTEC=3Dy
+# CONFIG_SCx200_I2C is not set
+# CONFIG_SCx200_ACB is not set
+# CONFIG_I2C_SIS5595 is not set
+# CONFIG_I2C_SIS630 is not set
+# CONFIG_I2C_SIS96X is not set
+CONFIG_I2C_TINY_USB=3Dm
+# CONFIG_I2C_VIAPRO is not set
+# CONFIG_I2C_VOODOO3 is not set
+CONFIG_I2C_PCA_ISA=3Dm
+
+#
+# Miscellaneous I2C Chip support
+#
+# CONFIG_I2C_DEBUG_CORE is not set
+# CONFIG_I2C_DEBUG_ALGO is not set
+# CONFIG_I2C_DEBUG_BUS is not set
+# CONFIG_I2C_DEBUG_CHIP is not set
+
+#
+# SPI support
+#
+# CONFIG_SPI is not set
+# CONFIG_SPI_MASTER is not set
+
+#
+# Dallas's 1-wire bus
+#
+CONFIG_W1=3Dy
+CONFIG_W1_CON=3Dy
+
+#
+# 1-wire Bus Masters
+#
+# CONFIG_W1_MASTER_MATROX is not set
+CONFIG_W1_MASTER_DS2490=3Dm
+
+#
+# 1-wire Slaves
+#
+CONFIG_W1_SLAVE_THERM=3Dm
+CONFIG_W1_SLAVE_SMEM=3Dm
+CONFIG_W1_SLAVE_DS2433=3Dy
+# CONFIG_W1_SLAVE_DS2433_CRC is not set
+CONFIG_HWMON=3Dy
+CONFIG_HWMON_VID=3Dy
+CONFIG_SENSORS_ADM1021=3Dy
+CONFIG_SENSORS_ADM1025=3Dy
+CONFIG_SENSORS_DS1621=3Dy
+# CONFIG_SENSORS_FSCHER is not set
+CONFIG_SENSORS_FSCPOS=3Dm
+CONFIG_SENSORS_GL518SM=3Dm
+# CONFIG_SENSORS_GL520SM is not set
+# CONFIG_SENSORS_IT87 is not set
+# CONFIG_SENSORS_LM63 is not set
+CONFIG_SENSORS_LM75=3Dm
+CONFIG_SENSORS_LM77=3Dm
+CONFIG_SENSORS_LM78=3Dm
+CONFIG_SENSORS_LM83=3Dy
+CONFIG_SENSORS_LM87=3Dy
+# CONFIG_SENSORS_LM90 is not set
+CONFIG_SENSORS_LM92=3Dy
+# CONFIG_SENSORS_MAX1619 is not set
+# CONFIG_SENSORS_SMSC47M1 is not set
+# CONFIG_SENSORS_VIA686A is not set
+CONFIG_SENSORS_W83781D=3Dy
+CONFIG_SENSORS_W83627HF=3Dm
+CONFIG_SENSORS_HDAPS=3Dy
+CONFIG_SENSORS_APPLESMC=3Dy
+# CONFIG_HWMON_DEBUG_CHIP is not set
+
+#
+# Multifunction device drivers
+#
+CONFIG_MFD_SM501=3Dm
+
+#
+# Multimedia devices
+#
+CONFIG_VIDEO_DEV=3Dm
+CONFIG_VIDEO_V4L1=3Dy
+CONFIG_VIDEO_V4L1_COMPAT=3Dy
+CONFIG_VIDEO_V4L2=3Dy
+CONFIG_VIDEO_CAPTURE_DRIVERS=3Dy
+# CONFIG_VIDEO_ADV_DEBUG is not set
+# CONFIG_VIDEO_HELPER_CHIPS_AUTO is not set
+
+#
+# Encoders/decoders and other helper chips
+#
+
+#
+# Audio decoders
+#
+# CONFIG_VIDEO_TVAUDIO is not set
+CONFIG_VIDEO_TDA7432=3Dm
+CONFIG_VIDEO_TDA9840=3Dm
+# CONFIG_VIDEO_TDA9875 is not set
+CONFIG_VIDEO_TEA6415C=3Dm
+# CONFIG_VIDEO_TEA6420 is not set
+# CONFIG_VIDEO_MSP3400 is not set
+
+#
+# Video decoders
+#
+CONFIG_VIDEO_BT819=3Dm
+# CONFIG_VIDEO_BT856 is not set
+CONFIG_VIDEO_BT866=3Dm
+CONFIG_VIDEO_KS0127=3Dm
+CONFIG_VIDEO_OV7670=3Dm
+CONFIG_VIDEO_SAA7110=3Dm
+CONFIG_VIDEO_SAA7111=3Dm
+# CONFIG_VIDEO_SAA7114 is not set
+# CONFIG_VIDEO_SAA7191 is not set
+# CONFIG_VIDEO_TVP5150 is not set
+# CONFIG_VIDEO_VPX3220 is not set
+
+#
+# Video and audio decoders
+#
+
+#
+# MPEG video encoders
+#
+CONFIG_VIDEO_CX2341X=3Dm
+
+#
+# Video encoders
+#
+CONFIG_VIDEO_SAA7185=3Dm
+CONFIG_VIDEO_ADV7170=3Dm
+CONFIG_VIDEO_ADV7175=3Dm
+
+#
+# Video improvement chips
+#
+# CONFIG_VIDEO_VIVI is not set
+CONFIG_VIDEO_BT848=3Dm
+CONFIG_VIDEO_BT848_DVB=3Dy
+CONFIG_VIDEO_SAA6588=3Dm
+# CONFIG_VIDEO_PMS is not set
+CONFIG_VIDEO_BWQCAM=3Dm
+# CONFIG_VIDEO_W9966 is not set
+# CONFIG_VIDEO_CPIA is not set
+CONFIG_VIDEO_CPIA2=3Dm
+# CONFIG_VIDEO_SAA5246A is not set
+# CONFIG_VIDEO_SAA5249 is not set
+# CONFIG_TUNER_3036 is not set
+# CONFIG_VIDEO_ZORAN is not set
+CONFIG_VIDEO_MEYE=3Dm
+# CONFIG_VIDEO_SAA7134 is not set
+CONFIG_VIDEO_MXB=3Dm
+CONFIG_VIDEO_DPC=3Dm
+CONFIG_VIDEO_HEXIUM_ORION=3Dm
+# CONFIG_VIDEO_HEXIUM_GEMINI is not set
+CONFIG_VIDEO_CX88=3Dm
+CONFIG_VIDEO_CX88_BLACKBIRD=3Dm
+CONFIG_VIDEO_CX88_DVB=3Dm
+CONFIG_VIDEO_CX88_VP3054=3Dm
+# CONFIG_VIDEO_CAFE_CCIC is not set
+CONFIG_V4L_USB_DRIVERS=3Dy
+# CONFIG_VIDEO_EM28XX is not set
+# CONFIG_VIDEO_USBVISION is not set
+CONFIG_VIDEO_USBVIDEO=3Dm
+# CONFIG_USB_IBMCAM is not set
+# CONFIG_USB_KONICAWC is not set
+CONFIG_USB_QUICKCAM_MESSENGER=3Dm
+CONFIG_USB_ET61X251=3Dm
+CONFIG_VIDEO_OVCAMCHIP=3Dm
+CONFIG_USB_W9968CF=3Dm
+# CONFIG_USB_OV511 is not set
+CONFIG_USB_SE401=3Dm
+CONFIG_USB_SN9C102=3Dm
+# CONFIG_USB_STV680 is not set
+# CONFIG_USB_ZC0301 is not set
+CONFIG_USB_PWC=3Dm
+# CONFIG_USB_PWC_DEBUG is not set
+CONFIG_USB_ZR364XX=3Dm
+# CONFIG_RADIO_ADAPTERS is not set
+CONFIG_DVB_CORE=3Dm
+# CONFIG_DVB_CORE_ATTACH is not set
+CONFIG_DVB_CAPTURE_DRIVERS=3Dy
+
+#
+# Supported SAA7146 based PCI Adapters
+#
+CONFIG_DVB_AV7110=3Dm
+# CONFIG_DVB_AV7110_OSD is not set
+# CONFIG_DVB_BUDGET is not set
+CONFIG_DVB_BUDGET_CI=3Dm
+CONFIG_DVB_BUDGET_AV=3Dm
+
+#
+# Supported USB Adapters
+#
+# CONFIG_DVB_USB is not set
+# CONFIG_DVB_TTUSB_BUDGET is not set
+# CONFIG_DVB_TTUSB_DEC is not set
+# CONFIG_DVB_CINERGYT2 is not set
+
+#
+# Supported FlexCopII (B2C2) Adapters
+#
+# CONFIG_DVB_B2C2_FLEXCOP is not set
+
+#
+# Supported BT878 Adapters
+#
+CONFIG_DVB_BT8XX=3Dm
+
+#
+# Supported Pluto2 Adapters
+#
+CONFIG_DVB_PLUTO2=3Dm
+
+#
+# Supported DVB Frontends
+#
+
+#
+# Customise DVB Frontends
+#
+# CONFIG_DVB_FE_CUSTOMISE is not set
+
+#
+# DVB-S (satellite) frontends
+#
+CONFIG_DVB_STV0299=3Dm
+CONFIG_DVB_CX24110=3Dm
+CONFIG_DVB_CX24123=3Dm
+CONFIG_DVB_TDA8083=3Dm
+# CONFIG_DVB_MT312 is not set
+CONFIG_DVB_VES1X93=3Dm
+# CONFIG_DVB_S5H1420 is not set
+CONFIG_DVB_TDA10086=3Dm
+
+#
+# DVB-T (terrestrial) frontends
+#
+CONFIG_DVB_SP8870=3Dm
+CONFIG_DVB_SP887X=3Dm
+CONFIG_DVB_CX22700=3Dm
+CONFIG_DVB_CX22702=3Dm
+CONFIG_DVB_L64781=3Dm
+CONFIG_DVB_TDA1004X=3Dm
+CONFIG_DVB_NXT6000=3Dm
+CONFIG_DVB_MT352=3Dm
+CONFIG_DVB_ZL10353=3Dm
+CONFIG_DVB_DIB3000MB=3Dm
+# CONFIG_DVB_DIB3000MC is not set
+CONFIG_DVB_DIB7000M=3Dm
+CONFIG_DVB_DIB7000P=3Dm
+
+#
+# DVB-C (cable) frontends
+#
+CONFIG_DVB_VES1820=3Dm
+CONFIG_DVB_TDA10021=3Dm
+CONFIG_DVB_TDA10023=3Dm
+CONFIG_DVB_STV0297=3Dm
+
+#
+# ATSC (North American/Korean Terrestrial/Cable DTV) frontends
+#
+CONFIG_DVB_NXT200X=3Dm
+CONFIG_DVB_OR51211=3Dm
+CONFIG_DVB_OR51132=3Dm
+CONFIG_DVB_BCM3510=3Dm
+CONFIG_DVB_LGDT330X=3Dm
+
+#
+# Tuners/PLL support
+#
+CONFIG_DVB_PLL=3Dm
+# CONFIG_DVB_TDA826X is not set
+CONFIG_DVB_TDA827X=3Dm
+CONFIG_DVB_TUNER_QT1010=3Dm
+CONFIG_DVB_TUNER_MT2060=3Dm
+
+#
+# Miscellaneous devices
+#
+CONFIG_DVB_LNBP21=3Dm
+CONFIG_DVB_ISL6421=3Dm
+CONFIG_DVB_TUA6100=3Dm
+CONFIG_VIDEO_SAA7146=3Dm
+CONFIG_VIDEO_SAA7146_VV=3Dm
+CONFIG_VIDEO_TUNER=3Dm
+CONFIG_VIDEO_BUF=3Dm
+CONFIG_VIDEO_BUF_DVB=3Dm
+CONFIG_VIDEO_BTCX=3Dm
+CONFIG_VIDEO_IR=3Dm
+CONFIG_VIDEO_TVEEPROM=3Dm
+CONFIG_DAB=3Dy
+CONFIG_USB_DABUSB=3Dm
+
+#
+# Graphics support
+#
+CONFIG_BACKLIGHT_LCD_SUPPORT=3Dy
+CONFIG_BACKLIGHT_CLASS_DEVICE=3Dy
+CONFIG_LCD_CLASS_DEVICE=3Dy
+CONFIG_BACKLIGHT_PROGEAR=3Dm
+
+#
+# Display device support
+#
+CONFIG_DISPLAY_SUPPORT=3Dm
+
+#
+# Display hardware drivers
+#
+CONFIG_VGASTATE=3Dy
+CONFIG_FB=3Dy
+# CONFIG_FIRMWARE_EDID is not set
+CONFIG_FB_DDC=3Dy
+CONFIG_FB_CFB_FILLRECT=3Dy
+CONFIG_FB_CFB_COPYAREA=3Dy
+CONFIG_FB_CFB_IMAGEBLIT=3Dy
+CONFIG_FB_SYS_FILLRECT=3Dy
+CONFIG_FB_SYS_COPYAREA=3Dy
+CONFIG_FB_SYS_IMAGEBLIT=3Dy
+CONFIG_FB_SYS_FOPS=3Dy
+CONFIG_FB_DEFERRED_IO=3Dy
+CONFIG_FB_SVGALIB=3Dm
+# CONFIG_FB_MACMODES is not set
+CONFIG_FB_BACKLIGHT=3Dy
+CONFIG_FB_MODE_HELPERS=3Dy
+CONFIG_FB_TILEBLITTING=3Dy
+
+#
+# Frame buffer hardware drivers
+#
+CONFIG_FB_CIRRUS=3Dy
+CONFIG_FB_PM2=3Dm
+CONFIG_FB_PM2_FIFO_DISCONNECT=3Dy
+CONFIG_FB_CYBER2000=3Dy
+CONFIG_FB_ARC=3Dy
+CONFIG_FB_ASILIANT=3Dy
+# CONFIG_FB_IMSTT is not set
+# CONFIG_FB_VGA16 is not set
+CONFIG_FB_VESA=3Dy
+# CONFIG_FB_IMAC is not set
+CONFIG_FB_HECUBA=3Dm
+CONFIG_FB_HGA=3Dy
+CONFIG_FB_S1D13XXX=3Dm
+# CONFIG_FB_NVIDIA is not set
+CONFIG_FB_RIVA=3Dy
+CONFIG_FB_RIVA_I2C=3Dy
+# CONFIG_FB_RIVA_DEBUG is not set
+CONFIG_FB_RIVA_BACKLIGHT=3Dy
+# CONFIG_FB_LE80578 is not set
+# CONFIG_FB_MATROX is not set
+CONFIG_FB_RADEON=3Dy
+# CONFIG_FB_RADEON_I2C is not set
+CONFIG_FB_RADEON_BACKLIGHT=3Dy
+# CONFIG_FB_RADEON_DEBUG is not set
+CONFIG_FB_ATY128=3Dy
+CONFIG_FB_ATY128_BACKLIGHT=3Dy
+CONFIG_FB_ATY=3Dy
+CONFIG_FB_ATY_CT=3Dy
+CONFIG_FB_ATY_GENERIC_LCD=3Dy
+CONFIG_FB_ATY_GX=3Dy
+CONFIG_FB_ATY_BACKLIGHT=3Dy
+CONFIG_FB_S3=3Dm
+# CONFIG_FB_SIS is not set
+# CONFIG_FB_NEOMAGIC is not set
+CONFIG_FB_KYRO=3Dy
+CONFIG_FB_3DFX=3Dy
+CONFIG_FB_VOODOO1=3Dy
+CONFIG_FB_VT8623=3Dm
+CONFIG_FB_CYBLA=3Dm
+# CONFIG_FB_TRIDENT is not set
+CONFIG_FB_ARK=3Dm
+CONFIG_FB_SM501=3Dm
+# CONFIG_FB_VIRTUAL is not set
+
+#
+# Console display driver support
+#
+CONFIG_VGA_CONSOLE=3Dy
+CONFIG_VGACON_SOFT_SCROLLBACK=3Dy
+CONFIG_VGACON_SOFT_SCROLLBACK_SIZE=3D64
+CONFIG_VIDEO_SELECT=3Dy
+CONFIG_MDA_CONSOLE=3Dy
+CONFIG_DUMMY_CONSOLE=3Dy
+CONFIG_FRAMEBUFFER_CONSOLE=3Dm
+# CONFIG_FRAMEBUFFER_CONSOLE_ROTATION is not set
+CONFIG_FONTS=3Dy
+CONFIG_FONT_8x8=3Dy
+CONFIG_FONT_8x16=3Dy
+# CONFIG_FONT_6x11 is not set
+CONFIG_FONT_7x14=3Dy
+# CONFIG_FONT_PEARL_8x8 is not set
+CONFIG_FONT_ACORN_8x8=3Dy
+# CONFIG_FONT_MINI_4x6 is not set
+# CONFIG_FONT_SUN8x16 is not set
+# CONFIG_FONT_SUN12x22 is not set
+# CONFIG_FONT_10x18 is not set
+# CONFIG_LOGO is not set
+
+#
+# Sound
+#
+CONFIG_SOUND=3Dm
+
+#
+# Advanced Linux Sound Architecture
+#
+# CONFIG_SND is not set
+
+#
+# Open Sound System
+#
+CONFIG_SOUND_PRIME=3Dm
+# CONFIG_OSS_OBSOLETE is not set
+# CONFIG_SOUND_TRIDENT is not set
+CONFIG_SOUND_MSNDCLAS=3Dm
+CONFIG_MSNDCLAS_INIT_FILE=3D"/etc/sound/msndinit.bin"
+CONFIG_MSNDCLAS_PERM_FILE=3D"/etc/sound/msndperm.bin"
+CONFIG_SOUND_MSNDPIN=3Dm
+CONFIG_MSNDPIN_INIT_FILE=3D"/etc/sound/pndspini.bin"
+CONFIG_MSNDPIN_PERM_FILE=3D"/etc/sound/pndsperm.bin"
+# CONFIG_SOUND_OSS is not set
+
+#
+# HID Devices
+#
+CONFIG_HID=3Dy
+# CONFIG_HID_DEBUG is not set
+
+#
+# USB Input Devices
+#
+CONFIG_USB_HID=3Dm
+# CONFIG_USB_HIDINPUT_POWERBOOK is not set
+CONFIG_USB_HIDDEV=3Dy
+
+#
+# USB HID Boot Protocol drivers
+#
+CONFIG_USB_KBD=3Dm
+CONFIG_USB_MOUSE=3Dm
+
+#
+# USB support
+#
+CONFIG_USB_ARCH_HAS_HCD=3Dy
+CONFIG_USB_ARCH_HAS_OHCI=3Dy
+CONFIG_USB_ARCH_HAS_EHCI=3Dy
+CONFIG_USB=3Dy
+# CONFIG_USB_DEBUG is not set
+
+#
+# Miscellaneous USB options
+#
+# CONFIG_USB_DEVICEFS is not set
+# CONFIG_USB_DEVICE_CLASS is not set
+
+#
+# USB Host Controller Drivers
+#
+# CONFIG_USB_EHCI_HCD is not set
+# CONFIG_USB_ISP116X_HCD is not set
+CONFIG_USB_OHCI_HCD=3Dy
+# CONFIG_USB_OHCI_BIG_ENDIAN_DESC is not set
+# CONFIG_USB_OHCI_BIG_ENDIAN_MMIO is not set
+CONFIG_USB_OHCI_LITTLE_ENDIAN=3Dy
+# CONFIG_USB_UHCI_HCD is not set
+CONFIG_USB_U132_HCD=3Dy
+CONFIG_USB_SL811_HCD=3Dm
+CONFIG_USB_SL811_CS=3Dm
+
+#
+# USB Device Class drivers
+#
+CONFIG_USB_ACM=3Dm
+CONFIG_USB_PRINTER=3Dm
+
+#
+# NOTE: USB_STORAGE enables SCSI, and 'SCSI disk support'
+#
+
+#
+# may also be needed; see USB_STORAGE Help for more information
+#
+# CONFIG_USB_LIBUSUAL is not set
+
+#
+# USB Imaging devices
+#
+CONFIG_USB_MON=3Dy
+
+#
+# USB port drivers
+#
+CONFIG_USB_USS720=3Dm
+
+#
+# USB Serial Converter support
+#
+CONFIG_USB_SERIAL=3Dy
+CONFIG_USB_SERIAL_GENERIC=3Dy
+CONFIG_USB_SERIAL_AIRPRIME=3Dm
+CONFIG_USB_SERIAL_BELKIN=3Dm
+CONFIG_USB_SERIAL_WHITEHEAT=3Dy
+# CONFIG_USB_SERIAL_DIGI_ACCELEPORT is not set
+CONFIG_USB_SERIAL_EMPEG=3Dm
+CONFIG_USB_SERIAL_FUNSOFT=3Dm
+CONFIG_USB_SERIAL_VISOR=3Dy
+CONFIG_USB_SERIAL_IPAQ=3Dy
+CONFIG_USB_SERIAL_EDGEPORT=3Dm
+# CONFIG_USB_SERIAL_EDGEPORT_TI is not set
+CONFIG_USB_SERIAL_GARMIN=3Dy
+CONFIG_USB_SERIAL_KEYSPAN_PDA=3Dy
+CONFIG_USB_SERIAL_KEYSPAN=3Dm
+CONFIG_USB_SERIAL_KEYSPAN_MPR=3Dy
+# CONFIG_USB_SERIAL_KEYSPAN_USA28 is not set
+CONFIG_USB_SERIAL_KEYSPAN_USA28X=3Dy
+CONFIG_USB_SERIAL_KEYSPAN_USA28XA=3Dy
+CONFIG_USB_SERIAL_KEYSPAN_USA28XB=3Dy
+# CONFIG_USB_SERIAL_KEYSPAN_USA19 is not set
+# CONFIG_USB_SERIAL_KEYSPAN_USA18X is not set
+# CONFIG_USB_SERIAL_KEYSPAN_USA19W is not set
+CONFIG_USB_SERIAL_KEYSPAN_USA19QW=3Dy
+CONFIG_USB_SERIAL_KEYSPAN_USA19QI=3Dy
+CONFIG_USB_SERIAL_KEYSPAN_USA49W=3Dy
+# CONFIG_USB_SERIAL_KEYSPAN_USA49WLC is not set
+CONFIG_USB_SERIAL_KOBIL_SCT=3Dy
+CONFIG_USB_SERIAL_MCT_U232=3Dy
+CONFIG_USB_SERIAL_MOS7720=3Dy
+CONFIG_USB_SERIAL_MOS7840=3Dm
+# CONFIG_USB_SERIAL_NAVMAN is not set
+CONFIG_USB_SERIAL_PL2303=3Dm
+CONFIG_USB_SERIAL_HP4X=3Dy
+# CONFIG_USB_SERIAL_SIERRAWIRELESS is not set
+# CONFIG_USB_SERIAL_TI is not set
+# CONFIG_USB_SERIAL_XIRCOM is not set
+CONFIG_USB_SERIAL_OPTION=3Dm
+# CONFIG_USB_SERIAL_DEBUG is not set
+CONFIG_USB_EZUSB=3Dy
+
+#
+# USB Miscellaneous drivers
+#
+CONFIG_USB_EMI62=3Dm
+CONFIG_USB_EMI26=3Dy
+CONFIG_USB_LCD=3Dm
+CONFIG_USB_BERRY_CHARGE=3Dy
+CONFIG_USB_LED=3Dm
+CONFIG_USB_CYPRESS_CY7C63=3Dm
+# CONFIG_USB_CYTHERM is not set
+CONFIG_USB_PHIDGET=3Dm
+# CONFIG_USB_PHIDGETKIT is not set
+CONFIG_USB_PHIDGETMOTORCONTROL=3Dm
+CONFIG_USB_PHIDGETSERVO=3Dm
+# CONFIG_USB_IDMOUSE is not set
+CONFIG_USB_FTDI_ELAN=3Dy
+CONFIG_USB_APPLEDISPLAY=3Dy
+CONFIG_USB_LD=3Dm
+CONFIG_USB_TRANCEVIBRATOR=3Dm
+CONFIG_USB_IOWARRIOR=3Dm
+
+#
+# USB DSL modem support
+#
+
+#
+# USB Gadget Support
+#
+CONFIG_USB_GADGET=3Dy
+# CONFIG_USB_GADGET_DEBUG_FILES is not set
+CONFIG_USB_GADGET_SELECTED=3Dy
+# CONFIG_USB_GADGET_FSL_USB2 is not set
+CONFIG_USB_GADGET_NET2280=3Dy
+CONFIG_USB_NET2280=3Dy
+# CONFIG_USB_GADGET_PXA2XX is not set
+# CONFIG_USB_GADGET_GOKU is not set
+# CONFIG_USB_GADGET_LH7A40X is not set
+# CONFIG_USB_GADGET_OMAP is not set
+# CONFIG_USB_GADGET_AT91 is not set
+# CONFIG_USB_GADGET_DUMMY_HCD is not set
+CONFIG_USB_GADGET_DUALSPEED=3Dy
+# CONFIG_USB_ZERO is not set
+CONFIG_USB_ETH=3Dm
+# CONFIG_USB_GADGETFS is not set
+# CONFIG_USB_FILE_STORAGE is not set
+CONFIG_USB_G_SERIAL=3Dm
+# CONFIG_USB_MIDI_GADGET is not set
+# CONFIG_MMC is not set
+
+#
+# LED devices
+#
+CONFIG_NEW_LEDS=3Dy
+CONFIG_LEDS_CLASS=3Dy
+
+#
+# LED drivers
+#
+CONFIG_LEDS_NET48XX=3Dm
+# CONFIG_LEDS_WRAP is not set
+
+#
+# LED Triggers
+#
+# CONFIG_LEDS_TRIGGERS is not set
+
+#
+# InfiniBand support
+#
+# CONFIG_INFINIBAND is not set
+
+#
+# EDAC - error detection and reporting (RAS) (EXPERIMENTAL)
+#
+
+#
+# Real Time Clock
+#
+
+#
+# DMA Engine support
+#
+# CONFIG_DMA_ENGINE is not set
+
+#
+# DMA Clients
+#
+
+#
+# DMA Devices
+#
+
+#
+# Auxiliary Display support
+#
+CONFIG_KS0108=3Dm
+CONFIG_KS0108_PORT=3D0x378
+CONFIG_KS0108_DELAY=3D2
+CONFIG_CFAG12864B=3Dm
+CONFIG_CFAG12864B_RATE=3D20
+
+#
+# Virtualization
+#
+
+#
+# File systems
+#
+# CONFIG_EXT2_FS is not set
+# CONFIG_EXT3_FS is not set
+# CONFIG_REISERFS_FS is not set
+# CONFIG_JFS_FS is not set
+CONFIG_FS_POSIX_ACL=3Dy
+# CONFIG_XFS_FS is not set
+# CONFIG_OCFS2_FS is not set
+# CONFIG_MINIX_FS is not set
+# CONFIG_ROMFS_FS is not set
+# CONFIG_INOTIFY is not set
+# CONFIG_QUOTA is not set
+CONFIG_DNOTIFY=3Dy
+CONFIG_AUTOFS_FS=3Dy
+CONFIG_AUTOFS4_FS=3Dy
+# CONFIG_FUSE_FS is not set
+
+#
+# CD-ROM/DVD Filesystems
+#
+# CONFIG_ISO9660_FS is not set
+# CONFIG_UDF_FS is not set
+
+#
+# DOS/FAT/NT Filesystems
+#
+# CONFIG_MSDOS_FS is not set
+# CONFIG_VFAT_FS is not set
+# CONFIG_NTFS_FS is not set
+
+#
+# Pseudo filesystems
+#
+CONFIG_PROC_FS=3Dy
+CONFIG_PROC_KCORE=3Dy
+CONFIG_PROC_SYSCTL=3Dy
+CONFIG_SYSFS=3Dy
+# CONFIG_TMPFS is not set
+CONFIG_HUGETLBFS=3Dy
+CONFIG_HUGETLB_PAGE=3Dy
+CONFIG_RAMFS=3Dy
+
+#
+# Miscellaneous filesystems
+#
+# CONFIG_HFSPLUS_FS is not set
+# CONFIG_CRAMFS is not set
+# CONFIG_VXFS_FS is not set
+# CONFIG_HPFS_FS is not set
+# CONFIG_QNX4FS_FS is not set
+# CONFIG_SYSV_FS is not set
+# CONFIG_UFS_FS is not set
+
+#
+# Network File Systems
+#
+CONFIG_NFS_FS=3Dm
+# CONFIG_NFS_V3 is not set
+CONFIG_NFS_DIRECTIO=3Dy
+CONFIG_NFSD=3Dm
+CONFIG_NFSD_V2_ACL=3Dy
+CONFIG_NFSD_V3=3Dy
+CONFIG_NFSD_V3_ACL=3Dy
+# CONFIG_NFSD_TCP is not set
+CONFIG_LOCKD=3Dm
+CONFIG_LOCKD_V4=3Dy
+CONFIG_EXPORTFS=3Dm
+CONFIG_NFS_ACL_SUPPORT=3Dm
+CONFIG_NFS_COMMON=3Dy
+CONFIG_SUNRPC=3Dm
+CONFIG_SMB_FS=3Dm
+# CONFIG_SMB_NLS_DEFAULT is not set
+# CONFIG_CIFS is not set
+CONFIG_NCP_FS=3Dm
+CONFIG_NCPFS_PACKET_SIGNING=3Dy
+CONFIG_NCPFS_IOCTL_LOCKING=3Dy
+# CONFIG_NCPFS_STRONG is not set
+# CONFIG_NCPFS_NFS_NS is not set
+CONFIG_NCPFS_OS2_NS=3Dy
+# CONFIG_NCPFS_SMALLDOS is not set
+CONFIG_NCPFS_NLS=3Dy
+# CONFIG_NCPFS_EXTRAS is not set
+CONFIG_CODA_FS=3Dm
+CONFIG_CODA_FS_OLD_API=3Dy
+
+#
+# Partition Types
+#
+# CONFIG_PARTITION_ADVANCED is not set
+CONFIG_MSDOS_PARTITION=3Dy
+
+#
+# Native Language Support
+#
+CONFIG_NLS=3Dm
+CONFIG_NLS_DEFAULT=3D"iso8859-1"
+# CONFIG_NLS_CODEPAGE_437 is not set
+# CONFIG_NLS_CODEPAGE_737 is not set
+# CONFIG_NLS_CODEPAGE_775 is not set
+# CONFIG_NLS_CODEPAGE_850 is not set
+CONFIG_NLS_CODEPAGE_852=3Dm
+# CONFIG_NLS_CODEPAGE_855 is not set
+# CONFIG_NLS_CODEPAGE_857 is not set
+# CONFIG_NLS_CODEPAGE_860 is not set
+CONFIG_NLS_CODEPAGE_861=3Dm
+# CONFIG_NLS_CODEPAGE_862 is not set
+CONFIG_NLS_CODEPAGE_863=3Dm
+CONFIG_NLS_CODEPAGE_864=3Dm
+CONFIG_NLS_CODEPAGE_865=3Dm
+# CONFIG_NLS_CODEPAGE_866 is not set
+CONFIG_NLS_CODEPAGE_869=3Dm
+# CONFIG_NLS_CODEPAGE_936 is not set
+# CONFIG_NLS_CODEPAGE_950 is not set
+CONFIG_NLS_CODEPAGE_932=3Dm
+CONFIG_NLS_CODEPAGE_949=3Dm
+CONFIG_NLS_CODEPAGE_874=3Dm
+CONFIG_NLS_ISO8859_8=3Dm
+CONFIG_NLS_CODEPAGE_1250=3Dm
+# CONFIG_NLS_CODEPAGE_1251 is not set
+# CONFIG_NLS_ASCII is not set
+# CONFIG_NLS_ISO8859_1 is not set
+CONFIG_NLS_ISO8859_2=3Dm
+CONFIG_NLS_ISO8859_3=3Dm
+CONFIG_NLS_ISO8859_4=3Dm
+# CONFIG_NLS_ISO8859_5 is not set
+CONFIG_NLS_ISO8859_6=3Dm
+CONFIG_NLS_ISO8859_7=3Dm
+CONFIG_NLS_ISO8859_9=3Dm
+# CONFIG_NLS_ISO8859_13 is not set
+CONFIG_NLS_ISO8859_14=3Dm
+# CONFIG_NLS_ISO8859_15 is not set
+CONFIG_NLS_KOI8_R=3Dm
+CONFIG_NLS_KOI8_U=3Dm
+# CONFIG_NLS_UTF8 is not set
+
+#
+# Kernel hacking
+#
+CONFIG_TRACE_IRQFLAGS_SUPPORT=3Dy
+# CONFIG_PRINTK_TIME is not set
+# CONFIG_ENABLE_MUST_CHECK is not set
+# CONFIG_MAGIC_SYSRQ is not set
+CONFIG_UNUSED_SYMBOLS=3Dy
+# CONFIG_DEBUG_FS is not set
+CONFIG_HEADERS_CHECK=3Dy
+# CONFIG_DEBUG_KERNEL is not set
+CONFIG_DEBUG_BUGVERBOSE=3Dy
+CONFIG_EARLY_PRINTK=3Dy
+CONFIG_DOUBLEFAULT=3Dy
+
+#
+# Security options
+#
+CONFIG_KEYS=3Dy
+# CONFIG_KEYS_DEBUG_PROC_KEYS is not set
+CONFIG_SECURITY=3Dy
+# CONFIG_SECURITY_NETWORK is not set
+CONFIG_SECURITY_CAPABILITIES=3Dy
+# CONFIG_SECURITY_ROOTPLUG is not set
+
+#
+# Cryptographic options
+#
+CONFIG_CRYPTO=3Dy
+CONFIG_CRYPTO_ALGAPI=3Dy
+CONFIG_CRYPTO_ABLKCIPHER=3Dm
+CONFIG_CRYPTO_BLKCIPHER=3Dy
+CONFIG_CRYPTO_HASH=3Dy
+CONFIG_CRYPTO_MANAGER=3Dy
+CONFIG_CRYPTO_HMAC=3Dy
+CONFIG_CRYPTO_NULL=3Dm
+CONFIG_CRYPTO_MD4=3Dy
+CONFIG_CRYPTO_MD5=3Dy
+CONFIG_CRYPTO_SHA1=3Dy
+CONFIG_CRYPTO_SHA256=3Dm
+CONFIG_CRYPTO_SHA512=3Dy
+# CONFIG_CRYPTO_WP512 is not set
+CONFIG_CRYPTO_TGR192=3Dm
+CONFIG_CRYPTO_ECB=3Dy
+CONFIG_CRYPTO_CBC=3Dy
+CONFIG_CRYPTO_PCBC=3Dm
+CONFIG_CRYPTO_CRYPTD=3Dm
+CONFIG_CRYPTO_DES=3Dy
+CONFIG_CRYPTO_FCRYPT=3Dy
+CONFIG_CRYPTO_BLOWFISH=3Dm
+CONFIG_CRYPTO_TWOFISH=3Dm
+CONFIG_CRYPTO_TWOFISH_COMMON=3Dy
+CONFIG_CRYPTO_TWOFISH_586=3Dy
+CONFIG_CRYPTO_SERPENT=3Dm
+CONFIG_CRYPTO_AES=3Dm
+# CONFIG_CRYPTO_AES_586 is not set
+CONFIG_CRYPTO_CAST5=3Dm
+CONFIG_CRYPTO_CAST6=3Dm
+# CONFIG_CRYPTO_TEA is not set
+CONFIG_CRYPTO_ARC4=3Dy
+# CONFIG_CRYPTO_KHAZAD is not set
+CONFIG_CRYPTO_ANUBIS=3Dy
+CONFIG_CRYPTO_DEFLATE=3Dy
+# CONFIG_CRYPTO_MICHAEL_MIC is not set
+CONFIG_CRYPTO_CRC32C=3Dy
+CONFIG_CRYPTO_CAMELLIA=3Dm
+CONFIG_CRYPTO_TEST=3Dm
+
+#
+# Hardware crypto devices
+#
+CONFIG_CRYPTO_DEV_PADLOCK=3Dm
+CONFIG_CRYPTO_DEV_PADLOCK_AES=3Dm
+# CONFIG_CRYPTO_DEV_PADLOCK_SHA is not set
+# CONFIG_CRYPTO_DEV_GEODE is not set
+
+#
+# Library routines
+#
+CONFIG_BITREVERSE=3Dy
+CONFIG_CRC_CCITT=3Dy
+CONFIG_CRC16=3Dm
+# CONFIG_CRC_ITU_T is not set
+CONFIG_CRC32=3Dy
+CONFIG_LIBCRC32C=3Dy
+CONFIG_ZLIB_INFLATE=3Dy
+CONFIG_ZLIB_DEFLATE=3Dy
+CONFIG_PLIST=3Dy
+CONFIG_HAS_IOMEM=3Dy
+CONFIG_HAS_IOPORT=3Dy
+CONFIG_HAS_DMA=3Dy
+CONFIG_GENERIC_HARDIRQS=3Dy
+CONFIG_GENERIC_IRQ_PROBE=3Dy
+CONFIG_X86_BIOS_REBOOT=3Dy
+CONFIG_KTIME_SCALAR=3Dy
+
+
+
+=2D------------------------------------------------------
+
+=2D-=20
+MfG/Sincerely
+
+Toralf F=F6rster
+
+--Boundary-01=_t4MhGeMWxa/FR8+
+Content-Type: text/plain;
+  name="build #301 failed for 2.6.22-rc6-g0471448 in"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+the build with the attached .config failed, make ends with:
+...
+  MODPOST vmlinux
+  AS      arch/i386/boot/bootsect.o
+  LD      arch/i386/boot/bootsect
+  AS      arch/i386/boot/setup.o
+  LD      arch/i386/boot/setup
+  AS      arch/i386/boot/compressed/head.o
+  CC      arch/i386/boot/compressed/misc.o
+  OBJCOPY arch/i386/boot/compressed/vmlinux.bin
+  GZIP    arch/i386/boot/compressed/vmlinux.bin.gz
+  LD      arch/i386/boot/compressed/piggy.o
+  LD      arch/i386/boot/compressed/vmlinux
+  OBJCOPY arch/i386/boot/vmlinux.bin
+  HOSTCC  arch/i386/boot/tools/build
+  BUILD   arch/i386/boot/bzImage
+Root device is (3, 8)
+Boot sector 512 bytes.
+Setup is 7161 bytes.
+System is 2114 kB
+Kernel: arch/i386/boot/bzImage is ready  (#1)
+  Building modules, stage 2.
+  MODPOST 355 modules
+ERROR: "libertas_remove_mesh" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+ERROR: "libertas_add_card" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+ERROR: "libertas_send_tx_feedback" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+ERROR: "libertas_prepare_and_send_command" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+ERROR: "libertas_remove_card" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+ERROR: "libertas_add_mesh" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+ERROR: "libertas_process_rxed_packet" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+ERROR: "libertas_interrupt" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+ERROR: "libertas_activate_card" [drivers/net/wireless/libertas/usb8xxx.ko] undefined!
+make[1]: *** [__modpost] Error 1
+make: *** [modules] Error 2
+
+The build was made with :
+$> make mrproper && make rndconfig && <tweak it to ThinkPad T41> && make oldconfig && make
+
+Here's the config:
+
+#
+# Automatically generated make config: don't edit
+# Linux kernel version: 2.6.22-rc6
+# Fri Jun 29 10:23:19 2007
+#
+CONFIG_X86_32=y
+CONFIG_GENERIC_TIME=y
+CONFIG_CLOCKSOURCE_WATCHDOG=y
+CONFIG_GENERIC_CLOCKEVENTS=y
+CONFIG_LOCKDEP_SUPPORT=y
+CONFIG_STACKTRACE_SUPPORT=y
+CONFIG_SEMAPHORE_SLEEPERS=y
+CONFIG_X86=y
+CONFIG_MMU=y
+CONFIG_ZONE_DMA=y
+CONFIG_QUICKLIST=y
+CONFIG_GENERIC_ISA_DMA=y
+CONFIG_GENERIC_IOMAP=y
+CONFIG_GENERIC_BUG=y
+CONFIG_GENERIC_HWEIGHT=y
+CONFIG_ARCH_MAY_HAVE_PC_FDC=y
+CONFIG_DMI=y
+CONFIG_DEFCONFIG_LIST="/lib/modules/$UNAME_RELEASE/.config"
+
+#
+# Code maturity level options
+#
+# CONFIG_EXPERIMENTAL is not set
+CONFIG_BROKEN_ON_SMP=y
+CONFIG_LOCK_KERNEL=y
+CONFIG_INIT_ENV_ARG_LIMIT=32
+
+#
+# General setup
+#
+CONFIG_LOCALVERSION=""
+CONFIG_LOCALVERSION_AUTO=y
+CONFIG_SWAP=y
+CONFIG_SYSVIPC=y
+# CONFIG_IPC_NS is not set
+CONFIG_SYSVIPC_SYSCTL=y
+# CONFIG_BSD_PROCESS_ACCT is not set
+# CONFIG_TASKSTATS is not set
+CONFIG_UTS_NS=y
+# CONFIG_AUDIT is not set
+CONFIG_IKCONFIG=y
+CONFIG_IKCONFIG_PROC=y
+CONFIG_LOG_BUF_SHIFT=14
+# CONFIG_SYSFS_DEPRECATED is not set
+CONFIG_RELAY=y
+CONFIG_BLK_DEV_INITRD=y
+CONFIG_INITRAMFS_SOURCE=""
+CONFIG_SYSCTL=y
+# CONFIG_EMBEDDED is not set
+CONFIG_UID16=y
+CONFIG_SYSCTL_SYSCALL=y
+CONFIG_KALLSYMS=y
+# CONFIG_KALLSYMS_EXTRA_PASS is not set
+CONFIG_HOTPLUG=y
+CONFIG_PRINTK=y
+CONFIG_BUG=y
+CONFIG_ELF_CORE=y
+CONFIG_BASE_FULL=y
+CONFIG_FUTEX=y
+CONFIG_ANON_INODES=y
+CONFIG_EPOLL=y
+CONFIG_SIGNALFD=y
+CONFIG_TIMERFD=y
+CONFIG_EVENTFD=y
+CONFIG_SHMEM=y
+CONFIG_VM_EVENT_COUNTERS=y
+CONFIG_SLAB=y
+# CONFIG_SLUB is not set
+# CONFIG_SLOB is not set
+CONFIG_RT_MUTEXES=y
+# CONFIG_TINY_SHMEM is not set
+CONFIG_BASE_SMALL=0
+
+#
+# Loadable module support
+#
+CONFIG_MODULES=y
+CONFIG_MODULE_UNLOAD=y
+# CONFIG_MODVERSIONS is not set
+CONFIG_MODULE_SRCVERSION_ALL=y
+# CONFIG_KMOD is not set
+
+#
+# Block layer
+#
+CONFIG_BLOCK=y
+# CONFIG_LBD is not set
+# CONFIG_BLK_DEV_IO_TRACE is not set
+# CONFIG_LSF is not set
+
+#
+# IO Schedulers
+#
+CONFIG_IOSCHED_NOOP=y
+CONFIG_IOSCHED_AS=y
+CONFIG_IOSCHED_DEADLINE=y
+CONFIG_IOSCHED_CFQ=y
+# CONFIG_DEFAULT_AS is not set
+# CONFIG_DEFAULT_DEADLINE is not set
+CONFIG_DEFAULT_CFQ=y
+# CONFIG_DEFAULT_NOOP is not set
+CONFIG_DEFAULT_IOSCHED="cfq"
+
+#
+# Processor type and features
+#
+CONFIG_TICK_ONESHOT=y
+# CONFIG_NO_HZ is not set
+CONFIG_HIGH_RES_TIMERS=y
+# CONFIG_SMP is not set
+CONFIG_X86_PC=y
+# CONFIG_X86_ELAN is not set
+# CONFIG_X86_VOYAGER is not set
+# CONFIG_X86_NUMAQ is not set
+# CONFIG_X86_SUMMIT is not set
+# CONFIG_X86_BIGSMP is not set
+# CONFIG_X86_VISWS is not set
+# CONFIG_X86_GENERICARCH is not set
+# CONFIG_X86_ES7000 is not set
+# CONFIG_M386 is not set
+# CONFIG_M486 is not set
+# CONFIG_M586 is not set
+# CONFIG_M586TSC is not set
+# CONFIG_M586MMX is not set
+# CONFIG_M686 is not set
+# CONFIG_MPENTIUMII is not set
+# CONFIG_MPENTIUMIII is not set
+CONFIG_MPENTIUMM=y
+# CONFIG_MCORE2 is not set
+# CONFIG_MPENTIUM4 is not set
+# CONFIG_MK6 is not set
+# CONFIG_MK7 is not set
+# CONFIG_MK8 is not set
+# CONFIG_MCRUSOE is not set
+# CONFIG_MEFFICEON is not set
+# CONFIG_MWINCHIPC6 is not set
+# CONFIG_MWINCHIP2 is not set
+# CONFIG_MWINCHIP3D is not set
+# CONFIG_MGEODEGX1 is not set
+# CONFIG_MGEODE_LX is not set
+# CONFIG_MCYRIXIII is not set
+# CONFIG_MVIAC3_2 is not set
+# CONFIG_MVIAC7 is not set
+CONFIG_X86_GENERIC=y
+CONFIG_X86_CMPXCHG=y
+CONFIG_X86_L1_CACHE_SHIFT=7
+CONFIG_X86_XADD=y
+CONFIG_RWSEM_XCHGADD_ALGORITHM=y
+# CONFIG_ARCH_HAS_ILOG2_U32 is not set
+# CONFIG_ARCH_HAS_ILOG2_U64 is not set
+CONFIG_GENERIC_CALIBRATE_DELAY=y
+CONFIG_X86_WP_WORKS_OK=y
+CONFIG_X86_INVLPG=y
+CONFIG_X86_BSWAP=y
+CONFIG_X86_POPAD_OK=y
+CONFIG_X86_CMPXCHG64=y
+CONFIG_X86_GOOD_APIC=y
+CONFIG_X86_INTEL_USERCOPY=y
+CONFIG_X86_USE_PPRO_CHECKSUM=y
+CONFIG_X86_TSC=y
+CONFIG_X86_CMOV=y
+CONFIG_X86_MINIMUM_CPU_MODEL=4
+CONFIG_HPET_TIMER=y
+# CONFIG_PREEMPT_NONE is not set
+# CONFIG_PREEMPT_VOLUNTARY is not set
+CONFIG_PREEMPT=y
+# CONFIG_PREEMPT_BKL is not set
+# CONFIG_X86_UP_APIC is not set
+CONFIG_X86_MCE=y
+CONFIG_X86_MCE_NONFATAL=y
+CONFIG_VM86=y
+# CONFIG_TOSHIBA is not set
+# CONFIG_I8K is not set
+CONFIG_X86_REBOOTFIXUPS=y
+CONFIG_MICROCODE=y
+CONFIG_MICROCODE_OLD_INTERFACE=y
+# CONFIG_X86_MSR is not set
+CONFIG_X86_CPUID=m
+
+#
+# Firmware Drivers
+#
+# CONFIG_EDD is not set
+CONFIG_EFI_VARS=y
+# CONFIG_DELL_RBU is not set
+CONFIG_DCDBAS=y
+# CONFIG_NOHIGHMEM is not set
+# CONFIG_HIGHMEM4G is not set
+CONFIG_HIGHMEM64G=y
+CONFIG_PAGE_OFFSET=0xC0000000
+CONFIG_HIGHMEM=y
+CONFIG_X86_PAE=y
+CONFIG_ARCH_POPULATES_NODE_MAP=y
+CONFIG_FLATMEM=y
+CONFIG_FLAT_NODE_MEM_MAP=y
+# CONFIG_SPARSEMEM_STATIC is not set
+CONFIG_SPLIT_PTLOCK_CPUS=4
+CONFIG_RESOURCES_64BIT=y
+CONFIG_ZONE_DMA_FLAG=1
+CONFIG_NR_QUICK=1
+# CONFIG_HIGHPTE is not set
+# CONFIG_MATH_EMULATION is not set
+CONFIG_MTRR=y
+CONFIG_EFI=y
+CONFIG_BOOT_IOREMAP=y
+CONFIG_SECCOMP=y
+CONFIG_HZ_100=y
+# CONFIG_HZ_250 is not set
+# CONFIG_HZ_300 is not set
+# CONFIG_HZ_1000 is not set
+CONFIG_HZ=100
+# CONFIG_KEXEC is not set
+CONFIG_PHYSICAL_START=0x100000
+CONFIG_PHYSICAL_ALIGN=0x100000
+CONFIG_COMPAT_VDSO=y
+CONFIG_ARCH_ENABLE_MEMORY_HOTPLUG=y
+
+#
+# Power management options (ACPI, APM)
+#
+CONFIG_PM=y
+CONFIG_PM_LEGACY=y
+# CONFIG_PM_DEBUG is not set
+# CONFIG_PM_SYSFS_DEPRECATED is not set
+# CONFIG_SOFTWARE_SUSPEND is not set
+
+#
+# ACPI (Advanced Configuration and Power Interface) Support
+#
+CONFIG_ACPI=y
+CONFIG_ACPI_SLEEP=y
+CONFIG_ACPI_SLEEP_PROC_FS=y
+# CONFIG_ACPI_SLEEP_PROC_SLEEP is not set
+# CONFIG_ACPI_PROCFS is not set
+CONFIG_ACPI_AC=m
+# CONFIG_ACPI_BATTERY is not set
+CONFIG_ACPI_BUTTON=m
+# CONFIG_ACPI_VIDEO is not set
+CONFIG_ACPI_FAN=y
+# CONFIG_ACPI_PROCESSOR is not set
+# CONFIG_ACPI_ASUS is not set
+# CONFIG_ACPI_TOSHIBA is not set
+CONFIG_ACPI_BLACKLIST_YEAR=0
+# CONFIG_ACPI_DEBUG is not set
+CONFIG_ACPI_EC=y
+CONFIG_ACPI_POWER=y
+CONFIG_ACPI_SYSTEM=y
+CONFIG_X86_PM_TIMER=y
+# CONFIG_APM is not set
+
+#
+# CPU Frequency scaling
+#
+CONFIG_CPU_FREQ=y
+CONFIG_CPU_FREQ_TABLE=y
+# CONFIG_CPU_FREQ_DEBUG is not set
+CONFIG_CPU_FREQ_STAT=y
+CONFIG_CPU_FREQ_STAT_DETAILS=y
+CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y
+# CONFIG_CPU_FREQ_DEFAULT_GOV_USERSPACE is not set
+CONFIG_CPU_FREQ_GOV_PERFORMANCE=y
+CONFIG_CPU_FREQ_GOV_POWERSAVE=m
+CONFIG_CPU_FREQ_GOV_USERSPACE=y
+CONFIG_CPU_FREQ_GOV_ONDEMAND=m
+# CONFIG_CPU_FREQ_GOV_CONSERVATIVE is not set
+
+#
+# CPUFreq processor drivers
+#
+# CONFIG_X86_POWERNOW_K6 is not set
+# CONFIG_X86_POWERNOW_K7 is not set
+CONFIG_X86_GX_SUSPMOD=y
+CONFIG_X86_SPEEDSTEP_CENTRINO=m
+CONFIG_X86_SPEEDSTEP_CENTRINO_TABLE=y
+# CONFIG_X86_SPEEDSTEP_ICH is not set
+# CONFIG_X86_P4_CLOCKMOD is not set
+CONFIG_X86_LONGRUN=m
+
+#
+# shared options
+#
+# CONFIG_X86_SPEEDSTEP_LIB is not set
+
+#
+# Bus options (PCI, PCMCIA, EISA, MCA, ISA)
+#
+CONFIG_PCI=y
+CONFIG_PCI_GOBIOS=y
+# CONFIG_PCI_GOMMCONFIG is not set
+# CONFIG_PCI_GODIRECT is not set
+# CONFIG_PCI_GOANY is not set
+CONFIG_PCI_BIOS=y
+# CONFIG_PCIEPORTBUS is not set
+# CONFIG_ARCH_SUPPORTS_MSI is not set
+CONFIG_ISA_DMA_API=y
+CONFIG_ISA=y
+# CONFIG_EISA is not set
+# CONFIG_MCA is not set
+CONFIG_SCx200=m
+CONFIG_SCx200HR_TIMER=m
+
+#
+# PCCARD (PCMCIA/CardBus) support
+#
+CONFIG_PCCARD=y
+# CONFIG_PCMCIA_DEBUG is not set
+CONFIG_PCMCIA=m
+CONFIG_PCMCIA_IOCTL=y
+CONFIG_CARDBUS=y
+
+#
+# PC-card bridges
+#
+CONFIG_YENTA=m
+CONFIG_YENTA_O2=y
+CONFIG_YENTA_RICOH=y
+CONFIG_YENTA_TI=y
+CONFIG_YENTA_ENE_TUNE=y
+CONFIG_YENTA_TOSHIBA=y
+# CONFIG_PD6729 is not set
+CONFIG_I82092=m
+CONFIG_I82365=m
+# CONFIG_TCIC is not set
+CONFIG_PCMCIA_PROBE=y
+CONFIG_PCCARD_NONSTATIC=m
+
+#
+# Executable file formats
+#
+CONFIG_BINFMT_ELF=y
+# CONFIG_BINFMT_AOUT is not set
+CONFIG_BINFMT_MISC=m
+
+#
+# Networking
+#
+CONFIG_NET=y
+
+#
+# Networking options
+#
+CONFIG_PACKET=y
+# CONFIG_PACKET_MMAP is not set
+# CONFIG_UNIX is not set
+CONFIG_XFRM=y
+CONFIG_XFRM_USER=y
+CONFIG_NET_KEY=y
+CONFIG_INET=y
+# CONFIG_IP_MULTICAST is not set
+# CONFIG_IP_ADVANCED_ROUTER is not set
+CONFIG_IP_FIB_HASH=y
+CONFIG_IP_PNP=y
+CONFIG_IP_PNP_DHCP=y
+CONFIG_IP_PNP_BOOTP=y
+# CONFIG_IP_PNP_RARP is not set
+# CONFIG_NET_IPIP is not set
+CONFIG_NET_IPGRE=y
+CONFIG_SYN_COOKIES=y
+CONFIG_INET_AH=y
+CONFIG_INET_ESP=y
+CONFIG_INET_IPCOMP=y
+CONFIG_INET_XFRM_TUNNEL=y
+CONFIG_INET_TUNNEL=y
+CONFIG_INET_XFRM_MODE_TRANSPORT=y
+CONFIG_INET_XFRM_MODE_TUNNEL=y
+CONFIG_INET_XFRM_MODE_BEET=y
+CONFIG_INET_DIAG=y
+CONFIG_INET_TCP_DIAG=y
+CONFIG_TCP_CONG_ADVANCED=y
+CONFIG_TCP_CONG_BIC=y
+CONFIG_TCP_CONG_CUBIC=m
+CONFIG_TCP_CONG_WESTWOOD=y
+CONFIG_TCP_CONG_HTCP=y
+# CONFIG_DEFAULT_BIC is not set
+# CONFIG_DEFAULT_CUBIC is not set
+# CONFIG_DEFAULT_HTCP is not set
+# CONFIG_DEFAULT_VEGAS is not set
+CONFIG_DEFAULT_WESTWOOD=y
+# CONFIG_DEFAULT_RENO is not set
+CONFIG_DEFAULT_TCP_CONG="westwood"
+CONFIG_IPV6=y
+# CONFIG_IPV6_PRIVACY is not set
+# CONFIG_IPV6_ROUTER_PREF is not set
+# CONFIG_INET6_AH is not set
+CONFIG_INET6_ESP=m
+CONFIG_INET6_IPCOMP=m
+CONFIG_INET6_XFRM_TUNNEL=m
+CONFIG_INET6_TUNNEL=m
+CONFIG_INET6_XFRM_MODE_TRANSPORT=y
+CONFIG_INET6_XFRM_MODE_TUNNEL=m
+CONFIG_INET6_XFRM_MODE_BEET=m
+CONFIG_IPV6_SIT=m
+# CONFIG_IPV6_TUNNEL is not set
+# CONFIG_NETLABEL is not set
+CONFIG_NETWORK_SECMARK=y
+# CONFIG_NETFILTER is not set
+CONFIG_BRIDGE=m
+CONFIG_VLAN_8021Q=y
+CONFIG_DECNET=y
+CONFIG_LLC=m
+CONFIG_LLC2=m
+CONFIG_IPX=m
+# CONFIG_IPX_INTERN is not set
+# CONFIG_ATALK is not set
+
+#
+# QoS and/or fair queueing
+#
+CONFIG_NET_SCHED=y
+CONFIG_NET_SCH_FIFO=y
+
+#
+# Queueing/Scheduling
+#
+CONFIG_NET_SCH_CBQ=m
+CONFIG_NET_SCH_HTB=y
+CONFIG_NET_SCH_HFSC=m
+# CONFIG_NET_SCH_PRIO is not set
+CONFIG_NET_SCH_RED=y
+CONFIG_NET_SCH_SFQ=m
+CONFIG_NET_SCH_TEQL=m
+CONFIG_NET_SCH_TBF=y
+CONFIG_NET_SCH_GRED=m
+# CONFIG_NET_SCH_DSMARK is not set
+CONFIG_NET_SCH_NETEM=m
+CONFIG_NET_SCH_INGRESS=y
+
+#
+# Classification
+#
+CONFIG_NET_CLS=y
+# CONFIG_NET_CLS_BASIC is not set
+CONFIG_NET_CLS_TCINDEX=y
+# CONFIG_NET_CLS_ROUTE4 is not set
+# CONFIG_NET_CLS_FW is not set
+CONFIG_NET_CLS_U32=y
+CONFIG_CLS_U32_PERF=y
+CONFIG_CLS_U32_MARK=y
+# CONFIG_NET_CLS_RSVP is not set
+# CONFIG_NET_CLS_RSVP6 is not set
+CONFIG_NET_EMATCH=y
+CONFIG_NET_EMATCH_STACK=32
+# CONFIG_NET_EMATCH_CMP is not set
+CONFIG_NET_EMATCH_NBYTE=y
+CONFIG_NET_EMATCH_U32=y
+CONFIG_NET_EMATCH_META=y
+# CONFIG_NET_EMATCH_TEXT is not set
+# CONFIG_NET_CLS_ACT is not set
+# CONFIG_NET_CLS_POLICE is not set
+# CONFIG_NET_CLS_IND is not set
+# CONFIG_NET_ESTIMATOR is not set
+
+#
+# Network testing
+#
+CONFIG_NET_PKTGEN=y
+# CONFIG_HAMRADIO is not set
+CONFIG_IRDA=y
+
+#
+# IrDA protocols
+#
+CONFIG_IRLAN=m
+CONFIG_IRNET=m
+CONFIG_IRCOMM=m
+CONFIG_IRDA_ULTRA=y
+
+#
+# IrDA options
+#
+# CONFIG_IRDA_CACHE_LAST_LSAP is not set
+CONFIG_IRDA_FAST_RR=y
+# CONFIG_IRDA_DEBUG is not set
+
+#
+# Infrared-port device drivers
+#
+
+#
+# SIR device drivers
+#
+CONFIG_IRTTY_SIR=m
+
+#
+# Dongle support
+#
+CONFIG_DONGLE=y
+# CONFIG_ESI_DONGLE is not set
+CONFIG_ACTISYS_DONGLE=m
+CONFIG_TEKRAM_DONGLE=m
+# CONFIG_TOIM3232_DONGLE is not set
+CONFIG_LITELINK_DONGLE=m
+
+#
+# Old SIR device drivers
+#
+# CONFIG_IRPORT_SIR is not set
+
+#
+# Old Serial dongle support
+#
+
+#
+# FIR device drivers
+#
+# CONFIG_USB_IRDA is not set
+CONFIG_NSC_FIR=m
+CONFIG_WINBOND_FIR=m
+# CONFIG_TOSHIBA_FIR is not set
+# CONFIG_VIA_FIR is not set
+CONFIG_BT=m
+# CONFIG_BT_L2CAP is not set
+CONFIG_BT_SCO=m
+
+#
+# Bluetooth device drivers
+#
+CONFIG_BT_HCIUSB=m
+CONFIG_BT_HCIUSB_SCO=y
+CONFIG_BT_HCIUART=m
+# CONFIG_BT_HCIUART_H4 is not set
+CONFIG_BT_HCIUART_BCSP=y
+# CONFIG_BT_HCIBCM203X is not set
+CONFIG_BT_HCIBPA10X=m
+# CONFIG_BT_HCIBFUSB is not set
+# CONFIG_BT_HCIDTL1 is not set
+CONFIG_BT_HCIBT3C=m
+# CONFIG_BT_HCIBLUECARD is not set
+CONFIG_BT_HCIBTUART=m
+CONFIG_BT_HCIVHCI=m
+
+#
+# Wireless
+#
+CONFIG_CFG80211=y
+CONFIG_WIRELESS_EXT=y
+CONFIG_IEEE80211=y
+# CONFIG_IEEE80211_DEBUG is not set
+CONFIG_IEEE80211_CRYPT_WEP=y
+CONFIG_IEEE80211_CRYPT_CCMP=m
+# CONFIG_IEEE80211_CRYPT_TKIP is not set
+# CONFIG_RFKILL is not set
+
+#
+# Device Drivers
+#
+
+#
+# Generic Driver Options
+#
+CONFIG_STANDALONE=y
+CONFIG_PREVENT_FIRMWARE_BUILD=y
+CONFIG_FW_LOADER=y
+# CONFIG_SYS_HYPERVISOR is not set
+
+#
+# Connector - unified userspace <-> kernelspace linker
+#
+CONFIG_CONNECTOR=y
+CONFIG_PROC_EVENTS=y
+# CONFIG_MTD is not set
+
+#
+# Parallel port support
+#
+CONFIG_PARPORT=m
+CONFIG_PARPORT_PC=m
+CONFIG_PARPORT_PC_PCMCIA=m
+# CONFIG_PARPORT_GSC is not set
+CONFIG_PARPORT_AX88796=m
+CONFIG_PARPORT_1284=y
+CONFIG_PARPORT_NOT_PC=y
+
+#
+# Plug and Play support
+#
+CONFIG_PNP=y
+# CONFIG_PNP_DEBUG is not set
+
+#
+# Protocols
+#
+CONFIG_ISAPNP=y
+CONFIG_PNPACPI=y
+
+#
+# Block devices
+#
+# CONFIG_BLK_DEV_FD is not set
+# CONFIG_BLK_DEV_XD is not set
+# CONFIG_PARIDE is not set
+# CONFIG_BLK_CPQ_DA is not set
+# CONFIG_BLK_CPQ_CISS_DA is not set
+# CONFIG_BLK_DEV_DAC960 is not set
+# CONFIG_BLK_DEV_COW_COMMON is not set
+# CONFIG_BLK_DEV_LOOP is not set
+# CONFIG_BLK_DEV_NBD is not set
+# CONFIG_BLK_DEV_SX8 is not set
+# CONFIG_BLK_DEV_UB is not set
+# CONFIG_BLK_DEV_RAM is not set
+# CONFIG_CDROM_PKTCDVD is not set
+# CONFIG_ATA_OVER_ETH is not set
+
+#
+# Misc devices
+#
+# CONFIG_PHANTOM is not set
+# CONFIG_SGI_IOC4 is not set
+CONFIG_MSI_LAPTOP=y
+CONFIG_SONY_LAPTOP=y
+CONFIG_SONYPI_COMPAT=y
+CONFIG_THINKPAD_ACPI=m
+# CONFIG_THINKPAD_ACPI_DEBUG is not set
+# CONFIG_THINKPAD_ACPI_DOCK is not set
+# CONFIG_THINKPAD_ACPI_BAY is not set
+# CONFIG_BLINK is not set
+# CONFIG_IDE is not set
+
+#
+# SCSI device support
+#
+# CONFIG_RAID_ATTRS is not set
+# CONFIG_SCSI is not set
+# CONFIG_SCSI_NETLINK is not set
+# CONFIG_ATA is not set
+
+#
+# Old CD-ROM drivers (not SCSI, not IDE)
+#
+# CONFIG_CD_NO_IDESCSI is not set
+
+#
+# Multi-device support (RAID and LVM)
+#
+# CONFIG_MD is not set
+
+#
+# Fusion MPT device support
+#
+# CONFIG_FUSION is not set
+
+#
+# IEEE 1394 (FireWire) support
+#
+
+#
+# An alternative FireWire stack is available with EXPERIMENTAL=y
+#
+CONFIG_IEEE1394=m
+
+#
+# Subsystem Options
+#
+# CONFIG_IEEE1394_VERBOSEDEBUG is not set
+
+#
+# Controllers
+#
+CONFIG_IEEE1394_PCILYNX=m
+# CONFIG_IEEE1394_OHCI1394 is not set
+
+#
+# Protocols
+#
+
+#
+# SBP-2 support (for storage devices) requires SCSI
+#
+# CONFIG_IEEE1394_ETH1394_ROM_ENTRY is not set
+# CONFIG_IEEE1394_RAWIO is not set
+
+#
+# I2O device support
+#
+# CONFIG_I2O is not set
+# CONFIG_MACINTOSH_DRIVERS is not set
+
+#
+# Network device support
+#
+CONFIG_NETDEVICES=y
+# CONFIG_DUMMY is not set
+CONFIG_BONDING=m
+# CONFIG_EQUALIZER is not set
+CONFIG_TUN=y
+# CONFIG_NET_SB1000 is not set
+CONFIG_ARCNET=m
+CONFIG_ARCNET_1201=m
+CONFIG_ARCNET_1051=m
+# CONFIG_ARCNET_RAW is not set
+# CONFIG_ARCNET_CAP is not set
+CONFIG_ARCNET_COM90xx=m
+# CONFIG_ARCNET_COM90xxIO is not set
+# CONFIG_ARCNET_RIM_I is not set
+# CONFIG_ARCNET_COM20020 is not set
+# CONFIG_PHYLIB is not set
+
+#
+# Ethernet (10 or 100Mbit)
+#
+CONFIG_NET_ETHERNET=y
+CONFIG_MII=y
+CONFIG_HAPPYMEAL=y
+CONFIG_SUNGEM=m
+CONFIG_CASSINI=m
+# CONFIG_NET_VENDOR_3COM is not set
+CONFIG_LANCE=m
+CONFIG_NET_VENDOR_SMC=y
+# CONFIG_WD80x3 is not set
+# CONFIG_ULTRA is not set
+CONFIG_SMC9194=y
+CONFIG_NET_VENDOR_RACAL=y
+CONFIG_NI52=y
+CONFIG_NI65=y
+
+#
+# Tulip family network device support
+#
+CONFIG_NET_TULIP=y
+# CONFIG_TULIP is not set
+CONFIG_DE4X5=y
+# CONFIG_WINBOND_840 is not set
+# CONFIG_DM9102 is not set
+# CONFIG_ULI526X is not set
+# CONFIG_PCMCIA_XIRCOM is not set
+# CONFIG_PCMCIA_XIRTULIP is not set
+CONFIG_DEPCA=y
+# CONFIG_HP100 is not set
+# CONFIG_NET_ISA is not set
+# CONFIG_NET_PCI is not set
+CONFIG_NET_POCKET=y
+# CONFIG_ATP is not set
+CONFIG_DE600=m
+# CONFIG_DE620 is not set
+# CONFIG_NETDEV_1000 is not set
+# CONFIG_NETDEV_10000 is not set
+# CONFIG_TR is not set
+
+#
+# Wireless LAN
+#
+# CONFIG_WLAN_PRE80211 is not set
+CONFIG_WLAN_80211=y
+# CONFIG_PCMCIA_RAYCS is not set
+CONFIG_IPW2100=y
+# CONFIG_IPW2100_MONITOR is not set
+# CONFIG_IPW2100_DEBUG is not set
+# CONFIG_IPW2200 is not set
+CONFIG_LIBERTAS=y
+CONFIG_LIBERTAS_USB=m
+# CONFIG_LIBERTAS_DEBUG is not set
+# CONFIG_AIRO is not set
+CONFIG_HERMES=y
+CONFIG_PLX_HERMES=y
+CONFIG_TMD_HERMES=y
+CONFIG_NORTEL_HERMES=y
+# CONFIG_PCI_HERMES is not set
+# CONFIG_ATMEL is not set
+CONFIG_PCMCIA_HERMES=m
+# CONFIG_PCMCIA_SPECTRUM is not set
+CONFIG_AIRO_CS=m
+CONFIG_USB_ZD1201=y
+CONFIG_HOSTAP=y
+# CONFIG_HOSTAP_FIRMWARE is not set
+CONFIG_HOSTAP_PLX=m
+CONFIG_HOSTAP_PCI=y
+CONFIG_HOSTAP_CS=m
+
+#
+# USB Network Adapters
+#
+CONFIG_USB_KAWETH=m
+# CONFIG_USB_PEGASUS is not set
+CONFIG_USB_USBNET_MII=y
+CONFIG_USB_USBNET=y
+CONFIG_USB_NET_AX8817X=y
+CONFIG_USB_NET_CDCETHER=y
+CONFIG_USB_NET_DM9601=m
+CONFIG_USB_NET_GL620A=y
+# CONFIG_USB_NET_NET1080 is not set
+CONFIG_USB_NET_MCS7830=y
+CONFIG_USB_NET_CDC_SUBSET=m
+CONFIG_USB_ALI_M5632=y
+# CONFIG_USB_AN2720 is not set
+# CONFIG_USB_BELKIN is not set
+# CONFIG_USB_ARMLINUX is not set
+CONFIG_USB_EPSON2888=y
+CONFIG_USB_NET_ZAURUS=y
+# CONFIG_NET_PCMCIA is not set
+CONFIG_WAN=y
+CONFIG_HOSTESS_SV11=m
+# CONFIG_COSA is not set
+CONFIG_LANMEDIA=y
+CONFIG_SEALEVEL_4021=m
+CONFIG_HDLC=y
+# CONFIG_HDLC_RAW is not set
+CONFIG_HDLC_RAW_ETH=m
+CONFIG_HDLC_CISCO=m
+# CONFIG_HDLC_FR is not set
+CONFIG_HDLC_PPP=m
+
+#
+# X.25/LAPB support is disabled
+#
+CONFIG_PCI200SYN=y
+# CONFIG_WANXL is not set
+# CONFIG_PC300 is not set
+# CONFIG_PC300TOO is not set
+# CONFIG_N2 is not set
+CONFIG_C101=m
+CONFIG_FARSYNC=m
+# CONFIG_DSCC4 is not set
+CONFIG_DLCI=y
+CONFIG_DLCI_MAX=8
+CONFIG_SDLA=m
+CONFIG_SBNI=m
+CONFIG_SBNI_MULTILINE=y
+# CONFIG_FDDI is not set
+CONFIG_PLIP=m
+CONFIG_PPP=m
+CONFIG_PPP_FILTER=y
+CONFIG_PPP_ASYNC=m
+CONFIG_PPP_SYNC_TTY=m
+CONFIG_PPP_DEFLATE=m
+# CONFIG_PPP_BSDCOMP is not set
+# CONFIG_SLIP is not set
+CONFIG_SLHC=m
+# CONFIG_NETPOLL is not set
+# CONFIG_NET_POLL_CONTROLLER is not set
+
+#
+# ISDN subsystem
+#
+CONFIG_ISDN=y
+
+#
+# Old ISDN4Linux
+#
+CONFIG_ISDN_I4L=m
+CONFIG_ISDN_PPP=y
+# CONFIG_ISDN_PPP_VJ is not set
+CONFIG_ISDN_MPP=y
+CONFIG_IPPP_FILTER=y
+# CONFIG_ISDN_PPP_BSDCOMP is not set
+# CONFIG_ISDN_AUDIO is not set
+
+#
+# ISDN feature submodules
+#
+# CONFIG_ISDN_DRV_LOOP is not set
+# CONFIG_ISDN_DIVERSION is not set
+
+#
+# ISDN4Linux hardware drivers
+#
+
+#
+# Passive cards
+#
+# CONFIG_ISDN_DRV_HISAX is not set
+
+#
+# Active cards
+#
+# CONFIG_ISDN_DRV_ICN is not set
+# CONFIG_ISDN_DRV_PCBIT is not set
+CONFIG_ISDN_DRV_SC=m
+# CONFIG_ISDN_DRV_ACT2000 is not set
+# CONFIG_HYSDN is not set
+
+#
+# Siemens Gigaset
+#
+# CONFIG_ISDN_DRV_GIGASET is not set
+
+#
+# CAPI subsystem
+#
+CONFIG_ISDN_CAPI=m
+# CONFIG_ISDN_DRV_AVMB1_VERBOSE_REASON is not set
+# CONFIG_CAPI_TRACE is not set
+CONFIG_ISDN_CAPI_CAPI20=m
+# CONFIG_ISDN_CAPI_CAPIDRV is not set
+
+#
+# CAPI hardware drivers
+#
+
+#
+# Active AVM cards
+#
+# CONFIG_CAPI_AVM is not set
+
+#
+# Active Eicon DIVA Server cards
+#
+# CONFIG_CAPI_EICON is not set
+
+#
+# Telephony Support
+#
+CONFIG_PHONE=m
+CONFIG_PHONE_IXJ=m
+CONFIG_PHONE_IXJ_PCMCIA=m
+
+#
+# Input device support
+#
+CONFIG_INPUT=y
+CONFIG_INPUT_FF_MEMLESS=y
+CONFIG_INPUT_POLLDEV=y
+
+#
+# Userland interfaces
+#
+CONFIG_INPUT_MOUSEDEV=y
+# CONFIG_INPUT_MOUSEDEV_PSAUX is not set
+CONFIG_INPUT_MOUSEDEV_SCREEN_X=1024
+CONFIG_INPUT_MOUSEDEV_SCREEN_Y=768
+CONFIG_INPUT_JOYDEV=y
+CONFIG_INPUT_TSDEV=y
+CONFIG_INPUT_TSDEV_SCREEN_X=240
+CONFIG_INPUT_TSDEV_SCREEN_Y=320
+CONFIG_INPUT_EVDEV=y
+CONFIG_INPUT_EVBUG=m
+
+#
+# Input Device Drivers
+#
+CONFIG_INPUT_KEYBOARD=y
+CONFIG_KEYBOARD_ATKBD=y
+# CONFIG_KEYBOARD_SUNKBD is not set
+# CONFIG_KEYBOARD_LKKBD is not set
+CONFIG_KEYBOARD_XTKBD=y
+CONFIG_KEYBOARD_NEWTON=y
+# CONFIG_KEYBOARD_STOWAWAY is not set
+CONFIG_INPUT_MOUSE=y
+CONFIG_MOUSE_PS2=m
+CONFIG_MOUSE_PS2_ALPS=y
+CONFIG_MOUSE_PS2_LOGIPS2PP=y
+CONFIG_MOUSE_PS2_SYNAPTICS=y
+CONFIG_MOUSE_PS2_LIFEBOOK=y
+CONFIG_MOUSE_PS2_TRACKPOINT=y
+# CONFIG_MOUSE_PS2_TOUCHKIT is not set
+CONFIG_MOUSE_SERIAL=y
+CONFIG_MOUSE_APPLETOUCH=m
+CONFIG_MOUSE_INPORT=m
+# CONFIG_MOUSE_ATIXL is not set
+CONFIG_MOUSE_LOGIBM=m
+# CONFIG_MOUSE_PC110PAD is not set
+CONFIG_MOUSE_VSXXXAA=y
+# CONFIG_INPUT_JOYSTICK is not set
+# CONFIG_INPUT_TABLET is not set
+# CONFIG_INPUT_TOUCHSCREEN is not set
+# CONFIG_INPUT_MISC is not set
+
+#
+# Hardware I/O ports
+#
+CONFIG_SERIO=y
+CONFIG_SERIO_I8042=y
+CONFIG_SERIO_SERPORT=m
+CONFIG_SERIO_CT82C710=m
+CONFIG_SERIO_PARKBD=m
+# CONFIG_SERIO_PCIPS2 is not set
+CONFIG_SERIO_LIBPS2=y
+CONFIG_SERIO_RAW=m
+# CONFIG_GAMEPORT is not set
+
+#
+# Character devices
+#
+CONFIG_VT=y
+CONFIG_VT_CONSOLE=y
+CONFIG_HW_CONSOLE=y
+CONFIG_VT_HW_CONSOLE_BINDING=y
+# CONFIG_SERIAL_NONSTANDARD is not set
+
+#
+# Serial drivers
+#
+# CONFIG_SERIAL_8250 is not set
+
+#
+# Non-8250 serial port support
+#
+# CONFIG_SERIAL_JSM is not set
+CONFIG_UNIX98_PTYS=y
+# CONFIG_LEGACY_PTYS is not set
+CONFIG_PRINTER=m
+CONFIG_LP_CONSOLE=y
+CONFIG_PPDEV=m
+CONFIG_TIPAR=m
+
+#
+# IPMI
+#
+# CONFIG_IPMI_HANDLER is not set
+CONFIG_WATCHDOG=y
+CONFIG_WATCHDOG_NOWAYOUT=y
+
+#
+# Watchdog Device Drivers
+#
+# CONFIG_SOFT_WATCHDOG is not set
+# CONFIG_ACQUIRE_WDT is not set
+CONFIG_ADVANTECH_WDT=m
+CONFIG_ALIM1535_WDT=m
+CONFIG_ALIM7101_WDT=y
+CONFIG_SC520_WDT=m
+CONFIG_EUROTECH_WDT=m
+# CONFIG_IB700_WDT is not set
+CONFIG_IBMASR=m
+CONFIG_WAFER_WDT=m
+# CONFIG_I6300ESB_WDT is not set
+CONFIG_ITCO_WDT=y
+CONFIG_ITCO_VENDOR_SUPPORT=y
+CONFIG_SC1200_WDT=y
+CONFIG_SCx200_WDT=m
+CONFIG_PC87413_WDT=y
+# CONFIG_60XX_WDT is not set
+CONFIG_SBC8360_WDT=y
+# CONFIG_CPU5_WDT is not set
+# CONFIG_SMSC37B787_WDT is not set
+CONFIG_W83627HF_WDT=m
+CONFIG_W83697HF_WDT=y
+CONFIG_W83877F_WDT=y
+CONFIG_W83977F_WDT=y
+CONFIG_MACHZ_WDT=m
+CONFIG_SBC_EPX_C3_WATCHDOG=y
+
+#
+# ISA-based Watchdog Cards
+#
+CONFIG_PCWATCHDOG=m
+# CONFIG_MIXCOMWD is not set
+# CONFIG_WDT is not set
+
+#
+# PCI-based Watchdog Cards
+#
+# CONFIG_PCIPCWATCHDOG is not set
+CONFIG_WDTPCI=y
+CONFIG_WDT_501_PCI=y
+
+#
+# USB-based Watchdog Cards
+#
+# CONFIG_USBPCWATCHDOG is not set
+CONFIG_HW_RANDOM=m
+CONFIG_HW_RANDOM_INTEL=m
+CONFIG_HW_RANDOM_AMD=m
+CONFIG_HW_RANDOM_GEODE=m
+CONFIG_HW_RANDOM_VIA=m
+CONFIG_NVRAM=y
+# CONFIG_RTC is not set
+# CONFIG_GEN_RTC is not set
+CONFIG_DTLK=y
+# CONFIG_R3964 is not set
+CONFIG_APPLICOM=m
+CONFIG_AGP=m
+CONFIG_AGP_ALI=m
+# CONFIG_AGP_ATI is not set
+# CONFIG_AGP_AMD is not set
+# CONFIG_AGP_AMD64 is not set
+CONFIG_AGP_INTEL=m
+# CONFIG_AGP_NVIDIA is not set
+# CONFIG_AGP_SIS is not set
+CONFIG_AGP_SWORKS=m
+# CONFIG_AGP_VIA is not set
+# CONFIG_AGP_EFFICEON is not set
+# CONFIG_DRM is not set
+
+#
+# PCMCIA character devices
+#
+# CONFIG_SYNCLINK_CS is not set
+CONFIG_CARDMAN_4000=m
+# CONFIG_CARDMAN_4040 is not set
+# CONFIG_MWAVE is not set
+CONFIG_SCx200_GPIO=m
+# CONFIG_PC8736x_GPIO is not set
+CONFIG_NSC_GPIO=m
+CONFIG_CS5535_GPIO=m
+# CONFIG_RAW_DRIVER is not set
+CONFIG_HPET=y
+# CONFIG_HPET_RTC_IRQ is not set
+# CONFIG_HPET_MMAP is not set
+# CONFIG_HANGCHECK_TIMER is not set
+
+#
+# TPM devices
+#
+CONFIG_DEVPORT=y
+CONFIG_I2C=y
+CONFIG_I2C_BOARDINFO=y
+CONFIG_I2C_CHARDEV=m
+
+#
+# I2C Algorithms
+#
+CONFIG_I2C_ALGOBIT=y
+# CONFIG_I2C_ALGOPCF is not set
+CONFIG_I2C_ALGOPCA=m
+
+#
+# I2C Hardware Bus support
+#
+CONFIG_I2C_ALI1535=y
+CONFIG_I2C_ALI15X3=m
+# CONFIG_I2C_AMD756 is not set
+# CONFIG_I2C_AMD8111 is not set
+# CONFIG_I2C_ELEKTOR is not set
+CONFIG_I2C_I801=m
+# CONFIG_I2C_I810 is not set
+CONFIG_I2C_PIIX4=y
+# CONFIG_I2C_NFORCE2 is not set
+# CONFIG_I2C_PARPORT is not set
+# CONFIG_I2C_PARPORT_LIGHT is not set
+CONFIG_I2C_PROSAVAGE=y
+CONFIG_I2C_SIMTEC=y
+# CONFIG_SCx200_I2C is not set
+# CONFIG_SCx200_ACB is not set
+# CONFIG_I2C_SIS5595 is not set
+# CONFIG_I2C_SIS630 is not set
+# CONFIG_I2C_SIS96X is not set
+CONFIG_I2C_TINY_USB=m
+# CONFIG_I2C_VIAPRO is not set
+# CONFIG_I2C_VOODOO3 is not set
+CONFIG_I2C_PCA_ISA=m
+
+#
+# Miscellaneous I2C Chip support
+#
+# CONFIG_I2C_DEBUG_CORE is not set
+# CONFIG_I2C_DEBUG_ALGO is not set
+# CONFIG_I2C_DEBUG_BUS is not set
+# CONFIG_I2C_DEBUG_CHIP is not set
+
+#
+# SPI support
+#
+# CONFIG_SPI is not set
+# CONFIG_SPI_MASTER is not set
+
+#
+# Dallas's 1-wire bus
+#
+CONFIG_W1=y
+CONFIG_W1_CON=y
+
+#
+# 1-wire Bus Masters
+#
+# CONFIG_W1_MASTER_MATROX is not set
+CONFIG_W1_MASTER_DS2490=m
+
+#
+# 1-wire Slaves
+#
+CONFIG_W1_SLAVE_THERM=m
+CONFIG_W1_SLAVE_SMEM=m
+CONFIG_W1_SLAVE_DS2433=y
+# CONFIG_W1_SLAVE_DS2433_CRC is not set
+CONFIG_HWMON=y
+CONFIG_HWMON_VID=y
+CONFIG_SENSORS_ADM1021=y
+CONFIG_SENSORS_ADM1025=y
+CONFIG_SENSORS_DS1621=y
+# CONFIG_SENSORS_FSCHER is not set
+CONFIG_SENSORS_FSCPOS=m
+CONFIG_SENSORS_GL518SM=m
+# CONFIG_SENSORS_GL520SM is not set
+# CONFIG_SENSORS_IT87 is not set
+# CONFIG_SENSORS_LM63 is not set
+CONFIG_SENSORS_LM75=m
+CONFIG_SENSORS_LM77=m
+CONFIG_SENSORS_LM78=m
+CONFIG_SENSORS_LM83=y
+CONFIG_SENSORS_LM87=y
+# CONFIG_SENSORS_LM90 is not set
+CONFIG_SENSORS_LM92=y
+# CONFIG_SENSORS_MAX1619 is not set
+# CONFIG_SENSORS_SMSC47M1 is not set
+# CONFIG_SENSORS_VIA686A is not set
+CONFIG_SENSORS_W83781D=y
+CONFIG_SENSORS_W83627HF=m
+CONFIG_SENSORS_HDAPS=y
+CONFIG_SENSORS_APPLESMC=y
+# CONFIG_HWMON_DEBUG_CHIP is not set
+
+#
+# Multifunction device drivers
+#
+CONFIG_MFD_SM501=m
+
+#
+# Multimedia devices
+#
+CONFIG_VIDEO_DEV=m
+CONFIG_VIDEO_V4L1=y
+CONFIG_VIDEO_V4L1_COMPAT=y
+CONFIG_VIDEO_V4L2=y
+CONFIG_VIDEO_CAPTURE_DRIVERS=y
+# CONFIG_VIDEO_ADV_DEBUG is not set
+# CONFIG_VIDEO_HELPER_CHIPS_AUTO is not set
+
+#
+# Encoders/decoders and other helper chips
+#
+
+#
+# Audio decoders
+#
+# CONFIG_VIDEO_TVAUDIO is not set
+CONFIG_VIDEO_TDA7432=m
+CONFIG_VIDEO_TDA9840=m
+# CONFIG_VIDEO_TDA9875 is not set
+CONFIG_VIDEO_TEA6415C=m
+# CONFIG_VIDEO_TEA6420 is not set
+# CONFIG_VIDEO_MSP3400 is not set
+
+#
+# Video decoders
+#
+CONFIG_VIDEO_BT819=m
+# CONFIG_VIDEO_BT856 is not set
+CONFIG_VIDEO_BT866=m
+CONFIG_VIDEO_KS0127=m
+CONFIG_VIDEO_OV7670=m
+CONFIG_VIDEO_SAA7110=m
+CONFIG_VIDEO_SAA7111=m
+# CONFIG_VIDEO_SAA7114 is not set
+# CONFIG_VIDEO_SAA7191 is not set
+# CONFIG_VIDEO_TVP5150 is not set
+# CONFIG_VIDEO_VPX3220 is not set
+
+#
+# Video and audio decoders
+#
+
+#
+# MPEG video encoders
+#
+CONFIG_VIDEO_CX2341X=m
+
+#
+# Video encoders
+#
+CONFIG_VIDEO_SAA7185=m
+CONFIG_VIDEO_ADV7170=m
+CONFIG_VIDEO_ADV7175=m
+
+#
+# Video improvement chips
+#
+# CONFIG_VIDEO_VIVI is not set
+CONFIG_VIDEO_BT848=m
+CONFIG_VIDEO_BT848_DVB=y
+CONFIG_VIDEO_SAA6588=m
+# CONFIG_VIDEO_PMS is not set
+CONFIG_VIDEO_BWQCAM=m
+# CONFIG_VIDEO_W9966 is not set
+# CONFIG_VIDEO_CPIA is not set
+CONFIG_VIDEO_CPIA2=m
+# CONFIG_VIDEO_SAA5246A is not set
+# CONFIG_VIDEO_SAA5249 is not set
+# CONFIG_TUNER_3036 is not set
+# CONFIG_VIDEO_ZORAN is not set
+CONFIG_VIDEO_MEYE=m
+# CONFIG_VIDEO_SAA7134 is not set
+CONFIG_VIDEO_MXB=m
+CONFIG_VIDEO_DPC=m
+CONFIG_VIDEO_HEXIUM_ORION=m
+# CONFIG_VIDEO_HEXIUM_GEMINI is not set
+CONFIG_VIDEO_CX88=m
+CONFIG_VIDEO_CX88_BLACKBIRD=m
+CONFIG_VIDEO_CX88_DVB=m
+CONFIG_VIDEO_CX88_VP3054=m
+# CONFIG_VIDEO_CAFE_CCIC is not set
+CONFIG_V4L_USB_DRIVERS=y
+# CONFIG_VIDEO_EM28XX is not set
+# CONFIG_VIDEO_USBVISION is not set
+CONFIG_VIDEO_USBVIDEO=m
+# CONFIG_USB_IBMCAM is not set
+# CONFIG_USB_KONICAWC is not set
+CONFIG_USB_QUICKCAM_MESSENGER=m
+CONFIG_USB_ET61X251=m
+CONFIG_VIDEO_OVCAMCHIP=m
+CONFIG_USB_W9968CF=m
+# CONFIG_USB_OV511 is not set
+CONFIG_USB_SE401=m
+CONFIG_USB_SN9C102=m
+# CONFIG_USB_STV680 is not set
+# CONFIG_USB_ZC0301 is not set
+CONFIG_USB_PWC=m
+# CONFIG_USB_PWC_DEBUG is not set
+CONFIG_USB_ZR364XX=m
+# CONFIG_RADIO_ADAPTERS is not set
+CONFIG_DVB_CORE=m
+# CONFIG_DVB_CORE_ATTACH is not set
+CONFIG_DVB_CAPTURE_DRIVERS=y
+
+#
+# Supported SAA7146 based PCI Adapters
+#
+CONFIG_DVB_AV7110=m
+# CONFIG_DVB_AV7110_OSD is not set
+# CONFIG_DVB_BUDGET is not set
+CONFIG_DVB_BUDGET_CI=m
+CONFIG_DVB_BUDGET_AV=m
+
+#
+# Supported USB Adapters
+#
+# CONFIG_DVB_USB is not set
+# CONFIG_DVB_TTUSB_BUDGET is not set
+# CONFIG_DVB_TTUSB_DEC is not set
+# CONFIG_DVB_CINERGYT2 is not set
+
+#
+# Supported FlexCopII (B2C2) Adapters
+#
+# CONFIG_DVB_B2C2_FLEXCOP is not set
+
+#
+# Supported BT878 Adapters
+#
+CONFIG_DVB_BT8XX=m
+
+#
+# Supported Pluto2 Adapters
+#
+CONFIG_DVB_PLUTO2=m
+
+#
+# Supported DVB Frontends
+#
+
+#
+# Customise DVB Frontends
+#
+# CONFIG_DVB_FE_CUSTOMISE is not set
+
+#
+# DVB-S (satellite) frontends
+#
+CONFIG_DVB_STV0299=m
+CONFIG_DVB_CX24110=m
+CONFIG_DVB_CX24123=m
+CONFIG_DVB_TDA8083=m
+# CONFIG_DVB_MT312 is not set
+CONFIG_DVB_VES1X93=m
+# CONFIG_DVB_S5H1420 is not set
+CONFIG_DVB_TDA10086=m
+
+#
+# DVB-T (terrestrial) frontends
+#
+CONFIG_DVB_SP8870=m
+CONFIG_DVB_SP887X=m
+CONFIG_DVB_CX22700=m
+CONFIG_DVB_CX22702=m
+CONFIG_DVB_L64781=m
+CONFIG_DVB_TDA1004X=m
+CONFIG_DVB_NXT6000=m
+CONFIG_DVB_MT352=m
+CONFIG_DVB_ZL10353=m
+CONFIG_DVB_DIB3000MB=m
+# CONFIG_DVB_DIB3000MC is not set
+CONFIG_DVB_DIB7000M=m
+CONFIG_DVB_DIB7000P=m
+
+#
+# DVB-C (cable) frontends
+#
+CONFIG_DVB_VES1820=m
+CONFIG_DVB_TDA10021=m
+CONFIG_DVB_TDA10023=m
+CONFIG_DVB_STV0297=m
+
+#
+# ATSC (North American/Korean Terrestrial/Cable DTV) frontends
+#
+CONFIG_DVB_NXT200X=m
+CONFIG_DVB_OR51211=m
+CONFIG_DVB_OR51132=m
+CONFIG_DVB_BCM3510=m
+CONFIG_DVB_LGDT330X=m
+
+#
+# Tuners/PLL support
+#
+CONFIG_DVB_PLL=m
+# CONFIG_DVB_TDA826X is not set
+CONFIG_DVB_TDA827X=m
+CONFIG_DVB_TUNER_QT1010=m
+CONFIG_DVB_TUNER_MT2060=m
+
+#
+# Miscellaneous devices
+#
+CONFIG_DVB_LNBP21=m
+CONFIG_DVB_ISL6421=m
+CONFIG_DVB_TUA6100=m
+CONFIG_VIDEO_SAA7146=m
+CONFIG_VIDEO_SAA7146_VV=m
+CONFIG_VIDEO_TUNER=m
+CONFIG_VIDEO_BUF=m
+CONFIG_VIDEO_BUF_DVB=m
+CONFIG_VIDEO_BTCX=m
+CONFIG_VIDEO_IR=m
+CONFIG_VIDEO_TVEEPROM=m
+CONFIG_DAB=y
+CONFIG_USB_DABUSB=m
+
+#
+# Graphics support
+#
+CONFIG_BACKLIGHT_LCD_SUPPORT=y
+CONFIG_BACKLIGHT_CLASS_DEVICE=y
+CONFIG_LCD_CLASS_DEVICE=y
+CONFIG_BACKLIGHT_PROGEAR=m
+
+#
+# Display device support
+#
+CONFIG_DISPLAY_SUPPORT=m
+
+#
+# Display hardware drivers
+#
+CONFIG_VGASTATE=y
+CONFIG_FB=y
+# CONFIG_FIRMWARE_EDID is not set
+CONFIG_FB_DDC=y
+CONFIG_FB_CFB_FILLRECT=y
+CONFIG_FB_CFB_COPYAREA=y
+CONFIG_FB_CFB_IMAGEBLIT=y
+CONFIG_FB_SYS_FILLRECT=y
+CONFIG_FB_SYS_COPYAREA=y
+CONFIG_FB_SYS_IMAGEBLIT=y
+CONFIG_FB_SYS_FOPS=y
+CONFIG_FB_DEFERRED_IO=y
+CONFIG_FB_SVGALIB=m
+# CONFIG_FB_MACMODES is not set
+CONFIG_FB_BACKLIGHT=y
+CONFIG_FB_MODE_HELPERS=y
+CONFIG_FB_TILEBLITTING=y
+
+#
+# Frame buffer hardware drivers
+#
+CONFIG_FB_CIRRUS=y
+CONFIG_FB_PM2=m
+CONFIG_FB_PM2_FIFO_DISCONNECT=y
+CONFIG_FB_CYBER2000=y
+CONFIG_FB_ARC=y
+CONFIG_FB_ASILIANT=y
+# CONFIG_FB_IMSTT is not set
+# CONFIG_FB_VGA16 is not set
+CONFIG_FB_VESA=y
+# CONFIG_FB_IMAC is not set
+CONFIG_FB_HECUBA=m
+CONFIG_FB_HGA=y
+CONFIG_FB_S1D13XXX=m
+# CONFIG_FB_NVIDIA is not set
+CONFIG_FB_RIVA=y
+CONFIG_FB_RIVA_I2C=y
+# CONFIG_FB_RIVA_DEBUG is not set
+CONFIG_FB_RIVA_BACKLIGHT=y
+# CONFIG_FB_LE80578 is not set
+# CONFIG_FB_MATROX is not set
+CONFIG_FB_RADEON=y
+# CONFIG_FB_RADEON_I2C is not set
+CONFIG_FB_RADEON_BACKLIGHT=y
+# CONFIG_FB_RADEON_DEBUG is not set
+CONFIG_FB_ATY128=y
+CONFIG_FB_ATY128_BACKLIGHT=y
+CONFIG_FB_ATY=y
+CONFIG_FB_ATY_CT=y
+CONFIG_FB_ATY_GENERIC_LCD=y
+CONFIG_FB_ATY_GX=y
+CONFIG_FB_ATY_BACKLIGHT=y
+CONFIG_FB_S3=m
+# CONFIG_FB_SIS is not set
+# CONFIG_FB_NEOMAGIC is not set
+CONFIG_FB_KYRO=y
+CONFIG_FB_3DFX=y
+CONFIG_FB_VOODOO1=y
+CONFIG_FB_VT8623=m
+CONFIG_FB_CYBLA=m
+# CONFIG_FB_TRIDENT is not set
+CONFIG_FB_ARK=m
+CONFIG_FB_SM501=m
+# CONFIG_FB_VIRTUAL is not set
+
+#
+# Console display driver support
+#
+CONFIG_VGA_CONSOLE=y
+CONFIG_VGACON_SOFT_SCROLLBACK=y
+CONFIG_VGACON_SOFT_SCROLLBACK_SIZE=64
+CONFIG_VIDEO_SELECT=y
+CONFIG_MDA_CONSOLE=y
+CONFIG_DUMMY_CONSOLE=y
+CONFIG_FRAMEBUFFER_CONSOLE=m
+# CONFIG_FRAMEBUFFER_CONSOLE_ROTATION is not set
+CONFIG_FONTS=y
+CONFIG_FONT_8x8=y
+CONFIG_FONT_8x16=y
+# CONFIG_FONT_6x11 is not set
+CONFIG_FONT_7x14=y
+# CONFIG_FONT_PEARL_8x8 is not set
+CONFIG_FONT_ACORN_8x8=y
+# CONFIG_FONT_MINI_4x6 is not set
+# CONFIG_FONT_SUN8x16 is not set
+# CONFIG_FONT_SUN12x22 is not set
+# CONFIG_FONT_10x18 is not set
+# CONFIG_LOGO is not set
+
+#
+# Sound
+#
+CONFIG_SOUND=m
+
+#
+# Advanced Linux Sound Architecture
+#
+# CONFIG_SND is not set
+
+#
+# Open Sound System
+#
+CONFIG_SOUND_PRIME=m
+# CONFIG_OSS_OBSOLETE is not set
+# CONFIG_SOUND_TRIDENT is not set
+CONFIG_SOUND_MSNDCLAS=m
+CONFIG_MSNDCLAS_INIT_FILE="/etc/sound/msndinit.bin"
+CONFIG_MSNDCLAS_PERM_FILE="/etc/sound/msndperm.bin"
+CONFIG_SOUND_MSNDPIN=m
+CONFIG_MSNDPIN_INIT_FILE="/etc/sound/pndspini.bin"
+CONFIG_MSNDPIN_PERM_FILE="/etc/sound/pndsperm.bin"
+# CONFIG_SOUND_OSS is not set
+
+#
+# HID Devices
+#
+CONFIG_HID=y
+# CONFIG_HID_DEBUG is not set
+
+#
+# USB Input Devices
+#
+CONFIG_USB_HID=m
+# CONFIG_USB_HIDINPUT_POWERBOOK is not set
+CONFIG_USB_HIDDEV=y
+
+#
+# USB HID Boot Protocol drivers
+#
+CONFIG_USB_KBD=m
+CONFIG_USB_MOUSE=m
+
+#
+# USB support
+#
+CONFIG_USB_ARCH_HAS_HCD=y
+CONFIG_USB_ARCH_HAS_OHCI=y
+CONFIG_USB_ARCH_HAS_EHCI=y
+CONFIG_USB=y
+# CONFIG_USB_DEBUG is not set
+
+#
+# Miscellaneous USB options
+#
+# CONFIG_USB_DEVICEFS is not set
+# CONFIG_USB_DEVICE_CLASS is not set
+
+#
+# USB Host Controller Drivers
+#
+# CONFIG_USB_EHCI_HCD is not set
+# CONFIG_USB_ISP116X_HCD is not set
+CONFIG_USB_OHCI_HCD=y
+# CONFIG_USB_OHCI_BIG_ENDIAN_DESC is not set
+# CONFIG_USB_OHCI_BIG_ENDIAN_MMIO is not set
+CONFIG_USB_OHCI_LITTLE_ENDIAN=y
+# CONFIG_USB_UHCI_HCD is not set
+CONFIG_USB_U132_HCD=y
+CONFIG_USB_SL811_HCD=m
+CONFIG_USB_SL811_CS=m
+
+#
+# USB Device Class drivers
+#
+CONFIG_USB_ACM=m
+CONFIG_USB_PRINTER=m
+
+#
+# NOTE: USB_STORAGE enables SCSI, and 'SCSI disk support'
+#
+
+#
+# may also be needed; see USB_STORAGE Help for more information
+#
+# CONFIG_USB_LIBUSUAL is not set
+
+#
+# USB Imaging devices
+#
+CONFIG_USB_MON=y
+
+#
+# USB port drivers
+#
+CONFIG_USB_USS720=m
+
+#
+# USB Serial Converter support
+#
+CONFIG_USB_SERIAL=y
+CONFIG_USB_SERIAL_GENERIC=y
+CONFIG_USB_SERIAL_AIRPRIME=m
+CONFIG_USB_SERIAL_BELKIN=m
+CONFIG_USB_SERIAL_WHITEHEAT=y
+# CONFIG_USB_SERIAL_DIGI_ACCELEPORT is not set
+CONFIG_USB_SERIAL_EMPEG=m
+CONFIG_USB_SERIAL_FUNSOFT=m
+CONFIG_USB_SERIAL_VISOR=y
+CONFIG_USB_SERIAL_IPAQ=y
+CONFIG_USB_SERIAL_EDGEPORT=m
+# CONFIG_USB_SERIAL_EDGEPORT_TI is not set
+CONFIG_USB_SERIAL_GARMIN=y
+CONFIG_USB_SERIAL_KEYSPAN_PDA=y
+CONFIG_USB_SERIAL_KEYSPAN=m
+CONFIG_USB_SERIAL_KEYSPAN_MPR=y
+# CONFIG_USB_SERIAL_KEYSPAN_USA28 is not set
+CONFIG_USB_SERIAL_KEYSPAN_USA28X=y
+CONFIG_USB_SERIAL_KEYSPAN_USA28XA=y
+CONFIG_USB_SERIAL_KEYSPAN_USA28XB=y
+# CONFIG_USB_SERIAL_KEYSPAN_USA19 is not set
+# CONFIG_USB_SERIAL_KEYSPAN_USA18X is not set
+# CONFIG_USB_SERIAL_KEYSPAN_USA19W is not set
+CONFIG_USB_SERIAL_KEYSPAN_USA19QW=y
+CONFIG_USB_SERIAL_KEYSPAN_USA19QI=y
+CONFIG_USB_SERIAL_KEYSPAN_USA49W=y
+# CONFIG_USB_SERIAL_KEYSPAN_USA49WLC is not set
+CONFIG_USB_SERIAL_KOBIL_SCT=y
+CONFIG_USB_SERIAL_MCT_U232=y
+CONFIG_USB_SERIAL_MOS7720=y
+CONFIG_USB_SERIAL_MOS7840=m
+# CONFIG_USB_SERIAL_NAVMAN is not set
+CONFIG_USB_SERIAL_PL2303=m
+CONFIG_USB_SERIAL_HP4X=y
+# CONFIG_USB_SERIAL_SIERRAWIRELESS is not set
+# CONFIG_USB_SERIAL_TI is not set
+# CONFIG_USB_SERIAL_XIRCOM is not set
+CONFIG_USB_SERIAL_OPTION=m
+# CONFIG_USB_SERIAL_DEBUG is not set
+CONFIG_USB_EZUSB=y
+
+#
+# USB Miscellaneous drivers
+#
+CONFIG_USB_EMI62=m
+CONFIG_USB_EMI26=y
+CONFIG_USB_LCD=m
+CONFIG_USB_BERRY_CHARGE=y
+CONFIG_USB_LED=m
+CONFIG_USB_CYPRESS_CY7C63=m
+# CONFIG_USB_CYTHERM is not set
+CONFIG_USB_PHIDGET=m
+# CONFIG_USB_PHIDGETKIT is not set
+CONFIG_USB_PHIDGETMOTORCONTROL=m
+CONFIG_USB_PHIDGETSERVO=m
+# CONFIG_USB_IDMOUSE is not set
+CONFIG_USB_FTDI_ELAN=y
+CONFIG_USB_APPLEDISPLAY=y
+CONFIG_USB_LD=m
+CONFIG_USB_TRANCEVIBRATOR=m
+CONFIG_USB_IOWARRIOR=m
+
+#
+# USB DSL modem support
+#
+
+#
+# USB Gadget Support
+#
+CONFIG_USB_GADGET=y
+# CONFIG_USB_GADGET_DEBUG_FILES is not set
+CONFIG_USB_GADGET_SELECTED=y
+# CONFIG_USB_GADGET_FSL_USB2 is not set
+CONFIG_USB_GADGET_NET2280=y
+CONFIG_USB_NET2280=y
+# CONFIG_USB_GADGET_PXA2XX is not set
+# CONFIG_USB_GADGET_GOKU is not set
+# CONFIG_USB_GADGET_LH7A40X is not set
+# CONFIG_USB_GADGET_OMAP is not set
+# CONFIG_USB_GADGET_AT91 is not set
+# CONFIG_USB_GADGET_DUMMY_HCD is not set
+CONFIG_USB_GADGET_DUALSPEED=y
+# CONFIG_USB_ZERO is not set
+CONFIG_USB_ETH=m
+# CONFIG_USB_GADGETFS is not set
+# CONFIG_USB_FILE_STORAGE is not set
+CONFIG_USB_G_SERIAL=m
+# CONFIG_USB_MIDI_GADGET is not set
+# CONFIG_MMC is not set
+
+#
+# LED devices
+#
+CONFIG_NEW_LEDS=y
+CONFIG_LEDS_CLASS=y
+
+#
+# LED drivers
+#
+CONFIG_LEDS_NET48XX=m
+# CONFIG_LEDS_WRAP is not set
+
+#
+# LED Triggers
+#
+# CONFIG_LEDS_TRIGGERS is not set
+
+#
+# InfiniBand support
+#
+# CONFIG_INFINIBAND is not set
+
+#
+# EDAC - error detection and reporting (RAS) (EXPERIMENTAL)
+#
+
+#
+# Real Time Clock
+#
+
+#
+# DMA Engine support
+#
+# CONFIG_DMA_ENGINE is not set
+
+#
+# DMA Clients
+#
+
+#
+# DMA Devices
+#
+
+#
+# Auxiliary Display support
+#
+CONFIG_KS0108=m
+CONFIG_KS0108_PORT=0x378
+CONFIG_KS0108_DELAY=2
+CONFIG_CFAG12864B=m
+CONFIG_CFAG12864B_RATE=20
+
+#
+# Virtualization
+#
+
+#
+# File systems
+#
+# CONFIG_EXT2_FS is not set
+# CONFIG_EXT3_FS is not set
+# CONFIG_REISERFS_FS is not set
+# CONFIG_JFS_FS is not set
+CONFIG_FS_POSIX_ACL=y
+# CONFIG_XFS_FS is not set
+# CONFIG_OCFS2_FS is not set
+# CONFIG_MINIX_FS is not set
+# CONFIG_ROMFS_FS is not set
+# CONFIG_INOTIFY is not set
+# CONFIG_QUOTA is not set
+CONFIG_DNOTIFY=y
+CONFIG_AUTOFS_FS=y
+CONFIG_AUTOFS4_FS=y
+# CONFIG_FUSE_FS is not set
+
+#
+# CD-ROM/DVD Filesystems
+#
+# CONFIG_ISO9660_FS is not set
+# CONFIG_UDF_FS is not set
+
+#
+# DOS/FAT/NT Filesystems
+#
+# CONFIG_MSDOS_FS is not set
+# CONFIG_VFAT_FS is not set
+# CONFIG_NTFS_FS is not set
+
+#
+# Pseudo filesystems
+#
+CONFIG_PROC_FS=y
+CONFIG_PROC_KCORE=y
+CONFIG_PROC_SYSCTL=y
+CONFIG_SYSFS=y
+# CONFIG_TMPFS is not set
+CONFIG_HUGETLBFS=y
+CONFIG_HUGETLB_PAGE=y
+CONFIG_RAMFS=y
+
+#
+# Miscellaneous filesystems
+#
+# CONFIG_HFSPLUS_FS is not set
+# CONFIG_CRAMFS is not set
+# CONFIG_VXFS_FS is not set
+# CONFIG_HPFS_FS is not set
+# CONFIG_QNX4FS_FS is not set
+# CONFIG_SYSV_FS is not set
+# CONFIG_UFS_FS is not set
+
+#
+# Network File Systems
+#
+CONFIG_NFS_FS=m
+# CONFIG_NFS_V3 is not set
+CONFIG_NFS_DIRECTIO=y
+CONFIG_NFSD=m
+CONFIG_NFSD_V2_ACL=y
+CONFIG_NFSD_V3=y
+CONFIG_NFSD_V3_ACL=y
+# CONFIG_NFSD_TCP is not set
+CONFIG_LOCKD=m
+CONFIG_LOCKD_V4=y
+CONFIG_EXPORTFS=m
+CONFIG_NFS_ACL_SUPPORT=m
+CONFIG_NFS_COMMON=y
+CONFIG_SUNRPC=m
+CONFIG_SMB_FS=m
+# CONFIG_SMB_NLS_DEFAULT is not set
+# CONFIG_CIFS is not set
+CONFIG_NCP_FS=m
+CONFIG_NCPFS_PACKET_SIGNING=y
+CONFIG_NCPFS_IOCTL_LOCKING=y
+# CONFIG_NCPFS_STRONG is not set
+# CONFIG_NCPFS_NFS_NS is not set
+CONFIG_NCPFS_OS2_NS=y
+# CONFIG_NCPFS_SMALLDOS is not set
+CONFIG_NCPFS_NLS=y
+# CONFIG_NCPFS_EXTRAS is not set
+CONFIG_CODA_FS=m
+CONFIG_CODA_FS_OLD_API=y
+
+#
+# Partition Types
+#
+# CONFIG_PARTITION_ADVANCED is not set
+CONFIG_MSDOS_PARTITION=y
+
+#
+# Native Language Support
+#
+CONFIG_NLS=m
+CONFIG_NLS_DEFAULT="iso8859-1"
+# CONFIG_NLS_CODEPAGE_437 is not set
+# CONFIG_NLS_CODEPAGE_737 is not set
+# CONFIG_NLS_CODEPAGE_775 is not set
+# CONFIG_NLS_CODEPAGE_850 is not set
+CONFIG_NLS_CODEPAGE_852=m
+# CONFIG_NLS_CODEPAGE_855 is not set
+# CONFIG_NLS_CODEPAGE_857 is not set
+# CONFIG_NLS_CODEPAGE_860 is not set
+CONFIG_NLS_CODEPAGE_861=m
+# CONFIG_NLS_CODEPAGE_862 is not set
+CONFIG_NLS_CODEPAGE_863=m
+CONFIG_NLS_CODEPAGE_864=m
+CONFIG_NLS_CODEPAGE_865=m
+# CONFIG_NLS_CODEPAGE_866 is not set
+CONFIG_NLS_CODEPAGE_869=m
+# CONFIG_NLS_CODEPAGE_936 is not set
+# CONFIG_NLS_CODEPAGE_950 is not set
+CONFIG_NLS_CODEPAGE_932=m
+CONFIG_NLS_CODEPAGE_949=m
+CONFIG_NLS_CODEPAGE_874=m
+CONFIG_NLS_ISO8859_8=m
+CONFIG_NLS_CODEPAGE_1250=m
+# CONFIG_NLS_CODEPAGE_1251 is not set
+# CONFIG_NLS_ASCII is not set
+# CONFIG_NLS_ISO8859_1 is not set
+CONFIG_NLS_ISO8859_2=m
+CONFIG_NLS_ISO8859_3=m
+CONFIG_NLS_ISO8859_4=m
+# CONFIG_NLS_ISO8859_5 is not set
+CONFIG_NLS_ISO8859_6=m
+CONFIG_NLS_ISO8859_7=m
+CONFIG_NLS_ISO8859_9=m
+# CONFIG_NLS_ISO8859_13 is not set
+CONFIG_NLS_ISO8859_14=m
+# CONFIG_NLS_ISO8859_15 is not set
+CONFIG_NLS_KOI8_R=m
+CONFIG_NLS_KOI8_U=m
+# CONFIG_NLS_UTF8 is not set
+
+#
+# Kernel hacking
+#
+CONFIG_TRACE_IRQFLAGS_SUPPORT=y
+# CONFIG_PRINTK_TIME is not set
+# CONFIG_ENABLE_MUST_CHECK is not set
+# CONFIG_MAGIC_SYSRQ is not set
+CONFIG_UNUSED_SYMBOLS=y
+# CONFIG_DEBUG_FS is not set
+CONFIG_HEADERS_CHECK=y
+# CONFIG_DEBUG_KERNEL is not set
+CONFIG_DEBUG_BUGVERBOSE=y
+CONFIG_EARLY_PRINTK=y
+CONFIG_DOUBLEFAULT=y
+
+#
+# Security options
+#
+CONFIG_KEYS=y
+# CONFIG_KEYS_DEBUG_PROC_KEYS is not set
+CONFIG_SECURITY=y
+# CONFIG_SECURITY_NETWORK is not set
+CONFIG_SECURITY_CAPABILITIES=y
+# CONFIG_SECURITY_ROOTPLUG is not set
+
+#
+# Cryptographic options
+#
+CONFIG_CRYPTO=y
+CONFIG_CRYPTO_ALGAPI=y
+CONFIG_CRYPTO_ABLKCIPHER=m
+CONFIG_CRYPTO_BLKCIPHER=y
+CONFIG_CRYPTO_HASH=y
+CONFIG_CRYPTO_MANAGER=y
+CONFIG_CRYPTO_HMAC=y
+CONFIG_CRYPTO_NULL=m
+CONFIG_CRYPTO_MD4=y
+CONFIG_CRYPTO_MD5=y
+CONFIG_CRYPTO_SHA1=y
+CONFIG_CRYPTO_SHA256=m
+CONFIG_CRYPTO_SHA512=y
+# CONFIG_CRYPTO_WP512 is not set
+CONFIG_CRYPTO_TGR192=m
+CONFIG_CRYPTO_ECB=y
+CONFIG_CRYPTO_CBC=y
+CONFIG_CRYPTO_PCBC=m
+CONFIG_CRYPTO_CRYPTD=m
+CONFIG_CRYPTO_DES=y
+CONFIG_CRYPTO_FCRYPT=y
+CONFIG_CRYPTO_BLOWFISH=m
+CONFIG_CRYPTO_TWOFISH=m
+CONFIG_CRYPTO_TWOFISH_COMMON=y
+CONFIG_CRYPTO_TWOFISH_586=y
+CONFIG_CRYPTO_SERPENT=m
+CONFIG_CRYPTO_AES=m
+# CONFIG_CRYPTO_AES_586 is not set
+CONFIG_CRYPTO_CAST5=m
+CONFIG_CRYPTO_CAST6=m
+# CONFIG_CRYPTO_TEA is not set
+CONFIG_CRYPTO_ARC4=y
+# CONFIG_CRYPTO_KHAZAD is not set
+CONFIG_CRYPTO_ANUBIS=y
+CONFIG_CRYPTO_DEFLATE=y
+# CONFIG_CRYPTO_MICHAEL_MIC is not set
+CONFIG_CRYPTO_CRC32C=y
+CONFIG_CRYPTO_CAMELLIA=m
+CONFIG_CRYPTO_TEST=m
+
+#
+# Hardware crypto devices
+#
+CONFIG_CRYPTO_DEV_PADLOCK=m
+CONFIG_CRYPTO_DEV_PADLOCK_AES=m
+# CONFIG_CRYPTO_DEV_PADLOCK_SHA is not set
+# CONFIG_CRYPTO_DEV_GEODE is not set
+
+#
+# Library routines
+#
+CONFIG_BITREVERSE=y
+CONFIG_CRC_CCITT=y
+CONFIG_CRC16=m
+# CONFIG_CRC_ITU_T is not set
+CONFIG_CRC32=y
+CONFIG_LIBCRC32C=y
+CONFIG_ZLIB_INFLATE=y
+CONFIG_ZLIB_DEFLATE=y
+CONFIG_PLIST=y
+CONFIG_HAS_IOMEM=y
+CONFIG_HAS_IOPORT=y
+CONFIG_HAS_DMA=y
+CONFIG_GENERIC_HARDIRQS=y
+CONFIG_GENERIC_IRQ_PROBE=y
+CONFIG_X86_BIOS_REBOOT=y
+CONFIG_KTIME_SCALAR=y
+
+
+--Boundary-01=_t4MhGeMWxa/FR8+--
+
+--nextPart15371141.zsh6OQpBmM
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQBGhM4thyrlCH22naMRAisIAKCHc31bFbKoGYZMxqEF7zKcdjU5YACdGOlt
+PRESVVkloAEEOZenQ3Rmt08=
+=Y0fq
+-----END PGP SIGNATURE-----
+
+--nextPart15371141.zsh6OQpBmM--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
