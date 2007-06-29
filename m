@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52713 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751162AbXFNJIO (ORCPT
+Received: from smtp136.iad.emailsrvr.com ([207.97.245.136]:48691 "EHLO
+	smtp136.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751006AbXF2WlH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2007 05:08:14 -0400
-Subject: rt2x00firmware.c missing some include
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4E5fjcA+51JoU5+6xm3B"
-Date: Wed, 13 Jun 2007 23:41:11 +0200
-Message-Id: <1181770871.29767.139.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 29 Jun 2007 18:41:07 -0400
+Message-ID: <46858A31.3050609@gentoo.org>
+Date: Fri, 29 Jun 2007 18:39:45 -0400
+From: Daniel Drake <dsd@gentoo.org>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: Michael Wu <flamingice@sourmilk.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Benc <jbenc@suse.cz>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Export short-preamble bit to drivers
+References: <200706251628.00838.mb@bu3sch.de> <1183024620.4769.80.camel@johannes.berg> <200706282301.16474.flamingice@sourmilk.net> <200706291013.07660.mb@bu3sch.de>
+In-Reply-To: <200706291013.07660.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michael Buesch wrote:
+> Configure it for management/ctl frames that are sent in hw. We send them
+> with long preamble atm.
 
---=-4E5fjcA+51JoU5+6xm3B
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+I am working on patches which will help you here. Currently mac80211's 
+handling of short preambles is correct for hostap/master mode but not 
+for a STA.
 
-I get
+The interface I'm working on adding will be somewhat similar to the 
+softmac interface. That is, preambles are available on a per-frame basis 
+and the driver also gets a notification when the availability of short 
+preambles changes.
 
-  CC [M]  drivers/net/wireless/mac80211/rt2x00/rt2x00firmware.o
-drivers/net/wireless/mac80211/rt2x00/rt2x00firmware.c: In function =E2=80=
-=98rt2x00lib_load_firmware_wait=E2=80=99:
-drivers/net/wireless/mac80211/rt2x00/rt2x00firmware.c:123: warning: implici=
-t declaration of function =E2=80=98msleep=E2=80=99
+zd1211rw seems to have similar requirements for bcm43xx. The correct 
+behaviour (IMO) is to send frames with long preambles until mac80211 
+uses the above notification to tell you that short preambles are now 
+allowable. This is how zd1211rw-softmac does it.
 
-on powerpc. I suppose on your system something pulls in the relevant
-header already.
+I have written the code for the above but have not had time to test it 
+yet. Hopefully within the next few days...
 
-johannes
-
---=-4E5fjcA+51JoU5+6xm3B
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGcGR3/ETPhpq3jKURAut6AJ9zl13o0NSLm9ZDnpgil/+VB5F0pwCdFvXp
-Dr7VNfjdbgnc1q2k/hOgPWY=
-=/sT5
------END PGP SIGNATURE-----
-
---=-4E5fjcA+51JoU5+6xm3B--
-
+Daniel
