@@ -1,58 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fallback.mail.elte.hu ([157.181.151.13]:49980 "EHLO
-	fallback.mail.elte.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750764AbXFQPWE (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:17993 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750813AbXF2GA4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jun 2007 11:22:04 -0400
-Date: Sun, 17 Jun 2007 17:14:50 +0200
-From: Ingo Molnar <mingo@elte.hu>
-To: James Morris <jmorris@namei.org>
-Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Christoph Lameter <clameter@sgi.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Andrea Righi <righiandr@users.sourceforge.net>,
-	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Andrey Borzenkov <arvidjaar@mail.ru>,
-	Bjorn Helgaas <bjorn.helgaas@hp.com>,
-	Chad Tindel <ctindel@users.sourceforge.net>,
-	Dan Aloni <da-x@monatomic.org>,
-	Jay Vosburgh <fubar@us.ibm.com>,
-	Stephen Hemminger <shemminger@linux-foundation.org>,
-	Stephen Smalley <sds@tycho.nsa.gov>,
-	Eric Paris <eparis@parisplace.org>,
-	linux-usb-devel@lists.sourceforge.net,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Paulo Pereira <pfmp.404@gmail.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [2/2] 2.6.22-rc5: known regressions with patches
-Message-ID: <20070617151450.GA11762@elte.hu>
-References: <4675430B.2000304@googlemail.com> <46754400.2080101@googlemail.com> <Line.LNX.4.64.0706171046190.1178@localhost.localdomain>
+	Fri, 29 Jun 2007 02:00:56 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: Export short-preamble bit to drivers
+Date: Thu, 28 Jun 2007 23:01:11 -0700
+Cc: Michael Buesch <mb@bu3sch.de>, Jiri Benc <jbenc@suse.cz>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200706251628.00838.mb@bu3sch.de> <200706271840.09719.flamingice@sourmilk.net> <1183024620.4769.80.camel@johannes.berg>
+In-Reply-To: <1183024620.4769.80.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <Line.LNX.4.64.0706171046190.1178@localhost.localdomain>
+Content-Type: multipart/signed;
+  boundary="nextPart24148086.5xsq4YdW2F";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200706282301.16474.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--nextPart24148086.5xsq4YdW2F
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-* James Morris <jmorris@namei.org> wrote:
+On Thursday 28 June 2007 02:57, Johannes Berg wrote:
+> I don't think we ever care about configuring it per-frame and currently
+> can't afaik, so I don't think we can rightfully say "short preamble
+> allowed" unless we want to confuse driver authors about who is
+> responsible for then determining whether to use it or not for each
+> frame.
+>
+mac80211 does this per-frame. It does matter. Short preamble should not be=
+=20
+configured by a global bit. What does the bcm43xx firmware do with this bit?
 
-> > SELinux
-> > 
-> > Subject    : very high non-preempt latency in context_struct_compute_av()
-> > References : http://lkml.org/lkml/2007/6/4/78
-> > Submitter  : Ingo Molnar <mingo@elte.hu>
-> > Handled-By : Stephen Smalley <sds@tycho.nsa.gov>
-> >             James Morris <jmorris@namei.org>
-> > Patch      : http://lkml.org/lkml/2007/6/7/334
-> > Status     : patch available
-> 
-> This patch is queued for -mm, and will be submitted for 2.6.23.
+=2DMichael Wu
 
-and that is fine with me - think this is a pre-existing problem so not a 
-new regression in .22.
+--nextPart24148086.5xsq4YdW2F
+Content-Type: application/pgp-signature
 
-	Ingo
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGhKAsT3Oqt9AH4aERAu+CAKDMUWhhb4NFRhzQYOUuCv98wWqDmwCdGTwQ
+e/ms8suJzCXBLsN3010x71o=
+=f7E+
+-----END PGP SIGNATURE-----
+
+--nextPart24148086.5xsq4YdW2F--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
