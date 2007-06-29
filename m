@@ -1,126 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:23655 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750898AbXFVFHG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2007 01:07:06 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Jouni Malinen <j@w1.fi>
-Subject: Re: [WIP] mac80211: kill mgmt interface
-Date: Thu, 21 Jun 2007 22:05:12 -0700
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1182418939.10821.8.camel@johannes.berg> <20070621133556.GJ5361@jm.kir.nu>
-In-Reply-To: <20070621133556.GJ5361@jm.kir.nu>
+Received: from mx1.redhat.com ([66.187.233.31]:49602 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1765132AbXF2Neg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jun 2007 09:34:36 -0400
+From: Michal Schmidt <mschmidt@redhat.com>
+Subject: [PATCH 2/5] airo: delay some initialization until the netdev is up
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	Matteo Croce <rootkit85@yahoo.it>
+Date: Fri, 29 Jun 2007 15:33:36 +0200
+Message-ID: <20070629133336.6658.46135.stgit@localhost.localdomain>
+In-Reply-To: <20070629131841.6658.76381.stgit@localhost.localdomain>
+References: <20070629131841.6658.76381.stgit@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2515396.sW31APrrCi";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200706212205.16642.flamingice@sourmilk.net>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2515396.sW31APrrCi
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+airo's kernel thread and the IRQ handler are needed only when the interface
+is up.
 
-On Thursday 21 June 2007 06:35, Jouni Malinen wrote:
-> On Thu, Jun 21, 2007 at 11:42:19AM +0200, Johannes Berg wrote:
-> > This patch kills the management interface type now that we can
-> > see transmitted frames on monitor interfaces.
->
-> Has someone tested that this works with programs that use the management
-> interface (mainly, hostapd and wpa_supplicant)? Is all the needed
-> functionality available with the alternative solution?
->
-The management interface shouldn't be killed until hostap and wpa_supplican=
-t=20
-can work with monitor interfaces.
+Signed-off-by: Michal Schmidt <mschmidt@redhat.com>
+---
 
-> > I renamed the req_tx_status to reliable_tx_mntr and the flag
-> > constant as well since that's what they now mean. It is always
-> > set for injected frames so that hostapd can rely on seeing the
-> > frames it sent.
->
-> I'm not sure I follow this explanation fully.. How would hostapd learn
-> whether the destination address acknowledged a unicast frame?
->
-It's the same as the management interface - hostap receives the same frame =
-it=20
-sent, with a header that says whether or not it was ACKed.
+ drivers/net/wireless/airo.c |   80 ++++++++++++++++++++++++-------------------
+ 1 files changed, 45 insertions(+), 35 deletions(-)
 
-> > The biggest problem, however, and I'm not sure how to solve it, is
-> > that hostapd will see either encrypted or unencrypted frames on the
-> > monitor interface depending on whether hardware encryption is used
-> > or not. However, hostapd really needs to see eapol frames to do
-> > whatever it needs to with them. Right now, I don't really have an
-> > idea except maybe to send these packets to hostapd via nl80211,
-> > or to introduce some sort of "decrypted soft monitor" iface.
->
-> If I've understood correctly (please correct me, if not), this patch is
-> proposing to remove an interface that works currently and leave the
-> stack in state that does not work. I can only strongly recommend this
-> patch not to be applied at this point. It is not a good direction to
-> start removing working code before there is a good alternative available
-> and that alternative has actually been tested to provide the needed
-> functionality.
->
-Agreed. However, it is marked WIP and has spawned some good discussion. :)
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 57da70b..37aa619 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -1926,28 +1926,55 @@ static int readStatsRid(struct airo_info*ai, StatsRid *sr, int rid, int lock) {
+ 	return rc;
+ }
+ 
++static void try_auto_wep(struct airo_info *ai)
++{
++	if (auto_wep && !(ai->flags & FLAG_RADIO_DOWN)) {
++		ai->expires = RUN_AT(3*HZ);
++		wake_up_interruptible(&ai->thr_wait);
++	}
++}
++
+ static int airo_open(struct net_device *dev) {
+-	struct airo_info *info = dev->priv;
++	struct airo_info *ai = dev->priv;
+ 	Resp rsp;
++	int rc = 0;
+ 
+-	if (test_bit(FLAG_FLASHING, &info->flags))
++	if (test_bit(FLAG_FLASHING, &ai->flags))
+ 		return -EIO;
+ 
+ 	/* Make sure the card is configured.
+ 	 * Wireless Extensions may postpone config changes until the card
+ 	 * is open (to pipeline changes and speed-up card setup). If
+ 	 * those changes are not yet commited, do it now - Jean II */
+-	if (test_bit (FLAG_COMMIT, &info->flags)) {
+-		disable_MAC(info, 1);
+-		writeConfigRid(info, 1);
++	if (test_bit(FLAG_COMMIT, &ai->flags)) {
++		disable_MAC(ai, 1);
++		writeConfigRid(ai, 1);
+ 	}
+ 
+-	if (info->wifidev != dev) {
++	if (ai->wifidev != dev) {
++		clear_bit(JOB_DIE, &ai->jobs);
++		ai->airo_thread_task = kthread_run(airo_thread, dev, dev->name);
++		if (IS_ERR(ai->airo_thread_task))
++			return (int)PTR_ERR(ai->airo_thread_task);
++		
++		rc = request_irq(dev->irq, airo_interrupt, IRQF_SHARED,
++			dev->name, dev);
++		if (rc) {
++			airo_print_err(dev->name,
++				"register interrupt %d failed, rc %d",
++				dev->irq, rc);
++			set_bit(JOB_DIE, &ai->jobs);
++			kthread_stop(ai->airo_thread_task);
++			return rc;
++		}
++		
+ 		/* Power on the MAC controller (which may have been disabled) */
+-		clear_bit(FLAG_RADIO_DOWN, &info->flags);
+-		enable_interrupts(info);
++		clear_bit(FLAG_RADIO_DOWN, &ai->flags);
++		enable_interrupts(ai);
++
++		try_auto_wep(ai);
+ 	}
+-	enable_MAC(info, &rsp, 1);
++	enable_MAC(ai, &rsp, 1);
+ 
+ 	netif_start_queue(dev);
+ 	return 0;
+@@ -2392,6 +2419,11 @@ static int airo_close(struct net_device *dev) {
+ 		disable_MAC(ai, 1);
+ #endif
+ 		disable_interrupts( ai );
++
++		free_irq(dev->irq, dev);
++		
++		set_bit(JOB_DIE, &ai->jobs);
++		kthread_stop(ai->airo_thread_task);
+ 	}
+ 	return 0;
+ }
+@@ -2403,7 +2435,6 @@ void stop_airo_card( struct net_device *dev, int freeres )
+ 	set_bit(FLAG_RADIO_DOWN, &ai->flags);
+ 	disable_MAC(ai, 1);
+ 	disable_interrupts(ai);
+-	free_irq( dev->irq, dev );
+ 	takedown_proc_entry( dev, ai );
+ 	if (test_bit(FLAG_REGISTERED, &ai->flags)) {
+ 		unregister_netdev( dev );
+@@ -2414,9 +2445,6 @@ void stop_airo_card( struct net_device *dev, int freeres )
+ 		}
+ 		clear_bit(FLAG_REGISTERED, &ai->flags);
+ 	}
+-	set_bit(JOB_DIE, &ai->jobs);
+-	kthread_stop(ai->airo_thread_task);
+-
+ 	/*
+ 	 * Clean out tx queue
+ 	 */
+@@ -2821,14 +2849,11 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 	ai->config.len = 0;
+ 	ai->pci = pci;
+ 	init_waitqueue_head (&ai->thr_wait);
+-	ai->airo_thread_task = kthread_run(airo_thread, dev, dev->name);
+-	if (IS_ERR(ai->airo_thread_task))
+-		goto err_out_free;
+ 	ai->tfm = NULL;
+ 	add_airo_dev(ai);
+ 
+ 	if (airo_networks_allocate (ai))
+-		goto err_out_thr;
++		goto err_out_free;
+ 	airo_networks_initialize (ai);
+ 
+ 	/* The Airo-specific entries in the device structure. */
+@@ -2851,21 +2876,16 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 	dev->base_addr = port;
+ 
+ 	SET_NETDEV_DEV(dev, dmdev);
++	SET_MODULE_OWNER(dev);
+ 
+ 	reset_card (dev, 1);
+ 	msleep(400);
+ 
+-	rc = request_irq( dev->irq, airo_interrupt, IRQF_SHARED, dev->name, dev );
+-	if (rc) {
+-		airo_print_err(dev->name, "register interrupt %d failed, rc %d",
+-				irq, rc);
+-		goto err_out_nets;
+-	}
+ 	if (!is_pcmcia) {
+ 		if (!request_region( dev->base_addr, 64, dev->name )) {
+ 			rc = -EBUSY;
+ 			airo_print_err(dev->name, "Couldn't request region");
+-			goto err_out_irq;
++			goto err_out_nets;
+ 		}
+ 	}
+ 
+@@ -2921,8 +2941,6 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 	if (setup_proc_entry(dev, dev->priv) < 0)
+ 		goto err_out_wifi;
+ 
+-	netif_start_queue(dev);
+-	SET_MODULE_OWNER(dev);
+ 	return dev;
+ 
+ err_out_wifi:
+@@ -2940,14 +2958,9 @@ err_out_map:
+ err_out_res:
+ 	if (!is_pcmcia)
+ 	        release_region( dev->base_addr, 64 );
+-err_out_irq:
+-	free_irq(dev->irq, dev);
+ err_out_nets:
+ 	airo_networks_free(ai);
+-err_out_thr:
+ 	del_airo_dev(ai);
+-	set_bit(JOB_DIE, &ai->jobs);
+-	kthread_stop(ai->airo_thread_task);
+ err_out_free:
+ 	free_netdev(dev);
+ 	return NULL;
+@@ -3919,10 +3932,7 @@ static u16 setup_card(struct airo_info *ai, u8 *mac, int lock)
+ 		rc = readWepKeyRid(ai, &wkr, 0, lock);
+ 	} while(lastindex != wkr.kindex);
+ 
+-	if (auto_wep) {
+-		ai->expires = RUN_AT(3*HZ);
+-		wake_up_interruptible(&ai->thr_wait);
+-	}
++	try_auto_wep(ai);
+ 
+ 	return SUCCESS;
+ }
 
-> I don't really see need for getting rid of the management interface, but
-> if there is consensus on doing that, we would need to have another way
-> of being able to receive and transmit management frames and data frames
-> from/to user space in a way that provides at least following
-> functionality:
-> - transmit management frames at high priority
-Should be fine to hardcode this for now since the current mgmt interface=20
-doesn't allow control over this.
-
-> - control whether transmitted frames will be encrypted or not
-IEEE80211_RADIOTAP_F_WEP should be appropriate, I think. (despite its somew=
-hat=20
-misleading name)
-
-> - get callback to report TX status for unicast frames (whether the
->   receiver sent control::ack for the frame)
-This is provided by [PATCH] mac80211: show transmitted frames on monitor=20
-interfaces.
-
-> - receive management frames
-Well, it's a monitor interface, so it's more of a challenge to receive just=
-=20
-the desired frames. Hopefully packet filter works well enough for this..
-
-> - receive data frames EAPOL/etc. ethertypes in decrypted form
-We should be able to receive this on the other interface which is handling =
-all=20
-the data frames, right?
-
-> - delivery of notifications to user space for Michael MIC errors and
->   other similar events
-nl80211 should be appropriate for this. nl80211 is probably the biggest=20
-blocker before removing the mgmt interface completely.. everything else is=
-=20
-*almost* there.
-
-=2DMichael Wu
-
---nextPart2515396.sW31APrrCi
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGe1iMT3Oqt9AH4aERAm/LAKDJNGjVfMtcSKj0iYddNUuf9wQuiQCfeyCw
-kNceVbxX8P3Q6Rgy+MbZp94=
-=Cfy2
------END PGP SIGNATURE-----
-
---nextPart2515396.sW31APrrCi--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
