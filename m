@@ -1,67 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49663 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752192AbXFTNzG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2007 09:55:06 -0400
-Subject: Re: ieee80211_radar_status?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20070620135000.GZ5361@jm.kir.nu>
-References: <1182296182.3714.19.camel@johannes.berg>
-	 <20070620135000.GZ5361@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3aVR9hFSjC9TC6IP8k7a"
-Date: Wed, 20 Jun 2007 15:56:07 +0200
-Message-Id: <1182347767.3714.69.camel@johannes.berg>
+Received: from mx1.redhat.com ([66.187.233.31]:47925 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751993AbXF3IG0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jun 2007 04:06:26 -0400
+Subject: Re: [RFC/PATCH] debug workqueue deadlocks with lockdep
+From: Ingo Molnar <mingo@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arjan van de Ven <arjan@linux.intel.com>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>,
+	Oleg Nesterov <oleg@tv-sign.ru>, mingo@elte.hu,
+	Thomas Sattler <tsattler@gmx.de>
+In-Reply-To: <1183052001.4089.2.camel@johannes.berg>
+References: <1182969638.4769.56.camel@johannes.berg>
+	 <1183048429.4089.1.camel@johannes.berg>
+	 <1183052001.4089.2.camel@johannes.berg>
+Content-Type: text/plain
+Date: Sat, 30 Jun 2007 10:05:28 +0200
+Message-Id: <1183190728.7932.43.camel@earth4>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2007-06-28 at 19:33 +0200, Johannes Berg wrote:
+> No, that's not right either, but Arjan just helped me a bit with how
+> lockdep works and I think I have the right idea now. Ignore this for
+> now, I'll send a new patch in a few days.
 
---=-3aVR9hFSjC9TC6IP8k7a
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+ok. But in general, this is a very nice idea!
 
-On Wed, 2007-06-20 at 06:50 -0700, Jouni Malinen wrote:
-> On Wed, Jun 20, 2007 at 01:36:21AM +0200, Johannes Berg wrote:
->=20
-> > Is there any documentation for the arguments to ieee80211_radar_status?
->=20
-> Apparently not. It looks like it was only used for reporting a detected
-> radar and none of the arguments were really used, i.e., it is just a
-> callback from low-level driver to notify if a radar was detected on the
-> current channel.
+i've Cc:-ed Oleg. Oleg, what do you think? I think we should keep all
+the workqueue APIs specified in a form that makes them lockdep coverable
+like Johannes did. This debug mechanism could have helped with the
+recent DVB lockup that Thomas Sattler reported.
 
-Huh, ok, but why were the arguments added then. Oh well, doesn't matter
-much.
-
-> > When moving to nl80211, this shall be handled there, but since we don't
-> > have anybody using it right now we might as well kill it off completely
-> > until we need it (again).
->=20
-> This function is called by low-level driver and it would not have
-> anything to do with nl80211.. The ieee80211_msg_radar type message to
-> user space would be the one that would need to be replaced.
-
-Yeah, true, but unless I see something using it I don't think I can
-properly define the semantics for the nl80211 message, and thus I can't
-define the semantics for cfg80211, and then not for the function that
-the low-level driver calls...
-
-johannes
-
---=-3aVR9hFSjC9TC6IP8k7a
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGeTH2/ETPhpq3jKURAsSYAKCs/K5qSJ7VLoCfzt4KFpGENH7ypwCeJdeR
-Kl0AAMEObhmBcH+mJTVd8vQ=
-=NH75
------END PGP SIGNATURE-----
-
---=-3aVR9hFSjC9TC6IP8k7a--
+	Ingo
 
