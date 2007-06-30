@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp3.infineon.com ([203.126.106.229]:39733 "EHLO
-	smtp3.infineon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762645AbXF1IkZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2007 04:40:25 -0400
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: ieee80211_rx_mgmt: pushing fake 'management' frames intouserspace
-Date: Thu, 28 Jun 2007 16:40:21 +0800
-Message-ID: <A2CE5E0A70B68046A98EB5145552E2770119C773@sinse303.ap.infineon.com>
-In-Reply-To: <1182952910.4769.20.camel@johannes.berg>
-References: <A2CE5E0A70B68046A98EB5145552E27701173B8F@sinse303.ap.infineon.com> <1182952910.4769.20.camel@johannes.berg>
-From: <Mandy.Peng@infineon.com>
-To: <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:37374 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751640AbXF3T7i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jun 2007 15:59:38 -0400
+Subject: Re: drivers/net/wireless/libertas/rx.c: use-after-free
+From: Dan Williams <dcbw@redhat.com>
+To: Adrian Bunk <bunk@stusta.de>
+Cc: linville@tuxdriver.com,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20070629195116.GG6087@stusta.de>
+References: <20070629195116.GG6087@stusta.de>
+Content-Type: text/plain
+Date: Sat, 30 Jun 2007 16:02:46 -0400
+Message-Id: <1183233766.9150.2.camel@xo-13-A4-25.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2007-06-29 at 21:51 +0200, Adrian Bunk wrote:
+> The Coverity checker spotted the following use-after-free of "skb" in 
+> drivers/net/wireless/libertas/rx.c introduced by
+> commit 9012b28a407511fb355f6d2176a12d4653489672 (WTF did this commit
+> with the title "libertas: make debug configurable" add the 
+> "skb->protocol = __constant_htons(0x0019);" line?):
 
->-----Original Message-----
->From: Johannes Berg [mailto:johannes@sipsolutions.net] 
->Sent: Wednesday, June 27, 2007 10:02 PM
->To: Peng Mandy (IFTW COM AC SE)
->Cc: linux-wireless@vger.kernel.org
->Subject: Re: ieee80211_rx_mgmt: pushing fake 'management' frames
-intouserspace
->
->Also, I thought you were doing a fullmac chipset? Then you shouldn't be
-worrying about mac80211 *at all*
->
->johannes
+Holger, that's all you :)
 
-Yes, I have to worry about it. Since our chipset only handle the data
-path task, the host software has to take care of all the management
-tasks. If we write a netdevice driver and register to cfg80211. Then we
-should use the similar way to pass through the management frame as
-mac80211. So I wondering how do you testing the mac80211 management
-action ? Which version of hostapd and wpa_supplicant are you used to
-verify the mac80211 ? We will set up the set environment.
+dan
 
-Mandy.
+> <--  snip  -->
+> 
+> ...
+> static int process_rxed_802_11_packet(wlan_private * priv, struct sk_buff *skb)
+> {
+> ...
+>         libertas_upload_rx_packet(priv, skb);
+> 
+>         ret = 0;
+> 
+> done:
+>         skb->protocol = __constant_htons(0x0019);       /* ETH_P_80211_RAW */
+> ...
+> 
+> <--  snip  -->
+> 
+> 
+> cu
+> Adrian
+> 
+
