@@ -1,62 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:45063
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932517AbXGSTku (ORCPT
+Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:6981 "EHLO
+	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752325AbXGAQkh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2007 15:40:50 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 2/2] bcm43xx-mac80211: Fix reported rx frequency and channel
-Date: Thu, 19 Jul 2007 21:39:14 +0200
-Cc: andy@warmcat.com, linux-wireless@vger.kernel.org,
-	Larry Finger <larry.finger@lwfinger.net>,
-	johannes@sipsolutions.net
-References: <20070611103828.961999956@warmcat.com> <20070611103914.577674038@warmcat.com> <20070719191052.GC6603@tuxdriver.com>
-In-Reply-To: <20070719191052.GC6603@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200707192139.14930.mb@bu3sch.de>
+	Sun, 1 Jul 2007 12:40:37 -0400
+From: Daniel Drake <dsd@gentoo.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: kune@deine-taler.de
+Cc: flamingice@sourmilk.net
+Subject: [PATCH] zd1211rw-mac80211: Fix SSI reporting
+Message-Id: <20070701164037.6ACC87B409F@zog.reactivated.net>
+Date: Sun,  1 Jul 2007 17:40:37 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 19 July 2007 21:10:52 John W. Linville wrote:
-> On Mon, Jun 11, 2007 at 11:38:30AM +0100, andy@warmcat.com wrote:
-> > bcm43xx-mac80211 is reporting bogus frequencies and channels back to
-> > mac80211 at the moment (eg, actual ch1 (2412MHz) reported as 2424MHz).
-> > 
-> > Prior to this patch, the hardware rx channel value is reported as
-> > starting at 0x18 and rising by 0x0a per channel.  Code in bcm43xx_xmit.c
-> > tries to take this value and add 2400 to it to get the rx frequency.
-> > It seems the intention is that the hardware reports the (rx freq - 2400),
-> > so we want the value starting at 0x0c and rising by 0x05 per channel.
-> > 
-> > If the value read is shifted one more bit to the right, it will
-> > succeed in doing this.  Therefore this patch increases the shifting constant
-> > by one and reduces the mask by one lsb.
-> > 
-> > The rx frequency reported in the radiotap rx and then, eg, tcpdump,
-> > is then correct.  I didn't test ch 14 but I guess the hardware is
-> > consistent about it.
-> > 
-> > CC: Larry Finger <larry.finger@lwfinger.net>
-> > CC: Michael Buesch <mb@bu3sch.de>
-> > Signed-off-by: Andy Green <andy@warmcat.com>
-> 
-> Larry, Michael, Johannes -- ack/nak?
+zd1211rw-mac80211 currently reports different values for signal level
+than zd1211rw-softmac. This is because the softmac driver passes the raw
+strength value, whereas zd1211rw-mac80211 is performing some other
+calculation.
 
-nak, the issue is more difficult than this.
-The point is that firmware changed and we don't know the exact revision, yet.
-But it is actually no problem in reality, as the use-it-or-die
-firmware doesn't have this problem. So if someone uses another
-firmware than the one we suggest, he will probably run into more
-problems, as well.
-The fix is called: Use the correct firmware.
-For now, at least.
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+Signed-off-by: Ulrich Kunitz <kune@deine-taler.de>
+---
+ drivers/net/wireless/mac80211/zd1211rw/zd_chip.c |    8 --------
+ drivers/net/wireless/mac80211/zd1211rw/zd_chip.h |    1 -
+ drivers/net/wireless/mac80211/zd1211rw/zd_mac.c  |    2 +-
+ 3 files changed, 1 insertions(+), 10 deletions(-)
 
-Of course, the author of this patch should help us to find
-out the exact firmware rev where this change happened. So we
-can come up with a real fix.
-
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
+index 75728bb..662e66e 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
+@@ -1464,14 +1464,6 @@ u8 zd_rx_qual_percent(const void *rx_frame, unsigned int size,
+ 		cck_qual_percent(status->signal_quality_cck);
+ }
+ 
+-u8 zd_rx_strength_percent(u8 rssi)
+-{
+-	int r = (rssi*100) / 41;
+-	if (r > 100)
+-		r = 100;
+-	return (u8) r;
+-}
+-
+ u16 zd_rx_rate(const void *rx_frame, const struct rx_status *status)
+ {
+ 	static const u16 ofdm_rates[] = {
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.h b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.h
+index 96ada90..5229290 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.h
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.h
+@@ -877,7 +877,6 @@ struct rx_status;
+ 
+ u8 zd_rx_qual_percent(const void *rx_frame, unsigned int size,
+ 	               const struct rx_status *status);
+-u8 zd_rx_strength_percent(u8 rssi);
+ 
+ u16 zd_rx_rate(const void *rx_frame, const struct rx_status *status);
+ 
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
+index 49633d4..373916a 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
+@@ -652,7 +652,7 @@ static int fill_rx_stats(struct ieee80211_rx_status *stats,
+ 	stats->channel = _zd_chip_get_channel(&mac->chip);
+ 	stats->freq = zd_channels[stats->channel - 1].freq;
+ 	stats->phymode = MODE_IEEE80211G;
+-	stats->ssi = zd_rx_strength_percent(status->signal_strength);
++	stats->ssi = status->signal_strength;
+ 	stats->signal = zd_rx_qual_percent(buffer,
+ 		                          length - sizeof(struct rx_status),
+ 		                          status);
 -- 
-Greetings Michael.
+1.5.2.2
+
