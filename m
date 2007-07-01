@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47634 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751020AbXGLKAf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2007 06:00:35 -0400
-Subject: Re: at76_usb - fourth submission attempt
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org, Guido Guenther <agx@sigxcpu.org>,
-	at76c503a-develop@lists.berlios.de
-In-Reply-To: <1184228166.2377.31.camel@dv>
-References: <1184228166.2377.31.camel@dv>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QEZokmXvDonSwYdAb1ra"
-Date: Thu, 12 Jul 2007 12:00:35 +0200
-Message-Id: <1184234435.6669.27.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from deine-taler.de ([217.160.107.63]:52122 "EHLO deine-taler.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751309AbXGAWJV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jul 2007 18:09:21 -0400
+Date: Sun, 1 Jul 2007 23:35:15 +0200
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: Joerg Mayer <jmayer@loplof.de>
+Cc: Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] zd1211rw-mac80211: basic regulatory domain support
+Message-ID: <20070701213515.GA6829@deine-taler.de>
+References: <20070701163907.39B6B7B409F@zog.reactivated.net> <20070701203238.GE8218@thot.informatik.uni-kl.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20070701203238.GE8218@thot.informatik.uni-kl.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 07-07-01 22:32 Joerg Mayer wrote:
 
---=-QEZokmXvDonSwYdAb1ra
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2007-07-12 at 04:16 -0400, Pavel Roskin wrote:
-> Hello!
+> On Sun, Jul 01, 2007 at 05:39:06PM +0100, Daniel Drake wrote:
+> > This patch causes zd1211rw-mac80211 to interpret the regdomain in t=
+he
+> > EEPROM and restrict the channels accordingly, like the softmac driv=
+er does.
 >=20
-> I'd like to submit at76_usb driver for inclusion into the kernel.
+> The patch only addresses the allowed channels but not the allowed
+> maximum power levels. Is this intentional?
+> I've only looked at the patch, so maybe this is handled elsewhere.
+>=20
+>=20
+>  ciao
+>        Joerg
 
-> It's my first driver submission ever, so please don't hesitate to tell
-> me if I'm doing anything wrong.
+J=F6rg,
 
-Patches?
+this is not an easy task, because ZD1211 devices have
+numerous different constructions affecting the antenna forms and
+sizes and a greater number of different RF chips. BTW we have no
+documentation about the registers controlling the output power.
+We are currently using the register parameters the vendor driver
+is using. If somebody could provide ongoing measurements, that
+would give us the data points to work on the issue.
 
-johannes
+Kind regards,
 
---=-QEZokmXvDonSwYdAb1ra
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Ulrich
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGlfvC/ETPhpq3jKURAnthAJ48QcDoLVVyNwVtCxpurRVZaySisgCfXwRR
-+lgN/+zEC4Ar8jnfBj5N0jM=
-=XBMW
------END PGP SIGNATURE-----
-
---=-QEZokmXvDonSwYdAb1ra--
-
+--=20
+Uli Kunitz
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
