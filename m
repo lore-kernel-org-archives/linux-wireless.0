@@ -1,41 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:56494
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33402
 	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762247AbXG0LYf (ORCPT
+	with ESMTP id S1751820AbXGAWQQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2007 07:24:35 -0400
+	Sun, 1 Jul 2007 18:16:16 -0400
 From: Michael Buesch <mb@bu3sch.de>
-To: Zhu Yi <yi.zhu@intel.com>
-Subject: Re: [PATCH 09/17] iwlwifi: EEPROM reading fix
-Date: Fri, 27 Jul 2007 13:22:49 +0200
-Cc: linville@tuxdriver.com, ipwpatch@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Gregory Greenman <gregory.greenman@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-References: <11855284012123-git-send-email-yi.zhu@intel.com> <11855284161716-git-send-email-yi.zhu@intel.com> <11855284183313-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11855284183313-git-send-email-yi.zhu@intel.com>
+To: Ulrich Kunitz <kune@deine-taler.de>
+Subject: Re: [PATCH] zd1211rw-mac80211: basic regulatory domain support
+Date: Mon, 2 Jul 2007 00:15:32 +0200
+Cc: Joerg Mayer <jmayer@loplof.de>, Daniel Drake <dsd@gentoo.org>,
+	linux-wireless@vger.kernel.org
+References: <20070701163907.39B6B7B409F@zog.reactivated.net> <20070701203238.GE8218@thot.informatik.uni-kl.de> <20070701213515.GA6829@deine-taler.de>
+In-Reply-To: <20070701213515.GA6829@deine-taler.de>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200707271322.50303.mb@bu3sch.de>
+  charset="iso-8859-1"
+Message-Id: <200707020015.32480.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 27 July 2007 11:26:33 Zhu Yi wrote:
->  		if (!(r & 1)) {
->  			IWL_ERROR("Time out reading EEPROM[%d]", addr);
-> -			return -ETIMEDOUT;
-> +			rc = -ETIMEDOUT;
-> +			goto done;
->  		}
->  
->  		e[addr / 2] = le16_to_cpu(r >> 16);
+On Sunday 01 July 2007 23:35:15 Ulrich Kunitz wrote:
+> this is not an easy task, because ZD1211 devices have
+> numerous different constructions affecting the antenna forms and
+> sizes and a greater number of different RF chips. BTW we have no
+> documentation about the registers controlling the output power.
+> We are currently using the register parameters the vendor driver
+> is using. If somebody could provide ongoing measurements, that
+> would give us the data points to work on the issue.
 
-Seems like you really want cpu_to_le16() here, as "r" should better
-be CPU-endian when shifting it by >>.
-
-Though, I don't see enough code context here to judge if the
-endianess conversion is correct at all or not.
+Which registers do control power and where are they written?
 
 -- 
 Greetings Michael.
