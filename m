@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47683 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758193AbXGLKCD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2007 06:02:03 -0400
-Subject: Re: d80211 deadlock with wpa_supplicant and rmmod
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: seventh guardian <seventhguardian@gmail.com>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20070711234153.GB5099@tuxdriver.com>
-References: <1caff7430707111617o70a534a5x2cf6b611a91f301a@mail.gmail.com>
-	 <20070711234153.GB5099@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rcDVXwOhzqZ/Mh9sZvkD"
-Date: Thu, 12 Jul 2007 12:02:18 +0200
-Message-Id: <1184234538.6669.30.camel@johannes.berg>
+Received: from styx.suse.cz ([82.119.242.94]:49451 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752566AbXGBNw6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jul 2007 09:52:58 -0400
+Date: Mon, 2 Jul 2007 15:53:09 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Joerg Pommnitz <pommnitz@yahoo.com>
+Cc: "Cohen, Guy" <guy.cohen@intel.com>, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [WIP] mac80211: kill mgmt interface
+Message-ID: <20070702155309.5300ef7f@griffin.suse.cz>
+In-Reply-To: <394827.41199.qm@web51403.mail.re2.yahoo.com>
+References: <394827.41199.qm@web51403.mail.re2.yahoo.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> Von: "Cohen, Guy" <guy.cohen@intel.com>
+> > This is a required feature for Access Points (multiple BSSID).
 
---=-rcDVXwOhzqZ/Mh9sZvkD
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Mon, 2 Jul 2007 06:38:00 -0700 (PDT), Joerg Pommnitz wrote:
+> And, just from reading the documentation, it seems to be supported by MadWifi for Atheros
+> based devices:
+> 
+> http://madwifi.org/wiki/ngFeatures
+> 
+> and note the "To create APs which share a single MAC address, use the -bssid flag when
+> creating the VAPs:"  remark.
+> 
+> Even if no current mac80211 driver supports this feature, the API must not prevent this in the future.
 
-On Wed, 2007-07-11 at 19:41 -0400, John W. Linville wrote:
+What are you talking about? Have you actually looked at mac80211? This
+is supported from day 0 of d80211.
 
-> > >I believe we have a deadlock in d80211.
-> >=20
-> > I have it too. But I'm using iwl3945 driver, in-kernel mac80211, and a
-> > gentoo kernel (basically a patched vanilla-2.6.22.1). My machine is a
-> > x86_64 core 2 duo.
-> >=20
-> > >The following triggers it on my 2way SMT machine with preempt.
-> > >
-> > >modprobe bcm43xx-d80211
-> > >add sta0
-> > >ifconfig sta0 up
-> > >start wpa_supplicant on the interface
-> > >rmmod bcm43xx-d80211
+ Jiri
 
-Sounds like the bug with the scheduled work locking. See the
-"mac80211/bcm43xx deadlock" thread, there's a patch, report back if you
-can/can not reproduce with the patch.
-
-johannes
-
---=-rcDVXwOhzqZ/Mh9sZvkD
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGlfwq/ETPhpq3jKURAv2uAJ9BJbZkR9derqS5t/a3nRXMi/IZyQCfTPJh
-lwn5hjSgm5XkqvRU3pibfss=
-=6yDj
------END PGP SIGNATURE-----
-
---=-rcDVXwOhzqZ/Mh9sZvkD--
-
+-- 
+Jiri Benc
+SUSE Labs
