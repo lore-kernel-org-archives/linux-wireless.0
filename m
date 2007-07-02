@@ -1,31 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57936
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752446AbXGRW3P (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2007 18:29:15 -0400
-Date: Wed, 18 Jul 2007 15:29:14 -0700 (PDT)
-Message-Id: <20070718.152914.04054726.davem@davemloft.net>
-To: jbenc@suse.cz
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH v2] mac80211: fix GCC warning on 64bit platforms
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20070718171044.2de287cd@griffin.suse.cz>
-References: <20070716184653.355253bf@griffin.suse.cz>
-	<20070716.145358.35015496.davem@davemloft.net>
-	<20070718171044.2de287cd@griffin.suse.cz>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from srv5.dvmed.net ([207.36.208.214]:50743 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758886AbXGBMOx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jul 2007 08:14:53 -0400
+Message-ID: <4688EC37.3080305@garzik.org>
+Date: Mon, 02 Jul 2007 08:14:47 -0400
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	dcbw@redhat.com
+Subject: Re: Please pull 'libertas-fixes' branch of wireless-2.6
+References: <20070627205539.GB13617@tuxdriver.com>
+In-Reply-To: <20070627205539.GB13617@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jiri Benc <jbenc@suse.cz>
-Date: Wed, 18 Jul 2007 17:10:44 +0200
+John W. Linville wrote:
+> The following changes since commit 189548642c5962e60c3667bdb3a703fe0bed12a6:
+>   Linus Torvalds (1):
+>         Linus 2.6.22-rc6
+> 
+> are found in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git libertas-fixes
+> 
+> Dan Williams (4):
+>       libertas: style fixes
+>       libertas: kill wlan_scan_process_results
+>       libertas: fix WPA associations by handling ENABLE_RSN correctly
+>       libertas: remove private ioctls
+> 
+>  drivers/net/wireless/libertas/Makefile  |    2 +-
+>  drivers/net/wireless/libertas/README    |  275 --------
+>  drivers/net/wireless/libertas/assoc.c   |   28 +-
+>  drivers/net/wireless/libertas/cmd.c     |   12 +-
+>  drivers/net/wireless/libertas/cmdresp.c |   21 +
+>  drivers/net/wireless/libertas/hostcmd.h |    2 +-
+>  drivers/net/wireless/libertas/ioctl.c   | 1081 -------------------------------
+>  drivers/net/wireless/libertas/main.c    |    8 +-
+>  drivers/net/wireless/libertas/scan.c    |   51 +--
+>  drivers/net/wireless/libertas/wext.c    |  152 -----
+>  drivers/net/wireless/libertas/wext.h    |   45 +--
+>  11 files changed, 79 insertions(+), 1598 deletions(-)
+>  delete mode 100644 drivers/net/wireless/libertas/ioctl.c
 
-> -	local->tx_headroom = max(local->hw.extra_tx_headroom,
-> -				 sizeof(struct ieee80211_tx_status_rtap_hdr));
-> +	local->tx_headroom = max_t(unsigned, local->hw.extra_tx_headroom,
-> +				   sizeof(struct ieee80211_tx_status_rtap_hdr));
+pulled
 
-Please spell out the complete type, "unsigned int".
+
