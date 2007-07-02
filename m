@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:59856 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764337AbXGaQ4H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 12:56:07 -0400
-Date: Tue, 31 Jul 2007 09:55:05 -0700
-To: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] remove duplicated ioctl entries in compat_ioctl.c
-Message-ID: <20070731165505.GB15450@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <20070730144726.GA6586@tuxdriver.com> <20070730183729.GB7332@bougret.hpl.hp.com> <20070731133115.3288.MOKUNO@sm.sony.co.jp>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070731133115.3288.MOKUNO@sm.sony.co.jp>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45533 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751584AbXGBI4C (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jul 2007 04:56:02 -0400
+Subject: Re: [2.6 patch] drivers/net/wireless/libertas/wext.c: remove dead  code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20070701202040.GD10869@stusta.de>
+References: <20070701202040.GD10869@stusta.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-m7zAeKz37qZGmPRfBjg7"
+Date: Mon, 02 Jul 2007 10:53:54 +0200
+Message-Id: <1183366434.4089.96.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 31, 2007 at 01:45:06PM +0900, Masakazu Mokuno wrote:
-> 
-> On Mon, 30 Jul 2007 11:37:29 -0700
-> Jean Tourrilhes <jt@hpl.hp.com> wrote:
-> 
-> > 	Testing with SIOCGIWSTATS or SIOCGIWPRIV would narrow down to
-> > only the pointer problem, and the kernel fix should work with both old
-> > and new version of the Wireless Tools. It's simple to test, either you
-> > are getting valid data or garbage, the only issue is that some drivers
-> > may be returning garbage for those calls.
-> 
-> As I'm outside of the firewall of the company this week,  I'll test in
-> the next week.
-> 
-> I think it is sufficient to see these ioctls work, using 'iwpriv
-> <interface>' for SIOCGIWPRIV and 'iwconfig <interface>' for SIOCGIWSTAT.
-> Is that right?
 
-	Correct. You should check what to expect to make sure the
-returned data is valid.
+--=-m7zAeKz37qZGmPRfBjg7
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->  Anything to add more?
-> 
-> For the 'old version' of wirelesstools,  which version should I use?
-> wirelesstools 28?
+On Sun, 2007-07-01 at 22:20 +0200, Adrian Bunk wrote:
+> This patch removes dead code introduced by
+> commit 90a42210f275e1f828eb6c08bf8252c2d6a774e0 and spotted
+> by the Coverity checker.
 
-	Yes, v28 is great, unless John has a specific version in mind.
+> --- linux-2.6.22-rc6-mm1/drivers/net/wireless/libertas/wext.c.old	2007-06=
+-29 21:52:56.000000000 +0200
+> +++ linux-2.6.22-rc6-mm1/drivers/net/wireless/libertas/wext.c	2007-06-29 =
+21:53:43.000000000 +0200
+> @@ -1823,85 +1823,82 @@ static int wlan_set_encodeext(struct net
 
-> regards
-> 
-> --
-> Masakazu MOKUNO
+out of curiosity, why so much context?
 
-	Jean
+johannes
+
+--=-m7zAeKz37qZGmPRfBjg7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGiL0h/ETPhpq3jKURAn/QAKCKl5F8t/HfdbZ4wZmAHhwNplkIjwCfV3PJ
+3AThodhAU7lPkBdjiFT3leA=
+=1Swq
+-----END PGP SIGNATURE-----
+
+--=-m7zAeKz37qZGmPRfBjg7--
+
