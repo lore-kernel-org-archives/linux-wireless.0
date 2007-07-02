@@ -1,86 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from postel.suug.ch ([194.88.212.233]:53072 "EHLO postel.suug.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753697AbXGVLGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jul 2007 07:06:35 -0400
-Date: Sun, 22 Jul 2007 12:43:32 +0200
-From: Thomas Graf <tgraf@suug.ch>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [WIRELESS]: Use type safe netlink interface
-Message-ID: <20070722104332.GL3651@postel.suug.ch>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:13848 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751584AbXGBIuk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jul 2007 04:50:40 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: drivers/net/wireless/libertas/rx.c: use-after-free
+Date: Mon, 2 Jul 2007 10:50:32 +0200
+Cc: Dan Williams <dcbw@redhat.com>, Adrian Bunk <bunk@stusta.de>,
+	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+References: <20070629195116.GG6087@stusta.de> <1183233766.9150.2.camel@xo-13-A4-25.localdomain>
+In-Reply-To: <1183233766.9150.2.camel@xo-13-A4-25.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200707021050.33039.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Makes use of the type safe netlink interface and adds a warning
-if the message is too big for NLMSG_DEFAULT_SIZE to help debug.
+libertas: remove a coverity bug
 
-Signed-off-by: Thomas Graf <tgraf@suug.ch>
+... by removing an ill-conceived, useless line.
 
-Index: net-2.6/net/wireless/wext.c
-===================================================================
---- net-2.6.orig/net/wireless/wext.c	2007-07-22 11:41:46.000000000 +0200
-+++ net-2.6/net/wireless/wext.c	2007-07-22 12:00:17.000000000 +0200
-@@ -1129,10 +1129,12 @@ static int rtnetlink_fill_iwinfo(struct 
- {
- 	struct ifinfomsg *r;
- 	struct nlmsghdr  *nlh;
--	unsigned char	 *b = skb_tail_pointer(skb);
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+
+---
+
+Dunno how this line made it into the patch that I made in
+February and was commited in May. At that time, I didn't hardly
+knew anything about skb's at all and certainly didn't play with
+raw ethernet types. Maybe it was a remnant of some bugus test
+that I or the committer did?!?
+
+I tested the driver after the removal of this line with ping and
+ssh, but not anything else (e.g. no mesh, no tshark monitoring).
+
+ drivers/net/wireless/libertas/rx.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
+index 88d9d2d..769c86f 100644
+--- a/drivers/net/wireless/libertas/rx.c
++++ b/drivers/net/wireless/libertas/rx.c
+@@ -439,7 +439,6 @@ static int process_rxed_802_11_packet(wlan_private * priv, struct sk_buff *skb)
+ 	ret = 0;
  
--	nlh = NLMSG_PUT(skb, 0, 0, type, sizeof(*r));
--	r = NLMSG_DATA(nlh);
-+	nlh = nlmsg_put(skb, 0, 0, type, sizeof(*r), 0);
-+	if (nlh == NULL)
-+		return -EMSGSIZE;
-+
-+	r = nlmsg_data(nlh);
- 	r->ifi_family = AF_UNSPEC;
- 	r->__ifi_pad = 0;
- 	r->ifi_type = dev->type;
-@@ -1141,15 +1143,13 @@ static int rtnetlink_fill_iwinfo(struct 
- 	r->ifi_change = 0;	/* Wireless changes don't affect those flags */
- 
- 	/* Add the wireless events in the netlink packet */
--	RTA_PUT(skb, IFLA_WIRELESS, event_len, event);
-+	NLA_PUT(skb, IFLA_WIRELESS, event_len, event);
- 
--	nlh->nlmsg_len = skb_tail_pointer(skb) - b;
--	return skb->len;
-+	return nlmsg_end(skb, nlh);
- 
--nlmsg_failure:
--rtattr_failure:
--	nlmsg_trim(skb, b);
--	return -1;
-+nla_put_failure:
-+	nlmsg_cancel(skb, nlh);
-+	return -EMSGSIZE;
+ done:
+-	skb->protocol = __constant_htons(0x0019);	/* ETH_P_80211_RAW */
+ 	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", ret);
+ 	return ret;
  }
- 
- /* ---------------------------------------------------------------- */
-@@ -1162,17 +1162,19 @@ rtattr_failure:
- static void rtmsg_iwinfo(struct net_device *dev, char *event, int event_len)
- {
- 	struct sk_buff *skb;
--	int size = NLMSG_GOODSIZE;
-+	int err;
- 
--	skb = alloc_skb(size, GFP_ATOMIC);
-+	skb = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_ATOMIC);
- 	if (!skb)
- 		return;
- 
--	if (rtnetlink_fill_iwinfo(skb, dev, RTM_NEWLINK,
--				  event, event_len) < 0) {
-+	err = rtnetlink_fill_iwinfo(skb, dev, RTM_NEWLINK, event, event_len);
-+	if (err < 0) {
-+		WARN_ON(err == -EMSGSIZE);
- 		kfree_skb(skb);
- 		return;
- 	}
-+
- 	NETLINK_CB(skb).dst_group = RTNLGRP_LINK;
- 	skb_queue_tail(&wireless_nlevent_queue, skb);
- 	tasklet_schedule(&wireless_nlevent_tasklet);
