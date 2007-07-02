@@ -1,39 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:46233
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55331
 	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751354AbXGBJIw (ORCPT
+	with ESMTP id S1757600AbXGBUgb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2007 05:08:52 -0400
+	Mon, 2 Jul 2007 16:36:31 -0400
 From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [2.6 patch] drivers/net/wireless/libertas/wext.c: remove dead code
-Date: Mon, 2 Jul 2007 11:07:28 +0200
-Cc: Adrian Bunk <bunk@stusta.de>, Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20070701202040.GD10869@stusta.de> <1183366434.4089.96.camel@johannes.berg>
-In-Reply-To: <1183366434.4089.96.camel@johannes.berg>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: [PATCH RFC] mac80211: Make stop_queues() usable
+Date: Mon, 2 Jul 2007 22:35:38 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200707021107.28390.mb@bu3sch.de>
+  charset="us-ascii"
+Message-Id: <200707022235.38791.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 02 July 2007 10:53:54 Johannes Berg wrote:
-> On Sun, 2007-07-01 at 22:20 +0200, Adrian Bunk wrote:
-> > This patch removes dead code introduced by
-> > commit 90a42210f275e1f828eb6c08bf8252c2d6a774e0 and spotted
-> > by the Coverity checker.
-> 
-> > --- linux-2.6.22-rc6-mm1/drivers/net/wireless/libertas/wext.c.old	2007-06-29 21:52:56.000000000 +0200
-> > +++ linux-2.6.22-rc6-mm1/drivers/net/wireless/libertas/wext.c	2007-06-29 21:53:43.000000000 +0200
-> > @@ -1823,85 +1823,82 @@ static int wlan_set_encodeext(struct net
-> 
-> out of curiosity, why so much context?
+stop_queues() is currently not usable, as it races with
+the TX path and generates hard to debug system freezes.
 
-Because you see why it's dead code in the context and don't have
-to lookup the code tree. ;)
+In the driver we must be able to stop and flush (!) the
+TX queues before we shutdown the device.
+Otherwise the TX handlers race against the device shutdown.
+But stop_queues lacks some locking against the TX handlers.
+
+stop_queues is only safe to call inside of the TX handler,
+but there's it's useless to call.
+
+I have no idea what's needed to get this working properly,
+so here's an untested patch for RFC.
+
+
+Index: mac80211/net/mac80211/ieee80211.c
+===================================================================
+--- mac80211.orig/net/mac80211/ieee80211.c	2007-06-25 17:32:32.000000000 +0200
++++ mac80211/net/mac80211/ieee80211.c	2007-07-02 22:29:03.000000000 +0200
+@@ -5063,10 +5063,14 @@ EXPORT_SYMBOL(ieee80211_start_queues);
+ 
+ void ieee80211_stop_queues(struct ieee80211_hw *hw)
+ {
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct net_device *mdev = local->mdev;
+ 	int i;
+ 
++	netif_tx_lock_bh(mdev);
+ 	for (i = 0; i < hw->queues; i++)
+ 		ieee80211_stop_queue(hw, i);
++	netif_tx_unlock_bh(mdev);
+ }
+ EXPORT_SYMBOL(ieee80211_stop_queues);
+ 
 
 -- 
 Greetings Michael.
