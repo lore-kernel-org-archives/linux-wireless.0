@@ -1,53 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:57837 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932317AbXGLSQx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2007 14:16:53 -0400
-Date: Thu, 12 Jul 2007 20:17:02 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org, Guido Guenther <agx@sigxcpu.org>,
-	at76c503a-develop@lists.berlios.de
-Subject: Re: at76_usb - fourth submission attempt
-Message-ID: <20070712201702.72209493@griffin.suse.cz>
-In-Reply-To: <1184228166.2377.31.camel@dv>
-References: <1184228166.2377.31.camel@dv>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:46233
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751354AbXGBJIw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jul 2007 05:08:52 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [2.6 patch] drivers/net/wireless/libertas/wext.c: remove dead code
+Date: Mon, 2 Jul 2007 11:07:28 +0200
+Cc: Adrian Bunk <bunk@stusta.de>, Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20070701202040.GD10869@stusta.de> <1183366434.4089.96.camel@johannes.berg>
+In-Reply-To: <1183366434.4089.96.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200707021107.28390.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 12 Jul 2007 04:16:06 -0400, Pavel Roskin wrote:
-> I'd like to submit at76_usb driver for inclusion into the kernel.
+On Monday 02 July 2007 10:53:54 Johannes Berg wrote:
+> On Sun, 2007-07-01 at 22:20 +0200, Adrian Bunk wrote:
+> > This patch removes dead code introduced by
+> > commit 90a42210f275e1f828eb6c08bf8252c2d6a774e0 and spotted
+> > by the Coverity checker.
 > 
-> The driver's temporary repository is located at
-> http://git.80211libre.org/at76_usb.git/
+> > --- linux-2.6.22-rc6-mm1/drivers/net/wireless/libertas/wext.c.old	2007-06-29 21:52:56.000000000 +0200
+> > +++ linux-2.6.22-rc6-mm1/drivers/net/wireless/libertas/wext.c	2007-06-29 21:53:43.000000000 +0200
+> > @@ -1823,85 +1823,82 @@ static int wlan_set_encodeext(struct net
 > 
-> To compile the driver standalone, just run "make" and "make install".
-> To integrate the driver into the kernel, apply kernel_patch.diff to the
-> kernel with -p1 option, then copy at76_usb*.[ch] to drivers/net/wireless
+> out of curiosity, why so much context?
 
-Could you send a direct pointer to the patch? And make a patch that
-creates those at76_usb* files in the correct dir by itself? That will
-ease the review a lot.
-
-> [...]
-> The biggest change that has not been done is conversion to mac80211.  I
-> believe it's possible, but I don't expect it to happen overnight.  Until
-> then, at76_usb uses its own implementation of 802.11 protocol.
-
-Unfortunately, that prevents being accepted to vanilla.
-
-I'd suggest to convert the driver to mac80211 and submit it then;
-otherwise people will tend to look at the code saying "NAK, it contains
-its own home grown 802.11 stack" only and not to review the driver in
-depth.
-
-Thanks,
-
- Jiri
-
+Because you see why it's dead code in the context and don't have
+to lookup the code tree. ;)
 
 -- 
-Jiri Benc
-SUSE Labs
+Greetings Michael.
