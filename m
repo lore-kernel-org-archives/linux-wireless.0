@@ -1,75 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:48589
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967112AbXG3RJz (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57905
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751237AbXGCFiV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2007 13:09:55 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Satyam Sharma <satyam@infradead.org>
-Subject: Re: [PATCH 1/5] Use mutex instead of semaphore in the Host AP driver
-Date: Mon, 30 Jul 2007 19:09:38 +0200
-Cc: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, akpm@linux-foundation.org
-References: <20070729212909.GC3432@traven> <200707300006.42397.mb@bu3sch.de> <alpine.LFD.0.999.0707300842350.10861@enigma.security.iitk.ac.in>
-In-Reply-To: <alpine.LFD.0.999.0707300842350.10861@enigma.security.iitk.ac.in>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200707301909.38602.mb@bu3sch.de>
+	Tue, 3 Jul 2007 01:38:21 -0400
+Date: Mon, 02 Jul 2007 22:38:40 -0700 (PDT)
+Message-Id: <20070702.223840.99827968.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Set low initial rate in rc80211_simple
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20070612012411.GI20422@tuxdriver.com>
+References: <20070612012228.GG20422@tuxdriver.com>
+	<20070612012319.GH20422@tuxdriver.com>
+	<20070612012411.GI20422@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 30 July 2007, Satyam Sharma wrote:
-> 
-> On Mon, 30 Jul 2007, Michael Buesch wrote:
-> 
-> > On Sunday 29 July 2007 23:34, Matthias Kaehlcke wrote:
-> > > The Host AP driver uses a semaphore as mutex. Use the mutex API
-> > > instead of the (binary) semaphore.
-> > > 
-> > > Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-> 
-> [ Something seems to have gone wrong with your diff / patch / script.
->   There was no diff header here, which should have been. ]
-> 
-> > > -	res = down_interruptible(&local->rid_bap_sem);
-> > > +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
-> > >  	if (res)
-> > >  		return res;
-> > >  
-> > > @@ -902,7 +902,7 @@ static int hfa384x_set_rid(struct net_device *dev, u16 rid, void *buf, int len)
-> > >  	/* RID len in words and +1 for rec.rid */
-> > >  	rec.len = cpu_to_le16(len / 2 + len % 2 + 1);
-> > >  
-> > > -	res = down_interruptible(&local->rid_bap_sem);
-> > > +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
-> > >  	if (res)
-> > >  		return res;
-> > >  
-> > 
-> > Is res returned to userspace? If yes, that's not right.
-> 
-> Yup, that's not right.
-> 
-> > On a interrupted mutex allocation you should return
-> > -ERESTARTSYS to userspace.
-> 
-> Nope, userspace must not see ERESTARTSYS (I /think/ this is the third
-> time I'm participating in this exact same discussion :-)
-> 
-> If the return would be caught by a previous in-kernel caller in the
-> call chain, ERESTARTSYS is okay and it could try to restart the
-> operation. However, if the return goes unfiltered directly to
-> userspace, EINTR is the correct choice.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 11 Jun 2007 21:24:11 -0400
 
-Last time I submitted a patch which returned EINTR to userspace,
-people came and said it was wrong. It was said that we must
-return ERESTARTSYS to the libc and the libc will convert that
-into either EINTR or automatically restart it immediately.
-(You can set that in the sigaction stuff).
+> From: Larry Finger <Larry.Finger@lwfinger.net>
+> 
+> The initial rate for STA's using rc80211_simple is set to the last
+> rate in the rate table. For situations for which the signal is weak,
+> the rate may be too high for authentication and association. Although
+> the rc80211_simple module will adjust the speed, the response may not
+> be fast enough for a successful connection. This modification sets the
+> initial rate to the lowest supported value.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-So either the one who told me that last time was wrong, or you. :)
-
-Andrew? I think you were involved in this discussion I mentioned.
-(It was about the HW-RNG chardev, but that doesn't matter here).
+Applied to net-2.6.23
