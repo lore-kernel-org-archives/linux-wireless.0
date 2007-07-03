@@ -1,64 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:51736 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757145AbXGJSmP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2007 14:42:15 -0400
-Date: Tue, 10 Jul 2007 11:41:55 -0700
-To: Larry Finger <larry.finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: [PATCH 2.6] SoftMAC : fix duplicate display of channel in scan
-Message-ID: <20070710184155.GA6955@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:39480
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752472AbXGCMlA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2007 08:41:00 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Patrick McHardy <kaber@trash.net>
+Subject: Re: [PATCH RFC] mac80211: Make stop_queues() usable
+Date: Tue, 3 Jul 2007 14:39:40 +0200
+Cc: Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200707022235.38791.mb@bu3sch.de> <200707031039.56710.mb@bu3sch.de> <468A41A3.1020903@trash.net>
+In-Reply-To: <468A41A3.1020903@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200707031439.40828.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	Hi,
+On Tuesday 03 July 2007 14:31:31 Patrick McHardy wrote:
+> Michael Buesch wrote:
+> > On Tuesday 03 July 2007 06:09:19 Michael Wu wrote:
+> > 
+> >>On Monday 02 July 2007 13:35, Michael Buesch wrote:
+> >>
+> >>>+	netif_tx_lock_bh(mdev);
+> >>> 	for (i = 0; i < hw->queues; i++)
+> >>> 		ieee80211_stop_queue(hw, i);
+> >>>+	netif_tx_unlock_bh(mdev);
+> >>
+> >>Well, looks like this will break stopping all tx queues from the tx handler by 
+> >>deadlocking. It may be useless for bcm43xx to call ieee80211_stop_queue, but 
+> >>there are other drivers which rely on it.
+> 
+> 
+> The wireless multiqueue handling should be replaced by the generic
+> implementation in net-2.6.23 (using prio, seperating out the wme
+> classifier and killing the broken scheduler). You don't need to
+> stop individual subqueues for a full shutdown with that implementation,
+> you can just stop the global queue. Not sure if that really helps for
+> this case though since I didn't look to deep into this code.
 
-	SoftMAC output the channel twice in the scan output. It should
-display frequency and channel, but only once for each.
---------------------------------------------------------
-          Cell 02 - Address: A2:00:04:XX:XX:XX
-                    ESSID:"TheESSID"
-                    Protocol:IEEE 802.11b
-                    Mode:Ad-Hoc
-->                  Channel:5
-->                  Frequency:2.432 GHz (Channel 5)
-                    Encryption key:off
-                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s
-                    Quality=95/100  Signal level=-47 dBm  Noise level=-65 dBm
-                    Extra: Last beacon: 120ms ago
---------------------------------------------------------
-	The fix is simple, patch attached, tested for 2.6.22 with
-bcm43xx. If you like it, send it to John.
-	Regards,
+That's exactly what I want. Stop the "global queue".
+As there is no "global queue" in mac80211, I need to stop every queue.
 
-	Jean
-
-Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
-
------------------------------------------------------------
-
---- linux/net/ieee80211/ieee80211_wx.j1.c	2007-07-10 11:28:55.000000000 -0700
-+++ linux/net/ieee80211/ieee80211_wx.c	2007-07-10 11:31:18.000000000 -0700
-@@ -90,14 +90,11 @@ static char *ieee80211_translate_scan(st
- 	}
- 
- 	/* Add channel and frequency */
-+	/* Note : userspace automatically computes channel using iwrange */
- 	iwe.cmd = SIOCGIWFREQ;
--	iwe.u.freq.m = network->channel;
--	iwe.u.freq.e = 0;
--	iwe.u.freq.i = 0;
--	start = iwe_stream_add_event(start, stop, &iwe, IW_EV_FREQ_LEN);
--
- 	iwe.u.freq.m = ieee80211_channel_to_freq(ieee, network->channel);
- 	iwe.u.freq.e = 6;
-+	iwe.u.freq.i = 0;
- 	start = iwe_stream_add_event(start, stop, &iwe, IW_EV_FREQ_LEN);
- 
- 	/* Add encryption capability */
-
+-- 
+Greetings Michael.
