@@ -1,58 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:48355 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756082AbXGRQ53 (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:7685 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756425AbXGCPXs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2007 12:57:29 -0400
-Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	mabbas <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240707180851y22ead404g1c87d73903e939e3@mail.gmail.com>
-References: <1174909200.1364.56.camel@dell-4965.jf.intel.com>
-	 <1175111599.5151.123.camel@johannes.berg>
-	 <46137FF2.6020203@linux.intel.com> <1182374019.3714.87.camel@johannes.berg>
-	 <20070718000140.GA26907@tuxdriver.com>
-	 <1184754598.4658.14.camel@johannes.berg>
-	 <1ba2fa240707180622p791168eax4fae712641e24cc4@mail.gmail.com>
-	 <1ba2fa240707180851y22ead404g1c87d73903e939e3@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Dior/f6L5D5Z2vPpfKym"
-Date: Wed, 18 Jul 2007 18:56:15 +0200
-Message-Id: <1184777775.8125.0.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 3 Jul 2007 11:23:48 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+Date: Tue, 3 Jul 2007 17:23:42 +0200
+Subject: [PATCH] libertas: remove adapter->beaconperiod
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Message-Id: <200707031723.42855.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+beaconperiod was initialized with MRVDRV_BEACON_INTERVAL, but there is
+no code that would ever change it's value. We can use the define directly.
 
---=-Dior/f6L5D5Z2vPpfKym
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+---
+ drivers/net/wireless/libertas/dev.h  |    1 -
+ drivers/net/wireless/libertas/join.c |    2 +-
+ drivers/net/wireless/libertas/main.c |    2 --
+ 3 files changed, 1 insertions(+), 4 deletions(-)
 
-On Wed, 2007-07-18 at 18:51 +0300, Tomas Winkler wrote:
-
-> > HT aggregtion is extension of QoS. Multicast and broadcast frames are
-> > not QoS frames and therefore such frames  want be incorporated into an
-> > A-MSDU.
-> Oops
-> s/want/won't/
-
-Ah, ok, I didn't bother to re-check. Mind doing a patch then that rips
-out this code?
-
-johannes
-
---=-Dior/f6L5D5Z2vPpfKym
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGnkYv/ETPhpq3jKURAv4OAJ0RRnf6Wqeu7mx09rzGxMQ/jePc2QCfdsDH
-ggcLlotcAkU3lMXcA/F6EqQ=
-=0KTg
------END PGP SIGNATURE-----
-
---=-Dior/f6L5D5Z2vPpfKym--
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index eef6a72..1b42fad 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -265,7 +265,6 @@ struct _wlan_adapter {
+ 	u8 scantype;
+ 	u32 scanmode;
+ 
+-	u16 beaconperiod;
+ 	u8 adhoccreate;
+ 
+ 	/** capability Info used in Association, start, join */
+diff --git a/drivers/net/wireless/libertas/join.c b/drivers/net/wireless/libertas/join.c
+index 95c21ba..c16d1f6 100644
+--- a/drivers/net/wireless/libertas/join.c
++++ b/drivers/net/wireless/libertas/join.c
+@@ -496,7 +496,7 @@ int libertas_cmd_80211_ad_hoc_start(wlan_private * priv,
+ 	/* set the BSS type */
+ 	adhs->bsstype = CMD_BSS_TYPE_IBSS;
+ 	adapter->mode = IW_MODE_ADHOC;
+-	adhs->beaconperiod = cpu_to_le16(adapter->beaconperiod);
++	adhs->beaconperiod = cpu_to_le16(MRVDRV_BEACON_INTERVAL);
+ 
+ 	/* set Physical param set */
+ #define DS_PARA_IE_ID   3
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 6882a7d..68aa9bc 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -1037,8 +1037,6 @@ static void wlan_init_adapter(wlan_private * priv)
+ 	adapter->auto_rate = 1;
+ 	adapter->cur_rate = 0;
+ 
+-	adapter->beaconperiod = MRVDRV_BEACON_INTERVAL;
+-
+ 	// set default capabilities
+ 	adapter->capability = WLAN_CAPABILITY_SHORT_PREAMBLE;
+ 
+-- 
+1.5.2.1
 
