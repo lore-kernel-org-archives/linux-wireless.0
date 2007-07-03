@@ -1,35 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:57856 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755088AbXGYJsZ (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:7628 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756262AbXGCPXY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 05:48:25 -0400
-Message-ID: <46A71C64.9050301@warmcat.com>
-Date: Wed, 25 Jul 2007 10:48:20 +0100
-From: Andy Green <andy@warmcat.com>
+	Tue, 3 Jul 2007 11:23:24 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+Date: Tue, 3 Jul 2007 17:23:18 +0200
+Subject: [PATCH] libertas: remove adapter->atimwindow
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: yi.zhu@intel.com
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Please pull patch-bomb for iwlwifi
-References: <20070725085754.GA670@mail.intel.com>
-In-Reply-To: <20070725085754.GA670@mail.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Message-Id: <200707031723.18548.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Somebody in the thread at some point said:
+This varaible was initialized with 0 but there is no code that would ever
+change it's value. So it can go away.
 
-> This patch series catches wireless-dev up to the stand-alone
-> iwlwifi tree version 0.1.3.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+---
+ drivers/net/wireless/libertas/dev.h  |    1 -
+ drivers/net/wireless/libertas/join.c |    2 +-
+ drivers/net/wireless/libertas/main.c |    3 ---
+ 3 files changed, 1 insertions(+), 5 deletions(-)
 
-Hi -
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index 383d689..c52ce0b 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -303,7 +303,6 @@ struct _wlan_adapter {
+ 
+ 	/** POWER MANAGEMENT AND PnP SUPPORT */
+ 	u8 surpriseremoved;
+-	u16 atimwindow;
+ 
+ 	u16 psmode;		/* Wlan802_11PowermodeCAM=disable
+ 				   Wlan802_11PowermodeMAX_PSP=enable */
+diff --git a/drivers/net/wireless/libertas/join.c b/drivers/net/wireless/libertas/join.c
+index 0803491..0bded0c 100644
+--- a/drivers/net/wireless/libertas/join.c
++++ b/drivers/net/wireless/libertas/join.c
+@@ -518,7 +518,7 @@ int libertas_cmd_80211_ad_hoc_start(wlan_private * priv,
+ 
+ 	adhs->ssparamset.ibssparamset.elementid = IBSS_PARA_IE_ID;
+ 	adhs->ssparamset.ibssparamset.len = IBSS_PARA_IE_LEN;
+-	adhs->ssparamset.ibssparamset.atimwindow = cpu_to_le16(adapter->atimwindow);
++	adhs->ssparamset.ibssparamset.atimwindow = 0;
+ 
+ 	/* set capability info */
+ 	tmpcap = WLAN_CAPABILITY_IBSS;
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index d26df1a..8d09cf5 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -992,9 +992,6 @@ static void wlan_init_adapter(wlan_private * priv)
+ 	wlan_adapter *adapter = priv->adapter;
+ 	int i;
+ 
+-	/* ATIM params */
+-	adapter->atimwindow = 0;
+-
+ 	adapter->connect_status = LIBERTAS_DISCONNECTED;
+ 	memset(adapter->current_addr, 0xff, ETH_ALEN);
+ 
+-- 
+1.5.2.1
 
-My little patch "iwl3945: provide frequency to radiotap monitor not
-channel index" here:
-
-http://www.spinics.net/lists/linux-wireless/msg03499.html
-
-which you kindly Ack'd doesn't seem to be listed in the cluster bomb?
-
--Andy
