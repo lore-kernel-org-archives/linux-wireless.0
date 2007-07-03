@@ -1,54 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:59102 "EHLO
-	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936715AbXGZUO0 (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:7652 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756276AbXGCPXf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2007 16:14:26 -0400
-Date: Thu, 26 Jul 2007 15:13:54 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: A problem with shared interrupts
-Message-ID: <46a90082./TQABjOfVYW1o6lY%Larry.Finger@lwfinger.net>
+	Tue, 3 Jul 2007 11:23:35 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+Date: Tue, 3 Jul 2007 17:23:28 +0200
+Subject: [PATCH] libertas: remove adapter->listeninterval
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-Id: <200707031723.29034.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael,
+listeninterval was initialized with MRVDRV_DEFAULT_LISTEN_INTERVAL, but
+there exists that would ever change it. So we can use this define directly.
 
-When I try the -mb tree on my old i386 notebook, I get an "irq 11: nobody cared"
-message and interrupts for the bcm43xx-mac80211 device are not initialized. The
-code in Linville's tree works. The only difference that seems to be important
-is the code returned when a shared interrupt not intended for us is received.
-By making the changes shown below, both trees now work.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+---
+ drivers/net/wireless/libertas/dev.h  |    1 -
+ drivers/net/wireless/libertas/join.c |    2 +-
+ drivers/net/wireless/libertas/main.c |    2 --
+ 3 files changed, 1 insertions(+), 4 deletions(-)
 
-I recall you having a discussion with someone over some aspect of shared IRQ's,
-but I don't remember the details and I'm too busy (lazy) to go back and look.
-
-Thanks,
-
-Larry
-----
-
-Index: wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
-===================================================================
---- wireless-mb.orig/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
-+++ wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
-@@ -1503,7 +1503,7 @@ static void bcm43xx_interrupt_ack(struct
- /* Interrupt handler top-half */
- static irqreturn_t bcm43xx_interrupt_handler(int irq, void *dev_id)
- {
--	irqreturn_t ret = IRQ_NONE;
-+	irqreturn_t ret = IRQ_HANDLED;
- 	struct bcm43xx_wldev *dev = dev_id;
- 	u32 reason;
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index 5bb8e51..6675cc6 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -287,7 +287,6 @@ struct _wlan_adapter {
+ 	u32 fragthsd;
+ 	u32 rtsthsd;
  
-@@ -1517,7 +1517,6 @@ static irqreturn_t bcm43xx_interrupt_han
- 	reason = bcm43xx_read32(dev, BCM43xx_MMIO_GEN_IRQ_REASON);
- 	if (reason == 0xffffffff) /* shared IRQ */
- 		goto out;
--	ret = IRQ_HANDLED;
- 	reason &= bcm43xx_read32(dev, BCM43xx_MMIO_GEN_IRQ_MASK);
- 	if (!reason)
- 		goto out;
+-	u16 listeninterval;
+ 	u8 txretrycount;
+ 
+ 	/** Tx-related variables (for single packet tx) */
+diff --git a/drivers/net/wireless/libertas/join.c b/drivers/net/wireless/libertas/join.c
+index 0bded0c..e335a7e 100644
+--- a/drivers/net/wireless/libertas/join.c
++++ b/drivers/net/wireless/libertas/join.c
+@@ -369,7 +369,7 @@ int libertas_cmd_80211_associate(wlan_private * priv,
+ 	pos += sizeof(passo->peerstaaddr);
+ 
+ 	/* set the listen interval */
+-	passo->listeninterval = cpu_to_le16(adapter->listeninterval);
++	passo->listeninterval = cpu_to_le16(MRVDRV_DEFAULT_LISTEN_INTERVAL);
+ 
+ 	pos += sizeof(passo->capability);
+ 	pos += sizeof(passo->listeninterval);
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 8d09cf5..79e2748 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -1045,8 +1045,6 @@ static void wlan_init_adapter(wlan_private * priv)
+ 
+ 	adapter->psmode = WLAN802_11POWERMODECAM;
+ 
+-	adapter->listeninterval = MRVDRV_DEFAULT_LISTEN_INTERVAL;
+-
+ 	adapter->psstate = PS_STATE_FULL_POWER;
+ 	adapter->needtowakeup = 0;
+ 
+-- 
+1.5.2.1
+
