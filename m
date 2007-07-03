@@ -1,62 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50717 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756957AbXGHVXw (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:7573 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756019AbXGCPXA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2007 17:23:52 -0400
-Subject: Re: Arrested Development
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ulrich Kunitz <kune@deine-taler.de>
-Cc: Andy Green <andy@warmcat.com>, Jon Smirl <jonsmirl@gmail.com>,
-	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <20070708203717.GA15957@deine-taler.de>
-References: <468DE699.9040708@warmcat.com> <468E48AF.10109@gentoo.org>
-	 <468E5C33.2000102@warmcat.com> <20070708140054.GA28113@deine-taler.de>
-	 <46910F3F.8010201@warmcat.com>
-	 <9e4733910707081142t43a85fb1y383ee8e1835c2842@mail.gmail.com>
-	 <469130E8.1010608@warmcat.com>
-	 <9e4733910707081204l490e99fcm6b8780f36ef8b9a8@mail.gmail.com>
-	 <46913846.9000007@warmcat.com>  <20070708203717.GA15957@deine-taler.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7dSNt8jxyMBjh0VwQpJO"
-Date: Sun, 08 Jul 2007 23:23:34 +0200
-Message-Id: <1183929814.3771.5.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 3 Jul 2007 11:23:00 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+Date: Tue, 3 Jul 2007 17:22:54 +0200
+Subject: [PATCH] libertas: remove adapter->{data,bcn}_avg_factor
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Message-Id: <200707031722.54290.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Those two variables were initialized with some default values, but there
+is no code that would ever change them. So we could use as well the defaults
+directly.
 
---=-7dSNt8jxyMBjh0VwQpJO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+---
+ drivers/net/wireless/libertas/cmd.c  |    2 +-
+ drivers/net/wireless/libertas/dev.h  |    2 --
+ drivers/net/wireless/libertas/main.c |    3 ---
+ drivers/net/wireless/libertas/rx.c   |    4 ++--
+ 4 files changed, 3 insertions(+), 8 deletions(-)
 
-On Sun, 2007-07-08 at 22:37 +0200, Ulrich Kunitz wrote:
-
-> I just wrote a patch, which forwards now all the received packets
-> on ZD1211. Right now no FCS checks are done, so you will see
-> suspicous packets with strange packets in Wireshark. However you
-> can see now also packets going to other devices.
-
-This isn't going to work properly when you add a sta interface and then
-a monitor interface, which afaict the driver doesn't prevent in
-zd_mac_open. Basically, it has the phy always follow the last-added
-virtual interface which doesn't seem right. Also, I might be missing
-something, but it shouldn't allow multiple sta interfaces, afaict it
-does now.
-
-johannes
-
---=-7dSNt8jxyMBjh0VwQpJO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGkVXV/ETPhpq3jKURAgVoAJ9ML2yVA11hIof09Tq3pJDa1cUf5QCfdEfW
-4ENolCw9dGCEI/ISteRl6qc=
-=Nulv
------END PGP SIGNATURE-----
-
---=-7dSNt8jxyMBjh0VwQpJO--
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 0da013f..72e76e4 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -671,7 +671,7 @@ static int wlan_cmd_802_11_rssi(wlan_private * priv,
+ 	lbs_deb_enter(LBS_DEB_CMD);
+ 	cmd->command = cpu_to_le16(CMD_802_11_RSSI);
+ 	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_rssi) + S_DS_GEN);
+-	cmd->params.rssi.N = cpu_to_le16(priv->adapter->bcn_avg_factor);
++	cmd->params.rssi.N = cpu_to_le16(DEFAULT_BCN_AVG_FACTOR);
+ 
+ 	/* reset Beacon SNR/NF/RSSI values */
+ 	adapter->SNR[TYPE_BEACON][TYPE_NOAVG] = 0;
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index fced9fa..d324eeb 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -334,8 +334,6 @@ struct _wlan_adapter {
+ 	u8 wpa_ie_len;
+ 
+ 	/** Requested Signal Strength*/
+-	u16 bcn_avg_factor;
+-	u16 data_avg_factor;
+ 	u16 SNR[MAX_TYPE_B][MAX_TYPE_AVG];
+ 	u16 NF[MAX_TYPE_B][MAX_TYPE_AVG];
+ 	u8 RSSI[MAX_TYPE_B][MAX_TYPE_AVG];
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 070e5da..2e56801 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -992,9 +992,6 @@ static void wlan_init_adapter(wlan_private * priv)
+ 	wlan_adapter *adapter = priv->adapter;
+ 	int i;
+ 
+-	adapter->bcn_avg_factor = DEFAULT_BCN_AVG_FACTOR;
+-	adapter->data_avg_factor = DEFAULT_DATA_AVG_FACTOR;
+-
+ 	/* ATIM params */
+ 	adapter->atimwindow = 0;
+ 
+diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
+index 255da74..f0b04d2 100644
+--- a/drivers/net/wireless/libertas/rx.c
++++ b/drivers/net/wireless/libertas/rx.c
+@@ -84,12 +84,12 @@ static u8 wlan_getavgnf(wlan_private * priv)
+ static void wlan_save_rawSNRNF(wlan_private * priv, struct rxpd *p_rx_pd)
+ {
+ 	wlan_adapter *adapter = priv->adapter;
+-	if (adapter->numSNRNF < adapter->data_avg_factor)
++	if (adapter->numSNRNF < DEFAULT_DATA_AVG_FACTOR)
+ 		adapter->numSNRNF++;
+ 	adapter->rawSNR[adapter->nextSNRNF] = p_rx_pd->snr;
+ 	adapter->rawNF[adapter->nextSNRNF] = p_rx_pd->nf;
+ 	adapter->nextSNRNF++;
+-	if (adapter->nextSNRNF >= adapter->data_avg_factor)
++	if (adapter->nextSNRNF >= DEFAULT_DATA_AVG_FACTOR)
+ 		adapter->nextSNRNF = 0;
+ 	return;
+ }
+-- 
+1.5.2.1
 
