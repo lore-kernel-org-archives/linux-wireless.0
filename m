@@ -1,76 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purr.warmcat.com ([87.106.142.209]:50683 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758856AbXGaNfp (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:2037 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753836AbXGCPWS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 09:35:45 -0400
-Message-ID: <46AF3AAE.4010908@warmcat.com>
-Date: Tue, 31 Jul 2007 14:35:42 +0100
-From: Andy Green <andy@warmcat.com>
+	Tue, 3 Jul 2007 11:22:18 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+Date: Tue, 3 Jul 2007 17:22:08 +0200
+Subject: [PATCH] libertas: remove adapter->{rx,tx}antenna
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: Ivo van Doorn <ivdoorn@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rt73usb-add-bluenext-148f-2573
-References: <20070731115446.5717.37617.stgit@localhost> <200707311427.58948.IvDoorn@gmail.com> <46AF2D5C.6090803@warmcat.com> <200707311458.40936.IvDoorn@gmail.com>
-In-Reply-To: <200707311458.40936.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Message-Id: <200707031722.08334.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Somebody in the thread at some point said:
+There was nowhere any code that used the values of those 
+variables.
 
->> Are there known problems with the monitor mode?  It seems incomplete
->> even with one virtual interface, eg
-> 
-> Sounds awfully familiar. :(
+This patch also removes two static functions that are now unused.
 
-Don't feel bad, monitor mode is not in a coherent state all over the
-drivers at the moment.  I would really like to see it become trustable
-in all cases.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+---
+ drivers/net/wireless/libertas/cmd.c     |   
+25 -------------------------
+ drivers/net/wireless/libertas/cmdresp.c |   
+24 ------------------------
+ drivers/net/wireless/libertas/dev.h     |    6 ------
+ drivers/net/wireless/libertas/main.c    |    2 --
+ 4 files changed, 0 insertions(+), 57 deletions(-)
 
-> At which rate should the other box be sending the frames?
+diff --git a/drivers/net/wireless/libertas/cmd.c 
+b/drivers/net/wireless/libertas/cmd.c
+index d3402e1..2a5defe 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -570,26 +570,6 @@ static int 
+wlan_cmd_802_11_rf_tx_power(wlan_private * priv,
+ 	return 0;
+ }
+ 
+-static int wlan_cmd_802_11_rf_antenna(wlan_private * priv,
+-				      struct cmd_ds_command *cmd,
+-				      u16 cmd_action, void *pdata_buf)
+-{
+-	struct cmd_ds_802_11_rf_antenna *rant = &cmd->params.rant;
+-
+-	lbs_deb_enter(LBS_DEB_CMD);
+-	cmd->command = cpu_to_le16(CMD_802_11_RF_ANTENNA);
+-	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_rf_antenna) 
++
+-				S_DS_GEN);
+-
+-	rant->action = cpu_to_le16(cmd_action);
+-	if ((cmd_action == CMD_ACT_SET_RX) || (cmd_action == 
+CMD_ACT_SET_TX)) {
+-		rant->antennamode = cpu_to_le16((u16) (*(u32 *) pdata_buf));
+-	}
+-
+-	lbs_deb_leave(LBS_DEB_CMD);
+-	return 0;
+-}
+-
+ static int wlan_cmd_802_11_rate_adapt_rateset(wlan_private * 
+priv,
+ 					      struct cmd_ds_command *cmd,
+ 					      u16 cmd_action)
+@@ -1252,11 +1232,6 @@ int 
+libertas_prepare_and_send_command(wlan_private * priv,
+ 		ret = wlan_cmd_802_11_radio_control(priv, cmdptr, cmd_action);
+ 		break;
+ 
+-	case CMD_802_11_RF_ANTENNA:
+-		ret = wlan_cmd_802_11_rf_antenna(priv, cmdptr,
+-						 cmd_action, pdata_buf);
+-		break;
+-
+ 	case CMD_802_11_DATA_RATE:
+ 		ret = wlan_cmd_802_11_data_rate(priv, cmdptr, cmd_action);
+ 		break;
+diff --git a/drivers/net/wireless/libertas/cmdresp.c 
+b/drivers/net/wireless/libertas/cmdresp.c
+index 646b591..465a087 100644
+--- a/drivers/net/wireless/libertas/cmdresp.c
++++ b/drivers/net/wireless/libertas/cmdresp.c
+@@ -383,27 +383,6 @@ static int 
+wlan_ret_802_11_rf_tx_power(wlan_private * priv,
+ 	return 0;
+ }
+ 
+-static int wlan_ret_802_11_rf_antenna(wlan_private * priv,
+-				      struct cmd_ds_command *resp)
+-{
+-	struct cmd_ds_802_11_rf_antenna *pAntenna = &resp->params.rant;
+-	wlan_adapter *adapter = priv->adapter;
+-	u16 action = le16_to_cpu(pAntenna->action);
+-
+-	lbs_deb_enter(LBS_DEB_CMD);
+-	if (action == CMD_ACT_GET_RX)
+-		adapter->rxantennamode = le16_to_cpu(pAntenna->antennamode);
+-
+-	if (action == CMD_ACT_GET_TX)
+-		adapter->txantennamode = le16_to_cpu(pAntenna->antennamode);
+-
+-	lbs_deb_cmd("RF_ANT_RESP: action 0x%x, mode 0x%04x\n",
+-	       action, le16_to_cpu(pAntenna->antennamode));
+-
+-	lbs_deb_leave(LBS_DEB_CMD);
+-	return 0;
+-}
+-
+ static int wlan_ret_802_11_rate_adapt_rateset(wlan_private * 
+priv,
+ 					      struct cmd_ds_command *resp)
+ {
+@@ -620,9 +599,6 @@ static inline int handle_cmd_response(u16 
+respcmd,
+ 		spin_unlock_irqrestore(&adapter->driver_lock, flags);
+ 
+ 		break;
+-	case CMD_RET(CMD_802_11_RF_ANTENNA):
+-		ret = wlan_ret_802_11_rf_antenna(priv, resp);
+-		break;
+ 
+ 	case CMD_RET(CMD_MAC_MULTICAST_ADR):
+ 	case CMD_RET(CMD_MAC_CONTROL):
+diff --git a/drivers/net/wireless/libertas/dev.h 
+b/drivers/net/wireless/libertas/dev.h
+index 7c0ee0f..765c0c4 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -284,9 +284,6 @@ struct _wlan_adapter {
+ 	/** control G rates */
+ 	u8 adhoc_grate_enabled;
+ 
+-	u32 txantenna;
+-	u32 rxantenna;
+-
+ 	u32 fragthsd;
+ 	u32 rtsthsd;
+ 
+@@ -337,9 +334,6 @@ struct _wlan_adapter {
+ 	u8 wpa_ie[MAX_WPA_IE_LEN];
+ 	u8 wpa_ie_len;
+ 
+-	u16 rxantennamode;
+-	u16 txantennamode;
+-
+ 	/** Requested Signal Strength*/
+ 	u16 bcn_avg_factor;
+ 	u16 data_avg_factor;
+diff --git a/drivers/net/wireless/libertas/main.c 
+b/drivers/net/wireless/libertas/main.c
+index 1b6b09d..5b4a134 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -1049,8 +1049,6 @@ static void wlan_init_adapter(wlan_private 
+* priv)
+ 	    CMD_ACT_MAC_RX_ON | CMD_ACT_MAC_TX_ON;
+ 
+ 	adapter->radioon = RADIO_ON;
+-	adapter->txantenna = RF_ANTENNA_2;
+-	adapter->rxantenna = RF_ANTENNA_AUTO;
+ 
+ 	adapter->auto_rate = 1;
+ 	adapter->cur_rate = 0;
+-- 
+1.5.2.1
 
-54Mbps, I am a couple of metres from the AP.
-
->> # while [ 1 ] ; do ls -l / ; done
->>
->> over an ssh link which is being carried on another wireless device on
->> the same box associated on to channel 6...
-> 
-> Could you enable debugfs and do inside the "rt73usb" folder within the
-> mac80211 debugfs entry do:
-> 
-> echo 16 > csr_offset
-> cat csr_value
-> 
-> This will read the TXRX_CSR0 register of rt73usb which controls the filtering
-> of the frames. That will help determining if the missing frames have been
-> droppen in the hardware or not.
-
-I have to add debugfs in my .config for that, it is rebuilding.
-
-However, I added the following debug line inside the loop at
-rt2x00_dev.c function
-void rt2x00lib_rxdone(struct data_entry *entry, char *data,
-	const int size, const int signal, const int rssi, const int ofdm)
-
-		printk("signal=%d, ofdm=%d, rate->val=%d, val=%d\n", signal, ofdm,
-rate->val, val);
-
-and ran tcpdump at the same time.  What I see is that even though
-tcpdump on ch 6 is only willing to show 1Mbps packets, packets with
-other rates passed through here, eg,
-
-signal=20, ofdm=0, rate->val=4106, val=10
-signal=20, ofdm=0, rate->val=16789524, val=20
-signal=110, ofdm=0, rate->val=4106, val=10
-signal=110, ofdm=0, rate->val=16789524, val=20
-signal=110, ofdm=0, rate->val=33583159, val=55
-signal=110, ofdm=0, rate->val=50393198, val=110
-
-but ALWAYS ofdm is 0, ie, it only sees CCK packets.
-
-If I look over on channel 11, my neighbour has an 80211b device
-apparently, I see data packets at 11Mbps, again CCK.
-
--Andy
