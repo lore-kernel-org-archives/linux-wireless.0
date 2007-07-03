@@ -1,43 +1,1141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:63716 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754128AbXG1Klw (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:29217 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753376AbXGCIQc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jul 2007 06:41:52 -0400
-Message-ID: <46AB1D68.1020808@lwfinger.net>
-Date: Sat, 28 Jul 2007 05:41:44 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Tue, 3 Jul 2007 04:16:32 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] add support for Marvell 8385 CF cards
+Date: Tue, 3 Jul 2007 10:16:18 +0200
+Cc: libertas-dev@lists.infradead.org
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Jiri Benc <jbenc@suse.cz>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211: pull request
-References: <20070727192617.5ae82584@griffin.suse.cz> <46AA31A4.3050205@lwfinger.net>
-In-Reply-To: <46AA31A4.3050205@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200707031016.18561.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> Jiri Benc wrote:
->> John,
->>
->> please pull from
->> git://git.kernel.org/pub/scm/linux/kernel/git/jbenc/mac80211.git up-2.6
->> to obtain patches below.
->>
->> This is intended for wireless-2.6. Because of the number of patches and
->> the fact they are not much tested, it's maybe a good idea not to push
->> them upstream immediately - but that's up to you.
-> 
-> Now that a patch adding SSB to mainline is available, I will move 
-> bcm4301 into wireless-2.6 and do some testing of mac80211 that way.
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-I don't think these patches have made it to wireless-2.6 yet, but when I moved the bcm4301 code to
-the wireless-2.6 tree (last commit 1e4dcd22), it failed, whereas moving it to a downloaded copy of
-2.6.22.1 works. I'm looking at the mac80211 diffs to see where the problem lies.
+This patch adds support for Marvell based 8385 compact flash cards.
 
-This failure also occurs for Linus's tree, thus it is a regression from 2.6.22 to 2.6.23-rc1.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+---
 
-Larry
+Please review and, if ok, apply as 2.6.23 material.
+
+
+This driver seems to work reasonably well, but given that it
+is my first WLAN driver, it might contain still errors, e.g. in
+the area of locking or handling of PCMCIA.
+
+One problem that I know off, but don't know how to handle it,
+is the following. After booting and inserting the card, I
+see this NOHZ-warning:
+
+pccard: PCMCIA card inserted into slot 0
+cs: memory probe 0x0c0000-0x0fffff: excluding 0xc0000-0xcffff 0xe0000-0xfffff
+cs: memory probe 0x50000000-0x57ffffff: excluding 0x50000000-0x57ffffff
+cs: memory probe 0x60000000-0x60ffffff: excluding 0x60000000-0x60ffffff
+cs: memory probe 0xa0000000-0xa0ffffff: clean.
+cs: memory probe 0xffd00000-0xffdfffff: excluding 0xffd00000-0xffd0ffff 0xffdf0000-0xffdfffff
+pcmcia: registering new device pcmcia0.0
+libertas: unidentified region code; using the default (USA)
+libertas: eth1: Marvell WLAN 802.11 adapter
+NOHZ: local_softirq_pending 08
+NOHZ: local_softirq_pending 08
+NOHZ: local_softirq_pending 08
+NOHZ: local_softirq_pending 08
+NOHZ: local_softirq_pending 08
+NOHZ: local_softirq_pending 08
+NOHZ: local_softirq_pending 08
+NOHZ: local_softirq_pending 08
+NOHZ: local_softirq_pending 08
+NOHZ: local_softirq_pending 08
+
+However, the card works. "pccardctl eject; sleep 0.5; rmmod libertas_cs
+libertas" removes the card and the driver. But another insertion of the
+card (either manual or via "pccardctl insert" won't show the NOHZ-warning
+again (and the card works again, of course).
+
+The IRQ in use is heavily shared on my laptop:
+
+laptop:~# cat /proc/interrupts
+           CPU0
+  0:      54139    XT-PIC-XT        timer
+  1:         78    XT-PIC-XT        i8042
+  2:          0    XT-PIC-XT        cascade
+  8:          0    XT-PIC-XT        rtc0
+  9:       2940    XT-PIC-XT        acpi, Intel 82801DB-ICH4, eth0
+ 11:        144    XT-PIC-XT        yenta, yenta, ehci_hcd:usb1, uhci_hcd:usb2, uhci_hcd:usb3, uhci_hcd:usb4, libertas_cs
+ 12:          9    XT-PIC-XT        i8042
+ 14:       1397    XT-PIC-XT        ide0
+ 15:         38    XT-PIC-XT        ide1
+NMI:         98
+LOC:       1165
+ERR:          0
+MIS:          0
+
+ drivers/net/wireless/Kconfig           |    7 +
+ drivers/net/wireless/Makefile          |    2 +-
+ drivers/net/wireless/libertas/Makefile |    2 +
+ drivers/net/wireless/libertas/if_cs.c  | 1005 ++++++++++++++++++++++++++++++++
+ 4 files changed, 1015 insertions(+), 1 deletions(-)
+ create mode 100644 drivers/net/wireless/libertas/if_cs.c
+
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index fa2399c..5cdb693 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -280,6 +280,13 @@ config LIBERTAS_USB
+ 	---help---
+ 	  A driver for Marvell Libertas 8388 USB devices.
+ 
++config LIBERTAS_CS
++	tristate "Marvell Libertas 8385 CompactFlash 802.11b/g cards"
++	depends on LIBERTAS && PCMCIA && EXPERIMENTAL
++	select FW_LOADER
++	---help---
++	  A driver for Marvell Libertas 8385 CompactFlash devices.
++
+ config LIBERTAS_DEBUG
+ 	bool "Enable full debugging output in the Libertas module."
+ 	depends on LIBERTAS
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index d212460..6b82b96 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -43,4 +43,4 @@ obj-$(CONFIG_PCMCIA_RAYCS)	+= ray_cs.o
+ obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
+ 
+ obj-$(CONFIG_USB_ZD1201)	+= zd1201.o
+-obj-$(CONFIG_LIBERTAS_USB)     += libertas/
++obj-$(CONFIG_LIBERTAS)		+= libertas/
+diff --git a/drivers/net/wireless/libertas/Makefile b/drivers/net/wireless/libertas/Makefile
+index b56b4c5..c469d56 100644
+--- a/drivers/net/wireless/libertas/Makefile
++++ b/drivers/net/wireless/libertas/Makefile
+@@ -6,6 +6,8 @@ libertas-objs := main.o wext.o \
+ 		ethtool.o assoc.o
+ 
+ usb8xxx-objs += if_usb.o
++libertas_cs-objs += if_cs.o
+ 
+ obj-$(CONFIG_LIBERTAS)     += libertas.o
+ obj-$(CONFIG_LIBERTAS_USB) += usb8xxx.o
++obj-$(CONFIG_LIBERTAS_CS)  += libertas_cs.o
+diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
+new file mode 100644
+index 0000000..888f023
+--- /dev/null
++++ b/drivers/net/wireless/libertas/if_cs.c
+@@ -0,0 +1,1005 @@
++/*
++
++  Driver for the Marvell 8385 based compact flash WLAN cards.
++
++  (C) 2007 by Holger Schurig <hs4233@mail.mn-solutions.de>
++
++  This program is free software; you can redistribute it and/or modify
++  it under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  This program is distributed in the hope that it will be useful,
++  but WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++  GNU General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with this program; see the file COPYING.  If not, write to
++  the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
++  Boston, MA 02110-1301, USA.
++
++*/
++
++#include <linux/module.h>
++#include <linux/delay.h>
++#include <linux/moduleparam.h>
++#include <linux/firmware.h>
++#include <linux/netdevice.h>
++
++#include <pcmcia/cs_types.h>
++#include <pcmcia/cs.h>
++#include <pcmcia/cistpl.h>
++#include <pcmcia/ds.h>
++
++#include <linux/io.h>
++
++#define DRV_NAME "libertas_cs"
++
++#include "decl.h"
++#include "defs.h"
++#include "dev.h"
++
++
++/********************************************************************/
++/* Module stuff                                                     */
++/********************************************************************/
++
++MODULE_AUTHOR("Holger Schurig <hs4233@mail.mn-solutions.de>");
++MODULE_DESCRIPTION("Driver for Marvell 83xx compact flash WLAN cards");
++MODULE_LICENSE("GPL");
++
++
++
++/********************************************************************/
++/* Data structures                                                  */
++/********************************************************************/
++
++struct if_cs_card {
++	struct pcmcia_device *p_dev;
++	wlan_private *priv;
++	void __iomem *iobase;
++};
++
++
++
++/********************************************************************/
++/* Hardware access                                                  */
++/********************************************************************/
++
++/* This define enables wrapper functions which allow you
++   to dump all register accesses. You normally won't this,
++   except for development */
++/* #define DEBUG_IO */
++
++#ifdef DEBUG_IO
++static int debug_output = 0;
++#else
++/* This way the compiler optimizes the printk's away */
++#define debug_output 0
++#endif
++
++static inline unsigned int if_cs_read8(struct if_cs_card *card, uint reg)
++{
++	unsigned int val = ioread8(card->iobase + reg);
++	if (debug_output)
++		printk(KERN_INFO "##inb %08x<%02x\n", reg, val);
++	return val;
++}
++static inline unsigned int if_cs_read16(struct if_cs_card *card, uint reg)
++{
++	unsigned int val = ioread16(card->iobase + reg);
++	if (debug_output)
++		printk(KERN_INFO "##inw %08x<%04x\n", reg, val);
++	return val;
++}
++static inline void if_cs_read16_rep(
++	struct if_cs_card *card,
++	uint reg,
++	void *buf,
++	unsigned long count)
++{
++	if (debug_output)
++		printk(KERN_INFO "##insw %08x<(0x%lx words)\n",
++			reg, count);
++	ioread16_rep(card->iobase + reg, buf, count);
++}
++
++static inline void if_cs_write8(struct if_cs_card *card, uint reg, u8 val)
++{
++	if (debug_output)
++		printk(KERN_INFO "##outb %08x>%02x\n", reg, val);
++	iowrite8(val, card->iobase + reg);
++}
++
++static inline void if_cs_write16(struct if_cs_card *card, uint reg, u16 val)
++{
++	if (debug_output)
++		printk(KERN_INFO "##outw %08x>%04x\n", reg, val);
++	iowrite16(val, card->iobase + reg);
++}
++
++static inline void if_cs_write16_rep(
++	struct if_cs_card *card,
++	uint reg,
++	void *buf,
++	unsigned long count)
++{
++	if (debug_output)
++		printk(KERN_INFO "##outsw %08x>(0x%lx words)\n",
++			reg, count);
++	iowrite16_rep(card->iobase + reg, buf, count);
++}
++
++
++/*
++ * I know that polling/delaying is frowned upon. However, this procedure
++ * with polling is needed while downloading the firmware. At this stage,
++ * the hardware does unfortunately not create any interrupts.
++ *
++ * Fortunately, this function is never used once the firmware is in
++ * the card. :-)
++ *
++ * As a reference, see the "Firmware Specification v5.1", page 18
++ * and 19. I did not follow their suggested timing to the word,
++ * but this works nice & fast anyway.
++ */
++static int if_cs_poll_while_fw_download(struct if_cs_card *card, uint addr, u8 reg)
++{
++	int i;
++
++	for (i = 0; i < 500; i++) {
++		u8 val = if_cs_read8(card, addr);
++		if (val == reg)
++			return i;
++		udelay(100);
++	}
++	return -ETIME;
++}
++
++
++
++/* Host control registers and their bit definitions */
++
++#define IF_CS_H_STATUS			0x00000000
++#define IF_CS_H_STATUS_TX_OVER		0x0001
++#define IF_CS_H_STATUS_RX_OVER		0x0002
++#define IF_CS_H_STATUS_DNLD_OVER	0x0004
++
++#define IF_CS_H_INT_CAUSE		0x00000002
++#define IF_CS_H_IC_TX_OVER		0x0001
++#define IF_CS_H_IC_RX_OVER		0x0002
++#define IF_CS_H_IC_DNLD_OVER		0x0004
++#define IF_CS_H_IC_HOST_EVENT		0x0008
++#define IF_CS_H_IC_MASK			0x001f
++
++#define IF_CS_H_INT_MASK		0x00000004
++#define	IF_CS_H_IM_MASK			0x001f
++
++#define IF_CS_H_WRITE_LEN		0x00000014
++
++#define IF_CS_H_WRITE			0x00000016
++
++#define IF_CS_H_CMD_LEN			0x00000018
++
++#define IF_CS_H_CMD			0x0000001A
++
++#define IF_CS_C_READ_LEN		0x00000024
++
++#define IF_CS_H_READ			0x00000010
++
++/* Card control registers and their bit definitions */
++
++#define IF_CS_C_STATUS			0x00000020
++#define IF_CS_C_S_TX_DNLD_RDY		0x0001
++#define IF_CS_C_S_RX_UPLD_RDY		0x0002
++#define IF_CS_C_S_CMD_DNLD_RDY		0x0004
++#define IF_CS_C_S_CMD_UPLD_RDY		0x0008
++#define IF_CS_C_S_CARDEVENT		0x0010
++#define IF_CS_C_S_MASK			0x001f
++#define IF_CS_C_S_STATUS_MASK		0x7f00
++/* The following definitions should be the same as the MRVDRV_ ones */
++
++#if MRVDRV_CMD_DNLD_RDY != IF_CS_C_S_CMD_DNLD_RDY
++#error MRVDRV_CMD_DNLD_RDY and IF_CS_C_S_CMD_DNLD_RDY not in sync
++#endif
++#if MRVDRV_CMD_UPLD_RDY != IF_CS_C_S_CMD_UPLD_RDY
++#error MRVDRV_CMD_UPLD_RDY and IF_CS_C_S_CMD_UPLD_RDY not in sync
++#endif
++#if MRVDRV_CARDEVENT != IF_CS_C_S_CARDEVENT
++#error MRVDRV_CARDEVENT and IF_CS_C_S_CARDEVENT not in sync
++#endif
++
++#define IF_CS_C_INT_CAUSE		0x00000022
++#define	IF_CS_C_IC_MASK			0x001f
++
++#define IF_CS_C_SQ_READ_LOW		0x00000028
++#define IF_CS_C_SQ_HELPER_OK		0x10
++
++#define IF_CS_C_CMD_LEN			0x00000030
++
++#define IF_CS_C_CMD			0x00000012
++
++#define IF_CS_SCRATCH			0x0000003F
++
++
++
++/********************************************************************/
++/* Interrupts                                                       */
++/********************************************************************/
++
++static inline void if_cs_enable_ints(struct if_cs_card *card)
++{
++	lbs_deb_enter(LBS_DEB_CS);
++	if_cs_write16(card, IF_CS_H_INT_MASK, 0);
++}
++
++static inline void if_cs_disable_ints(struct if_cs_card *card)
++{
++	lbs_deb_enter(LBS_DEB_CS);
++	if_cs_write16(card, IF_CS_H_INT_MASK, IF_CS_H_IM_MASK);
++}
++
++static irqreturn_t if_cs_interrupt(int irq, void *data)
++{
++	struct if_cs_card *card = (struct if_cs_card *)data;
++	u16 int_cause;
++
++	lbs_deb_enter(LBS_DEB_CS);
++
++	int_cause = if_cs_read16(card, IF_CS_C_INT_CAUSE);
++	switch (int_cause) {
++	case 0x0000:
++		/* not for us */
++		return IRQ_NONE;
++	case 0xffff:
++		/* if one reads junk, then probably the card was removed */
++		card->priv->adapter->surpriseremoved = 1;
++		break;
++	case IF_CS_H_IC_TX_OVER:
++		if (card->priv->adapter->connect_status == LIBERTAS_CONNECTED)
++			netif_wake_queue(card->priv->dev);
++		/* fallthrought */
++	default:
++		/* clear interrupt */
++		if_cs_write16(card, IF_CS_C_INT_CAUSE, int_cause & IF_CS_C_IC_MASK);
++		if_cs_disable_ints(card);
++	}
++
++	libertas_interrupt(card->priv->dev);
++
++	return IRQ_HANDLED;
++}
++
++
++
++
++/********************************************************************/
++/* I/O                                                              */
++/********************************************************************/
++
++/*
++ * Called from if_cs_host_to_card to send a command to the hardware
++ */
++static int if_cs_send_cmd(wlan_private *priv, u8 *buf, u16 nb)
++{
++	struct if_cs_card *card = (struct if_cs_card *)priv->card;
++	int ret = -1;
++	int loops = 0;
++
++	lbs_deb_enter(LBS_DEB_CS);
++
++	/* Is hardware ready? */
++	while (1) {
++		u16 val = if_cs_read16(card, IF_CS_C_STATUS);
++		if (val & IF_CS_C_S_CMD_DNLD_RDY)
++			break;
++		if (++loops > 100) {
++			lbs_pr_err("card not ready for commands\n");
++			goto done;
++		}
++		mdelay(1);
++	}
++
++	if_cs_write16(card, IF_CS_H_CMD_LEN, nb);
++
++	if_cs_write16_rep(card, IF_CS_H_CMD, buf, nb / 2);
++	/* Are we supposed to transfer an odd amount of bytes? */
++	if (nb & 1)
++		if_cs_write8(card, IF_CS_H_CMD, buf[nb-1]);
++
++	/* "Assert the download over interrupt command in the Host
++	 * status register" */
++	if_cs_write16(card, IF_CS_H_STATUS, IF_CS_H_STATUS_DNLD_OVER);
++
++	/* "Assert the download over interrupt command in the Card
++	 * interrupt case register" */
++	if_cs_write16(card, IF_CS_H_INT_CAUSE, IF_CS_H_IC_DNLD_OVER);
++	ret = 0;
++
++done:
++	lbs_deb_leave_args(LBS_DEB_CS, "ret %d", ret);
++	return ret;
++}
++
++
++/*
++ * Called from if_cs_host_to_card to send a data to the hardware
++ */
++static void if_cs_send_data(wlan_private *priv, u8 *buf, u16 nb)
++{
++	struct if_cs_card *card = (struct if_cs_card *)priv->card;
++
++	lbs_deb_enter(LBS_DEB_CS);
++
++	if_cs_write16(card, IF_CS_H_WRITE_LEN, nb);
++
++	/* write even number of bytes, then odd byte if necessary */
++	if_cs_write16_rep(card, IF_CS_H_WRITE, buf, nb / 2);
++	if (nb & 1)
++		if_cs_write8(card, IF_CS_H_WRITE, buf[nb-1]);
++
++	if_cs_write16(card, IF_CS_H_STATUS, IF_CS_H_STATUS_TX_OVER);
++	if_cs_write16(card, IF_CS_H_INT_CAUSE, IF_CS_H_STATUS_TX_OVER);
++
++	lbs_deb_leave(LBS_DEB_CS);
++}
++
++
++/*
++ * Get the command result out of the card.
++ */
++static int if_cs_receive_cmdres(wlan_private *priv, u8* data, u32 *len)
++{
++	int ret = -1;
++	u16 val;
++
++	lbs_deb_enter(LBS_DEB_CS);
++
++	/* is hardware ready? */
++	val = if_cs_read16(priv->card, IF_CS_C_STATUS);
++	if ((val & IF_CS_C_S_CMD_UPLD_RDY) == 0) {
++		lbs_pr_err("card not ready for CMD\n");
++		goto out;
++	}
++
++	*len = if_cs_read16(priv->card, IF_CS_C_CMD_LEN);
++	if ((*len == 0) || (*len > MRVDRV_SIZE_OF_CMD_BUFFER)) {
++		lbs_pr_err("card cmd buffer has invalid # of bytes (%d)\n", *len);
++		goto out;
++	}
++
++	/* read even number of bytes, then odd byte if necessary */
++	if_cs_read16_rep(priv->card, IF_CS_C_CMD, data, *len/sizeof(u16));
++	if (*len & 1)
++		data[*len-1] = if_cs_read8(priv->card, IF_CS_C_CMD);
++
++	ret = 0;
++out:
++	lbs_deb_leave_args(LBS_DEB_CS, "ret %d, len %d", ret, *len);
++	return ret;
++}
++
++
++static struct sk_buff *if_cs_receive_data(wlan_private *priv)
++{
++	struct sk_buff *skb = NULL;
++	u16 len;
++	u8 *data;
++
++	lbs_deb_enter(LBS_DEB_CS);
++
++	len = if_cs_read16(priv->card, IF_CS_C_READ_LEN);
++	if (len == 0 || len > MRVDRV_ETH_RX_PACKET_BUFFER_SIZE) {
++		lbs_pr_err("card data buffer has invalid # of bytes (%d)\n", len);
++		priv->stats.rx_dropped++;
++		printk(KERN_INFO "##HS %s:%d TODO\n", __FUNCTION__, __LINE__);
++		goto dat_err;
++	}
++
++	//TODO: skb = dev_alloc_skb(len+ETH_FRAME_LEN+MRVDRV_SNAP_HEADER_LEN+EXTRA_LEN);
++	skb = dev_alloc_skb(MRVDRV_ETH_RX_PACKET_BUFFER_SIZE);
++	if (!skb)
++		goto out;
++	data = skb_put(skb, len);
++
++	/* read even number of bytes, then odd byte if necessary */
++	if_cs_read16_rep(priv->card, IF_CS_H_READ, data, len/sizeof(u16));
++	if (len & 1)
++		data[len-1] = if_cs_read8(priv->card, IF_CS_H_READ);
++
++dat_err:
++	if_cs_write16(priv->card, IF_CS_H_STATUS, IF_CS_H_STATUS_RX_OVER);
++	if_cs_write16(priv->card, IF_CS_H_INT_CAUSE, IF_CS_H_IC_RX_OVER);
++
++out:
++	lbs_deb_leave_args(LBS_DEB_CS, "ret %p", skb);
++	return skb;
++}
++
++
++
++/********************************************************************/
++/* Firmware                                                         */
++/********************************************************************/
++
++/*
++ * Tries to program the helper firmware.
++ *
++ * Return 0 on success
++ */
++static int if_cs_prog_helper(struct if_cs_card *card)
++{
++	int ret = 0;
++	int sent = 0;
++	u8  scratch;
++	const struct firmware *fw;
++
++	lbs_deb_enter(LBS_DEB_CS);
++
++	scratch = if_cs_read8(card, IF_CS_SCRATCH);
++
++	/* "If the value is 0x5a, the firmware is already
++	 * downloaded successfully"
++	 */
++	if (scratch == 0x5a)
++		goto done;
++
++	/* "If the value is != 00, it is invalid value of register */
++	if (scratch != 0x00) {
++		ret = -ENODEV;
++		goto done;
++	}
++
++	/* TODO: make firmware file configurable */
++	ret = request_firmware(&fw, "libertas_cs_helper.fw",
++		&handle_to_dev(card->p_dev));
++	if (ret) {
++		lbs_pr_err("can't load helper firmware\n");
++		ret = -ENODEV;
++		goto done;
++	}
++	lbs_deb_cs("helper size %d\n", fw->size);
++
++	/* "Set the 5 bytes of the helper image to 0" */
++	/* Not needed, this contains an ARM branch instruction */
++
++	for (;;) {
++		/* "the number of bytes to send is 256" */
++		int count = 256;
++		int remain = fw->size - sent;
++
++		if (remain < count)
++			count = remain;
++		/* printk(KERN_INFO "//HS %d loading %d of %d bytes\n",
++			__LINE__, sent, fw->size); */
++
++		/* "write the number of bytes to be sent to the I/O Command
++		 * write length register" */
++		if_cs_write16(card, IF_CS_H_CMD_LEN, count);
++
++		/* "write this to I/O Command port register as 16 bit writes */
++		if (count)
++			if_cs_write16_rep(card, IF_CS_H_CMD,
++				&fw->data[sent],
++				count >> 1);
++
++		/* "Assert the download over interrupt command in the Host
++		 * status register" */
++		if_cs_write8(card, IF_CS_H_STATUS, IF_CS_H_STATUS_DNLD_OVER);
++
++		/* "Assert the download over interrupt command in the Card
++		 * interrupt case register" */
++		if_cs_write16(card, IF_CS_H_INT_CAUSE, IF_CS_H_IC_DNLD_OVER);
++
++		/* "The host polls the Card Status register ... for 50 ms before
++		   declaring a failure */
++		ret = if_cs_poll_while_fw_download(card, IF_CS_C_STATUS,
++			IF_CS_C_S_CMD_DNLD_RDY);
++		if (ret < 0) {
++			lbs_pr_err("can't download helper at 0x%x, ret %d\n",
++				sent, ret);
++			goto done;
++		}
++
++		if (count == 0)
++			break;
++
++		sent += count;
++	}
++
++	release_firmware(fw);
++	ret = 0;
++
++done:
++	lbs_deb_leave_args(LBS_DEB_CS, "ret %d", ret);
++	return ret;
++}
++
++
++static int if_cs_prog_real(struct if_cs_card *card)
++{
++	const struct firmware *fw;
++	int ret = 0;
++	int retry = 0;
++	int len = 0;
++	int sent;
++
++	lbs_deb_enter(LBS_DEB_CS);
++
++	/* TODO: make firmware file configurable */
++	ret = request_firmware(&fw, "libertas_cs.fw",
++		&handle_to_dev(card->p_dev));
++	if (ret) {
++		lbs_pr_err("can't load firmware\n");
++		ret = -ENODEV;
++		goto done;
++	}
++	lbs_deb_cs("fw size %d\n", fw->size);
++
++	ret = if_cs_poll_while_fw_download(card, IF_CS_C_SQ_READ_LOW, IF_CS_C_SQ_HELPER_OK);
++	if (ret < 0) {
++		int i;
++		lbs_pr_err("helper firmware doesn't answer\n");
++		for (i = 0; i < 0x50; i += 2)
++			printk(KERN_INFO "## HS %02x: %04x\n",
++				i, if_cs_read16(card, i));
++		goto err_release;
++	}
++
++	for (sent = 0; sent < fw->size; sent += len) {
++		len = if_cs_read16(card, IF_CS_C_SQ_READ_LOW);
++		/* printk(KERN_INFO "//HS %d loading %d of %d bytes\n",
++			__LINE__, sent, fw->size); */
++		if (len & 1) {
++			retry++;
++			lbs_pr_info("odd, need to retry this firmware block\n");
++		} else {
++			retry = 0;
++		}
++
++		if (retry > 20) {
++			lbs_pr_err("could not download firmware\n");
++			ret = -ENODEV;
++			goto err_release;
++		}
++		if (retry) {
++			sent -= len;
++		}
++
++
++		if_cs_write16(card, IF_CS_H_CMD_LEN, len);
++
++		if_cs_write16_rep(card, IF_CS_H_CMD,
++			&fw->data[sent],
++			(len+1) >> 1);
++		if_cs_write8(card, IF_CS_H_STATUS, IF_CS_H_STATUS_DNLD_OVER);
++		if_cs_write16(card, IF_CS_H_INT_CAUSE, IF_CS_H_IC_DNLD_OVER);
++
++		ret = if_cs_poll_while_fw_download(card, IF_CS_C_STATUS,
++			IF_CS_C_S_CMD_DNLD_RDY);
++		if (ret < 0) {
++			lbs_pr_err("can't download firmware at 0x%x\n", sent);
++			goto err_release;
++		}
++	}
++
++	ret = if_cs_poll_while_fw_download(card, IF_CS_SCRATCH, 0x5a);
++	if (ret < 0) {
++		lbs_pr_err("firmware download failed\n");
++		goto err_release;
++	}
++
++	ret = 0;
++	goto done;
++
++
++err_release:
++	release_firmware(fw);
++
++done:
++	lbs_deb_leave_args(LBS_DEB_CS, "ret %d", ret);
++	return ret;
++}
++
++
++
++/********************************************************************/
++/* Callback functions for libertas.ko                               */
++/********************************************************************/
++
++static int if_cs_register_dev(wlan_private *priv)
++{
++	struct if_cs_card *card = (struct if_cs_card *)priv->card;
++
++	lbs_deb_enter(LBS_DEB_CS);
++
++	card->priv = priv;
++
++	return 0;
++}
++
++
++static int if_cs_unregister_dev(wlan_private *priv)
++{
++	lbs_deb_enter(LBS_DEB_CS);
++
++	/*
++	 * Nothing special here. Because the device's power gets turned off
++	 * anyway, there's no need to send a RESET command like in if_usb.c
++	 */
++
++	return 0;
++}
++
++
++/*
++ * This callback is a dummy. The reason is that the USB code needs
++ * to have various things set up in order to be able to download the
++ * firmware. That's not needed in our case.
++ *
++ * On the contrary, if libertas_add_card() has been called and we're
++ * then later called via libertas_activate_card(), but without a valid
++ * firmware, then it's quite tedious to tear down the half-installed
++ * card. Therefore, we download the firmware before calling adding/
++ * activating the card in the first place. If that doesn't work, we
++ * won't call into libertas.ko at all.
++ */
++
++static int if_cs_prog_firmware(wlan_private *priv)
++{
++	priv->adapter->fw_ready = 1;
++	return 0;
++}
++
++
++/* Send commands or data packets to the card */
++static int if_cs_host_to_card(wlan_private *priv, u8 type, u8 *buf, u16 nb)
++{
++	int ret = -1;
++
++	lbs_deb_enter_args(LBS_DEB_CS, "type %d, bytes %d", type, nb);
++
++	switch (type) {
++	case MVMS_DAT:
++		priv->dnld_sent = DNLD_CMD_SENT;
++		if_cs_send_data(priv, buf, nb);
++		ret = 0;
++		break;
++	case MVMS_CMD:
++		ret = if_cs_send_cmd(priv, buf, nb);
++		break;
++	default:
++		lbs_pr_err("%s: unsupported type %d\n", __FUNCTION__, type);
++	}
++
++	lbs_deb_leave_args(LBS_DEB_CS, "ret %d", ret);
++	return ret;
++}
++
++
++static int if_cs_get_int_status(wlan_private *priv, u8 *ireg)
++{
++	struct if_cs_card *card = (struct if_cs_card *)priv->card;
++	//wlan_adapter *adapter = priv->adapter;
++	int ret = 0;
++	u16 int_cause;
++	u8 *cmdbuf;
++	*ireg = 0;
++
++	lbs_deb_enter(LBS_DEB_CS);
++
++	if (priv->adapter->surpriseremoved)
++		goto out;
++
++	int_cause = if_cs_read16(card, IF_CS_C_INT_CAUSE) & IF_CS_C_IC_MASK;
++	if_cs_write16(card, IF_CS_C_INT_CAUSE, int_cause);
++
++	*ireg = if_cs_read16(card, IF_CS_C_STATUS) & IF_CS_C_S_MASK;
++	if_cs_enable_ints(card);
++
++	if (!*ireg)
++		goto sbi_get_int_status_exit;
++
++sbi_get_int_status_exit:
++
++	/* is there a data packet for us? */
++	if (*ireg & IF_CS_C_S_RX_UPLD_RDY) {
++		struct sk_buff *skb = if_cs_receive_data(priv);
++		libertas_process_rxed_packet(priv, skb);
++		*ireg &= ~IF_CS_C_S_RX_UPLD_RDY;
++	}
++
++	if (*ireg & IF_CS_C_S_TX_DNLD_RDY) {
++		priv->dnld_sent = DNLD_RES_RECEIVED;
++	}
++
++	/* Card has a command result for us */
++	if (*ireg & IF_CS_C_S_CMD_UPLD_RDY) {
++		spin_lock(&priv->adapter->driver_lock);
++		if (!priv->adapter->cur_cmd) {
++			cmdbuf = priv->upld_buf;
++			priv->adapter->hisregcpy &= ~IF_CS_C_S_RX_UPLD_RDY;
++		} else {
++			cmdbuf = priv->adapter->cur_cmd->bufvirtualaddr;
++		}
++
++		ret = if_cs_receive_cmdres(priv, cmdbuf, &priv->upld_len);
++		spin_unlock(&priv->adapter->driver_lock);
++		if (ret < 0)
++			lbs_pr_err("could not receive cmd from card\n");
++	}
++
++out:
++	lbs_deb_leave_args(LBS_DEB_CS, "ret %d, ireg 0x%x, hisregcpy 0x%x", ret, *ireg, priv->adapter->hisregcpy);
++	return ret;
++}
++
++
++static int if_cs_read_event_cause(wlan_private *priv)
++{
++	lbs_deb_enter(LBS_DEB_CS);
++
++	priv->adapter->eventcause = (if_cs_read16(priv->card, IF_CS_C_STATUS) & IF_CS_C_S_STATUS_MASK) >> 5;
++	if_cs_write16(priv->card, IF_CS_H_INT_CAUSE, IF_CS_H_IC_HOST_EVENT);
++
++	return 0;
++}
++
++
++
++/********************************************************************/
++/* Card Services                                                    */
++/********************************************************************/
++
++/*
++ * After a card is removed, if_cs_release() will unregister the
++ * device, and release the PCMCIA configuration.  If the device is
++ * still open, this will be postponed until it is closed.
++ */
++static void if_cs_release(struct pcmcia_device *p_dev)
++{
++	struct if_cs_card *card = p_dev->priv;
++
++	lbs_deb_enter(LBS_DEB_CS);
++
++	pcmcia_disable_device(p_dev);
++	free_irq(p_dev->irq.AssignedIRQ, card);
++	if (card->iobase)
++		ioport_unmap(card->iobase);
++
++	lbs_deb_leave(LBS_DEB_CS);
++}
++
++
++/*
++ * This creates an "instance" of the driver, allocating local data
++ * structures for one device.  The device is registered with Card
++ * Services.
++ *
++ * The dev_link structure is initialized, but we don't actually
++ * configure the card at this point -- we wait until we receive a card
++ * insertion event.
++ */
++static int if_cs_probe(struct pcmcia_device *p_dev)
++{
++	int ret = -ENOMEM;
++	wlan_private *priv;
++	struct if_cs_card *card;
++	/* CIS parsing */
++	tuple_t tuple;
++	cisparse_t parse;
++	cistpl_cftable_entry_t *cfg = &parse.cftable_entry;
++	cistpl_io_t *io = &cfg->io;
++	u_char buf[64];
++
++	lbs_deb_enter(LBS_DEB_CS);
++
++	card = kzalloc(sizeof(struct if_cs_card), GFP_KERNEL);
++	if (!card) {
++		lbs_pr_err("error in kzalloc\n");
++		goto out;
++	}
++	card->p_dev = p_dev;
++	p_dev->priv = card;
++
++	p_dev->irq.Attributes = IRQ_TYPE_DYNAMIC_SHARING;
++	p_dev->irq.Handler = NULL;
++	p_dev->irq.IRQInfo1 = IRQ_INFO2_VALID | IRQ_LEVEL_ID;
++
++	p_dev->conf.Attributes = 0;
++	p_dev->conf.IntType = INT_MEMORY_AND_IO;
++
++	tuple.Attributes = 0;
++	tuple.TupleData = buf;
++	tuple.TupleDataMax = sizeof(buf);
++	tuple.TupleOffset = 0;
++
++	tuple.DesiredTuple = CISTPL_CFTABLE_ENTRY;
++	if ((ret = pcmcia_get_first_tuple(p_dev, &tuple)) != 0 ||
++	    (ret = pcmcia_get_tuple_data(p_dev, &tuple)) != 0 ||
++	    (ret = pcmcia_parse_tuple(p_dev, &tuple, &parse)) != 0)
++	{
++		lbs_pr_err("error in pcmcia_get_first_tuple etc\n");
++		goto out1;
++	}
++
++	p_dev->conf.ConfigIndex = cfg->index;
++
++	/* Do we need to allocate an interrupt? */
++	if (cfg->irq.IRQInfo1) {
++		p_dev->conf.Attributes |= CONF_ENABLE_IRQ;
++	}
++
++	/* IO window settings */
++	if (cfg->io.nwin != 1) {
++		lbs_pr_err("wrong CIS (check number of IO windows)\n");
++		ret = -ENODEV;
++		goto out1;
++	}
++	p_dev->io.Attributes1 = IO_DATA_PATH_WIDTH_AUTO;
++	p_dev->io.BasePort1 = io->win[0].base;
++	p_dev->io.NumPorts1 = io->win[0].len;
++
++	/* This reserves IO space but doesn't actually enable it */
++	ret = pcmcia_request_io(p_dev, &p_dev->io);
++	if (ret) {
++		lbs_pr_err("error in pcmcia_request_io\n");
++		goto out1;
++	}
++
++	/*
++	 * Allocate an interrupt line.  Note that this does not assign
++	 * a handler to the interrupt, unless the 'Handler' member of
++	 * the irq structure is initialized.
++	 */
++	if (p_dev->conf.Attributes & CONF_ENABLE_IRQ) {
++		ret = pcmcia_request_irq(p_dev, &p_dev->irq);
++		if (ret) {
++			lbs_pr_err("error in pcmcia_request_irq\n");
++			goto out1;
++		}
++	}
++
++	/* Initialize io access */
++	card->iobase = ioport_map(p_dev->io.BasePort1, p_dev->io.NumPorts1);
++	if (!card->iobase) {
++		lbs_pr_err("error in ioport_map\n");
++		ret = -EIO;
++		goto out1;
++	}
++
++	/*
++	 * This actually configures the PCMCIA socket -- setting up
++	 * the I/O windows and the interrupt mapping, and putting the
++	 * card and host interface into "Memory and IO" mode.
++	 */
++	ret = pcmcia_request_configuration(p_dev, &p_dev->conf);
++	if (ret) {
++		lbs_pr_err("error in pcmcia_request_configuration\n");
++		goto out2;
++	}
++
++	/* Finally, report what we've done */
++	lbs_deb_cs("irq %d, io 0x%04x-0x%04x\n",
++	       p_dev->irq.AssignedIRQ, p_dev->io.BasePort1,
++	       p_dev->io.BasePort1 + p_dev->io.NumPorts1 - 1);
++
++	if_cs_enable_ints(card);
++
++	/* Load the firmware early, before calling into libertas.ko */
++	ret = if_cs_prog_helper(card);
++	if (ret == 0)
++		ret = if_cs_prog_real(card);
++	if (ret)
++		goto out2;
++
++	/* Make this card known to the libertas driver */
++	priv = libertas_add_card(card, &p_dev->dev);
++	if (!priv) {
++		ret = -ENOMEM;
++		goto out2;
++	}
++
++	/* Store pointers to our call-back functions */
++	priv->card = card;
++	priv->hw_register_dev     = if_cs_register_dev;
++	priv->hw_unregister_dev   = if_cs_unregister_dev;
++	priv->hw_prog_firmware    = if_cs_prog_firmware;
++	priv->hw_host_to_card     = if_cs_host_to_card;
++	priv->hw_get_int_status   = if_cs_get_int_status;
++	priv->hw_read_event_cause = if_cs_read_event_cause;
++
++	/* Now actually get the IRQ */
++	ret = request_irq(p_dev->irq.AssignedIRQ, if_cs_interrupt,
++		IRQF_SHARED, DRV_NAME, card);
++	if (ret) {
++		lbs_pr_err("error in request_irq\n");
++		goto out3;
++	}
++
++	/* And finally bring the card up */
++	if (libertas_activate_card(priv) != 0) {
++		lbs_pr_err("could not activate card\n");
++		goto out3;
++	}
++
++	ret = 0;
++	goto out;
++
++out3:
++	libertas_remove_card(priv);
++out2:
++	ioport_unmap(card->iobase);
++out1:
++	pcmcia_disable_device(p_dev);
++out:
++	lbs_deb_leave_args(LBS_DEB_CS, "ret %d", ret);
++	return ret;
++}
++
++
++/*
++ * This deletes a driver "instance".  The device is de-registered with
++ * Card Services.  If it has been released, all local data structures
++ * are freed.  Otherwise, the structures will be freed when the device
++ * is released.
++ */
++static void if_cs_detach(struct pcmcia_device *p_dev)
++{
++	struct if_cs_card *card = p_dev->priv;
++
++	lbs_deb_enter(LBS_DEB_CS);
++
++	libertas_remove_card(card->priv);
++	if_cs_release(p_dev);
++	kfree(card);
++
++	lbs_deb_leave(LBS_DEB_CS);
++}
++
++
++
++/********************************************************************/
++/* Module initialization                                            */
++/********************************************************************/
++
++static struct pcmcia_device_id if_cs_ids[] = {
++	PCMCIA_DEVICE_MANF_CARD(0x02df, 0x8103),
++	PCMCIA_DEVICE_NULL,
++};
++MODULE_DEVICE_TABLE(pcmcia, if_cs_ids);
++
++
++static struct pcmcia_driver libertas_driver = {
++	.owner		= THIS_MODULE,
++	.drv		= {
++		.name	= DRV_NAME,
++	},
++	.probe		= if_cs_probe,
++	.remove		= if_cs_detach,
++	.id_table       = if_cs_ids,
++};
++
++
++static int __init if_cs_init(void)
++{
++	int ret;
++
++	lbs_deb_enter(LBS_DEB_CS);
++	ret = pcmcia_register_driver(&libertas_driver);
++	lbs_deb_leave(LBS_DEB_CS);
++	return ret;
++}
++
++
++static void __exit if_cs_exit(void)
++{
++	lbs_deb_enter(LBS_DEB_CS);
++	pcmcia_unregister_driver(&libertas_driver);
++	lbs_deb_leave(LBS_DEB_CS);
++}
++
++
++module_init(if_cs_init);
++module_exit(if_cs_exit);
+-- 
+1.5.2.1
 
