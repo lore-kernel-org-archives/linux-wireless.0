@@ -1,35 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:57966 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755781AbXGMMLi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2007 08:11:38 -0400
-Date: Fri, 13 Jul 2007 14:11:48 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: "Sushi Sensei" <sinestado@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Master mode on rtl8187
-Message-ID: <20070713141148.16100abf@griffin.suse.cz>
-In-Reply-To: <a63ecaf0707121239h51479d54m5e45174640e8c114@mail.gmail.com>
-References: <a63ecaf0707121239h51479d54m5e45174640e8c114@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:7596 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755912AbXGCPXG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2007 11:23:06 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+Date: Tue, 3 Jul 2007 17:23:00 +0200
+Subject: [PATCH] libertas: remove adapter->nullpktinterval
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Message-Id: <200707031723.00751.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 12 Jul 2007 16:39:45 -0300, Sushi Sensei wrote:
-> I have compiled the kernel 2.6.22.1 with git2 patch. This patch add:
-> 
-> [...]
-> 
-> # iwconfig wlan0 mode master
-> Error for wireless request "Set Mode" (8B06) :
->     SET failed on device wlan0 ; Invalid argument.
+No code ever initialized this variable, so it was 0 because of kzalloc().
+But no other code changes it, making it rather useless.
 
-The code in vanilla doesn't support AP mode. Use wireless-dev tree
-instead.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+---
+ drivers/net/wireless/libertas/cmd.c |    3 +--
+ drivers/net/wireless/libertas/dev.h |    1 -
+ 2 files changed, 1 insertions(+), 3 deletions(-)
 
- Jiri
-
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 72e76e4..f5d4971 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -73,8 +73,7 @@ static int wlan_cmd_802_11_ps_mode(wlan_private * priv,
+ 
+ 		psm->locallisteninterval =
+ 		    cpu_to_le16(adapter->locallisteninterval);
+-		psm->nullpktinterval =
+-		    cpu_to_le16(adapter->nullpktinterval);
++		psm->nullpktinterval = 0;
+ 		psm->multipledtim =
+ 		    cpu_to_le16(priv->adapter->multipledtim);
+ 		break;
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index d324eeb..2d203c6 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -313,7 +313,6 @@ struct _wlan_adapter {
+ 
+ 	struct PS_CMD_ConfirmSleep libertas_ps_confirm_sleep;
+ 	u16 locallisteninterval;
+-	u16 nullpktinterval;
+ 
+ 	struct assoc_request * pending_assoc_req;
+ 	struct assoc_request * in_progress_assoc_req;
 -- 
-Jiri Benc
-SUSE Labs
+1.5.2.1
+
