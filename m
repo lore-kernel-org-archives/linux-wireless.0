@@ -1,38 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38487 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756112AbXGYPTt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 11:19:49 -0400
-Message-ID: <46A76A0E.805@garzik.org>
-Date: Wed, 25 Jul 2007 11:19:42 -0400
-From: Jeff Garzik <jeff@garzik.org>
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:7604 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756101AbXGCPXN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2007 11:23:13 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+Date: Tue, 3 Jul 2007 17:23:06 +0200
+Subject: [PATCH] libertas: remove adapter->locallisteninterval
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: James Ketrenos <jketreno@linux.intel.com>,
-	Stephen Clark <Stephen.Clark@seclark.us>,
-	ipw3945-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, Axj <axjslack@bluebottle.com>
-Subject: Re: [ipw3945-devel] Request for help...
-References: <1185289332.46a61474a444c@mail.bluebottle.com> <20070724161226.GA24344@tuxdriver.com> <46A64503.1080003@seclark.us> <20070724203035.GG24344@tuxdriver.com> <46A66B63.6030006@garzik.org> <46A6A447.2080903@linux.intel.com> <46A69359.4030201@garzik.org> <20070725144651.GA7093@tuxdriver.com>
-In-Reply-To: <20070725144651.GA7093@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Message-Id: <200707031723.06584.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> I would definitely like to see more action from mac80211 driver
-> developers towards getting drivers upstream.  With mac80211 merged,
-> I know of no reason not to get the drivers ready for upstream now so
-> they can funnel through netdev-2.6 into -mm with plenty of time to
-> spare before the next merge window.
+locallisteninterval was initialized with 0, but there is no code that
+changes it, rendering it rather useless.
 
-Agreed.  Getting something upstream is the fastest way to mature a 
-driver...  It gets far less testing and review hiding out in 
-netdev-2.6.git or wireless-dev.git.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+---
+ drivers/net/wireless/libertas/cmd.c  |    6 +-----
+ drivers/net/wireless/libertas/dev.h  |    1 -
+ drivers/net/wireless/libertas/main.c |    1 -
+ 3 files changed, 1 insertions(+), 7 deletions(-)
 
-If it works, is relatively clean, and doesn't corrupt data or have 
-races, push it upstream :)
-
-	Jeff
-
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index f5d4971..276d981 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -56,7 +56,6 @@ static int wlan_cmd_802_11_ps_mode(wlan_private * priv,
+ 				   u16 cmd_action)
+ {
+ 	struct cmd_ds_802_11_ps_mode *psm = &cmd->params.psmode;
+-	wlan_adapter *adapter = priv->adapter;
+ 
+ 	lbs_deb_enter(LBS_DEB_CMD);
+ 
+@@ -68,11 +67,8 @@ static int wlan_cmd_802_11_ps_mode(wlan_private * priv,
+ 	switch (cmd_action) {
+ 	case CMD_SUBCMD_ENTER_PS:
+ 		lbs_deb_cmd("PS command:" "SubCode- Enter PS\n");
+-		lbs_deb_cmd("locallisteninterval %d\n",
+-		       adapter->locallisteninterval);
+ 
+-		psm->locallisteninterval =
+-		    cpu_to_le16(adapter->locallisteninterval);
++		psm->locallisteninterval = 0;
+ 		psm->nullpktinterval = 0;
+ 		psm->multipledtim =
+ 		    cpu_to_le16(priv->adapter->multipledtim);
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index 2d203c6..807746b 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -312,7 +312,6 @@ struct _wlan_adapter {
+ 	u8 needtowakeup;
+ 
+ 	struct PS_CMD_ConfirmSleep libertas_ps_confirm_sleep;
+-	u16 locallisteninterval;
+ 
+ 	struct assoc_request * pending_assoc_req;
+ 	struct assoc_request * in_progress_assoc_req;
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 2e56801..245aada 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -1053,7 +1053,6 @@ static void wlan_init_adapter(wlan_private * priv)
+ 
+ 	adapter->psstate = PS_STATE_FULL_POWER;
+ 	adapter->needtowakeup = 0;
+-	adapter->locallisteninterval = 0;	/* default value in firmware will be used */
+ 
+ 	adapter->intcounter = 0;
+ 
+-- 
+1.5.2.1
 
