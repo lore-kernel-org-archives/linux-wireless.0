@@ -1,51 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:11167 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752320AbXGQNyM (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:7545 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756019AbXGCPWl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2007 09:54:12 -0400
-Received: by py-out-1112.google.com with SMTP id d32so2905314pye
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jul 2007 06:54:12 -0700 (PDT)
-Message-ID: <43e72e890707170654h7ecb9ffhb609db23e9c98faa@mail.gmail.com>
-Date: Tue, 17 Jul 2007 09:54:11 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Christoph Hellwig" <hch@infradead.org>
-Subject: Re: [PATCH 00/14] major mac80211 restructuring/cleanups
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Jiri Benc" <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-In-Reply-To: <20070711202035.GA15457@infradead.org>
+	Tue, 3 Jul 2007 11:22:41 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+Date: Tue, 3 Jul 2007 17:22:35 +0200
+Subject: [PATCH] libertas: remove adapter->pkttxctrl
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-References: <20070621221603.778432000@sipsolutions.net>
-	 <20070710153456.471e395e@logostar.upir.cz>
-	 <1184075439.15565.11.camel@johannes.berg>
-	 <20070710162912.17899683@logostar.upir.cz>
-	 <1184079079.15565.13.camel@johannes.berg>
-	 <20070710171216.GE7927@tuxdriver.com>
-	 <1184092500.3738.15.camel@johannes.berg>
-	 <20070711202035.GA15457@infradead.org>
+Message-Id: <200707031722.35148.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/11/07, Christoph Hellwig <hch@infradead.org> wrote:
-> On Tue, Jul 10, 2007 at 08:35:00PM +0200, Johannes Berg wrote:
-> > I don't really see the big problem anyhow. As long as we don't want any
-> > patches in upstream that depend on the refactoring we can delay pushing
-> > the refactoring upstream. Once we do get patches we can decide to either
-> > make two versions of them or at some point push the refactoring upstream
-> > as well; problems will only arise if we delay too much pushing patches
-> > upstream that are before the refactoring, those would need to be
-> > rediffed.
->
-> The normal Linux aproach is to push the refactoring as soon as possible.
-> That way the other changes have to be rebased once and than you're done
-> with it.  If you keep the big refactoring in some staging tree porting
-> things forth and back will be an endless pain.
+The variable was initialized to 0 and nowhere else changed, so basically
+the per-packet TX control wasn't used.
 
-This is true but the idea is to try to merge wireless-dev into
-wireless-2.6 ASAP. We shouldn't stop wireless-dev tree changes as that
-is what we need to help with development. I can only see this helping
-us down the road. Jiri -- are you sure? :)
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+---
+ drivers/net/wireless/libertas/dev.h  |    2 --
+ drivers/net/wireless/libertas/main.c |    1 -
+ drivers/net/wireless/libertas/tx.c   |    4 ----
+ 3 files changed, 0 insertions(+), 7 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index 2ec2b9a..3eae896 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -376,8 +376,6 @@ struct _wlan_adapter {
+ 
+ 	struct cmd_ds_802_11_get_log logmsg;
+ 
+-	u32 pkttxctrl;
+-
+ 	u16 txrate;
+ 	u8 fw_ready;
+ 
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index f0c2df9..070e5da 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -1061,7 +1061,6 @@ static void wlan_init_adapter(wlan_private * priv)
+ 	adapter->intcounter = 0;
+ 
+ 	adapter->currenttxskb = NULL;
+-	adapter->pkttxctrl = 0;
+ 
+ 	memset(&adapter->tx_queue_ps, 0, NR_TX_QUEUE*sizeof(struct sk_buff*));
+ 	adapter->tx_queue_idx = 0;
+diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
+index f5f54ed..85f7bfb 100644
+--- a/drivers/net/wireless/libertas/tx.c
++++ b/drivers/net/wireless/libertas/tx.c
+@@ -20,7 +20,6 @@
+  */
+ static int SendSinglePacket(wlan_private * priv, struct sk_buff *skb)
+ {
+-	wlan_adapter *adapter = priv->adapter;
+ 	int ret = 0;
+ 	struct txpd localtxpd;
+ 	struct txpd *plocaltxpd = &localtxpd;
+@@ -46,9 +45,6 @@ static int SendSinglePacket(wlan_private * priv, struct sk_buff *skb)
+ 	/* offset of actual data */
+ 	plocaltxpd->tx_packet_location = cpu_to_le32(sizeof(struct txpd));
+ 
+-	/* TxCtrl set by user or default */
+-	plocaltxpd->tx_control = cpu_to_le32(adapter->pkttxctrl);
+-
+ 	p802x_hdr = skb->data;
+ 
+ 	/* copy destination address from 802.3 header */
+-- 
+1.5.2.1
+
