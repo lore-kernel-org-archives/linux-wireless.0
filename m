@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:25954 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760034AbXGaMIh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 08:08:37 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so392946fkz
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 05:08:35 -0700 (PDT)
-To: warmcat <andy@warmcat.com>
-Subject: Re: [PATCH] rt73usb-add-bluenext-148f-2573
-Date: Tue, 31 Jul 2007 14:12:29 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <20070731115446.5717.37617.stgit@localhost>
-In-Reply-To: <20070731115446.5717.37617.stgit@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200707311412.30340.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4448 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759944AbXGCTCD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2007 15:02:03 -0400
+Date: Tue, 3 Jul 2007 14:48:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: jeff@garzik.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Please pull 'libertas-fixes' branch of wireless-2.6
+Message-ID: <20070703184813.GC3534@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 31 July 2007, warmcat wrote:
-> Add device ID for cheapo BlueNext rt2571-based stick BN-WD54G
-> 
-> Signed-off-by: Andy Green <andy@warmcat.com>
-> ---
->
->  drivers/net/wireless/rt73usb.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt73usb.c b/drivers/net/wireless/rt73usb.c
-> index 3d838d1..82bb23c 100644
-> --- a/drivers/net/wireless/rt73usb.c
-> +++ b/drivers/net/wireless/rt73usb.c
-> @@ -1814,6 +1814,8 @@ static struct usb_device_id rt73usb_device_table[] = {
->  	{ USB_DEVICE(0x050d, 0x905b), USB_DEVICE_DATA(&rt73usb_ops) },
->  	/* Billionton */
->  	{ USB_DEVICE(0x1631, 0xc019), USB_DEVICE_DATA(&rt73usb_ops) },
-> +	/* BlueNEXT */
-> +	{ USB_DEVICE(0x148f, 0x2573), USB_DEVICE_DATA(&rt73usb_ops) },
+The following changes since commit aa2e09da2a332e748532aa2a71b090e7e7c3203d:
+  Len Brown (1):
+        ACPI: fix acpi_osi=!Linux
 
-This USB ID is already in the List under the Label "Ralink"
+are found in the git repository at:
 
-	/* Ralink */
-	{ USB_DEVICE(0x148f, 0x2573), USB_DEVICE_DATA(&rt73usb_ops) },
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git libertas-fixes
 
-Ivo
+Holger Schurig (1):
+      libertas: fix use-after-free in rx path
 
+Robert P. J. Day (1):
+      WIRELESS: Remove clearly obsolete libertas/version.h file.
+
+ drivers/net/wireless/libertas/rx.c      |    1 -
+ drivers/net/wireless/libertas/version.h |    1 -
+ 2 files changed, 0 insertions(+), 2 deletions(-)
+ delete mode 100644 drivers/net/wireless/libertas/version.h
+
+diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
+index 88d9d2d..769c86f 100644
+--- a/drivers/net/wireless/libertas/rx.c
++++ b/drivers/net/wireless/libertas/rx.c
+@@ -439,7 +439,6 @@ static int process_rxed_802_11_packet(wlan_private * priv, struct sk_buff *skb)
+ 	ret = 0;
+ 
+ done:
+-	skb->protocol = __constant_htons(0x0019);	/* ETH_P_80211_RAW */
+ 	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", ret);
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/libertas/version.h b/drivers/net/wireless/libertas/version.h
+deleted file mode 100644
+index 8b13789..0000000
+--- a/drivers/net/wireless/libertas/version.h
++++ /dev/null
+@@ -1 +0,0 @@
+-
+
+-- 
+John W. Linville
+linville@tuxdriver.com
