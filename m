@@ -1,59 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58998 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760457AbXGFM56 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2007 08:57:58 -0400
-Subject: Re: Multiple interfaces in mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jon Smirl <jonsmirl@gmail.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <9e4733910707060555s224b485ege5ed6024c7ca6b30@mail.gmail.com>
-References: <9e4733910707041723g6f7a535ap1a62dd4473484d40@mail.gmail.com>
-	 <1ba2fa240707050530q2d165232raa73455397546c62@mail.gmail.com>
-	 <9e4733910707050632m794944b5nb9ac9393b05dfa75@mail.gmail.com>
-	 <200707052154.24976.flamingice@sourmilk.net>
-	 <9e4733910707060533y3bd3b4a5v5f0441f0d6e76377@mail.gmail.com>
-	 <1183725861.3779.0.camel@johannes.berg>
-	 <9e4733910707060555s224b485ege5ed6024c7ca6b30@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/UEDyhItZAxhwY57ye7z"
-Date: Fri, 06 Jul 2007 14:58:58 +0200
-Message-Id: <1183726738.3779.2.camel@johannes.berg>
+Received: from electric-eye.fr.zoreil.com ([213.41.134.224]:49628 "EHLO
+	fr.zoreil.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753492AbXGCWwY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2007 18:52:24 -0400
+Date: Wed, 4 Jul 2007 00:31:44 +0200
+From: Francois Romieu <romieu@fr.zoreil.com>
+To: jgarzik@pobox.com
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH] eeprom_93cx6: shorten pulse timing to match spec (bis)
+Message-ID: <20070703223144.GA13714@electric-eye.fr.zoreil.com>
+References: <20070702210345.GA22610@electric-eye.fr.zoreil.com> <20070703123441.GA3534@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070703123441.GA3534@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Based on an original idea by John W. Linville.
 
---=-/UEDyhItZAxhwY57ye7z
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+It is the missing part of 42d45ccd60636c28e35c2016f091783bc14ad99c
 
-On Fri, 2007-07-06 at 08:55 -0400, Jon Smirl wrote:
+Signed-off-by: Francois Romieu <romieu@fr.zoreil.com>
+---
+ drivers/misc/eeprom_93cx6.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-> Yes, only interface is monitor.
->=20
-> Here is something else that is odd.
->=20
-> Beacons are reporting channel 1...
->=20
-> But I am tuned to channel 10.
-
-That's fishy. What hardware?
-
-johannes
-
---=-/UEDyhItZAxhwY57ye7z
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGjjyQ/ETPhpq3jKURArHkAJ9tWm+hncbHuQTA2CkjYbGrp1WOlwCfd6hp
-bup42hjmVRZhCDP0uq6LTig=
-=VYCL
------END PGP SIGNATURE-----
-
---=-/UEDyhItZAxhwY57ye7z--
+diff --git a/drivers/misc/eeprom_93cx6.c b/drivers/misc/eeprom_93cx6.c
+index ac515b0..ea55654 100644
+--- a/drivers/misc/eeprom_93cx6.c
++++ b/drivers/misc/eeprom_93cx6.c
+@@ -55,10 +55,10 @@ static inline void eeprom_93cx6_pulse_low(struct eeprom_93cx6 *eeprom)
+ 
+ 	/*
+ 	 * Add a short delay for the pulse to work.
+-	 * According to the specifications the minimal time
+-	 * should be 450ns so a 1us delay is sufficient.
++	 * According to the specifications the "maximum minimum"
++	 * time should be 450ns.
+ 	 */
+-	udelay(1);
++	ndelay(450);
+ }
+ 
+ static void eeprom_93cx6_startup(struct eeprom_93cx6 *eeprom)
+-- 
+1.5.2.1
 
