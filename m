@@ -1,60 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:57503
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756239AbXGIWr4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2007 18:47:56 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: jt@hpl.hp.com
-Subject: Re: [PATCH 2.6] SoftMAC : fix ESSID problem
-Date: Tue, 10 Jul 2007 00:46:23 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-References: <20070709221922.GB1381@bougret.hpl.hp.com>
-In-Reply-To: <20070709221922.GB1381@bougret.hpl.hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200707100046.23832.mb@bu3sch.de>
+Received: from mail.screens.ru ([213.234.233.54]:41230 "EHLO mail.screens.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757328AbXGDMvX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jul 2007 08:51:23 -0400
+Date: Wed, 4 Jul 2007 16:52:19 +0400
+From: Oleg Nesterov <oleg@tv-sign.ru>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ingo Molnar <mingo@redhat.com>,
+	Arjan van de Ven <arjan@linux.intel.com>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>, mingo@elte.hu,
+	Thomas Sattler <tsattler@gmx.de>
+Subject: Re: [RFC/PATCH] debug workqueue deadlocks with lockdep
+Message-ID: <20070704125219.GA98@tv-sign.ru>
+References: <1182969638.4769.56.camel@johannes.berg> <1183048429.4089.1.camel@johannes.berg> <1183052001.4089.2.camel@johannes.berg> <1183190728.7932.43.camel@earth4> <20070630114658.GA344@tv-sign.ru> <1183381393.4089.117.camel@johannes.berg> <20070703173112.GA108@tv-sign.ru> <1183549772.3812.10.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1183549772.3812.10.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 10 July 2007 00:19:22 Jean Tourrilhes wrote:
-> 	Hi,
+On 07/04, Johannes Berg wrote:
 > 
-> 	Victor Porton reported that the SoftMAC layer had random
-> problem when setting the ESSID :
-> 		http://bugzilla.kernel.org/show_bug.cgi?id=8686
-> 	After investigation, it turned out to be worse, the SoftMAC
-> layer is left in an inconsistent state. The fix is pretty trivial.
->         John : would you mind pushing that to 2.6.23 ?
->         Thanks...
+> On Tue, 2007-07-03 at 21:31 +0400, Oleg Nesterov wrote:
 > 
->         Jean
+> > If A does NOT take a lock L1, then it is OK to do cancel_work_sync(A)
+> > under L1, regardless of which other work_structs this workqueue has,
+> > before or after A.
 > 
-> Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
-> 
-> -----------------------------------------------------------
-> 
-> --- linux/net/ieee80211/softmac/ieee80211softmac_assoc.j1.c	2007-07-09 13:56:13.000000000 -0700
-> +++ linux/net/ieee80211/softmac/ieee80211softmac_assoc.c	2007-07-09 13:56:41.000000000 -0700
-> @@ -271,8 +271,11 @@ ieee80211softmac_assoc_work(struct work_
->  			 */
->  			dprintk(KERN_INFO PFX "Associate: Scanning for networks first.\n");
->  			ieee80211softmac_notify(mac->dev, IEEE80211SOFTMAC_EVENT_SCAN_FINISHED, ieee80211softmac_assoc_notify_scan, NULL);
-> -			if (ieee80211softmac_start_scan(mac))
-> +			if (ieee80211softmac_start_scan(mac)) {
->  				dprintk(KERN_INFO PFX "Associate: failed to initiate scan. Is device up?\n");
-> +				mac->associnfo.associating = 0;
-> +				mac->associnfo.associated = 0;
-> +			}
->  			goto out;
->  		} else {
->  			mac->associnfo.associating = 0;
-> 
+> Ah, cancel_work_sync() waits only for it if A is currently running?
 
-Acked-by: Michael Buesch <mb@bu3sch.de>
+Yes. And no other work (except a barrier) can run before the caller of
+wait_on_work() is woken.
 
+> > Now we have a false positive if some time we queue B into that workqueue,
+> > and this is not good.
+> 
+> Right. I was thinking of the flush_workqueue case where any of A or B
+> matters.
 
--- 
-Greetings Michael.
+Aha, now I see where I was confused. Yes, we can't avoid the false positives
+with flush_workqueue().
+
+I hope this won't be a problem, because almost every usage of flush_workqueue()
+is pointless nowadays. So even if we have a false positive, it probably
+means the code needs cleanups anyway.
+
+But see below,
+
+> > We can avoid this problem if we put lockdep_map into work_struct, so
+> > that wait_on_work() "locks" work->lockdep_map, while flush_workqueue()
+> > takes wq->lockdep_map.
+> 
+> Yeah, and then we'll take both wq->lockdep_map and the
+> work_struct->lockdep_map when running that work. That should work, I'll
+> give it a go later.
+
+If you are going to do this, may I suggest you to make 2 separate patches?
+Exactly because we can't avoid the false positives with flush_workqueue(),
+it would be nice if we have an option to revert the 2-nd patch if there are
+too many false positives (I hope this won't happen).
+
+(please ignore if this is not suitable for you).
+
+> > > @@ -257,7 +260,9 @@ static void run_workqueue(struct cpu_wor
+> > >
+> > >  		BUG_ON(get_wq_data(work) != cwq);
+> > >  		work_clear_pending(work);
+> > > +		lock_acquire(&cwq->wq->lockdep_map, 0, 0, 0, 2, _THIS_IP_);
+> > >  		f(work);
+> > > +		lock_release(&cwq->wq->lockdep_map, 0, _THIS_IP_);
+> >                                                    ^^^
+> > Isn't it better to call lock_release() with nested == 1 ?
+> 
+> Not sure, Ingo?
+
+Ingo, could you also explain the meaning of "nested" parameter? Looks
+like it is just unneeded, lock_release_nested() does a quick check
+and use lock_release_non_nested() when hlock is not on top of stack.
+
+Oleg.
+
