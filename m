@@ -1,66 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2607 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761481AbXGZTGc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2007 15:06:32 -0400
-Date: Thu, 26 Jul 2007 14:50:29 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-Cc: linux-wireless@vger.kernel.org,
-	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
-	geoffrey.levand@am.sony.com
-Subject: Re: [PATCH] remove duplicated ioctl entries in compat_ioctl.c
-Message-ID: <20070726185029.GC6068@tuxdriver.com>
-References: <20070709193744.D021.MOKUNO@sm.sony.co.jp>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070709193744.D021.MOKUNO@sm.sony.co.jp>
+Received: from wx-out-0506.google.com ([66.249.82.227]:4464 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752045AbXGDGNW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jul 2007 02:13:22 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1997595wxd
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jul 2007 23:13:21 -0700 (PDT)
+Message-ID: <1ba2fa240707032313p7209117bycc8ee7335447afea@mail.gmail.com>
+Date: Wed, 4 Jul 2007 09:13:21 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Jiri Benc" <jbenc@suse.cz>
+Subject: Re: [WIP] mac80211: kill mgmt interface
+Cc: "Joerg Pommnitz" <pommnitz@yahoo.com>,
+	"Cohen, Guy" <guy.cohen@intel.com>, linux-wireless@vger.kernel.org,
+	"Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <20070702155309.5300ef7f@griffin.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <394827.41199.qm@web51403.mail.re2.yahoo.com>
+	 <20070702155309.5300ef7f@griffin.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 09, 2007 at 07:54:39PM +0900, Masakazu Mokuno wrote:
-> This patch removes some duplicated wireless ioctl entries in the array
-> 'struct ioctl_trans ioctl_start[]' of fs/compat_ioctl.c
-> 
-> These entries are registered twice like:
-> 
-> 	COMPATIBLE_IOCTL(SIOCGIWPRIV)
-> 
-> and
-> 
-> 	HANDLE_IOCTL(SIOCGIWPRIV, do_wireless_ioctl)
-> 
-> 
-> Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-> ---
->  fs/compat_ioctl.c |    3 ---
->  1 file changed, 3 deletions(-)
-> 
-> --- a/fs/compat_ioctl.c
-> +++ b/fs/compat_ioctl.c
-> @@ -3156,12 +3156,9 @@ COMPATIBLE_IOCTL(SIOCSIWSENS)
->  COMPATIBLE_IOCTL(SIOCGIWSENS)
->  COMPATIBLE_IOCTL(SIOCSIWRANGE)
->  COMPATIBLE_IOCTL(SIOCSIWPRIV)
-> -COMPATIBLE_IOCTL(SIOCGIWPRIV)
->  COMPATIBLE_IOCTL(SIOCSIWSTATS)
-> -COMPATIBLE_IOCTL(SIOCGIWSTATS)
->  COMPATIBLE_IOCTL(SIOCSIWAP)
->  COMPATIBLE_IOCTL(SIOCGIWAP)
-> -COMPATIBLE_IOCTL(SIOCSIWSCAN)
->  COMPATIBLE_IOCTL(SIOCSIWRATE)
->  COMPATIBLE_IOCTL(SIOCGIWRATE)
->  COMPATIBLE_IOCTL(SIOCSIWRTS)
+On 7/2/07, Jiri Benc <jbenc@suse.cz> wrote:
+> > Von: "Cohen, Guy" <guy.cohen@intel.com>
+> > > This is a required feature for Access Points (multiple BSSID).
+>
+> On Mon, 2 Jul 2007 06:38:00 -0700 (PDT), Joerg Pommnitz wrote:
+> > And, just from reading the documentation, it seems to be supported by MadWifi for Atheros
+> > based devices:
+> >
+> > http://madwifi.org/wiki/ngFeatures
+> >
+> > and note the "To create APs which share a single MAC address, use the -bssid flag when
+> > creating the VAPs:"  remark.
+> >
+> > Even if no current mac80211 driver supports this feature, the API must not prevent this in the future.
+>
+> What are you talking about? Have you actually looked at mac80211? This
+> is supported from day 0 of d80211.
+>
+>  Jiri
+>
+There is probably difference between running multiple hostapd
+instances and running in multiple BSSID mode over one interface,
+meaning that hostapad is running multiple instances of MLME. I guess
+the original post was a bit confusing.
+I'm not sure if and how current implementation of hostapd can do that,
+but that's probably question for another mailing list.
 
-As I read the code in compat_ioctl.c, it looks to me like the
-COMPATIBLE_IOCTL definitions are the ones that are actually being
-used today.  Do you agree?
-
-Given the...stability...of the wireless extensions API, if we are going
-to remove one or the other of these not-quite-duplicate definitions,
-shouldn't we remove the HANDLE_IOCTL defintions instead?
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+> --
+> Jiri Benc
+> SUSE Labs
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
