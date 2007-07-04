@@ -1,33 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:64339 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S964808AbXGZSuF (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49699 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759122AbXGDN7U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2007 14:50:05 -0400
-Message-ID: <46A8ECD6.30204@lwfinger.net>
-Date: Thu, 26 Jul 2007 13:49:58 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] bcm43xx-mac80211: Fix specs typo for baseband attenuation
-References: <46a8ccbd.wNQamvQ9e0RJ0XZK%Larry.Finger@lwfinger.net> <20070726172138.GA6068@tuxdriver.com> <46A8E044.6080206@lwfinger.net> <20070726181334.GB6068@tuxdriver.com>
-In-Reply-To: <20070726181334.GB6068@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 4 Jul 2007 09:59:20 -0400
+Subject: Re: [RFC/PATCH] debug workqueue deadlocks with lockdep
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Oleg Nesterov <oleg@tv-sign.ru>, Ingo Molnar <mingo@redhat.com>,
+	Arjan van de Ven <arjan@linux.intel.com>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>,
+	Thomas Sattler <tsattler@gmx.de>
+In-Reply-To: <20070704122159.GA21813@elte.hu>
+References: <1182969638.4769.56.camel@johannes.berg>
+	 <1183048429.4089.1.camel@johannes.berg>
+	 <1183052001.4089.2.camel@johannes.berg> <1183190728.7932.43.camel@earth4>
+	 <20070630114658.GA344@tv-sign.ru> <1183381393.4089.117.camel@johannes.berg>
+	 <20070703173112.GA108@tv-sign.ru> <1183549772.3812.10.camel@johannes.berg>
+	 <20070704122159.GA21813@elte.hu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rIGjZruKXStOknjyWCV3"
+Date: Wed, 04 Jul 2007 15:59:54 +0200
+Message-Id: <1183557594.3812.29.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> 
-> Hmmm...well, if you asked to revert it on bcm43xx, why is it appropriate here?
 
-AFAIK, the V4 specs have always had the typo, thus there was no patch introducing this error - it is 
-original. On the other hand, the V3 specs were modified fairly late in the process, which led to the 
-bcm43xx patch that needed to be reverted. I suspect that the V3 changes may have been the result of 
-making them match the V4 specs. If that is the case, it made both of them wrong.
+--=-rIGjZruKXStOknjyWCV3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-No matter, the change is needed to make some older cards work. Now I know why bcm43xx-mac80211 never 
-worked on my BCM4306 until today.
+On Wed, 2007-07-04 at 14:21 +0200, Ingo Molnar wrote:
 
-Larry
+> well, in this case the lock/unlock should nest perfectly (i.e. it should=20
+> always be balanced perfectly), so indeed calling with nested=3D=3D1 leads=
+ to=20
+> stricter checking.
+>=20
+> non-nested unlocks occur when people do stuff like:
+>=20
+> 	spin_lock(&lock1);
+> 	spin_lock(&lock2);
+> 	spin_unlock(&lock1);
+> 	spin_unlock(&lock2);
+>=20
+> the first unlock is not 'nested perfectly'. Now for the workqueue=20
+> dep_map this shouldnt be a legal combination, right?
+
+I don't think so, will change to use nested=3D=3D1.
+
+johannes
+
+--=-rIGjZruKXStOknjyWCV3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGi6fa/ETPhpq3jKURAiowAJwIVgAhX8IH9prYRp3w5LLeAvO7owCeKYRC
+j3r0BA8ruLbDjyAm9hrYabk=
+=Ei2t
+-----END PGP SIGNATURE-----
+
+--=-rIGjZruKXStOknjyWCV3--
+
