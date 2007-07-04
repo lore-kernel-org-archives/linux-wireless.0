@@ -1,59 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59380 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750990AbXGXVNP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2007 17:13:15 -0400
-Message-ID: <46A66B63.6030006@garzik.org>
-Date: Tue, 24 Jul 2007 17:13:07 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Stephen Clark <Stephen.Clark@seclark.us>,
-	Axj <axjslack@bluebottle.com>, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] Request for help...
-References: <1185289332.46a61474a444c@mail.bluebottle.com> <20070724161226.GA24344@tuxdriver.com> <46A64503.1080003@seclark.us> <20070724203035.GG24344@tuxdriver.com>
-In-Reply-To: <20070724203035.GG24344@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from crystal.sipsolutions.net ([195.210.38.204]:56131 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754849AbXGDLwa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jul 2007 07:52:30 -0400
+Subject: Re: [RFC/PATCH] debug workqueue deadlocks with lockdep
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Oleg Nesterov <oleg@tv-sign.ru>
+Cc: Ingo Molnar <mingo@redhat.com>,
+	Arjan van de Ven <arjan@linux.intel.com>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>, mingo@elte.hu,
+	Thomas Sattler <tsattler@gmx.de>
+In-Reply-To: <20070703173112.GA108@tv-sign.ru>
+References: <1182969638.4769.56.camel@johannes.berg>
+	 <1183048429.4089.1.camel@johannes.berg>
+	 <1183052001.4089.2.camel@johannes.berg> <1183190728.7932.43.camel@earth4>
+	 <20070630114658.GA344@tv-sign.ru> <1183381393.4089.117.camel@johannes.berg>
+	 <20070703173112.GA108@tv-sign.ru>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Bqc4nt2kh6qXzJ2eKeJg"
+Date: Wed, 04 Jul 2007 13:49:32 +0200
+Message-Id: <1183549772.3812.10.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Tue, Jul 24, 2007 at 02:29:23PM -0400, Stephen Clark wrote:
-> 
->> Just being a user I am not sure what you mean by come back to working 
->> with community? None of
->> their stuff is hidden is it? Does "the community" make it so hard to get 
->> stuff included that it is
->> not worth the pain for Intel?
-> 
-> Very simple -- conduct mac80211 development in public on a mailing
-> list appropriate to discussion of an in-kernel component rather than
-> hiding on a mailing list that is ostensibly for development of a
-> specific driver.  As the authors of the patches it is incumbent on
-> Intel to post them for inclusion upstream.  That is the price of good
-> citizenship in the Linux community.
 
-Not just that... it's good engineering.
+--=-Bqc4nt2kh6qXzJ2eKeJg
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Wireless driver patches that don't make it rapidly to linux-wireless and 
-upstream rapidly fester.  It becomes a real engineering challenge to 
-sync up with upstream, if you don't make that your primary task to begin 
-with.
+Oleg,
 
-There is a reason why we say "release early, release often."  If 
-wireless developers don't hear from Intel on a regular basis, the 
-codebases will diverge, wireless hackers will not get the useful 
-feedback they need, and Intel hackers will not get the useful feedback 
-they need.
+Thanks for your comments. Shows how little I really understand the
+workqueue API :)
 
-Open source isn't just about a source code license.  This is an 
--engineering process-.  Post -> [merge | revise based on feedback ] -> 
-<infinity>.  The lower the frequency of posting and community 
-interaction, the less you are actually participating in key portions of 
-the engineering process.
+On Tue, 2007-07-03 at 21:31 +0400, Oleg Nesterov wrote:
 
-	Jeff
+> > I think this could lead to false positives, but then I think we
+> > shouldn't care about those. Let me explain. The thing is that with this
+> > it can happen that the code using the workqueue somehow obeys an
+> > ordering in the work it queues, so as far as I can tell it'd be fine to
+> > have two work items A and B where only B takes a lock L1, and then have
+> > a wait_on_work(A) under L1, if and only if B was always queued right
+> > after A (or something like that).
+>=20
+> Not sure I understand. Yes, we can have false positives, but I think the
+> ordering in the workqueue doesn't matter.
+>=20
+> If A does NOT take a lock L1, then it is OK to do cancel_work_sync(A)
+> under L1, regardless of which other work_structs this workqueue has,
+> before or after A.
 
+Ah, cancel_work_sync() waits only for it if A is currently running?
 
+> Now we have a false positive if some time we queue B into that workqueue,
+> and this is not good.
+
+Right. I was thinking of the flush_workqueue case where any of A or B
+matters.
+
+> We can avoid this problem if we put lockdep_map into work_struct, so
+> that wait_on_work() "locks" work->lockdep_map, while flush_workqueue()
+> takes wq->lockdep_map.
+
+Yeah, and then we'll take both wq->lockdep_map and the
+work_struct->lockdep_map when running that work. That should work, I'll
+give it a go later.
+
+> But probably we don't need this right now, at least until we really
+> have a lot of false positives while converting from flush_workqueue()
+> to cancel_work_sync/cancel_delayed_work_sync.
+
+I didn't really think about those yet, but I think you're right.
+
+> > @@ -257,7 +260,9 @@ static void run_workqueue(struct cpu_wor
+> >
+> >  		BUG_ON(get_wq_data(work) !=3D cwq);
+> >  		work_clear_pending(work);
+> > +		lock_acquire(&cwq->wq->lockdep_map, 0, 0, 0, 2, _THIS_IP_);
+> >  		f(work);
+> > +		lock_release(&cwq->wq->lockdep_map, 0, _THIS_IP_);
+>                                                    ^^^
+> Isn't it better to call lock_release() with nested =3D=3D 1 ?
+
+Not sure, Ingo?
+
+> > +#define create_workqueue(name) \
+> > +({								\
+> > +	static struct lock_class_key __key;			\
+> > +	struct workqueue_struct *__wq;				\
+> > +								\
+> > +	__wq =3D __create_workqueue((name), 0, 0, &__key);	\
+> > +	__wq;							\
+> > +})
+>=20
+> Why do we need __wq ?
+
+No particular reason I think, I copied some other code doing it that
+way.
+
+> 	+#define create_workqueue(name) \
+> 	({							\
+> 		static struct lock_class_key __key;		\
+> 		__create_workqueue((name), 0, 0, &__key);	\
+> 	})
+>=20
+> Actually, I'd suggest to rename __create_workqueue() to __create_workqueu=
+e_key(),
+> and then you need the only change in linux/workqueue.h
+>=20
+> 	- extern struct workqueue_struct *__create_workqueue(...);
+> 	+ extern struct workqueue_struct *__create_workqueue_key(..., key);
+> 	+ #define __create_workqueue(...)	\
+> 	+	static struct lock_class_key __key;	\
+> 	+	__create_workqueue_key(..., key);	\
+>=20
+> but this is a matter of taste.
+
+Sure, that works. I thought about compiling out the argument completely
+for the no-lockdep case, would you prefer that?
+
+> Btw, I think your patch found a real bug in net/mac80211/, cool!
+
+Actually, I found the bug by experiencing it and analysing the stack
+traces; then I thought that it should be possible to add lockdep support
+for that to avoid regressing :)
+
+johannes
+
+--=-Bqc4nt2kh6qXzJ2eKeJg
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGi4lM/ETPhpq3jKURAva/AJ9fXarGWVy/PYvNj7eCOPBA5R4ORwCfeMQ4
+Vnv8CO8ej0FMrQXwQ2CXSss=
+=OTKc
+-----END PGP SIGNATURE-----
+
+--=-Bqc4nt2kh6qXzJ2eKeJg--
 
