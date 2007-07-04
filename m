@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4626 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763373AbXGSTdV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2007 15:33:21 -0400
-Date: Thu, 19 Jul 2007 15:10:02 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: andy@warmcat.com
-Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>
-Subject: Re: [PATCH 1/2] zd1211rw-mac80211: return hardware specific tx rate code for rx status
-Message-ID: <20070719191002.GB6603@tuxdriver.com>
-References: <20070611103828.961999956@warmcat.com> <20070611103914.481787013@warmcat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070611103914.481787013@warmcat.com>
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:29671 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753397AbXGDG7v (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jul 2007 02:59:51 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+Date: Wed, 4 Jul 2007 08:59:49 +0200
+Subject: [PATCH 2/2] libertas: remove bss_descriptor->timestamp
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Message-Id: <200707040859.49814.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 11, 2007 at 11:38:29AM +0100, andy@warmcat.com wrote:
-> zd1211rw-mac80211 uses different hardware-specific codings to talk about
-> rates when doing transmit and receive.  Because mac80211 looks up the rx
-> rate against the rates table used for selecting hardware-specific coding for
-> tx, the rate returned in the rx_status struct needs to be adjusted to use the
-> coding used to hardware-specific tx rates.  This patch performs this adjustment.
-> 
-> Without this patch the radiotap-based monitor stuff reports a "0.0Mbps" rate for
-> all packets from this driver.
-> 
-> CC: Daniel Drake <dsd@gentoo.org>
-> CC: Ulrich Kunitz <kune@deine-taler.de>
-> Signed-off-by: Andy Green <andy@warmcat.com>
+Noone used this variable.
 
-Daniel, Uli -- ack/nak?
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+---
+ drivers/net/wireless/libertas/scan.c |    1 -
+ drivers/net/wireless/libertas/scan.h |    1 -
+ 2 files changed, 0 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
+index aea2e90..5c730b9 100644
+--- a/drivers/net/wireless/libertas/scan.c
++++ b/drivers/net/wireless/libertas/scan.c
+@@ -903,7 +903,6 @@ static int libertas_process_bss(struct bss_descriptor * bss,
+ 	pos++;
+ 
+ 	/* time stamp is 8 bytes long */
+-	bss->timestamp = le64_to_cpup((void *) pos);
+ 	pos += 8;
+ 
+ 	/* beacon interval is 2 bytes long */
+diff --git a/drivers/net/wireless/libertas/scan.h b/drivers/net/wireless/libertas/scan.h
+index 28decf3..9bb1a43 100644
+--- a/drivers/net/wireless/libertas/scan.h
++++ b/drivers/net/wireless/libertas/scan.h
+@@ -157,7 +157,6 @@ struct bss_descriptor {
+ 	/* zero-terminated array of supported data rates */
+ 	u8 rates[MAX_RATES + 1];
+ 
+-	__le64 timestamp;	//!< TSF value included in the beacon/probe response
+ 	unsigned long last_scanned;
+ 
+ 	union ieeetypes_phyparamset phyparamset;
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.2.1
+
