@@ -1,61 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hoefnix.telenet-ops.be ([195.130.132.54]:56381 "EHLO
-	hoefnix.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755455AbXGHUDE (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.177]:7800 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751565AbXGDGYK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2007 16:03:04 -0400
-Received: from ananke.telenet-ops.be (ananke.telenet-ops.be [195.130.137.78])
-	by hoefnix.telenet-ops.be (Postfix) with ESMTP id EC5E89CFE3
-	for <linux-wireless@vger.kernel.org>; Sun,  8 Jul 2007 22:03:01 +0200 (CEST)
-Message-ID: <469142CC.1000903@telenet.be>
-Date: Sun, 08 Jul 2007 22:02:20 +0200
-From: ian <ischram@telenet.be>
+	Wed, 4 Jul 2007 02:24:10 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3675175pyb
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jul 2007 23:24:10 -0700 (PDT)
+Message-ID: <468B3CFF.7020903@gmail.com>
+Date: Wed, 04 Jul 2007 15:23:59 +0900
+From: Tejun Heo <htejun@gmail.com>
 MIME-Version: 1.0
-To: Andy Green <andy@warmcat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: iwlwifi 3945: secondary interface disallows association
-References: <4691310E.8070406@warmcat.com>
-In-Reply-To: <4691310E.8070406@warmcat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Andrew Morton <akpm@linux-foundation.org>
+CC: Miles Lane <miles.lane@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>, yi.zhu@intel.com,
+	jketreno@linux.intel.com, linux-wireless@vger.kernel.org
+Subject: Re: 2.6.22-rc6-mm1 -- BUG - EIP: [<c01a77a1>] sysfs_addrm_finish+0x1c2/0x226  SS:ESP 0068:c5ff9db8
+References: <a44ae5cd0707030932h16a90ca3j8ad65b7a3ec64b03@mail.gmail.com> <20070703094916.e60d4df7.akpm@linux-foundation.org>
+In-Reply-To: <20070703094916.e60d4df7.akpm@linux-foundation.org>
+Content-Type: multipart/mixed;
+ boundary="------------090209030609060901000508"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I don't appear to have the same problem with:
-  -latest version of iwlwifi (0.0.35)
-  - gentoo-sources-2.6.20 kernel (patched with a relatively old mac80211 package)
+This is a multi-part message in MIME format.
+--------------090209030609060901000508
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-I believe fedora has 0.0.24 of iwlwifi embedded?
-So the problem might have been fixed already.
+Hello,
 
-Writing this email, after executing your command, when associated on a wpa2
-network.
+Andrew Morton wrote:
+>> EIP is at sysfs_addrm_finish+0x1c2/0x226
+>> eax: 00000001   ebx: c5ff9dc0   ecx: c058aa40   edx: 00000001
+>> esi: c5ff9de8   edi: c37c3240   ebp: c5ff9e1c   esp: c5ff9db8
+>> ds: 007b   es: 007b   fs: 0000  gs: 0033  ss: 0068
+>> Process modprobe (pid: 3519, ti=c5ff9000 task=c5ef15e0 task.ti=c5ff9000)
+>> Stack: c03a3eda c5ff9e24 00000000 00000001 dead4ead ffffffff ffffffff c0657cf0
+>>        00000000 c046359d c5ff9de0 c5ff9de0 00000000 00000001 dead4ead ffffffff
+>>        ffffffff c0657cf0 00000000 c046359d c5ff9de0 c5ff9de0 c37c3240 c5ff9e24
+>> Call Trace:
+>>  [<c01a7833>] remove_dir+0x2e/0x35
+>>  [<c01a7894>] __sysfs_remove_dir+0x5a/0x61
+>>  [<c01a78d1>] sysfs_remove_dir+0x2c/0x30
 
-Ian.
+Hmm... That's weird.  I tried to regenerate it here but mine unloads
+happily.  Can you apply the attached patch and report the resulting
+messages when oops happens?
 
-Andy Green wrote:
-> Hi folks -
-> 
-> I have pretty decent functionality on the 3945abg laptop with the Fedora
-> development kernel version of iwlwifi and WPA via wpa_supplicant.
-> Connections can stay up over a couple of days or more when I am staying
-> close to the AP.
-> 
-> However if I perform this action:
-> 
-> echo -n mon0 > /sys/class/ieee80211/phy0/add_iface
-> 
-> I immediately lose association and cannot reacquire it until I remove
-> the iwl3945 module and insert again.  I don't have to do anything with
-> the new interface, just create it.  I tried setting the channel and mode
-> of it, but that didn't help with reacquiring an association.
-> 
-> In contrast I can bring up other virtual interfaces okay on, eg, zd1211
-> without losing an existing association to the same WPA network.
-> 
-> -Andy
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+Thanks.
+
+-- 
+tejun
+
+--------------090209030609060901000508
+Content-Type: text/plain;
+ name="debug"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="debug"
+
+---
+ fs/sysfs/dir.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+Index: tree0/fs/sysfs/dir.c
+===================================================================
+--- tree0.orig/fs/sysfs/dir.c
++++ tree0/fs/sysfs/dir.c
+@@ -268,6 +268,9 @@ static void sysfs_deactivate(struct sysf
+ 	DECLARE_COMPLETION_ONSTACK(wait);
+ 	int v;
+ 
++	if (sd->s_sibling || !(sd->s_flags & SYSFS_FLAG_REMOVED))
++		printk("XXX sysfs_deactivate: sd=%p s_sibling=%p s_flags=0x%x\n",
++		       sd, sd->s_sibling, sd->s_flags);
+ 	BUG_ON(sd->s_sibling || !(sd->s_flags & SYSFS_FLAG_REMOVED));
+ 	sd->s_sibling = (void *)&wait;
+ 
+@@ -530,6 +533,9 @@ void sysfs_remove_one(struct sysfs_addrm
+ 		drop_nlink(acxt->parent_inode);
+ 
+ 	acxt->cnt++;
++
++	printk("XXX sysfs_remove_one: acxt=%p sd=%p s_flags=0x%x cnt=%d\n",
++	       acxt, sd, sd->s_flags, acxt->cnt);
+ }
+ 
+ /**
+@@ -624,6 +630,8 @@ int sysfs_addrm_finish(struct sysfs_addr
+ 		acxt->removed = sd->s_sibling;
+ 		sd->s_sibling = NULL;
+ 
++		printk("XXX sysfs_addrm_finish: acxt=%p sd=%p s_sibling=%p s_flags=0x%x\n",
++		       acxt, sd, sd->s_sibling, sd->s_flags);
+ 		sysfs_drop_dentry(sd);
+ 		sysfs_deactivate(sd);
+ 		sysfs_put(sd);
+
+--------------090209030609060901000508--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
