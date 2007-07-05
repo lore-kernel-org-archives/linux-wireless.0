@@ -1,94 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.184]:15800 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756080AbXGaOqv (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49421 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755110AbXGFKg4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 10:46:51 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so2728941mue
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 07:46:49 -0700 (PDT)
-To: Andy Green <andy@warmcat.com>
-Subject: Re: [PATCH] rt73usb-add-bluenext-148f-2573
-Date: Tue, 31 Jul 2007 16:50:34 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <20070731115446.5717.37617.stgit@localhost> <200707311611.26683.IvDoorn@gmail.com> <46AF4889.4070902@warmcat.com>
-In-Reply-To: <46AF4889.4070902@warmcat.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200707311650.34795.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 6 Jul 2007 06:36:56 -0400
+Subject: Re: [PATCH] eeprom_93cx6: shorten pulse timing to match spec (bis)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Francois Romieu <romieu@fr.zoreil.com>
+Cc: jgarzik@pobox.com, "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>
+In-Reply-To: <20070703223144.GA13714@electric-eye.fr.zoreil.com>
+References: <20070702210345.GA22610@electric-eye.fr.zoreil.com>
+	 <20070703123441.GA3534@tuxdriver.com>
+	 <20070703223144.GA13714@electric-eye.fr.zoreil.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-P1ll5tEKwNzcKCl8bxsB"
+Date: Thu, 05 Jul 2007 18:44:29 +0200
+Message-Id: <1183653869.3818.58.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 31 July 2007, Andy Green wrote:
-> Somebody in the thread at some point said:
-> 
-> > I think I have an idea why mac80211 always reports 1 MBs,
-> > rt2x00 checks if PREAMBLE was enabled or not. If that is the case it sets
-> > the rate value to rate->val2
-> > Mac80211 in turn only compares the value against rate->val which
-> > means that it won't find the rate and assume the lowest possible rate.
-> > I'll fix this by always setting the rate->val value instead (It isn't
-> really
-> > important for mac80211 to know if the preamble bit was set anyway).
-> 
-> Somehow the rates seem to be correct now after your change to the DROP
-> bits...
 
-Excellent! :)
+--=-P1ll5tEKwNzcKCl8bxsB
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> > #define TXRX_CSR0_DROP_CRC				FIELD32(0x00020000)
-> > #define TXRX_CSR0_DROP_PHYSICAL			FIELD32(0x00040000)
-> > #define TXRX_CSR0_DROP_CONTROL			FIELD32(0x00080000)
-> > #define TXRX_CSR0_DROP_NOT_TO_ME		FIELD32(0x00100000)
-> > #define TXRX_CSR0_DROP_TO_DS				FIELD32(0x00200000)
-> > #define TXRX_CSR0_DROP_VERSION_ERROR	FIELD32(0x00400000)
-> > #define TXRX_CSR0_DROP_MULTICAST			FIELD32(0x00800000)
-> > #define TXRX_CSR0_DROP_BORADCAST		FIELD32(0x01000000)
-> > #define TXRX_CSR0_DROP_ACK_CTS			FIELD32(0x02000000)
-> >
-> > Which means it will only pass multicast, broadcast and ACK_CTS frames. :S
-> > Always dropping CRC errors is correct, since enabling that will
-> greatly upset
-> > any monitoring tool listening to the interface.
-> 
-> Well one day it will be nice if there is a stack-level way to turn it on
-> and off.  We can also pass in the radiotap part a flag to show if the
-> packet's CRC was valid or not.  The tools can then either turn on the
-> filtering before the packets come or filter on good packets only.
+On Wed, 2007-07-04 at 00:31 +0200, Francois Romieu wrote:
+> Based on an original idea by John W. Linville.
+>=20
+> It is the missing part of 42d45ccd60636c28e35c2016f091783bc14ad99c
+                            ^
+I can't find that commit in the current wireless-dev tree, can you
+provide a correct reference or more explanation? Then again the patch
+itself is short enough and I don't understand the need for the reference
+at all.
 
-Well the problem with the CRC errors is that, when enabled, mac80211
-will be flooded with frames. Regular frames which are usually the interesting
-ones could get lost in there.
-But you are right, having the stack to control the DROP filter would be a very
-nice feature. :)
+johannes
 
-> > To see if it helps try:
-> >
-> > echo 16 > csr_offset
-> > echo 0x0002b162 > csr_value
-> >
-> > This will disable all DROP bits (except for the CRC error) and thus should
-> > trigger more frames to be received by your interface. In the mean time
-> I'll search
-> > why those bits weren't cleared when enabling the interface in monitor
-> mode.
-> 
-> Yes, that seems to have done it, thanks
+--=-P1ll5tEKwNzcKCl8bxsB
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Excellent :)
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-> > Which version are you using?
-> > wireless-dev <---
-> > rt2x00.git
-> > rt2x00 cvs
+iD8DBQBGjR/t/ETPhpq3jKURAmYhAJ4hMCVYX6pKmrZvf8hoOno8miBJkQCgqipG
+z8pg0ydZEMLxNUaZA5BkieA=
+=mUSu
+-----END PGP SIGNATURE-----
 
-Ok, rt2x00.git contains many changes to the initialization of the device,
-so it is a bit hard to compare at the moment. At least it is confirmed that rt2x00 can
-receive all frames in monitor mode and the problem area is the DROP filter.
+--=-P1ll5tEKwNzcKCl8bxsB--
 
-I'll release rt2x00 2.0.5 later today with all those changes, including the rxdone rate
-selection fix. So if you could retest later to see if the problem disappeared in 2.0.5 it
-would be great. :)
-
-Ivo
