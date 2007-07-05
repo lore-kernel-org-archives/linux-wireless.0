@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:17493 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754928AbXGZVTo (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:2612 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756135AbXGENcI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2007 17:19:44 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so601818ugf
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2007 14:19:43 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [Rt2400-devel] Please pull 'upstream' branch of rt2x00
-Date: Thu, 26 Jul 2007 23:22:43 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200707252249.47931.IvDoorn@gmail.com> <20070726021939.GA3810@tuxdriver.com>
-In-Reply-To: <20070726021939.GA3810@tuxdriver.com>
+	Thu, 5 Jul 2007 09:32:08 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so3610876wah
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2007 06:32:07 -0700 (PDT)
+Message-ID: <9e4733910707050632m794944b5nb9ac9393b05dfa75@mail.gmail.com>
+Date: Thu, 5 Jul 2007 09:32:07 -0400
+From: "Jon Smirl" <jonsmirl@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: Multiple interfaces in mac80211
+Cc: "Michael Wu" <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240707050530q2d165232raa73455397546c62@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200707262322.43150.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <9e4733910707041723g6f7a535ap1a62dd4473484d40@mail.gmail.com>
+	 <200707042305.40944.flamingice@sourmilk.net>
+	 <1ba2fa240707050530q2d165232raa73455397546c62@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 7/5/07, Tomas Winkler <tomasw@gmail.com> wrote:
+> Does anybody have/ think of a patch that removes the master interface
+> from the sub_if_list. It slows down the receive path. Second problem
+> with this is that the code becomes incorrect when opening receive path
+> for control packets.  Meanwhile as a workaround I've changed iw_mode
+> of the master interface  to invalid value instead of default
+> IEEE80211_IF_TYPE_AP.
 
-> > Today a very quick release of 2.0.4,
-> > reason for this quick followup on 2.0.3 are the fixes
-> > regarding the USB ID and the rt61pci interrupts.
-> 
-> Ivo,
-> 
-> Thanks for the post -- I merged them into wireless-dev.  You might
-> also notice that I moved the driver files up two levels into
-> drivers/net/wireless (along w/ the other drivers).
+I'm debugging this because I've been trying for two days without
+success to get monitor mode to work. I have the adapter in promisc
+mode and the interface in monitor mode.  I can see directed and
+broadcast traffic with tcpdump, but not directed traffic for other
+nodes.
 
-Thanks.
-But one request, do you mind if I put all rt2x00 files into
-a new folder drivers/net/wireless/rt2x00 ?
-There are 25 files that belong to rt2x00 and it would be nice
-if I can have them grouped together.
+I've added debug printk to mac80211 and the non-directed packets are
+making it to
+ieee80211_rx_monitor and onto netif_rx. But they don't come out the
+tcpdump interface. I don't have iptables loaded. What's eating these
+packets in the higher layers?
 
-> Any idea when you'll be ready for rt2x00 to go upstream?
+>
+>
+> On 7/5/07, Michael Wu <flamingice@sourmilk.net> wrote:
+> > On Wednesday 04 July 2007 17:23, Jon Smirl wrote:
+> > > I added some debugging code to __ieee80211_rx() and I noticed in this loop:
+> > >               list_for_each_entry(sdata, &local->sub_if_list, list) {
+> > >
+> > sub_if_list includes the master interface.
+> >
+> > -Michael Wu
+> >
+> >
+>
 
-Not really sure I want to have at least atop making the
-suspend/resume result into a big kernel panic, and adhoc
-mode should come back to live.
-All other reported bugs are more rare and appear not affect
-that many people.
-So hopefully within 1 or 2 months should rt2x00 reach a condition
-where I am more confident about moving a bit further upstream.
 
-Ivo
+-- 
+Jon Smirl
+jonsmirl@gmail.com
