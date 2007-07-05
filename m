@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:63218 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755263AbXGWBvl (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.232]:52713 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755473AbXGEAIq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jul 2007 21:51:41 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Daniel Drake <dsd@gentoo.org>
-Subject: Re: [PATCH] mac80211: missing dev_put in ieee80211_master_start_xmit
-Date: Sun, 22 Jul 2007 18:50:04 -0700
-Cc: jbenc@suse.cz, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-References: <20070722235839.950277B409F@zog.reactivated.net>
-In-Reply-To: <20070722235839.950277B409F@zog.reactivated.net>
+	Wed, 4 Jul 2007 20:08:46 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so2201756wxd
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2007 17:08:44 -0700 (PDT)
+Message-ID: <1ba2fa240707041708h7295becg7ef3e7e152aeeb54@mail.gmail.com>
+Date: Thu, 5 Jul 2007 03:08:44 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Jiri Benc" <jbenc@suse.cz>
+Subject: Re: wmm_acm setting
+Cc: "Cohen, Guy" <guy.cohen@intel.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <20070702184015.44fad5f9@griffin.suse.cz>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1330352.Kimn5tDjAm";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200707221850.12083.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <D0122E209EBF8D4CAB38EC6A8AF244E502BCD5AC@hasmsx412.ger.corp.intel.com>
+	 <20070702184015.44fad5f9@griffin.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1330352.Kimn5tDjAm
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Somehow cannot find in wireless-dev.git
+Can you paste it into email.
+Thanks
+Tomas
 
-On Sunday 22 July 2007 16:58, Daniel Drake wrote:
-> @@ -1662,6 +1662,7 @@ static int ieee80211_master_start_xmit(struct sk_buff
-> *skb, if (skb_headroom(skb) < headroom) {
->  		if (pskb_expand_head(skb, headroom, 0, GFP_ATOMIC)) {
->  			dev_kfree_skb(skb);
-> +			dev_put(odev);
->  			return 0;
->  		}
->  	}
-Acked-by: Michael Wu <flamingice@sourmilk.net>
-
-This should also go to stable.
-
-Thanks,
--Michael Wu
-
---nextPart1330352.Kimn5tDjAm
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGpAlUT3Oqt9AH4aERAi+cAJ4nW7ETNIZ5l9Ryxt4/0pdozFc2owCfZ9Jy
-jMW9iRE+behjvG4l/k3/KuM=
-=MU3M
------END PGP SIGNATURE-----
-
---nextPart1330352.Kimn5tDjAm--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+On 7/2/07, Jiri Benc <jbenc@suse.cz> wrote:
+> On Sun, 24 Jun 2007 14:47:40 +0300, Cohen, Guy wrote:
+> > In mac80211/ieee80211_sta.c, ieee80211_sta_wmm_params(), line ~267, is
+> > wmm_acm setting for case 1 (BK) and case 0 (BE) right (and not swapped)?
+>
+> See commit 37c95ceeebd38a3f1f686b8fbf5168672d19f825 in wireless-dev and
+> the referenced table.
+>
+>  Jiri
+>
+> --
+> Jiri Benc
+> SUSE Labs
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
