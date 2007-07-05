@@ -1,54 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49262 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756437AbXGMJGc (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:18465 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757001AbXGEHcM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2007 05:06:32 -0400
-Subject: Re: Setting channel when interface is down inconsistency
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Jon Smirl <jonsmirl@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1184188695.28850.2.camel@localhost.localdomain>
-References: <9e4733910707090759v5cd20f2en1f6c4e6fc6279b3f@mail.gmail.com>
-	 <1184005862.5671.2.camel@xo-13-A4-25.localdomain>
-	 <1184107850.3738.20.camel@johannes.berg>
-	 <1184188695.28850.2.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MqZJ2+0KPlu5tSq+oQrn"
-Date: Thu, 12 Jul 2007 22:31:46 +0200
-Message-Id: <1184272306.6669.44.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 5 Jul 2007 03:32:12 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so3514414wah
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2007 00:32:11 -0700 (PDT)
+Message-ID: <468C9E74.4080606@gmail.com>
+Date: Thu, 05 Jul 2007 16:32:04 +0900
+From: Tejun Heo <htejun@gmail.com>
+MIME-Version: 1.0
+To: Miles Lane <miles.lane@gmail.com>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>, yi.zhu@intel.com,
+	jketreno@linux.intel.com, linux-wireless@vger.kernel.org
+Subject: Re: 2.6.22-rc6-mm1 -- BUG - EIP: [<c01a77a1>] sysfs_addrm_finish+0x1c2/0x226  SS:ESP 0068:c5ff9db8
+References: <a44ae5cd0707030932h16a90ca3j8ad65b7a3ec64b03@mail.gmail.com>	 <20070703094916.e60d4df7.akpm@linux-foundation.org>	 <468B3CFF.7020903@gmail.com> <a44ae5cd0707040036x74c82dcci12b0a3f83a27af56@mail.gmail.com>
+In-Reply-To: <a44ae5cd0707040036x74c82dcci12b0a3f83a27af56@mail.gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------080801050008030809030906"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is a multi-part message in MIME format.
+--------------080801050008030809030906
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
---=-MqZJ2+0KPlu5tSq+oQrn
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hello,
 
-On Wed, 2007-07-11 at 17:18 -0400, Dan Williams wrote:
+Miles Lane wrote:
+> XXX sysfs_deactivate: sd=c36ba6c0 s_sibling=6b6b6b6b s_flags=0x6b6b6b6b
+> ------------[ cut here ]------------
+> kernel BUG at fs/sysfs/dir.c:274!
 
-> But, of course, we need to make sure that we are consistent and that if
-> we really don't allow configuration when the device is down, that all
-> drivers return error when they are down.
+OIC, ref counter is too low by one.  The sysfs_dirent is probably
+getting freed on sysfs_drop_dentry().  Hmmm... Where did I screw up?
+Can you apply the attached patch and report the log after oops?  It
+shouldn't generate too much output.
 
-If we want to go the way of not allowing configuration when the device
-is down we can easily check and return an error in cfg80211; if we do
-want to allow configuration when it is down we have to make sure all
-drivers support that.
+Thanks.
 
-johannes
+-- 
+tejun
 
---=-MqZJ2+0KPlu5tSq+oQrn
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--------------080801050008030809030906
+Content-Type: text/plain;
+ name="debug"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="debug"
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+---
+ fs/sysfs/dir.c        |   43 +++++++++++++++++++++++++++++++++++++++++++
+ fs/sysfs/sysfs.h      |   16 ++--------------
+ include/linux/sysfs.h |    3 +++
+ net/core/net-sysfs.c  |    6 +++++-
+ 4 files changed, 53 insertions(+), 15 deletions(-)
 
-iD8DBQBGlo+x/ETPhpq3jKURAko5AJ93zveY7WQX8mqS81Hz5+5RoZpbDQCbBA3J
-29Ss/5x8qstOreC+aE6YY3o=
-=pcw0
------END PGP SIGNATURE-----
+Index: tree0/fs/sysfs/dir.c
+===================================================================
+--- tree0.orig/fs/sysfs/dir.c
++++ tree0/fs/sysfs/dir.c
+@@ -11,15 +11,52 @@
+ #include <linux/namei.h>
+ #include <linux/idr.h>
+ #include <linux/completion.h>
++#include <linux/kallsyms.h>
+ #include <asm/semaphore.h>
+ #include "sysfs.h"
+ 
++struct kobject *sysfs_debug_me;
++
+ DEFINE_MUTEX(sysfs_mutex);
+ spinlock_t sysfs_assoc_lock = SPIN_LOCK_UNLOCKED;
+ 
+ static spinlock_t sysfs_ino_lock = SPIN_LOCK_UNLOCKED;
+ static DEFINE_IDA(sysfs_ino_ida);
+ 
++struct sysfs_dirent * sysfs_get(struct sysfs_dirent * sd)
++{
++	if (sd) {
++		if (sd->s_flags & SYSFS_FLAG_XXX) {
++			char c0[KSYM_NAME_LEN], c1[KSYM_NAME_LEN];
++
++			lookup_symbol_name((unsigned long)__builtin_return_address(0), c0);
++			lookup_symbol_name((unsigned long)__builtin_return_address(1), c1);
++
++			printk("sysfs_get(%s): cnt=%d++ called from %s:%s\n",
++			       sd->s_name, atomic_read(&sd->s_count), c0, c1);
++		}
++		WARN_ON(!atomic_read(&sd->s_count));
++		atomic_inc(&sd->s_count);
++	}
++	return sd;
++}
++
++void sysfs_put(struct sysfs_dirent * sd)
++{
++	if (sd && sd->s_flags & SYSFS_FLAG_XXX) {
++		char c0[KSYM_NAME_LEN], c1[KSYM_NAME_LEN];
++
++		lookup_symbol_name((unsigned long)__builtin_return_address(0), c0);
++		lookup_symbol_name((unsigned long)__builtin_return_address(1), c1);
++
++		printk("sysfs_put(%s): cnt=%d-- called from %s:%s\n",
++		       sd->s_name, atomic_read(&sd->s_count), c0, c1);
++	}
++
++	if (sd && atomic_dec_and_test(&sd->s_count))
++		release_sysfs_dirent(sd);
++}
++
+ /**
+  *	sysfs_link_sibling - link sysfs_dirent into sibling list
+  *	@sd: sysfs_dirent of interest
+@@ -317,6 +354,10 @@ void release_sysfs_dirent(struct sysfs_d
+ 	 * sd->s_parent won't change beneath us.
+ 	 */
+ 	parent_sd = sd->s_parent;
++	if (parent_sd->s_flags & SYSFS_FLAG_XXX)
++		printk("put from release(%s): cnt=%d-- (rel=%s)\n",
++		       parent_sd->s_name, atomic_read(&parent_sd->s_count),
++		       sd->s_name);
+ 
+ 	if (sysfs_type(sd) == SYSFS_KOBJ_LINK)
+ 		sysfs_put(sd->s_elem.symlink.target_sd);
+@@ -695,6 +736,8 @@ static int create_dir(struct kobject *ko
+ 	if (!sd)
+ 		return -ENOMEM;
+ 	sd->s_elem.dir.kobj = kobj;
++	if (sysfs_debug_me && sysfs_debug_me == kobj)
++		sd->s_flags |= SYSFS_FLAG_XXX;
+ 
+ 	/* link in */
+ 	sysfs_addrm_start(&acxt, parent_sd);
+Index: tree0/fs/sysfs/sysfs.h
+===================================================================
+--- tree0.orig/fs/sysfs/sysfs.h
++++ tree0/fs/sysfs/sysfs.h
+@@ -108,20 +108,8 @@ static inline unsigned int sysfs_type(st
+ 	return sd->s_flags & SYSFS_TYPE_MASK;
+ }
+ 
+-static inline struct sysfs_dirent * sysfs_get(struct sysfs_dirent * sd)
+-{
+-	if (sd) {
+-		WARN_ON(!atomic_read(&sd->s_count));
+-		atomic_inc(&sd->s_count);
+-	}
+-	return sd;
+-}
+-
+-static inline void sysfs_put(struct sysfs_dirent * sd)
+-{
+-	if (sd && atomic_dec_and_test(&sd->s_count))
+-		release_sysfs_dirent(sd);
+-}
++struct sysfs_dirent * sysfs_get(struct sysfs_dirent * sd);
++void sysfs_put(struct sysfs_dirent * sd);
+ 
+ static inline int sysfs_is_shadowed_inode(struct inode *inode)
+ {
+Index: tree0/include/linux/sysfs.h
+===================================================================
+--- tree0.orig/include/linux/sysfs.h
++++ tree0/include/linux/sysfs.h
+@@ -87,9 +87,12 @@ struct sysfs_ops {
+ 
+ #define SYSFS_FLAG_MASK		~SYSFS_TYPE_MASK
+ #define SYSFS_FLAG_REMOVED	0x0100
++#define SYSFS_FLAG_XXX		0x0200
+ 
+ #ifdef CONFIG_SYSFS
+ 
++extern struct kobject *sysfs_debug_me;
++
+ extern int sysfs_schedule_callback(struct kobject *kobj,
+ 		void (*func)(void *), void *data, struct module *owner);
+ 
+Index: tree0/net/core/net-sysfs.c
+===================================================================
+--- tree0.orig/net/core/net-sysfs.c
++++ tree0/net/core/net-sysfs.c
+@@ -472,6 +472,7 @@ int netdev_register_sysfs(struct net_dev
+ {
+ 	struct device *dev = &(net->dev);
+ 	struct attribute_group **groups = net->sysfs_groups;
++	int rc;
+ 
+ 	device_initialize(dev);
+ 	dev->class = &net_class;
+@@ -489,7 +490,10 @@ int netdev_register_sysfs(struct net_dev
+ 		*groups++ = &wireless_group;
+ #endif
+ 
+-	return device_add(dev);
++	sysfs_debug_me = &dev->kobj;
++	rc = device_add(dev);
++	sysfs_debug_me = NULL;
++	return rc;
+ }
+ 
+ int netdev_sysfs_init(void)
 
---=-MqZJ2+0KPlu5tSq+oQrn--
-
+--------------080801050008030809030906--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
