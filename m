@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.237]:23715 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760114AbXGSS1x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2007 14:27:53 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so585441wxd
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jul 2007 11:27:52 -0700 (PDT)
-Message-ID: <1ba2fa240707191127i7d4cf8daw79af7527d13155d4@mail.gmail.com>
-Date: Thu, 19 Jul 2007 21:27:52 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	mabbas <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1184777775.8125.0.camel@johannes.berg>
+Received: from mx3.mail.elte.hu ([157.181.1.138]:49546 "EHLO mx3.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757446AbXGEInj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jul 2007 04:43:39 -0400
+Date: Thu, 5 Jul 2007 10:43:23 +0200
+From: Ingo Molnar <mingo@elte.hu>
+To: Oleg Nesterov <oleg@tv-sign.ru>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	Arjan van de Ven <arjan@linux.intel.com>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>,
+	Thomas Sattler <tsattler@gmx.de>
+Subject: Re: [RFC/PATCH] debug workqueue deadlocks with lockdep
+Message-ID: <20070705084323.GB2447@elte.hu>
+References: <1182969638.4769.56.camel@johannes.berg> <1183048429.4089.1.camel@johannes.berg> <1183052001.4089.2.camel@johannes.berg> <1183190728.7932.43.camel@earth4> <20070630114658.GA344@tv-sign.ru> <1183381393.4089.117.camel@johannes.berg> <20070703173112.GA108@tv-sign.ru> <1183549772.3812.10.camel@johannes.berg> <20070704125219.GA98@tv-sign.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <1174909200.1364.56.camel@dell-4965.jf.intel.com>
-	 <1175111599.5151.123.camel@johannes.berg>
-	 <46137FF2.6020203@linux.intel.com>
-	 <1182374019.3714.87.camel@johannes.berg>
-	 <20070718000140.GA26907@tuxdriver.com>
-	 <1184754598.4658.14.camel@johannes.berg>
-	 <1ba2fa240707180622p791168eax4fae712641e24cc4@mail.gmail.com>
-	 <1ba2fa240707180851y22ead404g1c87d73903e939e3@mail.gmail.com>
-	 <1184777775.8125.0.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070704125219.GA98@tv-sign.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/18/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2007-07-18 at 18:51 +0300, Tomas Winkler wrote:
->
-> > > HT aggregtion is extension of QoS. Multicast and broadcast frames are
-> > > not QoS frames and therefore such frames  want be incorporated into an
-> > > A-MSDU.
-> > Oops
-> > s/want/won't/
->
-> Ah, ok, I didn't bother to re-check. Mind doing a patch then that rips
-> out this code?
->
-It's on my list, thanks
-Tomas
-> johannes
->
->
+
+* Oleg Nesterov <oleg@tv-sign.ru> wrote:
+
+> > > Isn't it better to call lock_release() with nested == 1 ?
+> > 
+> > Not sure, Ingo?
+> 
+> Ingo, could you also explain the meaning of "nested" parameter? Looks 
+> like it is just unneeded, lock_release_nested() does a quick check and 
+> use lock_release_non_nested() when hlock is not on top of stack.
+
+hm, i forgot about that. We basically turned off all bad-nesting 
+warnings in lockdep due to false positives.
+
+the workqueue dependencies should all nest perfectly so please just use 
+nested==1, even though it's a dummy right now. We might want to turn 
+unlock-nest checking back on in the future. Or we'll remove that 
+parameter altogether.
+
+	Ingo
