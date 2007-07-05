@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:60179 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757516AbXG1X6h (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:34530 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757160AbXGEMdH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jul 2007 19:58:37 -0400
-Message-ID: <46ABD821.6060709@lwfinger.net>
-Date: Sat, 28 Jul 2007 18:58:25 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de
-Subject: Re: bcm43xx-mac80211: a fix for the shared interrupt problem
-References: <46aab9a4.pmEWFfaWaaFDLvZd%Larry.Finger@lwfinger.net> <200707281848.02554.mb@bu3sch.de> <46ABACC1.1020107@lwfinger.net> <200707290103.50077.mb@bu3sch.de>
-In-Reply-To: <200707290103.50077.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 5 Jul 2007 08:33:07 -0400
+Subject: Re: Multiple interfaces in mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Jon Smirl <jonsmirl@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240707050530q2d165232raa73455397546c62@mail.gmail.com>
+References: <9e4733910707041723g6f7a535ap1a62dd4473484d40@mail.gmail.com>
+	 <200707042305.40944.flamingice@sourmilk.net>
+	 <1ba2fa240707050530q2d165232raa73455397546c62@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7CuxtfMWOikVSt3ud8wz"
+Date: Thu, 05 Jul 2007 14:34:05 +0200
+Message-Id: <1183638845.3818.34.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> 
-> Ok, seems like we are missing some dummy reads to drain
-> this IRQ. I'll look at this tomorrow.
-> Thanks for tracking this down.
 
-As we shouldn't get any interrupts until STAT_STARTED is reached, I wondered why interrupts were 
-enabled so early. As far as I can tell, none of the steps from where interrupts are enabled to where 
-STAT_STARTED is set depend on having them enabled; therefore, I tried a patch that delayed the 
-enabling of interrupts until after we had reached STAT_STARTED. It works for all my systems.
+--=-7CuxtfMWOikVSt3ud8wz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I'm beginning to think that the shared interrupts have nothing to do with the problem, but it is 
-more likely caused by peculiarities in the PCMCIA bridge in my ancient laptop.
+On Thu, 2007-07-05 at 15:30 +0300, Tomas Winkler wrote:
+> Does anybody have/ think of a patch that removes the master interface
+> from the sub_if_list. It slows down the receive path.
 
-Larry
+Actually, we want to get rid of it completely. The missing piece to that
+is decoupling qdiscs from netdevs.
 
-Index: wireless-mb/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-===================================================================
---- wireless-mb.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-+++ wireless-mb/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-@@ -3014,13 +3014,13 @@ static int bcm43xx_wireless_core_start(s
-  		       dev->dev->irq);
-  		goto out;
-  	}
--	bcm43xx_interrupt_enable(dev, dev->irq_savedstate);
-  	bcm43xx_mac_enable(dev);
+johannes
 
-  	bcm43xx_periodic_tasks_setup(dev);
+--=-7CuxtfMWOikVSt3ud8wz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-  	ieee80211_start_queues(dev->wl->hw);
-  	bcm43xx_set_status(dev, BCM43xx_STAT_STARTED);
-+	bcm43xx_interrupt_enable(dev, dev->irq_savedstate);
-  	bcmdbg(dev->wl, "Wireless interface started\n");
-  out:
-  	return err;
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGjOU9/ETPhpq3jKURArCyAJ413iNhtknnsS7c3jwFrxFS6Qns6wCfVnJl
+U7MG65dld0WpgwaKISqKqXY=
+=02Pb
+-----END PGP SIGNATURE-----
+
+--=-7CuxtfMWOikVSt3ud8wz--
+
