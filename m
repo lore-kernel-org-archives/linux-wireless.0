@@ -1,84 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:48828 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933405AbXGaSea convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 14:34:30 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so121282ugf
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 11:34:29 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 22/24] rt2x00: Configure type during add_interface
-Date: Tue, 31 Jul 2007 20:37:40 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200707312037.40306.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:52709 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761098AbXGFQD4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2007 12:03:56 -0400
+Subject: Re: libertas (private) ioctls vs. nl80211
+From: Dan Williams <dcbw@redhat.com>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, marcelo@kvack.org
+In-Reply-To: <445f43ac0707060840k34d9554cta9ff11cad314db76@mail.gmail.com>
+References: <1181757483.29767.99.camel@johannes.berg>
+	 <20070614170901.GA13384@infradead.org>
+	 <20070614103836.23b07a72.akpm@linux-foundation.org>
+	 <20070614181307.GA16856@infradead.org>
+	 <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org>
+	 <20070614190936.GA28917@tuxdriver.com>
+	 <445f43ac0707060840k34d9554cta9ff11cad314db76@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 06 Jul 2007 12:08:05 -0400
+Message-Id: <1183738085.23402.2.camel@xo-13-A4-25.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From b10059fd3e2bbaef1f82ac60a177902bd19071dc Mon Sep 17 00:00:00 2001
-From: Ivo van Doorn <IvDoorn@gmail.com>
-Date: Tue, 31 Jul 2007 17:09:15 +0200
-Subject: [PATCH 22/24] rt2x00: Configure type during add_interface
+On Fri, 2007-07-06 at 08:40 -0700, Javier Cardona wrote:
+> John,
+> 
+> On 6/14/07, John W. Linville <linville@tuxdriver.com> wrote:
+> > I'm not aware of any project working on wireless mesh in mac80211 at
+> > the moment, serious or otherwise.  I think one would be worthwhile,
+> > but I don't know of anyone working on it.
+> 
+> We (cozybit Inc.) are working on an open implementation of 802.11s for
+> Linux, based on mac80211.  We implemented an early draft
+> implementation of 802.11s for the Marvell wireless interface used on
+> the One Laptop Per Child.  That implementation was done entirely in
+> firmware to take advantage of the unique capabilities of Marvell's
+> wireless device:  the system-on-chip wireless module enables the
+> laptop to act as a low-power, fully functional mesh point even when
+> the main CPU is off.
+> 
+> Our next goal is to do a reference implementation of the latest
+> 802.11s draft on Linux.  The hope is that it will help to achieve
+> early interoperability and convergence of the standard.  We are
+> seeking sponsors for the project.  So far Nortel has expressed strong
+> interest.
 
-When there was only 1 interface present which was configured
-as monitor interface the interface would fail to configure
-the device correctly. This resulted in too many frames to be dropped.
+Rock on.  If we can achieve convergence between the API that libertas
++mesh and the mac80211+mesh use, then we should both use the same
+cfg80211/nl80211 interface for both.
 
-This patch will add the configure_type and configure_packet_filter
-to the add_interface handler instead of the config_interface handler.
+Dan
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00mac.c |   19 ++++++++++++-------
- 1 files changed, 12 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00mac.c b/drivers/net/wireless/rt2x00mac.c
-index 9c6d043..205f10f 100644
---- a/drivers/net/wireless/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00mac.c
-@@ -173,6 +173,7 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
- {
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
- 	struct interface *intf = &rt2x00dev->interface;
-+	int retval;
- 
- 	/*
- 	 * We only support 1 non-monitor interface.
-@@ -195,7 +196,17 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
- 		intf->filter = 0;
- 	}
- 
--	return rt2x00lib_init_interface(rt2x00dev);
-+	retval = rt2x00lib_init_interface(rt2x00dev);
-+	if (retval)
-+		return retval;
-+
-+	/*
-+	 * Configure interface.
-+	 */
-+	rt2x00lib_config_type(rt2x00dev, conf->type);
-+	rt2x00lib_config_packet_filter(rt2x00dev, intf->filter);
-+
-+	return 0;
- }
- EXPORT_SYMBOL_GPL(rt2x00mac_add_interface);
- 
-@@ -290,12 +301,6 @@ int rt2x00mac_config_interface(struct ieee80211_hw *hw, int if_id,
- 	 */
- 	if (conf->type != IEEE80211_IF_TYPE_AP)
- 		memcpy(&intf->bssid, conf->bssid, ETH_ALEN);
--
--	/*
--	 * Enable configuration.
--	 */
--	rt2x00lib_config_type(rt2x00dev, conf->type);
--	rt2x00lib_config_packet_filter(rt2x00dev, intf->filter);
- 	rt2x00lib_config_bssid(rt2x00dev, intf->bssid);
- 
- 	/*
--- 
-1.5.2.4
+> More details will follow soon.
+> 
+> Javier
 
