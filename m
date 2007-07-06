@@ -1,121 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:49643 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763701AbXGaC7K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2007 22:59:10 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 2/7] iwlwifi: fix rate setting in beacon command
-Date: Tue, 31 Jul 2007 10:56:31 +0800
-Message-Id: <11858505994113-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <118585059814-git-send-email-yi.zhu@intel.com>
-References: <11858505963374-git-send-email-yi.zhu@intel.com>
- <118585059814-git-send-email-yi.zhu@intel.com>
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:25288 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753867AbXGFHWJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2007 03:22:09 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: monitor mode support for OLPC
+Date: Fri, 6 Jul 2007 09:22:06 +0200
+References: <468c3f32.081b600a.3817.5051@mx.google.com> <200707050842.01533.hs4233@mail.mn-solutions.de> <8e8340660707051037p56e10ec7u3aa4d76893e0b1ed@mail.gmail.com>
+In-Reply-To: <8e8340660707051037p56e10ec7u3aa4d76893e0b1ed@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200707060922.06110.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+Javier, I've also put this thread onto linux-wireless, maybe 
+people there are interested in this area, too.
 
-This patch fixed rate setting in beacon command. It removes
-invalid <= comparsion on unsinged values.
+> I use the echo-to-sys way because we are not setting any
+> existing interface into monitor mode but creating a new one.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwl-3945.c |    2 +-
- drivers/net/wireless/iwl-4965.c |   11 ++++++-----
- drivers/net/wireless/iwl-base.c |    6 +++---
- drivers/net/wireless/iwlwifi.h  |    2 +-
- 4 files changed, 11 insertions(+), 10 deletions(-)
+And that is the part that I'm not really liking.
 
-diff --git a/drivers/net/wireless/iwl-3945.c b/drivers/net/wireless/iwl-3945.c
-index 8a534e1..b71e987 100644
---- a/drivers/net/wireless/iwl-3945.c
-+++ b/drivers/net/wireless/iwl-3945.c
-@@ -2231,7 +2231,7 @@ int iwl_hw_set_hw_setting(struct iwl_priv *priv)
- }
- 
- int iwl_hw_get_beacon_cmd(struct iwl_priv *priv,
--			  struct iwl_frame *frame, u16 rate)
-+			  struct iwl_frame *frame, u8 rate)
- {
- 	struct iwl_tx_beacon_cmd *tx_beacon_cmd;
- 	int frame_size;
-diff --git a/drivers/net/wireless/iwl-4965.c b/drivers/net/wireless/iwl-4965.c
-index cc2dd49..9f4d83a 100644
---- a/drivers/net/wireless/iwl-4965.c
-+++ b/drivers/net/wireless/iwl-4965.c
-@@ -2718,14 +2718,11 @@ int iwl_hw_get_temperature(struct iwl_priv *priv)
- }
- 
- int iwl_hw_get_beacon_cmd(struct iwl_priv *priv,
--			  struct iwl_frame *frame, u16 rate)
-+			  struct iwl_frame *frame, u8 rate)
- {
- 	struct iwl_tx_beacon_cmd *tx_beacon_cmd;
- 	int frame_size;
- 
--	if ((rate == IWL_RATE_1M_PLCP) || (rate >= IWL_RATE_2M_PLCP))
--		rate |= RATE_MCS_CCK_MSK;
--
- 	tx_beacon_cmd = &frame->u.beacon;
- 	memset(tx_beacon_cmd, 0, sizeof(*tx_beacon_cmd));
- 
-@@ -2739,7 +2736,11 @@ int iwl_hw_get_beacon_cmd(struct iwl_priv *priv,
- 
- 	tx_beacon_cmd->tx.len = frame_size;
- 
--	tx_beacon_cmd->tx.rate.rate_n_flags = rate;
-+	if ((rate == IWL_RATE_1M_PLCP) || (rate >= IWL_RATE_2M_PLCP))
-+		tx_beacon_cmd->tx.rate.rate_n_flags = rate|RATE_MCS_CCK_MSK;
-+	else
-+		tx_beacon_cmd->tx.rate.rate_n_flags = rate;
-+
- 	tx_beacon_cmd->tx.tx_flags = (TX_CMD_FLG_SEQ_CTL_MSK |
- 				TX_CMD_FLG_TSF_MSK | TX_CMD_FLG_STA_RATE_MSK);
- 	return (sizeof(*tx_beacon_cmd) + frame_size);
-diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
-index 6e77a51..574d01c 100644
---- a/drivers/net/wireless/iwl-base.c
-+++ b/drivers/net/wireless/iwl-base.c
-@@ -1487,7 +1487,7 @@ static int iwl_send_beacon_cmd(struct iwl_priv *priv)
- {
- 	struct iwl_frame *frame;
- 	int frame_size, rc;
--	u16 rate;
-+	u8 rate;
- 
- 	frame = iwl_get_free_frame(priv);
- 
-@@ -1500,11 +1500,11 @@ static int iwl_send_beacon_cmd(struct iwl_priv *priv)
- 	if (!(priv->staging_rxon.flags & RXON_FLG_BAND_24G_MSK)) {
- 		rate = iwl_rate_get_lowest_plcp(priv->active_rate_basic &
- 						0xFF0);
--		if (rate <= 0)
-+		if (rate == IWL_INVALID_RATE)
- 			rate = IWL_RATE_6M_PLCP;
- 	} else {
- 		rate = iwl_rate_get_lowest_plcp(priv->active_rate_basic & 0xF);
--		if (rate <= 0)
-+		if (rate == IWL_INVALID_RATE)
- 			rate = IWL_RATE_1M_PLCP;
- 	}
- 
-diff --git a/drivers/net/wireless/iwlwifi.h b/drivers/net/wireless/iwlwifi.h
-index 6941031..dff6f6f 100644
---- a/drivers/net/wireless/iwlwifi.h
-+++ b/drivers/net/wireless/iwlwifi.h
-@@ -692,7 +692,7 @@ extern int iwl_tx_queue_free_tfd(struct iwl_priv *priv,
- extern int iwl_hw_tx_queue_init(struct iwl_priv *priv,
- 				struct iwl_tx_queue *txq);
- extern int iwl_hw_get_beacon_cmd(struct iwl_priv *priv,
--				 struct iwl_frame *frame, u16 rate);
-+				 struct iwl_frame *frame, u8 rate);
- extern int iwl_hw_get_rx_read(struct iwl_priv *priv);
- extern void iwl_hw_build_tx_cmd_rate(struct iwl_priv *priv,
- 				     struct iwl_cmd *cmd,
--- 
-1.5.2
+> This is the way Intel ipw2xxx drivers behave and I think it is
+> a cleaner solution to have separate interfaces, one for 802.3
+> and another one for 802.11+rtap
+
+The ipw2xxx driver is a driver that was developed mostly 
+out-of-kernel-tree. I'm not sure if it is a good template on how 
+to write a WLAN driver :-)
+
+My problem is really that did create another interface, rtapX. It 
+is that you also create a new API on how to monitor. And I have 
+the feeling that we have an inflation of APIs for turning on 
+monitor mode:
+
+* there is "iwconfig eth1 mode monitor"
+* there is madwifi's way of wlanconfig
+* there is ipw22xx's way of a .config and of modprobe "ipw2200
+  rtap_iface=1" and "ifconfig rtap0 up"
+* and now you
+  with /sys/class/net/{ethX,mshX}/device/libertas_rtap
+
+Somehow I fear that tools like kismet (or others!) won't honor 
+just-another-interface on how to turn monitor mode on.
+
+
+
+Why not do it this way:
+
+"iwmode eth1 mode monitor" turn's the device into monitor mode. 
+That's what by far the most drivers use. In this mode, the 
+device will send all frames to the host, e.g. all beacon frames. 
+After all, user space can filter:
+
+  tshark -i rtap0 -R '!(wlan.fc.subtype == 8)'
+
+If you think that this creates too much traffic on the USB bus, 
+then additionally you can use something 
+like /sys/class/net/{ethX,mshX}/device/rtap_filter and expose 
+your bitmap.
