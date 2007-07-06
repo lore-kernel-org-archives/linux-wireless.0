@@ -1,36 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:48768 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S938697AbXG3HIS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2007 03:08:18 -0400
-Date: Mon, 30 Jul 2007 12:50:31 +0530 (IST)
-From: Satyam Sharma <satyam@infradead.org>
-To: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-cc: Michael Buesch <mb@bu3sch.de>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	akpm@linux-foundation.org
-Subject: Re: [PATCH 1/5] Use mutex instead of semaphore in the Host AP  driver
-In-Reply-To: <20070730054004.GI3432@traven>
-Message-ID: <alpine.LFD.0.999.0707301247100.12730@enigma.security.iitk.ac.in>
-References: <20070729212909.GC3432@traven> <20070729213434.GD3432@traven>
- <200707300006.42397.mb@bu3sch.de> <alpine.LFD.0.999.0707300842350.10861@enigma.security.iitk.ac.in>
- <alpine.LFD.0.999.0707300904360.10861@enigma.security.iitk.ac.in>
- <20070730054004.GI3432@traven>
+Received: from madara.hpl.hp.com ([192.6.19.124]:59540 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760698AbXGFRpU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2007 13:45:20 -0400
+Date: Fri, 6 Jul 2007 10:32:30 -0700
+To: Joerg Pommnitz <pommnitz@yahoo.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Forwarded: 32 character ESSID broken with WE-21
+Message-ID: <20070706173230.GA19327@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <25290.17794.qm@web51406.mail.re2.yahoo.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <25290.17794.qm@web51406.mail.re2.yahoo.com>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jul 05, 2007 at 11:17:47PM -0700, Joerg Pommnitz wrote:
+> Jean,
+> I'd like to make you aware of the following problem I encountered with WE-21. I'm not sure whether this is a driver issue or an issue of the generic WE code. Do you have any idea on how to proceed? This is a real problem for me, because my ESSIDs are MD5 hashes which just happen to be 32 characters long. I can't upgrade to a newer kernel with this problem unresolved.
+>  
+> --  
+> Thanks and kind regards
+>  
+>        Joerg
 
+	Yep, something like this was reported to me not long ago.
+	The bug I'm talking about is only about *reading* a 32 char
+ESSID, you can set it fine, it uses it, it's just that it's not
+read. I know what causes it, I have a fix for it that will go in
+2.6.23, and if people are happy with it we will backport it to earlier
+kernels.
+	Now, I've also seen various drivers doing some funky stuff
+with ESSID, and trying to be too clever. So, there might be other bug
+lurking around.
+	Regards,
 
-On Mon, 30 Jul 2007, Matthias Kaehlcke wrote:
+	Jean
 
-> [...]
+> ----- Weitergeleitete Mail ----
+> Von: Joerg Pommnitz <pommnitz@yahoo.com>
+> An: linux-wireless@vger.kernel.org
+> Gesendet: Donnerstag, den 5. Juli 2007, 12:36:16 Uhr
+> Betreff: 32 character ESSID broken with WE-21
 > 
-> The Host AP driver uses a semaphore as mutex. Use the mutex API
-> instead of the (binary) semaphore.
+> Hello all,
+> for some time there was an open bug in Madwifi related to 32 charater ESSIDs.
+> Doing some investigations I found that the same bug is present with an ipw2200bg
+> WLAN interface and Linux 2.6.20 (I tried the Ubuntu-7.0.4 CD).
 > 
-> Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-
-Reviewed-by: Satyam Sharma <satyam@infradead.org>
+> Please try
+> iwconfig wlan0 essid 12345678901234567890123456789012
+> vs
+> iwconfig wlan0 essid 1234567890123456789012345678901
+> 
+> Using 32 character ESSIDs was fine with 2.6.18 (the last version I tested).
+>  
+> --  
+> Regards
+>  
+>        Joerg
+>  
+> See http://news.gmane.org/gmane.linux.drivers.madwifi.devel for the Madwifi bug report
+> See http://madwifi.org/ticket/930 for the Madwifi bug ticket
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+>       __________________________________  Alles was der Gesundheit und Entspannung dient. BE A BETTER MEDIZINMANN! www.yahoo.de/clever
+> 
+> 
+> 
+> 
+> 
+> 
+>       __________________________________  BE A BETTER INTERNET-GURU: Jetzt Frage stellen und einen von 44 iPods gewinnen! www.yahoo.de/clever
