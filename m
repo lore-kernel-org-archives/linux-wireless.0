@@ -1,29 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:45147 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753924AbXGPQhm (ORCPT
+Received: from smtp166.iad.emailsrvr.com ([207.97.245.166]:46791 "EHLO
+	smtp166.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752464AbXGFNwG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jul 2007 12:37:42 -0400
-Message-ID: <469B9ED0.3040907@warmcat.com>
-Date: Mon, 16 Jul 2007 17:37:36 +0100
-From: Andy Green <andy@warmcat.com>
+	Fri, 6 Jul 2007 09:52:06 -0400
+Message-ID: <468E48AF.10109@gentoo.org>
+Date: Fri, 06 Jul 2007 09:50:39 -0400
+From: Daniel Drake <dsd@gentoo.org>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6
-References: <20070712204137.GB14486@tuxdriver.com>
-In-Reply-To: <20070712204137.GB14486@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Andy Green <andy@warmcat.com>
+CC: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Subject: Re: Arrested Development
+References: <468DE699.9040708@warmcat.com>
+In-Reply-To: <468DE699.9040708@warmcat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> Dave,
+Andy Green wrote:
+> Second is a small patch for zd1211rw-mac80211 that fixes rate reporting
+> on radiotap rx, last sent here 11 June.
 > 
-> This request is based off net-2.6, as it requires a patch that is in
-> net-2.6 but not yet in Linus' tree (b3d88ad49a0623d09efcf998beb26288c8029f75).
+> http://www.spinics.net/lists/linux-wireless/msg02897.html
 
-Thanks John and everyone who helped... the injection patches are in the
-Linus git tree now :-D
+Oh and if you want to jump on ahead and save me some time, answering 
+these questions might help :)
 
--Andy
+Why isn't this needed for the softmac driver? (or is it broken there too?)
+
+Are we really sure we need another rate conversion function? there are 
+already a couple in the mac80211 driver, and one or 2 extra (for RTS/CTS 
+rate programming) in the softmac driver.
+
+Daniel
