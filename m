@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:11612 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.183]:36943 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763255AbXGSWHM (ORCPT
+	with ESMTP id S1751760AbXGFNWm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2007 18:07:12 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so792781wah
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jul 2007 15:07:12 -0700 (PDT)
-Message-ID: <d120d5000707191507y76dd6e4dw4ce14ffdd055ceaa@mail.gmail.com>
-Date: Thu, 19 Jul 2007 18:07:09 -0400
-From: "Dmitry Torokhov" <dmitry.torokhov@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Merging P54 upstream?
-Cc: linux-wireless@vger.kernel.org, flamingice@sourmilk.net
-In-Reply-To: <20070719212602.GA12449@tuxdriver.com>
+	Fri, 6 Jul 2007 09:22:42 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so261135wah
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jul 2007 06:22:41 -0700 (PDT)
+Message-ID: <9e4733910707060622h26926ce2mf13b36e3a539194a@mail.gmail.com>
+Date: Fri, 6 Jul 2007 09:22:41 -0400
+From: "Jon Smirl" <jonsmirl@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Multiple interfaces in mac80211
+Cc: "Michael Wu" <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1183727663.3779.4.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <d120d5000707191409y7602a2bdk3b9e67f5bce009d@mail.gmail.com>
-	 <20070719212602.GA12449@tuxdriver.com>
+References: <9e4733910707041723g6f7a535ap1a62dd4473484d40@mail.gmail.com>
+	 <1ba2fa240707050530q2d165232raa73455397546c62@mail.gmail.com>
+	 <9e4733910707050632m794944b5nb9ac9393b05dfa75@mail.gmail.com>
+	 <200707052154.24976.flamingice@sourmilk.net>
+	 <9e4733910707060533y3bd3b4a5v5f0441f0d6e76377@mail.gmail.com>
+	 <1183725861.3779.0.camel@johannes.berg>
+	 <9e4733910707060555s224b485ege5ed6024c7ca6b30@mail.gmail.com>
+	 <1183726738.3779.2.camel@johannes.berg>
+	 <9e4733910707060600x51f7b967p9ac6e1671f0713ef@mail.gmail.com>
+	 <1183727663.3779.4.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/19/07, John W. Linville <linville@tuxdriver.com> wrote:
-> On Thu, Jul 19, 2007 at 05:09:21PM -0400, Dmitry Torokhov wrote:
+On 7/6/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2007-07-06 at 09:00 -0400, Jon Smirl wrote:
 >
-> > I wonder if there are any plans to merge p54 driver into mainline
-> > anytime soon? For some reason p54 works much better for me on my
-> > FullMAC card than prism54 (with which card started locking up after ~5
-> > min heavyish use, such as FTP since about a year or a year and a half
-> > ago).
+> > > That's fishy. What hardware?
+> >
+> > Ralink rt2x00usb
 >
-> Michael Wu is the author of that driver.  I know he is working an
-> internship this summer, so he may be a bit busy.  Still, I sincerely
-> hope he finds the time to whip this driver into mergeable shape and
-> submits it for upstream soon.
->
+> Oh. I never had good experience with that. Talk to Ivo?
 
-OK, if he needs a guinea pig I should be available, especially for
-patches against tip of Linus's tree.
+What is the most reliable hardware for monitor mode? I have PCI and
+USB on my desktop. I need something that I know works so that I can
+debug these other adapters that aren't working quite right.
+
+>
+> johannes
+>
+>
 
 -- 
-Dmitry
+Jon Smirl
+jonsmirl@gmail.com
