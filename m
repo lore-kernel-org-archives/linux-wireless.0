@@ -1,64 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44455 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757965AbXGTHhn (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:40346 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751982AbXGFGwN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jul 2007 03:37:43 -0400
-Subject: Re: [PATCH 2/2] bcm43xx-mac80211: Fix reported rx frequency and  channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Larry Finger <larry.finger@lwfinger.net>
-In-Reply-To: <46A050B4.3060500@warmcat.com>
-References: <20070611103828.961999956@warmcat.com>
-	 <20070611103914.577674038@warmcat.com>
-	 <20070719191052.GC6603@tuxdriver.com> <200707192139.14930.mb@bu3sch.de>
-	 <46A050B4.3060500@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mAo+M1zopIaJ6jJb/bcp"
-Date: Fri, 20 Jul 2007 09:37:24 +0200
-Message-Id: <1184917044.23536.4.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 6 Jul 2007 02:52:13 -0400
+Message-ID: <468DE699.9040708@warmcat.com>
+Date: Fri, 06 Jul 2007 07:52:09 +0100
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Daniel Drake <dsd@gentoo.org>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Subject: Arrested Development
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi folks -
 
---=-mAo+M1zopIaJ6jJb/bcp
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I have a couple of outstanding patches that haven't gotten where they
+are going (there was a third one to do with bcm43xx radiotap frequency
+reporting, but that turned out to be more complex and my patch only
+solved it for some firmwares, so we can forget about my patch if not the
+problem).
 
-On Fri, 2007-07-20 at 07:05 +0100, Andy Green wrote:
+First is the radiotap set that seems to be generally approved of now in
+try #13 form.
 
-> After seeing patch tracking issues on arm-linux mailing list as well,
-> those not involving me, I started making a PHP project called
-> "patchfillet" for the purpose of extracting patches from a mailing list
-> and trying to track the patch lifecycle in an automated way driven by
-> the contents of the threads (eg, keywords like adding Acked-by: <blah>
-> in a reply) and maybe one day by looking at an upstream git repo commits
-> (I found that the Index: line in git-committed patches can change
-> destroying what would otherwise be a hash match).
+http://www.spinics.net/lists/linux-wireless/msg03053.html
 
-Sounds like `patchwork'.
+But it doesn't get elevated to wireless-git, I know because I check the
+web interface for it every day like a kid waiting for Christmas.  Is
+there something more I should be doing, or is it somehow waiting for a
+ripe moment in the release cycle (even to go in wireless-dev?)
 
-> I must say an explicit ACK or NAK for patches is a great idea.
+Second is a small patch for zd1211rw-mac80211 that fixes rate reporting
+on radiotap rx, last sent here 11 June.
 
-I'd also appreciate explicit davem-style "thanks I merged this" but hey,
-I get by checking the various git trees all the time :)
+http://www.spinics.net/lists/linux-wireless/msg02897.html
 
-johannes
+This did not receive any comment, despite it should be simple to verify
+it is currently broken and that this small patch fixes it, and I see
+other small patches acknowledged and accepted there in the meanwhile.
+Again, is there something more or different I should be doing?
 
---=-mAo+M1zopIaJ6jJb/bcp
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGoGY0/ETPhpq3jKURAjftAJ9F2tUKZGo7IQyRObZOWfYitKzzoACfbXo7
-rkndBLuH1JqxcuOZnRqzWh0=
-=pw6i
------END PGP SIGNATURE-----
-
---=-mAo+M1zopIaJ6jJb/bcp--
-
+-Andy
