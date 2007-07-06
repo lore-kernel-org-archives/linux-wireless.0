@@ -1,53 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.mail.elte.hu ([157.181.151.9]:40537 "EHLO mx2.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756338AbXGDMWL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2007 08:22:11 -0400
-Date: Wed, 4 Jul 2007 14:21:59 +0200
-From: Ingo Molnar <mingo@elte.hu>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Oleg Nesterov <oleg@tv-sign.ru>, Ingo Molnar <mingo@redhat.com>,
-	Arjan van de Ven <arjan@linux.intel.com>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Peter Zijlstra <a.p.zijlstra@chello.nl>,
-	Thomas Sattler <tsattler@gmx.de>
-Subject: Re: [RFC/PATCH] debug workqueue deadlocks with lockdep
-Message-ID: <20070704122159.GA21813@elte.hu>
-References: <1182969638.4769.56.camel@johannes.berg> <1183048429.4089.1.camel@johannes.berg> <1183052001.4089.2.camel@johannes.berg> <1183190728.7932.43.camel@earth4> <20070630114658.GA344@tv-sign.ru> <1183381393.4089.117.camel@johannes.berg> <20070703173112.GA108@tv-sign.ru> <1183549772.3812.10.camel@johannes.berg>
+Received: from nz-out-0506.google.com ([64.233.162.231]:16516 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756054AbXGFMeD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2007 08:34:03 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so185770nze
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jul 2007 05:34:02 -0700 (PDT)
+Message-ID: <9e4733910707060533y3bd3b4a5v5f0441f0d6e76377@mail.gmail.com>
+Date: Fri, 6 Jul 2007 08:33:56 -0400
+From: "Jon Smirl" <jonsmirl@gmail.com>
+To: "Michael Wu" <flamingice@sourmilk.net>
+Subject: Re: Multiple interfaces in mac80211
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200707052154.24976.flamingice@sourmilk.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1183549772.3812.10.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <9e4733910707041723g6f7a535ap1a62dd4473484d40@mail.gmail.com>
+	 <1ba2fa240707050530q2d165232raa73455397546c62@mail.gmail.com>
+	 <9e4733910707050632m794944b5nb9ac9393b05dfa75@mail.gmail.com>
+	 <200707052154.24976.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 7/6/07, Michael Wu <flamingice@sourmilk.net> wrote:
+> On Thursday 05 July 2007 06:32, Jon Smirl wrote:
+> > I'm debugging this because I've been trying for two days without
+> > success to get monitor mode to work. I have the adapter in promisc
+> > mode and the interface in monitor mode.  I can see directed and
+> > broadcast traffic with tcpdump, but not directed traffic for other
+> > nodes.
+> >
+> Outgoing packets from the wireless adapter are not reported unless you have
+> Johannes' radiotap patches. Is that what you're talking about?
 
-* Johannes Berg <johannes@sipsolutions.net> wrote:
+No, At the interface I am only seeing incoming packets that are to my
+mac address or a multicast address. It is like the interface is not in
+promiscous mode, but ifconfig shows PROMISC set.
 
-> > > @@ -257,7 +260,9 @@ static void run_workqueue(struct cpu_wor
-> > >
-> > >  		BUG_ON(get_wq_data(work) != cwq);
-> > >  		work_clear_pending(work);
-> > > +		lock_acquire(&cwq->wq->lockdep_map, 0, 0, 0, 2, _THIS_IP_);
-> > >  		f(work);
-> > > +		lock_release(&cwq->wq->lockdep_map, 0, _THIS_IP_);
-> >                                                    ^^^
-> > Isn't it better to call lock_release() with nested == 1 ?
-> 
-> Not sure, Ingo?
+Packets to other mac addresses are arriving at the receiver and I can
+trace them up to ieee80211_rx_monitor and onto netif_rx. Something in
+the higher level networking code is filtering out these promiscuous
+packets; but I don't know what was is doing it. It's not iptables
+which it isn't loaded.
 
-well, in this case the lock/unlock should nest perfectly (i.e. it should 
-always be balanced perfectly), so indeed calling with nested==1 leads to 
-stricter checking.
+My ethernet adapters work fine in promiscuous mode.  I have the same
+wireless PROMISC problem on both ralink and zd1211 adapters.
 
-non-nested unlocks occur when people do stuff like:
+Using the wireless-dev tree and wireless_tools.29. Wireless interface
+is in monitor mode.I'm using tcpdump -i wlan0 -v to to look for the
+packets.
 
-	spin_lock(&lock1);
-	spin_lock(&lock2);
-	spin_unlock(&lock1);
-	spin_unlock(&lock2);
+wlan0     Link encap:UNSPEC  HWaddr
+00-15-E9-2D-76-57-00-00-00-00-00-00-00-00-00-00
+          UP BROADCAST RUNNING PROMISC MULTICAST  MTU:1500  Metric:1
+          RX packets:135 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:11610 (11.3 KiB)  TX bytes:0 (0.0 b)
 
-the first unlock is not 'nested perfectly'. Now for the workqueue 
-dep_map this shouldnt be a legal combination, right?
+wlan0     IEEE 802.11g  Mode:Monitor  Frequency:2.457 GHz
+          Retry min limit:7   RTS thr:off   Fragment thr=2346 B
+          Link Quality:0  Signal level:0  Noise level:0
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
 
-	Ingo
+-- 
+Jon Smirl
+jonsmirl@gmail.com
