@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from a83-132-36-246.cpe.netcabo.pt ([83.132.36.246]:42249 "EHLO
-	taurus.digitalself.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751395AbXG3MlX (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.169]:3490 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756267AbXGFR5n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2007 08:41:23 -0400
-Subject: Re: Linux wireless stack question
-From: Alfredo Matos <alfredo.matos@digitalself.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: maali Al Janoob <mms82@hotmail.com>, tomasw@gmail.com,
+	Fri, 6 Jul 2007 13:57:43 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so756131ugf
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jul 2007 10:57:41 -0700 (PDT)
+To: "Jon Smirl" <jonsmirl@gmail.com>
+Subject: Re: Multiple interfaces in mac80211
+Date: Fri, 6 Jul 2007 20:00:32 +0200
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Michael Wu" <flamingice@sourmilk.net>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <1185795198.4006.89.camel@johannes.berg>
-References: <BAY111-F325FAED32F3D133BCD0C69B6ED0@phx.gbl>
-	 <1185795198.4006.89.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 30 Jul 2007 13:08:30 +0100
-Message-Id: <1185797310.12159.2.camel@pegasus>
-Mime-Version: 1.0
+References: <9e4733910707041723g6f7a535ap1a62dd4473484d40@mail.gmail.com> <1183726738.3779.2.camel@johannes.berg> <9e4733910707060600x51f7b967p9ac6e1671f0713ef@mail.gmail.com>
+In-Reply-To: <9e4733910707060600x51f7b967p9ac6e1671f0713ef@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200707062000.32741.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-07-30 at 13:33 +0200, Johannes Berg wrote:
-> On Sun, 2007-07-29 at 18:21 +0400, maali Al Janoob wrote:
+On Friday 06 July 2007, Jon Smirl wrote:
+> On 7/6/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Fri, 2007-07-06 at 08:55 -0400, Jon Smirl wrote:
+> >
+> > > Yes, only interface is monitor.
+> > >
+> > > Here is something else that is odd.
+> > >
+> > > Beacons are reporting channel 1...
+> > >
+> > > But I am tuned to channel 10.
+> >
+> > That's fishy. What hardware?
 > 
-> > What I want to do basically is changing the backoff algorithm to implement a 
-> > modified protocol in Linux (for my thesis). From what I know, the firmware 
-> > is inaccessible. Are you aware of any available source code for a firmware 
-> > of any driver?
-> 
-> Nope, none freely available. There are some efforts (prism54, bcm43xx)
-> to write free firmware for some devices, but none of them are in a stage
-> that could be used. (prism54: dunno, but I know it's not usable;
-> bcm43xx: only partially reverse engineered)
-> 
+> Ralink rt2x00usb
 
-What about atheros dadwifi [1] and openHAL [2] ? Could this help ?
+Thats odd, are only beacons reported to be on channel 1?
+Because the channel for rx frames is automatically set when
+the channel is configured by mac80211.
 
-Alfredo.
+Directly after rt2x00lib has send the channel switch event to the
+driver the rt2x00dev->rx_status.channel value is updated...
 
-[1] - http://madwifi.org/wiki/DadWifi
-[2] - http://madwifi.org/wiki/OpenHAL
-
+Ivo
