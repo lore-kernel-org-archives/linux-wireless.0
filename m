@@ -1,34 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:21906 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750724AbXGILKz (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60193 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760800AbXGFLHq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2007 07:10:55 -0400
-Received: from lin01.mn-solutions.de (pD95F8A4E.dip0.t-ipconnect.de [217.95.138.78])
-	by s131.mittwaldmedien.de (Postfix) with ESMTP id 2DE658B1545
-	for <linux-wireless@vger.kernel.org>; Mon,  9 Jul 2007 13:10:54 +0200 (CEST)
-Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id 6F09F1E002B
-	for <linux-wireless@vger.kernel.org>; Mon,  9 Jul 2007 13:10:49 +0200 (CEST)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] remove duplicated ioctl entries in compat_ioctl.c
-Date: Mon, 9 Jul 2007 13:10:48 +0200
-References: <20070709193744.D021.MOKUNO@sm.sony.co.jp>
-In-Reply-To: <20070709193744.D021.MOKUNO@sm.sony.co.jp>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200707091310.49149.hs4233@mail.mn-solutions.de>
+	Fri, 6 Jul 2007 07:07:46 -0400
+Subject: Re: [PATCH] libertas: monitor mode support for OLPC
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <200707060922.06110.hs4233@mail.mn-solutions.de>
+References: <468c3f32.081b600a.3817.5051@mx.google.com>
+	 <200707050842.01533.hs4233@mail.mn-solutions.de>
+	 <8e8340660707051037p56e10ec7u3aa4d76893e0b1ed@mail.gmail.com>
+	 <200707060922.06110.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-br4DSBVBAiWMTV74WY2t"
+Date: Fri, 06 Jul 2007 13:08:46 +0200
+Message-Id: <1183720126.3818.122.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> This patch removes some duplicated wireless ioctl entries in
-> the array 'struct ioctl_trans ioctl_start[]' of
-> fs/compat_ioctl.c
-> -COMPATIBLE_IOCTL(SIOCSIWSCAN)
->  COMPATIBLE_IOCTL(SIOCSIWRATE)
->  COMPATIBLE_IOCTL(SIOCGIWRATE)
 
-Maybe you remove the double COMPATIBLE_IOCTL(SIOCGIWRATE) as 
-well?
+--=-br4DSBVBAiWMTV74WY2t
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+Javier, Holger,
+
+> Why not do it this way:
+>=20
+> "iwmode eth1 mode monitor" turn's the device into monitor mode.=20
+> That's what by far the most drivers use. In this mode, the=20
+> device will send all frames to the host, e.g. all beacon frames.=20
+> After all, user space can filter:
+>=20
+>   tshark -i rtap0 -R '!(wlan.fc.subtype =3D=3D 8)'
+
+I suppose you really should be using cfg80211 to create and change the
+mode of new interfaces (and allow only one monitor and/or one STA
+interface). Then you actually get a sysfs file for free, and as a bonus
+it's the same one mac80211 uses :)
+
+johannes
+
+--=-br4DSBVBAiWMTV74WY2t
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGjiK+/ETPhpq3jKURAtTnAJ4nvxihlkVhGXyRDUiPzQw2NzeOjQCgk6Uc
+Va0fMYfKcQZTKKA/JyXHujk=
+=Wotp
+-----END PGP SIGNATURE-----
+
+--=-br4DSBVBAiWMTV74WY2t--
+
