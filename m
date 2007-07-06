@@ -1,37 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp166.iad.emailsrvr.com ([207.97.245.166]:46791 "EHLO
-	smtp166.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752464AbXGFNwG (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:5362 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757283AbXGFIST (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2007 09:52:06 -0400
-Message-ID: <468E48AF.10109@gentoo.org>
-Date: Fri, 06 Jul 2007 09:50:39 -0400
-From: Daniel Drake <dsd@gentoo.org>
+	Fri, 6 Jul 2007 04:18:19 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: monitor mode support for OLPC
+Date: Fri, 6 Jul 2007 10:18:16 +0200
+Cc: libertas-dev@lists.infradead.org
+References: <468c3f32.081b600a.3817.5051@mx.google.com> <8e8340660707051037p56e10ec7u3aa4d76893e0b1ed@mail.gmail.com> <200707060922.06110.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200707060922.06110.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-To: Andy Green <andy@warmcat.com>
-CC: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Ulrich Kunitz <kune@deine-taler.de>
-Subject: Re: Arrested Development
-References: <468DE699.9040708@warmcat.com>
-In-Reply-To: <468DE699.9040708@warmcat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200707061018.16923.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andy Green wrote:
-> Second is a small patch for zd1211rw-mac80211 that fixes rate reporting
-> on radiotap rx, last sent here 11 June.
-> 
-> http://www.spinics.net/lists/linux-wireless/msg02897.html
+> My problem is really that did create another interface, rtapX.
 
-Oh and if you want to jump on ahead and save me some time, answering 
-these questions might help :)
+Oh, this should have been:
 
-Why isn't this needed for the softmac driver? (or is it broken there too?)
-
-Are we really sure we need another rate conversion function? there are 
-already a couple in the mac80211 driver, and one or 2 extra (for RTS/CTS 
-rate programming) in the softmac driver.
-
-Daniel
+  My problem isn't really that you did create another interface,
+  rtapX.
