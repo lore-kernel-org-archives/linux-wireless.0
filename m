@@ -1,67 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:22848 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756166AbXGZD3D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 23:29:03 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Andy Green <andy@warmcat.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH] iwlwifi: provide frequency to radiotap monitor not channel index
-Date: Thu, 26 Jul 2007 11:26:41 +0800
-Message-Id: <11854204053593-git-send-email-yi.zhu@intel.com>
+Received: from mga05.intel.com ([192.55.52.89]:11519 "EHLO
+	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759113AbXGFV0G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2007 17:26:06 -0400
+Message-ID: <468EB36C.10508@linux.intel.com>
+Date: Fri, 06 Jul 2007 14:26:04 -0700
+From: mabbas <mabbas@linux.intel.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: repeat scanning could cause disassoc
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andy Green <andy@warmcat.com>
-
-iwlwifi wrongly provides the channel index to the radiotap header
-on Monitor mode. This results in tcpdump showing "6MHz" for example.
-
-This patch arranges to send the frequency in MHz instead eg, 2437MHz
-
-Signed-off-by: Andy Green <andy@warmcat.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwl-base.c |    5 ++---
- drivers/net/wireless/iwlwifi.h  |    2 +-
- 2 files changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
-index a1ebc2a..8671891 100644
---- a/drivers/net/wireless/iwl-base.c
-+++ b/drivers/net/wireless/iwl-base.c
-@@ -3120,7 +3120,6 @@ void iwl_handle_data_packet_monitor(struct iwl_priv *priv,
- 	 * the information provided in the skb from the hardware */
- 	s8 signal = stats->ssi;
- 	s8 noise = 0;
--	u16 channel = stats->channel;
- 	int rate = stats->rate;
- 	u64 tsf = stats->mactime;
- 
-@@ -3162,8 +3161,8 @@ void iwl_handle_data_packet_monitor(struct iwl_priv *priv,
- 	iwl_rt->rt_dbmsignal = signal;
- 	iwl_rt->rt_dbmnoise = noise;
- 
--	/* Convert the channel data and set the flags */
--	iwl_rt->rt_channel = cpu_to_le16(channel);
-+	/* Convert the channel frequency and set the flags */
-+	iwl_rt->rt_channelMHz = cpu_to_le16(stats->freq);
- 	if (!(phy_flags & RX_RES_PHY_FLAGS_BAND_24_MSK)) {
- 		iwl_rt->rt_chbitmask =
- 		    cpu_to_le16((IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ));
-diff --git a/drivers/net/wireless/iwlwifi.h b/drivers/net/wireless/iwlwifi.h
-index a86fc48..58e3ea6 100644
---- a/drivers/net/wireless/iwlwifi.h
-+++ b/drivers/net/wireless/iwlwifi.h
-@@ -104,7 +104,7 @@ struct iwl_rt_rx_hdr {
- 	__le64 rt_tsf;		/* TSF */
- 	u8 rt_flags;		/* radiotap packet flags */
- 	u8 rt_rate;		/* rate in 500kb/s */
--	__le16 rt_channel;	/* channel in mHz */
-+	__le16 rt_channelMHz;	/* channel in MHz */
- 	__le16 rt_chbitmask;	/* channel bitfield */
- 	s8 rt_dbmsignal;	/* signal in dBm, kluged to signed */
- 	s8 rt_dbmnoise;
--- 
-1.5.2
+Hi
+If I keep repeating scanning for like 4 times in the raw, the mac80211 
+can disassociated because No ProbeResp.
+looking at the rx patch if we are scanning we wont pass 
+ieee80211_rx_h_passive_scan which only will deliver
+beacon and probe request, which what we want, except that we only update 
+last_rx in the function
+ieee80211_rx_h_sta_process which is two functions down rx handlers.
+In iwlwifi we do perform hw scan, in this command if scan takes a long 
+time, and we are associated, it will tunes to associated channel to
+allow getting beacons for a period of time, then continue with scanning. 
+we do receive beacons on the associated
+channel but mac80211 never update last_rx causing the disassociation.
+I wonder if we can move ieee80211_rx_h_sta_process before 
+ieee80211_rx_h_passive_scan or at least the rx_last
+update part.
+Thanks
+Mohamed
