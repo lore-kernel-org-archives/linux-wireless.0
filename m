@@ -1,62 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:44946 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755968AbXGSUCC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2007 16:02:02 -0400
-Subject: Re: libertas warnings & bugs
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1184767237.11352.2.camel@johannes.berg>
-References: <1184767237.11352.2.camel@johannes.berg>
-Content-Type: text/plain; charset=utf-8
-Date: Thu, 19 Jul 2007 16:00:44 -0400
-Message-Id: <1184875244.3179.30.camel@xo-13-A4-25.localdomain>
-Mime-Version: 1.0
+Received: from wa-out-1112.google.com ([209.85.146.182]:48767 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760122AbXGFShc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2007 14:37:32 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so376379wah
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jul 2007 11:37:32 -0700 (PDT)
+Message-ID: <9e4733910707061137i5baf2d3fw7ad1469f46632520@mail.gmail.com>
+Date: Fri, 6 Jul 2007 14:37:32 -0400
+From: "Jon Smirl" <jonsmirl@gmail.com>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Subject: Re: Multiple interfaces in mac80211
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Michael Wu" <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200707062000.32741.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <9e4733910707041723g6f7a535ap1a62dd4473484d40@mail.gmail.com>
+	 <1183726738.3779.2.camel@johannes.berg>
+	 <9e4733910707060600x51f7b967p9ac6e1671f0713ef@mail.gmail.com>
+	 <200707062000.32741.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-07-18 at 16:00 +0200, Johannes Berg wrote:
-> Hi Dan,
->=20
-> As promised a few more warnings from libertas from my ppc64 build.
->=20
-> drivers/net/wireless/libertas/cmd.c: In function =E2=80=98wlan_cmd_80=
-2_11_set_wep=E2=80=99:
-> drivers/net/wireless/libertas/cmd.c:189: warning: large integer impli=
-citly truncated to unsigned type
-> drivers/net/wireless/libertas/cmd.c:195: warning: large integer impli=
-citly truncated to unsigned type
+On 7/6/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> On Friday 06 July 2007, Jon Smirl wrote:
+> > On 7/6/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > > On Fri, 2007-07-06 at 08:55 -0400, Jon Smirl wrote:
+> > >
+> > > > Yes, only interface is monitor.
+> > > >
+> > > > Here is something else that is odd.
+> > > >
+> > > > Beacons are reporting channel 1...
+> > > >
+> > > > But I am tuned to channel 10.
+> > >
+> > > That's fishy. What hardware?
+> >
+> > Ralink rt2x00usb
+>
+> Thats odd, are only beacons reported to be on channel 1?
+> Because the channel for rx frames is automatically set when
+> the channel is configured by mac80211.
 
-=46ixed this one.
+The channel field appears to be uninitialized for beacon frames. When
+I booted this time it is displaying channel 9 and I am on channel 10.
 
-> The code is:
-> wep->keytype[i] =3D cpu_to_le16(cmd_type_wep_40_bit);
->=20
-> and it's fairly obvious why it warns: keytype[i] is a u8 so always en=
-ds
-> up 0...
->=20
-> drivers/net/wireless/libertas/debugfs.c: In function =E2=80=98liberta=
-s_getscantable=E2=80=99:
-> drivers/net/wireless/libertas/debugfs.c:85: warning: format =E2=80=98=
-%08llx=E2=80=99 expects type =E2=80=98long long unsigned int=E2=80=99, =
-but argument 4 has type =E2=80=98u64=E2=80=99
-> drivers/net/wireless/libertas/debugfs.c:85: warning: format =E2=80=98=
-%08llx=E2=80=99 expects type =E2=80=98long long unsigned int=E2=80=99, =
-but argument 4 has type =E2=80=98u64=E2=80=99
->=20
-> probably just needs a cast to unsigned long long.
+Other frames show channel 10 as expected.
 
-You probably want the 'libertas' branch, where this one doesn't
-appear...  master is plain linus kernels.  The layout was suggested by
-linville but maybe it's confusing?
-
-Dan
+>
+> Directly after rt2x00lib has send the channel switch event to the
+> driver the rt2x00dev->rx_status.channel value is updated...
+>
+> Ivo
+>
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jon Smirl
+jonsmirl@gmail.com
