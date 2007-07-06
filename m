@@ -1,81 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:48192 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932189AbXGaSeT convert rfc822-to-8bit (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:14901 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752683AbXGFEyc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 14:34:19 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so121179ugf
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 11:34:19 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 16/24] rt2x00: Call all configure handlers during resume
-Date: Tue, 31 Jul 2007 20:37:29 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+	Fri, 6 Jul 2007 00:54:32 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "Jon Smirl" <jonsmirl@gmail.com>
+Subject: Re: Multiple interfaces in mac80211
+Date: Thu, 5 Jul 2007 21:54:20 -0700
+Cc: linux-wireless@vger.kernel.org
+References: <9e4733910707041723g6f7a535ap1a62dd4473484d40@mail.gmail.com> <1ba2fa240707050530q2d165232raa73455397546c62@mail.gmail.com> <9e4733910707050632m794944b5nb9ac9393b05dfa75@mail.gmail.com>
+In-Reply-To: <9e4733910707050632m794944b5nb9ac9393b05dfa75@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200707312037.29645.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart4403587.AQPdKWYTVV";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200707052154.24976.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 4800d5b02a237838913df950e557cf17f2f70dde Mon Sep 17 00:00:00 2001
-From: Ivo van Doorn <IvDoorn@gmail.com>
-Date: Sun, 29 Jul 2007 14:19:31 +0200
-Subject: [PATCH 16/24] rt2x00: Call all configure handlers during resume
+--nextPart4403587.AQPdKWYTVV
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-All configure handlers should be called during
-resume operation to bring the device back into
-the correct state to make the device work again.
+On Thursday 05 July 2007 06:32, Jon Smirl wrote:
+> I'm debugging this because I've been trying for two days without
+> success to get monitor mode to work. I have the adapter in promisc
+> mode and the interface in monitor mode.  I can see directed and
+> broadcast traffic with tcpdump, but not directed traffic for other
+> nodes.
+>
+Outgoing packets from the wireless adapter are not reported unless you have=
+=20
+Johannes' radiotap patches. Is that what you're talking about?
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00dev.c |   24 ++++++++++++++++++++++--
- 1 files changed, 22 insertions(+), 2 deletions(-)
+=2DMichael Wu
 
-diff --git a/drivers/net/wireless/rt2x00dev.c b/drivers/net/wireless/rt2x00dev.c
-index 0220107..4989cdb 100644
---- a/drivers/net/wireless/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00dev.c
-@@ -1078,6 +1078,9 @@ EXPORT_SYMBOL_GPL(rt2x00lib_suspend);
- 
- int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev)
- {
-+	const struct rt2x00lib_ops *lib = rt2x00dev->ops->lib;
-+	struct ieee80211_conf *conf = &rt2x00dev->hw->conf;
-+	struct interface *intf = &rt2x00dev->interface;
- 	int retval;
- 
- 	NOTICE(rt2x00dev, "Waking up.\n");
-@@ -1095,10 +1098,27 @@ int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev)
- 		return retval;
- 
- 	/*
-+	 * Configure the device to the original state.
-+	 */
-+	lib->config_type(rt2x00dev, intf->type);
-+	lib->config_promisc(rt2x00dev, test_bit(INTERFACE_ENABLED_PROMISC,
-+						&rt2x00dev->flags));
-+	lib->config_bssid(rt2x00dev, intf->bssid);
-+	lib->config_phymode(rt2x00dev, conf->phymode);
-+	lib->config_channel(rt2x00dev, conf->channel_val,
-+			    conf->channel, conf->power_level);
-+	lib->config_antenna(rt2x00dev, conf->antenna_sel_tx,
-+			    conf->antenna_sel_rx);
-+	lib->config_duration(rt2x00dev,
-+			     (conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME),
-+			     conf->beacon_int);
-+	lib->reset_tuner(rt2x00dev);
-+
-+	/*
- 	 * We only need to continue when in Master or Ad-hoc mode.
- 	 */
--	if (rt2x00dev->interface.type != IEEE80211_IF_TYPE_AP &&
--	    rt2x00dev->interface.type != IEEE80211_IF_TYPE_IBSS)
-+	if (intf->type != IEEE80211_IF_TYPE_AP &&
-+	    intf->type != IEEE80211_IF_TYPE_IBSS)
- 		return 0;
- 
- 	/*
--- 
-1.5.2.4
+--nextPart4403587.AQPdKWYTVV
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGjcsAT3Oqt9AH4aERAu+/AKCUW+YUMwFx7+BbumvggUX1BeZxxgCeNZz1
+G3n5cQW3CU/+SJ529Ix/JV4=
+=Bjyh
+-----END PGP SIGNATURE-----
+
+--nextPart4403587.AQPdKWYTVV--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
