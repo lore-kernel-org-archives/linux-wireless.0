@@ -1,49 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:59667 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752095AbXGZMKx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2007 08:10:53 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 27DDC8CAD8
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2007 14:10:49 +0200 (CEST)
-Received: from meerkat.home.warmcat.com (unknown [192.168.0.242])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id 2922D1044E
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2007 12:12:35 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by meerkat.home.warmcat.com (Postfix) with ESMTP id AB76013639A2
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2007 13:10:51 +0100 (BST)
-From: warmcat <andy@warmcat.com>
-Subject: [PATCH 1/2] Add get_unaligned to ieee80211_get_radiotap_len
-To: linux-wireless@vger.kernel.org
-Date: Thu, 26 Jul 2007 13:10:51 +0100
-Message-ID: <20070726121051.11153.36250.stgit@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([66.187.233.31]:44777 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758790AbXGFDr3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jul 2007 23:47:29 -0400
+Subject: Re: [PATCH] libertas: remove adapter->TxLockFlag
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <200707031746.47550.hs4233@mail.mn-solutions.de>
+References: <200707031746.47550.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Thu, 05 Jul 2007 23:52:14 -0400
+Message-Id: <1183693934.24555.39.camel@xo-13-A4-25.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_get_radiotap_len() tries to dereference radiotap length without
-taking care that it is completely unaligned and get_unaligned()
-is required.
+On Tue, 2007-07-03 at 17:46 +0200, Holger Schurig wrote:
+> TxLockFlag was only set to 0, to no other value at all. So it's a candiate
+> for removing.
 
-Signed-off-by: Andy Green <andy@warmcat.com>
----
+Not committing until the radiotap/monitor mode stuff gets sorted out.
 
- net/mac80211/ieee80211.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Dan
 
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index a42e70e..6f5c001 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -350,7 +350,7 @@ static int ieee80211_get_radiotap_len(struct sk_buff *skb)
- 	struct ieee80211_radiotap_header *hdr =
- 		(struct ieee80211_radiotap_header *) skb->data;
- 
--	return le16_to_cpu(hdr->it_len);
-+	return le16_to_cpu(get_unaligned(&hdr->it_len));
- }
- 
- #ifdef CONFIG_MAC80211_LOWTX_FRAME_DUMP
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+> ---
+>  drivers/net/wireless/libertas/dev.h  |    1 -
+>  drivers/net/wireless/libertas/main.c |    2 +-
+>  drivers/net/wireless/libertas/tx.c   |    1 -
+>  3 files changed, 1 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+> index cfb6d71..125e882 100644
+> --- a/drivers/net/wireless/libertas/dev.h
+> +++ b/drivers/net/wireless/libertas/dev.h
+> @@ -285,7 +285,6 @@ struct _wlan_adapter {
+>  
+>  	/** Tx-related variables (for single packet tx) */
+>  	struct sk_buff *currenttxskb;
+> -	u16 TxLockFlag;
+>  
+>  	/** NIC Operation characteristics */
+>  	u16 currentpacketfilter;
+> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+> index 1548760..af56db6 100644
+> --- a/drivers/net/wireless/libertas/main.c
+> +++ b/drivers/net/wireless/libertas/main.c
+> @@ -448,7 +448,7 @@ static int libertas_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+>  
+>  	lbs_deb_enter(LBS_DEB_NET);
+>  
+> -	if (priv->dnld_sent || priv->adapter->TxLockFlag) {
+> +	if (priv->dnld_sent) {
+>  		priv->stats.tx_dropped++;
+>  		goto done;
+>  	}
+> diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
+> index 85f7bfb..3100d30 100644
+> --- a/drivers/net/wireless/libertas/tx.c
+> +++ b/drivers/net/wireless/libertas/tx.c
+> @@ -198,7 +198,6 @@ void libertas_send_tx_feedback(wlan_private * priv)
+>  	    (1 + adapter->txretrycount - try_count) : 0;
+>  	libertas_upload_rx_packet(priv, adapter->currenttxskb);
+>  	adapter->currenttxskb = NULL;
+> -	priv->adapter->TxLockFlag = 0;
+>  	if (priv->adapter->connect_status == LIBERTAS_CONNECTED) {
+>  		netif_wake_queue(priv->dev);
+>  		if (priv->mesh_dev)
 
