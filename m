@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:55730 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755932AbXGYUsn convert rfc822-to-8bit (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.249]:23408 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753992AbXGGDXs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 16:48:43 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so420021ugf
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2007 13:48:43 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 11/11] rt2x00: Release 2.0.4
-Date: Wed, 25 Jul 2007 22:50:30 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+	Fri, 6 Jul 2007 23:23:48 -0400
+Received: by an-out-0708.google.com with SMTP id d31so83264and
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jul 2007 20:23:47 -0700 (PDT)
+Message-ID: <45b4f7d90707062023i25dfb913s3e22b404490f245c@mail.gmail.com>
+Date: Fri, 6 Jul 2007 22:23:46 -0500
+From: "Benjamin Bryant" <blbryant@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: problem installing mac80211 on Fedora Core 7
+In-Reply-To: <45b4f7d90707062022j384934a1neb431bad641ef5b1@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200707252250.30340.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <45b4f7d90707062022j384934a1neb431bad641ef5b1@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From dc6848220127ce38df3145d754732902d3edf51d Mon Sep 17 00:00:00 2001
-From: Ivo van Doorn <IvDoorn@gmail.com>
-Date: Wed, 25 Jul 2007 22:08:38 +0200
-Subject: [PATCH 11/11] rt2x00: Release 2.0.4
+I'm getting the following output:
 
-A new rt2x00 release :)
+# make patch_kernel
+Patching from compatible/ to /lib/modules/2.6.21-1.3228.fc7/source/:
+ + Replaced 57 files.
+Checking for required kernel build updates...
+ - checking net/Kconfig and net/Makefile...
+ - checking net/core/Makefile for old 'wireless'...
+ - checking net/core/dev.c for wireless_proc_init vs. wext_proc_init...
+grep: /lib/modules/2.6.21-1.3228.fc7/source/net/core/dev.c: No such
+file or directory
+ - checking net/core/dev.c for wireless_process_ioctl v. wext_handle_ioctl...
+grep: /lib/modules/2.6.21-1.3228.fc7/source/net/core/dev.c: No such
+file or directory
+ - checking net/core/dev.c for linxu/wireless.h v. net/wext.h...
+grep: /lib/modules/2.6.21-1.3228.fc7/source/net/core/dev.c: No such
+file or directory
+ - checking net/core/dev.c for wireless_proc_init vs. wext_proc_init...
+grep: /lib/modules/2.6.21-1.3228.fc7/source/net/core/dev.c: No such
+file or directory
+ - checking net/Makefile and Kconfig for old 'd80211'...
+Done.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/mac80211/rt2x00/rt2x00.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+What am I missing?
 
-diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2x00.h b/drivers/net/wireless/mac80211/rt2x00/rt2x00.h
-index 5be5956..cca9160 100644
---- a/drivers/net/wireless/mac80211/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/mac80211/rt2x00/rt2x00.h
-@@ -42,7 +42,7 @@
-  * Module information.
-  * DRV_NAME should be set within the individual module source files.
-  */
--#define DRV_VERSION	"2.0.3"
-+#define DRV_VERSION	"2.0.4"
- #define DRV_PROJECT	"http://rt2x00.serialmonkey.com"
- 
- /*
--- 
-1.5.2.2
-
+Ben
