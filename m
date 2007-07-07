@@ -1,57 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.230]:12251 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758333AbXGYVx6 (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:41160 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750962AbXGGG4U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 17:53:58 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so307348wxd
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2007 14:53:57 -0700 (PDT)
-Message-ID: <1ba2fa240707251453j6b13f5afo855e062e8ad15aa1@mail.gmail.com>
-Date: Thu, 26 Jul 2007 00:53:57 +0300
-From: "Tomas Winkler" <tomas.winkler@intel.com>
-To: "Jeff Garzik" <jeff@garzik.org>
-Subject: Re: Please pull patch-bomb for iwlwifi
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <46A7C01F.2050308@garzik.org>
+	Sat, 7 Jul 2007 02:56:20 -0400
+Message-ID: <468F390F.9090206@warmcat.com>
+Date: Sat, 07 Jul 2007 07:56:15 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <20070725085754.GA670@mail.intel.com>
-	 <20070725200721.GH7093@tuxdriver.com>
-	 <1ba2fa240707251400l784cbad7ja0003b24017c6535@mail.gmail.com>
-	 <46A7C01F.2050308@garzik.org>
+To: Benjamin Bryant <blbryant@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: problem installing mac80211 on Fedora Core 7
+References: <45b4f7d90707062022j384934a1neb431bad641ef5b1@mail.gmail.com> <45b4f7d90707062023i25dfb913s3e22b404490f245c@mail.gmail.com>
+In-Reply-To: <45b4f7d90707062023i25dfb913s3e22b404490f245c@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/26/07, Jeff Garzik <jeff@garzik.org> wrote:
-> Tomas Winkler wrote:
-> > I know you've asked us to review the already submitted 11n/HT patches.
-> > I'm suggesting that we just patch over them otherwise we lost driver
-> > stability and delay the whole process even more.  I'm not happy with
-> > this solution myself but to bring the complete solution at once will
-> > make us silent for another period.
->
->
-> What do you mean, "patch over them"?
->
-> If this means dual solutions for the same problem, it's not very enticing.
->
-No, I mean gradually cleaning up the patches. Theoretically first I
-want to change data structures, then the interfaces, and finally
-cleaning up flows. but in bottom line I cannot afford to lost
-stability of the whole project for the period it takes to fix,
-currently driver works. Or first solution was narrowed to STA and we
-want to make it works better in IBSS and AP mode as well.
-I guess the community doesn't really care about our internal
-constrains but we all live in time and space.
+Benjamin Bryant wrote:
 
-Tomas
+> I'm getting the following output:
+> 
+> # make patch_kernel
+> Patching from compatible/ to /lib/modules/2.6.21-1.3228.fc7/source/:
+> + Replaced 57 files.
+> Checking for required kernel build updates...
+> - checking net/Kconfig and net/Makefile...
+> - checking net/core/Makefile for old 'wireless'...
+> - checking net/core/dev.c for wireless_proc_init vs. wext_proc_init...
+> grep: /lib/modules/2.6.21-1.3228.fc7/source/net/core/dev.c: No such
 
->         Jeff
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Hi -
+
+The kernel-devel package doesn't include all the kernel sources, just
+include files and so on.  You need the kernel SRPM installed to get all
+the c source files.
+
+Since Fedora kernels already have a recent mac80211 in them, depending
+on what you want to achieve you may be better off either
+
+ - skipping trying to cook mac80211 at all (I guess this is from iwlwifi)
+
+ - using the latest Fedora development kernel with
+
+     yum --enablerepo development update kernel
+
+ - or using the wireless-dev git with
+
+git clone
+git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-dev.git
+
+and copying over /boot/config-<something> as .config in there so you
+will be working with the most recent mac80211 all the time.
+
+-Andy
