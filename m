@@ -1,49 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:41243 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S935526AbXGZR4g (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49972 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751866AbXGGQkR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2007 13:56:36 -0400
-Message-ID: <46A8E044.6080206@lwfinger.net>
-Date: Thu, 26 Jul 2007 12:56:20 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] bcm43xx-mac80211: Fix specs typo for baseband attenuation
-References: <46a8ccbd.wNQamvQ9e0RJ0XZK%Larry.Finger@lwfinger.net> <20070726172138.GA6068@tuxdriver.com>
-In-Reply-To: <20070726172138.GA6068@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sat, 7 Jul 2007 12:40:17 -0400
+Subject: Re: Errors when firmware is missing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jon Smirl <jonsmirl@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <9e4733910707070927l37bdf79cpd1fc672909fb0bb3@mail.gmail.com>
+References: <9e4733910707070927l37bdf79cpd1fc672909fb0bb3@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UBBnwQ2J80pfk8EddJpq"
+Date: Sat, 07 Jul 2007 18:41:15 +0200
+Message-Id: <1183826476.3779.42.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Thu, Jul 26, 2007 at 11:33:01AM -0500, Larry Finger wrote:
->> A typo in the specs interchanges the branches in an if statement, which
->> breaks operations for a BCM4306/rev 2 that has phy->analog == 1.
-> 
->> @@ -1895,7 +1895,7 @@ void bcm43xx_phy_set_baseband_attenuatio
->>  		bcm43xx_write16(dev, BCM43xx_MMIO_PHY0,
->>  				(bcm43xx_read16(dev, BCM43xx_MMIO_PHY0)
->>  				 & 0xFFF0) | baseband_attenuation);
->> -	} else if (phy->analog == 1) {
->> +	} else if (phy->analog != 1) {
->>  		bcm43xx_phy_write(dev, BCM43xx_PHY_DACCTL,
->>  				  (bcm43xx_phy_read(dev, BCM43xx_PHY_DACCTL)
->>  				   & 0xFFC3) | (baseband_attenuation << 2));
-> 
-> Larry,
-> 
-> How does this relate to the bcm43xx patch you asked me to revert
-> (and has been reverted in F-7)?  That one change "==" to ">", while
-> this one changes "==" to "!=".  Instead of reverting the other,
-> should it do the same thing as this?
 
-It really doesn't matter whether one uses ">" or "!=" here. The number in question is >= 0 and the 
-test for for zero occurs earlier in the routine and ends with a return. Now that you mention it, it 
-would be best to make bcm43xx nad bcm43xx-mac80211 look the same. I'll modify and resubmit the patch.
+--=-UBBnwQ2J80pfk8EddJpq
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Larry
+On Sat, 2007-07-07 at 12:27 -0400, Jon Smirl wrote:
+> I have a new Broadcom 4318 adapter (which has exactly the same issues
+> with promiscuous mode).
 
+Huh? That's really weird.
+
+> I didn't have the right firmware down for it
+> and I received this error message when I did "ifconfig wlan up"
+> SIOCSIFFLAGS: No such file or directory.  This is not the most user
+> friendly error message, but I did receive a log entry.
+>=20
+> I tried the same thing with the zd1211. In this case the wlan0 device
+> didn't get created.
+>=20
+> Does it make sense to specify consistent behavior when the firmware is mi=
+ssing?
+
+It does, and I believe we've talked about it at the wireless summits,
+but I'm not aware that we've reached a conclusion. It would probably be
+nice to have an error message -EFIRMWARE or something; that for zd1211
+no device is created is probably counter-productive, that way userspace
+will never know that a wireless adapter is plugged in.
+
+johannes
+
+--=-UBBnwQ2J80pfk8EddJpq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGj8Ir/ETPhpq3jKURAtnRAJ0arD21tntF2/5NrkjZNV/qIl68QwCeJxO6
+sBT6gPJPaXBsmWqiVe/ADZs=
+=YfL6
+-----END PGP SIGNATURE-----
+
+--=-UBBnwQ2J80pfk8EddJpq--
 
