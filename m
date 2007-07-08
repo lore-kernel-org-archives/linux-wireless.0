@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2599 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754551AbXGQSco (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2007 14:32:44 -0400
-Date: Tue, 17 Jul 2007 14:04:17 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: patches ping
-Message-ID: <20070717180417.GE9037@tuxdriver.com>
-References: <1184674109.3773.70.camel@johannes.berg> <469CE051.5060805@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <469CE051.5060805@lwfinger.net>
+Received: from mog.warmcat.com ([62.193.232.24]:43131 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755283AbXGHSqF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Jul 2007 14:46:05 -0400
+Message-ID: <469130E8.1010608@warmcat.com>
+Date: Sun, 08 Jul 2007 19:46:00 +0100
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Jon Smirl <jonsmirl@gmail.com>
+CC: Ulrich Kunitz <kune@deine-taler.de>, Daniel Drake <dsd@gentoo.org>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: Arrested Development
+References: <468DE699.9040708@warmcat.com> <468E48AF.10109@gentoo.org>	 <468E5C33.2000102@warmcat.com> <20070708140054.GA28113@deine-taler.de>	 <46910F3F.8010201@warmcat.com> <9e4733910707081142t43a85fb1y383ee8e1835c2842@mail.gmail.com>
+In-Reply-To: <9e4733910707081142t43a85fb1y383ee8e1835c2842@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 17, 2007 at 10:29:21AM -0500, Larry Finger wrote:
-> Johannes Berg wrote:
-> >What happened to my patches
-> >
-> > * mac80211: regdomain.c needs to include ieee80211_i.h
-> > * mac80211: kill PRISM2_HOSTAPD_UPDATE_IF sub-ioctl
-> > * mac80211: move wpa trigger to debugfs
-> > * mac80211: kill PRISM2_PARAM_AP_AUTH_ALGS
+Jon Smirl wrote:
+> On 7/8/07, Andy Green <andy@warmcat.com> wrote:
+>> I rebooted into the new kernel and did this only
+>>
+>> # iwconfig wlan0 mode monitor
+>> # ifconfig wlan0 up
+>> # iwconfig wlan0 channel 6
+>> # tcpdump -i wlan0
+>>
+>> But all I could see were beacons, this is despite I am ssh-d into that
+>> box over the same channel 6 network with WPA and should surely be seeing
+>> the encrypted packets?
 > 
-> Add to Johannes's list
-> 
-> [PATCH V3] mac80211: Implementation of SIOCSIWRATE
+> I have been down the same path, tcpdump shows the encrypted packets,
+> but they aren't visible in Wireshark. I could only see directed
+> packets and broadcast ones. What fixed for me was rm -rf .wireshark in
+> /root.
 
-commit 1fd5e589d8c7d3cd42ddd39358338766cfcedec8
-Author: Larry Finger <Larry.Finger@lwfinger.net>
-Date:   Tue Jul 10 19:32:10 2007 +0200
+It's not quite the same path Jon, I don't use wireshark at all just
+tcpdump.  Maybe it is zd1211rw-mac80211 -specific.
 
-    [PATCH] mac80211: Implementation of SIOCSIWRATE
+-Andy
 
-    The WEXT ioctl SIOCSIWRATE is not implemented in mac80211. This patch
-    adds the missing routine. It supports the 'auto' keyword, fixed rates,
-    and the combination of 'auto' and a fixed rate to select an upper bound.
-
-    Based on the patch from Mohamed Abbas <mabbas@linux.intel.com>.
-
-    Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-    Signed-off-by: Jiri Benc <jbenc@suse.cz>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-That was from a recent pull of linux-2.6.  Maybe you should pull again?
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
