@@ -1,27 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:58915 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756023AbXGRFMy (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:41187 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755455AbXGHUcX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2007 01:12:54 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so84390wah
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jul 2007 22:12:53 -0700 (PDT)
-Message-ID: <318382250707172212x5880c274n8ed70c6a9ffa8a55@mail.gmail.com>
-Date: Tue, 17 Jul 2007 22:12:52 -0700
-From: "prasad hegde" <prasad.hegde@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Does pktgen tool supports 802.11 ?
+	Sun, 8 Jul 2007 16:32:23 -0400
+Message-ID: <469149D2.7090800@warmcat.com>
+Date: Sun, 08 Jul 2007 21:32:18 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: ian <ischram@telenet.be>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: iwlwifi 3945: secondary interface disallows association
+References: <4691310E.8070406@warmcat.com> <469142CC.1000903@telenet.be>
+In-Reply-To: <469142CC.1000903@telenet.be>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+ian wrote:
 
-Does pktgen tool supports 802.11 ? Standard version of pktgen
-available in linux 2.6.21 seems to support only ethernet devices.
-Does any one know extension of it which supports wlan devices.
-I want  to test  wireless  TX/  RX  performance. any suggestions about
- tools to use?
+> I don't appear to have the same problem with:
+>  -latest version of iwlwifi (0.0.35)
+>  - gentoo-sources-2.6.20 kernel (patched with a relatively old mac80211
+> package)
+> 
+> I believe fedora has 0.0.24 of iwlwifi embedded?
 
--Prasad
+I don't know, this was yesterday's latest development kernel
+2.6.22-0.5.rc7.git2.fc8 FWIW.
+
+> So the problem might have been fixed already.
+
+You're right Ian, I tested current wireless-dev git iwl3945 on another
+laptop and it works correctly, I can even put the secondary interface
+into Monitor mode and see stuff flying around and still ping things frmo
+the default associated interface.  Great!
+
+-Andy
