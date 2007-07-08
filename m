@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from electric-eye.fr.zoreil.com ([213.41.134.224]:49628 "EHLO
-	fr.zoreil.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753492AbXGCWwY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2007 18:52:24 -0400
-Date: Wed, 4 Jul 2007 00:31:44 +0200
-From: Francois Romieu <romieu@fr.zoreil.com>
-To: jgarzik@pobox.com
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH] eeprom_93cx6: shorten pulse timing to match spec (bis)
-Message-ID: <20070703223144.GA13714@electric-eye.fr.zoreil.com>
-References: <20070702210345.GA22610@electric-eye.fr.zoreil.com> <20070703123441.GA3534@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070703123441.GA3534@tuxdriver.com>
+Received: from wa-out-1112.google.com ([209.85.146.179]:5766 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755283AbXGHSml (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Jul 2007 14:42:41 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1099551wah
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jul 2007 11:42:41 -0700 (PDT)
+Message-ID: <9e4733910707081142t43a85fb1y383ee8e1835c2842@mail.gmail.com>
+Date: Sun, 8 Jul 2007 14:42:41 -0400
+From: "Jon Smirl" <jonsmirl@gmail.com>
+To: "Andy Green" <andy@warmcat.com>
+Subject: Re: Arrested Development
+Cc: "Ulrich Kunitz" <kune@deine-taler.de>,
+	"Daniel Drake" <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
+	"John Linville" <linville@tuxdriver.com>
+In-Reply-To: <46910F3F.8010201@warmcat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <468DE699.9040708@warmcat.com> <468E48AF.10109@gentoo.org>
+	 <468E5C33.2000102@warmcat.com> <20070708140054.GA28113@deine-taler.de>
+	 <46910F3F.8010201@warmcat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Based on an original idea by John W. Linville.
+On 7/8/07, Andy Green <andy@warmcat.com> wrote:
+> I rebooted into the new kernel and did this only
+>
+> # iwconfig wlan0 mode monitor
+> # ifconfig wlan0 up
+> # iwconfig wlan0 channel 6
+> # tcpdump -i wlan0
+>
+> But all I could see were beacons, this is despite I am ssh-d into that
+> box over the same channel 6 network with WPA and should surely be seeing
+> the encrypted packets?
 
-It is the missing part of 42d45ccd60636c28e35c2016f091783bc14ad99c
+I have been down the same path, tcpdump shows the encrypted packets,
+but they aren't visible in Wireshark. I could only see directed
+packets and broadcast ones. What fixed for me was rm -rf .wireshark in
+/root.
 
-Signed-off-by: Francois Romieu <romieu@fr.zoreil.com>
----
- drivers/misc/eeprom_93cx6.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/misc/eeprom_93cx6.c b/drivers/misc/eeprom_93cx6.c
-index ac515b0..ea55654 100644
---- a/drivers/misc/eeprom_93cx6.c
-+++ b/drivers/misc/eeprom_93cx6.c
-@@ -55,10 +55,10 @@ static inline void eeprom_93cx6_pulse_low(struct eeprom_93cx6 *eeprom)
- 
- 	/*
- 	 * Add a short delay for the pulse to work.
--	 * According to the specifications the minimal time
--	 * should be 450ns so a 1us delay is sufficient.
-+	 * According to the specifications the "maximum minimum"
-+	 * time should be 450ns.
- 	 */
--	udelay(1);
-+	ndelay(450);
- }
- 
- static void eeprom_93cx6_startup(struct eeprom_93cx6 *eeprom)
 -- 
-1.5.2.1
-
+Jon Smirl
+jonsmirl@gmail.com
