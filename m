@@ -1,46 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:65103 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760258AbXG0J3A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2007 05:29:00 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 07/17] iwilwifi: removed unused constant
-Date: Fri, 27 Jul 2007 17:26:31 +0800
-Message-Id: <11855284142478-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11855284122218-git-send-email-yi.zhu@intel.com>
-References: <11855284012123-git-send-email-yi.zhu@intel.com>
- <11855284032407-git-send-email-yi.zhu@intel.com>
- <11855284053896-git-send-email-yi.zhu@intel.com>
- <11855284072074-git-send-email-yi.zhu@intel.com>
- <1185528408776-git-send-email-yi.zhu@intel.com>
- <11855284103871-git-send-email-yi.zhu@intel.com>
- <11855284122218-git-send-email-yi.zhu@intel.com>
-To: ipwpatch@vger.kernel.org
+Received: from mog.warmcat.com ([62.193.232.24]:59541 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756279AbXGHURG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Jul 2007 16:17:06 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id CAC248CAD8
+	for <linux-wireless@vger.kernel.org>; Sun,  8 Jul 2007 22:16:56 +0200 (CEST)
+Message-Id: <20070708201701.126477512@warmcat.com>
+References: <20070708201636.804206271@warmcat.com>
+Date: Sun, 08 Jul 2007 21:16:37 +0100
+From: andy@warmcat.com
+To: linux-wireless@vger.kernel.org
+Cc: Andy Green <andy@warmcat.com>
+Subject: [PATCH 1/1] iwl3945: provide frequency to radiotap monitor not channel index
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-removed OFDM_SYMBOL_TIME
+iwl3945 and presumably 4965 wrongly provide the channel index to the radiotap
+header on Monitor mode.  This results in tcpdump showing "6MHz" for example.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+This patch arranges to send the frequency in MHz instead eg, 2437MHz
+
+Signed-off-by: Andy Green <andy@warmcat.com>
 ---
- drivers/net/wireless/iwl-hw.h |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ drivers/net/wireless/mac80211/iwlwifi/base.c    |    5 ++---
+ drivers/net/wireless/mac80211/iwlwifi/iwlwifi.h |    2 +-
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwl-hw.h b/drivers/net/wireless/iwl-hw.h
-index 58afbf7..49ad71b 100644
---- a/drivers/net/wireless/iwl-hw.h
-+++ b/drivers/net/wireless/iwl-hw.h
-@@ -99,7 +99,6 @@
-  */
- #define SHORT_SLOT_TIME 9
- #define LONG_SLOT_TIME 20
--#define OFDM_SYMBOL_TIME 4
+Index: wireless-dev/drivers/net/wireless/mac80211/iwlwifi/base.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/mac80211/iwlwifi/base.c
++++ wireless-dev/drivers/net/wireless/mac80211/iwlwifi/base.c
+@@ -2986,7 +2986,6 @@ void iwl_handle_data_packet_monitor(stru
+ 	 * the information provided in the skb from the hardware */
+ 	s8 signal = stats->ssi;
+ 	s8 noise = 0;
+-	u16 channel = stats->channel;
+ 	int rate = stats->rate;
+ 	u64 tsf = stats->mactime;
  
- /* RSSI to dBm */
- #if IWL == 3945
+@@ -3028,8 +3027,8 @@ void iwl_handle_data_packet_monitor(stru
+ 	iwl_rt->rt_dbmsignal = signal;
+ 	iwl_rt->rt_dbmnoise = noise;
+ 
+-	/* Convert the channel data and set the flags */
+-	iwl_rt->rt_channel = cpu_to_le16(channel);
++	/* Convert the channel frequency and set the flags */
++	iwl_rt->rt_channelMHz = cpu_to_le16(stats->freq);
+ 	if (!(phy_flags & RX_RES_PHY_FLAGS_BAND_24_MSK)) {
+ 		iwl_rt->rt_chbitmask =
+ 		    cpu_to_le16((IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ));
+Index: wireless-dev/drivers/net/wireless/mac80211/iwlwifi/iwlwifi.h
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/mac80211/iwlwifi/iwlwifi.h
++++ wireless-dev/drivers/net/wireless/mac80211/iwlwifi/iwlwifi.h
+@@ -103,7 +103,7 @@ struct iwl_rt_rx_hdr {
+ 	__le64 rt_tsf;		/* TSF */
+ 	u8 rt_flags;		/* radiotap packet flags */
+ 	u8 rt_rate;		/* rate in 500kb/s */
+-	__le16 rt_channel;	/* channel in mHz */
++	__le16 rt_channelMHz;	/* channel in MHz */
+ 	__le16 rt_chbitmask;	/* channel bitfield */
+ 	s8 rt_dbmsignal;	/* signal in dBm, kluged to signed */
+ 	s8 rt_dbmnoise;
+
 -- 
-1.5.2
