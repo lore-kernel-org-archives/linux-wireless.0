@@ -1,32 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:8835 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751995AbXGGQ1M (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:39636 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756546AbXGHTRa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jul 2007 12:27:12 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so712341wah
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jul 2007 09:27:11 -0700 (PDT)
-Message-ID: <9e4733910707070927l37bdf79cpd1fc672909fb0bb3@mail.gmail.com>
-Date: Sat, 7 Jul 2007 12:27:11 -0400
-From: "Jon Smirl" <jonsmirl@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Errors when firmware is missing
+	Sun, 8 Jul 2007 15:17:30 -0400
+Message-ID: <46913846.9000007@warmcat.com>
+Date: Sun, 08 Jul 2007 20:17:26 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Jon Smirl <jonsmirl@gmail.com>
+CC: Ulrich Kunitz <kune@deine-taler.de>, Daniel Drake <dsd@gentoo.org>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: Arrested Development
+References: <468DE699.9040708@warmcat.com> <468E48AF.10109@gentoo.org>	 <468E5C33.2000102@warmcat.com> <20070708140054.GA28113@deine-taler.de>	 <46910F3F.8010201@warmcat.com>	 <9e4733910707081142t43a85fb1y383ee8e1835c2842@mail.gmail.com>	 <469130E8.1010608@warmcat.com> <9e4733910707081204l490e99fcm6b8780f36ef8b9a8@mail.gmail.com>
+In-Reply-To: <9e4733910707081204l490e99fcm6b8780f36ef8b9a8@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a new Broadcom 4318 adapter (which has exactly the same issues
-with promiscuous mode). I didn't have the right firmware down for it
-and I received this error message when I did "ifconfig wlan up"
-SIOCSIFFLAGS: No such file or directory.  This is not the most user
-friendly error message, but I did receive a log entry.
+Jon Smirl wrote:
 
-I tried the same thing with the zd1211. In this case the wlan0 device
-didn't get created.
+>> It's not quite the same path Jon, I don't use wireshark at all just
+>> tcpdump.  Maybe it is zd1211rw-mac80211 -specific.
+> 
+> I can confirm. My BCM4318 is seeing all the packets.
+> My zd1211 is only seeing the directed/broadcast ones.
+> My rt2x00 is seeing all the packets.
+> 
+> All three devices are in the same machine and using the same mac80211
+> stack so it must be a driver issue with zd1211.
 
-Does it make sense to specify consistent behavior when the firmware is missing?
+I can add iwl3945 to "sees all the expected stuff" (after a battle) list
+as well.
 
--- 
-Jon Smirl
-jonsmirl@gmail.com
+-Andy
