@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:43131 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755283AbXGHSqF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2007 14:46:05 -0400
-Message-ID: <469130E8.1010608@warmcat.com>
-Date: Sun, 08 Jul 2007 19:46:00 +0100
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Jon Smirl <jonsmirl@gmail.com>
-CC: Ulrich Kunitz <kune@deine-taler.de>, Daniel Drake <dsd@gentoo.org>,
-	linux-wireless@vger.kernel.org,
+Received: from deine-taler.de ([217.160.107.63]:64012 "EHLO deine-taler.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757101AbXGHOA4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Jul 2007 10:00:56 -0400
+Date: Sun, 8 Jul 2007 16:00:54 +0200
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: Andy Green <andy@warmcat.com>
+Cc: Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
 	John Linville <linville@tuxdriver.com>
 Subject: Re: Arrested Development
-References: <468DE699.9040708@warmcat.com> <468E48AF.10109@gentoo.org>	 <468E5C33.2000102@warmcat.com> <20070708140054.GA28113@deine-taler.de>	 <46910F3F.8010201@warmcat.com> <9e4733910707081142t43a85fb1y383ee8e1835c2842@mail.gmail.com>
-In-Reply-To: <9e4733910707081142t43a85fb1y383ee8e1835c2842@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Message-ID: <20070708140054.GA28113@deine-taler.de>
+References: <468DE699.9040708@warmcat.com> <468E48AF.10109@gentoo.org> <468E5C33.2000102@warmcat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <468E5C33.2000102@warmcat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jon Smirl wrote:
-> On 7/8/07, Andy Green <andy@warmcat.com> wrote:
->> I rebooted into the new kernel and did this only
->>
->> # iwconfig wlan0 mode monitor
->> # ifconfig wlan0 up
->> # iwconfig wlan0 channel 6
->> # tcpdump -i wlan0
->>
->> But all I could see were beacons, this is despite I am ssh-d into that
->> box over the same channel 6 network with WPA and should surely be seeing
->> the encrypted packets?
+On 07-07-06 16:13 Andy Green wrote:
+
+> Daniel Drake wrote:
+> > Andy Green wrote:
+> >> Second is a small patch for zd1211rw-mac80211 that fixes rate reporting
+> >> on radiotap rx, last sent here 11 June.
+> >>
+> >> http://www.spinics.net/lists/linux-wireless/msg02897.html
+> ...
+> > Are we really sure we need another rate conversion function? there are
+> > already a couple in the mac80211 driver, and one or 2 extra (for RTS/CTS
+> > rate programming) in the softmac driver.
 > 
-> I have been down the same path, tcpdump shows the encrypted packets,
-> but they aren't visible in Wireshark. I could only see directed
-> packets and broadcast ones. What fixed for me was rm -rf .wireshark in
-> /root.
 
-It's not quite the same path Jon, I don't use wireshark at all just
-tcpdump.  Maybe it is zd1211rw-mac80211 -specific.
+I have created a commit (24b5500dc) in my Git tree that
+implements Andy's patch. I didn't introduce a new rate conversion
+function, but changed only zd_rx_rate(). The function is only used
+for filling the ieee80211_rx_status structure.
 
--Andy
+I have added also some more cleanup patches. One of them changes
+the name of all the struct ieee80211_hw pointers from dev to hw.
+The structure isn't a device and this has confused me more then
+once. I also renamed related functions accordingly. (John, these
+patches still need review by Daniel and should not be merged into
+wireless-dev right now.) I also removed fill_rt_header(). It
+caused a unused function warning and is not needed anymore.
 
+You can find my zd1211rw-dev branch here:
+
+http://deine-taler.de/git-bin/gitweb.cgi?p=zd1211rw.git;a=shortlog;h=zd1211rw-dev
+
+and also under
+
+git://deine-taler.de/git/zd1211rw.git
+
+-- 
+Uli Kunitz
