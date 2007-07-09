@@ -1,39 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33238 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760497AbXGYBkw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2007 21:40:52 -0400
-Message-ID: <46A6AA20.2080001@garzik.org>
-Date: Tue, 24 Jul 2007 21:40:48 -0400
-From: Jeff Garzik <jeff@garzik.org>
+Received: from nz-out-0506.google.com ([64.233.162.224]:56489 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755643AbXGIO7B (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2007 10:59:01 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so690545nze
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2007 07:59:01 -0700 (PDT)
+Message-ID: <9e4733910707090759v5cd20f2en1f6c4e6fc6279b3f@mail.gmail.com>
+Date: Mon, 9 Jul 2007 10:59:00 -0400
+From: "Jon Smirl" <jonsmirl@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Setting channel when interface is down inconsistency
 MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: Stephen.Clark@seclark.us, jketreno@linux.intel.com,
-	axjslack@bluebottle.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] Request for help...
-References: <46A69998.7020108@seclark.us>	<20070724.173529.48529759.davem@davemloft.net>	<46A69CA1.5020706@seclark.us> <20070724.174641.105428420.davem@davemloft.net>
-In-Reply-To: <20070724.174641.105428420.davem@davemloft.net>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller wrote:
-> From: Stephen Clark <Stephen.Clark@seclark.us>
-> Date: Tue, 24 Jul 2007 20:43:13 -0400
-> 
->> So if someone in "the community" really wanted to help Intel why
->> don't they take the code Intel posts to the ipw3945 ml and put it
->> into where ever it is really supposed to go?
-> 
-> Because it's better to teach someone how to fish than to continually
-> fish for them.
+bcm43xx and rx2x00 let me set the channel before the interface is up.
+zd1211 requires the interface to be up before setting the channel.
 
-Yep.  Less work for you and me, too, that way :)
+Is there a guideline for how this is supposed to work?
 
-Win-win.  :)
-
-	Jeff
-
-
-
+-- 
+Jon Smirl
+jonsmirl@gmail.com
