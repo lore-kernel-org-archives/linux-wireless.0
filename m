@@ -1,78 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:52361
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753256AbXGaWMl (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:58202 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751031AbXGIF3l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 18:12:41 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Andrew Morton <akpm@linux-foundation.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: [PATCH] ssb-chipcommon: Add function to get processor clock
-Date: Wed, 1 Aug 2007 00:11:56 +0200
-Cc: linux-wireless@vger.kernel.org,
-	Aurelien Jarno <aurelien@aurel32.net>,
-	Felix Fietkau <nbd@openwrt.org>
+	Mon, 9 Jul 2007 01:29:41 -0400
+Message-ID: <4691C7C0.1090101@warmcat.com>
+Date: Mon, 09 Jul 2007 06:29:36 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Message-Id: <200708010011.56753.mb@bu3sch.de>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+To: Ulrich Kunitz <kune@deine-taler.de>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Jon Smirl <jonsmirl@gmail.com>, Daniel Drake <dsd@gentoo.org>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: Arrested Development
+References: <468E5C33.2000102@warmcat.com> <20070708140054.GA28113@deine-taler.de> <46910F3F.8010201@warmcat.com> <9e4733910707081142t43a85fb1y383ee8e1835c2842@mail.gmail.com> <469130E8.1010608@warmcat.com> <9e4733910707081204l490e99fcm6b8780f36ef8b9a8@mail.gmail.com> <46913846.9000007@warmcat.com> <20070708203717.GA15957@deine-taler.de> <1183929814.3771.5.camel@johannes.berg> <46915B3C.6030609@warmcat.com> <20070708223829.GA18217@deine-taler.de>
+In-Reply-To: <20070708223829.GA18217@deine-taler.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Aurelien Jarno <aurelien@aurel32.net>
+Ulrich Kunitz wrote:
 
-The patch below (against 2.6.23-rc1-mm1) adds a new function to get the 
-processor clock. It originally comes from the OpenWrt patches.
+> I forgot to mention that the monitor support doesn't work with
+> additonal interfaces right now. Additional interfaces are broken
+> currently for zd1211rw. I cannot fix all the problems with
+> mac80211 interface of the driver at the same time.
 
-Cc: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Understood, I appreciate the work you and Daniel are putting in.  Over
+the past few months the zd1211rw-mac80211 has been pretty much my
+reference platform since it was more stable than the other devices I
+have during that time.
 
---- a/drivers/ssb/driver_chipcommon.c	2007-07-14 21:05:44.000000000 +0200
-+++ b/drivers/ssb/driver_chipcommon.c	2007-07-14 21:22:04.000000000 +0200
-@@ -264,6 +264,30 @@
- 	ssb_chipco_set_clockmode(cc, SSB_CLKMODE_FAST);
- }
- 
-+/* Get the processor clock */
-+void ssb_chipco_get_clockcpu(struct ssb_chipcommon *cc,
-+                             u32 *plltype, u32 *n, u32 *m)
-+{
-+	*n = chipco_read32(cc, SSB_CHIPCO_CLOCK_N);
-+	*plltype = (cc->capabilities & SSB_CHIPCO_CAP_PLLT);
-+	switch (*plltype) {
-+		case SSB_PLLTYPE_2:
-+		case SSB_PLLTYPE_4:
-+		case SSB_PLLTYPE_6:
-+		case SSB_PLLTYPE_7:
-+			*m = chipco_read32(cc, SSB_CHIPCO_CLOCK_MIPS);
-+			break;
-+		case SSB_PLLTYPE_3:
-+			/* 5350 uses m2 to control mips */
-+			*m = chipco_read32(cc, SSB_CHIPCO_CLOCK_M2);
-+			break;
-+		default:
-+			*m = chipco_read32(cc, SSB_CHIPCO_CLOCK_SB);
-+			break;
-+	}
-+}
-+
-+/* Get the bus clock */
- void ssb_chipco_get_clockcontrol(struct ssb_chipcommon *cc,
- 				 u32 *plltype, u32 *n, u32 *m)
- {
---- a/include/linux/ssb/ssb_driver_chipcommon.h	2007-07-14 21:05:44.000000000 +0200
-+++ b/include/linux/ssb/ssb_driver_chipcommon.h	2007-07-14 21:17:28.000000000 +0200
-@@ -364,6 +364,8 @@
- extern void ssb_chipco_suspend(struct ssb_chipcommon *cc, pm_message_t state);
- extern void ssb_chipco_resume(struct ssb_chipcommon *cc);
- 
-+extern void ssb_chipco_get_clockcpu(struct ssb_chipcommon *cc,
-+                                    u32 *plltype, u32 *n, u32 *m);
- extern void ssb_chipco_get_clockcontrol(struct ssb_chipcommon *cc,
- 					u32 *plltype, u32 *n, u32 *m);
- extern void ssb_chipco_timing_init(struct ssb_chipcommon *cc,
+> Try
+> 
+> iwconfig wlan0 mode monitor
+> ifconfig wlan0 up
+> iwconfig wlan0 channel 6
+> 
+> for now.
+> 
+> The problem with the STA + MNTR interface is, that mac80211 must
+> do the FCS checking for the STA interface or the driver has to
+> filter them before forwarding them to the upper layer.
+
+Yep that works now thanks, I see encrypted data and ACKs spamming and
+the occasional bogon.  BTW I quite like having the bogons too... in
+Monitor mode anyway.
+
+-Andy
 
 
--- 
-Greetings Michael.
