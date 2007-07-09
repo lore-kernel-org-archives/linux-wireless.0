@@ -1,94 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:39869 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932215AbXG0TkF (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39019 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751581AbXGIFQA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2007 15:40:05 -0400
-Date: Fri, 27 Jul 2007 12:38:53 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de, netdev@vger.kernel.org,
+	Mon, 9 Jul 2007 01:16:00 -0400
+Subject: Re: Arrested Development
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Ulrich Kunitz <kune@deine-taler.de>, Andy Green <andy@warmcat.com>,
+	Jon Smirl <jonsmirl@gmail.com>, Daniel Drake <dsd@gentoo.org>,
 	linux-wireless@vger.kernel.org,
-	Gary Zambrano <zambrano@broadcom.com>
-Subject: Re: [PATCH] Merge the Sonics Silicon Backplane subsystem
-Message-Id: <20070727123853.d16e875c.akpm@linux-foundation.org>
-In-Reply-To: <200707272130.48973.mb@bu3sch.de>
-References: <200707271857.24162.mb@bu3sch.de>
-	<20070727120318.54d18cfc.akpm@linux-foundation.org>
-	<200707272130.48973.mb@bu3sch.de>
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <200707081544.21464.flamingice@sourmilk.net>
+References: <468DE699.9040708@warmcat.com>
+	 <20070708203717.GA15957@deine-taler.de>
+	 <1183929814.3771.5.camel@johannes.berg>
+	 <200707081544.21464.flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Cusyl7U3EwlF6/Fru3I/"
+Date: Mon, 09 Jul 2007 07:15:49 +0200
+Message-Id: <1183958149.3771.10.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 27 Jul 2007 21:30:48 +0200
-Michael Buesch <mb@bu3sch.de> wrote:
 
-> > ERROR: "foo * bar" should be "foo *bar"
-> > #4156: FILE: drivers/ssb/ssb_private.h:119:
-> > +extern struct ssb_bus * ssb_pci_dev_to_bus(struct pci_dev *pdev);
-> > 
-> > are worth addressing.
-> 
-> Well, I intentionally wrote that this way, as in my opinion
-> it it easier to read. I only use this additional space for
-> functions returning a pointer.
-> 
-> struct foo * function(int a, int b);
-> 
-> vs:
-> 
-> struct foo *function(int a, int b);
-> 
-> But I can change that, if that's really an issue and a
-> style violation.
+--=-Cusyl7U3EwlF6/Fru3I/
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-It's a microissue but yeah, no-space is more conventional.
+On Sun, 2007-07-08 at 15:44 -0700, Michael Wu wrote:
 
-> > > +static ssize_t ssb_pci_attr_sprom_show(struct device *pcidev,
-> > > +				       struct device_attribute *attr,
-> > > +				       char *buf)
-> > > +{
-> > > +	struct pci_dev *pdev = container_of(pcidev, struct pci_dev, dev);
-> > > +	struct ssb_bus *bus;
-> > > +	u16 *sprom;
-> > > +	int err = -ENODEV;
-> > > +	ssize_t count = 0;
-> > > +
-> > > +	bus = ssb_pci_dev_to_bus(pdev);
-> > > +	if (!bus)
-> > > +		goto out;
-> > > +	err = -ENOMEM;
-> > > +	sprom = kcalloc(SSB_SPROMSIZE_WORDS, sizeof(u16), GFP_KERNEL);
-> > > +	if (!sprom)
-> > > +		goto out;
-> > > +
-> > > +	err = -ERESTARTSYS;
-> > > +	if (mutex_lock_interruptible(&bus->pci_sprom_mutex))
-> > > +		goto out_kfree;
-> > > +	sprom_do_read(bus, sprom);
-> > > +	mutex_unlock(&bus->pci_sprom_mutex);
-> > > +
-> > > +	count = sprom2hex(sprom, buf, PAGE_SIZE);
-> > > +	err = 0;
-> > > +
-> > > +out_kfree:
-> > > +	kfree(sprom);
-> > > +out:
-> > > +	return err ? err : count;
-> > > +}
-> > 
-> > The mutex_lock_interruptible() looks fishy.  Some commented explanation of
-> > what it's doing would be good here.  It's quite unobvious to this reader. 
-> > Cheesy deadlock avoidance?  Hope not.
-> 
-> No, it's simply to avoid writing the SPROM concurrently.
-> SPROM writing is hairy and we must make sure here that
-> we are the only one accessing the whole bus. We do that
-> by suspending all devices and taking a lock to protect
-> the SPROM from write concurrency.
+> It doesn't allow more than one interface, sta or mntr. mac80211 does soft=
+=20
+> monitor mode interfaces for zd1211rw when a sta interface is already up.
 
-Sure, but why is the locking interruptible rather than plain old
-mutex_lock()?
+Oops. You're right, I confused .open and .add_interface.
+
+johannes
+
+--=-Cusyl7U3EwlF6/Fru3I/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGkcSE/ETPhpq3jKURAsG3AKCTZuJEaSwRUzVe/i23H5ZRVslk3QCfdsil
+UNl7wFpxukdwV7r1wnHlLUY=
+=gLa6
+-----END PGP SIGNATURE-----
+
+--=-Cusyl7U3EwlF6/Fru3I/--
 
