@@ -1,76 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:63925 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754705AbXGJRBW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2007 13:01:22 -0400
-Date: Tue, 10 Jul 2007 10:00:39 -0700
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2.6] WE : Fix get 32 char ESSID
-Message-ID: <20070710170039.GA6171@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <20070709221322.GA1381@bougret.hpl.hp.com> <20070710151044.GC7927@tuxdriver.com>
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:56904 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758816AbXGIXk7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2007 19:40:59 -0400
+Message-ID: <4692C77C.30005@lwfinger.net>
+Date: Mon, 09 Jul 2007 18:40:44 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070710151044.GC7927@tuxdriver.com>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+To: Michael Buesch <mb@bu3sch.de>
+CC: jt@hpl.hp.com, "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 2.6] SoftMAC : fix ESSID problem
+References: <20070709221922.GB1381@bougret.hpl.hp.com> <200707100046.23832.mb@bu3sch.de>
+In-Reply-To: <200707100046.23832.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 10, 2007 at 11:10:44AM -0400, John W. Linville wrote:
-> On Mon, Jul 09, 2007 at 03:13:22PM -0700, Jean Tourrilhes wrote:
+Michael Buesch wrote:
+> On Tuesday 10 July 2007 00:19:22 Jean Tourrilhes wrote:
+>> 	Hi,
+>>
+>> 	Victor Porton reported that the SoftMAC layer had random
+>> problem when setting the ESSID :
+>> 		http://bugzilla.kernel.org/show_bug.cgi?id=8686
+>> 	After investigation, it turned out to be worse, the SoftMAC
+>> layer is left in an inconsistent state. The fix is pretty trivial.
+>>         John : would you mind pushing that to 2.6.23 ?
+>>         Thanks...
+>>
+>>         Jean
+>>
+>> Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
+>>
+>> -----------------------------------------------------------
+>>
+>> --- linux/net/ieee80211/softmac/ieee80211softmac_assoc.j1.c	2007-07-09 13:56:13.000000000 -0700
+>> +++ linux/net/ieee80211/softmac/ieee80211softmac_assoc.c	2007-07-09 13:56:41.000000000 -0700
+>> @@ -271,8 +271,11 @@ ieee80211softmac_assoc_work(struct work_
+>>  			 */
+>>  			dprintk(KERN_INFO PFX "Associate: Scanning for networks first.\n");
+>>  			ieee80211softmac_notify(mac->dev, IEEE80211SOFTMAC_EVENT_SCAN_FINISHED, ieee80211softmac_assoc_notify_scan, NULL);
+>> -			if (ieee80211softmac_start_scan(mac))
+>> +			if (ieee80211softmac_start_scan(mac)) {
+>>  				dprintk(KERN_INFO PFX "Associate: failed to initiate scan. Is device up?\n");
+>> +				mac->associnfo.associating = 0;
+>> +				mac->associnfo.associated = 0;
+>> +			}
+>>  			goto out;
+>>  		} else {
+>>  			mac->associnfo.associating = 0;
+>>
 > 
-> > 	A little bug was introduced a few months ago that prevent
-> > reading ESSID with 32 character. Philippe Teuwen was the first one to
-> > report that, followed by the MadWifi team :
-> > 		http://madwifi.org/ticket/930
-> > 	The patch fix this bug by removing obsolete code. It also
-> > reenable setting the full range of ESSID, including ESSID with a final
-> > NUL which are valid. This was tested on 2.6.21 and 2.6.22.
-> > 	John : would you mind pushing that to 2.6.23 ? If you are
-> > happy with it, I can provide backport patches for earlier kernels.
-> 
-> Jean,
-> 
-> Thanks for the patch.
-> 
-> Iirc, I wrote this ugly little piece of code that you seek to remove.
+> Acked-by: Michael Buesch <mb@bu3sch.de>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-	Yes, I remember perfectly the context of that piece of code,
-and I was assuming you did ;-) It was last autumn, and we said it was
-temporary. As we have now found that it's buggy, it's a good time to
-remove it.
+This patch should also be sent to stable@kernel.org.
 
-> It's purpose is/was to preserve userland ABI for older versions of
-> the wireless-tools package.  I'll have to dig a little deeper if you
-> need a more detailed refresher -- let me know.
-
-	If you want, I can fully refresh you ;-)
-
-> In that case, I believe the issue was that using older wireless-tools
-> w/ newer kernels would result in the SSID getting truncated by one
-> character.  If we apply this patch (removing my hack/fix), won't we
-> be reintroducing that issue?  If not, can you remind me as to why not?
-
-	Yes, we would definitely reintroduce the issue with older
-versions of Wireless Tools. But, as this API has been deprecated for
-now more than one year (february 2006), and as this patch causes
-troubles, it is time to get rid of it.
-	These are the released distributions that have a "good"
-version of Wireless Tools and wpa_supplicant :
-		Debian 4.0 Etch
-		Unbuntu 6.10 Edgy and 7.04 Feisty
-		Fedora 6.93 and 7.0
-		OpenSuSE 10.2
-		Mandriva 2007.0 and 2007.1
-		Slackware 11.0 and 12.0
-	As you can see, most distro have now 2 releases which are
-"good"...
-
-> Thanks,
-> 
-> John
-
-	Regards,
-
-	Jean
+Larry
