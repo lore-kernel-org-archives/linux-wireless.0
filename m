@@ -1,58 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:48225 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932106AbXGaSd7 convert rfc822-to-8bit (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.179]:63283 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754481AbXGIVvJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 14:33:59 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so121186ugf
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 11:33:59 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 03/24] rt2x00: Don't toggle tuner bit for non-RF2523 chips
-Date: Tue, 31 Jul 2007 20:37:02 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+	Mon, 9 Jul 2007 17:51:09 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1589401wah
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2007 14:51:08 -0700 (PDT)
+Message-ID: <59abf66e0707091451p3913ba5enf35edd934840b3cb@mail.gmail.com>
+Date: Mon, 9 Jul 2007 18:51:08 -0300
+From: "=?ISO-8859-1?Q?Jorge_Luc=E1ngeli_Obes?=" <t4m5yn@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Monitor mode with RTL8187
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200707312037.02606.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 875a52bc8ca873ac0ef6aa473101ffe59528d24c Mon Sep 17 00:00:00 2001
-From: Ivo van Doorn <IvDoorn@gmail.com>
-Date: Fri, 27 Jul 2007 17:39:55 +0200
-Subject: [PATCH 03/24] rt2x00: Don't toggle tuner bit for non-RF2523 chips
+Hi all,
+I've come into possession of a RTL8187-based wireless USB adapter
+(Encore ENUWI-G2). I am trying the new RTL8187 driver in wireless-dev
+GIT. The question is: does this driver support monitor mode?
 
-The TUNER bit for RF1 shouldn't be set when it isn't
-written to the device anyway...
+tamsyn@rory:~$ sudo iwconfig wlan0 mode monitor
+Error for wireless request "Set Mode" (8B06) :
+    SET failed on device wlan0 ; Device or resource busy.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2500pci.c |    9 ++++-----
- 1 files changed, 4 insertions(+), 5 deletions(-)
+Any clues? Please CC me as I'm not subscribed to the list. Thanks in advance.
 
-diff --git a/drivers/net/wireless/rt2500pci.c b/drivers/net/wireless/rt2500pci.c
-index 0535c1d..5996876 100644
---- a/drivers/net/wireless/rt2500pci.c
-+++ b/drivers/net/wireless/rt2500pci.c
-@@ -455,13 +455,12 @@ static void rt2500pci_config_channel(struct rt2x00_dev *rt2x00dev,
- 	 * Switch off tuning bits.
- 	 * For RT2523 devices we do not need to update the R1 register.
- 	 */
--	rt2x00_set_field32(&reg.rf1, RF1_TUNER, 0);
--	rt2x00_set_field32(&reg.rf3, RF3_TUNER, 0);
--
--
--	if (!rt2x00_rf(&rt2x00dev->chip, RF2523))
-+	if (!rt2x00_rf(&rt2x00dev->chip, RF2523)) {
-+		rt2x00_set_field32(&reg.rf1, RF1_TUNER, 0);
- 		rt2500pci_rf_write(rt2x00dev, reg.rf1);
-+	}
- 
-+	rt2x00_set_field32(&reg.rf3, RF3_TUNER, 0);
- 	rt2500pci_rf_write(rt2x00dev, reg.rf3);
- 
- 	/*
--- 
-1.5.2.4
-
+Jorge
