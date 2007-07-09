@@ -1,71 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([140.186.70.10]:53483 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236AbXGLIQL (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:21906 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750724AbXGILKz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2007 04:16:11 -0400
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1I8tqo-0006XL-TG
-	for linux-wireless@vger.kernel.org; Thu, 12 Jul 2007 04:16:38 -0400
-Subject: at76_usb - fourth submission attempt
-From: Pavel Roskin <proski@gnu.org>
+	Mon, 9 Jul 2007 07:10:55 -0400
+Received: from lin01.mn-solutions.de (pD95F8A4E.dip0.t-ipconnect.de [217.95.138.78])
+	by s131.mittwaldmedien.de (Postfix) with ESMTP id 2DE658B1545
+	for <linux-wireless@vger.kernel.org>; Mon,  9 Jul 2007 13:10:54 +0200 (CEST)
+Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 6F09F1E002B
+	for <linux-wireless@vger.kernel.org>; Mon,  9 Jul 2007 13:10:49 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
 To: linux-wireless@vger.kernel.org
-Cc: Guido Guenther <agx@sigxcpu.org>,
-	at76c503a-develop@lists.berlios.de
-Content-Type: text/plain
-Date: Thu, 12 Jul 2007 04:16:06 -0400
-Message-Id: <1184228166.2377.31.camel@dv>
-Mime-Version: 1.0
+Subject: Re: [PATCH] remove duplicated ioctl entries in compat_ioctl.c
+Date: Mon, 9 Jul 2007 13:10:48 +0200
+References: <20070709193744.D021.MOKUNO@sm.sony.co.jp>
+In-Reply-To: <20070709193744.D021.MOKUNO@sm.sony.co.jp>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200707091310.49149.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+> This patch removes some duplicated wireless ioctl entries in
+> the array 'struct ioctl_trans ioctl_start[]' of
+> fs/compat_ioctl.c
+> -COMPATIBLE_IOCTL(SIOCSIWSCAN)
+>  COMPATIBLE_IOCTL(SIOCSIWRATE)
+>  COMPATIBLE_IOCTL(SIOCGIWRATE)
 
-I'd like to submit at76_usb driver for inclusion into the kernel.
-
-The driver's temporary repository is located at
-http://git.80211libre.org/at76_usb.git/
-
-To compile the driver standalone, just run "make" and "make install".
-To integrate the driver into the kernel, apply kernel_patch.diff to the
-kernel with -p1 option, then copy at76_usb*.[ch] to drivers/net/wireless
-
-For the driver to work, please download the firmware from
-http://developer.berlios.de/projects/at76c503a/
-
-This is the fourth submission attempt.  Three previous attempts were
-made by Guido Guenther, and generated a lot of useful feedback.  I
-believe all the recommendations have been accepted.
-
-The driver went through a massive cleanup, but I realize that a lot of
-work still needs to be done.  I think the process will be more effective
-if more people take a look at the code.  New eyes will see new flaws.
-
-The biggest change that has not been done is conversion to mac80211.  I
-believe it's possible, but I don't expect it to happen overnight.  Until
-then, at76_usb uses its own implementation of 802.11 protocol.  I'm not
-going to polish it, but I tried to clean up the code to the point that
-it can be easily understood.
-
-If possible, I'd like the driver to be in Linux 2.6.23.  That would
-rejuvenate the interest to the driver, and hopefully it might attract
-new contributors.  I think at76_usb is quite on the par with other
-non-mac80211 drivers currently in Linux (although I do realize that it's
-a poor excuse).
-
-I'll do my best to convert the driver to mac80211.  I think it would be
-OK to replace the driver with the mac80211 version later, e.g. in Linux
-2.6.24.  There are parts of the driver that don't deal with 802.11 layer
-(e.g. firmware download and MIBs), and it would be great if they receive
-some good testing in the meantime.
-
-In any case, I'll appreciate any comments regarding the code.
-
-It's my first driver submission ever, so please don't hesitate to tell
-me if I'm doing anything wrong.
-
--- 
-Regards,
-Pavel Roskin
-
+Maybe you remove the double COMPATIBLE_IOCTL(SIOCGIWRATE) as 
+well?
