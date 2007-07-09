@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4843 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762378AbXG0Tgl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2007 15:36:41 -0400
-Date: Fri, 27 Jul 2007 15:21:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Andrew Morton <akpm@osdl.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Gary Zambrano <zambrano@broadcom.com>
-Subject: Re: [PATCH] Merge the Sonics Silicon Backplane subsystem
-Message-ID: <20070727192120.GB7572@tuxdriver.com>
-References: <200707271857.24162.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200707271857.24162.mb@bu3sch.de>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:44507
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754599AbXGIU6b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2007 16:58:31 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Andy Green <andy@warmcat.com>
+Subject: Re: Permissions down /sys
+Date: Mon, 9 Jul 2007 22:57:25 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <469297DF.4000806@warmcat.com>
+In-Reply-To: <469297DF.4000806@warmcat.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200707092257.25909.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 27, 2007 at 06:57:20PM +0200, Michael Buesch wrote:
-> The Sonics Silicon Backplane is a mini-bus used on
-> various Broadcom chips and embedded devices.
-> Devices using the SSB include b44, bcm43xx and various
-> Broadcom based wireless routers.
-> A b44 and bcm43xx port and a SSB based OHCI driver is available.
+On Monday 09 July 2007 22:17:35 Andy Green wrote:
+> Hi folks -
 > 
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> Is 222 permissions on /sys/class/ieee80211/phy*/add_iface and
+> remove_iface really okay, or should it perhaps be 220?
+> 
+> --w--w--w- 1 root root    0 2007-07-09 21:11 add_iface
+> --w--w--w- 1 root root 4096 2007-07-09 21:12 remove_iface
 
-At first glance it looks like there might be some tab/space issues
-in some of the #define blocks toward the end of the patch, although
-those might be intentional.
+IMO the file-permissions are correct, _but_ the following should
+be added to _store_remove_iface() and _store_add_iface():
 
-Aside from whatever other style issues that might be identified, I'll
-state that this code has been carried in wireless-dev for months and
-thereby also spent a lot of time in -mm as well as Fedora (rawhide
-and F-7).  The code has proven to be reasonably stable and reliable.
-
-Acked-by: John W. Linville <linville@tuxdriver.com>
+	if (!capable(CAP_NET_ADMIN))
+		return -EPERM;
 
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
