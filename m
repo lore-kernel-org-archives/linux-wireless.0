@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37781 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760678AbXGZQAo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2007 12:00:44 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/2] mac80211 [HT] adding MAC80211_HT and MAC80211_HT_DEBUG
-Date: Thu, 26 Jul 2007 19:00:39 +0300
-Message-Id: <11854656402369-git-send-email-tomas.winkler@intel.com>
+Received: from mog.warmcat.com ([62.193.232.24]:37587 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754781AbXGIVD6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2007 17:03:58 -0400
+Message-ID: <4692A2B9.2040004@warmcat.com>
+Date: Mon, 09 Jul 2007 22:03:53 +0100
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Permissions down /sys
+References: <469297DF.4000806@warmcat.com> <200707092257.25909.mb@bu3sch.de>
+In-Reply-To: <200707092257.25909.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds MAC80211_HT and MAC80211_HT_DEBUG config variables
-to separate HT features
+Michael Buesch wrote:
+> On Monday 09 July 2007 22:17:35 Andy Green wrote:
+>> Hi folks -
+>>
+>> Is 222 permissions on /sys/class/ieee80211/phy*/add_iface and
+>> remove_iface really okay, or should it perhaps be 220?
+>>
+>> --w--w--w- 1 root root    0 2007-07-09 21:11 add_iface
+>> --w--w--w- 1 root root 4096 2007-07-09 21:12 remove_iface
+> 
+> IMO the file-permissions are correct, _but_ the following should
+> be added to _store_remove_iface() and _store_add_iface():
+> 
+> 	if (!capable(CAP_NET_ADMIN))
+> 		return -EPERM;
+> 
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/Kconfig |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
+Fair enough... one or the other needs doing though because right now you
+can delete wlan0 as a mortal user (just tried it... you can't nuke
+wmaster0 though) and I guess exhaust the possible max interfaces too.  I
+made a patch changing the perms to  S_IWUSR|S_IWGRP, but your method is
+smarter.
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index a03c886..219b33c 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -20,6 +20,13 @@ config MAC80211_LEDS
- 	This option enables a few LED triggers for different
- 	packet receive/transmit events.
- 
-+config MAC80211_HT
-+	bool "Enable 802.11n HT Features"
-+	depends on MAC80211
-+	---help---
-+	This option enables 802.11n High Throughput features
-+	such as MIMO, AMPDU and AMSDU aggregation	
-+
- config MAC80211_DEBUGFS
- 	bool "Export mac80211 internals in DebugFS"
- 	depends on MAC80211 && DEBUG_FS
-@@ -39,6 +46,12 @@ config MAC80211_DEBUG
- 	  If you are not trying to debug or develop the ieee80211
- 	  subsystem, you most likely want to say N here.
- 
-+config MAC80211_HT_DEBUG
-+	bool "Enables HT debugging output"
-+	depends on MAC80211_HT && MAC80211_DEBUG
-+	---help---
-+	  Select this to see debugging information about HT
-+
- config MAC80211_VERBOSE_DEBUG
- 	bool "Verbose debugging output"
- 	depends on MAC80211_DEBUG
--- 
-1.5.2.2
+-Andy
+
