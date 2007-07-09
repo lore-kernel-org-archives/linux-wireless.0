@@ -1,271 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:54442 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757091AbXG0TEK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2007 15:04:10 -0400
-Date: Fri, 27 Jul 2007 12:03:18 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Gary Zambrano <zambrano@broadcom.com>
-Subject: Re: [PATCH] Merge the Sonics Silicon Backplane subsystem
-Message-Id: <20070727120318.54d18cfc.akpm@linux-foundation.org>
-In-Reply-To: <200707271857.24162.mb@bu3sch.de>
-References: <200707271857.24162.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from MGW2.Sony.CO.JP ([137.153.0.14]:61495 "EHLO mgw2.sony.co.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751815AbXGIMAS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2007 08:00:18 -0400
+Received: from mail36.sony.co.jp (localhost [127.0.0.1])
+	by mail36.sony.co.jp (R8/Sony) with ESMTP id l69C0Gct025129
+	for <linux-wireless@vger.kernel.org>; Mon, 9 Jul 2007 21:00:16 +0900 (JST)
+Received: from smail1.sm.sony.co.jp (smail1.sm.sony.co.jp [43.11.253.1])
+	by mail36.sony.co.jp (R8/Sony) with ESMTP id l69C0GKu025121
+	for <linux-wireless@vger.kernel.org>; Mon, 9 Jul 2007 21:00:16 +0900 (JST)
+Date: Mon, 09 Jul 2007 21:00:16 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: linux-wireless@vger.kernel.org
+Subject: alignment issue between 32bit userland and 64bit kernel
+Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
+	geoffrey.levand@am.sony.com
+Message-Id: <20070709201037.D02C.MOKUNO@sm.sony.co.jp>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 27 Jul 2007 18:57:20 +0200
-Michael Buesch <mb@bu3sch.de> wrote:
+	Hi,
 
-> The Sonics Silicon Backplane is a mini-bus used on
-> various Broadcom chips and embedded devices.
-> Devices using the SSB include b44, bcm43xx and various
-> Broadcom based wireless routers.
-> A b44 and bcm43xx port and a SSB based OHCI driver is available.
+While developing the wireless support for PS3, I'd noticed there were alignment
+issues if we issued some wireless ioctl from 32bit userland to 64bit
+kernel (ppc64 PS3 does have). 
+
+ - IW_EV_LCP_LEN in 32bit userland and 64bit kernel differ
+ - offsetof(struct iw_point, length) differ
+
+The former issue could be fixed if we added 'packed' attribute to
+iw_event structure, but it would break existing 64bit userland.  I have
+no idea to resolve latter issue because the first member of struct
+iw_point is a pointer.
+
+Does anyone have idea to fix these issues?
+(except compiling all userland apps in 64bit mode...)
+
+The following is the output from a test code on my PS3.
+
+> # cat test.c
+> #include <stdio.h>
+> #include <netdb.h>
+> #include <linux/wireless.h>
+> /* packed version */
+> struct iw_event_p {
+>   __u16         len;
+>   __u16         cmd;
+>   union iwreq_data      u;
+> } __attribute__((packed));
 > 
+> int main(void)
+> {
+>   printf("IW_EV_LCP_LEN=%d offset=%d,%d\n",
+>          IW_EV_LCP_LEN,
+>          offsetof(struct iw_event, u),
+>          offsetof(struct iw_event_p, u));
+>   printf("iw_event=%d iw_event_p=%d iwreq_data=%d\n",
+>          sizeof(struct iw_event),
+>          sizeof(struct iw_event_p),
+>          sizeof(union iwreq_data));
+> 
+>   /* --- */
+> 
+>   printf("iw_point=%d length=%d flags=%d\n",
+>          sizeof(struct iw_point),
+>          offsetof(struct iw_point, length),
+>          offsetof(struct iw_point, flags));
+>   return 0;
+> }
+> # cc -m64 -o test_64 test.c; cc -o test_32  test.c
+> # ./test_64
+> IW_EV_LCP_LEN=8 offset=8,4
+> iw_event=24 iw_event_p=20 iwreq_data=16
+> iw_point=16 length=8 flags=10
+> # ./test_32
+> IW_EV_LCP_LEN=4 offset=4,4
+> iw_event=20 iw_event_p=20 iwreq_data=16
+> iw_point=8 length=4 flags=6
+> # 
 
-hm, slim pickings for me here.  Nice looking code.
+regards
 
-checkpatch finds a few coding style glitches.  Lots of 80-col violations
-which you might choose ignore (comments on #defines in headers are
-especially hard) but these guys:
-
-ERROR: "foo * bar" should be "foo *bar"
-#4156: FILE: drivers/ssb/ssb_private.h:119:
-+extern struct ssb_bus * ssb_pci_dev_to_bus(struct pci_dev *pdev);
-
-are worth addressing.
-
-> ...
->
-> --- /dev/null
-> +++ b/drivers/ssb/driver_pcicore.c
-> @@ -0,0 +1,564 @@
->
-> ...
->
-> +u32 pci_iobase = 0x100;
-> +u32 pci_membase = SSB_PCI_DMA;
-
-These are quite poor names for global symbols.
-
-> +static struct resource ssb_pcicore_mem_resource = {
-> +	.name	= "SSB PCIcore external memory",
-> +	.start	= SSB_PCI_DMA,
-> +	.end	= (u32)SSB_PCI_DMA + (u32)SSB_PCI_DMA_SZ - 1,
-> +	.flags	= IORESOURCE_MEM,
-> +};
-
-start and end here are resource_size_t.  Forcing them to u32 seems
-inappropriate.
-
-> +void ssb_pcicore_init(struct ssb_pcicore *pc)
-
-Please check that all newly-added global symbols do indeed need global scope.
-
-> +static void ssb_pcie_mdio_write(struct ssb_pcicore *pc, u8 device,
-> +				u8 address, u16 data)
-> +{
-> +	const u16 mdio_control = 0x128;
-> +	const u16 mdio_data = 0x12C;
-> +	u32 v;
-> +	int i;
-> +
-> +	v = 0x80; /* Enable Preamble Sequence */
-> +	v |= 0x2; /* MDIO Clock Divisor */
-> +	pcicore_write32(pc, mdio_control, v);
-> +
-> +	v = (1 << 30); /* Start of Transaction */
-> +	v |= (1 << 28); /* Write Transaction */
-> +	v |= (1 << 17); /* Turnaround */
-> +	v |= (u32)device << 22;
-> +	v |= (u32)address << 18;
-> +	v |= data;
-> +	pcicore_write32(pc, mdio_data, v);
-> +	udelay(10);
-
-mystery udelays are usually worth a comment.
-
-> +	for (i = 0; i < 10; i++) {
-> +		v = pcicore_read32(pc, mdio_control);
-> +		if (v & 0x100 /* Trans complete */)
-> +			break;
-> +		msleep(1);
-> +	}
-> +	pcicore_write32(pc, mdio_control, 0);
-> +}
->
-> ...
->
-> +
-> +static void ssb_buses_lock(void)
-> +{
-> +	if (!ssb_is_early_boot)
-> +		mutex_lock(&buses_mutex);
-> +}
-> +
-> +static void ssb_buses_unlock(void)
-> +{
-> +	if (!ssb_is_early_boot)
-> +		mutex_unlock(&buses_mutex);
-> +}
-
-Some comments are neeeded here to explain why we're jumping through this
-hoop.  It's normally OK to take a mutex early in boot, so one wonders
-what's happening.
-
-> +EXPORT_SYMBOL(ssb_clockspeed);
-
-Please check that all newly-added exports really need to be exported (I'm
-sure they do, but..)
-
-> +static int ssb_wait_bit(struct ssb_device *dev, u16 reg, u32 bitmask,
-> +			int timeout, int set)
-> +{
-> +	int i;
-> +	u32 val;
-> +
-> +	for (i = 0; i < timeout; i++) {
-> +		val = ssb_read32(dev, reg);
-> +		if (set) {
-> +			if (val & bitmask)
-> +				return 0;
-> +		} else {
-> +			if (!(val & bitmask))
-> +				return 0;
-> +		}
-> +		udelay(10);
-> +	}
-> +	printk(KERN_ERR PFX "Timeout waiting for bitmask %08X on "
-> +			    "register %04X to %s.\n",
-> +	       bitmask, reg, (set ? "set" : "clear"));
-> +
-> +	return -ETIMEDOUT;
-> +}
-
-So `timeout' is in units of ten-microseconds.  Unusual.
-
-> +void ssb_device_disable(struct ssb_device *dev, u32 core_specific_flags)
-> +{
-> +	u32 reject;
-> +
-> +	if (ssb_read32(dev, SSB_TMSLOW) & SSB_TMSLOW_RESET)
-> +		return;
-> +
-> +	reject = ssb_tmslow_reject_bitmask(dev);
-> +	ssb_write32(dev, SSB_TMSLOW, reject | SSB_TMSLOW_CLOCK);
-> +	ssb_wait_bit(dev, SSB_TMSLOW, reject, 1000, 1);
-> +	ssb_wait_bit(dev, SSB_TMSHIGH, SSB_TMSHIGH_BUSY, 1000, 0);
-> +	ssb_write32(dev, SSB_TMSLOW,
-> +		    SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK |
-> +		    reject | SSB_TMSLOW_RESET |
-> +		    core_specific_flags);
-> +	/* flush */
-> +	ssb_read32(dev, SSB_TMSLOW);
-> +	udelay(1);
-> +
-> +	ssb_write32(dev, SSB_TMSLOW,
-> +		    reject | SSB_TMSLOW_RESET |
-> +		    core_specific_flags);
-> +	/* flush */
-> +	ssb_read32(dev, SSB_TMSLOW);
-> +	udelay(1);
-
-mystery udelay.
-
-> +}
-> +EXPORT_SYMBOL(ssb_device_disable);
->
-> ...
->
-> +const struct ssb_bus_ops ssb_pci_ops = {
-> +	.read16		= ssb_pci_read16,
-> +	.read32		= ssb_pci_read32,
-> +	.write16	= ssb_pci_write16,
-> +	.write32	= ssb_pci_write32,
-> +};
-
-static?
-
-> +static ssize_t ssb_pci_attr_sprom_show(struct device *pcidev,
-> +				       struct device_attribute *attr,
-> +				       char *buf)
-> +{
-> +	struct pci_dev *pdev = container_of(pcidev, struct pci_dev, dev);
-> +	struct ssb_bus *bus;
-> +	u16 *sprom;
-> +	int err = -ENODEV;
-> +	ssize_t count = 0;
-> +
-> +	bus = ssb_pci_dev_to_bus(pdev);
-> +	if (!bus)
-> +		goto out;
-> +	err = -ENOMEM;
-> +	sprom = kcalloc(SSB_SPROMSIZE_WORDS, sizeof(u16), GFP_KERNEL);
-> +	if (!sprom)
-> +		goto out;
-> +
-> +	err = -ERESTARTSYS;
-> +	if (mutex_lock_interruptible(&bus->pci_sprom_mutex))
-> +		goto out_kfree;
-> +	sprom_do_read(bus, sprom);
-> +	mutex_unlock(&bus->pci_sprom_mutex);
-> +
-> +	count = sprom2hex(sprom, buf, PAGE_SIZE);
-> +	err = 0;
-> +
-> +out_kfree:
-> +	kfree(sprom);
-> +out:
-> +	return err ? err : count;
-> +}
-
-The mutex_lock_interruptible() looks fishy.  Some commented explanation of
-what it's doing would be good here.  It's quite unobvious to this reader. 
-Cheesy deadlock avoidance?  Hope not.
-
-> +
-> +/* These are the main device register access functions.
-> + * do_select_core is inline to have the likely hotpath inline.
-> + * All unlikely codepaths are out-of-line. */
-> +static inline int do_select_core(struct ssb_bus *bus,
-> +				 struct ssb_device *dev,
-> +				 u16 *offset)
-> +{
-> +	int err;
-> +	u8 need_seg = (*offset >= 0x800) ? 1 : 0;
-> +
-> +	if (unlikely(dev != bus->mapped_device)) {
-> +		err = ssb_pcmcia_switch_core(bus, dev);
-> +		if (unlikely(err))
-> +			return err;
-> +	}
-> +	if (unlikely(need_seg != bus->mapped_pcmcia_seg)) {
-> +		err = ssb_pcmcia_switch_segment(bus, need_seg);
-> +		if (unlikely(err))
-> +			return err;
-> +	}
-> +	if (need_seg == 1)
-> +		*offset -= 0x800;
-> +
-> +	return 0;
-> +}
-
-Looks too large for inlining.
-
-> +const struct ssb_bus_ops ssb_pcmcia_ops = {
-> +	.read16		= ssb_pcmcia_read16,
-> +	.read32		= ssb_pcmcia_read32,
-> +	.write16	= ssb_pcmcia_write16,
-> +	.write32	= ssb_pcmcia_write32,
-> +};
-
-static?
-
+--
+Masakazu MOKUNO
 
