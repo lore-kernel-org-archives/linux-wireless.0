@@ -1,27 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:50031
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:57503
 	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751704AbXGLJDH (ORCPT
+	with ESMTP id S1756239AbXGIWr4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2007 05:03:07 -0400
-Message-Id: <20070712085432.528319000@bu3sch.de>
-Date: Thu, 12 Jul 2007 10:54:32 +0200
-From: mb@bu3sch.de
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	Aurelien Jarno <aurelien@aurel32.net>,
-	linux-wireless@vger.kernel.org,
-	Gary Zambrano <zambrano@broadcom.com>
-Subject: [patch 0/2] Merge the SSB subsystem
+	Mon, 9 Jul 2007 18:47:56 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: jt@hpl.hp.com
+Subject: Re: [PATCH 2.6] SoftMAC : fix ESSID problem
+Date: Tue, 10 Jul 2007 00:46:23 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+References: <20070709221922.GB1381@bougret.hpl.hp.com>
+In-Reply-To: <20070709221922.GB1381@bougret.hpl.hp.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200707100046.23832.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series merges the SSB subsystem and the SSB based USB OHCI HCD driver.
-This is the first step to finally get bcm43xx-mac80211 merged, which is also
-based on the SSB subsystem.
+On Tuesday 10 July 2007 00:19:22 Jean Tourrilhes wrote:
+> 	Hi,
+> 
+> 	Victor Porton reported that the SoftMAC layer had random
+> problem when setting the ESSID :
+> 		http://bugzilla.kernel.org/show_bug.cgi?id=8686
+> 	After investigation, it turned out to be worse, the SoftMAC
+> layer is left in an inconsistent state. The fix is pretty trivial.
+>         John : would you mind pushing that to 2.6.23 ?
+>         Thanks...
+> 
+>         Jean
+> 
+> Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
+> 
+> -----------------------------------------------------------
+> 
+> --- linux/net/ieee80211/softmac/ieee80211softmac_assoc.j1.c	2007-07-09 13:56:13.000000000 -0700
+> +++ linux/net/ieee80211/softmac/ieee80211softmac_assoc.c	2007-07-09 13:56:41.000000000 -0700
+> @@ -271,8 +271,11 @@ ieee80211softmac_assoc_work(struct work_
+>  			 */
+>  			dprintk(KERN_INFO PFX "Associate: Scanning for networks first.\n");
+>  			ieee80211softmac_notify(mac->dev, IEEE80211SOFTMAC_EVENT_SCAN_FINISHED, ieee80211softmac_assoc_notify_scan, NULL);
+> -			if (ieee80211softmac_start_scan(mac))
+> +			if (ieee80211softmac_start_scan(mac)) {
+>  				dprintk(KERN_INFO PFX "Associate: failed to initiate scan. Is device up?\n");
+> +				mac->associnfo.associating = 0;
+> +				mac->associnfo.associated = 0;
+> +			}
+>  			goto out;
+>  		} else {
+>  			mac->associnfo.associating = 0;
+> 
 
-There's also a b44 port available, but it isn't ACKed by the b44 maintainers, yet.
+Acked-by: Michael Buesch <mb@bu3sch.de>
 
---
+
+-- 
 Greetings Michael.
-
