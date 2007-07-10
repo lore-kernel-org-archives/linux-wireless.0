@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40484 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751758AbXGRKNA (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:42218 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757411AbXGJKOn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2007 06:13:00 -0400
-Subject: Re: [PATCH] rtl8187: ensure priv->hwaddr is always valid
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200707172025.19979.mb@bu3sch.de>
-References: <200707151709.55429.flamingice@sourmilk.net>
-	 <1184578463.3773.1.camel@johannes.berg>  <200707172025.19979.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+/YJjTAa95g9IjTFADos"
-Date: Wed, 18 Jul 2007 12:10:03 +0200
-Message-Id: <1184753403.4658.7.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 10 Jul 2007 06:14:43 -0400
+Message-ID: <46935BFF.20800@warmcat.com>
+Date: Tue, 10 Jul 2007 11:14:23 +0100
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Stefan Schweizer <genstef@gentoo.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Monitor mode with RTL8187
+References: <59abf66e0707091451p3913ba5enf35edd934840b3cb@mail.gmail.com> <4693176F.6070407@warmcat.com> <f6vep6$n3$1@sea.gmane.org>
+In-Reply-To: <f6vep6$n3$1@sea.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Stefan Schweizer wrote:
+> Andy Green wrote:
+>> ifconfig wlan0 down
+>>
+>> Then after changing the mode, bring it up and set the channel.
+> 
+> why can it not do that automatically when issueing the mode monitor command?
+> 
+> Seems usability has not yet reached wireless configuration - where it is imo
+> much needed.
 
---=-+/YJjTAa95g9IjTFADos
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+It's really a userspace issue... libpcap could be given the primitives
+so tcpdump or whatever can set the mode and bring the interface up.
 
-On Tue, 2007-07-17 at 20:25 +0200, Michael Buesch wrote:
+On the same subject, why is scanning done by a separate app (iwlist)
+from iwconfig?  Why is scanning specially modal in the stack (or even
+worse the device firmware) when there are enough primitives lying around
+to do it from userspace?  I guess the answer is it got started like that
+and now people are using it that way changing is harder.
 
-> I'd suggest changing this behaviour in the stack, as this bug will
-> be made again for new drivers in the future.
-> What about pointing mac_addr to a 00:00:00:00:00 const static mac address=
-,
-> instead of passing a NULL pointer?
+BTW apropos of nothing let me note that the try #13 injection patches
+apply to current wireless-dev with only a single fuzz, and are available
+right here:
 
-I disagree. Having the if statement in the driver doesn't hurt and
-neither does having a static zero mac address, but hardware that does
-require special setup instead of a zero mac address would have to do
-is_zero_etheraddr() or something to figure it out.
+[PATCH Try#lucky13 1/3] mac80211: Monitor mode radiotap injection docs
+http://www.spinics.net/lists/linux-wireless/msg03055.html
 
-johannes
+[PATCH Try#lucky13 2/3] cfg80211: Radiotap parser
+http://www.spinics.net/lists/linux-wireless/msg03056.html
 
---=-+/YJjTAa95g9IjTFADos
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+[PATCH Try#lucky13 3/3] mac80211: Monitor mode radiotap-based packet
+injection
+http://www.spinics.net/lists/linux-wireless/msg03054.html
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGneb7/ETPhpq3jKURAv/ZAJwJ0l6zcW+uOfUmCSIONzybqZZWkQCdHQ7f
-bbyyIRO72rbovuheGuuwqJY=
-=v+EO
------END PGP SIGNATURE-----
-
---=-+/YJjTAa95g9IjTFADos--
+-Andy
 
