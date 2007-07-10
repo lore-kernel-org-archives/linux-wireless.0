@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58604 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762218AbXGMJJh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2007 05:09:37 -0400
-Subject: Re: [PATCH 2.6] libertas : fix a few wext abuses...
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4735 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754396AbXGJPCX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jul 2007 11:02:23 -0400
+Date: Tue, 10 Jul 2007 10:56:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: Dan Williams <dcbw@redhat.com>
-Cc: jt@hpl.hp.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1184210893.18797.16.camel@localhost.localdomain>
-References: <20070710213706.GA7929@bougret.hpl.hp.com>
-	 <1184188789.28850.4.camel@localhost.localdomain>
-	 <20070712004634.GA12148@bougret.hpl.hp.com>
-	 <1184210893.18797.16.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FG0x/klzQ1M/KTXhQaLy"
-Date: Fri, 13 Jul 2007 00:05:52 +0200
-Message-Id: <1184277952.6669.81.camel@johannes.berg>
+Cc: Javier Cardona <javier@cozybit.com>,
+	linux-wireless@vger.kernel.org, marcelo@kvack.org
+Subject: Re: libertas (private) ioctls vs. nl80211
+Message-ID: <20070710145615.GB7927@tuxdriver.com>
+References: <1181757483.29767.99.camel@johannes.berg> <20070614170901.GA13384@infradead.org> <20070614103836.23b07a72.akpm@linux-foundation.org> <20070614181307.GA16856@infradead.org> <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org> <20070614190936.GA28917@tuxdriver.com> <445f43ac0707060840k34d9554cta9ff11cad314db76@mail.gmail.com> <1183738085.23402.2.camel@xo-13-A4-25.localdomain>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1183738085.23402.2.camel@xo-13-A4-25.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Jul 06, 2007 at 12:08:05PM -0400, Dan Williams wrote:
+> On Fri, 2007-07-06 at 08:40 -0700, Javier Cardona wrote:
+> > John,
+> > 
+> > On 6/14/07, John W. Linville <linville@tuxdriver.com> wrote:
+> > > I'm not aware of any project working on wireless mesh in mac80211 at
+> > > the moment, serious or otherwise.  I think one would be worthwhile,
+> > > but I don't know of anyone working on it.
+> > 
+> > We (cozybit Inc.) are working on an open implementation of 802.11s for
+> > Linux, based on mac80211.  We implemented an early draft
+> > implementation of 802.11s for the Marvell wireless interface used on
+> > the One Laptop Per Child.  That implementation was done entirely in
+> > firmware to take advantage of the unique capabilities of Marvell's
+> > wireless device:  the system-on-chip wireless module enables the
+> > laptop to act as a low-power, fully functional mesh point even when
+> > the main CPU is off.
+> > 
+> > Our next goal is to do a reference implementation of the latest
+> > 802.11s draft on Linux.  The hope is that it will help to achieve
+> > early interoperability and convergence of the standard.  We are
+> > seeking sponsors for the project.  So far Nortel has expressed strong
+> > interest.
+> 
+> Rock on.  If we can achieve convergence between the API that libertas
+> +mesh and the mac80211+mesh use, then we should both use the same
+> cfg80211/nl80211 interface for both.
 
---=-FG0x/klzQ1M/KTXhQaLy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+ACK.  This is definitely good news.  I am eager to see your patches.
+Let me know if I can somehow be helpful in your help for project
+sponsorship.
 
-On Wed, 2007-07-11 at 23:28 -0400, Dan Williams wrote:
-
-> > 	By the way, from my glancing at the driver, the Libertas
-> > driver do select CONFIG_IEEE80211, and then doesn't use it ? It seems
-> > to force loading a modules that is not needed.
->=20
-> It does for ieee80211_escape_essid, actually.
-
-In fact, just selecting CONFIG_IEEE80211 would force building it, not
-actually create a run-time dependency, so the use of
-ieee80211_escape_essid is what forces it to load :)
-
-johannes
-
---=-FG0x/klzQ1M/KTXhQaLy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGlqXA/ETPhpq3jKURAnfsAJ9oCWhoZOT0qBX4UQ5blnN54Z+nBwCeN+kp
-Z2rkiTbkI650MgTPkLmtRWc=
-=llu2
------END PGP SIGNATURE-----
-
---=-FG0x/klzQ1M/KTXhQaLy--
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
