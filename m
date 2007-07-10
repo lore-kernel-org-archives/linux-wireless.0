@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.229]:50425 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760859AbXGFPlC (ORCPT
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:56667 "EHLO
+	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760691AbXGJBhl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2007 11:41:02 -0400
-Received: by wr-out-0506.google.com with SMTP id i30so201615wra
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jul 2007 08:40:59 -0700 (PDT)
-Message-ID: <445f43ac0707060840k34d9554cta9ff11cad314db76@mail.gmail.com>
-Date: Fri, 6 Jul 2007 08:40:58 -0700
-From: "Javier Cardona" <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: libertas (private) ioctls vs. nl80211
-Cc: linux-wireless@vger.kernel.org, dcbw@redhat.com, marcelo@kvack.org
-In-Reply-To: <20070614190936.GA28917@tuxdriver.com>
+	Mon, 9 Jul 2007 21:37:41 -0400
+Date: Mon, 09 Jul 2007 20:37:36 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: stable@kernel.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] softmac: Fix ESSID problem
+Message-ID: <4692e2e0.u/1KuH/5hSPtXvF9%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <1181757483.29767.99.camel@johannes.berg>
-	 <20070614170901.GA13384@infradead.org>
-	 <20070614103836.23b07a72.akpm@linux-foundation.org>
-	 <20070614181307.GA16856@infradead.org>
-	 <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org>
-	 <20070614190936.GA28917@tuxdriver.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+From: Jean Tourrilhes <jt@hpl.hp.com>
 
-On 6/14/07, John W. Linville <linville@tuxdriver.com> wrote:
-> I'm not aware of any project working on wireless mesh in mac80211 at
-> the moment, serious or otherwise.  I think one would be worthwhile,
-> but I don't know of anyone working on it.
+Victor Porton reported that the SoftMAC layer had random problem when setting the ESSID :
+http://bugzilla.kernel.org/show_bug.cgi?id=8686 After investigation, it turned out to be
+worse, the SoftMAC layer is left in an inconsistent state. The fix is pretty trivial.
 
-We (cozybit Inc.) are working on an open implementation of 802.11s for
-Linux, based on mac80211.  We implemented an early draft
-implementation of 802.11s for the Marvell wireless interface used on
-the One Laptop Per Child.  That implementation was done entirely in
-firmware to take advantage of the unique capabilities of Marvell's
-wireless device:  the system-on-chip wireless module enables the
-laptop to act as a low-power, fully functional mesh point even when
-the main CPU is off.
+Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
+Acked-by: Michael Buesch <mb@bu3sch.df>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Our next goal is to do a reference implementation of the latest
-802.11s draft on Linux.  The hope is that it will help to achieve
-early interoperability and convergence of the standard.  We are
-seeking sponsors for the project.  So far Nortel has expressed strong
-interest.
+ ieee80211softmac_assoc.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-More details will follow soon.
+Index: linux-2.6/net/ieee80211/softmac/ieee80211softmac_assoc.c
+===================================================================
+--- linux-2.6.orig/net/ieee80211/softmac/ieee80211softmac_assoc.c
++++ linux-2.6/net/ieee80211/softmac/ieee80211softmac_assoc.c
+@@ -271,8 +271,11 @@ ieee80211softmac_assoc_work(struct work_
+ 			 */
+ 			dprintk(KERN_INFO PFX "Associate: Scanning for networks first.\n");
+ 			ieee80211softmac_notify(mac->dev, IEEE80211SOFTMAC_EVENT_SCAN_FINISHED, ieee80211softmac_assoc_notify_scan, NULL);
+-			if (ieee80211softmac_start_scan(mac))
++			if (ieee80211softmac_start_scan(mac)) {
+ 				dprintk(KERN_INFO PFX "Associate: failed to initiate scan. Is device up?\n");
++				mac->associnfo.associating = 0;
++				mac->associnfo.associated = 0;
++			}
+ 			goto out;
+ 		} else {
+ 			mac->associnfo.associating = 0;
 
-Javier
+----
+
