@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:29671 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753397AbXGDG7v (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2007 02:59:51 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-Date: Wed, 4 Jul 2007 08:59:49 +0200
-Subject: [PATCH 2/2] libertas: remove bss_descriptor->timestamp
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Received: from mga02.intel.com ([134.134.136.20]:1755 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752633AbXGJTXB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jul 2007 15:23:01 -0400
+Message-ID: <4693DC92.2010209@intel.com>
+Date: Tue, 10 Jul 2007 12:22:58 -0700
+From: "Kok, Auke" <auke-jan.h.kok@intel.com>
 MIME-Version: 1.0
-Message-Id: <200707040859.49814.hs4233@mail.mn-solutions.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+CC: linux-wireless@vger.kernel.org, jbenc@suse.cz
+Subject: Re: mac80211: build failure if enabled - 2.6.22 vanilla
+References: <4693D60F.7010003@intel.com> <4693DBD4.5010903@lwfinger.net>
+In-Reply-To: <4693DBD4.5010903@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Noone used this variable.
+Larry Finger wrote:
+> Kok, Auke wrote:
+>> I realize mac80211 isn't really helpfull if you don't build any drivers 
+>> that use it, but I currently get:
+>>
+>> ...
+>>   CC [M]  drivers/scsi/ch.o
+>>   LD [M]  net/llc/llc.o
+>>   LD      net/mac80211/built-in.o
+>> make[2]: *** No rule to make target `net/mac80211/ieee80211.o', needed 
+>> by `net/mac80211/mac80211.o'.  Stop.
+>> make[2]: *** Waiting for unfinished jobs....
+>> make[1]: *** [net/mac80211] Error 2
+>> make: *** [net] Error 2
+>> make: *** Waiting for unfinished jobs....
+>>
+>> if I enable CONFIG_MAC80211=m without selecting any drivers that use 
+>> this subsystem.
+> 
+> There is something funny here. I just built a 2.6.22 system with mac80211 without any drivers that 
+> use it, and everything worked OK. This was on an X86_64 system. What is your architecture?
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
----
- drivers/net/wireless/libertas/scan.c |    1 -
- drivers/net/wireless/libertas/scan.h |    1 -
- 2 files changed, 0 insertions(+), 2 deletions(-)
+32-bit... I'm trying now with a clean kernel and all and will post the .config 
+in a bit (that's if I can reproduce... I was mucking with my tree to get iwl to 
+compile and blew some changes).
 
-diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
-index aea2e90..5c730b9 100644
---- a/drivers/net/wireless/libertas/scan.c
-+++ b/drivers/net/wireless/libertas/scan.c
-@@ -903,7 +903,6 @@ static int libertas_process_bss(struct bss_descriptor * bss,
- 	pos++;
- 
- 	/* time stamp is 8 bytes long */
--	bss->timestamp = le64_to_cpup((void *) pos);
- 	pos += 8;
- 
- 	/* beacon interval is 2 bytes long */
-diff --git a/drivers/net/wireless/libertas/scan.h b/drivers/net/wireless/libertas/scan.h
-index 28decf3..9bb1a43 100644
---- a/drivers/net/wireless/libertas/scan.h
-+++ b/drivers/net/wireless/libertas/scan.h
-@@ -157,7 +157,6 @@ struct bss_descriptor {
- 	/* zero-terminated array of supported data rates */
- 	u8 rates[MAX_RATES + 1];
- 
--	__le64 timestamp;	//!< TSF value included in the beacon/probe response
- 	unsigned long last_scanned;
- 
- 	union ieeetypes_phyparamset phyparamset;
--- 
-1.5.2.1
-
+Auke
