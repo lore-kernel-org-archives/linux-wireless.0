@@ -1,39 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp156.iad.emailsrvr.com ([207.97.245.156]:38422 "EHLO
-	smtp156.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755083AbXGIAmE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2007 20:42:04 -0400
-Message-ID: <46918403.8080705@gentoo.org>
-Date: Sun, 08 Jul 2007 20:40:35 -0400
-From: Daniel Drake <dsd@gentoo.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Michael Buesch <mb@bu3sch.de>, Ulrich Kunitz <kune@deine-taler.de>,
-	Andy Green <andy@warmcat.com>, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: Arrested Development
-References: <468DE699.9040708@warmcat.com> <46910F3F.8010201@warmcat.com>	 <20070708181524.GA12389@deine-taler.de>  <200707082018.23045.mb@bu3sch.de> <1183921731.3771.2.camel@johannes.berg>
-In-Reply-To: <1183921731.3771.2.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from ra.tuxdriver.com ([70.61.120.52]:3385 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753625AbXGJPif (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jul 2007 11:38:35 -0400
+Date: Tue, 10 Jul 2007 11:10:44 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jean Tourrilhes <jt@hpl.hp.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 2.6] WE : Fix get 32 char ESSID
+Message-ID: <20070710151044.GC7927@tuxdriver.com>
+References: <20070709221322.GA1381@bougret.hpl.hp.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070709221322.GA1381@bougret.hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sun, 2007-07-08 at 20:18 +0200, Michael Buesch wrote:
+On Mon, Jul 09, 2007 at 03:13:22PM -0700, Jean Tourrilhes wrote:
+
+> 	A little bug was introduced a few months ago that prevent
+> reading ESSID with 32 character. Philippe Teuwen was the first one to
+> report that, followed by the MadWifi team :
+> 		http://madwifi.org/ticket/930
+> 	The patch fix this bug by removing obsolete code. It also
+> reenable setting the full range of ESSID, including ESSID with a final
+> NUL which are valid. This was tested on 2.6.21 and 2.6.22.
+> 	John : would you mind pushing that to 2.6.23 ? If you are
+> happy with it, I can provide backport patches for earlier kernels.
+
+Jean,
+
+Thanks for the patch.
+
+Iirc, I wrote this ugly little piece of code that you seek to remove.
+It's purpose is/was to preserve userland ABI for older versions of
+the wireless-tools package.  I'll have to dig a little deeper if you
+need a more detailed refresher -- let me know.
+
+In that case, I believe the issue was that using older wireless-tools
+w/ newer kernels would result in the SSID getting truncated by one
+character.  If we apply this patch (removing my hack/fix), won't we
+be reintroducing that issue?  If not, can you remind me as to why not?
+
+Thanks,
+
+John
+
 > 
->> I think it's the NULL pointer dereference of the mac address pointer,
->> if there's only a monitor interface. The address pointer can be NULL.
+> Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
 > 
-> Ahem. I copied a whole bunch of people when I audited that and never got
-> a reply (except from you)
+> -----------------------------------------------------------
+> 
+> --- linux/net/wireless/wext.j1.c	2007-07-09 13:19:22.000000000 -0700
+> +++ linux/net/wireless/wext.c	2007-07-09 13:19:59.000000000 -0700
+> @@ -741,39 +741,11 @@ static int ioctl_standard_call(struct ne
+>  		int	extra_size;
+>  		int	user_length = 0;
+>  		int	err;
+> -		int	essid_compat = 0;
+>  
+>  		/* Calculate space needed by arguments. Always allocate
+>  		 * for max space. Easier, and won't last long... */
+>  		extra_size = descr->max_tokens * descr->token_size;
+>  
+> -		/* Check need for ESSID compatibility for WE < 21 */
+> -		switch (cmd) {
+> -		case SIOCSIWESSID:
+> -		case SIOCGIWESSID:
+> -		case SIOCSIWNICKN:
+> -		case SIOCGIWNICKN:
+> -			if (iwr->u.data.length == descr->max_tokens + 1)
+> -				essid_compat = 1;
+> -			else if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
+> -				char essid[IW_ESSID_MAX_SIZE + 1];
+> -
+> -				err = copy_from_user(essid, iwr->u.data.pointer,
+> -						     iwr->u.data.length *
+> -						     descr->token_size);
+> -				if (err)
+> -					return -EFAULT;
+> -
+> -				if (essid[iwr->u.data.length - 1] == '\0')
+> -					essid_compat = 1;
+> -			}
+> -			break;
+> -		default:
+> -			break;
+> -		}
+> -
+> -		iwr->u.data.length -= essid_compat;
+> -
+>  		/* Check what user space is giving us */
+>  		if (IW_IS_SET(cmd)) {
+>  			/* Check NULL pointer */
+> @@ -811,7 +783,6 @@ static int ioctl_standard_call(struct ne
+>  		}
+>  
+>  		/* Create the kernel buffer */
+> -		/*    kzalloc ensures NULL-termination for essid_compat */
+>  		extra = kzalloc(extra_size, GFP_KERNEL);
+>  		if (extra == NULL)
+>  			return -ENOMEM;
+> @@ -830,8 +801,6 @@ static int ioctl_standard_call(struct ne
+>  		/* Call the handler */
+>  		ret = handler(dev, &info, &(iwr->u), extra);
+>  
+> -		iwr->u.data.length += essid_compat;
+> -
+>  		/* If we have something to return to the user */
+>  		if (!ret && IW_IS_GET(cmd)) {
+>  			/* Check if there is enough buffer up there */
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I did see the mail when you sent it, thanks. I am recording these issues 
-here:
-
-http://www.linuxwireless.org/en/users/Drivers/zd1211rw/mac80211Issues
-
-As you can see, we have a number of things to be looking at, so 
-apologies if we are little slow.
-
-Daniel
+-- 
+John W. Linville
+linville@tuxdriver.com
