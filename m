@@ -1,61 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:1105 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760212AbXGaMyq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 08:54:46 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so72616ugf
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 05:54:45 -0700 (PDT)
-To: Andy Green <andy@warmcat.com>
-Subject: Re: [PATCH] rt73usb-add-bluenext-148f-2573
-Date: Tue, 31 Jul 2007 14:58:40 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <20070731115446.5717.37617.stgit@localhost> <200707311427.58948.IvDoorn@gmail.com> <46AF2D5C.6090803@warmcat.com>
-In-Reply-To: <46AF2D5C.6090803@warmcat.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200707311458.40936.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:38617 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751706AbXGKVSY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jul 2007 17:18:24 -0400
+Subject: Re: Setting channel when interface is down inconsistency
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jon Smirl <jonsmirl@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1184107850.3738.20.camel@johannes.berg>
+References: <9e4733910707090759v5cd20f2en1f6c4e6fc6279b3f@mail.gmail.com>
+	 <1184005862.5671.2.camel@xo-13-A4-25.localdomain>
+	 <1184107850.3738.20.camel@johannes.berg>
+Content-Type: text/plain
+Date: Wed, 11 Jul 2007 17:18:15 -0400
+Message-Id: <1184188695.28850.2.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Are there known problems with the monitor mode?  It seems incomplete
-> even with one virtual interface, eg
-
-Sounds awfully familiar. :(
-
-> 13:37:00.549494 1.0 Mb/s 2437 MHz (0x0480) 192dB signal Probe Request ()
-> [1.0 2.0 5.5 11.0 6.0 9.0 12.0 18.0 Mbit]
-> 13:37:00.550243 1.0 Mb/s 2437 MHz (0x0480) 192dB signal Probe Request ()
-> [1.0 2.0 5.5 11.0 6.0 9.0 12.0 18.0 Mbit]
-> 13:37:00.590127 1.0 Mb/s 2437 MHz (0x0480) 216dB signal Beacon (froh)
-> [1.0* 2.0* 5.5* 11.0* Mbit] ESS CH: 6, PRIVACY
-> 13:37:00.692568 1.0 Mb/s 2437 MHz (0x0480) 216dB signal Beacon (froh)
-> [1.0* 2.0* 5.5* 11.0* Mbit] ESS CH: 6, PRIVACY
-> 13:37:00.897401 1.0 Mb/s 2437 MHz (0x0480) 216dB signal Beacon (froh)
-> [1.0* 2.0* 5.5* 11.0* Mbit] ESS CH: 6, PRIVACY
-> 13:37:00.999773 1.0 Mb/s 2437 MHz (0x0480) 216dB signal Beacon (froh)
-> [1.0* 2.0* 5.5* 11.0* Mbit] ESS CH: 6, PRIVACY
+On Wed, 2007-07-11 at 00:50 +0200, Johannes Berg wrote:
+> On Mon, 2007-07-09 at 14:31 -0400, Dan Williams wrote:
+> > On Mon, 2007-07-09 at 10:59 -0400, Jon Smirl wrote:
+> > > bcm43xx and rx2x00 let me set the channel before the interface is up.
+> > > zd1211 requires the interface to be up before setting the channel.
+> > > 
+> > > Is there a guideline for how this is supposed to work?
+> > 
+> > In the ideal case, the driver should allow you to set any _attribute_
+> > when the device is down, but if you try to do an _action_ that requires
+> > that the interface be up (for example, associating), it should return an
+> > error of some kind.
+> > 
+> > So setting things like encryption key, channel, ssid, bssid, etc should
+> > all work when the device is down, but actually issuing the 'iwconfig
+> > wlan0 ssid "foobar"' can be expected to fail because in WEXT that is
+> > supposed to trigger an association.
+> > 
+> > Splitting up this stuff and having an explicit association request in
+> > nl80211/cfg80211 should make this a lot clearer.
 > 
-> and reports the rate as 1Mbps in all cases.  During this capture I have
-> another box doing
-
-At which rate should the other box be sending the frames?
-
-> # while [ 1 ] ; do ls -l / ; done
+> In fact, the way it's planned now is that you can't even give it an
+> ssid/bssid etc. without also triggering an association, but contrary to
+> wext you do pass all parameters at once and when needed.
 > 
-> over an ssh link which is being carried on another wireless device on
-> the same box associated on to channel 6...
+> Hence, this will not actually solve the problem per se, we could make it
+> a requirement either way to document it (though in fact it'd be simple
+> to return -ENOTCONN for every configuration request when the device is
+> down) but setting the channel for example isn't actually any different
+> than with wext. Therefore, I think we still need a guideline. Do you
+> think setting everything when the device is down makes sense? Then we'll
 
-Could you enable debugfs and do inside the "rt73usb" folder within the
-mac80211 debugfs entry do:
+The more I think about it the more I think you're right; because with
+WEXT there was really no ordering guarantee.  With the new stuff as long
+as there's an ordering guarantee, I think it'll be fine.
 
-echo 16 > csr_offset
-cat csr_value
+But, of course, we need to make sure that we are consistent and that if
+we really don't allow configuration when the device is down, that all
+drivers return error when they are down.
 
-This will read the TXRX_CSR0 register of rt73usb which controls the filtering
-of the frames. That will help determining if the missing frames have been
-droppen in the hardware or not.
+Dan
 
-Ivo
+> have to document that drivers must accept these requests and honour them
+> when the device is turned on. Which is actually another thing we need to
+> make absolutely sure, when the netdev is down the device should be
+> turned off.
+> 
+> johannes
+
