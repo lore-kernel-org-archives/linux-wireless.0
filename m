@@ -1,58 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4448 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759944AbXGCTCD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2007 15:02:03 -0400
-Date: Tue, 3 Jul 2007 14:48:13 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: jeff@garzik.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Please pull 'libertas-fixes' branch of wireless-2.6
-Message-ID: <20070703184813.GC3534@tuxdriver.com>
-Mime-Version: 1.0
+Received: from mailgw1.uni-kl.de ([131.246.120.220]:50418 "EHLO
+	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759902AbXGKUJF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jul 2007 16:09:05 -0400
+Date: Wed, 11 Jul 2007 22:06:24 +0200
+From: Joerg Mayer <jmayer@loplof.de>
+To: jketreno <jketreno@linux.intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Benc <jbenc@suse.cz>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/14] major mac80211 restructuring/cleanups
+Message-ID: <20070711200624.GY8218@thot.informatik.uni-kl.de>
+References: <20070621221603.778432000@sipsolutions.net> <20070710153456.471e395e@logostar.upir.cz> <1184075439.15565.11.camel@johannes.berg> <20070710162912.17899683@logostar.upir.cz> <1184079079.15565.13.camel@johannes.berg> <469506AA.9010703@linux.intel.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <469506AA.9010703@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following changes since commit aa2e09da2a332e748532aa2a71b090e7e7c3203d:
-  Len Brown (1):
-        ACPI: fix acpi_osi=!Linux
+On Wed, Jul 11, 2007 at 09:34:50AM -0700, jketreno wrote:
+> Johannes Berg wrote:
+...
+> >Which all goes to say that pushing mac80211 for .22 was too fast.
+> 
+> Definitely not too fast.  
+> 
+> The fact that people are using mac80211 from Linus' kernel tip is *GREAT*.  
+> We have a lot of users now that can pull Linus' tree and use iwlwifi and 
+> they no longer have to figure out how to patch a kernel, or pull from 
+> wireless-dev.
+...
 
-are found in the git repository at:
+Which reminds me: Will the driver make it into .23?
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git libertas-fixes
-
-Holger Schurig (1):
-      libertas: fix use-after-free in rx path
-
-Robert P. J. Day (1):
-      WIRELESS: Remove clearly obsolete libertas/version.h file.
-
- drivers/net/wireless/libertas/rx.c      |    1 -
- drivers/net/wireless/libertas/version.h |    1 -
- 2 files changed, 0 insertions(+), 2 deletions(-)
- delete mode 100644 drivers/net/wireless/libertas/version.h
-
-diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
-index 88d9d2d..769c86f 100644
---- a/drivers/net/wireless/libertas/rx.c
-+++ b/drivers/net/wireless/libertas/rx.c
-@@ -439,7 +439,6 @@ static int process_rxed_802_11_packet(wlan_private * priv, struct sk_buff *skb)
- 	ret = 0;
- 
- done:
--	skb->protocol = __constant_htons(0x0019);	/* ETH_P_80211_RAW */
- 	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", ret);
- 	return ret;
- }
-diff --git a/drivers/net/wireless/libertas/version.h b/drivers/net/wireless/libertas/version.h
-deleted file mode 100644
-index 8b13789..0000000
---- a/drivers/net/wireless/libertas/version.h
-+++ /dev/null
-@@ -1 +0,0 @@
--
+ ciao
+    Joerg
 
 -- 
-John W. Linville
-linville@tuxdriver.com
+Joerg Mayer                                           <jmayer@loplof.de>
+We are stuck with technology when what we really want is just stuff that
+works. Some say that should read Microsoft instead of technology.
