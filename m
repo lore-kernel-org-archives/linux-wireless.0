@@ -1,38 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:57934 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760705AbXG0Rzu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2007 13:55:50 -0400
-Message-ID: <46AA31A4.3050205@lwfinger.net>
-Date: Fri, 27 Jul 2007 12:55:48 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Jiri Benc <jbenc@suse.cz>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211: pull request
-References: <20070727192617.5ae82584@griffin.suse.cz>
-In-Reply-To: <20070727192617.5ae82584@griffin.suse.cz>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from ra.tuxdriver.com ([70.61.120.52]:4315 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758452AbXGKQGC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jul 2007 12:06:02 -0400
+Date: Wed, 11 Jul 2007 11:31:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Chris Wright <chrisw@sous-sol.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, stable@kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [stable] [PATCH] softmac: Fix ESSID problem
+Message-ID: <20070711153111.GC9404@tuxdriver.com>
+References: <4692e2e0.u/1KuH/5hSPtXvF9%Larry.Finger@lwfinger.net> <20070711071418.GS4306@sequoia.sous-sol.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070711071418.GS4306@sequoia.sous-sol.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Benc wrote:
-> John,
+On Wed, Jul 11, 2007 at 12:14:18AM -0700, Chris Wright wrote:
+> * Larry Finger (Larry.Finger@lwfinger.net) wrote:
+> > From: Jean Tourrilhes <jt@hpl.hp.com>
+> > 
+> > Victor Porton reported that the SoftMAC layer had random problem when setting the ESSID :
+> > http://bugzilla.kernel.org/show_bug.cgi?id=8686 After investigation, it turned out to be
+> > worse, the SoftMAC layer is left in an inconsistent state. The fix is pretty trivial.
+> > 
+> > Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
+> > Acked-by: Michael Buesch <mb@bu3sch.df>
+> > Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 > 
-> please pull from
-> git://git.kernel.org/pub/scm/linux/kernel/git/jbenc/mac80211.git up-2.6
-> to obtain patches below.
-> 
-> This is intended for wireless-2.6. Because of the number of patches and
-> the fact they are not much tested, it's maybe a good idea not to push
-> them upstream immediately - but that's up to you.
+> Please resend when this is accepted upstream.
 
-Now that a patch adding SSB to mainline is available, I will move bcm4301 into wireless-2.6 and do 
-some testing of mac80211 that way.
+FWIW, I passed it up to Jeff yesterday.
 
-Larry
-
-
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
