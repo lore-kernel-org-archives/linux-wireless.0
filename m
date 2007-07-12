@@ -1,40 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purr.warmcat.com ([87.106.142.209]:41347 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760706AbXGaW2N (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:43532 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757709AbXGLOfI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 18:28:13 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id D18741804B256
-	for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 23:28:11 +0100 (BST)
-Received: from meerkat.home.warmcat.com (localhost [127.0.0.1])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id 4EB1C104B2
-	for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 22:28:16 +0000 (UTC)
-Message-ID: <46AFB779.4040003@warmcat.com>
-Date: Tue, 31 Jul 2007 23:28:09 +0100
-From: Andy Green <andy@warmcat.com>
+	Thu, 12 Jul 2007 10:35:08 -0400
+Message-ID: <46963C0F.3080104@lwfinger.net>
+Date: Thu, 12 Jul 2007 09:34:55 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Rate control over multiple devices
-Content-Type: text/plain; charset=ISO-8859-1
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+CC: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: bcm4301: A mac80211 driver using V3 firmware
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks -
+John and Michael,
 
-Just seemed a little strange, maybe it is perfectly fine.
+I have good news regarding the driver mentioned in the subject. It is now working on my BCM4311 with 
+performance that is nearly as good as for the softmac driver.
 
-iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
-PM: Adding info for No Bus:phy0
-PM: Adding info for No Bus:wmaster0
-wmaster0: Selected rate control algorithm 'iwl-3945-rs'
+My approach has been to take the PHY and radio parts of the softmac driver and use them with as much 
+of the bcm43xx-mac80211 code as possible. It therefore uses the SSB driver as part of the front end.
 
-...but then we add an rt73usb...
+My plan is to clean up the code, check it with my BCM4306 and BCM4318 devices, and then make it 
+available as a patch against the mainline source for more general testing. At the same time, I will 
+publish the results of my performance testing of all 3 models. Once it is shown to be reliable, a 
+decision can be made regarding its inclusion in mainline and if it should support B and G devices, 
+or be restricted to B-only devices. The A-PHY code has been stripped out.
 
-PM: Adding info for No Bus:phy1
-PM: Adding info for No Bus:wmaster1
-wmaster1: Selected rate control algorithm 'iwl-3945-rs' <----
-PM: Adding info for No Bus:wlan1
-usbcore: registered new interface driver rt73usb
+Larry
 
--Andy
