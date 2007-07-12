@@ -1,41 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:49451 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752566AbXGBNw6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2007 09:52:58 -0400
-Date: Mon, 2 Jul 2007 15:53:09 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Cc: "Cohen, Guy" <guy.cohen@intel.com>, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [WIP] mac80211: kill mgmt interface
-Message-ID: <20070702155309.5300ef7f@griffin.suse.cz>
-In-Reply-To: <394827.41199.qm@web51403.mail.re2.yahoo.com>
-References: <394827.41199.qm@web51403.mail.re2.yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55688
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756390AbXGLU6V (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jul 2007 16:58:21 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [patch 2/2] ssb: Add a driver for the Broadcom OHCI core
+Date: Thu, 12 Jul 2007 22:57:56 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Aurelien Jarno <aurelien@aurel32.net>,
+	linux-wireless@vger.kernel.org,
+	Gary Zambrano <zambrano@broadcom.com>
+References: <20070712085432.528319000@bu3sch.de> <20070712085744.961584000@bu3sch.de> <20070712104937.1b0970c5.akpm@linux-foundation.org>
+In-Reply-To: <20070712104937.1b0970c5.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200707122257.56526.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Von: "Cohen, Guy" <guy.cohen@intel.com>
-> > This is a required feature for Access Points (multiple BSSID).
-
-On Mon, 2 Jul 2007 06:38:00 -0700 (PDT), Joerg Pommnitz wrote:
-> And, just from reading the documentation, it seems to be supported by MadWifi for Atheros
-> based devices:
+On Thursday 12 July 2007 19:49, Andrew Morton wrote:
+> Here, we'd normally do
 > 
-> http://madwifi.org/wiki/ngFeatures
+> #else
+> #define ssb_ohci_hcd_suspend NULL
+> #define ssb_ohci_hcd_resume NULL
+
+Ah, well. I don't care either way, so if that is the preferred way to deal
+with it, I'll change :)
+
+> > Index: linux-2.6/drivers/usb/host/ohci-hcd.c
+> > ===================================================================
+> > --- linux-2.6.orig/drivers/usb/host/ohci-hcd.c	2007-07-12 10:51:46.000000000 +0200
+> > +++ linux-2.6/drivers/usb/host/ohci-hcd.c	2007-07-12 10:52:45.000000000 +0200
+> > @@ -920,11 +920,17 @@ MODULE_LICENSE ("GPL");
+> >  #define PS3_SYSTEM_BUS_DRIVER	ps3_ohci_sb_driver
+> >  #endif
+> >  
+> > +#ifdef CONFIG_USB_OHCI_HCD_SSB
+> > +#include "ohci-ssb.c"
+> > +#define SSB_OHCI_DRIVER		ssb_ohci_driver
+> > +#endif
 > 
-> and note the "To create APs which share a single MAC address, use the -bssid flag when
-> creating the VAPs:"  remark.
+> argh.  Why did USB do this?  Sigh.
 > 
-> Even if no current mac80211 driver supports this feature, the API must not prevent this in the future.
+> >  #if	!defined(PCI_DRIVER) &&		\
+> >  	!defined(PLATFORM_DRIVER) &&	\
+> >  	!defined(OF_PLATFORM_DRIVER) &&	\
+> >  	!defined(SA1111_DRIVER) &&	\
+> > -	!defined(PS3_SYSTEM_BUS_DRIVER)
+> > +	!defined(PS3_SYSTEM_BUS_DRIVER) && \
+> > +	!defined(SSB_OHCI_DRIVER)
+> >  #error "missing bus glue for ohci-hcd"
+> >  #endif
+> >  
+> > @@ -972,10 +978,20 @@ static int __init ohci_hcd_mod_init(void
+> >  		goto error_pci;
+> >  #endif
+> >  
+> > +#ifdef SSB_OHCI_DRIVER
+> > +	retval = ssb_driver_register(&SSB_OHCI_DRIVER);
+> > +	if (retval)
+> > +		goto error_ssb;
+> > +#endif
+> 
+> Why do we use SSB_OHCI_DRIVER here rather than ssb_ohci_driver?   Seems odd.
 
-What are you talking about? Have you actually looked at mac80211? This
-is supported from day 0 of d80211.
+Yes, that ohci code is horrible. But all other ohci drivers do it this way, too,
+so I did it, too.
 
- Jiri
+> > +
+> >  	return retval;
+> >  
+> >  	/* Error path */
+> > +#ifdef SSB_OHCI_DRIVER
+> > + error_ssb:
+> > +#endif
+> >  #ifdef PCI_DRIVER
+> > +	pci_unregister_driver(&PCI_DRIVER);
+> 
+> hm, are you sure about this?  I don't see anywhere in here where PCI_DRIVER
+> got newly registered, but we are newly unregistering it?
 
--- 
-Jiri Benc
-SUSE Labs
+Whoops, good catch. That's a merge error.
