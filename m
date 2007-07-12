@@ -1,72 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:8238 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755093AbXGCP1R (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49306 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936304AbXGMJH3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2007 11:27:17 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH, take #2] libertas: remove unused adapter->prev_xx variables
-Date: Tue, 3 Jul 2007 17:27:11 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200707031727.12013.hs4233@mail.mn-solutions.de>
+	Fri, 13 Jul 2007 05:07:29 -0400
+Subject: RE: [PATCH 1/1] mac80211: Replace overly "sticky" averaging  filters for rssi, signal, noise.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Cahill, Ben M" <ben.m.cahill@intel.com>
+Cc: Jiri Benc <jbenc@suse.cz>, benmcahill@gmail.com,
+	flamingice@sourmilk.net, linux-wireless@vger.kernel.org
+In-Reply-To: <4220499A1B034C4FA93B547BA01E1FF07FC284@orsmsx413.amr.corp.intel.com>
+References: <4220499A1B034C4FA93B547BA01E1FF07FC284@orsmsx413.amr.corp.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7n91Q3VJWS8nkBrV7A5G"
+Date: Fri, 13 Jul 2007 00:03:40 +0200
+Message-Id: <1184277820.6669.78.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-There were just used in some debug output, but nowhere else.
+--=-7n91Q3VJWS8nkBrV7A5G
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
----
+On Tue, 2007-07-10 at 21:59 -0700, Cahill, Ben M wrote:
 
-This is non-wordwrapped. Also, the linux-wireless-dev mailing list
-didn't like the original subject.
+> If we do the division when passing to user space, how should STA_FILE be
+> handled, if necessary?
 
- drivers/net/wireless/libertas/cmdresp.c |    9 ---------
- drivers/net/wireless/libertas/dev.h     |    4 ----
- 2 files changed, 0 insertions(+), 13 deletions(-)
+This should work due to the way the macros are set up:
 
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index 197d045..646b591 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -65,18 +65,9 @@ void libertas_mac_event_disconnected(wlan_private * priv)
- 	            escape_essid(adapter->curbssparams.ssid,
- 	                         adapter->curbssparams.ssid_len),
- 	            adapter->curbssparams.ssid_len);
--	lbs_deb_cmd("previous SSID '%s', length %u\n",
--	            escape_essid(adapter->prev_ssid, adapter->prev_ssid_len),
--	            adapter->prev_ssid_len);
- 
- 	adapter->connect_status = LIBERTAS_DISCONNECTED;
- 
--	/* Save previous SSID and BSSID for possible reassociation */
--	memcpy(&adapter->prev_ssid, &adapter->curbssparams.ssid,
--	       IW_ESSID_MAX_SIZE);
--	adapter->prev_ssid_len = adapter->curbssparams.ssid_len;
--	memcpy(adapter->prev_bssid, adapter->curbssparams.bssid, ETH_ALEN);
--
- 	/* Clear out associated SSID and BSSID since connection is
- 	 * no longer valid.
- 	 */
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 7c565cb..7c0ee0f 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -257,10 +257,6 @@ struct _wlan_adapter {
- 	/* IW_MODE_* */
- 	u8 mode;
- 
--	u8 prev_ssid[IW_ESSID_MAX_SIZE + 1];
--	u8 prev_ssid_len;
--	u8 prev_bssid[ETH_ALEN];
--
- 	/* Scan results list */
- 	struct list_head network_list;
- 	struct list_head network_free_list;
--- 
-1.5.2.1
+STA_READ_D(last_rssi, last_rssi/16)
+STA_OPS(last_rssi);
+
+johannes
+
+--=-7n91Q3VJWS8nkBrV7A5G
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGlqU7/ETPhpq3jKURAkvCAJ9Zcy+3Huqhg8igb7a8m9YqF8QpCACgqmwe
+nvhlX8f+hSWJNxNhaB1LShk=
+=NLUa
+-----END PGP SIGNATURE-----
+
+--=-7n91Q3VJWS8nkBrV7A5G--
 
