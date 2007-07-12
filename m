@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38193 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49262 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754694AbXGHTJG (ORCPT
+	with ESMTP id S1756437AbXGMJGc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2007 15:09:06 -0400
-Subject: Re: Arrested Development
+	Fri, 13 Jul 2007 05:06:32 -0400
+Subject: Re: Setting channel when interface is down inconsistency
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Ulrich Kunitz <kune@deine-taler.de>, Andy Green <andy@warmcat.com>,
-	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <200707082018.23045.mb@bu3sch.de>
-References: <468DE699.9040708@warmcat.com> <46910F3F.8010201@warmcat.com>
-	 <20070708181524.GA12389@deine-taler.de>  <200707082018.23045.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XMq7Zg4Esx4juZtxVMkr"
-Date: Sun, 08 Jul 2007 21:08:51 +0200
-Message-Id: <1183921731.3771.2.camel@johannes.berg>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Jon Smirl <jonsmirl@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1184188695.28850.2.camel@localhost.localdomain>
+References: <9e4733910707090759v5cd20f2en1f6c4e6fc6279b3f@mail.gmail.com>
+	 <1184005862.5671.2.camel@xo-13-A4-25.localdomain>
+	 <1184107850.3738.20.camel@johannes.berg>
+	 <1184188695.28850.2.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MqZJ2+0KPlu5tSq+oQrn"
+Date: Thu, 12 Jul 2007 22:31:46 +0200
+Message-Id: <1184272306.6669.44.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-XMq7Zg4Esx4juZtxVMkr
+--=-MqZJ2+0KPlu5tSq+oQrn
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2007-07-08 at 20:18 +0200, Michael Buesch wrote:
+On Wed, 2007-07-11 at 17:18 -0400, Dan Williams wrote:
 
-> I think it's the NULL pointer dereference of the mac address pointer,
-> if there's only a monitor interface. The address pointer can be NULL.
+> But, of course, we need to make sure that we are consistent and that if
+> we really don't allow configuration when the device is down, that all
+> drivers return error when they are down.
 
-Ahem. I copied a whole bunch of people when I audited that and never got
-a reply (except from you)
+If we want to go the way of not allowing configuration when the device
+is down we can easily check and return an error in cfg80211; if we do
+want to allow configuration when it is down we have to make sure all
+drivers support that.
 
 johannes
 
---=-XMq7Zg4Esx4juZtxVMkr
+--=-MqZJ2+0KPlu5tSq+oQrn
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGkTZD/ETPhpq3jKURAp7SAKCPfsg1jA20gwG2DkWFTmcGw48abwCgnNK+
-KsLskf0ywiXKjYUv0rTk2JU=
-=foPq
+iD8DBQBGlo+x/ETPhpq3jKURAko5AJ93zveY7WQX8mqS81Hz5+5RoZpbDQCbBA3J
+29Ss/5x8qstOreC+aE6YY3o=
+=pcw0
 -----END PGP SIGNATURE-----
 
---=-XMq7Zg4Esx4juZtxVMkr--
+--=-MqZJ2+0KPlu5tSq+oQrn--
 
