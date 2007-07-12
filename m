@@ -1,38 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:44507
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754599AbXGIU6b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2007 16:58:31 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Andy Green <andy@warmcat.com>
-Subject: Re: Permissions down /sys
-Date: Mon, 9 Jul 2007 22:57:25 +0200
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <469297DF.4000806@warmcat.com>
-In-Reply-To: <469297DF.4000806@warmcat.com>
+Received: from mga01.intel.com ([192.55.52.88]:15001 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757139AbXGLIKG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jul 2007 04:10:06 -0400
+Date: Thu, 12 Jul 2007 16:09:24 +0800
+From: Zhu Yi <yi.zhu@intel.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ipw2100: Fix `iwpriv set_power` error
+Message-ID: <20070712080924.GA28306@mail.intel.com>
+Reply-To: yi.zhu@intel.com
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200707092257.25909.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 09 July 2007 22:17:35 Andy Green wrote:
-> Hi folks -
-> 
-> Is 222 permissions on /sys/class/ieee80211/phy*/add_iface and
-> remove_iface really okay, or should it perhaps be 220?
-> 
-> --w--w--w- 1 root root    0 2007-07-09 21:11 add_iface
-> --w--w--w- 1 root root 4096 2007-07-09 21:12 remove_iface
+iwpriv <iface> set_power [0~6] can be used for ipw2100. '0' indicates
+off and '6' indicates auto. 1~5 are the actual power levels.
 
-IMO the file-permissions are correct, _but_ the following should
-be added to _store_remove_iface() and _store_add_iface():
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/ipw2100.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-	if (!capable(CAP_NET_ADMIN))
-		return -EPERM;
-
+diff --git a/drivers/net/wireless/ipw2100.c b/drivers/net/wireless/ipw2100.c
+index d51daf8..3d2a15a 100644
+--- a/drivers/net/wireless/ipw2100.c
++++ b/drivers/net/wireless/ipw2100.c
+@@ -7865,10 +7865,10 @@ static int ipw2100_wx_set_powermode(struct net_device *dev,
+ 		goto done;
+ 	}
+ 
+-	if ((mode < 1) || (mode > POWER_MODES))
++	if ((mode < 0) || (mode > POWER_MODES))
+ 		mode = IPW_POWER_AUTO;
+ 
+-	if (priv->power_mode != mode)
++	if (IPW_POWER_LEVEL(priv->power_mode) != mode)
+ 		err = ipw2100_set_power_mode(priv, mode);
+       done:
+ 	mutex_unlock(&priv->action_mutex);
+@@ -7899,7 +7899,7 @@ static int ipw2100_wx_get_powermode(struct net_device *dev,
+ 			break;
+ 		case IPW_POWER_AUTO:
+ 			snprintf(extra, MAX_POWER_STRING,
+-				 "Power save level: %d (Auto)", 0);
++				 "Power save level: %d (Auto)", level);
+ 			break;
+ 		default:
+ 			timeout = timeout_duration[level - 1] / 1000;
 -- 
-Greetings Michael.
+1.5.2
