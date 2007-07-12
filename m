@@ -1,82 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from MGW2.Sony.CO.JP ([137.153.0.14]:50399 "EHLO mgw2.sony.co.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750911AbXGTFEc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jul 2007 01:04:32 -0400
-Received: from mail2.sony.co.jp (localhost [127.0.0.1])
-	by mail2.sony.co.jp (R8/Sony) with ESMTP id l6K54Tn1014038
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Jul 2007 14:04:29 +0900 (JST)
-Received: from smail1.sm.sony.co.jp (smail1.sm.sony.co.jp [43.11.253.1])
-	by mail2.sony.co.jp (R8/Sony) with ESMTP id l6K54Tg6014025
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Jul 2007 14:04:29 +0900 (JST)
-Received: from imail.sm.sony.co.jp (imail.sm.sony.co.jp [43.4.141.32]) by smail1.sm.sony.co.jp (8.11.6p2/8.11.6) with ESMTP id l6K54TQ14158 for <linux-wireless@vger.kernel.org>; Fri, 20 Jul 2007 14:04:29 +0900 (JST)
-Received: from [43.4.146.40] (bluenote.sm.sony.co.jp [43.4.146.40])
-	by imail.sm.sony.co.jp (8.12.11/3.7W) with ESMTP id l6K54QRM000945
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Jul 2007 14:04:27 +0900 (JST)
-Date: Fri, 20 Jul 2007 14:04:29 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Received: from fencepost.gnu.org ([140.186.70.10]:53483 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751236AbXGLIQL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jul 2007 04:16:11 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1I8tqo-0006XL-TG
+	for linux-wireless@vger.kernel.org; Thu, 12 Jul 2007 04:16:38 -0400
+Subject: at76_usb - fourth submission attempt
+From: Pavel Roskin <proski@gnu.org>
 To: linux-wireless@vger.kernel.org
-Subject: Re: remove duplicated ioctl entries in compat_ioctl.c
-In-Reply-To: <20070709193744.D021.MOKUNO@sm.sony.co.jp>
-References: <20070709193744.D021.MOKUNO@sm.sony.co.jp>
-Message-Id: <20070720140020.6773.MOKUNO@sm.sony.co.jp>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Cc: Guido Guenther <agx@sigxcpu.org>,
+	at76c503a-develop@lists.berlios.de
+Content-Type: text/plain
+Date: Thu, 12 Jul 2007 04:16:06 -0400
+Message-Id: <1184228166.2377.31.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	Hi,
+Hello!
 
-This patch does not look to be applied.  Is it better that I would submit
-to other place?
+I'd like to submit at76_usb driver for inclusion into the kernel.
 
-regards
+The driver's temporary repository is located at
+http://git.80211libre.org/at76_usb.git/
 
-On Mon, 09 Jul 2007 19:54:39 +0900
-Masakazu Mokuno <mokuno@sm.sony.co.jp> wrote:
+To compile the driver standalone, just run "make" and "make install".
+To integrate the driver into the kernel, apply kernel_patch.diff to the
+kernel with -p1 option, then copy at76_usb*.[ch] to drivers/net/wireless
 
-> This patch removes some duplicated wireless ioctl entries in the array
-> 'struct ioctl_trans ioctl_start[]' of fs/compat_ioctl.c
-> 
-> These entries are registered twice like:
-> 
-> 	COMPATIBLE_IOCTL(SIOCGIWPRIV)
-> 
-> and
-> 
-> 	HANDLE_IOCTL(SIOCGIWPRIV, do_wireless_ioctl)
-> 
-> 
-> Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-> ---
->  fs/compat_ioctl.c |    3 ---
->  1 file changed, 3 deletions(-)
-> 
-> --- a/fs/compat_ioctl.c
-> +++ b/fs/compat_ioctl.c
-> @@ -3156,12 +3156,9 @@ COMPATIBLE_IOCTL(SIOCSIWSENS)
->  COMPATIBLE_IOCTL(SIOCGIWSENS)
->  COMPATIBLE_IOCTL(SIOCSIWRANGE)
->  COMPATIBLE_IOCTL(SIOCSIWPRIV)
-> -COMPATIBLE_IOCTL(SIOCGIWPRIV)
->  COMPATIBLE_IOCTL(SIOCSIWSTATS)
-> -COMPATIBLE_IOCTL(SIOCGIWSTATS)
->  COMPATIBLE_IOCTL(SIOCSIWAP)
->  COMPATIBLE_IOCTL(SIOCGIWAP)
-> -COMPATIBLE_IOCTL(SIOCSIWSCAN)
->  COMPATIBLE_IOCTL(SIOCSIWRATE)
->  COMPATIBLE_IOCTL(SIOCGIWRATE)
->  COMPATIBLE_IOCTL(SIOCSIWRTS)
-> 
-> 
-> --
-> Masakazu MOKUNO
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+For the driver to work, please download the firmware from
+http://developer.berlios.de/projects/at76c503a/
 
---
-Masakazu MOKUNO
+This is the fourth submission attempt.  Three previous attempts were
+made by Guido Guenther, and generated a lot of useful feedback.  I
+believe all the recommendations have been accepted.
+
+The driver went through a massive cleanup, but I realize that a lot of
+work still needs to be done.  I think the process will be more effective
+if more people take a look at the code.  New eyes will see new flaws.
+
+The biggest change that has not been done is conversion to mac80211.  I
+believe it's possible, but I don't expect it to happen overnight.  Until
+then, at76_usb uses its own implementation of 802.11 protocol.  I'm not
+going to polish it, but I tried to clean up the code to the point that
+it can be easily understood.
+
+If possible, I'd like the driver to be in Linux 2.6.23.  That would
+rejuvenate the interest to the driver, and hopefully it might attract
+new contributors.  I think at76_usb is quite on the par with other
+non-mac80211 drivers currently in Linux (although I do realize that it's
+a poor excuse).
+
+I'll do my best to convert the driver to mac80211.  I think it would be
+OK to replace the driver with the mac80211 version later, e.g. in Linux
+2.6.24.  There are parts of the driver that don't deal with 802.11 layer
+(e.g. firmware download and MIBs), and it would be great if they receive
+some good testing in the meantime.
+
+In any case, I'll appreciate any comments regarding the code.
+
+It's my first driver submission ever, so please don't hesitate to tell
+me if I'm doing anything wrong.
+
+-- 
+Regards,
+Pavel Roskin
 
