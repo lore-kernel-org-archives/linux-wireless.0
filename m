@@ -1,50 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38440 "EHLO mail.dvmed.net"
+Received: from mga01.intel.com ([192.55.52.88]:21261 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755563AbXGYPPf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 11:15:35 -0400
-Message-ID: <46A76915.3040902@garzik.org>
-Date: Wed, 25 Jul 2007 11:15:33 -0400
-From: Jeff Garzik <jeff@garzik.org>
+	id S1757805AbXGLIK3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jul 2007 04:10:29 -0400
+Date: Thu, 12 Jul 2007 16:09:47 +0800
+From: Zhu Yi <yi.zhu@intel.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] Update version ipw2200 stamp to 1.2.2
+Message-ID: <20070712080947.GA28333@mail.intel.com>
+Reply-To: yi.zhu@intel.com
 MIME-Version: 1.0
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Please pull patch-bomb for iwlwifi
-References: <20070725085754.GA670@mail.intel.com> <46A75CD9.9050100@garzik.org> <200707251643.14926.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200707251643.14926.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Holger Schurig wrote:
-> So, if you ask them to post each and every patch on 
-> linux-wireless, then other projects should do the same. Some 
-> projects (e.g. bcm43xx) mostly do cross-post. Is this the way 
-> people should go?
+---
+ drivers/net/wireless/ipw2200.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-
-Yes, definitely.
-
-* It is unscalable for core wireless developers to scan every individual 
-driver mailing list.
-
-* The amount of review is demonstrably lower when you bypass the core 
-mailing list.
-
-* The amount of information sharing, with regards to common problems and 
-common solutions, is far far lower when people and knowledge are spread 
-out across a wide variety of mailing lists.
-
-* It's a huge pain to scan $N mailing list archives for something, when 
-you could just scan one and be reasonably certain that your search 
-covered all useful areas.
-
-Like open source itself, we want to bring people -together- to work on a 
-common vision.  Not have $N competing visions, that are only reconciled 
-when patches are pushed upstream to linville.  That puts additional 
-burden on linville, and lowers the quality of the code (as described in 
-more detail in my response to James K just now).
-
-	Jeff
-
-
+diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+index 08a33df..bdd8ffd 100644
+--- a/drivers/net/wireless/ipw2200.c
++++ b/drivers/net/wireless/ipw2200.c
+@@ -70,7 +70,7 @@
+ #define VQ
+ #endif
+ 
+-#define IPW2200_VERSION "1.2.0" VK VD VM VP VR VQ
++#define IPW2200_VERSION "1.2.2" VK VD VM VP VR VQ
+ #define DRV_DESCRIPTION	"Intel(R) PRO/Wireless 2200/2915 Network Driver"
+ #define DRV_COPYRIGHT	"Copyright(c) 2003-2006 Intel Corporation"
+ #define DRV_VERSION     IPW2200_VERSION
+-- 
+1.5.2
