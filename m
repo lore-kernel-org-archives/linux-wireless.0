@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59724 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753896AbXGSW07 (ORCPT
+Received: from fencepost.gnu.org ([140.186.70.10]:35578 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755467AbXGLSjM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2007 18:26:59 -0400
-Subject: Re: bcm4301: A mac80211 driver using V3 firmware
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>,
-	Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20070719215801.GB12449@tuxdriver.com>
-References: <46963C0F.3080104@lwfinger.net>
-	 <20070719215801.GB12449@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-AwbQr9n70mnrMO8J1oLM"
-Date: Fri, 20 Jul 2007 00:26:34 +0200
-Message-Id: <1184883994.17966.14.camel@johannes.berg>
+	Thu, 12 Jul 2007 14:39:12 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1I93Zo-0005Ho-NT
+	for linux-wireless@vger.kernel.org; Thu, 12 Jul 2007 14:39:44 -0400
+Subject: Re: at76_usb - fourth submission attempt
+From: Pavel Roskin <proski@gnu.org>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: linux-wireless@vger.kernel.org, Guido Guenther <agx@sigxcpu.org>,
+	at76c503a-develop@lists.berlios.de
+In-Reply-To: <20070712201702.72209493@griffin.suse.cz>
+References: <1184228166.2377.31.camel@dv>
+	 <20070712201702.72209493@griffin.suse.cz>
+Content-Type: text/plain
+Date: Thu, 12 Jul 2007 14:39:07 -0400
+Message-Id: <1184265547.29486.2.camel@dv>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2007-07-12 at 20:17 +0200, Jiri Benc wrote:
 
---=-AwbQr9n70mnrMO8J1oLM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Could you send a direct pointer to the patch? And make a patch that
+> creates those at76_usb* files in the correct dir by itself? That will
+> ease the review a lot.
 
-On Thu, 2007-07-19 at 17:58 -0400, John W. Linville wrote:
+http://80211libre.org/at76/at76_usb_try4.patch
 
-> Regarding hardware support, I have begun to lean towards having
-> the v3 driver continue to support all the hardware it does now.
+Individual files are in http://80211libre.org/at76/
 
-I agree, until we can sort out the issues with that.
+> > The biggest change that has not been done is conversion to mac80211.  I
+> > believe it's possible, but I don't expect it to happen overnight.  Until
+> > then, at76_usb uses its own implementation of 802.11 protocol.
+> 
+> Unfortunately, that prevents being accepted to vanilla.
+> 
+> I'd suggest to convert the driver to mac80211 and submit it then;
+> otherwise people will tend to look at the code saying "NAK, it contains
+> its own home grown 802.11 stack" only and not to review the driver in
+> depth.
 
-> What exactly do we gain from using the v4 firmware?
+Well, that make sense.  Helpers are welcome :)
 
-We get crypto hardware working, for example, and other things I might
-not remember :)
-
-johannes
-
---=-AwbQr9n70mnrMO8J1oLM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGn+Ua/ETPhpq3jKURAvjFAKCRostmXhuC7Lc1euoeS0dlOw/F+wCcCihT
-bWssHEKI2Ris5SObWcO2akw=
-=P3f5
------END PGP SIGNATURE-----
-
---=-AwbQr9n70mnrMO8J1oLM--
+-- 
+Regards,
+Pavel Roskin
 
