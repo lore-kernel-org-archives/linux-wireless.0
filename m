@@ -1,41 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4737 "EHLO ra.tuxdriver.com"
+Received: from mga01.intel.com ([192.55.52.88]:28227 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932970AbXGQSCw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2007 14:02:52 -0400
-Date: Tue, 17 Jul 2007 13:57:56 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: stable@kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] softmac: Fix ESSID problem
-Message-ID: <20070717175756.GD9037@tuxdriver.com>
-References: <469CE459.4070300@lwfinger.net>
-Mime-Version: 1.0
+	id S1757376AbXGLIKO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jul 2007 04:10:14 -0400
+Date: Thu, 12 Jul 2007 16:09:32 +0800
+From: Zhu Yi <yi.zhu@intel.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] Fix ipw2200 set wrong power parameter causing firmware error
+Message-ID: <20070712080932.GA28315@mail.intel.com>
+Reply-To: yi.zhu@intel.com
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <469CE459.4070300@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 17, 2007 at 10:46:33AM -0500, Larry Finger wrote:
-> From: Jean Tourrilhes <jt@hpl.hp.com>
-> 
-> Victor Porton reported that the SoftMAC layer had random problem when 
-> setting the ESSID :
-> http://bugzilla.kernel.org/show_bug.cgi?id=8686 After investigation, it 
-> turned out to be
-> worse, the SoftMAC layer is left in an inconsistent state. The fix is 
-> pretty trivial.
-> 
-> Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
-> Acked-by: Michael Buesch <mb@bu3sch.df>
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> This patch is now in Linus's tree and should now be added to 2.6.22.Y.
+The power mode can only be set 0~5 to firmware. Otherwise there will be a
+firmware error generated. This patch fixed the invalid power mode requested
+by driver.
 
-ACK for the stable guys.
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/ipw2200.c |   14 ++++++--------
+ 1 files changed, 6 insertions(+), 8 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+index 7cb2052..bd0a8ff 100644
+--- a/drivers/net/wireless/ipw2200.c
++++ b/drivers/net/wireless/ipw2200.c
+@@ -2506,7 +2506,7 @@ static int ipw_send_power_mode(struct ipw_priv *priv, u32 mode)
+ 		break;
+ 	}
+ 
+-	param = cpu_to_le32(mode);
++	param = cpu_to_le32(param);
+ 	return ipw_send_cmd_pdu(priv, IPW_CMD_POWER_MODE, sizeof(param),
+ 				&param);
+ }
+@@ -9567,6 +9567,7 @@ static int ipw_wx_set_power(struct net_device *dev,
+ 		priv->power_mode = IPW_POWER_ENABLED | IPW_POWER_BATTERY;
+ 	else
+ 		priv->power_mode = IPW_POWER_ENABLED | priv->power_mode;
++
+ 	err = ipw_send_power_mode(priv, IPW_POWER_LEVEL(priv->power_mode));
+ 	if (err) {
+ 		IPW_DEBUG_WX("failed setting power mode.\n");
+@@ -9603,22 +9604,19 @@ static int ipw_wx_set_powermode(struct net_device *dev,
+ 	struct ipw_priv *priv = ieee80211_priv(dev);
+ 	int mode = *(int *)extra;
+ 	int err;
++
+ 	mutex_lock(&priv->mutex);
+-	if ((mode < 1) || (mode > IPW_POWER_LIMIT)) {
++	if ((mode < 1) || (mode > IPW_POWER_LIMIT))
+ 		mode = IPW_POWER_AC;
+-		priv->power_mode = mode;
+-	} else {
+-		priv->power_mode = IPW_POWER_ENABLED | mode;
+-	}
+ 
+-	if (priv->power_mode != mode) {
++	if (IPW_POWER_LEVEL(priv->power_mode) != mode) {
+ 		err = ipw_send_power_mode(priv, mode);
+-
+ 		if (err) {
+ 			IPW_DEBUG_WX("failed setting power mode.\n");
+ 			mutex_unlock(&priv->mutex);
+ 			return err;
+ 		}
++		priv->power_mode = IPW_POWER_ENABLED | mode;
+ 	}
+ 	mutex_unlock(&priv->mutex);
+ 	return 0;
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.2
