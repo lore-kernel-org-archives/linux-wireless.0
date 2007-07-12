@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2927 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751469AbXGSSc7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2007 14:32:59 -0400
-Date: Thu, 19 Jul 2007 14:24:40 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] mac80211: STA reassociation improvements
-Message-ID: <20070719182440.GA6603@tuxdriver.com>
-References: <20070715140251.B4F6B7B409F@zog.reactivated.net> <20070716185616.58030016@griffin.suse.cz> <469C2644.3060701@gentoo.org> <20070717113838.03561c26@logostar.upir.cz>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:35041 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752197AbXGLW1i (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jul 2007 18:27:38 -0400
+Date: Thu, 12 Jul 2007 15:25:56 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	Aurelien Jarno <aurelien@aurel32.net>,
+	linux-wireless@vger.kernel.org,
+	Gary Zambrano <zambrano@broadcom.com>
+Subject: Re: [patch 1/2] Merge the Sonics Silicon Backplane subsystem
+Message-Id: <20070712152556.299e9913.akpm@linux-foundation.org>
+In-Reply-To: <200707130010.58338.mb@bu3sch.de>
+References: <20070712085432.528319000@bu3sch.de>
+	<200707122342.27164.mb@bu3sch.de>
+	<20070712145347.ab861215.akpm@linux-foundation.org>
+	<200707130010.58338.mb@bu3sch.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070717113838.03561c26@logostar.upir.cz>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 17, 2007 at 11:38:38AM +0200, Jiri Benc wrote:
-> On Mon, 16 Jul 2007 22:15:32 -0400, Daniel Drake wrote:
-> > Jiri Benc wrote:
-> > > [removed netdev, no reason for sending this there]
-> > 
-> > Was I wrong for sending the patch there, or was it just your ACK that 
-> > you didn't think would be relevant on netdev?
+On Fri, 13 Jul 2007 00:10:58 +0200
+Michael Buesch <mb@bu3sch.de> wrote:
+
+> > So the principle of least surprise tells us "this shouldn't be called
+> > assert()".
 > 
-> linux-wireless mailinglist was created to lower traffic at netdev. I
-> understand that in the way that wireless patches should be sent to
-> linux-wireless only; they will be sent to nedev by John when he's asking
-> for a pull. But I'm not sure about that (Cc:ing John), my comment was more
-> about my ack.
+> Well, I do know that userspace assert() terminates the program.
+> But, in the kernel we use BUG() for this.
+> So let's better rename BUG() to assert() ;)
+> No just kidding.
+> IMO the word "assert" is short and to the point what this code
+> is actually doing. It asserts that a condition is true and
+> complains otherwise.
+> 
+> Let's make a deal, Andrew.
+> As I almost always do assert(0), I will remove the assert() macro
+> and introduce a macro SSB_CAN_NOT_REACH() or something like that
+> to mark codepaths that can not be reached.
+> I'll replace the rest of the assert()s that check an actual condition
+> with WARN_ON.
+> OK?
 
-I think linux-wireless is sufficient, especially for small and/or
-isolated patches.  But there is no real harm in including netdev,
-especially for patches with broader impact.  For example, if Zhu Yi
-and PJ had chosen to push the multiqueue stuff on wireless first then
-it would certainly have been appropriate to copy netdev.  I guess
-it is just a judgment call -- if your patch merits broader review,
-then copy netdev as well.
+I don't understand all the fuss.
 
-Hth!  (I doubt if it does!)
+When I looked at that code I assumed that your assert() implementation
+would be a wrapper of some from around a BUG().  But it wasn't.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+A suitable way of preventing others from being similarly surprised would be
+to call it something other than assert().  That's all.
