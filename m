@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:34696 "EHLO
-	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753076AbXGAQhn (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.238]:24633 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755005AbXGMMFp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jul 2007 12:37:43 -0400
-From: Daniel Drake <dsd@gentoo.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: kune@deine-taler.de
-Subject: [PATCH] zd1211rw-mac80211: Add ID for Buffalo WLI-U2-KG54L
-Message-Id: <20070701163744.77C3A7B409F@zog.reactivated.net>
-Date: Sun,  1 Jul 2007 17:37:44 +0100 (BST)
+	Fri, 13 Jul 2007 08:05:45 -0400
+Received: by wr-out-0506.google.com with SMTP id i30so314834wra
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jul 2007 05:05:44 -0700 (PDT)
+Message-ID: <1caff7430707130505r579ef08cmacc6c77f7535a66c@mail.gmail.com>
+Date: Fri, 13 Jul 2007 13:05:43 +0100
+From: "seventh guardian" <seventhguardian@gmail.com>
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: d80211 deadlock with wpa_supplicant and rmmod
+In-Reply-To: <1184234538.6669.30.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <1caff7430707111617o70a534a5x2cf6b611a91f301a@mail.gmail.com>
+	 <20070711234153.GB5099@tuxdriver.com>
+	 <1184234538.6669.30.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tested by Zen Kato
-zd1211b chip 0411:00da v4810 high 00-16-01 AL2230S_RF pa0 g--N-
+On 7/12/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2007-07-11 at 19:41 -0400, John W. Linville wrote:
+>
+> > > >I believe we have a deadlock in d80211.
+> > >
+> > > I have it too. But I'm using iwl3945 driver, in-kernel mac80211, and a
+> > > gentoo kernel (basically a patched vanilla-2.6.22.1). My machine is a
+> > > x86_64 core 2 duo.
+> > >
+> > > >The following triggers it on my 2way SMT machine with preempt.
+> > > >
+> > > >modprobe bcm43xx-d80211
+> > > >add sta0
+> > > >ifconfig sta0 up
+> > > >start wpa_supplicant on the interface
+> > > >rmmod bcm43xx-d80211
+>
+> Sounds like the bug with the scheduled work locking. See the
+> "mac80211/bcm43xx deadlock" thread, there's a patch, report back if you
+> can/can not reproduce with the patch.
 
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
-Signed-off-by: Ulrich Kunitz <kune@deine-taler.de>
----
- drivers/net/wireless/mac80211/zd1211rw/zd_usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Hello, sorry for the delay but I only managed to try it out today..
+I've applied the patch and tortured the system as far as I could, and
+no hang at all :)
 
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c b/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
-index fbb3ed0..30ae209 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
-@@ -69,6 +69,7 @@ static struct usb_device_id usb_ids[] = {
- 	{ USB_DEVICE(0x0586, 0x3412), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0586, 0x3413), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0053, 0x5301), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x0411, 0x00da), .driver_info = DEVICE_ZD1211B },
- 	/* "Driverless" devices that need ejecting */
- 	{ USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
- 	{ USB_DEVICE(0x0ace, 0x20ff), .driver_info = DEVICE_INSTALLER },
--- 
-1.5.2.2
+I've read the thread and it apparently replaces one bad problem for a
+lesser one, so I understand if it's not applied.. But at least there
+is a place in the code to point as the culprit :)
 
+Thanks,
+  Renato Caldas
