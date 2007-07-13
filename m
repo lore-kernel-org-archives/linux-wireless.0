@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purr.warmcat.com ([87.106.142.209]:40497 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755547AbXGaLyy (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:32167 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760181AbXGMSTn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 07:54:54 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id EEF201804B256
-	for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 12:54:48 +0100 (BST)
-Received: from meerkat.home.warmcat.com (unknown [192.168.0.242])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id B8A97103A7
-	for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 11:54:53 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by meerkat.home.warmcat.com (Postfix) with ESMTP id D172618D1DA2
-	for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 12:54:46 +0100 (BST)
-From: warmcat <andy@warmcat.com>
-Subject: [PATCH] rt73usb-add-bluenext-148f-2573
-To: linux-wireless@vger.kernel.org
-Date: Tue, 31 Jul 2007 12:54:46 +0100
-Message-ID: <20070731115446.5717.37617.stgit@localhost>
+	Fri, 13 Jul 2007 14:19:43 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [PATCH 1/1] mac80211: Replace overly "sticky" averaging filters for rssi, signal, noise.
+Date: Fri, 13 Jul 2007 11:19:28 -0700
+Message-ID: <4220499A1B034C4FA93B547BA01E1FF0017461F8@orsmsx413.amr.corp.intel.com>
+In-Reply-To: <4697BC55.1080704@lwfinger.net>
+From: "Cahill, Ben M" <ben.m.cahill@intel.com>
+To: "Larry Finger" <larry.finger@lwfinger.net>,
+	"Jiri Benc" <jbenc@suse.cz>
+Cc: <benmcahill@gmail.com>, <flamingice@sourmilk.net>,
+	<linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add device ID for cheapo BlueNext rt2571-based stick BN-WD54G
+ 
+> I added the wireless statistics to d80211 (it was that long 
+> ago) and I used 16-point averaging based on my experiences 
+> with an early version of the bcm43xx-softmac driver where the 
+> rssi value was quite jittery. From a quick test on the 
+> current drivers, the assumptions seem not to be valid and it 
+> is quite possible that averaging may not be needed, or that 
+> one can get by with a 2- or 4-point process.
+> 
+> My suggestion would be to circulate a trial patch with 
+> averaging removed and ask for testing to see if it makes the 
+> results too jumpy. I can prepare that patch if you wish.
+> 
+> Larry
 
-Signed-off-by: Andy Green <andy@warmcat.com>
----
+Thanks for the history, Larry.  I'd be very happy if you did.  Thanks!
 
- drivers/net/wireless/rt73usb.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/rt73usb.c b/drivers/net/wireless/rt73usb.c
-index 3d838d1..82bb23c 100644
---- a/drivers/net/wireless/rt73usb.c
-+++ b/drivers/net/wireless/rt73usb.c
-@@ -1814,6 +1814,8 @@ static struct usb_device_id rt73usb_device_table[] = {
- 	{ USB_DEVICE(0x050d, 0x905b), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Billionton */
- 	{ USB_DEVICE(0x1631, 0xc019), USB_DEVICE_DATA(&rt73usb_ops) },
-+	/* BlueNEXT */
-+	{ USB_DEVICE(0x148f, 0x2573), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* CNet */
- 	{ USB_DEVICE(0x1371, 0x9022), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x1371, 0x9032), USB_DEVICE_DATA(&rt73usb_ops) },
-
+-- Ben --
+> 
