@@ -1,60 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:48789 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763715AbXG3UKK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2007 16:10:10 -0400
-Date: Mon, 30 Jul 2007 13:13:02 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: Satyam Sharma <satyam@infradead.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Matthias Kaehlcke <matthias.kaehlcke@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, akpm@linux-foundation.org
-Subject: Re: [PATCH 1/5] Use mutex instead of semaphore in the Host AP  driver
-Message-Id: <20070730131302.82622b06.randy.dunlap@oracle.com>
-In-Reply-To: <alpine.LFD.0.999.0707310142190.17287@enigma.security.iitk.ac.in>
-References: <20070729212909.GC3432@traven>
-	<20070729213434.GD3432@traven>
-	<200707300006.42397.mb@bu3sch.de>
-	<alpine.LFD.0.999.0707300842350.10861@enigma.security.iitk.ac.in>
-	<alpine.LFD.0.999.0707300904360.10861@enigma.security.iitk.ac.in>
-	<20070730054004.GI3432@traven>
-	<alpine.LFD.0.999.0707301247100.12730@enigma.security.iitk.ac.in>
-	<20070730145005.GB6586@tuxdriver.com>
-	<alpine.LFD.0.999.0707310142190.17287@enigma.security.iitk.ac.in>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from hall.aurel32.net ([88.191.38.19]:48627 "EHLO hall.aurel32.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752333AbXGMGjl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jul 2007 02:39:41 -0400
+Date: Fri, 13 Jul 2007 08:11:00 +0200
+From: Aurelien Jarno <aurelien@aurel32.net>
+To: mb@bu3sch.de
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Gary Zambrano <zambrano@broadcom.com>
+Subject: Re: [patch 1/2] Merge the Sonics Silicon Backplane subsystem
+Message-ID: <20070713061100.GA28974@hall.aurel32.net>
+References: <20070712085432.528319000@bu3sch.de> <20070712085744.604965000@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <20070712085744.604965000@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 31 Jul 2007 01:44:37 +0530 (IST) Satyam Sharma wrote:
+On Thu, Jul 12, 2007 at 10:54:33AM +0200, mb@bu3sch.de wrote:
+> This merges the SSB subsystem. SSB is a backplane bus subsystem needed
+> for various Broadcom devices.
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-> 
-> 
-> On Mon, 30 Jul 2007, John W. Linville wrote:
-> 
-> > On Mon, Jul 30, 2007 at 12:50:31PM +0530, Satyam Sharma wrote:
-> > > On Mon, 30 Jul 2007, Matthias Kaehlcke wrote:
-> > > 
-> > > > [...]
-> > > > The Host AP driver uses a semaphore as mutex. Use the mutex API
-> > > > instead of the (binary) semaphore.
-> > > > 
-> > > > Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-> > > 
-> > > Reviewed-by: Satyam Sharma <satyam@infradead.org>
-> > 
-> > Is that the same as Acked-by?  Or do you disagree with the patch?
-> > 
-> > Just checkin'...
-> 
-> Well, I'm not the maintainer, so didn't think correct to give an
-> "Acked-by". "Reviewed-by" generally means I read the patch, and think
-> it is correct. Probably could save time for others ...
+[...]
 
-You should use Acked-by.  See Documentation/SubmittingPatches.  :)
+> Index: linux-2.6/include/linux/ssb/ssb_regs.h
+> ===================================================================
+> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
+> +++ linux-2.6/include/linux/ssb/ssb_regs.h	2007-07-12 10:51:49.000000000 +0200
+> @@ -0,0 +1,294 @@
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+[...]
+
+> +#define	SSB_EXTIF_BASE		0x1f000000	/* External Interface region base address */
+> +#define	SSB_FLASH1		0x1fc00000	/* Flash Region 1 */
+> +#define	SSB_FLASH1_SZ		0x00400000	/* Size of Flash Region 1 */
+> +
+> +#define SSB_PCI_DMA		0x40000000	/* Client Mode sb2pcitranslation2 (1 GB) */
+> +#define SSB_PCI_DMA_SZ		0x40000000	/* Client Mode sb2pcitranslation2 size in bytes */
+> +#define SSB_PCIE_DMA_L32		0x00000000	/* PCIE Client Mode sb2pcitranslation2 (2 ZettaBytes), low 32 bits */
+> +#define SSB_PCIE_DMA_H32		0x80000000	/* PCIE Client Mode sb2pcitranslation2 (2 ZettaBytes), high 32 bits */
+> +#define	SSB_EUART		(SB_EXTIF_BASE + 0x00800000)
+> +#define	SSB_LED			(SB_EXTIF_BASE + 0x00900000)
+
+I have just noticed a typo here. That should be SSB_EXTIF_BASE instead
+of SB_EXTIF_BASE.
+
+-- 
+  .''`.  Aurelien Jarno	            | GPG: 1024D/F1BCDB73
+ : :' :  Debian developer           | Electrical Engineer
+ `. `'   aurel32@debian.org         | aurelien@aurel32.net
+   `-    people.debian.org/~aurel32 | www.aurel32.net
