@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:18352 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760586AbXGaPC6 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33723 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751756AbXGMJxI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 11:02:58 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so427147fkz
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 08:02:56 -0700 (PDT)
-To: Andy Green <andy@warmcat.com>
-Subject: Re: [PATCH] rt73usb-add-bluenext-148f-2573
-Date: Tue, 31 Jul 2007 17:06:51 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <20070731115446.5717.37617.stgit@localhost> <46AF4889.4070902@warmcat.com> <200707311650.34795.IvDoorn@gmail.com>
-In-Reply-To: <200707311650.34795.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200707311706.52073.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 13 Jul 2007 05:53:08 -0400
+Subject: Re: [PATCH 2.6] libertas : fix a few wext abuses...
+From: Johannes Berg <johannes@sipsolutions.net>
+To: jt@hpl.hp.com
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <20070712164328.GB13445@bougret.hpl.hp.com>
+References: <20070710213706.GA7929@bougret.hpl.hp.com>
+	 <1184188789.28850.4.camel@localhost.localdomain>
+	 <20070712004634.GA12148@bougret.hpl.hp.com>
+	 <1184210893.18797.16.camel@localhost.localdomain>
+	 <20070712164328.GB13445@bougret.hpl.hp.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SBVn0/HQCry2jDUoenv+"
+Date: Fri, 13 Jul 2007 11:51:12 +0200
+Message-Id: <1184320272.30334.0.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-> > > Which version are you using?
-> > > wireless-dev <---
-> > > rt2x00.git
-> > > rt2x00 cvs
-> 
-> Ok, rt2x00.git contains many changes to the initialization of the device,
-> so it is a bit hard to compare at the moment. At least it is confirmed that rt2x00 can
-> receive all frames in monitor mode and the problem area is the DROP filter.
-> 
-> I'll release rt2x00 2.0.5 later today with all those changes, including the rxdone rate
-> selection fix. So if you could retest later to see if the problem disappeared in 2.0.5 it
-> would be great. :)
+--=-SBVn0/HQCry2jDUoenv+
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Ok, that was easier then I thought, rt2x00 2.0.5 _will_ contain the fix for this.
-I just noticed that when the first and only interface is a monitor interface
-the device was not being configured at all. This has now been fixed in rt2x00.git,
-so it will be part of the 2.0.5 release later today. :)
+On Thu, 2007-07-12 at 09:43 -0700, Jean Tourrilhes wrote:
 
-Ivo
+> 	Only 57k ? The orinoco driver itself is less than that, and
+> you'll find many other wireless driver way smaller than that ! I can
+> see that you guys are totally unconcerned about bloat.
 
+Face it, we started living in the 21st century and developer time is
+more valuable than 7k of memory.
 
+johannes
+
+--=-SBVn0/HQCry2jDUoenv+
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGl0sQ/ETPhpq3jKURAmVfAJ9gCPchPKz/7FK2nSWIWD6o9j0MQwCgqtYk
+qlqT76gI7HYTVoylZ8dpSRY=
+=uwBl
+-----END PGP SIGNATURE-----
+
+--=-SBVn0/HQCry2jDUoenv+--
 
