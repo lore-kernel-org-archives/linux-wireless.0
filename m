@@ -1,63 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:64977 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967865AbXG3Sin (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2007 14:38:43 -0400
-Date: Mon, 30 Jul 2007 11:37:29 -0700
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Masakazu Mokuno <mokuno@sm.sony.co.jp>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] remove duplicated ioctl entries in compat_ioctl.c
-Message-ID: <20070730183729.GB7332@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <20070727191053.GA7572@tuxdriver.com> <20070727215847.GA17991@bougret.hpl.hp.com> <20070730145358.327D.MOKUNO@sm.sony.co.jp> <20070730144726.GA6586@tuxdriver.com>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:47681
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757656AbXGNRtO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Jul 2007 13:49:14 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH #2] Merge the Sonics Silicon Backplane subsystem
+Date: Sat, 14 Jul 2007 19:47:45 +0200
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	John Linville <linville@tuxdriver.com>,
+	Aurelien Jarno <aurelien@aurel32.net>,
+	linux-wireless@vger.kernel.org,
+	Gary Zambrano <zambrano@broadcom.com>, netdev@vger.kernel.org
+References: <200707141918.22457.mb@bu3sch.de> <20070714172605.GA15586@infradead.org>
+In-Reply-To: <20070714172605.GA15586@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070730144726.GA6586@tuxdriver.com>
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200707141947.46191.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 30, 2007 at 10:47:26AM -0400, John W. Linville wrote:
-> On Mon, Jul 30, 2007 at 09:02:56PM +0900, Masakazu Mokuno wrote:
+On Saturday 14 July 2007 19:26:05 Christoph Hellwig wrote:
+> On Sat, Jul 14, 2007 at 07:18:20PM +0200, Michael Buesch wrote:
+> > --- /dev/null
+> > +++ b/drivers/ssb/Makefile
+> > @@ -0,0 +1,11 @@
+> > +ssb-builtin-drivers-y					+= driver_chipcommon.o
+> > +ssb-builtin-drivers-$(CONFIG_SSB_DRIVER_MIPS)		+= driver_mipscore.o
+> > +ssb-builtin-drivers-$(CONFIG_SSB_DRIVER_PCICORE)	+= driver_pcicore.o
+> > +
+> > +ssb-hostsupport-$(CONFIG_SSB_PCIHOST)			+= pci.o pcihost_wrapper.o
+> > +ssb-hostsupport-$(CONFIG_SSB_PCMCIAHOST)		+= pcmcia.o
+> > +
+> > +obj-$(CONFIG_SSB) += ssb.o
+> > +
+> > +ssb-objs	:= main.o scan.o \
+> > +		   $(ssb-hostsupport-y) $(ssb-builtin-drivers-y)
 > 
-> > In second half of the mail, I understood the he asked how about keeping
-> > used one (COMPATIBLE_IOCTL) instead of HANDLE_IOCTL one, considering
-> > compatibilities.  As I can esteem the idea that sometimes the compatibilities
-> > are more important than changing something and I didn't think my patch
-> > could address all problems of the issue and I had much time to test more,
-> > I replied with the intention that I didn't stick to the patch if all
-> > userland application could work around perfectly.
+> Whoa, this makefile is more than ugly :)
 > 
-> Masakazu-san,
+> Please try something like:
 > 
-> Thank you very much for your thorough explanation of the situation.
-> I apologize for having been a bit slow to grasp what you were doing.
+> # core
+> ssb-y					+= main.o scan.o
 > 
-> I agree that the HANDLE_IOCTL version seems correct.  As you correctly
-> understood, my concern was that we not break anything new in the
-> process of fixing this bug.
+> # host support
+> ssb-$(CONFIG_SSB_PCIHOST)		+= pci.o pcihost_wrapper.o
+> ssb-$(CONFIG_SSB_PCMCIAHOST)		+= pcmcia.o
 > 
-> Have you tested the both the old and the new wireless-tools on
-> a kernel with your patch applied?  Both 32- and 64-bit versions?
-> Do they all work equally well?
+> # drivers
+> ssb-y					+= driver_chipcommon.o
+> ssb-$(CONFIG_SSB_DRIVER_MIPS)		+= driver_mipscore.o
+> ssb-$(CONFIG_SSB_DRIVER_PCICORE)	+= driver_pcicore.o
 > 
-> Thanks,
+> obj-$(CONFIG_SSB)			+= ssb.o
 > 
-> John
+> instead
+> 
+> 
+> > +	default y
+> 
+> please don't add defauly y statements for random drivers.
+> 
 
-	Using SIOCSIWSCAN is probably a bad idea to test, because
-there is the extra problem of alignement *within* the data, on top of
-the pointer problem.
-	Testing with SIOCGIWSTATS or SIOCGIWPRIV would narrow down to
-only the pointer problem, and the kernel fix should work with both old
-and new version of the Wireless Tools. It's simple to test, either you
-are getting valid data or garbage, the only issue is that some drivers
-may be returning garbage for those calls.
-	Johannes told me (in the thread I linked) that the
-HANDLE_IOCTL was improving things (and that how we discovered the
-alignement problem). But, Johannes did not do exhaustive testing and I
-would welcome more testing, for sure.
-	Have fun...
+Thanks for your comments. I fixed that and will submit it
+with the next round.
 
-	Jean
+-- 
+Greetings Michael.
