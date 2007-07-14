@@ -1,59 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:46249 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754198AbXGJOu7 (ORCPT
+Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:6030 "EHLO
+	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755313AbXGNAkW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2007 10:50:59 -0400
-Subject: Re: [PATCH 00/14] major mac80211 restructuring/cleanups
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070710162912.17899683@logostar.upir.cz>
-References: <20070621221603.778432000@sipsolutions.net>
-	 <20070710153456.471e395e@logostar.upir.cz>
-	 <1184075439.15565.11.camel@johannes.berg>
-	 <20070710162912.17899683@logostar.upir.cz>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hUrUcHZBtd50icd181CD"
-Date: Tue, 10 Jul 2007 16:51:18 +0200
-Message-Id: <1184079079.15565.13.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 13 Jul 2007 20:40:22 -0400
+From: Daniel Drake <dsd@gentoo.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: kune@deine-taler.de
+Cc: mokuno@sm.sony.co.jp
+Subject: [PATCH] zd1211rw: Add ID for Planex GW-US54GXS
+Message-Id: <20070714004011.EE4A07B409F@zog.reactivated.net>
+Date: Sat, 14 Jul 2007 01:40:11 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
 
---=-hUrUcHZBtd50icd181CD
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch adds the ID for Planex GW-US54GXS USB wireless adapter sold in
+Japan.
+Since this device returns the regulatory region as 0x49,
+the patch 'Allow channels 1-11 for unrecognised regulatory domains' is
+required.
 
-On Tue, 2007-07-10 at 16:29 +0200, Jiri Benc wrote:
+Tested by Masakazu Mokuno
+zd1211b chip 2019:5303 v4810 high 00-90-cc AL2230_RF pa0 ---N-
 
-> But even if it can be applied upstream, it doesn't solve anything. Imagin=
-e
-> a patch which was merged into wireless-dev before this restructuring and
-> which is not upstream. Merging it upstream would mean taking the patch fr=
-om
-> wireless-dev git and manually modifying it to fit a new structure. And we
-> have a bunch of such patches which should go to 2.6.24 (yes, I really
-> mean .24). Perhaps I'm lazy, but I'd like to avoid that. It's going to be=
- a
-> lot of unpleasant work even without this...
+Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+---
+ zd_usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Which all goes to say that pushing mac80211 for .22 was too fast.
-
-joahnnes
-
---=-hUrUcHZBtd50icd181CD
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGk5zm/ETPhpq3jKURAox/AKCsldD0TQKUzG2+660NdBq7Gfpm1gCcCGP1
-ZmwQSDZehCgucU+NTharUwI=
-=cL7Z
------END PGP SIGNATURE-----
-
---=-hUrUcHZBtd50icd181CD--
+diff --git a/zd_usb.c b/zd_usb.c
+index 1e9c9ce..95c99a7 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -72,6 +72,7 @@ static struct usb_device_id usb_ids[] = {
+ 	{ USB_DEVICE(0x0586, 0x3413), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x0053, 0x5301), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x0411, 0x00da), .driver_info = DEVICE_ZD1211B },
++	{ USB_DEVICE(0x2019, 0x5303), .driver_info = DEVICE_ZD1211B },
+ 	/* "Driverless" devices that need ejecting */
+ 	{ USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
+ 	{ USB_DEVICE(0x0ace, 0x20ff), .driver_info = DEVICE_INSTALLER },
+-- 
+1.5.2.2
 
