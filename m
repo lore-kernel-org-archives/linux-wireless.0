@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:37587 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754781AbXGIVD6 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52804
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753524AbXGPVxz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2007 17:03:58 -0400
-Message-ID: <4692A2B9.2040004@warmcat.com>
-Date: Mon, 09 Jul 2007 22:03:53 +0100
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Permissions down /sys
-References: <469297DF.4000806@warmcat.com> <200707092257.25909.mb@bu3sch.de>
-In-Reply-To: <200707092257.25909.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 16 Jul 2007 17:53:55 -0400
+Date: Mon, 16 Jul 2007 14:53:58 -0700 (PDT)
+Message-Id: <20070716.145358.35015496.davem@davemloft.net>
+To: jbenc@suse.cz
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] mac80211: fix GCC warning on 64bit platforms
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20070716184653.355253bf@griffin.suse.cz>
+References: <20070714.185935.18577806.davem@davemloft.net>
+	<20070714.204116.23012949.davem@davemloft.net>
+	<20070716184653.355253bf@griffin.suse.cz>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Monday 09 July 2007 22:17:35 Andy Green wrote:
->> Hi folks -
->>
->> Is 222 permissions on /sys/class/ieee80211/phy*/add_iface and
->> remove_iface really okay, or should it perhaps be 220?
->>
->> --w--w--w- 1 root root    0 2007-07-09 21:11 add_iface
->> --w--w--w- 1 root root 4096 2007-07-09 21:12 remove_iface
-> 
-> IMO the file-permissions are correct, _but_ the following should
-> be added to _store_remove_iface() and _store_add_iface():
-> 
-> 	if (!capable(CAP_NET_ADMIN))
-> 		return -EPERM;
-> 
+From: Jiri Benc <jbenc@suse.cz>
+Date: Mon, 16 Jul 2007 18:46:53 +0200
 
-Fair enough... one or the other needs doing though because right now you
-can delete wlan0 as a mortal user (just tried it... you can't nuke
-wmaster0 though) and I guess exhaust the possible max interfaces too.  I
-made a patch changing the perms to  S_IWUSR|S_IWGRP, but your method is
-smarter.
+> net/mac80211/ieee80211.c: In function ieee80211_register_hw:
+> net/mac80211/ieee80211.c:4989: warning: comparison of distinct pointer types lacks a cast
+> 
+> Fix by casting from size_t to unsigned as size of ieee80211_tx_status_rtap_hdr
+> structure will never be greater than that.
+> 
+> Signed-off-by: Jiri Benc <jbenc@suse.cz>
 
--Andy
-
+The macro "max_t" exists for these kinds of situations, please
+use it. :-)
