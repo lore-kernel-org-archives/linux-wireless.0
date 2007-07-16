@@ -1,26 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:37181 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763509AbXGYPh0 (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:45147 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753924AbXGPQhm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 11:37:26 -0400
-Date: Wed, 25 Jul 2007 16:37:25 +0100
-From: Christoph Hellwig <hch@infradead.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [Fwd: [PATCH] libertas: Per-socket mesh-ttl via setsockopt().]
-Message-ID: <20070725153725.GB11785@infradead.org>
-References: <1185371628.11035.11.camel@xo-13-A4-25.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1185371628.11035.11.camel@xo-13-A4-25.localdomain>
+	Mon, 16 Jul 2007 12:37:42 -0400
+Message-ID: <469B9ED0.3040907@warmcat.com>
+Date: Mon, 16 Jul 2007 17:37:36 +0100
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6
+References: <20070712204137.GB14486@tuxdriver.com>
+In-Reply-To: <20070712204137.GB14486@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 25, 2007 at 09:53:48AM -0400, Dan Williams wrote:
-> Any objections before I push to libertas?
 
-Please post this to netdev to get the deserved amount of flames from
-the core developers.  Or to make it short, no way a driver should register
-sockops ever, and no way you should be using netfilter code for that.
+> Dave,
+> 
+> This request is based off net-2.6, as it requires a patch that is in
+> net-2.6 but not yet in Linus' tree (b3d88ad49a0623d09efcf998beb26288c8029f75).
 
+Thanks John and everyone who helped... the injection patches are in the
+Linus git tree now :-D
+
+-Andy
