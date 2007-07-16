@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:58442 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750999AbXGZRzr (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:34176 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755032AbXGPJgn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2007 13:55:47 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH] mac80211: revert some GFP_ATOMIC -> GFP_KERNEL changes
-Date: Thu, 26 Jul 2007 10:53:44 -0700
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>,
-	andy@warmcat.com
-Message-Id: <200707261053.44771.flamingice@sourmilk.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8";
-  format=fixed
+	Mon, 16 Jul 2007 05:36:43 -0400
+Subject: Re: [PATCH] rtl8187: ensure priv->hwaddr is always valid
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200707151709.55429.flamingice@sourmilk.net>
+References: <200707151709.55429.flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-whRVofKXcO4UietYs1o9"
+Date: Mon, 16 Jul 2007 11:34:22 +0200
+Message-Id: <1184578463.3773.1.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
 
-Some of the allocations made with GFP_ATOMIC really were necessary.
+--=-whRVofKXcO4UietYs1o9
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+On Sun, 2007-07-15 at 17:09 -0700, Michael Wu wrote:
+> =20
+> -	priv->hwaddr =3D conf->mac_addr;
+> +	priv->hwaddr =3D conf->mac_addr ? conf->mac_addr : dev->wiphy->perm_add=
+r;
 
- net/mac80211/ieee80211_sta.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Do you allow monitor mode? If so, this isn't correct unless the hardware
+is explicitly told to not do anything (most hw doesn't and we use a zero
+mac addr for that). conf->mac_addr is NULL in monitor mode for a reason:
+we don't want to have any mac address so we don't ACK packets.
 
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 8296c0c..c9fc9a3 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -3911,7 +3911,7 @@ ieee80211_sta_scan_result(struct net_device *dev,
- 
- 	if (bss) {
- 		char *buf;
--		buf = kmalloc(30, GFP_KERNEL);
-+		buf = kmalloc(30, GFP_ATOMIC);
- 		if (buf) {
- 			memset(&iwe, 0, sizeof(iwe));
- 			iwe.cmd = IWEVCUSTOM;
-@@ -3929,7 +3929,7 @@ ieee80211_sta_scan_result(struct net_device *dev,
- 		if (!(local->scan_flags & IEEE80211_SCAN_EXTRA_INFO))
- 			break;
- 
--		buf = kmalloc(100, GFP_KERNEL);
-+		buf = kmalloc(100, GFP_ATOMIC);
- 		if (!buf)
- 			break;
- 
+johannes
+
+--=-whRVofKXcO4UietYs1o9
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGmzue/ETPhpq3jKURAttZAJsEe9yidzdI1pelJEwoX5rDbcxEFQCfVepv
+4RMiuWASdHmu5qIokzIoJK0=
+=xD6j
+-----END PGP SIGNATURE-----
+
+--=-whRVofKXcO4UietYs1o9--
 
