@@ -1,26 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:5322 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754990AbXGLIJx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2007 04:09:53 -0400
-Date: Thu, 12 Jul 2007 16:09:11 +0800
-From: Zhu Yi <yi.zhu@intel.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: ipw2200 driver updates
-Message-ID: <20070712080911.GA28273@mail.intel.com>
-Reply-To: yi.zhu@intel.com
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50261 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752458AbXGQK2R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jul 2007 06:28:17 -0400
+Subject: Re: [PATCH] cfg80211: use debugfs_rename
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1182443457.21939.47.camel@johannes.berg>
+References: <1182443457.21939.47.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aEAPejg2oynxNLa/A5Ih"
+Date: Mon, 16 Jul 2007 14:34:21 +0200
+Message-Id: <1184589261.3773.21.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-[PATCH] ipw2100: Fix `iwpriv set_power` error
-[PATCH] Fix ipw2200 set wrong power parameter causing firmware error
-[PATCH] ipw2200: Fix ipw_isr() comments error on shared IRQ
-[PATCH] Update version ipw2200 stamp to 1.2.2
+--=-aEAPejg2oynxNLa/A5Ih
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
--yi
+This patch and the one titled "mac80211: use debugfs_rename" should be
+going in now as the debugfs_rename functionality has been merged by
+GregKH.
+
+johannes
+
+--=-aEAPejg2oynxNLa/A5Ih
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGm2XN/ETPhpq3jKURAnWNAJ9cDP0Rb+Ho83gBSlVvnKcx9QtcmQCcC8xZ
+3C56rL4TLXlqSzF/oRu0gxA=
+=SB+a
+-----END PGP SIGNATURE-----
+
+--=-aEAPejg2oynxNLa/A5Ih--
+
