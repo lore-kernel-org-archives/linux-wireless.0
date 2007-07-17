@@ -1,55 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from deine-taler.de ([217.160.107.63]:58531 "EHLO deine-taler.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753331AbXGHSPZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2007 14:15:25 -0400
-Date: Sun, 8 Jul 2007 20:15:24 +0200
-From: Ulrich Kunitz <kune@deine-taler.de>
-To: Andy Green <andy@warmcat.com>
-Cc: Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: Arrested Development
-Message-ID: <20070708181524.GA12389@deine-taler.de>
-References: <468DE699.9040708@warmcat.com> <468E48AF.10109@gentoo.org> <468E5C33.2000102@warmcat.com> <20070708140054.GA28113@deine-taler.de> <46910F3F.8010201@warmcat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <46910F3F.8010201@warmcat.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45611 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752159AbXGQMD0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jul 2007 08:03:26 -0400
+Subject: [PATCH] fix bug introduced in my IE stack space saving patch
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 17 Jul 2007 14:02:14 +0200
+Message-Id: <1184673734.3773.67.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07-07-08 17:22 Andy Green wrote:
 
-> I rebooted into the new kernel and did this only
-> 
-> # iwconfig wlan0 mode monitor
-> # ifconfig wlan0 up
-> # iwconfig wlan0 channel 6
-> # tcpdump -i wlan0
-> 
-> But all I could see were beacons, this is despite I am ssh-d into that
-> box over the same channel 6 network with WPA and should surely be seeing
-> the encrypted packets?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+I really wonder how I managed to use the IE patch all along. But I had
+it in my tree all the time.
 
-I assume you were connected over a different interface. It appears
-that the code, which enables the reception of all packets hasn't
-been called or is wrong. Currently you will see only packets that
-are sent to the interface. Promiscous mode is also interesting,
-but shouldn't have any importance in monitor mode, which the
-iwconfig manual describes as passing all packets on the frequency.
+--- wireless-dev.orig/net/mac80211/ieee80211_sta.c	2007-07-17 14:02:00.230964463 +0200
++++ wireless-dev/net/mac80211/ieee80211_sta.c	2007-07-17 14:02:01.910964463 +0200
+@@ -110,6 +110,8 @@ struct ieee802_11_elems {
+ 	u8 wpa_len;
+ 	u8 rsn_len;
+ 	u8 erp_info_len;
++	u8 ht_cap_param_len;
++	u8 ht_extra_param_len;
+ 	u8 ext_supp_rates_len;
+ 	u8 wmm_info_len;
+ 	u8 wmm_param_len;
 
-> Then I decided to start wpa_supplicant (this
-> is an FC6 box so it was service wpa_supplicant start) and I got this oops:
-> 
-> ...
-> EIP is at zd_mac_config_interface+0xc/0x35 [zd1211rw_mac80211]
-> ...
 
-I believe Jon Smirl reported the same bug. But I didn't quite
-understand how to provoke it.
-
-Cheers,
-
-Uli
-
--- 
-Uli Kunitz
