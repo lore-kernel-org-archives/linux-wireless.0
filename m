@@ -1,44 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp116.iad.emailsrvr.com ([207.97.245.116]:37195 "EHLO
-	smtp116.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755540AbXGZCXL (ORCPT
+Received: from smtp146.iad.emailsrvr.com ([207.97.245.146]:33881 "EHLO
+	smtp146.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752078AbXGQCRG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 22:23:11 -0400
-Message-ID: <46A80535.7060301@gentoo.org>
-Date: Wed, 25 Jul 2007 22:21:41 -0400
+	Mon, 16 Jul 2007 22:17:06 -0400
+Message-ID: <469C2644.3060701@gentoo.org>
+Date: Mon, 16 Jul 2007 22:15:32 -0400
 From: Daniel Drake <dsd@gentoo.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>,
-	James Ketrenos <jketreno@linux.intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: Re: driver bugs with changed mac address
-References: <1182333938.3714.53.camel@johannes.berg>
-In-Reply-To: <1182333938.3714.53.camel@johannes.berg>
+To: Jiri Benc <jbenc@suse.cz>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] mac80211: STA reassociation improvements
+References: <20070715140251.B4F6B7B409F@zog.reactivated.net> <20070716185616.58030016@griffin.suse.cz>
+In-Reply-To: <20070716185616.58030016@griffin.suse.cz>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> In zd1211, we start with hwaddr = dev->wiphy->perm_addr which isn't
-> correct either, for a pure monitor mode we want to start with a zero mac
-> addr to avoid acking packets. Also, zd1211rw will end up having a NULL
-> hwaddr when a monitor interface is added, most likely segfaulting in
-> zd_write_mac_addr then.
+Jiri Benc wrote:
+> [removed netdev, no reason for sending this there]
 
-Sorry for the delay in getting to this.
-
-Looking at this now, the behaviour you describe is not what happens. 
-When I bring up an interface set to monitor mode, zd_mac_add_interface() 
-gets called with a non-NULL mac address, the actual MAC of the device. 
-So, when zd_mac_open gets called soon after, it calls zd_write_mac_addr 
-with a non-NULL address, so it succeeds as normal.
-
-Should I ignore the above and just set an all-zero MAC in the hardware 
-when a monitor interface is brought up? (setting all-zero will disable acks)
-
-Thanks,
-Daniel
+Was I wrong for sending the patch there, or was it just your ACK that 
+you didn't think would be relevant on netdev?
 
