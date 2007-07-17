@@ -1,59 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:50557
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752304AbXGMKYA (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53963 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750767AbXGQNTN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2007 06:24:00 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Aurelien Jarno <aurelien@aurel32.net>
-Subject: Re: [patch 1/2] Merge the Sonics Silicon Backplane subsystem
-Date: Fri, 13 Jul 2007 12:22:35 +0200
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Gary Zambrano <zambrano@broadcom.com>
-References: <20070712085432.528319000@bu3sch.de> <20070712085744.604965000@bu3sch.de> <20070713061100.GA28974@hall.aurel32.net>
-In-Reply-To: <20070713061100.GA28974@hall.aurel32.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200707131222.35550.mb@bu3sch.de>
+	Tue, 17 Jul 2007 09:19:13 -0400
+Subject: [PATCH] nl80211: use the generic netlink multicast framework
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 17 Jul 2007 15:18:05 +0200
+Message-Id: <1184678285.3773.92.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 13 July 2007 08:11:00 Aurelien Jarno wrote:
-> On Thu, Jul 12, 2007 at 10:54:33AM +0200, mb@bu3sch.de wrote:
-> > This merges the SSB subsystem. SSB is a backplane bus subsystem needed
-> > for various Broadcom devices.
-> > 
-> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> 
-> [...]
-> 
-> > Index: linux-2.6/include/linux/ssb/ssb_regs.h
-> > ===================================================================
-> > --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> > +++ linux-2.6/include/linux/ssb/ssb_regs.h	2007-07-12 10:51:49.000000000 +0200
-> > @@ -0,0 +1,294 @@
-> 
-> [...]
-> 
-> > +#define	SSB_EXTIF_BASE		0x1f000000	/* External Interface region base address */
-> > +#define	SSB_FLASH1		0x1fc00000	/* Flash Region 1 */
-> > +#define	SSB_FLASH1_SZ		0x00400000	/* Size of Flash Region 1 */
-> > +
-> > +#define SSB_PCI_DMA		0x40000000	/* Client Mode sb2pcitranslation2 (1 GB) */
-> > +#define SSB_PCI_DMA_SZ		0x40000000	/* Client Mode sb2pcitranslation2 size in bytes */
-> > +#define SSB_PCIE_DMA_L32		0x00000000	/* PCIE Client Mode sb2pcitranslation2 (2 ZettaBytes), low 32 bits */
-> > +#define SSB_PCIE_DMA_H32		0x80000000	/* PCIE Client Mode sb2pcitranslation2 (2 ZettaBytes), high 32 bits */
-> > +#define	SSB_EUART		(SB_EXTIF_BASE + 0x00800000)
-> > +#define	SSB_LED			(SB_EXTIF_BASE + 0x00900000)
-> 
-> I have just noticed a typo here. That should be SSB_EXTIF_BASE instead
-> of SB_EXTIF_BASE.
-> 
+Generic netlink just got a framework to register multicast
+groups. Use it.
 
-Thanks, I fixed this.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
--- 
-Greetings Michael.
+---
+I totally misunderstood how it should be with multicast groups
+in generic netlink, but it wasn't really done well in any case.
+
+Please apply this patch as soon as you get the generic netlink multicast
+I just sent to davem. If you want I can also ping you once they make it
+in.
+
+ include/linux/nl80211.h |   16 ----------------
+ net/wireless/nl80211.c  |   12 +++++++++++-
+ 2 files changed, 11 insertions(+), 17 deletions(-)
+
+--- wireless-dev.orig/include/linux/nl80211.h	2007-07-17 14:05:13.520964463 +0200
++++ wireless-dev/include/linux/nl80211.h	2007-07-17 14:05:32.350964463 +0200
+@@ -189,22 +189,6 @@ enum nl80211_attrs {
+ };
+ #define NL80211_ATTR_MAX (__NL80211_ATTR_AFTER_LAST - 1)
+ 
+-/**
+- * enum nl80211_multicast_groups - multicast groups for nl80211
+- * @NL80211_GROUP_CONFIG: members of this group are notified of
+- *	configuration changes
+- */
+-enum nl80211_multicast_groups {
+-	/* be notified of configuration changes like wiphy renames */
+-	NL80211_GROUP_CONFIG,
+-
+-	/* add groups here */
+-
+-	/* keep last */
+-	__NL80211_GROUP_AFTER_LAST
+-};
+-#define NL80211_GROUP_MAX (__NL80211_GROUP_AFTER_LAST - 1)
+-
+ /*
+  * maximum length of IE(s) passed in an NL80211_ATTR_IE.
+  * this is an arbitrary limit, 774 means three full-length
+--- wireless-dev.orig/net/wireless/nl80211.c	2007-07-17 14:05:13.550964463 +0200
++++ wireless-dev/net/wireless/nl80211.c	2007-07-17 14:05:32.350964463 +0200
+@@ -944,6 +944,11 @@ void *nl80211msg_new(struct sk_buff **sk
+ }
+ EXPORT_SYMBOL_GPL(nl80211msg_new);
+ 
++/* multicast groups */
++static struct genl_multicast_group nl80211_config_mcgrp = {
++	.name = "config",
++};
++
+ /* notification functions */
+ 
+ void nl80211_notify_dev_rename(struct cfg80211_registered_device *rdev)
+@@ -959,7 +964,7 @@ void nl80211_notify_dev_rename(struct cf
+ 	NLA_PUT_STRING(msg, NL80211_ATTR_WIPHY_NAME, wiphy_name(&rdev->wiphy));
+ 
+ 	genlmsg_end(msg, hdr);
+-	genlmsg_multicast(msg, 0, NL80211_GROUP_CONFIG, GFP_KERNEL);
++	genlmsg_multicast(msg, 0, nl80211_config_mcgrp.id, GFP_KERNEL);
+ 
+ 	return;
+ 
+@@ -982,6 +987,11 @@ int nl80211_init(void)
+ 		if (err)
+ 			goto err_out;
+ 	}
++
++	err = genl_register_mc_group(&nl80211_fam, &nl80211_config_mcgrp);
++	if (err)
++		goto err_out;
++
+ 	return 0;
+  err_out:
+ 	genl_unregister_family(&nl80211_fam);
+
+
