@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:21861 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755154AbXGYOnN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 10:43:13 -0400
-Received: from lin01.mn-solutions.de (pD95F885D.dip0.t-ipconnect.de [217.95.136.93])
-	by s131.mittwaldmedien.de (Postfix) with ESMTP id 19CA68B215D
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2007 16:43:12 +0200 (CEST)
-Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id B54351E002B
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2007 16:43:06 +0200 (CEST)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Please pull patch-bomb for iwlwifi
-Date: Wed, 25 Jul 2007 16:43:14 +0200
-References: <20070725085754.GA670@mail.intel.com> <46A75CD9.9050100@garzik.org>
-In-Reply-To: <46A75CD9.9050100@garzik.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200707251643.14926.hs4233@mail.mn-solutions.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2599 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754551AbXGQSco (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jul 2007 14:32:44 -0400
+Date: Tue, 17 Jul 2007 14:04:17 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: patches ping
+Message-ID: <20070717180417.GE9037@tuxdriver.com>
+References: <1184674109.3773.70.camel@johannes.berg> <469CE051.5060805@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <469CE051.5060805@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 1) You should post patches to the list for review.  Yes, even
-> if there are 117 of them.  That is acceptable -- and
-> encouraged -- mailing list etiquette.
+On Tue, Jul 17, 2007 at 10:29:21AM -0500, Larry Finger wrote:
+> Johannes Berg wrote:
+> >What happened to my patches
+> >
+> > * mac80211: regdomain.c needs to include ieee80211_i.h
+> > * mac80211: kill PRISM2_HOSTAPD_UPDATE_IF sub-ioctl
+> > * mac80211: move wpa trigger to debugfs
+> > * mac80211: kill PRISM2_PARAM_AP_AUTH_ALGS
+> 
+> Add to Johannes's list
+> 
+> [PATCH V3] mac80211: Implementation of SIOCSIWRATE
 
-Here I'm wondering if this is needed. For example, for the 
-libertas WLAN driver we have an extra mailing list where people 
-(mostly) post patches for review. Eventually, Dan Williams put 
-them into his tree and then asks Linville to pull from him. But 
-the patches in his GIT tree won't be sent to linux-wireless for 
-individual review.
+commit 1fd5e589d8c7d3cd42ddd39358338766cfcedec8
+Author: Larry Finger <Larry.Finger@lwfinger.net>
+Date:   Tue Jul 10 19:32:10 2007 +0200
 
-Now, isn't doing the iwlwifi project the same?  There is a 
-mailinglist for this project 
-(https://lists.sourceforge.net/lists/listinfo/ipw3945-devel) 
-where anybody is free to join.
+    [PATCH] mac80211: Implementation of SIOCSIWRATE
 
-A cursory glance (I'm not in this mailing list) at 
-http://sourceforge.net/mailarchive/forum.php?forum_name=ipw3945-devel 
-shows that people indeed post patches there for review.
+    The WEXT ioctl SIOCSIWRATE is not implemented in mac80211. This patch
+    adds the missing routine. It supports the 'auto' keyword, fixed rates,
+    and the combination of 'auto' and a fixed rate to select an upper bound.
 
-So, if you ask them to post each and every patch on 
-linux-wireless, then other projects should do the same. Some 
-projects (e.g. bcm43xx) mostly do cross-post. Is this the way 
-people should go?
+    Based on the patch from Mohamed Abbas <mabbas@linux.intel.com>.
+
+    Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+    Signed-off-by: Jiri Benc <jbenc@suse.cz>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+That was from a recent pull of linux-2.6.  Maybe you should pull again?
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
