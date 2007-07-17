@@ -1,46 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:52554 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755186AbXGXXJf (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:55382 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934173AbXGQP30 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2007 19:09:35 -0400
-Message-ID: <46A6A447.2080903@linux.intel.com>
-Date: Tue, 24 Jul 2007 18:15:51 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
+	Tue, 17 Jul 2007 11:29:26 -0400
+Message-ID: <469CE051.5060805@lwfinger.net>
+Date: Tue, 17 Jul 2007 10:29:21 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-To: Jeff Garzik <jeff@garzik.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Stephen Clark <Stephen.Clark@seclark.us>,
-	ipw3945-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, Axj <axjslack@bluebottle.com>
-Subject: Re: [ipw3945-devel] Request for help...
-References: <1185289332.46a61474a444c@mail.bluebottle.com>	<20070724161226.GA24344@tuxdriver.com>	<46A64503.1080003@seclark.us>	<20070724203035.GG24344@tuxdriver.com> <46A66B63.6030006@garzik.org>
-In-Reply-To: <46A66B63.6030006@garzik.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: patches ping
+References: <1184674109.3773.70.camel@johannes.berg>
+In-Reply-To: <1184674109.3773.70.camel@johannes.berg>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jeff Garzik wrote:
+Johannes Berg wrote:
+> What happened to my patches
+> 
+>  * mac80211: regdomain.c needs to include ieee80211_i.h
+>  * mac80211: kill PRISM2_HOSTAPD_UPDATE_IF sub-ioctl
+>  * mac80211: move wpa trigger to debugfs
+>  * mac80211: kill PRISM2_PARAM_AP_AUTH_ALGS
 
-> There is a reason why we say "release early, release often."  If 
-> wireless developers don't hear from Intel on a regular basis,
+Add to Johannes's list
 
-The "community" vs. "Intel" slant is really getting old.  
+[PATCH V3] mac80211: Implementation of SIOCSIWRATE
 
-*WE* are part of the community.  *WE* have submitted patches.  
-*WE* have done work to bring wireless forward.  *WE* are wireless 
-developers.
-
-It isn't Intel's fault that certain people have historically 
-made it so difficult to get code to into wireless-dev's mac80211 
-(and eventually *maybe* upstream) that contributors have decided 
-to focus on getting their code out to users through other means.
-
-A version of mac80211 being available out-of-tree with features 
-not found in wireless-dev isn't the problem.  The problem is that 
-people have made it too difficult to innovate and develop in 
-wireless-dev.
-
-*That* needs to change.
-
-James
+Larry
