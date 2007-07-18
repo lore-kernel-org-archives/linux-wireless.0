@@ -1,34 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.232]:28596 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753360AbXGYUZH (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59444
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753103AbXGRDRR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 16:25:07 -0400
-Received: by wr-out-0506.google.com with SMTP id i30so227336wra
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2007 13:25:07 -0700 (PDT)
-Message-ID: <3df642dd0707251325r597f4823p79857795bc8768a2@mail.gmail.com>
-Date: Wed, 25 Jul 2007 15:25:06 -0500
-From: "Ed Howland" <ed.howland@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: lxr support for 2.6.22 (with wireless-dev?)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 17 Jul 2007 23:17:17 -0400
+Date: Tue, 17 Jul 2007 20:17:16 -0700 (PDT)
+Message-Id: <20070717.201716.112622844.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20070718021607.GB26907@tuxdriver.com>
+References: <20070718021607.GB26907@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Does anyone know if there is a new lxr version of the kernel tree
-including all of John's stuff and the various drivers?
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 17 Jul 2007 22:16:07 -0400
 
-Thanks
-Ed
+> A few more for 2.6.23...individual patches available here:
+> 
+>   http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/upstream-davem
 
--- 
-Ed Howland
-http://greenprogrammer.blogspot.com
-"The information transmitted is intended only for the person or entity
-to which it is addressed and may contain proprietary, confidential
-and/or legally privileged material. Any review, retransmission,
-dissemination or other use of, or taking of any action in reliance
-upon, this information by persons or entities other than the intended
-recipient is prohibited. If you received this in error, please contact
-the sender and delete the material from all computers."
+What about this warning which I reported to you right after the last
+merge?  Did this get fixed?
+
+net/mac80211/ieee80211.c:4989: warning: comparison of distinct pointer types lacks a cast
+
+Please fix that up first, then I'll pull from your tree.
