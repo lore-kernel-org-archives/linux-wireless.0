@@ -1,75 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:7545 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756019AbXGCPWl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2007 11:22:41 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-Date: Tue, 3 Jul 2007 17:22:35 +0200
-Subject: [PATCH] libertas: remove adapter->pkttxctrl
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200707031722.35148.hs4233@mail.mn-solutions.de>
+Received: from styx.suse.cz ([82.119.242.94]:53461 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754175AbXGRPK3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jul 2007 11:10:29 -0400
+Date: Wed, 18 Jul 2007 17:10:44 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: David Miller <davem@davemloft.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH v2] mac80211: fix GCC warning on 64bit platforms
+Message-ID: <20070718171044.2de287cd@griffin.suse.cz>
+In-Reply-To: <20070716.145358.35015496.davem@davemloft.net>
+References: <20070714.185935.18577806.davem@davemloft.net>
+	<20070714.204116.23012949.davem@davemloft.net>
+	<20070716184653.355253bf@griffin.suse.cz>
+	<20070716.145358.35015496.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The variable was initialized to 0 and nowhere else changed, so basically
-the per-packet TX control wasn't used.
+net/mac80211/ieee80211.c: In function ieee80211_register_hw:
+net/mac80211/ieee80211.c:4989: warning: comparison of distinct pointer types lacks a cast
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Size of ieee80211_tx_status_rtap_hdr structure will never be greater than
+unsigned int.
+
+Signed-off-by: Jiri Benc <jbenc@suse.cz>
+
 ---
- drivers/net/wireless/libertas/dev.h  |    2 --
- drivers/net/wireless/libertas/main.c |    1 -
- drivers/net/wireless/libertas/tx.c   |    4 ----
- 3 files changed, 0 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 2ec2b9a..3eae896 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -376,8 +376,6 @@ struct _wlan_adapter {
+On Mon, 16 Jul 2007 14:53:58 -0700 (PDT), David Miller wrote:
+> The macro "max_t" exists for these kinds of situations, please
+> use it. :-)
+
+Ok.
+
+---
+ net/mac80211/ieee80211.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- mac80211-2.6.orig/net/mac80211/ieee80211.c
++++ mac80211-2.6/net/mac80211/ieee80211.c
+@@ -4986,8 +4986,8 @@ int ieee80211_register_hw(struct ieee802
+ 	 * and we need some headroom for passing the frame to monitor
+ 	 * interfaces, but never both at the same time.
+ 	 */
+-	local->tx_headroom = max(local->hw.extra_tx_headroom,
+-				 sizeof(struct ieee80211_tx_status_rtap_hdr));
++	local->tx_headroom = max_t(unsigned, local->hw.extra_tx_headroom,
++				   sizeof(struct ieee80211_tx_status_rtap_hdr));
  
- 	struct cmd_ds_802_11_get_log logmsg;
+ 	debugfs_hw_add(local);
  
--	u32 pkttxctrl;
--
- 	u16 txrate;
- 	u8 fw_ready;
- 
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index f0c2df9..070e5da 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -1061,7 +1061,6 @@ static void wlan_init_adapter(wlan_private * priv)
- 	adapter->intcounter = 0;
- 
- 	adapter->currenttxskb = NULL;
--	adapter->pkttxctrl = 0;
- 
- 	memset(&adapter->tx_queue_ps, 0, NR_TX_QUEUE*sizeof(struct sk_buff*));
- 	adapter->tx_queue_idx = 0;
-diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
-index f5f54ed..85f7bfb 100644
---- a/drivers/net/wireless/libertas/tx.c
-+++ b/drivers/net/wireless/libertas/tx.c
-@@ -20,7 +20,6 @@
-  */
- static int SendSinglePacket(wlan_private * priv, struct sk_buff *skb)
- {
--	wlan_adapter *adapter = priv->adapter;
- 	int ret = 0;
- 	struct txpd localtxpd;
- 	struct txpd *plocaltxpd = &localtxpd;
-@@ -46,9 +45,6 @@ static int SendSinglePacket(wlan_private * priv, struct sk_buff *skb)
- 	/* offset of actual data */
- 	plocaltxpd->tx_packet_location = cpu_to_le32(sizeof(struct txpd));
- 
--	/* TxCtrl set by user or default */
--	plocaltxpd->tx_control = cpu_to_le32(adapter->pkttxctrl);
--
- 	p802x_hdr = skb->data;
- 
- 	/* copy destination address from 802.3 header */
+
 -- 
-1.5.2.1
-
+Jiri Benc
+SUSE Labs
