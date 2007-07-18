@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:50149 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751218AbXG3DGm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jul 2007 23:06:42 -0400
-Date: Mon, 30 Jul 2007 08:48:57 +0530 (IST)
-From: Satyam Sharma <satyam@infradead.org>
-To: Michael Buesch <mb@bu3sch.de>
-cc: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, akpm@linux-foundation.org
-Subject: Re: [PATCH 1/5] Use mutex instead of semaphore in the Host AP  driver
-In-Reply-To: <200707300006.42397.mb@bu3sch.de>
-Message-ID: <alpine.LFD.0.999.0707300842350.10861@enigma.security.iitk.ac.in>
-References: <20070729212909.GC3432@traven> <20070729213434.GD3432@traven>
- <200707300006.42397.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=us-ascii
+Received: from ra.tuxdriver.com ([70.61.120.52]:4227 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755142AbXGRAdK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jul 2007 20:33:10 -0400
+Date: Tue, 17 Jul 2007 20:01:40 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: mabbas <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org
+Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
+Message-ID: <20070718000140.GA26907@tuxdriver.com>
+References: <1174909200.1364.56.camel@dell-4965.jf.intel.com> <1175111599.5151.123.camel@johannes.berg> <46137FF2.6020203@linux.intel.com> <1182374019.3714.87.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1182374019.3714.87.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On Mon, 30 Jul 2007, Michael Buesch wrote:
-
-> On Sunday 29 July 2007 23:34, Matthias Kaehlcke wrote:
-> > The Host AP driver uses a semaphore as mutex. Use the mutex API
-> > instead of the (binary) semaphore.
-> > 
-> > Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-
-[ Something seems to have gone wrong with your diff / patch / script.
-  There was no diff header here, which should have been. ]
-
-> > -	res = down_interruptible(&local->rid_bap_sem);
-> > +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
-> >  	if (res)
-> >  		return res;
-> >  
-> > @@ -902,7 +902,7 @@ static int hfa384x_set_rid(struct net_device *dev, u16 rid, void *buf, int len)
-> >  	/* RID len in words and +1 for rec.rid */
-> >  	rec.len = cpu_to_le16(len / 2 + len % 2 + 1);
-> >  
-> > -	res = down_interruptible(&local->rid_bap_sem);
-> > +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
-> >  	if (res)
-> >  		return res;
-> >  
+On Wed, Jun 20, 2007 at 11:13:39PM +0200, Johannes Berg wrote:
+> Mohamed,
 > 
-> Is res returned to userspace? If yes, that's not right.
+> > +		padding = calc_pad_len(subframe_len);
+> > +		/* the last MSDU has no padding */
+> > +		if (subframe_len > remaining)
+> > +			return TXRX_DROP;
+> > +
+> > +		frame = dev_alloc_skb(local->hw.extra_tx_headroom + 
+> > +				      subframe_len);
+> > +
+> > +		if (frame == NULL) 
+> > +			return TXRX_DROP;
+> > +
+> > +		memcpy(skb_put(frame, subframe_len), (u8*)eth, subframe_len);
+> > +		frame->mac.raw = frame->data;
+> > +		skb2 = NULL;
+> 
+> Here you allocate a new frame which can be sent back to the device when
+> one of the aggregated frames was a multicast frame and we're an AP
+> device. You also correctly add extra_tx_headroom, but it seems that this
+> is missing some skb_reserve(extra_tx_headroom), no? Could you make a
+> patch adding it? I'm not sure I fully understand the code there.
 
-Yup, that's not right.
+Was there ever any reply to this?
 
-> On a interrupted mutex allocation you should return
-> -ERESTARTSYS to userspace.
-
-Nope, userspace must not see ERESTARTSYS (I /think/ this is the third
-time I'm participating in this exact same discussion :-)
-
-If the return would be caught by a previous in-kernel caller in the
-call chain, ERESTARTSYS is okay and it could try to restart the
-operation. However, if the return goes unfiltered directly to
-userspace, EINTR is the correct choice.
-
-
-Satyam
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
