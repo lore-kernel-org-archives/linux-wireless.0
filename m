@@ -1,121 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3385 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753625AbXGJPif (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2007 11:38:35 -0400
-Date: Tue, 10 Jul 2007 11:10:44 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jean Tourrilhes <jt@hpl.hp.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 2.6] WE : Fix get 32 char ESSID
-Message-ID: <20070710151044.GC7927@tuxdriver.com>
-References: <20070709221322.GA1381@bougret.hpl.hp.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35640 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765889AbXGSKHE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jul 2007 06:07:04 -0400
+Subject: [PATCH] nl80211: use new generic netlink multicast API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 19 Jul 2007 00:08:45 +0200
+Message-Id: <1184796525.8125.33.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070709221322.GA1381@bougret.hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 09, 2007 at 03:13:22PM -0700, Jean Tourrilhes wrote:
+This patch again updates nl80211 to use the again changed generic
+netlink multicast API.
 
-> 	A little bug was introduced a few months ago that prevent
-> reading ESSID with 32 character. Philippe Teuwen was the first one to
-> report that, followed by the MadWifi team :
-> 		http://madwifi.org/ticket/930
-> 	The patch fix this bug by removing obsolete code. It also
-> reenable setting the full range of ESSID, including ESSID with a final
-> NUL which are valid. This was tested on 2.6.21 and 2.6.22.
-> 	John : would you mind pushing that to 2.6.23 ? If you are
-> happy with it, I can provide backport patches for earlier kernels.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+I just proposed a change to the genetlink multicast API to make sure
+people do use the group registration functions. This patch changes
+nl80211 to follow that change, but I don't know yet whether the change
+will be accepted. But if it is then this is what nl80211 needs to
+follow. Of course it depends on the previous patch to use the new
+generic netlink multicast API in nl80211.
 
-Jean,
+ net/wireless/nl80211.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks for the patch.
+--- wireless-dev.orig/net/wireless/nl80211.c	2007-07-19 00:04:37.760937160 +0200
++++ wireless-dev/net/wireless/nl80211.c	2007-07-19 00:04:41.430937160 +0200
+@@ -964,7 +964,7 @@ void nl80211_notify_dev_rename(struct cf
+ 	NLA_PUT_STRING(msg, NL80211_ATTR_WIPHY_NAME, wiphy_name(&rdev->wiphy));
+ 
+ 	genlmsg_end(msg, hdr);
+-	genlmsg_multicast(msg, 0, nl80211_config_mcgrp.id, GFP_KERNEL);
++	genlmsg_multicast(msg, 0, &nl80211_config_mcgrp, GFP_KERNEL);
+ 
+ 	return;
+ 
 
-Iirc, I wrote this ugly little piece of code that you seek to remove.
-It's purpose is/was to preserve userland ABI for older versions of
-the wireless-tools package.  I'll have to dig a little deeper if you
-need a more detailed refresher -- let me know.
 
-In that case, I believe the issue was that using older wireless-tools
-w/ newer kernels would result in the SSID getting truncated by one
-character.  If we apply this patch (removing my hack/fix), won't we
-be reintroducing that issue?  If not, can you remind me as to why not?
-
-Thanks,
-
-John
-
-> 
-> Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
-> 
-> -----------------------------------------------------------
-> 
-> --- linux/net/wireless/wext.j1.c	2007-07-09 13:19:22.000000000 -0700
-> +++ linux/net/wireless/wext.c	2007-07-09 13:19:59.000000000 -0700
-> @@ -741,39 +741,11 @@ static int ioctl_standard_call(struct ne
->  		int	extra_size;
->  		int	user_length = 0;
->  		int	err;
-> -		int	essid_compat = 0;
->  
->  		/* Calculate space needed by arguments. Always allocate
->  		 * for max space. Easier, and won't last long... */
->  		extra_size = descr->max_tokens * descr->token_size;
->  
-> -		/* Check need for ESSID compatibility for WE < 21 */
-> -		switch (cmd) {
-> -		case SIOCSIWESSID:
-> -		case SIOCGIWESSID:
-> -		case SIOCSIWNICKN:
-> -		case SIOCGIWNICKN:
-> -			if (iwr->u.data.length == descr->max_tokens + 1)
-> -				essid_compat = 1;
-> -			else if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
-> -				char essid[IW_ESSID_MAX_SIZE + 1];
-> -
-> -				err = copy_from_user(essid, iwr->u.data.pointer,
-> -						     iwr->u.data.length *
-> -						     descr->token_size);
-> -				if (err)
-> -					return -EFAULT;
-> -
-> -				if (essid[iwr->u.data.length - 1] == '\0')
-> -					essid_compat = 1;
-> -			}
-> -			break;
-> -		default:
-> -			break;
-> -		}
-> -
-> -		iwr->u.data.length -= essid_compat;
-> -
->  		/* Check what user space is giving us */
->  		if (IW_IS_SET(cmd)) {
->  			/* Check NULL pointer */
-> @@ -811,7 +783,6 @@ static int ioctl_standard_call(struct ne
->  		}
->  
->  		/* Create the kernel buffer */
-> -		/*    kzalloc ensures NULL-termination for essid_compat */
->  		extra = kzalloc(extra_size, GFP_KERNEL);
->  		if (extra == NULL)
->  			return -ENOMEM;
-> @@ -830,8 +801,6 @@ static int ioctl_standard_call(struct ne
->  		/* Call the handler */
->  		ret = handler(dev, &info, &(iwr->u), extra);
->  
-> -		iwr->u.data.length += essid_compat;
-> -
->  		/* If we have something to return to the user */
->  		if (!ret && IW_IS_GET(cmd)) {
->  			/* Check if there is enough buffer up there */
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-John W. Linville
-linville@tuxdriver.com
