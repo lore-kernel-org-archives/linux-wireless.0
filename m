@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:55730 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753352AbXGYUs3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 16:48:29 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so420021ugf
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2007 13:48:28 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 01/11] rt2x00: Check permissions on debugfs write
-Date: Wed, 25 Jul 2007 22:49:56 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200707252249.56238.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:58840 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760273AbXGRPwL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jul 2007 11:52:11 -0400
+Subject: Re: libertas warnings & bugs
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1184767237.11352.2.camel@johannes.berg>
+References: <1184767237.11352.2.camel@johannes.berg>
+Content-Type: text/plain; charset=utf-8
+Date: Wed, 18 Jul 2007 11:50:59 -0400
+Message-Id: <1184773860.4024.0.camel@xo-13-A4-25.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 0eb031ef356c30c766966b4321808934c2667625 Mon Sep 17 00:00:00 2001
-From: Ivo van Doorn <IvDoorn@gmail.com>
-Date: Fri, 20 Jul 2007 16:36:42 +0200
-Subject: [PATCH 01/11] rt2x00: Check permissions on debugfs write
+On Wed, 2007-07-18 at 16:00 +0200, Johannes Berg wrote:
+> Hi Dan,
+>=20
+> As promised a few more warnings from libertas from my ppc64 build.
+>=20
+> drivers/net/wireless/libertas/cmd.c: In function =E2=80=98wlan_cmd_80=
+2_11_set_wep=E2=80=99:
+> drivers/net/wireless/libertas/cmd.c:189: warning: large integer impli=
+citly truncated to unsigned type
+> drivers/net/wireless/libertas/cmd.c:195: warning: large integer impli=
+citly truncated to unsigned type
+>=20
+> The code is:
+> wep->keytype[i] =3D cpu_to_le16(cmd_type_wep_40_bit);
+>=20
+> and it's fairly obvious why it warns: keytype[i] is a u8 so always en=
+ds
+> up 0...
+>=20
+> drivers/net/wireless/libertas/debugfs.c: In function =E2=80=98liberta=
+s_getscantable=E2=80=99:
+> drivers/net/wireless/libertas/debugfs.c:85: warning: format =E2=80=98=
+%08llx=E2=80=99 expects type =E2=80=98long long unsigned int=E2=80=99, =
+but argument 4 has type =E2=80=98u64=E2=80=99
+> drivers/net/wireless/libertas/debugfs.c:85: warning: format =E2=80=98=
+%08llx=E2=80=99 expects type =E2=80=98long long unsigned int=E2=80=99, =
+but argument 4 has type =E2=80=98u64=E2=80=99
+>=20
+> probably just needs a cast to unsigned long long.
 
-When writing to the registers through debugfs
-the capabilities should be checked for CAP_NET_ADMIN.
+Thanks, doing patch review and such today, I'll try to roll these in.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/mac80211/rt2x00/rt2x00debug.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+Dan
 
-diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2x00debug.c b/drivers/net/wireless/mac80211/rt2x00/rt2x00debug.c
-index cb61870..e99d783 100644
---- a/drivers/net/wireless/mac80211/rt2x00/rt2x00debug.c
-+++ b/drivers/net/wireless/mac80211/rt2x00/rt2x00debug.c
-@@ -152,6 +152,9 @@ static ssize_t rt2x00debug_file_write(void *device, const char __user *buf,
- 	int size;
- 	char *line;
- 
-+	if (!capable(CAP_NET_ADMIN))
-+		return -EPERM;
-+
- 	line = kzalloc(length, GFP_KERNEL);
- 	if (!line)
- 		return -ENOMEM;
--- 
-1.5.2.2
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
