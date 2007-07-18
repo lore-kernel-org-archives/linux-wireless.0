@@ -1,33 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 216-99-217-87.dsl.aracnet.com ([216.99.217.87]:37179 "EHLO
-	sous-sol.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750929AbXGKHO3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2007 03:14:29 -0400
-Date: Wed, 11 Jul 2007 00:14:18 -0700
-From: Chris Wright <chrisw@sous-sol.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: stable@kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [stable] [PATCH] softmac: Fix ESSID problem
-Message-ID: <20070711071418.GS4306@sequoia.sous-sol.org>
-References: <4692e2e0.u/1KuH/5hSPtXvF9%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4692e2e0.u/1KuH/5hSPtXvF9%Larry.Finger@lwfinger.net>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:48348 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934634AbXGRQ5W (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jul 2007 12:57:22 -0400
+Subject: Re: [PATCH v2] mac80211: fix GCC warning on 64bit platforms
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <20070718171044.2de287cd@griffin.suse.cz>
+References: <20070714.185935.18577806.davem@davemloft.net>
+	 <20070714.204116.23012949.davem@davemloft.net>
+	 <20070716184653.355253bf@griffin.suse.cz>
+	 <20070716.145358.35015496.davem@davemloft.net>
+	 <20070718171044.2de287cd@griffin.suse.cz>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cMOtrpgLuykpVVEPw8VL"
+Date: Wed, 18 Jul 2007 18:00:24 +0200
+Message-Id: <1184774424.4002.10.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Larry Finger (Larry.Finger@lwfinger.net) wrote:
-> From: Jean Tourrilhes <jt@hpl.hp.com>
-> 
-> Victor Porton reported that the SoftMAC layer had random problem when setting the ESSID :
-> http://bugzilla.kernel.org/show_bug.cgi?id=8686 After investigation, it turned out to be
-> worse, the SoftMAC layer is left in an inconsistent state. The fix is pretty trivial.
-> 
-> Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
-> Acked-by: Michael Buesch <mb@bu3sch.df>
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Please resend when this is accepted upstream.
+--=-cMOtrpgLuykpVVEPw8VL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-thanks,
--chris
+On Wed, 2007-07-18 at 17:10 +0200, Jiri Benc wrote:
+> net/mac80211/ieee80211.c: In function ieee80211_register_hw:
+> net/mac80211/ieee80211.c:4989: warning: comparison of distinct pointer ty=
+pes lacks a cast
+>=20
+> Size of ieee80211_tx_status_rtap_hdr structure will never be greater than
+> unsigned int.
+
+Thanks Jiri, just noticed that it was actually my bug.
+
+johannes
+
+--=-cMOtrpgLuykpVVEPw8VL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGnjkX/ETPhpq3jKURArfXAJ4mFw6lfkbdR4aZcJah2Cu/O33nQACgs8lI
+n5Y0R4TpLeyZPv/+5BS/QTs=
+=XvYK
+-----END PGP SIGNATURE-----
+
+--=-cMOtrpgLuykpVVEPw8VL--
+
