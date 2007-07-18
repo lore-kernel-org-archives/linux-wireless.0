@@ -1,35 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:35885 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760544AbXGTOgO (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:44520 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759401AbXGRQkb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jul 2007 10:36:14 -0400
-Message-ID: <46A0C851.2040302@lwfinger.net>
-Date: Fri, 20 Jul 2007 09:36:01 -0500
+	Wed, 18 Jul 2007 12:40:31 -0400
+Message-ID: <469E4278.5090509@lwfinger.net>
+Date: Wed, 18 Jul 2007 11:40:24 -0500
 From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-To: Andy Green <andy@warmcat.com>
-CC: Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH 2/2] bcm43xx-mac80211: Fix reported rx frequency and channel
-References: <20070611103828.961999956@warmcat.com> <20070611103914.577674038@warmcat.com> <20070719191052.GC6603@tuxdriver.com> <200707192139.14930.mb@bu3sch.de> <46A050B4.3060500@warmcat.com>
-In-Reply-To: <46A050B4.3060500@warmcat.com>
+To: Jiri Benc <jbenc@suse.cz>
+CC: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v2] mac80211: fix GCC warning on 64bit platforms
+References: <20070714.185935.18577806.davem@davemloft.net>	<20070714.204116.23012949.davem@davemloft.net>	<20070716184653.355253bf@griffin.suse.cz>	<20070716.145358.35015496.davem@davemloft.net>	<20070718171044.2de287cd@griffin.suse.cz>	<469E3C70.4070809@lwfinger.net> <20070718182740.69addc09@griffin.suse.cz>
+In-Reply-To: <20070718182740.69addc09@griffin.suse.cz>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andy Green wrote:
+Jiri Benc wrote:
 > 
-> I never heard of a special blessed firmware before, I don't think that
-> the driver made any dmesg when given the non-blessed one, if that is
-> what it is?  I was given this firmware by the traditional "person on
-> IRC" and don't know where it came from, but I still have it here if any
-> versioning can be extracted from it.
+> If you think "int" is more appropriate, fine with me, I don't really
+> care.
 
-Just as API's and ABI's change, the writers of firmware can change their layout, which is what 
-happened here. Nothing "blessed", just one behavior before, and a second after, the change. The 
-version info can be gotten from fwcutter.
+No, I'm just trying to learn.
 
 Larry
-
