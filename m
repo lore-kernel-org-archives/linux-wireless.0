@@ -1,63 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49972 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751866AbXGGQkR (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:33111 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753335AbXGRU3p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jul 2007 12:40:17 -0400
-Subject: Re: Errors when firmware is missing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jon Smirl <jonsmirl@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <9e4733910707070927l37bdf79cpd1fc672909fb0bb3@mail.gmail.com>
-References: <9e4733910707070927l37bdf79cpd1fc672909fb0bb3@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UBBnwQ2J80pfk8EddJpq"
-Date: Sat, 07 Jul 2007 18:41:15 +0200
-Message-Id: <1183826476.3779.42.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 18 Jul 2007 16:29:45 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: mac80211/bcm43xx deadlock
+Date: Wed, 18 Jul 2007 13:28:17 -0700
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	Jiri Benc <jbenc@suse.cz>
+References: <1182848382.3830.5.camel@johannes.berg> <1182954090.4769.28.camel@johannes.berg> <20070718181347.GD6625@tuxdriver.com>
+In-Reply-To: <20070718181347.GD6625@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1886823.LQSKGDy9xC";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200707181328.22000.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-UBBnwQ2J80pfk8EddJpq
-Content-Type: text/plain
+--nextPart1886823.LQSKGDy9xC
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Sat, 2007-07-07 at 12:27 -0400, Jon Smirl wrote:
-> I have a new Broadcom 4318 adapter (which has exactly the same issues
-> with promiscuous mode).
+On Wednesday 18 July 2007 11:13, John W. Linville wrote:
+> I didn't see an answer here.  Before we remove it, I'd prefer to know
+> what we thought we were protecting in the first place. :-)
+>
+It prevents BSSID/SSID/channel configuration from racing against userspace=
+=20
+configuration of the same thing. It's unlikely, however, and this deadlock =
+is=20
+much more serious than that race. I answered this in the patch for removing=
+=20
+the rtnl (01-kill-rtnl-locking.diff), though I wasn't as specific. This pat=
+ch=20
+should probably also go to stable.
 
-Huh? That's really weird.
+=2DMichael Wu
 
-> I didn't have the right firmware down for it
-> and I received this error message when I did "ifconfig wlan up"
-> SIOCSIFFLAGS: No such file or directory.  This is not the most user
-> friendly error message, but I did receive a log entry.
->=20
-> I tried the same thing with the zd1211. In this case the wlan0 device
-> didn't get created.
->=20
-> Does it make sense to specify consistent behavior when the firmware is mi=
-ssing?
-
-It does, and I believe we've talked about it at the wireless summits,
-but I'm not aware that we've reached a conclusion. It would probably be
-nice to have an error message -EFIRMWARE or something; that for zd1211
-no device is created is probably counter-productive, that way userspace
-will never know that a wireless adapter is plugged in.
-
-johannes
-
---=-UBBnwQ2J80pfk8EddJpq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart1886823.LQSKGDy9xC
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBGj8Ir/ETPhpq3jKURAtnRAJ0arD21tntF2/5NrkjZNV/qIl68QwCeJxO6
-sBT6gPJPaXBsmWqiVe/ADZs=
-=YfL6
+iD8DBQBGnnflT3Oqt9AH4aERAl4UAJ9imLvOWQ/FinWspNBjfhhu5+BDQgCglglC
+MoZT7HvjRzBV4v0dQeYhl7U=
+=V/AO
 -----END PGP SIGNATURE-----
 
---=-UBBnwQ2J80pfk8EddJpq--
-
+--nextPart1886823.LQSKGDy9xC--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
