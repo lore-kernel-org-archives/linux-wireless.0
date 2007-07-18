@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4735 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754396AbXGJPCX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2007 11:02:23 -0400
-Date: Tue, 10 Jul 2007 10:56:15 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	linux-wireless@vger.kernel.org, marcelo@kvack.org
-Subject: Re: libertas (private) ioctls vs. nl80211
-Message-ID: <20070710145615.GB7927@tuxdriver.com>
-References: <1181757483.29767.99.camel@johannes.berg> <20070614170901.GA13384@infradead.org> <20070614103836.23b07a72.akpm@linux-foundation.org> <20070614181307.GA16856@infradead.org> <alpine.LFD.0.98.0706141121080.14121@woody.linux-foundation.org> <20070614190936.GA28917@tuxdriver.com> <445f43ac0707060840k34d9554cta9ff11cad314db76@mail.gmail.com> <1183738085.23402.2.camel@xo-13-A4-25.localdomain>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33235 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763294AbXGRKaV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jul 2007 06:30:21 -0400
+Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: mabbas <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <20070718000140.GA26907@tuxdriver.com>
+References: <1174909200.1364.56.camel@dell-4965.jf.intel.com>
+	 <1175111599.5151.123.camel@johannes.berg>
+	 <46137FF2.6020203@linux.intel.com> <1182374019.3714.87.camel@johannes.berg>
+	 <20070718000140.GA26907@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1z5wYpwtZ1fAs5SDQWRo"
+Date: Wed, 18 Jul 2007 12:29:57 +0200
+Message-Id: <1184754598.4658.14.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1183738085.23402.2.camel@xo-13-A4-25.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 06, 2007 at 12:08:05PM -0400, Dan Williams wrote:
-> On Fri, 2007-07-06 at 08:40 -0700, Javier Cardona wrote:
-> > John,
-> > 
-> > On 6/14/07, John W. Linville <linville@tuxdriver.com> wrote:
-> > > I'm not aware of any project working on wireless mesh in mac80211 at
-> > > the moment, serious or otherwise.  I think one would be worthwhile,
-> > > but I don't know of anyone working on it.
-> > 
-> > We (cozybit Inc.) are working on an open implementation of 802.11s for
-> > Linux, based on mac80211.  We implemented an early draft
-> > implementation of 802.11s for the Marvell wireless interface used on
-> > the One Laptop Per Child.  That implementation was done entirely in
-> > firmware to take advantage of the unique capabilities of Marvell's
-> > wireless device:  the system-on-chip wireless module enables the
-> > laptop to act as a low-power, fully functional mesh point even when
-> > the main CPU is off.
-> > 
-> > Our next goal is to do a reference implementation of the latest
-> > 802.11s draft on Linux.  The hope is that it will help to achieve
-> > early interoperability and convergence of the standard.  We are
-> > seeking sponsors for the project.  So far Nortel has expressed strong
-> > interest.
-> 
-> Rock on.  If we can achieve convergence between the API that libertas
-> +mesh and the mac80211+mesh use, then we should both use the same
-> cfg80211/nl80211 interface for both.
 
-ACK.  This is definitely good news.  I am eager to see your patches.
-Let me know if I can somehow be helpful in your help for project
-sponsorship.
+--=-1z5wYpwtZ1fAs5SDQWRo
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+On Tue, 2007-07-17 at 20:01 -0400, John W. Linville wrote:
+
+> > Here you allocate a new frame which can be sent back to the device when
+> > one of the aggregated frames was a multicast frame and we're an AP
+> > device. You also correctly add extra_tx_headroom, but it seems that thi=
+s
+> > is missing some skb_reserve(extra_tx_headroom), no? Could you make a
+> > patch adding it? I'm not sure I fully understand the code there.
+>=20
+> Was there ever any reply to this?
+
+I didn't get one but never double-checked the code either, the relevant
+patches I had touching this have fallen off the list anyway :)
+
+johannes
+
+--=-1z5wYpwtZ1fAs5SDQWRo
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGneul/ETPhpq3jKURAqzZAJ4vpugP/6iK34C5rGoCzdy0e11p2ACdH4Nj
+5BxjuYBg4xlkk6q6NaVHQY8=
+=JijT
+-----END PGP SIGNATURE-----
+
+--=-1z5wYpwtZ1fAs5SDQWRo--
+
