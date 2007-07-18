@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:20986 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752547AbXGGUJ0 (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.235]:27996 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932383AbXGRPvm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jul 2007 16:09:26 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so772035wah
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jul 2007 13:09:26 -0700 (PDT)
-Message-ID: <9e4733910707071309u101a890fl3e1013c10226961d@mail.gmail.com>
-Date: Sat, 7 Jul 2007 16:09:26 -0400
-From: "Jon Smirl" <jonsmirl@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Problems with promiscuous mode fixed - wireshark
+	Wed, 18 Jul 2007 11:51:42 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so228252wxd
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2007 08:51:41 -0700 (PDT)
+Message-ID: <1ba2fa240707180851y22ead404g1c87d73903e939e3@mail.gmail.com>
+Date: Wed, 18 Jul 2007 18:51:41 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	mabbas <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240707180622p791168eax4fae712641e24cc4@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <1174909200.1364.56.camel@dell-4965.jf.intel.com>
+	 <1175111599.5151.123.camel@johannes.berg>
+	 <46137FF2.6020203@linux.intel.com>
+	 <1182374019.3714.87.camel@johannes.berg>
+	 <20070718000140.GA26907@tuxdriver.com>
+	 <1184754598.4658.14.camel@johannes.berg>
+	 <1ba2fa240707180622p791168eax4fae712641e24cc4@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've fixed the promiscuous problem but I don't know what the cause
-was. I noticed that when I captured a lot of packets with libpcap, it
-and the adapter were reporting the same number of packets seen. That
-implied that nothing was missing which made me suspect wireshark.
-Deleting the .wireshark directory made all of the missing packets
-appear. So I must have done something to wireshark to make it filter
-out packets that weren't directed to me in a way that it remembered
-the filter across restarts, but I don't know what I did to get it in
-that mode. tcpdump was getting the packets, but I was writing them to
-a file and using wireshark to look at them.
+On 7/18/07, Tomas Winkler <tomasw@gmail.com> wrote:
+> On 7/18/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Tue, 2007-07-17 at 20:01 -0400, John W. Linville wrote:
+> >
+> > > > Here you allocate a new frame which can be sent back to the device when
+> > > > one of the aggregated frames was a multicast frame and we're an AP
+> > > > device.
+> HT aggregtion is extension of QoS. Multicast and broadcast frames are
+> not QoS frames and therefore such frames  want be incorporated into an
+> A-MSDU.
+Oops
+s/want/won't/
 
-Something is still wrong with the radio tap headers. Using the bcm4318
-all of my packets say they were captured on channel 3, when they were
-captured from channel 1. This may be a problem with wireshark. The
-beacons show channel 1 in tcpdump, and channel 3 in wireshark.
-
-Have the structures for radio tap been changed? That could explain
-things if wireshark is compiled with the old version. I'm using
-0.99.4-6 from ubuntu.
-
-So now I can get back to my original goal of get zd1211/rt2x00 to run
-on an ARM with mac80211 and OLSR. I can say that the zd1211 and rt2x00
-mac80211 drivers appear to be working much better now than they were
-six months ago.
-
--- 
-Jon Smirl
-jonsmirl@gmail.com
+> You also correctly add extra_tx_headroom, but it seems that this
+> > > > is missing some skb_reserve(extra_tx_headroom), no? Could you make a
+> > > > patch adding it? I'm not sure I fully understand the code there.
+> > >
+> > > Was there ever any reply to this?
+> >
+> > I didn't get one but never double-checked the code either, the relevant
+> > patches I had touching this have fallen off the list anyway :)
+> >
+> > johannes
+> >
+> >
+>
