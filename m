@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mi0.bluebottle.com ([206.188.25.15]:33353 "EHLO
-	mi0.bluebottle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759964AbXGZPLD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2007 11:11:03 -0400
-Received: from localhost.localdomain (localhost.localdomain [127.0.0.1])
-	by mi0.bluebottle.com (8.13.1/8.13.1) with ESMTP id l6QFB2jK015121
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2007 08:11:02 -0700
-Message-Id: <200707261511.l6QFB2jK015121@mi0.bluebottle.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 26 Jul 2007 08:10:58 -0700
-From: Axj <axjslack@bluebottle.com>
-Subject: Re: Request for help...
-References: <1185289332.46a61474a444c@mail.bluebottle.com> <1185355931.3131.13.camel@debian.sh.intel.com>
-In-Reply-To: <1185355931.3131.13.camel@debian.sh.intel.com>
+Received: from deine-taler.de ([217.160.107.63]:62801 "EHLO deine-taler.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761950AbXGSVTp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jul 2007 17:19:45 -0400
+Date: Thu, 19 Jul 2007 23:19:43 +0200
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: andy@warmcat.com, linux-wireless@vger.kernel.org,
+	Daniel Drake <dsd@gentoo.org>
+Subject: Re: [PATCH 1/2] zd1211rw-mac80211: return hardware specific tx rate code for rx status
+Message-ID: <20070719211943.GA17387@deine-taler.de>
+References: <20070611103828.961999956@warmcat.com> <20070611103914.481787013@warmcat.com> <20070719191002.GB6603@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070719191002.GB6603@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Zhu Yi <yi.zhu@intel.com>:
+On 07-07-19 15:10 John W. Linville wrote:
 
-> On Tue, 2007-07-24 at 08:02 -0700, Axj wrote:
-> > so I can't compile the new version, but, even if the compilation
-> is
-> > not finished, when I retried to compile iwl version 0.1.2, it
-> works.
-> > Now for me is impossible to  understand, and I'm tring the way to
-> make
-> > mac802 subsys work. Can anyone help me....
+> On Mon, Jun 11, 2007 at 11:38:29AM +0100, andy@warmcat.com wrote:
+> > zd1211rw-mac80211 uses different hardware-specific codings to talk about
+> > rates when doing transmit and receive.  Because mac80211 looks up the rx
+> > rate against the rates table used for selecting hardware-specific coding for
+> > tx, the rate returned in the rx_status struct needs to be adjusted to use the
+> > coding used to hardware-specific tx rates.  This patch performs this adjustment.
+> > 
+> > Without this patch the radiotap-based monitor stuff reports a "0.0Mbps" rate for
+> > all packets from this driver.
+> > 
+> > CC: Daniel Drake <dsd@gentoo.org>
+> > CC: Ulrich Kunitz <kune@deine-taler.de>
+> > Signed-off-by: Andy Green <andy@warmcat.com>
 > 
-> iwlwifi-0.1.3 fixed this problem.
-> 
-> Thanks,
-> -yi
-> 
+> Daniel, Uli -- ack/nak?
 
-I tried, but peraphs I do someting wrong.... In fact without mac80211-9.0.x is impossibile to compile iwlwifi-0.1.3. But for me I'ts impossible to compile mac-802-9.0.2... give me 2 compile errors when I do "make modules", in the wmc.c. Now, if use the "make patch_kernel" of version of 9.0.2 and compile iwlwifi-0.1.3 it copilke perfect but at the moment to load the module, search a Object that doesn't exist (because if I don't compile the 9.0.2 I have to use 8.0.2). So, if I undestood good, the only way to use the driver version 0.1.x and not the version 0.0.x, is to make work the mac80211 version 9.0.2, and to resolve the compilation problem. It's no so simply like seems to be.
+John,
 
-I  saw onother exit of thje driver, 1.0.0, but I don't trust so much (at the momente the compination of mac80211 ver 8.0.2 and iwlwifi-0.0.42 work, even if the led doesn't work ad It's impossible to set an "Ad-Hoc" connection. ) so I would like try a CVS or GIT version of the Mac80211 or newer.... I know that a lot of person think that I have to "learn to fish", but I'm a better systemist, but not a excellent programmer (expecially in kernel space). 
+NAK. The patch introduces unnecessarily a new function.
 
-I would like to tel You tank you for the help.... 
-I hope that one day I will give you as better answer....
+I have already the correct patch in the queue:
 
-----------------------------------------------------------------------
-Finally - A spam blocker that actually works.
-http://www.bluebottle.com/tag/4
+http://deine-taler.de/git-bin/gitweb.cgi?p=zd1211rw.git;a=commitdiff;h=d635ff55fa76ff36da0b923c680861ccbddf34ad;hp=7e052f8d9f078314f3a3ad4a052e9a6c0e8fcadb
 
+Kind regards,
+
+Uli
+
+-- 
+Uli Kunitz
