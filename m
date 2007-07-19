@@ -1,59 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:53461 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754175AbXGRPK3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2007 11:10:29 -0400
-Date: Wed, 18 Jul 2007 17:10:44 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: David Miller <davem@davemloft.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: [PATCH v2] mac80211: fix GCC warning on 64bit platforms
-Message-ID: <20070718171044.2de287cd@griffin.suse.cz>
-In-Reply-To: <20070716.145358.35015496.davem@davemloft.net>
-References: <20070714.185935.18577806.davem@davemloft.net>
-	<20070714.204116.23012949.davem@davemloft.net>
-	<20070716184653.355253bf@griffin.suse.cz>
-	<20070716.145358.35015496.davem@davemloft.net>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38414 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752889AbXGSSi0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jul 2007 14:38:26 -0400
+Subject: Re: Airgo MIMO Wireless card mac80211 driver (unfinished)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Li YanBo <dreamfly281@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jeff willam <angelbane@gmail.com>
+In-Reply-To: <1197ff4c0707190820s26f28fafy784900d41f6b1ad4@mail.gmail.com>
+References: <1197ff4c0707190820s26f28fafy784900d41f6b1ad4@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LdqoD4MryDJFv24ORIU2"
+Date: Thu, 19 Jul 2007 20:38:12 +0200
+Message-Id: <1184870292.17966.7.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-net/mac80211/ieee80211.c: In function ieee80211_register_hw:
-net/mac80211/ieee80211.c:4989: warning: comparison of distinct pointer types lacks a cast
 
-Size of ieee80211_tx_status_rtap_hdr structure will never be greater than
-unsigned int.
+--=-LdqoD4MryDJFv24ORIU2
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Jiri Benc <jbenc@suse.cz>
+On Thu, 2007-07-19 at 23:20 +0800, Li YanBo wrote:
+> On 7/19/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > Hi,
+> >
+>=20
+> > It might be useful for you to put all your current code into a git tree
+> > and publish that to linux-wireless@vger.kernel.org so other people can
+> > take a look too :)
+> >
+>=20
+> First of all, the code is far away be finished and full of bugs,  We
+> can't success control the RX and TX yet.
+> For I just have a git tree in local machine, and it can't be access
+> from Internet, So, is there any place that can be used to put the code
+> or I have to apply a domain and build a server for it?
 
----
+I guess you could, with some work, get an account on kernel.org, or I
+can give you a tree on git.sipsolutions.net, or I'm sure there are other
+people around as well...
 
-On Mon, 16 Jul 2007 14:53:58 -0700 (PDT), David Miller wrote:
-> The macro "max_t" exists for these kinds of situations, please
-> use it. :-)
+johannes
 
-Ok.
+--=-LdqoD4MryDJFv24ORIU2
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
----
- net/mac80211/ieee80211.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
---- mac80211-2.6.orig/net/mac80211/ieee80211.c
-+++ mac80211-2.6/net/mac80211/ieee80211.c
-@@ -4986,8 +4986,8 @@ int ieee80211_register_hw(struct ieee802
- 	 * and we need some headroom for passing the frame to monitor
- 	 * interfaces, but never both at the same time.
- 	 */
--	local->tx_headroom = max(local->hw.extra_tx_headroom,
--				 sizeof(struct ieee80211_tx_status_rtap_hdr));
-+	local->tx_headroom = max_t(unsigned, local->hw.extra_tx_headroom,
-+				   sizeof(struct ieee80211_tx_status_rtap_hdr));
- 
- 	debugfs_hw_add(local);
- 
+iD8DBQBGn6+U/ETPhpq3jKURAiZbAKCLllGeQwgX6umckf69eSRrxofklgCeIS05
+vFIpc3Sobn/SkI3ZB+Xb18I=
+=rhEP
+-----END PGP SIGNATURE-----
 
--- 
-Jiri Benc
-SUSE Labs
+--=-LdqoD4MryDJFv24ORIU2--
+
