@@ -1,34 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36661 "EHLO mx1.redhat.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2173 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752589AbXGYUhw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 16:37:52 -0400
-Subject: Re: [Fwd: [PATCH] libertas: Per-socket mesh-ttl via setsockopt().]
-From: Dan Williams <dcbw@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20070725153725.GB11785@infradead.org>
-References: <1185371628.11035.11.camel@xo-13-A4-25.localdomain>
-	 <20070725153725.GB11785@infradead.org>
-Content-Type: text/plain
-Date: Wed, 25 Jul 2007 16:35:59 -0400
-Message-Id: <1185395760.15817.2.camel@xo-13-A4-25.localdomain>
+	id S934481AbXGSVc5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jul 2007 17:32:57 -0400
+Date: Thu, 19 Jul 2007 17:26:02 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: linux-wireless@vger.kernel.org, flamingice@sourmilk.net
+Subject: Re: Merging P54 upstream?
+Message-ID: <20070719212602.GA12449@tuxdriver.com>
+References: <d120d5000707191409y7602a2bdk3b9e67f5bce009d@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d120d5000707191409y7602a2bdk3b9e67f5bce009d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-07-25 at 16:37 +0100, Christoph Hellwig wrote:
-> On Wed, Jul 25, 2007 at 09:53:48AM -0400, Dan Williams wrote:
-> > Any objections before I push to libertas?
-> 
-> Please post this to netdev to get the deserved amount of flames from
-> the core developers.  Or to make it short, no way a driver should register
-> sockops ever, and no way you should be using netfilter code for that.
+On Thu, Jul 19, 2007 at 05:09:21PM -0400, Dmitry Torokhov wrote:
 
-It _WAS_ posted to netdev on 2007-07-03 with the subject "Proposed
-interface for per-packet mesh-ttl" from Javier.  Only the crickets were
-heard in response.  Please reply to that thread with comments then.
+> I wonder if there are any plans to merge p54 driver into mainline
+> anytime soon? For some reason p54 works much better for me on my
+> FullMAC card than prism54 (with which card started locking up after ~5
+> min heavyish use, such as FTP since about a year or a year and a half
+> ago).
 
-Dan
+Michael Wu is the author of that driver.  I know he is working an
+internship this summer, so he may be a bit busy.  Still, I sincerely
+hope he finds the time to whip this driver into mergeable shape and
+submits it for upstream soon.
 
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
