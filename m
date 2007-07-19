@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailgw1.uni-kl.de ([131.246.120.220]:50418 "EHLO
-	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759902AbXGKUJF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2007 16:09:05 -0400
-Date: Wed, 11 Jul 2007 22:06:24 +0200
-From: Joerg Mayer <jmayer@loplof.de>
-To: jketreno <jketreno@linux.intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Jiri Benc <jbenc@suse.cz>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/14] major mac80211 restructuring/cleanups
-Message-ID: <20070711200624.GY8218@thot.informatik.uni-kl.de>
-References: <20070621221603.778432000@sipsolutions.net> <20070710153456.471e395e@logostar.upir.cz> <1184075439.15565.11.camel@johannes.berg> <20070710162912.17899683@logostar.upir.cz> <1184079079.15565.13.camel@johannes.berg> <469506AA.9010703@linux.intel.com>
-MIME-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:2927 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751469AbXGSSc7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jul 2007 14:32:59 -0400
+Date: Thu, 19 Jul 2007 14:24:40 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] mac80211: STA reassociation improvements
+Message-ID: <20070719182440.GA6603@tuxdriver.com>
+References: <20070715140251.B4F6B7B409F@zog.reactivated.net> <20070716185616.58030016@griffin.suse.cz> <469C2644.3060701@gentoo.org> <20070717113838.03561c26@logostar.upir.cz>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <469506AA.9010703@linux.intel.com>
+In-Reply-To: <20070717113838.03561c26@logostar.upir.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 11, 2007 at 09:34:50AM -0700, jketreno wrote:
-> Johannes Berg wrote:
-...
-> >Which all goes to say that pushing mac80211 for .22 was too fast.
+On Tue, Jul 17, 2007 at 11:38:38AM +0200, Jiri Benc wrote:
+> On Mon, 16 Jul 2007 22:15:32 -0400, Daniel Drake wrote:
+> > Jiri Benc wrote:
+> > > [removed netdev, no reason for sending this there]
+> > 
+> > Was I wrong for sending the patch there, or was it just your ACK that 
+> > you didn't think would be relevant on netdev?
 > 
-> Definitely not too fast.  
-> 
-> The fact that people are using mac80211 from Linus' kernel tip is *GREAT*.  
-> We have a lot of users now that can pull Linus' tree and use iwlwifi and 
-> they no longer have to figure out how to patch a kernel, or pull from 
-> wireless-dev.
-...
+> linux-wireless mailinglist was created to lower traffic at netdev. I
+> understand that in the way that wireless patches should be sent to
+> linux-wireless only; they will be sent to nedev by John when he's asking
+> for a pull. But I'm not sure about that (Cc:ing John), my comment was more
+> about my ack.
 
-Which reminds me: Will the driver make it into .23?
+I think linux-wireless is sufficient, especially for small and/or
+isolated patches.  But there is no real harm in including netdev,
+especially for patches with broader impact.  For example, if Zhu Yi
+and PJ had chosen to push the multiqueue stuff on wireless first then
+it would certainly have been appropriate to copy netdev.  I guess
+it is just a judgment call -- if your patch merits broader review,
+then copy netdev as well.
 
- ciao
-    Joerg
+Hth!  (I doubt if it does!)
 
+John
 -- 
-Joerg Mayer                                           <jmayer@loplof.de>
-We are stuck with technology when what we really want is just stuff that
-works. Some say that should read Microsoft instead of technology.
+John W. Linville
+linville@tuxdriver.com
