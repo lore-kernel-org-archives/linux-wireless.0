@@ -1,638 +1,291 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:64356 "EHLO
-	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752325AbXGAQfl (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51340 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761969AbXGSRol (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jul 2007 12:35:41 -0400
-From: Daniel Drake <dsd@gentoo.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: kune@deine-taler.de
-Subject: [PATCH] zd1211rw-mac80211: Defer firmware load until first ifup
-Message-Id: <20070701163536.64C9F7B409F@zog.reactivated.net>
-Date: Sun,  1 Jul 2007 17:35:34 +0100 (BST)
+	Thu, 19 Jul 2007 13:44:41 -0400
+Received: from [84.135.252.168] (helo=[10.0.0.4])
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.67)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1IBa3K-0001wa-6i
+	for linux-wireless@vger.kernel.org; Thu, 19 Jul 2007 18:44:40 +0100
+Subject: debug patches
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DFC1uf6hKQH7yyOSABVt"
+Date: Thu, 19 Jul 2007 19:43:52 +0200
+Message-Id: <1184867032.17966.0.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While playing with the firmware a while back, I discovered a way to
-access the device's entire address space before the firmware has been
-loaded.
 
-Previously we were loading the firmware early on (during probe) so that
-we could read the MAC address from the EEPROM and register a netdevice.
-Now that we can read the EEPROM without having firmware, we can defer
-firmware loading until later while still reading the MAC address early
-on.
+--=-DFC1uf6hKQH7yyOSABVt
+Content-Type: multipart/mixed; boundary="=-5S53C0eXxn386wMZVmBy"
 
-This has the advantage that zd1211rw can now be built into the kernel --
-previously if this was the case, zd1211rw would be loaded before the
-filesystem is available and firmware loading would fail.
 
-Firmware load and other device initialization operations now happen the
-first time the interface is brought up.
+--=-5S53C0eXxn386wMZVmBy
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Some architectural changes were needed: handling of the is_zd1211b flag
-was moved into the zd_usb structure, MAC address handling was obviously
-changed, and a preinit_hw stage was added (the order is now: init,
-preinit_hw, init_hw).
+27 and 31 could be applied, but look at the other patches for how crap
+the master device really is
 
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
-Signed-off-by: Ulrich Kunitz <kune@deine-taler.de>
----
- drivers/net/wireless/mac80211/zd1211rw/zd_chip.c   |   88 +++---------------
- drivers/net/wireless/mac80211/zd1211rw/zd_chip.h   |   13 ++-
- drivers/net/wireless/mac80211/zd1211rw/zd_mac.c    |   45 ++++++---
- drivers/net/wireless/mac80211/zd1211rw/zd_mac.h    |    3 +-
- .../net/wireless/mac80211/zd1211rw/zd_rf_al2230.c  |    2 +-
- .../net/wireless/mac80211/zd1211rw/zd_rf_al7230b.c |    2 +-
- .../net/wireless/mac80211/zd1211rw/zd_rf_rf2959.c  |    2 +-
- .../net/wireless/mac80211/zd1211rw/zd_rf_uw2453.c  |    2 +-
- drivers/net/wireless/mac80211/zd1211rw/zd_usb.c    |   97 ++++++++++++++------
- drivers/net/wireless/mac80211/zd1211rw/zd_usb.h    |    3 +
- 10 files changed, 133 insertions(+), 124 deletions(-)
+johannes
 
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
-index fcf78ab..75728bb 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.c
-@@ -49,8 +49,9 @@ void zd_chip_clear(struct zd_chip *chip)
- 	ZD_MEMCLEAR(chip, sizeof(*chip));
- }
- 
--static int scnprint_mac_oui(const u8 *addr, char *buffer, size_t size)
-+static int scnprint_mac_oui(struct zd_chip *chip, char *buffer, size_t size)
- {
-+	u8 *addr = zd_chip_to_mac(chip)->hwaddr;
- 	return scnprintf(buffer, size, "%02x-%02x-%02x",
- 		         addr[0], addr[1], addr[2]);
- }
-@@ -61,10 +62,10 @@ static int scnprint_id(struct zd_chip *chip, char *buffer, size_t size)
- 	int i = 0;
- 
- 	i = scnprintf(buffer, size, "zd1211%s chip ",
--		      chip->is_zd1211b ? "b" : "");
-+		      zd_chip_is_zd1211b(chip) ? "b" : "");
- 	i += zd_usb_scnprint_id(&chip->usb, buffer+i, size-i);
- 	i += scnprintf(buffer+i, size-i, " ");
--	i += scnprint_mac_oui(chip->e2p_mac, buffer+i, size-i);
-+	i += scnprint_mac_oui(chip, buffer+i, size-i);
- 	i += scnprintf(buffer+i, size-i, " ");
- 	i += zd_rf_scnprint_id(&chip->rf, buffer+i, size-i);
- 	i += scnprintf(buffer+i, size-i, " pa%1x %c%c%c%c%c", chip->pa_type,
-@@ -366,64 +367,9 @@ error:
- 	return r;
- }
- 
--static int _read_mac_addr(struct zd_chip *chip, u8 *mac_addr,
--	                  const zd_addr_t *addr)
--{
--	int r;
--	u32 parts[2];
--
--	r = zd_ioread32v_locked(chip, parts, (const zd_addr_t *)addr, 2);
--	if (r) {
--		dev_dbg_f(zd_chip_dev(chip),
--			"error: couldn't read e2p macs. Error number %d\n", r);
--		return r;
--	}
--
--	mac_addr[0] = parts[0];
--	mac_addr[1] = parts[0] >>  8;
--	mac_addr[2] = parts[0] >> 16;
--	mac_addr[3] = parts[0] >> 24;
--	mac_addr[4] = parts[1];
--	mac_addr[5] = parts[1] >>  8;
--
--	return 0;
--}
--
--static int read_e2p_mac_addr(struct zd_chip *chip)
--{
--	static const zd_addr_t addr[2] = { E2P_MAC_ADDR_P1, E2P_MAC_ADDR_P2 };
--
--	ZD_ASSERT(mutex_is_locked(&chip->mutex));
--	return _read_mac_addr(chip, chip->e2p_mac, (const zd_addr_t *)addr);
--}
--
- /* MAC address: if custom mac addresses are to to be used CR_MAC_ADDR_P1 and
-  *              CR_MAC_ADDR_P2 must be overwritten
-  */
--void zd_get_e2p_mac_addr(struct zd_chip *chip, u8 *mac_addr)
--{
--	mutex_lock(&chip->mutex);
--	memcpy(mac_addr, chip->e2p_mac, ETH_ALEN);
--	mutex_unlock(&chip->mutex);
--}
--
--static int read_mac_addr(struct zd_chip *chip, u8 *mac_addr)
--{
--	static const zd_addr_t addr[2] = { CR_MAC_ADDR_P1, CR_MAC_ADDR_P2 };
--	return _read_mac_addr(chip, mac_addr, (const zd_addr_t *)addr);
--}
--
--int zd_read_mac_addr(struct zd_chip *chip, u8 *mac_addr)
--{
--	int r;
--
--	dev_dbg_f(zd_chip_dev(chip), "\n");
--	mutex_lock(&chip->mutex);
--	r = read_mac_addr(chip, mac_addr);
--	mutex_unlock(&chip->mutex);
--	return r;
--}
--
- int zd_write_mac_addr(struct zd_chip *chip, const u8 *mac_addr)
- {
- 	int r;
-@@ -444,12 +390,6 @@ int zd_write_mac_addr(struct zd_chip *chip, const u8 *mac_addr)
- 
- 	mutex_lock(&chip->mutex);
- 	r = zd_iowrite32a_locked(chip, reqs, ARRAY_SIZE(reqs));
--#ifdef DEBUG
--	{
--		u8 tmp[ETH_ALEN];
--		read_mac_addr(chip, tmp);
--	}
--#endif /* DEBUG */
- 	mutex_unlock(&chip->mutex);
- 	return r;
- }
-@@ -809,7 +749,7 @@ out:
- 
- static int hw_reset_phy(struct zd_chip *chip)
- {
--	return chip->is_zd1211b ? zd1211b_hw_reset_phy(chip) :
-+	return zd_chip_is_zd1211b(chip) ? zd1211b_hw_reset_phy(chip) :
- 		                  zd1211_hw_reset_phy(chip);
- }
- 
-@@ -874,7 +814,7 @@ static int hw_init_hmac(struct zd_chip *chip)
- 	if (r)
- 		return r;
- 
--	return chip->is_zd1211b ?
-+	return zd_chip_is_zd1211b(chip) ?
- 		zd1211b_hw_init_hmac(chip) : zd1211_hw_init_hmac(chip);
- }
- 
-@@ -1111,8 +1051,15 @@ static int read_fw_regs_offset(struct zd_chip *chip)
- 	return 0;
- }
- 
-+/* Read mac address using pre-firmware interface */
-+int zd_chip_read_mac_addr_fw(struct zd_chip *chip, u8 *addr)
-+{
-+	dev_dbg_f(zd_chip_dev(chip), "\n");
-+	return zd_usb_read_fw(&chip->usb, E2P_MAC_ADDR_P1, addr,
-+		ETH_ALEN);
-+}
- 
--int zd_chip_init_hw(struct zd_chip *chip, u8 device_type)
-+int zd_chip_init_hw(struct zd_chip *chip)
- {
- 	int r;
- 	u8 rf_type;
-@@ -1120,7 +1067,6 @@ int zd_chip_init_hw(struct zd_chip *chip, u8 device_type)
- 	dev_dbg_f(zd_chip_dev(chip), "\n");
- 
- 	mutex_lock(&chip->mutex);
--	chip->is_zd1211b = (device_type == DEVICE_ZD1211B) != 0;
- 
- #ifdef DEBUG
- 	r = test_init(chip);
-@@ -1176,10 +1122,6 @@ int zd_chip_init_hw(struct zd_chip *chip, u8 device_type)
- 		goto out;
- #endif /* DEBUG */
- 
--	r = read_e2p_mac_addr(chip);
--	if (r)
--		goto out;
--
- 	r = read_cal_int_tables(chip);
- 	if (r)
- 		goto out;
-@@ -1234,7 +1176,7 @@ static int update_channel_integration_and_calibration(struct zd_chip *chip,
- 	r = update_pwr_int(chip, channel);
- 	if (r)
- 		return r;
--	if (chip->is_zd1211b) {
-+	if (zd_chip_is_zd1211b(chip)) {
- 		static const struct zd_ioreq16 ioreqs[] = {
- 			{ CR69, 0x28 },
- 			{},
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.h b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.h
-index 24f5913..96ada90 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_chip.h
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_chip.h
-@@ -696,7 +696,6 @@ struct zd_chip {
- 	struct mutex mutex;
- 	/* Base address of FW_REG_ registers */
- 	zd_addr_t fw_regs_base;
--	u8 e2p_mac[ETH_ALEN];
- 	/* EepSetPoint in the vendor driver */
- 	u8 pwr_cal_values[E2P_CHANNEL_COUNT];
- 	/* integration values in the vendor driver */
-@@ -707,7 +706,7 @@ struct zd_chip {
- 	unsigned int pa_type:4,
- 		patch_cck_gain:1, patch_cr157:1, patch_6m_band_edge:1,
- 		new_phy_layout:1, al2230s_bit:1,
--		is_zd1211b:1, supports_tx_led:1;
-+		supports_tx_led:1;
- };
- 
- static inline struct zd_chip *zd_usb_to_chip(struct zd_usb *usb)
-@@ -726,9 +725,15 @@ void zd_chip_init(struct zd_chip *chip,
- 	         struct ieee80211_hw *dev,
- 	         struct usb_interface *intf);
- void zd_chip_clear(struct zd_chip *chip);
--int zd_chip_init_hw(struct zd_chip *chip, u8 device_type);
-+int zd_chip_read_mac_addr_fw(struct zd_chip *chip, u8 *addr);
-+int zd_chip_init_hw(struct zd_chip *chip);
- int zd_chip_reset(struct zd_chip *chip);
- 
-+static inline int zd_chip_is_zd1211b(struct zd_chip *chip)
-+{
-+	return chip->usb.is_zd1211b;
-+}
-+
- static inline int zd_ioread16v_locked(struct zd_chip *chip, u16 *values,
- 	                              const zd_addr_t *addresses,
- 				      unsigned int count)
-@@ -817,8 +822,6 @@ static inline u8 _zd_chip_get_channel(struct zd_chip *chip)
- }
- u8  zd_chip_get_channel(struct zd_chip *chip);
- int zd_read_regdomain(struct zd_chip *chip, u8 *regdomain);
--void zd_get_e2p_mac_addr(struct zd_chip *chip, u8 *mac_addr);
--int zd_read_mac_addr(struct zd_chip *chip, u8 *mac_addr);
- int zd_write_mac_addr(struct zd_chip *chip, const u8 *mac_addr);
- int zd_chip_switch_radio_on(struct zd_chip *chip);
- int zd_chip_switch_radio_off(struct zd_chip *chip);
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
-index 618913d..8df2165 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
-@@ -106,29 +106,39 @@ static void housekeeping_init(struct zd_mac *mac);
- static void housekeeping_enable(struct zd_mac *mac);
- static void housekeeping_disable(struct zd_mac *mac);
- 
--int zd_mac_init_hw(struct ieee80211_hw *dev, u8 device_type)
-+int zd_mac_preinit_hw(struct ieee80211_hw *dev)
-+{
-+	int r;
-+	u8 addr[ETH_ALEN];
-+	struct zd_mac *mac = zd_dev_mac(dev);
-+
-+	r = zd_chip_read_mac_addr_fw(&mac->chip, addr);
-+	if (r)
-+		return r;
-+
-+	spin_lock_irq(&mac->lock);
-+	SET_IEEE80211_PERM_ADDR(dev, addr);
-+	memcpy(mac->hwaddr, addr, ETH_ALEN);
-+	spin_unlock_irq(&mac->lock);
-+
-+	return 0;
-+}
-+
-+int zd_mac_init_hw(struct ieee80211_hw *dev)
- {
- 	int r;
- 	struct zd_mac *mac = zd_dev_mac(dev);
- 	struct zd_chip *chip = &mac->chip;
--	u8 addr[ETH_ALEN];
- 	u8 default_regdomain;
- 
- 	r = zd_chip_enable_int(chip);
- 	if (r)
- 		goto out;
--	r = zd_chip_init_hw(chip, device_type);
-+	r = zd_chip_init_hw(chip);
- 	if (r)
- 		goto disable_int;
- 
--	zd_get_e2p_mac_addr(chip, addr);
--	r = zd_write_mac_addr(chip, addr);
--	if (r)
--		goto disable_int;
- 	ZD_ASSERT(!irqs_disabled());
--	spin_lock_irq(&mac->lock);
--	SET_IEEE80211_PERM_ADDR(dev, addr);
--	spin_unlock_irq(&mac->lock);
- 
- 	r = zd_read_regdomain(chip, &default_regdomain);
- 	if (r)
-@@ -174,12 +184,22 @@ static int zd_mac_open(struct ieee80211_hw *dev)
- {
- 	struct zd_mac *mac = zd_dev_mac(dev);
- 	struct zd_chip *chip = &mac->chip;
-+	struct zd_usb *usb = &chip->usb;
- 	int r;
- 
-+	if (!usb->initialized) {
-+		r = zd_usb_init_hw(usb);
-+		if (r)
-+			goto out;
-+	}
-+
- 	r = zd_chip_enable_int(chip);
- 	if (r < 0)
- 		goto out;
- 
-+	r = zd_write_mac_addr(chip, mac->hwaddr);
-+	if (r)
-+		goto disable_int;
- 	r = zd_chip_set_basic_rates(chip, CR_RATES_80211B | CR_RATES_80211G);
- 	if (r < 0)
- 		goto disable_int;
-@@ -189,9 +209,6 @@ static int zd_mac_open(struct ieee80211_hw *dev)
- 	r = zd_chip_switch_radio_on(chip);
- 	if (r < 0)
- 		goto disable_int;
--	r = zd_write_mac_addr(chip, mac->hwaddr);
--	if (r)
--		goto disable_radio;
- 	r = zd_chip_enable_rxtx(chip);
- 	if (r < 0)
- 		goto disable_radio;
-@@ -499,7 +516,7 @@ static int fill_ctrlset(struct zd_mac *mac,
- 	/* ZD1211B: Computing the length difference this way, gives us
- 	 * flexibility to compute the packet length.
- 	 */
--	cs->packet_length = cpu_to_le16(mac->chip.is_zd1211b ?
-+	cs->packet_length = cpu_to_le16(zd_chip_is_zd1211b(&mac->chip) ?
- 			packet_length - frag_len : packet_length);
- 
- 	/*
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.h b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.h
-index 5faa562..ded3dea 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.h
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.h
-@@ -184,7 +184,8 @@ static inline struct zd_mac *zd_usb_to_mac(struct zd_usb *usb)
- struct ieee80211_hw *zd_mac_alloc(struct usb_interface *intf);
- void zd_mac_clear(struct zd_mac *mac);
- 
--int zd_mac_init_hw(struct ieee80211_hw *dev, u8 device_type);
-+int zd_mac_preinit_hw(struct ieee80211_hw *dev);
-+int zd_mac_init_hw(struct ieee80211_hw *dev);
- 
- int zd_mac_rx(struct ieee80211_hw *dev, const u8 *buffer, unsigned int length);
- void zd_mac_tx_failed(struct ieee80211_hw *dev);
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al2230.c b/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al2230.c
-index e7a4ecf..1640bcc 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al2230.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al2230.c
-@@ -422,7 +422,7 @@ int zd_rf_init_al2230(struct zd_rf *rf)
- 	struct zd_chip *chip = zd_rf_to_chip(rf);
- 
- 	rf->switch_radio_off = al2230_switch_radio_off;
--	if (chip->is_zd1211b) {
-+	if (zd_chip_is_zd1211b(chip)) {
- 		rf->init_hw = zd1211b_al2230_init_hw;
- 		rf->set_channel = zd1211b_al2230_set_channel;
- 		rf->switch_radio_on = zd1211b_al2230_switch_radio_on;
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al7230b.c b/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al7230b.c
-index f4e8b6a..73d0bb2 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al7230b.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_rf_al7230b.c
-@@ -473,7 +473,7 @@ int zd_rf_init_al7230b(struct zd_rf *rf)
- {
- 	struct zd_chip *chip = zd_rf_to_chip(rf);
- 
--	if (chip->is_zd1211b) {
-+	if (zd_chip_is_zd1211b(chip)) {
- 		rf->init_hw = zd1211b_al7230b_init_hw;
- 		rf->switch_radio_on = zd1211b_al7230b_switch_radio_on;
- 		rf->set_channel = zd1211b_al7230b_set_channel;
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_rf_rf2959.c b/drivers/net/wireless/mac80211/zd1211rw/zd_rf_rf2959.c
-index 2d736bd..cc70d40 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_rf_rf2959.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_rf_rf2959.c
-@@ -265,7 +265,7 @@ int zd_rf_init_rf2959(struct zd_rf *rf)
- {
- 	struct zd_chip *chip = zd_rf_to_chip(rf);
- 
--	if (chip->is_zd1211b) {
-+	if (zd_chip_is_zd1211b(chip)) {
- 		dev_err(zd_chip_dev(chip),
- 		       "RF2959 is currently not supported for ZD1211B"
- 		       " devices\n");
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_rf_uw2453.c b/drivers/net/wireless/mac80211/zd1211rw/zd_rf_uw2453.c
-index 414e40d..857dcf3 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_rf_uw2453.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_rf_uw2453.c
-@@ -486,7 +486,7 @@ static int uw2453_switch_radio_on(struct zd_rf *rf)
- 	if (r)
- 		return r;
- 
--	if (chip->is_zd1211b)
-+	if (zd_chip_is_zd1211b(chip))
- 		ioreqs[1].value = 0x7f;
- 
- 	return zd_iowrite16a_locked(chip, ioreqs, ARRAY_SIZE(ioreqs));
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c b/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
-index 47db3e3..fbb3ed0 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
-@@ -193,26 +193,27 @@ static u16 get_word(const void *data, u16 offset)
- 	return le16_to_cpu(p[offset]);
- }
- 
--static char *get_fw_name(char *buffer, size_t size, u8 device_type,
-+static char *get_fw_name(struct zd_usb *usb, char *buffer, size_t size,
- 	               const char* postfix)
- {
- 	scnprintf(buffer, size, "%s%s",
--		device_type == DEVICE_ZD1211B ?
-+		usb->is_zd1211b ?
- 			FW_ZD1211B_PREFIX : FW_ZD1211_PREFIX,
- 		postfix);
- 	return buffer;
- }
- 
--static int handle_version_mismatch(struct usb_device *udev, u8 device_type,
-+static int handle_version_mismatch(struct zd_usb *usb,
- 	const struct firmware *ub_fw)
- {
-+	struct usb_device *udev = zd_usb_to_usbdev(usb);
- 	const struct firmware *ur_fw = NULL;
- 	int offset;
- 	int r = 0;
- 	char fw_name[128];
- 
- 	r = request_fw_file(&ur_fw,
--		get_fw_name(fw_name, sizeof(fw_name), device_type, "ur"),
-+		get_fw_name(usb, fw_name, sizeof(fw_name), "ur"),
- 		&udev->dev);
- 	if (r)
- 		goto error;
-@@ -235,11 +236,12 @@ error:
- 	return r;
- }
- 
--static int upload_firmware(struct usb_device *udev, u8 device_type)
-+static int upload_firmware(struct zd_usb *usb)
- {
- 	int r;
- 	u16 fw_bcdDevice;
- 	u16 bcdDevice;
-+	struct usb_device *udev = zd_usb_to_usbdev(usb);
- 	const struct firmware *ub_fw = NULL;
- 	const struct firmware *uph_fw = NULL;
- 	char fw_name[128];
-@@ -247,7 +249,7 @@ static int upload_firmware(struct usb_device *udev, u8 device_type)
- 	bcdDevice = get_bcdDevice(udev);
- 
- 	r = request_fw_file(&ub_fw,
--		get_fw_name(fw_name, sizeof(fw_name), device_type,  "ub"),
-+		get_fw_name(usb, fw_name, sizeof(fw_name), "ub"),
- 		&udev->dev);
- 	if (r)
- 		goto error;
-@@ -262,7 +264,7 @@ static int upload_firmware(struct usb_device *udev, u8 device_type)
- 			dev_warn(&udev->dev, "device has old bootcode, please "
- 				"report success or failure\n");
- 
--		r = handle_version_mismatch(udev, device_type, ub_fw);
-+		r = handle_version_mismatch(usb, ub_fw);
- 		if (r)
- 			goto error;
- 	} else {
-@@ -273,7 +275,7 @@ static int upload_firmware(struct usb_device *udev, u8 device_type)
- 
- 
- 	r = request_fw_file(&uph_fw,
--		get_fw_name(fw_name, sizeof(fw_name), device_type, "uphr"),
-+		get_fw_name(usb, fw_name, sizeof(fw_name), "uphr"),
- 		&udev->dev);
- 	if (r)
- 		goto error;
-@@ -292,6 +294,30 @@ error:
- 	return r;
- }
- 
-+/* Read data from device address space using "firmware interface" which does
-+ * not require firmware to be loaded. */
-+int zd_usb_read_fw(struct zd_usb *usb, zd_addr_t addr, u8 *data, u16 len)
-+{
-+	int r;
-+	struct usb_device *udev = zd_usb_to_usbdev(usb);
-+
-+	r = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
-+		USB_REQ_FIRMWARE_READ_DATA, USB_DIR_IN | 0x40, addr, 0,
-+		data, len, 5000);
-+	if (r < 0) {
-+		dev_err(&udev->dev,
-+			"read over firmware interface failed: %d\n", r);
-+		return r;
-+	} else if (r != len) {
-+		dev_err(&udev->dev,
-+			"incomplete read over firmware interface: %d/%d\n",
-+			r, len);
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
-+
- #define urb_dev(urb) (&(urb)->dev->dev)
- 
- static inline void handle_regs_int(struct urb *urb)
-@@ -1005,10 +1031,43 @@ static int eject_installer(struct usb_interface *intf)
- 	return 0;
- }
- 
-+int zd_usb_init_hw(struct zd_usb *usb)
-+{
-+	int r;
-+	struct zd_mac *mac = zd_usb_to_mac(usb);
-+
-+	dev_dbg_f(zd_usb_dev(usb), "\n");
-+
-+	r = upload_firmware(usb);
-+	if (r) {
-+		dev_err(zd_usb_dev(usb),
-+		       "couldn't load firmware. Error number %d\n", r);
-+		return r;
-+	}
-+
-+	r = usb_reset_configuration(zd_usb_to_usbdev(usb));
-+	if (r) {
-+		dev_dbg_f(zd_usb_dev(usb),
-+			"couldn't reset configuration. Error number %d\n", r);
-+		return r;
-+	}
-+
-+	r = zd_mac_init_hw(mac->dev);
-+	if (r) {
-+		dev_dbg_f(zd_usb_dev(usb),
-+		         "couldn't initialize mac. Error number %d\n", r);
-+		return r;
-+	}
-+
-+	usb->initialized = 1;
-+	return 0;
-+}
-+
- static int probe(struct usb_interface *intf, const struct usb_device_id *id)
- {
- 	int r;
- 	struct usb_device *udev = interface_to_usbdev(intf);
-+	struct zd_usb *usb;
- 	struct ieee80211_hw *dev = NULL;
- 
- 	print_id(udev);
-@@ -1040,26 +1099,10 @@ static int probe(struct usb_interface *intf, const struct usb_device_id *id)
- 		goto error;
- 	}
- 
--	r = upload_firmware(udev, id->driver_info);
--	if (r) {
--		dev_err(&intf->dev,
--		       "couldn't load firmware. Error number %d\n", r);
--		goto error;
--	}
-+	usb = &zd_dev_mac(dev)->chip.usb;
-+	usb->is_zd1211b = (id->driver_info == DEVICE_ZD1211B) != 0;
- 
--	r = usb_reset_configuration(udev);
--	if (r) {
--		dev_dbg_f(&intf->dev,
--			"couldn't reset configuration. Error number %d\n", r);
--		goto error;
--	}
--
--	/* At this point the interrupt endpoint is not generally enabled. We
--	 * save the USB bandwidth until the network device is opened. But
--	 * notify that the initialization of the MAC will require the
--	 * interrupts to be temporary enabled.
--	 */
--	r = zd_mac_init_hw(dev, id->driver_info);
-+	r = zd_mac_preinit_hw(dev);
- 	if (r) {
- 		dev_dbg_f(&intf->dev,
- 		         "couldn't initialize mac. Error number %d\n", r);
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_usb.h b/drivers/net/wireless/mac80211/zd1211rw/zd_usb.h
-index f01d0bb..7c58301 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_usb.h
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_usb.h
-@@ -199,6 +199,7 @@ struct zd_usb {
- 	struct zd_usb_rx rx;
- 	struct zd_usb_tx tx;
- 	struct usb_interface *intf;
-+	u8 is_zd1211b:1, initialized:1;
- };
- 
- #define zd_usb_dev(usb) (&usb->intf->dev)
-@@ -262,6 +263,8 @@ int zd_usb_iowrite16v(struct zd_usb *usb, const struct zd_ioreq16 *ioreqs,
- 
- int zd_usb_rfwrite(struct zd_usb *usb, u32 value, u8 bits);
- 
-+int zd_usb_read_fw(struct zd_usb *usb, zd_addr_t addr, u8 *data, u16 len);
-+
- extern struct workqueue_struct *zd_workqueue;
- 
- #endif /* _ZD_USB_H */
--- 
-1.5.2.2
+--=-5S53C0eXxn386wMZVmBy
+Content-Disposition: attachment; filename=026-mdev-show-subif.patch
+Content-Transfer-Encoding: base64
+Content-Type: text/x-vhdl; name=026-mdev-show-subif.patch; charset=UTF-8
+
+LS0tDQogbmV0L21hYzgwMjExL2llZWU4MDIxMS5jICAgfCAgICAxICsNCiBuZXQvbWFjODAyMTEv
+aWVlZTgwMjExX2kuaCB8ICAgMjMgKysrKysrKysrKysrKysrKysrKy0tLS0NCiAyIGZpbGVzIGNo
+YW5nZWQsIDIwIGluc2VydGlvbnMoKyksIDQgZGVsZXRpb25zKC0pDQoNCi0tLSB3aXJlbGVzcy1k
+ZXYub3JpZy9uZXQvbWFjODAyMTEvaWVlZTgwMjExX2kuaAkyMDA3LTA3LTE5IDE0OjU5OjEzLjg5
+MjIwNDQxNCArMDIwMA0KKysrIHdpcmVsZXNzLWRldi9uZXQvbWFjODAyMTEvaWVlZTgwMjExX2ku
+aAkyMDA3LTA3LTE5IDE1OjM2OjA5LjQ3Mzg1NzM4NCArMDIwMA0KQEAgLTQ0NCw3ICs0NDQsMjUg
+QEAgc3RydWN0IGllZWU4MDIxMV9zdWJfaWZfZGF0YSB7DQogI2VuZGlmDQogfTsNCiANCi0jZGVm
+aW5lIElFRUU4MDIxMV9ERVZfVE9fU1VCX0lGKGRldikgbmV0ZGV2X3ByaXYoZGV2KQ0KKy8qIGZv
+ciB3aXBoeSBwcml2aWQgKi8NCitleHRlcm4gdm9pZCAqbWFjODAyMTFfd2lwaHlfcHJpdmlkOw0K
+Kw0KKyNkZWZpbmUgSUVFRTgwMjExX0RFVl9UT19TVUJfSUZfTlcoZGV2KSBuZXRkZXZfcHJpdihk
+ZXYpDQorDQorI2RlZmluZSBJRUVFODAyMTFfREVWX1RPX1NVQl9JRihkZXYpICh7CQkJCQlcDQor
+CXN0cnVjdCBpZWVlODAyMTFfc3ViX2lmX2RhdGEgKl9fc2RhdGE7CQkJCVwNCisJCQkJCQkJCQlc
+DQorCV9fc2RhdGEgPSBuZXRkZXZfcHJpdihkZXYpOwkJCQkJXA0KKwkJCQkJCQkJCVwNCisJaWYg
+KGRldi0+aWVlZTgwMjExX3B0ciAmJiBkZXYtPmllZWU4MDIxMV9wdHItPndpcGh5ICYmCQlcDQor
+CSAgICBkZXYtPmllZWU4MDIxMV9wdHItPndpcGh5LT5wcml2aWQgPT0gbWFjODAyMTFfd2lwaHlf
+cHJpdmlkJiZcDQorCSAgICBfX3NkYXRhLT5sb2NhbC0+bWRldiA9PSBkZXYpIHsJCQkJXA0KKwkJ
+cHJpbnRrKEtFUk5fREVCVUcgIklFRUU4MDIxMV9ERVZfVE9fU1VCX0lGKG1kZXYpIHVzYWdlXG4i
+KTtcDQorCQlkdW1wX3N0YWNrKCk7CQkJCQkJXA0KKwl9CQkJCQkJCQlcDQorCQkJCQkJCQkJXA0K
+KwlfX3NkYXRhOwkJCQkJCQlcDQorCX0pDQogDQogZW51bSB7DQogCUlFRUU4MDIxMV9SWF9NU0cJ
+PSAxLA0KQEAgLTkxNiw3ICs5MzQsNCBAQCB2b2lkIGllZWU4MDIxMV9pZl9kZWxfbWdtdChzdHJ1
+Y3QgaWVlZTgwDQogdm9pZCBpZWVlODAyMTFfcmVnZG9tYWluX2luaXQodm9pZCk7DQogdm9pZCBp
+ZWVlODAyMTFfc2V0X2RlZmF1bHRfcmVnZG9tYWluKHN0cnVjdCBpZWVlODAyMTFfaHdfbW9kZSAq
+bW9kZSk7DQogDQotLyogZm9yIHdpcGh5IHByaXZpZCAqLw0KLWV4dGVybiB2b2lkICptYWM4MDIx
+MV93aXBoeV9wcml2aWQ7DQotDQogI2VuZGlmIC8qIElFRUU4MDIxMV9JX0ggKi8NCi0tLSB3aXJl
+bGVzcy1kZXYub3JpZy9uZXQvbWFjODAyMTEvaWVlZTgwMjExLmMJMjAwNy0wNy0xOSAxNToyMTox
+NC42NDIyMDQ0MTQgKzAyMDANCisrKyB3aXJlbGVzcy1kZXYvbmV0L21hYzgwMjExL2llZWU4MDIx
+MS5jCTIwMDctMDctMTkgMTU6MzU6NTAuNTkzODU3Mzg0ICswMjAwDQpAQCAtNDIsNiArNDIsNyBA
+QA0KIA0KIC8qIHByaXZpZCBmb3Igd2lwaHlzIHRvIGRldGVybWluZSB3aGV0aGVyIHRoZXkgYmVs
+b25nIHRvIHVzIG9yIG5vdCAqLw0KIHZvaWQgKm1hYzgwMjExX3dpcGh5X3ByaXZpZCA9ICZtYWM4
+MDIxMV93aXBoeV9wcml2aWQ7DQorRVhQT1JUX1NZTUJPTF9HUEwobWFjODAyMTFfd2lwaHlfcHJp
+dmlkKTsNCiANCiAvKiBTZWUgSUVFRSA4MDIuMUggZm9yIExMQy9TTkFQIGVuY2Fwc3VsYXRpb24v
+ZGVjYXBzdWxhdGlvbiAqLw0KIC8qIEV0aGVybmV0LUlJIHNuYXAgaGVhZGVyIChSRkMxMDQyIGZv
+ciBtb3N0IEV0aGVyVHlwZXMpICovDQo=
+
+
+--=-5S53C0eXxn386wMZVmBy
+Content-Disposition: attachment; filename=027-if_add_reduce.patch
+Content-Transfer-Encoding: base64
+Content-Type: text/x-vhdl; name=027-if_add_reduce.patch; charset=UTF-8
+
+LS0tDQogbmV0L21hYzgwMjExL2llZWU4MDIxMS5jICAgICAgIHwgICAgMiArLQ0KIG5ldC9tYWM4
+MDIxMS9pZWVlODAyMTFfY2ZnLmMgICB8ICAgIDIgKy0NCiBuZXQvbWFjODAyMTEvaWVlZTgwMjEx
+X2kuaCAgICAgfCAgICAyICstDQogbmV0L21hYzgwMjExL2llZWU4MDIxMV9pZmFjZS5jIHwgICAg
+NyArLS0tLS0tDQogbmV0L21hYzgwMjExL2llZWU4MDIxMV9pb2N0bC5jIHwgICAxMSArKysrKy0t
+LS0tLQ0KIDUgZmlsZXMgY2hhbmdlZCwgOSBpbnNlcnRpb25zKCspLCAxNSBkZWxldGlvbnMoLSkN
+Cg0KLS0tIHdpcmVsZXNzLWRldi5vcmlnL25ldC9tYWM4MDIxMS9pZWVlODAyMTEuYwkyMDA3LTA3
+LTE5IDE1OjM1OjUwLjU5Mzg1NzM4NCArMDIwMA0KKysrIHdpcmVsZXNzLWRldi9uZXQvbWFjODAy
+MTEvaWVlZTgwMjExLmMJMjAwNy0wNy0xOSAxNTozNjoxMi44NjM4NTczODQgKzAyMDANCkBAIC01
+MTgzLDcgKzUxODMsNyBAQCBpbnQgaWVlZTgwMjExX3JlZ2lzdGVyX2h3KHN0cnVjdCBpZWVlODAy
+DQogCWllZWU4MDIxMV9pbnN0YWxsX3FkaXNjKGxvY2FsLT5tZGV2KTsNCiANCiAJLyogYWRkIG9u
+ZSBkZWZhdWx0IFNUQSBpbnRlcmZhY2UgKi8NCi0JcmVzdWx0ID0gaWVlZTgwMjExX2lmX2FkZChs
+b2NhbC0+bWRldiwgIndsYW4lZCIsIE5VTEwsDQorCXJlc3VsdCA9IGllZWU4MDIxMV9pZl9hZGQo
+bG9jYWwsICJ3bGFuJWQiLCBOVUxMLA0KIAkJCQkgIElFRUU4MDIxMV9JRl9UWVBFX1NUQSk7DQog
+CWlmIChyZXN1bHQpDQogCQlwcmludGsoS0VSTl9XQVJOSU5HICIlczogRmFpbGVkIHRvIGFkZCBk
+ZWZhdWx0IHZpcnR1YWwgaWZhY2VcbiIsDQotLS0gd2lyZWxlc3MtZGV2Lm9yaWcvbmV0L21hYzgw
+MjExL2llZWU4MDIxMV9jZmcuYwkyMDA3LTA3LTE5IDE1OjM1OjUwLjY1Mzg1NzM4NCArMDIwMA0K
+KysrIHdpcmVsZXNzLWRldi9uZXQvbWFjODAyMTEvaWVlZTgwMjExX2NmZy5jCTIwMDctMDctMTkg
+MTU6MzY6MTIuODYzODU3Mzg0ICswMjAwDQpAQCAtNDQsNyArNDQsNyBAQCBzdGF0aWMgaW50IGll
+ZWU4MDIxMV9hZGRfaWZhY2Uoc3RydWN0IHdpDQogCQlyZXR1cm4gLUVJTlZBTDsNCiAJfQ0KIA0K
+LQlyZXR1cm4gaWVlZTgwMjExX2lmX2FkZChsb2NhbC0+bWRldiwgbmFtZSwgTlVMTCwgaXR5cGUp
+Ow0KKwlyZXR1cm4gaWVlZTgwMjExX2lmX2FkZChsb2NhbCwgbmFtZSwgTlVMTCwgaXR5cGUpOw0K
+IH0NCiANCiBzdGF0aWMgaW50IGllZWU4MDIxMV9kZWxfaWZhY2Uoc3RydWN0IHdpcGh5ICp3aXBo
+eSwgaW50IGlmaW5kZXgpDQotLS0gd2lyZWxlc3MtZGV2Lm9yaWcvbmV0L21hYzgwMjExL2llZWU4
+MDIxMV9pLmgJMjAwNy0wNy0xOSAxNTozNjowOS40NzM4NTczODQgKzAyMDANCisrKyB3aXJlbGVz
+cy1kZXYvbmV0L21hYzgwMjExL2llZWU4MDIxMV9pLmgJMjAwNy0wNy0xOSAxNTozNjoxMi44NjM4
+NTczODQgKzAyMDANCkBAIC05MTgsNyArOTE4LDcgQEAgdm9pZCBkbHNfaW5mb19zdG9wKHN0cnVj
+dCBpZWVlODAyMTFfaWZfcw0KIGludCBkbHNfbGlua19zdGF0dXMoc3RydWN0IGllZWU4MDIxMV9s
+b2NhbCAqbG9jYWwsIHU4ICphZGRyKTsNCiANCiAvKiBpZWVlODAyMTFfaWZhY2UuYyAqLw0KLWlu
+dCBpZWVlODAyMTFfaWZfYWRkKHN0cnVjdCBuZXRfZGV2aWNlICpkZXYsIGNvbnN0IGNoYXIgKm5h
+bWUsDQoraW50IGllZWU4MDIxMV9pZl9hZGQoc3RydWN0IGllZWU4MDIxMV9sb2NhbCAqbG9jYWws
+IGNvbnN0IGNoYXIgKm5hbWUsDQogCQkgICAgIHN0cnVjdCBuZXRfZGV2aWNlICoqbmV3X2Rldiwg
+aW50IHR5cGUpOw0KIHZvaWQgaWVlZTgwMjExX2lmX3NldF90eXBlKHN0cnVjdCBuZXRfZGV2aWNl
+ICpkZXYsIGludCB0eXBlKTsNCiB2b2lkIGllZWU4MDIxMV9pZl9yZWluaXQoc3RydWN0IG5ldF9k
+ZXZpY2UgKmRldik7DQotLS0gd2lyZWxlc3MtZGV2Lm9yaWcvbmV0L21hYzgwMjExL2llZWU4MDIx
+MV9pZmFjZS5jCTIwMDctMDctMTkgMTU6MzU6NTAuNTEzODU3Mzg0ICswMjAwDQorKysgd2lyZWxl
+c3MtZGV2L25ldC9tYWM4MDIxMS9pZWVlODAyMTFfaWZhY2UuYwkyMDA3LTA3LTE5IDE1OjM2OjEy
+Ljg2Mzg1NzM4NCArMDIwMA0KQEAgLTM3LDExICszNywxMCBAQCBzdGF0aWMgdm9pZCBpZWVlODAy
+MTFfaWZfc2RhdGFfZGVpbml0KHN0DQogfQ0KIA0KIC8qIE11c3QgYmUgY2FsbGVkIHdpdGggcnRu
+bCBsb2NrIGhlbGQuICovDQotaW50IGllZWU4MDIxMV9pZl9hZGQoc3RydWN0IG5ldF9kZXZpY2Ug
+KmRldiwgY29uc3QgY2hhciAqbmFtZSwNCitpbnQgaWVlZTgwMjExX2lmX2FkZChzdHJ1Y3QgaWVl
+ZTgwMjExX2xvY2FsICpsb2NhbCwgY29uc3QgY2hhciAqbmFtZSwNCiAJCSAgICAgc3RydWN0IG5l
+dF9kZXZpY2UgKipuZXdfZGV2LCBpbnQgdHlwZSkNCiB7DQogCXN0cnVjdCBuZXRfZGV2aWNlICpu
+ZGV2Ow0KLQlzdHJ1Y3QgaWVlZTgwMjExX2xvY2FsICpsb2NhbCA9IHdkZXZfcHJpdihkZXYtPmll
+ZWU4MDIxMV9wdHIpOw0KIAlzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YSA9IE5V
+TEw7DQogCWludCByZXQ7DQogDQpAQCAtNTYsMTAgKzU1LDYgQEAgaW50IGllZWU4MDIxMV9pZl9h
+ZGQoc3RydWN0IG5ldF9kZXZpY2UgKg0KIAkJZ290byBmYWlsOw0KIA0KIAltZW1jcHkobmRldi0+
+ZGV2X2FkZHIsIGxvY2FsLT5ody53aXBoeS0+cGVybV9hZGRyLCBFVEhfQUxFTik7DQotCW5kZXYt
+PmJhc2VfYWRkciA9IGRldi0+YmFzZV9hZGRyOw0KLQluZGV2LT5pcnEgPSBkZXYtPmlycTsNCi0J
+bmRldi0+bWVtX3N0YXJ0ID0gZGV2LT5tZW1fc3RhcnQ7DQotCW5kZXYtPm1lbV9lbmQgPSBkZXYt
+Pm1lbV9lbmQ7DQogCVNFVF9ORVRERVZfREVWKG5kZXYsIHdpcGh5X2Rldihsb2NhbC0+aHcud2lw
+aHkpKTsNCiANCiAJc2RhdGEgPSBJRUVFODAyMTFfREVWX1RPX1NVQl9JRihuZGV2KTsNCi0tLSB3
+aXJlbGVzcy1kZXYub3JpZy9uZXQvbWFjODAyMTEvaWVlZTgwMjExX2lvY3RsLmMJMjAwNy0wNy0x
+OSAxNTozNTo1MC43MTM4NTczODQgKzAyMDANCisrKyB3aXJlbGVzcy1kZXYvbmV0L21hYzgwMjEx
+L2llZWU4MDIxMV9pb2N0bC5jCTIwMDctMDctMTkgMTU6MzY6MTIuODczODU3Mzg0ICswMjAwDQpA
+QCAtOTEyLDYgKzkxMiw3IEBAIHN0YXRpYyBpbnQgaWVlZTgwMjExX2lvY3RsX2FkZF9pZihzdHJ1
+Y3QNCiAJaW50IHJlczsNCiAJc3RydWN0IGhvc3RhcGRfaWZfd2RzICp3ZHM7DQogCXN0cnVjdCBo
+b3N0YXBkX2lmX2JzcyAqYnNzOw0KKwlzdHJ1Y3QgaWVlZTgwMjExX2xvY2FsICpsb2NhbCA9IHdk
+ZXZfcHJpdihkZXYtPmllZWU4MDIxMV9wdHIpOw0KIA0KIAlwcmludGsoS0VSTl9XQVJOSU5HICJQ
+UklTTTJfSE9TVEFQRF9BRERfSUYgaW9jdGwgaXMgZGVwcmVjYXRlZCEiKTsNCiAJc3dpdGNoIChw
+YXJhbS0+dS5pZl9pbmZvLnR5cGUpIHsNCkBAIC05MjEsMTQgKzkyMiwxMiBAQCBzdGF0aWMgaW50
+IGllZWU4MDIxMV9pb2N0bF9hZGRfaWYoc3RydWN0DQogCQlpZiAobGVmdCA8IHNpemVvZihzdHJ1
+Y3QgaG9zdGFwZF9pZl93ZHMpKQ0KIAkJCXJldHVybiAtRVBST1RPOw0KIA0KLQkJcmVzID0gaWVl
+ZTgwMjExX2lmX2FkZChkZXYsIHBhcmFtLT51LmlmX2luZm8ubmFtZSwgJm5ld19kZXYsDQorCQly
+ZXMgPSBpZWVlODAyMTFfaWZfYWRkKGxvY2FsLCBwYXJhbS0+dS5pZl9pbmZvLm5hbWUsICZuZXdf
+ZGV2LA0KIAkJCQkgICAgICAgSUVFRTgwMjExX0lGX1RZUEVfV0RTKTsNCiAJCWlmIChyZXMpDQog
+CQkJcmV0dXJuIHJlczsNCiAJCXJlcyA9IGllZWU4MDIxMV9pZl91cGRhdGVfd2RzKG5ld19kZXYs
+IHdkcy0+cmVtb3RlX2FkZHIpOw0KIAkJaWYgKHVubGlrZWx5KHJlcykpIHsNCi0JCQlzdHJ1Y3Qg
+aWVlZTgwMjExX2xvY2FsICpsb2NhbCA9DQotCQkJCXdkZXZfcHJpdihkZXYtPmllZWU4MDIxMV9w
+dHIpOw0KIAkJCXN0cnVjdCBpZWVlODAyMTFfc3ViX2lmX2RhdGEgKnNkYXRhID0NCiAJCQkJSUVF
+RTgwMjExX0RFVl9UT19TVUJfSUYobmV3X2Rldik7DQogCQkJd3JpdGVfbG9ja19iaCgmbG9jYWwt
+PnN1Yl9pZl9sb2NrKTsNCkBAIC05NDEsNyArOTQwLDcgQEAgc3RhdGljIGludCBpZWVlODAyMTFf
+aW9jdGxfYWRkX2lmKHN0cnVjdA0KIAkJaWYgKGxlZnQgPCBzaXplb2Yoc3RydWN0IGhvc3RhcGRf
+aWZfdmxhbikpDQogCQkJcmV0dXJuIC1FUFJPVE87DQogDQotCQlyZXMgPSBpZWVlODAyMTFfaWZf
+YWRkKGRldiwgcGFyYW0tPnUuaWZfaW5mby5uYW1lLCBOVUxMLA0KKwkJcmVzID0gaWVlZTgwMjEx
+X2lmX2FkZChsb2NhbCwgcGFyYW0tPnUuaWZfaW5mby5uYW1lLCBOVUxMLA0KIAkJCQkgICAgICAg
+SUVFRTgwMjExX0lGX1RZUEVfVkxBTik7DQogCQlyZXR1cm4gcmVzOw0KIAljYXNlIEhPU1RBUF9J
+Rl9CU1M6DQpAQCAtOTUwLDcgKzk0OSw3IEBAIHN0YXRpYyBpbnQgaWVlZTgwMjExX2lvY3RsX2Fk
+ZF9pZihzdHJ1Y3QNCiAJCWlmIChsZWZ0IDwgc2l6ZW9mKHN0cnVjdCBob3N0YXBkX2lmX2Jzcykp
+DQogCQkJcmV0dXJuIC1FUFJPVE87DQogDQotCQlyZXMgPSBpZWVlODAyMTFfaWZfYWRkKGRldiwg
+cGFyYW0tPnUuaWZfaW5mby5uYW1lLCAmbmV3X2RldiwNCisJCXJlcyA9IGllZWU4MDIxMV9pZl9h
+ZGQobG9jYWwsIHBhcmFtLT51LmlmX2luZm8ubmFtZSwgJm5ld19kZXYsDQogCQkJCSAgICAgICBJ
+RUVFODAyMTFfSUZfVFlQRV9BUCk7DQogCQlpZiAocmVzKQ0KIAkJCXJldHVybiByZXM7DQpAQCAt
+OTYwLDcgKzk1OSw3IEBAIHN0YXRpYyBpbnQgaWVlZTgwMjExX2lvY3RsX2FkZF9pZihzdHJ1Y3QN
+CiAJCWlmIChsZWZ0IDwgc2l6ZW9mKHN0cnVjdCBob3N0YXBkX2lmX3N0YSkpDQogCQkJcmV0dXJu
+IC1FUFJPVE87DQogDQotCQlyZXMgPSBpZWVlODAyMTFfaWZfYWRkKGRldiwgcGFyYW0tPnUuaWZf
+aW5mby5uYW1lLCBOVUxMLA0KKwkJcmVzID0gaWVlZTgwMjExX2lmX2FkZChsb2NhbCwgcGFyYW0t
+PnUuaWZfaW5mby5uYW1lLCBOVUxMLA0KIAkJCQkgICAgICAgSUVFRTgwMjExX0lGX1RZUEVfU1RB
+KTsNCiAJCXJldHVybiByZXM7DQogCWRlZmF1bHQ6DQo=
+
+
+--=-5S53C0eXxn386wMZVmBy
+Content-Disposition: attachment; filename=028-mdev-qos.patch
+Content-Transfer-Encoding: base64
+Content-Type: text/x-vhdl; name=028-mdev-qos.patch; charset=UTF-8
+
+LS0tDQogbmV0L21hYzgwMjExL3dtZS5jIHwgICAgOSArKysrKysrKy0NCiAxIGZpbGUgY2hhbmdl
+ZCwgOCBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pDQoNCi0tLSB3aXJlbGVzcy1kZXYub3Jp
+Zy9uZXQvbWFjODAyMTEvd21lLmMJMjAwNy0wNy0xOSAxNTozNjoxNS41MTM4NTczODQgKzAyMDAN
+CisrKyB3aXJlbGVzcy1kZXYvbmV0L21hYzgwMjExL3dtZS5jCTIwMDctMDctMTkgMTU6NTg6MTgu
+MTEzODU3Mzg0ICswMjAwDQpAQCAtMTY2LDcgKzE2Niw3IEBAIHN0YXRpYyBpbmxpbmUgaW50IHdt
+ZV9kb3duZ3JhZGVfYWMoc3RydWMNCiBzdGF0aWMgaW5saW5lIGludCBjbGFzc2lmeTgwMjExKHN0
+cnVjdCBza19idWZmICpza2IsIHN0cnVjdCBRZGlzYyAqcWQpDQogew0KIAlzdHJ1Y3QgaWVlZTgw
+MjExX2xvY2FsICpsb2NhbCA9IHdkZXZfcHJpdihxZC0+ZGV2LT5pZWVlODAyMTFfcHRyKTsNCi0J
+c3RydWN0IGllZWU4MDIxMV9zdWJfaWZfZGF0YSAqc2RhdGEgPSBJRUVFODAyMTFfREVWX1RPX1NV
+Ql9JRihxZC0+ZGV2KTsNCisJc3RydWN0IGllZWU4MDIxMV9zdWJfaWZfZGF0YSAqc2RhdGEgPSBJ
+RUVFODAyMTFfREVWX1RPX1NVQl9JRl9OVyhxZC0+ZGV2KTsNCiAJc3RydWN0IGllZWU4MDIxMV9p
+Zl9zdGEgKmlmc3RhID0gJnNkYXRhLT51LnN0YTsNCiAJc3RydWN0IGllZWU4MDIxMV90eF9wYWNr
+ZXRfZGF0YSAqcGt0X2RhdGEgPQ0KIAkJKHN0cnVjdCBpZWVlODAyMTFfdHhfcGFja2V0X2RhdGEg
+Kikgc2tiLT5jYjsNCkBAIC0xNzUsNiArMTc1LDEzIEBAIHN0YXRpYyBpbmxpbmUgaW50IGNsYXNz
+aWZ5ODAyMTEoc3RydWN0IHMNCiAJaW50IHFvcywgdHNpZCwgZGlyOw0KIAljb25zdCBpbnQgaWVl
+ZTgwMl8xZF90b19hY1s4XSA9IHsgMiwgMywgMywgMiwgMSwgMSwgMCwgMCB9Ow0KIA0KKwlwcmlu
+dGsoS0VSTl9ERUJVRyAiY2xhc3NpZnk4MDIxMSglcylcbiIsIHFkLT5kZXYtPm5hbWUpOw0KKwlp
+ZiAocWQtPmRldiAhPSBzZGF0YS0+bG9jYWwtPm1kZXYpDQorCQlwcmludGsoS0VSTl9ERUJVRyAi
+Q29uZ3JhdHMuIHlvdSBtYW5hZ2VkIHRvIGludm9rZSBjbGFzc2lmeTgwMjExIHdpdGgiDQorCQkg
+ICAgICAgIiBhIG5vbiBtYXN0ZXIgZGV2aWNlLlxuIg0KKwkJICAgICAgICJHb29kIHRoaW5nIGl0
+IGNvbnRhaW5zIHNwZWNpYWwgY29kZSBldmVuIGlmIHRoYXQgZG9lc24ndCINCisJCSAgICAgICAi
+IHJlYWxseSBtYWtlIHNlbnNlLlxuIik7DQorDQogCS8qIHNlZSBpZiBmcmFtZSBpcyBkYXRhIG9y
+IG5vbiBkYXRhIGZyYW1lICovDQogCWlmICh1bmxpa2VseSgoZmMgJiBJRUVFODAyMTFfRkNUTF9G
+VFlQRSkgIT0gSUVFRTgwMjExX0ZUWVBFX0RBVEEpKSB7DQogCQkvKiBtYW5hZ2VtZW50IGZyYW1l
+cyBnbyBvbiBBQ19WTyBxdWV1ZSwgYnV0IGFyZSBzZW50DQo=
+
+
+--=-5S53C0eXxn386wMZVmBy
+Content-Disposition: attachment; filename=029-mdev-scan.patch
+Content-Transfer-Encoding: base64
+Content-Type: text/x-vhdl; name=029-mdev-scan.patch; charset=UTF-8
+
+LS0tDQogbmV0L21hYzgwMjExL2llZWU4MDIxMV9zdGEuYyB8ICAgIDcgKysrKystLQ0KIDEgZmls
+ZSBjaGFuZ2VkLCA1IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQoNCi0tLSB3aXJlbGVz
+cy1kZXYub3JpZy9uZXQvbWFjODAyMTEvaWVlZTgwMjExX3N0YS5jCTIwMDctMDctMTkgMTU6NTU6
+MTMuMTAzODU3Mzg0ICswMjAwDQorKysgd2lyZWxlc3MtZGV2L25ldC9tYWM4MDIxMS9pZWVlODAy
+MTFfc3RhLmMJMjAwNy0wNy0xOSAxNjowMjowNC4wMDM4NTczODQgKzAyMDANCkBAIC0yMTM1LDcg
+KzIxMzUsNyBAQCBzdGF0aWMgdm9pZCBpZWVlODAyMTFfcnhfYnNzX2luZm8oc3RydWN0DQogCWlu
+dCBjaGFubmVsLCBpbnZhbGlkID0gMCwgY2xlbjsNCiAJc3RydWN0IGllZWU4MDIxMV9zdGFfYnNz
+ICpic3M7DQogCXN0cnVjdCBzdGFfaW5mbyAqc3RhOw0KLQlzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9p
+Zl9kYXRhICpzZGF0YSA9IElFRUU4MDIxMV9ERVZfVE9fU1VCX0lGKGRldik7DQorCXN0cnVjdCBp
+ZWVlODAyMTFfc3ViX2lmX2RhdGEgKnNkYXRhID0gSUVFRTgwMjExX0RFVl9UT19TVUJfSUZfTlco
+ZGV2KTsNCiAJdTY0IHRpbWVzdGFtcDsNCiANCiAJaWYgKCFiZWFjb24gJiYgbWVtY21wKG1nbXQt
+PmRhLCBkZXYtPmRldl9hZGRyLCBFVEhfQUxFTikpDQpAQCAtMjM3MSw2ICsyMzcxLDkgQEAgc3Rh
+dGljIHZvaWQgaWVlZTgwMjExX3J4X2Jzc19pbmZvKHN0cnVjdA0KIAkJICogY2hhbm5lbHMsIHNv
+IG1hcCB0aGUgY2hhbm5lbCBpbnRvIGZyZXF1ZW5jeS4gKi8NCiAJCWJzcy0+ZnJlcSA9IGZyZXFf
+bGlzdFtjaGFubmVsIC0gMV07DQogCX0NCisJcHJpbnRrKEtFUk5fREVCVUcgImJzcyAiIE1BQ19G
+TVQgIiB1cGRhdGVkIGZyb20gJXNcbiIsIE1BQ19BUkcobWdtdC0+YnNzaWQpLCBkZXYtPm5hbWUp
+Ow0KKwlpZiAobG9jYWwtPm1kZXYgPT0gZGV2KQ0KKwkJcHJpbnRrKEtFUk5fREVCVUcgInJlbWlu
+ZCBtZSwgd2h5IGNhbiB0aGlzIGNvZGUgYmUgaW52b2tlZCBmb3IgdGhlIG1hc3RlciBkZXZpY2U/
+XG4iKTsNCiAJYnNzLT50aW1lc3RhbXAgPSB0aW1lc3RhbXA7DQogCWJzcy0+bGFzdF91cGRhdGUg
+PSBqaWZmaWVzOw0KIAlic3MtPnJzc2kgPSByeF9zdGF0dXMtPnNzaTsNCkBAIC0yNDAzLDcgKzI0
+MDYsNyBAQCBzdGF0aWMgdm9pZCBpZWVlODAyMTFfcnhfbWdtdF9iZWFjb24oc3RyDQogDQogCWll
+ZWU4MDIxMV9yeF9ic3NfaW5mbyhkZXYsIG1nbXQsIGxlbiwgcnhfc3RhdHVzLCAxKTsNCiANCi0J
+c2RhdGEgPSBJRUVFODAyMTFfREVWX1RPX1NVQl9JRihkZXYpOw0KKwlzZGF0YSA9IElFRUU4MDIx
+MV9ERVZfVE9fU1VCX0lGX05XKGRldik7DQogCWlmIChzZGF0YS0+dHlwZSAhPSBJRUVFODAyMTFf
+SUZfVFlQRV9TVEEpDQogCQlyZXR1cm47DQogCWlmc3RhID0gJnNkYXRhLT51LnN0YTsNCg==
+
+
+--=-5S53C0eXxn386wMZVmBy
+Content-Disposition: attachment; filename=030-ignore-netdev-notif.patch
+Content-Transfer-Encoding: base64
+Content-Type: text/x-vhdl; name=030-ignore-netdev-notif.patch; charset=UTF-8
+
+LS0tDQogbmV0L21hYzgwMjExL2RlYnVnZnNfbmV0ZGV2LmMgfCAgICAyICstDQogMSBmaWxlIGNo
+YW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pDQoNCi0tLSB3aXJlbGVzcy1kZXYu
+b3JpZy9uZXQvbWFjODAyMTEvZGVidWdmc19uZXRkZXYuYwkyMDA3LTA3LTE5IDE1OjQ2OjEzLjcx
+Mzg1NzM4NCArMDIwMA0KKysrIHdpcmVsZXNzLWRldi9uZXQvbWFjODAyMTEvZGVidWdmc19uZXRk
+ZXYuYwkyMDA3LTA3LTE5IDE1OjQ2OjI1LjU3Mzg1NzM4NCArMDIwMA0KQEAgLTczNSw3ICs3MzUs
+NyBAQCBzdGF0aWMgaW50IG5ldGRldl9ub3RpZnkoc3RydWN0IG5vdGlmaWVyDQogew0KIAlzdHJ1
+Y3QgbmV0X2RldmljZSAqZGV2ID0gbmRldjsNCiAJc3RydWN0IGRlbnRyeSAqZGlyOw0KLQlzdHJ1
+Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YSA9IElFRUU4MDIxMV9ERVZfVE9fU1VCX0lG
+KGRldik7DQorCXN0cnVjdCBpZWVlODAyMTFfc3ViX2lmX2RhdGEgKnNkYXRhID0gSUVFRTgwMjEx
+X0RFVl9UT19TVUJfSUZfTlcoZGV2KTsNCiAJY2hhciBidWZbMTArSUZOQU1TSVpdOw0KIA0KIAlp
+ZiAoc3RhdGUgIT0gTkVUREVWX0NIQU5HRU5BTUUpDQo=
+
+
+--=-5S53C0eXxn386wMZVmBy
+Content-Disposition: attachment; filename=031-no-master-debugfs.patch
+Content-Transfer-Encoding: base64
+Content-Type: text/x-vhdl; name=031-no-master-debugfs.patch; charset=UTF-8
+
+LS0tDQogbmV0L21hYzgwMjExL2llZWU4MDIxMS5jIHwgICAgMyAtLS0NCiAxIGZpbGUgY2hhbmdl
+ZCwgMyBkZWxldGlvbnMoLSkNCg0KLS0tIHdpcmVsZXNzLWRldi5vcmlnL25ldC9tYWM4MDIxMS9p
+ZWVlODAyMTEuYwkyMDA3LTA3LTE5IDE1OjQ3OjI4LjU1Mzg1NzM4NCArMDIwMA0KKysrIHdpcmVs
+ZXNzLWRldi9uZXQvbWFjODAyMTEvaWVlZTgwMjExLmMJMjAwNy0wNy0xOSAxNTo0Nzo1Mi4zMjM4
+NTczODQgKzAyMDANCkBAIC01MTYzLDggKzUxNjMsNiBAQCBpbnQgaWVlZTgwMjExX3JlZ2lzdGVy
+X2h3KHN0cnVjdCBpZWVlODAyDQogCWlmIChyZXN1bHQgPCAwKQ0KIAkJZ290byBmYWlsX2RldjsN
+CiANCi0JaWVlZTgwMjExX2RlYnVnZnNfYWRkX25ldGRldihJRUVFODAyMTFfREVWX1RPX1NVQl9J
+Rihsb2NhbC0+bWRldikpOw0KLQ0KIAlyZXN1bHQgPSBpZWVlODAyMTFfaW5pdF9yYXRlX2N0cmxf
+YWxnKGxvY2FsLCBOVUxMKTsNCiAJaWYgKHJlc3VsdCA8IDApIHsNCiAJCXByaW50ayhLRVJOX0RF
+QlVHICIlczogRmFpbGVkIHRvIGluaXRpYWxpemUgcmF0ZSBjb250cm9sICINCkBAIC01MTk5LDcg
+KzUxOTcsNiBAQCBpbnQgaWVlZTgwMjExX3JlZ2lzdGVyX2h3KHN0cnVjdCBpZWVlODAyDQogZmFp
+bF93ZXA6DQogCXJhdGVfY29udHJvbF9kZWluaXRpYWxpemUobG9jYWwpOw0KIGZhaWxfcmF0ZToN
+Ci0JaWVlZTgwMjExX2RlYnVnZnNfcmVtb3ZlX25ldGRldihJRUVFODAyMTFfREVWX1RPX1NVQl9J
+Rihsb2NhbC0+bWRldikpOw0KIAl1bnJlZ2lzdGVyX25ldGRldmljZShsb2NhbC0+bWRldik7DQog
+ZmFpbF9kZXY6DQogCXJ0bmxfdW5sb2NrKCk7DQo=
+
+
+--=-5S53C0eXxn386wMZVmBy--
+
+--=-DFC1uf6hKQH7yyOSABVt
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGn6LY/ETPhpq3jKURAjTuAKCJjq5DKiWnutK8oLSaa/voWGoDygCgqSKp
+dxZXRwiNYYzKf9im8y7beyY=
+=Elrz
+-----END PGP SIGNATURE-----
+
+--=-DFC1uf6hKQH7yyOSABVt--
 
