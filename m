@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:25288 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753867AbXGFHWJ (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51423
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S935426AbXGSBV5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2007 03:22:09 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas: monitor mode support for OLPC
-Date: Fri, 6 Jul 2007 09:22:06 +0200
-References: <468c3f32.081b600a.3817.5051@mx.google.com> <200707050842.01533.hs4233@mail.mn-solutions.de> <8e8340660707051037p56e10ec7u3aa4d76893e0b1ed@mail.gmail.com>
-In-Reply-To: <8e8340660707051037p56e10ec7u3aa4d76893e0b1ed@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200707060922.06110.hs4233@mail.mn-solutions.de>
+	Wed, 18 Jul 2007 21:21:57 -0400
+Date: Wed, 18 Jul 2007 18:21:56 -0700 (PDT)
+Message-Id: <20070718.182156.17251646.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20070719004510.GA5618@tuxdriver.com>
+References: <20070718153449.GA6625@tuxdriver.com>
+	<20070718.153248.82378078.davem@davemloft.net>
+	<20070719004510.GA5618@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Javier, I've also put this thread onto linux-wireless, maybe 
-people there are interested in this area, too.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 18 Jul 2007 20:45:10 -0400
 
-> I use the echo-to-sys way because we are not setting any
-> existing interface into monitor mode but creating a new one.
+> On Wed, Jul 18, 2007 at 03:32:48PM -0700, David Miller wrote:
+> > From: "John W. Linville" <linville@tuxdriver.com>
+> > Date: Wed, 18 Jul 2007 11:34:49 -0400
+> > 
+> > > On Tue, Jul 17, 2007 at 08:17:16PM -0700, David Miller wrote:
+> > > > From: "John W. Linville" <linville@tuxdriver.com>
+> > > > Date: Tue, 17 Jul 2007 22:16:07 -0400
+> > > > 
+> > > > > A few more for 2.6.23...individual patches available here:
+> > > > > 
+> > > > >   http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/upstream-davem
+> > > > 
+> > > > What about this warning which I reported to you right after the last
+> > > > merge?  Did this get fixed?
+> > > > 
+> > > > net/mac80211/ieee80211.c:4989: warning: comparison of distinct pointer types lacks a cast
+> > > > 
+> > > > Please fix that up first, then I'll pull from your tree.
+> > > 
+> > > Fair enough! :-)
+> > 
+> > As I pointed out to Jiri, you need to spell out the complete type
+> > warning fix, rather than just "unsigned".
+> 
+> I went ahead and made that change, including the mysterious space after
+> "unsigned int " that seems to be common practice.  I had considered
+> asking for this before...oh well, it's there now! :-)
+> 
+> BTW, I also included an extra patch from Michael Wu which helps to
+> avoid some possible deadlocks when shutting down an interface.
 
-And that is the part that I'm not really liking.
-
-> This is the way Intel ipw2xxx drivers behave and I think it is
-> a cleaner solution to have separate interfaces, one for 802.3
-> and another one for 802.11+rtap
-
-The ipw2xxx driver is a driver that was developed mostly 
-out-of-kernel-tree. I'm not sure if it is a good template on how 
-to write a WLAN driver :-)
-
-My problem is really that did create another interface, rtapX. It 
-is that you also create a new API on how to monitor. And I have 
-the feeling that we have an inflation of APIs for turning on 
-monitor mode:
-
-* there is "iwconfig eth1 mode monitor"
-* there is madwifi's way of wlanconfig
-* there is ipw22xx's way of a .config and of modprobe "ipw2200
-  rtap_iface=1" and "ifconfig rtap0 up"
-* and now you
-  with /sys/class/net/{ethX,mshX}/device/libertas_rtap
-
-Somehow I fear that tools like kismet (or others!) won't honor 
-just-another-interface on how to turn monitor mode on.
-
-
-
-Why not do it this way:
-
-"iwmode eth1 mode monitor" turn's the device into monitor mode. 
-That's what by far the most drivers use. In this mode, the 
-device will send all frames to the host, e.g. all beacon frames. 
-After all, user space can filter:
-
-  tshark -i rtap0 -R '!(wlan.fc.subtype == 8)'
-
-If you think that this creates too much traffic on the USB bus, 
-then additionally you can use something 
-like /sys/class/net/{ethX,mshX}/device/rtap_filter and expose 
-your bitmap.
+Pulled, thanks John.
