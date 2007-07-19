@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51401.mail.re2.yahoo.com ([206.190.38.180]:33468 "HELO
-	web51401.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754032AbXGDHlu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2007 03:41:50 -0400
-Date: Wed, 4 Jul 2007 00:41:49 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: AW: [WIP] mac80211: kill mgmt interface
-To: Tomas Winkler <tomasw@gmail.com>, Jiri Benc <jbenc@suse.cz>
-Cc: "Cohen, Guy" <guy.cohen@intel.com>, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ascii
-Message-ID: <699262.29475.qm@web51401.mail.re2.yahoo.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4644 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S937340AbXGSTeD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jul 2007 15:34:03 -0400
+Date: Thu, 19 Jul 2007 15:15:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Daniel Drake <dsd@gentoo.org>
+Cc: jbenc@suse.cz, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	mb@bu3sch.de, flamingice@sourmilk.net
+Subject: Re: [PATCH v2 1/2] mac80211: improved short preamble handling
+Message-ID: <20070719191513.GD6603@tuxdriver.com>
+References: <20070715140739.C13187B409F@zog.reactivated.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070715140739.C13187B409F@zog.reactivated.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler <tomasw@gmail.com> wrote:
-> There is probably difference between running multiple hostapd
-> instances and running in multiple BSSID mode over one interface,
-> meaning that hostapad is running multiple instances of MLME. I guess
-> the original post was a bit confusing.
-> I'm not sure if and how current implementation of hostapd can do that,
-> but that's probably question for another mailing list.
+On Sun, Jul 15, 2007 at 03:07:39PM +0100, Daniel Drake wrote:
+> Similarly to CTS protection, whether short preambles are used for 802.11b
+> transmissions should be a per-subif setting, not device global.
+> 
+> For STAs, this patch makes short preamble handling automatic based on the ERP
+> IE. For APs, hostapd still uses the prism ioctls, but the write ioctl has been
+> restricted to AP-only subifs.
+> 
+> ieee80211_txrx_data.short_preamble (an unused field) was removed.
+> 
+> Unfortunately, some API changes were required for the following functions:
+>  - ieee80211_generic_frame_duration
+>  - ieee80211_rts_duration
+>  - ieee80211_ctstoself_duration
+>  - ieee80211_rts_get
+>  - ieee80211_ctstoself_get
+> Affected drivers (bcm43xx, rt2x00 and rtl8187) were updated accordingly.
+> 
+> Signed-off-by: Daniel Drake <dsd@gentoo.org>
 
-What triggered my initial mail was the concern that I did not see how
-one monitor interface could be used to control multiple AP interfaces.
-Obviously there must be a link that allows the MLME to associate
-frames that it receives from the monitor IF to a specific AP interface.
+Jiri, Michael -- this applies to upstream w/ just some offsets if you
+ignore the driver bits that aren't upstream.  I'll be happy to handle
+the patch monkeying if you are happy w/ this patch.
 
-I wanted to make sure that the API provides such an association. If
-this is already the case, my point is mute and I will go back to lurking.
- 
---  
-Regards
- 
-       Joerg
-
-
-
-
-      __________________________________  Alles was der Gesundheit und Entspannung dient. BE A BETTER MEDIZINMANN! www.yahoo.de/clever
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
