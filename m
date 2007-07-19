@@ -1,68 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33176 "EHLO mail.dvmed.net"
+Received: from mx1.redhat.com ([66.187.233.31]:47307 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759065AbXGYBfM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2007 21:35:12 -0400
-Message-ID: <46A6A8CD.9080806@garzik.org>
-Date: Tue, 24 Jul 2007 21:35:09 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: Stephen.Clark@seclark.us
-CC: James Ketrenos <jketreno@linux.intel.com>,
-	Axj <axjslack@bluebottle.com>, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] Request for help...
-References: <1185289332.46a61474a444c@mail.bluebottle.com>	<20070724161226.GA24344@tuxdriver.com>	<46A64503.1080003@seclark.us>	<20070724203035.GG24344@tuxdriver.com>	<46A66B63.6030006@garzik.org> <46A6A447.2080903@linux.intel.com> <46A69359.4030201@garzik.org> <46A69998.7020108@seclark.us>
-In-Reply-To: <46A69998.7020108@seclark.us>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1753136AbXGSUKJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jul 2007 16:10:09 -0400
+Subject: Re: [PATCH] drivers/net/wireless/libertas/cmd.c: fix  adapter->driver_lock dereference
+From: Dan Williams <dcbw@redhat.com>
+To: Eugene Teo <eugeneteo@kernel.sg>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20070719135923.GA29142@kernel.sg>
+References: <20070719135923.GA29142@kernel.sg>
+Content-Type: text/plain
+Date: Thu, 19 Jul 2007 16:07:28 -0400
+Message-Id: <1184875649.3179.32.camel@xo-13-A4-25.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stephen Clark wrote:
-> I find it really sad that a hardware vendor that is willing to write and 
-> develope drivers for Linux for their hardware aren't helped more by "the 
-> community"
+On Thu, 2007-07-19 at 21:59 +0800, Eugene Teo wrote:
+> adapter is NULL if cmdnode is not.
 
-It's hard to be more helpful without (a) explaining the problems with 
-the current situation and suggesting corrections, or (b) doing it all 
-myself.
+Applied, thanks!
 
+Dan
 
-> or is the "the community" only interested in hacking drivers where
-> the manufacturer give no or minimal support?
-
-The more people working on drivers, the wider the workload is spread, 
-which is a good thing.
-
-The caveat being you cannot just throw any old crap into the kernel, 
-just because you are a Big Hardware Vendor.  Linux thrives precisely 
-because of the system of engineering review and Internet-scale testing 
-that we have set up.
-
-We have an engineering process that has proven itself over the past 10+ 
-years.  You don't just chuck that out the window because someone doesn't 
-want to follow the process.  Making exceptions for Big Vendors who can't 
-grok the rules is not how Linux became successful.
-
-These processes all have carefully considered engineering rationale 
-behind them.  The obvious engineering breakdowns occur when you avoid 
-the standard process...  the process that has been delivering stable 
-hardware support to you and other Linux users.
-
-
-> I appreciate Intel's support for being open and purposely bought a 
-> laptop that had an Intel graphics chipset and an Intel wireless card.
-
-Intel gets five stars in the areas of open source CPU, platform, and 
-graphics support.  Intel graphics is really going to kick ass (not that 
-it doesn't already), and Keith Packard (old-school X11 hacker) is 
-leading the charge.  And Intel networking definitely gets applause for 
-doing open source networking as well.
-
-But we just don't shove any old vendor driver into the kernel.  Not when 
-we have to maintain these drivers for a decade, often after the vendor 
-themselves end-of-life's the chip.
-
-	Jeff
-
+> Signed-off-by: Eugene Teo <eugeneteo@kernel.sg>
+> ---
+>  drivers/net/wireless/libertas/cmd.c |   10 +---------
+>  1 files changed, 1 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+> index 4a8f5dc..03af8bb 100644
+> --- a/drivers/net/wireless/libertas/cmd.c
+> +++ b/drivers/net/wireless/libertas/cmd.c
+> @@ -941,7 +941,7 @@ static int DownloadcommandToStation(wlan_private * priv,
+>  	unsigned long flags;
+>  	struct cmd_ds_command *cmdptr;
+>  	wlan_adapter *adapter = priv->adapter;
+> -	int ret = 0;
+> +	int ret = -1;
+>  	u16 cmdsize;
+>  	u16 command;
+>  
+> @@ -950,12 +950,6 @@ static int DownloadcommandToStation(wlan_private * priv,
+>  	if (!adapter || !cmdnode) {
+>  		lbs_deb_cmd("DNLD_CMD: adapter = %p, cmdnode = %p\n",
+>  		       adapter, cmdnode);
+> -		if (cmdnode) {
+> -			spin_lock_irqsave(&adapter->driver_lock, flags);
+> -			__libertas_cleanup_and_insert_cmd(priv, cmdnode);
+> -			spin_unlock_irqrestore(&adapter->driver_lock, flags);
+> -		}
+> -		ret = -1;
+>  		goto done;
+>  	}
+>  
+> @@ -968,7 +962,6 @@ static int DownloadcommandToStation(wlan_private * priv,
+>  		       "Not sending\n");
+>  		__libertas_cleanup_and_insert_cmd(priv, cmdnode);
+>  		spin_unlock_irqrestore(&adapter->driver_lock, flags);
+> -		ret = -1;
+>  		goto done;
+>  	}
+>  
+> @@ -993,7 +986,6 @@ static int DownloadcommandToStation(wlan_private * priv,
+>  		__libertas_cleanup_and_insert_cmd(priv, adapter->cur_cmd);
+>  		adapter->cur_cmd = NULL;
+>  		spin_unlock_irqrestore(&adapter->driver_lock, flags);
+> -		ret = -1;
+>  		goto done;
+>  	}
+>  
 
