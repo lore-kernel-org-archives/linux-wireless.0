@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51423
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S935426AbXGSBV5 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.181]:11612 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763255AbXGSWHM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2007 21:21:57 -0400
-Date: Wed, 18 Jul 2007 18:21:56 -0700 (PDT)
-Message-Id: <20070718.182156.17251646.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20070719004510.GA5618@tuxdriver.com>
-References: <20070718153449.GA6625@tuxdriver.com>
-	<20070718.153248.82378078.davem@davemloft.net>
-	<20070719004510.GA5618@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 19 Jul 2007 18:07:12 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so792781wah
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jul 2007 15:07:12 -0700 (PDT)
+Message-ID: <d120d5000707191507y76dd6e4dw4ce14ffdd055ceaa@mail.gmail.com>
+Date: Thu, 19 Jul 2007 18:07:09 -0400
+From: "Dmitry Torokhov" <dmitry.torokhov@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Merging P54 upstream?
+Cc: linux-wireless@vger.kernel.org, flamingice@sourmilk.net
+In-Reply-To: <20070719212602.GA12449@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <d120d5000707191409y7602a2bdk3b9e67f5bce009d@mail.gmail.com>
+	 <20070719212602.GA12449@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 18 Jul 2007 20:45:10 -0400
+On 7/19/07, John W. Linville <linville@tuxdriver.com> wrote:
+> On Thu, Jul 19, 2007 at 05:09:21PM -0400, Dmitry Torokhov wrote:
+>
+> > I wonder if there are any plans to merge p54 driver into mainline
+> > anytime soon? For some reason p54 works much better for me on my
+> > FullMAC card than prism54 (with which card started locking up after ~5
+> > min heavyish use, such as FTP since about a year or a year and a half
+> > ago).
+>
+> Michael Wu is the author of that driver.  I know he is working an
+> internship this summer, so he may be a bit busy.  Still, I sincerely
+> hope he finds the time to whip this driver into mergeable shape and
+> submits it for upstream soon.
+>
 
-> On Wed, Jul 18, 2007 at 03:32:48PM -0700, David Miller wrote:
-> > From: "John W. Linville" <linville@tuxdriver.com>
-> > Date: Wed, 18 Jul 2007 11:34:49 -0400
-> > 
-> > > On Tue, Jul 17, 2007 at 08:17:16PM -0700, David Miller wrote:
-> > > > From: "John W. Linville" <linville@tuxdriver.com>
-> > > > Date: Tue, 17 Jul 2007 22:16:07 -0400
-> > > > 
-> > > > > A few more for 2.6.23...individual patches available here:
-> > > > > 
-> > > > >   http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/upstream-davem
-> > > > 
-> > > > What about this warning which I reported to you right after the last
-> > > > merge?  Did this get fixed?
-> > > > 
-> > > > net/mac80211/ieee80211.c:4989: warning: comparison of distinct pointer types lacks a cast
-> > > > 
-> > > > Please fix that up first, then I'll pull from your tree.
-> > > 
-> > > Fair enough! :-)
-> > 
-> > As I pointed out to Jiri, you need to spell out the complete type
-> > warning fix, rather than just "unsigned".
-> 
-> I went ahead and made that change, including the mysterious space after
-> "unsigned int " that seems to be common practice.  I had considered
-> asking for this before...oh well, it's there now! :-)
-> 
-> BTW, I also included an extra patch from Michael Wu which helps to
-> avoid some possible deadlocks when shutting down an interface.
+OK, if he needs a guinea pig I should be available, especially for
+patches against tip of Linus's tree.
 
-Pulled, thanks John.
+-- 
+Dmitry
