@@ -1,160 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from courier.cs.helsinki.fi ([128.214.9.1]:51025 "EHLO
-	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752510AbXGTKes (ORCPT
+Received: from fencepost.gnu.org ([140.186.70.10]:34339 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750840AbXGTEnV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jul 2007 06:34:48 -0400
-Date: Fri, 20 Jul 2007 13:34:44 +0300 (EEST)
-From: "=?ISO-8859-1?Q?Ilpo_J=E4rvinen?=" <ilpo.jarvinen@helsinki.fi>
-To: Li YanBo <dreamfly281@gmail.com>
-cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jeff willam <angelbane@gmail.com>
-Subject: Re: Airgo MIMO Wireless card mac80211 driver (unfinished)
-In-Reply-To: <1197ff4c0707190820s26f28fafy784900d41f6b1ad4@mail.gmail.com>
-Message-ID: <Pine.LNX.4.64.0707201142480.20559@kivilampi-30.cs.helsinki.fi>
-References: <1197ff4c0707190820s26f28fafy784900d41f6b1ad4@mail.gmail.com>
+	Fri, 20 Jul 2007 00:43:21 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1IBkLx-0001ND-RK
+	for linux-wireless@vger.kernel.org; Fri, 20 Jul 2007 00:44:33 -0400
+Subject: Re: bcm4301: A mac80211 driver using V3 firmware
+From: Pavel Roskin <proski@gnu.org>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>,
+	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
+In-Reply-To: <46A01209.4030200@lwfinger.net>
+References: <46963C0F.3080104@lwfinger.net>
+	 <20070719215801.GB12449@tuxdriver.com> <20070720012714.0dc0298a@morte>
+	 <46A01209.4030200@lwfinger.net>
+Content-Type: text/plain
+Date: Fri, 20 Jul 2007 00:43:16 -0400
+Message-Id: <1184906596.9511.42.camel@dv>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 19 Jul 2007, Li YanBo wrote:
+Hello, Larry!
 
-> On 7/19/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> 
-> > It might be useful for you to put all your current code into a git tree
-> > and publish that to linux-wireless@vger.kernel.org so other people can
-> > take a look too :)
-> >
-> 
-> First of all, the code is far away be finished and full of bugs,  We
-> can't success control the RX and TX yet.
+First of all, many thanks for porting the v3 driver to mac80211!
 
-It's important to have an early reviews too though not all issues 
-are not yet resolved.
+On Thu, 2007-07-19 at 20:38 -0500, Larry Finger wrote:
 
-> Thanks for all your suggestions and fixes, I'll fix it later.
-> Because the code is big , so I attach it in this mail. (Be attention,
-> it is far from finished and has tons of bugs).
+> 1. For more general testing, I'll distribute my driver as a patch to
+> be applied to wireless-dev as 
+> it needs ssb, which is not yet in mainline. If we are still in testing when ssb is merged, I'll 
+> change to making patches against mainline.
 
-Here are some things which you'll probably encounter when you try to get 
-this stuff merged, so you'll have to adjust the code sooner or later 
-(these can easily add many unnecessary post-comment round-trips when you 
-would like to get it merged asap):
+Sounds good.
 
+> 2. Once the problems have been cleared and ssb is in -mm, it gets sent there as a port from softmac 
+> to mac80211 for the current bcm43xx. An additional consideration is that a port from softmac to 
+> mac80211 will be more easily merged than if it looks like a new driver.
 
-- You seem to define assert and never use it, besides you could probably
-use either WARN_ON or BUG_ON which belongs to kernel's generic machinery 
-already...
+I would prefer if the name stayed the same, but it shouldn't be a big
+deal.
 
-- agnx_read32 & agnx_write32
-	* change to static inline, solves also the use of implicit 
-	  variable (reg) as you have return & assign instead (implicit
- 	  variables confuse readers, see Documentation/CodingStyle) 
-	* You seem to be also doing direct access using ioread/write32
-	  here and there?!?
+> 3. If the port of softmac to mac80211 is merged before Michael's driver, it will be known as bcm43xx 
+> with bcm43xx-mac80211 remaining in wireless-dev.
 
-- no // comments allowed, use /* */ instead, however, most of them are 
-  for dead code anyway which just makes things messy looking and should be 
-  removed (I'd say that removing them speeds up review too)... Besides, 
-  if you use repository, there's no need to keep dead code lying around.
+Yes, that's what I mean, keep it "bcm43xx" unless renaming it is the
+condition for acceptance.
 
-> +
-> +#ifdef CONFIG_PM
-> +static int agnx_pci_suspend(struct pci_dev *pdev, pm_message_t state)
-> +{
-> [...snip...]
-> +       
-> +       return 0;
-> +}
+> 4. Once bcm43xx-mac80211 gets merged to mainline, then Michael's driver should become bcm43xx and my 
+> driver gets its PCI IDs stripped to the 802.11b-only devices and once again becomes bcm4301. This 
+> name change for Michael's driver would cause some disruption for current users as their firmware 
+> would have the wrong name/version. That might be too much of a problem.
 
-Usually they ask you to add these...:
+Actually, the common practice is that the new driver that doesn't
+supplant the old driver immediately and for the whole range of hardware
+gets a new name.  Think CONFIG_IDE vs CONFIG_ATA and eepro100 vs e100.
 
-#else
-#define agnx_pci_suspend NULL
-#define agnx_pci_resume NULL
+Also, we could introduce a kernel option to enable support for new
+devices in your driver.
 
-> +#endif /* CONFIG_PM */
-> +
-> +static struct pci_driver agnx_pci_driver = {
-> +       .name           = "agnx-pci",
-> +       .id_table       = agnx_pci_id_tbl,
-> +       .probe          = agnx_pci_probe,
-> +       .remove         = __devexit_p(agnx_pci_remove),
-> +#ifdef CONFIG_PM       
-> +       .suspend        = agnx_pci_suspend,
-> +       .resume         = agnx_pci_resume,
-> +#endif /* CONFIG_PM */
-> +};
+> I think this is a path that always has a stable driver with at least moderate performance in 
+> mainline throughout the entire transformation.
 
-...and then to remove this #ifdefing.
+That's a very good goal.
 
-> +       /* FIXME */
-> +       reg = (bssid[0] << 24) | (bssid[1] << 16) | (bssid[2] << 8) | bssid[3];
-> +       agnx_write32(ctl_mem, AGNX_RXMC_BSSIDHI, reg);
-> +
-> +       agnx_read32(ctl_mem, AGNX_RXMC_BSSIDLO);
-> +       reg &= 0xffff0000;
+I would also consider the option to use different names for v3 and v4
+firmware.  I have a file /etc/modprobe.d/bcm43xx that reads
 
-Define this BSSIDLO_MASK and use it here with ~ operator.
+options bcm43xx fwpostfix=.3
+options bcm43xx_mac80211 fwpostfix=.4
 
-> +       reg |= (bssid[4] << 8) | bssid[5];
-> +       agnx_write32(ctl_mem, AGNX_RXMC_BSSIDLO, reg);
-
-...Maybe the "FIXME" already indicates the questionability of that
-bssid endianess stuff...? The same comments apply to MACHI/LO stuff...
-
-
-- I'm not sure if the comments per reg in phy_init() are that useful if 
-the same information is found in the header file already (just a matter 
-of taste though, shouldn't prevent merging, just IMHO)
-
-
-> +       /* Clear the Disable Tx interrupt bit in Interrupt Mask */
-> +       agnx_read32(ctl_mem, AGNX_INT_MASK);
-> +       reg &= ~0x20000;
-> +       agnx_write32(ctl_mem, AGNX_INT_MASK, reg);
-
-You should not use numeric constant then (besides, IRQ_TX_DISABLE is 
-already defined!), if the purpose of this is known (there are more this 
-kind of things I suppose)... Then the comment would not be necessary any 
-more either as the code itself would explain the same to the reader... :-) 
-Obviously some/many values (in other places) will remain unknown as
-reverse-engineered and that's something we just have to live with but 
-that's no excuse for known bits...
-
-> +/* Recieve Management Control Registers */
-
-typo
-
-> +#define                calibra_delay(priv) \
-> +               do {                                                   \
-> +                       udelay(40);                                    \
-> +               } while (0)
-
-static inline
-
-
-- ...other endianess issues should be dealt with...
-
-
-> +#define FIR_TABLE_NUM  24
-> +static const u32 
-> +tx_fir_table[FIR_TABLE_NUM] = { 0x19, 0x5d, 0xce, 0x151, 0x1c3, 0x1ff, 0x1ea,
-[...snip...]
-> +       for (i = 0; i < FIR_TABLE_NUM; i++) 
-
-Drop FIR_TABLE_NUM and use ARRAY_SIZE macro in the for construct (and 
-elsewhere if there are other users). It's available in linux/kernel.h, 
-also check if your code implements something that is already given in
-linux/kernel.h and replace them with the generic machinery. Same applies 
-to #define GAIN_TABLE_NUM 32 (and others?)
-
-
-...those people specialized to wireless stuff have probably some / many
-additional notes too...
-
+but we cannot expect every distro (let alone every user) to take care of
+the naming conflict.  Users don't expect the need to rename firmware,
+and we shouldn't create a problem for them.
 
 -- 
- i.
+Regards,
+Pavel Roskin
+
