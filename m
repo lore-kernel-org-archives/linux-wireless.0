@@ -1,35 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:13421 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754769AbXGMHJs (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.168]:47855 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764024AbXGTUmr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2007 03:09:48 -0400
-Received: from lin01.mn-solutions.de (pD95F854E.dip0.t-ipconnect.de [217.95.133.78])
-	by s131.mittwaldmedien.de (Postfix) with ESMTP id 864C88B0373
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Jul 2007 09:09:48 +0200 (CEST)
-Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id BA5B81E002B
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Jul 2007 09:09:42 +0200 (CEST)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [patch 1/2] Merge the Sonics Silicon Backplane subsystem
-Date: Fri, 13 Jul 2007 09:09:54 +0200
-References: <20070712085432.528319000@bu3sch.de> <20070712085744.604965000@bu3sch.de> <20070713061100.GA28974@hall.aurel32.net>
-In-Reply-To: <20070713061100.GA28974@hall.aurel32.net>
+	Fri, 20 Jul 2007 16:42:47 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so686872ugf
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Jul 2007 13:42:46 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] rt2x00: fix build break from (struct interface *)->id typo
+Date: Fri, 20 Jul 2007 22:44:47 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <20070720184742.GI7428@tuxdriver.com>
+In-Reply-To: <20070720184742.GI7428@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200707130909.54856.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200707202244.47334.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > +#define	SSB_EXTIF_BASE		0x1f000000	/* External Interface
-> > +#define	SSB_EUART		(SB_EXTIF_BASE + 0x00800000)
-> > +#define	SSB_LED			(SB_EXTIF_BASE + 0x00900000)
->
-> I have just noticed a typo here. That should be SSB_EXTIF_BASE
-> instead of SB_EXTIF_BASE.
+Hi,
 
-Or remove those two defines completely, obviously they are unused.
-Otherwise Michael would have get an compiler error.
+>   CC [M]  drivers/net/wireless/mac80211/rt2x00/rt2x00mac.o drivers/ne=
+t/wireless/mac80211/rt2x00/rt2x00mac.c: In function =E2=80=98rt2x00_tx_=
+rts_cts=E2=80=99:
+> drivers/net/wireless/mac80211/rt2x00/rt2x00mac.c:60: error: =E2=80=98=
+struct interface=E2=80=99 has no member named =E2=80=98if_id=E2=80=99
+> drivers/net/wireless/mac80211/rt2x00/rt2x00mac.c:64: error: =E2=80=98=
+struct interface=E2=80=99 has no member named =E2=80=98if_id=E2=80=99
+> make[3]: *** [drivers/net/wireless/mac80211/rt2x00/rt2x00mac.o] Error=
+ 1
 
+He, I had to double check where this error came from since it isn't pre=
+sent in the rt2x00.git repository,
+but I apparently I never checked the "mac80211: improved short preamble=
+ handling" patch completely
+for the rt2x00 bit. ;)
+
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> FYI...already committed to wireless-dev tree.
+
+Thanks :)
+
+Ivo
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
