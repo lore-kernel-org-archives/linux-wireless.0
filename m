@@ -1,81 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:59540 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760698AbXGFRpU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2007 13:45:20 -0400
-Date: Fri, 6 Jul 2007 10:32:30 -0700
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Forwarded: 32 character ESSID broken with WE-21
-Message-ID: <20070706173230.GA19327@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <25290.17794.qm@web51406.mail.re2.yahoo.com>
-MIME-Version: 1.0
+Received: from courier.cs.helsinki.fi ([128.214.9.1]:51025 "EHLO
+	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752510AbXGTKes (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Jul 2007 06:34:48 -0400
+Date: Fri, 20 Jul 2007 13:34:44 +0300 (EEST)
+From: "=?ISO-8859-1?Q?Ilpo_J=E4rvinen?=" <ilpo.jarvinen@helsinki.fi>
+To: Li YanBo <dreamfly281@gmail.com>
+cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jeff willam <angelbane@gmail.com>
+Subject: Re: Airgo MIMO Wireless card mac80211 driver (unfinished)
+In-Reply-To: <1197ff4c0707190820s26f28fafy784900d41f6b1ad4@mail.gmail.com>
+Message-ID: <Pine.LNX.4.64.0707201142480.20559@kivilampi-30.cs.helsinki.fi>
+References: <1197ff4c0707190820s26f28fafy784900d41f6b1ad4@mail.gmail.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <25290.17794.qm@web51406.mail.re2.yahoo.com>
-From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 05, 2007 at 11:17:47PM -0700, Joerg Pommnitz wrote:
-> Jean,
-> I'd like to make you aware of the following problem I encountered with WE-21. I'm not sure whether this is a driver issue or an issue of the generic WE code. Do you have any idea on how to proceed? This is a real problem for me, because my ESSIDs are MD5 hashes which just happen to be 32 characters long. I can't upgrade to a newer kernel with this problem unresolved.
->  
-> --  
-> Thanks and kind regards
->  
->        Joerg
+On Thu, 19 Jul 2007, Li YanBo wrote:
 
-	Yep, something like this was reported to me not long ago.
-	The bug I'm talking about is only about *reading* a 32 char
-ESSID, you can set it fine, it uses it, it's just that it's not
-read. I know what causes it, I have a fix for it that will go in
-2.6.23, and if people are happy with it we will backport it to earlier
-kernels.
-	Now, I've also seen various drivers doing some funky stuff
-with ESSID, and trying to be too clever. So, there might be other bug
-lurking around.
-	Regards,
+> On 7/19/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> 
+> > It might be useful for you to put all your current code into a git tree
+> > and publish that to linux-wireless@vger.kernel.org so other people can
+> > take a look too :)
+> >
+> 
+> First of all, the code is far away be finished and full of bugs,  We
+> can't success control the RX and TX yet.
 
-	Jean
+It's important to have an early reviews too though not all issues 
+are not yet resolved.
 
-> ----- Weitergeleitete Mail ----
-> Von: Joerg Pommnitz <pommnitz@yahoo.com>
-> An: linux-wireless@vger.kernel.org
-> Gesendet: Donnerstag, den 5. Juli 2007, 12:36:16 Uhr
-> Betreff: 32 character ESSID broken with WE-21
-> 
-> Hello all,
-> for some time there was an open bug in Madwifi related to 32 charater ESSIDs.
-> Doing some investigations I found that the same bug is present with an ipw2200bg
-> WLAN interface and Linux 2.6.20 (I tried the Ubuntu-7.0.4 CD).
-> 
-> Please try
-> iwconfig wlan0 essid 12345678901234567890123456789012
-> vs
-> iwconfig wlan0 essid 1234567890123456789012345678901
-> 
-> Using 32 character ESSIDs was fine with 2.6.18 (the last version I tested).
->  
-> --  
-> Regards
->  
->        Joerg
->  
-> See http://news.gmane.org/gmane.linux.drivers.madwifi.devel for the Madwifi bug report
-> See http://madwifi.org/ticket/930 for the Madwifi bug ticket
-> 
-> 
-> 
-> 
-> 
-> 
-> 
->       __________________________________  Alles was der Gesundheit und Entspannung dient. BE A BETTER MEDIZINMANN! www.yahoo.de/clever
-> 
-> 
-> 
-> 
-> 
-> 
->       __________________________________  BE A BETTER INTERNET-GURU: Jetzt Frage stellen und einen von 44 iPods gewinnen! www.yahoo.de/clever
+> Thanks for all your suggestions and fixes, I'll fix it later.
+> Because the code is big , so I attach it in this mail. (Be attention,
+> it is far from finished and has tons of bugs).
+
+Here are some things which you'll probably encounter when you try to get 
+this stuff merged, so you'll have to adjust the code sooner or later 
+(these can easily add many unnecessary post-comment round-trips when you 
+would like to get it merged asap):
+
+
+- You seem to define assert and never use it, besides you could probably
+use either WARN_ON or BUG_ON which belongs to kernel's generic machinery 
+already...
+
+- agnx_read32 & agnx_write32
+	* change to static inline, solves also the use of implicit 
+	  variable (reg) as you have return & assign instead (implicit
+ 	  variables confuse readers, see Documentation/CodingStyle) 
+	* You seem to be also doing direct access using ioread/write32
+	  here and there?!?
+
+- no // comments allowed, use /* */ instead, however, most of them are 
+  for dead code anyway which just makes things messy looking and should be 
+  removed (I'd say that removing them speeds up review too)... Besides, 
+  if you use repository, there's no need to keep dead code lying around.
+
+> +
+> +#ifdef CONFIG_PM
+> +static int agnx_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+> +{
+> [...snip...]
+> +       
+> +       return 0;
+> +}
+
+Usually they ask you to add these...:
+
+#else
+#define agnx_pci_suspend NULL
+#define agnx_pci_resume NULL
+
+> +#endif /* CONFIG_PM */
+> +
+> +static struct pci_driver agnx_pci_driver = {
+> +       .name           = "agnx-pci",
+> +       .id_table       = agnx_pci_id_tbl,
+> +       .probe          = agnx_pci_probe,
+> +       .remove         = __devexit_p(agnx_pci_remove),
+> +#ifdef CONFIG_PM       
+> +       .suspend        = agnx_pci_suspend,
+> +       .resume         = agnx_pci_resume,
+> +#endif /* CONFIG_PM */
+> +};
+
+...and then to remove this #ifdefing.
+
+> +       /* FIXME */
+> +       reg = (bssid[0] << 24) | (bssid[1] << 16) | (bssid[2] << 8) | bssid[3];
+> +       agnx_write32(ctl_mem, AGNX_RXMC_BSSIDHI, reg);
+> +
+> +       agnx_read32(ctl_mem, AGNX_RXMC_BSSIDLO);
+> +       reg &= 0xffff0000;
+
+Define this BSSIDLO_MASK and use it here with ~ operator.
+
+> +       reg |= (bssid[4] << 8) | bssid[5];
+> +       agnx_write32(ctl_mem, AGNX_RXMC_BSSIDLO, reg);
+
+...Maybe the "FIXME" already indicates the questionability of that
+bssid endianess stuff...? The same comments apply to MACHI/LO stuff...
+
+
+- I'm not sure if the comments per reg in phy_init() are that useful if 
+the same information is found in the header file already (just a matter 
+of taste though, shouldn't prevent merging, just IMHO)
+
+
+> +       /* Clear the Disable Tx interrupt bit in Interrupt Mask */
+> +       agnx_read32(ctl_mem, AGNX_INT_MASK);
+> +       reg &= ~0x20000;
+> +       agnx_write32(ctl_mem, AGNX_INT_MASK, reg);
+
+You should not use numeric constant then (besides, IRQ_TX_DISABLE is 
+already defined!), if the purpose of this is known (there are more this 
+kind of things I suppose)... Then the comment would not be necessary any 
+more either as the code itself would explain the same to the reader... :-) 
+Obviously some/many values (in other places) will remain unknown as
+reverse-engineered and that's something we just have to live with but 
+that's no excuse for known bits...
+
+> +/* Recieve Management Control Registers */
+
+typo
+
+> +#define                calibra_delay(priv) \
+> +               do {                                                   \
+> +                       udelay(40);                                    \
+> +               } while (0)
+
+static inline
+
+
+- ...other endianess issues should be dealt with...
+
+
+> +#define FIR_TABLE_NUM  24
+> +static const u32 
+> +tx_fir_table[FIR_TABLE_NUM] = { 0x19, 0x5d, 0xce, 0x151, 0x1c3, 0x1ff, 0x1ea,
+[...snip...]
+> +       for (i = 0; i < FIR_TABLE_NUM; i++) 
+
+Drop FIR_TABLE_NUM and use ARRAY_SIZE macro in the for construct (and 
+elsewhere if there are other users). It's available in linux/kernel.h, 
+also check if your code implements something that is already given in
+linux/kernel.h and replace them with the generic machinery. Same applies 
+to #define GAIN_TABLE_NUM 32 (and others?)
+
+
+...those people specialized to wireless stuff have probably some / many
+additional notes too...
+
+
+-- 
+ i.
