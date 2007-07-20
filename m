@@ -1,28 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33305
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S932627AbXGOB7d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jul 2007 21:59:33 -0400
-Date: Sat, 14 Jul 2007 18:59:35 -0700 (PDT)
-Message-Id: <20070714.185935.18577806.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20070712204137.GB14486@tuxdriver.com>
-References: <20070712204137.GB14486@tuxdriver.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3315 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756138AbXGTNdD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Jul 2007 09:33:03 -0400
+Date: Fri, 20 Jul 2007 09:12:47 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: remove duplicated ioctl entries in compat_ioctl.c
+Message-ID: <20070720131247.GA7428@tuxdriver.com>
+References: <20070709193744.D021.MOKUNO@sm.sony.co.jp> <20070720140020.6773.MOKUNO@sm.sony.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070720140020.6773.MOKUNO@sm.sony.co.jp>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 12 Jul 2007 16:41:38 -0400
+On Fri, Jul 20, 2007 at 02:04:29PM +0900, Masakazu Mokuno wrote:
+> 	Hi,
+> 
+> This patch does not look to be applied.  Is it better that I would submit
+> to other place?
 
-> This request is based off net-2.6, as it requires a patch that is in
-> net-2.6 but not yet in Linus' tree (b3d88ad49a0623d09efcf998beb26288c8029f75).
- ...
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-davem
+No, this is the right place.  I've got the patch.  I just had a lot
+of other patches to process, and this one didn't seem to be urgent.
 
-Pulled, thanks John!
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
