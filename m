@@ -1,30 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:21660 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757980AbXGCPNo (ORCPT
+Received: from fencepost.gnu.org ([140.186.70.10]:56855 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S939695AbXGTQF3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2007 11:13:44 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] add support for Marvell 8385 CF cards
-Date: Tue, 3 Jul 2007 17:13:31 +0200
-Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org
-References: <200707031016.18561.hs4233@mail.mn-solutions.de> <1183474524.23943.0.camel@xo-13-A4-25.localdomain>
-In-Reply-To: <1183474524.23943.0.camel@xo-13-A4-25.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200707031713.31610.hs4233@mail.mn-solutions.de>
+	Fri, 20 Jul 2007 12:05:29 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1IBv05-0002KR-L1
+	for linux-wireless@vger.kernel.org; Fri, 20 Jul 2007 12:06:41 -0400
+Subject: Re: bcm4301: A mac80211 driver using V3 firmware
+From: Pavel Roskin <proski@gnu.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
+In-Reply-To: <20070720134425.GC7428@tuxdriver.com>
+References: <46963C0F.3080104@lwfinger.net>
+	 <20070719215801.GB12449@tuxdriver.com> <20070720012714.0dc0298a@morte>
+	 <46A01209.4030200@lwfinger.net> <1184906596.9511.42.camel@dv>
+	 <20070720134425.GC7428@tuxdriver.com>
+Content-Type: text/plain
+Date: Fri, 20 Jul 2007 12:05:21 -0400
+Message-Id: <1184947521.1962.15.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wireless-2.6 throught libertas-2.6, I'd say. Not for 2.6.22-rcXX.
+On Fri, 2007-07-20 at 09:44 -0400, John W. Linville wrote:
+> On Fri, Jul 20, 2007 at 12:43:16AM -0400, Pavel Roskin wrote:
+> > Actually, the common practice is that the new driver that doesn't
+> > supplant the old driver immediately and for the whole range of hardware
+> > gets a new name.  Think CONFIG_IDE vs CONFIG_ATA and eepro100 vs e100.
+>  
+> Yes, this preserves stability for happy bcm43xx users.  Still taking
+> suggestions for the new name for bcm43xx-mac80211... :-)
 
-I think it is ready for merge window of 2.6.23 and John W. 
-Linville said several times that I should submit this before the 
-merge window opens.
+b43
+bcm43
+bcm4k3
+bcmwifi
+bcmwlan
+bcm80211
+brcm43xx
+broadcom
 
-I've marked it as EXPERIMENTAL in the Kconfig. That 
-nonwithstanding, I didn't change much in the code in the last 
-two weeks, I'm working more on the front of scanning (and lots 
-of other, non 8385-related projects).
+I really like the minimalism of b43, which plays well with b44 and
+p54 :)
+
+> > Also, we could introduce a kernel option to enable support for new
+> > devices in your driver.
+>  
+> Yes, this is probably worthwhile for those wishing to avoid PCI ID
+> conflicts between the drivers.  I have also been speculating that
+> perhaps we need an option for a secondary PCI ID table, so that a
+> driver could support a large range of PCI IDs but then gracefully
+> bow-out if another driver had a certain ID in its primary table.
+> Does that make any sense?  It would seem to be applicable to a number
+> of drivers in the kernel.
+
+Yes, I used to hearing complains that orinoco steals IDs from hostap.
+Then it became popular to blacklist orinoco modules.  Quite a disgrace
+for the driver!  Having "weak" IDs for Prism based cards would have
+avoided it.
+
+But please realize that the problem goes far beyond PCI.  Perhaps you
+have heard of CONFIG_USB_LIBUSUAL, which selects the best driver for USB
+storage devices, either the slow but reliable ub, or the SCSI based
+usb-storage, which it too fast for some cheap sticks.
+
+It even has a parameter called "bias", which allows to control how
+conservative the algorithm should be.  That would be hard to emulate
+with "weak entries", but I hope that "bias" is an overkill.
+
+> Yes, we should probably start using a default value for fwpostfix.
+> As dwmw2 suggested, it would also be nice to fall back to an empty
+> fwpostfix if the firmware is not found w/ the default extension.
+
+Yes, that sounds good.
+
+-- 
+Regards,
+Pavel Roskin
+
