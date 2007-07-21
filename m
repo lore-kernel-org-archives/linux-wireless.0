@@ -1,104 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtpout08-04.prod.mesa1.secureserver.net ([64.202.165.12]:50812
-	"HELO smtpout08.prod.mesa1.secureserver.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with SMTP id S1758372AbXGYAaR (ORCPT
+Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:27115 "EHLO
+	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754299AbXGUU6n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2007 20:30:17 -0400
-Message-ID: <46A69998.7020108@seclark.us>
-Date: Tue, 24 Jul 2007 20:30:16 -0400
-From: Stephen Clark <Stephen.Clark@seclark.us>
-Reply-To: Stephen.Clark@seclark.us
-MIME-Version: 1.0
-To: Jeff Garzik <jeff@garzik.org>
-CC: James Ketrenos <jketreno@linux.intel.com>,
-	Axj <axjslack@bluebottle.com>, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] Request for help...
-References: <1185289332.46a61474a444c@mail.bluebottle.com>	<20070724161226.GA24344@tuxdriver.com>	<46A64503.1080003@seclark.us>	<20070724203035.GG24344@tuxdriver.com>	<46A66B63.6030006@garzik.org> <46A6A447.2080903@linux.intel.com> <46A69359.4030201@garzik.org>
-In-Reply-To: <46A69359.4030201@garzik.org>
-Content-Type: text/plain; charset=us-ascii; format=flowed
+	Sat, 21 Jul 2007 16:58:43 -0400
+From: Daniel Drake <dsd@gentoo.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Cc: kune@deine-taler.de
+Subject: [PATCH] zd1211rw-mac80211: maximum length for ack_wait_queue
+Message-Id: <20070721205839.C36637B40A0@zog.reactivated.net>
+Date: Sat, 21 Jul 2007 21:58:39 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jeff Garzik wrote:
+From: Ulrich Kunitz <kune@deine-taler.de>
 
->James Ketrenos wrote:
->  
->
->>Jeff Garzik wrote:
->>
->>    
->>
->>>There is a reason why we say "release early, release often."  If 
->>>wireless developers don't hear from Intel on a regular basis,
->>>      
->>>
->>The "community" vs. "Intel" slant is really getting old. 
->>*WE* are part of the community.  *WE* have submitted patches.  *WE* have 
->>done work to bring wireless forward.  *WE* are wireless developers.
->>
->>It isn't Intel's fault that certain people have historically made it so 
->>difficult to get code to into wireless-dev's mac80211 (and eventually 
->>*maybe* upstream) that contributors have decided to focus on getting 
->>their code out to users through other means.
->>
->>A version of mac80211 being available out-of-tree with features not 
->>found in wireless-dev isn't the problem.  The problem is that people 
->>have made it too difficult to innovate and develop in wireless-dev.
->>    
->>
->
->Well, the facts according to my search are:
->
->* last iwlwifi submit was almost two months ago, in a form difficult to 
->review and discuss on the mailing list, save for a bug fix.  And I note, 
->the submission went into wireless-dev rapidly.
->
->* last mac80211 patches were almost three months ago, save for two small 
->add-ioctl patches from Mohamed and Hong.
->
->* no one else seems to have the same trouble getting patches in
->
->Whereas other developers are actively posting patches, big and small, to 
->linux-wireless on a regular basis.  I just don't see much activity at 
->all on {linux-kernel,linux-wireless,netdev} from Intel with regards to 
->the new wireless.
->
->Intel is the only wireless driver developer doing development 
->"elsewhere", rather than where the wireless hackers hang out.  Even 
->assuming a hypothetical worst case of 100% patch drops, you should be 
->working and posting where other developers are also working and posting. 
->  That is just a BASIC part of the open source kernel engineering process.
->
->Another key part of open source is "release early, release often" so 
->that people are aware of your work and needs, and can provide rapid 
->feedback.  That means posting most patches to linux-wireless as soon as 
->they work on your basic quick-test setup.  Intel is definitely not 
->"releasing early and often" from the LKML perspective.
->
->Though in fairness, I am a bit disappointed that wireless-dev seems to 
->occasionally become a resting place for drivers, rather than just a pit 
->stop on the way to upstream.  In particular, stuff still has not been 
->moved out of drivers/net/wireless/mac80211 and into 
->drivers/net/wireless, which is a basic and easy step to get all code 
->ready for upstream.
->
->	Jeff
->
->
->  
->
-I find it really sad that a hardware vendor that is willing to write and develope drivers for Linux for their hardware aren't helped more by "the community" or is the "the community" only interested in hacking drivers where the manufacturer give no or minimal support?
+This patch implements the maximum length ZD_MAC_MAX_ACK_WAITERS
+for the ack_wait_queue simply by removing waiting packets in the
+same way as an error had reported for them.
 
-I appreciate Intel's support for being open and purposely bought a laptop that had an Intel graphics chipset and an Intel wireless card.
+The ZD1211 chips don't inform the host, whether a packet has been
+successfully transmitted. Sometimes transmission errors are
+reported, but it is very difficult to link them back to the
+original transmitted packet. We try to emulate the behaviour by
+keeping the packets waiting for ACKs in a specific queue and
+report success or failure if ACKs or error messages are received.
 
-My $.02
-Steve
-"They that give up essential liberty to obtain temporary safety, 
-deserve neither liberty nor safety."  (Ben Franklin)
+Signed-off-by: Ulrich Kunitz <kune@deine-taler.de>
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+---
+ drivers/net/wireless/mac80211/zd1211rw/zd_mac.c |   59 ++++++++++++----------
+ drivers/net/wireless/mac80211/zd1211rw/zd_mac.h |    4 +-
+ 2 files changed, 35 insertions(+), 28 deletions(-)
 
-"The course of history shows that as a government grows, liberty 
-decreases."  (Thomas Jefferson)
-
-
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
+index 2461507..9a2d6f3 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
+@@ -313,6 +313,32 @@ static int init_tx_skb_control_block(struct sk_buff *skb,
+ }
+ 
+ /**
++ * zd_mac_tx_failed - callback for failed frames
++ * @dev: the mac80211 wireless device
++ *
++ * This function is called if a frame couldn't be succesfully be
++ * transferred. The first frame from the tx queue, will be selected and
++ * reported as error to the upper layers.
++ */
++void zd_mac_tx_failed(struct ieee80211_hw *dev)
++{
++	struct sk_buff_head *ack_wait_queue = &zd_dev_mac(dev)->ack_wait_queue;
++	struct sk_buff *skb;
++	struct ieee80211_tx_status status;
++	struct zd_tx_skb_control_block *cb;
++
++	skb = skb_dequeue(ack_wait_queue);
++	if (skb == NULL)
++		return;
++	cb = (struct zd_tx_skb_control_block *)skb->cb;
++	ZD_ASSERT(cb->control != NULL);
++	memset(&status, 0, sizeof(status));
++	memcpy(&status.control, cb->control, sizeof(status.control));
++	clear_tx_skb_control_block(skb);
++	ieee80211_tx_status_irqsafe(dev, skb, &status);
++}
++
++/**
+  * zd_mac_tx_to_dev - callback for USB layer
+  * @skb: a &sk_buff pointer
+  * @error: error value, 0 if transmission successful
+@@ -338,7 +364,12 @@ void zd_mac_tx_to_dev(struct sk_buff *skb, int error)
+ 			clear_tx_skb_control_block(skb);
+ 			ieee80211_tx_status_irqsafe(dev, skb, &status);
+ 		} else {
+-			skb_queue_tail(&zd_dev_mac(dev)->ack_wait_queue, skb);
++			struct sk_buff_head *q =
++				&zd_dev_mac(dev)->ack_wait_queue;
++
++			skb_queue_tail(q, skb);
++			while (skb_queue_len(q) > ZD_MAC_MAX_ACK_WAITERS)
++				zd_mac_tx_failed(dev);
+ 			return;
+ 		}
+ 	} else {
+@@ -516,32 +547,6 @@ static int zd_mac_tx(struct ieee80211_hw *dev, struct sk_buff *skb,
+ 	return 0;
+ }
+ 
+-/**
+- * zd_mac_tx_failed - callback for failed frames
+- * @dev: the mac80211 wireless device
+- *
+- * This function is called if a frame couldn't be succesfully be
+- * transferred. The first frame from the tx queue, will be selected and
+- * reported as error to the upper layers.
+- */
+-void zd_mac_tx_failed(struct ieee80211_hw *dev)
+-{
+-	struct sk_buff_head *ack_wait_queue = &zd_dev_mac(dev)->ack_wait_queue;
+-	struct sk_buff *skb;
+-	struct ieee80211_tx_status status;
+-	struct zd_tx_skb_control_block *cb;
+-
+-	skb = skb_dequeue(ack_wait_queue);
+-	if (skb == NULL)
+-		return;
+-	cb = (struct zd_tx_skb_control_block *)skb->cb;
+-	ZD_ASSERT(cb->control != NULL);
+-	memset(&status, 0, sizeof(status));
+-	memcpy(&status.control, cb->control, sizeof(status.control));
+-	clear_tx_skb_control_block(skb);
+-	ieee80211_tx_status_irqsafe(dev, skb, &status);
+-}
+-
+ struct zd_rt_hdr {
+ 	struct ieee80211_radiotap_header rt_hdr;
+ 	u8  rt_flags;
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.h b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.h
+index 1d4753e..6a3fe41 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.h
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.h
+@@ -114,7 +114,7 @@ struct rx_status {
+ #define ZD_RX_CRC16_ERROR		0x40
+ #define ZD_RX_ERROR			0x80
+ 
+-enum mac_flags { 
++enum mac_flags {
+ 	MAC_FIXED_CHANNEL = 0x01,
+ };
+ 
+@@ -140,6 +140,8 @@ struct zd_tx_skb_control_block {
+ 
+ #define ZD_MAC_STATS_BUFFER_SIZE 16
+ 
++#define ZD_MAC_MAX_ACK_WAITERS 10
++
+ struct zd_mac {
+ 	struct zd_chip chip;
+ 	spinlock_t lock;
+-- 
+1.5.2.2
 
