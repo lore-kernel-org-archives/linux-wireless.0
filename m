@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:50789 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755289AbXGKQWp (ORCPT
+Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:3989 "EHLO
+	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754451AbXGUU6x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2007 12:22:45 -0400
-Message-ID: <469503CC.8050500@lwfinger.net>
-Date: Wed, 11 Jul 2007 11:22:36 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Chris Wright <chrisw@sous-sol.org>
-CC: stable@kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [stable] [PATCH] softmac: Fix ESSID problem
-References: <4692e2e0.u/1KuH/5hSPtXvF9%Larry.Finger@lwfinger.net> <20070711071418.GS4306@sequoia.sous-sol.org>
-In-Reply-To: <20070711071418.GS4306@sequoia.sous-sol.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sat, 21 Jul 2007 16:58:53 -0400
+From: Daniel Drake <dsd@gentoo.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Cc: kune@deine-taler.de
+Subject: [PATCH] zd1211rw-mac80211: fix filter for PSPOLL frames
+Message-Id: <20070721205856.57B607B40A0@zog.reactivated.net>
+Date: Sat, 21 Jul 2007 21:58:56 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chris Wright wrote:
-> * Larry Finger (Larry.Finger@lwfinger.net) wrote:
->> From: Jean Tourrilhes <jt@hpl.hp.com>
->>
->> Victor Porton reported that the SoftMAC layer had random problem when setting the ESSID :
->> http://bugzilla.kernel.org/show_bug.cgi?id=8686 After investigation, it turned out to be
->> worse, the SoftMAC layer is left in an inconsistent state. The fix is pretty trivial.
->>
->> Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
->> Acked-by: Michael Buesch <mb@bu3sch.df>
->> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-> 
-> Please resend when this is accepted upstream.
+From: Ulrich Kunitz <kune@deine-taler.de>
 
-As you heard from John Linville, the patch has been sent upstream, but I'll resend it when it hits 
-Linus's tree.
+While filling the control set the driver tests for a PSPOLL frame.
+But it tested only the subtype of the packet. The full type needs
+to be tested to identify those packets reliably.
 
-Larry
+Signed-off-by: Ulrich Kunitz <kune@deine-taler.de>
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+---
+ drivers/net/wireless/mac80211/zd1211rw/zd_mac.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
+index d093841..1a7aaef 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_mac.c
+@@ -467,7 +467,8 @@ static void cs_set_control(struct zd_mac *mac, struct zd_ctrlset *cs,
+ 		cs->control |= ZD_CS_MULTICAST;
+ 
+ 	/* PS-POLL */
+-	if ((fctl & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PSPOLL)
++	if ((fctl & (IEEE80211_FCTL_FTYPE|IEEE80211_FCTL_STYPE)) ==
++	    (IEEE80211_FTYPE_CTL|IEEE80211_STYPE_PSPOLL))
+ 		cs->control |= ZD_CS_PS_POLL_FRAME;
+ 
+ 	if (flags & IEEE80211_TXCTL_USE_RTS_CTS)
+-- 
+1.5.2.2
+
