@@ -1,66 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:44168 "EHLO
-	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759225AbXG1Dg2 (ORCPT
+Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:20213 "EHLO
+	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761672AbXGUVmL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2007 23:36:28 -0400
-Date: Fri, 27 Jul 2007 22:36:04 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: bcm43xx-mac80211: a fix for the shared interrupt problem
-Message-ID: <46aab9a4.pmEWFfaWaaFDLvZd%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 21 Jul 2007 17:42:11 -0400
+From: Daniel Drake <dsd@gentoo.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Cc: kune@deine-taler.de
+Subject: [PATCH] zd1211rw: monitor all packets
+Message-Id: <20070721214213.550497B409F@zog.reactivated.net>
+Date: Sat, 21 Jul 2007 22:42:13 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael,
+From: Ulrich Kunitz <kune@deine-taler.de>
 
-I was in the right area with my previous fix to the "irq 11: nobody cared"
-message. I think for shared interrupts, skipping out if the status is not
-BCM43xx_STAT_STARTED is too severe. I added a message printing out the status
-whenever it skipped out, and found many thousands of interrupts with the
-status equal to BCM43xx_STAT_INITIALIZED. The patch below makes the necessary
-change and modifies a couple of asserts that depend on it.
+While in monitor mode the zd1211rw received only a limited
+set of packets. This patch forwards now all packets the device
+receives. Notify that while monitoring no FCS checks are done; so
+strange packets might appear in the network sniffer of your
+choice.
 
-This patch has been tested on BCM4306 and BCM4318 with shared interrupts,
-and BCM4311 without.
+ATTENTION: Support for multiple interfaces on a single ZD1211
+device is currently broken. So this code works only on the first
+interface.
 
-Thanks,
+Here is an example to put the device in monitor mode.
 
-Larry
-----
+iwconfig wlan0 mode monitor
+ifconfig wlan0 up
+iwconfig wlan0 channel 10
 
+[dsd@gentoo.org: backport to mainline]
+Signed-off-by: Ulrich Kunitz <kune@deine-taler.de>
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+---
+ zd_chip.h |    5 -----
+ zd_mac.c  |   44 ++++++++++++++++++++++++++++++++++++++------
+ 2 files changed, 38 insertions(+), 11 deletions(-)
 
-Index: wireless-mb/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+Index: linux/drivers/net/wireless/zd1211rw/zd_chip.h
 ===================================================================
---- wireless-mb.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-+++ wireless-mb/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-@@ -1374,7 +1374,7 @@ static void bcm43xx_interrupt_tasklet(st
+--- linux.orig/drivers/net/wireless/zd1211rw/zd_chip.h
++++ linux/drivers/net/wireless/zd1211rw/zd_chip.h
+@@ -871,11 +871,6 @@ static inline int zd_chip_set_basic_rate
+ 	return r;
+ }
  
- 	spin_lock_irqsave(&dev->wl->irq_lock, flags);
+-static inline int zd_chip_set_rx_filter(struct zd_chip *chip, u32 filter)
+-{
+-	return zd_iowrite32(chip, CR_RX_FILTER, filter);
+-}
+-
+ int zd_chip_lock_phy_regs(struct zd_chip *chip);
+ int zd_chip_unlock_phy_regs(struct zd_chip *chip);
  
--	assert(bcm43xx_status(dev) == BCM43xx_STAT_STARTED);
-+	assert(bcm43xx_status(dev) >= BCM43xx_STAT_INITIALIZED);
+Index: linux/drivers/net/wireless/zd1211rw/zd_mac.c
+===================================================================
+--- linux.orig/drivers/net/wireless/zd1211rw/zd_mac.c
++++ linux/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -161,13 +161,33 @@ void zd_mac_clear(struct zd_mac *mac)
+ 	ZD_MEMCLEAR(mac, sizeof(struct zd_mac));
+ }
  
- 	reason = dev->irq_reason;
- 	for (i = 0; i < ARRAY_SIZE(dma_reason); i++) {
-@@ -1512,7 +1512,7 @@ static irqreturn_t bcm43xx_interrupt_han
+-static int reset_mode(struct zd_mac *mac)
++static int set_rx_filter(struct zd_mac *mac)
+ {
+ 	struct ieee80211_device *ieee = zd_mac_to_ieee80211(mac);
+ 	u32 filter = (ieee->iw_mode == IW_MODE_MONITOR) ? ~0 : STA_RX_FILTER;
+ 	return zd_iowrite32(&mac->chip, CR_RX_FILTER, filter);
+ }
  
- 	spin_lock(&dev->wl->irq_lock);
++static int set_sniffer(struct zd_mac *mac)
++{
++	struct ieee80211_device *ieee = zd_mac_to_ieee80211(mac);
++	return zd_iowrite32(&mac->chip, CR_SNIFFER_ON,
++		ieee->iw_mode == IW_MODE_MONITOR ? 1 : 0);
++	return 0;
++}
++
++static int set_mc_hash(struct zd_mac *mac)
++{
++	struct zd_mc_hash hash;
++	struct ieee80211_device *ieee = zd_mac_to_ieee80211(mac);
++
++	zd_mc_clear(&hash);
++	if (ieee->iw_mode == IW_MODE_MONITOR)
++		zd_mc_add_all(&hash);
++
++	return zd_chip_set_multicast_hash(&mac->chip, &hash);
++}
++
+ int zd_mac_open(struct net_device *netdev)
+ {
+ 	struct zd_mac *mac = zd_netdev_mac(netdev);
+@@ -194,7 +214,13 @@ int zd_mac_open(struct net_device *netde
+ 	r = zd_chip_set_basic_rates(chip, CR_RATES_80211B | CR_RATES_80211G);
+ 	if (r < 0)
+ 		goto disable_int;
+-	r = reset_mode(mac);
++	r = set_rx_filter(mac);
++	if (r)
++		goto disable_int;
++	r = set_sniffer(mac);
++	if (r)
++		goto disable_int;
++	r = set_mc_hash(mac);
+ 	if (r)
+ 		goto disable_int;
+ 	r = zd_chip_switch_radio_on(chip);
+@@ -298,12 +324,14 @@ static void set_multicast_hash_handler(s
  
--	if (bcm43xx_status(dev) < BCM43xx_STAT_STARTED)
-+	if (bcm43xx_status(dev) < BCM43xx_STAT_INITIALIZED)
- 		goto out;
- 	reason = bcm43xx_read32(dev, BCM43xx_MMIO_GEN_IRQ_REASON);
- 	if (reason == 0xffffffff) /* shared IRQ */
-@@ -1522,7 +1522,7 @@ static irqreturn_t bcm43xx_interrupt_han
- 	if (!reason)
- 		goto out;
+ void zd_mac_set_multicast_list(struct net_device *dev)
+ {
+-	struct zd_mc_hash hash;
+ 	struct zd_mac *mac = zd_netdev_mac(dev);
++	struct ieee80211_device *ieee = zd_mac_to_ieee80211(mac);
++	struct zd_mc_hash hash;
+ 	struct dev_mc_list *mc;
+ 	unsigned long flags;
  
--	assert(bcm43xx_status(dev) == BCM43xx_STAT_STARTED);
-+	assert(bcm43xx_status(dev) >= BCM43xx_STAT_INITIALIZED);
+-	if (dev->flags & (IFF_PROMISC|IFF_ALLMULTI)) {
++	if (dev->flags & (IFF_PROMISC|IFF_ALLMULTI) ||
++			ieee->iw_mode == IW_MODE_MONITOR) {
+ 		zd_mc_add_all(&hash);
+ 	} else {
+ 		zd_mc_clear(&hash);
+@@ -628,8 +656,12 @@ int zd_mac_set_mode(struct zd_mac *mac, 
+ 	ieee->iw_mode = mode;
+ 	spin_unlock_irq(&ieee->lock);
  
- 	dev->dma_reason[0] = bcm43xx_read32(dev, BCM43xx_MMIO_DMA0_REASON)
- 			     & 0x0001DC00;
+-	if (netif_running(mac->netdev))
+-		return reset_mode(mac);
++	if (netif_running(mac->netdev)) {
++		int r = set_rx_filter(mac);
++		if (r)
++			return r;
++		return set_sniffer(mac);
++	}
+ 
+ 	return 0;
+ }
