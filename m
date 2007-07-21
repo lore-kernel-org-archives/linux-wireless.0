@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:52934 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754267AbXGRHtn (ORCPT
+Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:56683 "EHLO
+	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754950AbXGUU6z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2007 03:49:43 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Pete Zaitcev <zaitcev@redhat.com>
-Subject: Re: p54usb: Don't run DMA off code segment
-Date: Wed, 18 Jul 2007 00:48:31 -0700
-Cc: cebbert@redhat.com, linville@redhat.com,
-	linux-wireless@vger.kernel.org
-References: <20070716231051.0971d9c0.zaitcev@redhat.com>
-In-Reply-To: <20070716231051.0971d9c0.zaitcev@redhat.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1429006.jJXL2GUeQU";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200707180048.35762.flamingice@sourmilk.net>
+	Sat, 21 Jul 2007 16:58:55 -0400
+From: Daniel Drake <dsd@gentoo.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Cc: kune@deine-taler.de
+Subject: [PATCH] zd1211rw-mac80211: Add ID for Planex GW-US54GXS
+Message-Id: <20070721205859.9C93D7B40A0@zog.reactivated.net>
+Date: Sat, 21 Jul 2007 21:58:59 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1429006.jJXL2GUeQU
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
 
-On Monday 16 July 2007 23:10, Pete Zaitcev wrote:
-> +=A0=A0=A0=A0=A0=A0=A0if ((err =3D p54u_bulk_msg(priv, P54U_PIPE_DATA, bu=
-f, 4)) !=3D 0) {
-Please follow the style used elsewhere in this function and do it like:
+This patch adds the ID for Plannex GW-US54GXS USB wireless adapter sold in
+Japan.
+Since this device returns the regulatory region as 0x49,
+the patch 'Allow channels 1-11 for unrecognised regulatory domains' is
+required.
 
-  err =3D p54u_bulk_msg(priv, P54U_PIPE_DATA, buf, 4);
-  if (err) {
+Tested by Masakazu Mokuno
+zd1211b chip 2019:5303 v4810 high 00-90-cc AL2230_RF pa0 ---N-
 
-The rest of the patch looks fine. Thanks for fixing this.
+Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+---
+ drivers/net/wireless/mac80211/zd1211rw/zd_usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-=2DMichael Wu
+diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c b/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
+index 9b4950f..9a371f2 100644
+--- a/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
+@@ -70,6 +70,7 @@ static struct usb_device_id usb_ids[] = {
+ 	{ USB_DEVICE(0x0586, 0x3413), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x0053, 0x5301), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x0411, 0x00da), .driver_info = DEVICE_ZD1211B },
++	{ USB_DEVICE(0x2019, 0x5303), .driver_info = DEVICE_ZD1211B },
+ 	/* "Driverless" devices that need ejecting */
+ 	{ USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
+ 	{ USB_DEVICE(0x0ace, 0x20ff), .driver_info = DEVICE_INSTALLER },
+-- 
+1.5.2.2
 
---nextPart1429006.jJXL2GUeQU
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGncXTT3Oqt9AH4aERAiW2AJ9sfIGsR0QhGyP4Bos0MC3HVCKf1gCfVBvW
-J+4R9xhUBsRJq3W9oGIZxY0=
-=l4wG
------END PGP SIGNATURE-----
-
---nextPart1429006.jJXL2GUeQU--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
