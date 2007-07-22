@@ -1,74 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:60960 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754580AbXGHSaA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2007 14:30:00 -0400
-Message-ID: <46912D23.3010401@warmcat.com>
-Date: Sun, 08 Jul 2007 19:29:55 +0100
-From: Andy Green <andy@warmcat.com>
+Received: from [77.235.43.93] ([77.235.43.93]:54072 "EHLO main.fasthost.gr"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750725AbXGVNXb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Jul 2007 09:23:31 -0400
+Received: from paravoid  by divinity (envelope-from <paravoid@debian.org>)
+	with local (Exim 4.63 (Debian GNU/Linux))
+	id 1ICbIa-0000lx-Ea
+	for linux-wireless@vger.kernel.org; Sun, 22 Jul 2007 16:16:36 +0300
+Date: Sun, 22 Jul 2007 16:16:36 +0300
+From: Faidon Liambotis <paravoid@debian.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 2.6.23 1/3] [wireless] Kconfig: order options
+Message-ID: <20070722131636.GA2967@void.cube.gr>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Ulrich Kunitz <kune@deine-taler.de>, Daniel Drake <dsd@gentoo.org>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: Arrested Development
-References: <468DE699.9040708@warmcat.com> <46910F3F.8010201@warmcat.com> <20070708181524.GA12389@deine-taler.de> <200707082018.23045.mb@bu3sch.de>
-In-Reply-To: <200707082018.23045.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Sunday 08 July 2007 20:15:24 Ulrich Kunitz wrote:
->> On 07-07-08 17:22 Andy Green wrote:
->>
->>> I rebooted into the new kernel and did this only
->>>
->>> # iwconfig wlan0 mode monitor
->>> # ifconfig wlan0 up
->>> # iwconfig wlan0 channel 6
->>> # tcpdump -i wlan0
->>>
->>> But all I could see were beacons, this is despite I am ssh-d into that
->>> box over the same channel 6 network with WPA and should surely be seeing
->>> the encrypted packets?
->> I assume you were connected over a different interface. It appears
->> that the code, which enables the reception of all packets hasn't
->> been called or is wrong. Currently you will see only packets that
->> are sent to the interface. Promiscous mode is also interesting,
->> but shouldn't have any importance in monitor mode, which the
->> iwconfig manual describes as passing all packets on the frequency.
+Reorder the Atmel options so that the menu appears saner.
+Before:
+  < >   Hermes chipset 802.11b support (Orinoco/Prism2/Symbol)
+  <*>   Atmel at76c50x chipset  802.11b support
+  < >     Atmel at76c506 PCI cards (NEW)
+  < > Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards
+  < > Atmel at76c502/at76c504 PCMCIA cards (NEW)
 
-That's right, I actually use eth0 on the test box which ends up at an AP
-in bridge mode, and this laptop is coming in to the test box via the AP
-(and then eth0).
+After:
+  < >   Hermes chipset 802.11b support (Orinoco/Prism2/Symbol)
+  <*>   Atmel at76c50x chipset  802.11b support
+  < >     Atmel at76c506 PCI cards (NEW)
+  < >     Atmel at76c502/at76c504 PCMCIA cards (NEW)
+  < >   Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards
 
-ZD1211 - usb - [test box] -- eth0 -- [AP] -- wireless -- [main laptop]
+Signed-off-by: Faidon Liambotis <paravoid@debian.org>
+---
+ drivers/net/wireless/Kconfig |   68 +++++++++++++++++++++---------------------
+ 1 files changed, 34 insertions(+), 34 deletions(-)
 
-The ZD1211 should definitely be in a place to see the traffic between
-the main laptop and the eth0 side of the test box since it is also set
-to ch6, it is only 3 - 4 metres from the AP.
-
-I wonder if there is some kind of filtering enabled with the firmware or
-the hardware, only packets with both the AP MAC and the wlan0 MAC are
-allowed somehow.  And beacons.
-
->>> Then I decided to start wpa_supplicant (this
->>> is an FC6 box so it was service wpa_supplicant start) and I got this oops:
->>>
->>> ...
->>> EIP is at zd_mac_config_interface+0xc/0x35 [zd1211rw_mac80211]
->>> ...
->> I believe Jon Smirl reported the same bug. But I didn't quite
->> understand how to provoke it.
-> 
-> I think it's the NULL pointer dereference of the mac address pointer,
-> if there's only a monitor interface. The address pointer can be NULL.
-
-Right, that is the situation: there is only a single default interface
-wlan0 and it has been placed into Monitor mode.  Then you start
-wpa_supplicant to provoke the Oops.
-
--Andy
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index ae27af0..2e264b0 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -379,30 +379,6 @@ config PCI_HERMES
+ 	  common.  Some of the built-in wireless adaptors in laptops are of
+ 	  this variety.
+ 
+-config ATMEL
+-      tristate "Atmel at76c50x chipset  802.11b support"
+-      depends on (PCI || PCMCIA) && WLAN_80211
+-      select WIRELESS_EXT
+-      select FW_LOADER
+-      select CRC32
+-       ---help---
+-        A driver 802.11b wireless cards based on the Atmel fast-vnet
+-        chips. This driver supports standard Linux wireless extensions. 
+- 
+-        Many  cards based on this chipset do not have flash memory
+-        and need their firmware loaded at start-up. If yours is 
+-        one of these, you will need to provide a firmware image
+-        to be loaded into the card by the driver. The Atmel
+-        firmware package can be downloaded from
+-        <http://www.thekelleys.org.uk/atmel>
+-
+-config PCI_ATMEL
+-      tristate "Atmel at76c506 PCI cards"
+-      depends on ATMEL && PCI
+-       ---help---
+-        Enable support for PCI and mini-PCI cards containing the
+-        Atmel at76c506 chip.
+-
+ config PCMCIA_HERMES
+ 	tristate "Hermes PCMCIA card support"
+ 	depends on PCMCIA && HERMES
+@@ -437,6 +413,40 @@ config PCMCIA_SPECTRUM
+ 	  for downloading Symbol firmware are available at
+ 	  <http://sourceforge.net/projects/orinoco/>
+ 
++config ATMEL
++      tristate "Atmel at76c50x chipset  802.11b support"
++      depends on (PCI || PCMCIA) && WLAN_80211
++      select WIRELESS_EXT
++      select FW_LOADER
++      select CRC32
++       ---help---
++        A driver 802.11b wireless cards based on the Atmel fast-vnet
++        chips. This driver supports standard Linux wireless extensions. 
++ 
++        Many  cards based on this chipset do not have flash memory
++        and need their firmware loaded at start-up. If yours is 
++        one of these, you will need to provide a firmware image
++        to be loaded into the card by the driver. The Atmel
++        firmware package can be downloaded from
++        <http://www.thekelleys.org.uk/atmel>
++
++config PCI_ATMEL
++      tristate "Atmel at76c506 PCI cards"
++      depends on ATMEL && PCI
++       ---help---
++        Enable support for PCI and mini-PCI cards containing the
++        Atmel at76c506 chip.
++
++config PCMCIA_ATMEL
++	tristate "Atmel at76c502/at76c504 PCMCIA cards"
++	depends on ATMEL && PCMCIA
++	select WIRELESS_EXT
++	select FW_LOADER
++	select CRC32
++	---help---
++	  Enable support for PCMCIA cards containing the
++	  Atmel at76c502 and at76c504 chips.
++
+ config AIRO_CS
+ 	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
+ 	depends on PCMCIA && (BROKEN || !M32R) && WLAN_80211
+@@ -462,16 +472,6 @@ config AIRO_CS
+ 	  for location).  You also want to check out the PCMCIA-HOWTO,
+ 	  available from <http://www.tldp.org/docs.html#howto>.
+ 
+-config PCMCIA_ATMEL
+-	tristate "Atmel at76c502/at76c504 PCMCIA cards"
+-	depends on ATMEL && PCMCIA
+-	select WIRELESS_EXT
+-	select FW_LOADER
+-	select CRC32
+-	---help---
+-	  Enable support for PCMCIA cards containing the
+-	  Atmel at76c502 and at76c504 chips.
+-
+ config PCMCIA_WL3501
+       tristate "Planet WL3501 PCMCIA cards"
+       depends on EXPERIMENTAL && PCMCIA && WLAN_80211
+-- 
+1.5.2.4
 
