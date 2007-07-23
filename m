@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4328 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753553AbXGRSdQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2007 14:33:16 -0400
-Date: Wed, 18 Jul 2007 14:13:47 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>
-Subject: Re: mac80211/bcm43xx deadlock
-Message-ID: <20070718181347.GD6625@tuxdriver.com>
-References: <1182848382.3830.5.camel@johannes.berg> <200706261617.45713.mb@bu3sch.de> <1182937106.4769.10.camel@johannes.berg> <200706271448.58087.mb@bu3sch.de> <1182953184.4769.24.camel@johannes.berg> <1182954090.4769.28.camel@johannes.berg>
+Received: from fencepost.gnu.org ([140.186.70.10]:51041 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753854AbXGWGKp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jul 2007 02:10:45 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1ICr9S-0005tN-PV
+	for linux-wireless@vger.kernel.org; Mon, 23 Jul 2007 02:12:14 -0400
+Subject: Re: [PATCH 2.6.23 3/3] [wireless] orinoco: create a Kconfig option  for Prism2
+From: Pavel Roskin <proski@gnu.org>
+To: David Gibson <hermes@gibson.dropbear.id.au>
+Cc: Faidon Liambotis <paravoid@debian.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070723014210.GB3272@localhost.localdomain>
+References: <20070722131751.GA3009@void.cube.gr>
+	 <20070723014210.GB3272@localhost.localdomain>
+Content-Type: text/plain
+Date: Mon, 23 Jul 2007 02:10:40 -0400
+Message-Id: <1185171040.2108.46.camel@dv>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1182954090.4769.28.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 27, 2007 at 04:21:30PM +0200, Johannes Berg wrote:
-> On Wed, 2007-06-27 at 16:06 +0200, Johannes Berg wrote:
+On Mon, 2007-07-23 at 11:42 +1000, David Gibson wrote:
+> > Create an option to disable support for Prism devices in orinoco driver which
+> > disabled the IDs for the PCMCIA module and creates a Kconfig dependency for
+> > the Prism PCI modules.
 > 
-> > I'm not convinced this is the same thing, the deadlock here is simply
-> > that something running on the workqueue is trying to rtnl_lock() while
-> > flushing the workqueue is done under rtnl.
-> 
-> Looking again, Michael agrees that this is not the same deadlock he's
-> talking about, so back to the drawing board.
-> 
-> I shall be trying to add lockdep support for this sort of thing, but
-> until then how can we fix this? What exactly does the rtnl protect in
-> ieee80211_sta_config_auth?
+> I very much dislike this being a compile time only CONFIG option.  A
+> module parameter which enables or disables the device IDs would be
+> much nicer, if possible.  It can default to off (orinoco will not
+> claim Prism cards).
 
-I didn't see an answer here.  Before we remove it, I'd prefer to know
-what we thought we were protecting in the first place. :-)
+I'm afraid it's not possible.  There is only one device map in the
+driver, and it's read by depmod to generate module map tables.
 
-John
+If the run-time device table is different from the compile-time table,
+this would be really confusing.  Either the module would be loaded to
+support the device but would refuse to do so, or the module would need
+to be loaded manually for some devices, even if no other module is
+available to support the device.
 
-P.S.  Don't get me wrong -- less "big kernel lock" usage is probably
-better...
+Besides, orinoco_pci would become useless by default.
+
+Please see my message.  For TMD bridges, we don't know the firmware
+flavor before we know the firmware version.  For PLX bridges, we can
+read the CIS first and match the PCMCIA table, but it would need to be
+done manually, without the PCMCIA code.
+
+I don't see any clear solution without some kind of the device handover
+from Orinoco to hostap or vice versa.
+
+I would probably start with cutting Agere and Symbol devices from
+hostap, which is a much more clear-cut case than cutting working Prism
+support from Orinoco.
+
 -- 
-John W. Linville
-linville@tuxdriver.com
+Regards,
+Pavel Roskin
+
