@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33226 "EHLO mail.dvmed.net"
+Received: from ozlabs.org ([203.10.76.45]:39257 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932084AbXGYBkI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2007 21:40:08 -0400
-Message-ID: <46A6A9F4.1040603@garzik.org>
-Date: Tue, 24 Jul 2007 21:40:04 -0400
-From: Jeff Garzik <jeff@garzik.org>
+	id S1754174AbXGWBrv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Jul 2007 21:47:51 -0400
+Date: Mon, 23 Jul 2007 11:42:10 +1000
+From: David Gibson <hermes@gibson.dropbear.id.au>
+To: Faidon Liambotis <paravoid@debian.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2.6.23 3/3] [wireless] orinoco: create a Kconfig option for Prism2
+Message-ID: <20070723014210.GB3272@localhost.localdomain>
+References: <20070722131751.GA3009@void.cube.gr>
 MIME-Version: 1.0
-To: Stephen.Clark@seclark.us
-CC: David Miller <davem@davemloft.net>, jketreno@linux.intel.com,
-	axjslack@bluebottle.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] Request for help...
-References: <46A6A447.2080903@linux.intel.com>	<46A69359.4030201@garzik.org>	<46A69998.7020108@seclark.us> <20070724.173529.48529759.davem@davemloft.net> <46A69CA1.5020706@seclark.us>
-In-Reply-To: <46A69CA1.5020706@seclark.us>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070722131751.GA3009@void.cube.gr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stephen Clark wrote:
-> So if someone in "the community" really wanted to help  Intel why don't 
-> they take the
-> code Intel posts to  the ipw3945 ml and put it into where ever it is 
-> really supposed to go?
-> Instead of whining how Intel doesn't do it right.
+On Sun, Jul 22, 2007 at 04:17:51PM +0300, Faidon Liambotis wrote:
+> Since v2.6.14, Prism 2/2.5/3 devices are better supported using the HostAP
+> driver, which was made to work with these exclusively.
+> Having the same IDs supported by orinoco too confuses users who have both
+> drivers compiled in or as modules who expect hostap to drive the device.
+> 
+> Telling users to echo to /sys/bus/pci/drivers/*/unbind and bind is not
+> exactly user-friendly.
+> 
+> Create an option to disable support for Prism devices in orinoco driver which
+> disabled the IDs for the PCMCIA module and creates a Kconfig dependency for
+> the Prism PCI modules.
 
+I very much dislike this being a compile time only CONFIG option.  A
+module parameter which enables or disables the device IDs would be
+much nicer, if possible.  It can default to off (orinoco will not
+claim Prism cards).
 
-Unscalable.
-
-People in the past sometimes asked Linus, "why didn't you go to $foo.com 
-website and download the patches?  they work for me!"  Same reason: 
-it's unscalable.
-
-For each step in the maintainership pyramid of trust, the number of 
-people at that level decreases from the previous step.  Patches trickle 
--up- from sub-maintainers to maintainers to Andrew and finally Linus.
-
-Thus, it is unreasonable for a kernel maintainer to poll $N mailing 
-lists, coalesce the opinion, grok the code, make sure the code is at a 
-point where it is OK to push upstream, and then push.  That's a 
-one-to-many operation.
-
-In contrast, a WORKING example of kernel development is a many-to-one 
-process.  Driver maintainers send patches to subsystem maintainers. 
-Subsystem maintainers send patches to higher-level subsystem 
-maintainers.  High-level subsystem maintainers send patches to Andrew 
-and Linus.
-
-That's scalable.
-
-	Jeff
-
-
+-- 
+David Gibson			| I'll have my music baroque, and my code
+david AT gibson.dropbear.id.au	| minimalist, thank you.  NOT _the_ _other_
+				| _way_ _around_!
+http://www.ozlabs.org/~dgibson
