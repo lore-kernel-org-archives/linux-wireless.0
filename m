@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:50121
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755697AbXGHSTe (ORCPT
+Received: from mi0.bluebottle.com ([206.188.25.15]:41588 "EHLO
+	mi0.bluebottle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727AbXGXPMR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2007 14:19:34 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Ulrich Kunitz <kune@deine-taler.de>
-Subject: Re: Arrested Development
-Date: Sun, 8 Jul 2007 20:18:22 +0200
-Cc: Andy Green <andy@warmcat.com>, Daniel Drake <dsd@gentoo.org>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-References: <468DE699.9040708@warmcat.com> <46910F3F.8010201@warmcat.com> <20070708181524.GA12389@deine-taler.de>
-In-Reply-To: <20070708181524.GA12389@deine-taler.de>
+	Tue, 24 Jul 2007 11:12:17 -0400
+Received: from fe1.bluebottle.com (internal.bluebottle.com [206.188.24.43])
+	by mi0.bluebottle.com (8.13.1/8.13.1) with ESMTP id l6OF2F1Q031925
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2007 08:02:16 -0700
+Received: from localhost (internal.bluebottle.com [206.188.24.43])
+	(authenticated bits=0)
+	by fe1.bluebottle.com (8.13.1/8.13.1) with ESMTP id l6OF2CZ8006370
+	for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2007 08:02:15 -0700
+To: linux-wireless@vger.kernel.org
+Message-ID: <1185289332.46a61474a444c@mail.bluebottle.com>
+Date: Tue, 24 Jul 2007 08:02:12 -0700
+From: Axj <axjslack@bluebottle.com>
+Subject: Request for help...
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200707082018.23045.mb@bu3sch.de>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 08 July 2007 20:15:24 Ulrich Kunitz wrote:
-> On 07-07-08 17:22 Andy Green wrote:
-> 
-> > I rebooted into the new kernel and did this only
-> > 
-> > # iwconfig wlan0 mode monitor
-> > # ifconfig wlan0 up
-> > # iwconfig wlan0 channel 6
-> > # tcpdump -i wlan0
-> > 
-> > But all I could see were beacons, this is despite I am ssh-d into that
-> > box over the same channel 6 network with WPA and should surely be seeing
-> > the encrypted packets?
-> 
-> I assume you were connected over a different interface. It appears
-> that the code, which enables the reception of all packets hasn't
-> been called or is wrong. Currently you will see only packets that
-> are sent to the interface. Promiscous mode is also interesting,
-> but shouldn't have any importance in monitor mode, which the
-> iwconfig manual describes as passing all packets on the frequency.
-> 
-> > Then I decided to start wpa_supplicant (this
-> > is an FC6 box so it was service wpa_supplicant start) and I got this oops:
-> > 
-> > ...
-> > EIP is at zd_mac_config_interface+0xc/0x35 [zd1211rw_mac80211]
-> > ...
-> 
-> I believe Jon Smirl reported the same bug. But I didn't quite
-> understand how to provoke it.
+Hi, I'm alex....
 
-I think it's the NULL pointer dereference of the mac address pointer,
-if there's only a monitor interface. The address pointer can be NULL.
+I have a notebook Acer Aspire 5920G, with an intel 4965 wireless, system is a Slackware 12 and kernel is my personal recompiled version of 2.6.21.5. 
 
--- 
-Greetings Michael.
+Usually I use the drivers of the version 0.0.* with macsubsystem version 8.0.2, but I've tried to compile the version 0.1.2... a lot of compilation problem. So I think to use  mac9.0.2..... 
+after the make modules of these it's arrived this message.... 
+
+
+net/mac80211/wme.c: In function 'ieee80211_ht_agg_queue_add':
+net/mac80211/wme.c:759: error: dereferencing pointer to incomplete type
+net/mac80211/wme.c: In function 'ieee80211_ht_agg_queue_remove':
+net/mac80211/wme.c:784: error: dereferencing pointer to incomplete type
+make[2]: *** [net/mac80211/wme.o] Error 1
+make[1]: *** [net/mac80211] Error 2
+make: *** [net] Error 2
+
+
+so I can't compile the new version, but, even if the compilation is not finished, when I retried to compile iwl version 0.1.2, it works. Now for me is impossible to  understand, and I'm tring the way to make mac802 subsys work. Can anyone help me....
+
+Another little question... exist a way for make work the wireless led that is always off, even if the wireless works.
+
+Sorry for the request and for the the bad english... it's a lot of time that I don't wrote to a english mailing list (the last was alsa).
+
+Tank you 
+Alex
+
+----------------------------------------------------------------------
+Get a free email account with anti spam protection.
+http://www.bluebottle.com/tag/2
+
