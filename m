@@ -1,32 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:55382 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934173AbXGQP30 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2007 11:29:26 -0400
-Message-ID: <469CE051.5060805@lwfinger.net>
-Date: Tue, 17 Jul 2007 10:29:21 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: patches ping
-References: <1184674109.3773.70.camel@johannes.berg>
-In-Reply-To: <1184674109.3773.70.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from ra.tuxdriver.com ([70.61.120.52]:2646 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752530AbXGXVF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jul 2007 17:05:26 -0400
+Date: Tue, 24 Jul 2007 16:30:35 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stephen Clark <Stephen.Clark@seclark.us>
+Cc: Axj <axjslack@bluebottle.com>, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] Request for help...
+Message-ID: <20070724203035.GG24344@tuxdriver.com>
+References: <1185289332.46a61474a444c@mail.bluebottle.com> <20070724161226.GA24344@tuxdriver.com> <46A64503.1080003@seclark.us>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <46A64503.1080003@seclark.us>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> What happened to my patches
-> 
->  * mac80211: regdomain.c needs to include ieee80211_i.h
->  * mac80211: kill PRISM2_HOSTAPD_UPDATE_IF sub-ioctl
->  * mac80211: move wpa trigger to debugfs
->  * mac80211: kill PRISM2_PARAM_AP_AUTH_ALGS
+On Tue, Jul 24, 2007 at 02:29:23PM -0400, Stephen Clark wrote:
 
-Add to Johannes's list
+> Just being a user I am not sure what you mean by come back to working 
+> with community? None of
+> their stuff is hidden is it? Does "the community" make it so hard to get 
+> stuff included that it is
+> not worth the pain for Intel?
 
-[PATCH V3] mac80211: Implementation of SIOCSIWRATE
+Very simple -- conduct mac80211 development in public on a mailing
+list appropriate to discussion of an in-kernel component rather than
+hiding on a mailing list that is ostensibly for development of a
+specific driver.  As the authors of the patches it is incumbent on
+Intel to post them for inclusion upstream.  That is the price of good
+citizenship in the Linux community.
 
-Larry
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
