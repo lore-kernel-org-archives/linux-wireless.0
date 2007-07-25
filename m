@@ -1,72 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:40760
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S938808AbXGTRiN (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:57856 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755088AbXGYJsZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jul 2007 13:38:13 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [PATCH 2/2] bcm43xx-mac80211: Fix reported rx frequency and channel
-Date: Fri, 20 Jul 2007 19:36:40 +0200
-Cc: Andy Green <andy@warmcat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-References: <20070611103828.961999956@warmcat.com> <46A0CB16.6010901@warmcat.com> <46A0E9B0.1050600@lwfinger.net>
-In-Reply-To: <46A0E9B0.1050600@lwfinger.net>
+	Wed, 25 Jul 2007 05:48:25 -0400
+Message-ID: <46A71C64.9050301@warmcat.com>
+Date: Wed, 25 Jul 2007 10:48:20 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200707201936.41078.mb@bu3sch.de>
+To: yi.zhu@intel.com
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Please pull patch-bomb for iwlwifi
+References: <20070725085754.GA670@mail.intel.com>
+In-Reply-To: <20070725085754.GA670@mail.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 20 July 2007 18:58:24 Larry Finger wrote:
-> Andy Green wrote:
-> > 
-> > Understood, that is why I consider it a bad thing that functionality
-> > that can be done in the mac80211 driver is pushed into the binary-only
-> > firmware when there is a choice (otherwise known as "paranoia", apparently).
-> 
-> Unfortunately, that is a necessary result of this type of reverse-engineering. If Broadcom put some 
-> function in the firmware, we have to leave it there as we have no idea what would break.
-> 
-> > However you stripped some quoting from Michael:
-> > 
-> > ''But it is actually no problem in reality, as the use-it-or-die
-> > firmware doesn't have this problem. So if someone uses another
-> > firmware than the one we suggest, he will probably run into more
-> > problems, as well.
-> > The fix is called: Use the correct firmware.
-> > For now, at least.''
-> > 
-> > I would summarize this that Michael is telling me one pariticular
-> > version of firmware - "use it or die firmware" - is especially
-> > blessed/correct.  It might be an idea to let people know they have
-> > strayed from the dependency of the required firmware version in dmesg if
-> > indeed there is an effective dependency of the driver on it.
-> 
-> It isn't that it is blessed or correct, but that it has been tested. Your version has not. Who knows 
-> what else might have changed? Once we know the version with the different behavior, a warning 
-> message can be prepared. I don't think anyone knew about this problem until you submitted your patch.
+Somebody in the thread at some point said:
 
-People don't read dmesg. Adding a "This firmware is unsupported"
-would have no effect.
-I experience same thing for the "bcm43xx-does-not-support-v3-issue".
-There is a clear error message saying what to do exactly. And _still_
-people mail me asking what this message means.
+> This patch series catches wireless-dev up to the stand-alone
+> iwlwifi tree version 0.1.3.
 
-The use-or-die firmware is here:
-http://linuxwireless.org/en/users/Drivers/bcm43xx
+Hi -
 
-> > Can I still get the firmware version from fwcutter if I don't have the
-> > original Windows binary the firmware came from?
-> 
-> AFAIK, fwcutter can only get the version from the foreign driver. It can be gotten from the dmesg 
-> output of your inlaws computer, or if you have the extracted firmware files here, you can bundle 
-> them up and email them to me privately.
+My little patch "iwl3945: provide frequency to radiotap monitor not
+channel index" here:
 
-People don't read dmesg.
-q.e.d. ;)
+http://www.spinics.net/lists/linux-wireless/msg03499.html
 
--- 
-Greetings Michael.
+which you kindly Ack'd doesn't seem to be listed in the cluster bomb?
+
+-Andy
