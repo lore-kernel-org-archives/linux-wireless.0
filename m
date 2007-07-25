@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.239]:49598 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755586AbXGaWLf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 18:11:35 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so15072wxd
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 15:11:32 -0700 (PDT)
-Message-ID: <1ba2fa240707311511y620b205p21cc1b3963e0ef77@mail.gmail.com>
-Date: Wed, 1 Aug 2007 01:11:32 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: iwl: large integer implicitly truncated to unsigned
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200707312354.10118.mb@bu3sch.de>
+Received: from srv5.dvmed.net ([207.36.208.214]:38487 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756112AbXGYPTt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jul 2007 11:19:49 -0400
+Message-ID: <46A76A0E.805@garzik.org>
+Date: Wed, 25 Jul 2007 11:19:42 -0400
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200707312354.10118.mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: James Ketrenos <jketreno@linux.intel.com>,
+	Stephen Clark <Stephen.Clark@seclark.us>,
+	ipw3945-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, Axj <axjslack@bluebottle.com>
+Subject: Re: [ipw3945-devel] Request for help...
+References: <1185289332.46a61474a444c@mail.bluebottle.com> <20070724161226.GA24344@tuxdriver.com> <46A64503.1080003@seclark.us> <20070724203035.GG24344@tuxdriver.com> <46A66B63.6030006@garzik.org> <46A6A447.2080903@linux.intel.com> <46A69359.4030201@garzik.org> <20070725144651.GA7093@tuxdriver.com>
+In-Reply-To: <20070725144651.GA7093@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/1/07, Michael Buesch <mb@bu3sch.de> wrote:
-> Are you aware of these warnings in current wireless-dev?
->
-> drivers/net/wireless/iwl-base.c:2061: warning: large integer implicitly truncated to unsigned type
-> drivers/net/wireless/iwl-base.c:2062: warning: large integer implicitly truncated to unsigned type
-> drivers/net/wireless/iwl-base.c:2063: warning: large integer implicitly truncated to unsigned type
-> drivers/net/wireless/iwl-base.c:2064: warning: large integer implicitly truncated to unsigned type
-> drivers/net/wireless/iwl-base.c:2065: warning: large integer implicitly truncated to unsigned type
-> drivers/net/wireless/iwl-base.c:2071: warning: large integer implicitly truncated to unsigned type
-> drivers/net/wireless/iwl-base.c:2072: warning: large integer implicitly truncated to unsigned type
-> drivers/net/wireless/iwl-base.c:2073: warning: large integer implicitly truncated to unsigned type
-> drivers/net/wireless/iwl-base.c:2074: warning: large integer implicitly truncated to unsigned type
-> drivers/net/wireless/iwl-base.c:2075: warning: large integer implicitly truncated to unsigned type
->
-Haven't seen this one. What machine are you running compilation? 64bit maybe?
-Thanks
-> --
-> Greetings Michael.
->
+John W. Linville wrote:
+> I would definitely like to see more action from mac80211 driver
+> developers towards getting drivers upstream.  With mac80211 merged,
+> I know of no reason not to get the drivers ready for upstream now so
+> they can funnel through netdev-2.6 into -mm with plenty of time to
+> spare before the next merge window.
+
+Agreed.  Getting something upstream is the fastest way to mature a 
+driver...  It gets far less testing and review hiding out in 
+netdev-2.6.git or wireless-dev.git.
+
+If it works, is relatively clean, and doesn't corrupt data or have 
+races, push it upstream :)
+
+	Jeff
+
+
