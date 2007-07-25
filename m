@@ -1,68 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:65103 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762749AbXG0J3C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2007 05:29:02 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 10/17] iwlwifi: endianity cleaning of iwl_print_rx_config_cmd
-Date: Fri, 27 Jul 2007 17:26:34 +0800
-Message-Id: <11855284201330-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11855284183313-git-send-email-yi.zhu@intel.com>
-References: <11855284012123-git-send-email-yi.zhu@intel.com>
- <11855284032407-git-send-email-yi.zhu@intel.com>
- <11855284053896-git-send-email-yi.zhu@intel.com>
- <11855284072074-git-send-email-yi.zhu@intel.com>
- <1185528408776-git-send-email-yi.zhu@intel.com>
- <11855284103871-git-send-email-yi.zhu@intel.com>
- <11855284122218-git-send-email-yi.zhu@intel.com>
- <11855284142478-git-send-email-yi.zhu@intel.com>
- <11855284161716-git-send-email-yi.zhu@intel.com>
- <11855284183313-git-send-email-yi.zhu@intel.com>
-To: ipwpatch@vger.kernel.org
+Received: from ug-out-1314.google.com ([66.249.92.171]:54766 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762683AbXGYUsk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jul 2007 16:48:40 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so420027ugf
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2007 13:48:39 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 08/11] rt2x00: Fix MAC address initialization for multiple interfaces
+Date: Wed, 25 Jul 2007 22:50:22 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200707252250.22190.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patches cleans up endianity issues in iwl_print_rx_config_cmd,
-which produced a lot of spares errors.
+>From cd95761f3c7ad82d4759ffc8b431e9220e360226 Mon Sep 17 00:00:00 2001
+From: Ivo van Doorn <IvDoorn@gmail.com>
+Date: Tue, 24 Jul 2007 19:46:22 +0200
+Subject: [PATCH 08/11] rt2x00: Fix MAC address initialization for multiple interfaces
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+MAC address initialization was broken when the first
+interface which was loaded was a monitor interface and a
+real interface was loaded after that.
+
+Only configure the MAC address when a non-monitor interface
+is being added. This required splitting the initialization
+steps in add_interface up.
+
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/iwl-base.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mac80211/rt2x00/rt2x00mac.c |   38 ++++++++++++----------
+ 1 files changed, 21 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
-index 92c21d1..8f9714f 100644
---- a/drivers/net/wireless/iwl-base.c
-+++ b/drivers/net/wireless/iwl-base.c
-@@ -4664,11 +4664,13 @@ static void iwl_print_rx_config_cmd(struct iwl_rxon_cmd *rxon)
- {
- 	IWL_DEBUG_RADIO("RX CONFIG:\n");
- 	printk_buf(IWL_DL_RADIO, (u8 *) rxon, sizeof(*rxon));
--	IWL_DEBUG_RADIO("u16 channel: 0x%x\n", rxon->channel);
-+	IWL_DEBUG_RADIO("u16 channel: 0x%x\n", le16_to_cpu(rxon->channel));
- 	IWL_DEBUG_RADIO("u32 flags: 0x%08X " BIT_FMT32 "\n",
--			rxon->flags, BIT_ARG32(rxon->flags));
-+			le32_to_cpu(rxon->flags),
-+			BIT_ARG32(le32_to_cpu(rxon->flags)));
- 	IWL_DEBUG_RADIO("u32 filter_flags: 0x%08x " BIT_FMT32 "\n",
--			rxon->filter_flags, BIT_ARG32(rxon->filter_flags));
-+			le32_to_cpu(rxon->filter_flags),
-+			BIT_ARG32(le32_to_cpu(rxon->filter_flags)));
- 	IWL_DEBUG_RADIO("u8 dev_type: 0x%x\n", rxon->dev_type);
- 	IWL_DEBUG_RADIO("u8 ofdm_basic_rates: 0x%02x " BIT_FMT8 "\n",
- 			rxon->ofdm_basic_rates,
-@@ -4679,7 +4681,7 @@ static void iwl_print_rx_config_cmd(struct iwl_rxon_cmd *rxon)
- 			MAC_ARG(rxon->node_addr));
- 	IWL_DEBUG_RADIO("u8[6] bssid_addr: " MAC_FMT "\n",
- 			MAC_ARG(rxon->bssid_addr));
--	IWL_DEBUG_RADIO("u16 assoc_id: 0x%x\n", rxon->assoc_id);
-+	IWL_DEBUG_RADIO("u16 assoc_id: 0x%x\n", le16_to_cpu(rxon->assoc_id));
- }
+diff --git a/drivers/net/wireless/mac80211/rt2x00/rt2x00mac.c b/drivers/net/wireless/mac80211/rt2x00/rt2x00mac.c
+index 247ea4e..c39c1f2 100644
+--- a/drivers/net/wireless/mac80211/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/mac80211/rt2x00/rt2x00mac.c
+@@ -145,6 +145,17 @@ int rt2x00lib_add_interface(struct ieee80211_hw *hw,
+ 		return -ENOBUFS;
  
- #endif
+ 	/*
++	 * If this is the first interface which is added,
++	 * we should load the firmware now.
++	 */
++	if (!test_bit(DEVICE_INITIALIZED, &rt2x00dev->flags) &&
++	    test_bit(REQUIRE_FIRMWARE, &rt2x00dev->flags)) {
++		status = rt2x00lib_load_firmware(rt2x00dev);
++		if (status)
++			return status;
++	}
++
++	/*
+ 	 * We support muliple monitor mode interfaces.
+ 	 * All we need to do is increase the monitor_count.
+ 	 */
+@@ -156,29 +167,22 @@ int rt2x00lib_add_interface(struct ieee80211_hw *hw,
+ 		if (conf->type == IEEE80211_IF_TYPE_AP)
+ 			memcpy(&intf->bssid, conf->mac_addr, ETH_ALEN);
+ 		intf->promisc = 0;
+-	}
+ 
+-	/*
+-	 * Initialize interface, and enable the radio when this
+-	 * is the first interface that is brought up.
+-	 */
+-	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags)) {
+ 		/*
+-		 * We must load firmware before we can safely continue.
+-		 */
+-		if (test_bit(REQUIRE_FIRMWARE, &rt2x00dev->flags)) {
+-			status = rt2x00lib_load_firmware(rt2x00dev);
+-			if (status)
+-				return status;
+-		}
+-
+-		/*
+-		 * Before initialization, the mac address should
+-		 * be configured.
++		 * We should configure the MAC address before
++		 * the initialization starts. Note that the mac_addr
++		 * field is NULL when adding a monitor interface,
++		 * so we can only set the mac address here.
+ 		 */
+ 		rt2x00dev->ops->lib->config_mac_addr(rt2x00dev,
+ 			conf->mac_addr);
++	}
+ 
++	/*
++	 * Initialize interface, and enable the radio when this
++	 * is the first interface that is brought up.
++	 */
++	if (!test_bit(DEVICE_INITIALIZED, &rt2x00dev->flags)) {
+ 		/*
+ 		 * Initialize the device.
+ 		 */
 -- 
-1.5.2
+1.5.2.2
+
