@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:52555 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753856AbXGLVzU (ORCPT
+Received: from mga06.intel.com ([134.134.136.21]:52554 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755186AbXGXXJf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2007 17:55:20 -0400
-Date: Thu, 12 Jul 2007 14:53:47 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	Aurelien Jarno <aurelien@aurel32.net>,
-	linux-wireless@vger.kernel.org,
-	Gary Zambrano <zambrano@broadcom.com>
-Subject: Re: [patch 1/2] Merge the Sonics Silicon Backplane subsystem
-Message-Id: <20070712145347.ab861215.akpm@linux-foundation.org>
-In-Reply-To: <200707122342.27164.mb@bu3sch.de>
-References: <20070712085432.528319000@bu3sch.de>
-	<20070712085744.604965000@bu3sch.de>
-	<20070712112732.f7373a33.akpm@linux-foundation.org>
-	<200707122342.27164.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 24 Jul 2007 19:09:35 -0400
+Message-ID: <46A6A447.2080903@linux.intel.com>
+Date: Tue, 24 Jul 2007 18:15:51 -0700
+From: James Ketrenos <jketreno@linux.intel.com>
+MIME-Version: 1.0
+To: Jeff Garzik <jeff@garzik.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Stephen Clark <Stephen.Clark@seclark.us>,
+	ipw3945-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, Axj <axjslack@bluebottle.com>
+Subject: Re: [ipw3945-devel] Request for help...
+References: <1185289332.46a61474a444c@mail.bluebottle.com>	<20070724161226.GA24344@tuxdriver.com>	<46A64503.1080003@seclark.us>	<20070724203035.GG24344@tuxdriver.com> <46A66B63.6030006@garzik.org>
+In-Reply-To: <46A66B63.6030006@garzik.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 12 Jul 2007 23:42:26 +0200
-Michael Buesch <mb@bu3sch.de> wrote:
+Jeff Garzik wrote:
 
-> > > +#define assert(cond)	do {						\
-> > > +	if (unlikely(!(cond))) {					\
-> > > +		ssb_dprintk(KERN_ERR PFX "BUG: Assertion failed (%s) "	\
-> > > +			    "at: %s:%d:%s()\n",				\
-> > > +			    #cond, __FILE__, __LINE__, __func__);	\
-> > > +	}								\
-> > > +		       } while (0)
-> > 
-> > Odd.  One would normally expect an assert() to terminate execution in some
-> > fashion if it fails.  In-kernel that means BUG.  But this assert() just
-> > whines and continues.
-> 
-> An assertion failure is not a fatal bug, so we continue execution.
-> We do the same in bcm43xx and I really think we mustn't BUG on an
-> assertion failure, as people would already have killed me.
-> Additionally to that, I insert really lots of assert()s into the code.
-> I don't want all these to be WARN_ONs or BUGs, as it would bloat the
-> kernel a lot. In the places where I want runtime checks in nondebug
-> builds, I already use WARN_ON.
+> There is a reason why we say "release early, release often."  If 
+> wireless developers don't hear from Intel on a regular basis,
 
-Do `man 3 assert'.  The reader of your code will expect that an assert()
-will "terminate the program" (or the kernel equivalent) if the assertion
-fails.
+The "community" vs. "Intel" slant is really getting old.  
 
-So the principle of least surprise tells us "this shouldn't be called
-assert()".
+*WE* are part of the community.  *WE* have submitted patches.  
+*WE* have done work to bring wireless forward.  *WE* are wireless 
+developers.
+
+It isn't Intel's fault that certain people have historically 
+made it so difficult to get code to into wireless-dev's mac80211 
+(and eventually *maybe* upstream) that contributors have decided 
+to focus on getting their code out to users through other means.
+
+A version of mac80211 being available out-of-tree with features 
+not found in wireless-dev isn't the problem.  The problem is that 
+people have made it too difficult to innovate and develop in 
+wireless-dev.
+
+*That* needs to change.
+
+James
