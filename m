@@ -1,38 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:64716 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753109AbXG0I7A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2007 04:59:00 -0400
-Subject: Re: Request for help...
-From: Zhu Yi <yi.zhu@intel.com>
-To: Axj <axjslack@bluebottle.com>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <200707270848.l6R8mqkh004526@mi1.bluebottle.com>
-References: <1185289332.46a61474a444c@mail.bluebottle.com>
-	 <1185355931.3131.13.camel@debian.sh.intel.com>
-	 <200707261511.l6QFB2jK015121@mi0.bluebottle.com>
-	 <1185466954.14557.5.camel@dv>
-	 <200707270634.l6R6Yh2j003295@mi1.bluebottle.com>
-	 <1185522251.3079.66.camel@debian.sh.intel.com>
-	 <200707270848.l6R8mqkh004526@mi1.bluebottle.com>
-Content-Type: text/plain
-Date: Fri, 27 Jul 2007 16:56:52 +0800
-Message-Id: <1185526612.3079.75.camel@debian.sh.intel.com>
-Mime-Version: 1.0
+Received: from smtpauth12.prod.mesa1.secureserver.net ([64.202.165.35]:43994
+	"HELO smtpauth12.prod.mesa1.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756082AbXGYBGA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jul 2007 21:06:00 -0400
+Message-ID: <46A6A1F7.202@seclark.us>
+Date: Tue, 24 Jul 2007 21:05:59 -0400
+From: Stephen Clark <Stephen.Clark@seclark.us>
+Reply-To: Stephen.Clark@seclark.us
+MIME-Version: 1.0
+To: David Miller <davem@davemloft.net>
+CC: jeff@garzik.org, jketreno@linux.intel.com, axjslack@bluebottle.com,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] Request for help...
+References: <46A69998.7020108@seclark.us>	<20070724.173529.48529759.davem@davemloft.net>	<46A69CA1.5020706@seclark.us> <20070724.174641.105428420.davem@davemloft.net>
+In-Reply-To: <20070724.174641.105428420.davem@davemloft.net>
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-07-27 at 01:48 -0700, Axj wrote:
-> Maybe.... but don't work... from the version 0.0.36 to no tell me 
-> 
-> Impossible to set ...etc etc.... at the first occasion I will post up the error code that give me...
+David Miller wrote:
 
-With mac80211 you need to change wireless mode only when the interface
-is down.
+>From: Stephen Clark <Stephen.Clark@seclark.us>
+>Date: Tue, 24 Jul 2007 20:43:13 -0400
+>
+>  
+>
+>>So if someone in "the community" really wanted to help Intel why
+>>don't they take the code Intel posts to the ipw3945 ml and put it
+>>into where ever it is really supposed to go?
+>>    
+>>
+>
+>Because it's better to teach someone how to fish than to continually
+>fish for them.
+>
+>  
+>
+David,
 
-$ ifconfig wlan0 down
-$ iwconfig wlan0 mode ad-hoc
-$ ifconfig wlan0 up
+I understand what you are saying on one hand, but you are also saying 
+that Intel
+is by themselves and no one in the community is going to help, if Intel 
+can't figure
+out how to do it the right way.
+What I am saying why can't someone in the community be a liason
+between what Intel is doing and wireless-dev? Why does it have to be 
+someone from
+Intel?
 
-Thanks,
--yi
+
+-- 
+
+"They that give up essential liberty to obtain temporary safety, 
+deserve neither liberty nor safety."  (Ben Franklin)
+
+"The course of history shows that as a government grows, liberty 
+decreases."  (Thomas Jefferson)
+
+
+
