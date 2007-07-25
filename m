@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41831
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765481AbXG0WeX (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37335
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1760023AbXGYAfa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2007 18:34:23 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [PATCH 09/17] iwlwifi: EEPROM reading fix
-Date: Sat, 28 Jul 2007 00:32:40 +0200
-Cc: "Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
-	ipwpatch@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"Gregory Greenman" <gregory.greenman@intel.com>
-References: <11855284012123-git-send-email-yi.zhu@intel.com> <200707271322.50303.mb@bu3sch.de> <1ba2fa240707271524i591ed932jd3f2998ba6203ad8@mail.gmail.com>
-In-Reply-To: <1ba2fa240707271524i591ed932jd3f2998ba6203ad8@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200707280032.40475.mb@bu3sch.de>
+	Tue, 24 Jul 2007 20:35:30 -0400
+Date: Tue, 24 Jul 2007 17:35:29 -0700 (PDT)
+Message-Id: <20070724.173529.48529759.davem@davemloft.net>
+To: Stephen.Clark@seclark.us
+Cc: jeff@garzik.org, jketreno@linux.intel.com, axjslack@bluebottle.com,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] Request for help...
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <46A69998.7020108@seclark.us>
+References: <46A6A447.2080903@linux.intel.com>
+	<46A69359.4030201@garzik.org>
+	<46A69998.7020108@seclark.us>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 28 July 2007 00:24:42 Tomas Winkler wrote:
-> On 7/27/07, Michael Buesch <mb@bu3sch.de> wrote:
-> > On Friday 27 July 2007 11:26:33 Zhu Yi wrote:
-> > >               if (!(r & 1)) {
-> > >                       IWL_ERROR("Time out reading EEPROM[%d]", addr);
-> > > -                     return -ETIMEDOUT;
-> > > +                     rc = -ETIMEDOUT;
-> > > +                     goto done;
-> > >               }
-> > >
-> > >               e[addr / 2] = le16_to_cpu(r >> 16);
-> >
-> > Seems like you really want cpu_to_le16() here, as "r" should better
-> > be CPU-endian when shifting it by >>.
-> >
-> > Though, I don't see enough code context here to judge if the
-> > endianess conversion is correct at all or not.
-> >
-> This line is empirically correct.
+From: Stephen Clark <Stephen.Clark@seclark.us>
+Date: Tue, 24 Jul 2007 20:30:16 -0400
 
-No, you need cpu_to_le16 here, instead of le16_to_cpu.
-I know that these generate the same code, but it makes
-a difference for sparse.
+> I find it really sad that a hardware vendor that is willing to write
+> and develope drivers for Linux for their hardware aren't helped more
+> by "the community" or is the "the community" only interested in
+> hacking drivers where the manufacturer give no or minimal support?
 
--- 
-Greetings Michael.
+This is a massive mischaracterization of reality.
+
+I agree with every statement Jeff has made, Intel really is a problem
+child in this area, and consistently so.
+
+The only way we could "help them" more is to take over the code base
+and do the development for them.
+
+The thing you should find truly sad is how Intel handles these
+situations time and time again, rather than the tireless attempts of
+Jeff and others to education them on how to improve the situation.
