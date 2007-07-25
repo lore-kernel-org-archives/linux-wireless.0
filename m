@@ -1,100 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:34841 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756663AbXGZL3z (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:41292 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759304AbXGYSww convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2007 07:29:55 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id EC10C8CAD8
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2007 13:29:50 +0200 (CEST)
-Received: from meerkat.home.warmcat.com (localhost [127.0.0.1])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id D6245104BA
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2007 11:31:33 +0000 (UTC)
-Message-ID: <46A885A1.8000702@warmcat.com>
-Date: Thu, 26 Jul 2007 12:29:37 +0100
-From: Andy Green <andy@warmcat.com>
+	Wed, 25 Jul 2007 14:52:52 -0400
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Bogus double self-monitoring with multiple interfaces
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [PATCH 1/1] mac80211: Replace overly "sticky" averagingfilters for rssi, signal, noise.
+Date: Wed, 25 Jul 2007 11:50:29 -0700
+Message-ID: <4220499A1B034C4FA93B547BA01E1FF00174623A@orsmsx413.amr.corp.intel.com>
+In-Reply-To: <1184274936.6669.72.camel@johannes.berg>
+From: "Cahill, Ben M" <ben.m.cahill@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Jiri Benc" <jbenc@suse.cz>
+Cc: <benmcahill@gmail.com>, <flamingice@sourmilk.net>,
+	<linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks -
+Sorry, had to put this aside for awhile ... Actually, I like the way
+things behave without a filter at all (see other mail), but I just
+wanted to follow up ... and thank Johannes for his thoughtful comments.
 
-iwl3945 with wlan0 associated on to WPA and a secondary mon0 interface
-set into monitor mode.
+-- Ben --
 
-packetspammer is running on mon0 as well in another session.
+> -----Original Message-----
+> From: Johannes Berg [mailto:johannes@sipsolutions.net] 
+> Sent: Thursday, July 12, 2007 5:16 PM
+> To: Jiri Benc
+> Cc: benmcahill@gmail.com; flamingice@sourmilk.net; 
+> linux-wireless@vger.kernel.org; Cahill, Ben M
+> Subject: Re: [PATCH 1/1] mac80211: Replace overly "sticky" 
+> averagingfilters for rssi, signal, noise.
+> 
+> On Wed, 2007-07-11 at 02:25 +0200, Jiri Benc wrote:
+> 
+> > > +	/* Quantize the averages (divide by 16) */
+> > > +	sta->last_rssi = sta->accum_rssi >> 4;
+> > > +	sta->last_signal = sta->accum_signal >> 4;
+> > > +	sta->last_noise = sta->accum_noise >> 4;
+> > 
+> > First, do not obfuscate the code, please. If you want to 
+> divide by 16, 
+> > divide by 16. The compiler is perfectly capable of optimizing it.
+> 
+> No, you're wrong, the compiler can only optimise that if it 
+> knows for sure that the values can't ever be negative. And 
+> quoting the patch further below:
+> 
+> > +	int accum_rssi; /* hi-precision running average (rssi * 16) */
+> > +	int accum_signal; /* hi-precision average 
+> (signal-quality * 16) */
+> > +	int accum_noise; /* hi-precision running average (noise * 16) */
+> 
+> The compiler does some tricks to avoid the integer division 
+> IIRC but it can't do a simple shift. But in principle you're 
+> right, the code should say "/ 16" because either the 
+> variables need to be made unsigned (only positive values are 
+> put into them) or using a shift is wrong (if negative values 
+> can happpen)
 
-Notice that tcpdump has -XX so the radiotap header is visible.
+Actually, "arithmetic" right shift works for either signed or unsigned.
+Arithmetic shift looks at the most-significant bit, and shifts more of
+that in from the left, preserving the sign.  Our rssi and noise values
+are negative (dBm) values, and this integer shift formula worked fine.
+It's important that the variable is "int", rather than "unsigned", or
+else the compiler would use a "logical" right shift, which simply shifts
+in 0s from the left.
 
-# tcpdump -i mon0 -s0 -XX ether host 13:22:33:44:55:66
-...
-12:01:04.673737 0us tsft 18.0 Mb/s 2417 MHz (0x00c0) -34dB signal 0dB
-noise antenna 1 13:22:33:44:55:66 (oui Unknown) Unknown SSAP 0x60 >
-13:22:33:44:55:66 (oui Unknown) Unknown DSAP 0x50 Unnumbered, ua, Flags
-[Response], length 77
-        0x0000:  0000 1900 6f08 0000 0000 0000 0000 0000  ....o...........
-        0x0010:  0024 7109 c000 de00 0108 0100 00ff ffff  .$q.............
-        0x0020:  ffff ff13 2233 4455 6613 2233 4455 6610  ...."3DUf."3DUf.
-        0x0030:  8650 6163 6b65 7473 7061 6d6d 6572 2031  .Packetspammer.1
-        0x0040:  3862 726f 6164 6361 7374 2070 6163 6b65  8broadcast.packe
-        0x0050:  7423 3030 3138 3020 2d2d 203a 2d44 202d  t#00180.--.:-D.-
-        0x0060:  2d6d 6565 726b 6174 2e68 6f6d 652e 7761  -meerkat.home.wa
-        0x0070:  726d 6361 742e 636f 6d20 2d2d 2d2d       rmcat.com.----
-12:01:04.673755 [0x0000000f] 13:22:33:44:55:66 (oui Unknown) Unknown
-SSAP 0x60 > 13:22:33:44:55:66 (oui Unknown) Unknown DSAP 0x50
-Unnumbered, ua, Flags [Response], length 77
-        0x0000:  0000 0b00 0080 0200 0000 0008 0100 00ff  ................
-        0x0010:  ffff ffff ff13 2233 4455 6613 2233 4455  ......"3DUf."3DU
-        0x0020:  6610 8650 6163 6b65 7473 7061 6d6d 6572  f..Packetspammer
-        0x0030:  2031 3862 726f 6164 6361 7374 2070 6163  .18broadcast.pac
-        0x0040:  6b65 7423 3030 3138 3020 2d2d 203a 2d44  ket#00180.--.:-D
-        0x0050:  202d 2d6d 6565 726b 6174 2e68 6f6d 652e  .--meerkat.home.
-        0x0060:  7761 726d 6361 742e 636f 6d20 2d2d 2d2d  warmcat.com.----
+> 
+> With the algorithm as I see it, each update is done by
+> update(new_value):
+>   avg = 15/16*avg + new_value
+> 
+> which means that all old samples are still influencing the 
+> current output.
 
-Well as we noticed before in this mode with two interfaces we cannot
-monitor external packetspammer traffic, so this traffic is actually our
-transmit action inappropriately reflected into monitor mode.
+Exactly ... this is the characteristic of an "infinite impulse response"
+(IIR) filter.  The output is fed back into the input.  If we had
+infinite bits of precision in the output filter variable, the influence
+of a single input would constantly decay at the 15/16 rate, but would
+last forever.  Since we don't have infinite precision, the effect of a
+single sample is limited.
 
-Each injected transmit packet appears twice on the monitor interface,
-once with a good radiotap header
+Usually, for a given desired behavior, it's easier to build an IIR
+filter than an FIR (finite impulse response) filter ... the FIR filter
+does *not* use any feedback from the output ... any history must be in
+the form of stored input values, which you suggest below.
 
-0000 1900 6f08 0000 0000 0000 0000 0000 0024 7109 c000 de00 01
+> 
+> Doing two updates (update(a), update(b)) yields:
+> avg = 15/16 * (15/16*orig + a) + b = 225/256 * orig + 15/16 * a + b
+> 
+> And after 16 updates the original values still has an 
+> influence of about 3.5% on the output value:
+> update(a_0),...,update(a_15):
+> avg = (15/16)^16*orig + \sum_{i=0}^{15} (15/16)^i * a_i
+>     = 0.3560*orig + 0.3798*a_0 + ... (sum of coefficients is ~10.30)
+> 
+> Is this really what we want? Wouldn't it be better to have a 
+> ringbuffer of the last 16 values and really do an average 
+> over those? [which is what I understand as "moving average"]
 
-and then the same packet again (it was only transmitted once!  Each
-packetspammer payload has an incrementing number and the rate it was
-transmitted at) with a bogus radiotap header
+This is an FIR approach, which would work just fine, and would give
+results based on exactly 16 samples of history, distributed equally
+(rather than weighted towards more recent samples, which actually might
+be desirable), but would be more complicated to build and would use more
+storage.
 
-0000 0b00 0080 0200 0000 00
+You might be exactly right about the definition of a "moving average".
+I might have mis-used the term.
 
+-- Ben --
 
-I decided to try this test with only wlan0 interface set to monitor mode
-and packetspammer on wlan0 as well.  But I was able to see only one
-packet.....
-
-
-# tcpdump -i wlan0 -s0 -XX ether host 13:22:33:44:55:66
-tcpdump: WARNING: wlan0: no IPv4 address assigned
-tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
-listening on wlan0, link-type IEEE802_11_RADIO (802.11 plus BSD radio
-information header), capture size 65535 bytes
-12:03:38.477118 0us tsft 54.0 Mb/s 2417 MHz (0x00c0) -34dB signal 0dB
-noise antenna 1 13:22:33:44:55:66 (oui Unknown) Unknown SSAP 0x60 >
-13:22:33:44:55:66 (oui Unknown) Unknown DSAP 0x50 Unnumbered, ua, Flags
-[Response], length 77
-        0x0000:  0000 1900 6f08 0000 0000 0000 0000 0000  ....o...........
-        0x0010:  006c 7109 c000 de00 0108 0100 00ff ffff  .lq.............
-        0x0020:  ffff ff13 2233 4455 6613 2233 4455 6610  ...."3DUf."3DUf.
-        0x0030:  8650 6163 6b65 7473 7061 6d6d 6572 2035  .Packetspammer.5
-        0x0040:  3462 726f 6164 6361 7374 2070 6163 6b65  4broadcast.packe
-        0x0050:  7423 3030 3030 3020 2d2d 203a 2d44 202d  t#00000.--.:-D.-
-        0x0060:  2d6d 6565 726b 6174 2e68 6f6d 652e 7761  -meerkat.home.wa
-        0x0070:  726d 6361 742e 636f 6d20 2d2d 2d2d       rmcat.com.----
-
-... before the tcpdump and packetspammer processes froze, and on
-modprobe -r iwl3945 the whole machine froze.  Repeating the test got me
-another freeze just from running packetspammer on wlan0 alone.
-
--Andy
+> 
+> johannes
+> 
