@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:38907
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755408AbXGCRtN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2007 13:49:13 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [PATCH RFC] mac80211: Make stop_queues() usable
-Date: Tue, 3 Jul 2007 19:47:56 +0200
-Cc: Jiri Benc <jbenc@suse.cz>, John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200707022235.38791.mb@bu3sch.de> <200707031936.24084.mb@bu3sch.de> <200707031041.27895.flamingice@sourmilk.net>
-In-Reply-To: <200707031041.27895.flamingice@sourmilk.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200707031947.56602.mb@bu3sch.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2509 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756808AbXGYPGG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jul 2007 11:06:06 -0400
+Date: Wed, 25 Jul 2007 10:46:51 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: James Ketrenos <jketreno@linux.intel.com>,
+	Stephen Clark <Stephen.Clark@seclark.us>,
+	ipw3945-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, Axj <axjslack@bluebottle.com>
+Subject: Re: [ipw3945-devel] Request for help...
+Message-ID: <20070725144651.GA7093@tuxdriver.com>
+References: <1185289332.46a61474a444c@mail.bluebottle.com> <20070724161226.GA24344@tuxdriver.com> <46A64503.1080003@seclark.us> <20070724203035.GG24344@tuxdriver.com> <46A66B63.6030006@garzik.org> <46A6A447.2080903@linux.intel.com> <46A69359.4030201@garzik.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <46A69359.4030201@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 03 July 2007 19:41:22 Michael Wu wrote:
-> On Tuesday 03 July 2007 10:36, Michael Buesch wrote:
-> > the _only_ place where it's sane to call stop_queues (to stop all queues)
-> > is outside of the TX handler. Why would you stop all queues inside of
-> > the TX path?
-> isl38xx cards (p54) need the host to manage the memory that frames are copied 
-> to before the card transmits. If the card's memory gets filled up, all queues 
-> need to be stopped.
+On Tue, Jul 24, 2007 at 08:03:37PM -0400, Jeff Garzik wrote:
 
-Ah, yeah. Well. I was mainly talking about modern cards with
-modern DMA rings. ;) But Ok. This card may want to stop all
-queues from the TX path.
-On bcm43xx each queue is seperate and can run
-concurrently, though.
+> Though in fairness, I am a bit disappointed that wireless-dev seems to 
+> occasionally become a resting place for drivers, rather than just a pit 
+> stop on the way to upstream.  In particular, stuff still has not been 
+> moved out of drivers/net/wireless/mac80211 and into 
+> drivers/net/wireless, which is a basic and easy step to get all code 
+> ready for upstream.
 
+Point taken.  I'll apply a series of patches to eliminate the extra
+directory.  I guess I'll rename the existing bcm43xx and zd1211rw
+drivers in wireless-dev as a temporary measure until those ports are
+done upstream.
 
+I would definitely like to see more action from mac80211 driver
+developers towards getting drivers upstream.  With mac80211 merged,
+I know of no reason not to get the drivers ready for upstream now so
+they can funnel through netdev-2.6 into -mm with plenty of time to
+spare before the next merge window.
+
+John
 -- 
-Greetings Michael.
+John W. Linville
+linville@tuxdriver.com
