@@ -1,68 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:63020 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753109AbXG0J2q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2007 05:28:46 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Andy Green <andy@warmcat.com>
-Subject: [PATCH 01/17] iwlwifi: provide frequency to radiotap monitor not channel index
-Date: Fri, 27 Jul 2007 17:26:25 +0800
-Message-Id: <11855284032407-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11855284012123-git-send-email-yi.zhu@intel.com>
-References: <11855284012123-git-send-email-yi.zhu@intel.com>
-To: ipwpatch@vger.kernel.org
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:21861 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755154AbXGYOnN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jul 2007 10:43:13 -0400
+Received: from lin01.mn-solutions.de (pD95F885D.dip0.t-ipconnect.de [217.95.136.93])
+	by s131.mittwaldmedien.de (Postfix) with ESMTP id 19CA68B215D
+	for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2007 16:43:12 +0200 (CEST)
+Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id B54351E002B
+	for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2007 16:43:06 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Please pull patch-bomb for iwlwifi
+Date: Wed, 25 Jul 2007 16:43:14 +0200
+References: <20070725085754.GA670@mail.intel.com> <46A75CD9.9050100@garzik.org>
+In-Reply-To: <46A75CD9.9050100@garzik.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200707251643.14926.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwlwifi wrongly provides the channel index to the radiotap header
-on Monitor mode. This results in tcpdump showing "6MHz" for example.
+> 1) You should post patches to the list for review.  Yes, even
+> if there are 117 of them.  That is acceptable -- and
+> encouraged -- mailing list etiquette.
 
-This patch arranges to send the frequency in MHz instead eg, 2437MHz
+Here I'm wondering if this is needed. For example, for the 
+libertas WLAN driver we have an extra mailing list where people 
+(mostly) post patches for review. Eventually, Dan Williams put 
+them into his tree and then asks Linville to pull from him. But 
+the patches in his GIT tree won't be sent to linux-wireless for 
+individual review.
 
-Signed-off-by: Andy Green <andy@warmcat.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwl-base.c |    5 ++---
- drivers/net/wireless/iwlwifi.h  |    2 +-
- 2 files changed, 3 insertions(+), 4 deletions(-)
+Now, isn't doing the iwlwifi project the same?  There is a 
+mailinglist for this project 
+(https://lists.sourceforge.net/lists/listinfo/ipw3945-devel) 
+where anybody is free to join.
 
-diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
-index a1ebc2a..8671891 100644
---- a/drivers/net/wireless/iwl-base.c
-+++ b/drivers/net/wireless/iwl-base.c
-@@ -3120,7 +3120,6 @@ void iwl_handle_data_packet_monitor(struct iwl_priv *priv,
- 	 * the information provided in the skb from the hardware */
- 	s8 signal = stats->ssi;
- 	s8 noise = 0;
--	u16 channel = stats->channel;
- 	int rate = stats->rate;
- 	u64 tsf = stats->mactime;
- 
-@@ -3162,8 +3161,8 @@ void iwl_handle_data_packet_monitor(struct iwl_priv *priv,
- 	iwl_rt->rt_dbmsignal = signal;
- 	iwl_rt->rt_dbmnoise = noise;
- 
--	/* Convert the channel data and set the flags */
--	iwl_rt->rt_channel = cpu_to_le16(channel);
-+	/* Convert the channel frequency and set the flags */
-+	iwl_rt->rt_channelMHz = cpu_to_le16(stats->freq);
- 	if (!(phy_flags & RX_RES_PHY_FLAGS_BAND_24_MSK)) {
- 		iwl_rt->rt_chbitmask =
- 		    cpu_to_le16((IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ));
-diff --git a/drivers/net/wireless/iwlwifi.h b/drivers/net/wireless/iwlwifi.h
-index a86fc48..58e3ea6 100644
---- a/drivers/net/wireless/iwlwifi.h
-+++ b/drivers/net/wireless/iwlwifi.h
-@@ -104,7 +104,7 @@ struct iwl_rt_rx_hdr {
- 	__le64 rt_tsf;		/* TSF */
- 	u8 rt_flags;		/* radiotap packet flags */
- 	u8 rt_rate;		/* rate in 500kb/s */
--	__le16 rt_channel;	/* channel in mHz */
-+	__le16 rt_channelMHz;	/* channel in MHz */
- 	__le16 rt_chbitmask;	/* channel bitfield */
- 	s8 rt_dbmsignal;	/* signal in dBm, kluged to signed */
- 	s8 rt_dbmnoise;
--- 
-1.5.2
+A cursory glance (I'm not in this mailing list) at 
+http://sourceforge.net/mailarchive/forum.php?forum_name=ipw3945-devel 
+shows that people indeed post patches there for review.
+
+So, if you ask them to post each and every patch on 
+linux-wireless, then other projects should do the same. Some 
+projects (e.g. bcm43xx) mostly do cross-post. Is this the way 
+people should go?
