@@ -1,56 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55331
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757600AbXGBUgb (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.232]:28596 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753360AbXGYUZH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2007 16:36:31 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Jiri Benc <jbenc@suse.cz>
-Subject: [PATCH RFC] mac80211: Make stop_queues() usable
-Date: Mon, 2 Jul 2007 22:35:38 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
+	Wed, 25 Jul 2007 16:25:07 -0400
+Received: by wr-out-0506.google.com with SMTP id i30so227336wra
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2007 13:25:07 -0700 (PDT)
+Message-ID: <3df642dd0707251325r597f4823p79857795bc8768a2@mail.gmail.com>
+Date: Wed, 25 Jul 2007 15:25:06 -0500
+From: "Ed Howland" <ed.howland@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: lxr support for 2.6.22 (with wireless-dev?)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200707022235.38791.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-stop_queues() is currently not usable, as it races with
-the TX path and generates hard to debug system freezes.
+Does anyone know if there is a new lxr version of the kernel tree
+including all of John's stuff and the various drivers?
 
-In the driver we must be able to stop and flush (!) the
-TX queues before we shutdown the device.
-Otherwise the TX handlers race against the device shutdown.
-But stop_queues lacks some locking against the TX handlers.
-
-stop_queues is only safe to call inside of the TX handler,
-but there's it's useless to call.
-
-I have no idea what's needed to get this working properly,
-so here's an untested patch for RFC.
-
-
-Index: mac80211/net/mac80211/ieee80211.c
-===================================================================
---- mac80211.orig/net/mac80211/ieee80211.c	2007-06-25 17:32:32.000000000 +0200
-+++ mac80211/net/mac80211/ieee80211.c	2007-07-02 22:29:03.000000000 +0200
-@@ -5063,10 +5063,14 @@ EXPORT_SYMBOL(ieee80211_start_queues);
- 
- void ieee80211_stop_queues(struct ieee80211_hw *hw)
- {
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct net_device *mdev = local->mdev;
- 	int i;
- 
-+	netif_tx_lock_bh(mdev);
- 	for (i = 0; i < hw->queues; i++)
- 		ieee80211_stop_queue(hw, i);
-+	netif_tx_unlock_bh(mdev);
- }
- EXPORT_SYMBOL(ieee80211_stop_queues);
- 
+Thanks
+Ed
 
 -- 
-Greetings Michael.
+Ed Howland
+http://greenprogrammer.blogspot.com
+"The information transmitted is intended only for the person or entity
+to which it is addressed and may contain proprietary, confidential
+and/or legally privileged material. Any review, retransmission,
+dissemination or other use of, or taking of any action in reliance
+upon, this information by persons or entities other than the intended
+recipient is prohibited. If you received this in error, please contact
+the sender and delete the material from all computers."
