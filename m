@@ -1,76 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mfe1.polimi.it ([131.175.12.23]:48730 "EHLO polimi.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934822AbXGSXpt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2007 19:45:49 -0400
-Date: Fri, 20 Jul 2007 01:27:14 +0200
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>,
-	Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: bcm4301: A mac80211 driver using V3 firmware
-Message-ID: <20070720012714.0dc0298a@morte>
-In-Reply-To: <20070719215801.GB12449@tuxdriver.com>
-References: <46963C0F.3080104@lwfinger.net>
-	<20070719215801.GB12449@tuxdriver.com>
+Received: from fencepost.gnu.org ([140.186.70.10]:33368 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757949AbXGYQcb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jul 2007 12:32:31 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1IDjoT-0001o3-Er
+	for linux-wireless@vger.kernel.org; Wed, 25 Jul 2007 12:34:13 -0400
+Subject: Re: [PATCH 2.6.23 3/3] [wireless] orinoco: create a Kconfig option  for Prism2
+From: Pavel Roskin <proski@gnu.org>
+To: Faidon Liambotis <paravoid@debian.org>
+Cc: linux-wireless@vger.kernel.org, hermes@gibson.dropbear.id.au,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <46A6EB79.5040403@debian.org>
+References: <20070722131751.GA3009@void.cube.gr>
+	 <1185124453.3100.49.camel@mj>  <46A5269F.5050504@debian.org>
+	 <1185341420.12322.44.camel@dv>  <46A6EB79.5040403@debian.org>
+Content-Type: text/plain
+Date: Wed, 25 Jul 2007 12:32:24 -0400
+Message-Id: <1185381144.3236.12.camel@dv>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 19 Jul 2007 17:58:01 -0400
-"John W. Linville" <linville@tuxdriver.com> wrote:
+On Wed, 2007-07-25 at 09:19 +0300, Faidon Liambotis wrote:
+> Pavel Roskin wrote:
+> > I'm sorry, but considering your original patch, I just cannot be sure
+> > that you will get the PCMCIA IDs right.  I cannot be sure I'll get it
+> > right myself.  It requires a lot of searching and detective work.
+> We can always begin with the set that is common to both (PCMCIA) drivers.
+> You're proposing to do nothing but at the same time you say that HostAP 
+> claims it can support some cards when it actually doesn't, which is a 
+> rather important bug IMHO.
+> I understand that you're maintaining orinoco and not hostap but this is 
+> an issue that affects your "users" too, not to mention the overall 
+> quality of the kernel.
 
-> Are you proposing to add a third driver and deprecate the softmac
-> driver?  Or can we treat this as a port of the existing driver
-> to mac80211?  I think that might be better for users and distros,
-> and might let us get rid of the softmac component that much sooner.
+I understand, but I don't have all possible cards, and I depend on what
+users are reporting.  In absence of reports, I prefer to work on things
+I can actually test.
 
-I agree. Let's treat this as a port, as soon as it's stable. By the way, I
-hope I'll be able to contribute again starting on July, 25.
- 
-> As for the name, if we treat this as a port of the current driver to
-> mac80211 then perhaps we should just continue using the "bcm43xx" name?
-> If so, we need a new name for the v4-based driver -- "bcm43xxtoo"? :-)
+> My patch affected a douzine of PCMCIA IDs, don't you think we can safely 
+> correct these?
 
-Should the ported driver support 802.11g devices as well, it should be
-called bcm43xx, IMHO. Else, IIRC, we already discussed that and it should
-be called bcm4301. bcm43xx-mac80211 could be renamed to "bcm43xx-v4", it
-would be more meaningful than "bcm43xtoo", maybe.
+0156:0002 alone is going to be a big headache.  Basically, you would
+need to replace it with textual IDs for all Lucent cards and remove the
+numeric ID.
 
-> Regarding hardware support, I have begun to lean towards having
-> the v3 driver continue to support all the hardware it does now.
+> > On the other hand, I haven't heard many complains about the ID clash
+> > recently.  It seems to me that users learned how to deal with it.
+> > Distributions do a great job too.  For instance, Fedora renames network
+> > devices based on the MAC addresses, so the same configuration will work
+> > with either orinoco of hostap.
+> > 
+> > Of course, those who want to run an 802.11b AP know that they should
+> > choose hostap, but most users don't need that.
+> You haven't heard many complaints recently because there aren't many 
+> users recently...
+> 
+> And this is not about network interface names or AP mode.
+> You may disagree, but IMO HostAP is a *much* better driver for Prism2 
+> devices in all modes.
 
-I agree. But I would wait a little more time, I mean, when the ported driver
-is stable, then let's consider the status of "bcm43xx-v4". Michael is
-actually making some progress, even if - sadly - he's alone right now. 
+Well, I agree that there are many things in hostap that are not in
+orinoco, such as firmware download and WPA.
 
-The final plan should be something like this:
-1) bcm43xx gets stable and merged;
-2) bcm43xx-mac80211 is renamed to bcm43xx-v4 and doesn't get merged;
-3) when bcm43xx-v4 gets stable, the PCI IDs list of bcm43xx gets stripped
-down and it is renamed to bcm4301, while bcm43xx-v4 is renamed to bcm43xx.
+> And if you have both drivers compiled as modules (as most distributions 
+> do) you have to either blacklist orinoco or manually unbind the driver 
+> from the hardware using /sys.
 
-This could lead to some troubles. The other possible plan:
-1) bcm43xx-mac80211 gets stable and merged, while bcm43xx is renamed to
-bcm4301 and its PCI IDs list stripped down;
-would sound a lot simpler. Even if the first plan could be better for users
-and distributions. So I'd say, let's have a stable driver at least, before
-to take a decision.
+The later is true for the drivers compiled into the kernel as well.
 
-> What exactly do we gain from using the v4 firmware?
+> I'm maintaining hostap-utils for Debian and we are shipping a blacklist 
+> for orinoco for years because of the numerous reports of users who 
+> weren't be able to use HostAP.
+> This is suboptimal though, since it breaks (= no driver loaded) when the 
+> user actually has a Lucent Orinoco card.
 
-Other than crypto hardware, support for 802.11n devices, and maybe 802.11a
-devices too (I started working on that but I'm not doing that right now).
+I agree, that's suboptimal.
 
-> Anyway, I'm glad to hear we are making progress on this front.
-> Good job, Larry!
+> I understand your reluctance but I think it's way past the time you 
+> should have passed Prism2 to HostAP.
 
-Me too! Good job!
-
+I actually hoped that some userspace solution would appear that would
+make it unnecessary to handle it in the drive.
 
 -- 
-Ciao
-Stefano
+Regards,
+Pavel Roskin
+
