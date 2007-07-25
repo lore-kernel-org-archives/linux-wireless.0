@@ -1,59 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:48665 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752340AbXGaWLA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 18:11:00 -0400
-Date: Wed, 1 Aug 2007 00:10:57 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Ulrich Kunitz <kune@deine-taler.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] zd1211rw-mac80211: debug output for mac80211 ops
-Message-ID: <20070801001057.06c14503@logostar.upir.cz>
-In-Reply-To: <200707312337.02137.mb@bu3sch.de>
-References: <20070730023128.99E927B409F@zog.reactivated.net>
-	<20070730225205.GA17252@deine-taler.de>
-	<20070731230043.2cd80e2d@logostar.upir.cz>
-	<200707312337.02137.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from srv5.dvmed.net ([207.36.208.214]:60821 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758840AbXGYADs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jul 2007 20:03:48 -0400
+Message-ID: <46A69359.4030201@garzik.org>
+Date: Tue, 24 Jul 2007 20:03:37 -0400
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: James Ketrenos <jketreno@linux.intel.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Stephen Clark <Stephen.Clark@seclark.us>,
+	ipw3945-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, Axj <axjslack@bluebottle.com>
+Subject: Re: [ipw3945-devel] Request for help...
+References: <1185289332.46a61474a444c@mail.bluebottle.com>	<20070724161226.GA24344@tuxdriver.com>	<46A64503.1080003@seclark.us>	<20070724203035.GG24344@tuxdriver.com> <46A66B63.6030006@garzik.org> <46A6A447.2080903@linux.intel.com>
+In-Reply-To: <46A6A447.2080903@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 31 Jul 2007 23:37:01 +0200, Michael Buesch wrote:
-> On Tuesday 31 July 2007 23:00:43 Jiri Benc wrote:
-> > It depends on the IEEE80211_HW_MONITOR_DURING_OPER flag in hw.flags. If you
-> > set the flag in the driver, then monitor interfaces work in the exactly
-> > same way as STA or IBSS interfaces - the add_interface callback is called
-> > (with conf.type equal to IEEE80211_IF_TYPE_MNTR) whenever user brings up a
-> > monitor interface. You are responsible for switching the card to a monitor
-> > mode (e.g. turning off hardware packet filtering).
+James Ketrenos wrote:
+> Jeff Garzik wrote:
 > 
-> I think you don't want to completely turn off packet filtering
-> (promisc) if a monitor interface is present. The promisc bit is to be
-> honoured seperately.
-> The only thing we do in bcm43xx is enable passing of ctl frames (ACKs, etc),
-> if we have a monitor interface.
-
-Hm, yes, you're right. I didn't realize that, thanks!
-
-> > As Michael correctly said, don't care about the value, just store it and
-> > hand it back to the stack when the stack wants it.
+>> There is a reason why we say "release early, release often."  If 
+>> wireless developers don't hear from Intel on a regular basis,
 > 
-> That might raise the question, if it's required to store if_ids of monitor
-> interfaces. I think it's not, as you don't need any mac80211 callback,
-> that requires an if_id, for a monitor interface.
+> The "community" vs. "Intel" slant is really getting old. 
+> *WE* are part of the community.  *WE* have submitted patches.  *WE* have 
+> done work to bring wireless forward.  *WE* are wireless developers.
+> 
+> It isn't Intel's fault that certain people have historically made it so 
+> difficult to get code to into wireless-dev's mac80211 (and eventually 
+> *maybe* upstream) that contributors have decided to focus on getting 
+> their code out to users through other means.
+> 
+> A version of mac80211 being available out-of-tree with features not 
+> found in wireless-dev isn't the problem.  The problem is that people 
+> have made it too difficult to innovate and develop in wireless-dev.
 
-Sure. If you don't need to call any callback which requires if_id (and
-currently there is no such callback you can call for a monitor interface),
-there is no point in storing the value. But it's also no harm.
+Well, the facts according to my search are:
 
-Thanks,
+* last iwlwifi submit was almost two months ago, in a form difficult to 
+review and discuss on the mailing list, save for a bug fix.  And I note, 
+the submission went into wireless-dev rapidly.
 
- Jiri
+* last mac80211 patches were almost three months ago, save for two small 
+add-ioctl patches from Mohamed and Hong.
 
--- 
-Jiri Benc
-SUSE Labs
+* no one else seems to have the same trouble getting patches in
+
+Whereas other developers are actively posting patches, big and small, to 
+linux-wireless on a regular basis.  I just don't see much activity at 
+all on {linux-kernel,linux-wireless,netdev} from Intel with regards to 
+the new wireless.
+
+Intel is the only wireless driver developer doing development 
+"elsewhere", rather than where the wireless hackers hang out.  Even 
+assuming a hypothetical worst case of 100% patch drops, you should be 
+working and posting where other developers are also working and posting. 
+  That is just a BASIC part of the open source kernel engineering process.
+
+Another key part of open source is "release early, release often" so 
+that people are aware of your work and needs, and can provide rapid 
+feedback.  That means posting most patches to linux-wireless as soon as 
+they work on your basic quick-test setup.  Intel is definitely not 
+"releasing early and often" from the LKML perspective.
+
+Though in fairness, I am a bit disappointed that wireless-dev seems to 
+occasionally become a resting place for drivers, rather than just a pit 
+stop on the way to upstream.  In particular, stuff still has not been 
+moved out of drivers/net/wireless/mac80211 and into 
+drivers/net/wireless, which is a basic and easy step to get all code 
+ready for upstream.
+
+	Jeff
+
+
+
