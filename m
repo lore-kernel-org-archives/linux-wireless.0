@@ -1,87 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55688
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756390AbXGLU6V (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.177]:7073 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757579AbXGYSFU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2007 16:58:21 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [patch 2/2] ssb: Add a driver for the Broadcom OHCI core
-Date: Thu, 12 Jul 2007 22:57:56 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Aurelien Jarno <aurelien@aurel32.net>,
-	linux-wireless@vger.kernel.org,
-	Gary Zambrano <zambrano@broadcom.com>
-References: <20070712085432.528319000@bu3sch.de> <20070712085744.961584000@bu3sch.de> <20070712104937.1b0970c5.akpm@linux-foundation.org>
-In-Reply-To: <20070712104937.1b0970c5.akpm@linux-foundation.org>
+	Wed, 25 Jul 2007 14:05:20 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so294769wah
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2007 11:05:19 -0700 (PDT)
+Message-ID: <b3153e950707251105w4aebcd81w3e3bfc077385ea01@mail.gmail.com>
+Date: Wed, 25 Jul 2007 11:05:18 -0700
+From: "mohamed salim abbas" <mabbaswireless@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	mabbas <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1184754598.4658.14.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200707122257.56526.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <1174909200.1364.56.camel@dell-4965.jf.intel.com>
+	 <1175111599.5151.123.camel@johannes.berg>
+	 <46137FF2.6020203@linux.intel.com>
+	 <1182374019.3714.87.camel@johannes.berg>
+	 <20070718000140.GA26907@tuxdriver.com>
+	 <1184754598.4658.14.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 12 July 2007 19:49, Andrew Morton wrote:
-> Here, we'd normally do
-> 
-> #else
-> #define ssb_ohci_hcd_suspend NULL
-> #define ssb_ohci_hcd_resume NULL
+I thought the Destinations Address (DA) and Senders Address (SA)
+parameter values in the subframe header must map to the
+same Receiver Address (RA) and Transmitter Address (TA)
+in the MAC header. Thus, broadcasting or multicasting is not allowed.
 
-Ah, well. I don't care either way, so if that is the preferred way to deal
-with it, I'll change :)
 
-> > Index: linux-2.6/drivers/usb/host/ohci-hcd.c
-> > ===================================================================
-> > --- linux-2.6.orig/drivers/usb/host/ohci-hcd.c	2007-07-12 10:51:46.000000000 +0200
-> > +++ linux-2.6/drivers/usb/host/ohci-hcd.c	2007-07-12 10:52:45.000000000 +0200
-> > @@ -920,11 +920,17 @@ MODULE_LICENSE ("GPL");
-> >  #define PS3_SYSTEM_BUS_DRIVER	ps3_ohci_sb_driver
-> >  #endif
-> >  
-> > +#ifdef CONFIG_USB_OHCI_HCD_SSB
-> > +#include "ohci-ssb.c"
-> > +#define SSB_OHCI_DRIVER		ssb_ohci_driver
-> > +#endif
-> 
-> argh.  Why did USB do this?  Sigh.
-> 
-> >  #if	!defined(PCI_DRIVER) &&		\
-> >  	!defined(PLATFORM_DRIVER) &&	\
-> >  	!defined(OF_PLATFORM_DRIVER) &&	\
-> >  	!defined(SA1111_DRIVER) &&	\
-> > -	!defined(PS3_SYSTEM_BUS_DRIVER)
-> > +	!defined(PS3_SYSTEM_BUS_DRIVER) && \
-> > +	!defined(SSB_OHCI_DRIVER)
-> >  #error "missing bus glue for ohci-hcd"
-> >  #endif
-> >  
-> > @@ -972,10 +978,20 @@ static int __init ohci_hcd_mod_init(void
-> >  		goto error_pci;
-> >  #endif
-> >  
-> > +#ifdef SSB_OHCI_DRIVER
-> > +	retval = ssb_driver_register(&SSB_OHCI_DRIVER);
-> > +	if (retval)
-> > +		goto error_ssb;
-> > +#endif
-> 
-> Why do we use SSB_OHCI_DRIVER here rather than ssb_ohci_driver?   Seems odd.
-
-Yes, that ohci code is horrible. But all other ohci drivers do it this way, too,
-so I did it, too.
-
-> > +
-> >  	return retval;
-> >  
-> >  	/* Error path */
-> > +#ifdef SSB_OHCI_DRIVER
-> > + error_ssb:
-> > +#endif
-> >  #ifdef PCI_DRIVER
-> > +	pci_unregister_driver(&PCI_DRIVER);
-> 
-> hm, are you sure about this?  I don't see anywhere in here where PCI_DRIVER
-> got newly registered, but we are newly unregistering it?
-
-Whoops, good catch. That's a merge error.
+On 7/18/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2007-07-17 at 20:01 -0400, John W. Linville wrote:
+>
+> > > Here you allocate a new frame which can be sent back to the device when
+> > > one of the aggregated frames was a multicast frame and we're an AP
+> > > device. You also correctly add extra_tx_headroom, but it seems that this
+> > > is missing some skb_reserve(extra_tx_headroom), no? Could you make a
+> > > patch adding it? I'm not sure I fully understand the code there.
+> >
+> > Was there ever any reply to this?
+>
+> I didn't get one but never double-checked the code either, the relevant
+> patches I had touching this have fallen off the list anyway :)
+>
+> johannes
+>
+>
