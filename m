@@ -1,70 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49272 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932875AbXGMJGo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2007 05:06:44 -0400
-Subject: Re: repeat scanning could cause disassoc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: mohamed salim abbas <mabbaswireless@gmail.com>
-Cc: mabbas <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <b3153e950707111616r7f3f36a2x7a262f41afce396c@mail.gmail.com>
-References: <468EB36C.10508@linux.intel.com>
-	 <1184109113.3738.39.camel@johannes.berg>
-	 <b3153e950707111616r7f3f36a2x7a262f41afce396c@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ViabwidX5k0nLEj/KqT5"
-Date: Thu, 12 Jul 2007 22:43:04 +0200
-Message-Id: <1184272984.6669.52.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from srv5.dvmed.net ([207.36.208.214]:38009 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752099AbXGYOXZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jul 2007 10:23:25 -0400
+Message-ID: <46A75CD9.9050100@garzik.org>
+Date: Wed, 25 Jul 2007 10:23:21 -0400
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: yi.zhu@intel.com
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Please pull patch-bomb for iwlwifi
+References: <20070725085754.GA670@mail.intel.com>
+In-Reply-To: <20070725085754.GA670@mail.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Zhu Yi wrote:
+> Hi,
+> 
+> This patch series catches wireless-dev up to the stand-alone
+> iwlwifi tree version 0.1.3.
+> 
+> There are totally 117 patches so I won't post them one by one on
+> the list. Please find the commit series for the changes in the
+> patch bomb:
+> 
+>     iwlwifi-efe55d8fa702a23724bf44fdd54059f8c4480941.tgz
+> at
+>     http://intellinuxwireless.org/iwlwifi/patches/
 
---=-ViabwidX5k0nLEj/KqT5
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Based on a brief glance, patches look good to me.  Thanks!
 
-[could you turn off HTML mail please?]
-=20
-> I am not sure if the AP actually sending any data frame since we are
-> scanning,=20
-> but the major problem is mac80211 does not update rx_last once
-> recieved
-> beacon during scanning causing the disconnect.
+Two suggestions:
 
-I'm somewhat confused now. What happens if we do background scanning in
-mac80211 is that we tell the AP we want powersave mode and then go do
-the scan.
+1) You should post patches to the list for review.  Yes, even if there 
+are 117 of them.  That is acceptable -- and encouraged -- mailing list 
+etiquette.
 
-Do you actually see the message "<device>: expiring inactive STA ..."?
-Basically, what I can see happen is that the scan takes so long that the
-check there in ieee80211_associated() (called from ieee80211_sta_work())
-triggers, but that means the scan took on the order of two seconds. Is
-that so?
+2) I would recommend submitting via git.  Auke @ Intel does this with 
+e100/e1000/etc. stuff and it works great.
 
-I suppose we should update last_rx when we go out of the scan to avoid
-this since there's no way we can determine whether the AP dropped off
-during the time we scan. What you proposed was to update last_rx when we
-see frames from our AP, but even then if we're the first channel of the
-scan it doesn't really help. Then again you said that the firmware goes
-back to the channel it's supposed to be on once a while, that is with
-the hardware scan callback then?
+The main suggestion is #1, since it is important to post patches to 
+linux-wireless.  #2 is more in the realm of linville's preference.
 
-johannes
+	Jeff
 
 
---=-ViabwidX5k0nLEj/KqT5
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGlpJY/ETPhpq3jKURAsqLAJ99qzReRIR+AYC7GngPwQD8ck9pRwCfc9dA
-V1zOVs3DBh+XugOoer/0gfc=
-=W2rk
------END PGP SIGNATURE-----
-
---=-ViabwidX5k0nLEj/KqT5--
 
