@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:13848 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751584AbXGBIuk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2007 04:50:40 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: drivers/net/wireless/libertas/rx.c: use-after-free
-Date: Mon, 2 Jul 2007 10:50:32 +0200
-Cc: Dan Williams <dcbw@redhat.com>, Adrian Bunk <bunk@stusta.de>,
-	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-References: <20070629195116.GG6087@stusta.de> <1183233766.9150.2.camel@xo-13-A4-25.localdomain>
-In-Reply-To: <1183233766.9150.2.camel@xo-13-A4-25.localdomain>
+Received: from srv5.dvmed.net ([207.36.208.214]:38440 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755563AbXGYPPf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jul 2007 11:15:35 -0400
+Message-ID: <46A76915.3040902@garzik.org>
+Date: Wed, 25 Jul 2007 11:15:33 -0400
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200707021050.33039.hs4233@mail.mn-solutions.de>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Please pull patch-bomb for iwlwifi
+References: <20070725085754.GA670@mail.intel.com> <46A75CD9.9050100@garzik.org> <200707251643.14926.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200707251643.14926.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-libertas: remove a coverity bug
+Holger Schurig wrote:
+> So, if you ask them to post each and every patch on 
+> linux-wireless, then other projects should do the same. Some 
+> projects (e.g. bcm43xx) mostly do cross-post. Is this the way 
+> people should go?
 
-... by removing an ill-conceived, useless line.
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Yes, definitely.
 
----
+* It is unscalable for core wireless developers to scan every individual 
+driver mailing list.
 
-Dunno how this line made it into the patch that I made in
-February and was commited in May. At that time, I didn't hardly
-knew anything about skb's at all and certainly didn't play with
-raw ethernet types. Maybe it was a remnant of some bugus test
-that I or the committer did?!?
+* The amount of review is demonstrably lower when you bypass the core 
+mailing list.
 
-I tested the driver after the removal of this line with ping and
-ssh, but not anything else (e.g. no mesh, no tshark monitoring).
+* The amount of information sharing, with regards to common problems and 
+common solutions, is far far lower when people and knowledge are spread 
+out across a wide variety of mailing lists.
 
- drivers/net/wireless/libertas/rx.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+* It's a huge pain to scan $N mailing list archives for something, when 
+you could just scan one and be reasonably certain that your search 
+covered all useful areas.
 
-diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
-index 88d9d2d..769c86f 100644
---- a/drivers/net/wireless/libertas/rx.c
-+++ b/drivers/net/wireless/libertas/rx.c
-@@ -439,7 +439,6 @@ static int process_rxed_802_11_packet(wlan_private * priv, struct sk_buff *skb)
- 	ret = 0;
- 
- done:
--	skb->protocol = __constant_htons(0x0019);	/* ETH_P_80211_RAW */
- 	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", ret);
- 	return ret;
- }
+Like open source itself, we want to bring people -together- to work on a 
+common vision.  Not have $N competing visions, that are only reconciled 
+when patches are pushed upstream to linville.  That puts additional 
+burden on linville, and lowers the quality of the code (as described in 
+more detail in my response to James K just now).
+
+	Jeff
+
+
