@@ -1,44 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:54692 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S936829AbXGTUlf (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.236]:45380 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756364AbXGYVAw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jul 2007 16:41:35 -0400
-Message-ID: <46A11DF4.5090307@lwfinger.net>
-Date: Fri, 20 Jul 2007 15:41:24 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
+	Wed, 25 Jul 2007 17:00:52 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so296298wxd
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2007 14:00:51 -0700 (PDT)
+Message-ID: <1ba2fa240707251400l784cbad7ja0003b24017c6535@mail.gmail.com>
+Date: Thu, 26 Jul 2007 00:00:51 +0300
+From: "Tomas Winkler" <tomas.winkler@intel.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-CC: Pavel Roskin <proski@gnu.org>, Ehud Gavron <gavron@Wetwork.Net>,
-	Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: bcm4301: A mac80211 driver using V3 firmware
-References: <46963C0F.3080104@lwfinger.net> <20070719215801.GB12449@tuxdriver.com> <20070720012714.0dc0298a@morte> <46A01209.4030200@lwfinger.net> <1184906596.9511.42.camel@dv> <20070720134425.GC7428@tuxdriver.com> <1184947521.1962.15.camel@dv> <46A0E3F2.5080209@Wetwork.Net> <1184954268.1962.43.camel@dv> <20070720180558.GG7428@tuxdriver.com>
-In-Reply-To: <20070720180558.GG7428@tuxdriver.com>
+Subject: Re: Please pull patch-bomb for iwlwifi
+Cc: "Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <20070725200721.GH7093@tuxdriver.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <20070725085754.GA670@mail.intel.com>
+	 <20070725200721.GH7093@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> 
-> ACK...fwiw, I like the "b43" name suggestion.  I wonder if that is
-> too prone to confusion w/ "b44"?  Probably no worse than "ixgb" vs
-> "cxgb3" or "e100" vs "e1000" I suppose.
+On 7/25/07, John W. Linville <linville@tuxdriver.com> wrote:
+> On Wed, Jul 25, 2007 at 04:57:54PM +0800, Zhu Yi wrote:
+>
+> > This patch series catches wireless-dev up to the stand-alone
+> > iwlwifi tree version 0.1.3.
+> >
+> > There are totally 117 patches so I won't post them one by one on
+> > the list. Please find the commit series for the changes in the
+> > patch bomb:
+> >
+> >     iwlwifi-efe55d8fa702a23724bf44fdd54059f8c4480941.tgz
+> > at
+> >     http://intellinuxwireless.org/iwlwifi/patches/
+> >
+> > This is based on wireless-dev commit:
+> >
+> >     3382ada69e6796da1675b0c5d064a472e9db2822
+> >
+> > Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+>
+> I have applied these to the wireless-dev tree.  It is available now:
+>
+>         git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-dev.git
+>
+> Does the current driver (as posted) depend on mac80211 patches which
+> are not upstream at this time?
+>
+The HT part is still not there but it can be mean wihile compiled out
+in the driver. I'm suppose to submit HT  patches soon hoping for
+tomorrow if everything works fine. I'm rebasing them against latest
+wireless-dev.git. I will post them inline if you prefer.
 
-Today's discussion was very useful for me - I picked up two suggestions that I have or will be 
-putting into the code.
+I know you've asked us to review the already submitted 11n/HT patches.
+I'm suggesting that we just patch over them otherwise we lost driver
+stability and delay the whole process even more.  I'm not happy with
+this solution myself but to bring the complete solution at once will
+make us silent for another period.
 
-1. The drivers that use V3 firmware will get a default fwpostfix value of ".fw3". If the resulting 
-name fails, it will fallback to a blank value for fwpostfix. Of course, if a value is supplied, it 
-will override the default.
+> Do you believe that you have addressed the bulk of the review comments
+> from the previous posting?
 
-2. Any b-only driver will contain an alternate PCI ID table that can be selected by using the 
-appropriate module option (not yet named). If that option is selected, the driver will load a 
-combined b/g table of ID's. This way, it will be easy to supply a work-around for any user that 
-cannot get the default 802.11g driver to work. In addition, this fix will not require mucking with 
-rc.local.
+Most of them. The Endian issues fixing is still in progress.
 
-Larry
-
+Thanks
+Tomas
+> Thanks,
+>
+> John
+> --
+> John W. Linville
+> linville@tuxdriver.com
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
