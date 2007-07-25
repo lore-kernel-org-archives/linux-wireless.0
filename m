@@ -1,33 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:58836 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760979AbXG0Ogt (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:37181 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763509AbXGYPh0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2007 10:36:49 -0400
-Message-ID: <46AA02FF.5020401@lwfinger.net>
-Date: Fri, 27 Jul 2007 09:36:47 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de
-Subject: Re: A problem with shared interrupts
-References: <46a90082./TQABjOfVYW1o6lY%Larry.Finger@lwfinger.net> <1185530070.4006.46.camel@johannes.berg>
-In-Reply-To: <1185530070.4006.46.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 25 Jul 2007 11:37:26 -0400
+Date: Wed, 25 Jul 2007 16:37:25 +0100
+From: Christoph Hellwig <hch@infradead.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [Fwd: [PATCH] libertas: Per-socket mesh-ttl via setsockopt().]
+Message-ID: <20070725153725.GB11785@infradead.org>
+References: <1185371628.11035.11.camel@xo-13-A4-25.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1185371628.11035.11.camel@xo-13-A4-25.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Thu, 2007-07-26 at 15:13 -0500, Larry Finger wrote:
->> Michael,
->>
->> When I try the -mb tree on my old i386 notebook, I get an "irq 11: nobody cared"
->> message and interrupts for the bcm43xx-mac80211 device are not initialized.
-> 
-> Hm. Just a thought about something related: do you have 'debug shared
-> interrupts' on?
+On Wed, Jul 25, 2007 at 09:53:48AM -0400, Dan Williams wrote:
+> Any objections before I push to libertas?
 
-No I didn't. Thanks for the suggestion.
+Please post this to netdev to get the deserved amount of flames from
+the core developers.  Or to make it short, no way a driver should register
+sockops ever, and no way you should be using netfilter code for that.
 
-Larry
