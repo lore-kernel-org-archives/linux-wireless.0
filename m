@@ -1,73 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42282 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758979AbXGKJlJ (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:50555
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765911AbXGZWoO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2007 05:41:09 -0400
-Subject: Re: repeat scanning could cause disassoc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: mabbas <mabbas@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <468EB36C.10508@linux.intel.com>
-References: <468EB36C.10508@linux.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rSh+/q+/OKoUQmtiwiS3"
-Date: Wed, 11 Jul 2007 01:11:52 +0200
-Message-Id: <1184109113.3738.39.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 26 Jul 2007 18:44:14 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: A problem with shared interrupts
+Date: Fri, 27 Jul 2007 00:42:27 +0200
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <46a90082./TQABjOfVYW1o6lY%Larry.Finger@lwfinger.net>
+In-Reply-To: <46a90082./TQABjOfVYW1o6lY%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200707270042.27917.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 26 July 2007 22:13:54 Larry Finger wrote:
+> Michael,
+> 
+> When I try the -mb tree on my old i386 notebook, I get an "irq 11: nobody cared"
+> message and interrupts for the bcm43xx-mac80211 device are not initialized. The
+> code in Linville's tree works. The only difference that seems to be important
+> is the code returned when a shared interrupt not intended for us is received.
+> By making the changes shown below, both trees now work.
+> 
+> I recall you having a discussion with someone over some aspect of shared IRQ's,
+> but I don't remember the details and I'm too busy (lazy) to go back and look.
+> 
+> Thanks,
+> 
+> Larry
+> ----
+> 
+> Index: wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
+> ===================================================================
+> --- wireless-mb.orig/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
+> +++ wireless-mb/drivers/net/wireless/mac80211/bcm43xx/bcm43xx_main.c
+> @@ -1503,7 +1503,7 @@ static void bcm43xx_interrupt_ack(struct
+>  /* Interrupt handler top-half */
+>  static irqreturn_t bcm43xx_interrupt_handler(int irq, void *dev_id)
+>  {
+> -	irqreturn_t ret = IRQ_NONE;
+> +	irqreturn_t ret = IRQ_HANDLED;
+>  	struct bcm43xx_wldev *dev = dev_id;
+>  	u32 reason;
+>  
+> @@ -1517,7 +1517,6 @@ static irqreturn_t bcm43xx_interrupt_han
+>  	reason = bcm43xx_read32(dev, BCM43xx_MMIO_GEN_IRQ_REASON);
+>  	if (reason == 0xffffffff) /* shared IRQ */
+>  		goto out;
+> -	ret = IRQ_HANDLED;
+>  	reason &= bcm43xx_read32(dev, BCM43xx_MMIO_GEN_IRQ_MASK);
+>  	if (!reason)
+>  		goto out;
+> 
+> 
 
---=-rSh+/q+/OKoUQmtiwiS3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I neither think this is the correct solution, nor do I think that this
+is the way bcm43xx-softmac does it. This would always return HANDLED, right?
+regardless if the IRQ was for bcm43xx or not. I _do_ think that the bug is
+in the driver sharing the IRQ with bcm43xx.
 
-Hi,
-
-> If I keep repeating scanning for like 4 times in the raw, the mac80211=20
-> can disassociated because No ProbeResp.
-> looking at the rx patch if we are scanning we wont pass=20
-> ieee80211_rx_h_passive_scan which only will deliver
-> beacon and probe request, which what we want, except that we only update=20
-> last_rx in the function
-> ieee80211_rx_h_sta_process which is two functions down rx handlers.
-> In iwlwifi we do perform hw scan, in this command if scan takes a long=20
-> time, and we are associated, it will tunes to associated channel to
-> allow getting beacons for a period of time, then continue with scanning.=20
-> we do receive beacons on the associated
-> channel but mac80211 never update last_rx causing the disassociation.
-
-Interesting. If the scan takes such a long time, what do you do when
-there are actually data frames coming in during the time you listen on
-the associated channel? I think you'd have to buffer them because they
-also would be dropped by ieee80211_rx_h_passive_scan...
-
-> I wonder if we can move ieee80211_rx_h_sta_process before=20
-> ieee80211_rx_h_passive_scan or at least the rx_last
-> update part.
-
-I guess we could, the intention of the check is probably to find going
-out of range or such rather than disassociating when you've missed too
-much traffic :)
-
-Michael, you gave scanning and background scanning much more thought, I
-can see the problem here but not the solution. Shouldn't we be doing
-this back-tuning in mac80211 too then?
-
-johannes
-
---=-rSh+/q+/OKoUQmtiwiS3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGlBI4/ETPhpq3jKURAo+SAKCMgj/NiilEwnLQIg1iO+TpYl8pMACfQ2YH
-VJd0XaLl0/n01U2OVQVucEQ=
-=HqjQ
------END PGP SIGNATURE-----
-
---=-rSh+/q+/OKoUQmtiwiS3--
-
+-- 
+Greetings Michael.
