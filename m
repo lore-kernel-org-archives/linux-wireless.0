@@ -1,88 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:57993 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S936279AbXG3TZc (ORCPT
+Received: from smtp116.iad.emailsrvr.com ([207.97.245.116]:37195 "EHLO
+	smtp116.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755540AbXGZCXL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2007 15:25:32 -0400
-Date: Mon, 30 Jul 2007 12:23:39 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Satyam Sharma <satyam@infradead.org>,
-	Matthias Kaehlcke <matthias.kaehlcke@gmail.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/5] Use mutex instead of semaphore in the Host AP  driver
-Message-Id: <20070730122339.bbc541e5.akpm@linux-foundation.org>
-In-Reply-To: <200707301909.38602.mb@bu3sch.de>
-References: <20070729212909.GC3432@traven>
-	<200707300006.42397.mb@bu3sch.de>
-	<alpine.LFD.0.999.0707300842350.10861@enigma.security.iitk.ac.in>
-	<200707301909.38602.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 25 Jul 2007 22:23:11 -0400
+Message-ID: <46A80535.7060301@gentoo.org>
+Date: Wed, 25 Jul 2007 22:21:41 -0400
+From: Daniel Drake <dsd@gentoo.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: Re: driver bugs with changed mac address
+References: <1182333938.3714.53.camel@johannes.berg>
+In-Reply-To: <1182333938.3714.53.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 30 Jul 2007 19:09:38 +0200
-Michael Buesch <mb@bu3sch.de> wrote:
+Johannes Berg wrote:
+> In zd1211, we start with hwaddr = dev->wiphy->perm_addr which isn't
+> correct either, for a pure monitor mode we want to start with a zero mac
+> addr to avoid acking packets. Also, zd1211rw will end up having a NULL
+> hwaddr when a monitor interface is added, most likely segfaulting in
+> zd_write_mac_addr then.
 
-> On Monday 30 July 2007, Satyam Sharma wrote:
-> > 
-> > On Mon, 30 Jul 2007, Michael Buesch wrote:
-> > 
-> > > On Sunday 29 July 2007 23:34, Matthias Kaehlcke wrote:
-> > > > The Host AP driver uses a semaphore as mutex. Use the mutex API
-> > > > instead of the (binary) semaphore.
-> > > > 
-> > > > Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-> > 
-> > [ Something seems to have gone wrong with your diff / patch / script.
-> >   There was no diff header here, which should have been. ]
-> > 
-> > > > -	res = down_interruptible(&local->rid_bap_sem);
-> > > > +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
-> > > >  	if (res)
-> > > >  		return res;
-> > > >  
-> > > > @@ -902,7 +902,7 @@ static int hfa384x_set_rid(struct net_device *dev, u16 rid, void *buf, int len)
-> > > >  	/* RID len in words and +1 for rec.rid */
-> > > >  	rec.len = cpu_to_le16(len / 2 + len % 2 + 1);
-> > > >  
-> > > > -	res = down_interruptible(&local->rid_bap_sem);
-> > > > +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
-> > > >  	if (res)
-> > > >  		return res;
-> > > >  
-> > > 
-> > > Is res returned to userspace? If yes, that's not right.
-> > 
-> > Yup, that's not right.
-> > 
-> > > On a interrupted mutex allocation you should return
-> > > -ERESTARTSYS to userspace.
-> > 
-> > Nope, userspace must not see ERESTARTSYS (I /think/ this is the third
-> > time I'm participating in this exact same discussion :-)
-> > 
-> > If the return would be caught by a previous in-kernel caller in the
-> > call chain, ERESTARTSYS is okay and it could try to restart the
-> > operation. However, if the return goes unfiltered directly to
-> > userspace, EINTR is the correct choice.
-> 
-> Last time I submitted a patch which returned EINTR to userspace,
-> people came and said it was wrong. It was said that we must
-> return ERESTARTSYS to the libc and the libc will convert that
-> into either EINTR or automatically restart it immediately.
-> (You can set that in the sigaction stuff).
-> 
-> So either the one who told me that last time was wrong, or you. :)
-> 
-> Andrew? I think you were involved in this discussion I mentioned.
-> (It was about the HW-RNG chardev, but that doesn't matter here).
+Sorry for the delay in getting to this.
 
-who, me?  signals?  Danger.
+Looking at this now, the behaviour you describe is not what happens. 
+When I bring up an interface set to monitor mode, zd_mac_add_interface() 
+gets called with a non-NULL mac address, the actual MAC of the device. 
+So, when zd_mac_open gets called soon after, it calls zd_write_mac_addr 
+with a non-NULL address, so it succeeds as normal.
 
-yes, I think ERESTARTSYS is correct.  That gets converted to -EINTR by the
-arch's signal handling code (not by glibc) just before we return to
-userspace.
+Should I ignore the above and just set an all-zero MAC in the hardware 
+when a monitor interface is brought up? (setting all-zero will disable acks)
+
+Thanks,
+Daniel
 
