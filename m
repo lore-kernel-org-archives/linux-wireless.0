@@ -1,89 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:55108 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756116AbXGZKzd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2007 06:55:33 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 25E8C8CAD8
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2007 12:55:29 +0200 (CEST)
-Received: from meerkat.home.warmcat.com (localhost [127.0.0.1])
-	by armbox7.home.warmcat.com (Postfix) with ESMTP id E00CC10444
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2007 10:57:14 +0000 (UTC)
-Message-ID: <46A87DA3.7040500@warmcat.com>
-Date: Thu, 26 Jul 2007 11:55:31 +0100
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:24253 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757329AbXGZQAo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jul 2007 12:00:44 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
 To: linux-wireless@vger.kernel.org
-Subject: Incomplete Monitor mode with > 1 interface
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 2/2] mac80211 [HT] 802.11 code compiles under CONFIG_MAC80211_HT
+Date: Thu, 26 Jul 2007 19:00:40 +0300
+Message-Id: <11854656403581-git-send-email-tomas.winkler@intel.com>
+In-Reply-To: <11854656402369-git-send-email-tomas.winkler@intel.com>
+References: <11854656402369-git-send-email-tomas.winkler@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks -
+This patch provides compilation of 802.11n HT features under
+CONFIG_MAC80211_HT
 
-iwl3945 is associated on the wlan0 interface, and a second interface
-mon0 is created and put into monitor mode like this
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ include/net/mac80211.h       |   11 +++++++----
+ net/mac80211/ieee80211_sta.c |   10 ++++++++--
+ 2 files changed, 15 insertions(+), 6 deletions(-)
 
-echo -n mon0 >/sys/class/ieee80211/phy0/add_iface
-iwconfig mon0 mode monitor
-ifconfig mon0 up
-iwconfig mon0 channel 6
-
-tcpdump reports things going on
-
-# tcpdump -i mon0
-tcpdump: WARNING: mon0: no IPv4 address assigned
-tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
-listening on mon0, link-type IEEE802_11_RADIO (802.11 plus BSD radio
-information header), capture size 96 bytes
-11:46:04.512476 5.5 Mb/s 2437 MHz (0x0480) 220dB signal Beacon (froh)
-[1.0* 2.0* 5.5* 11.0* Mbit] ESS CH: 6, PRIVACY
-11:46:04.614885 5.5 Mb/s 2437 MHz (0x0480) 220dB signal Beacon (froh)
-[1.0* 2.0* 5.5* 11.0* Mbit] ESS CH: 6, PRIVACY
-11:46:04.717285 5.5 Mb/s 2437 MHz (0x0480) 220dB signal Beacon (froh)
-[1.0* 2.0* 5.5* 11.0* Mbit] ESS CH: 6, PRIVACY
-...
-
-Setting IFF_PROMISC on wlan0 or mon0 did not help.
-
-If I remove the iwl3945 module, kill wpa_supplicant and dhclient. and
-reinsert it, and set the only interface wlan0 to monitor mode, I see a
-more genuine view of what is out there.
-
-# tcpdump -i wlan0
-tcpdump: WARNING: wlan0: no IPv4 address assigned
-tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
-listening on wlan0, link-type IEEE802_11_RADIO (802.11 plus BSD radio
-information header), capture size 96 bytes
-11:50:18.364596 587219133us tsft 1.0 Mb/s 6 MHz (0x00a0) 0dB signal 0dB
-noise antenna 2 Beacon (froh) [1.0* 2.0* 5.5* 11.0* Mbit] ESS CH: 6, PRIVACY
-11:50:18.378049 587205672us tsft short preamble 5.5 Mb/s 6 MHz (0x00a0)
-0dB signal 0dB noise antenna 2 13:22:33:44:55:66 (oui Unknown) Unknown
-SSAP 0x60 > 13:22:33:44:55:66 (oui Unknown) Unknown DSAP 0x50
-Unnumbered, ua, Flags [Response], length 77
-11:50:18.466993 603996348us tsft 1.0 Mb/s 6 MHz (0x00a0) 0dB signal 0dB
-noise antenna 2 Beacon (froh) [1.0* 2.0* 5.5* 11.0* Mbit] ESS CH: 6, PRIVACY
-11:50:18.476051 603987283us tsft short preamble 2.0 Mb/s 6 MHz (0x00a0)
-0dB signal 0dB noise antenna 2 13:22:33:44:55:66 (oui Unknown) Unknown
-SSAP 0x60 > 13:22:33:44:55:66 (oui Unknown) Unknown DSAP 0x50
-Unnumbered, ua, Flags [Response], length 77
-11:50:18.569394 620773564us tsft 1.0 Mb/s 6 MHz (0x00a0) 0dB signal 0dB
-noise antenna 2 Beacon (froh) [1.0* 2.0* 5.5* 11.0* Mbit] ESS CH: 6, PRIVACY
-11:50:18.576754 620766193us tsft 1.0 Mb/s 6 MHz (0x00a0) 0dB signal 0dB
-noise antenna 2 13:22:33:44:55:66 (oui Unknown) Unknown SSAP 0x60 >
-13:22:33:44:55:66 (oui Unknown) Unknown DSAP 0x50 Unnumbered, ua, Flags
-[Response], length 77
-11:50:18.671802 637550779us tsft 1.0 Mb/s 6 MHz (0x00a0) 0dB signal 0dB
-noise antenna 2 Beacon (froh) [1.0* 2.0* 5.5* 11.0* Mbit] ESS CH: 6, PRIVACY
-11:50:18.675912 637546653us tsft 54.0 Mb/s 6 MHz (0x00c0) 0dB signal 0dB
-noise antenna 2 13:22:33:44:55:66 (oui Unknown) Unknown SSAP 0x60 >
-13:22:33:44:55:66 (oui Unknown) Unknown DSAP 0x50 Unnumbered, ua, Flags
-[Response], length 77
-
-This is the same situation as with zd1211rw after Ulrich's fix... if you
-are the only virtual interface, monitor mode works properly... it would
-really be beneficial if monitor mode acted consistently regardless of
-the number of virtual interfaces.
-
--Andy
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 405ce2a..17a4dd7 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -722,16 +722,17 @@ struct ieee80211_ops {
+ 	 * Must be atomic. */
+ 	u64 (*get_tsf)(struct ieee80211_hw *hw);
+ 
+-	/* Call low level driver with 11n Block Ack action */
+-	int (*handle_ba_action)(struct ieee80211_hw *hw,
+-				struct ieee80211_mgmt *mgmt);
+-
+ 	/* Reset the TSF timer and allow firmware/hardware to synchronize with
+ 	 * other STAs in the IBSS. This is only used in IBSS mode. This
+ 	 * function is optional if the firmware/hardware takes full care of
+ 	 * TSF synchronization. */
+ 	void (*reset_tsf)(struct ieee80211_hw *hw);
+ 
++#ifdef CONFIG_MAC80211_HT
++	/* Call low level driver with 11n Block Ack action */
++	int (*handle_ba_action)(struct ieee80211_hw *hw,
++				struct ieee80211_mgmt *mgmt);
++
+ 	/* Configure ht parameters. */
+ 	int (*conf_ht)(struct ieee80211_hw *hw,
+ 		       struct ieee80211_ht_capability *ht_cap_param,
+@@ -741,6 +742,8 @@ struct ieee80211_ops {
+ 	void (*get_ht_capab)(struct ieee80211_hw *hw,
+ 			     struct ieee80211_ht_capability *ht_cap_param);
+ 
++#endif /* CONFIG_MAC80211_HT */
++
+ 	/* Setup beacon data for IBSS beacons. Unlike access point (Master),
+ 	 * IBSS uses a fixed beacon frame which is configured using this
+ 	 * function. This handler is required only for IBSS mode. */
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 8296c0c..fe8296d 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -686,6 +686,7 @@ static void ieee80211_send_assoc(struct net_device *dev,
+ 		*pos++ = 0;
+ 	}
+ 
++#ifdef CONFIG_MAC80211_HT
+ 	/* if low level driver supports 11n, fill in 11n IE */
+ 	if (ht_enabled && ifsta->ht_enabled && local->ops->get_ht_capab) {
+ 		pos = skb_put(skb, sizeof(struct ieee80211_ht_capability)+2);
+@@ -695,6 +696,7 @@ static void ieee80211_send_assoc(struct net_device *dev,
+ 		local->ops->get_ht_capab(local_to_hw(local),
+ 			(struct ieee80211_ht_capability *)pos);
+ 	}
++#endif /* CONFIG_MAC80211_HT */
+ 
+ 	kfree(ifsta->assocreq_ies);
+ 	ifsta->assocreq_ies_len = (skb->data + skb->len) - ies;
+@@ -1740,7 +1742,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct net_device *dev,
+ 				rates |= BIT(j);
+ 	}
+ 	sta->supp_rates = rates;
+-
++#ifdef CONFIG_MAC80211_HT
+ 	if (elems.ht_extra_param && elems.ht_cap_param && elems.wmm_param &&
+ 	    ifsta->ht_enabled && local->ops->conf_ht){
+ 		int rc;
+@@ -1754,6 +1756,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct net_device *dev,
+ 			sta->flags |= WLAN_STA_HT;
+ 	}
+ 
++#endif	/* CONFIG_MAC80211_HT */
+ 
+ 	rate_control_rate_init(sta, local);
+ 
+@@ -2516,6 +2519,7 @@ static void ieee80211_rx_mgmt_probe_req(struct net_device *dev,
+ 	ieee80211_sta_tx(dev, skb, 0);
+ }
+ 
++#ifdef CONFIG_MAC80211_HT
+ static void ieee80211_send_addba_resp(struct net_device *dev,
+ 				      struct ieee80211_mgmt *mgmt_src,
+ 				      size_t len,
+@@ -2558,6 +2562,7 @@ static void ieee80211_send_addba_resp(struct net_device *dev,
+ 
+ 	return;
+ }
++#endif /* CONFIG_MAC80211_HT */
+ 
+ static void ieee80211_rx_mgmt_action(struct net_device *dev,
+ 				     struct ieee80211_if_sta *ifsta,
+@@ -2640,6 +2645,7 @@ static void ieee80211_rx_mgmt_action(struct net_device *dev,
+ 		}
+ 		break;
+ 
++#ifdef CONFIG_MAC80211_HT
+ 	case WLAN_CATEGORY_BACK:
+ 		switch (mgmt->u.action.u.addba_req.action_code) {
+ 		case WLAN_ACTION_ADDBA_REQ:
+@@ -2677,7 +2683,7 @@ static void ieee80211_rx_mgmt_action(struct net_device *dev,
+ 			break;
+ 		}
+ 		break;
+-
++#endif /* CONFIG_MAC80211_HT */
+ 	default:
+ 		break;
+ 	}
+-- 
+1.5.2.2
