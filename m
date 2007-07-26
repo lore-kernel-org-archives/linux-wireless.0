@@ -1,72 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:45803 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760111AbXGFMzs (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:64339 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964808AbXGZSuF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2007 08:55:48 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so251838wah
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jul 2007 05:55:46 -0700 (PDT)
-Message-ID: <9e4733910707060555s224b485ege5ed6024c7ca6b30@mail.gmail.com>
-Date: Fri, 6 Jul 2007 08:55:46 -0400
-From: "Jon Smirl" <jonsmirl@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Multiple interfaces in mac80211
-Cc: "Michael Wu" <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1183725861.3779.0.camel@johannes.berg>
+	Thu, 26 Jul 2007 14:50:05 -0400
+Message-ID: <46A8ECD6.30204@lwfinger.net>
+Date: Thu, 26 Jul 2007 13:49:58 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH] bcm43xx-mac80211: Fix specs typo for baseband attenuation
+References: <46a8ccbd.wNQamvQ9e0RJ0XZK%Larry.Finger@lwfinger.net> <20070726172138.GA6068@tuxdriver.com> <46A8E044.6080206@lwfinger.net> <20070726181334.GB6068@tuxdriver.com>
+In-Reply-To: <20070726181334.GB6068@tuxdriver.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <9e4733910707041723g6f7a535ap1a62dd4473484d40@mail.gmail.com>
-	 <1ba2fa240707050530q2d165232raa73455397546c62@mail.gmail.com>
-	 <9e4733910707050632m794944b5nb9ac9393b05dfa75@mail.gmail.com>
-	 <200707052154.24976.flamingice@sourmilk.net>
-	 <9e4733910707060533y3bd3b4a5v5f0441f0d6e76377@mail.gmail.com>
-	 <1183725861.3779.0.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/6/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2007-07-06 at 08:33 -0400, Jon Smirl wrote:
->
-> > Packets to other mac addresses are arriving at the receiver and I can
-> > trace them up to ieee80211_rx_monitor and onto netif_rx. Something in
-> > the higher level networking code is filtering out these promiscuous
-> > packets; but I don't know what was is doing it. It's not iptables
-> > which it isn't loaded.
->
-> That's odd because it works for everybody else. Have you tried with
-> *only* a monitor interface?
+John W. Linville wrote:
+> 
+> Hmmm...well, if you asked to revert it on bcm43xx, why is it appropriate here?
 
-Yes, only interface is monitor.
+AFAIK, the V4 specs have always had the typo, thus there was no patch introducing this error - it is 
+original. On the other hand, the V3 specs were modified fairly late in the process, which led to the 
+bcm43xx patch that needed to be reverted. I suspect that the V3 changes may have been the result of 
+making them match the V4 specs. If that is the case, it made both of them wrong.
 
-Here is something else that is odd.
+No matter, the change is needed to make some older cards work. Now I know why bcm43xx-mac80211 never 
+worked on my BCM4306 until today.
 
-Beacons are reporting channel 1...
-08:52:41.922526 1.0 Mb/s 2457 MHz (0x0480) 36dB signal 0us Beacon
-(Smirl) [1.0* 2.0* 5.5* 11.0* Mbit] ESS CH: 1, PRIVACY
-08:52:42.024888 1.0 Mb/s 2457 MHz (0x0480) 35dB signal 0us Beacon
-(Smirl) [1.0* 2.0* 5.5* 11.0* Mbit] ESS CH: 1, PRIVACY
-08:52:42.127247 1.0 Mb/s 2457 MHz (0x0480) 36dB signal 0us Beacon
-(Smirl) [1.0* 2.0* 5.5* 11.0* Mbit] ESS CH: 1, PRIVACY
-08:52:42.229737 1.0 Mb/s 2457 MHz (0x0480) 36dB signal 0us Beacon
-(Smirl) [1.0* 2.0* 5.5* 11.0* Mbit] ESS CH: 1, PRIVACY
-
-But I am tuned to channel 10.
-
-wlan0     IEEE 802.11g  Mode:Monitor  Frequency:2.457 GHz
-          Retry min limit:7   RTS thr:off   Fragment thr=2346 B
-          Encryption key:off
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-
->
-> johannes
->
->
-
-
--- 
-Jon Smirl
-jonsmirl@gmail.com
+Larry
