@@ -1,36 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:43984 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760559AbXGaPBH (ORCPT
+Received: from mog.warmcat.com ([62.193.232.24]:59231 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932365AbXGZSUy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 11:01:07 -0400
-Subject: Re: [PATCH] softmac: Fix deadlock of wx_set_essid with assoc work
-From: David Woodhouse <dwmw2@infradead.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <200707311457.33723.mb@bu3sch.de>
-References: <200707311457.33723.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Tue, 31 Jul 2007 16:01:00 +0100
-Message-Id: <1185894060.3083.115.camel@pmac.infradead.org>
-Mime-Version: 1.0
+	Thu, 26 Jul 2007 14:20:54 -0400
+Message-ID: <46A8E602.9090406@warmcat.com>
+Date: Thu, 26 Jul 2007 19:20:50 +0100
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Michael Wu <flamingice@sourmilk.net>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH] mac80211: revert some GFP_ATOMIC -> GFP_KERNEL changes
+References: <200707261053.44771.flamingice@sourmilk.net>
+In-Reply-To: <200707261053.44771.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-07-31 at 14:57 +0200, Michael Buesch wrote:
-> The essid wireless extension does deadlock against the assoc mutex,
-> as we don't unlock the assoc mutex.
-> 
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> 
-> --
-> 
-> David, please test if this fixes your deadlock. 
+Somebody in the thread at some point said:
 
-Seems to, although I'll have to leave it a few more hours before I'm
-sure. Thanks.
+> Some of the allocations made with GFP_ATOMIC really were necessary.
 
--- 
-dwmw2
+I tested it: this makes the BUG stuff in dmesg go away, thanks :-)
 
+-Andy
