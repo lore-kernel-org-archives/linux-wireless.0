@@ -1,35 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57908
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751512AbXGCFif (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2007 01:38:35 -0400
-Date: Mon, 02 Jul 2007 22:38:54 -0700 (PDT)
-Message-Id: <20070702.223854.78161801.davem@davemloft.net>
+Received: from mga01.intel.com ([192.55.52.88]:14873 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756226AbXGZD3D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jul 2007 23:29:03 -0400
+From: Zhu Yi <yi.zhu@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Add support for SIOCGIWRATE ioctl to provide  rate information
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20070612012319.GH20422@tuxdriver.com>
-References: <20070610.181704.73383002.davem@davemloft.net>
-	<20070612012228.GG20422@tuxdriver.com>
-	<20070612012319.GH20422@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH] iwlwifi: modify station fix
+Date: Thu, 26 Jul 2007 11:26:43 +0800
+Message-Id: <118542040911-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11854204073964-git-send-email-yi.zhu@intel.com>
+References: <11854204053593-git-send-email-yi.zhu@intel.com>
+ <11854204073964-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 11 Jun 2007 21:23:19 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-> From: Larry Finger <Larry.Finger@lwfinger.net>
-> 
-> At present, transmission rate information for mac80211 is available only
-> if verbose debugging is turned on, and then only in the logs. This patch
-> implements the SIOCGIWRATE ioctl, which adds the current transmission rate to
-> the output of iwconfig.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+This patch fixes bit mask for modify station parameters.
+Using assignment (=) instead of adding (|). The later caused
+bringing parameters from previous command to the current and
+eventaully caused uCode error.
 
-This change appears to already be in the tree.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwl-4965.c |   10 +++++-----
+ drivers/net/wireless/iwl-base.c |    4 ++--
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/iwl-4965.c b/drivers/net/wireless/iwl-4965.c
+index 9991956..3f1a339 100644
+--- a/drivers/net/wireless/iwl-4965.c
++++ b/drivers/net/wireless/iwl-4965.c
+@@ -3759,7 +3759,7 @@ static void iwl4965_sta_modify_ps_wake(struct iwl_priv *priv, int sta_id)
+ 	priv->stations[sta_id].sta.station_flags &= ~STA_FLG_PWR_SAVE_MSK;
+ 	priv->stations[sta_id].sta.station_flags_msk = STA_FLG_PWR_SAVE_MSK;
+ 	priv->stations[sta_id].sta.sta.modify_mask = 0;
+-	priv->stations[sta_id].sta.mode |= STA_CONTROL_MODIFY_MSK;
++	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+ 	spin_unlock_irqrestore(&priv->sta_lock, lock_flags);
+ 	/* assuming we are in rx flow and the lock is already locked */
+ 	iwl_send_add_station(priv, &priv->stations[sta_id].sta,
+@@ -4097,9 +4097,9 @@ static void iwl_sta_modify_enable_tid_tx(struct iwl_priv *priv, int sta_id,
+ 	unsigned long lock_flags;
+ 
+ 	spin_lock_irqsave(&priv->sta_lock, lock_flags);
+-	priv->stations[sta_id].sta.sta.modify_mask |= STA_MODIFY_TID_DISABLE_TX;
++	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_TID_DISABLE_TX;
+ 	priv->stations[sta_id].sta.tid_disable_tx &= cpu_to_le32(~(1 << tid));
+-	priv->stations[sta_id].sta.mode |= STA_CONTROL_MODIFY_MSK;
++	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+ 	spin_unlock_irqrestore(&priv->sta_lock, lock_flags);
+ 	iwl_send_add_station(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
+ }
+@@ -4556,7 +4556,7 @@ static void iwl4965_sta_modify_add_ba_tid(struct iwl_priv *priv,
+ 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_ADDBA_TID_MSK;
+ 	priv->stations[sta_id].sta.add_immediate_ba_tid = (u8)tid;
+ 	priv->stations[sta_id].sta.add_immediate_ba_ssn = cpu_to_le16(ssn);
+-	priv->stations[sta_id].sta.mode |= STA_CONTROL_MODIFY_MSK;
++	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+ 	spin_unlock_irqrestore(&priv->sta_lock, lock_flags);
+ 	iwl_send_add_station(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
+ }
+@@ -4570,7 +4570,7 @@ static void iwl4965_sta_modify_del_ba_tid(struct iwl_priv *priv,
+ 	priv->stations[sta_id].sta.station_flags_msk = 0;
+ 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_DELBA_TID_MSK;
+ 	priv->stations[sta_id].sta.remove_immediate_ba_tid = (u8)tid;
+-	priv->stations[sta_id].sta.mode |= STA_CONTROL_MODIFY_MSK;
++	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+ 	spin_unlock_irqrestore(&priv->sta_lock, lock_flags);
+ 	iwl_send_add_station(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
+ }
+diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
+index 7f8f2ac..1437f66 100644
+--- a/drivers/net/wireless/iwl-base.c
++++ b/drivers/net/wireless/iwl-base.c
+@@ -1405,8 +1405,8 @@ static int iwl_update_sta_key_info(struct iwl_priv *priv,
+ 	memcpy(priv->stations[sta_id].sta.key.key, keyconf->key,
+ 	       keyconf->keylen);
+ 	priv->stations[sta_id].sta.key.key_flags = key_flags;
+-	priv->stations[sta_id].sta.sta.modify_mask |= STA_MODIFY_KEY_MASK;
+-	priv->stations[sta_id].sta.mode |= STA_CONTROL_MODIFY_MSK;
++	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
++	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+ 
+ 	spin_unlock_irqrestore(&priv->sta_lock, flags);
+ 
+-- 
+1.5.2
