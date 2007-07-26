@@ -1,38 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2646 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752530AbXGXVF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2007 17:05:26 -0400
-Date: Tue, 24 Jul 2007 16:30:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Stephen Clark <Stephen.Clark@seclark.us>
-Cc: Axj <axjslack@bluebottle.com>, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] Request for help...
-Message-ID: <20070724203035.GG24344@tuxdriver.com>
-References: <1185289332.46a61474a444c@mail.bluebottle.com> <20070724161226.GA24344@tuxdriver.com> <46A64503.1080003@seclark.us>
-Mime-Version: 1.0
+Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:33302 "EHLO
+	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934077AbXGZQeM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jul 2007 12:34:12 -0400
+Date: Thu, 26 Jul 2007 11:33:01 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] bcm43xx-mac80211: Fix specs typo for baseband attenuation
+Message-ID: <46a8ccbd.wNQamvQ9e0RJ0XZK%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <46A64503.1080003@seclark.us>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 24, 2007 at 02:29:23PM -0400, Stephen Clark wrote:
+A typo in the specs interchanges the branches in an if statement, which
+breaks operations for a BCM4306/rev 2 that has phy->analog == 1.
 
-> Just being a user I am not sure what you mean by come back to working 
-> with community? None of
-> their stuff is hidden is it? Does "the community" make it so hard to get 
-> stuff included that it is
-> not worth the pain for Intel?
+Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+---
 
-Very simple -- conduct mac80211 development in public on a mailing
-list appropriate to discussion of an in-kernel component rather than
-hiding on a mailing list that is ostensibly for development of a
-specific driver.  As the authors of the patches it is incumbent on
-Intel to post them for inclusion upstream.  That is the price of good
-citizenship in the Linux community.
+John and Michael,
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+This patch is made for the wireless-dev tree after the bcm43xx-mac80211
+directory has been moved into drivers/net/wireless, but it needs to be
+applied to the wireless-mb tree as well.
+
+Larry
+
+Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_phy.c
+===================================================================
+--- wireless-dev/net/wireless/bcm43xx-mac80211/bcm43xx_phy.c
++++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_phy.c
+@@ -1895,7 +1895,7 @@ void bcm43xx_phy_set_baseband_attenuatio
+ 		bcm43xx_write16(dev, BCM43xx_MMIO_PHY0,
+ 				(bcm43xx_read16(dev, BCM43xx_MMIO_PHY0)
+ 				 & 0xFFF0) | baseband_attenuation);
+-	} else if (phy->analog == 1) {
++	} else if (phy->analog != 1) {
+ 		bcm43xx_phy_write(dev, BCM43xx_PHY_DACCTL,
+ 				  (bcm43xx_phy_read(dev, BCM43xx_PHY_DACCTL)
+ 				   & 0xFFC3) | (baseband_attenuation << 2));
