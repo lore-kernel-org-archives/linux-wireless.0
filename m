@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50743 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758886AbXGBMOx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2007 08:14:53 -0400
-Message-ID: <4688EC37.3080305@garzik.org>
-Date: Mon, 02 Jul 2007 08:14:47 -0400
-From: Jeff Garzik <jeff@garzik.org>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:40976
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932669AbXGZSNb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jul 2007 14:13:31 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH] bcm43xx-mac80211: Fix specs typo for baseband attenuation
+Date: Thu, 26 Jul 2007 20:11:48 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <46a8ccbd.wNQamvQ9e0RJ0XZK%Larry.Finger@lwfinger.net> <200707261931.41448.mb@bu3sch.de> <46A8E1D8.5040301@lwfinger.net>
+In-Reply-To: <46A8E1D8.5040301@lwfinger.net>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	dcbw@redhat.com
-Subject: Re: Please pull 'libertas-fixes' branch of wireless-2.6
-References: <20070627205539.GB13617@tuxdriver.com>
-In-Reply-To: <20070627205539.GB13617@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200707262011.48527.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> The following changes since commit 189548642c5962e60c3667bdb3a703fe0bed12a6:
->   Linus Torvalds (1):
->         Linus 2.6.22-rc6
+On Thursday 26 July 2007 20:03:04 Larry Finger wrote:
+> Michael Buesch wrote:
+> > 
+> > Last time I checked this code it matched the specs. And that's not too
+> > long ago.
+> > Did the specs change?
 > 
-> are found in the git repository at:
+> We had a complaint that a change in the V3 specs broke a BCM4306/rev 2 card using bcm43xx - it 
+> received but did not transmit. I verified the breakage and found that reverting a patch fixed the 
+> problem. I contacted Joseph, who found that he had mixed the branches when doing the specs.
 > 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git libertas-fixes
-> 
-> Dan Williams (4):
->       libertas: style fixes
->       libertas: kill wlan_scan_process_results
->       libertas: fix WPA associations by handling ENABLE_RSN correctly
->       libertas: remove private ioctls
-> 
->  drivers/net/wireless/libertas/Makefile  |    2 +-
->  drivers/net/wireless/libertas/README    |  275 --------
->  drivers/net/wireless/libertas/assoc.c   |   28 +-
->  drivers/net/wireless/libertas/cmd.c     |   12 +-
->  drivers/net/wireless/libertas/cmdresp.c |   21 +
->  drivers/net/wireless/libertas/hostcmd.h |    2 +-
->  drivers/net/wireless/libertas/ioctl.c   | 1081 -------------------------------
->  drivers/net/wireless/libertas/main.c    |    8 +-
->  drivers/net/wireless/libertas/scan.c    |   51 +--
->  drivers/net/wireless/libertas/wext.c    |  152 -----
->  drivers/net/wireless/libertas/wext.h    |   45 +--
->  11 files changed, 79 insertions(+), 1598 deletions(-)
->  delete mode 100644 drivers/net/wireless/libertas/ioctl.c
+> This morning, I found that bcm43xx-mac80211 has the same problem. I have not yet asked Joseph to 
+> recheck the specs; however, the patch I submitted allows my phy->rev == 1 card to work. Without it, 
+> it does not. I think there is an error in the specs in that place.
 
-pulled
+Ok, nice.
+I always like some nice explanation like this for this kind of patches.
+Because changing code based on "Specs changed, dunno why, so let's change this too"
+are always hairy and broke stuff in the past. :)
 
+I'll test and merge this as soon as you resubmitted it.
 
+-- 
+Greetings Michael.
