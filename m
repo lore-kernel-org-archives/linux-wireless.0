@@ -1,76 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:28227 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757376AbXGLIKO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2007 04:10:14 -0400
-Date: Thu, 12 Jul 2007 16:09:32 +0800
-From: Zhu Yi <yi.zhu@intel.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] Fix ipw2200 set wrong power parameter causing firmware error
-Message-ID: <20070712080932.GA28315@mail.intel.com>
-Reply-To: yi.zhu@intel.com
+Received: from mog.warmcat.com ([62.193.232.24]:59667 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752095AbXGZMKx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jul 2007 08:10:53 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 27DDC8CAD8
+	for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2007 14:10:49 +0200 (CEST)
+Received: from meerkat.home.warmcat.com (unknown [192.168.0.242])
+	by armbox7.home.warmcat.com (Postfix) with ESMTP id 2922D1044E
+	for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2007 12:12:35 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by meerkat.home.warmcat.com (Postfix) with ESMTP id AB76013639A2
+	for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2007 13:10:51 +0100 (BST)
+From: warmcat <andy@warmcat.com>
+Subject: [PATCH 1/2] Add get_unaligned to ieee80211_get_radiotap_len
+To: linux-wireless@vger.kernel.org
+Date: Thu, 26 Jul 2007 13:10:51 +0100
+Message-ID: <20070726121051.11153.36250.stgit@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The power mode can only be set 0~5 to firmware. Otherwise there will be a
-firmware error generated. This patch fixed the invalid power mode requested
-by driver.
+ieee80211_get_radiotap_len() tries to dereference radiotap length without
+taking care that it is completely unaligned and get_unaligned()
+is required.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Andy Green <andy@warmcat.com>
 ---
- drivers/net/wireless/ipw2200.c |   14 ++++++--------
- 1 files changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
-index 7cb2052..bd0a8ff 100644
---- a/drivers/net/wireless/ipw2200.c
-+++ b/drivers/net/wireless/ipw2200.c
-@@ -2506,7 +2506,7 @@ static int ipw_send_power_mode(struct ipw_priv *priv, u32 mode)
- 		break;
- 	}
+ net/mac80211/ieee80211.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index a42e70e..6f5c001 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -350,7 +350,7 @@ static int ieee80211_get_radiotap_len(struct sk_buff *skb)
+ 	struct ieee80211_radiotap_header *hdr =
+ 		(struct ieee80211_radiotap_header *) skb->data;
  
--	param = cpu_to_le32(mode);
-+	param = cpu_to_le32(param);
- 	return ipw_send_cmd_pdu(priv, IPW_CMD_POWER_MODE, sizeof(param),
- 				&param);
+-	return le16_to_cpu(hdr->it_len);
++	return le16_to_cpu(get_unaligned(&hdr->it_len));
  }
-@@ -9567,6 +9567,7 @@ static int ipw_wx_set_power(struct net_device *dev,
- 		priv->power_mode = IPW_POWER_ENABLED | IPW_POWER_BATTERY;
- 	else
- 		priv->power_mode = IPW_POWER_ENABLED | priv->power_mode;
-+
- 	err = ipw_send_power_mode(priv, IPW_POWER_LEVEL(priv->power_mode));
- 	if (err) {
- 		IPW_DEBUG_WX("failed setting power mode.\n");
-@@ -9603,22 +9604,19 @@ static int ipw_wx_set_powermode(struct net_device *dev,
- 	struct ipw_priv *priv = ieee80211_priv(dev);
- 	int mode = *(int *)extra;
- 	int err;
-+
- 	mutex_lock(&priv->mutex);
--	if ((mode < 1) || (mode > IPW_POWER_LIMIT)) {
-+	if ((mode < 1) || (mode > IPW_POWER_LIMIT))
- 		mode = IPW_POWER_AC;
--		priv->power_mode = mode;
--	} else {
--		priv->power_mode = IPW_POWER_ENABLED | mode;
--	}
  
--	if (priv->power_mode != mode) {
-+	if (IPW_POWER_LEVEL(priv->power_mode) != mode) {
- 		err = ipw_send_power_mode(priv, mode);
--
- 		if (err) {
- 			IPW_DEBUG_WX("failed setting power mode.\n");
- 			mutex_unlock(&priv->mutex);
- 			return err;
- 		}
-+		priv->power_mode = IPW_POWER_ENABLED | mode;
- 	}
- 	mutex_unlock(&priv->mutex);
- 	return 0;
--- 
-1.5.2
+ #ifdef CONFIG_MAC80211_LOWTX_FRAME_DUMP
+
