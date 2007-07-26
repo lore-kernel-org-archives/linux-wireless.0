@@ -1,85 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:45045 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934642AbXGaC7O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2007 22:59:14 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 7/7] iwlwifi: Endian fix for rate setting in 3945
-Date: Tue, 31 Jul 2007 10:56:36 +0800
-Message-Id: <11858506081731-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11858506062806-git-send-email-yi.zhu@intel.com>
-References: <11858505963374-git-send-email-yi.zhu@intel.com>
- <118585059814-git-send-email-yi.zhu@intel.com>
- <11858505994113-git-send-email-yi.zhu@intel.com>
- <11858506013260-git-send-email-yi.zhu@intel.com>
- <11858506033857-git-send-email-yi.zhu@intel.com>
- <11858506051195-git-send-email-yi.zhu@intel.com>
- <11858506062806-git-send-email-yi.zhu@intel.com>
+Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:63264 "EHLO
+	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755811AbXGZPti (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jul 2007 11:49:38 -0400
+Date: Thu, 26 Jul 2007 10:49:01 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH]mac80211: Remove overly sticky averaging filters for rssi, signal, noise
+Message-ID: <46a8c26d.vEDrkPz7/e+Oa7zN%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+The current version of wireless statistics contains a bug in the averaging
+that makes the numbers be too sticky and not react to small changes. This
+patch removes all averaging.
 
-This patch fixes endianity issue in rate setting in 3945.
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/iwl-3945-hw.h |    4 ++++
- drivers/net/wireless/iwl-base.c    |   13 ++++++++-----
- 2 files changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwl-3945-hw.h b/drivers/net/wireless/iwl-3945-hw.h
-index 81c7263..8fdf9e0 100644
---- a/drivers/net/wireless/iwl-3945-hw.h
-+++ b/drivers/net/wireless/iwl-3945-hw.h
-@@ -97,4 +97,8 @@ static inline u16 iwl_hw_get_rate_n_flags(__le16 rate_n_flags)
- 	return le16_to_cpu(rate_n_flags);
- }
+Index: wireless-dev/net/mac80211/ieee80211.c
+===================================================================
+--- wireless-dev.orig/net/mac80211/ieee80211.c
++++ wireless-dev/net/mac80211/ieee80211.c
+@@ -3860,12 +3860,9 @@ ieee80211_rx_h_sta_process(struct ieee80
  
-+static inline __le16 iwl_hw_set_rate_n_flags(u8 rate, u16 flags)
-+{
-+	return cpu_to_le16((u16)rate|flags);
-+}
- #endif
-diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
-index 683f07d..44fc2cb 100644
---- a/drivers/net/wireless/iwl-base.c
-+++ b/drivers/net/wireless/iwl-base.c
-@@ -382,7 +382,9 @@ u8 iwl_add_station(struct iwl_priv *priv, const u8 * bssid, int is_ap, u8 flags)
- 	int index = IWL_INVALID_STATION;
- 	struct iwl_station_entry *station;
- 	unsigned long flags_spin;
--
-+#if IWL == 3945
-+	u8 rate;
-+#endif
- 	spin_lock_irqsave(&priv->sta_lock, flags_spin);
- 	if (is_ap) {
- 		index = IWL_AP_ID;
-@@ -426,14 +428,15 @@ u8 iwl_add_station(struct iwl_priv *priv, const u8 * bssid, int is_ap, u8 flags)
- 	station->sta.sta.sta_id = i;
- 	station->sta.station_flags = 0;
- #if IWL == 3945
--	station->sta.rate_n_flags = cpu_to_le16(
--		(priv->phymode == MODE_IEEE80211A) ? IWL_RATE_6M_PLCP :
--			IWL_RATE_1M_PLCP | priv->hw_setting.cck_flag);
-+	rate = (priv->phymode == MODE_IEEE80211A) ? IWL_RATE_6M_PLCP :
-+			IWL_RATE_1M_PLCP | priv->hw_setting.cck_flag;
+ 	sta->rx_fragments++;
+ 	sta->rx_bytes += rx->skb->len;
+-	sta->last_rssi = (sta->last_rssi * 15 +
+-			  rx->u.rx.status->ssi) / 16;
+-	sta->last_signal = (sta->last_signal * 15 +
+-			    rx->u.rx.status->signal) / 16;
+-	sta->last_noise = (sta->last_noise * 15 +
+-			   rx->u.rx.status->noise) / 16;
++	sta->last_rssi = rx->u.rx.status->ssi;
++	sta->last_signal = rx->u.rx.status->signal;
++	sta->last_noise = rx->u.rx.status->noise;
  
- 	/* Turn on both antennas for the station... */
--	station->sta.rate_n_flags |= RATE_MCS_ANT_AB_MSK;
-+	station->sta.rate_n_flags =
-+			iwl_hw_set_rate_n_flags(rate, RATE_MCS_ANT_AB_MSK);
- 
- 	station->sta.station_flags |= STA_FLG_TX_RATE_MSK;
-+
- 	station->current_rate.rate_n_flags = le16_to_cpu(
- 		station->sta.rate_n_flags);
- #endif
--- 
-1.5.2
+ 	if (!(rx->fc & IEEE80211_FCTL_MOREFRAGS)) {
+ 		/* Change STA power saving mode only in the end of a frame
