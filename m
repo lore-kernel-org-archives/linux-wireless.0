@@ -1,79 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:54717 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751143AbXG3DfI (ORCPT
+Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:38376 "EHLO
+	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759374AbXGZTEK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jul 2007 23:35:08 -0400
-Date: Mon, 30 Jul 2007 09:17:25 +0530 (IST)
-From: Satyam Sharma <satyam@infradead.org>
-To: Michael Buesch <mb@bu3sch.de>
-cc: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, akpm@linux-foundation.org
-Subject: Re: [PATCH 1/5] Use mutex instead of semaphore in the Host AP  driver
-In-Reply-To: <alpine.LFD.0.999.0707300842350.10861@enigma.security.iitk.ac.in>
-Message-ID: <alpine.LFD.0.999.0707300904360.10861@enigma.security.iitk.ac.in>
-References: <20070729212909.GC3432@traven> <20070729213434.GD3432@traven>
- <200707300006.42397.mb@bu3sch.de>
- <alpine.LFD.0.999.0707300842350.10861@enigma.security.iitk.ac.in>
+	Thu, 26 Jul 2007 15:04:10 -0400
+Date: Thu, 26 Jul 2007 14:03:24 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH V2] bcm43xx-mac80211: Fix specs typo for baseband  attenuation
+Message-ID: <46a8effc.li9IcZcHQyQEe/l3%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whoops ...
+A typo in the specs interchanges the branches in an if statement, which
+breaks operations for a BCM4306/rev 2 that has phy->analog == 1.
 
+Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+---
 
-On Mon, 30 Jul 2007, Satyam Sharma wrote:
+John and Michael,
 
-> On Mon, 30 Jul 2007, Michael Buesch wrote:
-> 
-> > On Sunday 29 July 2007 23:34, Matthias Kaehlcke wrote:
-> > > The Host AP driver uses a semaphore as mutex. Use the mutex API
-> > > instead of the (binary) semaphore.
-> > > 
-> > > Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-> 
-> [ Something seems to have gone wrong with your diff / patch / script.
->   There was no diff header here, which should have been. ]
-> 
-> > > -	res = down_interruptible(&local->rid_bap_sem);
-> > > +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
-> > >  	if (res)
-> > >  		return res;
-> > >  
-> > > @@ -902,7 +902,7 @@ static int hfa384x_set_rid(struct net_device *dev, u16 rid, void *buf, int len)
-> > >  	/* RID len in words and +1 for rec.rid */
-> > >  	rec.len = cpu_to_le16(len / 2 + len % 2 + 1);
-> > >  
-> > > -	res = down_interruptible(&local->rid_bap_sem);
-> > > +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
-> > >  	if (res)
-> > >  		return res;
-> > >  
-> > 
-> > Is res returned to userspace? If yes, that's not right.
-> 
-> Yup, that's not right.
-> 
-> > On a interrupted mutex allocation you should return
-> > -ERESTARTSYS to userspace.
-> 
-> Nope, userspace must not see ERESTARTSYS (I /think/ this is the third
-> time I'm participating in this exact same discussion :-)
-> 
-> If the return would be caught by a previous in-kernel caller in the
-> call chain, ERESTARTSYS is okay and it could try to restart the
-> operation. However, if the return goes unfiltered directly to
-> userspace, EINTR is the correct choice.
+This patch is made for the wireless-dev tree after the bcm43xx-mac80211
+directory has been moved into drivers/net/wireless, but it needs to be
+applied to the wireless-mb tree as well.
 
-Eek, and because mutex_lock_interruptible() *does* return -EINTR when
-interrupted by a signal, and I noticed that hfa384x_set_rid() could be
-called from an ioctl(2) codepath with no intermediate caller trying to
-restart it, so the code is perfectly alright, actually.
+Larry
 
-But the patch doesn't have the diff header anyway, so Matthias would
-probably have to resend in any case :-)
-
-
-Satyam
+Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_phy.c
+===================================================================
+--- wireless-dev/net/wireless/bcm43xx-mac80211/bcm43xx_phy.c
++++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_phy.c
+@@ -1895,7 +1895,7 @@ void bcm43xx_phy_set_baseband_attenuatio
+ 		bcm43xx_write16(dev, BCM43xx_MMIO_PHY0,
+ 				(bcm43xx_read16(dev, BCM43xx_MMIO_PHY0)
+ 				 & 0xFFF0) | baseband_attenuation);
+-	} else if (phy->analog == 1) {
++	} else if (phy->analog > 1) {
+ 		bcm43xx_phy_write(dev, BCM43xx_PHY_DACCTL,
+ 				  (bcm43xx_phy_read(dev, BCM43xx_PHY_DACCTL)
+ 				   & 0xFFC3) | (baseband_attenuation << 2));
