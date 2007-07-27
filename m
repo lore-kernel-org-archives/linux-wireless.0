@@ -1,74 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47307 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753136AbXGSUKJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2007 16:10:09 -0400
-Subject: Re: [PATCH] drivers/net/wireless/libertas/cmd.c: fix  adapter->driver_lock dereference
-From: Dan Williams <dcbw@redhat.com>
-To: Eugene Teo <eugeneteo@kernel.sg>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20070719135923.GA29142@kernel.sg>
-References: <20070719135923.GA29142@kernel.sg>
-Content-Type: text/plain
-Date: Thu, 19 Jul 2007 16:07:28 -0400
-Message-Id: <1184875649.3179.32.camel@xo-13-A4-25.localdomain>
+Received: from bay0-omc3-s10.bay0.hotmail.com ([65.54.246.210]:18815 "EHLO
+	BAY0-OMC3-S10.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761907AbXG0XOV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jul 2007 19:14:21 -0400
+Message-ID: <BAY111-F35E30B3BF9450DAB091ED0B6F30@phx.gbl>
+From: "hamsa Al Janoob" <mms82@hotmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Linux wireless stack question
+Date: Sat, 28 Jul 2007 03:14:20 +0400
 Mime-Version: 1.0
+Content-Type: text/plain; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-07-19 at 21:59 +0800, Eugene Teo wrote:
-> adapter is NULL if cmdnode is not.
+Hi all,
 
-Applied, thanks!
+This question is directed to the authors (or any one with solid knowledge 
+of) of the new ieee80211 (or mac80211) wireless stack, which can be found in 
+Fedora 7 and expected to be part of the new kernel releases:
 
-Dan
+Where is the exact location of the implementaiton of the binary exponential 
+backoff procedure in the source code? Also, where can I find the 
+declarations of the min and max values of the contention window?
 
-> Signed-off-by: Eugene Teo <eugeneteo@kernel.sg>
-> ---
->  drivers/net/wireless/libertas/cmd.c |   10 +---------
->  1 files changed, 1 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-> index 4a8f5dc..03af8bb 100644
-> --- a/drivers/net/wireless/libertas/cmd.c
-> +++ b/drivers/net/wireless/libertas/cmd.c
-> @@ -941,7 +941,7 @@ static int DownloadcommandToStation(wlan_private * priv,
->  	unsigned long flags;
->  	struct cmd_ds_command *cmdptr;
->  	wlan_adapter *adapter = priv->adapter;
-> -	int ret = 0;
-> +	int ret = -1;
->  	u16 cmdsize;
->  	u16 command;
->  
-> @@ -950,12 +950,6 @@ static int DownloadcommandToStation(wlan_private * priv,
->  	if (!adapter || !cmdnode) {
->  		lbs_deb_cmd("DNLD_CMD: adapter = %p, cmdnode = %p\n",
->  		       adapter, cmdnode);
-> -		if (cmdnode) {
-> -			spin_lock_irqsave(&adapter->driver_lock, flags);
-> -			__libertas_cleanup_and_insert_cmd(priv, cmdnode);
-> -			spin_unlock_irqrestore(&adapter->driver_lock, flags);
-> -		}
-> -		ret = -1;
->  		goto done;
->  	}
->  
-> @@ -968,7 +962,6 @@ static int DownloadcommandToStation(wlan_private * priv,
->  		       "Not sending\n");
->  		__libertas_cleanup_and_insert_cmd(priv, cmdnode);
->  		spin_unlock_irqrestore(&adapter->driver_lock, flags);
-> -		ret = -1;
->  		goto done;
->  	}
->  
-> @@ -993,7 +986,6 @@ static int DownloadcommandToStation(wlan_private * priv,
->  		__libertas_cleanup_and_insert_cmd(priv, adapter->cur_cmd);
->  		adapter->cur_cmd = NULL;
->  		spin_unlock_irqrestore(&adapter->driver_lock, flags);
-> -		ret = -1;
->  		goto done;
->  	}
->  
+Regards,
+Maali
+
+_________________________________________________________________
+Express yourself instantly with MSN Messenger! Download today it's FREE! 
+http://messenger.msn.click-url.com/go/onm00200471ave/direct/01/
 
