@@ -1,61 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:49526 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752564AbXGYFy6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 01:54:58 -0400
-Message-ID: <46A7034C.6070006@linux.intel.com>
-Date: Wed, 25 Jul 2007 01:01:16 -0700
-From: James Ketrenos <jketreno@linux.intel.com>
-MIME-Version: 1.0
-To: Jeff Garzik <jeff@garzik.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Stephen Clark <Stephen.Clark@seclark.us>,
-	ipw3945-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, Axj <axjslack@bluebottle.com>
-Subject: Re: [ipw3945-devel] Request for help...
-References: <1185289332.46a61474a444c@mail.bluebottle.com>	<20070724161226.GA24344@tuxdriver.com>	<46A64503.1080003@seclark.us>	<20070724203035.GG24344@tuxdriver.com> <46A66B63.6030006@garzik.org> <46A6A447.2080903@linux.intel.com> <46A69359.4030201@garzik.org>
-In-Reply-To: <46A69359.4030201@garzik.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga01.intel.com ([192.55.52.88]:44073 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763161AbXG0J3O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jul 2007 05:29:14 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 17/17] iwlwifi: update version stamp to 0.1.5
+Date: Fri, 27 Jul 2007 17:26:41 +0800
+Message-Id: <11855284323630-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11855284303672-git-send-email-yi.zhu@intel.com>
+References: <11855284012123-git-send-email-yi.zhu@intel.com>
+ <11855284032407-git-send-email-yi.zhu@intel.com>
+ <11855284053896-git-send-email-yi.zhu@intel.com>
+ <11855284072074-git-send-email-yi.zhu@intel.com>
+ <1185528408776-git-send-email-yi.zhu@intel.com>
+ <11855284103871-git-send-email-yi.zhu@intel.com>
+ <11855284122218-git-send-email-yi.zhu@intel.com>
+ <11855284142478-git-send-email-yi.zhu@intel.com>
+ <11855284161716-git-send-email-yi.zhu@intel.com>
+ <11855284183313-git-send-email-yi.zhu@intel.com>
+ <11855284201330-git-send-email-yi.zhu@intel.com>
+ <11855284212390-git-send-email-yi.zhu@intel.com>
+ <1185528423816-git-send-email-yi.zhu@intel.com>
+ <11855284253382-git-send-email-yi.zhu@intel.com>
+ <11855284263627-git-send-email-yi.zhu@intel.com>
+ <11855284281570-git-send-email-yi.zhu@intel.com>
+ <11855284303672-git-send-email-yi.zhu@intel.com>
+To: ipwpatch@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jeff Garzik wrote:
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwl-base.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> Intel is definitely not releasing early and often" from the LKML perspective.
-
-I agree the cadence to >>linux-wireless<< has been lacking.  But Intel
-is releasing early and often.  You can check their GIT logs and snapshot
-history as evidence of that.
-
-I am very hopeful that the people working on the 802.11n and HT patches, 
-as well as the developers working on the iwlwifi drivers, will get their
-patches together and submitted to linux-wireless for inclusion.  
-
-I am also hopeful that those patches will be evaluated on the merit and
-value of the functionality they enable.  
-
-<soapbox>
-
-If people on linux-wireless don't want contributors to go off and 
-spend weeks / months at a time working in another sandbox, on another 
-mailing list, or in a different development community, maybe the 
-general attitude and approach of the maintainers on linux-wireless 
-needs to be one which facilitates those individual's contributions, 
-and helps in encouraging them to do more in the future.  Even if those
-contributors work for a Big Hardware Vendor.
-
-Working with a community should augment development, not complicate 
-it or become a burden to it.  People should feel better about their 
-contributions after engaging in a thread in a community where one 
-of their patches is reviewed; they should feel like progress has been
-made, their contributions have been shared, and now others can benefit
-from them -- they should not walk away feeling demoralized and berated
-for trying.
-
-More often than not, my time on linux-wireless has left me feeling 
-like the later.
-
-<soapbox/>
-
-James
+diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
+index e3cd459..87ad5d8 100644
+--- a/drivers/net/wireless/iwl-base.c
++++ b/drivers/net/wireless/iwl-base.c
+@@ -106,7 +106,7 @@ BUILD_BUG()
+ #define VS
+ #endif
+ 
+-#define IWLWIFI_VERSION "0.1.3k" VD VS
++#define IWLWIFI_VERSION "0.1.5k" VD VS
+ #define DRV_COPYRIGHT	"Copyright(c) 2003-2007 Intel Corporation"
+ #define DRV_VERSION     IWLWIFI_VERSION
+ 
+-- 
+1.5.2
