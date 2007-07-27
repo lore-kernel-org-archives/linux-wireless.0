@@ -1,75 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58446 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756688AbXGKJgV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2007 05:36:21 -0400
-Subject: Re: [PATCH 00/14] major mac80211 restructuring/cleanups
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-In-Reply-To: <20070710171216.GE7927@tuxdriver.com>
-References: <20070621221603.778432000@sipsolutions.net>
-	 <20070710153456.471e395e@logostar.upir.cz>
-	 <1184075439.15565.11.camel@johannes.berg>
-	 <20070710162912.17899683@logostar.upir.cz>
-	 <1184079079.15565.13.camel@johannes.berg>
-	 <20070710171216.GE7927@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-slYSSkGYSjL0Fk31Vzbj"
-Date: Tue, 10 Jul 2007 20:35:00 +0200
-Message-Id: <1184092500.3738.15.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:65103 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762749AbXG0J3C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jul 2007 05:29:02 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 10/17] iwlwifi: endianity cleaning of iwl_print_rx_config_cmd
+Date: Fri, 27 Jul 2007 17:26:34 +0800
+Message-Id: <11855284201330-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11855284183313-git-send-email-yi.zhu@intel.com>
+References: <11855284012123-git-send-email-yi.zhu@intel.com>
+ <11855284032407-git-send-email-yi.zhu@intel.com>
+ <11855284053896-git-send-email-yi.zhu@intel.com>
+ <11855284072074-git-send-email-yi.zhu@intel.com>
+ <1185528408776-git-send-email-yi.zhu@intel.com>
+ <11855284103871-git-send-email-yi.zhu@intel.com>
+ <11855284122218-git-send-email-yi.zhu@intel.com>
+ <11855284142478-git-send-email-yi.zhu@intel.com>
+ <11855284161716-git-send-email-yi.zhu@intel.com>
+ <11855284183313-git-send-email-yi.zhu@intel.com>
+To: ipwpatch@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patches cleans up endianity issues in iwl_print_rx_config_cmd,
+which produced a lot of spares errors.
 
---=-slYSSkGYSjL0Fk31Vzbj
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwl-base.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-On Tue, 2007-07-10 at 13:12 -0400, John W. Linville wrote:
-
-> > > which is not upstream. Merging it upstream would mean taking the patc=
-h from
-> > > wireless-dev git and manually modifying it to fit a new structure. An=
-d we
-> > > have a bunch of such patches which should go to 2.6.24 (yes, I really
-> > > mean .24). Perhaps I'm lazy, but I'd like to avoid that. It's going t=
-o be a
-> > > lot of unpleasant work even without this...
-
-> Hmmmm...maybe.  But, what would have been the perfect trigger to
-> merge it?  At least now we have less bits out-of-stream and have to
-> do less API-chasing with every new kernel.
-
-Dunno. I guess I didn't expect Jiri to block any patches based on the
-fact that we have two trees now.
-
-I don't really see the big problem anyhow. As long as we don't want any
-patches in upstream that depend on the refactoring we can delay pushing
-the refactoring upstream. Once we do get patches we can decide to either
-make two versions of them or at some point push the refactoring upstream
-as well; problems will only arise if we delay too much pushing patches
-upstream that are before the refactoring, those would need to be
-rediffed.
-
-Oh well. Do what you feel is easiest. This is the second or third time
-I've been burnt with significant mac80211 cleanups so I guess I'll just
-learn my lesson here.
-
-johannes
-
---=-slYSSkGYSjL0Fk31Vzbj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGk9FU/ETPhpq3jKURAv+sAKCDgza+lVe9oxyIi/dh5jXQbsgqTACdHQEY
-//2uVIaD5jOVoYLCcpluIz8=
-=E0JI
------END PGP SIGNATURE-----
-
---=-slYSSkGYSjL0Fk31Vzbj--
-
+diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
+index 92c21d1..8f9714f 100644
+--- a/drivers/net/wireless/iwl-base.c
++++ b/drivers/net/wireless/iwl-base.c
+@@ -4664,11 +4664,13 @@ static void iwl_print_rx_config_cmd(struct iwl_rxon_cmd *rxon)
+ {
+ 	IWL_DEBUG_RADIO("RX CONFIG:\n");
+ 	printk_buf(IWL_DL_RADIO, (u8 *) rxon, sizeof(*rxon));
+-	IWL_DEBUG_RADIO("u16 channel: 0x%x\n", rxon->channel);
++	IWL_DEBUG_RADIO("u16 channel: 0x%x\n", le16_to_cpu(rxon->channel));
+ 	IWL_DEBUG_RADIO("u32 flags: 0x%08X " BIT_FMT32 "\n",
+-			rxon->flags, BIT_ARG32(rxon->flags));
++			le32_to_cpu(rxon->flags),
++			BIT_ARG32(le32_to_cpu(rxon->flags)));
+ 	IWL_DEBUG_RADIO("u32 filter_flags: 0x%08x " BIT_FMT32 "\n",
+-			rxon->filter_flags, BIT_ARG32(rxon->filter_flags));
++			le32_to_cpu(rxon->filter_flags),
++			BIT_ARG32(le32_to_cpu(rxon->filter_flags)));
+ 	IWL_DEBUG_RADIO("u8 dev_type: 0x%x\n", rxon->dev_type);
+ 	IWL_DEBUG_RADIO("u8 ofdm_basic_rates: 0x%02x " BIT_FMT8 "\n",
+ 			rxon->ofdm_basic_rates,
+@@ -4679,7 +4681,7 @@ static void iwl_print_rx_config_cmd(struct iwl_rxon_cmd *rxon)
+ 			MAC_ARG(rxon->node_addr));
+ 	IWL_DEBUG_RADIO("u8[6] bssid_addr: " MAC_FMT "\n",
+ 			MAC_ARG(rxon->bssid_addr));
+-	IWL_DEBUG_RADIO("u16 assoc_id: 0x%x\n", rxon->assoc_id);
++	IWL_DEBUG_RADIO("u16 assoc_id: 0x%x\n", le16_to_cpu(rxon->assoc_id));
+ }
+ 
+ #endif
+-- 
+1.5.2
