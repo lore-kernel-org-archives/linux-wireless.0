@@ -1,269 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36544 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:14733 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758554AbXGFDGL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2007 23:06:11 -0400
-Subject: Re: [PATCH] libertas: remove adapter->linkmode
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <200707031722.23498.hs4233@mail.mn-solutions.de>
-References: <200707031722.23498.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Thu, 05 Jul 2007 23:10:50 -0400
-Message-Id: <1183691450.24555.32.camel@xo-13-A4-25.localdomain>
-Mime-Version: 1.0
+	id S1756883AbXG0Dux (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jul 2007 23:50:53 -0400
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C7D001.537B5191"
+Subject: [PATCH 1/1] Add uCode/Driver compatibility version number to firmware file name
+Date: Thu, 26 Jul 2007 20:50:51 -0700
+Message-ID: <4220499A1B034C4FA93B547BA01E1FF001746253@orsmsx413.amr.corp.intel.com>
+From: "Cahill, Ben M" <ben.m.cahill@intel.com>
+To: <ipw3945-devel@lists.sourceforge.net>
+Cc: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-07-03 at 17:22 +0200, Holger Schurig wrote:
-> linkmode was never assigned, so because of kzalloc() it was 0,
-> which is WLAN_LINKMODE_802_3. There was nowhere any code that
-> would have changed it. So I got rid and also killed all code
-> that referenced WLAN_LINKMODE_802_11.
+This is a multi-part message in MIME format.
 
-I'm going to hold off on this until the radiotap stuff that Luis
-proposed gets finalized.
+------_=_NextPart_001_01C7D001.537B5191
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Dan
+Hi all,
 
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-> ---
->  drivers/net/wireless/libertas/dev.h  |    1 -
->  drivers/net/wireless/libertas/rx.c   |  166 ----------------------------------
->  drivers/net/wireless/libertas/tx.c   |    7 +-
->  drivers/net/wireless/libertas/wext.h |    2 -
->  4 files changed, 2 insertions(+), 174 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-> index 1dcfb05..ba31140 100644
-> --- a/drivers/net/wireless/libertas/dev.h
-> +++ b/drivers/net/wireless/libertas/dev.h
-> @@ -379,7 +379,6 @@ struct _wlan_adapter {
->  	u32 pkttxctrl;
->  
->  	u16 txrate;
-> -	u32 linkmode;
->  	u32 radiomode;
->  	u8 fw_ready;
->  
-> diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
-> index 6041b9f..bce4ccd 100644
-> --- a/drivers/net/wireless/libertas/rx.c
-> +++ b/drivers/net/wireless/libertas/rx.c
-> @@ -35,7 +35,6 @@ struct rx80211packethdr {
->  	void *eth80211_hdr;
->  } __attribute__ ((packed));
->  
-> -static int process_rxed_802_11_packet(wlan_private * priv, struct sk_buff *skb);
->  
->  /**
->   *  @brief This function computes the avgSNR .
-> @@ -172,9 +171,6 @@ int libertas_process_rxed_packet(wlan_private * priv, struct sk_buff *skb)
->  
->  	lbs_deb_enter(LBS_DEB_RX);
->  
-> -	if (priv->adapter->linkmode == WLAN_LINKMODE_802_11)
-> -		return process_rxed_802_11_packet(priv, skb);
-> -
->  	p_rx_pkt = (struct rxpackethdr *) skb->data;
->  	p_rx_pd = &p_rx_pkt->rx_pd;
->  	if (p_rx_pd->rx_control & RxPD_MESH_FRAME)
-> @@ -273,165 +269,3 @@ done:
->  	return ret;
->  }
->  EXPORT_SYMBOL_GPL(libertas_process_rxed_packet);
-> -
-> -/**
-> - *  @brief This function converts Tx/Rx rates from the Marvell WLAN format
-> - *  (see Table 2 in Section 3.1) to IEEE80211_RADIOTAP_RATE units (500 Kb/s)
-> - *
-> - *  @param rate    Input rate
-> - *  @return 	   Output Rate (0 if invalid)
-> - */
-> -static u8 convert_mv_rate_to_radiotap(u8 rate)
-> -{
-> -	switch (rate) {
-> -	case 0:		/*   1 Mbps */
-> -		return 2;
-> -	case 1:		/*   2 Mbps */
-> -		return 4;
-> -	case 2:		/* 5.5 Mbps */
-> -		return 11;
-> -	case 3:		/*  11 Mbps */
-> -		return 22;
-> -	case 4:		/*   6 Mbps */
-> -		return 12;
-> -	case 5:		/*   9 Mbps */
-> -		return 18;
-> -	case 6:		/*  12 Mbps */
-> -		return 24;
-> -	case 7:		/*  18 Mbps */
-> -		return 36;
-> -	case 8:		/*  24 Mbps */
-> -		return 48;
-> -	case 9:		/*  36 Mbps */
-> -		return 72;
-> -	case 10:		/*  48 Mbps */
-> -		return 96;
-> -	case 11:		/*  54 Mbps */
-> -		return 108;
-> -	}
-> -	lbs_pr_alert("Invalid Marvell WLAN rate %i\n", rate);
-> -	return 0;
-> -}
-> -
-> -/**
-> - *  @brief This function processes a received 802.11 packet and forwards it
-> - *  to kernel/upper layer
-> - *
-> - *  @param priv    A pointer to wlan_private
-> - *  @param skb     A pointer to skb which includes the received packet
-> - *  @return 	   0 or -1
-> - */
-> -static int process_rxed_802_11_packet(wlan_private * priv, struct sk_buff *skb)
-> -{
-> -	wlan_adapter *adapter = priv->adapter;
-> -	int ret = 0;
-> -
-> -	struct rx80211packethdr *p_rx_pkt;
-> -	struct rxpd *prxpd;
-> -	struct rx_radiotap_hdr radiotap_hdr;
-> -	struct rx_radiotap_hdr *pradiotap_hdr;
-> -
-> -	lbs_deb_enter(LBS_DEB_RX);
-> -
-> -	p_rx_pkt = (struct rx80211packethdr *) skb->data;
-> -	prxpd = &p_rx_pkt->rx_pd;
-> -
-> -	// lbs_deb_hex(LBS_DEB_RX, "RX Data: Before chop rxpd", skb->data, min(skb->len, 100));
-> -
-> -	if (skb->len < (ETH_HLEN + 8 + sizeof(struct rxpd))) {
-> -		lbs_deb_rx("rx err: frame received wit bad length\n");
-> -		priv->stats.rx_length_errors++;
-> -		ret = 0;
-> -		goto done;
-> -	}
-> -
-> -	/*
-> -	 * Check rxpd status and update 802.3 stat,
-> -	 */
-> -	if (!(prxpd->status & cpu_to_le16(MRVDRV_RXPD_STATUS_OK))) {
-> -		//lbs_deb_rx("rx err: frame received with bad status\n");
-> -		priv->stats.rx_errors++;
-> -	}
-> -
-> -	lbs_deb_rx("rx data: skb->len-sizeof(RxPd) = %d-%zd = %zd\n",
-> -	       skb->len, sizeof(struct rxpd), skb->len - sizeof(struct rxpd));
-> -
-> -	/* create the exported radio header */
-> -	switch (priv->adapter->radiomode) {
-> -	case WLAN_RADIOMODE_NONE:
-> -		/* no radio header */
-> -		/* chop the rxpd */
-> -		skb_pull(skb, sizeof(struct rxpd));
-> -		break;
-> -
-> -	case WLAN_RADIOMODE_RADIOTAP:
-> -		/* radiotap header */
-> -		radiotap_hdr.hdr.it_version = 0;
-> -		/* XXX must check this value for pad */
-> -		radiotap_hdr.hdr.it_pad = 0;
-> -		radiotap_hdr.hdr.it_len = sizeof(struct rx_radiotap_hdr);
-> -		radiotap_hdr.hdr.it_present = RX_RADIOTAP_PRESENT;
-> -		/* unknown values */
-> -		radiotap_hdr.flags = 0;
-> -		radiotap_hdr.chan_freq = 0;
-> -		radiotap_hdr.chan_flags = 0;
-> -		radiotap_hdr.antenna = 0;
-> -		/* known values */
-> -		radiotap_hdr.rate = convert_mv_rate_to_radiotap(prxpd->rx_rate);
-> -		/* XXX must check no carryout */
-> -		radiotap_hdr.antsignal = prxpd->snr + prxpd->nf;
-> -		radiotap_hdr.rx_flags = 0;
-> -		if (!(prxpd->status & cpu_to_le16(MRVDRV_RXPD_STATUS_OK)))
-> -			radiotap_hdr.rx_flags |= IEEE80211_RADIOTAP_F_RX_BADFCS;
-> -		//memset(radiotap_hdr.pad, 0x11, IEEE80211_RADIOTAP_HDRLEN - 18);
-> -
-> -		/* chop the rxpd */
-> -		skb_pull(skb, sizeof(struct rxpd));
-> -
-> -		/* add space for the new radio header */
-> -		if ((skb_headroom(skb) < sizeof(struct rx_radiotap_hdr)) &&
-> -		    pskb_expand_head(skb, sizeof(struct rx_radiotap_hdr), 0,
-> -				     GFP_ATOMIC)) {
-> -			lbs_pr_alert("%s: couldn't pskb_expand_head\n",
-> -			       __func__);
-> -		}
-> -
-> -		pradiotap_hdr =
-> -		    (struct rx_radiotap_hdr *)skb_push(skb,
-> -						     sizeof(struct
-> -							    rx_radiotap_hdr));
-> -		memcpy(pradiotap_hdr, &radiotap_hdr,
-> -		       sizeof(struct rx_radiotap_hdr));
-> -		break;
-> -
-> -	default:
-> -		/* unknown header */
-> -		lbs_pr_alert("Unknown radiomode %i\n",
-> -		       priv->adapter->radiomode);
-> -		/* don't export any header */
-> -		/* chop the rxpd */
-> -		skb_pull(skb, sizeof(struct rxpd));
-> -		break;
-> -	}
-> -
-> -	/* Take the data rate from the rxpd structure
-> -	 * only if the rate is auto
-> -	 */
-> -	if (adapter->auto_rate)
-> -		adapter->cur_rate = libertas_fw_index_to_data_rate(prxpd->rx_rate);
-> -
-> -	wlan_compute_rssi(priv, prxpd);
-> -
-> -	lbs_deb_rx("rx data: size of actual packet %d\n", skb->len);
-> -	priv->stats.rx_bytes += skb->len;
-> -	priv->stats.rx_packets++;
-> -
-> -	libertas_upload_rx_packet(priv, skb);
-> -
-> -	ret = 0;
-> -
-> -done:
-> -	skb->protocol = __constant_htons(0x0019);	/* ETH_P_80211_RAW */
-> -	lbs_deb_leave_args(LBS_DEB_RX, "ret %d", ret);
-> -	return ret;
-> -}
-> diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
-> index 56d8402..a8787b0 100644
-> --- a/drivers/net/wireless/libertas/tx.c
-> +++ b/drivers/net/wireless/libertas/tx.c
-> @@ -110,11 +110,8 @@ static int SendSinglePacket(wlan_private * priv, struct sk_buff *skb)
->  				    - sizeof(struct tx_radiotap_hdr));
->  
->  	}
-> -	/* copy destination address from 802.3 or 802.11 header */
-> -	if (priv->adapter->linkmode == WLAN_LINKMODE_802_11)
-> -		memcpy(plocaltxpd->tx_dest_addr_high, p802x_hdr + 4, ETH_ALEN);
-> -	else
-> -		memcpy(plocaltxpd->tx_dest_addr_high, p802x_hdr, ETH_ALEN);
-> +	/* copy destination address from 802.3 header */
-> +	memcpy(plocaltxpd->tx_dest_addr_high, p802x_hdr, ETH_ALEN);
->  
->  	lbs_deb_hex(LBS_DEB_TX, "txpd", (u8 *) plocaltxpd, sizeof(struct txpd));
->  
-> diff --git a/drivers/net/wireless/libertas/wext.h b/drivers/net/wireless/libertas/wext.h
-> index 5b0bbc9..16ecc89 100644
-> --- a/drivers/net/wireless/libertas/wext.h
-> +++ b/drivers/net/wireless/libertas/wext.h
-> @@ -15,8 +15,6 @@ struct wlan_ioctl_regrdwr {
->  	u32 value;
->  };
->  
-> -#define WLAN_LINKMODE_802_3			0
-> -#define WLAN_LINKMODE_802_11			2
->  #define WLAN_RADIOMODE_NONE			0
->  #define WLAN_RADIOMODE_RADIOTAP			2
->  
+Attached please find patch that looks for (requires) new firmware
+filenames for 3945 and 4965.
 
+This is to enhance enforcement of driver/uCode compatibility, and allow
+simpler coexistence of older/newer drivers and their associated uCode
+files.  It also allows easy upgrades of uCode, without modification of
+driver, *if* the uCode is compatible (which is likely).
+
+FYI, here's the formula for our version numbers:
+
+The uCode version numbers consist of the following, which are found in
+the uCode tarball name, as well as the 1st dword of the firmware file
+itself, with following bit offsets:
+
+INTEL_MAJOR:  << 24, internal uCode version number
+INTEL_MINOR:  << 16, internal uCode version number
+LINUX_MAJOR:  <<  8, (new) indicates driver compatibility
+LINUX_MINOR:  <<  0, incremented each time we (Linux team) change
+anything
+
+I'm sending the uCode files to Yi separately, so as not to burden
+everybody's mailboxes.
+
+Tip of the hat to Jeremy at Red Hat for his help.
+
+-- Ben --
+
+
+------_=_NextPart_001_01C7D001.537B5191
+Content-Type: application/octet-stream;
+	name="0001-Add-uCode-driver-compatibility-version-number-in-fir.patch"
+Content-Transfer-Encoding: base64
+Content-Description: 0001-Add-uCode-driver-compatibility-version-number-in-fir.patch
+Content-Disposition: attachment;
+	filename="0001-Add-uCode-driver-compatibility-version-number-in-fir.patch"
+
+RnJvbSBkMGMzYTdhZmJkMTdmOTg0M2I5YTk1YWJhM2NhM2MwNzJhNGZkNGI4IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBCZW4gQ2FoaWxsIDxiZW4ubS5jYWhpbGxAaW50ZWwuY29tPgpE
+YXRlOiBUaHUsIDI2IEp1bCAyMDA3IDIzOjE1OjAyIC0wNDAwClN1YmplY3Q6IFtQQVRDSF0gQWRk
+IHVDb2RlL2RyaXZlciBjb21wYXRpYmlsaXR5IHZlcnNpb24gbnVtYmVyIGluIGZpcm13YXJlIGZp
+bGVuYW1lLAogIHRvIGVuYWJsZSBjb21wYXRpYmlsaXR5IGVuZm9yY2VtZW50IGFuZCBjb2V4aXN0
+ZW5jZSBvZiBvbGQvbmV3IGRyaXZlcnMuCgpTaWduZWQtb2ZmLWJ5OiBCZW4gQ2FoaWxsIDxiZW4u
+bS5jYWhpbGxAaW50ZWwuY29tPgotLS0KIG9yaWdpbi9pd2wtYmFzZS5jIHwgICAxOSArKysrKysr
+KysrKy0tLS0tLS0tCiAxIGZpbGVzIGNoYW5nZWQsIDExIGluc2VydGlvbnMoKyksIDggZGVsZXRp
+b25zKC0pCgpkaWZmIC0tZ2l0IGEvb3JpZ2luL2l3bC1iYXNlLmMgYi9vcmlnaW4vaXdsLWJhc2Uu
+YwppbmRleCBkMzZlMTMyLi45MmEzMmU4IDEwMDY0NAotLS0gYS9vcmlnaW4vaXdsLWJhc2UuYwor
+KysgYi9vcmlnaW4vaXdsLWJhc2UuYwpAQCAtMTEwLDYgKzExMCwxMyBAQCBCVUlMRF9CVUcoKQog
+I2RlZmluZSBEUlZfQ09QWVJJR0hUCSJDb3B5cmlnaHQoYykgMjAwMy0yMDA3IEludGVsIENvcnBv
+cmF0aW9uIgogI2RlZmluZSBEUlZfVkVSU0lPTiAgICAgSVdMV0lGSV9WRVJTSU9OCiAKKy8qIENo
+YW5nZSBmaXJtd2FyZSBmaWxlIG5hbWUsIHVzaW5nICItIiBhbmQgaW5jcmVtZW50aW5nIG51bWJl
+ciwKKyAqICAgKm9ubHkqIHdoZW4gdUNvZGUgaW50ZXJmYWNlIG9yIGFyY2hpdGVjdHVyZSBjaGFu
+Z2VzIHNvIHRoYXQgaXQKKyAqICAgaXMgbm90IGNvbXBhdGlibGUgd2l0aCBlYXJsaWVyIGRyaXZl
+cnMuCisgKiBUaGlzIG51bWJlciB3aWxsIGFsc28gYXBwZWFyIGluIDw8IDggcG9zaXRpb24gb2Yg
+MXN0IGR3b3JkIG9mIHVDb2RlIGZpbGUgKi8KKyNkZWZpbmUgSVdMMzk0NV9VQ09ERV9BUEkgIi0x
+IgorI2RlZmluZSBJV0w0OTY1X1VDT0RFX0FQSSAiLTEiCisKIE1PRFVMRV9ERVNDUklQVElPTihE
+UlZfREVTQ1JJUFRJT04pOwogTU9EVUxFX1ZFUlNJT04oRFJWX1ZFUlNJT04pOwogTU9EVUxFX0FV
+VEhPUihEUlZfQ09QWVJJR0hUKTsKQEAgLTYxNzYsMjEgKzYxODMsMTcgQEAgc3RhdGljIGludCBp
+d2xfcmVhZF91Y29kZShzdHJ1Y3QgaXdsX3ByaXYgKnByaXYpCiAJaW50IHJjID0gMDsKIAljb25z
+dCBzdHJ1Y3QgZmlybXdhcmUgKnVjb2RlX3JhdzsKICNpZiBJV0wgPT0gMzk0NQotCWNvbnN0IGNo
+YXIgKm5hbWUgPSAiaXdsd2lmaS0zOTQ1LnVjb2RlIjsJLyogZmlybXdhcmUgZmlsZSBuYW1lICov
+CisJLyogZmlybXdhcmUgZmlsZSBuYW1lIGNvbnRhaW5zIHVDb2RlL2RyaXZlciBjb21wYXRpYmls
+aXR5IHZlcnNpb24gKi8KKwljb25zdCBjaGFyICpuYW1lID0gIml3bHdpZmktMzk0NSIgSVdMMzk0
+NV9VQ09ERV9BUEkgIi51Y29kZSI7CiAjZWxpZiBJV0wgPT0gNDk2NQotCWNvbnN0IGNoYXIgKm5h
+bWUgPSAiaXdsd2lmaS00OTY1LnVjb2RlIjsJLyogZmlybXdhcmUgZmlsZSBuYW1lICovCisJY29u
+c3QgY2hhciAqbmFtZSA9ICJpd2x3aWZpLTQ5NjUiIElXTDQ5NjVfVUNPREVfQVBJICIudWNvZGUi
+OwogI2VuZGlmCiAJdTggKnNyYzsKIAlzaXplX3QgbGVuOwogCXUzMiB2ZXIsIGluc3Rfc2l6ZSwg
+ZGF0YV9zaXplLCBpbml0X3NpemUsIGluaXRfZGF0YV9zaXplLCBib290X3NpemU7CiAKIAkvKiBB
+c2sga2VybmVsIGZpcm13YXJlX2NsYXNzIG1vZHVsZSB0byBnZXQgdGhlIGJvb3QgZmlybXdhcmUg
+b2ZmIGRpc2suCi0JICogcmVxdWVzdF9maXJtd2FyZSgpIGlzIHN5bmNocm9ub3VzIGNhbGwsIGZp
+bGUgaXMgaW4gbWVtb3J5IG9uIHJldHVybi4KLQkgKiBUT0RPOiAgV291bGQgaXQgYmUgbW9yZSBw
+b2xpdGUgdG8gdXNlIGFzeW5jaHJvbm91cwotCSAqICAgICAgICByZXF1ZXN0X2Zpcm13YXJlX25v
+d2FpdCgpPz8gIElmIHNvLCBwdXQgcmVxdWVzdCBiYWNrIGludG8KLQkgKiAgICAgICAgaXdsX3Bj
+aV9wcm9iZSgpLCBhbmQgcmVzdCBvZiB0aGlzIGZ1bmN0aW9uIHdvdWxkIHNlcnZlIGFzCi0JICog
+ICAgICAgIHRoZSBjYWxsYmFjayBmb3IgcmVxdWVzdF9maXJtd2FyZV9ub3dhaXQoKS4gIEFsc28g
+bmVlZCB0bwotCSAqICAgICAgICBtYWtlIHN1cmUgZXZlcnl0aGluZyB3YWl0cyBmb3IgdGhpcyBj
+YWxsYmFjayB0byBjb21wbGV0ZSEgKi8KKwkgKiByZXF1ZXN0X2Zpcm13YXJlKCkgaXMgc3luY2hy
+b25vdXMsIGZpbGUgaXMgaW4gbWVtb3J5IG9uIHJldHVybi4gKi8KIAlyYyA9IHJlcXVlc3RfZmly
+bXdhcmUoJnVjb2RlX3JhdywgbmFtZSwgJnByaXYtPnBjaV9kZXYtPmRldik7CiAJaWYgKHJjIDwg
+MCkgewogCQlJV0xfRVJST1IoIiVzIGZpcm13YXJlIGZpbGUgcmVxIGZhaWxlZDogUmVhc29uICVk
+XG4iLCBuYW1lLCByYyk7Ci0tIAoxLjUuMgoK
+
+------_=_NextPart_001_01C7D001.537B5191--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
