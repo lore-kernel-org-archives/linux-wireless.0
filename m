@@ -1,58 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:46305 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756136AbXGRQOr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2007 12:14:47 -0400
-Message-ID: <469E3C70.4070809@lwfinger.net>
-Date: Wed, 18 Jul 2007 11:14:40 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Jiri Benc <jbenc@suse.cz>
-CC: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2] mac80211: fix GCC warning on 64bit platforms
-References: <20070714.185935.18577806.davem@davemloft.net>	<20070714.204116.23012949.davem@davemloft.net>	<20070716184653.355253bf@griffin.suse.cz>	<20070716.145358.35015496.davem@davemloft.net> <20070718171044.2de287cd@griffin.suse.cz>
-In-Reply-To: <20070718171044.2de287cd@griffin.suse.cz>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from ra.tuxdriver.com ([70.61.120.52]:3007 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935103AbXG0TmA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jul 2007 15:42:00 -0400
+Date: Fri, 27 Jul 2007 15:10:54 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jean Tourrilhes <jt@hpl.hp.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Re: [PATCH] remove duplicated ioctl entries in compat_ioctl.c
+Message-ID: <20070727191053.GA7572@tuxdriver.com>
+References: <20070727171301.GA16210@bougret.hpl.hp.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070727171301.GA16210@bougret.hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Benc wrote:
-> net/mac80211/ieee80211.c: In function ieee80211_register_hw:
-> net/mac80211/ieee80211.c:4989: warning: comparison of distinct pointer types lacks a cast
-> 
-> Size of ieee80211_tx_status_rtap_hdr structure will never be greater than
-> unsigned int.
-> 
-> Signed-off-by: Jiri Benc <jbenc@suse.cz>
-> 
-> ---
-> 
-> On Mon, 16 Jul 2007 14:53:58 -0700 (PDT), David Miller wrote:
->> The macro "max_t" exists for these kinds of situations, please
->> use it. :-)
-> 
-> Ok.
-> 
-> ---
->  net/mac80211/ieee80211.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> --- mac80211-2.6.orig/net/mac80211/ieee80211.c
-> +++ mac80211-2.6/net/mac80211/ieee80211.c
-> @@ -4986,8 +4986,8 @@ int ieee80211_register_hw(struct ieee802
->  	 * and we need some headroom for passing the frame to monitor
->  	 * interfaces, but never both at the same time.
->  	 */
-> -	local->tx_headroom = max(local->hw.extra_tx_headroom,
-> -				 sizeof(struct ieee80211_tx_status_rtap_hdr));
-> +	local->tx_headroom = max_t(unsigned, local->hw.extra_tx_headroom,
-> +				   sizeof(struct ieee80211_tx_status_rtap_hdr));
->  
->  	debugfs_hw_add(local);
+On Fri, Jul 27, 2007 at 10:13:01AM -0700, Jean Tourrilhes wrote:
+> "John W. Linville" wrote :
+> > On Mon, Jul 09, 2007 at 07:54:39PM +0900, Masakazu Mokuno wrote:
+> > > This patch removes some duplicated wireless ioctl entries in the array
+> > > 'struct ioctl_trans ioctl_start[]' of fs/compat_ioctl.c
+> > > 
+> > > These entries are registered twice like:
+> > > 
+> > > 	COMPATIBLE_IOCTL(SIOCGIWPRIV)
+> > > 
+> > > and
+> > > 
+> > > 	HANDLE_IOCTL(SIOCGIWPRIV, do_wireless_ioctl)
+> > > 
+> > > 
+> > > Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
 
-For my info on how to use max_t, not as a critique of this patch. (1) Is 'unsigned' enough or should 
-it be 'unsigned int'? (2) Because tx_headroom is an int, why use unsigned at all?
+> > As I read the code in compat_ioctl.c, it looks to me like the
+> > COMPATIBLE_IOCTL definitions are the ones that are actually being
+> > used today.  Do you agree?
+> 
+> 	Actually, you are wrong, and Masakazu is right. All those
+> ioctls contains a pointer and should go through the pointer
+> conversion.
 
-Larry
+Masakazu replied in agreement that the COMPATIBLE_IOCTL entries are
+the effective ones i.e. the code currently uses those entries and
+the others are currently just wasting space.
+
+Perhaps the HANDLE_IOCTL entries are indeed the correct and intended ones.  You seem to be indicating so.
+
+> 	The reason why Masakazu sent that patch is that he actually
+> stumbled on the problem and tested it.
+
+The only problem stated is the not-quite-duplicate entries.  If there
+is an actual problem (and not just sloppy code) then that makes the
+situation more clear.
+
+What is the manifestation of the problem?
+
+> > Given the...stability...of the wireless extensions API, if we are going
+> > to remove one or the other of these not-quite-duplicate definitions,
+> > shouldn't we remove the HANDLE_IOCTL defintions instead?
+> 
+> 	I don't understand, you are in favor of breaking the API ?
+
+I'm not sure how an honest reading could imply that.
+
+If this fixes a bug, then fine.  If we are trading the one "duplicate"
+entry we have been using for one that hasn't been in use, it doesn't
+make much sense.
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
