@@ -1,95 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:44073 "EHLO mga01.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:50879 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753109AbXG0J3J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2007 05:29:09 -0400
+	id S1760818AbXG0J3A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jul 2007 05:29:00 -0400
 From: Zhu Yi <yi.zhu@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Mohamed Abbas <mabbas@linux.intel.com>
-Subject: [PATCH 14/17] iwlwifi: fix channel switch assert
-Date: Fri, 27 Jul 2007 17:26:38 +0800
-Message-Id: <11855284263627-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11855284253382-git-send-email-yi.zhu@intel.com>
+	Gregory Greenman <gregory.greenman@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 05/17] iwlwifi: rxon filter_flags endianity fix
+Date: Fri, 27 Jul 2007 17:26:29 +0800
+Message-Id: <11855284103871-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1185528408776-git-send-email-yi.zhu@intel.com>
 References: <11855284012123-git-send-email-yi.zhu@intel.com>
  <11855284032407-git-send-email-yi.zhu@intel.com>
  <11855284053896-git-send-email-yi.zhu@intel.com>
  <11855284072074-git-send-email-yi.zhu@intel.com>
  <1185528408776-git-send-email-yi.zhu@intel.com>
- <11855284103871-git-send-email-yi.zhu@intel.com>
- <11855284122218-git-send-email-yi.zhu@intel.com>
- <11855284142478-git-send-email-yi.zhu@intel.com>
- <11855284161716-git-send-email-yi.zhu@intel.com>
- <11855284183313-git-send-email-yi.zhu@intel.com>
- <11855284201330-git-send-email-yi.zhu@intel.com>
- <11855284212390-git-send-email-yi.zhu@intel.com>
- <1185528423816-git-send-email-yi.zhu@intel.com>
- <11855284253382-git-send-email-yi.zhu@intel.com>
 To: ipwpatch@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix the system freeze when do channel switch to radar channel.
-If we are switching to a radar channel then we need to set
-expect_beacon. Otherwise we get assert from ucode. we still
-see assert if we do more than one channel switch currently,
-fix will be coming next.
+This patch fixes endianty issues in rxon.filter_flags.
+It also discards usage of iwl_check_bits in some cases.
+The result is the same but the semantic is not.
 
-Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- drivers/net/wireless/iwl-4965.c |    7 +++++++
- drivers/net/wireless/iwl-base.c |    8 ++++++--
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwl-base.c |   12 +++----
+ drivers/net/wireless/iwl-hw.h   |   74 ++++++++++++++++++--------------------
+ 2 files changed, 40 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/net/wireless/iwl-4965.c b/drivers/net/wireless/iwl-4965.c
-index fcee3f5..da3e9a7 100644
---- a/drivers/net/wireless/iwl-4965.c
-+++ b/drivers/net/wireless/iwl-4965.c
-@@ -2607,11 +2607,14 @@ int iwl_hw_channel_switch(struct iwl_priv *priv, u8 channel)
- 	u8 is_fat = 0;
- 	u8 ctrl_chan_high = 0;
- 	struct iwl_channel_switch_cmd cmd = { 0 };
-+	const struct iwl_channel_info *ch_info;
- 
- 	band = ((priv->phymode == MODE_IEEE80211B) ||
- 		(priv->phymode == MODE_IEEE80211G) ||
- 		(priv->phymode == MODE_ATHEROS_TURBOG)) ? 1 : 0;
- 
-+	ch_info = iwl_get_channel_info(priv, priv->phymode, channel);
-+
- 	is_fat = is_fat_channel(priv->staging_rxon.flags);
- 
- 	if (is_fat &&
-@@ -2624,6 +2627,10 @@ int iwl_hw_channel_switch(struct iwl_priv *priv, u8 channel)
- 	cmd.rxon_flags = priv->active_rxon.flags;
- 	cmd.rxon_filter_flags = priv->active_rxon.filter_flags;
- 	cmd.switch_time = cpu_to_le32(priv->ucode_beacon_time);
-+	if (ch_info)
-+		cmd.expect_beacon = is_channel_radar(ch_info);
-+	else
-+		cmd.expect_beacon = 1;
- 
- 	rc = iwl4965_fill_txpower_tbl(priv, band, channel, is_fat,
- 				      ctrl_chan_high, &cmd.tx_power);
 diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
-index a17fbd9..c28a56a 100644
+index 82470f1..3d19a1a 100644
 --- a/drivers/net/wireless/iwl-base.c
 +++ b/drivers/net/wireless/iwl-base.c
-@@ -7484,8 +7484,12 @@ static int iwl_mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
- 	/* if we are switching fron ht to 2.4 clear flags
- 	 * from any ht related info since 2.4 does not
- 	 * support ht */
--	if (is_channel_bg_band(ch_info) &&
--	    (priv->staging_rxon.channel != conf->channel))
-+	if ((priv->staging_rxon.channel != conf->channel)
-+#ifdef IEEE80211_CONF_CHANNEL_SWITCH
-+	    && !(conf->flags & IEEE80211_CONF_CHANNEL_SWITCH))
-+#else
-+	    )
-+#endif
- 		priv->staging_rxon.flags = 0;
- #endif /* CONFIG_IWLWIFI_HT */
- #endif /* IWL == 4965 */
+@@ -984,15 +984,13 @@ static int iwl_full_rxon_required(struct iwl_priv *priv)
+ 	 * flag transitions are allowed using RXON_ASSOC */
+ 
+ 	/* Check if we are not switching bands */
+-	if (iwl_check_bits(priv->staging_rxon.flags, RXON_FLG_BAND_24G_MSK) !=
+-	    iwl_check_bits(priv->active_rxon.flags, RXON_FLG_BAND_24G_MSK))
++	if ((priv->staging_rxon.flags & RXON_FLG_BAND_24G_MSK) !=
++	    (priv->active_rxon.flags & RXON_FLG_BAND_24G_MSK))
+ 		return 1;
+ 
+ 	/* Check if we are switching association toggle */
+-	if (iwl_check_bits(priv->staging_rxon.filter_flags,
+-			   RXON_FILTER_ASSOC_MSK) !=
+-	    iwl_check_bits(priv->active_rxon.filter_flags,
+-			   RXON_FILTER_ASSOC_MSK))
++	if ((priv->staging_rxon.filter_flags & RXON_FILTER_ASSOC_MSK) !=
++		(priv->active_rxon.filter_flags & RXON_FILTER_ASSOC_MSK))
+ 		return 1;
+ 
+ 	return 0;
+@@ -1154,7 +1152,7 @@ static int iwl_commit_rxon(struct iwl_priv *priv)
+ 		       "* bssid = " MAC_FMT "\n",
+ 		       ((priv->staging_rxon.filter_flags &
+ 			 RXON_FILTER_ASSOC_MSK) ? "" : "out"),
+-		       priv->staging_rxon.channel,
++		       le16_to_cpu(priv->staging_rxon.channel),
+ 		       MAC_ARG(priv->staging_rxon.bssid_addr));
+ 
+ 	/* Apply the new configuration */
+diff --git a/drivers/net/wireless/iwl-hw.h b/drivers/net/wireless/iwl-hw.h
+index 3f7e5bd..58afbf7 100644
+--- a/drivers/net/wireless/iwl-hw.h
++++ b/drivers/net/wireless/iwl-hw.h
+@@ -193,47 +193,43 @@ enum {
+ };
+ 
+ /* rx_config flags */
+-enum {
+-	/* band & modulation selection */
+-	RXON_FLG_BAND_24G_MSK = (1 << 0),
+-	RXON_FLG_CCK_MSK = (1 << 1),
+-	/* auto detection enable */
+-	RXON_FLG_AUTO_DETECT_MSK = (1 << 2),
+-	/* TGg protection when tx */
+-	RXON_FLG_TGG_PROTECT_MSK = (1 << 3),
+-	/* cck short slot & preamble */
+-	RXON_FLG_SHORT_SLOT_MSK = (1 << 4),
+-	RXON_FLG_SHORT_PREAMBLE_MSK = (1 << 5),
+-	/* antenna selection */
+-	RXON_FLG_DIS_DIV_MSK = (1 << 7),
+-	RXON_FLG_ANT_SEL_MSK = 0x0f00,
+-	RXON_FLG_ANT_A_MSK = (1 << 8),
+-	RXON_FLG_ANT_B_MSK = (1 << 9),
+-	/* radar detection enable */
+-	RXON_FLG_RADAR_DETECT_MSK = (1 << 12),
+-	RXON_FLG_TGJ_NARROW_BAND_MSK = (1 << 13),
+-	/* rx response to host with 8-byte TSF
+-	 * (according to ON_AIR deassertion) */
+-	RXON_FLG_TSF2HOST_MSK = (1 << 15)
+-};
++/* band & modulation selection */
++#define RXON_FLG_BAND_24G_MSK           __constant_cpu_to_le32(1 << 0)
++#define RXON_FLG_CCK_MSK                __constant_cpu_to_le32(1 << 1)
++/* auto detection enable */
++#define RXON_FLG_AUTO_DETECT_MSK        __constant_cpu_to_le32(1 << 2)
++/* TGg protection when tx */
++#define RXON_FLG_TGG_PROTECT_MSK        __constant_cpu_to_le32(1 << 3)
++/* cck short slot & preamble */
++#define RXON_FLG_SHORT_SLOT_MSK          __constant_cpu_to_le32(1 << 4)
++#define RXON_FLG_SHORT_PREAMBLE_MSK     __constant_cpu_to_le32(1 << 5)
++/* antenna selection */
++#define RXON_FLG_DIS_DIV_MSK            __constant_cpu_to_le32(1 << 7)
++#define RXON_FLG_ANT_SEL_MSK            __constant_cpu_to_le32(0x0f00)
++#define RXON_FLG_ANT_A_MSK              __constant_cpu_to_le32(1 << 8)
++#define RXON_FLG_ANT_B_MSK              __constant_cpu_to_le32(1 << 9)
++/* radar detection enable */
++#define RXON_FLG_RADAR_DETECT_MSK       __constant_cpu_to_le32(1 << 12)
++#define RXON_FLG_TGJ_NARROW_BAND_MSK    __constant_cpu_to_le32(1 << 13)
++/* rx response to host with 8-byte TSF
++* (according to ON_AIR deassertion) */
++#define RXON_FLG_TSF2HOST_MSK           __constant_cpu_to_le32(1 << 15)
+ 
+ /* rx_config filter flags */
+-enum {
+-	/* accept all data frames */
+-	RXON_FILTER_PROMISC_MSK = (1 << 0),
+-	/* pass control & management to host */
+-	RXON_FILTER_CTL2HOST_MSK = (1 << 1),
+-	/* accept multi-cast */
+-	RXON_FILTER_ACCEPT_GRP_MSK = (1 << 2),
+-	/* don't decrypt uni-cast frames */
+-	RXON_FILTER_DIS_DECRYPT_MSK = (1 << 3),
+-	/* don't decrypt multi-cast frames */
+-	RXON_FILTER_DIS_GRP_DECRYPT_MSK = (1 << 4),
+-	/* STA is associated */
+-	RXON_FILTER_ASSOC_MSK = (1 << 5),
+-	/* transfer to host non bssid beacons in associated state */
+-	RXON_FILTER_BCON_AWARE_MSK = (1 << 6)
+-};
++/* accept all data frames */
++#define RXON_FILTER_PROMISC_MSK         __constant_cpu_to_le32(1 << 0)
++/* pass control & management to host */
++#define RXON_FILTER_CTL2HOST_MSK        __constant_cpu_to_le32(1 << 1)
++/* accept multi-cast */
++#define RXON_FILTER_ACCEPT_GRP_MSK      __constant_cpu_to_le32(1 << 2)
++/* don't decrypt uni-cast frames */
++#define RXON_FILTER_DIS_DECRYPT_MSK     __constant_cpu_to_le32(1 << 3)
++/* don't decrypt multi-cast frames */
++#define RXON_FILTER_DIS_GRP_DECRYPT_MSK __constant_cpu_to_le32(1 << 4)
++/* STA is associated */
++#define RXON_FILTER_ASSOC_MSK           __constant_cpu_to_le32(1 << 5)
++/* transfer to host non bssid beacons in associated state */
++#define RXON_FILTER_BCON_AWARE_MSK      __constant_cpu_to_le32(1 << 6)
+ 
+ /*
+  * RXON-Timings Command & Response
 -- 
 1.5.2
