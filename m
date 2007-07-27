@@ -1,65 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60133 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758032AbXGFLGB (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:56494
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762247AbXG0LYf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2007 07:06:01 -0400
-Subject: Re: Arrested Development
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>
-In-Reply-To: <468DE699.9040708@warmcat.com>
-References: <468DE699.9040708@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Rt7w4Bv3jGe552YEAmNS"
-Date: Fri, 06 Jul 2007 13:07:02 +0200
-Message-Id: <1183720022.3818.120.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 27 Jul 2007 07:24:35 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Zhu Yi <yi.zhu@intel.com>
+Subject: Re: [PATCH 09/17] iwlwifi: EEPROM reading fix
+Date: Fri, 27 Jul 2007 13:22:49 +0200
+Cc: linville@tuxdriver.com, ipwpatch@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Gregory Greenman <gregory.greenman@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+References: <11855284012123-git-send-email-yi.zhu@intel.com> <11855284161716-git-send-email-yi.zhu@intel.com> <11855284183313-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11855284183313-git-send-email-yi.zhu@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200707271322.50303.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday 27 July 2007 11:26:33 Zhu Yi wrote:
+>  		if (!(r & 1)) {
+>  			IWL_ERROR("Time out reading EEPROM[%d]", addr);
+> -			return -ETIMEDOUT;
+> +			rc = -ETIMEDOUT;
+> +			goto done;
+>  		}
+>  
+>  		e[addr / 2] = le16_to_cpu(r >> 16);
 
---=-Rt7w4Bv3jGe552YEAmNS
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Seems like you really want cpu_to_le16() here, as "r" should better
+be CPU-endian when shifting it by >>.
 
-On Fri, 2007-07-06 at 07:52 +0100, Andy Green wrote:
+Though, I don't see enough code context here to judge if the
+endianess conversion is correct at all or not.
 
-> But it doesn't get elevated to wireless-git, I know because I check the
-> web interface for it every day like a kid waiting for Christmas.  Is
-> there something more I should be doing, or is it somehow waiting for a
-> ripe moment in the release cycle (even to go in wireless-dev?)
-
-Nothing is really going on right now in wireless-dev, John is probably
-still catching up with old mail after vacation and OLS :)
-
-> Second is a small patch for zd1211rw-mac80211 that fixes rate reporting
-> on radiotap rx, last sent here 11 June.
->=20
-> http://www.spinics.net/lists/linux-wireless/msg02897.html
->=20
-> This did not receive any comment, despite it should be simple to verify
-> it is currently broken and that this small patch fixes it, and I see
-> other small patches acknowledged and accepted there in the meanwhile.
-> Again, is there something more or different I should be doing?
-
-Probably just what you did now: poke daniel/uli again.
-
-johannes
-
---=-Rt7w4Bv3jGe552YEAmNS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGjiJV/ETPhpq3jKURAmx8AKCKwVWj+y7PSVU4zWEdOeQUNhJqSwCeNtZX
-E7pFrt+Ojgxxw97qwDNOa8g=
-=qwht
------END PGP SIGNATURE-----
-
---=-Rt7w4Bv3jGe552YEAmNS--
-
+-- 
+Greetings Michael.
