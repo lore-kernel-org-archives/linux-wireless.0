@@ -1,78 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.236]:45380 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756364AbXGYVAw (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33574 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762723AbXG0W2U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 17:00:52 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so296298wxd
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2007 14:00:51 -0700 (PDT)
-Message-ID: <1ba2fa240707251400l784cbad7ja0003b24017c6535@mail.gmail.com>
-Date: Thu, 26 Jul 2007 00:00:51 +0300
-From: "Tomas Winkler" <tomas.winkler@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Please pull patch-bomb for iwlwifi
-Cc: "Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20070725200721.GH7093@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <20070725085754.GA670@mail.intel.com>
-	 <20070725200721.GH7093@tuxdriver.com>
+	Fri, 27 Jul 2007 18:28:20 -0400
+Subject: Re: mac80211 git tree reworked
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Benc <jbenc@suse.cz>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20070727175716.32242e3f@griffin.suse.cz>
+References: <20070727175716.32242e3f@griffin.suse.cz>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-w+B+/Y0S8Gb9T+M5HE7C"
+Date: Sat, 28 Jul 2007 00:28:52 +0200
+Message-Id: <1185575332.4006.70.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/25/07, John W. Linville <linville@tuxdriver.com> wrote:
-> On Wed, Jul 25, 2007 at 04:57:54PM +0800, Zhu Yi wrote:
->
-> > This patch series catches wireless-dev up to the stand-alone
-> > iwlwifi tree version 0.1.3.
-> >
-> > There are totally 117 patches so I won't post them one by one on
-> > the list. Please find the commit series for the changes in the
-> > patch bomb:
-> >
-> >     iwlwifi-efe55d8fa702a23724bf44fdd54059f8c4480941.tgz
-> > at
-> >     http://intellinuxwireless.org/iwlwifi/patches/
-> >
-> > This is based on wireless-dev commit:
-> >
-> >     3382ada69e6796da1675b0c5d064a472e9db2822
-> >
-> > Signed-off-by: Zhu Yi <yi.zhu@intel.com>
->
-> I have applied these to the wireless-dev tree.  It is available now:
->
->         git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-dev.git
->
-> Does the current driver (as posted) depend on mac80211 patches which
-> are not upstream at this time?
->
-The HT part is still not there but it can be mean wihile compiled out
-in the driver. I'm suppose to submit HT  patches soon hoping for
-tomorrow if everything works fine. I'm rebasing them against latest
-wireless-dev.git. I will post them inline if you prefer.
 
-I know you've asked us to review the already submitted 11n/HT patches.
-I'm suggesting that we just patch over them otherwise we lost driver
-stability and delay the whole process even more.  I'm not happy with
-this solution myself but to bring the complete solution at once will
-make us silent for another period.
+--=-w+B+/Y0S8Gb9T+M5HE7C
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Do you believe that you have addressed the bulk of the review comments
-> from the previous posting?
+Hi Jiri,
 
-Most of them. The Endian issues fixing is still in progress.
+> this will most likely be unpopular, but it was a thing that needed to
+> be done to make mac80211 tree manageable again.
 
-Thanks
-Tomas
-> Thanks,
->
-> John
-> --
-> John W. Linville
-> linville@tuxdriver.com
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Why unpopular? The general reaction I've seen (and I second) was
+"awesome" :)
+
+> Creating the up-dev branch meant modifying all mac80211 patches in
+> wireless-dev, as they sit on top of Johannes' restructuring patches
+> now.=20
+
+Whee :)
+
+> I started to do the same with cfg80211 and nl80211 patches but it
+> turned out that many cfg/nl80211 commits overwrite each other as the
+> interface was evolving and being rewritten. So I decided to throw away
+> the history and make a patch (surprisingly, it's quite a nice and
+> relatively small patch in the end) that brings cfg80211/nl80211 to the
+> state in which it was when mac80211 was merged to vanilla. Patches that
+> were committed afterwards are committed separately on the top of it.
+
+Sounds good to me. It was changing quite a bit at the time, yeah. It'll
+probably continue to do so if somebody works on it again...
+
+> What are the advantages?
+> - Johannes' restructuring patches go in.
+> - We have patches prepared for merging of wireless-dev into vanilla.
+> - mac80211 patches can go to vanilla and will appear automatically and
+>   correctly in wireless-dev.
+
+Cool
+
+> [In fact, I'd like more another approach but I'm not sure how feasible
+> it is: apply mac80211 drivers to a separate branch than mac80211 in
+> wireless-dev and pull both of them into a common branch. That way I'd be
+> able to rebase mac80211 tree to keep mac80211 patches always on the top
+> (and modify them gradually as fixes, especially to 11n and WMM,
+> appear). The big disadvantage is that pulling from wireless-dev would
+> become much harder.]
+
+Actually, that just means that John has to pull both mac80211 and
+drivers into master everytime he updates one of them. Or something.
+
+Good job!
+
+johannes
+
+--=-w+B+/Y0S8Gb9T+M5HE7C
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGqnGj/ETPhpq3jKURAs2HAJwMws9uKId0srZWY3sMvQyJBKTGRQCfQrOh
+eJ5NWCubj0AyoSockX5GHSM=
+=Rg8C
+-----END PGP SIGNATURE-----
+
+--=-w+B+/Y0S8Gb9T+M5HE7C--
+
