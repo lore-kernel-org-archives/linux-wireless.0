@@ -1,48 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:56683 "EHLO
-	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754950AbXGUU6z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jul 2007 16:58:55 -0400
-From: Daniel Drake <dsd@gentoo.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Cc: kune@deine-taler.de
-Subject: [PATCH] zd1211rw-mac80211: Add ID for Planex GW-US54GXS
-Message-Id: <20070721205859.9C93D7B40A0@zog.reactivated.net>
-Date: Sat, 21 Jul 2007 21:58:59 +0100 (BST)
+Received: from styx.suse.cz ([82.119.242.94]:52122 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754676AbXG0Mii (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jul 2007 08:38:38 -0400
+Date: Fri, 27 Jul 2007 14:38:36 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: mac80211: BUG sleeping function called from invalid context
+Message-ID: <20070727143836.715fbe61@griffin.suse.cz>
+In-Reply-To: <200707271427.27261.mb@bu3sch.de>
+References: <200707271427.27261.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+On Fri, 27 Jul 2007 14:27:26 +0200, Michael Buesch wrote:
+> [  183.950972] BUG: sleeping function called from invalid context at mm/slab.c:3024
+> [  183.951305] in_atomic():1, irqs_disabled():0
+> [  183.952456] Call Trace:
+> [  183.953521] [db633cc0] [c0008978] show_stack+0x50/0x184 (unreliable)
+> [  183.954780] [db633ce0] [c002a164] __might_sleep+0xc0/0xd4
+> [  183.955982] [db633cf0] [c007862c] kmem_cache_alloc+0x34/0x118
+> [  183.957198] [db633d10] [e25fa20c] ieee80211_sta_scan_results+0x548/0x750 [mac80211]
 
-This patch adds the ID for Plannex GW-US54GXS USB wireless adapter sold in
-Japan.
-Since this device returns the regulatory region as 0x49,
-the patch 'Allow channels 1-11 for unrecognised regulatory domains' is
-required.
+Fix was posted in http://thread.gmane.org/gmane.linux.kernel.wireless.general/3939
 
-Tested by Masakazu Mokuno
-zd1211b chip 2019:5303 v4810 high 00-90-cc AL2230_RF pa0 ---N-
+Thanks,
 
-Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
----
- drivers/net/wireless/mac80211/zd1211rw/zd_usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ Jiri
 
-diff --git a/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c b/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
-index 9b4950f..9a371f2 100644
---- a/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/mac80211/zd1211rw/zd_usb.c
-@@ -70,6 +70,7 @@ static struct usb_device_id usb_ids[] = {
- 	{ USB_DEVICE(0x0586, 0x3413), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0053, 0x5301), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0411, 0x00da), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x2019, 0x5303), .driver_info = DEVICE_ZD1211B },
- 	/* "Driverless" devices that need ejecting */
- 	{ USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
- 	{ USB_DEVICE(0x0ace, 0x20ff), .driver_info = DEVICE_INSTALLER },
 -- 
-1.5.2.2
-
+Jiri Benc
+SUSE Labs
