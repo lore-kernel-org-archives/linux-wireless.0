@@ -1,68 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:11469 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754875AbXGaFYw (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:55789 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S937806AbXG0UNk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 01:24:52 -0400
-From: Michael Wu <flamingice@sourmilk.net>
+	Fri, 27 Jul 2007 16:13:40 -0400
+Date: Fri, 27 Jul 2007 13:12:49 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
 To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] zd1211rw-mac80211: debug output for mac80211 ops
-Date: Mon, 30 Jul 2007 22:22:58 -0700
-Cc: Ulrich Kunitz <kune@deine-taler.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
-	Jiri Benc <jbenc@suse.cz>
-References: <20070730023128.99E927B409F@zog.reactivated.net> <20070730225205.GA17252@deine-taler.de> <200707310105.55863.mb@bu3sch.de>
-In-Reply-To: <200707310105.55863.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart51562753.kE9pW7Ug5z";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200707302223.04696.flamingice@sourmilk.net>
+Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Gary Zambrano <zambrano@broadcom.com>
+Subject: Re: [PATCH] Merge the Sonics Silicon Backplane subsystem
+Message-Id: <20070727131249.74330a3d.akpm@linux-foundation.org>
+In-Reply-To: <200707272143.59551.mb@bu3sch.de>
+References: <200707271857.24162.mb@bu3sch.de>
+	<200707272130.48973.mb@bu3sch.de>
+	<20070727123853.d16e875c.akpm@linux-foundation.org>
+	<200707272143.59551.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart51562753.kE9pW7Ug5z
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Fri, 27 Jul 2007 21:43:59 +0200
+Michael Buesch <mb@bu3sch.de> wrote:
 
-On Monday 30 July 2007 16:05, Michael Buesch wrote:
-> I suggest you look at bcm43xx-mac80211.
-> You will need to introduce refcounting for your monitor interfaces
-> and I _really_ suggest to get rid of the zd_op_open() and zd_op_close()
-> functions. Just include that in add/remove interface. You need
-> to refcount your interfaces anyway.
->
-Requiring refcounting for monitor interfaces is fairly dumb since mac80211=
-=20
-does the exact same refcounting. I haven't bothered to do it in any driver=
-=20
-ports yet for this reason. This part of the mac80211 driver api needs to be=
-=20
-fixed.
+> > Sure, but why is the locking interruptible rather than plain old
+> > mutex_lock()?
+> 
+> Hm, well. We hold this mutex for several seconds, as writing takes
+> this long. So I simply thought it was worth allowing the waiter
+> to interrupt here. If you say that's not an issue, I'll be happy
+> to use mutex_lock() and reduce code complexity in this area.
 
-Also, I'm not entirely convinced that eliminating the open/close callbacks =
-is=20
-a good idea, which is why I continued to use them in the zd1211rw port.
+So..  is that what the _interruptible() is for?  To allow an impatient user to ^c
+a read?
 
-=2DMichael Wu
-
---nextPart51562753.kE9pW7Ug5z
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGrsc4T3Oqt9AH4aERAv6mAJ9jvyQgSTyfGkAjYgterU2//lagYQCeNGVO
-cbkpfTJPtMAfXpAPO2TPsFc=
-=GkiF
------END PGP SIGNATURE-----
-
---nextPart51562753.kE9pW7Ug5z--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+If so, that sounds reasonable.  It's worth a comment explaining these decisions
+to future readers, because it is hard to work out this sort of thinking just
+from the bare C code.
