@@ -1,72 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:7552 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753849AbXGCPWr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2007 11:22:47 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-Date: Tue, 3 Jul 2007 17:22:41 +0200
-Subject: [PATCH] libertas: remove adapter->txrate
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200707031722.41223.hs4233@mail.mn-solutions.de>
+Received: from styx.suse.cz ([82.119.242.94]:43694 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1759633AbXG0R0T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jul 2007 13:26:19 -0400
+Date: Fri, 27 Jul 2007 19:26:17 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: mac80211: pull request
+Message-ID: <20070727192617.5ae82584@griffin.suse.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The value of txrate was only set by a CMD_802_11_TX_RATE_QUERY command,
-but there was no code in the driver that ever issued this command.
+John,
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
----
- drivers/net/wireless/libertas/cmd.c     |    7 -------
- drivers/net/wireless/libertas/cmdresp.c |    3 ---
- drivers/net/wireless/libertas/dev.h     |    1 -
- 3 files changed, 0 insertions(+), 11 deletions(-)
+please pull from
+git://git.kernel.org/pub/scm/linux/kernel/git/jbenc/mac80211.git up-2.6
+to obtain patches below.
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 2a5defe..0da013f 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1368,13 +1368,6 @@ int libertas_prepare_and_send_command(wlan_private * priv,
- 					   S_DS_GEN);
- 		ret = 0;
- 		break;
--	case CMD_802_11_TX_RATE_QUERY:
--		cmdptr->command = cpu_to_le16(CMD_802_11_TX_RATE_QUERY);
--		cmdptr->size = cpu_to_le16(sizeof(struct cmd_tx_rate_query) +
--					   S_DS_GEN);
--		adapter->txrate = 0;
--		ret = 0;
--		break;
- 	default:
- 		lbs_deb_host("PREP_CMD: unknown command 0x%04x\n", cmd_no);
- 		ret = -1;
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index 465a087..02ef04d 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -702,9 +702,6 @@ static inline int handle_cmd_response(u16 respcmd,
- 			memcpy(adapter->cur_cmd->pdata_buf, &resp->params.mesh,
- 			       sizeof(resp->params.mesh));
- 		break;
--	case CMD_RET(CMD_802_11_TX_RATE_QUERY):
--		priv->adapter->txrate = resp->params.txrate.txrate;
--		break;
- 	default:
- 		lbs_deb_host("CMD_RESP: unknown cmd response 0x%04x\n",
- 			    resp->command);
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 3eae896..fcfb2d3 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -376,7 +376,6 @@ struct _wlan_adapter {
- 
- 	struct cmd_ds_802_11_get_log logmsg;
- 
--	u16 txrate;
- 	u8 fw_ready;
- 
- 	u8 last_scanned_channel;
+This is intended for wireless-2.6. Because of the number of patches and
+the fact they are not much tested, it's maybe a good idea not to push
+them upstream immediately - but that's up to you.
+
+Andy Green (2):
+      mac80211: Add get_unaligned to ieee80211_get_radiotap_len
+      mac80211: Improve sanity checks on injected packets
+
+Daniel Drake (5):
+      mac80211: missing dev_put in ieee80211_master_start_xmit
+      mac80211: STA reassociation improvements
+      mac80211: don't allow scanning in monitor mode
+      mac80211: improved short preamble handling
+      mac80211: implement ERP info change notifications
+
+Ivo van Doorn (1):
+      mac80211: Add LONG_RETRY flag to ieee80211_tx_control
+
+Johannes Berg (14):
+      mac80211: split RX handlers into own file
+      mac80211: move QoS rx handlers into rx.c
+      mac80211: rx cleanups (1)
+      mac80211: split ieee80211_rx_h_check handler
+      mac80211: split up __ieee80211_rx
+      mac80211: fix bug for per-sta stats
+      mac80211: rx cleanups (2)
+      mac80211: split TX path into own file
+      mac80211: remove some unnecessary includes
+      mac80211: split out some key functions from ieee80211.c
+      mac80211: move some rate control functions out of ieee80211.c
+      mac80211: reorder interface related functions
+      mac80211: introduce util.c
+      mac80211: fix add_interface monitor mode behaviour
+
+Michael Wu (2):
+      mac80211: improve locking of sta_info related structures
+      mac80211: use more GFP_KERNEL instead of GFP_ATOMIC
+
+Zhu Yi (2):
+      mac80211: use do { } while (0) for multi-line macros
+      mac80211: Fix sparse error for sta_last_seq_ctrl_read
+
+ include/net/ieee80211_radiotap.h |   10 +
+ include/net/mac80211.h           |   34 +-
+ net/mac80211/Makefile            |    6 +-
+ net/mac80211/debugfs_netdev.c    |    8 +-
+ net/mac80211/debugfs_sta.c       |    2 +-
+ net/mac80211/ieee80211.c         | 4491 ++++----------------------------------
+ net/mac80211/ieee80211_i.h       |   74 +-
+ net/mac80211/ieee80211_iface.c   |    2 +-
+ net/mac80211/ieee80211_ioctl.c   |   36 +-
+ net/mac80211/ieee80211_rate.c    |   42 +
+ net/mac80211/ieee80211_rate.h    |    6 +
+ net/mac80211/ieee80211_sta.c     |   60 +-
+ net/mac80211/key.c               |   69 +
+ net/mac80211/rx.c                | 1453 ++++++++++++
+ net/mac80211/sta_info.c          |  184 +-
+ net/mac80211/sta_info.h          |   11 +-
+ net/mac80211/tx.c                | 1883 ++++++++++++++++
+ net/mac80211/util.c              |  488 +++++
+ net/mac80211/wme.c               |   65 -
+ net/mac80211/wme.h               |    9 +-
+ 20 files changed, 4589 insertions(+), 4344 deletions(-)
+
+
 -- 
-1.5.2.1
-
+Jiri Benc
+SUSE Labs
