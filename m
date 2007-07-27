@@ -1,74 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51403.mail.re2.yahoo.com ([206.190.38.182]:46440 "HELO
-	web51403.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754847AbXGBNiB convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2007 09:38:01 -0400
-Date: Mon, 2 Jul 2007 06:38:00 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: AW: [WIP] mac80211: kill mgmt interface
-To: "Cohen, Guy" <guy.cohen@intel.com>, Jiri Benc <jbenc@suse.cz>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:45833
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932236AbXG0Tlc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jul 2007 15:41:32 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] Merge the Sonics Silicon Backplane subsystem
+Date: Fri, 27 Jul 2007 21:39:45 +0200
+Cc: Andrew Morton <akpm@osdl.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Gary Zambrano <zambrano@broadcom.com>
+References: <200707271857.24162.mb@bu3sch.de> <20070727192120.GB7572@tuxdriver.com>
+In-Reply-To: <20070727192120.GB7572@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-ID: <394827.41199.qm@web51403.mail.re2.yahoo.com>
+Message-Id: <200707272139.45629.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-And, just from reading the documentation, it seems to be supported by M=
-adWifi for Atheros
-based devices:
+On Friday 27 July 2007 21:21:20 John W. Linville wrote:
+> On Fri, Jul 27, 2007 at 06:57:20PM +0200, Michael Buesch wrote:
+> > The Sonics Silicon Backplane is a mini-bus used on
+> > various Broadcom chips and embedded devices.
+> > Devices using the SSB include b44, bcm43xx and various
+> > Broadcom based wireless routers.
+> > A b44 and bcm43xx port and a SSB based OHCI driver is available.
+> > 
+> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> 
+> At first glance it looks like there might be some tab/space issues
+> in some of the #define blocks toward the end of the patch, although
+> those might be intentional.
 
-http://madwifi.org/wiki/ngFeatures
+They are intentional. It's something like this:
 
-and note the "To create APs which share a single MAC address, use the -=
-bssid flag when
-creating the VAPs:"  remark.
+#define SSB_REGISTER_XX			0xF88
+#define  SSB_VALUE_FOR_REGISTER_XX	0x0001
+#define  SSB_MASK_FOR_REGISTER_XX	0xFF00
+#define SSB_REGISTER_YY			0xF99
+...
 
-Even if no current mac80211 driver supports this feature, the API must =
-not prevent this in the future.
+> Aside from whatever other style issues that might be identified, I'll
+> state that this code has been carried in wireless-dev for months and
+> thereby also spent a lot of time in -mm as well as Fedora (rawhide
+> and F-7).  The code has proven to be reasonably stable and reliable.
 
--- =20
-Regards
-       Joerg
+And it's in the OpenWRT trunk since quite some time.
 
------ Urspr=FCngliche Mail ----
-Von: "Cohen, Guy" <guy.cohen@intel.com>
-An: Jiri Benc <jbenc@suse.cz>; Joerg Pommnitz <pommnitz@yahoo.com>
-CC: linux-wireless@vger.kernel.org; Johannes Berg <johannes@sipsolution=
-s.net>
-Gesendet: Sonntag, den 1. Juli 2007, 03:48:06 Uhr
-Betreff: RE: [WIP] mac80211: kill mgmt interface
-
-
-
-Jiri Benc wrote:
-> > Can one run multiple MLME (e.g. hostapd) instances to run multiple
-> virtual master mode interfaces
-> > for different networks? With different BSSID?
->=20
-> I don't think that would be ever possible when using monitor
-> interfaces.
->=20
-> On the other hand, it doesn't make much sense to support that. The
-> interfaces are not completely independent, e.g. you cannot tune to
-> different channels on different virtual interfaces. Therefore, at
-least
-> a minimal knowledge about virtual interfaces would be needed in more
-> complicated user space MLMEs.
-
-This is a required feature for Access Points (multiple BSSID).
-
-
-
-
-
-
-      __________________________________  BE A BETTER MEDIZINMANN: Jetz=
-t Frage stellen und einen von 44 iPods gewinnen! www.yahoo.de/clever
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Greetings Michael.
