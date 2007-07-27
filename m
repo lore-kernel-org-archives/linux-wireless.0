@@ -1,50 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:45624 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967257AbXG3UCS (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:46523
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932636AbXG0Tpv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2007 16:02:18 -0400
-Date: Tue, 31 Jul 2007 01:44:37 +0530 (IST)
-From: Satyam Sharma <satyam@infradead.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, akpm@linux-foundation.org
-Subject: Re: [PATCH 1/5] Use mutex instead of semaphore in the Host AP  driver
-In-Reply-To: <20070730145005.GB6586@tuxdriver.com>
-Message-ID: <alpine.LFD.0.999.0707310142190.17287@enigma.security.iitk.ac.in>
-References: <20070729212909.GC3432@traven> <20070729213434.GD3432@traven>
- <200707300006.42397.mb@bu3sch.de> <alpine.LFD.0.999.0707300842350.10861@enigma.security.iitk.ac.in>
- <alpine.LFD.0.999.0707300904360.10861@enigma.security.iitk.ac.in>
- <20070730054004.GI3432@traven> <alpine.LFD.0.999.0707301247100.12730@enigma.security.iitk.ac.in>
- <20070730145005.GB6586@tuxdriver.com>
+	Fri, 27 Jul 2007 15:45:51 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] Merge the Sonics Silicon Backplane subsystem
+Date: Fri, 27 Jul 2007 21:43:59 +0200
+Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Gary Zambrano <zambrano@broadcom.com>
+References: <200707271857.24162.mb@bu3sch.de> <200707272130.48973.mb@bu3sch.de> <20070727123853.d16e875c.akpm@linux-foundation.org>
+In-Reply-To: <20070727123853.d16e875c.akpm@linux-foundation.org>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200707272143.59551.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On Mon, 30 Jul 2007, John W. Linville wrote:
-
-> On Mon, Jul 30, 2007 at 12:50:31PM +0530, Satyam Sharma wrote:
-> > On Mon, 30 Jul 2007, Matthias Kaehlcke wrote:
-> > 
-> > > [...]
-> > > The Host AP driver uses a semaphore as mutex. Use the mutex API
-> > > instead of the (binary) semaphore.
+On Friday 27 July 2007 21:38:53 Andrew Morton wrote:
+> > > > +static ssize_t ssb_pci_attr_sprom_show(struct device *pcidev,
+> > > > +				       struct device_attribute *attr,
+> > > > +				       char *buf)
+> > > > +{
+> > > > +	struct pci_dev *pdev = container_of(pcidev, struct pci_dev, dev);
+> > > > +	struct ssb_bus *bus;
+> > > > +	u16 *sprom;
+> > > > +	int err = -ENODEV;
+> > > > +	ssize_t count = 0;
+> > > > +
+> > > > +	bus = ssb_pci_dev_to_bus(pdev);
+> > > > +	if (!bus)
+> > > > +		goto out;
+> > > > +	err = -ENOMEM;
+> > > > +	sprom = kcalloc(SSB_SPROMSIZE_WORDS, sizeof(u16), GFP_KERNEL);
+> > > > +	if (!sprom)
+> > > > +		goto out;
+> > > > +
+> > > > +	err = -ERESTARTSYS;
+> > > > +	if (mutex_lock_interruptible(&bus->pci_sprom_mutex))
+> > > > +		goto out_kfree;
+> > > > +	sprom_do_read(bus, sprom);
+> > > > +	mutex_unlock(&bus->pci_sprom_mutex);
+> > > > +
+> > > > +	count = sprom2hex(sprom, buf, PAGE_SIZE);
+> > > > +	err = 0;
+> > > > +
+> > > > +out_kfree:
+> > > > +	kfree(sprom);
+> > > > +out:
+> > > > +	return err ? err : count;
+> > > > +}
 > > > 
-> > > Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+> > > The mutex_lock_interruptible() looks fishy.  Some commented explanation of
+> > > what it's doing would be good here.  It's quite unobvious to this reader. 
+> > > Cheesy deadlock avoidance?  Hope not.
 > > 
-> > Reviewed-by: Satyam Sharma <satyam@infradead.org>
+> > No, it's simply to avoid writing the SPROM concurrently.
+> > SPROM writing is hairy and we must make sure here that
+> > we are the only one accessing the whole bus. We do that
+> > by suspending all devices and taking a lock to protect
+> > the SPROM from write concurrency.
 > 
-> Is that the same as Acked-by?  Or do you disagree with the patch?
-> 
-> Just checkin'...
+> Sure, but why is the locking interruptible rather than plain old
+> mutex_lock()?
 
-Well, I'm not the maintainer, so didn't think correct to give an
-"Acked-by". "Reviewed-by" generally means I read the patch, and think
-it is correct. Probably could save time for others ...
+Hm, well. We hold this mutex for several seconds, as writing takes
+this long. So I simply thought it was worth allowing the waiter
+to interrupt here. If you say that's not an issue, I'll be happy
+to use mutex_lock() and reduce code complexity in this area.
 
-
-Satyam
+-- 
+Greetings Michael.
