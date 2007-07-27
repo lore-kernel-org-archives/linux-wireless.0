@@ -1,48 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:57661 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:50879 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752659AbXGGV20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jul 2007 17:28:26 -0400
-Subject: Re: Errors when firmware is missing
-From: Dan Williams <dcbw@redhat.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	Jon Smirl <jonsmirl@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <200707072037.44582.mb@bu3sch.de>
-References: <9e4733910707070927l37bdf79cpd1fc672909fb0bb3@mail.gmail.com>
-	 <468FD6B2.6000408@lwfinger.net>  <200707072037.44582.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Sat, 07 Jul 2007 17:33:08 -0400
-Message-Id: <1183843988.16396.0.camel@xo-13-A4-25.localdomain>
-Mime-Version: 1.0
+	id S1762418AbXG0J3A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jul 2007 05:29:00 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 08/17] iwlwifi: QoS control endianity fixes
+Date: Fri, 27 Jul 2007 17:26:32 +0800
+Message-Id: <11855284161716-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11855284142478-git-send-email-yi.zhu@intel.com>
+References: <11855284012123-git-send-email-yi.zhu@intel.com>
+ <11855284032407-git-send-email-yi.zhu@intel.com>
+ <11855284053896-git-send-email-yi.zhu@intel.com>
+ <11855284072074-git-send-email-yi.zhu@intel.com>
+ <1185528408776-git-send-email-yi.zhu@intel.com>
+ <11855284103871-git-send-email-yi.zhu@intel.com>
+ <11855284122218-git-send-email-yi.zhu@intel.com>
+ <11855284142478-git-send-email-yi.zhu@intel.com>
+To: ipwpatch@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2007-07-07 at 20:37 +0200, Michael Buesch wrote:
-> On Saturday 07 July 2007 20:08:50 Larry Finger wrote:
-> > Jon Smirl wrote:
-> > > I have a new Broadcom 4318 adapter (which has exactly the same issues
-> > > with promiscuous mode). I didn't have the right firmware down for it
-> > > and I received this error message when I did "ifconfig wlan up"
-> > > SIOCSIFFLAGS: No such file or directory.  This is not the most user
-> > > friendly error message, but I did receive a log entry.
-> > 
-> > If the firmware did not load correctly, the bcm43xx driver logs appropriate messages. This error 
-> > would have been encountered and logged when the interface was brought up. Is that what you meant 
-> > when you say that you received a log entry? The ifconfig error message is output by the user code, 
-> > and is not controlled by any driver.
-> 
-> Well it is. It's -ENOENT, which we return in the driver.
-> I'd like to return, -ENOFIRMWARE, but there's no such error.
-> So I selected the most sane error code (to me), which says
-> file not found...
+This patch fixes endianity issues in accessing QoS control field
 
-This should be what all drivers do; if, when setting IFF_UP, the device
-can't find firmware, it should return -ENOENT, which is the return code
-from request_firmware() when it fails to find the firmware.  Thus,
-userspace can detect that firmware is missing and attempt to
-intelligently inform the user.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwl-4965.c    |    4 ++--
+ drivers/net/wireless/iwl-base.c    |    4 ++--
+ drivers/net/wireless/iwl-helpers.h |    2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-Dan
-
-
+diff --git a/drivers/net/wireless/iwl-4965.c b/drivers/net/wireless/iwl-4965.c
+index 03e3708..5586b4c 100644
+--- a/drivers/net/wireless/iwl-4965.c
++++ b/drivers/net/wireless/iwl-4965.c
+@@ -3236,7 +3236,7 @@ int iwl4965_tx_cmd(struct iwl_priv *priv, struct iwl_cmd *out_cmd,
+ 	int rate_index = min(ctrl->tx_rate & 0xffff, IWL_RATE_COUNT - 1);
+ #ifdef CONFIG_IWLWIFI_HT
+ #ifdef CONFIG_IWLWIFI_HT_AGG
+-	u16 *qc;
++	__le16 *qc;
+ #endif /*CONFIG_IWLWIFI_HT_AGG */
+ #endif /* CONFIG_IWLWIFI_HT */
+ 
+@@ -3308,7 +3308,7 @@ int iwl4965_tx_cmd(struct iwl_priv *priv, struct iwl_cmd *out_cmd,
+ 	if (qc &&
+ 	    (priv->iw_mode != IEEE80211_IF_TYPE_IBSS)) {
+ 		u8 tid = 0;
+-		tid = (u8) (*qc & 0xF);
++		tid = (u8) (le16_to_cpu(*qc) & 0xF);
+ 		if (tid < TID_MAX_LOAD_COUNT)
+ 			iwl4965_tl_add_packet(priv, tid);
+ 	}
+diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
+index 95e8ead..1adcdbe 100644
+--- a/drivers/net/wireless/iwl-base.c
++++ b/drivers/net/wireless/iwl-base.c
+@@ -2650,7 +2650,7 @@ static void iwl_build_tx_cmd_basic(struct iwl_priv *priv,
+ {
+ 	u32 tx_flags;
+ 	u16 fc = le16_to_cpu(hdr->frame_control);
+-	u16 *qc;
++	__le16 *qc;
+ 
+ 	tx_flags = cmd->cmd.tx.tx_flags;
+ 
+@@ -2673,7 +2673,7 @@ static void iwl_build_tx_cmd_basic(struct iwl_priv *priv,
+ 
+ 	qc = ieee80211_get_qos_ctrl(hdr);
+ 	if (qc) {
+-		cmd->cmd.tx.tid_tspec = (u8) (*qc & 0xf);
++		cmd->cmd.tx.tid_tspec = (u8) (le16_to_cpu(*qc) & 0xf);
+ 		tx_flags &= ~TX_CMD_FLG_SEQ_CTL_MSK;
+ 	} else
+ 		tx_flags |= TX_CMD_FLG_SEQ_CTL_MSK;
+diff --git a/drivers/net/wireless/iwl-helpers.h b/drivers/net/wireless/iwl-helpers.h
+index c9ceff6..94dbb38 100644
+--- a/drivers/net/wireless/iwl-helpers.h
++++ b/drivers/net/wireless/iwl-helpers.h
+@@ -181,7 +181,7 @@ static inline __le16 *ieee80211_get_qos_ctrl(struct ieee80211_hdr *hdr)
+ 	u16 fc = le16_to_cpu(hdr->frame_control);
+ 	int hdr_len = ieee80211_get_hdrlen(fc);
+ 	if ( (fc & 0x00cc) == (IEEE80211_STYPE_QOS_DATA|IEEE80211_FTYPE_DATA))
+-		return (u16 *) ((u8 *) hdr + hdr_len - QOS_CONTROL_LEN);
++		return (__le16 *) ((u8 *) hdr + hdr_len - QOS_CONTROL_LEN);
+ 	return NULL;
+ }
+ 
+-- 
+1.5.2
