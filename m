@@ -1,158 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:28274 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755425AbXGCP2Z (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:39869 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932215AbXG0TkF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2007 11:28:25 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH, take 2] libertas: remove adapter->{rx,tx}antenna
-Date: Tue, 3 Jul 2007 17:28:19 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200707031728.19720.hs4233@mail.mn-solutions.de>
+	Fri, 27 Jul 2007 15:40:05 -0400
+Date: Fri, 27 Jul 2007 12:38:53 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Gary Zambrano <zambrano@broadcom.com>
+Subject: Re: [PATCH] Merge the Sonics Silicon Backplane subsystem
+Message-Id: <20070727123853.d16e875c.akpm@linux-foundation.org>
+In-Reply-To: <200707272130.48973.mb@bu3sch.de>
+References: <200707271857.24162.mb@bu3sch.de>
+	<20070727120318.54d18cfc.akpm@linux-foundation.org>
+	<200707272130.48973.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
+On Fri, 27 Jul 2007 21:30:48 +0200
+Michael Buesch <mb@bu3sch.de> wrote:
 
-There was nowhere any code that used the values of those variables.
-This patch also removes two static functions that are now unused.
+> > ERROR: "foo * bar" should be "foo *bar"
+> > #4156: FILE: drivers/ssb/ssb_private.h:119:
+> > +extern struct ssb_bus * ssb_pci_dev_to_bus(struct pci_dev *pdev);
+> > 
+> > are worth addressing.
+> 
+> Well, I intentionally wrote that this way, as in my opinion
+> it it easier to read. I only use this additional space for
+> functions returning a pointer.
+> 
+> struct foo * function(int a, int b);
+> 
+> vs:
+> 
+> struct foo *function(int a, int b);
+> 
+> But I can change that, if that's really an issue and a
+> style violation.
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
----
+It's a microissue but yeah, no-space is more conventional.
 
-This is non-wordwrapped. Sorry.
+> > > +static ssize_t ssb_pci_attr_sprom_show(struct device *pcidev,
+> > > +				       struct device_attribute *attr,
+> > > +				       char *buf)
+> > > +{
+> > > +	struct pci_dev *pdev = container_of(pcidev, struct pci_dev, dev);
+> > > +	struct ssb_bus *bus;
+> > > +	u16 *sprom;
+> > > +	int err = -ENODEV;
+> > > +	ssize_t count = 0;
+> > > +
+> > > +	bus = ssb_pci_dev_to_bus(pdev);
+> > > +	if (!bus)
+> > > +		goto out;
+> > > +	err = -ENOMEM;
+> > > +	sprom = kcalloc(SSB_SPROMSIZE_WORDS, sizeof(u16), GFP_KERNEL);
+> > > +	if (!sprom)
+> > > +		goto out;
+> > > +
+> > > +	err = -ERESTARTSYS;
+> > > +	if (mutex_lock_interruptible(&bus->pci_sprom_mutex))
+> > > +		goto out_kfree;
+> > > +	sprom_do_read(bus, sprom);
+> > > +	mutex_unlock(&bus->pci_sprom_mutex);
+> > > +
+> > > +	count = sprom2hex(sprom, buf, PAGE_SIZE);
+> > > +	err = 0;
+> > > +
+> > > +out_kfree:
+> > > +	kfree(sprom);
+> > > +out:
+> > > +	return err ? err : count;
+> > > +}
+> > 
+> > The mutex_lock_interruptible() looks fishy.  Some commented explanation of
+> > what it's doing would be good here.  It's quite unobvious to this reader. 
+> > Cheesy deadlock avoidance?  Hope not.
+> 
+> No, it's simply to avoid writing the SPROM concurrently.
+> SPROM writing is hairy and we must make sure here that
+> we are the only one accessing the whole bus. We do that
+> by suspending all devices and taking a lock to protect
+> the SPROM from write concurrency.
 
- drivers/net/wireless/libertas/cmd.c     |   25 -------------------------
- drivers/net/wireless/libertas/cmdresp.c |   24 ------------------------
- drivers/net/wireless/libertas/dev.h     |    6 ------
- drivers/net/wireless/libertas/main.c    |    2 --
- 4 files changed, 0 insertions(+), 57 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index d3402e1..2a5defe 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -570,26 +570,6 @@ static int wlan_cmd_802_11_rf_tx_power(wlan_private * priv,
- 	return 0;
- }
- 
--static int wlan_cmd_802_11_rf_antenna(wlan_private * priv,
--				      struct cmd_ds_command *cmd,
--				      u16 cmd_action, void *pdata_buf)
--{
--	struct cmd_ds_802_11_rf_antenna *rant = &cmd->params.rant;
--
--	lbs_deb_enter(LBS_DEB_CMD);
--	cmd->command = cpu_to_le16(CMD_802_11_RF_ANTENNA);
--	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_rf_antenna) +
--				S_DS_GEN);
--
--	rant->action = cpu_to_le16(cmd_action);
--	if ((cmd_action == CMD_ACT_SET_RX) || (cmd_action == CMD_ACT_SET_TX)) {
--		rant->antennamode = cpu_to_le16((u16) (*(u32 *) pdata_buf));
--	}
--
--	lbs_deb_leave(LBS_DEB_CMD);
--	return 0;
--}
--
- static int wlan_cmd_802_11_rate_adapt_rateset(wlan_private * priv,
- 					      struct cmd_ds_command *cmd,
- 					      u16 cmd_action)
-@@ -1252,11 +1232,6 @@ int libertas_prepare_and_send_command(wlan_private * priv,
- 		ret = wlan_cmd_802_11_radio_control(priv, cmdptr, cmd_action);
- 		break;
- 
--	case CMD_802_11_RF_ANTENNA:
--		ret = wlan_cmd_802_11_rf_antenna(priv, cmdptr,
--						 cmd_action, pdata_buf);
--		break;
--
- 	case CMD_802_11_DATA_RATE:
- 		ret = wlan_cmd_802_11_data_rate(priv, cmdptr, cmd_action);
- 		break;
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index 646b591..465a087 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -383,27 +383,6 @@ static int wlan_ret_802_11_rf_tx_power(wlan_private * priv,
- 	return 0;
- }
- 
--static int wlan_ret_802_11_rf_antenna(wlan_private * priv,
--				      struct cmd_ds_command *resp)
--{
--	struct cmd_ds_802_11_rf_antenna *pAntenna = &resp->params.rant;
--	wlan_adapter *adapter = priv->adapter;
--	u16 action = le16_to_cpu(pAntenna->action);
--
--	lbs_deb_enter(LBS_DEB_CMD);
--	if (action == CMD_ACT_GET_RX)
--		adapter->rxantennamode = le16_to_cpu(pAntenna->antennamode);
--
--	if (action == CMD_ACT_GET_TX)
--		adapter->txantennamode = le16_to_cpu(pAntenna->antennamode);
--
--	lbs_deb_cmd("RF_ANT_RESP: action 0x%x, mode 0x%04x\n",
--	       action, le16_to_cpu(pAntenna->antennamode));
--
--	lbs_deb_leave(LBS_DEB_CMD);
--	return 0;
--}
--
- static int wlan_ret_802_11_rate_adapt_rateset(wlan_private * priv,
- 					      struct cmd_ds_command *resp)
- {
-@@ -620,9 +599,6 @@ static inline int handle_cmd_response(u16 respcmd,
- 		spin_unlock_irqrestore(&adapter->driver_lock, flags);
- 
- 		break;
--	case CMD_RET(CMD_802_11_RF_ANTENNA):
--		ret = wlan_ret_802_11_rf_antenna(priv, resp);
--		break;
- 
- 	case CMD_RET(CMD_MAC_MULTICAST_ADR):
- 	case CMD_RET(CMD_MAC_CONTROL):
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 7c0ee0f..765c0c4 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -284,9 +284,6 @@ struct _wlan_adapter {
- 	/** control G rates */
- 	u8 adhoc_grate_enabled;
- 
--	u32 txantenna;
--	u32 rxantenna;
--
- 	u32 fragthsd;
- 	u32 rtsthsd;
- 
-@@ -337,9 +334,6 @@ struct _wlan_adapter {
- 	u8 wpa_ie[MAX_WPA_IE_LEN];
- 	u8 wpa_ie_len;
- 
--	u16 rxantennamode;
--	u16 txantennamode;
--
- 	/** Requested Signal Strength*/
- 	u16 bcn_avg_factor;
- 	u16 data_avg_factor;
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 1b6b09d..5b4a134 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -1049,8 +1049,6 @@ static void wlan_init_adapter(wlan_private * priv)
- 	    CMD_ACT_MAC_RX_ON | CMD_ACT_MAC_TX_ON;
- 
- 	adapter->radioon = RADIO_ON;
--	adapter->txantenna = RF_ANTENNA_2;
--	adapter->rxantenna = RF_ANTENNA_AUTO;
- 
- 	adapter->auto_rate = 1;
- 	adapter->cur_rate = 0;
--- 
-1.5.2.1
+Sure, but why is the locking interruptible rather than plain old
+mutex_lock()?
 
