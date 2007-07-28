@@ -1,67 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59840 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752717AbXGIMDj (ORCPT
+Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:44168 "EHLO
+	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759225AbXG1Dg2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2007 08:03:39 -0400
-Subject: Re: alignment issue between 32bit userland and 64bit kernel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-Cc: linux-wireless@vger.kernel.org,
-	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
-	geoffrey.levand@am.sony.com, Jean Tourrilhes <jt@hpl.hp.com>
-In-Reply-To: <20070709201037.D02C.MOKUNO@sm.sony.co.jp>
-References: <20070709201037.D02C.MOKUNO@sm.sony.co.jp>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Vk3+EdMmPEm9gpQOiNIU"
-Date: Mon, 09 Jul 2007 14:03:23 +0200
-Message-Id: <1183982603.18986.6.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 27 Jul 2007 23:36:28 -0400
+Date: Fri, 27 Jul 2007 22:36:04 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: bcm43xx-mac80211: a fix for the shared interrupt problem
+Message-ID: <46aab9a4.pmEWFfaWaaFDLvZd%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michael,
 
---=-Vk3+EdMmPEm9gpQOiNIU
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I was in the right area with my previous fix to the "irq 11: nobody cared"
+message. I think for shared interrupts, skipping out if the status is not
+BCM43xx_STAT_STARTED is too severe. I added a message printing out the status
+whenever it skipped out, and found many thousands of interrupts with the
+status equal to BCM43xx_STAT_INITIALIZED. The patch below makes the necessary
+change and modifies a couple of asserts that depend on it.
 
-Hi,
+This patch has been tested on BCM4306 and BCM4318 with shared interrupts,
+and BCM4311 without.
 
-> While developing the wireless support for PS3, I'd noticed there were ali=
-gnment
-> issues if we issued some wireless ioctl from 32bit userland to 64bit
-> kernel (ppc64 PS3 does have).=20
->=20
->  - IW_EV_LCP_LEN in 32bit userland and 64bit kernel differ
->  - offsetof(struct iw_point, length) differ
+Thanks,
 
-Yeah, we're aware of them.
+Larry
+----
 
-> The former issue could be fixed if we added 'packed' attribute to
-> iw_event structure, but it would break existing 64bit userland.  I have
-> no idea to resolve latter issue because the first member of struct
-> iw_point is a pointer.
->=20
-> Does anyone have idea to fix these issues?
-> (except compiling all userland apps in 64bit mode...)
 
-Jean wants to fix them in userspace. In fact, if you upgrade your
-userspace to the really latest version it *should* work. wpa_supplicant
-still doesn't work, nor do most distribution's versions of network
-manager because the fixes haven't been backported.
-
-johannes
-
---=-Vk3+EdMmPEm9gpQOiNIU
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGkiQJ/ETPhpq3jKURAr4BAJ48WGHvT2D7M1h30iteIADiuUfQDACgnwfT
-hy9nqJNSHOqIUSGsX2o4E5I=
-=ibGB
------END PGP SIGNATURE-----
-
---=-Vk3+EdMmPEm9gpQOiNIU--
-
+Index: wireless-mb/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+===================================================================
+--- wireless-mb.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
++++ wireless-mb/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+@@ -1374,7 +1374,7 @@ static void bcm43xx_interrupt_tasklet(st
+ 
+ 	spin_lock_irqsave(&dev->wl->irq_lock, flags);
+ 
+-	assert(bcm43xx_status(dev) == BCM43xx_STAT_STARTED);
++	assert(bcm43xx_status(dev) >= BCM43xx_STAT_INITIALIZED);
+ 
+ 	reason = dev->irq_reason;
+ 	for (i = 0; i < ARRAY_SIZE(dma_reason); i++) {
+@@ -1512,7 +1512,7 @@ static irqreturn_t bcm43xx_interrupt_han
+ 
+ 	spin_lock(&dev->wl->irq_lock);
+ 
+-	if (bcm43xx_status(dev) < BCM43xx_STAT_STARTED)
++	if (bcm43xx_status(dev) < BCM43xx_STAT_INITIALIZED)
+ 		goto out;
+ 	reason = bcm43xx_read32(dev, BCM43xx_MMIO_GEN_IRQ_REASON);
+ 	if (reason == 0xffffffff) /* shared IRQ */
+@@ -1522,7 +1522,7 @@ static irqreturn_t bcm43xx_interrupt_han
+ 	if (!reason)
+ 		goto out;
+ 
+-	assert(bcm43xx_status(dev) == BCM43xx_STAT_STARTED);
++	assert(bcm43xx_status(dev) >= BCM43xx_STAT_INITIALIZED);
+ 
+ 	dev->dma_reason[0] = bcm43xx_read32(dev, BCM43xx_MMIO_DMA0_REASON)
+ 			     & 0x0001DC00;
