@@ -1,41 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:58292 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1763659AbXFHM1Y (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:38628
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751807AbXG1QuH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2007 08:27:24 -0400
-Message-ID: <46694B29.4060304@lwfinger.net>
-Date: Fri, 08 Jun 2007 07:27:21 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Sat, 28 Jul 2007 12:50:07 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: bcm43xx-mac80211: a fix for the shared interrupt problem
+Date: Sat, 28 Jul 2007 18:48:02 +0200
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <46aab9a4.pmEWFfaWaaFDLvZd%Larry.Finger@lwfinger.net>
+In-Reply-To: <46aab9a4.pmEWFfaWaaFDLvZd%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [PATCH] mac80211: rc80211_lowest, a dumb rate control algorithm
-References: <4661bc4f.88st9yXgySnzwVtb%Larry.Finger@lwfinger.net>	 <20070607221939.444e9d74@griffin.suse.cz>	 <20070607222113.0f752bf8@griffin.suse.cz>	 <20070607222210.1a445cd7@griffin.suse.cz> <4668A7E5.3070500@lwfinger.net>	 <20070608105900.4c401e14@griffin.suse.cz> <1181293589.6533.25.camel@johannes.berg>
-In-Reply-To: <1181293589.6533.25.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200707281848.02554.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Fri, 2007-06-08 at 10:59 +0200, Jiri Benc wrote:
+On Saturday 28 July 2007 05:36:04 Larry Finger wrote:
+> Michael,
 > 
->>> I do not think this particular rate control algorithm is needed. A patch has been submitted that 
->>> will allow the user to use the SIOCSIWRATE ioctl to lock in a rate. In addition, a patch that 
->>> changes rc80211_simple to set the initial rate to the lowest supported value has also been 
->>> submitted. With these two alternatives, everything that this proposed module does is supported in 
->>> other ways.
->> Ok.
+> I was in the right area with my previous fix to the "irq 11: nobody cared"
+> message. I think for shared interrupts, skipping out if the status is not
+> BCM43xx_STAT_STARTED is too severe. I added a message printing out the status
+> whenever it skipped out, and found many thousands of interrupts with the
+> status equal to BCM43xx_STAT_INITIALIZED. The patch below makes the necessary
+> change and modifies a couple of asserts that depend on it.
 > 
-> Actually, I'd vote for having this rate control algorithm anyway because
-> it's basically a rate control algorithm template you can copy and
-> modify. rc80211_simple is quite a bit more sophisticated over that.
+> This patch has been tested on BCM4306 and BCM4318 with shared interrupts,
+> and BCM4311 without.
 > 
-> johannes
+> Thanks,
+> 
+> Larry
+> ----
+> 
+> 
+> Index: wireless-mb/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+> ===================================================================
+> --- wireless-mb.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+> +++ wireless-mb/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+> @@ -1374,7 +1374,7 @@ static void bcm43xx_interrupt_tasklet(st
+>  
+>  	spin_lock_irqsave(&dev->wl->irq_lock, flags);
+>  
+> -	assert(bcm43xx_status(dev) == BCM43xx_STAT_STARTED);
+> +	assert(bcm43xx_status(dev) >= BCM43xx_STAT_INITIALIZED);
+>  
+>  	reason = dev->irq_reason;
+>  	for (i = 0; i < ARRAY_SIZE(dma_reason); i++) {
+> @@ -1512,7 +1512,7 @@ static irqreturn_t bcm43xx_interrupt_han
+>  
+>  	spin_lock(&dev->wl->irq_lock);
+>  
+> -	if (bcm43xx_status(dev) < BCM43xx_STAT_STARTED)
+> +	if (bcm43xx_status(dev) < BCM43xx_STAT_INITIALIZED)
+>  		goto out;
+>  	reason = bcm43xx_read32(dev, BCM43xx_MMIO_GEN_IRQ_REASON);
+>  	if (reason == 0xffffffff) /* shared IRQ */
+> @@ -1522,7 +1522,7 @@ static irqreturn_t bcm43xx_interrupt_han
+>  	if (!reason)
+>  		goto out;
+>  
+> -	assert(bcm43xx_status(dev) == BCM43xx_STAT_STARTED);
+> +	assert(bcm43xx_status(dev) >= BCM43xx_STAT_INITIALIZED);
+>  
+>  	dev->dma_reason[0] = bcm43xx_read32(dev, BCM43xx_MMIO_DMA0_REASON)
+>  			     & 0x0001DC00;
+> 
+> 
 
-If the comments include the idea that this is an template for the rate control mechanism, I withdraw 
-my objection.
+That's not the right bugfix.
+If the interface is not STAT_STARTED, it should _not_ generate IRQs.
+The bug is elsewhere in the init routines.
+Please find out which IRQ bits are generated for these spurious IRQs.
 
-Larry
-
+-- 
+Greetings Michael.
