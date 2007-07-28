@@ -1,191 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-141-230-6-89.ipcom.comunitel.net ([89.6.230.141]:56795
-	"EHLO traven.no-ip.org" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755290AbXG3FkK (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:60179 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757516AbXG1X6h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2007 01:40:10 -0400
-Date: Mon, 30 Jul 2007 07:40:04 +0200
-From: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-To: Satyam Sharma <satyam@infradead.org>
-Cc: Michael Buesch <mb@bu3sch.de>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	akpm@linux-foundation.org
-Subject: Re: [PATCH 1/5] Use mutex instead of semaphore in the Host AP driver
-Message-ID: <20070730054004.GI3432@traven>
-References: <20070729212909.GC3432@traven> <20070729213434.GD3432@traven> <200707300006.42397.mb@bu3sch.de> <alpine.LFD.0.999.0707300842350.10861@enigma.security.iitk.ac.in> <alpine.LFD.0.999.0707300904360.10861@enigma.security.iitk.ac.in>
+	Sat, 28 Jul 2007 19:58:37 -0400
+Message-ID: <46ABD821.6060709@lwfinger.net>
+Date: Sat, 28 Jul 2007 18:58:25 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LFD.0.999.0707300904360.10861@enigma.security.iitk.ac.in>
+To: Michael Buesch <mb@bu3sch.de>
+CC: linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de
+Subject: Re: bcm43xx-mac80211: a fix for the shared interrupt problem
+References: <46aab9a4.pmEWFfaWaaFDLvZd%Larry.Finger@lwfinger.net> <200707281848.02554.mb@bu3sch.de> <46ABACC1.1020107@lwfinger.net> <200707290103.50077.mb@bu3sch.de>
+In-Reply-To: <200707290103.50077.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El Mon, Jul 30, 2007 at 09:17:25AM +0530 Satyam Sharma ha dit:
-
-> Whoops ...
+Michael Buesch wrote:
 > 
-> 
-> On Mon, 30 Jul 2007, Satyam Sharma wrote:
-> 
-> > On Mon, 30 Jul 2007, Michael Buesch wrote:
-> > 
-> > > On Sunday 29 July 2007 23:34, Matthias Kaehlcke wrote:
-> > > > The Host AP driver uses a semaphore as mutex. Use the mutex API
-> > > > instead of the (binary) semaphore.
-> > > > 
-> > > > Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-> > 
-> > [ Something seems to have gone wrong with your diff / patch / script.
-> >   There was no diff header here, which should have been. ]
-> > 
-> > > > -	res = down_interruptible(&local->rid_bap_sem);
-> > > > +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
-> > > >  	if (res)
-> > > >  		return res;
-> > > >  
-> > > > @@ -902,7 +902,7 @@ static int hfa384x_set_rid(struct net_device *dev, u16 rid, void *buf, int len)
-> > > >  	/* RID len in words and +1 for rec.rid */
-> > > >  	rec.len = cpu_to_le16(len / 2 + len % 2 + 1);
-> > > >  
-> > > > -	res = down_interruptible(&local->rid_bap_sem);
-> > > > +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
-> > > >  	if (res)
-> > > >  		return res;
-> > > >  
-> > > 
-> > > Is res returned to userspace? If yes, that's not right.
-> > 
-> > Yup, that's not right.
-> > 
-> > > On a interrupted mutex allocation you should return
-> > > -ERESTARTSYS to userspace.
-> > 
-> > Nope, userspace must not see ERESTARTSYS (I /think/ this is the third
-> > time I'm participating in this exact same discussion :-)
-> > 
-> > If the return would be caught by a previous in-kernel caller in the
-> > call chain, ERESTARTSYS is okay and it could try to restart the
-> > operation. However, if the return goes unfiltered directly to
-> > userspace, EINTR is the correct choice.
-> 
-> Eek, and because mutex_lock_interruptible() *does* return -EINTR when
-> interrupted by a signal, and I noticed that hfa384x_set_rid() could be
-> called from an ioctl(2) codepath with no intermediate caller trying to
-> restart it, so the code is perfectly alright, actually.
-> 
-> But the patch doesn't have the diff header anyway, so Matthias would
-> probably have to resend in any case :-)
+> Ok, seems like we are missing some dummy reads to drain
+> this IRQ. I'll look at this tomorrow.
+> Thanks for tracking this down.
 
-thanks for reviewing the patch and for your comments, here is the
-patch with the diff header (no idea what when wrong with the other
-one)
+As we shouldn't get any interrupts until STAT_STARTED is reached, I wondered why interrupts were 
+enabled so early. As far as I can tell, none of the steps from where interrupts are enabled to where 
+STAT_STARTED is set depend on having them enabled; therefore, I tried a patch that delayed the 
+enabling of interrupts until after we had reached STAT_STARTED. It works for all my systems.
 
-regards
+I'm beginning to think that the shared interrupts have nothing to do with the problem, but it is 
+more likely caused by peculiarities in the PCMCIA bridge in my ancient laptop.
 
-matthias
+Larry
 
---
+Index: wireless-mb/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+===================================================================
+--- wireless-mb.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
++++ wireless-mb/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+@@ -3014,13 +3014,13 @@ static int bcm43xx_wireless_core_start(s
+  		       dev->dev->irq);
+  		goto out;
+  	}
+-	bcm43xx_interrupt_enable(dev, dev->irq_savedstate);
+  	bcm43xx_mac_enable(dev);
 
-The Host AP driver uses a semaphore as mutex. Use the mutex API
-instead of the (binary) semaphore.
+  	bcm43xx_periodic_tasks_setup(dev);
 
-Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-
---
-
-diff --git a/drivers/net/wireless/hostap/hostap_hw.c b/drivers/net/wireless/hostap/hostap_hw.c
-index 959887b..d3dacbc 100644
---- a/drivers/net/wireless/hostap/hostap_hw.c
-+++ b/drivers/net/wireless/hostap/hostap_hw.c
-@@ -825,7 +825,7 @@ static int hfa384x_get_rid(struct net_device *dev, u16 rid, void *buf, int len,
- 	    local->hw_downloading)
- 		return -ENODEV;
- 
--	res = down_interruptible(&local->rid_bap_sem);
-+	res = mutex_lock_interruptible(&local->rid_bap_mtx);
- 	if (res)
- 		return res;
- 
-@@ -834,7 +834,7 @@ static int hfa384x_get_rid(struct net_device *dev, u16 rid, void *buf, int len,
- 		printk(KERN_DEBUG "%s: hfa384x_get_rid: CMDCODE_ACCESS failed "
- 		       "(res=%d, rid=%04x, len=%d)\n",
- 		       dev->name, res, rid, len);
--		up(&local->rid_bap_sem);
-+		mutex_unlock(&local->rid_bap_mtx);
- 		return res;
- 	}
- 
-@@ -861,7 +861,7 @@ static int hfa384x_get_rid(struct net_device *dev, u16 rid, void *buf, int len,
- 		res = hfa384x_from_bap(dev, BAP0, buf, len);
- 
- 	spin_unlock_bh(&local->baplock);
--	up(&local->rid_bap_sem);
-+	mutex_unlock(&local->rid_bap_mtx);
- 
- 	if (res) {
- 		if (res != -ENODATA)
-@@ -902,7 +902,7 @@ static int hfa384x_set_rid(struct net_device *dev, u16 rid, void *buf, int len)
- 	/* RID len in words and +1 for rec.rid */
- 	rec.len = cpu_to_le16(len / 2 + len % 2 + 1);
- 
--	res = down_interruptible(&local->rid_bap_sem);
-+	res = mutex_lock_interruptible(&local->rid_bap_mtx);
- 	if (res)
- 		return res;
- 
-@@ -917,12 +917,12 @@ static int hfa384x_set_rid(struct net_device *dev, u16 rid, void *buf, int len)
- 	if (res) {
- 		printk(KERN_DEBUG "%s: hfa384x_set_rid (rid=%04x, len=%d) - "
- 		       "failed - res=%d\n", dev->name, rid, len, res);
--		up(&local->rid_bap_sem);
-+		mutex_unlock(&local->rid_bap_mtx);
- 		return res;
- 	}
- 
- 	res = hfa384x_cmd(dev, HFA384X_CMDCODE_ACCESS_WRITE, rid, NULL, NULL);
--	up(&local->rid_bap_sem);
-+	mutex_unlock(&local->rid_bap_mtx);
- 
- 	if (res) {
- 		printk(KERN_DEBUG "%s: hfa384x_set_rid: CMDCODE_ACCESS_WRITE "
-@@ -3171,7 +3171,7 @@ prism2_init_local_data(struct prism2_helper_functions *funcs, int card_idx,
- 	spin_lock_init(&local->cmdlock);
- 	spin_lock_init(&local->baplock);
- 	spin_lock_init(&local->lock);
--	init_MUTEX(&local->rid_bap_sem);
-+	mutex_init(&local->rid_bap_mtx);
- 
- 	if (card_idx < 0 || card_idx >= MAX_PARM_DEVICES)
- 		card_idx = 0;
-diff --git a/drivers/net/wireless/hostap/hostap_wlan.h b/drivers/net/wireless/hostap/hostap_wlan.h
-index 87a54aa..a42325c 100644
---- a/drivers/net/wireless/hostap/hostap_wlan.h
-+++ b/drivers/net/wireless/hostap/hostap_wlan.h
-@@ -3,6 +3,7 @@
- 
- #include <linux/wireless.h>
- #include <linux/netdevice.h>
-+#include <linux/mutex.h>
- #include <net/iw_handler.h>
- 
- #include "hostap_config.h"
-@@ -641,7 +642,7 @@ struct local_info {
- 			      * when removing entries from the list.
- 			      * TX and RX paths can use read lock. */
- 	spinlock_t cmdlock, baplock, lock;
--	struct semaphore rid_bap_sem;
-+	struct mutex rid_bap_mtx;
- 	u16 infofid; /* MAC buffer id for info frame */
- 	/* txfid, intransmitfid, next_txtid, and next_alloc are protected by
- 	 * txfidlock */
-
--- 
-Matthias Kaehlcke
-Linux Application Developer
-Barcelona
-
-             You must have a plan. If you don't have a plan,
-               you'll become part of somebody else's plan
-                                                                 .''`.
-    using free software / Debian GNU/Linux | http://debian.org  : :'  :
-                                                                `. `'`
-gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
+  	ieee80211_start_queues(dev->wl->hw);
+  	bcm43xx_set_status(dev, BCM43xx_STAT_STARTED);
++	bcm43xx_interrupt_enable(dev, dev->irq_savedstate);
+  	bcmdbg(dev->wl, "Wireless interface started\n");
+  out:
+  	return err;
