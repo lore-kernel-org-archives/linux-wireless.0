@@ -1,73 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:7669 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756326AbXGCPXk (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:63716 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754128AbXG1Klw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2007 11:23:40 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-Date: Tue, 3 Jul 2007 17:23:34 +0200
-Subject: [PATCH] libertas: remove adapter->adhoc_grate_enabled
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+	Sat, 28 Jul 2007 06:41:52 -0400
+Message-ID: <46AB1D68.1020808@lwfinger.net>
+Date: Sat, 28 Jul 2007 05:41:44 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Message-Id: <200707031723.34967.hs4233@mail.mn-solutions.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Jiri Benc <jbenc@suse.cz>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211: pull request
+References: <20070727192617.5ae82584@griffin.suse.cz> <46AA31A4.3050205@lwfinger.net>
+In-Reply-To: <46AA31A4.3050205@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The variable was initialized with 0 (false). There is no code that would
-ever change it, so we can use the false-patch directly.
+Larry Finger wrote:
+> Jiri Benc wrote:
+>> John,
+>>
+>> please pull from
+>> git://git.kernel.org/pub/scm/linux/kernel/git/jbenc/mac80211.git up-2.6
+>> to obtain patches below.
+>>
+>> This is intended for wireless-2.6. Because of the number of patches and
+>> the fact they are not much tested, it's maybe a good idea not to push
+>> them upstream immediately - but that's up to you.
+> 
+> Now that a patch adding SSB to mainline is available, I will move 
+> bcm4301 into wireless-2.6 and do some testing of mac80211 that way.
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
----
- drivers/net/wireless/libertas/dev.h  |    2 --
- drivers/net/wireless/libertas/join.c |    9 ++-------
- drivers/net/wireless/libertas/main.c |    1 -
- 3 files changed, 2 insertions(+), 10 deletions(-)
+I don't think these patches have made it to wireless-2.6 yet, but when I moved the bcm4301 code to
+the wireless-2.6 tree (last commit 1e4dcd22), it failed, whereas moving it to a downloaded copy of
+2.6.22.1 works. I'm looking at the mac80211 diffs to see where the problem lies.
 
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 6675cc6..eef6a72 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -281,8 +281,6 @@ struct _wlan_adapter {
- 
- 	u16 enablehwauto;
- 	u16 ratebitmap;
--	/** control G rates */
--	u8 adhoc_grate_enabled;
- 
- 	u32 fragthsd;
- 	u32 rtsthsd;
-diff --git a/drivers/net/wireless/libertas/join.c b/drivers/net/wireless/libertas/join.c
-index e335a7e..95c21ba 100644
---- a/drivers/net/wireless/libertas/join.c
-+++ b/drivers/net/wireless/libertas/join.c
-@@ -534,13 +534,8 @@ int libertas_cmd_80211_ad_hoc_start(wlan_private * priv,
- 	adhs->probedelay = cpu_to_le16(CMD_SCAN_PROBE_DELAY_TIME);
- 
- 	memset(adhs->rates, 0, sizeof(adhs->rates));
--	if (adapter->adhoc_grate_enabled) {
--		ratesize = min(sizeof(adhs->rates), sizeof(libertas_bg_rates));
--		memcpy(adhs->rates, libertas_bg_rates, ratesize);
--	} else {
--		ratesize = min(sizeof(adhs->rates), sizeof(adhoc_rates_b));
--		memcpy(adhs->rates, adhoc_rates_b, ratesize);
--	}
-+	ratesize = min(sizeof(adhs->rates), sizeof(adhoc_rates_b));
-+	memcpy(adhs->rates, adhoc_rates_b, ratesize);
- 
- 	/* Copy the ad-hoc creating rates into Current BSS state structure */
- 	memset(&adapter->curbssparams.rates, 0, sizeof(adapter->curbssparams.rates));
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 79e2748..6882a7d 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -1036,7 +1036,6 @@ static void wlan_init_adapter(wlan_private * priv)
- 
- 	adapter->auto_rate = 1;
- 	adapter->cur_rate = 0;
--	adapter->adhoc_grate_enabled = 0;
- 
- 	adapter->beaconperiod = MRVDRV_BEACON_INTERVAL;
- 
--- 
-1.5.2.1
+This failure also occurs for Linus's tree, thus it is a regression from 2.6.22 to 2.6.23-rc1.
+
+Larry
 
