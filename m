@@ -1,158 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:22848 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756867AbXGZD3E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 23:29:04 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Gregory Greenman <gregory.greenman@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH] iwlwifi: rxon filter_flags endianity fix
-Date: Thu, 26 Jul 2007 11:26:45 +0800
-Message-Id: <11854204121057-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11854204113166-git-send-email-yi.zhu@intel.com>
-References: <11854204053593-git-send-email-yi.zhu@intel.com>
- <11854204073964-git-send-email-yi.zhu@intel.com>
- <118542040911-git-send-email-yi.zhu@intel.com>
- <11854204113166-git-send-email-yi.zhu@intel.com>
+Received: from betty.cbit.net.au ([202.55.154.10]:43541 "EHLO mail.cbit.net.au"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1759905AbXG2MSp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Jul 2007 08:18:45 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.cbit.net.au (Postfix) with ESMTP id 8D0F8108080
+	for <linux-wireless@vger.kernel.org>; Sun, 29 Jul 2007 21:59:44 +1000 (EST)
+Received: from mail.cbit.net.au ([127.0.0.1])
+	by localhost (localhost [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id E9vZfqz-9wP4 for <linux-wireless@vger.kernel.org>;
+	Sun, 29 Jul 2007 21:59:44 +1000 (EST)
+Received: from keitarou.bubblesworth.net (unknown [202.55.155.86])
+	by mail.cbit.net.au (Postfix) with ESMTP id 5C0E3108076
+	for <linux-wireless@vger.kernel.org>; Sun, 29 Jul 2007 21:59:44 +1000 (EST)
+Date: Sun, 29 Jul 2007 21:59:43 +1000
+From: Paul TBBle Hampson <Paul.Hampson@Pobox.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] bcm43xx-mac80211: Fix specs typo for baseband attenuation
+Message-ID: <20070729115943.GA12631@keitarou>
+References: <46a8ccbd.wNQamvQ9e0RJ0XZK%Larry.Finger@lwfinger.net> <20070726172138.GA6068@tuxdriver.com> <46A8E044.6080206@lwfinger.net> <20070726181334.GB6068@tuxdriver.com> <46A8ECD6.30204@lwfinger.net> <1185527932.14697.535.camel@pmac.infradead.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="OgqxwSJOaUobr8KG"
+In-Reply-To: <1185527932.14697.535.camel@pmac.infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
 
-This patch fixes endianty issues in rxon.filter_flags.
-It also discards usage of iwl_check_bits in some cases.
-The result is the same but the semantic is not.
+--OgqxwSJOaUobr8KG
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwl-base.c |   12 +++----
- drivers/net/wireless/iwl-hw.h   |   74 ++++++++++++++++++--------------------
- 2 files changed, 40 insertions(+), 46 deletions(-)
+On Fri, Jul 27, 2007 at 10:18:52AM +0100, David Woodhouse wrote:
+> I still get constant complaints of 'eth1: duplicate address detected'
+> due to the fact that it sees its own outgoing packets, and IPv6 doesn't
+> work.
 
-diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
-index 82470f1..3d19a1a 100644
---- a/drivers/net/wireless/iwl-base.c
-+++ b/drivers/net/wireless/iwl-base.c
-@@ -984,15 +984,13 @@ static int iwl_full_rxon_required(struct iwl_priv *priv)
- 	 * flag transitions are allowed using RXON_ASSOC */
- 
- 	/* Check if we are not switching bands */
--	if (iwl_check_bits(priv->staging_rxon.flags, RXON_FLG_BAND_24G_MSK) !=
--	    iwl_check_bits(priv->active_rxon.flags, RXON_FLG_BAND_24G_MSK))
-+	if ((priv->staging_rxon.flags & RXON_FLG_BAND_24G_MSK) !=
-+	    (priv->active_rxon.flags & RXON_FLG_BAND_24G_MSK))
- 		return 1;
- 
- 	/* Check if we are switching association toggle */
--	if (iwl_check_bits(priv->staging_rxon.filter_flags,
--			   RXON_FILTER_ASSOC_MSK) !=
--	    iwl_check_bits(priv->active_rxon.filter_flags,
--			   RXON_FILTER_ASSOC_MSK))
-+	if ((priv->staging_rxon.filter_flags & RXON_FILTER_ASSOC_MSK) !=
-+		(priv->active_rxon.filter_flags & RXON_FILTER_ASSOC_MSK))
- 		return 1;
- 
- 	return 0;
-@@ -1154,7 +1152,7 @@ static int iwl_commit_rxon(struct iwl_priv *priv)
- 		       "* bssid = " MAC_FMT "\n",
- 		       ((priv->staging_rxon.filter_flags &
- 			 RXON_FILTER_ASSOC_MSK) ? "" : "out"),
--		       priv->staging_rxon.channel,
-+		       le16_to_cpu(priv->staging_rxon.channel),
- 		       MAC_ARG(priv->staging_rxon.bssid_addr));
- 
- 	/* Apply the new configuration */
-diff --git a/drivers/net/wireless/iwl-hw.h b/drivers/net/wireless/iwl-hw.h
-index 3f7e5bd..58afbf7 100644
---- a/drivers/net/wireless/iwl-hw.h
-+++ b/drivers/net/wireless/iwl-hw.h
-@@ -193,47 +193,43 @@ enum {
- };
- 
- /* rx_config flags */
--enum {
--	/* band & modulation selection */
--	RXON_FLG_BAND_24G_MSK = (1 << 0),
--	RXON_FLG_CCK_MSK = (1 << 1),
--	/* auto detection enable */
--	RXON_FLG_AUTO_DETECT_MSK = (1 << 2),
--	/* TGg protection when tx */
--	RXON_FLG_TGG_PROTECT_MSK = (1 << 3),
--	/* cck short slot & preamble */
--	RXON_FLG_SHORT_SLOT_MSK = (1 << 4),
--	RXON_FLG_SHORT_PREAMBLE_MSK = (1 << 5),
--	/* antenna selection */
--	RXON_FLG_DIS_DIV_MSK = (1 << 7),
--	RXON_FLG_ANT_SEL_MSK = 0x0f00,
--	RXON_FLG_ANT_A_MSK = (1 << 8),
--	RXON_FLG_ANT_B_MSK = (1 << 9),
--	/* radar detection enable */
--	RXON_FLG_RADAR_DETECT_MSK = (1 << 12),
--	RXON_FLG_TGJ_NARROW_BAND_MSK = (1 << 13),
--	/* rx response to host with 8-byte TSF
--	 * (according to ON_AIR deassertion) */
--	RXON_FLG_TSF2HOST_MSK = (1 << 15)
--};
-+/* band & modulation selection */
-+#define RXON_FLG_BAND_24G_MSK           __constant_cpu_to_le32(1 << 0)
-+#define RXON_FLG_CCK_MSK                __constant_cpu_to_le32(1 << 1)
-+/* auto detection enable */
-+#define RXON_FLG_AUTO_DETECT_MSK        __constant_cpu_to_le32(1 << 2)
-+/* TGg protection when tx */
-+#define RXON_FLG_TGG_PROTECT_MSK        __constant_cpu_to_le32(1 << 3)
-+/* cck short slot & preamble */
-+#define RXON_FLG_SHORT_SLOT_MSK          __constant_cpu_to_le32(1 << 4)
-+#define RXON_FLG_SHORT_PREAMBLE_MSK     __constant_cpu_to_le32(1 << 5)
-+/* antenna selection */
-+#define RXON_FLG_DIS_DIV_MSK            __constant_cpu_to_le32(1 << 7)
-+#define RXON_FLG_ANT_SEL_MSK            __constant_cpu_to_le32(0x0f00)
-+#define RXON_FLG_ANT_A_MSK              __constant_cpu_to_le32(1 << 8)
-+#define RXON_FLG_ANT_B_MSK              __constant_cpu_to_le32(1 << 9)
-+/* radar detection enable */
-+#define RXON_FLG_RADAR_DETECT_MSK       __constant_cpu_to_le32(1 << 12)
-+#define RXON_FLG_TGJ_NARROW_BAND_MSK    __constant_cpu_to_le32(1 << 13)
-+/* rx response to host with 8-byte TSF
-+* (according to ON_AIR deassertion) */
-+#define RXON_FLG_TSF2HOST_MSK           __constant_cpu_to_le32(1 << 15)
- 
- /* rx_config filter flags */
--enum {
--	/* accept all data frames */
--	RXON_FILTER_PROMISC_MSK = (1 << 0),
--	/* pass control & management to host */
--	RXON_FILTER_CTL2HOST_MSK = (1 << 1),
--	/* accept multi-cast */
--	RXON_FILTER_ACCEPT_GRP_MSK = (1 << 2),
--	/* don't decrypt uni-cast frames */
--	RXON_FILTER_DIS_DECRYPT_MSK = (1 << 3),
--	/* don't decrypt multi-cast frames */
--	RXON_FILTER_DIS_GRP_DECRYPT_MSK = (1 << 4),
--	/* STA is associated */
--	RXON_FILTER_ASSOC_MSK = (1 << 5),
--	/* transfer to host non bssid beacons in associated state */
--	RXON_FILTER_BCON_AWARE_MSK = (1 << 6)
--};
-+/* accept all data frames */
-+#define RXON_FILTER_PROMISC_MSK         __constant_cpu_to_le32(1 << 0)
-+/* pass control & management to host */
-+#define RXON_FILTER_CTL2HOST_MSK        __constant_cpu_to_le32(1 << 1)
-+/* accept multi-cast */
-+#define RXON_FILTER_ACCEPT_GRP_MSK      __constant_cpu_to_le32(1 << 2)
-+/* don't decrypt uni-cast frames */
-+#define RXON_FILTER_DIS_DECRYPT_MSK     __constant_cpu_to_le32(1 << 3)
-+/* don't decrypt multi-cast frames */
-+#define RXON_FILTER_DIS_GRP_DECRYPT_MSK __constant_cpu_to_le32(1 << 4)
-+/* STA is associated */
-+#define RXON_FILTER_ASSOC_MSK           __constant_cpu_to_le32(1 << 5)
-+/* transfer to host non bssid beacons in associated state */
-+#define RXON_FILTER_BCON_AWARE_MSK      __constant_cpu_to_le32(1 << 6)
- 
- /*
-  * RXON-Timings Command & Response
--- 
-1.5.2
+Last time I looked at this, I believed it was a mac80211 issue since it
+affected both the bcm43xx-mac80211 and dadwifi drivers, which otherwise
+functioned fine, but didn't affect (the non-mac80211) bcm43xx driver.
+
+--=20
+-----------------------------------------------------------
+Paul "TBBle" Hampson, B.Sc, LPI, MCSE
+On-hiatus Asian Studies student, ANU
+The Boss, Bubblesworth Pty Ltd (ABN: 51 095 284 361)
+Paul.Hampson@Pobox.com
+
+Of course Pacman didn't influence us as kids. If it did,
+we'd be running around in darkened rooms, popping pills and
+listening to repetitive music.
+ -- Kristian Wilson, Nintendo, Inc, 1989
+
+License: http://creativecommons.org/licenses/by/2.1/au/
+-----------------------------------------------------------
+
+--OgqxwSJOaUobr8KG
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD4DBQFGrIEvexDuohKLFuARAhrDAKCGNhDGEM+YlYqGzCwi0tiT1NfZawCXd5e7
+xWVoRL/7XcXR6f4R7XljjQ==
+=L3/6
+-----END PGP SIGNATURE-----
+
+--OgqxwSJOaUobr8KG--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
