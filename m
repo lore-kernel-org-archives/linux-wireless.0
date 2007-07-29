@@ -1,69 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49699 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759122AbXGDN7U (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59043
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760178AbXG2WGw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2007 09:59:20 -0400
-Subject: Re: [RFC/PATCH] debug workqueue deadlocks with lockdep
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Oleg Nesterov <oleg@tv-sign.ru>, Ingo Molnar <mingo@redhat.com>,
-	Arjan van de Ven <arjan@linux.intel.com>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Peter Zijlstra <a.p.zijlstra@chello.nl>,
-	Thomas Sattler <tsattler@gmx.de>
-In-Reply-To: <20070704122159.GA21813@elte.hu>
-References: <1182969638.4769.56.camel@johannes.berg>
-	 <1183048429.4089.1.camel@johannes.berg>
-	 <1183052001.4089.2.camel@johannes.berg> <1183190728.7932.43.camel@earth4>
-	 <20070630114658.GA344@tv-sign.ru> <1183381393.4089.117.camel@johannes.berg>
-	 <20070703173112.GA108@tv-sign.ru> <1183549772.3812.10.camel@johannes.berg>
-	 <20070704122159.GA21813@elte.hu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rIGjZruKXStOknjyWCV3"
-Date: Wed, 04 Jul 2007 15:59:54 +0200
-Message-Id: <1183557594.3812.29.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 29 Jul 2007 18:06:52 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+Subject: Re: [PATCH 1/5] Use mutex instead of semaphore in the Host AP driver
+Date: Mon, 30 Jul 2007 00:06:41 +0200
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+References: <20070729212909.GC3432@traven> <20070729213434.GD3432@traven>
+In-Reply-To: <20070729213434.GD3432@traven>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200707300006.42397.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday 29 July 2007 23:34, Matthias Kaehlcke wrote:
+> The Host AP driver uses a semaphore as mutex. Use the mutex API
+> instead of the (binary) semaphore.
+> 
+> Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+> 
+> --
+> 
+> -	res = down_interruptible(&local->rid_bap_sem);
+> +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
+>  	if (res)
+>  		return res;
+>  
+> @@ -902,7 +902,7 @@ static int hfa384x_set_rid(struct net_device *dev, u16 rid, void *buf, int len)
+>  	/* RID len in words and +1 for rec.rid */
+>  	rec.len = cpu_to_le16(len / 2 + len % 2 + 1);
+>  
+> -	res = down_interruptible(&local->rid_bap_sem);
+> +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
+>  	if (res)
+>  		return res;
+>  
 
---=-rIGjZruKXStOknjyWCV3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2007-07-04 at 14:21 +0200, Ingo Molnar wrote:
-
-> well, in this case the lock/unlock should nest perfectly (i.e. it should=20
-> always be balanced perfectly), so indeed calling with nested=3D=3D1 leads=
- to=20
-> stricter checking.
->=20
-> non-nested unlocks occur when people do stuff like:
->=20
-> 	spin_lock(&lock1);
-> 	spin_lock(&lock2);
-> 	spin_unlock(&lock1);
-> 	spin_unlock(&lock2);
->=20
-> the first unlock is not 'nested perfectly'. Now for the workqueue=20
-> dep_map this shouldnt be a legal combination, right?
-
-I don't think so, will change to use nested=3D=3D1.
-
-johannes
-
---=-rIGjZruKXStOknjyWCV3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGi6fa/ETPhpq3jKURAiowAJwIVgAhX8IH9prYRp3w5LLeAvO7owCeKYRC
-j3r0BA8ruLbDjyAm9hrYabk=
-=Ei2t
------END PGP SIGNATURE-----
-
---=-rIGjZruKXStOknjyWCV3--
-
+Is res returned to userspace? If yes, that's not right.
+On a interrupted mutex allocation you should return
+-ERESTARTSYS to userspace.
