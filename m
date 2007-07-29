@@ -1,28 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:44520 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759401AbXGRQkb (ORCPT
+Received: from bay0-omc2-s11.bay0.hotmail.com ([65.54.246.147]:30093 "EHLO
+	bay0-omc2-s11.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762439AbXG2OVz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2007 12:40:31 -0400
-Message-ID: <469E4278.5090509@lwfinger.net>
-Date: Wed, 18 Jul 2007 11:40:24 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Jiri Benc <jbenc@suse.cz>
-CC: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2] mac80211: fix GCC warning on 64bit platforms
-References: <20070714.185935.18577806.davem@davemloft.net>	<20070714.204116.23012949.davem@davemloft.net>	<20070716184653.355253bf@griffin.suse.cz>	<20070716.145358.35015496.davem@davemloft.net>	<20070718171044.2de287cd@griffin.suse.cz>	<469E3C70.4070809@lwfinger.net> <20070718182740.69addc09@griffin.suse.cz>
-In-Reply-To: <20070718182740.69addc09@griffin.suse.cz>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 29 Jul 2007 10:21:55 -0400
+Message-ID: <BAY111-F325FAED32F3D133BCD0C69B6ED0@phx.gbl>
+In-Reply-To: <1ba2fa240707271628i38565d7bh3201959ffe269f3e@mail.gmail.com>
+From: "maali Al Janoob" <mms82@hotmail.com>
+To: tomasw@gmail.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Linux wireless stack question
+Date: Sun, 29 Jul 2007 18:21:50 +0400
+Mime-Version: 1.0
+Content-Type: text/plain; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Benc wrote:
-> 
-> If you think "int" is more appropriate, fine with me, I don't really
-> care.
+Thank you for the reply.
+What I want to do basically is changing the backoff algorithm to implement a 
+modified protocol in Linux (for my thesis). From what I know, the firmware 
+is inaccessible. Are you aware of any available source code for a firmware 
+of any driver?
 
-No, I'm just trying to learn.
+Please, I need this help so badly to continue my thesis work, any ideas?
 
-Larry
+Thanks,
+Maali
+
+
+>From: "Tomas Winkler" <tomasw@gmail.com>
+>To: "hamsa Al Janoob" <mms82@hotmail.com>
+>CC: linux-wireless@vger.kernel.org
+>Subject: Re: Linux wireless stack question
+>Date: Fri, 27 Jul 2007 16:28:49 -0700
+>
+>On 7/27/07, hamsa Al Janoob <mms82@hotmail.com> wrote:
+> > Hi all,
+> >
+> > This question is directed to the authors (or any one with solid 
+>knowledge
+> > of) of the new ieee80211 (or mac80211) wireless stack, which can be 
+>found in
+> > Fedora 7 and expected to be part of the new kernel releases:
+> >
+> > Where is the exact location of the implementaiton of the binary 
+>exponential
+> > backoff procedure in the source code?
+>I'm speaking for mac80211 only, there is no such implementation. This
+>stuff is mostly done directly by hw or firmware.. I'm not familiar
+>with all the drivers though.
+>Also, where can I find the
+> > declarations of the min and max values of the contention window?
+>look for cw_max cw_min. It is brought to driver through conf_tx handler
+>Tomas
+> > Regards,
+> > Maali
+> >
+> >
+>Tomas _________________________________________________________________
+> > Express yourself instantly with MSN Messenger! Download today it's FREE!
+> > http://messenger.msn.click-url.com/go/onm00200471ave/direct/01/
+> >
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe 
+>linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-wireless" 
+>in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+_________________________________________________________________
+Don't just search. Find. Check out the new MSN Search! 
+http://search.msn.com/
+
