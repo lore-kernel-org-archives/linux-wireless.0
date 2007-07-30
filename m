@@ -1,79 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc2-s11.bay0.hotmail.com ([65.54.246.147]:30093 "EHLO
-	bay0-omc2-s11.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762439AbXG2OVz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jul 2007 10:21:55 -0400
-Message-ID: <BAY111-F325FAED32F3D133BCD0C69B6ED0@phx.gbl>
-In-Reply-To: <1ba2fa240707271628i38565d7bh3201959ffe269f3e@mail.gmail.com>
-From: "maali Al Janoob" <mms82@hotmail.com>
-To: tomasw@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Linux wireless stack question
-Date: Sun, 29 Jul 2007 18:21:50 +0400
-Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Received: from madara.hpl.hp.com ([192.6.19.124]:64977 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967865AbXG3Sin (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jul 2007 14:38:43 -0400
+Date: Mon, 30 Jul 2007 11:37:29 -0700
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Masakazu Mokuno <mokuno@sm.sony.co.jp>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] remove duplicated ioctl entries in compat_ioctl.c
+Message-ID: <20070730183729.GB7332@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <20070727191053.GA7572@tuxdriver.com> <20070727215847.GA17991@bougret.hpl.hp.com> <20070730145358.327D.MOKUNO@sm.sony.co.jp> <20070730144726.GA6586@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070730144726.GA6586@tuxdriver.com>
+From: Jean Tourrilhes <jt@hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you for the reply.
-What I want to do basically is changing the backoff algorithm to implement a 
-modified protocol in Linux (for my thesis). From what I know, the firmware 
-is inaccessible. Are you aware of any available source code for a firmware 
-of any driver?
+On Mon, Jul 30, 2007 at 10:47:26AM -0400, John W. Linville wrote:
+> On Mon, Jul 30, 2007 at 09:02:56PM +0900, Masakazu Mokuno wrote:
+> 
+> > In second half of the mail, I understood the he asked how about keeping
+> > used one (COMPATIBLE_IOCTL) instead of HANDLE_IOCTL one, considering
+> > compatibilities.  As I can esteem the idea that sometimes the compatibilities
+> > are more important than changing something and I didn't think my patch
+> > could address all problems of the issue and I had much time to test more,
+> > I replied with the intention that I didn't stick to the patch if all
+> > userland application could work around perfectly.
+> 
+> Masakazu-san,
+> 
+> Thank you very much for your thorough explanation of the situation.
+> I apologize for having been a bit slow to grasp what you were doing.
+> 
+> I agree that the HANDLE_IOCTL version seems correct.  As you correctly
+> understood, my concern was that we not break anything new in the
+> process of fixing this bug.
+> 
+> Have you tested the both the old and the new wireless-tools on
+> a kernel with your patch applied?  Both 32- and 64-bit versions?
+> Do they all work equally well?
+> 
+> Thanks,
+> 
+> John
 
-Please, I need this help so badly to continue my thesis work, any ideas?
+	Using SIOCSIWSCAN is probably a bad idea to test, because
+there is the extra problem of alignement *within* the data, on top of
+the pointer problem.
+	Testing with SIOCGIWSTATS or SIOCGIWPRIV would narrow down to
+only the pointer problem, and the kernel fix should work with both old
+and new version of the Wireless Tools. It's simple to test, either you
+are getting valid data or garbage, the only issue is that some drivers
+may be returning garbage for those calls.
+	Johannes told me (in the thread I linked) that the
+HANDLE_IOCTL was improving things (and that how we discovered the
+alignement problem). But, Johannes did not do exhaustive testing and I
+would welcome more testing, for sure.
+	Have fun...
 
-Thanks,
-Maali
-
-
->From: "Tomas Winkler" <tomasw@gmail.com>
->To: "hamsa Al Janoob" <mms82@hotmail.com>
->CC: linux-wireless@vger.kernel.org
->Subject: Re: Linux wireless stack question
->Date: Fri, 27 Jul 2007 16:28:49 -0700
->
->On 7/27/07, hamsa Al Janoob <mms82@hotmail.com> wrote:
-> > Hi all,
-> >
-> > This question is directed to the authors (or any one with solid 
->knowledge
-> > of) of the new ieee80211 (or mac80211) wireless stack, which can be 
->found in
-> > Fedora 7 and expected to be part of the new kernel releases:
-> >
-> > Where is the exact location of the implementaiton of the binary 
->exponential
-> > backoff procedure in the source code?
->I'm speaking for mac80211 only, there is no such implementation. This
->stuff is mostly done directly by hw or firmware.. I'm not familiar
->with all the drivers though.
->Also, where can I find the
-> > declarations of the min and max values of the contention window?
->look for cw_max cw_min. It is brought to driver through conf_tx handler
->Tomas
-> > Regards,
-> > Maali
-> >
-> >
->Tomas _________________________________________________________________
-> > Express yourself instantly with MSN Messenger! Download today it's FREE!
-> > http://messenger.msn.click-url.com/go/onm00200471ave/direct/01/
-> >
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe 
->linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
->-
->To unsubscribe from this list: send the line "unsubscribe linux-wireless" 
->in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-_________________________________________________________________
-Don't just search. Find. Check out the new MSN Search! 
-http://search.msn.com/
-
+	Jean
