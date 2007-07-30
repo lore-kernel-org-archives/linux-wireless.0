@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34176 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755032AbXGPJgn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jul 2007 05:36:43 -0400
-Subject: Re: [PATCH] rtl8187: ensure priv->hwaddr is always valid
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200707151709.55429.flamingice@sourmilk.net>
-References: <200707151709.55429.flamingice@sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-whRVofKXcO4UietYs1o9"
-Date: Mon, 16 Jul 2007 11:34:22 +0200
-Message-Id: <1184578463.3773.1.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:13405 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759815AbXG3C7g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Jul 2007 22:59:36 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Mohamed Abbas <mabbas@linux.intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 2/8] iwlwifi: call QoS command on QoS data change
+Date: Mon, 30 Jul 2007 10:57:00 +0800
+Message-Id: <11857642362891-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11857642343783-git-send-email-yi.zhu@intel.com>
+References: <11857642261522-git-send-email-yi.zhu@intel.com>
+ <11857642343783-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Mohamed Abbas <mabbas@linux.intel.com>
 
---=-whRVofKXcO4UietYs1o9
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The driver issues QoS command from post association, some time
+post_assoc will be called before mac80211 sets QoS data. This
+patch makes sure the QoS command will be called with new QoS data.
 
-On Sun, 2007-07-15 at 17:09 -0700, Michael Wu wrote:
-> =20
-> -	priv->hwaddr =3D conf->mac_addr;
-> +	priv->hwaddr =3D conf->mac_addr ? conf->mac_addr : dev->wiphy->perm_add=
-r;
+Signed-off-by: Mohamed Abbas <mabbas@linux.intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwl-base.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-Do you allow monitor mode? If so, this isn't correct unless the hardware
-is explicitly told to not do anything (most hw doesn't and we use a zero
-mac addr for that). conf->mac_addr is NULL in monitor mode for a reason:
-we don't want to have any mac address so we don't ACK packets.
-
-johannes
-
---=-whRVofKXcO4UietYs1o9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGmzue/ETPhpq3jKURAttZAJsEe9yidzdI1pelJEwoX5rDbcxEFQCfVepv
-4RMiuWASdHmu5qIokzIoJK0=
-=xD6j
------END PGP SIGNATURE-----
-
---=-whRVofKXcO4UietYs1o9--
-
+diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
+index 57b8195..0648bec 100644
+--- a/drivers/net/wireless/iwl-base.c
++++ b/drivers/net/wireless/iwl-base.c
+@@ -7811,6 +7811,14 @@ static int iwl_mac_conf_tx(struct ieee80211_hw *hw, int queue,
+ 
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
++	mutex_lock(&priv->mutex);
++
++	/* we wait for the last queue then call qos ucode command */
++	if (priv->assoc_id && iwl_is_associated(priv) && (i == (AC_NUM - 1)))
++		iwl_activate_qos(priv, 0);
++
++	mutex_unlock(&priv->mutex);
++
+ #endif /*CONFIG_IWLWIFI_QOS */
+ 
+ 	IWL_DEBUG_MAC80211("leave\n");
+-- 
+1.5.2
