@@ -1,69 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from deine-taler.de ([217.160.107.63]:53393 "EHLO deine-taler.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755646AbXGHWia (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2007 18:38:30 -0400
-Date: Mon, 9 Jul 2007 00:38:29 +0200
-From: Ulrich Kunitz <kune@deine-taler.de>
-To: Andy Green <andy@warmcat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Jon Smirl <jonsmirl@gmail.com>, Daniel Drake <dsd@gentoo.org>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: Arrested Development
-Message-ID: <20070708223829.GA18217@deine-taler.de>
-References: <468E5C33.2000102@warmcat.com> <20070708140054.GA28113@deine-taler.de> <46910F3F.8010201@warmcat.com> <9e4733910707081142t43a85fb1y383ee8e1835c2842@mail.gmail.com> <469130E8.1010608@warmcat.com> <9e4733910707081204l490e99fcm6b8780f36ef8b9a8@mail.gmail.com> <46913846.9000007@warmcat.com> <20070708203717.GA15957@deine-taler.de> <1183929814.3771.5.camel@johannes.berg> <46915B3C.6030609@warmcat.com>
+Received: from static-141-230-6-89.ipcom.comunitel.net ([89.6.230.141]:56795
+	"EHLO traven.no-ip.org" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755290AbXG3FkK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jul 2007 01:40:10 -0400
+Date: Mon, 30 Jul 2007 07:40:04 +0200
+From: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+To: Satyam Sharma <satyam@infradead.org>
+Cc: Michael Buesch <mb@bu3sch.de>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	akpm@linux-foundation.org
+Subject: Re: [PATCH 1/5] Use mutex instead of semaphore in the Host AP driver
+Message-ID: <20070730054004.GI3432@traven>
+References: <20070729212909.GC3432@traven> <20070729213434.GD3432@traven> <200707300006.42397.mb@bu3sch.de> <alpine.LFD.0.999.0707300842350.10861@enigma.security.iitk.ac.in> <alpine.LFD.0.999.0707300904360.10861@enigma.security.iitk.ac.in>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <46915B3C.6030609@warmcat.com>
+In-Reply-To: <alpine.LFD.0.999.0707300904360.10861@enigma.security.iitk.ac.in>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07-07-08 22:46 Andy Green wrote:
+El Mon, Jul 30, 2007 at 09:17:25AM +0530 Satyam Sharma ha dit:
 
-> > This isn't going to work properly when you add a sta interface and then
-> > a monitor interface, which afaict the driver doesn't prevent in
-> > zd_mac_open. Basically, it has the phy always follow the last-added
-> > virtual interface which doesn't seem right. Also, I might be missing
-> > something, but it shouldn't allow multiple sta interfaces, afaict it
-> > does now.
+> Whoops ...
 > 
-> This is a bit of a general issue that has been discussed a couple of
-> times, not really to a resolution: how to deal with conflicting demands
-> of multiple interfaces on the same rx hardware.  I guess it wants it to
-> be that if any interface is in Monitor then the hardware promisc is
-> enabled.  IFF_PROMISC was discussed to be another way to select genuine
-> promisc rx as well.
-
-> FWIW my script looks like this:
 > 
->  modprobe -r zd1211rw-mac80211
->  modprobe -r rc80211_simple
->  modprobe -r mac80211
->  modprobe zd1211rw-mac80211
->  sleep 2s
->  ifconfig wlan0 up
->  echo -n mon0 >/sys/class/ieee80211/phy0/add_iface
->  iwconfig mon0 mode monitor
->  iwconfig mon0 channel 6
->  ifconfig mon0 up
+> On Mon, 30 Jul 2007, Satyam Sharma wrote:
+> 
+> > On Mon, 30 Jul 2007, Michael Buesch wrote:
+> > 
+> > > On Sunday 29 July 2007 23:34, Matthias Kaehlcke wrote:
+> > > > The Host AP driver uses a semaphore as mutex. Use the mutex API
+> > > > instead of the (binary) semaphore.
+> > > > 
+> > > > Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+> > 
+> > [ Something seems to have gone wrong with your diff / patch / script.
+> >   There was no diff header here, which should have been. ]
+> > 
+> > > > -	res = down_interruptible(&local->rid_bap_sem);
+> > > > +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
+> > > >  	if (res)
+> > > >  		return res;
+> > > >  
+> > > > @@ -902,7 +902,7 @@ static int hfa384x_set_rid(struct net_device *dev, u16 rid, void *buf, int len)
+> > > >  	/* RID len in words and +1 for rec.rid */
+> > > >  	rec.len = cpu_to_le16(len / 2 + len % 2 + 1);
+> > > >  
+> > > > -	res = down_interruptible(&local->rid_bap_sem);
+> > > > +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
+> > > >  	if (res)
+> > > >  		return res;
+> > > >  
+> > > 
+> > > Is res returned to userspace? If yes, that's not right.
+> > 
+> > Yup, that's not right.
+> > 
+> > > On a interrupted mutex allocation you should return
+> > > -ERESTARTSYS to userspace.
+> > 
+> > Nope, userspace must not see ERESTARTSYS (I /think/ this is the third
+> > time I'm participating in this exact same discussion :-)
+> > 
+> > If the return would be caught by a previous in-kernel caller in the
+> > call chain, ERESTARTSYS is okay and it could try to restart the
+> > operation. However, if the return goes unfiltered directly to
+> > userspace, EINTR is the correct choice.
+> 
+> Eek, and because mutex_lock_interruptible() *does* return -EINTR when
+> interrupted by a signal, and I noticed that hfa384x_set_rid() could be
+> called from an ioctl(2) codepath with no intermediate caller trying to
+> restart it, so the code is perfectly alright, actually.
+> 
+> But the patch doesn't have the diff header anyway, so Matthias would
+> probably have to resend in any case :-)
 
-I forgot to mention that the monitor support doesn't work with
-additonal interfaces right now. Additional interfaces are broken
-currently for zd1211rw. I cannot fix all the problems with
-mac80211 interface of the driver at the same time.
+thanks for reviewing the patch and for your comments, here is the
+patch with the diff header (no idea what when wrong with the other
+one)
 
-Try
+regards
 
-iwconfig wlan0 mode monitor
-ifconfig wlan0 up
-iwconfig wlan0 channel 6
+matthias
 
-for now.
+--
 
-The problem with the STA + MNTR interface is, that mac80211 must
-do the FCS checking for the STA interface or the driver has to
-filter them before forwarding them to the upper layer.
+The Host AP driver uses a semaphore as mutex. Use the mutex API
+instead of the (binary) semaphore.
+
+Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+
+--
+
+diff --git a/drivers/net/wireless/hostap/hostap_hw.c b/drivers/net/wireless/hostap/hostap_hw.c
+index 959887b..d3dacbc 100644
+--- a/drivers/net/wireless/hostap/hostap_hw.c
++++ b/drivers/net/wireless/hostap/hostap_hw.c
+@@ -825,7 +825,7 @@ static int hfa384x_get_rid(struct net_device *dev, u16 rid, void *buf, int len,
+ 	    local->hw_downloading)
+ 		return -ENODEV;
+ 
+-	res = down_interruptible(&local->rid_bap_sem);
++	res = mutex_lock_interruptible(&local->rid_bap_mtx);
+ 	if (res)
+ 		return res;
+ 
+@@ -834,7 +834,7 @@ static int hfa384x_get_rid(struct net_device *dev, u16 rid, void *buf, int len,
+ 		printk(KERN_DEBUG "%s: hfa384x_get_rid: CMDCODE_ACCESS failed "
+ 		       "(res=%d, rid=%04x, len=%d)\n",
+ 		       dev->name, res, rid, len);
+-		up(&local->rid_bap_sem);
++		mutex_unlock(&local->rid_bap_mtx);
+ 		return res;
+ 	}
+ 
+@@ -861,7 +861,7 @@ static int hfa384x_get_rid(struct net_device *dev, u16 rid, void *buf, int len,
+ 		res = hfa384x_from_bap(dev, BAP0, buf, len);
+ 
+ 	spin_unlock_bh(&local->baplock);
+-	up(&local->rid_bap_sem);
++	mutex_unlock(&local->rid_bap_mtx);
+ 
+ 	if (res) {
+ 		if (res != -ENODATA)
+@@ -902,7 +902,7 @@ static int hfa384x_set_rid(struct net_device *dev, u16 rid, void *buf, int len)
+ 	/* RID len in words and +1 for rec.rid */
+ 	rec.len = cpu_to_le16(len / 2 + len % 2 + 1);
+ 
+-	res = down_interruptible(&local->rid_bap_sem);
++	res = mutex_lock_interruptible(&local->rid_bap_mtx);
+ 	if (res)
+ 		return res;
+ 
+@@ -917,12 +917,12 @@ static int hfa384x_set_rid(struct net_device *dev, u16 rid, void *buf, int len)
+ 	if (res) {
+ 		printk(KERN_DEBUG "%s: hfa384x_set_rid (rid=%04x, len=%d) - "
+ 		       "failed - res=%d\n", dev->name, rid, len, res);
+-		up(&local->rid_bap_sem);
++		mutex_unlock(&local->rid_bap_mtx);
+ 		return res;
+ 	}
+ 
+ 	res = hfa384x_cmd(dev, HFA384X_CMDCODE_ACCESS_WRITE, rid, NULL, NULL);
+-	up(&local->rid_bap_sem);
++	mutex_unlock(&local->rid_bap_mtx);
+ 
+ 	if (res) {
+ 		printk(KERN_DEBUG "%s: hfa384x_set_rid: CMDCODE_ACCESS_WRITE "
+@@ -3171,7 +3171,7 @@ prism2_init_local_data(struct prism2_helper_functions *funcs, int card_idx,
+ 	spin_lock_init(&local->cmdlock);
+ 	spin_lock_init(&local->baplock);
+ 	spin_lock_init(&local->lock);
+-	init_MUTEX(&local->rid_bap_sem);
++	mutex_init(&local->rid_bap_mtx);
+ 
+ 	if (card_idx < 0 || card_idx >= MAX_PARM_DEVICES)
+ 		card_idx = 0;
+diff --git a/drivers/net/wireless/hostap/hostap_wlan.h b/drivers/net/wireless/hostap/hostap_wlan.h
+index 87a54aa..a42325c 100644
+--- a/drivers/net/wireless/hostap/hostap_wlan.h
++++ b/drivers/net/wireless/hostap/hostap_wlan.h
+@@ -3,6 +3,7 @@
+ 
+ #include <linux/wireless.h>
+ #include <linux/netdevice.h>
++#include <linux/mutex.h>
+ #include <net/iw_handler.h>
+ 
+ #include "hostap_config.h"
+@@ -641,7 +642,7 @@ struct local_info {
+ 			      * when removing entries from the list.
+ 			      * TX and RX paths can use read lock. */
+ 	spinlock_t cmdlock, baplock, lock;
+-	struct semaphore rid_bap_sem;
++	struct mutex rid_bap_mtx;
+ 	u16 infofid; /* MAC buffer id for info frame */
+ 	/* txfid, intransmitfid, next_txtid, and next_alloc are protected by
+ 	 * txfidlock */
 
 -- 
-Uli Kunitz
+Matthias Kaehlcke
+Linux Application Developer
+Barcelona
+
+             You must have a plan. If you don't have a plan,
+               you'll become part of somebody else's plan
+                                                                 .''`.
+    using free software / Debian GNU/Linux | http://debian.org  : :'  :
+                                                                `. `'`
+gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
