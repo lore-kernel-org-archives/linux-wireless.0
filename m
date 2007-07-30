@@ -1,36 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:21261 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757805AbXGLIK3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2007 04:10:29 -0400
-Date: Thu, 12 Jul 2007 16:09:47 +0800
-From: Zhu Yi <yi.zhu@intel.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] Update version ipw2200 stamp to 1.2.2
-Message-ID: <20070712080947.GA28333@mail.intel.com>
-Reply-To: yi.zhu@intel.com
+Received: from pentafluge.infradead.org ([213.146.154.40]:50149 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751218AbXG3DGm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Jul 2007 23:06:42 -0400
+Date: Mon, 30 Jul 2007 08:48:57 +0530 (IST)
+From: Satyam Sharma <satyam@infradead.org>
+To: Michael Buesch <mb@bu3sch.de>
+cc: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+Subject: Re: [PATCH 1/5] Use mutex instead of semaphore in the Host AP  driver
+In-Reply-To: <200707300006.42397.mb@bu3sch.de>
+Message-ID: <alpine.LFD.0.999.0707300842350.10861@enigma.security.iitk.ac.in>
+References: <20070729212909.GC3432@traven> <20070729213434.GD3432@traven>
+ <200707300006.42397.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- drivers/net/wireless/ipw2200.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
-index 08a33df..bdd8ffd 100644
---- a/drivers/net/wireless/ipw2200.c
-+++ b/drivers/net/wireless/ipw2200.c
-@@ -70,7 +70,7 @@
- #define VQ
- #endif
- 
--#define IPW2200_VERSION "1.2.0" VK VD VM VP VR VQ
-+#define IPW2200_VERSION "1.2.2" VK VD VM VP VR VQ
- #define DRV_DESCRIPTION	"Intel(R) PRO/Wireless 2200/2915 Network Driver"
- #define DRV_COPYRIGHT	"Copyright(c) 2003-2006 Intel Corporation"
- #define DRV_VERSION     IPW2200_VERSION
--- 
-1.5.2
+
+On Mon, 30 Jul 2007, Michael Buesch wrote:
+
+> On Sunday 29 July 2007 23:34, Matthias Kaehlcke wrote:
+> > The Host AP driver uses a semaphore as mutex. Use the mutex API
+> > instead of the (binary) semaphore.
+> > 
+> > Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+
+[ Something seems to have gone wrong with your diff / patch / script.
+  There was no diff header here, which should have been. ]
+
+> > -	res = down_interruptible(&local->rid_bap_sem);
+> > +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
+> >  	if (res)
+> >  		return res;
+> >  
+> > @@ -902,7 +902,7 @@ static int hfa384x_set_rid(struct net_device *dev, u16 rid, void *buf, int len)
+> >  	/* RID len in words and +1 for rec.rid */
+> >  	rec.len = cpu_to_le16(len / 2 + len % 2 + 1);
+> >  
+> > -	res = down_interruptible(&local->rid_bap_sem);
+> > +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
+> >  	if (res)
+> >  		return res;
+> >  
+> 
+> Is res returned to userspace? If yes, that's not right.
+
+Yup, that's not right.
+
+> On a interrupted mutex allocation you should return
+> -ERESTARTSYS to userspace.
+
+Nope, userspace must not see ERESTARTSYS (I /think/ this is the third
+time I'm participating in this exact same discussion :-)
+
+If the return would be caught by a previous in-kernel caller in the
+call chain, ERESTARTSYS is okay and it could try to restart the
+operation. However, if the return goes unfiltered directly to
+userspace, EINTR is the correct choice.
+
+
+Satyam
