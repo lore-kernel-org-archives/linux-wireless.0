@@ -1,71 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:51787 "EHLO madara.hpl.hp.com"
+Received: from MGW2.Sony.CO.JP ([137.153.0.14]:49759 "EHLO mgw2.sony.co.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759193AbXG0RNy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2007 13:13:54 -0400
-Date: Fri, 27 Jul 2007 10:13:01 -0700
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Re: [PATCH] remove duplicated ioctl entries in compat_ioctl.c
-Message-ID: <20070727171301.GA16210@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
+	id S1753363AbXG3MDA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jul 2007 08:03:00 -0400
+Received: from mail35.sony.co.jp (localhost [127.0.0.1])
+	by mail35.sony.co.jp (R8/Sony) with ESMTP id l6UC2vuW014361
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Jul 2007 21:02:57 +0900 (JST)
+Received: from smail1.sm.sony.co.jp (smail1.sm.sony.co.jp [43.11.253.1])
+	by mail35.sony.co.jp (R8/Sony) with ESMTP id l6UC2va2014358
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Jul 2007 21:02:57 +0900 (JST)
+Received: from imail.sm.sony.co.jp (imail.sm.sony.co.jp [43.4.141.32]) by smail1.sm.sony.co.jp (8.11.6p2/8.11.6) with ESMTP id l6UC2vQ03905 for <linux-wireless@vger.kernel.org>; Mon, 30 Jul 2007 21:02:57 +0900 (JST)
+Received: from [43.4.146.40] (bluenote.sm.sony.co.jp [43.4.146.40])
+	by imail.sm.sony.co.jp (8.12.11/3.7W) with ESMTP id l6UC2tCH025115
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Jul 2007 21:02:55 +0900 (JST)
+Date: Mon, 30 Jul 2007 21:02:56 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] remove duplicated ioctl entries in compat_ioctl.c
+In-Reply-To: <20070727215847.GA17991@bougret.hpl.hp.com>
+References: <20070727191053.GA7572@tuxdriver.com> <20070727215847.GA17991@bougret.hpl.hp.com>
+Message-Id: <20070730145358.327D.MOKUNO@sm.sony.co.jp>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"John W. Linville" wrote :
-> On Mon, Jul 09, 2007 at 07:54:39PM +0900, Masakazu Mokuno wrote:
-> > This patch removes some duplicated wireless ioctl entries in the array
-> > 'struct ioctl_trans ioctl_start[]' of fs/compat_ioctl.c
-> > 
-> > These entries are registered twice like:
-> > 
-> > 	COMPATIBLE_IOCTL(SIOCGIWPRIV)
-> > 
-> > and
-> > 
-> > 	HANDLE_IOCTL(SIOCGIWPRIV, do_wireless_ioctl)
-> > 
-> > 
-> > Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-> > ---
-> >  fs/compat_ioctl.c |    3 ---
-> >  1 file changed, 3 deletions(-)
-> > 
-> > --- a/fs/compat_ioctl.c
-> > +++ b/fs/compat_ioctl.c
-> > @@ -3156,12 +3156,9 @@ COMPATIBLE_IOCTL(SIOCSIWSENS)
-> >  COMPATIBLE_IOCTL(SIOCGIWSENS)
-> >  COMPATIBLE_IOCTL(SIOCSIWRANGE)
-> >  COMPATIBLE_IOCTL(SIOCSIWPRIV)
-> > -COMPATIBLE_IOCTL(SIOCGIWPRIV)
-> >  COMPATIBLE_IOCTL(SIOCSIWSTATS)
-> > -COMPATIBLE_IOCTL(SIOCGIWSTATS)
-> >  COMPATIBLE_IOCTL(SIOCSIWAP)
-> >  COMPATIBLE_IOCTL(SIOCGIWAP)
-> > -COMPATIBLE_IOCTL(SIOCSIWSCAN)
-> >  COMPATIBLE_IOCTL(SIOCSIWRATE)
-> >  COMPATIBLE_IOCTL(SIOCGIWRATE)
-> >  COMPATIBLE_IOCTL(SIOCSIWRTS)
-> 
-> As I read the code in compat_ioctl.c, it looks to me like the
-> COMPATIBLE_IOCTL definitions are the ones that are actually being
-> used today.  Do you agree?
+	Hi
 
-	Actually, you are wrong, and Masakazu is right. All those
-ioctls contains a pointer and should go through the pointer
-conversion.
-	The reason why Masakazu sent that patch is that he actually
-stumbled on the problem and tested it.
+I'd like to talk some about the patch.
 
-> Given the...stability...of the wireless extensions API, if we are going
-> to remove one or the other of these not-quite-duplicate definitions,
-> shouldn't we remove the HANDLE_IOCTL defintions instead?
 
-	I don't understand, you are in favor of breaking the API ?
+I've noticed that 32bit compiled wireless tools on 64 bit kernel (PS3 runs
+with powerpc 64 kernel) sometimes did not work properly than I expected,
+especially 'iwlist eth0 scanning' would show messed results.
 
-	Regards,
+Although I also noticed there was no problem found if I'd used 64bit
+wireless tools, I thought it was good that I first investigated this
+problem some before I started to work on rewriting PS3 wireless support.
 
-	Jean
+After some investigation, I found there was a mistake (which I believed)
+in the table for handlers to deal with 32bit ioctls.  Two handlers were
+defined simultaneously for one wireless ioctl as you can see.  After
+brief look into these handlers, I thought the HANDLE_IOCTL(SIOCGIWPRIV,
+do_wireless_ioctl) seemed to be better.  Then I made the patch that kept
+the latter (do_wireless_ioctl) and submitted it.
+
+And after that, I noticed that at least one of the causes of this iwlist
+problem was that the size and alignment of iw_point structure differed
+between 32bit and 64bit.  So I sent a mail that asked how we should deal
+with it.
+
+Then I got a reply that people in this ml had already knew it and worked
+around in userland applications.  So I tried to use wirelesstools 29
+pre22 and found that its iwlist showed reasonable scan results and I did
+no further test nor investigation.
+
+With these experiences, I thought that wireless experts here had already
+agreement that it should be fixed basically by working around in
+userland apps, and that I'd just brought up the settled issue again.
+
+Some days later, John gave me the mail that referred about my patch.  I
+understood that he asked me that only the former COMPATIBLE_IOCTL one
+was used, but the latter HANDLE_IOCTL never used due to the nature of
+compat_sys_ioctl().  That was exactly what I'd found, so I replied yes.
+I meant yes in that sense.
+
+In second half of the mail, I understood the he asked how about keeping
+used one (COMPATIBLE_IOCTL) instead of HANDLE_IOCTL one, considering
+compatibilities.  As I can esteem the idea that sometimes the compatibilities
+are more important than changing something and I didn't think my patch
+could address all problems of the issue and I had much time to test more,
+I replied with the intention that I didn't stick to the patch if all
+userland application could work around perfectly.
+
+I should search much closer whether similar argument or reports existed
+before sending my patch/mail, when I think of it now.  Sorry for my not
+supplying suffcient information for my patch and/or concern.
+
+--
+Masakazu MOKUNO
+
