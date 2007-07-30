@@ -1,50 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:6030 "EHLO
-	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755313AbXGNAkW (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:48768 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S938697AbXG3HIS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2007 20:40:22 -0400
-From: Daniel Drake <dsd@gentoo.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: kune@deine-taler.de
-Cc: mokuno@sm.sony.co.jp
-Subject: [PATCH] zd1211rw: Add ID for Planex GW-US54GXS
-Message-Id: <20070714004011.EE4A07B409F@zog.reactivated.net>
-Date: Sat, 14 Jul 2007 01:40:11 +0100 (BST)
+	Mon, 30 Jul 2007 03:08:18 -0400
+Date: Mon, 30 Jul 2007 12:50:31 +0530 (IST)
+From: Satyam Sharma <satyam@infradead.org>
+To: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+cc: Michael Buesch <mb@bu3sch.de>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	akpm@linux-foundation.org
+Subject: Re: [PATCH 1/5] Use mutex instead of semaphore in the Host AP  driver
+In-Reply-To: <20070730054004.GI3432@traven>
+Message-ID: <alpine.LFD.0.999.0707301247100.12730@enigma.security.iitk.ac.in>
+References: <20070729212909.GC3432@traven> <20070729213434.GD3432@traven>
+ <200707300006.42397.mb@bu3sch.de> <alpine.LFD.0.999.0707300842350.10861@enigma.security.iitk.ac.in>
+ <alpine.LFD.0.999.0707300904360.10861@enigma.security.iitk.ac.in>
+ <20070730054004.GI3432@traven>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
 
-This patch adds the ID for Planex GW-US54GXS USB wireless adapter sold in
-Japan.
-Since this device returns the regulatory region as 0x49,
-the patch 'Allow channels 1-11 for unrecognised regulatory domains' is
-required.
 
-Tested by Masakazu Mokuno
-zd1211b chip 2019:5303 v4810 high 00-90-cc AL2230_RF pa0 ---N-
+On Mon, 30 Jul 2007, Matthias Kaehlcke wrote:
 
-Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
----
- zd_usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+> [...]
+> 
+> The Host AP driver uses a semaphore as mutex. Use the mutex API
+> instead of the (binary) semaphore.
+> 
+> Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
 
-diff --git a/zd_usb.c b/zd_usb.c
-index 1e9c9ce..95c99a7 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -72,6 +72,7 @@ static struct usb_device_id usb_ids[] = {
- 	{ USB_DEVICE(0x0586, 0x3413), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0053, 0x5301), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0411, 0x00da), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x2019, 0x5303), .driver_info = DEVICE_ZD1211B },
- 	/* "Driverless" devices that need ejecting */
- 	{ USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
- 	{ USB_DEVICE(0x0ace, 0x20ff), .driver_info = DEVICE_INSTALLER },
--- 
-1.5.2.2
-
+Reviewed-by: Satyam Sharma <satyam@infradead.org>
