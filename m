@@ -1,58 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:50081 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762378AbXGTQ6k (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jul 2007 12:58:40 -0400
-Message-ID: <46A0E9B0.1050600@lwfinger.net>
-Date: Fri, 20 Jul 2007 11:58:24 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+Received: from deine-taler.de ([217.160.107.63]:61360 "EHLO deine-taler.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751496AbXG3WwG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jul 2007 18:52:06 -0400
+Date: Tue, 31 Jul 2007 00:52:05 +0200
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] zd1211rw-mac80211: debug output for mac80211 ops
+Message-ID: <20070730225205.GA17252@deine-taler.de>
+References: <20070730023128.99E927B409F@zog.reactivated.net> <200707292021.37845.flamingice@sourmilk.net> <20070730145125.GC6586@tuxdriver.com>
 MIME-Version: 1.0
-To: Andy Green <andy@warmcat.com>
-CC: Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH 2/2] bcm43xx-mac80211: Fix reported rx frequency and channel
-References: <20070611103828.961999956@warmcat.com> <20070611103914.577674038@warmcat.com> <20070719191052.GC6603@tuxdriver.com> <200707192139.14930.mb@bu3sch.de> <46A050B4.3060500@warmcat.com> <46A0C851.2040302@lwfinger.net> <46A0CB16.6010901@warmcat.com>
-In-Reply-To: <46A0CB16.6010901@warmcat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070730145125.GC6586@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andy Green wrote:
+John W. Linville wrote:
+
+> On Sun, Jul 29, 2007 at 08:21:31PM -0700, Michael Wu wrote:
+> > On Sunday 29 July 2007 19:31, Daniel Drake wrote:
+> > > This patch adds debug output to mac80211 operations. This is
+> > > intended to sort out the issues with the interface semantics.
+> > >
+> > Ugh. I really hate enter/exit and especially these since they are open coded. 
+> > What do you need clarified about mac80211 interface semantics?
 > 
-> Understood, that is why I consider it a bad thing that functionality
-> that can be done in the mac80211 driver is pushed into the binary-only
-> firmware when there is a choice (otherwise known as "paranoia", apparently).
+> I agree, these are a bit ugly.  Do you intend them to be permanent?
 
-Unfortunately, that is a necessary result of this type of reverse-engineering. If Broadcom put some 
-function in the firmware, we have to leave it there as we have no idea what would break.
+Guys, actually I looked into iwl-base.c and there are also leave
+and enter statements for exactly the same mac80211 operations. I
+would appreciate, if somebody could explain me the difference.
 
-> However you stripped some quoting from Michael:
-> 
-> ''But it is actually no problem in reality, as the use-it-or-die
-> firmware doesn't have this problem. So if someone uses another
-> firmware than the one we suggest, he will probably run into more
-> problems, as well.
-> The fix is called: Use the correct firmware.
-> For now, at least.''
-> 
-> I would summarize this that Michael is telling me one pariticular
-> version of firmware - "use it or die firmware" - is especially
-> blessed/correct.  It might be an idea to let people know they have
-> strayed from the dependency of the required firmware version in dmesg if
-> indeed there is an effective dependency of the driver on it.
+Please notify that the messages will only be compiled into the
+driver if ZD1211_DEBUG is set. I could agree to take them out,
+after we have fixed the multiple interface issues, but right now
+they help to make the logfile quite readable. They help also to
+check my understanding of the struct ieee80211_ops functions.
 
-It isn't that it is blessed or correct, but that it has been tested. Your version has not. Who knows 
-what else might have changed? Once we know the version with the different behavior, a warning 
-message can be prepared. I don't think anyone knew about this problem until you submitted your patch.
+Asked what I don't understand about the mac80211 interfaces, I
+have following questions:
 
-> Can I still get the firmware version from fwcutter if I don't have the
-> original Windows binary the firmware came from?
+Why does WIPHY has only a single MAC address?
 
-AFAIK, fwcutter can only get the version from the foreign driver. It can be gotten from the dmesg 
-output of your inlaws computer, or if you have the extracted firmware files here, you can bundle 
-them up and email them to me privately.
+Though ZD1211 has only one RF chip and one baseband processor --
+which represents a single PHY device in my opinion -- it can
+support two MAC addresses. Sure MAC80211 can give different IP
+addresses to different interfaces, but currently I'm not sure, how
+they relate to the address in the WIPHY.
 
+What about add_interface/remove_interfaces and monitor interfaces?
 
-Larry
+There seems to be difference between "hard" and "soft" monitor
+mode. Currently I'm not sure what the semantics is. There seems to
+be also calls to add_interface/remote_interface with if_id -1. I
+guess that means something like all interfaces. The expected
+behaviour is not documented for that case. 
+
+Cheers,
+
+Uli
+
+-- 
+Uli Kunitz
