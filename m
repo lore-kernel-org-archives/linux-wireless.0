@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4680 "EHLO ra.tuxdriver.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2659 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S936253AbXGZSfo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2007 14:35:44 -0400
-Date: Thu, 26 Jul 2007 14:13:34 -0400
+	id S1757909AbXG3RmT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jul 2007 13:42:19 -0400
+Date: Mon, 30 Jul 2007 10:47:26 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH] bcm43xx-mac80211: Fix specs typo for baseband attenuation
-Message-ID: <20070726181334.GB6068@tuxdriver.com>
-References: <46a8ccbd.wNQamvQ9e0RJ0XZK%Larry.Finger@lwfinger.net> <20070726172138.GA6068@tuxdriver.com> <46A8E044.6080206@lwfinger.net>
+To: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Cc: linux-wireless@vger.kernel.org, jt@hpl.hp.com
+Subject: Re: [PATCH] remove duplicated ioctl entries in compat_ioctl.c
+Message-ID: <20070730144726.GA6586@tuxdriver.com>
+References: <20070727191053.GA7572@tuxdriver.com> <20070727215847.GA17991@bougret.hpl.hp.com> <20070730145358.327D.MOKUNO@sm.sony.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <46A8E044.6080206@lwfinger.net>
+In-Reply-To: <20070730145358.327D.MOKUNO@sm.sony.co.jp>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 26, 2007 at 12:56:20PM -0500, Larry Finger wrote:
-> John W. Linville wrote:
-> >On Thu, Jul 26, 2007 at 11:33:01AM -0500, Larry Finger wrote:
-> >>A typo in the specs interchanges the branches in an if statement, which
-> >>breaks operations for a BCM4306/rev 2 that has phy->analog == 1.
-> >
-> >>@@ -1895,7 +1895,7 @@ void bcm43xx_phy_set_baseband_attenuatio
-> >> 		bcm43xx_write16(dev, BCM43xx_MMIO_PHY0,
-> >> 				(bcm43xx_read16(dev, BCM43xx_MMIO_PHY0)
-> >> 				 & 0xFFF0) | baseband_attenuation);
-> >>-	} else if (phy->analog == 1) {
-> >>+	} else if (phy->analog != 1) {
-> >> 		bcm43xx_phy_write(dev, BCM43xx_PHY_DACCTL,
-> >> 				  (bcm43xx_phy_read(dev, BCM43xx_PHY_DACCTL)
-> >> 				   & 0xFFC3) | (baseband_attenuation << 2));
-> >
-> >Larry,
-> >
-> >How does this relate to the bcm43xx patch you asked me to revert
-> >(and has been reverted in F-7)?  That one change "==" to ">", while
-> >this one changes "==" to "!=".  Instead of reverting the other,
-> >should it do the same thing as this?
-> 
-> It really doesn't matter whether one uses ">" or "!=" here. The number in 
-> question is >= 0 and the test for for zero occurs earlier in the routine 
-> and ends with a return. Now that you mention it, it would be best to make 
-> bcm43xx nad bcm43xx-mac80211 look the same. I'll modify and resubmit the 
-> patch.
+On Mon, Jul 30, 2007 at 09:02:56PM +0900, Masakazu Mokuno wrote:
 
-Hmmm...well, if you asked to revert it on bcm43xx, why is it appropriate here?
+> In second half of the mail, I understood the he asked how about keeping
+> used one (COMPATIBLE_IOCTL) instead of HANDLE_IOCTL one, considering
+> compatibilities.  As I can esteem the idea that sometimes the compatibilities
+> are more important than changing something and I didn't think my patch
+> could address all problems of the issue and I had much time to test more,
+> I replied with the intention that I didn't stick to the patch if all
+> userland application could work around perfectly.
+
+Masakazu-san,
+
+Thank you very much for your thorough explanation of the situation.
+I apologize for having been a bit slow to grasp what you were doing.
+
+I agree that the HANDLE_IOCTL version seems correct.  As you correctly
+understood, my concern was that we not break anything new in the
+process of fixing this bug.
+
+Have you tested the both the old and the new wireless-tools on
+a kernel with your patch applied?  Both 32- and 64-bit versions?
+Do they all work equally well?
+
+Thanks,
 
 John
 -- 
