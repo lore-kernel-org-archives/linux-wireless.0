@@ -1,53 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:57874 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758534AbXGRQ1Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2007 12:27:24 -0400
-Date: Wed, 18 Jul 2007 18:27:40 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2] mac80211: fix GCC warning on 64bit platforms
-Message-ID: <20070718182740.69addc09@griffin.suse.cz>
-In-Reply-To: <469E3C70.4070809@lwfinger.net>
-References: <20070714.185935.18577806.davem@davemloft.net>
-	<20070714.204116.23012949.davem@davemloft.net>
-	<20070716184653.355253bf@griffin.suse.cz>
-	<20070716.145358.35015496.davem@davemloft.net>
-	<20070718171044.2de287cd@griffin.suse.cz>
-	<469E3C70.4070809@lwfinger.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2899 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964951AbXG3RgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jul 2007 13:36:00 -0400
+Date: Mon, 30 Jul 2007 10:51:25 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Daniel Drake <dsd@gentoo.org>, kune@deine-taler.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] zd1211rw-mac80211: debug output for mac80211 ops
+Message-ID: <20070730145125.GC6586@tuxdriver.com>
+References: <20070730023128.99E927B409F@zog.reactivated.net> <200707292021.37845.flamingice@sourmilk.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200707292021.37845.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 18 Jul 2007 11:14:40 -0500, Larry Finger wrote:
-> > -	local->tx_headroom = max(local->hw.extra_tx_headroom,
-> > -				 sizeof(struct ieee80211_tx_status_rtap_hdr));
-> > +	local->tx_headroom = max_t(unsigned, local->hw.extra_tx_headroom,
-> > +				   sizeof(struct ieee80211_tx_status_rtap_hdr));
-> >  
-> >  	debugfs_hw_add(local);
-> 
-> For my info on how to use max_t, not as a critique of this patch.
-> (1) Is 'unsigned' enough or should it be 'unsigned int'?
+On Sun, Jul 29, 2007 at 08:21:31PM -0700, Michael Wu wrote:
+> On Sunday 29 July 2007 19:31, Daniel Drake wrote:
+> > This patch adds debug output to mac80211 operations. This is
+> > intended to sort out the issues with the interface semantics.
+> >
+> Ugh. I really hate enter/exit and especially these since they are open coded. 
+> What do you need clarified about mac80211 interface semantics?
 
-Don't know. For a C compiler, it doesn't matter, but it's fact that
-most of the code in the kernel uses "unsigned int".
-
-> (2) Because tx_headroom is an int, why use unsigned at all?
-
-Because hw.extra_tx_headroom is unsigned. tx_headroom should be IMO
-unsigned too but that's not just a matter of changing its type as it
-would mean a lot of new warnings. We're talking about numbers several
-orders less than int, so it's not an issue here anyway.
-
-If you think "int" is more appropriate, fine with me, I don't really
-care.
-
- Jiri
+I agree, these are a bit ugly.  Do you intend them to be permanent?
 
 -- 
-Jiri Benc
-SUSE Labs
+John W. Linville
+linville@tuxdriver.com
