@@ -1,67 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:7628 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756262AbXGCPXY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2007 11:23:24 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-Date: Tue, 3 Jul 2007 17:23:18 +0200
-Subject: [PATCH] libertas: remove adapter->atimwindow
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200707031723.18548.hs4233@mail.mn-solutions.de>
+Received: from mga01.intel.com ([192.55.52.88]:13420 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760142AbXG3C7r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Jul 2007 22:59:47 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 8/8] Update version iwl-base.c stamp to 0.1.6
+Date: Mon, 30 Jul 2007 10:57:06 +0800
+Message-Id: <11857642471001-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11857642463341-git-send-email-yi.zhu@intel.com>
+References: <11857642261522-git-send-email-yi.zhu@intel.com>
+ <11857642343783-git-send-email-yi.zhu@intel.com>
+ <11857642362891-git-send-email-yi.zhu@intel.com>
+ <1185764238442-git-send-email-yi.zhu@intel.com>
+ <11857642401149-git-send-email-yi.zhu@intel.com>
+ <11857642421391-git-send-email-yi.zhu@intel.com>
+ <11857642444000-git-send-email-yi.zhu@intel.com>
+ <11857642463341-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This varaible was initialized with 0 but there is no code that would ever
-change it's value. So it can go away.
-
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- drivers/net/wireless/libertas/dev.h  |    1 -
- drivers/net/wireless/libertas/join.c |    2 +-
- drivers/net/wireless/libertas/main.c |    3 ---
- 3 files changed, 1 insertions(+), 5 deletions(-)
+ drivers/net/wireless/iwl-base.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 383d689..c52ce0b 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -303,7 +303,6 @@ struct _wlan_adapter {
+diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
+index a98ad77..6e77a51 100644
+--- a/drivers/net/wireless/iwl-base.c
++++ b/drivers/net/wireless/iwl-base.c
+@@ -106,7 +106,7 @@ BUILD_BUG()
+ #define VS
+ #endif
  
- 	/** POWER MANAGEMENT AND PnP SUPPORT */
- 	u8 surpriseremoved;
--	u16 atimwindow;
- 
- 	u16 psmode;		/* Wlan802_11PowermodeCAM=disable
- 				   Wlan802_11PowermodeMAX_PSP=enable */
-diff --git a/drivers/net/wireless/libertas/join.c b/drivers/net/wireless/libertas/join.c
-index 0803491..0bded0c 100644
---- a/drivers/net/wireless/libertas/join.c
-+++ b/drivers/net/wireless/libertas/join.c
-@@ -518,7 +518,7 @@ int libertas_cmd_80211_ad_hoc_start(wlan_private * priv,
- 
- 	adhs->ssparamset.ibssparamset.elementid = IBSS_PARA_IE_ID;
- 	adhs->ssparamset.ibssparamset.len = IBSS_PARA_IE_LEN;
--	adhs->ssparamset.ibssparamset.atimwindow = cpu_to_le16(adapter->atimwindow);
-+	adhs->ssparamset.ibssparamset.atimwindow = 0;
- 
- 	/* set capability info */
- 	tmpcap = WLAN_CAPABILITY_IBSS;
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index d26df1a..8d09cf5 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -992,9 +992,6 @@ static void wlan_init_adapter(wlan_private * priv)
- 	wlan_adapter *adapter = priv->adapter;
- 	int i;
- 
--	/* ATIM params */
--	adapter->atimwindow = 0;
--
- 	adapter->connect_status = LIBERTAS_DISCONNECTED;
- 	memset(adapter->current_addr, 0xff, ETH_ALEN);
+-#define IWLWIFI_VERSION "0.1.5k" VD VS
++#define IWLWIFI_VERSION "0.1.6k" VD VS
+ #define DRV_COPYRIGHT	"Copyright(c) 2003-2007 Intel Corporation"
+ #define DRV_VERSION     IWLWIFI_VERSION
  
 -- 
-1.5.2.1
-
+1.5.2
