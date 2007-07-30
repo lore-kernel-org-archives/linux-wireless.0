@@ -1,26 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.224]:56489 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755643AbXGIO7B (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:57993 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S936279AbXG3TZc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2007 10:59:01 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so690545nze
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2007 07:59:01 -0700 (PDT)
-Message-ID: <9e4733910707090759v5cd20f2en1f6c4e6fc6279b3f@mail.gmail.com>
-Date: Mon, 9 Jul 2007 10:59:00 -0400
-From: "Jon Smirl" <jonsmirl@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Setting channel when interface is down inconsistency
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 30 Jul 2007 15:25:32 -0400
+Date: Mon, 30 Jul 2007 12:23:39 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Satyam Sharma <satyam@infradead.org>,
+	Matthias Kaehlcke <matthias.kaehlcke@gmail.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/5] Use mutex instead of semaphore in the Host AP  driver
+Message-Id: <20070730122339.bbc541e5.akpm@linux-foundation.org>
+In-Reply-To: <200707301909.38602.mb@bu3sch.de>
+References: <20070729212909.GC3432@traven>
+	<200707300006.42397.mb@bu3sch.de>
+	<alpine.LFD.0.999.0707300842350.10861@enigma.security.iitk.ac.in>
+	<200707301909.38602.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-bcm43xx and rx2x00 let me set the channel before the interface is up.
-zd1211 requires the interface to be up before setting the channel.
+On Mon, 30 Jul 2007 19:09:38 +0200
+Michael Buesch <mb@bu3sch.de> wrote:
 
-Is there a guideline for how this is supposed to work?
+> On Monday 30 July 2007, Satyam Sharma wrote:
+> > 
+> > On Mon, 30 Jul 2007, Michael Buesch wrote:
+> > 
+> > > On Sunday 29 July 2007 23:34, Matthias Kaehlcke wrote:
+> > > > The Host AP driver uses a semaphore as mutex. Use the mutex API
+> > > > instead of the (binary) semaphore.
+> > > > 
+> > > > Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+> > 
+> > [ Something seems to have gone wrong with your diff / patch / script.
+> >   There was no diff header here, which should have been. ]
+> > 
+> > > > -	res = down_interruptible(&local->rid_bap_sem);
+> > > > +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
+> > > >  	if (res)
+> > > >  		return res;
+> > > >  
+> > > > @@ -902,7 +902,7 @@ static int hfa384x_set_rid(struct net_device *dev, u16 rid, void *buf, int len)
+> > > >  	/* RID len in words and +1 for rec.rid */
+> > > >  	rec.len = cpu_to_le16(len / 2 + len % 2 + 1);
+> > > >  
+> > > > -	res = down_interruptible(&local->rid_bap_sem);
+> > > > +	res = mutex_lock_interruptible(&local->rid_bap_mtx);
+> > > >  	if (res)
+> > > >  		return res;
+> > > >  
+> > > 
+> > > Is res returned to userspace? If yes, that's not right.
+> > 
+> > Yup, that's not right.
+> > 
+> > > On a interrupted mutex allocation you should return
+> > > -ERESTARTSYS to userspace.
+> > 
+> > Nope, userspace must not see ERESTARTSYS (I /think/ this is the third
+> > time I'm participating in this exact same discussion :-)
+> > 
+> > If the return would be caught by a previous in-kernel caller in the
+> > call chain, ERESTARTSYS is okay and it could try to restart the
+> > operation. However, if the return goes unfiltered directly to
+> > userspace, EINTR is the correct choice.
+> 
+> Last time I submitted a patch which returned EINTR to userspace,
+> people came and said it was wrong. It was said that we must
+> return ERESTARTSYS to the libc and the libc will convert that
+> into either EINTR or automatically restart it immediately.
+> (You can set that in the sigaction stuff).
+> 
+> So either the one who told me that last time was wrong, or you. :)
+> 
+> Andrew? I think you were involved in this discussion I mentioned.
+> (It was about the HW-RNG chardev, but that doesn't matter here).
 
--- 
-Jon Smirl
-jonsmirl@gmail.com
+who, me?  signals?  Danger.
+
+yes, I think ERESTARTSYS is correct.  That gets converted to -EINTR by the
+arch's signal handling code (not by glibc) just before we return to
+userspace.
+
