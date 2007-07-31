@@ -1,103 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:55730 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752045AbXGYUs2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 16:48:28 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so420021ugf
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2007 13:48:27 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Please pull 'upstream' branch of rt2x00
-Date: Wed, 25 Jul 2007 22:49:47 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200707252249.47931.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:45045 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752566AbXGaC7L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jul 2007 22:59:11 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Gregory Greenman <gregory.greenman@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 5/7] iwlwifi: Endianity fixes for 3945
+Date: Tue, 31 Jul 2007 10:56:34 +0800
+Message-Id: <11858506051195-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11858506033857-git-send-email-yi.zhu@intel.com>
+References: <11858505963374-git-send-email-yi.zhu@intel.com>
+ <118585059814-git-send-email-yi.zhu@intel.com>
+ <11858505994113-git-send-email-yi.zhu@intel.com>
+ <11858506013260-git-send-email-yi.zhu@intel.com>
+ <11858506033857-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Today a very quick release of 2.0.4,
-reason for this quick followup on 2.0.3 are the fixes
-regarding the USB ID and the rt61pci interrupts.
+This patch fixes most of endianity issues in iwl-3945.c.
 
-The latter one (hopefully) resolves an bugreport recently
-raised in the Fedora Bugzilla. (I'll update the report in a few seconds)
-
-And yes I have read the mails of today regarding patch submissions,
-so I'll start sending the individual patches as well along with this pull request. ;)
-
-Short note about the state of rt2x00:
-  - Code cleaning is progressing, next version will probably contain
-    the result of Lindent run. But after that I don't expect big changes regarding
-    code style.
-
-  - Writing "Magical" values to the registers has been reduced as much as possible,
-    most values that are still magical are really magic and I have no clue on what they
-    exactly mean, except that those values should be written. ;)
-
-  - Suspend/resume is completely broken. I am not sure how the device should
-    correctly suspend/resume. Most important points on this area are
-    deregistering/registering ieee80211_hw and reassociation after resume.
-    I am gathering some more info on this, and will post a bigger report on the mailinglist
-    in a few days.
-
-  - Statistics reading. Noise and Signal are still empty...
-    It would really be nice to have some value to report for these statistics.
-
-  - Bug reports show definite progress, rt2x00 doesn't really seem to break things,
-    but neither is it doing a usefull things...
-
-Ivo
-
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
+ drivers/net/wireless/iwl-3945.c |   23 ++++++++++++-----------
+ 1 files changed, 12 insertions(+), 11 deletions(-)
 
-The following changes since commit 9cc4f5142dd983d178b158e782d5e60900e48270:
-  Michael Wu (1):
-        mac80211: use more GFP_KERNEL instead of GFP_ATOMIC
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ upstream
-
-Adam Baker (1):
-      rt2x00: Don't export unneeded symbols
-
-Ivo van Doorn (13):
-      rt2x00: Check permissions on debugfs write
-      Merge branch 'wireless-dev'
-      rt2x00: Use rts_cts_rate for CTS frames
-      rt2x00: Cleanup allocation/initialization
-      rt2x00: rt61pci interrupts are called on MCU CMD done
-      rt2x00: Reduce requirement for debugfs wrapper functions
-      rt2x00: Don't toggle promisc mode in link_tuner
-      rt2x00: Fix MAC address initialization for multiple interfaces
-      Merge branch 'wireless-dev'
-      rt2x00: Check for all errors on RXdone
-      rt2x00: Parse chipset revision for RT chip validation
-      rt2x00: Release 2.0.4
-      Merge branch 'wireless-dev'
-
- drivers/net/wireless/mac80211/rt2x00/rt2400pci.c   |   83 +--
- drivers/net/wireless/mac80211/rt2x00/rt2400pci.h   |    2 +-
- drivers/net/wireless/mac80211/rt2x00/rt2500pci.c   |   90 +---
- drivers/net/wireless/mac80211/rt2x00/rt2500pci.h   |    2 +-
- drivers/net/wireless/mac80211/rt2x00/rt2500usb.c   |  105 ++---
- drivers/net/wireless/mac80211/rt2x00/rt2500usb.h   |    4 +-
- drivers/net/wireless/mac80211/rt2x00/rt2x00.h      |   17 +-
- drivers/net/wireless/mac80211/rt2x00/rt2x00debug.c |  237 +++------
- drivers/net/wireless/mac80211/rt2x00/rt2x00debug.h |   27 +-
- drivers/net/wireless/mac80211/rt2x00/rt2x00dev.c   |  560 ++++++++++----------
- drivers/net/wireless/mac80211/rt2x00/rt2x00dev.h   |    1 -
- drivers/net/wireless/mac80211/rt2x00/rt2x00mac.c   |   57 ++-
- drivers/net/wireless/mac80211/rt2x00/rt2x00pci.c   |   58 ++-
- drivers/net/wireless/mac80211/rt2x00/rt2x00usb.c   |  126 +++--
- drivers/net/wireless/mac80211/rt2x00/rt2x00usb.h   |    1 -
- drivers/net/wireless/mac80211/rt2x00/rt61pci.c     |   99 ++---
- drivers/net/wireless/mac80211/rt2x00/rt61pci.h     |    2 +-
- drivers/net/wireless/mac80211/rt2x00/rt73usb.c     |  100 ++---
- drivers/net/wireless/mac80211/rt2x00/rt73usb.h     |    2 +-
- 19 files changed, 731 insertions(+), 842 deletions(-)
+diff --git a/drivers/net/wireless/iwl-3945.c b/drivers/net/wireless/iwl-3945.c
+index b71e987..6074ae0 100644
+--- a/drivers/net/wireless/iwl-3945.c
++++ b/drivers/net/wireless/iwl-3945.c
+@@ -295,6 +295,8 @@ static void iwl3945_rx_reply_rx(struct iwl_priv *priv,
+ 	struct iwl_rx_frame_end *rx_end = IWL_RX_END(pkt);
+ 	struct ieee80211_hdr *header;
+ 	u16 phy_flags = le16_to_cpu(rx_hdr->phy_flags);
++	u16 rx_stats_sig_avg = le16_to_cpu(rx_stats->sig_avg);
++	u16 rx_stats_noise_diff = le16_to_cpu(rx_stats->noise_diff);
+ 	struct ieee80211_rx_status stats = {
+ 		.mactime = le32_to_cpu(rx_end->beacon_timestamp),
+ 		.freq = ieee80211chan2mhz(le16_to_cpu(rx_hdr->channel)),
+@@ -316,9 +318,8 @@ static void iwl3945_rx_reply_rx(struct iwl_priv *priv,
+ 		return;
+ 	}
+ 
+-	if (!(le32_to_cpu(rx_end->status) & RX_RES_STATUS_NO_CRC32_ERROR)
+-	    || !(le32_to_cpu(rx_end->status) &
+-		 RX_RES_STATUS_NO_RXE_OVERFLOW)) {
++	if (!(rx_end->status & RX_RES_STATUS_NO_CRC32_ERROR)
++	    || !(rx_end->status & RX_RES_STATUS_NO_RXE_OVERFLOW)) {
+ 		IWL_DEBUG_RX("Bad CRC or FIFO: 0x%08X.\n", rx_end->status);
+ 		return;
+ 	}
+@@ -349,8 +350,8 @@ static void iwl3945_rx_reply_rx(struct iwl_priv *priv,
+ 	 * Convert linear SNR to dB SNR, then subtract that from rssi dBm
+ 	 *   to obtain noise level in dBm.
+ 	 * Calculate stats.signal (quality indicator in %) based on SNR. */
+-	if (rx_stats->noise_diff) {
+-		snr = rx_stats->sig_avg / rx_stats->noise_diff;
++	if (rx_stats_noise_diff) {
++		snr = rx_stats_sig_avg / rx_stats_noise_diff;
+ 		stats.noise = stats.ssi - iwl_calc_db_from_ratio(snr);
+ 		stats.signal = iwl_calc_sig_qual(stats.ssi, stats.noise);
+ 
+@@ -364,7 +365,7 @@ static void iwl3945_rx_reply_rx(struct iwl_priv *priv,
+ 
+ 	IWL_DEBUG_STATS("Rssi %d noise %d qual %d sig_avg %d noise_diff %d\n",
+ 			stats.ssi, stats.noise, stats.signal,
+-			rx_stats->sig_avg, rx_stats->noise_diff);
++			rx_stats_sig_avg, rx_stats_noise_diff);
+ 
+ 	stats.freq = ieee80211chan2mhz(stats.channel);
+ 
+@@ -415,7 +416,7 @@ static void iwl3945_rx_reply_rx(struct iwl_priv *priv,
+ 					pos =
+ 					    (__le32 *) & mgmt->u.beacon.
+ 					    timestamp;
+-					priv->timestamp0 = le64_to_cpu(pos[0]);
++					priv->timestamp0 = le32_to_cpu(pos[0]);
+ 					priv->timestamp1 = le32_to_cpu(pos[1]);
+ 					priv->beacon_int = le16_to_cpu(
+ 					    mgmt->u.beacon.beacon_int);
+@@ -597,7 +598,7 @@ void iwl_hw_build_tx_cmd_rate(struct iwl_priv *priv,
+ 	int rate;
+ 	u8 rts_retry_limit;
+ 	u8 data_retry_limit;
+-	u32 tx_flags;
++	__le32 tx_flags;
+ 	u16 fc = le16_to_cpu(hdr->frame_control);
+ 
+ 	rate = iwl_rates[rate_index].plcp;
+@@ -663,7 +664,7 @@ void iwl_hw_build_tx_cmd_rate(struct iwl_priv *priv,
+ 		       "cck/ofdm mask: 0x%x/0x%x\n",
+ 		       sta_id,
+ 		       cmd->cmd.tx.rate,
+-		       BIT_ARG16(cmd->cmd.tx.tx_flags),
++		       BIT_ARG16(le32_to_cpu(cmd->cmd.tx.tx_flags)),
+ 		       cmd->cmd.tx.supp_rates[1], cmd->cmd.tx.supp_rates[0]);
+ }
+ 
+@@ -2108,7 +2109,7 @@ int iwl_hw_tx_queue_init(struct iwl_priv *priv, struct iwl_tx_queue *txq)
+ 
+ 	struct iwl_shared *shared_data = priv->hw_setting.shared_virt;
+ 
+-	shared_data->tx_base_ptr[txq_id] = (u32) txq->q.dma_addr;
++	shared_data->tx_base_ptr[txq_id] = cpu_to_le32((u32)txq->q.dma_addr);
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 	rc = iwl_grab_restricted_access(priv);
+@@ -2140,7 +2141,7 @@ int iwl_hw_get_rx_read(struct iwl_priv *priv)
+ 	struct iwl_shared *shared_data =
+ 	    (struct iwl_shared *)priv->hw_setting.shared_virt;
+ 
+-	return shared_data->rx_read_ptr[0];
++	return le32_to_cpu(shared_data->rx_read_ptr[0]);
+ }
+ 
+ /**
+-- 
+1.5.2
