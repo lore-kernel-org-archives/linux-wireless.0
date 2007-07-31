@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.237]:54311 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753979AbXGaWU5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 18:20:57 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so16794wxd
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 15:20:56 -0700 (PDT)
-Message-ID: <1ba2fa240707311520w1dee7c24jd5696877b41653a0@mail.gmail.com>
-Date: Wed, 1 Aug 2007 01:20:56 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: iwl: large integer implicitly truncated to unsigned
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200708010016.19365.mb@bu3sch.de>
+Received: from xdsl-664.zgora.dialog.net.pl ([81.168.226.152]:4710 "EHLO
+	tuxland.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751659AbXGaVev (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2007 17:34:51 -0400
+From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+To: linux-kernel@vger.kernel.org
+Subject: [PATCH 60] drivers/net/wireless/prism54/oid_mgt.c: kmalloc + memset conversion to kzalloc
+Date: Tue, 31 Jul 2007 23:34:50 +0200
+Cc: kernel-janitors@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>, mcgrof@gmail.com,
+	linux-wireless@vger.kernel.org
+References: <200707311845.48807.m.kozlowski@tuxland.pl>
+In-Reply-To: <200707311845.48807.m.kozlowski@tuxland.pl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200707312354.10118.mb@bu3sch.de>
-	 <1ba2fa240707311511y620b205p21cc1b3963e0ef77@mail.gmail.com>
-	 <200708010016.19365.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-2"
+Message-Id: <200707312334.51067.m.kozlowski@tuxland.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/1/07, Michael Buesch <mb@bu3sch.de> wrote:
-> On Wednesday 01 August 2007 00:11:32 Tomas Winkler wrote:
-> > On 8/1/07, Michael Buesch <mb@bu3sch.de> wrote:
-> > > Are you aware of these warnings in current wireless-dev?
-> > >
-> > > drivers/net/wireless/iwl-base.c:2061: warning: large integer implicitly truncated to unsigned type
-> > > drivers/net/wireless/iwl-base.c:2062: warning: large integer implicitly truncated to unsigned type
-> > > drivers/net/wireless/iwl-base.c:2063: warning: large integer implicitly truncated to unsigned type
-> > > drivers/net/wireless/iwl-base.c:2064: warning: large integer implicitly truncated to unsigned type
-> > > drivers/net/wireless/iwl-base.c:2065: warning: large integer implicitly truncated to unsigned type
-> > > drivers/net/wireless/iwl-base.c:2071: warning: large integer implicitly truncated to unsigned type
-> > > drivers/net/wireless/iwl-base.c:2072: warning: large integer implicitly truncated to unsigned type
-> > > drivers/net/wireless/iwl-base.c:2073: warning: large integer implicitly truncated to unsigned type
-> > > drivers/net/wireless/iwl-base.c:2074: warning: large integer implicitly truncated to unsigned type
-> > > drivers/net/wireless/iwl-base.c:2075: warning: large integer implicitly truncated to unsigned type
-> > >
-> > Haven't seen this one. What machine are you running compilation? 64bit maybe?
->
-> 32bit PPC with gcc 4.1.2
->
-Hmm,  I'll try to cross compile it tomorrow.
-> --
-> Greetings Michael.
->
+Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+
+ drivers/net/wireless/prism54/oid_mgt.c | 25377 -> 25297 (-80 bytes)
+ drivers/net/wireless/prism54/oid_mgt.o | 128460 -> 128284 (-176 bytes)
+
+ drivers/net/wireless/prism54/oid_mgt.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+--- linux-2.6.23-rc1-mm1-a/drivers/net/wireless/prism54/oid_mgt.c	2007-07-26 13:07:43.000000000 +0200
++++ linux-2.6.23-rc1-mm1-b/drivers/net/wireless/prism54/oid_mgt.c	2007-07-30 00:27:44.000000000 +0200
+@@ -244,13 +244,11 @@ mgt_init(islpci_private *priv)
+ 	/* Alloc the cache */
+ 	for (i = 0; i < OID_NUM_LAST; i++) {
+ 		if (isl_oid[i].flags & OID_FLAG_CACHED) {
+-			priv->mib[i] = kmalloc(isl_oid[i].size *
++			priv->mib[i] = kzalloc(isl_oid[i].size *
+ 					       (isl_oid[i].range + 1),
+ 					       GFP_KERNEL);
+ 			if (!priv->mib[i])
+ 				return -ENOMEM;
+-			memset(priv->mib[i], 0,
+-			       isl_oid[i].size * (isl_oid[i].range + 1));
+ 		} else
+ 			priv->mib[i] = NULL;
+ 	}
