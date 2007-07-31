@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49306 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936304AbXGMJH3 (ORCPT
+Received: from purr.warmcat.com ([87.106.142.209]:35222 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756282AbXGaPOR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2007 05:07:29 -0400
-Subject: RE: [PATCH 1/1] mac80211: Replace overly "sticky" averaging  filters for rssi, signal, noise.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Cahill, Ben M" <ben.m.cahill@intel.com>
-Cc: Jiri Benc <jbenc@suse.cz>, benmcahill@gmail.com,
-	flamingice@sourmilk.net, linux-wireless@vger.kernel.org
-In-Reply-To: <4220499A1B034C4FA93B547BA01E1FF07FC284@orsmsx413.amr.corp.intel.com>
-References: <4220499A1B034C4FA93B547BA01E1FF07FC284@orsmsx413.amr.corp.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7n91Q3VJWS8nkBrV7A5G"
-Date: Fri, 13 Jul 2007 00:03:40 +0200
-Message-Id: <1184277820.6669.78.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 31 Jul 2007 11:14:17 -0400
+Message-ID: <46AF51C5.6070507@warmcat.com>
+Date: Tue, 31 Jul 2007 16:14:13 +0100
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rt73usb-add-bluenext-148f-2573
+References: <20070731115446.5717.37617.stgit@localhost> <46AF4889.4070902@warmcat.com> <200707311650.34795.IvDoorn@gmail.com> <200707311706.52073.IvDoorn@gmail.com>
+In-Reply-To: <200707311706.52073.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Somebody in the thread at some point said:
+> Hi,
+> 
+>>>> Which version are you using?
+>>>> wireless-dev <---
+>>>> rt2x00.git
+>>>> rt2x00 cvs
+>> Ok, rt2x00.git contains many changes to the initialization of the device,
+>> so it is a bit hard to compare at the moment. At least it is confirmed that rt2x00 can
+>> receive all frames in monitor mode and the problem area is the DROP filter.
+>>
+>> I'll release rt2x00 2.0.5 later today with all those changes, including the rxdone rate
+>> selection fix. So if you could retest later to see if the problem disappeared in 2.0.5 it
+>> would be great. :)
+> 
+> Ok, that was easier then I thought, rt2x00 2.0.5 _will_ contain the fix for this.
+> I just noticed that when the first and only interface is a monitor interface
+> the device was not being configured at all. This has now been fixed in rt2x00.git,
+> so it will be part of the 2.0.5 release later today. :)
 
---=-7n91Q3VJWS8nkBrV7A5G
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Great, I will check for it on the serialmonkey site later and give it a go.
 
-On Tue, 2007-07-10 at 21:59 -0700, Cahill, Ben M wrote:
+I just received four different kinds of cheap cards from ebuyer, I hoped
+to get a bcm43xx card again but you can't choose when the cards are only
+GBP8 each.  So later I will see what can happen with the other cards
+that are new to me: Libertas on 88W8335 PC Card, Libertas USB stick
+1286:1fab, and a Realtek PC Card RTL-8185.
 
-> If we do the division when passing to user space, how should STA_FILE be
-> handled, if necessary?
+Thanks to your help it looks like the first RT2571-based one is a winner ;-)
 
-This should work due to the way the macros are set up:
-
-STA_READ_D(last_rssi, last_rssi/16)
-STA_OPS(last_rssi);
-
-johannes
-
---=-7n91Q3VJWS8nkBrV7A5G
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGlqU7/ETPhpq3jKURAkvCAJ9Zcy+3Huqhg8igb7a8m9YqF8QpCACgqmwe
-nvhlX8f+hSWJNxNhaB1LShk=
-=NLUa
------END PGP SIGNATURE-----
-
---=-7n91Q3VJWS8nkBrV7A5G--
-
+-Andy
