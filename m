@@ -1,231 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:45045 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752631AbXGaC7K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2007 22:59:10 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 3/7] iwlwifi: Endianity fix for TX host command
-Date: Tue, 31 Jul 2007 10:56:32 +0800
-Message-Id: <11858506013260-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11858505994113-git-send-email-yi.zhu@intel.com>
-References: <11858505963374-git-send-email-yi.zhu@intel.com>
- <118585059814-git-send-email-yi.zhu@intel.com>
- <11858505994113-git-send-email-yi.zhu@intel.com>
+Received: from purr.warmcat.com ([87.106.142.209]:40808 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760133AbXGaOfK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2007 10:35:10 -0400
+Message-ID: <46AF4889.4070902@warmcat.com>
+Date: Tue, 31 Jul 2007 15:34:49 +0100
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rt73usb-add-bluenext-148f-2573
+References: <20070731115446.5717.37617.stgit@localhost> <200707311458.40936.IvDoorn@gmail.com> <46AF3AAE.4010908@warmcat.com> <200707311611.26683.IvDoorn@gmail.com>
+In-Reply-To: <200707311611.26683.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+Somebody in the thread at some point said:
 
-This patch fixes endnianity issues in TX host command.
+> I think I have an idea why mac80211 always reports 1 MBs,
+> rt2x00 checks if PREAMBLE was enabled or not. If that is the case it sets
+> the rate value to rate->val2
+> Mac80211 in turn only compares the value against rate->val which
+> means that it won't find the rate and assume the lowest possible rate.
+> I'll fix this by always setting the rate->val value instead (It isn't
+really
+> important for mac80211 to know if the preamble bit was set anyway).
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwl-3945-hw.h  |   10 ++++++++++
- drivers/net/wireless/iwl-4965-hw.h  |   10 +++++++++-
- drivers/net/wireless/iwl-4965.c     |   26 ++++++++++++++------------
- drivers/net/wireless/iwl-base.c     |   10 ++++++----
- drivers/net/wireless/iwl-commands.h |    2 +-
- drivers/net/wireless/iwl-hw.h       |   10 +++++-----
- 6 files changed, 45 insertions(+), 23 deletions(-)
+Somehow the rates seem to be correct now after your change to the DROP
+bits...
 
-diff --git a/drivers/net/wireless/iwl-3945-hw.h b/drivers/net/wireless/iwl-3945-hw.h
-index b127450..81c7263 100644
---- a/drivers/net/wireless/iwl-3945-hw.h
-+++ b/drivers/net/wireless/iwl-3945-hw.h
-@@ -87,4 +87,14 @@ struct iwl_tfd_frame {
- 	u8 reserved[28];
- } __attribute__ ((packed));
- 
-+static inline u8 iwl_hw_get_rate(__le16 rate_n_flags)
-+{
-+	return le16_to_cpu(rate_n_flags) & 0xFF;
-+}
-+
-+static inline u16 iwl_hw_get_rate_n_flags(__le16 rate_n_flags)
-+{
-+	return le16_to_cpu(rate_n_flags);
-+}
-+
- #endif
-diff --git a/drivers/net/wireless/iwl-4965-hw.h b/drivers/net/wireless/iwl-4965-hw.h
-index 5dec78b..61229c8 100644
---- a/drivers/net/wireless/iwl-4965-hw.h
-+++ b/drivers/net/wireless/iwl-4965-hw.h
-@@ -768,10 +768,18 @@ struct iwl4965_rx_mpdu_res_start {
- 	__le16 reserved;
- } __attribute__ ((packed));
- 
--static inline u8 iwl4965_get_rate(__le32 rate_n_flags)
-+static inline u8 iwl_hw_get_rate(__le32 rate_n_flags)
- {
- 	return le32_to_cpu(rate_n_flags) & 0xFF;
- }
-+static inline u16 iwl_hw_get_rate_n_flags(__le32 rate_n_flags)
-+{
-+	return le32_to_cpu(rate_n_flags) & 0xFFFF;
-+}
-+static inline __le32 iwl_hw_set_rate_n_flags(u8 rate, u16 flags)
-+{
-+	return cpu_to_le32(flags|rate);
-+}
- #if 0
- 
- union iwl_dram_scratch_union {
-diff --git a/drivers/net/wireless/iwl-4965.c b/drivers/net/wireless/iwl-4965.c
-index 9f4d83a..19591a6 100644
---- a/drivers/net/wireless/iwl-4965.c
-+++ b/drivers/net/wireless/iwl-4965.c
-@@ -2660,7 +2660,7 @@ void iwl_hw_build_tx_cmd_rate(struct iwl_priv *priv,
- 			      struct ieee80211_hdr *hdr, int sta_id,
- 			      int is_hcca)
- {
--	int rate = ctrl->tx_rate;
-+	u8 rate;
- 	u8 rts_retry_limit = 0;
- 	u8 data_retry_limit = 0;
- 	u32 tx_flags;
-@@ -2700,7 +2700,7 @@ void iwl_hw_build_tx_cmd_rate(struct iwl_priv *priv,
- 
- 	cmd->cmd.tx.rts_retry_limit = rts_retry_limit;
- 	cmd->cmd.tx.data_retry_limit = data_retry_limit;
--	cmd->cmd.tx.rate.s.rate = rate;
-+	cmd->cmd.tx.rate_n_flags = iwl_hw_set_rate_n_flags(rate, 0);
- 	cmd->cmd.tx.tx_flags = tx_flags;
- }
- 
-@@ -2737,9 +2737,11 @@ int iwl_hw_get_beacon_cmd(struct iwl_priv *priv,
- 	tx_beacon_cmd->tx.len = frame_size;
- 
- 	if ((rate == IWL_RATE_1M_PLCP) || (rate >= IWL_RATE_2M_PLCP))
--		tx_beacon_cmd->tx.rate.rate_n_flags = rate|RATE_MCS_CCK_MSK;
-+		tx_beacon_cmd->tx.rate_n_flags =
-+			iwl_hw_set_rate_n_flags(rate, RATE_MCS_CCK_MSK);
- 	else
--		tx_beacon_cmd->tx.rate.rate_n_flags = rate;
-+		tx_beacon_cmd->tx.rate_n_flags =
-+			iwl_hw_set_rate_n_flags(rate, 0);
- 
- 	tx_beacon_cmd->tx.tx_flags = (TX_CMD_FLG_SEQ_CTL_MSK |
- 				TX_CMD_FLG_TSF_MSK | TX_CMD_FLG_STA_RATE_MSK);
-@@ -3249,6 +3251,7 @@ int iwl4965_tx_cmd(struct iwl_priv *priv, struct iwl_cmd *out_cmd,
- 	u8 unicast = 0;
- 	u8 is_data = 1;
- 	u16 fc;
-+	u16 rate_flags;
- 	int rate_index = min(ctrl->tx_rate & 0xffff, IWL_RATE_COUNT - 1);
- #ifdef CONFIG_IWLWIFI_HT
- #ifdef CONFIG_IWLWIFI_HT_AGG
-@@ -3290,29 +3293,28 @@ int iwl4965_tx_cmd(struct iwl_priv *priv, struct iwl_cmd *out_cmd,
- 	/* Hard coded to start at the highest retry fallback position
- 	 * until the 4965 specific rate control algorithm is tied in */
- 	tx->initial_rate_index = LINK_QUAL_MAX_RETRY_NUM - 1;
--	tx->rate.s.rate = iwl_rates[rate_index].plcp;
- 
- 	/* Alternate between antenna A and B for successive frames */
- 	if (priv->use_ant_b_for_management_frame) {
- 		priv->use_ant_b_for_management_frame = 0;
--		tx->rate.rate_n_flags |= RATE_MCS_ANT_B_MSK;
--		tx->rate.rate_n_flags &= ~RATE_MCS_ANT_A_MSK;
-+		rate_flags = RATE_MCS_ANT_B_MSK;
- 	} else {
- 		priv->use_ant_b_for_management_frame = 1;
--		tx->rate.rate_n_flags |= RATE_MCS_ANT_A_MSK;
--		tx->rate.rate_n_flags &= ~RATE_MCS_ANT_B_MSK;
-+		rate_flags = RATE_MCS_ANT_A_MSK;
- 	}
- 
- 	if (!unicast || !is_data ) {
- 		if ((rate_index >= IWL_FIRST_CCK_RATE) &&
- 		    (rate_index <= IWL_LAST_CCK_RATE))
--			tx->rate.rate_n_flags |= RATE_MCS_CCK_MSK;
--
-+			rate_flags |= RATE_MCS_CCK_MSK;
- 	} else {
- 		tx->initial_rate_index = 0;
- 		tx->tx_flags |= TX_CMD_FLG_STA_RATE_MSK;
- 	}
- 
-+	tx->rate_n_flags = iwl_hw_set_rate_n_flags(iwl_rates[rate_index].plcp,
-+						rate_flags);
-+
- 	if (ieee80211_is_probe_request(fc))
- 		tx->tx_flags |= TX_CMD_FLG_TSF_MSK;
- 	else if (ieee80211_is_back_request(fc))
-@@ -3825,7 +3827,7 @@ static void iwl4965_rx_reply_rx(struct iwl_priv *priv,
- 			(rx_start->phy_flags & RX_RES_PHY_FLAGS_BAND_24_MSK) ?
- 			MODE_IEEE80211G : MODE_IEEE80211A,
- 		.antenna = 0,
--		.rate = iwl4965_get_rate(rx_start->rate_n_flags),
-+		.rate = iwl_hw_get_rate(rx_start->rate_n_flags),
- 		.flag = le16_to_cpu(rx_start->phy_flags),
- #ifdef CONFIG_IWLWIFI_HT_AGG
- 		.ordered = 0
-diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
-index 574d01c..a2560d3 100644
---- a/drivers/net/wireless/iwl-base.c
-+++ b/drivers/net/wireless/iwl-base.c
-@@ -7087,8 +7087,9 @@ static void iwl_bg_request_scan(struct work_struct *data)
- #if IWL == 3945
- 		scan->tx_cmd.rate = IWL_RATE_1M_PLCP;
- #elif IWL == 4965
--		scan->tx_cmd.rate.s.rate = IWL_RATE_1M_PLCP;
--		scan->tx_cmd.rate.s.flags = 0x80 | 0x2;
-+		scan->tx_cmd.rate_n_flags =
-+				iwl_hw_set_rate_n_flags(IWL_RATE_1M_PLCP,
-+				RATE_MCS_ANT_B_MSK|RATE_MCS_CCK_MSK);
- #endif
- 		scan->good_CRC_th = 0;
- 		phymode = MODE_IEEE80211G;
-@@ -7098,8 +7099,9 @@ static void iwl_bg_request_scan(struct work_struct *data)
- #if IWL == 3945
- 		scan->tx_cmd.rate = IWL_RATE_6M_PLCP;
- #elif IWL == 4965
--		scan->tx_cmd.rate.s.rate = IWL_RATE_6M_PLCP;
--		scan->tx_cmd.rate.s.flags = 0x80;
-+		scan->tx_cmd.rate_n_flags =
-+				iwl_hw_set_rate_n_flags(IWL_RATE_6M_PLCP,
-+				RATE_MCS_ANT_B_MSK);
- #endif
- 		scan->good_CRC_th = IWL_GOOD_CRC_TH;
- 		phymode = MODE_IEEE80211A;
-diff --git a/drivers/net/wireless/iwl-commands.h b/drivers/net/wireless/iwl-commands.h
-index e3f2977..0faf9c0 100644
---- a/drivers/net/wireless/iwl-commands.h
-+++ b/drivers/net/wireless/iwl-commands.h
-@@ -245,7 +245,7 @@ struct iwl_tx_cmd {
- 	u8 tid_tspec;
- #elif IWL == 4965
- 	struct iwl_dram_scratch scratch;
--	struct iwl_rate rate;
-+	__le32 rate_n_flags;
- 	u8 sta_id;
- #endif
- 	u8 sec_ctl;
-diff --git a/drivers/net/wireless/iwl-hw.h b/drivers/net/wireless/iwl-hw.h
-index e73cf88..25a4728 100644
---- a/drivers/net/wireless/iwl-hw.h
-+++ b/drivers/net/wireless/iwl-hw.h
-@@ -322,11 +322,11 @@ enum {
-  *          10 B active, A inactive
-  *          11 Both active
-  */
--#define RATE_MCS_ANT_A_POS 14
--#define RATE_MCS_ANT_B_POS 15
--#define RATE_MCS_ANT_A_MSK 	__constant_cpu_to_le16(0x4000)
--#define RATE_MCS_ANT_B_MSK 	__constant_cpu_to_le16(0x8000)
--#define RATE_MCS_ANT_AB_MSK 	__constant_cpu_to_le16(0xc000)
-+#define RATE_MCS_ANT_A_POS	14
-+#define RATE_MCS_ANT_B_POS	15
-+#define RATE_MCS_ANT_A_MSK	0x4000
-+#define RATE_MCS_ANT_B_MSK	0x8000
-+#define RATE_MCS_ANT_AB_MSK	0xc000
- 
- /*
-  * WEP/CKIP group key command
--- 
-1.5.2
+> #define TXRX_CSR0_DROP_CRC				FIELD32(0x00020000)
+> #define TXRX_CSR0_DROP_PHYSICAL			FIELD32(0x00040000)
+> #define TXRX_CSR0_DROP_CONTROL			FIELD32(0x00080000)
+> #define TXRX_CSR0_DROP_NOT_TO_ME		FIELD32(0x00100000)
+> #define TXRX_CSR0_DROP_TO_DS				FIELD32(0x00200000)
+> #define TXRX_CSR0_DROP_VERSION_ERROR	FIELD32(0x00400000)
+> #define TXRX_CSR0_DROP_MULTICAST			FIELD32(0x00800000)
+> #define TXRX_CSR0_DROP_BORADCAST		FIELD32(0x01000000)
+> #define TXRX_CSR0_DROP_ACK_CTS			FIELD32(0x02000000)
+>
+> Which means it will only pass multicast, broadcast and ACK_CTS frames. :S
+> Always dropping CRC errors is correct, since enabling that will
+greatly upset
+> any monitoring tool listening to the interface.
+
+Well one day it will be nice if there is a stack-level way to turn it on
+and off.  We can also pass in the radiotap part a flag to show if the
+packet's CRC was valid or not.  The tools can then either turn on the
+filtering before the packets come or filter on good packets only.
+
+> To see if it helps try:
+>
+> echo 16 > csr_offset
+> echo 0x0002b162 > csr_value
+>
+> This will disable all DROP bits (except for the CRC error) and thus should
+> trigger more frames to be received by your interface. In the mean time
+I'll search
+> why those bits weren't cleared when enabling the interface in monitor
+mode.
+
+Yes, that seems to have done it, thanks
+
+15:20:34.157203 54.0 Mb/s 2437 MHz (0x0480) 214dB signal Data IV:1b30
+Pad 20 KeyID 0
+15:20:34.157206 24.0 Mb/s 2437 MHz (0x0480) 232dB signal Acknowledgment
+RA:00:11:50:ad:ce:38 (oui Unknown)
+15:20:34.157942 54.0 Mb/s 2437 MHz (0x0480) 232dB signal Data IV:16aa
+Pad 20 KeyID 0
+15:20:34.157945 36.0 Mb/s 2437 MHz (0x0480) 214dB signal Acknowledgment
+RA:00:19:d2:59:8f:d5 (oui Unknown)
+15:20:34.161265 54.0 Mb/s 2437 MHz (0x0480) 214dB signal Data IV:1b31
+Pad 20 KeyID 0
+15:20:34.161268 24.0 Mb/s 2437 MHz (0x0480) 230dB signal Acknowledgment
+RA:00:11:50:ad:ce:38 (oui Unknown)
+15:20:34.165809 1.0 Mb/s 2437 MHz (0x0480) 218dB signal Beacon (froh)
+[1.0* 2.0* 5.5* 11.0* Mbit] ESS CH: 6, PRIVACY
+15:20:34.165812 54.0 Mb/s 2437 MHz (0x0480) 214dB signal Data IV:1b32
+Pad 20 KeyID 0
+15:20:34.165815 24.0 Mb/s 2437 MHz (0x0480) 232dB signal Acknowledgment
+RA:00:11:50:ad:ce:38 (oui Unknown)
+15:20:34.166498 54.0 Mb/s 2437 MHz (0x0480) 232dB signal Data IV:16ab
+Pad 20 KeyID 0
+15:20:34.166502 36.0 Mb/s 2437 MHz (0x0480) 214dB signal Acknowledgment
+RA:00:19:d2:59:8f:d5 (oui Unknown)
+
+
+> Which version are you using?
+> wireless-dev <---
+> rt2x00.git
+> rt2x00 cvs
+
+-Andy
