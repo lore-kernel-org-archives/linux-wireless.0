@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.232]:52713 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755473AbXGEAIq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2007 20:08:46 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so2201756wxd
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2007 17:08:44 -0700 (PDT)
-Message-ID: <1ba2fa240707041708h7295becg7ef3e7e152aeeb54@mail.gmail.com>
-Date: Thu, 5 Jul 2007 03:08:44 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Jiri Benc" <jbenc@suse.cz>
-Subject: Re: wmm_acm setting
-Cc: "Cohen, Guy" <guy.cohen@intel.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20070702184015.44fad5f9@griffin.suse.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <D0122E209EBF8D4CAB38EC6A8AF244E502BCD5AC@hasmsx412.ger.corp.intel.com>
-	 <20070702184015.44fad5f9@griffin.suse.cz>
+Received: from c60.cesmail.net ([216.154.195.49]:41633 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754257AbXGaNgY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2007 09:36:24 -0400
+Subject: Re: [PATCH] orinoco, wl3501, zd1201: use linux/ieee80211.h instead  of net/ieee80211.h
+From: Pavel Roskin <proski@gnu.org>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, acme@ghostprotocols.net,
+	pe1rxq@amsat.org
+In-Reply-To: <200707310036.15013.flamingice@sourmilk.net>
+References: <200707310036.15013.flamingice@sourmilk.net>
+Content-Type: text/plain
+Date: Tue, 31 Jul 2007 09:36:16 -0400
+Message-Id: <1185888976.12153.16.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Somehow cannot find in wireless-dev.git
-Can you paste it into email.
-Thanks
-Tomas
+On Tue, 2007-07-31 at 00:36 -0700, Michael Wu wrote:
+> From: Michael Wu <flamingice@sourmilk.net>
+> 
+> These drivers only need 802.11 definitions.
 
-On 7/2/07, Jiri Benc <jbenc@suse.cz> wrote:
-> On Sun, 24 Jun 2007 14:47:40 +0300, Cohen, Guy wrote:
-> > In mac80211/ieee80211_sta.c, ieee80211_sta_wmm_params(), line ~267, is
-> > wmm_acm setting for case 1 (BK) and case 0 (BE) right (and not swapped)?
->
-> See commit 37c95ceeebd38a3f1f686b8fbf5168672d19f825 in wireless-dev and
-> the referenced table.
->
->  Jiri
->
-> --
-> Jiri Benc
-> SUSE Labs
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I have nothing against the change if I understand the motivation.
+What's the point?
+
+> -#define ORINOCO_MAX_MTU		(IEEE80211_DATA_LEN - ENCAPS_OVERHEAD)
+> +#define ORINOCO_MAX_MTU		(IEEE80211_MAX_DATA_LEN - ENCAPS_OVERHEAD)
+
+We probably want to standardize on one name and use it consistently in
+all drivers.
+ 
+> -	if ( (new_mtu + ENCAPS_OVERHEAD + IEEE80211_HLEN) >
+> +	if ( (new_mtu + ENCAPS_OVERHEAD + sizeof(struct ieee80211_hdr)) >
+
+I prefer the original code.  "Size of 802.11 header" is easier to
+understand than "size of the structure representing 802.11 header".
+
+Can we please make IEEE80211_HLEN available to all wireless drivers?
+
+And by the way, the definition of struct ieee80211_hdr includes payload
+(which is a good thing in my opinion).  The definition uses a
+gcc-specific 0-size array, which we may want to convert to a c99 style
+flexible array (i.e. payload[] as opposed to payload[0]).
+
+Taking sizeof of a structure with a flexible array is dubious and is
+likely to be discouraged in the future (I would support having a warning
+in sparse).  What we really want is the offset of the payload in the
+frame, not the size allocated by the compiler for the frame with 0-byte
+payload.
+
+I would prefer all the necessary changes to occur without disturbing the
+individual drivers.
+
+-- 
+Regards,
+Pavel Roskin
