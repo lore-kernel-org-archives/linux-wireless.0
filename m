@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:38310 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752599AbXGYUmP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 16:42:15 -0400
-Subject: Re: Please pull patch-bomb for iwlwifi
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200707251643.14926.hs4233@mail.mn-solutions.de>
-References: <20070725085754.GA670@mail.intel.com>
-	 <46A75CD9.9050100@garzik.org>
-	 <200707251643.14926.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Wed, 25 Jul 2007 16:40:22 -0400
-Message-Id: <1185396022.15817.7.camel@xo-13-A4-25.localdomain>
-Mime-Version: 1.0
+Received: from ug-out-1314.google.com ([66.249.92.173]:48192 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765017AbXGaSeL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2007 14:34:11 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so121179ugf
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 11:34:10 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 10/24] rt2x00: rt2x00pci should use rf_size
+Date: Tue, 31 Jul 2007 20:37:17 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200707312037.17895.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-07-25 at 16:43 +0200, Holger Schurig wrote:
-> > 1) You should post patches to the list for review.  Yes, even
-> > if there are 117 of them.  That is acceptable -- and
-> > encouraged -- mailing list etiquette.
-> 
-> Here I'm wondering if this is needed. For example, for the 
-> libertas WLAN driver we have an extra mailing list where people 
-> (mostly) post patches for review. Eventually, Dan Williams put 
-> them into his tree and then asks Linville to pull from him. But 
-> the patches in his GIT tree won't be sent to linux-wireless for 
-> individual review.
+>From 0d1c0140cc51bec92a8c6219ed76beaa32227b08 Mon Sep 17 00:00:00 2001
+From: Ivo van Doorn <IvDoorn@gmail.com>
+Date: Sat, 28 Jul 2007 12:03:35 +0200
+Subject: [PATCH 10/24] rt2x00: rt2x00pci should use rf_size
 
-Ideally, that should fall off dramatically over time.  I'd like to move
-most patch traffic from libertas-dev to linux-wireless once the patch
-volume slows down, as I now think it has.  So in the future, I wouldn't
-mind posting most libertas patches to linux-wireless instead of
-libertas-dev.
+rt2x00pci should use the rf_size field instead
+of the hardcoded 4 * sizeof(u32).
 
-I'd also like to just get rid of the libertas-2.6 git tree and make
-Linville do all the patch merging work in the future, but that should
-come after we transition most of the patch review to linux-wireless, so
-maybe in a few months time.  Post 2.6.23 there probably shouldn't be
-much traffic on libertas-dev, I suspect.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00pci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Dan
-
-> Now, isn't doing the iwlwifi project the same?  There is a 
-> mailinglist for this project 
-> (https://lists.sourceforge.net/lists/listinfo/ipw3945-devel) 
-> where anybody is free to join.
-> 
-> A cursory glance (I'm not in this mailing list) at 
-> http://sourceforge.net/mailarchive/forum.php?forum_name=ipw3945-devel 
-> shows that people indeed post patches there for review.
-> 
-> So, if you ask them to post each and every patch on 
-> linux-wireless, then other projects should do the same. Some 
-> projects (e.g. bcm43xx) mostly do cross-post. Is this the way 
-> people should go?
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/rt2x00pci.c b/drivers/net/wireless/rt2x00pci.c
+index 80e2204..b1cff2c 100644
+--- a/drivers/net/wireless/rt2x00pci.c
++++ b/drivers/net/wireless/rt2x00pci.c
+@@ -329,7 +329,7 @@ static void rt2x00pci_free_eeprom(struct rt2x00_dev *rt2x00dev)
+ 
+ static int rt2x00pci_alloc_rf(struct rt2x00_dev *rt2x00dev)
+ {
+-	rt2x00dev->rf = kzalloc(4 * sizeof(u32), GFP_KERNEL);
++	rt2x00dev->rf = kzalloc(rt2x00dev->ops->rf_size, GFP_KERNEL);
+ 	if (!rt2x00dev->rf)
+ 		return -ENOMEM;
+ 
+-- 
+1.5.2.4
 
