@@ -1,68 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:59541 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756279AbXGHURG (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.173]:48225 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765478AbXGaSeT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2007 16:17:06 -0400
-Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
-	by mailserver.mog.warmcat.com (Postfix) with ESMTP id CAC248CAD8
-	for <linux-wireless@vger.kernel.org>; Sun,  8 Jul 2007 22:16:56 +0200 (CEST)
-Message-Id: <20070708201701.126477512@warmcat.com>
-References: <20070708201636.804206271@warmcat.com>
-Date: Sun, 08 Jul 2007 21:16:37 +0100
-From: andy@warmcat.com
-To: linux-wireless@vger.kernel.org
-Cc: Andy Green <andy@warmcat.com>
-Subject: [PATCH 1/1] iwl3945: provide frequency to radiotap monitor not channel index
+	Tue, 31 Jul 2007 14:34:19 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so121186ugf
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 11:34:18 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 15/24] rt2x00: Lindent
+Date: Tue, 31 Jul 2007 20:37:27 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200707312037.27668.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwl3945 and presumably 4965 wrongly provide the channel index to the radiotap
-header on Monitor mode.  This results in tcpdump showing "6MHz" for example.
+>From 2d772e1724a2e7480133ed80f8bf6e6ac3c609e8 Mon Sep 17 00:00:00 2001
+From: Ivo van Doorn <IvDoorn@gmail.com>
+Date: Sat, 28 Jul 2007 21:47:48 +0200
+Subject: [PATCH 15/24] rt2x00: Lindent
 
-This patch arranges to send the frequency in MHz instead eg, 2437MHz
+Run Lindent to make the code conform Kernel Coding Style.
 
-Signed-off-by: Andy Green <andy@warmcat.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/mac80211/iwlwifi/base.c    |    5 ++---
- drivers/net/wireless/mac80211/iwlwifi/iwlwifi.h |    2 +-
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/net/wireless/rt2400pci.c      |  231 +++++++-------
+ drivers/net/wireless/rt2400pci.h      |    1 -
+ drivers/net/wireless/rt2500pci.c      |  238 +++++++-------
+ drivers/net/wireless/rt2500usb.c      |  237 ++++++++-------
+ drivers/net/wireless/rt2x00.h         |  135 +++++----
+ drivers/net/wireless/rt2x00debug.c    |   24 +-
+ drivers/net/wireless/rt2x00debug.h    |    8 +-
+ drivers/net/wireless/rt2x00dev.c      |  107 ++++---
+ drivers/net/wireless/rt2x00dev.h      |    5 +-
+ drivers/net/wireless/rt2x00firmware.c |    8 +-
+ drivers/net/wireless/rt2x00lib.h      |   26 +-
+ drivers/net/wireless/rt2x00mac.c      |   66 ++--
+ drivers/net/wireless/rt2x00pci.c      |   51 ++--
+ drivers/net/wireless/rt2x00pci.h      |   26 +-
+ drivers/net/wireless/rt2x00rfkill.c   |    2 +-
+ drivers/net/wireless/rt2x00rfkill.h   |    8 +-
+ drivers/net/wireless/rt2x00usb.c      |  129 ++++-----
+ drivers/net/wireless/rt2x00usb.h      |   13 +-
+ drivers/net/wireless/rt61pci.c        |  558 +++++++++++++++++----------------
+ drivers/net/wireless/rt61pci.h        |    1 -
+ drivers/net/wireless/rt73usb.c        |  420 +++++++++++++------------
+ drivers/net/wireless/rt73usb.h        |    1 -
+ 22 files changed, 1188 insertions(+), 1107 deletions(-)
 
-Index: wireless-dev/drivers/net/wireless/mac80211/iwlwifi/base.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/mac80211/iwlwifi/base.c
-+++ wireless-dev/drivers/net/wireless/mac80211/iwlwifi/base.c
-@@ -2986,7 +2986,6 @@ void iwl_handle_data_packet_monitor(stru
- 	 * the information provided in the skb from the hardware */
- 	s8 signal = stats->ssi;
- 	s8 noise = 0;
--	u16 channel = stats->channel;
- 	int rate = stats->rate;
- 	u64 tsf = stats->mactime;
- 
-@@ -3028,8 +3027,8 @@ void iwl_handle_data_packet_monitor(stru
- 	iwl_rt->rt_dbmsignal = signal;
- 	iwl_rt->rt_dbmnoise = noise;
- 
--	/* Convert the channel data and set the flags */
--	iwl_rt->rt_channel = cpu_to_le16(channel);
-+	/* Convert the channel frequency and set the flags */
-+	iwl_rt->rt_channelMHz = cpu_to_le16(stats->freq);
- 	if (!(phy_flags & RX_RES_PHY_FLAGS_BAND_24_MSK)) {
- 		iwl_rt->rt_chbitmask =
- 		    cpu_to_le16((IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ));
-Index: wireless-dev/drivers/net/wireless/mac80211/iwlwifi/iwlwifi.h
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/mac80211/iwlwifi/iwlwifi.h
-+++ wireless-dev/drivers/net/wireless/mac80211/iwlwifi/iwlwifi.h
-@@ -103,7 +103,7 @@ struct iwl_rt_rx_hdr {
- 	__le64 rt_tsf;		/* TSF */
- 	u8 rt_flags;		/* radiotap packet flags */
- 	u8 rt_rate;		/* rate in 500kb/s */
--	__le16 rt_channel;	/* channel in mHz */
-+	__le16 rt_channelMHz;	/* channel in MHz */
- 	__le16 rt_chbitmask;	/* channel bitfield */
- 	s8 rt_dbmsignal;	/* signal in dBm, kluged to signed */
- 	s8 rt_dbmnoise;
+---
 
--- 
+http://mendiosus.nl/rt2x00/0015-rt2x00-Lindent.patch
