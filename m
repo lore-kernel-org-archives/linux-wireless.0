@@ -1,76 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from MGW4.Sony.CO.JP ([137.153.0.46]:49894 "EHLO mgw4.sony.co.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760650AbXG0Bft (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2007 21:35:49 -0400
-Date: Fri, 27 Jul 2007 10:35:38 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Received: from ug-out-1314.google.com ([66.249.92.173]:48192 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932189AbXGaSeT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2007 14:34:19 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so121179ugf
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 11:34:19 -0700 (PDT)
 To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] remove duplicated ioctl entries in compat_ioctl.c
-Cc: linux-wireless@vger.kernel.org,
-	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
-	geoffrey.levand@am.sony.com
-In-Reply-To: <20070726185029.GC6068@tuxdriver.com>
-References: <20070709193744.D021.MOKUNO@sm.sony.co.jp> <20070726185029.GC6068@tuxdriver.com>
-Message-Id: <20070727095654.3268.MOKUNO@sm.sony.co.jp>
+Subject: [PATCH 16/24] rt2x00: Call all configure handlers during resume
+Date: Tue, 31 Jul 2007 20:37:29 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200707312037.29645.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>From 4800d5b02a237838913df950e557cf17f2f70dde Mon Sep 17 00:00:00 2001
+From: Ivo van Doorn <IvDoorn@gmail.com>
+Date: Sun, 29 Jul 2007 14:19:31 +0200
+Subject: [PATCH 16/24] rt2x00: Call all configure handlers during resume
 
-On Thu, 26 Jul 2007 14:50:29 -0400
-"John W. Linville" <linville@tuxdriver.com> wrote:
+All configure handlers should be called during
+resume operation to bring the device back into
+the correct state to make the device work again.
 
-> On Mon, Jul 09, 2007 at 07:54:39PM +0900, Masakazu Mokuno wrote:
-> > This patch removes some duplicated wireless ioctl entries in the array
-> > 'struct ioctl_trans ioctl_start[]' of fs/compat_ioctl.c
-> > 
-> > These entries are registered twice like:
-> > 
-> > 	COMPATIBLE_IOCTL(SIOCGIWPRIV)
-> > 
-> > and
-> > 
-> > 	HANDLE_IOCTL(SIOCGIWPRIV, do_wireless_ioctl)
-> > 
-> > 
-> > Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-> > ---
-> >  fs/compat_ioctl.c |    3 ---
-> >  1 file changed, 3 deletions(-)
-> > 
-> > --- a/fs/compat_ioctl.c
-> > +++ b/fs/compat_ioctl.c
-> > @@ -3156,12 +3156,9 @@ COMPATIBLE_IOCTL(SIOCSIWSENS)
-> >  COMPATIBLE_IOCTL(SIOCGIWSENS)
-> >  COMPATIBLE_IOCTL(SIOCSIWRANGE)
-> >  COMPATIBLE_IOCTL(SIOCSIWPRIV)
-> > -COMPATIBLE_IOCTL(SIOCGIWPRIV)
-> >  COMPATIBLE_IOCTL(SIOCSIWSTATS)
-> > -COMPATIBLE_IOCTL(SIOCGIWSTATS)
-> >  COMPATIBLE_IOCTL(SIOCSIWAP)
-> >  COMPATIBLE_IOCTL(SIOCGIWAP)
-> > -COMPATIBLE_IOCTL(SIOCSIWSCAN)
-> >  COMPATIBLE_IOCTL(SIOCSIWRATE)
-> >  COMPATIBLE_IOCTL(SIOCGIWRATE)
-> >  COMPATIBLE_IOCTL(SIOCSIWRTS)
-> 
-> As I read the code in compat_ioctl.c, it looks to me like the
-> COMPATIBLE_IOCTL definitions are the ones that are actually being
-> used today.  Do you agree?
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00dev.c |   24 ++++++++++++++++++++++--
+ 1 files changed, 22 insertions(+), 2 deletions(-)
 
-Yes. The latter one in the array is silently ignored. In our case, 
-HANDLE_IOCTL(SIOCGIWPRIV, do_wireless_ioctl) ignored.
-
-> Given the...stability...of the wireless extensions API, if we are going
-> to remove one or the other of these not-quite-duplicate definitions,
-> shouldn't we remove the HANDLE_IOCTL defintions instead?
-
-I'm not sure which is better to keep. 
-We can keep COMPATIBLE_IOCTL entries if the userland apps could work
-around iw_point.pointer issue for these ioctls.
-
---
-Masakazu MOKUNO
+diff --git a/drivers/net/wireless/rt2x00dev.c b/drivers/net/wireless/rt2x00dev.c
+index 0220107..4989cdb 100644
+--- a/drivers/net/wireless/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00dev.c
+@@ -1078,6 +1078,9 @@ EXPORT_SYMBOL_GPL(rt2x00lib_suspend);
+ 
+ int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev)
+ {
++	const struct rt2x00lib_ops *lib = rt2x00dev->ops->lib;
++	struct ieee80211_conf *conf = &rt2x00dev->hw->conf;
++	struct interface *intf = &rt2x00dev->interface;
+ 	int retval;
+ 
+ 	NOTICE(rt2x00dev, "Waking up.\n");
+@@ -1095,10 +1098,27 @@ int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev)
+ 		return retval;
+ 
+ 	/*
++	 * Configure the device to the original state.
++	 */
++	lib->config_type(rt2x00dev, intf->type);
++	lib->config_promisc(rt2x00dev, test_bit(INTERFACE_ENABLED_PROMISC,
++						&rt2x00dev->flags));
++	lib->config_bssid(rt2x00dev, intf->bssid);
++	lib->config_phymode(rt2x00dev, conf->phymode);
++	lib->config_channel(rt2x00dev, conf->channel_val,
++			    conf->channel, conf->power_level);
++	lib->config_antenna(rt2x00dev, conf->antenna_sel_tx,
++			    conf->antenna_sel_rx);
++	lib->config_duration(rt2x00dev,
++			     (conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME),
++			     conf->beacon_int);
++	lib->reset_tuner(rt2x00dev);
++
++	/*
+ 	 * We only need to continue when in Master or Ad-hoc mode.
+ 	 */
+-	if (rt2x00dev->interface.type != IEEE80211_IF_TYPE_AP &&
+-	    rt2x00dev->interface.type != IEEE80211_IF_TYPE_IBSS)
++	if (intf->type != IEEE80211_IF_TYPE_AP &&
++	    intf->type != IEEE80211_IF_TYPE_IBSS)
+ 		return 0;
+ 
+ 	/*
+-- 
+1.5.2.4
 
