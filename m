@@ -1,175 +1,677 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:5178 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751828AbXGYWNh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 18:13:37 -0400
+Received: from ug-out-1314.google.com ([66.249.92.173]:48192 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932810AbXGaSe2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2007 14:34:28 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so121179ugf
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 11:34:26 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 20/24] rt2x00: Periodically read statistics
+Date: Tue, 31 Jul 2007 20:37:36 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C7CF09.0B0994AE"
-Subject: [PATCH 1/1 iwlwifi] Calculate and report noise while associated
-Date: Wed, 25 Jul 2007 15:13:07 -0700
-Message-ID: <4220499A1B034C4FA93B547BA01E1FF00174623C@orsmsx413.amr.corp.intel.com>
-From: "Cahill, Ben M" <ben.m.cahill@intel.com>
-To: <ipw3945-devel@lists.sourceforge.net>,
-	<linux-wireless@vger.kernel.org>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200707312037.37041.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
+>From ae4ebe1eadb9e5d8a4ea63aa6e2e260fb107eadf Mon Sep 17 00:00:00 2001
+From: Ivo van Doorn <IvDoorn@gmail.com>
+Date: Tue, 31 Jul 2007 14:09:45 +0200
+Subject: [PATCH 20/24] rt2x00: Periodically read statistics
 
-------_=_NextPart_001_01C7CF09.0B0994AE
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Split the link tuner up into 2 actions,
+first reading of statistics. Where the CCA count
+and the FCS error count can be read.
+second part where the link tuner is handled.
 
-Hi all,
+This has 2 benefits, statistics are read on a single
+location and we can use this location to determine the
+signal quality later on.
+And we can move the get_stats callback function into
+rt2x00mac.c since no device specific things are inside.
 
-Cross-posting this to linux-wireless as per request ... the attached
-(sorry, best I can do at the moment!) patch applies after the other 117
-in the patch-bomb.
+For rt2400pci this also changes the link tuner,
+previously it only degraded the sensitivity but now it uses
+the same values as the other drivers to either increase
+but also decrease the AGC VGC value.
 
-Fixes www.bughost.org bug # 1343.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2400pci.c |   71 +++++++++++++++----------------------
+ drivers/net/wireless/rt2500pci.c |   45 +++++++++++-------------
+ drivers/net/wireless/rt2500usb.c |   48 ++++++++++++-------------
+ drivers/net/wireless/rt2500usb.h |   29 ++++++++++++---
+ drivers/net/wireless/rt2x00.h    |    3 ++
+ drivers/net/wireless/rt2x00dev.c |   12 ++++--
+ drivers/net/wireless/rt2x00mac.c |   16 ++++++++
+ drivers/net/wireless/rt61pci.c   |   47 +++++++++++--------------
+ drivers/net/wireless/rt73usb.c   |   49 ++++++++++++--------------
+ 9 files changed, 165 insertions(+), 155 deletions(-)
 
--- Ben --
+diff --git a/drivers/net/wireless/rt2400pci.c b/drivers/net/wireless/rt2400pci.c
+index 4ea2217..2c60c3e 100644
+--- a/drivers/net/wireless/rt2400pci.c
++++ b/drivers/net/wireless/rt2400pci.c
+@@ -624,6 +624,25 @@ static void rt2400pci_disable_led(struct rt2x00_dev *rt2x00dev)
+ /*
+  * Link tuning
+  */
++static void rt2400pci_link_stats(struct rt2x00_dev *rt2x00dev)
++{
++	u32 reg;
++	u8 bbp;
++
++	/*
++	 * Update FCS error count from register.
++	 */
++	rt2x00pci_register_read(rt2x00dev, CNT0, &reg);
++	rt2x00dev->low_level_stats.dot11FCSErrorCount +=
++	    rt2x00_get_field32(reg, CNT0_FCS_ERROR);
++
++	/*
++	 * Update False CCA count from register.
++	 */
++	rt2400pci_bbp_read(rt2x00dev, 39, &bbp);
++	rt2x00dev->link.false_cca = bbp;
++}
++
+ static void rt2400pci_reset_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+ 	rt2400pci_bbp_write(rt2x00dev, 13, 0x08);
+@@ -632,7 +651,6 @@ static void rt2400pci_reset_tuner(struct rt2x00_dev *rt2x00dev)
+ static void rt2400pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u8 reg;
+-	char false_cca_delta;
+ 
+ 	/*
+ 	 * The link tuner should not run longer then 60 seconds,
+@@ -642,28 +660,16 @@ static void rt2400pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 		return;
+ 
+ 	/*
+-	 * Read false CCA counter.
++	 * Base r13 link tuning on the false cca count.
+ 	 */
+-	rt2400pci_bbp_read(rt2x00dev, 39, &reg);
++	rt2400pci_bbp_read(rt2x00dev, 13, &reg);
+ 
+-	/*
+-	 * Determine difference with previous CCA counter.
+-	 */
+-	false_cca_delta = reg - rt2x00dev->link.false_cca;
+-	rt2x00dev->link.false_cca = reg;
+-
+-	/*
+-	 * Check if the difference is higher than the
+-	 * threshold and if so, tune the link.
+-	 */
+-	if (false_cca_delta >= 8) {
+-		/*
+-		 * Read and update RX AGC VGC.
+-		 */
+-		rt2400pci_bbp_read(rt2x00dev, 13, &reg);
+-		reg += 2;
+-		if (reg < 0x20)
+-			rt2400pci_bbp_write(rt2x00dev, 13, reg);
++	if (rt2x00dev->link.false_cca > 512 && reg < 0x20) {
++		rt2400pci_bbp_write(rt2x00dev, 13, ++reg);
++		rt2x00dev->link.vgc_level = reg;
++	} else if (rt2x00dev->link.false_cca < 100 && reg > 0x08) {
++		rt2400pci_bbp_write(rt2x00dev, 13, --reg);
++		rt2x00dev->link.vgc_level = reg;
+ 	}
+ }
+ 
+@@ -1510,26 +1516,6 @@ static int rt2400pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+ /*
+  * IEEE80211 stack callback functions.
+  */
+-static int rt2400pci_get_stats(struct ieee80211_hw *hw,
+-			       struct ieee80211_low_level_stats *stats)
+-{
+-	struct rt2x00_dev *rt2x00dev = hw->priv;
+-	u32 reg;
+-
+-	/*
+-	 * Update FCS error count from register.
+-	 * The dot11ACKFailureCount, dot11RTSFailureCount and
+-	 * dot11RTSSuccessCount are updated in interrupt time.
+-	 */
+-	rt2x00pci_register_read(rt2x00dev, CNT0, &reg);
+-	rt2x00dev->low_level_stats.dot11FCSErrorCount +=
+-	    rt2x00_get_field32(reg, CNT0_FCS_ERROR);
+-
+-	memcpy(stats, &rt2x00dev->low_level_stats, sizeof(*stats));
+-
+-	return 0;
+-}
+-
+ static int rt2400pci_set_retry_limit(struct ieee80211_hw *hw,
+ 				     u32 short_retry, u32 long_retry)
+ {
+@@ -1608,7 +1594,7 @@ static const struct ieee80211_ops rt2400pci_mac80211_ops = {
+ 	.config			= rt2x00mac_config,
+ 	.config_interface	= rt2x00mac_config_interface,
+ 	.set_multicast_list	= rt2x00mac_set_multicast_list,
+-	.get_stats		= rt2400pci_get_stats,
++	.get_stats		= rt2x00mac_get_stats,
+ 	.set_retry_limit	= rt2400pci_set_retry_limit,
+ 	.conf_tx		= rt2400pci_conf_tx,
+ 	.get_tx_stats		= rt2x00mac_get_tx_stats,
+@@ -1627,6 +1613,7 @@ static const struct rt2x00lib_ops rt2400pci_rt2x00_ops = {
+ #ifdef CONFIG_RT2400PCI_RFKILL
+ 	.rfkill_poll		= rt2400pci_rfkill_poll,
+ #endif /* CONFIG_RT2400PCI_RFKILL */
++	.link_stats		= rt2400pci_link_stats,
+ 	.reset_tuner		= rt2400pci_reset_tuner,
+ 	.link_tuner		= rt2400pci_link_tuner,
+ 	.write_tx_desc		= rt2400pci_write_tx_desc,
+diff --git a/drivers/net/wireless/rt2500pci.c b/drivers/net/wireless/rt2500pci.c
+index 6e9d3ad..7317c10 100644
+--- a/drivers/net/wireless/rt2500pci.c
++++ b/drivers/net/wireless/rt2500pci.c
+@@ -725,6 +725,24 @@ static void rt2500pci_disable_led(struct rt2x00_dev *rt2x00dev)
+ /*
+  * Link tuning
+  */
++static void rt2500pci_link_stats(struct rt2x00_dev *rt2x00dev)
++{
++	u32 reg;
++
++	/*
++	 * Update FCS error count from register.
++	 */
++	rt2x00pci_register_read(rt2x00dev, CNT0, &reg);
++	rt2x00dev->low_level_stats.dot11FCSErrorCount +=
++	    rt2x00_get_field32(reg, CNT0_FCS_ERROR);
++
++	/*
++	 * Update False CCA count from register.
++	 */
++	rt2x00pci_register_read(rt2x00dev, CNT3, &reg);
++	rt2x00dev->link.false_cca = rt2x00_get_field32(reg, CNT3_FALSE_CCA);
++}
++
+ static void rt2500pci_reset_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+ 	rt2500pci_bbp_write(rt2x00dev, 17, 0x48);
+@@ -733,7 +751,6 @@ static void rt2500pci_reset_tuner(struct rt2x00_dev *rt2x00dev)
+ static void rt2500pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int rssi = rt2x00_get_link_rssi(&rt2x00dev->link);
+-	u32 reg;
+ 	u8 r17;
+ 
+ 	/*
+@@ -800,9 +817,6 @@ dynamic_cca_tune:
+ 	 * R17 is inside the dynamic tuning range,
+ 	 * start tuning the link based on the false cca counter.
+ 	 */
+-	rt2x00pci_register_read(rt2x00dev, CNT3, &reg);
+-	rt2x00dev->link.false_cca = rt2x00_get_field32(reg, CNT3_FALSE_CCA);
+-
+ 	if (rt2x00dev->link.false_cca > 512 && r17 < 0x40) {
+ 		rt2500pci_bbp_write(rt2x00dev, 17, ++r17);
+ 		rt2x00dev->link.vgc_level = r17;
+@@ -1762,26 +1776,6 @@ static int rt2500pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+ /*
+  * IEEE80211 stack callback functions.
+  */
+-static int rt2500pci_get_stats(struct ieee80211_hw *hw,
+-			       struct ieee80211_low_level_stats *stats)
+-{
+-	struct rt2x00_dev *rt2x00dev = hw->priv;
+-	u32 reg;
+-
+-	/*
+-	 * Update FCS error count from register.
+-	 * The dot11ACKFailureCount, dot11RTSFailureCount and
+-	 * dot11RTSSuccessCount are updated in interrupt time.
+-	 */
+-	rt2x00pci_register_read(rt2x00dev, CNT0, &reg);
+-	rt2x00dev->low_level_stats.dot11FCSErrorCount +=
+-	    rt2x00_get_field32(reg, CNT0_FCS_ERROR);
+-
+-	memcpy(stats, &rt2x00dev->low_level_stats, sizeof(*stats));
+-
+-	return 0;
+-}
+-
+ static int rt2500pci_set_retry_limit(struct ieee80211_hw *hw,
+ 				     u32 short_retry, u32 long_retry)
+ {
+@@ -1835,7 +1829,7 @@ static const struct ieee80211_ops rt2500pci_mac80211_ops = {
+ 	.config			= rt2x00mac_config,
+ 	.config_interface	= rt2x00mac_config_interface,
+ 	.set_multicast_list	= rt2x00mac_set_multicast_list,
+-	.get_stats		= rt2500pci_get_stats,
++	.get_stats		= rt2x00mac_get_stats,
+ 	.set_retry_limit	= rt2500pci_set_retry_limit,
+ 	.conf_tx		= rt2x00mac_conf_tx,
+ 	.get_tx_stats		= rt2x00mac_get_tx_stats,
+@@ -1854,6 +1848,7 @@ static const struct rt2x00lib_ops rt2500pci_rt2x00_ops = {
+ #ifdef CONFIG_RT2500PCI_RFKILL
+ 	.rfkill_poll		= rt2500pci_rfkill_poll,
+ #endif /* CONFIG_RT2500PCI_RFKILL */
++	.link_stats		= rt2500pci_link_stats,
+ 	.reset_tuner		= rt2500pci_reset_tuner,
+ 	.link_tuner		= rt2500pci_link_tuner,
+ 	.write_tx_desc		= rt2500pci_write_tx_desc,
+diff --git a/drivers/net/wireless/rt2500usb.c b/drivers/net/wireless/rt2500usb.c
+index 753ee36..a68650c 100644
+--- a/drivers/net/wireless/rt2500usb.c
++++ b/drivers/net/wireless/rt2500usb.c
+@@ -680,6 +680,25 @@ static void rt2500usb_disable_led(struct rt2x00_dev *rt2x00dev)
+ /*
+  * Link tuning
+  */
++static void rt2500usb_link_stats(struct rt2x00_dev *rt2x00dev)
++{
++	u16 reg;
++
++	/*
++	 * Update FCS error count from register.
++	 */
++	rt2500usb_register_read(rt2x00dev, STA_CSR0, &reg);
++	rt2x00dev->low_level_stats.dot11FCSErrorCount +=
++	    rt2x00_get_field16(reg, STA_CSR0_FCS_ERROR);
++
++	/*
++	 * Update False CCA count from register.
++	 */
++	rt2500usb_register_read(rt2x00dev, STA_CSR3, &reg);
++	rt2x00dev->link.false_cca =
++	    rt2x00_get_field16(reg, STA_CSR3_FALSE_CCA_ERROR);
++}
++
+ static void rt2500usb_reset_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u16 eeprom;
+@@ -706,7 +725,6 @@ static void rt2500usb_link_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int rssi = rt2x00_get_link_rssi(&rt2x00dev->link);
+ 	u16 bbp_thresh;
+-	u16 cca_alarm;
+ 	u16 vgc_bound;
+ 	u16 sens;
+ 	u16 r24;
+@@ -784,7 +802,6 @@ static void rt2500usb_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * Leave short or middle distance condition, restore r17
+ 	 * to the dynamic tuning range.
+ 	 */
+-	rt2500usb_register_read(rt2x00dev, STA_CSR3, &cca_alarm);
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_BBPTUNE_VGC, &vgc_bound);
+ 	vgc_bound = rt2x00_get_field16(vgc_bound, EEPROM_BBPTUNE_VGCUPPER);
+ 
+@@ -800,10 +817,10 @@ static void rt2500usb_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	if (r17 > up_bound) {
+ 		rt2500usb_bbp_write(rt2x00dev, 17, up_bound);
+ 		rt2x00dev->link.vgc_level = up_bound;
+-	} else if (cca_alarm > 512 && r17 < up_bound) {
++	} else if (rt2x00dev->link.false_cca > 512 && r17 < up_bound) {
+ 		rt2500usb_bbp_write(rt2x00dev, 17, ++r17);
+ 		rt2x00dev->link.vgc_level = r17;
+-	} else if (cca_alarm < 100 && r17 > low_bound) {
++	} else if (rt2x00dev->link.false_cca < 100 && r17 > low_bound) {
+ 		rt2500usb_bbp_write(rt2x00dev, 17, --r17);
+ 		rt2x00dev->link.vgc_level = r17;
+ 	}
+@@ -1492,26 +1509,6 @@ static int rt2500usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ /*
+  * IEEE80211 stack callback functions.
+  */
+-static int rt2500usb_get_stats(struct ieee80211_hw *hw,
+-			       struct ieee80211_low_level_stats *stats)
+-{
+-	struct rt2x00_dev *rt2x00dev = hw->priv;
+-	u16 reg;
+-
+-	/*
+-	 * Update FCS error count from register.
+-	 * The dot11ACKFailureCount, dot11RTSFailureCount and
+-	 * dot11RTSSuccessCount are updated in interrupt time.
+-	 */
+-	rt2500usb_register_read(rt2x00dev, STA_CSR0, &reg);
+-	rt2x00dev->low_level_stats.dot11FCSErrorCount +=
+-	    rt2x00_get_field16(reg, STA_CSR0_FCS_ERROR);
+-
+-	memcpy(stats, &rt2x00dev->low_level_stats, sizeof(*stats));
+-
+-	return 0;
+-}
+-
+ static const struct ieee80211_ops rt2500usb_mac80211_ops = {
+ 	.tx			= rt2x00mac_tx,
+ 	.reset			= rt2x00mac_reset,
+@@ -1520,7 +1517,7 @@ static const struct ieee80211_ops rt2500usb_mac80211_ops = {
+ 	.config			= rt2x00mac_config,
+ 	.config_interface	= rt2x00mac_config_interface,
+ 	.set_multicast_list	= rt2x00mac_set_multicast_list,
+-	.get_stats		= rt2500usb_get_stats,
++	.get_stats		= rt2x00mac_get_stats,
+ 	.conf_tx		= rt2x00mac_conf_tx,
+ 	.get_tx_stats		= rt2x00mac_get_tx_stats,
+ 	.beacon_update		= rt2x00usb_beacon_update,
+@@ -1531,6 +1528,7 @@ static const struct rt2x00lib_ops rt2500usb_rt2x00_ops = {
+ 	.initialize		= rt2x00usb_initialize,
+ 	.uninitialize		= rt2x00usb_uninitialize,
+ 	.set_device_state	= rt2500usb_set_device_state,
++	.link_stats		= rt2500usb_link_stats,
+ 	.reset_tuner		= rt2500usb_reset_tuner,
+ 	.link_tuner		= rt2500usb_link_tuner,
+ 	.write_tx_desc		= rt2500usb_write_tx_desc,
+diff --git a/drivers/net/wireless/rt2500usb.h b/drivers/net/wireless/rt2500usb.h
+index 9df67fb..f0eaead 100644
+--- a/drivers/net/wireless/rt2500usb.h
++++ b/drivers/net/wireless/rt2500usb.h
+@@ -474,18 +474,35 @@
+ #define STA_CSR0_FCS_ERROR		FIELD16(0xffff)
+ 
+ /*
+- * Statistic Register.
+- * STA_CSR1: PLCP error.
+- * STA_CSR2: LONG error.
+- * STA_CSR3: CCA false alarm.
+- * STA_CSR4: RX FIFO overflow.
+- * STA_CSR5: Beacon sent counter.
++ * STA_CSR1: PLCP error count.
+  */
+ #define STA_CSR1			0x04e2
++
++/*
++ * STA_CSR2: LONG error count.
++ */
+ #define STA_CSR2			0x04e4
++
++/*
++ * STA_CSR3: CCA false alarm.
++ * FALSE_CCA_ERROR: False CCA error count, cleared when read.
++ */
+ #define STA_CSR3			0x04e6
++#define STA_CSR3_FALSE_CCA_ERROR	FIELD16(0xffff)
++
++/*
++ * STA_CSR4: RX FIFO overflow.
++ */
+ #define STA_CSR4			0x04e8
++
++/*
++ * STA_CSR5: Beacon sent counter.
++ */
+ #define STA_CSR5			0x04ea
++
++/*
++ *  Statistics registers
++ */
+ #define STA_CSR6			0x04ec
+ #define STA_CSR7			0x04ee
+ #define STA_CSR8			0x04f0
+diff --git a/drivers/net/wireless/rt2x00.h b/drivers/net/wireless/rt2x00.h
+index 9a52251..b7e2578 100644
+--- a/drivers/net/wireless/rt2x00.h
++++ b/drivers/net/wireless/rt2x00.h
+@@ -357,6 +357,7 @@ struct rt2x00lib_ops {
+ 	int (*set_device_state) (struct rt2x00_dev *rt2x00dev,
+ 				 enum dev_state state);
+ 	int (*rfkill_poll) (struct rt2x00_dev *rt2x00dev);
++	void (*link_stats) (struct rt2x00_dev *rt2x00dev);
+ 	void (*reset_tuner) (struct rt2x00_dev *rt2x00dev);
+ 	void (*link_tuner) (struct rt2x00_dev *rt2x00dev);
+ 
+@@ -733,6 +734,8 @@ int rt2x00mac_config_interface(struct ieee80211_hw *hw, int if_id,
+ 			       struct ieee80211_if_conf *conf);
+ void rt2x00mac_set_multicast_list(struct ieee80211_hw *hw,
+ 				  unsigned short flags, int mc_count);
++int rt2x00mac_get_stats(struct ieee80211_hw *hw,
++			struct ieee80211_low_level_stats *stats);
+ int rt2x00mac_get_tx_stats(struct ieee80211_hw *hw,
+ 			   struct ieee80211_tx_queue_stats *stats);
+ int rt2x00mac_conf_tx(struct ieee80211_hw *hw, int queue,
+diff --git a/drivers/net/wireless/rt2x00dev.c b/drivers/net/wireless/rt2x00dev.c
+index f0c00d7..42308ed 100644
+--- a/drivers/net/wireless/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00dev.c
+@@ -175,12 +175,16 @@ static void rt2x00lib_link_tuner(struct work_struct *work)
+ 	    container_of(work, struct rt2x00_dev, link.work.work);
+ 
+ 	/*
+-	 * Check if the Link tuning has been disabled.
++	 * Update statistics.
+ 	 */
+-	if (test_bit(CONFIG_DISABLE_LINK_TUNING, &rt2x00dev->flags))
+-		return;
++	rt2x00dev->ops->lib->link_stats(rt2x00dev);
+ 
+-	rt2x00dev->ops->lib->link_tuner(rt2x00dev);
++	/*
++	 * Only perform the link tuning when Link tuning
++	 * has been enabled (This could have been disabled from the EEPROM).
++	 */
++	if (!test_bit(CONFIG_DISABLE_LINK_TUNING, &rt2x00dev->flags))
++		rt2x00dev->ops->lib->link_tuner(rt2x00dev);
+ 
+ 	/*
+ 	 * Increase tuner counter, and reschedule the next link tuner run.
+diff --git a/drivers/net/wireless/rt2x00mac.c b/drivers/net/wireless/rt2x00mac.c
+index c36ac4a..9c6d043 100644
+--- a/drivers/net/wireless/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00mac.c
+@@ -350,6 +350,22 @@ void rt2x00mac_set_multicast_list(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL_GPL(rt2x00mac_set_multicast_list);
+ 
++int rt2x00mac_get_stats(struct ieee80211_hw *hw,
++			struct ieee80211_low_level_stats *stats)
++{
++	struct rt2x00_dev *rt2x00dev = hw->priv;
++
++	/*
++	 * The dot11ACKFailureCount, dot11RTSFailureCount and
++	 * dot11RTSSuccessCount are updated in interrupt time.
++	 * dot11FCSErrorCount is updated in the link tuner.
++	 */
++	memcpy(stats, &rt2x00dev->low_level_stats, sizeof(*stats));
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(rt2x00mac_get_stats);
++
+ int rt2x00mac_get_tx_stats(struct ieee80211_hw *hw,
+ 			   struct ieee80211_tx_queue_stats *stats)
+ {
+diff --git a/drivers/net/wireless/rt61pci.c b/drivers/net/wireless/rt61pci.c
+index b280d7b..774f5de 100644
+--- a/drivers/net/wireless/rt61pci.c
++++ b/drivers/net/wireless/rt61pci.c
+@@ -937,6 +937,25 @@ static void rt61pci_activity_led(struct rt2x00_dev *rt2x00dev, int rssi)
+ /*
+  * Link tuning
+  */
++static void rt61pci_link_stats(struct rt2x00_dev *rt2x00dev)
++{
++	u32 reg;
++
++	/*
++	 * Update FCS error count from register.
++	 */
++	rt2x00pci_register_read(rt2x00dev, STA_CSR0, &reg);
++	rt2x00dev->low_level_stats.dot11FCSErrorCount +=
++	    rt2x00_get_field32(reg, STA_CSR0_FCS_ERROR);
++
++	/*
++	 * Update False CCA count from register.
++	 */
++	rt2x00pci_register_read(rt2x00dev, STA_CSR1, &reg);
++	rt2x00dev->link.false_cca =
++	    rt2x00_get_field32(reg, STA_CSR1_FALSE_CCA_ERROR);
++}
++
+ static void rt61pci_reset_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+ 	rt61pci_bbp_write(rt2x00dev, 17, 0x20);
+@@ -945,7 +964,6 @@ static void rt61pci_reset_tuner(struct rt2x00_dev *rt2x00dev)
+ static void rt61pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int rssi = rt2x00_get_link_rssi(&rt2x00dev->link);
+-	u32 reg;
+ 	u8 r17;
+ 	u8 up_bound;
+ 	u8 low_bound;
+@@ -1031,10 +1049,6 @@ static void rt61pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * r17 does not yet exceed upper limit, continue and base
+ 	 * the r17 tuning on the false CCA count.
+ 	 */
+-	rt2x00pci_register_read(rt2x00dev, STA_CSR1, &reg);
+-	rt2x00dev->link.false_cca =
+-	    rt2x00_get_field32(reg, STA_CSR1_FALSE_CCA_ERROR);
+-
+ 	if (rt2x00dev->link.false_cca > 512 && r17 < up_bound) {
+ 		if (++r17 > up_bound)
+ 			r17 = up_bound;
+@@ -2287,26 +2301,6 @@ static int rt61pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+ /*
+  * IEEE80211 stack callback functions.
+  */
+-static int rt61pci_get_stats(struct ieee80211_hw *hw,
+-			     struct ieee80211_low_level_stats *stats)
+-{
+-	struct rt2x00_dev *rt2x00dev = hw->priv;
+-	u32 reg;
+-
+-	/*
+-	 * Update FCS error count from register.
+-	 * The dot11ACKFailureCount, dot11RTSFailureCount and
+-	 * dot11RTSSuccessCount are updated in interrupt time.
+-	 */
+-	rt2x00pci_register_read(rt2x00dev, STA_CSR0, &reg);
+-	rt2x00dev->low_level_stats.dot11FCSErrorCount +=
+-	    rt2x00_get_field32(reg, STA_CSR0_FCS_ERROR);
+-
+-	memcpy(stats, &rt2x00dev->low_level_stats, sizeof(*stats));
+-
+-	return 0;
+-}
+-
+ static int rt61pci_set_retry_limit(struct ieee80211_hw *hw,
+ 				   u32 short_retry, u32 long_retry)
+ {
+@@ -2351,7 +2345,7 @@ static const struct ieee80211_ops rt61pci_mac80211_ops = {
+ 	.config			= rt2x00mac_config,
+ 	.config_interface	= rt2x00mac_config_interface,
+ 	.set_multicast_list	= rt2x00mac_set_multicast_list,
+-	.get_stats		= rt61pci_get_stats,
++	.get_stats		= rt2x00mac_get_stats,
+ 	.set_retry_limit	= rt61pci_set_retry_limit,
+ 	.conf_tx		= rt2x00mac_conf_tx,
+ 	.get_tx_stats		= rt2x00mac_get_tx_stats,
+@@ -2371,6 +2365,7 @@ static const struct rt2x00lib_ops rt61pci_rt2x00_ops = {
+ #ifdef CONFIG_RT61PCI_RFKILL
+ 	.rfkill_poll		= rt61pci_rfkill_poll,
+ #endif /* CONFIG_RT61PCI_RFKILL */
++	.link_stats		= rt61pci_link_stats,
+ 	.reset_tuner		= rt61pci_reset_tuner,
+ 	.link_tuner		= rt61pci_link_tuner,
+ 	.write_tx_desc		= rt61pci_write_tx_desc,
+diff --git a/drivers/net/wireless/rt73usb.c b/drivers/net/wireless/rt73usb.c
+index a076e28..28bc165 100644
+--- a/drivers/net/wireless/rt73usb.c
++++ b/drivers/net/wireless/rt73usb.c
+@@ -826,6 +826,26 @@ static void rt73usb_activity_led(struct rt2x00_dev *rt2x00dev, int rssi)
+ /*
+  * Link tuning
+  */
++static void rt73usb_link_stats(struct rt2x00_dev *rt2x00dev)
++{
++	u32 reg;
++
++	/*
++	 * Update FCS error count from register.
++	 */
++	rt73usb_register_read(rt2x00dev, STA_CSR0, &reg);
++	rt2x00dev->low_level_stats.dot11FCSErrorCount +=
++	    rt2x00_get_field32(reg, STA_CSR0_FCS_ERROR);
++
++	/*
++	 * Update False CCA count from register.
++	 */
++	rt73usb_register_read(rt2x00dev, STA_CSR1, &reg);
++	reg = rt2x00_get_field32(reg, STA_CSR1_FALSE_CCA_ERROR);
++	rt2x00dev->link.false_cca =
++	    rt2x00_get_field32(reg, STA_CSR1_FALSE_CCA_ERROR);
++}
++
+ static void rt73usb_reset_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+ 	rt73usb_bbp_write(rt2x00dev, 17, 0x20);
+@@ -834,7 +854,6 @@ static void rt73usb_reset_tuner(struct rt2x00_dev *rt2x00dev)
+ static void rt73usb_link_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int rssi = rt2x00_get_link_rssi(&rt2x00dev->link);
+-	u32 reg;
+ 	u8 r17;
+ 	u8 up_bound;
+ 	u8 low_bound;
+@@ -929,11 +948,6 @@ static void rt73usb_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * r17 does not yet exceed upper limit, continue and base
+ 	 * the r17 tuning on the false CCA count.
+ 	 */
+-	rt73usb_register_read(rt2x00dev, STA_CSR1, &reg);
+-	reg = rt2x00_get_field32(reg, STA_CSR1_FALSE_CCA_ERROR);
+-	rt2x00dev->link.false_cca =
+-	    rt2x00_get_field32(reg, STA_CSR1_FALSE_CCA_ERROR);
+-
+ 	if (rt2x00dev->link.false_cca > 512 && r17 < up_bound) {
+ 		r17 += 4;
+ 		if (r17 > up_bound)
+@@ -1752,26 +1766,6 @@ static int rt73usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ /*
+  * IEEE80211 stack callback functions.
+  */
+-static int rt73usb_get_stats(struct ieee80211_hw *hw,
+-			     struct ieee80211_low_level_stats *stats)
+-{
+-	struct rt2x00_dev *rt2x00dev = hw->priv;
+-	u32 reg;
+-
+-	/*
+-	 * Update FCS error count from register.
+-	 * The dot11ACKFailureCount, dot11RTSFailureCount and
+-	 * dot11RTSSuccessCount are updated in interrupt time.
+-	 */
+-	rt73usb_register_read(rt2x00dev, STA_CSR0, &reg);
+-	rt2x00dev->low_level_stats.dot11FCSErrorCount +=
+-	    rt2x00_get_field32(reg, STA_CSR0_FCS_ERROR);
+-
+-	memcpy(stats, &rt2x00dev->low_level_stats, sizeof(*stats));
+-
+-	return 0;
+-}
+-
+ static int rt73usb_set_retry_limit(struct ieee80211_hw *hw,
+ 				   u32 short_retry, u32 long_retry)
+ {
+@@ -1824,7 +1818,7 @@ static const struct ieee80211_ops rt73usb_mac80211_ops = {
+ 	.config			= rt2x00mac_config,
+ 	.config_interface	= rt2x00mac_config_interface,
+ 	.set_multicast_list	= rt2x00mac_set_multicast_list,
+-	.get_stats		= rt73usb_get_stats,
++	.get_stats		= rt2x00mac_get_stats,
+ 	.set_retry_limit	= rt73usb_set_retry_limit,
+ 	.conf_tx		= rt2x00mac_conf_tx,
+ 	.get_tx_stats		= rt2x00mac_get_tx_stats,
+@@ -1845,6 +1839,7 @@ static const struct rt2x00lib_ops rt73usb_rt2x00_ops = {
+ 	.initialize		= rt2x00usb_initialize,
+ 	.uninitialize		= rt2x00usb_uninitialize,
+ 	.set_device_state	= rt73usb_set_device_state,
++	.link_stats		= rt73usb_link_stats,
+ 	.reset_tuner		= rt73usb_reset_tuner,
+ 	.link_tuner		= rt73usb_link_tuner,
+ 	.write_tx_desc		= rt73usb_write_tx_desc,
+-- 
+1.5.2.4
 
-------_=_NextPart_001_01C7CF09.0B0994AE
-Content-Type: application/octet-stream;
-	name="0001-Calculate-and-report-noise-level-while-associated.patch"
-Content-Transfer-Encoding: base64
-Content-Description: 0001-Calculate-and-report-noise-level-while-associated.patch
-Content-Disposition: attachment;
-	filename="0001-Calculate-and-report-noise-level-while-associated.patch"
-
-RnJvbSBjMTBkMGJkZDhjZTMyZDQ0MDZmZDY5MGNhOWYyOGJkYzYxMDVhMjg1IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBCZW4gQ2FoaWxsIDxiZW4ubS5jYWhpbGxAaW50ZWwuY29tPgpE
-YXRlOiBXZWQsIDI1IEp1bCAyMDA3IDE3OjM1OjQzIC0wNDAwClN1YmplY3Q6IFtQQVRDSF0gQ2Fs
-Y3VsYXRlIGFuZCByZXBvcnQgbm9pc2UgbGV2ZWwgd2hpbGUgYXNzb2NpYXRlZC4KClRoaXMgcGF0
-Y2ggZml4ZXMgd3d3LmJ1Z2hvc3Qub3JnIGJ1ZyAjIDEzNDMuCgpTaWduZWQtb2ZmLWJ5OiBCZW4g
-Q2FoaWxsIDxiZW4ubS5jYWhpbGxAaW50ZWwuY29tPgotLS0KIG9yaWdpbi9iYXNlLmMgICAgIHwg
-ICAgMiArLQogb3JpZ2luL2l3bC00OTY1LmMgfCAgIDkxICsrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0tCiBvcmlnaW4vaXdsLTQ5NjUuaCB8ICAgIDIg
-Ky0KIG9yaWdpbi9pd2wtcHJpdi5oIHwgICAgNiArLS0KIDQgZmlsZXMgY2hhbmdlZCwgNjggaW5z
-ZXJ0aW9ucygrKSwgMzMgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvb3JpZ2luL2Jhc2UuYyBi
-L29yaWdpbi9iYXNlLmMKaW5kZXggNDg3N2E5Ni4uNjA0YjhjNiAxMDA2NDQKLS0tIGEvb3JpZ2lu
-L2Jhc2UuYworKysgYi9vcmlnaW4vYmFzZS5jCkBAIC0zNjU2LDcgKzM2NTYsNyBAQCBzdGF0aWMg
-dm9pZCBpd2xfcnhfcmVwbHlfdHgoc3RydWN0IGl3bF9wcml2ICpwcml2LAogCQlfX2xlMTYgKnFj
-ID0gaWVlZTgwMjExX2dldF9xb3NfY3RybChoZHIpOwogCiAJCWlmKHFjID09IE5VTEwpIHsKLQkJ
-CUlXTF9FUlJPUigiQlVHX09OIHFjIGlzIG51bGwhISEhIik7CisJCQlJV0xfRVJST1IoIkJVR19P
-TiBxYyBpcyBudWxsISEhIVxuIik7CiAJCQlyZXR1cm47CiAJCX0KIApkaWZmIC0tZ2l0IGEvb3Jp
-Z2luL2l3bC00OTY1LmMgYi9vcmlnaW4vaXdsLTQ5NjUuYwppbmRleCBjYWVmYjJjLi5lNDcwMjI3
-IDEwMDY0NAotLS0gYS9vcmlnaW4vaXdsLTQ5NjUuYworKysgYi9vcmlnaW4vaXdsLTQ5NjUuYwpA
-QCAtMzQ1OSw2ICszNDU5LDQ0IEBAIHN0YXRpYyBpbnQgaXdsNDk2NV9pc190ZW1wX2NhbGliX25l
-ZWRlZChzdHJ1Y3QgaXdsX3ByaXYgKnByaXYpCiAJcmV0dXJuIDE7CiB9CiAKKy8qIENhbGN1bGF0
-ZSBub2lzZSBsZXZlbCwgYmFzZWQgb24gbWVhc3VyZW1lbnRzIGR1cmluZyBuZXR3b3JrIHNpbGVu
-Y2UganVzdAorICogICBiZWZvcmUgYXJyaXZpbmcgYmVhY29uLiAgVGhpcyBtZWFzdXJlbWVudCBj
-YW4gYmUgZG9uZSBvbmx5IGlmIHdlIGtub3cKKyAqICAgZXhhY3RseSB3aGVuIHRvIGV4cGVjdCBi
-ZWFjb25zLCB0aGVyZWZvcmUgb25seSB3aGVuIHdlJ3JlIGFzc29jaWF0ZWQuICovCitzdGF0aWMg
-dm9pZCBpd2w0OTY1X3J4X2NhbGNfbm9pc2Uoc3RydWN0IGl3bF9wcml2ICpwcml2KQoreworCXN0
-cnVjdCBzdGF0aXN0aWNzX3J4X25vbl9waHkgKnJ4X2luZm8KKwkJCQk9ICYocHJpdi0+c3RhdGlz
-dGljcy5yeC5nZW5lcmFsKTsKKwlpbnQgbnVtX2FjdGl2ZV9yeCA9IDA7CisJaW50IHRvdGFsX3Np
-bGVuY2UgPSAwOworCWludCBiY25fc2lsZW5jZV9hID0gcnhfaW5mby0+YmVhY29uX3NpbGVuY2Vf
-cnNzaV9hICYgSU5fQkFORF9GSUxURVI7CisJaW50IGJjbl9zaWxlbmNlX2IgPSByeF9pbmZvLT5i
-ZWFjb25fc2lsZW5jZV9yc3NpX2IgJiBJTl9CQU5EX0ZJTFRFUjsKKwlpbnQgYmNuX3NpbGVuY2Vf
-YyA9IHJ4X2luZm8tPmJlYWNvbl9zaWxlbmNlX3Jzc2lfYyAmIElOX0JBTkRfRklMVEVSOworCisJ
-aWYgKGJjbl9zaWxlbmNlX2EpIHsKKwkJdG90YWxfc2lsZW5jZSArPSBiY25fc2lsZW5jZV9hOwor
-CQludW1fYWN0aXZlX3J4Kys7CisJfQorCWlmIChiY25fc2lsZW5jZV9iKSB7CisJCXRvdGFsX3Np
-bGVuY2UgKz0gYmNuX3NpbGVuY2VfYjsKKwkJbnVtX2FjdGl2ZV9yeCsrOworCX0KKwlpZiAoYmNu
-X3NpbGVuY2VfYykgeworCQl0b3RhbF9zaWxlbmNlICs9IGJjbl9zaWxlbmNlX2M7CisJCW51bV9h
-Y3RpdmVfcngrKzsKKwl9CisKKwkvKiBBdmVyYWdlIGFtb25nIGFjdGl2ZSBhbnRlbm5hcyAqLwor
-CWlmIChudW1fYWN0aXZlX3J4KSB7CisJCXByaXYtPmxhc3Rfcnhfbm9pc2UgPSAodG90YWxfc2ls
-ZW5jZSAvIG51bV9hY3RpdmVfcngpIC0gMTA3OworCX0gZWxzZSB7CisJCXByaXYtPmxhc3Rfcnhf
-bm9pc2UgPSAtMTI3OworCX0KKworCUlXTF9ERUJVR19DQUxJQigiaW5iYW5kIHNpbGVuY2UgYSAl
-dSwgYiAldSwgYyAldSwgZEJtICVkXG4iLAorCQkJYmNuX3NpbGVuY2VfYSwgYmNuX3NpbGVuY2Vf
-YiwgYmNuX3NpbGVuY2VfYywKKwkJCXByaXYtPmxhc3Rfcnhfbm9pc2UpOworfQorCiB2b2lkIGl3
-bF9od19yeF9zdGF0aXN0aWNzKHN0cnVjdCBpd2xfcHJpdiAqcHJpdiwgc3RydWN0IGl3bF9yeF9t
-ZW1fYnVmZmVyICpyeGIpCiB7CiAJc3RydWN0IGl3bF9yeF9wYWNrZXQgKnBrdCA9ICh2b2lkICop
-cnhiLT5za2ItPmRhdGE7CkBAIC0zNDg1LDExICszNTIzLDE0IEBAIHZvaWQgaXdsX2h3X3J4X3N0
-YXRpc3RpY3Moc3RydWN0IGl3bF9wcml2ICpwcml2LCBzdHJ1Y3QgaXdsX3J4X21lbV9idWZmZXIg
-KnJ4YikKIAltb2RfdGltZXIoJnByaXYtPnN0YXRpc3RpY3NfcGVyaW9kaWMsIGppZmZpZXMgKwog
-CQkgIG1zZWNzX3RvX2ppZmZpZXMoUkVHX1JFQ0FMSUJfUEVSSU9EICogMTAwMCkpOwogCi0jaWZk
-ZWYgQ09ORklHX0lXTFdJRklfU0VOU0lUSVZJVFkKIAlpZiAodW5saWtlbHkoIShwcml2LT5zdGF0
-dXMgJiBTVEFUVVNfU0NBTk5JTkcpKSAmJgotCSAgICAocGt0LT5oZHIuY21kID09IFNUQVRJU1RJ
-Q1NfTk9USUZJQ0FUSU9OKSkKKwkgICAgKHBrdC0+aGRyLmNtZCA9PSBTVEFUSVNUSUNTX05PVElG
-SUNBVElPTikpIHsKKwkJaXdsNDk2NV9yeF9jYWxjX25vaXNlKHByaXYpOworI2lmZGVmIENPTkZJ
-R19JV0xXSUZJX1NFTlNJVElWSVRZCiAJCXF1ZXVlX3dvcmsocHJpdi0+d29ya3F1ZXVlLCAmcHJp
-di0+c2Vuc2l0aXZpdHlfd29yayk7CiAjZW5kaWYKKwl9CisKIAkvKiBJZiB0aGUgaGFyZHdhcmUg
-aGFzbid0IHJlcG9ydGVkIGEgY2hhbmdlIGluCiAJICogdGVtcGVyYXR1cmUgdGhlbiBkb24ndCBi
-b3RoZXIgY29tcHV0aW5nIGEKIAkgKiBjYWxpYnJhdGVkIHRlbXBlcmF0dXJlIHZhbHVlICovCkBA
-IC0zODI4LDQ2ICszODY5LDQyIEBAIHN0YXRpYyB2b2lkIGl3bDQ5NjVfcnhfcmVwbHlfcngoc3Ry
-dWN0IGl3bF9wcml2ICpwcml2LAogCS8qIEZpbmQgbWF4IHNpZ25hbCBzdHJlbmd0aCAoZEJtKSBh
-bW9uZyAzIGFudGVubmEvcmVjZWl2ZXIgY2hhaW5zICovCiAJc3RhdHMuc3NpID0gaXdsNDk2NV9j
-YWxjX3Jzc2kocnhfc3RhcnQpOwogCi0JSVdMX0RFQlVHX1JYKCJSc3NpICVkLCBUU0YgJWxsdVxu
-Iiwgc3RhdHMuc3NpLAotCQkJbGU2NF90b19jcHUocnhfc3RhcnQtPnRpbWVzdGFtcCkpOwotCi0J
-LyogU2Vuc2l0aXZpdHkgYWxnbywgaWYgdXNlZCAob25seSB3aGlsZSBhc3NvY2lhdGVkLCBub3Qg
-c2Nhbm5pbmcpLAotCSAqIGNhbGN1bGF0ZXMgc2lnbmFsLXRvLW5vaXNlIHJhdGlvIGluIGRCLiAg
-VXNlIHRoaXMgaWYgYXZhaWxhYmxlLAotCSAqIGVsc2UgY2FsY3VsYXRlIHNpZ25hbCBxdWFsaXR5
-IHVzaW5nIG9ubHkgdGhlIHNpZ25hbCBzdHJlbmd0aC4gKi8KLQlpZiAocHJpdi0+bGFzdF9yeF9z
-bnIgJiYgaXdsX2lzX2Fzc29jaWF0ZWQocHJpdikgJiYKLQkJCSEocHJpdi0+c3RhdHVzICYgU1RB
-VFVTX1NDQU5OSU5HKSkgewotCQkvKiBUT0RPOiAgRmluZCBiZXR0ZXIgbm9pc2UgbGV2ZWwgcmVm
-ZXJlbmNlLCB1c2UKLQkJICogICAgICAgIGluIGl3bF9jYWxjX3NpZ19xdWFsKCkgKi8KLQkJc3Rh
-dHMubm9pc2UgPSBzdGF0cy5zc2kgLSBwcml2LT5sYXN0X3J4X3NucjsKLQkJc3RhdHMuc2lnbmFs
-ID0gaXdsX2NhbGNfc2lnX3F1YWwoc3RhdHMuc3NpLCAwKTsKKwkvKiBNZWFuaW5nZnVsIG5vaXNl
-IHZhbHVlcyBhcmUgYXZhaWxhYmxlIG9ubHkgZnJvbSBiZWFjb24gc3RhdGlzdGljcywKKwkgKiAg
-IHdoaWNoIGFyZSBnYXRoZXJlZCBvbmx5IHdoZW4gYXNzb2NpYXRlZCwgYW5kIGluZGljYXRlIG5v
-aXNlCisJICogICBvbmx5IGZvciB0aGUgYXNzb2NpYXRlZCBuZXR3b3JrIGNoYW5uZWwgLi4uCisJ
-ICogSWdub3JlIHRoZXNlIG5vaXNlIHZhbHVlcyB3aGlsZSBzY2FubmluZyAob3RoZXIgY2hhbm5l
-bHMpICovCisJaWYgKGl3bF9pc19hc3NvY2lhdGVkKHByaXYpICYmICEocHJpdi0+c3RhdHVzICYg
-U1RBVFVTX1NDQU5OSU5HKSkgeworCQlzdGF0cy5ub2lzZSA9IHByaXYtPmxhc3Rfcnhfbm9pc2U7
-CisJCXN0YXRzLnNpZ25hbCA9IGl3bF9jYWxjX3NpZ19xdWFsKHN0YXRzLnNzaSwgc3RhdHMubm9p
-c2UpOwogCX0gZWxzZSB7CisJCXN0YXRzLm5vaXNlID0gLTEyNzsKIAkJc3RhdHMuc2lnbmFsID0g
-aXdsX2NhbGNfc2lnX3F1YWwoc3RhdHMuc3NpLCAwKTsKKwl9CiAKLQkJLyogUmVzZXQgbm9pc2Ug
-dmFsdWVzIGlmIG5vdCBhc3NvY2lhdGVkIG9yIHNuciBub3QgYXZhaWxhYmxlLiAqLwotCQkvKiBT
-ZXQgZGVmYXVsdCBub2lzZSB2YWx1ZSB0byAtMTI3IC4uLiB0aGlzIHdvcmtzIGJldHRlciB0aGFu
-Ci0JCSAqICAgMCB3aGVuIGF2ZXJhZ2luZyBmcmFtZXMgd2l0aC93aXRob3V0IG5vaXNlIGluZm87
-Ci0JCSAqICAgbWVhc3VyZWQgZEJtIHZhbHVlcyBhcmUgYWx3YXlzIG5lZ2F0aXZlIC4uLiB1c2lu
-ZyBhCi0JCSAqICAgbmVnYXRpdmUgdmFsdWUgYXMgdGhlIGRlZmF1bHQga2VlcHMgYWxsIGF2ZXJh
-Z2VzCi0JCSAqICAgd2l0aGluIGFuIHM4J3MgKHVzZWQgaW4gc29tZSBhcHBzKSByYW5nZSBvZiBu
-ZWdhdGl2ZQotCQkgKiAgIHZhbHVlcy4gKi8KLQkJcHJpdi0+bGFzdF9yeF9zbnIgPSAwOworCS8q
-IFJlc2V0IGJlYWNvbiBub2lzZSBsZXZlbCBpZiBub3QgYXNzb2NpYXRlZC4KKwkgKiBVc2UgZGVm
-YXVsdCBub2lzZSB2YWx1ZSBvZiAtMTI3IC4uLiB0aGlzIHdvcmtzIGJldHRlciB0aGFuCisJICog
-ICAwIHdoZW4gYXZlcmFnaW5nIGZyYW1lcyB3aXRoL3dpdGhvdXQgbm9pc2UgaW5mbzsKKwkgKiAg
-IG1lYXN1cmVkIGRCbSB2YWx1ZXMgYXJlIGFsd2F5cyBuZWdhdGl2ZSAuLi4gdXNpbmcgYQorCSAq
-ICAgbmVnYXRpdmUgdmFsdWUgYXMgdGhlIGRlZmF1bHQga2VlcHMgYWxsIGF2ZXJhZ2VzIHdpdGhp
-bgorCSAqICAgYW4gczgncyAodXNlZCBpbiBzb21lIGFwcHMpIHJhbmdlIG9mIG5lZ2F0aXZlIHZh
-bHVlcy4gKi8KKwlpZiAoIWl3bF9pc19hc3NvY2lhdGVkKHByaXYpKQogCQlwcml2LT5sYXN0X3J4
-X25vaXNlID0gLTEyNzsKLQkJc3RhdHMubm9pc2UgPSAtMTI3OwotCX0KLQlJV0xfREVCVUdfU1RB
-VFMoIlJzc2kgJWQgbm9pc2UgJWQgcXVhbCAlZCBzbnIgZGIgJWRcbiIsIHN0YXRzLnNzaSwKLQkJ
-CXN0YXRzLm5vaXNlLCBzdGF0cy5zaWduYWwsIHByaXYtPmxhc3Rfcnhfc25yKTsKIAogI2lmZGVm
-IENPTkZJR19JV0xXSUZJX0RFQlVHCiAJLyogVE9ETzogIFBhcnRzIG9mIGl3bF9yZXBvcnRfZnJh
-bWUgYXJlIGJyb2tlbiBmb3IgNDk2NSAqLwogCWlmIChpd2xfZGVidWdfbGV2ZWwgJiAoSVdMX0RM
-X1JYKSkKIAkJLyogU2V0ICIxIiB0byByZXBvcnQgZ29vZCBkYXRhIGZyYW1lcyBpbiBncm91cHMg
-b2YgMTAwICovCiAJCWl3bF9yZXBvcnRfZnJhbWUocHJpdiwgcGt0LCBoZWFkZXIsIDEpOworCisJ
-aWYgKGl3bF9kZWJ1Z19sZXZlbCAmIChJV0xfRExfUlggfCBJV0xfRExfU1RBVFMpKQorCUlXTF9E
-RUJVR19SWCgiUnNzaSAlZCwgbm9pc2UgJWQsIHF1YWwgJWQsIFRTRiAlbHVcbiIsCisJCXN0YXRz
-LnNzaSwgc3RhdHMubm9pc2UsIHN0YXRzLnNpZ25hbCwKKwkJIChsb25nIHVuc2lnbmVkIGludCls
-ZTY0X3RvX2NwdShyeF9zdGFydC0+dGltZXN0YW1wKSk7CiAjZW5kaWYKIAogCW5ldHdvcmtfcGFj
-a2V0ID0gaXdsX2lzX25ldHdvcmtfcGFja2V0KHByaXYsIGhlYWRlcik7CiAJaWYgKG5ldHdvcmtf
-cGFja2V0KSB7CiAJCXByaXYtPmxhc3RfcnhfcnNzaSA9IHN0YXRzLnNzaTsKLQkJcHJpdi0+bGFz
-dF9yeF9ub2lzZSA9IHN0YXRzLm5vaXNlOwogCQlwcml2LT5sYXN0X2JlYWNvbl90aW1lID0gIHBy
-aXYtPnVjb2RlX2JlYWNvbl90aW1lOwogCQlwcml2LT5sYXN0X3RzZiA9IGxlNjRfdG9fY3B1KHJ4
-X3N0YXJ0LT50aW1lc3RhbXApOwogCX0KZGlmZiAtLWdpdCBhL29yaWdpbi9pd2wtNDk2NS5oIGIv
-b3JpZ2luL2l3bC00OTY1LmgKaW5kZXggYTI0NTJlOS4uODE2ZGY1NCAxMDA2NDQKLS0tIGEvb3Jp
-Z2luL2l3bC00OTY1LmgKKysrIGIvb3JpZ2luL2l3bC00OTY1LmgKQEAgLTE5Nyw3ICsxOTcsNiBA
-QCBzdHJ1Y3QgaXdsX2xxX21uZ3IgewogLyogU2Vuc2l0aXZpdHkgYW5kIGNoYWluIG5vaXNlIGNh
-bGlicmF0aW9uICovCiAjZGVmaW5lIElOSVRJQUxJWkFUSU9OX1ZBTFVFCQkweEZGRkYKICNkZWZp
-bmUgQ0FMX05VTV9PRl9CRUFDT05TCQkyMAotI2RlZmluZSBJTl9CQU5EX0ZJTFRFUgkJCTB4RkYK
-ICNkZWZpbmUgTUFYSU1VTV9BTExPV0VEX1BBVEhMT1NTCTE1CiAKIC8qIFBhcmFtIHRhYmxlIHdp
-dGhpbiBTRU5TSVRJVklUWV9DTUQgKi8KQEAgLTI1Nyw2ICsyNTYsNyBAQCBzdHJ1Y3QgaXdsX2xx
-X21uZ3IgewogI2RlZmluZSBDSEFJTl9DICAgICAgICAgICAgIDIKICNkZWZpbmUgQ0hBSU5fTk9J
-U0VfREVMVEFfR0FJTl9JTklUX1ZBTCA0CiAjZGVmaW5lIEFMTF9CQU5EX0ZJTFRFUgkJCTB4RkYw
-MAorI2RlZmluZSBJTl9CQU5EX0ZJTFRFUgkJCTB4RkYKICNkZWZpbmUgTUlOX0FWRVJBR0VfTk9J
-U0VfTUFYX1ZBTFVFCTB4RkZGRkZGRkYKIAogZW51bSBpd2xfZmFsc2VfYWxhcm1fc3RhdGUgewpk
-aWZmIC0tZ2l0IGEvb3JpZ2luL2l3bC1wcml2LmggYi9vcmlnaW4vaXdsLXByaXYuaAppbmRleCAw
-YTBmNGJjLi45ZGU4OThkIDEwMDY0NAotLS0gYS9vcmlnaW4vaXdsLXByaXYuaAorKysgYi9vcmln
-aW4vaXdsLXByaXYuaApAQCAtMTgyLDEwICsxODIsOCBAQCBzdHJ1Y3QgaXdsX3ByaXYgewogCXUz
-MiBzdGF0dXM7CiAJdTMyIGNvbmZpZzsKIAotCWludCBxdWFsaXR5OwotCWludCBsYXN0X3J4X3Jz
-c2k7Ci0JaW50IGxhc3Rfcnhfbm9pc2U7Ci0JaW50IGxhc3Rfcnhfc25yOworCWludCBsYXN0X3J4
-X3Jzc2k7CS8qIEZyb20gUnggcGFja2V0IHN0YXRpc2l0aWNzICovCisJaW50IGxhc3Rfcnhfbm9p
-c2U7CS8qIEZyb20gYmVhY29uIHN0YXRpc3RpY3MgKi8KIAogCXN0cnVjdCBpd2xfcG93ZXJfbWdy
-IHBvd2VyX2RhdGE7CiAKLS0gCjEuNS4yCgo=
-
-------_=_NextPart_001_01C7CF09.0B0994AE--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
