@@ -1,78 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:7518 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755856AbXGCPWZ (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:11469 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754875AbXGaFYw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2007 11:22:25 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-Date: Tue, 3 Jul 2007 17:22:13 +0200
-Subject: [PATCH] libertas: remove adapter->prescan
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+	Tue, 31 Jul 2007 01:24:52 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH] zd1211rw-mac80211: debug output for mac80211 ops
+Date: Mon, 30 Jul 2007 22:22:58 -0700
+Cc: Ulrich Kunitz <kune@deine-taler.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
+	Jiri Benc <jbenc@suse.cz>
+References: <20070730023128.99E927B409F@zog.reactivated.net> <20070730225205.GA17252@deine-taler.de> <200707310105.55863.mb@bu3sch.de>
+In-Reply-To: <200707310105.55863.mb@bu3sch.de>
 MIME-Version: 1.0
-Message-Id: <200707031722.13505.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed;
+  boundary="nextPart51562753.kE9pW7Ug5z";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200707302223.04696.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The value 1 was assigned to it and there was nowhere any code 
-that
-would have changed that to 0.
+--nextPart51562753.kE9pW7Ug5z
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
----
- drivers/net/wireless/libertas/assoc.c |    6 ++----
- drivers/net/wireless/libertas/dev.h   |    1 -
- drivers/net/wireless/libertas/main.c  |    2 --
- 3 files changed, 2 insertions(+), 7 deletions(-)
+On Monday 30 July 2007 16:05, Michael Buesch wrote:
+> I suggest you look at bcm43xx-mac80211.
+> You will need to introduce refcounting for your monitor interfaces
+> and I _really_ suggest to get rid of the zd_op_open() and zd_op_close()
+> functions. Just include that in add/remove interface. You need
+> to refcount your interfaces anyway.
+>
+Requiring refcounting for monitor interfaces is fairly dumb since mac80211=
+=20
+does the exact same refcounting. I haven't bothered to do it in any driver=
+=20
+ports yet for this reason. This part of the mac80211 driver api needs to be=
+=20
+fixed.
 
-diff --git a/drivers/net/wireless/libertas/assoc.c 
-b/drivers/net/wireless/libertas/assoc.c
-index 5fdc96f..ffeec2f 100644
---- a/drivers/net/wireless/libertas/assoc.c
-+++ b/drivers/net/wireless/libertas/assoc.c
-@@ -57,10 +57,8 @@ static int assoc_helper_essid(wlan_private 
-*priv,
- 	lbs_deb_assoc("New SSID requested: '%s'\n",
- 	              escape_essid(assoc_req->ssid, 
-assoc_req->ssid_len));
- 	if (assoc_req->mode == IW_MODE_INFRA) {
--		if (adapter->prescan) {
--			libertas_send_specific_ssid_scan(priv, assoc_req->ssid,
--				assoc_req->ssid_len, 0);
--		}
-+		libertas_send_specific_ssid_scan(priv, assoc_req->ssid,
-+			assoc_req->ssid_len, 0);
- 
- 		bss = libertas_find_ssid_in_list(adapter, assoc_req->ssid,
- 				assoc_req->ssid_len, NULL, IW_MODE_INFRA, channel);
-diff --git a/drivers/net/wireless/libertas/dev.h 
-b/drivers/net/wireless/libertas/dev.h
-index 765c0c4..83876a3 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -288,7 +288,6 @@ struct _wlan_adapter {
- 	u32 rtsthsd;
- 
- 	u16 listeninterval;
--	u16 prescan;
- 	u8 txretrycount;
- 
- 	/** Tx-related variables (for single packet tx) */
-diff --git a/drivers/net/wireless/libertas/main.c 
-b/drivers/net/wireless/libertas/main.c
-index 5b4a134..e354ebb 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -1037,8 +1037,6 @@ static void wlan_init_adapter(wlan_private 
-* priv)
- 
- 	mutex_init(&adapter->lock);
- 
--	adapter->prescan = 1;
--
- 	memset(&adapter->curbssparams, 0, 
-sizeof(adapter->curbssparams));
- 	adapter->curbssparams.channel = DEFAULT_AD_HOC_CHANNEL;
- 
--- 
-1.5.2.1
+Also, I'm not entirely convinced that eliminating the open/close callbacks =
+is=20
+a good idea, which is why I continued to use them in the zd1211rw port.
 
+=2DMichael Wu
+
+--nextPart51562753.kE9pW7Ug5z
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGrsc4T3Oqt9AH4aERAv6mAJ9jvyQgSTyfGkAjYgterU2//lagYQCeNGVO
+cbkpfTJPtMAfXpAPO2TPsFc=
+=GkiF
+-----END PGP SIGNATURE-----
+
+--nextPart51562753.kE9pW7Ug5z--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
