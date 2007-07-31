@@ -1,72 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:41097 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755540AbXGMPX2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2007 11:23:28 -0400
-Date: Fri, 13 Jul 2007 17:23:38 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: "Cahill, Ben M" <ben.m.cahill@intel.com>
-Cc: <benmcahill@gmail.com>, <flamingice@sourmilk.net>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/1] mac80211: Replace overly "sticky" averaging filters  for rssi, signal, noise.
-Message-ID: <20070713172338.71bc4216@griffin.suse.cz>
-In-Reply-To: <4220499A1B034C4FA93B547BA01E1FF07FC284@orsmsx413.amr.corp.intel.com>
-References: <20070711022508.36db6129@logostar.upir.cz>
-	<4220499A1B034C4FA93B547BA01E1FF07FC284@orsmsx413.amr.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from fk-out-0910.google.com ([209.85.128.185]:18352 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760586AbXGaPC6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2007 11:02:58 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so427147fkz
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 08:02:56 -0700 (PDT)
+To: Andy Green <andy@warmcat.com>
+Subject: Re: [PATCH] rt73usb-add-bluenext-148f-2573
+Date: Tue, 31 Jul 2007 17:06:51 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <20070731115446.5717.37617.stgit@localhost> <46AF4889.4070902@warmcat.com> <200707311650.34795.IvDoorn@gmail.com>
+In-Reply-To: <200707311650.34795.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200707311706.52073.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 10 Jul 2007 21:59:13 -0700, Cahill, Ben M wrote:
-> Postponing the division keeps the running average using more significant
-> bits, so each new sample has a meaningful, surviving impact to the
-> running average.  Sorry, "high-precision" is the best term that I can
-> think of to describe more bits being used in the running average.  The
-> "binary point" is between bits 3 and 4; think of bits 3:0 as
-> "remainder". 
+Hi,
 
-Thanks, that makes sense. Please include something like this
-explanation in the description of the patch when you resend it.
-
-> There is a subtle difference between:
+> > > Which version are you using?
+> > > wireless-dev <---
+> > > rt2x00.git
+> > > rt2x00 cvs
 > 
-> 1)  last_rssi * 15 / 16
+> Ok, rt2x00.git contains many changes to the initialization of the device,
+> so it is a bit hard to compare at the moment. At least it is confirmed that rt2x00 can
+> receive all frames in monitor mode and the problem area is the DROP filter.
 > 
-> 2)  last_rssi - (last_rssi / 16)
-> 
-> The first one would get stuck at -801 if there were a series of -51s
-> coming in.
-> -801 * 15 / 16 would get quantized to -750 each time, so the output
-> would be stuck at -801 (-50 dBm).
-> 
-> The second one favors the high precision memory, and would progress from
-> -801 to -802, etc., as a series of -51s came in:
-> -801 - (-801/16) = -751
+> I'll release rt2x00 2.0.5 later today with all those changes, including the rxdone rate
+> selection fix. So if you could retest later to see if the problem disappeared in 2.0.5 it
+> would be great. :)
 
-So it's basically just a different rounding - in the current code, it's
-like float division with the result rounded down, while your change
-makes it to round up (speaking about absolute value). Nothing about
-precision here :-)
+Ok, that was easier then I thought, rt2x00 2.0.5 _will_ contain the fix for this.
+I just noticed that when the first and only interface is a monitor interface
+the device was not being configured at all. This has now been fixed in rt2x00.git,
+so it will be part of the 2.0.5 release later today. :)
 
-> I saw 2 instances of sta->last_rssi being used in ieee80211_ioctl.c, and
-> STA_FILE(last_rssi, last_rssi, D) in debugfs_sta.c, which I didn't
-> understand (still don't) and was afraid to touch, so I thought the
-> safest thing with least impact would be to add the 3 additional
-> variables, and do the division in one place for each of the 3
-> rssi/signal/noise.
-> 
-> If we do the division when passing to user space, how should STA_FILE be
-> handled, if necessary?
+Ivo
 
-Johannes was quicker than me (thanks) :-)
 
-> Thanks for your comments.  I'll wait for your answer, and try again.
 
-Thanks and sorry for the delayed answer,
-
- Jiri
-
--- 
-Jiri Benc
-SUSE Labs
