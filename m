@@ -1,53 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mog.warmcat.com ([62.193.232.24]:58202 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751031AbXGIF3l (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.173]:48225 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764744AbXGaSd4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2007 01:29:41 -0400
-Message-ID: <4691C7C0.1090101@warmcat.com>
-Date: Mon, 09 Jul 2007 06:29:36 +0100
-From: Andy Green <andy@warmcat.com>
+	Tue, 31 Jul 2007 14:33:56 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so121186ugf
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 11:33:55 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 01/24] rt2x00: Remove rt73usb_get_tsf
+Date: Tue, 31 Jul 2007 20:36:55 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
-To: Ulrich Kunitz <kune@deine-taler.de>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Jon Smirl <jonsmirl@gmail.com>, Daniel Drake <dsd@gentoo.org>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: Arrested Development
-References: <468E5C33.2000102@warmcat.com> <20070708140054.GA28113@deine-taler.de> <46910F3F.8010201@warmcat.com> <9e4733910707081142t43a85fb1y383ee8e1835c2842@mail.gmail.com> <469130E8.1010608@warmcat.com> <9e4733910707081204l490e99fcm6b8780f36ef8b9a8@mail.gmail.com> <46913846.9000007@warmcat.com> <20070708203717.GA15957@deine-taler.de> <1183929814.3771.5.camel@johannes.berg> <46915B3C.6030609@warmcat.com> <20070708223829.GA18217@deine-taler.de>
-In-Reply-To: <20070708223829.GA18217@deine-taler.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200707312036.55850.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ulrich Kunitz wrote:
+>From 23d440a413208983ed8b17ac7048516f8bb9ed74 Mon Sep 17 00:00:00 2001
+From: Ivo van Doorn <IvDoorn@gmail.com>
+Date: Fri, 27 Jul 2007 13:58:18 +0200
+Subject: [PATCH 01/24] rt2x00: Remove rt73usb_get_tsf
 
-> I forgot to mention that the monitor support doesn't work with
-> additonal interfaces right now. Additional interfaces are broken
-> currently for zd1211rw. I cannot fix all the problems with
-> mac80211 interface of the driver at the same time.
+The get_tsf function must be atomic according to mac80211,
+this means that rt73usb is not capable of supporting this feature
+since all USB register access functions require sleeping.
+Place rt73usb_get_tsf between #if 0 statements to disable it,
+so that it can be easily readded when the atomic requirement
+has been removed.
 
-Understood, I appreciate the work you and Daniel are putting in.  Over
-the past few months the zd1211rw-mac80211 has been pretty much my
-reference platform since it was more stable than the other devices I
-have during that time.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt73usb.c |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-> Try
-> 
-> iwconfig wlan0 mode monitor
-> ifconfig wlan0 up
-> iwconfig wlan0 channel 6
-> 
-> for now.
-> 
-> The problem with the STA + MNTR interface is, that mac80211 must
-> do the FCS checking for the STA interface or the driver has to
-> filter them before forwarding them to the upper layer.
-
-Yep that works now thanks, I see encrypted data and ACKs spamming and
-the occasional bogon.  BTW I quite like having the bogons too... in
-Monitor mode anyway.
-
--Andy
-
+diff --git a/drivers/net/wireless/rt73usb.c b/drivers/net/wireless/rt73usb.c
+index 3d838d1..bc9b56c 100644
+--- a/drivers/net/wireless/rt73usb.c
++++ b/drivers/net/wireless/rt73usb.c
+@@ -1723,6 +1723,13 @@ static int rt73usb_set_retry_limit(struct ieee80211_hw *hw,
+ 	return 0;
+ }
+ 
++#if 0
++/*
++ * Mac80211 demands get_tsf must be atomic.
++ * This is not possible for rt73usb since all register access
++ * functions require sleeping. Untill mac80211 no longer needs
++ * get_tsf to be atomic, this function should be disabled.
++ */
+ static u64 rt73usb_get_tsf(struct ieee80211_hw *hw)
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+@@ -1736,6 +1743,7 @@ static u64 rt73usb_get_tsf(struct ieee80211_hw *hw)
+ 
+ 	return tsf;
+ }
++#endif
+ 
+ static void rt73usb_reset_tsf(struct ieee80211_hw *hw)
+ {
+@@ -1757,7 +1765,12 @@ static const struct ieee80211_ops rt73usb_mac80211_ops = {
+ 	.set_retry_limit	= rt73usb_set_retry_limit,
+ 	.conf_tx		= rt2x00lib_conf_tx,
+ 	.get_tx_stats		= rt2x00lib_get_tx_stats,
++#if 0
++/*
++ * See comment at the rt73usb_get_tsf function.
++ */
+ 	.get_tsf		= rt73usb_get_tsf,
++#endif
+ 	.reset_tsf		= rt73usb_reset_tsf,
+ 	.beacon_update		= rt2x00usb_beacon_update,
+ };
+-- 
+1.5.2.4
 
