@@ -1,104 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:7800 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751565AbXGDGYK (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:47938
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752142AbXGaVkK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2007 02:24:10 -0400
-Received: by py-out-1112.google.com with SMTP id u77so3675175pyb
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jul 2007 23:24:10 -0700 (PDT)
-Message-ID: <468B3CFF.7020903@gmail.com>
-Date: Wed, 04 Jul 2007 15:23:59 +0900
-From: Tejun Heo <htejun@gmail.com>
+	Tue, 31 Jul 2007 17:40:10 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH] zd1211rw-mac80211: debug output for mac80211 ops
+Date: Tue, 31 Jul 2007 23:39:52 +0200
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Ulrich Kunitz <kune@deine-taler.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org
+References: <20070730023128.99E927B409F@zog.reactivated.net> <200707302223.04696.flamingice@sourmilk.net> <20070731230613.6d0a0856@logostar.upir.cz>
+In-Reply-To: <20070731230613.6d0a0856@logostar.upir.cz>
 MIME-Version: 1.0
-To: Andrew Morton <akpm@linux-foundation.org>
-CC: Miles Lane <miles.lane@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>, yi.zhu@intel.com,
-	jketreno@linux.intel.com, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.22-rc6-mm1 -- BUG - EIP: [<c01a77a1>] sysfs_addrm_finish+0x1c2/0x226  SS:ESP 0068:c5ff9db8
-References: <a44ae5cd0707030932h16a90ca3j8ad65b7a3ec64b03@mail.gmail.com> <20070703094916.e60d4df7.akpm@linux-foundation.org>
-In-Reply-To: <20070703094916.e60d4df7.akpm@linux-foundation.org>
-Content-Type: multipart/mixed;
- boundary="------------090209030609060901000508"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200707312339.53025.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------090209030609060901000508
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+On Tuesday 31 July 2007 23:06:13 Jiri Benc wrote:
+> On Mon, 30 Jul 2007 22:22:58 -0700, Michael Wu wrote:
+> > On Monday 30 July 2007 16:05, Michael Buesch wrote:
+> > > I suggest you look at bcm43xx-mac80211.
+> > > You will need to introduce refcounting for your monitor interfaces
+> > > and I _really_ suggest to get rid of the zd_op_open() and zd_op_close()
+> > > functions. Just include that in add/remove interface. You need
+> > > to refcount your interfaces anyway.
+> > >
+> > Requiring refcounting for monitor interfaces is fairly dumb since mac80211 
+> > does the exact same refcounting. I haven't bothered to do it in any driver 
+> > ports yet for this reason. This part of the mac80211 driver api needs to be 
+> > fixed.
+> 
+> Ouch, I thought we don't bother drivers with more than one monitor
+> interface at a time. Apparently I forgot to fix that.
+> 
+> > Also, I'm not entirely convinced that eliminating the open/close callbacks is 
+> > a good idea,
+> 
+> Why?
 
-Hello,
-
-Andrew Morton wrote:
->> EIP is at sysfs_addrm_finish+0x1c2/0x226
->> eax: 00000001   ebx: c5ff9dc0   ecx: c058aa40   edx: 00000001
->> esi: c5ff9de8   edi: c37c3240   ebp: c5ff9e1c   esp: c5ff9db8
->> ds: 007b   es: 007b   fs: 0000  gs: 0033  ss: 0068
->> Process modprobe (pid: 3519, ti=c5ff9000 task=c5ef15e0 task.ti=c5ff9000)
->> Stack: c03a3eda c5ff9e24 00000000 00000001 dead4ead ffffffff ffffffff c0657cf0
->>        00000000 c046359d c5ff9de0 c5ff9de0 00000000 00000001 dead4ead ffffffff
->>        ffffffff c0657cf0 00000000 c046359d c5ff9de0 c5ff9de0 c37c3240 c5ff9e24
->> Call Trace:
->>  [<c01a7833>] remove_dir+0x2e/0x35
->>  [<c01a7894>] __sysfs_remove_dir+0x5a/0x61
->>  [<c01a78d1>] sysfs_remove_dir+0x2c/0x30
-
-Hmm... That's weird.  I tried to regenerate it here but mine unloads
-happily.  Can you apply the attached patch and report the resulting
-messages when oops happens?
-
-Thanks.
+Yeah, I don't see the need for open/close, either.
+We can live perfectly well without them. It even reduces code complexity
+and makes drivers more readable.
+In add/remove you better know anyway, if the interface is up or down.
+So if it's down in add_interface, just init it. It's a matter of an if statement.
+Really nothing more.
 
 -- 
-tejun
-
---------------090209030609060901000508
-Content-Type: text/plain;
- name="debug"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="debug"
-
----
- fs/sysfs/dir.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
-
-Index: tree0/fs/sysfs/dir.c
-===================================================================
---- tree0.orig/fs/sysfs/dir.c
-+++ tree0/fs/sysfs/dir.c
-@@ -268,6 +268,9 @@ static void sysfs_deactivate(struct sysf
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 	int v;
- 
-+	if (sd->s_sibling || !(sd->s_flags & SYSFS_FLAG_REMOVED))
-+		printk("XXX sysfs_deactivate: sd=%p s_sibling=%p s_flags=0x%x\n",
-+		       sd, sd->s_sibling, sd->s_flags);
- 	BUG_ON(sd->s_sibling || !(sd->s_flags & SYSFS_FLAG_REMOVED));
- 	sd->s_sibling = (void *)&wait;
- 
-@@ -530,6 +533,9 @@ void sysfs_remove_one(struct sysfs_addrm
- 		drop_nlink(acxt->parent_inode);
- 
- 	acxt->cnt++;
-+
-+	printk("XXX sysfs_remove_one: acxt=%p sd=%p s_flags=0x%x cnt=%d\n",
-+	       acxt, sd, sd->s_flags, acxt->cnt);
- }
- 
- /**
-@@ -624,6 +630,8 @@ int sysfs_addrm_finish(struct sysfs_addr
- 		acxt->removed = sd->s_sibling;
- 		sd->s_sibling = NULL;
- 
-+		printk("XXX sysfs_addrm_finish: acxt=%p sd=%p s_sibling=%p s_flags=0x%x\n",
-+		       acxt, sd, sd->s_sibling, sd->s_flags);
- 		sysfs_drop_dentry(sd);
- 		sysfs_deactivate(sd);
- 		sysfs_put(sd);
-
---------------090209030609060901000508--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+Greetings Michael.
