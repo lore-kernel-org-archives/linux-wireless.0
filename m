@@ -1,135 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [77.235.43.93] ([77.235.43.93]:54072 "EHLO main.fasthost.gr"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750725AbXGVNXb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jul 2007 09:23:31 -0400
-Received: from paravoid  by divinity (envelope-from <paravoid@debian.org>)
-	with local (Exim 4.63 (Debian GNU/Linux))
-	id 1ICbIa-0000lx-Ea
-	for linux-wireless@vger.kernel.org; Sun, 22 Jul 2007 16:16:36 +0300
-Date: Sun, 22 Jul 2007 16:16:36 +0300
-From: Faidon Liambotis <paravoid@debian.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2.6.23 1/3] [wireless] Kconfig: order options
-Message-ID: <20070722131636.GA2967@void.cube.gr>
+Received: from purr.warmcat.com ([87.106.142.209]:41845 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755914AbXGaVmu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2007 17:42:50 -0400
+Message-ID: <46AFACD6.9020607@warmcat.com>
+Date: Tue, 31 Jul 2007 22:42:46 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Michael Buesch <mb@bu3sch.de>
+CC: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] zd1211rw-mac80211: debug output for mac80211 ops
+References: <20070730023128.99E927B409F@zog.reactivated.net> <46AE7361.90406@warmcat.com> <20070731231249.121d55d4@logostar.upir.cz> <200707312330.48698.mb@bu3sch.de>
+In-Reply-To: <200707312330.48698.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reorder the Atmel options so that the menu appears saner.
-Before:
-  < >   Hermes chipset 802.11b support (Orinoco/Prism2/Symbol)
-  <*>   Atmel at76c50x chipset  802.11b support
-  < >     Atmel at76c506 PCI cards (NEW)
-  < > Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards
-  < > Atmel at76c502/at76c504 PCMCIA cards (NEW)
+Somebody in the thread at some point said:
+> On Tuesday 31 July 2007 23:12:49 Jiri Benc wrote:
+>> On Tue, 31 Jul 2007 00:25:21 +0100, Andy Green wrote:
+>>> The "soft" one is a faked up repeating of incoming (and outgoing!
+>>> twice!) packets
+>> You mean you see each outgoing packet twice on soft monitor interface? That
+>> would be a bug.
+>>
+>>> It really would be much better if the device
+>>> is kicked to hardware promisc if ANY virtual interface is in Monitor
+>>> mode, therefore the results are consistent regardless of the number of
+>>> virtual interfaces that happen to be around.
+>> Of course. If the hardware supports that.
+> 
+> The device should _not_ be kicked to promisc, if we have a monitor
+> interface. The promisc bit is a completely seperate setting
+> and must be handled seperate from the monitor stuff.
+> Userspace does take care of setting the promisc bit, if it's
+> required.
+> We recently fixed this bug in bcm43xx.
 
-After:
-  < >   Hermes chipset 802.11b support (Orinoco/Prism2/Symbol)
-  <*>   Atmel at76c50x chipset  802.11b support
-  < >     Atmel at76c506 PCI cards (NEW)
-  < >     Atmel at76c502/at76c504 PCMCIA cards (NEW)
-  < >   Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards
+Well that's fine... tcpdump for example does IFF_PROMISC while it runs
+so nobody who doesn't care will notice the difference, but I guess you
+get the power saving while IFF_PROMISC is off and the Monitor mode
+interface is up.
 
-Signed-off-by: Faidon Liambotis <paravoid@debian.org>
----
- drivers/net/wireless/Kconfig |   68 +++++++++++++++++++++---------------------
- 1 files changed, 34 insertions(+), 34 deletions(-)
+But anyone who tcpdumps on a Monitor mode interface still always sees
+the whole picture, not the synthesized one.  Sounds like a good general
+way to me.
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index ae27af0..2e264b0 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -379,30 +379,6 @@ config PCI_HERMES
- 	  common.  Some of the built-in wireless adaptors in laptops are of
- 	  this variety.
- 
--config ATMEL
--      tristate "Atmel at76c50x chipset  802.11b support"
--      depends on (PCI || PCMCIA) && WLAN_80211
--      select WIRELESS_EXT
--      select FW_LOADER
--      select CRC32
--       ---help---
--        A driver 802.11b wireless cards based on the Atmel fast-vnet
--        chips. This driver supports standard Linux wireless extensions. 
-- 
--        Many  cards based on this chipset do not have flash memory
--        and need their firmware loaded at start-up. If yours is 
--        one of these, you will need to provide a firmware image
--        to be loaded into the card by the driver. The Atmel
--        firmware package can be downloaded from
--        <http://www.thekelleys.org.uk/atmel>
--
--config PCI_ATMEL
--      tristate "Atmel at76c506 PCI cards"
--      depends on ATMEL && PCI
--       ---help---
--        Enable support for PCI and mini-PCI cards containing the
--        Atmel at76c506 chip.
--
- config PCMCIA_HERMES
- 	tristate "Hermes PCMCIA card support"
- 	depends on PCMCIA && HERMES
-@@ -437,6 +413,40 @@ config PCMCIA_SPECTRUM
- 	  for downloading Symbol firmware are available at
- 	  <http://sourceforge.net/projects/orinoco/>
- 
-+config ATMEL
-+      tristate "Atmel at76c50x chipset  802.11b support"
-+      depends on (PCI || PCMCIA) && WLAN_80211
-+      select WIRELESS_EXT
-+      select FW_LOADER
-+      select CRC32
-+       ---help---
-+        A driver 802.11b wireless cards based on the Atmel fast-vnet
-+        chips. This driver supports standard Linux wireless extensions. 
-+ 
-+        Many  cards based on this chipset do not have flash memory
-+        and need their firmware loaded at start-up. If yours is 
-+        one of these, you will need to provide a firmware image
-+        to be loaded into the card by the driver. The Atmel
-+        firmware package can be downloaded from
-+        <http://www.thekelleys.org.uk/atmel>
-+
-+config PCI_ATMEL
-+      tristate "Atmel at76c506 PCI cards"
-+      depends on ATMEL && PCI
-+       ---help---
-+        Enable support for PCI and mini-PCI cards containing the
-+        Atmel at76c506 chip.
-+
-+config PCMCIA_ATMEL
-+	tristate "Atmel at76c502/at76c504 PCMCIA cards"
-+	depends on ATMEL && PCMCIA
-+	select WIRELESS_EXT
-+	select FW_LOADER
-+	select CRC32
-+	---help---
-+	  Enable support for PCMCIA cards containing the
-+	  Atmel at76c502 and at76c504 chips.
-+
- config AIRO_CS
- 	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
- 	depends on PCMCIA && (BROKEN || !M32R) && WLAN_80211
-@@ -462,16 +472,6 @@ config AIRO_CS
- 	  for location).  You also want to check out the PCMCIA-HOWTO,
- 	  available from <http://www.tldp.org/docs.html#howto>.
- 
--config PCMCIA_ATMEL
--	tristate "Atmel at76c502/at76c504 PCMCIA cards"
--	depends on ATMEL && PCMCIA
--	select WIRELESS_EXT
--	select FW_LOADER
--	select CRC32
--	---help---
--	  Enable support for PCMCIA cards containing the
--	  Atmel at76c502 and at76c504 chips.
--
- config PCMCIA_WL3501
-       tristate "Planet WL3501 PCMCIA cards"
-       depends on EXPERIMENTAL && PCMCIA && WLAN_80211
--- 
-1.5.2.4
-
+-Andy
