@@ -1,60 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42276 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762139AbXGKJlB (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.173]:48192 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765152AbXGaSeI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2007 05:41:01 -0400
-Subject: Re: Monitor mode with RTL8187
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Stefan Schweizer <genstef@gentoo.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200707101050.17043.mb@bu3sch.de>
-References: <59abf66e0707091451p3913ba5enf35edd934840b3cb@mail.gmail.com>
-	 <4693176F.6070407@warmcat.com> <f6vep6$n3$1@sea.gmane.org>
-	 <200707101050.17043.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qAg25Xfg+a/Y4tl+ET8H"
-Date: Wed, 11 Jul 2007 01:02:14 +0200
-Message-Id: <1184108535.3738.32.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 31 Jul 2007 14:34:08 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so121179ugf
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 11:34:07 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 08/24] rt2x00: Fix invalid RF array reading
+Date: Tue, 31 Jul 2007 20:37:13 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200707312037.13175.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>From 9a895eb31291e4a856a4d04f4f99ea6cf055e5ec Mon Sep 17 00:00:00 2001
+From: Ivo van Doorn <IvDoorn@gmail.com>
+Date: Sat, 28 Jul 2007 01:12:39 +0200
+Subject: [PATCH 08/24] rt2x00: Fix invalid RF array reading
 
---=-qAg25Xfg+a/Y4tl+ET8H
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+RF registers don't have a word 0, check when this is
+being requested and just ignore that request. (Only possible
+call can come from debugfs).
 
-On Tue, 2007-07-10 at 10:50 +0200, Michael Buesch wrote:
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2400pci.h |    2 +-
+ drivers/net/wireless/rt2500pci.h |    2 +-
+ drivers/net/wireless/rt2500usb.h |    2 +-
+ drivers/net/wireless/rt2x00.h    |    6 ++++--
+ drivers/net/wireless/rt61pci.h   |    2 +-
+ drivers/net/wireless/rt73usb.h   |    2 +-
+ 6 files changed, 9 insertions(+), 7 deletions(-)
 
-> > Seems usability has not yet reached wireless configuration - where it i=
-s imo
-> > much needed.
->=20
-> ehm, setting the mode means setting the mode. Not bringing the device
-> up, changing channels or something like that.
-> The time where some wireless config commands magically trigger unrelated
-> events (ESSID setting triggers assoc) is over, with the advent of cfg8021=
-1.
-> And that is _good_.
-
-Seconded. usability =E2=89=A0 magic, I'd go as far as saying that magic exc=
-ludes
-usability. also, usability =E2=88=89 kernel :)
-
-johannes
-
---=-qAg25Xfg+a/Y4tl+ET8H
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGlA/2/ETPhpq3jKURAu0/AJ98BCZIvHyw5ecMtXQRGZlxXOdfHgCguwT5
-ygwTmawyP0pCSlwcbhateKw=
-=l1WO
------END PGP SIGNATURE-----
-
---=-qAg25Xfg+a/Y4tl+ET8H--
+diff --git a/drivers/net/wireless/rt2400pci.h b/drivers/net/wireless/rt2400pci.h
+index 54fd789..930b2ca 100644
+--- a/drivers/net/wireless/rt2400pci.h
++++ b/drivers/net/wireless/rt2400pci.h
+@@ -48,7 +48,7 @@
+ #define EEPROM_BASE			0x0000
+ #define EEPROM_SIZE			0x0100
+ #define BBP_SIZE			0x0020
+-#define RF_SIZE				0x0008
++#define RF_SIZE				0x000c
+ 
+ /*
+  * Control/Status Registers(CSR).
+diff --git a/drivers/net/wireless/rt2500pci.h b/drivers/net/wireless/rt2500pci.h
+index 49c6792..463f2c9 100644
+--- a/drivers/net/wireless/rt2500pci.h
++++ b/drivers/net/wireless/rt2500pci.h
+@@ -59,7 +59,7 @@
+ #define EEPROM_BASE			0x0000
+ #define EEPROM_SIZE			0x0200
+ #define BBP_SIZE			0x0040
+-#define RF_SIZE				0x000c
++#define RF_SIZE				0x0010
+ 
+ /*
+  * Control/Status Registers(CSR).
+diff --git a/drivers/net/wireless/rt2500usb.h b/drivers/net/wireless/rt2500usb.h
+index 425c804..065c3ab 100644
+--- a/drivers/net/wireless/rt2500usb.h
++++ b/drivers/net/wireless/rt2500usb.h
+@@ -59,7 +59,7 @@
+ #define EEPROM_BASE			0x0000
+ #define EEPROM_SIZE			0x006a
+ #define BBP_SIZE			0x0060
+-#define RF_SIZE				0x000c
++#define RF_SIZE				0x0010
+ 
+ /*
+  * Control/Status Registers(CSR).
+diff --git a/drivers/net/wireless/rt2x00.h b/drivers/net/wireless/rt2x00.h
+index bf80f51..8be013b 100644
+--- a/drivers/net/wireless/rt2x00.h
++++ b/drivers/net/wireless/rt2x00.h
+@@ -961,13 +961,15 @@ static inline struct data_ring* rt2x00_get_ring(
+ static inline void rt2x00_rf_read(const struct rt2x00_dev *rt2x00dev,
+ 	const unsigned int word, u32 *data)
+ {
+-	*data = rt2x00dev->rf[word - 1];
++	if (word)
++		*data = rt2x00dev->rf[word - 1];
+ }
+ 
+ static inline void rt2x00_rf_write(const struct rt2x00_dev *rt2x00dev,
+ 	const unsigned int word, u32 data)
+ {
+-	rt2x00dev->rf[word] = data;
++	if (word)
++		rt2x00dev->rf[word - 1] = data;
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/rt61pci.h b/drivers/net/wireless/rt61pci.h
+index ed450e7..3e653bd 100644
+--- a/drivers/net/wireless/rt61pci.h
++++ b/drivers/net/wireless/rt61pci.h
+@@ -50,7 +50,7 @@
+ #define EEPROM_BASE			0x0000
+ #define EEPROM_SIZE			0x0100
+ #define BBP_SIZE			0x0080
+-#define RF_SIZE				0x000c
++#define RF_SIZE				0x0010
+ 
+ /*
+  * PCI registers.
+diff --git a/drivers/net/wireless/rt73usb.h b/drivers/net/wireless/rt73usb.h
+index 276fa3f..ee2e0b1 100644
+--- a/drivers/net/wireless/rt73usb.h
++++ b/drivers/net/wireless/rt73usb.h
+@@ -50,7 +50,7 @@
+ #define EEPROM_BASE			0x0000
+ #define EEPROM_SIZE			0x0100
+ #define BBP_SIZE			0x0080
+-#define RF_SIZE				0x000c
++#define RF_SIZE				0x0010
+ 
+ /*
+  * USB registers.
+-- 
+1.5.2.4
 
