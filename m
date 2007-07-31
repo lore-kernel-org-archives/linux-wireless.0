@@ -1,48 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.230]:21725 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753298AbXGYIGa (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.173]:48828 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933405AbXGaSea convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2007 04:06:30 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so107728wxd
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2007 01:06:30 -0700 (PDT)
-Message-ID: <1ba2fa240707250106w43073bcbh1b4c7fa3d47fc3e2@mail.gmail.com>
-Date: Wed, 25 Jul 2007 11:06:29 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [patch 3/5] A-MSDU Rx aggregation support
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	mabbas <mabbas@linux.intel.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1184777775.8125.0.camel@johannes.berg>
+	Tue, 31 Jul 2007 14:34:30 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so121282ugf
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 11:34:29 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 22/24] rt2x00: Configure type during add_interface
+Date: Tue, 31 Jul 2007 20:37:40 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-References: <1174909200.1364.56.camel@dell-4965.jf.intel.com>
-	 <1175111599.5151.123.camel@johannes.berg>
-	 <46137FF2.6020203@linux.intel.com>
-	 <1182374019.3714.87.camel@johannes.berg>
-	 <20070718000140.GA26907@tuxdriver.com>
-	 <1184754598.4658.14.camel@johannes.berg>
-	 <1ba2fa240707180622p791168eax4fae712641e24cc4@mail.gmail.com>
-	 <1ba2fa240707180851y22ead404g1c87d73903e939e3@mail.gmail.com>
-	 <1184777775.8125.0.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200707312037.40306.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/18/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2007-07-18 at 18:51 +0300, Tomas Winkler wrote:
->
-> > > HT aggregtion is extension of QoS. Multicast and broadcast frames are
-> > > not QoS frames and therefore such frames  want be incorporated into an
-> > > A-MSDU.
-> > Oops
-> > s/want/won't/
->
-> Ah, ok, I didn't bother to re-check. Mind doing a patch then that rips
-> out this code?
->
-> johannes
->
->
-I've checked the Spec again and I was wrong. Theoretically,  A-MSDU
-packet can be a multicast packet so we get back to the problem you've
-pointed first.
+>From b10059fd3e2bbaef1f82ac60a177902bd19071dc Mon Sep 17 00:00:00 2001
+From: Ivo van Doorn <IvDoorn@gmail.com>
+Date: Tue, 31 Jul 2007 17:09:15 +0200
+Subject: [PATCH 22/24] rt2x00: Configure type during add_interface
+
+When there was only 1 interface present which was configured
+as monitor interface the interface would fail to configure
+the device correctly. This resulted in too many frames to be dropped.
+
+This patch will add the configure_type and configure_packet_filter
+to the add_interface handler instead of the config_interface handler.
+
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00mac.c |   19 ++++++++++++-------
+ 1 files changed, 12 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00mac.c b/drivers/net/wireless/rt2x00mac.c
+index 9c6d043..205f10f 100644
+--- a/drivers/net/wireless/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00mac.c
+@@ -173,6 +173,7 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+ 	struct interface *intf = &rt2x00dev->interface;
++	int retval;
+ 
+ 	/*
+ 	 * We only support 1 non-monitor interface.
+@@ -195,7 +196,17 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
+ 		intf->filter = 0;
+ 	}
+ 
+-	return rt2x00lib_init_interface(rt2x00dev);
++	retval = rt2x00lib_init_interface(rt2x00dev);
++	if (retval)
++		return retval;
++
++	/*
++	 * Configure interface.
++	 */
++	rt2x00lib_config_type(rt2x00dev, conf->type);
++	rt2x00lib_config_packet_filter(rt2x00dev, intf->filter);
++
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(rt2x00mac_add_interface);
+ 
+@@ -290,12 +301,6 @@ int rt2x00mac_config_interface(struct ieee80211_hw *hw, int if_id,
+ 	 */
+ 	if (conf->type != IEEE80211_IF_TYPE_AP)
+ 		memcpy(&intf->bssid, conf->bssid, ETH_ALEN);
+-
+-	/*
+-	 * Enable configuration.
+-	 */
+-	rt2x00lib_config_type(rt2x00dev, conf->type);
+-	rt2x00lib_config_packet_filter(rt2x00dev, intf->filter);
+ 	rt2x00lib_config_bssid(rt2x00dev, intf->bssid);
+ 
+ 	/*
+-- 
+1.5.2.4
+
