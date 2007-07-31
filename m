@@ -1,113 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:46600 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755364AbXGNNYZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jul 2007 09:24:25 -0400
-Date: Sat, 14 Jul 2007 15:24:14 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: seventh guardian <seventhguardian@gmail.com>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: d80211 deadlock with wpa_supplicant and rmmod
-Message-ID: <20070714152414.0d9d00ea@logostar.upir.cz>
-In-Reply-To: <1184363116.3928.4.camel@johannes.berg>
-References: <1caff7430707111617o70a534a5x2cf6b611a91f301a@mail.gmail.com>
-	<20070711234153.GB5099@tuxdriver.com>
-	<1184234538.6669.30.camel@johannes.berg>
-	<1caff7430707130505r579ef08cmacc6c77f7535a66c@mail.gmail.com>
-	<1184363116.3928.4.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from ug-out-1314.google.com ([66.249.92.173]:48192 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765532AbXGaSeR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2007 14:34:17 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so121179ugf
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 11:34:16 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 14/24] rt2x00: Fix interface opening/closing on suspend/resume
+Date: Tue, 31 Jul 2007 20:37:25 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200707312037.25207.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 13 Jul 2007 23:45:16 +0200, Johannes Berg wrote:
-> On Fri, 2007-07-13 at 13:05 +0100, seventh guardian wrote:
-> 
-> > Hello, sorry for the delay but I only managed to try it out today..
-> > I've applied the patch and tortured the system as far as I could, and
-> > no hang at all :)
-> > 
-> > I've read the thread and it apparently replaces one bad problem for a
-> > lesser one, so I understand if it's not applied.. But at least there
-> > is a place in the code to point as the culprit :)
-> 
-> It definitely should be applied anyway :) I guess John just hasn't
-> caught up with all threads yet.
+>From c2a2fd3eaa85367e56b01955139678fe772d1cfd Mon Sep 17 00:00:00 2001
+From: Ivo van Doorn <IvDoorn@gmail.com>
+Date: Sat, 28 Jul 2007 16:32:36 +0200
+Subject: [PATCH 14/24] rt2x00: Fix interface opening/closing on suspend/resume
 
-That's my fault, I missed that patch. If everybody put [PATCH] to subject
-of mails containing a patch... (sigh)
+During suspend rt2x00lib must close/unitialize all items that
+_must_ be reinitialized on resume. This means that
+rt2x00lib_uninitialize() must be called because the firmware and
+registers must be initialized on resume.
+Also make sure the beacon transmission will get a new impulse,
+and just to be safe close and reopen the debugfs entries.
 
-> John: This is about the patch in the "mac80211/bcm43xx deadlock" thread
-> from Michael, it kills some rtnl_lock()/unlock() that causes this
-> deadlock.
-
-Yes, please apply (the patch is below). Of course, we'll need a proper fix
-but until it is ready this should be applied to prevent deadlocks.
-
-Thanks,
-
- Jiri
-
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
+ drivers/net/wireless/rt2400pci.c |    2 +-
+ drivers/net/wireless/rt2500pci.c |    2 +-
+ drivers/net/wireless/rt2x00dev.c |   53 +++++++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/rt2x00lib.h |    1 +
+ drivers/net/wireless/rt2x00pci.c |   18 -------------
+ drivers/net/wireless/rt2x00pci.h |    1 -
+ drivers/net/wireless/rt61pci.c   |    2 +-
+ 7 files changed, 56 insertions(+), 23 deletions(-)
 
-Subject: [PATCH] mac80211: remove rtnl locking in ieee80211_sta.c
-From: Michael Wu <flamingice@sourmilk.net>
-
-The rtnl is held in ieee80211_sta.c to prevent some potential races with
-userspace. Unfortunately, it also has the potential for deadlocks on
-interface down. This patch removes the rtnl locking to eliminate the
-deadlocks.
-
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
-
- net/mac80211/ieee80211_sta.c |    6 ------
- 1 files changed, 0 insertions(+), 6 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 91b545c..4862797 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -25,7 +25,6 @@
- #include <linux/wireless.h>
- #include <linux/random.h>
- #include <linux/etherdevice.h>
--#include <linux/rtnetlink.h>
- #include <net/iw_handler.h>
- #include <asm/types.h>
+diff --git a/drivers/net/wireless/rt2400pci.c b/drivers/net/wireless/rt2400pci.c
+index 838b64e..473208d 100644
+--- a/drivers/net/wireless/rt2400pci.c
++++ b/drivers/net/wireless/rt2400pci.c
+@@ -1277,7 +1277,7 @@ static irqreturn_t rt2400pci_interrupt(int irq, void *dev_instance)
+ 	 * 1 - Beacon timer expired interrupt.
+ 	 */
+ 	if (rt2x00_get_field32(reg, CSR7_TBCN_EXPIRE))
+-		rt2x00pci_beacondone(rt2x00dev, IEEE80211_TX_QUEUE_BEACON);
++		rt2x00lib_beacondone(rt2x00dev, IEEE80211_TX_QUEUE_BEACON);
  
-@@ -2073,12 +2072,9 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
- 	struct ieee80211_sta_bss *bss, *selected = NULL;
- 	int top_rssi = 0, freq;
+ 	/*
+ 	 * 2 - Rx ring done interrupt.
+diff --git a/drivers/net/wireless/rt2500pci.c b/drivers/net/wireless/rt2500pci.c
+index e1e5ee2..fd7a8be 100644
+--- a/drivers/net/wireless/rt2500pci.c
++++ b/drivers/net/wireless/rt2500pci.c
+@@ -1446,7 +1446,7 @@ static irqreturn_t rt2500pci_interrupt(int irq, void *dev_instance)
+ 	 * 1 - Beacon timer expired interrupt.
+ 	 */
+ 	if (rt2x00_get_field32(reg, CSR7_TBCN_EXPIRE))
+-		rt2x00pci_beacondone(rt2x00dev, IEEE80211_TX_QUEUE_BEACON);
++		rt2x00lib_beacondone(rt2x00dev, IEEE80211_TX_QUEUE_BEACON);
  
--	rtnl_lock();
--
- 	if (!ifsta->auto_channel_sel && !ifsta->auto_bssid_sel &&
- 	    !ifsta->auto_ssid_sel) {
- 		ifsta->state = IEEE80211_AUTHENTICATE;
--		rtnl_unlock();
- 		ieee80211_sta_reset_auth(dev, ifsta);
- 		return 0;
+ 	/*
+ 	 * 2 - Rx ring done interrupt.
+diff --git a/drivers/net/wireless/rt2x00dev.c b/drivers/net/wireless/rt2x00dev.c
+index 10221bb..f369fbb 100644
+--- a/drivers/net/wireless/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00dev.c
+@@ -216,6 +216,24 @@ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
+ /*
+  * Interrupt context handlers.
+  */
++void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev, const int queue)
++{
++	struct data_ring *ring = rt2x00_get_ring(rt2x00dev, queue);
++	struct data_entry *entry = rt2x00_get_data_entry(ring);
++	struct sk_buff *skb;
++
++	skb = ieee80211_beacon_get(rt2x00dev->hw,
++		rt2x00dev->interface.id, &entry->tx_status.control);
++	if (!skb)
++		return;
++
++	rt2x00dev->ops->hw->beacon_update(rt2x00dev->hw, skb,
++		&entry->tx_status.control);
++
++	dev_kfree_skb(skb);
++}
++EXPORT_SYMBOL_GPL(rt2x00lib_beacondone);
++
+ void rt2x00lib_txdone(struct data_entry *entry,
+ 	const int status, const int retry)
+ {
+@@ -773,7 +791,7 @@ static int rt2x00lib_initialize(struct rt2x00_dev *rt2x00dev)
+ 	 */
+ 	status = rt2x00lib_alloc_ring_entries(rt2x00dev);
+ 	if (status) {
+-		ERROR(rt2x00dev, "DMA allocation failed.\n");
++		ERROR(rt2x00dev, "Ring entries allocation failed.\n");
+ 		return status;
  	}
-@@ -2121,7 +2117,6 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
- 		ieee80211_sta_set_bssid(dev, selected->bssid);
- 		ieee80211_rx_bss_put(dev, selected);
- 		ifsta->state = IEEE80211_AUTHENTICATE;
--		rtnl_unlock();
- 		ieee80211_sta_reset_auth(dev, ifsta);
- 		return 0;
- 	} else {
-@@ -2132,7 +2127,6 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
- 		} else
- 			ifsta->state = IEEE80211_DISABLED;
- 	}
--	rtnl_unlock();
- 	return -1;
+ 
+@@ -1026,7 +1044,13 @@ int rt2x00lib_suspend(struct rt2x00_dev *rt2x00dev,
+ 
+ 	NOTICE(rt2x00dev, "Going to sleep.\n");
+ 
++	/*
++	 * Disable radio and unitialize all items
++	 * that must be recreated on resume.
++	 */
+ 	rt2x00lib_disable_radio(rt2x00dev);
++	rt2x00lib_uninitialize(rt2x00dev);
++	rt2x00debug_deregister(rt2x00dev);
+ 
+ 	/*
+ 	 * Set device mode to sleep for power management.
+@@ -1041,8 +1065,35 @@ EXPORT_SYMBOL_GPL(rt2x00lib_suspend);
+ 
+ int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev)
+ {
++	int retval;
++
+ 	NOTICE(rt2x00dev, "Waking up.\n");
+ 
++	/*
++	 * Open the debugfs entry.
++	 */
++	rt2x00debug_register(rt2x00dev);
++
++	/*
++	 * Reinitialize device and all active interfaces.
++	 */
++	retval = rt2x00lib_init_interface(rt2x00dev);
++	if (retval)
++		return retval;
++
++	/*
++	 * We only need to continue when in Master or Ad-hoc mode.
++	 */
++	if (rt2x00dev->interface.type != IEEE80211_IF_TYPE_AP &&
++	    rt2x00dev->interface.type != IEEE80211_IF_TYPE_IBSS)
++		return 0;
++
++	/*
++	 * Restart Beacon transmitting by faking
++	 * a beacondone event.
++	 */
++	rt2x00lib_beacondone(rt2x00dev, IEEE80211_TX_QUEUE_BEACON);
++
+ 	return 0;
  }
+ EXPORT_SYMBOL_GPL(rt2x00lib_resume);
+diff --git a/drivers/net/wireless/rt2x00lib.h b/drivers/net/wireless/rt2x00lib.h
+index 72d3f45..cf13d10 100644
+--- a/drivers/net/wireless/rt2x00lib.h
++++ b/drivers/net/wireless/rt2x00lib.h
+@@ -75,6 +75,7 @@ int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev);
+ /*
+  * Interrupt context handlers.
+  */
++void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev, const int queue);
+ void rt2x00lib_txdone(struct data_entry *entry,
+ 	const int status, const int retry);
+ void rt2x00lib_rxdone(struct data_entry *entry, char *data,
+diff --git a/drivers/net/wireless/rt2x00pci.c b/drivers/net/wireless/rt2x00pci.c
+index b1cff2c..60d1517 100644
+--- a/drivers/net/wireless/rt2x00pci.c
++++ b/drivers/net/wireless/rt2x00pci.c
+@@ -72,24 +72,6 @@ int rt2x00pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
+ }
+ EXPORT_SYMBOL_GPL(rt2x00pci_beacon_update);
  
-
+-void rt2x00pci_beacondone(struct rt2x00_dev *rt2x00dev, const int queue)
+-{
+-	struct data_ring *ring = rt2x00_get_ring(rt2x00dev, queue);
+-	struct data_entry *entry = rt2x00_get_data_entry(ring);
+-	struct sk_buff *skb;
+-
+-	skb = ieee80211_beacon_get(rt2x00dev->hw,
+-		rt2x00dev->interface.id, &entry->tx_status.control);
+-	if (!skb)
+-		return;
+-
+-	rt2x00dev->ops->hw->beacon_update(rt2x00dev->hw, skb,
+-		&entry->tx_status.control);
+-
+-	dev_kfree_skb(skb);
+-}
+-EXPORT_SYMBOL_GPL(rt2x00pci_beacondone);
+-
+ /*
+  * TX data handlers.
+  */
+diff --git a/drivers/net/wireless/rt2x00pci.h b/drivers/net/wireless/rt2x00pci.h
+index 8595cbf..86eba3e 100644
+--- a/drivers/net/wireless/rt2x00pci.h
++++ b/drivers/net/wireless/rt2x00pci.h
+@@ -85,7 +85,6 @@ static inline void rt2x00pci_register_multiwrite(
+  */
+ int rt2x00pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	struct ieee80211_tx_control *control);
+-void rt2x00pci_beacondone(struct rt2x00_dev *rt2x00dev, const int queue);
+ 
+ /*
+  * TX data handlers.
+diff --git a/drivers/net/wireless/rt61pci.c b/drivers/net/wireless/rt61pci.c
+index cb50956..183464c 100644
+--- a/drivers/net/wireless/rt61pci.c
++++ b/drivers/net/wireless/rt61pci.c
+@@ -1885,7 +1885,7 @@ static irqreturn_t rt61pci_interrupt(int irq, void *dev_instance)
+ 	 * 1 - Beacon timer expired interrupt.
+ 	 */
+ 	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_BEACON_DONE))
+-		rt2x00pci_beacondone(rt2x00dev, IEEE80211_TX_QUEUE_BEACON);
++		rt2x00lib_beacondone(rt2x00dev, IEEE80211_TX_QUEUE_BEACON);
+ 
+ 	/*
+ 	 * 2 - Rx ring done interrupt.
 -- 
-Jiri Benc
-SUSE Labs
+1.5.2.4
+
