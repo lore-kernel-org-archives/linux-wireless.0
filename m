@@ -1,96 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:58556 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752501AbXGIWOG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2007 18:14:06 -0400
-Date: Mon, 9 Jul 2007 15:13:22 -0700
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 2.6] WE : Fix get 32 char ESSID
-Message-ID: <20070709221322.GA1381@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
+Received: from ug-out-1314.google.com ([66.249.92.173]:48225 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765478AbXGaSeN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2007 14:34:13 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so121186ugf
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 11:34:11 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 11/24] rt2x00: Correctly handle RF 0 writing
+Date: Tue, 31 Jul 2007 20:37:19 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-From: Jean Tourrilhes <jt@hpl.hp.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200707312037.19852.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	Hi,
+>From 9b7ee86485d789df2a1e6006a073d0847f54a5b7 Mon Sep 17 00:00:00 2001
+From: Ivo van Doorn <IvDoorn@gmail.com>
+Date: Sat, 28 Jul 2007 12:15:56 +0200
+Subject: [PATCH 11/24] rt2x00: Correctly handle RF 0 writing
 
-	A little bug was introduced a few months ago that prevent
-reading ESSID with 32 character. Philippe Teuwen was the first one to
-report that, followed by the MadWifi team :
-		http://madwifi.org/ticket/930
-	The patch fix this bug by removing obsolete code. It also
-reenable setting the full range of ESSID, including ESSID with a final
-NUL which are valid. This was tested on 2.6.21 and 2.6.22.
-	John : would you mind pushing that to 2.6.23 ? If you are
-happy with it, I can provide backport patches for earlier kernels.
-        Thanks...
+When attempting to write to RF 0 the rf handler should
+exit immediately.
+This also removes the requirement to do index - 1
+when reading and writing to the RF buffer since the size
+is big enough to keep word 0 unused.
 
-        Jean
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2400pci.c |    3 +++
+ drivers/net/wireless/rt2500pci.c |    3 +++
+ drivers/net/wireless/rt2500usb.c |    3 +++
+ drivers/net/wireless/rt2x00.h    |    6 ++----
+ drivers/net/wireless/rt61pci.c   |    3 +++
+ drivers/net/wireless/rt73usb.c   |    3 +++
+ 6 files changed, 17 insertions(+), 4 deletions(-)
 
-Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
-
------------------------------------------------------------
-
---- linux/net/wireless/wext.j1.c	2007-07-09 13:19:22.000000000 -0700
-+++ linux/net/wireless/wext.c	2007-07-09 13:19:59.000000000 -0700
-@@ -741,39 +741,11 @@ static int ioctl_standard_call(struct ne
- 		int	extra_size;
- 		int	user_length = 0;
- 		int	err;
--		int	essid_compat = 0;
+diff --git a/drivers/net/wireless/rt2400pci.c b/drivers/net/wireless/rt2400pci.c
+index 45bc993..a43a407 100644
+--- a/drivers/net/wireless/rt2400pci.c
++++ b/drivers/net/wireless/rt2400pci.c
+@@ -142,6 +142,9 @@ static void rt2400pci_rf_write(const struct rt2x00_dev *rt2x00dev,
+ 	u32 reg;
+ 	unsigned int i;
  
- 		/* Calculate space needed by arguments. Always allocate
- 		 * for max space. Easier, and won't last long... */
- 		extra_size = descr->max_tokens * descr->token_size;
++	if (!word)
++		return;
++
+ 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+ 		rt2x00pci_register_read(rt2x00dev, RFCSR, &reg);
+ 		if (!rt2x00_get_field32(reg, RFCSR_BUSY))
+diff --git a/drivers/net/wireless/rt2500pci.c b/drivers/net/wireless/rt2500pci.c
+index 3117e0b..7f4287c 100644
+--- a/drivers/net/wireless/rt2500pci.c
++++ b/drivers/net/wireless/rt2500pci.c
+@@ -142,6 +142,9 @@ static void rt2500pci_rf_write(const struct rt2x00_dev *rt2x00dev,
+ 	u32 reg;
+ 	unsigned int i;
  
--		/* Check need for ESSID compatibility for WE < 21 */
--		switch (cmd) {
--		case SIOCSIWESSID:
--		case SIOCGIWESSID:
--		case SIOCSIWNICKN:
--		case SIOCGIWNICKN:
--			if (iwr->u.data.length == descr->max_tokens + 1)
--				essid_compat = 1;
--			else if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
--				char essid[IW_ESSID_MAX_SIZE + 1];
--
--				err = copy_from_user(essid, iwr->u.data.pointer,
--						     iwr->u.data.length *
--						     descr->token_size);
--				if (err)
--					return -EFAULT;
--
--				if (essid[iwr->u.data.length - 1] == '\0')
--					essid_compat = 1;
--			}
--			break;
--		default:
--			break;
--		}
--
--		iwr->u.data.length -= essid_compat;
--
- 		/* Check what user space is giving us */
- 		if (IW_IS_SET(cmd)) {
- 			/* Check NULL pointer */
-@@ -811,7 +783,6 @@ static int ioctl_standard_call(struct ne
- 		}
++	if (!word)
++		return;
++
+ 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+ 		rt2x00pci_register_read(rt2x00dev, RFCSR, &reg);
+ 		if (!rt2x00_get_field32(reg, RFCSR_BUSY))
+diff --git a/drivers/net/wireless/rt2500usb.c b/drivers/net/wireless/rt2500usb.c
+index 89cb347..0d775fa 100644
+--- a/drivers/net/wireless/rt2500usb.c
++++ b/drivers/net/wireless/rt2500usb.c
+@@ -178,6 +178,9 @@ static void rt2500usb_rf_write(const struct rt2x00_dev *rt2x00dev,
+ 	u16 reg;
+ 	unsigned int i;
  
- 		/* Create the kernel buffer */
--		/*    kzalloc ensures NULL-termination for essid_compat */
- 		extra = kzalloc(extra_size, GFP_KERNEL);
- 		if (extra == NULL)
- 			return -ENOMEM;
-@@ -830,8 +801,6 @@ static int ioctl_standard_call(struct ne
- 		/* Call the handler */
- 		ret = handler(dev, &info, &(iwr->u), extra);
++	if (!word)
++		return;
++
+ 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+ 		rt2500usb_register_read(rt2x00dev, PHY_CSR10, &reg);
+ 		if (!rt2x00_get_field16(reg, PHY_CSR10_RF_BUSY))
+diff --git a/drivers/net/wireless/rt2x00.h b/drivers/net/wireless/rt2x00.h
+index 8be013b..227a50a 100644
+--- a/drivers/net/wireless/rt2x00.h
++++ b/drivers/net/wireless/rt2x00.h
+@@ -961,15 +961,13 @@ static inline struct data_ring* rt2x00_get_ring(
+ static inline void rt2x00_rf_read(const struct rt2x00_dev *rt2x00dev,
+ 	const unsigned int word, u32 *data)
+ {
+-	if (word)
+-		*data = rt2x00dev->rf[word - 1];
++	*data = rt2x00dev->rf[word];
+ }
  
--		iwr->u.data.length += essid_compat;
--
- 		/* If we have something to return to the user */
- 		if (!ret && IW_IS_GET(cmd)) {
- 			/* Check if there is enough buffer up there */
+ static inline void rt2x00_rf_write(const struct rt2x00_dev *rt2x00dev,
+ 	const unsigned int word, u32 data)
+ {
+-	if (word)
+-		rt2x00dev->rf[word - 1] = data;
++	rt2x00dev->rf[word] = data;
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/rt61pci.c b/drivers/net/wireless/rt61pci.c
+index fb0c5c5..37191a4 100644
+--- a/drivers/net/wireless/rt61pci.c
++++ b/drivers/net/wireless/rt61pci.c
+@@ -140,6 +140,9 @@ static void rt61pci_rf_write(const struct rt2x00_dev *rt2x00dev,
+ 	u32 reg;
+ 	unsigned int i;
+ 
++	if (!word)
++		return;
++
+ 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+ 		rt2x00pci_register_read(rt2x00dev, PHY_CSR4, &reg);
+ 		if (!rt2x00_get_field32(reg, PHY_CSR4_BUSY))
+diff --git a/drivers/net/wireless/rt73usb.c b/drivers/net/wireless/rt73usb.c
+index 07e6087..8add8d3 100644
+--- a/drivers/net/wireless/rt73usb.c
++++ b/drivers/net/wireless/rt73usb.c
+@@ -179,6 +179,9 @@ static void rt73usb_rf_write(const struct rt2x00_dev *rt2x00dev,
+ 	u32 reg;
+ 	unsigned int i;
+ 
++	if (!word)
++		return;
++
+ 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+ 		rt73usb_register_read(rt2x00dev, PHY_CSR4, &reg);
+ 		if (!rt2x00_get_field32(reg, PHY_CSR4_BUSY))
+-- 
+1.5.2.4
 
