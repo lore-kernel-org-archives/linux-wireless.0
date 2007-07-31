@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45533 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751584AbXGBI4C (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2007 04:56:02 -0400
-Subject: Re: [2.6 patch] drivers/net/wireless/libertas/wext.c: remove dead  code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Dan Williams <dcbw@redhat.com>,
+Received: from styx.suse.cz ([82.119.242.94]:45697 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1761636AbXGaVGR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2007 17:06:17 -0400
+Date: Tue, 31 Jul 2007 23:06:13 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Michael Buesch <mb@bu3sch.de>, Ulrich Kunitz <kune@deine-taler.de>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20070701202040.GD10869@stusta.de>
-References: <20070701202040.GD10869@stusta.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-m7zAeKz37qZGmPRfBjg7"
-Date: Mon, 02 Jul 2007 10:53:54 +0200
-Message-Id: <1183366434.4089.96.camel@johannes.berg>
+	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] zd1211rw-mac80211: debug output for mac80211 ops
+Message-ID: <20070731230613.6d0a0856@logostar.upir.cz>
+In-Reply-To: <200707302223.04696.flamingice@sourmilk.net>
+References: <20070730023128.99E927B409F@zog.reactivated.net>
+	<20070730225205.GA17252@deine-taler.de>
+	<200707310105.55863.mb@bu3sch.de>
+	<200707302223.04696.flamingice@sourmilk.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 30 Jul 2007 22:22:58 -0700, Michael Wu wrote:
+> On Monday 30 July 2007 16:05, Michael Buesch wrote:
+> > I suggest you look at bcm43xx-mac80211.
+> > You will need to introduce refcounting for your monitor interfaces
+> > and I _really_ suggest to get rid of the zd_op_open() and zd_op_close()
+> > functions. Just include that in add/remove interface. You need
+> > to refcount your interfaces anyway.
+> >
+> Requiring refcounting for monitor interfaces is fairly dumb since mac80211 
+> does the exact same refcounting. I haven't bothered to do it in any driver 
+> ports yet for this reason. This part of the mac80211 driver api needs to be 
+> fixed.
 
---=-m7zAeKz37qZGmPRfBjg7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Ouch, I thought we don't bother drivers with more than one monitor
+interface at a time. Apparently I forgot to fix that.
 
-On Sun, 2007-07-01 at 22:20 +0200, Adrian Bunk wrote:
-> This patch removes dead code introduced by
-> commit 90a42210f275e1f828eb6c08bf8252c2d6a774e0 and spotted
-> by the Coverity checker.
+> Also, I'm not entirely convinced that eliminating the open/close callbacks is 
+> a good idea,
 
-> --- linux-2.6.22-rc6-mm1/drivers/net/wireless/libertas/wext.c.old	2007-06=
--29 21:52:56.000000000 +0200
-> +++ linux-2.6.22-rc6-mm1/drivers/net/wireless/libertas/wext.c	2007-06-29 =
-21:53:43.000000000 +0200
-> @@ -1823,85 +1823,82 @@ static int wlan_set_encodeext(struct net
+Why?
 
-out of curiosity, why so much context?
+Thanks,
 
-johannes
+ Jiri
 
---=-m7zAeKz37qZGmPRfBjg7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGiL0h/ETPhpq3jKURAn/QAKCKl5F8t/HfdbZ4wZmAHhwNplkIjwCfV3PJ
-3AThodhAU7lPkBdjiFT3leA=
-=1Swq
------END PGP SIGNATURE-----
-
---=-m7zAeKz37qZGmPRfBjg7--
-
+-- 
+Jiri Benc
+SUSE Labs
