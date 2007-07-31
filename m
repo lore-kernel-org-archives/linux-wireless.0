@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:25890 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754570AbXGDGvJ (ORCPT
+Received: from purr.warmcat.com ([87.106.142.209]:37998 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759387AbXGaVuc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2007 02:51:09 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Marcelo Tosatti <marcelo@kvack.org>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: Fwd: drivers/net/wireless/libertas/rx.c: use-after-free
-Date: Wed, 4 Jul 2007 08:51:05 +0200
-Cc: Adrian Bunk <bunk@stusta.de>
-References: <200706302114.53985.hs4233@mail.mn-solutions.de> <20070703195633.GA6325@dmt>
-In-Reply-To: <20070703195633.GA6325@dmt>
+	Tue, 31 Jul 2007 17:50:32 -0400
+Message-ID: <46AFAEA5.2010104@warmcat.com>
+Date: Tue, 31 Jul 2007 22:50:29 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200707040851.06156.hs4233@mail.mn-solutions.de>
+To: Jiri Benc <jbenc@suse.cz>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] zd1211rw-mac80211: debug output for mac80211 ops
+References: <20070730023128.99E927B409F@zog.reactivated.net>	<20070730145125.GC6586@tuxdriver.com>	<20070730225205.GA17252@deine-taler.de>	<200707310105.55863.mb@bu3sch.de>	<46AE7361.90406@warmcat.com> <20070731231249.121d55d4@logostar.upir.cz>
+In-Reply-To: <20070731231249.121d55d4@logostar.upir.cz>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Hi Holger,
->
-> That line sneaked somehow with the patch - it was part of the
-> original driver.
+Somebody in the thread at some point said:
+> On Tue, 31 Jul 2007 00:25:21 +0100, Andy Green wrote:
+>> The "soft" one is a faked up repeating of incoming (and outgoing!
+>> twice!) packets
+> 
+> You mean you see each outgoing packet twice on soft monitor interface? That
+> would be a bug.
 
-I think John W. Linville already committed my patch that removes 
-the line completely. It's in 
-git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git, 
-branch libertas-fixes
+It's not all outgoing packets, just the injected ones.  I described it here
 
+http://marc.info/?l=linux-wireless&m=118544939901024&w=2
 
-> process_rxed_802_11_packet is never called at the moment
+>> It really would be much better if the device
+>> is kicked to hardware promisc if ANY virtual interface is in Monitor
+>> mode, therefore the results are consistent regardless of the number of
+>> virtual interfaces that happen to be around.
+> 
+> Of course. If the hardware supports that.
 
-I also noticed yesterday that process_rxed_802_11_packet() is 
-never called, because no-one sets adapter->linkmode. So I posted 
-a patch to libertas-dev and linux-wireless-dev to remove this 
-variable as well as the code around it. I also found out lot's 
-of other variables that weren't really used, and posted 
-remove-XYZ patches. Please comment on which you want to stay 
-because you/we plan to build an actual interface around them.
+Is there any hardware that can't do hardware promisc and let the stack
+decide what to throw away?  I would imagine the problem of having too
+many kinds of packet should be okay to solve by examining MAC addresses
+and so on.
 
-
-> but we might want to support monitor mode properly (there is a
-> firmware comming out with it soon), and setting ETH_P_80211_RAW
-> seems required for that. 
-
-When is "is coming out soon" ???  If it's really soon, we 
-shouldn't maybe commit my remove adapter->linkmode patch :-)
+-Andy
