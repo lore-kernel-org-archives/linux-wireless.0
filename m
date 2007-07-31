@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from MGW3.Sony.CO.JP ([137.153.0.15]:48570 "EHLO mgw3.sony.co.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751971AbXGJHNc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2007 03:13:32 -0400
-Date: Tue, 10 Jul 2007 16:13:21 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-To: jt@hpl.hp.com
-Subject: Re: alignment issue between 32bit userland and 64bit kernel
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Jouni Malinen <jkmaline@cc.hut.fi>,
-	linux-wireless@vger.kernel.org,
-	Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>,
-	geoffrey.levand@am.sony.com
-In-Reply-To: <20070709164632.GA32350@bougret.hpl.hp.com>
-References: <1183982603.18986.6.camel@johannes.berg> <20070709164632.GA32350@bougret.hpl.hp.com>
-Message-Id: <20070710160718.D02F.MOKUNO@sm.sony.co.jp>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Received: from styx.suse.cz ([82.119.242.94]:45945 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752467AbXGaVMw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2007 17:12:52 -0400
+Date: Tue, 31 Jul 2007 23:12:49 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Andy Green <andy@warmcat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] zd1211rw-mac80211: debug output for mac80211 ops
+Message-ID: <20070731231249.121d55d4@logostar.upir.cz>
+In-Reply-To: <46AE7361.90406@warmcat.com>
+References: <20070730023128.99E927B409F@zog.reactivated.net>
+	<20070730145125.GC6586@tuxdriver.com>
+	<20070730225205.GA17252@deine-taler.de>
+	<200707310105.55863.mb@bu3sch.de>
+	<46AE7361.90406@warmcat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	Hi
+On Tue, 31 Jul 2007 00:25:21 +0100, Andy Green wrote:
+> The "soft" one is a faked up repeating of incoming (and outgoing!
+> twice!) packets
 
-On Mon, 9 Jul 2007 09:46:32 -0700
-Jean Tourrilhes <jt@hpl.hp.com> wrote:
+You mean you see each outgoing packet twice on soft monitor interface? That
+would be a bug.
 
-> > Jean wants to fix them in userspace. In fact, if you upgrade your
-> > userspace to the really latest version it *should* work. wpa_supplicant
-> > still doesn't work, nor do most distribution's versions of network
-> > manager because the fixes haven't been backported.
-> 
-> 	You need :
-> 		Wireless Tools 29-pre20 or later
+> It really would be much better if the device
+> is kicked to hardware promisc if ANY virtual interface is in Monitor
+> mode, therefore the results are consistent regardless of the number of
+> virtual interfaces that happen to be around.
 
-I downloaded Wireless Tools 29 pre22 and its iwlist worked fine on my
-PS3.
+Of course. If the hardware supports that.
 
-Thank you.
+ Jiri
 
---
-Masakazu MOKUNO
-
+-- 
+Jiri Benc
+SUSE Labs
