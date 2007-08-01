@@ -1,55 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34510 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:36387 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751348AbXHJVXQ (ORCPT
+	with ESMTP id S1761708AbXHAKDy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2007 17:23:16 -0400
-Subject: [PATCH] mac80211: remove ieee80211_msg_wep_frame_unknown_key
+	Wed, 1 Aug 2007 06:03:54 -0400
+Subject: Re: Rate control over multiple devices
 From: Johannes Berg <johannes@sipsolutions.net>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 10 Aug 2007 23:25:51 +0200
-Message-Id: <1186781151.17351.6.camel@johannes.berg>
+Cc: Andy Green <andy@warmcat.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <20070801004543.GD4719@tuxdriver.com>
+References: <46AFB779.4040003@warmcat.com>
+	 <20070801004543.GD4719@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0Wt0wM7r823HpudrxVRp"
+Date: Wed, 01 Aug 2007 11:32:44 +0200
+Message-Id: <1185960764.14279.2.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Neither hostapd nor wpa_supplicant really use it.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+--=-0Wt0wM7r823HpudrxVRp
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- wireless-dev.orig/net/mac80211/ieee80211.c	2007-08-10 23:22:00.163840246 +0200
-+++ wireless-dev/net/mac80211/ieee80211.c	2007-08-10 23:22:29.713840246 +0200
-@@ -3808,12 +3808,11 @@ ieee80211_rx_h_check(struct ieee80211_tx
- 				       MAC_ARG(hdr->addr1),
- 				       MAC_ARG(hdr->addr2),
- 				       MAC_ARG(hdr->addr3));
--				if (!rx->local->apdev)
--					return TXRX_DROP;
--				ieee80211_rx_mgmt(
--					rx->local, rx->skb, rx->u.rx.status,
--					ieee80211_msg_wep_frame_unknown_key);
--				return TXRX_QUEUED;
-+				/*
-+				 * TODO: notify userspace about this
-+				 * via cfg/nl80211
-+				 */
-+				return TXRX_DROP;
- 			}
- 		}
- 	}
---- wireless-dev.orig/net/mac80211/ieee80211_common.h	2007-08-10 23:22:33.873840246 +0200
-+++ wireless-dev/net/mac80211/ieee80211_common.h	2007-08-10 23:22:46.783840246 +0200
-@@ -48,7 +48,7 @@ enum ieee80211_msg_type {
- 	ieee80211_msg_tx_callback_ack = 1,
- 	ieee80211_msg_tx_callback_fail = 2,
- 	/* hole at 3, was ieee80211_msg_passive_scan but unused */
--	ieee80211_msg_wep_frame_unknown_key = 4,
-+	/* hole at 4, was ieee80211_msg_wep_frame_unknown_key but now unused */
- 	ieee80211_msg_michael_mic_failure = 5,
- 	/* hole at 6, was monitor but never sent to userspace */
- 	ieee80211_msg_sta_not_assoc = 7,
+On Tue, 2007-07-31 at 20:45 -0400, John W. Linville wrote:
 
+> > Just seemed a little strange, maybe it is perfectly fine.
+> >=20
+> > iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
+> > PM: Adding info for No Bus:phy0
+> > PM: Adding info for No Bus:wmaster0
+> > wmaster0: Selected rate control algorithm 'iwl-3945-rs'
+> >=20
+> > ...but then we add an rt73usb...
+> >=20
+> > PM: Adding info for No Bus:phy1
+> > PM: Adding info for No Bus:wmaster1
+> > wmaster1: Selected rate control algorithm 'iwl-3945-rs' <----
+> > PM: Adding info for No Bus:wlan1
+> > usbcore: registered new interface driver rt73usb
+
+Weird. But I guess that's because iwl-3945-rs is loaded and available so
+it's chosen first or something.
+
+> This looks like the reverse of a dust-up we had a couple of months ago:
+>=20
+> 	http://marc.info/?l=3Dlinux-wireless&m=3D117875332512693&w=3D2
+>=20
+> It is possible to change the rate control algorithm now via debugfs.
+> In the past someone proposed letting drivers request their default
+> rate scaling algorithm, and I think that makes a lot of sense.
+> Any thoughts?
+
+Apply the patch already? IIRC James made a pretty good one around that
+time to let the driver choose a default name as part of the hw structure
+it registers and it can be NULL for the default.
+
+Of course, in a perfect world we'd have a 'default' rate control setting
+somewhere and apply that for drivers that have rate_control=3D=3DNULL, whil=
+e
+default would default to 'simple' to avoid the issue above.
+
+johannes
+
+--=-0Wt0wM7r823HpudrxVRp
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGsFM8/ETPhpq3jKURAkp6AKC4s7o8s17cd7gElpRXLeMGKVHTwACgoVDH
+42a8ARjcI5mKEf2EhzgMI78=
+=c4Xl
+-----END PGP SIGNATURE-----
+
+--=-0Wt0wM7r823HpudrxVRp--
 
