@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([131.228.20.172]:22024 "EHLO
-	mgw-ext13.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752163AbXH2OdA (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:13678 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752861AbXHAHVD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2007 10:33:00 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: mac80211 AP mode powersaving problems?
-References: <1186990509.27916.38.camel@johannes.berg>
-	<87lkccf30m.fsf@tikku.osso.net>
-	<1187270479.5141.44.camel@johannes.berg> <87643f4kkh.fsf@nokia.com>
-	<1187275344.23489.6.camel@johannes.berg> <871wdphsus.fsf@nokia.com>
-	<1188290911.7837.65.camel@johannes.berg> <87absbsz5f.fsf@nokia.com>
-	<1188299159.7837.96.camel@johannes.berg> <87sl63prsg.fsf@nokia.com>
-	<1188317935.7837.106.camel@johannes.berg> <878x7v8rcm.fsf@nokia.com>
-	<1188326593.7837.118.camel@johannes.berg> <87fy2355yy.fsf@nokia.com>
-	<1188376637.7837.149.camel@johannes.berg>
-From: Kalle Valo <Kalle.Valo@nokia.com>
-Date: Wed, 29 Aug 2007 17:35:06 +0300
-In-Reply-To: <1188376637.7837.149.camel@johannes.berg> (ext Johannes Berg's message of "Wed\, 29 Aug 2007 10\:37\:17 +0200")
-Message-ID: <873ay2v279.fsf@nokia.com>
+	Wed, 1 Aug 2007 03:21:03 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: libertas: blows chunks on failed firmware load
+Date: Wed, 1 Aug 2007 09:00:00 +0200
+Cc: Andy Green <andy@warmcat.com>
+References: <46AF913F.9010006@warmcat.com> <1185935705.17940.40.camel@xo-13-A4-25.localdomain> <46B01F86.5050406@warmcat.com>
+In-Reply-To: <46B01F86.5050406@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708010900.00514.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Wednesday 01 August 2007 07:52, Andy Green wrote:
+> One of the other cheapo cards I randomly got was a Libertas
+> 88W8335 PC Card, I assume I am SOL on that as well.
 
-> On Wed, 2007-08-29 at 07:18 +0300, Kalle Valo wrote:
->
->> > Can you disable QoS and see if the same weird frames show up again? b43
->> > doesn't really support QoS yet but I don't think that should be causing
->> > such frame corruption.
->> 
->> From b43 or N800? 
->
-> N800, I guess, if possible. But since you didn't do this yet you might
-> want to try the stuff I sent you first.
+No, you aren't.
 
-I tested your multicast stuff and it worked. Do you still want me to
-test with QoS disabled in N800?
+I published the driver into the libertas tree what handles PC 
+Cards. At least mine (a compact flash based 8388), the one from 
+Marcin and another guy. The driver is still extremely new, maybe 
+a little bit fragile, but having people test this beast would be 
+wonderful.
 
->> > Interestingly, your N800 seems to pick up the frames correctly since it
->> > did reply to the ping packets... 
->> 
->> Yes, N800 managed to receive some ping packets from the laptop
->
-> Yes, the odd thing however is that it replies to these mangled packets.
-> I would guess that's a bug in the QoS implementation on the N800.
+The error handling for firmware is a little bit better :-)   
+Because the firmware format for the CF card is different to the 
+one for the USB dongles, I can (actually must!) download the 
+firmware before calling libertas-code. So you shouldn't get a 
+kernel crash if you forgot to install the firmware 
+in /lib/firmware.
 
-Good point. I'll look into that.
-
--- 
-Kalle Valo
+However, *IF* you need the firmware, you can use the firmware 
+cutter that is currently only in SVN, see 
+http://projects.linuxtogo.org/scm/?group_id=24
