@@ -1,62 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60838 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761477AbXHCOuQ (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:47280 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753056AbXHAWHy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 10:50:16 -0400
-Subject: Re: [ipw3945-devel] chaning mode only when interface down?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Derek Atkins <warlord@MIT.EDU>
-Cc: dragoran <drago01@gmail.com>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	Wed, 1 Aug 2007 18:07:54 -0400
+Date: Wed, 1 Aug 2007 15:06:11 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org,
-	network manager <networkmanager-list@gnome.org>,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <sjmy7gswuvw.fsf@pgpdev.ihtfp.org>
-References: <C07C4589BE74A34981C3C3525EE1F801024CF2CB@hasmsx412.ger.corp.intel.com>
-	 <1186058047.24230.38.camel@johannes.berg> <46B1D28F.1080006@gmail.com>
-	 <1186059192.24230.44.camel@johannes.berg>
-	 <sjmy7gswuvw.fsf@pgpdev.ihtfp.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Y20ukOWLqkkXSqlUeHqU"
-Date: Fri, 03 Aug 2007 16:50:22 +0200
-Message-Id: <1186152622.4647.48.camel@johannes.berg>
+	Aurelien Jarno <aurelien@aurel32.net>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH] ssb-chipcommon: Add function to get processor clock
+Message-Id: <20070801150611.44c9c47a.akpm@linux-foundation.org>
+In-Reply-To: <200708010011.56753.mb@bu3sch.de>
+References: <200708010011.56753.mb@bu3sch.de>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 1 Aug 2007 00:11:56 +0200
+Michael Buesch <mb@bu3sch.de> wrote:
 
---=-Y20ukOWLqkkXSqlUeHqU
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> From: Aurelien Jarno <aurelien@aurel32.net>
+> 
+> The patch below (against 2.6.23-rc1-mm1) adds a new function to get the 
+> processor clock. It originally comes from the OpenWrt patches.
+> 
+> Cc: Felix Fietkau <nbd@openwrt.org>
+> Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> 
+> --- a/drivers/ssb/driver_chipcommon.c	2007-07-14 21:05:44.000000000 +0200
+> +++ b/drivers/ssb/driver_chipcommon.c	2007-07-14 21:22:04.000000000 +0200
+> @@ -264,6 +264,30 @@
+>  	ssb_chipco_set_clockmode(cc, SSB_CLKMODE_FAST);
+>  }
+>  
+> +/* Get the processor clock */
+> +void ssb_chipco_get_clockcpu(struct ssb_chipcommon *cc,
+> +                             u32 *plltype, u32 *n, u32 *m)
+> +{
+> +	*n = chipco_read32(cc, SSB_CHIPCO_CLOCK_N);
+> +	*plltype = (cc->capabilities & SSB_CHIPCO_CAP_PLLT);
+> +	switch (*plltype) {
+> +		case SSB_PLLTYPE_2:
+> +		case SSB_PLLTYPE_4:
+> +		case SSB_PLLTYPE_6:
+> +		case SSB_PLLTYPE_7:
+> +			*m = chipco_read32(cc, SSB_CHIPCO_CLOCK_MIPS);
+> +			break;
+> +		case SSB_PLLTYPE_3:
+> +			/* 5350 uses m2 to control mips */
+> +			*m = chipco_read32(cc, SSB_CHIPCO_CLOCK_M2);
+> +			break;
+> +		default:
+> +			*m = chipco_read32(cc, SSB_CHIPCO_CLOCK_SB);
+> +			break;
+> +	}
+> +}
 
-On Fri, 2007-08-03 at 10:33 -0400, Derek Atkins wrote:
+Please indent the body of switch statements one tabstop less than this.
 
-> Um, what state?  Sure you lose your layer 2 state, but why force a
-> layer 3 lossage when you don't necessarily have to do so?  For
-> example, I've seen plenty of networks that have both 802.11(a) and
-> 802.11(b/g) networks that share absolutely everything at layer 3.
-> Indeed, at home I have an a/b/g AP where layer 3 is always shared.  At
-> the IETF last week it was also shared.  I could easily roam from the
-> 802.11(a) to the 802.11(b/g) network if my wireless driver would let
-> me; the IP Address I've got is certainly valid on both networks.  Why
-> should the driver try to be smarter than I am?
+> +/* Get the bus clock */
+>  void ssb_chipco_get_clockcontrol(struct ssb_chipcommon *cc,
+>  				 u32 *plltype, u32 *n, u32 *m)
+>  {
+> --- a/include/linux/ssb/ssb_driver_chipcommon.h	2007-07-14 21:05:44.000000000 +0200
+> +++ b/include/linux/ssb/ssb_driver_chipcommon.h	2007-07-14 21:17:28.000000000 +0200
+> @@ -364,6 +364,8 @@
+>  extern void ssb_chipco_suspend(struct ssb_chipcommon *cc, pm_message_t state);
+>  extern void ssb_chipco_resume(struct ssb_chipcommon *cc);
+>  
+> +extern void ssb_chipco_get_clockcpu(struct ssb_chipcommon *cc,
+> +                                    u32 *plltype, u32 *n, u32 *m);
 
-Can you please re-read the original mail?
-
-Thanks,
-johannes
-
---=-Y20ukOWLqkkXSqlUeHqU
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGs0Cu/ETPhpq3jKURApf6AJ4hRl5gOK5MOngj6nLRapQelASASACbBLI6
-zQZaLsYbFyDFZCTsaCyO1mw=
-=5Gwx
------END PGP SIGNATURE-----
-
---=-Y20ukOWLqkkXSqlUeHqU--
-
+But it has no callers?
