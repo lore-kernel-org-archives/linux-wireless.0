@@ -1,32 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:1446 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751884AbXHBG0y (ORCPT
+Received: from fmailhost03.isp.att.net ([204.127.217.103]:37812 "EHLO
+	fmailhost03.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751194AbXHAWx2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 02:26:54 -0400
-Received: from lin01.mn-solutions.de (pD95F872D.dip0.t-ipconnect.de [217.95.135.45])
-	by s131.mittwaldmedien.de (Postfix) with ESMTP id 625E65E5AD3
-	for <linux-wireless@vger.kernel.org>; Thu,  2 Aug 2007 08:26:53 +0200 (CEST)
-Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id 89C0C1E002B
-	for <linux-wireless@vger.kernel.org>; Thu,  2 Aug 2007 08:26:48 +0200 (CEST)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: libertas: blows chunks on failed firmware load
-Date: Thu, 2 Aug 2007 08:26:47 +0200
-References: <46AF913F.9010006@warmcat.com> <200708011131.22390.hs4233@mail.mn-solutions.de> <46B109C8.9090704@warmcat.com>
-In-Reply-To: <46B109C8.9090704@warmcat.com>
+	Wed, 1 Aug 2007 18:53:28 -0400
+Message-ID: <46B10DA5.7090502@bellsouth.net>
+Date: Wed, 01 Aug 2007 17:48:05 -0500
+From: rob m <rmckibbe@bellsouth.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200708020826.47399.hs4233@mail.mn-solutions.de>
+CC: linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de
+Subject: Re: [RFC V2] bcm43xx-mac80211: Provide information to allow transmission  rate decreases
+References: <46b0f367.p35iGhSXwM+v4QLG%Larry.Finger@lwfinger.net>
+In-Reply-To: <46b0f367.p35iGhSXwM+v4QLG%Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 02 August 2007 00:31, Andy Green wrote:
-> Well it seems the libertas_cs driver supports PCMCIA only? 
+#1, 2, 3, and 4:
 
-Right, like libertas_cs is --- like e.g. orinoco_cs --- just for 
-for PCMCIA based designs, like CF CARD. If you have a PCI based 
-device, you'll need to write your own libertas_pci driver
+THANK YOU!!!  for all you are doing to make this card work. 
+
+I wish I could help somehow.  I've been lurking on this mailing list for 
+a while now, and most of the emails are way beyond my talents.
+
+I am, at this very moment, using a broadcom "4306" as reported by 
+iwconfig, on Debian Etch, installed in early July 2007.  My question:
+
+        What software do you use to determine the quality of the 
+connection to the AP? 
+
+gkrellm says that I have a -253 "level".  I know enough about radio 
+transmission to know that -253 db is useless, but this interface is 
+working fairly well as long as I'm relatively close (up one floor, over 
+one room).  I can't connect at the opposite end of my home, <100', which 
+is where I want to hang out.
+
+Thanks,
+
+Rob
+
+Larry Finger wrote:
+> Michael,
+>
+>
+>   
 
