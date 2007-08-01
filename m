@@ -1,39 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail8.sea5.speakeasy.net ([69.17.117.10]:50212 "EHLO
-	mail8.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750711AbXHREId (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.188]:48269 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756093AbXHARBY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Aug 2007 00:08:33 -0400
-Date: Fri, 17 Aug 2007 21:07:25 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 07/20] mac80211: remove unused ioctls (2)
-Message-ID: <20070818040725.GG1415@jm.kir.nu>
-References: <20070815144920.135826000@sipsolutions.net> <20070815145044.386019000@sipsolutions.net>
+	Wed, 1 Aug 2007 13:01:24 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so217465fkz
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Aug 2007 10:01:22 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Please pull 'upstream' branch of rt2x00
+Date: Wed, 1 Aug 2007 19:05:29 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200707312036.49060.IvDoorn@gmail.com>
+In-Reply-To: <200707312036.49060.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070815145044.386019000@sipsolutions.net>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200708011905.29675.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 15, 2007 at 04:49:27PM +0200, Johannes Berg wrote:
-> The ioctls
-> 
->  * PRISM2_PARAM_STA_ANTENNA_SEL
->  * PRISM2_PARAM_TX_POWER_REDUCTION
->  * PRISM2_PARAM_KEY_INDEX
->  * PRISM2_PARAM_DEFAULT_WEP_ONLY
->  * PRISM2_PARAM_ALLOW_BROADCAST_ALWAYS
-> 
-> are not used by hostapd or wpa_supplicant.
+Hi John,
 
-Well, maybe so. But again, some are useful for testing (e.g., allow
-broadcast always for continuous TX tests). Default WEP only is useful
-for optimizing hwaccel in some multi-SSID cases, but it seemed to have
-already been broken before..
+Thanks for the quick pull on rt2x00.git,
+but I have a short question:
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+> Ivo van Doorn (25):
+>       rt2x00: Remove rt73usb_get_tsf
+>       rt2x00: Put rf register value detection in function
+>       rt2x00: Don't toggle tuner bit for non-RF2523 chips
+>       rt2x00: Add reset_tuner handler
+>       rt2x00: rt2500usb needs to reset BBP 24, 25 and 61
+>       rt2x00: Cleanup RF register reading/writing
+>       rt2x00: Add RF register contents to Debugfs
+>       rt2x00: Fix invalid RF array reading
+>       rt2x00: Increase RF_SIZE
+>       rt2x00: rt2x00pci should use rf_size
+>       rt2x00: Correctly handle RF 0 writing
+>       rt2x00: Rename init_hw -> probe_hw
+>       rt2x00: Move interface init/deinit into rt2x00dev
+>       rt2x00: Fix interface opening/closing on suspend/resume
+>       rt2x00: Lindent
+>       rt2x00: Call all configure handlers during resume
+>       rt2x00: Big rt2x00 cleanup
+>       rt2x00: Add Multicast/Broadcast filtering
+>       rt2x00: Include <linux/delay.h>
+>       rt2x00: Periodically read statistics
+>       rt2x00: Don't check for preamble in RXdone
+>       rt2x00: Configure type during add_interface
+>       rt2x00: Add Signal reporting
+
+The above have been merged nicely,
+but where did the following patch go to?
+
+>       rt2x00: rt2x00 2.0.5
+
+Was this intentionally dropped,
+or was there a weird git problem somewhere?
+
+Thanks,
+
+Ivo
