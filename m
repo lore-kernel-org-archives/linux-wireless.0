@@ -1,41 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:53530 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760844AbXHWOgt (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:43232 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759900AbXHAL4l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2007 10:36:49 -0400
-Subject: Re: [PATCH 1/2] mac80211:  Remove ieee80211_privacy_mismatch
-From: Volker Braun <vbraun@physics.upenn.edu>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <1187878586.4314.22.camel@johannes.berg>
-References: <1187406018.30247.17.camel@thinkpad>
-	 <20070818034146.GC1415@jm.kir.nu>  <1187787855.4314.6.camel@johannes.berg>
-	 <1187805455.9845.104.camel@carrot.hep.upenn.edu>
-	 <1187878586.4314.22.camel@johannes.berg>
-Content-Type: text/plain
-Date: Thu, 23 Aug 2007 10:36:48 -0400
-Message-Id: <1187879808.27317.13.camel@carrot.hep.upenn.edu>
-Mime-Version: 1.0
+	Wed, 1 Aug 2007 07:56:41 -0400
+Message-ID: <46B074F4.9060902@lwfinger.net>
+Date: Wed, 01 Aug 2007 06:56:36 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: David Woodhouse <dwmw2@infradead.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH final] softmac: Fix deadlock of wx_set_essid with assoc  work
+References: <200707312041.04987.mb@bu3sch.de> <1185965301.3083.145.camel@pmac.infradead.org> <200708011251.17320.mb@bu3sch.de>
+In-Reply-To: <200708011251.17320.mb@bu3sch.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-08-23 at 16:16 +0200, Johannes Berg wrote:
-> However, I'm trying to figure out why wpa_supplicant
-> doesn't tell mac80211 it's doing key management in your case.
+Michael Buesch wrote:
+> On Wednesday 01 August 2007, David Woodhouse wrote:
+>> On Tue, 2007-07-31 at 20:41 +0200, Michael Buesch wrote:
+>>> David, please stresstest this.
+>> It seemed to survive being left with NetworkManager overnight, which the
+>> 2.6.22.1 kernel was consistently failing to cope with beforehand.
+> 
+> So John, please apply this.
 
-Yes, I also looked quickly into wpa_supplicant but so far haven't found
-out why the key management is not set. I'll try to debug that further...
+ACK.
 
-> > ------------------ snip --------------------------------
-> > Mixed Cells Mode
-> thanks for that, where did you get that from?
-
-I found it at Dell's support page:
-
-http://www.support.dell.com/support/edocs/network/P94583/en/security.htm
-
-
-
+Larry
