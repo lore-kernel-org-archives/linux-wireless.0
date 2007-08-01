@@ -1,68 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:48804 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760718AbXHHXo5 (ORCPT
+Received: from mi1.bluebottle.com ([206.188.25.14]:44456 "EHLO
+	mi1.bluebottle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751918AbXHAGk6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 19:44:57 -0400
-Date: Wed, 8 Aug 2007 16:43:27 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Aurelien Jarno <aurelien@aurel32.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	John Linville <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ssb: Make extif driver compilation depend on extif  config
-Message-Id: <20070808164327.45803a64.akpm@linux-foundation.org>
-In-Reply-To: <46BA4E24.3060400@aurel32.net>
-References: <200708071744.40287.mb@bu3sch.de>
-	<20070808154813.abf55801.akpm@linux-foundation.org>
-	<46BA4E24.3060400@aurel32.net>
-Mime-Version: 1.0
+	Wed, 1 Aug 2007 02:40:58 -0400
+Received: from localhost.localdomain (localhost.localdomain [127.0.0.1])
+	by mi1.bluebottle.com (8.13.1/8.13.1) with ESMTP id l716evvW009219
+	for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 23:40:57 -0700
+Message-Id: <200708010640.l716evvW009219@mi1.bluebottle.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Axj <axjslack@bluebottle.com>, Pavel Roskin <proski@gnu.org>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 31 Jul 2007 23:40:57 -0700
+From: Axj <axjslack@bluebottle.com>
+Subject: Re: Request for help...
+References: <1185289332.46a61474a444c@mail.bluebottle.com>  <1185355931.3131.13.camel@debian.sh.intel.com>  <200707261511.l6QFB2jK015121@mi0.bluebottle.com>  <1185466954.14557.5.camel@dv>  <200707270634.l6R6Yh2j003295@mi1.bluebottle.com>  <1185522251.3079.66.camel@debian.sh.intel.com>  <200707270848.l6R8mqkh004526@mi1.bluebottle.com>  <1185526612.3079.75.camel@debian.sh.intel.com>  <200707270910.l6R9AssD005317@mi0.bluebottle.com> <1185757127.3079.101.camel@debian.sh.intel.com>
+In-Reply-To: <1185757127.3079.101.camel@debian.sh.intel.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 09 Aug 2007 01:13:40 +0200
-Aurelien Jarno <aurelien@aurel32.net> wrote:
+Quoting Zhu Yi <yi.zhu@intel.com>:
 
-> Andrew Morton a __crit :
-> > mips allmodconfig:
-> > 
-> > drivers/ssb/driver_pcicore.c: In function `ssb_fixup_pcibridge':
-> > drivers/ssb/driver_pcicore.c:98: error: implicit declaration of function `pcibios_enable_device'
-> > drivers/ssb/driver_pcicore.c: At top level:
-> > drivers/ssb/driver_pcicore.c:278: warning: integer overflow in expression
-> > drivers/ssb/driver_pcicore.c:278: warning: integer overflow in expression
+> On Fri, 2007-07-27 at 02:10 -0700, Axj wrote:
+> > iwconfig wlan0 essid "lago" mode Ad-Hoc 
+> > and then give me error.... 
 > 
-> Those looks like real errors.
-
-They seems to have gone away after I droped the duplicated patches.
-
-> > drivers/ssb/driver_extif.c:125: error: redefinition of 'extif_read32'
-> > drivers/ssb/driver_extif.c:21: error: previous definition of 'extif_read32' was here
-> > drivers/ssb/driver_extif.c:130: error: redefinition of 'extif_write32'
-> > drivers/ssb/driver_extif.c:26: error: previous definition of 'extif_write32' was here
-> > drivers/ssb/driver_extif.c:136: error: redefinition of 'serial_exists'
-> > drivers/ssb/driver_extif.c:32: error: previous definition of 'serial_exists' was here
-> > drivers/ssb/driver_extif.c:150: error: redefinition of 'ssb_extif_serial_init'
-> > drivers/ssb/driver_extif.c:46: error: previous definition of 'ssb_extif_serial_init' was here
-> > drivers/ssb/driver_extif.c:181: error: redefinition of 'ssb_extif_timing_init'
-> > drivers/ssb/driver_extif.c:77: error: previous definition of 'ssb_extif_timing_init' was here
-> > drivers/ssb/driver_extif.c:203: error: redefinition of 'ssb_extif_get_clockcontrol'
-> > drivers/ssb/driver_extif.c:99: error: previous definition of 'ssb_extif_get_clockcontrol' was here
-> > 
+> What's the error?
 > 
-> All the versions of driver_extif.c I have seen have at maximum around
-> 100 lines. It looks like a patch applied twice, which make the same code
-> appearing twice in the .c file.
+> -yi
+> 
 
-Yeah.  I dropped a bunch of things which seemed to help.
+When I try the command 
+ iwconfig wlan0 essid "lago" mode Ad-Hoc 
 
-I'm hopelessly confused by the ssb stuff.  I'm not sure if I have all the
-right stuff, all the latest stuff and I don't understand why some is going
-into git-wireless and some is not.
+show me 
 
-I'd prefer to be dumbly pulling a tree which Michael controls rather than
-trying to master it all in -mm, if possible.  A git tree or a quilt tree in
-some open dir somewhere would suit?
+Error for wireless request Set Mode (8B06) :
+    SET failed on device wlan0 ; Device or resource busy.
 
+But if I connect with for example 
+
+iwconfig wlan0 essid "dip-open" #my university wireless connection it works, and very well.
+
+For this I have no explanation
+
+----------------------------------------------------------------------
+Free pop3 email with a spam filter.
+http://www.bluebottle.com/tag/5
 
