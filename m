@@ -1,29 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:38480
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755881AbXHAKvW (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.177]:21739 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756825AbXHABU6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2007 06:51:22 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH final] softmac: Fix deadlock of wx_set_essid with assoc work
-Date: Wed, 1 Aug 2007 12:51:17 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200707312041.04987.mb@bu3sch.de> <1185965301.3083.145.camel@pmac.infradead.org>
-In-Reply-To: <1185965301.3083.145.camel@pmac.infradead.org>
+	Tue, 31 Jul 2007 21:20:58 -0400
+Received: by py-out-1112.google.com with SMTP id d32so95480pye
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 18:20:57 -0700 (PDT)
+Message-ID: <43e72e890707311820h59eebf6raf5b77058e2d23dc@mail.gmail.com>
+Date: Tue, 31 Jul 2007 21:20:57 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Edward Ando" <edwardando@fastwebnet.it>
+Subject: Re: Removing the prism54 module
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <20070728224008.782a3be6@ed.anywhere>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200708011251.17320.mb@bu3sch.de>
+Content-Type: text/plain; charset=UTF-8
+References: <20070728224008.782a3be6@ed.anywhere>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 01 August 2007, David Woodhouse wrote:
-> On Tue, 2007-07-31 at 20:41 +0200, Michael Buesch wrote:
-> > David, please stresstest this.
-> 
-> It seemed to survive being left with NetworkManager overnight, which the
-> 2.6.22.1 kernel was consistently failing to cope with beforehand.
+On 7/28/07, Edward Ando <edwardando@fastwebnet.it> wrote:
+> Dear All,
+> I am trying to set up software suspend 2 (TuxOnIce now it seems). This
+> has decided it wants to remove the prism54 module before starting the
+> hibernate process.
+>
+> When it tries to do this, (or when I manually do: "ifconfig eth1
+> down"), I start getting these messages on all terminals, ad infinitum:
+>
+> kernel: unregister_netdevice: waiting for eth1 to become free. Usage
+> count = 4
 
-So John, please apply this.
+Hmm... can you show lsmod output please?
+
+  Luis
