@@ -1,34 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from galaxy.systems.pipex.net ([62.241.162.31]:59915 "EHLO
-	galaxy.systems.pipex.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756131AbXH2VXF (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:35736 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754208AbXHAD2I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2007 17:23:05 -0400
-From: Adam Baker <linux@baker-net.org.uk>
-To: rt2400-devel@lists.sourceforge.net
-Subject: Re: [Rt2400-devel] [PATCH] Fix breakage on WEP for cards that rely on =?utf-8?q?software=09decoding?=
-Date: Wed, 29 Aug 2007 22:23:02 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <200708282345.53016.adam@baker-net.org.uk> <1188389382.19891.12.camel@johannes.berg>
-In-Reply-To: <1188389382.19891.12.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200708292223.02321.linux@baker-net.org.uk>
+	Tue, 31 Jul 2007 23:28:08 -0400
+Date: Tue, 31 Jul 2007 20:26:48 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Gary Zambrano <zambrano@broadcom.com>,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH FINAL] Merge the Sonics Silicon Backplane subsystem
+Message-Id: <20070731202648.e1a8c45f.akpm@linux-foundation.org>
+In-Reply-To: <200707291324.58691.mb@bu3sch.de>
+References: <200707291324.58691.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 29 August 2007 13:09, Johannes Berg wrote:
+On Sun, 29 Jul 2007 13:24:54 +0200 Michael Buesch <mb@bu3sch.de> wrote:
 
->
-> I think this patch ought to fix it as well:
-> http://johannes.sipsolutions.net/patches/kernel/all/2007-08-29-12:08/023-re
->work-hardware-crypto-flags.patch
->
-> but it should probably have a few more changes.
->
+> The Sonics Silicon Backplane is a mini-bus used on
+> various Broadcom chips and embedded devices.
 
-I can confirm that with that patch WEP is working for me. Another user on the 
-rt2x00 forum is also reporting success with it.
+Sigh.
+
+s390:
+
+drivers/ssb/main.c: In function 'ssb_ssb_read16':
+drivers/ssb/main.c:489: error: implicit declaration of function 'readw'
+drivers/ssb/main.c: In function 'ssb_ssb_read32':
+drivers/ssb/main.c:497: error: implicit declaration of function 'readl'
+drivers/ssb/main.c: In function 'ssb_ssb_write16':
+drivers/ssb/main.c:505: error: implicit declaration of function 'writew'
+drivers/ssb/main.c: In function 'ssb_ssb_write32':
+drivers/ssb/main.c:513: error: implicit declaration of function 'writel'        
+
+we shouldn't be compiling SSB on s390, because:
+
+config SSB
+        tristate "Sonics Silicon Backplane support"
+        depends on EXPERIMENTAL && HAS_IOMEM
+
+and
+
+akpm2:/usr/src/25> grep IOMEM .config 
+CONFIG_NO_IOMEM=y
+akpm2:/usr/src/25> 
+
+but
+
+akpm2:/usr/src/25> grep SSB .config 
+CONFIG_DCSSBLK=m
+CONFIG_SSB=m
+CONFIG_SSB_SILENT=y
+
+well, how did that come about?
+
+It _has_ to be `select'.  It's _always_ `select'.
+
+yup, it's `select':
+
+Selected by: B44 && NETDEVICES && NET_ETHERNET || BCM43XX_MAC80211 && NETDEVICES && !S390 && MAC80211 && WLAN_80211 && EXPERIMENTAL
+
+
+Look.  Kconfig's `select' Just.  Does.  Not.  Work.  If you find yourself
+contemplating using it, please, don sackcloth, take a cold shower and
+several analgesics, then have another go, OK?
+
+ho hum.
+
