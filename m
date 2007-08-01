@@ -1,67 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:41002 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750734AbXH2SVL (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:50553 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754653AbXHAQ5G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2007 14:21:11 -0400
-Date: Wed, 29 Aug 2007 19:28:58 +0100
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: "Jon Smirl" <jonsmirl@gmail.com>
-Cc: "Valdis.Kletnieks@vt.edu" <Valdis.Kletnieks@vt.edu>,
-	"Christoph Hellwig" <hch@infradead.org>,
-	"Jiri Slaby" <jirislaby@gmail.com>, linville@tuxdriver.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 4/5] Net: ath5k, license is GPLv2
-Message-ID: <20070829192858.75aa6542@the-village.bc.nu>
-In-Reply-To: <9e4733910708291101i3783a8b1l38f0d5cfb0c2863d@mail.gmail.com>
-References: <2713029743177393055@pripojeni.net>
-	<7515194658758617@pripojeni.net>
-	<20070828171155.GC29343@infradead.org>
-	<3208.1188408545@turing-police.cc.vt.edu>
-	<9e4733910708291101i3783a8b1l38f0d5cfb0c2863d@mail.gmail.com>
+	Wed, 1 Aug 2007 12:57:06 -0400
+Date: Wed, 1 Aug 2007 09:55:23 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Gary Zambrano <zambrano@broadcom.com>,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH FINAL] Merge the Sonics Silicon Backplane subsystem
+Message-Id: <20070801095523.458e00c1.akpm@linux-foundation.org>
+In-Reply-To: <200708011133.37214.mb@bu3sch.de>
+References: <200707291324.58691.mb@bu3sch.de>
+	<20070731202648.e1a8c45f.akpm@linux-foundation.org>
+	<200708011133.37214.mb@bu3sch.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > to remove the BSD/other license.   Jiri can release *his* code as GPLv2
-> > only, but I suspect the files as a whole really should be dual BSD/GPLv2,
-> > due to the numerous other stakeholders in those files.
+On Wed, 1 Aug 2007 11:33:36 +0200 Michael Buesch <mb@bu3sch.de> wrote:
+
+> > 
+> > yup, it's `select':
+> > 
+> > Selected by: B44 && NETDEVICES && NET_ETHERNET || BCM43XX_MAC80211 && NETDEVICES && !S390 && MAC80211 && WLAN_80211 && EXPERIMENTAL
+> > 
+> > 
+> > Look.  Kconfig's `select' Just.  Does.  Not.  Work.  If you find yourself
+> > contemplating using it, please, don sackcloth, take a cold shower and
+> > several analgesics, then have another go, OK?
+> > 
+> > ho hum.
 > 
-> This mess has been occurring in the kernel for years. The DRM graphics
-> drivers are used in both BSD and Linux. It is quite easy to contribute
-> something to this code via LKML and think you are doing it under the
-> GPL. Doesn't a patch against the kernel have to be GPL? When these
-> patches get pulled back into BSD and distributed with it, did BSD get
-> infected with the GPL? AFAIK this has never been legally sorted out.
+> Ah, yeah. Crap select not caring about dependencies...
+> The problem is that people will kill me, if they don't find
+> bcm43xx in the kconfig anymore, as they have to enable ssb
+> before that. Ya know the flame with Uwe Bugla going crazy
+> about that? :D
+> Same goes for b44. It was always there in kconfig without
+> additional deps, but now (when we merge the b44 port) we would
+> need ssb selected before we see b44.
 
-I'm not aware anyone has felt it needed "sorting out". Its not exactly
-complicated.
+We just don't have a good solution to this.
 
-	BSD non advertising is compatible with GPL
+`select' is bust and it's unobvious how it can _not_ be bust.  If you're
+selecting something whose dependencies aren't met, what can we do?  Maybe
+select the thing it depends on as well?  What if it depends on (A||B)? 
+Which one do we force on?  Screwed.
 
-The GPL says:
-	"when you distribute the same sections as part of a whole which
-	is a work based on the Program, the distribution of the whole
-	must be on the terms of this License, "
+And hiding options from the users until theyve gone elsewher and selected
+something else is most user-hostile.
 
-The BSD license doesn't conflict with that
+At least we have menuconfig's "/" command, so if you know the option's name
+you can work out why it isn't appearing.
 
-The GPL (and copyright law also say)
+I think what we should do is to continue to offer the unselectable option
+in manuconfig and friends, only "greyed out" in some fashion.  So the user
+can still navigate to it and select the "what do you depend on" button.
 
-"If identifiable sections of that work are not derived from the Program,
-and can be reasonably considered independent and separate works in
-themselves, then this License, and its terms, do not apply to ..."
+> Maybe default SSB to M?
 
-All a bit irrelevant anyway as Ath5K code (not the .h file) say:
-
- * Alternatively, this software may be distributed under the terms of the
- * GNU General Public License ("GPL") version 2 as published by the Free
- * Software Foundation.
-
-So Jiri is choosing to distribute it under the GPL, and with his changes
-GPL only.
-
-So whats the problem ?
-
+People would complain about that too.  I don't know what to do, sorry. 
+Muddle through :(
