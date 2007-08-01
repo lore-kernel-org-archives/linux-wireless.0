@@ -1,104 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43615 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756753AbXH3PUR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 11:20:17 -0400
-Subject: [PATCH] mac80211: remove TKIP mixing for hw accel again
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Michael Buesch <mb@bu3sch.de>
+Received: from mx1.redhat.com ([66.187.233.31]:51138 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753432AbXHAChO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2007 22:37:14 -0400
+Subject: Re: libertas: blows chunks on failed firmware load
+From: Dan Williams <dcbw@redhat.com>
+To: Andy Green <andy@warmcat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <46AF913F.9010006@warmcat.com>
+References: <46AF913F.9010006@warmcat.com>
 Content-Type: text/plain
-Date: Thu, 30 Aug 2007 17:21:23 +0200
-Message-Id: <1188487283.3978.42.camel@johannes.berg>
+Date: Tue, 31 Jul 2007 22:34:38 -0400
+Message-Id: <1185935678.17940.38.camel@xo-13-A4-25.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The TKIP mixing code was added for the benefit of Intel's ipw3945
-chipset but that code ended up not using it. We have previously
-identified many problems with this code and it crystallized that
-library functions for mixing are likely to handle this in much
-more generality and might allow b43 to take advantage of hardware
-acceleration for TKIP.
+On Tue, 2007-07-31 at 20:45 +0100, Andy Green wrote:
+> Hi folks -
+> 
+> I realize I am slightly pushing my luck, but I added this el-cheapo
+> 88W8338 -based "Compoint EVWL-GI-700S" USB stick's USB ID "0x1286,
+> 0x1fab" to libertas/usb8xxx.c and chanced my arm.
 
-Due to these reasons, remove the TKIP mixing for hardware
-accelerated crypto operations.
+If it's 8338, it's certainly not gonna work with this driver.  Did you
+add the USB ID yourself?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Acked-by: Michael Buesch <mb@bu3sch.de>
+Dan
 
----
- include/net/mac80211.h |    9 ---------
- net/mac80211/wpa.c     |   17 -----------------
- 2 files changed, 26 deletions(-)
-
---- wireless-dev.orig/include/net/mac80211.h	2007-08-30 14:35:36.472051253 +0200
-+++ wireless-dev/include/net/mac80211.h	2007-08-30 14:35:37.232051253 +0200
-@@ -189,7 +189,6 @@ struct ieee80211_tx_control {
- #define IEEE80211_TXCTL_REQUEUE		(1<<7)
- #define IEEE80211_TXCTL_FIRST_FRAGMENT	(1<<8) /* this is a first fragment of
- 						* the frame */
--#define IEEE80211_TXCTL_TKIP_NEW_PHASE1_KEY (1<<9)
- #define IEEE80211_TXCTL_LONG_RETRY_LIMIT (1<<10) /* this frame should be send
- 						  * using the through
- 						  * set_retry_limit configured
-@@ -205,7 +204,6 @@ struct ieee80211_tx_control {
- 	u8 antenna_sel_tx; 	/* 0 = default/diversity, 1 = Ant0, 2 = Ant1 */
- 	u8 icv_len;		/* length of the ICV/MIC field in octets */
- 	u8 iv_len;		/* length of the IV field in octets */
--	u8 tkip_key[16];	/* generated phase2/phase1 key for hw TKIP */
- 	u8 queue;		/* hardware queue to use for this frame;
- 				 * 0 = highest, hw->queues-1 = lowest */
- 	u8 sw_retry_attempt;	/* number of times hw has tried to
-@@ -565,13 +563,6 @@ struct ieee80211_hw {
- 	 * specified in the device's EEPROM */
- #define IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED (1<<11)
- 
--	/* Do TKIP phase1 key mixing in stack to support cards only do
--	 * phase2 key mixing when doing hwcrypto */
--#define IEEE80211_HW_TKIP_REQ_PHASE1_KEY (1<<13)
--	/* Do TKIP phase1 and phase2 key mixing in stack and send the generated
--	 * per-packet RC4 key with each TX frame when doing hwcrypto */
--#define IEEE80211_HW_TKIP_REQ_PHASE2_KEY (1<<14)
--
- 	/* The device capable of supporting 11n */
- #define IEEE80211_HW_SUPPORT_HT_MODE (1<<15)
- 
---- wireless-dev.orig/net/mac80211/wpa.c	2007-08-30 14:35:36.482051253 +0200
-+++ wireless-dev/net/mac80211/wpa.c	2007-08-30 14:35:37.232051253 +0200
-@@ -297,7 +297,6 @@ skip_iv_inc:
- 	    && !tx->wpa_test
- #endif /* CONFIG_HOSTAPD_WPA_TESTING */
- 		) {
--		u32 flags = tx->local->hw.flags;
- 		hdr = (struct ieee80211_hdr *)skb->data;
- 
- 		/* hwaccel - with preallocated room for IV */
-@@ -307,22 +306,6 @@ skip_iv_inc:
- 					    0x7f),
- 				      (u8) key->u.tkip.iv16);
- 
--		if (flags & IEEE80211_HW_TKIP_REQ_PHASE2_KEY)
--			ieee80211_tkip_gen_rc4key(key, hdr->addr2,
--						  tx->u.tx.control->tkip_key);
--		else if (flags & IEEE80211_HW_TKIP_REQ_PHASE1_KEY) {
--			if (key->u.tkip.iv16 == 0 ||
--			    !key->u.tkip.tx_initialized) {
--				ieee80211_tkip_gen_phase1key(key, hdr->addr2,
--					    (u16 *)tx->u.tx.control->tkip_key);
--				key->u.tkip.tx_initialized = 1;
--				tx->u.tx.control->flags |=
--					    IEEE80211_TXCTL_TKIP_NEW_PHASE1_KEY;
--			} else
--				tx->u.tx.control->flags &=
--					    ~IEEE80211_TXCTL_TKIP_NEW_PHASE1_KEY;
--		}
--
- 		tx->u.tx.control->key_idx = tx->key->conf.hw_key_idx;
- 		return 0;
- 	}
-
+> 
+> I was rewarded with
+> 
+> PM: Adding info for No Bus:msh0
+> PM: Adding info for No Bus:5-4
+> PM: Removing info for No Bus:5-4
+> libertas: request_firmware() failed with 0xfffffffe
+> libertas: firmware usb8388.bin not found
+> libertas: firmware init failed
+> PM: Removing info for No Bus:msh0
+> kfree_debugcheck: out of range ptr 6b6b6b6bh.
+> ------------[ cut here ]------------
+> kernel BUG at mm/slab.c:2825!
+> invalid opcode: 0000 [#1]
+> SMP
+> Modules linked in: usb8xxx libertas ieee80211 ieee80211_crypt iwl3945
+> rt73usb rt2x00usb rt2x00lib rfkill input_polldev crc_itu_t mac80211
+> cfg80211 vfat fat vmnet(P) vmmon(P) snd_rtctimer usb_storage autofs4 aes
+> nf_conntrack_netbios_ns ipt_REJECT nf_conntrack_ipv4 xt_state
+> nf_conntrack nfnetlink xt_tcpudp iptable_filter ip_tables x_tables
+> cpufreq_ondemand acpi_cpufreq video output sbs button dock battery ac lp
+> loop snd_hda_intel snd_seq_dummy arc4 snd_seq_oss ecb blkcipher
+> snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss sr_mod
+> snd_mixer_oss snd_pcm rtc_cmos cdrom snd_timer snd b44 ssb parport
+> iTCO_wdt iTCO_vendor_support soundcore serio_raw ata_piix rtc_core
+> rtc_lib ata_generic snd_page_alloc mii sg ahci libata sd_mod scsi_mod
+> ext3 jbd mbcache ehci_hcd ohci_hcd uhci_hcd
+> CPU:    1
+> EIP:    0060:[<c047b122>]    Tainted: P        VLI
+> EFLAGS: 00010086   (2.6.23-rc1 #1)
+> EIP is at kfree_debugcheck+0x29/0x2f
+> eax: 00000031   ebx: f48c2600   ecx: c0422e7d   edx: c8ea9060
+> esi: ea1d1338   edi: 6b6b6b6b   ebp: e3a0ed6c   esp: e3a0ed64
+> ds: 007b   es: 007b   fs: 00d8  gs: 0033  ss: 0068
+> Process modprobe (pid: 6761, ti=e3a0e000 task=c8ea9060 task.ti=e3a0e000)
+> Stack: c06c7131 6b6b6b6b e3a0ed84 c047ba96 00000202 f48c2600 ea1d1338
+> ea1d12e0
+>        e3a0edc0 f8dd4b28 f8dd00d8 ffffff10 c0447a00 f8dd6ec8 e3a0edb0
+> c0579b2d
+>        f8dd6ec8 ee3602c0 d9a926b8 ed449e38 ee3602c0 f8dd6d40 f8dd6d90
+> e3a0edd0
+> Call Trace:
+>  [<c0405f35>] show_trace_log_lvl+0x1a/0x2f
+>  [<c0405fe5>] show_stack_log_lvl+0x9b/0xa3
+>  [<c04061a5>] show_registers+0x1b8/0x289
+>  [<c0406389>] die+0x113/0x246
+>  [<c0622f98>] do_trap+0x8a/0xa3
+>  [<c040677b>] do_invalid_op+0x88/0x92
+>  [<c0622d6a>] error_code+0x72/0x78
+>  [<c047ba96>] kfree+0x25/0xdb
+>  [<f8dd4b28>] if_usb_probe+0x412/0x427 [usb8xxx]
+>  [<c057a77f>] usb_probe_interface+0x6a/0xa0
+>  [<c0562bb8>] driver_probe_device+0xe9/0x16a
+>  [<c0562d62>] __driver_attach+0x76/0xaf
+>  [<c05620bb>] bus_for_each_dev+0x3a/0x5f
+>  [<c0562a03>] driver_attach+0x19/0x1b
+>  [<c05623d9>] bus_add_driver+0x79/0x181
+>  [<c0562f65>] driver_register+0x67/0x6c
+>  [<c057a2b9>] usb_register_driver+0x7e/0xe5
+>  [<f8dd3a4f>] if_usb_init_module+0x76/0xcc [usb8xxx]
+>  [<c044eb0d>] sys_init_module+0x13b5/0x1503
+>  [<c0404ed2>] sysenter_past_esp+0x5f/0x99
+>  =======================
+> Code: 5d c3 55 89 c2 8d 80 00 00 00 40 89 e5 c1 e8 0c 83 ec 08 3b 05 04
+> 33 a8 c0 72 14 89 54 24 04 c7 04 24 31 71 6c c0 e8 a8 ff fa ff <0f> 0b
+> eb fe c9 c3 55 89 e5 57 31 ff 56 89 c6 53 89 d3 83 ec 10
+> EIP: [<c047b122>] kfree_debugcheck+0x29/0x2f SS:ESP 0068:e3a0ed64
+> 
+> Basically the error path for "can't load firmware" seems to double free?
+> 
+> It seems that by the time we arrive at kfree(priv->adapter); at
+> if_usb.c:234 in if_usb_probe(), priv has already been freed or crapped
+> on to point to somewhere that has been freed.
+> 
+> I had a quick look around, it looked to me like there might be a mistake
+>  in main.c:867, in int libertas_activate_card(wlan_private *priv, char
+> *fw_name) where it might jump to the wrong level of error unpicking
+> code, but it didn't fix it.
+> 
+> 	if (priv->hw_register_dev(priv) < 0) {
+> 		lbs_pr_err("failed to register WLAN device\n");
+> 		goto err_registerdev;
+> 	}
+> 
+> 	/* init FW and HW */
+> 	if (fw_name && libertas_init_fw(priv, fw_name)) {
+> 		lbs_pr_err("firmware init failed\n");
+> //		goto err_registerdev; // !!!  <--- seems wrong
+> 		goto err_init_fw;
+> 	}
+> 
+> 	if (register_netdev(dev)) {
+> 		lbs_pr_err("cannot register ethX device\n");
+> 		goto err_init_fw;
+> 	}
+> 
+> 	lbs_pr_info("%s: Marvell WLAN 802.11 adapter\n", dev->name);
+> 
+> 	libertas_debugfs_init_one(priv, dev);
+> 
+> 	ret = 0;
+> 	goto done;
+> 
+> err_init_fw:
+> 	priv->hw_unregister_dev(priv);
+> err_registerdev:
+> 	destroy_workqueue(priv->assoc_thread);
+> 	/* Stop the thread servicing the interrupts */
+> 
+> 
+> Even when I provided it with firmware, it dropped dead the same way just
+> with this additional info before:
+> 
+> PM: Adding info for No Bus:msh0
+> PM: Adding info for No Bus:5-4
+> PM: Removing info for No Bus:5-4
+> usb8xxx: failed to load fw, resetting device!
+> usb 5-4: reset high speed USB device using ehci_hcd and address 3
+> usb 5-4: device descriptor read/64, error -71
+> usb 5-4: device descriptor read/64, error -71
+> usb 5-4: reset high speed USB device using ehci_hcd and address 3
+> usb 5-4: device descriptor read/64, error -71
+> usb 5-4: device descriptor read/64, error -71
+> usb 5-4: reset high speed USB device using ehci_hcd and address 3
+> usb 5-4: device descriptor read/8, error 0
+> usb 5-4: device descriptor read/8, error 0
+> usb 5-4: reset high speed USB device using ehci_hcd and address 3
+> usb 5-4: device descriptor read/8, error 0
+> usb 5-4: device descriptor read/8, error 0
+> usb 5-4: USB disconnect, address 3
+> libertas: firmware init failed
+> PM: Removing info for No Bus:msh0
+> kfree_debugcheck: out of range ptr 6b6b6b6bh.
+> ------------[ cut here ]------------
+> kernel BUG at mm/slab.c:2825!
+> ...
+> 
+> Of course this can be due to the luck-pushing, but it seemed it might
+> also be a genuine problem with the error handling.
+> 
+> -Andy
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
