@@ -1,92 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hall.aurel32.net ([88.191.38.19]:43221 "EHLO hall.aurel32.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759740AbXHMJHN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 05:07:13 -0400
-Date: Mon, 13 Aug 2007 11:07:10 +0200
-From: Aurelien Jarno <aurelien@aurel32.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH][SSB] Fix a warning in PCI core driver
-Message-ID: <20070813090710.GA25439@hall.aurel32.net>
-References: <20070812235058.GA4966@hall.aurel32.net> <200708130202.28030.mb@bu3sch.de> <20070813001849.GC4966@hall.aurel32.net> <200708130421.31904.mb@bu3sch.de>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:56494
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755451AbXHAJdo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Aug 2007 05:33:44 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH FINAL] Merge the Sonics Silicon Backplane subsystem
+Date: Wed, 1 Aug 2007 11:33:36 +0200
+Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Gary Zambrano <zambrano@broadcom.com>,
+	John Linville <linville@tuxdriver.com>
+References: <200707291324.58691.mb@bu3sch.de> <20070731202648.e1a8c45f.akpm@linux-foundation.org>
+In-Reply-To: <20070731202648.e1a8c45f.akpm@linux-foundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <200708130421.31904.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708011133.37214.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 13, 2007 at 04:21:31AM +0200, Michael Buesch wrote:
-> > Yes it is overflow warning. The compiler thinks that those constant are
-> > signed values and thus generate an overflow.
-> > 
-> > Another fix would be to postfix those constants by U.
-> > 
+On Wednesday 01 August 2007, Andrew Morton wrote:
+> On Sun, 29 Jul 2007 13:24:54 +0200 Michael Buesch <mb@bu3sch.de> wrote:
 > 
-> Can you please do this?
+> > The Sonics Silicon Backplane is a mini-bus used on
+> > various Broadcom chips and embedded devices.
 > 
+> Sigh.
+> 
+> s390:
+> 
+> drivers/ssb/main.c: In function 'ssb_ssb_read16':
+> drivers/ssb/main.c:489: error: implicit declaration of function 'readw'
+> drivers/ssb/main.c: In function 'ssb_ssb_read32':
+> drivers/ssb/main.c:497: error: implicit declaration of function 'readl'
+> drivers/ssb/main.c: In function 'ssb_ssb_write16':
+> drivers/ssb/main.c:505: error: implicit declaration of function 'writew'
+> drivers/ssb/main.c: In function 'ssb_ssb_write32':
+> drivers/ssb/main.c:513: error: implicit declaration of function 'writel'        
+> 
+> we shouldn't be compiling SSB on s390, because:
+> 
+> config SSB
+>         tristate "Sonics Silicon Backplane support"
+>         depends on EXPERIMENTAL && HAS_IOMEM
+> 
+> and
+> 
+> akpm2:/usr/src/25> grep IOMEM .config 
+> CONFIG_NO_IOMEM=y
+> akpm2:/usr/src/25> 
+> 
+> but
+> 
+> akpm2:/usr/src/25> grep SSB .config 
+> CONFIG_DCSSBLK=m
+> CONFIG_SSB=m
+> CONFIG_SSB_SILENT=y
+> 
+> well, how did that come about?
+> 
+> It _has_ to be `select'.  It's _always_ `select'.
+> 
+> yup, it's `select':
+> 
+> Selected by: B44 && NETDEVICES && NET_ETHERNET || BCM43XX_MAC80211 && NETDEVICES && !S390 && MAC80211 && WLAN_80211 && EXPERIMENTAL
+> 
+> 
+> Look.  Kconfig's `select' Just.  Does.  Not.  Work.  If you find yourself
+> contemplating using it, please, don sackcloth, take a cold shower and
+> several analgesics, then have another go, OK?
+> 
+> ho hum.
 
-Please find a patch below. I did the same for the whole address map for
-consistency.
-
-Aurelien
-
-
-
-The patch below fixes a warning spotted a few days ago by Andrew Morton
-while releasing 2.6.23-rc2-mm1.
-
-Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
-
---- a/include/linux/ssb/ssb_regs.h
-+++ a/include/linux/ssb/ssb_regs.h
-@@ -5,24 +5,24 @@
- /* SiliconBackplane Address Map.
-  * All regions may not exist on all chips.
-  */
--#define SSB_SDRAM_BASE		0x00000000	/* Physical SDRAM */
--#define SSB_PCI_MEM		0x08000000	/* Host Mode sb2pcitranslation0 (64 MB) */
--#define SSB_PCI_CFG		0x0c000000	/* Host Mode sb2pcitranslation1 (64 MB) */
--#define	SSB_SDRAM_SWAPPED	0x10000000	/* Byteswapped Physical SDRAM */
--#define SSB_ENUM_BASE    	0x18000000	/* Enumeration space base */
--#define	SSB_ENUM_LIMIT		0x18010000	/* Enumeration space limit */
--
--#define	SSB_FLASH2		0x1c000000	/* Flash Region 2 (region 1 shadowed here) */
--#define	SSB_FLASH2_SZ		0x02000000	/* Size of Flash Region 2 */
--
--#define	SSB_EXTIF_BASE		0x1f000000	/* External Interface region base address */
--#define	SSB_FLASH1		0x1fc00000	/* Flash Region 1 */
--#define	SSB_FLASH1_SZ		0x00400000	/* Size of Flash Region 1 */
--
--#define SSB_PCI_DMA		0x40000000	/* Client Mode sb2pcitranslation2 (1 GB) */
--#define SSB_PCI_DMA_SZ		0x40000000	/* Client Mode sb2pcitranslation2 size in bytes */
--#define SSB_PCIE_DMA_L32	0x00000000	/* PCIE Client Mode sb2pcitranslation2 (2 ZettaBytes), low 32 bits */
--#define SSB_PCIE_DMA_H32	0x80000000	/* PCIE Client Mode sb2pcitranslation2 (2 ZettaBytes), high 32 bits */
-+#define SSB_SDRAM_BASE		0x00000000U	/* Physical SDRAM */
-+#define SSB_PCI_MEM		0x08000000U	/* Host Mode sb2pcitranslation0 (64 MB) */
-+#define SSB_PCI_CFG		0x0c000000U	/* Host Mode sb2pcitranslation1 (64 MB) */
-+#define	SSB_SDRAM_SWAPPED	0x10000000U	/* Byteswapped Physical SDRAM */
-+#define SSB_ENUM_BASE    	0x18000000U	/* Enumeration space base */
-+#define	SSB_ENUM_LIMIT		0x18010000U	/* Enumeration space limit */
-+
-+#define	SSB_FLASH2		0x1c000000U	/* Flash Region 2 (region 1 shadowed here) */
-+#define	SSB_FLASH2_SZ		0x02000000U	/* Size of Flash Region 2 */
-+
-+#define	SSB_EXTIF_BASE		0x1f000000U	/* External Interface region base address */
-+#define	SSB_FLASH1		0x1fc00000U	/* Flash Region 1 */
-+#define	SSB_FLASH1_SZ		0x00400000U	/* Size of Flash Region 1 */
-+
-+#define SSB_PCI_DMA		0x40000000U	/* Client Mode sb2pcitranslation2 (1 GB) */
-+#define SSB_PCI_DMA_SZ		0x40000000U	/* Client Mode sb2pcitranslation2 size in bytes */
-+#define SSB_PCIE_DMA_L32	0x00000000U	/* PCIE Client Mode sb2pcitranslation2 (2 ZettaBytes), low 32 bits */
-+#define SSB_PCIE_DMA_H32	0x80000000U	/* PCIE Client Mode sb2pcitranslation2 (2 ZettaBytes), high 32 bits */
- #define	SSB_EUART		(SSB_EXTIF_BASE + 0x00800000)
- #define	SSB_LED			(SSB_EXTIF_BASE + 0x00900000)
- 
-
--- 
-  .''`.  Aurelien Jarno	            | GPG: 1024D/F1BCDB73
- : :' :  Debian developer           | Electrical Engineer
- `. `'   aurel32@debian.org         | aurelien@aurel32.net
-   `-    people.debian.org/~aurel32 | www.aurel32.net
+Ah, yeah. Crap select not caring about dependencies...
+The problem is that people will kill me, if they don't find
+bcm43xx in the kconfig anymore, as they have to enable ssb
+before that. Ya know the flame with Uwe Bugla going crazy
+about that? :D
+Same goes for b44. It was always there in kconfig without
+additional deps, but now (when we merge the b44 port) we would
+need ssb selected before we see b44.
+Maybe default SSB to M?
