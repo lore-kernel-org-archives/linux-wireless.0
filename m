@@ -1,57 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hoefnix.telenet-ops.be ([195.130.132.54]:33702 "EHLO
-	hoefnix.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753996AbXHKKU5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Aug 2007 06:20:57 -0400
-Received: from adicia.telenet-ops.be (adicia.telenet-ops.be [195.130.132.56])
-	by hoefnix.telenet-ops.be (Postfix) with ESMTP id B69B89C20B
-	for <linux-wireless@vger.kernel.org>; Sat, 11 Aug 2007 12:20:56 +0200 (CEST)
-Message-ID: <46BD8D7E.3050003@telenet.be>
-Date: Sat, 11 Aug 2007 12:20:46 +0200
-From: ian <ischram@telenet.be>
-MIME-Version: 1.0
-To: Christopher Bills <cpbills@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: iwlwifi losing AP...
-References: <65a3c8300708102331t42ce4da5kf2e3fb4a105f2f80@mail.gmail.com>
-In-Reply-To: <65a3c8300708102331t42ce4da5kf2e3fb4a105f2f80@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from styx.suse.cz ([82.119.242.94]:54297 "EHLO mail.suse.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1759878AbXHALqX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Aug 2007 07:46:23 -0400
+Date: Wed, 1 Aug 2007 13:46:24 +0200
+From: Jiri Benc <jbenc@suse.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Andy Green <andy@warmcat.com>, linux-wireless@vger.kernel.org
+Subject: Re: Rate control over multiple devices
+Message-ID: <20070801134624.481eb856@griffin.suse.cz>
+In-Reply-To: <1185960764.14279.2.camel@johannes.berg>
+References: <46AFB779.4040003@warmcat.com>
+	<20070801004543.GD4719@tuxdriver.com>
+	<1185960764.14279.2.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-Christopher Bills wrote:
-> i'm using iwlwifi 1.0.0-1 on a lenovo thinkpad x61, with the Intel
-> 4965AGN wireless card. I'm using kernel 2.6.22.2 with mac80211 v8.0.2
-> and from time to time i lose my connection to my Belkin (802.11b)
-
-We are probably going to need more debug information.dmesg (with debug turned on)
-when this happens?
-
-Personally I loose connection very rarely too(once every few days),
-haven't investigated further. Get a no PropeResp message, which should indicate
-that the connection was idle for two seconds, and the AP didn't respond to the probe?
-(guess upping IWL_ACTIVE_DWELL_TIME_24 might help in this situation)
-
-> router. this can often be remedied by issuing the 'iwconfig wlan0
-> essid <ssid>' command, but is rather irritating.
+On Wed, 01 Aug 2007 11:32:44 +0200, Johannes Berg wrote:
+> On Tue, 2007-07-31 at 20:45 -0400, John W. Linville wrote:
 > 
-> is this a known issue, and if so, is there some sort of work-around? i
-> tried using mac80211 v9.0.4 but my kernel will not compile with that,
-> if that is known to fix it.
+> > > Just seemed a little strange, maybe it is perfectly fine.
+> > > 
+> > > iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
+> > > PM: Adding info for No Bus:phy0
+> > > PM: Adding info for No Bus:wmaster0
+> > > wmaster0: Selected rate control algorithm 'iwl-3945-rs'
+> > > 
+> > > ...but then we add an rt73usb...
+> > > 
+> > > PM: Adding info for No Bus:phy1
+> > > PM: Adding info for No Bus:wmaster1
+> > > wmaster1: Selected rate control algorithm 'iwl-3945-rs' <----
+> > > PM: Adding info for No Bus:wlan1
+> > > usbcore: registered new interface driver rt73usb
+> 
+> Weird. But I guess that's because iwl-3945-rs is loaded and available so
+> it's chosen first or something.
 
-There is a fix or two, between the versions, this problem used to be more common,
-so I can't say it wont help. I'm using wireless-dev's mac80211.
+Exactly. This is one of things that should be solved in the patch
+mentioned below.
 
+> > This looks like the reverse of a dust-up we had a couple of months ago:
+> > 
+> > 	http://marc.info/?l=linux-wireless&m=117875332512693&w=2
+> > 
+> > It is possible to change the rate control algorithm now via debugfs.
+> > In the past someone proposed letting drivers request their default
+> > rate scaling algorithm, and I think that makes a lot of sense.
+> > Any thoughts?
+
+Still waiting for a patch from Intel.
+
+> Apply the patch already? IIRC James made a pretty good one around that
+> time to let the driver choose a default name as part of the hw structure
+> it registers and it can be NULL for the default.
 > 
-> thanks in advance,
-> 
-> chris
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+> Of course, in a perfect world we'd have a 'default' rate control setting
+> somewhere and apply that for drivers that have rate_control==NULL, while
+> default would default to 'simple' to avoid the issue above.
+
+I'd really like to see that in the patch. Seems to be a real issue.
+
+ Jiri
+
+-- 
+Jiri Benc
+SUSE Labs
