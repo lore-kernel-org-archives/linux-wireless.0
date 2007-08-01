@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:26222 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:49387 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757680AbXHHHyi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 03:54:38 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH] iwlwifi: fix gcc warning when CONFIG_IWLWIFI_DEBUG is not defined
-Date: Wed,  8 Aug 2007 15:51:19 +0800
-Message-Id: <11865594794161-git-send-email-yi.zhu@intel.com>
+	id S1758427AbXHALht (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Aug 2007 07:37:49 -0400
+Subject: Re: libertas: blows chunks on failed firmware load
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org, Andy Green <andy@warmcat.com>
+In-Reply-To: <200708011315.10439.hs4233@mail.mn-solutions.de>
+References: <46AF913F.9010006@warmcat.com> <46B01F86.5050406@warmcat.com>
+	 <1185966204.29690.2.camel@xo-13-A4-25.localdomain>
+	 <200708011315.10439.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Wed, 01 Aug 2007 07:35:16 -0400
+Message-Id: <1185968116.29690.14.camel@xo-13-A4-25.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- origin/iwl-base.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+On Wed, 2007-08-01 at 13:15 +0200, Holger Schurig wrote:
+> > Yeah, I'm wondering whether we should change that...  I don't
+> > know what the policy on changing driver names is though, but
+> > given that the driver isn't extensively used yet, we may be
+> > able to.
+> 
+> I'd say
+> 
+> libertas_cs     for card-services cards (CF Cards, PCMCIA etc)
+> libertas_usb    for USB cards
+> libertas_sdio   for SDIO based cards
+> 
+> That makes the names orthogonal :-)
 
-diff --git a/origin/iwl-base.c b/origin/iwl-base.c
-index 15965fc..b8293fe 100644
---- a/drivers/net/wireless/iwl-base.c
-+++ b/drivers/net/wireless/iwl-base.c
-@@ -5107,9 +5107,12 @@ static void iwl_error_recovery(struct iwl_priv *priv)
- 
- static void iwl_irq_tasklet(struct iwl_priv *priv)
- {
--	u32 inta, inta_mask, handled = 0;
-+	u32 inta, handled = 0;
- 	u32 inta_fh;
- 	unsigned long flags;
-+#ifdef CONFIG_IWLWIFI_DEBUG
-+	u32 inta_mask;
-+#endif
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 
--- 
-1.5.2
+Right, but that doesn't solve the original issue that the driver is
+named "usb8xxx" and doesn't work with the 833x series.  Maybe we just
+ignore that.  The current driver will likely work with the libertas 86xx
+chips (8682, 8686, 8688) too, so that just leaves the 833x, 831x, and
+830x chips.  Some of those are really, really old.  Others (like 833x)
+you can still find in a lot of places.
+
+Dan
+
+
