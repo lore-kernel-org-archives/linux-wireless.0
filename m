@@ -1,76 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:43332 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753402AbXH3Nnl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 09:43:41 -0400
-Subject: Re: mac80211, iwlwifi and packet injection
-From: Dan Williams <dcbw@redhat.com>
-To: Andy Green <andy@warmcat.com>
-Cc: ian <ischram@telenet.be>,
-	Robert =?ISO-8859-1?Q?F=FChricht?=
-	<the_master_of_disaster@gmx.at>, linux-wireless@vger.kernel.org
-In-Reply-To: <46D5CE9B.8080401@warmcat.com>
-References: <20070829161655.7f68542c@doppelhertz>
-	 <46D5B8B9.8000803@telenet.be>  <46D5CE9B.8080401@warmcat.com>
-Content-Type: text/plain
-Date: Thu, 30 Aug 2007 09:37:53 -0400
-Message-Id: <1188481073.27590.11.camel@xo-3E-67-34.localdomain>
-Mime-Version: 1.0
+Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:54234 "EHLO
+	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761702AbXHAT4H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Aug 2007 15:56:07 -0400
+Date: Wed, 01 Aug 2007 14:55:42 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [RFC] bcm43xx-mac80211: Provide information to allow transmission rate decreases
+Message-ID: <46b0e53e.ouY931+cZsSSSmLK%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2007-08-29 at 20:52 +0100, Andy Green wrote:
-> Somebody in the thread at some point said:
-> 
-> > I'm believe that there are still other places where iwlwifi isn't
-> > ready to inject packages into the network though. Would need some
-> > work.
-> 
-> No, there's no general problem.  I just cooked current wireless-dev
-> everything and am running it on this Compaq nx7400 with a 3945 chip, it
-> has just sent 100,000 packetspams while pinging warmcat.com over an
-> associated connection, the injections verified on another box with a zd1211.
-> 
-> If I run NetworkManager though, it deassociates me after ~60 injections.
->  With NM turned off it is fine.
-> 
-> BTW NetworkManager-0.6.5-7.fc7 also still tries to do its thing with
-> thinking the virtual interface is a second physical device, pushes it
-> into Managed, presents it as a second device on the UI, etc.  NM should
-> check and see if the network interface resolves to the same wiphy down
-> /sys and not do those things to virtual interfaces not in Managed already.
+Michael,
 
-No, NM shouldn't be touching /sys at all.  That's HAL's job.  If there's
-a device out there that's an 802.11 device, NM will attempt to control
-it.  I don't really see why that's wrong.  What's more wrong is
-representing the same underlying device with separate _wireless_
-devices.  Normally (atheros, airo) drivers that have "special"
-interfaces set other bits on them so they get ignored.  This sucks
-though, the raw 802.11 stuff should go through other channels, not have
-to create a completely separate device.
+This version saves the long- and short-retry limits in the phy struct
+and only sets excessive retries when one or the other is reached.
 
-I assume what you'd like to do is have NM ignore the fact that you just
-turned on some sort of "raw" mode on the device.  Unfortunately, WEXT
-doesn't give us the flexibility to OR the modes.  Ideally
-"raw"/"monitor" would just be attributes of the device that wouldn't
-really affect it's normal operation.
+Larry
+---
 
-WRT the disconnection, please run 'iwevent' during your packet injection
-runs and see if the driver sends you an SIOCGIWAP event filled with
-zeros, meaning that the driver disconnected you.  Also please run a few
-'iwlist ethX scan' commands about 30 seconds or more apart during that
-run, and see what the 'iwevent' says.  My suspicion is that doing scans
-during the injection while associated makes the card hiccup, causing NM
-to notice the disconnection event and kill the connection (rightly so).
+In bcm43xx-mac80211, the mechanism for decreasing the transmit rate cannot
+be triggered. This may be shown by walking away from the AP with a laptop.
+At some distance, communications will be lost and never recovered because
+the rate decreasing mechanism of rc80211_simple needs to see excessive_retries
+set in the ieee80211_tx_status struct. With this patch, the transmit rate
+will decrease until communications restart.
 
-Dan
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-> One thing though... I am associated on a WPA network when I run these
-> tests... is that the case for Robert I wonder?
-> 
-> -Andy
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
++++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
+@@ -1284,6 +1284,7 @@ void bcm43xx_dma_handle_txstatus(struct 
+ 	struct bcm43xx_dmaring *ring;
+ 	struct bcm43xx_dmadesc_generic *desc;
+ 	struct bcm43xx_dmadesc_meta *meta;
++	struct bcm43xx_phy *phy = &dev->phy;
+ 	int slot;
+ 
+ 	ring = parse_cookie(dev, status->cookie, &slot);
+@@ -1311,6 +1312,10 @@ void bcm43xx_dma_handle_txstatus(struct 
+ 			 */
+ 			if (status->acked)
+ 				meta->txstat.flags |= IEEE80211_TX_STATUS_ACK;
++			else
++				if ((status->frame_count >= phy->lrlimit) ||
++				    (status->frame_count >= phy->srlimit))
++					meta->txstat.excessive_retries = 1;
+ 			meta->txstat.retry_count = status->frame_count - 1;
+ 			ieee80211_tx_status_irqsafe(dev->wl->hw, meta->skb, &(meta->txstat));
+ 			/* skb is freed by ieee80211_tx_status_irqsafe() */
+Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx.h
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx.h
++++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx.h
+@@ -562,6 +562,8 @@ struct bcm43xx_phy {
+ 	u16 lofcal;
+ 
+ 	u16 initval;//FIXME rename?
++	u8 srlimit;
++	u8 lrlimit;
+ };
+ 
+ /* Data structures for DMA transmission, per 80211 core. */
+Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
++++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+@@ -3333,10 +3333,12 @@ static int bcm43xx_wireless_core_init(st
+ 	tmp = limit_value(modparam_short_retry, 0, 0xF);
+ 	bcm43xx_shm_write16(dev, BCM43xx_SHM_SCRATCH,
+ 			    BCM43xx_SHM_SC_SRLIMIT, tmp);
++	phy->srlimit = tmp;
+ 	tmp = limit_value(modparam_long_retry, 0, 0xF);
+ 	bcm43xx_shm_write16(dev, BCM43xx_SHM_SCRATCH,
+ 			    BCM43xx_SHM_SC_LRLIMIT, tmp);
+ 
++	phy->lrlimit = tmp;
+ 	bcm43xx_shm_write16(dev, BCM43xx_SHM_SHARED,
+ 			    BCM43xx_SHM_SH_SFFBLIM, 3);
+ 	bcm43xx_shm_write16(dev, BCM43xx_SHM_SHARED,
