@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([131.228.20.171]:32639 "EHLO
-	mgw-ext12.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755084AbXHPFqQ (ORCPT
+Received: from purr.warmcat.com ([87.106.142.209]:34549 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752699AbXHAFwJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2007 01:46:16 -0400
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>
-Subject: Re: mac80211 AP mode powersaving problems?
-References: <1186990509.27916.38.camel@johannes.berg>
-From: Kalle Valo <Kalle.Valo@nokia.com>
-Date: Thu, 16 Aug 2007 08:43:21 +0300
-In-Reply-To: <1186990509.27916.38.camel@johannes.berg> (ext Johannes Berg's message of "Mon\, 13 Aug 2007 09\:35\:09 +0200")
-Message-ID: <87lkccf30m.fsf@tikku.osso.net>
+	Wed, 1 Aug 2007 01:52:09 -0400
+Message-ID: <46B01F86.5050406@warmcat.com>
+Date: Wed, 01 Aug 2007 06:52:06 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Dan Williams <dcbw@redhat.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: libertas: blows chunks on failed firmware load
+References: <46AF913F.9010006@warmcat.com> <1185935705.17940.40.camel@xo-13-A4-25.localdomain>
+In-Reply-To: <1185935705.17940.40.camel@xo-13-A4-25.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Johannes Berg" <johannes@sipsolutions.net> writes:
+Somebody in the thread at some point said:
 
-> is it possible that something is broken with powersave mode? I frequently
-> have connection stalls up to hangs with the N770 that go away when I
-> either continually ping from the beginning of the connection or do
-> something from the N770 instead of from the laptop that is functioning
-> as the AP.
+>> I realize I am slightly pushing my luck, but I added this el-cheapo
+>> 88W8338 -based "Compoint EVWL-GI-700S" USB stick's USB ID "0x1286,
+>> 0x1fab" to libertas/usb8xxx.c and chanced my arm.
 
-[...]
+> If it's 8338, it's certainly not gonna work with this driver.  Did you
+> add the USB ID yourself?
 
-> I'll keep digging, but if somebody has any idea if/how the powersave
-> code works let me know where to look.
+Yes I do actually say in that rather obfuscated sentence above that I
+added the USB ID and accepted I was pushing my luck doing so.  But...
+the driver took the bold step of calling itself usb8xxx...
 
-One thing which came to my mind is that when Nokia 770 is in PSM it
-uses PS-Poll to fetch the frames from AP. Few devices do that, so I
-wonder if mac80211 supports that properly?
+> Irregardless of my previous comment, the bug should get fixed of course.
 
-But I'm just guessing here.
+Right, that's why I reported it like this:
 
--- 
-Kalle Valo
+>> Of course this can be due to the luck-pushing, but it seemed it might
+>> also be a genuine problem with the error handling.
+
+One of the other cheapo cards I randomly got was a Libertas 88W8335 PC
+Card, I assume I am SOL on that as well.
+
+-Andy
