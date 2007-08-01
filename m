@@ -1,80 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45697 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763356AbXHJWEc (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:12455 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755056AbXHAJbb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2007 18:04:32 -0400
-Message-Id: <20070810220634.036380000@sipsolutions.net>
-References: <20070810220544.321975000@sipsolutions.net>
-Date: Sat, 11 Aug 2007 00:05:47 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/4] mac80211: remove  ieee80211_msg_key_threshold_notification
-Mime-Version: 1.0
+	Wed, 1 Aug 2007 05:31:31 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: libertas: blows chunks on failed firmware load
+Date: Wed, 1 Aug 2007 11:31:22 +0200
+Cc: Andy Green <andy@warmcat.com>
+References: <46AF913F.9010006@warmcat.com> <200708010900.00514.hs4233@mail.mn-solutions.de> <46B04704.3000409@warmcat.com>
+In-Reply-To: <46B04704.3000409@warmcat.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708011131.22390.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hostapd doesn't care at the moment.
+> Sure I will try it tonight, where should I go to get it?  The
+> only trees with "libertas" in the name on git.kernel.org don't
+> seem to be the ones.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ieee80211.c        |   31 ++-----------------------------
- net/mac80211/ieee80211_common.h |    2 +-
- 2 files changed, 3 insertions(+), 30 deletions(-)
+My driver is for sure in the libertas-dev tree from the OLPC 
+people. The SVN project that contains the firmware cutter also 
+contains code to checkout this tree and select the proper branch 
+in this tree.
 
---- wireless-dev.orig/net/mac80211/ieee80211.c	2007-08-11 00:01:06.323840246 +0200
-+++ wireless-dev/net/mac80211/ieee80211.c	2007-08-11 00:01:44.943840246 +0200
-@@ -233,35 +233,8 @@ void ieee80211_key_threshold_notify(stru
- 				    struct ieee80211_key *key,
- 				    struct sta_info *sta)
- {
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	struct sk_buff *skb;
--	struct ieee80211_msg_key_notification *msg;
--
--	/* if no one will get it anyway, don't even allocate it.
--	 * unlikely because this is only relevant for APs
--	 * where the device must be open... */
--	if (unlikely(!local->apdev))
--		return;
--
--	skb = dev_alloc_skb(sizeof(struct ieee80211_frame_info) +
--			    sizeof(struct ieee80211_msg_key_notification));
--	if (!skb)
--		return;
--
--	skb_reserve(skb, sizeof(struct ieee80211_frame_info));
--	msg = (struct ieee80211_msg_key_notification *)
--		skb_put(skb, sizeof(struct ieee80211_msg_key_notification));
--	msg->tx_rx_count = key->tx_rx_count;
--	memcpy(msg->ifname, dev->name, IFNAMSIZ);
--	if (sta)
--		memcpy(msg->addr, sta->addr, ETH_ALEN);
--	else
--		memset(msg->addr, 0xff, ETH_ALEN);
--
--	key->tx_rx_count = 0;
--
--	ieee80211_rx_mgmt(local, skb, NULL,
--			  ieee80211_msg_key_threshold_notification);
-+	/* dummy function for when we add back support */
-+	/* TODO: add back support via cfg80211/nl80211 */
- }
- 
- static int ieee80211_mgmt_open(struct net_device *dev)
---- wireless-dev.orig/net/mac80211/ieee80211_common.h	2007-08-11 00:01:42.273840246 +0200
-+++ wireless-dev/net/mac80211/ieee80211_common.h	2007-08-11 00:01:44.943840246 +0200
-@@ -53,7 +53,7 @@ enum ieee80211_msg_type {
- 	/* hole at 6, was monitor but never sent to userspace */
- 	/* hole at 7, was ieee80211_msg_sta_not_assoc but now unused */
- 	/* 8 was ieee80211_msg_set_aid_for_sta */
--	ieee80211_msg_key_threshold_notification = 9,
-+	/* hole at 9, was ieee80211_msg_key_threshold_notification */
- 	ieee80211_msg_radar = 11,
- };
- 
 
--- 
+Basically, you do
 
+git clone --reference XXXX git://git.infradead.org/libertas-2.6
+cd libertas-2.6
+git branch libertas-cf
+git checkout libertas-cf
+git pull origin libertas
+
+
+
+However, I've "Signed-Up" this driver and asked Dan to forward it 
+into wireless-dev. He hasn't done this yet :-(
+
+If anyone want's to review the patch (in addition to what people 
+did on the libertas-dev mailing list), here's an URL:
+
+http://git.infradead.org/?p=libertas-2.6.git;a=commitdiff;h=9e25bb4c6ed9430e166b69f9f91bfccd96f0869d
