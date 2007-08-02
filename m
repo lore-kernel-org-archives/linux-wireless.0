@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:56486 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750775AbXHHFwZ (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:56569 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754244AbXHBVb7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 01:52:25 -0400
-Message-ID: <46B95A15.1080202@lwfinger.net>
-Date: Wed, 08 Aug 2007 00:52:21 -0500
+	Thu, 2 Aug 2007 17:31:59 -0400
+Message-ID: <46B24D4D.5020904@lwfinger.net>
+Date: Thu, 02 Aug 2007 16:31:57 -0500
 From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Fix handling of failure to create debugfs directory
-References: <20070808051710.3902.43211.stgit@dv.roinet.com>
-In-Reply-To: <20070808051710.3902.43211.stgit@dv.roinet.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: David Woodhouse <dwmw2@infradead.org>
+CC: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	Bcm43xx-dev@lists.berlios.de, jbenc@suse.cz,
+	flamingice@sourmilk.net
+Subject: Re: [RFC 0/10] Port of bcm43xx from softmac to mac80211
+References: <46b1fde0.b+weBDN75J0SPe2a%Larry.Finger@lwfinger.net>	 <200708021807.20649.mb@bu3sch.de>  <46B20695.2080100@lwfinger.net> <1186088678.2931.10.camel@pmac.infradead.org>
+In-Reply-To: <1186088678.2931.10.camel@pmac.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin wrote:
-> This can happen if CONFIG_BCM43XX_MAC80211_DEBUG is enabled, but
-> CONFIG_DEBUG_FS is not.
+David Woodhouse wrote:
+> On Thu, 2007-08-02 at 11:30 -0500, Larry Finger wrote:
+>> I was hoping this would be your response, but I had to make the
+>> effort. I'll wait for a couple of days to see if anyone else has any
+>> comments and send it on to Linville and hope it ends up in -mm  fairly
+>> soon. It _DOES_ work on the hardware.
 > 
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
-> ---
+> My experience is that mac80211 is broken w.r.t IPv6 -- it receives its
+> own packets. It would be suboptimal for me if the softmac version of
+> bcm43xx were to go away before that got fixed.
 > 
-With this patch installed, and the DEBUG configuration set as above, I get a kernel panic on an 
-x86_64 SMP system. The reason for the panic scrolled off the screen, but the complete stack dump 
-(hand copied) is as follows:
 
-lock_acquire+0x85/0x31
-bcm43xx_mac80211: bcm43xx_debugfs_log_txstat+0x5a/099
-_spin_lock+0x25/0x31
-bcm43xx_mac80211: bcm43xx_interrupt_tasklet+0x21/0x723
-bcm43xx_mac80211: bcm43xx_debugfs_log_txstat+0x5a/0x99
-bcm43xx_mac80211: bcm43xx_handle_txstatsus+0x12/0x72
-bcm43xx_mac80211: bcm43xx_interrupt_tasklet+0x699/0x723
-__lock_acquire+0xca2/0xcf0
-bcm43xx_mac80211: bcm43xx_interrupt_handler+0x296/0x723
-tasklet_action+0x5e/0xb2
-__do_softirq+0x5f/0xe3
-call_softirq+0x1c/0x28
-do_softirq+0x39/0x9f
-irq_exit+0x4e/0x50
-do_IRQ+0xba/0xd8
-default_idle+0x35/0x51
-cpu_idle+0xce/0xf1
-start_secondary+0x2e0/0x2f2
+This will go into -mm. I hope that it gets plenty of testing, in fact, I hope you grab the patch set 
+and make a trial of your own. If this driver is broken with IPv6, I want to know.
 
 Larry
-
 
