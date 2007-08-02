@@ -1,56 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:38097 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752800AbXHBOKQ (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:40499
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758952AbXHBT7y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 10:10:16 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so345244ugf
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Aug 2007 07:10:15 -0700 (PDT)
-To: dragoran <drago01@gmail.com>
-Subject: Re: rt2500usb stopped working (vendor request error)
-Date: Thu, 2 Aug 2007 16:14:29 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <46B1B0AE.7050205@gmail.com> <200708021315.19626.IvDoorn@gmail.com> <46B1C20B.7020601@gmail.com>
-In-Reply-To: <46B1C20B.7020601@gmail.com>
+	Thu, 2 Aug 2007 15:59:54 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [RFC V3] bcm43xx-mac80211: Provide information to allow transmission rate decreases
+Date: Thu, 2 Aug 2007 21:59:44 +0200
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+References: <46b1fa6d.d4l4DujAaAR2ORZf%Larry.Finger@lwfinger.net> <200708021805.17004.mb@bu3sch.de> <46B23422.3050207@lwfinger.net>
+In-Reply-To: <46B23422.3050207@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200708021614.29385.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="iso-8859-1"
+Message-Id: <200708022159.44422.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
- 
-> >> I was using rt2x00 with hostapd to create a AP and it worked fine in FC6 
-> >> with rt2x00-cvs-2007020803.
-> >> But after upgrading to F7 it stopped working. I am using kernel 
-> >> kernel-2.6.22.1-41.fc7 which have a recent wireless-dev copy of the 
-> >> driver but I just get this errors in dmesg:
-> >>     
-> >
-> > <... snip...>
-> >
-> >   
-> >> Any idea whats going on?
-> >> Can I provide more info to help finding a solution?
-> >> I already reported it here before:
-> >> http://rt2x00.serialmonkey.com/phpBB2/viewtopic.php?t=4042
-> >> but got no usefull replies so I decided to try here.
-> >>     
-> >
-> > Could you retry with a more recent version?
-> >
-> >   
-> what do you mean by more recent?
-> its a some days old wireless-dev snapshot (31-07-2007).
-> has something changed in the past 2 days that could fix it?
+On Thursday 02 August 2007, Larry Finger wrote:
+> Michael Buesch wrote:
+> > On Thursday 02 August 2007, Larry Finger wrote:
+> >> Michael,
+> >>
+> >> I couldn't find any long/short indication in the header, so I added a bool that
+> >> is set when the frame is sent.
+> > 
+> > This is not going to work.
+> > 
+> > But we can do this differently.
+> > You can do something like:
+> > 
+> > if (!status->acked && !tx_control->noack)
+> > 	excessive_retries = 1;
+> > 
+> > So we don't need to care about the retry count.
+> > 
+> > Anyway. I don't know why we need excessive_retries _at_ _all_.
+> > The rc algorithm does already know if the frame succeed or failed
+> > anyway.
+> 
+> Is this what you had in mind?
+> 
+> Larry
+> 
+> 
+> @@ -1311,6 +1311,9 @@ void bcm43xx_dma_handle_txstatus(struct
+>                           */
+>                          if (status->acked)
+>                                  meta->txstat.flags |= IEEE80211_TX_STATUS_ACK;
+> +                       else
+> +                               if (!(meta->txstat.flags & IEEE80211_TXCTL_NO_ACK))
+> +                                       meta->txstat.excessive_retries = 1;
+>                          meta->txstat.retry_count = status->frame_count - 1;
+>                          ieee80211_tx_status_irqsafe(dev->wl->hw, meta->skb, &(meta->txstat));
+>                          /* skb is freed by ieee80211_tx_status_irqsafe() */
 
-Well I don't know which rt2x00 version was shipped with 2.6.22.1-41-fc7,
-not do I know when it was released. Your last posted on the forum dated
-from July 13th.
-And regarding the patches, last tuesday I have released rt2x00 2.0.5 which
-was then merged with wireless-dev, but the release itself contained quite
-a lot of patches...
 
-Ivo
+Yeah, looks good. If you correctly diff that up, I'll queue it up for
+the next submission to John.
