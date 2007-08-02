@@ -1,76 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:46189 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754520AbXHQPJf (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:58629 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754742AbXHBVEn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2007 11:09:35 -0400
-Subject: Re: [PATCHv3] mac80211: dynamic wep
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Volker Braun <volker.braun@physik.hu-berlin.de>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>
-In-Reply-To: <1187360200.4417.32.camel@thinkpad>
-References: <1187151162.3253.18.camel@thinkpad>
-	 <1187308221.23489.91.camel@johannes.berg>
-	 <1187360200.4417.32.camel@thinkpad>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-V0imD5IkhJG9kWOc0Y7S"
-Date: Fri, 17 Aug 2007 17:09:05 +0200
-Message-Id: <1187363345.6090.2.camel@johannes.berg>
+	Thu, 2 Aug 2007 17:04:43 -0400
+Subject: Re: [RFC 0/10] Port of bcm43xx from softmac to mac80211
+From: David Woodhouse <dwmw2@infradead.org>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	Bcm43xx-dev@lists.berlios.de, jbenc@suse.cz,
+	flamingice@sourmilk.net
+In-Reply-To: <46B20695.2080100@lwfinger.net>
+References: <46b1fde0.b+weBDN75J0SPe2a%Larry.Finger@lwfinger.net>
+	 <200708021807.20649.mb@bu3sch.de>  <46B20695.2080100@lwfinger.net>
+Content-Type: text/plain
+Date: Thu, 02 Aug 2007 22:04:38 +0100
+Message-Id: <1186088678.2931.10.camel@pmac.infradead.org>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2007-08-02 at 11:30 -0500, Larry Finger wrote:
+> I was hoping this would be your response, but I had to make the
+> effort. I'll wait for a couple of days to see if anyone else has any
+> comments and send it on to Linville and hope it ends up in -mm  fairly
+> soon. It _DOES_ work on the hardware.
 
---=-V0imD5IkhJG9kWOc0Y7S
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+My experience is that mac80211 is broken w.r.t IPv6 -- it receives its
+own packets. It would be suboptimal for me if the softmac version of
+bcm43xx were to go away before that got fixed.
 
-On Fri, 2007-08-17 at 10:16 -0400, Volker Braun wrote:
-
-> NetworkManager can do that for you, no need to duplicate that in the
-> driver where you can't give any useful feedback to the user. Maybe you
-> want to test whether your AP _really_ discards unencrypted data?=20
-
-Can't really do that since it'll ack the packet anyway :)
-
-> It should be broadcast, you are right.
-
-Don't think it matters much, was just curious.
-
-> The key index is saved later on in key->keyidx. So I wanted to be on the
-> safe side and make sure that a legal value is stored there.
-
-Right. I was totally confused about some things and just reread the
-standard again :)
-
-> First of all, we violate the standard by looking at the keyindex in case
-> of a pairwise key.
-
-I don't think we do look at it, do we? In any case, if it was there I
-removed it with the RFC key selection patch.
-
-> Now granted, Cisco also violates it, but in a way
-> that is never visible to standards-compliant STAs. We must set the
-> keyindex to zero on outgoing pairwise key-encrypted data, but that is
-> kind of irrelevant since the AP is forced to ignore that key index on
-> receive.
-
-But then I don't understand why we try to set a non-zero key index for
-the key.
-
-johannes
-
---=-V0imD5IkhJG9kWOc0Y7S
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGxboR/ETPhpq3jKURAtCuAJ4hOzxkCJYufCohTonjW8WEqhLTHwCdFu9v
-WWkDRxjsUBz86WbCfJqHwm8=
-=0CSN
------END PGP SIGNATURE-----
-
---=-V0imD5IkhJG9kWOc0Y7S--
+-- 
+dwmw2
 
