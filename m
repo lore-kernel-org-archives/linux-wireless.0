@@ -1,77 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41354
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41420
 	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754203AbXHKAGK (ORCPT
+	with ESMTP id S1751418AbXHBNEJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2007 20:06:10 -0400
-Message-Id: <20070811000357.633337000@bu3sch.de>
-References: <20070811000354.611868000@bu3sch.de>
-Date: Sat, 11 Aug 2007 02:03:58 +0200
+	Thu, 2 Aug 2007 09:04:09 -0400
 From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: [patch 4/5] ssb: Fix EXPERIMENTAL annotations
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [RFC V2] bcm43xx-mac80211: Provide information to allow  transmission rate decreases
+Date: Thu, 2 Aug 2007 15:03:53 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <46b0f367.p35iGhSXwM+v4QLG%Larry.Finger@lwfinger.net> <200708021337.21285.mb@bu3sch.de> <1186055319.24230.32.camel@johannes.berg>
+In-Reply-To: <1186055319.24230.32.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200708021503.53982.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ssb-core is not experimental anymore.
+On Thursday 02 August 2007 13:48:39 Johannes Berg wrote:
+> On Thu, 2007-08-02 at 13:37 +0200, Michael Buesch wrote:
+> 
+> > If we just check the ack bit, rate control would throttle, just because
+> > we sent unacked frames.
+> 
+> Ah but rate control shouldn't actually care about frames that we never
+> expected an ACK for since there's no way to know for those anyway. So
+> IMHO the rate control algorithm shouldn't even be called for those
+> frames.
+> 
+> > So if we didn't get an ack, we need to check if we failed, or if...
+> > Oh, acutally. Why not simply check the noack bit in the tx_control... :)
+> 
+> Works too, but it seems mac80211 should do that.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+So, what's the point of this "excessive retries" field anyway?
+We already have an "acked" bit. So if it's not set, but we expected an
+ack, what's the point of setting excessive retries in the driver?
+the rc algo sould know _anyway_, as it has the "acked" and the
+"we wanted to have an ack" bits.
 
-Index: ssb-merge/drivers/ssb/Kconfig
-===================================================================
---- ssb-merge.orig/drivers/ssb/Kconfig	2007-08-10 12:52:50.000000000 +0200
-+++ ssb-merge/drivers/ssb/Kconfig	2007-08-10 13:35:27.000000000 +0200
-@@ -2,7 +2,7 @@ menu "Sonics Silicon Backplane"
- 
- config SSB
- 	tristate "Sonics Silicon Backplane support"
--	depends on EXPERIMENTAL && HAS_IOMEM
-+	depends on HAS_IOMEM
- 	help
- 	  Support for the Sonics Silicon Backplane bus
- 
-@@ -21,8 +21,8 @@ config SSB_PCIHOST
- 	  If unsure, say Y
- 
- config SSB_PCMCIAHOST
--	bool "Support for SSB on PCMCIA-bus host"
--	depends on SSB && PCMCIA
-+	bool "Support for SSB on PCMCIA-bus host (EXPERIMENTAL)"
-+	depends on SSB && PCMCIA && EXPERIMENTAL
- 	help
- 	  Support for a Sonics Silicon Backplane on top
- 	  of a PCMCIA device.
-@@ -65,14 +65,14 @@ config SSB_DRIVER_PCICORE
- 	  If unsure, say Y
- 
- config SSB_PCICORE_HOSTMODE
--	bool "Hostmode support for SSB PCI core"
--	depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS
-+	bool "Hostmode support for SSB PCI core (EXPERIMENTAL)"
-+	depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS && EXPERIMENTAL
- 	help
- 	  PCIcore hostmode operation (external PCI bus).
- 
- config SSB_DRIVER_MIPS
--	bool "SSB Broadcom MIPS core driver"
--	depends on SSB && MIPS
-+	bool "SSB Broadcom MIPS core driver (EXPERIMENTAL)"
-+	depends on SSB && MIPS && EXPERIMENTAL
- 	select SSB_SERIAL
- 	help
- 	  Driver for the Sonics Silicon Backplane attached
-@@ -81,8 +81,8 @@ config SSB_DRIVER_MIPS
- 	  If unsure, say N
- 
- config SSB_DRIVER_EXTIF
--	bool "SSB Broadcom EXTIF core driver"
--	depends on SSB_DRIVER_MIPS
-+	bool "SSB Broadcom EXTIF core driver (EXPERIMENTAL)"
-+	depends on SSB_DRIVER_MIPS && EXPERIMENTAL
- 	help
- 	  Driver for the Sonics Silicon Backplane attached
- 	  Broadcom EXTIF core.
+confused..
 
 -- 
-
+Greetings Michael.
