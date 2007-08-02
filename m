@@ -1,106 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45979 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763378AbXHOO5v (ORCPT
+Received: from purr.warmcat.com ([87.106.142.209]:42674 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756079AbXHBWjC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 10:57:51 -0400
-Message-Id: <20070815145047.834125000@sipsolutions.net>
-References: <20070815144920.135826000@sipsolutions.net>
-Date: Wed, 15 Aug 2007 16:49:34 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 14/20] mac80211: kill key_mgmt variable, use privacy_enabled
-Mime-Version: 1.0
+	Thu, 2 Aug 2007 18:39:02 -0400
+Received: from armbox7.home.warmcat.com (cpc1-nthc5-0-0-cust289.nrth.cable.ntl.com [82.29.29.34])
+	by mailserver.mog.warmcat.com (Postfix) with ESMTP id 971B61804B256
+	for <linux-wireless@vger.kernel.org>; Thu,  2 Aug 2007 23:39:00 +0100 (BST)
+Received: from meerkat.home.warmcat.com (unknown [192.168.0.242])
+	by armbox7.home.warmcat.com (Postfix) with ESMTP id E4E67105FD
+	for <linux-wireless@vger.kernel.org>; Thu,  2 Aug 2007 22:39:09 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by meerkat.home.warmcat.com (Postfix) with ESMTP id E25F518D1E0B
+	for <linux-wireless@vger.kernel.org>; Thu,  2 Aug 2007 23:38:57 +0100 (BST)
+From: warmcat <andy@warmcat.com>
+Subject: [PATCH] mac80211: No echo TX pkt to Monitor interfaces for injection
+To: linux-wireless@vger.kernel.org
+Date: Thu, 02 Aug 2007 23:38:57 +0100
+Message-ID: <20070802223857.19090.70108.stgit@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The key_mgmt variable for STA interfaces doesn't seem well-defined
-nor do we actually use the values other than "NONE", so change it to
-be named better.
+Block of code at the end of ieee80211_tx_status() seems to exist in order
+to echo tx packets down Monitor mode interfaces with a synthesized
+radiotap preamble describing the outcome of the transmission.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+The effect it has with injected packets is that two copies of each
+injected packet appears on the soft Monitor mode interface it was injected
+down, one with a correct radiotap header reflecting what was injected,
+and one with a bogus 0x0b length radiotap header.  This behaviour
+was seen on iwl3945 and rt73usb.
+
+This patch adds a new attribute to ieee80211_tx_control's flags field,
+IEEE80211_TXCTL_NO_SOFT_MONITOR_ECHO, which is set for injected
+packets.  The code to add a new radiotap header and echo the packet
+down monitor mode interfaces is now conditional on this attribute not
+being set.
+
+Signed-off-by: Andy Green <andy@warmcat.com>
 ---
- net/mac80211/hostapd_ioctl.h   |    8 --------
- net/mac80211/ieee80211_i.h     |    2 +-
- net/mac80211/ieee80211_ioctl.c |   24 +++++++++---------------
- net/mac80211/ieee80211_sta.c   |    2 +-
- 4 files changed, 11 insertions(+), 25 deletions(-)
 
---- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-08-15 14:09:54.916516958 +0200
-+++ wireless-dev/net/mac80211/ieee80211_i.h	2007-08-15 14:11:55.656516958 +0200
-@@ -277,7 +277,7 @@ struct ieee80211_if_sta {
- 	unsigned long request;
- 	struct sk_buff_head skb_queue;
- 
--	int key_mgmt;
-+	int privacy_enabled;
- 	unsigned long last_probe;
- 
- #define IEEE80211_AUTH_ALG_OPEN BIT(0)
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-15 14:11:49.086516958 +0200
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-15 14:11:55.666516958 +0200
-@@ -2245,22 +2245,16 @@ static int ieee80211_ioctl_siwauth(struc
- 			ret = -EINVAL;
- 		else {
- 			/*
--			 * TODO: sdata->u.sta.key_mgmt does not match with WE18
--			 * value completely; could consider modifying this to
--			 * be closer to WE18. For now, this value is not really
--			 * used for anything else than Privacy matching, so the
--			 * current code here should be more or less OK.
-+			 * What are the semantics in wext supposed to be?
-+			 *
-+			 * Don't bother figuring that out... It's wext after
-+			 * all so figuring it out will most likely require a
-+			 * moderate amount of clairvoyance.
-+			 *
-+			 * TODO: remove in favour of something well-defined
-+			 *       in cfg80211/nl80211.
- 			 */
--			if (data->value & IW_AUTH_KEY_MGMT_802_1X) {
--				sdata->u.sta.key_mgmt =
--					IEEE80211_KEY_MGMT_WPA_EAP;
--			} else if (data->value & IW_AUTH_KEY_MGMT_PSK) {
--				sdata->u.sta.key_mgmt =
--					IEEE80211_KEY_MGMT_WPA_PSK;
--			} else {
--				sdata->u.sta.key_mgmt =
--					IEEE80211_KEY_MGMT_NONE;
--			}
-+			sdata->u.sta.privacy_enabled = !!data->value;
+ include/net/mac80211.h   |    1 +
+ net/mac80211/ieee80211.c |    5 +++++
+ 2 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 17a4dd7..6bf8f7b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -192,6 +192,7 @@ struct ieee80211_tx_control {
+ #define IEEE80211_TXCTL_FIRST_FRAGMENT	(1<<8) /* this is a first fragment of
+ 						* the frame */
+ #define IEEE80211_TXCTL_TKIP_NEW_PHASE1_KEY (1<<9)
++#define IEEE80211_TXCTL_NO_SOFT_MONITOR_ECHO (1<<10)
+ 	u32 flags;			       /* tx control flags defined
+ 						* above */
+ 	u8 retry_limit;		/* 1 = only first attempt, 2 = one retry, .. */
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 7dda339..b094274 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -1309,6 +1309,7 @@ __ieee80211_tx_prepare(struct ieee80211_txrx_data *tx,
+ 								TXRX_DROP) {
+ 			return TXRX_DROP;
  		}
- 		break;
- 	case IW_AUTH_80211_AUTH_ALG:
---- wireless-dev.orig/net/mac80211/ieee80211_sta.c	2007-08-15 14:08:54.646516958 +0200
-+++ wireless-dev/net/mac80211/ieee80211_sta.c	2007-08-15 14:11:55.676516958 +0200
-@@ -1168,7 +1168,7 @@ static int ieee80211_privacy_mismatch(st
- 	struct ieee80211_sta_bss *bss;
- 	int res = 0;
++		control->flags |= IEEE80211_TXCTL_NO_SOFT_MONITOR_ECHO;
+ 		/*
+ 		 * we removed the radiotap header after this point,
+ 		 * we filled control with what we could use
+@@ -4850,6 +4851,9 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb,
  
--	if (!ifsta || ifsta->key_mgmt != IEEE80211_KEY_MGMT_NONE)
-+	if (!ifsta || !ifsta->privacy_enabled)
- 		return 0;
+ 	rthdr->data_retries = status->retry_count;
  
- 	bss = ieee80211_rx_bss_get(dev, ifsta->bssid);
---- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-08-15 14:11:52.406516958 +0200
-+++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-08-15 14:11:55.676516958 +0200
-@@ -180,14 +180,6 @@ struct prism2_hostapd_param {
- 
- #define HOSTAP_HW_FLAG_NULLFUNC_OK BIT(0)
- 
--enum {
--	IEEE80211_KEY_MGMT_NONE = 0,
--	IEEE80211_KEY_MGMT_IEEE8021X = 1,
--	IEEE80211_KEY_MGMT_WPA_PSK = 2,
--	IEEE80211_KEY_MGMT_WPA_EAP = 3,
--};
--
--
- /* Data structures used for get_hw_features ioctl */
- struct hostapd_ioctl_hw_modes_hdr {
- 	int mode;
-
--- 
++	if (status->control.flags & IEEE80211_TXCTL_NO_SOFT_MONITOR_ECHO)
++		goto out_no_echo;
++
+ 	read_lock(&local->sub_if_lock);
+ 	monitors = local->monitors;
+ 	list_for_each_entry(sdata, &local->sub_if_list, list) {
+@@ -4885,6 +4889,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	}
+  out:
+ 	read_unlock(&local->sub_if_lock);
++ out_no_echo:
+ 	if (skb)
+ 		dev_kfree_skb(skb);
+ }
 
