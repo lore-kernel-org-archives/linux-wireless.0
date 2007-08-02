@@ -1,63 +1,488 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.238]:63375 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759422AbXH3BiK (ORCPT
+Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:39929 "EHLO
+	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755118AbXHBPyN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2007 21:38:10 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so309868nze
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2007 18:38:10 -0700 (PDT)
-Message-ID: <40f31dec0708291838p5d33eb34p3b4432d9d270841a@mail.gmail.com>
-Date: Thu, 30 Aug 2007 04:38:09 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Christoph Hellwig" <hch@infradead.org>,
-	"Jiri Slaby" <jirislaby@gmail.com>, linville@tuxdriver.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 5/5] Net: ath5k, kconfig changes
-In-Reply-To: <20070828171330.GD29343@infradead.org>
+	Thu, 2 Aug 2007 11:54:13 -0400
+Date: Thu, 02 Aug 2007 10:54:06 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [RFC 9/10] Port of bcm43xx from softmac to mac80211
+Message-ID: <46b1fe1e.H28hPO4t0GvvAOkC%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <2713029743177393055@pripojeni.net>
-	 <280951420471148977@pripojeni.net>
-	 <20070828171330.GD29343@infradead.org>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/8/28, Christoph Hellwig <hch@infradead.org>:
-> On Tue, Aug 28, 2007 at 12:01:30PM -0400, Jiri Slaby wrote:
-> > +config ATH5K_AR5210
-> > +     bool "Support AR5210"
-> > +     depends on ATH5K
-> > +     default y
-> > +
-> > +config ATH5K_AR5211
-> > +     bool "Support AR5211"
-> > +     depends on ATH5K
-> > +     default y
-> > +
-> > +config ATH5K_AR5212
-> > +     bool "Support AR5212"
-> > +     depends on ATH5K
-> > +     default y
->
-> Please don't add more default statements.
->
-> Also this whole patch seems rather pointless.  It saves only
-> very little and turns the driver into a complete ifdef maze.
+This if file 9 of 10 of the port of the bcm43xx driver from softmac
+to mac80211.
 
-It saves big chunks of code (not only initial register settings
-arrays) and we'll extend it's use more inside ath5k_hw.c Trust me this
-is a very useful step, eg. check out descriptor processing / setup or
-PHY functions (calibrate/channel set etc). For example AR5210 mac chip
-only comes with RF5110 phy chip so we can get rid of RF5111/RF5112
-code, AR5211 comes with RF5111 so we can get rid of RF5110 and RF5112
-code and AR5212 comes with RF5111 or RF5112 so we get rid of RF5110.
-This thing also saves lots of checks during runtime (some of them
-happen verry frequently, eg. durring descriptor processing). Also most
-people will use 5212 code only, 5211 cards are on some old laptops and
-5210, well i couldn't even find  a 5210 for actual testing :P
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Index: linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c
++++ linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_sysfs.c
+@@ -4,7 +4,7 @@
+ 
+   SYSFS support routines
+ 
+-  Copyright (c) 2006 Michael Buesch <mbuesch@freenet.de>
++  Copyright (c) 2006 Michael Buesch <mb@bu3sch.de>
+ 
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+@@ -26,6 +26,7 @@
+ #include "bcm43xx_sysfs.h"
+ #include "bcm43xx.h"
+ #include "bcm43xx_main.h"
++#include "bcm43xx_phy.h"
+ #include "bcm43xx_radio.h"
+ 
+ #include <linux/capability.h>
+@@ -71,143 +72,42 @@ static int get_boolean(const char *buf, 
+ 	return -EINVAL;
+ }
+ 
+-static int sprom2hex(const u16 *sprom, char *buf, size_t buf_len)
+-{
+-	int i, pos = 0;
+-
+-	for (i = 0; i < BCM43xx_SPROM_SIZE; i++) {
+-		pos += snprintf(buf + pos, buf_len - pos - 1,
+-				"%04X", swab16(sprom[i]) & 0xFFFF);
+-	}
+-	pos += snprintf(buf + pos, buf_len - pos - 1, "\n");
+-
+-	return pos + 1;
+-}
+-
+-static int hex2sprom(u16 *sprom, const char *dump, size_t len)
+-{
+-	char tmp[5] = { 0 };
+-	int cnt = 0;
+-	unsigned long parsed;
+-
+-	if (len < BCM43xx_SPROM_SIZE * sizeof(u16) * 2)
+-		return -EINVAL;
+-
+-	while (cnt < BCM43xx_SPROM_SIZE) {
+-		memcpy(tmp, dump, 4);
+-		dump += 4;
+-		parsed = simple_strtoul(tmp, NULL, 16);
+-		sprom[cnt++] = swab16((u16)parsed);
+-	}
+-
+-	return 0;
+-}
+-
+-static ssize_t bcm43xx_attr_sprom_show(struct device *dev,
+-				       struct device_attribute *attr,
+-				       char *buf)
+-{
+-	struct bcm43xx_private *bcm = dev_to_bcm(dev);
+-	u16 *sprom;
+-	unsigned long flags;
+-	int err;
+-
+-	if (!capable(CAP_NET_ADMIN))
+-		return -EPERM;
+-
+-	assert(BCM43xx_SPROM_SIZE * sizeof(u16) <= PAGE_SIZE);
+-	sprom = kmalloc(BCM43xx_SPROM_SIZE * sizeof(*sprom),
+-			GFP_KERNEL);
+-	if (!sprom)
+-		return -ENOMEM;
+-	mutex_lock(&bcm->mutex);
+-	spin_lock_irqsave(&bcm->irq_lock, flags);
+-	err = bcm43xx_sprom_read(bcm, sprom);
+-	if (!err)
+-		err = sprom2hex(sprom, buf, PAGE_SIZE);
+-	mmiowb();
+-	spin_unlock_irqrestore(&bcm->irq_lock, flags);
+-	mutex_unlock(&bcm->mutex);
+-	kfree(sprom);
+-
+-	return err;
+-}
+-
+-static ssize_t bcm43xx_attr_sprom_store(struct device *dev,
+-					struct device_attribute *attr,
+-					const char *buf, size_t count)
+-{
+-	struct bcm43xx_private *bcm = dev_to_bcm(dev);
+-	u16 *sprom;
+-	unsigned long flags;
+-	int err;
+-
+-	if (!capable(CAP_NET_ADMIN))
+-		return -EPERM;
+-
+-	sprom = kmalloc(BCM43xx_SPROM_SIZE * sizeof(*sprom),
+-			GFP_KERNEL);
+-	if (!sprom)
+-		return -ENOMEM;
+-	err = hex2sprom(sprom, buf, count);
+-	if (err)
+-		goto out_kfree;
+-	mutex_lock(&bcm->mutex);
+-	spin_lock_irqsave(&bcm->irq_lock, flags);
+-	spin_lock(&bcm->leds_lock);
+-	err = bcm43xx_sprom_write(bcm, sprom);
+-	mmiowb();
+-	spin_unlock(&bcm->leds_lock);
+-	spin_unlock_irqrestore(&bcm->irq_lock, flags);
+-	mutex_unlock(&bcm->mutex);
+-out_kfree:
+-	kfree(sprom);
+-
+-	return err ? err : count;
+-
+-}
+-
+-static DEVICE_ATTR(sprom, 0600,
+-		   bcm43xx_attr_sprom_show,
+-		   bcm43xx_attr_sprom_store);
+-
+ static ssize_t bcm43xx_attr_interfmode_show(struct device *dev,
+ 					    struct device_attribute *attr,
+ 					    char *buf)
+ {
+-	struct bcm43xx_private *bcm = dev_to_bcm(dev);
++	struct bcm43xx_wldev *wldev = dev_to_bcm43xx_wldev(dev);
+ 	ssize_t count = 0;
+ 
+ 	if (!capable(CAP_NET_ADMIN))
+ 		return -EPERM;
+ 
+-	mutex_lock(&bcm->mutex);
++	mutex_lock(&wldev->wl->mutex);
+ 
+-	switch (bcm43xx_current_radio(bcm)->interfmode) {
+-	case BCM43xx_RADIO_INTERFMODE_NONE:
++	switch (wldev->phy.interfmode) {
++	case BCM43xx_INTERFMODE_NONE:
+ 		count = snprintf(buf, PAGE_SIZE, "0 (No Interference Mitigation)\n");
+ 		break;
+-	case BCM43xx_RADIO_INTERFMODE_NONWLAN:
++	case BCM43xx_INTERFMODE_NONWLAN:
+ 		count = snprintf(buf, PAGE_SIZE, "1 (Non-WLAN Interference Mitigation)\n");
+ 		break;
+-	case BCM43xx_RADIO_INTERFMODE_MANUALWLAN:
++	case BCM43xx_INTERFMODE_MANUALWLAN:
+ 		count = snprintf(buf, PAGE_SIZE, "2 (WLAN Interference Mitigation)\n");
+ 		break;
+ 	default:
+-		assert(0);
++		BCM43xx_WARN_ON(1);
+ 	}
+ 
+-	mutex_unlock(&bcm->mutex);
++	mutex_unlock(&wldev->wl->mutex);
+ 
+ 	return count;
+-
+ }
+ 
+ static ssize_t bcm43xx_attr_interfmode_store(struct device *dev,
+ 					     struct device_attribute *attr,
+ 					     const char *buf, size_t count)
+ {
+-	struct bcm43xx_private *bcm = dev_to_bcm(dev);
++	struct bcm43xx_wldev *wldev = dev_to_bcm43xx_wldev(dev);
+ 	unsigned long flags;
+ 	int err;
+ 	int mode;
+@@ -218,32 +118,32 @@ static ssize_t bcm43xx_attr_interfmode_s
+ 	mode = get_integer(buf, count);
+ 	switch (mode) {
+ 	case 0:
+-		mode = BCM43xx_RADIO_INTERFMODE_NONE;
++		mode = BCM43xx_INTERFMODE_NONE;
+ 		break;
+ 	case 1:
+-		mode = BCM43xx_RADIO_INTERFMODE_NONWLAN;
++		mode = BCM43xx_INTERFMODE_NONWLAN;
+ 		break;
+ 	case 2:
+-		mode = BCM43xx_RADIO_INTERFMODE_MANUALWLAN;
++		mode = BCM43xx_INTERFMODE_MANUALWLAN;
+ 		break;
+ 	case 3:
+-		mode = BCM43xx_RADIO_INTERFMODE_AUTOWLAN;
++		mode = BCM43xx_INTERFMODE_AUTOWLAN;
+ 		break;
+ 	default:
+ 		return -EINVAL;
+ 	}
+ 
+-	mutex_lock(&bcm->mutex);
+-	spin_lock_irqsave(&bcm->irq_lock, flags);
++	mutex_lock(&wldev->wl->mutex);
++	spin_lock_irqsave(&wldev->wl->irq_lock, flags);
+ 
+-	err = bcm43xx_radio_set_interference_mitigation(bcm, mode);
++	err = bcm43xx_radio_set_interference_mitigation(wldev, mode);
+ 	if (err) {
+-		printk(KERN_ERR PFX "Interference Mitigation not "
+-				    "supported by device\n");
++		bcmerr(wldev->wl, "Interference Mitigation not "
++		       "supported by device\n");
+ 	}
+ 	mmiowb();
+-	spin_unlock_irqrestore(&bcm->irq_lock, flags);
+-	mutex_unlock(&bcm->mutex);
++	spin_unlock_irqrestore(&wldev->wl->irq_lock, flags);
++	mutex_unlock(&wldev->wl->mutex);
+ 
+ 	return err ? err : count;
+ }
+@@ -256,20 +156,20 @@ static ssize_t bcm43xx_attr_preamble_sho
+ 					  struct device_attribute *attr,
+ 					  char *buf)
+ {
+-	struct bcm43xx_private *bcm = dev_to_bcm(dev);
++	struct bcm43xx_wldev *wldev = dev_to_bcm43xx_wldev(dev);
+ 	ssize_t count;
+ 
+ 	if (!capable(CAP_NET_ADMIN))
+ 		return -EPERM;
+ 
+-	mutex_lock(&bcm->mutex);
++	mutex_lock(&wldev->wl->mutex);
+ 
+-	if (bcm->short_preamble)
++	if (wldev->short_preamble)
+ 		count = snprintf(buf, PAGE_SIZE, "1 (Short Preamble enabled)\n");
+ 	else
+ 		count = snprintf(buf, PAGE_SIZE, "0 (Short Preamble disabled)\n");
+ 
+-	mutex_unlock(&bcm->mutex);
++	mutex_unlock(&wldev->wl->mutex);
+ 
+ 	return count;
+ }
+@@ -278,7 +178,7 @@ static ssize_t bcm43xx_attr_preamble_sto
+ 					   struct device_attribute *attr,
+ 					   const char *buf, size_t count)
+ {
+-	struct bcm43xx_private *bcm = dev_to_bcm(dev);
++	struct bcm43xx_wldev *wldev = dev_to_bcm43xx_wldev(dev);
+ 	unsigned long flags;
+ 	int value;
+ 
+@@ -288,13 +188,13 @@ static ssize_t bcm43xx_attr_preamble_sto
+ 	value = get_boolean(buf, count);
+ 	if (value < 0)
+ 		return value;
+-	mutex_lock(&bcm->mutex);
+-	spin_lock_irqsave(&bcm->irq_lock, flags);
++	mutex_lock(&wldev->wl->mutex);
++	spin_lock_irqsave(&wldev->wl->irq_lock, flags);
+ 
+-	bcm->short_preamble = !!value;
++	wldev->short_preamble = !!value;
+ 
+-	spin_unlock_irqrestore(&bcm->irq_lock, flags);
+-	mutex_unlock(&bcm->mutex);
++	spin_unlock_irqrestore(&wldev->wl->irq_lock, flags);
++	mutex_unlock(&wldev->wl->mutex);
+ 
+ 	return count;
+ }
+@@ -303,169 +203,31 @@ static DEVICE_ATTR(shortpreamble, 0644,
+ 		   bcm43xx_attr_preamble_show,
+ 		   bcm43xx_attr_preamble_store);
+ 
+-static ssize_t bcm43xx_attr_phymode_store(struct device *dev,
+-					  struct device_attribute *attr,
+-					  const char *buf, size_t count)
+-{
+-	struct bcm43xx_private *bcm = dev_to_bcm(dev);
+-	int phytype;
+-	int err = -EINVAL;
+-
+-	if (count < 1)
+-		goto out;
+-	switch (buf[0]) {
+-	case 'a':  case 'A':
+-		phytype = BCM43xx_PHYTYPE_A;
+-		break;
+-	case 'b':  case 'B':
+-		phytype = BCM43xx_PHYTYPE_B;
+-		break;
+-	case 'g':  case 'G':
+-		phytype = BCM43xx_PHYTYPE_G;
+-		break;
+-	default:
+-		goto out;
+-	}
+-
+-	bcm43xx_periodic_tasks_delete(bcm);
+-	mutex_lock(&(bcm)->mutex);
+-	err = bcm43xx_select_wireless_core(bcm, phytype);
+-	if (!err)
+-		bcm43xx_periodic_tasks_setup(bcm);
+-	mutex_unlock(&(bcm)->mutex);
+-	if (err == -ESRCH)
+-		err = -ENODEV;
+-
+-out:
+-	return err ? err : count;
+-}
+-
+-static ssize_t bcm43xx_attr_phymode_show(struct device *dev,
+-					 struct device_attribute *attr,
+-					 char *buf)
++int bcm43xx_sysfs_register(struct bcm43xx_wldev *wldev)
+ {
+-	struct bcm43xx_private *bcm = dev_to_bcm(dev);
+-	ssize_t count = 0;
+-
+-	mutex_lock(&(bcm)->mutex);
+-	switch (bcm43xx_current_phy(bcm)->type) {
+-	case BCM43xx_PHYTYPE_A:
+-		snprintf(buf, PAGE_SIZE, "A");
+-		break;
+-	case BCM43xx_PHYTYPE_B:
+-		snprintf(buf, PAGE_SIZE, "B");
+-		break;
+-	case BCM43xx_PHYTYPE_G:
+-		snprintf(buf, PAGE_SIZE, "G");
+-		break;
+-	default:
+-		assert(0);
+-	}
+-	mutex_unlock(&(bcm)->mutex);
+-
+-	return count;
+-}
+-
+-static DEVICE_ATTR(phymode, 0644,
+-		   bcm43xx_attr_phymode_show,
+-		   bcm43xx_attr_phymode_store);
+-
+-static ssize_t bcm43xx_attr_microcode_show(struct device *dev,
+-					   struct device_attribute *attr,
+-					   char *buf)
+-{
+-	unsigned long flags;
+-	struct bcm43xx_private *bcm = dev_to_bcm(dev);
+-	ssize_t count = 0;
+-	u16 status;
+-
+-	if (!capable(CAP_NET_ADMIN))
+-		return -EPERM;
+-
+-	mutex_lock(&(bcm)->mutex);
+-	spin_lock_irqsave(&bcm->irq_lock, flags);
+-	status = bcm43xx_shm_read16(bcm, BCM43xx_SHM_SHARED,
+-				    BCM43xx_UCODE_STATUS);
+-
+-	spin_unlock_irqrestore(&bcm->irq_lock, flags);
+-	mutex_unlock(&(bcm)->mutex);
+-	switch (status) {
+-	case 0x0000:
+-		count = snprintf(buf, PAGE_SIZE, "0x%.4x (invalid)\n",
+-				 status);
+-		break;
+-	case 0x0001:
+-		count = snprintf(buf, PAGE_SIZE, "0x%.4x (init)\n",
+-				 status);
+-		break;
+-	case 0x0002:
+-		count = snprintf(buf, PAGE_SIZE, "0x%.4x (active)\n",
+-				 status);
+-		break;
+-	case 0x0003:
+-		count = snprintf(buf, PAGE_SIZE, "0x%.4x (suspended)\n",
+-				 status);
+-		break;
+-	case 0x0004:
+-		count = snprintf(buf, PAGE_SIZE, "0x%.4x (asleep)\n",
+-				 status);
+-		break;
+-	default:
+-		count = snprintf(buf, PAGE_SIZE, "0x%.4x (unknown)\n",
+-				 status);
+-		break;
+-	}
+-
+-	return count;
+-}
+-
+-static DEVICE_ATTR(microcodestatus, 0444,
+-		   bcm43xx_attr_microcode_show,
+-		   NULL);
+-
+-int bcm43xx_sysfs_register(struct bcm43xx_private *bcm)
+-{
+-	struct device *dev = &bcm->pci_dev->dev;
++	struct device *dev = wldev->dev->dev;
+ 	int err;
+ 
+-	assert(bcm43xx_status(bcm) == BCM43xx_STAT_INITIALIZED);
++	BCM43xx_WARN_ON(bcm43xx_status(wldev) != BCM43xx_STAT_INITIALIZED);
+ 
+-	err = device_create_file(dev, &dev_attr_sprom);
+-	if (err)
+-		goto out;
+ 	err = device_create_file(dev, &dev_attr_interference);
+ 	if (err)
+-		goto err_remove_sprom;
++		goto out;
+ 	err = device_create_file(dev, &dev_attr_shortpreamble);
+ 	if (err)
+ 		goto err_remove_interfmode;
+-	err = device_create_file(dev, &dev_attr_phymode);
+-	if (err)
+-		goto err_remove_shortpreamble;
+-	err = device_create_file(dev, &dev_attr_microcodestatus);
+-	if (err)
+-		goto err_remove_phymode;
+ 
+ out:
+ 	return err;
+-err_remove_phymode:
+-	device_remove_file(dev, &dev_attr_phymode);
+-err_remove_shortpreamble:
+-	device_remove_file(dev, &dev_attr_shortpreamble);
+ err_remove_interfmode:
+ 	device_remove_file(dev, &dev_attr_interference);
+-err_remove_sprom:
+-	device_remove_file(dev, &dev_attr_sprom);
+ 	goto out;
+ }
+ 
+-void bcm43xx_sysfs_unregister(struct bcm43xx_private *bcm)
++void bcm43xx_sysfs_unregister(struct bcm43xx_wldev *wldev)
+ {
+-	struct device *dev = &bcm->pci_dev->dev;
++	struct device *dev = wldev->dev->dev;
+ 
+-	device_remove_file(dev, &dev_attr_microcodestatus);
+-	device_remove_file(dev, &dev_attr_phymode);
+ 	device_remove_file(dev, &dev_attr_shortpreamble);
+ 	device_remove_file(dev, &dev_attr_interference);
+-	device_remove_file(dev, &dev_attr_sprom);
+ }
+Index: linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_sysfs.h
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/bcm43xx/bcm43xx_sysfs.h
++++ linux-2.6/drivers/net/wireless/bcm43xx/bcm43xx_sysfs.h
+@@ -1,9 +1,9 @@
+ #ifndef BCM43xx_SYSFS_H_
+ #define BCM43xx_SYSFS_H_
+ 
+-struct bcm43xx_private;
++struct bcm43xx_wldev;
+ 
+-int bcm43xx_sysfs_register(struct bcm43xx_private *bcm);
+-void bcm43xx_sysfs_unregister(struct bcm43xx_private *bcm);
++int bcm43xx_sysfs_register(struct bcm43xx_wldev *dev);
++void bcm43xx_sysfs_unregister(struct bcm43xx_wldev *dev);
+ 
+ #endif /* BCM43xx_SYSFS_H_ */
+
