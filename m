@@ -1,103 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:21793 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S968377AbXHMH4p (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:40836 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752789AbXHBPCd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 03:56:45 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Volker Braun <volker.braun@physik.hu-berlin.de>
-Subject: Re: [PATCHv2] mac80211: dynamic wep
-Date: Mon, 13 Aug 2007 00:54:53 -0700
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jiri Benc <jbenc@suse.cz>
-References: <pan.2007.08.10.23.31.32@physik.hu-berlin.de>
-In-Reply-To: <pan.2007.08.10.23.31.32@physik.hu-berlin.de>
+	Thu, 2 Aug 2007 11:02:33 -0400
+Message-ID: <46B1F201.7060107@lwfinger.net>
+Date: Thu, 02 Aug 2007 10:02:25 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1484344.Uocg1elFt6";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200708130054.57899.flamingice@sourmilk.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC V2] bcm43xx-mac80211: Provide information to allow  transmission  rate decreases
+References: <46b0f367.p35iGhSXwM+v4QLG%Larry.Finger@lwfinger.net>	 <200708021337.21285.mb@bu3sch.de> <1186055319.24230.32.camel@johannes.berg>	 <200708021503.53982.mb@bu3sch.de> <1186060034.24230.48.camel@johannes.berg>
+In-Reply-To: <1186060034.24230.48.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1484344.Uocg1elFt6
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Johannes Berg wrote:
+> On Thu, 2007-08-02 at 15:03 +0200, Michael Buesch wrote:
+> 
+>> So, what's the point of this "excessive retries" field anyway?
+>> We already have an "acked" bit. So if it's not set, but we expected an
+>> ack, what's the point of setting excessive retries in the driver?
+>> the rc algo sould know _anyway_, as it has the "acked" and the
+>> "we wanted to have an ack" bits.
+> 
+> No idea. I guess you get to dig through the code and remove it ;)
 
-On Friday 10 August 2007 16:31, Volker Braun wrote:
-> This patch fixes my problems with "dynamic wep" (widely used in
-> universities), and I can now successfully associate and transfer
-> data using mac80211+iwl4965. Main changes:
-> 1) Allow privacy mismatch until associated
-> 2) Decrypt unicast frames with the per-STA key, not making any
->    assumptions about it being key index 0.
->
-> Signed-off-by: Volker Braun <volker.braun@physik.hu-berlin.de>
-> ---
-Hm, you somehow got a copy of this to me without actually putting me on the=
- CC=20
-list.. you should probably use CC instead.
+When I first started investigating the problem of mac80211 not reducing the rate as I moved away 
+from the AP, it seemed to me that the decision regarding excessive retries should be made in 
+mac80211, not in the driver; however, I have had extreme difficulty in getting any changes into 
+mac80211 on several occasions. Linville assures me that he has had private discussions about this 
+problem; however, I needed a quick fix and couldn't stand any protracted discussion and/or review 
+delays. I knew Michael would be tough, but that his comments would not be delayed.
 
-> -0400 @@ -357,7 +357,7 @@ struct ieee80211_cts {
->  #define WLAN_CAPABILITY_IBSS		(1<<1)
->  #define WLAN_CAPABILITY_CF_POLLABLE	(1<<2)
->  #define WLAN_CAPABILITY_CF_POLL_REQUEST	(1<<3)
-> -#define WLAN_CAPABILITY_PRIVACY		(1<<4)
-> +#define WLAN_CAPABILITY_PRIVACY		(1<<4) /* Force WEP on data packets */
-Anyone interested in what this bit is can read the spec. Also, your comment=
- is=20
-inaccurate, as this bit is not specific to WEP.
+At the moment, I have more pressing matters to resolve than fixing this problem in mac80211; 
+however, I feel really good that the port of bcm43xx-softmac to mac80211 has this issue.
 
-> +	if (rx->fc & IEEE80211_FCTL_PROTECTED && /* WEP */
-Inaccurate and unnecessary comment.
+Larry
 
-> -			if (keyidx >=3D 0 && keyidx < NUM_DEFAULT_KEYS &&
-> -			    (!rx->sta || !rx->sta->key || keyidx > 0))
-> -				rx->key =3D rx->sdata->keys[keyidx];
-So it looks like the keyidx > 0 check here is the source of the RX problems=
-=2E I=20
-think we can store the keyidx of the individual key to compare against=20
-instead of assuming all individual keys have a keyidx of 0.
-
-> -0400 @@ -1131,10 +1131,11 @@ static int ieee80211_privacy_mismatch(st
->  	bss =3D ieee80211_rx_bss_get(dev, ifsta->bssid);
->  	if (!bss)
->  		return 0;
-> -
-> -	if (ieee80211_sta_wep_configured(dev) !=3D
-> -	    !!(bss->capability & WLAN_CAPABILITY_PRIVACY))
-> -		res =3D 1;
-> +
-> +	if (ifsta->associated && ieee80211_sta_wep_configured(dev) !=3D
-> +	    !!(bss->capability & WLAN_CAPABILITY_PRIVACY)) {
-> +		res =3D 1;  /* associated and WEP encryption mismatch */
-> +	}
-Another unneeded comment. Don't add braces when it's not needed.
-
-This part seems fairly evil. I suspect a better solution here is to allow=20
-unencrypted frames when the interface is dormant (netif_dormant()) and then=
-=20
-we might be able to get rid of the specific check for WEP.
-
-=2DMichael Wu
-
---nextPart1484344.Uocg1elFt6
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGwA5RT3Oqt9AH4aERAuFDAJwL5XfGQbP5RAzk99bnSYc1A8W8fQCdGfcs
-Ny1z5raVvAjk26+aPF4qSj0=
-=ijut
------END PGP SIGNATURE-----
-
---nextPart1484344.Uocg1elFt6--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
