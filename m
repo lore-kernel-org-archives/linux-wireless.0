@@ -1,124 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60568 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755033AbXHUQUw (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59037
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755143AbXHBWHm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 12:20:52 -0400
-Received: from [131.234.209.34] (helo=[131.234.237.45])
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1INWTJ-0008Gg-4n
-	for linux-wireless@vger.kernel.org; Tue, 21 Aug 2007 17:20:49 +0100
-Message-Id: <20070821161942.159647000@sipsolutions.net>
-References: <20070821161845.165557000@sipsolutions.net>
-Date: Tue, 21 Aug 2007 18:18:46 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 1/2] mac80211: allow drivers to indicate failed FCS/PLCP  checksum
-Mime-Version: 1.0
+	Thu, 2 Aug 2007 18:07:42 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] bcm43xx-mac80211: Provide information to allow transmission rate decreases
+Date: Fri, 3 Aug 2007 00:06:34 +0200
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <46b24304.DLuGdus4YPRFspUn%Larry.Finger@lwfinger.net>
+In-Reply-To: <46b24304.DLuGdus4YPRFspUn%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708030006.35112.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch allows drivers to indicate bad FCS/PLCP CRC to the stack and
-have the stack drop packets like that except for monitor interfaces.
+Thanks, I fixed that and queued it up ;)
+http://bu3sch.de/patches/wireless-dev/20070803-1186092135/patches/bcm43xx-mac80211-provide-information-to-allow-transmission-rate-decreases.patch
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Changes since v1:
- * filter bad frames early in the RX code and don't count
-   them nor try to get a STA for them
+On Thursday 02 August 2007, Larry Finger wrote:
+> In bcm43xx-mac80211, the mechanism for decreasing the transmit rate cannot
+> be triggered. This may be shown by walking away from the AP with a laptop.
+> At some distance, communications will be lost and never recovered because
+> the rate decreasing mechanism of rc80211_simple needs to see excessive_retries
+> set in the ieee80211_tx_status struct. With this patch, the transmit rate
+> will decrease until communications restart.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> 
+> John and Michael,
+> 
+> This is based on the wireless-dev tree.
+> 
+> Larry
+> 
+>  bcm43xx_dma.c |    3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
+> ===================================================================
+> --- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
+> +++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
+> @@ -1311,6 +1311,9 @@ void bcm43xx_dma_handle_txstatus(struct 
+>  			 */
+>  			if (status->acked)
+>  				meta->txstat.flags |= IEEE80211_TX_STATUS_ACK;
+> +			else
+> +				if (!(meta->txstat.flags & IEEE80211_TXCTL_NO_ACK))
+> +					meta->txstat.excessive_retries = 1;
+>  			meta->txstat.retry_count = status->frame_count - 1;
+>  			ieee80211_tx_status_irqsafe(dev->wl->hw, meta->skb, &(meta->txstat));
+>  			/* skb is freed by ieee80211_tx_status_irqsafe() */
+> 
+> 
 
- include/net/mac80211.h |    2 ++
- net/mac80211/rx.c      |   31 ++++++++++++++++++++++++++++---
- 2 files changed, 30 insertions(+), 3 deletions(-)
-
---- wireless-dev.orig/include/net/mac80211.h	2007-08-21 16:26:46.405923881 +0200
-+++ wireless-dev/include/net/mac80211.h	2007-08-21 16:28:19.015923881 +0200
-@@ -243,6 +243,8 @@ struct ieee80211_rx_status {
- #define RX_FLAG_MMIC_ERROR	(1<<0)
- #define RX_FLAG_DECRYPTED	(1<<1)
- #define RX_FLAG_RADIOTAP	(1<<2)
-+#define RX_FLAG_FAILED_FCS_CRC	(1<<3)
-+#define RX_FLAG_FAILED_PLCP_CRC	(1<<4)
- 	int flag;
- };
- 
---- wireless-dev.orig/net/mac80211/rx.c	2007-08-21 16:26:46.415923881 +0200
-+++ wireless-dev/net/mac80211/rx.c	2007-08-21 16:28:19.015923881 +0200
-@@ -154,6 +154,7 @@ ieee80211_rx_monitor(struct net_device *
- 		__le16 chan_freq;
- 		__le16 chan_flags;
- 		u8 antsignal;
-+		__le16 rx_flags;
- 	} __attribute__ ((packed)) *rthdr;
- 
- 	skb->dev = dev;
-@@ -178,12 +179,21 @@ ieee80211_rx_monitor(struct net_device *
- 		cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
- 			    (1 << IEEE80211_RADIOTAP_RATE) |
- 			    (1 << IEEE80211_RADIOTAP_CHANNEL) |
--			    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL));
-+			    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL) |
-+			    (1 << IEEE80211_RADIOTAP_RX_FLAGS));
- 	rthdr->flags = local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS ?
- 		       IEEE80211_RADIOTAP_F_FCS : 0;
-+
-+	/* FIXME: when radiotap gets a 'bad PLCP' flag use it here */
-+	rthdr->rx_flags = 0;
-+	if (status->flag &
-+	    (RX_FLAG_FAILED_FCS_CRC | RX_FLAG_FAILED_PLCP_CRC))
-+		rthdr->rx_flags |= cpu_to_le16(IEEE80211_RADIOTAP_F_RX_BADFCS);
-+
- 	rate = ieee80211_get_rate(local, status->phymode, status->rate);
- 	if (rate)
- 		rthdr->rate = rate->rate / 5;
-+
- 	rthdr->chan_freq = cpu_to_le16(status->freq);
- 	rthdr->chan_flags =
- 		status->phymode == MODE_IEEE80211A ?
-@@ -211,6 +221,15 @@ ieee80211_rx_h_monitor(struct ieee80211_
- 		return TXRX_QUEUED;
- 	}
- 
-+	/*
-+	 * Drop frames with failed FCS/PLCP checksums here, they are only
-+	 * relevant for monitor mode, the rest of the stack should never
-+	 * see them.
-+	 */
-+	if (rx->u.rx.status->flag &
-+	    (RX_FLAG_FAILED_FCS_CRC | RX_FLAG_FAILED_PLCP_CRC))
-+		return TXRX_DROP;
-+
- 	if (rx->u.rx.status->flag & RX_FLAG_RADIOTAP)
- 		skb_pull(rx->skb, ieee80211_get_radiotap_len(rx->skb->data));
- 
-@@ -1498,6 +1517,7 @@ void __ieee80211_rx(struct ieee80211_hw 
- 	struct ieee80211_sub_if_data *prev = NULL;
- 	struct sk_buff *skb_new;
- 	u8 *bssid;
-+	int bogon;
- 
- 	if (status->flag & RX_FLAG_RADIOTAP) {
- 		radiotap_len = ieee80211_get_radiotap_len(skb->data);
-@@ -1512,10 +1532,15 @@ void __ieee80211_rx(struct ieee80211_hw 
- 	rx.u.rx.status = status;
- 	rx.fc = skb->len >= 2 ? le16_to_cpu(hdr->frame_control) : 0;
- 	type = rx.fc & IEEE80211_FCTL_FTYPE;
--	if (type == IEEE80211_FTYPE_DATA || type == IEEE80211_FTYPE_MGMT)
-+
-+	bogon = status->flag & (RX_FLAG_FAILED_FCS_CRC |
-+				RX_FLAG_FAILED_PLCP_CRC);
-+
-+	if (!bogon && (type == IEEE80211_FTYPE_DATA ||
-+		       type == IEEE80211_FTYPE_MGMT))
- 		local->dot11ReceivedFragmentCount++;
- 
--	if (skb->len >= 16) {
-+	if (!bogon && skb->len >= 16) {
- 		sta = rx.sta = sta_info_get(local, hdr->addr2);
- 		if (sta) {
- 			rx.dev = rx.sta->dev;
-
--- 
 
