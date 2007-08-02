@@ -1,51 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail6.sea5.speakeasy.net ([69.17.117.8]:41091 "EHLO
-	mail6.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750696AbXHREAT (ORCPT
+Received: from hoefnix.telenet-ops.be ([195.130.132.54]:43575 "EHLO
+	hoefnix.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751165AbXHBQNl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Aug 2007 00:00:19 -0400
-Date: Fri, 17 Aug 2007 20:59:09 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 14/20] mac80211: kill key_mgmt variable, use privacy_enabled
-Message-ID: <20070818035909.GE1415@jm.kir.nu>
-References: <20070815144920.135826000@sipsolutions.net> <20070815145047.834125000@sipsolutions.net>
+	Thu, 2 Aug 2007 12:13:41 -0400
+Date: Thu, 2 Aug 2007 18:12:56 +0200 (CEST)
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Andrew Morton <akpm@osdl.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Gary Zambrano <zambrano@broadcom.com>
+Subject: Re: [PATCH] Merge the Sonics Silicon Backplane subsystem
+In-Reply-To: <200708021624.59701.mb@bu3sch.de>
+Message-ID: <Pine.LNX.4.64.0708021812260.5150@anakin>
+References: <200707271857.24162.mb@bu3sch.de> <Pine.LNX.4.64.0708021557280.5150@anakin>
+ <200708021624.59701.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070815145047.834125000@sipsolutions.net>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 15, 2007 at 04:49:34PM +0200, Johannes Berg wrote:
+On Thu, 2 Aug 2007, Michael Buesch wrote:
+> On Thursday 02 August 2007, Geert Uytterhoeven wrote:
+> > On Fri, 27 Jul 2007, Michael Buesch wrote:
+> > > The Sonics Silicon Backplane is a mini-bus used on
+> > > various Broadcom chips and embedded devices.
+> > > Devices using the SSB include b44, bcm43xx and various
+> > > Broadcom based wireless routers.
+> > > A b44 and bcm43xx port and a SSB based OHCI driver is available.
+> > 
+> > > --- a/drivers/Kconfig
+> > > +++ b/drivers/Kconfig
+> > > @@ -58,6 +58,8 @@ source "drivers/power/Kconfig"
+> > >  
+> > >  source "drivers/hwmon/Kconfig"
+> > >  
+> > > +source "drivers/ssb/Kconfig"
+> > > +
+> > >  source "drivers/mfd/Kconfig"
+> > >  
+> > >  source "drivers/media/Kconfig"
+> > 
+> > > --- /dev/null
+> > > +++ b/drivers/ssb/Kconfig
+> > > @@ -0,0 +1,92 @@
+> > > +menu "Sonics Silicon Backplane"
+> > > +
+> > > +config SSB
+> > > +	tristate "Sonics Silicon Backplane support"
+> > > +	depends on EXPERIMENTAL
+> > 
+> > Hence this will show up on all platforms?
+> 
+> So?
 
-> The key_mgmt variable for STA interfaces doesn't seem well-defined
-> nor do we actually use the values other than "NONE", so change it to
-> be named better.
+Shouldn't you add a dependency for platforms where it make sense to have SSB?
 
-Most drivers should not need key_mgmt configuration. The only exception
-that I'm aware of is firmware designs that insist on generating WPA/RSN
-IE internally. None of them are likely to be using mac80211, though.
+Gr{oetje,eeting}s,
 
-> +			 * What are the semantics in wext supposed to be?
-> +			 *
-> +			 * Don't bother figuring that out... It's wext after
-> +			 * all so figuring it out will most likely require a
-> +			 * moderate amount of clairvoyance.
+						Geert
 
-Isn't this a bit unnecessary?
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-> +			sdata->u.sta.privacy_enabled = !!data->value;
-
-This looks a bit odd, though, taken into account that this is coming
-from IW_AUTH_KEY_MGMT and not IW_AUTH_PRIVACY_INVOKED.. It would
-probably be better to just remove all the crab from here can ignore the
-IW_AUTH_KEY_MGMT value in mac80211. The only place that actually used it
-in the client code (mixed cell configuration) had already been broken,
-so this could all be just removed completely unless someone has plans on
-fixing privacy mismatch detection.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
