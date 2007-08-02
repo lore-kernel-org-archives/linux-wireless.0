@@ -1,57 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49594 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752994AbXHPNNW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2007 09:13:22 -0400
-Subject: Re: [PATCH 17/20] mac80211: avoid copying packets to interfaces  that are down
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200708152148.58436.flamingice@sourmilk.net>
-References: <20070815144920.135826000@sipsolutions.net>
-	 <20070815145048.965414000@sipsolutions.net>
-	 <200708152148.58436.flamingice@sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oKYjpBgMCLidJXYtzfhX"
-Date: Thu, 16 Aug 2007 15:14:15 +0200
-Message-Id: <1187270055.5141.31.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:18761 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752801AbXHBCSt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Aug 2007 22:18:49 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 3/4] iwlwifi: TX aggregation fix
+Date: Thu,  2 Aug 2007 10:16:04 +0800
+Message-Id: <11860209712781-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1186020969666-git-send-email-yi.zhu@intel.com>
+References: <1186020965807-git-send-email-yi.zhu@intel.com>
+ <11860209683483-git-send-email-yi.zhu@intel.com>
+ <1186020969666-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Tomas Winkler <tomas.winkler@intel.com>
 
---=-oKYjpBgMCLidJXYtzfhX
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch fixes driver crash in case when one of aggregated
+packets was aborted.
 
-On Wed, 2007-08-15 at 21:48 -0700, Michael Wu wrote:
-> On Wednesday 15 August 2007 07:49, Johannes Berg wrote:
-> > Is there a possibility of a race condition here? If the interface is
-> > brought down right after this check the SKB could be copied to that
-> > interface after the skb queue has been flushed.
-> >
-> Yeah. This can be avoided by holding a write lock on the subif lock while=
-=20
-> flushing the skb queue. Not sure how much I like doing that, but it shoul=
-d=20
-> work.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwl-base.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
 
-Hmm. Not entirely sure what you mean.
-
-johannes
-
---=-oKYjpBgMCLidJXYtzfhX
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGxE2n/ETPhpq3jKURArejAKClbGxCmirPj4ai0Sjlq3EkDQkmegCdHpwE
-97dkY0KF2auQfRPNkNhel28=
-=E6Nd
------END PGP SIGNATURE-----
-
---=-oKYjpBgMCLidJXYtzfhX--
-
+diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
+index 44fc2cb..0209219 100644
+--- a/drivers/net/wireless/iwl-base.c
++++ b/drivers/net/wireless/iwl-base.c
+@@ -3595,8 +3595,14 @@ int iwl4965_tx_status_reply_tx(struct iwl_priv *priv,
+ 			idx = SEQ_TO_INDEX(seq);
+ 			txq_id = SEQ_TO_QUEUE(seq);
+ 
++			if (status &
++				(AGG_TX_STATE_FEW_BYTES_MSK|
++				 AGG_TX_STATE_ABORT_MSK))
++				continue;
++
+ 			IWL_DEBUG_TX_REPLY("FrameCnt = %d, txq_id=%d idx=%d\n",
+ 					   agg->frame_count, txq_id, idx);
++
+ 			hdr = iwl_tx_queue_get_hdr(priv, txq_id, idx);
+ 
+ 			if (idx != (SEQ_TO_SN(hdr->seq_ctrl) & 0xff)) {
+@@ -3611,7 +3617,6 @@ int iwl4965_tx_status_reply_tx(struct iwl_priv *priv,
+ 			IWL_DEBUG_TX_REPLY("AGG Frame i=%d idx %d seq=%d\n",
+ 					   i, idx, SEQ_TO_SN(hdr->seq_ctrl));
+ 
+-
+ 			sh = idx - start;
+ 			if (sh > 64 ) {
+ 				sh = (start - idx) + 0xff;
+@@ -3640,7 +3645,8 @@ int iwl4965_tx_status_reply_tx(struct iwl_priv *priv,
+ 				agg->start_idx,
+ 				agg->bitmap0);
+ 
+-		agg->wait_for_ba = 1;
++		if (bitmap)
++			agg->wait_for_ba = 1;
+ 	}
+ 	return 0;
+ }
+-- 
+1.5.2
