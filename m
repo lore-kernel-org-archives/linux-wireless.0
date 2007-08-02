@@ -1,69 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:22844 "EHLO mga09.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:18761 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932864AbXHHHih (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 03:38:37 -0400
+	id S1752613AbXHBCSq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Aug 2007 22:18:46 -0400
 From: Zhu Yi <yi.zhu@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Ben Cahill <ben.m.cahill@intel.com>, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 27/28] iwlwifi: Correct missing hardware detection in iwl_isr()
-Date: Wed,  8 Aug 2007 15:33:44 +0800
-Message-Id: <11865584891294-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11865584861970-git-send-email-yi.zhu@intel.com>
-References: <11865584251026-git-send-email-yi.zhu@intel.com>
- <11865584292234-git-send-email-yi.zhu@intel.com>
- <1186558432932-git-send-email-yi.zhu@intel.com>
- <11865584342308-git-send-email-yi.zhu@intel.com>
- <11865584363863-git-send-email-yi.zhu@intel.com>
- <11865584392893-git-send-email-yi.zhu@intel.com>
- <11865584413292-git-send-email-yi.zhu@intel.com>
- <1186558443548-git-send-email-yi.zhu@intel.com>
- <11865584452614-git-send-email-yi.zhu@intel.com>
- <11865584473732-git-send-email-yi.zhu@intel.com>
- <11865584503648-git-send-email-yi.zhu@intel.com>
- <11865584521358-git-send-email-yi.zhu@intel.com>
- <11865584543903-git-send-email-yi.zhu@intel.com>
- <11865584562811-git-send-email-yi.zhu@intel.com>
- <11865584583336-git-send-email-yi.zhu@intel.com>
- <11865584603865-git-send-email-yi.zhu@intel.com>
- <11865584631842-git-send-email-yi.zhu@intel.com>
- <11865584661209-git-send-email-yi.zhu@intel.com>
- <11865584683474-git-send-email-yi.zhu@intel.com>
- <1186558470949-git-send-email-yi.zhu@intel.com>
- <11865584733882-git-send-email-yi.zhu@intel.com>
- <11865584754153-git-send-email-yi.zhu@intel.com>
- <11865584771950-git-send-email-yi.zhu@intel.com>
- <1186558479530-git-send-email-yi.zhu@intel.com>
- <11865584823402-git-send-email-yi.zhu@intel.com>
- <11865584841976-git-send-email-yi.zhu@intel.com>
- <11865584861970-git-send-email-yi.zhu@intel.com>
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 1/4] iwlwifi: Endianity fix for iwl4965_handle_data_packet function
+Date: Thu,  2 Aug 2007 10:16:02 +0800
+Message-Id: <11860209683483-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1186020965807-git-send-email-yi.zhu@intel.com>
+References: <1186020965807-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-This patch corrects missing hardware detection in iwl_isr().
+This patch fixes endianity issue in iwl4965_handle_data_packet
+function.
 
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- drivers/net/wireless/iwl-base.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwl-4965.c |   25 ++++++++++++-------------
+ 1 files changed, 12 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
-index ad7e67c..881945d 100644
---- a/drivers/net/wireless/iwl-base.c
-+++ b/drivers/net/wireless/iwl-base.c
-@@ -5282,8 +5282,7 @@ static irqreturn_t iwl_isr(int irq, void *data)
- 		goto none;
+diff --git a/drivers/net/wireless/iwl-4965.c b/drivers/net/wireless/iwl-4965.c
+index 1b90838..f501f82 100644
+--- a/drivers/net/wireless/iwl-4965.c
++++ b/drivers/net/wireless/iwl-4965.c
+@@ -3588,10 +3588,10 @@ static void iwl4965_handle_data_packet(struct iwl_priv *priv, int is_data,
+ 	struct iwl4965_rx_phy_res *rx_start = (include_phy) ?
+ 	    (struct iwl4965_rx_phy_res *)&(pkt->u.raw[0]) : NULL;
+ 	struct ieee80211_hdr *hdr;
+-	unsigned int len;
+-	u32 *rx_end;
++	u16 len;
++	__le32 *rx_end;
+ 	unsigned int skblen;
+-	u32 ampd_status;
++	u32 ampdu_status;
+ 
+ 	if (!include_phy && priv->last_phy_res[0])
+ 		rx_start = (struct iwl4965_rx_phy_res *)&priv->last_phy_res[1];
+@@ -3604,9 +3604,9 @@ static void iwl4965_handle_data_packet(struct iwl_priv *priv, int is_data,
+ 		hdr = (struct ieee80211_hdr *)((u8 *) & rx_start[1] +
+ 					       rx_start->cfg_phy_cnt);
+ 
+-		len = rx_start->byte_count;
++		len = le16_to_cpu(rx_start->byte_count);
+ 
+-		rx_end = (u32 *) ((u8 *) & pkt->u.raw[0] +
++		rx_end = (__le32 *) ((u8 *) & pkt->u.raw[0] +
+ 				  sizeof(struct iwl4965_rx_phy_res) +
+ 				  rx_start->cfg_phy_cnt + len);
+ 
+@@ -3614,20 +3614,19 @@ static void iwl4965_handle_data_packet(struct iwl_priv *priv, int is_data,
+ 		struct iwl4965_rx_mpdu_res_start *amsdu =
+ 		    (struct iwl4965_rx_mpdu_res_start *)pkt->u.raw;
+ 
+-		hdr = (void *)(pkt->u.raw +
++		hdr = (struct ieee80211_hdr *)(pkt->u.raw +
+ 			       sizeof(struct iwl4965_rx_mpdu_res_start));
+-		len = amsdu->byte_count;
+-		rx_end = (u32 *) (((u8 *) hdr) + len);
+-		rx_start->byte_count = len;
++		len =  le16_to_cpu(amsdu->byte_count);
++		rx_start->byte_count = amsdu->byte_count;
++		rx_end = (__le32 *) (((u8 *) hdr) + len);
+ 	}
+ 	if (len > 2342 || len < 16) {
+ 		IWL_DEBUG_DROP("byte count out of range [16,2342]"
+ 			       " : %d\n", len);
+ 		return;
+-
  	}
  
--	if ((inta == 0xFFFFFFFF) || (inta == 0xa5a5a5a5)
--	    || (inta == 0x5a5a5a5a)) {
-+	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
- 		/* Hardware disappeared */
- 		IWL_WARNING("HARDWARE GONE?? INTA == 0x%080x\n", inta);
- 		goto none;
+-	ampd_status = *rx_end;
++	ampdu_status = le32_to_cpu(*rx_end);
+ 	skblen = ((u8 *) rx_end - (u8 *) & pkt->u.raw[0]) + sizeof(u32);
+ 
+ 	/* start from MAC */
+@@ -3644,7 +3643,7 @@ static void iwl4965_handle_data_packet(struct iwl_priv *priv, int is_data,
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
+ 		if (iwl_param_hwcrypto)
+ 			iwl_set_decrypted_flag(priv, rxb->skb,
+-					       ampd_status, stats);
++					       ampdu_status, stats);
+ 		iwl_handle_data_packet_monitor(priv, rxb, hdr, len, stats, 0);
+ 		return;
+ 	}
+@@ -3653,7 +3652,7 @@ static void iwl4965_handle_data_packet(struct iwl_priv *priv, int is_data,
+ 	hdr = (struct ieee80211_hdr *)rxb->skb->data;
+ 
+ 	if (iwl_param_hwcrypto)
+-		iwl_set_decrypted_flag(priv, rxb->skb, ampd_status, stats);
++		iwl_set_decrypted_flag(priv, rxb->skb, ampdu_status, stats);
+ 
+ 	ieee80211_rx_irqsafe(priv->hw, rxb->skb, stats);
+ 	priv->alloc_rxb_skb--;
 -- 
 1.5.2
