@@ -1,74 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:52664 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750825AbXHREof (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.191]:20800 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754058AbXHBLLI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Aug 2007 00:44:35 -0400
-Subject: [PATCH 2/2 v2] mac80211: ignore key index on pairwise key (WEP  only)
-From: Volker Braun <vbraun@physics.upenn.edu>
-To: Jouni Malinen <j@w1.fi>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <20070818034613.GD1415@jm.kir.nu>
-References: <1187406019.30247.18.camel@thinkpad>
-	 <20070818034613.GD1415@jm.kir.nu>
-Content-Type: text/plain
-Date: Sat, 18 Aug 2007 00:44:33 -0400
-Message-Id: <1187412273.3515.4.camel@thinkpad>
-Mime-Version: 1.0
+	Thu, 2 Aug 2007 07:11:08 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so404376fkz
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Aug 2007 04:11:05 -0700 (PDT)
+To: dragoran <drago01@gmail.com>
+Subject: Re: rt2500usb stopped working (vendor request error)
+Date: Thu, 2 Aug 2007 13:15:18 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <46B1B0AE.7050205@gmail.com>
+In-Reply-To: <46B1B0AE.7050205@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200708021315.19626.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Work-around for broken APs that use a non-zero key index for WEP
-pairwise keys. With this patch, WEP encryption only is exempt from
-providing a zero key index.
+Hi,
 
-Signed-off-by: Volker Braun <volker.braun@physik.hu-berlin.de>
+> I was using rt2x00 with hostapd to create a AP and it worked fine in FC6 
+> with rt2x00-cvs-2007020803.
+> But after upgrading to F7 it stopped working. I am using kernel 
+> kernel-2.6.22.1-41.fc7 which have a recent wireless-dev copy of the 
+> driver but I just get this errors in dmesg:
 
+<... snip...>
 
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-index fbdd1d1..2a45e54 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -385,13 +385,14 @@ static int ieee80211_set_encryption(struct net_device *dev
- 
-        sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
-+       if (idx <0 || idx >= NUM_DEFAULT_KEYS) {
-+               printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
-+                      dev->name, idx);
-+               return -EINVAL;
-+       }
-+
-        if (is_broadcast_ether_addr(sta_addr)) {
-                sta = NULL;
--               if (idx >= NUM_DEFAULT_KEYS) {
--                       printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
--                              dev->name, idx);
--                       return -EINVAL;
--               }
-                key = sdata->keys[idx];
- 
-                /* TODO: consider adding hwaccel support for these; at least
-@@ -405,9 +406,15 @@ static int ieee80211_set_encryption(struct net_device *dev,
-                 * being, this can be only set at compile time. */
-        } else {
-                set_tx_key = 0;
--               if (idx != 0) {
--                       printk(KERN_DEBUG "%s: set_encrypt - non-zero idx for "
--                              "individual key\n", dev->name);
-+
-+               /*
-+                * According to the standard, the key index of a pairwise 
-+                * key must be zero. However, some AP are broken when it
-+                * comes to WEP key indices, so we work around this.
-+                */
-+               if (idx != 0 && alg != ALG_WEP) {
-+                        printk(KERN_DEBUG "%s: set_encrypt - non-zero idx for "
-+                               "pairwise key\n", dev->name);
-                        return -EINVAL;
-                }
- 
+> Any idea whats going on?
+> Can I provide more info to help finding a solution?
+> I already reported it here before:
+> http://rt2x00.serialmonkey.com/phpBB2/viewtopic.php?t=4042
+> but got no usefull replies so I decided to try here.
 
+Could you retry with a more recent version?
 
+Ivo
