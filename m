@@ -1,62 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40556 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754967AbXH1Sls (ORCPT
+Received: from mga03.intel.com ([143.182.124.21]:42147 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757171AbXHBMlP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2007 14:41:48 -0400
-Subject: Re: mac80211 AP mode powersaving problems?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <Kalle.Valo@nokia.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <878x7v8rcm.fsf@nokia.com>
-References: <1186990509.27916.38.camel@johannes.berg>
-	 <87lkccf30m.fsf@tikku.osso.net> <1187270479.5141.44.camel@johannes.berg>
-	 <87643f4kkh.fsf@nokia.com> <1187275344.23489.6.camel@johannes.berg>
-	 <871wdphsus.fsf@nokia.com> <1188290911.7837.65.camel@johannes.berg>
-	 <87absbsz5f.fsf@nokia.com> <1188299159.7837.96.camel@johannes.berg>
-	 <87sl63prsg.fsf@nokia.com> <1188317935.7837.106.camel@johannes.berg>
-	 <878x7v8rcm.fsf@nokia.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7pbPhL1p5ev0Ad7yflie"
-Date: Tue, 28 Aug 2007 20:43:13 +0200
-Message-Id: <1188326593.7837.118.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 2 Aug 2007 08:41:15 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [ipw3945-devel] chaning mode only when interface down?
+Date: Thu, 2 Aug 2007 15:41:09 +0300
+Message-ID: <C07C4589BE74A34981C3C3525EE1F801024CF30B@hasmsx412.ger.corp.intel.com>
+In-Reply-To: <1186058047.24230.38.camel@johannes.berg>
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: "dragoran" <drago01@gmail.com>, "Dan Williams" <dcbw@redhat.com>,
+	<linux-wireless@vger.kernel.org>,
+	"network manager" <networkmanager-list@gnome.org>,
+	<ipw3945-devel@lists.sourceforge.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-7pbPhL1p5ev0Ad7yflie
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2007-08-28 at 21:08 +0300, Kalle Valo wrote:
+>-----Original Message-----
+>From: Johannes Berg [mailto:johannes@sipsolutions.net]
+>Sent: Thursday, August 02, 2007 3:34 PM
+>To: Winkler, Tomas
+>Cc: dragoran; Dan Williams; linux-wireless@vger.kernel.org; network
+>manager; ipw3945-devel@lists.sourceforge.net
+>Subject: RE: [ipw3945-devel] chaning mode only when interface down?
+>
+>On Thu, 2007-08-02 at 15:17 +0300, Winkler, Tomas wrote:
+>
+>> There is a definitely a known issue in the driver that we still need
+to
+>> resolve, but I agree with Johannes that there is a problem in design
+of
+>> the configuration as well.
+>
+>Nono, you cannot solve it in the driver. The whole design of mac80211
+>mandates that assumption and I think it is a valid one to make. If
+>userspace breaks because of that it's their fault.
+>
+I know for sure there is an issue in our driver for moving to master
+(AP) mode. I'm just cleaning up this patch...
 
-> I hope you have time to investigate this, because I really would like
-> to have Nokia N800 and 770 working with b43 AP. So if you need more
-> testing, just ask.
+I'm really not an expert on the configuration but I think at least the
+transition from STA to IBSS mode and back should be smooth without
+reloading the driver. What you do if the driver is compiled to kernel
+will we reboot?
 
-Can you disable QoS and see if the same weird frames show up again? b43
-doesn't really support QoS yet but I don't think that should be causing
-such frame corruption.
+I hope we are talking about the same issue here...
+Thansk
+Tomas
 
-Interestingly, your N800 seems to pick up the frames correctly since it
-did reply to the ping packets... Did you have a capture size limit?
-
-johannes
-
---=-7pbPhL1p5ev0Ad7yflie
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG1GzB/ETPhpq3jKURAghGAJsG5Sa5qxHj6Ob9+qyv197tRhNJhACdEoWQ
-pTX6moHv+Qhw/pbggvSJLEY=
-=Dytr
------END PGP SIGNATURE-----
-
---=-7pbPhL1p5ev0Ad7yflie--
-
+>johannes
