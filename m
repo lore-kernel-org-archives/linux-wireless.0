@@ -1,65 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:38720
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756927AbXHAKxr (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58504 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754678AbXHBMvs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2007 06:53:47 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: stable@kernel.org
-Subject: [PATCH stable] softmac: Fix deadlock of wx_set_essid with assoc work
-Date: Wed, 1 Aug 2007 12:53:06 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200708011253.06569.mb@bu3sch.de>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+	Thu, 2 Aug 2007 08:51:48 -0400
+Subject: Re: [ipw3945-devel] chaning mode only when interface down?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: dragoran <drago01@gmail.com>
+Cc: "Winkler, Tomas" <tomas.winkler@intel.com>,
+	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	network manager <networkmanager-list@gnome.org>,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <46B1D28F.1080006@gmail.com>
+References: <C07C4589BE74A34981C3C3525EE1F801024CF2CB@hasmsx412.ger.corp.intel.com>
+	 <1186058047.24230.38.camel@johannes.berg>  <46B1D28F.1080006@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-s+YtHkz32xoi8s7Cfbt4"
+Date: Thu, 02 Aug 2007 14:53:11 +0200
+Message-Id: <1186059192.24230.44.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The essid wireless extension does deadlock against the assoc mutex,
-as we don't unlock the assoc mutex when flushing the workqueue, which
-also holds the lock.
 
-This patch is queued for inclusion in the wireless-2.6 tree.
+--=-s+YtHkz32xoi8s7Cfbt4
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+On Thu, 2007-08-02 at 14:48 +0200, dragoran wrote:
 
-Index: bu3sch-wireless-dev/net/ieee80211/softmac/ieee80211softmac_wx.c
-===================================================================
---- bu3sch-wireless-dev.orig/net/ieee80211/softmac/ieee80211softmac_wx.c	2007-07-14 18:18:06.000000000 +0200
-+++ bu3sch-wireless-dev/net/ieee80211/softmac/ieee80211softmac_wx.c	2007-07-31 20:30:08.000000000 +0200
-@@ -74,8 +74,8 @@ ieee80211softmac_wx_set_essid(struct net
- 	struct ieee80211softmac_auth_queue_item *authptr;
- 	int length = 0;
- 
-+check_assoc_again:
- 	mutex_lock(&sm->associnfo.mutex);
--
- 	/* Check if we're already associating to this or another network
- 	 * If it's another network, cancel and start over with our new network
- 	 * If it's our network, ignore the change, we're already doing it!
-@@ -98,13 +98,18 @@ ieee80211softmac_wx_set_essid(struct net
- 				cancel_delayed_work(&authptr->work);
- 			sm->associnfo.bssvalid = 0;
- 			sm->associnfo.bssfixed = 0;
--			flush_scheduled_work();
- 			sm->associnfo.associating = 0;
- 			sm->associnfo.associated = 0;
-+			/* We must unlock to avoid deadlocks with the assoc workqueue
-+			 * on the associnfo.mutex */
-+			mutex_unlock(&sm->associnfo.mutex);
-+			flush_scheduled_work();
-+			/* Avoid race! Check assoc status again. Maybe someone started an
-+			 * association while we flushed. */
-+			goto check_assoc_again;
- 		}
- 	}
- 
--
- 	sm->associnfo.static_essid = 0;
- 	sm->associnfo.assoc_wait = 0;
- 
+> > Nono, you cannot solve it in the driver. The whole design of mac80211
+> > mandates that assumption and I think it is a valid one to make.
+> why? did the old way (allow mode changing while up) caused any problems?
 
--------------------------------------------------------
+Why should it be allowed? Can you come up with a good reason for that
+since you lose all state anyway when doing mode transitions?
+
+Until then (and I guess somebody *really* wants it) it's just a lot
+easier to not even try to change these low-level things while the
+interface is operating.
+
+johannes
+
+--=-s+YtHkz32xoi8s7Cfbt4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGsdO3/ETPhpq3jKURAqfOAJ0fIn/LwSoPMajzaNmXGykr+13ZawCgioH7
+JsdFZGJ8c2vhuEm4LE/FmzY=
+=Wv7u
+-----END PGP SIGNATURE-----
+
+--=-s+YtHkz32xoi8s7Cfbt4--
+
