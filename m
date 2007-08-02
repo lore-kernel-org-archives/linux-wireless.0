@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49146 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S970961AbXHMJCA (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:33973 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754711AbXHBQds (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 05:02:00 -0400
-Subject: Re: [PATCHv2] mac80211: dynamic wep
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: Volker Braun <volker.braun@physik.hu-berlin.de>,
-	linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
-In-Reply-To: <200708130054.57899.flamingice@sourmilk.net>
-References: <pan.2007.08.10.23.31.32@physik.hu-berlin.de>
-	 <200708130054.57899.flamingice@sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jnlH6hgDIL3aiMYwN5Z9"
-Date: Mon, 13 Aug 2007 10:54:43 +0200
-Message-Id: <1186995283.27916.60.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 2 Aug 2007 12:33:48 -0400
+Message-ID: <46B20760.5000406@lwfinger.net>
+Date: Thu, 02 Aug 2007 11:33:36 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [RFC V3] bcm43xx-mac80211: Provide information to allow transmission  rate decreases
+References: <46b1fa6d.d4l4DujAaAR2ORZf%Larry.Finger@lwfinger.net> <200708021805.17004.mb@bu3sch.de>
+In-Reply-To: <200708021805.17004.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michael Buesch wrote:
+> On Thursday 02 August 2007, Larry Finger wrote:
+>> Michael,
+>>
+>> I couldn't find any long/short indication in the header, so I added a bool that
+>> is set when the frame is sent.
+> 
+> This is not going to work.
+> 
+> But we can do this differently.
+> You can do something like:
+> 
+> if (!status->acked && !tx_control->noack)
+> 	excessive_retries = 1;
+> 
+> So we don't need to care about the retry count.
+> 
+> Anyway. I don't know why we need excessive_retries _at_ _all_.
+> The rc algorithm does already know if the frame succeed or failed
+> anyway.
 
---=-jnlH6hgDIL3aiMYwN5Z9
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yes, it does, but it only looks at the potential for reduction if excessive retries is set. Why? 
+Because it was coded that way! As I said earlier, I don't want to get involved there.
 
-On Mon, 2007-08-13 at 00:54 -0700, Michael Wu wrote:
+I'll try to implement it as above.
 
-> This part seems fairly evil. I suspect a better solution here is to allow=
-=20
-> unencrypted frames when the interface is dormant (netif_dormant()) and th=
-en=20
-> we might be able to get rid of the specific check for WEP.
-
-Might that address Tomas's concern with EAPOL too?
-
-johannes
-
---=-jnlH6hgDIL3aiMYwN5Z9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGwBxT/ETPhpq3jKURAtm5AKCMC1X3b4SGH98wrNtV3pC+2B4Q7ACffADP
-xPVDvHmjbFcfWJxMbKUzvyA=
-=n8XG
------END PGP SIGNATURE-----
-
---=-jnlH6hgDIL3aiMYwN5Z9--
+Larry
 
