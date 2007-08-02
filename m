@@ -1,69 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:46011 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763200AbXHOO6n (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46747
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751002AbXHBWiQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 10:58:43 -0400
-Message-Id: <20070815145043.964961000@sipsolutions.net>
-References: <20070815144920.135826000@sipsolutions.net>
-Date: Wed, 15 Aug 2007 16:49:26 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 06/20] mac80211: remove PRISM2_PARAM_RADIO_ENABLED
+	Thu, 2 Aug 2007 18:38:16 -0400
+Date: Thu, 02 Aug 2007 15:38:16 -0700 (PDT)
+Message-Id: <20070802.153816.98863127.davem@davemloft.net>
+To: mb@bu3sch.de
+Cc: dsd@gentoo.org, dwmw2@infradead.org, larry.finger@lwfinger.net,
+	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
+	jbenc@suse.cz, flamingice@sourmilk.net
+Subject: Re: mac80211 IPv6 problems
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <200708030036.13317.mb@bu3sch.de>
+References: <1186088678.2931.10.camel@pmac.infradead.org>
+	<46B25B04.5020804@gentoo.org>
+	<200708030036.13317.mb@bu3sch.de>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This now is unused in hostapd/wpa_supplicant.
+From: Michael Buesch <mb@bu3sch.de>
+Date: Fri, 3 Aug 2007 00:36:12 +0200
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/hostapd_ioctl.h   |    1 -
- net/mac80211/ieee80211_ioctl.c |   14 --------------
- 2 files changed, 15 deletions(-)
+> On Friday 03 August 2007, Daniel Drake wrote:
+> > David Woodhouse wrote:
+> > > My experience is that mac80211 is broken w.r.t IPv6 -- it receives its
+> > > own packets. It would be suboptimal for me if the softmac version of
+> > > bcm43xx were to go away before that got fixed.
+> > 
+> > This may be a stack-level issue. This is one of the issues holding back 
+> > zd1211rw-mac80211 going into mainline: we have a report that 
+> > zd1211rw-softmac works fine with IPv6 but mac80211 only works 
+> > occasionally with the same device on the same system.
+> > 
+> > Does anyone have any ideas?
+> 
+> This is certainly an issue in the packet filtering of mac80211.
 
---- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-08-15 13:39:48.466520121 +0200
-+++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-08-15 13:39:49.146520121 +0200
-@@ -35,7 +35,6 @@ enum {
- 	PRISM2_PARAM_PREAMBLE = 1003,
- 	PRISM2_PARAM_SHORT_SLOT_TIME = 1006,
- 	PRISM2_PARAM_NEXT_MODE = 1008,
--	PRISM2_PARAM_RADIO_ENABLED = 1010,
- 	PRISM2_PARAM_PRIVACY_INVOKED = 1014,
- 	PRISM2_PARAM_BROADCAST_SSID = 1015,
- 	PRISM2_PARAM_STA_ANTENNA_SEL = 1017,
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-15 13:39:48.466520121 +0200
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-15 13:39:49.146520121 +0200
-@@ -1157,16 +1157,6 @@ static int ieee80211_ioctl_set_regulator
- }
- 
- 
--static int ieee80211_ioctl_set_radio_enabled(struct net_device *dev,
--					     int val)
--{
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	struct ieee80211_conf *conf = &local->hw.conf;
--
--	conf->radio_enabled = val;
--	return ieee80211_hw_config(wdev_priv(dev->ieee80211_ptr));
--}
--
- static int
- ieee80211_ioctl_set_tx_queue_params(struct net_device *dev,
- 				    struct prism2_hostapd_param *param)
-@@ -2202,10 +2192,6 @@ static int ieee80211_ioctl_prism2_param(
- 		local->next_mode = value;
- 		break;
- 
--	case PRISM2_PARAM_RADIO_ENABLED:
--		ret = ieee80211_ioctl_set_radio_enabled(dev, value);
--		break;
--
- 	case PRISM2_PARAM_BROADCAST_SSID:
- 		if ((value < 0) || (value > 1))
- 			ret = -EINVAL;
-
--- 
-
+Another thing to always be mindful of with ipv6 is that it
+uses multicast as part of it's normal operation.
