@@ -1,84 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59232 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39709 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754962AbXH3NEe (ORCPT
+	with ESMTP id S1755089AbXHBMpY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 09:04:34 -0400
-Subject: [PATCH] b43 drivers: remove IEEE80211_CONF_SSID_HIDDEN
+	Thu, 2 Aug 2007 08:45:24 -0400
+Subject: RE: [ipw3945-devel] chaning mode only when interface down?
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>
-Content-Type: text/plain
-Date: Thu, 30 Aug 2007 15:05:44 +0200
-Message-Id: <1188479144.2963.30.camel@johannes.berg>
+To: "Winkler, Tomas" <tomas.winkler@intel.com>
+Cc: dragoran <drago01@gmail.com>, Dan Williams <dcbw@redhat.com>,
+	linux-wireless@vger.kernel.org,
+	network manager <networkmanager-list@gnome.org>,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <C07C4589BE74A34981C3C3525EE1F801024CF30B@hasmsx412.ger.corp.intel.com>
+References: <C07C4589BE74A34981C3C3525EE1F801024CF30B@hasmsx412.ger.corp.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-plj5/w6ER6iCR3FW9S9v"
+Date: Thu, 02 Aug 2007 14:46:43 +0200
+Message-Id: <1186058803.24230.42.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The IEEE80211_CONF_SSID_HIDDEN setting is unclear but does not
-match the "closed net" flag b43 hardware has; the flag influences
-only the sending of probe responses which is disabled anyway.
->From looking at the microcode, I can see that if the flag is set
-then probe requests are required to be directed to the BSSID of
-the AP to be answered by the microcode, but this not interesting
-because we don't support probe request offload anyway.
 
-This patch removes the IEEE80211_CONF_SSID_HIDDEN use from
-both b43 drivers.
+--=-plj5/w6ER6iCR3FW9S9v
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Cc: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <larry.finger@lwfinger.net>
+On Thu, 2007-08-02 at 15:41 +0300, Winkler, Tomas wrote:
 
----
-I've also clarified the specs, please queue the change to your
-respective drivers.
+> I'm really not an expert on the configuration but I think at least the
+> transition from STA to IBSS mode and back should be smooth without
+> reloading the driver. What you do if the driver is compiled to kernel
+> will we reboot?
 
- drivers/net/wireless/b43/main.c       |   11 -----------
- drivers/net/wireless/b43legacy/main.c |   12 ------------
- 2 files changed, 23 deletions(-)
+Oh you don't have to reload the driver, you only have to down the
+interface. If you have to reload it that's a driver bug, but the fact
+that you have to down the interface is a mac80211 "limitation"
 
---- wireless-dev.orig/drivers/net/wireless/b43/main.c	2007-08-30 14:35:57.512051253 +0200
-+++ wireless-dev/drivers/net/wireless/b43/main.c	2007-08-30 14:36:01.002051253 +0200
-@@ -2836,17 +2836,6 @@ static int b43_dev_config(struct ieee802
- 		}
- 	}
- 
--	/* Hide/Show the SSID (AP mode only). */
--	if (conf->flags & IEEE80211_CONF_SSID_HIDDEN) {
--		b43_write32(dev, B43_MMIO_MACCTL,
--			    b43_read32(dev, B43_MMIO_MACCTL)
--			    | B43_MACCTL_CLOSEDNET);
--	} else {
--		b43_write32(dev, B43_MMIO_MACCTL,
--			    b43_read32(dev, B43_MMIO_MACCTL)
--			    & ~B43_MACCTL_CLOSEDNET);
--	}
--
- 	/* Antennas for RX and management frame TX. */
- 	b43_mgmtframe_txantenna(dev, antenna_tx);
- 	b43_set_rx_antenna(dev, antenna_rx);
---- wireless-dev.orig/drivers/net/wireless/b43legacy/main.c	2007-08-30 14:35:05.962051253 +0200
-+++ wireless-dev/drivers/net/wireless/b43legacy/main.c	2007-08-30 14:36:01.022051253 +0200
-@@ -2655,18 +2655,6 @@ static int b43legacy_dev_config(struct i
- 		}
- 	}
- 
--	/* Hide/Show the SSID (AP mode only). */
--	if (conf->flags & IEEE80211_CONF_SSID_HIDDEN)
--		b43legacy_write32(dev, B43legacy_MMIO_STATUS_BITFIELD,
--				  b43legacy_read32(dev,
--				  B43legacy_MMIO_STATUS_BITFIELD)
--				  | B43legacy_SBF_NO_SSID_BCAST);
--	else
--		b43legacy_write32(dev, B43legacy_MMIO_STATUS_BITFIELD,
--				  b43legacy_read32(dev,
--				  B43legacy_MMIO_STATUS_BITFIELD)
--				  & ~B43legacy_SBF_NO_SSID_BCAST);
--
- 	/* Antennas for RX and management frame TX. */
- 	b43legacy_mgmtframe_txantenna(dev, antenna_tx);
- 
+johannes
 
+--=-plj5/w6ER6iCR3FW9S9v
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGsdIz/ETPhpq3jKURAkMdAKCdctUIcueYVRde6kF1bABAFZyBSACeLuMj
+q2RWeGu3Scl5F4rTiSnddNU=
+=HD77
+-----END PGP SIGNATURE-----
+
+--=-plj5/w6ER6iCR3FW9S9v--
 
