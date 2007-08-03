@@ -1,272 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:42546 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759704AbXHTWO3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2007 18:14:29 -0400
-From: Chr <chunkeey@web.de>
+Received: from mx1.redhat.com ([66.187.233.31]:45113 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751136AbXHCLXW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Aug 2007 07:23:22 -0400
+Subject: RE: [ipw3945-devel] chaning mode only when interface down?
+From: Dan Williams <dcbw@redhat.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Recent linux-wireless git changes have broken my prism54pci card
-Date: Tue, 21 Aug 2007 00:14:26 +0200
-Cc: Hans de Goede <j.w.r.degoede@hhs.nl>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-References: <46BFF10B.1090307@hhs.nl> <200708201351.45575.chunkeey@web.de> <1187612256.6090.104.camel@johannes.berg>
-In-Reply-To: <1187612256.6090.104.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_CJhyGxRNOlnuDcc"
-Message-Id: <200708210014.26242.chunkeey@web.de>
+Cc: "Winkler, Tomas" <tomas.winkler@intel.com>,
+	dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
+	network manager <networkmanager-list@gnome.org>,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1186134177.4647.19.camel@johannes.berg>
+References: <C07C4589BE74A34981C3C3525EE1F801024CF2CB@hasmsx412.ger.corp.intel.com>
+	 <1186058047.24230.38.camel@johannes.berg>
+	 <1186080675.9527.10.camel@xo-13-A4-25.localdomain>
+	 <1186134177.4647.19.camel@johannes.berg>
+Content-Type: text/plain
+Date: Fri, 03 Aug 2007 07:20:19 -0400
+Message-Id: <1186140019.22438.6.camel@xo-13-A4-25.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Boundary-00=_CJhyGxRNOlnuDcc
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-On Monday, 20. August 2007, Johannes Berg wrote:
-> On Mon, 2007-08-20 at 13:51 +0200, Chr wrote:
+On Fri, 2007-08-03 at 11:42 +0200, Johannes Berg wrote:
+> On Thu, 2007-08-02 at 14:51 -0400, Dan Williams wrote:
 > 
-> > "pyh2: not handling 0x02 type control frame" (could be the FW)
+> > Well, to be honest none of the drivers before mac80211 required you to
+> > down the device to change modes.  But they were mostly fullmac, or
+> > half-mac like ipw2x00.  Since mac80211 has only just become useful in
+> > the past couple of months for most people, it's not really fair to
+> > expect versions of NM that were out before mac80211 landed to play nice
+> > with what mac80211 expects, which is different from what other drivers
+> > implement.
 > 
-> The driver, I assume.
-No, it's really the firmware. I've "finally" tried the 2.4.12.0 and got the same messages... 
-But, I didn't get them with 2.7.0.0 or 2.5.2.0.
+> True.
+> 
+> > Not to say NM shouldn't be fixed for this.  The other problem is that
+> > there's really not a good way to determine whether the driver is
+> > actually _ready_ after down it and bringing it back up.  You basically
+> > have to spin & block until the interface gets IFF_UP set on it again,
+> > and even then that's not entirely reliable.
+> 
+> Not sure I understand? Drivers can fully well block the userspace task
+> that is doing the IFF_UP until they're read? bcm43xx does that.
 
-Moreover, because of some "unknown reason" 2.4.12.0 does not work very well with
-my isl3880 chip, I cannot tx/rx any QoS data frame... And probably, it's because the
-feature is not supported by the firmware...  
+Well, I'd rather that the driver actually not block (NM uses netlink
+here anyway, not an ioctl) but there be some flag to look for when the
+device actually is up.  That implies that the device not set IFF_UP on
+itself until it actually _is_ up.  I think the biggest offender for
+up-misbehavior used to be prism54 FullMAC, because it had to reload the
+firmware for almost every operation, and that could take over a second
+or two to load & reboot the firmware.  There wasn't a good way of
+telling when that was done and the firmware was ready for business.  So
+you end up having sleep(2) calls littering the code to deal with these
+sorts of little things.
 
-I made two patches:
+Dan
 
-the p54-pull-padding.diff should finally fix the rate algorithm for "everyone" and as 
-a bonus for developers: it adds a printk for the firmware revision p54 is using.
-(If noone complains within a week, I'll write a official patch post for it...)
-
-p54-remove-qos.diff (must be applied on top of p54-pull-padding.diff) is _only_ for
-Hans...  It removes/reverts QoS/WME/WMM/IEEE802.11e features.
-
-Thanks,
-	Chr
-
-    
-
-
-
-
---Boundary-00=_CJhyGxRNOlnuDcc
-Content-Type: text/x-diff;
-  charset="iso-8859-15";
-  name="p54-pull-padding.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="p54-pull-padding.diff"
-
-diff -Nurp a/drivers/net/wireless/p54common.c b/drivers/net/wireless/p54common.c
---- a/drivers/net/wireless/p54common.c	2007-08-18 20:44:04.000000000 +0200
-+++ b/drivers/net/wireless/p54common.c	2007-08-20 23:06:46.000000000 +0200
-@@ -48,6 +48,7 @@ void p54_parse_firmware(struct ieee80211
- 	while (bootrec->data <= end_data &&
- 	       (bootrec->data + le32_to_cpu(bootrec->len)) <= end_data) {
- 		u32 code = le32_to_cpu(bootrec->code);
-+		size_t len = le32_to_cpu(bootrec->len);
- 		switch (code) {
- 		case BR_CODE_COMPONENT_ID:
- 			switch (be32_to_cpu(*bootrec->data)) {
-@@ -69,6 +70,9 @@ void p54_parse_firmware(struct ieee80211
- 			}
- 			break;
- 		case BR_CODE_COMPONENT_VERSION:
-+			priv->fw_version = kmalloc(len * 4, GFP_KERNEL);
-+			snprintf(priv->fw_version, len * 4, "%s", (char*)bootrec->data);
-+			printk(KERN_INFO "p54: firmware version %s\n", priv->fw_version);
- 			break;
- 		case BR_CODE_DESCR:
- 			priv->rx_start = le32_to_cpu(bootrec->data[1]);
-@@ -86,7 +90,7 @@ void p54_parse_firmware(struct ieee80211
- 		default:
- 			break;
- 		}
--		bootrec = (struct bootrec *)&bootrec->data[le32_to_cpu(bootrec->len)];
-+		bootrec = (struct bootrec *)&bootrec->data[len];
- 	}
- }
- EXPORT_SYMBOL_GPL(p54_parse_firmware);
-@@ -315,9 +319,11 @@ static void p54_rx_frame_sent(struct iee
- 	struct p54_control_hdr *hdr = (struct p54_control_hdr *) skb->data;
- 	struct p54_frame_sent_hdr *payload = (struct p54_frame_sent_hdr *) hdr->data;
- 	struct sk_buff *entry = (struct sk_buff *) priv->tx_queue.next;
-+	struct p54_control_hdr *entry_hdr;
-+	struct p54_tx_control_allocdata *entry_data;
- 	u32 addr = le32_to_cpu(hdr->req_id) - 0x70;
- 	struct memrecord *range = NULL;
--	u32 freed = 0;
-+	u32 freed = 0, pad = 0;
- 	u32 last_addr = priv->rx_start;
- 
- 	while (entry != (struct sk_buff *)&priv->tx_queue) {
-@@ -339,15 +345,25 @@ static void p54_rx_frame_sent(struct iee
- 			memcpy(&status.control, range->control,
- 			       sizeof(status.control));
- 			kfree(range->control);
--			if (!payload->status)
--				status.flags |= IEEE80211_TX_STATUS_ACK;
--			else
--				status.excessive_retries = 1;
--			status.retry_count = payload->retries - 1;
--			status.ack_signal = le16_to_cpu(payload->ack_rssi);
--			skb_pull(entry, sizeof(*hdr) + sizeof(struct p54_tx_control_allocdata));
- 			priv->tx_stats.data[status.control.queue].len--;
-+
-+			entry_hdr = (struct p54_control_hdr *) entry->data;
-+			entry_data = (struct p54_tx_control_allocdata *) entry_hdr->data;
-+			if (entry_hdr->magic1 & cpu_to_le16(0x4000))
-+				pad = entry_data->align[0];
-+			else 
-+				pad = 0;
-+			if (status.control.flags & IEEE80211_TXCTL_NO_ACK) {
-+				if (!(payload->status & 0x01))
-+					status.flags |= IEEE80211_TX_STATUS_ACK;
-+				else
-+					status.excessive_retries = 1;
-+				status.retry_count = payload->retries - 1;
-+				status.ack_signal = le16_to_cpu(payload->ack_rssi);
-+			}
-+			skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
- 			ieee80211_tx_status_irqsafe(dev, entry, &status);
-+
- 			break;
- 		} else
- 			last_addr = range->end_addr;
-@@ -486,6 +502,7 @@ static int p54_tx(struct ieee80211_hw *d
- 		ieee80211_stop_queue(dev, control->queue);
- 
- 	padding = (unsigned long)(skb->data - (sizeof(*hdr) + sizeof(*txhdr))) & 3;
-+
- 	len = skb->len;
- 
- 	control_copy = kmalloc(sizeof(*control), GFP_ATOMIC);
-@@ -496,10 +513,12 @@ static int p54_tx(struct ieee80211_hw *d
- 			skb_push(skb, sizeof(*txhdr) + padding);
- 	hdr = (struct p54_control_hdr *) skb_push(skb, sizeof(*hdr));
- 
--	if (padding)
--		hdr->magic1 = cpu_to_le16(0x4010);
--	else
--		hdr->magic1 = cpu_to_le16(0x0010);
-+	if (padding) {
-+		hdr->magic1 = cpu_to_le16(0x4000);
-+		txhdr->align[0] = padding;
-+	} else
-+		hdr->magic1 = cpu_to_le16(0x0000);
-+
- 	hdr->len = cpu_to_le16(len);
- 	hdr->type = (control->flags & IEEE80211_TXCTL_NO_ACK) ? 0 : cpu_to_le16(1);
- 	hdr->retry1 = hdr->retry2 = control->retry_limit;
-@@ -515,6 +534,9 @@ static int p54_tx(struct ieee80211_hw *d
- 		rate |= 0x40;
- 	else if (control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT)
- 		rate |= 0x20;
-+	else 
-+		hdr->magic1 |= cpu_to_le16(0x0010);
-+
- 	memset(txhdr->rateset, rate, 8);
- 	txhdr->wep_key_present = 0;
- 	txhdr->wep_key_len = 0;
-@@ -525,8 +547,6 @@ static int p54_tx(struct ieee80211_hw *d
- 	txhdr->output_power = 0x7f; // HW Maximum
- 	txhdr->magic5 = (control->flags & IEEE80211_TXCTL_NO_ACK) ?
- 		0 : ((rate > 0x3) ? cpu_to_le32(0x33) : cpu_to_le32(0x23));
--	if (padding)
--		txhdr->align[0] = padding;
- 
- 	priv->tx(dev, hdr, skb->len, 0);
- 	return 0;
-@@ -938,6 +958,7 @@ void p54_free_common(struct ieee80211_hw
- 	kfree(priv->output_limit);
- 	kfree(priv->curve_data);
- 	kfree(priv->cached_vdcf);
-+	kfree(priv->fw_version);
- }
- EXPORT_SYMBOL_GPL(p54_free_common);
- 
-diff -Nurp a/drivers/net/wireless/p54.h b/drivers/net/wireless/p54.h
---- a/drivers/net/wireless/p54.h	2007-08-18 20:44:04.000000000 +0200
-+++ b/drivers/net/wireless/p54.h	2007-08-20 23:05:45.000000000 +0200
-@@ -60,6 +60,7 @@ struct p54_common {
- 	struct pda_pa_curve_data *curve_data;
- 	__le16 rxhw;
- 	u8 version;
-+	char *fw_version;
- 	unsigned int tx_hdr_len;
- 	void *cached_vdcf;
- 	/* FIXME: this channels/modes/rates stuff sucks */
-
---Boundary-00=_CJhyGxRNOlnuDcc
-Content-Type: text/x-diff;
-  charset="iso-8859-15";
-  name="p54-remove-qos.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="p54-remove-qos.diff"
-
-diff -Nurp a/drivers/net/wireless/p54common.c b/drivers/net/wireless/p54common.c
---- a/drivers/net/wireless/p54common.c	2007-08-20 23:06:46.000000000 +0200
-+++ b/drivers/net/wireless/p54common.c	2007-08-20 23:41:07.000000000 +0200
-@@ -345,7 +345,7 @@ static void p54_rx_frame_sent(struct iee
- 			memcpy(&status.control, range->control,
- 			       sizeof(status.control));
- 			kfree(range->control);
--			priv->tx_stats.data[status.control.queue].len--;
-+			priv->tx_stats.data[0].len--;
- 
- 			entry_hdr = (struct p54_control_hdr *) entry->data;
- 			entry_data = (struct p54_tx_control_allocdata *) entry_hdr->data;
-@@ -493,13 +493,13 @@ static int p54_tx(struct ieee80211_hw *d
- 	size_t padding, len;
- 	u8 rate;
- 
--	current_queue = &priv->tx_stats.data[control->queue];
-+	current_queue = &priv->tx_stats.data[0];
- 	if (unlikely(current_queue->len > current_queue->limit))
- 		return NETDEV_TX_BUSY;
- 	current_queue->len++;
- 	current_queue->count++;
- 	if (current_queue->len == current_queue->limit)
--		ieee80211_stop_queue(dev, control->queue);
-+		ieee80211_stop_queue(dev, 0);
- 
- 	padding = (unsigned long)(skb->data - (sizeof(*hdr) + sizeof(*txhdr))) & 3;
- 
-@@ -540,7 +540,7 @@ static int p54_tx(struct ieee80211_hw *d
- 	memset(txhdr->rateset, rate, 8);
- 	txhdr->wep_key_present = 0;
- 	txhdr->wep_key_len = 0;
--	txhdr->frame_type = cpu_to_le32(control->queue + 4);
-+	txhdr->frame_type = 4;
- 	txhdr->magic4 = 0;
- 	txhdr->antenna = (control->antenna_sel_tx == 0) ?
- 		2 : control->antenna_sel_tx - 1;
-@@ -920,12 +920,9 @@ struct ieee80211_hw *p54_init_common(siz
- 	dev->max_rssi = 100;
- 
- 	/* (hard) queue limits */
--	priv->tx_stats.data[0].limit = 3;
--	priv->tx_stats.data[1].limit = 4;
--	priv->tx_stats.data[2].limit = 3;
--	priv->tx_stats.data[3].limit = 1;
-+	priv->tx_stats.data[0].limit = 4;
- 
--	dev->queues = 4;
-+	dev->queues = 1;
- 	dev->extra_tx_headroom = sizeof(struct p54_control_hdr) + 4 +
- 				 sizeof(struct p54_tx_control_allocdata);
- 
-
---Boundary-00=_CJhyGxRNOlnuDcc--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
