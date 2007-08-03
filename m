@@ -1,41 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:36777 "EHLO
-	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751010AbXHBPx0 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:34226 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762101AbXHCVnJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 11:53:26 -0400
-Date: Thu, 02 Aug 2007 10:53:04 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [RFC 0/10] Port of bcm43xx from softmac to mac80211
-Message-ID: <46b1fde0.b+weBDN75J0SPe2a%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 3 Aug 2007 17:43:09 -0400
+Subject: [PATCH] mac80211: allow drivers to indicate failed FCS/PLCP  checksum
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 03 Aug 2007 23:44:35 +0200
+Message-Id: <1186177475.13315.10.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver bcm43xx is being ported from using SoftMAC to mac80211. For rewiew,
-this series of patches is being prepared; however, the final patch will be
-a single entity so that compilation during bisection will not break.
+This patch allows drivers to indicate bad FCS/PLCP CRC to the stack and
+have the stack drop packets like that except for monitor interfaces.
 
-The contents of the various pieces are as follows:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Compiles, but otherwise untested. Patch against Jiri's tree, applies to
+John's tree (with some fuzz) if you change rx.c to ieee80211.c in the
+patch.
 
- 1. Kconfig, Makefile and the main header file.
- 2. bcm43xx_debugfs.c and bcm43xx_debugfs.h
- 3. bcm43xx_dma.c and bcm43xx_dma.h
- 4. bcm43xx_ilt.c, bcm43xx_ilt.h, bcm43xx_leds.c and bcm43xx_leds.h
- 5. bcm43xx_main.c and bcm43xx_main.h
- 6. bcm43xx_phy.c and bcm43xx_phy.h
- 7. bcm43xx_pio.c and bcm43xx_pio.h
- 8. bcm43xx_radio.c and bcm43xx_radio.h
- 9. bcm43xx_sysfs.c and bcm43xx_sysfs.h
-10: bcm43xx_xmit.c and bcm43xx_xmit.h
+ include/net/mac80211.h |    2 ++
+ net/mac80211/rx.c      |   21 ++++++++++++++++++++-
+ 2 files changed, 22 insertions(+), 1 deletion(-)
 
-In general, this port consists of taking the files bcm43xx_phy and 
-bcm43xx_radio from the softmac driver and converting them to work with
-the files from the mac80211 version, which has been back-converted to 
-use V3 firmware.
+--- mac80211.orig/include/net/mac80211.h	2007-08-03 23:06:33.357869508 +0200
++++ mac80211/include/net/mac80211.h	2007-08-03 23:10:01.267869508 +0200
+@@ -241,6 +241,8 @@ struct ieee80211_rx_status {
+ #define RX_FLAG_MMIC_ERROR	(1<<0)
+ #define RX_FLAG_DECRYPTED	(1<<1)
+ #define RX_FLAG_RADIOTAP	(1<<2)
++#define RX_FLAG_FAILED_FCS_CRC	(1<<3)
++#define RX_FLAG_FAILED_PLCP_CRC	(1<<4)
+ 	int flag;
+ };
+ 
+--- mac80211.orig/net/mac80211/rx.c	2007-08-03 23:06:54.187869508 +0200
++++ mac80211/net/mac80211/rx.c	2007-08-03 23:39:41.717869508 +0200
+@@ -155,6 +155,7 @@ ieee80211_rx_monitor(struct net_device *
+ 		__le16 chan_freq;
+ 		__le16 chan_flags;
+ 		u8 antsignal;
++		__le16 rx_flags;
+ 	} __attribute__ ((packed)) *rthdr;
+ 
+ 	skb->dev = dev;
+@@ -179,12 +180,21 @@ ieee80211_rx_monitor(struct net_device *
+ 		cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
+ 			    (1 << IEEE80211_RADIOTAP_RATE) |
+ 			    (1 << IEEE80211_RADIOTAP_CHANNEL) |
+-			    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL));
++			    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL) |
++			    (1 << IEEE80211_RADIOTAP_RX_FLAGS));
+ 	rthdr->flags = local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS ?
+ 		       IEEE80211_RADIOTAP_F_FCS : 0;
++
++	/* FIXME: when radiotap gets a 'bad PLCP' flag use it here */
++	rthdr->rx_flags = 0;
++	if (status->flag &
++	    (RX_FLAG_FAILED_FCS_CRC | RX_FLAG_FAILED_PLCP_CRC))
++		rthdr->rx_flags |= cpu_to_le16(IEEE80211_RADIOTAP_F_RX_BADFCS);
++
+ 	rate = ieee80211_get_rate(local, status->phymode, status->rate);
+ 	if (rate)
+ 		rthdr->rate = rate->rate / 5;
++
+ 	rthdr->chan_freq = cpu_to_le16(status->freq);
+ 	rthdr->chan_flags =
+ 		status->phymode == MODE_IEEE80211A ?
+@@ -212,6 +222,15 @@ ieee80211_rx_h_monitor(struct ieee80211_
+ 		return TXRX_QUEUED;
+ 	}
+ 
++	/*
++	 * Drop frames with failed FCS/PLCP checksums here, they are only
++	 * relevant for monitor mode, the rest of the stack should never
++	 * see them.
++	 */
++	if (rx->u.rx.status->flag &
++	    (RX_FLAG_FAILED_FCS_CRC | RX_FLAG_FAILED_PLCP_CRC))
++		return TXRX_DROP;
++
+ 	if (rx->u.rx.status->flag & RX_FLAG_RADIOTAP)
+ 		skb_pull(rx->skb, ieee80211_get_radiotap_len(rx->skb->data));
+ 
 
-Larry
 
