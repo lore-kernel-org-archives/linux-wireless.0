@@ -1,29 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42385 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S970669AbXHMI5b (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.173]:42907 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760032AbXHCS05 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 04:57:31 -0400
-Received: from [131.234.209.34] (helo=[131.234.237.45])
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1IKVju-0007S6-6X
-	for linux-wireless@vger.kernel.org; Mon, 13 Aug 2007 09:57:30 +0100
-Message-Id: <20070813074504.416717000@sipsolutions.net>
-Date: Mon, 13 Aug 2007 09:45:04 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/3] management interface removal
-Mime-Version: 1.0
+	Fri, 3 Aug 2007 14:26:57 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so497610ugf
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Aug 2007 11:26:55 -0700 (PDT)
+To: dragoran <drago01@gmail.com>
+Subject: Re: rt2500usb stopped working (vendor request error)
+Date: Fri, 3 Aug 2007 20:31:23 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <46B1B0AE.7050205@gmail.com> <200708032015.57569.IvDoorn@gmail.com> <f6ca9fed0708031114v49736b2cxd4525cc4c1650c7e@mail.gmail.com>
+In-Reply-To: <f6ca9fed0708031114v49736b2cxd4525cc4c1650c7e@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708032031.23966.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The first patch in the series is required to get hostapd working
-with the monitor interface, the second cleans up some event sending
-code and the third finally removes all the management interface.
+On Friday 03 August 2007, dragoran wrote:
+> thats what I am using it for....
 
-Net weight:
- 17 files changed, 75 insertions(+), 529 deletions(-)
+I understand, but if you could test the legacy driver
+for any other mode to see if at least the hardware is
+all right.
+Managed and adhoc mode would already give a good
+idea about any possible hardware problems.
 
-johannes
+Ivo
