@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:54608
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760544AbXHFU0X (ORCPT
+Received: from purr.warmcat.com ([87.106.142.209]:41232 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759473AbXHCKtO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2007 16:26:23 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC] bcm43xx-mac80211: Add TX power set file to debugfs
-Date: Mon, 6 Aug 2007 22:25:58 +0200
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <46b782f6.XGqOxV2KvXubz5jy%Larry.Finger@lwfinger.net>
-In-Reply-To: <46b782f6.XGqOxV2KvXubz5jy%Larry.Finger@lwfinger.net>
+	Fri, 3 Aug 2007 06:49:14 -0400
+Message-ID: <46B30828.3000507@warmcat.com>
+Date: Fri, 03 Aug 2007 11:49:12 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200708062225.58737.mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Ulrich Kunitz <kune@deine-taler.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Daniel Drake <dsd@gentoo.org>
+Subject: Re: mac80211 driver interface semantics
+References: <46B27729.5030406@gentoo.org>	 <20070803052935.GA12683@deine-taler.de>  <46B2E06F.4090706@warmcat.com>	 <1186134894.4647.24.camel@johannes.berg>  <46B3032C.5040306@warmcat.com>	 <1186137166.4647.34.camel@johannes.berg>  <46B304FF.3000305@warmcat.com> <1186137715.4647.36.camel@johannes.berg>
+In-Reply-To: <1186137715.4647.36.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 06 August 2007 22:22:14 Larry Finger wrote:
-> Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-> ===================================================================
-> --- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-> +++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-> @@ -2762,12 +2762,11 @@ static int bcm43xx_dev_config(struct iee
->  	}
->  
->  	/* Adjust the desired TX power level. */
-> -	if (conf->power_level != 0) {
-> -		if (conf->power_level != phy->power_level) {
-> -			phy->power_level = conf->power_level;
-> -			bcm43xx_phy_xmitpower(dev);
-> -		}
-> -	}
-> +	if (conf->power_level != 0 && phy->power_level == 0) {
-> +		phy->power_level = conf->power_level;
-> +	} else
-> +		phy->power_level = 10;
-> +	bcm43xx_phy_xmitpower(dev);
-
-No, what's that? I disagree with that.
-This breaks power adjustment.
-
->  
->  	/* Hide/Show the SSID (AP mode only). */
->  	if (conf->flags & IEEE80211_CONF_SSID_HIDDEN) {
+Somebody in the thread at some point said:
+> On Fri, 2007-08-03 at 11:35 +0100, Andy Green wrote:
 > 
+>> Right, but since we marked up the skb "the integrity of the IP checksum
+>> is unknown", if anything wants to use the packet it should re-check it
+>> itself.  Won't that do?
 > 
+> It'll check the IP checksum anyway since we don't have hardware that
+> checks it as far as I know, but we want to check the FCS.
 
+I guess I didn't understand where the problem can come from, then.
 
+''Because if you have both a hard monitor and a regular interface
+(monitor_during_oper allowed) then we will never check the CRC on frames
+that enter the networking path and can get corrupted TCP packets in etc.''
 
--- 
-Greetings Michael.
+If the rest of the networking stack didn't trust the packet anyway and
+confirms the IP-level checksum, then it can make its own opinion about
+the packet.
+
+For stuff that is looking at the whole rx packet including the ieee80211
+header, we can add a bit in the radiotap flags on top of the packet
+noting that it failed FCS.
+
+-Andy
