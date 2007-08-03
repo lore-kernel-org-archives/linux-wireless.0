@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53752 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752751AbXHJVmI (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.171]:31948 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762484AbXHCPBa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2007 17:42:08 -0400
-Subject: [PATCH] hostapd: remove use of  ieee80211_msg_key_threshold_notification
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 10 Aug 2007 23:44:45 +0200
-Message-Id: <1186782285.17351.19.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 3 Aug 2007 11:01:30 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so472986ugf
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Aug 2007 08:01:29 -0700 (PDT)
+To: dragoran <drago01@gmail.com>
+Subject: Re: rt2500usb stopped working (vendor request error)
+Date: Fri, 3 Aug 2007 17:05:57 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <46B1B0AE.7050205@gmail.com> <200708022306.33486.IvDoorn@gmail.com> <46B2E533.2000808@gmail.com>
+In-Reply-To: <46B2E533.2000808@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200708031705.57672.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The code is #if 0'ed anyway, so might as well not use the constant.
+On Friday 03 August 2007, dragoran wrote:
+> Ivo van Doorn wrote:
+> > do you have the USB stick plugged into a USB 1.1 port?
+> > If so, could you edit rt2x00usb.h and change the line: 
+> >
+> > #define REGISTER_TIMEOUT      20
+> >
+> > And increase the value to something higher (up to 500) and see if that works better?
+> >   
+> > Just an idea related to another bug report regarding vendor request 
+> > errors,
+> 1) tested todays snapshot:
+> same results.
+> 2) increased the timeout didn't help.
+> "usb 2-2: new high speed USB device using ehci_hcd and address"
+> so its a usb2 device.
+> any other ideas?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Nope not at this time,
+I'll look into the issue some more and see what might cause this.
 
---- hostap.orig/hostapd/driver_devicescape.c	2007-08-10 23:42:58.000000000 +0200
-+++ hostap/hostapd/driver_devicescape.c	2007-08-10 23:43:43.000000000 +0200
-@@ -1342,13 +1342,17 @@ static void handle_frame(struct hostapd_
- 		return;
- 	}
- #endif
-+# if 0
-+/* TODO
-+ * get key notification from kernel again... it doesn't give one now
-+ * because this code doesn't care
-+ */
- 	if (msg_type == ieee80211_msg_key_threshold_notification) {
--#if 0 /* TODO */
- 		ieee802_11_key_threshold_notification(iface->bss[0], buf,
- 						      data_len);
--#endif
- 		return;
- 	}
-+#endif
- 
- 	/* PS-Poll frame from not associated is 16 bytes. All other frames
- 	 * passed to hostapd are 24 bytes or longer.
-
-
+Ivo
