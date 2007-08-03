@@ -1,59 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:47772 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754871AbXHVRlt (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:59397 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752527AbXHCTdS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2007 13:41:49 -0400
-Message-ID: <46CC755A.5030109@lwfinger.net>
-Date: Wed, 22 Aug 2007 12:41:46 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH]  b43legacy: Initial port of new driver with bcm43xx PHY code  and ssb/mac80211 front end
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 3 Aug 2007 15:33:18 -0400
+Date: Fri, 3 Aug 2007 12:32:40 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Christian =?ISO-8859-1?Q?Sch=E4fer?= <schaefer@in.tum.de>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [BUG] timer.h
+Message-Id: <20070803123240.519c5a38.akpm@linux-foundation.org>
+In-Reply-To: <46B2EA43.8070305@in.tum.de>
+References: <46B1F896.8090005@in.tum.de>
+	<46B2EA43.8070305@in.tum.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following message was just sent to John Linville with the patch attached. Because of the patch's 
-length, it is not being sent to the lists. If you would like to obtain a copy, it is at 
-ftp://lwfinger.dynalias.org/patches/port_to_b43legacy.
+On Fri, 03 Aug 2007 10:41:39 +0200
+Christian Sch__fer <schaefer@in.tum.de> wrote:
 
-Larry
-=============================
+> Christian Sch__fer wrote:
+> > today I got the following kernel bug while wpa_supplicant tried to 
+> > connect to my AP. Kernel is a self-compiled 2.6.22 running under Ubuntu 
+> > Feisty.
+> > The wireless device is a r8187 USB, the driver is patched for injection 
+> > capability taken from www.aircrack-ng.org.
+> > Don't know if this bug is related to the driver or to the kernel, I'm no 
+> > expert.
+> > 
+> > Attached is the full dmesg and .config. Please CC to me, I'm not on the 
+> > list.
+> 
+> I was able to reproduce the bug without a tainted kernel (i.e. without 
+> the nvidia binary module). Please let me know if you need more infos.
+> 
+> 
+> ------------[ cut here ]------------
+> kernel BUG at include/linux/timer.h:153!
+> invalid opcode: 0000 [#1]
+> PREEMPT
+> Modules linked in: ieee80211_crypt_wep_rtl ieee80211_crypt_tkip_rtl 
+> ieee80211_crypt_ccmp_rtl r8187 ieee80211_rtl ieee80211_crypt_rtl 
+> speedstep_ich speedstep_lib dm_crypt dm_mod fuse firewire_sbp2 ehci_hcd 
+> ohci_hcd pcmcia firmware_class usbhid firewire_ohci firewire_core 
+> yenta_socket rsrc_nonstatic pcmcia_core crc_itu_t floppy uhci_hcd usbcore
+> CPU:    0
+> EIP:    0060:[<f8e45cf4>]    Not tainted VLI
+> EFLAGS: 00010286   (2.6.22 #3)
+> EIP is at ieee80211_associate_step1_rtl7+0x257/0x28d [ieee80211_rtl]
+> eax: f74cfae8   ebx: c045c030   ecx: f74cfcf8   edx: ffffffff
+> esi: f74cf3a0   edi: e8fd2e80   ebp: 00000202   esp: f0d5ff68
+> ds: 007b   es: 007b   fs: 0000  gs: 0000  ss: 0068
+> Process Ieee80211/0 (pid: 2733, ti=f0d5e000 task=f176c0b0 task.ti=f0d5e000)
+> Stack: ffffffff e9ee0410 f74cfb88 f74cf3a0 f4c6fc40 f8e4600c f8e4606e 
+> f74cfb8c
+>         f74cfb88 c01276a6 00000000 00000000 0000001a c0456198 f4c6fc48 
+> f4c6fc40
+>         c0127c55 00000000 c0127cf2 00000000 f176c0b0 c012a784 f0d5ffc0 
+> f0d5ffc0
+> Call Trace:
+>   [<f8e4600c>] ieee80211_associate_procedure_wq_rtl7+0x0/0x78 
+> [ieee80211_rtl]
+>   [<f8e4606e>] ieee80211_associate_procedure_wq_rtl7+0x62/0x78 
+> [ieee80211_rtl]
+>   [<c01276a6>] run_workqueue+0x84/0x135
+>   [<c0127c55>] worker_thread+0x0/0xfb
+>   [<c0127cf2>] worker_thread+0x9d/0xfb
+>   [<c012a784>] autoremove_wake_function+0x0/0x37
+>   [<c0127c55>] worker_thread+0x0/0xfb
+>   [<c012a4aa>] kthread+0x33/0x54
+>   [<c012a477>] kthread+0x0/0x54
+>   [<c010490f>] kernel_thread_helper+0x7/0x18
+>   =======================
+> Code: 51 c7 e9 5b ff ff ff 66 c7 86 c4 05 00 00 00 00 e9 2b ff ff ff 89 
+> fa 89 f0 e8 b8 c3 ff ff eb c5 66 c7 86 c4 05 00 00 00 00 eb 9d <0f> 0b 
+> eb fe b9 fd 5c e4 f8 ba 1e 00
+>   00 00 89 f8 e8 13 ca 4a c7
+> EIP: [<f8e45cf4>] ieee80211_associate_step1_rtl7+0x257/0x28d 
+> [ieee80211_rtl] SS:ESP 0068:f0d5ff68
+> 
 
-This patch ports the PHY and radio handling code of the softmac driver
-to the mac80211 front end from b43. The resulting driver is known as
-b43legacy.
+You'll need to hunt down the authors of ieee80211_rtl (where'd that come
+from?) and tell them not do do add_timer() or an already-pending timer.
 
-This driver uses V3 firmware and supports 802.11b-only devices (BCM4301
-and BCM4303). It also supports the BCM4306/2 802.11g model. This driver
-is needed as these units are not supported by the V4 firmware used with
-driver b43. Module ssb has been modified to select between b43 and
-b43legacy depending on the revision of the 802.11 wireless core. As a
-result the two versions can coexist on a system. The scheme whereby
-the firmware is split into separate directories precludes any problems
-with firmware names. Compilation with both drivers built into the
-kernel confirms that there are no namespace collisions between b43 and
-b43legacy.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
-
-John,
-
-Because of the size of this patch, I have not sent it to the lists.
-If this is a problem, please let me know. It is meant to apply to the
-b43 branch of wireless-dev after the series of 6 patches queued by
-Michael Buesch on Aug. 18.
-
-This patch has been run through scripts/checkpatch.pl, and is reasonably
-free of the defects found by that script.
-
-The problem with performance on the BCM4306/2 has been fixed. It still
-needs improvement, but it now works as well as it ever has.
-
-Thanks,
-
-Larry
+Presumably ieee80211_associate_procedure_wq_rtl7() has an add_timer() in
+it.  Converting that to mod_timer() would maek the crash go away, but there
+might still be deeper problems.
 
