@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:52241 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758881AbXHBQaP (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.187]:62436 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750713AbXHCSO6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 12:30:15 -0400
-Message-ID: <46B20695.2080100@lwfinger.net>
-Date: Thu, 02 Aug 2007 11:30:13 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Fri, 3 Aug 2007 14:14:58 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so733633rvb
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Aug 2007 11:14:57 -0700 (PDT)
+Message-ID: <f6ca9fed0708031114v49736b2cxd4525cc4c1650c7e@mail.gmail.com>
+Date: Fri, 3 Aug 2007 20:14:57 +0200
+From: dragoran <drago01@gmail.com>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Subject: Re: rt2500usb stopped working (vendor request error)
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200708032015.57569.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 0/10] Port of bcm43xx from softmac to mac80211
-References: <46b1fde0.b+weBDN75J0SPe2a%Larry.Finger@lwfinger.net> <200708021807.20649.mb@bu3sch.de>
-In-Reply-To: <200708021807.20649.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <46B1B0AE.7050205@gmail.com> <200708032007.45875.IvDoorn@gmail.com>
+	 <f6ca9fed0708031105y5e87330fq1518b755a14ab028@mail.gmail.com>
+	 <200708032015.57569.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Thursday 02 August 2007, Larry Finger wrote:
->> Driver bcm43xx is being ported from using SoftMAC to mac80211. For rewiew,
->> this series of patches is being prepared; however, the final patch will be
->> a single entity so that compilation during bisection will not break.
->>
->> The contents of the various pieces are as follows:
->>
->>  1. Kconfig, Makefile and the main header file.
->>  2. bcm43xx_debugfs.c and bcm43xx_debugfs.h
->>  3. bcm43xx_dma.c and bcm43xx_dma.h
->>  4. bcm43xx_ilt.c, bcm43xx_ilt.h, bcm43xx_leds.c and bcm43xx_leds.h
->>  5. bcm43xx_main.c and bcm43xx_main.h
->>  6. bcm43xx_phy.c and bcm43xx_phy.h
->>  7. bcm43xx_pio.c and bcm43xx_pio.h
->>  8. bcm43xx_radio.c and bcm43xx_radio.h
->>  9. bcm43xx_sysfs.c and bcm43xx_sysfs.h
->> 10: bcm43xx_xmit.c and bcm43xx_xmit.h
->>
->> In general, this port consists of taking the files bcm43xx_phy and 
->> bcm43xx_radio from the softmac driver and converting them to work with
->> the files from the mac80211 version, which has been back-converted to 
->> use V3 firmware.
-> 
-> I don't really want to review 10 huge patches that replace
-> X by Y. If the code works, fine. Go for it. You get my ACK, if it works
-> on the hardware where it matters. ;)
+thats what I am using it for....
 
-I was hoping this would be your response, but I had to make the effort. I'll wait for a couple of 
-days to see if anyone else has any comments and send it on to Linville and hope it ends up in -mm 
-fairly soon. It _DOES_ work on the hardware.
-
-Larry
+On 8/3/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> On Friday 03 August 2007, dragoran wrote:
+> > ok this makes sense.
+> > is the legacy driver supported by hostapd?
+>
+> Nope, there is no master mode support in the legacy drivers.
+>
+> Ivo
+>
+> > On 8/3/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> > > On Friday 03 August 2007, dragoran wrote:
+> > > > no I havn't I will try it tomorrow and tell you if it worked.
+> > > > but as I said before a earilier version of the driver worked before on
+> > > > fc6 without any problems.
+> > >
+> > > Yes, but I want to rule out hardware problems completely.
+> > > If legacy still works then there is nothing with the hardware,
+> > > but indeed a driver problem.
+> > > If the legacy driver shows the same problem, it might be a hardware
+> problem.
+> > >
+> > > Ivo
+> > >
+> >
+>
+>
+>
