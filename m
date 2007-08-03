@@ -1,75 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47516 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754255AbXHQKJl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2007 06:09:41 -0400
-Subject: Re: [PATCH V3] mac80211: Turn off meaningless TKIP message when   software WEP encryption is used
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <46C2FCAB.6090607@lwfinger.net>
-References: <46c0d788.GYQYqGfCBKyAWrg7%Larry.Finger@lwfinger.net>
-	 <1187136960.31200.37.camel@johannes.berg>  <46C2FCAB.6090607@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-H9TxzodRPRdiPOBN421M"
-Date: Fri, 17 Aug 2007 00:32:25 +0200
-Message-Id: <1187303546.23489.74.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from MAIL.IHTFP.ORG ([204.107.200.6]:54324 "EHLO mail.ihtfp.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762029AbXHCOdN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Aug 2007 10:33:13 -0400
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: dragoran <drago01@gmail.com>,
+	"Winkler\, Tomas" <tomas.winkler@intel.com>,
+	linux-wireless@vger.kernel.org,
+	network manager <networkmanager-list@gnome.org>,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] chaning mode only when interface down?
+References: <C07C4589BE74A34981C3C3525EE1F801024CF2CB@hasmsx412.ger.corp.intel.com>
+	<1186058047.24230.38.camel@johannes.berg> <46B1D28F.1080006@gmail.com>
+	<1186059192.24230.44.camel@johannes.berg>
+From: Derek Atkins <warlord@MIT.EDU>
+Date: Fri, 03 Aug 2007 10:33:07 -0400
+In-Reply-To: <1186059192.24230.44.camel@johannes.berg> (Johannes Berg's message of "Thu\, 02 Aug 2007 14\:53\:11 +0200")
+Message-ID: <sjmy7gswuvw.fsf@pgpdev.ihtfp.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg <johannes@sipsolutions.net> writes:
 
---=-H9TxzodRPRdiPOBN421M
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Thu, 2007-08-02 at 14:48 +0200, dragoran wrote:
+>
+>> > Nono, you cannot solve it in the driver. The whole design of mac80211
+>> > mandates that assumption and I think it is a valid one to make.
+>> why? did the old way (allow mode changing while up) caused any problems?
+>
+> Why should it be allowed? Can you come up with a good reason for that
+> since you lose all state anyway when doing mode transitions?
 
-On Wed, 2007-08-15 at 08:16 -0500, Larry Finger wrote:
+Um, what state?  Sure you lose your layer 2 state, but why force a
+layer 3 lossage when you don't necessarily have to do so?  For
+example, I've seen plenty of networks that have both 802.11(a) and
+802.11(b/g) networks that share absolutely everything at layer 3.
+Indeed, at home I have an a/b/g AP where layer 3 is always shared.  At
+the IETF last week it was also shared.  I could easily roam from the
+802.11(a) to the 802.11(b/g) network if my wireless driver would let
+me; the IP Address I've got is certainly valid on both networks.  Why
+should the driver try to be smarter than I am?
 
-> > Thing is, it looks as though all frames that trigger the message are
-> > dropped, and I'm fairly certain we don't actually want that.
+> Until then (and I guess somebody *really* wants it) it's just a lot
+> easier to not even try to change these low-level things while the
+> interface is operating.
 
-Looks like I was right. This is really strange, and it plays into the RX
-key selection that Volker also complained about.
+Easier for the driver developer or easier for the user?  In general
+it's better to implement more challenging code in order to make life
+easier for the end user.  In this case it certainly looks like you're
+foresaking your users to make the developer's life (maybe) a tiny bit
+easier.
 
-I've tested this with my network, which is using CCMP for pairwise and
-TKIP for group keys, and I started getting the same message as you had
-but with "CCMP failed" instead of "TKIP failed". Adding all the
-addresses to the debug output got me:
+> johannes
 
-CCMP decrypt failed for RX frame from 00:15:f2:3d:63:97 to 33:33:00:00:00:0=
-2
+-derek
 
-Note how it's sending to that IPv6 multicast address but trying to
-decrypt with CCMP although I have TKIP GTK keys. And as expected, I see
-*no* multicast traffic on wlan0.
-
-The problem obviously is key selection:
-
-if (rx->sta && rx->sta->key)
-	use rx->sta->key
-
-well, duh, that's obviously wrong since we have a pairwise (sta) key for
-the AP, but it's sending us a multicast frame.
-
-I've been thinking about revamping key selection, I guess this is
-something to really look into now... Anyhow, this confirms that the
-patch is wrong, it suppresses messages that we failed to decrypt frames
-that we should be seeing, in this case multicast and broadcast frames.
-
-johannes
-
---=-H9TxzodRPRdiPOBN421M
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGxNB5/ETPhpq3jKURApZZAJ4t1crrXUoS56vH6T0S0eFSEyohuQCfWDKX
-fpATbt/8eTpcSjKQwJBzLXc=
-=4ClR
------END PGP SIGNATURE-----
-
---=-H9TxzodRPRdiPOBN421M--
-
+-- 
+       Derek Atkins, SB '93 MIT EE, SM '95 MIT Media Laboratory
+       Member, MIT Student Information Processing Board  (SIPB)
+       URL: http://web.mit.edu/warlord/    PP-ASEL-IA     N1NWH
+       warlord@MIT.EDU                        PGP key available
