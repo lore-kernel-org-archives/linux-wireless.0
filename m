@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:22582 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754386AbXHSSar convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43282 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751420AbXHCKbX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Aug 2007 14:30:47 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so446922ugf
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2007 11:30:46 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 13/30] rt2x00: rt2x00_ring_free returns invalid length
-Date: Sun, 19 Aug 2007 20:26:06 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200708192018.30624.IvDoorn@gmail.com>
-In-Reply-To: <200708192018.30624.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200708192026.07053.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 3 Aug 2007 06:31:23 -0400
+Subject: Re: mac80211 driver interface semantics
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andy Green <andy@warmcat.com>
+Cc: Ulrich Kunitz <kune@deine-taler.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Daniel Drake <dsd@gentoo.org>
+In-Reply-To: <46B3032C.5040306@warmcat.com>
+References: <46B27729.5030406@gentoo.org>
+	 <20070803052935.GA12683@deine-taler.de>  <46B2E06F.4090706@warmcat.com>
+	 <1186134894.4647.24.camel@johannes.berg>  <46B3032C.5040306@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-I8UK0uSy8aJq0K32enWZ"
+Date: Fri, 03 Aug 2007 12:32:46 +0200
+Message-Id: <1186137166.4647.34.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 038b4a505c82c91a84caaf7832967ffac2faf93b Mon Sep 17 00:00:00 2001
-From: Ivo van Doorn <IvDoorn@gmail.com>
-Date: Sat, 18 Aug 2007 13:03:32 +0200
-Subject: [PATCH 13/30] rt2x00: rt2x00_ring_free returns invalid length
 
-rt2x00_ring_free returned the incorrect number of available
-entries because it accidently used ring->stats.len minus
-the number of used entries. This always results in 0 available entries,
-obviously this in turn would lead to problems regarding the
-TX handling.
+--=-I8UK0uSy8aJq0K32enWZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-We can fix and optimize the code quite simply by
-doing the limit - length
+On Fri, 2007-08-03 at 11:27 +0100, Andy Green wrote:
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00ring.h |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+> Inside that question, if you mark up skb->ip_summed with CHECKSUM_NONE,
+> include/linux/skbuff.h says this:
+>=20
+> /* A. Checksumming of received packets by device.
+>  *
+>  *      NONE: device failed to checksum this packet.
+>  *              skb->csum is undefined.
+>=20
+> If we mark up the skb with FCS-broken packets with that, maybe it would
+> be compatible with the networking stack for this purpose.
 
-diff --git a/drivers/net/wireless/rt2x00ring.h b/drivers/net/wireless/rt2x00ring.h
-index 2adc8e5..9c94d06 100644
---- a/drivers/net/wireless/rt2x00ring.h
-+++ b/drivers/net/wireless/rt2x00ring.h
-@@ -219,9 +219,7 @@ static inline int rt2x00_ring_full(struct data_ring *ring)
- 
- static inline int rt2x00_ring_free(struct data_ring *ring)
- {
--	if (ring->index_done >= ring->index)
--		return ring->index_done - ring->index;
--	return ring->stats.len - (ring->index - ring->index_done);
-+	return ring->stats.limit - ring->stats.len;
- }
- 
- /*
--- 
-1.5.3.rc5
+No, that's the IP checksum. It may or may not be broken if the FCS CRC
+fails.
+
+johannes
+
+--=-I8UK0uSy8aJq0K32enWZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGswRO/ETPhpq3jKURAtWCAJ40TkrHyWBhrHlZnp1Et4nTRJilUQCfXgiv
+5qyqsn3vnApgVsm7oUsdQVs=
+=tsnY
+-----END PGP SIGNATURE-----
+
+--=-I8UK0uSy8aJq0K32enWZ--
 
