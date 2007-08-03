@@ -1,28 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2247 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765360AbXHWVO7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2007 17:14:59 -0400
-Date: Thu, 23 Aug 2007 16:55:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-Subject: Re: [Rt2400-devel] Please pull 'upstream' branch of rt2x00
-Message-ID: <20070823205519.GI2989@tuxdriver.com>
-References: <200708192018.30624.IvDoorn@gmail.com>
+Received: from purr.warmcat.com ([87.106.142.209]:40859 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759575AbXHCKfp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Aug 2007 06:35:45 -0400
+Message-ID: <46B304FF.3000305@warmcat.com>
+Date: Fri, 03 Aug 2007 11:35:43 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200708192018.30624.IvDoorn@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Ulrich Kunitz <kune@deine-taler.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Daniel Drake <dsd@gentoo.org>
+Subject: Re: mac80211 driver interface semantics
+References: <46B27729.5030406@gentoo.org>	 <20070803052935.GA12683@deine-taler.de>  <46B2E06F.4090706@warmcat.com>	 <1186134894.4647.24.camel@johannes.berg>  <46B3032C.5040306@warmcat.com> <1186137166.4647.34.camel@johannes.berg>
+In-Reply-To: <1186137166.4647.34.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 19, 2007 at 08:18:30PM +0200, Ivo van Doorn wrote:
+Somebody in the thread at some point said:
+> On Fri, 2007-08-03 at 11:27 +0100, Andy Green wrote:
+> 
+>> Inside that question, if you mark up skb->ip_summed with CHECKSUM_NONE,
+>> include/linux/skbuff.h says this:
+>>
+>> /* A. Checksumming of received packets by device.
+>>  *
+>>  *      NONE: device failed to checksum this packet.
+>>  *              skb->csum is undefined.
+>>
+>> If we mark up the skb with FCS-broken packets with that, maybe it would
+>> be compatible with the networking stack for this purpose.
+> 
+> No, that's the IP checksum. It may or may not be broken if the FCS CRC
+> fails.
 
-> Well finally rt2x00 2.0.7 is released, unfortunately it will
-> not be the last release in the 2.0.* series as promised earlier.
+Right, but since we marked up the skb "the integrity of the IP checksum
+is unknown", if anything wants to use the packet it should re-check it
+itself.  Won't that do?
 
-Merged to wireless-dev...
+-Andy
 
--- 
-John W. Linville
-linville@tuxdriver.com
