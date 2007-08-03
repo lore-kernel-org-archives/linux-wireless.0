@@ -1,55 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44964 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35195 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S972257AbXHMMmO (ORCPT
+	with ESMTP id S1757765AbXHCJmy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 08:42:14 -0400
-Subject: Re: [PATCH 2/4] Net: mac80211, remove bitfields from struct  ieee80211_txrx_data
+	Fri, 3 Aug 2007 05:42:54 -0400
+Subject: Re: [ipw3945-devel] chaning mode only when interface down?
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	jbenc@suse.cz, flamingice@sourmilk.net, jeff@garzik.org
-In-Reply-To: <2653412025907217317@wsc.cz>
-References: <2653412025907217317@wsc.cz>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QDS0UPsfdZM3iz18bE18"
-Date: Mon, 13 Aug 2007 14:44:38 +0200
-Message-Id: <1187009078.27916.109.camel@johannes.berg>
+To: Derek Atkins <warlord@MIT.EDU>
+Cc: dragoran <drago01@gmail.com>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	linux-wireless@vger.kernel.org,
+	network manager <networkmanager-list@gnome.org>,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <sjmir7yx7b9.fsf@pgpdev.ihtfp.org>
+References: <C07C4589BE74A34981C3C3525EE1F801024CF2CB@hasmsx412.ger.corp.intel.com>
+	 <1186058047.24230.38.camel@johannes.berg> <46B1D28F.1080006@gmail.com>
+	 <1186059192.24230.44.camel@johannes.berg>
+	 <f6ca9fed0708020643p53ceedcav76b14814b1b1cabd@mail.gmail.com>
+	 <sjmir7yx7b9.fsf@pgpdev.ihtfp.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-be7bS6cSRUi2KMvxgA3Z"
+Date: Fri, 03 Aug 2007 11:41:52 +0200
+Message-Id: <1186134112.4647.17.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-QDS0UPsfdZM3iz18bE18
+--=-be7bS6cSRUi2KMvxgA3Z
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2007-08-12 at 15:08 +0200, Jiri Slaby wrote:
+On Thu, 2007-08-02 at 11:52 -0400, Derek Atkins wrote:
 
-> -	unsigned int fragmented:1; /* whether the MSDU was fragmented */
-> +	/* whether the MSDU was fragmented */
-> +#define IEEE80211_TXRXD_FRAGMENTED		BIT(0)
-> +#define IEEE80211_TXRXD_TXUNICAST		BIT(1)
-> +#define IEEE80211_TXRXD_TXPS_BUFFERED		BIT(2)
-> +#define IEEE80211_TXRXD_TXPROBE_LAST_FRAG	BIT(3)
-> +#define IEEE80211_TXRXD_RXIN_SCAN		BIT(4)
+> Well, for one thing in many cases the interface needs to be "up" in
+> order to scan.  Also, many times the driver itself will incorrectly
+> associate on insert before NetworkManager gets a chance to chime in
+> and then you're stuck in a situation where you never get to the band
+> you want.
 
-I know this isn't the style currently used, but could you put these
-definitions before the struct declaration? That way, kerneldoc doesn't
-totally screw up.
+Driver bug?
+
+> Regardless, you should NEVER require a driver reload to switch bands
+> and if you do that's a bug.  If mac80211 requires a driver reload then
+> that's a MAJOR flaw in that layer.
+
+Have you read the original mail? We were talking about requiring an
+ifdown/ifup cycle.
 
 johannes
 
---=-QDS0UPsfdZM3iz18bE18
+--=-be7bS6cSRUi2KMvxgA3Z
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGwFI2/ETPhpq3jKURAqoiAJ9TudBaJ7/wz8RydKNs9NzyH0S0XgCgi3MF
-2U/c9xHgn70Ysvo21XVdnnM=
-=iHUh
+iD8DBQBGsvhg/ETPhpq3jKURAtzQAKCminhkUkyaUShHUiDjy1lqkkdrJQCbBYKM
+Ulg2AzCGuXVdatz6ndo+zG4=
+=WQOW
 -----END PGP SIGNATURE-----
 
---=-QDS0UPsfdZM3iz18bE18--
+--=-be7bS6cSRUi2KMvxgA3Z--
 
