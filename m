@@ -1,58 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53816 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40335 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752229AbXHRI4E (ORCPT
+	with ESMTP id S1759806AbXHCKmq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Aug 2007 04:56:04 -0400
-Subject: Re: [PATCH 1/2] mac80211:  Remove ieee80211_privacy_mismatch
+	Fri, 3 Aug 2007 06:42:46 -0400
+Subject: Re: [PATCH] mac80211: No echo TX pkt to Monitor  interfaces for injection
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Volker Braun <vbraun@physics.upenn.edu>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <20070818034146.GC1415@jm.kir.nu>
-References: <1187406018.30247.17.camel@thinkpad>
-	 <20070818034146.GC1415@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RDzJqD6hWuJ9xKHQRHGT"
-Date: Sat, 18 Aug 2007 10:56:05 +0200
-Message-Id: <1187427365.6090.26.camel@johannes.berg>
+To: Andy Green <andy@warmcat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <46B304AB.8060805@warmcat.com>
+References: <20070802223857.19090.70108.stgit@localhost>
+	 <1186135029.4647.27.camel@johannes.berg>  <46B30035.4080004@warmcat.com>
+	 <1186136638.4647.32.camel@johannes.berg>  <46B304AB.8060805@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-z3M+lxy83twLP8pJerNl"
+Date: Fri, 03 Aug 2007 12:43:32 +0200
+Message-Id: <1186137812.4647.39.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-RDzJqD6hWuJ9xKHQRHGT
+--=-z3M+lxy83twLP8pJerNl
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2007-08-17 at 20:41 -0700, Jouni Malinen wrote:
+On Fri, 2007-08-03 at 11:34 +0100, Andy Green wrote:
 
-> I don't know what has happened here, but ieee80211_privacy_mismatch()
-> and being able to disable/enable mixed-cell operations was here for
-> purpose (to prevent associating with APs that have mismatching
-> configuration by default, but allowing this to be enabled if the target
-> network is known to use some of the virtual AP designs that would
-> otherwise cause problems).
+> I also think it makes no sense to have a dependency on what Monitor mode
+> provides based on the other virtual interfaces, unless the hardware
+> cannot live up to the various demands at the same time.  (What hardware
+> has this problem that it can't run a Managed interface with hardware
+> promisc Rx?)
 
-Actually, that does work, but in the case Volker has apparently
-wpa_supplicant fails to set the authentication method to 802.1X via
-wireless extensions and thus he fails to be able to associate to the
-network. For WPA, it correctly sets it so you can associate without
-having keys.
+That's exactly the point though. Some hardware cannot do it and that's
+why it exists. Not sure what hardware, probably Intel stuff with their
+great firmware...
+
+> Well it has leaked out of that raison d'etre and oozed into being what
+> you get on any secondary virtual interface in Monitor mode.
+
+I don't think you get that with bcm43xx since that allows
+monitor_during_oper. I'm guessing that zd1211 should also support it but
+just doesn't set the flag.
 
 johannes
 
---=-RDzJqD6hWuJ9xKHQRHGT
+--=-z3M+lxy83twLP8pJerNl
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGxrQl/ETPhpq3jKURAi2FAJ92IjFTHpYWG57IucKuSPln4tuHiwCcDKqL
-iw1kKSCRMq1+OiM3ddN+Rv0=
-=b+2y
+iD8DBQBGswbU/ETPhpq3jKURAlkmAJ9z9S8HIZPLJFGzZVjUmQKZwE1zbACfSJ59
+x2KO/EYhu7F6J5R63+1w6Y8=
+=FN7o
 -----END PGP SIGNATURE-----
 
---=-RDzJqD6hWuJ9xKHQRHGT--
+--=-z3M+lxy83twLP8pJerNl--
 
