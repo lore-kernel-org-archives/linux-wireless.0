@@ -1,60 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43282 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751420AbXHCKbX (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.175]:65114 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763655AbXHCPcK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 06:31:23 -0400
-Subject: Re: mac80211 driver interface semantics
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: Ulrich Kunitz <kune@deine-taler.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Daniel Drake <dsd@gentoo.org>
-In-Reply-To: <46B3032C.5040306@warmcat.com>
-References: <46B27729.5030406@gentoo.org>
-	 <20070803052935.GA12683@deine-taler.de>  <46B2E06F.4090706@warmcat.com>
-	 <1186134894.4647.24.camel@johannes.berg>  <46B3032C.5040306@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-I8UK0uSy8aJq0K32enWZ"
-Date: Fri, 03 Aug 2007 12:32:46 +0200
-Message-Id: <1186137166.4647.34.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 3 Aug 2007 11:32:10 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so477120ugf
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Aug 2007 08:32:08 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 18/24] rt2x00: Add Multicast/Broadcast filtering
+Date: Fri, 3 Aug 2007 17:36:27 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200707312037.33060.IvDoorn@gmail.com> <200708031709.39208.IvDoorn@gmail.com> <1186154435.4647.50.camel@johannes.berg>
+In-Reply-To: <1186154435.4647.50.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200708031736.27782.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday 03 August 2007, Johannes Berg wrote:
+> On Fri, 2007-08-03 at 17:09 +0200, Ivo van Doorn wrote:
+> > On Friday 03 August 2007, Johannes Berg wrote:
+> > > On Tue, 2007-07-31 at 20:37 +0200, Ivo van Doorn wrote:
+> > > 
+> > > > +	if (is_monitor_present(intf)) {
+> > > > +		filter = IFF_PROMISC | IFF_MULTICAST | IFF_BROADCAST;
+> > > > +		if (intf->filter != filter)
+> > > > +			__set_bit(PACKET_FILTER_PENDING, &rt2x00dev->flags);
+> > > > +	}
+> > > 
+> > > Don't do that. There's no requirement that monitor mode interfaces
+> > > always be promisc. Also, earlier in the code:
+> > 
+> > Note that this "Enable promisc" on monitor mode here will only be send to
+> > the device. It does not mean that the non-monitor mode will have promisc
+> > mode enabled. In fact, when the monitor interface goes down, the normal
+> > setting will be used again.
+> > If with monitor mode, IFF_PROMISC is not send to the device, monitor
+> > mode is useless since it will not catch anything except beacons
+> > (Especially true when you only have 1 interface which is in monitor mode)
+> 
+> But don't you allow monitoring during operation? In that case this would
+> make that monitor interface always promisc which isn't what you want
+> unless you set the promisc bit on any of the interfaces.
 
---=-I8UK0uSy8aJq0K32enWZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+But that would mean that when a non-monitor and monitor interface are
+enabled at the same time, the montitor interface is quite pointless since
+all frames can be caught on the regular interface as well. 
 
-On Fri, 2007-08-03 at 11:27 +0100, Andy Green wrote:
+A monitor interface is supposed to catch as many frames as possible,
+if a monitor interface does not catch frames not directly send to it, it won't
+catch anything except beacons.
 
-> Inside that question, if you mark up skb->ip_summed with CHECKSUM_NONE,
-> include/linux/skbuff.h says this:
->=20
-> /* A. Checksumming of received packets by device.
->  *
->  *      NONE: device failed to checksum this packet.
->  *              skb->csum is undefined.
->=20
-> If we mark up the skb with FCS-broken packets with that, maybe it would
-> be compatible with the networking stack for this purpose.
+Even when there is only 1 interface which is in monitor mode, the user shouldn't
+have to set the device into promisc mode right?
 
-No, that's the IP checksum. It may or may not be broken if the FCS CRC
-fails.
-
-johannes
-
---=-I8UK0uSy8aJq0K32enWZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGswRO/ETPhpq3jKURAtWCAJ40TkrHyWBhrHlZnp1Et4nTRJilUQCfXgiv
-5qyqsn3vnApgVsm7oUsdQVs=
-=tsnY
------END PGP SIGNATURE-----
-
---=-I8UK0uSy8aJq0K32enWZ--
-
+Ivo
