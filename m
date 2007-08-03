@@ -1,59 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:47743 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762145AbXHIAPK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 20:15:10 -0400
-Date: Wed, 8 Aug 2007 17:13:30 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Aurelien Jarno <aurelien@aurel32.net>,
-	John Linville <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ssb: Make extif driver compilation depend on extif  config
-Message-Id: <20070808171330.b374ec12.akpm@linux-foundation.org>
-In-Reply-To: <200708090202.20267.mb@bu3sch.de>
-References: <200708071744.40287.mb@bu3sch.de>
-	<46BA4E24.3060400@aurel32.net>
-	<20070808164327.45803a64.akpm@linux-foundation.org>
-	<200708090202.20267.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from smtp.rutgers.edu ([128.6.72.243]:9165 "EHLO annwn14.rutgers.edu"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752337AbXHCIEE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Aug 2007 04:04:04 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: mac80211 IPv6 problems
+Date: Fri, 3 Aug 2007 01:02:12 -0700
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
+	jbenc@suse.cz, Michael Buesch <mb@bu3sch.de>,
+	Bcm43xx-dev@lists.berlios.de,
+	Larry Finger <larry.finger@lwfinger.net>
+References: <46b1fde0.b+weBDN75J0SPe2a%Larry.Finger@lwfinger.net> <1186094778.6701.6.camel@shinybook.infradead.org> <20070803005517.GA4261@tuxdriver.com>
+In-Reply-To: <20070803005517.GA4261@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1256112.BM8N9uY2kE";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200708030102.17358.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 9 Aug 2007 02:02:19 +0200
-Michael Buesch <mb@bu3sch.de> wrote:
+--nextPart1256112.BM8N9uY2kE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> > I'm hopelessly confused by the ssb stuff.  I'm not sure if I have all the
-> > right stuff, all the latest stuff and I don't understand why some is going
-> > into git-wireless and some is not.
-> 
-> Everything is going into git-wireless.
-> git-wireless contains latest ssb. _but_ John complained
-> about that. And he is right. SSB is not strictly wireless core.
-> So I thought it was best to get ssb into mainline as soon as
-> possible. So -mm is really the way to go into mainline.
-> My plan was to merge mainline with the next merge window.
-> 
-> > I'd prefer to be dumbly pulling a tree which Michael controls rather than
-> > trying to master it all in -mm, if possible.  A git tree or a quilt tree in
-> > some open dir somewhere would suit?
-> 
-> It's a bit difficult, as bcm43xx depends on it. Which again depends
-> on the wireless tree. :)
-> So basically we are stuck with maintaining it in wireless-dev.
-> 
-> I don't know what your policy is with pulling from wireless-dev.
-> So wireless-dev currently contains latest SSB. So if you pull from
-> wireless-dev, you'll also get latest SSB. Though, if we want to
-> merge SSB soon, we need it broken-out. That is what I was trying
-> to do.
+On Thursday 02 August 2007 17:55, John W. Linville wrote:
+>  				} else if (!multicast &&
+>  					   compare_ether_addr(sdata->dev->dev_addr,
+> -							      hdr->addr1) !=3D 0) {
+> +							      hdr->addr1)) {
+Good idea. Should do this for all the other cases in the function to keep=20
+things consistent.
 
-Yeah, after dropping all the ssb stuff, my build is now busted because
-the bit of git-wireless which I have wants SSB bits for BCM43XX.
+>  					if (!sdata->promisc)
+>  						continue;
+>  					rx.u.rx.ra_match =3D 0;
+> -				}
+> +				} else if (multicast &&
+> +					   !compare_ether_addr(sdata->dev->dev_addr,
+> +							       hdr->addr3))
+> +					rx.u.rx.ra_match =3D 0;
+This doesn't seem quite right. I think ieee80211_rx_h_data is a safer place=
+=20
+for this check (inside the IEEE80211_FCTL_FROMDS case), and allows various=
+=20
+statistics to be updated. ieee80211_rx_h_sta_process is another function th=
+at=20
+might work though that would probably involve more code to add all the righ=
+t=20
+checks.
 
-argh.  I'll try disabling b44 so I can get a release out the door.
-Please, just give me some internally-consistent tree(s) to pull??
+Another alternate is to continue - doing rx.u.rx.ra_match =3D 0; still pass=
+es=20
+the frame through the rx chain, though I think I'd prefer to update the=20
+statistics.
 
-Thanks.
+=2DMichael Wu
+
+--nextPart1256112.BM8N9uY2kE
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGsuEJT3Oqt9AH4aERAnuJAJ9o5WlqZ4H3WVTG618AtvWomrC2GwCffEkB
+Jt4lo0qx/Vr1X9LLIrI0WMU=
+=gaZU
+-----END PGP SIGNATURE-----
+
+--nextPart1256112.BM8N9uY2kE--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
