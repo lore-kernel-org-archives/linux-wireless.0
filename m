@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49631 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754917AbXHPNOD (ORCPT
+Received: from purr.warmcat.com ([87.106.142.209]:60021 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759530AbXHCKeX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2007 09:14:03 -0400
-Subject: Re: [PATCH 18/20] mac80211, drivers: remove reset callback
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200708152010.52433.IvDoorn@gmail.com>
-References: <20070815144920.135826000@sipsolutions.net>
-	 <20070815145049.384297000@sipsolutions.net>
-	 <200708152010.52433.IvDoorn@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ObUAvaE4RdNf9Twa1MDb"
-Date: Thu, 16 Aug 2007 15:14:41 +0200
-Message-Id: <1187270081.5141.33.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 3 Aug 2007 06:34:23 -0400
+Message-ID: <46B304AB.8060805@warmcat.com>
+Date: Fri, 03 Aug 2007 11:34:19 +0100
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: No echo TX pkt to Monitor interfaces for injection
+References: <20070802223857.19090.70108.stgit@localhost>	 <1186135029.4647.27.camel@johannes.berg>  <46B30035.4080004@warmcat.com> <1186136638.4647.32.camel@johannes.berg>
+In-Reply-To: <1186136638.4647.32.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Somebody in the thread at some point said:
+> On Fri, 2007-08-03 at 11:15 +0100, Andy Green wrote:
+> 
+>> With the patch, injected packets have the same Monitor mode footprint
+>> with hard or soft monitoring (you see the injected radiotap stuff)
+>> because the synthesized "tx report" packet doesn't exist in the real
+>> world shown by hard monitoring.
+> 
+> I don't see why there's a distinction between hard and soft monitor
+> mode. To me, hard monitor mode is basically "show me everything you can"
+> while soft is "best effort". Soft monitor mode also makes no sense while
+> no other interface is operating.
 
---=-ObUAvaE4RdNf9Twa1MDb
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I also think it makes no sense to have a dependency on what Monitor mode
+provides based on the other virtual interfaces, unless the hardware
+cannot live up to the various demands at the same time.  (What hardware
+has this problem that it can't run a Managed interface with hardware
+promisc Rx?)
 
-On Wed, 2007-08-15 at 20:10 +0200, Ivo van Doorn wrote:
+> The synthesized 'tx report packet' isn't that; the only synthesized
+> thing is the radiotap header, the rest of the packet is what we actually
+> sent and were thus unable to capture ourselves.
 
-> ACK for the rt2x00 part.
-> If reset is permenantly gone, I'll probably move the reset handler
-> to rt2x00dev.c soon since that is the only place where it is used
-> at this time.
+Yes, that is true.
 
-I noticed, but wasn't sure what you planned so refrained from further
-changes (also to make the diff smaller etc.)
+>> Acutually I think where it might all be heading is Michael Buesch's
+>> method of selecting between hard and soft Monitor mode based on
+>> IFF_PROMISC.
+> 
+> Ah. I see. You're thinking of hard/soft monitor as something totally
+> different than it is. Soft monitor really is only a hack for
+> pseudo-softmac hardware that doesn't allow you to capture control
+> packets while another interface is operating.
 
-johannes
+Well it has leaked out of that raison d'etre and oozed into being what
+you get on any secondary virtual interface in Monitor mode.
 
---=-ObUAvaE4RdNf9Twa1MDb
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Still I was suggesting maybe it does have another reason for existing,
+the application of the usermode MLME might fit well with the filtered
+aspect of it and the existing "TX report echos".
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGxE3B/ETPhpq3jKURAmznAKCHA/vJy0tzuFBvgsLt8epfJegczACgk00p
-vAj5wJ5NtmlsZ+VpsBpbj3A=
-=lpzG
------END PGP SIGNATURE-----
-
---=-ObUAvaE4RdNf9Twa1MDb--
-
+-Andy
