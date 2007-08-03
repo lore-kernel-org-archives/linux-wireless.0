@@ -1,56 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:29491 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755829AbXHNEXs (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51030 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751948AbXHCTdS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2007 00:23:48 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: "maali Al Janoob" <mms82@hotmail.com>
-Subject: Re: wireless drivers that doesn't require firmware
-Date: Mon, 13 Aug 2007 21:21:45 -0700
-Cc: linux-wireless@vger.kernel.org
-References: <BAY111-F3063D70AED453915236D9FB6DC0@phx.gbl>
-In-Reply-To: <BAY111-F3063D70AED453915236D9FB6DC0@phx.gbl>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1623818.23S6y84Ape";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200708132121.49345.flamingice@sourmilk.net>
+	Fri, 3 Aug 2007 15:33:18 -0400
+Subject: Re: [PATCH 18/24] rt2x00: Add Multicast/Broadcast filtering
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200708031804.04234.IvDoorn@gmail.com>
+References: <200707312037.33060.IvDoorn@gmail.com>
+	 <200708031736.27782.IvDoorn@gmail.com>
+	 <1186155722.4647.55.camel@johannes.berg>
+	 <200708031804.04234.IvDoorn@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tHS45r6CR419cziRL863"
+Date: Fri, 03 Aug 2007 21:34:47 +0200
+Message-Id: <1186169687.4647.57.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1623818.23S6y84Ape
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
-On Monday 13 August 2007 15:04, maali Al Janoob wrote:
-> Do you know any linux wireless drivers that implements all 802.11 related
-> functionalities in software and doesn't require a firmware? The only one
-> that I know is madwifi, do you know others?
->
+--=-tHS45r6CR419cziRL863
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-All Realtek chips - rtl8180, rtl8185, rtl8187.
-All ADMtek ADM8211 chips (but they're not made anymore)
-Some Ralink chips, IIRC. Don't know which ones.
+On Fri, 2007-08-03 at 18:04 +0200, Ivo van Doorn wrote:
 
--Michael Wu
+> Next rt2x00 release will not treat monitor mode interfaces special.
+> Just read the http://www.linuxwireless.org/en/developers/mac80211/semanti=
+cs article
+> So the next rt2x00 will comply with that.
 
---nextPart1623818.23S6y84Ape
-Content-Type: application/pgp-signature
+Wait until we finish discussing the CRC checks though :) I still think
+they should be done even in monitor mode and enabled by some extra flag;
+and only enabled when you have only monitor interfaces. Or mac80211
+needs to be taught to drop packets with failed CRC on non-monitor
+interfaces.
+
+johannes
+
+--=-tHS45r6CR419cziRL863
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBGwS3dT3Oqt9AH4aERApt/AJ9aT76IDC+u43Q+eROCJOTx+0J5YwCffwlE
-nTpo0gAqxvIcN29c8ws9oAs=
-=DEai
+iD8DBQBGs4NX/ETPhpq3jKURAr3JAKCARW1cOgvOl4789KTyI5xkoTK+SACfZfI4
+ynCF3ehMOo9yvBm0eXYqqs8=
+=EcSV
 -----END PGP SIGNATURE-----
 
---nextPart1623818.23S6y84Ape--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+--=-tHS45r6CR419cziRL863--
+
