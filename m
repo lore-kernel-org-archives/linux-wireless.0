@@ -1,54 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:17217 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752921AbXHOG50 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 02:57:26 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Volker Braun <volker.braun@physik.hu-berlin.de>
-Subject: Re: [PATCHv3] mac80211: dynamic wep
-Date: Tue, 14 Aug 2007 23:55:23 -0700
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-References: <1187151162.3253.18.camel@thinkpad>
-In-Reply-To: <1187151162.3253.18.camel@thinkpad>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart9065924.CAlDRaNPUT";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200708142355.27708.flamingice@sourmilk.net>
+Received: from mx1.riseup.net ([204.13.164.18]:58723 "EHLO mx1.riseup.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762325AbXHCOld (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Aug 2007 10:41:33 -0400
+Date: Fri, 3 Aug 2007 16:38:36 +0200
+From: Stefano Brivio <stefano.brivio@polimi.it>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC 2/10] Port of bcm43xx from softmac to mac80211
+Message-ID: <20070803163836.7ef9622b@morte>
+In-Reply-To: <46b1fded.0g4ZHvU7XwSzeJVs%Larry.Finger@lwfinger.net>
+References: <46b1fded.0g4ZHvU7XwSzeJVs%Larry.Finger@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart9065924.CAlDRaNPUT
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Thu, 02 Aug 2007 10:53:17 -0500
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-On Tuesday 14 August 2007 21:12, Volker Braun wrote:
-> 2) Don't make assumptions about keyidx=3D=3D0 on unicast keys.
->
-I'm curious.. does decryption still work if unicast keys with keyidx > 0 ar=
-e=20
-turned into regular keys? I suspect keyidx > 0 is done to allow hardware=20
-without individual WEP key support to continue using hardware WEP.
+> +static char big_buffer[1024*256];
 
-=2DMichael Wu
+static char big_buffer[1024 * 256];
 
---nextPart9065924.CAlDRaNPUT
-Content-Type: application/pgp-signature
+> +		bcmerr(dev->wl, "debugfs: Board not initialized.\n");
+>  		res = -EFAULT;
+>  		goto out_unlock;
+>  	}
+> -	if (sscanf(buf, "%lli", &tsf) != 1) {
+> -		printk(KERN_INFO PFX "debugfs: invalid values for
+> \"tsf\"\n");
+> +	if (sscanf(buf, "%llu", (unsigned long long *)(&tsf)) != 1) {
+> +		bcmerr(dev->wl, "debugfs: invalid values for \"tsf\"\n");
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+"debugfs: Invalid values for TSF.\n"
 
-iD8DBQBGwqNfT3Oqt9AH4aERAuldAKCMBXIBhQ6apdrzu6naMz1CJjD9tgCeNtkz
-5BlOycSDdwIAN3cej4M6tIA=
-=6+bQ
------END PGP SIGNATURE-----
+> +	int i;
+> +	int idx;
 
---nextPart9065924.CAlDRaNPUT--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+int i, idx;
+
+> +void bcm43xx_debugfs_add_device(struct bcm43xx_wldev *dev)
+>  {
+>  	struct bcm43xx_dfsentry *e;
+> -	char devdir[IFNAMSIZ];
+> +	struct bcm43xx_txstatus_log *log;
+> +	char devdir[16];
+>  
+> -	assert(bcm);
+> +	BCM43xx_BUG_ON(!dev);
+>  	e = kzalloc(sizeof(*e), GFP_KERNEL);
+>  	if (!e) {
+> -		printk(KERN_ERR PFX "out of memory\n");
+> +		bcmerr(dev->wl, "debugfs: add device OOM\n");
+
+"debugfs: OOM while adding device.\n"
+
+> +		bcmerr(dev->wl, "debugfs: add device txstatus OOM\n");
+
+"debugfs: OOM while adding device txstatus.\n"
+
+And the same for all the debugfs messages, please be consistent.
+
+
+-- 
+Ciao
+Stefano
