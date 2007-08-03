@@ -1,53 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:58454 "EHLO mx1.redhat.com"
+Received: from MAIL.IHTFP.ORG ([204.107.200.6]:53124 "EHLO mail.ihtfp.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932564AbXHaMFZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Aug 2007 08:05:25 -0400
-Subject: Re: [PATCH 5/5] Net: ath5k, kconfig changes
-From: Dan Williams <dcbw@redhat.com>
+	id S1762054AbXHCPKl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Aug 2007 11:10:41 -0400
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Jiri Slaby <jirislaby@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <20070830123609.GA5140@tuxdriver.com>
-References: <2713029743177393055@pripojeni.net>
-	 <280951420471148977@pripojeni.net> <20070828171330.GD29343@infradead.org>
-	 <40f31dec0708291838p5d33eb34p3b4432d9d270841a@mail.gmail.com>
-	 <20070830123609.GA5140@tuxdriver.com>
-Content-Type: text/plain
-Date: Fri, 31 Aug 2007 07:58:51 -0400
-Message-Id: <1188561531.2668.7.camel@xo-3E-67-34.localdomain>
-Mime-Version: 1.0
+Cc: network manager <networkmanager-list@gnome.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"Winkler\, Tomas" <tomas.winkler@intel.com>,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] chaning mode only when interface down?
+References: <C07C4589BE74A34981C3C3525EE1F801024CF2CB@hasmsx412.ger.corp.intel.com>
+	<1186058047.24230.38.camel@johannes.berg> <46B1D28F.1080006@gmail.com>
+	<1186059192.24230.44.camel@johannes.berg>
+	<sjmy7gswuvw.fsf@pgpdev.ihtfp.org>
+	<20070803145305.GE5137@tuxdriver.com>
+From: Derek Atkins <warlord@MIT.EDU>
+Date: Fri, 03 Aug 2007 11:10:36 -0400
+In-Reply-To: <20070803145305.GE5137@tuxdriver.com> (John W. Linville's message of "Fri\, 3 Aug 2007 10\:53\:05 -0400")
+Message-ID: <sjmhcngwt5f.fsf@pgpdev.ihtfp.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-08-30 at 08:36 -0400, John W. Linville wrote:
-> On Thu, Aug 30, 2007 at 04:38:09AM +0300, Nick Kossifidis wrote:
-> > 2007/8/28, Christoph Hellwig <hch@infradead.org>:
-> 
-> > > Also this whole patch seems rather pointless.  It saves only
-> > > very little and turns the driver into a complete ifdef maze.
-> 
-> > Also most
-> > people will use 5212 code only, 5211 cards are on some old laptops and
-> > 5210, well i couldn't even find  a 5210 for actual testing :P
-> 
-> FWIW, I'd bet dollars to donuts that distros will enable them all
-> together.
+"John W. Linville" <linville@tuxdriver.com> writes:
 
-I would certainly _hope_ that distros enable everything -that is in the
-kernel- that they can get their hands on, otherwise when you stick a
-card in, it doesn't just work.
+> On Fri, Aug 03, 2007 at 10:33:07AM -0400, Derek Atkins wrote:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>> 
+>> > On Thu, 2007-08-02 at 14:48 +0200, dragoran wrote:
+>> >
+>> >> > Nono, you cannot solve it in the driver. The whole design of mac80211
+>> >> > mandates that assumption and I think it is a valid one to make.
+>> >> why? did the old way (allow mode changing while up) caused any problems?
+>> >
+>> > Why should it be allowed? Can you come up with a good reason for that
+>> > since you lose all state anyway when doing mode transitions?
+>> 
+>> Um, what state?  Sure you lose your layer 2 state, but why force a
+>> layer 3 lossage when you don't necessarily have to do so?  For
+>> example, I've seen plenty of networks that have both 802.11(a) and
+>> 802.11(b/g) networks that share absolutely everything at layer 3.
+>
+> I think you are confusing a/b/g "mode" (which is _not_ the topic)
+> with AP/STA/IBSS/monitor "mode" (which is the topic).
 
-Dan
+Indeed I am, mea culpa.   I'll go shut up now.
 
-> Is saving code space the only reason to turn these off?  How much
-> space do you save?
-> 
-> Is there some way you can isolate and/or limit the number of ifdef
-> blocks further?  If so, we might consider a version of this patch
-> that depends on EMBEDDED or somesuch...?
-> 
 > John
 
+-derek
+
+-- 
+       Derek Atkins, SB '93 MIT EE, SM '95 MIT Media Laboratory
+       Member, MIT Student Information Processing Board  (SIPB)
+       URL: http://web.mit.edu/warlord/    PP-ASEL-IA     N1NWH
+       warlord@MIT.EDU                        PGP key available
