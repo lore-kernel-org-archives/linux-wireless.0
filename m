@@ -1,46 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59836
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753385AbXHEVoW (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60731 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751778AbXHCOrH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Aug 2007 17:44:22 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Subject: Re: suspend/resume support in mac80211
-Date: Sun, 5 Aug 2007 23:44:12 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <1186343417.8459.23.camel@localhost>
-In-Reply-To: <1186343417.8459.23.camel@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200708052344.12673.mb@bu3sch.de>
+	Fri, 3 Aug 2007 10:47:07 -0400
+Subject: Re: [PATCH 18/24] rt2x00: Add Multicast/Broadcast filtering
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200707312037.33060.IvDoorn@gmail.com>
+References: <200707312037.33060.IvDoorn@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cPrZK2OZshx/6rqg4dJn"
+Date: Fri, 03 Aug 2007 16:01:16 +0200
+Message-Id: <1186149676.4647.42.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 05 August 2007, Mattias Nissler wrote:
-> Hi,
-> 
-> we have recently been struggling with getting suspend/resume working in
-> rt2x00. A few questions:
 
-There is no suspend/resume support in mac80211.
+--=-cPrZK2OZshx/6rqg4dJn
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> 1. What is the recommended scheme for implementing suspend/resume with
-> mac80211? Some drivers (p54, iwlwifi) call ieee80211_stop_queues().
+On Tue, 2007-07-31 at 20:37 +0200, Ivo van Doorn wrote:
 
-Calling stop_queues() from outside of the TX handler may deadlock.
-That is a bug in mac80211. I don't think it has been fixed, yet.
+> +	if (is_monitor_present(intf)) {
+> +		filter =3D IFF_PROMISC | IFF_MULTICAST | IFF_BROADCAST;
+> +		if (intf->filter !=3D filter)
+> +			__set_bit(PACKET_FILTER_PENDING, &rt2x00dev->flags);
+> +	}
 
-> 2. Are there any mac80211 drivers that suspend/resume properly? Also
-> when associated?
-> 
-> 3. Shouldn't mac80211 be made suspend/resume-aware (AFAIK it is not), so
-> we can do things like disassociating during suspend and reassociating
-> when resuming? I'd like something in the spirit of
-> netif_device_detach()/netif_device_attach(). Comments?
+Don't do that. There's no requirement that monitor mode interfaces
+always be promisc. Also, earlier in the code:
 
-I think we should have a API call to mac80211 that suspends the stack
-(saves the state etc..) and a call the resumes (reassociates, re-handshakes...).
-But that's probably not that easy to implement, as parts of this
-does happen in userspace.
+
+> +       int promisc =3D !!(filter & IFF_PROMISC);
+> +       int multicast =3D !!(filter & IFF_MULTICAST);
+> +       int broadcast =3D !!(filter & IFF_BROADCAST);
+>         u32 reg;
+> =20
+>         rt2x00pci_register_read(rt2x00dev, RXCSR0, &reg);
+>         rt2x00_set_field32(&reg, RXCSR0_DROP_NOT_TO_ME, !promisc);
+> +       rt2x00_set_field32(&reg, RXCSR0_DROP_MCAST, !multicast);
+> +       rt2x00_set_field32(&reg, RXCSR0_DROP_BCAST, !broadcast);
+>         rt2x00pci_register_write(rt2x00dev, RXCSR0, reg);
+
+Depending on how the hardware behaves I think promisc should imply the
+other two, it seems likely that even with DROP_NOT_TO_ME turned off you
+won't be getting multicast traffic and promisc should see that too.
+
+johannes
+
+--=-cPrZK2OZshx/6rqg4dJn
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGszUs/ETPhpq3jKURAkWDAKCBm/I0hEvDOZc7ulOrmu+l05XowwCfUcoU
+KHPyH5Y2FzwCZwGzF8CS7JI=
+=7WnP
+-----END PGP SIGNATURE-----
+
+--=-cPrZK2OZshx/6rqg4dJn--
+
