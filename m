@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hu-out-0506.google.com ([72.14.214.235]:51233 "EHLO
-	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751683AbXHDJqr (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:42325 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759318AbXHCKlK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Aug 2007 05:46:47 -0400
-Received: by hu-out-0506.google.com with SMTP id 19so644005hue
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Aug 2007 02:46:44 -0700 (PDT)
-Message-ID: <46B44AFF.70707@gmail.com>
-Date: Sat, 04 Aug 2007 11:46:39 +0200
-From: dragoran <drago01@gmail.com>
-MIME-Version: 1.0
-To: Ivo van Doorn <ivdoorn@gmail.com>
-CC: Luis Correia <luis.f.correia@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	linux-usb-devel@lists.sourceforge.net
-Subject: Re: rt2500usb stopped working (vendor request error)
-References: <46B1B0AE.7050205@gmail.com> <46B43415.1000808@gmail.com> <efe7343f0708040134v30b7ffc1mcfc9b61e555897c3@mail.gmail.com> <200708041146.37667.IvDoorn@gmail.com>
-In-Reply-To: <200708041146.37667.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 3 Aug 2007 06:41:10 -0400
+Subject: Re: mac80211 IPv6 problems
+From: David Woodhouse <dwmw2@infradead.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: flamingice@sourmilk.net, linux-wireless@vger.kernel.org,
+	jbenc@suse.cz, Michael Buesch <mb@bu3sch.de>,
+	Daniel Drake <dsd@gentoo.org>, Bcm43xx-dev@lists.berlios.de,
+	Larry Finger <larry.finger@lwfinger.net>
+In-Reply-To: <20070803005517.GA4261@tuxdriver.com>
+References: <46b1fde0.b+weBDN75J0SPe2a%Larry.Finger@lwfinger.net>
+	 <200708021807.20649.mb@bu3sch.de> <46B20695.2080100@lwfinger.net>
+	 <1186088678.2931.10.camel@pmac.infradead.org> <46B25B04.5020804@gentoo.org>
+	 <1186094778.6701.6.camel@shinybook.infradead.org>
+	 <20070803005517.GA4261@tuxdriver.com>
+Content-Type: text/plain
+Date: Fri, 03 Aug 2007 11:40:57 +0100
+Message-Id: <1186137657.2931.45.camel@pmac.infradead.org>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ivo van Doorn wrote:
-> On Saturday 04 August 2007, Luis Correia wrote:
->   
->> Well, it may be an hardware error you got on your stick.
->>     
->
-> Nope, very doubtfully.
-> When he is using the latest version there would be a big warning
-> "Not an rt2500usb device" and the driver would halt loading after that.
->
->   
->> That or it is one of those wrongly named sticks which are actually
->> rt73... but i don't really know.
->>
->> One last test you could do, go to a friend that uses Windoze and see
->> if it works as a client and if yes, which driver did it detect, rt73
->> or rt2500usb.
->>     
->
-> Hmm checking if at least it works on windows would be an idea,
-> but I am really starting to suspect hardware problems...
->
->   
-ok will test in on my fc6 server (where the last working driver still 
-builds) and see if this one works.
-if this does not work too I will test on windows to make sure thats a hw 
-problem.
+On Thu, 2007-08-02 at 20:55 -0400, John W. Linville wrote:
+> I hacked-up the (untested) patch below -- thoughts? 
+
+I tried to test it. Today, I get no connectivity with bcm43xx-mac80211
+(from Fedora 7 + your patch).
+
+It does manage to associate, but tcpdump shows it doesn't seem to
+receive any packets correctly -- http://david.woodhou.se/bcm43xx-bad.txt
+
+I tried taking the device down and back up, and setting the WEP key
+again (I think I've seen it screw up before and have to be told the WEP
+key again before it starts working), but that didn't help. Removing the
+module left rmmod and ksoftirqd both eating CPU, so I had to reboot.
+
+I don't have time to do any more right now; I might look at it again in
+a couple of weeks when I get home. But all this ought to be
+reproduceable elsewhere -- and if it isn't, I have a Cardbus card which
+seems to be exactly the same rev 4306 as my shinybook's internal device.
+Give me an address to ship it to :)
+
+-- 
+dwmw2
+
