@@ -1,42 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59236 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758546AbXHGWXB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2007 18:23:01 -0400
-Message-ID: <46B8F0C3.6030409@garzik.org>
-Date: Tue, 07 Aug 2007 18:22:59 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: Please pull 'libertas-upstream' branch of wireless-2.6
-References: <20070806203005.GL6442@tuxdriver.com>
-In-Reply-To: <20070806203005.GL6442@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from crystal.sipsolutions.net ([195.210.38.204]:40294 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762797AbXHCPTK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Aug 2007 11:19:10 -0400
+Subject: Re: [PATCH 18/24] rt2x00: Add Multicast/Broadcast filtering
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200708031709.39208.IvDoorn@gmail.com>
+References: <200707312037.33060.IvDoorn@gmail.com>
+	 <1186149676.4647.42.camel@johannes.berg>
+	 <200708031709.39208.IvDoorn@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4b/hSEIuBmyfcdypdkwT"
+Date: Fri, 03 Aug 2007 17:20:35 +0200
+Message-Id: <1186154435.4647.50.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> Got a big patch bomb from the libertas guys.  I tried to cherry-pick
-> some of the fixes for 2.6.23, but they either were fixes to problems
-> in new code or all the code cleanups made them difficult for me to
-> intelligently backport.
-> 
-> So, this is intended for 2.6.24...
-> 
-> ---
-> 
-> The following changes since commit d4ac2477fad0f2680e84ec12e387ce67682c5c13:
->   Linus Torvalds (1):
->         Linux 2.6.23-rc2
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git libertas-upstream
 
-This is missing the patch.  I looked at it locally, but please do send a 
-patch for review with each push, no matter how big.
+--=-4b/hSEIuBmyfcdypdkwT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-pulled into #upstream
+On Fri, 2007-08-03 at 17:09 +0200, Ivo van Doorn wrote:
+> On Friday 03 August 2007, Johannes Berg wrote:
+> > On Tue, 2007-07-31 at 20:37 +0200, Ivo van Doorn wrote:
+> >=20
+> > > +	if (is_monitor_present(intf)) {
+> > > +		filter =3D IFF_PROMISC | IFF_MULTICAST | IFF_BROADCAST;
+> > > +		if (intf->filter !=3D filter)
+> > > +			__set_bit(PACKET_FILTER_PENDING, &rt2x00dev->flags);
+> > > +	}
+> >=20
+> > Don't do that. There's no requirement that monitor mode interfaces
+> > always be promisc. Also, earlier in the code:
+>=20
+> Note that this "Enable promisc" on monitor mode here will only be send to
+> the device. It does not mean that the non-monitor mode will have promisc
+> mode enabled. In fact, when the monitor interface goes down, the normal
+> setting will be used again.
+> If with monitor mode, IFF_PROMISC is not send to the device, monitor
+> mode is useless since it will not catch anything except beacons
+> (Especially true when you only have 1 interface which is in monitor mode)
 
+But don't you allow monitoring during operation? In that case this would
+make that monitor interface always promisc which isn't what you want
+unless you set the promisc bit on any of the interfaces.
+
+johannes
+
+--=-4b/hSEIuBmyfcdypdkwT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGs0fC/ETPhpq3jKURAmyLAJ4jmk5Dkd102FGrYpaVjziF3lT2igCguxbQ
+T6s6mq/OdSbi4R70NZ9m/uI=
+=fiYw
+-----END PGP SIGNATURE-----
+
+--=-4b/hSEIuBmyfcdypdkwT--
 
