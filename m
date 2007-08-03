@@ -1,21 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37396 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758919AbXHUQCT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 12:02:19 -0400
-Message-Id: <20070821155725.489738000@sipsolutions.net>
-Date: Tue, 21 Aug 2007 17:57:25 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 0/3] improve mac80211 key handling
+Received: from mx1.redhat.com ([66.187.233.31]:52232 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761823AbXHCORS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Aug 2007 10:17:18 -0400
+Subject: Please pull 'for-linville' branch of libertas-2.6
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Fri, 03 Aug 2007 10:13:52 -0400
+Message-Id: <1186150432.27417.6.camel@xo-13-A4-25.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series improves mac80211's internal key handling
-as well as the driver interface.
+Notable things: (a) Holger's CompactFlash support which implies
+restructuring of interface-specific code, and (b) removal of lots of
+dead code.
 
-johannes
+Thanks!
+Dan
+
+The following changes since commit f695baf2df9e0413d3521661070103711545207a:
+  Linus Torvalds (1):
+        Linux 2.6.23-rc1
+
+are available in the git repository at:
+
+  git://git.infradead.org/libertas-2.6 for-linville
+
+Dan Williams (27):
+      libertas: kill ieeetypes_capinfo bitfield, use ieee80211.h types
+      libertas: rename WLAN_802_11_KEY to enc_key and clean up usage
+      libertas: clean up indentation in libertas_association_worker
+      libertas: clean up 802.11 IE post-scan handling
+      libertas: remove if_bootcmd.c
+      libertas: fix mixed-case abuse in cmd_ds_802_11_scan
+      libertas: fix mixed-case abuse in cmd_ds_802_11_ad_hoc_result
+      libertas: fix mixed-case abuse in cmd_ds_802_11_ad_hoc_start
+      libertas: re-uppercase command defines and other constants
+      libertas: fix debug build breakage due to field rename
+      libertas: remove thread.h and make kthread usage clearer
+      libertas: new mesh control knobs
+      libertas: bump version to 322.p1
+      libertas: fix more mixed-case abuse
+      libertas: move generic firmware reset command to common code
+      libertas: wlan_ -> libertas_ function prefix renames for main.c
+      libertas: simplify and clean up data rate handling
+      libertas: fix WEXT quality reporting
+      libertas: send association events on adhoc reassociation
+      libertas: push mesh beacon bit to userspace in scan results
+      libertas: fix assignment of WEP key type
+      libertas: push WEXT scan requests to a work queue
+      libertas: fix misspelling in debug message
+      libertas: ignore spurious mesh autostart events
+      libertas: better descriptions for association errors
+      libertas: fix sparse-reported problems
+      libertas: bump driver version
+
+Eugene Teo (1):
+      drivers/net/wireless/libertas/cmd.c: fix adapter->driver_lock dereference
+
+Holger Schurig (33):
+      libertas: remove fw.c
+      libertas: fix one more sparse warning
+      libertas: make more functions static & remove unused functions
+      libertas: uppercase some #defines
+      libertas: access mesh_dev more carefully
+      libertas: tune hardware info output
+      libertas: remove debugmode
+      libertas: make the hex dumper nicer
+      libertas: remove a hundred CMD_RET_xxx definitions
+      libertas: use LBS_DEB_HOST for host-to-card communications
+      libertas: use LBS_DEB_HOST for host-to-card communications
+      add support for Marvell 8385 CF cards
+      libertas: remove unused adapter->prev_XXXX variables
+      libertas: remove adapter->{rx,tx}antenna
+      libertas: remove adapter->prescan
+      libertas: remove adapter->scanprobes
+      libertas: remove adapter->pkttxctrl
+      libertas: remove adapter->txrate
+      libertas: remove adapter->rxpd_rate
+      libertas: remove adapter->{data,bcn}_avg_factor
+      libertas: remove adapter->nullpktinterval
+      libertas: remove adapter->locallisteninterval
+      libertas: remove adapter->multipledtim
+      libertas: remove adapter->atimwindow
+      libertas: remove adapter->regiontableindex
+      libertas: remove adapter->listeninterval
+      libertas: remove adapter->adhoc_grate_enabled
+      libertas: remove adapter->beaconperiod
+      libertas: remove adapter->scanmode
+      libertas: remove adapter->scantype
+      libertas: remove bss_descriptior->networktsf
+      libertas: remove bss_descriptor->timestamp
+      libertas: fix two debug statements in cmdresp.c
+
+Jean Tourrilhes (1):
+      libertas: fix a few wext abuses...
+
+Luis Carlos Cobo (7):
+      libertas: specific mesh scan for mshX interface
+      Support for mesh autostart deactivation through sysfs
+      libertas: Avoid MESH_AUTOSTARTED spam on console
+      libertas: revert CAPINFO_MASK to its original value
+      libertas: keep mesh autostart enabled while asleep
+      libertas: monitor mode support for OLPC firmware
+      libertas: pass boot2 version to firmware
+
+ drivers/net/wireless/Kconfig               |    7 +
+ drivers/net/wireless/Makefile              |    2 +-
+ drivers/net/wireless/libertas/11d.c        |  124 ++---
+ drivers/net/wireless/libertas/11d.h        |    4 -
+ drivers/net/wireless/libertas/Makefile     |    5 +-
+ drivers/net/wireless/libertas/assoc.c      |   99 ++--
+ drivers/net/wireless/libertas/assoc.h      |    2 +-
+ drivers/net/wireless/libertas/cmd.c        |  664 +++++++++---------
+ drivers/net/wireless/libertas/cmdresp.c    |  368 +++++------
+ drivers/net/wireless/libertas/debugfs.c    |  137 ++--
+ drivers/net/wireless/libertas/decl.h       |   18 +-
+ drivers/net/wireless/libertas/defs.h       |  157 +++---
+ drivers/net/wireless/libertas/dev.h        |   77 +--
+ drivers/net/wireless/libertas/ethtool.c    |    8 +-
+ drivers/net/wireless/libertas/fw.c         |  349 ----------
+ drivers/net/wireless/libertas/host.h       |  445 ++++++-------
+ drivers/net/wireless/libertas/hostcmd.h    |   81 +--
+ drivers/net/wireless/libertas/if_bootcmd.c |   40 --
+ drivers/net/wireless/libertas/if_cs.c      | 1005 ++++++++++++++++++++++++++++
+ drivers/net/wireless/libertas/if_usb.c     |  209 +++++--
+ drivers/net/wireless/libertas/if_usb.h     |    4 -
+ drivers/net/wireless/libertas/join.c       |  474 +++++++------
+ drivers/net/wireless/libertas/join.h       |   35 +-
+ drivers/net/wireless/libertas/main.c       |  752 ++++++++++++++++++----
+ drivers/net/wireless/libertas/rx.c         |   85 +--
+ drivers/net/wireless/libertas/scan.c       |  585 +++++++----------
+ drivers/net/wireless/libertas/scan.h       |   36 +-
+ drivers/net/wireless/libertas/thread.h     |   52 --
+ drivers/net/wireless/libertas/tx.c         |   41 +-
+ drivers/net/wireless/libertas/types.h      |   67 +--
+ drivers/net/wireless/libertas/wext.c       |  391 ++++--------
+ drivers/net/wireless/libertas/wext.h       |    9 +-
+ 32 files changed, 3512 insertions(+), 2820 deletions(-)
+ delete mode 100644 drivers/net/wireless/libertas/fw.c
+ delete mode 100644 drivers/net/wireless/libertas/if_bootcmd.c
+ create mode 100644 drivers/net/wireless/libertas/if_cs.c
+ delete mode 100644 drivers/net/wireless/libertas/thread.h
+
+
