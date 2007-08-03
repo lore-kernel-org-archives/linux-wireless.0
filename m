@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:48604 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S968349AbXHMPqO (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51170 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763123AbXHCW3T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 11:46:14 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 3/3] mac80211: remove management interface
-Date: Mon, 13 Aug 2007 08:44:23 -0700
-Cc: linux-wireless@vger.kernel.org
-References: <20070813074504.416717000@sipsolutions.net> <20070813074644.118092000@sipsolutions.net>
-In-Reply-To: <20070813074644.118092000@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart148381788.FE4bsUdXaX";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200708130844.27516.flamingice@sourmilk.net>
+	Fri, 3 Aug 2007 18:29:19 -0400
+Received: from [84.135.224.6] (helo=[10.0.0.4])
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.67)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1IH5e1-00070X-5O
+	for linux-wireless@vger.kernel.org; Fri, 03 Aug 2007 23:29:18 +0100
+Subject: Re: further plan wrt. monitor interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1186178959.13315.30.camel@johannes.berg>
+References: <1186178959.13315.30.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0E5lDmv1YlCbxNaLappA"
+Date: Sat, 04 Aug 2007 00:30:53 +0200
+Message-Id: <1186180253.20275.6.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart148381788.FE4bsUdXaX
-Content-Type: text/plain;
-  charset="iso-8859-15"
+
+--=-0E5lDmv1YlCbxNaLappA
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Monday 13 August 2007 00:45, Johannes Berg wrote:
-> Oh and somebody needs to fix zd1211rw-mac80211. It abused the
-> MGMT interface constant that was explicitly mentioned to be
-> not for drivers... I've "fixed" it for now but readers of the
-> code may not be happy with it.
-I've done this in all my drivers. It's perfectly fine. If you're going to d=
-rop=20
-the MGMT enum, please post a patch to s/IEEE80211_IF_TYPE_MGMT/-1/ for all=
-=20
-drivers.
+On Sat, 2007-08-04 at 00:09 +0200, Johannes Berg wrote:
 
-=2DMichael Wu
+> 4)
+> Change the "int flags" argument to the set_multicast_list callback to
+> "int *flags" so drivers can indicate whether they supported a flag or
+> not by clearing all flags they did not honour. Additional advantage:
+> drivers break and people will be forced to re-examine their code to use
+> the new flags.
 
---nextPart148381788.FE4bsUdXaX
-Content-Type: application/pgp-signature
+Hmm. I think this is confusing because set_multicast_list is also a
+netdev callback. Maybe we should do the flags in another callback after
+all? Just so people who've written a regular net driver won't be
+confused.
+
+johannes
+
+--=-0E5lDmv1YlCbxNaLappA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBGwHxbT3Oqt9AH4aERAkFoAKDC+yhW4DRrSWIhWGAIK6HJCZUTRACgwbIy
-bIcyJvT1qztf6bUwio386MY=
-=CIZM
+iD8DBQBGs6yd/ETPhpq3jKURAgclAJ92SF9j/JkSsEYRuiNc8099OleWugCeJ6zI
+Kb3mSOkGVkLtqGvj4RboqqQ=
+=+rBF
 -----END PGP SIGNATURE-----
 
---nextPart148381788.FE4bsUdXaX--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+--=-0E5lDmv1YlCbxNaLappA--
+
