@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59975 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760652AbXHOPBX (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.169]:28225 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757683AbXHCSL3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 11:01:23 -0400
-Message-Id: <20070815145046.815119000@sipsolutions.net>
-References: <20070815144920.135826000@sipsolutions.net>
-Date: Wed, 15 Aug 2007 16:49:32 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>
-Subject: [PATCH 12/20] mac80211: fix preamble setting
-Mime-Version: 1.0
+	Fri, 3 Aug 2007 14:11:29 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so495974ugf
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Aug 2007 11:11:28 -0700 (PDT)
+To: dragoran <drago01@gmail.com>
+Subject: Re: rt2500usb stopped working (vendor request error)
+Date: Fri, 3 Aug 2007 20:15:57 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <46B1B0AE.7050205@gmail.com> <200708032007.45875.IvDoorn@gmail.com> <f6ca9fed0708031105y5e87330fq1518b755a14ab028@mail.gmail.com>
+In-Reply-To: <f6ca9fed0708031105y5e87330fq1518b755a14ab028@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708032015.57569.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It looks like in commit 28487a90 the condition was unintentionally
-negated by moving some code, fix it.
+On Friday 03 August 2007, dragoran wrote:
+> ok this makes sense.
+> is the legacy driver supported by hostapd?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Daniel Drake <dsd@gentoo.org>
+Nope, there is no master mode support in the legacy drivers.
 
----
- net/mac80211/ieee80211_ioctl.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Ivo
 
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-15 13:39:52.366520121 +0200
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-15 13:39:52.926520121 +0200
-@@ -1962,7 +1962,7 @@ static int ieee80211_ioctl_prism2_param(
- 		break;
- 
- 	case PRISM2_PARAM_PREAMBLE:
--		if (sdata->type != IEEE80211_IF_TYPE_AP) {
-+		if (sdata->type == IEEE80211_IF_TYPE_AP) {
- 			sdata->short_preamble = !!value;
- 			ieee80211_erp_info_change_notify(dev, IEEE80211_ERP_CHANGE_PREAMBLE);
- 		} else {
+> On 8/3/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> > On Friday 03 August 2007, dragoran wrote:
+> > > no I havn't I will try it tomorrow and tell you if it worked.
+> > > but as I said before a earilier version of the driver worked before on
+> > > fc6 without any problems.
+> >
+> > Yes, but I want to rule out hardware problems completely.
+> > If legacy still works then there is nothing with the hardware,
+> > but indeed a driver problem.
+> > If the legacy driver shows the same problem, it might be a hardware problem.
+> >
+> > Ivo
+> >
+> 
 
--- 
 
