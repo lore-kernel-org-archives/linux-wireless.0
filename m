@@ -1,56 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34440 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760065AbXHNLwI (ORCPT
+Received: from smtp126.iad.emailsrvr.com ([207.97.245.126]:43926 "EHLO
+	smtp126.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751031AbXHCAcA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2007 07:52:08 -0400
-Message-Id: <20070814093410.322846000@sipsolutions.net>
-References: <20070814093254.021041000@sipsolutions.net>
-Date: Tue, 14 Aug 2007 11:32:58 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/4] hostapd: remove PRISM2_PARAM_NEXT_MODE
-Mime-Version: 1.0
+	Thu, 2 Aug 2007 20:32:00 -0400
+Message-ID: <46B27729.5030406@gentoo.org>
+Date: Thu, 02 Aug 2007 20:30:33 -0400
+From: Daniel Drake <dsd@gentoo.org>
+MIME-Version: 1.0
+To: wireless <linux-wireless@vger.kernel.org>
+CC: Michael Buesch <mb@bu3sch.de>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Jiri Benc <jbenc@suse.cz>, Ulrich Kunitz <kune@deine-taler.de>
+Subject: mac80211 driver interface semantics
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-802.11 A is easily distinguishable based on frequency, and the difference
-between 802.11B/G isn't really done well in mac80211 with most 802.11G
-drivers supporting only 802.11G channels and no B channels
+There has been some recent confusion as to how monitor interfaces should 
+operate, how multiple interfaces should be handled by drivers, and how 
+MAC addresses should be handled.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Based on some recent discussions, and what bcm43xx does, I started 
+writing some documentation:
 
----
-What reason is there anyway for distinguishing between an 802.11G and an
-802.11B channel? Regulatory? In that case, well, needs lots of work.
+http://www.linuxwireless.org/en/developers/mac80211/semantics
 
- hostapd/driver_devicescape.c |   14 --------------
- 1 file changed, 14 deletions(-)
+Discuss :)
+I probably made some mistakes. Corrections are very welcome.
 
---- hostap.orig/hostapd/driver_devicescape.c	2007-08-14 11:32:35.000000000 +0200
-+++ hostap/hostapd/driver_devicescape.c	2007-08-14 11:32:36.000000000 +0200
-@@ -367,20 +367,6 @@ static int i802_set_freq(void *priv, int
- 	struct i802_driver_data *drv = priv;
- 	struct iwreq iwr;
- 
--	switch (mode) {
--	case HOSTAPD_MODE_IEEE80211A:
--		mode = MODE_IEEE80211A;
--		break;
--	case HOSTAPD_MODE_IEEE80211B:
--		mode = MODE_IEEE80211B;
--		break;
--	case HOSTAPD_MODE_IEEE80211G:
--		mode = MODE_IEEE80211G;
--		break;
--	}
--
--	hostap_ioctl_prism2param(drv, PRISM2_PARAM_NEXT_MODE, mode);
--
- 	memset(&iwr, 0, sizeof(iwr));
- 	os_strlcpy(iwr.ifr_name, drv->hapd->conf->iface, IFNAMSIZ);
- 	iwr.u.freq.m = freq;
-
--- 
-
+Thanks,
+Daniel
