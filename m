@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:35169 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752528AbXHEOd2 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52215 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758068AbXHCJxV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Aug 2007 10:33:28 -0400
-Message-ID: <46B5DFAC.9090600@lwfinger.net>
-Date: Sun, 05 Aug 2007 09:33:16 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2] bcm43xx-mac80211: Rescale link quality output
-References: <46b57c5f.7s2ojiPQUXY5R3Qv%Larry.Finger@lwfinger.net> <200708051457.11970.mb@bu3sch.de>
-In-Reply-To: <200708051457.11970.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 3 Aug 2007 05:53:21 -0400
+Subject: Re: mac80211 driver interface semantics
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andy Green <andy@warmcat.com>
+Cc: Ulrich Kunitz <kune@deine-taler.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Daniel Drake <dsd@gentoo.org>
+In-Reply-To: <46B2E06F.4090706@warmcat.com>
+References: <46B27729.5030406@gentoo.org>
+	 <20070803052935.GA12683@deine-taler.de>  <46B2E06F.4090706@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BdSOP4foVMSzc7YYd6Vw"
+Date: Fri, 03 Aug 2007 11:54:54 +0200
+Message-Id: <1186134894.4647.24.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Sunday 05 August 2007, Larry Finger wrote:
->> The link quality output from wireless extensions is too small by the ratio
->> of 100/BCM43xx_RX_MAX_SSI (60) for bcm43xx-mac80211. This patch puts the
->> quantity on the proper scale.
->>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> ---
->>
->> Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
->> ===================================================================
->> --- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
->> +++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
->> @@ -537,7 +537,8 @@ void bcm43xx_rx(struct bcm43xx_wldev *de
->>  					      (phystat0 & BCM43xx_RX_PHYST0_GAINCTL),
->>  					      (phystat3 & BCM43xx_RX_PHYST3_TRSTATE));
->>  	status.noise = dev->stats.link_noise;
->> -	status.signal = jssi; /* this looks wrong, but is what mac80211 wants */
->> +	/* the next line looks wrong, but is what mac80211 wants */
->> +	status.signal = (jssi * 100) / BCM43xx_RX_MAX_SSI;
-> 
-> So signal is in percent?
-> Where is this actually documented. I cannot find a hint on what
-> the values of all these things are supposed to be.
 
-Yes, it is clear as mud, with the additional complications of mac80211 mixing the definitions of 
-signal and rssi (as far as I'm concerned). The scale is set by the following code snippet in 
-bcm43xx_wireless_init.
+--=-BdSOP4foVMSzc7YYd6Vw
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-         hw->max_signal = 100;
-         hw->max_rssi = -110;
-         hw->max_noise = -110;
+On Fri, 2007-08-03 at 08:59 +0100, Andy Green wrote:
 
-In this code, "signal" is put on a scale of 0 to 100, and rssi and noise on a scale of -110 to 0 and 
-are assumed to be dBm. Of course, rssi should be a positive number and signal should be in dBm, but 
-my renaming of signal => quality and rssi => signal was shot down, so we are stuck.
+> There seems to be some agreement that in the future the number of
+> virtual interfaces that happen to be lying around shouldn't determine
+> the functionality of Monitor mode like that.
 
-An alternative to the patch above would be to set hw->max_signal = BCM43xx_RX_MAX_SSI. In that case, 
-the line of iwconfig output that reads "Link Quality=83/100  Signal level=-34 dBm  Noise level=-71 
-dBm" would have a "Link Quality" of 50/60 instead of 83/100.
+I think that only happens if you don't have monitor_during_oper set;
+otherwise it's a bug.
 
-The bottom line is that it is an arbitrary quantity on an arbitrary scale. Is it better for it to be 
-  XX/100 than YY/60? I think so, but YMMV.
+I am, however, not entirely sure we should be forwarding packets with
+failed CRC on hard monitor interfaces. Because if you have both a hard
+monitor and a regular interface (monitor_during_oper allowed) then we
+will never check the CRC on frames that enter the networking path and
+can get corrupted TCP packets in etc.
 
-Larry
+johannes
+
+--=-BdSOP4foVMSzc7YYd6Vw
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGsvtu/ETPhpq3jKURAidnAJ9L5vUSMLA9Zniob04rail9/TZOywCfXUXw
+AP9RABal/FCJ4c1c3unSVCU=
+=rF8s
+-----END PGP SIGNATURE-----
+
+--=-BdSOP4foVMSzc7YYd6Vw--
+
