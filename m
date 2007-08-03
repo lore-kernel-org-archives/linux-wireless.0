@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55794
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755678AbXHKPQG (ORCPT
+Received: from purr.warmcat.com ([87.106.142.209]:48342 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757516AbXHCH7q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Aug 2007 11:16:06 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: How to use software encryption with WEP and mac80211
-Date: Sat, 11 Aug 2007 17:15:23 +0200
-Cc: wireless <linux-wireless@vger.kernel.org>
-References: <46BD2C17.4000702@lwfinger.net> <200708111142.15991.mb@bu3sch.de> <46BDD038.4040207@lwfinger.net>
-In-Reply-To: <46BDD038.4040207@lwfinger.net>
+	Fri, 3 Aug 2007 03:59:46 -0400
+Message-ID: <46B2E06F.4090706@warmcat.com>
+Date: Fri, 03 Aug 2007 08:59:43 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Message-Id: <200708111715.23891.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+To: Ulrich Kunitz <kune@deine-taler.de>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Daniel Drake <dsd@gentoo.org>
+Subject: Re: mac80211 driver interface semantics
+References: <46B27729.5030406@gentoo.org> <20070803052935.GA12683@deine-taler.de>
+In-Reply-To: <20070803052935.GA12683@deine-taler.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 11 August 2007 17:05:28 Larry Finger wrote:
-> Michael Buesch wrote:
-> > On Saturday 11 August 2007 05:25:11 Larry Finger wrote:
-> >> What do I need to do to get mac80211 to do software encryption for WEP? My port of the PHY code from 
-> >> bcm43xx and the mac80211 front end works with WPA encryption. With WEP, it authenticates and 
-> >> associates, but never gets an IP number from DHCP. That indicates to me that the encryption is not 
-> >> set up correctly. I looked through the various definitions in include/net/mac80211.h, but nothing 
-> >> seems to apply.
-> > 
-> > Which hw enc code do you use in that tree? The old softmac crap
-> > or my new code from bcm43xx-mac80211?
+Somebody in the thread at some point said:
+
+> As far as I know the phy0/add_iface entry can be used to add a new
+> interface. Notify though the "file" has write access for other,
+> you will need network admin capabilities, which is satisfied by
+> being root. For example:
 > 
-> I had stripped out all the key stuff, but before that it was from bcm43xx-mac80211.
-> 
-> > Anyway, if you want to disable hw enc, always set the force sw enc bit
-> > in the set_key function and return early:
-> > 
-> > 	key->flags |= IEEE80211_KEY_FORCE_SW_ENCRYPT;
-> > 	return 0;
-> 
-> This doesn't seem to work. I had tried it before. I guess I put your code back in again.
+> # cat mon0 >/sys/class/net/wmaster0/phy80211/add_iface
 
-bcm43xx-mac80211 hwenc code does not work with v3 firmware.
-There is no working hwenc code for v3 firmware.
+echo -n mon0 ... ;-)
 
-The above code should work to enable swenc, unless there's a bug in mac80211.
+you can also come at this through
 
+/sys/class/ieee80211/phy<n>/add_iface
 
--- 
-Greetings Michael.
+Nice idea to document it Daniel.  Seeing it written down makes it a
+little more obviously "huh?" about the hard and soft monitor distinction
+IMO.  There seems to be some agreement that in the future the number of
+virtual interfaces that happen to be lying around shouldn't determine
+the functionality of Monitor mode like that.
+
+-Andy
