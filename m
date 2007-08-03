@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2268 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753873AbXHGSGG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2007 14:06:06 -0400
-Date: Tue, 7 Aug 2007 13:34:31 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Alex Deucher <alexdeucher@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Marvell pci wifi chips
-Message-ID: <20070807173431.GC3330@tuxdriver.com>
-References: <a728f9f90708070921x13c1a9fem8f7bbf3fe77756d@mail.gmail.com>
+Received: from hu-out-0506.google.com ([72.14.214.226]:15827 "EHLO
+	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752263AbXHCIUJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Aug 2007 04:20:09 -0400
+Received: by hu-out-0506.google.com with SMTP id 19so487523hue
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Aug 2007 01:20:06 -0700 (PDT)
+Message-ID: <46B2E533.2000808@gmail.com>
+Date: Fri, 03 Aug 2007 10:20:03 +0200
+From: dragoran <drago01@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a728f9f90708070921x13c1a9fem8f7bbf3fe77756d@mail.gmail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rt2500usb stopped working (vendor request error)
+References: <46B1B0AE.7050205@gmail.com> <200708021614.29385.IvDoorn@gmail.com> <f6ca9fed0708020756r7af012a0gd2a72009265a5000@mail.gmail.com> <200708022306.33486.IvDoorn@gmail.com>
+In-Reply-To: <200708022306.33486.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 07, 2007 at 12:21:02PM -0400, Alex Deucher wrote:
-> Is anyone working on a driver for the marvell pci libertas chips
-> (8335, 8300, 8310, etc.) or know of someone who is?  I've got several
-> of these cards not doing anything at the moment if someone is
-> interested in one.  It seems there are several drivers floating
-> around:
-> 
-> - mrv8k driver (http://www.saillard.org/linux/mrv8k/)
-> - openbsd malo driver (http://www.openbsd.org/cgi-bin/man.cgi?query=malo)
-> - marvell GPL driver (http://johannes.sipsolutions.net/files/marvell.tar.bz2)
-> 
-> Reading through the linux-wireless archive, several people seemed to
-> indicate there was work going on, but I have not been able to find any
-> information on that other than Holger's CF libertas integration.  I
-> and others have asked before, but there seems to be some confusion as
-> to the whole libertas line and their relative compatibility.  Just
-> curious.
-
-I think I saw discussion lately to the effect that the PCI devices are
-not currently supported, and that they likely could be supported by
-simply implementing a PCI front-end to the core of the libertas code.
-I think Holger is the person most likely to know for sure.
-
-I've got cards like that too -- would love for you to get them
-working... :-)
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Ivo van Doorn wrote:
+> do you have the USB stick plugged into a USB 1.1 port?
+> If so, could you edit rt2x00usb.h and change the line: 
+>
+> #define REGISTER_TIMEOUT      20
+>
+> And increase the value to something higher (up to 500) and see if that works better?
+>   
+> Just an idea related to another bug report regarding vendor request 
+> errors,
+1) tested todays snapshot:
+same results.
+2) increased the timeout didn't help.
+"usb 2-2: new high speed USB device using ehci_hcd and address"
+so its a usb2 device.
+any other ideas?
