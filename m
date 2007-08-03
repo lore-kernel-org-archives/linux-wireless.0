@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:32842 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754121AbXHAR0u (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:56019 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756987AbXHCWYV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2007 13:26:50 -0400
-Date: Wed, 1 Aug 2007 10:26:15 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Gabriel C <nix.or.die@googlemail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.23-rc1-mm2
-Message-Id: <20070801102615.c8f7d1b9.akpm@linux-foundation.org>
-In-Reply-To: <46B066C9.9030100@googlemail.com>
-References: <20070731230932.a9459617.akpm@linux-foundation.org>
-	<46B066C9.9030100@googlemail.com>
+	Fri, 3 Aug 2007 18:24:21 -0400
+Received: from [84.135.224.6] (helo=[10.0.0.4])
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.67)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1IH5ZD-0006z4-AZ
+	for linux-wireless@vger.kernel.org; Fri, 03 Aug 2007 23:24:20 +0100
+Subject: Re: further plan wrt. monitor interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1186178959.13315.30.camel@johannes.berg>
+References: <1186178959.13315.30.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-F42VcEmvxK+B/YZ8BJcj"
+Date: Sat, 04 Aug 2007 00:25:54 +0200
+Message-Id: <1186179954.20275.3.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 01 Aug 2007 12:56:09 +0200 Gabriel C <nix.or.die@googlemail.com> wrote:
 
-> Andrew Morton wrote:
-> ...
-> > - git-wireless is back.  It is still a >3MB diff, and appears to compile.
-> > 
-> ...
-> 
-> allmodconfig on UML 
-> 
-> ...
-> 
-> 
-> In file included from drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c:48:
-> drivers/net/wireless/bcm43xx-mac80211/bcm43xx_pio.h: In function 'bcm43xx_pio_write':
-> drivers/net/wireless/bcm43xx-mac80211/bcm43xx_pio.h:97: error: implicit declaration of function 'mmiowb'
-> drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c: In function 'bcm43xx_init':
-> drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c:4051: warning: label 'err_dfs_exit' defined but not used
-> make[4]: *** [drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.o] Error 1
-> make[3]: *** [drivers/net/wireless/bcm43xx-mac80211] Error 2
-> make[2]: *** [drivers/net/wireless] Error 2
-> make[1]: *** [drivers/net] Error 2
-> make: *** [drivers] Error 2
-> make: *** Waiting for unfinished jobs....
-> 
+--=-F42VcEmvxK+B/YZ8BJcj
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-(cc linux-wireless)
+On Sat, 2007-08-04 at 00:09 +0200, Johannes Berg wrote:
 
-Probably Kconfig troubles again.
+> After some discussion and review of Daniel's document (thanks!) we came
+> up with the following ideas:
+
+Of course, this also means that drivers now get to keep track of any
+added interfaces to program/unprogram the MAC address.
+
+On the other hand, with these changed semantics open/close could make
+more sense again since drivers now need not always count interfaces and
+monitor interfaces are no longer added/removed to the driver; hence the
+open/close callbacks could be used by drivers that allow only one
+operating interface at a time.
+
+johannes
+
+--=-F42VcEmvxK+B/YZ8BJcj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGs6ty/ETPhpq3jKURAnPPAKCFlaySfUsYb2P/+JbHiiZfSHm5+QCffZun
+f3oDO/HShKwbfTYOykfEwG4=
+=OsoR
+-----END PGP SIGNATURE-----
+
+--=-F42VcEmvxK+B/YZ8BJcj--
+
