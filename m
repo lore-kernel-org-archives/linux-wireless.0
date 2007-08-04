@@ -1,68 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40294 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762797AbXHCPTK (ORCPT
+Received: from purr.warmcat.com ([87.106.142.209]:45949 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752343AbXHDHyG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 11:19:10 -0400
-Subject: Re: [PATCH 18/24] rt2x00: Add Multicast/Broadcast filtering
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200708031709.39208.IvDoorn@gmail.com>
-References: <200707312037.33060.IvDoorn@gmail.com>
-	 <1186149676.4647.42.camel@johannes.berg>
-	 <200708031709.39208.IvDoorn@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4b/hSEIuBmyfcdypdkwT"
-Date: Fri, 03 Aug 2007 17:20:35 +0200
-Message-Id: <1186154435.4647.50.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 4 Aug 2007 03:54:06 -0400
+Message-ID: <46B4309A.70804@warmcat.com>
+Date: Sat, 04 Aug 2007 08:54:02 +0100
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: further plan wrt. monitor interfaces
+References: <1186178959.13315.30.camel@johannes.berg>
+In-Reply-To: <1186178959.13315.30.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Somebody in the thread at some point said:
 
---=-4b/hSEIuBmyfcdypdkwT
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> After my recent patch drivers can now tell the stack that a frame was
+> damaged. That doesn't do much good, however, if the user cannot tell the
+> stack to generate such frames. But we need to go level by level so first
+> mac80211 needs to know about it.
+> 
+> After some discussion and review of Daniel's document (thanks!) we came
+> up with the following ideas:
 
-On Fri, 2007-08-03 at 17:09 +0200, Ivo van Doorn wrote:
-> On Friday 03 August 2007, Johannes Berg wrote:
-> > On Tue, 2007-07-31 at 20:37 +0200, Ivo van Doorn wrote:
-> >=20
-> > > +	if (is_monitor_present(intf)) {
-> > > +		filter =3D IFF_PROMISC | IFF_MULTICAST | IFF_BROADCAST;
-> > > +		if (intf->filter !=3D filter)
-> > > +			__set_bit(PACKET_FILTER_PENDING, &rt2x00dev->flags);
-> > > +	}
-> >=20
-> > Don't do that. There's no requirement that monitor mode interfaces
-> > always be promisc. Also, earlier in the code:
->=20
-> Note that this "Enable promisc" on monitor mode here will only be send to
-> the device. It does not mean that the non-monitor mode will have promisc
-> mode enabled. In fact, when the monitor interface goes down, the normal
-> setting will be used again.
-> If with monitor mode, IFF_PROMISC is not send to the device, monitor
-> mode is useless since it will not catch anything except beacons
-> (Especially true when you only have 1 interface which is in monitor mode)
+I don't know enough abut the insides of the drivers and stack to have
+any useful opinion on the details of the implementation as Ulrich has.
 
-But don't you allow monitoring during operation? In that case this would
-make that monitor interface always promisc which isn't what you want
-unless you set the promisc bit on any of the interfaces.
+Definitely the additional functionality and the granularity of the
+filtering that can eventually be requested (if not delivered on by any
+particular driver) will be really nice.  Throwing out the soft Monitor
+mode but being able to emulate that and more with the new range of
+selections is great.  As is making selectability of broken packets
+official, eventually.
 
-johannes
-
---=-4b/hSEIuBmyfcdypdkwT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGs0fC/ETPhpq3jKURAmyLAJ4jmk5Dkd102FGrYpaVjziF3lT2igCguxbQ
-T6s6mq/OdSbi4R70NZ9m/uI=
-=fiYw
------END PGP SIGNATURE-----
-
---=-4b/hSEIuBmyfcdypdkwT--
-
+-Andy
