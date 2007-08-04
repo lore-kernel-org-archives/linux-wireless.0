@@ -1,27 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.ocgnet.org ([64.20.243.3]:56095 "EHLO smtp.ocgnet.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759596AbXHHXOl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 19:14:41 -0400
-Date: Thu, 9 Aug 2007 08:13:44 +0900
-From: Paul Mundt <lethal@linux-sh.org>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-Subject: Re: superh allmodconfig
-Message-ID: <20070808231344.GA22446@linux-sh.org>
-References: <20070808160619.1b483888.akpm@linux-foundation.org>
+Received: from hu-out-0506.google.com ([72.14.214.235]:51233 "EHLO
+	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751683AbXHDJqr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Aug 2007 05:46:47 -0400
+Received: by hu-out-0506.google.com with SMTP id 19so644005hue
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Aug 2007 02:46:44 -0700 (PDT)
+Message-ID: <46B44AFF.70707@gmail.com>
+Date: Sat, 04 Aug 2007 11:46:39 +0200
+From: dragoran <drago01@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070808160619.1b483888.akpm@linux-foundation.org>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: Luis Correia <luis.f.correia@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	linux-usb-devel@lists.sourceforge.net
+Subject: Re: rt2500usb stopped working (vendor request error)
+References: <46B1B0AE.7050205@gmail.com> <46B43415.1000808@gmail.com> <efe7343f0708040134v30b7ffc1mcfc9b61e555897c3@mail.gmail.com> <200708041146.37667.IvDoorn@gmail.com>
+In-Reply-To: <200708041146.37667.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 08, 2007 at 04:06:19PM -0700, Andrew Morton wrote:
-> drivers/net/b44.c: In function `b44_sync_dma_desc_for_cpu':
-> drivers/net/b44.c:159: error: implicit declaration of function `dma_sync_single_range_for_cpu'
-> 
-> This is actually an sh problem.  It hit sparc64 too but davem fixed
-> it.  Seems that secveral architectures are lagging a bit in the PCI
-> API area, and b44 is using things whcih other drivers are not.
-
-I'll fix it up, thanks.
+Ivo van Doorn wrote:
+> On Saturday 04 August 2007, Luis Correia wrote:
+>   
+>> Well, it may be an hardware error you got on your stick.
+>>     
+>
+> Nope, very doubtfully.
+> When he is using the latest version there would be a big warning
+> "Not an rt2500usb device" and the driver would halt loading after that.
+>
+>   
+>> That or it is one of those wrongly named sticks which are actually
+>> rt73... but i don't really know.
+>>
+>> One last test you could do, go to a friend that uses Windoze and see
+>> if it works as a client and if yes, which driver did it detect, rt73
+>> or rt2500usb.
+>>     
+>
+> Hmm checking if at least it works on windows would be an idea,
+> but I am really starting to suspect hardware problems...
+>
+>   
+ok will test in on my fc6 server (where the last working driver still 
+builds) and see if this one works.
+if this does not work too I will test on windows to make sure thats a hw 
+problem.
