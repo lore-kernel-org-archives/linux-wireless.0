@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.234]:21272 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933427AbXHGAhV (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:42573 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751305AbXHDX06 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2007 20:37:21 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so1599118wxd
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2007 17:37:20 -0700 (PDT)
-Message-ID: <1ba2fa240708061737q66c85ad7s2bde54f083a12266@mail.gmail.com>
-Date: Tue, 7 Aug 2007 03:37:19 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: [RFC V2] bcm43xx-mac80211: Add TX power set file to debugfs
-Cc: bcm43xx-dev@lists.berlios.de,
-	"Larry Finger" <larry.finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200708062335.14693.mb@bu3sch.de>
+	Sat, 4 Aug 2007 19:26:58 -0400
+Message-ID: <46B50B3C.7000906@lwfinger.net>
+Date: Sat, 04 Aug 2007 18:26:52 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <46b78ac2.M4X/XQ9LXYHUe/aO%Larry.Finger@lwfinger.net>
-	 <200708062307.40590.mb@bu3sch.de> <46B791EF.7000105@lwfinger.net>
-	 <200708062335.14693.mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+CC: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Port of bcm43xx from softmac to mac80211 is available for testing
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/7/07, Michael Buesch <mb@bu3sch.de> wrote:
-> On Monday 06 August 2007 23:26:07 Larry Finger wrote:
-> > Michael Buesch wrote:
-> > >
-> > > No, why do you poke with this at all.
-> > > This completely breaks power adjustment from mac80211.
-> > > Simply don't touch bcm43xx_dev_config :)
-> > >
-> >
-> > The problem is that mac80211 never seems to do any power adjustment. The funny 0x1b value for power
-> > level that I wondered about earlier is coming from a value of 27 dBm that is set in
-> > net/mac80211/regdomain.c, and conf->power_level doesn't get any information from anywhere else that
-> > I see.
-> >
-> > Do you know how to get mac80211 to change what it is sending to us?
->
-> I think we have an ioctl.
-> But it's probably the task of the rc algorithm to adjust power.
->
-11k and 11h have TPC features in as well.
-Even though tx power affects link quality it is not usually part of
-rate scaling.
-> --
-> Greetings Michael.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+The port of bcm43xx from softmac to mac80211 is available for testing. There are two patch sets that 
+can be downloaded from ftp://lwfinger.dynalias.org/patches and be applied to kernel 2.6.23-rc1 or 
+-rc2, the mainstream git tree (Linus's), and Linville's wireless-2.6 git tree.
+
+The two files are ftp://lwfinger.dynalias.org/patches/SSB_Final, which installs the SSB driver, and 
+ftp://lwfinger.dynalias.org/patches/port_to_mac80211, which has the changes for the bcm43xx driver. 
+The resulting driver will use V3 firmware.
+
+These patches are similar to the 4301 test driver that was circulated earlier. The major change is 
+that the earlier version was trying to set the power too low. Once that was fixed, performance has 
+become quite good, as shown below. I'm still working on the power setup, which may help the BCM4306.
+
+Transker rates (xmit/recv in Mbs), obtained by using an Iperf server on my LAN
+
+Bit Rate	BCM4311		BCM4318		BCM4306
+set (Mbs)
+1		1.17/8.66	1.22/9.39	1.22/3.73
+2		1.96/11.2	1.98/12.5	1.90/4.98
+5.5		4.15/17.7	4.19/17.7	3.98/5.09
+6		4.86/17.3	4.86/19.9	2.66/4.94
+9		6.58/17.7	6.56/19.9	3.26/5.01
+11		6.57/14.2	6.54/18.5	6.07/5.20
+18		10.7/19.6	10.7/20.2	4.74/5.05
+24		12.6/19.6	12.8/20.0	4.12/5.34
+36		16.2/20.1	15.9/20.1	4.76/4.90
+48		17.9/20.0	15.1/19.6	3.70/4.18
+54		19.0/19.8	15.1/20.0	1.83/2.64
+
+These results look rather good for the later models - my BCM4306 has a PHY rev of 1. On this 
+version, much more is required in the PHY setup, and we clearly have more work for that device.
+
+Please let me know of any problems in applying the patches, or any oops's that occur.
+
+Larry
+
+
+
