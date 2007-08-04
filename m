@@ -1,58 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:47339
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765634AbXHNQtl (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.189]:26983 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756423AbXHDIe2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2007 12:49:41 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] the recently discussed flags patch
-Date: Tue, 14 Aug 2007 18:48:57 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Daniel Drake <dsd@gentoo.org>
-References: <1187108515.4037.3.camel@johannes.berg>
-In-Reply-To: <1187108515.4037.3.camel@johannes.berg>
+	Sat, 4 Aug 2007 04:34:28 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so847920rvb
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Aug 2007 01:34:27 -0700 (PDT)
+Message-ID: <efe7343f0708040134v30b7ffc1mcfc9b61e555897c3@mail.gmail.com>
+Date: Sat, 4 Aug 2007 09:34:27 +0100
+From: "Luis Correia" <luis.f.correia@gmail.com>
+To: dragoran <drago01@gmail.com>
+Subject: Re: rt2500usb stopped working (vendor request error)
+Cc: "Ivo van Doorn" <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	linux-usb-devel@lists.sourceforge.net
+In-Reply-To: <46B43415.1000808@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200708141848.57809.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <46B1B0AE.7050205@gmail.com> <200708032015.57569.IvDoorn@gmail.com>
+	 <f6ca9fed0708031114v49736b2cxd4525cc4c1650c7e@mail.gmail.com>
+	 <200708032031.23966.IvDoorn@gmail.com> <46B43415.1000808@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 14 August 2007 18:21:55 Johannes Berg wrote:
-> +/*
-> + * flags for change_filter_flags()
-> + *
-> + * Note that e.g. if PROMISC_IN_BSS is unset then
-> + * you should still do MAC address filtering if
-> + * possible even if OTHER_BSS is set to indicate
-> + * no BSSID filtering should be done.
-> + */
-> +#define FIF_PROMISC_IN_BSS	0x01
-> +#define FIF_ALLMULTI		0x02
-> +#define FIF_FCSFAIL		0x04
-> +#define FIF_PLCPFAIL		0x08
-> +#define FIF_CONTROL		0x10
-> +#define FIF_OTHER_BSS		0x20
+Well, it may be an hardware error you got on your stick.
 
-Please some more comments on what they actually mean
-and what's usually to do when the flag is set.
+That or it is one of those wrongly named sticks which are actually
+rt73... but i don't really know.
 
-> +	/* Change filter flags, see above for FIF_* constants.
-> +	 *
-> +	 * Must be atomic due to running under the tx lock.
-> +	 * This callback is required.
-> +	 */
-> +	void (*change_filter_flags)(struct ieee80211_hw *hw,
-> +				    int changed_flags, int total_flags);
+One last test you could do, go to a friend that uses Windoze and see
+if it works as a client and if yes, which driver did it detect, rt73
+or rt2500usb.
 
-Better use unsigned int.
+Luis
 
-What does changed_flags and total_flags mean?
-I thought we'd like to have a pointer here, to the driver
-can clear what's not supported.
-
--- 
-Greetings Michael.
+On 8/4/07, dragoran <drago01@gmail.com> wrote:
+> Ivo van Doorn wrote:
+> > On Friday 03 August 2007, dragoran wrote:
+> >
+> >> thats what I am using it for....
+> >>
+> >
+> > I understand, but if you could test the legacy driver
+> > for any other mode to see if at least the hardware is
+> > all right.
+> > Managed and adhoc mode would already give a good
+> > idea about any possible hardware problems.
+> >
+> >
+> while testing the lagacy driver I got this messages:
+> usb 2-2: new high speed USB device using ehci_hcd and address 4
+> usb 2-2: unable to read config index 0 descriptor/start
+> usb 2-2: chopping to 0 config(s)
+> usb 2-2: string descriptor 0 read error: -71
+> usb 2-2: string descriptor 0 read error: -71
+> usb 2-2: string descriptor 0 read error: -71
+> usb 2-2: no configuration chosen from 0 choices
+> and nothing worked....
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
