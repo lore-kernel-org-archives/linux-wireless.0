@@ -1,54 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from DSL022.labridge.com ([206.117.136.22]:1111 "EHLO perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753998AbXHOBia (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2007 21:38:30 -0400
-Subject: Re: [PATCH] [121/2many] MAINTAINERS - CFG80211 and NL80211
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: torvalds@linux-foundation.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, akpm@linux-foundation.org
-In-Reply-To: <1187000365.27916.66.camel@johannes.berg>
-References: <46bff948.otglyA7i5BhTYKIi%joe@perches.com>
-	 <1187000365.27916.66.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 14 Aug 2007 18:37:41 -0700
-Message-Id: <1187141862.32555.184.camel@localhost>
-Mime-Version: 1.0
+Received: from purr.warmcat.com ([87.106.142.209]:50439 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752004AbXHEGnL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Aug 2007 02:43:11 -0400
+Message-ID: <46B5717A.6090302@warmcat.com>
+Date: Sun, 05 Aug 2007 07:43:06 +0100
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] bcm43xx-mac80211: Rescale link quality output
+References: <46b56ce8.MTc7K0Zquczk+/6h%Larry.Finger@lwfinger.net>
+In-Reply-To: <46b56ce8.MTc7K0Zquczk+/6h%Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2007-08-13 at 12:19 +0200, Johannes Berg wrote:
-> On Sun, 2007-08-12 at 23:25 -0700, joe@perches.com wrote:
-> > Add file pattern to MAINTAINER entry
-> 
-> > +F:	include/linux/nl80211.h
-> > +F:	include/net/cfg80211.h
-> > +F:	net/wireless/core.*
-> > +F:	net/wireless/sysfs.*
-> > +F:	net/wireless/radiotap.c
-> 
-> I must've missed the original discussion surrounding this,
+Somebody in the thread at some point said:
+> BCM43xx_RX_MAX_SSI (60)
 
-Sorry, posted 1/way2many on LK.
-http://lkml.org/lkml/2007/8/13/17
+> +	status.signal = jssi * 100 / BCM43xx_RX_MAX_SSI;
 
-> are these supposed to be regular match patterns?
+That can't be doing what you intended... (int)100/60 == 1, it just
+multiplies jssi by 1.  Maybe some brackets around the multiply?
 
-More or less.  
-
-> Is there a tool reading it? With
-> this and wireless extensions it'd probably be best to mark cfg80211 as
-> "everything in net/wireless/ but net/wireless/wext*" if possible.
-
-CFG80211 and NL80211
-P:	Johannes Berg
-M:	johannes@sipsolutions.net
-L:	linux-wireless@vger.kernel.org
-S:	Maintained
-F:	include/linux/nl80211.h
-F:	include/net/cfg80211.h
-F:	net/wireless/*
-X:	net/wireless/wext*
-
-
+-Andy
