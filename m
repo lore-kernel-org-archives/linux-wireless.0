@@ -1,46 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58893
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753855AbXHaFQn (ORCPT
+Received: from smtp116.iad.emailsrvr.com ([207.97.245.116]:40564 "EHLO
+	smtp116.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753634AbXHEWfZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Aug 2007 01:16:43 -0400
-Date: Thu, 30 Aug 2007 22:16:42 -0700 (PDT)
-Message-Id: <20070830.221642.41875712.davem@davemloft.net>
-To: matthew@wil.cx
-Cc: shemminger@linux-foundation.org, johannes@sipsolutions.net,
-	voss@seehuhn.de, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, netdev@vger.kernel.org,
-	bridge@linux-foundation.org
-Subject: Re: [PATCH] bridge: fix OOPS when bridging device without ethtool
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20070830164812.GW14130@parisc-linux.org>
-References: <20070830145840.GU14130@parisc-linux.org>
-	<20070830082932.71272c3d@freepuppy.rosehill.hemminger.net>
-	<20070830164812.GW14130@parisc-linux.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sun, 5 Aug 2007 18:35:25 -0400
+Message-ID: <46B65058.7030500@gentoo.org>
+Date: Sun, 05 Aug 2007 18:34:00 -0400
+From: Daniel Drake <dsd@gentoo.org>
+MIME-Version: 1.0
+To: Ulrich Kunitz <kune@deine-taler.de>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: further plan wrt. monitor interfaces
+References: <1186178959.13315.30.camel@johannes.berg> <46B3B2AD.1040509@gentoo.org> <20070804074616.GA17144@deine-taler.de>
+In-Reply-To: <20070804074616.GA17144@deine-taler.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matthew Wilcox <matthew@wil.cx>
-Date: Thu, 30 Aug 2007 10:48:13 -0600
+Ulrich Kunitz wrote:
+> Just my 2 cents: I wonder, how you would handle the situation,
+> that a device can support two MACs in parallel? 
 
-> On Thu, Aug 30, 2007 at 08:29:32AM -0700, Stephen Hemminger wrote:
-> > Bridge code calls ethtool to get speed. The conversion to using
-> > only ethtool_ops broke the case of devices without ethtool_ops.
-> > This is a new regression in 2.6.23.
-> > 
-> > Rearranged the switch to a logical order, and use gcc initializer.
-> > 
-> > Ps: speed should have been part of the network device structure from
-> >     the start rather than burying it in ethtool.
-> 
-> Feel free to do the conversion ;-)  One of the things I like about the
-> ethtool framework is it gives us a way to take stuff out of the drivers
-> and put it in the midlayer without disturbing userspace.
-> 
-> > Signed-off-by: Stephen Hemminger <shemminger@linux-foundation.org>
-> 
-> Acked-by: Matthew Wilcox <matthew@wil.cx>
+I think that mac80211 would need quite a bit more work (in places like 
+TX and RX path) to support devices with "multiple radios" (or 
+pseudo-radios) anyway. Of course, I'm just speculating on how such 
+hardware could/would operate. While we don't have any, I'm not sure it's 
+worth increasing complexity so much to accommodate this.
 
-Applied, thanks!
+Daniel
+
