@@ -1,57 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60164 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272AbXH1Ils (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:46190 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753516AbXHEH0e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2007 04:41:48 -0400
-Subject: Re: [PATCH 08/15] cfg80211: clean up key add/remove interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <46D2ED59.1020508@lwfinger.net>
-References: <20070824122705.549190000@sipsolutions.net>
-	 <20070824122907.784517000@sipsolutions.net> <46CF298B.7040001@lwfinger.net>
-	 <1188212576.7837.3.camel@johannes.berg> <46D2ED59.1020508@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-t3qvhWLylmSGYNK+1wLY"
-Date: Tue, 28 Aug 2007 10:43:06 +0200
-Message-Id: <1188290586.7837.60.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 5 Aug 2007 03:26:34 -0400
+Message-ID: <46B57BA8.5010102@lwfinger.net>
+Date: Sun, 05 Aug 2007 02:26:32 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Andy Green <andy@warmcat.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] bcm43xx-mac80211: Rescale link quality output
+References: <46b56ce8.MTc7K0Zquczk+/6h%Larry.Finger@lwfinger.net> <46B5717A.6090302@warmcat.com>
+In-Reply-To: <46B5717A.6090302@warmcat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Andy Green wrote:
+> Somebody in the thread at some point said:
+>> BCM43xx_RX_MAX_SSI (60)
+> 
+>> +	status.signal = jssi * 100 / BCM43xx_RX_MAX_SSI;
+> 
+> That can't be doing what you intended... (int)100/60 == 1, it just
+> multiplies jssi by 1.  Maybe some brackets around the multiply?
 
---=-t3qvhWLylmSGYNK+1wLY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I think gcc does equal rank operations from left to right, and the change does have the desired 
+result, but the parentheses should be there for clarity.
 
-On Mon, 2007-08-27 at 10:27 -0500, Larry Finger wrote:
+Thanks,
 
-> I have been working from the 'b43' branch with a top commit hash of=20
-> 43a9a146a1290808519c68615809ae8bc207e8a1. It seems to be out of synch wit=
-h branch 'everything' in=20
-> this area.
-
-Ah yes, that explains it, I think John grouped the cfg80211 updates with
-mac80211 and those aren't always pulled into the driver branches.
-
-> Sorry for the noise.
-
-No problem, I appreciate any bug reports.
-
-johannes
-
---=-t3qvhWLylmSGYNK+1wLY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG0+Aa/ETPhpq3jKURAhSlAJ9FLVjSwxfXWIJke0KCa/fvpm21KgCfZwrE
-c/Cbs1zt515IZ99BKLXSgj8=
-=14TM
------END PGP SIGNATURE-----
-
---=-t3qvhWLylmSGYNK+1wLY--
-
+Larry
