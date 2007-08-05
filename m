@@ -1,59 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60596 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752819AbXHOKxb (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:35169 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752528AbXHEOd2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 06:53:31 -0400
-Subject: Re: [PATCH 4/4] hostapd: remove PRISM2_PARAM_NEXT_MODE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240708150029n7ae1223ax87a287b80e967543@mail.gmail.com>
-References: <20070814093254.021041000@sipsolutions.net>
-	 <20070814093410.322846000@sipsolutions.net>
-	 <20070815024135.GF1415@jm.kir.nu>
-	 <1ba2fa240708150029n7ae1223ax87a287b80e967543@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nOVyXueHx2a1KxPEZ83l"
-Date: Wed, 15 Aug 2007 12:56:02 +0200
-Message-Id: <1187175362.3998.17.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 5 Aug 2007 10:33:28 -0400
+Message-ID: <46B5DFAC.9090600@lwfinger.net>
+Date: Sun, 05 Aug 2007 09:33:16 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V2] bcm43xx-mac80211: Rescale link quality output
+References: <46b57c5f.7s2ojiPQUXY5R3Qv%Larry.Finger@lwfinger.net> <200708051457.11970.mb@bu3sch.de>
+In-Reply-To: <200708051457.11970.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michael Buesch wrote:
+> On Sunday 05 August 2007, Larry Finger wrote:
+>> The link quality output from wireless extensions is too small by the ratio
+>> of 100/BCM43xx_RX_MAX_SSI (60) for bcm43xx-mac80211. This patch puts the
+>> quantity on the proper scale.
+>>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> ---
+>>
+>> Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
+>> ===================================================================
+>> --- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
+>> +++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
+>> @@ -537,7 +537,8 @@ void bcm43xx_rx(struct bcm43xx_wldev *de
+>>  					      (phystat0 & BCM43xx_RX_PHYST0_GAINCTL),
+>>  					      (phystat3 & BCM43xx_RX_PHYST3_TRSTATE));
+>>  	status.noise = dev->stats.link_noise;
+>> -	status.signal = jssi; /* this looks wrong, but is what mac80211 wants */
+>> +	/* the next line looks wrong, but is what mac80211 wants */
+>> +	status.signal = (jssi * 100) / BCM43xx_RX_MAX_SSI;
+> 
+> So signal is in percent?
+> Where is this actually documented. I cannot find a hint on what
+> the values of all these things are supposed to be.
 
---=-nOVyXueHx2a1KxPEZ83l
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yes, it is clear as mud, with the additional complications of mac80211 mixing the definitions of 
+signal and rssi (as far as I'm concerned). The scale is set by the following code snippet in 
+bcm43xx_wireless_init.
 
-On Wed, 2007-08-15 at 10:29 +0300, Tomas Winkler wrote:
+         hw->max_signal = 100;
+         hw->max_rssi = -110;
+         hw->max_noise = -110;
 
-> Just a small example as everybody knows the major distinction is in
-> modulation schema i.e. CCK vs. OFDM. 11b only devices are deaf to OFDM
-> traffic so we use CTS/RTS to overcome it which in turn slows the
-> traffic. Sometime B-only or even G-only (no CCK rates) environments
-> are required. I've used to have laptops with 11b only cards so I've
-> configured the AP to B only not slowing even more the traffic.
+In this code, "signal" is put on a scale of 0 to 100, and rssi and noise on a scale of -110 to 0 and 
+are assumed to be dBm. Of course, rssi should be a positive number and signal should be in dBm, but 
+my renaming of signal => quality and rssi => signal was shot down, so we are stuck.
 
-That's more a matter of only announcing B channels though, not a reason
-for telling the hardware that a B channel was selected.
+An alternative to the patch above would be to set hw->max_signal = BCM43xx_RX_MAX_SSI. In that case, 
+the line of iwconfig output that reads "Link Quality=83/100  Signal level=-34 dBm  Noise level=-71 
+dBm" would have a "Link Quality" of 50/60 instead of 83/100.
 
-Of course, it is not inconceivable that hardware may support turning off
-OFDM completely, I just haven't seen any yet :)
+The bottom line is that it is an arbitrary quantity on an arbitrary scale. Is it better for it to be 
+  XX/100 than YY/60? I think so, but YMMV.
 
-johannes
-
---=-nOVyXueHx2a1KxPEZ83l
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGwtvC/ETPhpq3jKURAqy7AJ9MsoafihlGawfEmDCxLiCw9kOl0QCfcRTK
-kGGI3h0+S3F7N/cnp3dm294=
-=P6pe
------END PGP SIGNATURE-----
-
---=-nOVyXueHx2a1KxPEZ83l--
-
+Larry
