@@ -1,53 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38957 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932636AbXHHJeM (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59836
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753385AbXHEVoW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 05:34:12 -0400
-Subject: Re: Marvell pci wifi chips
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200708080848.51130.hs4233@mail.mn-solutions.de>
-References: <a728f9f90708070921x13c1a9fem8f7bbf3fe77756d@mail.gmail.com>
-	 <20070807173431.GC3330@tuxdriver.com>
-	 <a728f9f90708072129m2c5dd9f8j70e5bba44e504ff0@mail.gmail.com>
-	 <200708080848.51130.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-crHevruAY3iDOTqwBrHF"
-Date: Wed, 08 Aug 2007 11:36:03 +0200
-Message-Id: <1186565764.11717.25.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 5 Aug 2007 17:44:22 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Subject: Re: suspend/resume support in mac80211
+Date: Sun, 5 Aug 2007 23:44:12 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <1186343417.8459.23.camel@localhost>
+In-Reply-To: <1186343417.8459.23.camel@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200708052344.12673.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday 05 August 2007, Mattias Nissler wrote:
+> Hi,
+> 
+> we have recently been struggling with getting suspend/resume working in
+> rt2x00. A few questions:
 
---=-crHevruAY3iDOTqwBrHF
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+There is no suspend/resume support in mac80211.
 
-On Wed, 2007-08-08 at 08:48 +0200, Holger Schurig wrote:
-> > Has anyone tested the marvell driver
-> > (http://johannes.sipsolutions.net/files/marvell.tar.bz2)?
-> >  Does it work?
->=20
-> Maybe the author ?!?
+> 1. What is the recommended scheme for implementing suspend/resume with
+> mac80211? Some drivers (p54, iwlwifi) call ieee80211_stop_queues().
 
-But who'd that be? It looks like internal to some embedded systems
-company IIRC.
+Calling stop_queues() from outside of the TX handler may deadlock.
+That is a bug in mac80211. I don't think it has been fixed, yet.
 
-johannes
+> 2. Are there any mac80211 drivers that suspend/resume properly? Also
+> when associated?
+> 
+> 3. Shouldn't mac80211 be made suspend/resume-aware (AFAIK it is not), so
+> we can do things like disassociating during suspend and reassociating
+> when resuming? I'd like something in the spirit of
+> netif_device_detach()/netif_device_attach(). Comments?
 
---=-crHevruAY3iDOTqwBrHF
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGuY6D/ETPhpq3jKURAq4UAKCtTYTBESGA/qsJ5UnfVE///5M/QQCgrtQq
-283hzPpLoRU8jOfw+9AwnSw=
-=QjdW
------END PGP SIGNATURE-----
-
---=-crHevruAY3iDOTqwBrHF--
-
+I think we should have a API call to mac80211 that suspends the stack
+(saves the state etc..) and a call the resumes (reassociates, re-handshakes...).
+But that's probably not that easy to implement, as parts of this
+does happen in userspace.
