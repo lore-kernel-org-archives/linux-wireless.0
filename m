@@ -1,31 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:51092 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965676AbXHaVbd (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.173]:56102 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762271AbXHEUl5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Aug 2007 17:31:33 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so701208fkz
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Aug 2007 14:31:32 -0700 (PDT)
-To: Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [PATCH 1/6] adm8211: Switch to eeprom_93cx6
-Date: Fri, 31 Aug 2007 23:40:52 +0200
-Cc: John Linville <linville@tuxdriver.com>,
+	Sun, 5 Aug 2007 16:41:57 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so581480ugf
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Aug 2007 13:41:56 -0700 (PDT)
+To: rt2400-devel@lists.sourceforge.net
+Subject: Re: [Rt2400-devel] [BUG] rt2x00: inconsistent lock state
+Date: Sun, 5 Aug 2007 22:46:43 +0200
+Cc: Luca Tettamanti <kronos.it@gmail.com>, netdev@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-References: <200708310055.37580.flamingice@sourmilk.net>
-In-Reply-To: <200708310055.37580.flamingice@sourmilk.net>
+References: <20070805194554.GA17141@dreamland.darkstar.lan>
+In-Reply-To: <20070805194554.GA17141@dreamland.darkstar.lan>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200708312340.52730.IvDoorn@gmail.com>
+  charset="iso-8859-1"
+Message-Id: <200708052246.43203.IvDoorn@gmail.com>
 From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> +	ADM8211_CSR_WRITE(SPR, reg);
-> +	ADM8211_CSR_READ(SPR);		// eeprom_delay
-> +}
+Hi,
 
-Is this extra delay needed? eeprom_93cx6 also performs
-a ndelay(450) during each pulse
+> If I'm reading the state bits and the message correcly dev_base_lock was
+> aquired for write with IRQ enabled (via register_netdevice), but lockep also
+> saw it aquired for read *in* IRQ (hardirq) context (rt2x00 code path, via
+> rt2x00lib_beacondone -> ieee80211_beacon_get); this means that a deadlock can
+> occur if we take an interrupt while the lock is already held.
+> So either the lock must be IRQ-safe (_irq() / _irq_save()) or rt2x00 must not
+> take it in interrupt context.
+
+This has already been fixed in rt2x00.git
+I am still working on resolving some other issues,
+but the rt2x00 2.0.7 release will contain the fix for this.
 
 Ivo
