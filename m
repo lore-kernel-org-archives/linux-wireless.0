@@ -1,81 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from deine-taler.de ([217.160.107.63]:52421 "EHLO deine-taler.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967338AbXHGWDm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2007 18:03:42 -0400
-Date: Wed, 8 Aug 2007 00:03:41 +0200
-From: Ulrich Kunitz <kune@deine-taler.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Daniel Drake <dsd@gentoo.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: further plan wrt. monitor interfaces
-Message-ID: <20070807220341.GA24236@deine-taler.de>
-References: <1186178959.13315.30.camel@johannes.berg> <46B3B2AD.1040509@gentoo.org> <20070804074616.GA17144@deine-taler.de> <1186395427.28655.56.camel@johannes.berg> <20070806212300.GA14347@deine-taler.de> <1186480002.4067.28.camel@johannes.berg>
+Received: from mail.inf.tu-dresden.de ([141.76.2.1]:52954 "EHLO
+	mail.inf.tu-dresden.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754563AbXHEMce convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Aug 2007 08:32:34 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.inf.tu-dresden.de (8.13.7/8.13.7) with ESMTP id l75Bp91X000586
+	for <linux-wireless@vger.kernel.org>; Sun, 5 Aug 2007 13:51:09 +0200 (CEST)
+Received: from mail.inf.tu-dresden.de ([127.0.0.1])
+ by localhost (mail.inf.tu-dresden.de [127.0.0.1]) (amavisd-new, port 10024)
+ with ESMTP id 28944-06 for <linux-wireless@vger.kernel.org>;
+ Sun,  5 Aug 2007 13:51:09 +0200 (CEST)
+Received: from [192.168.55.10] (p54B36A0A.dip.t-dialin.net [84.179.106.10])
+	(authenticated bits=0)
+	by mail.inf.tu-dresden.de (8.13.7/8.13.7) with ESMTP id l75Bp4Nm000573
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Sun, 5 Aug 2007 13:51:05 +0200 (CEST)
+From: Joerg Hermsdorf <joerg.hermsdorf@inf.tu-dresden.de>
+To: linux-wireless@vger.kernel.org
+Subject: mac80211 and WPA
+Date: Sun, 5 Aug 2007 13:50:56 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1186480002.4067.28.camel@johannes.berg>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200708051350.57161.joerg.hermsdorf@inf.tu-dresden.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
+Hi all,
 
-> > A bunch
-> > of parameters are already set with a single function, only config
-> > and config_interface need to be replaced by parameter-specific
-> > functions. Reset should be removed. 
-> 
-> Not sure what reset is for.
+After some hours of struggling, I can successfully connect  the 'Intel =
+PRO/=20
+Wireless 3945ABG' device of my ThinkPad T60p, on Kernel 2.6.22.1 using =
+the=20
+iwlwifi driver, via an WPA encrypted connection to my access point.=20
+The point is, I used 'wpa_supplicant' for this. My question is now, was=
+n't the=20
+mac80211 subsystem designed to get rid of things like wpa_supplicant?
+Is there already an other way to configure the iwlwifi driver for WPA/W=
+PA2,=20
+without wpa_supplicant? If so, how? Using 'iwpriv'? I did not find any =
+docs=20
+or howtos for configuring iwlwifi drivers to use WPA.
 
-Now, we are at least two.
+--------------------------------
+Here's how I did it for now:
+I got the iwlwifi driver (version 0.1.8) from http://intellinuxwireless=
+=2Eorg/=20
+together with the microcode image (version iwlwifi-3945-ucode-2.14.1.5)=
+=2E It=20
+compiles without errors and loading the iwl3945 kernel module works fin=
+e and=20
+brings up the 'wlan0' interface. Well, only the wlan LED on my ThinkPad=
+ does=20
+not light!
 
-> > add_interface() and
-> > remove_interface() are comparable to my enable_mac() and
-> > disable_mac() as you discovered. 
-> 
-> Aha, but they're not fully compatible. First of all, you were talking
-> about multiple MACs which isn't something we're going to support
-> (multiple MAC addresses yes).
+I can use iwconfig to setup the device to connect to open and WEP encry=
+pted=20
+access points. To connect to WPA encrypted access points I had to addit=
+onally=20
+setup wpa_supplicant using the 'wext' driver (Linux wireless extensions=
+=20
+(generic)).
 
-I would state we should the support the functionality that the
-device supports. Everything else is "form follows function". 
+Now calling=20
 
-> Secondly, a WDS and AP interface will be
-> running with the same MAC address but have quite different
-> configuration. Thirdly, always doing lookups by MAC address (even if it
-> were possible which it is not due to WDS vs AP) is rather inefficient.
+# wpa_supplicant -Dwext -iwlan0 -c/etc/wpa_supplicant.conf
 
-The MAC address lookup issue could be handled. 
+successfully connects to my WPA2 encrypted access point.
+-----------------------------------------
 
-Assuming that the device would be able to create beacons on a
-specific MAC address, would it need to know about WDS or AP mode?
 
-> > Tell the driver on the real interface, which packets it should
-> > report to the mac80211 stack. 
-> 
-> That's what I proposed.
-> 
-> > Don't bother the driver with virtual
-> > interfaces. The stack should handle it completely transparently.
-> 
-> What I'm trying to explain to you is that basically you cannot do that.
-> AP vs WDS interfaces, lookups by MAC address, beaconing, ...
 
-Beaconing needs to be supported by the device. AP and WDS are
-working on the same MAC address, but why should the people know
-about it. It doesn't look into the packets transmitted.
 
-> > Don't call the driver before open() or after stop() is called.
-> 
-> Do we do that? In any case, it's rather orthogonal to the issue at hand.
 
-Sure. Some drivers support the configuration of the channel before
-the device is up. There has been the request for the zd1211rw
-driver to shadow the configuration in the device data structure.
-But I believe that is something the stack should handle.
-
-Ciao,
-
-Uli
-
--- 
-Uli Kunitz
+Regards,
+J=C3=B6rg
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
