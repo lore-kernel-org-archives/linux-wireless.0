@@ -1,67 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([131.228.20.173]:58601 "EHLO
-	mgw-ext14.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751896AbXH2ETE (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.187]:7589 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751012AbXHEJYi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2007 00:19:04 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: mac80211 AP mode powersaving problems?
-References: <1186990509.27916.38.camel@johannes.berg>
-	<87lkccf30m.fsf@tikku.osso.net>
-	<1187270479.5141.44.camel@johannes.berg> <87643f4kkh.fsf@nokia.com>
-	<1187275344.23489.6.camel@johannes.berg> <871wdphsus.fsf@nokia.com>
-	<1188290911.7837.65.camel@johannes.berg> <87absbsz5f.fsf@nokia.com>
-	<1188299159.7837.96.camel@johannes.berg> <87sl63prsg.fsf@nokia.com>
-	<1188317935.7837.106.camel@johannes.berg> <878x7v8rcm.fsf@nokia.com>
-	<1188326593.7837.118.camel@johannes.berg>
-From: Kalle Valo <Kalle.Valo@nokia.com>
-In-Reply-To: <1188326593.7837.118.camel@johannes.berg> (ext Johannes Berg's message of "Tue\, 28 Aug 2007 20\:43\:13 +0200")
-Date: Wed, 29 Aug 2007 07:18:13 +0300
-Message-ID: <87fy2355yy.fsf@nokia.com>
+	Sun, 5 Aug 2007 05:24:38 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so1145274fkz
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Aug 2007 02:24:37 -0700 (PDT)
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: further plan wrt. monitor interfaces
+Date: Sun, 5 Aug 2007 11:29:23 +0200
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1186178959.13315.30.camel@johannes.berg> <200708041322.14876.IvDoorn@gmail.com> <1ba2fa240708042358x6b206c4bla6f10589fd2cf97f@mail.gmail.com>
+In-Reply-To: <1ba2fa240708042358x6b206c4bla6f10589fd2cf97f@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708051129.23301.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Sorry for sending twice, I accidentally sent the previous mail too
-early.)
+On Sunday 05 August 2007, Tomas Winkler wrote:
+> On 8/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> > Hi,
+> >
+> > >  * FIF_PROMISC_IN_BSS (BSS filters still on, but otherwise promisc)
+> > >  * FIF_ALLMULTI               (all multicast frames are allowed through)
+> > >  * FIF_BROADCAST      (broadcast frames are allowed through)
+> > >  * FIF_FCSFAIL                (frames with bad FCS are allowed through)
+> > >  * FIF_PLCPFAIL               (frames with bad PLCP checksum are allowed through)
+> > >  * FIF_CONTROL                (control frames are shown)
+> > >  * FIF_OTHER_BSS      (frames from other BSSes are shown, subject to the
+> > >                        other filters)
+> > > [missing anything?]
+> >
+> > rt2x00 registers have the 2 following entries as well:
+> >
+> >         Physical error
+> >         Version error
+> >
+> >
+> > The rest of the idea looks pretty good, si I will be happy to implement it for rt2x00. :)
+> >
+> > Ivo
+> >
+> >
+> What about decryption error ?
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+those could be send to the mac80211 stack without the DECRYPTED flag set.
+It will be up to mac80211 to take another shot at decrypting, send it further upstream as-is
+or just simply drop it.
 
-> On Tue, 2007-08-28 at 21:08 +0300, Kalle Valo wrote:
->
->> I hope you have time to investigate this, because I really would like
->> to have Nokia N800 and 770 working with b43 AP. So if you need more
->> testing, just ask.
->
-> Can you disable QoS and see if the same weird frames show up again? b43
-> doesn't really support QoS yet but I don't think that should be causing
-> such frame corruption.
-
->From b43 or N800? 
-
-> Interestingly, your N800 seems to pick up the frames correctly since it
-> did reply to the ping packets... 
-
-Yes, N800 managed to receive some ping packets from the laptop, but
-the packet loss was high (at least 50%). It happened because the ARP
-requests were not buffered and N800 could receive them occasionally
-just by luck. When N800 replied to the request, it woke up from PSM
-and b43 immediately sent all the buffered frames to N800. 
-
-N800 stays awake 200 ms (100 ms if display is off) after a transmitted
-frame, so there's some time to receive packets at that time.
-
-If added a static ARP entry (ip neigh change ... permanent), packet
-loss was 100%.
-
-> Did you have a capture size limit?
-
-I think I didn't, but I have to recheck.
-
--- 
-Kalle Valo
+Ivo
