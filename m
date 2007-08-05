@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:43732 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759999AbXHHDPV (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:63964 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751199AbXHEXIT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2007 23:15:21 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: fix tx status frame code
-Date: Tue, 7 Aug 2007 20:13:24 -0700
-Cc: linux-wireless@vger.kernel.org, jbenc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <1186475037.4067.14.camel@johannes.berg> <1186480510.4067.35.camel@johannes.berg>
-In-Reply-To: <1186480510.4067.35.camel@johannes.berg>
+	Sun, 5 Aug 2007 19:08:19 -0400
+Message-ID: <46B65861.6050502@lwfinger.net>
+Date: Sun, 05 Aug 2007 18:08:17 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart395517996.MhdPVv1izx";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200708072013.28765.flamingice@sourmilk.net>
+To: Richard Jonsson <richie@coderworld.net>
+CC: bcm43xx-dev@lists.berlios.de,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Port of bcm43xx from softmac to mac80211 is available for testing
+References: <46B50B3C.7000906@lwfinger.net>	<200708052115.51758.richie@coderworld.net> <46B63D05.8040709@lwfinger.net>
+In-Reply-To: <46B63D05.8040709@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart395517996.MhdPVv1izx
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Richard Jonsson wrote:
 
-On Tuesday 07 August 2007 02:55, Johannes Berg wrote:
-> This should probably go to .23 as well as -stable.
->
--stable is for .22.. I don't think outgoing frame monitoring was in 2.6.22.
+> "rmmod bcm43xx" when kde is running hangs rmmod and prevents a clean shutdown. 
+> I tried to find which program causes this while using bcm4301 driver, but so 
+> far no luck. System shuts down fine if I don't try to rmmod first. rmmod 
+> works fine from runlevel 3 aside from this message when inserting module 
+> again:
+> "net eth1: device_rename: sysfs_create_symlink failed (-17)"
 
--Michael Wu
+I just got one of these during bootup, which prevented bcm43xx from starting correctly.
 
---nextPart395517996.MhdPVv1izx
-Content-Type: application/pgp-signature
+The logged sequence was:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+kernel: bcm43xx-phy1: Broadcom 4311 WLAN found
+kernel: ssb: Switching to IEEE 802.11 core, index 1
+kernel: bcm43xx-phy1 debug: Found PHY: Analog 4, Type 2, Revision 8
+kernel: bcm43xx-phy1 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
+kernel: bcm43xx-phy1 debug: Radio turned off
+kernel: wmaster0: Selected rate control algorithm 'simple'
+ifup: Service network not started and mode 'auto' -> skipping
+kernel: net eth1: device_rename: sysfs_create_symlink failed (-17)
+ifup: Network interface is managed from NetworkManager
+ifup: NetworkManager will be advised to set up eth1
+ifup: but it cannot be assured from here.
+kernel: bcm43xx-phy1 debug: Adding Interface type 2
+kernel: ssb: Switching to PCI-E core, index 3
+kernel: ssb: Switching to IEEE 802.11 core, index 1
+kernel: bcm43xx-phy1: bcm43xx: Microcode bcm43xx_microcode5.fw3.fw loaded
 
-iD8DBQBGuTTYT3Oqt9AH4aERAuRhAKCx1tdmEz5ZvusDafg4upL3Mi+nAQCeNHce
-fhG3Ky2S3Spo8iGw9h4oycM=
-=LarN
------END PGP SIGNATURE-----
+The fix for this was to 'modprobe -r bcm43xx' followed by 'modprobe bcm43xx', which got everything 
+started OK.
 
---nextPart395517996.MhdPVv1izx--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+Larry
