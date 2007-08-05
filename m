@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:34454
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751136AbXHBWgU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 18:36:20 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Daniel Drake <dsd@gentoo.org>
-Subject: Re: mac80211 IPv6 problems
-Date: Fri, 3 Aug 2007 00:36:12 +0200
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
-	jbenc@suse.cz, flamingice@sourmilk.net
-References: <46b1fde0.b+weBDN75J0SPe2a%Larry.Finger@lwfinger.net> <1186088678.2931.10.camel@pmac.infradead.org> <46B25B04.5020804@gentoo.org>
-In-Reply-To: <46B25B04.5020804@gentoo.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200708030036.13317.mb@bu3sch.de>
+Received: from foo.birdnet.se ([213.88.146.6]:57590 "EHLO foo.birdnet.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751199AbXHEXQc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Aug 2007 19:16:32 -0400
+Message-ID: <20070805230908.19435.qmail@cdy.org>
+Date: Mon, 6 Aug 2007 01:09:08 +0200
+From: Peter Stuge <stuge-rt2400@cdy.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+Subject: Re: [Rt2400-devel] suspend/resume support in mac80211
+References: <1186343417.8459.23.camel@localhost> <200708052344.12673.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200708052344.12673.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 03 August 2007, Daniel Drake wrote:
-> David Woodhouse wrote:
-> > My experience is that mac80211 is broken w.r.t IPv6 -- it receives its
-> > own packets. It would be suboptimal for me if the softmac version of
-> > bcm43xx were to go away before that got fixed.
+On Sun, Aug 05, 2007 at 11:44:12PM +0200, Michael Buesch wrote:
+> > we have recently been struggling with getting suspend/resume
+> > working in rt2x00. A few questions:
 > 
-> This may be a stack-level issue. This is one of the issues holding back 
-> zd1211rw-mac80211 going into mainline: we have a report that 
-> zd1211rw-softmac works fine with IPv6 but mac80211 only works 
-> occasionally with the same device on the same system.
+> There is no suspend/resume support in mac80211.
+
+Wow, that's really bad news.
+
+Are there plans for it?
+
+
+> > 3. Shouldn't mac80211 be made suspend/resume-aware
 > 
-> Does anyone have any ideas?
+> I think we should have a API call to mac80211 that suspends the
+> stack (saves the state etc..)
 
-This is certainly an issue in the packet filtering of mac80211.
+Would it be enough to add a suspended state and functions for
+entering/exiting the state? On transitions, the appropriate driver
+level functions are called of course.
 
+
+> and a call the resumes (reassociates, re-handshakes...).
+> But that's probably not that easy to implement, as parts of this
+> does happen in userspace.
+
+Shouldn't that be handled by hotplugging then?
+
+
+(I'm not on linux-wireless, but rt2400-devel, no need to cc if you
+crosspost.)
+
+//Peter
