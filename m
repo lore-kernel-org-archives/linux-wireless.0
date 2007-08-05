@@ -1,59 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41608 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753057AbXHHJOK (ORCPT
+Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:55320 "EHLO
+	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753845AbXHEH3m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 05:14:10 -0400
-Subject: Re: [RFC] allow device to stop packet mirror behaviour
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, andy@warmcat.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070807.180607.116354128.davem@davemloft.net>
-References: <1186475155.4067.17.camel@johannes.berg>
-	 <20070807.180607.116354128.davem@davemloft.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zqmS7C6YYBPr5fhexhkT"
-Date: Wed, 08 Aug 2007 11:14:01 +0200
-Message-Id: <1186564441.11717.5.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 5 Aug 2007 03:29:42 -0400
+Date: Sun, 05 Aug 2007 02:29:35 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH V2] bcm43xx-mac80211: Rescale link quality output
+Message-ID: <46b57c5f.7s2ojiPQUXY5R3Qv%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The link quality output from wireless extensions is too small by the ratio
+of 100/BCM43xx_RX_MAX_SSI (60) for bcm43xx-mac80211. This patch puts the
+quantity on the proper scale.
 
---=-zqmS7C6YYBPr5fhexhkT
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-On Tue, 2007-08-07 at 18:06 -0700, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Tue, 07 Aug 2007 10:25:55 +0200
->=20
-> > The only way to solve this problem therefore seems to be to suppress th=
-e
-> > mirroring out of the packet by dev_queue_xmit_nit(). The patch below
-> > does that by way of adding a new netdev flag.
->=20
-> Multicast packets also get looped back in a similar manner in the ipv4
-> code.  These will also be seen twice due to this issue.
-
-I don't think these other places are of any interest because of the
-radiotap+802.11 framing on the devices where it is relevant to us; you
-can't actually add an IP route to a monitor interface as far as I can
-tell.
-
-johannes
-
---=-zqmS7C6YYBPr5fhexhkT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGuYlZ/ETPhpq3jKURAlZTAJ4vllyzg0QZCC6vIPFcUoBnfTCndgCgnLR8
-dY0FGxSmBgMolwL3nMAI3z8=
-=fAR9
------END PGP SIGNATURE-----
-
---=-zqmS7C6YYBPr5fhexhkT--
-
+Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
++++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
+@@ -537,7 +537,8 @@ void bcm43xx_rx(struct bcm43xx_wldev *de
+ 					      (phystat0 & BCM43xx_RX_PHYST0_GAINCTL),
+ 					      (phystat3 & BCM43xx_RX_PHYST3_TRSTATE));
+ 	status.noise = dev->stats.link_noise;
+-	status.signal = jssi; /* this looks wrong, but is what mac80211 wants */
++	/* the next line looks wrong, but is what mac80211 wants */
++	status.signal = (jssi * 100) / BCM43xx_RX_MAX_SSI;
+ 	if (phystat0 & BCM43xx_RX_PHYST0_OFDM)
+ 		status.rate = bcm43xx_plcp_get_bitrate_ofdm(plcp);
+ 	else
