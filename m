@@ -1,38 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59007 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758054AbXHGJq0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2007 05:46:26 -0400
-Subject: [PATCH] mac80211: fix tx status frame code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: jbenc <jbenc@suse.cz>, "John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain
-Date: Tue, 07 Aug 2007 10:23:57 +0200
-Message-Id: <1186475037.4067.14.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from deine-taler.de ([217.160.107.63]:49403 "EHLO deine-taler.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756543AbXHFVXB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Aug 2007 17:23:01 -0400
+Date: Mon, 6 Aug 2007 23:23:00 +0200
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: further plan wrt. monitor interfaces
+Message-ID: <20070806212300.GA14347@deine-taler.de>
+References: <1186178959.13315.30.camel@johannes.berg> <46B3B2AD.1040509@gentoo.org> <20070804074616.GA17144@deine-taler.de> <1186395427.28655.56.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1186395427.28655.56.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When I added the monitor for outgoing frames somehow a break
-statement slipped in. Remove it.
+Johannes Berg wrote:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net
+> > I would suggest something like this:
+> > 
+> > int (*enable_phy)(struct ieee80211_hw *hw, int flags);
+> > int (*disable_phy)(struct ieee80211_hw *hw, int flags);
+> > int (*set_phy_freq)(struct ieee80211_hw *hw, int /* ? */ freq, int flags);
+> > ...
+> > 
+> > int (*enable_mac)(struct ieee80211_hw *hw, u8 *mac_addr,
+> >                int filter_flags, int flags);
+> > int (*disable_mac)(struct ieee80211_hw *hw, u8 *mac_addr);
+> > int (*set_mac_bssid)(struct ieee80211_hw *hw, u8 *mac_addr, u8 *bssid);
+> > int (*enable_mac_beacon)(struct ieee80211_hw *hw, u8 *mac_addr,
+> >                       struct ieee80211_beacon_config *config);
+> > int (*disable_mac_beacon)(struct ieee80211_hw *hw, u8 *mac_addr);
+> > ...
+> > 
+> > The call sequence could be:
+> > 
+> > enable_phy
+> > set_phy_freq
+> > set_phy_rate
+> > enable_mac
+> > set_mac_bssid     // For AP this will be the own mac address.
+> > enable_mac_beacon // first mac address will be master
+> > enable_mac        // for second mac address if needed
+> > set_mac_bssid     // set bssid for second mac
+> > disable_mac
+> > disable_mac
+> > disable_phy
+> > 
+> > I would make it to a rule that the setter functions could only be
+> > called if the corresponding layer (phy, mac) has been enabled. All
+> > the interface semantics for the upper layer should be handled by
+> > the mac80211 stack including the persistent storage of a frequency
+> > value before the the device has been brought up.
+> 
+> I don't think I like this. First of all, it's quite a large step away
+> from how mac80211 operates and thus a lot of work.
 
----
-Against wireless-dev, but should be trivial to apply against mac80211
-the tree :)
+I don't think so enable_phy/disable_phy is open and stop. A bunch
+of parameters are already set with a single function, only config
+and config_interface need to be replaced by parameter-specific
+functions. Reset should be removed. add_interface() and
+remove_interface() are comparable to my enable_mac() and
+disable_mac() as you discovered. 
 
---- wireless-dev.orig/net/mac80211/ieee80211.c	2007-08-06 20:10:47.770049363 +0200
-+++ wireless-dev/net/mac80211/ieee80211.c	2007-08-06 20:34:00.090049363 +0200
-@@ -4875,7 +4877,6 @@ void ieee80211_tx_status(struct ieee8021
- 			memset(skb->cb, 0, sizeof(skb->cb));
- 			netif_rx(skb);
- 			skb = skb2;
--			break;
- 		}
- 	}
-  out:
+There are two main things I'm asking for:
 
+Tell the driver on the real interface, which packets it should
+report to the mac80211 stack. Don't bother the driver with virtual
+interfaces. The stack should handle it completely transparently.
 
+Don't call the driver before open() or after stop() is called.
+This means of course that the stack would have to maintain all
+parameters for the device. The advantage would be that suspend and
+resume support would become very easy. The stack would close the
+device in suspend() and would open and configure the device in
+resume(). These operations would not differ a lot from normal
+open and normal stop.
+
+-- 
+Uli Kunitz
