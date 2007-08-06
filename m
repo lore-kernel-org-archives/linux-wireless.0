@@ -1,60 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:50347
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765529AbXHNRA5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2007 13:00:57 -0400
-Message-Id: <20070814165747.821518000@bu3sch.de>
-References: <20070814165746.863593000@bu3sch.de>
-Date: Tue, 14 Aug 2007 18:57:48 +0200
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [patch 2/7] ssb: include modalias in uevent for core
+Received: from ra.tuxdriver.com ([70.61.120.52]:4243 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754851AbXHFUgX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Aug 2007 16:36:23 -0400
+Date: Mon, 6 Aug 2007 16:13:21 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Please pull 'fixes-davem' branch of wireless-2.6
+Message-ID: <20070806201321.GI6442@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Some fixes intended for 2.6.23.  Individual patches available here:
 
-Index: ssb-merge-new/drivers/ssb/main.c
-===================================================================
---- ssb-merge-new.orig/drivers/ssb/main.c	2007-08-11 01:57:31.000000000 +0200
-+++ ssb-merge-new/drivers/ssb/main.c	2007-08-11 20:26:57.000000000 +0200
-@@ -317,6 +317,24 @@ static int ssb_bus_match(struct device *
- 	return 0;
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-davem/
+
+Thanks!
+
+John
+---
+
+The following changes since commit d4ac2477fad0f2680e84ec12e387ce67682c5c13:
+  Linus Torvalds (1):
+        Linux 2.6.23-rc2
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
+
+Daniel Drake (2):
+      mac80211: missing dev_put in ieee80211_master_start_xmit
+      mac80211: don't allow scanning in monitor mode
+
+Zhu Yi (2):
+      mac80211: use do { } while (0) for multi-line macros
+      mac80211: Fix sparse error for sta_last_seq_ctrl_read
+
+ net/mac80211/debugfs_netdev.c  |    8 +++++---
+ net/mac80211/debugfs_sta.c     |    2 +-
+ net/mac80211/ieee80211.c       |    1 +
+ net/mac80211/ieee80211_ioctl.c |   19 +++++++++++++------
+ 4 files changed, 20 insertions(+), 10 deletions(-)
+
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 799a920..095be91 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -271,9 +271,11 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
+ 	}
  }
  
-+static int ssb_device_uevent(struct device *dev, char **envp, int num_envp,
-+			     char *buffer, int buffer_size)
-+{
-+	struct ssb_device *ssb_dev = dev_to_ssb_dev(dev);
-+	int ret, i = 0, length = 0;
-+
-+	if (!dev)
-+		return -ENODEV;
-+
-+	ret = add_uevent_var(envp, num_envp, &i,
-+			     buffer, buffer_size, &length,
-+			     "MODALIAS=ssb:v%.4xid%.4xrev%.2x",
-+			     ssb_dev->id.vendor, ssb_dev->id.coreid,
-+			     ssb_dev->id.revision);
-+	envp[i] = NULL;
-+	return ret;
-+}
-+
- static struct bus_type ssb_bustype = {
- 	.name		= "ssb",
- 	.match		= ssb_bus_match,
-@@ -325,6 +343,7 @@ static struct bus_type ssb_bustype = {
- 	.shutdown	= ssb_device_shutdown,
- 	.suspend	= ssb_device_suspend,
- 	.resume		= ssb_device_resume,
-+	.uevent		= ssb_device_uevent,
- };
+-#define DEBUGFS_DEL(name, type)\
+-	debugfs_remove(sdata->debugfs.type.name);\
+-	sdata->debugfs.type.name = NULL;
++#define DEBUGFS_DEL(name, type)					\
++	do {							\
++		debugfs_remove(sdata->debugfs.type.name);	\
++		sdata->debugfs.type.name = NULL;		\
++	} while (0)
  
- static void ssb_buses_lock(void)
-
+ static void del_sta_files(struct ieee80211_sub_if_data *sdata)
+ {
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index d41e696..da34ea7 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -157,7 +157,7 @@ static ssize_t sta_last_seq_ctrl_read(struct file *file, char __user *userbuf,
+ 	struct sta_info *sta = file->private_data;
+ 	for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
+ 		p += scnprintf(p, sizeof(buf)+buf-p, "%x ",
+-			       sta->last_seq_ctrl[i]);
++			       le16_to_cpu(sta->last_seq_ctrl[i]));
+ 	p += scnprintf(p, sizeof(buf)+buf-p, "\n");
+ 	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
+ }
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index c944b17..8ec5ed1 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -1650,6 +1650,7 @@ static int ieee80211_master_start_xmit(struct sk_buff *skb,
+ 	if (skb_headroom(skb) < headroom) {
+ 		if (pskb_expand_head(skb, headroom, 0, GFP_ATOMIC)) {
+ 			dev_kfree_skb(skb);
++			dev_put(odev);
+ 			return 0;
+ 		}
+ 	}
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index d0e1ab5..e7904db 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -697,17 +697,24 @@ static int ieee80211_ioctl_siwscan(struct net_device *dev,
+ 	if (!netif_running(dev))
+ 		return -ENETDOWN;
+ 
+-	if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID) {
+-		if (sdata->type == IEEE80211_IF_TYPE_STA ||
+-		    sdata->type == IEEE80211_IF_TYPE_IBSS) {
++	switch (sdata->type) {
++	case IEEE80211_IF_TYPE_STA:
++	case IEEE80211_IF_TYPE_IBSS:
++		if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID) {
+ 			ssid = sdata->u.sta.ssid;
+ 			ssid_len = sdata->u.sta.ssid_len;
+-		} else if (sdata->type == IEEE80211_IF_TYPE_AP) {
++		}
++		break;
++	case IEEE80211_IF_TYPE_AP:
++		if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID) {
+ 			ssid = sdata->u.ap.ssid;
+ 			ssid_len = sdata->u.ap.ssid_len;
+-		} else
+-			return -EINVAL;
++		}
++		break;
++	default:
++		return -EOPNOTSUPP;
+ 	}
++
+ 	return ieee80211_sta_req_scan(dev, ssid, ssid_len);
+ }
+ 
 -- 
-
+John W. Linville
+linville@tuxdriver.com
