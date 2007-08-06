@@ -1,69 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35148 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37119 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757736AbXHCJl3 (ORCPT
+	with ESMTP id S1757184AbXHFKHD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 05:41:29 -0400
-Subject: Re: [RFC V2] bcm43xx-mac80211: Provide information to allow  transmission rate decreases
+	Mon, 6 Aug 2007 06:07:03 -0400
+Subject: Re: further plan wrt. monitor interfaces
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <46B1F201.7060107@lwfinger.net>
-References: <46b0f367.p35iGhSXwM+v4QLG%Larry.Finger@lwfinger.net>
-	 <200708021337.21285.mb@bu3sch.de> <1186055319.24230.32.camel@johannes.berg>
-	 <200708021503.53982.mb@bu3sch.de> <1186060034.24230.48.camel@johannes.berg>
-	  <46B1F201.7060107@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-smIy+bNp5Tbc4geXKyDA"
-Date: Fri, 03 Aug 2007 11:40:01 +0200
-Message-Id: <1186134001.4647.15.camel@johannes.berg>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200708051129.23301.IvDoorn@gmail.com>
+References: <1186178959.13315.30.camel@johannes.berg>
+	 <200708041322.14876.IvDoorn@gmail.com>
+	 <1ba2fa240708042358x6b206c4bla6f10589fd2cf97f@mail.gmail.com>
+	 <200708051129.23301.IvDoorn@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/mOiKpmZ9cPQd+AwFgBF"
+Date: Mon, 06 Aug 2007 12:09:02 +0200
+Message-Id: <1186394942.28655.49.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-smIy+bNp5Tbc4geXKyDA
+--=-/mOiKpmZ9cPQd+AwFgBF
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2007-08-02 at 10:02 -0500, Larry Finger wrote:
+On Sun, 2007-08-05 at 11:29 +0200, Ivo van Doorn wrote:
 
-> When I first started investigating the problem of mac80211 not reducing t=
-he rate as I moved away=20
-> from the AP, it seemed to me that the decision regarding excessive retrie=
-s should be made in=20
-> mac80211, not in the driver; however, I have had extreme difficulty in ge=
-tting any changes into=20
-> mac80211 on several occasions. Linville assures me that he has had privat=
-e discussions about this=20
-> problem; however, I needed a quick fix and couldn't stand any protracted =
-discussion and/or review=20
-> delays. I knew Michael would be tough, but that his comments would not be=
- delayed.
+> those could be send to the mac80211 stack without the DECRYPTED flag set.
+> It will be up to mac80211 to take another shot at decrypting, send it fur=
+ther upstream as-is
+> or just simply drop it.
 
-Agreed. There are definitely problems with getting things into mac80211
-and I've complained about that in the past.
-
-> At the moment, I have more pressing matters to resolve than fixing this p=
-roblem in mac80211;=20
-> however, I feel really good that the port of bcm43xx-softmac to mac80211 =
-has this issue.
-
-I think that a great many other drivers will have this issue too.
+Come to think of it, that's actually necessary because you may change
+keys in hardware but still get packets for the old keys under some
+circumstances.
 
 johannes
 
---=-smIy+bNp5Tbc4geXKyDA
+--=-/mOiKpmZ9cPQd+AwFgBF
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGsvfx/ETPhpq3jKURAnfjAKCHXLuSZe8Pk6mW3ytJUTR2GndVxwCggNyb
-FXP16CCjy5YIDJSnR2nUdBw=
-=0KcQ
+iD8DBQBGtvM+/ETPhpq3jKURAkFuAJ9wbgdT1aizUfMOdAtvRUOBbISBVQCeM+7c
+aOHLyf2peyU5wZUtCICDrbc=
+=633f
 -----END PGP SIGNATURE-----
 
---=-smIy+bNp5Tbc4geXKyDA--
+--=-/mOiKpmZ9cPQd+AwFgBF--
 
