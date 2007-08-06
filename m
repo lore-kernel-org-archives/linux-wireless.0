@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44324 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755215AbXH3Lyc (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:37708
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753302AbXHFVfk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 07:54:32 -0400
-Subject: bridge packets option
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Jouni Malinen <j@w1.fi>, Michael Wu <flamingice@sourmilk.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-T4FdlnpYODogZCJPX1b8"
-Date: Wed, 29 Aug 2007 18:31:11 +0200
-Message-Id: <1188405071.1757.5.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 6 Aug 2007 17:35:40 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [RFC V2] bcm43xx-mac80211: Add TX power set file to debugfs
+Date: Mon, 6 Aug 2007 23:35:14 +0200
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+References: <46b78ac2.M4X/XQ9LXYHUe/aO%Larry.Finger@lwfinger.net> <200708062307.40590.mb@bu3sch.de> <46B791EF.7000105@lwfinger.net>
+In-Reply-To: <46B791EF.7000105@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708062335.14693.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 06 August 2007 23:26:07 Larry Finger wrote:
+> Michael Buesch wrote:
+> > 
+> > No, why do you poke with this at all.
+> > This completely breaks power adjustment from mac80211.
+> > Simply don't touch bcm43xx_dev_config :)
+> > 
+> 
+> The problem is that mac80211 never seems to do any power adjustment. The funny 0x1b value for power 
+> level that I wondered about earlier is coming from a value of 27 dBm that is set in 
+> net/mac80211/regdomain.c, and conf->power_level doesn't get any information from anywhere else that 
+> I see.
+> 
+> Do you know how to get mac80211 to change what it is sending to us?
 
---=-T4FdlnpYODogZCJPX1b8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I think we have an ioctl.
+But it's probably the task of the rc algorithm to adjust power.
 
-Hey,
-
-Looking through the receive code, the bridge_packets config option has
-the effect of copying multicast traffic to the air right away and
-passing frames to a station without having them go all the way through
-the network stack.
-
-I think there's a flaw with this: when you turn it off, nothing will
-copy multicast frames to the network as expected by an AP, as far as I
-can tell. Hence, I think that the bridge_packets must not be honoured
-for multicast packets.
-
-OTOH, for multicast, is it actually correct? Doesn't the AP need to
-rewrite some fields?
-
-As for unicast packets, what is the gain? There's obviously the loss
-that netfilter won't see the packet which is generally very much frowned
-upon. Is the performance benefit really that high?
-
-I really need more devices for testing :/
-
-johannes
-
---=-T4FdlnpYODogZCJPX1b8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG1Z9P/ETPhpq3jKURAnCSAKCDukurUaptJ9YeQUfmrdqKbOc2rgCdHB//
-Zy/bcK1ig/WEoKyw0qHKrkY=
-=SFmc
------END PGP SIGNATURE-----
-
---=-T4FdlnpYODogZCJPX1b8--
-
+-- 
+Greetings Michael.
