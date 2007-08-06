@@ -1,106 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57724 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:36562 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753551AbXHVJgm (ORCPT
+	with ESMTP id S1759877AbXHFIHu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2007 05:36:42 -0400
-Received: from [131.234.74.113]
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1INmdl-0005ny-Ao
-	for linux-wireless@vger.kernel.org; Wed, 22 Aug 2007 10:36:41 +0100
-Message-Id: <20070822093634.616289000@sipsolutions.net>
-References: <20070822093602.028331000@sipsolutions.net>
-Date: Wed, 22 Aug 2007 11:36:04 +0200
+	Mon, 6 Aug 2007 04:07:50 -0400
+Subject: Re: [BUG] timer.h
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 2/4] mac80211: remove TKIP mixing for hw accel again
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Christian =?ISO-8859-1?Q?Sch=E4fer?= <schaefer@in.tum.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070803123240.519c5a38.akpm@linux-foundation.org>
+References: <46B1F896.8090005@in.tum.de> <46B2EA43.8070305@in.tum.de>
+	 <20070803123240.519c5a38.akpm@linux-foundation.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-vy5HCHNea/3kqOK/boG9"
+Date: Mon, 06 Aug 2007 08:35:46 +0200
+Message-Id: <1186382146.21957.40.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The TKIP mixing code was added for the benefit of Intel's ipw3945
-chipset but that code ended up not using it. We have previously
-identified many problems with this code and it crystallized that
-library functions for mixing are likely to handle this in much
-more generality.
 
-Due to these reasons, remove the TKIP mixing for hardware
-accelerated crypto operations.
+--=-vy5HCHNea/3kqOK/boG9
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+On Fri, 2007-08-03 at 12:32 -0700, Andrew Morton wrote:
 
----
- include/net/mac80211.h |    9 ---------
- net/mac80211/wpa.c     |   17 -----------------
- 2 files changed, 26 deletions(-)
+> > I was able to reproduce the bug without a tainted kernel (i.e. without=20
+> > the nvidia binary module). Please let me know if you need more infos.
 
---- wireless-dev.orig/include/net/mac80211.h	2007-08-22 10:19:21.789500061 +0200
-+++ wireless-dev/include/net/mac80211.h	2007-08-22 10:26:14.879500061 +0200
-@@ -193,7 +193,6 @@ struct ieee80211_tx_control {
- #define IEEE80211_TXCTL_REQUEUE		(1<<7)
- #define IEEE80211_TXCTL_FIRST_FRAGMENT	(1<<8) /* this is a first fragment of
- 						* the frame */
--#define IEEE80211_TXCTL_TKIP_NEW_PHASE1_KEY (1<<9)
- #define IEEE80211_TXCTL_LONG_RETRY_LIMIT (1<<10) /* this frame should be send
- 						  * using the through
- 						  * set_retry_limit configured
-@@ -209,7 +208,6 @@ struct ieee80211_tx_control {
- 				 * other values: keyidx from hw->set_key() */
- 	u8 icv_len;		/* length of the ICV/MIC field in octets */
- 	u8 iv_len;		/* length of the IV field in octets */
--	u8 tkip_key[16];	/* generated phase2/phase1 key for hw TKIP */
- 	u8 queue;		/* hardware queue to use for this frame;
- 				 * 0 = highest, hw->queues-1 = lowest */
- 	u8 sw_retry_attempt;	/* number of times hw has tried to
-@@ -520,13 +518,6 @@ struct ieee80211_hw {
- 	 * specified in the device's EEPROM */
- #define IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED (1<<11)
- 
--	/* Do TKIP phase1 key mixing in stack to support cards only do
--	 * phase2 key mixing when doing hwcrypto */
--#define IEEE80211_HW_TKIP_REQ_PHASE1_KEY (1<<13)
--	/* Do TKIP phase1 and phase2 key mixing in stack and send the generated
--	 * per-packet RC4 key with each TX frame when doing hwcrypto */
--#define IEEE80211_HW_TKIP_REQ_PHASE2_KEY (1<<14)
--
- 	/* The device capable of supporting 11n */
- #define IEEE80211_HW_SUPPORT_HT_MODE (1<<15)
- 
---- wireless-dev.orig/net/mac80211/wpa.c	2007-08-22 10:25:17.689500061 +0200
-+++ wireless-dev/net/mac80211/wpa.c	2007-08-22 10:26:14.879500061 +0200
-@@ -297,7 +297,6 @@ skip_iv_inc:
- 	    && !tx->wpa_test
- #endif /* CONFIG_HOSTAPD_WPA_TESTING */
- 		) {
--		u32 flags = tx->local->hw.flags;
- 		hdr = (struct ieee80211_hdr *)skb->data;
- 
- 		/* hwaccel - with preallocated room for IV */
-@@ -307,22 +306,6 @@ skip_iv_inc:
- 					    0x7f),
- 				      (u8) key->u.tkip.iv16);
- 
--		if (flags & IEEE80211_HW_TKIP_REQ_PHASE2_KEY)
--			ieee80211_tkip_gen_rc4key(key, hdr->addr2,
--						  tx->u.tx.control->tkip_key);
--		else if (flags & IEEE80211_HW_TKIP_REQ_PHASE1_KEY) {
--			if (key->u.tkip.iv16 == 0 ||
--			    !key->u.tkip.tx_initialized) {
--				ieee80211_tkip_gen_phase1key(key, hdr->addr2,
--					    (u16 *)tx->u.tx.control->tkip_key);
--				key->u.tkip.tx_initialized = 1;
--				tx->u.tx.control->flags |=
--					    IEEE80211_TXCTL_TKIP_NEW_PHASE1_KEY;
--			} else
--				tx->u.tx.control->flags &=
--					    ~IEEE80211_TXCTL_TKIP_NEW_PHASE1_KEY;
--		}
--
- 		tx->u.tx.control->key_idx = tx->key->conf.hw_key_idx;
- 		return 0;
- 	}
+What sort of wireless code are you using? That _rtl suffix *looks* like
+some weird vendor driver added _rtl to all function and module names.
+It's definitely not pristine upstream source; looks to me like vendor
+source to that r8187 module you have since the official driver is called
+rtl8187.
 
--- 
+> >   [<f8e4600c>] ieee80211_associate_procedure_wq_rtl7+0x0/0x78  [ieee802=
+11_rtl]
+
+> You'll need to hunt down the authors of ieee80211_rtl (where'd that come
+> from?) and tell them not do do add_timer() or an already-pending timer.
+
+There's no such nor any similar function in any code I know. No use
+blaming linux-wireless.
+
+johannes
+
+--=-vy5HCHNea/3kqOK/boG9
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGtsFC/ETPhpq3jKURAtGMAJ92hd3dLhwTo+WqKmwcrFo+GKNPYQCeJDtk
+gzqSw1uwSdiDINg9VpxWtaw=
+=vdOl
+-----END PGP SIGNATURE-----
+
+--=-vy5HCHNea/3kqOK/boG9--
 
