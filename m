@@ -1,77 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60908 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38539 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752281AbXHOKgK (ORCPT
+	with ESMTP id S1751598AbXHGJmu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 06:36:10 -0400
-Subject: [PATCH] hostapd: remove vlan stuff
+	Tue, 7 Aug 2007 05:42:50 -0400
+Subject: Re: [PATCH] zd1211rw-mac80211: use correct preambles for RTS/CTS  frames
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 15 Aug 2007 00:41:09 +0200
-Message-Id: <1187131269.31200.3.camel@johannes.berg>
+To: Daniel Drake <dsd@gentoo.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	kune@deine-taler.de
+In-Reply-To: <20070805231845.657BA7B409F@zog.reactivated.net>
+References: <20070805231845.657BA7B409F@zog.reactivated.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4CvgaWQ4W8N+dGk4R6vu"
+Date: Mon, 06 Aug 2007 18:15:23 +0200
+Message-Id: <1186416923.28655.78.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This removes the VLAN stuff from hostapd.
 
-The VLAN stuff in mac80211 cannot possibly work, it doesn't actually do
-anything with those VLAN type interfaces. Also, when I added the VLAN
-type to cfg80211 I must have been rather convinced of the idea; I no
-longer am in favour of doing it in the wireless stack. The recently
-added "macvlan" "driver" shows how you can do VLANs based on destination
-address, what we will need is something like "smacvlan" that does VLANs
-based on source address.
+--=-4CvgaWQ4W8N+dGk4R6vu
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+On Mon, 2007-08-06 at 00:18 +0100, Daniel Drake wrote:
 
----
- hostapd/ChangeLog            |    2 ++
- hostapd/driver_devicescape.c |   16 ----------------
- 2 files changed, 2 insertions(+), 16 deletions(-)
+> +	/* We always send 11M RTS/self-CTS messages, like the vendor driver. */
 
---- hostap.orig/hostapd/driver_devicescape.c	2007-08-15 00:36:51.000000000 +0200
-+++ hostap/hostapd/driver_devicescape.c	2007-08-15 00:36:56.000000000 +0200
-@@ -1135,21 +1135,6 @@ static struct hostapd_hw_modes * i802_ge
- }
- 
- 
--static int i802_set_sta_vlan(void *priv, const u8 *addr, const char *ifname,
--			     int vlan_id)
--{
--	struct i802_driver_data *drv = priv;
--	struct prism2_hostapd_param param;
--
--	memset(&param, 0, sizeof(param));
--	param.cmd = PRISM2_HOSTAPD_SET_STA_VLAN;
--	memcpy(param.sta_addr, addr, ETH_ALEN);
--	os_strlcpy(param.u.set_sta_vlan.vlan_name, ifname, IFNAMSIZ);
--	param.u.set_sta_vlan.vlan_id = vlan_id;
--	return hostapd_ioctl(drv, &param, sizeof(param));
--}
--
--
- static void handle_data(struct hostapd_data *hapd, u8 *buf, size_t len,
- 			u16 stype)
- {
-@@ -2170,5 +2155,4 @@ const struct wpa_driver_ops wpa_driver_d
- 	.if_update = i802_if_update,
- 	.if_remove = i802_if_remove,
- 	.get_hw_feature_data = i802_get_hw_feature_data,
--	.set_sta_vlan = i802_set_sta_vlan,
- };
---- hostap.orig/hostapd/ChangeLog	2007-08-15 00:40:25.000000000 +0200
-+++ hostap/hostapd/ChangeLog	2007-08-15 00:40:55.000000000 +0200
-@@ -16,6 +16,8 @@ ChangeLog for hostapd
- 	  either need to support this or will have to use the WPA/RSN IEs from
- 	  hostapd; currently, the included madwifi and bsd driver interfaces do
- 	  not have support for this)
-+	* removed VLAN support from devicescape driver, the kernel isn't up
-+	  to it and it need not live in the wireless stack at all.
- 
- 2007-05-28 - v0.6.0
- 	* added experimental IEEE 802.11r/D6.0 support
+That will most likely be safe almost everywhere, but I don't think it is
+required by the standard that 11M is a valid basic rate and these frames
+must use basic rates IIRC.
 
+johannes
+
+--=-4CvgaWQ4W8N+dGk4R6vu
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGt0kb/ETPhpq3jKURAsOKAKCjjxAREolk9e1Mq9FQ6v18MyUMmwCgn17g
+STyf90PeZ6bK5jGcHlmG+QQ=
+=in0M
+-----END PGP SIGNATURE-----
+
+--=-4CvgaWQ4W8N+dGk4R6vu--
 
