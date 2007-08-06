@@ -1,50 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foo.birdnet.se ([213.88.146.6]:57590 "EHLO foo.birdnet.se"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2145 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751199AbXHEXQc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Aug 2007 19:16:32 -0400
-Message-ID: <20070805230908.19435.qmail@cdy.org>
-Date: Mon, 6 Aug 2007 01:09:08 +0200
-From: Peter Stuge <stuge-rt2400@cdy.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-Subject: Re: [Rt2400-devel] suspend/resume support in mac80211
-References: <1186343417.8459.23.camel@localhost> <200708052344.12673.mb@bu3sch.de>
-Mime-Version: 1.0
+	id S1759140AbXHFVGc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Aug 2007 17:06:32 -0400
+Date: Mon, 6 Aug 2007 16:30:05 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: jeff@garzik.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Please pull 'libertas-upstream' branch of wireless-2.6
+Message-ID: <20070806203005.GL6442@tuxdriver.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200708052344.12673.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 05, 2007 at 11:44:12PM +0200, Michael Buesch wrote:
-> > we have recently been struggling with getting suspend/resume
-> > working in rt2x00. A few questions:
-> 
-> There is no suspend/resume support in mac80211.
+Got a big patch bomb from the libertas guys.  I tried to cherry-pick
+some of the fixes for 2.6.23, but they either were fixes to problems
+in new code or all the code cleanups made them difficult for me to
+intelligently backport.
 
-Wow, that's really bad news.
+So, this is intended for 2.6.24...
 
-Are there plans for it?
+---
 
+The following changes since commit d4ac2477fad0f2680e84ec12e387ce67682c5c13:
+  Linus Torvalds (1):
+        Linux 2.6.23-rc2
 
-> > 3. Shouldn't mac80211 be made suspend/resume-aware
-> 
-> I think we should have a API call to mac80211 that suspends the
-> stack (saves the state etc..)
+are available in the git repository at:
 
-Would it be enough to add a suspended state and functions for
-entering/exiting the state? On transitions, the appropriate driver
-level functions are called of course.
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git libertas-upstream
 
+Dan Williams (27):
+      libertas: kill ieeetypes_capinfo bitfield, use ieee80211.h types
+      libertas: rename WLAN_802_11_KEY to enc_key and clean up usage
+      libertas: clean up indentation in libertas_association_worker
+      libertas: clean up 802.11 IE post-scan handling
+      libertas: remove if_bootcmd.c
+      libertas: fix mixed-case abuse in cmd_ds_802_11_scan
+      libertas: fix mixed-case abuse in cmd_ds_802_11_ad_hoc_result
+      libertas: fix mixed-case abuse in cmd_ds_802_11_ad_hoc_start
+      libertas: re-uppercase command defines and other constants
+      libertas: fix debug build breakage due to field rename
+      libertas: remove thread.h and make kthread usage clearer
+      libertas: new mesh control knobs
+      libertas: bump version to 322.p1
+      libertas: fix more mixed-case abuse
+      libertas: move generic firmware reset command to common code
+      libertas: wlan_ -> libertas_ function prefix renames for main.c
+      libertas: simplify and clean up data rate handling
+      libertas: fix WEXT quality reporting
+      libertas: send association events on adhoc reassociation
+      libertas: push mesh beacon bit to userspace in scan results
+      libertas: fix assignment of WEP key type
+      libertas: push WEXT scan requests to a work queue
+      libertas: fix misspelling in debug message
+      libertas: ignore spurious mesh autostart events
+      libertas: better descriptions for association errors
+      libertas: fix sparse-reported problems
+      libertas: bump driver version
 
-> and a call the resumes (reassociates, re-handshakes...).
-> But that's probably not that easy to implement, as parts of this
-> does happen in userspace.
+Eugene Teo (1):
+      drivers/net/wireless/libertas/cmd.c: fix adapter->driver_lock dereference
 
-Shouldn't that be handled by hotplugging then?
+Holger Schurig (33):
+      libertas: remove fw.c
+      libertas: fix one more sparse warning
+      libertas: make more functions static & remove unused functions
+      libertas: uppercase some #defines
+      libertas: access mesh_dev more carefully
+      libertas: tune hardware info output
+      libertas: remove debugmode
+      libertas: make the hex dumper nicer
+      libertas: remove a hundred CMD_RET_xxx definitions
+      libertas: use LBS_DEB_HOST for host-to-card communications
+      libertas: use LBS_DEB_HOST for host-to-card communications
+      add support for Marvell 8385 CF cards
+      libertas: remove unused adapter->prev_XXXX variables
+      libertas: remove adapter->{rx,tx}antenna
+      libertas: remove adapter->prescan
+      libertas: remove adapter->scanprobes
+      libertas: remove adapter->pkttxctrl
+      libertas: remove adapter->txrate
+      libertas: remove adapter->rxpd_rate
+      libertas: remove adapter->{data,bcn}_avg_factor
+      libertas: remove adapter->nullpktinterval
+      libertas: remove adapter->locallisteninterval
+      libertas: remove adapter->multipledtim
+      libertas: remove adapter->atimwindow
+      libertas: remove adapter->regiontableindex
+      libertas: remove adapter->listeninterval
+      libertas: remove adapter->adhoc_grate_enabled
+      libertas: remove adapter->beaconperiod
+      libertas: remove adapter->scanmode
+      libertas: remove adapter->scantype
+      libertas: remove bss_descriptior->networktsf
+      libertas: remove bss_descriptor->timestamp
+      libertas: fix two debug statements in cmdresp.c
 
+Jean Tourrilhes (1):
+      libertas: fix a few wext abuses...
 
-(I'm not on linux-wireless, but rt2400-devel, no need to cc if you
-crosspost.)
+Luis Carlos Cobo (7):
+      libertas: specific mesh scan for mshX interface
+      Support for mesh autostart deactivation through sysfs
+      libertas: Avoid MESH_AUTOSTARTED spam on console
+      libertas: revert CAPINFO_MASK to its original value
+      libertas: keep mesh autostart enabled while asleep
+      libertas: monitor mode support for OLPC firmware
+      libertas: pass boot2 version to firmware
 
-//Peter
+ drivers/net/wireless/Kconfig               |    7 +
+ drivers/net/wireless/Makefile              |    2 +-
+ drivers/net/wireless/libertas/11d.c        |  124 ++---
+ drivers/net/wireless/libertas/11d.h        |    4 -
+ drivers/net/wireless/libertas/Makefile     |    5 +-
+ drivers/net/wireless/libertas/assoc.c      |   99 ++--
+ drivers/net/wireless/libertas/assoc.h      |    2 +-
+ drivers/net/wireless/libertas/cmd.c        |  664 +++++++++---------
+ drivers/net/wireless/libertas/cmdresp.c    |  368 +++++------
+ drivers/net/wireless/libertas/debugfs.c    |  137 ++--
+ drivers/net/wireless/libertas/decl.h       |   18 +-
+ drivers/net/wireless/libertas/defs.h       |  157 +++---
+ drivers/net/wireless/libertas/dev.h        |   77 +--
+ drivers/net/wireless/libertas/ethtool.c    |    8 +-
+ drivers/net/wireless/libertas/fw.c         |  349 ----------
+ drivers/net/wireless/libertas/host.h       |  445 ++++++-------
+ drivers/net/wireless/libertas/hostcmd.h    |   81 +--
+ drivers/net/wireless/libertas/if_bootcmd.c |   40 --
+ drivers/net/wireless/libertas/if_cs.c      | 1005 ++++++++++++++++++++++++++++
+ drivers/net/wireless/libertas/if_usb.c     |  209 +++++--
+ drivers/net/wireless/libertas/if_usb.h     |    4 -
+ drivers/net/wireless/libertas/join.c       |  474 +++++++------
+ drivers/net/wireless/libertas/join.h       |   35 +-
+ drivers/net/wireless/libertas/main.c       |  752 ++++++++++++++++++----
+ drivers/net/wireless/libertas/rx.c         |   85 +--
+ drivers/net/wireless/libertas/scan.c       |  585 +++++++----------
+ drivers/net/wireless/libertas/scan.h       |   36 +-
+ drivers/net/wireless/libertas/thread.h     |   52 --
+ drivers/net/wireless/libertas/tx.c         |   41 +-
+ drivers/net/wireless/libertas/types.h      |   67 +--
+ drivers/net/wireless/libertas/wext.c       |  391 ++++--------
+ drivers/net/wireless/libertas/wext.h       |    9 +-
+ 32 files changed, 3512 insertions(+), 2820 deletions(-)
+ delete mode 100644 drivers/net/wireless/libertas/fw.c
+ delete mode 100644 drivers/net/wireless/libertas/if_bootcmd.c
+ create mode 100644 drivers/net/wireless/libertas/if_cs.c
+ delete mode 100644 drivers/net/wireless/libertas/thread.h
+-- 
+John W. Linville
+linville@tuxdriver.com
