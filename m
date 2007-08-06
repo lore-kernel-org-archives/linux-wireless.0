@@ -1,62 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4520 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965395AbXHGVGF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2007 17:06:05 -0400
-Received: from ra.tuxdriver.com (ra.tuxdriver.com [127.0.0.1])
-	by ra.tuxdriver.com (8.14.0/8.13.7) with ESMTP id l77L5rdd001563
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Tue, 7 Aug 2007 17:05:58 -0400
-Received: (from uucp@localhost)
-	by ra.tuxdriver.com (8.14.0/8.14.0/Submit) with UUCP id l77KjDCA001299
-	for linux-wireless@vger.kernel.org; Tue, 7 Aug 2007 16:45:13 -0400
-Received: from linville-t43.mobile (localhost.localdomain [127.0.0.1])
-	by linville-t43.mobile (8.14.1/8.13.8) with ESMTP id l77KXFGd018348
-	for <linux-wireless@vger.kernel.org>; Tue, 7 Aug 2007 16:33:15 -0400
-Received: (from linville@localhost)
-	by linville-t43.mobile (8.14.1/8.14.1/Submit) id l77KXFdq018347
-	for linux-wireless@vger.kernel.org; Tue, 7 Aug 2007 16:33:15 -0400
-Date: Tue, 7 Aug 2007 16:33:15 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: probe for hidden SSIDs in pre-auth scan
-Message-ID: <20070807203315.GG3330@tuxdriver.com>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:37780
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753626AbXHFVgN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Aug 2007 17:36:13 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [RFC] bcm43xx-mac80211: Hack to turn automatic pctl off
+Date: Mon, 6 Aug 2007 23:35:48 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+References: <46b792a0.FdNEyH1qMrUgo6oh%Larry.Finger@lwfinger.net>
+In-Reply-To: <46b792a0.FdNEyH1qMrUgo6oh%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708062335.48546.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: John W. Linville <linville@tuxdriver.com>
+On Monday 06 August 2007 23:29:04 Larry Finger wrote:
+> Michael,
+> 
+> I sent the wrong message under this subject before.
+> 
+> This hack disabled hardware power control. With this installed and the
+> desired power set to 10 dBm using the previous patch, I get much, much
+> better performance from bcm43xx-mac80211 on my BCM4311. I have not yet
+> tested it on the BCM4306 or the BCM4318.
+> 
+> The new iperf readings for transmit/receive with the computer about 2 m
+> from the AP are as follows:
+> 
+> Bit Rate	xmit/receive (Mbs)
+> 
+> 1M		1.11/8.70
+> 2M		1.44/11.0
+> 5.5M		4.15/13.3
+> 6M		4.76/17.4
+> 9M		6.55/18.2
+> 11M		6.54/14.3
+> 18M		10.7/18.5
+> 24M		12.8/19.5
+> 36M		16.1/19.7
+> 48M		18.0/19.5
+> 54M		18.6/19.0
+> 
+> These numbers are comparable with what I'm getting with the PHY port from
+> softmac. I don't understand the dip in received rate at 11M, but it is real.
+> On Richard Jonsson's 4311, he isn't able to measure the transfer rate at
+> 11M.
+> 
+> With these settings, the rate adjustment proces bumps the rate to 54M
+> automatically.
+> 
+> Larry
+> 
+> 
+> 
+> Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_phy.c
+> ===================================================================
+> --- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_phy.c
+> +++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_phy.c
+> @@ -471,6 +471,7 @@ void bcm43xx_phy_early_init(struct bcm43
+>  	struct bcm43xx_phy *phy = &dev->phy;
+>  	struct bcm43xx_txpower_lo_control *lo = phy->lo_control;
+>  
+> +	phy->hw_pctl_off = 1;
+>  	default_baseband_attenuation(dev, &phy->bbatt);
+>  	default_radio_attenuation(dev, &phy->rfatt);
+>  	phy->tx_control = (default_tx_control(dev) << 4);
+> Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_phy.h
+> ===================================================================
+> --- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_phy.h
+> +++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_phy.h
+> @@ -219,8 +219,9 @@ void bcm43xx_gphy_dc_lt_init(struct bcm4
+>  
+>  /* Returns the boolean whether the board has HardwarePowerControl */
+>  #define has_hardware_pctl(phy) \
+> +	(!((phy)->hw_pctl_off) &&				\
+>  	(((phy)->type == BCM43xx_PHYTYPE_A && (phy)->rev >= 5) ||	\
+> -	 ((phy)->type == BCM43xx_PHYTYPE_G && (phy)->rev >= 6))
+> +	 ((phy)->type == BCM43xx_PHYTYPE_G && (phy)->rev >= 6)))
+>  /* Returns the boolean whether "TX Magnification" is enabled. */
+>  #define has_tx_magnification(phy) \
+>  	(((phy)->rev >= 2) &&			\
+> Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx.h
+> ===================================================================
+> --- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx.h
+> +++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx.h
+> @@ -534,6 +534,7 @@ struct bcm43xx_phy {
+>  	struct bcm43xx_bbatt bbatt;
+>  	struct bcm43xx_rfatt rfatt;
+>  	u8 tx_control; /* BCM43xx_TXCTL_XXX */
+> +	bool hw_pctl_off;
+>  #ifdef CONFIG_BCM43XX_MAC80211_DEBUG
+>  	bool manual_txpower_control; /* Manual TX-power control enabled? */
+>  #endif
+> 
+> ---
+> _______________________________________________
+> Bcm43xx-dev mailing list
+> Bcm43xx-dev@lists.berlios.de
+> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
+> 
+> 
 
-Probe for hidden SSIDs if initiating pre-authentication scan and SSID
-is set for STA interface.
+I am currently doing a patch for this.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-The ternary conditionals are a bit ugly.  I guess I could recode it
-with temp vars initialized before calling ieee80211_sta_start_scan.
-
-Any other complaints?
-
- net/mac80211/ieee80211_sta.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index 007dd08..9f467cc 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -3217,7 +3217,10 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
- 		return 0;
- 	} else {
- 		if (ifsta->state != IEEE80211_AUTHENTICATE) {
--			ieee80211_sta_start_scan(dev, NULL, 0);
-+			ieee80211_sta_start_scan(dev, ifsta->auto_ssid_sel ?
-+							NULL : ifsta->ssid,
-+						 ifsta->auto_ssid_sel ?
-+							0 : ifsta->ssid_len);
- 			ifsta->state = IEEE80211_AUTHENTICATE;
- 			set_bit(IEEE80211_STA_REQ_AUTH, &ifsta->request);
- 		} else
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
