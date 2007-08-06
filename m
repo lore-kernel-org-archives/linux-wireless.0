@@ -1,79 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23775 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751231AbXH0FZ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Aug 2007 01:25:27 -0400
-Subject: [PATCH V2] Add iwlwifi wireless drivers
-From: Zhu Yi <yi.zhu@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W.Linville" <linville@tuxdriver.com>,
-	Jeff Garzik <jgarzik@pobox.com>
-Content-Type: text/plain
-Date: Mon, 27 Aug 2007 13:20:12 +0800
-Message-Id: <1188192012.13078.177.camel@debian.sh.intel.com>
-Mime-Version: 1.0
+Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:25857 "EHLO
+	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752851AbXHFBXk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Aug 2007 21:23:40 -0400
+From: Daniel Drake <dsd@gentoo.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Cc: kune@deine-taler.de
+Subject: [PATCH] zd1211rw-mac80211: Add ID for ZyXEL M-202 XtremeMIMO
+Message-Id: <20070806012340.40DC67B409F@zog.reactivated.net>
+Date: Mon,  6 Aug 2007 02:23:40 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Tested by Nathen Meyers
+FCC ID: SI5WUB221Z
+zd1211b chip 0586:340a v4810 high 00-13-49 AL2230_RF pa0 ----S
 
-Hi,
+Despite the product name, I'm pretty sure this isn't a MIMO device. It
+appears just to be a normal ZD1211B and we have never heard of these
+devices having more than 1 RF. I guess they named this product this way
+to make it appear that it fits in with the rest of their XtremeMIMO
+product range.
 
-This is the second version of the patch (still against 2.6.23-rc3) adds
-the mac80211 based wireless drivers for the Intel PRO/Wireless
-3945ABG/BG Network Connection and Intel Wireless WiFi Link AGN (4965)
-adapters. You can find it from:
-http://intellinuxwireless.org/iwlwifi/v5-Add-iwlwifi-wireless-drivers.patch
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+---
+ drivers/net/wireless/zd1211rw-mac80211/zd_usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-I list the changes against the first version I submitted to the list on
-8/17 in case you have reviewed the previous version and only want to see
-the diff. You can find the overall patch here:
-http://intellinuxwireless.org/iwlwifi/iwlwifi-v4_to_v5.patch
-and the broken out patches here:
-http://intellinuxwireless.org/iwlwifi/patches/iwlwifi-v5-v4-patches/
+diff --git a/drivers/net/wireless/zd1211rw-mac80211/zd_usb.c b/drivers/net/wireless/zd1211rw-mac80211/zd_usb.c
+index cba09be..0d942a4 100644
+--- a/drivers/net/wireless/zd1211rw-mac80211/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw-mac80211/zd_usb.c
+@@ -73,6 +73,7 @@ static struct usb_device_id usb_ids[] = {
+ 	{ USB_DEVICE(0x2019, 0x5303), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x129b, 0x1667), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x0cde, 0x001a), .driver_info = DEVICE_ZD1211B },
++	{ USB_DEVICE(0x0586, 0x340a), .driver_info = DEVICE_ZD1211B },
+ 	/* "Driverless" devices that need ejecting */
+ 	{ USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
+ 	{ USB_DEVICE(0x0ace, 0x20ff), .driver_info = DEVICE_INSTALLER },
+-- 
+1.5.2.4
 
-
-Ben M Cahill (5):
-      iwlwifi: remove unused 3945-only struct from 4965 build
-      iwlwifi: move all uCode API structs into iwl-command.h
-      iwlwifi: replace iwl_scanstart_notification with
-iwl_scanreq_notification
-      iwlwifi: add struct iwl_card_state_cmd as documentation
-      iwlwifi: add BSM_DRAM_INST_LOAD definition
-
-Johannes Berg (1):
-      iwlwifi: remove atheros turbo modes
-
-Johannes Engel (1):
-      iwlwifi: fix iwl-3945-rs.c typo
-
-Mohamed Abbas (3):
-      iwlwifi: fix rs_get_best_rate to pick up the right rate
-      iwlwifi: fix 11n connection problem
-      iwlwifi: fix aggregation problem
-
-Tomas Winkler (11):
-      iwlwifi: adding queues_num module parameter
-      iwlwifi: iwl_get_sta_id AP mode fix
-      iwlwifi: EEPROM band 5 endianity fix
-      iwlwifi: AP mode beacon update
-      iwlwifi: kill iwl_rate union
-      iwlwifi: simplifying reclaim flow
-      iwlwifi: removing while loop from iwl_print_hex_dump
-      iwlwifi: typo fix for CONFIG_IWLWIFI_SPECTRUM_MEASUREMENY
-      iwlwifi: remove unused code
-      iwlwifi: rate scaling - up scaling fix
-      iwlwifi: rate scale quality command fix
-
-Zhu Yi (10):
-      iwlwifi: replace lock_flags into simpler flags
-      iwlwifi: split priv->hcmd_lock from priv->lock to protect hcmd
-queue
-      iwlwifi: iwl_mac_set_key cleanup
-      iwlwifi: fix priv->hcmd_lock uninitialized problem
-      iwlwifi: Update version iwl-base.c stamp to 0.1.9
-      iwlwifi: fix iwl_grab_restricted_access return code
-      iwlwifi: Update version iwl-base.c stamp to 0.1.10
-      iwlwifi: add a parameter to functions
-iwl_rate_control_[un]register
-      iwlwifi: Update version iwl-base.c stamp to 0.1.11
-      iwlwifi: fix iwl_send_cmd_async return value bug
