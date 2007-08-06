@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canuck.infradead.org ([209.217.80.40]:59469 "EHLO
-	canuck.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756344AbXHBWqm (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51380 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760137AbXHFJPm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 18:46:42 -0400
-Subject: Re: mac80211 IPv6 problems
-From: David Woodhouse <dwmw2@infradead.org>
-To: Daniel Drake <dsd@gentoo.org>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de, jbenc@suse.cz,
-	flamingice@sourmilk.net
-In-Reply-To: <46B25B04.5020804@gentoo.org>
-References: <46b1fde0.b+weBDN75J0SPe2a%Larry.Finger@lwfinger.net>
-	 <200708021807.20649.mb@bu3sch.de>  <46B20695.2080100@lwfinger.net>
-	 <1186088678.2931.10.camel@pmac.infradead.org> <46B25B04.5020804@gentoo.org>
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 02 Aug 2007 23:46:18 +0100
-Message-Id: <1186094778.6701.6.camel@shinybook.infradead.org>
+	Mon, 6 Aug 2007 05:15:42 -0400
+Subject: Re: suspend/resume support in mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Mattias Nissler <mattias.nissler@gmx.de>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+In-Reply-To: <200708052344.12673.mb@bu3sch.de>
+References: <1186343417.8459.23.camel@localhost>
+	 <200708052344.12673.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2rX8q1cqc85WAMUFrICq"
+Date: Mon, 06 Aug 2007 11:17:42 +0200
+Message-Id: <1186391862.28655.28.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-08-02 at 18:30 -0400, Daniel Drake wrote:
-> This may be a stack-level issue. This is one of the issues holding ba=
-ck=20
-> zd1211rw-mac80211 going into mainline: we have a report that=20
-> zd1211rw-softmac works fine with IPv6 but mac80211 only works=20
-> occasionally with the same device on the same system.
->=20
-> Does anyone have any ideas?
 
-It receives its own neighbour solicitation (multicast) packets when the
-AP sends them back out again. These packets...
+--=-2rX8q1cqc85WAMUFrICq
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-23:41:56.046939 00:0a:95:f3:99:92 > 33:33:ff:f3:99:92, ethertype IPv6
-(0x86dd), length 78: :: > ff02::1:fff3:9992: ICMP6, neighbor
-solicitation, who has fe80::20a:95ff:fef3:9992, length 24
+On Sun, 2007-08-05 at 23:44 +0200, Michael Buesch wrote:
 
-You should be able to see this without _any_ IPv6 infrastructure -- and
-you'll see the link-local IPv6 address remains 'tentative'.
+> I think we should have a API call to mac80211 that suspends the stack
+> (saves the state etc..) and a call the resumes (reassociates, re-handshak=
+es...).
+> But that's probably not that easy to implement, as parts of this
+> does happen in userspace.
 
-Once you've fixed that, setting up a local route advertisement d=C3=A6m=
-on
-(radvd) to give you site-local addresses is fairly trivial too -- and
-then you can also check that Ethernet multicast is working properly.
+At the minimum it should be resetting the keys. Reassocation etc. could
+probably be done as well if using the in-kernel MLME.
 
---=20
-dwmw2
+johannes
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-2rX8q1cqc85WAMUFrICq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGtuc2/ETPhpq3jKURAlJRAJ9xktcCVl3ZUxJ+0pi+t1MI7RN4PwCghg8P
+vXgJyj3C+yBcVExtOtoI6UQ=
+=L81D
+-----END PGP SIGNATURE-----
+
+--=-2rX8q1cqc85WAMUFrICq--
+
