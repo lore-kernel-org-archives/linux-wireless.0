@@ -1,63 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:59482 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752953AbXH3FyU (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52642 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754168AbXHFJKz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 01:54:20 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Chr <chunkeey@web.de>
-Subject: Re: Recent linux-wireless git changes have broken my prism54pci card
-Date: Thu, 30 Aug 2007 01:52:23 -0400
-Cc: Hans de Goede <j.w.r.degoede@hhs.nl>,
+	Mon, 6 Aug 2007 05:10:55 -0400
+Subject: Re: [BUG] timer.h
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian =?ISO-8859-1?Q?Sch=E4fer?= <schaefer@in.tum.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-wireless@vger.kernel.org
-References: <46BFF10B.1090307@hhs.nl> <46CEA8A2.3040906@hhs.nl> <200708282132.59474.chunkeey@web.de>
-In-Reply-To: <200708282132.59474.chunkeey@web.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart7720558.5ZEkzIiboz";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200708300152.27736.flamingice@sourmilk.net>
+In-Reply-To: <46B6DF83.8080507@in.tum.de>
+References: <46B1F896.8090005@in.tum.de> <46B2EA43.8070305@in.tum.de>
+	 <20070803123240.519c5a38.akpm@linux-foundation.org>
+	 <1186382146.21957.40.camel@johannes.berg>  <46B6DF83.8080507@in.tum.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6SRItHPv27g5i9Nn3NsP"
+Date: Mon, 06 Aug 2007 11:12:44 +0200
+Message-Id: <1186391564.28655.22.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart7720558.5ZEkzIiboz
-Content-Type: text/plain;
-  charset="iso-8859-15"
+
+--=-6SRItHPv27g5i9Nn3NsP
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Tuesday 28 August 2007 15:32, Chr wrote:
-> Here we are:
->
-> series:
-> p54-pull-padding2.diff
-Looks okay, but it seems to do more than just account for padding. I'm okay=
-=20
-with those changes too.
+On Mon, 2007-08-06 at 10:44 +0200, Christian Sch=C3=A4fer wrote:
 
-> p54-support-older-firmwares.diff
-The new information pulled from parsing the firmware isn't used anywhere bu=
-t=20
-in this function.. no need to keep that information in the private structur=
-e.
+> The driver source is from [1] (I think it comes from Realtek) and=20
+> patched with the injection-patch taken from the aircrack-project (for=20
+> more background see [2]).
 
-Thanks,
-=2DMichael Wu
+Thought so. Can't help you with that.
 
---nextPart7720558.5ZEkzIiboz
-Content-Type: application/pgp-signature
+> However this issue was before I used the current 2.6.23-rc2 kernel with=20
+> native r8187 support where no such problem occurred untill today.
+
+So? Even if you haven't gotten any debug printout before doesn't mean
+the bug is new in the kernel. Andrew has already pointed out what the
+bug is; I'm merely saying that we're not interested in fixing it because
+it is vendor source and we have another driver 'rtl8187'.
+
+johannes
+
+--=-6SRItHPv27g5i9Nn3NsP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBG1lsbT3Oqt9AH4aERAuXjAJ4z6Hop+iWGLej3/DscJyGt0kGUPQCgjaXg
-8UYVm3mODfoKZmmO09xGzUM=
-=6Iwq
+iD8DBQBGtuYM/ETPhpq3jKURAmq0AJ9VCTyoBUtLQnZlXuBNqouiFxWy+gCfSLM2
+tOWa5yakk3fM6VTfu/IqT60=
+=8xx9
 -----END PGP SIGNATURE-----
 
---nextPart7720558.5ZEkzIiboz--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+--=-6SRItHPv27g5i9Nn3NsP--
+
