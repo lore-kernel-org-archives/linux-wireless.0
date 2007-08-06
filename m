@@ -1,87 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60817 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753422AbXHOKly (ORCPT
+Received: from purr.warmcat.com ([87.106.142.209]:33776 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753753AbXHFIZf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 06:41:54 -0400
-Subject: warnings in iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Tomas Winkler <tomasw@gmail.com>, Zhu Yi <yi.zhu@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fqaaUF19d+vTTEZqJOAV"
-Date: Wed, 15 Aug 2007 01:10:51 +0200
-Message-Id: <1187133051.31200.26.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 6 Aug 2007 04:25:35 -0400
+Message-ID: <46B6DAFC.7020301@warmcat.com>
+Date: Mon, 06 Aug 2007 09:25:32 +0100
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Ulrich Kunitz <kune@deine-taler.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Daniel Drake <dsd@gentoo.org>
+Subject: Re: mac80211 driver interface semantics
+References: <46B27729.5030406@gentoo.org>	 <20070803052935.GA12683@deine-taler.de>  <46B2E06F.4090706@warmcat.com>	 <1186134894.4647.24.camel@johannes.berg>  <46B3032C.5040306@warmcat.com>	 <1186137166.4647.34.camel@johannes.berg>  <46B304FF.3000305@warmcat.com>	 <1186137715.4647.36.camel@johannes.berg>  <46B30828.3000507@warmcat.com> <1186382658.21957.45.camel@johannes.berg>
+In-Reply-To: <1186382658.21957.45.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Somebody in the thread at some point said:
+> On Fri, 2007-08-03 at 11:49 +0100, Andy Green wrote:
+> 
+>> ''Because if you have both a hard monitor and a regular interface
+>> (monitor_during_oper allowed) then we will never check the CRC on frames
+>> that enter the networking path and can get corrupted TCP packets in etc.''
+>>
+>> If the rest of the networking stack didn't trust the packet anyway and
+>> confirms the IP-level checksum, then it can make its own opinion about
+>> the packet.
+> 
+> Maybe it helps if I add that the FCS covers more of the packet than the
+> IP checksum; hence, if the FCS fails due to a bit in the area the IP
+> checksum does not cover we will not ACK the packet and get a
+> retransmission, but the IP checksum will check out as good and we'll
+> have a duplicate packet.
 
---=-fqaaUF19d+vTTEZqJOAV
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Fair enough, thanks for the explanation.
 
-  CC [M]  drivers/net/wireless/iwl-base-3945.o
-drivers/net/wireless/iwl-base.c: In function =E2=80=98iwl_handle_data_packe=
-t_monitor=E2=80=99:
-drivers/net/wireless/iwl-base.c:3318: warning: integer overflow in expressi=
-on
-drivers/net/wireless/iwl-base.c:3318: warning: integer overflow in expressi=
-on
-  CC [M]  drivers/net/wireless/iwl-3945.o
-  CC [M]  drivers/net/wireless/iwl-3945-rs.o
-  CC [M]  drivers/net/wireless/iwl-base-4965.o
-drivers/net/wireless/iwl-base.c:2169: warning: large integer implicitly tru=
-ncated to unsigned type
-drivers/net/wireless/iwl-base.c:2170: warning: large integer implicitly tru=
-ncated to unsigned type
-drivers/net/wireless/iwl-base.c:2171: warning: large integer implicitly tru=
-ncated to unsigned type
-drivers/net/wireless/iwl-base.c:2172: warning: large integer implicitly tru=
-ncated to unsigned type
-drivers/net/wireless/iwl-base.c:2173: warning: large integer implicitly tru=
-ncated to unsigned type
-drivers/net/wireless/iwl-base.c:2179: warning: large integer implicitly tru=
-ncated to unsigned type
-drivers/net/wireless/iwl-base.c:2181: warning: large integer implicitly tru=
-ncated to unsigned type
-drivers/net/wireless/iwl-base.c:2183: warning: large integer implicitly tru=
-ncated to unsigned type
-drivers/net/wireless/iwl-base.c:2185: warning: large integer implicitly tru=
-ncated to unsigned type
-drivers/net/wireless/iwl-base.c:2186: warning: large integer implicitly tru=
-ncated to unsigned type
-drivers/net/wireless/iwl-base.c: In function =E2=80=98iwl_handle_data_packe=
-t_monitor=E2=80=99:
-drivers/net/wireless/iwl-base.c:3318: warning: integer overflow in expressi=
-on
-drivers/net/wireless/iwl-base.c:3318: warning: integer overflow in expressi=
-on
-
-
-I suspect most of them are caused by endianness bugs.
-This for example:
-
-	le16_to_cpu(phy_flags_hw & RX_RES_PHY_FLAGS_ANTENNA_MSK) >> 4;
-
-looks totally bogus unless you somehow do macro magic to define the
-RX_RES_PHY...MASK in little endian...
-
-Maybe it's time for you to get a cross compiler or better yet buy a
-big-endian machine and actually test things on that? :)
-
-johannes
-
---=-fqaaUF19d+vTTEZqJOAV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGwjZ7/ETPhpq3jKURAt5uAJ0fpqL6Wf2aRIUxs7rxsx1wIPg24ACfS1oH
-fRrqVq0Rjdfn7F39/ByVryQ=
-=tX3v
------END PGP SIGNATURE-----
-
---=-fqaaUF19d+vTTEZqJOAV--
-
+-Andy
