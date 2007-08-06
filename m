@@ -1,70 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hall.aurel32.net ([88.191.38.19]:50241 "EHLO hall.aurel32.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752973AbXHONeN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 09:34:13 -0400
-Date: Wed, 15 Aug 2007 15:34:12 +0200
-From: Aurelien Jarno <aurelien@aurel32.net>
-To: Michael Buesch <mb@bu3sch.de>
+Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:4289 "EHLO
+	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752703AbXHFBZT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Aug 2007 21:25:19 -0400
+From: Daniel Drake <dsd@gentoo.org>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] Fix MII interface of the B44 driver
-Message-ID: <20070815133412.GA24729@hall.aurel32.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Cc: kune@deine-taler.de
+Subject: [PATCH] zd1211rw: Add ID for ZyXEL M-202 XtremeMIMO
+Message-Id: <20070806012519.0CF857B409F@zog.reactivated.net>
+Date: Mon,  6 Aug 2007 02:25:18 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am resending this patch, as it looks like it has been lost. Now that
-John Linville's wireless-dev.git tree has a specific ssb branch, it
-should be easier to merge it.
+Tested by Nathen Meyers
+FCC ID: SI5WUB221Z
+zd1211b chip 0586:340a v4810 high 00-13-49 AL2230_RF pa0 ----S
 
-Aurelien
+Despite the product name, I'm pretty sure this isn't a MIMO device. It
+appears just to be a normal ZD1211B and we have never heard of these
+devices having more than 1 RF. I guess they named this product this way
+to make it appear that it fits in with the rest of their XtremeMIMO
+product range.
 
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+---
+ zd_usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-
-The conversion of the B44 driver to SSB bus added the functions
-__b44_{read,write}phy functions that have an argument phy_id. This gives
-a way to fix the b44_mii_{read,write} functions used for MII interfaces.
-
-The patch below does that. It allows B44 devices with integrated switch
-to be configured from userland.
-
-Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
-
-diff --git a/drivers/net/b44.c b/drivers/net/b44.c
-index 36724fb..e6883f4 100644
---- a/drivers/net/b44.c
-+++ b/drivers/net/b44.c
-@@ -300,16 +300,11 @@ static inline int b44_writephy(struct b44 *bp, int reg, u32 val)
- }
- 
- /* miilib interface */
--/* FIXME FIXME: phy_id is ignored, bp->phy_addr use is unconditional
-- * due to code existing before miilib use was added to this driver.
-- * Someone should remove this artificial driver limitation in
-- * b44_{read,write}phy.  bp->phy_addr itself is fine (and needed).
-- */
- static int b44_mii_read(struct net_device *dev, int phy_id, int location)
- {
- 	u32 val;
- 	struct b44 *bp = netdev_priv(dev);
--	int rc = b44_readphy(bp, location, &val);
-+	int rc = __b44_readphy(bp, phy_id, location, &val);
- 	if (rc)
- 		return 0xffffffff;
- 	return val;
-@@ -319,7 +314,7 @@ static void b44_mii_write(struct net_device *dev, int phy_id, int location,
- 			 int val)
- {
- 	struct b44 *bp = netdev_priv(dev);
--	b44_writephy(bp, location, val);
-+	__b44_writephy(bp, phy_id, location, val);
- }
- 
- static int b44_phy_reset(struct b44 *bp)
-
--- 
-  .''`.  Aurelien Jarno	            | GPG: 1024D/F1BCDB73
- : :' :  Debian developer           | Electrical Engineer
- `. `'   aurel32@debian.org         | aurelien@aurel32.net
-   `-    people.debian.org/~aurel32 | www.aurel32.net
+Index: linux/drivers/net/wireless/zd1211rw/zd_usb.c
+===================================================================
+--- linux.orig/drivers/net/wireless/zd1211rw/zd_usb.c
++++ linux/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -75,6 +75,7 @@ static struct usb_device_id usb_ids[] = 
+ 	{ USB_DEVICE(0x2019, 0x5303), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x129b, 0x1667), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x0cde, 0x001a), .driver_info = DEVICE_ZD1211B },
++	{ USB_DEVICE(0x0586, 0x340a), .driver_info = DEVICE_ZD1211B },
+ 	/* "Driverless" devices that need ejecting */
+ 	{ USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
+ 	{ USB_DEVICE(0x0ace, 0x20ff), .driver_info = DEVICE_INSTALLER },
