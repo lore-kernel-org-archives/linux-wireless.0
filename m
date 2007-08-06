@@ -1,78 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:37524 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754896AbXHQOQn (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:57707
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763313AbXHFUpr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2007 10:16:43 -0400
-Subject: Re: [PATCHv3] mac80211: dynamic wep
-From: Volker Braun <volker.braun@physik.hu-berlin.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>, Jouni Malinen <j@w1.fi>
-In-Reply-To: <1187308221.23489.91.camel@johannes.berg>
-References: <1187151162.3253.18.camel@thinkpad>
-	 <1187308221.23489.91.camel@johannes.berg>
-Content-Type: text/plain
-Date: Fri, 17 Aug 2007 10:16:40 -0400
-Message-Id: <1187360200.4417.32.camel@thinkpad>
-Mime-Version: 1.0
+	Mon, 6 Aug 2007 16:45:47 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [RFC] bcm43xx-mac80211: Add TX power set file to debugfs
+Date: Mon, 6 Aug 2007 22:45:21 +0200
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <46b782f6.XGqOxV2KvXubz5jy%Larry.Finger@lwfinger.net> <200708062225.58737.mb@bu3sch.de> <46B78661.4050807@lwfinger.net>
+In-Reply-To: <46B78661.4050807@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708062245.22117.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-08-17 at 01:50 +0200, Johannes Berg wrote:
-> On Wed, 2007-08-15 at 00:12 -0400, Volker Braun wrote:
-> > 1) Instead of hacking around ieee80211_privacy_mismatch, remove it
-> > completely. It serves no useful purpose.
-> The purpose seems to be to avoid associating to BSSes that have privacy
-> enabled when we don't have any keys nor a tool told us that it's ok
-
-NetworkManager can do that for you, no need to duplicate that in the
-driver where you can't give any useful feedback to the user. Maybe you
-want to test whether your AP _really_ discards unencrypted data? 
-
-> > -	if (rx->fc & IEEE80211_FCTL_PROTECTED && rx->key && rx->u.rx.ra_match) {
-> > +	if (rx->key && rx->u.rx.ra_match) {
+On Monday 06 August 2007 22:36:49 Larry Finger wrote:
+> Michael Buesch wrote:
+> > On Monday 06 August 2007 22:22:14 Larry Finger wrote:
+> >> Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+> >> ===================================================================
+> >> --- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+> >> +++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+> >> @@ -2762,12 +2762,11 @@ static int bcm43xx_dev_config(struct iee
+> >>  	}
+> >>  
+> >>  	/* Adjust the desired TX power level. */
+> >> -	if (conf->power_level != 0) {
+> >> -		if (conf->power_level != phy->power_level) {
+> >> -			phy->power_level = conf->power_level;
+> >> -			bcm43xx_phy_xmitpower(dev);
+> >> -		}
+> >> -	}
+> >> +	if (conf->power_level != 0 && phy->power_level == 0) {
+> >> +		phy->power_level = conf->power_level;
+> >> +	} else
+> >> +		phy->power_level = 10;
+> >> +	bcm43xx_phy_xmitpower(dev);
+> > 
+> > No, what's that? I disagree with that.
+> > This breaks power adjustment.
+> > 
 > 
-> That's just an optimisation, right? (If we have a key, the frame was
-> encrypted)
+> I just discovered that it fails. When I find the problem, I'll resubmit. Is the debugfs part right?
 
-Yes.
+I think so.
+Although, (I think you know that), it does not immediately
+reconfigure the power, but waits for the next pwork with enough
+tssi information.
 
-> > -	if (is_broadcast_ether_addr(sta_addr)) {
-> > +	if (idx < 0 || idx >= NUM_DEFAULT_KEYS) {
-> > +		printk(KERN_DEBUG "%s: set_encrypt - invalid idx = %d\n",
-> > +		       dev->name, idx);
-> > +		return -EINVAL;
-> > +	}
-> > +
-> > +	if (is_multicast_ether_addr(sta_addr)) {
-> 
-> I still haven't understood why you changed from broadcast to multicast
-> here. Nor why you moved the key index check outside the check, if it's a
-> not a group key then the key index is irrelevant.
-
-It should be broadcast, you are right.
-
-The key index is saved later on in key->keyidx. So I wanted to be on the
-safe side and make sure that a legal value is stored there.
-
-> So wpa_supplicant is actually trying to set a pairwise key with a key
-> index that isn't zero? That's really weird and definitely against the
-> rules. Is that somehow required? Shouldn't the AP be able to live with
-> you setting the key index to zero? Could you try that by forcing the
-> index to zero in this case?
-> 
-> Actually, maybe this is some weird Cisco rule-bending as you said, but
-> then I'd rather suspect that it's because of interaction with pre-shared
-> WEP keys rather than TKIP. In any case, it seems acceptable to remove
-> this restriction even if we then violate the standard.
-
-First of all, we violate the standard by looking at the keyindex in case
-of a pairwise key. Now granted, Cisco also violates it, but in a way
-that is never visible to standards-compliant STAs. We must set the
-keyindex to zero on outgoing pairwise key-encrypted data, but that is
-kind of irrelevant since the AP is forced to ignore that key index on
-receive.
-
-
-
+-- 
+Greetings Michael.
