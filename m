@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:45575 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752595AbXHMFXV (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:54608
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760544AbXHFU0X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 01:23:21 -0400
-Date: Sun, 12 Aug 2007 22:29:06 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.23-rc2-mm2 (libertas)
-Message-Id: <20070812222906.e6510c4b.randy.dunlap@oracle.com>
-In-Reply-To: <20070809224254.11f42716.akpm@linux-foundation.org>
-References: <20070809224254.11f42716.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 6 Aug 2007 16:26:23 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC] bcm43xx-mac80211: Add TX power set file to debugfs
+Date: Mon, 6 Aug 2007 22:25:58 +0200
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <46b782f6.XGqOxV2KvXubz5jy%Larry.Finger@lwfinger.net>
+In-Reply-To: <46b782f6.XGqOxV2KvXubz5jy%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708062225.58737.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 9 Aug 2007 22:42:54 -0700 Andrew Morton wrote:
+On Monday 06 August 2007 22:22:14 Larry Finger wrote:
+> Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+> ===================================================================
+> --- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+> +++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+> @@ -2762,12 +2762,11 @@ static int bcm43xx_dev_config(struct iee
+>  	}
+>  
+>  	/* Adjust the desired TX power level. */
+> -	if (conf->power_level != 0) {
+> -		if (conf->power_level != phy->power_level) {
+> -			phy->power_level = conf->power_level;
+> -			bcm43xx_phy_xmitpower(dev);
+> -		}
+> -	}
+> +	if (conf->power_level != 0 && phy->power_level == 0) {
+> +		phy->power_level = conf->power_level;
+> +	} else
+> +		phy->power_level = 10;
+> +	bcm43xx_phy_xmitpower(dev);
 
+No, what's that? I disagree with that.
+This breaks power adjustment.
+
+>  
+>  	/* Hide/Show the SSID (AP mode only). */
+>  	if (conf->flags & IEEE80211_CONF_SSID_HIDDEN) {
 > 
-> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.23-rc2/2.6.23-rc2-mm2/
 > 
-> - Various problems from 2.6.23-rc2-mm1 were fixed
-
-libertas wireless warnings on x86_64:
-
-drivers/net/wireless/libertas/if_cs.c:462: warning: format '%d' expects type 'int', but argument 3 has type 'size_t'
-drivers/net/wireless/libertas/if_cs.c:538: warning: format '%d' expects type 'int', but argument 3 has type 'size_t'
 
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+
+-- 
+Greetings Michael.
