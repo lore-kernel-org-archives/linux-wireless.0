@@ -1,40 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:7069 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753628AbXHUKN7 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51962 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757815AbXHFIMk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 06:13:59 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so844055nfb
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Aug 2007 03:13:58 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 28/30] rt2x00: Always check if mac80211 requested TX status update
-Date: Tue, 21 Aug 2007 12:21:23 +0200
+	Mon, 6 Aug 2007 04:12:40 -0400
+Subject: Re: [PATCH] mac80211: allow drivers to indicate failed FCS/PLCP  checksum
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200708192018.30624.IvDoorn@gmail.com> <200708192036.37330.IvDoorn@gmail.com> <1187630496.6923.0.camel@johannes.berg>
-In-Reply-To: <1187630496.6923.0.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200708211221.24172.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>
+In-Reply-To: <200708041425.29112.IvDoorn@gmail.com>
+References: <1186177475.13315.10.camel@johannes.berg>
+	 <200708041425.29112.IvDoorn@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-M3bf+oEL00ON9DH6t930"
+Date: Mon, 06 Aug 2007 10:07:20 +0200
+Message-Id: <1186387640.28655.5.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 20 August 2007, Johannes Berg wrote:
-> On Sun, 2007-08-19 at 20:36 +0200, Ivo van Doorn wrote:
-> 
-> > During txdone always check for the IEEE80211_TXCTL_REQ_TX_STATUS flag
-> > to determine if ieee80211_tx_status_irqsafe should be called or not.
-> > When the flag is not set, just cleanup the skb and don't bother
-> > mac80211 with it.
-> 
-> Never mind that I'd love to remove the REQ_TX_STATUS flag, this is not
-> really the best thing to do since rate control will basically ignore
-> this frame if you don't hand it back to mac80211.
 
-Ok, I'll revert that check for rt2x00 2.0.8
+--=-M3bf+oEL00ON9DH6t930
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
+On Sat, 2007-08-04 at 14:25 +0200, Ivo van Doorn wrote:
 
-Ivo
+> The package descriptor knows 3 kind of errors for a received frame:
+>=20
+> 	CRC error
+> 	Physical error
+> 	Cipher error
+>=20
+> For the CRC error I don't know if that is the FCS or PLCP error..
+
+CRC is most likely FCS. And Physical ist most likely the PLCP CRC.
+
+> For the cipher error it could perhaps be possible to send it to mac80211
+> without the RX_FLAG_DECRYPTED bit set. (At the moment rt2x00 doesn't
+> see this error yet, because hardware encryption is not yet implemented).
+
+Not sure what mac80211 does for crypto errors, I expect you want to send
+them up without having it decrypted, it'll attempt it and then do the
+appropriate actions. Seems it should be possible to short-circuit that
+somehow, but I don't know if it is right now.
+
+johannes
+
+--=-M3bf+oEL00ON9DH6t930
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGtta4/ETPhpq3jKURAvTJAJ0d3EsjbnrkbsYpECeFrk7JMJUixgCePmhn
+0QmxKR0kYNGV5yzMI19TYY0=
+=BEBw
+-----END PGP SIGNATURE-----
+
+--=-M3bf+oEL00ON9DH6t930--
+
