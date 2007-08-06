@@ -1,71 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53446 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51931 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758628AbXHPNUH (ORCPT
+	with ESMTP id S1754652AbXHFILu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2007 09:20:07 -0400
-Subject: Re: [PATCH 4/4] hostapd: remove PRISM2_PARAM_NEXT_MODE
+	Mon, 6 Aug 2007 04:11:50 -0400
+Subject: Re: mac80211 driver interface semantics
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20070816013803.GR1415@jm.kir.nu>
-References: <20070814093254.021041000@sipsolutions.net>
-	 <20070814093410.322846000@sipsolutions.net>
-	 <20070815024135.GF1415@jm.kir.nu> <1187174682.3998.6.camel@johannes.berg>
-	 <20070816013803.GR1415@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Jy1Xp5mX2xq9W2jz3Qb4"
-Date: Thu, 16 Aug 2007 15:22:50 +0200
-Message-Id: <1187270570.5141.46.camel@johannes.berg>
+To: Andy Green <andy@warmcat.com>
+Cc: Ulrich Kunitz <kune@deine-taler.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Daniel Drake <dsd@gentoo.org>
+In-Reply-To: <46B30828.3000507@warmcat.com>
+References: <46B27729.5030406@gentoo.org>
+	 <20070803052935.GA12683@deine-taler.de>  <46B2E06F.4090706@warmcat.com>
+	 <1186134894.4647.24.camel@johannes.berg>  <46B3032C.5040306@warmcat.com>
+	 <1186137166.4647.34.camel@johannes.berg>  <46B304FF.3000305@warmcat.com>
+	 <1186137715.4647.36.camel@johannes.berg>  <46B30828.3000507@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RnPj+Ll/zPCpq7tDiyzC"
+Date: Mon, 06 Aug 2007 08:44:18 +0200
+Message-Id: <1186382658.21957.45.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-Jy1Xp5mX2xq9W2jz3Qb4
+--=-RnPj+Ll/zPCpq7tDiyzC
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2007-08-15 at 18:38 -0700, Jouni Malinen wrote:
+On Fri, 2007-08-03 at 11:49 +0100, Andy Green wrote:
 
-> I don't linke next_mode either, so if this is combined to a single
-> atomic operation, it would be quite a bit better way to do this.
-
-Yeah, we'll have that if somebody gets around to it.
-
-> I would assume that the quick workaround for this would have been to
-> change the configuration file to use 802.11g instead of the default
-> i802.11b..=20
-
-Oh, it was :) But it wasn't obvious.
-
-> Anyway, the design used here does indeed assume that the
-> driver exports all supported mode/channel pairs and in case the hardware
-> card supports 802.11g, the driver would most likely claim support for
-> both 802.11b and 802.11g channels.
+> ''Because if you have both a hard monitor and a regular interface
+> (monitor_during_oper allowed) then we will never check the CRC on frames
+> that enter the networking path and can get corrupted TCP packets in etc.'=
+'
 >=20
-> Adding code for reverting back to 802.11g version would, in theory, be
-> fine for most cases, but it does have some issues.. If I remember
-> correctly, channel 14 may only be used with 802.11b mode in Japan, so
-> the list of 802.11b and 802.11g channels is not the same. In this
-> particular case, though, the workaround of using 802.11g list would not
-> cause a problem (the other direction would potentially have).
+> If the rest of the networking stack didn't trust the packet anyway and
+> confirms the IP-level checksum, then it can make its own opinion about
+> the packet.
 
-Hmm. That seems like something to be integrated with the regulatory code
-rather than the driver.
+Maybe it helps if I add that the FCS covers more of the packet than the
+IP checksum; hence, if the FCS fails due to a bit in the area the IP
+checksum does not cover we will not ACK the packet and get a
+retransmission, but the IP checksum will check out as good and we'll
+have a duplicate packet.
 
 johannes
 
---=-Jy1Xp5mX2xq9W2jz3Qb4
+--=-RnPj+Ll/zPCpq7tDiyzC
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGxE+q/ETPhpq3jKURAlH/AJ471M/4sej64fSOYlbYd22rtQWkFwCdGGDW
-eHFM+LUgl2DI8y64EUKNqZI=
-=5JjJ
+iD8DBQBGtsNC/ETPhpq3jKURAmZIAJ4l1iaYEfxRsn/UK4wDF95lLTM2YQCfd0+I
+3bc1nrLJ4cWdsqcDeXytUvQ=
+=Bahp
 -----END PGP SIGNATURE-----
 
---=-Jy1Xp5mX2xq9W2jz3Qb4--
+--=-RnPj+Ll/zPCpq7tDiyzC--
 
