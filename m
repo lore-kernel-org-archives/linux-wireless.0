@@ -1,85 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38791 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758958AbXHHHhZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 03:37:25 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 09/28] iwlwifi: replace unnecessary GFP_ATOMIC with GFP_KERNEL
-Date: Wed,  8 Aug 2007 15:33:26 +0800
-Message-Id: <11865584473732-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11865584452614-git-send-email-yi.zhu@intel.com>
-References: <11865584251026-git-send-email-yi.zhu@intel.com>
- <11865584292234-git-send-email-yi.zhu@intel.com>
- <1186558432932-git-send-email-yi.zhu@intel.com>
- <11865584342308-git-send-email-yi.zhu@intel.com>
- <11865584363863-git-send-email-yi.zhu@intel.com>
- <11865584392893-git-send-email-yi.zhu@intel.com>
- <11865584413292-git-send-email-yi.zhu@intel.com>
- <1186558443548-git-send-email-yi.zhu@intel.com>
- <11865584452614-git-send-email-yi.zhu@intel.com>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:58219
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763583AbXHFMK6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Aug 2007 08:10:58 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH V2] bcm43xx-mac80211: Rescale link quality output
+Date: Mon, 6 Aug 2007 14:10:54 +0200
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <46b57c5f.7s2ojiPQUXY5R3Qv%Larry.Finger@lwfinger.net>
+In-Reply-To: <46b57c5f.7s2ojiPQUXY5R3Qv%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708061410.54552.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwl-base.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+On Sunday 05 August 2007, Larry Finger wrote:
+> The link quality output from wireless extensions is too small by the ratio
+> of 100/BCM43xx_RX_MAX_SSI (60) for bcm43xx-mac80211. This patch puts the
+> quantity on the proper scale.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> 
+> Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
+> ===================================================================
+> --- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
+> +++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
+> @@ -537,7 +537,8 @@ void bcm43xx_rx(struct bcm43xx_wldev *de
+>  					      (phystat0 & BCM43xx_RX_PHYST0_GAINCTL),
+>  					      (phystat3 & BCM43xx_RX_PHYST3_TRSTATE));
+>  	status.noise = dev->stats.link_noise;
+> -	status.signal = jssi; /* this looks wrong, but is what mac80211 wants */
+> +	/* the next line looks wrong, but is what mac80211 wants */
+> +	status.signal = (jssi * 100) / BCM43xx_RX_MAX_SSI;
+>  	if (phystat0 & BCM43xx_RX_PHYST0_OFDM)
+>  		status.rate = bcm43xx_plcp_get_bitrate_ofdm(plcp);
+>  	else
+> 
+> 
 
-diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
-index 8f55f0d..ca4edd2 100644
---- a/drivers/net/wireless/iwl-base.c
-+++ b/drivers/net/wireless/iwl-base.c
-@@ -222,7 +222,7 @@ static int iwl_tx_queue_alloc(struct iwl_priv *priv,
- 
- 	if (id != IWL_CMD_QUEUE_NUM) {
- 		txq->txb = kmalloc(sizeof(txq->txb[0]) *
--				   TFD_QUEUE_SIZE_MAX, GFP_ATOMIC);
-+				   TFD_QUEUE_SIZE_MAX, GFP_KERNEL);
- 		if (!txq->txb) {
- 			IWL_ERROR("kmalloc for auxilary BD "
- 				  "structures failed\n");
-@@ -1460,7 +1460,7 @@ static struct iwl_frame *iwl_get_free_frame(struct iwl_priv *priv)
- 	struct iwl_frame *frame;
- 	struct list_head *element;
- 	if (list_empty(&priv->free_frames)) {
--		frame = kzalloc(sizeof(*frame), GFP_ATOMIC);
-+		frame = kzalloc(sizeof(*frame), GFP_KERNEL);
- 		if (!frame) {
- 			IWL_ERROR("Could not allocate frame!\n");
- 			return NULL;
-@@ -5706,19 +5706,19 @@ static int iwl_init_geos(struct iwl_priv *priv)
- 	}
- 
- 	modes = kzalloc(sizeof(struct ieee80211_hw_mode) * mode_count,
--			GFP_ATOMIC);
-+			GFP_KERNEL);
- 	if (!modes)
- 		return -ENOMEM;
- 
- 	channels = kzalloc(sizeof(struct ieee80211_channel) *
--			   priv->channel_count, GFP_ATOMIC);
-+			   priv->channel_count, GFP_KERNEL);
- 	if (!channels) {
- 		kfree(modes);
- 		return -ENOMEM;
- 	}
- 
- 	rates = kzalloc((sizeof(struct ieee80211_rate) * (IWL_MAX_RATES + 1)),
--			GFP_ATOMIC);
-+			GFP_KERNEL);
- 	if (!rates) {
- 		kfree(modes);
- 		kfree(channels);
-@@ -7014,7 +7014,7 @@ static void iwl_bg_request_scan(struct work_struct *data)
- 
- 	if (!priv->scan) {
- 		priv->scan = kmalloc(sizeof(struct iwl_scan_cmd) +
--				     IWL_MAX_SCAN_SIZE, GFP_ATOMIC);
-+				     IWL_MAX_SCAN_SIZE, GFP_KERNEL);
- 		if (!priv->scan) {
- 			rc = -ENOMEM;
- 			goto done;
--- 
-1.5.2
+Queued into my patch series, thanks.
