@@ -1,134 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:41206 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751275AbXHQXdK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2007 19:33:10 -0400
-Subject: [PATCH] mac80211: fix debugfs key directory
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>
+Received: from mx1.redhat.com ([66.187.233.31]:33957 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759104AbXHFWOF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Aug 2007 18:14:05 -0400
+Subject: Re: Please pull 'libertas-upstream' branch of wireless-2.6
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: jeff@garzik.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <20070806203005.GL6442@tuxdriver.com>
+References: <20070806203005.GL6442@tuxdriver.com>
 Content-Type: text/plain
-Date: Sat, 18 Aug 2007 01:33:11 +0200
-Message-Id: <1187393591.6090.23.camel@johannes.berg>
+Date: Mon, 06 Aug 2007 18:10:28 -0400
+Message-Id: <1186438228.2861.9.camel@xo-13-A4-25.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The key directory in debugfs is currently based on the
-key index. When writing that, I somehow thought key indizes
-were unique, which of course they are not. No harm is
-done by this bug except that some keys may not show up
-in debugfs. Fix it by simply using an increasing counter
-for the key directory, one will have to look at the key's
-keyidx and station properties to find out what it really
-is.
+On Mon, 2007-08-06 at 16:30 -0400, John W. Linville wrote:
+> Got a big patch bomb from the libertas guys.  I tried to cherry-pick
+> some of the fixes for 2.6.23, but they either were fixes to problems
+> in new code or all the code cleanups made them difficult for me to
+> intelligently backport.
+> 
+> So, this is intended for 2.6.24...
 
-Also, add an ifidx file to figure out which device the
-key belongs to if it's a group key.
+Sounds fine to me...  we did miss the merge window :)
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Dan
 
----
-It applies after the previous key debugfs fix bug but I should probably
-roll this one into that since it'd make us have less code shuffling
-between this and the patch moving embedding the conf.
-
- net/mac80211/debugfs_key.c |   53 ++++++++++++++++++++++-----------------------
- 1 file changed, 26 insertions(+), 27 deletions(-)
-
---- wireless-dev.orig/net/mac80211/debugfs_key.c	2007-08-17 23:03:43.285978363 +0200
-+++ wireless-dev/net/mac80211/debugfs_key.c	2007-08-17 23:03:49.905978363 +0200
-@@ -14,17 +14,34 @@
- #include "debugfs.h"
- #include "debugfs_key.h"
- 
--#define KEY_CONF_READ(name, buflen, format_string)			\
--static ssize_t key_conf_##name##_read(struct file *file,		\
-+#define KEY_READ(name, prop, buflen, format_string)			\
-+static ssize_t key_##name##_read(struct file *file,			\
- 				 char __user *userbuf,			\
- 				 size_t count, loff_t *ppos)		\
- {									\
- 	char buf[buflen];						\
- 	struct ieee80211_key *key = file->private_data;			\
--	int res = scnprintf(buf, buflen, format_string, key->conf.name);\
-+	int res = scnprintf(buf, buflen, format_string, key->prop);	\
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);	\
- }
-+#define KEY_READ_D(name) KEY_READ(name, name, 20, "%d\n")
-+#define KEY_READ_X(name) KEY_READ(name, name, 20, "0x%x\n")
-+
-+#define KEY_OPS(name)							\
-+static const struct file_operations key_ ##name## _ops = {		\
-+	.read = key_##name##_read,					\
-+	.open = mac80211_open_file_generic,				\
-+}
-+
-+#define KEY_FILE(name, format)						\
-+		 KEY_READ_##format(name)				\
-+		 KEY_OPS(name)
-+
-+#define KEY_CONF_READ(name, buflen, format_string)			\
-+	KEY_READ(conf_##name, conf.name, buflen, format_string)
-+
- #define KEY_CONF_READ_D(name) KEY_CONF_READ(name, 20, "%d\n")
-+#define KEY_CONF_READ_X(name) KEY_CONF_READ(name, 20, "0x%x\n")
- 
- #define KEY_CONF_OPS(name)						\
- static const struct file_operations key_ ##name## _ops = {		\
-@@ -41,32 +58,11 @@ KEY_CONF_FILE(keyidx, D);
- KEY_CONF_FILE(hw_key_idx, D);
- 
- 
--#define KEY_READ(name, buflen, format_string)				\
--static ssize_t key_##name##_read(struct file *file,			\
--				 char __user *userbuf,			\
--				 size_t count, loff_t *ppos)		\
--{									\
--	char buf[buflen];						\
--	struct ieee80211_key *key = file->private_data;			\
--	int res = scnprintf(buf, buflen, format_string, key->name);	\
--	return simple_read_from_buffer(userbuf, count, ppos, buf, res);	\
--}
--#define KEY_READ_D(name) KEY_READ(name, 20, "%d\n")
--#define KEY_READ_X(name) KEY_READ(name, 20, "0x%x\n")
--
--#define KEY_OPS(name)							\
--static const struct file_operations key_ ##name## _ops = {		\
--	.read = key_##name##_read,					\
--	.open = mac80211_open_file_generic,				\
--}
--
--#define KEY_FILE(name, format)						\
--		 KEY_READ_##format(name)				\
--		 KEY_OPS(name)
--
- KEY_FILE(tx_rx_count, D);
- KEY_FILE(flags, X);
- 
-+KEY_READ(ifidx, sdata->dev->ifindex, 20, "%d\n")
-+KEY_OPS(ifidx);
- 
- static ssize_t key_algorithm_read(struct file *file,
- 				  char __user *userbuf,
-@@ -196,12 +192,15 @@ KEY_OPS(key);
- void ieee80211_debugfs_key_add(struct ieee80211_local *local,
- 			       struct ieee80211_key *key)
- {
-+	static int keycount = 0;
- 	char buf[20];
- 
- 	if (!local->debugfs.keys)
- 		return;
- 
--	sprintf(buf, "%d", key->conf.keyidx);
-+	sprintf(buf, "%d", keycount);
-+	keycount++;
-+
- 	key->debugfs.dir = debugfs_create_dir(buf,
- 					local->debugfs.keys);
- 
-
+> 
+> ---
+> 
+> The following changes since commit d4ac2477fad0f2680e84ec12e387ce67682c5c13:
+>   Linus Torvalds (1):
+>         Linux 2.6.23-rc2
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git libertas-upstream
+> 
+> Dan Williams (27):
+>       libertas: kill ieeetypes_capinfo bitfield, use ieee80211.h types
+>       libertas: rename WLAN_802_11_KEY to enc_key and clean up usage
+>       libertas: clean up indentation in libertas_association_worker
+>       libertas: clean up 802.11 IE post-scan handling
+>       libertas: remove if_bootcmd.c
+>       libertas: fix mixed-case abuse in cmd_ds_802_11_scan
+>       libertas: fix mixed-case abuse in cmd_ds_802_11_ad_hoc_result
+>       libertas: fix mixed-case abuse in cmd_ds_802_11_ad_hoc_start
+>       libertas: re-uppercase command defines and other constants
+>       libertas: fix debug build breakage due to field rename
+>       libertas: remove thread.h and make kthread usage clearer
+>       libertas: new mesh control knobs
+>       libertas: bump version to 322.p1
+>       libertas: fix more mixed-case abuse
+>       libertas: move generic firmware reset command to common code
+>       libertas: wlan_ -> libertas_ function prefix renames for main.c
+>       libertas: simplify and clean up data rate handling
+>       libertas: fix WEXT quality reporting
+>       libertas: send association events on adhoc reassociation
+>       libertas: push mesh beacon bit to userspace in scan results
+>       libertas: fix assignment of WEP key type
+>       libertas: push WEXT scan requests to a work queue
+>       libertas: fix misspelling in debug message
+>       libertas: ignore spurious mesh autostart events
+>       libertas: better descriptions for association errors
+>       libertas: fix sparse-reported problems
+>       libertas: bump driver version
+> 
+> Eugene Teo (1):
+>       drivers/net/wireless/libertas/cmd.c: fix adapter->driver_lock dereference
+> 
+> Holger Schurig (33):
+>       libertas: remove fw.c
+>       libertas: fix one more sparse warning
+>       libertas: make more functions static & remove unused functions
+>       libertas: uppercase some #defines
+>       libertas: access mesh_dev more carefully
+>       libertas: tune hardware info output
+>       libertas: remove debugmode
+>       libertas: make the hex dumper nicer
+>       libertas: remove a hundred CMD_RET_xxx definitions
+>       libertas: use LBS_DEB_HOST for host-to-card communications
+>       libertas: use LBS_DEB_HOST for host-to-card communications
+>       add support for Marvell 8385 CF cards
+>       libertas: remove unused adapter->prev_XXXX variables
+>       libertas: remove adapter->{rx,tx}antenna
+>       libertas: remove adapter->prescan
+>       libertas: remove adapter->scanprobes
+>       libertas: remove adapter->pkttxctrl
+>       libertas: remove adapter->txrate
+>       libertas: remove adapter->rxpd_rate
+>       libertas: remove adapter->{data,bcn}_avg_factor
+>       libertas: remove adapter->nullpktinterval
+>       libertas: remove adapter->locallisteninterval
+>       libertas: remove adapter->multipledtim
+>       libertas: remove adapter->atimwindow
+>       libertas: remove adapter->regiontableindex
+>       libertas: remove adapter->listeninterval
+>       libertas: remove adapter->adhoc_grate_enabled
+>       libertas: remove adapter->beaconperiod
+>       libertas: remove adapter->scanmode
+>       libertas: remove adapter->scantype
+>       libertas: remove bss_descriptior->networktsf
+>       libertas: remove bss_descriptor->timestamp
+>       libertas: fix two debug statements in cmdresp.c
+> 
+> Jean Tourrilhes (1):
+>       libertas: fix a few wext abuses...
+> 
+> Luis Carlos Cobo (7):
+>       libertas: specific mesh scan for mshX interface
+>       Support for mesh autostart deactivation through sysfs
+>       libertas: Avoid MESH_AUTOSTARTED spam on console
+>       libertas: revert CAPINFO_MASK to its original value
+>       libertas: keep mesh autostart enabled while asleep
+>       libertas: monitor mode support for OLPC firmware
+>       libertas: pass boot2 version to firmware
+> 
+>  drivers/net/wireless/Kconfig               |    7 +
+>  drivers/net/wireless/Makefile              |    2 +-
+>  drivers/net/wireless/libertas/11d.c        |  124 ++---
+>  drivers/net/wireless/libertas/11d.h        |    4 -
+>  drivers/net/wireless/libertas/Makefile     |    5 +-
+>  drivers/net/wireless/libertas/assoc.c      |   99 ++--
+>  drivers/net/wireless/libertas/assoc.h      |    2 +-
+>  drivers/net/wireless/libertas/cmd.c        |  664 +++++++++---------
+>  drivers/net/wireless/libertas/cmdresp.c    |  368 +++++------
+>  drivers/net/wireless/libertas/debugfs.c    |  137 ++--
+>  drivers/net/wireless/libertas/decl.h       |   18 +-
+>  drivers/net/wireless/libertas/defs.h       |  157 +++---
+>  drivers/net/wireless/libertas/dev.h        |   77 +--
+>  drivers/net/wireless/libertas/ethtool.c    |    8 +-
+>  drivers/net/wireless/libertas/fw.c         |  349 ----------
+>  drivers/net/wireless/libertas/host.h       |  445 ++++++-------
+>  drivers/net/wireless/libertas/hostcmd.h    |   81 +--
+>  drivers/net/wireless/libertas/if_bootcmd.c |   40 --
+>  drivers/net/wireless/libertas/if_cs.c      | 1005 ++++++++++++++++++++++++++++
+>  drivers/net/wireless/libertas/if_usb.c     |  209 +++++--
+>  drivers/net/wireless/libertas/if_usb.h     |    4 -
+>  drivers/net/wireless/libertas/join.c       |  474 +++++++------
+>  drivers/net/wireless/libertas/join.h       |   35 +-
+>  drivers/net/wireless/libertas/main.c       |  752 ++++++++++++++++++----
+>  drivers/net/wireless/libertas/rx.c         |   85 +--
+>  drivers/net/wireless/libertas/scan.c       |  585 +++++++----------
+>  drivers/net/wireless/libertas/scan.h       |   36 +-
+>  drivers/net/wireless/libertas/thread.h     |   52 --
+>  drivers/net/wireless/libertas/tx.c         |   41 +-
+>  drivers/net/wireless/libertas/types.h      |   67 +--
+>  drivers/net/wireless/libertas/wext.c       |  391 ++++--------
+>  drivers/net/wireless/libertas/wext.h       |    9 +-
+>  32 files changed, 3512 insertions(+), 2820 deletions(-)
+>  delete mode 100644 drivers/net/wireless/libertas/fw.c
+>  delete mode 100644 drivers/net/wireless/libertas/if_bootcmd.c
+>  create mode 100644 drivers/net/wireless/libertas/if_cs.c
+>  delete mode 100644 drivers/net/wireless/libertas/thread.h
 
