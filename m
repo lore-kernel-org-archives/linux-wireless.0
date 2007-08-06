@@ -1,37 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hu-out-0506.google.com ([72.14.214.224]:13357 "EHLO
-	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755096AbXHBMsk (ORCPT
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:52400 "EHLO
+	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761754AbXHFVMb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 08:48:40 -0400
-Received: by hu-out-0506.google.com with SMTP id 19so334659hue
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Aug 2007 05:48:39 -0700 (PDT)
-Message-ID: <46B1D28F.1080006@gmail.com>
-Date: Thu, 02 Aug 2007 14:48:15 +0200
-From: dragoran <drago01@gmail.com>
+	Mon, 6 Aug 2007 17:12:31 -0400
+Date: Mon, 06 Aug 2007 16:12:11 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [RFC] bcm43xx-mac80211: Hack to turn automatic pctl off
+Message-ID: <46b78eab.GkVgzZjJwjJN76J8%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Winkler, Tomas" <tomas.winkler@intel.com>,
-	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	network manager <networkmanager-list@gnome.org>,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] chaning mode only when interface down?
-References: <C07C4589BE74A34981C3C3525EE1F801024CF2CB@hasmsx412.ger.corp.intel.com> <1186058047.24230.38.camel@johannes.berg>
-In-Reply-To: <1186058047.24230.38.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Thu, 2007-08-02 at 15:17 +0300, Winkler, Tomas wrote:
->
->   
->> There is a definitely a known issue in the driver that we still need to
->> resolve, but I agree with Johannes that there is a problem in design of
->> the configuration as well. 
->>     
->
-> Nono, you cannot solve it in the driver. The whole design of mac80211
-> mandates that assumption and I think it is a valid one to make.
-why? did the old way (allow mode changing while up) caused any problems?
+For testing purposes, this patch adds a file named "power_level" to the
+debugfs for bcm43xx-mac80211. If this file is read, it returns the current
+setting for the "Desired power level". Writing a number between 5 and 18
+will set that value as the new value for the desired power setting.
 
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+Michael,
+
+The error before is fixed in this version.
+
+Larry
+
+Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.c
++++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.c
+@@ -151,6 +151,74 @@ out_unlock_bb:
+ 	return res;
+ }
+ 
++static ssize_t power_read_file(struct file *file, char __user *userbuf,
++			     size_t count, loff_t *ppos)
++{
++	struct bcm43xx_wldev *dev = file->private_data;
++	const size_t len = ARRAY_SIZE(big_buffer);
++	char *buf = big_buffer;
++	size_t pos = 0;
++	ssize_t res;
++	unsigned long flags;
++
++	mutex_lock(&big_buffer_mutex);
++	mutex_lock(&dev->wl->mutex);
++	spin_lock_irqsave(&dev->wl->irq_lock, flags);
++	if (bcm43xx_status(dev) < BCM43xx_STAT_STARTED) {
++		fappend("Board not initialized.\n");
++		goto out;
++	}
++	fappend("%d dBm\n",dev->phy.power_level);
++
++out:
++	spin_unlock_irqrestore(&dev->wl->irq_lock, flags);
++	mutex_unlock(&dev->wl->mutex);
++	res = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
++	mutex_unlock(&big_buffer_mutex);
++
++	return res;
++}
++
++static ssize_t power_write_file(struct file *file, const char __user *user_buf,
++			      size_t count, loff_t *ppos)
++{
++	struct bcm43xx_wldev *dev = file->private_data;
++	char *buf = big_buffer;
++	ssize_t buf_size;
++	ssize_t res;
++	unsigned long flags;
++	int power;
++
++	mutex_lock(&big_buffer_mutex);
++	buf_size = min(count, ARRAY_SIZE(big_buffer) - 1);
++	if (copy_from_user(buf, user_buf, buf_size)) {
++	        res = -EFAULT;
++		goto out_unlock_bb;
++	}
++	mutex_lock(&dev->wl->mutex);
++	spin_lock_irqsave(&dev->wl->irq_lock, flags);
++	if (bcm43xx_status(dev) < BCM43xx_STAT_STARTED) {
++		bcmerr(dev->wl, "debugfs: Board not initialized.\n");
++		res = -EFAULT;
++		goto out_unlock;
++	}
++	if ((sscanf(buf, "%d", &power) != 1) || (power > 18 || power < 5)) {
++		bcmerr(dev->wl, "debugfs: Invalid values for power level\n");
++		res = -EINVAL;
++		goto out_unlock;
++	}
++	dev->phy.power_level = power;
++	res = buf_size;
++
++out_unlock:
++	spin_unlock_irqrestore(&dev->wl->irq_lock, flags);
++	mutex_unlock(&dev->wl->mutex);
++out_unlock_bb:
++	mutex_unlock(&big_buffer_mutex);
++
++	return res;
++}
++
+ static ssize_t txstat_read_file(struct file *file, char __user *userbuf,
+ 				size_t count, loff_t *ppos)
+ {
+@@ -405,6 +473,12 @@ static struct file_operations restart_fo
+ 	.open = open_file_generic,
+ };
+ 
++static struct file_operations power_fops = {
++	.read = power_read_file,
++	.write = power_write_file,
++	.open = open_file_generic,
++};
++
+ 
+ int bcm43xx_debug(struct bcm43xx_wldev *dev, enum bcm43xx_dyndbg feature)
+ {
+@@ -495,6 +569,11 @@ void bcm43xx_debugfs_add_device(struct b
+ 	if (IS_ERR(e->dentry_restart))
+ 		e->dentry_restart = NULL;
+ 
++	e->dentry_power = debugfs_create_file("power_level", 0600, e->subdir,
++					     dev, &power_fops);
++	if (IS_ERR(e->dentry_power))
++		e->dentry_power = NULL;
++
+ 	bcm43xx_add_dynamic_debug(dev);
+ }
+ 
+@@ -512,6 +591,7 @@ void bcm43xx_debugfs_remove_device(struc
+ 	debugfs_remove(e->dentry_txstat);
+ 	debugfs_remove(e->dentry_restart);
+ 	debugfs_remove(e->dentry_txpower_g);
++	debugfs_remove(e->dentry_power);
+ 	debugfs_remove(e->subdir);
+ 	kfree(e->txstatlog.log);
+ 	kfree(e);
+Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.h
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.h
++++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.h
+@@ -35,6 +35,7 @@ struct bcm43xx_dfsentry {
+ 	struct dentry *dentry_txstat;
+ 	struct dentry *dentry_txpower_g;
+ 	struct dentry *dentry_restart;
++	struct dentry *dentry_power;
+ 
+ 	struct bcm43xx_wldev *dev;
+ 
+Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
++++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+@@ -2763,7 +2763,8 @@ static int bcm43xx_dev_config(struct iee
+ 
+ 	/* Adjust the desired TX power level. */
+ 	if (conf->power_level != 0) {
+-		if (conf->power_level != phy->power_level) {
++		if (conf->power_level != phy->power_level &&
++		    phy->power_level == 0) {
+ 			phy->power_level = conf->power_level;
+ 			bcm43xx_phy_xmitpower(dev);
+ 		}
