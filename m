@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:53391 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S947760AbXHMPMz (ORCPT
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:64395 "EHLO
+	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752028AbXHFDBF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 11:12:55 -0400
-Subject: Re: [PATCHv2] mac80211: dynamic wep
-From: Volker Braun <volker.braun@physik.hu-berlin.de>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jiri Benc <jbenc@suse.cz>
-In-Reply-To: <200708130054.57899.flamingice@sourmilk.net>
-References: <pan.2007.08.10.23.31.32@physik.hu-berlin.de>
-	 <200708130054.57899.flamingice@sourmilk.net>
-Content-Type: text/plain
-Date: Mon, 13 Aug 2007 11:12:50 -0400
-Message-Id: <1187017970.14416.23.camel@carrot.hep.upenn.edu>
-Mime-Version: 1.0
+	Sun, 5 Aug 2007 23:01:05 -0400
+Date: Sun, 05 Aug 2007 22:00:24 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] bcm43xx-mac80211: Fix regression in interrupt handling
+Message-ID: <46b68ec8.nObKM6TauxkzJMGV%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I completely missed that privacy==confidentiality and includes all
-encryption schemes, thanks. 
+Since commit 85a83d26697dd2203ac4e5f33022951f2c3e6e33, "bcm43xx-mac80211:
+Rewrite and simplify handling of the initialization status", some PCI
+adapters have problems due to interrupts happening before the device status
+reaches BCM43xx_STARTED. This patch delays the initial interrupt enable until
+after the device status is set.
 
-On Mon, 2007-08-13 at 00:54 -0700, Michael Wu wrote:
-> > -			if (keyidx >= 0 && keyidx < NUM_DEFAULT_KEYS &&
-> > -			    (!rx->sta || !rx->sta->key || keyidx > 0))
-> > -				rx->key = rx->sdata->keys[keyidx];
-> So it looks like the keyidx > 0 check here is the source of the RX problems. I 
-> think we can store the keyidx of the individual key to compare against 
-> instead of assuming all individual keys have a keyidx of 0.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Correct me if I'm wrong, but I'm reading the standard like this: For WEP
-keys one can have up to 4 default keys (rx->sdata->keys[keyidx]), and a
-varying number (but at least 10) per-STA keys (rx->sta->key). On
-receiving a unicast packet, you use the per-STA key if available (and
-discard keyidx). Only if there is no per-STA key, or the packet is
-multicast, you use the keyidx-th default key. 
+John,
 
-So you cannot rely on keyidx and you must have a check for unicast vs.
-multicast somewhere.
+This patch fixes a regression since 2.6.23-rc1. Michael and I have discussed this
+and he has agreed that this is the proper fix.
 
-Volker
+Larry
 
+ bcm43xx_main.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+===================================================================
+--- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
++++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
+@@ -3014,13 +3014,13 @@ static int bcm43xx_wireless_core_start(s
+ 		       dev->dev->irq);
+ 		goto out;
+ 	}
+-	bcm43xx_interrupt_enable(dev, dev->irq_savedstate);
+ 	bcm43xx_mac_enable(dev);
+ 
+ 	bcm43xx_periodic_tasks_setup(dev);
+ 
+ 	ieee80211_start_queues(dev->wl->hw);
+ 	bcm43xx_set_status(dev, BCM43xx_STAT_STARTED);
++	bcm43xx_interrupt_enable(dev, dev->irq_savedstate);
+ 	bcmdbg(dev->wl, "Wireless interface started\n");
+ out:
+ 	return err;
