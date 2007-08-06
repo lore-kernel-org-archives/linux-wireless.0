@@ -1,55 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60697 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750919AbXHVJWY (ORCPT
+Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:63666 "EHLO
+	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758862AbXHFAYT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2007 05:22:24 -0400
-Subject: Re: Lock problem with latest b43 patches
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
-In-Reply-To: <46C9D3F6.7020306@lwfinger.net>
-References: <46C7CACC.2000000@lwfinger.net>
-	 <1187609202.6090.93.camel@johannes.berg>  <46C9D3F6.7020306@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mzrcrzTf/0ddcLiR8/Hf"
-Date: Tue, 21 Aug 2007 20:58:51 +0200
-Message-Id: <1187722731.8435.0.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 5 Aug 2007 20:24:19 -0400
+From: Daniel Drake <dsd@gentoo.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Cc: kune@deine-taler.de
+Subject: [PATCH] zd1211rw: Add ID for Sitecom WL-162
+Message-Id: <20070806002419.ADB227B409F@zog.reactivated.net>
+Date: Mon,  6 Aug 2007 01:24:19 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Tested by Giuseppe Lippolis
+zd1211b chip 0cde:001a v4810 high 00-60-b3 AL2230_RF pa0 g--NS
 
---=-mzrcrzTf/0ddcLiR8/Hf
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+---
+ zd_usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-On Mon, 2007-08-20 at 12:48 -0500, Larry Finger wrote:
-
-> My / and /home partitions are local, but I do have mounted NFS partitions=
-. Whatever happened here=20
-> has been a one-time only event, at least so far. Until it happens again, =
-I'll assume that an=20
-> electron got crosswise somewhere. :)
-
-I suppose it's unlikely because it looks like there was a page fault of
-a memory mapped file involved. It may be worth sending it to the NFS
-maintainer anyway.
-
-johannes
-
---=-mzrcrzTf/0ddcLiR8/Hf
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGyzXr/ETPhpq3jKURAhWCAJ9YQde+xRCXFWjkyxL2iv9S2r6PkgCeOLRy
-fzVEds4dTe3oedZm3mZI9jI=
-=hK4d
------END PGP SIGNATURE-----
-
---=-mzrcrzTf/0ddcLiR8/Hf--
-
+Index: linux/drivers/net/wireless/zd1211rw/zd_usb.c
+===================================================================
+--- linux.orig/drivers/net/wireless/zd1211rw/zd_usb.c
++++ linux/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -74,6 +74,7 @@ static struct usb_device_id usb_ids[] = 
+ 	{ USB_DEVICE(0x0411, 0x00da), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x2019, 0x5303), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x129b, 0x1667), .driver_info = DEVICE_ZD1211B },
++	{ USB_DEVICE(0x0cde, 0x001a), .driver_info = DEVICE_ZD1211B },
+ 	/* "Driverless" devices that need ejecting */
+ 	{ USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
+ 	{ USB_DEVICE(0x0ace, 0x20ff), .driver_info = DEVICE_INSTALLER },
