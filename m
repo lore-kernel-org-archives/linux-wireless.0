@@ -1,64 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from MAIL.IHTFP.ORG ([204.107.200.6]:54324 "EHLO mail.ihtfp.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762029AbXHCOdN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 10:33:13 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: dragoran <drago01@gmail.com>,
-	"Winkler\, Tomas" <tomas.winkler@intel.com>,
-	linux-wireless@vger.kernel.org,
-	network manager <networkmanager-list@gnome.org>,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] chaning mode only when interface down?
-References: <C07C4589BE74A34981C3C3525EE1F801024CF2CB@hasmsx412.ger.corp.intel.com>
-	<1186058047.24230.38.camel@johannes.berg> <46B1D28F.1080006@gmail.com>
-	<1186059192.24230.44.camel@johannes.berg>
-From: Derek Atkins <warlord@MIT.EDU>
-Date: Fri, 03 Aug 2007 10:33:07 -0400
-In-Reply-To: <1186059192.24230.44.camel@johannes.berg> (Johannes Berg's message of "Thu\, 02 Aug 2007 14\:53\:11 +0200")
-Message-ID: <sjmy7gswuvw.fsf@pgpdev.ihtfp.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59028 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758270AbXHGJq6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Aug 2007 05:46:58 -0400
+Subject: [RFC] allow device to stop packet mirror behaviour
+From: Johannes Berg <johannes@sipsolutions.net>
+To: netdev <netdev@vger.kernel.org>
+Cc: Andy Green <andy@warmcat.com>, David Miller <davem@davemloft.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 07 Aug 2007 10:25:55 +0200
+Message-Id: <1186475155.4067.17.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+In the wireless code, we have special 802.11+radiotap framed virtual
+interfaces, mostly used to monitor traffic on the air. They also show
+outgoing packets from other virtual interfaces associated with the same
+PHY because you can't receive packets while sending. Due to the design
+of the virtual interfaces, the packets don't pass through those
+802.11+radiotap framed interfaces.
 
-> On Thu, 2007-08-02 at 14:48 +0200, dragoran wrote:
->
->> > Nono, you cannot solve it in the driver. The whole design of mac80211
->> > mandates that assumption and I think it is a valid one to make.
->> why? did the old way (allow mode changing while up) caused any problems?
->
-> Why should it be allowed? Can you come up with a good reason for that
-> since you lose all state anyway when doing mode transitions?
+This whole setup has the additional advantage that we are able to
+indicate the transmission status parameters via radiotap as well,
+meaning that we can tell (in userspace) by looking at the radiotap
+header whether a packet was acknowledged by the receiver, whether
+RTS/CTS was used etc. This is required for implementing more things in
+userspace which we plan to do in order to not have the high-complexity
+MLME in the kernel.
 
-Um, what state?  Sure you lose your layer 2 state, but why force a
-layer 3 lossage when you don't necessarily have to do so?  For
-example, I've seen plenty of networks that have both 802.11(a) and
-802.11(b/g) networks that share absolutely everything at layer 3.
-Indeed, at home I have an a/b/g AP where layer 3 is always shared.  At
-the IETF last week it was also shared.  I could easily roam from the
-802.11(a) to the 802.11(b/g) network if my wireless driver would let
-me; the IP Address I've got is certainly valid on both networks.  Why
-should the driver try to be smarter than I am?
+Now, however, we run into the situation that somebody is actually
+sending frames down the 802.11+radiotap framed interface. This could be
+the userspace MLME implementation, for example, sending association
+requests or whatever. These will now show up twice on the monitoring
+interface that the userspace MLME is using, once via
+dev_queue_xmit_nit() because they were sent on that interface and once
+via our own mirror mechanism that also shows the transmission status
+indication.
 
-> Until then (and I guess somebody *really* wants it) it's just a lot
-> easier to not even try to change these low-level things while the
-> interface is operating.
+Andy has written a patch that suppresses our own mirror mechanism from
+becoming effective for packets that were already mirrored out by
+dev_queue_xmit_nit(), however this is not very desirable because it
+makes such packets special, their transmission status information will
+not be available; however, in some circumstances this information is
+required (for example when implementing an MLME using 802.11+radiotap
+framed interfaces.) [Also, the current implementation means that on yet
+another monitor interface you don't see those frames at all.]
 
-Easier for the driver developer or easier for the user?  In general
-it's better to implement more challenging code in order to make life
-easier for the end user.  In this case it certainly looks like you're
-foresaking your users to make the developer's life (maybe) a tiny bit
-easier.
+The only way to solve this problem therefore seems to be to suppress the
+mirroring out of the packet by dev_queue_xmit_nit(). The patch below
+does that by way of adding a new netdev flag.
 
-> johannes
+Comments welcome.
 
--derek
+johannes
 
--- 
-       Derek Atkins, SB '93 MIT EE, SM '95 MIT Media Laboratory
-       Member, MIT Student Information Processing Board  (SIPB)
-       URL: http://web.mit.edu/warlord/    PP-ASEL-IA     N1NWH
-       warlord@MIT.EDU                        PGP key available
+---
+Tested with three monitor interfaces and a trivial injection program on
+bcm43xx-mac80211. I'll send the mac80211 patch I used as a follow-up.
+
+ include/linux/if.h |    2 ++
+ net/core/dev.c     |    4 ++--
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+--- wireless-dev.orig/include/linux/if.h	2007-08-06 21:02:55.868164177 +0200
++++ wireless-dev/include/linux/if.h	2007-08-06 21:03:05.458164177 +0200
+@@ -50,6 +50,8 @@
+ #define IFF_LOWER_UP	0x10000		/* driver signals L1 up		*/
+ #define IFF_DORMANT	0x20000		/* driver signals dormant	*/
+ 
++#define IFF_NO_MIRROR	0x40000		/* driver will mirror packets	*/
++
+ #define IFF_VOLATILE	(IFF_LOOPBACK|IFF_POINTOPOINT|IFF_BROADCAST|\
+ 		IFF_MASTER|IFF_SLAVE|IFF_RUNNING|IFF_LOWER_UP|IFF_DORMANT)
+ 
+--- wireless-dev.orig/net/core/dev.c	2007-08-06 21:02:55.898164177 +0200
++++ wireless-dev/net/core/dev.c	2007-08-06 21:04:58.218164177 +0200
+@@ -1417,7 +1417,7 @@ static int dev_gso_segment(struct sk_buf
+ int dev_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ {
+ 	if (likely(!skb->next)) {
+-		if (!list_empty(&ptype_all))
++		if (!list_empty(&ptype_all) && !(dev->flags & IFF_NO_MIRROR))
+ 			dev_queue_xmit_nit(skb, dev);
+ 
+ 		if (netif_needs_gso(dev, skb)) {
+@@ -2829,7 +2829,7 @@ int dev_change_flags(struct net_device *
+ 			       IFF_DYNAMIC | IFF_MULTICAST | IFF_PORTSEL |
+ 			       IFF_AUTOMEDIA)) |
+ 		     (dev->flags & (IFF_UP | IFF_VOLATILE | IFF_PROMISC |
+-				    IFF_ALLMULTI));
++				    IFF_ALLMULTI | IFF_NO_MIRROR));
+ 
+ 	/*
+ 	 *	Load in the correct multicast list now the flags have changed.
+
+
