@@ -1,35 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:62785 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762937AbXHFV0K (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:47746
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754815AbXHGKTK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2007 17:26:10 -0400
-Message-ID: <46B791EF.7000105@lwfinger.net>
-Date: Mon, 06 Aug 2007 16:26:07 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Tue, 7 Aug 2007 06:19:10 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH] softmac: Fix deadlock of wx_set_essid with assoc work
+Date: Tue, 7 Aug 2007 12:18:12 +0200
+Cc: stable@kernel.org, "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless@vger.kernel.org
+References: <200708071202.58452.mb@bu3sch.de>
+In-Reply-To: <200708071202.58452.mb@bu3sch.de>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [RFC V2] bcm43xx-mac80211: Add TX power set file to debugfs
-References: <46b78ac2.M4X/XQ9LXYHUe/aO%Larry.Finger@lwfinger.net> <200708062307.40590.mb@bu3sch.de>
-In-Reply-To: <200708062307.40590.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708071218.12546.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
+On Tuesday 07 August 2007 12:02:58 Michael Buesch wrote:
+> The essid wireless extension does deadlock against the assoc mutex,
+> as we don't unlock the assoc mutex.
 > 
-> No, why do you poke with this at all.
-> This completely breaks power adjustment from mac80211.
-> Simply don't touch bcm43xx_dev_config :)
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> 
+> --
+> 
+> This is included in John's wireless-2.6 tree.
+> 
+> This doesn't fix the whole issue completely, as we shouldn't
+> flush the workqueue while we are holding the rtnl lock.
+> But, it turns this bug from a "will 100% always deadlock" into
+> a "it might deadlock" bug.
+> A followup patch will come (if someone has some time to do so)
+> to fix this crap code completely.
+> 
+> Index: bu3sch-wireless-dev/net/ieee80211/softmac/ieee80211softmac_wx.c
+> ===================================================================
+> --- bu3sch-wireless-dev.orig/net/ieee80211/softmac/ieee80211softmac_wx.c	2007-03-05 18:42:18.000000000 +0100
+> +++ bu3sch-wireless-dev/net/ieee80211/softmac/ieee80211softmac_wx.c	2007-07-31 14:51:46.000000000 +0200
+> @@ -98,9 +98,12 @@ ieee80211softmac_wx_set_essid(struct net
+>  				cancel_delayed_work(&authptr->work);
+>  			sm->associnfo.bssvalid = 0;
+>  			sm->associnfo.bssfixed = 0;
+> -			flush_scheduled_work();
+>  			sm->associnfo.associating = 0;
+>  			sm->associnfo.associated = 0;
+> +			/* Unlock mutex, otherwise we deadlock with the assoc work handler. */
+> +			mutex_unlock(&sm->associnfo.mutex);
+> +			flush_scheduled_work();
+> +			mutex_lock(&sm->associnfo.mutex);
+>  		}
+>  	}
+>  
+> 
 > 
 
-The problem is that mac80211 never seems to do any power adjustment. The funny 0x1b value for power 
-level that I wondered about earlier is coming from a value of 27 dBm that is set in 
-net/mac80211/regdomain.c, and conf->power_level doesn't get any information from anywhere else that 
-I see.
+Whoops, no. I attached the wrong patch. Sorry!
 
-Do you know how to get mac80211 to change what it is sending to us?
-
-Larry
-
+-- 
+Greetings Michael.
