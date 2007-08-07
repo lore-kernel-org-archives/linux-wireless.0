@@ -1,76 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54215 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39048 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751900AbXH1QRa (ORCPT
+	with ESMTP id S1757787AbXHGKJZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2007 12:17:30 -0400
-Subject: Re: mac80211 AP mode powersaving problems?
+	Tue, 7 Aug 2007 06:09:25 -0400
+Subject: Re: [PATCH stable] softmac: Fix deadlock of wx_set_essid with  assoc work
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <Kalle.Valo@nokia.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <87sl63prsg.fsf@nokia.com>
-References: <1186990509.27916.38.camel@johannes.berg>
-	 <87lkccf30m.fsf@tikku.osso.net> <1187270479.5141.44.camel@johannes.berg>
-	 <87643f4kkh.fsf@nokia.com> <1187275344.23489.6.camel@johannes.berg>
-	 <871wdphsus.fsf@nokia.com> <1188290911.7837.65.camel@johannes.berg>
-	 <87absbsz5f.fsf@nokia.com> <1188299159.7837.96.camel@johannes.berg>
-	 <87sl63prsg.fsf@nokia.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/tdSrZZIUvqwMfXtGyXx"
-Date: Tue, 28 Aug 2007 18:18:55 +0200
-Message-Id: <1188317935.7837.106.camel@johannes.berg>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: stable@kernel.org, John Linville <linville@tuxdriver.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200708071157.21105.mb@bu3sch.de>
+References: <200708011253.06569.mb@bu3sch.de>
+	 <200708031250.51161.mb@bu3sch.de> <1186410230.28655.75.camel@johannes.berg>
+	 <200708071157.21105.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kBkU0IMhgoirmlV2kVim"
+Date: Tue, 07 Aug 2007 12:10:38 +0200
+Message-Id: <1186481438.4067.40.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-/tdSrZZIUvqwMfXtGyXx
+--=-kBkU0IMhgoirmlV2kVim
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2007-08-28 at 19:06 +0300, Kalle Valo wrote:
+On Tue, 2007-08-07 at 11:57 +0200, Michael Buesch wrote:
 
-> Ok, I finally managed to test it. Hardware was Nokia N800 and Broadcom
-> 4318 in an x86 laptop. I used b43 from wireless-dev#everything commit
-> 0347a7c86f8406 and hostapd from commit 62897a2a1a0e. I tested running
-> ping and arping from the laptop to N800.
+> Yep, but this patch turns the bug from a
+> "It will 100% deadlock all the time"
+> into a
+> "It might possibly deadlock, although unlikely"
+> So it's a win for that crap softmac code.
 
-Cool, thanks.
-
-> Everything works fine when N800 has WLAN PSM disabled. When WLAN PSM
-> is enabled, TIM for AID is not set in beacons, just like you said.
-
-Right.
-
-> But that's not all, also multicast frames (including ARP broadcast)
-> are not buffered correctly. They are sent randomly instead of directly
-> after a DTIM beacon. Also Multicast bit is not set and DTIM is always
-> zero even though DTIM period is two.
-
-Hm, yeah, I almost expected this, b43 hardware has some capabilities for
-this but we don't really know how to use it yet. We also need to upload
-the DTIM count to the hardware (shm somewhere)=20
-
-> I also some really odd frames sent by b43 when N800 had PSM enabled.
-> Never seen it before, no idea what it is. Dump at the of this message.
-
-Could you send me a packet capture in pkt format via private mail?
+Agreed, let's go with the patch you just sent. It's rather unlikely that
+it will deadlock against the link watch event, and hopefully we can
+delete softmac in 2.6.24 with Larry's bcm4301 and zd1211-mac80211
+shaping up.
 
 johannes
 
---=-/tdSrZZIUvqwMfXtGyXx
+--=-kBkU0IMhgoirmlV2kVim
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBG1Erv/ETPhpq3jKURArLPAKCcend6cWG/x0KTM/lUejnM+kilXgCdHQ9c
-VQbl4qZg7IJFDFCkdPSje4o=
-=aKe5
+iD8DBQBGuEUe/ETPhpq3jKURArybAKCiwEtMJ1AYBlvpGsmW/wrdsfSuHQCeKt/x
+OmSrg2h5VgQ2/hdjz3qksww=
+=FofV
 -----END PGP SIGNATURE-----
 
---=-/tdSrZZIUvqwMfXtGyXx--
+--=-kBkU0IMhgoirmlV2kVim--
 
