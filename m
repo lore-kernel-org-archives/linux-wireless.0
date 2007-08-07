@@ -1,107 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:46298 "EHLO
-	ms-smtp-02.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750916AbXHBPie (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59110 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758731AbXHGJtJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 11:38:34 -0400
-Date: Thu, 02 Aug 2007 10:38:21 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [RFC V3] bcm43xx-mac80211: Provide information to allow  transmission rate decreases
-Message-ID: <46b1fa6d.d4l4DujAaAR2ORZf%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 7 Aug 2007 05:49:09 -0400
+Subject: Re: further plan wrt. monitor interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ulrich Kunitz <kune@deine-taler.de>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070806212300.GA14347@deine-taler.de>
+References: <1186178959.13315.30.camel@johannes.berg>
+	 <46B3B2AD.1040509@gentoo.org> <20070804074616.GA17144@deine-taler.de>
+	 <1186395427.28655.56.camel@johannes.berg>
+	 <20070806212300.GA14347@deine-taler.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6zIywMl3flLdLJjqa32C"
+Date: Tue, 07 Aug 2007 11:46:42 +0200
+Message-Id: <1186480002.4067.28.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael,
 
-I couldn't find any long/short indication in the header, so I added a bool that
-is set when the frame is sent.
+--=-6zIywMl3flLdLJjqa32C
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Larry
----
+On Mon, 2007-08-06 at 23:23 +0200, Ulrich Kunitz wrote:
 
-In bcm43xx-mac80211, the mechanism for decreasing the transmit rate cannot
-be triggered. This may be shown by walking away from the AP with a laptop.
-At some distance, communications will be lost and never recovered because
-the rate decreasing mechanism of rc80211_simple needs to see excessive_retries
-set in the ieee80211_tx_status struct. With this patch, the transmit rate
-will decrease until communications restart.
+> I don't think so enable_phy/disable_phy is open and stop.=20
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+True. I don't really care what those are named :)
 
-Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
-+++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
-@@ -1311,6 +1311,16 @@ void bcm43xx_dma_handle_txstatus(struct 
- 			 */
- 			if (status->acked)
- 				meta->txstat.flags |= IEEE80211_TX_STATUS_ACK;
-+			else
-+				if (dev->last_frame_long) {
-+					if (status->frame_count >=
-+					    dev->long_retry_limit)
-+						meta->txstat.excessive_retries = 1;
-+				} else {
-+					if (status->frame_count >=
-+					    dev->short_retry_limit)
-+						meta->txstat.excessive_retries = 1;
-+				}
- 			meta->txstat.retry_count = status->frame_count - 1;
- 			ieee80211_tx_status_irqsafe(dev->wl->hw, meta->skb, &(meta->txstat));
- 			/* skb is freed by ieee80211_tx_status_irqsafe() */
-Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx.h
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx.h
-+++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx.h
-@@ -707,6 +707,9 @@ struct bcm43xx_wldev {
- 	bool short_preamble;		/* TRUE, if short preamble is enabled. */
- 	bool short_slot;		/* TRUE, if short slot timing is enabled. */
- 	bool radio_hw_enable;		/* saved state of radio hardware enabled state */
-+	bool last_frame_long;		/* true is last frame was long */
-+	u8 short_retry_limit;
-+	u8 long_retry_limit;
- 
- 	/* PHY/Radio device. */
- 	struct bcm43xx_phy phy;
-Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-+++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-@@ -3333,10 +3333,12 @@ static int bcm43xx_wireless_core_init(st
- 	tmp = limit_value(modparam_short_retry, 0, 0xF);
- 	bcm43xx_shm_write16(dev, BCM43xx_SHM_SCRATCH,
- 			    BCM43xx_SHM_SC_SRLIMIT, tmp);
-+	dev->short_retry_limit = tmp;
- 	tmp = limit_value(modparam_long_retry, 0, 0xF);
- 	bcm43xx_shm_write16(dev, BCM43xx_SHM_SCRATCH,
- 			    BCM43xx_SHM_SC_LRLIMIT, tmp);
- 
-+	dev->long_retry_limit = tmp;
- 	bcm43xx_shm_write16(dev, BCM43xx_SHM_SHARED,
- 			    BCM43xx_SHM_SH_SFFBLIM, 3);
- 	bcm43xx_shm_write16(dev, BCM43xx_SHM_SHARED,
-Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
-+++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
-@@ -264,6 +264,7 @@ static void generate_txhdr_fw4(struct bc
- 	 * is a 5Ghz packet.
- 	 */
- 	txhdr->chan_radio_code = phy->channel;
-+	dev->last_frame_long = 0;
- 
- 	/* PHY TX Control word */
- 	if (rate_ofdm)
-@@ -336,6 +337,7 @@ static void generate_txhdr_fw4(struct bc
- 		if (rts_rate_fb_ofdm)
- 			extra_ft |= BCM43xx_TX4_EFT_RTSFBOFDM;
- 		mac_ctl |= BCM43xx_TX4_MAC_LONGFRAME;
-+		dev->last_frame_long = 1;
- 	}
- 
- 	/* Magic cookie */
+> A bunch
+> of parameters are already set with a single function, only config
+> and config_interface need to be replaced by parameter-specific
+> functions. Reset should be removed.=20
+
+Not sure what reset is for.
+
+> add_interface() and
+> remove_interface() are comparable to my enable_mac() and
+> disable_mac() as you discovered.=20
+
+Aha, but they're not fully compatible. First of all, you were talking
+about multiple MACs which isn't something we're going to support
+(multiple MAC addresses yes). Secondly, a WDS and AP interface will be
+running with the same MAC address but have quite different
+configuration. Thirdly, always doing lookups by MAC address (even if it
+were possible which it is not due to WDS vs AP) is rather inefficient.
+
+> Tell the driver on the real interface, which packets it should
+> report to the mac80211 stack.=20
+
+That's what I proposed.
+
+> Don't bother the driver with virtual
+> interfaces. The stack should handle it completely transparently.
+
+What I'm trying to explain to you is that basically you cannot do that.
+AP vs WDS interfaces, lookups by MAC address, beaconing, ...
+
+> Don't call the driver before open() or after stop() is called.
+
+Do we do that? In any case, it's rather orthogonal to the issue at hand.
+
+johannes
+
+--=-6zIywMl3flLdLJjqa32C
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGuD+C/ETPhpq3jKURAqRIAJ4tl6NbqKd2hxGrBLb2InpapFAJPACePo95
+XtXXtwxCGOcKSxDyua1zj8Y=
+=4VSF
+-----END PGP SIGNATURE-----
+
+--=-6zIywMl3flLdLJjqa32C--
+
