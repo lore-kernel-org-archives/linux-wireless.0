@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purr.warmcat.com ([87.106.142.209]:40859 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759575AbXHCKfp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 06:35:45 -0400
-Message-ID: <46B304FF.3000305@warmcat.com>
-Date: Fri, 03 Aug 2007 11:35:43 +0100
-From: Andy Green <andy@warmcat.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:54072 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S937275AbXHGVZQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Aug 2007 17:25:16 -0400
+Message-ID: <46B8E338.9070405@garzik.org>
+Date: Tue, 07 Aug 2007 17:25:12 -0400
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Ulrich Kunitz <kune@deine-taler.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Daniel Drake <dsd@gentoo.org>
-Subject: Re: mac80211 driver interface semantics
-References: <46B27729.5030406@gentoo.org>	 <20070803052935.GA12683@deine-taler.de>  <46B2E06F.4090706@warmcat.com>	 <1186134894.4647.24.camel@johannes.berg>  <46B3032C.5040306@warmcat.com> <1186137166.4647.34.camel@johannes.berg>
-In-Reply-To: <1186137166.4647.34.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: Please pull 'fixes-jgarzik' branch of wireless-2.6
+References: <20070806201441.GJ6442@tuxdriver.com>
+In-Reply-To: <20070806201441.GJ6442@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Somebody in the thread at some point said:
-> On Fri, 2007-08-03 at 11:27 +0100, Andy Green wrote:
+John W. Linville wrote:
+> The following changes since commit d4ac2477fad0f2680e84ec12e387ce67682c5c13:
+>   Linus Torvalds (1):
+>         Linux 2.6.23-rc2
 > 
->> Inside that question, if you mark up skb->ip_summed with CHECKSUM_NONE,
->> include/linux/skbuff.h says this:
->>
->> /* A. Checksumming of received packets by device.
->>  *
->>  *      NONE: device failed to checksum this packet.
->>  *              skb->csum is undefined.
->>
->> If we mark up the skb with FCS-broken packets with that, maybe it would
->> be compatible with the networking stack for this purpose.
+> are available in the git repository at:
 > 
-> No, that's the IP checksum. It may or may not be broken if the FCS CRC
-> fails.
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-jgarzik
+> 
+> John W. Linville (1):
+>       Revert "[PATCH] bcm43xx: Fix deviation from specifications in set_baseband_attenuation"
+> 
+> Masakazu Mokuno (1):
+>       remove duplicated ioctl entries in compat_ioctl.c
+> 
+> Michael Buesch (1):
+>       softmac: Fix deadlock of wx_set_essid with assoc work
+> 
+> Michael Wu (1):
+>       rtl8187: ensure priv->hwaddr is always valid
+> 
+> Ulrich Kunitz (1):
+>       zd1211rw: fix filter for PSPOLL frames
+> 
+>  drivers/net/wireless/bcm43xx/bcm43xx_phy.c  |    2 +-
+>  drivers/net/wireless/rtl8187_dev.c          |    2 +-
+>  drivers/net/wireless/zd1211rw/zd_mac.c      |    2 +-
+>  fs/compat_ioctl.c                           |    3 ---
+>  net/ieee80211/softmac/ieee80211softmac_wx.c |   11 ++++++++---
+>  5 files changed, 11 insertions(+), 9 deletions(-)
 
-Right, but since we marked up the skb "the integrity of the IP checksum
-is unknown", if anything wants to use the packet it should re-check it
-itself.  Won't that do?
+pulled
 
--Andy
 
