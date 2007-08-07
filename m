@@ -1,58 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49710 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753239AbXHOKsm (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:43773
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759516AbXHGPqH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 06:48:42 -0400
-Subject: Re: [PATCH] hostapd: remove use of  ieee80211_msg_wep_frame_unknown_key
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20070815033555.GI1415@jm.kir.nu>
-References: <1186781366.17351.8.camel@johannes.berg>
-	 <20070815033555.GI1415@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1bN5FHzLb9xQVY4HUtit"
-Date: Wed, 15 Aug 2007 12:45:59 +0200
-Message-Id: <1187174759.3998.8.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 7 Aug 2007 11:46:07 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Andrew Morton <akpm@linux-foundation.org>,
+	John Linville <linville@tuxdriver.com>
+Subject: [PATCH] ssb: Make extif driver compilation depend on extif config
+Date: Tue, 7 Aug 2007 17:44:39 +0200
+Cc: Aurelien Jarno <aurelien@aurel32.net>,
+	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200708071744.40287.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Compilation of the extif driver must depend on
+CONFIG_SSB_DRIVER_EXTIF.
+Sorry, my fault.
 
---=-1bN5FHzLb9xQVY4HUtit
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-On Tue, 2007-08-14 at 20:35 -0700, Jouni Malinen wrote:
+--
 
-> This feature was originally used to allow a station to be disassociated
-> if it seemed to be using incorrect keys.=20
+John, please apply to wireless-dev
+Andrew, please apply to -mm after applying the other ssb patches.
 
-Makes sense, this is a bit icky.
 
-> However, this was causing
-> interoperability issues with some client implementations and the code
-> was eventually commented out and this was only used to update a dot11
-> MIB counters. Consequently, I did not see much point in integrating it
-> into hostapd and we might as well just remove the TODO item completely
-> from hostapd.
+diff --git a/drivers/ssb/Makefile b/drivers/ssb/Makefile
+index 811343d..bcde58d 100644
+--- a/drivers/ssb/Makefile
++++ b/drivers/ssb/Makefile
+@@ -7,7 +7,8 @@ ssb-$(CONFIG_SSB_PCMCIAHOST)		+= pcmcia.
+ 
+ # built-in drivers
+ ssb-y					+= driver_chipcommon.o
+-ssb-$(CONFIG_SSB_DRIVER_MIPS)		+= driver_mipscore.o driver_extif.o
++ssb-$(CONFIG_SSB_DRIVER_MIPS)		+= driver_mipscore.o
++ssb-$(CONFIG_SSB_DRIVER_EXTIF)		+= driver_extif.o
+ ssb-$(CONFIG_SSB_DRIVER_PCICORE)	+= driver_pcicore.o
+ 
+ obj-$(CONFIG_SSB)			+= ssb.o
 
-I'm not sure whether it'd be worth it going forward anyway, with WEP
-deployments hopefully going down.
-
-johannes
-
---=-1bN5FHzLb9xQVY4HUtit
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGwtln/ETPhpq3jKURAn3xAJ9J9o2VMRzbPfj79Ff7iDPT0SXhkACgj5/l
-ZtL9zY+u0pd07V9Qj3CTjmI=
-=+PUD
------END PGP SIGNATURE-----
-
---=-1bN5FHzLb9xQVY4HUtit--
-
+-- 
+Greetings Michael.
