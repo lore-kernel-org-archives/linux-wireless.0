@@ -1,53 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54177 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753197AbXHUKHG (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.191]:42261 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765362AbXHGQVD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 06:07:06 -0400
-Subject: Re: [PATCH 28/30] rt2x00: Always check if mac80211 requested TX  status update
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200708192036.37330.IvDoorn@gmail.com>
-References: <200708192018.30624.IvDoorn@gmail.com>
-	 <200708192036.37330.IvDoorn@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CnMVity03LNLaXj1gyal"
-Date: Mon, 20 Aug 2007 19:21:35 +0200
-Message-Id: <1187630496.6923.0.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 7 Aug 2007 12:21:03 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1433721rvb
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Aug 2007 09:21:03 -0700 (PDT)
+Message-ID: <a728f9f90708070921x13c1a9fem8f7bbf3fe77756d@mail.gmail.com>
+Date: Tue, 7 Aug 2007 12:21:02 -0400
+From: "Alex Deucher" <alexdeucher@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Marvell pci wifi chips
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Is anyone working on a driver for the marvell pci libertas chips
+(8335, 8300, 8310, etc.) or know of someone who is?  I've got several
+of these cards not doing anything at the moment if someone is
+interested in one.  It seems there are several drivers floating
+around:
 
---=-CnMVity03LNLaXj1gyal
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+- mrv8k driver (http://www.saillard.org/linux/mrv8k/)
+- openbsd malo driver (http://www.openbsd.org/cgi-bin/man.cgi?query=malo)
+- marvell GPL driver (http://johannes.sipsolutions.net/files/marvell.tar.bz2)
 
-On Sun, 2007-08-19 at 20:36 +0200, Ivo van Doorn wrote:
+Reading through the linux-wireless archive, several people seemed to
+indicate there was work going on, but I have not been able to find any
+information on that other than Holger's CF libertas integration.  I
+and others have asked before, but there seems to be some confusion as
+to the whole libertas line and their relative compatibility.  Just
+curious.
 
-> During txdone always check for the IEEE80211_TXCTL_REQ_TX_STATUS flag
-> to determine if ieee80211_tx_status_irqsafe should be called or not.
-> When the flag is not set, just cleanup the skb and don't bother
-> mac80211 with it.
+Thanks,
 
-Never mind that I'd love to remove the REQ_TX_STATUS flag, this is not
-really the best thing to do since rate control will basically ignore
-this frame if you don't hand it back to mac80211.
-
-johannes
-
---=-CnMVity03LNLaXj1gyal
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGyc2f/ETPhpq3jKURAsa/AJ49/zkacFf+SpoHewNCArSoRl+utQCZAcqX
-Wk8ejhvrTHm+C3p9WGcy2us=
-=Fqh9
------END PGP SIGNATURE-----
-
---=-CnMVity03LNLaXj1gyal--
-
+Alex
