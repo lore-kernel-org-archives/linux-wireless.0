@@ -1,65 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55447 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59148 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751154AbXHPQ7y (ORCPT
+	with ESMTP id S1750778AbXHGJuQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2007 12:59:54 -0400
-Subject: Re: mac80211 AP mode powersaving problems?
+	Tue, 7 Aug 2007 05:50:16 -0400
+Subject: Re: [RFC] bcm43xx-mac80211: Hack to turn automatic pctl off
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Russell Senior <seniorr@aracnet.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <86wsvv8m9t.fsf@coulee.tdb.com>
-References: <1186990509.27916.38.camel@johannes.berg>
-	 <87lkccf30m.fsf@tikku.osso.net> <1187270479.5141.44.camel@johannes.berg>
-	 <87643f4kkh.fsf@nokia.com> <1187275344.23489.6.camel@johannes.berg>
-	 <86wsvv8m9t.fsf@coulee.tdb.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pdIr2wC8s2ZCHbiAFkOe"
-Date: Thu, 16 Aug 2007 19:02:38 +0200
-Message-Id: <1187283758.23489.38.camel@johannes.berg>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de
+In-Reply-To: <46B7F9AC.10706@lwfinger.net>
+References: <46b792a0.FdNEyH1qMrUgo6oh%Larry.Finger@lwfinger.net>
+	 <200708062335.48546.mb@bu3sch.de> <200708062356.58782.mb@bu3sch.de>
+	 <46B7F9AC.10706@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ddJ0tQLd016M8XDh9iAg"
+Date: Tue, 07 Aug 2007 11:51:48 +0200
+Message-Id: <1186480308.4067.33.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-pdIr2wC8s2ZCHbiAFkOe
+--=-ddJ0tQLd016M8XDh9iAg
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2007-08-16 at 09:41 -0700, Russell Senior wrote:
+On Mon, 2007-08-06 at 23:48 -0500, Larry Finger wrote:
+> Michael Buesch wrote:
+> >=20
+> > That's it
+> > http://bu3sch.de/patches/wireless-dev/20070806-1186437386/patches/bcm43=
+xx-mac80211-hwpctl-optional.patch
+> >=20
+>=20
+> This patch makes my BCM4311 positively hum even with the power set at the=
+ default 18.5 dBm. I get=20
+> the same performance as was seen using the PHY code ported from softmac. =
+Congratulations - you found=20
+> the secret. Of course, the system will probably be even better when hardw=
+are power control is=20
+> working, but we can now afford to wait until the reverse engineers have t=
+ime.
 
->   I have yet to see (maybe I am just blind), except for a very sparse
->   smattering of examples, a description of how mac80211 is intended to
->   be used.  I've never needed hostapd for master-mode before. =20
-
-That is, I expect, because you had a device that handled all that in
-hardware/firmware. We now handle many MLME things in software, and have
-pushed it out of the kernel into userspace.
-
->   I am
->   not even sure what it does.
-
-It handles everything from association to encryption etc.
-
->   Is there somewhere I should be looking
->   for user-level documentation?
-
-http://hostap.epitest.fi/hostapd/
-But I think you need git version to compile against the current
-wireless-dev 'everything' branch.
+Cool stuff!
 
 johannes
 
---=-pdIr2wC8s2ZCHbiAFkOe
+--=-ddJ0tQLd016M8XDh9iAg
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGxIMu/ETPhpq3jKURAmWUAJ9wXuABcTIkJwm+pU4VCyhfNMav4ACgmWTH
-50dqCyycGN+97aUv8YVwGtM=
-=WTLA
+iD8DBQBGuEC0/ETPhpq3jKURAk9zAKCdrZ0sdtV5xmIE4TlcpBXFihzfXwCfcKVe
+tL42LINm30ktsnHwNf/CM/o=
+=+eCu
 -----END PGP SIGNATURE-----
 
---=-pdIr2wC8s2ZCHbiAFkOe--
+--=-ddJ0tQLd016M8XDh9iAg--
 
