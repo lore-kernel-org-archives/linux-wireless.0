@@ -1,70 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33939
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751123AbXHHJL5 (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:59586 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965051AbXHGUyZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 05:11:57 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: [PATCH] Fix handling of failure to create debugfs directory
-Date: Wed, 8 Aug 2007 11:04:56 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Larry Finger <larry.finger@lwfinger.net>
-References: <20070808051710.3902.43211.stgit@dv.roinet.com>
-In-Reply-To: <20070808051710.3902.43211.stgit@dv.roinet.com>
+	Tue, 7 Aug 2007 16:54:25 -0400
+Date: Tue, 7 Aug 2007 13:47:22 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	Jean Tourrilhes <jt@hpl.hp.com>, Michael Buesch <mb@bu3sch.df>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [2.6.22.2 review 49/84] softmac: Fix ESSID problem
+Message-ID: <20070807204722.GY23028@kroah.com>
+References: <20070807204034.882009319@mini.kroah.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200708081104.56295.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070807204157.GA23028@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 08 August 2007 07:17:10 Pavel Roskin wrote:
-> This can happen if CONFIG_BCM43XX_MAC80211_DEBUG is enabled, but
-> CONFIG_DEBUG_FS is not.
-> 
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
-> ---
 
-Thanks, queued.
-Larry, this might also apply to bcm4301.
+From: Jean Tourrilhes <jt@hpl.hp.com>
 
->  .../wireless/bcm43xx-mac80211/bcm43xx_debugfs.c    |    8 ++++++--
->  1 files changed, 6 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.c b/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.c
-> index 9ca4625..aded2b3 100644
-> --- a/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.c
-> +++ b/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.c
-> @@ -408,7 +408,7 @@ static struct file_operations restart_fops = {
->  
->  int bcm43xx_debug(struct bcm43xx_wldev *dev, enum bcm43xx_dyndbg feature)
->  {
-> -	return !!(dev->dfsentry->dyn_debug[feature]);
-> +	return !!(dev->dfsentry && dev->dfsentry->dyn_debug[feature]);
->  }
->  
->  static void bcm43xx_remove_dynamic_debug(struct bcm43xx_wldev *dev)
-> @@ -472,7 +472,9 @@ void bcm43xx_debugfs_add_device(struct bcm43xx_wldev *dev)
->  	snprintf(devdir, sizeof(devdir), "%s", wiphy_name(dev->wl->hw->wiphy));
->  	e->subdir = debugfs_create_dir(devdir, fs.root);
->  	if (!e->subdir || IS_ERR(e->subdir)) {
-> -		e->subdir = NULL;
-> +		bcmerr(dev->wl, "debugfs: cannot create %s directory\n",
-> +		       devdir);
-> +		dev->dfsentry = NULL;
->  		kfree(log->log);
->  		kfree(e);
->  		return;
-> @@ -525,6 +527,8 @@ void bcm43xx_debugfs_log_txstat(struct bcm43xx_wldev *dev,
->  	struct bcm43xx_txstatus *cur;
->  	int i;
->  
-> +	if (!e)
-> +		return;
->  	log = &e->txstatlog;
->  	assert(irqs_disabled());
->  	spin_lock(&log->lock);
+Victor Porton reported that the SoftMAC layer had random problem when setting the ESSID :
+http://bugzilla.kernel.org/show_bug.cgi?id=8686 After investigation, it turned out to be
+worse, the SoftMAC layer is left in an inconsistent state. The fix is pretty trivial.
+
+Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
+Acked-by: Michael Buesch <mb@bu3sch.df>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Acked-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ net/ieee80211/softmac/ieee80211softmac_assoc.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+--- a/net/ieee80211/softmac/ieee80211softmac_assoc.c
++++ b/net/ieee80211/softmac/ieee80211softmac_assoc.c
+@@ -271,8 +271,11 @@ ieee80211softmac_assoc_work(struct work_
+ 			 */
+ 			dprintk(KERN_INFO PFX "Associate: Scanning for networks first.\n");
+ 			ieee80211softmac_notify(mac->dev, IEEE80211SOFTMAC_EVENT_SCAN_FINISHED, ieee80211softmac_assoc_notify_scan, NULL);
+-			if (ieee80211softmac_start_scan(mac))
++			if (ieee80211softmac_start_scan(mac)) {
+ 				dprintk(KERN_INFO PFX "Associate: failed to initiate scan. Is device up?\n");
++				mac->associnfo.associating = 0;
++				mac->associnfo.associated = 0;
++			}
+ 			goto out;
+ 		} else {
+ 			mac->associnfo.associating = 0;
 
 -- 
-Greetings Michael.
