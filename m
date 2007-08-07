@@ -1,78 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57753 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752190AbXHOL7r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 07:59:47 -0400
-Subject: Re: warnings in iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: ian <ischram@telenet.be>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>, Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <46C2E992.5070805@telenet.be>
-References: <1187133051.31200.26.camel@johannes.berg>
-	 <46C2E992.5070805@telenet.be>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-umrk8nlDyFNQwTtm1rod"
-Date: Wed, 15 Aug 2007 14:02:23 +0200
-Message-Id: <1187179344.3998.38.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from srv5.dvmed.net ([207.36.208.214]:59236 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758546AbXHGWXB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Aug 2007 18:23:01 -0400
+Message-ID: <46B8F0C3.6030409@garzik.org>
+Date: Tue, 07 Aug 2007 18:22:59 -0400
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: Please pull 'libertas-upstream' branch of wireless-2.6
+References: <20070806203005.GL6442@tuxdriver.com>
+In-Reply-To: <20070806203005.GL6442@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+John W. Linville wrote:
+> Got a big patch bomb from the libertas guys.  I tried to cherry-pick
+> some of the fixes for 2.6.23, but they either were fixes to problems
+> in new code or all the code cleanups made them difficult for me to
+> intelligently backport.
+> 
+> So, this is intended for 2.6.24...
+> 
+> ---
+> 
+> The following changes since commit d4ac2477fad0f2680e84ec12e387ce67682c5c13:
+>   Linus Torvalds (1):
+>         Linux 2.6.23-rc2
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git libertas-upstream
 
---=-umrk8nlDyFNQwTtm1rod
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This is missing the patch.  I looked at it locally, but please do send a 
+patch for review with each push, no matter how big.
 
-On Wed, 2007-08-15 at 13:54 +0200, ian wrote:
+pulled into #upstream
 
-> > 	le16_to_cpu(phy_flags_hw & RX_RES_PHY_FLAGS_ANTENNA_MSK) >> 4;
-> >=20
-> > looks totally bogus unless you somehow do macro magic to define the
-> > RX_RES_PHY...MASK in little endian...
->=20
-> iwl-hw.h:#define        RX_RES_PHY_FLAGS_ANTENNA_MSK            __constan=
-t_cpu_to_le16(0xf0)
-
-> I don't understand how this would generate the warning though
-
-Ah, so there is macro magic. Why that, and not just convert the value to
-CPU first and then mask? i.e.
-#define        RX_RES_PHY_FLAGS_ANTENNA_MSK            0xF0
-and use
-	(le16_to_cpu(phy_flags_hw) & RX_RES...MSK) >> 4
-or something?
-
-> > Maybe it's time for you to get a cross compiler or better yet buy a
-> > big-endian machine and actually test things on that? :)
-> >=20
->=20
-> No need for these drastic comments, for two warnings imho ;-)
-
-:)
-
-I'm spammed by warnings right now in my kernel build for some reason.
-I'm guessing gcc got a bit more trigger-happy or something.
-
-> I'm predicting that patch will arrive on linux-wireless soon too.
-> (took me quite some time to figure this out, because I was looking at the=
- iwlwifi git)
-
-Alright :)
-
-johannes
-
---=-umrk8nlDyFNQwTtm1rod
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGwutP/ETPhpq3jKURAr3CAKCKmS4OjBRWeKyt3yX9601zR2nWCACeOhae
-Ppt9mg+pEkHwgft7dG0NXyI=
-=6dJ7
------END PGP SIGNATURE-----
-
---=-umrk8nlDyFNQwTtm1rod--
 
