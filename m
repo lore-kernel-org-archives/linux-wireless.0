@@ -1,50 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54327 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758779AbXHPPBI (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:45280
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757526AbXHGKEG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2007 11:01:08 -0400
-Subject: Re: [PATCH] nl80211: remove VLAN type
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "David S. Miller" <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1187169518.3960.0.camel@johannes.berg>
-References: <1187169518.3960.0.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ePkXdZFPogBeQNKPZl89"
-Date: Thu, 16 Aug 2007 17:03:45 +0200
-Message-Id: <1187276625.23489.18.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 7 Aug 2007 06:04:06 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Greg KH <greg@kroah.com>
+Subject: [PATCH] softmac: Fix deadlock of wx_set_essid with assoc work
+Date: Tue, 7 Aug 2007 12:02:58 +0200
+Cc: stable@kernel.org, "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Message-Id: <200708071202.58452.mb@bu3sch.de>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The essid wireless extension does deadlock against the assoc mutex,
+as we don't unlock the assoc mutex.
 
---=-ePkXdZFPogBeQNKPZl89
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-On Wed, 2007-08-15 at 11:18 +0200, Johannes Berg wrote:
-> There is no point in trying to handle source MAC address based VLANs in
-> the wireless stack, something like "smacvlan" modeled after macvlan
-> should be sufficient.
+--
 
-Whoops. I only forgot the use with encryption. Please consider this
-patch withdrawn, at least until I see clearer through that crypto issue.
+This is included in John's wireless-2.6 tree.
 
-johannes
+This doesn't fix the whole issue completely, as we shouldn't
+flush the workqueue while we are holding the rtnl lock.
+But, it turns this bug from a "will 100% always deadlock" into
+a "it might deadlock" bug.
+A followup patch will come (if someone has some time to do so)
+to fix this crap code completely.
 
---=-ePkXdZFPogBeQNKPZl89
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Index: bu3sch-wireless-dev/net/ieee80211/softmac/ieee80211softmac_wx.c
+===================================================================
+--- bu3sch-wireless-dev.orig/net/ieee80211/softmac/ieee80211softmac_wx.c	2007-03-05 18:42:18.000000000 +0100
++++ bu3sch-wireless-dev/net/ieee80211/softmac/ieee80211softmac_wx.c	2007-07-31 14:51:46.000000000 +0200
+@@ -98,9 +98,12 @@ ieee80211softmac_wx_set_essid(struct net
+ 				cancel_delayed_work(&authptr->work);
+ 			sm->associnfo.bssvalid = 0;
+ 			sm->associnfo.bssfixed = 0;
+-			flush_scheduled_work();
+ 			sm->associnfo.associating = 0;
+ 			sm->associnfo.associated = 0;
++			/* Unlock mutex, otherwise we deadlock with the assoc work handler. */
++			mutex_unlock(&sm->associnfo.mutex);
++			flush_scheduled_work();
++			mutex_lock(&sm->associnfo.mutex);
+ 		}
+ 	}
+ 
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iD8DBQBGxGdR/ETPhpq3jKURAoDOAKCKgkzeYX2pR4TFnZ4unHN1tnPbegCfbpT7
-XHnXpUetncpeoGCX+XZIwIo=
-=ylzQ
------END PGP SIGNATURE-----
-
---=-ePkXdZFPogBeQNKPZl89--
-
+-- 
+Greetings Michael.
