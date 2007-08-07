@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4088 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753385AbXH3NPU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 09:15:20 -0400
-Date: Thu, 30 Aug 2007 08:38:49 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 1/5] Net: ath5k, split hw into hw, phy and initvals
-Message-ID: <20070830123849.GB5140@tuxdriver.com>
-References: <2713029743177393055@pripojeni.net> <20070828171034.GB29343@infradead.org> <40f31dec0708291850j2d35db6cu9de7c5f0a91e76f7@mail.gmail.com>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:44373
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750723AbXHGJ6S (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Aug 2007 05:58:18 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH stable] softmac: Fix deadlock of wx_set_essid with assoc work
+Date: Tue, 7 Aug 2007 11:57:20 +0200
+Cc: stable@kernel.org, John Linville <linville@tuxdriver.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless@vger.kernel.org
+References: <200708011253.06569.mb@bu3sch.de> <200708031250.51161.mb@bu3sch.de> <1186410230.28655.75.camel@johannes.berg>
+In-Reply-To: <1186410230.28655.75.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0708291850j2d35db6cu9de7c5f0a91e76f7@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200708071157.21105.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 30, 2007 at 04:50:01AM +0300, Nick Kossifidis wrote:
-> 2007/8/28, Christoph Hellwig <hch@infradead.org>:
+On Monday 06 August 2007 16:23:50 Johannes Berg wrote:
+> On Fri, 2007-08-03 at 12:50 +0200, Michael Buesch wrote:
+> 
+> > Ah, Ok. I didn't see that rtnl is locked there, too.
+> > cancel_delayed_work_sync could probably work. Care to test that?
+> 
+> It's harder than thought, runs into the next use of flush_scheduled_work
+> under rtnl. I think the only solution is to go with your patch and then
+> add an own single-threaded workqueue to softmac again and use that
+> everywhere instead of the global one; at least that way the rtnl doesn't
+> get into the way.
 
-> > ath5k_hw_phy.o should probably be ath5k_phy.o by conventions used by
-> > most drivers and ath5k_hw_inivals.o mights aswell be something like
-> > ath5k_init.o
+Yep, but this patch turns the bug from a
+"It will 100% deadlock all the time"
+into a
+"It might possibly deadlock, although unlikely"
+So it's a win for that crap softmac code.
 
-> If you check out the code you'll see i'm using the same convention
-> inside them, ath5k_hw* files contain hw related functions
-> (ath5k_hw_<name>) while driver code has ath5k_<name>. Also ath5k_init
-> is misleading, file acually includes initial register settings for
-
-I have to agree w/ Christoph -- the extra "_hw" in the names is just
-a bit unwieldy.
-
-John
-
-P.S.  "ath5k_initvals.c" seems acceptable to me.
 -- 
-John W. Linville
-linville@tuxdriver.com
+Greetings Michael.
