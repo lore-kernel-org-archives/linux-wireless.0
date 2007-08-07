@@ -1,29 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60758
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750982AbXH2AVX (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:65298 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761937AbXHGSB2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2007 20:21:23 -0400
-Date: Tue, 28 Aug 2007 17:21:21 -0700 (PDT)
-Message-Id: <20070828.172121.102575217.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: Please pull 'upstream-davem' branch of wireless-2.6
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20070828225029.GA2967@tuxdriver.com>
-References: <20070828225029.GA2967@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 7 Aug 2007 14:01:28 -0400
+Message-ID: <46B8B372.3020709@lwfinger.net>
+Date: Tue, 07 Aug 2007 13:01:22 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] bcm43xx-mac80211: Remove the stackdump in rfatt/bbatt  assertion
+References: <200708071815.09936.mb@bu3sch.de>
+In-Reply-To: <200708071815.09936.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 28 Aug 2007 18:50:29 -0400
+Michael Buesch wrote:
+> This removes the stackdump in the rfatt/bbatt assertion
+> to reduce verbosity, but it also increases the message log
+> level from "debug" to "error".
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-> And, of course, simply ask and I'll rebase on whatever is current when
-> you get to my poor pull request. :-)
+ACK: Larry Finger <Larry.Finger@lwfinger.net>
 
-You are perfect!  You emailed this to me exactly when I pushed
-the rebased net-2.6.24 tree to master.kernel.org :-)
+Michael - thanks for this.
 
-I applied everything as patches and pushed it out, thanks John.
+Larry
+
