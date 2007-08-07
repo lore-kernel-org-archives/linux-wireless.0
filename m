@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44843 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59049 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752678AbXHWQA7 (ORCPT
+	with ESMTP id S1758216AbXHGJrb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2007 12:00:59 -0400
-Subject: Re: [PATCH] Add iwlwifi wireless drivers (resend)
+	Tue, 7 Aug 2007 05:47:31 -0400
+Subject: Re: [RFC] allow device to stop packet mirror behaviour
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W.Linville" <linville@tuxdriver.com>,
-	Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>
-In-Reply-To: <1187328536.5763.137.camel@debian.sh.intel.com>
-References: <1187328536.5763.137.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ai2DUR9bcNxhy6jUK0TT"
-Date: Thu, 23 Aug 2007 18:01:23 +0200
-Message-Id: <1187884884.22725.0.camel@johannes.berg>
+To: netdev <netdev@vger.kernel.org>
+Cc: Andy Green <andy@warmcat.com>, David Miller <davem@davemloft.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1186475155.4067.17.camel@johannes.berg>
+References: <1186475155.4067.17.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 07 Aug 2007 10:27:07 +0200
+Message-Id: <1186475227.4067.19.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is the corresponding patch to mac80211.
 
---=-Ai2DUR9bcNxhy6jUK0TT
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 2007-08-17 at 13:28 +0800, Zhu Yi wrote:
-
-> This patch (against 2.6.23-rc3)
-
-+#if IWL =3D=3D 4965
-+	modes[G_11N].mode =3D MODE_ATHEROS_TURBOG;
-+	modes[G_11N].channels =3D channels;
-+	modes[G_11N].num_rates =3D 13;        /* OFDM & CCK */
-+	modes[G_11N].rates =3D rates;
-+	modes[G_11N].num_channels =3D 0;
-+
-+	modes[A_11N].mode =3D MODE_ATHEROS_TURBO;
-+	modes[A_11N].channels =3D &channels[ARRAY_SIZE(iwl_eeprom_band_1)];
-+	modes[A_11N].rates =3D &rates[4];
-+	modes[A_11N].num_rates =3D 9; /* just OFDM */
-+	modes[A_11N].num_channels =3D 0;
-+#endif
-
-What's that? Poor man's attempt to support 802.11n with a mac80211 that
-has no idea what 802.11n is?
+It marks all monitor type interfaces with IFF_NO_MIRROR the reasons for
+which I explained in the previous mail; it also marks the master device
+with IFF_NO_MIRROR so you don't see *any* packets on the master device
+(right now you see outgoing frames with 802.11 header.) We want to get
+rid of it anyway so making it a bit more useless yet seems like a good
+idea.
 
 johannes
 
---=-Ai2DUR9bcNxhy6jUK0TT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+---
+ net/mac80211/ieee80211.c       |    1 +
+ net/mac80211/ieee80211_iface.c |    2 ++
+ 2 files changed, 3 insertions(+)
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+--- wireless-dev.orig/net/mac80211/ieee80211_iface.c	2007-08-06 21:14:37.398164177 +0200
++++ wireless-dev/net/mac80211/ieee80211_iface.c	2007-08-06 21:15:02.078164177 +0200
+@@ -158,6 +158,7 @@ void ieee80211_if_set_type(struct net_de
+ 	int oldtype = sdata->type;
+ 
+ 	dev->hard_start_xmit = ieee80211_subif_start_xmit;
++	dev->flags &= ~IFF_NO_MIRROR;
+ 
+ 	sdata->type = type;
+ 	switch (type) {
+@@ -216,6 +217,7 @@ void ieee80211_if_set_type(struct net_de
+ 	case IEEE80211_IF_TYPE_MNTR:
+ 		dev->type = ARPHRD_IEEE80211_RADIOTAP;
+ 		dev->hard_start_xmit = ieee80211_monitor_start_xmit;
++		dev->flags |= IFF_NO_MIRROR;
+ 		break;
+ 	default:
+ 		printk(KERN_WARNING "%s: %s: Unknown interface type 0x%x",
+--- wireless-dev.orig/net/mac80211/ieee80211.c	2007-08-06 21:15:01.898164177 +0200
++++ wireless-dev/net/mac80211/ieee80211.c	2007-08-06 21:15:02.088164177 +0200
+@@ -5138,6 +5138,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(
+ 	mdev->stop = ieee80211_master_stop;
+ 	mdev->type = ARPHRD_IEEE80211;
+ 	mdev->hard_header_parse = header_parse_80211;
++	mdev->flags |= IFF_NO_MIRROR;
+ 
+ 	sdata->type = IEEE80211_IF_TYPE_AP;
+ 	sdata->dev = mdev;
 
-iD8DBQBGza9T/ETPhpq3jKURAnkpAJ9XUUF/XMEhHNpKAhvhF//rUGsrMgCcDb/Z
-tXipoiJEZhLBpeY3y/4luuA=
-=sIL0
------END PGP SIGNATURE-----
-
---=-Ai2DUR9bcNxhy6jUK0TT--
 
