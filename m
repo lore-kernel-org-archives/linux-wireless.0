@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4731 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751406AbXHAAfx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 20:35:53 -0400
-Date: Tue, 31 Jul 2007 20:29:27 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Daniel Drake <dsd@gentoo.org>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211 git tree reworked
-Message-ID: <20070801002927.GC4719@tuxdriver.com>
-References: <20070727175716.32242e3f@griffin.suse.cz> <46AFD024.1020708@gentoo.org>
+Received: from smtp.rutgers.edu ([128.6.72.243]:51374 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759320AbXHHDUt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Aug 2007 23:20:49 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: mac80211 IPv6 problems
+Date: Tue, 7 Aug 2007 20:19:03 -0700
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
+	jbenc@suse.cz, Michael Buesch <mb@bu3sch.de>,
+	Bcm43xx-dev@lists.berlios.de,
+	Larry Finger <larry.finger@lwfinger.net>
+References: <46b1fde0.b+weBDN75J0SPe2a%Larry.Finger@lwfinger.net> <200708030102.17358.flamingice@sourmilk.net> <20070806170500.GE6442@tuxdriver.com>
+In-Reply-To: <20070806170500.GE6442@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <46AFD024.1020708@gentoo.org>
+Content-Type: multipart/signed;
+  boundary="nextPart1501887.QnvLX6rT66";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200708072019.03635.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 31, 2007 at 08:13:24PM -0400, Daniel Drake wrote:
-> Jiri Benc wrote:
-> >- up-2.6 - this is a branch with patches I'd like to push to vanilla.
-> >  It contains, among other things, Johannes' restructuring patches. I'll
-> >  send a pull request later today.
-> 
-> John, will you be pulling this into wireless-dev anytime soon? I have 
-> some further mac80211 development work to do but am not sure which tree 
-> I should be working on. Also my patch titled "don't allow scanning in 
-> monitor mode" has got lost somewhere and I'm not sure whether it would 
-> be beneficial for me to re-submit based on Jiri/Johannes' restructuring.
+--nextPart1501887.QnvLX6rT66
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-It isn't lost, I've got it.  I haven't been in a hurry with
-2.6.24-destined patches, although I suppose I could have put it in
-wireless-dev.  As you know, of course, that exact state of wireless-dev
-is uncertain.
+On Monday 06 August 2007 10:05, John W. Linville wrote:
+> -		if (sdata->type != IEEE80211_IF_TYPE_STA) {
+> +		if (sdata->type != IEEE80211_IF_TYPE_STA ||
+> +		    (is_multicast_ether_addr(dst) &&
+> +		     !compare_ether_addr(src, dev->dev_addr)))
+>  			return TXRX_DROP;
+> -		}
+Looks fine to me, though I haven't tested.
 
-I do plan to adopt Jiri's git work.  I'm sorry I haven't got it
-prepared yet.  It might be worthwhile for you to reformulate your
-patch based on the restructuring.
+-Michael Wu
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+--nextPart1501887.QnvLX6rT66
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGuTYnT3Oqt9AH4aERArHyAJ9LL0Vn+DtiBpTLukHJM+pSVNkv6gCgm4Zi
+GoTFTQrq1kLdfVbvcpbL6PI=
+=nzqb
+-----END PGP SIGNATURE-----
+
+--nextPart1501887.QnvLX6rT66--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
