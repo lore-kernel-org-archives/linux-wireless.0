@@ -1,68 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35984 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757840AbXHALx3 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:55722
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S932856AbXHHBIw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2007 07:53:29 -0400
-Subject: Re: Rate control over multiple devices
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Andy Green <andy@warmcat.com>, linux-wireless@vger.kernel.org,
-	James Ketrenos <jketreno@linux.intel.com>
-In-Reply-To: <20070801134624.481eb856@griffin.suse.cz>
-References: <46AFB779.4040003@warmcat.com>
-	 <20070801004543.GD4719@tuxdriver.com>
-	 <1185960764.14279.2.camel@johannes.berg>
-	 <20070801134624.481eb856@griffin.suse.cz>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7c+Q/uvf/VsPCV3jXPWP"
-Date: Wed, 01 Aug 2007 13:54:15 +0200
-Message-Id: <1185969255.21901.11.camel@johannes.berg>
+	Tue, 7 Aug 2007 21:08:52 -0400
+Date: Tue, 07 Aug 2007 18:08:52 -0700 (PDT)
+Message-Id: <20070807.180852.68037556.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: Please pull 'fixes-davem' branch of wireless-2.6
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20070806201321.GI6442@tuxdriver.com>
+References: <20070806201321.GI6442@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 6 Aug 2007 16:13:21 -0400
 
---=-7c+Q/uvf/VsPCV3jXPWP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> The following changes since commit d4ac2477fad0f2680e84ec12e387ce67682c5c13:
+>   Linus Torvalds (1):
+>         Linux 2.6.23-rc2
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
 
-On Wed, 2007-08-01 at 13:46 +0200, Jiri Benc wrote:
-
-> Exactly. This is one of things that should be solved in the patch
-> mentioned below.
-
-I suppose you mean this patch
-http://article.gmane.org/gmane.linux.kernel.wireless.general/2303
-
-> > Apply the patch already? IIRC James made a pretty good one around that
-> > time to let the driver choose a default name as part of the hw structur=
-e
-> > it registers and it can be NULL for the default.
-> >=20
-> > Of course, in a perfect world we'd have a 'default' rate control settin=
-g
-> > somewhere and apply that for drivers that have rate_control=3D=3DNULL, =
-while
-> > default would default to 'simple' to avoid the issue above.
->=20
-> I'd really like to see that in the patch. Seems to be a real issue.
-
-Except that we have no API for that (should be in cfg80211.)
-
-johannes
-
---=-7c+Q/uvf/VsPCV3jXPWP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGsHRn/ETPhpq3jKURApJ9AJ4kFBXOiALvsBxTlYfuBUkopcNUDACeMEra
-XDuiVLhMDxNCHPkdR5McZ3o=
-=DqQd
------END PGP SIGNATURE-----
-
---=-7c+Q/uvf/VsPCV3jXPWP--
-
+Pulled, thanks John.
