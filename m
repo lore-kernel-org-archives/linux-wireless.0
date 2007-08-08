@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ftp.linux-mips.org ([194.74.144.162]:57242 "EHLO
-	ftp.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762977AbXHWM22 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41608 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753057AbXHHJOK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2007 08:28:28 -0400
-Received: from localhost.localdomain ([127.0.0.1]:7110 "EHLO
-	dl5rb.ham-radio-op.net") by ftp.linux-mips.org with ESMTP
-	id S20023790AbXHWM22 (ORCPT <rfc822;linux-wireless@vger.kernel.org>
-	+ 3 others); Thu, 23 Aug 2007 13:28:28 +0100
-Date: Wed, 22 Aug 2007 23:03:21 +0100
-From: Ralf Baechle <ralf@linux-mips.org>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, source@mvista.com,
-	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
-	dtor@mail.ru, linux-input@atrey.karlin.mff.cuni.cz,
-	netdev@vger.kernel.org, James.Bottomley@SteelEye.com,
-	linux-scsi@vger.kernel.org, gtolstolytkin@ru.mvista.com,
-	vitalywool@gmail.com, dsaxena@plexity.net,
-	linux-mips@linux-mips.org, mchehab@infradead.org,
-	video4linux-list@redhat.com, jbenc@suse.cz,
-	flamingice@sourmilk.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 8/9] define global BIT macro
-Message-ID: <20070822220321.GA4473@linux-mips.org>
-References: <737828602404912540@wsc.cz> <428714662539710215@wsc.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <428714662539710215@wsc.cz>
+	Wed, 8 Aug 2007 05:14:10 -0400
+Subject: Re: [RFC] allow device to stop packet mirror behaviour
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, andy@warmcat.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070807.180607.116354128.davem@davemloft.net>
+References: <1186475155.4067.17.camel@johannes.berg>
+	 <20070807.180607.116354128.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zqmS7C6YYBPr5fhexhkT"
+Date: Wed, 08 Aug 2007 11:14:01 +0200
+Message-Id: <1186564441.11717.5.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 18, 2007 at 11:44:12AM +0200, Jiri Slaby wrote:
 
-> define global BIT macro
-> 
-> move all local BIT defines to the new globally define macro.
-> 
-> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+--=-zqmS7C6YYBPr5fhexhkT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Acked-by: Ralf Baechle <ralf@linux-mips.org>
+On Tue, 2007-08-07 at 18:06 -0700, David Miller wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Tue, 07 Aug 2007 10:25:55 +0200
+>=20
+> > The only way to solve this problem therefore seems to be to suppress th=
+e
+> > mirroring out of the packet by dev_queue_xmit_nit(). The patch below
+> > does that by way of adding a new netdev flag.
+>=20
+> Multicast packets also get looped back in a similar manner in the ipv4
+> code.  These will also be seen twice due to this issue.
 
-for the MACE ethernet and MIPS bits.
+I don't think these other places are of any interest because of the
+radiotap+802.11 framing on the devices where it is relevant to us; you
+can't actually add an IP route to a monitor interface as far as I can
+tell.
 
-  Ralf
+johannes
+
+--=-zqmS7C6YYBPr5fhexhkT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGuYlZ/ETPhpq3jKURAlZTAJ4vllyzg0QZCC6vIPFcUoBnfTCndgCgnLR8
+dY0FGxSmBgMolwL3nMAI3z8=
+=fAR9
+-----END PGP SIGNATURE-----
+
+--=-zqmS7C6YYBPr5fhexhkT--
+
