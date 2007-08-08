@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35941 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751169AbXH0OoV (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:13401 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752983AbXHHH6A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Aug 2007 10:44:21 -0400
-Subject: Re: [PATCH 00/15] more key handling updates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+	Wed, 8 Aug 2007 03:58:00 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] mac80211: probe for hidden SSIDs in pre-auth scan
+Date: Wed, 8 Aug 2007 00:56:11 -0700
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20070824122705.549190000@sipsolutions.net>
-References: <20070824122705.549190000@sipsolutions.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aUZevWP3Hnc0fooBIVGo"
-Date: Mon, 27 Aug 2007 16:45:30 +0200
-Message-Id: <1188225930.7837.32.camel@johannes.berg>
-Mime-Version: 1.0
+References: <20070807203315.GG3330@tuxdriver.com>
+In-Reply-To: <20070807203315.GG3330@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1265889.lsN5W6nE26";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200708080056.16195.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--nextPart1265889.lsN5W6nE26
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
---=-aUZevWP3Hnc0fooBIVGo
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Tuesday 07 August 2007 13:33, John W. Linville wrote:
+> The ternary conditionals are a bit ugly.  I guess I could recode it
+> with temp vars initialized before calling ieee80211_sta_start_scan.
+>
+Something more like:
 
-On Fri, 2007-08-24 at 14:27 +0200, Johannes Berg wrote:
-> This patch series updates mac80211's and cfg80211's key
-> handling and adds some documentation (more to follow.)
+if (ifsta->auto_ssid_sel && ifsta->ssid_len)
+  ieee80211_sta_start_scan(dev, NULL, 0);
+else
+  ieee80211_sta_start_scan(dev, ifsta->ssid, ifsta->ssid_len);
 
-Ok, I found the bug Larry reported, will repost tomorrow.
+would be better.
 
-johannes
+-Michael Wu
 
---=-aUZevWP3Hnc0fooBIVGo
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart1265889.lsN5W6nE26
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBG0uOK/ETPhpq3jKURAsDFAJ4qdHJ9gbTxZRMfMwB2QhlyeQLc2gCgoMOW
-a2mChwJCfAmQh1fShA3sld8=
-=SwNH
+iD8DBQBGuXcgT3Oqt9AH4aERAoEbAKDcEOxpjwXf26QV8iusYSu+tXXnjACeNuBn
+yX7L3de/v0lZpAoWQxhSObg=
+=/H13
 -----END PGP SIGNATURE-----
 
---=-aUZevWP3Hnc0fooBIVGo--
-
+--nextPart1265889.lsN5W6nE26--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
