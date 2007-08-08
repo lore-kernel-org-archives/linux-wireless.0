@@ -1,51 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57053 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753331AbXHXKMs (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:12769 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753632AbXHHGsM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2007 06:12:48 -0400
-Subject: Re: [RFC 09/11] mac80211, iwlwifi: remove atheros turbo modes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1187942429.13078.104.camel@debian.sh.intel.com>
-References: <20070823164500.998912000@sipsolutions.net>
-	 <20070823164524.799041000@sipsolutions.net>
-	 <1187942429.13078.104.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-v9OZHSut0LdhYCEmIHVy"
-Date: Fri, 24 Aug 2007 12:09:51 +0200
-Message-Id: <1187950192.24933.7.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 8 Aug 2007 02:48:12 -0400
+Received: from lin01.mn-solutions.de (pD95FA8BF.dip0.t-ipconnect.de [217.95.168.191])
+	by s131.mittwaldmedien.de (Postfix) with ESMTP id A2FCA8B02B1
+	for <linux-wireless@vger.kernel.org>; Wed,  8 Aug 2007 08:48:11 +0200 (CEST)
+Received: from mnz66.mn-solutions.de.mn-solutions.de (mnz66.mn-logistik.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 0BF6B1E002B
+	for <linux-wireless@vger.kernel.org>; Wed,  8 Aug 2007 08:48:06 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Marvell pci wifi chips
+Date: Wed, 8 Aug 2007 08:48:12 +0200
+References: <a728f9f90708070921x13c1a9fem8f7bbf3fe77756d@mail.gmail.com>
+In-Reply-To: <a728f9f90708070921x13c1a9fem8f7bbf3fe77756d@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708080848.12531.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+- marvell GPL driver
+> (http://johannes.sipsolutions.net/files/marvell.tar.bz2)
 
---=-v9OZHSut0LdhYCEmIHVy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I looked at this driver. Yes, it seems to be for a PCI Marvell 
+WLAN chip.
 
-On Fri, 2007-08-24 at 16:00 +0800, Zhu Yi wrote:
+But looking at the registers (e.g. bit definitions), this driver 
+seems to have a very (!) different architecture to the 
+CF/SDIO/USB based 83xx chips the libertas driver supports.
 
-> ACK. iwlwifi doesn't support turbo mode. The code was there for
-> completeness. I agree with the removal.
 
-Good. I noticed another problems with this patch that I'll be fixing,
-but I am still curious why you define channels with turbo that are named
-11N or such?
-
-johannes
-
---=-v9OZHSut0LdhYCEmIHVy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGzq5v/ETPhpq3jKURAhDuAKCV+VEUrqX4Kf2mXWpl9XDXh44hrQCfbPZ0
-4bh4cXgotTi/oJrBe6JH1ng=
-=/Jx6
------END PGP SIGNATURE-----
-
---=-v9OZHSut0LdhYCEmIHVy--
-
+So feel free to grab this driver, push it in shape and submit it 
+to the Linux kernel. It's GPL, after all :-)
