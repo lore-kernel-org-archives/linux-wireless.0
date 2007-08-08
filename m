@@ -1,75 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58426 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758989AbXHUPKR (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.171]:19127 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762396AbXHHWE4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 11:10:17 -0400
-Message-Id: <20070821150039.396311000@sipsolutions.net>
-References: <20070821145905.689978000@sipsolutions.net>
-Date: Tue, 21 Aug 2007 16:59:08 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 03/27] mac80211: avoid copying packets to interfaces that  are down
-Mime-Version: 1.0
+	Wed, 8 Aug 2007 18:04:56 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so276067ugf
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2007 15:04:54 -0700 (PDT)
+To: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: arm allmodconfig
+Date: Thu, 9 Aug 2007 00:10:12 +0200
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+References: <20070808145705.756597b0.akpm@linux-foundation.org>
+In-Reply-To: <20070808145705.756597b0.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708090010.12347.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Woodhouse noticed that under some circumstances the number of slab
-allocations kept growing. After looking a bit, this seemed to happen
-when you had a management mode interface that was *down*.
+<snip>
 
-The reason for this is that when the device is down, all management
-frames get queued to the in-kernel MLME (via ieee80211_sta_rx_mgmt) but
-then the sta work is invoked but doesn't run when the netif is down.
-When you then bring the interface up, all such frames are freed, but if
-you change the mode all of them are lost because the skb queue is
-reinitialised as soon as you go back to managed mode. The skb queue is
-correctly cleared when the interface is brought down, but the code
-doesn't account for the fact that it may be filled while it is not up.
+> drivers/net/wireless/rt61pci.c:2034: warning: comparison is always false due to limited range of data type
+> drivers/net/wireless/rt61pci.c:2047: warning: comparison is always false due to limited range of data type
+> drivers/net/wireless/rt61pci.c:2050: warning: comparison is always false due to limited range of data type
 
-This patch should fix the issue by simply ignoring all interfaces that
-are down when going through the RX handlers.
+Thanks, will fix these asap.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
----
- net/mac80211/ieee80211.c |    9 +++++++++
- net/mac80211/rx.c        |    3 +++
- 2 files changed, 12 insertions(+)
-
---- wireless-dev.orig/net/mac80211/rx.c	2007-08-21 14:39:40.425923881 +0200
-+++ wireless-dev/net/mac80211/rx.c	2007-08-21 14:39:42.675923881 +0200
-@@ -1521,6 +1521,9 @@ void __ieee80211_rx(struct ieee80211_hw 
- 	list_for_each_entry(sdata, &local->sub_if_list, list) {
- 		rx.u.rx.ra_match = 1;
- 
-+		if (!netif_running(sdata->dev))
-+			continue;
-+
- 		prepres = prepare_for_handlers(sdata, bssid, &rx, hdr);
- 		/* prepare_for_handlers can change sta */
- 		sta = rx.sta;
---- wireless-dev.orig/net/mac80211/ieee80211.c	2007-08-21 14:39:41.445923881 +0200
-+++ wireless-dev/net/mac80211/ieee80211.c	2007-08-21 14:39:42.675923881 +0200
-@@ -494,7 +494,16 @@ static void ieee80211_if_shutdown(struct
- 		sdata->u.sta.state = IEEE80211_DISABLED;
- 		del_timer_sync(&sdata->u.sta.timer);
- 		del_timer_sync(&sdata->u.sta.admit_timer);
-+		/*
-+		 * Holding the sub_if_lock for writing here blocks
-+		 * out the receive path and makes sure it's not
-+		 * currently processing a packet that may get
-+		 * added to the queue.
-+		 */
-+		write_lock_bh(&local->sub_if_lock);
- 		skb_queue_purge(&sdata->u.sta.skb_queue);
-+		write_unlock_bh(&local->sub_if_lock);
-+
- 		if (!local->ops->hw_scan &&
- 		    local->scan_dev == sdata->dev) {
- 			local->sta_scanning = 0;
-
--- 
+Ivo
 
