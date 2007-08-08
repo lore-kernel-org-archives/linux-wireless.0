@@ -1,32 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23242 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752661AbXHTCnc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Aug 2007 22:43:32 -0400
-Subject: Re: [PATCH] Add iwlwifi wireless drivers (resend)
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W.Linville" <linville@tuxdriver.com>,
-	Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>
-In-Reply-To: <1187350871.23489.175.camel@johannes.berg>
-References: <1187328536.5763.137.camel@debian.sh.intel.com>
-	 <1187350641.23489.172.camel@johannes.berg>
-	 <1187350871.23489.175.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 20 Aug 2007 10:39:00 +0800
-Message-Id: <1187577540.5763.226.camel@debian.sh.intel.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:45962 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754389AbXHHWcq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Aug 2007 18:32:46 -0400
+Date: Wed, 8 Aug 2007 15:32:08 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+Subject: Re: arm allmodconfig
+Message-Id: <20070808153208.49fb7211.akpm@linux-foundation.org>
+In-Reply-To: <20070808152606.9ea3010f.akpm@linux-foundation.org>
+References: <20070808145705.756597b0.akpm@linux-foundation.org>
+	<200708090013.06846.mb@bu3sch.de>
+	<20070808152606.9ea3010f.akpm@linux-foundation.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-08-17 at 13:41 +0200, Johannes Berg wrote:
-> Ah, found it in iwlwifi.git, but it's mostly a list of TODOs and
-> documentation that only applies to the out-of-tree version, except for
-> the legalese. 
 
-Yeah, the document is far lagged behind the code so I didn't include it
-this time.
+m68k allmodconfig:
 
-Thanks,
--yi
+drivers/ssb/main.c: In function 'ssb_ssb_read16':
+drivers/ssb/main.c:489: error: implicit declaration of function 'readw'
+drivers/ssb/main.c: In function 'ssb_ssb_read32':
+drivers/ssb/main.c:497: error: implicit declaration of function 'readl'
+drivers/ssb/main.c: In function 'ssb_ssb_write16':
+drivers/ssb/main.c:505: error: implicit declaration of function 'writew'
+drivers/ssb/main.c: In function 'ssb_ssb_write32':
+drivers/ssb/main.c:513: error: implicit declaration of function 'writel'
+
+Probably a dependency on HAS_IOMEM will fix that uup.
