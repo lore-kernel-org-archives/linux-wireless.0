@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:50322 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756421AbXHTRg2 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41659 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758020AbXHHJPC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2007 13:36:28 -0400
-Message-ID: <46C9D11B.4020001@lwfinger.net>
-Date: Mon, 20 Aug 2007 12:36:27 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211: fix software decryption with b43legacy
-References: <1187346385.23489.157.camel@johannes.berg>	 <46C5CC0D.2040609@lwfinger.net> <1187384230.6090.7.camel@johannes.berg>	 <46C612E8.4020604@lwfinger.net> <1187387215.6090.13.camel@johannes.berg>	 <46C64777.1000602@lwfinger.net> <1187453173.6090.33.camel@johannes.berg>	 <46C752FE.4030706@lwfinger.net> <1187611793.6090.102.camel@johannes.berg>
-In-Reply-To: <1187611793.6090.102.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 8 Aug 2007 05:15:02 -0400
+Subject: Re: [PATCH] mac80211: fix tx status frame code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: linux-wireless@vger.kernel.org, jbenc <jbenc@suse.cz>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200708072013.28765.flamingice@sourmilk.net>
+References: <1186475037.4067.14.camel@johannes.berg>
+	 <1186480510.4067.35.camel@johannes.berg>
+	 <200708072013.28765.flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IUKFcr3D+ZLxQIzyAxnG"
+Date: Wed, 08 Aug 2007 11:14:25 +0200
+Message-Id: <1186564465.11717.7.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sat, 2007-08-18 at 15:13 -0500, Larry Finger wrote:
-> 
->> The rest of the call trace is available if needed. The crash occurred when ieee80211_key_free was
->> trying to unlock the mutex key_idx. I added printk's to dump the pointer to sdata at the point where 
->> that mutex is initialized and where the key is freed. The mutex that errs was inited.
-> 
-> Ho humm, yes, I'm dumb, patch below but I'll fold it into my key patch.
-> Sorry about that, classic use-after-free condition here.
 
-The patch fixed the crash. The reason for the "lost AP" is that WPA isn't working for b43legacy, 
-with or without your patches. It used to work and I have no idea why it fails now.
+--=-IUKFcr3D+ZLxQIzyAxnG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
+On Tue, 2007-08-07 at 20:13 -0700, Michael Wu wrote:
+> On Tuesday 07 August 2007 02:55, Johannes Berg wrote:
+> > This should probably go to .23 as well as -stable.
+> >
+> -stable is for .22.. I don't think outgoing frame monitoring was in 2.6.2=
+2.
 
-Larry
+Good point, we didn't have that at that time.
+
+johannes
+
+--=-IUKFcr3D+ZLxQIzyAxnG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGuYlx/ETPhpq3jKURAvafAJ97FNVxjXKEkmsmHkvNHxNvynpwOQCfeU6g
+6eOrltOD5wXQTpgblF5i8W4=
+=iDaI
+-----END PGP SIGNATURE-----
+
+--=-IUKFcr3D+ZLxQIzyAxnG--
 
