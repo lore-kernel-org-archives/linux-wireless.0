@@ -1,287 +1,475 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47386 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761604AbXHUPEE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 11:04:04 -0400
-Message-Id: <20070821150047.420655000@sipsolutions.net>
-References: <20070821145905.689978000@sipsolutions.net>
-Date: Tue, 21 Aug 2007 16:59:23 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 18/27] mac80211: fix software decryption
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:46134 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758966AbXHHHiJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Aug 2007 03:38:09 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 21/28] iwlwifi: remove WLAN_FC_GET_TYPE macros
+Date: Wed,  8 Aug 2007 15:33:38 +0800
+Message-Id: <11865584754153-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11865584733882-git-send-email-yi.zhu@intel.com>
+References: <11865584251026-git-send-email-yi.zhu@intel.com>
+ <11865584292234-git-send-email-yi.zhu@intel.com>
+ <1186558432932-git-send-email-yi.zhu@intel.com>
+ <11865584342308-git-send-email-yi.zhu@intel.com>
+ <11865584363863-git-send-email-yi.zhu@intel.com>
+ <11865584392893-git-send-email-yi.zhu@intel.com>
+ <11865584413292-git-send-email-yi.zhu@intel.com>
+ <1186558443548-git-send-email-yi.zhu@intel.com>
+ <11865584452614-git-send-email-yi.zhu@intel.com>
+ <11865584473732-git-send-email-yi.zhu@intel.com>
+ <11865584503648-git-send-email-yi.zhu@intel.com>
+ <11865584521358-git-send-email-yi.zhu@intel.com>
+ <11865584543903-git-send-email-yi.zhu@intel.com>
+ <11865584562811-git-send-email-yi.zhu@intel.com>
+ <11865584583336-git-send-email-yi.zhu@intel.com>
+ <11865584603865-git-send-email-yi.zhu@intel.com>
+ <11865584631842-git-send-email-yi.zhu@intel.com>
+ <11865584661209-git-send-email-yi.zhu@intel.com>
+ <11865584683474-git-send-email-yi.zhu@intel.com>
+ <1186558470949-git-send-email-yi.zhu@intel.com>
+ <11865584733882-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When doing key selection for software decryption, mac80211 gets
-a few things wrong: it always uses pairwise keys if configured,
-even if the frame is addressed to a multicast address. Also, it
-doesn't allow using a key index of zero if a pairwise key has
-also been found.
+Use IEEE80211_FCTL_FTYPE directly. Also make some inline function unlined.
 
-This patch changes the key selection code to be (more) in line
-with the 802.11 specification. I have confirmed that with this,
-multicast frames are correctly decrypted and I've tested with
-WEP as well.
-
-While at it, I've cleaned up the semantics of the hardware flags
-IEEE80211_HW_WEP_INCLUDE_IV and IEEE80211_HW_DEVICE_HIDES_WEP
-and clarified them in the mac80211.h header; it is also now
-allowed to set the IEEE80211_HW_DEVICE_HIDES_WEP option even if
-it only applies to frames that have been decrypted by the hw,
-unencrypted frames must be dropped but encrypted frames that
-the hardware couldn't handle can be passed up unmodified.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- include/net/mac80211.h |   37 +++++++++++---
- net/mac80211/rx.c      |  125 ++++++++++++++++++++++++++++++-------------------
- net/mac80211/wpa.c     |    7 +-
- 3 files changed, 112 insertions(+), 57 deletions(-)
+ drivers/net/wireless/iwl-3945.c    |    9 ++-
+ drivers/net/wireless/iwl-4965.c    |   14 +++--
+ drivers/net/wireless/iwl-base.c    |   78 ++++++++++++++++++++---
+ drivers/net/wireless/iwl-helpers.h |  122 ++++++++----------------------------
+ drivers/net/wireless/iwlwifi.h     |    1 +
+ 5 files changed, 111 insertions(+), 113 deletions(-)
 
---- wireless-dev.orig/net/mac80211/rx.c	2007-08-21 15:23:31.625923881 +0200
-+++ wireless-dev/net/mac80211/rx.c	2007-08-21 15:29:55.865923881 +0200
-@@ -317,52 +317,83 @@ static ieee80211_txrx_result
- ieee80211_rx_h_load_key(struct ieee80211_txrx_data *rx)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
--	int always_sta_key;
-+	int keyidx;
-+	int hdrlen;
-+	int trying_wep = 0;
-+
-+	/*
-+	 * Key selection 101
-+	 *
-+	 * There are three types of keys:
-+	 *  - GTK (group keys)
-+	 *  - PTK (pairwise keys)
-+	 *  - STK (station-to-station pairwise keys)
-+	 *
-+	 * When selecting a key, we have to distinguish between multicast
-+	 * (including broadcast) and unicast frames, the latter can only
-+	 * use PTKs and STKs while the former always use GTKs. Unless, of
-+	 * course, actual WEP keys ("pre-RSNA") are used, then unicast
-+	 * frames can also use key indizes like GTKs. Hence, if we don't
-+	 * have a PTK/STK we check the key index for a WEP key.
-+	 *
-+	 * There is also a slight problem in IBSS mode: GTKs are negotiated
-+	 * with each station, that is something we don't currently handle.
-+	 */
- 
--	if (rx->sdata->type == IEEE80211_IF_TYPE_STA)
--		always_sta_key = 0;
--	else
--		always_sta_key = 1;
-+	if (!(rx->fc & IEEE80211_FCTL_PROTECTED))
-+		return TXRX_CONTINUE;
- 
--	if (rx->sta && rx->sta->key && always_sta_key) {
--		rx->key = rx->sta->key;
-+	/*
-+	 * No point in finding a key if the frame is neither
-+	 * addressed to us nor a multicast frame.
-+	 */
-+	if (!rx->u.rx.ra_match)
-+		return TXRX_DROP;
-+
-+	if (is_multicast_ether_addr(hdr->addr1) || !rx->sta) {
-+ find_by_index:
-+		/*
-+		 * The device doesn't give us the IV so won't be
-+		 * able to look up the key. That's ok though, we
-+		 * don't need to decrypt the frame, we just won't
-+		 * be able to keep statistics accurate.
-+		 * Except for key threshold notifications, should
-+		 * we somehow allow the driver to tell us which key
-+		 * the hardware used if this flag is set?
-+		 */
-+		if (!(rx->local->hw.flags & IEEE80211_HW_WEP_INCLUDE_IV))
-+			return TXRX_CONTINUE;
-+
-+		hdrlen = ieee80211_get_hdrlen(rx->fc);
-+
-+		if (rx->skb->len < 8 + hdrlen)
-+			/* COUNT THIS? */
-+			return TXRX_DROP;
-+		/*
-+		 * no need to call ieee80211_wep_get_keyidx,
-+		 * it verifies a bunch of things we've done already
-+		 */
-+		keyidx = rx->skb->data[hdrlen + 3] >> 6;
-+
-+		/*
-+		 * TODO: handle IBSS! We can have per-STA group keys there!
-+		 */
-+		rx->key = rx->sdata->keys[keyidx];
-+
-+		/*
-+		 * If we got here for WEP, make sure we got WEP
-+		 */
-+		if (trying_wep && rx->key && rx->key->alg != ALG_WEP)
-+			rx->key = NULL;
- 	} else {
--		if (rx->sta && rx->sta->key)
--			rx->key = rx->sta->key;
--		else
--			rx->key = rx->sdata->default_key;
--
--		if ((rx->local->hw.flags & IEEE80211_HW_WEP_INCLUDE_IV) &&
--		    rx->fc & IEEE80211_FCTL_PROTECTED) {
--			int keyidx = ieee80211_wep_get_keyidx(rx->skb);
--
--			if (keyidx >= 0 && keyidx < NUM_DEFAULT_KEYS &&
--			    (!rx->sta || !rx->sta->key || keyidx > 0))
--				rx->key = rx->sdata->keys[keyidx];
--
--			if (!rx->key) {
--				if (!rx->u.rx.ra_match)
--					return TXRX_DROP;
--				if (net_ratelimit())
--					printk(KERN_DEBUG "%s: RX WEP frame "
--					       "with unknown keyidx %d "
--					       "(A1=" MAC_FMT
--					       " A2=" MAC_FMT
--					       " A3=" MAC_FMT ")\n",
--					       rx->dev->name, keyidx,
--					       MAC_ARG(hdr->addr1),
--					       MAC_ARG(hdr->addr2),
--					       MAC_ARG(hdr->addr3));
--				/*
--				 * TODO: notify userspace about this
--				 * via cfg/nl80211
--				 */
--				return TXRX_DROP;
--			}
-+		rx->key = rx->sta->key;
-+		if (!rx->key) {
-+			trying_wep = 1;
-+			goto find_by_index;
- 		}
+diff --git a/drivers/net/wireless/iwl-3945.c b/drivers/net/wireless/iwl-3945.c
+index 6cec308..53fba5d 100644
+--- a/drivers/net/wireless/iwl-3945.c
++++ b/drivers/net/wireless/iwl-3945.c
+@@ -395,9 +395,10 @@ static void iwl3945_rx_reply_rx(struct iwl_priv *priv,
+ 		priv->last_rx_noise = stats.noise;
  	}
  
--	if (rx->fc & IEEE80211_FCTL_PROTECTED && rx->key && rx->u.rx.ra_match) {
-+	if (rx->key && rx->u.rx.ra_match) {
- 		rx->key->tx_rx_count++;
- 		if (unlikely(rx->local->key_tx_rx_threshold &&
- 			     rx->key->tx_rx_count >
-@@ -520,10 +551,6 @@ ieee80211_rx_h_wep_weak_iv_detection(str
- static ieee80211_txrx_result
- ieee80211_rx_h_wep_decrypt(struct ieee80211_txrx_data *rx)
- {
--	/* If the device handles decryption totally, skip this test */
--	if (rx->local->hw.flags & IEEE80211_HW_DEVICE_HIDES_WEP)
--		return TXRX_CONTINUE;
--
- 	if ((rx->key && rx->key->alg != ALG_WEP) ||
- 	    !(rx->fc & IEEE80211_FCTL_PROTECTED) ||
- 	    ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA &&
-@@ -875,8 +902,14 @@ ieee80211_rx_h_802_1x_pae(struct ieee802
- static ieee80211_txrx_result
- ieee80211_rx_h_drop_unencrypted(struct ieee80211_txrx_data *rx)
- {
--	/*  If the device handles decryption totally, skip this test */
--	if (rx->local->hw.flags & IEEE80211_HW_DEVICE_HIDES_WEP)
-+	/*
-+	 * Pass through unencrypted frames if the hardware might have
-+	 * decrypted them already without telling us, but that can only
-+	 * be true if we either didn't find a key or the found key is
-+	 * uploaded to the hardware.
-+	 */
-+	if ((rx->local->hw.flags & IEEE80211_HW_DEVICE_HIDES_WEP) &&
-+	    (!rx->key || !rx->key->force_sw_encrypt))
- 		return TXRX_CONTINUE;
+-	switch (WLAN_FC_GET_TYPE(le16_to_cpu(header->frame_control))) {
++	switch (le16_to_cpu(header->frame_control) & IEEE80211_FCTL_FTYPE) {
+ 	case IEEE80211_FTYPE_MGMT:
+-		switch (WLAN_FC_GET_STYPE(le16_to_cpu(header->frame_control))) {
++		switch (le16_to_cpu(header->frame_control) &
++			IEEE80211_FCTL_STYPE) {
+ 		case IEEE80211_STYPE_PROBE_RESP:
+ 		case IEEE80211_STYPE_BEACON:{
+ 				/* If this is a beacon or probe response for
+@@ -632,8 +633,8 @@ void iwl_hw_build_tx_cmd_rate(struct iwl_priv *priv,
+ 	if (priv->data_retry_limit != -1)
+ 		data_retry_limit = priv->data_retry_limit;
  
- 	/* Drop unencrypted frames if key is set. */
---- wireless-dev.orig/include/net/mac80211.h	2007-08-21 15:24:26.015923881 +0200
-+++ wireless-dev/include/net/mac80211.h	2007-08-21 15:28:19.455923881 +0200
-@@ -1,7 +1,9 @@
- /*
-- * Low-level hardware driver -- IEEE 802.11 driver (80211.o) interface
-+ * mac80211 <-> driver interface
-+ *
-  * Copyright 2002-2005, Devicescape Software, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-+ * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
+-	if (WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT) {
+-		switch (WLAN_FC_GET_STYPE(fc)) {
++	if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) {
++		switch (fc & IEEE80211_FCTL_STYPE) {
+ 		case IEEE80211_STYPE_AUTH:
+ 		case IEEE80211_STYPE_DEAUTH:
+ 		case IEEE80211_STYPE_ASSOC_REQ:
+diff --git a/drivers/net/wireless/iwl-4965.c b/drivers/net/wireless/iwl-4965.c
+index 76c0c98..631bd19 100644
+--- a/drivers/net/wireless/iwl-4965.c
++++ b/drivers/net/wireless/iwl-4965.c
+@@ -2655,8 +2655,10 @@ void iwl_hw_build_tx_cmd_rate(struct iwl_priv *priv,
+ 	if (priv->data_retry_limit != -1)
+ 		data_retry_limit = priv->data_retry_limit;
+ 
+-	if (WLAN_FC_GET_TYPE(hdr->frame_control) == IEEE80211_FTYPE_MGMT) {
+-		switch (WLAN_FC_GET_STYPE(hdr->frame_control)) {
++	if ((le16_to_cpu(hdr->frame_control) & IEEE80211_FCTL_FTYPE)
++			== IEEE80211_FTYPE_MGMT) {
++		switch (le16_to_cpu(hdr->frame_control) &
++			IEEE80211_FCTL_STYPE) {
+ 		case IEEE80211_STYPE_AUTH:
+ 		case IEEE80211_STYPE_DEAUTH:
+ 		case IEEE80211_STYPE_ASSOC_REQ:
+@@ -3233,7 +3235,7 @@ int iwl4965_tx_cmd(struct iwl_priv *priv, struct iwl_cmd *out_cmd,
+ 	unicast = !is_multicast_ether_addr(hdr->addr1);
+ 
+ 	fc = le16_to_cpu(hdr->frame_control);
+-	if (WLAN_FC_GET_TYPE(fc) != IEEE80211_FTYPE_DATA)
++	if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
+ 		is_data = 0;
+ 
+ 	memcpy(&cmd, &(out_cmd->cmd.tx), sizeof(struct iwl_tx_cmd));
+@@ -3896,13 +3898,13 @@ static void iwl4965_rx_reply_rx(struct iwl_priv *priv,
+ 	}
+ 
+ 	fc = le16_to_cpu(header->frame_control);
+-	switch (WLAN_FC_GET_TYPE(fc)) {
++	switch (fc & IEEE80211_FCTL_FTYPE) {
+ 	case IEEE80211_FTYPE_MGMT:
+ 
+ 		if (priv->iw_mode == IEEE80211_IF_TYPE_AP)
+ 			iwl4965_update_ps_mode(priv, fc  & IEEE80211_FCTL_PM,
+ 						header->addr2);
+-		switch (WLAN_FC_GET_STYPE(fc)) {
++		switch (fc & IEEE80211_FCTL_STYPE) {
+ 		case IEEE80211_STYPE_PROBE_RESP:
+ 		case IEEE80211_STYPE_BEACON:
+ 			if ((priv->iw_mode == IEEE80211_IF_TYPE_STA &&
+@@ -3990,7 +3992,7 @@ static void iwl4965_rx_reply_rx(struct iwl_priv *priv,
+ 
+ 	case IEEE80211_FTYPE_CTL:
+ #ifdef CONFIG_IWLWIFI_HT_AGG
+-		switch (WLAN_FC_GET_STYPE(fc)) {
++		switch (fc & IEEE80211_FCTL_STYPE) {
+ 		case IEEE80211_STYPE_BACK_REQ:
+ 			IWL_DEBUG_HT("IEEE80211_STYPE_BACK_REQ arrived\n");
+ 			iwl4965_handle_data_packet(priv, 0, include_phy,
+diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
+index 7514928..efd4762 100644
+--- a/drivers/net/wireless/iwl-base.c
++++ b/drivers/net/wireless/iwl-base.c
+@@ -122,6 +122,68 @@ MODULE_VERSION(DRV_VERSION);
+ MODULE_AUTHOR(DRV_COPYRIGHT);
+ MODULE_LICENSE("GPL");
+ 
++__le16 *ieee80211_get_qos_ctrl(struct ieee80211_hdr *hdr)
++{
++	u16 fc = le16_to_cpu(hdr->frame_control);
++	int hdr_len = ieee80211_get_hdrlen(fc);
++
++	if ((fc & 0x00cc) == (IEEE80211_STYPE_QOS_DATA | IEEE80211_FTYPE_DATA))
++		return (__le16 *) ((u8 *) hdr + hdr_len - QOS_CONTROL_LEN);
++	return NULL;
++}
++
++static const struct ieee80211_hw_mode *iwl_get_hw_mode(
++		struct iwl_priv *priv, int mode)
++{
++	int i;
++
++	for (i = 0; i < 3; i++)
++		if (priv->modes[i].mode == mode)
++			return &priv->modes[i];
++
++	return NULL;
++}
++
++static int iwl_is_empty_essid(const char *essid, int essid_len)
++{
++	/* Single white space is for Linksys APs */
++	if (essid_len == 1 && essid[0] == ' ')
++		return 1;
++
++	/* Otherwise, if the entire essid is 0, we assume it is hidden */
++	while (essid_len) {
++		essid_len--;
++		if (essid[essid_len] != '\0')
++			return 0;
++	}
++
++	return 1;
++}
++
++static const char *iwl_escape_essid(const char *essid, u8 essid_len)
++{
++	static char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
++	const char *s = essid;
++	char *d = escaped;
++
++	if (iwl_is_empty_essid(essid, essid_len)) {
++		memcpy(escaped, "<hidden>", sizeof("<hidden>"));
++		return escaped;
++	}
++
++	essid_len = min(essid_len, (u8) IW_ESSID_MAX_SIZE);
++	while (essid_len--) {
++		if (*s == '\0') {
++			*d++ = '\\';
++			*d++ = '0';
++			s++;
++		} else
++			*d++ = *s++;
++	}
++	*d = '\0';
++	return escaped;
++}
++
+ /*************** DMA-QUEUE-GENERAL-FUNCTIONS  *****
+  * DMA services
   *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -471,10 +473,16 @@ struct ieee80211_hw {
- 	 */
- #define IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE (1<<1)
+@@ -2693,7 +2755,7 @@ static void iwl_build_tx_cmd_basic(struct iwl_priv *priv,
+ 	cmd->cmd.tx.stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
+ 	if (!(ctrl->flags & IEEE80211_TXCTL_NO_ACK)) {
+ 		tx_flags |= TX_CMD_FLG_ACK_MSK;
+-		if (WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT)
++		if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT)
+ 			tx_flags |= TX_CMD_FLG_SEQ_CTL_MSK;
+ 		if (ieee80211_is_probe_response(fc) &&
+ 		    !(le16_to_cpu(hdr->seq_ctrl) & 0xf))
+@@ -2726,9 +2788,9 @@ static void iwl_build_tx_cmd_basic(struct iwl_priv *priv,
+ 		tx_flags |= TX_CMD_FLG_FULL_TXOP_PROT_MSK;
  
--	/* Some devices handle decryption internally and do not
-+	/*
-+	 * Some devices handle decryption internally and do not
- 	 * indicate whether the frame was encrypted (unencrypted frames
- 	 * will be dropped by the hardware, unless specifically allowed
--	 * through) */
-+	 * through.)
-+	 * It is permissible to not handle all encrypted frames and fall
-+	 * back to software encryption; however, if this flag is set
-+	 * unencrypted frames must be dropped unless the driver is told
-+	 * otherwise via the set_ieee8021x() callback.
-+	 */
- #define IEEE80211_HW_DEVICE_HIDES_WEP (1<<2)
+ 	tx_flags &= ~(TX_CMD_FLG_ANT_SEL_MSK);
+-	if (WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT) {
+-		if (((WLAN_FC_GET_STYPE(fc)) == IEEE80211_STYPE_ASSOC_REQ) ||
+-		    ((WLAN_FC_GET_STYPE(fc)) == IEEE80211_STYPE_REASSOC_REQ))
++	if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) {
++		if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_ASSOC_REQ ||
++		    (fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_REASSOC_REQ)
+ 			cmd->cmd.tx.timeout.pm_frame_timeout =
+ 				cpu_to_le16(3);
+ 		else
+@@ -2749,7 +2811,7 @@ static int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
  
- 	/* Whether RX frames passed to ieee80211_rx() include FCS in the end */
-@@ -488,6 +496,18 @@ struct ieee80211_hw {
- 	 * can fetch them with ieee80211_get_buffered_bc(). */
- #define IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING (1<<4)
+ 	/* If this frame is broadcast or not data then use the broadcast
+ 	 * station id */
+-	if ((WLAN_FC_GET_TYPE(fc) != IEEE80211_FTYPE_DATA) ||
++	if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA) ||
+ 	    is_multicast_ether_addr(hdr->addr1))
+ 		return IWL_BROADCAST_ID;
  
-+	/*
-+	 * This flag is only relevant if hardware encryption is used.
-+	 * If set, it has two meanings:
-+	 *  1) the IV and ICV are present in received frames that have
-+	 *     been decrypted (unless IEEE80211_HW_DEVICE_HIDES_WEP is
-+	 *     also set)
-+	 *  2) on transmission, the IV should be generated in software.
-+	 *
-+	 * Please let us know if you *don't* use this flag, the stack would
-+	 * really like to be able to get the IV to keep key statistics
-+	 * accurate.
-+	 */
- #define IEEE80211_HW_WEP_INCLUDE_IV (1<<5)
+@@ -2838,7 +2900,7 @@ static int iwl_tx_skb(struct iwl_priv *priv,
+ #endif
  
- /* hole at 6 */
-@@ -495,11 +515,12 @@ struct ieee80211_hw {
- 	/* Force software encryption for TKIP packets if WMM is enabled. */
- #define IEEE80211_HW_NO_TKIP_WMM_HWACCEL (1<<7)
+ 	if (!iwl_is_associated(priv) &&
+-	    (WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_DATA)) {
++	    ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA)) {
+ 		IWL_DEBUG_DROP("Dropping - !iwl_is_associated\n");
+ 		goto drop;
+ 	}
+@@ -3232,8 +3294,8 @@ void iwl_handle_data_packet_monitor(struct iwl_priv *priv,
+ int is_duplicate_packet(struct iwl_priv *priv, struct ieee80211_hdr *header)
+ {
+ 	u16 sc = le16_to_cpu(header->seq_ctrl);
+-	u16 seq = WLAN_GET_SEQ_SEQ(sc);
+-	u16 frag = WLAN_GET_SEQ_FRAG(sc);
++	u16 seq = (sc & IEEE80211_SCTL_SEQ) >> 4;
++	u16 frag = sc & IEEE80211_SCTL_FRAG;
+ 	u16 *last_seq, *last_frag;
+ 	unsigned long *last_time;
  
--	/* Some devices handle Michael MIC internally and do not include MIC in
--	 * the received packets passed up. device_strips_mic must be set
--	 * for such devices. The 'encryption' frame control bit is expected to
--	 * be still set in the IEEE 802.11 header with this option unlike with
--	 * the device_hides_wep configuration option.
-+	/*
-+	 * Some devices handle Michael MIC internally and do not include MIC in
-+	 * the received packets passed up. This flag must be set for such
-+	 * devices. The 'encryption' frame control bit is expected to be still
-+	 * set in the IEEE 802.11 header with this option unlike with the
-+	 * IEEE80211_HW_DEVICE_HIDES_WEP flag.
- 	 */
- #define IEEE80211_HW_DEVICE_STRIPS_MIC (1<<8)
+diff --git a/drivers/net/wireless/iwl-helpers.h b/drivers/net/wireless/iwl-helpers.h
+index 46084f2..6ac119f 100644
+--- a/drivers/net/wireless/iwl-helpers.h
++++ b/drivers/net/wireless/iwl-helpers.h
+@@ -145,139 +145,97 @@ static inline struct ieee80211_conf *ieee80211_get_hw_conf(
+ 	return &hw->conf;
+ }
  
---- wireless-dev.orig/net/mac80211/wpa.c	2007-08-21 14:58:42.015923881 +0200
-+++ wireless-dev/net/mac80211/wpa.c	2007-08-21 15:28:19.455923881 +0200
-@@ -169,9 +169,10 @@ ieee80211_rx_h_michael_mic_verify(struct
+-static inline const struct ieee80211_hw_mode *iwl_get_hw_mode(
+-	struct iwl_priv *priv, int mode)
+-{
+-	int i;
+-
+-	for (i = 0; i < 3; i++)
+-		if (priv->modes[i].mode == mode)
+-			return &priv->modes[i];
+-
+-	return NULL;
+-}
+-
+-#define WLAN_FC_GET_TYPE(fc)    (((fc) & IEEE80211_FCTL_FTYPE))
+-#define WLAN_FC_GET_STYPE(fc)   (((fc) & IEEE80211_FCTL_STYPE))
+-#define WLAN_GET_SEQ_FRAG(seq)  ((seq) & 0x000f)
+-#define WLAN_GET_SEQ_SEQ(seq)   ((seq) >> 4)
+-
+ #define QOS_CONTROL_LEN 2
  
- 	fc = rx->fc;
+-static inline __le16 *ieee80211_get_qos_ctrl(struct ieee80211_hdr *hdr)
+-{
+-	u16 fc = le16_to_cpu(hdr->frame_control);
+-	int hdr_len = ieee80211_get_hdrlen(fc);
+-	if ( (fc & 0x00cc) == (IEEE80211_STYPE_QOS_DATA|IEEE80211_FTYPE_DATA))
+-		return (__le16 *) ((u8 *) hdr + hdr_len - QOS_CONTROL_LEN);
+-	return NULL;
+-}
+-
+ #define IEEE80211_STYPE_BACK_REQ	0x0080
+ #define IEEE80211_STYPE_BACK		0x0090
  
--	/* If device handles decryption totally, skip this check */
--	if ((rx->local->hw.flags & IEEE80211_HW_DEVICE_HIDES_WEP) ||
--	    (rx->local->hw.flags & IEEE80211_HW_DEVICE_STRIPS_MIC))
-+	/*
-+	 * No way to verify the MIC if the hardware stripped it
-+	 */
-+	if (rx->local->hw.flags & IEEE80211_HW_DEVICE_STRIPS_MIC)
- 		return TXRX_CONTINUE;
  
- 	if (!rx->key || rx->key->alg != ALG_TKIP ||
-
+ static inline int ieee80211_is_management(u16 fc)
+ {
+-	return WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT;
++	return (fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT;
+ }
+ 
+ static inline int ieee80211_is_control(u16 fc)
+ {
+-	return WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_CTL;
++	return (fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_CTL;
+ }
+ 
+ static inline int ieee80211_is_data(u16 fc)
+ {
+-	return WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_DATA;
++	return (fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA;
+ }
+ 
+ static inline int ieee80211_is_back_request(u16 fc)
+ {
+-	return (WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_CTL) &&
+-	       (WLAN_FC_GET_STYPE(fc) == IEEE80211_STYPE_BACK_REQ);
++	return ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_CTL) &&
++	       ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_BACK_REQ);
+ }
+ 
+ static inline int ieee80211_is_probe_response(u16 fc)
+ {
+-	return (WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT) &&
+-	       (WLAN_FC_GET_STYPE(fc) == IEEE80211_STYPE_PROBE_RESP);
++	return ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) &&
++	       ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PROBE_RESP);
+ }
+ 
+ static inline int ieee80211_is_probe_request(u16 fc)
+ {
+-	return (WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT) &&
+-	       (WLAN_FC_GET_STYPE(fc) == IEEE80211_STYPE_PROBE_REQ);
++	return ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) &&
++	       ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PROBE_REQ);
+ }
+ 
+ static inline int ieee80211_is_beacon(u16 fc)
+ {
+-	return (WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT) &&
+-	       (WLAN_FC_GET_STYPE(fc) == IEEE80211_STYPE_BEACON);
++	return ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) &&
++	       ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_BEACON);
+ }
+ 
+ static inline int ieee80211_is_atim(u16 fc)
+ {
+-	return (WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT) &&
+-	       (WLAN_FC_GET_STYPE(fc) == IEEE80211_STYPE_ATIM);
++	return ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) &&
++	       ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_ATIM);
+ }
+ 
+ static inline int ieee80211_is_assoc_request(u16 fc)
+ {
+-	return (WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT) &&
+-	       (WLAN_FC_GET_STYPE(fc) == IEEE80211_STYPE_ASSOC_REQ);
++	return ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) &&
++	       ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_ASSOC_REQ);
+ }
+ 
+ static inline int ieee80211_is_assoc_response(u16 fc)
+ {
+-	return (WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT) &&
+-	       (WLAN_FC_GET_STYPE(fc) == IEEE80211_STYPE_ASSOC_RESP);
++	return ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) &&
++	       ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_ASSOC_RESP);
+ }
+ 
+ static inline int ieee80211_is_auth(u16 fc)
+ {
+-	return (WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT) &&
+-	       (WLAN_FC_GET_STYPE(fc) == IEEE80211_STYPE_ASSOC_REQ);
++	return ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) &&
++	       ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_ASSOC_REQ);
+ }
+ 
+ static inline int ieee80211_is_deauth(u16 fc)
+ {
+-	return (WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT) &&
+-	       (WLAN_FC_GET_STYPE(fc) == IEEE80211_STYPE_ASSOC_REQ);
++	return ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) &&
++	       ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_ASSOC_REQ);
+ }
+ 
+ static inline int ieee80211_is_disassoc(u16 fc)
+ {
+-	return (WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT) &&
+-	       (WLAN_FC_GET_STYPE(fc) == IEEE80211_STYPE_ASSOC_REQ);
++	return ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) &&
++	       ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_ASSOC_REQ);
+ }
+ 
+ static inline int ieee80211_is_reassoc_request(u16 fc)
+ {
+-	return (WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT) &&
+-	       (WLAN_FC_GET_STYPE(fc) == IEEE80211_STYPE_REASSOC_REQ);
++	return ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) &&
++	       ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_REASSOC_REQ);
+ }
+ 
+ static inline int ieee80211_is_reassoc_response(u16 fc)
+ {
+-	return (WLAN_FC_GET_TYPE(fc) == IEEE80211_FTYPE_MGMT) &&
+-	       (WLAN_FC_GET_STYPE(fc) == IEEE80211_STYPE_REASSOC_RESP);
+-}
+-
+-static inline int iwl_is_empty_essid(const char *essid, int essid_len)
+-{
+-	/* Single white space is for Linksys APs */
+-	if (essid_len == 1 && essid[0] == ' ')
+-		return 1;
+-
+-	/* Otherwise, if the entire essid is 0, we assume it is hidden */
+-	while (essid_len) {
+-		essid_len--;
+-		if (essid[essid_len] != '\0')
+-			return 0;
+-	}
+-
+-	return 1;
++	return ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) &&
++	       ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_REASSOC_RESP);
+ }
+ 
+ static inline int iwl_check_bits(unsigned long field, unsigned long mask)
+@@ -285,30 +243,6 @@ static inline int iwl_check_bits(unsigned long field, unsigned long mask)
+ 	return ((field & mask) == mask) ? 1 : 0;
+ }
+ 
+-static inline const char *iwl_escape_essid(const char *essid, u8 essid_len)
+-{
+-	static char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+-	const char *s = essid;
+-	char *d = escaped;
+-
+-	if (iwl_is_empty_essid(essid, essid_len)) {
+-		memcpy(escaped, "<hidden>", sizeof("<hidden>"));
+-		return escaped;
+-	}
+-
+-	essid_len = min(essid_len, (u8) IW_ESSID_MAX_SIZE);
+-	while (essid_len--) {
+-		if (*s == '\0') {
+-			*d++ = '\\';
+-			*d++ = '0';
+-			s++;
+-		} else
+-			*d++ = *s++;
+-	}
+-	*d = '\0';
+-	return escaped;
+-}
+-
+ static inline unsigned long elapsed_jiffies(unsigned long start,
+ 					    unsigned long end)
+ {
+@@ -318,8 +252,6 @@ static inline unsigned long elapsed_jiffies(unsigned long start,
+ 	return end + (MAX_JIFFY_OFFSET - start);
+ }
+ 
+-
+-
+ static inline int snprint_line(char *buf, size_t count,
+ 			       const u8 *data, u32 len, u32 ofs)
+ {
+diff --git a/drivers/net/wireless/iwlwifi.h b/drivers/net/wireless/iwlwifi.h
+index 5b826bf..1279a2b 100644
+--- a/drivers/net/wireless/iwlwifi.h
++++ b/drivers/net/wireless/iwlwifi.h
+@@ -639,6 +639,7 @@ extern int iwl_send_statistics_request(struct iwl_priv *priv);
+ extern void iwl_set_decrypted_flag(struct iwl_priv *priv, struct sk_buff *skb,
+ 				   u32 decrypt_res,
+ 				   struct ieee80211_rx_status *stats);
++extern __le16 *ieee80211_get_qos_ctrl(struct ieee80211_hdr *hdr);
+ 
+ extern const u8 BROADCAST_ADDR[ETH_ALEN];
+ 
 -- 
-
+1.5.2
