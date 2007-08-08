@@ -1,54 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([131.228.20.172]:26098 "EHLO
-	mgw-ext13.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759619AbXHaImK (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:53801
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760538AbXHHWNe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Aug 2007 04:42:10 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [PATCH] mac80211: don't send invalid QoS frames
-References: <1188483732.3978.13.camel@johannes.berg>
-From: Kalle Valo <Kalle.Valo@nokia.com>
-Date: Fri, 31 Aug 2007 11:43:10 +0300
-In-Reply-To: <1188483732.3978.13.camel@johannes.berg> (ext Johannes Berg's message of "Thu\, 30 Aug 2007 16\:22\:12 +0200")
-Message-ID: <87wsvcksbl.fsf@nokia.com>
+	Wed, 8 Aug 2007 18:13:34 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: arm allmodconfig
+Date: Thu, 9 Aug 2007 00:13:06 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <20070808145705.756597b0.akpm@linux-foundation.org>
+In-Reply-To: <20070808145705.756597b0.akpm@linux-foundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708090013.06846.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Wednesday 08 August 2007 23:57:05 Andrew Morton wrote:
+> drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c:4038: error: implicit declaration of function `ssb_pcihost_register'
+> drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c:4055: error: implicit declaration of function `ssb_pcihost_unregister'
 
-> Kalle Valo noticed that QoS frames are sent with an invalid QoS control
-> field; this is because we increase the header length but neither
-> initialise the space nor actually have enough space in the header
-> structure for the QoS control field.
->
-> This patch fixes it by treating the QoS field specially and appending it
-> explicitly, initialising it to zero.
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->
-> ---
-> Kalle, please check if this fixes the weird frames you saw. I think it
-> will but would like to be sure. If it does, please say so and then we
-> should merge this patch to 2.6.24 and wireless-dev and I may make one
-> for -stable as well.
+I have no idea how this is possible.
 
-Now b43 won't send any unicast frames to N800 according to a wireless
-sniffer (and packet loss is 100%, obviously). Broadcast frames are
-sent and N800 replies to ARP requests just fine.
+bcm43xx_main.c:
 
-I was a bit surprised by the result, so I double checked my tests.
-After reverting this patch unicast frames were sent again, just that
-QoS frames were broken as expected. So this patch definetely broke
-unicast QoS send.
+#ifdef CONFIG_BCM43XX_MAC80211_PCI
+	err = ssb_pcihost_register(&bcm43xx_pci_driver);
+	if (err)
+		goto err_dfs_exit;
+#endif
 
-Tested with wireless-dev#anything commit 60faa0c2 and N800 had PSM
-disabled. I didn't have time to test with QoS disabled, sorry. But I
-can test that later, if you want.
+
+bcm43xx Kconfig:
+
+config BCM43XX_MAC80211_PCI
+	bool "BCM43xx PCI device support"
+	depends on BCM43XX_MAC80211 && PCI
+	select SSB_PCIHOST
+	select SSB_DRIVER_PCICORE
+
+
+ssb Kconfig:
+
+config SSB_PCIHOST
+	bool "Support for SSB on PCI-bus host"
+	depends on SSB && PCI
+
+
+ssb function declaration:
+
+#ifdef CONFIG_SSB_PCIHOST
+/* PCI-host wrapper driver */
+extern int ssb_pcihost_register(struct pci_driver *driver);
+static inline void ssb_pcihost_unregister(struct pci_driver *driver)
+{
+	pci_unregister_driver(driver);
+}
+#endif /* CONFIG_SSB_PCIHOST */
+
+
+So what is going on? CONFIG_BCM43XX_MAC80211_PCI must be enabled.
+Otherwise the func call would be ifdef'ed out. So but if
+it is enabled, it would SELECT SSB_PCIHOST. Which would enable
+the declaration and definition of ssb_pcihost_register().
+What am I missing?
 
 -- 
-Kalle Valo
+Greetings Michael.
