@@ -1,59 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.232]:18854 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757834AbXH3XEK (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33939
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751123AbXHHJL5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 19:04:10 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so623747wxd
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Aug 2007 16:04:09 -0700 (PDT)
-Message-ID: <9a8748490708301604k688daad8p145fb9106b442d91@mail.gmail.com>
-Date: Fri, 31 Aug 2007 01:04:09 +0200
-From: "Jesper Juhl" <jesper.juhl@gmail.com>
-To: "Randy Dunlap" <randy.dunlap@oracle.com>
-Subject: Re: [PATCH] Don't needlessly initialize variable to NULL in zd_chip (was: Re: [PATCH 13/30] net: Don't do pointless kmalloc return value casts in zd1211 driver)
-Cc: "Joe Perches" <joe@perches.com>, "Daniel Drake" <dsd@gentoo.org>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	"Ulrich Kunitz" <kune@deine-taler.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070830154255.6a146c21.randy.dunlap@oracle.com>
+	Wed, 8 Aug 2007 05:11:57 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: [PATCH] Fix handling of failure to create debugfs directory
+Date: Wed, 8 Aug 2007 11:04:56 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Larry Finger <larry.finger@lwfinger.net>
+References: <20070808051710.3902.43211.stgit@dv.roinet.com>
+In-Reply-To: <20070808051710.3902.43211.stgit@dv.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1554af80879a7ef2f78a4d654f23c248203500d9.1187912217.git.jesper.juhl@gmail.com>
-	 <9a8748490708301320o49d8e794vc5c37ffc938006f1@mail.gmail.com>
-	 <1188512393.6062.156.camel@localhost>
-	 <200708310030.31713.jesper.juhl@gmail.com>
-	 <20070830154255.6a146c21.randy.dunlap@oracle.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200708081104.56295.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31/08/2007, Randy Dunlap <randy.dunlap@oracle.com> wrote:
-...
->
-> BTW:  http://marc.info/?l=linux-wireless&m=118831813500769&w=2
->
-...
+On Wednesday 08 August 2007 07:17:10 Pavel Roskin wrote:
+> This can happen if CONFIG_BCM43XX_MAC80211_DEBUG is enabled, but
+> CONFIG_DEBUG_FS is not.
+> 
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
+> ---
 
-Heh, thanks Randy.
+Thanks, queued.
+Larry, this might also apply to bcm4301.
 
-All too often patches get missed since I don't happen to include the
-right magic person to Cc. So I generally take a "better to have one Cc
-too many than miss one" approach when sending patches - otherwise I
-just end up resending it several times and eventually have to bother
-Andrew to move it through -mm.
+>  .../wireless/bcm43xx-mac80211/bcm43xx_debugfs.c    |    8 ++++++--
+>  1 files changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.c b/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.c
+> index 9ca4625..aded2b3 100644
+> --- a/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.c
+> +++ b/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.c
+> @@ -408,7 +408,7 @@ static struct file_operations restart_fops = {
+>  
+>  int bcm43xx_debug(struct bcm43xx_wldev *dev, enum bcm43xx_dyndbg feature)
+>  {
+> -	return !!(dev->dfsentry->dyn_debug[feature]);
+> +	return !!(dev->dfsentry && dev->dfsentry->dyn_debug[feature]);
+>  }
+>  
+>  static void bcm43xx_remove_dynamic_debug(struct bcm43xx_wldev *dev)
+> @@ -472,7 +472,9 @@ void bcm43xx_debugfs_add_device(struct bcm43xx_wldev *dev)
+>  	snprintf(devdir, sizeof(devdir), "%s", wiphy_name(dev->wl->hw->wiphy));
+>  	e->subdir = debugfs_create_dir(devdir, fs.root);
+>  	if (!e->subdir || IS_ERR(e->subdir)) {
+> -		e->subdir = NULL;
+> +		bcmerr(dev->wl, "debugfs: cannot create %s directory\n",
+> +		       devdir);
+> +		dev->dfsentry = NULL;
+>  		kfree(log->log);
+>  		kfree(e);
+>  		return;
+> @@ -525,6 +527,8 @@ void bcm43xx_debugfs_log_txstat(struct bcm43xx_wldev *dev,
+>  	struct bcm43xx_txstatus *cur;
+>  	int i;
+>  
+> +	if (!e)
+> +		return;
+>  	log = &e->txstatlog;
+>  	assert(irqs_disabled());
+>  	spin_lock(&log->lock);
 
-I see the point of people not getting things twice, but too many
-patches slip through the cracks already (and not just my patches,
-that's a general problem) so I'd rather inconvenience a few people
-with one extra email than missing the proper maintainer by not Cc'ing
-the right list.    Picking the right list/set of people to Cc is hard!
-
-
-(whoops, mistakenly didn't do a reply-to-all initially; sorry Randy,
-now you'll get this mail twice ;)
-
-
---
-Jesper Juhl <jesper.juhl@gmail.com>
-Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please      http://www.expita.com/nomime.html
+-- 
+Greetings Michael.
