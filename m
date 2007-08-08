@@ -1,65 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55555 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762230AbXHCPke (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:48804 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760718AbXHHXo5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 11:40:34 -0400
-Subject: Re: [PATCH 18/24] rt2x00: Add Multicast/Broadcast filtering
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200708031736.27782.IvDoorn@gmail.com>
-References: <200707312037.33060.IvDoorn@gmail.com>
-	 <200708031709.39208.IvDoorn@gmail.com>
-	 <1186154435.4647.50.camel@johannes.berg>
-	 <200708031736.27782.IvDoorn@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IidvTHNUMjtFNS1KHsws"
-Date: Fri, 03 Aug 2007 17:42:02 +0200
-Message-Id: <1186155722.4647.55.camel@johannes.berg>
+	Wed, 8 Aug 2007 19:44:57 -0400
+Date: Wed, 8 Aug 2007 16:43:27 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Aurelien Jarno <aurelien@aurel32.net>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	John Linville <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ssb: Make extif driver compilation depend on extif  config
+Message-Id: <20070808164327.45803a64.akpm@linux-foundation.org>
+In-Reply-To: <46BA4E24.3060400@aurel32.net>
+References: <200708071744.40287.mb@bu3sch.de>
+	<20070808154813.abf55801.akpm@linux-foundation.org>
+	<46BA4E24.3060400@aurel32.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 09 Aug 2007 01:13:40 +0200
+Aurelien Jarno <aurelien@aurel32.net> wrote:
 
---=-IidvTHNUMjtFNS1KHsws
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Andrew Morton a __crit :
+> > mips allmodconfig:
+> > 
+> > drivers/ssb/driver_pcicore.c: In function `ssb_fixup_pcibridge':
+> > drivers/ssb/driver_pcicore.c:98: error: implicit declaration of function `pcibios_enable_device'
+> > drivers/ssb/driver_pcicore.c: At top level:
+> > drivers/ssb/driver_pcicore.c:278: warning: integer overflow in expression
+> > drivers/ssb/driver_pcicore.c:278: warning: integer overflow in expression
+> 
+> Those looks like real errors.
 
-On Fri, 2007-08-03 at 17:36 +0200, Ivo van Doorn wrote:
+They seems to have gone away after I droped the duplicated patches.
 
-> But that would mean that when a non-monitor and monitor interface are
-> enabled at the same time, the montitor interface is quite pointless since
-> all frames can be caught on the regular interface as well.=20
+> > drivers/ssb/driver_extif.c:125: error: redefinition of 'extif_read32'
+> > drivers/ssb/driver_extif.c:21: error: previous definition of 'extif_read32' was here
+> > drivers/ssb/driver_extif.c:130: error: redefinition of 'extif_write32'
+> > drivers/ssb/driver_extif.c:26: error: previous definition of 'extif_write32' was here
+> > drivers/ssb/driver_extif.c:136: error: redefinition of 'serial_exists'
+> > drivers/ssb/driver_extif.c:32: error: previous definition of 'serial_exists' was here
+> > drivers/ssb/driver_extif.c:150: error: redefinition of 'ssb_extif_serial_init'
+> > drivers/ssb/driver_extif.c:46: error: previous definition of 'ssb_extif_serial_init' was here
+> > drivers/ssb/driver_extif.c:181: error: redefinition of 'ssb_extif_timing_init'
+> > drivers/ssb/driver_extif.c:77: error: previous definition of 'ssb_extif_timing_init' was here
+> > drivers/ssb/driver_extif.c:203: error: redefinition of 'ssb_extif_get_clockcontrol'
+> > drivers/ssb/driver_extif.c:99: error: previous definition of 'ssb_extif_get_clockcontrol' was here
+> > 
+> 
+> All the versions of driver_extif.c I have seen have at maximum around
+> 100 lines. It looks like a patch applied twice, which make the same code
+> appearing twice in the .c file.
 
-Not true, monitor mode interfaces gives you a lot more info (radiotap.)
+Yeah.  I dropped a bunch of things which seemed to help.
 
-> A monitor interface is supposed to catch as many frames as possible,
-> if a monitor interface does not catch frames not directly send to it, it =
-won't
-> catch anything except beacons.
+I'm hopelessly confused by the ssb stuff.  I'm not sure if I have all the
+right stuff, all the latest stuff and I don't understand why some is going
+into git-wireless and some is not.
 
-Not if we want to use monitor interfaces for the userspace mlme.
+I'd prefer to be dumbly pulling a tree which Michael controls rather than
+trying to master it all in -mm, if possible.  A git tree or a quilt tree in
+some open dir somewhere would suit?
 
-> Even when there is only 1 interface which is in monitor mode, the user sh=
-ouldn't
-> have to set the device into promisc mode right?
-
-Actually, imho they should have to. And tcpdump always does anyway.
-
-johannes
-
---=-IidvTHNUMjtFNS1KHsws
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGs0zK/ETPhpq3jKURAheUAJwILYRljwAjD/Kyr/Kcb/KOwvX97QCcD3H3
-paHDHNRxiXJLPZ5hzAOqsOU=
-=pkTe
------END PGP SIGNATURE-----
-
---=-IidvTHNUMjtFNS1KHsws--
 
