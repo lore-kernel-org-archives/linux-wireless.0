@@ -1,77 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.236]:50000 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935429AbXHNWqo (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:33209 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751509AbXHHWhq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2007 18:46:44 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so1555488wxd
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2007 15:46:43 -0700 (PDT)
-Message-ID: <1ba2fa240708141546g4de44ff1v94db00213a3187aa@mail.gmail.com>
-Date: Wed, 15 Aug 2007 01:46:43 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] hostapd: use eapol frames from ethernet device
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Jiri Benc" <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
-	"Jouni Malinen" <j@w1.fi>
-In-Reply-To: <1187002921.27916.77.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1186789737.4862.3.camel@johannes.berg>
-	 <1186790012.4862.8.camel@johannes.berg>
-	 <1ba2fa240708120358rb22a2f9me1a1020e669406e7@mail.gmail.com>
-	 <1186995104.27916.56.camel@johannes.berg>
-	 <1ba2fa240708130346h6175701cr2daab916afaed00f@mail.gmail.com>
-	 <1187002921.27916.77.camel@johannes.berg>
+	Wed, 8 Aug 2007 18:37:46 -0400
+Date: Wed, 8 Aug 2007 15:37:07 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+Subject: Re: arm allmodconfig
+Message-Id: <20070808153707.eda9a3b2.akpm@linux-foundation.org>
+In-Reply-To: <20070808153208.49fb7211.akpm@linux-foundation.org>
+References: <20070808145705.756597b0.akpm@linux-foundation.org>
+	<200708090013.06846.mb@bu3sch.de>
+	<20070808152606.9ea3010f.akpm@linux-foundation.org>
+	<20070808153208.49fb7211.akpm@linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/13/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2007-08-13 at 13:46 +0300, Tomas Winkler wrote:
->
-> >  I think it was a polite query I've made, don't see any reason to use
-> > this language. If you precept it otherwise I apologize it wasn't my
-> > intention.
->
-> Apologies. I seriously don't understand that comment though, the patch
-> didn't touch the management interface at all, in fact it renamed only a
-> few variables and changed EAPOL frame receiving from using the
-> management interface to the ethernet framed interface.
->
-> > They have management meaning. So it was appropriate to route them
-> > through management interface rather then from data interface.
->
-> I'm not sure we understand each other. The only thing I changed with
-> this patch and the corresponding kernel patch is that all data frames
-> including those that are used for management purposes are now routed
-> through the data interface. Why do you think that is wrong? Reordering
-> your mail a bit, you also said
->
-> > On the contrary what I'm saying that EAPOL packets are the only data
-> > packets that should go up until handshake is done.
->
-> which seems to agree with me. You can achieve the effect of letting
-> *only* EAPOL packets through by setting the 802.1X protection parameter
-> on the network interface via the private prism ioctl, hostapd doesn't
-> seem to do that unless explicitly requested though.
+On Wed, 8 Aug 2007 15:32:08 -0700
+Andrew Morton <akpm@linux-foundation.org> wrote:
 
-> The actual technical reason for doing is that subsequent patches totally
-> remove the management interface and on the monitor interface the EAPOL
-> frames show up undecrypted.
+> Probably a dependency on HAS_IOMEM will fix that uup.
 
-Can you enlighten me and tell me why the monitor interface is
-preferable over management interface? I've probably got busy and
-missed the whole conversation.
- I'm not so familiar with monitor interface but isn't it to be
-sniffing interface - everything goes up including data raw packets.
-Thanks for keeping patience with me :)
+So to get around this I deleted the CONFIG_SSB=m from .config and ran
+oldconfig.  Whoop, it magically reappeared!  Irritating.  Investigates.
 
-What if management frames needs decryption? I think this is 802.11w
-specs that defines that.
+omg.
 
-Thanks
-Tomas
+ Symbol: SSB [=m]
+  x Prompt: Sonics Silicon Backplane support
+  x   Defined at drivers/ssb/Kconfig:3
+  x   Depends on: EXPERIMENTAL && HAS_IOMEM
+  x   Location:
+  x     -> Device Drivers
+  x       -> Sonics Silicon Backplane
+  x   Selected by: B44 && NETDEVICES && NET_ETHERNET && HAS_IOMEM || BCM43XX_MAC80211 && NETDEVICES && !S390 && MAC80211 && WLAN_80211 && EXPERIMENTAL
 
-> johannes
->
->
+you'll never be able to get that to work.  If by some miracle you do, you
+will not be able to maintain it.  select is just that bad, and that
+expression!!!
+
+We've been struggling with SSB Kconfig for weeks and it's nowhere near
+right yet.
+
+Please, do consider switching the whole lot to `depends on'.
