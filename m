@@ -1,75 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37133 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757866AbXHJVj7 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49159
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751287AbXHHKir (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2007 17:39:59 -0400
-Subject: [PATCH] mac80211: remove ieee80211_msg_key_threshold_notification
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 10 Aug 2007 23:42:29 +0200
-Message-Id: <1186782149.17351.17.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 8 Aug 2007 06:38:47 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] Fix handling of failure to create debugfs directory
+Date: Wed, 8 Aug 2007 12:38:02 +0200
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+References: <20070808051710.3902.43211.stgit@dv.roinet.com> <46B95A15.1080202@lwfinger.net>
+In-Reply-To: <46B95A15.1080202@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708081238.03216.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hostapd doesn't care at the moment.
+On Wednesday 08 August 2007 07:52:21 Larry Finger wrote:
+> Pavel Roskin wrote:
+> > This can happen if CONFIG_BCM43XX_MAC80211_DEBUG is enabled, but
+> > CONFIG_DEBUG_FS is not.
+> > 
+> > Signed-off-by: Pavel Roskin <proski@gnu.org>
+> > ---
+> > 
+> With this patch installed, and the DEBUG configuration set as above, I get a kernel panic on an 
+> x86_64 SMP system. The reason for the panic scrolled off the screen, but the complete stack dump 
+> (hand copied) is as follows:
+> 
+> lock_acquire+0x85/0x31
+> bcm43xx_mac80211: bcm43xx_debugfs_log_txstat+0x5a/099
+> _spin_lock+0x25/0x31
+> bcm43xx_mac80211: bcm43xx_interrupt_tasklet+0x21/0x723
+> bcm43xx_mac80211: bcm43xx_debugfs_log_txstat+0x5a/0x99
+> bcm43xx_mac80211: bcm43xx_handle_txstatsus+0x12/0x72
+> bcm43xx_mac80211: bcm43xx_interrupt_tasklet+0x699/0x723
+> __lock_acquire+0xca2/0xcf0
+> bcm43xx_mac80211: bcm43xx_interrupt_handler+0x296/0x723
+> tasklet_action+0x5e/0xb2
+> __do_softirq+0x5f/0xe3
+> call_softirq+0x1c/0x28
+> do_softirq+0x39/0x9f
+> irq_exit+0x4e/0x50
+> do_IRQ+0xba/0xd8
+> default_idle+0x35/0x51
+> cpu_idle+0xce/0xf1
+> start_secondary+0x2e0/0x2f2
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Ah crap. I missed this. I'll do a patch.
+But first some lunch :)
 
---- wireless-dev.orig/net/mac80211/ieee80211.c	2007-08-10 23:39:49.903840246 +0200
-+++ wireless-dev/net/mac80211/ieee80211.c	2007-08-10 23:40:52.453840246 +0200
-@@ -226,35 +226,8 @@ static void ieee80211_key_threshold_noti
- 					   struct ieee80211_key *key,
- 					   struct sta_info *sta)
- {
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	struct sk_buff *skb;
--	struct ieee80211_msg_key_notification *msg;
--
--	/* if no one will get it anyway, don't even allocate it.
--	 * unlikely because this is only relevant for APs
--	 * where the device must be open... */
--	if (unlikely(!local->apdev))
--		return;
--
--	skb = dev_alloc_skb(sizeof(struct ieee80211_frame_info) +
--			    sizeof(struct ieee80211_msg_key_notification));
--	if (!skb)
--		return;
--
--	skb_reserve(skb, sizeof(struct ieee80211_frame_info));
--	msg = (struct ieee80211_msg_key_notification *)
--		skb_put(skb, sizeof(struct ieee80211_msg_key_notification));
--	msg->tx_rx_count = key->tx_rx_count;
--	memcpy(msg->ifname, dev->name, IFNAMSIZ);
--	if (sta)
--		memcpy(msg->addr, sta->addr, ETH_ALEN);
--	else
--		memset(msg->addr, 0xff, ETH_ALEN);
--
--	key->tx_rx_count = 0;
--
--	ieee80211_rx_mgmt(local, skb, NULL,
--			  ieee80211_msg_key_threshold_notification);
-+	/* dummy function for when we add back support */
-+	/* TODO: add back support via cfg80211/nl80211 */
- }
- 
- 
---- wireless-dev.orig/net/mac80211/ieee80211_common.h	2007-08-10 23:39:28.643840246 +0200
-+++ wireless-dev/net/mac80211/ieee80211_common.h	2007-08-10 23:39:40.913840246 +0200
-@@ -53,7 +53,7 @@ enum ieee80211_msg_type {
- 	/* hole at 6, was monitor but never sent to userspace */
- 	/* hole at 7, was ieee80211_msg_sta_not_assoc but now unused */
- 	/* 8 was ieee80211_msg_set_aid_for_sta */
--	ieee80211_msg_key_threshold_notification = 9,
-+	/* hole at 9, was ieee80211_msg_key_threshold_notification */
- 	ieee80211_msg_radar = 11,
- };
- 
-
-
+-- 
+Greetings Michael.
