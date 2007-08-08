@@ -1,66 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33967 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757440AbXH3PXP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 11:23:15 -0400
-Subject: [PATCH] mac80211: ignore key index on pairwise key (WEP only)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Volker Braun <volker.braun@physik.hu-berlin.de>,
-	Michael Wu <flamingice@sourmilk.net>
-Content-Type: text/plain
-Date: Thu, 30 Aug 2007 17:24:23 +0200
-Message-Id: <1188487463.3978.45.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from hall.aurel32.net ([88.191.38.19]:39431 "EHLO hall.aurel32.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757296AbXHHXNS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Aug 2007 19:13:18 -0400
+Message-ID: <46BA4E24.3060400@aurel32.net>
+Date: Thu, 09 Aug 2007 01:13:40 +0200
+From: Aurelien Jarno <aurelien@aurel32.net>
+MIME-Version: 1.0
+To: Andrew Morton <akpm@linux-foundation.org>
+CC: Michael Buesch <mb@bu3sch.de>,
+	John Linville <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ssb: Make extif driver compilation depend on extif config
+References: <200708071744.40287.mb@bu3sch.de> <20070808154813.abf55801.akpm@linux-foundation.org>
+In-Reply-To: <20070808154813.abf55801.akpm@linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Volker Braun <vbraun@physics.upenn.edu>
+Andrew Morton a =E9crit :
+> mips allmodconfig:
+>=20
+> drivers/ssb/driver_pcicore.c: In function `ssb_fixup_pcibridge':
+> drivers/ssb/driver_pcicore.c:98: error: implicit declaration of funct=
+ion `pcibios_enable_device'
+> drivers/ssb/driver_pcicore.c: At top level:
+> drivers/ssb/driver_pcicore.c:278: warning: integer overflow in expres=
+sion
+> drivers/ssb/driver_pcicore.c:278: warning: integer overflow in expres=
+sion
 
-Work-around for broken APs that use a non-zero key index for WEP
-pairwise keys. With this patch, WEP encryption only is exempt from
-providing a zero key index.
+Those looks like real errors.
 
-Signed-off-by: Volker Braun <volker.braun@physik.hu-berlin.de>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> drivers/ssb/driver_extif.c:125: error: redefinition of 'extif_read32'
+> drivers/ssb/driver_extif.c:21: error: previous definition of 'extif_r=
+ead32' was here
+> drivers/ssb/driver_extif.c:130: error: redefinition of 'extif_write32=
+'
+> drivers/ssb/driver_extif.c:26: error: previous definition of 'extif_w=
+rite32' was here
+> drivers/ssb/driver_extif.c:136: error: redefinition of 'serial_exists=
+'
+> drivers/ssb/driver_extif.c:32: error: previous definition of 'serial_=
+exists' was here
+> drivers/ssb/driver_extif.c:150: error: redefinition of 'ssb_extif_ser=
+ial_init'
+> drivers/ssb/driver_extif.c:46: error: previous definition of 'ssb_ext=
+if_serial_init' was here
+> drivers/ssb/driver_extif.c:181: error: redefinition of 'ssb_extif_tim=
+ing_init'
+> drivers/ssb/driver_extif.c:77: error: previous definition of 'ssb_ext=
+if_timing_init' was here
+> drivers/ssb/driver_extif.c:203: error: redefinition of 'ssb_extif_get=
+_clockcontrol'
+> drivers/ssb/driver_extif.c:99: error: previous definition of 'ssb_ext=
+if_get_clockcontrol' was here
+>=20
 
----
- net/mac80211/ieee80211_ioctl.c |   18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+All the versions of driver_extif.c I have seen have at maximum around
+100 lines. It looks like a patch applied twice, which make the same cod=
+e
+appearing twice in the .c file.
 
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-30 14:35:32.912051253 +0200
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-30 14:35:37.972051253 +0200
-@@ -416,17 +416,23 @@ static int ieee80211_set_encryption(stru
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
-+	if (idx < 0 || idx >= NUM_DEFAULT_KEYS) {
-+		printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
-+		       dev->name, idx);
-+		return -EINVAL;
-+	}
-+
- 	if (is_broadcast_ether_addr(sta_addr)) {
- 		sta = NULL;
--		if (idx >= NUM_DEFAULT_KEYS) {
--			printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
--			       dev->name, idx);
--			return -EINVAL;
--		}
- 		key = sdata->keys[idx];
- 	} else {
- 		set_tx_key = 0;
--		if (idx != 0) {
-+		/*
-+		 * According to the standard, the key index of a pairwise
-+		 * key must be zero. However, some AP are broken when it
-+		 * comes to WEP key indices, so we work around this.
-+		 */
-+		if (idx != 0 && alg != ALG_WEP) {
- 			printk(KERN_DEBUG "%s: set_encrypt - non-zero idx for "
- 			       "individual key\n", dev->name);
- 			return -EINVAL;
-
-
+--=20
+  .''`.  Aurelien Jarno	            | GPG: 1024D/F1BCDB73
+ : :' :  Debian developer           | Electrical Engineer
+ `. `'   aurel32@debian.org         | aurelien@aurel32.net
+   `-    people.debian.org/~aurel32 | www.aurel32.net
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
