@@ -1,61 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59037
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755143AbXHBWHm (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38957 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932636AbXHHJeM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 18:07:42 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] bcm43xx-mac80211: Provide information to allow transmission rate decreases
-Date: Fri, 3 Aug 2007 00:06:34 +0200
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <46b24304.DLuGdus4YPRFspUn%Larry.Finger@lwfinger.net>
-In-Reply-To: <46b24304.DLuGdus4YPRFspUn%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200708030006.35112.mb@bu3sch.de>
+	Wed, 8 Aug 2007 05:34:12 -0400
+Subject: Re: Marvell pci wifi chips
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200708080848.51130.hs4233@mail.mn-solutions.de>
+References: <a728f9f90708070921x13c1a9fem8f7bbf3fe77756d@mail.gmail.com>
+	 <20070807173431.GC3330@tuxdriver.com>
+	 <a728f9f90708072129m2c5dd9f8j70e5bba44e504ff0@mail.gmail.com>
+	 <200708080848.51130.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-crHevruAY3iDOTqwBrHF"
+Date: Wed, 08 Aug 2007 11:36:03 +0200
+Message-Id: <1186565764.11717.25.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks, I fixed that and queued it up ;)
-http://bu3sch.de/patches/wireless-dev/20070803-1186092135/patches/bcm43xx-mac80211-provide-information-to-allow-transmission-rate-decreases.patch
 
-On Thursday 02 August 2007, Larry Finger wrote:
-> In bcm43xx-mac80211, the mechanism for decreasing the transmit rate cannot
-> be triggered. This may be shown by walking away from the AP with a laptop.
-> At some distance, communications will be lost and never recovered because
-> the rate decreasing mechanism of rc80211_simple needs to see excessive_retries
-> set in the ieee80211_tx_status struct. With this patch, the transmit rate
-> will decrease until communications restart.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> John and Michael,
-> 
-> This is based on the wireless-dev tree.
-> 
-> Larry
-> 
->  bcm43xx_dma.c |    3 +++
->  1 file changed, 3 insertions(+)
-> 
-> Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
-> ===================================================================
-> --- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
-> +++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
-> @@ -1311,6 +1311,9 @@ void bcm43xx_dma_handle_txstatus(struct 
->  			 */
->  			if (status->acked)
->  				meta->txstat.flags |= IEEE80211_TX_STATUS_ACK;
-> +			else
-> +				if (!(meta->txstat.flags & IEEE80211_TXCTL_NO_ACK))
-> +					meta->txstat.excessive_retries = 1;
->  			meta->txstat.retry_count = status->frame_count - 1;
->  			ieee80211_tx_status_irqsafe(dev->wl->hw, meta->skb, &(meta->txstat));
->  			/* skb is freed by ieee80211_tx_status_irqsafe() */
-> 
-> 
+--=-crHevruAY3iDOTqwBrHF
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, 2007-08-08 at 08:48 +0200, Holger Schurig wrote:
+> > Has anyone tested the marvell driver
+> > (http://johannes.sipsolutions.net/files/marvell.tar.bz2)?
+> >  Does it work?
+>=20
+> Maybe the author ?!?
+
+But who'd that be? It looks like internal to some embedded systems
+company IIRC.
+
+johannes
+
+--=-crHevruAY3iDOTqwBrHF
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGuY6D/ETPhpq3jKURAq4UAKCtTYTBESGA/qsJ5UnfVE///5M/QQCgrtQq
+283hzPpLoRU8jOfw+9AwnSw=
+=QjdW
+-----END PGP SIGNATURE-----
+
+--=-crHevruAY3iDOTqwBrHF--
 
