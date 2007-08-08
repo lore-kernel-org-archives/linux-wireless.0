@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mi1.bluebottle.com ([206.188.25.14]:44456 "EHLO
-	mi1.bluebottle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751918AbXHAGk6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2007 02:40:58 -0400
-Received: from localhost.localdomain (localhost.localdomain [127.0.0.1])
-	by mi1.bluebottle.com (8.13.1/8.13.1) with ESMTP id l716evvW009219
-	for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2007 23:40:57 -0700
-Message-Id: <200708010640.l716evvW009219@mi1.bluebottle.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Axj <axjslack@bluebottle.com>, Pavel Roskin <proski@gnu.org>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 31 Jul 2007 23:40:57 -0700
-From: Axj <axjslack@bluebottle.com>
-Subject: Re: Request for help...
-References: <1185289332.46a61474a444c@mail.bluebottle.com>  <1185355931.3131.13.camel@debian.sh.intel.com>  <200707261511.l6QFB2jK015121@mi0.bluebottle.com>  <1185466954.14557.5.camel@dv>  <200707270634.l6R6Yh2j003295@mi1.bluebottle.com>  <1185522251.3079.66.camel@debian.sh.intel.com>  <200707270848.l6R8mqkh004526@mi1.bluebottle.com>  <1185526612.3079.75.camel@debian.sh.intel.com>  <200707270910.l6R9AssD005317@mi0.bluebottle.com> <1185757127.3079.101.camel@debian.sh.intel.com>
-In-Reply-To: <1185757127.3079.101.camel@debian.sh.intel.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2369 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752496AbXHHBiJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Aug 2007 21:38:09 -0400
+Date: Tue, 7 Aug 2007 20:50:08 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: Please pull 'libertas-upstream' branch of wireless-2.6
+Message-ID: <20070808005008.GB5038@tuxdriver.com>
+References: <20070806203005.GL6442@tuxdriver.com> <46B8F0C3.6030409@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <46B8F0C3.6030409@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Zhu Yi <yi.zhu@intel.com>:
-
-> On Fri, 2007-07-27 at 02:10 -0700, Axj wrote:
-> > iwconfig wlan0 essid "lago" mode Ad-Hoc 
-> > and then give me error.... 
+On Tue, Aug 07, 2007 at 06:22:59PM -0400, Jeff Garzik wrote:
+> John W. Linville wrote:
+> >Got a big patch bomb from the libertas guys.  I tried to cherry-pick
+> >some of the fixes for 2.6.23, but they either were fixes to problems
+> >in new code or all the code cleanups made them difficult for me to
+> >intelligently backport.
+> >
+> >So, this is intended for 2.6.24...
+> >
+> >---
+> >
+> >The following changes since commit 
+> >d4ac2477fad0f2680e84ec12e387ce67682c5c13:
+> >  Linus Torvalds (1):
+> >        Linux 2.6.23-rc2
+> >
+> >are available in the git repository at:
+> >
+> >  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git 
+> >  libertas-upstream
 > 
-> What's the error?
-> 
-> -yi
-> 
+> This is missing the patch.  I looked at it locally, but please do send a 
+> patch for review with each push, no matter how big.
 
-When I try the command 
- iwconfig wlan0 essid "lago" mode Ad-Hoc 
+Ooops, sorry!  I apologoze for the oversight.
 
-show me 
+> pulled into #upstream
 
-Error for wireless request Set Mode (8B06) :
-    SET failed on device wlan0 ; Device or resource busy.
+Thanks!
 
-But if I connect with for example 
-
-iwconfig wlan0 essid "dip-open" #my university wireless connection it works, and very well.
-
-For this I have no explanation
-
-----------------------------------------------------------------------
-Free pop3 email with a spam filter.
-http://www.bluebottle.com/tag/5
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
