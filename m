@@ -1,40 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49212
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752300AbXHRXxT (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38937
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753574AbXHHKRz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Aug 2007 19:53:19 -0400
-Message-Id: <20070818234834.595040000@bu3sch.de>
-References: <20070818234833.623623000@bu3sch.de>
-Date: Sun, 19 Aug 2007 01:48:35 +0200
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: [patch 2/6] ssb: Fix uevent MODALIAS string.
+	Wed, 8 Aug 2007 06:17:55 -0400
+Date: Wed, 08 Aug 2007 03:17:55 -0700 (PDT)
+Message-Id: <20070808.031755.91441405.davem@davemloft.net>
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, andy@warmcat.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC] allow device to stop packet mirror behaviour
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1186564441.11717.5.camel@johannes.berg>
+References: <1186475155.4067.17.camel@johannes.berg>
+	<20070807.180607.116354128.davem@davemloft.net>
+	<1186564441.11717.5.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the same %-convention as file2alias does.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Wed, 08 Aug 2007 11:14:01 +0200
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> On Tue, 2007-08-07 at 18:06 -0700, David Miller wrote:
+> > From: Johannes Berg <johannes@sipsolutions.net>
+> > Date: Tue, 07 Aug 2007 10:25:55 +0200
+> > 
+> > > The only way to solve this problem therefore seems to be to suppress the
+> > > mirroring out of the packet by dev_queue_xmit_nit(). The patch below
+> > > does that by way of adding a new netdev flag.
+> > 
+> > Multicast packets also get looped back in a similar manner in the ipv4
+> > code.  These will also be seen twice due to this issue.
+> 
+> I don't think these other places are of any interest because of the
+> radiotap+802.11 framing on the devices where it is relevant to us; you
+> can't actually add an IP route to a monitor interface as far as I can
+> tell.
 
-Index: ssb-merge-new/drivers/ssb/main.c
-===================================================================
---- ssb-merge-new.orig/drivers/ssb/main.c	2007-08-15 18:33:50.000000000 +0200
-+++ ssb-merge-new/drivers/ssb/main.c	2007-08-15 18:35:11.000000000 +0200
-@@ -331,10 +331,11 @@ static int ssb_device_uevent(struct devi
- 
- 	ret = add_uevent_var(envp, num_envp, &i,
- 			     buffer, buffer_size, &length,
--			     "MODALIAS=ssb:v%.4xid%.4xrev%.2x",
-+			     "MODALIAS=ssb:v%04Xid%04Xrev%02X",
- 			     ssb_dev->id.vendor, ssb_dev->id.coreid,
- 			     ssb_dev->id.revision);
- 	envp[i] = NULL;
-+
- 	return ret;
- }
- 
-
--- 
-
+Then I don't understand your problem.  If they are specific 802.11
+protocol packets, the radio stack is in a much better situation to
+filter out things like this.
