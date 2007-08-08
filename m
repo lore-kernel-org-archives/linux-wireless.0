@@ -1,49 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2532 "EHLO ra.tuxdriver.com"
+Received: from mga09.intel.com ([134.134.136.24]:38791 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762932AbXHABFp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 21:05:45 -0400
-Date: Tue, 31 Jul 2007 20:45:43 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Andy Green <andy@warmcat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Rate control over multiple devices
-Message-ID: <20070801004543.GD4719@tuxdriver.com>
-References: <46AFB779.4040003@warmcat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <46AFB779.4040003@warmcat.com>
+	id S1758472AbXHHHhV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Aug 2007 03:37:21 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 07/28] iwlwifi: make local functions static
+Date: Wed,  8 Aug 2007 15:33:24 +0800
+Message-Id: <1186558443548-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11865584413292-git-send-email-yi.zhu@intel.com>
+References: <11865584251026-git-send-email-yi.zhu@intel.com>
+ <11865584292234-git-send-email-yi.zhu@intel.com>
+ <1186558432932-git-send-email-yi.zhu@intel.com>
+ <11865584342308-git-send-email-yi.zhu@intel.com>
+ <11865584363863-git-send-email-yi.zhu@intel.com>
+ <11865584392893-git-send-email-yi.zhu@intel.com>
+ <11865584413292-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 31, 2007 at 11:28:09PM +0100, Andy Green wrote:
-> Hi folks -
-> 
-> Just seemed a little strange, maybe it is perfectly fine.
-> 
-> iwl3945: Tunable channels: 13 802.11bg, 23 802.11a channels
-> PM: Adding info for No Bus:phy0
-> PM: Adding info for No Bus:wmaster0
-> wmaster0: Selected rate control algorithm 'iwl-3945-rs'
-> 
-> ...but then we add an rt73usb...
-> 
-> PM: Adding info for No Bus:phy1
-> PM: Adding info for No Bus:wmaster1
-> wmaster1: Selected rate control algorithm 'iwl-3945-rs' <----
-> PM: Adding info for No Bus:wlan1
-> usbcore: registered new interface driver rt73usb
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwl-4965.c |    9 +++++----
+ drivers/net/wireless/iwl-base.c |    4 ++--
+ 2 files changed, 7 insertions(+), 6 deletions(-)
 
-This looks like the reverse of a dust-up we had a couple of months ago:
-
-	http://marc.info/?l=linux-wireless&m=117875332512693&w=2
-
-It is possible to change the rate control algorithm now via debugfs.
-In the past someone proposed letting drivers request their default
-rate scaling algorithm, and I think that makes a lot of sense.
-Any thoughts?
-
-John
+diff --git a/drivers/net/wireless/iwl-4965.c b/drivers/net/wireless/iwl-4965.c
+index c93c607..8175b48 100644
+--- a/drivers/net/wireless/iwl-4965.c
++++ b/drivers/net/wireless/iwl-4965.c
+@@ -4257,8 +4257,9 @@ static int iwl4965_tx_queue_set_q2ratid(struct iwl_priv *priv, u16 ra_tid,
+ /**
+  * txq_id must be greater than IWL_BACK_QUEUE_FIRST_ID
+  */
+-int iwl4965_tx_queue_agg_enable(struct iwl_priv *priv, int txq_id, int tx_fifo,
+-				int sta_id, int tid, u16 ssn_idx)
++static int iwl4965_tx_queue_agg_enable(struct iwl_priv *priv, int txq_id,
++				       int tx_fifo, int sta_id, int tid,
++				       u16 ssn_idx)
+ {
+ 	unsigned long flags;
+ 	int rc;
+@@ -4315,8 +4316,8 @@ int iwl4965_tx_queue_agg_enable(struct iwl_priv *priv, int txq_id, int tx_fifo,
+ /**
+  * txq_id must be greater than IWL_BACK_QUEUE_FIRST_ID
+  */
+-int iwl4965_tx_queue_agg_disable(struct iwl_priv *priv, u16 txq_id,
+-				 u16 ssn_idx, u8 tx_fifo)
++static int iwl4965_tx_queue_agg_disable(struct iwl_priv *priv, u16 txq_id,
++					u16 ssn_idx, u8 tx_fifo)
+ {
+ 	unsigned long flags;
+ 	int rc;
+diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
+index 18c4a23..e58dcfa 100644
+--- a/drivers/net/wireless/iwl-base.c
++++ b/drivers/net/wireless/iwl-base.c
+@@ -310,7 +310,7 @@ void iwl_tx_queue_free(struct iwl_priv *priv, struct iwl_tx_queue *txq)
+ 	     q->last_used = iwl_queue_inc_wrap(q->last_used, q->n_bd))
+ 		iwl_hw_tx_queue_free_tfd(priv, txq);
+ 
+-	len = sizeof(txq->cmd[0]) * q->n_window;
++	len = sizeof(struct iwl_cmd) * q->n_window;
+ 	if (q->id == IWL_CMD_QUEUE_NUM);
+ 		len += IWL_MAX_SCAN_SIZE;
+ 
+@@ -3549,7 +3549,7 @@ static inline u32 iwl_get_scd_ssn(struct iwl_tx_resp *tx_resp)
+ 	return le32_to_cpu(*scd_ssn & MAX_SN);
+ 
+ }
+-int iwl4965_tx_status_reply_tx(struct iwl_priv *priv,
++static int iwl4965_tx_status_reply_tx(struct iwl_priv *priv,
+ 				      struct iwl_ht_agg *agg,
+ 				      struct iwl_tx_resp *tx_resp,
+ 				      u16 start_idx)
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.2
