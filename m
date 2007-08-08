@@ -1,57 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42321 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38898 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751840AbXHVJ1B (ORCPT
+	with ESMTP id S1756011AbXHHJcW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2007 05:27:01 -0400
-Subject: Re: [RFC 1/2] mac80211: allow drivers to indicate failed FCS/PLCP  checksum
+	Wed, 8 Aug 2007 05:32:22 -0400
+Subject: Re: [PATCH] mac80211: probe for hidden SSIDs in pre-auth scan
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200708212307.59926.IvDoorn@gmail.com>
-References: <20070821161845.165557000@sipsolutions.net>
-	 <20070821161942.159647000@sipsolutions.net>
-	 <200708212307.59926.IvDoorn@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-i/JvcUUpHu43Tj2ZEpCq"
-Date: Wed, 22 Aug 2007 11:22:41 +0200
-Message-Id: <1187774561.4314.0.camel@johannes.berg>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200708080056.16195.flamingice@sourmilk.net>
+References: <20070807203315.GG3330@tuxdriver.com>
+	 <200708080056.16195.flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7YKCT4XYXnggjUsSpHMh"
+Date: Wed, 08 Aug 2007 11:34:11 +0200
+Message-Id: <1186565651.11717.23.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-i/JvcUUpHu43Tj2ZEpCq
+--=-7YKCT4XYXnggjUsSpHMh
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2007-08-21 at 23:07 +0200, Ivo van Doorn wrote:
+On Wed, 2007-08-08 at 00:56 -0700, Michael Wu wrote:
+> On Tuesday 07 August 2007 13:33, John W. Linville wrote:
+> > The ternary conditionals are a bit ugly.  I guess I could recode it
+> > with temp vars initialized before calling ieee80211_sta_start_scan.
+> >
+> Something more like:
+>=20
+> if (ifsta->auto_ssid_sel && ifsta->ssid_len)
+>   ieee80211_sta_start_scan(dev, NULL, 0);
+> else
+>   ieee80211_sta_start_scan(dev, ifsta->ssid, ifsta->ssid_len);
 
-> Do we need another flag to indicate ICV errors?
-> rt2x00 has the following fields to indicate problems during hardware decr=
-yption:
-> 	ICV error -> How to report this to mac80211?
-> 	MIC error -> The RX_FLAG_MMIC_ERROR flag can be set
-> 	invalid key -> Could best be done by just not setting RX_FLAG_DECRYPTED =
-I assume.
-
-I think you either just drop the packet or give it to mac80211 decrypted
-but with ICV still on so that mac80211 will verify the ICV (again) and
-do whatever is appropriate. But I think dropping it ought to be fine. Do
-we want this for monitoring maybe?
+Except you got the condition inverted.
 
 johannes
 
---=-i/JvcUUpHu43Tj2ZEpCq
+--=-7YKCT4XYXnggjUsSpHMh
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGzABh/ETPhpq3jKURAv5fAJ4u0nvtlR2ShU1pH4GW4UmLX2OkJQCgs4NY
-cHYjh90JSNnxQUl8eAxpLNo=
-=gpl2
+iD8DBQBGuY4T/ETPhpq3jKURAgPLAJsGNamOYdwWcbZ15I5JhO/NUceJ+ACePzzy
+Iv7R/RXaJpndeURWba1ZYMM=
+=pmqv
 -----END PGP SIGNATURE-----
 
---=-i/JvcUUpHu43Tj2ZEpCq--
+--=-7YKCT4XYXnggjUsSpHMh--
 
