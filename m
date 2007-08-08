@@ -1,62 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:40499
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758952AbXHBT7y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 15:59:54 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [RFC V3] bcm43xx-mac80211: Provide information to allow transmission rate decreases
-Date: Thu, 2 Aug 2007 21:59:44 +0200
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-References: <46b1fa6d.d4l4DujAaAR2ORZf%Larry.Finger@lwfinger.net> <200708021805.17004.mb@bu3sch.de> <46B23422.3050207@lwfinger.net>
-In-Reply-To: <46B23422.3050207@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200708022159.44422.mb@bu3sch.de>
+Received: from mga09.intel.com ([134.134.136.24]:12789 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757920AbXHHHhK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Aug 2007 03:37:10 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 02/28] iwlwifi: add more Kconfig options
+Date: Wed,  8 Aug 2007 15:33:19 +0800
+Message-Id: <1186558432932-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <11865584292234-git-send-email-yi.zhu@intel.com>
+References: <11865584251026-git-send-email-yi.zhu@intel.com>
+ <11865584292234-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 02 August 2007, Larry Finger wrote:
-> Michael Buesch wrote:
-> > On Thursday 02 August 2007, Larry Finger wrote:
-> >> Michael,
-> >>
-> >> I couldn't find any long/short indication in the header, so I added a bool that
-> >> is set when the frame is sent.
-> > 
-> > This is not going to work.
-> > 
-> > But we can do this differently.
-> > You can do something like:
-> > 
-> > if (!status->acked && !tx_control->noack)
-> > 	excessive_retries = 1;
-> > 
-> > So we don't need to care about the retry count.
-> > 
-> > Anyway. I don't know why we need excessive_retries _at_ _all_.
-> > The rc algorithm does already know if the frame succeed or failed
-> > anyway.
-> 
-> Is this what you had in mind?
-> 
-> Larry
-> 
-> 
-> @@ -1311,6 +1311,9 @@ void bcm43xx_dma_handle_txstatus(struct
->                           */
->                          if (status->acked)
->                                  meta->txstat.flags |= IEEE80211_TX_STATUS_ACK;
-> +                       else
-> +                               if (!(meta->txstat.flags & IEEE80211_TXCTL_NO_ACK))
-> +                                       meta->txstat.excessive_retries = 1;
->                          meta->txstat.retry_count = status->frame_count - 1;
->                          ieee80211_tx_status_irqsafe(dev->wl->hw, meta->skb, &(meta->txstat));
->                          /* skb is freed by ieee80211_tx_status_irqsafe() */
+Add IWLWIFI_SENSITIVITY, IWLWIFI_SPECTRUM_MEASUREMENT, and IWLWIFI_QOS.
 
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/Kconfig |   23 +++++++++++++++++++++++
+ 1 files changed, 23 insertions(+), 0 deletions(-)
 
-Yeah, looks good. If you correctly diff that up, I'll queue it up for
-the next submission to John.
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index daa7c9e..a9f97ab 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -768,6 +768,29 @@ config IWLWIFI_DEBUG
+ 	  as the debug information can assist others in helping you resolve
+ 	  any problems you may encounter.
+ 
++config IWLWIFI_SENSITIVITY
++	bool "Enable Sensitivity Calibration in iwlwifi drivers"
++	depends on IWLWIFI
++	default y
++	---help---
++	  This option will enable sensitivity calibration for the iwlwifi
++	  drivers.
++
++config IWLWIFI_SPECTRUM_MEASUREMENT
++	bool "Enable Spectrum Measurement in iwlwifi drivers"
++	depends on IWLWIFI
++	default y
++	---help---
++	  This option will enable spectrum measurement for the iwlwifi drivers.
++
++config IWLWIFI_QOS
++	bool "Enable Wireless QoS in iwlwifi drivers"
++	depends on IWLWIFI
++	default y
++	---help---
++	  This option will enable wireless quality of service (QoS) for the
++	  iwlwifi drivers.
++
+ config IWLWIFI_HT
+ 	bool "Enable 802.11n HT features in iwlwifi drivers"
+ 	depends on EXPERIMENTAL
+-- 
+1.5.2
