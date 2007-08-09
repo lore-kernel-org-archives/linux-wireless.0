@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58891 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751156AbXHJV0s (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2007 17:26:48 -0400
-Subject: [PATCH] hostapd: remove use of ieee80211_msg_wep_frame_unknown_key
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 10 Aug 2007 23:29:26 +0200
-Message-Id: <1186781366.17351.8.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4722 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S938085AbXHIOHH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Aug 2007 10:07:07 -0400
+Date: Thu, 9 Aug 2007 09:53:26 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Aurelien Jarno <aurelien@aurel32.net>,
+	Michael Buesch <mb@bu3sch.de>, Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ssb: Make extif driver compilation depend on extif  config
+Message-ID: <20070809135326.GB7811@tuxdriver.com>
+References: <200708071744.40287.mb@bu3sch.de> <20070808154813.abf55801.akpm@linux-foundation.org> <46BA4E24.3060400@aurel32.net> <20070808164327.45803a64.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070808164327.45803a64.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I just removed it from the kernel because hostapd doesn't really use it.
-Kill all references.
+On Wed, Aug 08, 2007 at 04:43:27PM -0700, Andrew Morton wrote:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> I'm hopelessly confused by the ssb stuff.  I'm not sure if I have all the
+> right stuff, all the latest stuff and I don't understand why some is going
+> into git-wireless and some is not.
 
---- hostap.orig/hostapd/driver_devicescape.c	2007-08-10 23:27:07.000000000 +0200
-+++ hostap/hostapd/driver_devicescape.c	2007-08-10 23:28:21.000000000 +0200
-@@ -1413,9 +1413,15 @@ static void handle_frame(struct hostapd_
- 	case ieee80211_msg_tx_callback_fail:
- 		handle_tx_callback(hapd, buf, data_len, 0);
- 		return;
-+/*
-+ * TODO
-+ * the kernel never sends this any more, add new nl80211
-+ * notification if you need this.
-+
- 	case ieee80211_msg_wep_frame_unknown_key:
--		/* TODO: ieee802_11_rx_unknown_key(hapd, buf, data_len); */
-+		ieee802_11_rx_unknown_key(hapd, buf, data_len);
- 		return;
-+ */
- 	case ieee80211_msg_michael_mic_failure:
- 		hostapd_michael_mic_failure(hapd, buf, data_len);
- 		return;
+Once you added ssb patches to -mm, I dropped the ssb stuff from the
+mm-master branch of wireless-dev in hopes of avoiding conflicts.
 
+Ugh, it looks like some new stuff has leaked-through -- I'll get rid
+of it.
 
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
