@@ -1,89 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44292 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762903AbXHCWMb (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:53668
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936314AbXHIOJZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 18:12:31 -0400
-Received: from [84.135.224.6] (helo=[10.0.0.4])
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1IH5Nl-0006th-9F
-	for linux-wireless@vger.kernel.org; Fri, 03 Aug 2007 23:12:30 +0100
-Subject: further plan wrt. monitor interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-p5+nBdMxneF2Lg0PY7lz"
-Date: Sat, 04 Aug 2007 00:09:19 +0200
-Message-Id: <1186178959.13315.30.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 9 Aug 2007 10:09:25 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] ssb: Make extif driver compilation depend on extif config
+Date: Thu, 9 Aug 2007 16:08:43 +0200
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Aurelien Jarno <aurelien@aurel32.net>,
+	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+References: <200708071744.40287.mb@bu3sch.de> <20070808164327.45803a64.akpm@linux-foundation.org> <20070809135326.GB7811@tuxdriver.com>
+In-Reply-To: <20070809135326.GB7811@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708091608.43994.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 09 August 2007 15:53:26 John W. Linville wrote:
+> On Wed, Aug 08, 2007 at 04:43:27PM -0700, Andrew Morton wrote:
+> 
+> > I'm hopelessly confused by the ssb stuff.  I'm not sure if I have all the
+> > right stuff, all the latest stuff and I don't understand why some is going
+> > into git-wireless and some is not.
+> 
+> Once you added ssb patches to -mm, I dropped the ssb stuff from the
+> mm-master branch of wireless-dev in hopes of avoiding conflicts.
+> 
+> Ugh, it looks like some new stuff has leaked-through -- I'll get rid
+> of it.
 
---=-p5+nBdMxneF2Lg0PY7lz
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I think we decided that it was not a good idea to maintain ssb in
+the -mm tree, so I think we'll have to maintain it in a seperate
+branch of wireless-dev. Any idea?
 
-After my recent patch drivers can now tell the stack that a frame was
-damaged. That doesn't do much good, however, if the user cannot tell the
-stack to generate such frames. But we need to go level by level so first
-mac80211 needs to know about it.
-
-After some discussion and review of Daniel's document (thanks!) we came
-up with the following ideas:
-
-1)
-Define new filter flags
- * FIF_PROMISC_IN_BSS	(BSS filters still on, but otherwise promisc)
- * FIF_ALLMULTI		(all multicast frames are allowed through)
- * FIF_BROADCAST	(broadcast frames are allowed through)
- * FIF_FCSFAIL		(frames with bad FCS are allowed through)
- * FIF_PLCPFAIL		(frames with bad PLCP checksum are allowed through)
- * FIF_CONTROL		(control frames are shown)
- * FIF_OTHER_BSS	(frames from other BSSes are shown, subject to the
-			 other filters)
-[missing anything?]
-
-It should be permitted to silently 'upgrade', say if a driver can't
-support PROMISC_IN_BSS but only get all packets then it does that
-instead, but PROMISC_IN_BSS is still useful if possible.
-
-2)
-Remove IEEE80211_HW_MONITOR_DURING_OPER, it becomes useless; same with
-soft monitor mode interface stuff
-
-3)
-When a monitor interface is added, set FIF_OTHER_BSS and FIF_CONTROL;
-depending on the interface flags set FIF_PROMISC_IN_BSS, FIF_MCAST,
-FIF_BCAST. No longer tell drivers about monitor interfaces with
-add_interface/remove_interface, but rather call set_multicast_list()
-with changed flags when a monitor interface comes on.
-
-4)
-Change the "int flags" argument to the set_multicast_list callback to
-"int *flags" so drivers can indicate whether they supported a flag or
-not by clearing all flags they did not honour. Additional advantage:
-drivers break and people will be forced to re-examine their code to use
-the new flags.
-
-5) [FUTURE]
-Introduce cfg80211/nl80211 API to ask for bad FCS/bad PLCP on a monitor
-interface.
-
-johannes
-
---=-p5+nBdMxneF2Lg0PY7lz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGs6eP/ETPhpq3jKURAvxrAKCUAopa3tZ7HX6xoJMxybgSEOiTCwCgh4ww
-M7W6Ls38jytMyfqwCux1wK0=
-=pQ08
------END PGP SIGNATURE-----
-
---=-p5+nBdMxneF2Lg0PY7lz--
-
+-- 
+Greetings Michael.
