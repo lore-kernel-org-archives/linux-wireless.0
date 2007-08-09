@@ -1,38 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purr.warmcat.com ([87.106.142.209]:48182 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758715AbXHGJrY (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:35987 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750931AbXHIESW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2007 05:47:24 -0400
-Message-ID: <46B83FA9.20507@warmcat.com>
-Date: Tue, 07 Aug 2007 10:47:21 +0100
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
+	Thu, 9 Aug 2007 00:18:22 -0400
+From: Michael Wu <flamingice@sourmilk.net>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: No echo TX pkt to Monitor interfaces for injection
-References: <20070802223857.19090.70108.stgit@localhost> <1186428789.4067.12.camel@johannes.berg>
-In-Reply-To: <1186428789.4067.12.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: [PATCH] mac80211: probe for hidden SSIDs in pre-auth scan
+Date: Wed, 8 Aug 2007 21:16:33 -0700
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <20070807203315.GG3330@tuxdriver.com> <1186565651.11717.23.camel@johannes.berg> <1186566071.11717.28.camel@johannes.berg>
+In-Reply-To: <1186566071.11717.28.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart10694037.qIMs4RabWP";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200708082116.38013.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Somebody in the thread at some point said:
-> On Thu, 2007-08-02 at 23:38 +0100, warmcat wrote:
-> 
->> This patch adds a new attribute to ieee80211_tx_control's flags field,
->> IEEE80211_TXCTL_NO_SOFT_MONITOR_ECHO, which is set for injected
->> packets.  The code to add a new radiotap header and echo the packet
->> down monitor mode interfaces is now conditional on this attribute not
->> being set.
-> 
-> Regardless of whether my approach (just posted) will be accepted, this
-> patch cannot go in: it stops injected packets from showing up on all
-> monitor interfaces but the one they were injected into. If my
-> IFF_NO_MIRROR approach is rejected then we'll have to make this a bit
-> more elaborate by storing the injection device ifindex in the info
-> instead of just a flag.
+--nextPart10694037.qIMs4RabWP
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Yep, fair enough.
+On Wednesday 08 August 2007 02:41, Johannes Berg wrote:
+> On the other hand, calling with a "anything, 0" probably has the same
+> effect as calling with "NULL, 0" so the "ifsta->ssid_len" condition can
+> go away just as linville had it.
+>
+Yep.
 
--Andy
+-Michael Wu
+
+--nextPart10694037.qIMs4RabWP
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGupUlT3Oqt9AH4aERAsslAKDAp0CRlaDN0Jf1ipC45t1kXeMPIwCfZGaC
+caBnJcWcgnHFnLan9azky0w=
+=jjW3
+-----END PGP SIGNATURE-----
+
+--nextPart10694037.qIMs4RabWP--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
