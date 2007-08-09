@@ -1,206 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45000 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758091AbXHXMbr (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.191]:63672 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S938545AbXHIFn0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2007 08:31:47 -0400
-Message-Id: <20070824122905.350213000@sipsolutions.net>
-References: <20070824122705.549190000@sipsolutions.net>
-Date: Fri, 24 Aug 2007 14:27:10 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+	Thu, 9 Aug 2007 01:43:26 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so322212rvb
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2007 22:43:25 -0700 (PDT)
+Message-ID: <a728f9f90708082243u2e66e84cjeed8856722c4bea5@mail.gmail.com>
+Date: Thu, 9 Aug 2007 01:43:25 -0400
+From: "Alex Deucher" <alexdeucher@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Marvell pci wifi chips
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 05/15] mac80211: remove HW_KEY_IDX_INVALID
-Mime-Version: 1.0
+In-Reply-To: <a728f9f90708072129m2c5dd9f8j70e5bba44e504ff0@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <a728f9f90708070921x13c1a9fem8f7bbf3fe77756d@mail.gmail.com>
+	 <20070807173431.GC3330@tuxdriver.com>
+	 <a728f9f90708072129m2c5dd9f8j70e5bba44e504ff0@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch makes the mac80211/driver interface rely only on the
-IEEE80211_TXCTL_DO_NOT_ENCRYPT flag to signal to the driver whether
-a frame should be encrypted or not, since mac80211 internally no
-longer relies on HW_KEY_IDX_INVALID either this removes it, changes
-the key index to be a u8 in all places and makes the full range of
-the value available to drivers.
+On 8/8/07, Alex Deucher <alexdeucher@gmail.com> wrote:
+> On 8/7/07, John W. Linville <linville@tuxdriver.com> wrote:
+> > On Tue, Aug 07, 2007 at 12:21:02PM -0400, Alex Deucher wrote:
+> > > Is anyone working on a driver for the marvell pci libertas chips
+> > > (8335, 8300, 8310, etc.) or know of someone who is?  I've got several
+> > > of these cards not doing anything at the moment if someone is
+> > > interested in one.  It seems there are several drivers floating
+> > > around:
+> > >
+> > > - mrv8k driver (http://www.saillard.org/linux/mrv8k/)
+> > > - openbsd malo driver (http://www.openbsd.org/cgi-bin/man.cgi?query=malo)
+> > > - marvell GPL driver (http://johannes.sipsolutions.net/files/marvell.tar.bz2)
+> > >
+> > > Reading through the linux-wireless archive, several people seemed to
+> > > indicate there was work going on, but I have not been able to find any
+> > > information on that other than Holger's CF libertas integration.  I
+> > > and others have asked before, but there seems to be some confusion as
+> > > to the whole libertas line and their relative compatibility.  Just
+> > > curious.
+> >
+> > I think I saw discussion lately to the effect that the PCI devices are
+> > not currently supported, and that they likely could be supported by
+> > simply implementing a PCI front-end to the core of the libertas code.
+> > I think Holger is the person most likely to know for sure.
+> >
+> > I've got cards like that too -- would love for you to get them
+> > working... :-)
+>
+> Has anyone tested the marvell driver
+> (http://johannes.sipsolutions.net/files/marvell.tar.bz2)?  Does it
+> work?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+I attempted to build the driver on 2.6.22, but I got the following
+errors.  Unfortunately, I'm not too familiar with the net80211 stuff.
+Anyone got any ideas?
 
----
-Changes since v1:
- * use a u8 instead of an int
- * reorder some fields for better space usage (less padding)
+  CC [M]  drivers/net/wireless/marvell_softap/driver/mwl_debug.o
+In file included from drivers/net/wireless/marvell_softap/driver/mwl_main.h:42,
+                 from drivers/net/wireless/marvell_softap/driver/mwl_debug.h:42,
+                 from drivers/net/wireless/marvell_softap/driver/mwl_debug.c:26:
+drivers/net/wireless/marvell_softap/driver/mwl_descriptors.h:72:
+warning: 'packed' attribute ignored
+drivers/net/wireless/marvell_softap/driver/mwl_descriptors.h:90:
+warning: 'packed' attribute ignored
+In file included from drivers/net/wireless/marvell_softap/driver/mwl_main.h:43,
+                 from drivers/net/wireless/marvell_softap/driver/mwl_debug.h:42,
+                 from drivers/net/wireless/marvell_softap/driver/mwl_debug.c:26:
+drivers/net/wireless/marvell_softap/driver/mwl_wlanext.h:37:26: error:
+if_ethersubr.h: No such file or directory
+drivers/net/wireless/marvell_softap/driver/mwl_wlanext.h:38:22: error:
+if_media.h: No such file or directory
+drivers/net/wireless/marvell_softap/driver/mwl_wlanext.h:39:20: error:
+if_llc.h: No such file or directory
+drivers/net/wireless/marvell_softap/driver/mwl_wlanext.h:40:27: error:
+ieee80211_var.h: No such file or directory
+In file included from drivers/net/wireless/marvell_softap/driver/mwl_debug.h:42,
+                 from drivers/net/wireless/marvell_softap/driver/mwl_debug.c:26:
+drivers/net/wireless/marvell_softap/driver/mwl_main.h:44:29: error:
+ieee80211_proto.h: No such file or directory
+In file included from drivers/net/wireless/marvell_softap/driver/mwl_debug.h:42,
+                 from drivers/net/wireless/marvell_softap/driver/mwl_debug.c:26:
+drivers/net/wireless/marvell_softap/driver/mwl_main.h:125: error:
+field 'beaconOffsets' has incomplete type
+drivers/net/wireless/marvell_softap/driver/mwl_main.h:129: error:
+field 'node' has incomplete type
+drivers/net/wireless/marvell_softap/driver/mwl_main.h:200: warning:
+'enum ieee80211_state' declared inside parameter list
+drivers/net/wireless/marvell_softap/driver/mwl_main.h:200: warning:
+its scope is only this definition or declaration, which is probably
+not what you want
+drivers/net/wireless/marvell_softap/driver/mwl_main.h:200: warning:
+'struct ieee80211com' declared inside parameter list
+drivers/net/wireless/marvell_softap/driver/mwl_main.h:201: warning:
+'struct ieee80211com' declared inside parameter list
+drivers/net/wireless/marvell_softap/driver/mwl_main.h:204: warning:
+'struct ieee80211com' declared inside parameter list
+drivers/net/wireless/marvell_softap/driver/mwl_main.h:208: warning:
+'struct ieee80211com' declared inside parameter list
+drivers/net/wireless/marvell_softap/driver/mwl_main.h:231: error:
+field 'curr80211com' has incomplete type
+drivers/net/wireless/marvell_softap/driver/mwl_main.h:232: error:
+field 'initialOpmode' has incomplete type
+drivers/net/wireless/marvell_softap/driver/mwl_main.h:233: error:
+field 'currChannel' has incomplete type
+make[4]: *** [drivers/net/wireless/marvell_softap/driver/mwl_debug.o] Error 1
+make[3]: *** [drivers/net/wireless/marvell_softap] Error 2
+make[2]: *** [drivers/net/wireless] Error 2
+make[1]: *** [drivers/net] Error 2
+make: *** [drivers] Error 2
 
- include/net/mac80211.h |   19 +++++++++----------
- net/mac80211/key.c     |    5 -----
- net/mac80211/tx.c      |    7 +++----
- net/mac80211/wpa.c     |    8 ++++----
- 4 files changed, 16 insertions(+), 23 deletions(-)
 
---- wireless-dev.orig/include/net/mac80211.h	2007-08-24 13:46:02.979417211 +0200
-+++ wireless-dev/include/net/mac80211.h	2007-08-24 13:55:34.779417211 +0200
-@@ -167,7 +167,6 @@ struct ieee80211_low_level_stats {
- /* Transmit control fields. This data structure is passed to low-level driver
-  * with each TX frame. The low-level driver is responsible for configuring
-  * the hardware to use given values (depending on what is supported). */
--#define HW_KEY_IDX_INVALID -1
- 
- struct ieee80211_tx_control {
- 	int tx_rate; /* Transmit rate, given as the hw specific value for the
-@@ -200,13 +199,13 @@ struct ieee80211_tx_control {
- 						  * long retry value */
- 	u32 flags;			       /* tx control flags defined
- 						* above */
-+	u8 key_idx;		/* keyidx from hw->set_key(), undefined if
-+				 * IEEE80211_TXCTL_DO_NOT_ENCRYPT is set */
- 	u8 retry_limit;		/* 1 = only first attempt, 2 = one retry, ..
- 				 * This could be used when set_retry_limit
- 				 * is not implemented by the driver */
- 	u8 power_level;		/* per-packet transmit power level, in dBm */
- 	u8 antenna_sel_tx; 	/* 0 = default/diversity, 1 = Ant0, 2 = Ant1 */
--	s8 key_idx;		/* HW_KEY_IDX_INVALID = do not encrypt,
--				 * other values: keyidx from hw->set_key() */
- 	u8 icv_len;		/* length of the ICV/MIC field in octets */
- 	u8 iv_len;		/* length of the IV field in octets */
- 	u8 tkip_key[16];	/* generated phase2/phase1 key for hw TKIP */
-@@ -470,8 +469,7 @@ enum ieee80211_key_flags {
-  *
-  * @hw_key_idx: To be set by the driver, this is the key index the driver
-  *	wants to be given when a frame is transmitted and needs to be
-- *	encrypted in hardware. It defaults to %HW_KEY_IDX_INVALID which
-- *	the driver may not use.
-+ *	encrypted in hardware.
-  * @alg: The key algorithm.
-  * @driver_keylist: for use by the driver
-  * @flags: key flags, see &enum ieee80211_key_flags.
-@@ -480,9 +478,9 @@ enum ieee80211_key_flags {
-  * @key: key material
-  */
- struct ieee80211_key_conf {
--	int hw_key_idx;
--	ieee80211_key_alg alg;
- 	struct list_head driver_keylist;
-+	ieee80211_key_alg alg;
-+	u8 hw_key_idx;
- 	u8 flags;
- 	s8 keyidx;
- 	u8 keylen;
-@@ -704,9 +702,10 @@ struct ieee80211_ops {
- 	 * remove the key for transmission.
- 	 *
- 	 * Return 0 if the key is now in use, -EOPNOTSUPP or -ENOSPC if it
--	 * couldn't be added; if you return 0 then hw_key_idx must be
--	 * assigned to something other than HW_KEY_IDX_INVALID. When the cmd
--	 * is DISABLE_KEY then it must succeed.
-+	 * couldn't be added; if you return 0 then hw_key_idx must be assigned
-+	 * to the hardware key index, you are free to use the full u8 range.
-+	 *
-+	 * When the cmd is DISABLE_KEY then it must succeed.
- 	 *
- 	 * Note that it is permissible to not decrypt a frame even if a key
- 	 * for it has been uploaded to hardware, the stack will not make any
---- wireless-dev.orig/net/mac80211/key.c	2007-08-24 13:45:14.449417211 +0200
-+++ wireless-dev/net/mac80211/key.c	2007-08-24 13:47:32.979417211 +0200
-@@ -69,8 +69,6 @@ static void ieee80211_key_enable_hw_acce
- 				       key->sdata->dev->dev_addr, addr,
- 				       &key->conf);
- 
--	WARN_ON(!ret && (key->conf.hw_key_idx == HW_KEY_IDX_INVALID));
--
- 	if (!ret)
- 		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
- 
-@@ -105,7 +103,6 @@ static void ieee80211_key_disable_hw_acc
- 		       key->conf.keyidx, MAC_ARG(addr), ret);
- 
- 	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
--	key->conf.hw_key_idx = HW_KEY_IDX_INVALID;
- }
- 
- /*
-@@ -122,7 +119,6 @@ void ieee80211_key_removed(struct ieee80
- 		return;
- 
- 	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
--	key->conf.hw_key_idx = HW_KEY_IDX_INVALID;
- }
- 
- struct ieee80211_key *ieee80211_key_alloc(struct ieee80211_sub_if_data *sdata,
-@@ -144,7 +140,6 @@ struct ieee80211_key *ieee80211_key_allo
- 	 * Default to software encryption; we'll later upload the
- 	 * key to the hardware if possible.
- 	 */
--	key->conf.hw_key_idx = HW_KEY_IDX_INVALID;
- 	key->conf.flags = 0;
- 	key->flags = 0;
- 
---- wireless-dev.orig/net/mac80211/wpa.c	2007-08-24 13:45:07.209417211 +0200
-+++ wireless-dev/net/mac80211/wpa.c	2007-08-24 13:47:32.979417211 +0200
-@@ -136,7 +136,7 @@ ieee80211_tx_h_michael_mic_add(struct ie
- 		printk(KERN_INFO "%s: WPA testing - corrupting TX Michael MIC "
- 		       "for STA " MAC_FMT "\n",
- 		       tx->dev->name, MAC_ARG(tx->sta->addr));
--		tx->u.tx.control->key_idx = HW_KEY_IDX_INVALID;
-+		tx->u.tx.control->flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT;
- 		tx->sta->wpa_trigger &= ~WPA_TRIGGER_FAIL_TX_MIC;
- 		tx->wpa_test = 1;
- 		mic[0]++;
-@@ -144,7 +144,7 @@ ieee80211_tx_h_michael_mic_add(struct ie
- 		   tx->local->wpa_trigger & WPA_TRIGGER_FAIL_TX_MIC) {
- 		printk(KERN_INFO "%s: WPA testing - corrupting TX Michael MIC "
- 		       "for Group Key\n", tx->dev->name);
--		tx->u.tx.control->key_idx = HW_KEY_IDX_INVALID;
-+		tx->u.tx.control->flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT;
- 		tx->local->wpa_trigger &= ~WPA_TRIGGER_FAIL_TX_MIC;
- 		tx->wpa_test = 1;
- 		mic[0]++;
-@@ -415,7 +415,7 @@ ieee80211_tx_h_tkip_encrypt(struct ieee8
- 		printk(KERN_INFO "%s: WPA testing - corrupting TX TKIP ICV "
- 		       "for STA " MAC_FMT "\n",
- 		       tx->dev->name, MAC_ARG(tx->sta->addr));
--		tx->u.tx.control->key_idx = HW_KEY_IDX_INVALID;
-+		tx->u.tx.control->flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT;
- 		tx->sta->wpa_trigger &= ~WPA_TRIGGER_FAIL_TX_ICV;
- 		skb->data[skb->len - 1]++;
- 	} else if (!(tx->flags & IEEE80211_TXRXD_TXUNICAST) &&
-@@ -423,7 +423,7 @@ ieee80211_tx_h_tkip_encrypt(struct ieee8
- 		printk(KERN_INFO "%s: WPA testing - corrupting TX TKIP ICV "
- 		       "for Group Key\n",
- 		       tx->dev->name);
--		tx->u.tx.control->key_idx = HW_KEY_IDX_INVALID;
-+		tx->u.tx.control->flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT;
- 		tx->local->wpa_trigger &= ~WPA_TRIGGER_FAIL_TX_ICV;
- 		skb->data[skb->len - 1]++;
- 	}
---- wireless-dev.orig/net/mac80211/tx.c	2007-08-24 13:40:32.409417211 +0200
-+++ wireless-dev/net/mac80211/tx.c	2007-08-24 13:47:32.989417211 +0200
-@@ -426,8 +426,6 @@ ieee80211_tx_h_ps_buf(struct ieee80211_t
- static ieee80211_txrx_result
- ieee80211_tx_h_select_key(struct ieee80211_txrx_data *tx)
- {
--	tx->u.tx.control->key_idx = HW_KEY_IDX_INVALID;
--
- 	if (unlikely(tx->u.tx.control->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT))
- 		tx->key = NULL;
- 	else if (tx->sta && tx->sta->key)
-@@ -438,8 +436,10 @@ ieee80211_tx_h_select_key(struct ieee802
- 		 !(tx->sdata->eapol && ieee80211_is_eapol(tx->skb))) {
- 		I802_DEBUG_INC(tx->local->tx_handlers_drop_unencrypted);
- 		return TXRX_DROP;
--	} else
-+	} else {
- 		tx->key = NULL;
-+		tx->u.tx.control->flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT;
-+	}
- 
- 	if (tx->key) {
- 		tx->key->tx_rx_count++;
-@@ -831,7 +831,6 @@ __ieee80211_parse_tx_radiotap(
- 	 */
- 
- 	control->retry_limit = 1; /* no retry */
--	control->key_idx = HW_KEY_IDX_INVALID;
- 	control->flags &= ~(IEEE80211_TXCTL_USE_RTS_CTS |
- 			    IEEE80211_TXCTL_USE_CTS_PROTECT);
- 	control->flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT |
+Thanks,
 
--- 
-
+Alex
