@@ -1,56 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47237 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759861AbXHVNEV (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:47743 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762145AbXHIAPK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2007 09:04:21 -0400
-Subject: Re: [PATCH 1/2] mac80211:  Remove ieee80211_privacy_mismatch
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Volker Braun <vbraun@physics.upenn.edu>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <20070818034146.GC1415@jm.kir.nu>
-References: <1187406018.30247.17.camel@thinkpad>
-	 <20070818034146.GC1415@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xKi0BjpxcrjiYtosgLQj"
-Date: Wed, 22 Aug 2007 15:04:15 +0200
-Message-Id: <1187787855.4314.6.camel@johannes.berg>
+	Wed, 8 Aug 2007 20:15:10 -0400
+Date: Wed, 8 Aug 2007 17:13:30 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Aurelien Jarno <aurelien@aurel32.net>,
+	John Linville <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ssb: Make extif driver compilation depend on extif  config
+Message-Id: <20070808171330.b374ec12.akpm@linux-foundation.org>
+In-Reply-To: <200708090202.20267.mb@bu3sch.de>
+References: <200708071744.40287.mb@bu3sch.de>
+	<46BA4E24.3060400@aurel32.net>
+	<20070808164327.45803a64.akpm@linux-foundation.org>
+	<200708090202.20267.mb@bu3sch.de>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 9 Aug 2007 02:02:19 +0200
+Michael Buesch <mb@bu3sch.de> wrote:
 
---=-xKi0BjpxcrjiYtosgLQj
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > I'm hopelessly confused by the ssb stuff.  I'm not sure if I have all the
+> > right stuff, all the latest stuff and I don't understand why some is going
+> > into git-wireless and some is not.
+> 
+> Everything is going into git-wireless.
+> git-wireless contains latest ssb. _but_ John complained
+> about that. And he is right. SSB is not strictly wireless core.
+> So I thought it was best to get ssb into mainline as soon as
+> possible. So -mm is really the way to go into mainline.
+> My plan was to merge mainline with the next merge window.
+> 
+> > I'd prefer to be dumbly pulling a tree which Michael controls rather than
+> > trying to master it all in -mm, if possible.  A git tree or a quilt tree in
+> > some open dir somewhere would suit?
+> 
+> It's a bit difficult, as bcm43xx depends on it. Which again depends
+> on the wireless tree. :)
+> So basically we are stuck with maintaining it in wireless-dev.
+> 
+> I don't know what your policy is with pulling from wireless-dev.
+> So wireless-dev currently contains latest SSB. So if you pull from
+> wireless-dev, you'll also get latest SSB. Though, if we want to
+> merge SSB soon, we need it broken-out. That is what I was trying
+> to do.
 
-On Fri, 2007-08-17 at 20:41 -0700, Jouni Malinen wrote:
+Yeah, after dropping all the ssb stuff, my build is now busted because
+the bit of git-wireless which I have wants SSB bits for BCM43XX.
 
-> I don't know what has happened here, but ieee80211_privacy_mismatch()
-> and being able to disable/enable mixed-cell operations was here for
-> purpose
+argh.  I'll try disabling b44 so I can get a release out the door.
+Please, just give me some internally-consistent tree(s) to pull??
 
-Volker, can you try
-
-# iwpriv wlan0 param 1039 1
-
-instead of this patch? Yep, that's the UI for enabling mixed cell as far
-as I can tell. Great huh?...
-
-johannes
-
---=-xKi0BjpxcrjiYtosgLQj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGzDRP/ETPhpq3jKURAqAFAJ4ibWwnlnys1SujqgagQ4ix8tyjCwCfUnHu
-NLmQGpPJ30xgft1mHJD90Zc=
-=S1pu
------END PGP SIGNATURE-----
-
---=-xKi0BjpxcrjiYtosgLQj--
-
+Thanks.
