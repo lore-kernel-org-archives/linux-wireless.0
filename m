@@ -1,63 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55039 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37239 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752226AbXHKIPT (ORCPT
+	with ESMTP id S1750790AbXHJVfY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Aug 2007 04:15:19 -0400
-Subject: Re: [PATCH 4/4] mac80211: remove radar stuff
+	Fri, 10 Aug 2007 17:35:24 -0400
+Subject: [PATCH] hostapd: don't reference ieee80211_msg_sta_not_assoc if  it's unused anyway
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <46BD2A89.8050906@lwfinger.net>
-References: <20070810220544.321975000@sipsolutions.net>
-	 <20070810220634.450509000@sipsolutions.net> <46BD2A89.8050906@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-emKtupNuo7D8tsC5Kk3Z"
-Date: Sat, 11 Aug 2007 10:17:47 +0200
-Message-Id: <1186820267.5363.1.camel@johannes.berg>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 10 Aug 2007 23:38:01 +0200
+Message-Id: <1186781881.17351.15.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hostapd doesn't do anything about such frames. Kernel no longer sends
+them and the constant was removed, so let's not reference it any longer.
 
---=-emKtupNuo7D8tsC5Kk3Z
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2007-08-10 at 22:18 -0500, Larry Finger wrote:
-> Johannes Berg wrote:
-> > Unused in drivers, userspace and mac80211.
-> >=20
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > ---
->=20
-> Won't 802.11a drivers need this? If so, does it hurt to leave it in for n=
-ow?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Absolutely correct, they probably will. None of the ones we have,
-however, actually uses it, and it uses the management interface we're
-trying to get rid of for the notification. The same function should
-probably be added back to mac80211 or cfg80211 once somebody actually
-wants it, but do the notification
- 1) with well-defined arguments (explanation for the two args anyone?)
- 2) via nl80211
+--- hostap.orig/hostapd/driver_devicescape.c	2007-08-10 23:33:19.000000000 +0200
++++ hostap/hostapd/driver_devicescape.c	2007-08-10 23:35:10.000000000 +0200
+@@ -1351,9 +1351,12 @@ static void handle_frame(struct hostapd_
+ 	}
+ 
+ 	/* PS-Poll frame from not associated is 16 bytes. All other frames
+-	 * passed to hostapd are 24 bytes or longer. */
+-	if (len < 24 &&
+-	    (msg_type != ieee80211_msg_sta_not_assoc || len < 16)) {
++	 * passed to hostapd are 24 bytes or longer.
++	 * Right now, the kernel doesn't send us any frames from not-associated
++	 * because the code here doesn't care. TODO: add support to kernel
++	 * and send DEAUTH/DISASSOC to them...
++	 */
++	if (len < 24) {
+ 		printf("handle_frame: too short (%lu), type %d\n",
+ 		       (unsigned long) len, msg_type);
+ 		return;
+@@ -1425,9 +1428,15 @@ static void handle_frame(struct hostapd_
+ 	case ieee80211_msg_michael_mic_failure:
+ 		hostapd_michael_mic_failure(hapd, buf, data_len);
+ 		return;
+-	case ieee80211_msg_sta_not_assoc:
+-		/* TODO: ieee802_11_rx_sta_not_assoc(hapd, buf, data_len); */
++/*
++ * TODO
++ * We should be telling them to go away. But we don't support that now.
++ * See also below and above for other TODO items related to this.
++
++ 	case ieee80211_msg_sta_not_assoc:
++		ieee802_11_rx_sta_not_assoc(hapd, buf, data_len);
+ 		return;
++ */
+ 	default:
+ 		printf("handle_frame: unknown msg_type %d\n", msg_type);
+ 		return;
 
-It doesn't really "hurt" but I'm trying to actually remove the master
-interface now and I'm almost there, so this code is in my way.
-
-johannes
-
---=-emKtupNuo7D8tsC5Kk3Z
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGvXCr/ETPhpq3jKURApGfAKC6GLxnDpLSKjbTvIx/bCIHFfzqTwCeMe+V
-pPb34C3e5DQeCNZLKg91E5s=
-=kEXC
------END PGP SIGNATURE-----
-
---=-emKtupNuo7D8tsC5Kk3Z--
 
