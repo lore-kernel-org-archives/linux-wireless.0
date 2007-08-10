@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51589 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43648 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751276AbXHTLYt (ORCPT
+	with ESMTP id S1751952AbXHJXqZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2007 07:24:49 -0400
-Subject: Re: [PATCH] Add iwlwifi wireless drivers (resend)
+	Fri, 10 Aug 2007 19:46:25 -0400
+Subject: [PATCH] mac80211: remove special casing of EAPOL on mgmt interface
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W.Linville" <linville@tuxdriver.com>,
-	Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>
-In-Reply-To: <1187578610.5763.232.camel@debian.sh.intel.com>
-References: <1187328536.5763.137.camel@debian.sh.intel.com>
-	 <1187349981.23489.162.camel@johannes.berg>
-	 <1187578610.5763.232.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qxNhsk/oQdCYBpdP267k"
-Date: Mon, 20 Aug 2007 13:22:12 +0200
-Message-Id: <1187608932.6090.87.camel@johannes.berg>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Sat, 11 Aug 2007 01:48:57 +0200
+Message-Id: <1186789737.4862.3.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch removes sending EAPOL frames to the management interface and
+sends them to the regular ethernet interface instead.
 
---=-qxNhsk/oQdCYBpdP267k
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-On Mon, 2007-08-20 at 10:56 +0800, Zhu Yi wrote:
-> On Fri, 2007-08-17 at 13:26 +0200, Johannes Berg wrote:
-> > I was recently reviewing encryption stuff---can you comment on why you
-> > don't allow disabling hardware keys? For proper operation you really
-> > should allow that.=20
->=20
-> I don't think there is any special reason, just haven't enabled it yet.
-> We enable the hwcrypto and find it works good, then we switched to
-> enable something else. For the end users, I think they'd always want to
-> use hwcrypto if it is supported by the hardware. For developers, I'd
-> agree it is useful. I'll add it to the TODO list.
+---
+ net/mac80211/rx.c |   11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
-I guess the relevant thing is that if an association is lost then the
-key shouldn't be retained in the hardware because it should no longer be
-used, yet you don't allow to disable that key.
+--- wireless-dev.orig/net/mac80211/rx.c	2007-08-11 00:45:05.647838974 +0200
++++ wireless-dev/net/mac80211/rx.c	2007-08-11 01:45:58.517838974 +0200
+@@ -837,15 +837,8 @@ static ieee80211_txrx_result
+ ieee80211_rx_h_802_1x_pae(struct ieee80211_txrx_data *rx)
+ {
+ 	if (rx->sdata->eapol && ieee80211_is_eapol(rx->skb) &&
+-	    rx->sdata->type != IEEE80211_IF_TYPE_STA && rx->u.rx.ra_match) {
+-		/* Pass both encrypted and unencrypted EAPOL frames to user
+-		 * space for processing. */
+-		if (!rx->local->apdev)
+-			return TXRX_DROP;
+-		ieee80211_rx_mgmt(rx->local, rx->skb, rx->u.rx.status,
+-				  ieee80211_msg_normal);
+-		return TXRX_QUEUED;
+-	}
++	    rx->sdata->type != IEEE80211_IF_TYPE_STA && rx->u.rx.ra_match)
++		return TXRX_CONTINUE;
+ 
+ 	if (unlikely(rx->sdata->ieee802_1x &&
+ 		     (rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
 
-johannes
-
---=-qxNhsk/oQdCYBpdP267k
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGyXlk/ETPhpq3jKURAg3TAJ4kMHYyX+JIiMphuUh6/7FpguHuYwCfZixJ
-g8K3D2UvOX19gFPMR2uw79I=
-=OZ9d
------END PGP SIGNATURE-----
-
---=-qxNhsk/oQdCYBpdP267k--
 
