@@ -1,102 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:42300
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933869AbXHXKLj (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45706 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764900AbXHJWEo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2007 06:11:39 -0400
-From: Michael Buesch <mb@bu3sch.de>
+	Fri, 10 Aug 2007 18:04:44 -0400
+Message-Id: <20070810220632.677662000@sipsolutions.net>
+References: <20070810220544.321975000@sipsolutions.net>
+Date: Sat, 11 Aug 2007 00:05:45 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-Subject: b43: Copy MAC address to local struct
-Date: Fri, 24 Aug 2007 12:10:23 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200708241210.23562.mb@bu3sch.de>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/4] mac80211: remove ieee80211_msg_wep_frame_unknown_key
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We must copy the MAC addresses to a local struct, as we
-don't own the original pointer from mac80211 and don't
-know how mac80211 might mess with it while we are using it.
+Neither hostapd nor wpa_supplicant really use it.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <larry.finger@lwfinger.net>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ieee80211_common.h |    2 +-
+ net/mac80211/rx.c               |   11 +++++------
+ 2 files changed, 6 insertions(+), 7 deletions(-)
 
-Index: wireless-dev-new/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-dev-new.orig/drivers/net/wireless/b43/b43.h	2007-08-24 00:20:03.000000000 +0200
-+++ wireless-dev-new/drivers/net/wireless/b43/b43.h	2007-08-24 11:56:28.000000000 +0200
-@@ -600,10 +600,10 @@ struct b43_wl {
- 	 * Do not modify.
- 	 */
- 	int if_id;
--	/* MAC address (can be NULL). */
--	const u8 *mac_addr;
--	/* Current BSSID (can be NULL). */
--	const u8 *bssid;
-+	/* The MAC address of the operating interface. */
-+	u8 mac_addr[ETH_ALEN];
-+	/* Current BSSID */
-+	u8 bssid[ETH_ALEN];
- 	/* Interface type. (IEEE80211_IF_TYPE_XXX) */
- 	int if_type;
- 	/* Counter of active monitor interfaces. */
-Index: wireless-dev-new/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-dev-new.orig/drivers/net/wireless/b43/main.c	2007-08-24 00:20:03.000000000 +0200
-+++ wireless-dev-new/drivers/net/wireless/b43/main.c	2007-08-24 12:02:12.000000000 +0200
-@@ -537,7 +537,6 @@ void b43_macfilter_set(struct b43_wldev 
- 
- static void b43_write_mac_bssid_templates(struct b43_wldev *dev)
- {
--	static const u8 zero_addr[ETH_ALEN] = { 0 };
- 	const u8 *mac;
- 	const u8 *bssid;
- 	u8 mac_bssid[ETH_ALEN * 2];
-@@ -545,11 +544,7 @@ static void b43_write_mac_bssid_template
- 	u32 tmp;
- 
- 	bssid = dev->wl->bssid;
--	if (!bssid)
--		bssid = zero_addr;
- 	mac = dev->wl->mac_addr;
--	if (!mac)
--		mac = zero_addr;
- 
- 	b43_macfilter_set(dev, B43_MACFILTER_BSSID, bssid);
- 
-@@ -569,7 +564,10 @@ static void b43_write_mac_bssid_template
- static void b43_upload_card_macaddress(struct b43_wldev *dev,
- 				       const u8 * mac_addr)
- {
--	dev->wl->mac_addr = mac_addr;
-+	if (mac_addr)
-+		memcpy(dev->wl->mac_addr, mac_addr, ETH_ALEN);
-+	else
-+		memset(dev->wl->mac_addr, 0, ETH_ALEN);
- 	b43_write_mac_bssid_templates(dev);
- 	b43_macfilter_set(dev, B43_MACFILTER_SELF, mac_addr);
- }
-@@ -3026,7 +3024,10 @@ static int b43_config_interface(struct i
- 	spin_lock_irqsave(&wl->irq_lock, flags);
- 	if (conf->type != IEEE80211_IF_TYPE_MNTR) {
- 		B43_WARN_ON(wl->if_id != if_id);
--		wl->bssid = conf->bssid;
-+		if (conf->bssid)
-+			memcpy(wl->bssid, conf->bssid, ETH_ALEN);
-+		else
-+			memset(wl->bssid, 0, ETH_ALEN);
- 		if (b43_status(dev) >= B43_STAT_INITIALIZED) {
- 			if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP)) {
- 				B43_WARN_ON(conf->type != IEEE80211_IF_TYPE_AP);
-@@ -3454,7 +3455,7 @@ static int b43_wireless_core_init(struct
- 	b43_bluetooth_coext_enable(dev);
- 
- 	ssb_bus_powerup(bus, 1);	/* Enable dynamic PCTL */
--	wl->bssid = NULL;
-+	memset(wl->bssid, 0, ETH_ALEN);
- 	b43_upload_card_macaddress(dev, NULL);
- 	b43_security_init(dev);
- 	b43_rng_init(wl);
+--- wireless-dev.orig/net/mac80211/rx.c	2007-08-10 23:55:56.063840246 +0200
++++ wireless-dev/net/mac80211/rx.c	2007-08-11 00:01:27.643840246 +0200
+@@ -350,12 +350,11 @@ ieee80211_rx_h_load_key(struct ieee80211
+ 				       MAC_ARG(hdr->addr1),
+ 				       MAC_ARG(hdr->addr2),
+ 				       MAC_ARG(hdr->addr3));
+-				if (!rx->local->apdev)
+-					return TXRX_DROP;
+-				ieee80211_rx_mgmt(
+-					rx->local, rx->skb, rx->u.rx.status,
+-					ieee80211_msg_wep_frame_unknown_key);
+-				return TXRX_QUEUED;
++				/*
++				 * TODO: notify userspace about this
++				 * via cfg/nl80211
++				 */
++				return TXRX_DROP;
+ 			}
+ 		}
+ 	}
+--- wireless-dev.orig/net/mac80211/ieee80211_common.h	2007-08-10 23:50:37.933840246 +0200
++++ wireless-dev/net/mac80211/ieee80211_common.h	2007-08-11 00:01:27.643840246 +0200
+@@ -48,7 +48,7 @@ enum ieee80211_msg_type {
+ 	ieee80211_msg_tx_callback_ack = 1,
+ 	ieee80211_msg_tx_callback_fail = 2,
+ 	/* hole at 3, was ieee80211_msg_passive_scan but unused */
+-	ieee80211_msg_wep_frame_unknown_key = 4,
++	/* hole at 4, was ieee80211_msg_wep_frame_unknown_key but now unused */
+ 	ieee80211_msg_michael_mic_failure = 5,
+ 	/* hole at 6, was monitor but never sent to userspace */
+ 	ieee80211_msg_sta_not_assoc = 7,
+
+-- 
+
