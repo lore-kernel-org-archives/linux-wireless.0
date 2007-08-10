@@ -1,45 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:52616 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751256AbXHDLRk (ORCPT
+Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:57859 "EHLO
+	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762135AbXHJQYW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Aug 2007 07:17:40 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so533614ugf
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Aug 2007 04:17:38 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: further plan wrt. monitor interfaces
-Date: Sat, 4 Aug 2007 13:22:14 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1186178959.13315.30.camel@johannes.berg>
-In-Reply-To: <1186178959.13315.30.camel@johannes.berg>
+	Fri, 10 Aug 2007 12:24:22 -0400
+Date: Fri, 10 Aug 2007 11:23:20 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH V2] mac80211: Add SIOCGIWTXPOWER routine
+Message-ID: <46bc90f8.XZeVSt6DkZIYh9fX%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200708041322.14876.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The wireless extensions ioctl's implemented in mac80211 do not include
+SIOCGIWTXPOWER. This patch adds the necessary code.
 
->  * FIF_PROMISC_IN_BSS	(BSS filters still on, but otherwise promisc)
->  * FIF_ALLMULTI		(all multicast frames are allowed through)
->  * FIF_BROADCAST	(broadcast frames are allowed through)
->  * FIF_FCSFAIL		(frames with bad FCS are allowed through)
->  * FIF_PLCPFAIL		(frames with bad PLCP checksum are allowed through)
->  * FIF_CONTROL		(control frames are shown)
->  * FIF_OTHER_BSS	(frames from other BSSes are shown, subject to the
-> 			 other filters)
-> [missing anything?]
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-rt2x00 registers have the 2 following entries as well:
+John,
 
-	Physical error
-	Version error
+This version incorporates the change suggested by Tomas Winkler.
 
+Larry
 
-The rest of the idea looks pretty good, si I will be happy to implement it for rt2x00. :)
+ ieee80211_ioctl.c |   16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
 
-Ivo
-
-
+Index: wireless-dev/net/mac80211/ieee80211_ioctl.c
+===================================================================
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c
+@@ -1932,6 +1932,20 @@ static int ieee80211_ioctl_giwrate(struc
+ 	return 0;
+ }
+ 
++static int ieee80211_ioctl_giwtxpower(struct net_device *dev,
++				   struct iw_request_info *info,
++				   union iwreq_data *data, char *extra)
++{
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++
++	data->txpower.fixed = 1;
++	data->txpower.disabled = !(local->hw.conf.radio_enabled);
++	data->txpower.value = local->hw.conf.power_level;
++	data->txpower.flags = IW_TXPOW_DBM;
++
++	return 0;
++}
++
+ static int ieee80211_ioctl_siwrts(struct net_device *dev,
+ 				  struct iw_request_info *info,
+ 				  struct iw_param *rts, char *extra)
+@@ -2888,7 +2902,7 @@ static const iw_handler ieee80211_handle
+ 	(iw_handler) ieee80211_ioctl_siwfrag,		/* SIOCSIWFRAG */
+ 	(iw_handler) ieee80211_ioctl_giwfrag,		/* SIOCGIWFRAG */
+ 	(iw_handler) NULL,				/* SIOCSIWTXPOW */
+-	(iw_handler) NULL,				/* SIOCGIWTXPOW */
++	(iw_handler) ieee80211_ioctl_giwtxpower,	/* SIOCGIWTXPOW */
+ 	(iw_handler) ieee80211_ioctl_siwretry,		/* SIOCSIWRETRY */
+ 	(iw_handler) ieee80211_ioctl_giwretry,		/* SIOCGIWRETRY */
+ 	(iw_handler) ieee80211_ioctl_siwencode,		/* SIOCSIWENCODE */
