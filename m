@@ -1,68 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58903 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755357AbXH3OVL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 10:21:11 -0400
-Subject: [PATCH] mac80211: don't send invalid QoS frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Kalle Valo <Kalle.Valo@nokia.com>
-Content-Type: text/plain
-Date: Thu, 30 Aug 2007 16:22:12 +0200
-Message-Id: <1188483732.3978.13.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:2672 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757563AbXHJWit (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Aug 2007 18:38:49 -0400
+Date: Fri, 10 Aug 2007 17:43:40 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Aurelien Jarno <aurelien@aurel32.net>,
+	Michael Buesch <mb@bu3sch.de>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: 2.6.23-rc2-mm2
+Message-ID: <20070810214340.GA28812@tuxdriver.com>
+References: <20070809224254.11f42716.akpm@linux-foundation.org> <20070810200801.GA16714@hall.aurel32.net> <20070810132019.bc218797.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070810132019.bc218797.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo noticed that QoS frames are sent with an invalid QoS control
-field; this is because we increase the header length but neither
-initialise the space nor actually have enough space in the header
-structure for the QoS control field.
+On Fri, Aug 10, 2007 at 01:20:19PM -0700, Andrew Morton wrote:
 
-This patch fixes it by treating the QoS field specially and appending it
-explicitly, initialising it to zero.
+> git-wireless now has the usual git catastrophe when merging it against the
+> recently-discovered net-2.6.24 tree, so I'll need to do something about
+> that first.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+I have rebased the wireless-dev tree, and the mm-master branch there
+should specifically avoid these merge conflicts.
 
----
-Kalle, please check if this fixes the weird frames you saw. I think it
-will but would like to be sure. If it does, please say so and then we
-should merge this patch to 2.6.24 and wireless-dev and I may make one
-for -stable as well.
+Hth!
 
-I think this is nicer than my previous patch because it explicitly
-appends the QoS field and gives us a place to modify it should we ever
-want.
-
- net/mac80211/tx.c |   15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
-
---- wireless-dev.orig/net/mac80211/tx.c	2007-08-30 14:35:21.152051253 +0200
-+++ wireless-dev/net/mac80211/tx.c	2007-08-30 16:16:17.595374680 +0200
-@@ -1493,7 +1493,20 @@ int ieee80211_subif_start_xmit(struct sk
- 		nh_pos += encaps_len;
- 		h_pos += encaps_len;
- 	}
--	memcpy(skb_push(skb, hdrlen), &hdr, hdrlen);
-+
-+	if (fc & IEEE80211_STYPE_QOS_DATA) {
-+		__le16 *qos_control;
-+
-+		memcpy(skb_push(skb, hdrlen - 2), &hdr, hdrlen - 2);
-+		qos_control = (__le16*) skb_push(skb, 2);
-+		/*
-+		 * Maybe we could actually set some fields here, for now just
-+		 * initialise to zero to indicate no special operation.
-+		 */
-+		*qos_control = 0;
-+	} else
-+		memcpy(skb_push(skb, hdrlen), &hdr, hdrlen);
-+
- 	nh_pos += hdrlen;
- 	h_pos += hdrlen;
- 
-
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
