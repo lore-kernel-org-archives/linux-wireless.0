@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([131.228.20.172]:21850 "EHLO
-	mgw-ext13.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752441AbXH2ObX (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:36495 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751364AbXHKPFf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2007 10:31:23 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: mac80211 AP mode powersaving problems?
-References: <1186990509.27916.38.camel@johannes.berg>
-	<87lkccf30m.fsf@tikku.osso.net>
-	<1187270479.5141.44.camel@johannes.berg> <87643f4kkh.fsf@nokia.com>
-	<1187275344.23489.6.camel@johannes.berg> <871wdphsus.fsf@nokia.com>
-	<1188290911.7837.65.camel@johannes.berg> <87absbsz5f.fsf@nokia.com>
-	<1188299159.7837.96.camel@johannes.berg> <87sl63prsg.fsf@nokia.com>
-	<1188349109.7837.147.camel@johannes.berg>
-From: Kalle Valo <Kalle.Valo@nokia.com>
-Date: Wed, 29 Aug 2007 17:32:38 +0300
-In-Reply-To: <1188349109.7837.147.camel@johannes.berg> (ext Johannes Berg's message of "Wed\, 29 Aug 2007 02\:58\:29 +0200")
-Message-ID: <877inev2bd.fsf@nokia.com>
+	Sat, 11 Aug 2007 11:05:35 -0400
+Message-ID: <46BDD038.4040207@lwfinger.net>
+Date: Sat, 11 Aug 2007 10:05:28 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Michael Buesch <mb@bu3sch.de>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: How to use software encryption with WEP and mac80211
+References: <46BD2C17.4000702@lwfinger.net> <200708111142.15991.mb@bu3sch.de>
+In-Reply-To: <200708111142.15991.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Michael Buesch wrote:
+> On Saturday 11 August 2007 05:25:11 Larry Finger wrote:
+>> What do I need to do to get mac80211 to do software encryption for WEP? My port of the PHY code from 
+>> bcm43xx and the mac80211 front end works with WPA encryption. With WEP, it authenticates and 
+>> associates, but never gets an IP number from DHCP. That indicates to me that the encryption is not 
+>> set up correctly. I looked through the various definitions in include/net/mac80211.h, but nothing 
+>> seems to apply.
+> 
+> Which hw enc code do you use in that tree? The old softmac crap
+> or my new code from bcm43xx-mac80211?
 
-> Good news.
+I had stripped out all the key stuff, but before that it was from bcm43xx-mac80211.
 
-Really good news!
+> Anyway, if you want to disable hw enc, always set the force sw enc bit
+> in the set_key function and return early:
+> 
+> 	key->flags |= IEEE80211_KEY_FORCE_SW_ENCRYPT;
+> 	return 0;
 
->> But that's not all, also multicast frames (including ARP broadcast)
->> are not buffered correctly. They are sent randomly instead of directly
->> after a DTIM beacon. Also Multicast bit is not set and DTIM is always
->> zero even though DTIM period is two.
->
-> Actually, they were sent right away because we enqueued them to queue
-> zero, not queue four.
+This doesn't seem to work. I had tried it before. I guess I put your code back in again.
 
-Yeah, I meant randomly relative to a DTIM beacon.
+Thanks,
 
-> Please try the attached patches. I haven't implemented the set_tim()
-> callback yet, but the device should now wake up for multicast traffic,
-> not for unicast yet. The patches work for me on a heavily patched kernel
-> ('everything' plus http://johannes.sipsolutions.net/patches/kernel/all/)
+Larry
 
-Applied 055-b43-timb-position.patch and 057-b43-mcast.patch to commit
-0347a7c86f. Multicast is buffered correctly and N800 sees them. Also
-DTIM count and multicast bit are now correct in beacons.
 
--- 
-Kalle Valo
+
