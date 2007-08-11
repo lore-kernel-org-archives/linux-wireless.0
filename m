@@ -1,49 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:43773
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759516AbXHGPqH (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55039 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752226AbXHKIPT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2007 11:46:07 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Andrew Morton <akpm@linux-foundation.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: [PATCH] ssb: Make extif driver compilation depend on extif config
-Date: Tue, 7 Aug 2007 17:44:39 +0200
-Cc: Aurelien Jarno <aurelien@aurel32.net>,
-	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200708071744.40287.mb@bu3sch.de>
+	Sat, 11 Aug 2007 04:15:19 -0400
+Subject: Re: [PATCH 4/4] mac80211: remove radar stuff
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <46BD2A89.8050906@lwfinger.net>
+References: <20070810220544.321975000@sipsolutions.net>
+	 <20070810220634.450509000@sipsolutions.net> <46BD2A89.8050906@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-emKtupNuo7D8tsC5Kk3Z"
+Date: Sat, 11 Aug 2007 10:17:47 +0200
+Message-Id: <1186820267.5363.1.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Compilation of the extif driver must depend on
-CONFIG_SSB_DRIVER_EXTIF.
-Sorry, my fault.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+--=-emKtupNuo7D8tsC5Kk3Z
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---
+On Fri, 2007-08-10 at 22:18 -0500, Larry Finger wrote:
+> Johannes Berg wrote:
+> > Unused in drivers, userspace and mac80211.
+> >=20
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> > ---
+>=20
+> Won't 802.11a drivers need this? If so, does it hurt to leave it in for n=
+ow?
 
-John, please apply to wireless-dev
-Andrew, please apply to -mm after applying the other ssb patches.
+Absolutely correct, they probably will. None of the ones we have,
+however, actually uses it, and it uses the management interface we're
+trying to get rid of for the notification. The same function should
+probably be added back to mac80211 or cfg80211 once somebody actually
+wants it, but do the notification
+ 1) with well-defined arguments (explanation for the two args anyone?)
+ 2) via nl80211
 
+It doesn't really "hurt" but I'm trying to actually remove the master
+interface now and I'm almost there, so this code is in my way.
 
-diff --git a/drivers/ssb/Makefile b/drivers/ssb/Makefile
-index 811343d..bcde58d 100644
---- a/drivers/ssb/Makefile
-+++ b/drivers/ssb/Makefile
-@@ -7,7 +7,8 @@ ssb-$(CONFIG_SSB_PCMCIAHOST)		+= pcmcia.
- 
- # built-in drivers
- ssb-y					+= driver_chipcommon.o
--ssb-$(CONFIG_SSB_DRIVER_MIPS)		+= driver_mipscore.o driver_extif.o
-+ssb-$(CONFIG_SSB_DRIVER_MIPS)		+= driver_mipscore.o
-+ssb-$(CONFIG_SSB_DRIVER_EXTIF)		+= driver_extif.o
- ssb-$(CONFIG_SSB_DRIVER_PCICORE)	+= driver_pcicore.o
- 
- obj-$(CONFIG_SSB)			+= ssb.o
+johannes
 
--- 
-Greetings Michael.
+--=-emKtupNuo7D8tsC5Kk3Z
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGvXCr/ETPhpq3jKURApGfAKC6GLxnDpLSKjbTvIx/bCIHFfzqTwCeMe+V
+pPb34C3e5DQeCNZLKg91E5s=
+=kEXC
+-----END PGP SIGNATURE-----
+
+--=-emKtupNuo7D8tsC5Kk3Z--
+
