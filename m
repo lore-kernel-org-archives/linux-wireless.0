@@ -1,85 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:38174 "EHLO
-	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751234AbXHAU4v (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41353
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753136AbXHKAGK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2007 16:56:51 -0400
-Date: Wed, 01 Aug 2007 15:56:07 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [RFC V2] bcm43xx-mac80211: Provide information to allow  transmission rate decreases
-Message-ID: <46b0f367.p35iGhSXwM+v4QLG%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 10 Aug 2007 20:06:10 -0400
+Message-Id: <20070811000357.090532000@bu3sch.de>
+References: <20070811000354.611868000@bu3sch.de>
+Date: Sat, 11 Aug 2007 02:03:57 +0200
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Aurelien Jarno <aurelien@aurel32.net>
+Subject: [patch 3/5] ssb: Read the UART divisor instead of setting it
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael,
+From: Aurelien Jarno <aurelien@aurel32.net>
 
-I think I took care of your comments in the previous version.
+I finally have one more patch for the SSB bus driver. I have ported the
+BCM947xx code to the CFE API that is already in the kernel, and I have
+seen that when the chip common driver initializes the serial port, it
+breaks the CFE console (used as an early console until the serial port
+is initialized). This is due to the change of the UART clock in 
+ssb_chipco_serial_init().
 
-Larry
----
+The patch below reads the current UART divisor value and use it to 
+compute baud_base instead of forcing a fixed divisor value. This limits
+the maximum speed of the serial port, but don't forget the SSB bus runs 
+at around 100MHz. CFE initializes the divisor so that baud_base equals 
+1.8432MHz, which is already fast for a serial port.
 
-In bcm43xx-mac80211, the mechanism for decreasing the transmit rate cannot
-be triggered. This may be shown by walking away from the AP with a laptop.
-At some distance, communications will be lost and never recovered because
-the rate decreasing mechanism of rc80211_simple needs to see excessive_retries
-set in the ieee80211_tx_status struct. With this patch, the transmit rate
-will decrease until communications restart.
+Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
-
-Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
+Index: ssb-merge/drivers/ssb/driver_chipcommon.c
 ===================================================================
---- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
-+++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
-@@ -1311,6 +1311,16 @@ void bcm43xx_dma_handle_txstatus(struct 
- 			 */
- 			if (status->acked)
- 				meta->txstat.flags |= IEEE80211_TX_STATUS_ACK;
-+			else
-+				if (dev->short_preamble) {
-+					if (status->frame_count >=
-+					    dev->short_retry_limit)
-+						meta->txstat.excessive_retries = 1;
-+				} else {
-+					if (status->frame_count >=
-+					    dev->long_retry_limit)
-+						meta->txstat.excessive_retries = 1;
-+				}
- 			meta->txstat.retry_count = status->frame_count - 1;
- 			ieee80211_tx_status_irqsafe(dev->wl->hw, meta->skb, &(meta->txstat));
- 			/* skb is freed by ieee80211_tx_status_irqsafe() */
-Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx.h
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx.h
-+++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx.h
-@@ -707,6 +707,8 @@ struct bcm43xx_wldev {
- 	bool short_preamble;		/* TRUE, if short preamble is enabled. */
- 	bool short_slot;		/* TRUE, if short slot timing is enabled. */
- 	bool radio_hw_enable;		/* saved state of radio hardware enabled state */
-+	u8 short_retry_limit;
-+	u8 long_retry_limit;
- 
- 	/* PHY/Radio device. */
- 	struct bcm43xx_phy phy;
-Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-+++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-@@ -3333,10 +3333,12 @@ static int bcm43xx_wireless_core_init(st
- 	tmp = limit_value(modparam_short_retry, 0, 0xF);
- 	bcm43xx_shm_write16(dev, BCM43xx_SHM_SCRATCH,
- 			    BCM43xx_SHM_SC_SRLIMIT, tmp);
-+	dev->short_retry_limit = tmp;
- 	tmp = limit_value(modparam_long_retry, 0, 0xF);
- 	bcm43xx_shm_write16(dev, BCM43xx_SHM_SCRATCH,
- 			    BCM43xx_SHM_SC_LRLIMIT, tmp);
- 
-+	dev->long_retry_limit = tmp;
- 	bcm43xx_shm_write16(dev, BCM43xx_SHM_SHARED,
- 			    BCM43xx_SHM_SH_SFFBLIM, 3);
- 	bcm43xx_shm_write16(dev, BCM43xx_SHM_SHARED,
+--- ssb-merge.orig/drivers/ssb/driver_chipcommon.c	2007-08-10 13:30:21.000000000 +0200
++++ ssb-merge/drivers/ssb/driver_chipcommon.c	2007-08-10 13:31:14.000000000 +0200
+@@ -375,10 +375,8 @@ int ssb_chipco_serial_init(struct ssb_ch
+ 		} else if (cc->dev->id.revision >= 3) {
+ 			/* Internal backplane clock */
+ 			baud_base = ssb_clockspeed(bus);
+-			div = 2; /* Minimum divisor */
+-			chipco_write32(cc, SSB_CHIPCO_CLKDIV,
+-				       (chipco_read32(cc, SSB_CHIPCO_CLKDIV)
+-					& ~SSB_CHIPCO_CLKDIV_UART) | div);
++			div = chipco_read32(cc, SSB_CHIPCO_CLKDIV)
++			      & SSB_CHIPCO_CLKDIV_UART;
+ 		} else {
+ 			/* Fixed internal backplane clock */
+ 			baud_base = 88000000;
+
+-- 
+
