@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.go2.pl ([193.17.41.42]:38691 "EHLO poczta.o2.pl"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754057AbXH3Nnp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 09:43:45 -0400
-Date: Thu, 30 Aug 2007 15:45:06 +0200
-From: Jarek Poplawski <jarkao2@o2.pl>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jiri Slaby <jirislaby@gmail.com>, linville@tuxdriver.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Xavier Bestel <xavier.bestel@free.fr>,
-	Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: [PATCH 4/5] Net: ath5k, license is GPLv2
-Message-ID: <20070830134506.GB2778@ff.dom.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070829204529.66ce1bcb@the-village.bc.nu>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41350
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752414AbXHKAGK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Aug 2007 20:06:10 -0400
+Message-Id: <20070811000355.861811000@bu3sch.de>
+References: <20070811000354.611868000@bu3sch.de>
+Date: Sat, 11 Aug 2007 02:03:55 +0200
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Aurelien Jarno <aurelien@aurel32.net>
+Subject: [patch 1/5] ssb: pcicore compile fix
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 30-08-2007 13:59, Johannes Berg wrote:
-> On Wed, 2007-08-29 at 15:13 +0200, Xavier Bestel wrote:
-> 
->> How about asking for changes to be dual-licenced too ?
-> 
-> In theory, that could work, but in practice relying on functions that
-> the Linux kernel offers in GPLv2-only headers etc. will make the result
-> GPLv2 anyway, and disentangling it would be a nightmare.
-> 
+From: Aurelien Jarno <aurelien@aurel32.net>
 
-Why?
+The patch below against 2.6.23-rc1-mm1 fixes the definition of
+pcibios_map_irq in the SSB code. The corresponding include file has been
+changed in commit 19df0d1169b3ddcc84933794d1401aaafe2f0000.
 
-Very good point, but, in my opinion, it should be still resonable for
-both sides: it simply means such changes are mostly unusable for the
-other side, but nobody is going to waste time for marking all these
-places, or care about suing if accidentally the changes, after some
-adaptation, are usable for the other side. Unless you think or know
-that "#include xyz" or "print_linux_way()" should add more than these
-(maybe unusable) words or lines only?
+Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Jarek P.
+Index: ssb-merge/drivers/ssb/driver_pcicore.c
+===================================================================
+--- ssb-merge.orig/drivers/ssb/driver_pcicore.c	2007-08-10 13:30:22.000000000 +0200
++++ ssb-merge/drivers/ssb/driver_pcicore.c	2007-08-10 13:30:23.000000000 +0200
+@@ -102,7 +102,7 @@ static void __init ssb_fixup_pcibridge(s
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, ssb_fixup_pcibridge);
+ 
+-int __init pcibios_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
++int __init pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	return ssb_mips_irq(extpci_core->dev) + 2;
+ }
+
+-- 
+
