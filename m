@@ -1,50 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54786 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757631AbXHWQtr (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41348
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751720AbXHKAGK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2007 12:49:47 -0400
-Received: from [131.234.79.133]
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1IOFsO-00010a-RA
-	for linux-wireless@vger.kernel.org; Thu, 23 Aug 2007 17:49:45 +0100
-Message-Id: <20070823164525.677795000@sipsolutions.net>
-References: <20070823164500.998912000@sipsolutions.net>
-Date: Thu, 23 Aug 2007 18:45:12 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 11/11] mac80211 maintainership
-Mime-Version: 1.0
+	Fri, 10 Aug 2007 20:06:10 -0400
+Message-Id: <20070811000356.595396000@bu3sch.de>
+References: <20070811000354.611868000@bu3sch.de>
+Date: Sat, 11 Aug 2007 02:03:56 +0200
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Aurelien Jarno <aurelien@aurel32.net>
+Subject: [patch 2/5] ssb: pci core driver fixes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds myself to the maintainer list for mac80211 and
-changes the git tree URL to John's tree since Jiri doesn't seem
-to be around any more.
+From: Aurelien Jarno <aurelien@aurel32.net>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Fixes various things on the SSB
+PCI core driver:
+ - Correctly write the configuration register value in 
+   ssb_extpci_write_config() for len = 1 or len = 2.
+ - Set the PCI_LATENCY_TIMER to handle devices on the PCI bus.
+ - Set the PCI arbiter control to internal.
+ - Add some delay between the configuration of the PCI controller 
+   and its registration.
 
----
- MAINTAINERS |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
---- wireless-dev.orig/MAINTAINERS	2007-08-23 18:38:36.901897709 +0200
-+++ wireless-dev/MAINTAINERS	2007-08-23 18:38:46.241897709 +0200
-@@ -2443,9 +2443,11 @@ P:	Jiri Benc
- M:	jbenc@suse.cz
- P:	Michael Wu
- M:	flamingice@sourmilk.net
-+P:	Johannes Berg
-+M:	johannes@sipsolutions.net
- L:	linux-wireless@vger.kernel.org
- W:	http://linuxwireless.org/
--T:	git kernel.org:/pub/scm/linux/kernel/git/jbenc/mac80211.git
-+T:	git kernel.org:/pub/scm/linux/kernel/git/linville/wireless-dev.git (mac80211 branch)
- S:	Maintained
+Index: ssb-merge/drivers/ssb/driver_pcicore.c
+===================================================================
+--- ssb-merge.orig/drivers/ssb/driver_pcicore.c	2007-08-10 13:30:23.000000000 +0200
++++ ssb-merge/drivers/ssb/driver_pcicore.c	2007-08-10 13:30:50.000000000 +0200
+@@ -99,6 +99,9 @@ static void __init ssb_fixup_pcibridge(s
  
- MACVLAN DRIVER
+ 	/* Enable PCI bridge BAR1 prefetch and burst */
+ 	pci_write_config_dword(dev, SSB_BAR1_CONTROL, 3);
++
++	/* Make sure our latency is high enough to handle the devices behind us */
++	pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0xa8);
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, ssb_fixup_pcibridge);
+ 
+@@ -230,7 +233,7 @@ static int ssb_extpci_write_config(struc
+ 		val = *((const u32 *)buf);
+ 		break;
+ 	}
+-	writel(*((const u32 *)buf), mmio);
++	writel(val, mmio);
+ 
+ 	err = 0;
+ unmap:
+@@ -311,6 +314,8 @@ static void ssb_pcicore_init_hostmode(st
+ 	udelay(150); /* Assertion time demanded by the PCI standard */
+ 	val |= SSB_PCICORE_CTL_RST; /* Deassert RST# */
+ 	pcicore_write32(pc, SSB_PCICORE_CTL, val);
++	val = SSB_PCICORE_ARBCTL_INTERN;
++	pcicore_write32(pc, SSB_PCICORE_ARBCTL, val);
+ 	udelay(1); /* Assertion time demanded by the PCI standard */
+ 
+ 	/*TODO cardbus mode */
+@@ -340,6 +345,9 @@ static void ssb_pcicore_init_hostmode(st
+ 	 * The following needs change, if we want to port hostmode
+ 	 * to non-MIPS platform. */
+ 	set_io_port_base((unsigned long)ioremap_nocache(SSB_PCI_MEM, 0x04000000));
++	/* Give some time to the PCI controller to configure itself with the new
++	 * values. Not waiting at this point causes crashes of the machine. */
++	mdelay(10);
+ 	register_pci_controller(&ssb_pcicore_controller);
+ }
+ 
 
 -- 
 
