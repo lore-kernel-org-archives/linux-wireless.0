@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:42261 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765362AbXHGQVD (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55794
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755678AbXHKPQG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2007 12:21:03 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1433721rvb
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Aug 2007 09:21:03 -0700 (PDT)
-Message-ID: <a728f9f90708070921x13c1a9fem8f7bbf3fe77756d@mail.gmail.com>
-Date: Tue, 7 Aug 2007 12:21:02 -0400
-From: "Alex Deucher" <alexdeucher@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Marvell pci wifi chips
+	Sat, 11 Aug 2007 11:16:06 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: How to use software encryption with WEP and mac80211
+Date: Sat, 11 Aug 2007 17:15:23 +0200
+Cc: wireless <linux-wireless@vger.kernel.org>
+References: <46BD2C17.4000702@lwfinger.net> <200708111142.15991.mb@bu3sch.de> <46BDD038.4040207@lwfinger.net>
+In-Reply-To: <46BDD038.4040207@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Message-Id: <200708111715.23891.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is anyone working on a driver for the marvell pci libertas chips
-(8335, 8300, 8310, etc.) or know of someone who is?  I've got several
-of these cards not doing anything at the moment if someone is
-interested in one.  It seems there are several drivers floating
-around:
+On Saturday 11 August 2007 17:05:28 Larry Finger wrote:
+> Michael Buesch wrote:
+> > On Saturday 11 August 2007 05:25:11 Larry Finger wrote:
+> >> What do I need to do to get mac80211 to do software encryption for WEP? My port of the PHY code from 
+> >> bcm43xx and the mac80211 front end works with WPA encryption. With WEP, it authenticates and 
+> >> associates, but never gets an IP number from DHCP. That indicates to me that the encryption is not 
+> >> set up correctly. I looked through the various definitions in include/net/mac80211.h, but nothing 
+> >> seems to apply.
+> > 
+> > Which hw enc code do you use in that tree? The old softmac crap
+> > or my new code from bcm43xx-mac80211?
+> 
+> I had stripped out all the key stuff, but before that it was from bcm43xx-mac80211.
+> 
+> > Anyway, if you want to disable hw enc, always set the force sw enc bit
+> > in the set_key function and return early:
+> > 
+> > 	key->flags |= IEEE80211_KEY_FORCE_SW_ENCRYPT;
+> > 	return 0;
+> 
+> This doesn't seem to work. I had tried it before. I guess I put your code back in again.
 
-- mrv8k driver (http://www.saillard.org/linux/mrv8k/)
-- openbsd malo driver (http://www.openbsd.org/cgi-bin/man.cgi?query=malo)
-- marvell GPL driver (http://johannes.sipsolutions.net/files/marvell.tar.bz2)
+bcm43xx-mac80211 hwenc code does not work with v3 firmware.
+There is no working hwenc code for v3 firmware.
 
-Reading through the linux-wireless archive, several people seemed to
-indicate there was work going on, but I have not been able to find any
-information on that other than Holger's CF libertas integration.  I
-and others have asked before, but there seems to be some confusion as
-to the whole libertas line and their relative compatibility.  Just
-curious.
+The above code should work to enable swenc, unless there's a bug in mac80211.
 
-Thanks,
 
-Alex
+-- 
+Greetings Michael.
