@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:56569 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754244AbXHBVb7 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54990 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752894AbXHKISx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 17:31:59 -0400
-Message-ID: <46B24D4D.5020904@lwfinger.net>
-Date: Thu, 02 Aug 2007 16:31:57 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: David Woodhouse <dwmw2@infradead.org>
-CC: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de, jbenc@suse.cz,
-	flamingice@sourmilk.net
-Subject: Re: [RFC 0/10] Port of bcm43xx from softmac to mac80211
-References: <46b1fde0.b+weBDN75J0SPe2a%Larry.Finger@lwfinger.net>	 <200708021807.20649.mb@bu3sch.de>  <46B20695.2080100@lwfinger.net> <1186088678.2931.10.camel@pmac.infradead.org>
-In-Reply-To: <1186088678.2931.10.camel@pmac.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sat, 11 Aug 2007 04:18:53 -0400
+Subject: [PATCH] nl80211: fix a bug caused by a missing asterisk
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Sat, 11 Aug 2007 10:21:32 +0200
+Message-Id: <1186820492.5363.4.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Woodhouse wrote:
-> On Thu, 2007-08-02 at 11:30 -0500, Larry Finger wrote:
->> I was hoping this would be your response, but I had to make the
->> effort. I'll wait for a couple of days to see if anyone else has any
->> comments and send it on to Linville and hope it ends up in -mm  fairly
->> soon. It _DOES_ work on the hardware.
-> 
-> My experience is that mac80211 is broken w.r.t IPv6 -- it receives its
-> own packets. It would be suboptimal for me if the softmac version of
-> bcm43xx were to go away before that got fixed.
-> 
+I really dislike double pointers. Oh well.
 
-This will go into -mm. I hope that it gets plenty of testing, in fact, I hope you grab the patch set 
-and make a trial of your own. If this driver is broken with IPv6, I want to know.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Larry
+---
+Just hit it yesterday, oopses the kernel under RNTL so you're screwed.
+Not nice.
+
+--- wireless-dev.orig/net/wireless/nl80211.c	2007-08-11 10:19:57.999563528 +0200
++++ wireless-dev/net/wireless/nl80211.c	2007-08-11 10:19:58.559563528 +0200
+@@ -55,7 +55,7 @@ static int get_drv_dev_by_info_ifindex(s
+ 
+ 	ifindex = nla_get_u32(info->attrs[NL80211_ATTR_IFINDEX]);
+ 	*dev = dev_get_by_index(ifindex);
+-	if (!dev)
++	if (!*dev)
+ 		return -ENODEV;
+ 
+ 	*drv = cfg80211_get_dev_from_ifindex(ifindex);
+
 
