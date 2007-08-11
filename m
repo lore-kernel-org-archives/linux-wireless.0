@@ -1,71 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3624 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753654AbXHFRhG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2007 13:37:06 -0400
-Date: Mon, 6 Aug 2007 13:05:00 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
-	jbenc@suse.cz, Michael Buesch <mb@bu3sch.de>,
-	Bcm43xx-dev@lists.berlios.de,
-	Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: mac80211 IPv6 problems
-Message-ID: <20070806170500.GE6442@tuxdriver.com>
-References: <46b1fde0.b+weBDN75J0SPe2a%Larry.Finger@lwfinger.net> <1186094778.6701.6.camel@shinybook.infradead.org> <20070803005517.GA4261@tuxdriver.com> <200708030102.17358.flamingice@sourmilk.net>
+Received: from hoefnix.telenet-ops.be ([195.130.132.54]:33702 "EHLO
+	hoefnix.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753996AbXHKKU5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Aug 2007 06:20:57 -0400
+Received: from adicia.telenet-ops.be (adicia.telenet-ops.be [195.130.132.56])
+	by hoefnix.telenet-ops.be (Postfix) with ESMTP id B69B89C20B
+	for <linux-wireless@vger.kernel.org>; Sat, 11 Aug 2007 12:20:56 +0200 (CEST)
+Message-ID: <46BD8D7E.3050003@telenet.be>
+Date: Sat, 11 Aug 2007 12:20:46 +0200
+From: ian <ischram@telenet.be>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200708030102.17358.flamingice@sourmilk.net>
+To: Christopher Bills <cpbills@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwlwifi losing AP...
+References: <65a3c8300708102331t42ce4da5kf2e3fb4a105f2f80@mail.gmail.com>
+In-Reply-To: <65a3c8300708102331t42ce4da5kf2e3fb4a105f2f80@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 03, 2007 at 01:02:12AM -0700, Michael Wu wrote:
-
-> This doesn't seem quite right. I think ieee80211_rx_h_data is a safer place 
-> for this check (inside the IEEE80211_FCTL_FROMDS case), and allows various 
-> statistics to be updated. ieee80211_rx_h_sta_process is another function that 
-> might work though that would probably involve more code to add all the right 
-> checks.
-
-The patch below seems to work for me w/ an otherwise stock F-7 kernel
-w/ iwl3945.  Thoughts?
-
-From: John W. Linville <linville@tuxdriver.com>
-
-[PATCH] mac80211: filter locally-originated multicast frames
-
-In STA mode, the AP will echo our traffic.  This includes multicast
-traffice.
-
-Receiving these frames confuses some protocols and applications,
-notably IPv6 Duplicate Address Detection.
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-
- net/mac80211/ieee80211.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index a42e70e..0097b0a 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -3030,9 +3030,10 @@ ieee80211_rx_h_data(struct ieee80211_txrx_data *rx)
- 		memcpy(dst, hdr->addr1, ETH_ALEN);
- 		memcpy(src, hdr->addr3, ETH_ALEN);
- 
--		if (sdata->type != IEEE80211_IF_TYPE_STA) {
-+		if (sdata->type != IEEE80211_IF_TYPE_STA ||
-+		    (is_multicast_ether_addr(dst) &&
-+		     !compare_ether_addr(src, dev->dev_addr)))
- 			return TXRX_DROP;
--		}
- 		break;
- 	case 0:
- 		/* DA SA BSSID */
 
 
--- 
-John W. Linville
-linville@tuxdriver.com
+Christopher Bills wrote:
+> i'm using iwlwifi 1.0.0-1 on a lenovo thinkpad x61, with the Intel
+> 4965AGN wireless card. I'm using kernel 2.6.22.2 with mac80211 v8.0.2
+> and from time to time i lose my connection to my Belkin (802.11b)
+
+We are probably going to need more debug information.dmesg (with debug turned on)
+when this happens?
+
+Personally I loose connection very rarely too(once every few days),
+haven't investigated further. Get a no PropeResp message, which should indicate
+that the connection was idle for two seconds, and the AP didn't respond to the probe?
+(guess upping IWL_ACTIVE_DWELL_TIME_24 might help in this situation)
+
+> router. this can often be remedied by issuing the 'iwconfig wlan0
+> essid <ssid>' command, but is rather irritating.
+> 
+> is this a known issue, and if so, is there some sort of work-around? i
+> tried using mac80211 v9.0.4 but my kernel will not compile with that,
+> if that is known to fix it.
+
+There is a fix or two, between the versions, this problem used to be more common,
+so I can't say it wont help. I'm using wireless-dev's mac80211.
+
+> 
+> thanks in advance,
+> 
+> chris
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
