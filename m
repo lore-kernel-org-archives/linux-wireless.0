@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2252 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761269AbXHWVPI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2007 17:15:08 -0400
-Date: Thu, 23 Aug 2007 16:58:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
-	Guido Guenther <agx@sigxcpu.org>,
-	at76c503a-develop@lists.berlios.de
-Subject: Re: at76_usb - fourth submission attempt
-Message-ID: <20070823205851.GK2989@tuxdriver.com>
-References: <1184228166.2377.31.camel@dv> <20070712201702.72209493@griffin.suse.cz> <1184265547.29486.2.camel@dv>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1184265547.29486.2.camel@dv>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58363 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S970364AbXHMItd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Aug 2007 04:49:33 -0400
+Received: from [131.234.209.34] (helo=[131.234.237.45])
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.67)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1IKVc9-0007O2-Ko
+	for linux-wireless@vger.kernel.org; Mon, 13 Aug 2007 09:49:30 +0100
+Subject: retry count?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xsKS+AOzGR9HPX221HIq"
+Date: Sun, 12 Aug 2007 12:20:07 +0200
+Message-Id: <1186914007.5363.9.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 12, 2007 at 02:39:07PM -0400, Pavel Roskin wrote:
-> On Thu, 2007-07-12 at 20:17 +0200, Jiri Benc wrote:
 
-> > > The biggest change that has not been done is conversion to mac80211.  I
-> > > believe it's possible, but I don't expect it to happen overnight.  Until
-> > > then, at76_usb uses its own implementation of 802.11 protocol.
-> > 
-> > Unfortunately, that prevents being accepted to vanilla.
-> > 
-> > I'd suggest to convert the driver to mac80211 and submit it then;
-> > otherwise people will tend to look at the code saying "NAK, it contains
-> > its own home grown 802.11 stack" only and not to review the driver in
-> > depth.
-> 
-> Well, that make sense.  Helpers are welcome :)
+--=-xsKS+AOzGR9HPX221HIq
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I have added this to the 'at76' branch of wireless-dev, and attempted
-to directly recruit some help to get this driver ported to mac80211.
-I think that is a requirement for merging upstream, but at least
-being in wireless-dev and -mm will get you some visibility, testing,
-feedback, etc...
+struct ieee80211_tx_status contains "retry_count" and I just noticed
+that bcm43xx sets it to -1 if the frame was acked right away. Should it
+be -1 in that case or should it be 0? A comment indicating either way
+would be good. If it should be -1, then I suppose the radiotap tx status
+needs to be fixed, it defines data_retries as a u8 so can't really be
+less than 0.
 
-Thanks!
+johannes
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+--=-xsKS+AOzGR9HPX221HIq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGvt7X/ETPhpq3jKURAhLuAJ9qgR+QJyAXtt7j2LaJQk/LANIiYQCgk0+E
+4W/S7VSfm4b+Us7yAufGtHI=
+=3ccC
+-----END PGP SIGNATURE-----
+
+--=-xsKS+AOzGR9HPX221HIq--
+
