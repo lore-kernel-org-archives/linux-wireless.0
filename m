@@ -1,44 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purr.warmcat.com ([87.106.142.209]:45138 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753245AbXH2TxF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2007 15:53:05 -0400
-Message-ID: <46D5CE9B.8080401@warmcat.com>
-Date: Wed, 29 Aug 2007 20:52:59 +0100
-From: Andy Green <andy@warmcat.com>
+Received: from hall.aurel32.net ([88.191.38.19]:35987 "EHLO hall.aurel32.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934871AbXHLXvg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Aug 2007 19:51:36 -0400
+Date: Mon, 13 Aug 2007 01:51:35 +0200
+From: Aurelien Jarno <aurelien@aurel32.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH][SSB] Add GPIO support to Chip Common and PCI core drivers
+Message-ID: <20070812235135.GB4966@hall.aurel32.net>
 MIME-Version: 1.0
-To: ian <ischram@telenet.be>
-CC: =?ISO-8859-1?Q?Robert_F=FChricht?= <the_master_of_disaster@gmx.at>,
-	linux-wireless@vger.kernel.org
-Subject: Re: mac80211, iwlwifi and packet injection
-References: <20070829161655.7f68542c@doppelhertz> <46D5B8B9.8000803@telenet.be>
-In-Reply-To: <46D5B8B9.8000803@telenet.be>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Somebody in the thread at some point said:
+The patch below adds a functions to Chip Common and PCI core drivers to
+access the GPIO lines.
 
-> I'm believe that there are still other places where iwlwifi isn't
-> ready to inject packages into the network though. Would need some
-> work.
+Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
 
-No, there's no general problem.  I just cooked current wireless-dev
-everything and am running it on this Compaq nx7400 with a 3945 chip, it
-has just sent 100,000 packetspams while pinging warmcat.com over an
-associated connection, the injections verified on another box with a zd1211.
+--- a/drivers/ssb/driver_chipcommon.c
++++ b/drivers/ssb/driver_chipcommon.c
+@@ -39,6 +39,14 @@
+ 	ssb_write32(cc->dev, offset, value);
+ }
+ 
++static inline void chipco_write32_masked(struct ssb_chipcommon *cc, u16 offset,
++					 u32 mask, u32 value)
++{
++	value &= mask;
++	value |= chipco_read32(cc, offset) & ~mask;
++	chipco_write32(cc, offset, value);
++}
++
+ void ssb_chipco_set_clockmode(struct ssb_chipcommon *cc,
+ 			      enum ssb_clkmode mode)
+ {
+@@ -344,6 +352,21 @@
+ 	chipco_write32(cc, SSB_CHIPCO_WATCHDOG, ticks);
+ }
+ 
++u32 ssb_chipco_gpio_in(struct ssb_chipcommon *cc, u32 mask)
++{
++	return chipco_read32(cc, SSB_CHIPCO_GPIOIN) & mask;
++}
++
++void ssb_chipco_gpio_out(struct ssb_chipcommon *cc, u32 mask, u32 value)
++{
++	return chipco_write32_masked(cc, SSB_CHIPCO_GPIOOUT, mask, value);
++}
++
++void ssb_chipco_gpio_outen(struct ssb_chipcommon *cc, u32 mask, u32 value)
++{
++	return chipco_write32_masked(cc, SSB_CHIPCO_GPIOOUTEN, mask, value);
++}
++
+ #ifdef CONFIG_SSB_SERIAL
+ int ssb_chipco_serial_init(struct ssb_chipcommon *cc,
+ 			   struct ssb_serial_port *ports)
+--- a/drivers/ssb/driver_extif.c
++++ b/drivers/ssb/driver_extif.c
+@@ -27,6 +27,14 @@
+ 	ssb_write32(extif->dev, offset, value);
+ }
+ 
++static inline void extif_write32_masked(struct ssb_extif *extif, u16 offset,
++					u32 mask, u32 value)
++{
++	value &= mask;
++	value |= extif_read32(extif, offset) & ~mask;
++	extif_write32(extif, offset, value);
++}
++
+ #ifdef CONFIG_SSB_SERIAL
+ static bool serial_exists(u8 *regs)
+ {
+@@ -102,3 +110,20 @@
+ 	*m = extif_read32(extif, SSB_EXTIF_CLOCK_SB);
+ }
+ 
++u32 ssb_extif_gpio_in(struct ssb_extif *extif, u32 mask)
++{
++	return extif_read32(extif, SSB_EXTIF_GPIO_IN) & mask;
++}
++
++void ssb_extif_gpio_out(struct ssb_extif *extif, u32 mask, u32 value)
++{
++	return extif_write32_masked(extif, SSB_EXTIF_GPIO_OUT(0),
++				   mask, value);
++}
++
++void ssb_extif_gpio_outen(struct ssb_extif *extif, u32 mask, u32 value)
++{
++	return extif_write32_masked(extif, SSB_EXTIF_GPIO_OUTEN(0),
++				   mask, value);
++}
++
+--- a/include/linux/ssb/ssb_driver_chipcommon.h
++++ b/include/linux/ssb/ssb_driver_chipcommon.h
+@@ -382,6 +382,12 @@
+ extern void ssb_chipco_watchdog_timer_set(struct ssb_chipcommon *cc,
+ 					  u32 ticks);
+ 
++u32 ssb_chipco_gpio_in(struct ssb_chipcommon *cc, u32 mask);
++
++void ssb_chipco_gpio_out(struct ssb_chipcommon *cc, u32 mask, u32 value);
++
++void ssb_chipco_gpio_outen(struct ssb_chipcommon *cc, u32 mask, u32 value);
++
+ #ifdef CONFIG_SSB_SERIAL
+ extern int ssb_chipco_serial_init(struct ssb_chipcommon *cc,
+ 				  struct ssb_serial_port *ports);
+--- a/include/linux/ssb/ssb_driver_extif.h
++++ b/include/linux/ssb/ssb_driver_extif.h
+@@ -171,6 +171,12 @@
+ extern void ssb_extif_timing_init(struct ssb_extif *extif,
+ 				  unsigned long ns);
+ 
++u32 ssb_extif_gpio_in(struct ssb_extif *extif, u32 mask);
++
++void ssb_extif_gpio_out(struct ssb_extif *extif, u32 mask, u32 value);
++
++void ssb_extif_gpio_outen(struct ssb_extif *extif, u32 mask, u32 value);
++
+ #ifdef CONFIG_SSB_SERIAL
+ extern int ssb_extif_serial_init(struct ssb_extif *extif,
+ 				 struct ssb_serial_port *ports);
 
-If I run NetworkManager though, it deassociates me after ~60 injections.
- With NM turned off it is fine.
-
-BTW NetworkManager-0.6.5-7.fc7 also still tries to do its thing with
-thinking the virtual interface is a second physical device, pushes it
-into Managed, presents it as a second device on the UI, etc.  NM should
-check and see if the network interface resolves to the same wiphy down
-/sys and not do those things to virtual interfaces not in Managed already.
-
-One thing though... I am associated on a WPA network when I run these
-tests... is that the case for Robert I wonder?
-
--Andy
+-- 
+  .''`.  Aurelien Jarno	            | GPG: 1024D/F1BCDB73
+ : :' :  Debian developer           | Electrical Engineer
+ `. `'   aurel32@debian.org         | aurelien@aurel32.net
+   `-    people.debian.org/~aurel32 | www.aurel32.net
