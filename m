@@ -1,40 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:56046
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755854AbXH2Tjl (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:27303 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S935902AbXHNAAn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2007 15:39:41 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Jon Smirl" <jonsmirl@gmail.com>
-Subject: Re: [PATCH 4/5] Net: ath5k, license is GPLv2
-Date: Wed, 29 Aug 2007 21:37:48 +0200
-Cc: "Alan Cox" <alan@lxorguk.ukuu.org.uk>,
-	"Valdis.Kletnieks@vt.edu" <Valdis.Kletnieks@vt.edu>,
-	"Christoph Hellwig" <hch@infradead.org>,
-	"Jiri Slaby" <jirislaby@gmail.com>, linville@tuxdriver.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-References: <2713029743177393055@pripojeni.net> <20070829192858.75aa6542@the-village.bc.nu> <9e4733910708291233h3c4022a9n6e46733c5c50e222@mail.gmail.com>
-In-Reply-To: <9e4733910708291233h3c4022a9n6e46733c5c50e222@mail.gmail.com>
+	Mon, 13 Aug 2007 20:00:43 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [PATCH V3] mac80211: Turn off meaningless TKIP message when software WEP encryption is used
+Date: Mon, 13 Aug 2007 16:58:21 -0700
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <46c0d788.GYQYqGfCBKyAWrg7%Larry.Finger@lwfinger.net> <200708140054.22845.IvDoorn@gmail.com> <46C0E5AD.2080407@lwfinger.net>
+In-Reply-To: <46C0E5AD.2080407@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200708292137.48834.mb@bu3sch.de>
+Content-Type: multipart/signed;
+  boundary="nextPart1662557.yOAriq5RbT";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200708131658.27758.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 29 August 2007 21:33:43 Jon Smirl wrote:
-> What if a patch spans both code that is pure GPL and code imported
-> from BSD, how do you license it?
+--nextPart1662557.yOAriq5RbT
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I think it's a valid assumption, if we say that the author
-of the patch read the license header of a file and agreed with it.
-So the patch is licensed to whatever the fileheader says. And if
-there's none, it's licensed with the COPYING terms.
-If a patch author likes some other license conditions, he must
-explicitely add them with the patch to the file, saying that this
-and that part have these and those conditions. Of course they must
-be compatible with the original license.
+On Monday 13 August 2007 16:13, Larry Finger wrote:
+> Yes, this empirical behavior does not seem to match one's intuition on wh=
+at
+> the flag should do.
+>
+The flag means the hardware does the rc4 but doesn't bother to deal with th=
+e=20
+IV/ICV. If you're going do software encryption, there's no reason to bother=
+=20
+with that flag, as that says your hardware supports and does rc4 in hardwar=
+e.
 
--- 
-Greetings Michael.
+=2DMichael Wu
+
+--nextPart1662557.yOAriq5RbT
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGwPAjT3Oqt9AH4aERAl2JAJ4sMN9ZwYUqtl/T3TI/NehNo8eKLQCgwhPV
+SVai7Vjxx9RrrRJqY5XiAgg=
+=L1ff
+-----END PGP SIGNATURE-----
+
+--nextPart1662557.yOAriq5RbT--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
