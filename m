@@ -1,55 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50007 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759997AbXHYH4P (ORCPT
+Received: from purr.warmcat.com ([87.106.142.209]:48521 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965644AbXHMJXr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Aug 2007 03:56:15 -0400
-Subject: port of my recent patches to net-2.6.24
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UiRHJLJCBUV9tkf9/MsF"
-Date: Sat, 25 Aug 2007 09:37:50 +0200
-Message-Id: <1188027470.9529.5.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 13 Aug 2007 05:23:47 -0400
+Message-ID: <46C0231F.5040605@warmcat.com>
+Date: Mon, 13 Aug 2007 10:23:43 +0100
+From: Andy Green <andy@warmcat.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Subject: Re: [PATCH] hostapd: work with monitor interface
+References: <1186992004.27916.53.camel@johannes.berg>
+In-Reply-To: <1186992004.27916.53.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Somebody in the thread at some point said:
 
---=-UiRHJLJCBUV9tkf9/MsF
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Andy, feel free to lift the BPF code into your stuff. I've extended the
+> radiotap parser to understand two more items, not sure if we want those
+> in the kernel (the only thing we'd do with them is ignore). Actually,
+> the two types I added are IEEE80211_RADIOTAP_TX_FLAGS and
+> IEEE80211_RADIOTAP_DATA_RETRIES both of which we'll probably need for
+> injection.
 
-Because everybody has already seen these patches I won't be sending them
-to the list again, uploaded here:
+Wow impressive amount of ioctl calls going into the bit bucket there...
 
-http://johannes.sipsolutions.net/patches/net-2.6.24/
+I will try to use your direct BPF programming and also dispense with
+libpcap tonight, thanks for that.
 
-That contains ports of my and Jiri Slaby's recently merged patches to
-the net-2.6.24 tree minus those that don't apply because they delete
-ioctls that aren't in that tree (patches 0..23) plus some other patches
-I cherry-picked that I think should go in (024, 025), some whitespace
-and comment cleanups to make it more like wireless-dev (026, 027). Then
-there's your multicast fix (028) and those parts of the series I posted
-yesterday that don't depend on nl80211 (029..035).
+> I spent about two days working on this. Not too bad, so also thanks to
+> Andy and everybody else who was involved with the injection for that.
 
-I've merged the event.c copyright patch (that I accidentally forgot to
-copy to the list but it only added 6 lines copyright statement) into the
-relevant cleanup patch (015).
+Good work done!
 
-johannes
-
---=-UiRHJLJCBUV9tkf9/MsF
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGz9xN/ETPhpq3jKURAhG3AJ96lMLM17W9QSrpwkTatnwDjbyjkwCgiX+D
-hJC8ocW73JyX/RYR7BTRBlc=
-=tq3H
------END PGP SIGNATURE-----
-
---=-UiRHJLJCBUV9tkf9/MsF--
-
+-Andy
