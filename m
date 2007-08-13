@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:56785
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750734AbXHHLRG (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:22883 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S969319AbXHMPul (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 07:17:06 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] Fix handling of failure to create debugfs directory
-Date: Wed, 8 Aug 2007 13:16:37 +0200
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-References: <20070808051710.3902.43211.stgit@dv.roinet.com> <46B95A15.1080202@lwfinger.net> <46B95C75.8060404@lwfinger.net>
-In-Reply-To: <46B95C75.8060404@lwfinger.net>
+	Mon, 13 Aug 2007 11:50:41 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCHv2] mac80211: dynamic wep
+Date: Mon, 13 Aug 2007 08:48:52 -0700
+Cc: Volker Braun <volker.braun@physik.hu-berlin.de>,
+	linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
+References: <pan.2007.08.10.23.31.32@physik.hu-berlin.de> <200708130054.57899.flamingice@sourmilk.net> <1186995283.27916.60.camel@johannes.berg>
+In-Reply-To: <1186995283.27916.60.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200708081316.38183.mb@bu3sch.de>
+Content-Type: multipart/signed;
+  boundary="nextPart2397490.8UWUZAqrst";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200708130848.53128.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 08 August 2007 08:02:29 Larry Finger wrote:
-> Larry Finger wrote:
-> > Pavel Roskin wrote:
-> >> This can happen if CONFIG_BCM43XX_MAC80211_DEBUG is enabled, but
-> >> CONFIG_DEBUG_FS is not.
-> >>
-> >> Signed-off-by: Pavel Roskin <proski@gnu.org>
-> >> ---
-> >>
-> > With this patch installed, and the DEBUG configuration set as above, I get a kernel panic on an 
-> > x86_64 SMP system. The reason for the panic scrolled off the screen, but the complete stack dump 
-> > (hand copied) is as follows:
-> > 
-> > lock_acquire+0x85/0x31
-> > bcm43xx_mac80211: bcm43xx_debugfs_log_txstat+0x5a/099
-> > _spin_lock+0x25/0x31
-> 
-> Ignore the noise above. I had failed to get the right patch. The crash confirms the problem 
-> _without_ the patch. Getting it in properly fixes the problem
-> 
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+--nextPart2397490.8UWUZAqrst
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Yeah, I just noticed that, too :)
-So, I applied it to my queue and it will soon go upstream.
-http://bu3sch.de/patches/wireless-dev/LATEST/patches/
+On Monday 13 August 2007 01:54, Johannes Berg wrote:
+> On Mon, 2007-08-13 at 00:54 -0700, Michael Wu wrote:
+> > This part seems fairly evil. I suspect a better solution here is to allow
+> > unencrypted frames when the interface is dormant (netif_dormant()) and
+> > then we might be able to get rid of the specific check for WEP.
+>
+> Might that address Tomas's concern with EAPOL too?
+>
+Nope, this is just for the privacy mismatch check.
 
--- 
-Greetings Michael.
+-Michael Wu
+
+--nextPart2397490.8UWUZAqrst
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGwH1lT3Oqt9AH4aERAhmYAJwNrRSaOVeP37US8Tahuac36YJ/ZwCgyieL
+1imMIGp8WMDNLEzI9NefsAU=
+=egPA
+-----END PGP SIGNATURE-----
+
+--nextPart2397490.8UWUZAqrst--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
