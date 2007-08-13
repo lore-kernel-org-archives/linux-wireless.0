@@ -1,33 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:36486 "EHLO mail.suse.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752152AbXHAIUf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2007 04:20:35 -0400
-Date: Wed, 1 Aug 2007 10:20:29 +0200
-From: Jiri Benc <jbenc@suse.cz>
-To: Daniel Drake <dsd@gentoo.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211 git tree reworked
-Message-ID: <20070801102029.6bfe95ba@logostar.upir.cz>
-In-Reply-To: <46AFD024.1020708@gentoo.org>
-References: <20070727175716.32242e3f@griffin.suse.cz>
-	<46AFD024.1020708@gentoo.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:52906
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965702AbXHMMTS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Aug 2007 08:19:18 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Aurelien Jarno <aurelien@aurel32.net>
+Subject: Re: [PATCH][SSB] Fix a warning in PCI core driver
+Date: Mon, 13 Aug 2007 14:18:39 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+References: <20070812235058.GA4966@hall.aurel32.net> <200708130421.31904.mb@bu3sch.de> <20070813090710.GA25439@hall.aurel32.net>
+In-Reply-To: <20070813090710.GA25439@hall.aurel32.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200708131418.39929.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 31 Jul 2007 20:13:24 -0400, Daniel Drake wrote:
-> Also my patch titled "don't allow scanning in 
-> monitor mode" has got lost somewhere and I'm not sure whether it would 
-> be beneficial for me to re-submit based on Jiri/Johannes' restructuring.
+On Monday 13 August 2007 11:07:10 Aurelien Jarno wrote:
+> On Mon, Aug 13, 2007 at 04:21:31AM +0200, Michael Buesch wrote:
+> > > Yes it is overflow warning. The compiler thinks that those constant are
+> > > signed values and thus generate an overflow.
+> > > 
+> > > Another fix would be to postfix those constants by U.
+> > > 
+> > 
+> > Can you please do this?
+> > 
+> 
+> Please find a patch below. I did the same for the whole address map for
+> consistency.
+> 
+> Aurelien
 
-It's there,
-http://git.kernel.org/?p=linux/kernel/git/jbenc/mac80211.git;a=commit;h=2923882423db52642e9f2fc131972842cfa05e82
-
- Jiri
+Queued, thanks!
 
 -- 
-Jiri Benc
-SUSE Labs
+Greetings Michael.
