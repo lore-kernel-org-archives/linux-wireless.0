@@ -1,75 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:35736 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754208AbXHAD2I (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.188]:58837 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S948409AbXHMT6f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 23:28:08 -0400
-Date: Tue, 31 Jul 2007 20:26:48 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Gary Zambrano <zambrano@broadcom.com>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH FINAL] Merge the Sonics Silicon Backplane subsystem
-Message-Id: <20070731202648.e1a8c45f.akpm@linux-foundation.org>
-In-Reply-To: <200707291324.58691.mb@bu3sch.de>
-References: <200707291324.58691.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 13 Aug 2007 15:58:35 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so2328917mue
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2007 12:58:31 -0700 (PDT)
+Message-ID: <46C0B817.50707@gmail.com>
+Date: Mon, 13 Aug 2007 21:59:19 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	jbenc@suse.cz, flamingice@sourmilk.net, jeff@garzik.org
+Subject: Re: [PATCH 1/4] Net: mac80211, remove bitfields from struct ieee80211_tx_packet_data
+References: <32694265142306417777@wsc.cz> <1187009029.27916.107.camel@johannes.berg>
+In-Reply-To: <1187009029.27916.107.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 29 Jul 2007 13:24:54 +0200 Michael Buesch <mb@bu3sch.de> wrote:
+Johannes Berg napsal(a):
+> On Sun, 2007-08-12 at 15:08 +0200, Jiri Slaby wrote:
+> 
+>> +	if (control->flags & IEEE80211_TXCTL_REQ_TX_STATUS)
+>> +		pkt_data->flags |= IEEE80211_TXPD_REQ_TX_STATUS;
+>> +	if (control->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT)
+>> +		pkt_data->flags |= IEEE80211_TXPD_DO_NOT_ENCRYPT;
+>> +	if (control->flags & IEEE80211_TXCTL_REQUEUE)
+>> +		pkt_data->flags |= IEEE80211_TXPD_REQUEUE;
+>> +	if (control->type == IEEE80211_IF_TYPE_MGMT)
+>> +		pkt_data->flags |= IEEE80211_TXPD_MGMT_IFACE;
+> 
+> This looks weird. Can't we just use the same flags?
 
-> The Sonics Silicon Backplane is a mini-bus used on
-> various Broadcom chips and embedded devices.
+I don't think, that it must be subset one of each another in the future. (This
+is why I created yet another bits defined).
 
-Sigh.
+Do we still want the same flags?
 
-s390:
-
-drivers/ssb/main.c: In function 'ssb_ssb_read16':
-drivers/ssb/main.c:489: error: implicit declaration of function 'readw'
-drivers/ssb/main.c: In function 'ssb_ssb_read32':
-drivers/ssb/main.c:497: error: implicit declaration of function 'readl'
-drivers/ssb/main.c: In function 'ssb_ssb_write16':
-drivers/ssb/main.c:505: error: implicit declaration of function 'writew'
-drivers/ssb/main.c: In function 'ssb_ssb_write32':
-drivers/ssb/main.c:513: error: implicit declaration of function 'writel'        
-
-we shouldn't be compiling SSB on s390, because:
-
-config SSB
-        tristate "Sonics Silicon Backplane support"
-        depends on EXPERIMENTAL && HAS_IOMEM
-
-and
-
-akpm2:/usr/src/25> grep IOMEM .config 
-CONFIG_NO_IOMEM=y
-akpm2:/usr/src/25> 
-
-but
-
-akpm2:/usr/src/25> grep SSB .config 
-CONFIG_DCSSBLK=m
-CONFIG_SSB=m
-CONFIG_SSB_SILENT=y
-
-well, how did that come about?
-
-It _has_ to be `select'.  It's _always_ `select'.
-
-yup, it's `select':
-
-Selected by: B44 && NETDEVICES && NET_ETHERNET || BCM43XX_MAC80211 && NETDEVICES && !S390 && MAC80211 && WLAN_80211 && EXPERIMENTAL
-
-
-Look.  Kconfig's `select' Just.  Does.  Not.  Work.  If you find yourself
-contemplating using it, please, don sackcloth, take a cold shower and
-several analgesics, then have another go, OK?
-
-ho hum.
-
+-- 
+Jiri Slaby (jirislaby@gmail.com)
+Faculty of Informatics, Masaryk University
