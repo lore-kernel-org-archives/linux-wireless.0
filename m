@@ -1,46 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:25857 "EHLO
-	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752851AbXHFBXk (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:38538 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S944388AbXHMLQt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Aug 2007 21:23:40 -0400
-From: Daniel Drake <dsd@gentoo.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Cc: kune@deine-taler.de
-Subject: [PATCH] zd1211rw-mac80211: Add ID for ZyXEL M-202 XtremeMIMO
-Message-Id: <20070806012340.40DC67B409F@zog.reactivated.net>
-Date: Mon,  6 Aug 2007 02:23:40 +0100 (BST)
+	Mon, 13 Aug 2007 07:16:49 -0400
+Subject: Re: [PATCH] hostapd: work with monitor interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andy Green <andy@warmcat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <46C0231F.5040605@warmcat.com>
+References: <1186992004.27916.53.camel@johannes.berg>
+	 <46C0231F.5040605@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FXcuVD8yWsMKTBX4tgtm"
+Date: Mon, 13 Aug 2007 13:19:09 +0200
+Message-Id: <1187003949.27916.86.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tested by Nathen Meyers
-FCC ID: SI5WUB221Z
-zd1211b chip 0586:340a v4810 high 00-13-49 AL2230_RF pa0 ----S
 
-Despite the product name, I'm pretty sure this isn't a MIMO device. It
-appears just to be a normal ZD1211B and we have never heard of these
-devices having more than 1 RF. I guess they named this product this way
-to make it appear that it fits in with the rest of their XtremeMIMO
-product range.
+--=-FXcuVD8yWsMKTBX4tgtm
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
----
- drivers/net/wireless/zd1211rw-mac80211/zd_usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+On Mon, 2007-08-13 at 10:23 +0100, Andy Green wrote:
 
-diff --git a/drivers/net/wireless/zd1211rw-mac80211/zd_usb.c b/drivers/net/wireless/zd1211rw-mac80211/zd_usb.c
-index cba09be..0d942a4 100644
---- a/drivers/net/wireless/zd1211rw-mac80211/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw-mac80211/zd_usb.c
-@@ -73,6 +73,7 @@ static struct usb_device_id usb_ids[] = {
- 	{ USB_DEVICE(0x2019, 0x5303), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x129b, 0x1667), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0cde, 0x001a), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x0586, 0x340a), .driver_info = DEVICE_ZD1211B },
- 	/* "Driverless" devices that need ejecting */
- 	{ USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
- 	{ USB_DEVICE(0x0ace, 0x20ff), .driver_info = DEVICE_INSTALLER },
--- 
-1.5.2.4
+> Wow impressive amount of ioctl calls going into the bit bucket there...
+
+I think there's only a single ioctl being killed, but all the stuff from
+ieee80211_common.h which is good too. Less crappy userspace interface :)
+
+> I will try to use your direct BPF programming and also dispense with
+> libpcap tonight, thanks for that.
+
+There's one gotcha with BPF: the program counter is always increasing so
+you can't have loops, and if you say "jump by 1 instruction" then
+another one is added too. But if you just copy the post-processing code
+you won't have to deal with that :)
+
+If you need any help writing a filter for the MAC address you use as the
+special one or something let me know. I'd probably use a 4-byte and a
+2-byte word load and compare to constants; just remember that multi-byte
+word loads do network/host byte order swapping so you'll have to use the
+LE32/LE16 macros for the constants.
+
+This was, incidentally, the reason I didn't use pcap, I couldn't figure
+out if it could handle little-endian loads like my first few
+instructions do.
+
+johannes
+
+--=-FXcuVD8yWsMKTBX4tgtm
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGwD4t/ETPhpq3jKURAvJoAJ9aKIm1lqAOADlwCj0k22EpZ7AKtwCbBjY6
+HlkgCSCLy9uUXSwBWGF6j2s=
+=LW/Z
+-----END PGP SIGNATURE-----
+
+--=-FXcuVD8yWsMKTBX4tgtm--
 
