@@ -1,30 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx10.go2.pl ([193.17.41.74]:52455 "EHLO poczta.o2.pl"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755941AbXH3IbZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 04:31:25 -0400
-Date: Thu, 30 Aug 2007 10:32:46 +0200
-From: Jarek Poplawski <jarkao2@o2.pl>
-To: netdev@vger.kernel.org
-Cc: Jon Smirl <jonsmirl@gmail.com>,
-	"Valdis\.Kletnieks\@vt\.edu" <Valdis.Kletnieks@vt.edu>,
-	Christoph Hellwig <hch@infradead.org>,
-	Jiri Slaby <jirislaby@gmail.com>, linville@tuxdriver.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 4/5] Net: ath5k, license is GPLv2
-Message-ID: <20070830083246.GA2738@ff.dom.local>
-References: <200708292137.48834.mb@bu3sch.de> <20070830082652.GA2669@ff.dom.local>
+Received: from bay0-omc2-s40.bay0.hotmail.com ([65.54.246.176]:25424 "EHLO
+	bay0-omc2-s40.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758596AbXHMWCX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Aug 2007 18:02:23 -0400
+Message-ID: <BAY111-F19A0F069C5470789D54A43B6DC0@phx.gbl>
+In-Reply-To: <1185797310.12159.2.camel@pegasus>
+From: "maali Al Janoob" <mms82@hotmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: madwifi question
+Date: Tue, 14 Aug 2007 02:02:21 +0400
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070830082652.GA2669@ff.dom.local>
+Content-Type: text/plain; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 30, 2007 at 10:26:52AM +0200, Jarek Poplawski wrote:
-...
-> PS: there is probably some mess with gmail addresses in this thread.
+Does madwifi driver support ad hoc oepration?
 
-...or maybe it's OK...  Sorry.
+Thanks
 
-Jarek P.
+_________________________________________________________________
+Express yourself instantly with MSN Messenger! Download today it's FREE! 
+http://messenger.msn.click-url.com/go/onm00200471ave/direct/01/
+
