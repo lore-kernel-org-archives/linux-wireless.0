@@ -1,50 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45900 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752372AbXH1QaA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2007 12:30:00 -0400
-Subject: Re: [PATCH 08/12] mac80211: remove hostapd add/remove interface  ioctls
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070828161453.266899000@sipsolutions.net>
-References: <20070828161346.972115000@sipsolutions.net>
-	 <20070828161453.266899000@sipsolutions.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2bSKafAiUTaBz++mkoiL"
-Date: Tue, 28 Aug 2007 18:31:24 +0200
-Message-Id: <1188318684.7837.110.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from DSL022.labridge.com ([206.117.136.22]:2483 "EHLO perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967496AbXHMGkI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Aug 2007 02:40:08 -0400
+Date: Sun, 12 Aug 2007 23:39:45 -0700
+From: joe@perches.com
+To: torvalds@linux-foundation.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+	acme@ghostprotocols.net
+Subject: [PATCH] [543/2many] MAINTAINERS - WL3501 WIRELESS PCMCIA CARD  DRIVER
+Message-ID: <46bffcb1.4pQ3AxPuL9R1oYU1%joe@perches.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add file pattern to MAINTAINER entry
 
---=-2bSKafAiUTaBz++mkoiL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Joe Perches <joe@perches.com>
 
-On Tue, 2007-08-28 at 18:13 +0200, Johannes Berg wrote:
-> plain text document attachment (014-remove-hostapd-if-ioctls.patch)
-> hostapd no longer uses these ioctls as it uses nl80211 now,
-> so they are no longer necessary.
-
-That patch hasn't been merged, but no driver we currently have actually
-supports WDS or multiple BSSes which is the only use for this right now.
-
-johannes
-
---=-2bSKafAiUTaBz++mkoiL
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG1E3c/ETPhpq3jKURApkVAJ9Vg7uRbLGew6zmUgzj5a3mxw7R5QCgq4Ko
-lM3bPQj0lviHmYqGpi3t2Ns=
-=e23y
------END PGP SIGNATURE-----
-
---=-2bSKafAiUTaBz++mkoiL--
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index e1fd743..454494e 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -5134,6 +5134,7 @@ M:	acme@ghostprotocols.net
+ L:	linux-wireless@vger.kernel.org
+ W:	http://oops.ghostprotocols.net:81/blog
+ S:	Maintained
++F:	drivers/net/wireless/wl3501*
+ 
+ X.25 NETWORK LAYER
+ P:	Henner Eisen
