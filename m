@@ -1,225 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cacti.profiwh.com ([85.93.165.66]:38184 "EHLO smtp.wsc.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751312AbXHRIwQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Aug 2007 04:52:16 -0400
-Message-id: <25024219461172228260@wsc.cz>
-Subject: [PATCH 1/4 #2] Net: mac80211, remove bitfields from struct ieee80211_tx_packet_data
-From: Jiri Slaby <jirislaby@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <jbenc@suse.cz>
-Cc: <flamingice@sourmilk.net>
-Cc: <jeff@garzik.org>
-Cc: <netdev@vger.kernel.org>
-Date: Sat, 18 Aug 2007 10:53:31 +0200 (CEST)
+Received: from smtp.rutgers.edu ([128.6.72.243]:57718 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S968462AbXHMIAo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Aug 2007 04:00:44 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Hans de Goede <j.w.r.degoede@hhs.nl>
+Subject: Re: Recent linux-wireless git changes have broken my prism54pci card
+Date: Mon, 13 Aug 2007 00:58:47 -0700
+Cc: Andy Green <andy@warmcat.com>, linux-wireless@vger.kernel.org
+References: <46BFF10B.1090307@hhs.nl> <46BFFE4F.802@warmcat.com> <46C00D1E.3000807@hhs.nl>
+In-Reply-To: <46C00D1E.3000807@hhs.nl>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart2477204.s6XiBmEhne";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200708130058.47778.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211, remove bitfields from struct ieee80211_tx_packet_data
+--nextPart2477204.s6XiBmEhne
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+On Monday 13 August 2007 00:49, Hans de Goede wrote:
+> I already found that one, but there is no drivers/net/wireless/mac80211 d=
+ir
+> there. What am I missing?
+>
+John Linville recently collapsed that directory into driver/net/wireless.
 
----
-commit b7844000ba006531bd2133e8097fa27724efe3c2
-tree ba74c93d4c8f1ef7d7c4a3f45af9a24cf3a6d329
-parent a050b807aede7f33339c6bee0bef1c07cd9c5fc4
-author Jiri Slaby <jirislaby@gmail.com> Sat, 18 Aug 2007 10:23:58 +0200
-committer Jiri Slaby <jirislaby@gmail.com> Sat, 18 Aug 2007 10:23:58 +0200
+If you can just find the title of the patches/commits or describe them, tha=
+t's=20
+probably enough for me to find them.
 
- net/mac80211/ieee80211.c     |   15 +++++++++++----
- net/mac80211/ieee80211_i.h   |   12 +++++++-----
- net/mac80211/ieee80211_sta.c |    6 ++++--
- net/mac80211/rx.c            |    4 ++--
- net/mac80211/tx.c            |   23 ++++++++++++-----------
- net/mac80211/wme.c           |    4 ++--
- 6 files changed, 38 insertions(+), 26 deletions(-)
+=2DMichael Wu
 
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 9ff86ee..0952237 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -933,10 +933,17 @@ static void ieee80211_remove_tx_extra(struct ieee80211_local *local,
- 
- 	pkt_data = (struct ieee80211_tx_packet_data *)skb->cb;
- 	pkt_data->ifindex = control->ifindex;
--	pkt_data->mgmt_iface = (control->type == IEEE80211_IF_TYPE_MGMT);
--	pkt_data->req_tx_status = !!(control->flags & IEEE80211_TXCTL_REQ_TX_STATUS);
--	pkt_data->do_not_encrypt = !!(control->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT);
--	pkt_data->requeue = !!(control->flags & IEEE80211_TXCTL_REQUEUE);
-+	pkt_data->flags &= ~(IEEE80211_TXPD_REQ_TX_STATUS |
-+		IEEE80211_TXPD_DO_NOT_ENCRYPT | IEEE80211_TXPD_REQUEUE |
-+		IEEE80211_TXPD_MGMT_IFACE);
-+	if (control->flags & IEEE80211_TXCTL_REQ_TX_STATUS)
-+		pkt_data->flags |= IEEE80211_TXPD_REQ_TX_STATUS;
-+	if (control->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT)
-+		pkt_data->flags |= IEEE80211_TXPD_DO_NOT_ENCRYPT;
-+	if (control->flags & IEEE80211_TXCTL_REQUEUE)
-+		pkt_data->flags |= IEEE80211_TXPD_REQUEUE;
-+	if (control->type == IEEE80211_IF_TYPE_MGMT)
-+		pkt_data->flags |= IEEE80211_TXPD_MGMT_IFACE;
- 	pkt_data->queue = control->queue;
- 
- 	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 4599d55..8163a5a 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -166,15 +166,17 @@ struct ieee80211_txrx_data {
- #endif /* CONFIG_HOSTAPD_WPA_TESTING */
- };
- 
-+/* flags used in struct ieee80211_tx_packet_data.flags */
-+#define IEEE80211_TXPD_REQ_TX_STATUS	BIT(0)
-+#define IEEE80211_TXPD_DO_NOT_ENCRYPT	BIT(1)
-+#define IEEE80211_TXPD_REQUEUE		BIT(2)
-+#define IEEE80211_TXPD_MGMT_IFACE	BIT(3)
- /* Stored in sk_buff->cb */
- struct ieee80211_tx_packet_data {
- 	int ifindex;
- 	unsigned long jiffies;
--	unsigned int req_tx_status:1;
--	unsigned int do_not_encrypt:1;
--	unsigned int requeue:1;
--	unsigned int mgmt_iface:1;
--	unsigned int queue:4;
-+	unsigned int flags;
-+	u8 queue;
- };
- 
- struct ieee80211_tx_stored_packet {
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index b996332..75521ae 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -506,8 +506,10 @@ static void ieee80211_sta_tx(struct net_device *dev, struct sk_buff *skb,
- 	pkt_data = (struct ieee80211_tx_packet_data *) skb->cb;
- 	memset(pkt_data, 0, sizeof(struct ieee80211_tx_packet_data));
- 	pkt_data->ifindex = sdata->dev->ifindex;
--	pkt_data->mgmt_iface = (sdata->type == IEEE80211_IF_TYPE_MGMT);
--	pkt_data->do_not_encrypt = !encrypt;
-+	if (sdata->type == IEEE80211_IF_TYPE_MGMT)
-+		pkt_data->flags |= IEEE80211_TXPD_MGMT_IFACE;
-+	if (!encrypt)
-+		pkt_data->flags |= IEEE80211_TXPD_DO_NOT_ENCRYPT;
- 
- 	dev_queue_xmit(skb);
- }
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 0a10720..948eb2f 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -415,7 +415,7 @@ static int ap_sta_ps_end(struct net_device *dev, struct sta_info *sta)
- 	while ((skb = skb_dequeue(&sta->tx_filtered)) != NULL) {
- 		pkt_data = (struct ieee80211_tx_packet_data *) skb->cb;
- 		sent++;
--		pkt_data->requeue = 1;
-+		pkt_data->flags |= IEEE80211_TXPD_REQUEUE;
- 		dev_queue_xmit(skb);
- 	}
- 	while ((skb = skb_dequeue(&sta->ps_tx_buf)) != NULL) {
-@@ -427,7 +427,7 @@ static int ap_sta_ps_end(struct net_device *dev, struct sta_info *sta)
- 		       "since STA not sleeping anymore\n", dev->name,
- 		       MAC_ARG(sta->addr), sta->aid);
- #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
--		pkt_data->requeue = 1;
-+		pkt_data->flags |= IEEE80211_TXPD_REQUEUE;
- 		dev_queue_xmit(skb);
- 	}
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index b57a592..3d05f8f 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1248,11 +1248,11 @@ int ieee80211_master_start_xmit(struct sk_buff *skb,
- 
- 	control.ifindex = odev->ifindex;
- 	control.type = osdata->type;
--	if (pkt_data->req_tx_status)
-+	if (pkt_data->flags & IEEE80211_TXPD_REQ_TX_STATUS)
- 		control.flags |= IEEE80211_TXCTL_REQ_TX_STATUS;
--	if (pkt_data->do_not_encrypt)
-+	if (pkt_data->flags & IEEE80211_TXPD_DO_NOT_ENCRYPT)
- 		control.flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT;
--	if (pkt_data->requeue)
-+	if (pkt_data->flags & IEEE80211_TXPD_REQUEUE)
- 		control.flags |= IEEE80211_TXCTL_REQUEUE;
- 	control.queue = pkt_data->queue;
- 
-@@ -1294,8 +1294,7 @@ int ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	/* needed because we set skb device to master */
- 	pkt_data->ifindex = dev->ifindex;
- 
--	pkt_data->mgmt_iface = 0;
--	pkt_data->do_not_encrypt = 1;
-+	pkt_data->flags |= IEEE80211_TXPD_DO_NOT_ENCRYPT;
- 
- 	/*
- 	 * fix up the pointers accounting for the radiotap
-@@ -1346,7 +1345,7 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	struct ieee80211_hdr hdr;
- 	const u8 *encaps_data;
- 	int encaps_len, skip_header_bytes;
--	int nh_pos, h_pos, no_encrypt = 0;
-+	int nh_pos, h_pos;
- 	struct sta_info *sta;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-@@ -1492,8 +1491,8 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	pkt_data = (struct ieee80211_tx_packet_data *)skb->cb;
- 	memset(pkt_data, 0, sizeof(struct ieee80211_tx_packet_data));
- 	pkt_data->ifindex = dev->ifindex;
--	pkt_data->mgmt_iface = (sdata->type == IEEE80211_IF_TYPE_MGMT);
--	pkt_data->do_not_encrypt = no_encrypt;
-+	if (sdata->type == IEEE80211_IF_TYPE_MGMT)
-+		pkt_data->flags |= IEEE80211_TXPD_MGMT_IFACE;
- 
- 	skb->dev = local->mdev;
- 	sdata->stats.tx_packets++;
-@@ -1551,7 +1550,8 @@ int ieee80211_mgmt_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 	pkt_data = (struct ieee80211_tx_packet_data *) skb->cb;
- 	memset(pkt_data, 0, sizeof(struct ieee80211_tx_packet_data));
- 	pkt_data->ifindex = sdata->dev->ifindex;
--	pkt_data->mgmt_iface = (sdata->type == IEEE80211_IF_TYPE_MGMT);
-+	if (sdata->type == IEEE80211_IF_TYPE_MGMT)
-+		pkt_data->flags |= IEEE80211_TXPD_MGMT_IFACE;
- 
- 	skb->priority = 20; /* use hardcoded priority for mgmt TX queue */
- 	skb->dev = sdata->local->mdev;
-@@ -1561,12 +1561,13 @@ int ieee80211_mgmt_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 	 * to request TX callback for hostapd. BIT(1) is checked.
- 	 */
- 	if ((fc & BIT(1)) == BIT(1)) {
--		pkt_data->req_tx_status = 1;
-+		pkt_data->flags |= IEEE80211_TXPD_REQ_TX_STATUS;
- 		fc &= ~BIT(1);
- 		hdr->frame_control = cpu_to_le16(fc);
- 	}
- 
--	pkt_data->do_not_encrypt = !(fc & IEEE80211_FCTL_PROTECTED);
-+	if (!(fc & IEEE80211_FCTL_PROTECTED))
-+		pkt_data->flags |= IEEE80211_TXPD_DO_NOT_ENCRYPT;
- 
- 	sdata->stats.tx_packets++;
- 	sdata->stats.tx_bytes += skb->len;
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 99a792c..d3c81fe 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -110,7 +110,7 @@ static inline int classify80211(struct sk_buff *skb, struct Qdisc *qd)
- 		return IEEE80211_TX_QUEUE_DATA0;
- 	}
- 
--	if (unlikely(pkt_data->mgmt_iface)) {
-+	if (unlikely(pkt_data->flags & IEEE80211_TXPD_MGMT_IFACE)) {
- 		/* Data frames from hostapd (mainly, EAPOL) use AC_VO
- 		* and they will include QoS control fields if
- 		* the target STA is using WME. */
-@@ -179,7 +179,7 @@ static int wme_qdiscop_enqueue(struct sk_buff *skb, struct Qdisc* qd)
- 	struct Qdisc *qdisc;
- 	int err, queue;
- 
--	if (pkt_data->requeue) {
-+	if (pkt_data->flags & IEEE80211_TXPD_REQUEUE) {
- 		skb_queue_tail(&q->requeued[pkt_data->queue], skb);
- 		qd->q.qlen++;
- 		return 0;
+--nextPart2477204.s6XiBmEhne
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGwA83T3Oqt9AH4aERAiNAAJ42iexGnm9PSWZefcEz7pLBMOdOnQCglKtY
+p8U0kOPOU5c2CJJDqyGT81k=
+=qvM5
+-----END PGP SIGNATURE-----
+
+--nextPart2477204.s6XiBmEhne--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
