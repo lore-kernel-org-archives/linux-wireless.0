@@ -1,29 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xdsl-664.zgora.dialog.net.pl ([81.168.226.152]:1442 "EHLO
-	tuxland.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750778AbXHHF60 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 01:58:26 -0400
-From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] drivers/net/wireless/wl3501_cs.c: remove redundant memset
-Date: Wed, 8 Aug 2007 07:58:21 +0200
-Cc: acme@ghostprotocols.net, Jeff Garzik <jgarzik@pobox.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-References: <200708070050.23158.m.kozlowski@tuxland.pl> <20070807001155.GA3285@tuxdriver.com>
-In-Reply-To: <20070807001155.GA3285@tuxdriver.com>
+Received: from smtp.rutgers.edu ([128.6.72.243]:51004 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754843AbXHMGU3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Aug 2007 02:20:29 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Hans de Goede <j.w.r.degoede@hhs.nl>
+Subject: Re: Recent linux-wireless git changes have broken my prism54pci card
+Date: Sun, 12 Aug 2007 23:18:37 -0700
+Cc: linux-wireless@vger.kernel.org
+References: <46BFF10B.1090307@hhs.nl>
+In-Reply-To: <46BFF10B.1090307@hhs.nl>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200708080758.22319.m.kozlowski@tuxland.pl>
+Content-Type: multipart/signed;
+  boundary="nextPart4695948.1SlfObM6MQ";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200708122318.42283.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Please send wireless patches to linux-wireless@vger.kernel.org,
-> and CC me.
+--nextPart4695948.1SlfObM6MQ
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Ok. Did you pick the patch up?
+On Sunday 12 August 2007 22:50, Hans de Goede wrote:
+> Patch causing loose off connection within seconds when fully loading the
+> link with a local file transfer:
+> http://bu3sch.de/gitweb?p=wireless-dev.git;a=commitdiff;h=62ee473d67b7ae353
+>d210b186abaadc37a642237
+>
+> Only associating and nothing else:
+> http://bu3sch.de/gitweb?p=wireless-dev.git;a=commitdiff;h=7d59453a9dbe50dc9
+>bab846c410e39f8d5b10c83 And then specifically the changes to prism54common.c
+>
+Links not working.
 
-Regards,
+-Michael Wu
 
-	Mariusz
+--nextPart4695948.1SlfObM6MQ
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGv/fCT3Oqt9AH4aERAmi5AKCFD3lovg6SpKNFoQx63nPKABAAmwCfXL0M
+AaDyHECe8FIuNolKKARWp/s=
+=dTU8
+-----END PGP SIGNATURE-----
+
+--nextPart4695948.1SlfObM6MQ--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
