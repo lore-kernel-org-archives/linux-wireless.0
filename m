@@ -1,55 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:50736 "EHLO mx1.redhat.com"
+Received: from smtp2.versatel.nl ([62.58.50.89]:41466 "EHLO smtp2.versatel.nl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754172AbXHaOiv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Aug 2007 10:38:51 -0400
-Subject: Re: [PATCH 5/5] Net: ath5k, kconfig changes
-From: Dan Williams <dcbw@redhat.com>
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Jiri Slaby <jirislaby@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <46D8180A.5070902@garzik.org>
-References: <2713029743177393055@pripojeni.net>
-	 <280951420471148977@pripojeni.net> <20070828171330.GD29343@infradead.org>
-	 <40f31dec0708291838p5d33eb34p3b4432d9d270841a@mail.gmail.com>
-	 <20070830123609.GA5140@tuxdriver.com>
-	 <1188561531.2668.7.camel@xo-3E-67-34.localdomain>
-	 <46D8180A.5070902@garzik.org>
-Content-Type: text/plain
-Date: Fri, 31 Aug 2007 10:32:14 -0400
-Message-Id: <1188570734.4347.15.camel@xo-3E-67-34.localdomain>
-Mime-Version: 1.0
+	id S1754566AbXHMF6M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Aug 2007 01:58:12 -0400
+Message-ID: <46BFF10B.1090307@hhs.nl>
+Date: Mon, 13 Aug 2007 07:50:03 +0200
+From: Hans de Goede <j.w.r.degoede@hhs.nl>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: flamingice@sourmilk.net, Hans de Goede <j.w.r.degoede@hhs.nl>
+Subject: Recent linux-wireless git changes have broken my prism54pci card
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-08-31 at 09:30 -0400, Jeff Garzik wrote:
-> Dan Williams wrote:
-> > On Thu, 2007-08-30 at 08:36 -0400, John W. Linville wrote:
-> >> On Thu, Aug 30, 2007 at 04:38:09AM +0300, Nick Kossifidis wrote:
-> >>> 2007/8/28, Christoph Hellwig <hch@infradead.org>:
-> >>>> Also this whole patch seems rather pointless.  It saves only
-> >>>> very little and turns the driver into a complete ifdef maze.
-> >>> Also most
-> >>> people will use 5212 code only, 5211 cards are on some old laptops and
-> >>> 5210, well i couldn't even find  a 5210 for actual testing :P
-> >> FWIW, I'd bet dollars to donuts that distros will enable them all
-> >> together.
-> > 
-> > I would certainly _hope_ that distros enable everything -that is in the
-> > kernel- that they can get their hands on, otherwise when you stick a
-> > card in, it doesn't just work.
-> 
-> Distros definitely -do not- do this.  Plenty of ancient ISA drivers are 
-> disabled at build time, for example, in many distros.
+Hi All,
 
-Ok, so let me qualify to "within reason".  All 802.11-compliant wireless
-cards would fall within the "within reason" IMHO, but, for example,
-older non 802.11 wireless cards (early Aironet products for example)
-probably don't.  ISA clearly does not for mainstream distros.
+I first reported this in Fedora bugzilla, as I'm using Fedora with a Fedora 
+kernel (which includes recent  linux-wireless git snapshots), see here for the 
+Fedora bugreport:
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=249823
 
-Dan
+Updating from the Fedora 7 test kernel to the final results in very poor 
+performance, and going to even newer versions of the Fedora kernel totally 
+breaks connectivity. Linville thought it would be best to further discuss this 
+here, so here I am.
+
+I've looked at recent git commits to the prism54 / p54pci driver and have been 
+trying it revision by revision, eventually I've managed to pin the cause down 
+to 2 patches, below is a verbatim cut and paste from the bugzilla entry, 
+containing my analysis:
+
+---
+
+I've been busy researching this and I have come to the
+following conclusions.
+
+1) with the 2.6.20-2something F7-test kernel everything works fine build date
+    3 march, I can give you the exact revision if you want.
+
+2) with the fc release kerkel (3194) things work, but the connection is often lost.
+
+3) with the 2.6.23-0.49.rc1.git3.fc8, the card asociates and thats it.
+
+Using wireless git and out of tree driver building I've found that the following
+2 patches are the culprits:
+
+Patch causing loose off connection within seconds when fully loading the link
+with a local file transfer:
+http://bu3sch.de/gitweb?p=wireless-dev.git;a=commitdiff;h=62ee473d67b7ae353d210b186abaadc37a642237
+
+Only associating and nothing else:
+http://bu3sch.de/gitweb?p=wireless-dev.git;a=commitdiff;h=7d59453a9dbe50dc9bab846c410e39f8d5b10c83
+And then specifically the changes to prism54common.c
+
+This is with an isl3886 cardbus card, using the p54pci driver.
+
+----
+
+I would be more then happy to test any changes.
+
+Thanks & Regards,
+
+Hans
 
 
+p.s.
+
+Please keep my CC-ed I'm not on the list.
