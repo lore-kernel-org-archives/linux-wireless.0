@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35395 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755074AbXH2Tiq (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.187]:50731 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753669AbXHMUAs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2007 15:38:46 -0400
-Date: Wed, 29 Aug 2007 20:45:29 +0100
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: "Jon Smirl" <jonsmirl@gmail.com>
-Cc: "Valdis.Kletnieks@vt.edu" <Valdis.Kletnieks@vt.edu>,
-	"Christoph Hellwig" <hch@infradead.org>,
-	"Jiri Slaby" <jirislaby@gmail.com>, linville@tuxdriver.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 4/5] Net: ath5k, license is GPLv2
-Message-ID: <20070829204529.66ce1bcb@the-village.bc.nu>
-In-Reply-To: <9e4733910708291233h3c4022a9n6e46733c5c50e222@mail.gmail.com>
-References: <2713029743177393055@pripojeni.net>
-	<7515194658758617@pripojeni.net>
-	<20070828171155.GC29343@infradead.org>
-	<3208.1188408545@turing-police.cc.vt.edu>
-	<9e4733910708291101i3783a8b1l38f0d5cfb0c2863d@mail.gmail.com>
-	<20070829192858.75aa6542@the-village.bc.nu>
-	<9e4733910708291233h3c4022a9n6e46733c5c50e222@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 13 Aug 2007 16:00:48 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so572246nfb
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2007 13:00:47 -0700 (PDT)
+Message-ID: <46C0B89E.3080505@gmail.com>
+Date: Mon, 13 Aug 2007 22:01:34 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	jbenc@suse.cz, flamingice@sourmilk.net, jeff@garzik.org
+Subject: Re: [PATCH 2/4] Net: mac80211, remove bitfields from struct ieee80211_txrx_data
+References: <2653412025907217317@wsc.cz> <1187009078.27916.109.camel@johannes.berg>
+In-Reply-To: <1187009078.27916.109.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Aren't patches made against the kernel GPL'd if the author doesn't
-> explicitly grant them more liberal BSD license in addition?
-
-That would be the normal assumption.
-
-> The problem then comes in taking the patches that were only made
-> available against GPL code and reshipping them under the BSD license
-> without the author explicitly agreeing to this.
+Johannes Berg napsal(a):
+> On Sun, 2007-08-12 at 15:08 +0200, Jiri Slaby wrote:
 > 
-> What if a patch spans both code that is pure GPL and code imported
-> from BSD, how do you license it?
+>> -	unsigned int fragmented:1; /* whether the MSDU was fragmented */
+>> +	/* whether the MSDU was fragmented */
+>> +#define IEEE80211_TXRXD_FRAGMENTED		BIT(0)
+>> +#define IEEE80211_TXRXD_TXUNICAST		BIT(1)
+>> +#define IEEE80211_TXRXD_TXPS_BUFFERED		BIT(2)
+>> +#define IEEE80211_TXRXD_TXPROBE_LAST_FRAG	BIT(3)
+>> +#define IEEE80211_TXRXD_RXIN_SCAN		BIT(4)
+> 
+> I know this isn't the style currently used, but could you put these
+> definitions before the struct declaration? That way, kerneldoc doesn't
+> totally screw up.
 
-See the acpi codebase for a worked example.
+OK
 
-Alan
+-- 
+Jiri Slaby (jirislaby@gmail.com)
+Faculty of Informatics, Masaryk University
