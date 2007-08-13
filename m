@@ -1,70 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hoefnix.telenet-ops.be ([195.130.132.54]:43575 "EHLO
-	hoefnix.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751165AbXHBQNl (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:32850 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S970149AbXHMIwS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 12:13:41 -0400
-Date: Thu, 2 Aug 2007 18:12:56 +0200 (CEST)
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Andrew Morton <akpm@osdl.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Gary Zambrano <zambrano@broadcom.com>
-Subject: Re: [PATCH] Merge the Sonics Silicon Backplane subsystem
-In-Reply-To: <200708021624.59701.mb@bu3sch.de>
-Message-ID: <Pine.LNX.4.64.0708021812260.5150@anakin>
-References: <200707271857.24162.mb@bu3sch.de> <Pine.LNX.4.64.0708021557280.5150@anakin>
- <200708021624.59701.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Mon, 13 Aug 2007 04:52:18 -0400
+Subject: warning in ieee80211 tkip code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oera1vyB48dytX3+8+l3"
+Date: Mon, 13 Aug 2007 08:35:02 +0200
+Message-Id: <1186986902.27916.26.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2 Aug 2007, Michael Buesch wrote:
-> On Thursday 02 August 2007, Geert Uytterhoeven wrote:
-> > On Fri, 27 Jul 2007, Michael Buesch wrote:
-> > > The Sonics Silicon Backplane is a mini-bus used on
-> > > various Broadcom chips and embedded devices.
-> > > Devices using the SSB include b44, bcm43xx and various
-> > > Broadcom based wireless routers.
-> > > A b44 and bcm43xx port and a SSB based OHCI driver is available.
-> > 
-> > > --- a/drivers/Kconfig
-> > > +++ b/drivers/Kconfig
-> > > @@ -58,6 +58,8 @@ source "drivers/power/Kconfig"
-> > >  
-> > >  source "drivers/hwmon/Kconfig"
-> > >  
-> > > +source "drivers/ssb/Kconfig"
-> > > +
-> > >  source "drivers/mfd/Kconfig"
-> > >  
-> > >  source "drivers/media/Kconfig"
-> > 
-> > > --- /dev/null
-> > > +++ b/drivers/ssb/Kconfig
-> > > @@ -0,0 +1,92 @@
-> > > +menu "Sonics Silicon Backplane"
-> > > +
-> > > +config SSB
-> > > +	tristate "Sonics Silicon Backplane support"
-> > > +	depends on EXPERIMENTAL
-> > 
-> > Hence this will show up on all platforms?
-> 
-> So?
 
-Shouldn't you add a dependency for platforms where it make sense to have SSB?
+--=-oera1vyB48dytX3+8+l3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Gr{oetje,eeting}s,
+net/ieee80211/ieee80211_crypt_tkip.c: In function 'michael_mic_hdr':
+net/ieee80211/ieee80211_crypt_tkip.c:587: warning: overflow in implicit
+constant conversion
 
-						Geert
+The reason is pretty obvious:
+hdr[12] =3D qoshdr->qos_ctl & cpu_to_le16(IEEE80211_QCTL_TID);
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+where IEEE80211_QCTL_TID is 0xF, so that's made into 0xF00 on BE and
+then truncated to 0x00. Not very useful.
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+This was introduced in this commit:
+
+commit 65b6a2775102cd81e57158ef4b1cb89641f76cfd
+Author: Zhu Yi <yi.zhu@intel.com>
+Date:   Mon Aug 21 11:32:31 2006 +0800
+
+with the change
+
+-               hdr[12] =3D le16_to_cpu(qoshdr->qos_ctl) & IEEE80211_QCTL_T=
+ID;
++               hdr[12] =3D qoshdr->qos_ctl & cpu_to_le16(IEEE80211_QCTL_TI=
+D);
+
+The code before the change looks much saner since you're accessing the
+header as bytes...
+
+johannes
+
+--=-oera1vyB48dytX3+8+l3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGv/uW/ETPhpq3jKURAji0AJ0cm/zqeYxRrsL4M1mmIX8yob30YwCgnHI9
+HtRUuuKkwkD/gcjCJseLN1k=
+=B+mI
+-----END PGP SIGNATURE-----
+
+--=-oera1vyB48dytX3+8+l3--
+
