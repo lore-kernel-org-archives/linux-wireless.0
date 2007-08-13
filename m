@@ -1,53 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49963 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758147AbXHQKOB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2007 06:14:01 -0400
-Subject: Re: mac80211 AP mode powersaving problems?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Russell Senior <seniorr@aracnet.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <86fy2je371.fsf@coulee.tdb.com>
-References: <1186990509.27916.38.camel@johannes.berg>
-	 <87lkccf30m.fsf@tikku.osso.net> <1187270479.5141.44.camel@johannes.berg>
-	 <87643f4kkh.fsf@nokia.com> <1187275344.23489.6.camel@johannes.berg>
-	 <86wsvv8m9t.fsf@coulee.tdb.com> <1187283758.23489.38.camel@johannes.berg>
-	 <86fy2je371.fsf@coulee.tdb.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ubxdyf/oGv+Hfqa2wC6y"
-Date: Fri, 17 Aug 2007 12:14:28 +0200
-Message-Id: <1187345668.23489.145.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from DSL022.labridge.com ([206.117.136.22]:1624 "EHLO perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967216AbXHMGe4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Aug 2007 02:34:56 -0400
+Date: Sun, 12 Aug 2007 23:34:41 -0700
+From: joe@perches.com
+To: torvalds@linux-foundation.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, corey@world.std.com,
+	akpm@linux-foundation.org
+Subject: [PATCH] [400/2many] MAINTAINERS - RAYLINK/WEBGEAR 802.11 WIRELESS LAN DRIVER
+Message-ID: <46bffb81.3Y36j03eTK6yltNK%joe@perches.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add file pattern to MAINTAINER entry
 
---=-ubxdyf/oGv+Hfqa2wC6y
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Joe Perches <joe@perches.com>
 
-On Thu, 2007-08-16 at 11:37 -0700, Russell Senior wrote:
-
-> Sorry, I meant user-level documentation for using the mac80211 stuff,
-> not hostapd specifically.
-
-Oh. Well, I don't think there really is anything. But there isn't much
-to know either, for WPA or AP mode you need wpa_supplicant or hostapd
-respectively, and everything else should just work.
-
-johannes
-
---=-ubxdyf/oGv+Hfqa2wC6y
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGxXUE/ETPhpq3jKURAk80AJwJT/ifWeTorZFeqXRG/cV8lm/V7ACeN6Y+
-s3ololImmKQF8zkNl5Z4Ke8=
-=nF72
------END PGP SIGNATURE-----
-
---=-ubxdyf/oGv+Hfqa2wC6y--
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index da61adc..e62a648 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -3822,6 +3822,7 @@ P:	Corey Thomas
+ M:	corey@world.std.com
+ L:	linux-wireless@vger.kernel.org
+ S:	Maintained
++F:	drivers/net/wireless/ray*
+ 
+ RANDOM NUMBER DRIVER
+ P:	Matt Mackall
