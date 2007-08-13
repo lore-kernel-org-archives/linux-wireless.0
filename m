@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3747 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760379AbXHMUGu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 16:06:50 -0400
-Date: Mon, 13 Aug 2007 15:35:52 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Turn off meaningless TKIP message when  software WEP encryption is used
-Message-ID: <20070813193552.GE19115@tuxdriver.com>
-References: <46c0b062.yM23YNXGCQhX0Zd/%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <46c0b062.yM23YNXGCQhX0Zd/%Larry.Finger@lwfinger.net>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44935 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S972280AbXHMMl3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Aug 2007 08:41:29 -0400
+Subject: Re: [PATCH 1/4] Net: mac80211, remove bitfields from struct  ieee80211_tx_packet_data
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	jbenc@suse.cz, flamingice@sourmilk.net, jeff@garzik.org
+In-Reply-To: <32694265142306417777@wsc.cz>
+References: <32694265142306417777@wsc.cz>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7G5E77YaV8ejdTKXdGhu"
+Date: Mon, 13 Aug 2007 14:43:49 +0200
+Message-Id: <1187009029.27916.107.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 13, 2007 at 02:26:26PM -0500, Larry Finger wrote:
 
-> --- wireless-legacy.orig/net/mac80211/wpa.c
-> +++ wireless-legacy/net/mac80211/wpa.c
-> @@ -516,9 +516,11 @@ ieee80211_rx_h_tkip_decrypt(struct ieee8
->  					  skb->len - hdrlen, rx->sta->addr,
->  					  hwaccel, rx->u.rx.queue);
->  	if (res != TKIP_DECRYPT_OK || wpa_test) {
-> -		printk(KERN_DEBUG "%s: TKIP decrypt failed for RX frame from "
-> -		       MAC_FMT " (res=%d)\n",
-> -		       rx->dev->name, MAC_ARG(rx->sta->addr), res);
-> +		if ((rx->local->hw.flags & IEEE80211_HW_WEP_INCLUDE_IV)) {
-> +			printk(KERN_DEBUG "%s: TKIP decrypt failed for RX frame from "
-> +			       MAC_FMT " (res=%d)\n",
-> +			       rx->dev->name, MAC_ARG(rx->sta->addr), res);
-> +		}
->  		return TXRX_DROP;
->  	}
+--=-7G5E77YaV8ejdTKXdGhu
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Since you are in there anyway, should this be rate limited?
+On Sun, 2007-08-12 at 15:08 +0200, Jiri Slaby wrote:
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+> +	if (control->flags & IEEE80211_TXCTL_REQ_TX_STATUS)
+> +		pkt_data->flags |=3D IEEE80211_TXPD_REQ_TX_STATUS;
+> +	if (control->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT)
+> +		pkt_data->flags |=3D IEEE80211_TXPD_DO_NOT_ENCRYPT;
+> +	if (control->flags & IEEE80211_TXCTL_REQUEUE)
+> +		pkt_data->flags |=3D IEEE80211_TXPD_REQUEUE;
+> +	if (control->type =3D=3D IEEE80211_IF_TYPE_MGMT)
+> +		pkt_data->flags |=3D IEEE80211_TXPD_MGMT_IFACE;
+
+This looks weird. Can't we just use the same flags?
+
+johannes
+
+--=-7G5E77YaV8ejdTKXdGhu
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGwFIF/ETPhpq3jKURAjXCAKCg1zYXY3Xvcl8v4bea/6pHod8yUgCgorwG
+DaD5jjbBjNVxZdrxjVy9OMY=
+=Wwrs
+-----END PGP SIGNATURE-----
+
+--=-7G5E77YaV8ejdTKXdGhu--
+
