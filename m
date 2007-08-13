@@ -1,42 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purr.warmcat.com ([87.106.142.209]:48342 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757516AbXHCH7q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 03:59:46 -0400
-Message-ID: <46B2E06F.4090706@warmcat.com>
-Date: Fri, 03 Aug 2007 08:59:43 +0100
-From: Andy Green <andy@warmcat.com>
+Received: from DSL022.labridge.com ([206.117.136.22]:1696 "EHLO perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967216AbXHMGfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Aug 2007 02:35:20 -0400
+Date: Sun, 12 Aug 2007 23:35:00 -0700
+From: joe@perches.com
+To: torvalds@linux-foundation.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, flamingice@sourmilk.net,
+	andreamrl@tiscali.it, akpm@linux-foundation.org
+Subject: [PATCH] [410/2many] MAINTAINERS - RTL818X WIRELESS DRIVER
+Message-ID: <46bffb94.2CBFGZIXkk4N62oJ%joe@perches.com>
 MIME-Version: 1.0
-To: Ulrich Kunitz <kune@deine-taler.de>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Daniel Drake <dsd@gentoo.org>
-Subject: Re: mac80211 driver interface semantics
-References: <46B27729.5030406@gentoo.org> <20070803052935.GA12683@deine-taler.de>
-In-Reply-To: <20070803052935.GA12683@deine-taler.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Somebody in the thread at some point said:
+Add file pattern to MAINTAINER entry
 
-> As far as I know the phy0/add_iface entry can be used to add a new
-> interface. Notify though the "file" has write access for other,
-> you will need network admin capabilities, which is satisfied by
-> being root. For example:
-> 
-> # cat mon0 >/sys/class/net/wmaster0/phy80211/add_iface
+Signed-off-by: Joe Perches <joe@perches.com>
 
-echo -n mon0 ... ;-)
-
-you can also come at this through
-
-/sys/class/ieee80211/phy<n>/add_iface
-
-Nice idea to document it Daniel.  Seeing it written down makes it a
-little more obviously "huh?" about the hard and soft monitor distinction
-IMO.  There seems to be some agreement that in the future the number of
-virtual interfaces that happen to be lying around shouldn't determine
-the functionality of Monitor mode like that.
-
--Andy
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 5bc5769..c1596d6 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -3911,6 +3911,7 @@ L:	linux-wireless@vger.kernel.org
+ W:	http://linuxwireless.org/
+ T:	git kernel.org:/pub/scm/linux/kernel/git/mwu/mac80211-drivers.git
+ S:	Maintained
++F:	drivers/net/wireless/rtl818*
+ 
+ S3 SAVAGE FRAMEBUFFER DRIVER
+ P:	Antonino Daplas
