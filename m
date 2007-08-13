@@ -1,64 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60252 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:48109 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751900AbXHXK1K (ORCPT
+	with ESMTP id S943521AbXHMLAF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2007 06:27:10 -0400
-Subject: Re: [patch 7/7] b43: Fix and cleanup hwcrypto
+	Mon, 13 Aug 2007 07:00:05 -0400
+Subject: Re: [PATCH] hostapd: use eapol frames from ethernet device
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-In-Reply-To: <200708241216.50441.mb@bu3sch.de>
-References: <20070823222153.073035000@bu3sch.de>
-	 <20070823222157.102919000@bu3sch.de>
-	 <1187950112.24933.3.camel@johannes.berg>  <200708241216.50441.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GJ4mUO2uSXG9NttD7Xus"
-Date: Fri, 24 Aug 2007 12:27:56 +0200
-Message-Id: <1187951276.24933.13.camel@johannes.berg>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <1ba2fa240708130346h6175701cr2daab916afaed00f@mail.gmail.com>
+References: <1186789737.4862.3.camel@johannes.berg>
+	 <1186790012.4862.8.camel@johannes.berg>
+	 <1ba2fa240708120358rb22a2f9me1a1020e669406e7@mail.gmail.com>
+	 <1186995104.27916.56.camel@johannes.berg>
+	 <1ba2fa240708130346h6175701cr2daab916afaed00f@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bxvJ6VCkwHg/QNgvYHyM"
+Date: Mon, 13 Aug 2007 13:02:01 +0200
+Message-Id: <1187002921.27916.77.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-GJ4mUO2uSXG9NttD7Xus
+--=-bxvJ6VCkwHg/QNgvYHyM
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2007-08-24 at 12:16 +0200, Michael Buesch wrote:
-> On Friday 24 August 2007 12:08:32 Johannes Berg wrote:
-> > On Fri, 2007-08-24 at 00:22 +0200, Michael Buesch wrote:
-> >=20
-> > >  struct b43_key {
-> > > -	void *keyconf;
-> > > -	bool enabled;
-> > > +	/* If keyconf is NULL, this key is disabled.
-> > > +	 * keyconf is a cookie. Don't derefenrence it outside of the set_ke=
-y
-> > > +	 * path, because b43 doesn't own it. */
-> > > +	struct ieee80211_key_conf *keyconf;
-> >=20
-> > Just for clarification, you're allowed to dereference it as well if you
-> > wish but most things you can do with it (e.g. change hw key index) are
-> > racy.
->=20
-> That's what "because b43 doesn't own it" means. :)
+On Mon, 2007-08-13 at 13:46 +0300, Tomas Winkler wrote:
 
-I missed the "outside of the set_key" part, sorry.
+>  I think it was a polite query I've made, don't see any reason to use
+> this language. If you precept it otherwise I apologize it wasn't my
+> intention.
+
+Apologies. I seriously don't understand that comment though, the patch
+didn't touch the management interface at all, in fact it renamed only a
+few variables and changed EAPOL frame receiving from using the
+management interface to the ethernet framed interface.
+
+> They have management meaning. So it was appropriate to route them
+> through management interface rather then from data interface.
+
+I'm not sure we understand each other. The only thing I changed with
+this patch and the corresponding kernel patch is that all data frames
+including those that are used for management purposes are now routed
+through the data interface. Why do you think that is wrong? Reordering
+your mail a bit, you also said
+
+> On the contrary what I'm saying that EAPOL packets are the only data
+> packets that should go up until handshake is done.
+
+which seems to agree with me. You can achieve the effect of letting
+*only* EAPOL packets through by setting the 802.1X protection parameter
+on the network interface via the private prism ioctl, hostapd doesn't
+seem to do that unless explicitly requested though.
+
+The actual technical reason for doing is that subsequent patches totally
+remove the management interface and on the monitor interface the EAPOL
+frames show up undecrypted.
 
 johannes
 
---=-GJ4mUO2uSXG9NttD7Xus
+--=-bxvJ6VCkwHg/QNgvYHyM
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGzrKs/ETPhpq3jKURAr/mAJ9L19unLAzPFXHqQ2jja/HZbPgS1wCgs2jT
-rQLl2Ce0fOyI9F3Amx8EP8o=
-=3k5F
+iD8DBQBGwDop/ETPhpq3jKURAqNFAKCmmmcoqWf/QIXSSlxlvnepQXTuLACeNFbM
+aIYUtEle3yoefgeL8TabsL8=
+=jwiz
 -----END PGP SIGNATURE-----
 
---=-GJ4mUO2uSXG9NttD7Xus--
+--=-bxvJ6VCkwHg/QNgvYHyM--
 
