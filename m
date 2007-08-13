@@ -1,64 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:32850 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S970149AbXHMIwS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 04:52:18 -0400
-Subject: warning in ieee80211 tkip code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oera1vyB48dytX3+8+l3"
-Date: Mon, 13 Aug 2007 08:35:02 +0200
-Message-Id: <1186986902.27916.26.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from hall.aurel32.net ([88.191.38.19]:43221 "EHLO hall.aurel32.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759740AbXHMJHN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Aug 2007 05:07:13 -0400
+Date: Mon, 13 Aug 2007 11:07:10 +0200
+From: Aurelien Jarno <aurelien@aurel32.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH][SSB] Fix a warning in PCI core driver
+Message-ID: <20070813090710.GA25439@hall.aurel32.net>
+References: <20070812235058.GA4966@hall.aurel32.net> <200708130202.28030.mb@bu3sch.de> <20070813001849.GC4966@hall.aurel32.net> <200708130421.31904.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <200708130421.31904.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Aug 13, 2007 at 04:21:31AM +0200, Michael Buesch wrote:
+> > Yes it is overflow warning. The compiler thinks that those constant are
+> > signed values and thus generate an overflow.
+> > 
+> > Another fix would be to postfix those constants by U.
+> > 
+> 
+> Can you please do this?
+> 
 
---=-oera1vyB48dytX3+8+l3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Please find a patch below. I did the same for the whole address map for
+consistency.
 
-net/ieee80211/ieee80211_crypt_tkip.c: In function 'michael_mic_hdr':
-net/ieee80211/ieee80211_crypt_tkip.c:587: warning: overflow in implicit
-constant conversion
+Aurelien
 
-The reason is pretty obvious:
-hdr[12] =3D qoshdr->qos_ctl & cpu_to_le16(IEEE80211_QCTL_TID);
 
-where IEEE80211_QCTL_TID is 0xF, so that's made into 0xF00 on BE and
-then truncated to 0x00. Not very useful.
 
-This was introduced in this commit:
+The patch below fixes a warning spotted a few days ago by Andrew Morton
+while releasing 2.6.23-rc2-mm1.
 
-commit 65b6a2775102cd81e57158ef4b1cb89641f76cfd
-Author: Zhu Yi <yi.zhu@intel.com>
-Date:   Mon Aug 21 11:32:31 2006 +0800
+Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
 
-with the change
+--- a/include/linux/ssb/ssb_regs.h
++++ a/include/linux/ssb/ssb_regs.h
+@@ -5,24 +5,24 @@
+ /* SiliconBackplane Address Map.
+  * All regions may not exist on all chips.
+  */
+-#define SSB_SDRAM_BASE		0x00000000	/* Physical SDRAM */
+-#define SSB_PCI_MEM		0x08000000	/* Host Mode sb2pcitranslation0 (64 MB) */
+-#define SSB_PCI_CFG		0x0c000000	/* Host Mode sb2pcitranslation1 (64 MB) */
+-#define	SSB_SDRAM_SWAPPED	0x10000000	/* Byteswapped Physical SDRAM */
+-#define SSB_ENUM_BASE    	0x18000000	/* Enumeration space base */
+-#define	SSB_ENUM_LIMIT		0x18010000	/* Enumeration space limit */
+-
+-#define	SSB_FLASH2		0x1c000000	/* Flash Region 2 (region 1 shadowed here) */
+-#define	SSB_FLASH2_SZ		0x02000000	/* Size of Flash Region 2 */
+-
+-#define	SSB_EXTIF_BASE		0x1f000000	/* External Interface region base address */
+-#define	SSB_FLASH1		0x1fc00000	/* Flash Region 1 */
+-#define	SSB_FLASH1_SZ		0x00400000	/* Size of Flash Region 1 */
+-
+-#define SSB_PCI_DMA		0x40000000	/* Client Mode sb2pcitranslation2 (1 GB) */
+-#define SSB_PCI_DMA_SZ		0x40000000	/* Client Mode sb2pcitranslation2 size in bytes */
+-#define SSB_PCIE_DMA_L32	0x00000000	/* PCIE Client Mode sb2pcitranslation2 (2 ZettaBytes), low 32 bits */
+-#define SSB_PCIE_DMA_H32	0x80000000	/* PCIE Client Mode sb2pcitranslation2 (2 ZettaBytes), high 32 bits */
++#define SSB_SDRAM_BASE		0x00000000U	/* Physical SDRAM */
++#define SSB_PCI_MEM		0x08000000U	/* Host Mode sb2pcitranslation0 (64 MB) */
++#define SSB_PCI_CFG		0x0c000000U	/* Host Mode sb2pcitranslation1 (64 MB) */
++#define	SSB_SDRAM_SWAPPED	0x10000000U	/* Byteswapped Physical SDRAM */
++#define SSB_ENUM_BASE    	0x18000000U	/* Enumeration space base */
++#define	SSB_ENUM_LIMIT		0x18010000U	/* Enumeration space limit */
++
++#define	SSB_FLASH2		0x1c000000U	/* Flash Region 2 (region 1 shadowed here) */
++#define	SSB_FLASH2_SZ		0x02000000U	/* Size of Flash Region 2 */
++
++#define	SSB_EXTIF_BASE		0x1f000000U	/* External Interface region base address */
++#define	SSB_FLASH1		0x1fc00000U	/* Flash Region 1 */
++#define	SSB_FLASH1_SZ		0x00400000U	/* Size of Flash Region 1 */
++
++#define SSB_PCI_DMA		0x40000000U	/* Client Mode sb2pcitranslation2 (1 GB) */
++#define SSB_PCI_DMA_SZ		0x40000000U	/* Client Mode sb2pcitranslation2 size in bytes */
++#define SSB_PCIE_DMA_L32	0x00000000U	/* PCIE Client Mode sb2pcitranslation2 (2 ZettaBytes), low 32 bits */
++#define SSB_PCIE_DMA_H32	0x80000000U	/* PCIE Client Mode sb2pcitranslation2 (2 ZettaBytes), high 32 bits */
+ #define	SSB_EUART		(SSB_EXTIF_BASE + 0x00800000)
+ #define	SSB_LED			(SSB_EXTIF_BASE + 0x00900000)
+ 
 
--               hdr[12] =3D le16_to_cpu(qoshdr->qos_ctl) & IEEE80211_QCTL_T=
-ID;
-+               hdr[12] =3D qoshdr->qos_ctl & cpu_to_le16(IEEE80211_QCTL_TI=
-D);
-
-The code before the change looks much saner since you're accessing the
-header as bytes...
-
-johannes
-
---=-oera1vyB48dytX3+8+l3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGv/uW/ETPhpq3jKURAji0AJ0cm/zqeYxRrsL4M1mmIX8yob30YwCgnHI9
-HtRUuuKkwkD/gcjCJseLN1k=
-=B+mI
------END PGP SIGNATURE-----
-
---=-oera1vyB48dytX3+8+l3--
-
+-- 
+  .''`.  Aurelien Jarno	            | GPG: 1024D/F1BCDB73
+ : :' :  Debian developer           | Electrical Engineer
+ `. `'   aurel32@debian.org         | aurelien@aurel32.net
+   `-    people.debian.org/~aurel32 | www.aurel32.net
