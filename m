@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4679 "EHLO ra.tuxdriver.com"
+Received: from DSL022.labridge.com ([206.117.136.22]:1097 "EHLO perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934475AbXHIOgs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2007 10:36:48 -0400
-Date: Thu, 9 Aug 2007 10:23:25 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Aurelien Jarno <aurelien@aurel32.net>,
-	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ssb: Make extif driver compilation depend on extif  config
-Message-ID: <20070809142325.GD7811@tuxdriver.com>
-References: <200708071744.40287.mb@bu3sch.de> <20070808164327.45803a64.akpm@linux-foundation.org> <20070809135326.GB7811@tuxdriver.com> <200708091608.43994.mb@bu3sch.de>
+	id S967009AbXHMGb7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Aug 2007 02:31:59 -0400
+Date: Sun, 12 Aug 2007 23:31:38 -0700
+From: joe@perches.com
+To: torvalds@linux-foundation.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jbenc@suse.cz,
+	flamingice@sourmilk.net, akpm@linux-foundation.org
+Subject: [PATCH] [307/2many] MAINTAINERS - MAC80211
+Message-ID: <46bffaca.H40xpVULANwnAvQA%joe@perches.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200708091608.43994.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 09, 2007 at 04:08:43PM +0200, Michael Buesch wrote:
-> On Thursday 09 August 2007 15:53:26 John W. Linville wrote:
-> > On Wed, Aug 08, 2007 at 04:43:27PM -0700, Andrew Morton wrote:
-> > 
-> > > I'm hopelessly confused by the ssb stuff.  I'm not sure if I have all the
-> > > right stuff, all the latest stuff and I don't understand why some is going
-> > > into git-wireless and some is not.
-> > 
-> > Once you added ssb patches to -mm, I dropped the ssb stuff from the
-> > mm-master branch of wireless-dev in hopes of avoiding conflicts.
-> > 
-> > Ugh, it looks like some new stuff has leaked-through -- I'll get rid
-> > of it.
-> 
-> I think we decided that it was not a good idea to maintain ssb in
-> the -mm tree, so I think we'll have to maintain it in a seperate
-> branch of wireless-dev. Any idea?
+Add file pattern to MAINTAINER entry
 
-Responded later in the thread -- you've probably seen them by the
-time you get this... :-)
+Signed-off-by: Joe Perches <joe@perches.com>
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+diff --git a/MAINTAINERS b/MAINTAINERS
+index f7943f0..07fb80f 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2957,6 +2957,9 @@ L:	linux-wireless@vger.kernel.org
+ W:	http://linuxwireless.org/
+ T:	git kernel.org:/pub/scm/linux/kernel/git/jbenc/mac80211.git
+ S:	Maintained
++F:	net/mac80211/
++F:	Documentation/networking/mac80211-injection.txt
++F:	include/net/mac80211.h
+ 
+ MACVLAN DRIVER
+ P:	Patrick McHardy
