@@ -1,54 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37269 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754860AbXHQLi2 (ORCPT
+Received: from rgminet01.oracle.com ([148.87.113.118]:45575 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752595AbXHMFXV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2007 07:38:28 -0400
-Subject: Re: [PATCH] Add iwlwifi wireless drivers (resend)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W.Linville" <linville@tuxdriver.com>,
-	Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>
-In-Reply-To: <1187350641.23489.172.camel@johannes.berg>
-References: <1187328536.5763.137.camel@debian.sh.intel.com>
-	 <1187350641.23489.172.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-blZ3chBGhGSZ1yvTTvuJ"
-Date: Fri, 17 Aug 2007 13:41:11 +0200
-Message-Id: <1187350871.23489.175.camel@johannes.berg>
+	Mon, 13 Aug 2007 01:23:21 -0400
+Date: Sun, 12 Aug 2007 22:29:06 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: 2.6.23-rc2-mm2 (libertas)
+Message-Id: <20070812222906.e6510c4b.randy.dunlap@oracle.com>
+In-Reply-To: <20070809224254.11f42716.akpm@linux-foundation.org>
+References: <20070809224254.11f42716.akpm@linux-foundation.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 9 Aug 2007 22:42:54 -0700 Andrew Morton wrote:
 
---=-blZ3chBGhGSZ1yvTTvuJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> 
+> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.23-rc2/2.6.23-rc2-mm2/
+> 
+> - Various problems from 2.6.23-rc2-mm1 were fixed
 
-On Fri, 2007-08-17 at 13:38 +0200, Johannes Berg wrote:
-> +	  See <file:Documentation/networking/README.iwlwifi> for
-> +	  information on the capabilities currently enabled in this
-> +	  driver and for tips for debugging any issues or problems.
->=20
-> -ENOENT. It's not in wireless-dev either, has it been written at all?
+libertas wireless warnings on x86_64:
 
-Ah, found it in iwlwifi.git, but it's mostly a list of TODOs and
-documentation that only applies to the out-of-tree version, except for
-the legalese.
+drivers/net/wireless/libertas/if_cs.c:462: warning: format '%d' expects type 'int', but argument 3 has type 'size_t'
+drivers/net/wireless/libertas/if_cs.c:538: warning: format '%d' expects type 'int', but argument 3 has type 'size_t'
 
-johannes
 
---=-blZ3chBGhGSZ1yvTTvuJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGxYlX/ETPhpq3jKURAqgGAKC3dGwvmNr6W9nDZ6j271AUS9Wy8QCeINLP
-gPwyexLiIqoHUGfzkpYsZFc=
-=35Bv
------END PGP SIGNATURE-----
-
---=-blZ3chBGhGSZ1yvTTvuJ--
-
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
