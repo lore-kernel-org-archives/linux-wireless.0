@@ -1,99 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49728 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753763AbXH0Ncr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Aug 2007 09:32:47 -0400
-Subject: [PATCH] address comments from Michael Wu
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 27 Aug 2007 15:33:53 +0200
-Message-Id: <1188221633.7837.18.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from DSL022.labridge.com ([206.117.136.22]:1561 "EHLO perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967193AbXHMGed (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Aug 2007 02:34:33 -0400
+Date: Sun, 12 Aug 2007 23:34:19 -0700
+From: joe@perches.com
+To: torvalds@linux-foundation.org, mcgrof@gmail.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	akpm@linux-foundation.org
+Subject: [PATCH] [389/2many] MAINTAINERS - PRISM54 WIRELESS DRIVER
+Message-ID: <46bffb6b.ZUAsbjOXozOHlrbF%joe@perches.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The key selection changes had some things Michael Wu wasn't entirely
-happy with, address these points.
+Add file pattern to MAINTAINER entry
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Joe Perches <joe@perches.com>
 
----
- net/mac80211/rx.c |   32 +++++++++++++-------------------
- 1 file changed, 13 insertions(+), 19 deletions(-)
-
---- wireless-dev.orig/net/mac80211/rx.c	2007-08-27 15:22:33.894646075 +0200
-+++ wireless-dev/net/mac80211/rx.c	2007-08-27 15:22:35.944646075 +0200
-@@ -321,7 +321,6 @@ ieee80211_rx_h_load_key(struct ieee80211
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
- 	int keyidx;
- 	int hdrlen;
--	int trying_wep = 0;
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 049c63b..f61f0a8 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -3717,6 +3717,7 @@ M:	mcgrof@gmail.com
+ L:	linux-wireless@vger.kernel.org
+ W:	http://prism54.org
+ S:	Maintained
++F:	drivers/net/wireless/prism54/
  
- 	/*
- 	 * Key selection 101
-@@ -350,12 +349,13 @@ ieee80211_rx_h_load_key(struct ieee80211
- 	 * addressed to us nor a multicast frame.
- 	 */
- 	if (!(rx->flags & IEEE80211_TXRXD_RXRA_MATCH))
--		return TXRX_DROP;
-+		return TXRX_CONTINUE;
- 
--	if (is_multicast_ether_addr(hdr->addr1) || !rx->sta) {
-- find_by_index:
-+	if (!is_multicast_ether_addr(hdr->addr1) && rx->sta && rx->sta->key) {
-+		rx->key = rx->sta->key;
-+	} else {
- 		/*
--		 * The device doesn't give us the IV so won't be
-+		 * The device doesn't give us the IV so we won't be
- 		 * able to look up the key. That's ok though, we
- 		 * don't need to decrypt the frame, we just won't
- 		 * be able to keep statistics accurate.
-@@ -369,33 +369,27 @@ ieee80211_rx_h_load_key(struct ieee80211
- 		hdrlen = ieee80211_get_hdrlen(rx->fc);
- 
- 		if (rx->skb->len < 8 + hdrlen)
--			/* COUNT THIS? */
--			return TXRX_DROP;
-+			return TXRX_DROP; /* TODO: count this? */
-+
- 		/*
- 		 * no need to call ieee80211_wep_get_keyidx,
- 		 * it verifies a bunch of things we've done already
- 		 */
- 		keyidx = rx->skb->data[hdrlen + 3] >> 6;
- 
--		/*
--		 * TODO: handle IBSS! We can have per-STA group keys there!
--		 */
- 		rx->key = rx->sdata->keys[keyidx];
- 
- 		/*
--		 * If we got here for WEP, make sure we got WEP
-+		 * RSNA-protected unicast frames should always be sent with
-+		 * pairwise or station-to-station keys, but for WEP we allow
-+		 * using a key index as well.
- 		 */
--		if (trying_wep && rx->key && rx->key->conf.alg != ALG_WEP)
-+		if (rx->key && rx->key->conf.alg != ALG_WEP &&
-+		    !is_multicast_ether_addr(hdr->addr1))
- 			rx->key = NULL;
--	} else {
--		rx->key = rx->sta->key;
--		if (!rx->key) {
--			trying_wep = 1;
--			goto find_by_index;
--		}
- 	}
- 
--	if (rx->key && (rx->flags & IEEE80211_TXRXD_RXRA_MATCH)) {
-+	if (rx->key) {
- 		rx->key->tx_rx_count++;
- 		if (unlikely(rx->local->key_tx_rx_threshold &&
- 			     rx->key->tx_rx_count >
-
-
+ PROMISE DC4030 CACHING DISK CONTROLLER DRIVER
+ P:	Peter Denison
