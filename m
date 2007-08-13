@@ -1,36 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail7.sea5.speakeasy.net ([69.17.117.9]:54955 "EHLO
-	mail7.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758529AbXHPBXn (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:48604 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S968349AbXHMPqO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 21:23:43 -0400
-Date: Wed, 15 Aug 2007 18:22:39 -0700
-From: Jouni Malinen <j@w1.fi>
+	Mon, 13 Aug 2007 11:46:14 -0400
+From: Michael Wu <flamingice@sourmilk.net>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] hostapd: remove vlan stuff
-Message-ID: <20070816012239.GQ1415@jm.kir.nu>
-References: <1187131269.31200.3.camel@johannes.berg> <1187180689.3998.41.camel@johannes.berg>
+Subject: Re: [PATCH 3/3] mac80211: remove management interface
+Date: Mon, 13 Aug 2007 08:44:23 -0700
+Cc: linux-wireless@vger.kernel.org
+References: <20070813074504.416717000@sipsolutions.net> <20070813074644.118092000@sipsolutions.net>
+In-Reply-To: <20070813074644.118092000@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1187180689.3998.41.camel@johannes.berg>
+Content-Type: multipart/signed;
+  boundary="nextPart148381788.FE4bsUdXaX";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200708130844.27516.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 15, 2007 at 02:24:49PM +0200, Johannes Berg wrote:
+--nextPart148381788.FE4bsUdXaX
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> This removes the VLAN stuff from hostapd.
-> 
-> The VLAN stuff in mac80211 cannot possibly work, it doesn't actually do
-> anything with those VLAN type interfaces. Also, when I added the VLAN
-> type to cfg80211 I must have been rather convinced of the idea; I no
-> longer am in favour of doing it in the wireless stack. The recently
-> added "macvlan" "driver" shows how you can do VLANs based on destination
-> address, what we will need is something like "smacvlan" that does VLANs
-> based on source address.
+On Monday 13 August 2007 00:45, Johannes Berg wrote:
+> Oh and somebody needs to fix zd1211rw-mac80211. It abused the
+> MGMT interface constant that was explicitly mentioned to be
+> not for drivers... I've "fixed" it for now but readers of the
+> code may not be happy with it.
+I've done this in all my drivers. It's perfectly fine. If you're going to d=
+rop=20
+the MGMT enum, please post a patch to s/IEEE80211_IF_TYPE_MGMT/-1/ for all=
+=20
+drivers.
 
-This doesn't sound like a good idea. How would macvlan-based alternative
-solve the problem of having different group keys for each VLAN?
+=2DMichael Wu
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+--nextPart148381788.FE4bsUdXaX
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGwHxbT3Oqt9AH4aERAkFoAKDC+yhW4DRrSWIhWGAIK6HJCZUTRACgwbIy
+bIcyJvT1qztf6bUwio386MY=
+=CIZM
+-----END PGP SIGNATURE-----
+
+--nextPart148381788.FE4bsUdXaX--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
