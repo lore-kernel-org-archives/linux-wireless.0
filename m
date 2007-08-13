@@ -1,102 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:46211 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754596AbXHSScQ convert rfc822-to-8bit (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:39391 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753818AbXHMXNw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Aug 2007 14:32:16 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so508965nfb
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2007 11:32:14 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 25/30] rt2x00: Fix PLCP setup
-Date: Sun, 19 Aug 2007 20:35:41 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200708192018.30624.IvDoorn@gmail.com>
-In-Reply-To: <200708192018.30624.IvDoorn@gmail.com>
+	Mon, 13 Aug 2007 19:13:52 -0400
+Message-ID: <46C0E5AD.2080407@lwfinger.net>
+Date: Mon, 13 Aug 2007 18:13:49 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200708192035.41296.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V3] mac80211: Turn off meaningless TKIP message when software  WEP encryption is used
+References: <46c0d788.GYQYqGfCBKyAWrg7%Larry.Finger@lwfinger.net> <200708140054.22845.IvDoorn@gmail.com>
+In-Reply-To: <200708140054.22845.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From b545a9a3b8ff04a2c6f62923cf01043aeb9ec599 Mon Sep 17 00:00:00 2001
-From: Ivo van Doorn <IvDoorn@gmail.com>
-Date: Sat, 18 Aug 2007 16:09:25 +0200
-Subject: [PATCH 25/30] rt2x00: Fix PLCP setup
+Ivo van Doorn wrote:
+> 
+> Not a question regarding the patch itself, but more about the comment
+> regarding IEEE80211_HW_WEP_INCLUDE_IV and WEP encryption. ;)
+> 
+> You mean the drivers that require mac80211 to do the encryption/decryption
+> must make sure the IEEE80211_HW_WEP_INCLUDE_IV is _not_ set?
+> I figured that when device requires software encryption they should set the flag
+> since they do not touch the frame and pass it through completely to the stack
+> this would also mean that the IV is passed on. Which should suggest that the
+> flag should be set to tell mac80211 it can use the IV.
 
-The Length extension bit should only be set when using
-the 11Mbs rate and when the residual is <= 3. (value comes
-from zd1211rw, ralink legacy driver was unclear)
+I'm not too up on this myself, but when I ported the frond end of bcm43xx-mac80211 to b43legacy, I 
+left the flags supplied to mac80211 untouched. Once I got the basic engine running using V3, rather 
+than V4, firmware, it did WPA encryption just fine. Of course, WPA is done in software in both 
+instances. WEP encrypt/decrypt is done in hardware in bcm43xx-mac80211, but it does not work in V3. 
+The only way I could get software-based WEP to work was to get rid of the "set_key" callback, which 
+sets an internal flag called force_sw_encrypt, and kill that flag. Then both WEP and WPA worked in 
+software, but the message showed up for WPA.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c |   36 +++++++++++++++++-------------
- 1 files changed, 20 insertions(+), 16 deletions(-)
+Yes, this empirical behavior does not seem to match one's intuition on what the flag should do.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 36b522b..a0fcd05 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -480,14 +480,15 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 		desc.ifs = IFS_BACKOFF;
- 
- 	/*
--	 * How the length should be processed depends
--	 * on if we are working with OFDM rates or not.
-+	 * PLCP setup
-+	 * Length calculation depends on OFDM/CCK rate.
- 	 */
-+	desc.signal = DEVICE_GET_RATE_FIELD(tx_rate, PLCP);
-+	desc.service = 0x04;
-+
- 	if (test_bit(ENTRY_TXD_OFDM_RATE, &entry->flags)) {
--		residual = 0;
- 		desc.length_high = ((length + FCS_LEN) >> 6) & 0x3f;
- 		desc.length_low = ((length + FCS_LEN) & 0x3f);
--
- 	} else {
- 		bitrate = DEVICE_GET_RATE_FIELD(tx_rate, RATE);
- 
-@@ -497,23 +498,26 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 		residual = get_duration_res(length + FCS_LEN, bitrate);
- 		duration = get_duration(length + FCS_LEN, bitrate);
- 
--		if (residual != 0)
-+		if (residual != 0) {
- 			duration++;
- 
-+			/*
-+			 * Check if we need to set the Length Extension
-+			 */
-+			if (bitrate == 110 && residual <= 3)
-+				desc.service |= 0x80;
-+		}
-+
- 		desc.length_high = (duration >> 8) & 0xff;
- 		desc.length_low = duration & 0xff;
--	}
- 
--	/*
--	 * Create the signal and service values.
--	 */
--	desc.signal = DEVICE_GET_RATE_FIELD(tx_rate, PLCP);
--	if (DEVICE_GET_RATE_FIELD(tx_rate, PREAMBLE))
--		desc.signal |= 0x08;
--
--	desc.service = 0x04;
--	if (residual <= (8 % 11))
--		desc.service |= 0x80;
-+		/*
-+		 * When preamble is enabled we should set the
-+		 * preamble bit for the signal.
-+		 */
-+		if (DEVICE_GET_RATE_FIELD(tx_rate, PREAMBLE))
-+			desc.signal |= 0x08;
-+	}
- 
- 	rt2x00dev->ops->lib->write_tx_desc(rt2x00dev, entry, txd, &desc,
- 					   ieee80211hdr, length, control);
--- 
-1.5.3.rc5
+Of course my patch is a complete hack that is band-aiding over a deeper flaw/bug in mac80211; 
+however, my request for a fix has gone unanswered. In addition, this problem is preventing me from 
+sending b43legacy to John. I originally intended to use my hack only while debugging, but when no 
+fix was coming, I decided that an awful patch would probably get some action. We'll see, 
+particularly now that my deep/dark secret is exposed. ;-)
 
+Larry
