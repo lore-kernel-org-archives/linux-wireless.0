@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42455 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932899AbXH2MIA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2007 08:08:00 -0400
-Subject: Re: [PATCH] Fix breakage on WEP for cards that rely on software  decoding
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Adam Baker <adam@baker-net.org.uk>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200708282345.53016.adam@baker-net.org.uk>
-References: <200708282345.53016.adam@baker-net.org.uk>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gGKiO3WPzphk4+D9povW"
-Date: Wed, 29 Aug 2007 14:09:42 +0200
-Message-Id: <1188389382.19891.12.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:3747 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760379AbXHMUGu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Aug 2007 16:06:50 -0400
+Date: Mon, 13 Aug 2007 15:35:52 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Turn off meaningless TKIP message when  software WEP encryption is used
+Message-ID: <20070813193552.GE19115@tuxdriver.com>
+References: <46c0b062.yM23YNXGCQhX0Zd/%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <46c0b062.yM23YNXGCQhX0Zd/%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Aug 13, 2007 at 02:26:26PM -0500, Larry Finger wrote:
 
---=-gGKiO3WPzphk4+D9povW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> --- wireless-legacy.orig/net/mac80211/wpa.c
+> +++ wireless-legacy/net/mac80211/wpa.c
+> @@ -516,9 +516,11 @@ ieee80211_rx_h_tkip_decrypt(struct ieee8
+>  					  skb->len - hdrlen, rx->sta->addr,
+>  					  hwaccel, rx->u.rx.queue);
+>  	if (res != TKIP_DECRYPT_OK || wpa_test) {
+> -		printk(KERN_DEBUG "%s: TKIP decrypt failed for RX frame from "
+> -		       MAC_FMT " (res=%d)\n",
+> -		       rx->dev->name, MAC_ARG(rx->sta->addr), res);
+> +		if ((rx->local->hw.flags & IEEE80211_HW_WEP_INCLUDE_IV)) {
+> +			printk(KERN_DEBUG "%s: TKIP decrypt failed for RX frame from "
+> +			       MAC_FMT " (res=%d)\n",
+> +			       rx->dev->name, MAC_ARG(rx->sta->addr), res);
+> +		}
+>  		return TXRX_DROP;
+>  	}
 
-On Tue, 2007-08-28 at 23:45 +0100, Adam Baker wrote:
-> The test to drop out of ieee80211_rx_h_load_key if we don't know the IV s=
-hould
-> check if the packet has already been decrypted, otherwise we need to load
-> the key to be able to decrypt it
+Since you are in there anyway, should this be rate limited?
 
-I think this patch ought to fix it as well:
-http://johannes.sipsolutions.net/patches/kernel/all/2007-08-29-12:08/023-re=
-work-hardware-crypto-flags.patch
-
-but it should probably have a few more changes.
-
-johannes
-
---=-gGKiO3WPzphk4+D9povW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG1WIG/ETPhpq3jKURAtyUAJ0b5QGAzRtNeCtwp6ANbRvFP0/1IwCeJ095
-q9SByYkfTosG/aYLzivzjaU=
-=KoMF
------END PGP SIGNATURE-----
-
---=-gGKiO3WPzphk4+D9povW--
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
