@@ -1,69 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:38928
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:47339
 	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756020AbXHGSOs (ORCPT
+	with ESMTP id S1765634AbXHNQtl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2007 14:14:48 -0400
+	Tue, 14 Aug 2007 12:49:41 -0400
 From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] mac80211: Add SIOCGIWTXPOWER routine
-Date: Tue, 7 Aug 2007 20:13:58 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <46b8b531.h17+wXhw0v8LOFD/%Larry.Finger@lwfinger.net>
-In-Reply-To: <46b8b531.h17+wXhw0v8LOFD/%Larry.Finger@lwfinger.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] the recently discussed flags patch
+Date: Tue, 14 Aug 2007 18:48:57 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jiri Benc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Daniel Drake <dsd@gentoo.org>
+References: <1187108515.4037.3.camel@johannes.berg>
+In-Reply-To: <1187108515.4037.3.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200708072013.58508.mb@bu3sch.de>
+  charset="iso-8859-15"
+Message-Id: <200708141848.57809.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 07 August 2007 20:08:49 Larry Finger wrote:
-> The wireless extensions ioctl's implemented in mac80211 do not include
-> SIOCGIWTXPOWER. This patch adds the necessary code.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> Index: wireless-dev/net/mac80211/ieee80211_ioctl.c
-> ===================================================================
-> --- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c
-> +++ wireless-dev/net/mac80211/ieee80211_ioctl.c
-> @@ -1925,6 +1925,20 @@ static int ieee80211_ioctl_giwrate(struc
->  	return 0;
->  }
->  
-> +static int ieee80211_ioctl_giwtxpower(struct net_device *dev,
-> +				   struct iw_request_info *info,
-> +				   union iwreq_data *data, char *extra)
-> +{
-> +	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-> +
-> +	data->txpower.fixed = 1;
-> +	data->txpower.disabled = 0;
-> +	data->txpower.value = local->hw.conf.power_level;
-> +	data->txpower.flags = IW_TXPOW_DBM;
-> +
-> +	return 0;
-> +}
-> +
->  static int ieee80211_ioctl_siwrts(struct net_device *dev,
->  				  struct iw_request_info *info,
->  				  struct iw_param *rts, char *extra)
-> @@ -2881,7 +2895,7 @@ static const iw_handler ieee80211_handle
->  	(iw_handler) ieee80211_ioctl_siwfrag,		/* SIOCSIWFRAG */
->  	(iw_handler) ieee80211_ioctl_giwfrag,		/* SIOCGIWFRAG */
->  	(iw_handler) NULL,				/* SIOCSIWTXPOW */
-> -	(iw_handler) NULL,				/* SIOCGIWTXPOW */
-> +	(iw_handler) ieee80211_ioctl_giwtxpower,	/* SIOCGIWTXPOW */
->  	(iw_handler) ieee80211_ioctl_siwretry,		/* SIOCSIWRETRY */
->  	(iw_handler) ieee80211_ioctl_giwretry,		/* SIOCGIWRETRY */
->  	(iw_handler) ieee80211_ioctl_siwencode,		/* SIOCSIWENCODE */
+On Tuesday 14 August 2007 18:21:55 Johannes Berg wrote:
+> +/*
+> + * flags for change_filter_flags()
+> + *
+> + * Note that e.g. if PROMISC_IN_BSS is unset then
+> + * you should still do MAC address filtering if
+> + * possible even if OTHER_BSS is set to indicate
+> + * no BSSID filtering should be done.
+> + */
+> +#define FIF_PROMISC_IN_BSS	0x01
+> +#define FIF_ALLMULTI		0x02
+> +#define FIF_FCSFAIL		0x04
+> +#define FIF_PLCPFAIL		0x08
+> +#define FIF_CONTROL		0x10
+> +#define FIF_OTHER_BSS		0x20
 
-Looks good.
+Please some more comments on what they actually mean
+and what's usually to do when the flag is set.
 
-Acked-by: Michael Buesch <mb@bu3sch.de>
+> +	/* Change filter flags, see above for FIF_* constants.
+> +	 *
+> +	 * Must be atomic due to running under the tx lock.
+> +	 * This callback is required.
+> +	 */
+> +	void (*change_filter_flags)(struct ieee80211_hw *hw,
+> +				    int changed_flags, int total_flags);
+
+Better use unsigned int.
+
+What does changed_flags and total_flags mean?
+I thought we'd like to have a pointer here, to the driver
+can clear what's not supported.
 
 -- 
 Greetings Michael.
