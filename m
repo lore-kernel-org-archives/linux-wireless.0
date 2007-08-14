@@ -1,63 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45710 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761646AbXHJWEr (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:37099
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932872AbXHNSOE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2007 18:04:47 -0400
-Message-Id: <20070810220633.284525000@sipsolutions.net>
-References: <20070810220544.321975000@sipsolutions.net>
-Date: Sat, 11 Aug 2007 00:05:46 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
+	Tue, 14 Aug 2007 14:14:04 -0400
+Message-Id: <20070814181217.291720000@bu3sch.de>
+References: <20070814181213.135874000@bu3sch.de>
+Date: Tue, 14 Aug 2007 20:12:22 +0200
+From: Michael Buesch <mb@bu3sch.de>
 To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/4] mac80211: dont send frames from unassociated stations  up
-Mime-Version: 1.0
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: [patch 9/9] b43: Rewrite kconfig to get rid of the advice hack.
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hostapd doesn't care anyway right now. And it could probably use the
-monitor interface if we added a flag or something.
+This should properly autoselect the SSB options without
+introducing a dependency hell.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ieee80211_common.h |    2 +-
- net/mac80211/rx.c               |   13 +++++++------
- 2 files changed, 8 insertions(+), 7 deletions(-)
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
---- wireless-dev.orig/net/mac80211/rx.c	2007-08-11 00:01:27.643840246 +0200
-+++ wireless-dev/net/mac80211/rx.c	2007-08-11 00:01:42.273840246 +0200
-@@ -301,12 +301,13 @@ ieee80211_rx_h_check(struct ieee80211_tx
- 			return TXRX_DROP;
- 		}
- 
--		if (!rx->local->apdev)
--			return TXRX_DROP;
+Index: wireless-dev-new/drivers/net/wireless/b43/Kconfig
+===================================================================
+--- wireless-dev-new.orig/drivers/net/wireless/b43/Kconfig	2007-08-14 20:09:15.000000000 +0200
++++ wireless-dev-new/drivers/net/wireless/b43/Kconfig	2007-08-14 20:11:07.000000000 +0200
+@@ -1,49 +1,31 @@
+-config B43_DEP_HACK
+-	bool
+-	depends on SSB && SSB_PCIHOST && SSB_DRIVER_PCICORE
+-	default y
 -
--		ieee80211_rx_mgmt(rx->local, rx->skb, rx->u.rx.status,
--				  ieee80211_msg_sta_not_assoc);
--		return TXRX_QUEUED;
-+		/*
-+		 * TODO: hostapd is really responsible for this.
-+		 * But it doesn't care right now. So until it wants to care
-+		 * drop it, and at that point just add a radiotap flag
-+		 * or something
-+		 */
-+		return TXRX_DROP;
- 	}
+-config B43_ADVICE_HACK
+-	bool "Broadcom 43xx PCI (mac80211) not available. Read the help text of this option!"
+-	depends on !B43_DEP_HACK
+-	---help---
+-	  The B43 driver for B43 PCI devices can not be enabled,
+-	  because the required dependencies are not selected.
+-
+-	  In order to be able to select the B43-mac80211 driver, you
+-	  need to enable the following options first:
+-
+-	  CONFIG_SSB found in menu:
+-	  Device Drivers/Sonics Silicon Backplane/Sonics Silicon Backplane support
+-	  CONFIG_SSB_PCIHOST found in menu:
+-	  Device Drivers/Sonics Silicon Backplane/Support for SSB on PCI-bus host
+-	  CONFIG_SSB_DRIVER_PCICORE found in menu:
+-	  Device Drivers/Sonics Silicon Backplane/SSB PCI core driver
+-
+ config B43
+ 	tristate "Broadcom 43xx wireless support (mac80211 stack)"
+-	depends on SSB && MAC80211 && WLAN_80211 && EXPERIMENTAL
++	depends on SSB_POSSIBLE && MAC80211 && WLAN_80211 && EXPERIMENTAL
++	select SSB
+ 	select FW_LOADER
+ 	select HW_RANDOM
+ 	---help---
+ 	  This is an experimental driver for the Broadcom 43xx wireless chip,
+ 	  found in the Apple Airport Extreme and various other devices.
  
- 	return TXRX_CONTINUE;
---- wireless-dev.orig/net/mac80211/ieee80211_common.h	2007-08-11 00:01:27.643840246 +0200
-+++ wireless-dev/net/mac80211/ieee80211_common.h	2007-08-11 00:01:42.273840246 +0200
-@@ -51,7 +51,7 @@ enum ieee80211_msg_type {
- 	/* hole at 4, was ieee80211_msg_wep_frame_unknown_key but now unused */
- 	ieee80211_msg_michael_mic_failure = 5,
- 	/* hole at 6, was monitor but never sent to userspace */
--	ieee80211_msg_sta_not_assoc = 7,
-+	/* hole at 7, was ieee80211_msg_sta_not_assoc but now unused */
- 	/* 8 was ieee80211_msg_set_aid_for_sta */
- 	ieee80211_msg_key_threshold_notification = 9,
- 	ieee80211_msg_radar = 11,
+-config B43_PCI
+-	bool "Broadcom 43xx PCI device support"
+-	depends on B43 && SSB_PCIHOST && SSB_DRIVER_PCICORE
++# Auto-select SSB PCI-HOST support, if possible
++config B43_PCI_AUTOSELECT
++	bool
++	depends on SSB_PCIHOST_POSSIBLE
++	select SSB_PCIHOST
+ 	default y
+-	---help---
+-	  Broadcom 43xx PCI device support.
+ 
+-	  Say Y, if you have a B43 device connected through the PCI bus.
+-	  Please note that most PC-CARD devices are (to the kernel) PCI devices,
+-	  too and not PCMCIA.
+-	  It's safe to select Y here, even if you don't have a B43 PCI device.
++# Auto-select SSB PCICORE driver, if possible
++config B43_PCICORE_AUTOSELECT
++	bool
++	depends on SSB_DRIVER_PCICORE_POSSIBLE
++	select SSB_DRIVER_PCICORE
++	default y
+ 
+ config B43_PCMCIA
+ 	bool "Broadcom 43xx PCMCIA device support"
+-	depends on B43 && SSB_PCMCIAHOST
++	depends on B43 && SSB_PCMCIAHOST_POSSIBLE
++	select SSB_PCMCIAHOST
+ 	---help---
+ 	  Broadcom 43xx PCMCIA device support.
+ 
 
 -- 
 
