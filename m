@@ -1,54 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40319 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759639AbXHCKmT (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.236]:50000 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935429AbXHNWqo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 06:42:19 -0400
-Subject: Re: mac80211 driver interface semantics
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: Ulrich Kunitz <kune@deine-taler.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Daniel Drake <dsd@gentoo.org>
-In-Reply-To: <46B304FF.3000305@warmcat.com>
-References: <46B27729.5030406@gentoo.org>
-	 <20070803052935.GA12683@deine-taler.de>  <46B2E06F.4090706@warmcat.com>
-	 <1186134894.4647.24.camel@johannes.berg>  <46B3032C.5040306@warmcat.com>
-	 <1186137166.4647.34.camel@johannes.berg>  <46B304FF.3000305@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8Ef3KIxq7Cij5X2fk978"
-Date: Fri, 03 Aug 2007 12:41:55 +0200
-Message-Id: <1186137715.4647.36.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 14 Aug 2007 18:46:44 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1555488wxd
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2007 15:46:43 -0700 (PDT)
+Message-ID: <1ba2fa240708141546g4de44ff1v94db00213a3187aa@mail.gmail.com>
+Date: Wed, 15 Aug 2007 01:46:43 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] hostapd: use eapol frames from ethernet device
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Jiri Benc" <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
+	"Jouni Malinen" <j@w1.fi>
+In-Reply-To: <1187002921.27916.77.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1186789737.4862.3.camel@johannes.berg>
+	 <1186790012.4862.8.camel@johannes.berg>
+	 <1ba2fa240708120358rb22a2f9me1a1020e669406e7@mail.gmail.com>
+	 <1186995104.27916.56.camel@johannes.berg>
+	 <1ba2fa240708130346h6175701cr2daab916afaed00f@mail.gmail.com>
+	 <1187002921.27916.77.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 8/13/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2007-08-13 at 13:46 +0300, Tomas Winkler wrote:
+>
+> >  I think it was a polite query I've made, don't see any reason to use
+> > this language. If you precept it otherwise I apologize it wasn't my
+> > intention.
+>
+> Apologies. I seriously don't understand that comment though, the patch
+> didn't touch the management interface at all, in fact it renamed only a
+> few variables and changed EAPOL frame receiving from using the
+> management interface to the ethernet framed interface.
+>
+> > They have management meaning. So it was appropriate to route them
+> > through management interface rather then from data interface.
+>
+> I'm not sure we understand each other. The only thing I changed with
+> this patch and the corresponding kernel patch is that all data frames
+> including those that are used for management purposes are now routed
+> through the data interface. Why do you think that is wrong? Reordering
+> your mail a bit, you also said
+>
+> > On the contrary what I'm saying that EAPOL packets are the only data
+> > packets that should go up until handshake is done.
+>
+> which seems to agree with me. You can achieve the effect of letting
+> *only* EAPOL packets through by setting the 802.1X protection parameter
+> on the network interface via the private prism ioctl, hostapd doesn't
+> seem to do that unless explicitly requested though.
 
---=-8Ef3KIxq7Cij5X2fk978
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> The actual technical reason for doing is that subsequent patches totally
+> remove the management interface and on the monitor interface the EAPOL
+> frames show up undecrypted.
 
-On Fri, 2007-08-03 at 11:35 +0100, Andy Green wrote:
+Can you enlighten me and tell me why the monitor interface is
+preferable over management interface? I've probably got busy and
+missed the whole conversation.
+ I'm not so familiar with monitor interface but isn't it to be
+sniffing interface - everything goes up including data raw packets.
+Thanks for keeping patience with me :)
 
-> Right, but since we marked up the skb "the integrity of the IP checksum
-> is unknown", if anything wants to use the packet it should re-check it
-> itself.  Won't that do?
+What if management frames needs decryption? I think this is 802.11w
+specs that defines that.
 
-It'll check the IP checksum anyway since we don't have hardware that
-checks it as far as I know, but we want to check the FCS.
+Thanks
+Tomas
 
-johannes
-
---=-8Ef3KIxq7Cij5X2fk978
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGswZz/ETPhpq3jKURAj/2AKCVve3pYIdmzjGUjdZcSc6i5lo9/gCgpGVz
-hDgSsNLzfwv3y5wqk442nyY=
-=9uVO
------END PGP SIGNATURE-----
-
---=-8Ef3KIxq7Cij5X2fk978--
-
+> johannes
+>
+>
