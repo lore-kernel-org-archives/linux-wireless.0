@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4616 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762239AbXHCPIO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 11:08:14 -0400
-Date: Fri, 3 Aug 2007 10:53:05 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Derek Atkins <warlord@MIT.EDU>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	ipw3945-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	network manager <networkmanager-list@gnome.org>
-Subject: Re: [ipw3945-devel] chaning mode only when interface down?
-Message-ID: <20070803145305.GE5137@tuxdriver.com>
-References: <C07C4589BE74A34981C3C3525EE1F801024CF2CB@hasmsx412.ger.corp.intel.com> <1186058047.24230.38.camel@johannes.berg> <46B1D28F.1080006@gmail.com> <1186059192.24230.44.camel@johannes.berg> <sjmy7gswuvw.fsf@pgpdev.ihtfp.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <sjmy7gswuvw.fsf@pgpdev.ihtfp.org>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37613 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756948AbXHNO3F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Aug 2007 10:29:05 -0400
+Subject: Re: [PATCH] mac80211: don't send packets to interfaces that are  down
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>,
+	David Woodhouse <dwmw2@infradead.org>
+In-Reply-To: <1187101721.4069.48.camel@johannes.berg>
+References: <1187101721.4069.48.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-d2801qENEWKpe6lWeXmR"
+Date: Tue, 14 Aug 2007 16:31:11 +0200
+Message-Id: <1187101871.4069.50.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 03, 2007 at 10:33:07AM -0400, Derek Atkins wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
-> 
-> > On Thu, 2007-08-02 at 14:48 +0200, dragoran wrote:
-> >
-> >> > Nono, you cannot solve it in the driver. The whole design of mac80211
-> >> > mandates that assumption and I think it is a valid one to make.
-> >> why? did the old way (allow mode changing while up) caused any problems?
-> >
-> > Why should it be allowed? Can you come up with a good reason for that
-> > since you lose all state anyway when doing mode transitions?
-> 
-> Um, what state?  Sure you lose your layer 2 state, but why force a
-> layer 3 lossage when you don't necessarily have to do so?  For
-> example, I've seen plenty of networks that have both 802.11(a) and
-> 802.11(b/g) networks that share absolutely everything at layer 3.
 
-I think you are confusing a/b/g "mode" (which is _not_ the topic)
-with AP/STA/IBSS/monitor "mode" (which is the topic).
+--=-d2801qENEWKpe6lWeXmR
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+On Tue, 2007-08-14 at 16:28 +0200, Johannes Berg wrote:
+
+> Is there a possibility of a race condition here? If the interface is
+> brought down right after this check the SKB could be copied to that
+> interface after the skb queue has been flushed.
+
+Oh once we sort that out this should go to all applicable kernels ASAP,
+including -stable I think (this is in stable right? :) )
+
+johannes
+
+--=-d2801qENEWKpe6lWeXmR
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGwbyv/ETPhpq3jKURAqbSAKCCR325yJVwRDBGKguAf1j6Mwc6LgCfeg5P
+52Wj4T2gJpY+7iinRIIT/Hw=
+=yPgl
+-----END PGP SIGNATURE-----
+
+--=-d2801qENEWKpe6lWeXmR--
+
