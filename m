@@ -1,58 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:51004 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754843AbXHMGU3 (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33951
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750968AbXHNN2X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 02:20:29 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Hans de Goede <j.w.r.degoede@hhs.nl>
-Subject: Re: Recent linux-wireless git changes have broken my prism54pci card
-Date: Sun, 12 Aug 2007 23:18:37 -0700
-Cc: linux-wireless@vger.kernel.org
-References: <46BFF10B.1090307@hhs.nl>
-In-Reply-To: <46BFF10B.1090307@hhs.nl>
+	Tue, 14 Aug 2007 09:28:23 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] SSB base patch
+Date: Tue, 14 Aug 2007 15:27:31 +0200
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org
+References: <200708101316.25023.mb@bu3sch.de> <20070813192300.GD19115@tuxdriver.com>
+In-Reply-To: <20070813192300.GD19115@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart4695948.1SlfObM6MQ";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200708122318.42283.flamingice@sourmilk.net>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708141527.31479.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart4695948.1SlfObM6MQ
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Monday 13 August 2007 21:23:00 John W. Linville wrote:
+> On Fri, Aug 10, 2007 at 01:16:23PM +0200, Michael Buesch wrote:
+> 
+> > Please use the following patch to base the ssb branch
+> > in wireless-dev on. This patch does not include all recent
+> > fixes and updates, but it is good as a starting point.
+> > I will resend all the patches, which are not includes in this
+> > one later, after you rebased your tree. (Which will hopefully
+> > happen _very_ soon)
+> 
+> I'm dropping this one since my rebase was occuring about the time
+> you sent it.  I am presuming that the later patch series you sent is
+> based on what I put in the wireless-dev rebase and not this.
 
-On Sunday 12 August 2007 22:50, Hans de Goede wrote:
-> Patch causing loose off connection within seconds when fully loading the
-> link with a local file transfer:
-> http://bu3sch.de/gitweb?p=wireless-dev.git;a=commitdiff;h=62ee473d67b7ae353
->d210b186abaadc37a642237
->
-> Only associating and nothing else:
-> http://bu3sch.de/gitweb?p=wireless-dev.git;a=commitdiff;h=7d59453a9dbe50dc9
->bab846c410e39f8d5b10c83 And then specifically the changes to prism54common.c
->
-Links not working.
+Ok, let's hope all patches are in there.
+My patch was based on the old wireless-dev as of the day I sent it.
 
--Michael Wu
-
---nextPart4695948.1SlfObM6MQ
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGv/fCT3Oqt9AH4aERAmi5AKCFD3lovg6SpKNFoQx63nPKABAAmwCfXL0M
-AaDyHECe8FIuNolKKARWp/s=
-=dTU8
------END PGP SIGNATURE-----
-
---nextPart4695948.1SlfObM6MQ--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Greetings Michael.
