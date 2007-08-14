@@ -1,59 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37607 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57215 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755582AbXHUKRM (ORCPT
+	with ESMTP id S1759014AbXHNLtU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 06:17:12 -0400
-Subject: Re: [PATCH V3] mac80211: Turn off meaningless TKIP message when  software WEP encryption is used
+	Tue, 14 Aug 2007 07:49:20 -0400
+Message-Id: <20070814092446.472482000@sipsolutions.net>
+References: <20070814092008.627058000@sipsolutions.net>
+Date: Tue, 14 Aug 2007 11:20:20 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Mattias Nissler <mattias.nissler@gmx.de>
-In-Reply-To: <200708201955.46232.IvDoorn@gmail.com>
-References: <46c0d788.GYQYqGfCBKyAWrg7%Larry.Finger@lwfinger.net>
-	 <46C0E5AD.2080407@lwfinger.net>
-	 <200708131658.27758.flamingice@sourmilk.net>
-	 <200708201955.46232.IvDoorn@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nPWlYfugbiWtq+5OgoJv"
-Date: Tue, 21 Aug 2007 12:17:02 +0200
-Message-Id: <1187691422.4288.9.camel@johannes.berg>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 12/13] mac80211: remove PRISM2_PARAM_NEXT_MODE
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is now unused in hostapd/wpa_supplicant.
 
---=-nPWlYfugbiWtq+5OgoJv
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/hostapd_ioctl.h   |    1 -
+ net/mac80211/ieee80211_i.h     |    5 -----
+ net/mac80211/ieee80211_ioctl.c |   13 -------------
+ 3 files changed, 19 deletions(-)
 
-On Mon, 2007-08-20 at 19:55 +0200, Ivo van Doorn wrote:
+--- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-08-14 00:27:33.885589257 +0200
++++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-08-14 00:27:34.505589257 +0200
+@@ -34,7 +34,6 @@ enum {
+ 	PRISM2_PARAM_CTS_PROTECT_ERP_FRAMES = 1001,
+ 	PRISM2_PARAM_PREAMBLE = 1003,
+ 	PRISM2_PARAM_SHORT_SLOT_TIME = 1006,
+-	PRISM2_PARAM_NEXT_MODE = 1008,
+ 	PRISM2_PARAM_PRIVACY_INVOKED = 1014,
+ 	PRISM2_PARAM_BROADCAST_SSID = 1015,
+ 	PRISM2_PARAM_EAPOL = 1023,
+--- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-08-14 00:27:33.255589257 +0200
++++ wireless-dev/net/mac80211/ieee80211_i.h	2007-08-14 00:27:34.505589257 +0200
+@@ -501,11 +501,6 @@ struct ieee80211_local {
+ 
+ 	struct rate_control_ref *rate_ctrl;
+ 
+-	int next_mode; /* MODE_IEEE80211*
+-			* The mode preference for next channel change. This is
+-			* used to select .11g vs. .11b channels (or 4.9 GHz vs.
+-			* .11a) when the channel number is not unique. */
+-
+ 	/* Supported and basic rate filters for different modes. These are
+ 	 * pointers to -1 terminated lists and rates in 100 kbps units. */
+ 	int *supp_rates[NUM_IEEE80211_MODES];
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-14 00:27:33.885589257 +0200
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-14 00:27:34.515589257 +0200
+@@ -1270,11 +1270,6 @@ int ieee80211_set_channel(struct ieee802
+ 			struct ieee80211_channel *chan = &mode->channels[c];
+ 			if (chan->flag & IEEE80211_CHAN_W_SCAN &&
+ 			    ((chan->chan == channel) || (chan->freq == freq))) {
+-				/* Use next_mode as the mode preference to
+-				 * resolve non-unique channel numbers. */
+-				if (set && mode->mode != local->next_mode)
+-					continue;
+-
+ 				local->oper_channel = chan;
+ 				local->oper_hw_mode = mode;
+ 				set++;
+@@ -1885,10 +1880,6 @@ static int ieee80211_ioctl_prism2_param(
+ 					local_to_hw(local), value);
+ 		break;
+ 
+-	case PRISM2_PARAM_NEXT_MODE:
+-		local->next_mode = value;
+-		break;
+-
+ 	case PRISM2_PARAM_BROADCAST_SSID:
+ 		if ((value < 0) || (value > 1))
+ 			ret = -EINVAL;
+@@ -1961,10 +1952,6 @@ static int ieee80211_ioctl_get_prism2_pa
+ 		*param = !!(local->hw.conf.flags & IEEE80211_CONF_SHORT_SLOT_TIME);
+ 		break;
+ 
+-	case PRISM2_PARAM_NEXT_MODE:
+-		*param = local->next_mode;
+-		break;
+-
+ 	case PRISM2_PARAM_BROADCAST_SSID:
+ 		*param = !!(local->hw.conf.flags & IEEE80211_CONF_SSID_HIDDEN);
+ 		break;
 
-> Has this behavior changed recently?
-> e.g. Has a patch been sent recently which will correctly enforce the rule=
- mentioned
-> above, but has not yet appeared in wireless-dev?
-
-No, it's still in my patchset. The semantics of that flag are rather
-unclear so I've cleaned it up completely. However, key selection is
-broken anyway at the moment so multicast/broadcast isn't coming through
-on software crypto.
-
-johannes
-
---=-nPWlYfugbiWtq+5OgoJv
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGyrue/ETPhpq3jKURAlATAJ49v65GSM4OvYWP05b4w8S7HRCCUgCfcCPE
-INU1adhAYVE3We03ukKbs0g=
-=9g4o
------END PGP SIGNATURE-----
-
---=-nPWlYfugbiWtq+5OgoJv--
+-- 
 
