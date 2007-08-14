@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:2547 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754530AbXH1PyK (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:37069
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932550AbXHNSN6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2007 11:54:10 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so1507422nfb
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2007 08:54:09 -0700 (PDT)
-Message-ID: <46D44521.9000808@gmail.com>
-Date: Tue, 28 Aug 2007 17:54:09 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linville@tuxdriver.com, Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 3/4] Net: ath5k, use short preamble for some rates
-References: <2109718751164215004@pripojeni.net> <1188238159.7837.50.camel@johannes.berg>
-In-Reply-To: <1188238159.7837.50.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-2
+	Tue, 14 Aug 2007 14:13:58 -0400
+Message-Id: <20070814181215.023935000@bu3sch.de>
+References: <20070814181213.135874000@bu3sch.de>
+Date: Tue, 14 Aug 2007 20:12:17 +0200
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: [patch 4/9] b43: Check init status in b43_config_interface.
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg napsal(a):
-> On Sat, 2007-08-25 at 03:58 -0400, Jiri Slaby wrote:
->> ath5k, use short preamble for some rates
->>
->> 2, 5.5 and 11 in b/g are now in short preamble mode
-> 
-> umm, mac80211 needs to be able to choose depending on the network.
+We must check for >=INITIALIZED
 
-Hmm, misleading log comment. It should be 'can now be in SP mode'.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-thanks,
+Index: wireless-dev-new/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-dev-new.orig/drivers/net/wireless/b43/main.c	2007-08-12 20:17:07.000000000 +0200
++++ wireless-dev-new/drivers/net/wireless/b43/main.c	2007-08-12 20:17:11.000000000 +0200
+@@ -2940,13 +2940,15 @@ static int b43_config_interface(struct i
+ 	if (conf->type != IEEE80211_IF_TYPE_MNTR) {
+ 		B43_WARN_ON(wl->if_id != if_id);
+ 		wl->bssid = conf->bssid;
+-		if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP)) {
+-			B43_WARN_ON(conf->type != IEEE80211_IF_TYPE_AP);
+-			b43_set_ssid(dev, conf->ssid, conf->ssid_len);
+-			if (conf->beacon)
+-				b43_refresh_templates(dev, conf->beacon);
++		if (b43_status(dev) >= B43_STAT_INITIALIZED) {
++			if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP)) {
++				B43_WARN_ON(conf->type != IEEE80211_IF_TYPE_AP);
++				b43_set_ssid(dev, conf->ssid, conf->ssid_len);
++				if (conf->beacon)
++					b43_refresh_templates(dev, conf->beacon);
++			}
++			b43_write_mac_bssid_templates(dev);
+ 		}
+-		b43_write_mac_bssid_templates(dev);
+ 	}
+ 	spin_unlock_irqrestore(&wl->irq_lock, flags);
+ 	mutex_unlock(&wl->mutex);
+
 -- 
-Jiri Slaby (jirislaby@gmail.com)
-Faculty of Informatics, Masaryk University
+
