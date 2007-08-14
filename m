@@ -1,100 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47430 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37533 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760366AbXHUPFJ (ORCPT
+	with ESMTP id S1752885AbXHNO0g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 11:05:09 -0400
-Message-Id: <20070821150040.175527000@sipsolutions.net>
-References: <20070821145905.689978000@sipsolutions.net>
-Date: Tue, 21 Aug 2007 16:59:09 +0200
+	Tue, 14 Aug 2007 10:26:36 -0400
+Subject: [PATCH] mac80211: don't send packets to interfaces that are down
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 04/27] mac80211: fix key debugfs
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>,
+	David Woodhouse <dwmw2@infradead.org>
+Content-Type: text/plain
+Date: Tue, 14 Aug 2007 16:28:41 +0200
+Message-Id: <1187101721.4069.48.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes two issues with the key debugfs:
- 1) key index obviously isn't unique
- 2) various missing break statements led to bogus output
+David Woodhouse noticed that under some circumstances the number of slab
+allocations kept growing. After looking a bit, this seemed to happen
+when you had a management mode interface that was *down*.
+
+The reason for this is that when the device is down, all management
+frames get queued to the in-kernel MLME (via ieee80211_sta_rx_mgmt) but
+then the sta work is invoked but doesn't run when the netif is down.
+When you then bring the interface up, all such frames are freed, but if
+you change the mode all of them are lost because the skb queue is
+reinitialised as soon as you go back to managed mode. The skb queue is
+correctly cleared when the interface is brought down, but the code
+doesn't account for the fact that it may be filled while it is not up.
+
+This patch should fix the issue by simply ignoring all interfaces that
+are down when going through the RX handlers.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
 ---
- net/mac80211/debugfs_key.c |   12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+Is there a possibility of a race condition here? If the interface is
+brought down right after this check the SKB could be copied to that
+interface after the skb queue has been flushed.
 
---- wireless-dev.orig/net/mac80211/debugfs_key.c	2007-08-21 16:17:35.565923881 +0200
-+++ wireless-dev/net/mac80211/debugfs_key.c	2007-08-21 16:25:21.405923881 +0200
-@@ -77,14 +77,17 @@ static ssize_t key_tx_spec_read(struct f
- 	switch (key->alg) {
- 	case ALG_WEP:
- 		len = scnprintf(buf, sizeof(buf), "\n");
-+		break;
- 	case ALG_TKIP:
- 		len = scnprintf(buf, sizeof(buf), "%08x %04x\n",
- 				key->u.tkip.iv32,
- 				key->u.tkip.iv16);
-+		break;
- 	case ALG_CCMP:
- 		tpn = key->u.ccmp.tx_pn;
- 		len = scnprintf(buf, sizeof(buf), "%02x%02x%02x%02x%02x%02x\n",
- 				tpn[0], tpn[1], tpn[2], tpn[3], tpn[4], tpn[5]);
-+		break;
- 	default:
- 		return 0;
- 	}
-@@ -103,6 +106,7 @@ static ssize_t key_rx_spec_read(struct f
- 	switch (key->alg) {
- 	case ALG_WEP:
- 		len = scnprintf(buf, sizeof(buf), "\n");
-+		break;
- 	case ALG_TKIP:
- 		for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
- 			p += scnprintf(p, sizeof(buf)+buf-p,
-@@ -110,6 +114,7 @@ static ssize_t key_rx_spec_read(struct f
- 				       key->u.tkip.iv32_rx[i],
- 				       key->u.tkip.iv16_rx[i]);
- 		len = p - buf;
-+		break;
- 	case ALG_CCMP:
- 		for (i = 0; i < NUM_RX_DATA_QUEUES; i++) {
- 			rpn = key->u.ccmp.rx_pn[i];
-@@ -119,6 +124,7 @@ static ssize_t key_rx_spec_read(struct f
- 				       rpn[3], rpn[4], rpn[5]);
- 		}
- 		len = p - buf;
-+		break;
- 	default:
- 		return 0;
- 	}
-@@ -164,12 +170,14 @@ KEY_OPS(key);
- void ieee80211_debugfs_key_add(struct ieee80211_local *local,
- 			       struct ieee80211_key *key)
- {
-+	static int keycount;
- 	char buf[20];
- 
- 	if (!local->debugfs.keys)
- 		return;
- 
--	sprintf(buf, "%d", key->keyidx);
-+	sprintf(buf, "%d", keycount);
-+	keycount++;
- 	key->debugfs.dir = debugfs_create_dir(buf,
- 					local->debugfs.keys);
- 
-@@ -239,7 +247,7 @@ void ieee80211_debugfs_key_sta_link(stru
- 	if (!key->debugfs.dir)
- 		return;
- 
--	sprintf(buf, "../sta/" MAC_FMT, MAC_ARG(sta->addr));
-+	sprintf(buf, "../../stations/" MAC_FMT, MAC_ARG(sta->addr));
- 	key->debugfs.stalink =
- 		debugfs_create_symlink("station", key->debugfs.dir, buf);
- }
+ net/mac80211/rx.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
--- 
+--- wireless-dev.orig/net/mac80211/rx.c	2007-08-14 16:18:10.924225996 +0200
++++ wireless-dev/net/mac80211/rx.c	2007-08-14 16:18:27.014225996 +0200
+@@ -1511,6 +1511,9 @@ void __ieee80211_rx(struct ieee80211_hw 
+ 	list_for_each_entry(sdata, &local->sub_if_list, list) {
+ 		rx.u.rx.ra_match = 1;
+ 
++		if (!netif_running(sdata->dev))
++			continue;
++
+ 		prepres = prepare_for_handlers(sdata, bssid, &rx, hdr);
+ 		/* prepare_for_handlers can change sta */
+ 		sta = rx.sta;
+
 
