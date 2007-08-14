@@ -1,60 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:46059 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933315AbXHOO7z (ORCPT
+Received: from canuck.infradead.org ([209.217.80.40]:55359 "EHLO
+	canuck.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751616AbXHNHqE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 10:59:55 -0400
-Message-Id: <20070815145042.064271000@sipsolutions.net>
-References: <20070815144920.135826000@sipsolutions.net>
-Date: Wed, 15 Aug 2007 16:49:22 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 02/20] mac80211: remove ieee80211_msg_wep_frame_unknown_key
-Mime-Version: 1.0
+	Tue, 14 Aug 2007 03:46:04 -0400
+Date: Tue, 14 Aug 2007 00:28:57 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org,
+	Greg KH <greg@kroah.com>
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	David Woodhouse <dwmw2@infradead.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: [patch 03/12] softmac: Fix deadlock of wx_set_essid with assoc work
+Message-ID: <20070814072857.GD15025@kroah.com>
+References: <20070814072244.882283903@mini.kroah.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070814072813.GA15025@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Neither hostapd nor wpa_supplicant really use it.
+-stable review patch.  If anyone has any objections, please let us know.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+------------------
+From: Michael Buesch <mb@bu3sch.de>
+
+The essid wireless extension does deadlock against the assoc mutex,
+as we don't unlock the assoc mutex when flushing the workqueue, which
+also holds the lock.
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
 ---
- net/mac80211/ieee80211_common.h |    2 +-
- net/mac80211/rx.c               |   11 +++++------
- 2 files changed, 6 insertions(+), 7 deletions(-)
+ net/ieee80211/softmac/ieee80211softmac_wx.c |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
---- wireless-dev.orig/net/mac80211/rx.c	2007-08-15 13:39:27.226520121 +0200
-+++ wireless-dev/net/mac80211/rx.c	2007-08-15 13:39:42.366520121 +0200
-@@ -350,12 +350,11 @@ ieee80211_rx_h_load_key(struct ieee80211
- 				       MAC_ARG(hdr->addr1),
- 				       MAC_ARG(hdr->addr2),
- 				       MAC_ARG(hdr->addr3));
--				if (!rx->local->apdev)
--					return TXRX_DROP;
--				ieee80211_rx_mgmt(
--					rx->local, rx->skb, rx->u.rx.status,
--					ieee80211_msg_wep_frame_unknown_key);
--				return TXRX_QUEUED;
-+				/*
-+				 * TODO: notify userspace about this
-+				 * via cfg/nl80211
-+				 */
-+				return TXRX_DROP;
- 			}
+--- a/net/ieee80211/softmac/ieee80211softmac_wx.c
++++ b/net/ieee80211/softmac/ieee80211softmac_wx.c
+@@ -74,8 +74,8 @@ ieee80211softmac_wx_set_essid(struct net
+ 	struct ieee80211softmac_auth_queue_item *authptr;
+ 	int length = 0;
+ 
++check_assoc_again:
+ 	mutex_lock(&sm->associnfo.mutex);
+-
+ 	/* Check if we're already associating to this or another network
+ 	 * If it's another network, cancel and start over with our new network
+ 	 * If it's our network, ignore the change, we're already doing it!
+@@ -98,13 +98,18 @@ ieee80211softmac_wx_set_essid(struct net
+ 				cancel_delayed_work(&authptr->work);
+ 			sm->associnfo.bssvalid = 0;
+ 			sm->associnfo.bssfixed = 0;
+-			flush_scheduled_work();
+ 			sm->associnfo.associating = 0;
+ 			sm->associnfo.associated = 0;
++			/* We must unlock to avoid deadlocks with the assoc workqueue
++			 * on the associnfo.mutex */
++			mutex_unlock(&sm->associnfo.mutex);
++			flush_scheduled_work();
++			/* Avoid race! Check assoc status again. Maybe someone started an
++			 * association while we flushed. */
++			goto check_assoc_again;
  		}
  	}
---- wireless-dev.orig/net/mac80211/ieee80211_common.h	2007-08-15 13:39:27.256520121 +0200
-+++ wireless-dev/net/mac80211/ieee80211_common.h	2007-08-15 13:39:42.366520121 +0200
-@@ -48,7 +48,7 @@ enum ieee80211_msg_type {
- 	ieee80211_msg_tx_callback_ack = 1,
- 	ieee80211_msg_tx_callback_fail = 2,
- 	/* hole at 3, was ieee80211_msg_passive_scan but unused */
--	ieee80211_msg_wep_frame_unknown_key = 4,
-+	/* hole at 4, was ieee80211_msg_wep_frame_unknown_key but now unused */
- 	ieee80211_msg_michael_mic_failure = 5,
- 	/* hole at 6, was monitor but never sent to userspace */
- 	ieee80211_msg_sta_not_assoc = 7,
+ 
+-
+ 	sm->associnfo.static_essid = 0;
+ 	sm->associnfo.assoc_wait = 0;
+ 
 
 -- 
-
