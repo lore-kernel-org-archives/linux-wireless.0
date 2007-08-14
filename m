@@ -1,206 +1,269 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:54780 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57970 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755981AbXHWQti (ORCPT
+	with ESMTP id S1760578AbXHNLos (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2007 12:49:38 -0400
-Received: from [131.234.79.133]
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1IOFsF-00010C-Ge
-	for linux-wireless@vger.kernel.org; Thu, 23 Aug 2007 17:49:36 +0100
-Message-Id: <20070823164523.962519000@sipsolutions.net>
-References: <20070823164500.998912000@sipsolutions.net>
-Date: Thu, 23 Aug 2007 18:45:08 +0200
+	Tue, 14 Aug 2007 07:44:48 -0400
+Message-Id: <20070814092442.281364000@sipsolutions.net>
+References: <20070814092008.627058000@sipsolutions.net>
+Date: Tue, 14 Aug 2007 11:20:11 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 07/11] mac80211: print out wiphy name instead of master device
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 03/13] mac80211: remove unused ioctls (2)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes mac80211 print out the wiphy name instead of the
-master device name where appropriate.
+The ioctls
+
+ * PRISM2_PARAM_STA_ANTENNA_SEL
+ * PRISM2_PARAM_TX_POWER_REDUCTION
+ * PRISM2_PARAM_KEY_INDEX
+ * PRISM2_PARAM_DEFAULT_WEP_ONLY
+ * PRISM2_PARAM_ALLOW_BROADCAST_ALWAYS
+
+are not used by hostapd or wpa_supplicant.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
 ---
- net/mac80211/ieee80211.c      |   14 +++++++-------
- net/mac80211/ieee80211_rate.c |    4 ++--
- net/mac80211/ieee80211_sta.c  |    2 +-
- net/mac80211/rx.c             |    3 ++-
- net/mac80211/sta_info.c       |    4 ++--
- net/mac80211/tx.c             |    9 +++++----
- 6 files changed, 19 insertions(+), 17 deletions(-)
+ include/net/mac80211.h         |    1 
+ net/mac80211/debugfs.c         |    5 ---
+ net/mac80211/hostapd_ioctl.h   |    5 ---
+ net/mac80211/ieee80211_i.h     |   11 -------
+ net/mac80211/ieee80211_ioctl.c |   59 -----------------------------------------
+ net/mac80211/rc80211_simple.c  |    8 -----
+ net/mac80211/sta_info.h        |    4 --
+ net/mac80211/tx.c              |    3 --
+ 8 files changed, 96 deletions(-)
 
---- wireless-dev.orig/net/mac80211/ieee80211.c	2007-08-23 18:38:38.211897709 +0200
-+++ wireless-dev/net/mac80211/ieee80211.c	2007-08-23 18:38:43.831897709 +0200
-@@ -864,7 +864,7 @@ static void ieee80211_tasklet_handler(un
- 			break;
- 		default: /* should never get here! */
- 			printk(KERN_ERR "%s: Unknown message type (%d)\n",
--			       local->mdev->name, skb->pkt_type);
-+			       wiphy_name(local->hw.wiphy), skb->pkt_type);
- 			dev_kfree_skb(skb);
- 			break;
- 		}
-@@ -949,7 +949,7 @@ void ieee80211_tx_status(struct ieee8021
- 	if (!status) {
- 		printk(KERN_ERR
- 		       "%s: ieee80211_tx_status called with NULL status\n",
--		       local->mdev->name);
-+		       wiphy_name(local->hw.wiphy));
- 		dev_kfree_skb(skb);
- 		return;
- 	}
-@@ -1006,7 +1006,7 @@ void ieee80211_tx_status(struct ieee8021
- 					printk(KERN_DEBUG "%s: dropped TX "
- 					       "filtered frame queue_len=%d "
- 					       "PS=%d @%lu\n",
--					       local->mdev->name,
-+					       wiphy_name(local->hw.wiphy),
- 					       skb_queue_len(
- 						       &sta->tx_filtered),
- 					       !!(sta->flags & WLAN_STA_PS),
-@@ -1331,7 +1331,7 @@ int ieee80211_register_hw(struct ieee802
- 	result = ieee80211_init_rate_ctrl_alg(local, NULL);
- 	if (result < 0) {
- 		printk(KERN_DEBUG "%s: Failed to initialize rate control "
--		       "algorithm\n", local->mdev->name);
-+		       "algorithm\n", wiphy_name(local->hw.wiphy));
- 		goto fail_rate;
- 	}
+--- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-08-14 11:08:49.724229604 +0200
++++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-08-14 11:09:55.444229604 +0200
+@@ -37,13 +37,8 @@ enum {
+ 	PRISM2_PARAM_NEXT_MODE = 1008,
+ 	PRISM2_PARAM_PRIVACY_INVOKED = 1014,
+ 	PRISM2_PARAM_BROADCAST_SSID = 1015,
+-	PRISM2_PARAM_STA_ANTENNA_SEL = 1017,
+-	PRISM2_PARAM_TX_POWER_REDUCTION = 1022,
+ 	PRISM2_PARAM_EAPOL = 1023,
+ 	PRISM2_PARAM_KEY_TX_RX_THRESHOLD = 1024,
+-	PRISM2_PARAM_KEY_INDEX = 1025,
+-	PRISM2_PARAM_DEFAULT_WEP_ONLY = 1026,
+-	PRISM2_PARAM_ALLOW_BROADCAST_ALWAYS = 1034,
+ 	PRISM2_PARAM_HW_MODES = 1036,
+ 	PRISM2_PARAM_CREATE_IBSS = 1037,
+ 	PRISM2_PARAM_WMM_ENABLED = 1038,
+--- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-08-14 11:07:18.954229604 +0200
++++ wireless-dev/net/mac80211/ieee80211_i.h	2007-08-14 11:09:55.454229604 +0200
+@@ -587,12 +587,6 @@ struct ieee80211_local {
+ 	struct work_struct sta_debugfs_add;
+ #endif
  
-@@ -1339,7 +1339,7 @@ int ieee80211_register_hw(struct ieee802
+-	enum {
+-		STA_ANTENNA_SEL_AUTO = 0,
+-		STA_ANTENNA_SEL_SW_CTRL = 1,
+-		STA_ANTENNA_SEL_SW_CTRL_DEBUG = 2
+-	} sta_antenna_sel;
+-
+ #ifdef CONFIG_MAC80211_DEBUG_COUNTERS
+ 	/* TX/RX handler statistics */
+ 	unsigned int tx_handlers_drop;
+@@ -628,10 +622,6 @@ struct ieee80211_local {
+ 	int total_ps_buffered; /* total number of all buffered unicast and
+ 				* multicast packets for power saving stations
+ 				*/
+-	int allow_broadcast_always; /* whether to allow TX of broadcast frames
+-				     * even when there are no associated STAs
+-				     */
+-
+ 	unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
  
- 	if (result < 0) {
- 		printk(KERN_DEBUG "%s: Failed to initialize wep\n",
--		       local->mdev->name);
-+		       wiphy_name(local->hw.wiphy));
- 		goto fail_wep;
- 	}
+ 	unsigned int enabled_modes; /* bitfield of allowed modes;
+@@ -658,7 +648,6 @@ struct ieee80211_local {
+ 		struct dentry *mode;
+ 		struct dentry *wep_iv;
+ 		struct dentry *rate_ctrl_alg;
+-		struct dentry *tx_power_reduction;
+ 		struct dentry *modes;
+ 		struct dentry *statistics;
+ 		struct local_debugfsdentries_statsdentries {
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-14 11:08:49.724229604 +0200
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-14 11:09:55.444229604 +0200
+@@ -2201,17 +2201,6 @@ static int ieee80211_ioctl_prism2_param(
+ 			local->hw.conf.flags &= ~IEEE80211_CONF_SSID_HIDDEN;
+ 		break;
  
-@@ -1350,7 +1350,7 @@ int ieee80211_register_hw(struct ieee802
- 				  IEEE80211_IF_TYPE_STA);
- 	if (result)
- 		printk(KERN_WARNING "%s: Failed to add default virtual iface\n",
--		       local->mdev->name);
-+		       wiphy_name(local->hw.wiphy));
+-	case PRISM2_PARAM_STA_ANTENNA_SEL:
+-		local->sta_antenna_sel = value;
+-		break;
+-
+-	case PRISM2_PARAM_TX_POWER_REDUCTION:
+-		if (value < 0)
+-			ret = -EINVAL;
+-		else
+-			local->hw.conf.tx_power_reduction = value;
+-		break;
+-
+ 	case PRISM2_PARAM_EAPOL:
+ 		sdata->eapol = value;
+ 		break;
+@@ -2220,23 +2209,6 @@ static int ieee80211_ioctl_prism2_param(
+ 		local->key_tx_rx_threshold = value;
+ 		break;
  
- 	local->reg_state = IEEE80211_DEV_REGISTERED;
- 	rtnl_unlock();
-@@ -1450,7 +1450,7 @@ void ieee80211_unregister_hw(struct ieee
- 	if (skb_queue_len(&local->skb_queue)
- 			|| skb_queue_len(&local->skb_queue_unreliable))
- 		printk(KERN_WARNING "%s: skb_queue not empty\n",
--		       local->mdev->name);
-+		       wiphy_name(local->hw.wiphy));
- 	skb_queue_purge(&local->skb_queue);
- 	skb_queue_purge(&local->skb_queue_unreliable);
+-	case PRISM2_PARAM_KEY_INDEX:
+-		if (value < 0 || value >= NUM_DEFAULT_KEYS)
+-			ret = -EINVAL;
+-		else if (!sdata->keys[value])
+-			ret = -ENOENT;
+-		else
+-			sdata->default_key = sdata->keys[value];
+-		break;
+-
+-	case PRISM2_PARAM_DEFAULT_WEP_ONLY:
+-		ret = ieee80211_ioctl_default_wep_only(local, value);
+-		break;
+-
+-	case PRISM2_PARAM_ALLOW_BROADCAST_ALWAYS:
+-		local->allow_broadcast_always = value;
+-		break;
+-
+ 	case PRISM2_PARAM_MIXED_CELL:
+ 		if (sdata->type != IEEE80211_IF_TYPE_STA &&
+ 		    sdata->type != IEEE80211_IF_TYPE_IBSS)
+@@ -2338,14 +2310,6 @@ static int ieee80211_ioctl_get_prism2_pa
+ 		*param = !!(local->hw.conf.flags & IEEE80211_CONF_SSID_HIDDEN);
+ 		break;
  
---- wireless-dev.orig/net/mac80211/ieee80211_rate.c	2007-08-23 18:38:38.251897709 +0200
-+++ wireless-dev/net/mac80211/ieee80211_rate.c	2007-08-23 18:38:43.831897709 +0200
-@@ -152,7 +152,7 @@ int ieee80211_init_rate_ctrl_alg(struct 
- 	ref = rate_control_alloc(name, local);
- 	if (!ref) {
- 		printk(KERN_WARNING "%s: Failed to select rate control "
--		       "algorithm\n", local->mdev->name);
-+		       "algorithm\n", wiphy_name(local->hw.wiphy));
- 		return -ENOENT;
- 	}
+-	case PRISM2_PARAM_STA_ANTENNA_SEL:
+-		*param = local->sta_antenna_sel;
+-		break;
+-
+-	case PRISM2_PARAM_TX_POWER_REDUCTION:
+-		*param = local->hw.conf.tx_power_reduction;
+-		break;
+-
+ 	case PRISM2_PARAM_EAPOL:
+ 		*param = sdata->eapol;
+ 		break;
+@@ -2354,29 +2318,6 @@ static int ieee80211_ioctl_get_prism2_pa
+ 		*param = local->key_tx_rx_threshold;
+ 		break;
  
-@@ -164,7 +164,7 @@ int ieee80211_init_rate_ctrl_alg(struct 
- 	}
+-	case PRISM2_PARAM_KEY_INDEX:
+-		if (!sdata->default_key)
+-			ret = -ENOENT;
+-		else if (sdata->default_key == sdata->keys[0])
+-			*param = 0;
+-		else if (sdata->default_key == sdata->keys[1])
+-			*param = 1;
+-		else if (sdata->default_key == sdata->keys[2])
+-			*param = 2;
+-		else if (sdata->default_key == sdata->keys[3])
+-			*param = 3;
+-		else
+-			ret = -ENOENT;
+-		break;
+-
+-	case PRISM2_PARAM_DEFAULT_WEP_ONLY:
+-		*param = local->default_wep_only;
+-		break;
+-
+-	case PRISM2_PARAM_ALLOW_BROADCAST_ALWAYS:
+-		*param = local->allow_broadcast_always;
+-		break;
+-
+ 	case PRISM2_PARAM_HW_MODES:
+ 		*param = local->enabled_modes;
+ 		break;
+--- wireless-dev.orig/net/mac80211/rc80211_simple.c	2007-08-14 11:06:09.714229604 +0200
++++ wireless-dev/net/mac80211/rc80211_simple.c	2007-08-14 11:08:57.504229604 +0200
+@@ -147,14 +147,6 @@ static void rate_control_simple_tx_statu
+ 	srctrl = sta->rate_ctrl_priv;
+ 	srctrl->tx_num_xmit++;
+ 	if (status->excessive_retries) {
+-		sta->antenna_sel_tx = sta->antenna_sel_tx == 1 ? 2 : 1;
+-		sta->antenna_sel_rx = sta->antenna_sel_rx == 1 ? 2 : 1;
+-		if (local->sta_antenna_sel == STA_ANTENNA_SEL_SW_CTRL_DEBUG) {
+-			printk(KERN_DEBUG "%s: " MAC_FMT " TX antenna --> %d "
+-			       "RX antenna --> %d (@%lu)\n",
+-			       dev->name, MAC_ARG(hdr->addr1),
+-			       sta->antenna_sel_tx, sta->antenna_sel_rx, jiffies);
+-		}
+ 		srctrl->tx_num_failures++;
+ 		sta->tx_retry_failed++;
+ 		sta->tx_num_consecutive_failures++;
+--- wireless-dev.orig/net/mac80211/tx.c	2007-08-14 11:06:09.774229604 +0200
++++ wireless-dev/net/mac80211/tx.c	2007-08-14 11:09:55.454229604 +0200
+@@ -243,7 +243,6 @@ ieee80211_tx_h_check_assoc(struct ieee80
+ 	} else {
+ 		if (unlikely((tx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
+ 			     tx->local->num_sta == 0 &&
+-			     !tx->local->allow_broadcast_always &&
+ 			     tx->sdata->type != IEEE80211_IF_TYPE_IBSS)) {
+ 			/*
+ 			 * No associated STAs - no need to send multicast
+@@ -959,8 +958,6 @@ __ieee80211_tx_prepare(struct ieee80211_
+ 	 */
+ 	control->power_level = local->hw.conf.power_level;
+ 	control->antenna_sel_tx = local->hw.conf.antenna_sel_tx;
+-	if (local->sta_antenna_sel != STA_ANTENNA_SEL_AUTO && tx->sta)
+-		control->antenna_sel_tx = tx->sta->antenna_sel_tx;
  
- 	printk(KERN_DEBUG "%s: Selected rate control "
--	       "algorithm '%s'\n", local->mdev->name,
-+	       "algorithm '%s'\n", wiphy_name(local->hw.wiphy),
- 	       ref->ops->name);
+ 	/* process and remove the injection radiotap header */
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+--- wireless-dev.orig/net/mac80211/sta_info.h	2007-08-14 11:06:09.814229604 +0200
++++ wireless-dev/net/mac80211/sta_info.h	2007-08-14 11:08:57.514229604 +0200
+@@ -91,10 +91,6 @@ struct sta_info {
+ 	int channel_use;
+ 	int channel_use_raw;
  
+-	u8 antenna_sel_tx;
+-	u8 antenna_sel_rx;
+-
+-
+ 	int key_idx_compression; /* key table index for compression and TX
+ 				  * filtering; used only if sta->key is not
+ 				  * set */
+--- wireless-dev.orig/include/net/mac80211.h	2007-08-14 11:07:15.374229604 +0200
++++ wireless-dev/include/net/mac80211.h	2007-08-14 11:09:43.604229604 +0200
+@@ -293,7 +293,6 @@ struct ieee80211_conf {
+ 	u8 power_level;			/* transmit power limit for current
+ 					 * regulatory domain; in dBm */
+ 	u8 antenna_max;			/* maximum antenna gain */
+-	short tx_power_reduction; /* in 0.1 dBm */
  
---- wireless-dev.orig/net/mac80211/ieee80211_sta.c	2007-08-23 18:38:38.271897709 +0200
-+++ wireless-dev/net/mac80211/ieee80211_sta.c	2007-08-23 18:38:43.841897709 +0200
-@@ -4027,7 +4027,7 @@ struct sta_info * ieee80211_ibss_add_sta
- 	}
+ 	/* 0 = default/diversity, 1 = Ant0, 2 = Ant1 */
+ 	u8 antenna_sel_tx;
+--- wireless-dev.orig/net/mac80211/debugfs.c	2007-08-14 11:02:57.004229604 +0200
++++ wireless-dev/net/mac80211/debugfs.c	2007-08-14 11:09:43.544229604 +0200
+@@ -124,9 +124,6 @@ DEBUGFS_READONLY_FILE(mode, 20, "%s",
+ 		      ieee80211_mode_str(local->hw.conf.phymode));
+ DEBUGFS_READONLY_FILE(wep_iv, 20, "%#06x",
+ 		      local->wep_iv & 0xffffff);
+-DEBUGFS_READONLY_FILE(tx_power_reduction, 20, "%d.%d dBm",
+-		      local->hw.conf.tx_power_reduction / 10,
+-		      local->hw.conf.tx_power_reduction % 10);
+ DEBUGFS_READ(rate_ctrl_alg, 100, "%s",
+ 	     local->rate_ctrl ? local->rate_ctrl->ops->name : "<unset>");
  
- 	printk(KERN_DEBUG "%s: Adding new IBSS station " MAC_FMT " (dev=%s)\n",
--	       local->mdev->name, MAC_ARG(addr), dev->name);
-+	       wiphy_name(local->hw.wiphy), MAC_ARG(addr), dev->name);
+@@ -347,7 +344,6 @@ void debugfs_hw_add(struct ieee80211_loc
+ 	DEBUGFS_ADD(total_ps_buffered);
+ 	DEBUGFS_ADD(mode);
+ 	DEBUGFS_ADD(wep_iv);
+-	DEBUGFS_ADD(tx_power_reduction);
+ 	DEBUGFS_ADD_MODE(rate_ctrl_alg, 0644);
+ 	DEBUGFS_ADD(modes);
  
- 	sta = sta_info_add(local, dev, addr, GFP_ATOMIC);
- 	if (!sta)
---- wireless-dev.orig/net/mac80211/rx.c	2007-08-23 18:38:38.321897709 +0200
-+++ wireless-dev/net/mac80211/rx.c	2007-08-23 18:38:43.841897709 +0200
-@@ -1605,7 +1605,8 @@ void __ieee80211_rx(struct ieee80211_hw 
- 			if (net_ratelimit())
- 				printk(KERN_DEBUG "%s: failed to copy "
- 				       "multicast frame for %s",
--				       local->mdev->name, prev->dev->name);
-+				       wiphy_name(local->hw.wiphy),
-+				       prev->dev->name);
- 			continue;
- 		}
- 		rx.skb = skb_new;
---- wireless-dev.orig/net/mac80211/sta_info.c	2007-08-23 18:38:38.361897709 +0200
-+++ wireless-dev/net/mac80211/sta_info.c	2007-08-23 18:38:43.851897709 +0200
-@@ -191,7 +191,7 @@ struct sta_info * sta_info_add(struct ie
+@@ -413,7 +409,6 @@ void debugfs_hw_del(struct ieee80211_loc
+ 	DEBUGFS_DEL(total_ps_buffered);
+ 	DEBUGFS_DEL(mode);
+ 	DEBUGFS_DEL(wep_iv);
+-	DEBUGFS_DEL(tx_power_reduction);
+ 	DEBUGFS_DEL(rate_ctrl_alg);
+ 	DEBUGFS_DEL(modes);
  
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
- 	printk(KERN_DEBUG "%s: Added STA " MAC_FMT "\n",
--	       local->mdev->name, MAC_ARG(addr));
-+	       wiphy_name(local->hw.wiphy), MAC_ARG(addr));
- #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
-@@ -250,7 +250,7 @@ void sta_info_free(struct sta_info *sta)
- 
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
- 	printk(KERN_DEBUG "%s: Removed STA " MAC_FMT "\n",
--	       local->mdev->name, MAC_ARG(sta->addr));
-+	       wiphy_name(local->hw.wiphy), MAC_ARG(sta->addr));
- #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
- 
- 	ieee80211_key_free(sta->key);
---- wireless-dev.orig/net/mac80211/tx.c	2007-08-23 18:38:43.161897709 +0200
-+++ wireless-dev/net/mac80211/tx.c	2007-08-23 18:38:43.861897709 +0200
-@@ -318,7 +318,7 @@ static void purge_old_ps_buffers(struct 
- 
- 	local->total_ps_buffered = total;
- 	printk(KERN_DEBUG "%s: PS buffers full - purged %d frames\n",
--	       local->mdev->name, purged);
-+	       wiphy_name(local->hw.wiphy), purged);
- }
- 
- static inline ieee80211_txrx_result
-@@ -1030,7 +1030,8 @@ static int __ieee80211_tx(struct ieee802
- 		return IEEE80211_TX_AGAIN;
- 	}
- 	if (skb) {
--		ieee80211_dump_frame(local->mdev->name, "TX to low-level driver", skb);
-+		ieee80211_dump_frame(wiphy_name(local->hw.wiphy),
-+				     "TX to low-level driver", skb);
- 		ret = local->ops->tx(local_to_hw(local), skb, control);
- 		if (ret)
- 			return IEEE80211_TX_AGAIN;
-@@ -1058,7 +1059,7 @@ static int __ieee80211_tx(struct ieee802
- 						~IEEE80211_TXCTL_RATE_CTRL_PROBE;
- 			}
- 
--			ieee80211_dump_frame(local->mdev->name,
-+			ieee80211_dump_frame(wiphy_name(local->hw.wiphy),
- 					     "TX to low-level driver",
- 					     tx->u.tx.extra_frag[i]);
- 			ret = local->ops->tx(local_to_hw(local),
-@@ -1761,7 +1762,7 @@ struct sk_buff *ieee80211_beacon_get(str
- 		if (!rate) {
- 			if (net_ratelimit()) {
- 				printk(KERN_DEBUG "%s: ieee80211_beacon_get: no rate "
--				       "found\n", local->mdev->name);
-+				       "found\n", wiphy_name(local->hw.wiphy));
- 			}
- 			dev_kfree_skb(skb);
- 			return NULL;
 
 -- 
 
