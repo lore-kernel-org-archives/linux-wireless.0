@@ -1,71 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43960 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57158 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754334AbXH2J6J (ORCPT
+	with ESMTP id S1758071AbXHNLry (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2007 05:58:09 -0400
-Subject: Re: [PATCH 4/5] Net: ath5k, license is GPLv2
+	Tue, 14 Aug 2007 07:47:54 -0400
+Message-Id: <20070814092444.984747000@sipsolutions.net>
+References: <20070814092008.627058000@sipsolutions.net>
+Date: Tue, 14 Aug 2007 11:20:17 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <7515194658758617@pripojeni.net>
-References: <7515194658758617@pripojeni.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6v5aEqlwwo/PkR5IiUy/"
-Date: Wed, 29 Aug 2007 11:59:42 +0200
-Message-Id: <1188381582.19891.6.camel@johannes.berg>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 09/13] mac80211: remove scan struct from hostapd_param
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This hasn't been used for quite a while.
 
---=-6v5aEqlwwo/PkR5IiUy/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/hostapd_ioctl.h |    8 --------
+ 1 file changed, 8 deletions(-)
 
-On Tue, 2007-08-28 at 12:00 -0400, Jiri Slaby wrote:
+--- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-08-14 00:27:31.475589257 +0200
++++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-08-14 00:27:32.715589257 +0200
+@@ -127,14 +127,6 @@ struct prism2_hostapd_param {
+ 			u8 data[0] ALIGNED; /* num_modes * feature data */
+ 		} hw_features;
+ 		struct {
+-			u8  now;
+-			s8  our_mode_only;
+-			s16 last_rx;
+-			u16 channel;
+-			s16 interval; /* seconds */
+-			s32 listen;   /* microseconds */
+-		} scan;
+-		struct {
+ 			u16 mode; /* MODE_* */
+ 			u16 num_supported_rates;
+ 			u16 num_basic_rates;
 
-> The files are available only under GPLv2 since now.
-
-Since the BSD people are already getting upset about (for various
-reasons among which seem to be a clear non-understanding) I'd suggest
-changing it to:
-
-
-+ * Parts of this file were originally licenced under the BSD licence:
-+ *
->  * Permission to use, copy, modify, and distribute this software for any
->  * purpose with or without fee is hereby granted, provided that the above
->  * copyright notice and this permission notice appear in all copies.
->  *
->  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTI=
-ES
->  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
->  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FO=
-R
->  * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
->  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
->  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT O=
-F
->  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ *
-+ * Further changes to this file since the moment this notice was extended
-+ * are now distributed under the terms of the GPL version two as published
-+ * by the Free Software Foundation <yaddaya>
-
-johannes
-
---=-6v5aEqlwwo/PkR5IiUy/
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG1UOO/ETPhpq3jKURAthAAJ9x3OTY3YoseAAJanaNkd7i4/wVbgCcC8vs
-2ZS5R2w9tU9Wx31Ui7HZ2ck=
-=KzYw
------END PGP SIGNATURE-----
-
---=-6v5aEqlwwo/PkR5IiUy/--
+-- 
 
