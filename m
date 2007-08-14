@@ -1,86 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57107 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760865AbXHNLqa (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:29491 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755829AbXHNEXs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2007 07:46:30 -0400
-Message-Id: <20070814092444.069607000@sipsolutions.net>
-References: <20070814092008.627058000@sipsolutions.net>
-Date: Tue, 14 Aug 2007 11:20:15 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 07/13] mac80211: remove PRISM2_HOSTAPD_SET_GENERIC_INFO_ELEM
-Mime-Version: 1.0
+	Tue, 14 Aug 2007 00:23:48 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: "maali Al Janoob" <mms82@hotmail.com>
+Subject: Re: wireless drivers that doesn't require firmware
+Date: Mon, 13 Aug 2007 21:21:45 -0700
+Cc: linux-wireless@vger.kernel.org
+References: <BAY111-F3063D70AED453915236D9FB6DC0@phx.gbl>
+In-Reply-To: <BAY111-F3063D70AED453915236D9FB6DC0@phx.gbl>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1623818.23S6y84Ape";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200708132121.49345.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is now unused in hostapd/wpa_supplicant, it uses SIOCSIWGENIE.
+--nextPart1623818.23S6y84Ape
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/hostapd_ioctl.h   |    5 -----
- net/mac80211/ieee80211_ioctl.c |   20 --------------------
- 2 files changed, 25 deletions(-)
+On Monday 13 August 2007 15:04, maali Al Janoob wrote:
+> Do you know any linux wireless drivers that implements all 802.11 related
+> functionalities in software and doesn't require a firmware? The only one
+> that I know is madwifi, do you know others?
+>
 
---- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-08-14 00:27:30.935589257 +0200
-+++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-08-14 00:27:31.475589257 +0200
-@@ -61,7 +61,6 @@ enum {
- 	PRISM2_HOSTAPD_ADD_IF = 1006,
- 	PRISM2_HOSTAPD_REMOVE_IF = 1007,
- 	PRISM2_HOSTAPD_SET_STA_VLAN = 1010,
--	PRISM2_HOSTAPD_SET_GENERIC_INFO_ELEM = 1011,
- 	PRISM2_HOSTAPD_SET_CHANNEL_FLAG = 1012,
- 	PRISM2_HOSTAPD_SET_REGULATORY_DOMAIN = 1013,
- 	PRISM2_HOSTAPD_SET_TX_QUEUE_PARAMS = 1014,
-@@ -152,10 +151,6 @@ struct prism2_hostapd_param {
- 			int vlan_id;
- 		} set_sta_vlan;
- 		struct {
--			u8 len;
--			u8 data[0] ALIGNED;
--		} set_generic_info_elem;
--		struct {
- 			u16 mode; /* MODE_* */
- 			u16 chan;
- 			u32 flag;
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-14 00:27:30.345589257 +0200
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-14 00:27:31.475589257 +0200
-@@ -1028,22 +1028,6 @@ static int ieee80211_set_gen_ie(struct n
- }
- 
- 
--static int
--ieee80211_ioctl_set_generic_info_elem(struct net_device *dev,
--				      struct prism2_hostapd_param *param,
--				      int param_len)
--{
--	u8 *pos = param->u.set_generic_info_elem.data;
--	int left = param_len - ((u8 *) pos - (u8 *) param);
--	int len = param->u.set_generic_info_elem.len;
--
--	if (left < len)
--		return -EINVAL;
--
--	return ieee80211_set_gen_ie(dev, pos, len);
--}
--
--
- static int ieee80211_ioctl_set_regulatory_domain(struct net_device *dev,
- 					    struct prism2_hostapd_param *param)
- {
-@@ -1176,10 +1160,6 @@ static int ieee80211_ioctl_priv_hostapd(
- 	case PRISM2_HOSTAPD_SET_STA_VLAN:
- 		ret = ieee80211_ioctl_set_sta_vlan(dev, param);
- 		break;
--	case PRISM2_HOSTAPD_SET_GENERIC_INFO_ELEM:
--		ret = ieee80211_ioctl_set_generic_info_elem(dev, param,
--							    p->length);
--		break;
- 	case PRISM2_HOSTAPD_SET_CHANNEL_FLAG:
- 		ret = ieee80211_ioctl_set_channel_flag(dev, param);
- 		break;
+All Realtek chips - rtl8180, rtl8185, rtl8187.
+All ADMtek ADM8211 chips (but they're not made anymore)
+Some Ralink chips, IIRC. Don't know which ones.
 
--- 
+-Michael Wu
 
+--nextPart1623818.23S6y84Ape
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBGwS3dT3Oqt9AH4aERApt/AJ9aT76IDC+u43Q+eROCJOTx+0J5YwCffwlE
+nTpo0gAqxvIcN29c8ws9oAs=
+=DEai
+-----END PGP SIGNATURE-----
+
+--nextPart1623818.23S6y84Ape--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
