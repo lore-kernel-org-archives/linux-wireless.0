@@ -1,57 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:28862 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753057AbXHHFRM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 01:17:12 -0400
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH] Fix handling of failure to create debugfs directory
-To: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Date: Wed, 08 Aug 2007 01:17:10 -0400
-Message-ID: <20070808051710.3902.43211.stgit@dv.roinet.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:50355
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765539AbXHNRA6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Aug 2007 13:00:58 -0400
+Message-Id: <20070814165750.102981000@bu3sch.de>
+References: <20070814165746.863593000@bu3sch.de>
+Date: Tue, 14 Aug 2007 18:57:53 +0200
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: [patch 7/7] ssb: Add kconfig SELECT workaround
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This can happen if CONFIG_BCM43XX_MAC80211_DEBUG is enabled, but
-CONFIG_DEBUG_FS is not.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+Index: ssb-merge-new/drivers/ssb/Kconfig
+===================================================================
+--- ssb-merge-new.orig/drivers/ssb/Kconfig	2007-08-14 17:05:12.000000000 +0200
++++ ssb-merge-new/drivers/ssb/Kconfig	2007-08-14 17:22:13.000000000 +0200
+@@ -1,18 +1,33 @@
+ menu "Sonics Silicon Backplane"
+ 
++config SSB_POSSIBLE
++	bool
++	depends on HAS_IOMEM
++	default y
++
+ config SSB
+ 	tristate "Sonics Silicon Backplane support"
+-	depends on HAS_IOMEM
++	depends on SSB_POSSIBLE
+ 	help
+-	  Support for the Sonics Silicon Backplane bus
++	  Support for the Sonics Silicon Backplane bus.
++	  You only need to enable this option, if you are
++	  configuring a kernel for an embedded system with
++	  this bus.
++	  It will be auto-selected if needed in other
++	  environments.
+ 
+-	  The module will be called ssb
++	  The module will be called ssb.
+ 
+-	  If unsure, say M
++	  If unsure, say N.
++
++config SSB_PCIHOST_POSSIBLE
++	bool
++	depends on SSB && PCI
++	default y
+ 
+ config SSB_PCIHOST
+ 	bool "Support for SSB on PCI-bus host"
+-	depends on SSB && PCI
++	depends on SSB_PCIHOST_POSSIBLE
+ 	default y
+ 	help
+ 	  Support for a Sonics Silicon Backplane on top
+@@ -20,9 +35,14 @@ config SSB_PCIHOST
+ 
+ 	  If unsure, say Y
+ 
++config SSB_PCMCIAHOST_POSSIBLE
++	bool
++	depends on SSB && PCMCIA && EXPERIMENTAL
++	default y
++
+ config SSB_PCMCIAHOST
+ 	bool "Support for SSB on PCMCIA-bus host (EXPERIMENTAL)"
+-	depends on SSB && PCMCIA && EXPERIMENTAL
++	depends on SSB_PCMCIAHOST_POSSIBLE
+ 	help
+ 	  Support for a Sonics Silicon Backplane on top
+ 	  of a PCMCIA device.
+@@ -31,7 +51,7 @@ config SSB_PCMCIAHOST
+ 
+ config SSB_SILENT
+ 	bool "No SSB kernel messages"
+-	depends on SSB
++	depends on SSB && EMBEDDED
+ 	help
+ 	  This option turns off all Sonics Silicon Backplane printks.
+ 	  Note that you won't be able to identify problems, once
+@@ -55,9 +75,14 @@ config SSB_SERIAL
+ 	depends on SSB
+ 	# ChipCommon and ExtIf serial support routines.
+ 
++config SSB_DRIVER_PCICORE_POSSIBLE
++	bool
++	depends on SSB_PCIHOST
++	default y
++
+ config SSB_DRIVER_PCICORE
+ 	bool "SSB PCI core driver"
+-	depends on SSB && SSB_PCIHOST
++	depends on SSB_DRIVER_PCICORE_POSSIBLE
+ 	help
+ 	  Driver for the Sonics Silicon Backplane attached
+ 	  Broadcom PCI core.
 
- .../wireless/bcm43xx-mac80211/bcm43xx_debugfs.c    |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+-- 
 
-diff --git a/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.c b/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.c
-index 9ca4625..aded2b3 100644
---- a/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.c
-+++ b/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_debugfs.c
-@@ -408,7 +408,7 @@ static struct file_operations restart_fops = {
- 
- int bcm43xx_debug(struct bcm43xx_wldev *dev, enum bcm43xx_dyndbg feature)
- {
--	return !!(dev->dfsentry->dyn_debug[feature]);
-+	return !!(dev->dfsentry && dev->dfsentry->dyn_debug[feature]);
- }
- 
- static void bcm43xx_remove_dynamic_debug(struct bcm43xx_wldev *dev)
-@@ -472,7 +472,9 @@ void bcm43xx_debugfs_add_device(struct bcm43xx_wldev *dev)
- 	snprintf(devdir, sizeof(devdir), "%s", wiphy_name(dev->wl->hw->wiphy));
- 	e->subdir = debugfs_create_dir(devdir, fs.root);
- 	if (!e->subdir || IS_ERR(e->subdir)) {
--		e->subdir = NULL;
-+		bcmerr(dev->wl, "debugfs: cannot create %s directory\n",
-+		       devdir);
-+		dev->dfsentry = NULL;
- 		kfree(log->log);
- 		kfree(e);
- 		return;
-@@ -525,6 +527,8 @@ void bcm43xx_debugfs_log_txstat(struct bcm43xx_wldev *dev,
- 	struct bcm43xx_txstatus *cur;
- 	int i;
- 
-+	if (!e)
-+		return;
- 	log = &e->txstatlog;
- 	assert(irqs_disabled());
- 	spin_lock(&log->lock);
