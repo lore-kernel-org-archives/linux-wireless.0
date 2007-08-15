@@ -1,55 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58986 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757733AbXHGJpt (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53313
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1756618AbXHOBdb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2007 05:45:49 -0400
-Subject: Re: [PATCH] mac80211: No echo TX pkt to Monitor interfaces for  injection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: warmcat <andy@warmcat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20070802223857.19090.70108.stgit@localhost>
-References: <20070802223857.19090.70108.stgit@localhost>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-i+54E878/JltVsCFC3d1"
-Date: Mon, 06 Aug 2007 21:33:09 +0200
-Message-Id: <1186428789.4067.12.camel@johannes.berg>
+	Tue, 14 Aug 2007 21:33:31 -0400
+Date: Tue, 14 Aug 2007 18:33:30 -0700 (PDT)
+Message-Id: <20070814.183330.21931289.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: Please pull 'fixes-davem' branch of wireless-2.6
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20070815003234.GI7198@tuxdriver.com>
+References: <20070815003234.GI7198@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 14 Aug 2007 20:32:34 -0400
 
---=-i+54E878/JltVsCFC3d1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> These are a few more items intended for 2.6.23.
+ ...
+> The following changes since commit 39d3520c92cf7a28c07229ca00cc35a1e8026c77:
+>   Linus Torvalds (1):
+>         Linux 2.6.23-rc3
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
+> 
+> Johannes Berg (1):
+>       mac80211: fix tx status frame code
+> 
+> John W. Linville (1):
+>       mac80211: probe for hidden SSIDs in pre-auth scan
 
-On Thu, 2007-08-02 at 23:38 +0100, warmcat wrote:
-
-> This patch adds a new attribute to ieee80211_tx_control's flags field,
-> IEEE80211_TXCTL_NO_SOFT_MONITOR_ECHO, which is set for injected
-> packets.  The code to add a new radiotap header and echo the packet
-> down monitor mode interfaces is now conditional on this attribute not
-> being set.
-
-Regardless of whether my approach (just posted) will be accepted, this
-patch cannot go in: it stops injected packets from showing up on all
-monitor interfaces but the one they were injected into. If my
-IFF_NO_MIRROR approach is rejected then we'll have to make this a bit
-more elaborate by storing the injection device ifindex in the info
-instead of just a flag.
-
-johannes
-
---=-i+54E878/JltVsCFC3d1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGt3d1/ETPhpq3jKURAiLQAKCYTQ7iCuUtOzMhFzkCfGpGbGSH9wCgofsd
-18VMb1skUlYWbVMyRSGXxPs=
-=BlXf
------END PGP SIGNATURE-----
-
---=-i+54E878/JltVsCFC3d1--
-
+Pulled, thanks John.
