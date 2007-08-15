@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bay0-omc3-s1.bay0.hotmail.com ([65.54.246.201]:55631 "EHLO
-	bay0-omc3-s1.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753111AbXHPUyF (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43843 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763219AbXHOO4A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2007 16:54:05 -0400
-Message-ID: <BAY111-F25D952C7E01CC8CB5A47B2B6DF0@phx.gbl>
-From: "maali Al Janoob" <mms82@hotmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: question for developers (help plzz!!)
-Date: Fri, 17 Aug 2007 00:54:00 +0400
+	Wed, 15 Aug 2007 10:56:00 -0400
+Message-Id: <20070815145048.965414000@sipsolutions.net>
+References: <20070815144920.135826000@sipsolutions.net>
+Date: Wed, 15 Aug 2007 16:49:37 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 17/20] mac80211: avoid copying packets to interfaces that  are down
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
+David Woodhouse noticed that under some circumstances the number of slab
+allocations kept growing. After looking a bit, this seemed to happen
+when you had a management mode interface that was *down*.
 
-I would like to get in touch with any of the developers of Realtek and 
-Ralink linux drivers. My question to them is about the implementation of the 
-binary exponential backoff (BEB) algorithm in the driver: is it part of the 
-open-source driver code which is availabl for public access, or is it part 
-of the binary-only firmware?
-I came to know thorugh this mailing list that those two chipsets might not 
-require a firmware, and that gave me hope in finding all the 802.11 
-functionalities in the open source driver codes, but I have searched through 
-the code of the Ralink 2571 usb driver and the Realtek 8187L driver - What I 
-found was only specifying the min and max values of the contention window 
-(cw), not the implementation of the BEB algorithm itselt.
+The reason for this is that when the device is down, all management
+frames get queued to the in-kernel MLME (via ieee80211_sta_rx_mgmt) but
+then the sta work is invoked but doesn't run when the netif is down.
+When you then bring the interface up, all such frames are freed, but if
+you change the mode all of them are lost because the skb queue is
+reinitialised as soon as you go back to managed mode. The skb queue is
+correctly cleared when the interface is brought down, but the code
+doesn't account for the fact that it may be filled while it is not up.
 
-Aside from this, if any one is aware of any chipset that implements ALL 
-802.11 funcitonalities in open source software, please save me with it. I'm 
-doing a masters thesis that requires modifying the BEB algorithm. I have 
-tried the following chips so far with no hope: prism (wlan-ng), 
-zd1211(zd1211rw), atheros(madwifi).
+This patch should fix the issue by simply ignoring all interfaces that
+are down when going through the RX handlers.
 
-The smallest contribution of any of you will be of great value to me!
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Regards,
-Maali
+---
+Is there a possibility of a race condition here? If the interface is
+brought down right after this check the SKB could be copied to that
+interface after the skb queue has been flushed.
 
-_________________________________________________________________
-Express yourself instantly with MSN Messenger! Download today it's FREE! 
-http://messenger.msn.click-url.com/go/onm00200471ave/direct/01/
+ net/mac80211/rx.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+--- wireless-dev.orig/net/mac80211/rx.c	2007-08-15 14:13:28.596516958 +0200
++++ wireless-dev/net/mac80211/rx.c	2007-08-15 14:13:30.866516958 +0200
+@@ -1522,6 +1522,9 @@ void __ieee80211_rx(struct ieee80211_hw 
+ 	list_for_each_entry(sdata, &local->sub_if_list, list) {
+ 		rx.u.rx.ra_match = 1;
+ 
++		if (!netif_running(sdata->dev))
++			continue;
++
+ 		prepres = prepare_for_handlers(sdata, bssid, &rx, hdr);
+ 		/* prepare_for_handlers can change sta */
+ 		sta = rx.sta;
+
+-- 
 
