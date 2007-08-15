@@ -1,50 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49229
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758897AbXHRXxW (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49648 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752954AbXHOKq4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Aug 2007 19:53:22 -0400
-Message-Id: <20070818234835.514400000@bu3sch.de>
-References: <20070818234833.623623000@bu3sch.de>
-Date: Sun, 19 Aug 2007 01:48:37 +0200
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [patch 4/6] b43: Update Kconfig help text
+	Wed, 15 Aug 2007 06:46:56 -0400
+Subject: Re: [RFC] the recently discussed flags patch
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jiri Benc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Daniel Drake <dsd@gentoo.org>
+In-Reply-To: <200708141848.57809.mb@bu3sch.de>
+References: <1187108515.4037.3.camel@johannes.berg>
+	 <200708141848.57809.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oVbETefM5RKaD3ylZkwV"
+Date: Wed, 15 Aug 2007 12:38:02 +0200
+Message-Id: <1187174282.3998.0.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Larry Finger <Larry.Finger@lwfinger.net>
 
-The help text in Kconfig for b43 is updated to indicate the devices that it
-does not support and to note that it can coexist with b43legacy.
+--=-oVbETefM5RKaD3ylZkwV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+On Tue, 2007-08-14 at 18:48 +0200, Michael Buesch wrote:
 
-Index: wireless-dev-new/drivers/net/wireless/b43/Kconfig
-===================================================================
---- wireless-dev-new.orig/drivers/net/wireless/b43/Kconfig	2007-08-15 15:18:34.000000000 +0200
-+++ wireless-dev-new/drivers/net/wireless/b43/Kconfig	2007-08-17 20:20:27.000000000 +0200
-@@ -6,7 +6,16 @@ config B43
- 	select HW_RANDOM
- 	---help---
- 	  This is an experimental driver for the Broadcom 43xx wireless chip,
--	  found in the Apple Airport Extreme and various other devices.
-+	  found in the Apple Airport Extreme and various other devices. This
-+	  driver supports 802.11a and 802.11g, but not 802.11b. As a result,
-+	  BCM4301 and BCM4303 are not supported - use b43legacy instead.
-+	  It is safe to include both b43 and b43legacy as the ssb driver will
-+	  load the correct version for your device.
-+
-+	  This driver uses V4 firmware, which must be installed separately using
-+	  b43-fwcutter.
-+
-+	  This driver can be built as a module (recommended) that will be called "b43".
- 
- # Auto-select SSB PCI-HOST support, if possible
- config B43_PCI_AUTOSELECT
+> Please some more comments on what they actually mean
+> and what's usually to do when the flag is set.
 
--- 
+Will do.
+
+> > +	/* Change filter flags, see above for FIF_* constants.
+> > +	 *
+> > +	 * Must be atomic due to running under the tx lock.
+> > +	 * This callback is required.
+> > +	 */
+> > +	void (*change_filter_flags)(struct ieee80211_hw *hw,
+> > +				    int changed_flags, int total_flags);
+>=20
+> Better use unsigned int.
+
+Yeah, did that.
+
+> What does changed_flags and total_flags mean?
+> I thought we'd like to have a pointer here, to the driver
+> can clear what's not supported.
+
+I changed that in the second version, and changed_flags indicates which
+ones have changed since the last call so the driver need not set all of
+them if that might be expensive.
+
+johannes
+
+--=-oVbETefM5RKaD3ylZkwV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGwteK/ETPhpq3jKURAnxdAKC15F2a2DNwYLMSdZAzVjNVFZXCpQCcCTaS
+EZF92zdQcyWOSweDA6iaIfI=
+=9tRN
+-----END PGP SIGNATURE-----
+
+--=-oVbETefM5RKaD3ylZkwV--
 
