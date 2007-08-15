@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33673
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755813AbXHKJnK (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43709 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765280AbXHOOw3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Aug 2007 05:43:10 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: How to use software encryption with WEP and mac80211
-Date: Sat, 11 Aug 2007 11:42:15 +0200
-Cc: wireless <linux-wireless@vger.kernel.org>
-References: <46BD2C17.4000702@lwfinger.net>
-In-Reply-To: <46BD2C17.4000702@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200708111142.15991.mb@bu3sch.de>
+	Wed, 15 Aug 2007 10:52:29 -0400
+Message-Id: <20070815145041.402349000@sipsolutions.net>
+References: <20070815144920.135826000@sipsolutions.net>
+Date: Wed, 15 Aug 2007 16:49:21 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 01/20] mac80211: fix showing transmitted frames on multiple  monitor interfaces
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 11 August 2007 05:25:11 Larry Finger wrote:
-> What do I need to do to get mac80211 to do software encryption for WEP? My port of the PHY code from 
-> bcm43xx and the mac80211 front end works with WPA encryption. With WEP, it authenticates and 
-> associates, but never gets an IP number from DHCP. That indicates to me that the encryption is not 
-> set up correctly. I looked through the various definitions in include/net/mac80211.h, but nothing 
-> seems to apply.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net
 
-Which hw enc code do you use in that tree? The old softmac crap
-or my new code from bcm43xx-mac80211?
+---
+ net/mac80211/ieee80211.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-Anyway, if you want to disable hw enc, always set the force sw enc bit
-in the set_key function and return early:
-
-	key->flags |= IEEE80211_KEY_FORCE_SW_ENCRYPT;
-	return 0;
+--- wireless-dev.orig/net/mac80211/ieee80211.c	2007-08-15 13:39:27.816520121 +0200
++++ wireless-dev/net/mac80211/ieee80211.c	2007-08-15 13:39:40.476520121 +0200
+@@ -1190,7 +1190,6 @@ void ieee80211_tx_status(struct ieee8021
+ 			memset(skb->cb, 0, sizeof(skb->cb));
+ 			netif_rx(skb);
+ 			skb = skb2;
+-			break;
+ 		}
+ 	}
+  out:
 
 -- 
-Greetings Michael.
+
