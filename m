@@ -1,81 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38791 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757332AbXHHHhR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 03:37:17 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 05/28] iwlwifi: optimize iwl_queue_{inc|dec}_wrap implementation
-Date: Wed,  8 Aug 2007 15:33:22 +0800
-Message-Id: <11865584392893-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11865584363863-git-send-email-yi.zhu@intel.com>
-References: <11865584251026-git-send-email-yi.zhu@intel.com>
- <11865584292234-git-send-email-yi.zhu@intel.com>
- <1186558432932-git-send-email-yi.zhu@intel.com>
- <11865584342308-git-send-email-yi.zhu@intel.com>
- <11865584363863-git-send-email-yi.zhu@intel.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49710 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753239AbXHOKsm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Aug 2007 06:48:42 -0400
+Subject: Re: [PATCH] hostapd: remove use of  ieee80211_msg_wep_frame_unknown_key
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070815033555.GI1415@jm.kir.nu>
+References: <1186781366.17351.8.camel@johannes.berg>
+	 <20070815033555.GI1415@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1bN5FHzLb9xQVY4HUtit"
+Date: Wed, 15 Aug 2007 12:45:59 +0200
+Message-Id: <1187174759.3998.8.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch optimizes implementation of iwl_queue_inc_wrap and
-iwl_queue_inc_wrap based on the fact the hardware queue is power-of-two
-size. We also add BUG_ON and BUILD_BUG_ON check for queue size against
-is_power_of_2 in case future hardwares break this rule.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwl-base.c |   16 +++++++++++++---
- 1 files changed, 13 insertions(+), 3 deletions(-)
+--=-1bN5FHzLb9xQVY4HUtit
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
-index 4d73b86..becaeea 100644
---- a/drivers/net/wireless/iwl-base.c
-+++ b/drivers/net/wireless/iwl-base.c
-@@ -160,14 +160,16 @@ static int iwl_queue_space(const struct iwl_queue *q)
- 	return s;
- }
- 
-+/* XXX: n_bd must be power-of-two size */
- static inline int iwl_queue_inc_wrap(int index, int n_bd)
- {
--	return (++index == n_bd) ? 0 : index;
-+	return ++index & (n_bd - 1);
- }
- 
-+/* XXX: n_bd must be power-of-two size */
- static inline int iwl_queue_dec_wrap(int index, int n_bd)
- {
--	return (index == 0) ? n_bd - 1 : index - 1;
-+	return --index & (n_bd - 1);
- }
- 
- static inline int x2_queue_used(const struct iwl_queue *q, int i)
-@@ -192,6 +194,10 @@ static int iwl_queue_init(struct iwl_priv *priv, struct iwl_queue *q,
- 	q->n_window = slots_num;
- 	q->id = id;
- 
-+	/* count must be power-of-two size, otherwise iwl_queue_inc_wrap
-+	 * and iwl_queue_dec_wrap are broken. */
-+	BUG_ON(!is_power_of_2(count));
-+
- 	q->low_mark = q->n_window / 4;
- 	if (q->low_mark < 4)
- 		q->low_mark = 4;
-@@ -266,9 +272,13 @@ int iwl_tx_queue_init(struct iwl_priv *priv,
- 
- 		return -ENOMEM;
- 	}
--
- 	txq->need_update = 0;
-+
-+	/* TFD_QUEUE_SIZE_MAX must be power-of-two size, otherwise
-+	 * iwl_queue_inc_wrap and iwl_queue_dec_wrap are broken. */
-+	BUILD_BUG_ON(TFD_QUEUE_SIZE_MAX & (TFD_QUEUE_SIZE_MAX - 1));
- 	iwl_queue_init(priv, &txq->q, TFD_QUEUE_SIZE_MAX, slots_num, txq_id);
-+
- 	iwl_hw_tx_queue_init(priv, txq);
- 
- 	return 0;
--- 
-1.5.2
+On Tue, 2007-08-14 at 20:35 -0700, Jouni Malinen wrote:
+
+> This feature was originally used to allow a station to be disassociated
+> if it seemed to be using incorrect keys.=20
+
+Makes sense, this is a bit icky.
+
+> However, this was causing
+> interoperability issues with some client implementations and the code
+> was eventually commented out and this was only used to update a dot11
+> MIB counters. Consequently, I did not see much point in integrating it
+> into hostapd and we might as well just remove the TODO item completely
+> from hostapd.
+
+I'm not sure whether it'd be worth it going forward anyway, with WEP
+deployments hopefully going down.
+
+johannes
+
+--=-1bN5FHzLb9xQVY4HUtit
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGwtln/ETPhpq3jKURAn3xAJ9J9o2VMRzbPfj79Ff7iDPT0SXhkACgj5/l
+ZtL9zY+u0pd07V9Qj3CTjmI=
+=+PUD
+-----END PGP SIGNATURE-----
+
+--=-1bN5FHzLb9xQVY4HUtit--
+
