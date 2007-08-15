@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:64346 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751747AbXHKQzL (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49747 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752898AbXHOKtt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Aug 2007 12:55:11 -0400
-Message-ID: <46BDE9ED.5060705@lwfinger.net>
-Date: Sat, 11 Aug 2007 11:55:09 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: How to use software encryption with WEP and mac80211
-References: <46BD2C17.4000702@lwfinger.net> <200708111142.15991.mb@bu3sch.de> <46BDD038.4040207@lwfinger.net> <200708111715.23891.mb@bu3sch.de>
-In-Reply-To: <200708111715.23891.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 15 Aug 2007 06:49:49 -0400
+Subject: Re: [PATCH] hostapd: remove use of  ieee80211_msg_key_threshold_notification
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070815034312.GK1415@jm.kir.nu>
+References: <1186782285.17351.19.camel@johannes.berg>
+	 <20070815034312.GK1415@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-l4eHPL/hSpRpXCdI8xqE"
+Date: Wed, 15 Aug 2007 12:49:44 +0200
+Message-Id: <1187174984.3998.13.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Saturday 11 August 2007 17:05:28 Larry Finger wrote:
->> Michael Buesch wrote:
->>> On Saturday 11 August 2007 05:25:11 Larry Finger wrote:
->>>> What do I need to do to get mac80211 to do software encryption for WEP? My port of the PHY code from 
->>>> bcm43xx and the mac80211 front end works with WPA encryption. With WEP, it authenticates and 
->>>> associates, but never gets an IP number from DHCP. That indicates to me that the encryption is not 
->>>> set up correctly. I looked through the various definitions in include/net/mac80211.h, but nothing 
->>>> seems to apply.
->>> Which hw enc code do you use in that tree? The old softmac crap
->>> or my new code from bcm43xx-mac80211?
->> I had stripped out all the key stuff, but before that it was from bcm43xx-mac80211.
->>
->>> Anyway, if you want to disable hw enc, always set the force sw enc bit
->>> in the set_key function and return early:
->>>
->>> 	key->flags |= IEEE80211_KEY_FORCE_SW_ENCRYPT;
->>> 	return 0;
->> This doesn't seem to work. I had tried it before. I guess I put your code back in again.
-> 
-> bcm43xx-mac80211 hwenc code does not work with v3 firmware.
-> There is no working hwenc code for v3 firmware.
-> 
-> The above code should work to enable swenc, unless there's a bug in mac80211.
 
-It wasn't a bug in mac80211. In fact, it forces software encryption if the set_key callback is not 
-specified. My problem was that the hw->flags were wrong in the initial registration of the iface. 
-Both WEP and WPA are working now.
+--=-l4eHPL/hSpRpXCdI8xqE
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Larry
+On Tue, 2007-08-14 at 20:43 -0700, Jouni Malinen wrote:
+
+> Just like ieee80211_msg_sta_not_assoc, this one is a useful notification
+> and I would rather not see it being removed. Consequently, I did not
+> apply this. I would be much more open to changing this notification to
+> use some other mechanism if there is a reason to get rid of
+> ieee80211_msg_* types, but just removing this because the code is
+> currently #if 0'ed in hostapd is not a reason I would support.
+
+Same as with the other one, I'd like to get rid of the ieee80211_msg_*
+stuff with the hacked-up prism2 monitor mode header. Again, here I've
+extended the TODO item to cover both sides, where the implementation
+ought to be in nl80211.
+
+johannes
+
+--=-l4eHPL/hSpRpXCdI8xqE
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGwtpI/ETPhpq3jKURAtJMAJ9zqK92Owqe9cxfBokdS4QlH0kmEQCgk1FI
+9lje0vFCiSNFmajo5Dzp9dI=
+=X/VA
+-----END PGP SIGNATURE-----
+
+--=-l4eHPL/hSpRpXCdI8xqE--
+
