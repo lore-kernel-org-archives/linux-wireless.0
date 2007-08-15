@@ -1,90 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:38084
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932364AbXH3R20 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43751 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932823AbXHOOxd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 13:28:26 -0400
-From: Michael Buesch <mb@bu3sch.de>
+	Wed, 15 Aug 2007 10:53:33 -0400
+Message-Id: <20070815145042.613693000@sipsolutions.net>
+References: <20070815144920.135826000@sipsolutions.net>
+Date: Wed, 15 Aug 2007 16:49:23 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43 drivers: remove IEEE80211_CONF_SSID_HIDDEN
-Date: Thu, 30 Aug 2007 19:26:32 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>,
-	Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200708301926.32594.mb@bu3sch.de>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 03/20] mac80211: remove radar stuff
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+Unused in drivers, userspace and mac80211.
 
-The IEEE80211_CONF_SSID_HIDDEN setting is unclear but does not
-match the "closed net" flag b43 hardware has; the flag influences
-only the sending of probe responses which is disabled anyway.
->From looking at the microcode, I can see that if the flag is set
-then probe requests are required to be directed to the BSSID of
-the AP to be answered by the microcode, but this not interesting
-because we don't support probe request offload anyway.
-
-This patch removes the IEEE80211_CONF_SSID_HIDDEN use from
-both b43 drivers.
-
-Cc: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <larry.finger@lwfinger.net>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
-I've also clarified the specs, please queue the change to your
-respective drivers.
+ include/net/mac80211.h          |    6 ------
+ net/mac80211/ieee80211.c        |   28 ----------------------------
+ net/mac80211/ieee80211_common.h |    2 +-
+ 3 files changed, 1 insertion(+), 35 deletions(-)
 
- drivers/net/wireless/b43/main.c       |   11 -----------
- drivers/net/wireless/b43legacy/main.c |   12 ------------
- 2 files changed, 23 deletions(-)
-
---- wireless-dev.orig/drivers/net/wireless/b43/main.c	2007-08-30 14:35:57.512051253 +0200
-+++ wireless-dev/drivers/net/wireless/b43/main.c	2007-08-30 14:36:01.002051253 +0200
-@@ -2836,17 +2836,6 @@ static int b43_dev_config(struct ieee802
- 		}
- 	}
+--- wireless-dev.orig/include/net/mac80211.h	2007-08-15 14:04:48.196516958 +0200
++++ wireless-dev/include/net/mac80211.h	2007-08-15 14:07:04.636516958 +0200
+@@ -1038,12 +1038,6 @@ ieee80211_get_mc_list_item(struct ieee80
+ /* called by driver to notify scan status completed */
+ void ieee80211_scan_completed(struct ieee80211_hw *hw);
  
--	/* Hide/Show the SSID (AP mode only). */
--	if (conf->flags & IEEE80211_CONF_SSID_HIDDEN) {
--		b43_write32(dev, B43_MMIO_MACCTL,
--			    b43_read32(dev, B43_MMIO_MACCTL)
--			    | B43_MACCTL_CLOSEDNET);
--	} else {
--		b43_write32(dev, B43_MMIO_MACCTL,
--			    b43_read32(dev, B43_MMIO_MACCTL)
--			    & ~B43_MACCTL_CLOSEDNET);
--	}
+-/* Function to indicate Radar Detection. The low level driver must call this
+- * function to indicate the presence of radar in the current channel.
+- * Additionally the radar type also could be sent */
+-int  ieee80211_radar_status(struct ieee80211_hw *hw, int channel,
+-			    int radar, int radar_type);
 -
- 	/* Antennas for RX and management frame TX. */
- 	b43_mgmtframe_txantenna(dev, antenna_tx);
- 	b43_set_rx_antenna(dev, antenna_rx);
---- wireless-dev.orig/drivers/net/wireless/b43legacy/main.c	2007-08-30 14:35:05.962051253 +0200
-+++ wireless-dev/drivers/net/wireless/b43legacy/main.c	2007-08-30 14:36:01.022051253 +0200
-@@ -2655,18 +2655,6 @@ static int b43legacy_dev_config(struct i
- 		}
- 	}
+ /* return a pointer to the source address (SA) */
+ static inline u8 *ieee80211_get_SA(struct ieee80211_hdr *hdr)
+ {
+--- wireless-dev.orig/net/mac80211/ieee80211.c	2007-08-15 14:06:33.976516958 +0200
++++ wireless-dev/net/mac80211/ieee80211.c	2007-08-15 14:07:04.636516958 +0200
+@@ -201,34 +201,6 @@ ieee80211_rx_mgmt(struct ieee80211_local
+ 	netif_rx(skb);
+ }
  
--	/* Hide/Show the SSID (AP mode only). */
--	if (conf->flags & IEEE80211_CONF_SSID_HIDDEN)
--		b43legacy_write32(dev, B43legacy_MMIO_STATUS_BITFIELD,
--				  b43legacy_read32(dev,
--				  B43legacy_MMIO_STATUS_BITFIELD)
--				  | B43legacy_SBF_NO_SSID_BCAST);
--	else
--		b43legacy_write32(dev, B43legacy_MMIO_STATUS_BITFIELD,
--				  b43legacy_read32(dev,
--				  B43legacy_MMIO_STATUS_BITFIELD)
--				  & ~B43legacy_SBF_NO_SSID_BCAST);
+-int ieee80211_radar_status(struct ieee80211_hw *hw, int channel,
+-			   int radar, int radar_type)
+-{
+-	struct sk_buff *skb;
+-	struct ieee80211_radar_info *msg;
+-	struct ieee80211_local *local = hw_to_local(hw);
 -
- 	/* Antennas for RX and management frame TX. */
- 	b43legacy_mgmtframe_txantenna(dev, antenna_tx);
+-	if (!local->apdev)
+-		return 0;
+-
+-	skb = dev_alloc_skb(sizeof(struct ieee80211_frame_info) +
+-			    sizeof(struct ieee80211_radar_info));
+-
+-	if (!skb)
+-		return -ENOMEM;
+-	skb_reserve(skb, sizeof(struct ieee80211_frame_info));
+-
+-	msg = (struct ieee80211_radar_info *)
+-		skb_put(skb, sizeof(struct ieee80211_radar_info));
+-	msg->channel = channel;
+-	msg->radar = radar;
+-	msg->radar_type = radar_type;
+-
+-	ieee80211_rx_mgmt(local, skb, NULL, ieee80211_msg_radar);
+-	return 0;
+-}
+-EXPORT_SYMBOL(ieee80211_radar_status);
+-
+ void ieee80211_key_threshold_notify(struct net_device *dev,
+ 				    struct ieee80211_key *key,
+ 				    struct sta_info *sta)
+--- wireless-dev.orig/net/mac80211/ieee80211_common.h	2007-08-15 14:06:34.006516958 +0200
++++ wireless-dev/net/mac80211/ieee80211_common.h	2007-08-15 14:07:04.636516958 +0200
+@@ -54,7 +54,7 @@ enum ieee80211_msg_type {
+ 	ieee80211_msg_sta_not_assoc = 7,
+ 	/* 8 was ieee80211_msg_set_aid_for_sta */
+ 	ieee80211_msg_key_threshold_notification = 9,
+-	ieee80211_msg_radar = 11,
++	/* 11 was ieee80211_msg_radar */
+ };
  
+ struct ieee80211_msg_key_notification {
 
 -- 
-Greetings Michael.
+
