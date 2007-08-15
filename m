@@ -1,93 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:37099
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932872AbXHNSOE (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:40834 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758264AbXHOPYR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2007 14:14:04 -0400
-Message-Id: <20070814181217.291720000@bu3sch.de>
-References: <20070814181213.135874000@bu3sch.de>
-Date: Tue, 14 Aug 2007 20:12:22 +0200
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: [patch 9/9] b43: Rewrite kconfig to get rid of the advice hack.
+	Wed, 15 Aug 2007 11:24:17 -0400
+Subject: Re: [PATCHv3] mac80211: dynamic wep
+From: Volker Braun <volker.braun@physik.hu-berlin.de>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200708142355.27708.flamingice@sourmilk.net>
+References: <1187151162.3253.18.camel@thinkpad>
+	 <200708142355.27708.flamingice@sourmilk.net>
+Content-Type: text/plain
+Date: Wed, 15 Aug 2007 11:24:15 -0400
+Message-Id: <1187191455.6462.14.camel@carrot.hep.upenn.edu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This should properly autoselect the SSB options without
-introducing a dependency hell.
+On Tue, 2007-08-14 at 23:55 -0700, Michael Wu wrote:
+> I suspect keyidx > 0 is done to allow hardware 
+> without individual WEP key support to continue using hardware WEP.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+I've wondered for a long time why Cisco chose to use keyidx>0 for WEP
+unicast keys, but I think I finally understand that this is a weird
+feature (8.5.1): In a mixed WEP and TKIP network a WEP key[0] would
+conflict with the TKIP key (which must have keyidx == 0), forcing a dumb
+TKIP STA to downgrade to WEP. (A good TKIP STA would just rely on
+per-STA keys and not have this problem)
 
-Index: wireless-dev-new/drivers/net/wireless/b43/Kconfig
-===================================================================
---- wireless-dev-new.orig/drivers/net/wireless/b43/Kconfig	2007-08-14 20:09:15.000000000 +0200
-+++ wireless-dev-new/drivers/net/wireless/b43/Kconfig	2007-08-14 20:11:07.000000000 +0200
-@@ -1,49 +1,31 @@
--config B43_DEP_HACK
--	bool
--	depends on SSB && SSB_PCIHOST && SSB_DRIVER_PCICORE
--	default y
--
--config B43_ADVICE_HACK
--	bool "Broadcom 43xx PCI (mac80211) not available. Read the help text of this option!"
--	depends on !B43_DEP_HACK
--	---help---
--	  The B43 driver for B43 PCI devices can not be enabled,
--	  because the required dependencies are not selected.
--
--	  In order to be able to select the B43-mac80211 driver, you
--	  need to enable the following options first:
--
--	  CONFIG_SSB found in menu:
--	  Device Drivers/Sonics Silicon Backplane/Sonics Silicon Backplane support
--	  CONFIG_SSB_PCIHOST found in menu:
--	  Device Drivers/Sonics Silicon Backplane/Support for SSB on PCI-bus host
--	  CONFIG_SSB_DRIVER_PCICORE found in menu:
--	  Device Drivers/Sonics Silicon Backplane/SSB PCI core driver
--
- config B43
- 	tristate "Broadcom 43xx wireless support (mac80211 stack)"
--	depends on SSB && MAC80211 && WLAN_80211 && EXPERIMENTAL
-+	depends on SSB_POSSIBLE && MAC80211 && WLAN_80211 && EXPERIMENTAL
-+	select SSB
- 	select FW_LOADER
- 	select HW_RANDOM
- 	---help---
- 	  This is an experimental driver for the Broadcom 43xx wireless chip,
- 	  found in the Apple Airport Extreme and various other devices.
- 
--config B43_PCI
--	bool "Broadcom 43xx PCI device support"
--	depends on B43 && SSB_PCIHOST && SSB_DRIVER_PCICORE
-+# Auto-select SSB PCI-HOST support, if possible
-+config B43_PCI_AUTOSELECT
-+	bool
-+	depends on SSB_PCIHOST_POSSIBLE
-+	select SSB_PCIHOST
- 	default y
--	---help---
--	  Broadcom 43xx PCI device support.
- 
--	  Say Y, if you have a B43 device connected through the PCI bus.
--	  Please note that most PC-CARD devices are (to the kernel) PCI devices,
--	  too and not PCMCIA.
--	  It's safe to select Y here, even if you don't have a B43 PCI device.
-+# Auto-select SSB PCICORE driver, if possible
-+config B43_PCICORE_AUTOSELECT
-+	bool
-+	depends on SSB_DRIVER_PCICORE_POSSIBLE
-+	select SSB_DRIVER_PCICORE
-+	default y
- 
- config B43_PCMCIA
- 	bool "Broadcom 43xx PCMCIA device support"
--	depends on B43 && SSB_PCMCIAHOST
-+	depends on B43 && SSB_PCMCIAHOST_POSSIBLE
-+	select SSB_PCMCIAHOST
- 	---help---
- 	  Broadcom 43xx PCMCIA device support.
- 
+Volker Braun
 
--- 
 
