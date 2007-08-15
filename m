@@ -1,66 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35204 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49691 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757872AbXHCJnA (ORCPT
+	with ESMTP id S1751986AbXHOKsJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 05:43:00 -0400
-Subject: RE: [ipw3945-devel] chaning mode only when interface down?
+	Wed, 15 Aug 2007 06:48:09 -0400
+Subject: Re: [PATCH 4/4] hostapd: remove PRISM2_PARAM_NEXT_MODE
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "Winkler, Tomas" <tomas.winkler@intel.com>,
-	dragoran <drago01@gmail.com>, linux-wireless@vger.kernel.org,
-	network manager <networkmanager-list@gnome.org>,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1186080675.9527.10.camel@xo-13-A4-25.localdomain>
-References: <C07C4589BE74A34981C3C3525EE1F801024CF2CB@hasmsx412.ger.corp.intel.com>
-	 <1186058047.24230.38.camel@johannes.berg>
-	 <1186080675.9527.10.camel@xo-13-A4-25.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9ZcEdeiMcMw13N9BG3EW"
-Date: Fri, 03 Aug 2007 11:42:57 +0200
-Message-Id: <1186134177.4647.19.camel@johannes.berg>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070815024135.GF1415@jm.kir.nu>
+References: <20070814093254.021041000@sipsolutions.net>
+	 <20070814093410.322846000@sipsolutions.net>
+	 <20070815024135.GF1415@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/VwbmkE/5HO1FJCe0OfP"
+Date: Wed, 15 Aug 2007 12:44:42 +0200
+Message-Id: <1187174682.3998.6.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-9ZcEdeiMcMw13N9BG3EW
+--=-/VwbmkE/5HO1FJCe0OfP
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2007-08-02 at 14:51 -0400, Dan Williams wrote:
+On Tue, 2007-08-14 at 19:41 -0700, Jouni Malinen wrote:
 
-> Well, to be honest none of the drivers before mac80211 required you to
-> down the device to change modes.  But they were mostly fullmac, or
-> half-mac like ipw2x00.  Since mac80211 has only just become useful in
-> the past couple of months for most people, it's not really fair to
-> expect versions of NM that were out before mac80211 landed to play nice
-> with what mac80211 expects, which is different from what other drivers
-> implement.
+> Agreed on 802.11a vs. b/g as long as frequency is used for configuration
+> (as is the case here; channel numbers would not have been unique).
+> Dropping the b vs. g is somewhat unfortunate, though.
 
-True.
+Agreed. I can live with leaving it in.
 
-> Not to say NM shouldn't be fixed for this.  The other problem is that
-> there's really not a good way to determine whether the driver is
-> actually _ready_ after down it and bringing it back up.  You basically
-> have to spin & block until the interface gets IFF_UP set on it again,
-> and even then that's not entirely reliable.
+> Furthermore, frequency may not be unique in future with additional PHY
+> changes. Having option of setting both a "mode" and frequency is a pair
+> is a good way of making sure the design is more future proof in this
+> area.
 
-Not sure I understand? Drivers can fully well block the userspace task
-that is doing the IFF_UP until they're read? bcm43xx does that.
+Agreed as well, the plan for nl80211 was to have the tuple set together.
+I quite dislike the idea of this internal "next_mode" state but I
+suppose it's the best we have now.
+
+However, this is the reason David Woodhouse couldn't get his Broadcom
+based card to work in B mode, hostapd tried to select a B mode channel
+and b43 doesn't offer any since it offers G mode. Should the burden be
+on the driver authors here, or should we somehow select a G channel if B
+isn't available?
 
 johannes
 
---=-9ZcEdeiMcMw13N9BG3EW
+--=-/VwbmkE/5HO1FJCe0OfP
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGsvih/ETPhpq3jKURAnd3AJ0b1+ZmIj2DvxF38U+SrtAAMcbbiwCdE0yV
-omyl0C6VmKq3hHeT11cXrZc=
-=Agz+
+iD8DBQBGwtka/ETPhpq3jKURAmnCAJ9STgIcvfBgJKBEsDYFBQEi02NAfwCgqEBH
+Ao5GtVwp78ATTq//2IL3XG4=
+=GD+p
 -----END PGP SIGNATURE-----
 
---=-9ZcEdeiMcMw13N9BG3EW--
+--=-/VwbmkE/5HO1FJCe0OfP--
 
