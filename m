@@ -1,36 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp136.iad.emailsrvr.com ([207.97.245.136]:41894 "EHLO
-	smtp136.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754304AbXHBWbz (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45979 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763378AbXHOO5v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 18:31:55 -0400
-Message-ID: <46B25B04.5020804@gentoo.org>
-Date: Thu, 02 Aug 2007 18:30:28 -0400
-From: Daniel Drake <dsd@gentoo.org>
-MIME-Version: 1.0
-To: David Woodhouse <dwmw2@infradead.org>
-CC: Larry Finger <larry.finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	Bcm43xx-dev@lists.berlios.de, jbenc@suse.cz,
-	flamingice@sourmilk.net
-Subject: mac80211 IPv6 problems
-References: <46b1fde0.b+weBDN75J0SPe2a%Larry.Finger@lwfinger.net>	 <200708021807.20649.mb@bu3sch.de>  <46B20695.2080100@lwfinger.net> <1186088678.2931.10.camel@pmac.infradead.org>
-In-Reply-To: <1186088678.2931.10.camel@pmac.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 15 Aug 2007 10:57:51 -0400
+Message-Id: <20070815145047.834125000@sipsolutions.net>
+References: <20070815144920.135826000@sipsolutions.net>
+Date: Wed, 15 Aug 2007 16:49:34 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 14/20] mac80211: kill key_mgmt variable, use privacy_enabled
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Woodhouse wrote:
-> My experience is that mac80211 is broken w.r.t IPv6 -- it receives its
-> own packets. It would be suboptimal for me if the softmac version of
-> bcm43xx were to go away before that got fixed.
+The key_mgmt variable for STA interfaces doesn't seem well-defined
+nor do we actually use the values other than "NONE", so change it to
+be named better.
 
-This may be a stack-level issue. This is one of the issues holding back 
-zd1211rw-mac80211 going into mainline: we have a report that 
-zd1211rw-softmac works fine with IPv6 but mac80211 only works 
-occasionally with the same device on the same system.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/hostapd_ioctl.h   |    8 --------
+ net/mac80211/ieee80211_i.h     |    2 +-
+ net/mac80211/ieee80211_ioctl.c |   24 +++++++++---------------
+ net/mac80211/ieee80211_sta.c   |    2 +-
+ 4 files changed, 11 insertions(+), 25 deletions(-)
 
-Does anyone have any ideas?
+--- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-08-15 14:09:54.916516958 +0200
++++ wireless-dev/net/mac80211/ieee80211_i.h	2007-08-15 14:11:55.656516958 +0200
+@@ -277,7 +277,7 @@ struct ieee80211_if_sta {
+ 	unsigned long request;
+ 	struct sk_buff_head skb_queue;
+ 
+-	int key_mgmt;
++	int privacy_enabled;
+ 	unsigned long last_probe;
+ 
+ #define IEEE80211_AUTH_ALG_OPEN BIT(0)
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-15 14:11:49.086516958 +0200
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-15 14:11:55.666516958 +0200
+@@ -2245,22 +2245,16 @@ static int ieee80211_ioctl_siwauth(struc
+ 			ret = -EINVAL;
+ 		else {
+ 			/*
+-			 * TODO: sdata->u.sta.key_mgmt does not match with WE18
+-			 * value completely; could consider modifying this to
+-			 * be closer to WE18. For now, this value is not really
+-			 * used for anything else than Privacy matching, so the
+-			 * current code here should be more or less OK.
++			 * What are the semantics in wext supposed to be?
++			 *
++			 * Don't bother figuring that out... It's wext after
++			 * all so figuring it out will most likely require a
++			 * moderate amount of clairvoyance.
++			 *
++			 * TODO: remove in favour of something well-defined
++			 *       in cfg80211/nl80211.
+ 			 */
+-			if (data->value & IW_AUTH_KEY_MGMT_802_1X) {
+-				sdata->u.sta.key_mgmt =
+-					IEEE80211_KEY_MGMT_WPA_EAP;
+-			} else if (data->value & IW_AUTH_KEY_MGMT_PSK) {
+-				sdata->u.sta.key_mgmt =
+-					IEEE80211_KEY_MGMT_WPA_PSK;
+-			} else {
+-				sdata->u.sta.key_mgmt =
+-					IEEE80211_KEY_MGMT_NONE;
+-			}
++			sdata->u.sta.privacy_enabled = !!data->value;
+ 		}
+ 		break;
+ 	case IW_AUTH_80211_AUTH_ALG:
+--- wireless-dev.orig/net/mac80211/ieee80211_sta.c	2007-08-15 14:08:54.646516958 +0200
++++ wireless-dev/net/mac80211/ieee80211_sta.c	2007-08-15 14:11:55.676516958 +0200
+@@ -1168,7 +1168,7 @@ static int ieee80211_privacy_mismatch(st
+ 	struct ieee80211_sta_bss *bss;
+ 	int res = 0;
+ 
+-	if (!ifsta || ifsta->key_mgmt != IEEE80211_KEY_MGMT_NONE)
++	if (!ifsta || !ifsta->privacy_enabled)
+ 		return 0;
+ 
+ 	bss = ieee80211_rx_bss_get(dev, ifsta->bssid);
+--- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-08-15 14:11:52.406516958 +0200
++++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-08-15 14:11:55.676516958 +0200
+@@ -180,14 +180,6 @@ struct prism2_hostapd_param {
+ 
+ #define HOSTAP_HW_FLAG_NULLFUNC_OK BIT(0)
+ 
+-enum {
+-	IEEE80211_KEY_MGMT_NONE = 0,
+-	IEEE80211_KEY_MGMT_IEEE8021X = 1,
+-	IEEE80211_KEY_MGMT_WPA_PSK = 2,
+-	IEEE80211_KEY_MGMT_WPA_EAP = 3,
+-};
+-
+-
+ /* Data structures used for get_hw_features ioctl */
+ struct hostapd_ioctl_hw_modes_hdr {
+ 	int mode;
 
-Thanks,
-Daniel
+-- 
+
