@@ -1,67 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38538 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51326 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S944388AbXHMLQt (ORCPT
+	with ESMTP id S1752747AbXHOK4o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 07:16:49 -0400
-Subject: Re: [PATCH] hostapd: work with monitor interface
+	Wed, 15 Aug 2007 06:56:44 -0400
+Subject: Re: [PATCH] hostapd: use eapol frames from ethernet device
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
 	Jouni Malinen <j@w1.fi>
-In-Reply-To: <46C0231F.5040605@warmcat.com>
-References: <1186992004.27916.53.camel@johannes.berg>
-	 <46C0231F.5040605@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FXcuVD8yWsMKTBX4tgtm"
-Date: Mon, 13 Aug 2007 13:19:09 +0200
-Message-Id: <1187003949.27916.86.camel@johannes.berg>
+In-Reply-To: <1ba2fa240708141546g4de44ff1v94db00213a3187aa@mail.gmail.com>
+References: <1186789737.4862.3.camel@johannes.berg>
+	 <1186790012.4862.8.camel@johannes.berg>
+	 <1ba2fa240708120358rb22a2f9me1a1020e669406e7@mail.gmail.com>
+	 <1186995104.27916.56.camel@johannes.berg>
+	 <1ba2fa240708130346h6175701cr2daab916afaed00f@mail.gmail.com>
+	 <1187002921.27916.77.camel@johannes.berg>
+	 <1ba2fa240708141546g4de44ff1v94db00213a3187aa@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rp/ZzOCLY2+xqlG3LB2+"
+Date: Wed, 15 Aug 2007 12:58:56 +0200
+Message-Id: <1187175536.3998.21.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-FXcuVD8yWsMKTBX4tgtm
+--=-rp/ZzOCLY2+xqlG3LB2+
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2007-08-13 at 10:23 +0100, Andy Green wrote:
+On Wed, 2007-08-15 at 01:46 +0300, Tomas Winkler wrote:
 
-> Wow impressive amount of ioctl calls going into the bit bucket there...
+> Can you enlighten me and tell me why the monitor interface is
+> preferable over management interface? I've probably got busy and
+> missed the whole conversation.
 
-I think there's only a single ioctl being killed, but all the stuff from
-ieee80211_common.h which is good too. Less crappy userspace interface :)
+Oh, I can name a number of reasons :)
+ * magic needed to conjure it
+ * munged prism2 header that nothing but hostapd/wpa_supplicant
+   understands
+ * special cases all over the code to stuff frames there
 
-> I will try to use your direct BPF programming and also dispense with
-> libpcap tonight, thanks for that.
+> I'm not so familiar with monitor interface but isn't it to be
+> sniffing interface - everything goes up including data raw packets.
 
-There's one gotcha with BPF: the program counter is always increasing so
-you can't have loops, and if you say "jump by 1 instruction" then
-another one is added too. But if you just copy the post-processing code
-you won't have to deal with that :)
+Well, in a way you're right. But please review the recent filter flags
+patches I posted. And I'm using BPF to avoid seeing data frames other
+than those I need.
 
-If you need any help writing a filter for the MAC address you use as the
-special one or something let me know. I'd probably use a 4-byte and a
-2-byte word load and compare to constants; just remember that multi-byte
-word loads do network/host byte order swapping so you'll have to use the
-LE32/LE16 macros for the constants.
+> What if management frames needs decryption? I think this is 802.11w
+> specs that defines that.
 
-This was, incidentally, the reason I didn't use pcap, I couldn't figure
-out if it could handle little-endian loads like my first few
-instructions do.
+I thought radiotap injection could handle that, but it turns out that I
+need to think again, especially about EAPOL frames. I'll address these
+things in a reply to Jouni's mail, but that'll take a bit longer than
+just going through and replying.
 
 johannes
 
---=-FXcuVD8yWsMKTBX4tgtm
+--=-rp/ZzOCLY2+xqlG3LB2+
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGwD4t/ETPhpq3jKURAvJoAJ9aKIm1lqAOADlwCj0k22EpZ7AKtwCbBjY6
-HlkgCSCLy9uUXSwBWGF6j2s=
-=LW/Z
+iD8DBQBGwtxw/ETPhpq3jKURAvShAKCFQYsfGY751vSa94vYsgFXt8d6HACfTiFv
+rJiHH/bp3oUGMpbeaaukXU0=
+=/qJs
 -----END PGP SIGNATURE-----
 
---=-FXcuVD8yWsMKTBX4tgtm--
+--=-rp/ZzOCLY2+xqlG3LB2+--
 
