@@ -1,100 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp166.iad.emailsrvr.com ([207.97.245.166]:45188 "EHLO
-	smtp166.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761930AbXHCW6M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 18:58:12 -0400
-Message-ID: <46B3B2AD.1040509@gentoo.org>
-Date: Fri, 03 Aug 2007 18:56:45 -0400
-From: Daniel Drake <dsd@gentoo.org>
-MIME-Version: 1.0
+Received: from DSL022.labridge.com ([206.117.136.22]:1111 "EHLO perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753998AbXHOBia (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Aug 2007 21:38:30 -0400
+Subject: Re: [PATCH] [121/2many] MAINTAINERS - CFG80211 and NL80211
+From: Joe Perches <joe@perches.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: further plan wrt. monitor interfaces
-References: <1186178959.13315.30.camel@johannes.berg>
-In-Reply-To: <1186178959.13315.30.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Cc: torvalds@linux-foundation.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+In-Reply-To: <1187000365.27916.66.camel@johannes.berg>
+References: <46bff948.otglyA7i5BhTYKIi%joe@perches.com>
+	 <1187000365.27916.66.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 14 Aug 2007 18:37:41 -0700
+Message-Id: <1187141862.32555.184.camel@localhost>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> 1)
-> Define new filter flags
->  * FIF_PROMISC_IN_BSS	(BSS filters still on, but otherwise promisc)
->  * FIF_ALLMULTI		(all multicast frames are allowed through)
->  * FIF_BROADCAST	(broadcast frames are allowed through)
->  * FIF_FCSFAIL		(frames with bad FCS are allowed through)
->  * FIF_PLCPFAIL		(frames with bad PLCP checksum are allowed through)
->  * FIF_CONTROL		(control frames are shown)
->  * FIF_OTHER_BSS	(frames from other BSSes are shown, subject to the
-> 			 other filters)
-> [missing anything?]
+On Mon, 2007-08-13 at 12:19 +0200, Johannes Berg wrote:
+> On Sun, 2007-08-12 at 23:25 -0700, joe@perches.com wrote:
+> > Add file pattern to MAINTAINER entry
+> 
+> > +F:	include/linux/nl80211.h
+> > +F:	include/net/cfg80211.h
+> > +F:	net/wireless/core.*
+> > +F:	net/wireless/sysfs.*
+> > +F:	net/wireless/radiotap.c
+> 
+> I must've missed the original discussion surrounding this,
 
-Incase this wasn't clear to anyone else, the proposal is that we add a 
-bitfield to the set_multicast_list parameters for the above flags. The 
-stack would then 'fabricate' some calls to set_multicast_list.
+Sorry, posted 1/way2many on LK.
+http://lkml.org/lkml/2007/8/13/17
 
-I like the filter flags concept here, but I think this may be better as 
-its own callback, or perhaps we should just rename set_multicast_list to 
-configure_filter or something like that.
+> are these supposed to be regular match patterns?
 
-This also sounds nice to implement from a driver standpoint. After 
-documenting how I feel the soft/hard monitor interfaces should behave 
-should we have such a system, I'm not keen on the idea of actually 
-implementing that.
+More or less.  
+
+> Is there a tool reading it? With
+> this and wireless extensions it'd probably be best to mark cfg80211 as
+> "everything in net/wireless/ but net/wireless/wext*" if possible.
+
+CFG80211 and NL80211
+P:	Johannes Berg
+M:	johannes@sipsolutions.net
+L:	linux-wireless@vger.kernel.org
+S:	Maintained
+F:	include/linux/nl80211.h
+F:	include/net/cfg80211.h
+F:	net/wireless/*
+X:	net/wireless/wext*
 
 
-As for the other problems mentioned in followup mails, how about 
-something like the following:
-
-A new configure_device callback with these parameters:
-  - ieee80211_hw *hw
-  - int state: possible values NOCHANGE, ON, OFF
-  - int filter_flags: FIF_ flags from above
-  - u8 *mac_addr
-
-This would combine the ideas of add_interface, remove_interface and 
-open/stop into one.
-
-state: this would become ON when the first interface is brought up, and 
-would become OFF when the last interface is brought down. For all other 
-calls into this function, state is NOCHANGE
-
-filter_flags: Johannes' proposal above
-
-mac_addr: if NULL, do not do anything. Otherwise, change the device MAC 
-address to the one provided. This may be provided as all-zeros in some 
-situations.
-
-During a fairly standard session, the callback would be called in the 
-following ways:
-
-Device gets plugged in, registers interface. Default managed wlan0 gets 
-created.
-User brings wlan0 up.
-    -> callback called with (hw, ON, default FIF, device MAC)
-    -> driver powers up device, sets mac address and filtering
-User creates new additional monitor interface and brings it up
-    -> callback called with (hw, NOCHANGE, new FIF, NULL)
-    -> driver changes filtering params
-User deletes managed interface (wlan0)
-    -> callback called with(hw, NOCHANGE, maybe new FIF?, 0x000000000000)
-    -> driver changes filtering params and writes zero mac addr
-User deletes monitor interface
-    -> callback called with (hw, OFF, dontcare, dontcare)
-    -> driver powers down device
-
-After thinking through the above, I wonder if we should also roll 
-config_interface into this: also pass in a BSSID for RX filtering 
-purposes (or NULL of no change required).
-
-Also I was wanting to add communication from mac80211 to the driver 
-about supported rates in the ESS (softmac does this, zd1211rw uses this 
-info). This would also fall in the same category. And maybe we should 
-add the multicast list above too.
-
-I feel the above would make life fairly easy for drivers, or am I 
-over-designing this? Perhaps I am also missing some considerations for 
-IBSS/AP mode...
-
-Daniel
