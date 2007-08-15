@@ -1,57 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:22883 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S969319AbXHMPul (ORCPT
+Received: from mail7.sea5.speakeasy.net ([69.17.117.9]:40872 "EHLO
+	mail7.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756585AbXHODuL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 11:50:41 -0400
-From: Michael Wu <flamingice@sourmilk.net>
+	Tue, 14 Aug 2007 23:50:11 -0400
+Date: Tue, 14 Aug 2007 20:49:09 -0700
+From: Jouni Malinen <j@w1.fi>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCHv2] mac80211: dynamic wep
-Date: Mon, 13 Aug 2007 08:48:52 -0700
-Cc: Volker Braun <volker.braun@physik.hu-berlin.de>,
-	linux-wireless@vger.kernel.org, Jiri Benc <jbenc@suse.cz>
-References: <pan.2007.08.10.23.31.32@physik.hu-berlin.de> <200708130054.57899.flamingice@sourmilk.net> <1186995283.27916.60.camel@johannes.berg>
-In-Reply-To: <1186995283.27916.60.camel@johannes.berg>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/4] hostapd: remove enable/disable calls
+Message-ID: <20070815034909.GL1415@jm.kir.nu>
+References: <20070814093254.021041000@sipsolutions.net> <20070814093408.541566000@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2397490.8UWUZAqrst";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200708130848.53128.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070814093408.541566000@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2397490.8UWUZAqrst
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Tue, Aug 14, 2007 at 11:32:55AM +0200, Johannes Berg wrote:
+> This isn't really useful since mac80211 always enables the radio
+> when the interface is brought up.
 
-On Monday 13 August 2007 01:54, Johannes Berg wrote:
-> On Mon, 2007-08-13 at 00:54 -0700, Michael Wu wrote:
-> > This part seems fairly evil. I suspect a better solution here is to allow
-> > unencrypted frames when the interface is dormant (netif_dormant()) and
-> > then we might be able to get rid of the specific check for WEP.
->
-> Might that address Tomas's concern with EAPOL too?
->
-Nope, this is just for the privacy mismatch check.
+Thanks, applied. I think this parameter was originally used (with
+another name, though) for disabling the radio when a radar was detected.
+The benefit of being able to do this without bringing down the interface
+was to not lose IP configuration. Anyway, the radar stuff is very likely
+to take a different direction, so getting rid of this parameter should
+be fine.
 
--Michael Wu
-
---nextPart2397490.8UWUZAqrst
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGwH1lT3Oqt9AH4aERAhmYAJwNrRSaOVeP37US8Tahuac36YJ/ZwCgyieL
-1imMIGp8WMDNLEzI9NefsAU=
-=egPA
------END PGP SIGNATURE-----
-
---nextPart2397490.8UWUZAqrst--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Jouni Malinen                                            PGP id EFC895FA
