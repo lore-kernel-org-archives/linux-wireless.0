@@ -1,72 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50891 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49627 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754219AbXH3M4I (ORCPT
+	with ESMTP id S1752885AbXHOKqX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 08:56:08 -0400
-Subject: [FYI] b43 vulnerable to CCMP replay attacks
+	Wed, 15 Aug 2007 06:46:23 -0400
+Subject: Re: Kernel BUG when using ad-hoc mode in rt2x00
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Michael Buesch <mb@bu3sch.de>,
-	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GLnu+dLsBqIaynHSRrlW"
-Date: Thu, 30 Aug 2007 14:57:16 +0200
-Message-Id: <1188478636.2963.26.camel@johannes.berg>
+To: Adam Baker <linux@baker-net.org.uk>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <200708082324.17186.linux@baker-net.org.uk>
+References: <200708082324.17186.linux@baker-net.org.uk>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7iTYzVQy7K8LnaEXtTW9"
+Date: Wed, 15 Aug 2007 11:50:43 +0200
+Message-Id: <1187171443.3960.6.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-GLnu+dLsBqIaynHSRrlW
+--=-7iTYzVQy7K8LnaEXtTW9
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-b43 contains the following code (with - because I copied it from a patch
-I have that removes it):
+On Wed, 2007-08-08 at 23:24 +0100, Adam Baker wrote:
 
--                       if (skb->data[wlhdr_len + 3] & (1 << 5)) {
--                               /* The Ext-IV Bit is set in the "KeyID"
--                                * octet of the IV.
--                                */
--                               iv_len =3D 8;
--                               icv_len =3D 8;
--                       } else {
--                               iv_len =3D 4;
--                               icv_len =3D 4;
--                       }
--                       if (unlikely(skb->len < (wlhdr_len + iv_len + icv_l=
-en))) {
--                               b43dbg(dev->wl,
--                                      "RX: Packet size underrun (4)\n");
--                               goto drop;
--                       }
--                       /* Remove the IV */
--                       memmove(skb->data + iv_len, skb->data, wlhdr_len);
--                       skb_pull(skb, iv_len);
--                       /* Remove the ICV */
--                       skb_trim(skb, skb->len - icv_len);
+> a) If anyone can see anything obvious wrong in the trace
+> b) If anyone has recently tested ad-hoc mode with another driver and can=20
+> confirm it works.
 
-This means that it is vulnerable to CCMP replay attacks when hardware
-crypto is used because the hardware doesn't verify the CCMP PN and
-mac80211 cannot.
+Neither.
 
-The patch quoted above fixes this but does a bunch of changes in
-mac80211 too and needs to get some review. I hope we can get to that
-before 2.6.24 so that b43 can finally go mainline.
+> The sequence of events that leads to the crash is
+> iwconfig wlan1 mode ad-hoc
+> ifconfig wlan1 192.168.0.230
+> iwconfig wlan1 channel 11
+> iwconfig wlan1 essid test
+>=20
+> then attempt a scan from another device.=20
+
+Very weird. Can you please enable verbose debugging and also add a few
+printks to various lines of the code in ieee80211_tx_h_multicast_ps_buf
+and ieee80211_tx_h_unicast_ps_buf? Both ought to be fine as far as I can
+tell and the STA scanning shouldn't be in powersave mode either so this
+is a bit strange.
 
 johannes
 
---=-GLnu+dLsBqIaynHSRrlW
+--=-7iTYzVQy7K8LnaEXtTW9
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBG1r6s/ETPhpq3jKURAiEvAKCdEws5ys+MZApB3JoWvUCp6JPqAgCeLjAE
-uKPpYNoSs9R86pkmYNc0snY=
-=f6oq
+iD8DBQBGwsxz/ETPhpq3jKURAvfFAJ9KXDLSUIOUyvg/g/GEflNINPvdSwCeP5wa
+pkVvfg1tAzYZv9MM0noipvA=
+=vtU2
 -----END PGP SIGNATURE-----
 
---=-GLnu+dLsBqIaynHSRrlW--
+--=-7iTYzVQy7K8LnaEXtTW9--
 
