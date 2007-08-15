@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:44539
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754496AbXHXKSn (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51423 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751966AbXHOK7o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2007 06:18:43 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [patch 6/6] b43: New firmware file format
-Date: Fri, 24 Aug 2007 12:17:21 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <20070818234833.623623000@bu3sch.de> <20070821201336.GA5313@tuxdriver.com> <1187902186.8363.7.camel@johannes.berg>
-In-Reply-To: <1187902186.8363.7.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200708241217.22209.mb@bu3sch.de>
+	Wed, 15 Aug 2007 06:59:44 -0400
+Subject: patch mess
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, jbenc@suse.cz,
+	flamingice@sourmilk.net
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-a9NrhMzKHaewrmUFHXzj"
+Date: Wed, 15 Aug 2007 13:02:22 +0200
+Message-Id: <1187175742.3998.25.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 23 August 2007 22:49:46 Johannes Berg wrote:
-> On Tue, 2007-08-21 at 16:13 -0400, John W. Linville wrote:
-> 
-> > > otherwise it oopses when the file can't be loaded.
-> > 
-> > ACK...here is a patch, in case you are lazy... :-)
-> 
-> Any reason you didn't push this fix this along with the patch?
 
-Hm? This fix is on its way into the tree.
+--=-a9NrhMzKHaewrmUFHXzj
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+Hey,
 
--- 
-Greetings Michael.
+It seems I've made quite a mess with patches interdependent on hostapd
+and kernel patches.
+
+Please drop all my patches for now.
+
+Now that Jouni has merged a bunch of my patches I'll be going through
+later today and will repost those that can be applied now because the
+corresponding patches to hostapd have been merged, and I'll hold the
+other ones. Then I'll rebase the other ones and post them as RFC again.
+
+Review would still be appreciated :) I have, however, found a few minor
+bugs in some patches that I've fixed too.
+
+johannes
+
+--=-a9NrhMzKHaewrmUFHXzj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGwt0+/ETPhpq3jKURAngQAJ9TDd1Ab4710uRNoNQXZSm0mn64rACgki1E
+phvqDmFRGtesHxMcEp2wOAY=
+=JOkZ
+-----END PGP SIGNATURE-----
+
+--=-a9NrhMzKHaewrmUFHXzj--
+
