@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:34241 "EHLO
-	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S969653AbXHMUaE (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59975 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760652AbXHOPBX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 16:30:04 -0400
-Date: Mon, 13 Aug 2007 15:29:24 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 15 Aug 2007 11:01:23 -0400
+Message-Id: <20070815145046.815119000@sipsolutions.net>
+References: <20070815144920.135826000@sipsolutions.net>
+Date: Wed, 15 Aug 2007 16:49:32 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH V2] mac80211: Turn off meaningless TKIP message when  software WEP encryption is used
-Message-ID: <46c0bf24.1Ueh57Fe7+ymCjRS%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>
+Subject: [PATCH 12/20] mac80211: fix preamble setting
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For drivers that do no hardware encryption/decryption, WEP encryption
-works as long as IEEE80211_HW_INCLUDE_IV is not set in the flags variable.
-With WPA encryption and IEEE80211_HW_INCLUDE_IV not set, the logs are full
-of TKIP decrypt failure messages. Despite the messages, RX is working.
-This patch turns off the message for this case.
+It looks like in commit 28487a90 the condition was unintentionally
+negated by moving some code, fix it.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Daniel Drake <dsd@gentoo.org>
+
 ---
+ net/mac80211/ieee80211_ioctl.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- wpa.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
-Index: wireless-legacy/net/mac80211/wpa.c
-===================================================================
---- wireless-legacy.orig/net/mac80211/wpa.c
-+++ wireless-legacy/net/mac80211/wpa.c
-@@ -516,9 +516,12 @@ ieee80211_rx_h_tkip_decrypt(struct ieee8
- 					  skb->len - hdrlen, rx->sta->addr,
- 					  hwaccel, rx->u.rx.queue);
- 	if (res != TKIP_DECRYPT_OK || wpa_test) {
--		printk(KERN_DEBUG "%s: TKIP decrypt failed for RX frame from "
--		       MAC_FMT " (res=%d)\n",
--		       rx->dev->name, MAC_ARG(rx->sta->addr), res);
-+		if ((rx->local->hw.flags & IEEE80211_HW_WEP_INCLUDE_IV)
-+		     & net_ratelimit()) {
-+			printk(KERN_DEBUG "%s: TKIP decrypt failed for RX frame from "
-+			       MAC_FMT " (res=%d)\n",
-+			       rx->dev->name, MAC_ARG(rx->sta->addr), res);
-+		}
- 		return TXRX_DROP;
- 	}
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-15 13:39:52.366520121 +0200
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-15 13:39:52.926520121 +0200
+@@ -1962,7 +1962,7 @@ static int ieee80211_ioctl_prism2_param(
+ 		break;
  
+ 	case PRISM2_PARAM_PREAMBLE:
+-		if (sdata->type != IEEE80211_IF_TYPE_AP) {
++		if (sdata->type == IEEE80211_IF_TYPE_AP) {
+ 			sdata->short_preamble = !!value;
+ 			ieee80211_erp_info_change_notify(dev, IEEE80211_ERP_CHANGE_PREAMBLE);
+ 		} else {
+
+-- 
+
