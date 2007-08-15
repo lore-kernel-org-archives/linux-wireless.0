@@ -1,70 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.versatel.nl ([62.58.50.89]:41466 "EHLO smtp2.versatel.nl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754566AbXHMF6M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 01:58:12 -0400
-Message-ID: <46BFF10B.1090307@hhs.nl>
-Date: Mon, 13 Aug 2007 07:50:03 +0200
-From: Hans de Goede <j.w.r.degoede@hhs.nl>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: flamingice@sourmilk.net, Hans de Goede <j.w.r.degoede@hhs.nl>
-Subject: Recent linux-wireless git changes have broken my prism54pci card
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45535 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754925AbXHOMWK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Aug 2007 08:22:10 -0400
+Subject: [PATCH v2] hostapd: remove vlan stuff
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1187131269.31200.3.camel@johannes.berg>
+References: <1187131269.31200.3.camel@johannes.berg>
+Content-Type: text/plain
+Date: Wed, 15 Aug 2007 14:24:49 +0200
+Message-Id: <1187180689.3998.41.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+This removes the VLAN stuff from hostapd.
 
-I first reported this in Fedora bugzilla, as I'm using Fedora with a Fedora 
-kernel (which includes recent  linux-wireless git snapshots), see here for the 
-Fedora bugreport:
-https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=249823
+The VLAN stuff in mac80211 cannot possibly work, it doesn't actually do
+anything with those VLAN type interfaces. Also, when I added the VLAN
+type to cfg80211 I must have been rather convinced of the idea; I no
+longer am in favour of doing it in the wireless stack. The recently
+added "macvlan" "driver" shows how you can do VLANs based on destination
+address, what we will need is something like "smacvlan" that does VLANs
+based on source address.
 
-Updating from the Fedora 7 test kernel to the final results in very poor 
-performance, and going to even newer versions of the Fedora kernel totally 
-breaks connectivity. Linville thought it would be best to further discuss this 
-here, so here I am.
-
-I've looked at recent git commits to the prism54 / p54pci driver and have been 
-trying it revision by revision, eventually I've managed to pin the cause down 
-to 2 patches, below is a verbatim cut and paste from the bugzilla entry, 
-containing my analysis:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
 ---
+Rediffed to apply just on top of the eloop fix I just sent and not
+require any other patches.
 
-I've been busy researching this and I have come to the
-following conclusions.
+ hostapd/ChangeLog            |    2 ++
+ hostapd/driver_devicescape.c |   18 ------------------
+ 2 files changed, 2 insertions(+), 18 deletions(-)
 
-1) with the 2.6.20-2something F7-test kernel everything works fine build date
-    3 march, I can give you the exact revision if you want.
+--- hostap.orig/hostapd/driver_devicescape.c	2007-08-15 14:21:37.000000000 +0200
++++ hostap/hostapd/driver_devicescape.c	2007-08-15 14:21:58.000000000 +0200
+@@ -972,8 +972,6 @@ static int i802_set_short_slot_time(void
+ static int i802_if_type(enum hostapd_driver_if_type type)
+ {
+ 	switch (type) {
+-	case HOSTAPD_IF_VLAN:
+-		return HOSTAP_IF_VLAN;
+ 	case HOSTAPD_IF_WDS:
+ 		return HOSTAP_IF_WDS;
+ 	}
+@@ -1141,21 +1139,6 @@ static struct hostapd_hw_modes * i802_ge
+ }
+ 
+ 
+-static int i802_set_sta_vlan(void *priv, const u8 *addr, const char *ifname,
+-			     int vlan_id)
+-{
+-	struct i802_driver_data *drv = priv;
+-	struct prism2_hostapd_param param;
+-
+-	memset(&param, 0, sizeof(param));
+-	param.cmd = PRISM2_HOSTAPD_SET_STA_VLAN;
+-	memcpy(param.sta_addr, addr, ETH_ALEN);
+-	os_strlcpy(param.u.set_sta_vlan.vlan_name, ifname, IFNAMSIZ);
+-	param.u.set_sta_vlan.vlan_id = vlan_id;
+-	return hostapd_ioctl(drv, &param, sizeof(param));
+-}
+-
+-
+ static void handle_data(struct hostapd_data *hapd, u8 *buf, size_t len,
+ 			u16 stype, struct ieee80211_frame_info *fi)
+ {
+@@ -2000,5 +1983,4 @@ const struct wpa_driver_ops wpa_driver_d
+ 	.if_update = i802_if_update,
+ 	.if_remove = i802_if_remove,
+ 	.get_hw_feature_data = i802_get_hw_feature_data,
+-	.set_sta_vlan = i802_set_sta_vlan,
+ };
+--- hostap.orig/hostapd/ChangeLog	2007-08-15 14:21:37.000000000 +0200
++++ hostap/hostapd/ChangeLog	2007-08-15 14:21:37.000000000 +0200
+@@ -16,6 +16,8 @@ ChangeLog for hostapd
+ 	  either need to support this or will have to use the WPA/RSN IEs from
+ 	  hostapd; currently, the included madwifi and bsd driver interfaces do
+ 	  not have support for this)
++	* removed VLAN support from devicescape driver, the kernel isn't up
++	  to it and it need not live in the wireless stack at all.
+ 
+ 2007-05-28 - v0.6.0
+ 	* added experimental IEEE 802.11r/D6.0 support
 
-2) with the fc release kerkel (3194) things work, but the connection is often lost.
 
-3) with the 2.6.23-0.49.rc1.git3.fc8, the card asociates and thats it.
-
-Using wireless git and out of tree driver building I've found that the following
-2 patches are the culprits:
-
-Patch causing loose off connection within seconds when fully loading the link
-with a local file transfer:
-http://bu3sch.de/gitweb?p=wireless-dev.git;a=commitdiff;h=62ee473d67b7ae353d210b186abaadc37a642237
-
-Only associating and nothing else:
-http://bu3sch.de/gitweb?p=wireless-dev.git;a=commitdiff;h=7d59453a9dbe50dc9bab846c410e39f8d5b10c83
-And then specifically the changes to prism54common.c
-
-This is with an isl3886 cardbus card, using the p54pci driver.
-
-----
-
-I would be more then happy to test any changes.
-
-Thanks & Regards,
-
-Hans
-
-
-p.s.
-
-Please keep my CC-ed I'm not on the list.
