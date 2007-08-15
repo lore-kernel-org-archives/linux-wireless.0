@@ -1,56 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44976 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764785AbXHXKJH (ORCPT
+Received: from mail5.sea5.speakeasy.net ([69.17.117.7]:33637 "EHLO
+	mail5.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755990AbXHOD2I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2007 06:09:07 -0400
-Subject: Re: [RFC 06/11] mac80211: remove HW_KEY_IDX_INVALID
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200708232301.17562.mb@bu3sch.de>
-References: <20070823164500.998912000@sipsolutions.net>
-	 <20070823164523.418272000@sipsolutions.net>
-	 <200708232301.17562.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WFzpXERsSEZcMwJhjTmW"
-Date: Fri, 24 Aug 2007 12:09:02 +0200
-Message-Id: <1187950142.24933.5.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 14 Aug 2007 23:28:08 -0400
+Date: Tue, 14 Aug 2007 20:27:01 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ed Howland <ed.howland@gmail.com>,
+	David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH] hostapd: make it work on the latest kernel
+Message-ID: <20070815032701.GH1415@jm.kir.nu>
+References: <1186780805.17351.3.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1186780805.17351.3.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Aug 10, 2007 at 11:20:05PM +0200, Johannes Berg wrote:
+> i802_if_update isn't actually used so remove all code from it, add
+> ieee80211_msg_passive_scan as our own constant and #if 0 more code in
+> handle_frame()
 
---=-WFzpXERsSEZcMwJhjTmW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks, applied. I think that if_update handler can disappear completely
+since it was only used in code that was not merged into the hostapd
+releases and I don't have plans on merging it in the future. Similarly,
+ieee80211_msg_passive_scan should just go away and like the #if 0'ed
+blocks (or at least most of them).
 
-On Thu, 2007-08-23 at 23:01 +0200, Michael Buesch wrote:
-> On Thursday 23 August 2007 18:45:07 Johannes Berg wrote:
-> > longer relies on HW_KEY_IDX_INVALID either this removes it, changes
-> > the key index to be an integer in all places and makes the full
-> > range of the value available to drivers.
->=20
-> Why's that needed? It increases the tx control struct size,
-> which is created and destroyed with every packet.
-> Isn't 127 keys enough? If not, probably do a s16. But I think
-> an int if overkill.
+Since there are number of pending patches to driver_devicescape.c, I'll
+postpone some of the additional cleanup for now, but this will likely
+happen once I've had chance of getting through the queue.
 
-Ah, but it's an int in the key_conf structure. I'm fine with making it a
-u8 in both places too.
-
-johannes
-
---=-WFzpXERsSEZcMwJhjTmW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGzq4+/ETPhpq3jKURApplAKCBqzVMuddz6Eb4yCD8gZ0eDy5bQwCfZmIy
-1ds7OHzSz8DeFDVGrivCMGE=
-=LL3T
------END PGP SIGNATURE-----
-
---=-WFzpXERsSEZcMwJhjTmW--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
