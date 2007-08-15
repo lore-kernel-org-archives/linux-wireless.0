@@ -1,30 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:39061
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751064AbXHSMRo (ORCPT
+Received: from mail8.sea5.speakeasy.net ([69.17.117.10]:50925 "EHLO
+	mail8.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754826AbXHOCmi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Aug 2007 08:17:44 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: Lock problem with latest b43 patches
-Date: Sun, 19 Aug 2007 14:16:25 +0200
-Cc: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-References: <46C7CACC.2000000@lwfinger.net>
-In-Reply-To: <46C7CACC.2000000@lwfinger.net>
+	Tue, 14 Aug 2007 22:42:38 -0400
+Date: Tue, 14 Aug 2007 19:41:35 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 4/4] hostapd: remove PRISM2_PARAM_NEXT_MODE
+Message-ID: <20070815024135.GF1415@jm.kir.nu>
+References: <20070814093254.021041000@sipsolutions.net> <20070814093410.322846000@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200708191416.26192.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070814093410.322846000@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 19 August 2007 06:45:00 Larry Finger wrote:
-> Using the latest set of 6 patches posted about 5 hours ago, I get the following locking problem with 
-> a BCM4311 using WPA-PSK TKIP encryption controlled by NetworkManager:
+On Tue, Aug 14, 2007 at 11:32:58AM +0200, Johannes Berg wrote:
+> 802.11 A is easily distinguishable based on frequency, and the difference
+> between 802.11B/G isn't really done well in mac80211 with most 802.11G
+> drivers supporting only 802.11G channels and no B channels
 
-Are you sure this is caused by my patches? I don't see how that's possible.
-How to reproduce?
+Agreed on 802.11a vs. b/g as long as frequency is used for configuration
+(as is the case here; channel numbers would not have been unique).
+Dropping the b vs. g is somewhat unfortunate, though.
+
+> What reason is there anyway for distinguishing between an 802.11G and an
+> 802.11B channel? Regulatory? In that case, well, needs lots of work.
+
+The original reason for adding that was that some hardware designs have
+separate modes for 802.11b and 802.11g and there may be cases where the
+802.11b mode would be preferred. I'm not sure about all the differences
+in hardware, but I would assume this could include power use (save power
+by being able to use slower internal frequency since there is less
+things to do and by disabling some functionality) and maybe in some
+cases just the fact of disabling all non-802.11b extensions.
+
+Furthermore, frequency may not be unique in future with additional PHY
+changes. Having option of setting both a "mode" and frequency is a pair
+is a good way of making sure the design is more future proof in this
+area.
 
 -- 
-Greetings Michael.
+Jouni Malinen                                            PGP id EFC895FA
