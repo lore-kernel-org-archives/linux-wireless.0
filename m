@@ -1,91 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:49426 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757213AbXH2NiU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2007 09:38:20 -0400
-Subject: Re: mac80211 problems
-From: Dan Williams <dcbw@redhat.com>
-To: Jesse Shaver <J_shaver@comcast.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200708281025.50899.J_shaver@comcast.net>
-References: <200708281025.50899.J_shaver@comcast.net>
-Content-Type: text/plain; charset=utf-8
-Date: Wed, 29 Aug 2007 09:32:51 -0400
-Message-Id: <1188394371.18746.3.camel@xo-13-A4-25.localdomain>
-Mime-Version: 1.0
+Received: from ranger.systems.pipex.net ([62.241.162.32]:41085 "EHLO
+	ranger.systems.pipex.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755319AbXHOVtN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Aug 2007 17:49:13 -0400
+From: Adam Baker <linux@baker-net.org.uk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Kernel BUG when using ad-hoc mode in rt2x00
+Date: Wed, 15 Aug 2007 22:49:09 +0100
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	rt2400-devel@lists.sourceforge.net
+References: <200708082324.17186.linux@baker-net.org.uk> <1187171443.3960.6.camel@johannes.berg>
+In-Reply-To: <1187171443.3960.6.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200708152249.09948.linux@baker-net.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-08-28 at 10:25 -0400, Jesse Shaver wrote:
-> Hello All;
-> I am sorry for bothering this dev list with this question, but I can'=
-t seem to=20
-> find an answer anywhere else...
->=20
-> I am trying to get my Intel 4965AGN wireless to work under SuSE 10.2 =
-(64bit)=20
-> no a Lenovo X61 Core duo 2. I am trying to build mac80211 for it, but=
- am=20
-> getting errors.=20
->=20
-> my kernel is:
-> hayden:~/mac80211-9.0.4 # uname -a
-> Linux hayden 2.6.18.8-0.5-default #1 SMP Fri Jun 22 12:17:53 UTC 2007=
- x86_64=20
-> x86_64 x86_64 GNU/Linux
->=20
-> The error I get is:
->=20
-> net/mac80211/ieee80211_sta.c: In function =E2=80=98sta_process_csa=E2=
-=80=99:
-> net/mac80211/ieee80211_sta.c:2546: warning: format =E2=80=98%d=E2=80=99=
- expects type =E2=80=98int=E2=80=99,=20
-> but argument 2 has type =E2=80=98size_t=E2=80=99
+On Wednesday 15 August 2007 10:50, Johannes Berg wrote:
+> On Wed, 2007-08-08 at 23:24 +0100, Adam Baker wrote:
+> > a) If anyone can see anything obvious wrong in the trace
+> > b) If anyone has recently tested ad-hoc mode with another driver and can
+> > confirm it works.
+>
+> Neither.
+>
+> > The sequence of events that leads to the crash is
+> > iwconfig wlan1 mode ad-hoc
+> > ifconfig wlan1 192.168.0.230
+> > iwconfig wlan1 channel 11
+> > iwconfig wlan1 essid test
+> >
+> > then attempt a scan from another device.
+>
+> Very weird. Can you please enable verbose debugging and also add a few
+> printks to various lines of the code in ieee80211_tx_h_multicast_ps_buf
+> and ieee80211_tx_h_unicast_ps_buf? Both ought to be fine as far as I can
+> tell and the STA scanning shouldn't be in powersave mode either so this
+> is a bit strange.
+>
 
-The '%d' here should probably be a '%z' or a '%p' if it's a pointer.
+Today the most reliable way to crash it seems to be to start a scan locally,
+i.e. iwlist wlan1 scan rather than from a different machine. I've appied Ivo's
+patch and enabled 
+CONFIG_MAC80211_VERBOSE_DEBUG=y
+CONFIG_MAC80211_VERBOSE_PS_DEBUG=y
+and I then see in syslog shortly before the crash
 
->   CC [M]  net/mac80211/ieee80211_iface.o
->   CC [M]  net/mac80211/ieee80211_rate.o
->   CC [M]  net/mac80211/michael.o
->   CC [M]  net/mac80211/regdomain.o
->   CC [M]  net/mac80211/tkip.o
->   CC [M]  net/mac80211/aes_ccm.o
->   CC [M]  net/mac80211/wme.o
->   CC [M]  net/mac80211/ieee80211_cfg.o
->   CC [M]  net/mac80211/ieee80211_led.o
->   CC [M]  net/mac80211/debugfs.o
-> net/mac80211/debugfs.c: In function =E2=80=98mac80211_open_file_gener=
-ic=E2=80=99:
-> net/mac80211/debugfs.c:28: error: =E2=80=98struct inode=E2=80=99 has =
-no member=20
-> named =E2=80=98i_private=E2=80=99
+I guess this is indicating something is attempting to power save when it shouldn't
+so that gives me a clue where to try adding printk's
 
-Seems like a kernel/mac80211 mismatch?  What kernel are you using, and
-where are you getting your mac80211 from?  This probably means you're
-using a quite-recent mac80211 with an older kernel and stuff has
-changed.
-
-Dan
-
-> make[2]: *** [net/mac80211/debugfs.o] Error 1
-> make[1]: *** [net/mac80211] Error 2
-> make: *** [net] Error 2
->=20
-> I do have some programming background, but very little in C/C++ and o=
-nly=20
-> limited kernel compiling experience.
->=20
-> thanks for any help you can give, sorry to bother you all.
->=20
-> -Jesse Shaver
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
-ess" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Aug 15 22:28:20 gromit kernel: [  286.592323] wlan1: Creating new IBSS network, BSSID 2a:3f:11:b4:62:c9
+Aug 15 22:28:20 gromit kernel: [  286.593514] HW CONFIG: channel=11 freq=2462 phymode=3
+Aug 15 22:28:20 gromit kernel: [  286.607980] wlan1: Configured IBSS beacon template based on scan results
+Aug 15 22:28:40 gromit kernel: [  306.008510] wmaster0: Adding new IBSS station 00:19:4f:9e:b8:ba (dev=wlan1)
+Aug 15 22:28:40 gromit kernel: [  306.008693] wmaster0: Added STA 00:19:4f:9e:b8:ba
+Aug 15 22:28:40 gromit kernel: [  306.008742] wlan1: STA 00:19:4f:9e:b8:ba aid 0 enters power save mode
+Aug 15 22:28:42 gromit kernel: [  308.022518] wlan1: STA 00:19:4f:9e:b8:ba aid 0 exits power save mode
+Aug 15 22:28:44 gromit kernel: [  309.966798] wlan1: STA 00:19:4f:9e:b8:ba aid 0 enters power save mode
