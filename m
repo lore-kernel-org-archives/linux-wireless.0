@@ -1,57 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44377 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39348 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758815AbXH3Lzs (ORCPT
+	with ESMTP id S1753989AbXHON2e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 07:55:48 -0400
-Subject: Re: mac80211 AP mode powersaving problems?
+	Wed, 15 Aug 2007 09:28:34 -0400
+Subject: Re: [PATCH V3] mac80211: Turn off meaningless TKIP message when   software WEP encryption is used
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <Kalle.Valo@nokia.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <877inev2bd.fsf@nokia.com>
-References: <1186990509.27916.38.camel@johannes.berg>
-	 <87lkccf30m.fsf@tikku.osso.net> <1187270479.5141.44.camel@johannes.berg>
-	 <87643f4kkh.fsf@nokia.com> <1187275344.23489.6.camel@johannes.berg>
-	 <871wdphsus.fsf@nokia.com> <1188290911.7837.65.camel@johannes.berg>
-	 <87absbsz5f.fsf@nokia.com> <1188299159.7837.96.camel@johannes.berg>
-	 <87sl63prsg.fsf@nokia.com> <1188349109.7837.147.camel@johannes.berg>
-	 <877inev2bd.fsf@nokia.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iTGaw/q7DRACwiWfcqgb"
-Date: Thu, 30 Aug 2007 13:55:32 +0200
-Message-Id: <1188474932.2963.9.camel@johannes.berg>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <46C2FCAB.6090607@lwfinger.net>
+References: <46c0d788.GYQYqGfCBKyAWrg7%Larry.Finger@lwfinger.net>
+	 <1187136960.31200.37.camel@johannes.berg>  <46C2FCAB.6090607@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1j7F9AG1yo04z6va/X8m"
+Date: Wed, 15 Aug 2007 15:30:57 +0200
+Message-Id: <1187184657.27608.1.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-iTGaw/q7DRACwiWfcqgb
+--=-1j7F9AG1yo04z6va/X8m
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
+On Wed, 2007-08-15 at 08:16 -0500, Larry Finger wrote:
 
-> Applied 055-b43-timb-position.patch and 057-b43-mcast.patch to commit
-> 0347a7c86f. Multicast is buffered correctly and N800 sees them. Also
-> DTIM count and multicast bit are now correct in beacons.
+> AFAIK, I'm using WPA-PSK TKIP. My AP is a Linksys WRT54G V5. On the "Wire=
+less Security" page, I have=20
+> selected "WPA Personal" for the security mode and TKIP for the WPA algori=
+thm. On my laptop, the=20
+> connection is managed by NetworkManager. My key is stored in Kwallet and =
+is supplied automatically,=20
+> but NM asked for a WPA passphrase when I set it up.
 
-Good. However, it appears that in STA mode we need to enqueue multicast
-frames to queue 1 as well, not 4, so the patches aren't exactly correct.
+Ok.
+=20
+> That is certainly possible, either in my network or that of my neighbors.=
+ A network list shows 5=20
+> APs, two of which are mine. Only the AP in question is using WPA, 3 are u=
+sing WEP, and one is=20
+> unencrypted.=20
+
+I don't think the other networks should matter, at least if we got the
+BSSID filtering right.
+
+> I'm collecting a packet dump now using Kismet - I don't run X on my secon=
+d laptop as it=20
+> has too little memory and is slow besides. I'll send you that file off-li=
+st. I have filtered out=20
+> beacons. I hope that is OK.
+
+Sounds great, I'll take a look at it then.
 
 johannes
 
---=-iTGaw/q7DRACwiWfcqgb
+--=-1j7F9AG1yo04z6va/X8m
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBG1rA0/ETPhpq3jKURAnEBAJ40Sj8SxA/kArtj6RpJZ958gdGO0ACfSvhJ
-UHq5YeyFEGG10MxTyGPS4PU=
-=UEpW
+iD8DBQBGwwAR/ETPhpq3jKURAuIOAKCE3hOuYcCasczNvuTRSG3E4PbyDgCcC65f
+Lhr5p2S1MOqBFAFmXEF1w5E=
+=FHGT
 -----END PGP SIGNATURE-----
 
---=-iTGaw/q7DRACwiWfcqgb--
+--=-1j7F9AG1yo04z6va/X8m--
 
