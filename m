@@ -1,56 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35257 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752787AbXH1IrU (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:38768 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752810AbXHPEu5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2007 04:47:20 -0400
-Subject: Re: mac80211 AP mode powersaving problems?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <Kalle.Valo@nokia.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <871wdphsus.fsf@nokia.com>
-References: <1186990509.27916.38.camel@johannes.berg>
-	 <87lkccf30m.fsf@tikku.osso.net> <1187270479.5141.44.camel@johannes.berg>
-	 <87643f4kkh.fsf@nokia.com> <1187275344.23489.6.camel@johannes.berg>
-	 <871wdphsus.fsf@nokia.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mSO3Z48VvBezWBh+yw6m"
-Date: Tue, 28 Aug 2007 10:48:31 +0200
-Message-Id: <1188290911.7837.65.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 16 Aug 2007 00:50:57 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 17/20] mac80211: avoid copying packets to interfaces that are down
+Date: Wed, 15 Aug 2007 21:48:53 -0700
+Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
+	linux-wireless@vger.kernel.org
+References: <20070815144920.135826000@sipsolutions.net> <20070815145048.965414000@sipsolutions.net>
+In-Reply-To: <20070815145048.965414000@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1623326.xXRjpqutYi";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200708152148.58436.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-mSO3Z48VvBezWBh+yw6m
-Content-Type: text/plain
+--nextPart1623326.xXRjpqutYi
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Mon, 2007-08-27 at 18:58 +0300, Kalle Valo wrote:
+On Wednesday 15 August 2007 07:49, Johannes Berg wrote:
+> Is there a possibility of a race condition here? If the interface is
+> brought down right after this check the SKB could be copied to that
+> interface after the skb queue has been flushed.
+>
+Yeah. This can be avoided by holding a write lock on the subif lock while=20
+flushing the skb queue. Not sure how much I like doing that, but it should=
+=20
+work.
 
-> Heh, I guess I have used madwifi too much :)=20
+=2DMichael Wu
 
-Heh, yeah, the BSD folks insist of putting all that functionality into
-the kernel because for some reason they believe it'll magically make it
-more stable (they told me that, minus the "magically")
-
-In any case, I'm fairly sure the TIM is just wrong, if you have a third
-device you could try capturing the beacons and check that the TIM is
-never updated.
-
-johannes
-
---=-mSO3Z48VvBezWBh+yw6m
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart1623326.xXRjpqutYi
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBG0+Ff/ETPhpq3jKURAhxFAKCLEBIk2VTcCKsdLkox/UQhu9hZ2wCgp+t7
-u693f3vrIILH4UixlMTQzko=
-=K4Zx
+iD8DBQBGw9c6T3Oqt9AH4aERApviAJ9Z5mO2i8WN6yRrLTYZQhT3ReWgBQCgpad8
+LyHJ0MP0J4AbUCNLLvMqccw=
+=cG3v
 -----END PGP SIGNATURE-----
 
---=-mSO3Z48VvBezWBh+yw6m--
-
+--nextPart1623326.xXRjpqutYi--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
