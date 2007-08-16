@@ -1,79 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:20133 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754817AbXH3WuF (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:48203 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756791AbXHPQWS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 18:50:05 -0400
-Date: Thu, 30 Aug 2007 15:42:55 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: Jesper Juhl <jesper.juhl@gmail.com>
-Cc: Joe Perches <joe@perches.com>, Daniel Drake <dsd@gentoo.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Don't needlessly initialize variable to NULL in zd_chip    (was: Re: [PATCH 13/30] net: Don't do pointless kmalloc return value  casts in zd1211 driver)
-Message-Id: <20070830154255.6a146c21.randy.dunlap@oracle.com>
-In-Reply-To: <200708310030.31713.jesper.juhl@gmail.com>
-References: <1554af80879a7ef2f78a4d654f23c248203500d9.1187912217.git.jesper.juhl@gmail.com>
-	<9a8748490708301320o49d8e794vc5c37ffc938006f1@mail.gmail.com>
-	<1188512393.6062.156.camel@localhost>
-	<200708310030.31713.jesper.juhl@gmail.com>
+	Thu, 16 Aug 2007 12:22:18 -0400
+Received: from [131.234.209.34] (helo=[131.234.237.45])
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.67)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1ILi6z-0003D8-QX
+	for linux-wireless@vger.kernel.org; Thu, 16 Aug 2007 17:22:18 +0100
+Subject: Re: mac80211 hardware flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <1187280988.23489.29.camel@johannes.berg>
+References: <1187280988.23489.29.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eVCQkEDGklpBQyi+ma6m"
+Date: Thu, 16 Aug 2007 18:25:03 +0200
+Message-Id: <1187281503.23489.31.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 31 Aug 2007 00:30:31 +0200 Jesper Juhl wrote:
 
-> On Friday 31 August 2007 00:19:53 Joe Perches wrote:
-> > On Thu, 2007-08-30 at 22:20 +0200, Jesper Juhl wrote:
-> > > Ok, I must admit I didn't check with sparse since it seemed pointless
-> > > - we usually never cast void pointers to other pointer types,
-> > > specifically because the C language nicely guarantees that the right
-> > > thing will happen without the cast.  Sometimes we have to cast them to
-> > > integer types, su sure we need the cast there.   But what on earth
-> > > makes a "zd_addr_t *" so special that we have to explicitly cast a
-> > > "void *" to that type?
-> > 
-> > http://marc.info/?l=linux-netdev&m=117113743902549&w=1
-> > 
-> 
-> Thank you for that link Joe.
-> 
-> I'm not sure I agree with the __nocast, but I respect that this is 
-> the maintainers choice.
-> 
-> But, I still think the first chunk of the patch that removes the 
-> initial variable initialization makes sense. 
-> Initializing the variable to NULL is pointless since it'll never be
-> used before the kmalloc() call. So here's a revised patch that just
-> gets rid of that little detail.
+--=-eVCQkEDGklpBQyi+ma6m
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Thu, 2007-08-16 at 18:16 +0200, Johannes Berg wrote:
+>  invert the meaning of
+> IEEE80211_HW_DATA_NULLFUNC_ACK now.
 
-BTW:  http://marc.info/?l=linux-wireless&m=118831813500769&w=2
+scratch that. I'll just remove it.
 
+johannes
 
-> No need to initialize to NULL when variable is never used before 
-> it's assigned the return value of a kmalloc() call.
-> 
-> Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
-> ---
-> 
-> diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
-> index c39f198..30872fe 100644
-> --- a/drivers/net/wireless/zd1211rw/zd_chip.c
-> +++ b/drivers/net/wireless/zd1211rw/zd_chip.c
-> @@ -106,7 +106,7 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
->  {
->  	int r;
->  	int i;
-> -	zd_addr_t *a16 = (zd_addr_t *)NULL;
-> +	zd_addr_t *a16;
->  	u16 *v16;
->  	unsigned int count16;
+--=-eVCQkEDGklpBQyi+ma6m
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+iD8DBQBGxHpf/ETPhpq3jKURAuIoAJ40G9a8G9YzmRXKalXSf5+yVxp3+ACdEfD/
+ywAoXuHcboDPYxWI+lgHjuY=
+=EpcN
+-----END PGP SIGNATURE-----
+
+--=-eVCQkEDGklpBQyi+ma6m--
+
