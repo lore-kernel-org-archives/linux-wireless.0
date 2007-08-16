@@ -1,289 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:22582 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754260AbXHSSai convert rfc822-to-8bit (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:43766 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752943AbXHPS0E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Aug 2007 14:30:38 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so446922ugf
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2007 11:30:37 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 09/30] rt2x00: Be consistent with unsigned
-Date: Sun, 19 Aug 2007 20:24:27 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200708192018.30624.IvDoorn@gmail.com>
-In-Reply-To: <200708192018.30624.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200708192024.27274.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 16 Aug 2007 14:26:04 -0400
+Subject: Re: [PATCHv3] mac80211: dynamic wep
+From: Volker Braun <volker.braun@physik.hu-berlin.de>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200708152158.11677.flamingice@sourmilk.net>
+References: <1187151162.3253.18.camel@thinkpad>
+	 <200708142355.27708.flamingice@sourmilk.net>
+	 <1187191455.6462.14.camel@carrot.hep.upenn.edu>
+	 <200708152158.11677.flamingice@sourmilk.net>
+Content-Type: text/plain
+Date: Thu, 16 Aug 2007 14:26:01 -0400
+Message-Id: <1187288761.6462.47.camel@carrot.hep.upenn.edu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From cdc01c652d3b058111e8a2567649e198c7c77cc5 Mon Sep 17 00:00:00 2001
-From: Ivo van Doorn <IvDoorn@gmail.com>
-Date: Sat, 18 Aug 2007 13:00:39 +0200
-Subject: [PATCH 09/30] rt2x00: Be consistent with unsigned
+On Wed, 2007-08-15 at 21:58 -0700, Michael Wu wrote:
+> Hm.. I'm not really convinced that this is the main reason. Can you check and 
+> see if the keyidx that wpa_supplicant configures and the keyidx used in 
+> unicast frames are the same?
 
-unsigned should be used consistently,
-all values used as flags should be unsigned
-and the ring identifier should also be unsigned everywhere.
+Its true, wpa_supplicant and the unicast frames all have keyidx==3. I
+added these printk's:
 
-char is not consistently signed over all platforms,
-make the signedness more explicit where it is demanded
-so we resolve some warnings of the type:
-"warning: comparison is always false due to limited range of data type"
+=============
+        if (rx->fc & IEEE80211_FCTL_PROTECTED) {                
+                if (rx->skb->pkt_type == PACKET_HOST)
+                        printk(KERN_DEBUG "%s: RX WEP unicast frame from "
+                               MAC_FMT " with keyidx %d\n",
+                               rx->dev->name, MAC_ARG(hdr->addr2),
+                               ieee80211_wep_get_keyidx(rx->skb) );
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2400pci.c |    8 +++++---
- drivers/net/wireless/rt2500pci.c |    8 +++++---
- drivers/net/wireless/rt2500usb.c |    8 +++++---
- drivers/net/wireless/rt2x00.h    |    9 +++++----
- drivers/net/wireless/rt61pci.c   |   14 ++++++++------
- drivers/net/wireless/rt73usb.c   |   14 ++++++++------
- 6 files changed, 36 insertions(+), 25 deletions(-)
+                if (rx->skb->pkt_type == PACKET_HOST && 
+                    rx->sta && rx->sta->key) {
 
-diff --git a/drivers/net/wireless/rt2400pci.c b/drivers/net/wireless/rt2400pci.c
-index 8365171..aa1209b 100644
---- a/drivers/net/wireless/rt2400pci.c
-+++ b/drivers/net/wireless/rt2400pci.c
-@@ -278,7 +278,7 @@ static void rt2400pci_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
- }
- 
- static void rt2400pci_config_packet_filter(struct rt2x00_dev *rt2x00dev,
--					   const int filter)
-+					   const unsigned int filter)
- {
- 	int promisc = !!(filter & IFF_PROMISC);
- 	u32 reg;
-@@ -561,7 +561,8 @@ static void rt2400pci_config_duration(struct rt2x00_dev *rt2x00dev,
- 	rt2x00pci_register_write(rt2x00dev, CSR12, reg);
- }
- 
--static void rt2400pci_config(struct rt2x00_dev *rt2x00dev, const int flags,
-+static void rt2400pci_config(struct rt2x00_dev *rt2x00dev,
-+			     const unsigned int flags,
- 			     struct ieee80211_conf *conf)
- {
- 	int short_slot_time = conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME;
-@@ -1177,7 +1178,8 @@ static void rt2400pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- /*
-  * TX data initialization
-  */
--static void rt2400pci_kick_tx_queue(struct rt2x00_dev *rt2x00dev, int queue)
-+static void rt2400pci_kick_tx_queue(struct rt2x00_dev *rt2x00dev,
-+				    unsigned int queue)
- {
- 	u32 reg;
- 
-diff --git a/drivers/net/wireless/rt2500pci.c b/drivers/net/wireless/rt2500pci.c
-index a794989..3a1da1f 100644
---- a/drivers/net/wireless/rt2500pci.c
-+++ b/drivers/net/wireless/rt2500pci.c
-@@ -278,7 +278,7 @@ static void rt2500pci_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
- }
- 
- static void rt2500pci_config_packet_filter(struct rt2x00_dev *rt2x00dev,
--					   const int filter)
-+					   const unsigned int filter)
- {
- 	int promisc = !!(filter & IFF_PROMISC);
- 	int multicast = !!(filter & IFF_MULTICAST);
-@@ -672,7 +672,8 @@ static void rt2500pci_config_duration(struct rt2x00_dev *rt2x00dev,
- 	rt2x00pci_register_write(rt2x00dev, CSR12, reg);
- }
- 
--static void rt2500pci_config(struct rt2x00_dev *rt2x00dev, const int flags,
-+static void rt2500pci_config(struct rt2x00_dev *rt2x00dev,
-+			     const unsigned int flags,
- 			     struct ieee80211_conf *conf)
- {
- 	int short_slot_time = conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME;
-@@ -1355,7 +1356,8 @@ static void rt2500pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- /*
-  * TX data initialization
-  */
--static void rt2500pci_kick_tx_queue(struct rt2x00_dev *rt2x00dev, int queue)
-+static void rt2500pci_kick_tx_queue(struct rt2x00_dev *rt2x00dev,
-+				    unsigned int queue)
- {
- 	u32 reg;
- 
-diff --git a/drivers/net/wireless/rt2500usb.c b/drivers/net/wireless/rt2500usb.c
-index 581cc6f..71b7bf2 100644
---- a/drivers/net/wireless/rt2500usb.c
-+++ b/drivers/net/wireless/rt2500usb.c
-@@ -283,7 +283,7 @@ static void rt2500usb_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
- }
- 
- static void rt2500usb_config_packet_filter(struct rt2x00_dev *rt2x00dev,
--					   const int filter)
-+					   const unsigned int filter)
- {
- 	int promisc = !!(filter & IFF_PROMISC);
- 	int multicast = !!(filter & IFF_MULTICAST);
-@@ -625,7 +625,8 @@ static void rt2500usb_config_duration(struct rt2x00_dev *rt2x00dev,
- 	rt2500usb_register_write(rt2x00dev, TXRX_CSR18, reg);
- }
- 
--static void rt2500usb_config(struct rt2x00_dev *rt2x00dev, const int flags,
-+static void rt2500usb_config(struct rt2x00_dev *rt2x00dev,
-+			     const unsigned int flags,
- 			     struct ieee80211_conf *conf)
- {
- 	int short_slot_time = conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME;
-@@ -1153,7 +1154,8 @@ static void rt2500usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- /*
-  * TX data initialization
-  */
--static void rt2500usb_kick_tx_queue(struct rt2x00_dev *rt2x00dev, int queue)
-+static void rt2500usb_kick_tx_queue(struct rt2x00_dev *rt2x00dev,
-+				    unsigned int queue)
- {
- 	u16 reg;
- 
-diff --git a/drivers/net/wireless/rt2x00.h b/drivers/net/wireless/rt2x00.h
-index 0db81eb..5c6d7d0 100644
---- a/drivers/net/wireless/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00.h
-@@ -310,7 +310,7 @@ struct interface {
- 	 * Monitor mode count, the number of interfaces
- 	 * in monitor mode that that have been added.
- 	 */
--	char monitor_count;
-+	unsigned short monitor_count;
- };
- 
- static inline int is_interface_present(struct interface *intf)
-@@ -396,7 +396,8 @@ struct rt2x00lib_ops {
- 	int (*write_tx_data) (struct rt2x00_dev *rt2x00dev,
- 			      struct data_ring *ring, struct sk_buff *skb,
- 			      struct ieee80211_tx_control *control);
--	void (*kick_tx_queue) (struct rt2x00_dev *rt2x00dev, int queue);
-+	void (*kick_tx_queue) (struct rt2x00_dev *rt2x00dev,
-+			       unsigned int queue);
- 
- 	/*
- 	 * RX control handlers
-@@ -410,9 +411,9 @@ struct rt2x00lib_ops {
- 	void (*config_mac_addr) (struct rt2x00_dev *rt2x00dev, u8 *mac);
- 	void (*config_bssid) (struct rt2x00_dev *rt2x00dev, u8 *bssid);
- 	void (*config_packet_filter) (struct rt2x00_dev *rt2x00dev,
--				      const int filter);
-+				      const unsigned int filter);
- 	void (*config_type) (struct rt2x00_dev *rt2x00dev, const int type);
--	void (*config) (struct rt2x00_dev *rt2x00dev, const int flags,
-+	void (*config) (struct rt2x00_dev *rt2x00dev, const unsigned int flags,
- 			struct ieee80211_conf *conf);
- #define CONFIG_UPDATE_PHYMODE		( 1 << 1 )
- #define CONFIG_UPDATE_CHANNEL		( 1 << 2 )
-diff --git a/drivers/net/wireless/rt61pci.c b/drivers/net/wireless/rt61pci.c
-index edacb46..f592397 100644
---- a/drivers/net/wireless/rt61pci.c
-+++ b/drivers/net/wireless/rt61pci.c
-@@ -307,7 +307,7 @@ static void rt61pci_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
- }
- 
- static void rt61pci_config_packet_filter(struct rt2x00_dev *rt2x00dev,
--					 const int filter)
-+					 const unsigned int filter)
- {
- 	int promisc = !!(filter & IFF_PROMISC);
- 	int multicast = !!(filter & IFF_MULTICAST);
-@@ -846,7 +846,8 @@ static void rt61pci_config_duration(struct rt2x00_dev *rt2x00dev,
- 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
- }
- 
--static void rt61pci_config(struct rt2x00_dev *rt2x00dev, const int flags,
-+static void rt61pci_config(struct rt2x00_dev *rt2x00dev,
-+			   const unsigned int flags,
- 			   struct ieee80211_conf *conf)
- {
- 	int short_slot_time = conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME;
-@@ -1726,7 +1727,8 @@ static void rt61pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- /*
-  * TX data initialization
-  */
--static void rt61pci_kick_tx_queue(struct rt2x00_dev *rt2x00dev, int queue)
-+static void rt61pci_kick_tx_queue(struct rt2x00_dev *rt2x00dev,
-+				  unsigned int queue)
- {
- 	u32 reg;
- 
-@@ -1759,8 +1761,8 @@ static void rt61pci_kick_tx_queue(struct rt2x00_dev *rt2x00dev, int queue)
- static int rt61pci_agc_to_rssi(struct rt2x00_dev *rt2x00dev, int rxd_w1)
- {
- 	u16 eeprom;
--	char offset;
--	char lna;
-+	u8 offset;
-+	u8 lna;
- 
- 	lna = rt2x00_get_field32(rxd_w1, RXD_W1_RSSI_LNA);
- 	switch (lna) {
-@@ -1960,7 +1962,7 @@ static int rt61pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	u32 reg;
- 	u16 word;
- 	u8 *mac;
--	char value;
-+	s8 value;
- 
- 	rt2x00pci_register_read(rt2x00dev, E2PROM_CSR, &reg);
- 
-diff --git a/drivers/net/wireless/rt73usb.c b/drivers/net/wireless/rt73usb.c
-index 74e4173..9f059ce 100644
---- a/drivers/net/wireless/rt73usb.c
-+++ b/drivers/net/wireless/rt73usb.c
-@@ -282,7 +282,7 @@ static void rt73usb_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
- }
- 
- static void rt73usb_config_packet_filter(struct rt2x00_dev *rt2x00dev,
--					 const int filter)
-+					 const unsigned int filter)
- {
- 	int promisc = !!(filter & IFF_PROMISC);
- 	int multicast = !!(filter & IFF_MULTICAST);
-@@ -742,7 +742,8 @@ static void rt73usb_config_duration(struct rt2x00_dev *rt2x00dev,
- 	rt73usb_register_write(rt2x00dev, TXRX_CSR9, reg);
- }
- 
--static void rt73usb_config(struct rt2x00_dev *rt2x00dev, const int flags,
-+static void rt73usb_config(struct rt2x00_dev *rt2x00dev,
-+			   const unsigned int flags,
- 			   struct ieee80211_conf *conf)
- {
- 	int short_slot_time = conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME;
-@@ -1370,7 +1371,8 @@ static void rt73usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- /*
-  * TX data initialization
-  */
--static void rt73usb_kick_tx_queue(struct rt2x00_dev *rt2x00dev, int queue)
-+static void rt73usb_kick_tx_queue(struct rt2x00_dev *rt2x00dev,
-+				  unsigned int queue)
- {
- 	u32 reg;
- 
-@@ -1390,8 +1392,8 @@ static void rt73usb_kick_tx_queue(struct rt2x00_dev *rt2x00dev, int queue)
- static int rt73usb_agc_to_rssi(struct rt2x00_dev *rt2x00dev, int rxd_w1)
- {
- 	u16 eeprom;
--	char offset;
--	char lna;
-+	u8 offset;
-+	u8 lna;
- 
- 	lna = rt2x00_get_field32(rxd_w1, RXD_W1_RSSI_LNA);
- 	switch (lna) {
-@@ -1469,7 +1471,7 @@ static int rt73usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- {
- 	u16 word;
- 	u8 *mac;
--	char value;
-+	s8 value;
- 
- 	rt2x00usb_eeprom_read(rt2x00dev, rt2x00dev->eeprom, EEPROM_SIZE);
- 
--- 
-1.5.3.rc5
+                        rx->key = rx->sta->key;
+                        printk(KERN_DEBUG "Using STA key\n");
+=============
+
+Then I get a debug log that contains a lot of
+
+...
+Aug 16 14:03:58 thinkpad kernel: wlan0: RX WEP unicast frame from 00:15:c6:5e:e5:70 with keyidx 3
+Aug 16 14:03:58 thinkpad kernel: Using STA key
+Aug 16 14:03:58 thinkpad kernel: wlan0: RX WEP unicast frame from 00:15:c6:5e:e5:70 with keyidx 3
+Aug 16 14:03:58 thinkpad kernel: Using STA key
+Aug 16 14:03:58 thinkpad kernel: wlan0: RX WEP unicast frame from 00:15:c6:5e:e5:70 with keyidx 3
+Aug 16 14:03:58 thinkpad kernel: Using STA key
+...
+
+
+Here is the relevant output from wpa_supplicant -Dwext -ddd:
+
+EAPOL: KEY_RX entering state KEY_RECEIVE
+EAPOL: processKey
+EAPOL: RX IEEE 802.1X ver=1 type=3 len=57 EAPOL-Key: type=1 key_length=13 key_index=0x1
+EAPOL: EAPOL-Key key signature verified
+EAPOL: Decrypted(RC4) key - hexdump(len=13): [REMOVED]
+EAPOL: Setting dynamic WEP key: broadcast keyidx 1 len 13
+wpa_driver_wext_set_key: alg=1 key_idx=1 set_tx=0 seq_len=0 key_len=13
+RX EAPOL from 00:15:c6:5e:e5:70
+RX EAPOL - hexdump(len=48): 01 03 00 2c 01 00 0d 00 00 46 c4 8d 8a 35 ae f9 fc 6e 64 dc 34 71 cf 55 8f 4f 40 46 4e d2 a1 83 4f b5 fa 93 15 93 7b 02 d3 96 a5 cf e6 74 dd 93
+EAPOL: Received EAPOL-Key frame
+EAPOL: KEY_RX entering state KEY_RECEIVE
+EAPOL: processKey
+EAPOL: RX IEEE 802.1X ver=1 type=3 len=44 EAPOL-Key: type=1 key_length=13 key_index=0x83
+EAPOL: EAPOL-Key key signature verified
+EAPOL: using part of EAP keying material data encryption key - hexdump(len=13): [REMOVED]
+EAPOL: Setting dynamic WEP key: unicast keyidx 3 len 13
+wpa_driver_wext_set_key: alg=1 key_idx=3 set_tx=128 seq_len=0 key_len=13
+EAPOL: all required EAPOL-Key frames received
+WPA: EAPOL processing complete
+Cancelling authentication timeout
+State: ASSOCIATED -> COMPLETED
+CTRL-EVENT-CONNECTED - Connection to 00:15:c6:5e:e5:70 completed (auth) [id=0 id_str=]
+
+key_index & 0x80 means unicast, and the actual index is 3 = key_index &
+0x03.
+
 
