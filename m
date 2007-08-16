@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xdsl-664.zgora.dialog.net.pl ([81.168.226.152]:4293 "EHLO
-	tuxland.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760013AbXHVTyJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2007 15:54:09 -0400
-From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: 2.6.23-rc3-mm1: net/wireless/rt2x00mac.c build failure
-Date: Wed, 22 Aug 2007 21:54:02 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-References: <20070822020648.5ea3a612.akpm@linux-foundation.org> <200708222116.22386.m.kozlowski@tuxland.pl> <200708222131.24882.IvDoorn@gmail.com>
-In-Reply-To: <200708222131.24882.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200708222154.03663.m.kozlowski@tuxland.pl>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53361 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757562AbXHPNRg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Aug 2007 09:17:36 -0400
+Subject: Re: [PATCH v2] hostapd: remove vlan stuff
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070816012239.GQ1415@jm.kir.nu>
+References: <1187131269.31200.3.camel@johannes.berg>
+	 <1187180689.3998.41.camel@johannes.berg>  <20070816012239.GQ1415@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zcLE+QDgJFIaxLZgtA1V"
+Date: Thu, 16 Aug 2007 15:20:14 +0200
+Message-Id: <1187270414.5141.42.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> >   CC [M]  drivers/net/wireless/rt2x00mac.o
-> > drivers/net/wireless/rt2x00mac.c: In function `rt2x00mac_tx_rts_cts':
-> > drivers/net/wireless/rt2x00mac.c:61: warning: passing arg 2 of `ieee80211_ctstoself_get' makes pointer from integer without a cast
-> > drivers/net/wireless/rt2x00mac.c:61: warning: passing arg 3 of `ieee80211_ctstoself_get' makes integer from pointer without a cast
-> > drivers/net/wireless/rt2x00mac.c:61: warning: passing arg 4 of `ieee80211_ctstoself_get' makes pointer from integer without a cast
-> > drivers/net/wireless/rt2x00mac.c:61: warning: passing arg 5 of `ieee80211_ctstoself_get' from incompatible pointer type
-> > drivers/net/wireless/rt2x00mac.c:61: error: too many arguments to function `ieee80211_ctstoself_get'
-> > drivers/net/wireless/rt2x00mac.c:65: warning: passing arg 2 of `ieee80211_rts_get' makes pointer from integer without a cast
-> > drivers/net/wireless/rt2x00mac.c:65: warning: passing arg 3 of `ieee80211_rts_get' makes integer from pointer without a cast
-> > drivers/net/wireless/rt2x00mac.c:65: warning: passing arg 4 of `ieee80211_rts_get' makes pointer from integer without a cast
-> > drivers/net/wireless/rt2x00mac.c:65: warning: passing arg 5 of `ieee80211_rts_get' from incompatible pointer type
-> > drivers/net/wireless/rt2x00mac.c:65: error: too many arguments to function `ieee80211_rts_get'
-> > make[3]: *** [drivers/net/wireless/rt2x00mac.o] Error 1
-> > make[2]: *** [drivers/net/wireless] Error 2
-> > make[1]: *** [drivers/net] Error 2
-> > make: *** [drivers] Error 2
-> 
-> This has been fixed for quite some time already.
-> John, I can't check this myself now, but which rt2x00
-> patches have gone into the -mm tree? Since I believe
-> the patch that changed ieee80211_ctstoself_get was
-> followed by a patch to fix rt2x00 within the same series...
 
-Ok. Thanks. What about this one?
+--=-zcLE+QDgJFIaxLZgtA1V
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  CC [M]  drivers/net/wireless/zd1211rw-mac80211/zd_mac.o
-drivers/net/wireless/zd1211rw-mac80211/zd_mac.c: In function `zd_op_erp_ie_changed':
-drivers/net/wireless/zd1211rw-mac80211/zd_mac.c:822: error: `IEEE80211_ERP_CHANGE_PREAMBLE' undeclared (first use in this function)
-drivers/net/wireless/zd1211rw-mac80211/zd_mac.c:822: error: (Each undeclared identifier is reported only once
-drivers/net/wireless/zd1211rw-mac80211/zd_mac.c:822: error: for each function it appears in.)
-drivers/net/wireless/zd1211rw-mac80211/zd_mac.c: At top level:
-drivers/net/wireless/zd1211rw-mac80211/zd_mac.c:844: error: unknown field `erp_ie_changed' specified in initializer
-drivers/net/wireless/zd1211rw-mac80211/zd_mac.c:844: warning: initialization from incompatible pointer type
-make[4]: *** [drivers/net/wireless/zd1211rw-mac80211/zd_mac.o] Error 1
-make[3]: *** [drivers/net/wireless/zd1211rw-mac80211] Error 2
-make[2]: *** [drivers/net/wireless] Error 2
-make[1]: *** [drivers/net] Error 2
-make: *** [drivers] Error 2
+On Wed, 2007-08-15 at 18:22 -0700, Jouni Malinen wrote:
 
-Regards,
+> This doesn't sound like a good idea. How would macvlan-based alternative
+> solve the problem of having different group keys for each VLAN?
 
-	Mariusz
+Ah. I never considered that was even possible. Wouldn't it make more
+sense to allow binding group keys to STAs too, instead of making the
+only within the interface? That way you could possibly even get hw accel
+for those.
+
+johannes
+
+--=-zcLE+QDgJFIaxLZgtA1V
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD4DBQBGxE8O/ETPhpq3jKURAnzEAJ9+fwoyKCleBwCzlBoib933RK98owCXVBfW
+BLSUv6kCg0XC0U0wFevBPw==
+=3Ol+
+-----END PGP SIGNATURE-----
+
+--=-zcLE+QDgJFIaxLZgtA1V--
+
