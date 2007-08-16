@@ -1,60 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45706 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53446 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764900AbXHJWEo (ORCPT
+	with ESMTP id S1758628AbXHPNUH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2007 18:04:44 -0400
-Message-Id: <20070810220632.677662000@sipsolutions.net>
-References: <20070810220544.321975000@sipsolutions.net>
-Date: Sat, 11 Aug 2007 00:05:45 +0200
+	Thu, 16 Aug 2007 09:20:07 -0400
+Subject: Re: [PATCH 4/4] hostapd: remove PRISM2_PARAM_NEXT_MODE
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/4] mac80211: remove ieee80211_msg_wep_frame_unknown_key
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070816013803.GR1415@jm.kir.nu>
+References: <20070814093254.021041000@sipsolutions.net>
+	 <20070814093410.322846000@sipsolutions.net>
+	 <20070815024135.GF1415@jm.kir.nu> <1187174682.3998.6.camel@johannes.berg>
+	 <20070816013803.GR1415@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Jy1Xp5mX2xq9W2jz3Qb4"
+Date: Thu, 16 Aug 2007 15:22:50 +0200
+Message-Id: <1187270570.5141.46.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Neither hostapd nor wpa_supplicant really use it.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ieee80211_common.h |    2 +-
- net/mac80211/rx.c               |   11 +++++------
- 2 files changed, 6 insertions(+), 7 deletions(-)
+--=-Jy1Xp5mX2xq9W2jz3Qb4
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- wireless-dev.orig/net/mac80211/rx.c	2007-08-10 23:55:56.063840246 +0200
-+++ wireless-dev/net/mac80211/rx.c	2007-08-11 00:01:27.643840246 +0200
-@@ -350,12 +350,11 @@ ieee80211_rx_h_load_key(struct ieee80211
- 				       MAC_ARG(hdr->addr1),
- 				       MAC_ARG(hdr->addr2),
- 				       MAC_ARG(hdr->addr3));
--				if (!rx->local->apdev)
--					return TXRX_DROP;
--				ieee80211_rx_mgmt(
--					rx->local, rx->skb, rx->u.rx.status,
--					ieee80211_msg_wep_frame_unknown_key);
--				return TXRX_QUEUED;
-+				/*
-+				 * TODO: notify userspace about this
-+				 * via cfg/nl80211
-+				 */
-+				return TXRX_DROP;
- 			}
- 		}
- 	}
---- wireless-dev.orig/net/mac80211/ieee80211_common.h	2007-08-10 23:50:37.933840246 +0200
-+++ wireless-dev/net/mac80211/ieee80211_common.h	2007-08-11 00:01:27.643840246 +0200
-@@ -48,7 +48,7 @@ enum ieee80211_msg_type {
- 	ieee80211_msg_tx_callback_ack = 1,
- 	ieee80211_msg_tx_callback_fail = 2,
- 	/* hole at 3, was ieee80211_msg_passive_scan but unused */
--	ieee80211_msg_wep_frame_unknown_key = 4,
-+	/* hole at 4, was ieee80211_msg_wep_frame_unknown_key but now unused */
- 	ieee80211_msg_michael_mic_failure = 5,
- 	/* hole at 6, was monitor but never sent to userspace */
- 	ieee80211_msg_sta_not_assoc = 7,
+On Wed, 2007-08-15 at 18:38 -0700, Jouni Malinen wrote:
 
--- 
+> I don't linke next_mode either, so if this is combined to a single
+> atomic operation, it would be quite a bit better way to do this.
+
+Yeah, we'll have that if somebody gets around to it.
+
+> I would assume that the quick workaround for this would have been to
+> change the configuration file to use 802.11g instead of the default
+> i802.11b..=20
+
+Oh, it was :) But it wasn't obvious.
+
+> Anyway, the design used here does indeed assume that the
+> driver exports all supported mode/channel pairs and in case the hardware
+> card supports 802.11g, the driver would most likely claim support for
+> both 802.11b and 802.11g channels.
+>=20
+> Adding code for reverting back to 802.11g version would, in theory, be
+> fine for most cases, but it does have some issues.. If I remember
+> correctly, channel 14 may only be used with 802.11b mode in Japan, so
+> the list of 802.11b and 802.11g channels is not the same. In this
+> particular case, though, the workaround of using 802.11g list would not
+> cause a problem (the other direction would potentially have).
+
+Hmm. That seems like something to be integrated with the regulatory code
+rather than the driver.
+
+johannes
+
+--=-Jy1Xp5mX2xq9W2jz3Qb4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGxE+q/ETPhpq3jKURAlH/AJ471M/4sej64fSOYlbYd22rtQWkFwCdGGDW
+eHFM+LUgl2DI8y64EUKNqZI=
+=5JjJ
+-----END PGP SIGNATURE-----
+
+--=-Jy1Xp5mX2xq9W2jz3Qb4--
 
