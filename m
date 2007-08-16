@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-04.rdc-kc.rr.com ([24.94.166.116]:55320 "EHLO
-	ms-smtp-04.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753845AbXHEH3m (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54310 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758722AbXHPPAl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Aug 2007 03:29:42 -0400
-Date: Sun, 05 Aug 2007 02:29:35 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH V2] bcm43xx-mac80211: Rescale link quality output
-Message-ID: <46b57c5f.7s2ojiPQUXY5R3Qv%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 16 Aug 2007 11:00:41 -0400
+Subject: Re: [PATCH 20/20] mac80211: remove VLAN stuff
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070815145050.223404000@sipsolutions.net>
+References: <20070815144920.135826000@sipsolutions.net>
+	 <20070815145050.223404000@sipsolutions.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jGBXkba5qgETvJN2Ymv5"
+Date: Thu, 16 Aug 2007 17:03:02 +0200
+Message-Id: <1187276582.23489.16.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The link quality output from wireless extensions is too small by the ratio
-of 100/BCM43xx_RX_MAX_SSI (60) for bcm43xx-mac80211. This patch puts the
-quantity on the proper scale.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+--=-jGBXkba5qgETvJN2Ymv5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
-+++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_xmit.c
-@@ -537,7 +537,8 @@ void bcm43xx_rx(struct bcm43xx_wldev *de
- 					      (phystat0 & BCM43xx_RX_PHYST0_GAINCTL),
- 					      (phystat3 & BCM43xx_RX_PHYST3_TRSTATE));
- 	status.noise = dev->stats.link_noise;
--	status.signal = jssi; /* this looks wrong, but is what mac80211 wants */
-+	/* the next line looks wrong, but is what mac80211 wants */
-+	status.signal = (jssi * 100) / BCM43xx_RX_MAX_SSI;
- 	if (phystat0 & BCM43xx_RX_PHYST0_OFDM)
- 		status.rate = bcm43xx_plcp_get_bitrate_ofdm(plcp);
- 	else
+On Wed, 2007-08-15 at 16:49 +0200, Johannes Berg wrote:
+> plain text document attachment (036-mac80211-remove-vlans.patch)
+> This patch removes all VLAN stuff from mac80211.
+
+Whoops. Please consider withdrawn, Jouni actually pointed me to a use of
+the VLAN interfaces.
+
+johannes
+
+--=-jGBXkba5qgETvJN2Ymv5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGxGcm/ETPhpq3jKURAnyVAJ4lSW7zWsILfk/wFyH8Qa6XSTVhBgCdF3xh
+zHYuvohVzI0snj6mzPNW6Cs=
+=9VRD
+-----END PGP SIGNATURE-----
+
+--=-jGBXkba5qgETvJN2Ymv5--
+
