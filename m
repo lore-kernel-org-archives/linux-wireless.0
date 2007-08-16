@@ -1,297 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44358 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756855AbXH3Lza (ORCPT
+Received: from galaxy.systems.pipex.net ([62.241.162.31]:60387 "EHLO
+	galaxy.systems.pipex.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752292AbXHPVnJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 07:55:30 -0400
-Subject: Re: key races in mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1188300177.7837.101.camel@johannes.berg>
-References: <1188297777.7837.94.camel@johannes.berg>
-	 <1188300177.7837.101.camel@johannes.berg>
-Content-Type: text/plain
-Date: Thu, 30 Aug 2007 12:54:05 +0200
-Message-Id: <1188471246.2963.6.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 16 Aug 2007 17:43:09 -0400
+From: Adam Baker <linux@baker-net.org.uk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Kernel BUG when using ad-hoc mode in rt2x00
+Date: Thu, 16 Aug 2007 22:43:05 +0100
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	rt2400-devel@lists.sourceforge.net
+References: <200708082324.17186.linux@baker-net.org.uk> <200708161625.44057.linux@baker-net.org.uk> <1187278509.23489.24.camel@johannes.berg>
+In-Reply-To: <1187278509.23489.24.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200708162243.05809.linux@baker-net.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-08-28 at 13:22 +0200, Johannes Berg wrote:
 
-> This untested patch might solve it.
+> > I've added some printk's as you suggested, the log is attached. I
+> > haven't yet
+> > managed to capture this on the serial port so I can't yet guarantee
+> > that there
+> > aren't any calls that didn't get logged just as it crashed - I'll keep
+> > trying.
+>
+> Ok. I'll look through.
 
-It showed that it was untested, it had a few missing rcu_read_unlock()
-statements. Updated and working patch below.
+Having now managed to capture a small relevant area it looks like there were a couple of seconds missing from the end of that log file.
 
-johannes
+>
+> > Aug 16 15:53:34 gromit kernel: [  633.972956] wmaster0: Entering
+> > ieee80211_tx_h_multicast_ps_buf(), hw.flags 1746 Aug 16 15:53:34 gromit
+> > kernel: [  633.972960] Leaving ieee80211_tx_h_multicast_ps_buf
+>
+> Hm. I thought it crashed in there. Could you put printk's into the two
+> functions called from this, and then switch to a console and tell me
+> which one shows up last? Elevate the printk priority to something like
+> KERN_ERR or change your console to show all messages.
+>
+My problem is that I'm using a console that can't keep up with logging at
+the necessary data rate so I get gaps in the log. I'll try to get the necessary
+cables to try a different solution. I think I got the bit we want this time though.
 
----
- net/mac80211/ieee80211_ioctl.c |    5 ----
- net/mac80211/key.c             |   43 +++++++++++++++++++++++++----------------
- net/mac80211/rx.c              |   20 ++++++++++++++++---
- net/mac80211/tx.c              |   20 +++++++++++++++----
- 4 files changed, 61 insertions(+), 27 deletions(-)
+Trying to make sense of this I just noticed that I missed the exit printk on the
+TXRX_QUEUED exit from ieee80211_tx_h_multicast_ps_buf but I think I get
+a hint of what might be going wrong. The remote device is being added as a
+new IBSS station even though it hasn't associated, only probed. Could
+something be assuming there is more info recorded for that device than there
+really is?
 
---- wireless-dev.orig/net/mac80211/key.c	2007-08-29 15:48:54.731382599 +0200
-+++ wireless-dev/net/mac80211/key.c	2007-08-29 15:48:55.071382599 +0200
-@@ -12,6 +12,7 @@
- #include <linux/if_ether.h>
- #include <linux/etherdevice.h>
- #include <linux/list.h>
-+#include <linux/rcupdate.h>
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
- #include "debugfs_key.h"
-@@ -120,6 +121,7 @@ struct ieee80211_key *ieee80211_key_allo
- {
- 	struct ieee80211_key *key;
- 
-+	BUG_ON(idx < 0 || idx >= NUM_DEFAULT_KEYS);
- 	BUG_ON(alg == ALG_NONE);
- 
- 	key = kzalloc(sizeof(struct ieee80211_key) + key_len, GFP_KERNEL);
-@@ -157,9 +159,15 @@ struct ieee80211_key *ieee80211_key_allo
- 
- 	ieee80211_debugfs_key_add(key->local, key);
- 
-+	/* remove key first */
-+	if (sta)
-+		ieee80211_key_free(sta->key);
-+	else
-+		ieee80211_key_free(sdata->keys[idx]);
-+
- 	if (sta) {
- 		ieee80211_debugfs_key_sta_link(key, sta);
--		sta->key = key;
-+
- 		/*
- 		 * some hardware cannot handle TKIP with QoS, so
- 		 * we indicate whether QoS could be in use.
-@@ -179,21 +187,19 @@ struct ieee80211_key *ieee80211_key_allo
- 				sta_info_put(ap);
- 			}
- 		}
--
--		if (idx >= 0 && idx < NUM_DEFAULT_KEYS) {
--			if (!sdata->keys[idx])
--				sdata->keys[idx] = key;
--			else
--				WARN_ON(1);
--		} else
--			WARN_ON(1);
- 	}
- 
--	list_add(&key->list, &sdata->key_list);
--
-+	/* enable hwaccel if appropriate */
- 	if (netif_running(key->sdata->dev))
- 		ieee80211_key_enable_hw_accel(key);
- 
-+	if (sta)
-+		rcu_assign_pointer(sta->key, key);
-+	else
-+		rcu_assign_pointer(sdata->keys[idx], key);
-+
-+	list_add(&key->list, &sdata->key_list);
-+
- 	return key;
- }
- 
-@@ -202,20 +208,25 @@ void ieee80211_key_free(struct ieee80211
- 	if (!key)
- 		return;
- 
--	ieee80211_key_disable_hw_accel(key);
--
- 	if (key->sta) {
--		key->sta->key = NULL;
-+		rcu_assign_pointer(key->sta->key, NULL);
- 	} else {
- 		if (key->sdata->default_key == key)
- 			ieee80211_set_default_key(key->sdata, -1);
- 		if (key->conf.keyidx >= 0 &&
- 		    key->conf.keyidx < NUM_DEFAULT_KEYS)
--			key->sdata->keys[key->conf.keyidx] = NULL;
-+			rcu_assign_pointer(key->sdata->keys[key->conf.keyidx],
-+					   NULL);
- 		else
- 			WARN_ON(1);
- 	}
- 
-+	/* wait for all key users to complete */
-+	synchronize_rcu();
-+
-+	/* remove from hwaccel if appropriate */
-+	ieee80211_key_disable_hw_accel(key);
-+
- 	if (key->conf.alg == ALG_CCMP)
- 		ieee80211_aes_key_free(key->u.ccmp.tfm);
- 	ieee80211_debugfs_key_remove(key);
-@@ -235,7 +246,7 @@ void ieee80211_set_default_key(struct ie
- 	if (sdata->default_key != key) {
- 		ieee80211_debugfs_key_remove_default(sdata);
- 
--		sdata->default_key = key;
-+		rcu_assign_pointer(sdata->default_key, key);
- 
- 		if (sdata->default_key)
- 			ieee80211_debugfs_key_add_default(sdata);
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-29 15:48:54.641382599 +0200
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-29 15:48:55.081382599 +0200
-@@ -420,11 +420,8 @@ static int ieee80211_set_encryption(stru
- 		key = NULL;
- 	} else {
- 		/*
--		 * Need to free it before allocating a new one with
--		 * with the same index or the ordering to the driver's
--		 * set_key() callback becomes confused.
-+		 * Automatically frees any old key if present.
- 		 */
--		ieee80211_key_free(key);
- 		key = ieee80211_key_alloc(sdata, sta, alg, idx, key_len, _key);
- 		if (!key) {
- 			ret = -ENOMEM;
---- wireless-dev.orig/net/mac80211/rx.c	2007-08-29 15:48:54.701382599 +0200
-+++ wireless-dev/net/mac80211/rx.c	2007-08-29 15:49:48.981382599 +0200
-@@ -13,6 +13,7 @@
- #include <linux/skbuff.h>
- #include <linux/netdevice.h>
- #include <linux/etherdevice.h>
-+#include <linux/rcupdate.h>
- #include <net/mac80211.h>
- #include <net/ieee80211_radiotap.h>
- 
-@@ -321,6 +322,7 @@ ieee80211_rx_h_load_key(struct ieee80211
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
- 	int keyidx;
- 	int hdrlen;
-+	struct ieee80211_key *stakey = NULL;
- 
- 	/*
- 	 * Key selection 101
-@@ -358,8 +360,11 @@ ieee80211_rx_h_load_key(struct ieee80211
- 	if (!(rx->flags & IEEE80211_TXRXD_RXRA_MATCH))
- 		return TXRX_CONTINUE;
- 
--	if (!is_multicast_ether_addr(hdr->addr1) && rx->sta && rx->sta->key) {
--		rx->key = rx->sta->key;
-+	if (rx->sta)
-+		stakey = rcu_dereference(rx->sta->key);
-+
-+	if (!is_multicast_ether_addr(hdr->addr1) && stakey) {
-+		rx->key = stakey;
- 	} else {
- 		/*
- 		 * The device doesn't give us the IV so we won't be
-@@ -384,7 +389,7 @@ ieee80211_rx_h_load_key(struct ieee80211
- 		 */
- 		keyidx = rx->skb->data[hdrlen + 3] >> 6;
- 
--		rx->key = rx->sdata->keys[keyidx];
-+		rx->key = rcu_dereference(rx->sdata->keys[keyidx]);
- 
- 		/*
- 		 * RSNA-protected unicast frames should always be sent with
-@@ -1512,6 +1517,12 @@ void __ieee80211_rx(struct ieee80211_hw 
- 		skb_pull(skb, radiotap_len);
- 	}
- 
-+	/*
-+	 * key references are protected using RCU and this requires that
-+	 * we are in a read-site RCU section during receive processing
-+	 */
-+	rcu_read_lock();
-+
- 	hdr = (struct ieee80211_hdr *) skb->data;
- 	memset(&rx, 0, sizeof(rx));
- 	rx.skb = skb;
-@@ -1552,6 +1563,7 @@ void __ieee80211_rx(struct ieee80211_hw 
- 		ieee80211_invoke_rx_handlers(local, local->rx_handlers, &rx,
- 					     rx.sta);
- 		sta_info_put(sta);
-+		rcu_read_unlock();
- 		return;
- 	}
- 
-@@ -1613,6 +1625,8 @@ void __ieee80211_rx(struct ieee80211_hw 
- 	read_unlock(&local->sub_if_lock);
- 
-  end:
-+	rcu_read_unlock();
-+
- 	if (sta)
- 		sta_info_put(sta);
- }
---- wireless-dev.orig/net/mac80211/tx.c	2007-08-29 15:48:54.831382599 +0200
-+++ wireless-dev/net/mac80211/tx.c	2007-08-29 15:50:20.991382599 +0200
-@@ -17,6 +17,7 @@
- #include <linux/skbuff.h>
- #include <linux/etherdevice.h>
- #include <linux/bitmap.h>
-+#include <linux/rcupdate.h>
- #include <net/ieee80211_radiotap.h>
- #include <net/cfg80211.h>
- #include <net/mac80211.h>
-@@ -426,14 +427,16 @@ ieee80211_tx_h_ps_buf(struct ieee80211_t
- static ieee80211_txrx_result
- ieee80211_tx_h_select_key(struct ieee80211_txrx_data *tx)
- {
-+	struct ieee80211_key *key;
-+
- 	tx->u.tx.control->key_idx = HW_KEY_IDX_INVALID;
- 
- 	if (unlikely(tx->u.tx.control->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT))
- 		tx->key = NULL;
--	else if (tx->sta && tx->sta->key)
--		tx->key = tx->sta->key;
--	else if (tx->sdata->default_key)
--		tx->key = tx->sdata->default_key;
-+	else if (tx->sta && (key = rcu_dereference(tx->sta->key)))
-+		tx->key = key;
-+	else if ((key = rcu_dereference(tx->sdata->default_key)))
-+		tx->key = key;
- 	else if (tx->sdata->drop_unencrypted &&
- 		 !(tx->sdata->eapol && ieee80211_is_eapol(tx->skb))) {
- 		I802_DEBUG_INC(tx->local->tx_handlers_drop_unencrypted);
-@@ -1111,6 +1114,12 @@ static int ieee80211_tx(struct net_devic
- 		return 0;
- 	}
- 
-+	/*
-+	 * key references are protected using RCU and this requires that
-+	 * we are in a read-site RCU section during receive processing
-+	 */
-+	rcu_read_lock();
-+
- 	sta = tx.sta;
- 	tx.u.tx.mgmt_interface = mgmt;
- 	tx.u.tx.mode = local->hw.conf.mode;
-@@ -1138,6 +1147,7 @@ static int ieee80211_tx(struct net_devic
- 
- 	if (unlikely(res == TXRX_QUEUED)) {
- 		I802_DEBUG_INC(local->tx_handlers_queued);
-+		rcu_read_unlock();
- 		return 0;
- 	}
- 
-@@ -1195,6 +1205,7 @@ retry:
- 		store->last_frag_rate_ctrl_probe =
- 			!!(tx.flags & IEEE80211_TXRXD_TXPROBE_LAST_FRAG);
- 	}
-+	rcu_read_unlock();
- 	return 0;
- 
-  drop:
-@@ -1204,6 +1215,7 @@ retry:
- 		if (tx.u.tx.extra_frag[i])
- 			dev_kfree_skb(tx.u.tx.extra_frag[i]);
- 	kfree(tx.u.tx.extra_frag);
-+	rcu_read_unlock();
- 	return 0;
- }
- 
+It may be relevant at this point to mention that the remote device is a Nokia
+n800 so likely to have fairly aggressive power save settings.
 
+MISSING DATA
+[16694.835829] phy7 -> rt2x00usb_interrupt_rxdone: Debug - Size 128
+[16694.938310] phy7 -> rt2x00usb_interrupt_rxdone: Debug - Size 128
+[16695.040666] phy7 -> rt2x00usb_interrupt_rxdone: Debug - Size 128
+[16695.143039] phy7 -> rt2x00usb_interrupt_rxdone
+MISSING DATA
+[16695.843860] Entering ieee80211_master_start_xmit()
+[16695.849097] wmaster0: Entering ieee80211_tx_h_multicast_ps_buf(), hw.flags 1746
+[16695.857083] Leaving ieee80211_tx_h_multicast_ps_buf
+[16695.862383] Leaving ieee80211_master_start_xmit() ret=0
+MISSING DATA
+[16696.883214] phy7 -> rt2x00usb_interrupt_rxdone: Debug - Size 128
+[16696.952071] phy7 -> rt2x00usb_interrupt_rxdone: Debug - Size 128
+[16696.958640] wmaster0: Adding new IBSS station 00:19:4f:9e:b8:ba (dev=wlan1)
+[16696.966386] wmaster0: Added STA 00:
+MISSING DATA
+[16697.804543] phy7 -> rt2x00usb_interrupt_rxdone: Debug - Size 128
+[16697.851272] Entering ieee80211_master_start_xmit()
+[16697.856499] wmaster0: Entering ieee80211_tx_h_multicast_ps_buf(), hw.flags 1746
+[16697.864492] INFO: trying to register non-stat
+MISSING DATA
+16703.045044] BUG: NMI Watchdog detected LOCKUP on CPU0, eip c022d7fa, registers:
+[16703.052642] Modules linked in: nls_cp437 isofs udf rfcomm l2cap bluetooth binfmt_misc cpufreq_powersave cpufreq_stats cpufreq_userspace cpufre
+q_ondemand cpufreq_conservative freq_table video output battery container sbs fan dock ac ipv6 nfs lockd sunrpc asb100 hwmon_vid lp pl2303 rt2500
+usb arc4 ecb blkcipher rc80211_simple usbserial rt73usb rt2x00usb rt2x00lib input_polldev crc_itu_t mac80211 af_packet tsdev snd_ens1371 gameport
+ snd_rawmidi snd_seq_device snd_ac97_codec ac97_bus snd_pcm_oss snd_mixer_oss snd_pcm serio_raw snd_timer parport_pc evdev parport psmouse i2c_vi
+apro 8139too i2c_core snd ehci_hcd pcspkr floppy via_ircc uhci_hcd irda 8139cp soundcore snd_page_alloc mii crc_ccitt usbcore shpchp via_agp pci_
+hotplug agpgart thermal button processor
+[16703.123282] CPU:    0
+[16703.123283] EIP:    0060:[<c022d7fa>]    Not tainted VLI
+[16703.123285] EFLAGS: 00000046   (2.6.23-rc3 #11)
+[16703.135782] EIP is at _raw_spin_lock+0xaa/0x150
+[16703.140450] eax: 00000000   ebx: c4f5791c   ecx: 1ec4817c   edx: 665fa417
+[16703.147506] esi: 0dd5135f   edi: 00000000   ebp: 6b8ab748   esp: c0453ad8
+[16703.154598] ds: 007b   es: 007b   fs: 00d8  gs: 0000  ss: 0068
+[16703.160664] Process swapper (pid: 0, ti=c0452000 task=c041a3c0 task.ti=c0452000)
 
