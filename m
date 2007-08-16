@@ -1,59 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51561 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43811 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751563AbXHTLX6 (ORCPT
+	with ESMTP id S1764941AbXHPQ3z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2007 07:23:58 -0400
-Subject: Re: [RFC] mac80211: fix software decryption with b43legacy
+	Thu, 16 Aug 2007 12:29:55 -0400
+Message-Id: <20070816162931.924947000@sipsolutions.net>
+References: <20070816162908.030659000@sipsolutions.net>
+Date: Thu, 16 Aug 2007 18:29:09 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <46C752FE.4030706@lwfinger.net>
-References: <1187346385.23489.157.camel@johannes.berg>
-	 <46C5CC0D.2040609@lwfinger.net> <1187384230.6090.7.camel@johannes.berg>
-	 <46C612E8.4020604@lwfinger.net> <1187387215.6090.13.camel@johannes.berg>
-	 <46C64777.1000602@lwfinger.net> <1187453173.6090.33.camel@johannes.berg>
-	 <46C752FE.4030706@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-shbv1PTr9nicvw2NlHVc"
-Date: Mon, 20 Aug 2007 13:20:48 +0200
-Message-Id: <1187608848.6090.84.camel@johannes.berg>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Subject: [PATCH 1/4] ralink drivers: remove IEEE80211_HW_DATA_NULLFUNC_ACK
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The flag will be removed from mac80211 because it is unused.
 
---=-shbv1PTr9nicvw2NlHVc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: rt2400-devel@lists.sourceforge.net
+Cc: Ivo van Doorn <ivdoorn@gmail.com>
 
-On Sat, 2007-08-18 at 15:13 -0500, Larry Finger wrote:
+---
+ drivers/net/wireless/rt2400pci.c |    1 -
+ drivers/net/wireless/rt2500pci.c |    1 -
+ drivers/net/wireless/rt2500usb.c |    1 -
+ drivers/net/wireless/rt61pci.c   |    1 -
+ drivers/net/wireless/rt73usb.c   |    1 -
+ 5 files changed, 5 deletions(-)
 
-> eth1: No ProbeResp from current AP 00:1a:70:46:ba:b1 - assume out of rang=
-e
+--- wireless-dev.orig/drivers/net/wireless/rt2400pci.c	2007-08-16 18:18:27.243468950 +0200
++++ wireless-dev/drivers/net/wireless/rt2400pci.c	2007-08-16 18:18:43.093468950 +0200
+@@ -1446,7 +1446,6 @@ static void rt2400pci_probe_hw_mode(stru
+ 	rt2x00dev->hw->flags =
+ 	    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 	    IEEE80211_HW_WEP_INCLUDE_IV |
+-	    IEEE80211_HW_DATA_NULLFUNC_ACK |
+ 	    IEEE80211_HW_NO_TKIP_WMM_HWACCEL |
+ 	    IEEE80211_HW_MONITOR_DURING_OPER |
+ 	    IEEE80211_HW_NO_PROBE_FILTERING;
+--- wireless-dev.orig/drivers/net/wireless/rt2500pci.c	2007-08-16 18:19:14.133468950 +0200
++++ wireless-dev/drivers/net/wireless/rt2500pci.c	2007-08-16 18:19:16.323468950 +0200
+@@ -1691,7 +1691,6 @@ static void rt2500pci_probe_hw_mode(stru
+ 	rt2x00dev->hw->flags =
+ 	    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 	    IEEE80211_HW_WEP_INCLUDE_IV |
+-	    IEEE80211_HW_DATA_NULLFUNC_ACK |
+ 	    IEEE80211_HW_NO_TKIP_WMM_HWACCEL |
+ 	    IEEE80211_HW_MONITOR_DURING_OPER |
+ 	    IEEE80211_HW_NO_PROBE_FILTERING;
+--- wireless-dev.orig/drivers/net/wireless/rt2500usb.c	2007-08-16 18:19:14.233468950 +0200
++++ wireless-dev/drivers/net/wireless/rt2500usb.c	2007-08-16 18:19:17.883468950 +0200
+@@ -1422,7 +1422,6 @@ static void rt2500usb_probe_hw_mode(stru
+ 	    IEEE80211_HW_RX_INCLUDES_FCS |
+ 	    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 	    IEEE80211_HW_WEP_INCLUDE_IV |
+-	    IEEE80211_HW_DATA_NULLFUNC_ACK |
+ 	    IEEE80211_HW_NO_TKIP_WMM_HWACCEL |
+ 	    IEEE80211_HW_MONITOR_DURING_OPER |
+ 	    IEEE80211_HW_NO_PROBE_FILTERING;
+--- wireless-dev.orig/drivers/net/wireless/rt61pci.c	2007-08-16 18:18:27.143468950 +0200
++++ wireless-dev/drivers/net/wireless/rt61pci.c	2007-08-16 18:18:41.373468950 +0200
+@@ -2215,7 +2215,6 @@ static void rt61pci_probe_hw_mode(struct
+ 	rt2x00dev->hw->flags =
+ 	    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 	    IEEE80211_HW_WEP_INCLUDE_IV |
+-	    IEEE80211_HW_DATA_NULLFUNC_ACK |
+ 	    IEEE80211_HW_NO_TKIP_WMM_HWACCEL |
+ 	    IEEE80211_HW_MONITOR_DURING_OPER |
+ 	    IEEE80211_HW_NO_PROBE_FILTERING;
+--- wireless-dev.orig/drivers/net/wireless/rt73usb.c	2007-08-16 18:18:27.033468950 +0200
++++ wireless-dev/drivers/net/wireless/rt73usb.c	2007-08-16 18:18:39.603468950 +0200
+@@ -1682,7 +1682,6 @@ static void rt73usb_probe_hw_mode(struct
+ 	    IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE |
+ 	    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 	    IEEE80211_HW_WEP_INCLUDE_IV |
+-	    IEEE80211_HW_DATA_NULLFUNC_ACK |
+ 	    IEEE80211_HW_NO_TKIP_WMM_HWACCEL |
+ 	    IEEE80211_HW_MONITOR_DURING_OPER |
+ 	    IEEE80211_HW_NO_PROBE_FILTERING;
 
-odd.
-
-> I don't know why this happened. I didn't move away from the AP, or do any=
-thing that should have=20
-> caused loss of a probe response; however, immediately after that, I got t=
-his GPF:
-
-I'll look into it, thanks.
-
-johannes
-
---=-shbv1PTr9nicvw2NlHVc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGyXkQ/ETPhpq3jKURAp1QAKC7kmhYDRsqzTiX6A42pPwCS9l6wwCfXu3U
-UC5mECYgunQyNtzMsQr4dtU=
-=DRxE
------END PGP SIGNATURE-----
-
---=-shbv1PTr9nicvw2NlHVc--
+-- 
 
