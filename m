@@ -1,41 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.181]:47375 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752985AbXH3MYI (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:53393 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757131AbXHPNSf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 08:24:08 -0400
-Received: by el-out-1112.google.com with SMTP id j27so210291elf
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Aug 2007 05:24:08 -0700 (PDT)
-Message-ID: <c4db5c50708300524s75fe6acame25bc58f473f3ed1@mail.gmail.com>
-Date: Thu, 30 Aug 2007 13:24:06 +0100
-From: "Robin Cornelius" <robin.cornelius@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [Rt2400-devel] [PATCH] Fix breakage on WEP for cards that rely on software decoding
-Cc: "Adam Baker" <linux@baker-net.org.uk>,
-	rt2400-devel@lists.sourceforge.net,
-	"Ivo van Doorn" <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1188475206.2963.17.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200708282345.53016.adam@baker-net.org.uk>
-	 <1188389382.19891.12.camel@johannes.berg>
-	 <200708292223.02321.linux@baker-net.org.uk>
-	 <1188475206.2963.17.camel@johannes.berg>
+	Thu, 16 Aug 2007 09:18:35 -0400
+Subject: Re: mac80211 AP mode powersaving problems?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <Kalle.Valo@nokia.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>
+In-Reply-To: <87lkccf30m.fsf@tikku.osso.net>
+References: <1186990509.27916.38.camel@johannes.berg>
+	 <87lkccf30m.fsf@tikku.osso.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tzQS6kVLceNH8J9SB6m2"
+Date: Thu, 16 Aug 2007 15:21:19 +0200
+Message-Id: <1187270479.5141.44.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/30/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2007-08-29 at 22:23 +0100, Adam Baker wrote:
->
-> > I can confirm that with that patch WEP is working for me. Another user on the
-> > rt2x00 forum is also reporting success with it.
->
-> Good. I'll be posting this patch for inclusion soon.
->
 
-Hi Johannes,
+--=-tzQS6kVLceNH8J9SB6m2
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-A bit behind the boat here but another successful test (rt2x00:-
-rt61pci, rt73usb and rt2500usb) here as well. Clears the issue for me.
+On Thu, 2007-08-16 at 08:43 +0300, Kalle Valo wrote:
 
-Robin Cornelius
+> One thing which came to my mind is that when Nokia 770 is in PSM it
+> uses PS-Poll to fetch the frames from AP.
+
+Yeah, I noticed.
+
+>  Few devices do that, so I
+> wonder if mac80211 supports that properly?
+
+It should, as far as I can tell, but I haven't been able to quite
+pinpoint it yet. I'll need to get a third device fully monitoring.
+
+johannes
+
+--=-tzQS6kVLceNH8J9SB6m2
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGxE9P/ETPhpq3jKURAg8mAKCDijeMRiEgRgfxmDYJ6GKzY+iIkQCgnUWB
+pdPJiv+Gnbd+yud942CQT5U=
+=PQVV
+-----END PGP SIGNATURE-----
+
+--=-tzQS6kVLceNH8J9SB6m2--
+
