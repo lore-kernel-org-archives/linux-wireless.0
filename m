@@ -1,64 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:37065
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59695
 	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932538AbXHNSN5 (ORCPT
+	with ESMTP id S1754197AbXHPRLy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2007 14:13:57 -0400
-Message-Id: <20070814181214.599568000@bu3sch.de>
-References: <20070814181213.135874000@bu3sch.de>
-Date: Tue, 14 Aug 2007 20:12:16 +0200
+	Thu, 16 Aug 2007 13:11:54 -0400
 From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: [patch 3/9] b43: Powerup the bus before accessing any MMIO
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC 2/2 v2] mac80211: revamp interface and filter configuration
+Date: Thu, 16 Aug 2007 19:10:56 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>, Zhu Yi <yi.zhu@intel.com>
+References: <20070815152557.221351000@sipsolutions.net> <1187275819.23489.9.camel@johannes.berg> <1187276330.23489.14.camel@johannes.berg>
+In-Reply-To: <1187276330.23489.14.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200708161910.56957.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This crashes otherwise.
+On Thursday 16 August 2007 16:58:50 Johannes Berg wrote:
+> For convenience, here are the patches for each driver.
+> 
+> johannes
+> 
+
+b43 patch:
 
 Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Index: wireless-dev-new/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-dev-new.orig/drivers/net/wireless/b43/main.c	2007-08-12 20:17:01.000000000 +0200
-+++ wireless-dev-new/drivers/net/wireless/b43/main.c	2007-08-12 20:17:07.000000000 +0200
-@@ -3619,6 +3619,11 @@ static int b43_wireless_core_attach(stru
- 	 * that in core_init(), too.
- 	 */
- 
-+	err = ssb_bus_powerup(bus, 0);
-+	if (err) {
-+		bcmerr(wl, "Bus powerup failed\n");
-+		goto out;
-+	}
- 	/* Get the PHY type. */
- 	if (dev->dev->id.revision >= 5) {
- 		u32 tmshigh;
-@@ -3637,7 +3642,7 @@ static int b43_wireless_core_attach(stru
- 	/* Initialize LEDs structs. */
- 	err = b43_leds_init(dev);
- 	if (err)
--		goto out;
-+		goto err_powerdown;
- 
- 	dev->phy.gmode = (have_gphy || have_bphy);
- 	tmp = dev->phy.gmode ? B43_TMSLOW_GMODE : 0;
-@@ -3689,11 +3694,13 @@ static int b43_wireless_core_attach(stru
- 	ssb_device_disable(dev->dev, 0);
- 	ssb_bus_may_powerdown(bus);
- 
--      out:
-+out:
- 	return err;
- 
--      err_leds_exit:
-+err_leds_exit:
- 	b43_leds_exit(dev);
-+err_powerdown:
-+	ssb_bus_may_powerdown(bus);
- 	return err;
- }
- 
-
 -- 
-
+Greetings Michael.
