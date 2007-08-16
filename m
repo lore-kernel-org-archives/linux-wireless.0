@@ -1,33 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purr.warmcat.com ([87.106.142.209]:33434 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S940264AbXHMIFl (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52707 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932868AbXHPQb1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 04:05:41 -0400
-Message-ID: <46C010D2.7020702@warmcat.com>
-Date: Mon, 13 Aug 2007 09:05:38 +0100
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: Hans de Goede <j.w.r.degoede@hhs.nl>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Recent linux-wireless git changes have broken my prism54pci card
-References: <46BFF10B.1090307@hhs.nl> <46BFFE4F.802@warmcat.com> <46C00D1E.3000807@hhs.nl> <200708130058.47778.flamingice@sourmilk.net>
-In-Reply-To: <200708130058.47778.flamingice@sourmilk.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 16 Aug 2007 12:31:27 -0400
+Message-Id: <20070816162932.999042000@sipsolutions.net>
+References: <20070816162908.030659000@sipsolutions.net>
+Date: Thu, 16 Aug 2007 18:29:11 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>, developers@islsm.org
+Subject: [PATCH 3/4] p54: remove IEEE80211_HW_DATA_NULLFUNC_ACK
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Somebody in the thread at some point said:
-> On Monday 13 August 2007 00:49, Hans de Goede wrote:
->> I already found that one, but there is no drivers/net/wireless/mac80211 dir
->> there. What am I missing?
->>
-> John Linville recently collapsed that directory into driver/net/wireless.
+The flag will be removed from mac80211 because it is unused.
 
-Looking through that gitweb HEAD, the mac80211 stuff appears to be just
-plain absent at the moment as Hans says:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Wu <flamingice@sourmilk.net>
+Cc: developers@islsm.org
 
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-dev.git;a=blob;f=drivers/net/wireless/Kconfig;h=ae27af0141c02ee5b6100aa7f512dfdd77c4e703;hb=HEAD
+---
+ drivers/net/wireless/p54common.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
--Andy
+--- wireless-dev.orig/drivers/net/wireless/p54common.c	2007-08-16 18:19:38.323468950 +0200
++++ wireless-dev/drivers/net/wireless/p54common.c	2007-08-16 18:19:49.633468950 +0200
+@@ -893,9 +893,7 @@ struct ieee80211_hw *p54_init_common(siz
+ 	priv->modes[0].channels = priv->channels;
+ 	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING | /* not sure */
+ 		    IEEE80211_HW_RX_INCLUDES_FCS |
+-		    IEEE80211_HW_WEP_INCLUDE_IV |
+-		    IEEE80211_HW_DATA_NULLFUNC_ACK; /* TODO: check */
+-		    /* IEEE80211_HW_MONITOR_DURING_OPER FIXME: check */
++		    IEEE80211_HW_WEP_INCLUDE_IV;
+ 	dev->channel_change_time = 1000;	/* TODO: find actual value */
+ 	dev->max_rssi = 100;
+ 
+
+-- 
+
