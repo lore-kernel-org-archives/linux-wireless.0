@@ -1,38 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:53769 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752822AbXHNAYY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 20:24:24 -0400
-Message-ID: <46C0F635.9040300@lwfinger.net>
-Date: Mon, 13 Aug 2007 19:24:21 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3654 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754075AbXHQOQF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Aug 2007 10:16:05 -0400
+Date: Fri, 17 Aug 2007 09:49:41 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org, jbenc@suse.cz,
+	Michael Buesch <mb@bu3sch.de>, Daniel Drake <dsd@gentoo.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Bcm43xx-dev@lists.berlios.de,
+	Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: mac80211 IPv6 problems
+Message-ID: <20070817134941.GB6090@tuxdriver.com>
+References: <46b1fde0.b+weBDN75J0SPe2a%Larry.Finger@lwfinger.net> <1186094778.6701.6.camel@shinybook.infradead.org> <20070803005517.GA4261@tuxdriver.com> <200708030102.17358.flamingice@sourmilk.net> <20070806170500.GE6442@tuxdriver.com> <1187311977.23489.93.camel@johannes.berg>
 MIME-Version: 1.0
-To: Michael Wu <flamingice@sourmilk.net>
-CC: Ivo van Doorn <ivdoorn@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V3] mac80211: Turn off meaningless TKIP message when software  WEP encryption is used
-References: <46c0d788.GYQYqGfCBKyAWrg7%Larry.Finger@lwfinger.net> <200708140054.22845.IvDoorn@gmail.com> <46C0E5AD.2080407@lwfinger.net> <200708131658.27758.flamingice@sourmilk.net>
-In-Reply-To: <200708131658.27758.flamingice@sourmilk.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1187311977.23489.93.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Wu wrote:
-> On Monday 13 August 2007 16:13, Larry Finger wrote:
->> Yes, this empirical behavior does not seem to match one's intuition on what
->> the flag should do.
->>
-> The flag means the hardware does the rc4 but doesn't bother to deal with the 
-> IV/ICV. If you're going do software encryption, there's no reason to bother 
-> with that flag, as that says your hardware supports and does rc4 in hardware.
+On Fri, Aug 17, 2007 at 02:52:56AM +0200, Johannes Berg wrote:
+> On Mon, 2007-08-06 at 13:05 -0400, John W. Linville wrote:
+> 
+> > --- a/net/mac80211/ieee80211.c
+> > +++ b/net/mac80211/ieee80211.c
+> > @@ -3030,9 +3030,10 @@ ieee80211_rx_h_data(struct ieee80211_txrx_data *rx)
+> >  		memcpy(dst, hdr->addr1, ETH_ALEN);
+> >  		memcpy(src, hdr->addr3, ETH_ALEN);
+> >  
+> > -		if (sdata->type != IEEE80211_IF_TYPE_STA) {
+> > +		if (sdata->type != IEEE80211_IF_TYPE_STA ||
+> > +		    (is_multicast_ether_addr(dst) &&
+> > +		     !compare_ether_addr(src, dev->dev_addr)))
+> >  			return TXRX_DROP;
+> 
+> I can confirm that this works (applies if you s/ieee80211.c/rx.c/) for
+> IPv6 link local addresses, and it's definitely the right thing to do
+> here.
 
-That is fair enough, but why does that flag ever make any difference when the user has not provided 
-a set_key callback. My interpretation of the code was that this was one means of indicating that we 
-were never going to do any hardware encryption
+Yes, seems so.  FWIW, this patch is in later Fedora kernels.
 
-It would be very helpful to driver writers if the comments in include/net/mac80211.h we improved. 
-This flag has none, but I don't think it is that obvious.
+Unfortunately (due to the ieee80211.c -> rx.c issue you mentioned)
+applying this to 2.6.23 conflicts with patches already queued for
+2.6.24.  Since my experiments show that git doesn't help much in this
+instance, I'll need to work something out with Dave M. if we are to
+get this into 2.6.23.
 
-Larry
+If nothing else, I suppose we can just wait for 2.6.23 and send this
+patch to -stable.  Would that burn anyone's biscuits?
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
