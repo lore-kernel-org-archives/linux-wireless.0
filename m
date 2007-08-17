@@ -1,129 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4243 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754851AbXHFUgX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2007 16:36:23 -0400
-Date: Mon, 6 Aug 2007 16:13:21 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Please pull 'fixes-davem' branch of wireless-2.6
-Message-ID: <20070806201321.GI6442@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49874 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758038AbXHQKMR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Aug 2007 06:12:17 -0400
+Subject: Re: [PATCH 14/20] mac80211: kill key_mgmt variable, use  privacy_enabled
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070815145047.834125000@sipsolutions.net>
+References: <20070815144920.135826000@sipsolutions.net>
+	 <20070815145047.834125000@sipsolutions.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-12Sdi8A7LcaCXenHl2Yl"
+Date: Fri, 17 Aug 2007 03:09:09 +0200
+Message-Id: <1187312949.23489.97.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some fixes intended for 2.6.23.  Individual patches available here:
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/fixes-davem/
+--=-12Sdi8A7LcaCXenHl2Yl
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks!
+On Wed, 2007-08-15 at 16:49 +0200, Johannes Berg wrote:
 
-John
----
+> -	if (!ifsta || ifsta->key_mgmt !=3D IEEE80211_KEY_MGMT_NONE)
+> +	if (!ifsta || !ifsta->privacy_enabled)
+                        ^ be gone!
 
-The following changes since commit d4ac2477fad0f2680e84ec12e387ce67682c5c13:
-  Linus Torvalds (1):
-        Linux 2.6.23-rc2
+That privacy_enabled test is inverted.
 
-are available in the git repository at:
+johannes
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-davem
+--=-12Sdi8A7LcaCXenHl2Yl
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Daniel Drake (2):
-      mac80211: missing dev_put in ieee80211_master_start_xmit
-      mac80211: don't allow scanning in monitor mode
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Zhu Yi (2):
-      mac80211: use do { } while (0) for multi-line macros
-      mac80211: Fix sparse error for sta_last_seq_ctrl_read
+iD8DBQBGxPU1/ETPhpq3jKURApw7AKC2EepUHd+3PsFxe1eXaQOitzXpzwCfW8yx
+7upLCkd7oXajdf1Gzsz9nrY=
+=qOCJ
+-----END PGP SIGNATURE-----
 
- net/mac80211/debugfs_netdev.c  |    8 +++++---
- net/mac80211/debugfs_sta.c     |    2 +-
- net/mac80211/ieee80211.c       |    1 +
- net/mac80211/ieee80211_ioctl.c |   19 +++++++++++++------
- 4 files changed, 20 insertions(+), 10 deletions(-)
+--=-12Sdi8A7LcaCXenHl2Yl--
 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 799a920..095be91 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -271,9 +271,11 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
- 	}
- }
- 
--#define DEBUGFS_DEL(name, type)\
--	debugfs_remove(sdata->debugfs.type.name);\
--	sdata->debugfs.type.name = NULL;
-+#define DEBUGFS_DEL(name, type)					\
-+	do {							\
-+		debugfs_remove(sdata->debugfs.type.name);	\
-+		sdata->debugfs.type.name = NULL;		\
-+	} while (0)
- 
- static void del_sta_files(struct ieee80211_sub_if_data *sdata)
- {
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index d41e696..da34ea7 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -157,7 +157,7 @@ static ssize_t sta_last_seq_ctrl_read(struct file *file, char __user *userbuf,
- 	struct sta_info *sta = file->private_data;
- 	for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
- 		p += scnprintf(p, sizeof(buf)+buf-p, "%x ",
--			       sta->last_seq_ctrl[i]);
-+			       le16_to_cpu(sta->last_seq_ctrl[i]));
- 	p += scnprintf(p, sizeof(buf)+buf-p, "\n");
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
- }
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index c944b17..8ec5ed1 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -1650,6 +1650,7 @@ static int ieee80211_master_start_xmit(struct sk_buff *skb,
- 	if (skb_headroom(skb) < headroom) {
- 		if (pskb_expand_head(skb, headroom, 0, GFP_ATOMIC)) {
- 			dev_kfree_skb(skb);
-+			dev_put(odev);
- 			return 0;
- 		}
- 	}
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-index d0e1ab5..e7904db 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -697,17 +697,24 @@ static int ieee80211_ioctl_siwscan(struct net_device *dev,
- 	if (!netif_running(dev))
- 		return -ENETDOWN;
- 
--	if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID) {
--		if (sdata->type == IEEE80211_IF_TYPE_STA ||
--		    sdata->type == IEEE80211_IF_TYPE_IBSS) {
-+	switch (sdata->type) {
-+	case IEEE80211_IF_TYPE_STA:
-+	case IEEE80211_IF_TYPE_IBSS:
-+		if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID) {
- 			ssid = sdata->u.sta.ssid;
- 			ssid_len = sdata->u.sta.ssid_len;
--		} else if (sdata->type == IEEE80211_IF_TYPE_AP) {
-+		}
-+		break;
-+	case IEEE80211_IF_TYPE_AP:
-+		if (local->scan_flags & IEEE80211_SCAN_MATCH_SSID) {
- 			ssid = sdata->u.ap.ssid;
- 			ssid_len = sdata->u.ap.ssid_len;
--		} else
--			return -EINVAL;
-+		}
-+		break;
-+	default:
-+		return -EOPNOTSUPP;
- 	}
-+
- 	return ieee80211_sta_req_scan(dev, ssid, ssid_len);
- }
- 
--- 
-John W. Linville
-linville@tuxdriver.com
