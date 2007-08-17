@@ -1,57 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49923 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37269 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758078AbXHQKN2 (ORCPT
+	with ESMTP id S1754860AbXHQLi2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2007 06:13:28 -0400
-Subject: Re: Kernel BUG when using ad-hoc mode in rt2x00
+	Fri, 17 Aug 2007 07:38:28 -0400
+Subject: Re: [PATCH] Add iwlwifi wireless drivers (resend)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Adam Baker <linux@baker-net.org.uk>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200708162243.05809.linux@baker-net.org.uk>
-References: <200708082324.17186.linux@baker-net.org.uk>
-	 <200708161625.44057.linux@baker-net.org.uk>
-	 <1187278509.23489.24.camel@johannes.berg>
-	 <200708162243.05809.linux@baker-net.org.uk>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yaWBpqk15iy0pbb7My4J"
-Date: Fri, 17 Aug 2007 12:13:37 +0200
-Message-Id: <1187345617.23489.143.camel@johannes.berg>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W.Linville" <linville@tuxdriver.com>,
+	Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>
+In-Reply-To: <1187350641.23489.172.camel@johannes.berg>
+References: <1187328536.5763.137.camel@debian.sh.intel.com>
+	 <1187350641.23489.172.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-blZ3chBGhGSZ1yvTTvuJ"
+Date: Fri, 17 Aug 2007 13:41:11 +0200
+Message-Id: <1187350871.23489.175.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-yaWBpqk15iy0pbb7My4J
+--=-blZ3chBGhGSZ1yvTTvuJ
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2007-08-16 at 22:43 +0100, Adam Baker wrote:
+On Fri, 2007-08-17 at 13:38 +0200, Johannes Berg wrote:
+> +	  See <file:Documentation/networking/README.iwlwifi> for
+> +	  information on the capabilities currently enabled in this
+> +	  driver and for tips for debugging any issues or problems.
+>=20
+> -ENOENT. It's not in wireless-dev either, has it been written at all?
 
-> Having now managed to capture a small relevant area it looks like
-> there were a couple of seconds missing from the end of that log file.
-
-> [16697.856499] wmaster0: Entering ieee80211_tx_h_multicast_ps_buf(), hw.f=
-lags 1746
-> [16697.864492] INFO: trying to register non-stat
-
-Hm. Maybe you could disable verbose debugging in the ralink drivers to
-get a lower printk rate; however, this is weird, I think I'll have to
-try to reproduce it.
+Ah, found it in iwlwifi.git, but it's mostly a list of TODOs and
+documentation that only applies to the out-of-tree version, except for
+the legalese.
 
 johannes
 
---=-yaWBpqk15iy0pbb7My4J
+--=-blZ3chBGhGSZ1yvTTvuJ
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGxXTR/ETPhpq3jKURAnHGAJsHJ6ZG0OWeKaguj15LLMSfAyuAJwCgmtuz
-uNgBJOCLBEhsr8S5I5LgE8w=
-=P5ns
+iD8DBQBGxYlX/ETPhpq3jKURAqgGAKC3dGwvmNr6W9nDZ6j271AUS9Wy8QCeINLP
+gPwyexLiIqoHUGfzkpYsZFc=
+=35Bv
 -----END PGP SIGNATURE-----
 
---=-yaWBpqk15iy0pbb7My4J--
+--=-blZ3chBGhGSZ1yvTTvuJ--
 
