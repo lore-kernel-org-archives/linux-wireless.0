@@ -1,52 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42421 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756014AbXHXLBC (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:41697 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751331AbXHRDAU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2007 07:01:02 -0400
-Subject: [PATCH] b43: include FCS at end of frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>
+	Fri, 17 Aug 2007 23:00:20 -0400
+Subject: [PATCH 2/2] mac80211: ignore key index on pairwise key
+From: Volker Braun <vbraun@physics.upenn.edu>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Johannes Berg <johannes@sipsolutions.net>
 Content-Type: text/plain
-Date: Fri, 24 Aug 2007 13:01:50 +0200
-Message-Id: <1187953310.24933.19.camel@johannes.berg>
+Date: Fri, 17 Aug 2007 23:00:19 -0400
+Message-Id: <1187406019.30247.18.camel@thinkpad>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch makes b43 include the FCS at the end of
-received frames, useful for monitoring.
+Our Cisco AP's set key index 3 for the PTK. This patch removes the check
+for the key index. I also tried to set idx=0 by hand, but this did not
+work (presumably because the AP then discarded my unicast packets with
+key index 0 instead of 3).
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+With these two patches I can successfully use our dynamic wep wireless
+network.
 
----
- drivers/net/wireless/b43/main.c |    3 ++-
- drivers/net/wireless/b43/xmit.c |    1 -
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Signed-off-by: Volker Braun <volker.braun@physik.hu-berlin.de>
 
---- wireless-dev.orig/drivers/net/wireless/b43/main.c	2007-08-24 12:57:04.949420431 +0200
-+++ wireless-dev/drivers/net/wireless/b43/main.c	2007-08-24 13:00:08.989420431 +0200
-@@ -3934,7 +3934,8 @@ static int b43_wireless_init(struct ssb_
- 	}
+
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index fbdd1d1..66b4f5a 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -385,13 +385,14 @@ static int ieee80211_set_encryption(struct net_device *dev
  
- 	/* fill hw info */
--	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE;
-+	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE |
-+		    IEEE80211_HW_RX_INCLUDES_FCS;
- 	hw->max_signal = 100;
- 	hw->max_rssi = -110;
- 	hw->max_noise = -110;
---- wireless-dev.orig/drivers/net/wireless/b43/xmit.c	2007-08-24 12:57:04.959420431 +0200
-+++ wireless-dev/drivers/net/wireless/b43/xmit.c	2007-08-24 13:00:08.999420431 +0200
-@@ -481,7 +481,6 @@ void b43_rx(struct b43_wldev *dev, struc
- 	}
- 	wlhdr = (struct ieee80211_hdr *)(skb->data);
- 	fctl = le16_to_cpu(wlhdr->frame_control);
--	skb_trim(skb, skb->len - FCS_LEN);
+        sdata = IEEE80211_DEV_TO_SUB_IF(dev);
  
- 	if ((macstat & B43_RX_MAC_DEC) && !(macstat & B43_RX_MAC_DECERR)) {
- 		unsigned int keyidx;
++       if (idx <0 || idx >= NUM_DEFAULT_KEYS) {
++               printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
++                      dev->name, idx);
++               return -EINVAL;
++       }
++
+        if (is_broadcast_ether_addr(sta_addr)) {
+                sta = NULL;
+-               if (idx >= NUM_DEFAULT_KEYS) {
+-                       printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
+-                              dev->name, idx);
+-                       return -EINVAL;
+-               }
+                key = sdata->keys[idx];
+ 
+                /* TODO: consider adding hwaccel support for these; at least
+@@ -405,12 +406,6 @@ static int ieee80211_set_encryption(struct net_device *dev,
+                 * being, this can be only set at compile time. */
+        } else {
+                set_tx_key = 0;
+-               if (idx != 0) {
+-                       printk(KERN_DEBUG "%s: set_encrypt - non-zero idx for "
+-                              "individual key\n", dev->name);
+-                       return -EINVAL;
+-               }
+-
+                sta = sta_info_get(local, sta_addr);
+                if (!sta) {
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
 
 
