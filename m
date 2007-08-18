@@ -1,192 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:22855 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754528AbXHSSbl convert rfc822-to-8bit (ORCPT
+Received: from mail1.sea5.speakeasy.net ([69.17.117.3]:35340 "EHLO
+	mail1.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750709AbXHREFb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Aug 2007 14:31:41 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so446949ugf
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2007 11:31:40 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 21/30] rt2x00: Add byte-ordering annotation for MAC and BSSID
-Date: Sun, 19 Aug 2007 20:28:54 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200708192018.30624.IvDoorn@gmail.com>
-In-Reply-To: <200708192018.30624.IvDoorn@gmail.com>
+	Sat, 18 Aug 2007 00:05:31 -0400
+Date: Fri, 17 Aug 2007 21:04:23 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 05/20] mac80211: remove unused ioctls (1)
+Message-ID: <20070818040423.GF1415@jm.kir.nu>
+References: <20070815144920.135826000@sipsolutions.net> <20070815145043.551508000@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200708192028.55043.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070815145043.551508000@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 3194744aba3738ec948c338ed488b4b4639063b9 Mon Sep 17 00:00:00 2001
-From: Ivo van Doorn <IvDoorn@gmail.com>
-Date: Sat, 18 Aug 2007 13:22:01 +0200
-Subject: [PATCH 21/30] rt2x00: Add byte-ordering annotation for MAC and BSSID
+On Wed, Aug 15, 2007 at 04:49:25PM +0200, Johannes Berg wrote:
+> The ioctls
+> 
+>  * PRISM2_PARAM_WIFI_WME_NOACK_TEST
+>  * PRISM2_PARAM_HOST_ENCRYPT
+>  * PRISM2_PARAM_HOST_DECRYPT
+>  * PRISM2_PARAM_ANTENNA_MODE
+>  * PRISM2_PARAM_STAT_TIME
+>  * PRISM2_PARAM_SCAN_FLAGS
+> 
+> are not used by hostapd or wpa_supplicant.
 
-By adding byte-ordering annotation for the temporary
-register values for MAC and BSSID writing we enhance
-typesafety and uncover a bug:
-When rt73usb and rt61 touch the MAC/BSSID and treat
-it as a register they need to perform byteordering
-to prevent the bytes to get mixed up.
+No, but some of them can be assumed to be used with iwpriv.. First one
+is useful should one be interested in WFA certifications tests. Scan
+flags can be useful in filtering out scan results in cases where there
+are huge numbers of APs around. I could agree with the other ones being
+more or less useless here.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2400pci.c |    4 ++--
- drivers/net/wireless/rt2500pci.c |    4 ++--
- drivers/net/wireless/rt2500usb.c |    4 ++--
- drivers/net/wireless/rt61pci.c   |   14 ++++++++++----
- drivers/net/wireless/rt73usb.c   |   14 ++++++++++----
- 5 files changed, 26 insertions(+), 14 deletions(-)
+> --- wireless-dev.orig/net/mac80211/ieee80211_sta.c	2007-08-15 14:04:46.906516958 +0200
+> +++ wireless-dev/net/mac80211/ieee80211_sta.c	2007-08-15 14:07:46.486516958 +0200
+> @@ -3931,34 +3922,6 @@ ieee80211_sta_scan_result(struct net_dev
 
-diff --git a/drivers/net/wireless/rt2400pci.c b/drivers/net/wireless/rt2400pci.c
-index e5622d6..ffd41a6 100644
---- a/drivers/net/wireless/rt2400pci.c
-+++ b/drivers/net/wireless/rt2400pci.c
-@@ -251,7 +251,7 @@ static int rt2400pci_rfkill_poll(struct rt2x00_dev *rt2x00dev)
-  */
- static void rt2400pci_config_mac_addr(struct rt2x00_dev *rt2x00dev, u8 *addr)
- {
--	u32 reg[2];
-+	__le32 reg[2];
- 
- 	memset(&reg, 0, sizeof(reg));
- 	memcpy(&reg, addr, ETH_ALEN);
-@@ -265,7 +265,7 @@ static void rt2400pci_config_mac_addr(struct rt2x00_dev *rt2x00dev, u8 *addr)
- 
- static void rt2400pci_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
- {
--	u32 reg[2];
-+	__le32 reg[2];
- 
- 	memset(&reg, 0, sizeof(reg));
- 	memcpy(&reg, bssid, ETH_ALEN);
-diff --git a/drivers/net/wireless/rt2500pci.c b/drivers/net/wireless/rt2500pci.c
-index bfcedfd..fce91ed 100644
---- a/drivers/net/wireless/rt2500pci.c
-+++ b/drivers/net/wireless/rt2500pci.c
-@@ -251,7 +251,7 @@ static int rt2500pci_rfkill_poll(struct rt2x00_dev *rt2x00dev)
-  */
- static void rt2500pci_config_mac_addr(struct rt2x00_dev *rt2x00dev, u8 *addr)
- {
--	u32 reg[2];
-+	__le32 reg[2];
- 
- 	memset(&reg, 0, sizeof(reg));
- 	memcpy(&reg, addr, ETH_ALEN);
-@@ -265,7 +265,7 @@ static void rt2500pci_config_mac_addr(struct rt2x00_dev *rt2x00dev, u8 *addr)
- 
- static void rt2500pci_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
- {
--	u32 reg[2];
-+	__le32 reg[2];
- 
- 	memset(&reg, 0, sizeof(reg));
- 	memcpy(&reg, bssid, ETH_ALEN);
-diff --git a/drivers/net/wireless/rt2500usb.c b/drivers/net/wireless/rt2500usb.c
-index 9670330..9ece4af 100644
---- a/drivers/net/wireless/rt2500usb.c
-+++ b/drivers/net/wireless/rt2500usb.c
-@@ -256,7 +256,7 @@ static const struct rt2x00debug rt2500usb_rt2x00debug = {
-  */
- static void rt2500usb_config_mac_addr(struct rt2x00_dev *rt2x00dev, u8 *addr)
- {
--	u16 reg[3];
-+	__le16 reg[3];
- 
- 	memset(&reg, 0, sizeof(reg));
- 	memcpy(&reg, addr, ETH_ALEN);
-@@ -270,7 +270,7 @@ static void rt2500usb_config_mac_addr(struct rt2x00_dev *rt2x00dev, u8 *addr)
- 
- static void rt2500usb_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
- {
--	u16 reg[3];
-+	__le16 reg[3];
- 
- 	memset(&reg, 0, sizeof(reg));
- 	memcpy(&reg, bssid, ETH_ALEN);
-diff --git a/drivers/net/wireless/rt61pci.c b/drivers/net/wireless/rt61pci.c
-index e179702..0e7a528 100644
---- a/drivers/net/wireless/rt61pci.c
-+++ b/drivers/net/wireless/rt61pci.c
-@@ -276,12 +276,15 @@ static int rt61pci_rfkill_poll(struct rt2x00_dev *rt2x00dev)
-  */
- static void rt61pci_config_mac_addr(struct rt2x00_dev *rt2x00dev, u8 *addr)
- {
--	u32 reg[2];
-+	__le32 reg[2];
-+	u32 tmp;
- 
- 	memset(&reg, 0, sizeof(reg));
- 	memcpy(&reg, addr, ETH_ALEN);
- 
--	rt2x00_set_field32(&reg[1], MAC_CSR3_UNICAST_TO_ME_MASK, 0xff);
-+	tmp = le32_to_cpu(reg[1]);
-+	rt2x00_set_field32(&tmp, MAC_CSR3_UNICAST_TO_ME_MASK, 0xff);
-+	reg[1] = cpu_to_le32(tmp);
- 
- 	/*
- 	 * The MAC address is passed to us as an array of bytes,
-@@ -292,12 +295,15 @@ static void rt61pci_config_mac_addr(struct rt2x00_dev *rt2x00dev, u8 *addr)
- 
- static void rt61pci_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
- {
--	u32 reg[2];
-+	__le32 reg[2];
-+	u32 tmp;
- 
- 	memset(&reg, 0, sizeof(reg));
- 	memcpy(&reg, bssid, ETH_ALEN);
- 
--	rt2x00_set_field32(&reg[1], MAC_CSR5_BSS_ID_MASK, 3);
-+	tmp = le32_to_cpu(reg[1]);
-+	rt2x00_set_field32(&tmp, MAC_CSR5_BSS_ID_MASK, 3);
-+	reg[1] = cpu_to_le32(tmp);
- 
- 	/*
- 	 * The BSSID is passed to us as an array of bytes,
-diff --git a/drivers/net/wireless/rt73usb.c b/drivers/net/wireless/rt73usb.c
-index 1e8b88e..057e5a0 100644
---- a/drivers/net/wireless/rt73usb.c
-+++ b/drivers/net/wireless/rt73usb.c
-@@ -257,12 +257,15 @@ static const struct rt2x00debug rt73usb_rt2x00debug = {
-  */
- static void rt73usb_config_mac_addr(struct rt2x00_dev *rt2x00dev, u8 *addr)
- {
--	u32 reg[2];
-+	__le32 reg[2];
-+	u32 tmp;
- 
- 	memset(&reg, 0, sizeof(reg));
- 	memcpy(&reg, addr, ETH_ALEN);
- 
--	rt2x00_set_field32(&reg[1], MAC_CSR3_UNICAST_TO_ME_MASK, 0xff);
-+	tmp = le32_to_cpu(reg[1]);
-+	rt2x00_set_field32(&tmp, MAC_CSR3_UNICAST_TO_ME_MASK, 0xff);
-+	reg[1] = cpu_to_le32(tmp);
- 
- 	/*
- 	 * The MAC address is passed to us as an array of bytes,
-@@ -273,12 +276,15 @@ static void rt73usb_config_mac_addr(struct rt2x00_dev *rt2x00dev, u8 *addr)
- 
- static void rt73usb_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
- {
--	u32 reg[2];
-+	__le32 reg[2];
-+	u32 tmp;
- 
- 	memset(&reg, 0, sizeof(reg));
- 	memcpy(&reg, bssid, ETH_ALEN);
- 
--	rt2x00_set_field32(&reg[1], MAC_CSR5_BSS_ID_MASK, 3);
-+	tmp = le32_to_cpu(reg[1]);
-+	rt2x00_set_field32(&tmp, MAC_CSR5_BSS_ID_MASK, 3);
-+	reg[1] = cpu_to_le32(tmp);
- 
- 	/*
- 	 * The BSSID is passed to us as an array of bytes,
+> -		if (!(local->scan_flags & IEEE80211_SCAN_EXTRA_INFO))
+> -			break;
+
+> -		memset(&iwe, 0, sizeof(iwe));
+> -		iwe.cmd = IWEVCUSTOM;
+> -		sprintf(buf, "bcn_int=%d", bss->beacon_int);
+> -		iwe.u.data.length = strlen(buf);
+> -		current_ev = iwe_stream_add_point(current_ev, end_buf, &iwe,
+> -						  buf);
+> -
+> -		memset(&iwe, 0, sizeof(iwe));
+> -		iwe.cmd = IWEVCUSTOM;
+> -		sprintf(buf, "capab=0x%04x", bss->capability);
+> -		iwe.u.data.length = strlen(buf);
+> -		current_ev = iwe_stream_add_point(current_ev, end_buf, &iwe,
+> -						  buf);
+
+Even if you end up removing scan_flags, you could leave these pieces of
+information available in scan results.
+
 -- 
-1.5.3.rc5
-
+Jouni Malinen                                            PGP id EFC895FA
