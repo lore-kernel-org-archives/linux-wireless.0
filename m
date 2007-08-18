@@ -1,36 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:5732 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935273AbXHOSJk (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:34509 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751410AbXHRJDb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 14:09:40 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so2861nfb
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Aug 2007 11:09:38 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211 & drivers: remove IEEE80211_HW_HOST_GEN_BEACON
-Date: Wed, 15 Aug 2007 20:16:07 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jiri Benc <jbenc@suse.cz>,
+	Sat, 18 Aug 2007 05:03:31 -0400
+Subject: Re: [PATCH 14/20] mac80211: kill key_mgmt variable, use  privacy_enabled
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
 	Michael Wu <flamingice@sourmilk.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <1187134461.31200.32.camel@johannes.berg>
-In-Reply-To: <1187134461.31200.32.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200708152016.07188.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070818035909.GE1415@jm.kir.nu>
+References: <20070815144920.135826000@sipsolutions.net>
+	 <20070815145047.834125000@sipsolutions.net>
+	 <20070818035909.GE1415@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/uggDcNb8Y3dUdGhlqw5"
+Date: Sat, 18 Aug 2007 11:03:29 +0200
+Message-Id: <1187427810.6090.31.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 15 August 2007, Johannes Berg wrote:
-> This flag is unused and not useful either since the driver just calls
-> ieee80211_beacon_get() if it needs a beacon.
 
-I assume that mac80211 will always provide a beacon to the driver when needed?
-I mean during config_interface a beacon is supplied for master interfaces and this
-will kick the beacon handler for rt2x00. (which also assures ieee80211_beacon_get() 
-will be called when the beacon has been send).
-But for adhoc this will still be properly supplied through rt2x00pci_beacon_update() ?
+--=-/uggDcNb8Y3dUdGhlqw5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Ivo
+On Fri, 2007-08-17 at 20:59 -0700, Jouni Malinen wrote:
+
+> This looks a bit odd, though, taken into account that this is coming
+> from IW_AUTH_KEY_MGMT and not IW_AUTH_PRIVACY_INVOKED.. It would
+> probably be better to just remove all the crab from here can ignore the
+> IW_AUTH_KEY_MGMT value in mac80211. The only place that actually used it
+> in the client code (mixed cell configuration) had already been broken,
+> so this could all be just removed completely unless someone has plans on
+> fixing privacy mismatch detection.
+
+Yeah, it should probably be called "key_management_enabled". However,
+privacy mismatch detection does work for WPA, just not for Volker with
+dynamic WEP for some reason.
+
+johannes
+
+--=-/uggDcNb8Y3dUdGhlqw5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGxrXh/ETPhpq3jKURAmEzAKCZKt/+a9rYcIcEkDFq7J7QNb5pAACgqH1E
+ouoIR6HqW4aLBqFTuEDQC8I=
+=PZmd
+-----END PGP SIGNATURE-----
+
+--=-/uggDcNb8Y3dUdGhlqw5--
+
