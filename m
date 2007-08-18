@@ -1,58 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2634 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933519AbXHGAl2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2007 20:41:28 -0400
-Date: Mon, 6 Aug 2007 20:11:55 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
-Cc: acme@ghostprotocols.net, Jeff Garzik <jgarzik@pobox.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] drivers/net/wireless/wl3501_cs.c: remove redundant  memset
-Message-ID: <20070807001155.GA3285@tuxdriver.com>
-References: <200708070050.23158.m.kozlowski@tuxland.pl>
+Received: from agminet01.oracle.com ([141.146.126.228]:12568 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755477AbXHRSKw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Aug 2007 14:10:52 -0400
+Message-ID: <46C7373D.90005@oracle.com>
+Date: Sat, 18 Aug 2007 11:15:25 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200708070050.23158.m.kozlowski@tuxland.pl>
+To: Jiri Slaby <jirislaby@gmail.com>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, source@mvista.com,
+	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
+	dtor@mail.ru, linux-input@atrey.karlin.mff.cuni.cz,
+	netdev@vger.kernel.org, James.Bottomley@SteelEye.com,
+	linux-scsi@vger.kernel.org, gtolstolytkin@ru.mvista.com,
+	vitalywool@gmail.com, dsaxena@plexity.net, ralf@linux-mips.org,
+	linux-mips@linux-mips.org, mchehab@infradead.org,
+	video4linux-list@redhat.com, jbenc@suse.cz,
+	flamingice@sourmilk.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 8/9] define global BIT macro
+References: <737828602404912540@wsc.cz>	<428714662539710215@wsc.cz> <20070818094602.0ea69c27.randy.dunlap@oracle.com> <46C728CB.6060102@gmail.com>
+In-Reply-To: <46C728CB.6060102@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please send wireless patches to linux-wireless@vger.kernel.org,
-and CC me.
+Jiri Slaby wrote:
+> Randy Dunlap napsal(a):
+>> On Sat, 18 Aug 2007 11:44:12 +0200 (CEST) Jiri Slaby wrote:
+>>
+>>> define global BIT macro
+>>>
+>>> move all local BIT defines to the new globally define macro.
+>>>
+>>> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+>>>
+>>> ---
+>>>
+>>>  include/linux/bitops.h                      |    1 +
+>>>  include/video/sstfb.h                       |    1 -
+>>>  include/video/tdfx.h                        |    2 --
+>>>  net/mac80211/ieee80211_i.h                  |    2 --
+>>>  18 files changed, 1 insertions(+), 37 deletions(-)
+>>>
+>>> diff --git a/include/linux/bitops.h b/include/linux/bitops.h
+>>> index 3255b06..a57b81f 100644
+>>> --- a/include/linux/bitops.h
+>>> +++ b/include/linux/bitops.h
+>>> @@ -3,6 +3,7 @@
+>>>  #include <asm/types.h>
+>>>  
+>>>  #ifdef	__KERNEL__
+>>> +#define BIT(nr)			(1UL << (nr))
+>>>  #define BIT_MASK(nr)		(1UL << ((nr) % BITS_PER_LONG))
+>>>  #define BIT_WORD(nr)		((nr) / BITS_PER_LONG)
+>>>  #define BITS_TO_TYPE(nr, t)	(((nr)+(t)-1)/(t))
+>>
+>> So users of the BIT() macro in include/linux/input.h can be
+>> changed to use the global BIT_MASK() macro...
+>> and the former can be removed.
+> 
+> I'm afraid I don't understand you. Maybe, you are writing about changes done in
+> patch no. 7 [1], which didn't go through to the lkml?
+> 
+> [1]
+> http://www.fi.muni.cz/~xslaby/sklad/07-get-rid-of-input-bit-duplicate-defines.patch
 
-Thanks!
-
-John
-
-On Tue, Aug 07, 2007 at 12:50:22AM +0200, Mariusz Kozlowski wrote:
-> Hello,
-> 
-> 	This memset() looks superfluous.
-> 
-> Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
-> 
->  drivers/net/wireless/wl3501_cs.c | 58885 -> 58858 (-27 bytes)
->  drivers/net/wireless/wl3501_cs.o | 200252 -> 200000 (-252 bytes)
-> 
->  drivers/net/wireless/wl3501_cs.c |    1 -
->  1 file changed, 1 deletion(-)
-> 
-> --- linux-2.6.23-rc1-mm2-a/drivers/net/wireless/wl3501_cs.c	2007-08-01 08:43:46.000000000 +0200
-> +++ linux-2.6.23-rc1-mm2-b/drivers/net/wireless/wl3501_cs.c	2007-08-07 00:34:36.000000000 +0200
-> @@ -1841,7 +1841,6 @@ static int wl3501_get_encode(struct net_
->  	tocopy = min_t(u8, len_keys, wrqu->encoding.length);
->  	tocopy = min_t(u8, tocopy, 100);
->  	wrqu->encoding.length = tocopy;
-> -	memset(extra, 0, tocopy);
->  	memcpy(extra, keys, tocopy);
->  out:
->  	return rc;
-> -
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Exactly.  Thanks.
 
 -- 
-John W. Linville
-linville@tuxdriver.com
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
