@@ -1,65 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47453 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758971AbXHUPFq (ORCPT
+Received: from mail8.sea5.speakeasy.net ([69.17.117.10]:50212 "EHLO
+	mail8.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750711AbXHREId (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 11:05:46 -0400
-Message-Id: <20070821150041.213734000@sipsolutions.net>
-References: <20070821145905.689978000@sipsolutions.net>
-Date: Tue, 21 Aug 2007 16:59:11 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	Ivo van Doorn <ivdoorn@gmail.com>
-Subject: [PATCH 06/27] ralink drivers: remove IEEE80211_HW_HOST_GEN_BEACON  flag
-Mime-Version: 1.0
+	Sat, 18 Aug 2007 00:08:33 -0400
+Date: Fri, 17 Aug 2007 21:07:25 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 07/20] mac80211: remove unused ioctls (2)
+Message-ID: <20070818040725.GG1415@jm.kir.nu>
+References: <20070815144920.135826000@sipsolutions.net> <20070815145044.386019000@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070815145044.386019000@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's no point in setting that flag, the drivers can simply
-call ieee80211_beacon_get() if they need a beacon.
+On Wed, Aug 15, 2007 at 04:49:27PM +0200, Johannes Berg wrote:
+> The ioctls
+> 
+>  * PRISM2_PARAM_STA_ANTENNA_SEL
+>  * PRISM2_PARAM_TX_POWER_REDUCTION
+>  * PRISM2_PARAM_KEY_INDEX
+>  * PRISM2_PARAM_DEFAULT_WEP_ONLY
+>  * PRISM2_PARAM_ALLOW_BROADCAST_ALWAYS
+> 
+> are not used by hostapd or wpa_supplicant.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: rt2400-devel@lists.sourceforge.net
-Cc: Ivo van Doorn <ivdoorn@gmail.com>
-
----
- drivers/net/wireless/rt2x00/rt2400pci.c |    1 -
- drivers/net/wireless/rt2x00/rt2500pci.c |    1 -
- drivers/net/wireless/rt2x00/rt61pci.c   |    1 -
- 3 files changed, 3 deletions(-)
-
---- wireless-dev.orig/drivers/net/wireless/rt2x00/rt2400pci.c	2007-08-21 16:25:25.155923881 +0200
-+++ wireless-dev/drivers/net/wireless/rt2x00/rt2400pci.c	2007-08-21 16:25:27.765923881 +0200
-@@ -1448,7 +1448,6 @@ static void rt2400pci_probe_hw_mode(stru
- 	 * Initialize all hw fields.
- 	 */
- 	rt2x00dev->hw->flags =
--	    IEEE80211_HW_HOST_GEN_BEACON |
- 	    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
- 	    IEEE80211_HW_DATA_NULLFUNC_ACK |
- 	    IEEE80211_HW_NO_TKIP_WMM_HWACCEL |
---- wireless-dev.orig/drivers/net/wireless/rt2x00/rt2500pci.c	2007-08-21 16:25:25.165923881 +0200
-+++ wireless-dev/drivers/net/wireless/rt2x00/rt2500pci.c	2007-08-21 16:25:27.765923881 +0200
-@@ -1746,7 +1746,6 @@ static void rt2500pci_probe_hw_mode(stru
- 	 * Initialize all hw fields.
- 	 */
- 	rt2x00dev->hw->flags =
--	    IEEE80211_HW_HOST_GEN_BEACON |
- 	    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
- 	    IEEE80211_HW_DATA_NULLFUNC_ACK |
- 	    IEEE80211_HW_NO_TKIP_WMM_HWACCEL |
---- wireless-dev.orig/drivers/net/wireless/rt2x00/rt61pci.c	2007-08-21 16:25:25.175923881 +0200
-+++ wireless-dev/drivers/net/wireless/rt2x00/rt61pci.c	2007-08-21 16:25:27.765923881 +0200
-@@ -2119,7 +2119,6 @@ static void rt61pci_probe_hw_mode(struct
- 	 * Initialize all hw fields.
- 	 */
- 	rt2x00dev->hw->flags =
--	    IEEE80211_HW_HOST_GEN_BEACON |
- 	    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
- 	    IEEE80211_HW_DATA_NULLFUNC_ACK |
- 	    IEEE80211_HW_NO_TKIP_WMM_HWACCEL |
+Well, maybe so. But again, some are useful for testing (e.g., allow
+broadcast always for continuous TX tests). Default WEP only is useful
+for optimizing hwaccel in some multi-SSID cases, but it seemed to have
+already been broken before..
 
 -- 
-
+Jouni Malinen                                            PGP id EFC895FA
