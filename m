@@ -1,65 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:38948
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757339AbXHBQTG (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:52664 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750825AbXHREof (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 12:19:06 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH] Merge the Sonics Silicon Backplane subsystem
-Date: Thu, 2 Aug 2007 18:18:57 +0200
-Cc: Andrew Morton <akpm@osdl.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Gary Zambrano <zambrano@broadcom.com>
-References: <200707271857.24162.mb@bu3sch.de> <200708021624.59701.mb@bu3sch.de> <Pine.LNX.4.64.0708021812260.5150@anakin>
-In-Reply-To: <Pine.LNX.4.64.0708021812260.5150@anakin>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200708021818.58319.mb@bu3sch.de>
+	Sat, 18 Aug 2007 00:44:35 -0400
+Subject: [PATCH 2/2 v2] mac80211: ignore key index on pairwise key (WEP  only)
+From: Volker Braun <vbraun@physics.upenn.edu>
+To: Jouni Malinen <j@w1.fi>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <20070818034613.GD1415@jm.kir.nu>
+References: <1187406019.30247.18.camel@thinkpad>
+	 <20070818034613.GD1415@jm.kir.nu>
+Content-Type: text/plain
+Date: Sat, 18 Aug 2007 00:44:33 -0400
+Message-Id: <1187412273.3515.4.camel@thinkpad>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 02 August 2007, Geert Uytterhoeven wrote:
-> On Thu, 2 Aug 2007, Michael Buesch wrote:
-> > On Thursday 02 August 2007, Geert Uytterhoeven wrote:
-> > > On Fri, 27 Jul 2007, Michael Buesch wrote:
-> > > > The Sonics Silicon Backplane is a mini-bus used on
-> > > > various Broadcom chips and embedded devices.
-> > > > Devices using the SSB include b44, bcm43xx and various
-> > > > Broadcom based wireless routers.
-> > > > A b44 and bcm43xx port and a SSB based OHCI driver is available.
-> > > 
-> > > > --- a/drivers/Kconfig
-> > > > +++ b/drivers/Kconfig
-> > > > @@ -58,6 +58,8 @@ source "drivers/power/Kconfig"
-> > > >  
-> > > >  source "drivers/hwmon/Kconfig"
-> > > >  
-> > > > +source "drivers/ssb/Kconfig"
-> > > > +
-> > > >  source "drivers/mfd/Kconfig"
-> > > >  
-> > > >  source "drivers/media/Kconfig"
-> > > 
-> > > > --- /dev/null
-> > > > +++ b/drivers/ssb/Kconfig
-> > > > @@ -0,0 +1,92 @@
-> > > > +menu "Sonics Silicon Backplane"
-> > > > +
-> > > > +config SSB
-> > > > +	tristate "Sonics Silicon Backplane support"
-> > > > +	depends on EXPERIMENTAL
-> > > 
-> > > Hence this will show up on all platforms?
-> > 
-> > So?
-> 
-> Shouldn't you add a dependency for platforms where it make sense to have SSB?
+Work-around for broken APs that use a non-zero key index for WEP
+pairwise keys. With this patch, WEP encryption only is exempt from
+providing a zero key index.
 
-Well, that's everything where you can stick a PCI, PCMCIA, PC-Card or CF-Card
-into, plus the MIPS platform, where we have the embedded SSB.
-That's basically everything, no? Except these strange !HAS_IOMEM platforms,
-which we already take care of in a followup patch.
+Signed-off-by: Volker Braun <volker.braun@physik.hu-berlin.de>
+
+
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index fbdd1d1..2a45e54 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -385,13 +385,14 @@ static int ieee80211_set_encryption(struct net_device *dev
+ 
+        sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
++       if (idx <0 || idx >= NUM_DEFAULT_KEYS) {
++               printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
++                      dev->name, idx);
++               return -EINVAL;
++       }
++
+        if (is_broadcast_ether_addr(sta_addr)) {
+                sta = NULL;
+-               if (idx >= NUM_DEFAULT_KEYS) {
+-                       printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
+-                              dev->name, idx);
+-                       return -EINVAL;
+-               }
+                key = sdata->keys[idx];
+ 
+                /* TODO: consider adding hwaccel support for these; at least
+@@ -405,9 +406,15 @@ static int ieee80211_set_encryption(struct net_device *dev,
+                 * being, this can be only set at compile time. */
+        } else {
+                set_tx_key = 0;
+-               if (idx != 0) {
+-                       printk(KERN_DEBUG "%s: set_encrypt - non-zero idx for "
+-                              "individual key\n", dev->name);
++
++               /*
++                * According to the standard, the key index of a pairwise 
++                * key must be zero. However, some AP are broken when it
++                * comes to WEP key indices, so we work around this.
++                */
++               if (idx != 0 && alg != ALG_WEP) {
++                        printk(KERN_DEBUG "%s: set_encrypt - non-zero idx for "
++                               "pairwise key\n", dev->name);
+                        return -EINVAL;
+                }
+ 
+
+
