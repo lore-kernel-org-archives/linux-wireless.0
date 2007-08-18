@@ -1,118 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:60289
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757079AbXHAUFd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2007 16:05:33 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [RFC] bcm43xx-mac80211: Provide information to allow transmission rate decreases
-Date: Wed, 1 Aug 2007 22:05:16 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-References: <46b0e53e.ouY931+cZsSSSmLK%Larry.Finger@lwfinger.net>
-In-Reply-To: <46b0e53e.ouY931+cZsSSSmLK%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Message-Id: <200708012205.16529.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Received: from cacti.profiwh.com ([85.93.165.66]:38184 "EHLO smtp.wsc.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751312AbXHRIwQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Aug 2007 04:52:16 -0400
+Message-id: <25024219461172228260@wsc.cz>
+Subject: [PATCH 1/4 #2] Net: mac80211, remove bitfields from struct ieee80211_tx_packet_data
+From: Jiri Slaby <jirislaby@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <jbenc@suse.cz>
+Cc: <flamingice@sourmilk.net>
+Cc: <jeff@garzik.org>
+Cc: <netdev@vger.kernel.org>
+Date: Sat, 18 Aug 2007 10:53:31 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 01 August 2007 21:55:42 Larry Finger wrote:
-> Michael,
-> 
-> This version saves the long- and short-retry limits in the phy struct
-> and only sets excessive retries when one or the other is reached.
-> 
-> Larry
-> ---
-> 
-> In bcm43xx-mac80211, the mechanism for decreasing the transmit rate cannot
-> be triggered. This may be shown by walking away from the AP with a laptop.
-> At some distance, communications will be lost and never recovered because
-> the rate decreasing mechanism of rc80211_simple needs to see excessive_retries
-> set in the ieee80211_tx_status struct. With this patch, the transmit rate
-> will decrease until communications restart.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
-> ===================================================================
-> --- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
-> +++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
-> @@ -1284,6 +1284,7 @@ void bcm43xx_dma_handle_txstatus(struct 
->  	struct bcm43xx_dmaring *ring;
->  	struct bcm43xx_dmadesc_generic *desc;
->  	struct bcm43xx_dmadesc_meta *meta;
-> +	struct bcm43xx_phy *phy = &dev->phy;
->  	int slot;
->  
->  	ring = parse_cookie(dev, status->cookie, &slot);
-> @@ -1311,6 +1312,10 @@ void bcm43xx_dma_handle_txstatus(struct 
->  			 */
->  			if (status->acked)
->  				meta->txstat.flags |= IEEE80211_TX_STATUS_ACK;
-> +			else
-> +				if ((status->frame_count >= phy->lrlimit) ||
-> +				    (status->frame_count >= phy->srlimit))
-> +					meta->txstat.excessive_retries = 1;
+mac80211, remove bitfields from struct ieee80211_tx_packet_data
 
-No, you need something like
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
 
-if (is long frame)
-	if (cnt >= long_limit)
-		foo;
-else
-	if (cnt >= short_limit)
-		foo;
+---
+commit b7844000ba006531bd2133e8097fa27724efe3c2
+tree ba74c93d4c8f1ef7d7c4a3f45af9a24cf3a6d329
+parent a050b807aede7f33339c6bee0bef1c07cd9c5fc4
+author Jiri Slaby <jirislaby@gmail.com> Sat, 18 Aug 2007 10:23:58 +0200
+committer Jiri Slaby <jirislaby@gmail.com> Sat, 18 Aug 2007 10:23:58 +0200
 
-And please use variable names like
-short_retry_limit or something like that. It's more to type but
-soooooo much easier to read :)
-You could probably shorten that by short_retr_lim.
+ net/mac80211/ieee80211.c     |   15 +++++++++++----
+ net/mac80211/ieee80211_i.h   |   12 +++++++-----
+ net/mac80211/ieee80211_sta.c |    6 ++++--
+ net/mac80211/rx.c            |    4 ++--
+ net/mac80211/tx.c            |   23 ++++++++++++-----------
+ net/mac80211/wme.c           |    4 ++--
+ 6 files changed, 38 insertions(+), 26 deletions(-)
 
-And I think we should store the stuff in struct bcm43xx_wldev, as it's
-a mac attribute.
-bcm43xx_phy is more about the actual PHY hardware calibration and stuff.
-
-We tell the FW whether it's a long or short frame in the TXheader generation.
-
->  			meta->txstat.retry_count = status->frame_count - 1;
->  			ieee80211_tx_status_irqsafe(dev->wl->hw, meta->skb, &(meta->txstat));
->  			/* skb is freed by ieee80211_tx_status_irqsafe() */
-> Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx.h
-> ===================================================================
-> --- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx.h
-> +++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx.h
-> @@ -562,6 +562,8 @@ struct bcm43xx_phy {
->  	u16 lofcal;
->  
->  	u16 initval;//FIXME rename?
-> +	u8 srlimit;
-> +	u8 lrlimit;
->  };
->  
->  /* Data structures for DMA transmission, per 80211 core. */
-> Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-> ===================================================================
-> --- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-> +++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-> @@ -3333,10 +3333,12 @@ static int bcm43xx_wireless_core_init(st
->  	tmp = limit_value(modparam_short_retry, 0, 0xF);
->  	bcm43xx_shm_write16(dev, BCM43xx_SHM_SCRATCH,
->  			    BCM43xx_SHM_SC_SRLIMIT, tmp);
-> +	phy->srlimit = tmp;
->  	tmp = limit_value(modparam_long_retry, 0, 0xF);
->  	bcm43xx_shm_write16(dev, BCM43xx_SHM_SCRATCH,
->  			    BCM43xx_SHM_SC_LRLIMIT, tmp);
->  
-> +	phy->lrlimit = tmp;
->  	bcm43xx_shm_write16(dev, BCM43xx_SHM_SHARED,
->  			    BCM43xx_SHM_SH_SFFBLIM, 3);
->  	bcm43xx_shm_write16(dev, BCM43xx_SHM_SHARED,
-
-
--- 
-Greetings Michael.
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 9ff86ee..0952237 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -933,10 +933,17 @@ static void ieee80211_remove_tx_extra(struct ieee80211_local *local,
+ 
+ 	pkt_data = (struct ieee80211_tx_packet_data *)skb->cb;
+ 	pkt_data->ifindex = control->ifindex;
+-	pkt_data->mgmt_iface = (control->type == IEEE80211_IF_TYPE_MGMT);
+-	pkt_data->req_tx_status = !!(control->flags & IEEE80211_TXCTL_REQ_TX_STATUS);
+-	pkt_data->do_not_encrypt = !!(control->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT);
+-	pkt_data->requeue = !!(control->flags & IEEE80211_TXCTL_REQUEUE);
++	pkt_data->flags &= ~(IEEE80211_TXPD_REQ_TX_STATUS |
++		IEEE80211_TXPD_DO_NOT_ENCRYPT | IEEE80211_TXPD_REQUEUE |
++		IEEE80211_TXPD_MGMT_IFACE);
++	if (control->flags & IEEE80211_TXCTL_REQ_TX_STATUS)
++		pkt_data->flags |= IEEE80211_TXPD_REQ_TX_STATUS;
++	if (control->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT)
++		pkt_data->flags |= IEEE80211_TXPD_DO_NOT_ENCRYPT;
++	if (control->flags & IEEE80211_TXCTL_REQUEUE)
++		pkt_data->flags |= IEEE80211_TXPD_REQUEUE;
++	if (control->type == IEEE80211_IF_TYPE_MGMT)
++		pkt_data->flags |= IEEE80211_TXPD_MGMT_IFACE;
+ 	pkt_data->queue = control->queue;
+ 
+ 	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 4599d55..8163a5a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -166,15 +166,17 @@ struct ieee80211_txrx_data {
+ #endif /* CONFIG_HOSTAPD_WPA_TESTING */
+ };
+ 
++/* flags used in struct ieee80211_tx_packet_data.flags */
++#define IEEE80211_TXPD_REQ_TX_STATUS	BIT(0)
++#define IEEE80211_TXPD_DO_NOT_ENCRYPT	BIT(1)
++#define IEEE80211_TXPD_REQUEUE		BIT(2)
++#define IEEE80211_TXPD_MGMT_IFACE	BIT(3)
+ /* Stored in sk_buff->cb */
+ struct ieee80211_tx_packet_data {
+ 	int ifindex;
+ 	unsigned long jiffies;
+-	unsigned int req_tx_status:1;
+-	unsigned int do_not_encrypt:1;
+-	unsigned int requeue:1;
+-	unsigned int mgmt_iface:1;
+-	unsigned int queue:4;
++	unsigned int flags;
++	u8 queue;
+ };
+ 
+ struct ieee80211_tx_stored_packet {
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index b996332..75521ae 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -506,8 +506,10 @@ static void ieee80211_sta_tx(struct net_device *dev, struct sk_buff *skb,
+ 	pkt_data = (struct ieee80211_tx_packet_data *) skb->cb;
+ 	memset(pkt_data, 0, sizeof(struct ieee80211_tx_packet_data));
+ 	pkt_data->ifindex = sdata->dev->ifindex;
+-	pkt_data->mgmt_iface = (sdata->type == IEEE80211_IF_TYPE_MGMT);
+-	pkt_data->do_not_encrypt = !encrypt;
++	if (sdata->type == IEEE80211_IF_TYPE_MGMT)
++		pkt_data->flags |= IEEE80211_TXPD_MGMT_IFACE;
++	if (!encrypt)
++		pkt_data->flags |= IEEE80211_TXPD_DO_NOT_ENCRYPT;
+ 
+ 	dev_queue_xmit(skb);
+ }
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 0a10720..948eb2f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -415,7 +415,7 @@ static int ap_sta_ps_end(struct net_device *dev, struct sta_info *sta)
+ 	while ((skb = skb_dequeue(&sta->tx_filtered)) != NULL) {
+ 		pkt_data = (struct ieee80211_tx_packet_data *) skb->cb;
+ 		sent++;
+-		pkt_data->requeue = 1;
++		pkt_data->flags |= IEEE80211_TXPD_REQUEUE;
+ 		dev_queue_xmit(skb);
+ 	}
+ 	while ((skb = skb_dequeue(&sta->ps_tx_buf)) != NULL) {
+@@ -427,7 +427,7 @@ static int ap_sta_ps_end(struct net_device *dev, struct sta_info *sta)
+ 		       "since STA not sleeping anymore\n", dev->name,
+ 		       MAC_ARG(sta->addr), sta->aid);
+ #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
+-		pkt_data->requeue = 1;
++		pkt_data->flags |= IEEE80211_TXPD_REQUEUE;
+ 		dev_queue_xmit(skb);
+ 	}
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index b57a592..3d05f8f 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1248,11 +1248,11 @@ int ieee80211_master_start_xmit(struct sk_buff *skb,
+ 
+ 	control.ifindex = odev->ifindex;
+ 	control.type = osdata->type;
+-	if (pkt_data->req_tx_status)
++	if (pkt_data->flags & IEEE80211_TXPD_REQ_TX_STATUS)
+ 		control.flags |= IEEE80211_TXCTL_REQ_TX_STATUS;
+-	if (pkt_data->do_not_encrypt)
++	if (pkt_data->flags & IEEE80211_TXPD_DO_NOT_ENCRYPT)
+ 		control.flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT;
+-	if (pkt_data->requeue)
++	if (pkt_data->flags & IEEE80211_TXPD_REQUEUE)
+ 		control.flags |= IEEE80211_TXCTL_REQUEUE;
+ 	control.queue = pkt_data->queue;
+ 
+@@ -1294,8 +1294,7 @@ int ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 	/* needed because we set skb device to master */
+ 	pkt_data->ifindex = dev->ifindex;
+ 
+-	pkt_data->mgmt_iface = 0;
+-	pkt_data->do_not_encrypt = 1;
++	pkt_data->flags |= IEEE80211_TXPD_DO_NOT_ENCRYPT;
+ 
+ 	/*
+ 	 * fix up the pointers accounting for the radiotap
+@@ -1346,7 +1345,7 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	struct ieee80211_hdr hdr;
+ 	const u8 *encaps_data;
+ 	int encaps_len, skip_header_bytes;
+-	int nh_pos, h_pos, no_encrypt = 0;
++	int nh_pos, h_pos;
+ 	struct sta_info *sta;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+@@ -1492,8 +1491,8 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	pkt_data = (struct ieee80211_tx_packet_data *)skb->cb;
+ 	memset(pkt_data, 0, sizeof(struct ieee80211_tx_packet_data));
+ 	pkt_data->ifindex = dev->ifindex;
+-	pkt_data->mgmt_iface = (sdata->type == IEEE80211_IF_TYPE_MGMT);
+-	pkt_data->do_not_encrypt = no_encrypt;
++	if (sdata->type == IEEE80211_IF_TYPE_MGMT)
++		pkt_data->flags |= IEEE80211_TXPD_MGMT_IFACE;
+ 
+ 	skb->dev = local->mdev;
+ 	sdata->stats.tx_packets++;
+@@ -1551,7 +1550,8 @@ int ieee80211_mgmt_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ 	pkt_data = (struct ieee80211_tx_packet_data *) skb->cb;
+ 	memset(pkt_data, 0, sizeof(struct ieee80211_tx_packet_data));
+ 	pkt_data->ifindex = sdata->dev->ifindex;
+-	pkt_data->mgmt_iface = (sdata->type == IEEE80211_IF_TYPE_MGMT);
++	if (sdata->type == IEEE80211_IF_TYPE_MGMT)
++		pkt_data->flags |= IEEE80211_TXPD_MGMT_IFACE;
+ 
+ 	skb->priority = 20; /* use hardcoded priority for mgmt TX queue */
+ 	skb->dev = sdata->local->mdev;
+@@ -1561,12 +1561,13 @@ int ieee80211_mgmt_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ 	 * to request TX callback for hostapd. BIT(1) is checked.
+ 	 */
+ 	if ((fc & BIT(1)) == BIT(1)) {
+-		pkt_data->req_tx_status = 1;
++		pkt_data->flags |= IEEE80211_TXPD_REQ_TX_STATUS;
+ 		fc &= ~BIT(1);
+ 		hdr->frame_control = cpu_to_le16(fc);
+ 	}
+ 
+-	pkt_data->do_not_encrypt = !(fc & IEEE80211_FCTL_PROTECTED);
++	if (!(fc & IEEE80211_FCTL_PROTECTED))
++		pkt_data->flags |= IEEE80211_TXPD_DO_NOT_ENCRYPT;
+ 
+ 	sdata->stats.tx_packets++;
+ 	sdata->stats.tx_bytes += skb->len;
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 99a792c..d3c81fe 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -110,7 +110,7 @@ static inline int classify80211(struct sk_buff *skb, struct Qdisc *qd)
+ 		return IEEE80211_TX_QUEUE_DATA0;
+ 	}
+ 
+-	if (unlikely(pkt_data->mgmt_iface)) {
++	if (unlikely(pkt_data->flags & IEEE80211_TXPD_MGMT_IFACE)) {
+ 		/* Data frames from hostapd (mainly, EAPOL) use AC_VO
+ 		* and they will include QoS control fields if
+ 		* the target STA is using WME. */
+@@ -179,7 +179,7 @@ static int wme_qdiscop_enqueue(struct sk_buff *skb, struct Qdisc* qd)
+ 	struct Qdisc *qdisc;
+ 	int err, queue;
+ 
+-	if (pkt_data->requeue) {
++	if (pkt_data->flags & IEEE80211_TXPD_REQUEUE) {
+ 		skb_queue_tail(&q->requeued[pkt_data->queue], skb);
+ 		qd->q.qlen++;
+ 		return 0;
