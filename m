@@ -1,56 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from frosty.hhs.nl ([145.52.2.15]:41344 "EHLO frosty.hhs.nl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752231AbXHTIb7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2007 04:31:59 -0400
-Received: from exim (helo=frosty)
-	by frosty.hhs.nl with local-smtp (Exim 4.62)
-	(envelope-from <j.w.r.degoede@hhs.nl>)
-	id 1IN2Ft-00072R-RJ
-	for linux-wireless@vger.kernel.org; Mon, 20 Aug 2007 10:04:57 +0200
-Received: from [145.52.8.13] (port=63566 helo=hhs.nl)
-	by frosty.hhs.nl with esmtp (Exim 4.62)
-	(envelope-from <j.w.r.degoede@hhs.nl>)
-	id 1IN2Ft-00072H-7o
-	for linux-wireless@vger.kernel.org; Mon, 20 Aug 2007 10:04:57 +0200
-Message-ID: <46C94844.3080505@hhs.nl>
-Date: Mon, 20 Aug 2007 09:52:36 +0200
-From: Hans de Goede <j.w.r.degoede@hhs.nl>
-MIME-Version: 1.0
-To: Chr <chunkeey@web.de>
-CC: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Recent linux-wireless git changes have broken my prism54pci card
-References: <46BFF10B.1090307@hhs.nl> <200708140025.56708.chunkeey@web.de> <46C1638C.7070704@hhs.nl> <200708200244.22841.chunkeey@web.de>
-In-Reply-To: <200708200244.22841.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:48700 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750941AbXHRDAT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Aug 2007 23:00:19 -0400
+Subject: [PATCH 1/2] mac80211:  Remove ieee80211_privacy_mismatch
+From: Volker Braun <vbraun@physics.upenn.edu>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain
+Date: Fri, 17 Aug 2007 23:00:18 -0400
+Message-Id: <1187406018.30247.17.camel@thinkpad>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chr wrote:
-> On Tuesday, 14. August 2007, Hans de Goede wrote:
-> 
-> Hans,
-> 
-> Any updates?
+Remove ieee80211_privacy_mismatch() and associated variable
+"privacy_enabled". It serves no purpose and breaks dynamic wep.
 
-Erm, did you not receive my long mail with all kinda logs attached in logs.tar.gz?
+Signed-off-by: Volker Braun <volker.braun@physik.hu-berlin.de>
 
- > Or are you on holiday?
+---
 
-Nope
+The patch is on top of Johannes' patches.
 
-> 
-> I've prepared a patch, which should theoretically lower the excessive retry count.
-> 
-> however I don't think it will magically solve anything...
-> 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index b028cac..d13c06a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -278,7 +278,6 @@ struct ieee80211_if_sta {
+ 	unsigned long request;
+ 	struct sk_buff_head skb_queue;
+ 
+-	int privacy_enabled;
+ 	unsigned long last_probe;
+ 
+ #define IEEE80211_AUTH_ALG_OPEN BIT(0)
+diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
+index b68da75..fbdd1d1 100644
+--- a/net/mac80211/ieee80211_ioctl.c
++++ b/net/mac80211/ieee80211_ioctl.c
+@@ -1955,23 +1955,7 @@ static int ieee80211_ioctl_siwauth(struct net_device *dev,
+ 	case IW_AUTH_CIPHER_GROUP:
+ 	case IW_AUTH_WPA_ENABLED:
+ 	case IW_AUTH_RX_UNENCRYPTED_EAPOL:
+-		break;
+ 	case IW_AUTH_KEY_MGMT:
+-		if (sdata->type != IEEE80211_IF_TYPE_STA)
+-			ret = -EINVAL;
+-		else {
+-			/*
+-			 * What are the semantics in wext supposed to be?
+-			 *
+-			 * Don't bother figuring that out... It's wext after
+-			 * all so figuring it out will most likely require a
+-			 * moderate amount of clairvoyance.
+-			 *
+-			 * TODO: remove in favour of something well-defined
+-			 *       in cfg80211/nl80211.
+-			 */
+-			sdata->u.sta.privacy_enabled = !!data->value;
+-		}
+ 		break;
+ 	case IW_AUTH_80211_AUTH_ALG:
+ 		if (sdata->type == IEEE80211_IF_TYPE_STA ||
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 9234183..f2cf4de 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -1162,29 +1162,6 @@ void ieee80211_send_dls_teardown(struct net_device *dev,
+ }
+ 
+ 
+-static int ieee80211_privacy_mismatch(struct net_device *dev,
+-				      struct ieee80211_if_sta *ifsta)
+-{
+-	struct ieee80211_sta_bss *bss;
+-	int res = 0;
+-
+-	if (!ifsta || ifsta->privacy_enabled)
+-		return 0;
+-
+-	bss = ieee80211_rx_bss_get(dev, ifsta->bssid);
+-	if (!bss)
+-		return 0;
+-
+-	if (ieee80211_sta_wep_configured(dev) !=
+-	    !!(bss->capability & WLAN_CAPABILITY_PRIVACY))
+-		res = 1;
+-
+-	ieee80211_rx_bss_put(dev, bss);
+-
+-	return res;
+-}
+-
+-
+ static void ieee80211_associate(struct net_device *dev,
+ 				struct ieee80211_if_sta *ifsta)
+ {
+@@ -1200,12 +1177,6 @@ static void ieee80211_associate(struct net_device *dev,
+ 	ifsta->state = IEEE80211_ASSOCIATE;
+ 	printk(KERN_DEBUG "%s: associate with AP " MAC_FMT "\n",
+ 	       dev->name, MAC_ARG(ifsta->bssid));
+-	if (ieee80211_privacy_mismatch(dev, ifsta)) {
+-		printk(KERN_DEBUG "%s: mismatch in privacy configuration and "
+-		       "mixed-cell disabled - abort association\n", dev->name);
+-		ifsta->state = IEEE80211_DISABLED;
+-		return;
+-	}
+ 
+ 	ieee80211_send_assoc(dev, ifsta);
+ 
+@@ -2949,14 +2920,6 @@ void ieee80211_sta_work(struct work_struct *work)
+ 		       ifsta->state);
+ 		break;
+ 	}
+-
+-	if (ieee80211_privacy_mismatch(dev, ifsta)) {
+-		printk(KERN_DEBUG "%s: privacy configuration mismatch and "
+-		       "mixed-cell disabled - disassociate\n", dev->name);
+-
+-		ieee80211_send_disassoc(dev, ifsta, WLAN_REASON_UNSPECIFIED);
+-		ieee80211_set_disassoc(dev, ifsta, 0);
+-	}
+ }
+ 
+ 
 
-Erm, I'm awfully busy, still I want to get this resolved! So I'll make time to 
-test things as necessary, but could you first look at the logs I send and then 
-confirm (or deny) that this pathc might help.
-
-Regards,
-
-Hans
 
