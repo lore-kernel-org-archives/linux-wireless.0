@@ -1,34 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2243 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760908AbXHWVOp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2007 17:14:45 -0400
-Date: Thu, 23 Aug 2007 16:56:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, jgarzik@pobox.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 1/1] Net: add ath5k wireless driver
-Message-ID: <20070823205642.GJ2989@tuxdriver.com>
-References: <17440296431036922992@wsc.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <17440296431036922992@wsc.cz>
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49209
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752976AbXHRXxT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Aug 2007 19:53:19 -0400
+Message-Id: <20070818234833.623623000@bu3sch.de>
+Date: Sun, 19 Aug 2007 01:48:33 +0200
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: [patch 0/6] New patch series for merge
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 12, 2007 at 05:33:16PM +0200, Jiri Slaby wrote:
-> add ath5k wireless driver
-> 
-> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Hi John,
 
-Review still pending, but I went ahead and added this on the 'ath5k'
-branch of wireless-dev.  It is available on 'everything' as well.
+This patch series catches wireless-dev up to my
+current wireless-development patchset.
 
-Thanks,
+Please merge this into wireless-dev.
 
-John
+IMPORTANT: Latest fwcutter from SVN and re-extracting the firmware is needed after applying this.
+
+
 -- 
-John W. Linville
-linville@tuxdriver.com
+
