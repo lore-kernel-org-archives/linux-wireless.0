@@ -1,68 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49842 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757253AbXHQKLi (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:58896 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756765AbXHRUNw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2007 06:11:38 -0400
-Subject: Re: mac80211 IPv6 problems
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org, jbenc@suse.cz,
-	Michael Buesch <mb@bu3sch.de>, Daniel Drake <dsd@gentoo.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Bcm43xx-dev@lists.berlios.de,
-	Larry Finger <larry.finger@lwfinger.net>
-In-Reply-To: <20070806170500.GE6442@tuxdriver.com>
-References: <46b1fde0.b+weBDN75J0SPe2a%Larry.Finger@lwfinger.net>
-	 <1186094778.6701.6.camel@shinybook.infradead.org>
-	 <20070803005517.GA4261@tuxdriver.com>
-	 <200708030102.17358.flamingice@sourmilk.net>
-	 <20070806170500.GE6442@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iCoAty4GrmotscNfNYOA"
-Date: Fri, 17 Aug 2007 02:52:56 +0200
-Message-Id: <1187311977.23489.93.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 18 Aug 2007 16:13:52 -0400
+Message-ID: <46C752FE.4030706@lwfinger.net>
+Date: Sat, 18 Aug 2007 15:13:50 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: fix software decryption with b43legacy
+References: <1187346385.23489.157.camel@johannes.berg>	 <46C5CC0D.2040609@lwfinger.net> <1187384230.6090.7.camel@johannes.berg>	 <46C612E8.4020604@lwfinger.net> <1187387215.6090.13.camel@johannes.berg>	 <46C64777.1000602@lwfinger.net> <1187453173.6090.33.camel@johannes.berg>
+In-Reply-To: <1187453173.6090.33.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I have added the lists to this message.
 
---=-iCoAty4GrmotscNfNYOA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I got b43legacy up and running with the software decryption modifications. It started OK with 
+WPA-PSK TKIP encryption, but soon thereafter, I got this message:
 
-On Mon, 2007-08-06 at 13:05 -0400, John W. Linville wrote:
+eth1: No ProbeResp from current AP 00:1a:70:46:ba:b1 - assume out of range
 
-> --- a/net/mac80211/ieee80211.c
-> +++ b/net/mac80211/ieee80211.c
-> @@ -3030,9 +3030,10 @@ ieee80211_rx_h_data(struct ieee80211_txrx_data *rx=
-)
->  		memcpy(dst, hdr->addr1, ETH_ALEN);
->  		memcpy(src, hdr->addr3, ETH_ALEN);
-> =20
-> -		if (sdata->type !=3D IEEE80211_IF_TYPE_STA) {
-> +		if (sdata->type !=3D IEEE80211_IF_TYPE_STA ||
-> +		    (is_multicast_ether_addr(dst) &&
-> +		     !compare_ether_addr(src, dev->dev_addr)))
->  			return TXRX_DROP;
+I don't know why this happened. I didn't move away from the AP, or do anything that should have 
+caused loss of a probe response; however, immediately after that, I got this GPF:
 
-I can confirm that this works (applies if you s/ieee80211.c/rx.c/) for
-IPv6 link local addresses, and it's definitely the right thing to do
-here.
+general protection fault: 0000 [1] SMP
+CPU 0
+Modules linked in: nfs af_packet snd_pcm_oss snd_mixer_oss snd_seq snd_seq_device vboxdrv
+cpufreq_conservative cpufreq_ondemand cpufreq_userspace cpufreq_powersave powernow_k8 freq_table
+thermal processor button battery ac nls_utf8 ntfs loop dm_mod nfsd exportfs lockd nfs_acl
+auth_rpcgss sunrpc snd_hda_intel rc80211_simple snd_pcm snd_timer ohci_hcd snd ohci1394 ehci_hcd
+ieee1394 soundcore b43legacy sdhci usbcore mmc_core mac80211 cfg80211 ide_cd cdrom forcedeth
+snd_page_alloc i2c_nforce2 ssb ext3 mbcache jbd sg edd fan sata_nv libata amd74xx sd_mod scsi_mod
+ide_disk ide_core
+Pid: 2087, comm: b43legacy Not tainted 2.6.23-rc3-Ldev-gf5a42059-dirty #13
+RIP: 0010:[<ffffffff803fe191>]  [<ffffffff803fe191>] __mutex_unlock_slowpath+0x6b/0x13a
+RSP: 0018:ffff810056bd9b30  EFLAGS: 00010016
+RAX: 0000000000007b64 RBX: ffff81005825e978 RCX: 0000000000000003
+RDX: ffff810037f3d080 RSI: 0000000000000008 RDI: 6b6b6b6b6b6b6ba3
+RBP: ffff810056bd9b50 R08: 0000000000000000 R09: ffff81005825e978
+R10: ffff810056bd9b80 R11: ffff810037f3d080 R12: 6b6b6b6b6b6b6ba3
+R13: 0000000000000246 R14: 6b6b6b6b6b6b6bab R15: ffff8100580564c0
+FS:  00002b4afda060b0(0000) GS:ffffffff80539000(0000) knlGS:00000000f479eb90
+CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+CR2: 00000000f4e88bd0 CR3: 0000000057aa2000 CR4: 00000000000006e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process b43legacy (pid: 2087, threadinfo ffff810056bd8000, task ffff810037f3d080)
+Stack:  ffff81005825e978 ffff81005825c2f0 ffff8100580564c0 ffff81005825c2f0
+  ffff810056bd9b60 ffffffff803fe269 ffff810056bd9b80 ffffffff8814d704
+  ffff81005825c2f0 ffff810058056640 ffff810056bd9bb0 ffffffff8813cd4f
+Call Trace:
+  [<ffffffff803fe269>] mutex_unlock+0x9/0xb
+  [<ffffffff8814d704>] :mac80211:ieee80211_key_free+0x33/0x37
+  [<ffffffff8813cd4f>] :mac80211:sta_info_free+0x92/0xae
+  [<ffffffff881427dc>] :mac80211:ieee80211_associated+0x100/0x1ec
+  [<ffffffff88143646>] :mac80211:ieee80211_sta_work+0x0/0x182e
 
-johannes
+The rest of the call trace is available if needed. The crash occurred when ieee80211_key_free was
+trying to unlock the mutex key_idx. I added printk's to dump the pointer to sdata at the point where 
+that mutex is initialized and where the key is freed. The mutex that errs was inited.
 
---=-iCoAty4GrmotscNfNYOA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Note: For this run, I did not have a set_key callback routine defined. I also tried it with a 
+callback routine that immediately returns -ENOSPC. It didn't make any difference.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Please let me know what further debug info you need.
 
-iD8DBQBGxPFo/ETPhpq3jKURAvG8AKCZmSq80efTxxcKlnlkrZuuOXSvOwCfdZXI
-fF97FnuQzUKlCMmM5XLCJz0=
-=qNPV
------END PGP SIGNATURE-----
+Larry
 
---=-iCoAty4GrmotscNfNYOA--
 
