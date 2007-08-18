@@ -1,82 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:37245 "EHLO
-	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759548AbXH3XF5 (ORCPT
+Received: from mail8.sea5.speakeasy.net ([69.17.117.10]:33679 "EHLO
+	mail8.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750765AbXHREKv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 19:05:57 -0400
-Date: Thu, 30 Aug 2007 18:05:11 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] b43legacy: Change Kconfig help text to match b43
-Message-ID: <46d74d27.t9Eit/LAinpbIKhk%Larry.Finger@lwfinger.net>
+	Sat, 18 Aug 2007 00:10:51 -0400
+Date: Fri, 17 Aug 2007 21:09:43 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 08/20] mac80211: remove unused ioctls (3)
+Message-ID: <20070818040943.GH1415@jm.kir.nu>
+References: <20070815144920.135826000@sipsolutions.net> <20070815145045.151670000@sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070815145045.151670000@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch updates the b43legacy Kconfig text to match the latest
-b43 version.
+On Wed, Aug 15, 2007 at 04:49:28PM +0200, Johannes Berg wrote:
+> The ioctls
+> 
+>  * PRISM2_PARAM_HW_MODES
+>  * PRISM2_PARAM_CREATE_IBSS
+>  * PRISM2_PARAM_WMM_ENABLED
+>  * PRISM2_PARAM_MIXED_CELL
+>  * PRISM2_PARAM_KEY_MGMT
+> 
+> are not used by hostapd or wpa_supplicant.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+No, but iwpriv.. See the pattern here.. ;-)
 
- 1 file changed, 14 insertions(+), 11 deletions(-)
-finger@larrylap:/home/finger/wireless-dev>
+Create IBSS is a somewhat commonly used configuration and so is mixed
+cell configuration in Cisco-world (and the only point for the
+privacy_mismatch check that is left broken after this patch).
 
-Index: wireless-dev/drivers/net/wireless/b43legacy/Kconfig
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43legacy/Kconfig
-+++ wireless-dev/drivers/net/wireless/b43legacy/Kconfig
-@@ -1,21 +1,24 @@
- config B43LEGACY
--	tristate "Broadcom BCM43xx legacy wireless support (mac80211 stack)"
--	depends on SSB_POSSIBLE && MAC80211 && WLAN_80211 && EXPERIMENTAL
-+	tristate "Broadcom 43xx-legacy wireless support (mac80211 stack)"
-+	depends on SSB_POSSIBLE && MAC80211 && WLAN_80211
- 	select SSB
- 	select FW_LOADER
- 	select HW_RANDOM
- 	---help---
--	  This is a driver for 802.11b devices from Broadcom (BCM4301 and
--	  BCM4303).  It is also the driver for early model 802.11g chips (BCM4306
--	  Ver. 2) that were used in the Linksys WPC54G V1 PCMCIA devices. Newer
--	  devices need b43. It is safe to include both b43legacy and b43 as the
--	  ssb driver will select the correct version for your hardware.
-+	  b43legacy is a driver for 802.11b devices from Broadcom (BCM4301 and
-+	  BCM4303) and early model 802.11g chips (BCM4306 Ver. 2) used in the
-+	  Linksys WPC54G V1 PCMCIA devices.
-+
-+	  Newer 802.11g and 802.11a devices need b43.
-+
-+	  It is safe to include both b43 and b43legacy as the underlying glue
-+	  layer will automatically load the correct version for your device.
- 
- 	  This driver uses V3 firmware, which must be installed separately using
- 	  b43-fwcutter.
- 
--	  This driver can be compiled as a module (recommended) that will be
--	  called "b43legacy".
-+	  This driver can be built as a module (recommended) that will be
-+	  called "b43legacy". If unsure, say M.
- 
- # Auto-select SSB PCI-HOST support, if possible
- config B43LEGACY_PCI_AUTOSELECT
-@@ -32,7 +35,7 @@ config B43LEGACY_PCICORE_AUTOSELECT
- 	default y
- 
- config B43LEGACY_DEBUG
--	bool "Broadcom B43legacy debugging (RECOMMENDED)"
-+	bool "Broadcom 43xx-legacy debugging"
- 	depends on B43LEGACY
- 	default y
- 	---help---
-@@ -48,7 +51,7 @@ config B43LEGACY_PIO
- 	depends on B43LEGACY
- 
- choice
--	prompt "B43LEGACY data transfer mode"
-+	prompt "Broadcom 43xx-legacy data transfer mode"
- 	depends on B43LEGACY
- 	default B43LEGACY_DMA_AND_PIO_MODE
- 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
