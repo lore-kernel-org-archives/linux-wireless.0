@@ -1,69 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57877 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761103AbXHUPQz (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.184]:34595 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753553AbXHSSaZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 11:16:55 -0400
-Message-Id: <20070821150051.202525000@sipsolutions.net>
-References: <20070821145905.689978000@sipsolutions.net>
-Date: Tue, 21 Aug 2007 16:59:29 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 24/27] mac80211: remove PRISM2_PARAM_KEY_MGMT
-Mime-Version: 1.0
+	Sun, 19 Aug 2007 14:30:25 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so999280fkz
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2007 11:30:23 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 02/30] rt2x00: Clear MAC and BSSID when non-monitor interface goes down
+Date: Sun, 19 Aug 2007 20:21:31 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200708192018.30624.IvDoorn@gmail.com>
+In-Reply-To: <200708192018.30624.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200708192021.31729.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This ioctl isn't used and wext has a replacement.
+>From f027057821e22cf353fd37e3c139dc908c85bffe Mon Sep 17 00:00:00 2001
+From: Ivo van Doorn <IvDoorn@gmail.com>
+Date: Sat, 18 Aug 2007 12:51:46 +0200
+Subject: [PATCH 02/30] rt2x00: Clear MAC and BSSID when non-monitor interface goes down
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+When the non-monitor interface goes down the BSSID and MAC address
+should be cleared inside the registers to prevent acking of frames.
 
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- net/mac80211/hostapd_ioctl.h   |    1 -
- net/mac80211/ieee80211_ioctl.c |   13 -------------
- 2 files changed, 14 deletions(-)
+ drivers/net/wireless/rt2x00.h    |    2 +-
+ drivers/net/wireless/rt2x00dev.c |    8 ++++++--
+ drivers/net/wireless/rt2x00mac.c |    4 ++--
+ 3 files changed, 9 insertions(+), 5 deletions(-)
 
---- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-08-21 15:58:25.445923881 +0200
-+++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-08-21 15:58:28.215923881 +0200
-@@ -45,7 +45,6 @@ enum {
- 	PRISM2_PARAM_CREATE_IBSS = 1037,
- 	PRISM2_PARAM_WMM_ENABLED = 1038,
- 	PRISM2_PARAM_MIXED_CELL = 1039,
--	PRISM2_PARAM_KEY_MGMT = 1040,
- 	PRISM2_PARAM_USER_SPACE_MLME = 1045,
- 	PRISM2_PARAM_MGMT_IF = 1046,
- };
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-21 15:58:17.925923881 +0200
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-21 15:58:22.955923881 +0200
-@@ -2033,13 +2033,6 @@ static int ieee80211_ioctl_prism2_param(
- 			sdata->u.sta.mixed_cell = !!value;
- 		break;
+diff --git a/drivers/net/wireless/rt2x00.h b/drivers/net/wireless/rt2x00.h
+index 77556fe..b06cda6 100644
+--- a/drivers/net/wireless/rt2x00.h
++++ b/drivers/net/wireless/rt2x00.h
+@@ -290,7 +290,7 @@ struct interface {
+ 	/*
+ 	 * MAC of the device.
+ 	 */
+-	u8 *mac;
++	u8 mac[ETH_ALEN];
  
--	case PRISM2_PARAM_KEY_MGMT:
--		if (sdata->type != IEEE80211_IF_TYPE_STA)
--			ret = -EINVAL;
--		else
--			sdata->u.sta.key_mgmt = value;
--		break;
--
- 	case PRISM2_PARAM_HW_MODES:
- 		local->enabled_modes = value;
- 		break;
-@@ -2165,12 +2158,6 @@ static int ieee80211_ioctl_get_prism2_pa
- 			*param = !!sdata->u.sta.mixed_cell;
- 		break;
+ 	/*
+ 	 * BBSID of the AP to associate with.
+diff --git a/drivers/net/wireless/rt2x00dev.c b/drivers/net/wireless/rt2x00dev.c
+index 28ddbe0..1597d2d 100644
+--- a/drivers/net/wireless/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00dev.c
+@@ -920,12 +920,16 @@ void rt2x00lib_deinit_interface(struct rt2x00_dev *rt2x00dev)
  
--	case PRISM2_PARAM_KEY_MGMT:
--		if (sdata->type != IEEE80211_IF_TYPE_STA)
--			ret = -EINVAL;
--		else
--			*param = sdata->u.sta.key_mgmt;
--		break;
- 	case PRISM2_PARAM_WMM_ENABLED:
- 		if (sdata->type != IEEE80211_IF_TYPE_STA &&
- 		    sdata->type != IEEE80211_IF_TYPE_IBSS)
-
+ 	/*
+ 	 * If no interfaces are present, we should disable the radio
+-	 * Otherwise check which interface needs to be initialized.
++	 * Otherwise configure the mac_address and bssid and check
++	 * which interface needs to be initialized.
+ 	 */
+ 	if (!is_monitor_present(intf) && !is_interface_present(intf))
+ 		rt2x00lib_disable_radio(rt2x00dev);
+-	else if (is_monitor_present(intf) ^ is_interface_present(intf))
++	else if (is_monitor_present(intf) ^ is_interface_present(intf)) {
++		rt2x00lib_config_mac_addr(rt2x00dev, intf->mac);
++		rt2x00lib_config_bssid(rt2x00dev, intf->bssid);
+ 		rt2x00lib_config_type(rt2x00dev, intf->type);
++	}
+ 
+ 	/*
+ 	 * If we are in reset mode, the device must be deinitialized.
+diff --git a/drivers/net/wireless/rt2x00mac.c b/drivers/net/wireless/rt2x00mac.c
+index c384767..31fe0f1 100644
+--- a/drivers/net/wireless/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00mac.c
+@@ -192,7 +192,7 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
+ 		intf->type = conf->type;
+ 		if (conf->type == IEEE80211_IF_TYPE_AP)
+ 			memcpy(&intf->bssid, conf->mac_addr, ETH_ALEN);
+-		intf->mac = conf->mac_addr;
++		memcpy(&intf->mac, conf->mac_addr, ETH_ALEN);
+ 		intf->filter = 0;
+ 	}
+ 
+@@ -232,7 +232,7 @@ void rt2x00mac_remove_interface(struct ieee80211_hw *hw,
+ 		intf->id = 0;
+ 		intf->type = INVALID_INTERFACE;
+ 		memset(&intf->bssid, 0x00, ETH_ALEN);
+-		intf->mac = NULL;
++		memset(&intf->mac, 0x00, ETH_ALEN);
+ 		intf->filter = 0;
+ 	}
+ 
 -- 
+1.5.3.rc5
 
