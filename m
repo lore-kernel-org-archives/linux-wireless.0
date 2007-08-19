@@ -1,126 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38055 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764147AbXHPOuX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2007 10:50:23 -0400
-Received: from [131.234.209.34] (helo=[131.234.237.45])
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1ILgg1-0002ZP-Df
-	for linux-wireless@vger.kernel.org; Thu, 16 Aug 2007 15:50:21 +0100
-Subject: [RFC 1/2 v2] mac80211: allow drivers to indicate failed FCS/PLCP   checksum
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <20070815152657.809571000@sipsolutions.net>
-References: <20070815152557.221351000@sipsolutions.net>
-	 <20070815152657.809571000@sipsolutions.net>
-Content-Type: text/plain
-Date: Thu, 16 Aug 2007 16:53:06 +0200
-Message-Id: <1187275986.23489.11.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from betty.cbit.net.au ([202.55.154.10]:37808 "EHLO mail.cbit.net.au"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754054AbXHSCp5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Aug 2007 22:45:57 -0400
+Date: Sun, 19 Aug 2007 12:45:52 +1000
+From: Paul TBBle Hampson <Paul.Hampson@Pobox.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org, jbenc@suse.cz,
+	Michael Buesch <mb@bu3sch.de>, Daniel Drake <dsd@gentoo.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Bcm43xx-dev@lists.berlios.de,
+	Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: mac80211 IPv6 problems
+Message-ID: <20070819024552.GA10836@keitarou>
+References: <46b1fde0.b+weBDN75J0SPe2a%Larry.Finger@lwfinger.net> <1186094778.6701.6.camel@shinybook.infradead.org> <20070803005517.GA4261@tuxdriver.com> <200708030102.17358.flamingice@sourmilk.net> <20070806170500.GE6442@tuxdriver.com> <1187311977.23489.93.camel@johannes.berg> <20070817134941.GB6090@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ZPt4rx8FFjLCG7dd"
+In-Reply-To: <20070817134941.GB6090@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch allows drivers to indicate bad FCS/PLCP CRC to the stack and
-have the stack drop packets like that except for monitor interfaces.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Changes since v1:
- * filter bad frames early in the RX code and don't count
-   them nor try to get a STA for them
+--ZPt4rx8FFjLCG7dd
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
- include/net/mac80211.h |    2 ++
- net/mac80211/rx.c      |   31 ++++++++++++++++++++++++++++---
- 2 files changed, 30 insertions(+), 3 deletions(-)
+On Fri, Aug 17, 2007 at 09:49:41AM -0400, John W. Linville wrote:
+> On Fri, Aug 17, 2007 at 02:52:56AM +0200, Johannes Berg wrote:
+>> On Mon, 2007-08-06 at 13:05 -0400, John W. Linville wrote:
+>>=20
+> >> --- a/net/mac80211/ieee80211.c
+> >> +++ b/net/mac80211/ieee80211.c
+> >> @@ -3030,9 +3030,10 @@ ieee80211_rx_h_data(struct ieee80211_txrx_data =
+*rx)
+> >>  		memcpy(dst, hdr->addr1, ETH_ALEN);
+> >>  		memcpy(src, hdr->addr3, ETH_ALEN);
+> >> =20
+> >> -		if (sdata->type !=3D IEEE80211_IF_TYPE_STA) {
+> >> +		if (sdata->type !=3D IEEE80211_IF_TYPE_STA ||
+> >> +		    (is_multicast_ether_addr(dst) &&
+> >> +		     !compare_ether_addr(src, dev->dev_addr)))
+> >>  			return TXRX_DROP;
 
---- wireless-dev.orig/include/net/mac80211.h	2007-08-15 16:48:43.296516958 +0200
-+++ wireless-dev/include/net/mac80211.h	2007-08-16 16:51:20.173468950 +0200
-@@ -241,6 +241,8 @@ struct ieee80211_rx_status {
- #define RX_FLAG_MMIC_ERROR	(1<<0)
- #define RX_FLAG_DECRYPTED	(1<<1)
- #define RX_FLAG_RADIOTAP	(1<<2)
-+#define RX_FLAG_FAILED_FCS_CRC	(1<<3)
-+#define RX_FLAG_FAILED_PLCP_CRC	(1<<4)
- 	int flag;
- };
- 
---- wireless-dev.orig/net/mac80211/rx.c	2007-08-15 16:48:43.316516958 +0200
-+++ wireless-dev/net/mac80211/rx.c	2007-08-16 16:51:26.823468950 +0200
-@@ -154,6 +154,7 @@ ieee80211_rx_monitor(struct net_device *
- 		__le16 chan_freq;
- 		__le16 chan_flags;
- 		u8 antsignal;
-+		__le16 rx_flags;
- 	} __attribute__ ((packed)) *rthdr;
- 
- 	skb->dev = dev;
-@@ -178,12 +179,21 @@ ieee80211_rx_monitor(struct net_device *
- 		cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
- 			    (1 << IEEE80211_RADIOTAP_RATE) |
- 			    (1 << IEEE80211_RADIOTAP_CHANNEL) |
--			    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL));
-+			    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL) |
-+			    (1 << IEEE80211_RADIOTAP_RX_FLAGS));
- 	rthdr->flags = local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS ?
- 		       IEEE80211_RADIOTAP_F_FCS : 0;
-+
-+	/* FIXME: when radiotap gets a 'bad PLCP' flag use it here */
-+	rthdr->rx_flags = 0;
-+	if (status->flag &
-+	    (RX_FLAG_FAILED_FCS_CRC | RX_FLAG_FAILED_PLCP_CRC))
-+		rthdr->rx_flags |= cpu_to_le16(IEEE80211_RADIOTAP_F_RX_BADFCS);
-+
- 	rate = ieee80211_get_rate(local, status->phymode, status->rate);
- 	if (rate)
- 		rthdr->rate = rate->rate / 5;
-+
- 	rthdr->chan_freq = cpu_to_le16(status->freq);
- 	rthdr->chan_flags =
- 		status->phymode == MODE_IEEE80211A ?
-@@ -211,6 +221,15 @@ ieee80211_rx_h_monitor(struct ieee80211_
- 		return TXRX_QUEUED;
- 	}
- 
-+	/*
-+	 * Drop frames with failed FCS/PLCP checksums here, they are only
-+	 * relevant for monitor mode, the rest of the stack should never
-+	 * see them.
-+	 */
-+	if (rx->u.rx.status->flag &
-+	    (RX_FLAG_FAILED_FCS_CRC | RX_FLAG_FAILED_PLCP_CRC))
-+		return TXRX_DROP;
-+
- 	if (rx->u.rx.status->flag & RX_FLAG_RADIOTAP)
- 		skb_pull(rx->skb, ieee80211_get_radiotap_len(rx->skb->data));
- 
-@@ -1465,6 +1484,7 @@ void __ieee80211_rx(struct ieee80211_hw 
- 	struct ieee80211_sub_if_data *prev = NULL;
- 	struct sk_buff *skb_new;
- 	u8 *bssid;
-+	int bogon;
- 
- 	if (status->flag & RX_FLAG_RADIOTAP) {
- 		radiotap_len = ieee80211_get_radiotap_len(skb->data);
-@@ -1479,10 +1499,15 @@ void __ieee80211_rx(struct ieee80211_hw 
- 	rx.u.rx.status = status;
- 	rx.fc = skb->len >= 2 ? le16_to_cpu(hdr->frame_control) : 0;
- 	type = rx.fc & IEEE80211_FCTL_FTYPE;
--	if (type == IEEE80211_FTYPE_DATA || type == IEEE80211_FTYPE_MGMT)
-+
-+	bogon = status->flag & (RX_FLAG_FAILED_FCS_CRC |
-+				RX_FLAG_FAILED_PLCP_CRC);
-+
-+	if (!bogon && (type == IEEE80211_FTYPE_DATA ||
-+		       type == IEEE80211_FTYPE_MGMT))
- 		local->dot11ReceivedFragmentCount++;
- 
--	if (skb->len >= 16) {
-+	if (!bogon && skb->len >= 16) {
- 		sta = rx.sta = sta_info_get(local, hdr->addr2);
- 		if (sta) {
- 			rx.dev = rx.sta->dev;
+>> I can confirm that this works (applies if you s/ieee80211.c/rx.c/) for
+>> IPv6 link local addresses, and it's definitely the right thing to do
+>> here.
 
+> Yes, seems so.  FWIW, this patch is in later Fedora kernels.
 
+> Unfortunately (due to the ieee80211.c -> rx.c issue you mentioned)
+> applying this to 2.6.23 conflicts with patches already queued for
+> 2.6.24.  Since my experiments show that git doesn't help much in this
+> instance, I'll need to work something out with Dave M. if we are to
+> get this into 2.6.23.
+
+> If nothing else, I suppose we can just wait for 2.6.23 and send this
+> patch to -stable.  Would that burn anyone's biscuits?
+
+Suits me. The only machine this is currently relevant to is tracking
+wireless-dev#evertything for the moment.
+
+--=20
+-----------------------------------------------------------
+Paul "TBBle" Hampson, B.Sc, LPI, MCSE
+Very-later-year Asian Studies student, ANU
+The Boss, Bubblesworth Pty Ltd (ABN: 51 095 284 361)
+Paul.Hampson@Pobox.com
+
+Of course Pacman didn't influence us as kids. If it did,
+we'd be running around in darkened rooms, popping pills and
+listening to repetitive music.
+ -- Kristian Wilson, Nintendo, Inc, 1989
+
+License: http://creativecommons.org/licenses/by/2.1/au/
+-----------------------------------------------------------
+
+--ZPt4rx8FFjLCG7dd
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFGx67gexDuohKLFuARAoooAJ9TZKgeyj2JrL/B8gfg+6UCuYayoQCgsDpP
+dxOGtAPa4i4EospPC64v3Y4=
+=HMz9
+-----END PGP SIGNATURE-----
+
+--ZPt4rx8FFjLCG7dd--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
