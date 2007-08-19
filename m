@@ -1,57 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:60086 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751004AbXH0LAB (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:46211 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754632AbXHSScT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Aug 2007 07:00:01 -0400
-Subject: Re: [PATCH 05/15] mac80211: remove HW_KEY_IDX_INVALID
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <46CF327F.4050002@lwfinger.net>
-References: <20070824122705.549190000@sipsolutions.net>
-	 <20070824122905.350213000@sipsolutions.net> <46CF327F.4050002@lwfinger.net>
-Content-Type: text/plain
-Date: Mon, 27 Aug 2007 13:00:59 +0200
-Message-Id: <1188212460.7837.1.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 19 Aug 2007 14:32:19 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so508965nfb
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2007 11:32:18 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 27/30] rt2x00: Add rt2x00lib_reset_link_tuner()
+Date: Sun, 19 Aug 2007 20:36:20 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200708192018.30624.IvDoorn@gmail.com>
+In-Reply-To: <200708192018.30624.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200708192036.20985.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-08-24 at 14:33 -0500, Larry Finger wrote:
+>From d6188297893be7023e0cec4b0132e64ec96de884 Mon Sep 17 00:00:00 2001
+From: Ivo van Doorn <IvDoorn@gmail.com>
+Date: Sat, 18 Aug 2007 16:41:58 +0200
+Subject: [PATCH 27/30] rt2x00: Add rt2x00lib_reset_link_tuner()
 
-> This patch breaks software encryption in my tests - WPA for b43, WPA and WEP for b43legacy. I 
-> haven't looked for the cause yet. That is my next step.
+When rt2x00config needs the link tuner to be reset,
+this means that also all statistics need to be reset
+_and_ that the link tuner timer is being reset.
+In short: when resetting the link tuner, the link
+tuner should be stopped and restarted.
 
-The patch below appears necessary for b43 when I enable sw crypto, but
-you shouldn't be having such problems in b43legacy since you don't
-support crypto at all; or have you not removed the crypto related code
-from xmit.c?
-
-johannes
-
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- net/mac80211/tx.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/net/wireless/rt2x00/rt2x00config.c |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00dev.c    |   14 ++++++++++----
+ drivers/net/wireless/rt2x00/rt2x00lib.h    |    1 +
+ 3 files changed, 12 insertions(+), 5 deletions(-)
 
---- wireless-dev.orig/net/mac80211/tx.c	2007-08-27 12:06:10.844650841 +0200
-+++ wireless-dev/net/mac80211/tx.c	2007-08-27 12:12:46.094650841 +0200
-@@ -722,6 +722,15 @@ ieee80211_tx_h_misc(struct ieee80211_txr
- 		}
- 	}
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+index 4fec0af..b5075b5 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -155,7 +155,7 @@ config:
+ 	 * which means we need to reset the link tuner.
+ 	 */
+ 	if (flags & (CONFIG_UPDATE_CHANNEL | CONFIG_UPDATE_ANTENNA))
+-		rt2x00dev->ops->lib->reset_tuner(rt2x00dev);
++		rt2x00lib_reset_link_tuner(rt2x00dev);
  
-+	/*
-+	 * Tell hardware to not encrypt when we had sw crypto.
-+	 * Because we use the same flag to internally indicate that
-+	 * no encryption should be done, we have to set it after all
-+	 * crypto handlers to indicate that we want encryption.
-+	 */
-+	if (tx->key && !(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
-+		tx->u.tx.control->flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT;
-+
- 	return TXRX_CONTINUE;
+ 	rt2x00dev->rx_status.phymode = conf->phymode;
+ 	rt2x00dev->rx_status.freq = conf->freq;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 8e7fc2a..14968ef 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -67,7 +67,7 @@ EXPORT_SYMBOL_GPL(rt2x00lib_get_ring);
+ /*
+  * Link tuning handlers
+  */
+-static void rt2x00_start_link_tune(struct rt2x00_dev *rt2x00dev)
++static void rt2x00lib_start_link_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+ 	rt2x00dev->link.count = 0;
+ 	rt2x00dev->link.avg_rssi = 0;
+@@ -87,12 +87,18 @@ static void rt2x00_start_link_tune(struct rt2x00_dev *rt2x00dev)
+ 			   &rt2x00dev->link.work, LINK_TUNE_INTERVAL);
  }
  
-
+-static void rt2x00_stop_link_tune(struct rt2x00_dev *rt2x00dev)
++static void rt2x00lib_stop_link_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+ 	if (delayed_work_pending(&rt2x00dev->link.work))
+ 		cancel_rearming_delayed_work(&rt2x00dev->link.work);
+ }
+ 
++void rt2x00lib_reset_link_tuner(struct rt2x00_dev *rt2x00dev)
++{
++	rt2x00lib_stop_link_tuner(rt2x00dev);
++	rt2x00lib_start_link_tuner(rt2x00dev);
++}
++
+ /*
+  * Radio control handlers.
+  */
+@@ -167,7 +173,7 @@ void rt2x00lib_toggle_rx(struct rt2x00_dev *rt2x00dev, int enable)
+ 	 * When we are disabling the RX, we should also stop the link tuner.
+ 	 */
+ 	if (!enable)
+-		rt2x00_stop_link_tune(rt2x00dev);
++		rt2x00lib_stop_link_tuner(rt2x00dev);
+ 
+ 	rt2x00dev->ops->lib->set_device_state(rt2x00dev, state);
+ 
+@@ -175,7 +181,7 @@ void rt2x00lib_toggle_rx(struct rt2x00_dev *rt2x00dev, int enable)
+ 	 * When we are enabling the RX, we should also start the link tuner.
+ 	 */
+ 	if (enable && is_interface_present(&rt2x00dev->interface))
+-		rt2x00_start_link_tune(rt2x00dev);
++		rt2x00lib_start_link_tuner(rt2x00dev);
+ }
+ 
+ static int rt2x00lib_calculate_link_signal(struct rt2x00_dev *rt2x00dev)
+diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
+index 1560f73..454e022 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00lib.h
++++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
+@@ -38,6 +38,7 @@
+ int rt2x00lib_enable_radio(struct rt2x00_dev *rt2x00dev);
+ void rt2x00lib_disable_radio(struct rt2x00_dev *rt2x00dev);
+ void rt2x00lib_toggle_rx(struct rt2x00_dev *rt2x00dev, int enable);
++void rt2x00lib_reset_link_tuner(struct rt2x00_dev *rt2x00dev);
+ 
+ /*
+  * Initialization handlers.
+-- 
+1.5.3.rc5
 
