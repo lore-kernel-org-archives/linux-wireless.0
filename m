@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38539 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751598AbXHGJmu (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.170]:54961 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757276AbXHSUhL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2007 05:42:50 -0400
-Subject: Re: [PATCH] zd1211rw-mac80211: use correct preambles for RTS/CTS  frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Drake <dsd@gentoo.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	kune@deine-taler.de
-In-Reply-To: <20070805231845.657BA7B409F@zog.reactivated.net>
-References: <20070805231845.657BA7B409F@zog.reactivated.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4CvgaWQ4W8N+dGk4R6vu"
-Date: Mon, 06 Aug 2007 18:15:23 +0200
-Message-Id: <1186416923.28655.78.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 19 Aug 2007 16:37:11 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so452552ugf
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2007 13:37:09 -0700 (PDT)
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH 12/30] rt2x00: Store firmware in memory
+Date: Sun, 19 Aug 2007 22:44:17 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200708192018.30624.IvDoorn@gmail.com> <200708192025.39412.IvDoorn@gmail.com> <200708192054.29643.mb@bu3sch.de>
+In-Reply-To: <200708192054.29643.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200708192244.17323.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday 19 August 2007, Michael Buesch wrote:
+> On Sunday 19 August 2007 20:25:39 Ivo van Doorn wrote:
+> > +void rt2x00lib_free_firmware(struct rt2x00_dev *rt2x00dev)
+> > +{
+> > +	if (rt2x00dev->fw) {
+> 
+> No !=NULL check is needed.
 
---=-4CvgaWQ4W8N+dGk4R6vu
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'll fix this.
 
-On Mon, 2007-08-06 at 00:18 +0100, Daniel Drake wrote:
+Thanks :)
 
-> +	/* We always send 11M RTS/self-CTS messages, like the vendor driver. */
+Ivo
 
-That will most likely be safe almost everywhere, but I don't think it is
-required by the standard that 11M is a valid basic rate and these frames
-must use basic rates IIRC.
+> > +		release_firmware(rt2x00dev->fw);
+> > +		rt2x00dev->fw = NULL;
+> > +	}
+> > +}
+> 
 
-johannes
-
---=-4CvgaWQ4W8N+dGk4R6vu
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGt0kb/ETPhpq3jKURAsOKAKCjjxAREolk9e1Mq9FQ6v18MyUMmwCgn17g
-STyf90PeZ6bK5jGcHlmG+QQ=
-=in0M
------END PGP SIGNATURE-----
-
---=-4CvgaWQ4W8N+dGk4R6vu--
 
