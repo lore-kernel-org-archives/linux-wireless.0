@@ -1,36 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:44915
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759693AbXHCKv1 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.169]:22855 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754457AbXHSSat convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 06:51:27 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH stable] softmac: Fix deadlock of wx_set_essid with assoc work
-Date: Fri, 3 Aug 2007 12:50:50 +0200
-Cc: stable@kernel.org, John Linville <linville@tuxdriver.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-wireless@vger.kernel.org
-References: <200708011253.06569.mb@bu3sch.de> <1186092127.4647.10.camel@johannes.berg>
-In-Reply-To: <1186092127.4647.10.camel@johannes.berg>
+	Sun, 19 Aug 2007 14:30:49 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so446949ugf
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2007 11:30:48 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 14/30] Fix off-by-one error in debugfs helpers
+Date: Sun, 19 Aug 2007 20:26:30 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200708192018.30624.IvDoorn@gmail.com>
+In-Reply-To: <200708192018.30624.IvDoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200708031250.51161.mb@bu3sch.de>
+  charset="utf-8"
+Message-Id: <200708192026.31064.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 03 August 2007 00:02:07 Johannes Berg wrote:
-> Adding to my previous mail, this fix is not enough. As you can see
-> below, it is never safe to call flush_scheduled_work() under rtnl
-> because some other things running *from* the global events workqueue
-> acquire the rtnl and hence it we could deadlock against them.
-> 
-> I think the fix would be to use cancel_delayed_work_sync() here instead
-> of a combination of cancel_delayed_work() and flush_workqueue().
+>From 089bfb50f6f9426f1dfd48bfb07455224484b847 Mon Sep 17 00:00:00 2001
+From: Luca Tettamanti <kronos.it@gmail.com>
+Date: Thu, 9 Aug 2007 21:19:49 +0200
+Subject: [PATCH 14/30] Fix off-by-one error in debugfs helpers
 
-Ah, Ok. I didn't see that rtnl is locked there, too.
-cancel_delayed_work_sync could probably work. Care to test that?
+Fix an off-by-on error in debugfs code which may lead to read/write past
+the end of the data.
 
+Signed-Off-By: Luca Tettamanti <kronos.it@gmail.com>
+
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00debug.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00debug.c b/drivers/net/wireless/rt2x00debug.c
+index d6c4cfe..c7b331c 100644
+--- a/drivers/net/wireless/rt2x00debug.c
++++ b/drivers/net/wireless/rt2x00debug.c
+@@ -127,7 +127,7 @@ static ssize_t rt2x00debug_read_##__name(struct file *file,	\
+ 	if (*offset)						\
+ 		return 0;					\
+ 								\
+-	if (intf->offset_##__name > debug->__name.word_count)	\
++	if (intf->offset_##__name >= debug->__name.word_count)	\
+ 		return -EINVAL;					\
+ 								\
+ 	debug->__name.read(intf->rt2x00dev,			\
+@@ -160,7 +160,7 @@ static ssize_t rt2x00debug_write_##__name(struct file *file,	\
+ 	if (!capable(CAP_NET_ADMIN))				\
+ 		return -EPERM;					\
+ 								\
+-	if (intf->offset_##__name > debug->__name.word_count)	\
++	if (intf->offset_##__name >= debug->__name.word_count)	\
+ 		return -EINVAL;					\
+ 								\
+ 	if (copy_from_user(line, buf, length))			\
 -- 
-Greetings Michael.
+1.5.3.rc5
+
