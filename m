@@ -1,152 +1,289 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2145 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759140AbXHFVGc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2007 17:06:32 -0400
-Date: Mon, 6 Aug 2007 16:30:05 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: jeff@garzik.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Please pull 'libertas-upstream' branch of wireless-2.6
-Message-ID: <20070806203005.GL6442@tuxdriver.com>
+Received: from ug-out-1314.google.com ([66.249.92.169]:22582 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754260AbXHSSai convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Aug 2007 14:30:38 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so446922ugf
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2007 11:30:37 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 09/30] rt2x00: Be consistent with unsigned
+Date: Sun, 19 Aug 2007 20:24:27 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200708192018.30624.IvDoorn@gmail.com>
+In-Reply-To: <200708192018.30624.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200708192024.27274.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Got a big patch bomb from the libertas guys.  I tried to cherry-pick
-some of the fixes for 2.6.23, but they either were fixes to problems
-in new code or all the code cleanups made them difficult for me to
-intelligently backport.
+>From cdc01c652d3b058111e8a2567649e198c7c77cc5 Mon Sep 17 00:00:00 2001
+From: Ivo van Doorn <IvDoorn@gmail.com>
+Date: Sat, 18 Aug 2007 13:00:39 +0200
+Subject: [PATCH 09/30] rt2x00: Be consistent with unsigned
 
-So, this is intended for 2.6.24...
+unsigned should be used consistently,
+all values used as flags should be unsigned
+and the ring identifier should also be unsigned everywhere.
 
+char is not consistently signed over all platforms,
+make the signedness more explicit where it is demanded
+so we resolve some warnings of the type:
+"warning: comparison is always false due to limited range of data type"
+
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
+ drivers/net/wireless/rt2400pci.c |    8 +++++---
+ drivers/net/wireless/rt2500pci.c |    8 +++++---
+ drivers/net/wireless/rt2500usb.c |    8 +++++---
+ drivers/net/wireless/rt2x00.h    |    9 +++++----
+ drivers/net/wireless/rt61pci.c   |   14 ++++++++------
+ drivers/net/wireless/rt73usb.c   |   14 ++++++++------
+ 6 files changed, 36 insertions(+), 25 deletions(-)
 
-The following changes since commit d4ac2477fad0f2680e84ec12e387ce67682c5c13:
-  Linus Torvalds (1):
-        Linux 2.6.23-rc2
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git libertas-upstream
-
-Dan Williams (27):
-      libertas: kill ieeetypes_capinfo bitfield, use ieee80211.h types
-      libertas: rename WLAN_802_11_KEY to enc_key and clean up usage
-      libertas: clean up indentation in libertas_association_worker
-      libertas: clean up 802.11 IE post-scan handling
-      libertas: remove if_bootcmd.c
-      libertas: fix mixed-case abuse in cmd_ds_802_11_scan
-      libertas: fix mixed-case abuse in cmd_ds_802_11_ad_hoc_result
-      libertas: fix mixed-case abuse in cmd_ds_802_11_ad_hoc_start
-      libertas: re-uppercase command defines and other constants
-      libertas: fix debug build breakage due to field rename
-      libertas: remove thread.h and make kthread usage clearer
-      libertas: new mesh control knobs
-      libertas: bump version to 322.p1
-      libertas: fix more mixed-case abuse
-      libertas: move generic firmware reset command to common code
-      libertas: wlan_ -> libertas_ function prefix renames for main.c
-      libertas: simplify and clean up data rate handling
-      libertas: fix WEXT quality reporting
-      libertas: send association events on adhoc reassociation
-      libertas: push mesh beacon bit to userspace in scan results
-      libertas: fix assignment of WEP key type
-      libertas: push WEXT scan requests to a work queue
-      libertas: fix misspelling in debug message
-      libertas: ignore spurious mesh autostart events
-      libertas: better descriptions for association errors
-      libertas: fix sparse-reported problems
-      libertas: bump driver version
-
-Eugene Teo (1):
-      drivers/net/wireless/libertas/cmd.c: fix adapter->driver_lock dereference
-
-Holger Schurig (33):
-      libertas: remove fw.c
-      libertas: fix one more sparse warning
-      libertas: make more functions static & remove unused functions
-      libertas: uppercase some #defines
-      libertas: access mesh_dev more carefully
-      libertas: tune hardware info output
-      libertas: remove debugmode
-      libertas: make the hex dumper nicer
-      libertas: remove a hundred CMD_RET_xxx definitions
-      libertas: use LBS_DEB_HOST for host-to-card communications
-      libertas: use LBS_DEB_HOST for host-to-card communications
-      add support for Marvell 8385 CF cards
-      libertas: remove unused adapter->prev_XXXX variables
-      libertas: remove adapter->{rx,tx}antenna
-      libertas: remove adapter->prescan
-      libertas: remove adapter->scanprobes
-      libertas: remove adapter->pkttxctrl
-      libertas: remove adapter->txrate
-      libertas: remove adapter->rxpd_rate
-      libertas: remove adapter->{data,bcn}_avg_factor
-      libertas: remove adapter->nullpktinterval
-      libertas: remove adapter->locallisteninterval
-      libertas: remove adapter->multipledtim
-      libertas: remove adapter->atimwindow
-      libertas: remove adapter->regiontableindex
-      libertas: remove adapter->listeninterval
-      libertas: remove adapter->adhoc_grate_enabled
-      libertas: remove adapter->beaconperiod
-      libertas: remove adapter->scanmode
-      libertas: remove adapter->scantype
-      libertas: remove bss_descriptior->networktsf
-      libertas: remove bss_descriptor->timestamp
-      libertas: fix two debug statements in cmdresp.c
-
-Jean Tourrilhes (1):
-      libertas: fix a few wext abuses...
-
-Luis Carlos Cobo (7):
-      libertas: specific mesh scan for mshX interface
-      Support for mesh autostart deactivation through sysfs
-      libertas: Avoid MESH_AUTOSTARTED spam on console
-      libertas: revert CAPINFO_MASK to its original value
-      libertas: keep mesh autostart enabled while asleep
-      libertas: monitor mode support for OLPC firmware
-      libertas: pass boot2 version to firmware
-
- drivers/net/wireless/Kconfig               |    7 +
- drivers/net/wireless/Makefile              |    2 +-
- drivers/net/wireless/libertas/11d.c        |  124 ++---
- drivers/net/wireless/libertas/11d.h        |    4 -
- drivers/net/wireless/libertas/Makefile     |    5 +-
- drivers/net/wireless/libertas/assoc.c      |   99 ++--
- drivers/net/wireless/libertas/assoc.h      |    2 +-
- drivers/net/wireless/libertas/cmd.c        |  664 +++++++++---------
- drivers/net/wireless/libertas/cmdresp.c    |  368 +++++------
- drivers/net/wireless/libertas/debugfs.c    |  137 ++--
- drivers/net/wireless/libertas/decl.h       |   18 +-
- drivers/net/wireless/libertas/defs.h       |  157 +++---
- drivers/net/wireless/libertas/dev.h        |   77 +--
- drivers/net/wireless/libertas/ethtool.c    |    8 +-
- drivers/net/wireless/libertas/fw.c         |  349 ----------
- drivers/net/wireless/libertas/host.h       |  445 ++++++-------
- drivers/net/wireless/libertas/hostcmd.h    |   81 +--
- drivers/net/wireless/libertas/if_bootcmd.c |   40 --
- drivers/net/wireless/libertas/if_cs.c      | 1005 ++++++++++++++++++++++++++++
- drivers/net/wireless/libertas/if_usb.c     |  209 +++++--
- drivers/net/wireless/libertas/if_usb.h     |    4 -
- drivers/net/wireless/libertas/join.c       |  474 +++++++------
- drivers/net/wireless/libertas/join.h       |   35 +-
- drivers/net/wireless/libertas/main.c       |  752 ++++++++++++++++++----
- drivers/net/wireless/libertas/rx.c         |   85 +--
- drivers/net/wireless/libertas/scan.c       |  585 +++++++----------
- drivers/net/wireless/libertas/scan.h       |   36 +-
- drivers/net/wireless/libertas/thread.h     |   52 --
- drivers/net/wireless/libertas/tx.c         |   41 +-
- drivers/net/wireless/libertas/types.h      |   67 +--
- drivers/net/wireless/libertas/wext.c       |  391 ++++--------
- drivers/net/wireless/libertas/wext.h       |    9 +-
- 32 files changed, 3512 insertions(+), 2820 deletions(-)
- delete mode 100644 drivers/net/wireless/libertas/fw.c
- delete mode 100644 drivers/net/wireless/libertas/if_bootcmd.c
- create mode 100644 drivers/net/wireless/libertas/if_cs.c
- delete mode 100644 drivers/net/wireless/libertas/thread.h
+diff --git a/drivers/net/wireless/rt2400pci.c b/drivers/net/wireless/rt2400pci.c
+index 8365171..aa1209b 100644
+--- a/drivers/net/wireless/rt2400pci.c
++++ b/drivers/net/wireless/rt2400pci.c
+@@ -278,7 +278,7 @@ static void rt2400pci_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
+ }
+ 
+ static void rt2400pci_config_packet_filter(struct rt2x00_dev *rt2x00dev,
+-					   const int filter)
++					   const unsigned int filter)
+ {
+ 	int promisc = !!(filter & IFF_PROMISC);
+ 	u32 reg;
+@@ -561,7 +561,8 @@ static void rt2400pci_config_duration(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00pci_register_write(rt2x00dev, CSR12, reg);
+ }
+ 
+-static void rt2400pci_config(struct rt2x00_dev *rt2x00dev, const int flags,
++static void rt2400pci_config(struct rt2x00_dev *rt2x00dev,
++			     const unsigned int flags,
+ 			     struct ieee80211_conf *conf)
+ {
+ 	int short_slot_time = conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME;
+@@ -1177,7 +1178,8 @@ static void rt2400pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ /*
+  * TX data initialization
+  */
+-static void rt2400pci_kick_tx_queue(struct rt2x00_dev *rt2x00dev, int queue)
++static void rt2400pci_kick_tx_queue(struct rt2x00_dev *rt2x00dev,
++				    unsigned int queue)
+ {
+ 	u32 reg;
+ 
+diff --git a/drivers/net/wireless/rt2500pci.c b/drivers/net/wireless/rt2500pci.c
+index a794989..3a1da1f 100644
+--- a/drivers/net/wireless/rt2500pci.c
++++ b/drivers/net/wireless/rt2500pci.c
+@@ -278,7 +278,7 @@ static void rt2500pci_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
+ }
+ 
+ static void rt2500pci_config_packet_filter(struct rt2x00_dev *rt2x00dev,
+-					   const int filter)
++					   const unsigned int filter)
+ {
+ 	int promisc = !!(filter & IFF_PROMISC);
+ 	int multicast = !!(filter & IFF_MULTICAST);
+@@ -672,7 +672,8 @@ static void rt2500pci_config_duration(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00pci_register_write(rt2x00dev, CSR12, reg);
+ }
+ 
+-static void rt2500pci_config(struct rt2x00_dev *rt2x00dev, const int flags,
++static void rt2500pci_config(struct rt2x00_dev *rt2x00dev,
++			     const unsigned int flags,
+ 			     struct ieee80211_conf *conf)
+ {
+ 	int short_slot_time = conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME;
+@@ -1355,7 +1356,8 @@ static void rt2500pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ /*
+  * TX data initialization
+  */
+-static void rt2500pci_kick_tx_queue(struct rt2x00_dev *rt2x00dev, int queue)
++static void rt2500pci_kick_tx_queue(struct rt2x00_dev *rt2x00dev,
++				    unsigned int queue)
+ {
+ 	u32 reg;
+ 
+diff --git a/drivers/net/wireless/rt2500usb.c b/drivers/net/wireless/rt2500usb.c
+index 581cc6f..71b7bf2 100644
+--- a/drivers/net/wireless/rt2500usb.c
++++ b/drivers/net/wireless/rt2500usb.c
+@@ -283,7 +283,7 @@ static void rt2500usb_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
+ }
+ 
+ static void rt2500usb_config_packet_filter(struct rt2x00_dev *rt2x00dev,
+-					   const int filter)
++					   const unsigned int filter)
+ {
+ 	int promisc = !!(filter & IFF_PROMISC);
+ 	int multicast = !!(filter & IFF_MULTICAST);
+@@ -625,7 +625,8 @@ static void rt2500usb_config_duration(struct rt2x00_dev *rt2x00dev,
+ 	rt2500usb_register_write(rt2x00dev, TXRX_CSR18, reg);
+ }
+ 
+-static void rt2500usb_config(struct rt2x00_dev *rt2x00dev, const int flags,
++static void rt2500usb_config(struct rt2x00_dev *rt2x00dev,
++			     const unsigned int flags,
+ 			     struct ieee80211_conf *conf)
+ {
+ 	int short_slot_time = conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME;
+@@ -1153,7 +1154,8 @@ static void rt2500usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ /*
+  * TX data initialization
+  */
+-static void rt2500usb_kick_tx_queue(struct rt2x00_dev *rt2x00dev, int queue)
++static void rt2500usb_kick_tx_queue(struct rt2x00_dev *rt2x00dev,
++				    unsigned int queue)
+ {
+ 	u16 reg;
+ 
+diff --git a/drivers/net/wireless/rt2x00.h b/drivers/net/wireless/rt2x00.h
+index 0db81eb..5c6d7d0 100644
+--- a/drivers/net/wireless/rt2x00.h
++++ b/drivers/net/wireless/rt2x00.h
+@@ -310,7 +310,7 @@ struct interface {
+ 	 * Monitor mode count, the number of interfaces
+ 	 * in monitor mode that that have been added.
+ 	 */
+-	char monitor_count;
++	unsigned short monitor_count;
+ };
+ 
+ static inline int is_interface_present(struct interface *intf)
+@@ -396,7 +396,8 @@ struct rt2x00lib_ops {
+ 	int (*write_tx_data) (struct rt2x00_dev *rt2x00dev,
+ 			      struct data_ring *ring, struct sk_buff *skb,
+ 			      struct ieee80211_tx_control *control);
+-	void (*kick_tx_queue) (struct rt2x00_dev *rt2x00dev, int queue);
++	void (*kick_tx_queue) (struct rt2x00_dev *rt2x00dev,
++			       unsigned int queue);
+ 
+ 	/*
+ 	 * RX control handlers
+@@ -410,9 +411,9 @@ struct rt2x00lib_ops {
+ 	void (*config_mac_addr) (struct rt2x00_dev *rt2x00dev, u8 *mac);
+ 	void (*config_bssid) (struct rt2x00_dev *rt2x00dev, u8 *bssid);
+ 	void (*config_packet_filter) (struct rt2x00_dev *rt2x00dev,
+-				      const int filter);
++				      const unsigned int filter);
+ 	void (*config_type) (struct rt2x00_dev *rt2x00dev, const int type);
+-	void (*config) (struct rt2x00_dev *rt2x00dev, const int flags,
++	void (*config) (struct rt2x00_dev *rt2x00dev, const unsigned int flags,
+ 			struct ieee80211_conf *conf);
+ #define CONFIG_UPDATE_PHYMODE		( 1 << 1 )
+ #define CONFIG_UPDATE_CHANNEL		( 1 << 2 )
+diff --git a/drivers/net/wireless/rt61pci.c b/drivers/net/wireless/rt61pci.c
+index edacb46..f592397 100644
+--- a/drivers/net/wireless/rt61pci.c
++++ b/drivers/net/wireless/rt61pci.c
+@@ -307,7 +307,7 @@ static void rt61pci_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
+ }
+ 
+ static void rt61pci_config_packet_filter(struct rt2x00_dev *rt2x00dev,
+-					 const int filter)
++					 const unsigned int filter)
+ {
+ 	int promisc = !!(filter & IFF_PROMISC);
+ 	int multicast = !!(filter & IFF_MULTICAST);
+@@ -846,7 +846,8 @@ static void rt61pci_config_duration(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
+ }
+ 
+-static void rt61pci_config(struct rt2x00_dev *rt2x00dev, const int flags,
++static void rt61pci_config(struct rt2x00_dev *rt2x00dev,
++			   const unsigned int flags,
+ 			   struct ieee80211_conf *conf)
+ {
+ 	int short_slot_time = conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME;
+@@ -1726,7 +1727,8 @@ static void rt61pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ /*
+  * TX data initialization
+  */
+-static void rt61pci_kick_tx_queue(struct rt2x00_dev *rt2x00dev, int queue)
++static void rt61pci_kick_tx_queue(struct rt2x00_dev *rt2x00dev,
++				  unsigned int queue)
+ {
+ 	u32 reg;
+ 
+@@ -1759,8 +1761,8 @@ static void rt61pci_kick_tx_queue(struct rt2x00_dev *rt2x00dev, int queue)
+ static int rt61pci_agc_to_rssi(struct rt2x00_dev *rt2x00dev, int rxd_w1)
+ {
+ 	u16 eeprom;
+-	char offset;
+-	char lna;
++	u8 offset;
++	u8 lna;
+ 
+ 	lna = rt2x00_get_field32(rxd_w1, RXD_W1_RSSI_LNA);
+ 	switch (lna) {
+@@ -1960,7 +1962,7 @@ static int rt61pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	u32 reg;
+ 	u16 word;
+ 	u8 *mac;
+-	char value;
++	s8 value;
+ 
+ 	rt2x00pci_register_read(rt2x00dev, E2PROM_CSR, &reg);
+ 
+diff --git a/drivers/net/wireless/rt73usb.c b/drivers/net/wireless/rt73usb.c
+index 74e4173..9f059ce 100644
+--- a/drivers/net/wireless/rt73usb.c
++++ b/drivers/net/wireless/rt73usb.c
+@@ -282,7 +282,7 @@ static void rt73usb_config_bssid(struct rt2x00_dev *rt2x00dev, u8 *bssid)
+ }
+ 
+ static void rt73usb_config_packet_filter(struct rt2x00_dev *rt2x00dev,
+-					 const int filter)
++					 const unsigned int filter)
+ {
+ 	int promisc = !!(filter & IFF_PROMISC);
+ 	int multicast = !!(filter & IFF_MULTICAST);
+@@ -742,7 +742,8 @@ static void rt73usb_config_duration(struct rt2x00_dev *rt2x00dev,
+ 	rt73usb_register_write(rt2x00dev, TXRX_CSR9, reg);
+ }
+ 
+-static void rt73usb_config(struct rt2x00_dev *rt2x00dev, const int flags,
++static void rt73usb_config(struct rt2x00_dev *rt2x00dev,
++			   const unsigned int flags,
+ 			   struct ieee80211_conf *conf)
+ {
+ 	int short_slot_time = conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME;
+@@ -1370,7 +1371,8 @@ static void rt73usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ /*
+  * TX data initialization
+  */
+-static void rt73usb_kick_tx_queue(struct rt2x00_dev *rt2x00dev, int queue)
++static void rt73usb_kick_tx_queue(struct rt2x00_dev *rt2x00dev,
++				  unsigned int queue)
+ {
+ 	u32 reg;
+ 
+@@ -1390,8 +1392,8 @@ static void rt73usb_kick_tx_queue(struct rt2x00_dev *rt2x00dev, int queue)
+ static int rt73usb_agc_to_rssi(struct rt2x00_dev *rt2x00dev, int rxd_w1)
+ {
+ 	u16 eeprom;
+-	char offset;
+-	char lna;
++	u8 offset;
++	u8 lna;
+ 
+ 	lna = rt2x00_get_field32(rxd_w1, RXD_W1_RSSI_LNA);
+ 	switch (lna) {
+@@ -1469,7 +1471,7 @@ static int rt73usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u16 word;
+ 	u8 *mac;
+-	char value;
++	s8 value;
+ 
+ 	rt2x00usb_eeprom_read(rt2x00dev, rt2x00dev->eeprom, EEPROM_SIZE);
+ 
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.3.rc5
+
