@@ -1,41 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:57320 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754826AbXHWWQ4 (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:43853 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750709AbXHSE7h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2007 18:16:56 -0400
-Message-ID: <46CE0757.8000008@lwfinger.net>
-Date: Thu, 23 Aug 2007 17:16:55 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: David Woodhouse <dwmw2@infradead.org>
-CC: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: ALERT: firmware change for b43
-References: <46C89BF1.5060306@lwfinger.net> <1187860330.22432.139.camel@pmac.infradead.org>
-In-Reply-To: <1187860330.22432.139.camel@pmac.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 19 Aug 2007 00:59:37 -0400
+Date: Sun, 19 Aug 2007 00:59:43 -0400
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: Yi Zhu <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: ipw2200: sparse warnings
+Message-ID: <20070819005943.1b53cc4d@oldman.hemminger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Woodhouse wrote:
-> On Sun, 2007-08-19 at 14:37 -0500, Larry Finger wrote:
->> It is recommended that you update fwcutter before these patches are
->> merged. If your version of fwcutter was obtained with subversion, a
->> simple 'svn update' in the fwcutter directory will suffice.
->> If you are using a version provided by your distro, you will need to
->> checkout the latest version with the command 'svn checkout
->> svn://svn.berlios.de/bcm43xx/trunk/fwcutter'. 
-> 
-> Ew, Subversion. Hasn't everyone abandoned that yet?
-> 
-> I've set up a script to mirror it into git hourly:
-> 	http://git.infradead.org/?p=b43-fwcutter.git
-> 	git://git.infradead.org/b43-fwcutter.git
-> 
+Lots of sparse warnings come out of this driver:
 
-Although git is clearly superior, it doesn't make that much difference for small projects. Where 
-Subversion still has a place, however, is where the project is code used on multiple OS's. At least 
-I haven't seen a port of git to Windows. OS X wouldn't be that much trouble, I guess.
-
-Larry
+drivers/net/wireless/ipw2200.c:833:6: warning: symbol 'led' shadows an earlier one
+drivers/net/wireless/ipw2200.c:93:12: originally declared here
+drivers/net/wireless/ipw2200.c:877:6: warning: symbol 'led' shadows an earlier one
+drivers/net/wireless/ipw2200.c:93:12: originally declared here
+drivers/net/wireless/ipw2200.c:921:6: warning: symbol 'led' shadows an earlier one
+drivers/net/wireless/ipw2200.c:93:12: originally declared here
+drivers/net/wireless/ipw2200.c:966:6: warning: symbol 'led' shadows an earlier one
+drivers/net/wireless/ipw2200.c:93:12: originally declared here
+drivers/net/wireless/ipw2200.c:1002:6: warning: symbol 'led' shadows an earlier one
+drivers/net/wireless/ipw2200.c:93:12: originally declared here
+drivers/net/wireless/ipw2200.c:1037:6: warning: symbol 'led' shadows an earlier one
+drivers/net/wireless/ipw2200.c:93:12: originally declared here
+drivers/net/wireless/ipw2200.c:1793:6: warning: symbol 'channel' shadows an earlier one
+drivers/net/wireless/ipw2200.c:87:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_x' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:4239:12: warning: symbol '_y' shadows an earlier one
+drivers/net/wireless/ipw2200.c:4239:12: originally declared here
+drivers/net/wireless/ipw2200.c:6169:7: warning: symbol 'channel' shadows an earlier one
+drivers/net/wireless/ipw2200.c:87:12: originally declared here
+drivers/net/wireless/ipw2200.c:6285:6: warning: symbol 'channel' shadows an earlier one
+drivers/net/wireless/ipw2200.c:87:12: originally declared here
+drivers/net/wireless/ipw2200.c:6751:5: warning: symbol 'mode' shadows an earlier one
+drivers/net/wireless/ipw2200.c:88:12: originally declared here
+drivers/net/wireless/ipw2200.c:7854:6: warning: symbol 'channel' shadows an earlier one
+drivers/net/wireless/ipw2200.c:87:12: originally declared here
+drivers/net/wireless/ipw2200.c:8612:5: warning: symbol 'channel' shadows an earlier one
+drivers/net/wireless/ipw2200.c:87:12: originally declared here
+drivers/net/wireless/ipw2200.c:9606:6: warning: symbol 'mode' shadows an earlier one
+drivers/net/wireless/ipw2200.c:88:12: originally declared here
+drivers/net/wireless/ipw2200.c:9664:6: warning: symbol 'mode' shadows an earlier one
+drivers/net/wireless/ipw2200.c:88:12: originally declared here
+drivers/net/wireless/ipw2200.c:9770:6: warning: symbol 'mode' shadows an earlier one
+drivers/net/wireless/ipw2200.c:88:12: originally declared here
+drivers/net/wireless/ipw2200.c:10265:7: warning: symbol 'remaining_bytes' shadows an earlier one
+drivers/net/wireless/ipw2200.c:10134:6: originally declared here
+drivers/net/wireless/ipw2200.c:1236:23: error: bad constant expression
