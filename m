@@ -1,114 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38791 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759355AbXHHHhj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 03:37:39 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Gregory Greenman <gregory.greenman@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 15/28] iwlwifi: Endianity fix for rxon host commands
-Date: Wed,  8 Aug 2007 15:33:32 +0800
-Message-Id: <11865584603865-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11865584583336-git-send-email-yi.zhu@intel.com>
-References: <11865584251026-git-send-email-yi.zhu@intel.com>
- <11865584292234-git-send-email-yi.zhu@intel.com>
- <1186558432932-git-send-email-yi.zhu@intel.com>
- <11865584342308-git-send-email-yi.zhu@intel.com>
- <11865584363863-git-send-email-yi.zhu@intel.com>
- <11865584392893-git-send-email-yi.zhu@intel.com>
- <11865584413292-git-send-email-yi.zhu@intel.com>
- <1186558443548-git-send-email-yi.zhu@intel.com>
- <11865584452614-git-send-email-yi.zhu@intel.com>
- <11865584473732-git-send-email-yi.zhu@intel.com>
- <11865584503648-git-send-email-yi.zhu@intel.com>
- <11865584521358-git-send-email-yi.zhu@intel.com>
- <11865584543903-git-send-email-yi.zhu@intel.com>
- <11865584562811-git-send-email-yi.zhu@intel.com>
- <11865584583336-git-send-email-yi.zhu@intel.com>
+Received: from ug-out-1314.google.com ([66.249.92.169]:22855 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754476AbXHSSbF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Aug 2007 14:31:05 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so446949ugf
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2007 11:31:03 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 16/30] rt2x00: Cleanup set_state for rt61 and rt73
+Date: Sun, 19 Aug 2007 20:27:15 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200708192018.30624.IvDoorn@gmail.com>
+In-Reply-To: <200708192018.30624.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200708192027.15945.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+>From 252c0576e50c72fed7a52777b5a4abf962b8ae43 Mon Sep 17 00:00:00 2001
+From: Ivo van Doorn <IvDoorn@gmail.com>
+Date: Sat, 18 Aug 2007 13:08:09 +0200
+Subject: [PATCH 16/30] rt2x00: Cleanup set_state for rt61 and rt73
 
-This patch fixes left over endianity issues in rxon host command.
+The set_state was doing too much work for rt61 and rt73,
+the additional registers that were set should be used
+for Power Saving management and _not_ suspend/resume.
+Since at the moment we don't support power management
+we should remove the additional calls.
 
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/iwl-4965-hw.h |   21 +++++++++++----------
- drivers/net/wireless/iwl-4965.c    |   10 ++++++----
- 2 files changed, 17 insertions(+), 14 deletions(-)
+ drivers/net/wireless/rt61pci.c |   12 ------------
+ drivers/net/wireless/rt73usb.c |    8 --------
+ 2 files changed, 0 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/iwl-4965-hw.h b/drivers/net/wireless/iwl-4965-hw.h
-index 106f7c0..bb814cf 100644
---- a/drivers/net/wireless/iwl-4965-hw.h
-+++ b/drivers/net/wireless/iwl-4965-hw.h
-@@ -229,20 +229,21 @@ struct iwl_channel_switch_notif {
- /********************* END TXPOWER *****************************************/
+diff --git a/drivers/net/wireless/rt61pci.c b/drivers/net/wireless/rt61pci.c
+index d0c2323..1a4957b 100644
+--- a/drivers/net/wireless/rt61pci.c
++++ b/drivers/net/wireless/rt61pci.c
+@@ -1423,18 +1423,6 @@ static int rt61pci_set_state(struct rt2x00_dev *rt2x00dev, enum dev_state state)
+ 	rt2x00_set_field32(&reg, MAC_CSR12_PUT_TO_SLEEP, put_to_sleep);
+ 	rt2x00pci_register_write(rt2x00dev, MAC_CSR12, reg);
  
- /* HT flags */
--#define RXON_FLG_CONTROL_CHANNEL_LOCATION_MSK	0x400000
--#define RXON_FLG_CONTROL_CHANNEL_LOC_LOW_MSK	0x000000
--#define RXON_FLG_CONTROL_CHANNEL_LOC_HIGH_MSK	0x400000
-+#define RXON_FLG_CONTROL_CHANNEL_LOCATION_POS	(22)
-+#define RXON_FLG_CONTROL_CHANNEL_LOCATION_MSK	__constant_cpu_to_le32(0x1<<22)
-+#define RXON_FLG_CONTROL_CHANNEL_LOC_LOW_MSK	__constant_cpu_to_le32(0x0<<22)
-+#define RXON_FLG_CONTROL_CHANNEL_LOC_HIGH_MSK	__constant_cpu_to_le32(0x1<<22)
+-	if (put_to_sleep) {
+-		rt2x00pci_register_write(rt2x00dev, SOFT_RESET_CSR, 0x00000005);
+-		rt2x00pci_register_write(rt2x00dev, IO_CNTL_CSR, 0x0000001c);
+-		rt2x00pci_register_write(rt2x00dev, PCI_USEC_CSR, 0x00000060);
+-		rt61pci_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0x00, 0x00);
+-	} else {
+-		rt2x00pci_register_write(rt2x00dev, SOFT_RESET_CSR, 0x00000007);
+-		rt2x00pci_register_write(rt2x00dev, IO_CNTL_CSR, 0x00000018);
+-		rt2x00pci_register_write(rt2x00dev, PCI_USEC_CSR, 0x00000020);
+-		rt61pci_mcu_request(rt2x00dev, MCU_WAKEUP, 0xff, 0x00, 0x00);
+-	}
+-
+ 	/*
+ 	 * Device is not guaranteed to be in the requested state yet.
+ 	 * We must wait until the register indicates that the
+diff --git a/drivers/net/wireless/rt73usb.c b/drivers/net/wireless/rt73usb.c
+index 0d9c1b9..85dfc58 100644
+--- a/drivers/net/wireless/rt73usb.c
++++ b/drivers/net/wireless/rt73usb.c
+@@ -1156,19 +1156,11 @@ static int rt73usb_set_state(struct rt2x00_dev *rt2x00dev, enum dev_state state)
  
- #define RXON_FLG_HT_OPERATING_MODE_POS		(23)
--/*yshevet - bug fix */
--#define RXON_FLG_HT_PROT_MSK			0x800000
--#define RXON_FLG_FAT_PROT_MSK			0x1000000
-+
-+#define RXON_FLG_HT_PROT_MSK			__constant_cpu_to_le32(0x1<<23)
-+#define RXON_FLG_FAT_PROT_MSK			__constant_cpu_to_le32(0x2<<23)
+ 	put_to_sleep = (state != STATE_AWAKE);
  
- #define RXON_FLG_CHANNEL_MODE_POS		(25)
--#define RXON_FLG_CHANNEL_MODE_MSK		0x06000000
--#define RXON_FLG_CHANNEL_MODE_LEGACY_MSK	0x00000000
--#define RXON_FLG_CHANNEL_MODE_PURE_40_MSK	0x02000000
--#define RXON_FLG_CHANNEL_MODE_MIXED_MSK		0x04000000
-+#define RXON_FLG_CHANNEL_MODE_MSK		__constant_cpu_to_le32(0x3<<25)
-+#define RXON_FLG_CHANNEL_MODE_LEGACY_MSK	__constant_cpu_to_le32(0x0<<25)
-+#define RXON_FLG_CHANNEL_MODE_PURE_40_MSK	__constant_cpu_to_le32(0x1<<25)
-+#define RXON_FLG_CHANNEL_MODE_MIXED_MSK		__constant_cpu_to_le32(0x2<<25)
+-	if (!put_to_sleep)
+-		rt2x00usb_vendor_request_sw(rt2x00dev, USB_DEVICE_MODE, 0x0000,
+-					    USB_MODE_WAKEUP, REGISTER_TIMEOUT);
+-
+ 	rt73usb_register_read(rt2x00dev, MAC_CSR12, &reg);
+ 	rt2x00_set_field32(&reg, MAC_CSR12_FORCE_WAKEUP, !put_to_sleep);
+ 	rt2x00_set_field32(&reg, MAC_CSR12_PUT_TO_SLEEP, put_to_sleep);
+ 	rt73usb_register_write(rt2x00dev, MAC_CSR12, reg);
  
- #define RXON_RX_CHAIN_DRIVER_FORCE_MSK		__constant_cpu_to_le16(0x1<<0)
- #define RXON_RX_CHAIN_VALID_MSK			__constant_cpu_to_le16(0x7<<1)
-diff --git a/drivers/net/wireless/iwl-4965.c b/drivers/net/wireless/iwl-4965.c
-index 0cbe798..5999be5 100644
---- a/drivers/net/wireless/iwl-4965.c
-+++ b/drivers/net/wireless/iwl-4965.c
-@@ -79,7 +79,7 @@ const struct iwl_rate_info iwl_rates[IWL_RATE_COUNT] = {
- 	IWL_DECLARE_RATE_INFO(60, 60, 48, INV, 48, INV, 48, INV),/* 60mbps */
- };
- 
--static int is_fat_channel(u32 rxon_flags)
-+static int is_fat_channel(__le32 rxon_flags)
- {
- 	return (rxon_flags & RXON_FLG_CHANNEL_MODE_PURE_40_MSK) ||
- 		(rxon_flags & RXON_FLG_CHANNEL_MODE_MIXED_MSK);
-@@ -2859,12 +2859,14 @@ void iwl4965_set_rxon_chain(struct iwl_priv *priv)
- 	 * Just after first association, iwl4965_noise_calibration()
- 	 *    checks which antennas actually *are* connected. */
- 	priv->staging_rxon.rx_chain |=
--	    (priv->valid_antenna << RXON_RX_CHAIN_VALID_POS);
-+	    cpu_to_le16(priv->valid_antenna << RXON_RX_CHAIN_VALID_POS);
- 
- 	/* How many receivers should we use? */
- 	iwl4965_get_rx_chain_counter(priv, &idle_state, &rx_state);
--	priv->staging_rxon.rx_chain |= (rx_state << RXON_RX_CHAIN_MIMO_CNT_POS);
--	priv->staging_rxon.rx_chain |= (idle_state << RXON_RX_CHAIN_CNT_POS);
-+	priv->staging_rxon.rx_chain |=
-+		cpu_to_le16(rx_state << RXON_RX_CHAIN_MIMO_CNT_POS);
-+	priv->staging_rxon.rx_chain |=
-+		cpu_to_le16(idle_state << RXON_RX_CHAIN_CNT_POS);
- 
- 	if (!is_single && !(priv->status & STATUS_POWER_PMI) && (rx_state >= 2))
- 		priv->staging_rxon.rx_chain |= RXON_RX_CHAIN_MIMO_FORCE_MSK;
+-	if (put_to_sleep)
+-		rt2x00usb_vendor_request_sw(rt2x00dev, USB_DEVICE_MODE, 0x0000,
+-					    USB_MODE_SLEEP, REGISTER_TIMEOUT);
+-
+ 	/*
+ 	 * Device is not guaranteed to be in the requested state yet.
+ 	 * We must wait until the register indicates that the
 -- 
-1.5.2
+1.5.3.rc5
+
