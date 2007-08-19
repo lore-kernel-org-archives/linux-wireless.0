@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:57675 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753955AbXHHGCa (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.169]:22855 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754616AbXHSSca convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 02:02:30 -0400
-Message-ID: <46B95C75.8060404@lwfinger.net>
-Date: Wed, 08 Aug 2007 01:02:29 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
+	Sun, 19 Aug 2007 14:32:30 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so446949ugf
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2007 11:32:29 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 28/30] rt2x00: Always check if mac80211 requested TX status update
+Date: Sun, 19 Aug 2007 20:36:37 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200708192018.30624.IvDoorn@gmail.com>
+In-Reply-To: <200708192018.30624.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Larry Finger <larry.finger@lwfinger.net>
-CC: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] Fix handling of failure to create debugfs directory
-References: <20070808051710.3902.43211.stgit@dv.roinet.com> <46B95A15.1080202@lwfinger.net>
-In-Reply-To: <46B95A15.1080202@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200708192036.37330.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> Pavel Roskin wrote:
->> This can happen if CONFIG_BCM43XX_MAC80211_DEBUG is enabled, but
->> CONFIG_DEBUG_FS is not.
->>
->> Signed-off-by: Pavel Roskin <proski@gnu.org>
->> ---
->>
-> With this patch installed, and the DEBUG configuration set as above, I get a kernel panic on an 
-> x86_64 SMP system. The reason for the panic scrolled off the screen, but the complete stack dump 
-> (hand copied) is as follows:
-> 
-> lock_acquire+0x85/0x31
-> bcm43xx_mac80211: bcm43xx_debugfs_log_txstat+0x5a/099
-> _spin_lock+0x25/0x31
+>From cbf01c4f3f1810f0ba98238aa7900a523a044e66 Mon Sep 17 00:00:00 2001
+From: Ivo van Doorn <IvDoorn@gmail.com>
+Date: Sat, 18 Aug 2007 17:43:23 +0200
+Subject: [PATCH 28/30] rt2x00: Always check if mac80211 requested TX status update
 
-Ignore the noise above. I had failed to get the right patch. The crash confirms the problem 
-_without_ the patch. Getting it in properly fixes the problem
+During txdone always check for the IEEE80211_TXCTL_REQ_TX_STATUS flag
+to determine if ieee80211_tx_status_irqsafe should be called or not.
+When the flag is not set, just cleanup the skb and don't bother
+mac80211 with it.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 14968ef..75888ea 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -333,10 +333,14 @@ void rt2x00lib_txdone(struct data_entry *entry,
+ 	}
+ 
+ 	/*
+-	 * Send the tx_status to mac80211,
+-	 * that method also cleans up the skb structure.
++	 * Check if mac80211 wants to be updated or not,
++	 * if it wants the update it will cleanup the skb structure,
++	 * else then we should cleanup the skb structure.
+ 	 */
+-	ieee80211_tx_status_irqsafe(rt2x00dev->hw, entry->skb, tx_status);
++	if (tx_status->control.flags & IEEE80211_TXCTL_REQ_TX_STATUS)
++		ieee80211_tx_status_irqsafe(rt2x00dev->hw, entry->skb, tx_status);
++	else
++		dev_kfree_skb_any(entry->skb);
+ 
+ 	entry->skb = NULL;
+ }
+-- 
+1.5.3.rc5
 
