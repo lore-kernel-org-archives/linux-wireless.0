@@ -1,37 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:50693
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761300AbXHBVGk (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:61420 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753898AbXHSQHM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 17:06:40 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [RFC 0/10] Port of bcm43xx from softmac to mac80211
-Date: Thu, 2 Aug 2007 23:06:33 +0200
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
-	jbenc@suse.cz, flamingice@sourmilk.net
-References: <46b1fde0.b+weBDN75J0SPe2a%Larry.Finger@lwfinger.net> <46B20695.2080100@lwfinger.net> <1186088678.2931.10.camel@pmac.infradead.org>
-In-Reply-To: <1186088678.2931.10.camel@pmac.infradead.org>
+	Sun, 19 Aug 2007 12:07:12 -0400
+Message-ID: <46C86AA4.1030303@lwfinger.net>
+Date: Sun, 19 Aug 2007 11:07:00 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200708022306.34139.mb@bu3sch.de>
+To: Michael Buesch <mb@bu3sch.de>
+CC: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Lock problem with latest b43 patches
+References: <46C7CACC.2000000@lwfinger.net> <200708191416.26192.mb@bu3sch.de>
+In-Reply-To: <200708191416.26192.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 02 August 2007, David Woodhouse wrote:
-> On Thu, 2007-08-02 at 11:30 -0500, Larry Finger wrote:
-> > I was hoping this would be your response, but I had to make the
-> > effort. I'll wait for a couple of days to see if anyone else has any
-> > comments and send it on to Linville and hope it ends up in -mm  fairly
-> > soon. It _DOES_ work on the hardware.
+Michael Buesch wrote:
+> On Sunday 19 August 2007 06:45:00 Larry Finger wrote:
+>> Using the latest set of 6 patches posted about 5 hours ago, I get the following locking problem with 
+>> a BCM4311 using WPA-PSK TKIP encryption controlled by NetworkManager:
 > 
-> My experience is that mac80211 is broken w.r.t IPv6 -- it receives its
-> own packets. It would be suboptimal for me if the softmac version of
-> bcm43xx were to go away before that got fixed.
-> 
+> Are you sure this is caused by my patches? I don't see how that's possible.
+> How to reproduce?
 
-We don't go _away_ from anything until there's no regression anymore.
-This is a patchset which adds a driver. It does not remove something.
+It's probably not your patches, but some unusual locking interaction involving NetworkManager, 
+wpa_supplicant, and mac80211. The involvement of b43 may be incidental. It must have accidentally 
+triggered just after I installed your patches. I cannot reproduce it today. No doubt it will show up 
+again.
 
+Larry
