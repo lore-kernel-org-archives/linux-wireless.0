@@ -1,43 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.239]:27052 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751617AbXH2SBg (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.191]:44117 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754089AbXHSSa2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2007 14:01:36 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so222428nze
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2007 11:01:35 -0700 (PDT)
-Message-ID: <9e4733910708291101i3783a8b1l38f0d5cfb0c2863d@mail.gmail.com>
-Date: Wed, 29 Aug 2007 14:01:34 -0400
-From: "Jon Smirl" <jonsmirl@gmail.com>
-To: "Valdis.Kletnieks@vt.edu" <Valdis.Kletnieks@vt.edu>
-Subject: Re: [PATCH 4/5] Net: ath5k, license is GPLv2
-Cc: "Christoph Hellwig" <hch@infradead.org>,
-	"Jiri Slaby" <jirislaby@gmail.com>, linville@tuxdriver.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <3208.1188408545@turing-police.cc.vt.edu>
+	Sun, 19 Aug 2007 14:30:28 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so508819nfb
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2007 11:30:27 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 04/30] rt2x00: Clear all fields on start_link_tune()
+Date: Sun, 19 Aug 2007 20:22:11 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200708192018.30624.IvDoorn@gmail.com>
+In-Reply-To: <200708192018.30624.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <2713029743177393055@pripojeni.net>
-	 <7515194658758617@pripojeni.net>
-	 <20070828171155.GC29343@infradead.org>
-	 <3208.1188408545@turing-police.cc.vt.edu>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200708192022.11665.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/29/07, Valdis.Kletnieks@vt.edu <Valdis.Kletnieks@vt.edu> wrote:
-> The heck with "good idea" - it's unclear to me if Jiri is even *allowed*
-> to remove the BSD/other license.   Jiri can release *his* code as GPLv2
-> only, but I suspect the files as a whole really should be dual BSD/GPLv2,
-> due to the numerous other stakeholders in those files.
+>From 643e88e4fca8b22d60f718226bede9f033b3e869 Mon Sep 17 00:00:00 2001
+From: Ivo van Doorn <IvDoorn@gmail.com>
+Date: Sat, 18 Aug 2007 12:55:02 +0200
+Subject: [PATCH 04/30] rt2x00: Clear all fields on start_link_tune()
 
-This mess has been occurring in the kernel for years. The DRM graphics
-drivers are used in both BSD and Linux. It is quite easy to contribute
-something to this code via LKML and think you are doing it under the
-GPL. Doesn't a patch against the kernel have to be GPL? When these
-patches get pulled back into BSD and distributed with it, did BSD get
-infected with the GPL? AFAIK this has never been legally sorted out.
+All variables inside the link structure need to be
+cleared when calling start_link_tune().
 
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00dev.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00dev.c b/drivers/net/wireless/rt2x00dev.c
+index 1597d2d..b7191cc 100644
+--- a/drivers/net/wireless/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00dev.c
+@@ -73,6 +73,10 @@ static void rt2x00_start_link_tune(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00dev->link.avg_rssi = 0;
+ 	rt2x00dev->link.vgc_level = 0;
+ 	rt2x00dev->link.false_cca = 0;
++	rt2x00dev->link.rx_success = 0;
++	rt2x00dev->link.rx_failed = 0;
++	rt2x00dev->link.tx_success = 0;
++	rt2x00dev->link.tx_failed = 0;
+ 
+ 	/*
+ 	 * Reset the link tuner.
 -- 
-Jon Smirl
-jonsmirl@gmail.com
+1.5.3.rc5
+
