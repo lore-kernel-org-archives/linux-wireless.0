@@ -1,39 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purr.warmcat.com ([87.106.142.209]:50459 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753914AbXHAWbm (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:39323 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750932AbXHTLvr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2007 18:31:42 -0400
-Message-ID: <46B109C8.9090704@warmcat.com>
-Date: Wed, 01 Aug 2007 23:31:36 +0100
-From: Andy Green <andy@warmcat.com>
+	Mon, 20 Aug 2007 07:51:47 -0400
+From: Chr <chunkeey@web.de>
+To: Hans de Goede <j.w.r.degoede@hhs.nl>
+Subject: Re: Recent linux-wireless git changes have broken my prism54pci card
+Date: Mon, 20 Aug 2007 13:51:45 +0200
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+References: <46BFF10B.1090307@hhs.nl> <200708200244.22841.chunkeey@web.de> <46C94844.3080505@hhs.nl>
+In-Reply-To: <46C94844.3080505@hhs.nl>
 MIME-Version: 1.0
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: libertas: blows chunks on failed firmware load
-References: <46AF913F.9010006@warmcat.com> <200708010900.00514.hs4233@mail.mn-solutions.de> <46B04704.3000409@warmcat.com> <200708011131.22390.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200708011131.22390.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708201351.45575.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Somebody in the thread at some point said:
->> Sure I will try it tonight, where should I go to get it?  The
->> only trees with "libertas" in the name on git.kernel.org don't
->> seem to be the ones.
+On Monday, 20. August 2007, Hans de Goede wrote:
+> Chr wrote:
+> > On Tuesday, 14. August 2007, Hans de Goede wrote:
+> > 
+> > Hans,
+> > 
+> > Any updates?
 > 
-> My driver is for sure in the libertas-dev tree from the OLPC 
-> people. The SVN project that contains the firmware cutter also 
-> contains code to checkout this tree and select the proper branch 
-> in this tree.
+> Erm, did you not receive my long mail with all kinda logs attached in logs.tar.gz?
+> 
+yes I got the logs... but maybe you haven't seen my reply:
+http://www.spinics.net/lists/linux-wireless/msg04658.html
 
-Hi Holger -
+>  > Or are you on holiday?
+> 
+> Nope
+> 
+> > 
+> > I've prepared a patch, which should theoretically lower the excessive retry count.
+> > 
+> > however I don't think it will magically solve anything...
+> > 
+> 
+> Erm, I'm awfully busy, still I want to get this resolved! So I'll make time to 
+> test things as necessary, but could you first look at the logs I send and then 
+> confirm (or deny) that this pathc might help.
+> 
 
-Well it seems the libertas_cs driver supports PCMCIA only?  The device I
-have is a PC Card which uses PCI semantics... at least I added the ID
-11ab:1faa to if_cs.c and nothing good happened when I inserted the
-module and the PC Card.
+me too... but the logs don't carry much useful information inside:
 
-Or maybe I didn't get the idea?
+"pyh2: not handling 0x02 type control frame" (could be the FW)
+"wlan0: duplicate address detected!" (never seen this before... IPv6?)
+"wlan0: switched to short barker preamble" (nothing to be scared.)
 
--Andy
+and of course: the low signal with any driver, except 13-6...
+
+Thanks,
+	Chr.
