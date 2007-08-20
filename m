@@ -1,52 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:22582 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754193AbXHSSaf convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51521 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756410AbXHTLWy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Aug 2007 14:30:35 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so446922ugf
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2007 11:30:35 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 08/30] rt2x00: Fix width of filter field.
-Date: Sun, 19 Aug 2007 20:24:01 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200708192018.30624.IvDoorn@gmail.com>
-In-Reply-To: <200708192018.30624.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200708192024.01210.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Mon, 20 Aug 2007 07:22:54 -0400
+Subject: Re: question for developers (help plzz!!)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: maali Al Janoob <mms82@hotmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <BAY111-F3965149B92B333B4E37A4DB6D80@phx.gbl>
+References: <BAY111-F3965149B92B333B4E37A4DB6D80@phx.gbl>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+foIfBwM0N+NhCYTGuiV"
+Date: Mon, 20 Aug 2007 12:44:00 +0200
+Message-Id: <1187606640.6090.83.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 47c06acef36889c67594dadb4a29879d28c8415b Mon Sep 17 00:00:00 2001
-From: Mattias Nissler <mattias.nissler@gmx.de>
-Date: Sat, 4 Aug 2007 19:18:44 +0200
-Subject: [PATCH 08/30] rt2x00: Fix width of filter field.
 
-The filter field needs to be declared unsigned short instead of char
-in order to hold all relevant IFF_* flags.
+--=-+foIfBwM0N+NhCYTGuiV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Fri, 2007-08-17 at 15:49 +0400, maali Al Janoob wrote:
+> Thank you so much for the reply. My advisor is not very convinced with th=
+is=20
+> answer, and says that there must be somewhere a linux driver that has an=20
+> open source firmware for protocol development purposes, or a driver that=20
+> implements everything in software.
 
-diff --git a/drivers/net/wireless/rt2x00.h b/drivers/net/wireless/rt2x00.h
-index 31f8a13..0db81eb 100644
---- a/drivers/net/wireless/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00.h
-@@ -304,7 +304,7 @@ struct interface {
- 	 * the monitor mode interfaces are removed, while a
- 	 * non-monitor mode interface remains.
- 	 */
--	char filter;
-+	unsigned short filter;
- 
- 	/*
- 	 * Monitor mode count, the number of interfaces
--- 
-1.5.3.rc5
+Clearly, your adviser has no clue how things work wrt. Linux and 802.11.
+There's gnuradio, but I don't think they already have a working 802.11
+implementation. That your adviser thinks that there could be a driver
+that implements retry logic in software is a pretty good indication for
+something else that I'll refrain from mentioning though.... Retry logic
+is timing sensitive on the order of a microsecond and Linux isn't a
+real-time operating system. That should tell you at least something.
+
+> So, firstly, can I please ask you for=20
+> some references affirming your answer that I can include in my research?=20
+
+No. Feel free to do the research yourself, I've only answered based on
+my own (limited) knowledge.
+
+> and=20
+> secondly, are you aware of any attempt in the open source firmware=20
+> direction?
+
+We've partially reverse engineered the Broadcom firmware and others have
+partially reverse engineered the prism54 firmware, neither have working
+replacement firmware. In fact, for Broadcom firmware I haven't been able
+to completely identify the retry logic in the existing code from a quick
+look.
+
+> Assuming that there is no way I can access the backoff algorithm in any o=
+f=20
+> the commercial wireless cards,=20
+
+I assure you, this is the case unless you want to invest significant
+reverse engineering effort or somehow manage to get vendor support. But
+as far as I know, for example Broadcom's NDA doesn't include firmware
+because there's no reason for a card vendor to have access to it.
+
+> what would be the solution to my case then? I=20
+> need to modify the backoff algorithm for my masters thesis, and if this i=
+s=20
+> not possible with any card, what should I do?!
+
+Why would you be asking me this question? Remember it's your masters
+thesis, not mine, you're the one supposed to solve the problems arising.
+I'm told (by my thesis advisers, mind you) one of the points of doing a
+Master's is showing that one is able to solve the arising problems.
+
+johannes
+
+--=-+foIfBwM0N+NhCYTGuiV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGyXBw/ETPhpq3jKURAjtCAKCfGYanslFkwXK4n37PsTGVv06pIgCfdOE5
+SJRPH1NJDS7wLFCUBqEvG9s=
+=3NWT
+-----END PGP SIGNATURE-----
+
+--=-+foIfBwM0N+NhCYTGuiV--
 
