@@ -1,50 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp23.orange.fr ([80.12.242.50]:19074 "EHLO smtp23.orange.fr"
+Received: from deine-taler.de ([217.160.107.63]:62872 "EHLO deine-taler.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763851AbXHFKpq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2007 06:45:46 -0400
-Received: from smtp23.orange.fr (mwinf2349 [10.232.4.149])
-	by mwinf2305.orange.fr (SMTP Server) with ESMTP id 788E61C20C01
-	for <linux-wireless@vger.kernel.org>; Mon,  6 Aug 2007 10:36:18 +0200 (CEST)
-Received: from me-wanadoo.net (localhost [127.0.0.1])
-	by mwinf2349.orange.fr (SMTP Server) with ESMTP id 62E741C0008D
-	for <linux-wireless@vger.kernel.org>; Mon,  6 Aug 2007 10:35:36 +0200 (CEST)
-In-Reply-To: <1186214124.21957.9.camel@johannes.berg>
-References: <200708031737.TAA00882@ifs.emn.fr> <1186214124.21957.9.camel@johannes.berg>
-Mime-Version: 1.0 (Apple Message framework v752.2)
-Content-Type: text/plain; charset=ISO-8859-1;
-	delsp=yes	format=flowed
-Message-Id: <0E5F2753-6D34-462B-ACBA-CB3A19E30856@wanadoo.fr>
-Cc: linux-wireless@vger.kernel.org, Julia Lawall <julia@diku.dk>
-From: yoann padioleau <padator@wanadoo.fr>
-Subject: Re: [PATCH 13/13] dev->priv to netdev_priv(dev), for drivers/net/wireless
-Date: Mon, 6 Aug 2007 10:35:34 +0200
-To: Johannes Berg <johannes@sipsolutions.net>
+	id S1751231AbXHTWnf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Aug 2007 18:43:35 -0400
+Date: Tue, 21 Aug 2007 00:43:34 +0200
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: fix software decryption with b43legacy
+Message-ID: <20070820224333.GA6363@deine-taler.de>
+References: <1187346385.23489.157.camel@johannes.berg> <46C5CC0D.2040609@lwfinger.net> <1187384230.6090.7.camel@johannes.berg> <46C612E8.4020604@lwfinger.net> <1187387215.6090.13.camel@johannes.berg> <46C64777.1000602@lwfinger.net> <1187453173.6090.33.camel@johannes.berg> <46C752FE.4030706@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <46C752FE.4030706@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Larry Finger wrote:
 
-On 4 ao=FBt 07, at 09:55, Johannes Berg wrote:
+> I have added the lists to this message.
+> 
+> I got b43legacy up and running with the software decryption modifications. 
+> It started OK with WPA-PSK TKIP encryption, but soon thereafter, I got this 
+> message:
+> 
+> eth1: No ProbeResp from current AP 00:1a:70:46:ba:b1 - assume out of range
+> 
 
-> On Fri, 2007-08-03 at 19:37 +0200, Yoann Padioleau wrote:
->
->> Here is an excerpt of the semantic patch that performs the =20
->> transformation
->
-> Out of curiosity, what is that "semantic patch" stuff? Is there =20
-> actually
-> a tool that applies changes defined in that way?
+Since the git tree reorg wireless-dev branch created comparable
+problems for zd1211rw-mac80211 too. It might be related:
 
-Yes there is. See www.emn.fr/x-info/coccinelle
-This tool is called spatch.
+Aug 19 07:08:51 keks kernel: [   83.572628] wlan0: CCMP replay detected for RX frame from 00:04:0e:68:ad:70 (RX PN 00000000000c <= prev. PN 00000000000c)
+Aug 19 07:08:54 keks kernel: [   87.432010] usb 1-2: handle_regs_int() regs interrupt ignored
+Aug 19 07:08:55 keks kernel: [   87.898447] wlan0: No ProbeResp from current AP 00:04:0e:68:ad:70 - assume out of range
+Aug 19 07:08:55 keks kernel: [   87.899649] wmaster0: Removed STA 00:04:0e:68:ad:70
+Aug 19 07:08:55 keks kernel: [   87.901406] wlan0: set_encrypt - unknown addr 00:04:0e:68:ad:70
 
->
-> johannes
+The first message might be a simple duplicate. The
+handle_regs_int() is absolutely suspicious and I cannot really
+explain it right now. The "No ProbeResp" might be a follow-up
+problem. The whole USB subsystem becomes absolutely instable to
+the point that I can't use keyboard and mouse anymore. 
 
+I will try Johannes' patch tomorrow.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+BTW the wireless-dev reorg makes it impossible to actually use
+git-bisect to find the patch, which caused the problem. 
+
+BTW the current Linus tree following patch doesn't work with the
+current zd1211rw-mac80211. The offending patch is the following one:
+
+commit b9bf1e60a294fc7795d5198f94a917290e52865b
+Author: John W. Linville <linville@tuxdriver.com>
+Date:   Tue Aug 7 16:33:15 2007 -0400
+
+    [PATCH] mac80211: probe for hidden SSIDs in pre-auth scan
+    
+    Probe for hidden SSIDs if initiating pre-authentication scan and SSID
+    is set for STA interface.
+    
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
+index 7ba352e..0d99b68 100644
+--- a/net/mac80211/ieee80211_sta.c
++++ b/net/mac80211/ieee80211_sta.c
+@@ -2154,7 +2154,11 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
+ 		return 0;
+ 	} else {
+ 		if (ifsta->state != IEEE80211_AUTHENTICATE) {
+-			ieee80211_sta_start_scan(dev, NULL, 0);
++			if (ifsta->auto_ssid_sel)
++				ieee80211_sta_start_scan(dev, NULL, 0);
++			else
++				ieee80211_sta_start_scan(dev, ifsta->ssid,
++							 ifsta->ssid_len);
+ 			ifsta->state = IEEE80211_AUTHENTICATE;
+ 			set_bit(IEEE80211_STA_REQ_AUTH, &ifsta->request);
+ 		} else
+
+-- 
+Uli Kunitz
