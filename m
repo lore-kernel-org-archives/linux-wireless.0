@@ -1,252 +1,272 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:22582 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754624AbXHSScR convert rfc822-to-8bit (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:42546 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759704AbXHTWO3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Aug 2007 14:32:17 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so446922ugf
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2007 11:32:16 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 26/30] rt2x00: Clean up RATEMASK handling
-Date: Sun, 19 Aug 2007 20:36:05 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200708192018.30624.IvDoorn@gmail.com>
-In-Reply-To: <200708192018.30624.IvDoorn@gmail.com>
+	Mon, 20 Aug 2007 18:14:29 -0400
+From: Chr <chunkeey@web.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Recent linux-wireless git changes have broken my prism54pci card
+Date: Tue, 21 Aug 2007 00:14:26 +0200
+Cc: Hans de Goede <j.w.r.degoede@hhs.nl>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+References: <46BFF10B.1090307@hhs.nl> <200708201351.45575.chunkeey@web.de> <1187612256.6090.104.camel@johannes.berg>
+In-Reply-To: <1187612256.6090.104.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200708192036.05318.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_CJhyGxRNOlnuDcc"
+Message-Id: <200708210014.26242.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 295b7e7bc2a2081714a071c3946f1c0262b6e503 Mon Sep 17 00:00:00 2001
-From: Ivo van Doorn <IvDoorn@gmail.com>
-Date: Sat, 18 Aug 2007 16:31:38 +0200
-Subject: [PATCH 26/30] rt2x00: Clean up RATEMASK handling
+--Boundary-00=_CJhyGxRNOlnuDcc
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Rate handling needs some cleaning up to
-clear up the meaning of the variables.
+On Monday, 20. August 2007, Johannes Berg wrote:
+> On Mon, 2007-08-20 at 13:51 +0200, Chr wrote:
+> 
+> > "pyh2: not handling 0x02 type control frame" (could be the FW)
+> 
+> The driver, I assume.
+No, it's really the firmware. I've "finally" tried the 2.4.12.0 and got the same messages... 
+But, I didn't get them with 2.7.0.0 or 2.5.2.0.
 
-- Rename DEV_RATE_* to DEV_RATEBIT_*
-- Add DEV_RATEMASK_* to remove "magical values" passed to
-  rt2x00lib_rate
-- CCK_RATEMASK is alias for DEV_RATEMASK_11MB
-- OFDM_RATEMASK is alias for DEV_RATE_MASK_54MB - CCK_RATEMASK
+Moreover, because of some "unknown reason" 2.4.12.0 does not work very well with
+my isl3880 chip, I cannot tx/rx any QoS data frame... And probably, it's because the
+feature is not supported by the firmware...  
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c |    2 +-
- drivers/net/wireless/rt2x00/rt2500pci.c |    2 +-
- drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
- drivers/net/wireless/rt2x00/rt2x00dev.c |   44 ++++++++++++++----------
- drivers/net/wireless/rt2x00/rt2x00reg.h |   56 +++++++++++++++++++------------
- drivers/net/wireless/rt2x00/rt61pci.c   |    2 +-
- drivers/net/wireless/rt2x00/rt73usb.c   |    2 +-
- 7 files changed, 64 insertions(+), 46 deletions(-)
+I made two patches:
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index b851571..524f529 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -366,7 +366,7 @@ static void rt2400pci_config_rate(struct rt2x00_dev *rt2x00dev, const int rate)
- 	else
- 		preamble = PREAMBLE;
- 
--	reg = DEVICE_GET_RATE_FIELD(rate, RATEMASK) & DEV_BASIC_RATE;
-+	reg = DEVICE_GET_RATE_FIELD(rate, RATEMASK) & DEV_BASIC_RATEMASK;
- 	rt2x00pci_register_write(rt2x00dev, ARCSR1, reg);
- 
- 	rt2x00pci_register_read(rt2x00dev, TXCSR1, &reg);
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 1000525..cc90597 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -374,7 +374,7 @@ static void rt2500pci_config_rate(struct rt2x00_dev *rt2x00dev, const int rate)
- 	else
- 		preamble = PREAMBLE;
- 
--	reg = DEVICE_GET_RATE_FIELD(rate, RATEMASK) & DEV_BASIC_RATE;
-+	reg = DEVICE_GET_RATE_FIELD(rate, RATEMASK) & DEV_BASIC_RATEMASK;
- 	rt2x00pci_register_write(rt2x00dev, ARCSR1, reg);
- 
- 	rt2x00pci_register_read(rt2x00dev, TXCSR1, &reg);
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 9ece4af..ba6c099 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -383,7 +383,7 @@ static void rt2500usb_config_rate(struct rt2x00_dev *rt2x00dev, const int rate)
- 	else
- 		preamble = PREAMBLE;
- 
--	reg = DEVICE_GET_RATE_FIELD(rate, RATEMASK) & DEV_BASIC_RATE;
-+	reg = DEVICE_GET_RATE_FIELD(rate, RATEMASK) & DEV_BASIC_RATEMASK;
- 
- 	rt2500usb_register_write(rt2x00dev, TXRX_CSR11, reg);
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index a0fcd05..8e7fc2a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -449,7 +449,7 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Check for OFDM
- 	 */
--	if (DEVICE_GET_RATE_FIELD(tx_rate, RATEMASK) & DEV_OFDM_RATE)
-+	if (DEVICE_GET_RATE_FIELD(tx_rate, RATEMASK) & DEV_OFDM_RATEMASK)
- 		__set_bit(ENTRY_TXD_OFDM_RATE, &entry->flags);
- 
- 	/*
-@@ -587,26 +587,32 @@ static int rt2x00lib_probe_hw_modes(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Initialize Rate list.
- 	 */
--	rt2x00lib_rate(&rates[0], 10, 0x001, 0x00, IEEE80211_RATE_CCK);
--	rt2x00lib_rate(&rates[1], 20, 0x003, 0x01, IEEE80211_RATE_CCK_2);
--	rt2x00lib_rate(&rates[2], 55, 0x007, 0x02, IEEE80211_RATE_CCK_2);
--	rt2x00lib_rate(&rates[3], 110, 0x00f, 0x03, IEEE80211_RATE_CCK_2);
-+	rt2x00lib_rate(&rates[0], 10, DEV_RATEMASK_1MB,
-+		       0x00, IEEE80211_RATE_CCK);
-+	rt2x00lib_rate(&rates[1], 20, DEV_RATEMASK_2MB,
-+		       0x01, IEEE80211_RATE_CCK_2);
-+	rt2x00lib_rate(&rates[2], 55, DEV_RATEMASK_5_5MB,
-+		       0x02, IEEE80211_RATE_CCK_2);
-+	rt2x00lib_rate(&rates[3], 110, DEV_RATEMASK_11MB,
-+		       0x03, IEEE80211_RATE_CCK_2);
- 
- 	if (spec->num_rates > 4) {
--		rt2x00lib_rate(&rates[4], 60, 0x01f, 0x0b, IEEE80211_RATE_OFDM);
--		rt2x00lib_rate(&rates[5], 90, 0x03f, 0x0f, IEEE80211_RATE_OFDM);
--		rt2x00lib_rate(&rates[6], 120, 0x07f, 0x0a,
--			       IEEE80211_RATE_OFDM);
--		rt2x00lib_rate(&rates[7], 180, 0x0ff, 0x0e,
--			       IEEE80211_RATE_OFDM);
--		rt2x00lib_rate(&rates[8], 240, 0x1ff, 0x09,
--			       IEEE80211_RATE_OFDM);
--		rt2x00lib_rate(&rates[9], 360, 0x3ff, 0x0d,
--			       IEEE80211_RATE_OFDM);
--		rt2x00lib_rate(&rates[10], 480, 0x7ff, 0x08,
--			       IEEE80211_RATE_OFDM);
--		rt2x00lib_rate(&rates[11], 540, 0xfff, 0x0c,
--			       IEEE80211_RATE_OFDM);
-+		rt2x00lib_rate(&rates[4], 60, DEV_RATEMASK_6MB,
-+			       0x0b, IEEE80211_RATE_OFDM);
-+		rt2x00lib_rate(&rates[5], 90, DEV_RATEMASK_9MB,
-+			       0x0f, IEEE80211_RATE_OFDM);
-+		rt2x00lib_rate(&rates[6], 120, DEV_RATEMASK_12MB,
-+			       0x0a, IEEE80211_RATE_OFDM);
-+		rt2x00lib_rate(&rates[7], 180, DEV_RATEMASK_18MB,
-+			       0x0e, IEEE80211_RATE_OFDM);
-+		rt2x00lib_rate(&rates[8], 240, DEV_RATEMASK_24MB,
-+			       0x09, IEEE80211_RATE_OFDM);
-+		rt2x00lib_rate(&rates[9], 360, DEV_RATEMASK_36MB,
-+			       0x0d, IEEE80211_RATE_OFDM);
-+		rt2x00lib_rate(&rates[10], 480, DEV_RATEMASK_48MB,
-+			       0x08, IEEE80211_RATE_OFDM);
-+		rt2x00lib_rate(&rates[11], 540, DEV_RATEMASK_54MB,
-+			       0x0c, IEEE80211_RATE_OFDM);
+the p54-pull-padding.diff should finally fix the rate algorithm for "everyone" and as 
+a bonus for developers: it adds a printk for the firmware revision p54 is using.
+(If noone complains within a week, I'll write a official patch post for it...)
+
+p54-remove-qos.diff (must be applied on top of p54-pull-padding.diff) is _only_ for
+Hans...  It removes/reverts QoS/WME/WMM/IEEE802.11e features.
+
+Thanks,
+	Chr
+
+    
+
+
+
+
+--Boundary-00=_CJhyGxRNOlnuDcc
+Content-Type: text/x-diff;
+  charset="iso-8859-15";
+  name="p54-pull-padding.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="p54-pull-padding.diff"
+
+diff -Nurp a/drivers/net/wireless/p54common.c b/drivers/net/wireless/p54common.c
+--- a/drivers/net/wireless/p54common.c	2007-08-18 20:44:04.000000000 +0200
++++ b/drivers/net/wireless/p54common.c	2007-08-20 23:06:46.000000000 +0200
+@@ -48,6 +48,7 @@ void p54_parse_firmware(struct ieee80211
+ 	while (bootrec->data <= end_data &&
+ 	       (bootrec->data + le32_to_cpu(bootrec->len)) <= end_data) {
+ 		u32 code = le32_to_cpu(bootrec->code);
++		size_t len = le32_to_cpu(bootrec->len);
+ 		switch (code) {
+ 		case BR_CODE_COMPONENT_ID:
+ 			switch (be32_to_cpu(*bootrec->data)) {
+@@ -69,6 +70,9 @@ void p54_parse_firmware(struct ieee80211
+ 			}
+ 			break;
+ 		case BR_CODE_COMPONENT_VERSION:
++			priv->fw_version = kmalloc(len * 4, GFP_KERNEL);
++			snprintf(priv->fw_version, len * 4, "%s", (char*)bootrec->data);
++			printk(KERN_INFO "p54: firmware version %s\n", priv->fw_version);
+ 			break;
+ 		case BR_CODE_DESCR:
+ 			priv->rx_start = le32_to_cpu(bootrec->data[1]);
+@@ -86,7 +90,7 @@ void p54_parse_firmware(struct ieee80211
+ 		default:
+ 			break;
+ 		}
+-		bootrec = (struct bootrec *)&bootrec->data[le32_to_cpu(bootrec->len)];
++		bootrec = (struct bootrec *)&bootrec->data[len];
  	}
+ }
+ EXPORT_SYMBOL_GPL(p54_parse_firmware);
+@@ -315,9 +319,11 @@ static void p54_rx_frame_sent(struct iee
+ 	struct p54_control_hdr *hdr = (struct p54_control_hdr *) skb->data;
+ 	struct p54_frame_sent_hdr *payload = (struct p54_frame_sent_hdr *) hdr->data;
+ 	struct sk_buff *entry = (struct sk_buff *) priv->tx_queue.next;
++	struct p54_control_hdr *entry_hdr;
++	struct p54_tx_control_allocdata *entry_data;
+ 	u32 addr = le32_to_cpu(hdr->req_id) - 0x70;
+ 	struct memrecord *range = NULL;
+-	u32 freed = 0;
++	u32 freed = 0, pad = 0;
+ 	u32 last_addr = priv->rx_start;
  
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00reg.h b/drivers/net/wireless/rt2x00/rt2x00reg.h
-index 10a4a42..690356f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00reg.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00reg.h
-@@ -228,34 +228,46 @@ static inline u8 rt2x00_get_field8(const u8 reg,
- #define DEV_PLCP	FIELD32(0xff000000)
+ 	while (entry != (struct sk_buff *)&priv->tx_queue) {
+@@ -339,15 +345,25 @@ static void p54_rx_frame_sent(struct iee
+ 			memcpy(&status.control, range->control,
+ 			       sizeof(status.control));
+ 			kfree(range->control);
+-			if (!payload->status)
+-				status.flags |= IEEE80211_TX_STATUS_ACK;
+-			else
+-				status.excessive_retries = 1;
+-			status.retry_count = payload->retries - 1;
+-			status.ack_signal = le16_to_cpu(payload->ack_rssi);
+-			skb_pull(entry, sizeof(*hdr) + sizeof(struct p54_tx_control_allocdata));
+ 			priv->tx_stats.data[status.control.queue].len--;
++
++			entry_hdr = (struct p54_control_hdr *) entry->data;
++			entry_data = (struct p54_tx_control_allocdata *) entry_hdr->data;
++			if (entry_hdr->magic1 & cpu_to_le16(0x4000))
++				pad = entry_data->align[0];
++			else 
++				pad = 0;
++			if (status.control.flags & IEEE80211_TXCTL_NO_ACK) {
++				if (!(payload->status & 0x01))
++					status.flags |= IEEE80211_TX_STATUS_ACK;
++				else
++					status.excessive_retries = 1;
++				status.retry_count = payload->retries - 1;
++				status.ack_signal = le16_to_cpu(payload->ack_rssi);
++			}
++			skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
+ 			ieee80211_tx_status_irqsafe(dev, entry, &status);
++
+ 			break;
+ 		} else
+ 			last_addr = range->end_addr;
+@@ -486,6 +502,7 @@ static int p54_tx(struct ieee80211_hw *d
+ 		ieee80211_stop_queue(dev, control->queue);
  
- /*
-- * Bitmask for MASK_RATE
-+ * Bitfields
-  */
--#define DEV_RATE_1MB	( 1 << 1 )
--#define DEV_RATE_2MB	( 1 << 2 )
--#define DEV_RATE_5_5MB	( 1 << 3 )
--#define DEV_RATE_11MB	( 1 << 4 )
--#define DEV_RATE_6MB	( 1 << 5 )
--#define DEV_RATE_9MB	( 1 << 6 )
--#define DEV_RATE_12MB	( 1 << 7 )
--#define DEV_RATE_18MB	( 1 << 8 )
--#define DEV_RATE_24MB	( 1 << 9 )
--#define DEV_RATE_36MB	( 1 << 10 )
--#define DEV_RATE_48MB	( 1 << 11 )
--#define DEV_RATE_54MB	( 1 << 12 )
-+#define DEV_RATEBIT_1MB		( 1 << 1 )
-+#define DEV_RATEBIT_2MB		( 1 << 2 )
-+#define DEV_RATEBIT_5_5MB	( 1 << 3 )
-+#define DEV_RATEBIT_11MB	( 1 << 4 )
-+#define DEV_RATEBIT_6MB		( 1 << 5 )
-+#define DEV_RATEBIT_9MB		( 1 << 6 )
-+#define DEV_RATEBIT_12MB	( 1 << 7 )
-+#define DEV_RATEBIT_18MB	( 1 << 8 )
-+#define DEV_RATEBIT_24MB	( 1 << 9 )
-+#define DEV_RATEBIT_36MB	( 1 << 10 )
-+#define DEV_RATEBIT_48MB	( 1 << 11 )
-+#define DEV_RATEBIT_54MB	( 1 << 12 )
+ 	padding = (unsigned long)(skb->data - (sizeof(*hdr) + sizeof(*txhdr))) & 3;
++
+ 	len = skb->len;
  
- /*
-- * Bitmask groups of bitrates
-+ * Bitmasks for DEV_RATEMASK
-  */
--#define DEV_BASIC_RATE \
--	( DEV_RATE_1MB | DEV_RATE_2MB | DEV_RATE_5_5MB | DEV_RATE_11MB | \
--	  DEV_RATE_6MB | DEV_RATE_12MB | DEV_RATE_24MB )
-+#define DEV_RATEMASK_1MB	( (DEV_RATEBIT_1MB << 1) -1 )
-+#define DEV_RATEMASK_2MB	( (DEV_RATEBIT_2MB << 1) -1 )
-+#define DEV_RATEMASK_5_5MB	( (DEV_RATEBIT_5_5MB << 1) -1 )
-+#define DEV_RATEMASK_11MB	( (DEV_RATEBIT_11MB << 1) -1 )
-+#define DEV_RATEMASK_6MB	( (DEV_RATEBIT_6MB << 1) -1 )
-+#define DEV_RATEMASK_9MB	( (DEV_RATEBIT_9MB << 1) -1 )
-+#define DEV_RATEMASK_12MB	( (DEV_RATEBIT_12MB << 1) -1 )
-+#define DEV_RATEMASK_18MB	( (DEV_RATEBIT_18MB << 1) -1 )
-+#define DEV_RATEMASK_24MB	( (DEV_RATEBIT_24MB << 1) -1 )
-+#define DEV_RATEMASK_36MB	( (DEV_RATEBIT_36MB << 1) -1 )
-+#define DEV_RATEMASK_48MB	( (DEV_RATEBIT_48MB << 1) -1 )
-+#define DEV_RATEMASK_54MB	( (DEV_RATEBIT_54MB << 1) -1 )
+ 	control_copy = kmalloc(sizeof(*control), GFP_ATOMIC);
+@@ -496,10 +513,12 @@ static int p54_tx(struct ieee80211_hw *d
+ 			skb_push(skb, sizeof(*txhdr) + padding);
+ 	hdr = (struct p54_control_hdr *) skb_push(skb, sizeof(*hdr));
  
--#define DEV_CCK_RATE \
--	( DEV_RATE_1MB | DEV_RATE_2MB | DEV_RATE_5_5MB | DEV_RATE_11MB )
-+/*
-+ * Bitmask groups of bitrates
-+ */
-+#define DEV_BASIC_RATEMASK \
-+	( DEV_RATEMASK_11MB | \
-+	  DEV_RATEBIT_6MB | DEV_RATEBIT_12MB | DEV_RATEBIT_24MB )
+-	if (padding)
+-		hdr->magic1 = cpu_to_le16(0x4010);
+-	else
+-		hdr->magic1 = cpu_to_le16(0x0010);
++	if (padding) {
++		hdr->magic1 = cpu_to_le16(0x4000);
++		txhdr->align[0] = padding;
++	} else
++		hdr->magic1 = cpu_to_le16(0x0000);
++
+ 	hdr->len = cpu_to_le16(len);
+ 	hdr->type = (control->flags & IEEE80211_TXCTL_NO_ACK) ? 0 : cpu_to_le16(1);
+ 	hdr->retry1 = hdr->retry2 = control->retry_limit;
+@@ -515,6 +534,9 @@ static int p54_tx(struct ieee80211_hw *d
+ 		rate |= 0x40;
+ 	else if (control->flags & IEEE80211_TXCTL_USE_CTS_PROTECT)
+ 		rate |= 0x20;
++	else 
++		hdr->magic1 |= cpu_to_le16(0x0010);
++
+ 	memset(txhdr->rateset, rate, 8);
+ 	txhdr->wep_key_present = 0;
+ 	txhdr->wep_key_len = 0;
+@@ -525,8 +547,6 @@ static int p54_tx(struct ieee80211_hw *d
+ 	txhdr->output_power = 0x7f; // HW Maximum
+ 	txhdr->magic5 = (control->flags & IEEE80211_TXCTL_NO_ACK) ?
+ 		0 : ((rate > 0x3) ? cpu_to_le32(0x33) : cpu_to_le32(0x23));
+-	if (padding)
+-		txhdr->align[0] = padding;
  
--#define DEV_OFDM_RATE \
--	( DEV_RATE_6MB | DEV_RATE_9MB | DEV_RATE_12MB | DEV_RATE_18MB | \
--	  DEV_RATE_24MB | DEV_RATE_36MB | DEV_RATE_48MB | DEV_RATE_54MB )
-+#define DEV_CCK_RATEMASK	( DEV_RATEMASK_11MB )
-+#define DEV_OFDM_RATEMASK	( DEV_RATEMASK_54MB & ~DEV_CCK_RATEMASK )
+ 	priv->tx(dev, hdr, skb->len, 0);
+ 	return 0;
+@@ -938,6 +958,7 @@ void p54_free_common(struct ieee80211_hw
+ 	kfree(priv->output_limit);
+ 	kfree(priv->curve_data);
+ 	kfree(priv->cached_vdcf);
++	kfree(priv->fw_version);
+ }
+ EXPORT_SYMBOL_GPL(p54_free_common);
  
- /*
-  * Macro's to set and get specific fields from the device specific val and val2
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index efa6c25..0dacd59 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -404,7 +404,7 @@ static void rt61pci_config_rate(struct rt2x00_dev *rt2x00dev, const int rate)
- 	 * We need to set TXRX_CSR5 to the basic rate mask so we need to mask
- 	 * off the non-basic rates.
- 	 */
--	reg = DEVICE_GET_RATE_FIELD(rate, RATEMASK) & DEV_BASIC_RATE;
-+	reg = DEVICE_GET_RATE_FIELD(rate, RATEMASK) & DEV_BASIC_RATEMASK;
- 
- 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR5, reg);
- 
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 9e8c049..7eb1f02 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -380,7 +380,7 @@ static void rt73usb_config_rate(struct rt2x00_dev *rt2x00dev, const int rate)
- 	else
- 		preamble = PREAMBLE;
- 
--	reg = DEVICE_GET_RATE_FIELD(rate, RATEMASK) & DEV_BASIC_RATE;
-+	reg = DEVICE_GET_RATE_FIELD(rate, RATEMASK) & DEV_BASIC_RATEMASK;
- 
- 	rt73usb_register_write(rt2x00dev, TXRX_CSR5, reg);
- 
--- 
-1.5.3.rc5
+diff -Nurp a/drivers/net/wireless/p54.h b/drivers/net/wireless/p54.h
+--- a/drivers/net/wireless/p54.h	2007-08-18 20:44:04.000000000 +0200
++++ b/drivers/net/wireless/p54.h	2007-08-20 23:05:45.000000000 +0200
+@@ -60,6 +60,7 @@ struct p54_common {
+ 	struct pda_pa_curve_data *curve_data;
+ 	__le16 rxhw;
+ 	u8 version;
++	char *fw_version;
+ 	unsigned int tx_hdr_len;
+ 	void *cached_vdcf;
+ 	/* FIXME: this channels/modes/rates stuff sucks */
 
+--Boundary-00=_CJhyGxRNOlnuDcc
+Content-Type: text/x-diff;
+  charset="iso-8859-15";
+  name="p54-remove-qos.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="p54-remove-qos.diff"
+
+diff -Nurp a/drivers/net/wireless/p54common.c b/drivers/net/wireless/p54common.c
+--- a/drivers/net/wireless/p54common.c	2007-08-20 23:06:46.000000000 +0200
++++ b/drivers/net/wireless/p54common.c	2007-08-20 23:41:07.000000000 +0200
+@@ -345,7 +345,7 @@ static void p54_rx_frame_sent(struct iee
+ 			memcpy(&status.control, range->control,
+ 			       sizeof(status.control));
+ 			kfree(range->control);
+-			priv->tx_stats.data[status.control.queue].len--;
++			priv->tx_stats.data[0].len--;
+ 
+ 			entry_hdr = (struct p54_control_hdr *) entry->data;
+ 			entry_data = (struct p54_tx_control_allocdata *) entry_hdr->data;
+@@ -493,13 +493,13 @@ static int p54_tx(struct ieee80211_hw *d
+ 	size_t padding, len;
+ 	u8 rate;
+ 
+-	current_queue = &priv->tx_stats.data[control->queue];
++	current_queue = &priv->tx_stats.data[0];
+ 	if (unlikely(current_queue->len > current_queue->limit))
+ 		return NETDEV_TX_BUSY;
+ 	current_queue->len++;
+ 	current_queue->count++;
+ 	if (current_queue->len == current_queue->limit)
+-		ieee80211_stop_queue(dev, control->queue);
++		ieee80211_stop_queue(dev, 0);
+ 
+ 	padding = (unsigned long)(skb->data - (sizeof(*hdr) + sizeof(*txhdr))) & 3;
+ 
+@@ -540,7 +540,7 @@ static int p54_tx(struct ieee80211_hw *d
+ 	memset(txhdr->rateset, rate, 8);
+ 	txhdr->wep_key_present = 0;
+ 	txhdr->wep_key_len = 0;
+-	txhdr->frame_type = cpu_to_le32(control->queue + 4);
++	txhdr->frame_type = 4;
+ 	txhdr->magic4 = 0;
+ 	txhdr->antenna = (control->antenna_sel_tx == 0) ?
+ 		2 : control->antenna_sel_tx - 1;
+@@ -920,12 +920,9 @@ struct ieee80211_hw *p54_init_common(siz
+ 	dev->max_rssi = 100;
+ 
+ 	/* (hard) queue limits */
+-	priv->tx_stats.data[0].limit = 3;
+-	priv->tx_stats.data[1].limit = 4;
+-	priv->tx_stats.data[2].limit = 3;
+-	priv->tx_stats.data[3].limit = 1;
++	priv->tx_stats.data[0].limit = 4;
+ 
+-	dev->queues = 4;
++	dev->queues = 1;
+ 	dev->extra_tx_headroom = sizeof(struct p54_control_hdr) + 4 +
+ 				 sizeof(struct p54_tx_control_allocdata);
+ 
+
+--Boundary-00=_CJhyGxRNOlnuDcc--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
