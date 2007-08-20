@@ -1,42 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:59693 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761362AbXHVSIL (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:39918 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759240AbXHTLVQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2007 14:08:11 -0400
-Message-ID: <46CC7B89.7090906@lwfinger.net>
-Date: Wed, 22 Aug 2007 13:08:09 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: ALERT: firmware change for b43
-References: <46C89BF1.5060306@lwfinger.net> <20070822145257.GA2926@tuxdriver.com> <46CC5568.5000709@lwfinger.net> <20070822171805.GD2926@tuxdriver.com>
-In-Reply-To: <20070822171805.GD2926@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 20 Aug 2007 07:21:16 -0400
+Subject: Re: [PATCH 05/20] mac80211: remove unused ioctls (1)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070818040423.GF1415@jm.kir.nu>
+References: <20070815144920.135826000@sipsolutions.net>
+	 <20070815145043.551508000@sipsolutions.net>
+	 <20070818040423.GF1415@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TUs8chl1aHMiU/Ukt9Cy"
+Date: Mon, 20 Aug 2007 11:10:05 +0200
+Message-Id: <1187601005.6090.41.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Wed, Aug 22, 2007 at 10:25:28AM -0500, Larry Finger wrote:
->> John W. Linville wrote:
->>> On Sun, Aug 19, 2007 at 02:37:21PM -0500, Larry Finger wrote:
->>>> Just in case you missed the details, the latest set of changes to b43 
->>>> queued by Michael will require
->>>> a new version of fwcutter, now called b43-fwcutter, and a new extraction 
->>>> of your firmware.
->>> Is there a tarball available for download, as with bcm43xx-fwcutter?
->>> It would be handy for packaging.
->> The new code is in the svn repository; however, a tarball would not be a 
->> problem. Is source sufficient, or would you want an executable?
-> 
-> Source would be fine, equivalent to what is here:
-> 
-> 	http://download.berlios.de/bcm43xx/bcm43xx-fwcutter-006.tar.bz2
 
-I don't have nor want write access at berlios.de.  The file you want is:
+--=-TUs8chl1aHMiU/Ukt9Cy
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-ftp://lwfinger.dynalias.org/patches/b43-fwcutter-008.tar.bz2.
+On Fri, 2007-08-17 at 21:04 -0700, Jouni Malinen wrote:
 
-Larry
+> No, but some of them can be assumed to be used with iwpriv..=20
+
+As for that, see my other mail.
+
+> First one
+> is useful should one be interested in WFA certifications tests.=20
+
+That should, imho, rather live in debugfs. Somebody doing certification
+tests ought to be able to enable debugfs on their system.
+
+> Scan
+> flags can be useful in filtering out scan results in cases where there
+> are huge numbers of APs around.=20
+
+Plan has it that the new cfg80211 API for scanning allows scanning for
+things rather than filtering the results after the fact, e.g. (like
+iwlist already supports) scanning for a particular SSID. I suppose
+hardware designs like iwlwifi could make much better use of that than
+mac80211 itself though.
+
+
+> Even if you end up removing scan_flags, you could leave these pieces of
+> information available in scan results.
+
+Sure, I can do that.
+
+johannes
+
+--=-TUs8chl1aHMiU/Ukt9Cy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGyVpt/ETPhpq3jKURAh1DAJ94/JjY+9D/VtmqC2wWyQWG7QZPzgCfYtPA
+ol7e7QPciod5qT0KEC/02+w=
+=uYdT
+-----END PGP SIGNATURE-----
+
+--=-TUs8chl1aHMiU/Ukt9Cy--
+
