@@ -1,53 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:39332 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757508AbXHXROI (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51538 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755961AbXHTLXV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2007 13:14:08 -0400
-Message-ID: <46CF11DE.8040403@lwfinger.net>
-Date: Fri, 24 Aug 2007 12:14:06 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
+	Mon, 20 Aug 2007 07:23:21 -0400
+Subject: Re: [PATCH 08/20] mac80211: remove unused ioctls (3)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 05/15] mac80211: remove HW_KEY_IDX_INVALID
-References: <20070824122705.549190000@sipsolutions.net> <20070824122905.350213000@sipsolutions.net>
-In-Reply-To: <20070824122905.350213000@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20070818040943.GH1415@jm.kir.nu>
+References: <20070815144920.135826000@sipsolutions.net>
+	 <20070815145045.151670000@sipsolutions.net>
+	 <20070818040943.GH1415@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WbQsUEViikVrv0Gff7bJ"
+Date: Mon, 20 Aug 2007 11:15:41 +0200
+Message-Id: <1187601341.6090.50.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
 
-The following hunk in wireless-dev/include/net/mac80211.h
+--=-WbQsUEViikVrv0Gff7bJ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-@@ -200,13 +199,13 @@ struct ieee80211_tx_control {
-  						  * long retry value */
-  	u32 flags;			       /* tx control flags defined
-  						* above */
-+	u8 key_idx;		/* keyidx from hw->set_key(), undefined if
-+				 * IEEE80211_TXCTL_DO_NOT_ENCRYPT is set */
-  	u8 retry_limit;		/* 1 = only first attempt, 2 = one retry, ..
-  				 * This could be used when set_retry_limit
-  				 * is not implemented by the driver */
-  	u8 power_level;		/* per-packet transmit power level, in dBm */
-  	u8 antenna_sel_tx; 	/* 0 = default/diversity, 1 = Ant0, 2 = Ant1 */
--	s8 key_idx;		/* HW_KEY_IDX_INVALID = do not encrypt,
--				 * other values: keyidx from hw->set_key() */
-  	u8 icv_len;		/* length of the ICV/MIC field in octets */
-  	u8 iv_len;		/* length of the IV field in octets */
-  	u8 tkip_key[16];	/* generated phase2/phase1 key for hw TKIP */
+On Fri, 2007-08-17 at 21:09 -0700, Jouni Malinen wrote:
 
-leads to a compiler warning "warning: comparison is always true due to limited range of data type" 
-for b43 and b43legacy on the fiollowing statement.
+> Create IBSS is a somewhat commonly used configuration and so is mixed
+> cell configuration in Cisco-world (and the only point for the
+> privacy_mismatch check that is left broken after this patch).
 
-         int use_encryption = ((!(txctl->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT))
-                               && (txctl->key_idx >= 0));
+I was under the impression that the auth mechanism setting would still
+do that. What is "mixed cell configuration" anyway?
 
-What did a negative key_idx mean before? How is that condition represented now, or is it safe to 
-drop the entire portion following the &&?
+> No, but iwpriv.. See the pattern here.. ;-)
 
-Thanks,
+Oh, I can see that, but none of these things are documented nor do any
+existing tools use them. I don't contend the fact that these may indeed
+be useful, but I think none of them should be private ioctls. If you
+have a use case for all of these I'd be happy to see an explanation so
+we can add this with proper documentation elsewhere. Without
+documentation, they are a rather useless special configurations nobody
+will ever touch.
 
-Larry
+johannes
+
+--=-WbQsUEViikVrv0Gff7bJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGyVu9/ETPhpq3jKURAhfTAJ9kPDhiQCBB6X4Lt+oC48Og29dJ/QCfceW4
+FlWcvR+dLUaWw168Yq3qVXk=
+=AaRb
+-----END PGP SIGNATURE-----
+
+--=-WbQsUEViikVrv0Gff7bJ--
+
