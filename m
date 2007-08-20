@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:41841
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761317AbXHIAO2 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:51909 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755814AbXHTLbi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 20:14:28 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] ssb: pcicore compile fix
-Date: Thu, 9 Aug 2007 02:14:08 +0200
-Cc: aurelien@aurel32.net, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200708090214.08991.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="us-ascii"
+	Mon, 20 Aug 2007 07:31:38 -0400
+Subject: Re: UW2453 In kernel 2.6.20?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Callan Bryant <callan1990@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <46C7535D.1090803@supanet.com>
+References: <46C7535D.1090803@supanet.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zAfgnbNecmrp4OzA4mDo"
+Date: Mon, 20 Aug 2007 13:31:26 +0200
+Message-Id: <1187609486.6090.95.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Aurelien Jarno <aurelien@aurel32.net>
 
-The patch below against 2.6.23-rc1-mm1 fixes the definition of
-pcibios_map_irq in the SSB code. The corresponding include file has been
-changed in commit 19df0d1169b3ddcc84933794d1401aaafe2f0000.
+--=-zAfgnbNecmrp4OzA4mDo
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+On Sat, 2007-08-18 at 21:15 +0100, Callan Bryant wrote:
+> As, currently I cannot=20
+> upgrade to the 2.6.23 kernel, would it somehow be possible to upgrade=20
+> the zd1211rw driver separately?
 
-diff -puN drivers/ssb/driver_pcicore.c~ssb-compile-fix drivers/ssb/driver_pcicore.c
---- a/drivers/ssb/driver_pcicore.c~ssb-compile-fix
-+++ a/drivers/ssb/driver_pcicore.c
-@@ -102,7 +102,7 @@ static void __init ssb_fixup_pcibridge(s
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, ssb_fixup_pcibridge);
- 
--int __init pcibios_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
-+int __init pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- {
- 	return ssb_mips_irq(extpci_core->dev) + 2;
- }
-_
+Certainly, by identifying the patches to the driver and backporting them
+to your kernel, but you'll have to do the work yourself.
+
+johannes
+
+--=-zAfgnbNecmrp4OzA4mDo
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGyXuO/ETPhpq3jKURAnxhAJ9omVkj4h0YlkH2Q7gbvtgMEWZ6iACfXZes
+UC0HSc18bTFp91f5AfkKTlg=
+=JxTe
+-----END PGP SIGNATURE-----
+
+--=-zAfgnbNecmrp4OzA4mDo--
 
