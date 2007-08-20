@@ -1,68 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:41697 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751331AbXHRDAU (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50799 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750926AbXHTMKR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2007 23:00:20 -0400
-Subject: [PATCH 2/2] mac80211: ignore key index on pairwise key
-From: Volker Braun <vbraun@physics.upenn.edu>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	Johannes Berg <johannes@sipsolutions.net>
+	Mon, 20 Aug 2007 08:10:17 -0400
+Subject: Re: [RFC] mac80211: fix software decryption with b43legacy
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <46C752FE.4030706@lwfinger.net>
+References: <1187346385.23489.157.camel@johannes.berg>
+	 <46C5CC0D.2040609@lwfinger.net> <1187384230.6090.7.camel@johannes.berg>
+	 <46C612E8.4020604@lwfinger.net> <1187387215.6090.13.camel@johannes.berg>
+	 <46C64777.1000602@lwfinger.net> <1187453173.6090.33.camel@johannes.berg>
+	 <46C752FE.4030706@lwfinger.net>
 Content-Type: text/plain
-Date: Fri, 17 Aug 2007 23:00:19 -0400
-Message-Id: <1187406019.30247.18.camel@thinkpad>
+Date: Mon, 20 Aug 2007 14:09:53 +0200
+Message-Id: <1187611793.6090.102.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Our Cisco AP's set key index 3 for the PTK. This patch removes the check
-for the key index. I also tried to set idx=0 by hand, but this did not
-work (presumably because the AP then discarded my unicast packets with
-key index 0 instead of 3).
+On Sat, 2007-08-18 at 15:13 -0500, Larry Finger wrote:
 
-With these two patches I can successfully use our dynamic wep wireless
-network.
+> The rest of the call trace is available if needed. The crash occurred when ieee80211_key_free was
+> trying to unlock the mutex key_idx. I added printk's to dump the pointer to sdata at the point where 
+> that mutex is initialized and where the key is freed. The mutex that errs was inited.
 
-Signed-off-by: Volker Braun <volker.braun@physik.hu-berlin.de>
+Ho humm, yes, I'm dumb, patch below but I'll fold it into my key patch.
+Sorry about that, classic use-after-free condition here.
 
+johannes
 
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-index fbdd1d1..66b4f5a 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -385,13 +385,14 @@ static int ieee80211_set_encryption(struct net_device *dev
+--- wireless-dev.orig/net/mac80211/key.c	2007-08-20 14:07:43.165963896 +0200
++++ wireless-dev/net/mac80211/key.c	2007-08-20 14:08:04.265963896 +0200
+@@ -255,12 +255,16 @@ static void __ieee80211_key_free(struct 
  
-        sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
-+       if (idx <0 || idx >= NUM_DEFAULT_KEYS) {
-+               printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
-+                      dev->name, idx);
-+               return -EINVAL;
-+       }
+ void ieee80211_key_free(struct ieee80211_key *key)
+ {
++	struct ieee80211_sub_if_data *sdata;
 +
-        if (is_broadcast_ether_addr(sta_addr)) {
-                sta = NULL;
--               if (idx >= NUM_DEFAULT_KEYS) {
--                       printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
--                              dev->name, idx);
--                       return -EINVAL;
--               }
-                key = sdata->keys[idx];
+ 	if (!key)
+ 		return;
  
-                /* TODO: consider adding hwaccel support for these; at least
-@@ -405,12 +406,6 @@ static int ieee80211_set_encryption(struct net_device *dev,
-                 * being, this can be only set at compile time. */
-        } else {
-                set_tx_key = 0;
--               if (idx != 0) {
--                       printk(KERN_DEBUG "%s: set_encrypt - non-zero idx for "
--                              "individual key\n", dev->name);
--                       return -EINVAL;
--               }
--
-                sta = sta_info_get(local, sta_addr);
-                if (!sta) {
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+-	mutex_lock(&key->sdata->key_mtx);
++	sdata = key->sdata;
++
++	mutex_lock(&sdata->key_mtx);
+ 	__ieee80211_key_free(key);
+-	mutex_unlock(&key->sdata->key_mtx);
++	mutex_unlock(&sdata->key_mtx);
+ }
+ 
+ void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx)
 
 
