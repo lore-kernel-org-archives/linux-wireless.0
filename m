@@ -1,38 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.233]:19660 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759233AbXHURjs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 13:39:48 -0400
-Received: by wr-out-0506.google.com with SMTP id 36so1241100wra
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Aug 2007 10:39:46 -0700 (PDT)
-Message-ID: <43e72e890708211039y53e2c24aqbf5c00c24f0a0df6@mail.gmail.com>
-Date: Tue, 21 Aug 2007 13:39:46 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mark islsm list as subscribers-only
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Michael Wu" <flamingice@sourmilk.net>
-In-Reply-To: <1187714252.4218.9.camel@johannes.berg>
+Received: from frosty.hhs.nl ([145.52.2.15]:41344 "EHLO frosty.hhs.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752231AbXHTIb7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Aug 2007 04:31:59 -0400
+Received: from exim (helo=frosty)
+	by frosty.hhs.nl with local-smtp (Exim 4.62)
+	(envelope-from <j.w.r.degoede@hhs.nl>)
+	id 1IN2Ft-00072R-RJ
+	for linux-wireless@vger.kernel.org; Mon, 20 Aug 2007 10:04:57 +0200
+Received: from [145.52.8.13] (port=63566 helo=hhs.nl)
+	by frosty.hhs.nl with esmtp (Exim 4.62)
+	(envelope-from <j.w.r.degoede@hhs.nl>)
+	id 1IN2Ft-00072H-7o
+	for linux-wireless@vger.kernel.org; Mon, 20 Aug 2007 10:04:57 +0200
+Message-ID: <46C94844.3080505@hhs.nl>
+Date: Mon, 20 Aug 2007 09:52:36 +0200
+From: Hans de Goede <j.w.r.degoede@hhs.nl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1187282653.23489.36.camel@johannes.berg>
-	 <43e72e890708210932j7684d6c4h8dfe0193f67f1e8f@mail.gmail.com>
-	 <1187714252.4218.9.camel@johannes.berg>
+To: Chr <chunkeey@web.de>
+CC: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Recent linux-wireless git changes have broken my prism54pci card
+References: <46BFF10B.1090307@hhs.nl> <200708140025.56708.chunkeey@web.de> <46C1638C.7070704@hhs.nl> <200708200244.22841.chunkeey@web.de>
+In-Reply-To: <200708200244.22841.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/21/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2007-08-21 at 12:32 -0400, Luis R. Rodriguez wrote:
->
-> > I think that list was for the net80211 driver, not even sure if its
-> > used actively for the mac80211 driver.
->
-> I'm fine with removing it completely, but having a list listed that
-> simply drops your mail (not without spamming you, of course) is just not
-> useful.
+Chr wrote:
+> On Tuesday, 14. August 2007, Hans de Goede wrote:
+> 
+> Hans,
+> 
+> Any updates?
 
-ACK -- we can create a new list too which we are sure is for p54. Michael?
+Erm, did you not receive my long mail with all kinda logs attached in logs.tar.gz?
 
-  Luis
+ > Or are you on holiday?
+
+Nope
+
+> 
+> I've prepared a patch, which should theoretically lower the excessive retry count.
+> 
+> however I don't think it will magically solve anything...
+> 
+
+Erm, I'm awfully busy, still I want to get this resolved! So I'll make time to 
+test things as necessary, but could you first look at the logs I send and then 
+confirm (or deny) that this pathc might help.
+
+Regards,
+
+Hans
+
