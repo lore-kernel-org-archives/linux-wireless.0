@@ -1,46 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53378 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757761AbXHGJx3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2007 05:53:29 -0400
-Subject: Re: [PATCH] mac80211: fix tx status frame code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: jbenc <jbenc@suse.cz>, "John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1186475037.4067.14.camel@johannes.berg>
-References: <1186475037.4067.14.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MLDEjVGqbrB76O62OKNI"
-Date: Tue, 07 Aug 2007 11:55:10 +0200
-Message-Id: <1186480510.4067.35.camel@johannes.berg>
+Received: from mga01.intel.com ([192.55.52.88]:23242 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752661AbXHTCnc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Aug 2007 22:43:32 -0400
+Subject: Re: [PATCH] Add iwlwifi wireless drivers (resend)
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	"John W.Linville" <linville@tuxdriver.com>,
+	Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>
+In-Reply-To: <1187350871.23489.175.camel@johannes.berg>
+References: <1187328536.5763.137.camel@debian.sh.intel.com>
+	 <1187350641.23489.172.camel@johannes.berg>
+	 <1187350871.23489.175.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 20 Aug 2007 10:39:00 +0800
+Message-Id: <1187577540.5763.226.camel@debian.sh.intel.com>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2007-08-17 at 13:41 +0200, Johannes Berg wrote:
+> Ah, found it in iwlwifi.git, but it's mostly a list of TODOs and
+> documentation that only applies to the out-of-tree version, except for
+> the legalese. 
 
---=-MLDEjVGqbrB76O62OKNI
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yeah, the document is far lagged behind the code so I didn't include it
+this time.
 
-On Tue, 2007-08-07 at 10:23 +0200, Johannes Berg wrote:
-> When I added the monitor for outgoing frames somehow a break
-> statement slipped in. Remove it.
-
-This should probably go to .23 as well as -stable.
-
-johannes
-
---=-MLDEjVGqbrB76O62OKNI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGuEF+/ETPhpq3jKURAvkEAJwMXT1wlbLCX7TPFprM1zucSPhJ/wCfXupz
-1nnjnlJqCHwCCYwfL91D2gk=
-=fXH0
------END PGP SIGNATURE-----
-
---=-MLDEjVGqbrB76O62OKNI--
-
+Thanks,
+-yi
