@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52707 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932868AbXHPQb1 (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:41528 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750831AbXHTRsv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2007 12:31:27 -0400
-Message-Id: <20070816162932.999042000@sipsolutions.net>
-References: <20070816162908.030659000@sipsolutions.net>
-Date: Thu, 16 Aug 2007 18:29:11 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>, developers@islsm.org
-Subject: [PATCH 3/4] p54: remove IEEE80211_HW_DATA_NULLFUNC_ACK
-Mime-Version: 1.0
+	Mon, 20 Aug 2007 13:48:51 -0400
+Message-ID: <46C9D3F6.7020306@lwfinger.net>
+Date: Mon, 20 Aug 2007 12:48:38 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Michael Buesch <mb@bu3sch.de>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
+Subject: Re: Lock problem with latest b43 patches
+References: <46C7CACC.2000000@lwfinger.net> <1187609202.6090.93.camel@johannes.berg>
+In-Reply-To: <1187609202.6090.93.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The flag will be removed from mac80211 because it is unused.
+Johannes Berg wrote:
+> On Sat, 2007-08-18 at 23:45 -0500, Larry Finger wrote:
+> 
+>> -> #1 (&inode->i_mutex){--..}:
+>>         [<ffffffff80252d52>] __lock_acquire+0xad4/0xcf0
+>>         [<ffffffff803fe515>] mutex_lock+0x2a/0x2e
+>>         [<ffffffff80252ff3>] lock_acquire+0x85/0xa9
+>>         [<ffffffff803fe515>] mutex_lock+0x2a/0x2e
+>>         [<ffffffff803fe34a>] __mutex_lock_slowpath+0xef/0x290
+>>         [<ffffffff803fe515>] mutex_lock+0x2a/0x2e
+>>         [<ffffffff88600d7d>] nfs_revalidate_mapping+0x6d/0xac [nfs]
+>>         [<ffffffff885fe7e1>] nfs_file_mmap+0x4d/0x65 [nfs]
+> 
+> Are you running on NFS? This is a bit weird but not related to wireless
+> at all, seems to be dnotify/NFS interaction.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Wu <flamingice@sourmilk.net>
-Cc: developers@islsm.org
+My / and /home partitions are local, but I do have mounted NFS partitions. Whatever happened here 
+has been a one-time only event, at least so far. Until it happens again, I'll assume that an 
+electron got crosswise somewhere. :)
 
----
- drivers/net/wireless/p54common.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
---- wireless-dev.orig/drivers/net/wireless/p54common.c	2007-08-16 18:19:38.323468950 +0200
-+++ wireless-dev/drivers/net/wireless/p54common.c	2007-08-16 18:19:49.633468950 +0200
-@@ -893,9 +893,7 @@ struct ieee80211_hw *p54_init_common(siz
- 	priv->modes[0].channels = priv->channels;
- 	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING | /* not sure */
- 		    IEEE80211_HW_RX_INCLUDES_FCS |
--		    IEEE80211_HW_WEP_INCLUDE_IV |
--		    IEEE80211_HW_DATA_NULLFUNC_ACK; /* TODO: check */
--		    /* IEEE80211_HW_MONITOR_DURING_OPER FIXME: check */
-+		    IEEE80211_HW_WEP_INCLUDE_IV;
- 	dev->channel_change_time = 1000;	/* TODO: find actual value */
- 	dev->max_rssi = 100;
- 
-
--- 
-
+Larry
