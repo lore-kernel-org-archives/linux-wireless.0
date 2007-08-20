@@ -1,32 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:55717
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1758220AbXHHBGH (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54177 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753197AbXHUKHG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2007 21:06:07 -0400
-Date: Tue, 07 Aug 2007 18:06:07 -0700 (PDT)
-Message-Id: <20070807.180607.116354128.davem@davemloft.net>
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, andy@warmcat.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] allow device to stop packet mirror behaviour
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1186475155.4067.17.camel@johannes.berg>
-References: <1186475155.4067.17.camel@johannes.berg>
+	Tue, 21 Aug 2007 06:07:06 -0400
+Subject: Re: [PATCH 28/30] rt2x00: Always check if mac80211 requested TX  status update
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+In-Reply-To: <200708192036.37330.IvDoorn@gmail.com>
+References: <200708192018.30624.IvDoorn@gmail.com>
+	 <200708192036.37330.IvDoorn@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CnMVity03LNLaXj1gyal"
+Date: Mon, 20 Aug 2007 19:21:35 +0200
+Message-Id: <1187630496.6923.0.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 07 Aug 2007 10:25:55 +0200
 
-> The only way to solve this problem therefore seems to be to suppress the
-> mirroring out of the packet by dev_queue_xmit_nit(). The patch below
-> does that by way of adding a new netdev flag.
+--=-CnMVity03LNLaXj1gyal
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Multicast packets also get looped back in a similar manner in the ipv4
-code.  These will also be seen twice due to this issue.
+On Sun, 2007-08-19 at 20:36 +0200, Ivo van Doorn wrote:
 
-There are probably many other examples as well, dev_queue_xmit_nit()
-is just the tip of the iceberg.
+> During txdone always check for the IEEE80211_TXCTL_REQ_TX_STATUS flag
+> to determine if ieee80211_tx_status_irqsafe should be called or not.
+> When the flag is not set, just cleanup the skb and don't bother
+> mac80211 with it.
+
+Never mind that I'd love to remove the REQ_TX_STATUS flag, this is not
+really the best thing to do since rate control will basically ignore
+this frame if you don't hand it back to mac80211.
+
+johannes
+
+--=-CnMVity03LNLaXj1gyal
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGyc2f/ETPhpq3jKURAsa/AJ49/zkacFf+SpoHewNCArSoRl+utQCZAcqX
+Wk8ejhvrTHm+C3p9WGcy2us=
+=Fqh9
+-----END PGP SIGNATURE-----
+
+--=-CnMVity03LNLaXj1gyal--
+
