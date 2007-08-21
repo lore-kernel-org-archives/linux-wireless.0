@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fencepost.gnu.org ([140.186.70.10]:57515 "EHLO
-	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752493AbXH1RPl (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:37120 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750742AbXHUEfJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2007 13:15:41 -0400
-Received: from proski by fencepost.gnu.org with local (Exim 4.60)
-	(envelope-from <proski@gnu.org>)
-	id 1IQ4f8-0004ZW-Db
-	for linux-wireless@vger.kernel.org; Tue, 28 Aug 2007 13:15:34 -0400
-Subject: Re: [PATCH] [360/2many] MAINTAINERS - ORINOCO DRIVER
-From: Pavel Roskin <proski@gnu.org>
-To: joe@perches.com
-Cc: torvalds@linux-foundation.org, orinoco-users@lists.sourceforge.net,
-	orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	hermes@gibson.dropbear.id.au, akpm@linux-foundation.org
-In-Reply-To: <46bffb31.f1XwyK4H0RsPvky8%joe@perches.com>
-References: <46bffb31.f1XwyK4H0RsPvky8%joe@perches.com>
+	Tue, 21 Aug 2007 00:35:09 -0400
+Subject: Re: [PATCHv3] mac80211: dynamic wep
+From: Volker Braun <volker.braun@physik.hu-berlin.de>
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>
+In-Reply-To: <20070821030559.GL1415@jm.kir.nu>
+References: <1187151162.3253.18.camel@thinkpad>
+	 <1187308221.23489.91.camel@johannes.berg>
+	 <1187360200.4417.32.camel@thinkpad> <1187363345.6090.2.camel@johannes.berg>
+	 <20070821030559.GL1415@jm.kir.nu>
 Content-Type: text/plain
-Date: Tue, 28 Aug 2007 13:15:22 -0400
-Message-Id: <1188321322.2226.2.camel@dv>
+Date: Tue, 21 Aug 2007 00:35:06 -0400
+Message-Id: <1187670906.3827.11.camel@thinkpad>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2007-08-12 at 23:33 -0700, joe@perches.com wrote:
-> Add file pattern to MAINTAINER entry
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 96aeb40..f374fa8 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -3463,6 +3463,7 @@ L:	orinoco-users@lists.sourceforge.net
->  L:	orinoco-devel@lists.sourceforge.net
->  W:	http://www.nongnu.org/orinoco/
->  S:	Maintained
-> +F:	drivers/net/wireless/orinoco*
+The APs rotate key index 1 and 2 for broadcast keys as you said, but
+I've never seen it use anything but key index 3 for unicast keys. Key
+index 0 is apparently never used. 
 
-NAK.  Please also add airport*, spectrum* and hermes* in the same
-directory.
+I understand that rekeying broadcast keys while all STA's exchange
+broadcast traffic has a synchronization problem. But for unicast traffic
+there is no way to lose packets during rekeying since at any given time
+only one packet can be in the air. Am I missing something?
 
-Sorry for delay (due to vacation).
 
--- 
-Regards,
-Pavel Roskin
+
+
 
