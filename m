@@ -1,44 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:57373
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:36272
 	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757864AbXHWU70 (ORCPT
+	with ESMTP id S1752432AbXHUWYK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2007 16:59:26 -0400
+	Tue, 21 Aug 2007 18:24:10 -0400
 From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: ALERT: firmware change for b43
-Date: Thu, 23 Aug 2007 22:57:41 +0200
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-References: <46C89BF1.5060306@lwfinger.net> <1187860330.22432.139.camel@pmac.infradead.org>
-In-Reply-To: <1187860330.22432.139.camel@pmac.infradead.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] b43: allow disabling hardware encryption
+Date: Wed, 22 Aug 2007 00:22:45 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <1187712498.4218.3.camel@johannes.berg>
+In-Reply-To: <1187712498.4218.3.camel@johannes.berg>
 MIME-Version: 1.0
+Message-Id: <200708220022.45381.mb@bu3sch.de>
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200708232257.42291.mb@bu3sch.de>
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 23 August 2007 11:12:10 David Woodhouse wrote:
-> On Sun, 2007-08-19 at 14:37 -0500, Larry Finger wrote:
-> > It is recommended that you update fwcutter before these patches are
-> > merged. If your version of fwcutter was obtained with subversion, a
-> > simple 'svn update' in the fwcutter directory will suffice.
-> > If you are using a version provided by your distro, you will need to
-> > checkout the latest version with the command 'svn checkout
-> > svn://svn.berlios.de/bcm43xx/trunk/fwcutter'. 
+On Tuesday 21 August 2007 18:08:18 Johannes Berg wrote:
+> For debugging it seems useful to be able to turn off
+> hardware encryption. With the changes I made to mac80211
+> that is now simple.
 > 
-> Ew, Subversion. Hasn't everyone abandoned that yet?
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 > 
-> I've set up a script to mirror it into git hourly:
-> 	http://git.infradead.org/?p=b43-fwcutter.git
-> 	git://git.infradead.org/b43-fwcutter.git
+> ---
+>  drivers/net/wireless/b43/main.c |    7 +++++++
+>  1 file changed, 7 insertions(+)
 > 
+> --- wireless-dev.orig/drivers/net/wireless/b43/main.c	2007-08-21 16:41:30.955923881 +0200
+> +++ wireless-dev/drivers/net/wireless/b43/main.c	2007-08-21 16:47:46.175923881 +0200
+> @@ -96,6 +96,10 @@ static int modparam_hwpctl;
+>  module_param_named(hwpctl, modparam_hwpctl, int, 0444);
+>  MODULE_PARM_DESC(hwpctl, "Enable hardware-side power control (default off)");
+>  
+> +static int modparam_nohwcrypt;
+> +module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0644);
+> +MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
+> +
+>  static const struct ssb_device_id b43_ssb_tbl[] = {
+>  	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 5),
+>  	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 6),
+> @@ -2850,6 +2854,9 @@ static int b43_dev_set_key(struct ieee80
+>  	u8 index;
+>  	int err = -EINVAL;
+>  
+> +	if (modparam_nohwcrypt)
+> +		return -ENOSPC;
+> +
+>  	if (!dev)
+>  		return -ENODEV;
+>  	switch (key->alg) {
 
-Well, for most of my projects. But I didn't see a really good
-reason to move fwcutter to git, yet.
-Maybe I should move it to git, though, as git trees are easier to handle.
+I queued this, although your mac80211 patch that changes the key
+stuff is not in, yet. /me looks at John. :)
 
 -- 
 Greetings Michael.
