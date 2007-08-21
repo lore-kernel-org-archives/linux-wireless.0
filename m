@@ -1,64 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:16033 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753494AbXH0Xrv (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37607 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755582AbXHUKRM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Aug 2007 19:47:51 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: port of my recent patches to net-2.6.24
-Date: Mon, 27 Aug 2007 19:45:51 -0400
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1188027470.9529.5.camel@johannes.berg>
-In-Reply-To: <1188027470.9529.5.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart108026812.FtPWj39jt0";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200708271945.55384.flamingice@sourmilk.net>
+	Tue, 21 Aug 2007 06:17:12 -0400
+Subject: Re: [PATCH V3] mac80211: Turn off meaningless TKIP message when  software WEP encryption is used
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Mattias Nissler <mattias.nissler@gmx.de>
+In-Reply-To: <200708201955.46232.IvDoorn@gmail.com>
+References: <46c0d788.GYQYqGfCBKyAWrg7%Larry.Finger@lwfinger.net>
+	 <46C0E5AD.2080407@lwfinger.net>
+	 <200708131658.27758.flamingice@sourmilk.net>
+	 <200708201955.46232.IvDoorn@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nPWlYfugbiWtq+5OgoJv"
+Date: Tue, 21 Aug 2007 12:17:02 +0200
+Message-Id: <1187691422.4288.9.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart108026812.FtPWj39jt0
-Content-Type: text/plain;
-  charset="iso-8859-15"
+
+--=-nPWlYfugbiWtq+5OgoJv
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On Saturday 25 August 2007 03:37, Johannes Berg wrote:
-> http://johannes.sipsolutions.net/patches/net-2.6.24/
->
-Patch 22:
-+		ap =3D sta_info_get(key->local, key->sdata->u.sta.bssid);
-How does this work when we're setting a multicast/broadcast key on an AP=20
-interface?
+On Mon, 2007-08-20 at 19:55 +0200, Ivo van Doorn wrote:
 
-+	list_add(&key->list, &sdata->key_list);
-Should we be holding the key mutex here?
+> Has this behavior changed recently?
+> e.g. Has a patch been sent recently which will correctly enforce the rule=
+ mentioned
+> above, but has not yet appeared in wireless-dev?
 
-This patch does too many things. If you can split some things out into=20
-separate patches, like moving code into key.c, it would be easier to review.
+No, it's still in my patchset. The semantics of that flag are rather
+unclear so I've cleaned it up completely. However, key selection is
+broken anyway at the moment so multicast/broadcast isn't coming through
+on software crypto.
 
-Patch 23-29: ACK
+johannes
 
-Thanks,
-=2DMichael Wu
-
---nextPart108026812.FtPWj39jt0
-Content-Type: application/pgp-signature
+--=-nPWlYfugbiWtq+5OgoJv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBG02IzT3Oqt9AH4aERAhZXAKDJA4t3WioVqE0+bbajTp7VeDMYAQCg1qzu
-tgHEAB++NL/Z+WlvviMZ8LQ=
-=PpYj
+iD8DBQBGyrue/ETPhpq3jKURAlATAJ49v65GSM4OvYWP05b4w8S7HRCCUgCfcCPE
+INU1adhAYVE3We03ukKbs0g=
+=9g4o
 -----END PGP SIGNATURE-----
 
---nextPart108026812.FtPWj39jt0--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+--=-nPWlYfugbiWtq+5OgoJv--
+
