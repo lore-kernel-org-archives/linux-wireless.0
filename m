@@ -1,56 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45329 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58369 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760169AbXH3PAl (ORCPT
+	with ESMTP id S1759425AbXHUPIw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 11:00:41 -0400
-Subject: Re: oops with recent wireless-dev tree
+	Tue, 21 Aug 2007 11:08:52 -0400
+Message-Id: <20070821150042.289917000@sipsolutions.net>
+References: <20070821145905.689978000@sipsolutions.net>
+Date: Tue, 21 Aug 2007 16:59:13 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Stephen Hemminger <shemminger@linux-foundation.org>
-Cc: Jochen Voss <voss@seehuhn.de>,
-	linux wireless list <linux-wireless@vger.kernel.org>,
-	linville@tuxdriver.com, netdev <netdev@vger.kernel.org>,
-	Matthew Wilcox <matthew@wil.cx>, bridge@linux-foundation.org
-In-Reply-To: <20070830074949.7cd25b04@freepuppy.rosehill.hemminger.net>
-References: <20070829223752.GA6969@seehuhn.de>
-	 <1188475530.2963.20.camel@johannes.berg>
-	 <20070830074949.7cd25b04@freepuppy.rosehill.hemminger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-msTEZMDPb3e8RRSHWxSV"
-Date: Thu, 30 Aug 2007 17:01:31 +0200
-Message-Id: <1188486091.3978.32.camel@johannes.berg>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 08/27] mac80211: remove PRISM2_PARAM_RADIO_ENABLED
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This now is unused in hostapd/wpa_supplicant.
 
---=-msTEZMDPb3e8RRSHWxSV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/hostapd_ioctl.h   |    1 -
+ net/mac80211/ieee80211_ioctl.c |   14 --------------
+ 2 files changed, 15 deletions(-)
 
-On Thu, 2007-08-30 at 07:49 -0700, Stephen Hemminger wrote:
+--- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-08-21 14:39:01.695923881 +0200
++++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-08-21 14:40:10.365923881 +0200
+@@ -37,7 +37,6 @@ enum {
+ 	PRISM2_PARAM_PREAMBLE = 1003,
+ 	PRISM2_PARAM_SHORT_SLOT_TIME = 1006,
+ 	PRISM2_PARAM_NEXT_MODE = 1008,
+-	PRISM2_PARAM_RADIO_ENABLED = 1010,
+ 	PRISM2_PARAM_ANTENNA_MODE = 1013,
+ 	PRISM2_PARAM_PRIVACY_INVOKED = 1014,
+ 	PRISM2_PARAM_BROADCAST_SSID = 1015,
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-21 14:39:42.055923881 +0200
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-21 14:40:10.375923881 +0200
+@@ -1157,16 +1157,6 @@ static int ieee80211_ioctl_set_regulator
+ }
+ 
+ 
+-static int ieee80211_ioctl_set_radio_enabled(struct net_device *dev,
+-					     int val)
+-{
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	struct ieee80211_conf *conf = &local->hw.conf;
+-
+-	conf->radio_enabled = val;
+-	return ieee80211_hw_config(wdev_priv(dev->ieee80211_ptr));
+-}
+-
+ static int
+ ieee80211_ioctl_set_tx_queue_params(struct net_device *dev,
+ 				    struct prism2_hostapd_param *param)
+@@ -2227,10 +2217,6 @@ static int ieee80211_ioctl_prism2_param(
+ 		local->next_mode = value;
+ 		break;
+ 
+-	case PRISM2_PARAM_RADIO_ENABLED:
+-		ret = ieee80211_ioctl_set_radio_enabled(dev, value);
+-		break;
+-
+ 	case PRISM2_PARAM_ANTENNA_MODE:
+ 		local->hw.conf.antenna_mode = value;
+ 		if (ieee80211_hw_config(local))
 
-> Devices aren't required to have ethtool_ops. The code there used to
-> call ethtool directly, and it would handle the error cases. I'll rollup
-> a fix this morning.
-
-Great, thanks.
-
-Jochen had a patch: http://marc.info/?l=3Dlinux-wireless&m=3D11884271502661=
-4&w=3D2
-
-johannes
-
---=-msTEZMDPb3e8RRSHWxSV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG1tvL/ETPhpq3jKURAok+AKC7kBAPAr/8QsVZ/N4g9POGLiK2ZgCfdXBz
-D2Zv2GZuwyXdQUg6iphWb14=
-=wpiP
------END PGP SIGNATURE-----
-
---=-msTEZMDPb3e8RRSHWxSV--
+-- 
 
