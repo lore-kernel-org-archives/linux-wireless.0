@@ -1,197 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58457 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760617AbXHUPK7 (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:36426 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751002AbXHUASF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 11:10:59 -0400
-Message-Id: <20070821150040.744655000@sipsolutions.net>
-References: <20070821145905.689978000@sipsolutions.net>
-Date: Tue, 21 Aug 2007 16:59:10 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 05/27] mac80211, drivers: remove reset callback
-Mime-Version: 1.0
+	Mon, 20 Aug 2007 20:18:05 -0400
+Message-ID: <46CA2F3B.1060500@lwfinger.net>
+Date: Mon, 20 Aug 2007 19:18:03 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
+MIME-Version: 1.0
+To: Ulrich Kunitz <kune@deine-taler.de>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: fix software decryption with b43legacy
+References: <1187346385.23489.157.camel@johannes.berg> <46C5CC0D.2040609@lwfinger.net> <1187384230.6090.7.camel@johannes.berg> <46C612E8.4020604@lwfinger.net> <1187387215.6090.13.camel@johannes.berg> <46C64777.1000602@lwfinger.net> <1187453173.6090.33.camel@johannes.berg> <46C752FE.4030706@lwfinger.net> <20070820224333.GA6363@deine-taler.de>
+In-Reply-To: <20070820224333.GA6363@deine-taler.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The callback isn't used so remove it.
+Ulrich Kunitz wrote:
+> Larry Finger wrote:
+> 
+>> I have added the lists to this message.
+>>
+>> I got b43legacy up and running with the software decryption modifications. 
+>> It started OK with WPA-PSK TKIP encryption, but soon thereafter, I got this 
+>> message:
+>>
+>> eth1: No ProbeResp from current AP 00:1a:70:46:ba:b1 - assume out of range
+>>
+> 
+> Since the git tree reorg wireless-dev branch created comparable
+> problems for zd1211rw-mac80211 too. It might be related:
+> 
+> Aug 19 07:08:51 keks kernel: [   83.572628] wlan0: CCMP replay detected for RX frame from 00:04:0e:68:ad:70 (RX PN 00000000000c <= prev. PN 00000000000c)
+> Aug 19 07:08:54 keks kernel: [   87.432010] usb 1-2: handle_regs_int() regs interrupt ignored
+> Aug 19 07:08:55 keks kernel: [   87.898447] wlan0: No ProbeResp from current AP 00:04:0e:68:ad:70 - assume out of range
+> Aug 19 07:08:55 keks kernel: [   87.899649] wmaster0: Removed STA 00:04:0e:68:ad:70
+> Aug 19 07:08:55 keks kernel: [   87.901406] wlan0: set_encrypt - unknown addr 00:04:0e:68:ad:70
+> 
+> The first message might be a simple duplicate. The
+> handle_regs_int() is absolutely suspicious and I cannot really
+> explain it right now. The "No ProbeResp" might be a follow-up
+> problem. The whole USB subsystem becomes absolutely instable to
+> the point that I can't use keyboard and mouse anymore. 
+> 
+> I will try Johannes' patch tomorrow.
+> 
+> BTW the wireless-dev reorg makes it impossible to actually use
+> git-bisect to find the patch, which caused the problem. 
+> 
+> BTW the current Linus tree following patch doesn't work with the
+> current zd1211rw-mac80211. The offending patch is the following one:
+> 
+> commit b9bf1e60a294fc7795d5198f94a917290e52865b
+> Author: John W. Linville <linville@tuxdriver.com>
+> Date:   Tue Aug 7 16:33:15 2007 -0400
+> 
+>     [PATCH] mac80211: probe for hidden SSIDs in pre-auth scan
+>     
+>     Probe for hidden SSIDs if initiating pre-authentication scan and SSID
+>     is set for STA interface.
+>     
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> 
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+This patch is not in my tree, but adding it breaks WEP. WPA fails with it in or out at the moment. 
+I'm still looking at that problem.
 
----
- drivers/net/wireless/adm8211.c          |   38 --------------------------------
- drivers/net/wireless/b43/main.c         |   18 ---------------
- drivers/net/wireless/rt2x00/rt2400pci.c |    1 
- drivers/net/wireless/rt2x00/rt2500pci.c |    1 
- drivers/net/wireless/rt2x00/rt2500usb.c |    1 
- drivers/net/wireless/rt2x00/rt2x00mac.c |    1 
- drivers/net/wireless/rt2x00/rt61pci.c   |    1 
- drivers/net/wireless/rt2x00/rt73usb.c   |    1 
- include/net/mac80211.h                  |    3 --
- 9 files changed, 65 deletions(-)
-
---- wireless-dev.orig/include/net/mac80211.h	2007-08-21 16:25:19.385923881 +0200
-+++ wireless-dev/include/net/mac80211.h	2007-08-21 16:25:25.135923881 +0200
-@@ -570,9 +570,6 @@ struct ieee80211_ops {
- 	int (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		  struct ieee80211_tx_control *control);
- 
--	/* Handler for performing hardware reset. */
--	int (*reset)(struct ieee80211_hw *hw);
--
- 	/* Handler that is called when any netdevice attached to the hardware
- 	 * device is set UP for the first time. This can be used, e.g., to
- 	 * enable interrupts and beacon sending. */
---- wireless-dev.orig/drivers/net/wireless/adm8211.c	2007-08-21 16:23:23.115923881 +0200
-+++ wireless-dev/drivers/net/wireless/adm8211.c	2007-08-21 16:25:25.145923881 +0200
-@@ -1643,43 +1643,6 @@ static int adm8211_stop(struct ieee80211
- 	return 0;
- }
- 
--static int adm8211_reset(struct ieee80211_hw *dev)
--{
--	struct adm8211_priv *priv = dev->priv;
--	int retval = 0;
--
--	priv->nar = 0;
--	ADM8211_CSR_WRITE(NAR, 0);
--	ADM8211_CSR_WRITE(IER, 0);
--	ADM8211_CSR_READ(NAR);
--
--	adm8211_free_rings(dev);
--
--	retval = adm8211_hw_reset(dev);
--	if (retval) {
--		printk(KERN_ERR "%s: hardware reset failed\n",
--		       wiphy_name(dev->wiphy));
--		goto fail;
--	}
--
--	retval = adm8211_init_rings(dev);
--	if (retval) {
--		printk(KERN_ERR "%s: failed to initialize rings\n",
--		       wiphy_name(dev->wiphy));
--		goto fail;
--	}
--
--	adm8211_hw_init(dev);
--	adm8211_rf_set_channel(dev, priv->channel);
--
--	ADM8211_CSR_WRITE(IER, ADM8211_INTMASK);
--	adm8211_update_mode(dev);
--	ADM8211_CSR_WRITE(RDR, 0);
--
--fail:
--	return retval;
--}
--
- static void adm8211_calc_durations(int *dur, int *plcp, size_t payload_len, int len,
- 				   int plcp_signal, int short_preamble)
- {
-@@ -1878,7 +1841,6 @@ static int adm8211_alloc_rings(struct ie
- 
- static const struct ieee80211_ops adm8211_ops = {
- 	.tx			= adm8211_tx,
--	.reset			= adm8211_reset,
- 	.open			= adm8211_open,
- 	.stop			= adm8211_stop,
- 	.add_interface		= adm8211_add_interface,
---- wireless-dev.orig/drivers/net/wireless/b43/main.c	2007-08-21 16:23:23.145923881 +0200
-+++ wireless-dev/drivers/net/wireless/b43/main.c	2007-08-21 16:25:25.155923881 +0200
-@@ -2617,23 +2617,6 @@ static int b43_get_stats(struct ieee8021
- 	return 0;
- }
- 
--static int b43_dev_reset(struct ieee80211_hw *hw)
--{
--	struct b43_wl *wl = hw_to_b43_wl(hw);
--	struct b43_wldev *dev;
--	int err = -ENODEV;
--
--	mutex_lock(&wl->mutex);
--	dev = wl->current_dev;
--	if (dev) {
--		b43_controller_restart(dev, "Reset by ieee80211 subsystem");
--		err = 0;
--	}
--	mutex_unlock(&wl->mutex);
--
--	return 0;
--}
--
- static const char *phymode_to_string(unsigned int phymode)
- {
- 	switch (phymode) {
-@@ -3566,7 +3549,6 @@ static const struct ieee80211_ops b43_hw
- 	.conf_tx = b43_conf_tx,
- 	.add_interface = b43_add_interface,
- 	.remove_interface = b43_remove_interface,
--	.reset = b43_dev_reset,
- 	.config = b43_dev_config,
- 	.config_interface = b43_config_interface,
- 	.set_multicast_list = b43_set_multicast_list,
---- wireless-dev.orig/drivers/net/wireless/rt2x00/rt2400pci.c	2007-08-21 16:23:23.165923881 +0200
-+++ wireless-dev/drivers/net/wireless/rt2x00/rt2400pci.c	2007-08-21 16:25:25.155923881 +0200
-@@ -1592,7 +1592,6 @@ static int rt2400pci_tx_last_beacon(stru
- 
- static const struct ieee80211_ops rt2400pci_mac80211_ops = {
- 	.tx			= rt2x00mac_tx,
--	.reset			= rt2x00mac_reset,
- 	.add_interface		= rt2x00mac_add_interface,
- 	.remove_interface	= rt2x00mac_remove_interface,
- 	.config			= rt2x00mac_config,
---- wireless-dev.orig/drivers/net/wireless/rt2x00/rt2500pci.c	2007-08-21 16:23:23.195923881 +0200
-+++ wireless-dev/drivers/net/wireless/rt2x00/rt2500pci.c	2007-08-21 16:25:25.165923881 +0200
-@@ -1883,7 +1883,6 @@ static int rt2500pci_tx_last_beacon(stru
- 
- static const struct ieee80211_ops rt2500pci_mac80211_ops = {
- 	.tx			= rt2x00mac_tx,
--	.reset			= rt2x00mac_reset,
- 	.add_interface		= rt2x00mac_add_interface,
- 	.remove_interface	= rt2x00mac_remove_interface,
- 	.config			= rt2x00mac_config,
---- wireless-dev.orig/drivers/net/wireless/rt2x00/rt2500usb.c	2007-08-21 16:23:23.215923881 +0200
-+++ wireless-dev/drivers/net/wireless/rt2x00/rt2500usb.c	2007-08-21 16:25:25.165923881 +0200
-@@ -1560,7 +1560,6 @@ static int rt2500usb_probe_hw(struct rt2
-  */
- static const struct ieee80211_ops rt2500usb_mac80211_ops = {
- 	.tx			= rt2x00mac_tx,
--	.reset			= rt2x00mac_reset,
- 	.add_interface		= rt2x00mac_add_interface,
- 	.remove_interface	= rt2x00mac_remove_interface,
- 	.config			= rt2x00mac_config,
---- wireless-dev.orig/drivers/net/wireless/rt2x00/rt2x00mac.c	2007-08-21 16:23:23.235923881 +0200
-+++ wireless-dev/drivers/net/wireless/rt2x00/rt2x00mac.c	2007-08-21 16:25:25.165923881 +0200
-@@ -167,7 +167,6 @@ exit:
- 
- 	return retval;
- }
--EXPORT_SYMBOL_GPL(rt2x00mac_reset);
- 
- int rt2x00mac_add_interface(struct ieee80211_hw *hw,
- 			    struct ieee80211_if_init_conf *conf)
---- wireless-dev.orig/drivers/net/wireless/rt2x00/rt61pci.c	2007-08-21 16:23:23.255923881 +0200
-+++ wireless-dev/drivers/net/wireless/rt2x00/rt61pci.c	2007-08-21 16:25:25.175923881 +0200
-@@ -2246,7 +2246,6 @@ static void rt61pci_reset_tsf(struct iee
- 
- static const struct ieee80211_ops rt61pci_mac80211_ops = {
- 	.tx			= rt2x00mac_tx,
--	.reset			= rt2x00mac_reset,
- 	.add_interface		= rt2x00mac_add_interface,
- 	.remove_interface	= rt2x00mac_remove_interface,
- 	.config			= rt2x00mac_config,
---- wireless-dev.orig/drivers/net/wireless/rt2x00/rt73usb.c	2007-08-21 16:23:23.295923881 +0200
-+++ wireless-dev/drivers/net/wireless/rt2x00/rt73usb.c	2007-08-21 16:25:25.175923881 +0200
-@@ -1854,7 +1854,6 @@ static void rt73usb_reset_tsf(struct iee
- 
- static const struct ieee80211_ops rt73usb_mac80211_ops = {
- 	.tx			= rt2x00mac_tx,
--	.reset			= rt2x00mac_reset,
- 	.add_interface		= rt2x00mac_add_interface,
- 	.remove_interface	= rt2x00mac_remove_interface,
- 	.config			= rt2x00mac_config,
-
--- 
+Larry
 
