@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43648 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60697 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751952AbXHJXqZ (ORCPT
+	with ESMTP id S1750919AbXHVJWY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2007 19:46:25 -0400
-Subject: [PATCH] mac80211: remove special casing of EAPOL on mgmt interface
+	Wed, 22 Aug 2007 05:22:24 -0400
+Subject: Re: Lock problem with latest b43 patches
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Sat, 11 Aug 2007 01:48:57 +0200
-Message-Id: <1186789737.4862.3.camel@johannes.berg>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
+In-Reply-To: <46C9D3F6.7020306@lwfinger.net>
+References: <46C7CACC.2000000@lwfinger.net>
+	 <1187609202.6090.93.camel@johannes.berg>  <46C9D3F6.7020306@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mzrcrzTf/0ddcLiR8/Hf"
+Date: Tue, 21 Aug 2007 20:58:51 +0200
+Message-Id: <1187722731.8435.0.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes sending EAPOL frames to the management interface and
-sends them to the regular ethernet interface instead.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+--=-mzrcrzTf/0ddcLiR8/Hf
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
- net/mac80211/rx.c |   11 ++---------
- 1 file changed, 2 insertions(+), 9 deletions(-)
+On Mon, 2007-08-20 at 12:48 -0500, Larry Finger wrote:
 
---- wireless-dev.orig/net/mac80211/rx.c	2007-08-11 00:45:05.647838974 +0200
-+++ wireless-dev/net/mac80211/rx.c	2007-08-11 01:45:58.517838974 +0200
-@@ -837,15 +837,8 @@ static ieee80211_txrx_result
- ieee80211_rx_h_802_1x_pae(struct ieee80211_txrx_data *rx)
- {
- 	if (rx->sdata->eapol && ieee80211_is_eapol(rx->skb) &&
--	    rx->sdata->type != IEEE80211_IF_TYPE_STA && rx->u.rx.ra_match) {
--		/* Pass both encrypted and unencrypted EAPOL frames to user
--		 * space for processing. */
--		if (!rx->local->apdev)
--			return TXRX_DROP;
--		ieee80211_rx_mgmt(rx->local, rx->skb, rx->u.rx.status,
--				  ieee80211_msg_normal);
--		return TXRX_QUEUED;
--	}
-+	    rx->sdata->type != IEEE80211_IF_TYPE_STA && rx->u.rx.ra_match)
-+		return TXRX_CONTINUE;
- 
- 	if (unlikely(rx->sdata->ieee802_1x &&
- 		     (rx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
+> My / and /home partitions are local, but I do have mounted NFS partitions=
+. Whatever happened here=20
+> has been a one-time only event, at least so far. Until it happens again, =
+I'll assume that an=20
+> electron got crosswise somewhere. :)
 
+I suppose it's unlikely because it looks like there was a page fault of
+a memory mapped file involved. It may be worth sending it to the NFS
+maintainer anyway.
+
+johannes
+
+--=-mzrcrzTf/0ddcLiR8/Hf
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGyzXr/ETPhpq3jKURAhWCAJ9YQde+xRCXFWjkyxL2iv9S2r6PkgCeOLRy
+fzVEds4dTe3oedZm3mZI9jI=
+=hK4d
+-----END PGP SIGNATURE-----
+
+--=-mzrcrzTf/0ddcLiR8/Hf--
 
