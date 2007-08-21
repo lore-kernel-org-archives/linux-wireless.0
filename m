@@ -1,34 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [192.55.52.93] ([192.55.52.93]:52863 "EHLO mga11.intel.com"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1753000AbXHTDKx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Aug 2007 23:10:53 -0400
-Subject: Re: [PATCH] Add iwlwifi wireless drivers (resend)
-From: Zhu Yi <yi.zhu@intel.com>
+Received: from nf-out-0910.google.com ([64.233.182.189]:7069 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753628AbXHUKN7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Aug 2007 06:13:59 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so844055nfb
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Aug 2007 03:13:58 -0700 (PDT)
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W.Linville" <linville@tuxdriver.com>,
-	Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>
-In-Reply-To: <1187349981.23489.162.camel@johannes.berg>
-References: <1187328536.5763.137.camel@debian.sh.intel.com>
-	 <1187349981.23489.162.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 20 Aug 2007 10:56:50 +0800
-Message-Id: <1187578610.5763.232.camel@debian.sh.intel.com>
-Mime-Version: 1.0
+Subject: Re: [PATCH 28/30] rt2x00: Always check if mac80211 requested TX status update
+Date: Tue, 21 Aug 2007 12:21:23 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200708192018.30624.IvDoorn@gmail.com> <200708192036.37330.IvDoorn@gmail.com> <1187630496.6923.0.camel@johannes.berg>
+In-Reply-To: <1187630496.6923.0.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200708211221.24172.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-08-17 at 13:26 +0200, Johannes Berg wrote:
-> I was recently reviewing encryption stuff---can you comment on why you
-> don't allow disabling hardware keys? For proper operation you really
-> should allow that. 
+On Monday 20 August 2007, Johannes Berg wrote:
+> On Sun, 2007-08-19 at 20:36 +0200, Ivo van Doorn wrote:
+> 
+> > During txdone always check for the IEEE80211_TXCTL_REQ_TX_STATUS flag
+> > to determine if ieee80211_tx_status_irqsafe should be called or not.
+> > When the flag is not set, just cleanup the skb and don't bother
+> > mac80211 with it.
+> 
+> Never mind that I'd love to remove the REQ_TX_STATUS flag, this is not
+> really the best thing to do since rate control will basically ignore
+> this frame if you don't hand it back to mac80211.
 
-I don't think there is any special reason, just haven't enabled it yet.
-We enable the hwcrypto and find it works good, then we switched to
-enable something else. For the end users, I think they'd always want to
-use hwcrypto if it is supported by the hardware. For developers, I'd
-agree it is useful. I'll add it to the TODO list.
+Ok, I'll revert that check for rt2x00 2.0.8
 
 Thanks,
--yi
+
+Ivo
