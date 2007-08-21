@@ -1,59 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:32867 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58426 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762158AbXHAM14 (ORCPT
+	with ESMTP id S1758989AbXHUPKR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2007 08:27:56 -0400
-Subject: Re: Rate control over multiple devices
+	Tue, 21 Aug 2007 11:10:17 -0400
+Message-Id: <20070821150039.396311000@sipsolutions.net>
+References: <20070821145905.689978000@sipsolutions.net>
+Date: Tue, 21 Aug 2007 16:59:08 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Benc <jbenc@suse.cz>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Andy Green <andy@warmcat.com>, linux-wireless@vger.kernel.org,
-	James Ketrenos <jketreno@linux.intel.com>
-In-Reply-To: <20070801142318.7234c63b@griffin.suse.cz>
-References: <46AFB779.4040003@warmcat.com>
-	 <20070801004543.GD4719@tuxdriver.com>
-	 <1185960764.14279.2.camel@johannes.berg>
-	 <20070801134624.481eb856@griffin.suse.cz>
-	 <1185969255.21901.11.camel@johannes.berg>
-	 <20070801142318.7234c63b@griffin.suse.cz>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-onvpu9pZ6M3nMbrSQicF"
-Date: Wed, 01 Aug 2007 14:29:14 +0200
-Message-Id: <1185971354.21901.21.camel@johannes.berg>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 03/27] mac80211: avoid copying packets to interfaces that  are down
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+David Woodhouse noticed that under some circumstances the number of slab
+allocations kept growing. After looking a bit, this seemed to happen
+when you had a management mode interface that was *down*.
 
---=-onvpu9pZ6M3nMbrSQicF
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The reason for this is that when the device is down, all management
+frames get queued to the in-kernel MLME (via ieee80211_sta_rx_mgmt) but
+then the sta work is invoked but doesn't run when the netif is down.
+When you then bring the interface up, all such frames are freed, but if
+you change the mode all of them are lost because the skb queue is
+reinitialised as soon as you go back to managed mode. The skb queue is
+correctly cleared when the interface is brought down, but the code
+doesn't account for the fact that it may be filled while it is not up.
 
-On Wed, 2007-08-01 at 14:23 +0200, Jiri Benc wrote:
+This patch should fix the issue by simply ignoring all interfaces that
+are down when going through the RX handlers.
 
-> Yes. But I'd like to see a solution to the problem reported by Andy in
-> the patch. One of the possible solutions could be adding a "this is a
-> special rate control alg which shouldn't be selected automatically"
-> flag to rate control algs and not selecting such algorithms in
-> ieee80211_try_rate_control_ops_get when 'name' is NULL. Should be easy
-> to implement.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Maybe go all the way then and somehow tie it to specific information it
-requires from the hardware that most hardware doesn't give it?
+---
+ net/mac80211/ieee80211.c |    9 +++++++++
+ net/mac80211/rx.c        |    3 +++
+ 2 files changed, 12 insertions(+)
 
-johannes
+--- wireless-dev.orig/net/mac80211/rx.c	2007-08-21 14:39:40.425923881 +0200
++++ wireless-dev/net/mac80211/rx.c	2007-08-21 14:39:42.675923881 +0200
+@@ -1521,6 +1521,9 @@ void __ieee80211_rx(struct ieee80211_hw 
+ 	list_for_each_entry(sdata, &local->sub_if_list, list) {
+ 		rx.u.rx.ra_match = 1;
+ 
++		if (!netif_running(sdata->dev))
++			continue;
++
+ 		prepres = prepare_for_handlers(sdata, bssid, &rx, hdr);
+ 		/* prepare_for_handlers can change sta */
+ 		sta = rx.sta;
+--- wireless-dev.orig/net/mac80211/ieee80211.c	2007-08-21 14:39:41.445923881 +0200
++++ wireless-dev/net/mac80211/ieee80211.c	2007-08-21 14:39:42.675923881 +0200
+@@ -494,7 +494,16 @@ static void ieee80211_if_shutdown(struct
+ 		sdata->u.sta.state = IEEE80211_DISABLED;
+ 		del_timer_sync(&sdata->u.sta.timer);
+ 		del_timer_sync(&sdata->u.sta.admit_timer);
++		/*
++		 * Holding the sub_if_lock for writing here blocks
++		 * out the receive path and makes sure it's not
++		 * currently processing a packet that may get
++		 * added to the queue.
++		 */
++		write_lock_bh(&local->sub_if_lock);
+ 		skb_queue_purge(&sdata->u.sta.skb_queue);
++		write_unlock_bh(&local->sub_if_lock);
++
+ 		if (!local->ops->hw_scan &&
+ 		    local->scan_dev == sdata->dev) {
+ 			local->sta_scanning = 0;
 
---=-onvpu9pZ6M3nMbrSQicF
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGsHya/ETPhpq3jKURAj+5AKCvP5HKIxOwdga+UhbTL7YGZii17gCgrjgX
-S9xYEiI5eh6AIOXF2Qw7avQ=
-=nFkO
------END PGP SIGNATURE-----
-
---=-onvpu9pZ6M3nMbrSQicF--
+-- 
 
