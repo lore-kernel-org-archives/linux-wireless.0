@@ -1,51 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:47921 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758324AbXHHWxq (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58338 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932193AbXHUPH7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 18:53:46 -0400
-Date: Wed, 8 Aug 2007 15:52:31 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: arm allmodconfig
-Message-Id: <20070808155231.77bfc676.akpm@linux-foundation.org>
-In-Reply-To: <200708090038.05320.mb@bu3sch.de>
-References: <20070808145705.756597b0.akpm@linux-foundation.org>
-	<200708090013.06846.mb@bu3sch.de>
-	<20070808152606.9ea3010f.akpm@linux-foundation.org>
-	<200708090038.05320.mb@bu3sch.de>
+	Tue, 21 Aug 2007 11:07:59 -0400
+Message-Id: <20070821150038.073643000@sipsolutions.net>
+References: <20070821145905.689978000@sipsolutions.net>
+Date: Tue, 21 Aug 2007 16:59:06 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 01/27] mac80211: fix showing transmitted frames on multiple  monitor interfaces
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 9 Aug 2007 00:38:05 +0200
-Michael Buesch <mb@bu3sch.de> wrote:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net
 
-> > Just stop using select.   It's busted.
-> 
-> Ok, I have no problem with that. BUT my users and other people
-> in the kernel community do certainly have. Nobody will find
-> the bcm43xx option anymore, if we depend on SSB.
-> I mean, people do even seriously complain about the filenames
-> of the firmware and so on.
-> So adding a dep on SSB would generate about 3 to 4
-> bugreports each day, I'd say from experience.
+---
+ net/mac80211/ieee80211.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-yup, I understand the problem and I cannot suggest any acceptable solution,
-apart from...
+--- wireless-dev.orig/net/mac80211/ieee80211.c	2007-08-21 14:39:16.695923881 +0200
++++ wireless-dev/net/mac80211/ieee80211.c	2007-08-21 14:39:41.445923881 +0200
+@@ -1190,7 +1190,6 @@ void ieee80211_tx_status(struct ieee8021
+ 			memset(skb->cb, 0, sizeof(skb->cb));
+ 			netif_rx(skb);
+ 			skb = skb2;
+-			break;
+ 		}
+ 	}
+  out:
 
-> So, once you suggested that menuconfig should be changed to
-> show options "greyed out" when deps are not met. Are there
-> any patches available? Any starting point?
-
-No, nothing at all, sorry.
-
-I'm getting a _lot_ of build breakage out of SSB right now.
-
-
-I wonder if we could do something lame like adding some text to the
-BCM_whatever Kconfig files, right there on the top-level menu entry which
-says "go look at CONFIG_SSB".  Make it really obvious.
+-- 
 
