@@ -1,56 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58870 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55336 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755409AbXHUKOY (ORCPT
+	with ESMTP id S1756920AbXHUKee (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 06:14:24 -0400
-Subject: Re: [PATCH 05/20] mac80211: remove unused ioctls (1)
+	Tue, 21 Aug 2007 06:34:34 -0400
+Subject: Re: Kernel BUG when using ad-hoc mode in rt2x00
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070821030918.GM1415@jm.kir.nu>
-References: <20070815144920.135826000@sipsolutions.net>
-	 <20070815145043.551508000@sipsolutions.net>
-	 <20070818040423.GF1415@jm.kir.nu> <1187601005.6090.41.camel@johannes.berg>
-	 <20070821030918.GM1415@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GYFAavU0UTR0uggYkOTy"
-Date: Tue, 21 Aug 2007 12:14:07 +0200
-Message-Id: <1187691247.4288.6.camel@johannes.berg>
+To: Adam Baker <linux@baker-net.org.uk>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	rt2400-devel@lists.sourceforge.net, jbenc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>
+In-Reply-To: <200708202121.35543.linux@baker-net.org.uk>
+References: <200708082324.17186.linux@baker-net.org.uk>
+	 <200708162243.05809.linux@baker-net.org.uk>
+	 <1187345617.23489.143.camel@johannes.berg>
+	 <200708202121.35543.linux@baker-net.org.uk>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JmBf7/AYbavgtgMLT3SR"
+Date: Tue, 21 Aug 2007 12:34:45 +0200
+Message-Id: <1187692485.4288.11.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-GYFAavU0UTR0uggYkOTy
+--=-JmBf7/AYbavgtgMLT3SR
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2007-08-20 at 20:09 -0700, Jouni Malinen wrote:
 
-> Sure, that's fine. I was mainly objecting for the part of completely
-> removing the code (i.e., not just the ioctl). I don't really care how
-> this command goes through, but anyway, I would agree that debugfs would
-> be more reasonable location now that it is available and already being
-> used elsewhere in mac80211.
+> One is in ieee80211_if_set_type at the only point where I can see u.ap.ps=
+_bc_buf could get
+> initialised and as I suspected that doesn't get called.
+>         case IEEE80211_IF_TYPE_AP:
+>                 sdata->u.ap.dtim_period =3D 2;
+>                 sdata->u.ap.force_unicast_rateidx =3D -1;
+>                 sdata->u.ap.max_ratectrl_rateidx =3D -1;
+>                 skb_queue_head_init(&sdata->u.ap.ps_bc_buf);
+>                 printk( KERN_DEBUG "Initiatilsing ps_bc_buf at %p\n",&sda=
+ta->u.ap.ps_bc_buf);
+>                 sdata->bss =3D &sdata->u.ap;
+>                 break;
 
-Ok. I'll update the patch to move that flag instead. Though that has me
-thinking, should it be a per-netdev flag rather than a global one?
+> The other is in ieee80211_tx_h_multicast_ps_buf just before tx->sdata->bs=
+s->ps_bc_buf gets
+> used. I haven't quite followed what ap structure bss should be pointing t=
+o at that time but I'm
+> presuming whatever it is doesn't contain an initialised ps_bc_buf hence t=
+he lock failure.
+>=20
+>                 printk( KERN_INFO "About to queue skb %p to buffer %p\n",=
+tx->skb, &tx->sdata->bss->ps_bc_buf);
+>                 skb_queue_tail(&tx->sdata->bss->ps_bc_buf, tx->skb);
+
+At that point, sdata->bss should point to the master device, which
+apparently hasn't been initialised yet. The device initialisation code
+is pretty black magic to me, Jiri/Michael?
 
 johannes
 
---=-GYFAavU0UTR0uggYkOTy
+--=-JmBf7/AYbavgtgMLT3SR
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGyrrv/ETPhpq3jKURAhW/AJ4tL5vA5DSBRGR8Zry/6UUdBPc4pgCglE/Q
-PB1DeT5gXx+AF6yevOZUdR4=
-=XxEM
+iD8DBQBGyr/F/ETPhpq3jKURAv3kAJwMZaNlODQ0+YIyX7BzljTjwMxz/QCfRs8L
+ZQpzTWvEl/dBtPwimiL/q9c=
+=kb51
 -----END PGP SIGNATURE-----
 
---=-GYFAavU0UTR0uggYkOTy--
+--=-JmBf7/AYbavgtgMLT3SR--
 
