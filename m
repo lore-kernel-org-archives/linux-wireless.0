@@ -1,73 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:36426 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751002AbXHUASF (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:47430 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760366AbXHUPFJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2007 20:18:05 -0400
-Message-ID: <46CA2F3B.1060500@lwfinger.net>
-Date: Mon, 20 Aug 2007 19:18:03 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Ulrich Kunitz <kune@deine-taler.de>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211: fix software decryption with b43legacy
-References: <1187346385.23489.157.camel@johannes.berg> <46C5CC0D.2040609@lwfinger.net> <1187384230.6090.7.camel@johannes.berg> <46C612E8.4020604@lwfinger.net> <1187387215.6090.13.camel@johannes.berg> <46C64777.1000602@lwfinger.net> <1187453173.6090.33.camel@johannes.berg> <46C752FE.4030706@lwfinger.net> <20070820224333.GA6363@deine-taler.de>
-In-Reply-To: <20070820224333.GA6363@deine-taler.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 21 Aug 2007 11:05:09 -0400
+Message-Id: <20070821150040.175527000@sipsolutions.net>
+References: <20070821145905.689978000@sipsolutions.net>
+Date: Tue, 21 Aug 2007 16:59:09 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 04/27] mac80211: fix key debugfs
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ulrich Kunitz wrote:
-> Larry Finger wrote:
-> 
->> I have added the lists to this message.
->>
->> I got b43legacy up and running with the software decryption modifications. 
->> It started OK with WPA-PSK TKIP encryption, but soon thereafter, I got this 
->> message:
->>
->> eth1: No ProbeResp from current AP 00:1a:70:46:ba:b1 - assume out of range
->>
-> 
-> Since the git tree reorg wireless-dev branch created comparable
-> problems for zd1211rw-mac80211 too. It might be related:
-> 
-> Aug 19 07:08:51 keks kernel: [   83.572628] wlan0: CCMP replay detected for RX frame from 00:04:0e:68:ad:70 (RX PN 00000000000c <= prev. PN 00000000000c)
-> Aug 19 07:08:54 keks kernel: [   87.432010] usb 1-2: handle_regs_int() regs interrupt ignored
-> Aug 19 07:08:55 keks kernel: [   87.898447] wlan0: No ProbeResp from current AP 00:04:0e:68:ad:70 - assume out of range
-> Aug 19 07:08:55 keks kernel: [   87.899649] wmaster0: Removed STA 00:04:0e:68:ad:70
-> Aug 19 07:08:55 keks kernel: [   87.901406] wlan0: set_encrypt - unknown addr 00:04:0e:68:ad:70
-> 
-> The first message might be a simple duplicate. The
-> handle_regs_int() is absolutely suspicious and I cannot really
-> explain it right now. The "No ProbeResp" might be a follow-up
-> problem. The whole USB subsystem becomes absolutely instable to
-> the point that I can't use keyboard and mouse anymore. 
-> 
-> I will try Johannes' patch tomorrow.
-> 
-> BTW the wireless-dev reorg makes it impossible to actually use
-> git-bisect to find the patch, which caused the problem. 
-> 
-> BTW the current Linus tree following patch doesn't work with the
-> current zd1211rw-mac80211. The offending patch is the following one:
-> 
-> commit b9bf1e60a294fc7795d5198f94a917290e52865b
-> Author: John W. Linville <linville@tuxdriver.com>
-> Date:   Tue Aug 7 16:33:15 2007 -0400
-> 
->     [PATCH] mac80211: probe for hidden SSIDs in pre-auth scan
->     
->     Probe for hidden SSIDs if initiating pre-authentication scan and SSID
->     is set for STA interface.
->     
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
+This fixes two issues with the key debugfs:
+ 1) key index obviously isn't unique
+ 2) various missing break statements led to bogus output
 
-This patch is not in my tree, but adding it breaks WEP. WPA fails with it in or out at the moment. 
-I'm still looking at that problem.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Larry
+---
+ net/mac80211/debugfs_key.c |   12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+--- wireless-dev.orig/net/mac80211/debugfs_key.c	2007-08-21 16:17:35.565923881 +0200
++++ wireless-dev/net/mac80211/debugfs_key.c	2007-08-21 16:25:21.405923881 +0200
+@@ -77,14 +77,17 @@ static ssize_t key_tx_spec_read(struct f
+ 	switch (key->alg) {
+ 	case ALG_WEP:
+ 		len = scnprintf(buf, sizeof(buf), "\n");
++		break;
+ 	case ALG_TKIP:
+ 		len = scnprintf(buf, sizeof(buf), "%08x %04x\n",
+ 				key->u.tkip.iv32,
+ 				key->u.tkip.iv16);
++		break;
+ 	case ALG_CCMP:
+ 		tpn = key->u.ccmp.tx_pn;
+ 		len = scnprintf(buf, sizeof(buf), "%02x%02x%02x%02x%02x%02x\n",
+ 				tpn[0], tpn[1], tpn[2], tpn[3], tpn[4], tpn[5]);
++		break;
+ 	default:
+ 		return 0;
+ 	}
+@@ -103,6 +106,7 @@ static ssize_t key_rx_spec_read(struct f
+ 	switch (key->alg) {
+ 	case ALG_WEP:
+ 		len = scnprintf(buf, sizeof(buf), "\n");
++		break;
+ 	case ALG_TKIP:
+ 		for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
+ 			p += scnprintf(p, sizeof(buf)+buf-p,
+@@ -110,6 +114,7 @@ static ssize_t key_rx_spec_read(struct f
+ 				       key->u.tkip.iv32_rx[i],
+ 				       key->u.tkip.iv16_rx[i]);
+ 		len = p - buf;
++		break;
+ 	case ALG_CCMP:
+ 		for (i = 0; i < NUM_RX_DATA_QUEUES; i++) {
+ 			rpn = key->u.ccmp.rx_pn[i];
+@@ -119,6 +124,7 @@ static ssize_t key_rx_spec_read(struct f
+ 				       rpn[3], rpn[4], rpn[5]);
+ 		}
+ 		len = p - buf;
++		break;
+ 	default:
+ 		return 0;
+ 	}
+@@ -164,12 +170,14 @@ KEY_OPS(key);
+ void ieee80211_debugfs_key_add(struct ieee80211_local *local,
+ 			       struct ieee80211_key *key)
+ {
++	static int keycount;
+ 	char buf[20];
+ 
+ 	if (!local->debugfs.keys)
+ 		return;
+ 
+-	sprintf(buf, "%d", key->keyidx);
++	sprintf(buf, "%d", keycount);
++	keycount++;
+ 	key->debugfs.dir = debugfs_create_dir(buf,
+ 					local->debugfs.keys);
+ 
+@@ -239,7 +247,7 @@ void ieee80211_debugfs_key_sta_link(stru
+ 	if (!key->debugfs.dir)
+ 		return;
+ 
+-	sprintf(buf, "../sta/" MAC_FMT, MAC_ARG(sta->addr));
++	sprintf(buf, "../../stations/" MAC_FMT, MAC_ARG(sta->addr));
+ 	key->debugfs.stalink =
+ 		debugfs_create_symlink("station", key->debugfs.dir, buf);
+ }
+
+-- 
 
