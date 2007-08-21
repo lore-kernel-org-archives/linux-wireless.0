@@ -1,140 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from frosty.hhs.nl ([145.52.2.15]:57428 "EHLO frosty.hhs.nl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756723AbXHWLgy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2007 07:36:54 -0400
-Received: from exim (helo=frosty)
-	by frosty.hhs.nl with local-smtp (Exim 4.62)
-	(envelope-from <j.w.r.degoede@hhs.nl>)
-	id 1IOAzc-0001da-7K
-	for linux-wireless@vger.kernel.org; Thu, 23 Aug 2007 13:36:52 +0200
-Received: from [145.52.8.13] (port=50588 helo=hhs.nl)
-	by frosty.hhs.nl with esmtp (Exim 4.62)
-	(envelope-from <j.w.r.degoede@hhs.nl>)
-	id 1IOAzb-0001dK-0Y
-	for linux-wireless@vger.kernel.org; Thu, 23 Aug 2007 13:36:51 +0200
-Message-ID: <46CD6E5F.9040601@hhs.nl>
-Date: Thu, 23 Aug 2007 13:24:15 +0200
-From: Hans de Goede <j.w.r.degoede@hhs.nl>
-MIME-Version: 1.0
-To: Chr <chunkeey@web.de>
-CC: Michael Wu <flamingice@sourmilk.net>,
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35403 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758940AbXHUPOb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Aug 2007 11:14:31 -0400
+Message-Id: <20070821150048.770743000@sipsolutions.net>
+References: <20070821145905.689978000@sipsolutions.net>
+Date: Tue, 21 Aug 2007 16:59:25 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
 	linux-wireless@vger.kernel.org
-Subject: Re: Recent linux-wireless git changes have broken my prism54pci card
-References: <46BFF10B.1090307@hhs.nl> <200708200244.22841.chunkeey@web.de> <46C94844.3080505@hhs.nl> <200708201351.45575.chunkeey@web.de>
-In-Reply-To: <200708201351.45575.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: [PATCH 20/27] mac80211: remove unused ioctls (1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chr wrote:
-> On Monday, 20. August 2007, Hans de Goede wrote:
->> Chr wrote:
->>> On Tuesday, 14. August 2007, Hans de Goede wrote:
->>>
->>> Hans,
->>>
->>> Any updates?
->> Erm, did you not receive my long mail with all kinda logs attached in logs.tar.gz?
->>
-> yes I got the logs... but maybe you haven't seen my reply:
-> http://www.spinics.net/lists/linux-wireless/msg04658.html
-> 
+The ioctls
 
-I indeed didn't see that, probably because I'm not on the list. Here are some 
-answers to your questions:
+ * PRISM2_PARAM_HOST_ENCRYPT
+ * PRISM2_PARAM_HOST_DECRYPT
+ * PRISM2_PARAM_ANTENNA_MODE
+ * PRISM2_PARAM_STAT_TIME
 
- > > > 1. Which p54 firmware do you use? (It "must" be 2.7.0.0 for pci/cardbus)
- > > 2.4.12.0, extracted from the window driver for my card, any later version
- > > will cause the driver to fail to load with: "Error cannot read eeprom!"
+are not used by hostapd or wpa_supplicant.
 
- > uhh, that's a pity... Well, I'm thinking about to get the FW then. The
- > problem is that I don't have the necessary equipment "here" for debugging (I
- > am abroad with my old laptop and a minipci prism54 card...)
- >
- > Anyway, could you please verify that the firmware at
- > http://daemonizer.de/prism54/prism54-fw/fw-softmac/2.4.12.0.arm is the same
- > one you have? Or does it "differ"?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-I'm at work atm, but I did verify that my 2.4.12.0 matched 2.4.12.0 available 
-from the firmware site linked to from the prism54 wiki.
+---
+ include/net/mac80211.h         |    3 --
+ net/mac80211/hostapd_ioctl.h   |    4 ---
+ net/mac80211/ieee80211.c       |   42 -----------------------------------------
+ net/mac80211/ieee80211_i.h     |    2 -
+ net/mac80211/ieee80211_ioctl.c |   28 ---------------------------
+ 5 files changed, 79 deletions(-)
 
-I can verify that your link matches too if you want, but it porbably will.
+--- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-08-21 15:42:23.335923881 +0200
++++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-08-21 15:42:24.645923881 +0200
+@@ -28,8 +28,6 @@ enum {
+ 	PRISM2_PARAM_BEACON_INT = 3,
+ 	PRISM2_PARAM_AP_BRIDGE_PACKETS = 10,
+ 	PRISM2_PARAM_DTIM_PERIOD = 11,
+-	PRISM2_PARAM_HOST_ENCRYPT = 17,
+-	PRISM2_PARAM_HOST_DECRYPT = 18,
+ 	PRISM2_PARAM_IEEE_802_1X = 23,
+ 
+ 	/* Instant802 additions */
+@@ -37,10 +35,8 @@ enum {
+ 	PRISM2_PARAM_PREAMBLE = 1003,
+ 	PRISM2_PARAM_SHORT_SLOT_TIME = 1006,
+ 	PRISM2_PARAM_NEXT_MODE = 1008,
+-	PRISM2_PARAM_ANTENNA_MODE = 1013,
+ 	PRISM2_PARAM_PRIVACY_INVOKED = 1014,
+ 	PRISM2_PARAM_BROADCAST_SSID = 1015,
+-	PRISM2_PARAM_STAT_TIME = 1016,
+ 	PRISM2_PARAM_STA_ANTENNA_SEL = 1017,
+ 	PRISM2_PARAM_TX_POWER_REDUCTION = 1022,
+ 	PRISM2_PARAM_EAPOL = 1023,
+--- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-08-21 15:42:23.375923881 +0200
++++ wireless-dev/net/mac80211/ieee80211_i.h	2007-08-21 15:42:24.645923881 +0200
+@@ -590,8 +590,6 @@ struct ieee80211_local {
+ 
+ 	u32 channel_use;
+ 	u32 channel_use_raw;
+-	u32 stat_time;
+-	struct timer_list stat_timer;
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct work_struct sta_debugfs_add;
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-21 15:42:23.465923881 +0200
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-21 15:42:24.655923881 +0200
+@@ -2113,12 +2113,6 @@ static int ieee80211_ioctl_prism2_param(
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	switch (param) {
+-	case PRISM2_PARAM_HOST_ENCRYPT:
+-	case PRISM2_PARAM_HOST_DECRYPT:
+-		/* TODO: implement these; return success now to prevent
+-		 * hostapd from aborting */
+-		break;
+-
+ 	case PRISM2_PARAM_BEACON_INT:
+ 		local->hw.conf.beacon_int = value;
+ 		if (ieee80211_hw_config(local))
+@@ -2167,15 +2161,6 @@ static int ieee80211_ioctl_prism2_param(
+ 		}
+ 		break;
+ 
+-	case PRISM2_PARAM_STAT_TIME:
+-		if (!local->stat_time && value) {
+-			local->stat_timer.expires = jiffies + HZ * value / 100;
+-			add_timer(&local->stat_timer);
+-		} else if (local->stat_time && !value) {
+-			del_timer_sync(&local->stat_timer);
+-		}
+-		local->stat_time = value;
+-		break;
+ 	case PRISM2_PARAM_SHORT_SLOT_TIME:
+ 		if (value)
+ 			local->hw.conf.flags |= IEEE80211_CONF_SHORT_SLOT_TIME;
+@@ -2195,12 +2180,6 @@ static int ieee80211_ioctl_prism2_param(
+ 		local->next_mode = value;
+ 		break;
+ 
+-	case PRISM2_PARAM_ANTENNA_MODE:
+-		local->hw.conf.antenna_mode = value;
+-		if (ieee80211_hw_config(local))
+-			ret = -EINVAL;
+-		break;
+-
+ 	case PRISM2_PARAM_BROADCAST_SSID:
+ 		if ((value < 0) || (value > 1))
+ 			ret = -EINVAL;
+@@ -2353,9 +2332,6 @@ static int ieee80211_ioctl_get_prism2_pa
+ 		*param = sdata->short_preamble;
+ 		break;
+ 
+-	case PRISM2_PARAM_STAT_TIME:
+-		*param = local->stat_time;
+-		break;
+ 	case PRISM2_PARAM_SHORT_SLOT_TIME:
+ 		*param = !!(local->hw.conf.flags & IEEE80211_CONF_SHORT_SLOT_TIME);
+ 		break;
+@@ -2364,10 +2340,6 @@ static int ieee80211_ioctl_get_prism2_pa
+ 		*param = local->next_mode;
+ 		break;
+ 
+-	case PRISM2_PARAM_ANTENNA_MODE:
+-		*param = local->hw.conf.antenna_mode;
+-		break;
+-
+ 	case PRISM2_PARAM_BROADCAST_SSID:
+ 		*param = !!(local->hw.conf.flags & IEEE80211_CONF_SSID_HIDDEN);
+ 		break;
+--- wireless-dev.orig/include/net/mac80211.h	2007-08-21 15:42:23.615923881 +0200
++++ wireless-dev/include/net/mac80211.h	2007-08-21 15:42:24.655923881 +0200
+@@ -302,9 +302,6 @@ struct ieee80211_conf {
+ 	u8 antenna_sel_tx;
+ 	u8 antenna_sel_rx;
+ 
+-	int antenna_def;
+-	int antenna_mode;
+-
+ 	/* Following five fields are used for IEEE 802.11H */
+ 	unsigned int radar_detect;
+ 	unsigned int spect_mgmt;
+--- wireless-dev.orig/net/mac80211/ieee80211.c	2007-08-21 15:42:23.505923881 +0200
++++ wireless-dev/net/mac80211/ieee80211.c	2007-08-21 15:42:24.665923881 +0200
+@@ -788,42 +788,6 @@ struct dev_mc_list *ieee80211_get_mc_lis
+ }
+ EXPORT_SYMBOL(ieee80211_get_mc_list_item);
+ 
+-static void ieee80211_stat_refresh(unsigned long data)
+-{
+-	struct ieee80211_local *local = (struct ieee80211_local *) data;
+-	struct sta_info *sta;
+-	struct ieee80211_sub_if_data *sdata;
+-
+-	if (!local->stat_time)
+-		return;
+-
+-	/* go through all stations */
+-	read_lock_bh(&local->sta_lock);
+-	list_for_each_entry(sta, &local->sta_list, list) {
+-		sta->channel_use = (sta->channel_use_raw / local->stat_time) /
+-			CHAN_UTIL_PER_10MS;
+-		sta->channel_use_raw = 0;
+-	}
+-	read_unlock_bh(&local->sta_lock);
+-
+-	/* go through all subinterfaces */
+-	read_lock(&local->sub_if_lock);
+-	list_for_each_entry(sdata, &local->sub_if_list, list) {
+-		sdata->channel_use = (sdata->channel_use_raw /
+-				      local->stat_time) / CHAN_UTIL_PER_10MS;
+-		sdata->channel_use_raw = 0;
+-	}
+-	read_unlock(&local->sub_if_lock);
+-
+-	/* hardware interface */
+-	local->channel_use = (local->channel_use_raw /
+-			      local->stat_time) / CHAN_UTIL_PER_10MS;
+-	local->channel_use_raw = 0;
+-
+-	local->stat_timer.expires = jiffies + HZ * local->stat_time / 100;
+-	add_timer(&local->stat_timer);
+-}
+-
+ void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
+ 				 struct sk_buff *skb,
+ 				 struct ieee80211_tx_status *status)
+@@ -1262,9 +1226,6 @@ struct ieee80211_hw *ieee80211_alloc_hw(
+ 	INIT_LIST_HEAD(&local->sub_if_list);
+ 
+ 	INIT_DELAYED_WORK(&local->scan_work, ieee80211_sta_scan_work);
+-	init_timer(&local->stat_timer);
+-	local->stat_timer.function = ieee80211_stat_refresh;
+-	local->stat_timer.data = (unsigned long) local;
+ 	ieee80211_rx_bss_list_init(mdev);
+ 
+ 	sta_info_init(local);
+@@ -1463,9 +1424,6 @@ void ieee80211_unregister_hw(struct ieee
+ 
+ 	rtnl_unlock();
+ 
+-	if (local->stat_time)
+-		del_timer_sync(&local->stat_timer);
+-
+ 	ieee80211_rx_bss_list_deinit(local->mdev);
+ 	ieee80211_clear_tx_pending(local);
+ 	sta_info_stop(local);
 
-
- >
- > > 2. What's your "average" txrate and Link Signal Level / Link Quality with 
-and without the patches.
- > >    (see iwconfig)
- > See attached logs
- >
-Your average speed is in the very low MBit/s and your normal Link Signal Level 
-is only about
-40/100 (~ -80 dbm! ) ?! (The equation is roughly (rssi / 2) - 100 = dbm)
-
-Something is fishy: take a look at the "not working" scan-13-6.  Signal level 
-is about 62/100
-(~ -69 dbm! => much better! Did you move the laptop, or is this high value 
-really reproducible?)
-
-I'm afraid that my reception quality varies wildly. I don't know why, I'll try 
-to configure a different channel on the AP the next time I do some testing.
-
- > > 3. what brand/type of AP do you have?
- > A davolink DV-201AMR its an embedded Linux device using the BCM6348 chipset,
-
-hmm, a embedded linux? do you have a ssh/telnet access to the router? Maybe the
-syslogs / dmesg gives us a "hint" why it won't connect.
-
-I'm afraid its provisioned by my ISP , and I only have access to some crippled 
-web interface, I really need to kick the ISP and ask them to give me the source 
-and stuff, as they are oblidged under the GPL.
-
-(BTW: does your router really only support the weak WEP encryptions?)
-No it also supports 128 bit, but when first settings things up I had trouble 
-getting that working. This has been working reasonably for me, so I didn't 
-change it. The firmware can also do wpa, but the webinterface I'm stuck behind 
-doesn't allow this (GRRRR).
-
- > k. Do you have another wifi card that can perform wifi sniffs? (just as an
- > option)
-
-I can get my hands on a full mac prism pci card, but I'll first try your patches.
-
-----
-
-Replying to other mail in one go:
-
-Chr wrote:
- > I made two patches:
- >
- > the p54-pull-padding.diff should finally fix the rate algorithm for 
-"everyone" and as
- > a bonus for developers: it adds a printk for the firmware revision p54 is using.
- >
-
-Cool I'll give this a try tonight, I really wanted to try it sooner, but ...
-
- > p54-remove-qos.diff (must be applied on top of p54-pull-padding.diff) is 
-_only_ for
- > Hans...  It removes/reverts QoS/WME/WMM/IEEE802.11e features.
- >
-
-Hmm, could this be made conditionally on the firmware revision perhaps? I don't 
-like having to patch my kernel every update, and more importantly, my card is a 
-pretty popular el cheapo sitecom, which are stacked by the dozen by every 
-computershop in town, so it would be nice if this worked out of the box.
-
-I'll try to see if 2.5.2.0 will work with my card, I think I've tried before 
-but you never know, will 2.5.2.0 be good enough for the QoS/WME/WMM/IEEE802.11e 
-features?
-
-Maybe it would be an idea to dump the eeprom from the driver with the 2.4.12.0 
-firmware, and then fake the eeprom in the driver using newer firmware to see if 
-the eeprom reading is the only problem with newer firmware and my card ?
-
-Thanks & Regards,
-
-Hans
-
+-- 
 
