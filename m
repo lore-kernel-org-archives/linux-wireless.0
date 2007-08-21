@@ -1,51 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail7.sea5.speakeasy.net ([69.17.117.9]:60788 "EHLO
-	mail7.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751812AbXHUDKd (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.176]:22314 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757836AbXHUQcM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2007 23:10:33 -0400
-Date: Mon, 20 Aug 2007 20:09:18 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 05/20] mac80211: remove unused ioctls (1)
-Message-ID: <20070821030918.GM1415@jm.kir.nu>
-References: <20070815144920.135826000@sipsolutions.net> <20070815145043.551508000@sipsolutions.net> <20070818040423.GF1415@jm.kir.nu> <1187601005.6090.41.camel@johannes.berg>
+	Tue, 21 Aug 2007 12:32:12 -0400
+Received: by py-out-1112.google.com with SMTP id u77so2661167pyb
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Aug 2007 09:32:11 -0700 (PDT)
+Message-ID: <43e72e890708210932j7684d6c4h8dfe0193f67f1e8f@mail.gmail.com>
+Date: Tue, 21 Aug 2007 12:32:11 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mark islsm list as subscribers-only
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Michael Wu" <flamingice@sourmilk.net>
+In-Reply-To: <1187282653.23489.36.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1187601005.6090.41.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <1187282653.23489.36.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 20, 2007 at 11:10:05AM +0200, Johannes Berg wrote:
-> On Fri, 2007-08-17 at 21:04 -0700, Jouni Malinen wrote:
+On 8/16/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> This is bordering on stupid. I just received a bounce from it because
+> I'm not subscribed:
+>
+> ---begin mail---
+> Sorry, this list is for subscribers only. We previously held incoming
+> mail by non-subscribers for manual approval, but due to the increase
+> in spam this is no longer feasible.
+>
+> If you are seriously attempting to send mail to the islsm developers
+> list, please subscribe to the list and re-send.
+> ---end mail---
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>
+> ---
+> Or just remove it from MAINTAINERS as it obviously doesn't want mail.
+>
+>  MAINTAINERS |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> --- wireless-dev.orig/MAINTAINERS       2007-08-16 18:38:11.713468950 +0200
+> +++ wireless-dev/MAINTAINERS    2007-08-16 18:42:49.783468950 +0200
+> @@ -3037,7 +3037,7 @@ P54 WIRELESS DRIVER
+>  P:     Michael Wu
+>  M:     flamingice@sourmilk.net
+>  L:     linux-wireless@vger.kernel.org
+> -L:     developers@islsm.org
+> +L:     developers@islsm.org (subscribers-only; drops mail but spams you)
+>  W:     http://prism54.org
+>  T:     git kernel.org:/pub/scm/linux/kernel/git/mwu/mac80211-drivers.git
+>  S:     Maintained
+>
 
-> > First one
-> > is useful should one be interested in WFA certifications tests. 
-> 
-> That should, imho, rather live in debugfs. Somebody doing certification
-> tests ought to be able to enable debugfs on their system.
+I think that list was for the net80211 driver, not even sure if its
+used actively for the mac80211 driver.
 
-Sure, that's fine. I was mainly objecting for the part of completely
-removing the code (i.e., not just the ioctl). I don't really care how
-this command goes through, but anyway, I would agree that debugfs would
-be more reasonable location now that it is available and already being
-used elsewhere in mac80211.
-
-> > Scan
-> > flags can be useful in filtering out scan results in cases where there
-> > are huge numbers of APs around. 
-> 
-> Plan has it that the new cfg80211 API for scanning allows scanning for
-> things rather than filtering the results after the fact, e.g. (like
-> iwlist already supports) scanning for a particular SSID. I suppose
-> hardware designs like iwlwifi could make much better use of that than
-> mac80211 itself though.
-
-OK. I was more commenting on part of removing functionality, not on the
-removal of ioctl itself.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+  Luis
