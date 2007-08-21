@@ -1,70 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:33345 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753667AbXHHW0o (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:47480 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759428AbXHUPGT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 18:26:44 -0400
-Date: Wed, 8 Aug 2007 15:26:06 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: arm allmodconfig
-Message-Id: <20070808152606.9ea3010f.akpm@linux-foundation.org>
-In-Reply-To: <200708090013.06846.mb@bu3sch.de>
-References: <20070808145705.756597b0.akpm@linux-foundation.org>
-	<200708090013.06846.mb@bu3sch.de>
+	Tue, 21 Aug 2007 11:06:19 -0400
+Message-Id: <20070821150043.054208000@sipsolutions.net>
+References: <20070821145905.689978000@sipsolutions.net>
+Date: Tue, 21 Aug 2007 16:59:14 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 09/27] mac80211: remove PRISM2_HOSTAPD_SET_GENERIC_INFO_ELEM
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 9 Aug 2007 00:13:06 +0200
-Michael Buesch <mb@bu3sch.de> wrote:
+This is now unused in hostapd/wpa_supplicant, it uses SIOCSIWGENIE.
 
-> On Wednesday 08 August 2007 23:57:05 Andrew Morton wrote:
-> > drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c:4038: error: implicit declaration of function `ssb_pcihost_register'
-> > drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c:4055: error: implicit declaration of function `ssb_pcihost_unregister'
-> 
-> I have no idea how this is possible.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/hostapd_ioctl.h   |    5 -----
+ net/mac80211/ieee80211_ioctl.c |   20 --------------------
+ 2 files changed, 25 deletions(-)
 
-tee hee
+--- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-08-21 14:40:10.365923881 +0200
++++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-08-21 14:40:10.985923881 +0200
+@@ -84,7 +84,6 @@ enum {
+ 	PRISM2_HOSTAPD_GET_DOT11COUNTERSTABLE = 1008,
+ 	PRISM2_HOSTAPD_GET_LOAD_STATS = 1009,
+ 	PRISM2_HOSTAPD_SET_STA_VLAN = 1010,
+-	PRISM2_HOSTAPD_SET_GENERIC_INFO_ELEM = 1011,
+ 	PRISM2_HOSTAPD_SET_CHANNEL_FLAG = 1012,
+ 	PRISM2_HOSTAPD_SET_REGULATORY_DOMAIN = 1013,
+ 	PRISM2_HOSTAPD_SET_TX_QUEUE_PARAMS = 1014,
+@@ -199,10 +198,6 @@ struct prism2_hostapd_param {
+ 			int vlan_id;
+ 		} set_sta_vlan;
+ 		struct {
+-			u8 len;
+-			u8 data[0] ALIGNED;
+-		} set_generic_info_elem;
+-		struct {
+ 			u16 mode; /* MODE_* */
+ 			u16 chan;
+ 			u32 flag;
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-21 14:40:10.375923881 +0200
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-21 14:40:10.985923881 +0200
+@@ -1131,22 +1131,6 @@ static int ieee80211_set_gen_ie(struct n
+ }
+ 
+ 
+-static int
+-ieee80211_ioctl_set_generic_info_elem(struct net_device *dev,
+-				      struct prism2_hostapd_param *param,
+-				      int param_len)
+-{
+-	u8 *pos = param->u.set_generic_info_elem.data;
+-	int left = param_len - ((u8 *) pos - (u8 *) param);
+-	int len = param->u.set_generic_info_elem.len;
+-
+-	if (left < len)
+-		return -EINVAL;
+-
+-	return ieee80211_set_gen_ie(dev, pos, len);
+-}
+-
+-
+ static int ieee80211_ioctl_set_regulatory_domain(struct net_device *dev,
+ 					    struct prism2_hostapd_param *param)
+ {
+@@ -1338,10 +1322,6 @@ static int ieee80211_ioctl_priv_hostapd(
+ 	case PRISM2_HOSTAPD_SET_STA_VLAN:
+ 		ret = ieee80211_ioctl_set_sta_vlan(dev, param);
+ 		break;
+-	case PRISM2_HOSTAPD_SET_GENERIC_INFO_ELEM:
+-		ret = ieee80211_ioctl_set_generic_info_elem(dev, param,
+-							    p->length);
+-		break;
+ 	case PRISM2_HOSTAPD_SET_CHANNEL_FLAG:
+ 		ret = ieee80211_ioctl_set_channel_flag(dev, param);
+ 		break;
 
-> 	select SSB_PCIHOST
-> 	select SSB_DRIVER_PCICORE
+-- 
 
-You used select.  Anything is possible with select.
-
-You can do the below without an arm toolchain:
-
-setenv arch ARM
-make mrproper
-make allmodconfig
-akpm:/usr/src/25> grep BCM .config 
-CONFIG_BT_HCIBCM203X=m
-CONFIG_BCM43XX=m
-CONFIG_BCM43XX_DEBUG=y
-CONFIG_BCM43XX_DMA=y
-CONFIG_BCM43XX_PIO=y
-CONFIG_BCM43XX_DMA_AND_PIO_MODE=y
-# CONFIG_BCM43XX_DMA_MODE is not set
-# CONFIG_BCM43XX_PIO_MODE is not set
-CONFIG_BCM43XX_MAC80211=m
-CONFIG_BCM43XX_MAC80211_PCI=y
-CONFIG_BCM43XX_MAC80211_PCMCIA=y
-CONFIG_BCM43XX_MAC80211_DEBUG=y
-CONFIG_BCM43XX_MAC80211_DMA=y
-CONFIG_BCM43XX_MAC80211_PIO=y
-CONFIG_BCM43XX_MAC80211_DMA_AND_PIO_MODE=y
-# CONFIG_BCM43XX_MAC80211_DMA_MODE is not set
-# CONFIG_BCM43XX_MAC80211_PIO_MODE is not set
-CONFIG_DVB_BCM3510=m
-akpm:/usr/src/25> grep SSB .config
-akpm:/usr/src/25> 
-
-> So what is going on? CONFIG_BCM43XX_MAC80211_PCI must be enabled.
-> Otherwise the func call would be ifdef'ed out. So but if
-> it is enabled, it would SELECT SSB_PCIHOST. Which would enable
-> the declaration and definition of ssb_pcihost_register().
-> What am I missing?
-
-Just stop using select.   It's busted.
