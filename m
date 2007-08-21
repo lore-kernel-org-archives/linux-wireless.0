@@ -1,70 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38190 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:47453 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759510AbXH3PKw (ORCPT
+	with ESMTP id S1758971AbXHUPFq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 11:10:52 -0400
-Subject: [PATCH] mac80211: remove set_key_idx callback
+	Tue, 21 Aug 2007 11:05:46 -0400
+Message-Id: <20070821150041.213734000@sipsolutions.net>
+References: <20070821145905.689978000@sipsolutions.net>
+Date: Tue, 21 Aug 2007 16:59:11 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
-Content-Type: text/plain
-Date: Thu, 30 Aug 2007 17:12:03 +0200
-Message-Id: <1188486723.3978.35.camel@johannes.berg>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Subject: [PATCH 06/27] ralink drivers: remove IEEE80211_HW_HOST_GEN_BEACON  flag
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No existing drivers use this callback, hence there's no telling
-how it might be used. In fact, it is unlikely to be of much use
-as-is because the default key index isn't something that the
-driver can do much with without knowing which interface it was
-for etc. And if it needs the key index it can get it from the
-set_key() callback too, and which key is default is something
-mac80211 needs for key selection but the driver shouldn't need.
+There's no point in setting that flag, the drivers can simply
+call ieee80211_beacon_get() if they need a beacon.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: rt2400-devel@lists.sourceforge.net
+Cc: Ivo van Doorn <ivdoorn@gmail.com>
 
 ---
- include/net/mac80211.h |   13 -------------
- net/mac80211/key.c     |    4 ----
- 2 files changed, 17 deletions(-)
+ drivers/net/wireless/rt2x00/rt2400pci.c |    1 -
+ drivers/net/wireless/rt2x00/rt2500pci.c |    1 -
+ drivers/net/wireless/rt2x00/rt61pci.c   |    1 -
+ 3 files changed, 3 deletions(-)
 
---- wireless-dev.orig/include/net/mac80211.h	2007-08-30 14:35:34.042051253 +0200
-+++ wireless-dev/include/net/mac80211.h	2007-08-30 14:35:35.042051253 +0200
-@@ -648,19 +648,6 @@ struct ieee80211_ops {
- 		       const u8 *local_address, const u8 *address,
- 		       struct ieee80211_key_conf *key);
- 
--	/*
--	 * Set TX key index for default/broadcast keys. This is needed in cases
--	 * where wlan card is doing full WEP/TKIP encapsulation (wep_include_iv
--	 * is not set), in other cases, this function pointer can be set to
--	 * NULL since the IEEE 802.11 module takes care of selecting the key
--	 * index for each TX frame.
--	 *
--	 * TODO: If you use this callback in your driver tell us if you need
--	 *	 any other information from it to make it easier, like the
--	 *	 key_conf instead.
--	 */
--	int (*set_key_idx)(struct ieee80211_hw *hw, int idx);
--
- 	/* Enable/disable IEEE 802.1X. This item requests wlan card to pass
- 	 * unencrypted EAPOL-Key frames even when encryption is configured.
- 	 * If the wlan card does not require such a configuration, this
---- wireless-dev.orig/net/mac80211/key.c	2007-08-30 14:35:32.122051253 +0200
-+++ wireless-dev/net/mac80211/key.c	2007-08-30 14:35:35.042051253 +0200
-@@ -250,10 +250,6 @@ void ieee80211_set_default_key(struct ie
- 
- 		if (sdata->default_key)
- 			ieee80211_debugfs_key_add_default(sdata);
--
--		if (sdata->local->ops->set_key_idx)
--			sdata->local->ops->set_key_idx(
--				local_to_hw(sdata->local), idx);
- 	}
- }
- 
+--- wireless-dev.orig/drivers/net/wireless/rt2x00/rt2400pci.c	2007-08-21 16:25:25.155923881 +0200
++++ wireless-dev/drivers/net/wireless/rt2x00/rt2400pci.c	2007-08-21 16:25:27.765923881 +0200
+@@ -1448,7 +1448,6 @@ static void rt2400pci_probe_hw_mode(stru
+ 	 * Initialize all hw fields.
+ 	 */
+ 	rt2x00dev->hw->flags =
+-	    IEEE80211_HW_HOST_GEN_BEACON |
+ 	    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 	    IEEE80211_HW_DATA_NULLFUNC_ACK |
+ 	    IEEE80211_HW_NO_TKIP_WMM_HWACCEL |
+--- wireless-dev.orig/drivers/net/wireless/rt2x00/rt2500pci.c	2007-08-21 16:25:25.165923881 +0200
++++ wireless-dev/drivers/net/wireless/rt2x00/rt2500pci.c	2007-08-21 16:25:27.765923881 +0200
+@@ -1746,7 +1746,6 @@ static void rt2500pci_probe_hw_mode(stru
+ 	 * Initialize all hw fields.
+ 	 */
+ 	rt2x00dev->hw->flags =
+-	    IEEE80211_HW_HOST_GEN_BEACON |
+ 	    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 	    IEEE80211_HW_DATA_NULLFUNC_ACK |
+ 	    IEEE80211_HW_NO_TKIP_WMM_HWACCEL |
+--- wireless-dev.orig/drivers/net/wireless/rt2x00/rt61pci.c	2007-08-21 16:25:25.175923881 +0200
++++ wireless-dev/drivers/net/wireless/rt2x00/rt61pci.c	2007-08-21 16:25:27.765923881 +0200
+@@ -2119,7 +2119,6 @@ static void rt61pci_probe_hw_mode(struct
+ 	 * Initialize all hw fields.
+ 	 */
+ 	rt2x00dev->hw->flags =
+-	    IEEE80211_HW_HOST_GEN_BEACON |
+ 	    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 	    IEEE80211_HW_DATA_NULLFUNC_ACK |
+ 	    IEEE80211_HW_NO_TKIP_WMM_HWACCEL |
 
+-- 
 
