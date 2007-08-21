@@ -1,61 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24051 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754468AbXHQFdL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2007 01:33:11 -0400
-Subject: [PATCH] Add iwlwifi wireless drivers (resend)
-From: Zhu Yi <yi.zhu@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W.Linville" <linville@tuxdriver.com>,
-	Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>
-Content-Type: text/plain
-Date: Fri, 17 Aug 2007 13:28:56 +0800
-Message-Id: <1187328536.5763.137.camel@debian.sh.intel.com>
-Mime-Version: 1.0
+Received: from mail7.sea5.speakeasy.net ([69.17.117.9]:60788 "EHLO
+	mail7.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751812AbXHUDKd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Aug 2007 23:10:33 -0400
+Date: Mon, 20 Aug 2007 20:09:18 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 05/20] mac80211: remove unused ioctls (1)
+Message-ID: <20070821030918.GM1415@jm.kir.nu>
+References: <20070815144920.135826000@sipsolutions.net> <20070815145043.551508000@sipsolutions.net> <20070818040423.GF1415@jm.kir.nu> <1187601005.6090.41.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1187601005.6090.41.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[ My previous post doesn't show up on the list for a whole day. So I
-resend it now. I guess the an 800k mail is too big for the list... ]
+On Mon, Aug 20, 2007 at 11:10:05AM +0200, Johannes Berg wrote:
+> On Fri, 2007-08-17 at 21:04 -0700, Jouni Malinen wrote:
 
-This patch (against 2.6.23-rc3) adds the mac80211 based
-wireless drivers for the Intel PRO/Wireless 3945ABG/BG Network
-Connection and Intel Wireless WiFi Link AGN (4965) adapters. I hope it
-can be merged into 2.6.24 kernel. You comments are also welcome!
+> > First one
+> > is useful should one be interested in WFA certifications tests. 
+> 
+> That should, imho, rather live in debugfs. Somebody doing certification
+> tests ought to be able to enable debugfs on their system.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- MAINTAINERS                         |   10 +
- drivers/net/wireless/Kconfig        |  129 +
- drivers/net/wireless/Makefile       |   29 +
- drivers/net/wireless/iwl-3945-hw.h  |  117 +
- drivers/net/wireless/iwl-3945-rs.c  |  985 ++++
- drivers/net/wireless/iwl-3945-rs.h  |  221 +
- drivers/net/wireless/iwl-3945.c     | 2286 +++++++++
- drivers/net/wireless/iwl-3945.h     |   60 +
- drivers/net/wireless/iwl-4965-hw.h  |  954 ++++
- drivers/net/wireless/iwl-4965-rs.c  | 2162 ++++++++
- drivers/net/wireless/iwl-4965-rs.h  |  286 ++
- drivers/net/wireless/iwl-4965.c     | 4764 +++++++++++++++++
- drivers/net/wireless/iwl-4965.h     |  368 ++
- drivers/net/wireless/iwl-base.c     | 9603
-+++++++++++++++++++++++++++++++++++
- drivers/net/wireless/iwl-channel.h  |  163 +
- drivers/net/wireless/iwl-commands.h | 1515 ++++++
- drivers/net/wireless/iwl-debug.h    |  149 +
- drivers/net/wireless/iwl-eeprom.h   |  336 ++
- drivers/net/wireless/iwl-helpers.h  |  255 +
- drivers/net/wireless/iwl-hw.h       |  606 +++
- drivers/net/wireless/iwl-io.h       |  486 ++
- drivers/net/wireless/iwl-priv.h     |  305 ++
- drivers/net/wireless/iwl-spectrum.h |   91 +
- drivers/net/wireless/iwlwifi.h      |  715 +++
+Sure, that's fine. I was mainly objecting for the part of completely
+removing the code (i.e., not just the ioctl). I don't really care how
+this command goes through, but anyway, I would agree that debugfs would
+be more reasonable location now that it is available and already being
+used elsewhere in mac80211.
 
+> > Scan
+> > flags can be useful in filtering out scan results in cases where there
+> > are huge numbers of APs around. 
+> 
+> Plan has it that the new cfg80211 API for scanning allows scanning for
+> things rather than filtering the results after the fact, e.g. (like
+> iwlist already supports) scanning for a particular SSID. I suppose
+> hardware designs like iwlwifi could make much better use of that than
+> mac80211 itself though.
 
-Please find the patch (and the original mail) from:
+OK. I was more commenting on part of removing functionality, not on the
+removal of ioctl itself.
 
-http://intellinuxwireless.org/iwlwifi/v4-Add-iwlwifi-wireless-drivers.patch
-
-
-Thanks,
--yi
+-- 
+Jouni Malinen                                            PGP id EFC895FA
