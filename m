@@ -1,47 +1,290 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hall.aurel32.net ([88.191.38.19]:56324 "EHLO hall.aurel32.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753862AbXHBKY2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 06:24:28 -0400
-Message-ID: <46B1B0CE.7010109@aurel32.net>
-Date: Thu, 02 Aug 2007 12:24:14 +0200
-From: Aurelien Jarno <aurelien@aurel32.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH] ssb-chipcommon: Add function to get processor clock
-References: <200708010011.56753.mb@bu3sch.de> <200708020009.50374.mb@bu3sch.de> <46B19FFE.2010900@aurel32.net> <200708021140.25676.mb@bu3sch.de>
-In-Reply-To: <200708021140.25676.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58307 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758716AbXHUPHT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Aug 2007 11:07:19 -0400
+Message-Id: <20070821150049.353781000@sipsolutions.net>
+References: <20070821145905.689978000@sipsolutions.net>
+Date: Tue, 21 Aug 2007 16:59:26 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 21/27] mac80211: remove unused ioctls (2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch a =E9crit :
-> On Thursday 02 August 2007 11:12:30 Aurelien Jarno wrote:
->> Yep the merge of the bcm47xx is on my TODO list, but I want to finis=
-h
->> the SSB parts first. I hope to finish that before the end of this we=
-ek-end.
->>
->> About the bcm47xx arch code, my plan is to merge first a very simple
->> version that allow the machine to boot, but without support for CFE.
->>
->=20
-> There are also mipscore patches in openwrt that need to get merged up=
-stream.
-> Do you take care of these, too?
+The ioctls
 
-Yep I am currently working on that.
+ * PRISM2_PARAM_STA_ANTENNA_SEL
+ * PRISM2_PARAM_TX_POWER_REDUCTION
+ * PRISM2_PARAM_KEY_INDEX
+ * PRISM2_PARAM_DEFAULT_WEP_ONLY
+ * PRISM2_PARAM_ALLOW_BROADCAST_ALWAYS
 
---=20
-  .''`.  Aurelien Jarno	            | GPG: 1024D/F1BCDB73
- : :' :  Debian developer           | Electrical Engineer
- `. `'   aurel32@debian.org         | aurelien@aurel32.net
-   `-    people.debian.org/~aurel32 | www.aurel32.net
+are not used by hostapd or wpa_supplicant.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/iwl-4965-rs.c |    2 -
+ include/net/mac80211.h             |    1 
+ net/mac80211/debugfs.c             |    5 ---
+ net/mac80211/hostapd_ioctl.h       |    5 ---
+ net/mac80211/ieee80211_i.h         |   11 ------
+ net/mac80211/ieee80211_ioctl.c     |   59 -------------------------------------
+ net/mac80211/rc80211_simple.c      |    8 -----
+ net/mac80211/sta_info.h            |    4 --
+ net/mac80211/tx.c                  |    3 -
+ 9 files changed, 98 deletions(-)
+
+--- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-08-21 15:42:24.645923881 +0200
++++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-08-21 15:48:54.905923881 +0200
+@@ -37,14 +37,9 @@ enum {
+ 	PRISM2_PARAM_NEXT_MODE = 1008,
+ 	PRISM2_PARAM_PRIVACY_INVOKED = 1014,
+ 	PRISM2_PARAM_BROADCAST_SSID = 1015,
+-	PRISM2_PARAM_STA_ANTENNA_SEL = 1017,
+-	PRISM2_PARAM_TX_POWER_REDUCTION = 1022,
+ 	PRISM2_PARAM_EAPOL = 1023,
+ 	PRISM2_PARAM_KEY_TX_RX_THRESHOLD = 1024,
+-	PRISM2_PARAM_KEY_INDEX = 1025,
+-	PRISM2_PARAM_DEFAULT_WEP_ONLY = 1026,
+ 	PRISM2_PARAM_WIFI_WME_NOACK_TEST = 1033,
+-	PRISM2_PARAM_ALLOW_BROADCAST_ALWAYS = 1034,
+ 	PRISM2_PARAM_SCAN_FLAGS = 1035,
+ 	PRISM2_PARAM_HW_MODES = 1036,
+ 	PRISM2_PARAM_CREATE_IBSS = 1037,
+--- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-08-21 15:42:24.645923881 +0200
++++ wireless-dev/net/mac80211/ieee80211_i.h	2007-08-21 15:48:54.915923881 +0200
+@@ -595,12 +595,6 @@ struct ieee80211_local {
+ 	struct work_struct sta_debugfs_add;
+ #endif
+ 
+-	enum {
+-		STA_ANTENNA_SEL_AUTO = 0,
+-		STA_ANTENNA_SEL_SW_CTRL = 1,
+-		STA_ANTENNA_SEL_SW_CTRL_DEBUG = 2
+-	} sta_antenna_sel;
 -
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ #ifdef CONFIG_MAC80211_DEBUG_COUNTERS
+ 	/* TX/RX handler statistics */
+ 	unsigned int tx_handlers_drop;
+@@ -636,10 +630,6 @@ struct ieee80211_local {
+ 	int total_ps_buffered; /* total number of all buffered unicast and
+ 				* multicast packets for power saving stations
+ 				*/
+-	int allow_broadcast_always; /* whether to allow TX of broadcast frames
+-				     * even when there are no associated STAs
+-				     */
+-
+ 	int wifi_wme_noack_test;
+ 	unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
+ 
+@@ -667,7 +657,6 @@ struct ieee80211_local {
+ 		struct dentry *mode;
+ 		struct dentry *wep_iv;
+ 		struct dentry *rate_ctrl_alg;
+-		struct dentry *tx_power_reduction;
+ 		struct dentry *modes;
+ 		struct dentry *statistics;
+ 		struct local_debugfsdentries_statsdentries {
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-21 15:42:24.655923881 +0200
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-21 15:48:54.915923881 +0200
+@@ -2189,17 +2189,6 @@ static int ieee80211_ioctl_prism2_param(
+ 			local->hw.conf.flags &= ~IEEE80211_CONF_SSID_HIDDEN;
+ 		break;
+ 
+-	case PRISM2_PARAM_STA_ANTENNA_SEL:
+-		local->sta_antenna_sel = value;
+-		break;
+-
+-	case PRISM2_PARAM_TX_POWER_REDUCTION:
+-		if (value < 0)
+-			ret = -EINVAL;
+-		else
+-			local->hw.conf.tx_power_reduction = value;
+-		break;
+-
+ 	case PRISM2_PARAM_EAPOL:
+ 		sdata->eapol = value;
+ 		break;
+@@ -2208,27 +2197,10 @@ static int ieee80211_ioctl_prism2_param(
+ 		local->key_tx_rx_threshold = value;
+ 		break;
+ 
+-	case PRISM2_PARAM_KEY_INDEX:
+-		if (value < 0 || value >= NUM_DEFAULT_KEYS)
+-			ret = -EINVAL;
+-		else if (!sdata->keys[value])
+-			ret = -ENOENT;
+-		else
+-			sdata->default_key = sdata->keys[value];
+-		break;
+-
+-	case PRISM2_PARAM_DEFAULT_WEP_ONLY:
+-		ret = ieee80211_ioctl_default_wep_only(local, value);
+-		break;
+-
+ 	case PRISM2_PARAM_WIFI_WME_NOACK_TEST:
+ 		local->wifi_wme_noack_test = value;
+ 		break;
+ 
+-	case PRISM2_PARAM_ALLOW_BROADCAST_ALWAYS:
+-		local->allow_broadcast_always = value;
+-		break;
+-
+ 	case PRISM2_PARAM_SCAN_FLAGS:
+ 		local->scan_flags = value;
+ 		break;
+@@ -2344,14 +2316,6 @@ static int ieee80211_ioctl_get_prism2_pa
+ 		*param = !!(local->hw.conf.flags & IEEE80211_CONF_SSID_HIDDEN);
+ 		break;
+ 
+-	case PRISM2_PARAM_STA_ANTENNA_SEL:
+-		*param = local->sta_antenna_sel;
+-		break;
+-
+-	case PRISM2_PARAM_TX_POWER_REDUCTION:
+-		*param = local->hw.conf.tx_power_reduction;
+-		break;
+-
+ 	case PRISM2_PARAM_EAPOL:
+ 		*param = sdata->eapol;
+ 		break;
+@@ -2360,33 +2324,10 @@ static int ieee80211_ioctl_get_prism2_pa
+ 		*param = local->key_tx_rx_threshold;
+ 		break;
+ 
+-	case PRISM2_PARAM_KEY_INDEX:
+-		if (!sdata->default_key)
+-			ret = -ENOENT;
+-		else if (sdata->default_key == sdata->keys[0])
+-			*param = 0;
+-		else if (sdata->default_key == sdata->keys[1])
+-			*param = 1;
+-		else if (sdata->default_key == sdata->keys[2])
+-			*param = 2;
+-		else if (sdata->default_key == sdata->keys[3])
+-			*param = 3;
+-		else
+-			ret = -ENOENT;
+-		break;
+-
+-	case PRISM2_PARAM_DEFAULT_WEP_ONLY:
+-		*param = local->default_wep_only;
+-		break;
+-
+ 	case PRISM2_PARAM_WIFI_WME_NOACK_TEST:
+ 		*param = local->wifi_wme_noack_test;
+ 		break;
+ 
+-	case PRISM2_PARAM_ALLOW_BROADCAST_ALWAYS:
+-		*param = local->allow_broadcast_always;
+-		break;
+-
+ 	case PRISM2_PARAM_SCAN_FLAGS:
+ 		*param = local->scan_flags;
+ 		break;
+--- wireless-dev.orig/net/mac80211/rc80211_simple.c	2007-08-21 15:34:48.205923881 +0200
++++ wireless-dev/net/mac80211/rc80211_simple.c	2007-08-21 15:48:54.925923881 +0200
+@@ -147,14 +147,6 @@ static void rate_control_simple_tx_statu
+ 	srctrl = sta->rate_ctrl_priv;
+ 	srctrl->tx_num_xmit++;
+ 	if (status->excessive_retries) {
+-		sta->antenna_sel_tx = sta->antenna_sel_tx == 1 ? 2 : 1;
+-		sta->antenna_sel_rx = sta->antenna_sel_rx == 1 ? 2 : 1;
+-		if (local->sta_antenna_sel == STA_ANTENNA_SEL_SW_CTRL_DEBUG) {
+-			printk(KERN_DEBUG "%s: " MAC_FMT " TX antenna --> %d "
+-			       "RX antenna --> %d (@%lu)\n",
+-			       dev->name, MAC_ARG(hdr->addr1),
+-			       sta->antenna_sel_tx, sta->antenna_sel_rx, jiffies);
+-		}
+ 		srctrl->tx_num_failures++;
+ 		sta->tx_retry_failed++;
+ 		sta->tx_num_consecutive_failures++;
+--- wireless-dev.orig/net/mac80211/tx.c	2007-08-21 15:34:48.225923881 +0200
++++ wireless-dev/net/mac80211/tx.c	2007-08-21 15:48:54.925923881 +0200
+@@ -243,7 +243,6 @@ ieee80211_tx_h_check_assoc(struct ieee80
+ 	} else {
+ 		if (unlikely((tx->fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
+ 			     tx->local->num_sta == 0 &&
+-			     !tx->local->allow_broadcast_always &&
+ 			     tx->sdata->type != IEEE80211_IF_TYPE_IBSS)) {
+ 			/*
+ 			 * No associated STAs - no need to send multicast
+@@ -959,8 +958,6 @@ __ieee80211_tx_prepare(struct ieee80211_
+ 	 */
+ 	control->power_level = local->hw.conf.power_level;
+ 	control->antenna_sel_tx = local->hw.conf.antenna_sel_tx;
+-	if (local->sta_antenna_sel != STA_ANTENNA_SEL_AUTO && tx->sta)
+-		control->antenna_sel_tx = tx->sta->antenna_sel_tx;
+ 
+ 	/* process and remove the injection radiotap header */
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+--- wireless-dev.orig/net/mac80211/sta_info.h	2007-08-21 15:34:48.265923881 +0200
++++ wireless-dev/net/mac80211/sta_info.h	2007-08-21 15:48:54.925923881 +0200
+@@ -91,10 +91,6 @@ struct sta_info {
+ 	int channel_use;
+ 	int channel_use_raw;
+ 
+-	u8 antenna_sel_tx;
+-	u8 antenna_sel_rx;
+-
+-
+ 	int key_idx_compression; /* key table index for compression and TX
+ 				  * filtering; used only if sta->key is not
+ 				  * set */
+--- wireless-dev.orig/include/net/mac80211.h	2007-08-21 15:42:24.655923881 +0200
++++ wireless-dev/include/net/mac80211.h	2007-08-21 15:48:54.945923881 +0200
+@@ -296,7 +296,6 @@ struct ieee80211_conf {
+ 	u8 power_level;			/* transmit power limit for current
+ 					 * regulatory domain; in dBm */
+ 	u8 antenna_max;			/* maximum antenna gain */
+-	short tx_power_reduction; /* in 0.1 dBm */
+ 
+ 	/* 0 = default/diversity, 1 = Ant0, 2 = Ant1 */
+ 	u8 antenna_sel_tx;
+--- wireless-dev.orig/net/mac80211/debugfs.c	2007-08-21 15:34:48.295923881 +0200
++++ wireless-dev/net/mac80211/debugfs.c	2007-08-21 15:48:54.955923881 +0200
+@@ -124,9 +124,6 @@ DEBUGFS_READONLY_FILE(mode, 20, "%s",
+ 		      ieee80211_mode_str(local->hw.conf.phymode));
+ DEBUGFS_READONLY_FILE(wep_iv, 20, "%#06x",
+ 		      local->wep_iv & 0xffffff);
+-DEBUGFS_READONLY_FILE(tx_power_reduction, 20, "%d.%d dBm",
+-		      local->hw.conf.tx_power_reduction / 10,
+-		      local->hw.conf.tx_power_reduction % 10);
+ DEBUGFS_READ(rate_ctrl_alg, 100, "%s",
+ 	     local->rate_ctrl ? local->rate_ctrl->ops->name : "<unset>");
+ 
+@@ -347,7 +344,6 @@ void debugfs_hw_add(struct ieee80211_loc
+ 	DEBUGFS_ADD(total_ps_buffered);
+ 	DEBUGFS_ADD(mode);
+ 	DEBUGFS_ADD(wep_iv);
+-	DEBUGFS_ADD(tx_power_reduction);
+ 	DEBUGFS_ADD_MODE(rate_ctrl_alg, 0644);
+ 	DEBUGFS_ADD(modes);
+ 
+@@ -413,7 +409,6 @@ void debugfs_hw_del(struct ieee80211_loc
+ 	DEBUGFS_DEL(total_ps_buffered);
+ 	DEBUGFS_DEL(mode);
+ 	DEBUGFS_DEL(wep_iv);
+-	DEBUGFS_DEL(tx_power_reduction);
+ 	DEBUGFS_DEL(rate_ctrl_alg);
+ 	DEBUGFS_DEL(modes);
+ 
+--- wireless-dev.orig/drivers/net/wireless/iwl-4965-rs.c	2007-08-21 15:34:48.405923881 +0200
++++ wireless-dev/drivers/net/wireless/iwl-4965-rs.c	2007-08-21 15:48:54.955923881 +0200
+@@ -1661,8 +1661,6 @@ out:
+ 	    (lq_data->phymode == (u8) MODE_ATHEROS_TURBO))
+ 		sta->txrate = i - IWL_FIRST_OFDM_RATE;
+ 
+-	sta->antenna_sel_tx = tbl->lq_type;
+-
+ 	return;
+ }
+ 
+
+-- 
+
