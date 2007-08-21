@@ -1,78 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:59229 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60568 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758626AbXHPPc0 (ORCPT
+	with ESMTP id S1755033AbXHUQUw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2007 11:32:26 -0400
-Subject: Re: Kernel BUG when using ad-hoc mode in rt2x00
+	Tue, 21 Aug 2007 12:20:52 -0400
+Received: from [131.234.209.34] (helo=[131.234.237.45])
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.67)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1INWTJ-0008Gg-4n
+	for linux-wireless@vger.kernel.org; Tue, 21 Aug 2007 17:20:49 +0100
+Message-Id: <20070821161942.159647000@sipsolutions.net>
+References: <20070821161845.165557000@sipsolutions.net>
+Date: Tue, 21 Aug 2007 18:18:46 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Adam Baker <linux@baker-net.org.uk>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200708161625.44057.linux@baker-net.org.uk>
-References: <200708082324.17186.linux@baker-net.org.uk>
-	 <200708152249.09948.linux@baker-net.org.uk>
-	 <1187272082.5141.53.camel@johannes.berg>
-	 <200708161625.44057.linux@baker-net.org.uk>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-j56HuVryeBYzODvXs8VM"
-Date: Thu, 16 Aug 2007 17:35:08 +0200
-Message-Id: <1187278509.23489.24.camel@johannes.berg>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 1/2] mac80211: allow drivers to indicate failed FCS/PLCP  checksum
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch allows drivers to indicate bad FCS/PLCP CRC to the stack and
+have the stack drop packets like that except for monitor interfaces.
 
---=-j56HuVryeBYzODvXs8VM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Changes since v1:
+ * filter bad frames early in the RX code and don't count
+   them nor try to get a STA for them
 
-On Thu, 2007-08-16 at 16:25 +0100, Adam Baker wrote:
+ include/net/mac80211.h |    2 ++
+ net/mac80211/rx.c      |   31 ++++++++++++++++++++++++++++---
+ 2 files changed, 30 insertions(+), 3 deletions(-)
 
-> I'm starting to think that scanning from the remote device always causes =
-a crash
-> if done just after the iwconfig essid and never does if left for a while =
-first
-> (~ 1 minute). Scanning on the local machine I've usually done when the sc=
-an and
-> subsequent connect from the remote machine has succeeded. I'm not yet sur=
-e if
-> that is a necessary condition for the crash.
+--- wireless-dev.orig/include/net/mac80211.h	2007-08-21 16:26:46.405923881 +0200
++++ wireless-dev/include/net/mac80211.h	2007-08-21 16:28:19.015923881 +0200
+@@ -243,6 +243,8 @@ struct ieee80211_rx_status {
+ #define RX_FLAG_MMIC_ERROR	(1<<0)
+ #define RX_FLAG_DECRYPTED	(1<<1)
+ #define RX_FLAG_RADIOTAP	(1<<2)
++#define RX_FLAG_FAILED_FCS_CRC	(1<<3)
++#define RX_FLAG_FAILED_PLCP_CRC	(1<<4)
+ 	int flag;
+ };
+ 
+--- wireless-dev.orig/net/mac80211/rx.c	2007-08-21 16:26:46.415923881 +0200
++++ wireless-dev/net/mac80211/rx.c	2007-08-21 16:28:19.015923881 +0200
+@@ -154,6 +154,7 @@ ieee80211_rx_monitor(struct net_device *
+ 		__le16 chan_freq;
+ 		__le16 chan_flags;
+ 		u8 antsignal;
++		__le16 rx_flags;
+ 	} __attribute__ ((packed)) *rthdr;
+ 
+ 	skb->dev = dev;
+@@ -178,12 +179,21 @@ ieee80211_rx_monitor(struct net_device *
+ 		cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
+ 			    (1 << IEEE80211_RADIOTAP_RATE) |
+ 			    (1 << IEEE80211_RADIOTAP_CHANNEL) |
+-			    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL));
++			    (1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL) |
++			    (1 << IEEE80211_RADIOTAP_RX_FLAGS));
+ 	rthdr->flags = local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS ?
+ 		       IEEE80211_RADIOTAP_F_FCS : 0;
++
++	/* FIXME: when radiotap gets a 'bad PLCP' flag use it here */
++	rthdr->rx_flags = 0;
++	if (status->flag &
++	    (RX_FLAG_FAILED_FCS_CRC | RX_FLAG_FAILED_PLCP_CRC))
++		rthdr->rx_flags |= cpu_to_le16(IEEE80211_RADIOTAP_F_RX_BADFCS);
++
+ 	rate = ieee80211_get_rate(local, status->phymode, status->rate);
+ 	if (rate)
+ 		rthdr->rate = rate->rate / 5;
++
+ 	rthdr->chan_freq = cpu_to_le16(status->freq);
+ 	rthdr->chan_flags =
+ 		status->phymode == MODE_IEEE80211A ?
+@@ -211,6 +221,15 @@ ieee80211_rx_h_monitor(struct ieee80211_
+ 		return TXRX_QUEUED;
+ 	}
+ 
++	/*
++	 * Drop frames with failed FCS/PLCP checksums here, they are only
++	 * relevant for monitor mode, the rest of the stack should never
++	 * see them.
++	 */
++	if (rx->u.rx.status->flag &
++	    (RX_FLAG_FAILED_FCS_CRC | RX_FLAG_FAILED_PLCP_CRC))
++		return TXRX_DROP;
++
+ 	if (rx->u.rx.status->flag & RX_FLAG_RADIOTAP)
+ 		skb_pull(rx->skb, ieee80211_get_radiotap_len(rx->skb->data));
+ 
+@@ -1498,6 +1517,7 @@ void __ieee80211_rx(struct ieee80211_hw 
+ 	struct ieee80211_sub_if_data *prev = NULL;
+ 	struct sk_buff *skb_new;
+ 	u8 *bssid;
++	int bogon;
+ 
+ 	if (status->flag & RX_FLAG_RADIOTAP) {
+ 		radiotap_len = ieee80211_get_radiotap_len(skb->data);
+@@ -1512,10 +1532,15 @@ void __ieee80211_rx(struct ieee80211_hw 
+ 	rx.u.rx.status = status;
+ 	rx.fc = skb->len >= 2 ? le16_to_cpu(hdr->frame_control) : 0;
+ 	type = rx.fc & IEEE80211_FCTL_FTYPE;
+-	if (type == IEEE80211_FTYPE_DATA || type == IEEE80211_FTYPE_MGMT)
++
++	bogon = status->flag & (RX_FLAG_FAILED_FCS_CRC |
++				RX_FLAG_FAILED_PLCP_CRC);
++
++	if (!bogon && (type == IEEE80211_FTYPE_DATA ||
++		       type == IEEE80211_FTYPE_MGMT))
+ 		local->dot11ReceivedFragmentCount++;
+ 
+-	if (skb->len >= 16) {
++	if (!bogon && skb->len >= 16) {
+ 		sta = rx.sta = sta_info_get(local, hdr->addr2);
+ 		if (sta) {
+ 			rx.dev = rx.sta->dev;
 
-To be fair, I managed to reproduce it once with b43 but not again. Maybe
-this weird timing behaviour was the cause of that.
-
-> I've added some printk's as you suggested, the log is attached. I
-> haven't yet
-> managed to capture this on the serial port so I can't yet guarantee
-> that there
-> aren't any calls that didn't get logged just as it crashed - I'll keep
-> trying.
-
-Ok. I'll look through.
-
-> Aug 16 15:53:34 gromit kernel: [  633.972956] wmaster0: Entering ieee8021=
-1_tx_h_multicast_ps_buf(), hw.flags 1746
-> Aug 16 15:53:34 gromit kernel: [  633.972960] Leaving ieee80211_tx_h_mult=
-icast_ps_buf
-
-Hm. I thought it crashed in there. Could you put printk's into the two
-functions called from this, and then switch to a console and tell me
-which one shows up last? Elevate the printk priority to something like
-KERN_ERR or change your console to show all messages.
-
-johannes
-
---=-j56HuVryeBYzODvXs8VM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGxG6s/ETPhpq3jKURArAmAJ9jQUMR3hZu7wQ/u5LCelTwStndewCeJ7J+
-USbwcWge3PTsqxjpodYswcc=
-=jWd9
------END PGP SIGNATURE-----
-
---=-j56HuVryeBYzODvXs8VM--
+-- 
 
