@@ -1,143 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:50351
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765517AbXHNRA5 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:58388 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758088AbXHUPJW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2007 13:00:57 -0400
-Message-Id: <20070814165748.319144000@bu3sch.de>
-References: <20070814165746.863593000@bu3sch.de>
-Date: Tue, 14 Aug 2007 18:57:49 +0200
-From: Michael Buesch <mb@bu3sch.de>
+	Tue, 21 Aug 2007 11:09:22 -0400
+Message-Id: <20070821150049.932962000@sipsolutions.net>
+References: <20070821145905.689978000@sipsolutions.net>
+Date: Tue, 21 Aug 2007 16:59:27 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Aurelien Jarno <aurelien@aurel32.net>
-Subject: [patch 3/7] ssb: Add GPIO support to Chip Common and PCI core drivers
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 22/27] mac80211: remove unused ioctls (3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Aurelien Jarno <aurelien@aurel32.net>
+The ioctls
+ * PRISM2_PARAM_RADAR_DETECT
+ * PRISM2_PARAM_SPECTRUM_MGMT
+ * PRISM2_HOSTAPD_MLME
+ * PRISM2_HOSTAPD_SET_RADAR_PARAMS
+ * PRISM2_HOSTAPD_SET_QUIET_PARAMS
 
-The patch below adds a functions to Chip Common and PCI core drivers to
-access the GPIO lines.
+are not used by hostapd or wpa_supplicant,
 
-Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+ * PRISM2_HOSTAPD_WPA_TRIGGER
 
-Index: ssb-merge-new/drivers/ssb/driver_chipcommon.c
-===================================================================
---- ssb-merge-new.orig/drivers/ssb/driver_chipcommon.c	2007-08-11 20:25:54.000000000 +0200
-+++ ssb-merge-new/drivers/ssb/driver_chipcommon.c	2007-08-13 14:16:39.000000000 +0200
-@@ -39,6 +39,14 @@ static inline void chipco_write32(struct
- 	ssb_write32(cc->dev, offset, value);
- }
+was not in use any more since the wpa trigger moved into
+debugfs.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/mac80211.h         |   13 --------
+ net/mac80211/debugfs.c         |    4 --
+ net/mac80211/hostapd_ioctl.h   |   24 --------------
+ net/mac80211/ieee80211_i.h     |    1 
+ net/mac80211/ieee80211_ioctl.c |   66 -----------------------------------------
+ 5 files changed, 108 deletions(-)
+
+--- wireless-dev.orig/net/mac80211/debugfs.c	2007-08-21 15:48:54.955923881 +0200
++++ wireless-dev/net/mac80211/debugfs.c	2007-08-21 15:53:42.255923881 +0200
+@@ -100,8 +100,6 @@ DEBUGFS_READONLY_FILE(channel, 20, "%d",
+ 		      local->hw.conf.channel);
+ DEBUGFS_READONLY_FILE(frequency, 20, "%d",
+ 		      local->hw.conf.freq);
+-DEBUGFS_READONLY_FILE(radar_detect, 20, "%d",
+-		      local->hw.conf.radar_detect);
+ DEBUGFS_READONLY_FILE(antenna_sel_tx, 20, "%d",
+ 		      local->hw.conf.antenna_sel_tx);
+ DEBUGFS_READONLY_FILE(antenna_sel_rx, 20, "%d",
+@@ -332,7 +330,6 @@ void debugfs_hw_add(struct ieee80211_loc
  
-+static inline void chipco_write32_masked(struct ssb_chipcommon *cc, u16 offset,
-+					 u32 mask, u32 value)
-+{
-+	value &= mask;
-+	value |= chipco_read32(cc, offset) & ~mask;
-+	chipco_write32(cc, offset, value);
-+}
-+
- void ssb_chipco_set_clockmode(struct ssb_chipcommon *cc,
- 			      enum ssb_clkmode mode)
+ 	DEBUGFS_ADD(channel);
+ 	DEBUGFS_ADD(frequency);
+-	DEBUGFS_ADD(radar_detect);
+ 	DEBUGFS_ADD(antenna_sel_tx);
+ 	DEBUGFS_ADD(antenna_sel_rx);
+ 	DEBUGFS_ADD(bridge_packets);
+@@ -397,7 +394,6 @@ void debugfs_hw_del(struct ieee80211_loc
  {
-@@ -344,6 +352,21 @@ ssb_chipco_watchdog_timer_set(struct ssb
- 	chipco_write32(cc, SSB_CHIPCO_WATCHDOG, ticks);
+ 	DEBUGFS_DEL(channel);
+ 	DEBUGFS_DEL(frequency);
+-	DEBUGFS_DEL(radar_detect);
+ 	DEBUGFS_DEL(antenna_sel_tx);
+ 	DEBUGFS_DEL(antenna_sel_rx);
+ 	DEBUGFS_DEL(bridge_packets);
+--- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-08-21 15:48:54.905923881 +0200
++++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-08-21 15:53:42.255923881 +0200
+@@ -46,8 +46,6 @@ enum {
+ 	PRISM2_PARAM_WMM_ENABLED = 1038,
+ 	PRISM2_PARAM_MIXED_CELL = 1039,
+ 	PRISM2_PARAM_KEY_MGMT = 1040,
+-	PRISM2_PARAM_RADAR_DETECT = 1043,
+-	PRISM2_PARAM_SPECTRUM_MGMT = 1044,
+ 	PRISM2_PARAM_USER_SPACE_MLME = 1045,
+ 	PRISM2_PARAM_MGMT_IF = 1046,
+ };
+@@ -63,12 +61,10 @@ enum {
+ 	PRISM2_SET_ENCRYPTION = 6,
+ 	PRISM2_GET_ENCRYPTION = 7,
+ 	PRISM2_HOSTAPD_SET_FLAGS_STA = 8,
+-	PRISM2_HOSTAPD_MLME = 13,
+ 
+ 	/* Instant802 additions */
+ 	PRISM2_HOSTAPD_SET_BEACON = 1001,
+ 	PRISM2_HOSTAPD_GET_HW_FEATURES = 1002,
+-	PRISM2_HOSTAPD_WPA_TRIGGER = 1004,
+ 	PRISM2_HOSTAPD_SET_RATE_SETS = 1005,
+ 	PRISM2_HOSTAPD_ADD_IF = 1006,
+ 	PRISM2_HOSTAPD_REMOVE_IF = 1007,
+@@ -82,8 +78,6 @@ enum {
+ 	PRISM2_HOSTAPD_SCAN_REQ = 1019,
+ 	PRISM2_STA_GET_STATE = 1020,
+ 	PRISM2_HOSTAPD_FLUSH_IFS = 1021,
+-	PRISM2_HOSTAPD_SET_RADAR_PARAMS = 1023,
+-	PRISM2_HOSTAPD_SET_QUIET_PARAMS = 1024,
+ };
+ 
+ #define PRISM2_HOSTAPD_MAX_BUF_SIZE 2048
+@@ -214,24 +208,6 @@ struct prism2_hostapd_param {
+ 			u32 state;
+ 		} sta_get_state;
+ 		struct {
+-#define MLME_STA_DEAUTH 0
+-#define MLME_STA_DISASSOC 1
+-			u16 cmd;
+-			u16 reason_code;
+-		} mlme;
+-		struct {
+-			u8 radar_firpwr_threshold;
+-			u8 radar_rssi_threshold;
+-			u8 pulse_height_threshold;
+-			u8 pulse_rssi_threshold;
+-			u8 pulse_inband_threshold;
+-		} radar;
+-		struct {
+-			unsigned int period;
+-			unsigned int offset;
+-			unsigned int duration;
+-		} quiet;
+-		struct {
+ 			u8 dummy[80]; /* Make sizeof() this struct large enough
+ 				       * with some compiler versions. */
+ 		} dummy;
+--- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-08-21 15:48:54.915923881 +0200
++++ wireless-dev/net/mac80211/ieee80211_i.h	2007-08-21 15:53:42.265923881 +0200
+@@ -644,7 +644,6 @@ struct ieee80211_local {
+ 	struct local_debugfsdentries {
+ 		struct dentry *channel;
+ 		struct dentry *frequency;
+-		struct dentry *radar_detect;
+ 		struct dentry *antenna_sel_tx;
+ 		struct dentry *antenna_sel_rx;
+ 		struct dentry *bridge_packets;
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-21 15:48:54.915923881 +0200
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-21 15:53:42.275923881 +0200
+@@ -1029,29 +1029,6 @@ static int ieee80211_ioctl_sta_get_state
  }
  
-+u32 ssb_chipco_gpio_in(struct ssb_chipcommon *cc, u32 mask)
-+{
-+	return chipco_read32(cc, SSB_CHIPCO_GPIOIN) & mask;
-+}
-+
-+void ssb_chipco_gpio_out(struct ssb_chipcommon *cc, u32 mask, u32 value)
-+{
-+	return chipco_write32_masked(cc, SSB_CHIPCO_GPIOOUT, mask, value);
-+}
-+
-+void ssb_chipco_gpio_outen(struct ssb_chipcommon *cc, u32 mask, u32 value)
-+{
-+	return chipco_write32_masked(cc, SSB_CHIPCO_GPIOOUTEN, mask, value);
-+}
-+
- #ifdef CONFIG_SSB_SERIAL
- int ssb_chipco_serial_init(struct ssb_chipcommon *cc,
- 			   struct ssb_serial_port *ports)
-Index: ssb-merge-new/drivers/ssb/driver_extif.c
-===================================================================
---- ssb-merge-new.orig/drivers/ssb/driver_extif.c	2007-08-11 01:57:31.000000000 +0200
-+++ ssb-merge-new/drivers/ssb/driver_extif.c	2007-08-13 14:16:39.000000000 +0200
-@@ -27,6 +27,14 @@ static inline void extif_write32(struct 
- 	ssb_write32(extif->dev, offset, value);
- }
  
-+static inline void extif_write32_masked(struct ssb_extif *extif, u16 offset,
-+					u32 mask, u32 value)
-+{
-+	value &= mask;
-+	value |= extif_read32(extif, offset) & ~mask;
-+	extif_write32(extif, offset, value);
-+}
-+
- #ifdef CONFIG_SSB_SERIAL
- static bool serial_exists(u8 *regs)
+-static int ieee80211_ioctl_mlme(struct net_device *dev,
+-				struct prism2_hostapd_param *param)
+-{
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	struct ieee80211_sub_if_data *sdata;
+-
+-	if (local->user_space_mlme)
+-		return -EOPNOTSUPP;
+-
+-	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-	if (sdata->type != IEEE80211_IF_TYPE_STA &&
+-	    sdata->type != IEEE80211_IF_TYPE_IBSS)
+-		return -EINVAL;
+-	switch (param->u.mlme.cmd) {
+-	case MLME_STA_DEAUTH:
+-		return ieee80211_sta_deauthenticate(dev, param->u.mlme.reason_code);
+-	case MLME_STA_DISASSOC:
+-		return ieee80211_sta_disassociate(dev, param->u.mlme.reason_code);
+-	}
+-	return 0;
+-}
+-
+-
+ static int ieee80211_ioctl_get_load_stats(struct net_device *dev,
+ 					  struct prism2_hostapd_param *param)
  {
-@@ -102,3 +110,20 @@ void ssb_extif_get_clockcontrol(struct s
- 	*m = extif_read32(extif, SSB_EXTIF_CLOCK_SB);
+@@ -1222,34 +1199,6 @@ found:
  }
  
-+u32 ssb_extif_gpio_in(struct ssb_extif *extif, u32 mask)
-+{
-+	return extif_read32(extif, SSB_EXTIF_GPIO_IN) & mask;
-+}
-+
-+void ssb_extif_gpio_out(struct ssb_extif *extif, u32 mask, u32 value)
-+{
-+	return extif_write32_masked(extif, SSB_EXTIF_GPIO_OUT(0),
-+				   mask, value);
-+}
-+
-+void ssb_extif_gpio_outen(struct ssb_extif *extif, u32 mask, u32 value)
-+{
-+	return extif_write32_masked(extif, SSB_EXTIF_GPIO_OUTEN(0),
-+				   mask, value);
-+}
-+
-Index: ssb-merge-new/include/linux/ssb/ssb_driver_chipcommon.h
-===================================================================
---- ssb-merge-new.orig/include/linux/ssb/ssb_driver_chipcommon.h	2007-08-11 01:57:44.000000000 +0200
-+++ ssb-merge-new/include/linux/ssb/ssb_driver_chipcommon.h	2007-08-13 14:16:39.000000000 +0200
-@@ -382,6 +382,12 @@ extern void ssb_chipco_set_clockmode(str
- extern void ssb_chipco_watchdog_timer_set(struct ssb_chipcommon *cc,
- 					  u32 ticks);
  
-+u32 ssb_chipco_gpio_in(struct ssb_chipcommon *cc, u32 mask);
-+
-+void ssb_chipco_gpio_out(struct ssb_chipcommon *cc, u32 mask, u32 value);
-+
-+void ssb_chipco_gpio_outen(struct ssb_chipcommon *cc, u32 mask, u32 value);
-+
- #ifdef CONFIG_SSB_SERIAL
- extern int ssb_chipco_serial_init(struct ssb_chipcommon *cc,
- 				  struct ssb_serial_port *ports);
-Index: ssb-merge-new/include/linux/ssb/ssb_driver_extif.h
-===================================================================
---- ssb-merge-new.orig/include/linux/ssb/ssb_driver_extif.h	2007-08-11 01:57:44.000000000 +0200
-+++ ssb-merge-new/include/linux/ssb/ssb_driver_extif.h	2007-08-13 14:16:39.000000000 +0200
-@@ -171,6 +171,12 @@ extern void ssb_extif_get_clockcontrol(s
- extern void ssb_extif_timing_init(struct ssb_extif *extif,
- 				  unsigned long ns);
+-static int ieee80211_ioctl_set_quiet_params(struct net_device *dev,
+-					    struct prism2_hostapd_param *param)
+-{
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	struct ieee80211_conf *conf = &local->hw.conf;
+-
+-	conf->quiet_duration = param->u.quiet.duration;
+-	conf->quiet_offset = param->u.quiet.offset;
+-	conf->quiet_period = param->u.quiet.period;
+-	return 0;
+-}
+-
+-
+-static int ieee80211_ioctl_set_radar_params(struct net_device *dev,
+-					    struct prism2_hostapd_param *param)
+-{
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	struct ieee80211_conf *conf = &local->hw.conf;
+-
+-	conf->radar_firpwr_threshold = param->u.radar.radar_firpwr_threshold;
+-	conf->radar_rssi_threshold = param->u.radar.radar_rssi_threshold;
+-	conf->pulse_height_threshold = param->u.radar.pulse_height_threshold;
+-	conf->pulse_rssi_threshold = param->u.radar.pulse_rssi_threshold;
+-	conf->pulse_inband_threshold = param->u.radar.pulse_inband_threshold;
+-	return 0;
+-}
+-
+-
+ static int ieee80211_ioctl_priv_hostapd(struct net_device *dev,
+ 					struct iw_point *p)
+ {
+@@ -1338,15 +1287,6 @@ static int ieee80211_ioctl_priv_hostapd(
+ 	case PRISM2_STA_GET_STATE:
+ 		ret = ieee80211_ioctl_sta_get_state(dev, param);
+ 		break;
+-	case PRISM2_HOSTAPD_MLME:
+-		ret = ieee80211_ioctl_mlme(dev, param);
+-		break;
+-	case PRISM2_HOSTAPD_SET_RADAR_PARAMS:
+-		ret = ieee80211_ioctl_set_radar_params(dev, param);
+-		break;
+-	case PRISM2_HOSTAPD_SET_QUIET_PARAMS:
+-		ret = ieee80211_ioctl_set_quiet_params(dev, param);
+-		break;
+ 	default:
+ 		ret = -EOPNOTSUPP;
+ 		break;
+@@ -2237,12 +2177,6 @@ static int ieee80211_ioctl_prism2_param(
+ 		else
+ 			sdata->u.sta.wmm_enabled = !!value;
+ 		break;
+-	case PRISM2_PARAM_RADAR_DETECT:
+-		local->hw.conf.radar_detect = value;
+-		break;
+-	case PRISM2_PARAM_SPECTRUM_MGMT:
+-		local->hw.conf.spect_mgmt = value;
+-		break;
+ 	case PRISM2_PARAM_MGMT_IF:
+ 		if (value == 1) {
+ 			if (!local->apdev)
+--- wireless-dev.orig/include/net/mac80211.h	2007-08-21 15:48:54.945923881 +0200
++++ wireless-dev/include/net/mac80211.h	2007-08-21 15:53:42.275923881 +0200
+@@ -300,19 +300,6 @@ struct ieee80211_conf {
+ 	/* 0 = default/diversity, 1 = Ant0, 2 = Ant1 */
+ 	u8 antenna_sel_tx;
+ 	u8 antenna_sel_rx;
+-
+-	/* Following five fields are used for IEEE 802.11H */
+-	unsigned int radar_detect;
+-	unsigned int spect_mgmt;
+-	unsigned int quiet_duration; /* duration of quiet period */
+-	unsigned int quiet_offset; /* how far into the beacon is the quiet
+-				    * period */
+-	unsigned int quiet_period;
+-	u8 radar_firpwr_threshold;
+-	u8 radar_rssi_threshold;
+-	u8 pulse_height_threshold;
+-	u8 pulse_rssi_threshold;
+-	u8 pulse_inband_threshold;
+ };
  
-+u32 ssb_extif_gpio_in(struct ssb_extif *extif, u32 mask);
-+
-+void ssb_extif_gpio_out(struct ssb_extif *extif, u32 mask, u32 value);
-+
-+void ssb_extif_gpio_outen(struct ssb_extif *extif, u32 mask, u32 value);
-+
- #ifdef CONFIG_SSB_SERIAL
- extern int ssb_extif_serial_init(struct ssb_extif *extif,
- 				 struct ssb_serial_port *ports);
+ /**
 
 -- 
 
