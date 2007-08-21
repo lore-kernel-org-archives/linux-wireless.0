@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:28303 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754595AbXHCP7h (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:35478 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761408AbXHUPQE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 11:59:37 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so480662ugf
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Aug 2007 08:59:35 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 18/24] rt2x00: Add Multicast/Broadcast filtering
-Date: Fri, 3 Aug 2007 18:04:04 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200707312037.33060.IvDoorn@gmail.com> <200708031736.27782.IvDoorn@gmail.com> <1186155722.4647.55.camel@johannes.berg>
-In-Reply-To: <1186155722.4647.55.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200708031804.04234.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Tue, 21 Aug 2007 11:16:04 -0400
+Message-Id: <20070821150038.987283000@sipsolutions.net>
+References: <20070821145905.689978000@sipsolutions.net>
+Date: Tue, 21 Aug 2007 16:59:07 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>
+Subject: [PATCH 02/27] mac80211: fix preamble setting
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 03 August 2007, Johannes Berg wrote:
-> On Fri, 2007-08-03 at 17:36 +0200, Ivo van Doorn wrote:
-> 
-> > But that would mean that when a non-monitor and monitor interface are
-> > enabled at the same time, the montitor interface is quite pointless since
-> > all frames can be caught on the regular interface as well. 
-> 
-> Not true, monitor mode interfaces gives you a lot more info (radiotap.)
-> 
-> > A monitor interface is supposed to catch as many frames as possible,
-> > if a monitor interface does not catch frames not directly send to it, it won't
-> > catch anything except beacons.
-> 
-> Not if we want to use monitor interfaces for the userspace mlme.
-> 
-> > Even when there is only 1 interface which is in monitor mode, the user shouldn't
-> > have to set the device into promisc mode right?
-> 
-> Actually, imho they should have to. And tcpdump always does anyway.
+It looks like in commit 28487a90 the condition was unintentionally
+negated by moving some code, fix it.
 
-Well I hope so, otherwise I'll get quite a lot of bugreports. ;)
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Daniel Drake <dsd@gentoo.org>
 
-Next rt2x00 release will not treat monitor mode interfaces special.
-Just read the http://www.linuxwireless.org/en/developers/mac80211/semantics article
-So the next rt2x00 will comply with that.
+---
+ net/mac80211/ieee80211_ioctl.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Ivo
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-21 14:39:16.465923881 +0200
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-21 14:39:42.055923881 +0200
+@@ -2191,7 +2191,7 @@ static int ieee80211_ioctl_prism2_param(
+ 		break;
+ 
+ 	case PRISM2_PARAM_PREAMBLE:
+-		if (sdata->type != IEEE80211_IF_TYPE_AP) {
++		if (sdata->type == IEEE80211_IF_TYPE_AP) {
+ 			sdata->short_preamble = !!value;
+ 			ieee80211_erp_info_change_notify(dev, IEEE80211_ERP_CHANGE_PREAMBLE);
+ 		} else {
+
+-- 
+
