@@ -1,64 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail4.sea5.speakeasy.net ([69.17.117.6]:46290 "EHLO
-	mail4.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750764AbXHOERE (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:46730 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760431AbXHVR5h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 00:17:04 -0400
-Date: Tue, 14 Aug 2007 21:16:02 -0700
-From: Jouni Malinen <j@w1.fi>
+	Wed, 22 Aug 2007 13:57:37 -0400
+Subject: Re: [PATCH 1/2] mac80211:  Remove ieee80211_privacy_mismatch
+From: Volker Braun <vbraun@physics.upenn.edu>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] hostapd: use eapol frames from ethernet device
-Message-ID: <20070815041602.GP1415@jm.kir.nu>
-References: <1186789737.4862.3.camel@johannes.berg> <1186790012.4862.8.camel@johannes.berg> <1ba2fa240708120358rb22a2f9me1a1020e669406e7@mail.gmail.com> <1186995104.27916.56.camel@johannes.berg> <1ba2fa240708130346h6175701cr2daab916afaed00f@mail.gmail.com> <1187002921.27916.77.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1187002921.27916.77.camel@johannes.berg>
+Cc: Jouni Malinen <j@w1.fi>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>
+In-Reply-To: <1187787855.4314.6.camel@johannes.berg>
+References: <1187406018.30247.17.camel@thinkpad>
+	 <20070818034146.GC1415@jm.kir.nu>  <1187787855.4314.6.camel@johannes.berg>
+Content-Type: text/plain
+Date: Wed, 22 Aug 2007 13:57:35 -0400
+Message-Id: <1187805455.9845.104.camel@carrot.hep.upenn.edu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 13, 2007 at 01:02:01PM +0200, Johannes Berg wrote:
+On Wed, 2007-08-22 at 15:04 +0200, Johannes Berg wrote:
+> Volker, can you try # iwpriv wlan0 param 1039 1
 
-> The actual technical reason for doing is that subsequent patches totally
-> remove the management interface and on the monitor interface the EAPOL
-> frames show up undecrypted.
+Thats PRISM2_PARAM_MIXED_CELL=1039, which you removed in your
+023-remove-unused-ioctls-3.patch. If I revert that then I'm sure your
+iwpriv call would work around my problem.
 
-I have to admit that I haven't followed the latest changes on this area,
-but before this kind of change goes in, I would like to verify that all
-the needed cases will be supported with EAPOL and management frames:
+Note that I'm not in a mixed cell! iee80211_privacy_mismatch checks the
+wrong mismatch. In my case, the AP broadcasts privacy, but I do not
+(yet) have a WEP key. But really mixed cell support is about the AP
+_not_ broadcasting privacy, yet the user _having_ a WEP key configured. 
 
-- user space needs to be able to transmit EAPOL frames encrypted
-  (WPA/WPA2) and in plain (IEEE 802.1X with dynamic WEP) even if keys
-  are configured for the receiver; how is this done for the IEEE 802.1X
-  rekeying case?
+So say we fix iee80211_privacy_mismatch in checking for the right
+mismatch only. Then everybody would be happy, except some poor soul on a
+mixed cell network who would probably never figure out how to enable
+mixed cell mode. Why do we hate him so much? ;-) There is no security
+implication in enabling mixed mode by default --- management frames stay
+unencrypted and data frames with privacy mismatch continue to be
+dropped. 
 
-- plaintext EAPOL frames need to be received in some cases (mainly, IEEE
-  802.1X with dynamic WEP) even if there is a configured key for the
-  sending; ideally, user space apps would know whether the frame was
-  encrypted or not
+------------------ snip --------------------------------
+Mixed Cells Mode
 
-- management frames will need to be encrypted and decrypted in kernel
-  (802.11w), e.g., when user space is sending and receiving action
-  frames; i.e., there would need to be a mechanism to receive management
-  frames that has been decrypted by the kernel and to be able to send
-  management frames with kernel doing encryption; both are optional and
-  depend on the key configuration for the sender/receiver
+Some access points, for example Cisco 350 or Cisco 1200, support
+environments in which not all client stations support WEP encryption;
+this is called Mixed-Cell Mode. When these wireless networks operate in
+"optional encryption" mode, client stations that join in WEP mode send
+all messages encrypted, and stations that join in using standard mode
+send all messages unencrypted. These access points broadcast that these
+network do not use encryption, but allow clients to join using WEP mode.
+When "Mixed-Cell" is enabled in a profile, it allows you to connect to
+access points that are configured for "optional encryption".
+--------------------------------------------------------
+
+-Volker
 
 
-I don't really like the idea of having to implement encryption and
-decryption for all these frames in both the user and kernel space.
-Furthermore, some things like receiption of unencrypted EAPOL frames
-would be quite difficult to do in user space unless the kernel were
-actually to help here.
-
-For me, the management frame interface provides a good and working
-solution for this. I know that some people do not like the idea of
-having yet another network device showing up here, but I want to make
-sure that the "solution" for this is not breaking some needed
-functionality or making this unnecessarily complex to implement for user
-space apps.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
