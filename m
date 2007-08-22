@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.186]:65119 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932636AbXHVUFM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2007 16:05:12 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so383147mue
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Aug 2007 13:05:11 -0700 (PDT)
-To: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
-Subject: Re: 2.6.23-rc3-mm1: net/wireless/rt2x00mac.c build failure
-Date: Wed, 22 Aug 2007 22:12:52 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-References: <20070822020648.5ea3a612.akpm@linux-foundation.org> <200708222131.24882.IvDoorn@gmail.com> <200708222154.03663.m.kozlowski@tuxland.pl>
-In-Reply-To: <200708222154.03663.m.kozlowski@tuxland.pl>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4085 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758224AbXHVRo5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Aug 2007 13:44:57 -0400
+Date: Wed, 22 Aug 2007 13:18:05 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: ALERT: firmware change for b43
+Message-ID: <20070822171805.GD2926@tuxdriver.com>
+References: <46C89BF1.5060306@lwfinger.net> <20070822145257.GA2926@tuxdriver.com> <46CC5568.5000709@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200708222212.52805.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <46CC5568.5000709@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, Aug 22, 2007 at 10:25:28AM -0500, Larry Finger wrote:
+> John W. Linville wrote:
+> >On Sun, Aug 19, 2007 at 02:37:21PM -0500, Larry Finger wrote:
+> >>Just in case you missed the details, the latest set of changes to b43 
+> >>queued by Michael will require
+> >>a new version of fwcutter, now called b43-fwcutter, and a new extraction 
+> >>of your firmware.
+> >
+> >Is there a tarball available for download, as with bcm43xx-fwcutter?
+> >It would be handy for packaging.
+> 
+> The new code is in the svn repository; however, a tarball would not be a 
+> problem. Is source sufficient, or would you want an executable?
 
->   CC [M]  drivers/net/wireless/zd1211rw-mac80211/zd_mac.o
-> drivers/net/wireless/zd1211rw-mac80211/zd_mac.c: In function `zd_op_erp_ie_changed':
-> drivers/net/wireless/zd1211rw-mac80211/zd_mac.c:822: error: `IEEE80211_ERP_CHANGE_PREAMBLE' undeclared (first use in this function)
-> drivers/net/wireless/zd1211rw-mac80211/zd_mac.c:822: error: (Each undeclared identifier is reported only once
-> drivers/net/wireless/zd1211rw-mac80211/zd_mac.c:822: error: for each function it appears in.)
-> drivers/net/wireless/zd1211rw-mac80211/zd_mac.c: At top level:
-> drivers/net/wireless/zd1211rw-mac80211/zd_mac.c:844: error: unknown field `erp_ie_changed' specified in initializer
-> drivers/net/wireless/zd1211rw-mac80211/zd_mac.c:844: warning: initialization from incompatible pointer type
-> make[4]: *** [drivers/net/wireless/zd1211rw-mac80211/zd_mac.o] Error 1
-> make[3]: *** [drivers/net/wireless/zd1211rw-mac80211] Error 2
-> make[2]: *** [drivers/net/wireless] Error 2
-> make[1]: *** [drivers/net] Error 2
-> make: *** [drivers] Error 2
+Source would be fine, equivalent to what is here:
 
-I'm not a zd1211rw developer, but a quick look into the patch series it seems
-that the mac80211 version in -mm1 does not contain the patch
-[PATCH 4/4] mac80211: implement ERP info change notifications
-But it does contain the zd1211rw patch:
-[PATCH] zd1211rw-mac80211: use correct preambles for RTS/CTS frames
-Which depended on the above mentioned mac80211 patch.
+	http://download.berlios.de/bcm43xx/bcm43xx-fwcutter-006.tar.bz2
 
-Just had a second thought about those rt2x00 compilation errors you reported,
-the error is not caused by rt2x00 lagging behind mac80211 api changes but
-that rt2x00 patches to follow the api changes are going upstream but
-the mac80211 api changes it depends on are not going anywhere.
+Thanks!
 
-It seems that mac80211 has not been updated in the -mm tree while the
-drivers have been updated. This is causing the compilation errors for both
-rt2x00 as zd1211rw.
-I'll bet that if you try any other mac80211 driver similar issues will arise.
-
-Ivo
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
