@@ -1,43 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:35482 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753077AbXHKRBD (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.177]:62761 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753605AbXHVHLR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Aug 2007 13:01:03 -0400
-Message-ID: <46BDEB49.2070703@lwfinger.net>
-Date: Sat, 11 Aug 2007 12:00:57 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
+	Wed, 22 Aug 2007 03:11:17 -0400
+Received: by py-out-1112.google.com with SMTP id u77so164908pyb
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Aug 2007 00:11:17 -0700 (PDT)
+Message-ID: <3871229b0708220011r18a13676n384cd72a0e22189e@mail.gmail.com>
+Date: Wed, 22 Aug 2007 09:11:16 +0200
+From: "Jean-Baptiste Note" <jbnote@gmail.com>
+Reply-To: jean-baptiste.note@m4x.org
+To: "Michael Wu" <flamingice@sourmilk.net>
+Subject: Re: [PATCH] mark islsm list as subscribers-only
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 4/4] mac80211: remove radar stuff
-References: <20070810220544.321975000@sipsolutions.net>	 <20070810220634.450509000@sipsolutions.net> <46BD2A89.8050906@lwfinger.net> <1186820267.5363.1.camel@johannes.berg>
-In-Reply-To: <1186820267.5363.1.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <200708220042.16421.flamingice@sourmilk.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1187282653.23489.36.camel@johannes.berg>
+	 <1187714252.4218.9.camel@johannes.berg>
+	 <43e72e890708211039y53e2c24aqbf5c00c24f0a0df6@mail.gmail.com>
+	 <200708220042.16421.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Fri, 2007-08-10 at 22:18 -0500, Larry Finger wrote:
->> Johannes Berg wrote:
->>> Unused in drivers, userspace and mac80211.
->>>
->>> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->>> ---
->> Won't 802.11a drivers need this? If so, does it hurt to leave it in for now?
-> 
-> Absolutely correct, they probably will. None of the ones we have,
-> however, actually uses it, and it uses the management interface we're
-> trying to get rid of for the notification. The same function should
-> probably be added back to mac80211 or cfg80211 once somebody actually
-> wants it, but do the notification
->  1) with well-defined arguments (explanation for the two args anyone?)
->  2) via nl80211
-> 
-> It doesn't really "hurt" but I'm trying to actually remove the master
-> interface now and I'm almost there, so this code is in my way.
+Hi,
 
-OK, thanks for the explanation.
+If there's already a list fitting the need, then please remove islsm
+from the maintainers. Else, I can switch the list to whatever
+configuration you please, and add a spam filter...
 
-Larry
+JB
