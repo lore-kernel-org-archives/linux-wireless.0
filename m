@@ -1,63 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hoefnix.telenet-ops.be ([195.130.132.54]:48706 "EHLO
-	hoefnix.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751652AbXHBN7c (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57724 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753551AbXHVJgm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 09:59:32 -0400
-Date: Thu, 2 Aug 2007 15:58:43 +0200 (CEST)
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Andrew Morton <akpm@osdl.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Gary Zambrano <zambrano@broadcom.com>
-Subject: Re: [PATCH] Merge the Sonics Silicon Backplane subsystem
-In-Reply-To: <200707271857.24162.mb@bu3sch.de>
-Message-ID: <Pine.LNX.4.64.0708021557280.5150@anakin>
-References: <200707271857.24162.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Wed, 22 Aug 2007 05:36:42 -0400
+Received: from [131.234.74.113]
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.67)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1INmdl-0005ny-Ao
+	for linux-wireless@vger.kernel.org; Wed, 22 Aug 2007 10:36:41 +0100
+Message-Id: <20070822093634.616289000@sipsolutions.net>
+References: <20070822093602.028331000@sipsolutions.net>
+Date: Wed, 22 Aug 2007 11:36:04 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 2/4] mac80211: remove TKIP mixing for hw accel again
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 27 Jul 2007, Michael Buesch wrote:
-> The Sonics Silicon Backplane is a mini-bus used on
-> various Broadcom chips and embedded devices.
-> Devices using the SSB include b44, bcm43xx and various
-> Broadcom based wireless routers.
-> A b44 and bcm43xx port and a SSB based OHCI driver is available.
+The TKIP mixing code was added for the benefit of Intel's ipw3945
+chipset but that code ended up not using it. We have previously
+identified many problems with this code and it crystallized that
+library functions for mixing are likely to handle this in much
+more generality.
 
-> --- a/drivers/Kconfig
-> +++ b/drivers/Kconfig
-> @@ -58,6 +58,8 @@ source "drivers/power/Kconfig"
->  
->  source "drivers/hwmon/Kconfig"
->  
-> +source "drivers/ssb/Kconfig"
-> +
->  source "drivers/mfd/Kconfig"
->  
->  source "drivers/media/Kconfig"
+Due to these reasons, remove the TKIP mixing for hardware
+accelerated crypto operations.
 
-> --- /dev/null
-> +++ b/drivers/ssb/Kconfig
-> @@ -0,0 +1,92 @@
-> +menu "Sonics Silicon Backplane"
-> +
-> +config SSB
-> +	tristate "Sonics Silicon Backplane support"
-> +	depends on EXPERIMENTAL
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Hence this will show up on all platforms?
+---
+ include/net/mac80211.h |    9 ---------
+ net/mac80211/wpa.c     |   17 -----------------
+ 2 files changed, 26 deletions(-)
 
-Gr{oetje,eeting}s,
+--- wireless-dev.orig/include/net/mac80211.h	2007-08-22 10:19:21.789500061 +0200
++++ wireless-dev/include/net/mac80211.h	2007-08-22 10:26:14.879500061 +0200
+@@ -193,7 +193,6 @@ struct ieee80211_tx_control {
+ #define IEEE80211_TXCTL_REQUEUE		(1<<7)
+ #define IEEE80211_TXCTL_FIRST_FRAGMENT	(1<<8) /* this is a first fragment of
+ 						* the frame */
+-#define IEEE80211_TXCTL_TKIP_NEW_PHASE1_KEY (1<<9)
+ #define IEEE80211_TXCTL_LONG_RETRY_LIMIT (1<<10) /* this frame should be send
+ 						  * using the through
+ 						  * set_retry_limit configured
+@@ -209,7 +208,6 @@ struct ieee80211_tx_control {
+ 				 * other values: keyidx from hw->set_key() */
+ 	u8 icv_len;		/* length of the ICV/MIC field in octets */
+ 	u8 iv_len;		/* length of the IV field in octets */
+-	u8 tkip_key[16];	/* generated phase2/phase1 key for hw TKIP */
+ 	u8 queue;		/* hardware queue to use for this frame;
+ 				 * 0 = highest, hw->queues-1 = lowest */
+ 	u8 sw_retry_attempt;	/* number of times hw has tried to
+@@ -520,13 +518,6 @@ struct ieee80211_hw {
+ 	 * specified in the device's EEPROM */
+ #define IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED (1<<11)
+ 
+-	/* Do TKIP phase1 key mixing in stack to support cards only do
+-	 * phase2 key mixing when doing hwcrypto */
+-#define IEEE80211_HW_TKIP_REQ_PHASE1_KEY (1<<13)
+-	/* Do TKIP phase1 and phase2 key mixing in stack and send the generated
+-	 * per-packet RC4 key with each TX frame when doing hwcrypto */
+-#define IEEE80211_HW_TKIP_REQ_PHASE2_KEY (1<<14)
+-
+ 	/* The device capable of supporting 11n */
+ #define IEEE80211_HW_SUPPORT_HT_MODE (1<<15)
+ 
+--- wireless-dev.orig/net/mac80211/wpa.c	2007-08-22 10:25:17.689500061 +0200
++++ wireless-dev/net/mac80211/wpa.c	2007-08-22 10:26:14.879500061 +0200
+@@ -297,7 +297,6 @@ skip_iv_inc:
+ 	    && !tx->wpa_test
+ #endif /* CONFIG_HOSTAPD_WPA_TESTING */
+ 		) {
+-		u32 flags = tx->local->hw.flags;
+ 		hdr = (struct ieee80211_hdr *)skb->data;
+ 
+ 		/* hwaccel - with preallocated room for IV */
+@@ -307,22 +306,6 @@ skip_iv_inc:
+ 					    0x7f),
+ 				      (u8) key->u.tkip.iv16);
+ 
+-		if (flags & IEEE80211_HW_TKIP_REQ_PHASE2_KEY)
+-			ieee80211_tkip_gen_rc4key(key, hdr->addr2,
+-						  tx->u.tx.control->tkip_key);
+-		else if (flags & IEEE80211_HW_TKIP_REQ_PHASE1_KEY) {
+-			if (key->u.tkip.iv16 == 0 ||
+-			    !key->u.tkip.tx_initialized) {
+-				ieee80211_tkip_gen_phase1key(key, hdr->addr2,
+-					    (u16 *)tx->u.tx.control->tkip_key);
+-				key->u.tkip.tx_initialized = 1;
+-				tx->u.tx.control->flags |=
+-					    IEEE80211_TXCTL_TKIP_NEW_PHASE1_KEY;
+-			} else
+-				tx->u.tx.control->flags &=
+-					    ~IEEE80211_TXCTL_TKIP_NEW_PHASE1_KEY;
+-		}
+-
+ 		tx->u.tx.control->key_idx = tx->key->conf.hw_key_idx;
+ 		return 0;
+ 	}
 
-						Geert
+-- 
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
