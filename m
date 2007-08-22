@@ -1,68 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:46696
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760670AbXHCULo (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60813 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752565AbXHVJZv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 16:11:44 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 18/24] rt2x00: Add Multicast/Broadcast filtering
-Date: Fri, 3 Aug 2007 22:11:26 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200707312037.33060.IvDoorn@gmail.com> <1186154435.4647.50.camel@johannes.berg> <200708031736.27782.IvDoorn@gmail.com>
-In-Reply-To: <200708031736.27782.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200708032211.26389.mb@bu3sch.de>
+	Wed, 22 Aug 2007 05:25:51 -0400
+Subject: b43 vs. the TIM (was: mac80211 AP mode powersaving problems?)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <Kalle.Valo@nokia.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jiri Benc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <87lkccf30m.fsf@tikku.osso.net>
+References: <1186990509.27916.38.camel@johannes.berg>
+	 <87lkccf30m.fsf@tikku.osso.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-f21s/rueM5lU/d0neY6n"
+Date: Wed, 22 Aug 2007 09:49:05 +0200
+Message-Id: <1187768945.9267.12.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 03 August 2007, Ivo van Doorn wrote:
-> On Friday 03 August 2007, Johannes Berg wrote:
-> > On Fri, 2007-08-03 at 17:09 +0200, Ivo van Doorn wrote:
-> > > On Friday 03 August 2007, Johannes Berg wrote:
-> > > > On Tue, 2007-07-31 at 20:37 +0200, Ivo van Doorn wrote:
-> > > > 
-> > > > > +	if (is_monitor_present(intf)) {
-> > > > > +		filter = IFF_PROMISC | IFF_MULTICAST | IFF_BROADCAST;
-> > > > > +		if (intf->filter != filter)
-> > > > > +			__set_bit(PACKET_FILTER_PENDING, &rt2x00dev->flags);
-> > > > > +	}
-> > > > 
-> > > > Don't do that. There's no requirement that monitor mode interfaces
-> > > > always be promisc. Also, earlier in the code:
-> > > 
-> > > Note that this "Enable promisc" on monitor mode here will only be send to
-> > > the device. It does not mean that the non-monitor mode will have promisc
-> > > mode enabled. In fact, when the monitor interface goes down, the normal
-> > > setting will be used again.
-> > > If with monitor mode, IFF_PROMISC is not send to the device, monitor
-> > > mode is useless since it will not catch anything except beacons
-> > > (Especially true when you only have 1 interface which is in monitor mode)
-> > 
-> > But don't you allow monitoring during operation? In that case this would
-> > make that monitor interface always promisc which isn't what you want
-> > unless you set the promisc bit on any of the interfaces.
-> 
-> But that would mean that when a non-monitor and monitor interface are
-> enabled at the same time, the montitor interface is quite pointless since
-> all frames can be caught on the regular interface as well. 
-> 
-> A monitor interface is supposed to catch as many frames as possible,
-> if a monitor interface does not catch frames not directly send to it, it won't
-> catch anything except beacons.
-> 
-> Even when there is only 1 interface which is in monitor mode, the user shouldn't
-> have to set the device into promisc mode right?
 
-You are wrong.
-The promisc attribute is a _different_ setting from the monitor
-bits. If userspace wants promisc, it tells you (through set mcast_list stuff).
-And tcpdump/wireshark and stuff _do_ this.
-If userspace wants a nonpromisc monitor, it should be allowed to have one.
-Don't put policy into the kernel and make bad assumptions like
-"monitor interface wants to be promisc".
+--=-f21s/rueM5lU/d0neY6n
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, 2007-08-16 at 08:43 +0300, Kalle Valo wrote:
+
+> One thing which came to my mind is that when Nokia 770 is in PSM it
+> uses PS-Poll to fetch the frames from AP. Few devices do that, so I
+> wonder if mac80211 supports that properly?
+
+I had to return the N770 I tested with to its owner, but I think I found
+the problem anyway. b43 doesn't have a set_tim() handler so the TIM bits
+are never set.
+
+Michael, the firmware automatically sets the DTIM count field in the
+beacon according to the the B43_SHM_SH_DTIMPER value, B43_SHM_SH_TIMBPOS
+must point to the correct offset into the beacon (to the TIM information
+element.) Bit 0 of the TIM (broadcast/multicast) is set according to
+whether FIFO 4 has contents or not so we'll have to do some more reverse
+engineering to get that bit properly set. The microcode doesn't seem to
+do any other things with the TIM, but I haven't fully understood the PMQ
+thing yet, but it appears to be just some firmware-assisted PS mode
+tracking (it adds entries when a STA enters or leaves PS mode or
+disassociates/deauthenticates etc.
+
+johannes
+
+--=-f21s/rueM5lU/d0neY6n
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGy+px/ETPhpq3jKURArT5AJ48eN2yuI2vUo0D3+VzAukgrggoEgCgsUX9
+xy0F9MqMhdpzrQ8qS+xopaY=
+=UNWo
+-----END PGP SIGNATURE-----
+
+--=-f21s/rueM5lU/d0neY6n--
 
