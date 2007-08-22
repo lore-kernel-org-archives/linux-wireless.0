@@ -1,186 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:22582 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754233AbXHSSae convert rfc822-to-8bit (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57728 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760023AbXHVJgp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Aug 2007 14:30:34 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so446922ugf
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2007 11:30:33 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 07/30] rt2x00: Schedule beacon update
-Date: Sun, 19 Aug 2007 20:23:37 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200708192018.30624.IvDoorn@gmail.com>
-In-Reply-To: <200708192018.30624.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200708192023.37862.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Wed, 22 Aug 2007 05:36:45 -0400
+Received: from [131.234.74.113]
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.67)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1INmdo-0005o6-F2
+	for linux-wireless@vger.kernel.org; Wed, 22 Aug 2007 10:36:44 +0100
+Message-Id: <20070822093635.263993000@sipsolutions.net>
+References: <20070822093602.028331000@sipsolutions.net>
+Date: Wed, 22 Aug 2007 11:36:05 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 3/4] mac80211: remove set_key_idx callback
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From ddf86b88ab735fac340b1fae078a6433ed1a8fce Mon Sep 17 00:00:00 2001
-From: Ivo van Doorn <IvDoorn@gmail.com>
-Date: Sat, 18 Aug 2007 12:56:18 +0200
-Subject: [PATCH 07/30] rt2x00: Schedule beacon update
+No existing drivers use this callback, hence there's no telling
+how it might be used. In fact, it is unlikely to be of much use
+as-is because the default key index isn't something that the
+driver can do much with without knowing which interface it was
+for etc. And if it needs the key index for the transmitted frame,
+it can get it by keeping a reference to the key_conf structure
+and looking it up by hw_key_idx.
 
-ieee80211_beacon_get Doesn't allow to be called
-from interrupt context. Schedule the call using
-a workqueue.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/rt2400pci.c |    2 +-
- drivers/net/wireless/rt2500pci.c |    2 +-
- drivers/net/wireless/rt2x00.h    |    7 ++++++-
- drivers/net/wireless/rt2x00dev.c |   25 +++++++++++++++++++++----
- drivers/net/wireless/rt2x00mac.c |    2 +-
- drivers/net/wireless/rt61pci.c   |    2 +-
- 6 files changed, 31 insertions(+), 9 deletions(-)
+ include/net/mac80211.h |   13 -------------
+ net/mac80211/key.c     |    4 ----
+ 2 files changed, 17 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2400pci.c b/drivers/net/wireless/rt2400pci.c
-index d8628e6..8365171 100644
---- a/drivers/net/wireless/rt2400pci.c
-+++ b/drivers/net/wireless/rt2400pci.c
-@@ -1306,7 +1306,7 @@ static irqreturn_t rt2400pci_interrupt(int irq, void *dev_instance)
- 	 * 1 - Beacon timer expired interrupt.
- 	 */
- 	if (rt2x00_get_field32(reg, CSR7_TBCN_EXPIRE))
--		rt2x00lib_beacondone(rt2x00dev, IEEE80211_TX_QUEUE_BEACON);
-+		rt2x00lib_beacondone(rt2x00dev);
+--- wireless-dev.orig/include/net/mac80211.h	2007-08-22 10:26:14.879500061 +0200
++++ wireless-dev/include/net/mac80211.h	2007-08-22 10:26:54.429500061 +0200
+@@ -733,19 +733,6 @@ struct ieee80211_ops {
+ 		       const u8 *local_address, const u8 *address,
+ 		       struct ieee80211_key_conf *key);
  
- 	/*
- 	 * 2 - Rx ring done interrupt.
-diff --git a/drivers/net/wireless/rt2500pci.c b/drivers/net/wireless/rt2500pci.c
-index 4d195de..a794989 100644
---- a/drivers/net/wireless/rt2500pci.c
-+++ b/drivers/net/wireless/rt2500pci.c
-@@ -1482,7 +1482,7 @@ static irqreturn_t rt2500pci_interrupt(int irq, void *dev_instance)
- 	 * 1 - Beacon timer expired interrupt.
- 	 */
- 	if (rt2x00_get_field32(reg, CSR7_TBCN_EXPIRE))
--		rt2x00lib_beacondone(rt2x00dev, IEEE80211_TX_QUEUE_BEACON);
-+		rt2x00lib_beacondone(rt2x00dev);
+-	/*
+-	 * Set TX key index for default/broadcast keys. This is needed in cases
+-	 * where wlan card is doing full WEP/TKIP encapsulation (wep_include_iv
+-	 * is not set), in other cases, this function pointer can be set to
+-	 * NULL since the IEEE 802.11 module takes care of selecting the key
+-	 * index for each TX frame.
+-	 *
+-	 * TODO: If you use this callback in your driver tell us if you need
+-	 *	 any other information from it to make it easier, like the
+-	 *	 key_conf instead.
+-	 */
+-	int (*set_key_idx)(struct ieee80211_hw *hw, int idx);
+-
+ 	/* Enable/disable IEEE 802.1X. This item requests wlan card to pass
+ 	 * unencrypted EAPOL-Key frames even when encryption is configured.
+ 	 * If the wlan card does not require such a configuration, this
+--- wireless-dev.orig/net/mac80211/key.c	2007-08-22 10:19:21.489500061 +0200
++++ wireless-dev/net/mac80211/key.c	2007-08-22 10:26:54.429500061 +0200
+@@ -264,10 +264,6 @@ void ieee80211_set_default_key(struct ie
  
- 	/*
- 	 * 2 - Rx ring done interrupt.
-diff --git a/drivers/net/wireless/rt2x00.h b/drivers/net/wireless/rt2x00.h
-index 4b8906e..31f8a13 100644
---- a/drivers/net/wireless/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00.h
-@@ -589,6 +589,11 @@ struct rt2x00_dev {
- 	struct ieee80211_rx_status rx_status;
- 
- 	/*
-+	 * Beacon scheduled work.
-+	 */
-+	struct work_struct beacon_work;
-+
-+	/*
- 	 * Data ring arrays for RX, TX and Beacon.
- 	 * The Beacon array also contains the Atim ring
- 	 * if that is supported by the device.
-@@ -725,7 +730,7 @@ struct data_ring *rt2x00lib_get_ring(struct rt2x00_dev *rt2x00dev,
- /*
-  * Interrupt context handlers.
-  */
--void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev, const int queue);
-+void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev);
- void rt2x00lib_txdone(struct data_entry *entry,
- 		      const int status, const int retry);
- void rt2x00lib_rxdone(struct data_entry *entry, char *data,
-diff --git a/drivers/net/wireless/rt2x00dev.c b/drivers/net/wireless/rt2x00dev.c
-index b7191cc..7f3eaf1 100644
---- a/drivers/net/wireless/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00dev.c
-@@ -90,8 +90,7 @@ static void rt2x00_start_link_tune(struct rt2x00_dev *rt2x00dev)
- static void rt2x00_stop_link_tune(struct rt2x00_dev *rt2x00dev)
- {
- 	if (delayed_work_pending(&rt2x00dev->link.work))
--		cancel_rearming_delayed_workqueue(rt2x00dev->hw->workqueue,
--						  &rt2x00dev->link.work);
-+		cancel_rearming_delayed_work(&rt2x00dev->link.work);
+ 		if (sdata->default_key)
+ 			ieee80211_debugfs_key_add_default(sdata);
+-
+-		if (sdata->local->ops->set_key_idx)
+-			sdata->local->ops->set_key_idx(
+-				local_to_hw(sdata->local), idx);
+ 	}
  }
  
- /*
-@@ -139,6 +138,12 @@ void rt2x00lib_disable_radio(struct rt2x00_dev *rt2x00dev)
- 		return;
- 
- 	/*
-+	 * Stop beacon generation.
-+	 */
-+	if (work_pending(&rt2x00dev->beacon_work))
-+		cancel_work_sync(&rt2x00dev->beacon_work);
-+
-+	/*
- 	 * Stop the TX queues.
- 	 */
- 	ieee80211_stop_queues(rt2x00dev->hw);
-@@ -252,9 +257,12 @@ static void rt2x00lib_link_tuner(struct work_struct *work)
- /*
-  * Interrupt context handlers.
-  */
--void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev, const int queue)
-+static void rt2x00lib_beacondone_scheduled(struct work_struct *work)
- {
--	struct data_ring *ring = rt2x00lib_get_ring(rt2x00dev, queue);
-+	struct rt2x00_dev *rt2x00dev =
-+	    container_of(work, struct rt2x00_dev, beacon_work);
-+	struct data_ring *ring =
-+	    rt2x00lib_get_ring(rt2x00dev, IEEE80211_TX_QUEUE_BEACON);
- 	struct data_entry *entry = rt2x00_get_data_entry(ring);
- 	struct sk_buff *skb;
- 
-@@ -269,6 +277,14 @@ void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev, const int queue)
- 
- 	dev_kfree_skb(skb);
- }
-+
-+void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev)
-+{
-+	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
-+		return;
-+
-+	queue_work(rt2x00dev->hw->workqueue, &rt2x00dev->beacon_work);
-+}
- EXPORT_SYMBOL_GPL(rt2x00lib_beacondone);
- 
- void rt2x00lib_txdone(struct data_entry *entry,
-@@ -1012,6 +1028,7 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Initialize configuration work.
- 	 */
-+	INIT_WORK(&rt2x00dev->beacon_work, rt2x00lib_beacondone_scheduled);
- 	INIT_DELAYED_WORK(&rt2x00dev->link.work, rt2x00lib_link_tuner);
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00mac.c b/drivers/net/wireless/rt2x00mac.c
-index 31fe0f1..2b1b910 100644
---- a/drivers/net/wireless/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00mac.c
-@@ -157,7 +157,7 @@ int rt2x00mac_reset(struct ieee80211_hw *hw)
- 	 */
- 	if (intf->type == IEEE80211_IF_TYPE_AP ||
- 	    intf->type == IEEE80211_IF_TYPE_IBSS)
--		rt2x00lib_beacondone(rt2x00dev, IEEE80211_TX_QUEUE_BEACON);
-+		rt2x00lib_beacondone(rt2x00dev);
- 
- exit:
- 	__clear_bit(INTERFACE_RESET, &rt2x00dev->flags);
-diff --git a/drivers/net/wireless/rt61pci.c b/drivers/net/wireless/rt61pci.c
-index 7c52a4e..edacb46 100644
---- a/drivers/net/wireless/rt61pci.c
-+++ b/drivers/net/wireless/rt61pci.c
-@@ -1927,7 +1927,7 @@ static irqreturn_t rt61pci_interrupt(int irq, void *dev_instance)
- 	 * 1 - Beacon timer expired interrupt.
- 	 */
- 	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_BEACON_DONE))
--		rt2x00lib_beacondone(rt2x00dev, IEEE80211_TX_QUEUE_BEACON);
-+		rt2x00lib_beacondone(rt2x00dev);
- 
- 	/*
- 	 * 2 - Rx ring done interrupt.
+
 -- 
-1.5.3.rc5
 
