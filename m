@@ -1,75 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57728 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760023AbXHVJgp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2007 05:36:45 -0400
-Received: from [131.234.74.113]
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1INmdo-0005o6-F2
-	for linux-wireless@vger.kernel.org; Wed, 22 Aug 2007 10:36:44 +0100
-Message-Id: <20070822093635.263993000@sipsolutions.net>
-References: <20070822093602.028331000@sipsolutions.net>
-Date: Wed, 22 Aug 2007 11:36:05 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 3/4] mac80211: remove set_key_idx callback
-Mime-Version: 1.0
+Received: from xdsl-664.zgora.dialog.net.pl ([81.168.226.152]:4293 "EHLO
+	tuxland.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760013AbXHVTyJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Aug 2007 15:54:09 -0400
+From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: 2.6.23-rc3-mm1: net/wireless/rt2x00mac.c build failure
+Date: Wed, 22 Aug 2007 21:54:02 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <20070822020648.5ea3a612.akpm@linux-foundation.org> <200708222116.22386.m.kozlowski@tuxland.pl> <200708222131.24882.IvDoorn@gmail.com>
+In-Reply-To: <200708222131.24882.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200708222154.03663.m.kozlowski@tuxland.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No existing drivers use this callback, hence there's no telling
-how it might be used. In fact, it is unlikely to be of much use
-as-is because the default key index isn't something that the
-driver can do much with without knowing which interface it was
-for etc. And if it needs the key index for the transmitted frame,
-it can get it by keeping a reference to the key_conf structure
-and looking it up by hw_key_idx.
+> >   CC [M]  drivers/net/wireless/rt2x00mac.o
+> > drivers/net/wireless/rt2x00mac.c: In function `rt2x00mac_tx_rts_cts':
+> > drivers/net/wireless/rt2x00mac.c:61: warning: passing arg 2 of `ieee80211_ctstoself_get' makes pointer from integer without a cast
+> > drivers/net/wireless/rt2x00mac.c:61: warning: passing arg 3 of `ieee80211_ctstoself_get' makes integer from pointer without a cast
+> > drivers/net/wireless/rt2x00mac.c:61: warning: passing arg 4 of `ieee80211_ctstoself_get' makes pointer from integer without a cast
+> > drivers/net/wireless/rt2x00mac.c:61: warning: passing arg 5 of `ieee80211_ctstoself_get' from incompatible pointer type
+> > drivers/net/wireless/rt2x00mac.c:61: error: too many arguments to function `ieee80211_ctstoself_get'
+> > drivers/net/wireless/rt2x00mac.c:65: warning: passing arg 2 of `ieee80211_rts_get' makes pointer from integer without a cast
+> > drivers/net/wireless/rt2x00mac.c:65: warning: passing arg 3 of `ieee80211_rts_get' makes integer from pointer without a cast
+> > drivers/net/wireless/rt2x00mac.c:65: warning: passing arg 4 of `ieee80211_rts_get' makes pointer from integer without a cast
+> > drivers/net/wireless/rt2x00mac.c:65: warning: passing arg 5 of `ieee80211_rts_get' from incompatible pointer type
+> > drivers/net/wireless/rt2x00mac.c:65: error: too many arguments to function `ieee80211_rts_get'
+> > make[3]: *** [drivers/net/wireless/rt2x00mac.o] Error 1
+> > make[2]: *** [drivers/net/wireless] Error 2
+> > make[1]: *** [drivers/net] Error 2
+> > make: *** [drivers] Error 2
+> 
+> This has been fixed for quite some time already.
+> John, I can't check this myself now, but which rt2x00
+> patches have gone into the -mm tree? Since I believe
+> the patch that changed ieee80211_ctstoself_get was
+> followed by a patch to fix rt2x00 within the same series...
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Ok. Thanks. What about this one?
 
----
- include/net/mac80211.h |   13 -------------
- net/mac80211/key.c     |    4 ----
- 2 files changed, 17 deletions(-)
+  CC [M]  drivers/net/wireless/zd1211rw-mac80211/zd_mac.o
+drivers/net/wireless/zd1211rw-mac80211/zd_mac.c: In function `zd_op_erp_ie_changed':
+drivers/net/wireless/zd1211rw-mac80211/zd_mac.c:822: error: `IEEE80211_ERP_CHANGE_PREAMBLE' undeclared (first use in this function)
+drivers/net/wireless/zd1211rw-mac80211/zd_mac.c:822: error: (Each undeclared identifier is reported only once
+drivers/net/wireless/zd1211rw-mac80211/zd_mac.c:822: error: for each function it appears in.)
+drivers/net/wireless/zd1211rw-mac80211/zd_mac.c: At top level:
+drivers/net/wireless/zd1211rw-mac80211/zd_mac.c:844: error: unknown field `erp_ie_changed' specified in initializer
+drivers/net/wireless/zd1211rw-mac80211/zd_mac.c:844: warning: initialization from incompatible pointer type
+make[4]: *** [drivers/net/wireless/zd1211rw-mac80211/zd_mac.o] Error 1
+make[3]: *** [drivers/net/wireless/zd1211rw-mac80211] Error 2
+make[2]: *** [drivers/net/wireless] Error 2
+make[1]: *** [drivers/net] Error 2
+make: *** [drivers] Error 2
 
---- wireless-dev.orig/include/net/mac80211.h	2007-08-22 10:26:14.879500061 +0200
-+++ wireless-dev/include/net/mac80211.h	2007-08-22 10:26:54.429500061 +0200
-@@ -733,19 +733,6 @@ struct ieee80211_ops {
- 		       const u8 *local_address, const u8 *address,
- 		       struct ieee80211_key_conf *key);
- 
--	/*
--	 * Set TX key index for default/broadcast keys. This is needed in cases
--	 * where wlan card is doing full WEP/TKIP encapsulation (wep_include_iv
--	 * is not set), in other cases, this function pointer can be set to
--	 * NULL since the IEEE 802.11 module takes care of selecting the key
--	 * index for each TX frame.
--	 *
--	 * TODO: If you use this callback in your driver tell us if you need
--	 *	 any other information from it to make it easier, like the
--	 *	 key_conf instead.
--	 */
--	int (*set_key_idx)(struct ieee80211_hw *hw, int idx);
--
- 	/* Enable/disable IEEE 802.1X. This item requests wlan card to pass
- 	 * unencrypted EAPOL-Key frames even when encryption is configured.
- 	 * If the wlan card does not require such a configuration, this
---- wireless-dev.orig/net/mac80211/key.c	2007-08-22 10:19:21.489500061 +0200
-+++ wireless-dev/net/mac80211/key.c	2007-08-22 10:26:54.429500061 +0200
-@@ -264,10 +264,6 @@ void ieee80211_set_default_key(struct ie
- 
- 		if (sdata->default_key)
- 			ieee80211_debugfs_key_add_default(sdata);
--
--		if (sdata->local->ops->set_key_idx)
--			sdata->local->ops->set_key_idx(
--				local_to_hw(sdata->local), idx);
- 	}
- }
- 
+Regards,
 
--- 
-
+	Mariusz
