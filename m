@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52061 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54824 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760151AbXHYH5Y (ORCPT
+	with ESMTP id S1758169AbXHWQup (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Aug 2007 03:57:24 -0400
-Subject: Re: [PATCH] b43: include FCS at end of frames
+	Thu, 23 Aug 2007 12:50:45 -0400
+Received: from [131.234.79.133]
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.67)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1IOFtM-00012O-8o
+	for linux-wireless@vger.kernel.org; Thu, 23 Aug 2007 17:50:44 +0100
+Message-Id: <20070823164525.263344000@sipsolutions.net>
+References: <20070823164500.998912000@sipsolutions.net>
+Date: Thu, 23 Aug 2007 18:45:11 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200708241512.44463.hs4233@mail.mn-solutions.de>
-References: <1187953310.24933.19.camel@johannes.berg>
-	 <200708241512.44463.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YE8llOdh506ncGs50mbE"
-Date: Sat, 25 Aug 2007 09:58:22 +0200
-Message-Id: <1188028702.9529.9.camel@johannes.berg>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 10/11] mac80211: fix warnings introduced by the doc patches
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This fixes a warning about NUM_IEEE80211_MODES missing
+in a switch statement. Intentionally do not add a default
+case so we get warnings at these places if we need to add
+new modes.
 
---=-YE8llOdh506ncGs50mbE
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-On Fri, 2007-08-24 at 15:12 +0200, Holger Schurig wrote:
+---
+ net/mac80211/util.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-> You must have a very different tree to wireless-dev, branch everything.
-> According to git blame, since 2007-08-13 the piece of code there looks
-> like this:
+--- wireless-dev.orig/net/mac80211/util.c	2007-08-23 18:40:37.441897709 +0200
++++ wireless-dev/net/mac80211/util.c	2007-08-23 18:41:09.941897709 +0200
+@@ -97,6 +97,9 @@ void ieee80211_prepare_rates(struct ieee
+ 			    rate->rate == 55 || rate->rate == 110)
+ 				rate->flags |= IEEE80211_RATE_BASIC;
+ 			break;
++		case NUM_IEEE80211_MODES:
++			/* not useful */
++			break;
+ 		}
+ 
+ 		/* Set ERP and MANDATORY flags based on phymode */
+@@ -117,6 +120,9 @@ void ieee80211_prepare_rates(struct ieee
+ 			    rate->rate == 240)
+ 				rate->flags |= IEEE80211_RATE_MANDATORY;
+ 			break;
++		case NUM_IEEE80211_MODES:
++			/* not useful */
++			break;
+ 		}
+ 		if (ieee80211_is_erp_rate(mode->mode, rate->rate))
+ 			rate->flags |= IEEE80211_RATE_ERP;
 
-After my patches, yeah. I screwed up, shouldn't have posted this yet.
-
-johannes
-
---=-YE8llOdh506ncGs50mbE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGz+Ee/ETPhpq3jKURAiz1AJ0ReSqY88rkBP/n8Xui1ZiHKH+w5QCfXqLk
-OJlbGUDQOyvxvb0ilzmqtzI=
-=vRy/
------END PGP SIGNATURE-----
-
---=-YE8llOdh506ncGs50mbE--
+-- 
 
