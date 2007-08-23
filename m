@@ -1,53 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38791 "EHLO mga09.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2234 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758829AbXHHHhd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 03:37:33 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 13/28] iwlwifi: define iwl_rx_reply_scan only when CONFIG_IWLWIFI_DEBUG enabled
-Date: Wed,  8 Aug 2007 15:33:30 +0800
-Message-Id: <11865584562811-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11865584543903-git-send-email-yi.zhu@intel.com>
-References: <11865584251026-git-send-email-yi.zhu@intel.com>
- <11865584292234-git-send-email-yi.zhu@intel.com>
- <1186558432932-git-send-email-yi.zhu@intel.com>
- <11865584342308-git-send-email-yi.zhu@intel.com>
- <11865584363863-git-send-email-yi.zhu@intel.com>
- <11865584392893-git-send-email-yi.zhu@intel.com>
- <11865584413292-git-send-email-yi.zhu@intel.com>
- <1186558443548-git-send-email-yi.zhu@intel.com>
- <11865584452614-git-send-email-yi.zhu@intel.com>
- <11865584473732-git-send-email-yi.zhu@intel.com>
- <11865584503648-git-send-email-yi.zhu@intel.com>
- <11865584521358-git-send-email-yi.zhu@intel.com>
- <11865584543903-git-send-email-yi.zhu@intel.com>
+	id S1761048AbXHWVO3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Aug 2007 17:14:29 -0400
+Date: Thu, 23 Aug 2007 16:51:41 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH]  b43legacy: Initial port of new driver with bcm43xx  PHY code and ssb/mac80211 front end
+Message-ID: <20070823205141.GG2989@tuxdriver.com>
+References: <46CC755A.5030109@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <46CC755A.5030109@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwl-base.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+On Wed, Aug 22, 2007 at 12:41:46PM -0500, Larry Finger wrote:
 
-diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
-index dad9649..8863953 100644
---- a/drivers/net/wireless/iwl-base.c
-+++ b/drivers/net/wireless/iwl-base.c
-@@ -3902,11 +3902,13 @@ static void iwl_rx_beacon_notif(struct iwl_priv *priv,
- static void iwl_rx_reply_scan(struct iwl_priv *priv,
- 			      struct iwl_rx_mem_buffer *rxb)
- {
-+#ifdef CONFIG_IWLWIFI_DEBUG
- 	struct iwl_rx_packet *pkt = (void *)rxb->skb->data;
- 	struct iwl_scanstart_notification *notif =
- 	    (struct iwl_scanstart_notification *)pkt->u.raw;
- 
- 	IWL_DEBUG_RX("Scan request status = 0x%x\n", notif->status);
-+#endif
- }
- 
- static void iwl_rx_scan_start_notif(struct iwl_priv *priv,
+> This patch ports the PHY and radio handling code of the softmac driver
+> to the mac80211 front end from b43. The resulting driver is known as
+> b43legacy.
+
+I have added this to the b43 branch of wireless-dev.  It is available
+in 'everything' as well.
+
 -- 
-1.5.2
+John W. Linville
+linville@tuxdriver.com
