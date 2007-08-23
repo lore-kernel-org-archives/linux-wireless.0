@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([131.228.20.172]:31120 "EHLO
-	mgw-ext13.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751129AbXH1Fyg (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:53530 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760844AbXHWOgt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2007 01:54:36 -0400
-Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
-	by mgw-ext13.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id l7S5sLCg008157
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2007 08:54:33 +0300
-Received: from tikku (essapo-nirac252124.europe.nokia.com [10.162.252.124])
-	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id l7S5sSkt000750
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2007 08:54:28 +0300
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: which hostapd version for which wireless driver
-References: <20070827223833.GA15515@seehuhn.de>
-From: Kalle Valo <Kalle.Valo@nokia.com>
-Date: Tue, 28 Aug 2007 08:54:28 +0300
-In-Reply-To: <20070827223833.GA15515@seehuhn.de> (ext Jochen Voss's message of "Mon\, 27 Aug 2007 23\:38\:33 +0100")
-Message-ID: <871wdouru3.fsf@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 23 Aug 2007 10:36:49 -0400
+Subject: Re: [PATCH 1/2] mac80211:  Remove ieee80211_privacy_mismatch
+From: Volker Braun <vbraun@physics.upenn.edu>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>
+In-Reply-To: <1187878586.4314.22.camel@johannes.berg>
+References: <1187406018.30247.17.camel@thinkpad>
+	 <20070818034146.GC1415@jm.kir.nu>  <1187787855.4314.6.camel@johannes.berg>
+	 <1187805455.9845.104.camel@carrot.hep.upenn.edu>
+	 <1187878586.4314.22.camel@johannes.berg>
+Content-Type: text/plain
+Date: Thu, 23 Aug 2007 10:36:48 -0400
+Message-Id: <1187879808.27317.13.camel@carrot.hep.upenn.edu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"ext Jochen Voss" <voss@seehuhn.de> writes:
+On Thu, 2007-08-23 at 16:16 +0200, Johannes Berg wrote:
+> However, I'm trying to figure out why wpa_supplicant
+> doesn't tell mac80211 it's doing key management in your case.
 
-> I am trying to get hostapd up and running on my Soekris net4521 board,
-> until now without much success.  One of the problems might be that I
-> am completely at a loss which version of hostapd is supposed to work
-> together with which driver.
+Yes, I also looked quickly into wpa_supplicant but so far haven't found
+out why the key management is not set. I'll try to debug that further...
 
-I tried hostapd for the first time last night and it worked with my
-old PII laptop and b43. So it should work :)
+> > ------------------ snip --------------------------------
+> > Mixed Cells Mode
+> thanks for that, where did you get that from?
 
-> Any help about which combinations of hostapd and device driver have at
-> least a chance of working together would be more than welcome.
+I found it at Dell's support page:
 
-I used latest git for both the kernel and hostapd. My notes here:
+http://www.support.dell.com/support/edocs/network/P94583/en/security.htm
 
-http://marc.info/?l=linux-wireless&m=118823232032439&w=2
 
->     root@funk [~] iwconfig wlan1 mode master
->     root@funk [~] iwconfig wlan1 essid "SR20"
->     root@funk [~] iwconfig wlan1 channel 6
->     root@funk [~] iwconfig wlan1 rate 11M
 
-I did not issue these commands, but I don't know if it makes any
-difference in practice.
-
->     root@funk [~] ifconfig wlan1 up
-
-I think I didn't do this, but can't be sure anymore.
-
-My advice is to double check that you are really using the correct
-hostapd compiled for the kernel you are running. And did you remember
-to do make clean for hostapd between compilations?
-
--- 
-Kalle Valo
