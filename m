@@ -1,59 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38680 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764974AbXHPQNo (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55215
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764694AbXHWW1E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2007 12:13:44 -0400
-Received: from [131.234.209.34] (helo=[131.234.237.45])
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1ILhyh-00039k-9e
-	for linux-wireless@vger.kernel.org; Thu, 16 Aug 2007 17:13:43 +0100
-Subject: mac80211 hardware flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gMxx1swPomJSRK1z5sox"
-Date: Thu, 16 Aug 2007 18:16:28 +0200
-Message-Id: <1187280988.23489.29.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 23 Aug 2007 18:27:04 -0400
+Message-Id: <20070823222154.849018000@bu3sch.de>
+References: <20070823222153.073035000@bu3sch.de>
+Date: Fri, 24 Aug 2007 00:21:55 +0200
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Larry Finger <larry.finger@lwfinger.net>
+Subject: [patch 2/7] b43: Fix oops when firmware not found
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add a return statement.
 
---=-gMxx1swPomJSRK1z5sox
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <larry.finger@lwfinger.net>
 
-Hey,
+Index: wireless-dev-new/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-dev-new.orig/drivers/net/wireless/b43/main.c	2007-08-23 23:41:27.000000000 +0200
++++ wireless-dev-new/drivers/net/wireless/b43/main.c	2007-08-23 23:41:34.000000000 +0200
+@@ -1601,6 +1601,7 @@ static int do_request_fw(struct b43_wlde
+ 	if (err) {
+ 		b43err(dev->wl, "Firmware file \"%s\" not found "
+ 		       "or load failed.\n", path);
++		return err;
+ 	}
+ 	if ((*fw)->size < sizeof(struct b43_fw_header))
+ 		goto err_format;
 
-Currently, it looks as though many drivers otherwise well-maintained
-should be setting hardware flags but don't, this is often because of the
-weird semantics of these flags, e.g. IEEE80211_HW_NO_PROBE_FILTERING.
-
-Would anybody object to doing the dumb-down thing and having flags only
-set for hardware to enable special features or work around hardware
-limitations?
-
-I propose to add some prose to mac80211.h that if you add flags it
-should be done that way, and invert the meaning of
-IEEE80211_HW_DATA_NULLFUNC_ACK now.
-
-Any objections?
-
-johannes
-
---=-gMxx1swPomJSRK1z5sox
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGxHhc/ETPhpq3jKURAgqpAJ0UFe3PcX4YlWUjYCHwLJkUvdEf0wCgnKh4
-DpRpaJJolr4/Ibt7YgDJW0M=
-=iHpX
------END PGP SIGNATURE-----
-
---=-gMxx1swPomJSRK1z5sox--
+-- 
 
