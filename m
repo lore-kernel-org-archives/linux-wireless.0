@@ -1,161 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:55151 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754513AbXHHBzI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2007 21:55:08 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1IIalK-00007I-UC
-	for linux-wireless@vger.kernel.org; Wed, 08 Aug 2007 03:55:02 +0200
-Received: from carrot.hep.upenn.edu ([128.91.45.96])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2007 03:55:02 +0200
-Received: from volker.braun by carrot.hep.upenn.edu with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2007 03:55:02 +0200
-To: linux-wireless@vger.kernel.org
-From: Volker Braun <volker.braun@physik.hu-berlin.de>
-Subject: mac8011 vs. dynamic wep infrastructure
-Date: Wed, 8 Aug 2007 00:00:09 +0000 (UTC)
-Message-ID: <pan.2007.08.08.00.00.05@physik.hu-berlin.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55212
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764225AbXHWW1E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Aug 2007 18:27:04 -0400
+Message-Id: <20070823222154.137089000@bu3sch.de>
+References: <20070823222153.073035000@bu3sch.de>
+Date: Fri, 24 Aug 2007 00:21:54 +0200
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Larry Finger <larry.finger@lwfinger.net>
+Subject: [patch 1/7] b43: Change Kconfig help text
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I had problems associating to my university's wireless lan. We are
-using dynamic WEP (IEEE8021X EAP-TTLS/PAP, aka "eduroam") and Cisco
-APs. There seem to be two problems:
+Hopefully people can understand this better.
 
-1) The AP beacon sets WLAN_CAPABILITY_PRIVACY. Of course, the initial
-authentication and WEP key exchange cannot be WEP encrypted (but is
-protected by TTLS, so it is secure). Reading the original 80211 draft,
-it is probably illegal to set WLAN_CAPABILITY_PRIVACY in this
-situation, so it would be Cisco's fault (but we still have to live
-with it). I patched ieee80211_privacy_mismatch to allow the mismatch
-as long as we are not associated.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <larry.finger@lwfinger.net>
 
-2) The Cisco AP sets the unicast key to some index higher than
-0. While outright weird, this is probably legal. However, mac80211
-does not allow this setting. I patched ieee80211_set_encryption to
-remove this invalid restriction of the key index. Finally I inserted
-some hack in ieee80211_rx_h_check to guess the right key.
-
-With these modifications, I can associate to our network and exchange
-data.
-
-To get the patch into a presentable state, I have a couple of
-questions:
-
-a) Can anyone please confirm that the key index *must* be in the range
-[0,NUM_DEFAULT_KEYS), everywhere in the code? Or are there some magic
-values outside this interval? 
-
-b) In ieee80211_set_encryption, there are two places to store WEP
-keys: sta->key (for the unicast key) and sdata->keys[0..3] (for
-broad/multicast keys). So the unicast key is not included in the
-output of "iwlist key", is that intentional? In ieee80211_rx_h_check
-you get the key index, but the unicast key is _NOT_
-sdata->keys[keyindex]?!? Why don't we simply put all keys into
-sdata->keys[0..3], would that be too easy? 
-
-I see some similar (wrong) assumptions about keyidx==0 being the
-unicast key in ieee80211_rx_michael_mic_report. The statistics
-gathering is probably still broken in that regard.
-
-
-Volker Braun
----
-
-
-diff -ru linux+mac80211-9.0.3/include/linux/ieee80211.h linux-2.6.22.1/include/linux/ieee80211.h
---- linux+mac80211-9.0.3/include/linux/ieee80211.h      2007-08-06 16:28:48.000000000 -0400
-+++ linux-2.6.22.1/include/linux/ieee80211.h    2007-08-07 13:35:18.000000000 -0400
-@@ -357,7 +357,7 @@
- #define WLAN_CAPABILITY_IBSS           (1<<1)
- #define WLAN_CAPABILITY_CF_POLLABLE    (1<<2)
- #define WLAN_CAPABILITY_CF_POLL_REQUEST        (1<<3)
--#define WLAN_CAPABILITY_PRIVACY                (1<<4)
-+#define WLAN_CAPABILITY_PRIVACY                (1<<4) /* Force WEP on data packets */
- #define WLAN_CAPABILITY_SHORT_PREAMBLE (1<<5)
- #define WLAN_CAPABILITY_PBCC           (1<<6)
- #define WLAN_CAPABILITY_CHANNEL_AGILITY        (1<<7)
-diff -ru linux+mac80211-9.0.3/net/mac80211/ieee80211.c linux-2.6.22.1/net/mac80211/ieee80211.c
---- linux+mac80211-9.0.3/net/mac80211/ieee80211.c       2007-08-06 16:28:48.000000000 -0400
-+++ linux-2.6.22.1/net/mac80211/ieee80211.c     2007-08-07 19:52:42.000000000 -0400
-@@ -3571,12 +3571,19 @@
- 
-                if ((rx->local->hw.flags & IEEE80211_HW_WEP_INCLUDE_IV) &&
-                    rx->fc & IEEE80211_FCTL_PROTECTED) {
--                       int keyidx = ieee80211_wep_get_keyidx(rx->skb);
- 
-+                       int keyidx = ieee80211_wep_get_keyidx(rx->skb);
-+                       if (keyidx < 0 || keyidx >= NUM_DEFAULT_KEYS)
-+                               return TXRX_DROP;
+Index: wireless-dev-new/drivers/net/wireless/b43/Kconfig
+===================================================================
+--- wireless-dev-new.orig/drivers/net/wireless/b43/Kconfig	2007-08-23 22:55:18.000000000 +0200
++++ wireless-dev-new/drivers/net/wireless/b43/Kconfig	2007-08-23 23:31:09.000000000 +0200
+@@ -1,21 +1,31 @@
+ config B43
+ 	tristate "Broadcom 43xx wireless support (mac80211 stack)"
+-	depends on SSB_POSSIBLE && MAC80211 && WLAN_80211 && EXPERIMENTAL
++	depends on SSB_POSSIBLE && MAC80211 && WLAN_80211
+ 	select SSB
+ 	select FW_LOADER
+ 	select HW_RANDOM
+ 	---help---
+-	  This is an experimental driver for the Broadcom 43xx wireless chip,
+-	  found in the Apple Airport Extreme and various other devices. This
+-	  driver supports 802.11a and 802.11g, but not 802.11b. As a result,
+-	  BCM4301 and BCM4303 are not supported - use b43legacy instead.
+-	  It is safe to include both b43 and b43legacy as the ssb driver will
+-	  load the correct version for your device.
++	  b43 is a driver for the Broadcom 43xx series wireless devices.
 +
-                        if (keyidx >= 0 && keyidx < NUM_DEFAULT_KEYS &&
-                            (!rx->sta || !rx->sta->key || keyidx > 0))
-                                rx->key = rx->sdata->keys[keyidx];
- 
-+                       /* nasty hack: the unicast key had keyidx > 0 */
-+                       if (rx->sta && rx->sta->key && !rx->key)
-+                               rx->key = rx->sta->key;
++	  Check "lspci" for something like
++	  "Broadcom Corporation BCM43XX 802.11 Wireless LAN Controller"
++	  to determine whether you own such a device.
 +
-                        if (!rx->key) {
-                                if (!rx->u.rx.ra_match)
-                                        return TXRX_DROP;
-diff -ru linux+mac80211-9.0.3/net/mac80211/ieee80211_ioctl.c linux-2.6.22.1/net/mac80211/ieee80211_ioctl.c
---- linux+mac80211-9.0.3/net/mac80211/ieee80211_ioctl.c 2007-08-06 16:28:48.000000000 -0400
-+++ linux-2.6.22.1/net/mac80211/ieee80211_ioctl.c       2007-08-07 19:37:25.000000000 -0400
-@@ -479,13 +479,14 @@
- 
-        sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
-+       if (idx < 0 || idx >= NUM_DEFAULT_KEYS) {
-+               printk(KERN_DEBUG "%s: set_encrypt - invalid idx = %d\n",
-+                      dev->name, idx);
-+               return -EINVAL;
-+       }
++	  This driver supports the new BCM43xx IEEE 802.11G devices, but not
++	  the old IEEE 802.11B devices. Old devices are supported by
++	  the b43legacy driver.
++	  Note that this has nothing to do with the standard that your AccessPoint
++	  supports (A, B, G or a combination).
++	  IEEE 802.11G devices can talk to IEEE 802.11B AccessPoints.
 +
-        if (is_broadcast_ether_addr(sta_addr)) {
-                sta = NULL;
--               if (idx >= NUM_DEFAULT_KEYS) {
--                       printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
--                              dev->name, idx);
--                       return -EINVAL;
--               }
-                key = sdata->keys[idx];
++	  It is safe to include both b43 and b43legacy as the underlying glue
++	  layer will automatically load the correct version for your device.
  
-                /* TODO: consider adding hwaccel support for these; at least
-@@ -499,12 +500,6 @@
-                 * being, this can be only set at compile time. */
-        } else {
-                set_tx_key = 0;
--               if (idx != 0) {
--                       printk(KERN_DEBUG "%s: set_encrypt - non-zero idx for "
--                              "individual key\n", dev->name);
--                       return -EINVAL;
--               }
--
-                sta = sta_info_get(local, sta_addr);
-                if (!sta) {
-                        if (err)
-diff -ru linux+mac80211-9.0.3/net/mac80211/ieee80211_sta.c linux-2.6.22.1/net/mac80211/ieee80211_sta.c
---- linux+mac80211-9.0.3/net/mac80211/ieee80211_sta.c   2007-08-06 16:28:48.000000000 -0400
-+++ linux-2.6.22.1/net/mac80211/ieee80211_sta.c 2007-08-07 15:01:31.000000000 -0400
-@@ -1131,10 +1131,11 @@
-        bss = ieee80211_rx_bss_get(dev, ifsta->bssid);
-        if (!bss)
-                return 0;
--
--       if (ieee80211_sta_wep_configured(dev) !=
--           !!(bss->capability & WLAN_CAPABILITY_PRIVACY))
--               res = 1;
-+
-+       if (ifsta->associated && ieee80211_sta_wep_configured(dev) != 
-+           !!(bss->capability & WLAN_CAPABILITY_PRIVACY)) {
-+               res = 1;  /* associated and WEP encryption mismatch */
-+       }
+ 	  This driver uses V4 firmware, which must be installed separately using
+ 	  b43-fwcutter.
  
-        ieee80211_rx_bss_put(dev, bss);
+ 	  This driver can be built as a module (recommended) that will be called "b43".
++	  If unsure, say M.
+ 
+ # Auto-select SSB PCI-HOST support, if possible
+ config B43_PCI_AUTOSELECT
+@@ -32,8 +42,8 @@ config B43_PCICORE_AUTOSELECT
+ 	default y
+ 
+ config B43_PCMCIA
+-	bool "Broadcom 43xx PCMCIA device support"
+-	depends on B43 && SSB_PCMCIAHOST_POSSIBLE
++	bool "Broadcom 43xx PCMCIA device support (EXPERIMENTAL)"
++	depends on B43 && SSB_PCMCIAHOST_POSSIBLE && EXPERIMENTAL
+ 	select SSB_PCMCIAHOST
+ 	---help---
+ 	  Broadcom 43xx PCMCIA device support.
+@@ -41,7 +51,7 @@ config B43_PCMCIA
+ 	  Support for 16bit PCMCIA devices.
+ 	  Please note that most PC-CARD devices are _NOT_ 16bit PCMCIA
+ 	  devices, but 32bit CardBUS devices. CardBUS devices are supported
+-	  by "B43 PCI device support".
++	  out of the box by b43.
+ 
+ 	  With this config option you can drive b43 cards in
+ 	  CompactFlash formfactor in a PCMCIA adaptor.
+
+-- 
 
