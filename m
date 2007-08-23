@@ -1,103 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4075 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757884AbXHOBGd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2007 21:06:33 -0400
-Date: Tue, 14 Aug 2007 20:34:10 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Please pull 'upstream-davem' branch of wireless-2.6
-Message-ID: <20070815003410.GJ7198@tuxdriver.com>
-References: <20070815003234.GI7198@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070815003234.GI7198@tuxdriver.com>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:37177 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759591AbXHWOPw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Aug 2007 10:15:52 -0400
+Subject: Re: [PATCH 1/2] mac80211:  Remove ieee80211_privacy_mismatch
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Volker Braun <vbraun@physics.upenn.edu>
+Cc: Jouni Malinen <j@w1.fi>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>
+In-Reply-To: <1187805455.9845.104.camel@carrot.hep.upenn.edu>
+References: <1187406018.30247.17.camel@thinkpad>
+	 <20070818034146.GC1415@jm.kir.nu>  <1187787855.4314.6.camel@johannes.berg>
+	 <1187805455.9845.104.camel@carrot.hep.upenn.edu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mC6sii79FEstveNB5hP5"
+Date: Thu, 23 Aug 2007 16:16:26 +0200
+Message-Id: <1187878586.4314.22.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-More items intended for 2.6.24, based-off the preceding fixes-davem
-request.
 
-Individual patches available here:
+--=-mC6sii79FEstveNB5hP5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/upstream-davem
+On Wed, 2007-08-22 at 13:57 -0400, Volker Braun wrote:
 
-Thanks!
+> Thats PRISM2_PARAM_MIXED_CELL=3D1039, which you removed in your
+> 023-remove-unused-ioctls-3.patch. If I revert that then I'm sure your
+> iwpriv call would work around my problem.
 
-John
+Oh right, but I dropped that patch now that Jouni complained about it :)
 
----
+> Note that I'm not in a mixed cell! iee80211_privacy_mismatch checks
+> the
+> wrong mismatch. In my case, the AP broadcasts privacy, but I do not
+> (yet) have a WEP key.
 
-The following changes since commit b9bf1e60a294fc7795d5198f94a917290e52865b:
-  John W. Linville (1):
-        mac80211: probe for hidden SSIDs in pre-auth scan
+So far I understand, that's exactly what happens with WPA as well.
 
-are available in the git repository at:
+>  But really mixed cell support is about the AP
+> _not_ broadcasting privacy, yet the user _having_ a WEP key
+> configured.=20
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git upstream-davem
+Ah, so that's mixed cell. Had me wondering anyway :)
 
-Johannes Berg (1):
-      radiotap parser: accept all other fields
+> So say we fix iee80211_privacy_mismatch in checking for the right
+> mismatch only. Then everybody would be happy, except some poor soul on
+> a
+> mixed cell network who would probably never figure out how to enable
+> mixed cell mode. Why do we hate him so much? ;-) There is no security
+> implication in enabling mixed mode by default --- management frames
+> stay
+> unencrypted and data frames with privacy mismatch continue to be
+> dropped.=20
 
-Larry Finger (1):
-      mac80211: Add SIOCGIWTXPOWER routine
+That's true. However, I'm trying to figure out why wpa_supplicant
+doesn't tell mac80211 it's doing key management in your case. The first
+check in privacy_mismatch() should make it return 0 if wpa_supplicant
+sets key management, which works fine with WPA. I'm wondering if there's
+actually a bug in wpa_supplicant here.
 
- net/mac80211/ieee80211_ioctl.c |   16 +++++++++++++++-
- net/wireless/radiotap.c        |    6 +++++-
- 2 files changed, 20 insertions(+), 2 deletions(-)
+> ------------------ snip --------------------------------
+> Mixed Cells Mode
 
-diff --git a/net/mac80211/ieee80211_ioctl.c b/net/mac80211/ieee80211_ioctl.c
-index e7904db..f459d89 100644
---- a/net/mac80211/ieee80211_ioctl.c
-+++ b/net/mac80211/ieee80211_ioctl.c
-@@ -798,6 +798,20 @@ static int ieee80211_ioctl_giwrate(struct net_device *dev,
- 	return 0;
- }
- 
-+static int ieee80211_ioctl_giwtxpower(struct net_device *dev,
-+				   struct iw_request_info *info,
-+				   union iwreq_data *data, char *extra)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+
-+	data->txpower.fixed = 1;
-+	data->txpower.disabled = !(local->hw.conf.radio_enabled);
-+	data->txpower.value = local->hw.conf.power_level;
-+	data->txpower.flags = IW_TXPOW_DBM;
-+
-+	return 0;
-+}
-+
- static int ieee80211_ioctl_siwrts(struct net_device *dev,
- 				  struct iw_request_info *info,
- 				  struct iw_param *rts, char *extra)
-@@ -1580,7 +1594,7 @@ static const iw_handler ieee80211_handler[] =
- 	(iw_handler) ieee80211_ioctl_siwfrag,		/* SIOCSIWFRAG */
- 	(iw_handler) ieee80211_ioctl_giwfrag,		/* SIOCGIWFRAG */
- 	(iw_handler) NULL,				/* SIOCSIWTXPOW */
--	(iw_handler) NULL,				/* SIOCGIWTXPOW */
-+	(iw_handler) ieee80211_ioctl_giwtxpower,	/* SIOCGIWTXPOW */
- 	(iw_handler) ieee80211_ioctl_siwretry,		/* SIOCSIWRETRY */
- 	(iw_handler) ieee80211_ioctl_giwretry,		/* SIOCGIWRETRY */
- 	(iw_handler) ieee80211_ioctl_siwencode,		/* SIOCSIWENCODE */
-diff --git a/net/wireless/radiotap.c b/net/wireless/radiotap.c
-index 68c11d0..28fbd0b 100644
---- a/net/wireless/radiotap.c
-+++ b/net/wireless/radiotap.c
-@@ -161,7 +161,11 @@ int ieee80211_radiotap_iterator_next(
- 		[IEEE80211_RADIOTAP_DBM_TX_POWER] = 0x11,
- 		[IEEE80211_RADIOTAP_ANTENNA] = 0x11,
- 		[IEEE80211_RADIOTAP_DB_ANTSIGNAL] = 0x11,
--		[IEEE80211_RADIOTAP_DB_ANTNOISE] = 0x11
-+		[IEEE80211_RADIOTAP_DB_ANTNOISE] = 0x11,
-+		[IEEE80211_RADIOTAP_RX_FLAGS] = 0x22,
-+		[IEEE80211_RADIOTAP_TX_FLAGS] = 0x22,
-+		[IEEE80211_RADIOTAP_RTS_RETRIES] = 0x11,
-+		[IEEE80211_RADIOTAP_DATA_RETRIES] = 0x11,
- 		/*
- 		 * add more here as they are defined in
- 		 * include/net/ieee80211_radiotap.h
--- 
-John W. Linville
-linville@tuxdriver.com
+thanks for that, where did you get that from?
+
+johannes
+
+--=-mC6sii79FEstveNB5hP5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGzZa6/ETPhpq3jKURAu5HAJ4rQfGAgNyMYNxjyCVE5cm40IJCowCfe9OW
+rmjfzByHc0Dg1/5cmxZWcZg=
+=Y2o3
+-----END PGP SIGNATURE-----
+
+--=-mC6sii79FEstveNB5hP5--
+
