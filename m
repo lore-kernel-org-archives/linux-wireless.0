@@ -1,53 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:58469 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54800 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760351AbXHUPLU (ORCPT
+	with ESMTP id S1757969AbXHWQuK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 11:11:20 -0400
-Message-Id: <20070821145905.689978000@sipsolutions.net>
-Date: Tue, 21 Aug 2007 16:59:05 +0200
+	Thu, 23 Aug 2007 12:50:10 -0400
+Message-Id: <20070823164524.424586000@sipsolutions.net>
+References: <20070823164500.998912000@sipsolutions.net>
+Date: Thu, 23 Aug 2007 18:45:09 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 00/27] various cleanups and fixes for mac80211 and drivers
+To: linux-wireless@vger.kernel.org
+Cc: Volker Braun <volker.braun@physik.hu-berlin.de>
+Subject: [RFC 08/11] mac80211: ignore key index on pairwise key (WEP only)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've stripped my patch series down to those things that
-nobody objected to. The ioctl removal is a bit slimmer
-keeping the things Jouni wanted to keep.
+Work-around for broken APs that use a non-zero key index for WEP
+pairwise keys. With this patch, WEP encryption only is exempt from
+providing a zero key index.
 
-This series contains:
+Signed-off-by: Volker Braun <volker.braun@physik.hu-berlin.de>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
- * mac80211: fix showing transmitted frames on multiple monitor interfaces
- * mac80211: fix preamble setting
- * mac80211: avoid copying packets to interfaces that are down
- * mac80211: fix key debugfs
- * mac80211, drivers: remove reset callback
- * ralink drivers: remove IEEE80211_HW_HOST_GEN_BEACON flag
- * mac80211: remove IEEE80211_HW_HOST_GEN_BEACON flag
- * mac80211: remove PRISM2_PARAM_RADIO_ENABLED
- * mac80211: remove PRISM2_HOSTAPD_SET_GENERIC_INFO_ELEM
- * ralink drivers: remove IEEE80211_HW_DATA_NULLFUNC_ACK
- * rtl8187: remove IEEE80211_HW_DATA_NULLFUNC_ACK
- * p54: remove IEEE80211_HW_DATA_NULLFUNC_ACK
- * mac80211: remove IEEE80211_HW_DATA_NULLFUNC_ACK
- * mac80211: ratelimit some RX messages
- * mac80211: remove ieee80211_msg_wep_frame_unknown_key
- * mac80211: remove radar stuff
- * mac80211: remove scan struct from hostapd_param
- * mac80211: fix software decryption
- * cfg80211: extend radiotap parser by all remaining fields
- * mac80211: remove unused ioctls (1)
- * mac80211: remove unused ioctls (2)
- * mac80211: remove unused ioctls (3)
- * mac80211: remove unused ioctls (4)
- * mac80211: remove PRISM2_PARAM_KEY_MGMT
- * mac80211: kill key_mgmt, use key_management_enabled
- * mac80211: refactor event sending
- * mac80211: use switch statement in tx code
+---
+ net/mac80211/ieee80211_ioctl.c |   18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
-johannes
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-23 18:38:37.961897709 +0200
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-23 18:38:44.581897709 +0200
+@@ -385,17 +385,23 @@ static int ieee80211_set_encryption(stru
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
++	if (idx < 0 || idx >= NUM_DEFAULT_KEYS) {
++		printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
++		       dev->name, idx);
++		return -EINVAL;
++	}
++
+ 	if (is_broadcast_ether_addr(sta_addr)) {
+ 		sta = NULL;
+-		if (idx >= NUM_DEFAULT_KEYS) {
+-			printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
+-			       dev->name, idx);
+-			return -EINVAL;
+-		}
+ 		key = sdata->keys[idx];
+ 	} else {
+ 		set_tx_key = 0;
+-		if (idx != 0) {
++		/*
++		 * According to the standard, the key index of a pairwise
++		 * key must be zero. However, some AP are broken when it
++		 * comes to WEP key indices, so we work around this.
++		 */
++		if (idx != 0 && alg != ALG_WEP) {
+ 			printk(KERN_DEBUG "%s: set_encrypt - non-zero idx for "
+ 			       "individual key\n", dev->name);
+ 			return -EINVAL;
+
+-- 
 
