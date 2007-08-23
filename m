@@ -1,64 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3244 "EHLO ra.tuxdriver.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2895 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761530AbXHWVPU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2007 17:15:20 -0400
-Date: Thu, 23 Aug 2007 16:54:11 -0400
+	id S932105AbXHXAO1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Aug 2007 20:14:27 -0400
+Date: Thu, 23 Aug 2007 19:43:33 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/27] various cleanups and fixes for mac80211 and  drivers
-Message-ID: <20070823205411.GH2989@tuxdriver.com>
-References: <20070821145905.689978000@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] b43, b43legacy: Fix inconsistency between branches  'b43' and 'everything' in wireless-dev
+Message-ID: <20070823234333.GA3472@tuxdriver.com>
+References: <46ce12c4.2TC1IuG0LDupBuDr%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070821145905.689978000@sipsolutions.net>
+In-Reply-To: <46ce12c4.2TC1IuG0LDupBuDr%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 21, 2007 at 04:59:05PM +0200, Johannes Berg wrote:
-> I've stripped my patch series down to those things that
-> nobody objected to. The ioctl removal is a bit slimmer
-> keeping the things Jouni wanted to keep.
-> 
-> This series contains:
-> 
->  * mac80211: fix showing transmitted frames on multiple monitor interfaces
->  * mac80211: fix preamble setting
->  * mac80211: avoid copying packets to interfaces that are down
->  * mac80211: fix key debugfs
->  * mac80211, drivers: remove reset callback
->  * ralink drivers: remove IEEE80211_HW_HOST_GEN_BEACON flag
->  * mac80211: remove IEEE80211_HW_HOST_GEN_BEACON flag
->  * mac80211: remove PRISM2_PARAM_RADIO_ENABLED
->  * mac80211: remove PRISM2_HOSTAPD_SET_GENERIC_INFO_ELEM
->  * ralink drivers: remove IEEE80211_HW_DATA_NULLFUNC_ACK
->  * rtl8187: remove IEEE80211_HW_DATA_NULLFUNC_ACK
->  * p54: remove IEEE80211_HW_DATA_NULLFUNC_ACK
->  * mac80211: remove IEEE80211_HW_DATA_NULLFUNC_ACK
->  * mac80211: ratelimit some RX messages
->  * mac80211: remove ieee80211_msg_wep_frame_unknown_key
->  * mac80211: remove radar stuff
->  * mac80211: remove scan struct from hostapd_param
->  * mac80211: fix software decryption
->  * cfg80211: extend radiotap parser by all remaining fields
->  * mac80211: remove unused ioctls (1)
->  * mac80211: remove unused ioctls (2)
->  * mac80211: remove unused ioctls (3)
->  * mac80211: remove unused ioctls (4)
->  * mac80211: remove PRISM2_PARAM_KEY_MGMT
->  * mac80211: kill key_mgmt, use key_management_enabled
->  * mac80211: refactor event sending
->  * mac80211: use switch statement in tx code
+On Thu, Aug 23, 2007 at 06:05:40PM -0500, Larry Finger wrote:
 
-I've merged the lot to the 'mac80211' branch (and driver patches to
-their respective branches) of wireless-dev, and it is available on
-'everything' as well.
+> I'm not sure how to handle this. In it's present state, branch 'b43' cannot be used
+> to generate a working version of b43 or b43legacy. In addition,  the Kconfig and Makefile
+> from b43legacy are not included, thus it is not possible to build b43legacy
+> in that branch.
 
-Johannes, I appreciate your continued dedication to the cause! :-)
+I had neglected to pull the mac80211 updates into the branches that
+depend on them (now most of the driver branches).  I have done that
+now, and pushed the results.
+
+Hth!
 
 John
+
+P.S.  FWIW, b43legacy seems to have Kconfig and Makefile in my tree.
+I was able to build it just fine.  Yes, I checked to make sure I had
+included them in git. :-)
 -- 
 John W. Linville
 linville@tuxdriver.com
