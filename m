@@ -1,72 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:19289 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754161AbXHaE65 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Aug 2007 00:58:57 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-Subject: [PATCH 6/6] adm8211: Fix monitor mode
-Date: Fri, 31 Aug 2007 00:56:23 -0400
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <200708310056.23408.flamingice@sourmilk.net>
-In-Reply-To: <20070831045328.3700.81232.stgit@magic.sourmilk.net>
-References: <20070831045328.3700.81232.stgit@magic.sourmilk.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3244 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761530AbXHWVPU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Aug 2007 17:15:20 -0400
+Date: Thu, 23 Aug 2007 16:54:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/27] various cleanups and fixes for mac80211 and  drivers
+Message-ID: <20070823205411.GH2989@tuxdriver.com>
+References: <20070821145905.689978000@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8";
-  format=fixed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070821145905.689978000@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Wu <flamingice@sourmilk.net>
+On Tue, Aug 21, 2007 at 04:59:05PM +0200, Johannes Berg wrote:
+> I've stripped my patch series down to those things that
+> nobody objected to. The ioctl removal is a bit slimmer
+> keeping the things Jouni wanted to keep.
+> 
+> This series contains:
+> 
+>  * mac80211: fix showing transmitted frames on multiple monitor interfaces
+>  * mac80211: fix preamble setting
+>  * mac80211: avoid copying packets to interfaces that are down
+>  * mac80211: fix key debugfs
+>  * mac80211, drivers: remove reset callback
+>  * ralink drivers: remove IEEE80211_HW_HOST_GEN_BEACON flag
+>  * mac80211: remove IEEE80211_HW_HOST_GEN_BEACON flag
+>  * mac80211: remove PRISM2_PARAM_RADIO_ENABLED
+>  * mac80211: remove PRISM2_HOSTAPD_SET_GENERIC_INFO_ELEM
+>  * ralink drivers: remove IEEE80211_HW_DATA_NULLFUNC_ACK
+>  * rtl8187: remove IEEE80211_HW_DATA_NULLFUNC_ACK
+>  * p54: remove IEEE80211_HW_DATA_NULLFUNC_ACK
+>  * mac80211: remove IEEE80211_HW_DATA_NULLFUNC_ACK
+>  * mac80211: ratelimit some RX messages
+>  * mac80211: remove ieee80211_msg_wep_frame_unknown_key
+>  * mac80211: remove radar stuff
+>  * mac80211: remove scan struct from hostapd_param
+>  * mac80211: fix software decryption
+>  * cfg80211: extend radiotap parser by all remaining fields
+>  * mac80211: remove unused ioctls (1)
+>  * mac80211: remove unused ioctls (2)
+>  * mac80211: remove unused ioctls (3)
+>  * mac80211: remove unused ioctls (4)
+>  * mac80211: remove PRISM2_PARAM_KEY_MGMT
+>  * mac80211: kill key_mgmt, use key_management_enabled
+>  * mac80211: refactor event sending
+>  * mac80211: use switch statement in tx code
 
-This patch makes adm8211 deal with a NULL mac addr in monitor mode and
-fixes handling of FCS in monitor mode.
+I've merged the lot to the 'mac80211' branch (and driver patches to
+their respective branches) of wireless-dev, and it is available on
+'everything' as well.
 
-Signed-off-by: Michael Wu <flamingice@sourmilk.net>
----
+Johannes, I appreciate your continued dedication to the cause! :-)
 
- drivers/net/wireless/adm8211.c |   13 ++++++++-----
- 1 files changed, 8 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index 872b032..be93ba0 100644
---- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -316,6 +316,11 @@ static void adm8211_set_rx_mode(struct ieee80211_hw *dev,
- 	ADM8211_CSR_WRITE(MAR1, mc_filter[1]);
- 	ADM8211_CSR_READ(NAR);
- 
-+	if (flags & IFF_PROMISC)
-+		dev->flags |= IEEE80211_HW_RX_INCLUDES_FCS;
-+	else
-+		dev->flags &= ~IEEE80211_HW_RX_INCLUDES_FCS;
-+
- 	ADM8211_RESTORE();
- }
- 
-@@ -476,11 +481,6 @@ static void adm8211_interrupt_rci(struct ieee80211_hw 
-*dev)
- 			rx_status.freq = adm8211_channels[priv->channel - 1].freq;
- 			rx_status.phymode = MODE_IEEE80211B;
- 
--			/* remove FCS */
--			/* TODO: remove this and set flag in ieee80211_hw instead? */
--			if (dev->flags & IFF_PROMISC)
--				skb_trim(skb, skb->len - FCS_LEN);
--
- 			ieee80211_rx_irqsafe(dev, skb, &rx_status);
- 		}
- 
-@@ -1255,6 +1255,9 @@ static void adm8211_hw_init(struct ieee80211_hw *dev)
- 	/* Clear the missed-packet counter. */
- 	ADM8211_CSR_READ(LPC);
- 
-+	if (!priv->mac_addr)
-+		return;
-+
- 	/* set mac address */
- 	ADM8211_CSR_WRITE(PAR0, *(u32 *)priv->mac_addr);
- 	ADM8211_CSR_WRITE(PAR1, *(u16 *)&priv->mac_addr[4]);
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
