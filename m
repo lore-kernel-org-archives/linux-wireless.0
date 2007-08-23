@@ -1,93 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:36180 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750947AbXHHKaU (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55219
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764752AbXHWW1E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 06:30:20 -0400
-Subject: Re: [RFC] allow device to stop packet mirror behaviour
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, andy@warmcat.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070808.031755.91441405.davem@davemloft.net>
-References: <1186475155.4067.17.camel@johannes.berg>
-	 <20070807.180607.116354128.davem@davemloft.net>
-	 <1186564441.11717.5.camel@johannes.berg>
-	 <20070808.031755.91441405.davem@davemloft.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cTNlzPcwyYgVjOjwnTA6"
-Date: Wed, 08 Aug 2007 12:32:08 +0200
-Message-Id: <1186569128.11717.44.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 23 Aug 2007 18:27:04 -0400
+Message-Id: <20070823222155.268828000@bu3sch.de>
+References: <20070823222153.073035000@bu3sch.de>
+Date: Fri, 24 Aug 2007 00:21:56 +0200
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [patch 3/7] b43: allow disabling hardware encryption
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes@sipsolutions.net>
 
---=-cTNlzPcwyYgVjOjwnTA6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+For debugging it seems useful to be able to turn off
+hardware encryption. With the changes I made to mac80211
+that is now simple.
 
-On Wed, 2007-08-08 at 03:17 -0700, David Miller wrote:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-> Then I don't understand your problem.  If they are specific 802.11
-> protocol packets, the radio stack is in a much better situation to
-> filter out things like this.
+Index: wireless-dev-new/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-dev-new.orig/drivers/net/wireless/b43/main.c	2007-08-23 23:32:08.000000000 +0200
++++ wireless-dev-new/drivers/net/wireless/b43/main.c	2007-08-23 23:36:22.000000000 +0200
+@@ -104,6 +104,10 @@ static int modparam_hwpctl;
+ module_param_named(hwpctl, modparam_hwpctl, int, 0444);
+ MODULE_PARM_DESC(hwpctl, "Enable hardware-side power control (default off)");
+ 
++static int modparam_nohwcrypt;
++module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
++MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
++
+ static const struct ssb_device_id b43_ssb_tbl[] = {
+ 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 5),
+ 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 6),
+@@ -2872,6 +2876,9 @@ static int b43_dev_set_key(struct ieee80
+ 	u8 index;
+ 	int err = -EINVAL;
+ 
++	if (modparam_nohwcrypt)
++		return -ENOSPC; /* User disabled HW-crypto */
++
+ 	if (!dev)
+ 		return -ENODEV;
+ 	switch (key->alg) {
 
-What do you mean by radio stack? You can't really send any frames into
-the monitor devices *except* raw radiotap+802.11 frames, and these are
-exactly the problem because they're mirrored out right away. But because
-we have a different radiotap header on outgoing than on incoming frames
-to allow userspace to see the transmission indication (was the packet
-ACKed by the other side etc) we ourselves mirror them out as well.
-
-We also mirror out packets from other virtual devices associated with
-the same PHY as the virtual monitor.
-
-So think of it this way:
-
-[ monitor interface (radiotap+802.11) ]  [ STA mode interface (802.3) ]
-                                  |       |
-                                  \       /
-                                   \     /
-                                    \   /
-                                     \ /
-                                [ mac80211 ]
-                                      |
-                                   [ PHY ]
-                                      |
-                             [ wireless medium ]
-
-Now for packets that come in on the right path, they get mirrored out
-back to the STA mode interface as well. That's fine. For packets that
-come from the bottom, they get cloned and sent to both devices at the
-top with different framing.
-
-Additionally, packets that come in via any interface on the top are
-redirected to all monitor interfaces *after* their transmission via the
-PHY and are amended by a radiotap header that indicates whether the
-transmission was successful. So if you run tcpdump on both interfaces
-above you'll see the IPv4 multicast packet sent to the STA mode
-interface come up on the STA mode interface right away, and you'll also
-see it on the monitor interface after it was transmitted by the PHY.
-
-The problem now comes in when you actually transmit a 802.11 framed
-packet down the monitor device. Because the mac80211 code mirrors all
-transmitted packets up to all monitor interfaces, and the generic code
-mirrors the packet as soon as it was sent to the device (via
-dev_queue_xmit_nit) you see it twice.
-
-johannes
-
---=-cTNlzPcwyYgVjOjwnTA6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGuZuo/ETPhpq3jKURApCCAJ9kN0QxeEEOoPC6ivW4w2YZY21NZwCgo4cq
-NL3Hd71WtBrhPtkl+GB5VsY=
-=nWEs
------END PGP SIGNATURE-----
-
---=-cTNlzPcwyYgVjOjwnTA6--
+-- 
 
