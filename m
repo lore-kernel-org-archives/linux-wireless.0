@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:50983 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54786 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757815AbXHFIRI (ORCPT
+	with ESMTP id S1757631AbXHWQtr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2007 04:17:08 -0400
-Subject: Re: [PATCH] mac80211: allow drivers to indicate failed FCS/PLCP   checksum
+	Thu, 23 Aug 2007 12:49:47 -0400
+Received: from [131.234.79.133]
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.67)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1IOFsO-00010a-RA
+	for linux-wireless@vger.kernel.org; Thu, 23 Aug 2007 17:49:45 +0100
+Message-Id: <20070823164525.677795000@sipsolutions.net>
+References: <20070823164500.998912000@sipsolutions.net>
+Date: Thu, 23 Aug 2007 18:45:12 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <1186177475.13315.10.camel@johannes.berg>
-References: <1186177475.13315.10.camel@johannes.berg>
-Content-Type: text/plain
-Date: Sat, 04 Aug 2007 09:53:23 +0200
-Message-Id: <1186214003.21957.6.camel@johannes.berg>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 11/11] mac80211 maintainership
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-08-03 at 23:44 +0200, Johannes Berg wrote:
+This patch adds myself to the maintainer list for mac80211 and
+changes the git tree URL to John's tree since Jiri doesn't seem
+to be around any more.
 
-> --- mac80211.orig/net/mac80211/rx.c	2007-08-03 23:06:54.187869508 +0200
-> +++ mac80211/net/mac80211/rx.c	2007-08-03 23:39:41.717869508 +0200
-> @@ -155,6 +155,7 @@ ieee80211_rx_monitor(struct net_device *
->  		__le16 chan_freq;
->  		__le16 chan_flags;
->  		u8 antsignal;
-> +		__le16 rx_flags;
->  	} __attribute__ ((packed)) *rthdr;
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Oh. I overlooked the packed attribute there, this additional patch is
-needed:
+---
+ MAINTAINERS |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
---- mac80211.orig/net/mac80211/rx.c     2007-08-03 23:06:54.187869508 +0200
-+++ mac80211/net/mac80211/rx.c  2007-08-03 23:39:41.717869508 +0200
-@@ -155,6 +155,7 @@ ieee80211_rx_monitor(struct net_device *
- 		__le16 chan_freq;
- 		__le16 chan_flags;
- 		u8 antsignal;
-+		u8 padding_for_rx_flags;
- 		__le16 rx_flags;
- 	} __attribute__ ((packed)) *rthdr;
+--- wireless-dev.orig/MAINTAINERS	2007-08-23 18:38:36.901897709 +0200
++++ wireless-dev/MAINTAINERS	2007-08-23 18:38:46.241897709 +0200
+@@ -2443,9 +2443,11 @@ P:	Jiri Benc
+ M:	jbenc@suse.cz
+ P:	Michael Wu
+ M:	flamingice@sourmilk.net
++P:	Johannes Berg
++M:	johannes@sipsolutions.net
+ L:	linux-wireless@vger.kernel.org
+ W:	http://linuxwireless.org/
+-T:	git kernel.org:/pub/scm/linux/kernel/git/jbenc/mac80211.git
++T:	git kernel.org:/pub/scm/linux/kernel/git/linville/wireless-dev.git (mac80211 branch)
+ S:	Maintained
  
+ MACVLAN DRIVER
 
-(patch fabricated by hand so might not apply)
-
-johannes
+-- 
 
