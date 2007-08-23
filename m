@@ -1,173 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55236
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764742AbXHWW1I (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54769 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755488AbXHWQtY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2007 18:27:08 -0400
-Message-Id: <20070823222157.102919000@bu3sch.de>
-References: <20070823222153.073035000@bu3sch.de>
-Date: Fri, 24 Aug 2007 00:22:00 +0200
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [patch 7/7] b43: Fix and cleanup hwcrypto
+	Thu, 23 Aug 2007 12:49:24 -0400
+Received: from [131.234.79.133]
+	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.67)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1IOFs0-0000zj-45
+	for linux-wireless@vger.kernel.org; Thu, 23 Aug 2007 17:49:21 +0100
+Message-Id: <20070823164520.967564000@sipsolutions.net>
+References: <20070823164500.998912000@sipsolutions.net>
+Date: Thu, 23 Aug 2007 18:45:02 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 01/11] mac80211: renumber and document the hardware flags
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes bugs and does a cleanup of the hwcrypto stuff.
+Currently, hardware flags that drivers must set are not
+documented well enough. Fix this.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Index: wireless-dev-new/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-dev-new.orig/drivers/net/wireless/b43/b43.h	2007-08-23 22:55:18.000000000 +0200
-+++ wireless-dev-new/drivers/net/wireless/b43/b43.h	2007-08-24 00:14:00.000000000 +0200
-@@ -571,8 +571,10 @@ struct b43_stats {
- };
+---
+ include/net/mac80211.h |  101 ++++++++++++++++++++++++++-----------------------
+ 1 file changed, 55 insertions(+), 46 deletions(-)
+
+--- wireless-dev.orig/include/net/mac80211.h	2007-08-23 18:26:15.941897709 +0200
++++ wireless-dev/include/net/mac80211.h	2007-08-23 18:26:17.191897709 +0200
+@@ -507,6 +507,61 @@ typedef enum set_key_cmd {
+ 	SET_KEY, DISABLE_KEY,
+ } set_key_cmd;
  
- struct b43_key {
--	void *keyconf;
--	bool enabled;
-+	/* If keyconf is NULL, this key is disabled.
-+	 * keyconf is a cookie. Don't derefenrence it outside of the set_key
-+	 * path, because b43 doesn't own it. */
-+	struct ieee80211_key_conf *keyconf;
- 	u8 algorithm;
- };
- 
-Index: wireless-dev-new/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-dev-new.orig/drivers/net/wireless/b43/main.c	2007-08-23 23:42:20.000000000 +0200
-+++ wireless-dev-new/drivers/net/wireless/b43/main.c	2007-08-24 00:03:09.000000000 +0200
-@@ -806,31 +806,29 @@ static int b43_key_write(struct b43_wlde
- {
- 	int i;
- 	int sta_keys_start;
-+	bool removal = 0;
- 
- 	if (key_len > B43_SEC_KEYSIZE)
- 		return -EINVAL;
- 	if (index < 0) {
--		/* Per station key with associated MAC address.
--		 * Look if it already exists, if yes update, otherwise
--		 * allocate a new key.
--		 */
-+		/* Either pairwise key or address is 00:00:00:00:00:00
-+		 * for transmit-only keys. Search the index. */
- 		if (b43_new_kidx_api(dev))
- 			sta_keys_start = 4;
- 		else
- 			sta_keys_start = 8;
- 		for (i = sta_keys_start; i < dev->max_nr_keys; i++) {
- 			if (dev->key[i].keyconf == keyconf) {
--				/*
--				 * we already have this key so we must be
--				 * in removal (there is no update)
--				 */
-+				/* we already have this key so we must be
-+				 * in removal (there is no update) */
-+				removal = 1;
- 				index = i;
- 				break;
- 			}
- 		}
- 		if (index < 0) {
- 			for (i = sta_keys_start; i < dev->max_nr_keys; i++) {
--				if (!dev->key[i].enabled) {
-+				if (!dev->key[i].keyconf) {
- 					/* found empty */
- 					index = i;
- 					break;
-@@ -851,6 +849,7 @@ static int b43_key_write(struct b43_wlde
- 		do_key_write(dev, index + 4, algorithm, key, key_len, NULL);
- 	}
- 	keyconf->hw_key_idx = index;
-+	dev->key[index].keyconf = removal ? NULL : keyconf;
- 
- 	return 0;
- }
-@@ -864,7 +863,7 @@ static void b43_clear_keys(struct b43_wl
- 	for (i = 0; i < dev->max_nr_keys; i++) {
- 		do_key_write(dev, i, B43_SEC_ALGO_NONE,
- 			     zero, B43_SEC_KEYSIZE, zero);
--		dev->key[i].enabled = 0;
-+		dev->key[i].keyconf = NULL;
- 	}
- }
- 
-@@ -2960,7 +2959,6 @@ static int b43_dev_set_key(struct ieee80
- 		}
- 		if (err)
- 			goto out_unlock;
--		dev->key[key->hw_key_idx].enabled = 1;
- 
- 		if (algorithm == B43_SEC_ALGO_WEP40 ||
- 		    algorithm == B43_SEC_ALGO_WEP104) {
-@@ -2974,16 +2972,11 @@ static int b43_dev_set_key(struct ieee80
- 		static const u8 zero[B43_SEC_KEYSIZE] = { 0 };
- 
- 		algorithm = B43_SEC_ALGO_NONE;
--		if (is_broadcast_ether_addr(addr)) {
--			err = b43_key_write(dev, index, algorithm,
--					    zero, B43_SEC_KEYSIZE,
--					    NULL, key);
--		} else {
--			err = b43_key_write(dev, -1, algorithm,
--					    zero, B43_SEC_KEYSIZE,
--					    addr, key);
--		}
--		dev->key[key->hw_key_idx].enabled = 0;
-+		err = b43_key_write(dev, index, algorithm,
-+				    zero, B43_SEC_KEYSIZE,
-+				    NULL, key);
-+		if (err)
-+			goto out_unlock;
- 		break;
- 	}
- 	default:
-Index: wireless-dev-new/drivers/net/wireless/b43/xmit.c
-===================================================================
---- wireless-dev-new.orig/drivers/net/wireless/b43/xmit.c	2007-08-23 22:55:18.000000000 +0200
-+++ wireless-dev-new/drivers/net/wireless/b43/xmit.c	2007-08-24 00:06:28.000000000 +0200
-@@ -234,23 +234,20 @@ static void generate_txhdr_fw4(struct b4
- 
- 		B43_WARN_ON(key_idx >= dev->max_nr_keys);
- 		key = &(dev->key[key_idx]);
-+		B43_WARN_ON(!key->keyconf);
- 
--		if (key->enabled) {
--			/* Hardware appends ICV. */
--			plcp_fragment_len += txctl->icv_len;
--
--			key_idx = b43_kidx_to_fw(dev, key_idx);
--			mac_ctl |= (key_idx << B43_TX4_MAC_KEYIDX_SHIFT) &
--			    B43_TX4_MAC_KEYIDX;
--			mac_ctl |=
--			    (key->
--			     algorithm << B43_TX4_MAC_KEYALG_SHIFT) &
--			    B43_TX4_MAC_KEYALG;
--			wlhdr_len = ieee80211_get_hdrlen(fctl);
--			iv_len = min((size_t) txctl->iv_len,
--				     ARRAY_SIZE(txhdr->iv));
--			memcpy(txhdr->iv, ((u8 *) wlhdr) + wlhdr_len, iv_len);
--		}
-+		/* Hardware appends ICV. */
-+		plcp_fragment_len += txctl->icv_len;
 +
-+		key_idx = b43_kidx_to_fw(dev, key_idx);
-+		mac_ctl |= (key_idx << B43_TX4_MAC_KEYIDX_SHIFT) &
-+			   B43_TX4_MAC_KEYIDX;
-+		mac_ctl |= (key->algorithm << B43_TX4_MAC_KEYALG_SHIFT) &
-+			   B43_TX4_MAC_KEYALG;
-+		wlhdr_len = ieee80211_get_hdrlen(fctl);
-+		iv_len = min((size_t) txctl->iv_len,
-+			     ARRAY_SIZE(txhdr->iv));
-+		memcpy(txhdr->iv, ((u8 *) wlhdr) + wlhdr_len, iv_len);
- 	}
- 	b43_generate_plcp_hdr((struct b43_plcp_hdr4 *)(&txhdr->plcp),
- 			      plcp_fragment_len, rate);
++/**
++ * enum ieee80211_hw_flags - hardware flags
++ *
++ * These flags are used to indicate hardware capabilities to
++ * the stack. Generally, flags here should have their meaning
++ * done in a way that the simplest hardware doesn't need setting
++ * any particular flags. There are some exceptions to this rule,
++ * however, so you are advised to review these flags carefully.
++ *
++ * @IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE:
++ *	The device only needs to be supplied with a beacon template.
++ *	If you need the host to generate each beacon then don't use
++ *	this flag and call ieee80211_beacon_get() when you need the
++ *	next beacon frame. Note that if you set this flag, you must
++ *	implement the set_tim() callback for powersave mode to work
++ *	properly.
++ *	This flag is only relevant for access-point mode.
++ *
++ * @IEEE80211_HW_RX_INCLUDES_FCS:
++ *	Indicates that received frames passed to the stack include
++ *	the FCS at the end.
++ *
++ * @IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING:
++ *	Some wireless LAN chipsets buffer broadcast/multicast frames
++ *	for power saving stations in the hardware/firmware and others
++ *	rely on the host system for such buffering. This option is used
++ *	to configure the IEEE 802.11 upper layer to buffer broadcast and
++ *	multicast frames when there are power saving stations so that
++ *	the driver can fetch them with ieee80211_get_buffered_bc(). Note
++ *	that not setting this flag works properly only when the
++ *	%IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE is also not set because
++ *	otherwise the stack will not know when the DTIM beacon was sent.
++ *
++ * @IEEE80211_HW_MULTICAST_FILTER:
++ *	Device has multicast filters, i.e. it can filter based on the
++ *	multicast address. If this flag is clear, then %FIF_ALLMULTI
++ *	will be enabled instead of passing multicast addresses when
++ *	multicast addresses are added.
++ *
++ * @IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED:
++ *	Channels are already configured to the default regulatory domain
++ *	specified in the device's EEPROM
++ *
++ * @IEEE80211_HW_SUPPORT_HT_MODE: The device capable of supporting 11n.
++ */
++enum ieee80211_hw_flags {
++	IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE		= 1<<0,
++	IEEE80211_HW_RX_INCLUDES_FCS			= 1<<1,
++	IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING	= 1<<2,
++	IEEE80211_HW_MULTICAST_FILTER			= 1<<3,
++	IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED	= 1<<4,
++	IEEE80211_HW_SUPPORT_HT_MODE			= 1<<5,
++};
++
+ /**
+  * struct ieee80211_hw - hardware information and state
+  * TODO: move documentation into kernel-doc format
+@@ -530,52 +585,6 @@ struct ieee80211_hw {
+ 
+ 	/* The rest is information about your hardware */
+ 
+-	/* TODO: frame_type 802.11/802.3, sw_encryption requirements */
+-
+-/* hole at 0 */
+-
+-	/*
+-	 * The device only needs to be supplied with a beacon template.
+-	 * If you need the host to generate each beacon then don't use
+-	 * this flag and use ieee80211_beacon_get().
+-	 */
+-#define IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE (1<<1)
+-
+-/* hole at 2 */
+-
+-	/* Whether RX frames passed to ieee80211_rx() include FCS in the end */
+-#define IEEE80211_HW_RX_INCLUDES_FCS (1<<3)
+-
+-	/* Some wireless LAN chipsets buffer broadcast/multicast frames for
+-	 * power saving stations in the hardware/firmware and others rely on
+-	 * the host system for such buffering. This option is used to
+-	 * configure the IEEE 802.11 upper layer to buffer broadcast/multicast
+-	 * frames when there are power saving stations so that low-level driver
+-	 * can fetch them with ieee80211_get_buffered_bc(). */
+-#define IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING (1<<4)
+-
+-/* hole at 5 */
+-
+-/* hole at 6 */
+-
+-/* hole at 7 */
+-
+-/* hole at 8 */
+-
+-	/*
+-	 * Device has multicast filters.
+-	 */
+-#define IEEE80211_HW_MULTICAST_FILTER (1<<9)
+-
+-/* hole at 10 */
+-
+-	/* Channels are already configured to the default regulatory domain
+-	 * specified in the device's EEPROM */
+-#define IEEE80211_HW_DEFAULT_REG_DOMAIN_CONFIGURED (1<<11)
+-
+-	/* The device capable of supporting 11n */
+-#define IEEE80211_HW_SUPPORT_HT_MODE (1<<15)
+-
+ 	u32 flags;			/* hardware flags defined above */
+ 
+ 	/* Set to the size of a needed device specific skb headroom for TX skbs. */
 
 -- 
 
