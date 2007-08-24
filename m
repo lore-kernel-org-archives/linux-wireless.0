@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:34759
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752261AbXHXVSn (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:42421 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756014AbXHXLBC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2007 17:18:43 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 06/15] mac80211: remove TKIP mixing for hw accel again
-Date: Fri, 24 Aug 2007 23:17:10 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <20070824122705.549190000@sipsolutions.net> <20070824122905.967634000@sipsolutions.net>
-In-Reply-To: <20070824122905.967634000@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200708242317.10822.mb@bu3sch.de>
+	Fri, 24 Aug 2007 07:01:02 -0400
+Subject: [PATCH] b43: include FCS at end of frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>
+Content-Type: text/plain
+Date: Fri, 24 Aug 2007 13:01:50 +0200
+Message-Id: <1187953310.24933.19.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 24 August 2007 14:27:11 Johannes Berg wrote:
-> The TKIP mixing code was added for the benefit of Intel's ipw3945
-> chipset but that code ended up not using it. We have previously
-> identified many problems with this code and it crystallized that
-> library functions for mixing are likely to handle this in much
-> more generality and might allow b43 to take advantage of hardware
-> acceleration for TKIP.
-> 
-> Due to these reasons, remove the TKIP mixing for hardware
-> accelerated crypto operations.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+This patch makes b43 include the FCS at the end of
+received frames, useful for monitoring.
 
-Acked-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
--- 
-Greetings Michael.
+---
+ drivers/net/wireless/b43/main.c |    3 ++-
+ drivers/net/wireless/b43/xmit.c |    1 -
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+--- wireless-dev.orig/drivers/net/wireless/b43/main.c	2007-08-24 12:57:04.949420431 +0200
++++ wireless-dev/drivers/net/wireless/b43/main.c	2007-08-24 13:00:08.989420431 +0200
+@@ -3934,7 +3934,8 @@ static int b43_wireless_init(struct ssb_
+ 	}
+ 
+ 	/* fill hw info */
+-	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE;
++	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE |
++		    IEEE80211_HW_RX_INCLUDES_FCS;
+ 	hw->max_signal = 100;
+ 	hw->max_rssi = -110;
+ 	hw->max_noise = -110;
+--- wireless-dev.orig/drivers/net/wireless/b43/xmit.c	2007-08-24 12:57:04.959420431 +0200
++++ wireless-dev/drivers/net/wireless/b43/xmit.c	2007-08-24 13:00:08.999420431 +0200
+@@ -481,7 +481,6 @@ void b43_rx(struct b43_wldev *dev, struc
+ 	}
+ 	wlhdr = (struct ieee80211_hdr *)(skb->data);
+ 	fctl = le16_to_cpu(wlhdr->frame_control);
+-	skb_trim(skb, skb->len - FCS_LEN);
+ 
+ 	if ((macstat & B43_RX_MAC_DEC) && !(macstat & B43_RX_MAC_DECERR)) {
+ 		unsigned int keyidx;
+
+
