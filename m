@@ -1,63 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51538 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45006 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755961AbXHTLXV (ORCPT
+	with ESMTP id S1758237AbXHXMbw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2007 07:23:21 -0400
-Subject: Re: [PATCH 08/20] mac80211: remove unused ioctls (3)
+	Fri, 24 Aug 2007 08:31:52 -0400
+Message-Id: <20070824122910.617307000@sipsolutions.net>
+References: <20070824122705.549190000@sipsolutions.net>
+Date: Fri, 24 Aug 2007 14:27:17 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20070818040943.GH1415@jm.kir.nu>
-References: <20070815144920.135826000@sipsolutions.net>
-	 <20070815145045.151670000@sipsolutions.net>
-	 <20070818040943.GH1415@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WbQsUEViikVrv0Gff7bJ"
-Date: Mon, 20 Aug 2007 11:15:41 +0200
-Message-Id: <1187601341.6090.50.camel@johannes.berg>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 12/15] mac80211: support changing default key index via  cfg80211
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This adds the necessary hook to mac80211 so that you can
+change the default key index via nl80211/cfg80211.
 
---=-WbQsUEViikVrv0Gff7bJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-On Fri, 2007-08-17 at 21:09 -0700, Jouni Malinen wrote:
+---
+ net/mac80211/cfg.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-> Create IBSS is a somewhat commonly used configuration and so is mixed
-> cell configuration in Cisco-world (and the only point for the
-> privacy_mismatch check that is left broken after this patch).
+--- wireless-dev.orig/net/mac80211/cfg.c	2007-08-24 14:16:41.539417211 +0200
++++ wireless-dev/net/mac80211/cfg.c	2007-08-24 14:16:51.139417211 +0200
+@@ -144,9 +144,22 @@ static int ieee80211_del_key(struct wiph
+ 	return 0;
+ }
+ 
++static int ieee80211_config_default_key(struct wiphy *wiphy,
++					struct net_device *dev,
++					u8 key_idx)
++{
++	struct ieee80211_sub_if_data *sdata;
++
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	ieee80211_set_default_key(sdata, key_idx);
++
++	return 0;
++}
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+ 	.add_key = ieee80211_add_key,
+ 	.del_key = ieee80211_del_key,
++	.set_default_key = ieee80211_config_default_key,
+ };
 
-I was under the impression that the auth mechanism setting would still
-do that. What is "mixed cell configuration" anyway?
-
-> No, but iwpriv.. See the pattern here.. ;-)
-
-Oh, I can see that, but none of these things are documented nor do any
-existing tools use them. I don't contend the fact that these may indeed
-be useful, but I think none of them should be private ioctls. If you
-have a use case for all of these I'd be happy to see an explanation so
-we can add this with proper documentation elsewhere. Without
-documentation, they are a rather useless special configurations nobody
-will ever touch.
-
-johannes
-
---=-WbQsUEViikVrv0Gff7bJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGyVu9/ETPhpq3jKURAhfTAJ9kPDhiQCBB6X4Lt+oC48Og29dJ/QCfceW4
-FlWcvR+dLUaWw168Yq3qVXk=
-=AaRb
------END PGP SIGNATURE-----
-
---=-WbQsUEViikVrv0Gff7bJ--
+-- 
 
