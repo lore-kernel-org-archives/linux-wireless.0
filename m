@@ -1,39 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2895 "EHLO ra.tuxdriver.com"
+Received: from mx1.redhat.com ([66.187.233.31]:46134 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932105AbXHXAO1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2007 20:14:27 -0400
-Date: Thu, 23 Aug 2007 19:43:33 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43, b43legacy: Fix inconsistency between branches  'b43' and 'everything' in wireless-dev
-Message-ID: <20070823234333.GA3472@tuxdriver.com>
-References: <46ce12c4.2TC1IuG0LDupBuDr%Larry.Finger@lwfinger.net>
+	id S1757547AbXHXDkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Aug 2007 23:40:03 -0400
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.1/8.13.1) with ESMTP id l7O3e0Ao014085
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Aug 2007 23:40:00 -0400
+Received: from pobox.brisbane.redhat.com (pobox.brisbane.redhat.com [172.16.44.10])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id l7O3dx6v024221
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Aug 2007 23:39:59 -0400
+Received: from kerndev.sin.redhat.com (reserved-144-252.sin.redhat.com [10.64.144.252])
+	by pobox.brisbane.redhat.com (8.13.1/8.13.1) with ESMTP id l7O3dsSr025264
+	for <linux-wireless@vger.kernel.org>; Fri, 24 Aug 2007 13:39:58 +1000
+Date: Fri, 24 Aug 2007 10:42:34 +0800
+From: Eugene Teo <eugeneteo@kernel.sg>
+To: linux-wireless@vger.kernel.org
+Message-ID: <20070824024234.GA4075@kernel.sg>
+Reply-To: Eugene Teo <eugeneteo@kernel.sg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <46ce12c4.2TC1IuG0LDupBuDr%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 23, 2007 at 06:05:40PM -0500, Larry Finger wrote:
-
-> I'm not sure how to handle this. In it's present state, branch 'b43' cannot be used
-> to generate a working version of b43 or b43legacy. In addition,  the Kconfig and Makefile
-> from b43legacy are not included, thus it is not possible to build b43legacy
-> in that branch.
-
-I had neglected to pull the mac80211 updates into the branches that
-depend on them (now most of the driver branches).  I have done that
-now, and pushed the results.
-
-Hth!
-
-John
-
-P.S.  FWIW, b43legacy seems to have Kconfig and Makefile in my tree.
-I was able to build it just fine.  Yes, I checked to make sure I had
-included them in git. :-)
--- 
-John W. Linville
-linville@tuxdriver.com
+subscribe linux-wireless
