@@ -1,160 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45015 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45022 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758259AbXHXMb5 (ORCPT
+	with ESMTP id S1758392AbXHXMcE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2007 08:31:57 -0400
-Message-Id: <20070824122913.231672000@sipsolutions.net>
+	Fri, 24 Aug 2007 08:32:04 -0400
+Message-Id: <20070824122908.327134000@sipsolutions.net>
 References: <20070824122705.549190000@sipsolutions.net>
-Date: Fri, 24 Aug 2007 14:27:20 +0200
+Date: Fri, 24 Aug 2007 14:27:14 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 15/15] mac80211: make use of the new cfg80211 key threshold  notification
+Subject: [PATCH 09/15] mac80211: rename ieee80211_cfg.c to cfg.c
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes mac80211 use the cfg80211 facilities for key threshold
-notification.
+It's just painful to have the extra ieee80211_ prefix.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
 ---
- net/mac80211/cfg.c             |    1 +
- net/mac80211/ieee80211_ioctl.c |    3 ++-
- net/mac80211/ieee80211_key.h   |    4 +++-
- net/mac80211/key.c             |    3 ++-
- net/mac80211/rx.c              |   10 ++++++++--
- net/mac80211/tx.c              |   17 ++++++++++++-----
- 6 files changed, 28 insertions(+), 10 deletions(-)
+ net/mac80211/Makefile        |    2 -
+ net/mac80211/cfg.c           |   72 +++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_cfg.c |   72 -------------------------------------------
+ 3 files changed, 73 insertions(+), 73 deletions(-)
 
---- wireless-dev.orig/net/mac80211/ieee80211_key.h	2007-08-24 14:11:42.149417211 +0200
-+++ wireless-dev/net/mac80211/ieee80211_key.h	2007-08-24 14:18:16.959417211 +0200
-@@ -86,6 +86,8 @@ struct ieee80211_key {
- 
- 	/* number of times this key has been used */
- 	int tx_rx_count;
-+	/* threshold for notification */
-+	u32 tx_rx_threshold;
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	struct {
-@@ -115,7 +117,7 @@ struct ieee80211_key {
- struct ieee80211_key *ieee80211_key_alloc(struct ieee80211_sub_if_data *sdata,
- 					  struct sta_info *sta,
- 					  ieee80211_key_alg alg,
--					  int idx,
-+					  int idx, u32 threshold,
- 					  size_t key_len,
- 					  const u8 *key_data);
- void ieee80211_key_free(struct ieee80211_key *key);
---- wireless-dev.orig/net/mac80211/key.c	2007-08-24 14:13:37.299417211 +0200
-+++ wireless-dev/net/mac80211/key.c	2007-08-24 14:18:16.959417211 +0200
-@@ -124,7 +124,7 @@ void ieee80211_key_removed(struct ieee80
- struct ieee80211_key *ieee80211_key_alloc(struct ieee80211_sub_if_data *sdata,
- 					  struct sta_info *sta,
- 					  ieee80211_key_alg alg,
--					  int idx,
-+					  int idx, u32 threshold,
- 					  size_t key_len,
- 					  const u8 *key_data)
- {
-@@ -151,6 +151,7 @@ struct ieee80211_key *ieee80211_key_allo
- 	key->local = sdata->local;
- 	key->sdata = sdata;
- 	key->sta = sta;
-+	key->tx_rx_threshold = threshold;
- 
- 	if (alg == ALG_CCMP) {
- 		/*
---- wireless-dev.orig/net/mac80211/cfg.c	2007-08-24 14:16:51.139417211 +0200
-+++ wireless-dev/net/mac80211/cfg.c	2007-08-24 14:18:16.959417211 +0200
-@@ -103,6 +103,7 @@ static int ieee80211_add_key(struct wiph
- 
- 	ret = 0;
- 	if (!ieee80211_key_alloc(sdata, sta, alg, params->key_idx,
-+				 params->threshold,
- 				 params->key_len, params->key))
- 		ret = -ENOMEM;
- 
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-24 14:16:56.449417211 +0200
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-24 14:18:16.969417211 +0200
-@@ -431,7 +431,8 @@ static int ieee80211_set_encryption(stru
- 		 * set_key() callback becomes confused.
- 		 */
- 		ieee80211_key_free(key);
--		key = ieee80211_key_alloc(sdata, sta, alg, idx, key_len, _key);
-+		key = ieee80211_key_alloc(sdata, sta, alg, idx, 0,
-+					  key_len, _key);
- 		if (!key) {
- 			ret = -ENOMEM;
- 			goto err_out;
---- wireless-dev.orig/net/mac80211/rx.c	2007-08-24 14:16:56.449417211 +0200
-+++ wireless-dev/net/mac80211/rx.c	2007-08-24 14:18:16.969417211 +0200
-@@ -322,6 +322,7 @@ ieee80211_rx_h_load_key(struct ieee80211
- 	int keyidx;
- 	int hdrlen;
- 	int trying_wep = 0;
-+	u8 *sta_mac = NULL;
- 
- 	/*
- 	 * Key selection 101
-@@ -401,11 +402,16 @@ ieee80211_rx_h_load_key(struct ieee80211
- 			trying_wep = 1;
- 			goto find_by_index;
- 		}
-+		sta_mac = rx->sta->addr;
- 	}
- 
--	if (rx->key && (rx->flags & IEEE80211_TXRXD_RXRA_MATCH)) {
-+	if (rx->key) {
- 		rx->key->tx_rx_count++;
--		/* TODO: add threshold stuff again */
-+		if (rx->key->tx_rx_threshold &&
-+		    rx->key->tx_rx_count > rx->key->tx_rx_threshold)
-+			cfg80211_key_threshold_notify(rx->key->sdata->dev,
-+						      rx->key->conf.keyidx,
-+						      sta_mac);
- 	}
- 
- 	return TXRX_CONTINUE;
---- wireless-dev.orig/net/mac80211/tx.c	2007-08-24 14:16:56.459417211 +0200
-+++ wireless-dev/net/mac80211/tx.c	2007-08-24 14:18:16.989417211 +0200
-@@ -426,11 +426,14 @@ ieee80211_tx_h_ps_buf(struct ieee80211_t
- static ieee80211_txrx_result
- ieee80211_tx_h_select_key(struct ieee80211_txrx_data *tx)
- {
-+	u8 *sta_mac = NULL;
+--- wireless-dev.orig/net/mac80211/Makefile	2007-08-24 14:11:44.529417211 +0200
++++ wireless-dev/net/mac80211/Makefile	2007-08-24 14:16:15.649417211 +0200
+@@ -17,7 +17,7 @@ mac80211-objs := \
+ 	regdomain.o \
+ 	tkip.o \
+ 	aes_ccm.o \
+-	ieee80211_cfg.o \
++	cfg.o \
+ 	rx.o \
+ 	tx.o \
+ 	key.o \
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ wireless-dev/net/mac80211/cfg.c	2007-08-24 14:16:15.669417211 +0200
+@@ -0,0 +1,72 @@
++/*
++ * mac80211 configuration hooks for cfg80211
++ *
++ * Copyright 2006	Johannes Berg <johannes@sipsolutions.net>
++ *
++ * This file is GPLv2 as found in COPYING.
++ */
 +
- 	if (unlikely(tx->u.tx.control->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT))
- 		tx->key = NULL;
--	else if (tx->sta && tx->sta->key)
-+	else if (tx->sta && tx->sta->key) {
-+		sta_mac = tx->sta->addr;
- 		tx->key = tx->sta->key;
--	else if (tx->sdata->default_key)
-+	} else if (tx->sdata->default_key)
- 		tx->key = tx->sdata->default_key;
- 	else if (tx->sdata->drop_unencrypted &&
- 		 !(tx->sdata->eapol && ieee80211_is_eapol(tx->skb))) {
-@@ -441,9 +444,13 @@ ieee80211_tx_h_select_key(struct ieee802
- 		tx->u.tx.control->flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT;
- 	}
- 
--	if (tx->key) {
--		tx->key->tx_rx_count++;
--		/* TODO: add threshold stuff again */
-+        if (tx->key) {
-+                tx->key->tx_rx_count++;
-+		if (tx->key->tx_rx_threshold &&
-+		    tx->key->tx_rx_count > tx->key->tx_rx_threshold)
-+			cfg80211_key_threshold_notify(tx->key->sdata->dev,
-+						      tx->key->conf.keyidx,
-+						      sta_mac);
- 	}
- 
- 	return TXRX_CONTINUE;
++#include <linux/nl80211.h>
++#include <linux/rtnetlink.h>
++#include <net/cfg80211.h>
++#include "ieee80211_i.h"
++#include "ieee80211_cfg.h"
++
++static int ieee80211_add_iface(struct wiphy *wiphy, char *name,
++			       enum nl80211_iftype type)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++	int itype;
++
++	if (unlikely(local->reg_state != IEEE80211_DEV_REGISTERED))
++		return -ENODEV;
++
++	switch (type) {
++	case NL80211_IFTYPE_UNSPECIFIED:
++		itype = IEEE80211_IF_TYPE_STA;
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		itype = IEEE80211_IF_TYPE_IBSS;
++		break;
++	case NL80211_IFTYPE_STATION:
++		itype = IEEE80211_IF_TYPE_STA;
++		break;
++	case NL80211_IFTYPE_AP:
++		itype = IEEE80211_IF_TYPE_AP;
++		break;
++	case NL80211_IFTYPE_WDS:
++		itype = IEEE80211_IF_TYPE_WDS;
++		break;
++	case NL80211_IFTYPE_MONITOR:
++		itype = IEEE80211_IF_TYPE_MNTR;
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	return ieee80211_if_add(local->mdev, name, NULL, itype);
++}
++
++static int ieee80211_del_iface(struct wiphy *wiphy, int ifindex)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++	struct net_device *dev;
++	char *name;
++
++	if (unlikely(local->reg_state != IEEE80211_DEV_REGISTERED))
++		return -ENODEV;
++
++	dev = dev_get_by_index(ifindex);
++	if (!dev)
++		return 0;
++
++	name = dev->name;
++	dev_put(dev);
++
++	return ieee80211_if_remove(local->mdev, name, -1);
++}
++
++struct cfg80211_ops mac80211_config_ops = {
++	.add_virtual_intf = ieee80211_add_iface,
++	.del_virtual_intf = ieee80211_del_iface,
++};
+--- wireless-dev.orig/net/mac80211/ieee80211_cfg.c	2007-08-24 14:11:48.499417211 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,72 +0,0 @@
+-/*
+- * mac80211 configuration hooks for cfg80211
+- *
+- * Copyright 2006	Johannes Berg <johannes@sipsolutions.net>
+- *
+- * This file is GPLv2 as found in COPYING.
+- */
+-
+-#include <linux/nl80211.h>
+-#include <linux/rtnetlink.h>
+-#include <net/cfg80211.h>
+-#include "ieee80211_i.h"
+-#include "ieee80211_cfg.h"
+-
+-static int ieee80211_add_iface(struct wiphy *wiphy, char *name,
+-			       enum nl80211_iftype type)
+-{
+-	struct ieee80211_local *local = wiphy_priv(wiphy);
+-	int itype;
+-
+-	if (unlikely(local->reg_state != IEEE80211_DEV_REGISTERED))
+-		return -ENODEV;
+-
+-	switch (type) {
+-	case NL80211_IFTYPE_UNSPECIFIED:
+-		itype = IEEE80211_IF_TYPE_STA;
+-		break;
+-	case NL80211_IFTYPE_ADHOC:
+-		itype = IEEE80211_IF_TYPE_IBSS;
+-		break;
+-	case NL80211_IFTYPE_STATION:
+-		itype = IEEE80211_IF_TYPE_STA;
+-		break;
+-	case NL80211_IFTYPE_AP:
+-		itype = IEEE80211_IF_TYPE_AP;
+-		break;
+-	case NL80211_IFTYPE_WDS:
+-		itype = IEEE80211_IF_TYPE_WDS;
+-		break;
+-	case NL80211_IFTYPE_MONITOR:
+-		itype = IEEE80211_IF_TYPE_MNTR;
+-		break;
+-	default:
+-		return -EINVAL;
+-	}
+-
+-	return ieee80211_if_add(local->mdev, name, NULL, itype);
+-}
+-
+-static int ieee80211_del_iface(struct wiphy *wiphy, int ifindex)
+-{
+-	struct ieee80211_local *local = wiphy_priv(wiphy);
+-	struct net_device *dev;
+-	char *name;
+-
+-	if (unlikely(local->reg_state != IEEE80211_DEV_REGISTERED))
+-		return -ENODEV;
+-
+-	dev = dev_get_by_index(ifindex);
+-	if (!dev)
+-		return 0;
+-
+-	name = dev->name;
+-	dev_put(dev);
+-
+-	return ieee80211_if_remove(local->mdev, name, -1);
+-}
+-
+-struct cfg80211_ops mac80211_config_ops = {
+-	.add_virtual_intf = ieee80211_add_iface,
+-	.del_virtual_intf = ieee80211_del_iface,
+-};
 
 -- 
 
