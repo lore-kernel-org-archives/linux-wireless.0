@@ -1,143 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38791 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758436AbXHHHhT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 03:37:19 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 06/28] iwlwifi: use mask operation to replace '%' for index calculation
-Date: Wed,  8 Aug 2007 15:33:23 +0800
-Message-Id: <11865584413292-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <11865584392893-git-send-email-yi.zhu@intel.com>
-References: <11865584251026-git-send-email-yi.zhu@intel.com>
- <11865584292234-git-send-email-yi.zhu@intel.com>
- <1186558432932-git-send-email-yi.zhu@intel.com>
- <11865584342308-git-send-email-yi.zhu@intel.com>
- <11865584363863-git-send-email-yi.zhu@intel.com>
- <11865584392893-git-send-email-yi.zhu@intel.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:33256 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755889AbXHXSaR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Aug 2007 14:30:17 -0400
+Date: Fri, 24 Aug 2007 11:29:34 -0700
+From: Stephen Hemminger <shemminger@linux-foundation.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: use internal network device stats
+Message-ID: <20070824112934.2e377bce@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces index calculation with '%' to mask operation. Note,
-this is only applicable for power-of-two size.
+Stats are now available for device usage inside network_device
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Stephen Hemminger <shemminger@linux-foundation.org>
 ---
- drivers/net/wireless/iwl-4965.c |    2 +-
- drivers/net/wireless/iwl-base.c |   18 +++++++++++-------
- drivers/net/wireless/iwl-hw.h   |    1 +
- drivers/net/wireless/iwlwifi.h  |    2 +-
- 4 files changed, 14 insertions(+), 9 deletions(-)
+ net/mac80211/ieee80211.c   |   44 ++++++++++++++------------------------------
+ net/mac80211/ieee80211_i.h |    2 --
+ 2 files changed, 14 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/iwl-4965.c b/drivers/net/wireless/iwl-4965.c
-index 58ea2a1..c93c607 100644
---- a/drivers/net/wireless/iwl-4965.c
-+++ b/drivers/net/wireless/iwl-4965.c
-@@ -2048,7 +2048,7 @@ static struct iwl_txpower_comp_entry {
- static s32 get_min_power_index(s32 rate_power_index, u32 band)
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 8ec5ed1..28cca19 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -1892,8 +1892,8 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	pkt_data->do_not_encrypt = no_encrypt;
+ 
+ 	skb->dev = local->mdev;
+-	sdata->stats.tx_packets++;
+-	sdata->stats.tx_bytes += skb->len;
++	dev->stats.tx_packets++;
++	dev->stats.tx_bytes += skb->len;
+ 
+ 	/* Update skb pointers to various headers since this modified frame
+ 	 * is going to go through Linux networking code that may potentially
+@@ -1966,8 +1966,8 @@ ieee80211_mgmt_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ 
+ 	pkt_data->do_not_encrypt = !(fc & IEEE80211_FCTL_PROTECTED);
+ 
+-	sdata->stats.tx_packets++;
+-	sdata->stats.tx_bytes += skb->len;
++	dev->stats.tx_packets++;
++	dev->stats.tx_bytes += skb->len;
+ 
+ 	dev_queue_xmit(skb);
+ 
+@@ -2492,13 +2492,6 @@ struct dev_mc_list *ieee80211_get_mc_list_item(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(ieee80211_get_mc_list_item);
+ 
+-static struct net_device_stats *ieee80211_get_stats(struct net_device *dev)
+-{
+-	struct ieee80211_sub_if_data *sdata;
+-	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-	return &(sdata->stats);
+-}
+-
+ static void ieee80211_if_shutdown(struct net_device *dev)
  {
- 	if (!band) {
--		if ((rate_power_index % 8) <= 4)
-+		if ((rate_power_index & 7) <= 4)
- 			return MIN_TX_GAIN_INDEX_52GHZ_EXT;
- 	}
- 	return MIN_TX_GAIN_INDEX;
-diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
-index becaeea..18c4a23 100644
---- a/drivers/net/wireless/iwl-base.c
-+++ b/drivers/net/wireless/iwl-base.c
-@@ -184,7 +184,7 @@ static inline u8 get_next_cmd_index(struct iwl_queue *q, u32 index, int is_huge)
- 	if (is_huge)
- 		return q->n_window;
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+@@ -2893,8 +2886,8 @@ ieee80211_rx_h_data(struct ieee80211_txrx_data *rx)
  
--	return (u8) (index % q->n_window);
-+	return index & (q->n_window - 1);
- }
+ 	skb2 = NULL;
  
- static int iwl_queue_init(struct iwl_priv *priv, struct iwl_queue *q,
-@@ -198,6 +198,10 @@ static int iwl_queue_init(struct iwl_priv *priv, struct iwl_queue *q,
- 	 * and iwl_queue_dec_wrap are broken. */
- 	BUG_ON(!is_power_of_2(count));
+-	sdata->stats.rx_packets++;
+-	sdata->stats.rx_bytes += skb->len;
++	dev->stats.rx_packets++;
++	dev->stats.rx_bytes += skb->len;
  
-+	/* slots_num must be power-of-two size, otherwise
-+	 * get_next_cmd_index is broken. */
-+	BUG_ON(!is_power_of_2(slots_num));
+ 	if (local->bridge_packets && (sdata->type == IEEE80211_IF_TYPE_AP
+ 	    || sdata->type == IEEE80211_IF_TYPE_VLAN) && rx->u.rx.ra_match) {
+@@ -3041,11 +3034,9 @@ ieee80211_rx_mgmt(struct ieee80211_local *local, struct sk_buff *skb,
+ {
+ 	struct ieee80211_frame_info *fi;
+ 	const size_t hlen = sizeof(struct ieee80211_frame_info);
+-	struct ieee80211_sub_if_data *sdata;
++	struct net_device *dev = local->apdev;
+ 
+-	skb->dev = local->apdev;
+-
+-	sdata = IEEE80211_DEV_TO_SUB_IF(local->apdev);
++	skb->dev = dev;
+ 
+ 	if (skb_headroom(skb) < hlen) {
+ 		I802_DEBUG_INC(local->rx_expand_skb_head);
+@@ -3060,8 +3051,8 @@ ieee80211_rx_mgmt(struct ieee80211_local *local, struct sk_buff *skb,
+ 	ieee80211_fill_frame_info(local, fi, status);
+ 	fi->msg_type = htonl(msg_type);
+ 
+-	sdata->stats.rx_packets++;
+-	sdata->stats.rx_bytes += skb->len;
++	dev->stats.rx_packets++;
++	dev->stats.rx_bytes += skb->len;
+ 
+ 	skb_set_mac_header(skb, 0);
+ 	skb->ip_summed = CHECKSUM_UNNECESSARY;
+@@ -3123,8 +3114,8 @@ ieee80211_rx_monitor(struct net_device *dev, struct sk_buff *skb,
+ 	rthdr->antsignal = status->ssi;
+ 
+  out:
+-	sdata->stats.rx_packets++;
+-	sdata->stats.rx_bytes += skb->len;
++	dev->stats.rx_packets++;
++	dev->stats.rx_bytes += skb->len;
+ 
+ 	skb_set_mac_header(skb, 0);
+ 	skb->ip_summed = CHECKSUM_UNNECESSARY;
+@@ -4784,7 +4775,7 @@ void ieee80211_if_setup(struct net_device *dev)
+ 	dev->wireless_handlers = &ieee80211_iw_handler_def;
+ 	dev->set_multicast_list = ieee80211_set_multicast_list;
+ 	dev->change_mtu = ieee80211_change_mtu;
+-	dev->get_stats = ieee80211_get_stats;
 +
- 	q->low_mark = q->n_window / 4;
- 	if (q->low_mark < 4)
- 		q->low_mark = 4;
-@@ -3247,7 +3251,7 @@ int is_duplicate_packet(struct iwl_priv *priv, struct ieee80211_hdr *header)
- 		struct list_head *p;
- 		struct iwl_ibss_seq *entry = NULL;
- 		u8 *mac = header->addr2;
--		int index = mac[5] % IWL_IBSS_MAC_HASH_SIZE;
-+		int index = mac[5] & (IWL_IBSS_MAC_HASH_SIZE - 1);
- 
- 		__list_for_each(p, &priv->ibss_mac_hash[index]) {
- 			entry =
-@@ -3325,8 +3329,8 @@ static u32 iwl_usecs_to_beacons(u32 usec, u32 beacon_interval)
- 	if (!interval || !usec)
- 		return 0;
- 
--	quot = (usec / interval) % 0x100;
--	rem = (usec % interval) % BEACON_TIME_MASK_LOW;
-+	quot = (usec / interval) & (BEACON_TIME_MASK_HIGH >> 24);
-+	rem = (usec % interval) & BEACON_TIME_MASK_LOW;
- 
- 	return (quot << 24) + rem;
+ 	dev->open = ieee80211_open;
+ 	dev->stop = ieee80211_stop;
+ 	dev->uninit = ieee80211_if_reinit;
+@@ -4796,7 +4787,7 @@ void ieee80211_if_mgmt_setup(struct net_device *dev)
+ 	ether_setup(dev);
+ 	dev->hard_start_xmit = ieee80211_mgmt_start_xmit;
+ 	dev->change_mtu = ieee80211_change_mtu_apdev;
+-	dev->get_stats = ieee80211_get_stats;
++
+ 	dev->open = ieee80211_mgmt_open;
+ 	dev->stop = ieee80211_mgmt_stop;
+ 	dev->type = ARPHRD_IEEE80211_PRISM;
+@@ -5225,13 +5216,6 @@ void ieee80211_wake_queues(struct ieee80211_hw *hw)
  }
-@@ -4344,7 +4348,7 @@ int iwl_rx_queue_restock(struct iwl_priv *priv)
- 		rxq->bd[rxq->write] =
- 		    iwl_dma_addr2rbd_ptr(priv, rxb->dma_addr);
- 		rxq->queue[rxq->write] = rxb;
--		rxq->write = (rxq->write + 1) % RX_QUEUE_SIZE;
-+		rxq->write = (rxq->write + 1) & RX_QUEUE_MASK;
- 		rxq->free_count--;
- 	}
- 	spin_unlock_irqrestore(&rxq->lock, flags);
-@@ -4647,7 +4651,7 @@ static void iwl_rx_handle(struct iwl_priv *priv)
- 		spin_lock_irqsave(&rxq->lock, flags);
- 		list_add_tail(&rxb->list, &priv->rxq.rx_used);
- 		spin_unlock_irqrestore(&rxq->lock, flags);
--		i = (i + 1) % RX_QUEUE_SIZE;
-+		i = (i + 1) & RX_QUEUE_MASK;
- 	}
+ EXPORT_SYMBOL(ieee80211_wake_queues);
  
- 	/* Backtrack one entry */
-@@ -8562,7 +8566,7 @@ static ssize_t show_rate(struct device *d,
+-struct net_device_stats *ieee80211_dev_stats(struct net_device *dev)
+-{
+-	struct ieee80211_sub_if_data *sdata;
+-	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-	return &sdata->stats;
+-}
+-
+ static int __init ieee80211_init(void)
+ {
+ 	struct sk_buff *skb;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 6f7bae7..4ffdcfe 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -285,7 +285,6 @@ struct ieee80211_sub_if_data {
+ 	unsigned int promisc:1;
+ 	unsigned int use_protection:1; /* CTS protect ERP frames */
  
- 	return sprintf(buf, "%d%s\n",
- 		       (iwl_rates[i].ieee >> 1),
--		       (iwl_rates[i].ieee % 2) ? ".5" : "");
-+		       (iwl_rates[i].ieee & 0x1) ? ".5" : "");
- }
+-	struct net_device_stats stats;
+ 	int drop_unencrypted;
+ 	int eapol; /* 0 = process EAPOL frames as normal data frames,
+ 		    * 1 = send EAPOL frames through wlan#ap to hostapd
+@@ -729,7 +728,6 @@ void ieee80211_if_setup(struct net_device *dev);
+ void ieee80211_if_mgmt_setup(struct net_device *dev);
+ int ieee80211_init_rate_ctrl_alg(struct ieee80211_local *local,
+ 				 const char *name);
+-struct net_device_stats *ieee80211_dev_stats(struct net_device *dev);
  
- static DEVICE_ATTR(rate, S_IRUSR, show_rate, NULL);
-diff --git a/drivers/net/wireless/iwl-hw.h b/drivers/net/wireless/iwl-hw.h
-index 933a367..e01f29c 100644
---- a/drivers/net/wireless/iwl-hw.h
-+++ b/drivers/net/wireless/iwl-hw.h
-@@ -1076,6 +1076,7 @@ struct statistics {
- #define NUM_TFD_CHUNKS                        4
- 
- #define RX_QUEUE_SIZE                         256
-+#define RX_QUEUE_MASK                         255
- #define RX_QUEUE_SIZE_LOG                     8
- 
- /*
-diff --git a/drivers/net/wireless/iwlwifi.h b/drivers/net/wireless/iwlwifi.h
-index 002f8e8..be94217 100644
---- a/drivers/net/wireless/iwlwifi.h
-+++ b/drivers/net/wireless/iwlwifi.h
-@@ -528,7 +528,7 @@ struct iwl_ucode {
- 	u8 data[0];		/* data in same order as "size" elements */
- };
- 
--#define IWL_IBSS_MAC_HASH_SIZE 31
-+#define IWL_IBSS_MAC_HASH_SIZE 32
- 
- struct iwl_ibss_seq {
- 	u8 mac[ETH_ALEN];
+ /* ieee80211_ioctl.c */
+ extern const struct iw_handler_def ieee80211_iw_handler_def;
 -- 
-1.5.2
+1.4.4.2
+
