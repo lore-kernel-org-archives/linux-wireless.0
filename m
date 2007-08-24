@@ -1,68 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:51123 "EHLO
-	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760304AbXHWXGS (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44976 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764785AbXHXKJH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2007 19:06:18 -0400
-Date: Thu, 23 Aug 2007 18:05:40 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] b43, b43legacy: Fix inconsistency between branches 'b43'  and 'everything' in wireless-dev
-Message-ID: <46ce12c4.2TC1IuG0LDupBuDr%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 24 Aug 2007 06:09:07 -0400
+Subject: Re: [RFC 06/11] mac80211: remove HW_KEY_IDX_INVALID
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200708232301.17562.mb@bu3sch.de>
+References: <20070823164500.998912000@sipsolutions.net>
+	 <20070823164523.418272000@sipsolutions.net>
+	 <200708232301.17562.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WFzpXERsSEZcMwJhjTmW"
+Date: Fri, 24 Aug 2007 12:09:02 +0200
+Message-Id: <1187950142.24933.5.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-One of Johannes's 27 patches changed the definition of the set_key callback.
-Because his change got applied to the 'everything' branch, and the changes in the
-b43 drivers to the 'b43' branch, the drivers in that branch are out of synch and an
-"initialization from incompatible pointer type" warning is generated. When this patch
-is applied to branch 'b43', it is internally consistent.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+--=-WFzpXERsSEZcMwJhjTmW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John,
+On Thu, 2007-08-23 at 23:01 +0200, Michael Buesch wrote:
+> On Thursday 23 August 2007 18:45:07 Johannes Berg wrote:
+> > longer relies on HW_KEY_IDX_INVALID either this removes it, changes
+> > the key index to be an integer in all places and makes the full
+> > range of the value available to drivers.
+>=20
+> Why's that needed? It increases the tx control struct size,
+> which is created and destroyed with every packet.
+> Isn't 127 keys enough? If not, probably do a s16. But I think
+> an int if overkill.
 
-I'm not sure how to handle this. In it's present state, branch 'b43' cannot be used
-to generate a working version of b43 or b43legacy. In addition,  the Kconfig and Makefile
-from b43legacy are not included, thus it is not possible to build b43legacy
-in that branch.
+Ah, but it's an int in the key_conf structure. I'm fine with making it a
+u8 in both places too.
 
-Larry
+johannes
 
-  
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 9a0cf2b..19e9cf1 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2861,8 +2861,8 @@ static int b43_dev_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
- }
- 
- static int b43_dev_set_key(struct ieee80211_hw *hw,
--			   set_key_cmd cmd, const u8 *local_addr,
--			   const u8 *addr, struct ieee80211_key_conf *key)
-+			   set_key_cmd cmd, u8 *addr,
-+			   struct ieee80211_key_conf *key, int aid)
- {
- 	struct b43_wl *wl = hw_to_b43_wl(hw);
- 	struct b43_wldev *dev = wl->current_dev;
-diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-index 980cb81..f9d6938 100644
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -2686,9 +2686,8 @@ out_unlock_mutex:
- }
- 
- static int b43legacy_dev_set_key(struct ieee80211_hw *hw,
--				 set_key_cmd cmd,
--				 const u8 *local_addr, const u8 *addr,
--				 struct ieee80211_key_conf *key)
-+				 set_key_cmd cmd, u8 *addr,
-+				 struct ieee80211_key_conf *key, int aid)
- {
- 	struct b43legacy_wl *wl = hw_to_b43legacy_wl(hw);
- 	struct b43legacy_wldev *dev = wl->current_dev;
+--=-WFzpXERsSEZcMwJhjTmW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGzq4+/ETPhpq3jKURApplAKCBqzVMuddz6Eb4yCD8gZ0eDy5bQwCfZmIy
+1ds7OHzSz8DeFDVGrivCMGE=
+=LL3T
+-----END PGP SIGNATURE-----
+
+--=-WFzpXERsSEZcMwJhjTmW--
 
