@@ -1,67 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:42402 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S970712AbXHMI6E (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 04:58:04 -0400
-Received: from [131.234.209.34] (helo=[131.234.237.45])
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1IKVkP-0007SB-3H
-	for linux-wireless@vger.kernel.org; Mon, 13 Aug 2007 09:58:01 +0100
-Message-Id: <20070813074643.269370000@sipsolutions.net>
-References: <20070813074504.416717000@sipsolutions.net>
-Date: Mon, 13 Aug 2007 09:45:05 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] mac80211: allow tx handlers on injected packets
+Received: from mga11.intel.com ([192.55.52.93]:31368 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753470AbXHXIF1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Aug 2007 04:05:27 -0400
+Subject: Re: [RFC 09/11] mac80211, iwlwifi: remove atheros turbo modes
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20070823164524.799041000@sipsolutions.net>
+References: <20070823164500.998912000@sipsolutions.net>
+	 <20070823164524.799041000@sipsolutions.net>
+Content-Type: text/plain
+Date: Fri, 24 Aug 2007 16:00:29 +0800
+Message-Id: <1187942429.13078.104.camel@debian.sh.intel.com>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we specify the F_WEP flag for injection, then we have
-indicated that we want encryption. Since that is handled
-by the tx handlers we need to run the packet through them
-with the additional benefit that everything else is also
-done. This is important for hostapd when it sends EAPOL
-frames, it needs to do that to avoid the qdisc.
+On Thu, 2007-08-23 at 18:45 +0200, Johannes Berg wrote:
+> This patch removes all mention of the atheros turbo modes that
+> can't possibly work properly anyway since in some places we don't
+> check for them when we should.
+> 
+> I have no idea what the iwlwifi drivers were doing with these but
+> it can't possibly have been correct.
+> 
+> Cc: Zhu Yi <yi.zhu@intel.com>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-I'm not entirely convinced this is the right thing, but
-it's what I needed to get it all running for now.
+ACK. iwlwifi doesn't support turbo mode. The code was there for
+completeness. I agree with the removal.
 
-Not-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
----
- net/mac80211/tx.c |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
-
---- wireless-dev.orig/net/mac80211/tx.c	2007-08-12 13:03:43.719561279 +0200
-+++ wireless-dev/net/mac80211/tx.c	2007-08-12 13:52:20.775894433 +0200
-@@ -835,8 +835,7 @@ __ieee80211_parse_tx_radiotap(
- 	control->key_idx = -1; /* no encryption key */
- 	control->flags &= ~(IEEE80211_TXCTL_USE_RTS_CTS |
- 			    IEEE80211_TXCTL_USE_CTS_PROTECT);
--	control->flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT |
--			  IEEE80211_TXCTL_NO_ACK;
-+	control->flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT;
- 	control->antenna_sel_tx = 0; /* default to default antenna */
- 
- 	/*
-@@ -1115,7 +1114,12 @@ static int ieee80211_tx(struct net_devic
- 	tx.u.tx.mgmt_interface = mgmt;
- 	tx.u.tx.mode = local->hw.conf.mode;
- 
--	if (res_prepare == TXRX_QUEUED) { /* if it was an injected packet */
-+	/*
-+	 * if it was an injected packet and "don't encrypt"
-+	 * was specified, then skip everthing. quite hackish
-+	 */
-+	if (res_prepare == TXRX_QUEUED &&
-+	    (control->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT)) {
- 		res = TXRX_CONTINUE;
- 	} else {
- 		for (handler = local->tx_handlers; *handler != NULL;
-
--- 
-
+Thanks,
+-yi
