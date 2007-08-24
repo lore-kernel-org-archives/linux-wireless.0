@@ -1,40 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purr.warmcat.com ([87.106.142.209]:48521 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965644AbXHMJXr (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60265 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751385AbXHXK11 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 05:23:47 -0400
-Message-ID: <46C0231F.5040605@warmcat.com>
-Date: Mon, 13 Aug 2007 10:23:43 +0100
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-Subject: Re: [PATCH] hostapd: work with monitor interface
-References: <1186992004.27916.53.camel@johannes.berg>
-In-Reply-To: <1186992004.27916.53.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 24 Aug 2007 06:27:27 -0400
+Subject: Re: [patch 6/6] b43: New firmware file format
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+In-Reply-To: <200708241217.22209.mb@bu3sch.de>
+References: <20070818234833.623623000@bu3sch.de>
+	 <20070821201336.GA5313@tuxdriver.com>
+	 <1187902186.8363.7.camel@johannes.berg>  <200708241217.22209.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JHrqvfIMmSTuDiPM07SE"
+Date: Fri, 24 Aug 2007 12:28:14 +0200
+Message-Id: <1187951294.24933.15.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Somebody in the thread at some point said:
 
-> Andy, feel free to lift the BPF code into your stuff. I've extended the
-> radiotap parser to understand two more items, not sure if we want those
-> in the kernel (the only thing we'd do with them is ignore). Actually,
-> the two types I added are IEEE80211_RADIOTAP_TX_FLAGS and
-> IEEE80211_RADIOTAP_DATA_RETRIES both of which we'll probably need for
-> injection.
+--=-JHrqvfIMmSTuDiPM07SE
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Wow impressive amount of ioctl calls going into the bit bucket there...
+On Fri, 2007-08-24 at 12:17 +0200, Michael Buesch wrote:
+> On Thursday 23 August 2007 22:49:46 Johannes Berg wrote:
+> > On Tue, 2007-08-21 at 16:13 -0400, John W. Linville wrote:
+> >=20
+> > > > otherwise it oopses when the file can't be loaded.
+> > >=20
+> > > ACK...here is a patch, in case you are lazy... :-)
+> >=20
+> > Any reason you didn't push this fix this along with the patch?
+>=20
+> Hm? This fix is on its way into the tree.
 
-I will try to use your direct BPF programming and also dispense with
-libpcap tonight, thanks for that.
+Yeah, never mind.
 
-> I spent about two days working on this. Not too bad, so also thanks to
-> Andy and everybody else who was involved with the injection for that.
+johannes
 
-Good work done!
+--=-JHrqvfIMmSTuDiPM07SE
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--Andy
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGzrK+/ETPhpq3jKURAlI5AJ9RN7YB54BSngJDGMDnZ+bqT8b/QACfetr1
+lj1C/WaMsBYOK2HXwXYOghY=
+=D2x/
+-----END PGP SIGNATURE-----
+
+--=-JHrqvfIMmSTuDiPM07SE--
+
