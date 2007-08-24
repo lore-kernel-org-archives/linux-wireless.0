@@ -1,34 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp136.iad.emailsrvr.com ([207.97.245.136]:37982 "EHLO
-	smtp136.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756389AbXHAAOw (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57053 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753331AbXHXKMs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2007 20:14:52 -0400
-Message-ID: <46AFD024.1020708@gentoo.org>
-Date: Tue, 31 Jul 2007 20:13:24 -0400
-From: Daniel Drake <dsd@gentoo.org>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Jiri Benc <jbenc@suse.cz>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211 git tree reworked
-References: <20070727175716.32242e3f@griffin.suse.cz>
-In-Reply-To: <20070727175716.32242e3f@griffin.suse.cz>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 24 Aug 2007 06:12:48 -0400
+Subject: Re: [RFC 09/11] mac80211, iwlwifi: remove atheros turbo modes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1187942429.13078.104.camel@debian.sh.intel.com>
+References: <20070823164500.998912000@sipsolutions.net>
+	 <20070823164524.799041000@sipsolutions.net>
+	 <1187942429.13078.104.camel@debian.sh.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-v9OZHSut0LdhYCEmIHVy"
+Date: Fri, 24 Aug 2007 12:09:51 +0200
+Message-Id: <1187950192.24933.7.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Benc wrote:
-> - up-2.6 - this is a branch with patches I'd like to push to vanilla.
->   It contains, among other things, Johannes' restructuring patches. I'll
->   send a pull request later today.
 
-John, will you be pulling this into wireless-dev anytime soon? I have 
-some further mac80211 development work to do but am not sure which tree 
-I should be working on. Also my patch titled "don't allow scanning in 
-monitor mode" has got lost somewhere and I'm not sure whether it would 
-be beneficial for me to re-submit based on Jiri/Johannes' restructuring.
+--=-v9OZHSut0LdhYCEmIHVy
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
-Daniel
+On Fri, 2007-08-24 at 16:00 +0800, Zhu Yi wrote:
+
+> ACK. iwlwifi doesn't support turbo mode. The code was there for
+> completeness. I agree with the removal.
+
+Good. I noticed another problems with this patch that I'll be fixing,
+but I am still curious why you define channels with turbo that are named
+11N or such?
+
+johannes
+
+--=-v9OZHSut0LdhYCEmIHVy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGzq5v/ETPhpq3jKURAhDuAKCV+VEUrqX4Kf2mXWpl9XDXh44hrQCfbPZ0
+4bh4cXgotTi/oJrBe6JH1ng=
+=/Jx6
+-----END PGP SIGNATURE-----
+
+--=-v9OZHSut0LdhYCEmIHVy--
 
