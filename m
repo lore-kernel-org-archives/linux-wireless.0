@@ -1,35 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from DSL022.labridge.com ([206.117.136.22]:1097 "EHLO perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967009AbXHMGb7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 02:31:59 -0400
-Date: Sun, 12 Aug 2007 23:31:38 -0700
-From: joe@perches.com
-To: torvalds@linux-foundation.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jbenc@suse.cz,
-	flamingice@sourmilk.net, akpm@linux-foundation.org
-Subject: [PATCH] [307/2many] MAINTAINERS - MAC80211
-Message-ID: <46bffaca.H40xpVULANwnAvQA%joe@perches.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from crystal.sipsolutions.net ([195.210.38.204]:50007 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759997AbXHYH4P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Aug 2007 03:56:15 -0400
+Subject: port of my recent patches to net-2.6.24
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UiRHJLJCBUV9tkf9/MsF"
+Date: Sat, 25 Aug 2007 09:37:50 +0200
+Message-Id: <1188027470.9529.5.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add file pattern to MAINTAINER entry
 
-Signed-off-by: Joe Perches <joe@perches.com>
+--=-UiRHJLJCBUV9tkf9/MsF
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index f7943f0..07fb80f 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2957,6 +2957,9 @@ L:	linux-wireless@vger.kernel.org
- W:	http://linuxwireless.org/
- T:	git kernel.org:/pub/scm/linux/kernel/git/jbenc/mac80211.git
- S:	Maintained
-+F:	net/mac80211/
-+F:	Documentation/networking/mac80211-injection.txt
-+F:	include/net/mac80211.h
- 
- MACVLAN DRIVER
- P:	Patrick McHardy
+Because everybody has already seen these patches I won't be sending them
+to the list again, uploaded here:
+
+http://johannes.sipsolutions.net/patches/net-2.6.24/
+
+That contains ports of my and Jiri Slaby's recently merged patches to
+the net-2.6.24 tree minus those that don't apply because they delete
+ioctls that aren't in that tree (patches 0..23) plus some other patches
+I cherry-picked that I think should go in (024, 025), some whitespace
+and comment cleanups to make it more like wireless-dev (026, 027). Then
+there's your multicast fix (028) and those parts of the series I posted
+yesterday that don't depend on nl80211 (029..035).
+
+I've merged the event.c copyright patch (that I accidentally forgot to
+copy to the list but it only added 6 lines copyright statement) into the
+relevant cleanup patch (015).
+
+johannes
+
+--=-UiRHJLJCBUV9tkf9/MsF
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGz9xN/ETPhpq3jKURAhG3AJ96lMLM17W9QSrpwkTatnwDjbyjkwCgiX+D
+hJC8ocW73JyX/RYR7BTRBlc=
+=tq3H
+-----END PGP SIGNATURE-----
+
+--=-UiRHJLJCBUV9tkf9/MsF--
+
