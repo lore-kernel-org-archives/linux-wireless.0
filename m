@@ -1,59 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51170 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763123AbXHCW3T (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:50603
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764382AbXHYACu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 18:29:19 -0400
-Received: from [84.135.224.6] (helo=[10.0.0.4])
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1IH5e1-00070X-5O
-	for linux-wireless@vger.kernel.org; Fri, 03 Aug 2007 23:29:18 +0100
-Subject: Re: further plan wrt. monitor interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1186178959.13315.30.camel@johannes.berg>
-References: <1186178959.13315.30.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0E5lDmv1YlCbxNaLappA"
-Date: Sat, 04 Aug 2007 00:30:53 +0200
-Message-Id: <1186180253.20275.6.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 24 Aug 2007 20:02:50 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: b43: Copy MAC address to local struct
+Date: Sat, 25 Aug 2007 02:00:51 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200708250200.52650.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We must copy the MAC addresses to a local struct, as we
+don't own the original pointer from mac80211 and don't
+know how mac80211 might mess with it while we are using it.
 
---=-0E5lDmv1YlCbxNaLappA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <larry.finger@lwfinger.net>
 
-On Sat, 2007-08-04 at 00:09 +0200, Johannes Berg wrote:
-
-> 4)
-> Change the "int flags" argument to the set_multicast_list callback to
-> "int *flags" so drivers can indicate whether they supported a flag or
-> not by clearing all flags they did not honour. Additional advantage:
-> drivers break and people will be forced to re-examine their code to use
-> the new flags.
-
-Hmm. I think this is confusing because set_multicast_list is also a
-netdev callback. Maybe we should do the flags in another callback after
-all? Just so people who've written a regular net driver won't be
-confused.
-
-johannes
-
---=-0E5lDmv1YlCbxNaLappA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGs6yd/ETPhpq3jKURAgclAJ92SF9j/JkSsEYRuiNc8099OleWugCeJ6zI
-Kb3mSOkGVkLtqGvj4RboqqQ=
-=+rBF
------END PGP SIGNATURE-----
-
---=-0E5lDmv1YlCbxNaLappA--
-
+Index: wireless-dev-new/drivers/net/wireless/b43/b43.h
+===================================================================
+--- wireless-dev-new.orig/drivers/net/wireless/b43/b43.h	2007-08-25 01:55:33.000000000 +0200
++++ wireless-dev-new/drivers/net/wireless/b43/b43.h	2007-08-25 01:57:30.000000000 +0200
+@@ -600,10 +600,10 @@ struct b43_wl {
+ 	 * Do not modify.
+ 	 */
+ 	int if_id;
+-	/* MAC address (can be NULL). */
+-	const u8 *mac_addr;
+-	/* Current BSSID (can be NULL). */
+-	const u8 *bssid;
++	/* The MAC address of the operating interface. */
++	u8 mac_addr[ETH_ALEN];
++	/* Current BSSID */
++	u8 bssid[ETH_ALEN];
+ 	/* Interface type. (IEEE80211_IF_TYPE_XXX) */
+ 	int if_type;
+ 	/* Counter of active monitor interfaces. */
+Index: wireless-dev-new/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-dev-new.orig/drivers/net/wireless/b43/main.c	2007-08-25 01:56:13.000000000 +0200
++++ wireless-dev-new/drivers/net/wireless/b43/main.c	2007-08-25 01:57:30.000000000 +0200
+@@ -537,7 +537,6 @@ void b43_macfilter_set(struct b43_wldev 
+ 
+ static void b43_write_mac_bssid_templates(struct b43_wldev *dev)
+ {
+-	static const u8 zero_addr[ETH_ALEN] = { 0 };
+ 	const u8 *mac;
+ 	const u8 *bssid;
+ 	u8 mac_bssid[ETH_ALEN * 2];
+@@ -545,11 +544,7 @@ static void b43_write_mac_bssid_template
+ 	u32 tmp;
+ 
+ 	bssid = dev->wl->bssid;
+-	if (!bssid)
+-		bssid = zero_addr;
+ 	mac = dev->wl->mac_addr;
+-	if (!mac)
+-		mac = zero_addr;
+ 
+ 	b43_macfilter_set(dev, B43_MACFILTER_BSSID, bssid);
+ 
+@@ -569,7 +564,10 @@ static void b43_write_mac_bssid_template
+ static void b43_upload_card_macaddress(struct b43_wldev *dev,
+ 				       const u8 * mac_addr)
+ {
+-	dev->wl->mac_addr = mac_addr;
++	if (mac_addr)
++		memcpy(dev->wl->mac_addr, mac_addr, ETH_ALEN);
++	else
++		memset(dev->wl->mac_addr, 0, ETH_ALEN);
+ 	b43_write_mac_bssid_templates(dev);
+ 	b43_macfilter_set(dev, B43_MACFILTER_SELF, mac_addr);
+ }
+@@ -3026,7 +3024,10 @@ static int b43_config_interface(struct i
+ 	spin_lock_irqsave(&wl->irq_lock, flags);
+ 	if (conf->type != IEEE80211_IF_TYPE_MNTR) {
+ 		B43_WARN_ON(wl->if_id != if_id);
+-		wl->bssid = conf->bssid;
++		if (conf->bssid)
++			memcpy(wl->bssid, conf->bssid, ETH_ALEN);
++		else
++			memset(wl->bssid, 0, ETH_ALEN);
+ 		if (b43_status(dev) >= B43_STAT_INITIALIZED) {
+ 			if (b43_is_mode(wl, IEEE80211_IF_TYPE_AP)) {
+ 				B43_WARN_ON(conf->type != IEEE80211_IF_TYPE_AP);
+@@ -3454,7 +3455,7 @@ static int b43_wireless_core_init(struct
+ 	b43_bluetooth_coext_enable(dev);
+ 
+ 	ssb_bus_powerup(bus, 1);	/* Enable dynamic PCTL */
+-	wl->bssid = NULL;
++	memset(wl->bssid, 0, ETH_ALEN);
+ 	b43_upload_card_macaddress(dev, NULL);
+ 	b43_security_init(dev);
+ 	b43_rng_init(wl);
