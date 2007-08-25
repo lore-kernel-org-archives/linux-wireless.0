@@ -1,58 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.sea5.speakeasy.net ([69.17.117.5]:48367 "EHLO
-	mail3.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750774AbXHUDHO (ORCPT
+Received: from hoboe1bl1.telenet-ops.be ([195.130.137.72]:40263 "EHLO
+	hoboe1bl1.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751704AbXHYMPE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2007 23:07:14 -0400
-Date: Mon, 20 Aug 2007 20:05:59 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Volker Braun <volker.braun@physik.hu-berlin.de>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: [PATCHv3] mac80211: dynamic wep
-Message-ID: <20070821030559.GL1415@jm.kir.nu>
-References: <1187151162.3253.18.camel@thinkpad> <1187308221.23489.91.camel@johannes.berg> <1187360200.4417.32.camel@thinkpad> <1187363345.6090.2.camel@johannes.berg>
+	Sat, 25 Aug 2007 08:15:04 -0400
+Message-ID: <46D01D57.6060806@telenet.be>
+Date: Sat, 25 Aug 2007 14:15:19 +0200
+From: ian <ischram@telenet.be>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1187363345.6090.2.camel@johannes.berg>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: letting drivers choose their preferred rate scale
+References: <46CF95F9.6090802@telenet.be> <1188028962.9529.13.camel@johannes.berg>
+In-Reply-To: <1188028962.9529.13.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 17, 2007 at 05:09:05PM +0200, Johannes Berg wrote:
-> On Fri, 2007-08-17 at 10:16 -0400, Volker Braun wrote:
-> > Now granted, Cisco also violates it, but in a way
-> > that is never visible to standards-compliant STAs. We must set the
-> > keyindex to zero on outgoing pairwise key-encrypted data, but that is
-> > kind of irrelevant since the AP is forced to ignore that key index on
-> > receive.
+
+Johannes Berg wrote:
 > 
-> But then I don't understand why we try to set a non-zero key index for
-> the key.
+> There were a few specific remarks about the patch
 
-If I remember correctly, Cisco APs in IEEE 802.1X/dynamic WEP
-configuration rotate between key indexes 0 and 1 for broadcast/multicast
-keys and indexes 2 and 3 for unicast. In standard IEEE 802.1X, doing
-rekeying for broadcast keys by using two key indexes can be used to
-allow the change to happen without any packets being lost (send the new
-key first to all clients and only after that start using the new key).
+I reread the discussion carefully and can't find any specific
+comments on the patch which for clarity I will reproduce below.
 
-I would assume that Cisco is trying to do the same kind of smooth
-rekeying for unicast here (not that I have verified that this is the
-case, but that sounds semi-logical). Consequently, we would actually
-need to configure two pairwise keys at the same time and not only set
-the non-zero key index but to actually use these keys when decrypting
-frames.. My guess would be that this is expected to work by using
-broadcast WEP keys instead of unicast keymapping keys, but it is
-somewhat broken design. Anyway, that is what has been deployed in number
-of networks. Eventually, this will hopefully go away once the networks
-are updated to WPA/WPA2, but some organizations take long time to change
-this kind of things..
 
-wpa_supplicant is just blindly following what the AP tells it to when
-setting keys (EAPOL-Key frames include the key index). Consequently, the
-driver/mac80211 ends up being told to use this non-zero key indexes for
-unicast keys.
+>, e.g. that the default
+> shouldn't change as soon as a driver loads another rate control
+> algorithm etc. 
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+The "default" rate scaling algorithm, is currently just the "first registered",
+and as long as there is already an algorithm loaded, the driver can
+"load" as many as it wants and wont change this. The patch doesn't touch
+that logic.
+
+> Once those are addressed I see no problems with merging
+> such a patch.
+> 
+> johannes
+
+ian
+
+The patch in question:
+
+Signed-off-by: James Ketrenos <jketreno@linux.intel.com>
+---
+include/net/mac80211.h   |    4 ++++
+net/mac80211/ieee80211.c |   10 +++++++---
+2 files changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index ef9b613..f9ad839 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -533,6 +533,10 @@ struct ieee80211_hw {
+    /* Number of available hardware TX queues for data packets.
+     * WMM requires at least four queues. */
+    int queues;
++
++    /* Preferred rate control algorithm. Leave as NULL for stack
++     * to select algorithm */
++    char *preferred_rate_control;
+};
+
+static inline void SET_IEEE80211_DEV(struct ieee80211_hw *hw, struct device *dev)
+diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
+index 873ccb0..6dcc002 100644
+--- a/net/mac80211/ieee80211.c
++++ b/net/mac80211/ieee80211.c
+@@ -4875,10 +4875,14 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+
+    ieee80211_debugfs_add_netdev(IEEE80211_DEV_TO_SUB_IF(local->mdev));
+
+-    result = ieee80211_init_rate_ctrl_alg(local, NULL);
++    result = ieee80211_init_rate_ctrl_alg(local,
++                          hw->preferred_rate_control);
++
+    if (result < 0) {
+-        printk(KERN_DEBUG "%s: Failed to initialize rate control "
+-		"algorithm\n", local->mdev->name);
++	printk(KERN_DEBUG "%s: Failed to initialize %s rate control "
++               "algorithm\n", local->mdev->name,
++		hw->preferred_rate_control ?
++ 		hw->preferred_rate_control : "default");
+        goto fail_rate;
+    }
