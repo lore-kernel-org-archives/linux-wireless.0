@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:38380 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759175AbXHJUVM (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52046 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760054AbXHYH5A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2007 16:21:12 -0400
-Date: Fri, 10 Aug 2007 13:20:19 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Aurelien Jarno <aurelien@aurel32.net>
-Cc: Michael Buesch <mb@bu3sch.de>, linux-kernel@vger.kernel.org,
+	Sat, 25 Aug 2007 03:57:00 -0400
+Subject: Re: [PATCH 08/15] cfg80211: clean up key add/remove interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: 2.6.23-rc2-mm2
-Message-Id: <20070810132019.bc218797.akpm@linux-foundation.org>
-In-Reply-To: <20070810200801.GA16714@hall.aurel32.net>
-References: <20070809224254.11f42716.akpm@linux-foundation.org>
-	<20070810200801.GA16714@hall.aurel32.net>
+In-Reply-To: <46CF298B.7040001@lwfinger.net>
+References: <20070824122705.549190000@sipsolutions.net>
+	 <20070824122907.784517000@sipsolutions.net> <46CF298B.7040001@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iYaQ/K59dk13ZFIa7PBO"
+Date: Sat, 25 Aug 2007 09:57:40 +0200
+Message-Id: <1188028660.9529.7.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 10 Aug 2007 22:08:01 +0200
-Aurelien Jarno <aurelien@aurel32.net> wrote:
 
-> On Thu, Aug 09, 2007 at 10:42:54PM -0700, Andrew Morton wrote:
-> > 
-> > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.23-rc2/2.6.23-rc2-mm2/
-> > 
-> > - Various problems from 2.6.23-rc2-mm1 were fixed
-> > 
-> 
-> I have just noticed that the B44 drivers now depends on BROKEN. It was
-> the already case in 2.6.23-rc2-mm1 but not 2.6.23-rc1-mm2. Is it
-> something really wanted?
-> 
+--=-iYaQ/K59dk13ZFIa7PBO
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I was leaving it that way until the ssb code all turned up in git-wireless's
-#mm-master branch.  From a quick peek it seems that this has now happened,
-so I'll drop that patch and see how we get on.
+On Fri, 2007-08-24 at 13:55 -0500, Larry Finger wrote:
 
-git-wireless now has the usual git catastrophe when merging it against the
-recently-discovered net-2.6.24 tree, so I'll need to do something about
-that first.
+> I found a compile problem when all the patches were installed in that 'op=
+s' was not defined in=20
+> wireless/core.c. This patch should be
+>=20
+> +       WARN_ON(!drv->ops->add_key && drv->ops->del_key);
+> +       WARN_ON(drv->ops->add_key && !drv->ops->del_key);
+>=20
+> and not WARN_ON(!ops->add_key etc.
+>=20
+> A similar change is also required in patch 11/15.
+
+Huh, odd. Seems I somehow messed up this series, I'll look into all the
+things next week (busy over the weekend)
+
+johannes
+
+--=-iYaQ/K59dk13ZFIa7PBO
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBGz+D0/ETPhpq3jKURAnuYAKCgutll61oWXOaBWaW/sAZESXVILQCdECo7
+auW+fhnR4tDNjLopFvJGa+0=
+=OA+k
+-----END PGP SIGNATURE-----
+
+--=-iYaQ/K59dk13ZFIa7PBO--
 
