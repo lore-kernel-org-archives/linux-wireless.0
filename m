@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35892 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751808AbXHOLGN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 07:06:13 -0400
-Subject: [PATCH] hostapd: fix eloop warning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 15 Aug 2007 13:08:51 +0200
-Message-Id: <1187176131.3998.29.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from deine-taler.de ([217.160.107.63]:53721 "EHLO deine-taler.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755592AbXHYA1X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Aug 2007 20:27:23 -0400
+Date: Sat, 25 Aug 2007 02:27:22 +0200
+From: Ulrich Kunitz <kune@deine-taler.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: 2.6.23-rc3-mm1: net/wireless/rt2x00mac.c build failure
+Message-ID: <20070825002722.GA5449@deine-taler.de>
+References: <20070822020648.5ea3a612.akpm@linux-foundation.org> <200708222116.22386.m.kozlowski@tuxland.pl> <200708222131.24882.IvDoorn@gmail.com> <20070822195814.GG2926@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20070822195814.GG2926@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a warning that occurs when turning off hostapd.
+John W. Linville wrote:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Andrew had a lot of problems working-out conflicts between wireless-dev
+> and net-2.6.24.  I have since taken steps to help with this, but I
+> think his pull was from before the wireless-dev rebase.  Hopefully the
+> next -mm will be better.
 
----
-Thought I'd send that earlier but it seems I forgot.
-This is a slightly modified version of my original patch, please do test
-it as I've not been able to test it right now. The original was fine
-though, but it shut down the eloop in wireless_event_deinit instead of
-here.
+John,
 
---- hostap.orig/hostapd/driver_devicescape.c	2007-08-15 13:06:48.000000000 +0200
-+++ hostap/hostapd/driver_devicescape.c	2007-08-15 13:07:39.000000000 +0200
-@@ -1954,8 +1954,10 @@ static void i802_deinit(void *priv)
- 
- 	(void) hostapd_set_iface_flags(drv, 0);
- 
--	if (drv->sock >= 0)
-+	if (drv->sock >= 0) {
-+		eloop_unregister_read_sock(drv->sock);
- 		close(drv->sock);
-+	}
- 	if (drv->ioctl_sock >= 0)
- 		close(drv->ioctl_sock);
- 
+just for notice since the reorganization the zd1211rw-mac80211
+driver doesn't work anymore. Station mode used to work stable with
+WPA, but now the system freezes.
 
+I will try to fix it, but it looks like that it will take a fairly
+large amount of work.
 
+Kind regards,
+
+Ulrich
+
+-- 
+Uli Kunitz
