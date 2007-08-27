@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54072 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S937275AbXHGVZQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2007 17:25:16 -0400
-Message-ID: <46B8E338.9070405@garzik.org>
-Date: Tue, 07 Aug 2007 17:25:12 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: Please pull 'fixes-jgarzik' branch of wireless-2.6
-References: <20070806201441.GJ6442@tuxdriver.com>
-In-Reply-To: <20070806201441.GJ6442@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from crystal.sipsolutions.net ([195.210.38.204]:57813 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751391AbXH0KsA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Aug 2007 06:48:00 -0400
+Subject: Re: letting drivers choose their preferred rate scale
+From: Johannes Berg <johannes@sipsolutions.net>
+To: ian <ischram@telenet.be>
+Cc: wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <46D01D57.6060806@telenet.be>
+References: <46CF95F9.6090802@telenet.be>
+	 <1188028962.9529.13.camel@johannes.berg>  <46D01D57.6060806@telenet.be>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mggGSwZAKk6K25n4C6vp"
+Date: Mon, 27 Aug 2007 12:49:09 +0200
+Message-Id: <1188211749.6756.11.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> The following changes since commit d4ac2477fad0f2680e84ec12e387ce67682c5c13:
->   Linus Torvalds (1):
->         Linux 2.6.23-rc2
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git fixes-jgarzik
-> 
-> John W. Linville (1):
->       Revert "[PATCH] bcm43xx: Fix deviation from specifications in set_baseband_attenuation"
-> 
-> Masakazu Mokuno (1):
->       remove duplicated ioctl entries in compat_ioctl.c
-> 
-> Michael Buesch (1):
->       softmac: Fix deadlock of wx_set_essid with assoc work
-> 
-> Michael Wu (1):
->       rtl8187: ensure priv->hwaddr is always valid
-> 
-> Ulrich Kunitz (1):
->       zd1211rw: fix filter for PSPOLL frames
-> 
->  drivers/net/wireless/bcm43xx/bcm43xx_phy.c  |    2 +-
->  drivers/net/wireless/rtl8187_dev.c          |    2 +-
->  drivers/net/wireless/zd1211rw/zd_mac.c      |    2 +-
->  fs/compat_ioctl.c                           |    3 ---
->  net/ieee80211/softmac/ieee80211softmac_wx.c |   11 ++++++++---
->  5 files changed, 11 insertions(+), 9 deletions(-)
 
-pulled
+--=-mggGSwZAKk6K25n4C6vp
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Sat, 2007-08-25 at 14:15 +0200, ian wrote:
+
+> I reread the discussion carefully and can't find any specific
+> comments on the patch which for clarity I will reproduce below.
+
+Then I guess I remember wrong and the comment was raised in another
+thread. The problem we have is that once any rate control algorithm is
+loaded, it will be default for any future drivers, which is often
+inappropriate. Hence, it would be great if
+hw->preferred_rate_control=3D=3DNULL would indicate "use default" where
+"default" would be set to "simple" to start with but also changeable.
+(although the change functionality could just be not usable from
+userspace for now)
+
+johannes
+
+--=-mggGSwZAKk6K25n4C6vp
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG0qwl/ETPhpq3jKURAso7AKCS81i86fTkVw12MU2bkMQneb4LdQCePNan
+uh1qH7E8+mb5Gna1lHKgL6w=
+=naqd
+-----END PGP SIGNATURE-----
+
+--=-mggGSwZAKk6K25n4C6vp--
 
