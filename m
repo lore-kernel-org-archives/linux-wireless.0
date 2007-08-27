@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp146.iad.emailsrvr.com ([207.97.245.146]:50000 "EHLO
-	smtp146.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759080AbXH3R4a (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:32915 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042AbXH0MHE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 13:56:30 -0400
-Message-ID: <46D70467.1040109@gentoo.org>
-Date: Thu, 30 Aug 2007 13:54:47 -0400
-From: Daniel Drake <dsd@gentoo.org>
-MIME-Version: 1.0
-To: Jesper Juhl <jesper.juhl@gmail.com>
-CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 13/30] net: Don't do pointless kmalloc return value casts  in zd1211 driver
-References: <1554af80879a7ef2f78a4d654f23c248203500d9.1187912217.git.jesper.juhl@gmail.com> <d551047daed1cb4d9de1eff956268a468c9837f6.1187912217.git.jesper.juhl@gmail.com>
-In-Reply-To: <d551047daed1cb4d9de1eff956268a468c9837f6.1187912217.git.jesper.juhl@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 27 Aug 2007 08:07:04 -0400
+Subject: Re: port of my recent patches to net-2.6.24
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ulrich Kunitz <kune@deine-taler.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20070826152204.GA18570@deine-taler.de>
+References: <1188027470.9529.5.camel@johannes.berg>
+	 <20070826152204.GA18570@deine-taler.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eCmaBuAgSvtTOEm2uZQ1"
+Date: Mon, 27 Aug 2007 14:08:12 +0200
+Message-Id: <1188216492.7837.11.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jesper Juhl wrote:
-> Since kmalloc() returns a void pointer there is no reason to cast
-> its return value.
-> This patch also removes a pointless initialization of a variable.
 
-NAK: adds a sparse warning
-zd_chip.c:116:15: warning: implicit cast to nocast type
+--=-eCmaBuAgSvtTOEm2uZQ1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
-> ---
->  drivers/net/wireless/zd1211rw/zd_chip.c |    5 ++---
->  1 files changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
-> index c39f198..4942e5c 100644
-> --- a/drivers/net/wireless/zd1211rw/zd_chip.c
-> +++ b/drivers/net/wireless/zd1211rw/zd_chip.c
-> @@ -106,8 +106,8 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
->  {
->  	int r;
->  	int i;
-> -	zd_addr_t *a16 = (zd_addr_t *)NULL;
->  	u16 *v16;
-> +	zd_addr_t *a16;
->  	unsigned int count16;
->  
->  	if (count > USB_MAX_IOREAD32_COUNT)
-> @@ -115,8 +115,7 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
->  
->  	/* Allocate a single memory block for values and addresses. */
->  	count16 = 2*count;
-> -	a16 = (zd_addr_t *) kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
-> -		                   GFP_KERNEL);
-> +	a16 = kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)), GFP_KERNEL);
->  	if (!a16) {
->  		dev_dbg_f(zd_chip_dev(chip),
->  			  "error ENOMEM in allocation of a16\n");
+On Sun, 2007-08-26 at 17:22 +0200, Ulrich Kunitz wrote:
+
+> I have tested the patches and they work with zd1211rw-mac80211 and
+> WPA. They version I tested can be accessed using
+> git://deine-taler.de/git/zd1211rw.git branch zd1211rw-net.
+
+Great, thanks for the heads-up.
+
+johannes
+
+--=-eCmaBuAgSvtTOEm2uZQ1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG0r6s/ETPhpq3jKURAjJnAKCTpxyxJ+ewxtRsUKGsExXlazqKSwCfT6IK
+O7SIWrfODo0TcDrj3EMuGcU=
+=YAlC
+-----END PGP SIGNATURE-----
+
+--=-eCmaBuAgSvtTOEm2uZQ1--
 
