@@ -1,62 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49627 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752885AbXHOKqX (ORCPT
+Received: from smtp.nokia.com ([131.228.20.171]:47036 "EHLO
+	mgw-ext12.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758658AbXH0QBJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 06:46:23 -0400
-Subject: Re: Kernel BUG when using ad-hoc mode in rt2x00
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Adam Baker <linux@baker-net.org.uk>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <200708082324.17186.linux@baker-net.org.uk>
-References: <200708082324.17186.linux@baker-net.org.uk>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7iTYzVQy7K8LnaEXtTW9"
-Date: Wed, 15 Aug 2007 11:50:43 +0200
-Message-Id: <1187171443.3960.6.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 27 Aug 2007 12:01:09 -0400
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>
+Subject: Re: mac80211 AP mode powersaving problems?
+References: <1186990509.27916.38.camel@johannes.berg>
+	<87lkccf30m.fsf@tikku.osso.net>
+	<1187270479.5141.44.camel@johannes.berg> <87643f4kkh.fsf@nokia.com>
+	<1187275344.23489.6.camel@johannes.berg>
+From: Kalle Valo <Kalle.Valo@nokia.com>
+Date: Mon, 27 Aug 2007 18:58:35 +0300
+Message-ID: <871wdphsus.fsf@nokia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg <johannes@sipsolutions.net> writes:
 
---=-7iTYzVQy7K8LnaEXtTW9
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>> Are there any tricks or should this be enough with b43:
+>> 
+>> iwconfig wlan0 mode master channel 2 essid mac80211
+>> ip link set wlan0 up
+>
+> Umm, of course not. You need hostapd.
 
-On Wed, 2007-08-08 at 23:24 +0100, Adam Baker wrote:
+Heh, I guess I have used madwifi too much :) 
 
-> a) If anyone can see anything obvious wrong in the trace
-> b) If anyone has recently tested ad-hoc mode with another driver and can=20
-> confirm it works.
+I didn't even think of hostapd, for some strange reason I have always
+thought it as an optional feature.
 
-Neither.
+I couldn't find any instructions how to use hostapd with mac80211, so
+here's what I did (for the archive):
 
-> The sequence of events that leads to the crash is
-> iwconfig wlan1 mode ad-hoc
-> ifconfig wlan1 192.168.0.230
-> iwconfig wlan1 channel 11
-> iwconfig wlan1 essid test
->=20
-> then attempt a scan from another device.=20
+o pulled latest wireless-dev#everything
 
-Very weird. Can you please enable verbose debugging and also add a few
-printks to various lines of the code in ieee80211_tx_h_multicast_ps_buf
-and ieee80211_tx_h_unicast_ps_buf? Both ought to be fine as far as I can
-tell and the STA scanning shouldn't be in powersave mode either so this
-is a bit strange.
+o pulled latest hostapd from git
 
-johannes
+o compiled hostapd with these extra settings in .config:
 
---=-7iTYzVQy7K8LnaEXtTW9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+CONFIG_DRIVER_DEVICESCAPE=y
+WIRELESS_DEV=/home/kvalo/linux-2.6/
+CFLAGS += -I$(WIRELESS_DEV)/net/mac80211
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+o edited hostapd.conf (wlan1 is my b43 interface):
 
-iD8DBQBGwsxz/ETPhpq3jKURAvfFAJ9KXDLSUIOUyvg/g/GEflNINPvdSwCeP5wa
-pkVvfg1tAzYZv9MM0noipvA=
-=vtU2
------END PGP SIGNATURE-----
+interface=wlan1                                                                
+driver=devicescape                                                             
+hw_mode=g                                                                      
+channel=5                                                                      
 
---=-7iTYzVQy7K8LnaEXtTW9--
+o started hostapd:
 
+# ./hostapd hostapd.conf
+
+-- 
+Kalle Valo
