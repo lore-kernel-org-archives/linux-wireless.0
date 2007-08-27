@@ -1,61 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37239 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750790AbXHJVfY (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:16033 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753494AbXH0Xrv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2007 17:35:24 -0400
-Subject: [PATCH] hostapd: don't reference ieee80211_msg_sta_not_assoc if  it's unused anyway
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 10 Aug 2007 23:38:01 +0200
-Message-Id: <1186781881.17351.15.camel@johannes.berg>
-Mime-Version: 1.0
+	Mon, 27 Aug 2007 19:47:51 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: port of my recent patches to net-2.6.24
+Date: Mon, 27 Aug 2007 19:45:51 -0400
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1188027470.9529.5.camel@johannes.berg>
+In-Reply-To: <1188027470.9529.5.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart108026812.FtPWj39jt0";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200708271945.55384.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hostapd doesn't do anything about such frames. Kernel no longer sends
-them and the constant was removed, so let's not reference it any longer.
+--nextPart108026812.FtPWj39jt0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
+On Saturday 25 August 2007 03:37, Johannes Berg wrote:
+> http://johannes.sipsolutions.net/patches/net-2.6.24/
+>
+Patch 22:
++		ap =3D sta_info_get(key->local, key->sdata->u.sta.bssid);
+How does this work when we're setting a multicast/broadcast key on an AP=20
+interface?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
++	list_add(&key->list, &sdata->key_list);
+Should we be holding the key mutex here?
 
---- hostap.orig/hostapd/driver_devicescape.c	2007-08-10 23:33:19.000000000 +0200
-+++ hostap/hostapd/driver_devicescape.c	2007-08-10 23:35:10.000000000 +0200
-@@ -1351,9 +1351,12 @@ static void handle_frame(struct hostapd_
- 	}
- 
- 	/* PS-Poll frame from not associated is 16 bytes. All other frames
--	 * passed to hostapd are 24 bytes or longer. */
--	if (len < 24 &&
--	    (msg_type != ieee80211_msg_sta_not_assoc || len < 16)) {
-+	 * passed to hostapd are 24 bytes or longer.
-+	 * Right now, the kernel doesn't send us any frames from not-associated
-+	 * because the code here doesn't care. TODO: add support to kernel
-+	 * and send DEAUTH/DISASSOC to them...
-+	 */
-+	if (len < 24) {
- 		printf("handle_frame: too short (%lu), type %d\n",
- 		       (unsigned long) len, msg_type);
- 		return;
-@@ -1425,9 +1428,15 @@ static void handle_frame(struct hostapd_
- 	case ieee80211_msg_michael_mic_failure:
- 		hostapd_michael_mic_failure(hapd, buf, data_len);
- 		return;
--	case ieee80211_msg_sta_not_assoc:
--		/* TODO: ieee802_11_rx_sta_not_assoc(hapd, buf, data_len); */
-+/*
-+ * TODO
-+ * We should be telling them to go away. But we don't support that now.
-+ * See also below and above for other TODO items related to this.
-+
-+ 	case ieee80211_msg_sta_not_assoc:
-+		ieee802_11_rx_sta_not_assoc(hapd, buf, data_len);
- 		return;
-+ */
- 	default:
- 		printf("handle_frame: unknown msg_type %d\n", msg_type);
- 		return;
+This patch does too many things. If you can split some things out into=20
+separate patches, like moving code into key.c, it would be easier to review.
 
+Patch 23-29: ACK
 
+Thanks,
+=2DMichael Wu
+
+--nextPart108026812.FtPWj39jt0
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBG02IzT3Oqt9AH4aERAhZXAKDJA4t3WioVqE0+bbajTp7VeDMYAQCg1qzu
+tgHEAB++NL/Z+WlvviMZ8LQ=
+=PpYj
+-----END PGP SIGNATURE-----
+
+--nextPart108026812.FtPWj39jt0--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
