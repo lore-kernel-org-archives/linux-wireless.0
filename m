@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:52081 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1757177AbXHETuU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Aug 2007 15:50:20 -0400
-Subject: suspend/resume support in mac80211
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: linux-wireless@vger.kernel.org
-Cc: rt2400-devel@lists.sourceforge.net
+Received: from crystal.sipsolutions.net ([195.210.38.204]:45903 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753489AbXH0Nrg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Aug 2007 09:47:36 -0400
+Subject: [PATCH] mac80211: completely reset flags in  ieee80211_remove_tx_extra
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jiri Slaby <jirislaby@gmail.com>
 Content-Type: text/plain
-Date: Sun, 05 Aug 2007 21:50:17 +0200
-Message-Id: <1186343417.8459.23.camel@localhost>
+Date: Mon, 27 Aug 2007 15:48:44 +0200
+Message-Id: <1188222524.7837.27.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+All flags should be cleared when we get here before resetting them,
+currently only these four exist so the result is the same but when
+more flags are added this is easier to extend.
 
-we have recently been struggling with getting suspend/resume working in
-rt2x00. A few questions:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-1. What is the recommended scheme for implementing suspend/resume with
-mac80211? Some drivers (p54, iwlwifi) call ieee80211_stop_queues().
-rt2x00 is currently doing so, but it doesn't seem to be enough: mac80211
-calls back into rt2x00 while the device is suspended, resulting in
-chaos.
+---
+Similar to the other patch, this is a wireless-dev update that I'll be
+rolling into the patch for net-2.6.24.
 
-2. Are there any mac80211 drivers that suspend/resume properly? Also
-when associated?
+ net/mac80211/ieee80211.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-3. Shouldn't mac80211 be made suspend/resume-aware (AFAIK it is not), so
-we can do things like disassociating during suspend and reassociating
-when resuming? I'd like something in the spirit of
-netif_device_detach()/netif_device_attach(). Comments?
+--- wireless-dev.orig/net/mac80211/ieee80211.c	2007-08-27 15:43:50.414646075 +0200
++++ wireless-dev/net/mac80211/ieee80211.c	2007-08-27 15:44:00.414646075 +0200
+@@ -880,9 +880,7 @@ static void ieee80211_remove_tx_extra(st
+ 
+ 	pkt_data = (struct ieee80211_tx_packet_data *)skb->cb;
+ 	pkt_data->ifindex = control->ifindex;
+-	pkt_data->flags &= ~(IEEE80211_TXPD_REQ_TX_STATUS |
+-		IEEE80211_TXPD_DO_NOT_ENCRYPT | IEEE80211_TXPD_REQUEUE |
+-		IEEE80211_TXPD_MGMT_IFACE);
++	pkt_data->flags = 0;
+ 	if (control->flags & IEEE80211_TXCTL_REQ_TX_STATUS)
+ 		pkt_data->flags |= IEEE80211_TXPD_REQ_TX_STATUS;
+ 	if (control->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT)
 
-Cheers,
-
-Mattias
 
