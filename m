@@ -1,51 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:22256 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760858AbXHCRq2 (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:40054 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754598AbXH0PKQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 13:46:28 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so728281rvb
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Aug 2007 10:46:27 -0700 (PDT)
-Message-ID: <f6ca9fed0708031046x639fc799wbec08f2c8e2c7536@mail.gmail.com>
-Date: Fri, 3 Aug 2007 19:46:26 +0200
-From: dragoran <drago01@gmail.com>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Subject: Re: rt2500usb stopped working (vendor request error)
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200708031848.03469.IvDoorn@gmail.com>
+	Mon, 27 Aug 2007 11:10:16 -0400
+Message-ID: <46D2E953.6050202@lwfinger.net>
+Date: Mon, 27 Aug 2007 10:10:11 -0500
+From: Larry Finger <larry.finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <46B1B0AE.7050205@gmail.com> <200708022306.33486.IvDoorn@gmail.com>
-	 <46B2E533.2000808@gmail.com> <200708031848.03469.IvDoorn@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 05/15] mac80211: remove HW_KEY_IDX_INVALID
+References: <20070824122705.549190000@sipsolutions.net>	 <20070824122905.350213000@sipsolutions.net> <46CF327F.4050002@lwfinger.net> <1188212460.7837.1.camel@johannes.berg>
+In-Reply-To: <1188212460.7837.1.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-no I havn't I will try it tomorrow and tell you if it worked.
-but as I said before a earilier version of the driver worked before on
-fc6 without any problems.
+Johannes Berg wrote:
+> On Fri, 2007-08-24 at 14:33 -0500, Larry Finger wrote:
+> 
+>> This patch breaks software encryption in my tests - WPA for b43, WPA and WEP for b43legacy. I 
+>> haven't looked for the cause yet. That is my next step.
+> 
+> The patch below appears necessary for b43 when I enable sw crypto, but
+> you shouldn't be having such problems in b43legacy since you don't
+> support crypto at all; or have you not removed the crypto related code
+> from xmit.c?
 
-On 8/3/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> On Friday 03 August 2007, dragoran wrote:
-> > Ivo van Doorn wrote:
-> > > do you have the USB stick plugged into a USB 1.1 port?
-> > > If so, could you edit rt2x00usb.h and change the line:
-> > >
-> > > #define REGISTER_TIMEOUT      20
-> > >
-> > > And increase the value to something higher (up to 500) and see if that
-> works better?
-> > >
-> > > Just an idea related to another bug report regarding vendor request
-> > > errors,
-> > 1) tested todays snapshot:
-> > same results.
-> > 2) increased the timeout didn't help.
-> > "usb 2-2: new high speed USB device using ehci_hcd and address"
-> > so its a usb2 device.
-> > any other ideas?
->
-> Have you tried using the legacy driver?
-> I'm curious if the same problem exist in there are well...
->
-> Ivo
->
+This fixes b43. It is a bit more difficult to test legacy, but it should be the same.
+
+The code in xmit.c for legacy is essentially the same as for b43. It certainly could be trimmed a 
+bit since no keys are ever set - routine set_key returns "no support".
+
+Thanks,
+
+Larry
+
