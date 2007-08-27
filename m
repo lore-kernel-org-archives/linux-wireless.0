@@ -1,40 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:36351 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752450AbXH1RNc (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:49728 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753763AbXH0Ncr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2007 13:13:32 -0400
-Date: Tue, 28 Aug 2007 18:13:30 +0100
-From: Christoph Hellwig <hch@infradead.org>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 5/5] Net: ath5k, kconfig changes
-Message-ID: <20070828171330.GD29343@infradead.org>
-References: <2713029743177393055@pripojeni.net> <280951420471148977@pripojeni.net>
+	Mon, 27 Aug 2007 09:32:47 -0400
+Subject: [PATCH] address comments from Michael Wu
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 27 Aug 2007 15:33:53 +0200
+Message-Id: <1188221633.7837.18.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <280951420471148977@pripojeni.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 28, 2007 at 12:01:30PM -0400, Jiri Slaby wrote:
-> +config ATH5K_AR5210
-> +	bool "Support AR5210"
-> +	depends on ATH5K
-> +	default y
-> +
-> +config ATH5K_AR5211
-> +	bool "Support AR5211"
-> +	depends on ATH5K
-> +	default y
-> +
-> +config ATH5K_AR5212
-> +	bool "Support AR5212"
-> +	depends on ATH5K
-> +	default y
+The key selection changes had some things Michael Wu wasn't entirely
+happy with, address these points.
 
-Please don't add more default statements.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Also this whole patch seems rather pointless.  It saves only
-very little and turns the driver into a complete ifdef maze.
+---
+ net/mac80211/rx.c |   32 +++++++++++++-------------------
+ 1 file changed, 13 insertions(+), 19 deletions(-)
+
+--- wireless-dev.orig/net/mac80211/rx.c	2007-08-27 15:22:33.894646075 +0200
++++ wireless-dev/net/mac80211/rx.c	2007-08-27 15:22:35.944646075 +0200
+@@ -321,7 +321,6 @@ ieee80211_rx_h_load_key(struct ieee80211
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
+ 	int keyidx;
+ 	int hdrlen;
+-	int trying_wep = 0;
+ 
+ 	/*
+ 	 * Key selection 101
+@@ -350,12 +349,13 @@ ieee80211_rx_h_load_key(struct ieee80211
+ 	 * addressed to us nor a multicast frame.
+ 	 */
+ 	if (!(rx->flags & IEEE80211_TXRXD_RXRA_MATCH))
+-		return TXRX_DROP;
++		return TXRX_CONTINUE;
+ 
+-	if (is_multicast_ether_addr(hdr->addr1) || !rx->sta) {
+- find_by_index:
++	if (!is_multicast_ether_addr(hdr->addr1) && rx->sta && rx->sta->key) {
++		rx->key = rx->sta->key;
++	} else {
+ 		/*
+-		 * The device doesn't give us the IV so won't be
++		 * The device doesn't give us the IV so we won't be
+ 		 * able to look up the key. That's ok though, we
+ 		 * don't need to decrypt the frame, we just won't
+ 		 * be able to keep statistics accurate.
+@@ -369,33 +369,27 @@ ieee80211_rx_h_load_key(struct ieee80211
+ 		hdrlen = ieee80211_get_hdrlen(rx->fc);
+ 
+ 		if (rx->skb->len < 8 + hdrlen)
+-			/* COUNT THIS? */
+-			return TXRX_DROP;
++			return TXRX_DROP; /* TODO: count this? */
++
+ 		/*
+ 		 * no need to call ieee80211_wep_get_keyidx,
+ 		 * it verifies a bunch of things we've done already
+ 		 */
+ 		keyidx = rx->skb->data[hdrlen + 3] >> 6;
+ 
+-		/*
+-		 * TODO: handle IBSS! We can have per-STA group keys there!
+-		 */
+ 		rx->key = rx->sdata->keys[keyidx];
+ 
+ 		/*
+-		 * If we got here for WEP, make sure we got WEP
++		 * RSNA-protected unicast frames should always be sent with
++		 * pairwise or station-to-station keys, but for WEP we allow
++		 * using a key index as well.
+ 		 */
+-		if (trying_wep && rx->key && rx->key->conf.alg != ALG_WEP)
++		if (rx->key && rx->key->conf.alg != ALG_WEP &&
++		    !is_multicast_ether_addr(hdr->addr1))
+ 			rx->key = NULL;
+-	} else {
+-		rx->key = rx->sta->key;
+-		if (!rx->key) {
+-			trying_wep = 1;
+-			goto find_by_index;
+-		}
+ 	}
+ 
+-	if (rx->key && (rx->flags & IEEE80211_TXRXD_RXRA_MATCH)) {
++	if (rx->key) {
+ 		rx->key->tx_rx_count++;
+ 		if (unlikely(rx->local->key_tx_rx_threshold &&
+ 			     rx->key->tx_rx_count >
+
+
