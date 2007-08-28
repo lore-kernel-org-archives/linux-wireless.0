@@ -1,52 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33242 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60164 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753920AbXHUQiY (ORCPT
+	with ESMTP id S1751272AbXH1Ils (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 12:38:24 -0400
-Subject: Re: [PATCH] mark islsm list as subscribers-only
+	Tue, 28 Aug 2007 04:41:48 -0400
+Subject: Re: [PATCH 08/15] cfg80211: clean up key add/remove interface
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
-In-Reply-To: <43e72e890708210932j7684d6c4h8dfe0193f67f1e8f@mail.gmail.com>
-References: <1187282653.23489.36.camel@johannes.berg>
-	 <43e72e890708210932j7684d6c4h8dfe0193f67f1e8f@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wZWS99KFGs3xtHqID6Yq"
-Date: Tue, 21 Aug 2007 18:37:32 +0200
-Message-Id: <1187714252.4218.9.camel@johannes.berg>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <46D2ED59.1020508@lwfinger.net>
+References: <20070824122705.549190000@sipsolutions.net>
+	 <20070824122907.784517000@sipsolutions.net> <46CF298B.7040001@lwfinger.net>
+	 <1188212576.7837.3.camel@johannes.berg> <46D2ED59.1020508@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-t3qvhWLylmSGYNK+1wLY"
+Date: Tue, 28 Aug 2007 10:43:06 +0200
+Message-Id: <1188290586.7837.60.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-wZWS99KFGs3xtHqID6Yq
+--=-t3qvhWLylmSGYNK+1wLY
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2007-08-21 at 12:32 -0400, Luis R. Rodriguez wrote:
+On Mon, 2007-08-27 at 10:27 -0500, Larry Finger wrote:
 
-> I think that list was for the net80211 driver, not even sure if its
-> used actively for the mac80211 driver.
+> I have been working from the 'b43' branch with a top commit hash of=20
+> 43a9a146a1290808519c68615809ae8bc207e8a1. It seems to be out of synch wit=
+h branch 'everything' in=20
+> this area.
 
-I'm fine with removing it completely, but having a list listed that
-simply drops your mail (not without spamming you, of course) is just not
-useful.
+Ah yes, that explains it, I think John grouped the cfg80211 updates with
+mac80211 and those aren't always pulled into the driver branches.
+
+> Sorry for the noise.
+
+No problem, I appreciate any bug reports.
 
 johannes
 
---=-wZWS99KFGs3xtHqID6Yq
+--=-t3qvhWLylmSGYNK+1wLY
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iD8DBQBGyxTM/ETPhpq3jKURAsJzAKCDaDzq+7p5QSs1MxJuJGMmzv05BQCgu+iE
-w2VmPO+M7gxSpFPr9D+BjOo=
-=cr8m
+iD8DBQBG0+Aa/ETPhpq3jKURAhSlAJ9FLVjSwxfXWIJke0KCa/fvpm21KgCfZwrE
+c/Cbs1zt515IZ99BKLXSgj8=
+=14TM
 -----END PGP SIGNATURE-----
 
---=-wZWS99KFGs3xtHqID6Yq--
+--=-t3qvhWLylmSGYNK+1wLY--
 
