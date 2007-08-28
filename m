@@ -1,88 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:55212
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764225AbXHWW1E (ORCPT
+Received: from smtp.nokia.com ([131.228.20.173]:24534 "EHLO
+	mgw-ext14.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759415AbXH1SJU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2007 18:27:04 -0400
-Message-Id: <20070823222154.137089000@bu3sch.de>
-References: <20070823222153.073035000@bu3sch.de>
-Date: Fri, 24 Aug 2007 00:21:54 +0200
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Larry Finger <larry.finger@lwfinger.net>
-Subject: [patch 1/7] b43: Change Kconfig help text
+	Tue, 28 Aug 2007 14:09:20 -0400
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jiri Benc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: mac80211 AP mode powersaving problems?
+References: <1186990509.27916.38.camel@johannes.berg>
+	<87lkccf30m.fsf@tikku.osso.net>
+	<1187270479.5141.44.camel@johannes.berg> <87643f4kkh.fsf@nokia.com>
+	<1187275344.23489.6.camel@johannes.berg> <871wdphsus.fsf@nokia.com>
+	<1188290911.7837.65.camel@johannes.berg> <87absbsz5f.fsf@nokia.com>
+	<1188299159.7837.96.camel@johannes.berg> <87sl63prsg.fsf@nokia.com>
+	<1188317935.7837.106.camel@johannes.berg>
+From: Kalle Valo <Kalle.Valo@nokia.com>
+Date: Tue, 28 Aug 2007 21:08:09 +0300
+In-Reply-To: <1188317935.7837.106.camel@johannes.berg> (ext Johannes Berg's message of "Tue\, 28 Aug 2007 18\:18\:55 +0200")
+Message-ID: <878x7v8rcm.fsf@nokia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hopefully people can understand this better.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <larry.finger@lwfinger.net>
+>> But that's not all, also multicast frames (including ARP broadcast)
+>> are not buffered correctly. They are sent randomly instead of directly
+>> after a DTIM beacon. Also Multicast bit is not set and DTIM is always
+>> zero even though DTIM period is two.
+>
+> Hm, yeah, I almost expected this, b43 hardware has some capabilities for
+> this but we don't really know how to use it yet. We also need to upload
+> the DTIM count to the hardware (shm somewhere) 
 
-Index: wireless-dev-new/drivers/net/wireless/b43/Kconfig
-===================================================================
---- wireless-dev-new.orig/drivers/net/wireless/b43/Kconfig	2007-08-23 22:55:18.000000000 +0200
-+++ wireless-dev-new/drivers/net/wireless/b43/Kconfig	2007-08-23 23:31:09.000000000 +0200
-@@ -1,21 +1,31 @@
- config B43
- 	tristate "Broadcom 43xx wireless support (mac80211 stack)"
--	depends on SSB_POSSIBLE && MAC80211 && WLAN_80211 && EXPERIMENTAL
-+	depends on SSB_POSSIBLE && MAC80211 && WLAN_80211
- 	select SSB
- 	select FW_LOADER
- 	select HW_RANDOM
- 	---help---
--	  This is an experimental driver for the Broadcom 43xx wireless chip,
--	  found in the Apple Airport Extreme and various other devices. This
--	  driver supports 802.11a and 802.11g, but not 802.11b. As a result,
--	  BCM4301 and BCM4303 are not supported - use b43legacy instead.
--	  It is safe to include both b43 and b43legacy as the ssb driver will
--	  load the correct version for your device.
-+	  b43 is a driver for the Broadcom 43xx series wireless devices.
-+
-+	  Check "lspci" for something like
-+	  "Broadcom Corporation BCM43XX 802.11 Wireless LAN Controller"
-+	  to determine whether you own such a device.
-+
-+	  This driver supports the new BCM43xx IEEE 802.11G devices, but not
-+	  the old IEEE 802.11B devices. Old devices are supported by
-+	  the b43legacy driver.
-+	  Note that this has nothing to do with the standard that your AccessPoint
-+	  supports (A, B, G or a combination).
-+	  IEEE 802.11G devices can talk to IEEE 802.11B AccessPoints.
-+
-+	  It is safe to include both b43 and b43legacy as the underlying glue
-+	  layer will automatically load the correct version for your device.
- 
- 	  This driver uses V4 firmware, which must be installed separately using
- 	  b43-fwcutter.
- 
- 	  This driver can be built as a module (recommended) that will be called "b43".
-+	  If unsure, say M.
- 
- # Auto-select SSB PCI-HOST support, if possible
- config B43_PCI_AUTOSELECT
-@@ -32,8 +42,8 @@ config B43_PCICORE_AUTOSELECT
- 	default y
- 
- config B43_PCMCIA
--	bool "Broadcom 43xx PCMCIA device support"
--	depends on B43 && SSB_PCMCIAHOST_POSSIBLE
-+	bool "Broadcom 43xx PCMCIA device support (EXPERIMENTAL)"
-+	depends on B43 && SSB_PCMCIAHOST_POSSIBLE && EXPERIMENTAL
- 	select SSB_PCMCIAHOST
- 	---help---
- 	  Broadcom 43xx PCMCIA device support.
-@@ -41,7 +51,7 @@ config B43_PCMCIA
- 	  Support for 16bit PCMCIA devices.
- 	  Please note that most PC-CARD devices are _NOT_ 16bit PCMCIA
- 	  devices, but 32bit CardBUS devices. CardBUS devices are supported
--	  by "B43 PCI device support".
-+	  out of the box by b43.
- 
- 	  With this config option you can drive b43 cards in
- 	  CompactFlash formfactor in a PCMCIA adaptor.
+I hope you have time to investigate this, because I really would like
+to have Nokia N800 and 770 working with b43 AP. So if you need more
+testing, just ask.
+
+>> I also some really odd frames sent by b43 when N800 had PSM enabled.
+>> Never seen it before, no idea what it is. Dump at the of this message.
+>
+> Could you send me a packet capture in pkt format via private mail?
+
+Sent.
 
 -- 
-
+Kalle Valo
