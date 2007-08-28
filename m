@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:38334 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751718AbXHBNFz (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.228]:52013 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756701AbXH1ULG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 09:05:55 -0400
-Subject: Re: [RFC V2] bcm43xx-mac80211: Provide information to allow   transmission rate decreases
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <200708021503.53982.mb@bu3sch.de>
-References: <46b0f367.p35iGhSXwM+v4QLG%Larry.Finger@lwfinger.net>
-	 <200708021337.21285.mb@bu3sch.de> <1186055319.24230.32.camel@johannes.berg>
-	 <200708021503.53982.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HR6yUA3iH4nXPj16Y6lh"
-Date: Thu, 02 Aug 2007 15:07:14 +0200
-Message-Id: <1186060034.24230.48.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 28 Aug 2007 16:11:06 -0400
+Received: by wr-out-0506.google.com with SMTP id 36so1386119wra
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2007 13:11:03 -0700 (PDT)
+Message-ID: <43e72e890708281311y630b85fcjb132bd065478d760@mail.gmail.com>
+Date: Tue, 28 Aug 2007 16:11:03 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Christoph Hellwig" <hch@infradead.org>,
+	"Jiri Slaby" <jirislaby@gmail.com>, linville@tuxdriver.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 4/5] Net: ath5k, license is GPLv2
+In-Reply-To: <20070828171155.GC29343@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <2713029743177393055@pripojeni.net>
+	 <7515194658758617@pripojeni.net>
+	 <20070828171155.GC29343@infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 8/28/07, Christoph Hellwig <hch@infradead.org> wrote:
+> On Tue, Aug 28, 2007 at 12:00:50PM -0400, Jiri Slaby wrote:
+> > ath5k, license is GPLv2
+> >
+> > The files are available only under GPLv2 since now.
+>
+> Is this really a good idea?  Most of the reverse-engineering was
+> done by the OpenBSD folks, and it would certainly be helpful to
+> work together with them on new hardware revisions, etc..
 
---=-HR6yUA3iH4nXPj16Y6lh
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Technically the best we can do is to leave the license as dual
+licensed, but keep in that technically that means nothing and is just
+for show, the GPL is what would apply as its derivative work and is
+the most restrictive license. This applies to any other driver in the
+kernel right now with a dual license tag.
 
-On Thu, 2007-08-02 at 15:03 +0200, Michael Buesch wrote:
-
-> So, what's the point of this "excessive retries" field anyway?
-> We already have an "acked" bit. So if it's not set, but we expected an
-> ack, what's the point of setting excessive retries in the driver?
-> the rc algo sould know _anyway_, as it has the "acked" and the
-> "we wanted to have an ack" bits.
-
-No idea. I guess you get to dig through the code and remove it ;)
-
-johannes
-
---=-HR6yUA3iH4nXPj16Y6lh
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGsdcC/ETPhpq3jKURAswXAJ90c37BtyLQYspBGdMQGcYg+coe1wCeLR7A
-0/ESddzHk60Qv/rkMtq2vHo=
-=0aGG
------END PGP SIGNATURE-----
-
---=-HR6yUA3iH4nXPj16Y6lh--
-
+  Luis
