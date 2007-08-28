@@ -1,43 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purr.warmcat.com ([87.106.142.209]:34549 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752699AbXHAFwJ (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60093 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751232AbXH1Ijo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2007 01:52:09 -0400
-Message-ID: <46B01F86.5050406@warmcat.com>
-Date: Wed, 01 Aug 2007 06:52:06 +0100
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: libertas: blows chunks on failed firmware load
-References: <46AF913F.9010006@warmcat.com> <1185935705.17940.40.camel@xo-13-A4-25.localdomain>
-In-Reply-To: <1185935705.17940.40.camel@xo-13-A4-25.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 28 Aug 2007 04:39:44 -0400
+Subject: Re: port of my recent patches to net-2.6.24
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200708271945.55384.flamingice@sourmilk.net>
+References: <1188027470.9529.5.camel@johannes.berg>
+	 <200708271945.55384.flamingice@sourmilk.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-t/q7yz4nCc4u5RM67L0M"
+Date: Tue, 28 Aug 2007 10:40:59 +0200
+Message-Id: <1188290459.7837.55.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Somebody in the thread at some point said:
 
->> I realize I am slightly pushing my luck, but I added this el-cheapo
->> 88W8338 -based "Compoint EVWL-GI-700S" USB stick's USB ID "0x1286,
->> 0x1fab" to libertas/usb8xxx.c and chanced my arm.
+--=-t/q7yz4nCc4u5RM67L0M
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> If it's 8338, it's certainly not gonna work with this driver.  Did you
-> add the USB ID yourself?
+On Mon, 2007-08-27 at 19:45 -0400, Michael Wu wrote:
+> On Saturday 25 August 2007 03:37, Johannes Berg wrote:
+> > http://johannes.sipsolutions.net/patches/net-2.6.24/
+> >
+> Patch 22:
+> +		ap =3D sta_info_get(key->local, key->sdata->u.sta.bssid);
+> How does this work when we're setting a multicast/broadcast key on an AP=20
+> interface?
 
-Yes I do actually say in that rather obfuscated sentence above that I
-added the USB ID and accepted I was pushing my luck doing so.  But...
-the driver took the bold step of calling itself usb8xxx...
+Hmm. I don't think that ever worked correctly for when we ourselves are
+using WMM. I can fix that.
 
-> Irregardless of my previous comment, the bug should get fixed of course.
+>=20
+> +	list_add(&key->list, &sdata->key_list);
+> Should we be holding the key mutex here?
 
-Right, that's why I reported it like this:
+Yeah.
 
->> Of course this can be due to the luck-pushing, but it seemed it might
->> also be a genuine problem with the error handling.
+> This patch does too many things. If you can split some things out into=20
+> separate patches, like moving code into key.c, it would be easier to revi=
+ew.
 
-One of the other cheapo cards I randomly got was a Libertas 88W8335 PC
-Card, I assume I am SOL on that as well.
+Not easily since it's really intermingled with the ioctl code. Have you
+looked at the original?
 
--Andy
+johannes
+
+--=-t/q7yz4nCc4u5RM67L0M
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG09+b/ETPhpq3jKURAg4mAJ9noKcBKA0wf3oNlv+MJMyLs7WeOQCfTgom
+A6OGLhxTfi/C0qQjy3dCYuY=
+=9PJN
+-----END PGP SIGNATURE-----
+
+--=-t/q7yz4nCc4u5RM67L0M--
+
