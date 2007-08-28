@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35438 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:54349 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755719AbXHUPPB (ORCPT
+	with ESMTP id S1751340AbXH1QV1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 11:15:01 -0400
-Message-Id: <20070821150044.408701000@sipsolutions.net>
-References: <20070821145905.689978000@sipsolutions.net>
-Date: Tue, 21 Aug 2007 16:59:17 +0200
+	Tue, 28 Aug 2007 12:21:27 -0400
+Subject: Re: [PATCH 1/5] Net: ath5k, split hw into hw, phy and initvals
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org, developers@islsm.org
-Subject: [PATCH 12/27] p54: remove IEEE80211_HW_DATA_NULLFUNC_ACK
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <2713029743177393055@pripojeni.net>
+References: <2713029743177393055@pripojeni.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-osJoKqQ7yF+1PWRnAQUF"
+Date: Tue, 28 Aug 2007 18:22:52 +0200
+Message-Id: <1188318172.7837.108.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Wu <flamingice@sourmilk.net>
-Cc: developers@islsm.org
 
----
- drivers/net/wireless/p54common.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+--=-osJoKqQ7yF+1PWRnAQUF
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- wireless-dev.orig/drivers/net/wireless/p54common.c	2007-08-21 14:39:00.575923881 +0200
-+++ wireless-dev/drivers/net/wireless/p54common.c	2007-08-21 14:40:13.525923881 +0200
-@@ -893,9 +893,7 @@ struct ieee80211_hw *p54_init_common(siz
- 	priv->modes[0].channels = priv->channels;
- 	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING | /* not sure */
- 		    IEEE80211_HW_RX_INCLUDES_FCS |
--		    IEEE80211_HW_WEP_INCLUDE_IV |
--		    IEEE80211_HW_DATA_NULLFUNC_ACK; /* TODO: check */
--		    /* IEEE80211_HW_MONITOR_DURING_OPER FIXME: check */
-+		    IEEE80211_HW_WEP_INCLUDE_IV;
- 	dev->channel_change_time = 1000;	/* TODO: find actual value */
- 	dev->max_rssi = 100;
- 
+On Tue, 2007-08-28 at 11:58 -0400, Jiri Slaby wrote:
 
--- 
+[...]
+
+There really is no need to CC netdev, those on linux-wireless don't need
+to get it twice (if they're also on netdev) and those on netdev aren't
+too concerned about wireless-dev (and if they are really need to sign up
+to linux-wireless)
+
+johannes
+
+--=-osJoKqQ7yF+1PWRnAQUF
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG1Evc/ETPhpq3jKURApJ+AJ9l38VsO04iHscna1TLh0Wud5ughwCcDzKu
+GIi2q5a/hbOHz5HdGgGzhJk=
+=7KOG
+-----END PGP SIGNATURE-----
+
+--=-osJoKqQ7yF+1PWRnAQUF--
 
