@@ -1,134 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hall.aurel32.net ([88.191.38.19]:35987 "EHLO hall.aurel32.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934871AbXHLXvg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Aug 2007 19:51:36 -0400
-Date: Mon, 13 Aug 2007 01:51:35 +0200
-From: Aurelien Jarno <aurelien@aurel32.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH][SSB] Add GPIO support to Chip Common and PCI core drivers
-Message-ID: <20070812235135.GB4966@hall.aurel32.net>
+Received: from smtp.nokia.com ([131.228.20.173]:31954 "EHLO
+	mgw-ext14.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751694AbXH1LMe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Aug 2007 07:12:34 -0400
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>
+Subject: Re: mac80211 AP mode powersaving problems?
+References: <1186990509.27916.38.camel@johannes.berg>
+	<87lkccf30m.fsf@tikku.osso.net>
+	<1187270479.5141.44.camel@johannes.berg> <87643f4kkh.fsf@nokia.com>
+	<1187275344.23489.6.camel@johannes.berg> <871wdphsus.fsf@nokia.com>
+	<1188290911.7837.65.camel@johannes.berg> <87absbsz5f.fsf@nokia.com>
+	<1188299159.7837.96.camel@johannes.berg>
+From: Kalle Valo <Kalle.Valo@nokia.com>
+Date: Tue, 28 Aug 2007 14:11:36 +0300
+In-Reply-To: <1188299159.7837.96.camel@johannes.berg> (ext Johannes Berg's message of "Tue\, 28 Aug 2007 13\:05\:59 +0200")
+Message-ID: <87642zsyl3.fsf@nokia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch below adds a functions to Chip Common and PCI core drivers to
-access the GPIO lines.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
+> On Tue, 2007-08-28 at 13:59 +0300, Kalle Valo wrote:
+>
+>> I just have a fear that we don't endup in "udev-hell", that is
+>> incompatibility between kernel and hostapd versions. It was just awful
+>> with udev few years ago, let's try to avoid that. Official hostapd
+>> releases should work with all official kernel releases, without any
+>> exceptions.
+>
+> Well, with mac80211 mainline kernels currently don't support AP mode at
+> all, and wireless-dev/hostapd are quite in lockstep. 
 
---- a/drivers/ssb/driver_chipcommon.c
-+++ b/drivers/ssb/driver_chipcommon.c
-@@ -39,6 +39,14 @@
- 	ssb_write32(cc->dev, offset, value);
- }
- 
-+static inline void chipco_write32_masked(struct ssb_chipcommon *cc, u16 offset,
-+					 u32 mask, u32 value)
-+{
-+	value &= mask;
-+	value |= chipco_read32(cc, offset) & ~mask;
-+	chipco_write32(cc, offset, value);
-+}
-+
- void ssb_chipco_set_clockmode(struct ssb_chipcommon *cc,
- 			      enum ssb_clkmode mode)
- {
-@@ -344,6 +352,21 @@
- 	chipco_write32(cc, SSB_CHIPCO_WATCHDOG, ticks);
- }
- 
-+u32 ssb_chipco_gpio_in(struct ssb_chipcommon *cc, u32 mask)
-+{
-+	return chipco_read32(cc, SSB_CHIPCO_GPIOIN) & mask;
-+}
-+
-+void ssb_chipco_gpio_out(struct ssb_chipcommon *cc, u32 mask, u32 value)
-+{
-+	return chipco_write32_masked(cc, SSB_CHIPCO_GPIOOUT, mask, value);
-+}
-+
-+void ssb_chipco_gpio_outen(struct ssb_chipcommon *cc, u32 mask, u32 value)
-+{
-+	return chipco_write32_masked(cc, SSB_CHIPCO_GPIOOUTEN, mask, value);
-+}
-+
- #ifdef CONFIG_SSB_SERIAL
- int ssb_chipco_serial_init(struct ssb_chipcommon *cc,
- 			   struct ssb_serial_port *ports)
---- a/drivers/ssb/driver_extif.c
-+++ b/drivers/ssb/driver_extif.c
-@@ -27,6 +27,14 @@
- 	ssb_write32(extif->dev, offset, value);
- }
- 
-+static inline void extif_write32_masked(struct ssb_extif *extif, u16 offset,
-+					u32 mask, u32 value)
-+{
-+	value &= mask;
-+	value |= extif_read32(extif, offset) & ~mask;
-+	extif_write32(extif, offset, value);
-+}
-+
- #ifdef CONFIG_SSB_SERIAL
- static bool serial_exists(u8 *regs)
- {
-@@ -102,3 +110,20 @@
- 	*m = extif_read32(extif, SSB_EXTIF_CLOCK_SB);
- }
- 
-+u32 ssb_extif_gpio_in(struct ssb_extif *extif, u32 mask)
-+{
-+	return extif_read32(extif, SSB_EXTIF_GPIO_IN) & mask;
-+}
-+
-+void ssb_extif_gpio_out(struct ssb_extif *extif, u32 mask, u32 value)
-+{
-+	return extif_write32_masked(extif, SSB_EXTIF_GPIO_OUT(0),
-+				   mask, value);
-+}
-+
-+void ssb_extif_gpio_outen(struct ssb_extif *extif, u32 mask, u32 value)
-+{
-+	return extif_write32_masked(extif, SSB_EXTIF_GPIO_OUTEN(0),
-+				   mask, value);
-+}
-+
---- a/include/linux/ssb/ssb_driver_chipcommon.h
-+++ b/include/linux/ssb/ssb_driver_chipcommon.h
-@@ -382,6 +382,12 @@
- extern void ssb_chipco_watchdog_timer_set(struct ssb_chipcommon *cc,
- 					  u32 ticks);
- 
-+u32 ssb_chipco_gpio_in(struct ssb_chipcommon *cc, u32 mask);
-+
-+void ssb_chipco_gpio_out(struct ssb_chipcommon *cc, u32 mask, u32 value);
-+
-+void ssb_chipco_gpio_outen(struct ssb_chipcommon *cc, u32 mask, u32 value);
-+
- #ifdef CONFIG_SSB_SERIAL
- extern int ssb_chipco_serial_init(struct ssb_chipcommon *cc,
- 				  struct ssb_serial_port *ports);
---- a/include/linux/ssb/ssb_driver_extif.h
-+++ b/include/linux/ssb/ssb_driver_extif.h
-@@ -171,6 +171,12 @@
- extern void ssb_extif_timing_init(struct ssb_extif *extif,
- 				  unsigned long ns);
- 
-+u32 ssb_extif_gpio_in(struct ssb_extif *extif, u32 mask);
-+
-+void ssb_extif_gpio_out(struct ssb_extif *extif, u32 mask, u32 value);
-+
-+void ssb_extif_gpio_outen(struct ssb_extif *extif, u32 mask, u32 value);
-+
- #ifdef CONFIG_SSB_SERIAL
- extern int ssb_extif_serial_init(struct ssb_extif *extif,
- 				 struct ssb_serial_port *ports);
+Yeah, I understood that.
+
+> As soon as we merge the AP mode stuff into mainline, however, it
+> will be via nl80211 which shall be a stable interface for that.
+
+That's a relief for me :) Thanks.
 
 -- 
-  .''`.  Aurelien Jarno	            | GPG: 1024D/F1BCDB73
- : :' :  Debian developer           | Electrical Engineer
- `. `'   aurel32@debian.org         | aurelien@aurel32.net
-   `-    people.debian.org/~aurel32 | www.aurel32.net
+Kalle Valo
