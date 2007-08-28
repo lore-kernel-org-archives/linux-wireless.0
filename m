@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:47532 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758395AbXHCQNK (ORCPT
+Received: from fencepost.gnu.org ([140.186.70.10]:57515 "EHLO
+	fencepost.gnu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752493AbXH1RPl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 12:13:10 -0400
-Message-ID: <46B35414.2030300@lwfinger.net>
-Date: Fri, 03 Aug 2007 11:13:08 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Stefano Brivio <stefano.brivio@polimi.it>
-CC: Michael Buesch <mb@bu3sch.de>, Bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC 1/10] Port of bcm43xx from softmac to mac80211
-References: <46b1fde7.JR5zA75dJy7VnTEq%Larry.Finger@lwfinger.net> <20070803163044.3d0fff1b@morte>
-In-Reply-To: <20070803163044.3d0fff1b@morte>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 28 Aug 2007 13:15:41 -0400
+Received: from proski by fencepost.gnu.org with local (Exim 4.60)
+	(envelope-from <proski@gnu.org>)
+	id 1IQ4f8-0004ZW-Db
+	for linux-wireless@vger.kernel.org; Tue, 28 Aug 2007 13:15:34 -0400
+Subject: Re: [PATCH] [360/2many] MAINTAINERS - ORINOCO DRIVER
+From: Pavel Roskin <proski@gnu.org>
+To: joe@perches.com
+Cc: torvalds@linux-foundation.org, orinoco-users@lists.sourceforge.net,
+	orinoco-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	hermes@gibson.dropbear.id.au, akpm@linux-foundation.org
+In-Reply-To: <46bffb31.f1XwyK4H0RsPvky8%joe@perches.com>
+References: <46bffb31.f1XwyK4H0RsPvky8%joe@perches.com>
+Content-Type: text/plain
+Date: Tue, 28 Aug 2007 13:15:22 -0400
+Message-Id: <1188321322.2226.2.camel@dv>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stefano,
-
-Thanks for taking the time to review the patches. As Michael wrote, the bulk of the patch comes from 
-his V4 code, but it's good to have it looked through.
-
-
-
-Stefano Brivio wrote:
-
->>  /* PHYVersioning */
->> -#define BCM43xx_PHYTYPE_A		0x00
+On Sun, 2007-08-12 at 23:33 -0700, joe@perches.com wrote:
+> Add file pattern to MAINTAINER entry
 > 
-> So OK, let's remove support for A PHYs. I never got done with it and maybe it
-> had to be rewritten from scratch anyway.
+> Signed-off-by: Joe Perches <joe@perches.com>
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 96aeb40..f374fa8 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -3463,6 +3463,7 @@ L:	orinoco-users@lists.sourceforge.net
+>  L:	orinoco-devel@lists.sourceforge.net
+>  W:	http://www.nongnu.org/orinoco/
+>  S:	Maintained
+> +F:	drivers/net/wireless/orinoco*
 
-This removal is _ONLY_ for the driver that uses V3 firmware. It will ultimately be limited to B PHYs 
-and removal of the A PHY stuff will happen anyway. AFAIK, support of A PHYs will be implemented 
-(eventually) in the V4 driver.
+NAK.  Please also add airport*, spectrum* and hermes* in the same
+directory.
 
-All suggestions implemented.
+Sorry for delay (due to vacation).
 
-Larry
+-- 
+Regards,
+Pavel Roskin
 
