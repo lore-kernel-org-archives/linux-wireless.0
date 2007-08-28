@@ -1,33 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:43232 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759900AbXHAL4l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2007 07:56:41 -0400
-Message-ID: <46B074F4.9060902@lwfinger.net>
-Date: Wed, 01 Aug 2007 06:56:36 -0500
-From: Larry Finger <larry.finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: David Woodhouse <dwmw2@infradead.org>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH final] softmac: Fix deadlock of wx_set_essid with assoc  work
-References: <200707312041.04987.mb@bu3sch.de> <1185965301.3083.145.camel@pmac.infradead.org> <200708011251.17320.mb@bu3sch.de>
-In-Reply-To: <200708011251.17320.mb@bu3sch.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:61361 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752346AbXH1JMe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Aug 2007 05:12:34 -0400
+Subject: Re: [PATCH V2] Add iwlwifi wireless drivers
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	linux-wireless@vger.kernel.org,
+	"John W.Linville" <linville@tuxdriver.com>,
+	Jeff Garzik <jgarzik@pobox.com>
+In-Reply-To: <1188291015.7837.67.camel@johannes.berg>
+References: <1188192012.13078.177.camel@debian.sh.intel.com>
+	 <20070827131026.GA21137@infradead.org>
+	 <1188285945.13078.242.camel@debian.sh.intel.com>
+	 <1188291015.7837.67.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 28 Aug 2007 17:07:11 +0800
+Message-Id: <1188292031.13078.262.camel@debian.sh.intel.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Wednesday 01 August 2007, David Woodhouse wrote:
->> On Tue, 2007-07-31 at 20:41 +0200, Michael Buesch wrote:
->>> David, please stresstest this.
->> It seemed to survive being left with NetworkManager overnight, which the
->> 2.6.22.1 kernel was consistently failing to cope with beforehand.
-> 
-> So John, please apply this.
+On Tue, 2007-08-28 at 10:50 +0200, Johannes Berg wrote:
+> To be fair, that's not what you do, you're building two drivers from
+> one source rather than have a single driver that supports both. I'm
+> fairly certain Christoph wouldn't object to the latter. 
 
-ACK.
+Because of the difference of the two hardwares (for example, in
+iwl-command.h, iwl_rxon_assoc_cmd differs between 3945 and 4965),
+runtime supporting is difficult if not possible (hw structures differs).
+So we select to do it statically by generating two drivers from one
+source code.
 
-Larry
+Do you think if it is a good idea to split them into two drivers and
+make each of them "#include iwl-base.c"? Please don't hesitate to share
+if you have better ideas.
+
+Thanks,
+-yi
