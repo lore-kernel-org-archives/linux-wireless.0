@@ -1,94 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3597 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1766013AbXHNUGp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2007 16:06:45 -0400
-Date: Tue, 14 Aug 2007 15:43:52 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: bcm43xx-dev@lists.berlios.de, ipw3945-devel@lists.sourceforge.net,
-	rt2400-devel@lists.sourceforge.net
-Subject: wireless-dev rebased, new rebasing policies
-Message-ID: <20070814194352.GG7198@tuxdriver.com>
+Received: from smtp.nokia.com ([131.228.20.172]:31120 "EHLO
+	mgw-ext13.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751129AbXH1Fyg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Aug 2007 01:54:36 -0400
+Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
+	by mgw-ext13.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id l7S5sLCg008157
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2007 08:54:33 +0300
+Received: from tikku (essapo-nirac252124.europe.nokia.com [10.162.252.124])
+	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id l7S5sSkt000750
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2007 08:54:28 +0300
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: which hostapd version for which wireless driver
+References: <20070827223833.GA15515@seehuhn.de>
+From: Kalle Valo <Kalle.Valo@nokia.com>
+Date: Tue, 28 Aug 2007 08:54:28 +0300
+In-Reply-To: <20070827223833.GA15515@seehuhn.de> (ext Jochen Voss's message of "Mon\, 27 Aug 2007 23\:38\:33 +0100")
+Message-ID: <871wdouru3.fsf@nokia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greetings!
+"ext Jochen Voss" <voss@seehuhn.de> writes:
 
-Some of you have already noticed that the wireless-dev tree has
-been rebased.  I adopted the mac80211 work of Jiri Benc as a base,
-then re-imported all of the mac80211 drivers (and the SSB stuff) from
-wireless-dev into individual branches.  There is also an 'everything'
-branch into which all the other branches get pulled, and an 'mm-master'
-branch which has the sole purpose of feeding patches to akpm while
-minimizing conflicts with the other networking trees.  The master
-branch is a direct pull of something relatively recent from Linus,
-usually an -rc or release tag.
+> I am trying to get hostapd up and running on my Soekris net4521 board,
+> until now without much success.  One of the problems might be that I
+> am completely at a loss which version of hostapd is supposed to work
+> together with which driver.
 
-Recent versions of git seem to hide remote branches by default when
-cloning a tree, so by default you will just get my master branch.
-Since this isn't very interesting for wireless development, you will
-want to recreate one or more of my branches to work from as a base.
+I tried hostapd for the first time last night and it worked with my
+old PII laptop and b43. So it should work :)
 
-At a minimum, everyone from "early adopter" users to driver maintainers
-will want the 'everything' branch, so I will illustrate recreating
-that below.  Other branches are done similarly.
+> Any help about which combinations of hostapd and device driver have at
+> least a chance of working together would be more than welcome.
 
-/home/linville/git/wireless-dev
-[linville-t43.mobile]:> git branch
-* master
+I used latest git for both the kernel and hostapd. My notes here:
 
-/home/linville/git/wireless-dev
-[linville-t43.mobile]:> git branch -r
-  origin/HEAD
-  origin/adm8211
-  origin/b43
-  origin/everything
-  origin/iwlwifi
-  origin/mac80211
-  origin/master
-  origin/merged-upstream
-  origin/mm-master
-  origin/p54
-  origin/rt2x00
-  origin/ssb
-  origin/zd1211rw
+http://marc.info/?l=linux-wireless&m=118823232032439&w=2
 
-/home/linville/git/wireless-dev
-[linville-t43.mobile]:> git checkout -b everything origin/everything
-Switched to a new branch "everything"
+>     root@funk [~] iwconfig wlan1 mode master
+>     root@funk [~] iwconfig wlan1 essid "SR20"
+>     root@funk [~] iwconfig wlan1 channel 6
+>     root@funk [~] iwconfig wlan1 rate 11M
 
-/home/linville/git/wireless-dev
-[linville-t43.mobile]:> git branch
-* everything
-  master
+I did not issue these commands, but I don't know if it makes any
+difference in practice.
 
-Unlike the way wireless-dev was used in the past, I make no promises
-about rebasing.  I intend to rebase most/all of the branches at least
-as often as Linus produces an -rc or release tag, and I reserve the
-right to rebase more often as I deem necessary.  I'm sorry, but as
-you can see I have to manage a lot of patches.  Keeping them based
-off a recent head is helpful to me.
+>     root@funk [~] ifconfig wlan1 up
 
-I will entertain suggestions for how to minimize rebasing pain for
-anyone following this tree.  However, the best suggestion I have
-for anyone tracking wireless-dev is for them to get their favorite
-driver(s) merged upstream.  Barring that, I understand that quilt
-can be a good tool for tracking stacks of patches in development.
-The git-format-patch, git-applymbox, and git-rebase commands are
-handy as well.
+I think I didn't do this, but can't be sure anymore.
 
-Those simply following the tree should learn about the "--reference"
-option to git-clone, and should use it often.  Keeping a backup of
-previous git trees with any work in progress wouldn't hurt either.
+My advice is to double check that you are really using the correct
+hostapd compiled for the kernel you are running. And did you remember
+to do make clean for hostapd between compilations?
 
-Questions?  Complaints?  Comments?
-
-Thanks,
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Kalle Valo
