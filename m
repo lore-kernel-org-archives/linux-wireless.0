@@ -1,36 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from DSL022.labridge.com ([206.117.136.22]:1220 "EHLO perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762005AbXH3WT7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 18:19:59 -0400
-Subject: Re: [PATCH 13/30] net: Don't do pointless kmalloc return value  casts in zd1211 driver
-From: Joe Perches <joe@perches.com>
-To: Jesper Juhl <jesper.juhl@gmail.com>
-Cc: Daniel Drake <dsd@gentoo.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Ulrich Kunitz <kune@deine-taler.de>,
+Received: from crystal.sipsolutions.net ([195.210.38.204]:60123 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751226AbXH1Ikf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Aug 2007 04:40:35 -0400
+Subject: Re: [PATCH 05/15] mac80211: remove HW_KEY_IDX_INVALID
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <larry.finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <9a8748490708301320o49d8e794vc5c37ffc938006f1@mail.gmail.com>
-References: <1554af80879a7ef2f78a4d654f23c248203500d9.1187912217.git.jesper.juhl@gmail.com>
-	 <d551047daed1cb4d9de1eff956268a468c9837f6.1187912217.git.jesper.juhl@gmail.com>
-	 <46D70467.1040109@gentoo.org>
-	 <9a8748490708301320o49d8e794vc5c37ffc938006f1@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 30 Aug 2007 15:19:53 -0700
-Message-Id: <1188512393.6062.156.camel@localhost>
+In-Reply-To: <46D2E953.6050202@lwfinger.net>
+References: <20070824122705.549190000@sipsolutions.net>
+	 <20070824122905.350213000@sipsolutions.net> <46CF327F.4050002@lwfinger.net>
+	 <1188212460.7837.1.camel@johannes.berg> <46D2E953.6050202@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ycucH70/pVSG4mks3jFc"
+Date: Tue, 28 Aug 2007 10:41:53 +0200
+Message-Id: <1188290513.7837.57.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-08-30 at 22:20 +0200, Jesper Juhl wrote:
-> Ok, I must admit I didn't check with sparse since it seemed pointless
-> - we usually never cast void pointers to other pointer types,
-> specifically because the C language nicely guarantees that the right
-> thing will happen without the cast.  Sometimes we have to cast them to
-> integer types, su sure we need the cast there.   But what on earth
-> makes a "zd_addr_t *" so special that we have to explicitly cast a
-> "void *" to that type?
 
-http://marc.info/?l=linux-netdev&m=117113743902549&w=1
+--=-ycucH70/pVSG4mks3jFc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2007-08-27 at 10:10 -0500, Larry Finger wrote:
+
+> This fixes b43. It is a bit more difficult to test legacy, but it should =
+be the same.
+
+Ok.
+
+> The code in xmit.c for legacy is essentially the same as for b43. It cert=
+ainly could be trimmed a=20
+> bit since no keys are ever set - routine set_key returns "no support".
+
+Yeah, I figured you'd already gotten rid of that code in which case it
+shouldn't have made a difference.
+
+johannes
+
+--=-ycucH70/pVSG4mks3jFc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG09/R/ETPhpq3jKURAkMbAJ43YHv+A2vUIGMg1UopkUUgTPnOWACgjinQ
+lAiaN5FeBCJpyJagUNADsT0=
+=w925
+-----END PGP SIGNATURE-----
+
+--=-ycucH70/pVSG4mks3jFc--
 
