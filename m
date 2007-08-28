@@ -1,61 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:40639 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751245AbXHXPzR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2007 11:55:17 -0400
-Subject: Re: [PATCH 14/30] net: Kill some unneeded allocation return value  casts in libertas
-From: Dan Williams <dcbw@redhat.com>
-To: Jesper Juhl <jesper.juhl@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <2ac91f5f0eed967cf1709cfbe476b351e536c299.1187912217.git.jesper.juhl@gmail.com>
-References: <1554af80879a7ef2f78a4d654f23c248203500d9.1187912217.git.jesper.juhl@gmail.com>
-	 <2ac91f5f0eed967cf1709cfbe476b351e536c299.1187912217.git.jesper.juhl@gmail.com>
-Content-Type: text/plain
-Date: Fri, 24 Aug 2007 11:50:24 -0400
-Message-Id: <1187970624.20110.0.camel@xo-13-A4-25.localdomain>
+Received: from pentafluge.infradead.org ([213.146.154.40]:50577 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751113AbXH1RKj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Aug 2007 13:10:39 -0400
+Date: Tue, 28 Aug 2007 18:10:34 +0100
+From: Christoph Hellwig <hch@infradead.org>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 1/5] Net: ath5k, split hw into hw, phy and initvals
+Message-ID: <20070828171034.GB29343@infradead.org>
+References: <2713029743177393055@pripojeni.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2713029743177393055@pripojeni.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2007-08-24 at 02:03 +0200, Jesper Juhl wrote:
-> kmalloc() and friends return void*, no need to cast it.
+On Tue, Aug 28, 2007 at 11:58:52AM -0400, Jiri Slaby wrote:
+> -ath5k-objs		= ath5k_base.o ath5k_hw.o ath5k_regdom.o
+> +ath5k-objs		= ath5k_base.o ath5k_hw.o ath5k_regdom.o \
+> +			  ath5k_hw_phy.o ath5k_hw_inivals.o
 
-Applied to libertas-2.6 'for-linville' branch, thanks.
+And while I'm at nitpicking :)
 
-Dan
-
-> Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
-> ---
->  drivers/net/wireless/libertas/debugfs.c |    2 +-
->  drivers/net/wireless/libertas/ethtool.c |    3 +--
->  2 files changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
-> index 715cbda..6ade63e 100644
-> --- a/drivers/net/wireless/libertas/debugfs.c
-> +++ b/drivers/net/wireless/libertas/debugfs.c
-> @@ -1839,7 +1839,7 @@ static ssize_t wlan_debugfs_write(struct file *f, const char __user *buf,
->  	char *p2;
->  	struct debug_data *d = (struct debug_data *)f->private_data;
->  
-> -	pdata = (char *)kmalloc(cnt, GFP_KERNEL);
-> +	pdata = kmalloc(cnt, GFP_KERNEL);
->  	if (pdata == NULL)
->  		return 0;
->  
-> diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
-> index 96f1974..7dad493 100644
-> --- a/drivers/net/wireless/libertas/ethtool.c
-> +++ b/drivers/net/wireless/libertas/ethtool.c
-> @@ -60,8 +60,7 @@ static int libertas_ethtool_get_eeprom(struct net_device *dev,
->  
->  //      mutex_lock(&priv->mutex);
->  
-> -	adapter->prdeeprom =
-> -		    (char *)kmalloc(eeprom->len+sizeof(regctrl), GFP_KERNEL);
-> +	adapter->prdeeprom = kmalloc(eeprom->len+sizeof(regctrl), GFP_KERNEL);
->  	if (!adapter->prdeeprom)
->  		return -ENOMEM;
->  	memcpy(adapter->prdeeprom, &regctrl, sizeof(regctrl));
+ath5k_hw_phy.o should probably be ath5k_phy.o by conventions used by
+most drivers and ath5k_hw_inivals.o mights aswell be something like
+ath5k_init.o
 
