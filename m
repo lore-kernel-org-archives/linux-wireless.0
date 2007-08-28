@@ -1,71 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:39348 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753989AbXHON2e (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59666
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752917AbXH1S4Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 09:28:34 -0400
-Subject: Re: [PATCH V3] mac80211: Turn off meaningless TKIP message when   software WEP encryption is used
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <larry.finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <46C2FCAB.6090607@lwfinger.net>
-References: <46c0d788.GYQYqGfCBKyAWrg7%Larry.Finger@lwfinger.net>
-	 <1187136960.31200.37.camel@johannes.berg>  <46C2FCAB.6090607@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1j7F9AG1yo04z6va/X8m"
-Date: Wed, 15 Aug 2007 15:30:57 +0200
-Message-Id: <1187184657.27608.1.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 28 Aug 2007 14:56:24 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Fix cancelation of workqueues
+Date: Tue, 28 Aug 2007 20:54:16 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	bcm43xx-dev@lists.berlios.de
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200708282054.16490.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This correctly cancels all workqueues on shutdown.
 
---=-1j7F9AG1yo04z6va/X8m
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <larry.finger.lwfinger.net>
 
-On Wed, 2007-08-15 at 08:16 -0500, Larry Finger wrote:
-
-> AFAIK, I'm using WPA-PSK TKIP. My AP is a Linksys WRT54G V5. On the "Wire=
-less Security" page, I have=20
-> selected "WPA Personal" for the security mode and TKIP for the WPA algori=
-thm. On my laptop, the=20
-> connection is managed by NetworkManager. My key is stored in Kwallet and =
-is supplied automatically,=20
-> but NM asked for a WPA passphrase when I set it up.
-
-Ok.
-=20
-> That is certainly possible, either in my network or that of my neighbors.=
- A network list shows 5=20
-> APs, two of which are mine. Only the AP in question is using WPA, 3 are u=
-sing WEP, and one is=20
-> unencrypted.=20
-
-I don't think the other networks should matter, at least if we got the
-BSSID filtering right.
-
-> I'm collecting a packet dump now using Kismet - I don't run X on my secon=
-d laptop as it=20
-> has too little memory and is slow besides. I'll send you that file off-li=
-st. I have filtered out=20
-> beacons. I hope that is OK.
-
-Sounds great, I'll take a look at it then.
-
-johannes
-
---=-1j7F9AG1yo04z6va/X8m
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGwwAR/ETPhpq3jKURAuIOAKCE3hOuYcCasczNvuTRSG3E4PbyDgCcC65f
-Lhr5p2S1MOqBFAFmXEF1w5E=
-=FHGT
------END PGP SIGNATURE-----
-
---=-1j7F9AG1yo04z6va/X8m--
-
+Index: wireless-dev-new/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-dev-new.orig/drivers/net/wireless/b43/main.c	2007-08-28 20:23:35.000000000 +0200
++++ wireless-dev-new/drivers/net/wireless/b43/main.c	2007-08-28 20:36:27.000000000 +0200
+@@ -2474,11 +2474,6 @@ static void b43_periodic_work_handler(st
+ 	mutex_unlock(&dev->wl->mutex);
+ }
+ 
+-static void b43_periodic_tasks_delete(struct b43_wldev *dev)
+-{
+-	cancel_rearming_delayed_work(&dev->periodic_work);
+-}
+-
+ static void b43_periodic_tasks_setup(struct b43_wldev *dev)
+ {
+ 	struct delayed_work *work = &dev->periodic_work;
+@@ -3055,9 +3050,9 @@ static void b43_wireless_core_stop(struc
+ 	b43_set_status(dev, B43_STAT_INITIALIZED);
+ 
+ 	mutex_unlock(&wl->mutex);
+-	/* Must unlock as it would otherwise deadlock. No races here. */
+-	b43_periodic_tasks_delete(dev);
+-	flush_workqueue(dev->wl->hw->workqueue);
++	/* Must unlock as it would otherwise deadlock. No races here.
++	 * Cancel the possibly running self-rearming periodic work. */
++	cancel_delayed_work_sync(&dev->periodic_work);
+ 	mutex_lock(&wl->mutex);
+ 
+ 	ieee80211_stop_queues(wl->hw);	//FIXME this could cause a deadlock, as mac80211 seems buggy.
+@@ -3322,13 +3317,22 @@ static void b43_imcfglo_timeouts_workaro
+ }
+ 
+ /* Shutdown a wireless core */
++/* Locking: wl->mutex */
+ static void b43_wireless_core_exit(struct b43_wldev *dev)
+ {
++	struct b43_wl *wl = dev->wl;
+ 	struct b43_phy *phy = &dev->phy;
+ 
+ 	B43_WARN_ON(b43_status(dev) > B43_STAT_INITIALIZED);
+ 	if (b43_status(dev) != B43_STAT_INITIALIZED)
+ 		return;
++	b43_set_status(dev, B43_STAT_UNINIT);
++
++	mutex_unlock(&wl->mutex);
++	/* Must unlock as it would otherwise deadlock. No races here.
++	 * Cancel possibly pending workqueues. */
++	cancel_work_sync(&dev->restart_work);
++	mutex_lock(&wl->mutex);
+ 
+ 	b43_rng_exit(dev->wl);
+ 	b43_pio_free(dev);
+@@ -3342,7 +3346,6 @@ static void b43_wireless_core_exit(struc
+ 	phy->lo_control = NULL;
+ 	ssb_device_disable(dev->dev, 0);
+ 	ssb_bus_may_powerdown(dev->dev->bus);
+-	b43_set_status(dev, B43_STAT_UNINIT);
+ }
+ 
+ /* Initialize a wireless core */
+@@ -4001,6 +4004,9 @@ static void b43_remove(struct ssb_device
+ /* Perform a hardware reset. This can be called from any context. */
+ void b43_controller_restart(struct b43_wldev *dev, const char *reason)
+ {
++	/* Must avoid requeueing, if we are in shutdown. */
++	if (b43_status(dev) < B43_STAT_INITIALIZED)
++		return;
+ 	b43info(dev->wl, "Controller RESET (%s) ...\n", reason);
+ 	queue_work(dev->wl->hw->workqueue, &dev->restart_work);
+ }
