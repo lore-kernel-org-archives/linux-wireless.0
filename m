@@ -1,59 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52642 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754168AbXHFJKz (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.191]:61828 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758273AbXH2P2o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2007 05:10:55 -0400
-Subject: Re: [BUG] timer.h
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian =?ISO-8859-1?Q?Sch=E4fer?= <schaefer@in.tum.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <46B6DF83.8080507@in.tum.de>
-References: <46B1F896.8090005@in.tum.de> <46B2EA43.8070305@in.tum.de>
-	 <20070803123240.519c5a38.akpm@linux-foundation.org>
-	 <1186382146.21957.40.camel@johannes.berg>  <46B6DF83.8080507@in.tum.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6SRItHPv27g5i9Nn3NsP"
-Date: Mon, 06 Aug 2007 11:12:44 +0200
-Message-Id: <1186391564.28655.22.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 29 Aug 2007 11:28:44 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so197372nfb
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2007 08:28:43 -0700 (PDT)
+Message-ID: <46D5906B.1030701@googlemail.com>
+Date: Wed, 29 Aug 2007 17:27:39 +0200
+MIME-Version: 1.0
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-fsdevel@vger.kernel.org, nfs@lists.sourceforge.net,
+	Trond Myklebust <Trond.Myklebust@netapp.com>,
+	Andrew Clayton <andrew@digital-domain.net>,
+	kbuild-devel@lists.sourceforge.net,
+	Roman Zippel <zippel@linux-m68k.org>,
+	Sam Ravnborg <sam@ravnborg.org>,
+	Hugh Dickins <hugh@veritas.com>,
+	Netdev <netdev@vger.kernel.org>, Shish <shish@shishnet.org>,
+	Karl Meyer <adhocrocker@gmail.com>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	linux-wireless@vger.kernel.org,
+	Christian Casteyde <casteyde.christian@free.fr>,
+	Martin Langer <martin-langer@gmx.de>,
+	Stefano Brivio <st3@riseup.net>,
+	Michael Buesch <mbuesch@freenet.de>,
+	Danny van Dyk <kugelfang@gentoo.org>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>
+Subject: Re: [3/4] 2.6.23-rc4: known regressions
+References: <46D58CC6.4020605@googlemail.com>
+In-Reply-To: <46D58CC6.4020605@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-2
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi all,
 
---=-6SRItHPv27g5i9Nn3NsP
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Here is a list of some known regressions in 2.6.23-rc4.
 
-On Mon, 2007-08-06 at 10:44 +0200, Christian Sch=C3=A4fer wrote:
+Feel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
 
-> The driver source is from [1] (I think it comes from Realtek) and=20
-> patched with the injection-patch taken from the aircrack-project (for=20
-> more background see [2]).
+List of Aces
 
-Thought so. Can't help you with that.
+Name                    Regressions fixed since 21-Jun-2007
+Adrian Bunk                            9
+Andi Kleen                             5
+Linus Torvalds                         5
+Andrew Morton                          4
+Hugh Dickins                           4
+Al Viro                                3
+Alan Stern                             3
+Cornelia Huck                          3
+Jens Axboe                             3
+Tejun Heo                              3
 
-> However this issue was before I used the current 2.6.23-rc2 kernel with=20
-> native r8187 support where no such problem occurred untill today.
 
-So? Even if you haven't gotten any debug printout before doesn't mean
-the bug is new in the kernel. Andrew has already pointed out what the
-bug is; I'm merely saying that we're not interested in fixing it because
-it is vendor source and we have another driver 'rtl8187'.
 
-johannes
+FS
 
---=-6SRItHPv27g5i9Nn3NsP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Subject         : [NFSD OOPS] 2.6.23-rc1-git10
+References      : http://lkml.org/lkml/2007/8/2/462
+Last known good : ?
+Submitter       : Andrew Clayton <andrew@digital-domain.net>
+Caused-By       : ?
+Handled-By      : ?
+Status          : unknown
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iD8DBQBGtuYM/ETPhpq3jKURAmq0AJ9VCTyoBUtLQnZlXuBNqouiFxWy+gCfSLM2
-tOWa5yakk3fM6VTfu/IqT60=
-=8xx9
------END PGP SIGNATURE-----
 
---=-6SRItHPv27g5i9Nn3NsP--
+Kconfig
 
+Subject         : CONFIG_HOTPLUG_CPU: kconfig bug?
+References      : http://lkml.org/lkml/2007/8/27/204
+Last known good : ?
+Submitter       : Hugh Dickins <hugh@veritas.com>
+Caused-By       : ?
+Handled-By      : Sam Ravnborg <sam@ravnborg.org>
+Status          : problem is being debugged
+
+
+
+Networking
+
+Subject         : System freeze when restarting network connection with Broadcom driver
+References      : http://bugzilla.kernel.org/show_bug.cgi?id=8934
+Last known good : ?
+Submitter       : Christian Casteyde <casteyde.christian@free.fr>
+Caused-By       : ?
+Handled-By      : ?
+Status          : problem is being debugged
+
+Subject         : NETDEV WATCHDOG: eth0: transmit timed out
+References      : http://lkml.org/lkml/2007/8/13/737
+Last known good : ?
+Submitter       : Karl Meyer <adhocrocker@gmail.com>
+Caused-By       : ?
+Handled-By      : Francois Romieu <romieu@fr.zoreil.com>
+Status          : problem is being debugged
+
+Subject         : Weird network problems with 2.6.23-rc2
+References      : http://lkml.org/lkml/2007/8/11/40
+Last known good : ?
+Submitter       : Shish <shish@shishnet.org>
+Caused-By       : ?
+Handled-By      : ?
+Status          : unknown
+
+
+
+Regards,
+Michal
+
+-- 
+LOG
+http://www.stardust.webpages.pl/log/
