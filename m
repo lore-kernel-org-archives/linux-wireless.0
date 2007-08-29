@@ -1,59 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:56019 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756987AbXHCWYV (ORCPT
+Received: from nz-out-0506.google.com ([64.233.162.239]:27052 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751617AbXH2SBg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 18:24:21 -0400
-Received: from [84.135.224.6] (helo=[10.0.0.4])
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1IH5ZD-0006z4-AZ
-	for linux-wireless@vger.kernel.org; Fri, 03 Aug 2007 23:24:20 +0100
-Subject: Re: further plan wrt. monitor interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1186178959.13315.30.camel@johannes.berg>
-References: <1186178959.13315.30.camel@johannes.berg>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-F42VcEmvxK+B/YZ8BJcj"
-Date: Sat, 04 Aug 2007 00:25:54 +0200
-Message-Id: <1186179954.20275.3.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 29 Aug 2007 14:01:36 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so222428nze
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2007 11:01:35 -0700 (PDT)
+Message-ID: <9e4733910708291101i3783a8b1l38f0d5cfb0c2863d@mail.gmail.com>
+Date: Wed, 29 Aug 2007 14:01:34 -0400
+From: "Jon Smirl" <jonsmirl@gmail.com>
+To: "Valdis.Kletnieks@vt.edu" <Valdis.Kletnieks@vt.edu>
+Subject: Re: [PATCH 4/5] Net: ath5k, license is GPLv2
+Cc: "Christoph Hellwig" <hch@infradead.org>,
+	"Jiri Slaby" <jirislaby@gmail.com>, linville@tuxdriver.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <3208.1188408545@turing-police.cc.vt.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <2713029743177393055@pripojeni.net>
+	 <7515194658758617@pripojeni.net>
+	 <20070828171155.GC29343@infradead.org>
+	 <3208.1188408545@turing-police.cc.vt.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 8/29/07, Valdis.Kletnieks@vt.edu <Valdis.Kletnieks@vt.edu> wrote:
+> The heck with "good idea" - it's unclear to me if Jiri is even *allowed*
+> to remove the BSD/other license.   Jiri can release *his* code as GPLv2
+> only, but I suspect the files as a whole really should be dual BSD/GPLv2,
+> due to the numerous other stakeholders in those files.
 
---=-F42VcEmvxK+B/YZ8BJcj
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This mess has been occurring in the kernel for years. The DRM graphics
+drivers are used in both BSD and Linux. It is quite easy to contribute
+something to this code via LKML and think you are doing it under the
+GPL. Doesn't a patch against the kernel have to be GPL? When these
+patches get pulled back into BSD and distributed with it, did BSD get
+infected with the GPL? AFAIK this has never been legally sorted out.
 
-On Sat, 2007-08-04 at 00:09 +0200, Johannes Berg wrote:
-
-> After some discussion and review of Daniel's document (thanks!) we came
-> up with the following ideas:
-
-Of course, this also means that drivers now get to keep track of any
-added interfaces to program/unprogram the MAC address.
-
-On the other hand, with these changed semantics open/close could make
-more sense again since drivers now need not always count interfaces and
-monitor interfaces are no longer added/removed to the driver; hence the
-open/close callbacks could be used by drivers that allow only one
-operating interface at a time.
-
-johannes
-
---=-F42VcEmvxK+B/YZ8BJcj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGs6ty/ETPhpq3jKURAnPPAKCFlaySfUsYb2P/+JbHiiZfSHm5+QCffZun
-f3oDO/HShKwbfTYOykfEwG4=
-=OsoR
------END PGP SIGNATURE-----
-
---=-F42VcEmvxK+B/YZ8BJcj--
-
+-- 
+Jon Smirl
+jonsmirl@gmail.com
