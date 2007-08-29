@@ -1,33 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:45962 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754389AbXHHWcq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 18:32:46 -0400
-Date: Wed, 8 Aug 2007 15:32:08 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-Subject: Re: arm allmodconfig
-Message-Id: <20070808153208.49fb7211.akpm@linux-foundation.org>
-In-Reply-To: <20070808152606.9ea3010f.akpm@linux-foundation.org>
-References: <20070808145705.756597b0.akpm@linux-foundation.org>
-	<200708090013.06846.mb@bu3sch.de>
-	<20070808152606.9ea3010f.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.fieldses.org ([66.93.2.214]:54966 "EHLO fieldses.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756257AbXH2V4F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Aug 2007 17:56:05 -0400
+Date: Wed, 29 Aug 2007 17:54:36 -0400
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-wireless@vger.kernel.org,
+	Michael Buesch <mbuesch@freenet.de>,
+	Stefano Brivio <st3@riseup.net>,
+	Andrew Clayton <andrew@digital-domain.net>,
+	Shish <shish@shishnet.org>, Roman Zippel <zippel@linux-m68k.org>,
+	Sam Ravnborg <sam@ravnborg.org>,
+	Karl Meyer <adhocrocker@gmail.com>,
+	Trond Myklebust <Trond.Myklebust@netapp.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Christian Casteyde <casteyde.christian@free.fr>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	nfs@lists.sourceforge.net, Netdev <netdev@vger.kernel.org>,
+	linux-fsdevel@vger.kernel.org, Hugh Dickins <hugh@veritas.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	kbuild-devel@lists.sourceforge.net,
+	Martin Langer <martin-langer@gmx.de>,
+	Andreas Jaggi <andreas.jaggi@waterwave.ch>,
+	Danny van Dyk <kugelfang@gentoo.org>
+Subject: Re: [NFS] [3/4] 2.6.23-rc4: known regressions
+Message-ID: <20070829215436.GB9731@fieldses.org>
+References: <46D58CC6.4020605@googlemail.com> <46D5906B.1030701@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <46D5906B.1030701@googlemail.com>
+From: "J. Bruce Fields" <bfields@fieldses.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Aug 29, 2007 at 05:27:39PM +0200, Michal Piotrowski wrote:
+> FS
+> 
+> Subject         : [NFSD OOPS] 2.6.23-rc1-git10
+> References      : http://lkml.org/lkml/2007/8/2/462
+> Last known good : ?
+> Submitter       : Andrew Clayton <andrew@digital-domain.net>
+> Caused-By       : ?
+> Handled-By      : ?
+> Status          : unknown
 
-m68k allmodconfig:
-
-drivers/ssb/main.c: In function 'ssb_ssb_read16':
-drivers/ssb/main.c:489: error: implicit declaration of function 'readw'
-drivers/ssb/main.c: In function 'ssb_ssb_read32':
-drivers/ssb/main.c:497: error: implicit declaration of function 'readl'
-drivers/ssb/main.c: In function 'ssb_ssb_write16':
-drivers/ssb/main.c:505: error: implicit declaration of function 'writew'
-drivers/ssb/main.c: In function 'ssb_ssb_write32':
-drivers/ssb/main.c:513: error: implicit declaration of function 'writel'
-
-Probably a dependency on HAS_IOMEM will fix that uup.
+This is a bug, but (alas) appears to be a preexisting bug, so may not
+belong on this list.--b.
