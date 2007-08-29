@@ -1,37 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail8.sea5.speakeasy.net ([69.17.117.10]:60826 "EHLO
-	mail8.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751735AbXHODlV (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43960 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754334AbXH2J6J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2007 23:41:21 -0400
-Date: Tue, 14 Aug 2007 20:40:19 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] hostapd: don't reference ieee80211_msg_sta_not_assoc if it's unused anyway
-Message-ID: <20070815034019.GJ1415@jm.kir.nu>
-References: <1186781881.17351.15.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1186781881.17351.15.camel@johannes.berg>
+	Wed, 29 Aug 2007 05:58:09 -0400
+Subject: Re: [PATCH 4/5] Net: ath5k, license is GPLv2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <7515194658758617@pripojeni.net>
+References: <7515194658758617@pripojeni.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6v5aEqlwwo/PkR5IiUy/"
+Date: Wed, 29 Aug 2007 11:59:42 +0200
+Message-Id: <1188381582.19891.6.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 10, 2007 at 11:38:01PM +0200, Johannes Berg wrote:
-> Hostapd doesn't do anything about such frames. Kernel no longer sends
-> them and the constant was removed, so let's not reference it any longer.
 
-This is not good.. We should really make sure that deauth/disassoc is
-sent out at proper time to avoid clients getting stuck believing that
-they are associated.
+--=-6v5aEqlwwo/PkR5IiUy/
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Why does the kernel no longer send this notification? The current
-wireless-dev.git seems to have this still in use and as such, I have not
-applied this change into hostapd and would rather not apply it either,
-i.e., if there is some need for getting rid of
-ieee80211_msg_sta_not_assoc, I would like to see it being done by
-providing similar functionality by some other means, not by just
-removing this.
+On Tue, 2007-08-28 at 12:00 -0400, Jiri Slaby wrote:
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+> The files are available only under GPLv2 since now.
+
+Since the BSD people are already getting upset about (for various
+reasons among which seem to be a clear non-understanding) I'd suggest
+changing it to:
+
+
++ * Parts of this file were originally licenced under the BSD licence:
++ *
+>  * Permission to use, copy, modify, and distribute this software for any
+>  * purpose with or without fee is hereby granted, provided that the above
+>  * copyright notice and this permission notice appear in all copies.
+>  *
+>  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTI=
+ES
+>  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+>  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FO=
+R
+>  * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+>  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+>  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT O=
+F
+>  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ *
++ * Further changes to this file since the moment this notice was extended
++ * are now distributed under the terms of the GPL version two as published
++ * by the Free Software Foundation <yaddaya>
+
+johannes
+
+--=-6v5aEqlwwo/PkR5IiUy/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG1UOO/ETPhpq3jKURAthAAJ9x3OTY3YoseAAJanaNkd7i4/wVbgCcC8vs
+2ZS5R2w9tU9Wx31Ui7HZ2ck=
+=KzYw
+-----END PGP SIGNATURE-----
+
+--=-6v5aEqlwwo/PkR5IiUy/--
+
