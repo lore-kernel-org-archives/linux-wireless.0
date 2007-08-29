@@ -1,132 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from seehuhn.de ([80.68.93.199]:3785 "EHLO seehuhn.de"
+Received: from mx1.redhat.com ([66.187.233.31]:49426 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756022AbXH2Wh5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2007 18:37:57 -0400
-Date: Wed, 29 Aug 2007 23:37:52 +0100
-From: Jochen Voss <voss@seehuhn.de>
-To: linux wireless list <linux-wireless@vger.kernel.org>
-Cc: linville@tuxdriver.com
-Subject: oops with recent wireless-dev tree
-Message-ID: <20070829223752.GA6969@seehuhn.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="TB36FDmn/VVEgNH/"
+	id S1757213AbXH2NiU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Aug 2007 09:38:20 -0400
+Subject: Re: mac80211 problems
+From: Dan Williams <dcbw@redhat.com>
+To: Jesse Shaver <J_shaver@comcast.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200708281025.50899.J_shaver@comcast.net>
+References: <200708281025.50899.J_shaver@comcast.net>
+Content-Type: text/plain; charset=utf-8
+Date: Wed, 29 Aug 2007 09:32:51 -0400
+Message-Id: <1188394371.18746.3.camel@xo-13-A4-25.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2007-08-28 at 10:25 -0400, Jesse Shaver wrote:
+> Hello All;
+> I am sorry for bothering this dev list with this question, but I can'=
+t seem to=20
+> find an answer anywhere else...
+>=20
+> I am trying to get my Intel 4965AGN wireless to work under SuSE 10.2 =
+(64bit)=20
+> no a Lenovo X61 Core duo 2. I am trying to build mac80211 for it, but=
+ am=20
+> getting errors.=20
+>=20
+> my kernel is:
+> hayden:~/mac80211-9.0.4 # uname -a
+> Linux hayden 2.6.18.8-0.5-default #1 SMP Fri Jun 22 12:17:53 UTC 2007=
+ x86_64=20
+> x86_64 x86_64 GNU/Linux
+>=20
+> The error I get is:
+>=20
+> net/mac80211/ieee80211_sta.c: In function =E2=80=98sta_process_csa=E2=
+=80=99:
+> net/mac80211/ieee80211_sta.c:2546: warning: format =E2=80=98%d=E2=80=99=
+ expects type =E2=80=98int=E2=80=99,=20
+> but argument 2 has type =E2=80=98size_t=E2=80=99
 
---TB36FDmn/VVEgNH/
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The '%d' here should probably be a '%z' or a '%p' if it's a pointer.
 
-Hi,
+>   CC [M]  net/mac80211/ieee80211_iface.o
+>   CC [M]  net/mac80211/ieee80211_rate.o
+>   CC [M]  net/mac80211/michael.o
+>   CC [M]  net/mac80211/regdomain.o
+>   CC [M]  net/mac80211/tkip.o
+>   CC [M]  net/mac80211/aes_ccm.o
+>   CC [M]  net/mac80211/wme.o
+>   CC [M]  net/mac80211/ieee80211_cfg.o
+>   CC [M]  net/mac80211/ieee80211_led.o
+>   CC [M]  net/mac80211/debugfs.o
+> net/mac80211/debugfs.c: In function =E2=80=98mac80211_open_file_gener=
+ic=E2=80=99:
+> net/mac80211/debugfs.c:28: error: =E2=80=98struct inode=E2=80=99 has =
+no member=20
+> named =E2=80=98i_private=E2=80=99
 
-when I use the b43 driver with my PCMCIA LinkSys WRT54GL adapter
-(Broadcom 4318), run hostapd on the interface, and then try to add the
-interface to a bridge, I get the following oops:
+Seems like a kernel/mac80211 mismatch?  What kernel are you using, and
+where are you getting your mac80211 from?  This probably means you're
+using a quite-recent mac80211 with an older kernel and stuff has
+changed.
 
-    BUG: unable to handle kernel NULL pointer dereference at virtual addres=
-s 00000000
-     printing eip:
-    *pde =3D 00000000
-    Oops: 0000 [#1]
-    CPU:    0
-    EIP:    0060:[<c02a2cb2>]    Not tainted VLI
-    EFLAGS: 00010292   (2.6.23-rc3-wd #1)
-    EIP is at port_cost+0x11/0xaa
-    eax: c3c40000   ebx: c3c40000   ecx: 00000000   edx: 000000c0
-    esi: 00000000   edi: c2a3ea80   ebp: c2a31e00   esp: c2a31dc8
-    ds: 007b   es: 007b   fs: 0000  gs: 0033  ss: 0068
-    Process brctl (pid: 1498, ti=3Dc2a30000 task=3Dc25734c0 task.ti=3Dc2a30=
-000)
-    Stack: c0119bcf c3680140 c10beea0 c2a31ddc c0148dc4 0000000d c2a31e00 0=
-0000296=20
-	   f000007e c10beea0 000080d0 c2bb7700 c3c40000 c2a3ea80 c2a31e2c c02a2ee3=
-=20
-	   c251b600 c3680270 00000001 c2bb7700 c3073380 c01117df c3c40000 00000001=
-=20
-    Call Trace:
-     [<c010294f>] show_trace_log_lvl+0x1a/0x2f
-     [<c0102a01>] show_stack_log_lvl+0x9d/0xa5
-     [<c0102d76>] show_registers+0x1a5/0x277
-     [<c0102f24>] die+0xdc/0x1a5
-     [<c01082d1>] do_page_fault+0x461/0x530
-     [<c02db49a>] error_code+0x6a/0x70
-     [<c02a2ee3>] br_add_if+0x119/0x290
-     [<c02a35b0>] add_del_if+0x40/0x56
-     [<c02a3acc>] br_dev_ioctl+0x506/0x537
-     [<c0219bc8>] dev_ifsioc+0x3c1/0x3dd
-     [<c0219f2b>] dev_ioctl+0x347/0x3d4
-     [<c02110ec>] sock_ioctl+0x183/0x18f
-     [<c01435d4>] do_ioctl+0x1c/0x4b
-     [<c01437d3>] vfs_ioctl+0x1d0/0x1df
-     [<c0143815>] sys_ioctl+0x33/0x4a
-     [<c0102422>] syscall_call+0x7/0xb
-     =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-    Code: ff 31 c0 eb 05 b8 ea ff ff ff 5b 5d c3 55 89 e5 83 e8 7c e8 35 58=
- e9 ff 5d c3 55 89 e5 57 56 53 83 ec 2c 89 c3 8b b0 b4 00 00 00 <83> 3e 00 =
-74 53=20
-    EIP: [<c02a2cb2>] port_cost+0x11/0xaa SS:ESP 0068:c2a31dc8
+Dan
 
-If I read this correctly, the EIP in the last line corresponds to
-net/bridge/br_if.c, line 36:
+> make[2]: *** [net/mac80211/debugfs.o] Error 1
+> make[1]: *** [net/mac80211] Error 2
+> make: *** [net] Error 2
+>=20
+> I do have some programming background, but very little in C/C++ and o=
+nly=20
+> limited kernel compiling experience.
+>=20
+> thanks for any help you can give, sorry to bother you all.
+>=20
+> -Jesse Shaver
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
+ess" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-    static int port_cost(struct net_device *dev)
-    {
-	    if (dev->ethtool_ops->get_settings) {
-                               ^^^^
-
-As far as I can figure out, dev->ethtool_ops is NULL and the crash
-happens while trying to derefernce ...->get_settings.
-
-Is dev->ethtool_ops allowed to be NULL?  In this case the appended
-patch might be the correct fix.  At least it makes the oops disappear
-for me.  Another possible fix would be to add an ethtool_ops structure
-to the device created by b43.
-
-I hope this helps,
-Jochen
---=20
-http://seehuhn.de/
-----------------------------------------------------------------------
-Avoid crashes while determining initial path cost for a bridge.
-
-Check whether 'dev->ethtool_ops' is non-NULL before accessing
-'dev->ethtool_ops->get_settings'.
-
-Signed-off-by: Jochen Voss <voss@seehuhn.de>
-
-diff --git a/net/bridge/br_if.c b/net/bridge/br_if.c
-index b40dada..5b396ea 100644
---- a/net/bridge/br_if.c
-+++ b/net/bridge/br_if.c
-@@ -33,7 +33,7 @@
-  */
- static int port_cost(struct net_device *dev)
- {
--       if (dev->ethtool_ops->get_settings) {
-+       if (dev->ethtool_ops && dev->ethtool_ops->get_settings) {
-                struct ethtool_cmd ecmd =3D { ETHTOOL_GSET };
-                int err =3D dev->ethtool_ops->get_settings(dev, &ecmd);
-                if (!err) {
-
---TB36FDmn/VVEgNH/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFG1fVAf+iD8yEbECURAsRjAKCxQysMZw9EPPL10tat2srxmaI5BACbBoor
-KVSqdE4g0KkCkjiPVf77Am8=
-=KpuN
------END PGP SIGNATURE-----
-
---TB36FDmn/VVEgNH/--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
