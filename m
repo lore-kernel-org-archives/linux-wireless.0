@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:13401 "EHLO
-	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752983AbXHHH6A (ORCPT
+Received: from smtp.nokia.com ([131.228.20.172]:21850 "EHLO
+	mgw-ext13.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752441AbXH2ObX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2007 03:58:00 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] mac80211: probe for hidden SSIDs in pre-auth scan
-Date: Wed, 8 Aug 2007 00:56:11 -0700
-Cc: linux-wireless@vger.kernel.org
-References: <20070807203315.GG3330@tuxdriver.com>
-In-Reply-To: <20070807203315.GG3330@tuxdriver.com>
+	Wed, 29 Aug 2007 10:31:23 -0400
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jiri Benc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: mac80211 AP mode powersaving problems?
+References: <1186990509.27916.38.camel@johannes.berg>
+	<87lkccf30m.fsf@tikku.osso.net>
+	<1187270479.5141.44.camel@johannes.berg> <87643f4kkh.fsf@nokia.com>
+	<1187275344.23489.6.camel@johannes.berg> <871wdphsus.fsf@nokia.com>
+	<1188290911.7837.65.camel@johannes.berg> <87absbsz5f.fsf@nokia.com>
+	<1188299159.7837.96.camel@johannes.berg> <87sl63prsg.fsf@nokia.com>
+	<1188349109.7837.147.camel@johannes.berg>
+From: Kalle Valo <Kalle.Valo@nokia.com>
+Date: Wed, 29 Aug 2007 17:32:38 +0300
+In-Reply-To: <1188349109.7837.147.camel@johannes.berg> (ext Johannes Berg's message of "Wed\, 29 Aug 2007 02\:58\:29 +0200")
+Message-ID: <877inev2bd.fsf@nokia.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1265889.lsN5W6nE26";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200708080056.16195.flamingice@sourmilk.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1265889.lsN5W6nE26
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-On Tuesday 07 August 2007 13:33, John W. Linville wrote:
-> The ternary conditionals are a bit ugly.  I guess I could recode it
-> with temp vars initialized before calling ieee80211_sta_start_scan.
+> Good news.
+
+Really good news!
+
+>> But that's not all, also multicast frames (including ARP broadcast)
+>> are not buffered correctly. They are sent randomly instead of directly
+>> after a DTIM beacon. Also Multicast bit is not set and DTIM is always
+>> zero even though DTIM period is two.
 >
-Something more like:
+> Actually, they were sent right away because we enqueued them to queue
+> zero, not queue four.
 
-if (ifsta->auto_ssid_sel && ifsta->ssid_len)
-  ieee80211_sta_start_scan(dev, NULL, 0);
-else
-  ieee80211_sta_start_scan(dev, ifsta->ssid, ifsta->ssid_len);
+Yeah, I meant randomly relative to a DTIM beacon.
 
-would be better.
+> Please try the attached patches. I haven't implemented the set_tim()
+> callback yet, but the device should now wake up for multicast traffic,
+> not for unicast yet. The patches work for me on a heavily patched kernel
+> ('everything' plus http://johannes.sipsolutions.net/patches/kernel/all/)
 
--Michael Wu
+Applied 055-b43-timb-position.patch and 057-b43-mcast.patch to commit
+0347a7c86f. Multicast is buffered correctly and N800 sees them. Also
+DTIM count and multicast bit are now correct in beacons.
 
---nextPart1265889.lsN5W6nE26
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGuXcgT3Oqt9AH4aERAoEbAKDcEOxpjwXf26QV8iusYSu+tXXnjACeNuBn
-yX7L3de/v0lZpAoWQxhSObg=
-=/H13
------END PGP SIGNATURE-----
-
---nextPart1265889.lsN5W6nE26--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+-- 
+Kalle Valo
