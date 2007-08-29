@@ -1,94 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:18796 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755395AbXHETqB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Aug 2007 15:46:01 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so579017ugf
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Aug 2007 12:46:00 -0700 (PDT)
-Date: Sun, 5 Aug 2007 21:45:54 +0200
-From: Luca Tettamanti <kronos.it@gmail.com>
-To: rt2400-devel@lists.sourceforge.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [BUG] rt2x00: inconsistent lock state
-Message-ID: <20070805194554.GA17141@dreamland.darkstar.lan>
+Received: from seehuhn.de ([80.68.93.199]:3785 "EHLO seehuhn.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756022AbXH2Wh5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Aug 2007 18:37:57 -0400
+Date: Wed, 29 Aug 2007 23:37:52 +0100
+From: Jochen Voss <voss@seehuhn.de>
+To: linux wireless list <linux-wireless@vger.kernel.org>
+Cc: linville@tuxdriver.com
+Subject: oops with recent wireless-dev tree
+Message-ID: <20070829223752.GA6969@seehuhn.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="TB36FDmn/VVEgNH/"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-while testing wireless-dev (git current) and rt2x00 driver lockdep emitted the
-following warning (shortly after wpa_supplicant upped the interface):
 
-ACPI: PCI Interrupt 0000:02:00.0[A] -> Link [LNKB] -> GSI 5 (level, low) -> IRQ 5
-wmaster0: Selected rate control algorithm 'simple'
+--TB36FDmn/VVEgNH/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-=================================
-[ INFO: inconsistent lock state ]
-2.6.23-rc1-gd34764df #33
----------------------------------
-inconsistent {hardirq-on-W} -> {in-hardirq-R} usage.
-wpa_supplicant/4918 [HC1[1]:SC0[0]:HE0:SE1] takes:
- (dev_base_lock){-.?-}, at: [<c030d3c0>] dev_get_by_index+0x10/0x40
-{hardirq-on-W} state was registered at:
-  [<c013cdbf>] __lock_acquire+0x65f/0x1050
-  [<c013d826>] lock_acquire+0x76/0xa0
-  [<c036299a>] _write_lock_bh+0x3a/0x50
-  [<c030bf7a>] register_netdevice+0x27a/0x400
-  [<c030c13a>] register_netdev+0x3a/0x50
-  [<c047e26d>] loopback_init+0xd/0x10
-  [<c0462742>] kernel_init+0xa2/0x290
-  [<c0104d43>] kernel_thread_helper+0x7/0x14
-  [<ffffffff>] 0xffffffff
-irq event stamp: 3178
-hardirqs last  enabled at (3177): [<c0362f25>] _spin_unlock_irqrestore+0x55/0x70
-hardirqs last disabled at (3178): [<c0104b94>] common_interrupt+0x24/0x34
-softirqs last  enabled at (3174): [<c01232c8>] __do_softirq+0xa8/0xc0
-softirqs last disabled at (3167): [<c0106bab>] do_softirq+0x9b/0xf0
+Hi,
 
-other info that might help us debug this:
-1 lock held by wpa_supplicant/4918:
- #0:  (rtnl_mutex){--..}, at: [<c03613dc>] mutex_lock+0x1c/0x20
+when I use the b43 driver with my PCMCIA LinkSys WRT54GL adapter
+(Broadcom 4318), run hostapd on the interface, and then try to add the
+interface to a bridge, I get the following oops:
 
-stack backtrace:
- [<c010510a>] show_trace_log_lvl+0x1a/0x30
- [<c0105da2>] show_trace+0x12/0x20
- [<c0105dc5>] dump_stack+0x15/0x20
- [<c013b1d0>] print_usage_bug+0x150/0x160
- [<c013beb8>] mark_lock+0x4d8/0x620
- [<c013cf35>] __lock_acquire+0x7d5/0x1050
- [<c013d826>] lock_acquire+0x76/0xa0
- [<c0362a85>] _read_lock+0x35/0x50
- [<c030d3c0>] dev_get_by_index+0x10/0x40
- [<e0bf16ec>] ieee80211_beacon_get+0x1c/0x530 [mac80211]
- [<e0af5404>] rt2x00lib_beacondone+0x44/0x70 [rt2x00lib]
- [<e0b43894>] rt2500pci_interrupt+0xa4/0xd0 [rt2500pci]
- [<c014a398>] handle_IRQ_event+0x28/0x60
- [<c014bc7d>] handle_level_irq+0x6d/0xf0
- [<c0106c9a>] do_IRQ+0x9a/0x100
- [<c0104b9e>] common_interrupt+0x2e/0x34
- [<e0bf42a2>] ieee80211_open+0x322/0x3d0 [mac80211]
- [<c030ca77>] dev_open+0x37/0x80
- [<c030a95d>] dev_change_flags+0x7d/0x180
- [<c0347124>] devinet_ioctl+0x4b4/0x650
- [<c034766b>] inet_ioctl+0x6b/0x90
- [<c02ff965>] sock_ioctl+0xb5/0x1f0
- [<c0178c38>] do_ioctl+0x28/0x80
- [<c0178ce7>] vfs_ioctl+0x57/0x2b0
- [<c0178f79>] sys_ioctl+0x39/0x60
- [<c01041a6>] syscall_call+0x7/0xb
- =======================
+    BUG: unable to handle kernel NULL pointer dereference at virtual addres=
+s 00000000
+     printing eip:
+    *pde =3D 00000000
+    Oops: 0000 [#1]
+    CPU:    0
+    EIP:    0060:[<c02a2cb2>]    Not tainted VLI
+    EFLAGS: 00010292   (2.6.23-rc3-wd #1)
+    EIP is at port_cost+0x11/0xaa
+    eax: c3c40000   ebx: c3c40000   ecx: 00000000   edx: 000000c0
+    esi: 00000000   edi: c2a3ea80   ebp: c2a31e00   esp: c2a31dc8
+    ds: 007b   es: 007b   fs: 0000  gs: 0033  ss: 0068
+    Process brctl (pid: 1498, ti=3Dc2a30000 task=3Dc25734c0 task.ti=3Dc2a30=
+000)
+    Stack: c0119bcf c3680140 c10beea0 c2a31ddc c0148dc4 0000000d c2a31e00 0=
+0000296=20
+	   f000007e c10beea0 000080d0 c2bb7700 c3c40000 c2a3ea80 c2a31e2c c02a2ee3=
+=20
+	   c251b600 c3680270 00000001 c2bb7700 c3073380 c01117df c3c40000 00000001=
+=20
+    Call Trace:
+     [<c010294f>] show_trace_log_lvl+0x1a/0x2f
+     [<c0102a01>] show_stack_log_lvl+0x9d/0xa5
+     [<c0102d76>] show_registers+0x1a5/0x277
+     [<c0102f24>] die+0xdc/0x1a5
+     [<c01082d1>] do_page_fault+0x461/0x530
+     [<c02db49a>] error_code+0x6a/0x70
+     [<c02a2ee3>] br_add_if+0x119/0x290
+     [<c02a35b0>] add_del_if+0x40/0x56
+     [<c02a3acc>] br_dev_ioctl+0x506/0x537
+     [<c0219bc8>] dev_ifsioc+0x3c1/0x3dd
+     [<c0219f2b>] dev_ioctl+0x347/0x3d4
+     [<c02110ec>] sock_ioctl+0x183/0x18f
+     [<c01435d4>] do_ioctl+0x1c/0x4b
+     [<c01437d3>] vfs_ioctl+0x1d0/0x1df
+     [<c0143815>] sys_ioctl+0x33/0x4a
+     [<c0102422>] syscall_call+0x7/0xb
+     =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+    Code: ff 31 c0 eb 05 b8 ea ff ff ff 5b 5d c3 55 89 e5 83 e8 7c e8 35 58=
+ e9 ff 5d c3 55 89 e5 57 56 53 83 ec 2c 89 c3 8b b0 b4 00 00 00 <83> 3e 00 =
+74 53=20
+    EIP: [<c02a2cb2>] port_cost+0x11/0xaa SS:ESP 0068:c2a31dc8
 
-If I'm reading the state bits and the message correcly dev_base_lock was
-aquired for write with IRQ enabled (via register_netdevice), but lockep also
-saw it aquired for read *in* IRQ (hardirq) context (rt2x00 code path, via
-rt2x00lib_beacondone -> ieee80211_beacon_get); this means that a deadlock can
-occur if we take an interrupt while the lock is already held.
-So either the lock must be IRQ-safe (_irq() / _irq_save()) or rt2x00 must not
-take it in interrupt context.
+If I read this correctly, the EIP in the last line corresponds to
+net/bridge/br_if.c, line 36:
 
-Luca
--- 
-Software is like sex; it's better when it's free.
-Linus Torvalds
+    static int port_cost(struct net_device *dev)
+    {
+	    if (dev->ethtool_ops->get_settings) {
+                               ^^^^
+
+As far as I can figure out, dev->ethtool_ops is NULL and the crash
+happens while trying to derefernce ...->get_settings.
+
+Is dev->ethtool_ops allowed to be NULL?  In this case the appended
+patch might be the correct fix.  At least it makes the oops disappear
+for me.  Another possible fix would be to add an ethtool_ops structure
+to the device created by b43.
+
+I hope this helps,
+Jochen
+--=20
+http://seehuhn.de/
+----------------------------------------------------------------------
+Avoid crashes while determining initial path cost for a bridge.
+
+Check whether 'dev->ethtool_ops' is non-NULL before accessing
+'dev->ethtool_ops->get_settings'.
+
+Signed-off-by: Jochen Voss <voss@seehuhn.de>
+
+diff --git a/net/bridge/br_if.c b/net/bridge/br_if.c
+index b40dada..5b396ea 100644
+--- a/net/bridge/br_if.c
++++ b/net/bridge/br_if.c
+@@ -33,7 +33,7 @@
+  */
+ static int port_cost(struct net_device *dev)
+ {
+-       if (dev->ethtool_ops->get_settings) {
++       if (dev->ethtool_ops && dev->ethtool_ops->get_settings) {
+                struct ethtool_cmd ecmd =3D { ETHTOOL_GSET };
+                int err =3D dev->ethtool_ops->get_settings(dev, &ecmd);
+                if (!err) {
+
+--TB36FDmn/VVEgNH/
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFG1fVAf+iD8yEbECURAsRjAKCxQysMZw9EPPL10tat2srxmaI5BACbBoor
+KVSqdE4g0KkCkjiPVf77Am8=
+=KpuN
+-----END PGP SIGNATURE-----
+
+--TB36FDmn/VVEgNH/--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
