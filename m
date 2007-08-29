@@ -1,80 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:49532 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754506AbXHPNLp (ORCPT
+Received: from smtp.nokia.com ([131.228.20.173]:58601 "EHLO
+	mgw-ext14.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751896AbXH2ETE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2007 09:11:45 -0400
-Subject: [PATCH] mac80211: fix key debugfs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 16 Aug 2007 14:44:14 +0200
-Message-Id: <1187268254.5141.24.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 29 Aug 2007 00:19:04 -0400
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jiri Benc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: mac80211 AP mode powersaving problems?
+References: <1186990509.27916.38.camel@johannes.berg>
+	<87lkccf30m.fsf@tikku.osso.net>
+	<1187270479.5141.44.camel@johannes.berg> <87643f4kkh.fsf@nokia.com>
+	<1187275344.23489.6.camel@johannes.berg> <871wdphsus.fsf@nokia.com>
+	<1188290911.7837.65.camel@johannes.berg> <87absbsz5f.fsf@nokia.com>
+	<1188299159.7837.96.camel@johannes.berg> <87sl63prsg.fsf@nokia.com>
+	<1188317935.7837.106.camel@johannes.berg> <878x7v8rcm.fsf@nokia.com>
+	<1188326593.7837.118.camel@johannes.berg>
+From: Kalle Valo <Kalle.Valo@nokia.com>
+In-Reply-To: <1188326593.7837.118.camel@johannes.berg> (ext Johannes Berg's message of "Tue\, 28 Aug 2007 20\:43\:13 +0200")
+Date: Wed, 29 Aug 2007 07:18:13 +0300
+Message-ID: <87fy2355yy.fsf@nokia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Looks like I was dreaming when writing that code.
+(Sorry for sending twice, I accidentally sent the previous mail too
+early.)
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
----
- net/mac80211/debugfs_key.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+> On Tue, 2007-08-28 at 21:08 +0300, Kalle Valo wrote:
+>
+>> I hope you have time to investigate this, because I really would like
+>> to have Nokia N800 and 770 working with b43 AP. So if you need more
+>> testing, just ask.
+>
+> Can you disable QoS and see if the same weird frames show up again? b43
+> doesn't really support QoS yet but I don't think that should be causing
+> such frame corruption.
 
---- wireless-dev.orig/net/mac80211/debugfs_key.c	2007-08-15 20:06:36.003475381 +0200
-+++ wireless-dev/net/mac80211/debugfs_key.c	2007-08-15 20:19:47.383475381 +0200
-@@ -77,14 +77,17 @@ static ssize_t key_tx_spec_read(struct f
- 	switch (key->alg) {
- 	case ALG_WEP:
- 		len = scnprintf(buf, sizeof(buf), "\n");
-+		break;
- 	case ALG_TKIP:
- 		len = scnprintf(buf, sizeof(buf), "%08x %04x\n",
- 				key->u.tkip.iv32,
- 				key->u.tkip.iv16);
-+		break;
- 	case ALG_CCMP:
- 		tpn = key->u.ccmp.tx_pn;
- 		len = scnprintf(buf, sizeof(buf), "%02x%02x%02x%02x%02x%02x\n",
- 				tpn[0], tpn[1], tpn[2], tpn[3], tpn[4], tpn[5]);
-+		break;
- 	default:
- 		return 0;
- 	}
-@@ -103,6 +106,7 @@ static ssize_t key_rx_spec_read(struct f
- 	switch (key->alg) {
- 	case ALG_WEP:
- 		len = scnprintf(buf, sizeof(buf), "\n");
-+		break;
- 	case ALG_TKIP:
- 		for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
- 			p += scnprintf(p, sizeof(buf)+buf-p,
-@@ -110,6 +114,7 @@ static ssize_t key_rx_spec_read(struct f
- 				       key->u.tkip.iv32_rx[i],
- 				       key->u.tkip.iv16_rx[i]);
- 		len = p - buf;
-+		break;
- 	case ALG_CCMP:
- 		for (i = 0; i < NUM_RX_DATA_QUEUES; i++) {
- 			rpn = key->u.ccmp.rx_pn[i];
-@@ -119,6 +124,7 @@ static ssize_t key_rx_spec_read(struct f
- 				       rpn[3], rpn[4], rpn[5]);
- 		}
- 		len = p - buf;
-+		break;
- 	default:
- 		return 0;
- 	}
-@@ -239,7 +245,7 @@ void ieee80211_debugfs_key_sta_link(stru
- 	if (!key->debugfs.dir)
- 		return;
- 
--	sprintf(buf, "../sta/" MAC_FMT, MAC_ARG(sta->addr));
-+	sprintf(buf, "../../stations/" MAC_FMT, MAC_ARG(sta->addr));
- 	key->debugfs.stalink =
- 		debugfs_create_symlink("station", key->debugfs.dir, buf);
- }
+>From b43 or N800? 
 
+> Interestingly, your N800 seems to pick up the frames correctly since it
+> did reply to the ping packets... 
 
+Yes, N800 managed to receive some ping packets from the laptop, but
+the packet loss was high (at least 50%). It happened because the ARP
+requests were not buffered and N800 could receive them occasionally
+just by luck. When N800 replied to the request, it woke up from PSM
+and b43 immediately sent all the buffered frames to N800. 
+
+N800 stays awake 200 ms (100 ms if display is off) after a transmitted
+frame, so there's some time to receive packets at that time.
+
+If added a static ARP entry (ip neigh change ... permanent), packet
+loss was 100%.
+
+> Did you have a capture size limit?
+
+I think I didn't, but I have to recheck.
+
+-- 
+Kalle Valo
