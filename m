@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purr.warmcat.com ([87.106.142.209]:33776 "EHLO
-	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753753AbXHFIZf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2007 04:25:35 -0400
-Message-ID: <46B6DAFC.7020301@warmcat.com>
-Date: Mon, 06 Aug 2007 09:25:32 +0100
-From: Andy Green <andy@warmcat.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Ulrich Kunitz <kune@deine-taler.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Daniel Drake <dsd@gentoo.org>
-Subject: Re: mac80211 driver interface semantics
-References: <46B27729.5030406@gentoo.org>	 <20070803052935.GA12683@deine-taler.de>  <46B2E06F.4090706@warmcat.com>	 <1186134894.4647.24.camel@johannes.berg>  <46B3032C.5040306@warmcat.com>	 <1186137166.4647.34.camel@johannes.berg>  <46B304FF.3000305@warmcat.com>	 <1186137715.4647.36.camel@johannes.berg>  <46B30828.3000507@warmcat.com> <1186382658.21957.45.camel@johannes.berg>
-In-Reply-To: <1186382658.21957.45.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp2f.orange.fr ([80.12.242.151]:9685 "EHLO smtp2f.orange.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756375AbXH2NNx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Aug 2007 09:13:53 -0400
+Received: from me-wanadoo.net (localhost [127.0.0.1])
+	by mwinf2f11.orange.fr (SMTP Server) with ESMTP id 840FD7000107
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2007 15:13:51 +0200 (CEST)
+Subject: Re: [PATCH 4/5] Net: ath5k, license is GPLv2
+From: Xavier Bestel <xavier.bestel@free.fr>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <4af2d03a0708290335x1a9aa38o566e9d416505f280@mail.gmail.com>
+References: <7515194658758617@pripojeni.net>
+	 <1188381582.19891.6.camel@johannes.berg>
+	 <4af2d03a0708290335x1a9aa38o566e9d416505f280@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 29 Aug 2007 15:13:46 +0200
+Message-Id: <1188393226.1131.319.camel@frg-rhel40-em64t-04>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Somebody in the thread at some point said:
-> On Fri, 2007-08-03 at 11:49 +0100, Andy Green wrote:
+On Wed, 2007-08-29 at 08:35 -0200, Jiri Slaby wrote:
+> On 8/29/07, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Tue, 2007-08-28 at 12:00 -0400, Jiri Slaby wrote:
+> >
+> > > The files are available only under GPLv2 since now.
+> >
+> > Since the BSD people are already getting upset about (for various
+> > reasons among which seem to be a clear non-understanding) I'd suggest
+> > changing it to:
 > 
->> ''Because if you have both a hard monitor and a regular interface
->> (monitor_during_oper allowed) then we will never check the CRC on frames
->> that enter the networking path and can get corrupted TCP packets in etc.''
->>
->> If the rest of the networking stack didn't trust the packet anyway and
->> confirms the IP-level checksum, then it can make its own opinion about
->> the packet.
+> yes, please. Can somebody do it, I'm away from my box.
 > 
-> Maybe it helps if I add that the FCS covers more of the packet than the
-> IP checksum; hence, if the FCS fails due to a bit in the area the IP
-> checksum does not cover we will not ACK the packet and get a
-> retransmission, but the IP checksum will check out as good and we'll
-> have a duplicate packet.
+> > + * Parts of this file were originally licenced under the BSD licence:
+> > + *
+> > >  * Permission to use, copy, modify, and distribute this software for any
+> > >  * purpose with or without fee is hereby granted, provided that the above
+> > >  * copyright notice and this permission notice appear in all copies.
+> > >  *
+> > >  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+> > WARRANTIES
+> > >  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+> > >  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+> > >  * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+> > >  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+> > >  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+> > >  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+> > + *
+> > + * Further changes to this file since the moment this notice was extended
+> > + * are now distributed under the terms of the GPL version two as published
+> > + * by the Free Software Foundation <yaddaya>
+> >
+> > johannes
 
-Fair enough, thanks for the explanation.
+How about asking for changes to be dual-licenced too ?
 
--Andy
+	Xav
+
+
