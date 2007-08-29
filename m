@@ -1,60 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44928 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753110AbXHBJMo (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49704
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751632AbXH2Rvn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 05:12:44 -0400
-Subject: Re: chaning mode only when interface down?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: dragoran <drago01@gmail.com>
-Cc: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-In-Reply-To: <46B18B77.5020802@gmail.com>
-References: <46B18B77.5020802@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-63s1UtFa7RTiIXvPq0R3"
-Date: Thu, 02 Aug 2007 11:14:04 +0200
-Message-Id: <1186046044.24230.11.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 29 Aug 2007 13:51:43 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: mac80211 AP mode powersaving problems?
+Date: Wed, 29 Aug 2007 19:50:03 +0200
+Cc: Kalle Valo <Kalle.Valo@nokia.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>
+References: <1186990509.27916.38.camel@johannes.berg> <1188349109.7837.147.camel@johannes.berg> <1188382312.19891.7.camel@johannes.berg>
+In-Reply-To: <1188382312.19891.7.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200708291950.04237.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 29 August 2007 12:11:52 Johannes Berg wrote:
+> On Wed, 2007-08-29 at 10:37 +0200, Johannes Berg wrote:
+> 
+> > I'll update the specs to indicate that
+> 
+> I wrote http://bcm-v4.sipsolutions.net/802.11/TX#QueueSelection and
+> updated the ObjectMemory page for the SHM stuff wrt. DTIM period etc.
 
---=-63s1UtFa7RTiIXvPq0R3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hm, I am wondering why this "more data" thing is needed.
+Driver sets it and fw clears it? So why set it at all?
 
-On Thu, 2007-08-02 at 09:44 +0200, dragoran wrote:
-> I noticed that I have to do ifdown wlan0 before I can change the mode=20
-> with iwconfig.
-> When I do it while the interface is up I get a error that the device is=20
-> busy.
-
-It is busy.
-
-> It seems to happen with ad-hoc, master and back from them to managed.
-> Is this a bug in the iwlwifi driver or in mac80211 ?
-
-Neither, it is expected behaviour. Blame it on Jean that wireless
-extensions are ill-defined and don't mandate this.
-
-> Because of this NM can't create ad-hoc networks because it does it while=20
-> the device is up.
-> Any ideas?
-
-Fix NM?
-
-johannes
-
---=-63s1UtFa7RTiIXvPq0R3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGsaBc/ETPhpq3jKURApKaAJ9VsGeDcry0SUYer2xkRzzUOptITwCdF89D
-NLG8/vOMblzTaf/TcK9kviI=
-=f4ZU
------END PGP SIGNATURE-----
-
---=-63s1UtFa7RTiIXvPq0R3--
-
+-- 
+Greetings Michael.
