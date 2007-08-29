@@ -1,31 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:50887
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755487AbXHYADx (ORCPT
+Received: from galaxy.systems.pipex.net ([62.241.162.31]:59915 "EHLO
+	galaxy.systems.pipex.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756131AbXH2VXF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2007 20:03:53 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: Re: b43: Copy MAC address to local struct
-Date: Sat, 25 Aug 2007 02:03:29 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-References: <200708250200.52650.mb@bu3sch.de>
-In-Reply-To: <200708250200.52650.mb@bu3sch.de>
+	Wed, 29 Aug 2007 17:23:05 -0400
+From: Adam Baker <linux@baker-net.org.uk>
+To: rt2400-devel@lists.sourceforge.net
+Subject: Re: [Rt2400-devel] [PATCH] Fix breakage on WEP for cards that rely on =?utf-8?q?software=09decoding?=
+Date: Wed, 29 Aug 2007 22:23:02 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <200708282345.53016.adam@baker-net.org.uk> <1188389382.19891.12.camel@johannes.berg>
+In-Reply-To: <1188389382.19891.12.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200708250203.30464.mb@bu3sch.de>
+  charset="utf-8"
+Message-Id: <200708292223.02321.linux@baker-net.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 25 August 2007, Michael Buesch wrote:
-> We must copy the MAC addresses to a local struct, as we
-> don't own the original pointer from mac80211 and don't
-> know how mac80211 might mess with it while we are using it.
-> 
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> Cc: Larry Finger <larry.finger@lwfinger.net>
+On Wednesday 29 August 2007 13:09, Johannes Berg wrote:
 
-Whoops, seems I already sent this one yesterday. Sorry.
+>
+> I think this patch ought to fix it as well:
+> http://johannes.sipsolutions.net/patches/kernel/all/2007-08-29-12:08/023-re
+>work-hardware-crypto-flags.patch
+>
+> but it should probably have a few more changes.
+>
 
+I can confirm that with that patch WEP is working for me. Another user on the 
+rt2x00 forum is also reporting success with it.
