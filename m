@@ -1,224 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cacti.profiwh.com ([85.93.165.66]:56978 "EHLO smtp.wsc.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1762364AbXHLNHw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Aug 2007 09:07:52 -0400
-Message-id: <32694265142306417777@wsc.cz>
-Subject: [PATCH 1/4] Net: mac80211, remove bitfields from struct ieee80211_tx_packet_data
-From: Jiri Slaby <jirislaby@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <netdev@vger.kernel.org>
-Cc: <jbenc@suse.cz>
-Cc: <flamingice@sourmilk.net>
-Cc: <jeff@garzik.org>
-Date: Sun, 12 Aug 2007 15:08:56 +0200 (CEST)
+Received: from DSL022.labridge.com ([206.117.136.22]:1220 "EHLO perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762005AbXH3WT7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Aug 2007 18:19:59 -0400
+Subject: Re: [PATCH 13/30] net: Don't do pointless kmalloc return value  casts in zd1211 driver
+From: Joe Perches <joe@perches.com>
+To: Jesper Juhl <jesper.juhl@gmail.com>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Ulrich Kunitz <kune@deine-taler.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <9a8748490708301320o49d8e794vc5c37ffc938006f1@mail.gmail.com>
+References: <1554af80879a7ef2f78a4d654f23c248203500d9.1187912217.git.jesper.juhl@gmail.com>
+	 <d551047daed1cb4d9de1eff956268a468c9837f6.1187912217.git.jesper.juhl@gmail.com>
+	 <46D70467.1040109@gentoo.org>
+	 <9a8748490708301320o49d8e794vc5c37ffc938006f1@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 30 Aug 2007 15:19:53 -0700
+Message-Id: <1188512393.6062.156.camel@localhost>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All against mac80211 tree
+On Thu, 2007-08-30 at 22:20 +0200, Jesper Juhl wrote:
+> Ok, I must admit I didn't check with sparse since it seemed pointless
+> - we usually never cast void pointers to other pointer types,
+> specifically because the C language nicely guarantees that the right
+> thing will happen without the cast.  Sometimes we have to cast them to
+> integer types, su sure we need the cast there.   But what on earth
+> makes a "zd_addr_t *" so special that we have to explicitly cast a
+> "void *" to that type?
 
---
+http://marc.info/?l=linux-netdev&m=117113743902549&w=1
 
-mac80211, remove bitfields from struct ieee80211_tx_packet_data
-
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-
----
-commit 10e9252a35d42fb92e65dfaaef136d81dbb71c4f
-tree f8579cff30dc8053b770b78582a30961b7320046
-parent a050b807aede7f33339c6bee0bef1c07cd9c5fc4
-author Jiri Slaby <jirislaby@gmail.com> Sun, 12 Aug 2007 11:14:36 +0200
-committer Jiri Slaby <jirislaby@gmail.com> Sun, 12 Aug 2007 11:14:36 +0200
-
- net/mac80211/ieee80211.c     |   15 +++++++++++----
- net/mac80211/ieee80211_i.h   |   11 ++++++-----
- net/mac80211/ieee80211_sta.c |    6 ++++--
- net/mac80211/rx.c            |    4 ++--
- net/mac80211/tx.c            |   23 ++++++++++++-----------
- net/mac80211/wme.c           |    4 ++--
- 6 files changed, 37 insertions(+), 26 deletions(-)
-
-diff --git a/net/mac80211/ieee80211.c b/net/mac80211/ieee80211.c
-index 9ff86ee..0952237 100644
---- a/net/mac80211/ieee80211.c
-+++ b/net/mac80211/ieee80211.c
-@@ -933,10 +933,17 @@ static void ieee80211_remove_tx_extra(struct ieee80211_local *local,
- 
- 	pkt_data = (struct ieee80211_tx_packet_data *)skb->cb;
- 	pkt_data->ifindex = control->ifindex;
--	pkt_data->mgmt_iface = (control->type == IEEE80211_IF_TYPE_MGMT);
--	pkt_data->req_tx_status = !!(control->flags & IEEE80211_TXCTL_REQ_TX_STATUS);
--	pkt_data->do_not_encrypt = !!(control->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT);
--	pkt_data->requeue = !!(control->flags & IEEE80211_TXCTL_REQUEUE);
-+	pkt_data->flags &= ~(IEEE80211_TXPD_REQ_TX_STATUS |
-+		IEEE80211_TXPD_DO_NOT_ENCRYPT | IEEE80211_TXPD_REQUEUE |
-+		IEEE80211_TXPD_MGMT_IFACE);
-+	if (control->flags & IEEE80211_TXCTL_REQ_TX_STATUS)
-+		pkt_data->flags |= IEEE80211_TXPD_REQ_TX_STATUS;
-+	if (control->flags & IEEE80211_TXCTL_DO_NOT_ENCRYPT)
-+		pkt_data->flags |= IEEE80211_TXPD_DO_NOT_ENCRYPT;
-+	if (control->flags & IEEE80211_TXCTL_REQUEUE)
-+		pkt_data->flags |= IEEE80211_TXPD_REQUEUE;
-+	if (control->type == IEEE80211_IF_TYPE_MGMT)
-+		pkt_data->flags |= IEEE80211_TXPD_MGMT_IFACE;
- 	pkt_data->queue = control->queue;
- 
- 	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 4599d55..265893a 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -170,11 +170,12 @@ struct ieee80211_txrx_data {
- struct ieee80211_tx_packet_data {
- 	int ifindex;
- 	unsigned long jiffies;
--	unsigned int req_tx_status:1;
--	unsigned int do_not_encrypt:1;
--	unsigned int requeue:1;
--	unsigned int mgmt_iface:1;
--	unsigned int queue:4;
-+#define IEEE80211_TXPD_REQ_TX_STATUS	BIT(0)
-+#define IEEE80211_TXPD_DO_NOT_ENCRYPT	BIT(1)
-+#define IEEE80211_TXPD_REQUEUE		BIT(2)
-+#define IEEE80211_TXPD_MGMT_IFACE	BIT(3)
-+	unsigned int flags;
-+	u8 queue;
- };
- 
- struct ieee80211_tx_stored_packet {
-diff --git a/net/mac80211/ieee80211_sta.c b/net/mac80211/ieee80211_sta.c
-index b996332..75521ae 100644
---- a/net/mac80211/ieee80211_sta.c
-+++ b/net/mac80211/ieee80211_sta.c
-@@ -506,8 +506,10 @@ static void ieee80211_sta_tx(struct net_device *dev, struct sk_buff *skb,
- 	pkt_data = (struct ieee80211_tx_packet_data *) skb->cb;
- 	memset(pkt_data, 0, sizeof(struct ieee80211_tx_packet_data));
- 	pkt_data->ifindex = sdata->dev->ifindex;
--	pkt_data->mgmt_iface = (sdata->type == IEEE80211_IF_TYPE_MGMT);
--	pkt_data->do_not_encrypt = !encrypt;
-+	if (sdata->type == IEEE80211_IF_TYPE_MGMT)
-+		pkt_data->flags |= IEEE80211_TXPD_MGMT_IFACE;
-+	if (!encrypt)
-+		pkt_data->flags |= IEEE80211_TXPD_DO_NOT_ENCRYPT;
- 
- 	dev_queue_xmit(skb);
- }
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 0a10720..948eb2f 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -415,7 +415,7 @@ static int ap_sta_ps_end(struct net_device *dev, struct sta_info *sta)
- 	while ((skb = skb_dequeue(&sta->tx_filtered)) != NULL) {
- 		pkt_data = (struct ieee80211_tx_packet_data *) skb->cb;
- 		sent++;
--		pkt_data->requeue = 1;
-+		pkt_data->flags |= IEEE80211_TXPD_REQUEUE;
- 		dev_queue_xmit(skb);
- 	}
- 	while ((skb = skb_dequeue(&sta->ps_tx_buf)) != NULL) {
-@@ -427,7 +427,7 @@ static int ap_sta_ps_end(struct net_device *dev, struct sta_info *sta)
- 		       "since STA not sleeping anymore\n", dev->name,
- 		       MAC_ARG(sta->addr), sta->aid);
- #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
--		pkt_data->requeue = 1;
-+		pkt_data->flags |= IEEE80211_TXPD_REQUEUE;
- 		dev_queue_xmit(skb);
- 	}
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index b57a592..3d05f8f 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1248,11 +1248,11 @@ int ieee80211_master_start_xmit(struct sk_buff *skb,
- 
- 	control.ifindex = odev->ifindex;
- 	control.type = osdata->type;
--	if (pkt_data->req_tx_status)
-+	if (pkt_data->flags & IEEE80211_TXPD_REQ_TX_STATUS)
- 		control.flags |= IEEE80211_TXCTL_REQ_TX_STATUS;
--	if (pkt_data->do_not_encrypt)
-+	if (pkt_data->flags & IEEE80211_TXPD_DO_NOT_ENCRYPT)
- 		control.flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT;
--	if (pkt_data->requeue)
-+	if (pkt_data->flags & IEEE80211_TXPD_REQUEUE)
- 		control.flags |= IEEE80211_TXCTL_REQUEUE;
- 	control.queue = pkt_data->queue;
- 
-@@ -1294,8 +1294,7 @@ int ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	/* needed because we set skb device to master */
- 	pkt_data->ifindex = dev->ifindex;
- 
--	pkt_data->mgmt_iface = 0;
--	pkt_data->do_not_encrypt = 1;
-+	pkt_data->flags |= IEEE80211_TXPD_DO_NOT_ENCRYPT;
- 
- 	/*
- 	 * fix up the pointers accounting for the radiotap
-@@ -1346,7 +1345,7 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	struct ieee80211_hdr hdr;
- 	const u8 *encaps_data;
- 	int encaps_len, skip_header_bytes;
--	int nh_pos, h_pos, no_encrypt = 0;
-+	int nh_pos, h_pos;
- 	struct sta_info *sta;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-@@ -1492,8 +1491,8 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	pkt_data = (struct ieee80211_tx_packet_data *)skb->cb;
- 	memset(pkt_data, 0, sizeof(struct ieee80211_tx_packet_data));
- 	pkt_data->ifindex = dev->ifindex;
--	pkt_data->mgmt_iface = (sdata->type == IEEE80211_IF_TYPE_MGMT);
--	pkt_data->do_not_encrypt = no_encrypt;
-+	if (sdata->type == IEEE80211_IF_TYPE_MGMT)
-+		pkt_data->flags |= IEEE80211_TXPD_MGMT_IFACE;
- 
- 	skb->dev = local->mdev;
- 	sdata->stats.tx_packets++;
-@@ -1551,7 +1550,8 @@ int ieee80211_mgmt_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 	pkt_data = (struct ieee80211_tx_packet_data *) skb->cb;
- 	memset(pkt_data, 0, sizeof(struct ieee80211_tx_packet_data));
- 	pkt_data->ifindex = sdata->dev->ifindex;
--	pkt_data->mgmt_iface = (sdata->type == IEEE80211_IF_TYPE_MGMT);
-+	if (sdata->type == IEEE80211_IF_TYPE_MGMT)
-+		pkt_data->flags |= IEEE80211_TXPD_MGMT_IFACE;
- 
- 	skb->priority = 20; /* use hardcoded priority for mgmt TX queue */
- 	skb->dev = sdata->local->mdev;
-@@ -1561,12 +1561,13 @@ int ieee80211_mgmt_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 	 * to request TX callback for hostapd. BIT(1) is checked.
- 	 */
- 	if ((fc & BIT(1)) == BIT(1)) {
--		pkt_data->req_tx_status = 1;
-+		pkt_data->flags |= IEEE80211_TXPD_REQ_TX_STATUS;
- 		fc &= ~BIT(1);
- 		hdr->frame_control = cpu_to_le16(fc);
- 	}
- 
--	pkt_data->do_not_encrypt = !(fc & IEEE80211_FCTL_PROTECTED);
-+	if (!(fc & IEEE80211_FCTL_PROTECTED))
-+		pkt_data->flags |= IEEE80211_TXPD_DO_NOT_ENCRYPT;
- 
- 	sdata->stats.tx_packets++;
- 	sdata->stats.tx_bytes += skb->len;
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 99a792c..d3c81fe 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -110,7 +110,7 @@ static inline int classify80211(struct sk_buff *skb, struct Qdisc *qd)
- 		return IEEE80211_TX_QUEUE_DATA0;
- 	}
- 
--	if (unlikely(pkt_data->mgmt_iface)) {
-+	if (unlikely(pkt_data->flags & IEEE80211_TXPD_MGMT_IFACE)) {
- 		/* Data frames from hostapd (mainly, EAPOL) use AC_VO
- 		* and they will include QoS control fields if
- 		* the target STA is using WME. */
-@@ -179,7 +179,7 @@ static int wme_qdiscop_enqueue(struct sk_buff *skb, struct Qdisc* qd)
- 	struct Qdisc *qdisc;
- 	int err, queue;
- 
--	if (pkt_data->requeue) {
-+	if (pkt_data->flags & IEEE80211_TXPD_REQUEUE) {
- 		skb_queue_tail(&q->requeued[pkt_data->queue], skb);
- 		qd->q.qlen++;
- 		return 0;
