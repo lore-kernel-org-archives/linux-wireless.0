@@ -1,64 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:11526 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752463AbXHUVGq (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.182]:39146 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760862AbXH3WSc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 17:06:46 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so975625nfb
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Aug 2007 14:06:44 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC 2/2] mac80211: revamp interface and filter configuration
-Date: Tue, 21 Aug 2007 23:14:14 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <20070821161845.165557000@sipsolutions.net> <20070821161942.938977000@sipsolutions.net>
-In-Reply-To: <20070821161942.938977000@sipsolutions.net>
+	Thu, 30 Aug 2007 18:18:32 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3112530pyb
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Aug 2007 15:18:32 -0700 (PDT)
+Message-ID: <40f31dec0708301518u5ef32d13jfe1cce09656bf77d@mail.gmail.com>
+Date: Fri, 31 Aug 2007 01:18:31 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 5/5] Net: ath5k, kconfig changes
+Cc: "Christoph Hellwig" <hch@infradead.org>,
+	"Jiri Slaby" <jirislaby@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <20070830123609.GA5140@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200708212314.15010.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <2713029743177393055@pripojeni.net>
+	 <280951420471148977@pripojeni.net>
+	 <20070828171330.GD29343@infradead.org>
+	 <40f31dec0708291838p5d33eb34p3b4432d9d270841a@mail.gmail.com>
+	 <20070830123609.GA5140@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 21 August 2007, Johannes Berg wrote:
-> Drivers are currently supposed to keep track of monitor
-> interfaces if they allow so-called "hard" monitor, and
-> they are also supposed to keep track of multicast etc.
-> 
-> This patch changes that, replaces the set_multicast_list()
-> callback with a new configure_filter() callback that takes
-> filter flags (FIF_*) instead of interface flags (IFF_*).
-> For a driver, this means it should open the filter as much
-> as necessary to get all frames according to the filter flags.
-> 
-> Multicast filtering is a bit special, which is why drivers
-> that do not require FIF_ALLMULTI for multicast address filters
-> (i.e. they actually have filters for multicast addresses)
-> need to set the new IEEE80211_HW_MULTICAST_FILTER flag and
-> call the ieee80211_get_mc_list_item() function.
-> 
-> At the same time, drivers are no longer notified about
-> monitor interfaces at all, this means they now need to
-> implement the start() and stop() callbacks and the new
-> change_filter_flags() callback. Also, the start()/stop()
-> ordering changed, start() is now called *before* any
-> add_interface() as it really should be, and stop() after
-> any remove_interface().
-> 
-> The patch also changes the behaviour of setting the bssid
-> to multicast for scanning when IEEE80211_HW_NO_PROBE_FILTERING
-> is set; the IEEE80211_HW_NO_PROBE_FILTERING flag is removed
-> and the filter flag FIF_BCN_PRBRESP_PROMISC introduced.
-> This is a lot more efficient for hardware like b43 that
-> supports it and other hardware can still set the BSSID
-> to multicast.
+2007/8/30, John W. Linville <linville@tuxdriver.com>:
+> On Thu, Aug 30, 2007 at 04:38:09AM +0300, Nick Kossifidis wrote:
+> > 2007/8/28, Christoph Hellwig <hch@infradead.org>:
+>
+> > > Also this whole patch seems rather pointless.  It saves only
+> > > very little and turns the driver into a complete ifdef maze.
+>
+> > Also most
+> > people will use 5212 code only, 5211 cards are on some old laptops and
+> > 5210, well i couldn't even find  a 5210 for actual testing :P
+>
+> FWIW, I'd bet dollars to donuts that distros will enable them all
+> together.
+>
+> Is saving code space the only reason to turn these off?  How much
+> space do you save?
+>
+> Is there some way you can isolate and/or limit the number of ifdef
+> blocks further?  If so, we might consider a version of this patch
+> that depends on EMBEDDED or somesuch...?
+>
+> John
 
-Personally I like the idea of this packet filtering, implementation
-and driver interface looks allright to me.
+O.K. as a first step i'll limit 5210 code only then, just an option
+like "support older 5210 chipsets" which is going to be off by default
+instead of 3 options. It's not just saving space, it's also saving
+some runtime checks. It's not really a gain in performance though,
+most checks are done during initialization and dfs setup, i just
+thought it would be usefull to save as much cpu as possible.
 
-> WARNING: This patch makes the ralink drivers BUG_ON().
-
-If you can give me a warning when you are going to submit this
-for inclusion, I'll cook up a patch to make it work for rt2x00. :)
-
-Ivo
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
