@@ -1,61 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:58873 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1765542AbXH0V3f (ORCPT
+Received: from smtp136.iad.emailsrvr.com ([207.97.245.136]:46226 "EHLO
+	smtp136.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759027AbXH3Xsy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Aug 2007 17:29:35 -0400
-Date: Mon, 27 Aug 2007 23:29:34 +0200
-From: Adrian Bunk <bunk@kernel.org>
-To: Andrew Morton <akpm@linux-foundation.org>, linville@tuxdriver.com
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [-mm patch] iwl-base.c bugfixes
-Message-ID: <20070827212934.GI26410@stusta.de>
-References: <20070822020648.5ea3a612.akpm@linux-foundation.org>
+	Thu, 30 Aug 2007 19:48:54 -0400
+Message-ID: <46D756FF.3090602@gentoo.org>
+Date: Thu, 30 Aug 2007 19:47:11 -0400
+From: Daniel Drake <dsd@gentoo.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20070822020648.5ea3a612.akpm@linux-foundation.org>
+To: Jesper Juhl <jesper.juhl@gmail.com>
+CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Ulrich Kunitz <kune@deine-taler.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 13/30] net: Don't do pointless kmalloc return value casts  in zd1211 driver
+References: <1554af80879a7ef2f78a4d654f23c248203500d9.1187912217.git.jesper.juhl@gmail.com>	 <d551047daed1cb4d9de1eff956268a468c9837f6.1187912217.git.jesper.juhl@gmail.com>	 <46D70467.1040109@gentoo.org> <9a8748490708301320o49d8e794vc5c37ffc938006f1@mail.gmail.com>
+In-Reply-To: <9a8748490708301320o49d8e794vc5c37ffc938006f1@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 22, 2007 at 02:06:48AM -0700, Andrew Morton wrote:
->...
-> Changes since 2.6.23-rc2-mm2:
->... 
->  git-wireless.patch
->...
->  git trees
->...
+Jesper Juhl wrote:
+> What would be wrong in applying my patch that removes the cast of the
+> kmalloc() return value and then also remove the "__nocast" here?
 
-This patch fixes two obvious bugs.
+We use it as a safety measure when coding. For example the write 
+register function takes an address and a value. We got one of these the 
+wrong way round once, and had a non-obvious bug.
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+nocast and sparse helps us prevent this.
 
----
-
- drivers/net/wireless/iwl-base.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-600ffdc11b25ac0aee15271d1b2ce99a367efa31 
-diff --git a/drivers/net/wireless/iwl-base.c b/drivers/net/wireless/iwl-base.c
-index b8293fe..f65c30e 100644
---- a/drivers/net/wireless/iwl-base.c
-+++ b/drivers/net/wireless/iwl-base.c
-@@ -343,7 +343,7 @@ int iwl_tx_queue_init(struct iwl_priv *priv,
- 	 * command is very huge the system will not have two scan at the
- 	 * same time */
- 	len = sizeof(struct iwl_cmd) * slots_num;
--	if (txq_id == IWL_CMD_QUEUE_NUM);
-+	if (txq_id == IWL_CMD_QUEUE_NUM)
- 		len +=  IWL_MAX_SCAN_SIZE;
- 	txq->cmd = pci_alloc_consistent(dev, len, &txq->dma_addr_cmd);
- 	if (!txq->cmd)
-@@ -390,7 +390,7 @@ void iwl_tx_queue_free(struct iwl_priv *priv, struct iwl_tx_queue *txq)
- 		iwl_hw_txq_free_tfd(priv, txq);
- 
- 	len = sizeof(struct iwl_cmd) * q->n_window;
--	if (q->id == IWL_CMD_QUEUE_NUM);
-+	if (q->id == IWL_CMD_QUEUE_NUM)
- 		len += IWL_MAX_SCAN_SIZE;
- 
- 	pci_free_consistent(dev, len, txq->cmd, txq->dma_addr_cmd);
+Daniel
 
