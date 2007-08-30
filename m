@@ -1,50 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:13918 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755492AbXH3BuC (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44053 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753855AbXH3MGB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2007 21:50:02 -0400
-Received: by py-out-1112.google.com with SMTP id u77so2570896pyb
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2007 18:50:02 -0700 (PDT)
-Message-ID: <40f31dec0708291850j2d35db6cu9de7c5f0a91e76f7@mail.gmail.com>
-Date: Thu, 30 Aug 2007 04:50:01 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Christoph Hellwig" <hch@infradead.org>
-Subject: Re: [PATCH 1/5] Net: ath5k, split hw into hw, phy and initvals
-Cc: "Jiri Slaby" <jirislaby@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <20070828171034.GB29343@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <2713029743177393055@pripojeni.net>
-	 <20070828171034.GB29343@infradead.org>
+	Thu, 30 Aug 2007 08:06:01 -0400
+Subject: Re: mac80211, iwlwifi and packet injection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andy Green <andy@warmcat.com>
+Cc: ian <ischram@telenet.be>,
+	Robert =?ISO-8859-1?Q?F=FChricht?=
+	<the_master_of_disaster@gmx.at>, linux-wireless@vger.kernel.org,
+	Zhu Yi <yi.zhu@intel.com>
+In-Reply-To: <46D5CE9B.8080401@warmcat.com>
+References: <20070829161655.7f68542c@doppelhertz>
+	 <46D5B8B9.8000803@telenet.be>  <46D5CE9B.8080401@warmcat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6eIOaEx5Yxu7zqaphG0s"
+Date: Thu, 30 Aug 2007 14:07:03 +0200
+Message-Id: <1188475623.2963.22.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/8/28, Christoph Hellwig <hch@infradead.org>:
-> On Tue, Aug 28, 2007 at 11:58:52AM -0400, Jiri Slaby wrote:
-> > -ath5k-objs           = ath5k_base.o ath5k_hw.o ath5k_regdom.o
-> > +ath5k-objs           = ath5k_base.o ath5k_hw.o ath5k_regdom.o \
-> > +                       ath5k_hw_phy.o ath5k_hw_inivals.o
->
-> And while I'm at nitpicking :)
->
-> ath5k_hw_phy.o should probably be ath5k_phy.o by conventions used by
-> most drivers and ath5k_hw_inivals.o mights aswell be something like
-> ath5k_init.o
->
 
-If you check out the code you'll see i'm using the same convention
-inside them, ath5k_hw* files contain hw related functions
-(ath5k_hw_<name>) while driver code has ath5k_<name>. Also ath5k_init
-is misleading, file acually includes initial register settings for
-various chips and the functions to apply them on hw, not the
-initialization/attach/wakeup etc routines (that can be found  in
-ath5k_hw.c), that's why it's inivals, i couldn't find a more
-appropriate name.
+--=-6eIOaEx5Yxu7zqaphG0s
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, 2007-08-29 at 20:52 +0100, Andy Green wrote:
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+> No, there's no general problem.  I just cooked current wireless-dev
+> everything and am running it on this Compaq nx7400 with a 3945 chip, it
+> has just sent 100,000 packetspams while pinging warmcat.com over an
+> associated connection, the injections verified on another box with a zd12=
+11.
+
+Right here is the difference, Robert didn't have a normal STA interface
+up at the same time. FWIW, the NULL mac address thing is about to change
+for the filter flags once a few people review that patch.
+
+johannes
+
+--=-6eIOaEx5Yxu7zqaphG0s
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG1rLn/ETPhpq3jKURAppoAKCBr5575Oi87KXBi7jRy7VsrceaAgCfSxtO
+C35TWZxIB9ADpeogerThq+A=
+=IT/Q
+-----END PGP SIGNATURE-----
+
+--=-6eIOaEx5Yxu7zqaphG0s--
+
