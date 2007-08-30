@@ -1,58 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-01.rdc-kc.rr.com ([24.94.166.115]:52266 "EHLO
-	ms-smtp-01.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S937945AbXHMWOM (ORCPT
+Received: from wx-out-0506.google.com ([66.249.82.232]:18854 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757834AbXH3XEK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2007 18:14:12 -0400
-Date: Mon, 13 Aug 2007 17:13:28 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH V3] mac80211: Turn off meaningless TKIP message when  software WEP encryption is used
-Message-ID: <46c0d788.GYQYqGfCBKyAWrg7%Larry.Finger@lwfinger.net>
+	Thu, 30 Aug 2007 19:04:10 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so623747wxd
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Aug 2007 16:04:09 -0700 (PDT)
+Message-ID: <9a8748490708301604k688daad8p145fb9106b442d91@mail.gmail.com>
+Date: Fri, 31 Aug 2007 01:04:09 +0200
+From: "Jesper Juhl" <jesper.juhl@gmail.com>
+To: "Randy Dunlap" <randy.dunlap@oracle.com>
+Subject: Re: [PATCH] Don't needlessly initialize variable to NULL in zd_chip (was: Re: [PATCH 13/30] net: Don't do pointless kmalloc return value casts in zd1211 driver)
+Cc: "Joe Perches" <joe@perches.com>, "Daniel Drake" <dsd@gentoo.org>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	"Ulrich Kunitz" <kune@deine-taler.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20070830154255.6a146c21.randy.dunlap@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1554af80879a7ef2f78a4d654f23c248203500d9.1187912217.git.jesper.juhl@gmail.com>
+	 <9a8748490708301320o49d8e794vc5c37ffc938006f1@mail.gmail.com>
+	 <1188512393.6062.156.camel@localhost>
+	 <200708310030.31713.jesper.juhl@gmail.com>
+	 <20070830154255.6a146c21.randy.dunlap@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For drivers that do no hardware encryption/decryption, WEP encryption
-works as long as IEEE80211_HW_INCLUDE_IV is not set in the flags variable.
-With WPA encryption and IEEE80211_HW_INCLUDE_IV not set, the logs are full
-of TKIP decrypt failure messages. Despite the messages, RX is working.
-This patch turns off the message for this case.
+On 31/08/2007, Randy Dunlap <randy.dunlap@oracle.com> wrote:
+...
+>
+> BTW:  http://marc.info/?l=linux-wireless&m=118831813500769&w=2
+>
+...
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Heh, thanks Randy.
 
-John,
+All too often patches get missed since I don't happen to include the
+right magic person to Cc. So I generally take a "better to have one Cc
+too many than miss one" approach when sending patches - otherwise I
+just end up resending it several times and eventually have to bother
+Andrew to move it through -mm.
 
-Your suggestion to net_ratelimit the output is a good one. I hope the 3rd
-time is a charm. I cannot believe that I'm still getting & and && confused.
-At least I'm now getting = and == right (most of the time). FORTRAN IV didn't
-have these complications!!
+I see the point of people not getting things twice, but too many
+patches slip through the cracks already (and not just my patches,
+that's a general problem) so I'd rather inconvenience a few people
+with one extra email than missing the proper maintainer by not Cc'ing
+the right list.    Picking the right list/set of people to Cc is hard!
 
-Larry
- 
- wpa.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
 
-Index: wireless-legacy/net/mac80211/wpa.c
-===================================================================
---- wireless-legacy.orig/net/mac80211/wpa.c
-+++ wireless-legacy/net/mac80211/wpa.c
-@@ -516,9 +516,12 @@ ieee80211_rx_h_tkip_decrypt(struct ieee8
- 					  skb->len - hdrlen, rx->sta->addr,
- 					  hwaccel, rx->u.rx.queue);
- 	if (res != TKIP_DECRYPT_OK || wpa_test) {
--		printk(KERN_DEBUG "%s: TKIP decrypt failed for RX frame from "
--		       MAC_FMT " (res=%d)\n",
--		       rx->dev->name, MAC_ARG(rx->sta->addr), res);
-+		if ((rx->local->hw.flags & IEEE80211_HW_WEP_INCLUDE_IV)
-+		     && net_ratelimit()) {
-+			printk(KERN_DEBUG "%s: TKIP decrypt failed for RX frame from "
-+			       MAC_FMT " (res=%d)\n",
-+			       rx->dev->name, MAC_ARG(rx->sta->addr), res);
-+		}
- 		return TXRX_DROP;
- 	}
- 
+(whoops, mistakenly didn't do a reply-to-all initially; sorry Randy,
+now you'll get this mail twice ;)
+
+
+--
+Jesper Juhl <jesper.juhl@gmail.com>
+Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
+Plain text mails only, please      http://www.expita.com/nomime.html
