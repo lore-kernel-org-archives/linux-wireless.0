@@ -1,59 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:43843 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763219AbXHOO4A (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.191]:8233 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758635AbXH3Wde (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 10:56:00 -0400
-Message-Id: <20070815145048.965414000@sipsolutions.net>
-References: <20070815144920.135826000@sipsolutions.net>
-Date: Wed, 15 Aug 2007 16:49:37 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 17/20] mac80211: avoid copying packets to interfaces that  are down
-Mime-Version: 1.0
+	Thu, 30 Aug 2007 18:33:34 -0400
+Received: by nf-out-0910.google.com with SMTP id f5so575041nfh
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Aug 2007 15:33:33 -0700 (PDT)
+From: Jesper Juhl <jesper.juhl@gmail.com>
+To: Joe Perches <joe@perches.com>
+Subject: [PATCH] Don't needlessly initialize variable to NULL in zd_chip   (was: Re: [PATCH 13/30] net: Don't do pointless kmalloc return value casts in zd1211 driver)
+Date: Fri, 31 Aug 2007 00:30:31 +0200
+Cc: Daniel Drake <dsd@gentoo.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Ulrich Kunitz <kune@deine-taler.de>,
+	linux-wireless@vger.kernel.org, Jesper Juhl <jesper.juhl@gmail.com>
+References: <1554af80879a7ef2f78a4d654f23c248203500d9.1187912217.git.jesper.juhl@gmail.com> <9a8748490708301320o49d8e794vc5c37ffc938006f1@mail.gmail.com> <1188512393.6062.156.camel@localhost>
+In-Reply-To: <1188512393.6062.156.camel@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200708310030.31713.jesper.juhl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Woodhouse noticed that under some circumstances the number of slab
-allocations kept growing. After looking a bit, this seemed to happen
-when you had a management mode interface that was *down*.
+On Friday 31 August 2007 00:19:53 Joe Perches wrote:
+> On Thu, 2007-08-30 at 22:20 +0200, Jesper Juhl wrote:
+> > Ok, I must admit I didn't check with sparse since it seemed pointless
+> > - we usually never cast void pointers to other pointer types,
+> > specifically because the C language nicely guarantees that the right
+> > thing will happen without the cast.  Sometimes we have to cast them to
+> > integer types, su sure we need the cast there.   But what on earth
+> > makes a "zd_addr_t *" so special that we have to explicitly cast a
+> > "void *" to that type?
+> 
+> http://marc.info/?l=linux-netdev&m=117113743902549&w=1
+> 
 
-The reason for this is that when the device is down, all management
-frames get queued to the in-kernel MLME (via ieee80211_sta_rx_mgmt) but
-then the sta work is invoked but doesn't run when the netif is down.
-When you then bring the interface up, all such frames are freed, but if
-you change the mode all of them are lost because the skb queue is
-reinitialised as soon as you go back to managed mode. The skb queue is
-correctly cleared when the interface is brought down, but the code
-doesn't account for the fact that it may be filled while it is not up.
+Thank you for that link Joe.
 
-This patch should fix the issue by simply ignoring all interfaces that
-are down when going through the RX handlers.
+I'm not sure I agree with the __nocast, but I respect that this is 
+the maintainers choice.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+But, I still think the first chunk of the patch that removes the 
+initial variable initialization makes sense. 
+Initializing the variable to NULL is pointless since it'll never be
+used before the kmalloc() call. So here's a revised patch that just
+gets rid of that little detail.
 
+
+
+No need to initialize to NULL when variable is never used before 
+it's assigned the return value of a kmalloc() call.
+
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
 ---
-Is there a possibility of a race condition here? If the interface is
-brought down right after this check the SKB could be copied to that
-interface after the skb queue has been flushed.
 
- net/mac80211/rx.c |    3 +++
- 1 file changed, 3 insertions(+)
-
---- wireless-dev.orig/net/mac80211/rx.c	2007-08-15 14:13:28.596516958 +0200
-+++ wireless-dev/net/mac80211/rx.c	2007-08-15 14:13:30.866516958 +0200
-@@ -1522,6 +1522,9 @@ void __ieee80211_rx(struct ieee80211_hw 
- 	list_for_each_entry(sdata, &local->sub_if_list, list) {
- 		rx.u.rx.ra_match = 1;
+diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
+index c39f198..30872fe 100644
+--- a/drivers/net/wireless/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/zd1211rw/zd_chip.c
+@@ -106,7 +106,7 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
+ {
+ 	int r;
+ 	int i;
+-	zd_addr_t *a16 = (zd_addr_t *)NULL;
++	zd_addr_t *a16;
+ 	u16 *v16;
+ 	unsigned int count16;
  
-+		if (!netif_running(sdata->dev))
-+			continue;
-+
- 		prepres = prepare_for_handlers(sdata, bssid, &rx, hdr);
- 		/* prepare_for_handlers can change sta */
- 		sta = rx.sta;
 
--- 
 
