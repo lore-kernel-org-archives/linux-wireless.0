@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms-smtp-03.rdc-kc.rr.com ([24.94.166.129]:39921 "EHLO
-	ms-smtp-03.rdc-kc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753647AbXHBUs0 (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:33633 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754801AbXH3L6f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2007 16:48:26 -0400
-Date: Thu, 02 Aug 2007 15:48:04 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] bcm43xx-mac80211: Provide information to allow  transmission rate decreases
-Message-ID: <46b24304.DLuGdus4YPRFspUn%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 30 Aug 2007 07:58:35 -0400
+Subject: Re: [PATCH 4/5] Net: ath5k, license is GPLv2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Xavier Bestel <xavier.bestel@free.fr>
+Cc: Jiri Slaby <jirislaby@gmail.com>, linville@tuxdriver.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <1188393226.1131.319.camel@frg-rhel40-em64t-04>
+References: <7515194658758617@pripojeni.net>
+	 <1188381582.19891.6.camel@johannes.berg>
+	 <4af2d03a0708290335x1a9aa38o566e9d416505f280@mail.gmail.com>
+	 <1188393226.1131.319.camel@frg-rhel40-em64t-04>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Zf9TLLgNQLJ4S02+oWrc"
+Date: Thu, 30 Aug 2007 13:59:42 +0200
+Message-Id: <1188475182.2963.15.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In bcm43xx-mac80211, the mechanism for decreasing the transmit rate cannot
-be triggered. This may be shown by walking away from the AP with a laptop.
-At some distance, communications will be lost and never recovered because
-the rate decreasing mechanism of rc80211_simple needs to see excessive_retries
-set in the ieee80211_tx_status struct. With this patch, the transmit rate
-will decrease until communications restart.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+--=-Zf9TLLgNQLJ4S02+oWrc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John and Michael,
+On Wed, 2007-08-29 at 15:13 +0200, Xavier Bestel wrote:
 
-This is based on the wireless-dev tree.
+> How about asking for changes to be dual-licenced too ?
 
-Larry
+In theory, that could work, but in practice relying on functions that
+the Linux kernel offers in GPLv2-only headers etc. will make the result
+GPLv2 anyway, and disentangling it would be a nightmare.
 
- bcm43xx_dma.c |    3 +++
- 1 file changed, 3 insertions(+)
+johannes
 
-Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
-+++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_dma.c
-@@ -1311,6 +1311,9 @@ void bcm43xx_dma_handle_txstatus(struct 
- 			 */
- 			if (status->acked)
- 				meta->txstat.flags |= IEEE80211_TX_STATUS_ACK;
-+			else
-+				if (!(meta->txstat.flags & IEEE80211_TXCTL_NO_ACK))
-+					meta->txstat.excessive_retries = 1;
- 			meta->txstat.retry_count = status->frame_count - 1;
- 			ieee80211_tx_status_irqsafe(dev->wl->hw, meta->skb, &(meta->txstat));
- 			/* skb is freed by ieee80211_tx_status_irqsafe() */
+--=-Zf9TLLgNQLJ4S02+oWrc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG1rEu/ETPhpq3jKURAiKOAJ9rw7sEJXX/abTtkYC4KuQg1SV8iQCgj512
+JWtOtMI9iI6sDtJc6l5xv3k=
+=s6+I
+-----END PGP SIGNATURE-----
+
+--=-Zf9TLLgNQLJ4S02+oWrc--
+
