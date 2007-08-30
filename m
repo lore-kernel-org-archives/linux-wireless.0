@@ -1,109 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57940 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:43255 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752809AbXHQLZH (ORCPT
+	with ESMTP id S1757482AbXH3QZt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2007 07:25:07 -0400
-Subject: [PATCH v2 14/20] mac80211: kill key_mgmt variable, use   privacy_enabled
+	Thu, 30 Aug 2007 12:25:49 -0400
+Subject: Re: mac80211, iwlwifi and packet injection
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1187312949.23489.97.camel@johannes.berg>
-References: <20070815144920.135826000@sipsolutions.net>
-	 <20070815145047.834125000@sipsolutions.net>
-	 <1187312949.23489.97.camel@johannes.berg>
-Content-Type: text/plain
-Date: Fri, 17 Aug 2007 13:27:39 +0200
-Message-Id: <1187350060.23489.165.camel@johannes.berg>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Andy Green <andy@warmcat.com>, ian <ischram@telenet.be>,
+	Robert =?ISO-8859-1?Q?F=FChricht?=
+	<the_master_of_disaster@gmx.at>, linux-wireless@vger.kernel.org
+In-Reply-To: <1188490617.28908.5.camel@xo-3E-67-34.localdomain>
+References: <20070829161655.7f68542c@doppelhertz>
+	 <46D5B8B9.8000803@telenet.be>  <46D5CE9B.8080401@warmcat.com>
+	 <1188481073.27590.11.camel@xo-3E-67-34.localdomain>
+	 <46D6D18F.2080108@warmcat.com> <1188483950.3978.15.camel@johannes.berg>
+	 <46D6D759.2050600@warmcat.com>  <1188485483.3978.25.camel@johannes.berg>
+	 <1188490617.28908.5.camel@xo-3E-67-34.localdomain>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gxNbIe2fvJih9zHuM/Pa"
+Date: Thu, 30 Aug 2007 18:26:55 +0200
+Message-Id: <1188491215.3978.50.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The key_mgmt variable for STA interfaces doesn't seem well-defined
-nor do we actually use the values other than "NONE", so change it to
-be named better.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/hostapd_ioctl.h   |    8 --------
- net/mac80211/ieee80211_i.h     |    2 +-
- net/mac80211/ieee80211_ioctl.c |   24 +++++++++---------------
- net/mac80211/ieee80211_sta.c   |    2 +-
- 4 files changed, 11 insertions(+), 25 deletions(-)
+--=-gxNbIe2fvJih9zHuM/Pa
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-08-16 23:26:41.153466559 +0200
-+++ wireless-dev/net/mac80211/ieee80211_i.h	2007-08-16 23:49:41.323466559 +0200
-@@ -277,7 +277,7 @@ struct ieee80211_if_sta {
- 	unsigned long request;
- 	struct sk_buff_head skb_queue;
- 
--	int key_mgmt;
-+	int privacy_enabled;
- 	unsigned long last_probe;
- 
- #define IEEE80211_AUTH_ALG_OPEN BIT(0)
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-16 23:26:36.253466559 +0200
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-16 23:49:36.263466559 +0200
-@@ -2245,22 +2245,16 @@ static int ieee80211_ioctl_siwauth(struc
- 			ret = -EINVAL;
- 		else {
- 			/*
--			 * TODO: sdata->u.sta.key_mgmt does not match with WE18
--			 * value completely; could consider modifying this to
--			 * be closer to WE18. For now, this value is not really
--			 * used for anything else than Privacy matching, so the
--			 * current code here should be more or less OK.
-+			 * What are the semantics in wext supposed to be?
-+			 *
-+			 * Don't bother figuring that out... It's wext after
-+			 * all so figuring it out will most likely require a
-+			 * moderate amount of clairvoyance.
-+			 *
-+			 * TODO: remove in favour of something well-defined
-+			 *       in cfg80211/nl80211.
- 			 */
--			if (data->value & IW_AUTH_KEY_MGMT_802_1X) {
--				sdata->u.sta.key_mgmt =
--					IEEE80211_KEY_MGMT_WPA_EAP;
--			} else if (data->value & IW_AUTH_KEY_MGMT_PSK) {
--				sdata->u.sta.key_mgmt =
--					IEEE80211_KEY_MGMT_WPA_PSK;
--			} else {
--				sdata->u.sta.key_mgmt =
--					IEEE80211_KEY_MGMT_NONE;
--			}
-+			sdata->u.sta.privacy_enabled = !!data->value;
- 		}
- 		break;
- 	case IW_AUTH_80211_AUTH_ALG:
---- wireless-dev.orig/net/mac80211/ieee80211_sta.c	2007-08-16 23:26:38.253466559 +0200
-+++ wireless-dev/net/mac80211/ieee80211_sta.c	2007-08-16 23:50:29.983466559 +0200
-@@ -1168,7 +1168,7 @@ static int ieee80211_privacy_mismatch(st
- 	struct ieee80211_sta_bss *bss;
- 	int res = 0;
- 
--	if (!ifsta || ifsta->key_mgmt != IEEE80211_KEY_MGMT_NONE)
-+	if (!ifsta || ifsta->privacy_enabled)
- 		return 0;
- 
- 	bss = ieee80211_rx_bss_get(dev, ifsta->bssid);
---- wireless-dev.orig/net/mac80211/hostapd_ioctl.h	2007-08-16 23:26:35.603466559 +0200
-+++ wireless-dev/net/mac80211/hostapd_ioctl.h	2007-08-16 23:49:35.443466559 +0200
-@@ -180,14 +180,6 @@ struct prism2_hostapd_param {
- 
- #define HOSTAP_HW_FLAG_NULLFUNC_OK BIT(0)
- 
--enum {
--	IEEE80211_KEY_MGMT_NONE = 0,
--	IEEE80211_KEY_MGMT_IEEE8021X = 1,
--	IEEE80211_KEY_MGMT_WPA_PSK = 2,
--	IEEE80211_KEY_MGMT_WPA_EAP = 3,
--};
--
--
- /* Data structures used for get_hw_features ioctl */
- struct hostapd_ioctl_hw_modes_hdr {
- 	int mode;
+On Thu, 2007-08-30 at 12:16 -0400, Dan Williams wrote:
 
+> So that's a b*tch and a half to deal with, when there are multiple
+> devices that actually share certain properties (like frequency).  That's
+> what's happening with libertas for OLPC, and it's not easy to coordinate
+> between the devices because there's no standard way for each device to
+> say "I share X, Y, and Z with device A".  It would be quite a bit easier
+> if NM could figure out exactly what attributes would be shared.
+>=20
+> For libertas, everything is shared except for SSID, mode, bitrate, and
+> possibly encryption settings.  Frequency is shared, yet they are two
+> completely separate WEXT interfaces.  Not fun.
+
+Yeah, I can see how that's tough. However, this is where the wiphy comes
+in handy, it's fairly well defined which properties are shared if the
+devices are linked to a single wiphy.
+
+> Right; can somebody attach an 'lshal' run that shows at least one
+> STA-mode interface and one non-STA-mode interface?  Send it to me
+> privately since I want the whole thing, not just the bits for the
+> net.interface object only.
+
+Sent.
+
+> I don't plan on making NM talk to hostapd to do master mode on an
+> interface for a really, really long time, if ever.  That's better left
+> to other tools.  As long as a STA interface _is_ a STA interface (and
+> doesn't have other properties like "monitor"/"raw") then this will work
+> fine.
+
+Yeah, that's what it should be.
+
+johannes
+
+--=-gxNbIe2fvJih9zHuM/Pa
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG1u/P/ETPhpq3jKURAonBAJ48EIFl4mu7FybbktL+tUXh5MxFswCguKC1
+hL4ktkmpWDMxW+k8SocK1Ek=
+=tvSX
+-----END PGP SIGNATURE-----
+
+--=-gxNbIe2fvJih9zHuM/Pa--
 
