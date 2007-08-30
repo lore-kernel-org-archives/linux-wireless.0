@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51909 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755814AbXHTLbi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2007 07:31:38 -0400
-Subject: Re: UW2453 In kernel 2.6.20?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Callan Bryant <callan1990@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <46C7535D.1090803@supanet.com>
-References: <46C7535D.1090803@supanet.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zAfgnbNecmrp4OzA4mDo"
-Date: Mon, 20 Aug 2007 13:31:26 +0200
-Message-Id: <1187609486.6090.95.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:4088 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753385AbXH3NPU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Aug 2007 09:15:20 -0400
+Date: Thu, 30 Aug 2007 08:38:49 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 1/5] Net: ath5k, split hw into hw, phy and initvals
+Message-ID: <20070830123849.GB5140@tuxdriver.com>
+References: <2713029743177393055@pripojeni.net> <20070828171034.GB29343@infradead.org> <40f31dec0708291850j2d35db6cu9de7c5f0a91e76f7@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0708291850j2d35db6cu9de7c5f0a91e76f7@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Aug 30, 2007 at 04:50:01AM +0300, Nick Kossifidis wrote:
+> 2007/8/28, Christoph Hellwig <hch@infradead.org>:
 
---=-zAfgnbNecmrp4OzA4mDo
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > ath5k_hw_phy.o should probably be ath5k_phy.o by conventions used by
+> > most drivers and ath5k_hw_inivals.o mights aswell be something like
+> > ath5k_init.o
 
-On Sat, 2007-08-18 at 21:15 +0100, Callan Bryant wrote:
-> As, currently I cannot=20
-> upgrade to the 2.6.23 kernel, would it somehow be possible to upgrade=20
-> the zd1211rw driver separately?
+> If you check out the code you'll see i'm using the same convention
+> inside them, ath5k_hw* files contain hw related functions
+> (ath5k_hw_<name>) while driver code has ath5k_<name>. Also ath5k_init
+> is misleading, file acually includes initial register settings for
 
-Certainly, by identifying the patches to the driver and backporting them
-to your kernel, but you'll have to do the work yourself.
+I have to agree w/ Christoph -- the extra "_hw" in the names is just
+a bit unwieldy.
 
-johannes
+John
 
---=-zAfgnbNecmrp4OzA4mDo
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGyXuO/ETPhpq3jKURAnxhAJ9omVkj4h0YlkH2Q7gbvtgMEWZ6iACfXZes
-UC0HSc18bTFp91f5AfkKTlg=
-=JxTe
------END PGP SIGNATURE-----
-
---=-zAfgnbNecmrp4OzA4mDo--
-
+P.S.  "ath5k_initvals.c" seems acceptable to me.
+-- 
+John W. Linville
+linville@tuxdriver.com
