@@ -1,33 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:59695
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754197AbXHPRLy (ORCPT
+Received: from crystal.sipsolutions.net ([195.210.38.204]:55723 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755376AbXH3OGe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2007 13:11:54 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC 2/2 v2] mac80211: revamp interface and filter configuration
-Date: Thu, 16 Aug 2007 19:10:56 +0200
-Cc: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>, Zhu Yi <yi.zhu@intel.com>
-References: <20070815152557.221351000@sipsolutions.net> <1187275819.23489.9.camel@johannes.berg> <1187276330.23489.14.camel@johannes.berg>
-In-Reply-To: <1187276330.23489.14.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200708161910.56957.mb@bu3sch.de>
+	Thu, 30 Aug 2007 10:06:34 -0400
+Subject: [PATCH net-2.6.24/wireless-dev] mac80211: remove spy wext ioctls
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 30 Aug 2007 16:07:45 +0200
+Message-Id: <1188482865.3978.4.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 16 August 2007 16:58:50 Johannes Berg wrote:
-> For convenience, here are the patches for each driver.
-> 
-> johannes
-> 
+mac80211 never calls wireless_spy_update so these aren't
+useful.
 
-b43 patch:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+---
+Patch should apply against both trees.
 
--- 
-Greetings Michael.
+ net/mac80211/ieee80211_ioctl.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+--- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-30 14:36:01.692051253 +0200
++++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-30 14:36:02.392051253 +0200
+@@ -2072,10 +2072,10 @@ static const iw_handler ieee80211_handle
+ 	(iw_handler) NULL /* kernel code */,		/* SIOCGIWPRIV */
+ 	(iw_handler) NULL /* not used */,		/* SIOCSIWSTATS */
+ 	(iw_handler) NULL /* kernel code */,		/* SIOCGIWSTATS */
+-	iw_handler_set_spy,				/* SIOCSIWSPY */
+-	iw_handler_get_spy,				/* SIOCGIWSPY */
+-	iw_handler_set_thrspy,				/* SIOCSIWTHRSPY */
+-	iw_handler_get_thrspy,				/* SIOCGIWTHRSPY */
++	(iw_handler) NULL,				/* SIOCSIWSPY */
++	(iw_handler) NULL,				/* SIOCGIWSPY */
++	(iw_handler) NULL,				/* SIOCSIWTHRSPY */
++	(iw_handler) NULL,				/* SIOCGIWTHRSPY */
+ 	(iw_handler) ieee80211_ioctl_siwap,		/* SIOCSIWAP */
+ 	(iw_handler) ieee80211_ioctl_giwap,		/* SIOCGIWAP */
+ 	(iw_handler) ieee80211_ioctl_siwmlme,		/* SIOCSIWMLME */
+
+
