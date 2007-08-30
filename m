@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from turing-police.cc.vt.edu ([128.173.14.107]:60551 "EHLO
-	turing-police.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752143AbXH2R3o (ORCPT
-	<RFC822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2007 13:29:44 -0400
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jiri Slaby <jirislaby@gmail.com>, linville@tuxdriver.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 4/5] Net: ath5k, license is GPLv2
-In-Reply-To: Your message of "Tue, 28 Aug 2007 18:11:55 BST."
-             <20070828171155.GC29343@infradead.org>
-From: Valdis.Kletnieks@vt.edu
-References: <2713029743177393055@pripojeni.net> <7515194658758617@pripojeni.net>
-            <20070828171155.GC29343@infradead.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1188408545_2981P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Date: Wed, 29 Aug 2007 13:29:05 -0400
-Message-ID: <3208.1188408545@turing-police.cc.vt.edu>
+Received: from smtp146.iad.emailsrvr.com ([207.97.245.146]:50000 "EHLO
+	smtp146.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759080AbXH3R4a (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Aug 2007 13:56:30 -0400
+Message-ID: <46D70467.1040109@gentoo.org>
+Date: Thu, 30 Aug 2007 13:54:47 -0400
+From: Daniel Drake <dsd@gentoo.org>
+MIME-Version: 1.0
+To: Jesper Juhl <jesper.juhl@gmail.com>
+CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Ulrich Kunitz <kune@deine-taler.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 13/30] net: Don't do pointless kmalloc return value casts  in zd1211 driver
+References: <1554af80879a7ef2f78a4d654f23c248203500d9.1187912217.git.jesper.juhl@gmail.com> <d551047daed1cb4d9de1eff956268a468c9837f6.1187912217.git.jesper.juhl@gmail.com>
+In-Reply-To: <d551047daed1cb4d9de1eff956268a468c9837f6.1187912217.git.jesper.juhl@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---==_Exmh_1188408545_2981P
-Content-Type: text/plain; charset=us-ascii
+Jesper Juhl wrote:
+> Since kmalloc() returns a void pointer there is no reason to cast
+> its return value.
+> This patch also removes a pointless initialization of a variable.
 
-On Tue, 28 Aug 2007 18:11:55 BST, Christoph Hellwig said:
-> On Tue, Aug 28, 2007 at 12:00:50PM -0400, Jiri Slaby wrote:
-> > ath5k, license is GPLv2
-> > 
-> > The files are available only under GPLv2 since now.
+NAK: adds a sparse warning
+zd_chip.c:116:15: warning: implicit cast to nocast type
+
+> Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+> ---
+>  drivers/net/wireless/zd1211rw/zd_chip.c |    5 ++---
+>  1 files changed, 2 insertions(+), 3 deletions(-)
 > 
-> Is this really a good idea?  Most of the reverse-engineering was
-> done by the OpenBSD folks, and it would certainly be helpful to
-> work together with them on new hardware revisions, etc..
+> diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
+> index c39f198..4942e5c 100644
+> --- a/drivers/net/wireless/zd1211rw/zd_chip.c
+> +++ b/drivers/net/wireless/zd1211rw/zd_chip.c
+> @@ -106,8 +106,8 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
+>  {
+>  	int r;
+>  	int i;
+> -	zd_addr_t *a16 = (zd_addr_t *)NULL;
+>  	u16 *v16;
+> +	zd_addr_t *a16;
+>  	unsigned int count16;
+>  
+>  	if (count > USB_MAX_IOREAD32_COUNT)
+> @@ -115,8 +115,7 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
+>  
+>  	/* Allocate a single memory block for values and addresses. */
+>  	count16 = 2*count;
+> -	a16 = (zd_addr_t *) kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
+> -		                   GFP_KERNEL);
+> +	a16 = kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)), GFP_KERNEL);
+>  	if (!a16) {
+>  		dev_dbg_f(zd_chip_dev(chip),
+>  			  "error ENOMEM in allocation of a16\n");
 
-The heck with "good idea" - it's unclear to me if Jiri is even *allowed*
-to remove the BSD/other license.   Jiri can release *his* code as GPLv2
-only, but I suspect the files as a whole really should be dual BSD/GPLv2,
-due to the numerous other stakeholders in those files.
-
---==_Exmh_1188408545_2981P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
-
-iD8DBQFG1azhcC3lWbTT17ARAqPfAKDxwQPBhROMke8+MfqroU/qgLTRWQCfeLrN
-WR0bzJ9VaJLrHQlf8hOrCwk=
-=y6qw
------END PGP SIGNATURE-----
-
---==_Exmh_1188408545_2981P--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
