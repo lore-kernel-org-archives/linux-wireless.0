@@ -1,66 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:35708 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757207AbXHXMbf (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:46001
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751712AbXH3Rze (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2007 08:31:35 -0400
-Message-Id: <20070824122906.757178000@sipsolutions.net>
-References: <20070824122705.549190000@sipsolutions.net>
-Date: Fri, 24 Aug 2007 14:27:12 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Volker Braun <volker.braun@physik.hu-berlin.de>
-Subject: [PATCH 07/15] mac80211: ignore key index on pairwise key (WEP only)
-Mime-Version: 1.0
+	Thu, 30 Aug 2007 13:55:34 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: bad mac80211/softmac/xfs interaction
+Date: Thu, 30 Aug 2007 19:53:51 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <1188397301.8048.2.camel@johannes.berg>
+In-Reply-To: <1188397301.8048.2.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200708301953.51926.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Volker Braun <vbraun@physics.upenn.edu>
+On Wednesday 29 August 2007 16:21:41 Johannes Berg wrote:
+> Hey,
+> 
+> When I run something like "make" at the same time as my zd1211rw dongle
+> with softmac using wpa_supplicant, associated with an AP on the same
+> machine (!) using b43/hostapd, and then hit ctrl-c to abort
+> wpa_supplicant, I fairly frequently have some code try to run a freed
+> work struct.
+> 
+> Does anybody have an idea what could be the cause of this? I suppose the
+> XFS interaction is there so that the work item isn't immediately done,
+> and I can't reproduce easily if I don't run them both on the same
+> machine.
+> 
+> For completeness, log below.
 
-Work-around for broken APs that use a non-zero key index for WEP
-pairwise keys. With this patch, WEP encryption only is exempt from
-providing a zero key index.
-
-Signed-off-by: Volker Braun <volker.braun@physik.hu-berlin.de>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
----
- net/mac80211/ieee80211_ioctl.c |   18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
-
---- wireless-dev.orig/net/mac80211/ieee80211_ioctl.c	2007-08-24 13:02:52.019420431 +0200
-+++ wireless-dev/net/mac80211/ieee80211_ioctl.c	2007-08-24 13:02:55.549420431 +0200
-@@ -385,17 +385,23 @@ static int ieee80211_set_encryption(stru
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
-+	if (idx < 0 || idx >= NUM_DEFAULT_KEYS) {
-+		printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
-+		       dev->name, idx);
-+		return -EINVAL;
-+	}
-+
- 	if (is_broadcast_ether_addr(sta_addr)) {
- 		sta = NULL;
--		if (idx >= NUM_DEFAULT_KEYS) {
--			printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
--			       dev->name, idx);
--			return -EINVAL;
--		}
- 		key = sdata->keys[idx];
- 	} else {
- 		set_tx_key = 0;
--		if (idx != 0) {
-+		/*
-+		 * According to the standard, the key index of a pairwise
-+		 * key must be zero. However, some AP are broken when it
-+		 * comes to WEP key indices, so we work around this.
-+		 */
-+		if (idx != 0 && alg != ALG_WEP) {
- 			printk(KERN_DEBUG "%s: set_encrypt - non-zero idx for "
- 			       "individual key\n", dev->name);
- 			return -EINVAL;
+related to this one?
+http://bugzilla.kernel.org/show_bug.cgi?id=8937
 
 -- 
-
+Greetings Michael.
