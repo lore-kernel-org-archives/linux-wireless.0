@@ -1,56 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:53936 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757470AbXHaWB5 (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:59482 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752953AbXH3FyU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Aug 2007 18:01:57 -0400
-Subject: Re: [PATCH V2] Add iwlwifi wireless drivers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	Jeff Garzik <jgarzik@pobox.com>
-In-Reply-To: <20070831205524.GA11128@tuxdriver.com>
-References: <1188192012.13078.177.camel@debian.sh.intel.com>
-	 <20070831205524.GA11128@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aCRp1sl8eWoiCQmR0TWt"
-Date: Sat, 01 Sep 2007 00:03:05 +0200
-Message-Id: <1188597785.7585.50.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 30 Aug 2007 01:54:20 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Chr <chunkeey@web.de>
+Subject: Re: Recent linux-wireless git changes have broken my prism54pci card
+Date: Thu, 30 Aug 2007 01:52:23 -0400
+Cc: Hans de Goede <j.w.r.degoede@hhs.nl>,
+	linux-wireless@vger.kernel.org
+References: <46BFF10B.1090307@hhs.nl> <46CEA8A2.3040906@hhs.nl> <200708282132.59474.chunkeey@web.de>
+In-Reply-To: <200708282132.59474.chunkeey@web.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart7720558.5ZEkzIiboz";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200708300152.27736.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-aCRp1sl8eWoiCQmR0TWt
-Content-Type: text/plain
+--nextPart7720558.5ZEkzIiboz
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Fri, 2007-08-31 at 16:55 -0400, John W. Linville wrote:
+On Tuesday 28 August 2007 15:32, Chr wrote:
+> Here we are:
+>
+> series:
+> p54-pull-padding2.diff
+Looks okay, but it seems to do more than just account for padding. I'm okay=
+=20
+with those changes too.
 
-> Otherwise, it mostly seems acceptable.  I think the mac80211 guys
-> have a few issues -- hopefully they will chime-in here now?
+> p54-support-older-firmwares.diff
+The new information pulled from parsing the firmware isn't used anywhere bu=
+t=20
+in this function.. no need to keep that information in the private structur=
+e.
 
-Few things off the top of my head:
- * mac80211 will be very noisy with the recent key changes -- the
-   iwlwifi drivers don't allow disabling keys which is sort of required.
+Thanks,
+=2DMichael Wu
 
- * oopses when you enabled a monitor mode interface and have iwlwifi
-   debug enabled
-
- * doesn't honour mac address setting, always uses eeprom mac address
-
-johannes
-
---=-aCRp1sl8eWoiCQmR0TWt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart7720558.5ZEkzIiboz
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBG2JAZ/ETPhpq3jKURAoK5AJ0VBo2C/TMBlu+GeU0UNd3Fkuxx/gCcCVMV
-dpIHCpmGQ4YwVwcm298gHpk=
-=6exp
+iD8DBQBG1lsbT3Oqt9AH4aERAuXjAJ4z6Hop+iWGLej3/DscJyGt0kGUPQCgjaXg
+8UYVm3mODfoKZmmO09xGzUM=
+=6Iwq
 -----END PGP SIGNATURE-----
 
---=-aCRp1sl8eWoiCQmR0TWt--
-
+--nextPart7720558.5ZEkzIiboz--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
