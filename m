@@ -1,30 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:58270 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750709AbXHRUPc (ORCPT
+Received: from nz-out-0506.google.com ([64.233.162.238]:63375 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759422AbXH3BiK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Aug 2007 16:15:32 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so407399ugf
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Aug 2007 13:15:31 -0700 (PDT)
-Message-ID: <46C7535D.1090803@supanet.com>
-Date: Sat, 18 Aug 2007 21:15:25 +0100
+	Wed, 29 Aug 2007 21:38:10 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so309868nze
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2007 18:38:10 -0700 (PDT)
+Message-ID: <40f31dec0708291838p5d33eb34p3b4432d9d270841a@mail.gmail.com>
+Date: Thu, 30 Aug 2007 04:38:09 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Christoph Hellwig" <hch@infradead.org>,
+	"Jiri Slaby" <jirislaby@gmail.com>, linville@tuxdriver.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 5/5] Net: ath5k, kconfig changes
+In-Reply-To: <20070828171330.GD29343@infradead.org>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: UW2453 In kernel 2.6.20?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-From: Callan Bryant <callan1990@googlemail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <2713029743177393055@pripojeni.net>
+	 <280951420471148977@pripojeni.net>
+	 <20070828171330.GD29343@infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all!
-First I would like to say thanks for all the effort everyone has put 
-into the zd1211rw driver, It has been of great use to me!
-I have a question; I have Backtrack 2 (Based on slax) which is running 
-kernel version 2.6.20 - which of course should work with my zd1211b 
-adaptor, execept it has a UW2453 transciever. As, currently I cannot 
-upgrade to the 2.6.23 kernel, would it somehow be possible to upgrade 
-the zd1211rw driver separately?
+2007/8/28, Christoph Hellwig <hch@infradead.org>:
+> On Tue, Aug 28, 2007 at 12:01:30PM -0400, Jiri Slaby wrote:
+> > +config ATH5K_AR5210
+> > +     bool "Support AR5210"
+> > +     depends on ATH5K
+> > +     default y
+> > +
+> > +config ATH5K_AR5211
+> > +     bool "Support AR5211"
+> > +     depends on ATH5K
+> > +     default y
+> > +
+> > +config ATH5K_AR5212
+> > +     bool "Support AR5212"
+> > +     depends on ATH5K
+> > +     default y
+>
+> Please don't add more default statements.
+>
+> Also this whole patch seems rather pointless.  It saves only
+> very little and turns the driver into a complete ifdef maze.
 
-Thanks in advance for your time,
-Regards,
-Callan Bryant
+It saves big chunks of code (not only initial register settings
+arrays) and we'll extend it's use more inside ath5k_hw.c Trust me this
+is a very useful step, eg. check out descriptor processing / setup or
+PHY functions (calibrate/channel set etc). For example AR5210 mac chip
+only comes with RF5110 phy chip so we can get rid of RF5111/RF5112
+code, AR5211 comes with RF5111 so we can get rid of RF5110 and RF5112
+code and AR5212 comes with RF5111 or RF5112 so we get rid of RF5110.
+This thing also saves lots of checks during runtime (some of them
+happen verry frequently, eg. durring descriptor processing). Also most
+people will use 5212 code only, 5211 cards are on some old laptops and
+5210, well i couldn't even find  a 5210 for actual testing :P
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
