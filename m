@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:55937 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754064AbXH3NPl (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.183]:13918 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755492AbXH3BuC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 09:15:41 -0400
-Subject: [PATCH] hostapd: driver_devicescape: remove set_broadcast_ssid
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 30 Aug 2007 15:16:52 +0200
-Message-Id: <1188479812.2963.36.camel@johannes.berg>
-Mime-Version: 1.0
+	Wed, 29 Aug 2007 21:50:02 -0400
+Received: by py-out-1112.google.com with SMTP id u77so2570896pyb
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2007 18:50:02 -0700 (PDT)
+Message-ID: <40f31dec0708291850j2d35db6cu9de7c5f0a91e76f7@mail.gmail.com>
+Date: Thu, 30 Aug 2007 04:50:01 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Christoph Hellwig" <hch@infradead.org>
+Subject: Re: [PATCH 1/5] Net: ath5k, split hw into hw, phy and initvals
+Cc: "Jiri Slaby" <jirislaby@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <20070828171034.GB29343@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <2713029743177393055@pripojeni.net>
+	 <20070828171034.GB29343@infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 doesn't have any drivers that care about this flag which
-is not really surprising: hostapd is responsible for this setting
-since it creates the beacon. Remove the callback.
+2007/8/28, Christoph Hellwig <hch@infradead.org>:
+> On Tue, Aug 28, 2007 at 11:58:52AM -0400, Jiri Slaby wrote:
+> > -ath5k-objs           = ath5k_base.o ath5k_hw.o ath5k_regdom.o
+> > +ath5k-objs           = ath5k_base.o ath5k_hw.o ath5k_regdom.o \
+> > +                       ath5k_hw_phy.o ath5k_hw_inivals.o
+>
+> And while I'm at nitpicking :)
+>
+> ath5k_hw_phy.o should probably be ath5k_phy.o by conventions used by
+> most drivers and ath5k_hw_inivals.o mights aswell be something like
+> ath5k_init.o
+>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
----
- hostapd/driver_devicescape.c |    9 ---------
- 1 file changed, 9 deletions(-)
-
---- hostap.orig/hostapd/driver_devicescape.c	2007-08-30 15:15:23.000000000 +0200
-+++ hostap/hostapd/driver_devicescape.c	2007-08-30 15:15:24.000000000 +0200
-@@ -929,14 +929,6 @@ static int i802_set_dtim_period(const ch
- }
- 
- 
--static int i802_set_broadcast_ssid(void *priv, int value)
--{
--	struct i802_driver_data *drv = priv;
--	return hostap_ioctl_prism2param(drv, PRISM2_PARAM_BROADCAST_SSID,
--					value);
--}
--
--
- static int i802_set_cts_protect(void *priv, int value)
- {
- 	struct i802_driver_data *drv = priv;
-@@ -1993,7 +1985,6 @@ const struct wpa_driver_ops wpa_driver_d
- 	.set_internal_bridge = i802_set_internal_bridge,
- 	.set_beacon_int = i802_set_beacon_int,
- 	.set_dtim_period = i802_set_dtim_period,
--	.set_broadcast_ssid = i802_set_broadcast_ssid,
- 	.set_cts_protect = i802_set_cts_protect,
- 	.set_preamble = i802_set_preamble,
- 	.set_short_slot_time = i802_set_short_slot_time,
+If you check out the code you'll see i'm using the same convention
+inside them, ath5k_hw* files contain hw related functions
+(ath5k_hw_<name>) while driver code has ath5k_<name>. Also ath5k_init
+is misleading, file acually includes initial register settings for
+various chips and the functions to apply them on hw, not the
+initialization/attach/wakeup etc routines (that can be found  in
+ath5k_hw.c), that's why it's inivals, i couldn't find a more
+appropriate name.
 
 
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
