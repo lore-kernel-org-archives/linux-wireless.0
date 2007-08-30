@@ -1,67 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33571 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755202AbXH3L5B (ORCPT
+Received: from palinux.external.hp.com ([192.25.206.14]:37854 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753982AbXH3PpP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 07:57:01 -0400
-Subject: Re: mac80211 AP mode powersaving problems?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <Kalle.Valo@nokia.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jiri Benc <jbenc@suse.cz>,
-	Michael Wu <flamingice@sourmilk.net>,
-	Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <873ay2v279.fsf@nokia.com>
-References: <1186990509.27916.38.camel@johannes.berg>
-	 <87lkccf30m.fsf@tikku.osso.net> <1187270479.5141.44.camel@johannes.berg>
-	 <87643f4kkh.fsf@nokia.com> <1187275344.23489.6.camel@johannes.berg>
-	 <871wdphsus.fsf@nokia.com> <1188290911.7837.65.camel@johannes.berg>
-	 <87absbsz5f.fsf@nokia.com> <1188299159.7837.96.camel@johannes.berg>
-	 <87sl63prsg.fsf@nokia.com> <1188317935.7837.106.camel@johannes.berg>
-	 <878x7v8rcm.fsf@nokia.com> <1188326593.7837.118.camel@johannes.berg>
-	 <87fy2355yy.fsf@nokia.com> <1188376637.7837.149.camel@johannes.berg>
-	 <873ay2v279.fsf@nokia.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ay3wW47XhPBpii6JKJst"
-Date: Thu, 30 Aug 2007 13:56:47 +0200
-Message-Id: <1188475007.2963.11.camel@johannes.berg>
-Mime-Version: 1.0
+	Thu, 30 Aug 2007 11:45:15 -0400
+Date: Thu, 30 Aug 2007 09:45:13 -0600
+From: Matthew Wilcox <matthew@wil.cx>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stephen Hemminger <shemminger@linux-foundation.org>,
+	Jochen Voss <voss@seehuhn.de>,
+	linux wireless list <linux-wireless@vger.kernel.org>,
+	linville@tuxdriver.com, netdev <netdev@vger.kernel.org>,
+	bridge@linux-foundation.org
+Subject: Re: oops with recent wireless-dev tree
+Message-ID: <20070830154513.GV14130@parisc-linux.org>
+References: <20070829223752.GA6969@seehuhn.de> <1188475530.2963.20.camel@johannes.berg> <20070830074949.7cd25b04@freepuppy.rosehill.hemminger.net> <1188486091.3978.32.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1188486091.3978.32.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Aug 30, 2007 at 05:01:31PM +0200, Johannes Berg wrote:
+> Jochen had a patch: http://marc.info/?l=linux-wireless&m=118842715026614&w=2
 
---=-ay3wW47XhPBpii6JKJst
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+That's exactly the right patch, please add
 
-On Wed, 2007-08-29 at 17:35 +0300, Kalle Valo wrote:
+Acked-by: Matthew Wilcox <matthew@wil.cx>
 
-> I tested your multicast stuff and it worked. Do you still want me to
-> test with QoS disabled in N800?
+I just checked over the commit that introduced the bug, and I didn't
+make the same mistake anywhere else.
 
-No. But please test the little patch I gave you that should clear out
-the QoS header properly.
-
-
-> > Yes, the odd thing however is that it replies to these mangled packets.
-> > I would guess that's a bug in the QoS implementation on the N800.
->=20
-> Good point. I'll look into that.
-
-Thanks.
-
-johannes
-
---=-ay3wW47XhPBpii6JKJst
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG1rB//ETPhpq3jKURAmPrAJ95YPCvmnDRpjRa6RTJG3W1FDWfuQCggRUI
-K9kvVSlFRthbW9YRjGcF678=
-=kNvH
------END PGP SIGNATURE-----
-
---=-ay3wW47XhPBpii6JKJst--
-
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
