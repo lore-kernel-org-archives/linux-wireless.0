@@ -1,53 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:40524 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757214AbXHXMRW (ORCPT
+Received: from pentafluge.infradead.org ([213.146.154.40]:36169 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756387AbXH3Mf7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2007 08:17:22 -0400
-Subject: [PATCH] hostapd: remove key threshold setting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 24 Aug 2007 14:18:10 +0200
-Message-Id: <1187957890.24933.24.camel@johannes.berg>
+	Thu, 30 Aug 2007 08:35:59 -0400
+Date: Thu, 30 Aug 2007 13:35:54 +0100
+From: Christoph Hellwig <hch@infradead.org>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Jiri Slaby <jirislaby@gmail.com>, linville@tuxdriver.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 5/5] Net: ath5k, kconfig changes
+Message-ID: <20070830123554.GA2176@infradead.org>
+References: <2713029743177393055@pripojeni.net> <280951420471148977@pripojeni.net> <20070828171330.GD29343@infradead.org> <40f31dec0708291838p5d33eb34p3b4432d9d270841a@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0708291838p5d33eb34p3b4432d9d270841a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm in the process of adding this to nl80211 as a per-key setting, so
-remove it here for now. It's never called anyway.
+On Thu, Aug 30, 2007 at 04:38:09AM +0300, Nick Kossifidis wrote:
+> It saves big chunks of code (not only initial register settings
+> arrays) and we'll extend it's use more inside ath5k_hw.c Trust me this
+> is a very useful step, eg. check out descriptor processing / setup or
+> PHY functions (calibrate/channel set etc). For example AR5210 mac chip
+> only comes with RF5110 phy chip so we can get rid of RF5111/RF5112
+> code, AR5211 comes with RF5111 so we can get rid of RF5110 and RF5112
+> code and AR5212 comes with RF5111 or RF5112 so we get rid of RF5110.
+> This thing also saves lots of checks during runtime (some of them
+> happen verry frequently, eg. durring descriptor processing). Also most
+> people will use 5212 code only, 5211 cards are on some old laptops and
+> 5210, well i couldn't even find  a 5210 for actual testing :P
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
----
- hostapd/driver_devicescape.c |    9 ---------
- 1 file changed, 9 deletions(-)
-
---- hostap.orig/hostapd/driver_devicescape.c	2007-08-24 09:56:52.000000000 +0200
-+++ hostap/hostapd/driver_devicescape.c	2007-08-24 09:57:04.000000000 +0200
-@@ -999,14 +999,6 @@ static int i802_set_cts_protect(void *pr
- }
- 
- 
--static int i802_set_key_tx_rx_threshold(void *priv, int value)
--{
--	struct i802_driver_data *drv = priv;
--	return hostap_ioctl_prism2param(drv, PRISM2_PARAM_KEY_TX_RX_THRESHOLD,
--					value);
--}
--
--
- static int i802_set_preamble(void *priv, int value)
- {
- 	struct i802_driver_data *drv = priv;
-@@ -2041,7 +2033,6 @@ const struct wpa_driver_ops wpa_driver_d
- 	.set_dtim_period = i802_set_dtim_period,
- 	.set_broadcast_ssid = i802_set_broadcast_ssid,
- 	.set_cts_protect = i802_set_cts_protect,
--	.set_key_tx_rx_threshold = i802_set_key_tx_rx_threshold,
- 	.set_preamble = i802_set_preamble,
- 	.set_short_slot_time = i802_set_short_slot_time,
- 	.set_tx_queue_params = i802_set_tx_queue_params,
-
-
+If you're doing these checks in a hotpath something is badly wrong with
+your architecture.
