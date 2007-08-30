@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:57628
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763061AbXHCVjH (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:39790 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754994AbXH3LQo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 17:39:07 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] bcm43xx-mac80211: Set antenna gains if not in sprom
-Date: Fri, 3 Aug 2007 23:38:43 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <46b39d7d.4kGviB6QZBFl2jfv%Larry.Finger@lwfinger.net>
-In-Reply-To: <46b39d7d.4kGviB6QZBFl2jfv%Larry.Finger@lwfinger.net>
+	Thu, 30 Aug 2007 07:16:44 -0400
+From: Chr <chunkeey@web.de>
+To: Michael Wu <flamingice@sourmilk.net>
+Subject: Re: Recent linux-wireless git changes have broken my prism54pci card
+Date: Thu, 30 Aug 2007 13:16:42 +0200
+Cc: Hans de Goede <j.w.r.degoede@hhs.nl>,
+	linux-wireless@vger.kernel.org
+References: <46BFF10B.1090307@hhs.nl> <200708282132.59474.chunkeey@web.de> <200708300152.27736.flamingice@sourmilk.net>
+In-Reply-To: <200708300152.27736.flamingice@sourmilk.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200708032338.43593.mb@bu3sch.de>
+  charset="iso-8859-15"
+Message-Id: <200708301316.42945.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 03 August 2007 23:26:21 Larry Finger wrote:
-> In the sprom for bcm43xx devices, any unprogrammed values are set to all ones.
-> In the case of antenna gains, the specs indicate that a gain of 2 dBm should
-> be set if no value is stored. This patch implements that provision.
+On Thursday, 30. August 2007, Michael Wu wrote:
+> On Tuesday 28 August 2007 15:32, Chr wrote:
+> > Here we are:
+> >
+> > series:
+> > p54-pull-padding2.diff
+> Looks okay, but it seems to do more than just account for padding. I'm okay 
+> with those changes too.
 > 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> Index: wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-> ===================================================================
-> --- wireless-dev.orig/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-> +++ wireless-dev/drivers/net/wireless/bcm43xx-mac80211/bcm43xx_main.c
-> @@ -3805,6 +3805,12 @@ static void bcm43xx_sprom_fixup(struct s
->  	    bus->boardinfo.rev > 0x40)
->  		bus->sprom.r1.boardflags_lo |= BCM43xx_BFL_PACTRL;
->  
-> +	/* Handle case when gain is not set in sprom */
-> +	if (bus->sprom.r1.antenna_gain_a == 0xFF)
-> +		bus->sprom.r1.antenna_gain_a = 2;
-> +	if (bus->sprom.r1.antenna_gain_bg == 0xFF)
-> +		bus->sprom.r1.antenna_gain_bg = 2;
-> +
->  	/* Convert Antennagain values to Q5.2 */
->  	bus->sprom.r1.antenna_gain_a <<= 2;
->  	bus->sprom.r1.antenna_gain_bg <<= 2;
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+Ok!
 
-Queued, thanks!
+> > p54-support-older-firmwares.diff
+> The new information pulled from parsing the firmware isn't used anywhere but 
+> in this function.. no need to keep that information in the private structure.
+> 
+Yes, the firmware version string could be freed right after the printk...
+but I would like to keep the fw_variant for "further" patches, since the
+softmac protocol has changed a bit throughout 2.4 - 2.13.1 firmwares. 
 
--- 
-Greetings Michael.
+> Thanks,
+> -Michael Wu
+
+
+Thanks,
+	Chr. 
+
+
