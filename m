@@ -1,58 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52215 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758068AbXHCJxV (ORCPT
+Received: from rgminet01.oracle.com ([148.87.113.118]:20133 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754817AbXH3WuF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 05:53:21 -0400
-Subject: Re: mac80211 driver interface semantics
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Green <andy@warmcat.com>
-Cc: Ulrich Kunitz <kune@deine-taler.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Daniel Drake <dsd@gentoo.org>
-In-Reply-To: <46B2E06F.4090706@warmcat.com>
-References: <46B27729.5030406@gentoo.org>
-	 <20070803052935.GA12683@deine-taler.de>  <46B2E06F.4090706@warmcat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BdSOP4foVMSzc7YYd6Vw"
-Date: Fri, 03 Aug 2007 11:54:54 +0200
-Message-Id: <1186134894.4647.24.camel@johannes.berg>
+	Thu, 30 Aug 2007 18:50:05 -0400
+Date: Thu, 30 Aug 2007 15:42:55 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Jesper Juhl <jesper.juhl@gmail.com>
+Cc: Joe Perches <joe@perches.com>, Daniel Drake <dsd@gentoo.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Ulrich Kunitz <kune@deine-taler.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Don't needlessly initialize variable to NULL in zd_chip    (was: Re: [PATCH 13/30] net: Don't do pointless kmalloc return value  casts in zd1211 driver)
+Message-Id: <20070830154255.6a146c21.randy.dunlap@oracle.com>
+In-Reply-To: <200708310030.31713.jesper.juhl@gmail.com>
+References: <1554af80879a7ef2f78a4d654f23c248203500d9.1187912217.git.jesper.juhl@gmail.com>
+	<9a8748490708301320o49d8e794vc5c37ffc938006f1@mail.gmail.com>
+	<1188512393.6062.156.camel@localhost>
+	<200708310030.31713.jesper.juhl@gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 31 Aug 2007 00:30:31 +0200 Jesper Juhl wrote:
 
---=-BdSOP4foVMSzc7YYd6Vw
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Friday 31 August 2007 00:19:53 Joe Perches wrote:
+> > On Thu, 2007-08-30 at 22:20 +0200, Jesper Juhl wrote:
+> > > Ok, I must admit I didn't check with sparse since it seemed pointless
+> > > - we usually never cast void pointers to other pointer types,
+> > > specifically because the C language nicely guarantees that the right
+> > > thing will happen without the cast.  Sometimes we have to cast them to
+> > > integer types, su sure we need the cast there.   But what on earth
+> > > makes a "zd_addr_t *" so special that we have to explicitly cast a
+> > > "void *" to that type?
+> > 
+> > http://marc.info/?l=linux-netdev&m=117113743902549&w=1
+> > 
+> 
+> Thank you for that link Joe.
+> 
+> I'm not sure I agree with the __nocast, but I respect that this is 
+> the maintainers choice.
+> 
+> But, I still think the first chunk of the patch that removes the 
+> initial variable initialization makes sense. 
+> Initializing the variable to NULL is pointless since it'll never be
+> used before the kmalloc() call. So here's a revised patch that just
+> gets rid of that little detail.
 
-On Fri, 2007-08-03 at 08:59 +0100, Andy Green wrote:
 
-> There seems to be some agreement that in the future the number of
-> virtual interfaces that happen to be lying around shouldn't determine
-> the functionality of Monitor mode like that.
+BTW:  http://marc.info/?l=linux-wireless&m=118831813500769&w=2
 
-I think that only happens if you don't have monitor_during_oper set;
-otherwise it's a bug.
 
-I am, however, not entirely sure we should be forwarding packets with
-failed CRC on hard monitor interfaces. Because if you have both a hard
-monitor and a regular interface (monitor_during_oper allowed) then we
-will never check the CRC on frames that enter the networking path and
-can get corrupted TCP packets in etc.
+> No need to initialize to NULL when variable is never used before 
+> it's assigned the return value of a kmalloc() call.
+> 
+> Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+> ---
+> 
+> diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
+> index c39f198..30872fe 100644
+> --- a/drivers/net/wireless/zd1211rw/zd_chip.c
+> +++ b/drivers/net/wireless/zd1211rw/zd_chip.c
+> @@ -106,7 +106,7 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
+>  {
+>  	int r;
+>  	int i;
+> -	zd_addr_t *a16 = (zd_addr_t *)NULL;
+> +	zd_addr_t *a16;
+>  	u16 *v16;
+>  	unsigned int count16;
 
-johannes
 
---=-BdSOP4foVMSzc7YYd6Vw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGsvtu/ETPhpq3jKURAidnAJ9L5vUSMLA9Zniob04rail9/TZOywCfXUXw
-AP9RABal/FCJ4c1c3unSVCU=
-=rF8s
------END PGP SIGNATURE-----
-
---=-BdSOP4foVMSzc7YYd6Vw--
-
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
