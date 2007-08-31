@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57894 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752425AbXHQLXw (ORCPT
+Received: from rhun.apana.org.au ([64.62.148.172]:3703 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755608AbXHaJbD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2007 07:23:52 -0400
-Subject: Re: [PATCH] Add iwlwifi wireless drivers (resend)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W.Linville" <linville@tuxdriver.com>,
-	Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>
-In-Reply-To: <1187328536.5763.137.camel@debian.sh.intel.com>
-References: <1187328536.5763.137.camel@debian.sh.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OiaKQoH+263VHOh954up"
-Date: Fri, 17 Aug 2007 13:26:21 +0200
-Message-Id: <1187349981.23489.162.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 31 Aug 2007 05:31:03 -0400
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: jesper.juhl@gmail.com (Jesper Juhl),
+	Al Viro <viro@ftp.linux.org.uk>
+Subject: Re: [PATCH 13/30] net: Don't do pointless kmalloc return value casts in zd1211 driver
+Cc: dsd@gentoo.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, davem@davemloft.net, kune@deine-taler.de,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <9a8748490708301320o49d8e794vc5c37ffc938006f1@mail.gmail.com>
+Message-Id: <E1IR2pW-0007T2-00@gondolin.me.apana.org.au>
+Date: Fri, 31 Aug 2007 17:30:18 +0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Jesper Juhl <jesper.juhl@gmail.com> wrote:
+> On 30/08/2007, Daniel Drake <dsd@gentoo.org> wrote:
+>> Jesper Juhl wrote:
+>> > Since kmalloc() returns a void pointer there is no reason to cast
+>> > its return value.
+>> > This patch also removes a pointless initialization of a variable.
+>>
+>> NAK: adds a sparse warning
+>> zd_chip.c:116:15: warning: implicit cast to nocast type
+>>
+> Ok, I must admit I didn't check with sparse since it seemed pointless
+> - we usually never cast void pointers to other pointer types,
+> specifically because the C language nicely guarantees that the right
+> thing will happen without the cast.  Sometimes we have to cast them to
+> integer types, su sure we need the cast there.   But what on earth
+> makes a "zd_addr_t *" so special that we have to explicitly cast a
+> "void *" to that type?
+> 
+> I see it's defined as
+>  typedef u32 __nocast zd_addr_t;
+> in drivers/net/wireless/zd1211rw/zd_types.h , but why the __nocast ?
 
---=-OiaKQoH+263VHOh954up
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Nevermind the __nocast, this looks like a bug in sparse.  Just
+because a base type is __nocast, sparse shouldn't infer that a
+pointer to it should also be __nocast.
 
-On Fri, 2007-08-17 at 13:28 +0800, Zhu Yi wrote:
-> [ My previous post doesn't show up on the list for a whole day. So I
-> resend it now. I guess the an 800k mail is too big for the list... ]
-
-Heh, yes.
-
-> This patch (against 2.6.23-rc3) adds the mac80211 based
-> wireless drivers for the Intel PRO/Wireless 3945ABG/BG Network
-> Connection and Intel Wireless WiFi Link AGN (4965) adapters. I hope it
-> can be merged into 2.6.24 kernel. You comments are also welcome!
-
-I was recently reviewing encryption stuff---can you comment on why you
-don't allow disabling hardware keys? For proper operation you really
-should allow that.
-
-johannes
-
---=-OiaKQoH+263VHOh954up
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGxYXd/ETPhpq3jKURAsrTAKCKLpThgGz5zDBoB7N12Cp8AqtckQCfWTWy
-Oto+TDBnoF7MK2l1ueGM2PE=
-=8Ydl
------END PGP SIGNATURE-----
-
---=-OiaKQoH+263VHOh954up--
-
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
