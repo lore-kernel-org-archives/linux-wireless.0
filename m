@@ -1,415 +1,344 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:49216
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758875AbXHRXxV (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.248]:48197 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932687AbXHaQSj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Aug 2007 19:53:21 -0400
-Message-Id: <20070818234835.956854000@bu3sch.de>
-References: <20070818234833.623623000@bu3sch.de>
-Date: Sun, 19 Aug 2007 01:48:38 +0200
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: [patch 5/6] b43: Use new firmware file naming scheme
+	Fri, 31 Aug 2007 12:18:39 -0400
+Received: by an-out-0708.google.com with SMTP id d31so170518and
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Aug 2007 09:18:38 -0700 (PDT)
+Message-ID: <43e72e890708310918l100326a6n6fa0c6642f4a52d4@mail.gmail.com>
+Date: Fri, 31 Aug 2007 12:18:37 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath5k - License clarification
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Jiri Slaby" <jirislaby@gmail.com>,
+	"Nick Kossifidis" <mickflemm@gmail.com>,
+	"Bradley M. Kuhn" <bkuhn@softwarefreedom.org>,
+	"Matt Norwood" <norwood@softwarefreedom.org>,
+	"Richard Fontana" <fontana@softwarefreedom.org>,
+	"karen sandler" <karen@softwarefreedom.org>
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_Part_7806_33047161.1188577117356"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use a sane firmware file naming scheme and also move
-the firmware files into a subdir.
-This avoids conflicts with bcm43xx and b43legacy.
+------=_Part_7806_33047161.1188577117356
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Attached patch amends the ath5k license as per review from SFLC with
+the following changes:
 
-Index: wireless-dev-new/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-dev-new.orig/drivers/net/wireless/b43/b43.h	2007-08-15 19:15:03.000000000 +0200
-+++ wireless-dev-new/drivers/net/wireless/b43/b43.h	2007-08-16 17:15:46.000000000 +0200
-@@ -406,9 +406,9 @@ struct b43_dmaring;
- struct b43_pioqueue;
- 
- struct b43_initval {
--	u16 offset;
--	u16 size;
--	u32 value;
-+	__be16 offset;
-+	__be16 size;
-+	__be32 value;
- } __attribute__ ((__packed__));
- 
- #define B43_PHYMODE(phytype)		(1 << (phytype))
-@@ -609,10 +609,10 @@ struct b43_firmware {
- 	const struct firmware *ucode;
- 	/* PCM code */
- 	const struct firmware *pcm;
--	/* Initial MMIO values 0 */
--	const struct firmware *initvals0;
--	/* Initial MMIO values 1 */
--	const struct firmware *initvals1;
-+	/* Initial MMIO values for the firmware */
-+	const struct firmware *initvals;
-+	/* Initial MMIO values for the firmware, band-specific */
-+	const struct firmware *initvals_band;
- 	/* Firmware revision */
- 	u16 rev;
- 	/* Firmware patchlevel */
-Index: wireless-dev-new/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-dev-new.orig/drivers/net/wireless/b43/main.c	2007-08-15 19:15:03.000000000 +0200
-+++ wireless-dev-new/drivers/net/wireless/b43/main.c	2007-08-16 17:32:10.000000000 +0200
-@@ -1566,136 +1566,155 @@ static void b43_release_firmware(struct 
- 	dev->fw.ucode = NULL;
- 	release_firmware(dev->fw.pcm);
- 	dev->fw.pcm = NULL;
--	release_firmware(dev->fw.initvals0);
--	dev->fw.initvals0 = NULL;
--	release_firmware(dev->fw.initvals1);
--	dev->fw.initvals1 = NULL;
-+	release_firmware(dev->fw.initvals);
-+	dev->fw.initvals = NULL;
-+	release_firmware(dev->fw.initvals_band);
-+	dev->fw.initvals_band = NULL;
- }
- 
--static int b43_request_firmware(struct b43_wldev *dev)
-+static void b43_print_fw_helptext(struct b43_wl *wl)
- {
--	u8 rev = dev->dev->id.revision;
--	int err = 0;
--	int nr;
--	char buf[22 + sizeof(modparam_fwpostfix) - 1] = { 0 };
-+	b43err(wl, "You must go to "
-+	       "http://linuxwireless.org/en/users/Drivers/bcm43xx#devicefirmware "
-+	       "and download the correct firmware (version 4).\n");
-+}
- 
--	if (!dev->fw.ucode) {
--		snprintf(buf, ARRAY_SIZE(buf), "bcm43xx_microcode%d%s.fw",
--			 (rev >= 5 ? 5 : rev), modparam_fwpostfix);
--		err = request_firmware(&dev->fw.ucode, buf, dev->dev->dev);
--		if (err) {
--			b43err(dev->wl, "Microcode \"%s\" not "
--			       "available or load failed.\n", buf);
--			goto error;
--		}
--	}
-+static int do_request_fw(struct b43_wldev *dev,
-+			 const char *name,
-+			 const struct firmware **fw)
-+{
-+	const size_t plen = sizeof(modparam_fwpostfix) + 32;
-+	char path[plen];
-+	int err;
- 
--	if (!dev->fw.pcm) {
--		snprintf(buf, ARRAY_SIZE(buf),
--			 "bcm43xx_pcm%d%s.fw",
--			 (rev < 5 ? 4 : 5), modparam_fwpostfix);
--		err = request_firmware(&dev->fw.pcm, buf, dev->dev->dev);
--		if (err) {
--			b43err(dev->wl, "PCM \"%s\" not available "
--			       "or load failed.\n", buf);
--			goto error;
--		}
-+	if (!name)
-+		return 0;
-+
-+	snprintf(path, ARRAY_SIZE(path),
-+		 "b43%s/%s.fw",
-+		 modparam_fwpostfix, name);
-+	err = request_firmware(fw, path, dev->dev->dev);
-+	if (err) {
-+		b43err(dev->wl, "Firmware file \"%s\" not found "
-+		       "or load failed.\n", path);
- 	}
- 
--	if (!dev->fw.initvals0) {
--		if (rev == 2 || rev == 4) {
--			switch (dev->phy.type) {
--			case B43_PHYTYPE_A:
--				nr = 3;
--				break;
--			case B43_PHYTYPE_B:
--			case B43_PHYTYPE_G:
--				nr = 1;
--				break;
--			default:
--				goto err_noinitval;
--			}
-+	return err;
-+}
- 
--		} else if (rev >= 5) {
--			switch (dev->phy.type) {
--			case B43_PHYTYPE_A:
--				nr = 7;
--				break;
--			case B43_PHYTYPE_B:
--			case B43_PHYTYPE_G:
--				nr = 5;
--				break;
--			default:
--				goto err_noinitval;
--			}
--		} else
--			goto err_noinitval;
--		snprintf(buf, ARRAY_SIZE(buf), "bcm43xx_initval%02d%s.fw",
--			 nr, modparam_fwpostfix);
-+static int b43_request_firmware(struct b43_wldev *dev)
-+{
-+	struct b43_firmware *fw = &dev->fw;
-+	const u8 rev = dev->dev->id.revision;
-+	const char *filename;
-+	u32 tmshigh;
-+	int err;
- 
--		err = request_firmware(&dev->fw.initvals0, buf, dev->dev->dev);
--		if (err) {
--			b43err(dev->wl, "InitVals \"%s\" not available "
--			       "or load failed.\n", buf);
--			goto error;
--		}
--		if (dev->fw.initvals0->size % sizeof(struct b43_initval)) {
--			b43err(dev->wl, "InitVals fileformat error.\n");
--			goto error;
-+	tmshigh = ssb_read32(dev->dev, SSB_TMSHIGH);
-+	if (!fw->ucode) {
-+		if ((rev >= 5) && (rev <= 10))
-+			filename = "ucode5";
-+		else if ((rev >= 11) && (rev <= 12))
-+			filename = "ucode11";
-+		else if (rev >= 13)
-+			filename = "ucode13";
-+		else
-+			goto err_no_ucode;
-+		err = do_request_fw(dev, filename, &fw->ucode);
-+		if (err)
-+			goto err_load;
-+	}
-+	if (!fw->pcm) {
-+		if ((rev >= 5) && (rev <= 10))
-+			filename = "pcm5";
-+		else if (rev >= 11)
-+			filename = NULL;
-+		else
-+			goto err_no_pcm;
-+		err = do_request_fw(dev, filename, &fw->pcm);
-+		if (err)
-+			goto err_load;
-+	}
-+	if (!fw->initvals) {
-+		switch (dev->phy.type) {
-+		case B43_PHYTYPE_A:
-+			if ((rev >= 5) && (rev <= 10)) {
-+				if (tmshigh & B43_TMSHIGH_GPHY)
-+					filename = "a0g1initvals5";
-+				else
-+					filename = "a0g0initvals5";
-+			} else
-+				goto err_no_initvals;
-+			break;
-+		case B43_PHYTYPE_G:
-+			if ((rev >= 5) && (rev <= 10))
-+				filename = "b0g0initvals5";
-+			else if (rev >= 13)
-+				filename = "lp0initvals13";
-+			else
-+				goto err_no_initvals;
-+			break;
-+		default:
-+			goto err_no_initvals;
- 		}
-+		err = do_request_fw(dev, filename, &fw->initvals);
-+		if (err)
-+			goto err_load;
- 	}
--
--	if (!dev->fw.initvals1) {
--		if (rev >= 5) {
--			u32 sbtmstatehigh;
--
--			switch (dev->phy.type) {
--			case B43_PHYTYPE_A:
--				sbtmstatehigh =
--				    ssb_read32(dev->dev, SSB_TMSHIGH);
--				if (sbtmstatehigh & 0x00010000)
--					nr = 9;
-+	if (!fw->initvals_band) {
-+		switch (dev->phy.type) {
-+		case B43_PHYTYPE_A:
-+			if ((rev >= 5) && (rev <= 10)) {
-+				if (tmshigh & B43_TMSHIGH_GPHY)
-+					filename = "a0g1bsinitvals5";
- 				else
--					nr = 10;
--				break;
--			case B43_PHYTYPE_B:
--			case B43_PHYTYPE_G:
--				nr = 6;
--				break;
--			default:
--				goto err_noinitval;
--			}
--			snprintf(buf, ARRAY_SIZE(buf), "bcm43xx_initval%02d%s.fw",
--				 nr, modparam_fwpostfix);
--
--			err =
--			    request_firmware(&dev->fw.initvals1, buf,
--					     dev->dev->dev);
--			if (err) {
--				b43err(dev->wl, "InitVals \"%s\" not available "
--				       "or load failed.\n", buf);
--				goto error;
--			}
--			if (dev->fw.initvals1->size %
--			    sizeof(struct b43_initval)) {
--				b43err(dev->wl, "InitVals fileformat error.\n");
--				goto error;
--			}
-+					filename = "a0g0bsinitvals5";
-+			} else if (rev >= 11)
-+				filename = NULL;
-+			else
-+				goto err_no_initvals;
-+			break;
-+		case B43_PHYTYPE_G:
-+			if ((rev >= 5) && (rev <= 10))
-+				filename = "b0g0bsinitvals5";
-+			else if (rev >= 11)
-+				filename = NULL;
-+			else
-+				goto err_no_initvals;
-+			break;
-+		default:
-+			goto err_no_initvals;
- 		}
-+		err = do_request_fw(dev, filename, &fw->initvals_band);
-+		if (err)
-+			goto err_load;
- 	}
- 
--      out:
--	return err;
--      error:
--	b43err(dev->wl, "You must go to "
--	       "http://linuxwireless.org/en/users/Drivers/b43#devicefirmware "
--	       "and download the correct firmware (version 4)\n");
--	b43_release_firmware(dev);
--	goto out;
--      err_noinitval:
--	b43err(dev->wl, "No InitVals available\n");
--	err = -ENOENT;
-+	return 0;
-+
-+err_load:
-+	b43_print_fw_helptext(dev->wl);
- 	goto error;
-+
-+err_no_ucode:
-+	err = -ENODEV;
-+	b43err(dev->wl, "No microcode available for core rev %u\n", rev);
-+	goto error;
-+
-+err_no_pcm:
-+	err = -ENODEV;
-+	b43err(dev->wl, "No PCM available for core rev %u\n", rev);
-+	goto error;
-+
-+err_no_initvals:
-+	err = -ENODEV;
-+	b43err(dev->wl, "No Initial Values firmware file for PHY %u, "
-+	       "core rev %u\n", dev->phy.type, rev);
-+	goto error;
-+
-+error:
-+	b43_release_firmware(dev);
-+	return err;
- }
- 
- static int b43_upload_microcode(struct b43_wldev *dev)
-@@ -1741,6 +1760,7 @@ static int b43_upload_microcode(struct b
- 		i++;
- 		if (i >= 50) {
- 			b43err(dev->wl, "Microcode not responding\n");
-+			b43_print_fw_helptext(dev->wl);
- 			err = -ENODEV;
- 			goto out;
- 		}
-@@ -1758,6 +1778,7 @@ static int b43_upload_microcode(struct b
- 		b43err(dev->wl, "YOUR FIRMWARE IS TOO OLD. Firmware from "
- 		       "binary drivers older than version 4.x is unsupported. "
- 		       "You must upgrade your firmware files.\n");
-+		b43_print_fw_helptext(dev->wl);
- 		b43_write32(dev, B43_MMIO_MACCTL, 0);
- 		err = -EOPNOTSUPP;
- 		goto out;
-@@ -1777,13 +1798,13 @@ static int b43_upload_microcode(struct b
- 
- static int b43_write_initvals(struct b43_wldev *dev,
- 			      const struct b43_initval *data,
--			      const unsigned int len)
-+			      size_t count)
- {
- 	u16 offset, size;
- 	u32 value;
--	unsigned int i;
-+	size_t i;
- 
--	for (i = 0; i < len; i++) {
-+	for (i = 0; i < count; i++) {
- 		offset = be16_to_cpu(data[i].offset);
- 		size = be16_to_cpu(data[i].size);
- 		value = be32_to_cpu(data[i].value);
-@@ -1802,34 +1823,32 @@ static int b43_write_initvals(struct b43
- 
- 	return 0;
- 
--      err_format:
--	b43err(dev->wl, "InitVals (b43_initvalXX.fw) file-format error. "
--	       "Please fix your b43 firmware files.\n");
-+err_format:
-+	b43err(dev->wl, "Initial Values Firmware file-format error\n");
-+	b43_print_fw_helptext(dev->wl);
-+
- 	return -EPROTO;
- }
- 
- static int b43_upload_initvals(struct b43_wldev *dev)
- {
-+	struct b43_firmware *fw = &dev->fw;
-+	struct b43_initval *ivals;
-+	size_t count;
- 	int err;
- 
--	err =
--	    b43_write_initvals(dev,
--			       (struct b43_initval *)dev->fw.initvals0->data,
--			       dev->fw.initvals0->size /
--			       sizeof(struct b43_initval));
-+	ivals = (struct b43_initval *)(fw->initvals->data);
-+	count = fw->initvals->size / sizeof(struct b43_initval);
-+	err = b43_write_initvals(dev, ivals, count);
- 	if (err)
- 		goto out;
--	if (dev->fw.initvals1) {
--		err =
--		    b43_write_initvals(dev,
--				       (struct b43_initval *)dev->fw.initvals1->
--				       data,
--				       dev->fw.initvals1->size /
--				       sizeof(struct b43_initval));
--		if (err)
--			goto out;
-+	if (fw->initvals_band) {
-+		ivals = (struct b43_initval *)(fw->initvals_band->data);
-+		count = fw->initvals_band->size / sizeof(struct b43_initval);
-+		err = b43_write_initvals(dev, ivals, count);
- 	}
--      out:
-+out:
-+
- 	return err;
- }
- 
+  * Makes sure that Reyk's copyright and license notice appears
+    correctly in each file that was derived from his work.
 
--- 
+  * Makes sure that Jiri's changes were released under a permissive,
+    modified-BSD license, as he indicated that was his preference.
 
+  * Makes sure that Nick's changes were released under
+    GPLv2-or-later, as he indicated that was his preference.
+
+  * Makes sure that all files clearly have the any GPL notices on
+    top, but include the proper BSD-like notices below when required.
+
+   * Adds Devicescape attribution to ath5k_base.c
+
+  * Sets the MODULE_LICENSE to GPL, because with Nick's changes
+    included under only GPL, the module can only be available under GPL.
+
+  * Adds Nick to the list of MODULE_AUTHORs because his changes
+    are substantial.
+
+Signed-Off-By: Bradley M. Kuhn <bkuhn@softwarefreedom.org>
+Signed-Off-By: Matt Norwood <norwood@softwarefreedom.org>
+Signed-Off-By: Richard Fontana <fontana@softwarefreedom.org>
+Signed-Off-By: Karen Sandler <karen@softwarefreedom.org>
+
+Acked-by: Luis R. Rodriguez <mcgrof@gmail.com>
+Acked-by: Jiri Slaby <jirislaby@gmail.com>
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+
+Thanks to the SFLC for their help with this driver from legal hell.
+
+  Luis
+
+------=_Part_7806_33047161.1188577117356
+Content-Type: text/x-patch; name="ath5k-license-clarification.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="ath5k-license-clarification.patch";
+ filename="ath5k-license-clarification.patch"
+X-Attachment-Id: f_f60w3wv9
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrLmggYi9kcml2ZXJzL25ldC93
+aXJlbGVzcy9hdGg1ay5oCmluZGV4IDI5MTNhMGEuLjUzZjcxZDggMTAwNjQ0Ci0tLSBhL2RyaXZl
+cnMvbmV0L3dpcmVsZXNzL2F0aDVrLmgKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWsu
+aApAQCAtMSwxOCArMSwzNiBAQAogLyoKLSAqIENvcHlyaWdodCAoYykgMjAwNC0yMDA3IFJleWsg
+RmxvZXRlciA8cmV5a0BvcGVuYnNkLm9yZz4KICAqIENvcHlyaWdodCAoYykgMjAwNi0yMDA3IE5p
+Y2sgS29zc2lmaWRpcyA8bWlja2ZsZW1tQGdtYWlsLmNvbT4KKyAqICBUaGlzIGZpbGUgaXMgZnJl
+ZSBzb2Z0d2FyZTogeW91IGNhbiBjb3B5LCByZWRpc3RyaWJ1dGUgYW5kL29yIG1vZGlmeQorICog
+IGl0IHVuZGVyIHRoZSB0ZXJtcyBvZiB0aGUgR05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2UgYXMg
+cHVibGlzaGVkIGJ5CisgKiAgdGhlIEZyZWUgU29mdHdhcmUgRm91bmRhdGlvbiwgZWl0aGVyIHZl
+cnNpb24gMiBvZiB0aGUgTGljZW5zZSwgb3IgKGF0CisgKiAgeW91ciBvcHRpb24pIGFueSBsYXRl
+ciB2ZXJzaW9uLgogICoKLSAqIFBlcm1pc3Npb24gdG8gdXNlLCBjb3B5LCBtb2RpZnksIGFuZCBk
+aXN0cmlidXRlIHRoaXMgc29mdHdhcmUgZm9yIGFueQotICogcHVycG9zZSB3aXRoIG9yIHdpdGhv
+dXQgZmVlIGlzIGhlcmVieSBncmFudGVkLCBwcm92aWRlZCB0aGF0IHRoZSBhYm92ZQotICogY29w
+eXJpZ2h0IG5vdGljZSBhbmQgdGhpcyBwZXJtaXNzaW9uIG5vdGljZSBhcHBlYXIgaW4gYWxsIGNv
+cGllcy4KKyAqICBUaGlzIGZpbGUgaXMgZGlzdHJpYnV0ZWQgaW4gdGhlIGhvcGUgdGhhdCBpdCB3
+aWxsIGJlIHVzZWZ1bCwgYnV0CisgKiAgV0lUSE9VVCBBTlkgV0FSUkFOVFk7IHdpdGhvdXQgZXZl
+biB0aGUgaW1wbGllZCB3YXJyYW50eSBvZgorICogIE1FUkNIQU5UQUJJTElUWSBvciBGSVRORVNT
+IEZPUiBBIFBBUlRJQ1VMQVIgUFVSUE9TRS4gIFNlZSB0aGUgR05VCisgKiAgR2VuZXJhbCBQdWJs
+aWMgTGljZW5zZSBmb3IgbW9yZSBkZXRhaWxzLgogICoKLSAqIFRIRSBTT0ZUV0FSRSBJUyBQUk9W
+SURFRCAiQVMgSVMiIEFORCBUSEUgQVVUSE9SIERJU0NMQUlNUyBBTEwgV0FSUkFOVElFUwotICog
+V0lUSCBSRUdBUkQgVE8gVEhJUyBTT0ZUV0FSRSBJTkNMVURJTkcgQUxMIElNUExJRUQgV0FSUkFO
+VElFUyBPRgotICogTUVSQ0hBTlRBQklMSVRZIEFORCBGSVRORVNTLiBJTiBOTyBFVkVOVCBTSEFM
+TCBUSEUgQVVUSE9SIEJFIExJQUJMRSBGT1IKLSAqIEFOWSBTUEVDSUFMLCBESVJFQ1QsIElORElS
+RUNULCBPUiBDT05TRVFVRU5USUFMIERBTUFHRVMgT1IgQU5ZIERBTUFHRVMKLSAqIFdIQVRTT0VW
+RVIgUkVTVUxUSU5HIEZST00gTE9TUyBPRiBVU0UsIERBVEEgT1IgUFJPRklUUywgV0hFVEhFUiBJ
+TiBBTgotICogQUNUSU9OIE9GIENPTlRSQUNULCBORUdMSUdFTkNFIE9SIE9USEVSIFRPUlRJT1VT
+IEFDVElPTiwgQVJJU0lORyBPVVQgT0YKLSAqIE9SIElOIENPTk5FQ1RJT04gV0lUSCBUSEUgVVNF
+IE9SIFBFUkZPUk1BTkNFIE9GIFRISVMgU09GVFdBUkUuCisgKiAgWW91IHNob3VsZCBoYXZlIHJl
+Y2VpdmVkIGEgY29weSBvZiB0aGUgR05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2UKKyAqICBhbG9u
+ZyB3aXRoIHRoaXMgcHJvZ3JhbS4gIElmIG5vdCwgc2VlIDxodHRwOi8vd3d3LmdudS5vcmcvbGlj
+ZW5zZXMvPi4KKyAqCisgKiBUaGlzIGZpbGUgaXMgYmFzZWQgb24gd29yayB1bmRlciB0aGUgZm9s
+bG93aW5nIGNvcHlyaWdodCBhbmQgcGVybWlzc2lvbgorICogbm90aWNlOgorICoKKyAqICAgICBD
+b3B5cmlnaHQgKGMpIDIwMDQtMjAwNyBSZXlrIEZsb2V0ZXIgPHJleWtAb3BlbmJzZC5vcmc+Cisg
+KgorICogICAgIFBlcm1pc3Npb24gdG8gdXNlLCBjb3B5LCBtb2RpZnksIGFuZCBkaXN0cmlidXRl
+IHRoaXMgc29mdHdhcmUgZm9yCisgKiAgICAgYW55IHB1cnBvc2Ugd2l0aCBvciB3aXRob3V0IGZl
+ZSBpcyBoZXJlYnkgZ3JhbnRlZCwgcHJvdmlkZWQgdGhhdAorICogICAgIHRoZSBhYm92ZSBjb3B5
+cmlnaHQgbm90aWNlIGFuZCB0aGlzIHBlcm1pc3Npb24gbm90aWNlIGFwcGVhciBpbiBhbGwKKyAq
+ICAgICBjb3BpZXMuCisgKgorICogICAgIFRIRSBTT0ZUV0FSRSBJUyBQUk9WSURFRCAiQVMgSVMi
+IEFORCBUSEUgQVVUSE9SIERJU0NMQUlNUyBBTEwKKyAqICAgICBXQVJSQU5USUVTIFdJVEggUkVH
+QVJEIFRPIFRISVMgU09GVFdBUkUgSU5DTFVESU5HIEFMTCBJTVBMSUVECisgKiAgICAgV0FSUkFO
+VElFUyBPRiBNRVJDSEFOVEFCSUxJVFkgQU5EIEZJVE5FU1MuIElOIE5PIEVWRU5UIFNIQUxMIFRI
+RQorICogICAgIEFVVEhPUiBCRSBMSUFCTEUgRk9SIEFOWSBTUEVDSUFMLCBESVJFQ1QsIElORElS
+RUNULCBPUgorICogICAgIENPTlNFUVVFTlRJQUwgREFNQUdFUyBPUiBBTlkgREFNQUdFUyBXSEFU
+U09FVkVSIFJFU1VMVElORyBGUk9NIExPU1MKKyAqICAgICBPRiBVU0UsIERBVEEgT1IgUFJPRklU
+UywgV0hFVEhFUiBJTiBBTiBBQ1RJT04gT0YgQ09OVFJBQ1QsCisgKiAgICAgTkVHTElHRU5DRSBP
+UiBPVEhFUiBUT1JUSU9VUyBBQ1RJT04sIEFSSVNJTkcgT1VUIE9GIE9SIElOCisgKiAgICAgQ09O
+TkVDVElPTiBXSVRIIFRIRSBVU0UgT1IgUEVSRk9STUFOQ0UgT0YgVEhJUyBTT0ZUV0FSRS4KICAq
+LwogCiAjaWZuZGVmIF9BVEg1S19ICmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9h
+dGg1a19iYXNlLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg1a19iYXNlLmMKaW5kZXggNjU3
+ZDU5Yi4uNjU5Zjg4NyAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWtfYmFz
+ZS5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrX2Jhc2UuYwpAQCAtMSw3ICsxLDkg
+QEAKIC8qLQogICogQ29weXJpZ2h0IChjKSAyMDAyLTIwMDUgU2FtIExlZmZsZXIsIEVycm5vIENv
+bnN1bHRpbmcKICAqIENvcHlyaWdodCAoYykgMjAwNC0yMDA1IEF0aGVyb3MgQ29tbXVuaWNhdGlv
+bnMsIEluYy4KKyAqIENvcHlyaWdodCAoYykgMjAwNiBEZXZpY2VzY2FwZSBTb2Z0d2FyZSwgSW5j
+LgogICogQ29weXJpZ2h0IChjKSAyMDA3IEppcmkgU2xhYnkgPGppcmlzbGFieUBnbWFpbC5jb20+
+CisgKgogICogQWxsIHJpZ2h0cyByZXNlcnZlZC4KICAqCiAgKiBSZWRpc3RyaWJ1dGlvbiBhbmQg
+dXNlIGluIHNvdXJjZSBhbmQgYmluYXJ5IGZvcm1zLCB3aXRoIG9yIHdpdGhvdXQKQEAgLTI1MTYs
+OCArMjUxOCw4IEBAIHN0YXRpYyB2b2lkIF9fZXhpdCBleGl0X2F0aF9wY2kodm9pZCkKIG1vZHVs
+ZV9pbml0KGluaXRfYXRoX3BjaSk7CiBtb2R1bGVfZXhpdChleGl0X2F0aF9wY2kpOwogCi1NT0RV
+TEVfQVVUSE9SKCJKaXJpIFNsYWJ5Iik7CitNT0RVTEVfQVVUSE9SKCJKaXJpIFNsYWJ5LCBOaWNr
+IEtvc3NpZmlkaXMiKTsKIE1PRFVMRV9ERVNDUklQVElPTigiU3VwcG9ydCBmb3IgQXRoZXJvcyA4
+MDIuMTEgd2lyZWxlc3MgTEFOIGNhcmRzLiIpOwogTU9EVUxFX1NVUFBPUlRFRF9ERVZJQ0UoIkF0
+aGVyb3MgV0xBTiBjYXJkcyIpOwotTU9EVUxFX0xJQ0VOU0UoIkR1YWwgQlNEL0dQTCIpOworTU9E
+VUxFX0xJQ0VOU0UoIkdQTCIpOwogTU9EVUxFX1ZFUlNJT04oQVRIX1BDSV9WRVJTSU9OICIgKEVY
+UEVSSU1FTlRBTCkiKTsKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrX2h3
+LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg1a19ody5jCmluZGV4IGYyNzNjNDIuLmI2MzM3
+MmEgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrX2h3LmMKKysrIGIvZHJp
+dmVycy9uZXQvd2lyZWxlc3MvYXRoNWtfaHcuYwpAQCAtMSwxOSArMSwzNyBAQAogIC8qCi0gKiBD
+b3B5cmlnaHQgKGMpIDIwMDQtMjAwNyBSZXlrIEZsb2V0ZXIgPHJleWtAb3BlbmJzZC5vcmc+CiAg
+KiBDb3B5cmlnaHQgKGMpIDIwMDYtMjAwNyBOaWNrIEtvc3NpZmlkaXMgPG1pY2tmbGVtbUBnbWFp
+bC5jb20+Ci0gKiBDb3B5cmlnaHQgKGMpIDIwMDcgSmlyaSBTbGFieSA8amlyaXNsYWJ5QGdtYWls
+LmNvbT4KKyAqICBUaGlzIGZpbGUgaXMgZnJlZSBzb2Z0d2FyZTogeW91IGNhbiBjb3B5LCByZWRp
+c3RyaWJ1dGUgYW5kL29yIG1vZGlmeQorICogIGl0IHVuZGVyIHRoZSB0ZXJtcyBvZiB0aGUgR05V
+IEdlbmVyYWwgUHVibGljIExpY2Vuc2UgYXMgcHVibGlzaGVkIGJ5CisgKiAgdGhlIEZyZWUgU29m
+dHdhcmUgRm91bmRhdGlvbiwgZWl0aGVyIHZlcnNpb24gMiBvZiB0aGUgTGljZW5zZSwgb3IgKGF0
+CisgKiAgeW91ciBvcHRpb24pIGFueSBsYXRlciB2ZXJzaW9uLgogICoKLSAqIFBlcm1pc3Npb24g
+dG8gdXNlLCBjb3B5LCBtb2RpZnksIGFuZCBkaXN0cmlidXRlIHRoaXMgc29mdHdhcmUgZm9yIGFu
+eQotICogcHVycG9zZSB3aXRoIG9yIHdpdGhvdXQgZmVlIGlzIGhlcmVieSBncmFudGVkLCBwcm92
+aWRlZCB0aGF0IHRoZSBhYm92ZQotICogY29weXJpZ2h0IG5vdGljZSBhbmQgdGhpcyBwZXJtaXNz
+aW9uIG5vdGljZSBhcHBlYXIgaW4gYWxsIGNvcGllcy4KKyAqICBUaGlzIGZpbGUgaXMgZGlzdHJp
+YnV0ZWQgaW4gdGhlIGhvcGUgdGhhdCBpdCB3aWxsIGJlIHVzZWZ1bCwgYnV0CisgKiAgV0lUSE9V
+VCBBTlkgV0FSUkFOVFk7IHdpdGhvdXQgZXZlbiB0aGUgaW1wbGllZCB3YXJyYW50eSBvZgorICog
+IE1FUkNIQU5UQUJJTElUWSBvciBGSVRORVNTIEZPUiBBIFBBUlRJQ1VMQVIgUFVSUE9TRS4gIFNl
+ZSB0aGUgR05VCisgKiAgR2VuZXJhbCBQdWJsaWMgTGljZW5zZSBmb3IgbW9yZSBkZXRhaWxzLgog
+ICoKLSAqIFRIRSBTT0ZUV0FSRSBJUyBQUk9WSURFRCAiQVMgSVMiIEFORCBUSEUgQVVUSE9SIERJ
+U0NMQUlNUyBBTEwgV0FSUkFOVElFUwotICogV0lUSCBSRUdBUkQgVE8gVEhJUyBTT0ZUV0FSRSBJ
+TkNMVURJTkcgQUxMIElNUExJRUQgV0FSUkFOVElFUyBPRgotICogTUVSQ0hBTlRBQklMSVRZIEFO
+RCBGSVRORVNTLiBJTiBOTyBFVkVOVCBTSEFMTCBUSEUgQVVUSE9SIEJFIExJQUJMRSBGT1IKLSAq
+IEFOWSBTUEVDSUFMLCBESVJFQ1QsIElORElSRUNULCBPUiBDT05TRVFVRU5USUFMIERBTUFHRVMg
+T1IgQU5ZIERBTUFHRVMKLSAqIFdIQVRTT0VWRVIgUkVTVUxUSU5HIEZST00gTE9TUyBPRiBVU0Us
+IERBVEEgT1IgUFJPRklUUywgV0hFVEhFUiBJTiBBTgotICogQUNUSU9OIE9GIENPTlRSQUNULCBO
+RUdMSUdFTkNFIE9SIE9USEVSIFRPUlRJT1VTIEFDVElPTiwgQVJJU0lORyBPVVQgT0YKLSAqIE9S
+IElOIENPTk5FQ1RJT04gV0lUSCBUSEUgVVNFIE9SIFBFUkZPUk1BTkNFIE9GIFRISVMgU09GVFdB
+UkUuCisgKiAgWW91IHNob3VsZCBoYXZlIHJlY2VpdmVkIGEgY29weSBvZiB0aGUgR05VIEdlbmVy
+YWwgUHVibGljIExpY2Vuc2UKKyAqICBhbG9uZyB3aXRoIHRoaXMgcHJvZ3JhbS4gIElmIG5vdCwg
+c2VlIDxodHRwOi8vd3d3LmdudS5vcmcvbGljZW5zZXMvPi4KKyAqCisgKiBUaGlzIGZpbGUgaW5j
+b3Jwb3JhdGVzIHdvcmsgY292ZXJlZCBieSB0aGUgZm9sbG93aW5nIGNvcHlyaWdodCBhbmQKKyAq
+IHBlcm1pc3Npb24gbm90aWNlOgorICoKKyAqICAgICBDb3B5cmlnaHQgKGMpIDIwMDcgSmlyaSBT
+bGFieSA8amlyaXNsYWJ5QGdtYWlsLmNvbT4KKyAqICAgICBDb3B5cmlnaHQgKGMpIDIwMDQsIDIw
+MDUsIDIwMDYsIDIwMDcgUmV5ayBGbG9ldGVyIDxyZXlrQG9wZW5ic2Qub3JnPgorICogCisgKiAg
+ICAgUGVybWlzc2lvbiB0byB1c2UsIGNvcHksIG1vZGlmeSwgYW5kIGRpc3RyaWJ1dGUgdGhpcyBz
+b2Z0d2FyZSBmb3IKKyAqICAgICBhbnkgcHVycG9zZSB3aXRoIG9yIHdpdGhvdXQgZmVlIGlzIGhl
+cmVieSBncmFudGVkLCBwcm92aWRlZCB0aGF0CisgKiAgICAgdGhlIGFib3ZlIGNvcHlyaWdodCBu
+b3RpY2UgYW5kIHRoaXMgcGVybWlzc2lvbiBub3RpY2UgYXBwZWFyIGluIGFsbAorICogICAgIGNv
+cGllcy4KKyAqCisgKiAgICAgVEhFIFNPRlRXQVJFIElTIFBST1ZJREVEICJBUyBJUyIgQU5EIFRI
+RSBBVVRIT1IgRElTQ0xBSU1TIEFMTAorICogICAgIFdBUlJBTlRJRVMgV0lUSCBSRUdBUkQgVE8g
+VEhJUyBTT0ZUV0FSRSBJTkNMVURJTkcgQUxMIElNUExJRUQKKyAqICAgICBXQVJSQU5USUVTIE9G
+IE1FUkNIQU5UQUJJTElUWSBBTkQgRklUTkVTUy4gSU4gTk8gRVZFTlQgU0hBTEwgVEhFCisgKiAg
+ICAgQVVUSE9SIEJFIExJQUJMRSBGT1IgQU5ZIFNQRUNJQUwsIERJUkVDVCwgSU5ESVJFQ1QsIE9S
+CisgKiAgICAgQ09OU0VRVUVOVElBTCBEQU1BR0VTIE9SIEFOWSBEQU1BR0VTIFdIQVRTT0VWRVIg
+UkVTVUxUSU5HIEZST00gTE9TUworICogICAgIE9GIFVTRSwgREFUQSBPUiBQUk9GSVRTLCBXSEVU
+SEVSIElOIEFOIEFDVElPTiBPRiBDT05UUkFDVCwKKyAqICAgICBORUdMSUdFTkNFIE9SIE9USEVS
+IFRPUlRJT1VTIEFDVElPTiwgQVJJU0lORyBPVVQgT0YgT1IgSU4KKyAqICAgICBDT05ORUNUSU9O
+IFdJVEggVEhFIFVTRSBPUiBQRVJGT1JNQU5DRSBPRiBUSElTIFNPRlRXQVJFLgogICoKICAqLwog
+CmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg1a19ody5oIGIvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvYXRoNWtfaHcuaAppbmRleCBiZDUxNjJlLi40ZWEwNWQzIDEwMDY0NAotLS0g
+YS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg1a19ody5oCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVs
+ZXNzL2F0aDVrX2h3LmgKQEAgLTEsMTggKzEsMzYgQEAKIC8qCi0gKiBDb3B5cmlnaHQgKGMpIDIw
+MDQtMjAwNyBSZXlrIEZsb2V0ZXIgPHJleWtAb3BlbmJzZC5vcmc+CiAgKiBDb3B5cmlnaHQgKGMp
+IDIwMDYtMjAwNyBOaWNrIEtvc3NpZmlkaXMgPG1pY2tmbGVtbUBnbWFpbC5jb20+CisgKiAgVGhp
+cyBmaWxlIGlzIGZyZWUgc29mdHdhcmU6IHlvdSBjYW4gY29weSwgcmVkaXN0cmlidXRlIGFuZC9v
+ciBtb2RpZnkKKyAqICBpdCB1bmRlciB0aGUgdGVybXMgb2YgdGhlIEdOVSBHZW5lcmFsIFB1Ymxp
+YyBMaWNlbnNlIGFzIHB1Ymxpc2hlZCBieQorICogIHRoZSBGcmVlIFNvZnR3YXJlIEZvdW5kYXRp
+b24sIGVpdGhlciB2ZXJzaW9uIDIgb2YgdGhlIExpY2Vuc2UsIG9yIChhdAorICogIHlvdXIgb3B0
+aW9uKSBhbnkgbGF0ZXIgdmVyc2lvbi4KICAqCi0gKiBQZXJtaXNzaW9uIHRvIHVzZSwgY29weSwg
+bW9kaWZ5LCBhbmQgZGlzdHJpYnV0ZSB0aGlzIHNvZnR3YXJlIGZvciBhbnkKLSAqIHB1cnBvc2Ug
+d2l0aCBvciB3aXRob3V0IGZlZSBpcyBoZXJlYnkgZ3JhbnRlZCwgcHJvdmlkZWQgdGhhdCB0aGUg
+YWJvdmUKLSAqIGNvcHlyaWdodCBub3RpY2UgYW5kIHRoaXMgcGVybWlzc2lvbiBub3RpY2UgYXBw
+ZWFyIGluIGFsbCBjb3BpZXMuCisgKiAgVGhpcyBmaWxlIGlzIGRpc3RyaWJ1dGVkIGluIHRoZSBo
+b3BlIHRoYXQgaXQgd2lsbCBiZSB1c2VmdWwsIGJ1dAorICogIFdJVEhPVVQgQU5ZIFdBUlJBTlRZ
+OyB3aXRob3V0IGV2ZW4gdGhlIGltcGxpZWQgd2FycmFudHkgb2YKKyAqICBNRVJDSEFOVEFCSUxJ
+VFkgb3IgRklUTkVTUyBGT1IgQSBQQVJUSUNVTEFSIFBVUlBPU0UuICBTZWUgdGhlIEdOVQorICog
+IEdlbmVyYWwgUHVibGljIExpY2Vuc2UgZm9yIG1vcmUgZGV0YWlscy4KICAqCi0gKiBUSEUgU09G
+VFdBUkUgSVMgUFJPVklERUQgIkFTIElTIiBBTkQgVEhFIEFVVEhPUiBESVNDTEFJTVMgQUxMIFdB
+UlJBTlRJRVMKLSAqIFdJVEggUkVHQVJEIFRPIFRISVMgU09GVFdBUkUgSU5DTFVESU5HIEFMTCBJ
+TVBMSUVEIFdBUlJBTlRJRVMgT0YKLSAqIE1FUkNIQU5UQUJJTElUWSBBTkQgRklUTkVTUy4gSU4g
+Tk8gRVZFTlQgU0hBTEwgVEhFIEFVVEhPUiBCRSBMSUFCTEUgRk9SCi0gKiBBTlkgU1BFQ0lBTCwg
+RElSRUNULCBJTkRJUkVDVCwgT1IgQ09OU0VRVUVOVElBTCBEQU1BR0VTIE9SIEFOWSBEQU1BR0VT
+Ci0gKiBXSEFUU09FVkVSIFJFU1VMVElORyBGUk9NIExPU1MgT0YgVVNFLCBEQVRBIE9SIFBST0ZJ
+VFMsIFdIRVRIRVIgSU4gQU4KLSAqIEFDVElPTiBPRiBDT05UUkFDVCwgTkVHTElHRU5DRSBPUiBP
+VEhFUiBUT1JUSU9VUyBBQ1RJT04sIEFSSVNJTkcgT1VUIE9GCi0gKiBPUiBJTiBDT05ORUNUSU9O
+IFdJVEggVEhFIFVTRSBPUiBQRVJGT1JNQU5DRSBPRiBUSElTIFNPRlRXQVJFLgorICogIFlvdSBz
+aG91bGQgaGF2ZSByZWNlaXZlZCBhIGNvcHkgb2YgdGhlIEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNl
+bnNlCisgKiAgYWxvbmcgd2l0aCB0aGlzIHByb2dyYW0uICBJZiBub3QsIHNlZSA8aHR0cDovL3d3
+dy5nbnUub3JnL2xpY2Vuc2VzLz4uCisgKgorICogVGhpcyBmaWxlIGluY29ycG9yYXRlcyB3b3Jr
+IGNvdmVyZWQgYnkgdGhlIGZvbGxvd2luZyBjb3B5cmlnaHQgYW5kCisgKiBwZXJtaXNzaW9uIG5v
+dGljZToKKyAqCisgKiAgICAgQ29weXJpZ2h0IChjKSAyMDA0LCAyMDA1LCAyMDA2LCAyMDA3IFJl
+eWsgRmxvZXRlciA8cmV5a0BvcGVuYnNkLm9yZz4KKyAqCisgKiAgICAgUGVybWlzc2lvbiB0byB1
+c2UsIGNvcHksIG1vZGlmeSwgYW5kIGRpc3RyaWJ1dGUgdGhpcyBzb2Z0d2FyZSBmb3IKKyAqICAg
+ICBhbnkgcHVycG9zZSB3aXRoIG9yIHdpdGhvdXQgZmVlIGlzIGhlcmVieSBncmFudGVkLCBwcm92
+aWRlZCB0aGF0CisgKiAgICAgdGhlIGFib3ZlIGNvcHlyaWdodCBub3RpY2UgYW5kIHRoaXMgcGVy
+bWlzc2lvbiBub3RpY2UgYXBwZWFyIGluIGFsbAorICogICAgIGNvcGllcy4KKyAqCisgKiAgICAg
+VEhFIFNPRlRXQVJFIElTIFBST1ZJREVEICJBUyBJUyIgQU5EIFRIRSBBVVRIT1IgRElTQ0xBSU1T
+IEFMTAorICogICAgIFdBUlJBTlRJRVMgV0lUSCBSRUdBUkQgVE8gVEhJUyBTT0ZUV0FSRSBJTkNM
+VURJTkcgQUxMIElNUExJRUQKKyAqICAgICBXQVJSQU5USUVTIE9GIE1FUkNIQU5UQUJJTElUWSBB
+TkQgRklUTkVTUy4gSU4gTk8gRVZFTlQgU0hBTEwgVEhFCisgKiAgICAgQVVUSE9SIEJFIExJQUJM
+RSBGT1IgQU5ZIFNQRUNJQUwsIERJUkVDVCwgSU5ESVJFQ1QsIE9SCisgKiAgICAgQ09OU0VRVUVO
+VElBTCBEQU1BR0VTIE9SIEFOWSBEQU1BR0VTIFdIQVRTT0VWRVIgUkVTVUxUSU5HIEZST00gTE9T
+UworICogICAgIE9GIFVTRSwgREFUQSBPUiBQUk9GSVRTLCBXSEVUSEVSIElOIEFOIEFDVElPTiBP
+RiBDT05UUkFDVCwKKyAqICAgICBORUdMSUdFTkNFIE9SIE9USEVSIFRPUlRJT1VTIEFDVElPTiwg
+QVJJU0lORyBPVVQgT0YgT1IgSU4KKyAqICAgICBDT05ORUNUSU9OIFdJVEggVEhFIFVTRSBPUiBQ
+RVJGT1JNQU5DRSBPRiBUSElTIFNPRlRXQVJFLgogICoKICAqICRJZCQKICAqLwpkaWZmIC0tZ2l0
+IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWtfcmVnLmggYi9kcml2ZXJzL25ldC93aXJlbGVz
+cy9hdGg1a19yZWcuaAppbmRleCA1OTU0N2QxLi4wZjkzOTVhIDEwMDY0NAotLS0gYS9kcml2ZXJz
+L25ldC93aXJlbGVzcy9hdGg1a19yZWcuaAorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGg1
+a19yZWcuaApAQCAtMSwzOSArMSw0MCBAQAogLyotCiAgKiBDb3B5cmlnaHQgKGMpIDIwMDcgTmlj
+ayBLb3NzaWZpZGlzIDxtaWNrZmxlbW1AZ21haWwuY29tPgotICogQWxsIHJpZ2h0cyByZXNlcnZl
+ZC4KKyAqICBUaGlzIGZpbGUgaXMgZnJlZSBzb2Z0d2FyZTogeW91IGNhbiBjb3B5LCByZWRpc3Ry
+aWJ1dGUgYW5kL29yIG1vZGlmeQorICogIGl0IHVuZGVyIHRoZSB0ZXJtcyBvZiB0aGUgR05VIEdl
+bmVyYWwgUHVibGljIExpY2Vuc2UgYXMgcHVibGlzaGVkIGJ5CisgKiAgdGhlIEZyZWUgU29mdHdh
+cmUgRm91bmRhdGlvbiwgZWl0aGVyIHZlcnNpb24gMiBvZiB0aGUgTGljZW5zZSwgb3IgKGF0Cisg
+KiAgeW91ciBvcHRpb24pIGFueSBsYXRlciB2ZXJzaW9uLgogICoKLSAqIFJlZGlzdHJpYnV0aW9u
+IGFuZCB1c2UgaW4gc291cmNlIGFuZCBiaW5hcnkgZm9ybXMsIHdpdGggb3Igd2l0aG91dAotICog
+bW9kaWZpY2F0aW9uLCBhcmUgcGVybWl0dGVkIHByb3ZpZGVkIHRoYXQgdGhlIGZvbGxvd2luZyBj
+b25kaXRpb25zCi0gKiBhcmUgbWV0OgotICogMS4gUmVkaXN0cmlidXRpb25zIG9mIHNvdXJjZSBj
+b2RlIG11c3QgcmV0YWluIHRoZSBhYm92ZSBjb3B5cmlnaHQKLSAqICAgIG5vdGljZSwgdGhpcyBs
+aXN0IG9mIGNvbmRpdGlvbnMgYW5kIHRoZSBmb2xsb3dpbmcgZGlzY2xhaW1lciwKLSAqICAgIHdp
+dGhvdXQgbW9kaWZpY2F0aW9uLgotICogMi4gUmVkaXN0cmlidXRpb25zIGluIGJpbmFyeSBmb3Jt
+IG11c3QgcmVwcm9kdWNlIGF0IG1pbmltdW0gYSBkaXNjbGFpbWVyCi0gKiAgICBzaW1pbGFyIHRv
+IHRoZSAiTk8gV0FSUkFOVFkiIGRpc2NsYWltZXIgYmVsb3cgKCJEaXNjbGFpbWVyIikgYW5kIGFu
+eQotICogICAgcmVkaXN0cmlidXRpb24gbXVzdCBiZSBjb25kaXRpb25lZCB1cG9uIGluY2x1ZGlu
+ZyBhIHN1YnN0YW50aWFsbHkKLSAqICAgIHNpbWlsYXIgRGlzY2xhaW1lciByZXF1aXJlbWVudCBm
+b3IgZnVydGhlciBiaW5hcnkgcmVkaXN0cmlidXRpb24uCi0gKiAzLiBOZWl0aGVyIHRoZSBuYW1l
+cyBvZiB0aGUgYWJvdmUtbGlzdGVkIGNvcHlyaWdodCBob2xkZXJzIG5vciB0aGUgbmFtZXMKLSAq
+ICAgIG9mIGFueSBjb250cmlidXRvcnMgbWF5IGJlIHVzZWQgdG8gZW5kb3JzZSBvciBwcm9tb3Rl
+IHByb2R1Y3RzIGRlcml2ZWQKLSAqICAgIGZyb20gdGhpcyBzb2Z0d2FyZSB3aXRob3V0IHNwZWNp
+ZmljIHByaW9yIHdyaXR0ZW4gcGVybWlzc2lvbi4KKyAqICBUaGlzIGZpbGUgaXMgZGlzdHJpYnV0
+ZWQgaW4gdGhlIGhvcGUgdGhhdCBpdCB3aWxsIGJlIHVzZWZ1bCwgYnV0CisgKiAgV0lUSE9VVCBB
+TlkgV0FSUkFOVFk7IHdpdGhvdXQgZXZlbiB0aGUgaW1wbGllZCB3YXJyYW50eSBvZgorICogIE1F
+UkNIQU5UQUJJTElUWSBvciBGSVRORVNTIEZPUiBBIFBBUlRJQ1VMQVIgUFVSUE9TRS4gIFNlZSB0
+aGUgR05VCisgKiAgR2VuZXJhbCBQdWJsaWMgTGljZW5zZSBmb3IgbW9yZSBkZXRhaWxzLgogICoK
+LSAqIEFsdGVybmF0aXZlbHksIHRoaXMgc29mdHdhcmUgbWF5IGJlIGRpc3RyaWJ1dGVkIHVuZGVy
+IHRoZSB0ZXJtcyBvZiB0aGUKLSAqIEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNlbnNlICgiR1BMIikg
+dmVyc2lvbiAyIGFzIHB1Ymxpc2hlZCBieSB0aGUgRnJlZQotICogU29mdHdhcmUgRm91bmRhdGlv
+bi4KKyAqICBZb3Ugc2hvdWxkIGhhdmUgcmVjZWl2ZWQgYSBjb3B5IG9mIHRoZSBHTlUgR2VuZXJh
+bCBQdWJsaWMgTGljZW5zZQorICogIGFsb25nIHdpdGggdGhpcyBwcm9ncmFtLiAgSWYgbm90LCBz
+ZWUgPGh0dHA6Ly93d3cuZ251Lm9yZy9saWNlbnNlcy8+LgorICoKKyAqIFRoaXMgZmlsZSBpbmNv
+cnBvcmF0ZXMgd29yayBjb3ZlcmVkIGJ5IHRoZSBmb2xsb3dpbmcgY29weXJpZ2h0IGFuZAorICog
+cGVybWlzc2lvbiBub3RpY2U6CisgKgorICogICAgIENvcHlyaWdodCAoYykgMjAwNCwgMjAwNSwg
+MjAwNiwgMjAwNyBSZXlrIEZsb2V0ZXIgPHJleWtAb3BlbmJzZC5vcmc+CisgKgorICogICAgIFBl
+cm1pc3Npb24gdG8gdXNlLCBjb3B5LCBtb2RpZnksIGFuZCBkaXN0cmlidXRlIHRoaXMgc29mdHdh
+cmUgZm9yCisgKiAgICAgYW55IHB1cnBvc2Ugd2l0aCBvciB3aXRob3V0IGZlZSBpcyBoZXJlYnkg
+Z3JhbnRlZCwgcHJvdmlkZWQgdGhhdAorICogICAgIHRoZSBhYm92ZSBjb3B5cmlnaHQgbm90aWNl
+IGFuZCB0aGlzIHBlcm1pc3Npb24gbm90aWNlIGFwcGVhciBpbiBhbGwKKyAqICAgICBjb3BpZXMu
+CisgKgorICogICAgIFRIRSBTT0ZUV0FSRSBJUyBQUk9WSURFRCAiQVMgSVMiIEFORCBUSEUgQVVU
+SE9SIERJU0NMQUlNUyBBTEwKKyAqICAgICBXQVJSQU5USUVTIFdJVEggUkVHQVJEIFRPIFRISVMg
+U09GVFdBUkUgSU5DTFVESU5HIEFMTCBJTVBMSUVECisgKiAgICAgV0FSUkFOVElFUyBPRiBNRVJD
+SEFOVEFCSUxJVFkgQU5EIEZJVE5FU1MuIElOIE5PIEVWRU5UIFNIQUxMIFRIRQorICogICAgIEFV
+VEhPUiBCRSBMSUFCTEUgRk9SIEFOWSBTUEVDSUFMLCBESVJFQ1QsIElORElSRUNULCBPUgorICog
+ICAgIENPTlNFUVVFTlRJQUwgREFNQUdFUyBPUiBBTlkgREFNQUdFUyBXSEFUU09FVkVSIFJFU1VM
+VElORyBGUk9NIExPU1MKKyAqICAgICBPRiBVU0UsIERBVEEgT1IgUFJPRklUUywgV0hFVEhFUiBJ
+TiBBTiBBQ1RJT04gT0YgQ09OVFJBQ1QsCisgKiAgICAgTkVHTElHRU5DRSBPUiBPVEhFUiBUT1JU
+SU9VUyBBQ1RJT04sIEFSSVNJTkcgT1VUIE9GIE9SIElOCisgKiAgICAgQ09OTkVDVElPTiBXSVRI
+IFRIRSBVU0UgT1IgUEVSRk9STUFOQ0UgT0YgVEhJUyBTT0ZUV0FSRS4KICAqCi0gKiBOTyBXQVJS
+QU5UWQotICogVEhJUyBTT0ZUV0FSRSBJUyBQUk9WSURFRCBCWSBUSEUgQ09QWVJJR0hUIEhPTERF
+UlMgQU5EIENPTlRSSUJVVE9SUwotICogYGBBUyBJUycnIEFORCBBTlkgRVhQUkVTUyBPUiBJTVBM
+SUVEIFdBUlJBTlRJRVMsIElOQ0xVRElORywgQlVUIE5PVAotICogTElNSVRFRCBUTywgVEhFIElN
+UExJRUQgV0FSUkFOVElFUyBPRiBOT05JTkZSSU5HRU1FTlQsIE1FUkNIQU5USUJJTElUWQotICog
+QU5EIEZJVE5FU1MgRk9SIEEgUEFSVElDVUxBUiBQVVJQT1NFIEFSRSBESVNDTEFJTUVELiBJTiBO
+TyBFVkVOVCBTSEFMTAotICogVEhFIENPUFlSSUdIVCBIT0xERVJTIE9SIENPTlRSSUJVVE9SUyBC
+RSBMSUFCTEUgRk9SIFNQRUNJQUwsIEVYRU1QTEFSWSwKLSAqIE9SIENPTlNFUVVFTlRJQUwgREFN
+QUdFUyAoSU5DTFVESU5HLCBCVVQgTk9UIExJTUlURUQgVE8sIFBST0NVUkVNRU5UIE9GCi0gKiBT
+VUJTVElUVVRFIEdPT0RTIE9SIFNFUlZJQ0VTOyBMT1NTIE9GIFVTRSwgREFUQSwgT1IgUFJPRklU
+UzsgT1IgQlVTSU5FU1MKLSAqIElOVEVSUlVQVElPTikgSE9XRVZFUiBDQVVTRUQgQU5EIE9OIEFO
+WSBUSEVPUlkgT0YgTElBQklMSVRZLCBXSEVUSEVSCi0gKiBJTiBDT05UUkFDVCwgU1RSSUNUIExJ
+QUJJTElUWSwgT1IgVE9SVCAoSU5DTFVESU5HIE5FR0xJR0VOQ0UgT1IgT1RIRVJXSVNFKQotICog
+QVJJU0lORyBJTiBBTlkgV0FZIE9VVCBPRiBUSEUgVVNFIE9GIFRISVMgU09GVFdBUkUsIEVWRU4g
+SUYgQURWSVNFRCBPRgotICogVEhFIFBPU1NJQklMSVRZIE9GIFNVQ0ggREFNQUdFUy4KICAqLwog
+CisKIC8qCiAgKiBSZWdpc3RlciB2YWx1ZXMgZm9yIEF0aGVyb3MgNTIxMC81MjExLzUyMTIgY2Fy
+ZHMgZnJvbSBPcGVuQlNEJ3MgYXI1awogICogbWFpbnRhaW5lZCBieSBSZXlrIEZsb2V0ZXIKZGlm
+ZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrX3JlZ2RvbS5jIGIvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvYXRoNWtfcmVnZG9tLmMKaW5kZXggYzM0NWRhOC4uMTBkMzE1OCAxMDA2NDQK
+LS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWtfcmVnZG9tLmMKKysrIGIvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvYXRoNWtfcmVnZG9tLmMKQEAgLTQsNiArNCwxNCBAQAogICogUGVybWlzc2lv
+biB0byB1c2UsIGNvcHksIG1vZGlmeSwgYW5kIGRpc3RyaWJ1dGUgdGhpcyBzb2Z0d2FyZSBmb3Ig
+YW55CiAgKiBwdXJwb3NlIHdpdGggb3Igd2l0aG91dCBmZWUgaXMgaGVyZWJ5IGdyYW50ZWQsIHBy
+b3ZpZGVkIHRoYXQgdGhlIGFib3ZlCiAgKiBjb3B5cmlnaHQgbm90aWNlIGFuZCB0aGlzIHBlcm1p
+c3Npb24gbm90aWNlIGFwcGVhciBpbiBhbGwgY29waWVzLgorICoKKyAqIFRIRSBTT0ZUV0FSRSBJ
+UyBQUk9WSURFRCAiQVMgSVMiIEFORCBUSEUgQVVUSE9SIERJU0NMQUlNUyBBTEwgV0FSUkFOVElF
+UworICogV0lUSCBSRUdBUkQgVE8gVEhJUyBTT0ZUV0FSRSBJTkNMVURJTkcgQUxMIElNUExJRUQg
+V0FSUkFOVElFUyBPRgorICogTUVSQ0hBTlRBQklMSVRZIEFORCBGSVRORVNTLiBJTiBOTyBFVkVO
+VCBTSEFMTCBUSEUgQVVUSE9SIEJFIExJQUJMRSBGT1IKKyAqIEFOWSBTUEVDSUFMLCBESVJFQ1Qs
+IElORElSRUNULCBPUiBDT05TRVFVRU5USUFMIERBTUFHRVMgT1IgQU5ZIERBTUFHRVMKKyAqIFdI
+QVRTT0VWRVIgUkVTVUxUSU5HIEZST00gTE9TUyBPRiBVU0UsIERBVEEgT1IgUFJPRklUUywgV0hF
+VEhFUiBJTiBBTgorICogQUNUSU9OIE9GIENPTlRSQUNULCBORUdMSUdFTkNFIE9SIE9USEVSIFRP
+UlRJT1VTIEFDVElPTiwgQVJJU0lORyBPVVQgT0YKKyAqIE9SIElOIENPTk5FQ1RJT04gV0lUSCBU
+SEUgVVNFIE9SIFBFUkZPUk1BTkNFIE9GIFRISVMgU09GVFdBUkUuCiAgKi8KIAogLyoKZGlmZiAt
+LWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aDVrX3JlZ2RvbS5oIGIvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvYXRoNWtfcmVnZG9tLmgKaW5kZXggZWJhZWFiZS4uZjdkM2M2NiAxMDA2NDQKLS0t
+IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoNWtfcmVnZG9tLmgKKysrIGIvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvYXRoNWtfcmVnZG9tLmgKQEAgLTQsNiArNCwxNCBAQAogICogUGVybWlzc2lvbiB0
+byB1c2UsIGNvcHksIG1vZGlmeSwgYW5kIGRpc3RyaWJ1dGUgdGhpcyBzb2Z0d2FyZSBmb3IgYW55
+CiAgKiBwdXJwb3NlIHdpdGggb3Igd2l0aG91dCBmZWUgaXMgaGVyZWJ5IGdyYW50ZWQsIHByb3Zp
+ZGVkIHRoYXQgdGhlIGFib3ZlCiAgKiBjb3B5cmlnaHQgbm90aWNlIGFuZCB0aGlzIHBlcm1pc3Np
+b24gbm90aWNlIGFwcGVhciBpbiBhbGwgY29waWVzLgorICoKKyAqIFRIRSBTT0ZUV0FSRSBJUyBQ
+Uk9WSURFRCAiQVMgSVMiIEFORCBUSEUgQVVUSE9SIERJU0NMQUlNUyBBTEwgV0FSUkFOVElFUwor
+ICogV0lUSCBSRUdBUkQgVE8gVEhJUyBTT0ZUV0FSRSBJTkNMVURJTkcgQUxMIElNUExJRUQgV0FS
+UkFOVElFUyBPRgorICogTUVSQ0hBTlRBQklMSVRZIEFORCBGSVRORVNTLiBJTiBOTyBFVkVOVCBT
+SEFMTCBUSEUgQVVUSE9SIEJFIExJQUJMRSBGT1IKKyAqIEFOWSBTUEVDSUFMLCBESVJFQ1QsIElO
+RElSRUNULCBPUiBDT05TRVFVRU5USUFMIERBTUFHRVMgT1IgQU5ZIERBTUFHRVMKKyAqIFdIQVRT
+T0VWRVIgUkVTVUxUSU5HIEZST00gTE9TUyBPRiBVU0UsIERBVEEgT1IgUFJPRklUUywgV0hFVEhF
+UiBJTiBBTgorICogQUNUSU9OIE9GIENPTlRSQUNULCBORUdMSUdFTkNFIE9SIE9USEVSIFRPUlRJ
+T1VTIEFDVElPTiwgQVJJU0lORyBPVVQgT0YKKyAqIE9SIElOIENPTk5FQ1RJT04gV0lUSCBUSEUg
+VVNFIE9SIFBFUkZPUk1BTkNFIE9GIFRISVMgU09GVFdBUkUuCiAgKi8KIAogI2lmbmRlZiBfSUVF
+RTgwMjExX1JFR0RPTUFJTl9IXwo=
+------=_Part_7806_33047161.1188577117356--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
