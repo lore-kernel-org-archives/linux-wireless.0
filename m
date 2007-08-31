@@ -1,67 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:59586 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965051AbXHGUyZ (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58893
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753855AbXHaFQn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2007 16:54:25 -0400
-Date: Tue, 7 Aug 2007 13:47:22 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
-	Jean Tourrilhes <jt@hpl.hp.com>, Michael Buesch <mb@bu3sch.df>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [2.6.22.2 review 49/84] softmac: Fix ESSID problem
-Message-ID: <20070807204722.GY23028@kroah.com>
-References: <20070807204034.882009319@mini.kroah.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20070807204157.GA23028@kroah.com>
+	Fri, 31 Aug 2007 01:16:43 -0400
+Date: Thu, 30 Aug 2007 22:16:42 -0700 (PDT)
+Message-Id: <20070830.221642.41875712.davem@davemloft.net>
+To: matthew@wil.cx
+Cc: shemminger@linux-foundation.org, johannes@sipsolutions.net,
+	voss@seehuhn.de, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, netdev@vger.kernel.org,
+	bridge@linux-foundation.org
+Subject: Re: [PATCH] bridge: fix OOPS when bridging device without ethtool
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20070830164812.GW14130@parisc-linux.org>
+References: <20070830145840.GU14130@parisc-linux.org>
+	<20070830082932.71272c3d@freepuppy.rosehill.hemminger.net>
+	<20070830164812.GW14130@parisc-linux.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Matthew Wilcox <matthew@wil.cx>
+Date: Thu, 30 Aug 2007 10:48:13 -0600
 
-From: Jean Tourrilhes <jt@hpl.hp.com>
+> On Thu, Aug 30, 2007 at 08:29:32AM -0700, Stephen Hemminger wrote:
+> > Bridge code calls ethtool to get speed. The conversion to using
+> > only ethtool_ops broke the case of devices without ethtool_ops.
+> > This is a new regression in 2.6.23.
+> > 
+> > Rearranged the switch to a logical order, and use gcc initializer.
+> > 
+> > Ps: speed should have been part of the network device structure from
+> >     the start rather than burying it in ethtool.
+> 
+> Feel free to do the conversion ;-)  One of the things I like about the
+> ethtool framework is it gives us a way to take stuff out of the drivers
+> and put it in the midlayer without disturbing userspace.
+> 
+> > Signed-off-by: Stephen Hemminger <shemminger@linux-foundation.org>
+> 
+> Acked-by: Matthew Wilcox <matthew@wil.cx>
 
-Victor Porton reported that the SoftMAC layer had random problem when setting the ESSID :
-http://bugzilla.kernel.org/show_bug.cgi?id=8686 After investigation, it turned out to be
-worse, the SoftMAC layer is left in an inconsistent state. The fix is pretty trivial.
-
-Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
-Acked-by: Michael Buesch <mb@bu3sch.df>
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-Acked-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- net/ieee80211/softmac/ieee80211softmac_assoc.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
---- a/net/ieee80211/softmac/ieee80211softmac_assoc.c
-+++ b/net/ieee80211/softmac/ieee80211softmac_assoc.c
-@@ -271,8 +271,11 @@ ieee80211softmac_assoc_work(struct work_
- 			 */
- 			dprintk(KERN_INFO PFX "Associate: Scanning for networks first.\n");
- 			ieee80211softmac_notify(mac->dev, IEEE80211SOFTMAC_EVENT_SCAN_FINISHED, ieee80211softmac_assoc_notify_scan, NULL);
--			if (ieee80211softmac_start_scan(mac))
-+			if (ieee80211softmac_start_scan(mac)) {
- 				dprintk(KERN_INFO PFX "Associate: failed to initiate scan. Is device up?\n");
-+				mac->associnfo.associating = 0;
-+				mac->associnfo.associated = 0;
-+			}
- 			goto out;
- 		} else {
- 			mac->associnfo.associating = 0;
-
--- 
+Applied, thanks!
