@@ -1,47 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from DSL022.labridge.com ([206.117.136.22]:3595 "EHLO perches.com"
+Received: from ebb.errno.com ([69.12.149.25]:2633 "EHLO ebb.errno.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751759AbXH1RY4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2007 13:24:56 -0400
-Subject: Re: [PATCH] [360/2many] MAINTAINERS - ORINOCO DRIVER
-From: Joe Perches <joe@perches.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: torvalds@linux-foundation.org, orinoco-users@lists.sourceforge.net,
-	orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	hermes@gibson.dropbear.id.au, akpm@linux-foundation.org
-In-Reply-To: <1188321322.2226.2.camel@dv>
-References: <46bffb31.f1XwyK4H0RsPvky8%joe@perches.com>
-	 <1188321322.2226.2.camel@dv>
-Content-Type: text/plain
-Date: Tue, 28 Aug 2007 10:23:13 -0700
-Message-Id: <1188321793.6062.40.camel@localhost>
-Mime-Version: 1.0
+	id S965212AbXHaRDc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Aug 2007 13:03:32 -0400
+Message-ID: <46D84772.4040308@errno.com>
+Date: Fri, 31 Aug 2007 09:53:06 -0700
+From: Sam Leffler <sam@errno.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Bradley M. Kuhn" <bkuhn@softwarefreedom.org>,
+	Matt Norwood <norwood@softwarefreedom.org>,
+	Richard Fontana <fontana@softwarefreedom.org>,
+	karen sandler <karen@softwarefreedom.org>,
+	Reyk Floeter <reyk@openbsd.org>,
+	David Kimdon <dwhedon@devicescape.com>
+Subject: Re: [PATCH] ath5k - License clarification
+References: <43e72e890708310918l100326a6n6fa0c6642f4a52d4@mail.gmail.com> <43e72e890708310943x55c10044t26e6f8e16292247c@mail.gmail.com>
+In-Reply-To: <43e72e890708310943x55c10044t26e6f8e16292247c@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2007-08-28 at 13:15 -0400, Pavel Roskin wrote:
-> NAK.  Please also add airport*, spectrum* and hermes* in the same
-> directory.
+Luis R. Rodriguez wrote:
+> Adding some other copyright holders to the CC list
+>
+>   Luis
+>
+> On 8/31/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>   
+>> Attached patch amends the ath5k license as per review from SFLC with
+>> the following changes:
+>>
+>>   * Makes sure that Reyk's copyright and license notice appears
+>>     correctly in each file that was derived from his work.
+>>
+>>   * Makes sure that Jiri's changes were released under a permissive,
+>>     modified-BSD license, as he indicated that was his preference.
+>>
+>>   * Makes sure that Nick's changes were released under
+>>     GPLv2-or-later, as he indicated that was his preference.
+>>
+>>   * Makes sure that all files clearly have the any GPL notices on
+>>     top, but include the proper BSD-like notices below when required.
+>>
+>>    * Adds Devicescape attribution to ath5k_base.c
+>>
+>>   * Sets the MODULE_LICENSE to GPL, because with Nick's changes
+>>     included under only GPL, the module can only be available under GPL.
+>>
+>>   * Adds Nick to the list of MODULE_AUTHORs because his changes
+>>     are substantial.
+>>
+>> Signed-Off-By: Bradley M. Kuhn <bkuhn@softwarefreedom.org>
+>> Signed-Off-By: Matt Norwood <norwood@softwarefreedom.org>
+>> Signed-Off-By: Richard Fontana <fontana@softwarefreedom.org>
+>> Signed-Off-By: Karen Sandler <karen@softwarefreedom.org>
+>>
+>> Acked-by: Luis R. Rodriguez <mcgrof@gmail.com>
+>> Acked-by: Jiri Slaby <jirislaby@gmail.com>
+>> Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+>>
+>> Thanks to the SFLC for their help with this driver from legal hell
+>>     
 
-Here's what I have now:
+For the record, I told Jiri and various other folks that any code I 
+licensed as dual-BSD/GPL could be made GPL only so long as the 
+attribution remained.  That was the exact reason I dual-licensed.
 
-ORINOCO/AIRPORT/SPECTRUM/HERMES WIRELESS DRIVERS
-P:	Pavel Roskin
-M:	proski@gnu.org
-P:	David Gibson
-M:	hermes@gibson.dropbear.id.au
-L:	linux-wireless@vger.kernel.org
-L:	orinoco-users@lists.sourceforge.net
-L:	orinoco-devel@lists.sourceforge.net
-W:	http://www.nongnu.org/orinoco/
-S:	Maintained
-F:	drivers/net/wireless/orinoco*
-F:	drivers/net/wireless/airport*
-F:	drivers/net/wireless/spectrum*
-F:	drivers/net/wireless/hermes*
-
-> Sorry for delay (due to vacation).
-
-Vacations good.  Apologies unnecessary.  Cheers, Joe
+    Sam
 
