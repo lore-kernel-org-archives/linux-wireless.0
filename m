@@ -1,91 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45535 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754925AbXHOMWK (ORCPT
+Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:57986
+	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753084AbXHaNEj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 08:22:10 -0400
-Subject: [PATCH v2] hostapd: remove vlan stuff
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1187131269.31200.3.camel@johannes.berg>
-References: <1187131269.31200.3.camel@johannes.berg>
-Content-Type: text/plain
-Date: Wed, 15 Aug 2007 14:24:49 +0200
-Message-Id: <1187180689.3998.41.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 31 Aug 2007 09:04:39 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/3] mac80211: revamp key handling
+Date: Fri, 31 Aug 2007 15:03:34 +0200
+Cc: John Linville <linville@tuxdriver.com>, Jiri Benc <jbenc@suse.cz>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+References: <20070821155725.489738000@sipsolutions.net> <20070821160001.763985000@sipsolutions.net> <1188517504.7585.17.camel@johannes.berg>
+In-Reply-To: <1188517504.7585.17.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200708311503.35568.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This removes the VLAN stuff from hostapd.
+On Friday 31 August 2007, Johannes Berg wrote:
+> Huh, this turned out to be buggy in b43:
+> 
+> > @@ -2921,13 +2919,15 @@ static int b43_dev_set_key(struct ieee80
+> >  			err = b43_key_write(dev, index, algorithm,
+> >  					    key->key, key->keylen, NULL, key);
+> >  		} else {
+> > +			/*
+> > +			 * either pairwise key or address is 00:00:00:00:00:00
+> > +			 * for transmit-only keys
+> > +			 */
+> >  			err = b43_key_write(dev, -1, algorithm,
+> >  					    key->key, key->keylen, addr, key);
+> >  		}
+> > -		if (err) {
+> > -			key->flags |= IEEE80211_KEY_FORCE_SW_ENCRYPT;
+> > +		if (err)
+> >  			goto out_unlock;
+> > -		}
+> >  		dev->key[key->hw_key_idx].enabled = 1;
+> >  
+> >  		if (algorithm == B43_SEC_ALGO_WEP40 ||
+> 
+> The same obviously has to be done when deleting keys. Michael, you can
+> either use the patch below or rework it to use the hw_key_idx to delete
+> the key.
+> 
+> Interestingly, this way I found out that when the B43_RX_MAC_DECERR flag
+> is set on a frame, then the hardware has decrypted the data with the
+> wrong key and then found that the ICV isn't correct so that the data is
+> completely mangled. Hence, you should simply drop the frame in that case
+> instead of passing it up, mac80211 will simply again attempt to decrypt
+> it and, since the frame is already decrypted with the wrong key, only
+> get garbage. This could even be used to DoS a machine with little
+> resources like an AP: simply send a lot of broken frames that mac80211
+> will try to decrypt in software.
 
-The VLAN stuff in mac80211 cannot possibly work, it doesn't actually do
-anything with those VLAN type interfaces. Also, when I added the VLAN
-type to cfg80211 I must have been rather convinced of the idea; I no
-longer am in favour of doing it in the wireless stack. The recently
-added "macvlan" "driver" shows how you can do VLANs based on destination
-address, what we will need is something like "smacvlan" that does VLANs
-based on source address.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
----
-Rediffed to apply just on top of the eloop fix I just sent and not
-require any other patches.
-
- hostapd/ChangeLog            |    2 ++
- hostapd/driver_devicescape.c |   18 ------------------
- 2 files changed, 2 insertions(+), 18 deletions(-)
-
---- hostap.orig/hostapd/driver_devicescape.c	2007-08-15 14:21:37.000000000 +0200
-+++ hostap/hostapd/driver_devicescape.c	2007-08-15 14:21:58.000000000 +0200
-@@ -972,8 +972,6 @@ static int i802_set_short_slot_time(void
- static int i802_if_type(enum hostapd_driver_if_type type)
- {
- 	switch (type) {
--	case HOSTAPD_IF_VLAN:
--		return HOSTAP_IF_VLAN;
- 	case HOSTAPD_IF_WDS:
- 		return HOSTAP_IF_WDS;
- 	}
-@@ -1141,21 +1139,6 @@ static struct hostapd_hw_modes * i802_ge
- }
- 
- 
--static int i802_set_sta_vlan(void *priv, const u8 *addr, const char *ifname,
--			     int vlan_id)
--{
--	struct i802_driver_data *drv = priv;
--	struct prism2_hostapd_param param;
--
--	memset(&param, 0, sizeof(param));
--	param.cmd = PRISM2_HOSTAPD_SET_STA_VLAN;
--	memcpy(param.sta_addr, addr, ETH_ALEN);
--	os_strlcpy(param.u.set_sta_vlan.vlan_name, ifname, IFNAMSIZ);
--	param.u.set_sta_vlan.vlan_id = vlan_id;
--	return hostapd_ioctl(drv, &param, sizeof(param));
--}
--
--
- static void handle_data(struct hostapd_data *hapd, u8 *buf, size_t len,
- 			u16 stype, struct ieee80211_frame_info *fi)
- {
-@@ -2000,5 +1983,4 @@ const struct wpa_driver_ops wpa_driver_d
- 	.if_update = i802_if_update,
- 	.if_remove = i802_if_remove,
- 	.get_hw_feature_data = i802_get_hw_feature_data,
--	.set_sta_vlan = i802_set_sta_vlan,
- };
---- hostap.orig/hostapd/ChangeLog	2007-08-15 14:21:37.000000000 +0200
-+++ hostap/hostapd/ChangeLog	2007-08-15 14:21:37.000000000 +0200
-@@ -16,6 +16,8 @@ ChangeLog for hostapd
- 	  either need to support this or will have to use the WPA/RSN IEs from
- 	  hostapd; currently, the included madwifi and bsd driver interfaces do
- 	  not have support for this)
-+	* removed VLAN support from devicescape driver, the kernel isn't up
-+	  to it and it need not live in the wireless stack at all.
- 
- 2007-05-28 - v0.6.0
- 	* added experimental IEEE 802.11r/D6.0 support
-
-
+I am sorry. I introduced this as I didn't understand my own weird code anymore. :)
+I think I'll fix this by using the hw_key_idx.
