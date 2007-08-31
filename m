@@ -1,55 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from deine-taler.de ([217.160.107.63]:64236 "EHLO deine-taler.de"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2593 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753295AbXHCF3h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2007 01:29:37 -0400
-Date: Fri, 3 Aug 2007 07:29:36 +0200
-From: Ulrich Kunitz <kune@deine-taler.de>
-To: Daniel Drake <dsd@gentoo.org>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	Michael Wu <flamingice@sourmilk.net>, Jiri Benc <jbenc@suse.cz>
-Subject: Re: mac80211 driver interface semantics
-Message-ID: <20070803052935.GA12683@deine-taler.de>
-References: <46B27729.5030406@gentoo.org>
+	id S965826AbXHaSop (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Aug 2007 14:44:45 -0400
+Date: Fri, 31 Aug 2007 14:09:33 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: ian <ischram@telenet.be>, wireless <linux-wireless@vger.kernel.org>
+Subject: Re: letting drivers choose their preferred rate scale
+Message-ID: <20070831180933.GB3352@tuxdriver.com>
+References: <46CF95F9.6090802@telenet.be> <1188028962.9529.13.camel@johannes.berg> <46D01D57.6060806@telenet.be> <1188211749.6756.11.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <46B27729.5030406@gentoo.org>
+In-Reply-To: <1188211749.6756.11.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Drake wrote:
-
-> There has been some recent confusion as to how monitor interfaces should 
-> operate, how multiple interfaces should be handled by drivers, and how 
-> MAC addresses should be handled.
+On Mon, Aug 27, 2007 at 12:49:09PM +0200, Johannes Berg wrote:
+> On Sat, 2007-08-25 at 14:15 +0200, ian wrote:
 > 
-> Based on some recent discussions, and what bcm43xx does, I started 
-> writing some documentation:
+> > I reread the discussion carefully and can't find any specific
+> > comments on the patch which for clarity I will reproduce below.
 > 
-> http://www.linuxwireless.org/en/developers/mac80211/semantics
+> Then I guess I remember wrong and the comment was raised in another
+> thread. The problem we have is that once any rate control algorithm is
+> loaded, it will be default for any future drivers, which is often
+> inappropriate. Hence, it would be great if
+> hw->preferred_rate_control==NULL would indicate "use default" where
+> "default" would be set to "simple" to start with but also changeable.
+> (although the change functionality could just be not usable from
+> userspace for now)
 
-This is a certainly a very good idea. If the description is
-accepted by the wireless developers, I would also suggest to
-update the documentation comments in the kernel accordingly.
+I ACK this approach.  Anyone have a patch hacked-up to post?
 
-As far as I know the phy0/add_iface entry can be used to add a new
-interface. Notify though the "file" has write access for other,
-you will need network admin capabilities, which is satisfied by
-being root. For example:
-
-# cat mon0 >/sys/class/net/wmaster0/phy80211/add_iface
-# iwconfig mon0 mode monitor
-# iwcondig mon0 up
-
-Notify that /sys/class/net/wmaster0/phy80211 is a symbolic link.
-
-> Discuss :)
-> I probably made some mistakes. Corrections are very welcome.
-
-I think you should mention IEEE80211_HW_MONITOR_DURING_OPER in the
-description of the monitor modes. There are some comments to be
-found in the mac80211.h header in the kernel.
-
+John
 -- 
-Uli Kunitz
+John W. Linville
+linville@tuxdriver.com
