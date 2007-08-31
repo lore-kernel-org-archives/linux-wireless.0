@@ -1,40 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47338 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:41962 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761462AbXHUPCs (ORCPT
+	with ESMTP id S1756350AbXHaKKz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2007 11:02:48 -0400
-Message-Id: <20070821150043.996531000@sipsolutions.net>
-References: <20070821145905.689978000@sipsolutions.net>
-Date: Tue, 21 Aug 2007 16:59:16 +0200
+	Fri, 31 Aug 2007 06:10:55 -0400
+Subject: Re: [PATCH] mac80211: don't send invalid QoS frames
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>, Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 11/27] rtl8187: remove IEEE80211_HW_DATA_NULLFUNC_ACK
+To: Kalle Valo <Kalle.Valo@nokia.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>
+In-Reply-To: <87wsvcksbl.fsf@nokia.com>
+References: <1188483732.3978.13.camel@johannes.berg>
+	 <87wsvcksbl.fsf@nokia.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-chyXHJ92FJNsxvafYnA5"
+Date: Fri, 31 Aug 2007 12:12:01 +0200
+Message-Id: <1188555121.7585.21.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Wu <flamingice@sourmilk.net>
 
----
- drivers/net/wireless/rtl8187_dev.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+--=-chyXHJ92FJNsxvafYnA5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- wireless-dev.orig/drivers/net/wireless/rtl8187_dev.c	2007-08-21 14:39:00.825923881 +0200
-+++ wireless-dev/drivers/net/wireless/rtl8187_dev.c	2007-08-21 14:40:12.535923881 +0200
-@@ -606,8 +606,7 @@ static int __devinit rtl8187_probe(struc
- 	priv->mode = IEEE80211_IF_TYPE_MGMT;
- 	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
- 		     IEEE80211_HW_RX_INCLUDES_FCS |
--		     IEEE80211_HW_WEP_INCLUDE_IV |
--		     IEEE80211_HW_DATA_NULLFUNC_ACK;
-+		     IEEE80211_HW_WEP_INCLUDE_IV;
- 	dev->extra_tx_headroom = sizeof(struct rtl8187_tx_hdr);
- 	dev->queues = 1;
- 	dev->max_rssi = 65;
+On Fri, 2007-08-31 at 11:43 +0300, Kalle Valo wrote:
 
--- 
+> Now b43 won't send any unicast frames to N800 according to a wireless
+> sniffer (and packet loss is 100%, obviously). Broadcast frames are
+> sent and N800 replies to ARP requests just fine.
+>=20
+> I was a bit surprised by the result, so I double checked my tests.
+> After reverting this patch unicast frames were sent again, just that
+> QoS frames were broken as expected. So this patch definetely broke
+> unicast QoS send.
+
+Huh, ok, I'll take another look.
+
+> Tested with wireless-dev#anything commit 60faa0c2 and N800 had PSM
+> disabled. I didn't have time to test with QoS disabled, sorry. But I
+> can test that later, if you want.
+
+I don't think it matters much. You should rather look into why the N800
+is accepting those bogus frames :)
+
+johannes
+
+--=-chyXHJ92FJNsxvafYnA5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG1+lx/ETPhpq3jKURAnuiAJ9VXUKBDu1T12aQyyeNyYLHcsxwqgCeJIdU
+J7GIPtjU90MYhKUhsPKxesM=
+=Lh2U
+-----END PGP SIGNATURE-----
+
+--=-chyXHJ92FJNsxvafYnA5--
 
