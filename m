@@ -1,142 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44305 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750922AbXH3Lx7 (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:47832 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751025AbXHaE64 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2007 07:53:59 -0400
-Received: from [131.234.75.247]
-	by sipsolutions.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
-	(Exim 4.67)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1IQiar-0002T7-BA
-	for linux-wireless@vger.kernel.org; Thu, 30 Aug 2007 12:53:50 +0100
-Subject: bad mac80211/softmac/xfs interaction
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tldMWYAbiNDi5PyXiKsA"
-Date: Wed, 29 Aug 2007 16:21:41 +0200
-Message-Id: <1188397301.8048.2.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 31 Aug 2007 00:58:56 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 1/6] adm8211: Switch to eeprom_93cx6
+Date: Fri, 31 Aug 2007 00:55:37 -0400
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <200708310055.37580.flamingice@sourmilk.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8";
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Michael Wu <flamingice@sourmilk.net>
 
---=-tldMWYAbiNDi5PyXiKsA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This makes adm8211 use the eeprom_93cx6 library.
 
-Hey,
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
+---
 
-When I run something like "make" at the same time as my zd1211rw dongle
-with softmac using wpa_supplicant, associated with an AP on the same
-machine (!) using b43/hostapd, and then hit ctrl-c to abort
-wpa_supplicant, I fairly frequently have some code try to run a freed
-work struct.
+ drivers/net/wireless/Kconfig   |    3 +
+ drivers/net/wireless/adm8211.c |   85 ++++++++++++++++------------------------
+ 2 files changed, 37 insertions(+), 51 deletions(-)
 
-Does anybody have an idea what could be the cause of this? I suppose the
-XFS interaction is there so that the work item isn't immediately done,
-and I can't reproduce easily if I don't run them both on the same
-machine.
-
-For completeness, log below.
-
-johannes
-
-[  216.200315] Unable to handle kernel paging request for data at address 0=
-x6b6b6b6b
-[  216.201488] Faulting instruction address: 0xc0040188
-[  216.202451] Oops: Kernel access of bad area, sig: 11 [#1]
-[  216.203361] PREEMPT PowerMac
-[  216.204139] Modules linked in: ieee80211_crypt_ccmp af_packet b43 rc8021=
-1_simple mac80211 cfg80211 zd1211rw ieee80211softmac ieee80211 ieee80211_cr=
-ypt radeon drm binfmt_misc hci_usb rfcomm l2cap bluetooth configfs nls_utf8=
- hfsplus nls_base fuse dm_snapshot dm_mirror sha256 snd_aoa_codec_tas arc4 =
-snd_aoa_fabric_layout snd_aoa joydev snd_aoa_i2sbus appletouch usbhid snd_p=
-cm_oss snd_mixer_oss snd_pcm snd_timer snd_page_alloc snd soundcore evdev s=
-nd_aoa_soundbus ehci_hcd ohci_hcd ohci1394 ieee1394 usbcore ssb yenta_socke=
-t rsrc_nonstatic pcmcia uninorth_agp pcmcia_core firmware_class agpgart uni=
-x
-[  216.210765] NIP: c0040188 LR: c00401e8 CTR: c0026210
-[  216.211630] REGS: effd3ea0 TRAP: 0300   Not tainted  (2.6.23-rc3-g0347a7=
-c8-dirty)
-[  216.212579] MSR: 00001032 <ME,IR,DR>  CR: 22002028  XER: 00000000
-[  216.213739] DAR: 6b6b6b6b, DSISR: 42000000
-[  216.214573] TASK =3D effd0000[5] 'events/0' THREAD: effd2000
-[  216.214776] GPR00: 00000000 effd3f50 effd0000 effe9070 c0008f20 00000000=
- e38e38e3 00000000=20
-[  216.216136] GPR08: 241afd80 6b6b6b6b 10000000 6b6b6b6b 22002028 00000000=
- 017855d0 0179db38=20
-[  216.217518] GPR16: 00240e68 00240e1c 00240e20 017857b0 0178656c c038a8b4=
- c038a87c c03acb00=20
-[  216.218889] GPR24: effd01f8 effd0000 effe9080 effd2000 6b6b6b6b edd22a34=
- effe9070 edd22a38=20
-[  216.222013] NIP [c0040188] run_workqueue+0x78/0x15c
-[  216.223016] LR [c00401e8] run_workqueue+0xd8/0x15c
-[  216.223993] Call Trace:
-[  216.224855] [effd3f50] [c00401e8] run_workqueue+0xd8/0x15c (unreliable)
-[  216.225959] [effd3f90] [c0040658] worker_thread+0xa0/0x124
-[  216.227014] [effd3fd0] [c00449f0] kthread+0x48/0x84
-[  216.228039] [effd3ff0] [c0011944] kernel_thread+0x44/0x60
-[  216.229113] Instruction dump:
-[  216.230067] 3d20c03b 7c591378 543b0024 3aaba8b4 3ae9cb00 3b0201f8 3bbfff=
-fc 7fc3f378=20
-[  216.231480] 839d000c 93be0030 817f0004 813f0000 <912b0000> 91690004 93ff=
-0000 93ff0004=20
-[  216.233560] note: events/0[5] exited with preempt_count 1
-[  216.234717] BUG: sleeping function called from invalid context at kernel=
-/sched.c:4550
-[  216.235844] in_atomic():1, irqs_disabled():0
-[  216.236889] Call Trace:
-[  216.237859] [effd3c90] [c0008a48] show_stack+0x4c/0x1ac (unreliable)
-[  216.239129] [effd3cd0] [c0028228] __might_sleep+0xd0/0xf0
-[  216.240341] [effd3ce0] [c0029078] __cond_resched+0x24/0x60
-[  216.241519] [effd3cf0] [c0029dfc] cond_resched_lock+0x60/0x70
-[  216.242739] [effd3d00] [c00a3c40] prune_dcache+0x54/0x204
-[  216.243925] [effd3d40] [c00a3f5c] shrink_dcache_parent+0xfc/0x13c
-[  216.245176] [effd3d70] [c00cdcb8] proc_flush_task+0x60/0x1f8
-[  216.246384] [effd3dc0] [c002fcc4] release_task+0x30c/0x458
-[  216.247612] [effd3e00] [c0031564] do_exit+0x6c0/0x888
-[  216.248838] [effd3e50] [c000f404] kernel_bad_stack+0x0/0x4c
-[  216.250072] [effd3e80] [c0014904] bad_page_fault+0x90/0xd8
-[  216.251291] [effd3e90] [c0010ee4] handle_page_fault+0x7c/0x80
-[  216.252550] --- Exception: 300 at run_workqueue+0x78/0x15c
-[  216.253740]     LR =3D run_workqueue+0xd8/0x15c
-[  216.254852] [effd3f90] [c0040658] worker_thread+0xa0/0x124
-[  216.256074] [effd3fd0] [c00449f0] kthread+0x48/0x84
-[  216.257284] [effd3ff0] [c0011944] kernel_thread+0x44/0x60
-[  217.397232] BUG: spinlock lockup on CPU#0, swapper/0, effe9070
-[  217.398470] Call Trace:
-[  217.399556] [c0655ca0] [c0008a48] show_stack+0x4c/0x1ac (unreliable)
-[  217.400901] [c0655ce0] [c01a24f8] _raw_spin_lock+0x154/0x180
-[  217.402171] [c0655d10] [c030aa3c] _spin_lock_irqsave+0x30/0x48
-[  217.403430] [c0655d30] [c004087c] __queue_work+0x1c/0x50
-[  217.404679] [c0655d50] [c004097c] queue_work+0x8c/0xb4
-[  217.405912] [c0655d70] [c01b5240] cursor_timer_handler+0x20/0x48
-[  217.407169] [c0655d90] [c00376d8] run_timer_softirq+0x188/0x1f0
-[  217.408410] [c0655de0] [c0033914] __do_softirq+0x84/0xf8
-[  217.409643] [c0655e00] [c0006738] do_softirq+0x58/0x5c
-[  217.410855] [c0655e10] [c00335ac] irq_exit+0x60/0x80
-[  217.412037] [c0655e20] [c000e330] timer_interrupt+0x260/0x5c0
-[  217.413231] [c0655eb0] [c00110f0] ret_from_except+0x0/0x14
-[  217.414422] --- Exception: 901 at cpu_idle+0x98/0xf8
-[  217.415588]     LR =3D cpu_idle+0x98/0xf8
-[  217.416653] [c0655f70] [c0009e2c] cpu_idle+0xdc/0xf8 (unreliable)
-[  217.417899] [c0655f90] [c03077fc] rest_init+0x7c/0x90
-[  217.419060] [c0655fb0] [c03d1a34] start_kernel+0x264/0x2e4
-[  217.420218] [c0655ff0] [00003860] 0x3860
-
-
---=-tldMWYAbiNDi5PyXiKsA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG1YD1/ETPhpq3jKURArZHAKCE+rTp9f6Y4EfQCltwOn5EX2agPACgiwfv
-7pKUpfEgBpxCfjciDICC/1s=
-=illx
------END PGP SIGNATURE-----
-
---=-tldMWYAbiNDi5PyXiKsA--
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index f14f04c..b73a751 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -560,8 +560,9 @@ config RTL8187
+ 
+ config ADM8211
+ 	tristate "ADMtek ADM8211 support"
+-	depends on PCI && WLAN_80211 && MAC80211 && EXPERIMENTAL
++	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
+ 	select CRC32
++	select EEPROM_93CX6
+ 	---help---
+ 	  This driver is for ADM8211A, ADM8211B, and ADM8211C based cards.
+ 	  These are PCI/mini-PCI/Cardbus 802.11b chips found in cards such as:
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index 5ab798c..e307412 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -3,7 +3,7 @@
+  * Linux device driver for ADMtek ADM8211 (IEEE 802.11b MAC/BBP)
+  *
+  * Copyright (c) 2003, Jouni Malinen <jkmaline@cc.hut.fi>
+- * Copyright (c) 2004-2006, Michael Wu <flamingice@sourmilk.net>
++ * Copyright (c) 2004-2007, Michael Wu <flamingice@sourmilk.net>
+  * Some parts copyright (c) 2003 by David Young <dyoung@pobox.com>
+  * and used with permission.
+  *
+@@ -23,6 +23,7 @@
+ #include <linux/pci.h>
+ #include <linux/delay.h>
+ #include <linux/crc32.h>
++#include <linux/eeprom_93cx6.h>
+ #include <net/mac80211.h>
+ #include <asm/unaligned.h>
+ #include <asm/div64.h>
+@@ -106,70 +107,56 @@ struct adm8211_tx_hdr {
+ #define RX_COPY_BREAK 128
+ #define RX_PKT_SIZE 2500
+ 
+-/* Serial EEPROM reading for 93C66/93C46 */
+-#define EE_ENB		(0x4000 | ADM8211_SPR_SRS | ADM8211_SPR_SCS)
+-#define EE_READ_CMD	(6)
+-#define eeprom_delay()	ADM8211_CSR_READ(SPR);
+-
+-
+-static u16 adm8211_eeprom_read_word(struct ieee80211_hw *dev, unsigned int addr,
+-				    unsigned int addr_len)
++static void adm8211_eeprom_register_read(struct eeprom_93cx6 *eeprom)
+ {
+-	struct adm8211_priv *priv = dev->priv;
+-	unsigned int read_cmd = addr | (EE_READ_CMD << addr_len);
+-	int i;
+-	u16 retval = 0;
+-
+-	ADM8211_CSR_WRITE(SPR, EE_ENB & ~ADM8211_SPR_SCS);
+-	eeprom_delay();
+-	ADM8211_CSR_WRITE(SPR, EE_ENB);
+-	eeprom_delay();
+-
+-	/* Shift the read command bits out. */
+-	for (i = 4 + addr_len; i >= 0; i--) {
+-		u32 dataval = EE_ENB | ((read_cmd & (1 << i)) ? ADM8211_SPR_SDI : 0);
+-		ADM8211_CSR_WRITE(SPR, dataval);
+-		eeprom_delay();
+-		ADM8211_CSR_WRITE(SPR, dataval | ADM8211_SPR_SCLK);
+-		eeprom_delay();
+-	}
+-
+-	ADM8211_CSR_WRITE(SPR, EE_ENB);
+-	eeprom_delay();
+-
+-	for (i = 16; i > 0; i--) {
+-		ADM8211_CSR_WRITE(SPR, EE_ENB | ADM8211_SPR_SCLK);
+-		eeprom_delay();
+-		retval <<= 1;
+-		if (ADM8211_CSR_READ(SPR) & ADM8211_SPR_SDO)
+-			retval |= 1;
+-		ADM8211_CSR_WRITE(SPR, EE_ENB);
+-		eeprom_delay();
+-	}
+-
+-	/* Terminate the EEPROM access. */
+-	ADM8211_CSR_WRITE(SPR, EE_ENB & ~ADM8211_SPR_SCS);
++	struct adm8211_priv *priv = eeprom->data;
++	u32 reg = ADM8211_CSR_READ(SPR);
+ 
+-	return retval;
++	eeprom->reg_data_in = reg & ADM8211_SPR_SDI;
++	eeprom->reg_data_out = reg & ADM8211_SPR_SDO;
++	eeprom->reg_data_clock = reg & ADM8211_SPR_SCLK;
++	eeprom->reg_chip_select = reg & ADM8211_SPR_SCS;
+ }
+ 
++static void adm8211_eeprom_register_write(struct eeprom_93cx6 *eeprom)
++{
++	struct adm8211_priv *priv = eeprom->data;
++	u32 reg = 0x4000 | ADM8211_SPR_SRS;
++
++	if (eeprom->reg_data_in)
++		reg |= ADM8211_SPR_SDI;
++	if (eeprom->reg_data_out)
++		reg |= ADM8211_SPR_SDO;
++	if (eeprom->reg_data_clock)
++		reg |= ADM8211_SPR_SCLK;
++	if (eeprom->reg_chip_select)
++		reg |= ADM8211_SPR_SCS;
++
++	ADM8211_CSR_WRITE(SPR, reg);
++	ADM8211_CSR_READ(SPR);		// eeprom_delay
++}
+ 
+ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+ {
+ 	struct adm8211_priv *priv = dev->priv;
+-	unsigned int addr_len, words, i;
++	unsigned int words;
+ 	struct ieee80211_chan_range chan_range;
+ 	u16 cr49;
++	struct eeprom_93cx6 eeprom = {
++		.data		= priv,
++		.register_read	= adm8211_eeprom_register_read,
++		.register_write	= adm8211_eeprom_register_write
++	};
+ 
+ 	if (ADM8211_CSR_READ(CSR_TEST0) & ADM8211_CSR_TEST0_EPTYP) {
+ 		printk(KERN_DEBUG "%s (adm8211): EEPROM type: 93C66\n", pci_name(priv->pdev));
+ 		/* 256 * 16-bit = 512 bytes */
+-		addr_len = 8;
++		eeprom.width = PCI_EEPROM_WIDTH_93C66;
+ 		words = 256;
+ 	} else {
+ 		printk(KERN_DEBUG "%s (adm8211): EEPROM type 93C46\n", pci_name(priv->pdev));
+ 		/* 64 * 16-bit = 128 bytes */
+-		addr_len = 6;
++		eeprom.width = PCI_EEPROM_WIDTH_93C46;
+ 		words = 64;
+ 	}
+ 
+@@ -178,9 +165,7 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+ 	if (priv->eeprom == NULL)
+ 		return -ENOMEM;
+ 
+-	for (i = 0; i < words; i++)
+-		*((u16 *) &((u8 *)priv->eeprom)[i * 2]) =
+-			adm8211_eeprom_read_word(dev, i, addr_len);
++	eeprom_93cx6_multiread(&eeprom, 0, (__le16 __force *)priv->eeprom, words);
+ 
+ 	cr49 = le16_to_cpu(priv->eeprom->cr49);
+ 	priv->rf_type = (cr49 >> 3) & 0x7;
 
