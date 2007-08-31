@@ -1,75 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:51326 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752747AbXHOK4o (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.180]:54072 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758626AbXHaQnV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2007 06:56:44 -0400
-Subject: Re: [PATCH] hostapd: use eapol frames from ethernet device
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <1ba2fa240708141546g4de44ff1v94db00213a3187aa@mail.gmail.com>
-References: <1186789737.4862.3.camel@johannes.berg>
-	 <1186790012.4862.8.camel@johannes.berg>
-	 <1ba2fa240708120358rb22a2f9me1a1020e669406e7@mail.gmail.com>
-	 <1186995104.27916.56.camel@johannes.berg>
-	 <1ba2fa240708130346h6175701cr2daab916afaed00f@mail.gmail.com>
-	 <1187002921.27916.77.camel@johannes.berg>
-	 <1ba2fa240708141546g4de44ff1v94db00213a3187aa@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rp/ZzOCLY2+xqlG3LB2+"
-Date: Wed, 15 Aug 2007 12:58:56 +0200
-Message-Id: <1187175536.3998.21.camel@johannes.berg>
-Mime-Version: 1.0
+	Fri, 31 Aug 2007 12:43:21 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3561967pyb
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Aug 2007 09:43:21 -0700 (PDT)
+Message-ID: <43e72e890708310943x55c10044t26e6f8e16292247c@mail.gmail.com>
+Date: Fri, 31 Aug 2007 12:43:20 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] ath5k - License clarification
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Jiri Slaby" <jirislaby@gmail.com>,
+	"Nick Kossifidis" <mickflemm@gmail.com>,
+	"Bradley M. Kuhn" <bkuhn@softwarefreedom.org>,
+	"Matt Norwood" <norwood@softwarefreedom.org>,
+	"Richard Fontana" <fontana@softwarefreedom.org>,
+	"karen sandler" <karen@softwarefreedom.org>,
+	"Reyk Floeter" <reyk@openbsd.org>, "Sam Leffler" <sam@errno.com>,
+	"David Kimdon" <dwhedon@devicescape.com>
+In-Reply-To: <43e72e890708310918l100326a6n6fa0c6642f4a52d4@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890708310918l100326a6n6fa0c6642f4a52d4@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Adding some other copyright holders to the CC list
 
---=-rp/ZzOCLY2+xqlG3LB2+
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+  Luis
 
-On Wed, 2007-08-15 at 01:46 +0300, Tomas Winkler wrote:
-
-> Can you enlighten me and tell me why the monitor interface is
-> preferable over management interface? I've probably got busy and
-> missed the whole conversation.
-
-Oh, I can name a number of reasons :)
- * magic needed to conjure it
- * munged prism2 header that nothing but hostapd/wpa_supplicant
-   understands
- * special cases all over the code to stuff frames there
-
-> I'm not so familiar with monitor interface but isn't it to be
-> sniffing interface - everything goes up including data raw packets.
-
-Well, in a way you're right. But please review the recent filter flags
-patches I posted. And I'm using BPF to avoid seeing data frames other
-than those I need.
-
-> What if management frames needs decryption? I think this is 802.11w
-> specs that defines that.
-
-I thought radiotap injection could handle that, but it turns out that I
-need to think again, especially about EAPOL frames. I'll address these
-things in a reply to Jouni's mail, but that'll take a bit longer than
-just going through and replying.
-
-johannes
-
---=-rp/ZzOCLY2+xqlG3LB2+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBGwtxw/ETPhpq3jKURAvShAKCFQYsfGY751vSa94vYsgFXt8d6HACfTiFv
-rJiHH/bp3oUGMpbeaaukXU0=
-=/qJs
------END PGP SIGNATURE-----
-
---=-rp/ZzOCLY2+xqlG3LB2+--
-
+On 8/31/07, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> Attached patch amends the ath5k license as per review from SFLC with
+> the following changes:
+>
+>   * Makes sure that Reyk's copyright and license notice appears
+>     correctly in each file that was derived from his work.
+>
+>   * Makes sure that Jiri's changes were released under a permissive,
+>     modified-BSD license, as he indicated that was his preference.
+>
+>   * Makes sure that Nick's changes were released under
+>     GPLv2-or-later, as he indicated that was his preference.
+>
+>   * Makes sure that all files clearly have the any GPL notices on
+>     top, but include the proper BSD-like notices below when required.
+>
+>    * Adds Devicescape attribution to ath5k_base.c
+>
+>   * Sets the MODULE_LICENSE to GPL, because with Nick's changes
+>     included under only GPL, the module can only be available under GPL.
+>
+>   * Adds Nick to the list of MODULE_AUTHORs because his changes
+>     are substantial.
+>
+> Signed-Off-By: Bradley M. Kuhn <bkuhn@softwarefreedom.org>
+> Signed-Off-By: Matt Norwood <norwood@softwarefreedom.org>
+> Signed-Off-By: Richard Fontana <fontana@softwarefreedom.org>
+> Signed-Off-By: Karen Sandler <karen@softwarefreedom.org>
+>
+> Acked-by: Luis R. Rodriguez <mcgrof@gmail.com>
+> Acked-by: Jiri Slaby <jirislaby@gmail.com>
+> Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+>
+> Thanks to the SFLC for their help with this driver from legal hell.
+>
+>   Luis
+>
+>
