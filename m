@@ -1,354 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:45012 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755304AbXHXMbz (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:47836 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753684AbXHaE65 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2007 08:31:55 -0400
-Message-Id: <20070824122907.784517000@sipsolutions.net>
-References: <20070824122705.549190000@sipsolutions.net>
-Date: Fri, 24 Aug 2007 14:27:13 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
+	Fri, 31 Aug 2007 00:58:57 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH 5/6] adm8211: Improve TX path
+Date: Fri, 31 Aug 2007 00:56:18 -0400
 To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 08/15] cfg80211: clean up key add/remove interface
-Mime-Version: 1.0
+Message-Id: <200708310056.18619.flamingice@sourmilk.net>
+In-Reply-To: <20070831045328.3700.81232.stgit@magic.sourmilk.net>
+References: <20070831045328.3700.81232.stgit@magic.sourmilk.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8";
+  format=fixed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This cleans up the key add/remove interface in both cfg80211
-and nl80211.
+From: Michael Wu <flamingice@sourmilk.net>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+This patch makes the TX path a little better.
 
+Signed-off-by: Michael Wu <flamingice@sourmilk.net>
 ---
- include/linux/nl80211.h |   51 ++++++++-----------
- include/net/cfg80211.h  |   13 +++-
- net/wireless/core.c     |    3 +
- net/wireless/nl80211.c  |  125 ++++++++++++++++++++++++++++++++----------------
- 4 files changed, 118 insertions(+), 74 deletions(-)
 
---- wireless-dev.orig/include/linux/nl80211.h	2007-08-24 13:02:50.239420431 +0200
-+++ wireless-dev/include/linux/nl80211.h	2007-08-24 13:02:58.569420431 +0200
-@@ -43,10 +43,10 @@
-  *	%NL80211_ATTR_BSSID, %NL80211_ATTR_CHANNEL, %NL80211_ATTR_PHYMODE,
-  *	and %NL80211_ATTR_IE may be given)
-  * @NL80211_CMD_ADD_KEY: add a key with given %NL80211_ATTR_KEY_DATA,
-- * 	%NL80211_ATTR_KEY_ID, %NL80211_ATTR_KEY_TYPE, %NL80211_ATTR_MAC and
-- *	%NL80211_ATTR_KEY_CIPHER attributes.
-- * @NL80211_CMD_DEL_KEY: delete a key identified by %NL80211_ATTR_KEY_ID,
-- *	%NL80211_ATTR_KEY_TYPE and %NL80211_ATTR_MAC or all keys.
-+ *	%NL80211_ATTR_KEY_IDX, %NL80211_ATTR_MAC and %NL80211_ATTR_KEY_CIPHER
-+ *	attributes.
-+ * @NL80211_CMD_DEL_KEY: delete a key identified by %NL80211_ATTR_KEY_IDX
-+ *	or %NL80211_ATTR_MAC.
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
- enum nl80211_commands {
-@@ -85,7 +85,9 @@ enum nl80211_commands {
- 	NL80211_CMD_AP_UPDATE_STA,
- 	NL80211_CMD_AP_GET_STA_INFO,
- 	NL80211_CMD_AP_SET_RATESETS,
-+	/* %input: ifindex, key_cipher, key_data, {key_idx, mac} */
- 	NL80211_CMD_ADD_KEY,
-+	/* %input: ifindex, key_idx|mac */
- 	NL80211_CMD_DEL_KEY,
- 
- 	/* add commands here */
-@@ -129,11 +131,13 @@ enum nl80211_commands {
-  * @NL80211_ATTR_TRANSMIT_POWER: transmit power in mW
-  * @NL80211_ATTR_FRAG_THRESHOLD: fragmentation threshold (bytes)
-  * @NL80211_ATTR_FLAG_SCAN_ACTIVE: netlink flag indiciating active scan
-- * @NL80211_ATTR_KEY_DATA: temporal key data
-- * @NL80211_ATTR_KEY_ID: key ID (u8, 0-3)
-- * @NL80211_ATTR_KEY_TYPE: key type (see &enum nl80211_keytype)
-- * @NL80211_ATTR_MAC: MAC address
-- * @NL80211_ATTR_KEY_CIPHER: key cipher suite (u32)
-+ * @NL80211_ATTR_KEY_DATA: (temporal) key data; for TKIP this consists of
-+ *	16 bytes encryption key followed by 8 bytes each for TX and RX MIC
-+ *	keys
-+ * @NL80211_ATTR_KEY_IDX: key ID (u8, 0-3)
-+ * @NL80211_ATTR_MAC: MAC address (various uses)
-+ * @NL80211_ATTR_KEY_CIPHER: key cipher suite (u32, as defined by IEEE 802.11
-+ *	section 7.3.2.25.1, e.g. 0x000FAC04)
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
- enum nl80211_attrs {
-@@ -148,6 +152,14 @@ enum nl80211_attrs {
- 	/* %type: nulstring */
- 	NL80211_ATTR_WIPHY_NAME,
- 	NL80211_ATTR_CMDS,
-+	/* %type: string */
-+	NL80211_ATTR_KEY_DATA,
-+	/* %type: u8 */
-+	NL80211_ATTR_KEY_IDX,
-+	/* %type: string/6/6/mac */
-+	NL80211_ATTR_MAC,
-+	/* %type: u32 */
-+	NL80211_ATTR_KEY_CIPHER,
- 	/* %type: u32 */
- 	NL80211_ATTR_IFTYPE,
- 	NL80211_ATTR_INTERFACE_LIST,
-@@ -173,11 +185,6 @@ enum nl80211_attrs {
- 	NL80211_ATTR_FRAG_THRESHOLD,
- 	NL80211_ATTR_FLAG_SCAN_ACTIVE,
- 
--	NL80211_ATTR_KEY_DATA,
--	NL80211_ATTR_KEY_ID,
--	NL80211_ATTR_KEY_TYPE,
--	NL80211_ATTR_MAC,
--	NL80211_ATTR_KEY_CIPHER,
- 
- 	NL80211_ATTR_BEACON_HEAD,
- 	NL80211_ATTR_BEACON_TAIL,
-@@ -266,20 +273,4 @@ enum nl80211_bsstype {
- };
- #define NL80211_BSSTYPE_MAX (__NL80211_BSSTYPE_AFTER_LAST - 1)
- 
--/**
-- * enum nl80211_keytype - key types
-- * @NL80211_KEYTYPE_GROUP: group key
-- * @NL80211_KEYTYPE_PAIRWISE: pairwise key
-- * @NL80211_KEYTYPE_PEER: peer key
-- */
--enum nl80211_keytype {
--	NL80211_KEYTYPE_GROUP,
--	NL80211_KEYTYPE_PAIRWISE,
--	NL80211_KEYTYPE_PEER,
--
--	/* keep last */
--	__NL80211_KEYTYPE_AFTER_LAST
--};
--#define NL80211_KEYTYPE_MAX (__NL80211_KEYTYPE_AFTER_LAST - 1)
--
- #endif /* __LINUX_NL80211_H */
---- wireless-dev.orig/include/net/cfg80211.h	2007-08-24 13:02:50.319420431 +0200
-+++ wireless-dev/include/net/cfg80211.h	2007-08-24 13:02:58.569420431 +0200
-@@ -65,14 +65,21 @@ struct association_params {
- 
- /**
-  * struct key_params - key information
-+ *
-+ * Information about a key
-+ *
-+ * @key: key material
-+ * @key_len: length of key material
-+ * @key_idx: key index (0-3)
-+ * @macaddress: MAC address (for a pairwise key) or %NULL
-+ * @cipher: cipher suite selector
-  */
- struct key_params {
- 	u8 *key;
--	int key_len;
--	int key_id;
--	u32 key_type;
- 	u8 *macaddress;
-+	int key_len;
- 	u32 cipher;
-+	u8 key_idx;
- };
- 
- 
---- wireless-dev.orig/net/wireless/nl80211.c	2007-08-24 13:02:50.339420431 +0200
-+++ wireless-dev/net/wireless/nl80211.c	2007-08-24 13:02:58.569420431 +0200
-@@ -75,7 +75,7 @@ static struct nla_policy nl80211_policy[
- 	[NL80211_ATTR_WIPHY_NAME] = { .type = NLA_NUL_STRING,
- 				      .len = BUS_ID_SIZE-1 },
- 	[NL80211_ATTR_IFTYPE] = { .type = NLA_U32 },
--	[NL80211_ATTR_BSSID] = { .len = ETH_ALEN },
-+	[NL80211_ATTR_BSSID] = { .type = NLA_BINARY, .len = ETH_ALEN },
- 	[NL80211_ATTR_SSID] = { .type = NLA_BINARY,
- 				.len = IEEE80211_MAX_SSID_LEN },
- 	[NL80211_ATTR_CHANNEL] = { .type = NLA_U32 },
-@@ -100,9 +100,8 @@ static struct nla_policy nl80211_policy[
- 	[NL80211_ATTR_BEACON_TAIL] = { .type = NLA_BINARY },
- 	[NL80211_ATTR_KEY_DATA] = { .type = NLA_BINARY,
- 				    .len = WLAN_MAX_KEY_LEN },
--	[NL80211_ATTR_KEY_ID] = { .type = NLA_U32 },
--	[NL80211_ATTR_KEY_TYPE] = { .type = NLA_U32 },
--	[NL80211_ATTR_MAC] = { .len = ETH_ALEN },
-+	[NL80211_ATTR_KEY_IDX] = { .type = NLA_U8 },
-+	[NL80211_ATTR_MAC] = { .type = NLA_BINARY, .len = ETH_ALEN },
- 	[NL80211_ATTR_KEY_CIPHER] = { .type = NLA_U32 },
- };
- 
-@@ -736,70 +735,114 @@ static int nl80211_rename_wiphy(struct s
- 	return result;
- }
- 
--static int nl80211_key_cmd(struct sk_buff *skb, struct genl_info *info)
-+static int nl80211_add_key(struct sk_buff *skb, struct genl_info *info)
+ drivers/net/wireless/adm8211.c |   59 ++++++++++++++++++++++------------------
+ drivers/net/wireless/adm8211.h |    6 ++--
+ 2 files changed, 35 insertions(+), 30 deletions(-)
+
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index 4af3008..872b032 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -335,40 +335,44 @@ static int adm8211_get_tx_stats(struct ieee80211_hw *dev,
+ static void adm8211_interrupt_tci(struct ieee80211_hw *dev)
  {
- 	struct cfg80211_registered_device *drv;
--	int err, del;
-+	int err;
- 	struct net_device *dev;
- 	struct key_params params;
--	int (*act)(struct wiphy *wiphy, struct net_device *dev,
--		   struct key_params *params);
+ 	struct adm8211_priv *priv = dev->priv;
+-	unsigned dirty_tx;
++	unsigned int dirty_tx;
  
- 	memset(&params, 0, sizeof(params));
+ 	spin_lock(&priv->lock);
  
--	if (!info->attrs[NL80211_ATTR_KEY_TYPE])
--		return -EINVAL;
+ 	for (dirty_tx = priv->dirty_tx; priv->cur_tx - dirty_tx; dirty_tx++) {
+-		unsigned entry = dirty_tx % priv->tx_ring_size;
++		unsigned int entry = dirty_tx % priv->tx_ring_size;
+ 		u32 status = le32_to_cpu(priv->tx_ring[entry].status);
++		struct adm8211_tx_ring_info *info;
++		struct sk_buff *skb;
+ 
+ 		if (status & TDES0_CONTROL_OWN ||
+ 		    !(status & TDES0_CONTROL_DONE))
+ 			break;
+ 
++		info = &priv->tx_buffers[entry];
++		skb = info->skb;
++
+ 		/* TODO: check TDES0_STATUS_TUF and TDES0_STATUS_TRO */
+ 
+-		pci_unmap_single(priv->pdev, priv->tx_buffers[entry].mapping,
+-				 priv->tx_buffers[entry].skb->len,
+-				 PCI_DMA_TODEVICE);
++		pci_unmap_single(priv->pdev, info->mapping,
++				 info->skb->len, PCI_DMA_TODEVICE);
+ 
+-		if (priv->tx_buffers[entry].tx_control.flags &
+-		    IEEE80211_TXCTL_REQ_TX_STATUS) {
++		if (info->tx_control.flags & IEEE80211_TXCTL_REQ_TX_STATUS) {
+ 			struct ieee80211_tx_status tx_status = {{0}};
+ 			struct ieee80211_hdr *hdr;
+-			size_t hdrlen = ieee80211_get_hdrlen(le16_to_cpu(priv->tx_buffers[entry].hdr.frame_control));
+-			hdr = (struct ieee80211_hdr *) skb_pull(priv->tx_buffers[entry].skb,
+-								sizeof(struct adm8211_tx_hdr) - hdrlen);
+-			memcpy(hdr, &priv->tx_buffers[entry].hdr, hdrlen);
+-			memcpy(&tx_status.control, &priv->tx_buffers[entry].tx_control, sizeof(tx_status.control));
++			size_t hdrlen = info->hdrlen;
++
++			skb_pull(skb, sizeof(struct adm8211_tx_hdr));
++			hdr = (struct ieee80211_hdr *)skb_push(skb, hdrlen);
++			memcpy(hdr, skb->cb, hdrlen);
++			memcpy(&tx_status.control, &info->tx_control,
++			       sizeof(tx_status.control));
+ 			if (!(status & TDES0_STATUS_ES))
+ 				tx_status.flags |= IEEE80211_TX_STATUS_ACK;
+-			ieee80211_tx_status_irqsafe(dev, priv->tx_buffers[entry].skb,
+-						    &tx_status);
++			ieee80211_tx_status_irqsafe(dev, skb, &tx_status);
+ 		} else
+-			dev_kfree_skb_irq(priv->tx_buffers[entry].skb);
+-		priv->tx_buffers[entry].skb = NULL;
++			dev_kfree_skb_irq(skb);
++		info->skb = NULL;
+ 	}
+ 
+ 	if (priv->cur_tx - dirty_tx < priv->tx_ring_size - 2)
+@@ -384,7 +388,7 @@ static void adm8211_interrupt_rci(struct ieee80211_hw *dev)
+ 	struct adm8211_priv *priv = dev->priv;
+ 	unsigned int entry = priv->cur_rx % priv->rx_ring_size;
+ 	u32 status;
+-	unsigned pktlen;
++	unsigned int pktlen;
+ 	struct sk_buff *skb, *newskb;
+ 	unsigned int limit = priv->rx_ring_size;
+ 	static const u8 rate_tbl[] = {10, 20, 55, 110, 220};
+@@ -1614,12 +1618,12 @@ static void adm8211_calc_durations(int *dur, int *plcp, size_t payload_len, int
+ static void adm8211_tx_raw(struct ieee80211_hw *dev, struct sk_buff *skb,
+ 			   u16 plcp_signal,
+ 			   struct ieee80211_tx_control *control,
+-			   struct ieee80211_hdr *hdr)
++			   size_t hdrlen)
+ {
+ 	struct adm8211_priv *priv = dev->priv;
+ 	unsigned long flags;
+ 	dma_addr_t mapping;
+-	unsigned entry;
++	unsigned int entry;
+ 	u32 flag;
+ 
+ 	mapping = pci_map_single(priv->pdev, skb->data, skb->len,
+@@ -1640,7 +1644,7 @@ static void adm8211_tx_raw(struct ieee80211_hw *dev, struct sk_buff *skb,
+ 	priv->tx_buffers[entry].skb = skb;
+ 	priv->tx_buffers[entry].mapping = mapping;
+ 	memcpy(&priv->tx_buffers[entry].tx_control, control, sizeof(*control));
+-	memcpy(&priv->tx_buffers[entry].hdr, hdr, sizeof(*hdr));
++	priv->tx_buffers[entry].hdrlen = hdrlen;
+ 	priv->tx_ring[entry].buffer1 = cpu_to_le32(mapping);
+ 
+ 	if (entry == priv->tx_ring_size - 1)
+@@ -1667,7 +1671,7 @@ static int adm8211_tx(struct ieee80211_hw *dev, struct sk_buff *skb,
+ 	u16 fc;
+ 	size_t payload_len, hdrlen;
+ 	int plcp, dur, len, plcp_signal, short_preamble;
+-	struct ieee80211_hdr hdr;
++	struct ieee80211_hdr *hdr;
+ 
+ 	if (control->tx_rate < 0) {
+ 		short_preamble = 1;
+@@ -1677,19 +1681,20 @@ static int adm8211_tx(struct ieee80211_hw *dev, struct sk_buff *skb,
+ 		plcp_signal = control->tx_rate;
+ 	}
+ 
+-	memcpy(&hdr, skb->data, sizeof(hdr));
 -
- 	if (!info->attrs[NL80211_ATTR_KEY_CIPHER])
- 		return -EINVAL;
+-	fc = le16_to_cpu(hdr.frame_control) & ~IEEE80211_FCTL_PROTECTED;
++	hdr = (struct ieee80211_hdr *)skb->data;
++	fc = le16_to_cpu(hdr->frame_control) & ~IEEE80211_FCTL_PROTECTED;
+ 	hdrlen = ieee80211_get_hdrlen(fc);
++	memcpy(skb->cb, skb->data, hdrlen);
++	hdr = (struct ieee80211_hdr *)skb->cb;
+ 	skb_pull(skb, hdrlen);
+ 	payload_len = skb->len;
  
--	params.key_type = nla_get_u32(info->attrs[NL80211_ATTR_KEY_TYPE]);
--	if (params.key_type > NL80211_KEYTYPE_MAX)
-+	if (info->attrs[NL80211_ATTR_KEY_DATA]) {
-+		params.key = nla_data(info->attrs[NL80211_ATTR_KEY_DATA]);
-+		params.key_len = nla_len(info->attrs[NL80211_ATTR_KEY_DATA]);
-+	}
-+
-+	if (info->attrs[NL80211_ATTR_KEY_IDX])
-+		params.key_idx = nla_get_u8(info->attrs[NL80211_ATTR_KEY_IDX]);
-+
-+	params.cipher = nla_get_u32(info->attrs[NL80211_ATTR_KEY_CIPHER]);
-+
-+	if (info->attrs[NL80211_ATTR_MAC])
-+		params.macaddress = nla_data(info->attrs[NL80211_ATTR_MAC]);
-+
-+	if (params.key_idx > 3)
- 		return -EINVAL;
+ 	txhdr = (struct adm8211_tx_hdr *) skb_push(skb, sizeof(*txhdr));
+ 	memset(txhdr, 0, sizeof(*txhdr));
+-	memcpy(txhdr->da, ieee80211_get_DA(&hdr), ETH_ALEN);
++	memcpy(txhdr->da, ieee80211_get_DA(hdr), ETH_ALEN);
+ 	txhdr->signal = plcp_signal;
+ 	txhdr->frame_body_size = cpu_to_le16(payload_len);
+-	txhdr->frame_control = hdr.frame_control;
++	txhdr->frame_control = hdr->frame_control;
  
--	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
--	if (err)
--		return err;
-+	/*
-+	 * Disallow pairwise keys with non-zero index unless it's WEP
-+	 * (because current deployments use pairwise WEP keys with
-+	 * non-zero indizes but RSNA clearly specifies to use zero)
-+	 */
-+	if (params.macaddress && params.key_idx &&
-+	    params.cipher != WLAN_CIPHER_SUITE_WEP40 &&
-+	    params.cipher != WLAN_CIPHER_SUITE_WEP104)
-+		return -EINVAL;
+ 	len = hdrlen + payload_len + FCS_LEN;
+ 	if (fc & IEEE80211_FCTL_PROTECTED)
+@@ -1716,7 +1721,7 @@ static int adm8211_tx(struct ieee80211_hw *dev, struct sk_buff *skb,
  
--	switch (info->genlhdr->cmd) {
--	case NL80211_CMD_ADD_KEY:
--		act = drv->ops->add_key;
--		del = 0;
-+	/* TODO: add definitions for the lengths to linux/ieee80211.h */
-+	switch (params.cipher) {
-+	case WLAN_CIPHER_SUITE_WEP40:
-+		if (params.key_len != 5)
-+			return -EINVAL;
-+		break;
-+	case WLAN_CIPHER_SUITE_TKIP:
-+		if (params.key_len != 32)
-+			return -EINVAL;
-+		break;
-+	case WLAN_CIPHER_SUITE_CCMP:
-+		if (params.key_len != 16)
-+			return -EINVAL;
- 		break;
--	case NL80211_CMD_DEL_KEY:
--		act = drv->ops->del_key;
--		del = 1;
-+	case WLAN_CIPHER_SUITE_WEP104:
-+		if (params.key_len != 13)
-+			return -EINVAL;
- 		break;
- 	default:
--		act = NULL;
-+		return -EINVAL;
- 	}
+ 	txhdr->retry_limit = control->retry_limit;
  
--	if (!act) {
-+	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	if (err)
-+		return err;
-+
-+	if (!drv->ops->add_key) {
- 		err = -EOPNOTSUPP;
- 		goto out;
- 	}
+-	adm8211_tx_raw(dev, skb, plcp_signal, control, &hdr);
++	adm8211_tx_raw(dev, skb, plcp_signal, control, hdrlen);
  
--	if (info->attrs[NL80211_ATTR_KEY_DATA]) {
--		params.key = nla_data(info->attrs[NL80211_ATTR_KEY_DATA]);
--		params.key_len = nla_len(info->attrs[NL80211_ATTR_KEY_DATA]);
--	}
-+	rtnl_lock();
-+	err = drv->ops->add_key(&drv->wiphy, dev, &params);
-+	rtnl_unlock();
+ 	return NETDEV_TX_OK;
+ }
+diff --git a/drivers/net/wireless/adm8211.h b/drivers/net/wireless/adm8211.h
+index 926c66d..795d895 100644
+--- a/drivers/net/wireless/adm8211.h
++++ b/drivers/net/wireless/adm8211.h
+@@ -444,7 +444,7 @@ struct adm8211_tx_ring_info {
+ 	struct sk_buff *skb;
+ 	dma_addr_t mapping;
+ 	struct ieee80211_tx_control tx_control;
+-	struct ieee80211_hdr hdr;
++	size_t hdrlen;
+ };
  
--	if (info->attrs[NL80211_ATTR_KEY_ID]) {
--		params.key_id = nla_get_u32(info->attrs[NL80211_ATTR_KEY_ID]);
--	} else {
--		params.key_id = -1;
--	}
-+ out:
-+	cfg80211_put_dev(drv);
-+	dev_put(dev);
-+	return err;
-+}
+ #define PLCP_SIGNAL_1M		0x0a
+@@ -599,8 +599,8 @@ struct adm8211_priv {
+ 	dma_addr_t tx_ring_dma;
+ 	struct adm8211_rx_ring_info *rx_buffers;
+ 	struct adm8211_tx_ring_info *tx_buffers;
+-	unsigned rx_ring_size, tx_ring_size;
+-	unsigned cur_tx, dirty_tx, cur_rx;
++	unsigned int rx_ring_size, tx_ring_size;
++	unsigned int cur_tx, dirty_tx, cur_rx;
  
--	params.cipher = nla_get_u32(info->attrs[NL80211_ATTR_KEY_CIPHER]);
-+static int nl80211_del_key(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *drv;
-+	int err;
-+	struct net_device *dev;
-+	struct key_params params;
-+
-+	memset(&params, 0, sizeof(params));
-+
-+	if (info->attrs[NL80211_ATTR_KEY_IDX])
-+		params.key_idx = nla_get_u8(info->attrs[NL80211_ATTR_KEY_IDX]);
-+
-+	if (params.key_idx > 3)
-+		return -EINVAL;
- 
--	if (info->attrs[NL80211_ATTR_MAC]) {
-+	if (info->attrs[NL80211_ATTR_MAC])
- 		params.macaddress = nla_data(info->attrs[NL80211_ATTR_MAC]);
--	} else {
--		params.macaddress = NULL;
-+
-+	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	if (err)
-+		return err;
-+
-+	if (!drv->ops->del_key) {
-+		err = -EOPNOTSUPP;
-+		goto out;
- 	}
- 
- 	rtnl_lock();
--	err = act(&drv->wiphy, dev, &params);
-+	err = drv->ops->del_key(&drv->wiphy, dev, &params);
- 	rtnl_unlock();
- 
-  out:
-@@ -916,13 +959,13 @@ static struct genl_ops nl80211_ops[] = {
- */
- 	{
- 		.cmd = NL80211_CMD_ADD_KEY,
--		.doit = nl80211_key_cmd,
-+		.doit = nl80211_add_key,
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
- 	},
- 	{
- 		.cmd = NL80211_CMD_DEL_KEY,
--		.doit = nl80211_key_cmd,
-+		.doit = nl80211_del_key,
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
- 	},
---- wireless-dev.orig/net/wireless/core.c	2007-08-24 13:02:50.399420431 +0200
-+++ wireless-dev/net/wireless/core.c	2007-08-24 13:02:58.579420431 +0200
-@@ -213,6 +213,9 @@ struct wiphy *wiphy_new(struct cfg80211_
- 	drv->ops = ops;
- 	drv->alive = 0;
- 
-+	WARN_ON(!ops->add_key && ops->del_key);
-+	WARN_ON(ops->add_key && !ops->del_key);
-+
- 	mutex_lock(&cfg80211_drv_mutex);
- 	idr_pre_get(&cfg80211_drivers, GFP_KERNEL);
- 	res = idr_get_new(&cfg80211_drivers, drv, &drv->idx);
-
--- 
+ 	struct ieee80211_low_level_stats stats;
+ 	struct ieee80211_hw_mode modes[1];
 
