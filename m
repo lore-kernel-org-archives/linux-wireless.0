@@ -1,63 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:61847 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750842AbXI3Sil (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Sep 2007 14:38:41 -0400
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 00/26] at76_usb: bring up to date
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 30 Sep 2007 14:38:38 -0400
-Message-ID: <20070930183409.23921.97762.stgit@tt.roinet.com>
+Received: from wx-out-0506.google.com ([66.249.82.239]:42638 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752677AbXIAQsl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 12:48:41 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1074299wxd
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Sep 2007 09:48:40 -0700 (PDT)
+Message-ID: <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
+Date: Sat, 1 Sep 2007 12:48:40 -0400
+From: "Constantine A. Murenin" <mureninc@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Fwd: That whole "Linux stealing our code" thing
+In-Reply-To: <200709010140.l811eq9H005896@cvs.openbsd.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200709010140.l811eq9H005896@cvs.openbsd.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following series brings at76_usb up to date with the latest
-development, which is version 0.17 plus a last minute patch that adds
-another device ID.
+This will hopefully help diminish certain myths about the code licensing.
 
-Many changes stem from user feedback for version 0.16.  Other changes
-are cleanups made while trying to convert the driver to mac80211 stack.
+C.
 
-Accepting this series will make it possible to use wireless-2.6 as the
-main repository for further development.
----
-
-Pavel Roskin (26):
-      at76_usb: Add ID for at76c503a based CNETUSB611
-      at76_usb: Bump version to 0.17
-      at76_usb: Use ETH_P_802_2 in monitor mode
-      at76_usb: Be more verbose on startup
-      at76_usb: Use dev_printk() where possible
-      at76_usb: Remove incorrect firmware version check
-      at76_usb: Revert to network device names starting with "wlan"
-      at76_usb: Add ID for Corega Wireless LAN USB-11 mini and mini2
-      at76_usb: Avoid dealing with milliseconds when possible, use jiffies
-      at76_usb: Move some parts from at76_usb.h to at76_usb.c
-      at76_usb: Remove unneeded memset() calls
-      at76_usb: Clean reserved tx area for mgmt frames like it's done for data
-      at76_usb: Make it clear that management frames are sent at 1Mbps
-      at76_usb: Eliminate variables used only in at76_dbg()
-      at76_usb: Use string precision to avoid line termination
-      at76_usb: Stop worrying about line termination in ethtool info
-      at76_usb: Rename tlv to ie for readability
-      at76_usb: Remove commented out code for multicast support
-      at76_usb: Eliminate err(), it's USB specific
-      at76_usb: Integrate at76_set_monitor_mode() into at76_dwork_restart()
-      at76_usb: Fix turning radio off
-      at76_usb: No need to reserve 72 bytes in set_mib_buffer - we only need 6
-      at76_usb: Don't clean priv->mib_buf, just clean data explicitly if needed
-      at76_usb: Avoid dubious use of '\0'
-      at76_usb: Fix some device names in the device table
-      at76_usb: Use USB_DEVICE_DATA to improve readability of the device table
+---------- Forwarded message ----------
+From: Theo de Raadt <deraadt@cvs.openbsd.org>
+Date: 31-Aug-2007 21:40
+Subject: That whole "Linux stealing our code" thing
+To: misc@openbsd.org
 
 
- drivers/net/wireless/at76_usb.c |  811 ++++++++++++++++++++-------------------
- drivers/net/wireless/at76_usb.h |   61 ---
- 2 files changed, 416 insertions(+), 456 deletions(-)
+[bcc'd to Eben Moglen so that people don't flood him]
 
--- 
-Regards,
-Pavel Roskin
+I stopped making public statements in the recent controversy because
+Eben Moglen started working behind the scenes to 'improve' what Linux
+people are doing wrong with licensing, and he asked me to give him
+pause, so his team could work.  Honestly, I was greatly troubled by
+the situation, because even people like Alan Cox were giving other
+Linux developers advice to ... break the law.  And furthermore, there
+are even greater potential risks for how the various communities
+interact.
+
+For the record -- I was right and the Linux developers cannot change
+the licenses in any of those ways proposed in those diffs, or that
+conversation (http://lkml.org/lkml/2007/8/28/157).
+
+It is illegal to modify a license unless you are the owner/author,
+because it is a legal document.  If there are multiple owners/authors,
+they must all agree.  A person who receives the file under two
+licenses can use the file in either way....  but if they distribute
+the file (modified or unmodified!), they must distribute it with the
+existing license intact, because the licenses we all use have
+statements which say that the license may not be removed.
+
+It may seem that the licenses let one _distribute_ it under either
+license, but this interpretation of the license is false -- it is
+still illegal to break up, cut up, or modify someone else's legal
+document, and, it cannot be replaced by another license because it may
+not be removed.  Hence, a dual licensed file always remains dual
+licensed, every time it is distributed.
+
+Now I've been nice enough to give Eben and his team a few days time to
+communicate inside the Linux community, to convince them that what
+they have proposed/discussed is wrong at a legal level.  I think that
+Eben also agrees with me that there are grave concerns about how this
+leads to problems at the ethical and community levels (at some level,
+a ethos is needed for Linux developers to work with *BSD developers).
+And there are possibilities that similar issues could loom in the
+larger open source communities who are writing applications.
+
+Eben has thus far chosen not to make a public statement, but since
+time is running out on people's memory, I am making one.  Also, I feel
+that a lot of Linux "relicencing" meme-talkin' trolls basically have
+attacked me very unfairly again, so I am not going to wait for Eben to
+say something public about this.
+
+In http://lkml.org/lkml/2007/8/29/183, Alan Cox managed to summarize
+what Jiri Slaby and Luis Rodriguez were trying to do by proposing a
+modification of a Dual Licenced file without the consent of all the
+authors.  Alan asks "So whats the problem ?".  Well, Alan, I must
+caution you -- your post is advising people to break the law.
+
+I will attempt to describe in simple terms, based on what I have been
+taught, how one must handle such licenses:
+
+- If you receive dual licensed code, you may not delete the license
+  you don't like and then distribute it.  It has to stay, because you
+  may not edit someone's else's license -- which is a three-part legal
+  document (For instance: Copyright notice, BSD, followed by GPL).
+
+- If you receive ISC or BSD licensed code, you may not delete the
+  license.  Same principle, since the notice says so.  It's the law.
+  Really.
+
+- If you add "large pieces of originality" to the code which are valid
+  for copyright protection on their own, you may choose to put a different
+  and seperate (must be non-conflicting...) license at the top of the file
+  above the existing license.
+
+    (Warning: things become less clear as to what the combination of
+    licenses mean, though -- there are ethical traps, too).
+
+- If you wish for everyone to remain friends, you should give code back.
+
+  That means (at some ethical or friendliness level) you probably do
+  not want to put a GPL at the top of a BSD or ISC file, because you
+  would be telling the people who wrote the BSD or ISC file:
+
+     "Thanks for what you wrote, but this is a one-way street, you give
+     us code, and we take it, we give you you nothing back.  screw off."
+
+In either case, I think a valuable lessons has been taught us here in
+the BSD world -- there are many many GPL loving people who are going
+to try to find any way to not give back and share (I will mention one
+name: Luis Rodriguez has been a fanatic pushing us for dual licensed,
+and I feel he is to blame for this particular problem).  Many of those
+same people have been saying for years that BSD code can be stolen,
+and that is why people should GPL their code.
+
+Well, the lesson they have really taught us is that they consider the
+GPL their best tool to take from us!
+
+GPL fans said the great problem we would face is that companies would
+take our BSD code, modify it, and not give back.  Nope -- the great
+problem we face is that people would wrap the GPL around our code, and
+lock us out in the same way that these supposed companies would lock
+us out.  Just like the Linux community, we have many companies giving
+us code back, all the time.  But once the code is GPL'd, we cannot get
+it back.
+
+Ironic.
+
+I hope some people in the GPL community will give that some thought.
+Your license may benefit you, but you could lose friends you need.
+The GPL users have an opportunity to 'develop community', to keep an
+ethic of sharing alive.
+
+If the Linux developers wrap GPL's around things we worked very hard
+on, it will definately not be viewed as community development.
+
+Thank you for thinking about this.
+
+[I ask that one person make sure that one copy of this ends up on the
+linux kernel mailing list]
