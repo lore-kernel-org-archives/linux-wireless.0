@@ -1,56 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:8008 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751577AbXIAEgi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 00:36:38 -0400
-Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
-	by relay.cesmail.net (Postfix) with ESMTP id ED055618FE1
-	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:36:37 -0400 (EDT)
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 25/35] Don't dump mib_mdomain while scanning,  it's done on device startup
-To: linux-wireless@vger.kernel.org
-Date: Sat, 01 Sep 2007 00:36:37 -0400
-Message-ID: <20070901043637.2498.60162.stgit@dv.roinet.com>
-In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
-References: <20070901043233.2498.95850.stgit@dv.roinet.com>
+Received: from py-out-1112.google.com ([64.233.166.176]:38339 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751487AbXIAF6Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 01:58:16 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3852081pyb
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Aug 2007 22:58:15 -0700 (PDT)
+Message-ID: <40f31dec0708312258h1d77fc4eu54460bf70f119d27@mail.gmail.com>
+Date: Sat, 1 Sep 2007 08:58:15 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 5/5] Net: ath5k, kconfig changes
+Cc: "Christoph Hellwig" <hch@infradead.org>,
+	"Jiri Slaby" <jirislaby@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <40f31dec0708301518u5ef32d13jfe1cce09656bf77d@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
+References: <2713029743177393055@pripojeni.net>
+	 <280951420471148977@pripojeni.net>
+	 <20070828171330.GD29343@infradead.org>
+	 <40f31dec0708291838p5d33eb34p3b4432d9d270841a@mail.gmail.com>
+	 <20070830123609.GA5140@tuxdriver.com>
+	 <40f31dec0708301518u5ef32d13jfe1cce09656bf77d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+2007/8/31, Nick Kossifidis <mickflemm@gmail.com>:
+> 2007/8/30, John W. Linville <linville@tuxdriver.com>:
+> > On Thu, Aug 30, 2007 at 04:38:09AM +0300, Nick Kossifidis wrote:
+> > > 2007/8/28, Christoph Hellwig <hch@infradead.org>:
+> >
+> > > > Also this whole patch seems rather pointless.  It saves only
+> > > > very little and turns the driver into a complete ifdef maze.
+> >
+> > > Also most
+> > > people will use 5212 code only, 5211 cards are on some old laptops and
+> > > 5210, well i couldn't even find  a 5210 for actual testing :P
+> >
+> > FWIW, I'd bet dollars to donuts that distros will enable them all
+> > together.
+> >
+> > Is saving code space the only reason to turn these off?  How much
+> > space do you save?
+> >
+> > Is there some way you can isolate and/or limit the number of ifdef
+> > blocks further?  If so, we might consider a version of this patch
+> > that depends on EMBEDDED or somesuch...?
+> >
+> > John
+>
+> O.K. as a first step i'll limit 5210 code only then, just an option
+> like "support older 5210 chipsets" which is going to be off by default
+> instead of 3 options. It's not just saving space, it's also saving
+> some runtime checks. It's not really a gain in performance though,
+> most checks are done during initialization and dfs setup, i just
+> thought it would be usefull to save as much cpu as possible.
+>
 
- drivers/net/wireless/at76_usb.c |   11 -----------
- 1 files changed, 0 insertions(+), 11 deletions(-)
+Well after some thought i removed them all, there is no real gain from
+this in most cases (that ppl will use newer 5212 chips and
+combatibles).
 
 
-diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-index 98960eb..b586522 100644
---- a/drivers/net/wireless/at76_usb.c
-+++ b/drivers/net/wireless/at76_usb.c
-@@ -3816,7 +3816,6 @@ static void at76_dwork_get_scan(struct work_struct *work)
- {
- 	int status;
- 	int ret;
--	struct mib_mdomain mdomain;
- 	struct at76_priv *priv = container_of(work, struct at76_priv,
- 					      dwork_get_scan.work);
- 
-@@ -3861,16 +3860,6 @@ static void at76_dwork_get_scan(struct work_struct *work)
- 
- 	case 1:
- 		WARN_ON(!priv->international_roaming);
--		ret = at76_get_mib_mdomain(priv, &mdomain);
--		if (ret < 0)
--			err("at76_get_mib_mdomain returned %d", ret);
--		else
--			at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: channel_list %s "
--				 "tx_powerlevel %s", priv->netdev->name,
--				 hex2str(mdomain.channel_list,
--					 sizeof(mdomain.channel_list)),
--				 hex2str(mdomain.tx_powerlevel,
--					 sizeof(mdomain.tx_powerlevel)));
- 		ret = at76_start_scan(priv, 0, 0);
- 		if (ret < 0)
- 			err("%s: %s: start_scan (IR) failed with %d",
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
