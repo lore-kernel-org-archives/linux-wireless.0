@@ -1,60 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:44548 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758455AbXISPJy (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.183]:65431 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757632AbXIAXs3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 11:09:54 -0400
-Subject: Re: [PATCH 1/1] mac80211: add sta_notify callback
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240709190805i6b703e0w885390a78eda9bdc@mail.gmail.com>
-References: <1190036530108-git-send-email-tomas.winkler@intel.com>
-	 <1190054680.23521.23.camel@johannes.berg>
-	 <1ba2fa240709180951v3dc0a98ay11205296fd5768a@mail.gmail.com>
-	 <1190197117.4414.0.camel@johannes.berg>
-	 <1ba2fa240709190438o5032df52mb22a97546bdbe563@mail.gmail.com>
-	 <1190204934.4414.17.camel@johannes.berg>
-	 <1ba2fa240709190805i6b703e0w885390a78eda9bdc@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sgu18RCSuthD2d0GyVkG"
-Date: Wed, 19 Sep 2007 17:11:10 +0200
-Message-Id: <1190214671.4414.24.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 1 Sep 2007 19:48:29 -0400
+Received: by py-out-1112.google.com with SMTP id u77so4178008pyb
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Sep 2007 16:48:28 -0700 (PDT)
+Message-ID: <43e72e890709011648k5caffb7fn1051e1f5d5f27c9b@mail.gmail.com>
+Date: Sat, 1 Sep 2007 19:48:28 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Constantine A. Murenin" <mureninc@gmail.com>
+Subject: Re: Fwd: That whole "Linux stealing our code" thing
+Cc: "Adrian Bunk" <bunk@kernel.org>, "Jeff Garzik" <jeff@garzik.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>,
+	"Alan Cox" <alan@lxorguk.ukuu.org.uk>
+In-Reply-To: <f34ca13c0709011629g1f16508cic7c31c3d20a57dae@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <200709010140.l811eq9H005896@cvs.openbsd.org>
+	 <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
+	 <46D99FB7.6030505@garzik.org>
+	 <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
+	 <20070901205457.GK9260@stusta.de>
+	 <f34ca13c0709011427u7a9cc97bp75c035afed3e5a63@mail.gmail.com>
+	 <20070901215225.GM9260@stusta.de>
+	 <f34ca13c0709011629g1f16508cic7c31c3d20a57dae@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I urge developers to not bait into this and just leave this alone.
+Those involved know what they are doing and have a strong team of
+attorneys watching their backs. Any *necessary* discussions are be
+done privately.
 
---=-sgu18RCSuthD2d0GyVkG
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2007-09-19 at 17:05 +0200, Tomas Winkler wrote:
-
-> I will do this favor for you :)  I will prepare another patch.
-
-Thanks :)
-
-You should probably base it against Michael's tree though:
-http://git.kernel.org/?p=3Dlinux/kernel/git/mwu/mac80211-misc.git;a=3Dsumma=
-ry
-which basically consists of all the patches I had that we agreed on
-should go in.
-
-Oh and please also update the comment describing the callback.
-
-johannes
-
---=-sgu18RCSuthD2d0GyVkG
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG8TwO/ETPhpq3jKURAnM5AJsG+35aKC4U1DV4aSqaCB75nQ12nACeLXYv
-+5SiDC6Z79/eBrZza9+CVHE=
-=gyvt
------END PGP SIGNATURE-----
-
---=-sgu18RCSuthD2d0GyVkG--
-
+  Luis
