@@ -1,38 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:4025 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753515AbXIFIXM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2007 04:23:12 -0400
-Date: Thu, 6 Sep 2007 16:23:01 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Satyam Sharma <satyam@infradead.org>
-Cc: Florian Lohoff <flo@rfc822.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
-	Michal Piotrowski <michal.k.k.piotrowski@gmail.com>,
-	ipw3945-devel@lists.sourceforge.net, yi.zhu@intel.com
-Subject: Re: BUG: scheduling while atomic: ifconfig/0x00000002/4170
-Message-ID: <20070906082301.GB21929@gondor.apana.org.au>
-References: <20070902184439.GA14306@paradigm.rfc822.org> <6bffcb0e0709021659o3856cd06gabc054c949a84397@mail.gmail.com> <alpine.LFD.0.999.0709060923340.26804@enigma.security.iitk.ac.in>
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:2250 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752299AbXIANox (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 09:44:53 -0400
+Date: Sat, 1 Sep 2007 09:12:49 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	yi.zhu@intel.com
+Subject: Re: borkage in 2.6.23-rc4-mm1
+Message-ID: <20070901131248.GA4462@tuxdriver.com>
+References: <20070831211603.083dfed2.akpm@linux-foundation.org> <46D9352B.4060606@garzik.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LFD.0.999.0709060923340.26804@enigma.security.iitk.ac.in>
+In-Reply-To: <46D9352B.4060606@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 06, 2007 at 10:32:33AM +0530, Satyam Sharma wrote:
-> 
-> > > [  382.529041]  [<c02c8abc>] dev_close+0x24/0x67
-> > > [  382.529052]  [<e01f402b>] ieee80211_master_stop+0x4a/0x6d [mac80211]
+On Sat, Sep 01, 2007 at 05:47:23AM -0400, Jeff Garzik wrote:
+> Andrew Morton wrote:
+> >Aug 31 20:58:07 sony kernel: ipw2200: Firmware error detected.  Restarting.
 
-This is where the bug is.  You cannot call dev_close from an
-atomic context as i33380211_master_stop does it within spin
-locks.
+> I see this on my Sony Vaio with older, non-mm kernels too.  Incredibly 
+> frustrating, as it seems to be related to the phase of the moon. 
+> Sometimes a reboot gets my wireless working, sometimes it doesn't.
 
-Cheers,
+There have been a few random reports of firmware restarts with ipw2x00
+for a long time.  Unfortunately, only Intel has any visibility into
+that firmware.  Do make sure you have the latest firmware released
+from Intel (you probably do already, but it's worth checking).
+
+Yi, any thoughts?
+
+John
 -- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+John W. Linville
+linville@tuxdriver.com
