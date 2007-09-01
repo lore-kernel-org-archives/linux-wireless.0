@@ -1,83 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:47097 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754381AbXI3ImP (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:34344 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753075AbXIAQwc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Sep 2007 04:42:15 -0400
-Subject: Re: Kernelspace --> Userspace MLME move and related items
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, Jouni Malinen <j@w1.fi>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20070929161740.GB6130@tuxdriver.com>
-References: <43e72e890709281725n6a8ffe0bq487f32796a7e1cf2@mail.gmail.com>
-	 <1191066581.22960.55.camel@johannes.berg>
-	 <20070929161740.GB6130@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qXOS2iqp0/dVD6x4vtw1"
-Date: Sun, 30 Sep 2007 10:43:35 +0200
-Message-Id: <1191141815.22960.134.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 1 Sep 2007 12:52:32 -0400
+From: Chr <chunkeey@web.de>
+To: Michael Wu <flamingice@sourmilk.net>
+Subject: Re: [PATCH 2/2 v2] p54: disable QoS on older firmwares
+Date: Sat, 1 Sep 2007 18:54:27 +0200
+Cc: Hans de Goede <j.w.r.degoede@hhs.nl>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <46BFF10B.1090307@hhs.nl> <200708312327.28981.chunkeey@web.de> <200709010058.59928.flamingice@sourmilk.net>
+In-Reply-To: <200709010058.59928.flamingice@sourmilk.net>
+MIME-Version: 1.0
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_DlZ2GVMe1lpYEzZ"
+Message-Id: <200709011854.27620.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--Boundary-00=_DlZ2GVMe1lpYEzZ
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
---=-qXOS2iqp0/dVD6x4vtw1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+From: Christian Lamparter <chunkeey@web.de>
 
-On Sat, 2007-09-29 at 12:17 -0400, John W. Linville wrote:
+This patch fixes a regression with older (pre 2.5.2.0) firmwares, that don't
+support the QoS queues yet...
 
-> Can you elaborate some on why you think umlme is required for these
-> (or other) functions?  It isn't obvious to me that all of these MLME
-> functions are so complex as to require userland implementations.
+Thanks to Hans de Goede <j.w.r.degoede@hhs.nl> for reporting and debugging it.
 
-> >  * 802.11r (fast roaming)
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+>Why bother allocating a temporary buffer for firmware version string? Just 
+>keep a pointer to where it's located. (unless it's not null terminated..)
+Ok
+ 
 
-Already has a (partial?) implementation in wpa_supplicant.
+--Boundary-00=_DlZ2GVMe1lpYEzZ
+Content-Type: text/x-diff;
+  charset="iso-8859-15";
+  name="p54-support-older-firmwares4.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="p54-support-older-firmwares4.diff"
 
-> >  * 802.11s (mesh networking) (not entirely sure what management stuff
-> >    this includes)
+diff -Nurp a/drivers/net/wireless/p54common.c b/drivers/net/wireless/p54common.c
+--- a/drivers/net/wireless/p54common.c	2007-08-31 21:57:29.000000000 +0200
++++ b/drivers/net/wireless/p54common.c	2007-09-01 18:27:10.000000000 +0200
+@@ -30,9 +30,13 @@ MODULE_ALIAS("prism54common");
+ void p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw)
+ {
+ 	struct p54_common *priv = dev->priv;
++	struct bootrec_exp_if *exp_if;
+ 	struct bootrec *bootrec;
+ 	u32 *data = (u32 *)fw->data;
+ 	u32 *end_data = (u32 *)fw->data + (fw->size >> 2);
++	u8 *fw_version = NULL;
++	size_t len;
++	int i;
+ 
+ 	if (priv->rx_start)
+ 		return;
+@@ -46,7 +50,7 @@ void p54_parse_firmware(struct ieee80211
+ 	bootrec = (struct bootrec *) data;
+ 
+ 	while (bootrec->data <= end_data &&
+-	       (bootrec->data + le32_to_cpu(bootrec->len)) <= end_data) {
++	       (bootrec->data + (len = le32_to_cpu(bootrec->len))) <= end_data) {
+ 		u32 code = le32_to_cpu(bootrec->code);
+ 		switch (code) {
+ 		case BR_CODE_COMPONENT_ID:
+@@ -69,6 +73,9 @@ void p54_parse_firmware(struct ieee80211
+ 			}
+ 			break;
+ 		case BR_CODE_COMPONENT_VERSION:
++			/* 24 bytes should be enough for all firmwares */
++			if (strnlen((unsigned char*)bootrec->data, 24) < 24)
++				fw_version = (unsigned char*)bootrec->data;
+ 			break;
+ 		case BR_CODE_DESCR:
+ 			priv->rx_start = le32_to_cpu(bootrec->data[1]);
+@@ -76,6 +83,10 @@ void p54_parse_firmware(struct ieee80211
+ 			priv->rx_end = le32_to_cpu(bootrec->data[2]) - 0x3500;
+ 			break;
+ 		case BR_CODE_EXPOSED_IF:
++			exp_if = (struct bootrec_exp_if *) bootrec->data;
++			for (i = 0; i < (len * sizeof(*exp_if) / 4); i++)
++				if (exp_if[i].if_id == 0x1a)
++					priv->fw_var = le16_to_cpu(exp_if[i].variant);
+ 			break;
+ 		case BR_CODE_DEPENDENT_IF:
+ 			break;
+@@ -86,7 +97,20 @@ void p54_parse_firmware(struct ieee80211
+ 		default:
+ 			break;
+ 		}
+-		bootrec = (struct bootrec *)&bootrec->data[le32_to_cpu(bootrec->len)];
++		bootrec = (struct bootrec *)&bootrec->data[len];
++	}
++
++	if (fw_version)
++		printk(KERN_INFO "p54: FW rev %s - Softmac protocol %x.%x\n",
++			fw_version, priv->fw_var >> 8, priv->fw_var & 0xff);
++
++	if (priv->fw_var >= 0x300) {
++		/* Firmware supports QoS, use it! */
++		priv->tx_stats.data[0].limit = 3;
++		priv->tx_stats.data[1].limit = 4;
++		priv->tx_stats.data[2].limit = 3;
++		priv->tx_stats.data[3].limit = 1;
++		dev->queues = 4;
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(p54_parse_firmware);
+@@ -909,13 +933,9 @@ struct ieee80211_hw *p54_init_common(siz
+ 	dev->channel_change_time = 1000;	/* TODO: find actual value */
+ 	dev->max_rssi = 127;
+ 
+-	/* (hard) queue limits */
+-	priv->tx_stats.data[0].limit = 3;
+-	priv->tx_stats.data[1].limit = 4;
+-	priv->tx_stats.data[2].limit = 3;
+-	priv->tx_stats.data[3].limit = 1;
++	priv->tx_stats.data[0].limit = 5;
++	dev->queues = 1;
+ 
+-	dev->queues = 4;
+ 	dev->extra_tx_headroom = sizeof(struct p54_control_hdr) + 4 +
+ 				 sizeof(struct p54_tx_control_allocdata);
+ 
+diff -Nurp a/drivers/net/wireless/p54.h b/drivers/net/wireless/p54.h
+--- a/drivers/net/wireless/p54.h	2007-08-28 12:00:54.000000000 +0200
++++ b/drivers/net/wireless/p54.h	2007-09-01 18:04:51.000000000 +0200
+@@ -62,6 +62,7 @@ struct p54_common {
+ 	u8 version;
+ 	unsigned int tx_hdr_len;
+ 	void *cached_vdcf;
++	unsigned int fw_var;
+ 	/* FIXME: this channels/modes/rates stuff sucks */
+ 	struct ieee80211_channel channels[14];
+ 	struct ieee80211_rate rates[12];
 
-Not sure really.
-
-> >  * 802.11w (encrypted management)
-
-All the key handling is in wpa_supplicant so we will not be able to
-support it in the kernel w/o wpa_supplicant and I don't see a good way
-to do it in the kernel either (not too familiar with the spec though),
-and wpa_supplicant already has a (partial?) implementation.
-
-> >  * DLS features of 802.11e
-
-We've had this in the kernel and I'm not generally against it but it's
-somewhat strange to have something in the kernel and not be able to use
-it. We will of course need some support in the kernel for actually
-sending and receiving direct-link data frames.
-
-johannes
-
---=-qXOS2iqp0/dVD6x4vtw1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUARv9htqVg1VMiehFYAQLe/Q//VTvpbuJQ2RjP5ByrYAdWolPFU5stB/pX
-I3VOKBHCW1lbBhtU5Z4kVuapzDskXXJnlohjnN9tcfBte4aCPrubLGHHPb5uWwwM
-zbOvuOLQy0gWca0UEGTxci4lkcWzngmPwBrDr1W1gkpGXkJD+s7Ea+is/uGqrPaJ
-TfPp7tqhSuW4F07wOTA1M9qbf7+Tz5HCrPxt7ucJb/gu4hl1BtJo7KcCLAyXXiAI
-igEtwgcTuOPr180N997Pfi4R2gngXVhL00LaDcaGV+21lGEOtuAush2cld18Om8H
-HthLOjujvlImm9xnHV37wlyCl0SWhU2T3lsSNFMV5xpRP5u+IgO46lKpvZuTO+Yz
-qxgYLG39qrvNbiNLdjy5/KNhCMcdm8hf2A8C/BB8jLZuXl+igqRVUhjkeFTOsYr4
-zKVm4c5DO3BBIeNfsfuP4AlbyBgLhL7yHVSTunMGyckp54KzSP9nJZWQyzWNh0Ue
-md+h2JRSvT9ReIhMYhC7JH7u4npyZIOHDNFeFZgxrC7cTOWAfYFc+WfG3/HpyFsk
-2dqpn/cqgCUnaUa3DZJHxHbm56LrCpwVSD/ErV8HoIqsC96FAMivFx09EpZ2jo82
-kV8F0ZODQXEv76TJYLt/YgF8pZ91Tm/rD0f7hbHSzXD35Lp5KlSguWhE9RRZNsCw
-gksVvIkV2Qc=
-=c+xH
------END PGP SIGNATURE-----
-
---=-qXOS2iqp0/dVD6x4vtw1--
-
+--Boundary-00=_DlZ2GVMe1lpYEzZ--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
