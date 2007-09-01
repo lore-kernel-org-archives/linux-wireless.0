@@ -1,63 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34927 "EHLO
+Received: from crystal.sipsolutions.net ([195.210.38.204]:59393 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752277AbXI2Is3 (ORCPT
+	with ESMTP id S1752151AbXIANix (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Sep 2007 04:48:29 -0400
-Subject: Re: 802.11n drivers
+	Sat, 1 Sep 2007 09:38:53 -0400
+Subject: Re: [PATCH] mac80211: fix race conditions with keys
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Li YanBo <dreamfly281@gmail.com>
-Cc: Patrick Ziegler <patrick.ziegler@fh-kl.de>,
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1197ff4c0709281909u25421b6ay60f5d059fa3e906a@mail.gmail.com>
-References: <46FCF7E7.6080706@fh-kl.de>
-	 <1190991810.3907.7.camel@johannes.berg>
-	 <1197ff4c0709281909u25421b6ay60f5d059fa3e906a@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pGwfANPCLD4OkxXzC7sN"
-Date: Sat, 29 Sep 2007 10:49:50 +0200
-Message-Id: <1191055790.22960.39.camel@johannes.berg>
+In-Reply-To: <1188484758.3978.18.camel@johannes.berg>
+References: <1188484758.3978.18.camel@johannes.berg>
+Content-Type: text/plain
+Date: Sat, 01 Sep 2007 15:40:12 +0200
+Message-Id: <1188654012.7585.151.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-pGwfANPCLD4OkxXzC7sN
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Sat, 2007-09-29 at 10:09 +0800, Li YanBo wrote:
-
-> The Airgo chipset is a pre-n product, and the feature to support
-> standard 802.11n hasn't been implement yet. we will try to see whether
-> it can be used to support 80211n later. but if anything I can help you
-> now, I'd glad to do.
-
-Oh, ok, do you know what's different between the pre-N implemented by
-this chip and standard-N (say draft 2.0 or so)?
+I should note that this opens a race condition when you rekey, it could
+happen that we transmit packets while not having a key at all. We could
+avoid that but the patch is largish and complex (below), not sure if
+it's worth it. It's not something that may cause crashes or such, the
+worst case really is that we transmit frames unencrypted.
 
 johannes
 
---=-pGwfANPCLD4OkxXzC7sN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+---
+ net/mac80211/key.c |   88 +++++++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 76 insertions(+), 12 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+--- wireless-dev.orig/net/mac80211/key.c	2007-09-01 15:33:16.702769870 +0200
++++ wireless-dev/net/mac80211/key.c	2007-09-01 15:33:17.482769870 +0200
+@@ -109,6 +109,29 @@ static void ieee80211_key_disable_hw_acc
+ 	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
+ }
+ 
++/*
++ * Make a copy of the key including key material,
++ * does not copy the AES crypto state.
++ */
++static struct ieee80211_key *ieee80211_key_clone(struct ieee80211_key *key)
++{
++	struct ieee80211_key *result;
++	int size;
++
++	if (!key)
++		return NULL;
++
++	size = sizeof(*result) + key->conf.keylen;
++
++	result = kmalloc(size, GFP_KERNEL);
++	if (!result)
++		return NULL;
++
++	memcpy(result, key, size);
++
++	return result;
++}
++
+ struct ieee80211_key *ieee80211_key_alloc(struct ieee80211_sub_if_data *sdata,
+ 					  struct sta_info *sta,
+ 					  enum ieee80211_key_alg alg,
+@@ -116,7 +139,8 @@ struct ieee80211_key *ieee80211_key_allo
+ 					  size_t key_len,
+ 					  const u8 *key_data)
+ {
+-	struct ieee80211_key *key;
++	struct ieee80211_key *key, *old;
++	struct ieee80211_key **replace;
+ 
+ 	BUG_ON(idx < 0 || idx >= NUM_DEFAULT_KEYS);
+ 	BUG_ON(alg == ALG_NONE);
+@@ -156,13 +180,9 @@ struct ieee80211_key *ieee80211_key_allo
+ 
+ 	ieee80211_debugfs_key_add(key->local, key);
+ 
+-	/* remove key first */
+-	if (sta)
+-		ieee80211_key_free(sta->key);
+-	else
+-		ieee80211_key_free(sdata->keys[idx]);
+-
+ 	if (sta) {
++		replace = &sta->key;
++
+ 		ieee80211_debugfs_key_sta_link(key, sta);
+ 
+ 		/*
+@@ -172,6 +192,8 @@ struct ieee80211_key *ieee80211_key_allo
+ 		if (sta->flags & WLAN_STA_WME)
+ 			key->conf.flags |= IEEE80211_KEY_FLAG_WMM_STA;
+ 	} else {
++		replace = &sdata->keys[idx];
++
+ 		if (sdata->type == IEEE80211_IF_TYPE_STA) {
+ 			struct sta_info *ap;
+ 
+@@ -186,14 +208,56 @@ struct ieee80211_key *ieee80211_key_allo
+ 		}
+ 	}
+ 
+-	/* enable hwaccel if appropriate */
++	/*
++	 * Now it gets tricky. To avoid sending unencrypted packets
++	 * because we have no key at some point, first clone the old
++	 * key and put it to use without hw accel.
++	 *
++	 * Then we can safely free the previous one and remove it from
++	 * hardware acceleration.
++	 */
++	if (*replace && ((*replace)->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
++		struct ieee80211_key *clone;
++
++		old = *replace;
++
++		/*
++		 * If we fail to clone, we have to live with a short window
++		 * where we may be sending frames unencrypted.
++		 */
++		clone = ieee80211_key_clone(old);
++		if (clone)
++			clone->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
++
++		/* now put the clone to use (if any) */
++		rcu_assign_pointer(*replace, clone);
++		synchronize_rcu();
++
++		/*
++		 * We only copied the pointer to the AES tfm,
++		 * those can't be refcounted or such.
++		 */
++		old->u.ccmp.tfm = NULL;
++
++		/* free original, removing it from hw accel */
++		ieee80211_key_free(old);
++	}
++
++	/*
++	 * At this point, the key that's in use (if any) is not uploaded
++	 * to the hardware, so we can freely upload the new one.
++	 */
+ 	if (netif_running(key->sdata->dev))
+ 		ieee80211_key_enable_hw_accel(key);
+ 
+-	if (sta)
+-		rcu_assign_pointer(sta->key, key);
+-	else
+-		rcu_assign_pointer(sdata->keys[idx], key);
++	old = *replace;
++
++	/* put the new key to use */
++	rcu_assign_pointer(*replace, key);
++	synchronize_rcu();
++
++	/* and free the old one */
++	ieee80211_key_free(old);
+ 
+ 	list_add(&key->list, &sdata->key_list);
+ 
 
-iQIVAwUARv4RraVg1VMiehFYAQJCeQ/+KpzOQPWntHrk2grh1kWkJ59c+E968VRV
-hwZx1VyOtHJeCra9xDyPt96tD+gBEKVNMTR4XalZOteiF/qacwvpUKNZrVpygWjg
-BjLh/eE3phZdqcrDaEaXiBdETX+ufyKW/W0ISLsgAjnaDBYNlUJkYLBWcjET+92B
-rmCUyS6aZSNgC6BlSV4TGe4wr0zFevhMEdsp5rSHme5BIZMUYEaoPqOHk5XQWvIP
-easzpqKNILIuSK/OgGULpczna7zhG1n/75Dd7RAVTacnx8yLhXAggCQDriNh91Tx
-4CFcN+8Ug7zA8IGGNdWLKFMZ43Vpe8FLOQHQh2Q8D2HmXVw7YxMjjtY7FEmDRKmb
-WwfXy85X6HinW/ckID+T5YWq+fo9xaP2sLbhs71LJmVhh9+KVg08mUeZC0lDWbuL
-wj3V4CF7ZpSx25+Qa9IsvFoGhJO1QepoL0o5w4lV+UoCwMTj4741WOgSxmjc/T/A
-6zUkg14u6jf1wS88g95XcCdJwqLZlBOZ8znC2YlZ9naesVtIDjnx5zWqSCFcfmGm
-A/MReLWbpKNkD8C1L1gUTyRslQWrPnxMtrnGk3WjQSup8OFzuAV8j7jIxTH4kJI4
-bN+ANDKrUozysoSPOhYWI80OZKZBjQqJVW/1Kn3Cx8rS6lPUmTJRDoymjg/cCwRs
-TfKbMpuOz4Y=
-=YD4m
------END PGP SIGNATURE-----
-
---=-pGwfANPCLD4OkxXzC7sN--
 
