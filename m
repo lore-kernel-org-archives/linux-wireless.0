@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:56199 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751263AbXIAEe0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 00:34:26 -0400
-Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
-	by relay.cesmail.net (Postfix) with ESMTP id 7E50A618FE1
-	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:34:26 -0400 (EDT)
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 02/35] Use existing macros to find bulk in and bulk out  endpoints
-To: linux-wireless@vger.kernel.org
-Date: Sat, 01 Sep 2007 00:34:26 -0400
-Message-ID: <20070901043425.2498.87794.stgit@dv.roinet.com>
-In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
-References: <20070901043233.2498.95850.stgit@dv.roinet.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from crystal.sipsolutions.net ([195.210.38.204]:44540 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751884AbXIAJXC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 05:23:02 -0400
+Subject: Re: [PATCH] mac80211: get STA after tx radiotap snipped
+From: Johannes Berg <johannes@sipsolutions.net>
+To: warmcat <andy@warmcat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20070901090244.7234.51990.stgit@localhost>
+References: <20070901090244.7234.51990.stgit@localhost>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jA7zVf2eM+oYwqRqMo8t"
+Date: Sat, 01 Sep 2007 11:24:19 +0200
+Message-Id: <1188638659.7585.126.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
 
- drivers/net/wireless/at76_usb.c |    9 ++-------
- 1 files changed, 2 insertions(+), 7 deletions(-)
+--=-jA7zVf2eM+oYwqRqMo8t
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Sat, 2007-09-01 at 10:02 +0100, warmcat wrote:
+> Johannes Berg noticed that in __ieee80211_tx_prepare() we try to get the
+> STA from addr1 of the ieee80211 header when the radiotap header is actual=
+ly
+> still at the front of the packet.  This patch defers doing that until the
+> radiotap header is gone.
 
-diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-index f2a74d4..be9ef6e 100644
---- a/drivers/net/wireless/at76_usb.c
-+++ b/drivers/net/wireless/at76_usb.c
-@@ -2045,10 +2045,7 @@ static int at76_alloc_urbs(struct at76_priv *priv,
- 			 __func__,
- 			 i, endpoint->bEndpointAddress, endpoint->bmAttributes);
- 
--		if ((endpoint->bEndpointAddress & 0x80) &&
--		    ((endpoint->bmAttributes & 3) == 0x02)) {
--			/* we found a bulk in endpoint */
--
-+		if (usb_endpoint_is_bulk_in(endpoint)) {
- 			priv->read_urb = usb_alloc_urb(0, GFP_KERNEL);
- 			if (!priv->read_urb) {
- 				err("No free urbs available");
-@@ -2058,9 +2055,7 @@ static int at76_alloc_urbs(struct at76_priv *priv,
- 			    usb_rcvbulkpipe(udev, endpoint->bEndpointAddress);
- 		}
- 
--		if (((endpoint->bEndpointAddress & 0x80) == 0x00) &&
--		    ((endpoint->bmAttributes & 3) == 0x02)) {
--			/* we found a bulk out endpoint */
-+		if (usb_endpoint_is_bulk_out(endpoint)) {
- 			priv->write_urb = usb_alloc_urb(0, GFP_KERNEL);
- 			if (!priv->write_urb) {
- 				err("no free urbs available");
+looks good to me, thanks, will adopt for mac80211 unless somebody else
+wants to?
+
+johannes
+
+--=-jA7zVf2eM+oYwqRqMo8t
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG2S/D/ETPhpq3jKURAhhzAJ49tz73Mk49a1h+1WygW71c1vgzXwCdFlgr
+NG0fDLJ8U1HR+JpD0jvyq2c=
+=Raxp
+-----END PGP SIGNATURE-----
+
+--=-jA7zVf2eM+oYwqRqMo8t--
+
