@@ -1,46 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:35686
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751738AbXIZOlB (ORCPT
+Received: from purr.warmcat.com ([87.106.142.209]:55548 "EHLO
+	mailserver.mog.warmcat.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752259AbXIAJVE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2007 10:41:01 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] mac80211: fix interface initialisation and deinitialisation
-Date: Wed, 26 Sep 2007 16:37:56 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless@vger.kernel.org
-References: <200709252206.57855.mb@bu3sch.de> <1190755892.18521.330.camel@johannes.berg> <1190809643.4204.3.camel@johannes.berg>
-In-Reply-To: <1190809643.4204.3.camel@johannes.berg>
+	Sat, 1 Sep 2007 05:21:04 -0400
+Message-ID: <46D92EFC.2060007@warmcat.com>
+Date: Sat, 01 Sep 2007 10:21:00 +0100
+From: Andy Green <andy@warmcat.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200709261637.56556.mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: radiotap injection bugs & extending it
+References: <1188609135.7585.105.camel@johannes.berg>	 <46D92A1C.4050308@warmcat.com> <1188637615.7585.118.camel@johannes.berg>
+In-Reply-To: <1188637615.7585.118.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 26 September 2007 14:27:23 Johannes Berg wrote:
-> When an interface is registered it is still uninitialised so
-> ieee80211_if_reinit() can't be called on it (it will oops.)
-> Hence, we need to move the uninit method assignment.
+Somebody in the thread at some point said:
+> On Sat, 2007-09-01 at 10:00 +0100, Andy Green wrote:
 > 
-> Also, this patch fixes the bug that the master device is never
-> initialised nor deinitialised at all. Oddly, the deinit code
-> had an if statement to not run some code when running for the
-> master interface (which never happened), but that if statement
-> is also wrong. Fix that too.
+>> Yes it's wrong, hdr is also dereferenced once more while the radiotap
+>> header is still in place.  I made a little patch I will send in a
+>> moment, if you already did it then ignore the patch.
 > 
-> Now that the uninit code is run for the master device, another
-> bug surfaced: it tries to remove all dependent interfaces and
-> that oopses or BUGs at some point, either because it unregisters
-> already unregistered interfaces (missing list_del bug) or due
-> to trying to iterate a list that has had other things removed.
-> Fix this too by handling the master interface specially.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> No, sent the mail just before going to sleep :) I'll review your patch
+> and adopt it. Guess I get to rebase my ~70ish patches to after it
+> then ;)
 
-This works fine without any crashes or problems here.
+Hopefully it's just fuzz...
 
--- 
-Greetings Michael.
+>>> Also, after doing more work on mac80211 I now again have hostapd running
+>>> via monitor interfaces. However, there's a bit of a problem there.
+>> You are definitely on fire at the moment Johannes.
+> 
+> Heh, yeah, got a bit of time on my hands right now.
+
+Opposite for me, having to do paying work at the moment.
+
+> Yeah, I can do that. Not sure about PS mode though. I suppose your use
+> case won't suffer if I simply do it unconditionally since you're always
+> sending multicast frames anyhow.
+
+Well because our frames aren't targeted at any real MAC I'm not sure the
+AP will buffer them for devices in PS or not.  Maybe the client having
+an interface up in hardware promisc should be a sign for it to not go
+into PS mode anyway?
+
+For sure things will be much better and more consistent if we can inject
+down unassociated interfaces reliably, so this is a nice move.
+
+>>> This is basically it, except for short preamble setting. That is a bit
+>>> of a problem, however, because it's not a tristate in radiotap and we
+>>> want a tristate (long/short/automatic). Ideas on this item?
+>> No idea about it here.
+> 
+> I could propose adding a new radiotap TX flag, I suppose...
+
+I don't know enough about it to have a proper idea, sorry.
+
+-Andy
