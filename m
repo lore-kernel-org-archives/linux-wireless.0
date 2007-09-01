@@ -1,55 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from turing-police.cc.vt.edu ([128.173.14.107]:34134 "EHLO
-	turing-police.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751909AbXIBFqo (ORCPT
-	<RFC822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 01:46:44 -0400
-To: "Constantine A. Murenin" <mureninc@gmail.com>
-Cc: Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>, jirislaby@gmail.com,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: Re: That whole "Linux stealing our code" thing
-In-Reply-To: Your message of "Sun, 02 Sep 2007 01:09:18 EDT."
-             <f34ca13c0709012209x64c282b9o1fd0cb7d08690247@mail.gmail.com>
-From: Valdis.Kletnieks@vt.edu
-References: <200709010140.l811eq9H005896@cvs.openbsd.org> <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <20070901215225.GM9260@stusta.de> <3A831845-B630-42AD-B52F-DC9EA2060BAE@dixongroup.net> <20070902015537.GH16016@stusta.de> <5619.1188704843@turing-police.cc.vt.edu>
-            <f34ca13c0709012209x64c282b9o1fd0cb7d08690247@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1188711996_2988P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Date: Sun, 02 Sep 2007 01:46:36 -0400
-Message-ID: <24861.1188711996@turing-police.cc.vt.edu>
+Received: from c60.cesmail.net ([216.154.195.49]:4413 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751349AbXIAEhH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 00:37:07 -0400
+Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
+	by relay.cesmail.net (Postfix) with ESMTP id 93F4A618FE1
+	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:37:06 -0400 (EDT)
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 30/35] Eliminate pr_debug() in favor of at76_dbg()
+To: linux-wireless@vger.kernel.org
+Date: Sat, 01 Sep 2007 00:37:06 -0400
+Message-ID: <20070901043706.2498.22327.stgit@dv.roinet.com>
+In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
+References: <20070901043233.2498.95850.stgit@dv.roinet.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---==_Exmh_1188711996_2988P
-Content-Type: text/plain; charset=us-ascii
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-On Sun, 02 Sep 2007 01:09:18 EDT, "Constantine A. Murenin" said:
+ drivers/net/wireless/at76_usb.c |   19 +++++++++----------
+ 1 files changed, 9 insertions(+), 10 deletions(-)
 
-> The idea here is that no patching was needed in the first place --
-> most of the files are/were BSD-licensed, because they were forked from
-> OpenBSD.
 
-Oh, silly me.  For some reason, I had it in my head that Jiri's original
-patch actually included some real live *code* in addition to the parts that
-changed the licensing text... ;)
-
---==_Exmh_1188711996_2988P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
-
-iD8DBQFG2k48cC3lWbTT17ARAuNCAKD7cvkX1fngwvhOCXCW/0C2R+mV+gCdGd7E
-9aCzyBSxygcU0ZyqtI67zvY=
-=k9wr
------END PGP SIGNATURE-----
-
---==_Exmh_1188711996_2988P--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index 5922d35..e612dc5 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -1818,19 +1818,18 @@ static void at76_dump_bss_table(struct at76_priv *priv)
+ 
+ 	spin_lock_irqsave(&priv->bss_list_spinlock, flags);
+ 
+-	pr_debug("%s BSS table (curr=%p):", priv->netdev->name, priv->curr_bss);
++	at76_dbg(DBG_BSS_TABLE, "%s BSS table (curr=%p):", priv->netdev->name,
++		 priv->curr_bss);
+ 
+ 	list_for_each(lptr, &priv->bss_list) {
+ 		ptr = list_entry(lptr, struct bss_info, list);
+-		pr_debug("0x%p: bssid %s channel %d ssid %s (%s)"
+-			 " capa 0x%04x rates %s rssi %d link %d noise %d",
+-			 ptr, mac2str(ptr->bssid),
+-			 ptr->channel,
+-			 ptr->ssid,
+-			 hex2str(ptr->ssid, ptr->ssid_len),
+-			 ptr->capa,
+-			 hex2str(ptr->rates, ptr->rates_len),
+-			 ptr->rssi, ptr->link_qual, ptr->noise_level);
++		at76_dbg(DBG_BSS_TABLE,
++			 "0x%p: bssid %s channel %d ssid %s (%s)"
++			 " capa 0x%04x rates %s rssi %d link %d noise %d", ptr,
++			 mac2str(ptr->bssid), ptr->channel, ptr->ssid,
++			 hex2str(ptr->ssid, ptr->ssid_len), ptr->capa,
++			 hex2str(ptr->rates, ptr->rates_len), ptr->rssi,
++			 ptr->link_qual, ptr->noise_level);
+ 	}
+ 	spin_unlock_irqrestore(&priv->bss_list_spinlock, flags);
+ }
