@@ -1,53 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:52689 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757588AbXIYPKE (ORCPT
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:49738 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756821AbXIAW3A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2007 11:10:04 -0400
-Subject: Re: API to regulatory control (1)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <923504.45912.qm@web51410.mail.re2.yahoo.com>
-References: <923504.45912.qm@web51410.mail.re2.yahoo.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pyOReCxcaM+0+BwtC0Wt"
-Date: Tue, 25 Sep 2007 17:11:17 +0200
-Message-Id: <1190733078.18521.312.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 1 Sep 2007 18:29:00 -0400
+Date: Sun, 2 Sep 2007 00:29:01 +0200
+From: Adrian Bunk <bunk@kernel.org>
+To: Sam Leffler <sam@errno.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: Fwd: That whole "Linux stealing our code" thing
+Message-ID: <20070901222901.GO9260@stusta.de>
+References: <200709010140.l811eq9H005896@cvs.openbsd.org> <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <46D9E1B8.2060300@errno.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <46D9E1B8.2060300@errno.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Sep 01, 2007 at 03:03:36PM -0700, Sam Leffler wrote:
+> Adrian Bunk wrote:
+>> On Sat, Sep 01, 2007 at 01:37:18PM -0400, Constantine A. Murenin wrote:
+>>   
+>>> On 01/09/07, Jeff Garzik <jeff@garzik.org> wrote:
+>>>     
+>>>> Constantine A. Murenin wrote:
+>>>>       
+>>>>> This will hopefully help diminish certain myths about the code 
+>>>>> licensing.
+>>>>>         
+>>>> What myth?  The myth that Theo understands dual licensing?
+>>>>       
+>>> Reyk's code was never dual licensed, so it's not like it even matters
+>>> to the original dispute.
+>>>     
+>>
+>> It's no longer dual licenced in the FreeBSD tree because the FreeBSD 
+>> people removed the GPL choice of the dual licenced code 3 months ago.
+>>
+>> So all of Theo's accusations of people breaking the law by making this 
+>> dual licenced code GPL-only apply as well to the FreeBSD people...
+>>   
+>
+> Sigh, why actually check the facts when you can make them up.   The code in 
+> question is my code.  It has my copyright (modulo bits shared with onoe-san 
+> who was consulted on the switch from dual-bsd/gpl to bsd only in freebsd).  
 
---=-pyOReCxcaM+0+BwtC0Wt
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The latter is the code by Video54 Technologies?
 
-On Tue, 2007-09-25 at 07:43 -0700, Joerg Pommnitz wrote:
-> > From what I can see, this finishes the channel restrictions API. Since
->  > none of the information in the channels list is specific to some devic=
-e,
->  > it may be allocated statically.
->=20
-> Well, I beg to differ. I'm working on a system were we have regulatory
-> approval to use a TX power of up to 4W in certain channels. This means
-> that the regulatory settings (e.g. allowed channels) are different for
-> cards with amplifier and those without, even on the same machine.
+> Of course what was amusing was how after I changed the license on the 
+> current code in freebsd certain folks retroactively applied the license 
+> changes to code that was 3 years old.
+>
+> But is there a point to all this nonsense?  I dual-licensed the code so 
+> folks could adopt and use it however they saw fit.  As I've said before I 
+> don't care what people do with the work I give away so long as they don't 
+> claim it's their own.
 
-Thanks for your offer for patches.
+Fully agreed.  :-)
 
-johannes
+>>> That said, I don't see what exact wording you consider inaccurate.
+>>>     
+>>
+>> Both the FreeBSD and Linux people draw the logical conclusion that this 
+>> "Alternatively" means everyone can always choose to remove one of the two 
+>> choices alternatively offered.
+>>
+>> According to Theo, that is "breaking the law"...
+>
+> I've yet to see "FreeBSD people" speak up so again you're just spouting 
+> jibberish.  I am speaking up as the author of the code that set the dual 
+> license in place.  I have the definitive say and I have said that any of my 
+> code that is dual-licensed can be made gpl only.
 
---=-pyOReCxcaM+0+BwtC0Wt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Sorry, this has been a thinko on my side:
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+If noone except you and onoe-san made any contributions to this code 
+that were non-trivial enough for automatically giving its author a 
+copyright on his contributions (whatever this means in various 
+jurisdictions...) it was indeed an author-only change.
 
-iD8DBQBG+SUV/ETPhpq3jKURAn08AJ9e/GV9ea3q4me6k9nNKPHK8ABZMwCcDSVp
-CcJUvHrkKDDqYav3MJ8vI1E=
-=uDwd
------END PGP SIGNATURE-----
+>    Sam
 
---=-pyOReCxcaM+0+BwtC0Wt--
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
