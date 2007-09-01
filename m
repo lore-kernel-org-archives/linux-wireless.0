@@ -1,57 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:13878 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752757AbXISSpo (ORCPT
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:35052 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757295AbXIAWGd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 14:45:44 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so288340ugc
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2007 11:45:42 -0700 (PDT)
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: Please pull 'rt2x00' branch of wireless-2.6
-Date: Wed, 19 Sep 2007 20:58:29 +0200
-Cc: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
-	jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-References: <20070918213202.GJ4940@tuxdriver.com> <200709192048.00741.IvDoorn@gmail.com> <200709192036.59443.mb@bu3sch.de>
-In-Reply-To: <200709192036.59443.mb@bu3sch.de>
+	Sat, 1 Sep 2007 18:06:33 -0400
+Date: Sun, 2 Sep 2007 00:06:34 +0200
+From: Adrian Bunk <bunk@kernel.org>
+To: "Constantine A. Murenin" <mureninc@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: Fwd: That whole "Linux stealing our code" thing
+Message-ID: <20070901220634.GN9260@stusta.de>
+References: <200709010140.l811eq9H005896@cvs.openbsd.org> <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com> <46D99FB7.6030505@garzik.org> <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com> <20070901205457.GK9260@stusta.de> <20070901211642.GL9260@stusta.de> <f34ca13c0709011451p67ca96f8o184c0b32efa6b55b@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200709192058.29323.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <f34ca13c0709011451p67ca96f8o184c0b32efa6b55b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 19 September 2007, Michael Buesch wrote:
-> On Wednesday 19 September 2007 20:47:59 Ivo van Doorn wrote:
-> > On Wednesday 19 September 2007, David Miller wrote:
-> > > From: Ivo van Doorn <ivdoorn@gmail.com>
-> > > Date: Wed, 19 Sep 2007 20:31:19 +0200
-> > > 
-> > > > Because I am indeed not really happy with this early merge, but I'll do my
-> > > > best to resolve the last outstanding bugs as soon as possible.
-> > > 
-> > > Relax :-)
-> > 
-> > :)
-> > 
-> > > A merge upstream doesn't mean "bug free", it means "significantly
-> > > better than no driver at all" and that is undoubtedly the case
-> > > here.
-> > 
-> > Well I am happy rt2x00 is being considered good enough for upstream already,
-> > but I have the habbit of wanting things bug-free before pushing it further upstream.
-> > 
-> > Well most users are happy with current rt2x00 version anyway,
-> > so the remaining issues probably aren't that big anyway. (Except for the 2 panics,
-> > which should be resolved soon anyway) ;)
+On Sat, Sep 01, 2007 at 05:51:49PM -0400, Constantine A. Murenin wrote:
+> On 01/09/07, Adrian Bunk <bunk@kernel.org> wrote:
+> > On Sat, Sep 01, 2007 at 10:54:57PM +0200, Adrian Bunk wrote:
+> > > On Sat, Sep 01, 2007 at 01:37:18PM -0400, Constantine A. Murenin wrote:
+> > > > On 01/09/07, Jeff Garzik <jeff@garzik.org> wrote:
+> > > > > Constantine A. Murenin wrote:
+> > > > > > This will hopefully help diminish certain myths about the code licensing.
+> > > > >
+> > > > > What myth?  The myth that Theo understands dual licensing?
+> > > >
+> > > > Reyk's code was never dual licensed, so it's not like it even matters
+> > > > to the original dispute.
+> >
+> > Oh, and if you look at the OpenBSD CVS you see versions 4 months old
+> > with dozens of contributions by Reyk and with:
+> >
+> > /*      $OpenBSD: ath.c,v 1.63 2007/05/09 16:41:14 reyk Exp $  */
+> > /*      $NetBSD: ath.c,v 1.37 2004/08/18 21:59:39 dyoung Exp $        */
+> >
+> > /*-
+> >  * Copyright (c) 2002-2004 Sam Leffler, Errno Consulting
+> >  * All rights reserved.
+> >  *
+> >  * Redistribution and use in source and binary forms, with or without
+> >  * modification, are permitted provided that the following conditions
+> >  * are met:
+> >  * 1. Redistributions of source code must retain the above copyright
+> >  *    notice, this list of conditions and the following disclaimer,
+> >  *    without modification.
+> >  * 2. Redistributions in binary form must reproduce at minimum a disclaimer
+> >  *    similar to the "NO WARRANTY" disclaimer below ("Disclaimer") and any
+> >  *    redistribution must be conditioned upon including a substantially
+> >  *    similar Disclaimer requirement for further binary redistribution.
+> >  * 3. Neither the names of the above-listed copyright holders nor the names
+> >  *    of any contributors may be used to endorse or promote products derived
+> >  *    from this software without specific prior written permission.
+> >  *
+> >  * Alternatively, this software may be distributed under the terms of the
+> >  * GNU General Public License ("GPL") version 2 as published by the Free
+> >  * Software Foundation.
+> >  *
+> >  * NO WARRANTY
+> >  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+> >  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+> >  * LIMITED TO, THE IMPLIED WARRANTIES OF NONINFRINGEMENT, MERCHANTIBILITY
+> >  * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
+> >  * THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY,
+> >  * OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+> >  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+> >  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+> >  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+> >  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+> >  * THE POSSIBILITY OF SUCH DAMAGES.
+> >  */
 > 
-> Well, you have nothing to lose, basically.
-> It's impossible for you to create a regression.
-> So everything is fine, even if it's buggy and doesn't
-> work at all. ;)
+> Where exactly do you see Reyk's copyright in the above quote?
+>...
 
-Hehe. Thanks. I'll keep that in mind. ;)
+He has automatically a copyright on his contributions if they are 
+non-trivial.
 
-Ivo
+> C.
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
