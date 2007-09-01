@@ -1,65 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:37895 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756210AbXIELWC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2007 07:22:02 -0400
-Subject: Re: [RFC 2/2] mac80211: revamp interface and filter configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ulrich Kunitz <kune@deine-taler.de>
-Cc: Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
-	Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <20070905051626.GA12198@deine-taler.de>
-References: <20070821161845.165557000@sipsolutions.net>
-	 <20070821161942.938977000@sipsolutions.net> <46DB6C7B.3020001@gentoo.org>
-	 <1188811750.14564.32.camel@johannes.berg>
-	 <1188817035.14564.44.camel@johannes.berg>
-	 <20070905051626.GA12198@deine-taler.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XJQ3rlBLyXsnrkBJowrX"
-Date: Wed, 05 Sep 2007 13:23:16 +0200
-Message-Id: <1188991396.9942.97.camel@johannes.berg>
+Received: from mx.freeshell.ORG ([192.94.73.19]:57636 "EHLO sdf.lonestar.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753923AbXIATVs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 15:21:48 -0400
+Date: Sat, 1 Sep 2007 19:14:05 +0000
+From: Jacob Meuser <jakemsr@sdf.lonestar.org>
+To: mcgrof@gmail.com
+Cc: mickflemm@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath5k - License clarification
+Message-ID: <20070901191405.GB10469@SDF.LONESTAR.ORG>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-XJQ3rlBLyXsnrkBJowrX
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Whie the license clarification is much appreciated, adding GPL'd
+code to this driver is a slap in the face for BSD developers.
 
-On Wed, 2007-09-05 at 07:16 +0200, Ulrich Kunitz wrote:
+Adding code under a more restrictive licence than the code
+was originally released; does that really fit in with the principles
+of the FSF, the GPL, Linux, or the hacking community in general?
 
-> I see three options to achieve this:
->=20
-> 1) Use ieee80211_stop_queues() in ->configure_filter() and
->    ieee80211_wake_queues() at the end of the workqueue function.
->=20
-> 2) Throw away all packets until the workqueue function
->    terminates.
->=20
-> 3) Implement our own tx queue.
->=20
-> I prefer to do option (1) because it wouldn't require adding
-> additional fields to our private structure beside the work_struct
-> for the workqueue function, it is simple to implement and it would
-> not throw away any packets. Are there any side effects that I have
-> overlooked?
+Regardless of whether this is Microsoft taking BSD code and making it
+totally unfree, or you guys taking it and adding things which cannot
+be taken back by the original author, the result is the same: changes
+that don't go back to the author.  Isn't this one of the primary goals
+of the GPL, so changes remain as free as the original?
 
-I think Michael says it's currently buggy if called outside of ->tx().
+Please think about that for a minute.  Not from your point of view
+as a Linux coder, but from your point of view simply as a coder.
 
-johannes
+Thanks.
 
---=-XJQ3rlBLyXsnrkBJowrX
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG3pGk/ETPhpq3jKURAn+lAJ4kNP4A0GLQbonllYBDvDYtcSj9CACcC7Pu
-wRMP8trGeAbfkHICvwf5Kyg=
-=m1RX
------END PGP SIGNATURE-----
-
---=-XJQ3rlBLyXsnrkBJowrX--
-
+-- 
+jakemsr@sdf.lonestar.org
+SDF Public Access UNIX System - http://sdf.lonestar.org
