@@ -1,34 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yue.linux-ipv6.org ([203.178.140.15]:45561 "EHLO
-	yue.st-paulia.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752736AbXIYD2N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2007 23:28:13 -0400
-Date: Tue, 25 Sep 2007 12:29:51 +0900 (JST)
-Message-Id: <20070925.122951.98475715.yoshfuji@linux-ipv6.org>
-To: larry.finger@lwfinger.net
-Cc: jt@hpl.hp.com, linville@tuxdriver.com, mb@bu3sch.de,
-	linux-wireless@vger.kernel.org, davem@davemloft.net,
-	torvalds@linux-foundation.org, yoshfuji@linux-ipv6.org
-Subject: Re: 2.6.23-rc regression: bcm43xx does not work after commit  4cf92a3c
-From: YOSHIFUJI Hideaki / =?iso-2022-jp?B?GyRCNUhGIzFRTEAbKEI=?=
-	<yoshfuji@linux-ipv6.org>
-In-Reply-To: <46F87B27.5040106@lwfinger.net>
-References: <20070919163237.GA7914@bougret.hpl.hp.com>
-	<20070925.115054.25066958.yoshfuji@linux-ipv6.org>
-	<46F87B27.5040106@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from c60.cesmail.net ([216.154.195.49]:16429 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751539AbXIAEff (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 00:35:35 -0400
+Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
+	by relay.cesmail.net (Postfix) with ESMTP id 429D4618FE1
+	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:35:35 -0400 (EDT)
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 14/35] Fix incorrect queue management in at76_tx_mgmt()
+To: linux-wireless@vger.kernel.org
+Date: Sat, 01 Sep 2007 00:35:34 -0400
+Message-ID: <20070901043534.2498.20302.stgit@dv.roinet.com>
+In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
+References: <20070901043233.2498.95850.stgit@dv.roinet.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In article <46F87B27.5040106@lwfinger.net> (at Mon, 24 Sep 2007 22:06:15 -0500), Larry Finger <larry.finger@lwfinger.net> says:
+The old pending buffer should be freed, not the new one.  No need to set
+txbuf to NULL.
 
-> The right fix is in the chain. I sent it to John Linville who has sent it to Jeff Garzik. I
-> certainly hope it makes it before 2.6.23, as it is a serious regression.
-> 
-> Do you have the patch that fixes it? If not, please let me know and I'll send it to you.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-No, I don't have it in my hand.  Please sent it to me. Thank you.
+ drivers/net/wireless/at76_usb.c |   17 +++++++----------
+ 1 files changed, 7 insertions(+), 10 deletions(-)
 
---yoshfuji
+
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index f49fb3d..cabef24 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -1600,7 +1600,7 @@ static void at76_tx_callback(struct urb *urb)
+ static int at76_tx_mgmt(struct at76_priv *priv, struct at76_tx_buffer *txbuf)
+ {
+ 	unsigned long flags;
+-	int ret = 0;
++	int ret;
+ 	int urb_status;
+ 	void *oldbuf = NULL;
+ 
+@@ -1611,9 +1611,9 @@ static int at76_tx_mgmt(struct at76_priv *priv, struct at76_tx_buffer *txbuf)
+ 
+ 	urb_status = priv->tx_urb->status;
+ 	if (urb_status == -EINPROGRESS) {
+-		oldbuf = priv->next_mgmt_bulk;	/* to kfree below */
++		/* cannot transmit now, put in the queue */
++		oldbuf = priv->next_mgmt_bulk;
+ 		priv->next_mgmt_bulk = txbuf;
+-		txbuf = NULL;
+ 	}
+ 	spin_unlock_irqrestore(&priv->mgmt_spinlock, flags);
+ 
+@@ -1621,15 +1621,12 @@ static int at76_tx_mgmt(struct at76_priv *priv, struct at76_tx_buffer *txbuf)
+ 		/* a data/mgmt tx is already pending in the URB -
+ 		   if this is no error in some situations we must
+ 		   implement a queue or silently modify the old msg */
+-		err("%s: %s removed pending mgmt buffer %s",
+-		    priv->netdev->name, __func__,
+-		    hex2str(priv->next_mgmt_bulk, 64));
+-		kfree(priv->next_mgmt_bulk);
++		err("%s: %s removed pending mgmt buffer %s", priv->netdev->name,
++		    __func__, hex2str(oldbuf, 64));
++		kfree(oldbuf);
++		return 0;
+ 	}
+ 
+-	if (!txbuf)
+-		return ret;
+-
+ 	txbuf->tx_rate = 0;
+ 	txbuf->padding = at76_calc_padding(le16_to_cpu(txbuf->wlength));
+ 
