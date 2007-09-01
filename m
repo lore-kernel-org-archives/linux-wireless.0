@@ -1,128 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.241]:22790 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751556AbXIUVHk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2007 17:07:40 -0400
-Received: by an-out-0708.google.com with SMTP id d31so151206and
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Sep 2007 14:07:39 -0700 (PDT)
-Date: Fri, 21 Sep 2007 17:08:34 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Daniel Drake <dsd@gentoo.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 5/5] Wireless: add wireless configfs module
-Message-ID: <20070921210834.GI31768@pogo>
+Received: from c60.cesmail.net ([216.154.195.49]:8008 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751516AbXIAEgd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 00:36:33 -0400
+Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
+	by relay.cesmail.net (Postfix) with ESMTP id 4A180618FE1
+	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:36:32 -0400 (EDT)
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 24/35] Do implicit scanning only with current ESSID
+To: linux-wireless@vger.kernel.org
+Date: Sat, 01 Sep 2007 00:36:31 -0400
+Message-ID: <20070901043631.2498.41986.stgit@dv.roinet.com>
+In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
+References: <20070901043233.2498.95850.stgit@dv.roinet.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="PpAOPzA3dXsRhoo+"
-In-Reply-To: <20070921204606.GD31768@pogo>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This should speed up association.  We don't need non-matching APs if
+ESSID is set.
 
---PpAOPzA3dXsRhoo+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+For user-requested scanning, scan for any essid after that.  For
+international scanning, start with scan_runs 1, as it was meant to be
+done.  Actually use ir_step 0 for international scanning.  Adjust debug
+messages correspondingly.
 
-This patch adds a wireless configfs module. Currently we only add
-support for changing the central regulatory domain. The idea is not to
-replace nl80211 interface but to supplement it and also to give home
-for a place for configuring wireless kobjects. We can move add_interface /
-remove_interface from sysfs to configfs, for example.
-
-Example usage of using wireles configfs:
-
-mkdir /config/
-
-modprobe configfs_wireless
-mount -t configfs none /config
-echo US > /config/wireless/country
-dmesg -c
-
-You will see:
-
-Userspace changed regulatory domain
-ieee80211_regdomains: regulatory domain FCC1A created
-Regulatory Domain:      FCC1A   Regulatory Domain ID:   0x10
-        IEEE 802.11g    2GHz    ISM subband
-        max_ir_ptmp:    30 dBm  max_ir_ptp:     30 dBm
-        max_eirp_ptmp:  36 dBm  max_eirp_ptp:   255 dBm
-        max_antenna_gain:       6 dBi
-        Environment capability: Indoor & Outdoor
-                Channel Freq (MHz)
-                1       2412
-                2       2417
-                3       2422
-                4       2427
-                5       2432
-                6       2437
-                7       2442
-                8       2447
-                9       2452
-                10      2457
-                11      2462
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
- net/wireless/Kconfig  |   11 +++++++++++
- net/wireless/Makefile |    1 +
- 2 files changed, 12 insertions(+), 0 deletions(-)
 
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index 0505347..59e47ce 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -15,6 +15,17 @@ config NL80211
-=20
-          If unsure, say Y.
-=20
-+config CONFIGFS_WIRELESS
-+	depends CFG80211 && IEEE80211_REGDOMAINS
-+	tristate "Configfs interface for configuring central wireless settings"
-+	---help---
-+	 You can configure central wireless settings through this subsystem.
-+	 It currently only has an ISO3166-1 alpha2 country regulatory domain
-+	 settings used to define frequency and power regulatory restrictions
-+	 for all wireless cards.
-+	=20
-+	 If unsure, you can safely say Y.
+ drivers/net/wireless/at76_usb.c |   17 ++++++++++-------
+ 1 files changed, 10 insertions(+), 7 deletions(-)
+
+
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index 0873111..98960eb 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -3871,9 +3871,9 @@ static void at76_dwork_get_scan(struct work_struct *work)
+ 					 sizeof(mdomain.channel_list)),
+ 				 hex2str(mdomain.tx_powerlevel,
+ 					 sizeof(mdomain.tx_powerlevel)));
+-		ret = at76_start_scan(priv, 0, 1);
++		ret = at76_start_scan(priv, 0, 0);
+ 		if (ret < 0)
+-			err("%s: %s: start_scan (ANY) failed with %d",
++			err("%s: %s: start_scan (IR) failed with %d",
+ 			    priv->netdev->name, __func__, ret);
+ 		at76_dbg(DBG_MGMT_TIMER,
+ 			 "%s:%d: starting mgmt_timer for %d ticks",
+@@ -3883,9 +3883,9 @@ static void at76_dwork_get_scan(struct work_struct *work)
+ 		break;
+ 
+ 	case 2:
+-		ret = at76_start_scan(priv, 1, 1);
++		ret = at76_start_scan(priv, 0, 1);
+ 		if (ret < 0)
+-			err("%s: %s: start_scan (SSID) failed with %d",
++			err("%s: %s: start_scan (ANY) failed with %d",
+ 			    priv->netdev->name, __func__, ret);
+ 		at76_dbg(DBG_MGMT_TIMER,
+ 			 "%s:%d: starting mgmt_timer for %d ticks",
+@@ -4195,11 +4195,14 @@ static void at76_work_start_scan(struct work_struct *work)
+ 
+ 	/* only clear the bss list when a scan is actively initiated,
+ 	 * otherwise simply rely on at76_bss_list_timeout */
+-	if (priv->scan_state == SCAN_IN_PROGRESS)
++	if (priv->scan_state == SCAN_IN_PROGRESS) {
+ 		at76_free_bss_list(priv);
++		priv->scan_runs = priv->international_roaming ? 1 : 2;
++	} else
++		priv->scan_runs = 3;
 +
- config IEEE80211_REGDOMAINS
- 	tristate "Central IEEE 802.11 regulatory domain agent"
- 	select ISO3166_1
-diff --git a/net/wireless/Makefile b/net/wireless/Makefile
-index 74c1059..b3f5daa 100644
---- a/net/wireless/Makefile
-+++ b/net/wireless/Makefile
-@@ -1,5 +1,6 @@
- obj-$(CONFIG_WIRELESS_EXT) +=3D wext.o
- obj-$(CONFIG_CFG80211) +=3D cfg80211.o
-+obj-$(CONFIG_CONFIGFS_WIRELESS) +=3D configfs_wireless.o
-=20
- cfg80211-y +=3D core.o sysfs.o radiotap.o
- cfg80211-$(CONFIG_NL80211) +=3D nl80211.o
---=20
-1.5.2.4
-
-
---PpAOPzA3dXsRhoo+
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFG9DLSat1JN+IKUl4RAuOQAJ42QU7OW1CQfHtUAPVQAQY6v6krwgCgjdxV
-qkdo3E/DKU1FxA2K73AGvLI=
-=51Ia
------END PGP SIGNATURE-----
-
---PpAOPzA3dXsRhoo+--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
++	ret = at76_start_scan(priv, 1, 1);
+ 
+-	priv->scan_runs = 2;
+-	ret = at76_start_scan(priv, 0, 1);
+ 	if (ret < 0)
+ 		err("%s: %s: start_scan failed with %d",
+ 		    priv->netdev->name, __func__, ret);
