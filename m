@@ -1,35 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:55180 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751129AbXIUIFa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2007 04:05:30 -0400
-Date: Fri, 21 Sep 2007 09:05:00 +0100
-From: Christoph Hellwig <hch@infradead.org>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	"John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net,
-	jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Please pull 'iwlwifi' branch of wireless-2.6
-Message-ID: <20070921080500.GA29050@infradead.org>
-References: <20070918185040.GF4940@tuxdriver.com> <20070919101326.GA32432@infradead.org> <1190337630.5718.136.camel@debian.sh.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1190337630.5718.136.camel@debian.sh.intel.com>
+Received: from c60.cesmail.net ([216.154.195.49]:56199 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751004AbXIAEeQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 00:34:16 -0400
+Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
+	by relay.cesmail.net (Postfix) with ESMTP id 2AB1E618FE1
+	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:34:15 -0400 (EDT)
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 00/35] Update at76_usb to the start of mac80211 port
+To: linux-wireless@vger.kernel.org
+Date: Sat, 01 Sep 2007 00:34:14 -0400
+Message-ID: <20070901043233.2498.95850.stgit@dv.roinet.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 21, 2007 at 09:20:30AM +0800, Zhu Yi wrote:
-> > The depends on m for CONFIG_IWL4965 and CONFIG_IWL3945 needs to go,
-> > we don't put drivers int that need to be modular. 
-> 
-> Since we splited the code base for 3945 and 4965 by a simple "fork" of
-> file iwl-base.c, some non-static functions names remain the same. Make
-> the two drivers build into vmlinux at the same time will cause conflict.
-> So to make them depend on m is a current workaround for .24. We will
-> abstract a common iwl-core.ko and make driver specific iwl3945.ko and
-> iwl4965.ko depend on it in .25 time frame.
+This brings at76_usb to the point where Kalle Valo started mac80211
+conversion.
 
-This kind of stuff is not what we want to leak into mainline.  If you're
-too busy to do that 5 minute sed search and replace I'll do it for you.
+Further patches that bring the driver to version 0.16 will be submitted
+once it's clear how the conflicts with Kalle's changes can be resolved
+(i.e. which patch goes first and which must be rebased).
+
+-- 
+Regards,
+Pavel Roskin
