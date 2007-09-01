@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:24859 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754991AbXIBPzQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 11:55:16 -0400
-Received: by py-out-1112.google.com with SMTP id u77so4420404pyb
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Sep 2007 08:55:15 -0700 (PDT)
-Message-ID: <40f31dec0709020855q10d9227bld6e594ea57ba8142@mail.gmail.com>
-Date: Sun, 2 Sep 2007 18:55:15 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [PATCH 3/5] Net: ath5k, use int as retval
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <46D9C6A8.7070600@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <2713029743177393055@pripojeni.net>
-	 <2440910618305782004@pripojeni.net>
-	 <20070830124054.GC5140@tuxdriver.com> <46D9C6A8.7070600@gmail.com>
+Received: from mx.freeshell.ORG ([192.94.73.19]:55156 "EHLO sdf.lonestar.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755215AbXIAVEi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 17:04:38 -0400
+Date: Sat, 1 Sep 2007 21:04:19 +0000
+From: Jacob Meuser <jakemsr@sdf.lonestar.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath5k - License clarification
+Message-ID: <20070901210419.GC23642@SDF.LONESTAR.ORG>
+References: <20070901191405.GB10469@SDF.LONESTAR.ORG> <46D9BFC2.4080707@garzik.org> <20070901200714.GA23642@SDF.LONESTAR.ORG> <46D9CC46.4060302@garzik.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <46D9CC46.4060302@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2007/9/1, Jiri Slaby <jirislaby@gmail.com>:
-> John W. Linville napsal(a):
-> > On Tue, Aug 28, 2007 at 12:00:09PM -0400, Jiri Slaby wrote:
-> >> ath5k, use int as retval
-> >>
-> >> Convert some functions to return int and proper negative return value on
-> >> error as we are used to.
-> >
-> > Since I didn't apply 1/5, this one didn't apply either.  It seems
-> > fine overall, so if you rediff I'll be happy to apply.
->
-> Ok, I'll do it, thanks,
+On Sat, Sep 01, 2007 at 04:32:06PM -0400, Jeff Garzik wrote:
 
-Can somebody commit my resent changes from madwifi-svn (cleanups,
-kconfig, remove_hw_ from filenames etc) ? I don't have git repository
-;-(
+> Or are you one of the followers of The Pattern, which repeats itself on 
+> a regular basis:
+> 
+> 	1) Theo rants about Linux, FSF, and GPL
+> 	2) Rants inspire minions
+> 	3) Theo fans, ignorant of all facts, appear on Linux MLs
+> 	   to uphold Theo's side of the debate.
+> 
+> I'm betting the latter.
 
+I already explained my reasons for interest.
+
+It has nothing to do with what license is which, but about respect
+for the original author's wishes and the general idea of giving back.
+
+why are you attacking me?
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+jakemsr@sdf.lonestar.org
+SDF Public Access UNIX System - http://sdf.lonestar.org
