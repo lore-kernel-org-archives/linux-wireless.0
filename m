@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57894
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751264AbXISS7F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2007 14:59:05 -0400
-Date: Wed, 19 Sep 2007 11:59:03 -0700 (PDT)
-Message-Id: <20070919.115903.75429061.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: jeff@garzik.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, dsd@gentoo.org, kune@deine-taler.de
-Subject: Re: Please pull 'z1211' branch of wireless-2.6
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20070919181005.GB5483@tuxdriver.com>
-References: <20070919181005.GB5483@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from c60.cesmail.net ([216.154.195.49]:4413 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751905AbXIAEha (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 00:37:30 -0400
+Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
+	by relay.cesmail.net (Postfix) with ESMTP id 7FF35618FE1
+	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:37:29 -0400 (EDT)
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 34/35] Don't do additional MIB dumps if DEBUG is defined
+To: linux-wireless@vger.kernel.org
+Date: Sat, 01 Sep 2007 00:37:29 -0400
+Message-ID: <20070901043728.2498.56098.stgit@dv.roinet.com>
+In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
+References: <20070901043233.2498.95850.stgit@dv.roinet.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 19 Sep 2007 14:10:05 -0400
+They are already printed from at76_startup_device(), which should be
+enough.
 
-> This patch adds z1211 (previously known as zd1211rw-mac80211),
-> a driver for Zydas ZD1211 hardware.  This driver has proven very
-> robust -- Fedora 7 uses this driver and I don't think I have any open
-> bugzillas for it.  Either the driver works well, or no one as using
-> it...given the common availability of the hardware, I have to presume
-> the former. :-)
-> 
-> This driver is mostly a port of zd1211rw to the mac80211
-> infrastructure.  In fact, most zd1211rw patches have been mirrored
-> directly to this driver for some time.  I considered merely updating
-> the existing driver with this code, but I think it is more prudent to
-> include this as a separate driver just to avoid confusion.  There is
-> some symbol clash between the two drivers, so I add a Kconfig hack
-> to ensure that only one or the other is built-in or that this one is
-> built as a module.
-> 
-> The maintainers have identified some (IMHO minor) issues with the
-> mac80211 port of this driver.  Some of them are summarized here:
-> 
-> 	http://linuxwireless.org/en/users/Drivers/zd1211rw/mac80211Issues
-> 
-> Still, I think we would be better-off having this driver upstream.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-Agreed, merged into net-2.6.24, thanks John.
+ drivers/net/wireless/at76_usb.c |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
+
+
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index 2c8ad54..ba0ad2c 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -1823,10 +1823,6 @@ static void at76_work_assoc_done(struct work_struct *work)
+ 
+ 			at76_set_associd(priv, priv->assoc_id);
+ 			at76_set_listen_interval(priv, (u16)pm_period_beacon);
+-#ifdef DEBUG
+-			at76_dump_mib_mac(priv);
+-			at76_dump_mib_mac_mgmt(priv);
+-#endif
+ 		}
+ 		schedule_delayed_work(&priv->dwork_beacon, BEACON_TIMEOUT);
+ 	}
+@@ -3305,9 +3301,6 @@ static int at76_open(struct net_device *netdev)
+ 			at76_dbg(DBG_PROGRESS, "%s: set new MAC addr %s",
+ 				 netdev->name, mac2str(netdev->dev_addr));
+ 	}
+-#ifdef DEBUG
+-	at76_dump_mib_mac_addr(priv);
+-#endif
+ 
+ 	priv->scan_state = SCAN_IDLE;
+ 	priv->last_scan = jiffies;
