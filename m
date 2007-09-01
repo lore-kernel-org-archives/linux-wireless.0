@@ -1,43 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail4.sea5.speakeasy.net ([69.17.117.6]:52718 "EHLO
-	mail4.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759932AbXI1BkM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2007 21:40:12 -0400
-Date: Thu, 27 Sep 2007 18:39:56 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	mohamed salim abbas <mabbaswireless@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: A-MSDU deaggregation support
-Message-ID: <20070928013956.GK27241@jm.kir.nu>
-References: <1189354526.4506.25.camel@johannes.berg> <1ba2fa240709100441o421653fbre410df615e7d9e10@mail.gmail.com> <1190747966.18521.320.camel@johannes.berg> <1ba2fa240709251624ycb516c4t90bcb6846800b18@mail.gmail.com> <1190792394.18521.354.camel@johannes.berg>
+Received: from srv5.dvmed.net ([207.36.208.214]:47238 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752028AbXIAUcI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 16:32:08 -0400
+Message-ID: <46D9CC46.4060302@garzik.org>
+Date: Sat, 01 Sep 2007 16:32:06 -0400
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1190792394.18521.354.camel@johannes.berg>
+To: Jacob Meuser <jakemsr@sdf.lonestar.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath5k - License clarification
+References: <20070901191405.GB10469@SDF.LONESTAR.ORG> <46D9BFC2.4080707@garzik.org> <20070901200714.GA23642@SDF.LONESTAR.ORG>
+In-Reply-To: <20070901200714.GA23642@SDF.LONESTAR.ORG>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 26, 2007 at 09:39:54AM +0200, Johannes Berg wrote:
+Jacob Meuser wrote:
+> On Sat, Sep 01, 2007 at 03:38:42PM -0400, Jeff Garzik wrote:
+>> Was it slashdot or Theo's rant that made all the OpenBSD fanboys like 
+>> you come out of the woodwork?
+> 
+> ?
+> 
+> I have made contributions to GNU projects, and supplied large patches
+> and new files to GPL'd projects, always keeping the GPL license, not for
+> any reason other than respect for the wishes of the original author.
+> 
+> Earlier this year, I went out of my way to a NetBSD developer to
+> change the license of a file he wrote (that added NetBSD/OpenBSD
+> support) from BSD to GPL so it could be included in a GNU project,
+> because the project leader claimed the BSD license was incompatible
+> with GNU projects.  The NetBSD developer agreed to the change, but I
+> still have not seen that file added to the project.
+> 
+> My interest in this matter goes far beyond my interest as an OpenBSD
+> developer.
 
-> So any STA can actually send EAPOL frames with an arbitrary destination
-> MAC address except our own into our 802.3 interface. Hence, it looks
-> like the first case above is only for having eapol on mgmt iface.
+Are you a ath5k copyright holder?
+Or somewhere in the chain of wireless code maintenance?
 
-EAPOL ethertype is not supposed to be bridged, so it would be perfectly
-fine dropping these wherever it is most convenient to do.
+Or are you one of the followers of The Pattern, which repeats itself on 
+a regular basis:
 
-> The only problem I see with not doing this is that hostapd will have to
-> listen for EAPOL frames on all VLAN interfaces but I suppose that is
-> doable.
+	1) Theo rants about Linux, FSF, and GPL
+	2) Rants inspire minions
+	3) Theo fans, ignorant of all facts, appear on Linux MLs
+	   to uphold Theo's side of the debate.
 
-That's fine. This should be doable with just one packet socket that is
-not bound to any interface or alternatively with multiple sockets (one
-per interface). I wouldn't be too concerned about the extra cost here as
-long as the other EAPOL related silliness (e.g., the difference in
-encryption of re-keying packets in 802.1X with dynamic WEP vs. WPA).
+I'm betting the latter.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+	Jeff
+
+
+
