@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:33660 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751661AbXIXImT (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:61682 "EHLO
+	annwn13.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751796AbXIAFA4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2007 04:42:19 -0400
-Subject: Re: API to regulatory control (2)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890709220933i5eea5b85kf365ec5a5038da7f@mail.gmail.com>
-References: <1190456574.18521.220.camel@johannes.berg>
-	 <1190457155.18521.230.camel@johannes.berg>
-	 <43e72e890709220933i5eea5b85kf365ec5a5038da7f@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sPVaCU0qz2GCMCv+8BF6"
-Date: Mon, 24 Sep 2007 10:43:39 +0200
-Message-Id: <1190623419.18521.242.camel@johannes.berg>
-Mime-Version: 1.0
+	Sat, 1 Sep 2007 01:00:56 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Chr <chunkeey@web.de>
+Subject: Re: [PATCH 2/2] p54: disable QoS on older firmwares
+Date: Sat, 1 Sep 2007 00:58:55 -0400
+Cc: Hans de Goede <j.w.r.degoede@hhs.nl>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <46BFF10B.1090307@hhs.nl> <200708300152.27736.flamingice@sourmilk.net> <200708312327.28981.chunkeey@web.de>
+In-Reply-To: <200708312327.28981.chunkeey@web.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart6393742.HgTpDKi5qr";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200709010058.59928.flamingice@sourmilk.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-sPVaCU0qz2GCMCv+8BF6
-Content-Type: text/plain
+--nextPart6393742.HgTpDKi5qr
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Sat, 2007-09-22 at 12:33 -0400, Luis R. Rodriguez wrote:
+On Friday 31 August 2007 17:27, Chr wrote:
+> This patch fixes a regression with older (pre 2.5.2.0) firmwares, that
+> don't support the QoS queues yet...
+>
+Why bother allocating a temporary buffer for firmware version string? Just=
+=20
+keep a pointer to where it's located. (unless it's not null terminated..)
 
-> That's the plan ;)=20
+There's two extra unnecessary lines added to the end of p54_parse_firmware.
 
-:)
+Thanks,
+=2DMichael Wu
 
-> I still think we should notify the user but
-> whatever, this is a pretty rare thing to deal with, we'll figure it
-> out.
-
-Yeah, I figured we could provide a notifier chain for that.
-
-johannes
-
---=-sPVaCU0qz2GCMCv+8BF6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--nextPart6393742.HgTpDKi5qr
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBG93i7/ETPhpq3jKURAsutAJ4vqtrvYu8oBieCfEQ5Ha+9qDKE9wCfSWO/
-1ABtMB4zylZQbHkmnyxfryA=
-=oo+I
+iD8DBQBG2PGTT3Oqt9AH4aERAlwHAJ9xndw/WkEdC4mjRDiKjhk5i/I6LgCfduFr
+aSuRLP/WsO3cE+zGhlL32uY=
+=79mt
 -----END PGP SIGNATURE-----
 
---=-sPVaCU0qz2GCMCv+8BF6--
-
+--nextPart6393742.HgTpDKi5qr--
+-: 
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org: 
+More majordomo info at  http: //vger.kernel.org/majordomo-info.html
