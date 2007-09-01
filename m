@@ -1,181 +1,317 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:60393
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752029AbXIORv7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Sep 2007 13:51:59 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] b43legacy: Fix machine check errors for PPC architecture with BCM4306/2
-Date: Sat, 15 Sep 2007 19:48:46 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <46ec18d6.puwbD1oRuPgUil6/%Larry.Finger@lwfinger.net>
-In-Reply-To: <46ec18d6.puwbD1oRuPgUil6/%Larry.Finger@lwfinger.net>
+Received: from c60.cesmail.net ([216.154.195.49]:16429 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752834AbXIAEfa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 00:35:30 -0400
+Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
+	by relay.cesmail.net (Postfix) with ESMTP id 80DC4618FE1
+	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:35:29 -0400 (EDT)
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 13/35] Rename some long functions and fields
+To: linux-wireless@vger.kernel.org
+Date: Sat, 01 Sep 2007 00:35:29 -0400
+Message-ID: <20070901043528.2498.58304.stgit@dv.roinet.com>
+In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
+References: <20070901043233.2498.95850.stgit@dv.roinet.com>
 MIME-Version: 1.0
-Message-Id: <200709151948.46667.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 15 September 2007 19:39:34 Larry Finger wrote:
-> In b43, the variable gmode merely indicates whether the given core
-> has a GPHY or a BPHY. In b43legacy, this is always true; however,
-> on a BCM4306/2 it must be set only when the PHY is connected to the
-> ssb backplane, otherwise, reads of the PHY registers are invalid.
-> For x86 architecture, these read failures cause no problems; however,
-> on the ppc architecture, they cause a machine check. This patch has been
-> tested on an i386 platform using special code to detect these invalid
-> reads, and on two different Powerbooks.
->  
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> John,
-> 
-> This patch fixes a problem with the Fedora Rawhide kernel reported by David
-> Woodhouse on the bcm43xx mailing list and by Will Woods at 
-> https://bugzilla.redhat.com/show_bug.cgi?id=233011.
-> 
-> Larry
-> 
->  drivers/net/wireless/b43legacy/main.c |    5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> Index: wireless-dev/drivers/net/wireless/b43legacy/main.c
-> ===================================================================
-> --- wireless-dev.orig/drivers/net/wireless/b43legacy/main.c
-> +++ wireless-dev/drivers/net/wireless/b43legacy/main.c
-> @@ -738,8 +738,11 @@ void b43legacy_wireless_core_reset(struc
->  
->  	macctl = b43legacy_read32(dev, B43legacy_MMIO_MACCTL);
->  	macctl &= ~B43legacy_MACCTL_GMODE;
-> -	if (flags & B43legacy_TMSLOW_GMODE)
-> +	if (flags & B43legacy_TMSLOW_GMODE) {
->  		macctl |= B43legacy_MACCTL_GMODE;
-> +		dev->phy.gmode = 1;
-> +	} else
-> +		dev->phy.gmode = 0;
->  	macctl |= B43legacy_MACCTL_IHR_ENABLED;
->  	b43legacy_write32(dev, B43legacy_MMIO_MACCTL, macctl);
->  }
-> @@ -3424,7 +3427,6 @@ static int b43legacy_wireless_core_attac
->  	int err;
->  	int have_bphy = 0;
->  	int have_gphy = 0;
-> -	u32 tmp;
->  
->  	/* Do NOT do any device initialization here.
->  	 * Do it in wireless_core_init() instead.
-> @@ -3456,9 +3458,7 @@ static int b43legacy_wireless_core_attac
->  	if (err)
->  		goto err_powerdown;
->  
-> -	dev->phy.gmode = (have_gphy || have_bphy);
-> -	tmp = dev->phy.gmode ? B43legacy_TMSLOW_GMODE : 0;
-> -	b43legacy_wireless_core_reset(dev, tmp);
-> +	b43legacy_wireless_core_reset(dev, B43legacy_TMSLOW_GMODE);
->  
->  	err = b43legacy_phy_versioning(dev);
->  	if (err)
-> @@ -3482,9 +3482,7 @@ static int b43legacy_wireless_core_attac
->  			B43legacy_BUG_ON(1);
->  		}
->  	}
-> -	dev->phy.gmode = (have_gphy || have_bphy);
-> -	tmp = dev->phy.gmode ? B43legacy_TMSLOW_GMODE : 0;
-> -	b43legacy_wireless_core_reset(dev, tmp);
-> +	b43legacy_wireless_core_reset(dev, B43legacy_TMSLOW_GMODE);
->  
->  	err = b43legacy_validate_chipaccess(dev);
->  	if (err)
-> Index: wireless-dev/drivers/net/wireless/b43legacy/b43legacy.h
-> ===================================================================
-> --- wireless-dev.orig/drivers/net/wireless/b43legacy/b43legacy.h
-> +++ wireless-dev/drivers/net/wireless/b43legacy/b43legacy.h
-> @@ -389,7 +389,7 @@ struct b43legacy_lopair {
->  struct b43legacy_phy {
->  	/* Possible PHYMODEs on this PHY */
->  	u8 possible_phymodes;
-> -	/* GMODE bit enabled? */
-> +	/* True if PHY connected to ssb backplane */
->  	bool gmode;
+Mostly try to avoid "bulk", which is a minor technical detail.  Also
+avoid read/write in favor of more common rx/tx.
 
-Nono, wait. That "PHY Connected" bit never existed. It was a bug
-in the specification. It really is "Drive the PHY in G-mode".
-It has nothing to do with "connecting" something.
-So your changes above are, strictly said, also wrong.
-The bit must be enabled, if we want to use the G-mode PHY on the
-device and disabled otherwise. This is for multi-phy devices with
-an A PHY and a B/G PHY.
-So, well. As you won't ever support an A-PHY in the driver, I am
-probably OK with always forcing the GMODE bit on (which your above code does,
-but I don't see how this could fix anything). Better, yet, fix the _real_
-cause why gmode wasn't set (that's what you are trying to fix, no?)
-And please don't break the comment above. :)
-It _really_ is a "GMODE bit enabled" bit.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-Again: This has nothing to do with connecting some PHY to anything.
+ drivers/net/wireless/at76_usb.c |  101 ++++++++++++++++++---------------------
+ drivers/net/wireless/at76_usb.h |    8 ++-
+ 2 files changed, 50 insertions(+), 59 deletions(-)
 
->  	/* Possible ieee80211 subsystem hwmodes for this PHY.
->  	 * Which mode is selected, depends on thr GMODE enabled bit */
-> Index: wireless-dev/drivers/net/wireless/b43legacy/xmit.c
-> ===================================================================
-> --- wireless-dev.orig/drivers/net/wireless/b43legacy/xmit.c
-> +++ wireless-dev/drivers/net/wireless/b43legacy/xmit.c
-> @@ -49,8 +49,8 @@ static u8 b43legacy_plcp_get_bitrate_cck
->  	case 0x6E:
->  		return B43legacy_CCK_RATE_11MB;
->  	}
-> -	B43legacy_BUG_ON(1);
-> -	return 0;
-> +	printk(KERN_INFO "b43legacy: Invalid CCK bitrate of 0x%X\n", plcp->raw[0]);
-> +	return B43legacy_CCK_RATE_1MB;
 
-Please ratelimit this message, if you really want a message here.
-
->  }
->  
->  /* Extract the bitrate out of an OFDM PLCP header. */
-> @@ -74,8 +74,8 @@ static u8 b43legacy_plcp_get_bitrate_ofd
->  	case 0xC:
->  		return B43legacy_OFDM_RATE_54MB;
->  	}
-> -	B43legacy_BUG_ON(1);
-> -	return 0;
-> +	printk(KERN_INFO "b43legacy: Invalid OFDM bitrate of 0x%X\n", plcp->raw[0] & 0xF);
-> +	return B43legacy_OFDM_RATE_6MB;
->  }
-
-Same.
-
->  u8 b43legacy_plcp_get_ratecode_cck(const u8 bitrate)
-> @@ -90,8 +90,8 @@ u8 b43legacy_plcp_get_ratecode_cck(const
->  	case B43legacy_CCK_RATE_11MB:
->  		return 0x6E;
->  	}
-> -	B43legacy_BUG_ON(1);
-> -	return 0;
-> +	printk(KERN_INFO "b43legacy: Invalid CCK ratecode of 0x%X\n", bitrate);
-> +	return 0x0A;
->  }
-
-Same.
-
->  u8 b43legacy_plcp_get_ratecode_ofdm(const u8 bitrate)
-> @@ -114,8 +114,8 @@ u8 b43legacy_plcp_get_ratecode_ofdm(cons
->  	case B43legacy_OFDM_RATE_54MB:
->  		return 0xC;
->  	}
-> -	B43legacy_BUG_ON(1);
-> -	return 0;
-> +	printk(KERN_INFO "b43legacy: Invalid OFDM ratecode of 0x%X\n", bitrate);
-> +	return 0x0B;
->  }
-
-Same.
-
--- 
-Greetings Michael.
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index 2ed80eb..f49fb3d 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -1538,7 +1538,7 @@ static inline int at76_calc_padding(int wlen)
+ */
+ /* Or maybe because our BH handler is preempting bttv's BH handler.. BHs don't
+  * solve everything.. (alex) */
+-static void at76_read_bulk_callback(struct urb *urb)
++static void at76_rx_callback(struct urb *urb)
+ {
+ 	struct at76_priv *priv = urb->context;
+ 
+@@ -1547,7 +1547,7 @@ static void at76_read_bulk_callback(struct urb *urb)
+ 	return;
+ }
+ 
+-static void at76_write_bulk_callback(struct urb *urb)
++static void at76_tx_callback(struct urb *urb)
+ {
+ 	struct at76_priv *priv = urb->context;
+ 	struct net_device_stats *stats = &priv->stats;
+@@ -1564,7 +1564,7 @@ static void at76_write_bulk_callback(struct urb *urb)
+ 		/* urb has been unlinked */
+ 		return;
+ 	default:
+-		at76_dbg(DBG_URB, "%s - nonzero write bulk status received: %d",
++		at76_dbg(DBG_URB, "%s - nonzero tx status received: %d",
+ 			 __func__, urb->status);
+ 		stats->tx_errors++;
+ 		break;
+@@ -1584,11 +1584,11 @@ static void at76_write_bulk_callback(struct urb *urb)
+ 	   to the length */
+ 	memcpy(priv->bulk_out_buffer, mgmt_buf,
+ 	       le16_to_cpu(mgmt_buf->wlength) + AT76_TX_HDRLEN);
+-	usb_fill_bulk_urb(priv->write_urb, priv->udev, priv->tx_bulk_pipe,
++	usb_fill_bulk_urb(priv->tx_urb, priv->udev, priv->tx_pipe,
+ 			  priv->bulk_out_buffer,
+ 			  le16_to_cpu(mgmt_buf->wlength) + mgmt_buf->padding +
+-			  AT76_TX_HDRLEN, at76_write_bulk_callback, priv);
+-	ret = usb_submit_urb(priv->write_urb, GFP_ATOMIC);
++			  AT76_TX_HDRLEN, at76_tx_callback, priv);
++	ret = usb_submit_urb(priv->tx_urb, GFP_ATOMIC);
+ 	if (ret)
+ 		err("%s: %s error in tx submit urb: %d",
+ 		    priv->netdev->name, __func__, ret);
+@@ -1596,10 +1596,8 @@ static void at76_write_bulk_callback(struct urb *urb)
+ 	kfree(mgmt_buf);
+ }
+ 
+-/* Send a management frame on bulk-out.
+-   txbuf->wlength must be set (in LE format !) */
+-static int at76_send_mgmt_bulk(struct at76_priv *priv,
+-			       struct at76_tx_buffer *txbuf)
++/* Send a management frame on bulk-out.  txbuf->wlength must be set */
++static int at76_tx_mgmt(struct at76_priv *priv, struct at76_tx_buffer *txbuf)
+ {
+ 	unsigned long flags;
+ 	int ret = 0;
+@@ -1611,7 +1609,7 @@ static int at76_send_mgmt_bulk(struct at76_priv *priv,
+ 
+ 	spin_lock_irqsave(&priv->mgmt_spinlock, flags);
+ 
+-	urb_status = priv->write_urb->status;
++	urb_status = priv->tx_urb->status;
+ 	if (urb_status == -EINPROGRESS) {
+ 		oldbuf = priv->next_mgmt_bulk;	/* to kfree below */
+ 		priv->next_mgmt_bulk = txbuf;
+@@ -1648,11 +1646,11 @@ static int at76_send_mgmt_bulk(struct at76_priv *priv,
+ 	/* txbuf was not consumed above -> send mgmt msg immediately */
+ 	memcpy(priv->bulk_out_buffer, txbuf,
+ 	       le16_to_cpu(txbuf->wlength) + AT76_TX_HDRLEN);
+-	usb_fill_bulk_urb(priv->write_urb, priv->udev, priv->tx_bulk_pipe,
++	usb_fill_bulk_urb(priv->tx_urb, priv->udev, priv->tx_pipe,
+ 			  priv->bulk_out_buffer,
+ 			  le16_to_cpu(txbuf->wlength) + txbuf->padding +
+-			  AT76_TX_HDRLEN, at76_write_bulk_callback, priv);
+-	ret = usb_submit_urb(priv->write_urb, GFP_ATOMIC);
++			  AT76_TX_HDRLEN, at76_tx_callback, priv);
++	ret = usb_submit_urb(priv->tx_urb, GFP_ATOMIC);
+ 	if (ret)
+ 		err("%s: %s error in tx submit urb: %d",
+ 		    priv->netdev->name, __func__, ret);
+@@ -1720,7 +1718,7 @@ static int at76_auth_req(struct at76_priv *priv, struct bss_info *bss,
+ 
+ 	/* either send immediately (if no data tx is pending
+ 	   or put it in pending list */
+-	return at76_send_mgmt_bulk(priv, tx_buffer);
++	return at76_tx_mgmt(priv, tx_buffer);
+ }
+ 
+ static int at76_assoc_req(struct at76_priv *priv, struct bss_info *bss)
+@@ -1794,7 +1792,7 @@ static int at76_assoc_req(struct at76_priv *priv, struct bss_info *bss)
+ 
+ 	/* either send immediately (if no data tx is pending
+ 	   or put it in pending list */
+-	return at76_send_mgmt_bulk(priv, tx_buffer);
++	return at76_tx_mgmt(priv, tx_buffer);
+ }
+ 
+ /* We got to check the bss_list for old entries */
+@@ -3246,8 +3244,8 @@ static int at76_tx(struct sk_buff *skb, struct net_device *netdev)
+ 		return 0;
+ 	}
+ 
+-	if (priv->write_urb->status == -EINPROGRESS) {
+-		err("%s: %s called while priv->write_urb is pending for tx",
++	if (priv->tx_urb->status == -EINPROGRESS) {
++		err("%s: %s called while priv->tx_urb is pending for tx",
+ 		    netdev->name, __func__);
+ 		/* skip this packet */
+ 		dev_kfree_skb(skb);
+@@ -3339,20 +3337,16 @@ static int at76_tx(struct sk_buff *skb, struct net_device *netdev)
+ 	netif_stop_queue(netdev);
+ 	netdev->trans_start = jiffies;
+ 
+-	usb_fill_bulk_urb(priv->write_urb, priv->udev, priv->tx_bulk_pipe,
+-			  tx_buffer, submit_len, at76_write_bulk_callback,
+-			  priv);
+-	ret = usb_submit_urb(priv->write_urb, GFP_ATOMIC);
++	usb_fill_bulk_urb(priv->tx_urb, priv->udev, priv->tx_pipe, tx_buffer,
++			  submit_len, at76_tx_callback, priv);
++	ret = usb_submit_urb(priv->tx_urb, GFP_ATOMIC);
+ 	if (ret) {
+ 		stats->tx_errors++;
+ 		err("%s: error in tx submit urb: %d", netdev->name, ret);
+ 		if (ret == -EINVAL)
+ 			err("-EINVAL: urb %p urb->hcpriv %p urb->complete %p",
+-			    priv->write_urb,
+-			    priv->write_urb ? priv->write_urb->
+-			    hcpriv : (void *)-1,
+-			    priv->write_urb ? priv->write_urb->
+-			    complete : (void *)-1);
++			    priv->tx_urb, priv->tx_urb->hcpriv,
++			    priv->tx_urb->complete);
+ 	} else {
+ 		stats->tx_bytes += skb->len;
+ 		dev_kfree_skb(skb);
+@@ -3369,18 +3363,18 @@ static void at76_tx_timeout(struct net_device *netdev)
+ 		return;
+ 	warn("%s: tx timeout.", netdev->name);
+ 
+-	usb_unlink_urb(priv->write_urb);
++	usb_unlink_urb(priv->tx_urb);
+ 	priv->stats.tx_errors++;
+ }
+ 
+-static int at76_submit_read_urb(struct at76_priv *priv)
++static int at76_submit_rx_urb(struct at76_priv *priv)
+ {
+ 	int ret;
+ 	int size;
+ 	struct sk_buff *skb = priv->rx_skb;
+ 
+-	if (!priv->read_urb) {
+-		err("%s: priv->read_urb is NULL", __func__);
++	if (!priv->rx_urb) {
++		err("%s: priv->rx_urb is NULL", __func__);
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3399,10 +3393,9 @@ static int at76_submit_read_urb(struct at76_priv *priv)
+ 	}
+ 
+ 	size = skb_tailroom(skb);
+-	usb_fill_bulk_urb(priv->read_urb, priv->udev, priv->rx_bulk_pipe,
+-			  skb_put(skb, size), size, at76_read_bulk_callback,
+-			  priv);
+-	ret = usb_submit_urb(priv->read_urb, GFP_ATOMIC);
++	usb_fill_bulk_urb(priv->rx_urb, priv->udev, priv->rx_pipe,
++			  skb_put(skb, size), size, at76_rx_callback, priv);
++	ret = usb_submit_urb(priv->rx_urb, GFP_ATOMIC);
+ 	if (ret < 0) {
+ 		if (ret == -ENODEV)
+ 			at76_dbg(DBG_DEVSTART,
+@@ -3457,9 +3450,9 @@ static int at76_open(struct net_device *netdev)
+ 	priv->last_scan = jiffies;
+ 	priv->nr_submit_rx_tries = NR_SUBMIT_RX_TRIES;	/* init counter */
+ 
+-	ret = at76_submit_read_urb(priv);
++	ret = at76_submit_rx_urb(priv);
+ 	if (ret < 0) {
+-		err("%s: open: submit_read_urb failed: %d", netdev->name, ret);
++		err("%s: open: submit_rx_urb failed: %d", netdev->name, ret);
+ 		goto error;
+ 	}
+ 
+@@ -3492,9 +3485,9 @@ static int at76_stop(struct net_device *netdev)
+ 		 * device is not available anymore. */
+ 		at76_set_radio(priv, 0);
+ 
+-		/* We unlink read_urb because at76_open() re-submits it.
++		/* We unlink rx_urb because at76_open() re-submits it.
+ 		 * If unplugged, at76_delete_device() takes care of it. */
+-		usb_kill_urb(priv->read_urb);
++		usb_kill_urb(priv->rx_urb);
+ 	}
+ 
+ 	cancel_delayed_work(&priv->dwork_get_scan);
+@@ -4285,7 +4278,7 @@ static void at76_work_submit_rx(struct work_struct *work)
+ 					      work_submit_rx);
+ 
+ 	mutex_lock(&priv->mtx);
+-	at76_submit_read_urb(priv);
++	at76_submit_rx_urb(priv);
+ 	mutex_unlock(&priv->mtx);
+ }
+ 
+@@ -5064,7 +5057,7 @@ static struct sk_buff *at76_check_for_rx_frags(struct at76_priv *priv)
+ 	} else {
+ 		/* take the skb from priv->rx_skb */
+ 		optr->skb = priv->rx_skb;
+-		/* let at76_submit_read_urb() allocate a new skb */
++		/* let at76_submit_rx_urb() allocate a new skb */
+ 		priv->rx_skb = NULL;
+ 
+ 		at76_dbg(DBG_RX_FRAGS, "%s: use a free entry",
+@@ -5280,7 +5273,7 @@ static void at76_rx_tasklet(unsigned long param)
+ 		       priv->netdev->name, frame_ctl);
+ 	}
+ exit:
+-	at76_submit_read_urb(priv);
++	at76_submit_rx_urb(priv);
+ }
+ 
+ /* Load firmware into kernel memory and parse it */
+@@ -5450,14 +5443,12 @@ static int at76_alloc_urbs(struct at76_priv *priv,
+ 		return -ENXIO;
+ 	}
+ 
+-	priv->rx_bulk_pipe =
+-	    usb_rcvbulkpipe(priv->udev, ep_in->bEndpointAddress);
+-	priv->tx_bulk_pipe =
+-	    usb_sndbulkpipe(priv->udev, ep_out->bEndpointAddress);
++	priv->rx_pipe = usb_rcvbulkpipe(priv->udev, ep_in->bEndpointAddress);
++	priv->tx_pipe = usb_sndbulkpipe(priv->udev, ep_out->bEndpointAddress);
+ 
+-	priv->read_urb = usb_alloc_urb(0, GFP_KERNEL);
+-	priv->write_urb = usb_alloc_urb(0, GFP_KERNEL);
+-	if (!priv->read_urb || !priv->write_urb) {
++	priv->rx_urb = usb_alloc_urb(0, GFP_KERNEL);
++	priv->tx_urb = usb_alloc_urb(0, GFP_KERNEL);
++	if (!priv->rx_urb || !priv->tx_urb) {
+ 		printk(KERN_ERR DRIVER_NAME ": cannot allocate URB\n");
+ 		return -ENOMEM;
+ 	}
+@@ -5579,13 +5570,13 @@ static void at76_delete_device(struct at76_priv *priv)
+ 
+ 	kfree(priv->bulk_out_buffer);
+ 
+-	if (priv->write_urb) {
+-		usb_kill_urb(priv->write_urb);
+-		usb_free_urb(priv->write_urb);
++	if (priv->tx_urb) {
++		usb_kill_urb(priv->tx_urb);
++		usb_free_urb(priv->tx_urb);
+ 	}
+-	if (priv->read_urb) {
+-		usb_kill_urb(priv->read_urb);
+-		usb_free_urb(priv->read_urb);
++	if (priv->rx_urb) {
++		usb_kill_urb(priv->rx_urb);
++		usb_free_urb(priv->rx_urb);
+ 	}
+ 
+ 	at76_dbg(DBG_PROC_ENTRY, "%s: unlinked urbs", __func__);
+diff --git a/drivers/net/wireless/at76_usb.h b/drivers/net/wireless/at76_usb.h
+index fbae175..07bbf14 100644
+--- a/drivers/net/wireless/at76_usb.h
++++ b/drivers/net/wireless/at76_usb.h
+@@ -491,11 +491,11 @@ struct at76_priv {
+ 	struct sk_buff *rx_skb;	/* skbuff for receiving data */
+ 	void *bulk_out_buffer;	/* buffer for sending data */
+ 
+-	struct urb *write_urb;	/* URB for sending data */
+-	struct urb *read_urb;	/* URB for receiving data */
++	struct urb *tx_urb;	/* URB for sending data */
++	struct urb *rx_urb;	/* URB for receiving data */
+ 
+-	unsigned int tx_bulk_pipe;	/* bulk out endpoint */
+-	unsigned int rx_bulk_pipe;	/* bulk in endpoint */
++	unsigned int tx_pipe;	/* bulk out pipe */
++	unsigned int rx_pipe;	/* bulk in pipe */
+ 
+ 	struct mutex mtx;	/* locks this structure */
+ 
