@@ -1,40 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.sea5.speakeasy.net ([69.17.117.5]:49511 "EHLO
-	mail3.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752730AbXI1BQo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2007 21:16:44 -0400
-Date: Thu, 27 Sep 2007 18:16:30 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: hostapd: passing sta info struct to drivers?
-Message-ID: <20070928011630.GI27241@jm.kir.nu>
-References: <1190911599.5021.4.camel@johannes.berg>
+Received: from c60.cesmail.net ([216.154.195.49]:16429 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752326AbXIAEfS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 00:35:18 -0400
+Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
+	by relay.cesmail.net (Postfix) with ESMTP id 27186618FE1
+	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:35:18 -0400 (EDT)
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 11/35] Simplify logic in at76_get_reg_domain()
+To: linux-wireless@vger.kernel.org
+Date: Sat, 01 Sep 2007 00:35:17 -0400
+Message-ID: <20070901043517.2498.56777.stgit@dv.roinet.com>
+In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
+References: <20070901043233.2498.95850.stgit@dv.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1190911599.5021.4.camel@johannes.berg>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 27, 2007 at 06:46:39PM +0200, Johannes Berg wrote:
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-> During porting the STA management to nl80211 it turned out that it would
-> be much nicer in the kernel if we would always set all the flags on a
-> STA that the kernel needs to get from hostapd.
+ drivers/net/wireless/at76_usb.c |   13 +++++--------
+ 1 files changed, 5 insertions(+), 8 deletions(-)
 
-That I might be able to support at least partially by merging together
-some operations, but still, I would expect there to be valid scenarios
-where it would be useful to be able to just toggle a single flag.
 
-> To implement that, it would be good to simply pass the sta_info
-> structure, e.g. we currently have this code:
-
-This is not going to happen. struct sta_info (the one in hostapd) is
-internal for the core implementation and the driver wrappers should
-never touch it directly, i.e., pointer to this is not passed on purpose.
-If changes to the operation between the driver wrapper and kernel is
-desired, it will need to be done in a different way.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index 206fa90..6ad6248 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -664,6 +664,7 @@ exit:
+ 
+ static struct reg_domain const *at76_get_reg_domain(u16 code)
+ {
++	int i;
+ 	static struct reg_domain const fd_tab[] = {
+ 		{0x10, "FCC (USA)", 0x7ff},	/* ch 1-11 */
+ 		{0x20, "IC (Canada)", 0x7ff},	/* ch 1-11 */
+@@ -673,19 +674,15 @@ static struct reg_domain const *at76_get_reg_domain(u16 code)
+ 		{0x40, "MKK (Japan)", 0x2000},	/* ch 14 */
+ 		{0x41, "MKK1 (Japan)", 0x3fff},	/* ch 1-14 */
+ 		{0x50, "Israel", 0x3fc},	/* ch 3-9 */
++		{0x00, "<unknown>", 0xffffffff}	/* ch 1-32 */
+ 	};
+-	static int const tab_len = ARRAY_SIZE(fd_tab);
+-
+-	/* use this if an unknown code comes in */
+-	static struct reg_domain const unknown = { 0, "<unknown>", 0xffffffff };
+-
+-	int i;
+ 
+-	for (i = 0; i < tab_len; i++)
++	/* Last entry is fallback for unknown domain code */
++	for (i = 0; i < ARRAY_SIZE(fd_tab) - 1; i++)
+ 		if (code == fd_tab[i].code)
+ 			break;
+ 
+-	return (i >= tab_len) ? &unknown : &fd_tab[i];
++	return &fd_tab[i];
+ }
+ 
+ static inline int at76_get_mib(struct usb_device *udev, u16 mib, void *buf,
