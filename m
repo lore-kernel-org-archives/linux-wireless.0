@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56772 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932923AbXIBBNg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2007 21:13:36 -0400
-Message-ID: <46DA0E3B.1080509@garzik.org>
-Date: Sat, 01 Sep 2007 21:13:31 -0400
-From: Jeff Garzik <jeff@garzik.org>
-MIME-Version: 1.0
-To: Bob Beck <beck@bofh.cns.ualberta.ca>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>
-Subject: Re: r.kernel.org
-References: <20070902001913.GF24887@bofh.cns.ualberta.ca>
-In-Reply-To: <20070902001913.GF24887@bofh.cns.ualberta.ca>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from crystal.sipsolutions.net ([195.210.38.204]:52181 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754738AbXIAJPm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 05:15:42 -0400
+Subject: Re: [PATCH 18/35] Only cancel correct timeouts for Auth and Assoc  replies
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20070901043557.2498.6553.stgit@dv.roinet.com>
+References: <20070901043233.2498.95850.stgit@dv.roinet.com>
+	 <20070901043557.2498.6553.stgit@dv.roinet.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rWgoFwroP/VGHk0EbXkr"
+Date: Sat, 01 Sep 2007 11:17:08 +0200
+Message-Id: <1188638228.7585.124.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Beck wrote:
-> 
->> I urge developers to not bait into this and just leave this alone.
->> Those involved know what they are doing and have a strong team of
->> attorneys watching their backs. Any *necessary* discussions are be
->> done privately.
->>
->>  Luis
-> 
-> 	What? when we talk about the ethics of cooperating development
-> and sharing code the response is "we have lawyers watching your backs"
-> and "we know what we are doing and have a plan"
-> 
-> 	What is this? a concerted attack by some organization on
-> the BSD projects? Would that be the FSF? or freesoftware.org?  
-> 
-> 	What kind of crap is this? that Free Software developers can't
-> respect each others project goals and work together, but instead should
-> beware of organizations with hidden agendas to abscond with their work. 
-> 
-> 	What a crock. I urge any developers involved to decide if
-> you really want to work in an environment of this sort of amoral baloney.
 
-Your BSD software appears to have a bug in it.  Your email's CC line was 
-truncated at "netdev@vge", with the rest spilling into your email's 
-subject line.
+--=-rWgoFwroP/VGHk0EbXkr
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I'll wager this bug also triggered a buffer overflow on your side, 
-leading to an unwanted public spew of anti-Linux conspiracy theories.
+On Sat, 2007-09-01 at 00:35 -0400, Pavel Roskin wrote:
+> Don't cancel all delayed works indiscriminately.  In case of
+> at76_rx_mgmt_auth(), cancel the timeout regardless of the status of the
+> reply, as long as the reply is for us.
 
-But don't worry, we find them entertaining nonetheless.
+Out of curiosity, why are you cleaning up code that needs to be deleted
+anyhow? The way I see it, the driver ought to be be ported to mac80211,
+no? It seems to ship with an in-driver softmac.
 
-	Jeff
+johannes
 
+--=-rWgoFwroP/VGHk0EbXkr
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG2S4U/ETPhpq3jKURAm0iAKCjZqXq5XKJLCPVto2vSdsZl+Im9gCbByHH
+5qqyUPvMt7EqdxxVMytrpVE=
+=Cwpk
+-----END PGP SIGNATURE-----
+
+--=-rWgoFwroP/VGHk0EbXkr--
 
