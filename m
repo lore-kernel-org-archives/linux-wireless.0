@@ -1,61 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:35159 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756744AbXIQWmb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2007 18:42:31 -0400
-Date: Tue, 18 Sep 2007 04:15:11 +0530 (IST)
-From: Satyam Sharma <satyam@infradead.org>
-To: Andrew Morton <akpm@linux-foundation.org>
-cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH -mm][resend] net/wireless/sysfs.c: Shut up build warning
-Message-ID: <alpine.LFD.0.999.0709180412490.8863@enigma.security.iitk.ac.in>
+Received: from c60.cesmail.net ([216.154.195.49]:56199 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751096AbXIAEeV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 00:34:21 -0400
+Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
+	by relay.cesmail.net (Postfix) with ESMTP id CEDFF618FE1
+	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:34:20 -0400 (EDT)
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 01/35] Protect at76_get_op_mode() and at76_get_mib() against  short reads
+To: linux-wireless@vger.kernel.org
+Date: Sat, 01 Sep 2007 00:34:20 -0400
+Message-ID: <20070901043420.2498.30002.stgit@dv.roinet.com>
+In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
+References: <20070901043233.2498.95850.stgit@dv.roinet.com>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="464262402-258678704-1190069114=:8863"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Don't rely on usb_control_msg() returning -EPIPE in absence of working
+firmware.  In some cases, no error is returned, but no data is read.
 
---464262402-258678704-1190069114=:8863
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Interpret short reads as an error, return -EIO.
 
-
-net/wireless/sysfs.c:108: warning: ‘wiphy_uevent’ defined but not used
-
-when CONFIG_HOTPLUG=n is because the only usage site of this function
-is #ifdef'ed as such, so let's #ifdef the definition also.
-
-Signed-off-by: Satyam Sharma <satyam@infradead.org>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
 
- net/wireless/sysfs.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/at76_usb.c |   18 +++++++++++++-----
+ 1 files changed, 13 insertions(+), 5 deletions(-)
 
---- linux-2.6.23-rc4-mm1/net/wireless/sysfs.c~fix	2007-09-02 20:06:11.000000000 +0530
-+++ linux-2.6.23-rc4-mm1/net/wireless/sysfs.c	2007-09-02 20:07:01.000000000 +0530
-@@ -104,11 +104,13 @@ static void wiphy_dev_release(struct dev
- 	cfg80211_dev_free(rdev);
+
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index d5e939e..f2a74d4 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -578,7 +578,10 @@ static int at76_get_op_mode(struct usb_device *udev)
+ 			      USB_CTRL_GET_TIMEOUT);
+ 	if (ret < 0)
+ 		return ret;
+-	return op_mode;
++	else if (ret < 1)
++		return -EIO;
++	else
++		return op_mode;
  }
  
-+#ifdef CONFIG_HOTPLUG
- static int wiphy_uevent(struct device *dev, struct kobj_uevent_env *env)
+ /* Load a block of the second ("external") part of the firmware */
+@@ -695,10 +698,15 @@ static struct reg_domain const *at76_get_reg_domain(u16 code)
+ static inline int at76_get_mib(struct usb_device *udev, u16 mib, void *buf,
+ 			       int buf_size)
  {
- 	/* TODO, we probably need stuff here */
- 	return 0;
+-	return usb_control_msg(udev, usb_rcvctrlpipe(udev, 0), 0x33,
+-			       USB_TYPE_VENDOR | USB_DIR_IN |
+-			       USB_RECIP_INTERFACE, mib << 8, 0, buf, buf_size,
+-			       USB_CTRL_GET_TIMEOUT);
++	int ret;
++
++	ret = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0), 0x33,
++			      USB_TYPE_VENDOR | USB_DIR_IN |
++			      USB_RECIP_INTERFACE, mib << 8, 0, buf, buf_size,
++			      USB_CTRL_GET_TIMEOUT);
++	if (ret >= 0 && ret != buf_size)
++		return -EIO;
++	return ret;
  }
-+#endif
  
- struct class ieee80211_class = {
- 	.name = "ieee80211",
---464262402-258678704-1190069114=:8863--
--: 
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org: 
-More majordomo info at  http: //vger.kernel.org/majordomo-info.html
+ /* Return positive number for status, negative for an error */
