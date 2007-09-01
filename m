@@ -1,60 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:34159 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750715AbXI1LtA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2007 07:49:00 -0400
-Subject: Re: iwlwifi scan question
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240709280441s3eceac51x74a8bb8e422808f2@mail.gmail.com>
-References: <1190815228.4204.9.camel@johannes.berg>
-	 <1ba2fa240709280441s3eceac51x74a8bb8e422808f2@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PQ5WF1xQZVfRdid5I59B"
-Date: Fri, 28 Sep 2007 13:50:14 +0200
-Message-Id: <1190980214.13581.2.camel@johannes.berg>
-Mime-Version: 1.0
+Received: from c60.cesmail.net ([216.154.195.49]:17799 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751299AbXIAEez (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 00:34:55 -0400
+Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
+	by relay.cesmail.net (Postfix) with ESMTP id 41E30618FE1
+	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:34:55 -0400 (EDT)
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 07/35] Don't use shift on numeric constants in  usb_control_msg() arguments
+To: linux-wireless@vger.kernel.org
+Date: Sat, 01 Sep 2007 00:34:54 -0400
+Message-ID: <20070901043454.2498.43997.stgit@dv.roinet.com>
+In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
+References: <20070901043233.2498.95850.stgit@dv.roinet.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We don't know the meaning of 0x0a02 and 0x0902 in at76_get_hw_cfg() and
+at76_get_hw_cfg_intersil() respectively, so don't pretend that we do.
 
---=-PQ5WF1xQZVfRdid5I59B
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-On Fri, 2007-09-28 at 13:41 +0200, Tomas Winkler wrote:
-> On 9/26/07, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > When iwlwifi scans in firmware, which MAC address does it use? What if
-> > you've added multiple virtual interfaces as you said you could support?
-> >
-> Scanning is STA feature so only one MAC address is used in that case.
-> namely iwl_rxon_cmd.node_addr
+ drivers/net/wireless/at76_usb.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Whichever address that will be, ok :)
 
-Though, actually, scanning is not just a STA feature is it? APs will
-sometimes want to do a quick background scan too, I think.
-
-> Do you know any use case to support STA with multiple MAC addresses?
-
-Not really, unless you can implement a TSF adoption per local MAC
-address. I guess you could turn off powersave and do the backoff
-algorithm a bit out of spec and get by with just one timer too.
-
-johannes
-
---=-PQ5WF1xQZVfRdid5I59B
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iD8DBQBG/Op2/ETPhpq3jKURArj+AJ9o7m53lwNx2aYbcX4N0RcCQfUKqgCfQb8O
-Xm2RY1NUblIkBIQ47WQGZ4U=
-=GWmz
------END PGP SIGNATURE-----
-
---=-PQ5WF1xQZVfRdid5I59B--
-
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index 55e82cd..8994b70 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -599,7 +599,7 @@ static inline int at76_get_hw_cfg(struct usb_device *udev,
+ {
+ 	return usb_control_msg(udev, usb_rcvctrlpipe(udev, 0), 0x33,
+ 			       USB_TYPE_VENDOR | USB_DIR_IN |
+-			       USB_RECIP_INTERFACE, ((0x0a << 8) | 0x02), 0,
++			       USB_RECIP_INTERFACE, 0x0a02, 0,
+ 			       buf, buf_size, USB_CTRL_GET_TIMEOUT);
+ }
+ 
+@@ -609,7 +609,7 @@ static inline int at76_get_hw_cfg_intersil(struct usb_device *udev,
+ {
+ 	return usb_control_msg(udev, usb_rcvctrlpipe(udev, 0), 0x33,
+ 			       USB_TYPE_VENDOR | USB_DIR_IN |
+-			       USB_RECIP_INTERFACE, ((0x09 << 8) | 0x02), 0,
++			       USB_RECIP_INTERFACE, 0x0902, 0,
+ 			       buf, buf_size, USB_CTRL_GET_TIMEOUT);
+ }
+ 
