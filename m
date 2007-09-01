@@ -1,76 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.188]:35137 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751058AbXIDSsT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2007 14:48:19 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so2576864mue
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2007 11:48:17 -0700 (PDT)
-To: dragoran <drago01@gmail.com>
-Subject: Re: [PATCH V3] Add iwlwifi wireless drivers
-Date: Tue, 4 Sep 2007 20:58:15 +0200
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-References: <f6ca9fed0709041056rf44bb78ic7b5a516d6a3187a@mail.gmail.com> <200709042015.34764.IvDoorn@gmail.com> <f6ca9fed0709041118o2dcd4b18mcb25f2b93f648479@mail.gmail.com>
-In-Reply-To: <f6ca9fed0709041118o2dcd4b18mcb25f2b93f648479@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200709042058.15463.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:10713 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753231AbXIAKyy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 06:54:54 -0400
+Subject: Re: [PATCH 18/35] Only cancel correct timeouts for Auth and Assoc  replies
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1188638228.7585.124.camel@johannes.berg>
+References: <20070901043233.2498.95850.stgit@dv.roinet.com>
+	 <20070901043557.2498.6553.stgit@dv.roinet.com>
+	 <1188638228.7585.124.camel@johannes.berg>
+Content-Type: text/plain
+Date: Sat, 01 Sep 2007 06:54:51 -0400
+Message-Id: <1188644091.4146.12.camel@gx>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 04 September 2007, dragoran wrote:
-> On 9/4/07, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > On Tuesday 04 September 2007, dragoran wrote:
-> > > >+static ssize_t show_rf_kill(struct device *d,
-> > > >+                        struct device_attribute *attr, char *buf)
-> > > >+{
-> > > >+    /*
-> > > >+     * 0 - RF kill not enabled
-> > > >+     * 1 - SW based RF kill active (sysfs)
-> > > >+     * 2 - HW based RF kill active
-> > > >+     * 3 - Both HW and SW based RF kill active
-> > > >
-> > > >that as well, along with all the other sysfs bits. Also, how about using
-> > > >the generic rfkill infrastructure Ivo did?
-> > >
-> > > is the generic rfkill interface already stable and merged into the linus tree?
-> >
-> > Yes. It currently is only missing users.
+On Sat, 2007-09-01 at 11:17 +0200, Johannes Berg wrote: 
+> On Sat, 2007-09-01 at 00:35 -0400, Pavel Roskin wrote:
+> > Don't cancel all delayed works indiscriminately.  In case of
+> > at76_rx_mgmt_auth(), cancel the timeout regardless of the status of the
+> > reply, as long as the reply is for us.
 > 
-> ok thats great ;) is the (userspace) interface defined somewhere? or
-> should I read the code to understand how it works? (would like to add
-> support to hal)
+> Out of curiosity, why are you cleaning up code that needs to be deleted
+> anyhow? The way I see it, the driver ought to be be ported to mac80211,
+> no? It seems to ship with an in-driver softmac.
 
-There isn't a documentation file for it, so best thing to do would be looking at the code.
-basically hal only needs to check the sysfs files:
+I understand that.  But at the time I did it, I wasn't even sure that
+the mac80211 conversion is possible.  I wanted to have a solid base
+before starting the risky conversion.
 
-	name -> Name of device/interface
-	type -> wlan, bluetooth, irda
-	state -> Current device state. 0: Off, 1: On
-	claim -> 0: Kernel handles events, 1: Userspace handles events
+The driver used to have a big event handler that was split into several
+works and a big timer handler that was split into several timers.  In
+some cases, the code would cancel the "big timer" for some errors.  The
+first step was replace it with the code to cancel all timers.  The
+second step was to remove some unlikely or wrong cases, when the
+specific timer cannot be running or shouldn't be canceled.  I'm not
+going to do any more cleanup of this kind.
 
-"name" and "type" are read-only
-"claim" and "state" are read/writable
+What happened is that the driver in wireless-dev/at76 is a version 57
+commits below the top of my repository, and the mac80211 port was
+started at the point 35 commits above the version in wireless-dev/at76.
 
-Note that there is a bug in 2.6.22 which causes the "state" file to be read-only,
-this has been fixed in 2.6.23-rc.
+It would have been easier if everybody just had started with my current
+code, but since it didn't happen, I'm trying to fix it.  The first step
+is to go the the point where Kalle started mac80211 conversion.  The
+rest doesn't contain any major fixes, although some changes are pretty
+intrusive.  I'll see what to do with them once I have a chance to play
+with the mac80211 conversion patch.
 
-> > > if not please leave this for now to not break userspace (hal).
-> > > hal currently is using this on all ipw* and iwl* drivers to get and
-> > > set the rfkill status. And NM uses this interface to set/get rfkill
-> > > status.
-> > >
-> > > So please don't remove this yet until the proper interface is merged
-> > > too (which should be better anyway because this one requires polling)
-> >
-> > The input-polldev interface could be used for polling if it is required.
-> 
-> shouldn't the new interface send events so that polling isn't required?
+The patches I have sent were not meant to be reviewed in this list,
+since I expected the latest version to be imported as is.  But I think
+it's still better to send the patches separately rather than a single
+patch.  If nothing else, the separate patches could receive some useful
+comments.
 
-Not really, rfkill was intended for a generic interface, which would make
-the rfkill buttons work with or without intervention of userspace. So polling
-is required unless the hardware generates interrupts when the button is called.
-
-Ivo
+-- 
+Regards,
+Pavel Roskin
