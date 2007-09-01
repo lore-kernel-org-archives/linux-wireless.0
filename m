@@ -1,47 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:44924 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754219AbXIBSXM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2007 14:23:12 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so773827rvb
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Sep 2007 11:23:11 -0700 (PDT)
-Message-ID: <7579f7fb0709021123p7088ec41m5b688f527ba46d13@mail.gmail.com>
-Date: Sun, 2 Sep 2007 11:23:11 -0700
-From: "Matthew Jacob" <lydianconcepts@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: Fwd: That whole "Linux stealing our code" thing
-In-Reply-To: <Pine.LNX.4.64.0709021754250.6772@condmat1.ciencias.uniovi.es>
+Received: from c60.cesmail.net ([216.154.195.49]:36283 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751816AbXIAEgK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 00:36:10 -0400
+Received: from dv.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
+	by relay.cesmail.net (Postfix) with ESMTP id 7F719618FE1
+	for <linux-wireless@vger.kernel.org>; Sat,  1 Sep 2007 00:36:09 -0400 (EDT)
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 20/35] Protect at76_iw_handler_set_scan() with mutex
+To: linux-wireless@vger.kernel.org
+Date: Sat, 01 Sep 2007 00:36:09 -0400
+Message-ID: <20070901043608.2498.9450.stgit@dv.roinet.com>
+In-Reply-To: <20070901043233.2498.95850.stgit@dv.roinet.com>
+References: <20070901043233.2498.95850.stgit@dv.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200709010140.l811eq9H005896@cvs.openbsd.org>
-	 <20070902113638.78fbd202@the-village.bc.nu>
-	 <Pine.LNX.4.64.0709021303001.4312@condmat1.ciencias.uniovi.es>
-	 <20070902115041.GM16016@stusta.de>
-	 <Pine.LNX.4.64.0709021416130.6181@condmat1.ciencias.uniovi.es>
-	 <20070902134612.28a88761@the-village.bc.nu>
-	 <Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es>
-	 <m3642txj91.fsf@maximus.localdomain> <46DAC482.5090107@garzik.org>
-	 <Pine.LNX.4.64.0709021754250.6772@condmat1.ciencias.uniovi.es>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This has been pretty interesting for me to watch as I distribute my
-isp driver under a dual license (at least the portions of it which are
-common with the *BSD and Solaris ports)  that is almost identical to
-Sam's verbiage.
+This prevents a race condition when a response from an AP comes before
+we set state to MAC_SCANNING, but after at76_quiesce().
 
-I'll admit that I hadn't thought about whether redistribution included
-the ability to modify the header (and thus the text of the licensing
-as I had written) or not. On balance I'd say I believe that the
-arguments for, on redistribution, picking one or the other license
-makes sense and honored my general intent.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-This allows people who modify the code (and presumably improve it) a
-"chef's choice" based on where they're serving the meal.
+ drivers/net/wireless/at76_usb.c |   23 +++++++++++++++++------
+ 1 files changed, 17 insertions(+), 6 deletions(-)
 
-IANAL, but I believe that none of this keeps me from continuing to put
-a dual license on stuff I leave up for distribution, or changing that
-to restricting the code to Martian Triathalon winners or what have
-you.
+
+diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
+index 4a86b48..8b9f75a 100644
+--- a/drivers/net/wireless/at76_usb.c
++++ b/drivers/net/wireless/at76_usb.c
+@@ -2305,13 +2305,20 @@ static int at76_iw_handler_set_scan(struct net_device *netdev,
+ 
+ 	at76_dbg(DBG_IOCTL, "%s: SIOCSIWSCAN", netdev->name);
+ 
+-	if (!netif_running(netdev))
+-		return -ENETDOWN;
++	if (mutex_lock_interruptible(&priv->mtx))
++		return -EINTR;
++
++	if (!netif_running(netdev)) {
++		ret = -ENETDOWN;
++		goto exit;
++	}
+ 
+ 	/* jal: we don't allow "iwlist ethX scan" while we are
+ 	   in monitor mode */
+-	if (priv->iw_mode == IW_MODE_MONITOR)
+-		return -EBUSY;
++	if (priv->iw_mode == IW_MODE_MONITOR) {
++		ret = -EBUSY;
++		goto exit;
++	}
+ 
+ 	/* Discard old scan results */
+ 	if ((jiffies - priv->last_scan) > (20 * HZ))
+@@ -2319,8 +2326,10 @@ static int at76_iw_handler_set_scan(struct net_device *netdev,
+ 	priv->last_scan = jiffies;
+ 
+ 	/* Initiate a scan command */
+-	if (priv->scan_state == SCAN_IN_PROGRESS)
+-		return -EBUSY;
++	if (priv->scan_state == SCAN_IN_PROGRESS) {
++		ret = -EBUSY;
++		goto exit;
++	}
+ 
+ 	priv->scan_state = SCAN_IN_PROGRESS;
+ 
+@@ -2348,6 +2357,8 @@ static int at76_iw_handler_set_scan(struct net_device *netdev,
+ 	at76_set_mac_state(priv, MAC_SCANNING);
+ 	schedule_work(&priv->work_start_scan);
+ 
++exit:
++	mutex_unlock(&priv->mtx);
+ 	return ret;
+ }
+ 
