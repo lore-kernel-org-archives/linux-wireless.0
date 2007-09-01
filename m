@@ -1,61 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:4264 "EHLO baikonur.stro.at"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965099AbXIGLMZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2007 07:12:25 -0400
-Date: Fri, 7 Sep 2007 13:12:18 +0200
-From: maximilian attems <max@stro.at>
-To: flamingice@sourmilk.net, andreamrl@tiscali.it
-Cc: linux-wireless@vger.kernel.org
-Subject: rtl8187 on realtek 8189
-Message-ID: <20070907111218.GD16304@stro.at>
+Received: from wx-out-0506.google.com ([66.249.82.237]:41954 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755892AbXIAV1F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2007 17:27:05 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1123024wxd
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Sep 2007 14:27:03 -0700 (PDT)
+Message-ID: <f34ca13c0709011427u7a9cc97bp75c035afed3e5a63@mail.gmail.com>
+Date: Sat, 1 Sep 2007 17:27:03 -0400
+From: "Constantine A. Murenin" <mureninc@gmail.com>
+To: "Adrian Bunk" <bunk@kernel.org>
+Subject: Re: Fwd: That whole "Linux stealing our code" thing
+Cc: "Jeff Garzik" <jeff@garzik.org>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <20070901205457.GK9260@stusta.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200709010140.l811eq9H005896@cvs.openbsd.org>
+	 <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
+	 <46D99FB7.6030505@garzik.org>
+	 <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
+	 <20070901205457.GK9260@stusta.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hello guys,
+On 01/09/07, Adrian Bunk <bunk@kernel.org> wrote:
+> On Sat, Sep 01, 2007 at 01:37:18PM -0400, Constantine A. Murenin wrote:
+> > On 01/09/07, Jeff Garzik <jeff@garzik.org> wrote:
+> > > Constantine A. Murenin wrote:
+> > > > This will hopefully help diminish certain myths about the code licensing.
+> > >
+> > > What myth?  The myth that Theo understands dual licensing?
+> >
+> > Reyk's code was never dual licensed, so it's not like it even matters
+> > to the original dispute.
+>
+> It's no longer dual licenced in the FreeBSD tree because the FreeBSD
+> people removed the GPL choice of the dual licenced code 3 months ago.
 
-tried to get the wireless of the latest medion working,
-but simple pci id addition seems not enough, can't see
-any access point.
-what info do you need?
+FreeBSD doesn't have Reyk's ath(4) HAL, which OpenHAL is based on.
 
-also why the hack is the interface wlan0 and not ethX?
+FreeBSD has a driver written by Sam, and a binary-only HAL, also written by Sam.
 
-regards
+> So all of Theo's accusations of people breaking the law by making this
+> dual licenced code GPL-only apply as well to the FreeBSD people...
 
--- 
-maks
+How? FreeBSD doesn't have Reyk's ath(4) HAL from OpenBSD, so there are
+no possible licensing accusations and violations.
 
-lsusb:                                                                          
-Bus 005 Device 003: ID 0bda:8189 Realtek Semiconductor Corp.                    
+> > That said, I don't see what exact wording you consider inaccurate.
+>
+> Both the FreeBSD and Linux people draw the logical conclusion that this
+> "Alternatively" means everyone can always choose to remove one of the
+> two choices alternatively offered.
+>
+> According to Theo, that is "breaking the law"...
 
-iwconfig:
-wlan0     IEEE 802.11g  ESSID:"tunet"                                           
-          Mode:Managed  Channel:0  Access Point: Not-Associated                 
-          Retry min limit:7   RTS thr:off   Fragment thr=2346 B                 
-          Encryption key:off                                                    
-          Link Quality:0  Signal level:0  Noise level:0                         
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0              
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0              
+FreeBSD's ath(4) code, both the driver and the HAL, is entirely
+written by Sam Leffler, who can licence it in whichever way he seems
+reasonable. The driver part of Sam's code is also present in OpenBSD,
+but the HALs in OpenBSD and FreeBSD are entirely different.
 
-dmesg:
-wmaster0: Selected rate control algorithm 'simple'                              
-phy1: hwaddr 00:07:ca:06:2e:7b, rtl8187 V0 + rtl8225                            
-usbcore: registered new interface driver rtl8187                                
-
-
-diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
-index e61c6d5..ee6c8dd 100644
---- a/drivers/net/wireless/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl8187_dev.c
-@@ -33,6 +33,7 @@ MODULE_LICENSE("GPL");
- static struct usb_device_id rtl8187_table[] __devinitdata = {
- 	/* Realtek */
- 	{USB_DEVICE(0x0bda, 0x8187)},
-+	{USB_DEVICE(0x0bda, 0x8189)},
- 	/* Netgear */
- 	{USB_DEVICE(0x0846, 0x6100)},
- 	{USB_DEVICE(0x0846, 0x6a00)},
-
+C.
