@@ -1,423 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from crystal.sipsolutions.net ([195.210.38.204]:57050 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752496AbXIZPyp (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:59777 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754721AbXIAQI3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2007 11:54:45 -0400
-Message-Id: <20070926155434.915293000@sipsolutions.net>
-References: <20070926155313.955049000@sipsolutions.net>
-Date: Wed, 26 Sep 2007 17:53:18 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Wu <flamingice@sourmilk.net>,
-	John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Andy Green <andy@warmcat.com>
-Subject: [patch 5/7] mac80211: improve radiotap injection
+	Sat, 1 Sep 2007 12:08:29 -0400
+Date: Sat, 1 Sep 2007 09:08:19 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: borkage in 2.6.23-rc4-mm1
+Message-Id: <20070901090819.5bce4f79.akpm@linux-foundation.org>
+In-Reply-To: <46D9352B.4060606@garzik.org>
+References: <20070831211603.083dfed2.akpm@linux-foundation.org>
+	<46D9352B.4060606@garzik.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This improves radiotap injection by removing the shortcut over TX handlers
-that led to BUGS when injecting frames without setting a rate and also
-resulted in various other quirks. Now, TX handlers are run but some
-information that was present in the radiotap header is used instead of
-automatic settings.
+> On Sat, 01 Sep 2007 05:47:23 -0400 Jeff Garzik <jeff@garzik.org> wrote:
+> Andrew Morton wrote:
+> > Am seeing random crap like this:
+> > 
+> > Aug 31 20:57:46 sony dhclient: DHCPREQUEST on eth1 to 255.255.255.255 port 67
+> > Aug 31 20:57:51 sony dhclient: DHCPREQUEST on eth1 to 255.255.255.255 port 67
+> > Aug 31 20:57:56 sony dhclient: dhclient(4537) is already running - exiting. 
+> > Aug 31 20:57:56 sony dhclient: exiting.
+> > Aug 31 20:58:05 sony dhclient: DHCPDISCOVER on eth1 to 255.255.255.255 port 67 interval 4
+> > Aug 31 20:58:07 sony kernel: ipw2200: Firmware error detected.  Restarting.
+> > Aug 31 20:58:09 sony dhclient: DHCPDISCOVER on eth1 to 255.255.255.255 port 67 interval 7
+> > Aug 31 20:58:16 sony dhclient: DHCPDISCOVER on eth1 to 255.255.255.255 port 67 interval 14
+> > Aug 31 20:58:16 sony dhclient: DHCPOFFER from 192.168.2.1
+> > Aug 31 20:58:16 sony dhclient: DHCPREQUEST on eth1 to 255.255.255.255 port 67
+> > Aug 31 20:58:20 sony dhclient: DHCPREQUEST on eth1 to 255.255.255.255 port 67
+> > Aug 31 20:58:20 sony dhclient: DHCPACK from 192.168.2.1
+> > Aug 31 20:58:20 sony NET[4946]: /sbin/dhclient-script : updated /etc/resolv.conf
+> > Aug 31 20:58:20 sony dhclient: bound to 192.168.2.5 -- renewal in 125513 seconds.
+> > Aug 31 20:59:45 sony ntpd[2059]: sendto(192.36.143.234): Invalid argument
+> > Aug 31 20:59:51 sony ntpd[2059]: sendto(193.225.14.163): Invalid argument
+> > Aug 31 20:59:52 sony ntpd[2059]: sendto(193.60.199.78): Invalid argument
+> > Aug 31 21:01:31 sony kernel: ipw2200: Firmware error detected.  Restarting.
+> > Aug 31 21:01:54 sony ntpd[2059]: sendto(192.36.143.234): Invalid argument
+> > Aug 31 21:01:59 sony ntpd[2059]: sendto(193.225.14.163): Invalid argument
+> > Aug 31 21:02:02 sony ntpd[2059]: sendto(193.60.199.78): Invalid argument
+> > Aug 31 21:04:04 sony ntpd[2059]: sendto(192.36.143.234): Invalid argument
+> > Aug 31 21:04:05 sony kernel: ipw2200: Firmware error detected.  Restarting.
+> > Aug 31 21:04:07 sony ntpd[2059]: sendto(193.225.14.163): Invalid argument
+> > Aug 31 21:04:12 sony ntpd[2059]: sendto(193.60.199.78): Invalid argument
+> > Aug 31 21:05:21 sony kernel: ipw2200: Firmware error detected.  Restarting.
+> 
+> I see this on my Sony Vaio with older, non-mm kernels too.  Incredibly 
+> frustrating, as it seems to be related to the phase of the moon. 
+> Sometimes a reboot gets my wireless working, sometimes it doesn't.
+> 
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Andy Green <andy@warmcat.com>
-
----
- Documentation/networking/mac80211-injection.txt |   32 +++
- net/mac80211/ieee80211_i.h                      |    1 
- net/mac80211/tx.c                               |  195 ++++++++++++------------
- 3 files changed, 131 insertions(+), 97 deletions(-)
-
---- wireless-dev.orig/net/mac80211/tx.c	2007-09-26 17:45:46.507337342 +0200
-+++ wireless-dev/net/mac80211/tx.c	2007-09-26 17:51:21.617337342 +0200
-@@ -222,6 +222,9 @@ ieee80211_tx_h_check_assoc(struct ieee80
- #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
- 	u32 sta_flags;
- 
-+	if (unlikely(tx->flags & IEEE80211_TXRXD_TX_INJECTED))
-+		return TXRX_CONTINUE;
-+
- 	if (unlikely(tx->local->sta_scanning != 0) &&
- 	    ((tx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT ||
- 	     (tx->fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_PROBE_REQ))
-@@ -566,22 +569,27 @@ ieee80211_tx_h_rate_ctrl(struct ieee8021
- {
- 	struct rate_control_extra extra;
- 
--	memset(&extra, 0, sizeof(extra));
--	extra.mode = tx->u.tx.mode;
--	extra.ethertype = tx->ethertype;
--
--	tx->u.tx.rate = rate_control_get_rate(tx->local, tx->dev, tx->skb,
--					      &extra);
--	if (unlikely(extra.probe != NULL)) {
--		tx->u.tx.control->flags |= IEEE80211_TXCTL_RATE_CTRL_PROBE;
--		tx->flags |= IEEE80211_TXRXD_TXPROBE_LAST_FRAG;
--		tx->u.tx.control->alt_retry_rate = tx->u.tx.rate->val;
--		tx->u.tx.rate = extra.probe;
--	} else {
-+	if (likely(!tx->u.tx.rate)) {
-+		memset(&extra, 0, sizeof(extra));
-+		extra.mode = tx->u.tx.mode;
-+		extra.ethertype = tx->ethertype;
-+
-+		tx->u.tx.rate = rate_control_get_rate(tx->local, tx->dev,
-+						      tx->skb, &extra);
-+		if (unlikely(extra.probe != NULL)) {
-+			tx->u.tx.control->flags |=
-+				IEEE80211_TXCTL_RATE_CTRL_PROBE;
-+			tx->flags |= IEEE80211_TXRXD_TXPROBE_LAST_FRAG;
-+			tx->u.tx.control->alt_retry_rate = tx->u.tx.rate->val;
-+			tx->u.tx.rate = extra.probe;
-+		} else
-+			tx->u.tx.control->alt_retry_rate = -1;
-+
-+		if (!tx->u.tx.rate)
-+			return TXRX_DROP;
-+	} else
- 		tx->u.tx.control->alt_retry_rate = -1;
--	}
--	if (!tx->u.tx.rate)
--		return TXRX_DROP;
-+
- 	if (tx->u.tx.mode->mode == MODE_IEEE80211G &&
- 	    (tx->sdata->flags & IEEE80211_SDATA_USE_PROTECTION) &&
- 	    (tx->flags & IEEE80211_TXRXD_FRAGMENTED) && extra.nonerp) {
-@@ -611,19 +619,24 @@ ieee80211_tx_h_misc(struct ieee80211_txr
- 	struct ieee80211_tx_control *control = tx->u.tx.control;
- 	struct ieee80211_hw_mode *mode = tx->u.tx.mode;
- 
--	if (!is_multicast_ether_addr(hdr->addr1)) {
--		if (tx->skb->len + FCS_LEN > tx->local->rts_threshold &&
--		    tx->local->rts_threshold < IEEE80211_MAX_RTS_THRESHOLD) {
--			control->flags |= IEEE80211_TXCTL_USE_RTS_CTS;
--			control->flags |= IEEE80211_TXCTL_LONG_RETRY_LIMIT;
--			control->retry_limit =
--				tx->local->long_retry_limit;
-+	if (!control->retry_limit) {
-+		if (!is_multicast_ether_addr(hdr->addr1)) {
-+			if (tx->skb->len + FCS_LEN > tx->local->rts_threshold
-+			    && tx->local->rts_threshold <
-+			    		IEEE80211_MAX_RTS_THRESHOLD) {
-+				control->flags |=
-+					IEEE80211_TXCTL_USE_RTS_CTS;
-+				control->flags |=
-+					IEEE80211_TXCTL_LONG_RETRY_LIMIT;
-+				control->retry_limit =
-+					tx->local->long_retry_limit;
-+			} else {
-+				control->retry_limit =
-+					tx->local->short_retry_limit;
-+			}
- 		} else {
--			control->retry_limit =
--				tx->local->short_retry_limit;
-+			control->retry_limit = 1;
- 		}
--	} else {
--		control->retry_limit = 1;
- 	}
- 
- 	if (tx->flags & IEEE80211_TXRXD_FRAGMENTED) {
-@@ -785,9 +798,8 @@ ieee80211_tx_handler ieee80211_tx_handle
-  * with Radiotap Header -- only called for monitor mode interface
-  */
- static ieee80211_txrx_result
--__ieee80211_parse_tx_radiotap(
--	struct ieee80211_txrx_data *tx,
--	struct sk_buff *skb, struct ieee80211_tx_control *control)
-+__ieee80211_parse_tx_radiotap(struct ieee80211_txrx_data *tx,
-+			      struct sk_buff *skb)
- {
- 	/*
- 	 * this is the moment to interpret and discard the radiotap header that
-@@ -802,18 +814,11 @@ __ieee80211_parse_tx_radiotap(
- 		(struct ieee80211_radiotap_header *) skb->data;
- 	struct ieee80211_hw_mode *mode = tx->local->hw.conf.mode;
- 	int ret = ieee80211_radiotap_iterator_init(&iterator, rthdr, skb->len);
-+	struct ieee80211_tx_control *control = tx->u.tx.control;
- 
--	/*
--	 * default control situation for all injected packets
--	 * FIXME: this does not suit all usage cases, expand to allow control
--	 */
--
--	control->retry_limit = 1; /* no retry */
--	control->flags &= ~(IEEE80211_TXCTL_USE_RTS_CTS |
--			    IEEE80211_TXCTL_USE_CTS_PROTECT);
--	control->flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT |
--			  IEEE80211_TXCTL_NO_ACK;
--	control->antenna_sel_tx = 0; /* default to default antenna */
-+	control->flags |= IEEE80211_TXCTL_DO_NOT_ENCRYPT;
-+	tx->flags |= IEEE80211_TXRXD_TX_INJECTED;
-+	tx->flags &= ~IEEE80211_TXRXD_FRAGMENTED;
- 
- 	/*
- 	 * for every radiotap entry that is present
-@@ -846,19 +851,10 @@ __ieee80211_parse_tx_radiotap(
- 			for (i = 0; i < mode->num_rates; i++) {
- 				struct ieee80211_rate *r = &mode->rates[i];
- 
--				if (r->rate > target_rate)
--					continue;
--
--				control->rate = r;
--
--				if (r->flags & IEEE80211_RATE_PREAMBLE2)
--					control->tx_rate = r->val2;
--				else
--					control->tx_rate = r->val;
--
--				/* end on exact match */
--				if (r->rate == target_rate)
--					i = mode->num_rates;
-+				if (r->rate == target_rate) {
-+					tx->u.tx.rate = r;
-+					break;
-+				}
- 			}
- 			break;
- 
-@@ -888,8 +884,19 @@ __ieee80211_parse_tx_radiotap(
- 
- 				skb_trim(skb, skb->len - FCS_LEN);
- 			}
-+			if (*iterator.this_arg & IEEE80211_RADIOTAP_F_WEP)
-+				control->flags &=
-+					~IEEE80211_TXCTL_DO_NOT_ENCRYPT;
-+			if (*iterator.this_arg & IEEE80211_RADIOTAP_F_FRAG)
-+				tx->flags |= IEEE80211_TXRXD_FRAGMENTED;
- 			break;
- 
-+		/*
-+		 * Please update the file
-+		 * Documentation/networking/mac80211-injection.txt
-+		 * when parsing new fields here.
-+		 */
-+
- 		default:
- 			break;
- 		}
-@@ -908,14 +915,17 @@ __ieee80211_parse_tx_radiotap(
- 	return TXRX_CONTINUE;
- }
- 
--static ieee80211_txrx_result inline
-+/*
-+ * initialises @tx
-+ */
-+static ieee80211_txrx_result
- __ieee80211_tx_prepare(struct ieee80211_txrx_data *tx,
- 		       struct sk_buff *skb,
- 		       struct net_device *dev,
- 		       struct ieee80211_tx_control *control)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct ieee80211_hdr *hdr;
- 	struct ieee80211_sub_if_data *sdata;
- 	ieee80211_txrx_result res = TXRX_CONTINUE;
- 
-@@ -926,33 +936,31 @@ __ieee80211_tx_prepare(struct ieee80211_
- 	tx->dev = dev; /* use original interface */
- 	tx->local = local;
- 	tx->sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--
-+	tx->u.tx.control = control;
- 	/*
--	 * set defaults for things that can be set by
--	 * injected radiotap headers
-+	 * Set this flag (used below to indicate "automatic fragmentation"),
-+	 * it will be cleared/left by radiotap as desired.
- 	 */
--	control->power_level = local->hw.conf.power_level;
--	control->antenna_sel_tx = local->hw.conf.antenna_sel_tx;
-+	tx->flags |= IEEE80211_TXRXD_FRAGMENTED;
- 
- 	/* process and remove the injection radiotap header */
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	if (unlikely(sdata->type == IEEE80211_IF_TYPE_MNTR)) {
--		if (__ieee80211_parse_tx_radiotap(tx, skb, control) ==
--								TXRX_DROP) {
-+		if (__ieee80211_parse_tx_radiotap(tx, skb) == TXRX_DROP)
- 			return TXRX_DROP;
--		}
-+
- 		/*
--		 * we removed the radiotap header after this point,
--		 * we filled control with what we could use
--		 * set to the actual ieee header now
-+		 * __ieee80211_parse_tx_radiotap has now removed
-+		 * the radiotap header that was present and pre-filled
-+		 * 'tx' with tx control information.
- 		 */
--		hdr = (struct ieee80211_hdr *) skb->data;
--		res = TXRX_QUEUED; /* indication it was monitor packet */
- 	}
- 
-+	hdr = (struct ieee80211_hdr *) skb->data;
-+
- 	tx->sta = sta_info_get(local, hdr->addr1);
- 	tx->fc = le16_to_cpu(hdr->frame_control);
--	tx->u.tx.control = control;
-+
- 	if (is_multicast_ether_addr(hdr->addr1)) {
- 		tx->flags &= ~IEEE80211_TXRXD_TXUNICAST;
- 		control->flags |= IEEE80211_TXCTL_NO_ACK;
-@@ -960,19 +968,23 @@ __ieee80211_tx_prepare(struct ieee80211_
- 		tx->flags |= IEEE80211_TXRXD_TXUNICAST;
- 		control->flags &= ~IEEE80211_TXCTL_NO_ACK;
- 	}
--	if (local->fragmentation_threshold < IEEE80211_MAX_FRAG_THRESHOLD &&
--	    (tx->flags & IEEE80211_TXRXD_TXUNICAST) &&
--	    skb->len + FCS_LEN > local->fragmentation_threshold &&
--	    !local->ops->set_frag_threshold)
--		tx->flags |= IEEE80211_TXRXD_FRAGMENTED;
--	else
--		tx->flags &= ~IEEE80211_TXRXD_FRAGMENTED;
-+
-+	if (tx->flags & IEEE80211_TXRXD_FRAGMENTED) {
-+		if ((tx->flags & IEEE80211_TXRXD_TXUNICAST) &&
-+		    skb->len + FCS_LEN > local->fragmentation_threshold &&
-+		    !local->ops->set_frag_threshold)
-+			tx->flags |= IEEE80211_TXRXD_FRAGMENTED;
-+		else
-+			tx->flags &= ~IEEE80211_TXRXD_FRAGMENTED;
-+	}
-+
- 	if (!tx->sta)
- 		control->flags |= IEEE80211_TXCTL_CLEAR_DST_MASK;
- 	else if (tx->sta->clear_dst_mask) {
- 		control->flags |= IEEE80211_TXCTL_CLEAR_DST_MASK;
- 		tx->sta->clear_dst_mask = 0;
- 	}
-+
- 	hdrlen = ieee80211_get_hdrlen(tx->fc);
- 	if (skb->len > hdrlen + sizeof(rfc1042_header) + 2) {
- 		u8 *pos = &skb->data[hdrlen + sizeof(rfc1042_header)];
-@@ -984,11 +996,14 @@ __ieee80211_tx_prepare(struct ieee80211_
- }
- 
- /* Device in tx->dev has a reference added; use dev_put(tx->dev) when
-- * finished with it. */
--static int inline ieee80211_tx_prepare(struct ieee80211_txrx_data *tx,
--				       struct sk_buff *skb,
--				       struct net_device *mdev,
--				       struct ieee80211_tx_control *control)
-+ * finished with it.
-+ *
-+ * NB: @tx is uninitialised when passed in here
-+ */
-+static int ieee80211_tx_prepare(struct ieee80211_txrx_data *tx,
-+				struct sk_buff *skb,
-+				struct net_device *mdev,
-+				struct ieee80211_tx_control *control)
- {
- 	struct ieee80211_tx_packet_data *pkt_data;
- 	struct net_device *dev;
-@@ -1001,6 +1016,7 @@ static int inline ieee80211_tx_prepare(s
- 	}
- 	if (unlikely(!dev))
- 		return -ENODEV;
-+	/* initialises tx with control */
- 	__ieee80211_tx_prepare(tx, skb, dev, control);
- 	return 0;
- }
-@@ -1081,6 +1097,7 @@ static int ieee80211_tx(struct net_devic
- 		return 0;
- 	}
- 
-+	/* initialises tx */
- 	res_prepare = __ieee80211_tx_prepare(&tx, skb, dev, control);
- 
- 	if (res_prepare == TXRX_DROP) {
-@@ -1097,15 +1114,11 @@ static int ieee80211_tx(struct net_devic
- 	sta = tx.sta;
- 	tx.u.tx.mode = local->hw.conf.mode;
- 
--	if (res_prepare == TXRX_QUEUED) { /* if it was an injected packet */
--		res = TXRX_CONTINUE;
--	} else {
--		for (handler = local->tx_handlers; *handler != NULL;
--		     handler++) {
--			res = (*handler)(&tx);
--			if (res != TXRX_CONTINUE)
--				break;
--		}
-+	for (handler = local->tx_handlers; *handler != NULL;
-+	     handler++) {
-+		res = (*handler)(&tx);
-+		if (res != TXRX_CONTINUE)
-+			break;
- 	}
- 
- 	skb = tx.skb; /* handlers are allowed to change skb */
-@@ -1857,7 +1870,7 @@ ieee80211_get_buffered_bc(struct ieee802
- 				cpu_to_le16(IEEE80211_FCTL_MOREDATA);
- 		}
- 
--		if (ieee80211_tx_prepare(&tx, skb, local->mdev, control) == 0)
-+		if (!ieee80211_tx_prepare(&tx, skb, local->mdev, control))
- 			break;
- 		dev_kfree_skb_any(skb);
- 	}
---- wireless-dev.orig/Documentation/networking/mac80211-injection.txt	2007-09-26 17:38:20.637337342 +0200
-+++ wireless-dev/Documentation/networking/mac80211-injection.txt	2007-09-26 17:51:21.617337342 +0200
-@@ -13,15 +13,35 @@ The radiotap format is discussed in
- ./Documentation/networking/radiotap-headers.txt.
- 
- Despite 13 radiotap argument types are currently defined, most only make sense
--to appear on received packets.  Currently three kinds of argument are used by
--the injection code, although it knows to skip any other arguments that are
--present (facilitating replay of captured radiotap headers directly):
-+to appear on received packets.  The following information is parsed from the
-+radiotap headers and used to control injection:
- 
-- - IEEE80211_RADIOTAP_RATE - u8 arg in 500kbps units (0x02 --> 1Mbps)
-+ * IEEE80211_RADIOTAP_RATE
- 
-- - IEEE80211_RADIOTAP_ANTENNA - u8 arg, 0x00 = ant1, 0x01 = ant2
-+   rate in 500kbps units, automatic if invalid or not present
- 
-- - IEEE80211_RADIOTAP_DBM_TX_POWER - u8 arg, dBm
-+
-+ * IEEE80211_RADIOTAP_ANTENNA
-+
-+   antenna to use, automatic if not present
-+
-+
-+ * IEEE80211_RADIOTAP_DBM_TX_POWER
-+
-+   transmit power in dBm, automatic if not present
-+
-+
-+ * IEEE80211_RADIOTAP_FLAGS
-+
-+   IEEE80211_RADIOTAP_F_FCS: FCS will be removed and recalculated
-+   IEEE80211_RADIOTAP_F_WEP: frame will be encrypted if key available
-+   IEEE80211_RADIOTAP_F_FRAG: frame will be fragmented if longer than the
-+			      current fragmentation threshold. Note that
-+			      this flag is only reliable when software
-+			      fragmentation is enabled)
-+
-+The injection code can also skip all other currently defined radiotap fields
-+facilitating replay of captured radiotap headers directly.
- 
- Here is an example valid radiotap header defining these three parameters
- 
---- wireless-dev.orig/net/mac80211/ieee80211_i.h	2007-09-26 17:38:20.567337342 +0200
-+++ wireless-dev/net/mac80211/ieee80211_i.h	2007-09-26 17:51:21.617337342 +0200
-@@ -122,6 +122,7 @@ typedef enum {
- #define IEEE80211_TXRXD_RXIN_SCAN		BIT(4)
- /* frame is destined to interface currently processed (incl. multicast frames) */
- #define IEEE80211_TXRXD_RXRA_MATCH		BIT(5)
-+#define IEEE80211_TXRXD_TX_INJECTED		BIT(6)
- struct ieee80211_txrx_data {
- 	struct sk_buff *skb;
- 	struct net_device *dev;
-
--- 
-
+I've always had heaps of firmware restarts.  It's the sendto errors which
+are new (I think).
