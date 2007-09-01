@@ -1,49 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36522 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756364AbXITPy5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2007 11:54:57 -0400
-Subject: Re: wext 64-bit: network manager and wpa_supplicant
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jean Tourrilhes <jt@hpl.hp.com>, Jouni Malinen <j@w1.fi>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1190292526.18521.52.camel@johannes.berg>
-References: <1190292526.18521.52.camel@johannes.berg>
-Content-Type: text/plain
-Date: Thu, 20 Sep 2007 11:50:33 -0400
-Message-Id: <1190303433.2016.10.camel@xo-3E-67-34.localdomain>
+Received: from crystal.sipsolutions.net ([195.210.38.204]:32978 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751180AbXIABKx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Aug 2007 21:10:53 -0400
+Subject: radiotap injection bugs & extending it
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Andy Green <andy@warmcat.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jwhcHpGG54Yy+eUS5MMD"
+Date: Sat, 01 Sep 2007 03:12:15 +0200
+Message-Id: <1188609135.7585.105.camel@johannes.berg>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2007-09-20 at 14:48 +0200, Johannes Berg wrote:
-> Ahrg. So I was complaining about NM not displaying any networks when
-> that umlaut-network I talked about earlier was present. But all that was
-> just wrong, the real problem seems to be that NM doesn't work on 64-bit
-> platforms. Is there any fix for it? It really should be going into a
-> 0.6.5.1 version or something so distributions will ship it.
 
-You mean it doesn't work correctly when handling ioctls on 64-bit
-platforms?  Or is just plain broken in non-ioctl ways?
+--=-jwhcHpGG54Yy+eUS5MMD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Dan
+[John, Andy, sorry for the dupe, accidentally addressed to John instead
+of the list. please reply here]
 
-> Same seems to go for wpa_supplicant, Debian is shipping 0.6.0 which only
-> triggers this in the kernel log:
-> 
-> [  787.877417] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32){t:8b;sz:0} arg(ffb58418) on socket:[14569]
-> [  787.877763] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32){t:8b;sz:0} arg(ffb58418) on socket:[14569]
-> [  787.877817] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32){t:8b;sz:0} arg(ffb58418) on socket:[14569]
-> [  795.264145] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32){t:8b;sz:0} arg(ffb58458) on socket:[14569]
-> [  795.264243] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32){t:8b;sz:0} arg(ffb58458) on socket:[14569]
-> [  795.264291] ioctl32(wpa_supplicant:5846): Unknown cmd fd(3) cmd(00008b32){t:8b;sz:0} arg(ffb58458) on socket:[14569]
-> 
-> And even the wpa_supplicant git version still seems to parse everything
-> itself without any 64-bit workarounds as far as I can tell. I keep
-> building wpa_supplicant for 64-bit just to test... Any chance to finally
-> get fixes into the stable versions distros are shipping?
-> 
-> Thanks,
-> johannes
+Hey,
+
+Just noticed this:
+__ieee80211_tx_prepare:
+
+struct ieee80211_hdr *hdr =3D (struct ieee80211_hdr *) skb->data;
+[...]
+tx->sta =3D sta_info_get(local, hdr->addr1);
+[...]
+__ieee80211_parse_tx_radiotap(..)
+
+which seems a bit weird. Shouldn't we grab the sta only after removing
+the radiotap stuff? :)
+
+
+Also, after doing more work on mac80211 I now again have hostapd running
+via monitor interfaces. However, there's a bit of a problem there.
+
+After a few changes to mac80211, I have these TX handlers:
+        ieee80211_tx_h_check_assoc,
+        ieee80211_tx_h_sequence,
+        ieee80211_tx_h_ps_buf,
+        ieee80211_tx_h_select_key,
+        ieee80211_tx_h_michael_mic_add,
+        ieee80211_tx_h_fragment,
+        ieee80211_tx_h_encrypt,
+        ieee80211_tx_h_rate_ctrl,
+        ieee80211_tx_h_misc,
+        ieee80211_tx_h_load_stats,
+
+Of these, check_assoc should be skipped unconditionally for injected
+packets. sequence should be done, ps_buf I'm not sure about though I
+suppose that if the STA really goes into powersave very quickly then
+hostapd would need ps_buf.
+
+Then we have select_key (and mic adding/encrypt depends on it) which
+should IMHO depend on IEEE80211_RADIOTAP_F_WEP; fragment could depend on
+IEEE80211_RADIOTAP_F_FRAG. rate_ctrl should depend on the presence of
+the IEEE80211_RADIOTAP_RATE field, if it was present then rate_ctrl is
+skipped. This addresses this TODO item:
+           * TODO: auto-select when the rate field is not present!
+
+misc does a few things:
+retry should be taken from IEEE80211_RADIOTAP_DATA_RETRIES if present or
+otherwise automatically assigned, cts/rts should be taken from the
+radiotap TX flags IEEE80211_RADIOTAP_F_TX_CTS and
+IEEE80211_RADIOTAP_F_TX_RTS or automatically determined.
+
+This is basically it, except for short preamble setting. That is a bit
+of a problem, however, because it's not a tristate in radiotap and we
+want a tristate (long/short/automatic). Ideas on this item?
+
+Comments on the whole thing? I think we shouldn't be skipping TX
+handlers unconditionally.
+
+johannes
+
+--=-jwhcHpGG54Yy+eUS5MMD
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iD8DBQBG2Lxv/ETPhpq3jKURAlmHAJ4w+G6S8dG5mQjWgWxuKHUsaGztsQCfR/o1
+CQzNCnxYUqco4QCX2z2IphA=
+=/E65
+-----END PGP SIGNATURE-----
+
+--=-jwhcHpGG54Yy+eUS5MMD--
 
