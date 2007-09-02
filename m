@@ -1,60 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-ip-62-75-166-246.inaddr.intergenia.de ([62.75.166.246]:33521
-	"EHLO vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751329AbXIDNTz (ORCPT
+Received: from fresno.net.uniovi.es ([156.35.11.2]:59094 "EHLO
+	FRESNO.NET.UNIOVI.ES" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755716AbXIBP6o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2007 09:19:55 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Always drop crypt-failed packets.
-Date: Tue, 4 Sep 2007 15:18:51 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200709041518.52209.mb@bu3sch.de>
+	Sun, 2 Sep 2007 11:58:44 -0400
+Date: Sun, 02 Sep 2007 17:58:41 +0200 (CEST)
+From: Igor Sobrado <igor@condmat1.ciencias.uniovi.es>
+Subject: Re: Fwd: That whole "Linux stealing our code" thing
+In-reply-to: <46DAC482.5090107@garzik.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Krzysztof Halasa <khc@pm.waw.pl>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Adrian Bunk <bunk@kernel.org>,
+	"Constantine A. Murenin" <mureninc@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
+Message-id: <Pine.LNX.4.64.0709021754250.6772@condmat1.ciencias.uniovi.es>
+MIME-version: 1.0
+Content-type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+References: <200709010140.l811eq9H005896@cvs.openbsd.org>
+ <f34ca13c0709010948v67b04b58lb098713dc38c4d6a@mail.gmail.com>
+ <46D99FB7.6030505@garzik.org>
+ <f34ca13c0709011037p221cb40fjf69651d1858df212@mail.gmail.com>
+ <20070901205457.GK9260@stusta.de> <20070902113638.78fbd202@the-village.bc.nu>
+ <Pine.LNX.4.64.0709021303001.4312@condmat1.ciencias.uniovi.es>
+ <20070902115041.GM16016@stusta.de>
+ <Pine.LNX.4.64.0709021416130.6181@condmat1.ciencias.uniovi.es>
+ <20070902134612.28a88761@the-village.bc.nu>
+ <Pine.LNX.4.64.0709021446550.6181@condmat1.ciencias.uniovi.es>
+ <m3642txj91.fsf@maximus.localdomain> <46DAC482.5090107@garzik.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drop packets for which the firmware was unable to decrypt it,
-as we won't be able to decrypt them with the key, too.
+On Sun, 2 Sep 2007, Jeff Garzik wrote:
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> Krzysztof Halasa wrote:
+>>  WRT Atheros driver I'd probably leave the thing as is (i.e., BSD/GPL
+>>  = in fact BSD), unless something like 50+% of the code is rewritten -
+>>  it's mostly their hard work after all, isn't it? Not legal
+>>  requirement, though.
+>
+> Yes.  This deserves to be reinforced:
+>
+> There is definite value in sharing the ath5k HAL between OpenBSD and Linux.
 
-Index: wireless-dev/drivers/net/wireless/b43/xmit.c
-===================================================================
---- wireless-dev.orig/drivers/net/wireless/b43/xmit.c	2007-08-31 17:40:05.000000000 +0200
-+++ wireless-dev/drivers/net/wireless/b43/xmit.c	2007-08-31 18:33:38.000000000 +0200
-@@ -465,6 +465,12 @@ void b43_rx(struct b43_wldev *dev, struc
- 
- 	if (macstat & B43_RX_MAC_FCSERR)
- 		dev->wl->ieee_stats.dot11FCSErrorCount++;
-+	if (macstat & B43_RX_MAC_DECERR) {
-+		/* Decryption with the given key failed.
-+		 * Drop the packet. We also won't be able to decrypt it with
-+		 * the key in software. */
-+		goto drop;
-+	}
- 
- 	/* Skip PLCP and padding */
- 	padding = (macstat & B43_RX_MAC_PADDING) ? 2 : 0;
-@@ -483,7 +489,7 @@ void b43_rx(struct b43_wldev *dev, struc
- 	fctl = le16_to_cpu(wlhdr->frame_control);
- 	skb_trim(skb, skb->len - FCS_LEN);
- 
--	if ((macstat & B43_RX_MAC_DEC) && !(macstat & B43_RX_MAC_DECERR)) {
-+	if (macstat & B43_RX_MAC_DEC) {
- 		unsigned int keyidx;
- 		int wlhdr_len;
- 		int iv_len;
-@@ -573,7 +579,7 @@ void b43_rx(struct b43_wldev *dev, struc
- 	ieee80211_rx_irqsafe(dev->wl->hw, skb, &status);
- 
- 	return;
--      drop:
-+drop:
- 	b43dbg(dev->wl, "RX: Packet dropped\n");
- 	dev_kfree_skb_any(skb);
- }
+Of course.  Sharing knowledge and efforts can only improve both the GPL 
+and BSD licensed code.  It is important in all cases, but becomes critical 
+when support from manufacturers is limited or even non existent.  In these 
+cases, shared efforts are required to write successful code.
+
+Cheers,
+Igor.
